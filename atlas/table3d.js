@@ -337,31 +337,6 @@
       });
       return g;
     },
-    dots() {
-      const g = new (T().Group)(), S = 8, n = 5;
-      g.add(slab(9, .3, 9, M({ color: 0xfdfaf2, roughness: .9 }), M({ color: 0xe6e0d0 })));
-      const dotM = M({ color: 0x2b3044 }), A = M({ color: 0xff6b6b }), Bm = M({ color: 0x4cc3ff });
-      const p = i => -S / 2 + S / (n - 1) * i;
-      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const d = disc(.16, .14, dotM, 10); d.position.set(p(i), .37, p(j)); g.add(d); }
-      const seg = (x1, z1, x2, z2, mat) => { const m = mesh(new (T().BoxGeometry)(S / (n - 1) - .3, .1, .14), mat); m.position.set((p(x1) + p(x2)) / 2, .36, (p(z1) + p(z2)) / 2); if (z1 !== z2) m.rotation.y = Math.PI / 2; g.add(m); };
-      [[0, 0, 1, 0, A], [0, 0, 0, 1, A], [1, 0, 1, 1, Bm], [0, 1, 1, 1, A], [1, 1, 2, 1, Bm], [2, 0, 2, 1, Bm], [1, 0, 2, 0, Bm], [2, 2, 3, 2, A], [3, 2, 3, 3, A], [0, 3, 0, 4, Bm], [1, 3, 1, 4, A]].forEach(a => seg(...a));
-      const box = (x, z, mat) => { const b = mesh(new (T().BoxGeometry)(S / (n - 1) * .8, .04, S / (n - 1) * .8), mat); b.position.set(p(x) + S / (n - 1) / 2, .32, p(z) + S / (n - 1) / 2); g.add(b); };
-      box(0, 0, M({ color: 0xffc2c2 })); box(1, 0, M({ color: 0xbfe8ff }));
-      return g;
-    },
-    mancala() {
-      const g = new (T().Group)();
-      const body = mesh(new (T().BoxGeometry)(10.5, .9, 4.2), M({ map: wood('mc', '#b07842', '#6e4520', 512, 512, 1.4), roughness: .5 })); body.position.y = .45; g.add(body);
-      const pit = M({ color: 0x5e3a1a, roughness: .8 }), gems = [0xff6b6b, 0x4cc3ff, 0xffd23f, 0x4fd8a0, 0xa17cff, 0xff8fc7].map(c => M({ color: c, roughness: .15, metalness: .1 }));
-      const addPit = (x, z, r, sx, cnt) => {
-        const p = mesh(new (T().CylinderGeometry)(r, r * .82, .08, 20), pit); p.scale.x = sx; p.position.set(x, .93, z); g.add(p);
-        const rim = mesh(new (T().TorusGeometry)(r, .06, 4, 20), M({ color: 0xc9925a })); rim.rotation.x = Math.PI / 2; rim.scale.x = sx; rim.position.set(x, .95, z); g.add(rim);
-        for (let i = 0; i < cnt; i++) { const s = mesh(new (T().SphereGeometry)(.17, 7, 5), gems[(i + Math.round(x * 3)) % 6]); s.scale.y = .7; const a = i * 2.4, rr = .12 + .1 * (i % 3); s.position.set(x + Math.cos(a) * rr * sx, 1.04 + .08 * (i / 3 | 0), z + Math.sin(a) * rr); g.add(s); }
-      };
-      for (let i = 0; i < 6; i++) { addPit(-3.5 + i * 1.4, -1, .55, 1, 4); addPit(-3.5 + i * 1.4, 1, .55, 1, 4); }
-      addPit(-4.75, 0, .5, 1.1, 3); addPit(4.75, 0, .5, 1.1, 5);
-      return g;
-    },
     backgammon() {
       const g = new (T().Group)();
       const top = M({ map: canvasTex('bgb', 1024, 768, (c, W, H) => {
