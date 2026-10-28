@@ -1086,6 +1086,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/watchpause.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1479,6 +1480,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1548,7 +1550,7 @@ function update(anim) { renderBoard(anim); renderInfo(); }
 
 // ====================================================================== flow
 function newGame() {
-  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; wpPaused = false;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   moves = ''; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; resigned = null;
   hideOverlay('#resultOverlay');
@@ -1585,7 +1587,7 @@ function afterPosition() {
 }
 async function maybeAI(tok) {
   const shown = moves.slice(0, cur);
-  if (lesson || puzzle || reviewing || gameOver(shown)) return;
+  if (lesson || puzzle || reviewing || wpPaused || gameOver(shown)) return;
   const p = toMoveOf(shown);
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); hitsEl.classList.remove('can');
@@ -1668,7 +1670,23 @@ function canUndo() {
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveOf(moves.slice(0, i)) === humanColor) return true; return false; }
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle; }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !(gameOver(moves) || !!resigned), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || (gameOver(moves) || !!resigned)) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
+  update(false); afterPosition();
+}
 function undo() {
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = 0;
   let i = cur - 1;

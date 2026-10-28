@@ -440,6 +440,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rtLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
@@ -555,7 +556,7 @@ function commit(m) {
 
 // ====================================================================== flow
 function newGame(rated) {
-  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   rgame = null; rtHold = false;
   if (rated) rgame = Object.assign(rated, { ct: [rtClock().base, rtClock().base], t: Date.now() });
   startSpec = null;
@@ -588,7 +589,7 @@ function afterPosition() {
   maybeAI(tok);
 }
 async function maybeAI(tok) {
-  if (lesson || puzzle || reviewing || gameOver(cur)) return;
+  if (lesson || puzzle || reviewing || wpPaused || gameOver(cur)) return;
   const p = toMoveAt(cur);
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
@@ -686,8 +687,24 @@ function canUndo() {
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbS; }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || gameOver(moves.length)) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
+  update(false); afterPosition();
+}
 function undo() {
   if (rbS) { RBox.back(); return; }
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   let i = cur - 1;

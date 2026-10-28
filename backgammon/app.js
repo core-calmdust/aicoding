@@ -837,7 +837,7 @@ async function drive() {
   if (inStudy()) { renderButtons(); return; }
   if (settings.mode === 'online') { if (window.olDrive) olDrive(); else renderButtons(); return; }
   const tok = ++busyToken;
-  if (!match || lesson || puzzle || reviewing || !isLatest()) { renderButtons(); return; }
+  if (!match || lesson || puzzle || reviewing || wpPaused || !isLatest()) { renderButtons(); return; }
   const [g] = curGA(); const gm = match.games[g];
   const st = stateAt(g, gm.actions.length);
   if (st.over) { onGameOver(g); return; }
@@ -967,7 +967,7 @@ function onGameOver(g) {
   const kindTxt = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
   if (settings.mode === 'watch' && !mOver && match.len) {
     toast(t('res.pWinPts', { c: pname(st.winner), n: st.points }) + ' · ' + kindTxt, 2200);
-    setTimeout(() => { if (match && isLatest() && !lesson && !puzzle && stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !matchOver()) nextGame(); }, 2600);
+    setTimeout(() => { if (match && !wpPaused && isLatest() && !lesson && !puzzle && stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !matchOver()) nextGame(); }, 2600);
     return;
   }
   if (youWin || settings.mode === 'pvp') confetti();
@@ -1000,7 +1000,7 @@ function nextGame() {
   save(); updateCommit(); afterAction();
 }
 function startNewMatch() {
-  restPose = null;
+  restPose = null; wpPaused = false;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1;
   if (settings.mode === 'ai') humanSide = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
   view = settings.mode === 'ai' ? humanSide : 0;
@@ -1064,7 +1064,30 @@ function lastHumanAction(g) {
   for (let i = acts.length - 1; i >= 0; i--) if (actorOf(g, i) === humanSide && !(acts[i].t === 'r' && stateAt(g, i).nRolls === 0 && false)) return i;
   return -1;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !!match && !lesson && !puzzle && !inStudy(); }
+function wpOver() { const g = match.games.length - 1; return stateAt(g, match.games[g].actions.length).over && (!match.len || matchOver()); }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !wpOver(), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || wpOver()) return;
+  if (!wpPaused) {
+    wpPaused = true; busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false;
+    if (turn && turn.ai) turn = null;   // an AI move being animated is dropped (it was not pushed yet); resuming plays it again
+    render(); renderInfo(); renderButtons(); return;
+  }
+  wpPaused = false; cur = latestIdx(); reviewing = false; turn = null; hintData = null;   // resume from the latest position
+  const g = match.games.length - 1;
+  if (stateAt(g, match.games[g].actions.length).over) { nextGame(); return; }   // paused between two games of a match
+  afterAction();
+}
 function undo() {
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   if (turn && turn.steps.length && canInteract()) { undoStep(); return; }
   if (lesson || puzzle || settings.mode === 'online') return;
@@ -1161,6 +1184,7 @@ function renderInfo() {
   $('#evalFill').style.width = (ev ? ev.p * 100 : 50) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
