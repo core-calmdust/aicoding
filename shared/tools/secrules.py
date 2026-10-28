@@ -46,7 +46,7 @@ GAMES = {
     'shogi': dict(first='b', alt=True, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0)},
                   legacy_byo=90000, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=4000, bg=False),
     'chess': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
-                  legacy_byo=None, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=6000, bg=False),
+                  legacy_byo=None, free=0, imm=['tc'], draw=True, abandon=False, hist=False, moves_max=6000, bg=False),
     'gomoku': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
                    legacy_byo=None, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=6000, bg=False),
     'checkers': dict(first='b', alt=True, tckey='tc', tcs={'english': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
