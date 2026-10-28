@@ -440,6 +440,13 @@ function aidsNote() {
   if (['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(kind)) return `<br><small>${t('ls.aidSafe', { n: safe.length, l: longChains(p) })}</small>`;
   return `<br><small>${t('ls.aidChain')}</small>`;
 }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem keeps the usual 結果 button; the opening drills already run on by themselves.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || L.drill || !window.CardBar || !CardBar.autoNext) return;
+  const k = L.k; if (k + 1 >= L.probs.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.k === k && L.answered });
+}
 function lessonAnswer(e) {
   const L = lesson; if (!L || L.answered) return;
   if (L.drill) return drillAnswer(e);
@@ -452,6 +459,7 @@ function lessonAnswer(e) {
   if (v < best) { hintEdge = pr.values.find(x => x[1] === best)[0]; badEdge = -1; renderBoard(false); playWrong(); }
   else coach(t('ls.ok'), 'gold', 1200);
   renderLessonCard();
+  lsAuto(v >= best, 1500);
 }
 function answerFb() {
   const L = lesson, pr = L.pr, e = L.mine, vals = new Map(pr.values), v = vals.get(e), best = Math.max(...pr.values.map(x => x[1]));

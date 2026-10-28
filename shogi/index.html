@@ -1380,7 +1380,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=29"></script>
-<script src="../shared/cardbar.js?v=4"></script>
+<script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -3878,7 +3878,7 @@ function movePoints(pr, usi, runtimeScore) {
 }
 async function lessonMove(m) {
   const pr = lesson.cur, usi = P.toUsi(m);
-  lesson.waiting = false;
+  lesson.waiting = false; lesson.t0 = window.CardBar && CardBar.now ? CardBar.now() : null;
   const moves = [...lesson.played, usi];
   lessonGame(pr.sfen, moves); playPiece(false);
   const pen = lesson.hintShown ? HINT_PEN : 0;
@@ -3961,6 +3961,13 @@ function lessonReason(pr, usi) {
   }
   return '';
 }
+// a solved lesson / opening / exam problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap
+// cancels it). 詰将棋 (endless) is left as it is, and the last problem keeps the usual 終了 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || L.endless || L.retry || L.shownAnswer || !window.CardBar || !CardBar.autoNext) return;
+  const k = L.k, pr = L.cur; if (k + 1 >= (L.exam ? EXAM_N : L.probs.length)) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), since: L.t0, ok: () => lesson === L && L.k === k && L.cur === pr && L.answered && !L.retry });
+}
 function lessonScored(pts, info) {
   const pr = lesson.cur;
   lesson.answered = true; lesson.waiting = false;
@@ -3995,6 +4002,7 @@ function lessonScored(pts, info) {
   if (lesson.dailyMsg) { html += `<br>🔥 ${t('daily.streak', { n: dailyInfo(lesson.dailyEasy).streak })}`; lesson.dailyMsg = false; }
   lesson.fbHtml = html + book;
   playChime(pts >= 16);
+  lsAuto(pts >= 16, 1500);
   // show the problem position again with the candidates and their points
   if (pr.kind !== 'tsume') {
     setTimeout(() => {

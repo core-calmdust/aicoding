@@ -264,6 +264,13 @@ function problemPoints(P, m, n) {
   if (gtps(P.half, n).includes(m)) return 10;
   return 0;
 }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= curStep().problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 async function lessonAnswer(m) {
   const P = lessonProblem(), s = curStep(), n = game.n;
   lesson.answered = true;
@@ -279,6 +286,7 @@ async function lessonAnswer(m) {
   $('#lsFb').innerHTML = fb;
   playChime(pts_ >= 16);
   playMove2(m);
+  { const ln = gtps(P.line, n).length; lsAuto(pts_ >= 16, 700 + (ln > 1 ? 500 + ln * 850 : 0) + 900); }
   const tok = busyToken;
   await sleep(700);
   if (!lesson || tok !== busyToken) return;

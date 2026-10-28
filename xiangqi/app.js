@@ -1287,6 +1287,13 @@ function problemPoints(P, m) {
   return Math.max(0, Math.round(20 * (1 - loss / 0.5)));
 }
 function markMove(pos, mm, cls) { lessonMarks.push({ arrow: mPath(mm), cls }); lessonMarks.push({ at: mTo(mm), cls }); }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= curStep().problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 function lessonAnswer(m) {
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
   lesson.answered = true;
@@ -1302,6 +1309,7 @@ function lessonAnswer(m) {
   $('#lsFb').innerHTML = fb;
   playChime(pts >= 16);
   playMove2(m);
+  lsAuto(pts >= 16, moveDur(m, pos0) + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;
@@ -1321,6 +1329,7 @@ function okAnswer(P, s, m, pts) {
   const best = P.ok.includes(m) ? m : P.best;
   $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: '<bdi>' + mvIn(pos0, m) + '</bdi>' }) : t('ls.' + s.id + '.ng', { m: '<bdi>' + mvIn(pos0, best) + '</bdi>', x: '<bdi>' + mvIn(pos0, m) + '</bdi>' }));
   playChime(!!pts); playMove2(m);
+  lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;

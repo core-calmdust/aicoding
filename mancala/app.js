@@ -1579,6 +1579,13 @@ function problemPoints(sc, k) {
   const r = all.filter(v => v > mine + 1e-9).length;
   return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
 }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms, since) {
+  const L = lesson; if (!good || !L || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= LESSONS.steps[lesson.step].problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), since, ok: () => lesson === L && L.i === i && L.answered });
+}
 async function lessonAnswer(k) {
   const pr = lessonProblem(), s = LESSONS.steps[lesson.step];
   lesson.answered = true;
@@ -1593,9 +1600,10 @@ async function lessonAnswer(k) {
   if (s.id !== 'sow' && typeof mcExplainHTML === 'function') { try { fb += exFold(mcExplainHTML(pr.b, k, pr.best, lsRules(s), t('you'))); } catch (e) { console.warn(e); } }
   $('#lsFb').innerHTML = fb;
   if (pts >= 16) sChime(1); else sWrong();
-  const tok = busyToken;
+  const tok = busyToken, t0 = window.CardBar && CardBar.now ? CardBar.now() : 0;
   await playMove(k, { noFlow: true });
   if (!lesson || tok !== busyToken) return;
+  lsAuto(pts >= 16, 1500, t0);
   await sleep(900);
   if (!lesson || tok !== busyToken) return;
   // back to the problem: show the answer (gold ring), your move (red ring) and the engine's score of each pit

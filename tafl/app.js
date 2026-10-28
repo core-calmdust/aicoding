@@ -1278,6 +1278,13 @@ function problemPoints(P, m) {
   return Math.max(0, Math.round(20 * (1 - loss / 0.5)));
 }
 function markMove(pos, mm, cls) { lessonMarks.push({ arrow: [mFrom(mm), mTo(mm)], cls }); lessonMarks.push({ at: mTo(mm), cls }); }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms, since) {
+  const L = lesson; if (!good || !L || L.study || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= curStep().problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), since, ok: () => lesson === L && L.i === i && L.answered });
+}
 function lessonAnswer(m) {
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
   if (P.n > 1) return seqAnswer(P, s, m);
@@ -1294,6 +1301,7 @@ function lessonAnswer(m) {
   $('#lsFb').innerHTML = fb;
   playChime(pts >= 16);
   playMove2(m);
+  lsAuto(pts >= 16, moveDur(m, pos0) + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;
@@ -1310,7 +1318,7 @@ function lessonAnswer(m) {
 // a forced win within the moves left (engine.c puzzle(), exact); the engine then answers with its most stubborn defence.
 // A move that lets the win slip ends the problem (0 points): it is taken back and a move that works is shown.
 async function seqAnswer(P, s, m) {
-  const L = lesson, tok = busyToken, left = P.n - L.used;
+  const L = lesson, tok = busyToken, left = P.n - L.used, t0 = window.CardBar && CardBar.now ? CardBar.now() : 0;
   L.busy = true; lessonMarks = []; renderLessonCard();
   $('#lsFb').innerHTML = t('pz.checking');
   const list = await mateReq(left);
@@ -1323,6 +1331,7 @@ async function seqAnswer(P, s, m) {
   const finish = ok => {
     L.answered = true; L.busy = false; L.results[L.i] = ok ? 20 : 0; renderLessonCard();
     playChime(ok);
+    lsAuto(ok, dm + 1100, t0);
   };
   if (won()) {
     finish(true);
@@ -1364,6 +1373,7 @@ function okAnswer(P, s, m, pts) {
   const best = P.ok.includes(m) ? m : P.best;
   $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
   playChime(!!pts); playMove2(m);
+  lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;

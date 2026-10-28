@@ -405,6 +405,8 @@ function opSubmit(tt) {
   if (!ok) extraArrows.push({ side: x.s, start: x.before, moves: L.fb.mineMoves, cls: 'bad' });
   render(); opDrillCard();
   if (L.oi + 1 >= L.order.length) opDrillFinish();
+  // a right reply moves on to the next line by itself after a short beat (shared/cardbar.js; any tap cancels it)
+  else if (ok && window.CardBar && CardBar.autoNext) { const oi = L.oi; CardBar.autoNext({ ms: 1500, ok: () => lesson === L && L.oi === oi && L.answered && !L.done }); }
 }
 function opDrillFinish() {
   const L = lesson; L.done = true;

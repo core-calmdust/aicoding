@@ -1177,7 +1177,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=29"></script>
-<script src="../shared/cardbar.js?v=4"></script>
+<script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -2242,6 +2242,13 @@ function renderLessonCard() {
   $('#lsHint').disabled = lesson.answered;
 }
 function scoresToList(P) { return P.sc.map((v, c) => v === null ? null : { c, kind: P.kind || 'exact', v }).filter(Boolean); }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= LESSONS.steps[lesson.step].problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 function lessonAnswer(c) {
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
   lesson.answered = true;
@@ -2263,6 +2270,7 @@ function lessonAnswer(c) {
     update(false);
   }, ok ? 1100 : 900);
   playChime(ok);
+  lsAuto(ok, 1700);
   const head = ok ? `<b class="ok">${t('fb.ok')}</b> ` : `<b class="ng">${t('fb.ng')}</b> `;
   const why = t('ls.' + s.id + '.why' + (P.why || ''), { m: colName(ans), x: colName(c), c: pname(toMoveOf(P.moves)), a: P.alt !== undefined ? colName(P.alt) : '' });
   $('#lsFb').innerHTML = head + (ok ? '' : t('fb.answerIs', { m: colName(ans) }) + ' ') + why + `<br><span style="font-size:12px;color:var(--dim)">${t('fb.labels')}</span>`;

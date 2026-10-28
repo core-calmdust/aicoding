@@ -2700,6 +2700,13 @@ function renderLessonCard() {
   $('#lsNext').disabled = !lesson.answered;
   $('#lsHint').disabled = lesson.answered;
 }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.op || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= LESSONS.steps[L.step].problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 $('#lsChoices').addEventListener('click', e => {
   const b = e.target.closest('button[data-i]'); if (!b || !lesson || lesson.answered) return;
   const P = lessonProblem(), i = +b.dataset.i;
@@ -2709,6 +2716,7 @@ $('#lsChoices').addEventListener('click', e => {
   SFX.chime(ok);
   lesson.fb = { pts, ok, kind: 'choice' };
   renderLessonFb(); renderLessonCard();
+  lsAuto(pts >= 16, 1500);
 });
 function lessonSubmit(tt) {
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
@@ -2730,6 +2738,7 @@ function lessonSubmit(tt) {
   extraArrows = [{ side: P.side, start: turn.start, moves: plays[0].moves, cls: 'hint' }];
   if (effRank > 0) extraArrows.push({ side: P.side, start: turn.start, moves: mine.moves, cls: 'bad' });
   render(); renderLessonFb(); renderLessonCard();
+  lsAuto(pts >= 16, 1500);
 }
 function renderLessonFb() {
   const P = lessonProblem(), s = LESSONS.steps[lesson.step], F = lesson.fb;
