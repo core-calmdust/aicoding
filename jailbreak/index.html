@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Jost:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=18">
+<link rel="stylesheet" href="app.css?v=19">
 <link rel="stylesheet" href="comic.css?v=1">
 </head>
 <body data-floor="concrete">
@@ -28,9 +28,8 @@
     </div>
     <span class="sp"></span>
     <div class="icons">
-      <button class="ib" id="btnAch" data-i18n-title="ach.title"><i class="dot"></i></button>
-      <button class="ib" id="btnHelp" data-i18n-title="u.rules"></button>
       <button class="ib" id="btnSet" data-i18n-title="set.title"></button>
+      <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
       <a href="../" class="ib" id="homeLink" data-i18n-title="home"></a>
     </div>
   </header>
@@ -45,6 +44,8 @@
       </div>
       <div class="hpanel" data-p="course" hidden><div id="coursePanel"></div></div>
       <div class="hpanel" data-p="modes" hidden><div id="modePanel"></div></div>
+      <div class="hpanel gacha" data-p="gacha" hidden><div class="card panel" id="gachaPanel"></div></div>
+      <div class="hpanel me" data-p="me" hidden></div>
     </section>
 
     <section class="screen" id="play" hidden>
@@ -68,9 +69,10 @@
     </section>
   </main>
 </div>
+<nav class="bnav" id="bnav"></nav>
 
 <div id="gameMsg" hidden></div>
-<div class="modal" id="modal" hidden><div class="mbox"><button class="ib mx" id="modalX" aria-label="close">✕</button><div id="modalBody"></div></div></div>
+<div class="modal" id="modal" hidden><div class="mbox"><button class="ib mx" id="modalX" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div id="modalBody"></div></div></div>
 <canvas id="fx"></canvas>
 <div id="toast"></div>
 
@@ -79,13 +81,13 @@
 <script src="i18n.js?v=2"></script>
 <script src="i18n-more.js?v=2"></script>
 <script src="i18n-v2.js?v=1"></script>
-<script src="i18n-v3.js?v=3"></script>
+<script src="i18n-v3.js?v=4"></script>
 <script src="skins.js?v=1"></script>
 <script src="story.js?v=3"></script>
 <script src="firebase-config.js?v=1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=1"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261028jb" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac2" defer></script>
