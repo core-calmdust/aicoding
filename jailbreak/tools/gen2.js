@@ -34,10 +34,33 @@ function iceClimb() {
   }
   return null;
 }
+// LIGHTS / VENT: climb on the optimal count AND on the solution really using the switch / the vent
+function featureClimb(kind) {
+  const uses = rec => {
+    const P = E.decode(rec), r = E.solve(P, P.s0, 200000); if (r.n < 1) return null;
+    let S = P.s0, u = 0; for (const m of r.path) { const ev = {}; S = E.apply(P, S, m, ev); if (kind === 'lights' ? ev.lights : ev.vent) u++; }
+    if (u) { const x = Object.assign({}, rec); if (kind === 'lights') { delete x.sw; x.r = 'patrol'; } else { delete x.vt; x.r = 'basic'; } const P2 = E.decode(x), r2 = E.solve(P2, P2.s0, 200000).n; if (kind === 'lights' ? r2 === r.n : (r2 > 0 && r2 <= r.n)) u = 0; }
+    return { o: r.n, u };
+  };
+  for (let tries = 0; tries < 300; tries++) {
+    let cur = b.BUILD[kind](); if (!cur) continue;
+    let v0 = uses(cur); if (!v0) continue;
+    const val = v => Math.min(v.o, hi) + (v.u ? 6 : 0) + Math.min(v.u, 3);
+    let best = v0;
+    for (let it = 0; it < 70; it++) {
+      const m = b.mutRule(Object.assign({}, cur, { o: best.o })); if (!m) continue;
+      const v = uses(m); if (!v || v.o > hi + 1) continue;
+      if (val(v) >= val(best)) { best = v; cur = m; }
+    }
+    if (best.u && best.o >= lo && best.o <= hi) { cur.o = best.o; return cur; }
+  }
+  return null;
+}
 function one() {
   if (rule === 'basic') return b.plainAt([lo, hi], { n0: lo < 8 ? 4 : 7, n1: lo < 8 ? 9 : 12, walls: R() < .3 ? [1, 2] : null });
   if (rule === 'big') { const w = +(wA || (R() < .5 ? 7 : 8)); return b.plainAt([lo, hi], { w, h: w, n0: w === 8 ? 9 : 8, n1: w === 8 ? 15 : 13, walls: [0, 2], maxN: w === 8 ? 15 : 16, cap: 400000 }); }
   if (rule === 'ice') return iceClimb();
+  if (rule === 'lights' || rule === 'vent') return featureClimb(rule);
   return b.ruleAt(rule, lo, hi, 30 + hi * 3);
 }
 let made = 0, tried = 0;

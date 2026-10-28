@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0a17">
 <meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、入門〜戦術レッスン21ステップ、序盤の定跡、詰めモリス600問、今日の一問。">
@@ -1159,7 +1160,7 @@ function applyI18n() {
   { const b = $('#btnResign'); b.innerHTML = Resign.icon + '<span>' + Resign.label(LANG) + '</span>'; b.title = Resign.label(LANG); }
   renderBrand();
 }
-function renderBrand() { const tt = t('title.' + gv); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub.' + gv); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
+function renderBrand() { const tt = t('title.' + gv); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub.' + gv); { const h1 = $('#brandTitle').closest('h1') || document.querySelector('.brand h1'); if (h1) h1.style.setProperty('--tl', Math.max(14, tt.length)); } }
 let humanColor = P1;
 let reviewing = false;
 let evals = [];          // evals[i] = evaluation after i moves (first player's view)
@@ -3321,6 +3322,19 @@ document.addEventListener('keydown', e => {
 window.addEventListener('resize', () => renderFx());
 </script>
 <script src="online-ui.js?v=20261028l9"></script>
+<!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/morris.js?v=4')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=1'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>

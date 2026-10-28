@@ -232,7 +232,21 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
 /* in a game (and the rules tour) only 'quit' is shown, where the × sits */
-.bv.playing .x{display:none!important}
+.bv.playing .x,.bv.playing .bvtod{display:none!important}
+/* time-of-day picker (own UI), left of the × */
+.bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4}
+.bvtodb{height:40px;display:flex;align-items:center;gap:6px;padding:0 12px 0 11px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);color:var(--ink);font:800 13px var(--round,inherit);cursor:pointer}
+.bvtodb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none}
+.bvtodb .cv{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;transition:transform .2s}
+.bvtodb[aria-expanded=true] .cv{transform:translateY(1px) rotate(-135deg)}
+.bvtodm{position:absolute;top:calc(100% + 8px);inset-inline-end:0;min-width:150px;padding:6px;border-radius:16px;background:#fff;border:2px solid var(--line);box-shadow:0 4px 0 var(--line),0 14px 30px -12px rgba(60,40,10,.35);display:flex;flex-direction:column;gap:2px;animation:todIn .16s ease-out}
+.bvtodm[hidden]{display:none!important}
+@keyframes todIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.bvtodm button{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;border:0;background:transparent;font:700 14px var(--round,inherit);color:var(--ink);cursor:pointer;text-align:start}
+.bvtodm button:hover{background:#fff4dc}
+.bvtodm button.on{background:#ffe9c2;color:#8a4b00}
+.bvtodm button .sw{width:18px;height:18px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.bvtodm button.on::after{content:'';margin-inline-start:auto;width:6px;height:11px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg) translate(-2px,-1px)}
 .bv.playing .quit{inset-inline-start:auto;inset-inline-end:14px}
 .magic{position:fixed;inset:0;z-index:95;pointer-events:none}
 .magic i{position:absolute;display:block;background:currentColor;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px currentColor)}
@@ -596,7 +610,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dprev .bgfill{position:absolute;inset:0;opacity:.85}
 .dprev > *:not(.bgfill){position:relative}
 /* worn names: player + character / background / frame, beside (phone) or under (PC) the character */
-.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,253,247,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
+.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
 .dprev .dpl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:2px dashed rgba(0,0,0,.08)}
 .dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow-wrap:anywhere}.dprev .dpl .gnote{color:#5a6078;flex:none}
 .dprev .dw{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
@@ -604,7 +618,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .dprev .dwh{display:flex;align-items:center;gap:6px}.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;white-space:nowrap}
 .dprev .dw b{font-weight:900;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
 .dprev .dw .rar{position:static;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
-.dprev.dark .dname{background:rgba(22,26,44,.74);border-color:rgba(255,255,255,.18)}.dprev.dark .dpl b,.dprev.dark .dpl .gnote,.dprev.dark .dw b,.dprev.dark .dw .dwk{color:#fff}.dprev.dark .dpl{border-color:rgba(255,255,255,.15)}
+/* the name panel stays translucent white on every background (no dark variant) */
 @media (max-width:760px){
   .dprev{position:relative;top:auto;flex-direction:row;padding:12px;gap:10px}
   .dprev .poke{flex:none}
@@ -972,6 +986,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <div class="bv" id="bv" role="dialog" aria-modal="true">
   <div id="gl"></div>
   <button type="button" class="bvnav prev" id="bvPrev" aria-label="Previous game"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><button type="button" class="bvnav next" id="bvNext" aria-label="Next game"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="bvtod" id="bvTodW"><button type="button" class="bvtodb" id="bvTodBtn" aria-haspopup="listbox" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span id="bvTodLb"></span><i class="cv"></i></button><div class="bvtodm" id="bvTodMenu" role="listbox" hidden></div></div>
   <button class="icbtn x" id="bvClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <button class="btn sm ghost quit" id="bvQuit"></button>
   <div class="hud" id="hud"></div>
@@ -984,22 +999,22 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="art.js?v=6"></script>
-<script src="../shared/atlas.js?v=20261028ckpz"></script>
+<script src="../shared/atlas.js?v=20261028mc4"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261022ent"></script>
 <script src="i18n.js?v=26"></script>
-<script src="table3d.js?v=71"></script>
+<script src="table3d.js?v=73"></script>
 <script src="models/shogi.js?v=22"></script>
 <script src="models/chess.js?v=8"></script>
 <script src="models/backgammon.js?v=14"></script>
 <script src="models/goban.js?v=11"></script>
 <script src="models/hex.js?v=1"></script>
 <script src="models/xiangqi.js?v=2"></script>
-<script src="models/checkers.js?v=2"></script>
-<script src="models/morris.js?v=1"></script>
-<script src="models/connect4.js?v=1"></script>
+<script src="models/checkers.js?v=3"></script>
+<script src="models/morris.js?v=4"></script>
+<script src="models/connect4.js?v=3"></script>
 <script src="models/mancala.js?v=2"></script>
-<script src="models/dots.js?v=2"></script>
+<script src="models/dots.js?v=3"></script>
 <script src="icons3d.js?v=10"></script>
 <script src="games/reversi.js?v=11"></script>
 <script src="games/shogi-play.js?v=3"></script>
@@ -1007,10 +1022,15 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="games/chess.js?v=4"></script>
 <script src="games/backgammon.js?v=15"></script>
 <script src="games/gomoku.js?v=3"></script>
+<script src="games/morris-pieces.js?v=1"></script>
+<script src="games/morris.js?v=1"></script>
+<script src="games/connect4-tiles.js?v=1"></script>
+<script src="games/connect4.js?v=1"></script>
 <script src="games/go.js?v=1"></script>
 <script src="games/hex.js?v=1"></script>
 <script src="games/tafl.js?v=2"></script>
 <script src="games/xiangqi.js?v=1"></script>
+<script src="games/checkers.js?v=1"></script>
 <script src="games/mancala.js?v=1"></script>
 <script src="games/dots.js?v=1"></script>
 <script src="rules/reversi.js?v=8"></script>
@@ -1027,6 +1047,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=117"></script>
+<script src="app.js?v=122"></script>
 </body>
 </html>
