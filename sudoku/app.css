@@ -828,3 +828,12 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
   .megrid button svg{width:34px;height:34px;flex:none}
   .megrid button b{min-width:0;overflow-wrap:anywhere}
 }
+
+/* header trimmed to ルール / 設定 / ホーム: language + sound are in 設定; gacha / book / ranking / achievements on the home screen */
+.set.langset select{height:38px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:14px;font-weight:700;padding:0 8px;max-width:55%}
+.pact .btn{position:relative}
+.achdot{position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:var(--err);box-shadow:0 0 0 2px var(--surface,#fff);display:none}
+body.achnew .achdot{display:block}
+.megrid button{position:relative}.megrid .achdot{top:8px;right:8px}
+#home .htabs > button{position:relative}#home .htabs .achdot{top:4px;right:calc(50% - 20px)}
+@media (max-width:760px){.pact .pcx{display:none}}

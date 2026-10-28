@@ -187,7 +187,7 @@ function announce(fresh) {
     if (a.newBg) setTimeout(() => C.toast(`<span class="rwt">${bgThumb(a.newBg)}</span><span><b>${esc(t('sp.rw.bg'))}</b><small>${esc(t('sbg.' + a.newBg))}</small></span>`, 'gold'), 900);
     if (a.newIc != null) setTimeout(() => C.toast(`<span class="rwt ic">${C.iconSvg(a.newIc)}</span><span><b>${esc(t('sp.rw.ic'))}</b><small>${esc(C.iconName(a.newIc))}</small></span>`, 'gold'), 900);
   }, k * 500));
-  if (fresh.length) { C.SFX.ach(); const b = $('#btnAch'); if (b) b.classList.add('has'); }
+  if (fresh.length) { C.SFX.ach(); C.achNew(true); }
 }
 const bgThumb = k => C.BG.svg(k, 160, 100, '', 'day');
 
@@ -1214,7 +1214,7 @@ async function share(o) {
 /* ================= achievements modal ================= */
 let achTab = 'daily';
 function openAch() {
-  const b = $('#btnAch'); if (b && C.MODE === 'speed') b.classList.remove('has');
+  if (C.MODE === 'speed') C.achNew(false);
   syncAch(false);
   const tabs = [['daily', 'ach.t.daily'], ['col', 'sp.col'], ['chal', 'ach.t.chal'], ['rw', 'sp.rw'], ['stats', 'ach.t.stats']];
   $('#achTabs').innerHTML = tabs.map(([k, l]) => `<button class="tab ${k === achTab ? 'on' : ''}" data-k="${k}">${esc(t(l))}</button>`).join('');
