@@ -4923,18 +4923,18 @@ let kickRingLife = 0;
 // ---------------------------------
 const field = new THREE.Group();
 scene.add(field);
-const BOT_EXT = IS_MOBILE ? 700 : 0; // スマホは画面の下端まで板とグリッドを伸ばす（自機の下で途切れないように）
-const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H + TOP_EXT + BOT_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.8, depthWrite: false }));
+const BOT_EXT = IS_MOBILE ? 700 : 0, TOP_EXT_M = IS_MOBILE ? 700 : 0, SIDE_EXT = IS_MOBILE ? 500 : 0; // スマホは板を画面全面に（上下左右に伸ばす）
+const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W + SIDE_EXT * 2, H + TOP_EXT + TOP_EXT_M + BOT_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.8, depthWrite: false }));
 fieldGlass.rotation.x = -Math.PI / 2;
 fieldGlass.position.y = -8;
-fieldGlass.position.z = (-TOP_EXT + BOT_EXT) / 2;
+fieldGlass.position.z = (-TOP_EXT - TOP_EXT_M + BOT_EXT) / 2;
 fieldGlass.renderOrder = 1;
 field.add(fieldGlass);
 
 const FIELD_GRID_STEP = 40;
-const GH = H + TOP_EXT + BOT_EXT, GZ0 = -H / 2 - TOP_EXT; // グリッドも伸ばした枠まで
+const GH = H + TOP_EXT + TOP_EXT_M + BOT_EXT, GZ0 = -H / 2 - TOP_EXT - TOP_EXT_M; // グリッドも伸ばした枠まで
 const fieldGridCountH = Math.ceil(GH / FIELD_GRID_STEP);
-const fieldGridHalfV = Math.floor((W / 2) / FIELD_GRID_STEP);
+const fieldGridHalfV = Math.floor((W / 2 + SIDE_EXT) / FIELD_GRID_STEP);
 const fieldGridPos = new Float32Array((fieldGridCountH + fieldGridHalfV * 2 + 1) * 6);
 const fieldGridGeo = new THREE.BufferGeometry();
 fieldGridGeo.setAttribute('position', new THREE.BufferAttribute(fieldGridPos, 3).setUsage(THREE.DynamicDrawUsage));
@@ -4948,8 +4948,8 @@ function updateFieldGrid() {
     let k = 0;
     for (let i = 0; i < fieldGridCountH; i++) {
         const z = GZ0 + ((i * FIELD_GRID_STEP + fieldScroll) % (fieldGridCountH * FIELD_GRID_STEP)) * (GH / (fieldGridCountH * FIELD_GRID_STEP));
-        fieldGridPos[k] = -W / 2; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
-        fieldGridPos[k + 3] = W / 2; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
+        fieldGridPos[k] = -W / 2 - SIDE_EXT; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
+        fieldGridPos[k + 3] = W / 2 + SIDE_EXT; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
     }
     if (!fieldGridStaticDone) {
         for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
