@@ -76,7 +76,10 @@
     const foot = document.createElement('div'); foot.className = 'atlas-foot';
     const btns = document.createElement('div'); btns.className = 'atlas-btns';
     rows.forEach(r => { [...r.children].forEach(b => btns.appendChild(b)); r.remove(); });
-    foot.append(pic, btns); (card || wrap).appendChild(foot);
+    // the compact action bar of the cards (shared/cardbar.js: icon tools · primary button, × in the corner) stands beside the guide
+    const cb = card && card.querySelector('.cb-bar');
+    foot.append(pic); if (cb) foot.append(cb); if (!cb || btns.children.length) foot.append(btns); (card || wrap).appendChild(foot);
+    if (cb) foot.classList.add('cb-foot');
     // a little pop whenever the guide says something new
     new MutationObserver(() => { if (!bub.animate) return; if (!pic.getAnimations || !pic.getAnimations().some(x => x.id === 'talk')) { const an = pic.animate([{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px) scale(1.05,.95)' }, { transform: 'translateY(0) scale(1)' }], { duration: 320 }); an.id = 'talk'; } })
       .observe(bub, { childList: true, characterData: true, subtree: true });

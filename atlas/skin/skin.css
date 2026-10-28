@@ -125,9 +125,37 @@ html.atlas-skin .atlas-guide .op-dr button{flex:1 1 auto;white-space:nowrap}
 .atlas-btns button{background:#fff;border:2px solid #ead9b6;color:var(--text);font-weight:900;box-shadow:0 3px 0 #ead9b6;cursor:pointer}
 .atlas-btns button:disabled{opacity:.45}
 .atlas-btns button.go{background:#ff5d5d;color:#fff;border-color:transparent;box-shadow:0 3px 0 #d93c3c}
+/* ---- lesson / puzzle cards: the compact action bar (shared/cardbar.js) beside the guide, in the portal look —
+   white tiles with the cream rim (icons centred), one coral primary (次の問題 once solved / 次へ), × in the card's corner ---- */
+html.atlas-skin .atlas-foot.cb-foot{gap:10px;margin-top:2px}
+html.atlas-skin .cb-foot .pic{width:54px;height:54px}
+html.atlas-skin .cb-foot .cb-bar{flex:1 1 auto;min-width:0;margin:0;gap:6px}
+html.atlas-skin .cb-bar .cb-tools{gap:5px}
+html.atlas-skin .cb-bar .cb-ic:not(.cb-x){width:38px!important;height:38px!important}
+html.atlas-skin .cb-bar .cb-t{height:38px!important;padding:0 10px!important}
+html.atlas-skin .cb-bar .cb-ic{background:#fff!important;border:2px solid #ead9b6!important;border-radius:14px!important;color:#4a5068!important;box-shadow:0 3px 0 #ead9b6!important}
+html.atlas-skin .cb-bar .cb-ic:hover:not(:disabled){color:#2b3044!important;border-color:#e0b65a!important}
+html.atlas-skin .cb-bar .cb-ic.cb-go{color:#d93c3c!important;border-color:#ff8a7a!important;background:#fff1ee!important;box-shadow:0 3px 0 #ffb3a8,0 0 0 3px rgba(255,93,93,.18)!important}
+html.atlas-skin .cb-bar .cb-t{background:#fff!important;border:2px solid #ead9b6!important;border-radius:99px!important;color:#2b3044!important;font-weight:900!important;font-size:13px!important;box-shadow:0 3px 0 #ead9b6!important}
+html.atlas-skin .cb-bar .cb-t.go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 3px 0 #d93c3c!important}
+html.atlas-skin .cb-bar button:disabled{opacity:.4!important}
+html.atlas-skin .cb-bar .cb-ic.cb-x{position:absolute;top:10px;inset-inline-end:10px;width:32px!important;height:32px!important;border-radius:50%!important;border:0!important;background:transparent!important;box-shadow:none!important;color:#9aa0b2!important}
+html.atlas-skin .cb-bar .cb-ic.cb-x:hover{background:#f6efdd!important;color:#2b3044!important}
+html.atlas-skin .cb-card > .lh{padding-inline-end:38px}
+html.atlas-skin .cb-foot:has(.cb-tools > :nth-child(5)) .pic{display:none}   /* five tools (‹ prev too): the primary needs the guide's room */
+@media (max-width:520px){html.atlas-skin .cb-foot .pic{width:48px;height:48px}html.atlas-skin .atlas-foot.cb-foot{gap:8px}}
+html.atlas-land .cb-bar :is(.cb-ic,.cb-t):not(.cb-x){height:34px!important}
+html.atlas-land .cb-bar .cb-ic:not(.cb-x){width:34px!important}
 html.atlas-skin .kifu-card .info-line{display:block!important;order:9;margin-top:8px;padding-top:8px;border-top:2px dashed #efe3c8;color:#6a7088;font-size:12px}
 html.atlas-skin .side{overflow:visible}
 html.atlas-skin .side-in{height:100%}
+
+/* reversi / shogi with the portal bar as their PC header (html.hb-atlas): sized like the 2D page under its header bar
+   (--hb-h = the bar, the page starts below it), so the board and the side column never slip under the bar */
+html.atlas-reversi.hb-atlas,html.atlas-shogi.hb-atlas{--vh:calc(100vh - 64px)}
+html.atlas-reversi.hb-atlas,html.atlas-reversi.hb-atlas body,html.atlas-shogi.hb-atlas,html.atlas-shogi.hb-atlas body{--hb-h:64px;--top:0px}
+html.atlas-reversi.hb-atlas body,html.atlas-shogi.hb-atlas body{padding-top:64px}
+html.atlas-reversi.hb-atlas .app,html.atlas-shogi.hb-atlas .app{padding-top:var(--pad)!important}
 
 /* ===== shogi skin ===== */
 html.atlas-shogi .board{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
@@ -219,6 +247,11 @@ html.atlas-skin .modal .pb-tile:not(.done){background:#f8f0e0!important}
 
 /* ===== backgammon skin: the museum-piece 3D board — the DOM frame is the 3D case's outer edge (15.85 × H board units) ===== */
 html.atlas-backgammon .frame{background:transparent!important;box-shadow:none!important;border-radius:0!important}
+/* PC (board across the top, info below — or beside the board while the online dock is open, like the 2D page):
+   the page's own sizing (app.js pcFit) counts a 56px header + 12px gaps, so the app starts right under the portal bar */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html.atlas-backgammon:not(.rot):not(.atlas-land) .app{padding-top:68px!important}
+}
 html.atlas-bg3d #boardSvg{visibility:hidden}
 html.atlas-bg3d .lbl{color:rgba(250,236,200,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.75)!important}
 /* checkers: top-down renders of the metal-rimmed leather checkers (the light is up and to the left, as on the 3D board) */
