@@ -808,8 +808,22 @@ function toast(s) { const e = $('#toast'); e.textContent = s; e.classList.add('o
 function floatTip(s) { const e = $('#gInfo'); if (e) { e.classList.remove('pulse'); void e.offsetWidth; e.classList.add('pulse'); } toast(s); }
 
 /* ============================================================ MODALS ============================================================ */
-function modal(html, cls = '') { afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; if (G) G.paused = true; return $('#modalBody'); }
-function closeModal() { $('#modal').hidden = true; if (G) G.paused = false; const f = afterModal; afterModal = null; if (!$('#home').hidden) renderHome(); if (f) f(); }
+function modal(html, cls = '') {
+  afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; if (G) G.paused = true;
+  centerOnBoard();
+  return $('#modalBody');
+}
+// during play, dialogs sit over the middle of the board (kept inside the window)
+function centerOnBoard() {
+  const box = $('#modal .mbox'); box.style.translate = '';
+  if (!G || $('#play').hidden) return;
+  const b = boardEl().getBoundingClientRect(), r = box.getBoundingClientRect();
+  if (!b.width) return;
+  const dx = (b.left + b.width / 2) - (r.left + r.width / 2), dy = (b.top + b.height / 2) - (r.top + r.height / 2);
+  const cx = Math.max(8 - r.left, Math.min(innerWidth - 8 - r.right, dx)), cy = Math.max(8 - r.top, Math.min(innerHeight - 8 - r.bottom, dy));
+  box.style.translate = `${Math.round(cx)}px ${Math.round(cy)}px`;
+}
+function closeModal() { $('#modal .mbox').style.translate = ''; $('#modal').hidden = true; if (G) G.paused = false; const f = afterModal; afterModal = null; if (!$('#home').hidden) renderHome(); if (f) f(); }
 function ask(msg, btns) {
   const body = modal(`<div class="askb">${A.inmateSVG(DB.icon)}<p>${esc(msg)}</p><div class="mbtns">${btns.map(([l, c], i) => `<button class="btn big ${c || ''}" data-i="${i}">${esc(l)}</button>`).join('')}</div></div>`, 'mask');
   $$('[data-i]', body).forEach(b => { b.onclick = () => { $('#modal').hidden = true; if (G) G.paused = false; const f = btns[+b.dataset.i][2]; f && f(); }; });
