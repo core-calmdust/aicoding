@@ -39,10 +39,11 @@
     if (o.wrap) t.wrapS = t.wrapT = TT.RepeatWrapping;
     return (TX[key] = t);
   }
-  // nero marble: layered violet clouds; veins are contour lines of domain-warped fbm fields, measured in real
-  // distance (value / gradient) so they stay crisp — a few bold veins that swell, pinch and fade, a second family
-  // that branches and crosses, hairline fractures in patches round them, ghost veins deeper in the stone,
-  // white / lilac / gold tints along the veins and faint crystalline glints
+  // nero marble: layered violet clouds with an overall flow (the noise domain is turned and stretched along one
+  // direction); veins are contour lines of a smooth, gently warped field, measured as signed distance (value /
+  // gradient): they widen and taper, keep a crisp edge on one side and feather out on the other, fade in and out
+  // along their length, and split into secondary veins at shallow angles (neighbouring contour levels of the same
+  // field). Broad diffuse bands sit in the ground; white / lilac / gold tints; faint crystalline glints.
   function marbleStone(g, w, h) {
     const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
     const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -51,56 +52,58 @@
     const at = (a, u, v) => { const G = a.G, fx = Math.min(G - 1e-4, Math.max(0, u * G)), fy = Math.min(G - 1e-4, Math.max(0, v * G)), x = fx | 0, y = fy | 0, s = fx - x, t = fy - y, i = y * (G + 1) + x;
       return (a[i] * (1 - s) + a[i + 1] * s) * (1 - t) + (a[i + G + 1] * (1 - s) + a[i + G + 2] * s) * t; };
     const N1 = makeNoise(11), N2 = makeNoise(29), N3 = makeNoise(47), N4 = makeNoise(63), N5 = makeNoise(81), N6 = makeNoise(97);
-    const K = 4, R = Math.max(64, w >> 1);   // the field spans K noise units; the fine grids have half the texture's resolution
-    // two-level domain warp → folded, flowing shapes
-    const qx = grid(48, (u, v) => N1(u * K * .55, v * K * .55, 4)), qy = grid(48, (u, v) => N1(u * K * .55 + 5.2, v * K * .55 + 1.3, 4));
-    const P = (u, v) => [u * K + 2.2 * at(qx, u, v), v * K + 2.2 * at(qy, u, v)];
-    const rx = grid(96, (u, v) => { const [x, y] = P(u, v); return N2(x * .8 + 1.7, y * .8 + 9.2, 4); }), ry = grid(96, (u, v) => { const [x, y] = P(u, v); return N2(x * .8 + 8.3, y * .8 + 2.8, 4); });
-    const Wp = (u, v) => { const [x, y] = P(u, v); return [x + 1.6 * at(rx, u, v), y + 1.6 * at(ry, u, v), x, y]; };
-    const cl = grid(128, (u, v) => { const [x, y] = Wp(u, v); return N3(x * .5, y * .5, 5); });
-    const cl2 = grid(96, (u, v) => N3(u * K * 1.6 + 3, v * K * 1.6 + 7, 4));
-    const thk = grid(64, (u, v) => N5(u * K * .9 + 2, v * K * .9 + 4, 3));
-    const pat = grid(64, (u, v) => N5(u * K * .7 + 7, v * K * .7 + 1, 2));
-    const tin = grid(64, (u, v) => N2(u * K * .8 + 11, v * K * .8 + 4, 3));
-    const fB = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N4(x * .42, y * .42, 5); });
-    const fB2 = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N4(x * .6 + 3.1, y * .6 + 6.4, 4); });
-    const pat2 = grid(64, (u, v) => N3(u * K * .6 + 13, v * K * .6 + 2, 3));
-    const fH = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N6(x * 1.25 + 4, y * 1.25 + 1, 4); });
-    const fH2 = grid(R, (u, v) => { const [, , x, y] = Wp(u, v); return N6(x * 2.3 + 9, y * 2.3 + 3, 3); });
+    const K = 4, R = Math.max(64, w >> 1), CA = Math.cos(-.62), SA = Math.sin(-.62);
+    // flow frame: X runs along the veins (stretched), Y across them; a smooth two-level warp bends them without folding
+    const F0 = (u, v) => { const cu = u * K, cv = v * K; return [(cu * CA + cv * SA) * .42, (-cu * SA + cv * CA) * 1.25]; };
+    const wa = grid(48, (u, v) => { const [x, y] = F0(u, v); return N1(x * .8, y * .5, 3); }), wb = grid(96, (u, v) => { const [x, y] = F0(u, v); return N2(x * 1.6 + 4, y * 1.1 + 2, 3); });
+    const Fw = (u, v) => { const [x, y] = F0(u, v), a = at(wa, u, v), b = at(wb, u, v); return [x + (a - .5) * .8, y + (a - .5) * 2.6 + (b - .5) * .7]; };
+    const cl = grid(128, (u, v) => { const [x, y] = Fw(u, v); return N3(x * .7, y * .45, 5); });
+    const cl2 = grid(96, (u, v) => { const [x, y] = F0(u, v); return N3(x * 2 + 3, y * 1.2 + 7, 4); });
+    // vein phases: a gradient across the flow plus turbulence; every integer level is a vein (classic marble, sin(y + turbulence))
+    const fV = grid(R, (u, v) => { const [x, y] = Fw(u, v); return y * .55 + N4(x * .9, y * .9, 4) * 1.7; });            // main veins
+    const fF = grid(R, (u, v) => { const [x, y] = Fw(u, v); return y * 1.35 + N6(x * 1.6 + 4, y * 1.6 + 1, 3) * 2.4 + .37; });  // finer veins
+    const fBd = grid(128, (u, v) => { const [x, y] = Fw(u, v); return N5(x * .45 + 9, y * .5 + 3, 2); }); // broad bands
+    const slow = (seed, f) => grid(64, (u, v) => { const [x, y] = F0(u, v); return seed(x * f, y * f * .6, 3); });
+    const thk = slow((x, y, o) => N5(x + 2, y + 4, o), 1.4), opa = slow((x, y, o) => N2(x + 7, y + 1, o), 1.1), gate = slow((x, y, o) => N3(x + 13, y + 2, o), 1.3), tin = slow((x, y, o) => N1(x + 11, y + 4, o), .9);
     const G0 = hexRGB('#08070d'), G1 = hexRGB('#17132a'), G2 = hexRGB('#342b5c'), G3 = hexRGB('#4a3f7a');
-    const VW = hexRGB('#f1edf7'), VL = hexRGB('#b6a6e2'), VG = hexRGB('#dcb66c'), VS = hexRGB('#6c5fa0');
+    const VW = hexRGB('#efeaf6'), VL = hexRGB('#b3a3df'), VG = hexRGB('#d9b46c'), VS = hexRGB('#5d5190');
     let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-    const img = g.createImageData(w, h), d = img.data, px = 1024 / w;   // line widths are tuned at 1024 px
+    const img = g.createImageData(w, h), d = img.data, e = 1.5 / R, pxMin = .9 / w;
+    // a vein across signed distance sd: solid core, crisp fall-off on one side, a long feather on the other
+    const vein = (sd, hw) => { const a = Math.abs(sd), core = Math.max(hw * .45, pxMin * .6);
+      if (a <= core) return 1;
+      return sd < 0 ? Math.max(0, 1 - (a - core) / Math.max(pxMin, hw * .55)) : Math.exp(-(a - core) / Math.max(pxMin, hw * 1.7)) * .5; };
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const u = (x + .5) / w, v = (y + .5) / h;
-      // clouds: deep layered violet haze
+      // clouds: deep layered violet haze, drifting with the flow
       const c1 = at(cl, u, v);
       let c = mix(G0, G1, sm(.3, .62, c1));
-      c = mix(c, G2, sm(.5, .78, c1) * .75);
-      c = mix(c, G3, sm(.62, .85, c1 * .7 + at(cl2, u, v) * .3) * .35);
-      // veins are contour lines of the fields, measured in real distance (value / gradient): crisp everywhere, never smeared
-      const e = 1 / w, D = (a, n) => { const gx = at(a, u + e, v) - n, gy = at(a, u, v + e) - n; return Math.abs(n - .5) / Math.max(1e-7, Math.hypot(gx, gy) / e); };
-      const prof = (dd, hw) => { const t = dd / hw; return t <= .5 ? 1 : t >= 1 ? 0 : sm(1, .5, t); }, soft = (dd, hw) => { const t = dd / hw; return t >= 1 ? 0 : (1 - t) * (1 - t); };
-      // bold veins swell and pinch along their length (and fade out in places); their ghosts lie deeper in the stone
-      const b = at(fB, u, v), b2 = at(fB2, u, v), dB = D(fB, b), dB2 = D(fB2, b2);
-      const tk = at(thk, u, v), thick = .0008 + .0068 * Math.pow(tk, 2.4), br = sm(.45, .62, at(pat2, u, v));   // a second family of veins that comes and goes: branches and crossings
-      const bold = Math.max(prof(dB, thick), prof(dB2, thick * .5 + .0004) * br), near = Math.max(soft(dB, .02), soft(dB2, .012) * br);
-      const ghost = soft(dB, .03) * .14 + soft(dB2, .02) * br * .08;
-      // hairline fractures in patches, clustering round the bold veins
-      const patch = sm(.42, .66, at(pat, u, v)), hw = Math.max(.0006, .7 / w);
-      const hair = prof(D(fH, at(fH, u, v)), hw) * (.25 + .75 * patch) + prof(D(fH2, at(fH2, u, v)), hw * .8) * Math.max(patch, near) * .85;
+      c = mix(c, G2, sm(.5, .78, c1) * .7);
+      c = mix(c, G3, sm(.62, .85, c1 * .7 + at(cl2, u, v) * .3) * .3);
+      const grad = a => Math.max(1e-7, Math.hypot(at(a, u + e, v) - at(a, u - e, v), at(a, u, v + e) - at(a, u, v - e)) / (2 * e));   // (central differences over ~1.5 grid cells: smooth, no blocky steps)
+      // broad diffuse bands blended into the ground
+      const nb = at(fBd, u, v), sb = (nb - .5) / grad(fBd);
+      c = mix(c, VS, Math.exp(-Math.pow(sb / .045, 2)) * .2);
+      // main veins: width swells and tapers, opacity drifts along the length; secondary veins split off at shallow angles
+      const pv = at(fV, u, v), gv = grad(fV), n = pv - Math.round(pv) + .5, tk = at(thk, u, v), op = sm(.28, .62, at(opa, u, v)), gt = sm(.45, .66, at(gate, u, v));
+      const hw = .0008 + .013 * sm(.2, .85, tk);
+      let V = vein((n - .5) / gv, hw) * (.4 + .6 * op);
+      V = Math.max(V, vein((n - .5 - .02) / gv, hw * .45) * gt * (.3 + .6 * op));
+      V = Math.max(V, vein((.5 - .035 - n) / gv, hw * .35) * gt * op * .7);
+      const near = Math.exp(-Math.abs(n - .5) / gv / .02);
+      // finer veins: a quieter family that follows the same flow
+      const pf = at(fF, u, v), F = vein((pf - Math.round(pf)) / grad(fF), .0011) * gt * gt * .5 * Math.min(1, w / 1024 + .25);
       // vein colour: white with lilac and gold drifts
-      const tint = at(tin, u, v), gold = sm(.6, .72, tint), lil = sm(.48, .3, tint);
-      let vc = mix(VW, VL, .25 + lil * .6); vc = mix(vc, VG, gold * .85);
-      c = mix(c, VS, Math.min(1, ghost));
-      c = mix(c, mix(VL, vc, .6), Math.min(1, hair) * (.38 + near * .35) * Math.min(1, w / 1024 + .2));   // (half-size textures: the hairlines are wider in texels → fainter)
-      c = mix(c, vc, Math.min(1, bold) * .82);
+      const tint = at(tin, u, v), gold = sm(.58, .7, tint), lil = sm(.5, .3, tint);
+      let vc = mix(VW, VL, .2 + lil * .6); vc = mix(vc, VG, gold * .8);
+      c = mix(c, mix(VL, vc, .5), Math.min(1, F) * .6);
+      c = mix(c, vc, Math.min(1, V) * .92);
       // crystalline speckle: tiny glints, denser along the veins
       const r = rnd();
-      if (r < .0006 + near * .012) c = mix(c, VL, .15 + rnd() * .35);   // (faint lilac glints, mostly along the veins)
+      if (r < .0006 + near * .01) c = mix(c, VL, .12 + rnd() * .3);
       else if (r > .997) c = mix(c, G0, .4);
-      const n = (rnd() - .5) * 3, i = (y * w + x) * 4;
-      d[i] = c[0] + n; d[i + 1] = c[1] + n; d[i + 2] = c[2] + n; d[i + 3] = 255;
+      const k = (rnd() - .5) * 3, i = (y * w + x) * 4;
+      d[i] = c[0] + k; d[i + 1] = c[1] + k; d[i + 2] = c[2] + k; d[i + 3] = 255;
     }
     g.putImageData(img, 0, 0);
   }
