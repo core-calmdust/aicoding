@@ -371,5 +371,6 @@
 "dr.wait": "请再多走几步后再提和",
 "dr.accepted": "AI同意了和棋",
 "dr.declined": "AI拒绝和棋（它还想继续下）",
-"dr.aiResigned": "AI认输了"
+"dr.aiResigned": "AI认输了",
+"ls.seqGood": "好棋！"
 }

@@ -366,5 +366,6 @@
 "dr.wait": "Play a few more moves before offering a draw",
 "dr.accepted": "The AI accepted the draw",
 "dr.declined": "The AI declined the draw (it wants to play on)",
-"dr.aiResigned": "The AI resigned"
+"dr.aiResigned": "The AI resigned",
+"ls.seqGood": "Good move!"
 }

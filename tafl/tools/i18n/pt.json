@@ -371,5 +371,6 @@
 "dr.wait": "Jogue mais alguns lances antes de propor empate",
 "dr.accepted": "A IA aceitou o empate",
 "dr.declined": "A IA recusou o empate (quer continuar)",
-"dr.aiResigned": "A IA desistiu"
+"dr.aiResigned": "A IA desistiu",
+"ls.seqGood": "Bom lance!"
 }

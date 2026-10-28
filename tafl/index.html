@@ -11,10 +11,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c1218">
-<meta name="description" content="ヴァイキングの盤上遊戯ハイネタフル（コペンハーゲン・ルール11×11、ブランドゥブ7×7、タブルット9×9）。王を角へ逃がす守り手と、王を囲む攻め手の非対称な戦い。20段階のAI（15級〜五段）、レーティング戦、オンライン対戦、レッスン・定跡・詰めタフル、今日の一問。">
+<meta name="description" content="ヴァイキングの盤上遊戯ネファタフル（コペンハーゲン・ルール11×11、ブランドゥブ7×7、タブルット9×9）。王を角へ逃がす守り手と、王を囲む攻め手の非対称な戦い。20段階のAI（15級〜五段）、レーティング戦、オンライン対戦、レッスン・定跡・詰めタフル、今日の一問。">
 <title>Hnefatafl</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23142430'/%3E%3Crect x='8' y='8' width='48' height='48' rx='4' fill='%23d9bd8a'/%3E%3Cpath d='M8 8h9v9H8zM47 8h9v9h-9zM8 47h9v9H8zM47 47h9v9h-9zM27.5 27.5h9v9h-9z' fill='%238a5f22'/%3E%3Ccircle cx='32' cy='19' r='5' fill='%23222'/%3E%3Ccircle cx='19' cy='32' r='5' fill='%23222'/%3E%3Ccircle cx='45' cy='32' r='5' fill='%23222'/%3E%3Ccircle cx='32' cy='45' r='5' fill='%23222'/%3E%3Ccircle cx='32' cy='32' r='6.5' fill='%23f4ead2' stroke='%23e2c275' stroke-width='2'/%3E%3C/svg%3E">
-<meta property="og:title" content="ハイネタフル — ヴァイキングの王を逃がせ">
+<meta property="og:title" content="ネファタフル — ヴァイキングの王を逃がせ">
 <meta property="og:description" content="王を角へ逃がすか、王を囲んで捕らえるか。20段階AI、レーティング戦、オンライン対戦、レッスン・定跡・詰めタフル・今日の一問。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/tafl/">
@@ -117,8 +117,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .dest{position:absolute;width:calc(var(--cell) * .3);height:calc(var(--cell) * .3);margin:calc(var(--cell) * -.15) 0 0 calc(var(--cell) * -.15);border-radius:50%;background:rgba(255,236,170,.8);box-shadow:0 0 12px rgba(255,236,170,.9);z-index:3}
 .hov{position:absolute;width:calc(var(--cell) * .68);height:calc(var(--cell) * .68);margin:calc(var(--cell) * -.34) 0 0 calc(var(--cell) * -.34);border-radius:50%;opacity:.3;pointer-events:none;z-index:1}
 .mark{position:absolute;width:calc(var(--cell) * .84);height:calc(var(--cell) * .84);margin:calc(var(--cell) * -.42) 0 0 calc(var(--cell) * -.42);border-radius:50%;border:3px solid;pointer-events:none;z-index:8}
-.mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(226,194,117,.7)}
-.mark.ng{border-color:#ff6b5b}
+.mark.ok{border-color:#3df59a;box-shadow:0 0 0 2px rgba(10,14,28,.85),inset 0 0 0 2px rgba(10,14,28,.85),0 0 14px rgba(61,245,154,.6)}
+.mark.ng{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(10,14,28,.85),inset 0 0 0 2px rgba(10,14,28,.85)}
 .mark.from{border:2px dashed rgba(255,255,255,.45);width:calc(var(--cell) * .5);height:calc(var(--cell) * .5);margin:calc(var(--cell) * -.25) 0 0 calc(var(--cell) * -.25)}
 .board.hide-last .mark.from{display:none}
 .mark.took{border:0;width:calc(var(--cell) * .42);height:calc(var(--cell) * .42);margin:calc(var(--cell) * -.21) 0 0 calc(var(--cell) * -.21)}
@@ -150,8 +150,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .pc.inmill.old{box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.4),0 0 0 1.5px rgba(255,236,170,.45),0 0 10px rgba(255,226,140,.35)}
 @keyframes drawl{to{stroke-dashoffset:0}}
 .fxsvg .arrow{stroke:rgba(226,194,117,.9);fill:none;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(0,0,0,.8))}
-.fxsvg .arrow.ok{stroke:rgba(226,194,117,.95)}
-.fxsvg .arrow.ng{stroke:rgba(255,107,91,.9)}
+.fxsvg .arrow.ok{stroke:#3df59a;filter:none}
+.fxsvg .arrow.ng{stroke:#ff5a48;filter:none}
+.fxsvg .arrow-ol{stroke:rgba(10,14,28,.92);fill:none;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(0,0,0,.55))}
 .fxsvg .arrow.pl{stroke:rgba(255,255,255,.8);stroke-dasharray:.08 .08}
 .coords-x,.coords-y{position:absolute;pointer-events:none;color:rgba(226,194,117,.55);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .17);line-height:1}
 .coords-x{display:none}
@@ -1156,7 +1157,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   </div>
 </div>
 
-<script src="i18n.js?v=1"></script>
+<script src="i18n.js?v=2"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1171,10 +1172,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=2"></script>
-<script src="app.js?v=20261028rbwp1"></script>
+<script src="app.js?v=20261028rbwp1tf"></script>
 <script src="online-ui.js?v=1l9"></script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028tf2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>
