@@ -225,13 +225,18 @@ html[data-back=ornate] .bk{background:#fff url(img/back-ornate.webp) center/91% 
 html[data-back=ornateBlack] .bk{background:#1c1c1c url(img/back-ornate-black.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=gangsta] .bk{background:#3a3a3a url(img/back-gangsta.webp) center/86% 90% no-repeat;box-shadow:inset 0 0 0 calc(var(--cw)*.04) #f4f4f2,0 0 0 1px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=gangsta] .cd .bk::after{display:none}
-html[data-back=mosaic] .bk{background:#fff url(img/back-mosaic.webp) center/88% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=floral] .bk{background:#fff url(img/back-floral.webp) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=azure] .bk{background:#fff url(img/back-azure.webp) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=floralBlack] .bk{background:#1c1c1c url(img/back-floral-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=azureBlack] .bk{background:#1c1c1c url(img/back-azure-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=skull] .bk{background:#faf9f6 url(img/back-skull.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=skullBlack] .bk{background:#333 url(img/back-skull-black.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=floral] .cd .bk::after,html[data-back=azure] .cd .bk::after,html[data-back=floralBlack] .cd .bk::after,html[data-back=azureBlack] .cd .bk::after,html[data-back=skull] .cd .bk::after,html[data-back=skullBlack] .cd .bk::after{display:none}
 html[data-back=red] .cd .bk::after,html[data-back=blue] .cd .bk::after,html[data-back=ornate] .cd .bk::after,html[data-back=ornateBlack] .cd .bk::after,html[data-back=mosaic] .cd .bk::after{display:none}
 /* court art sets: the flat set is a whole card face (its own corner indices) */
 .tile .ct-pv{width:24px;height:36px;object-fit:fill;border:1px solid rgba(0,0,0,.35);background:#fff;padding:2px;border-radius:3px}
 .tile .ct-pv.full{padding:0;object-fit:cover}
 html[data-back=check] .bk{background:conic-gradient(#3a1018 25%,#7a1f2c 0 50%,#3a1018 0 75%,#7a1f2c 0) 0 0/10px 10px;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #e8d4a2,0 0 0 1px rgba(0,0,0,.4)}
-html[data-back=stars] .bk{background:radial-gradient(circle at 70% 26%,#f8e7b0 0 7%,transparent 7.5%),radial-gradient(circle at 74% 22%,#1c1a45 0 6.5%,transparent 7%),radial-gradient(circle,rgba(255,240,200,.9) .8px,transparent 1.2px) 0 0/13px 13px,radial-gradient(circle,rgba(255,240,200,.6) .6px,transparent 1px) 6px 7px/17px 17px,linear-gradient(170deg,#2a2463,#0e0c2a);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #d8c38a,0 0 0 1px rgba(0,0,0,.4)}
 html[data-back=deco] .bk{background:radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(220,187,108,.85) 5px 6px,transparent 6px 9px,rgba(220,187,108,.6) 9px 10px,transparent 10px) 0 0/20px 12px,#111316;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #c9a85c,0 0 0 1px rgba(0,0,0,.5)}
 html[data-back=tartan] .bk{background:repeating-linear-gradient(0deg,rgba(20,60,30,.55) 0 4px,transparent 4px 10px,rgba(255,220,120,.35) 10px 11px,transparent 11px 16px),repeating-linear-gradient(90deg,rgba(20,60,30,.55) 0 4px,transparent 4px 10px,rgba(255,220,120,.35) 10px 11px,transparent 11px 16px),#a5222f;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #f6efe0,0 0 0 1px rgba(0,0,0,.4)}
 
@@ -392,7 +397,7 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 /* design tab: small felt swatches, big card previews */
 .ng-body .tiles.felts{grid-template-columns:repeat(8,1fr)}
 .ng-body .tiles.felts .pv{height:34px}
-.ng-body .tiles.backs{grid-template-columns:repeat(8,1fr)}
+.ng-body .tiles.backs{grid-template-columns:repeat(7,1fr)}
 .ng-body .tiles.backs .pv{height:96px}
 .ng-body .tiles.backs .mini-card{width:58px;height:82px;--cw:58px;border-radius:5px}
 .ng-body .tiles.backs .mini-card .bk{border-radius:5px}

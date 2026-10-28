@@ -26,7 +26,7 @@
 
 ## 画像のクレジット
 - 絵札（J・Q・K）とカード裏面「クラシック赤・青」："Classic Playing Cards"（Alborz Heydaryan、Figma Community）CC BY 4.0。`img/CREDITS.txt` 参照。ゲーム内の設定ダイアログにも表記。
-- 絵札「アンティーク」「フラット」と裏面「アラベスク」「アラベスク黒」「モザイク」、カード・裏面「ギャングスタ」：Designed by Freepik（magnific.com の4素材、出典明記で使用可）。`img/CREDITS.txt` 参照。
+- 絵札「アンティーク」「フラット」と裏面「アラベスク」「アラベスク黒」「フローラル」「アズール」（各黒）「ラッキースカル」（白・黒）、カード・裏面「ギャングスタ」：Designed by Freepik（magnific.com の7素材、出典明記で使用可）。`img/CREDITS.txt` 参照。
 - カードのデザインは `set.court`（classic / antique / flat / gangsta）。classic・antique は絵札だけ画像（`img/`・`img/antique/`）、flat・gangsta は52枚すべてを画像で表示（`img/<deck>/<A23456789TJQK><shdc>.webp`、`Table.FULL_DECKS`、とても小さいカードでは描画のカードに切り替え）。裏面の既定はアラベスク。
 - 新しいゲームのダイアログは「ゲーム」「ルール」「デザイン」のタブ。今日の配りはメイン画面の「今日のソリティア」から。
 
