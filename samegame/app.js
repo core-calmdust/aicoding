@@ -182,7 +182,7 @@ const ACH = [
   ['col30', () => [colOwned(), 50], 300], ['col100', () => [colOwned(), 200], 3000], ['colall', () => [colOwned(), COL_TOTAL], 10000],
 ];
 const achDone = () => ACH.filter(([id, f]) => { const [v, g] = f(DB.stats); return v >= g && !DB.ach[id]; }).length;
-function updateBadges() { const n = achDone(); $('#btnAch .dot').style.display = n ? 'block' : 'none'; }
+function updateBadges() { const n = achDone(); $('#btnAch .dot').style.display = n ? 'block' : 'none'; const d = $('#bnav .dot'); if (d) d.hidden = !n; }
 
 /* ---------------- online rankings ---------------- */
 const ON = window.SameOnline;
@@ -229,14 +229,37 @@ document.addEventListener('click', e => {
   const main = tile.querySelector('[data-dl], [data-da], #aBlitz, #aRise, [data-am]'); if (main && !main.disabled) main.click();
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-rule]'); if (b) { e.stopPropagation(); modeTip(b.dataset.rule); } });
+/* phones (portrait): one section at a time + a fixed tab bar at the bottom. Free play moves into アクション,
+   the profile + calendar/login bonus into マイページ, and the gacha gets its own tab. PC keeps the original layout. */
+const PHONE = matchMedia('(max-width:760px)');
+const BNAV = [['daily', 'ht.daily', 'daily'], ['stage', 'ht.stage', 'stage'], ['action', 'ht.action', 'action'], ['gacha', 'ga.title', 'gacha'], ['me', 'ht.me', 'user']];
+function layoutHome() {
+  const ph = PHONE.matches, me = $('.hpanel.me'), act = $('.hpanel[data-p="action"]'), dly = $('.hpanel.daily');
+  if (ph) {
+    if ($('#profCard').parentNode !== me) { me.append($('#profCard'), $('#dCal')); act.prepend($('#dFree')); }
+  } else if ($('#profCard').parentNode === me) {
+    $('#home').prepend($('#profCard')); $('#dBox').append($('#dCal')); dly.append($('#dFree'));
+  }
+  document.body.classList.toggle('phnav', ph);
+}
 function renderHome() {
+  layoutHome();
+  if (!PHONE.matches && (homeTab === 'gacha' || homeTab === 'me')) homeTab = 'daily';
   profCard(); updateCoins(); updateBadges();
   $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === homeTab));
+  $$('#bnav button').forEach(b => { const on = b.dataset.p === homeTab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   $$('.hpanel').forEach(p => p.hidden = p.dataset.p !== homeTab);
   if (homeTab === 'daily') renderDaily();
   if (homeTab === 'stage') themeOpen ? renderTheme(themeOpen) : renderThemes();
-  if (homeTab === 'action') renderAction();
+  if (homeTab === 'action') { renderAction(); renderFree(); }
+  if (homeTab === 'me') renderCal();
+  if (homeTab === 'gacha') openGacha($('#gachaPanel'));
 }
+function setHomeTab(p) {
+  const same = p === homeTab; homeTab = p; if (p !== 'stage') themeOpen = null;
+  renderHome(); if (!same) { const pn = $(`.hpanel[data-p="${p}"]`); if (pn) pn.scrollTop = 0; }
+}
+PHONE.addEventListener('change', () => { if (!$('#home').hidden) renderHome(); else layoutHome(); });
 function miniBoard(b, cls = 'mini') {
   const w = b.length, h = Math.max(...b.map(c => c.length));
   let s = `<svg viewBox="0 0 ${w * 10} ${h * 10}" class="${cls}">`;
@@ -399,18 +422,21 @@ function cellSize() {
   const wrap = $('#boardWrap'), r = wrap.getBoundingClientRect();
   const wide = matchMedia('(min-width:1000px)').matches;
   const vh = window.visualViewport ? visualViewport.height : innerHeight;
-  const availW = wide ? r.width - 8 : r.width - 16, availH = Math.max(160, wide ? innerHeight - 16 - 24 : vh - (r.top + scrollY) - ($('#gfoot').offsetHeight || 56) - 26);
+  // measure from the play area, not the board's own box: the board column shrinks to the board (PC) and the
+  // whole play screen is centred vertically (phones), so the wrap's size/position depends on the board itself
+  const pr = $('#play').getBoundingClientRect(), above = r.top - $('#play .gbar').getBoundingClientRect().top + 8;
+  const availW = wide ? pr.width - 330 - 28 - 8 : r.width - 16, availH = Math.max(160, wide ? innerHeight - 16 - 24 : vh - above - ($('#gfoot').offsetHeight || 56) - 26);
   return Math.max(18, Math.min(wide ? 120 : 64, Math.floor(Math.min(availW / G.cols, availH / G.rows))));
 }
 const pos = (x, y) => `translate(${x * G.cs}px, ${(G.rows - 1 - y) * G.cs}px)`;
 function buildBoard() {
   const b = boardEl(); b.innerHTML = ''; G.cs = cellSize();
-  b.style.width = G.cols * G.cs + 'px'; b.style.height = G.rows * G.cs + 'px'; b.style.setProperty('--cs', G.cs + 'px');
+  b.style.width = G.cols * G.cs + 'px'; b.style.height = G.rows * G.cs + 'px'; b.style.setProperty('--cs', G.cs + 'px'); $('#play').style.setProperty('--bh', G.rows * G.cs + 8 + 'px');
   b.classList.toggle('noemb', !DB.set.emb);
   G.els = G.board.map((c, x) => c.map((v, y) => { const d = mkEl(v); d._v = v; d.style.transform = pos(x, y); b.appendChild(d); return d; }));
   if (G.mode === 'rise') { const dl = document.createElement('div'); dl.className = 'danger'; dl.style.top = G.cs * 2 + 'px'; b.appendChild(dl); }
 }
-function relayout() { if (!G || $('#play').hidden) return; const cs = cellSize(); if (cs === G.cs) return; G.cs = cs; const b = boardEl(); b.style.width = G.cols * cs + 'px'; b.style.height = G.rows * cs + 'px'; b.style.setProperty('--cs', cs + 'px'); b.classList.add('nomove'); G.els.forEach((c, x) => c.forEach((d, y) => d.style.transform = pos(x, y))); const dl = $('.danger', b); if (dl) dl.style.top = cs * 2 + 'px'; requestAnimationFrame(() => b.classList.remove('nomove')); }
+function relayout() { if (!G || $('#play').hidden) return; const cs = cellSize(); if (cs === G.cs) return; G.cs = cs; const b = boardEl(); b.style.width = G.cols * cs + 'px'; b.style.height = G.rows * cs + 'px'; b.style.setProperty('--cs', cs + 'px'); $('#play').style.setProperty('--bh', G.rows * cs + 8 + 'px'); b.classList.add('nomove'); G.els.forEach((c, x) => c.forEach((d, y) => d.style.transform = pos(x, y))); const dl = $('.danger', b); if (dl) dl.style.top = cs * 2 + 'px'; requestAnimationFrame(() => b.classList.remove('nomove')); }
 addEventListener('resize', relayout);
 function hud() {
   if (!G) return;
@@ -1033,8 +1059,11 @@ function rollOne(guarantee) {
   if (guarantee && rar < 2) rar = 2;
   const pool = GPOOL[rar]; return pool[(Math.random() * pool.length) | 0];
 }
-function openGacha() {
-  const body = modal(`<h2 class="mh">${esc(t('ga.title'))}</h2><div id="gaBody"></div>`, 'mgacha mwide');
+function openGacha(into) {
+  // phones: the gacha is a tab of its own (from the profile links too)
+  if (!into && PHONE.matches && !$('#home').hidden) { if (!$('#modal').hidden) $('#modal').hidden = true; return setHomeTab('gacha'); }
+  const html = `<h2 class="mh">${esc(t('ga.title'))}</h2><div id="gaBody"></div>`;
+  if (into) into.innerHTML = html; else modal(html, 'mgacha mwide');
   const gb = $('#gaBody');
   const cnt = k => GPOOL.flat().filter(x => x.t === k).length + (k === 'b' ? 1 : 0);
   const own = { c: Object.keys(DB.own).length, s: Object.keys(DB.stamps || {}).length, b: DB.bgOwn.length };
@@ -1341,14 +1370,17 @@ function syncSection() {
 function bind() {
   document.body.insertAdjacentHTML('afterbegin', A.SPRITE);
   $('#htabs').innerHTML = [['daily', 'ht.daily', A.ICON.daily], ['stage', 'ht.stage', A.ICON.stage], ['action', 'ht.action', A.ICON.action]].map(([p, k, ic]) => `<button data-p="${p}">${ic}<span data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
-  $$('#htabs button').forEach(b => b.onclick = () => { homeTab = b.dataset.p; if (homeTab !== 'stage') themeOpen = null; renderHome(); });
+  $$('#htabs button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
+  $('#bnav').setAttribute('role', 'tablist');
+  $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${A.ICON[ic]}${p === 'me' ? '<i class="dot" hidden></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
+  $$('#bnav button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
   // header icons
   const IC = { btnAch: 'trophy', btnGacha: 'gacha', btnBook: 'book', btnRank: 'rank', btnSet: 'gear', btnHelp: 'help', btnSound: 'sound', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
   $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = () => openBook(); $('#btnRank').onclick = () => openRank('p');
   $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => tutorial('basic');
   $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; try { localStorage.setItem('atlas-sfx', DB.set.snd ? '1' : '0'); } catch (e) {} save(); sndIcon(); if (DB.set.snd) SND.coin(); };
-  $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else { homeTab = 'daily'; themeOpen = null; renderHome(); } };
+  $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else setHomeTab('daily'); };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   $('#gBack').onclick = quitGame; $('#gUndo').onclick = undo; $('#gHint').onclick = hint; $('#gRestart').onclick = restart;
   const bw = $('#boardWrap');
