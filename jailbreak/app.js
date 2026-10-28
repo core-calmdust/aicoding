@@ -534,7 +534,12 @@ function render(anim = true, ev) {
   $$('.crack', boardEl()).forEach(e => e.classList.toggle('can', dg.includes(+e.dataset.c)));
 }
 // phone: the height of what sits under the board (rule line, tilt pad) is mirrored above it so the board is truly centred
-function balance() { const pl = $('#play'); if (!pl || pl.hidden) return; const h = ['#gInfo', '#tiltPad'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0); pl.style.setProperty('--ih', h + 'px'); }
+function balance() {
+  const pl = $('#play'); if (!pl || pl.hidden) return;
+  const hOf = q => { const e = $(q); return e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0; };
+  const top = innerWidth < 760 ? hOf('#gInfo') : 0, bot = hOf('#tiltPad') + (innerWidth < 760 ? 0 : hOf('#gInfo'));
+  pl.style.setProperty('--ihT', Math.max(0, bot - top) + 'px'); pl.style.setProperty('--ihB', Math.max(0, top - bot) + 'px');
+}
 function relayout() { if (!G || $('#play').hidden) return; balance(); const cs = cellSize(); if (cs !== G.cs) buildBoard(); }
 addEventListener('resize', () => { clearTimeout(relayout.t); relayout.t = setTimeout(relayout, 120); });
 function boardIn() { const b = boardEl(); b.classList.remove('bin'); void b.offsetWidth; b.classList.add('bin'); }
