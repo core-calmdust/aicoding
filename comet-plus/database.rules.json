@@ -1,0 +1,65 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "cometplus": {
+      "d": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/)",
+          "$key": {
+            ".read": "auth != null",
+            ".indexOn": [
+              "s"
+            ],
+            ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && newData.exists()",
+              ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+              "$other": {
+                ".validate": false
+              }
+            }
+          }
+        }
+      },
+      "w": {
+        "$week": {
+          ".validate": "$week.matches(/^20[0-9][0-9]-W(0[1-9]|[1-4][0-9]|5[0-3])$/)",
+          "$key": {
+            ".read": "auth != null",
+            ".indexOn": [
+              "s"
+            ],
+            ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && newData.exists()",
+              ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+              "$other": {
+                ".validate": false
+              }
+            }
+          }
+        }
+      },
+      "a": {
+        "$key": {
+          ".read": "auth != null",
+          ".indexOn": [
+            "s"
+          ],
+          ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && newData.exists()",
+            ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "$other": {
+        ".validate": false
+      }
+    }
+  }
+}
