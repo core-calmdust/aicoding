@@ -241,8 +241,8 @@ function courseCard(c) {
 const floorLabel = j => `${Math.floor(j / PER) + 1}F-${(j % PER) + 1}`;
 function renderCourses() {
   const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
-  el.innerHTML = `<div class="sechead"><h2>${esc(t('co.mix.h'))}</h2><p>${esc(t('co.mix.d'))}</p></div><div class="tgrid">${mix.map(courseCard).join('')}</div>
-    <div class="sechead"><h2>${esc(t('co.cls.h'))}</h2><p>${esc(t('co.cls.d'))}</p></div><div class="tgrid">${cls.map(courseCard).join('')}</div>`;
+  el.innerHTML = `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>
+    <section class="card panel secbox sb-cls"><div class="ptag">${esc(t('co.cls.h'))}</div><p class="secd">${esc(t('co.cls.d'))}</p><div class="tgrid">${cls.map(courseCard).join('')}</div></section>`;
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
   // while nothing on the course is cleared yet, its story comes first (then the stage starts)
   $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; if (!courseRecs(id).some(v => v)) { courseOpenId = id; showStory(Math.floor(j / PER), () => { courseOpenId = null; startStage(id, j); }); } else startStage(id, j); }; });
@@ -293,11 +293,11 @@ function showStory(f, then) {
 function renderModes() {
   const el = $('#modePanel');
   const sc = (m, best, extra) => `<div class="card acard" style="--mc:${MODE_COL[m]}"><div class="ptag">${esc(t('mo.' + m))}</div><button class="qbtn qc" data-rule="${m}">?</button><span class="aic">${A.MI[m]}</span><p>${esc(t('mo.' + m + '.s'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best ? fmt(best) : '—'}</b>${extra || ''}</div><button class="btn big org" data-sm="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
-  let html = `<div class="sechead"><h2>${esc(t('mo.h'))}</h2><p>${esc(t('mo.d'))}</p></div><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div>
-    <div class="sechead"><h2>${esc(t('mo.h2'))}</h2><p>${esc(t('mo.d2'))}</p></div><div class="mgrid">`;
+  let html = `<section class="card panel secbox sb-run"><div class="ptag">${esc(t('mo.h'))}</div><p class="secd">${esc(t('mo.d'))}</p><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div>
+    </section><section class="card panel secbox sb-rule"><div class="ptag">${esc(t('mo.h2'))}</div><p class="secd">${esc(t('mo.d2'))}</p><div class="mgrid">`;
   SMODES.forEach(m => { const recs = modeRecs(m), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), N = recs.length;
     html += `<div class="mcard" style="--mc:${MODE_COL[m]}"><button class="cmain" data-mode="${m}" data-j="${contIdx(m)}"><span class="mic">${A.MI[m]}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('mo.' + m + '.s'))}</small><span class="bar"><i style="width:${done / N * 100}%"></i></span><span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><span class="mnext">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} ${contIdx(m) + 1}</span></span></span></button>${done === N ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`; });
-  el.innerHTML = html + '</div>';
+  el.innerHTML = html + '</div></section>';
   $$('[data-sm]', el).forEach(b => { b.onclick = () => b.dataset.sm === 'sl' ? startSearch(false) : startChain(); });
   // a rule-mode card starts its next stage straight away (the stage list opens from the result screen's "list")
   $$('[data-mode]', el).forEach(b => { b.onclick = () => startStage(b.dataset.mode, +b.dataset.j); });

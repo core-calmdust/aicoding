@@ -74,6 +74,17 @@ button:disabled { cursor: default; opacity: .45; }
 .medal.big { width: 30px; height: 30px; border-width: 3px; }
 .qbtn { width: 32px; min-width: 32px; padding: 0; font-weight: 900; }
 .sechead { margin: 18px 4px 10px; }
+/* course / mode lists: each category in its own box with a coloured tag title (like the daily box) */
+#coursePanel, #modePanel { display: flex; flex-direction: column; gap: 30px; padding-top: 12px; }
+.secbox { display: flex; flex-direction: column; gap: 12px; padding-top: 18px; }
+.secbox > .ptag { align-self: flex-start; margin-bottom: 0; font-size: 20px; }
+.secbox .secd { margin: 0; font-size: 14px; font-weight: 600; color: #4e4a43; }
+.secbox .acards { padding-top: 6px; }
+.sb-mix > .ptag { background: linear-gradient(100deg, #f26b1d, #e8394d); }
+.sb-cls > .ptag { background: linear-gradient(100deg, #2f74b5, #5a4fcf); }
+.sb-run > .ptag { background: var(--yel); color: var(--ink); background-image: repeating-linear-gradient(-45deg, transparent 0 9px, rgba(0,0,0,.12) 9px 14px); }
+.sb-rule > .ptag { background: linear-gradient(100deg, #1fa463, #2a8fb0); }
+.sb-mix { border-top: 8px solid #f26b1d; } .sb-cls { border-top: 8px solid #2f74b5; } .sb-run { border-top: 8px solid var(--yel); } .sb-rule { border-top: 8px solid #1fa463; }
 .sechead h2 { font: 400 22px/1.2 var(--disp); margin: 0; }
 .sechead p { margin: 4px 0 0; font-size: 14px; color: #4e4a43; }
 
