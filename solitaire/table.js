@@ -20,7 +20,8 @@ function faceHtml(c) {
   const corner = `<div class="ix"><b>${rk}</b>${suitSvg(s)}</div><div class="ix ix2"><b>${rk}</b>${suitSvg(s)}</div>`;
   let mid;
   if (r > 10) {
-    mid = `<div class="fc"><img src="img/${'JQK'[r - 11]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async"></div>`;
+    const dir = Table.COURT_DIR[document.documentElement.dataset.court] || '';   // court art set: classic (img/), antique, flat
+    mid = `<div class="fc"><img src="img/${dir}${'JQK'[r - 11]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async"></div>`;
   } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
   return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div></div><div class="bk"></div>`;
@@ -236,7 +237,7 @@ class Table {
     this.layout(true);   // back to where it was
   }
 }
-Table.faceHtml = faceHtml; Table.RK = RK; Table.all = new Set();
+Table.faceHtml = faceHtml; Table.RK = RK; Table.COURT_DIR = { classic: '', antique: 'antique/', flat: 'flat/' }; Table.all = new Set();
 Table.applyFace = el => { const f = document.documentElement.dataset.face || 'classic'; (el ? [el] : [...Table.all].map(x => x.el)).forEach(e => { e.classList.toggle('face-large', f === 'large'); e.classList.toggle('face-four', f === 'four'); }); };
 window.Table = Table;
 })();
