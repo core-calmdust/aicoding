@@ -229,6 +229,8 @@ section{padding:56px 0}
 .tag.classic svg{width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .gx-chip.tg{border-color:rgba(232,140,90,.45);color:#ffc3a0}
 .gx-chip.tg[aria-pressed=true]{background:#ffb48a;border-color:#ffb48a;color:#2a1206}
+.gx-chip.tgc{border-color:rgba(240,214,150,.5);color:#f6e2b0}
+.gx-chip.tgc[aria-pressed=true]{background:#f0d696;border-color:#f0d696;color:#2a1f06}
 
 
 /* World Board Game Atlas — icon gallery + detail panel (#games) */
@@ -778,7 +780,7 @@ const GAMES = [
   { id:'connect4',   href:'./connect4/',      thumb:'images/connect4_v2.webp', icon:'images/icons/connect4.svg',    cat:'line',      kind:'BOARD GAME', key:'c4v2', isNew:true,  tags:['classic','ai','online','rated','daily','lessons','puzzles','mobile'], facts:{ ai:8, lessons:23, puzzles:306, players:'1–2' } },
   { id:'reversi-v3', href:'./reversi_v3.html',thumb:'images/reversi_v3.webp',  icon:'images/icons/reversi-v3.svg?v=3',  cat:'old',     kind:'BOARD GAME', key:'rv3',  tags:['mobile'], facts:{ players:'1–2' } },
 ];
-const GX_CATS = ['all', 'classic', 'chess', 'line', 'race', 'puzzle', 'old'];   // same categories as the portal (atlas) + previous versions
+const GX_CATS = ['all', 'classic', 'card', 'chess', 'line', 'race', 'puzzle', 'old'];   // 'classic' and 'card' are tag chips (filter on g.tags)   // same categories as the portal (atlas) + previous versions
 /* NEORETRO ARCADES (same gallery UI, no category chips) */
 const ARCADE = [
   { id:'comet-plus', href:'./comet-plus/',      thumb:'images/comet-plus.webp',  icon:'images/icons/comet-plus.svg', kind:'3D SHOOTER',    key:'cometplus', name:'COMET OUTBURST+',         beta:true, tags:['shooter','gamepad','mobile'], facts:{ modes:4, stages:'∞', players:'1' } },
@@ -812,7 +814,8 @@ function makeGallery(C) {
   const plain = html => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
   const norm = s => plain(s).normalize('NFKC').toLowerCase();
   // 'classic' (定番) is a tag chip: it filters on g.tags, the other chips on g.cat
-  const inCat = (g, c) => c === 'all' || (c === 'classic' ? g.tags.includes('classic') : g.cat === c);
+  const TAG_CHIPS = ['classic', 'card'];
+  const inCat = (g, c) => c === 'all' || (TAG_CHIPS.includes(c) ? g.tags.includes(c) : g.cat === c);
 
   /* ---- build once: chips + icon tiles ---- */
   const chips = (C.cats || []).map(c => {
@@ -838,8 +841,8 @@ function makeGallery(C) {
   function texts() {
     chips.forEach(b => {
       const c = b.dataset.cat, n = C.games.filter(g => inCat(g, c)).length;
-      b.classList.toggle('tg', c === 'classic');
-      b.innerHTML = `<span>${tr(c === 'all' ? 'gx.all' : c === 'classic' ? 'tag.classic' : 'sub.' + c)}</span><b>${n}</b>`;
+      b.classList.toggle('tg', c === 'classic'); b.classList.toggle('tgc', c === 'card');
+      b.innerHTML = `<span>${tr(c === 'all' ? 'gx.all' : TAG_CHIPS.includes(c) ? 'tag.' + c : 'sub.' + c)}</span><b>${n}</b>`;
       b.hidden = n === 0;
     });
     tiles.forEach((a, i) => { a.querySelector('.nm').innerHTML = title(C.games[i]); a.title = plain(title(C.games[i])); });
