@@ -393,7 +393,7 @@ function startStage(src, j) {
   const isC = !!courseOf(src), f = Math.floor(j / PER), m = rec.r || (RULE_OF[src] || 'basic');
   const title = isC ? `${t('cs.' + src)} ${floorLabel(j)}` : `${t('mo.' + src)} · ${j + 1}`;
   (DB.last = DB.last || {})[src] = j; save();
-  newGame(rec, { kind: 'stage', m, src, j, title, isC });
+  newGame(rec, { kind: 'stage', m, src, j, title, isC, tag: [isC ? t('cs.' + src) : t('mo.' + src), isC ? floorLabel(j) : String(j + 1), isC ? COURSE_COL[src] : MODE_COL[src]] });
   startPlay();
   // first visit of a floor: its story · a rule's first appearance: its explanation · the very first stage: a tip
   const tip = () => { if (m !== 'basic') maybeRuleTip(m); else if (j === 0 && !DB.tut.first) { DB.tut.first = 1; save(); setTimeout(() => floatTip(t('tip.first')), 500); } };
@@ -404,7 +404,7 @@ function startDaily(k) {
   const d = today(), rec = dRec(d, k), rr = dlOf(d)[k];
   if (rr.md > 0) return;
   const p = rr.p;
-  newGame(rec, { kind: 'daily', m: rec.r || 'basic', dk: k, date: d, title: `${t('d.title')} · ${t('dl.' + k)}` });
+  newGame(rec, { kind: 'daily', m: rec.r || 'basic', dk: k, date: d, title: `${t('d.title')} · ${t('dl.' + k)}`, tag: [t('dl.' + k), '', k === 'e' ? '#2f74b5' : k === 'm' ? '#d4561d' : '#6b3fa0'] });
   if (p) { Object.assign(G, { S: p.S.slice(), hist: p.hist.map(x => x.slice()), moves: p.moves, undoN: p.undoN, hinted: !!p.hinted, t0: Date.now() - p.el }); buildBoard(); hud(); }
   else { rr.p = { S: G.S.slice(), hist: [], moves: 0, undoN: 0, hinted: false, el: 0 }; save(); }
   startPlay(); if (rec.r && rec.r !== 'basic') maybeRuleTip(rec.r);
@@ -416,7 +416,7 @@ function startSearch(daily) {
   if (daily) { const r = dlOf(d).sl; if (r.a >= DSL_TRIES) return; r.a++; save(); }
   const rnd = E.rng(daily ? E.hashStr('jb-sl-' + d) : (Math.random() * 2 ** 31) | 0);
   const run = { rnd, k: 0, score: 0, n: 0, perf: 0, tEnd: 0, daily, date: d };
-  newGame(slPick(rnd, 0), { kind: 'sl', m: 'basic', run, title: daily ? t('d.sl') : t('mo.sl') });
+  newGame(slPick(rnd, 0), { kind: 'sl', m: 'basic', run, title: daily ? t('d.sl') : t('mo.sl'), tag: [daily ? t('d.sl') : t('mo.sl'), '', MODE_COL.sl] });
   startPlay(); G.busy = true;
   maybeRuleTip('sl', false, () => { if (G && G.run === run) countdown(() => { run.tEnd = performance.now() + SL_TIME * 1000; G.t0 = Date.now(); loop(); }); });
 }
@@ -425,12 +425,12 @@ function chainBudget(k, o) { return o + Math.max(1, 4 - Math.floor(k / 6)); }
 function startChain() {
   const rnd = E.rng((Math.random() * 2 ** 31) | 0), run = { rnd, k: 0, score: 0, n: 0, lives: 3, combo: 0 };
   const rec = slPick(rnd, 0);
-  newGame(rec, { kind: 'chain', m: 'basic', run, budget: chainBudget(0, rec.o), title: t('mo.chain') });
+  newGame(rec, { kind: 'chain', m: 'basic', run, budget: chainBudget(0, rec.o), title: t('mo.chain'), tag: [t('mo.chain'), '', MODE_COL.chain] });
   startPlay(); maybeRuleTip('chain');
 }
 function nextRunPuzzle() {
   const run = G.run; run.k++;
-  const rec = slPick(run.rnd, run.k), o = { kind: G.kind, m: 'basic', run, title: G.title };
+  const rec = slPick(run.rnd, run.k), o = { kind: G.kind, m: 'basic', run, title: G.title, tag: G.tag };
   if (G.kind === 'chain') o.budget = chainBudget(run.k, rec.o);
   const t0 = G.t0; newGame(rec, o); G.t0 = t0;
   boardIn();
@@ -560,7 +560,9 @@ function hud() {
   keepDaily();
   if (!G) return;
   const o = G.rec.o, mv = G.moves;
-  $('#gTitle').textContent = G.title || '';
+  // title: a tag in the course / mode colour + the stage (the phone's top band takes the same colour)
+  const tg = G.tag; $('#gTitle').innerHTML = tg ? `<span class="ctag">${esc(tg[0])}</span>${tg[1] ? `<span class="cfl">${esc(tg[1])}</span>` : ''}` : esc(G.title || '');
+  $('#play').style.setProperty('--band', (tg && tg[2]) || '#2b313c');
   $('#gTitleSub').innerHTML = (G.m && G.m !== 'basic' ? ruleChip(G.m) : '') + (o >= SUPER && G.kind === 'stage' ? `<span class="supc">${esc(t('u.super'))}</span>` : '');
   const st = G.kind === 'stage' || G.kind === 'daily' ? starsFor(Math.max(mv, o), o) : 0;
   // moves / best in one box
