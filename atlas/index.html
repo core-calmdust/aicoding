@@ -232,7 +232,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
 /* in a game (and the rules tour) only 'quit' is shown, where the × sits */
-.bv.playing .x,.bv.playing .bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4}
+.bv.playing .x,.bv.playing .bvtod{display:none!important}
+/* time-of-day picker (own UI), left of the × */
+.bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4}
 .bvtodb{height:40px;display:flex;align-items:center;gap:6px;padding:0 12px 0 11px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);color:var(--ink);font:800 13px var(--round,inherit);cursor:pointer}
 .bvtodb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none}
 .bvtodb .cv{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;transition:transform .2s}
@@ -1037,6 +1039,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=118"></script>
+<script src="app.js?v=119"></script>
 </body>
 </html>
