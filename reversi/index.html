@@ -1304,6 +1304,13 @@ html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh);align-self:st
 .board.rb-hov .hint, .board.rb-hov .mark{opacity:.12}
 html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 </style>
+<style>
+/* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
+   not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  :root, body{--board:calc(max(220px, min(100vw - 20px, 900px)) / 1.105)!important}
+}
+</style>
 </head>
 <body>
 <div class="app">

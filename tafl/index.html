@@ -873,6 +873,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 } }
 </style>
 <link rel="stylesheet" href="online.css?v=1l9">
+<style>
+/* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
+   not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  :root, body{--cell:min((100vw - 20px) / (var(--S) + .5), calc(800px / var(--S)))!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
