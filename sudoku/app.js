@@ -372,8 +372,9 @@ let modalPop = false;
 function closeTop() { closeModals(); }
 addEventListener('popstate', () => {
   if (modalPop) { modalPop = false; return; }
-  if ($('.modal.on')) { $$('.modal.on').forEach(m => m.classList.remove('on')); }
+  if ($('.modal.on')) { $$('.modal.on').forEach(m => m.classList.remove('on')); modalPopT = performance.now(); }
 });
+let modalPopT = 0;
 $$('.modal').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) { if (m.dataset.lock && e.target === m) return; closeTop(); } });
 });
@@ -1930,7 +1931,21 @@ $('#tHint').onclick = onHint;
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (cOf(G.ti, G.pi) + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
-$$('#htabs > button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); $('#home').scrollTop = 0; });
+$$('#htabs > button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); $('#home').scrollTop = 0; tabNav(); });
+/* back swipe / browser back on a home tab other than デイリー: back to デイリー first (one spare history entry while on another tab;
+   pushed right on the tap so the browser doesn't skip it). Games, lists and dialogs already step back through the hash / modal history. */
+const curTab = () => (MODE === 'speed' ? DB.homeTabS : DB.homeTab) || 'daily';
+let tabPop = false;
+function tabNav() {
+  const spare = !!(history.state && history.state.tab), away = screen === 'home' && curTab() !== 'daily';
+  if (away && !spare) { try { history.pushState({ tab: 1 }, ''); } catch (e) {} }
+  else if (!away && spare) { tabPop = true; history.back(); }
+}
+addEventListener('popstate', () => {
+  if (tabPop) { tabPop = false; return; }
+  if (modalPop || $('.modal.on') || screen !== 'home' || performance.now() - modalPopT < 100) return;   // that back closed a dialog
+  if (curTab() !== 'daily' && !(history.state && history.state.tab)) { setHomeTab('daily'); scrollTo({ top: 0 }); $('#home').scrollTop = 0; }
+});
 $$('#mePanel [data-me]').forEach(b => b.onclick = () => {
   SFX.tap();
   const sp = MODE === 'speed' && SPD;
