@@ -517,6 +517,7 @@ function setGM(m) {
 }
 function showGmTip() {
   const tip = $('#gmTip'), box = $('#gsel'); if (!tip || !box || box.hidden) return;
+  const td = today(); try { if (localStorage.getItem('sudoku-gmtip') === td) return; localStorage.setItem('sudoku-gmtip', td); } catch (e) {}   // once a day is enough
   tip.textContent = t('gm.tip.' + gmode());
   tip.classList.remove('on'); void tip.offsetWidth; tip.classList.add('on');
   clearTimeout(tip._t); tip._t = setTimeout(hideGmTip, 2800);
