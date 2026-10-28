@@ -1466,6 +1466,7 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 .mp-lv button.on{background:var(--gold2);color:#1b1405;border-color:var(--gold2);font-weight:700}
 .mp-lv button:not(.on):hover{border-color:var(--gold2);color:var(--gold2)}
 .mp-lv{margin:8px 0 0}
+.status .kncancel{margin-left:10px;padding:4px 14px;font-size:13px;pointer-events:auto}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -1635,6 +1636,15 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       eras: ['golden', 'forest', 'mine', 'pasture', 'kiln', 'trade', 'knight', 'voyage', 'market', 'war', 'harvest', 'peace'],
       specAdd: {}, specDel: [],
     },
+    // 劫火の胎動（2026-10-28）：中央は火山。時代の変わり目に、火山暦の方向とその反対の2方向へ溶岩が2マス流れる（土地は溶岩原に戻り、開拓し直すと黒土：生産+1）。
+    // 供物の枠（時計回り：小麦1・羊毛1／反時計回り：レンガ1・鉱石1）は各時代1回ずつ。使われた枠の向きへ1つずれる（両方なら打ち消し）。枠を使うと炎の印、3つ以上で最多＝火の守り手+2点
+    volcano: {
+      id: 'volcano', name: '劫火の胎動', goal: 12,
+      volc: { from: 1, first: 2, step: 2, len: 2, keeperN: 3, keeperVP: 2, tilt: { cw: { wheat: 1, sheep: 1 }, ccw: { brick: 1, ore: 1 } } },
+      eraSeq: [], eraFirst: [],
+      eras: ['golden', 'forest', 'mine', 'pasture', 'kiln', 'trade', 'knight', 'voyage', 'market', 'war', 'harvest', 'peace'],
+      specAdd: {}, specDel: [],
+    },
     gemroad: {
       id: 'gemroad', name: '宝玉の導き',
       veins: 4, veinMax: 3, deliverN: 3, deliverCap: 3, toll: 1, rumorVeins: 2,
@@ -1659,7 +1669,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (S.wide) { for (let r = -2; r <= 2; r++) { const [a, b] = WIDE_ROWS[r]; for (let q = a; q <= b; q++) coords.push([q, r]); } }
     else for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) if (Math.abs(q + r) <= 2) coords.push([q, r]);
     if (S.wide) return buildWide(S, coords);
-    if (S.scen) { buildStd(S, coords); return S.scen.veins ? applyGemroad(S) : S.scen.barb ? null : applyScen(S); }
+    if (S.scen) { buildStd(S, coords); return S.scen.veins ? applyGemroad(S) : (S.scen.barb || S.scen.volc) ? null : applyScen(S); }
     return buildStd(S, coords);
   }
   // 宝玉の導き：外周の荒地のいくつかに鉱脈を隠す／向かい合う2つの港を「本国の港」にする（交換には使えない）
@@ -1840,7 +1850,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     S.marketMode = opts.marketMode !== undefined ? opts.marketMode : 'scarce';   // v1.7：在庫が少ない資源ほど「もらう」のが高い
     S.knights = opts.knights != null ? opts.knights : true;
     S.armyMin = opts.armyMin || 4; S.armyPts = opts.armyPts != null ? opts.armyPts : 2;   // 最大騎士力：必要回数・点数                      // 1の札は騎士を兼ねる
-    S.marketPeriod = opts.marketPeriod || 3; S.box = {};
+    S.marketPeriod = opts.marketPeriod || 3; S.box = {}; S.boxPeriod = opts.boxPeriod || 0;
     S.rates = {}; RES.forEach(r => { S.rates[r] = opts.marketStart || 4; });            // 1手番に出せる交換の提案            // 組み合わせは何枚でも（既定）
     S.chipMarket = opts.chipMarket != null ? opts.chipMarket : 3;   // 数字チップの市場（公開3枚）
     S.starterSet = opts.starterSet || null;               // 準備の開拓の順（same＝地点を選んだ順／reverse）
@@ -1866,6 +1876,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     S.stock = stk ? {} : null; if (S.stock) RES.forEach(r => { S.stock[r] = ((opts.stockBy && opts.stockBy[r]) || stk) - S.players.reduce((a, P) => a + P.res[r], 0); });
     S.box = {};
     S.robber = S.hexes.findIndex(h => h.res === 'desert');
+    if (S.scen && S.scen.volc) S.volc = { dir: Math.floor(rand(S) * 6), cw: -1, ccw: -1, keeper: -1 };   // 劫火：火山暦の最初の方向
     S.first = Math.floor(rand(S) * S.n);
     // 座席：手番順に角の拠点を時計回りに割り当てる
     // 4人：隣り合う角の組を「1番手と4番手」「2番手と3番手」にする（後手が前の人と競るように）
@@ -1932,7 +1943,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function spend(S, p, r, k) { if (k <= 0) return; S.players[p].res[r] -= k; S.box[r] = (S.box[r] || 0) + k; (S.spentBy = S.spentBy || {})[r] = (S.spentBy[r] || 0) + k; }
   function pay(S, P, c) { const k = costOf(P, c); for (const r in k) spend(S, P.id, r, k[r]); if (c === 'city') P.mason = false; if (c === 'settle') P.settlers = false; }
   // 拠点は0点（都市にすれば2点）
-  function vp(S, p) { const P = S.players[p]; return P.settles + 2 * P.cities + (S.lrHolder === p ? 2 : 0) + (S.armyHolder === p ? S.armyPts : 0) + (P.raidPts || 0) + (S.wallVP ? S.wallVP * S.verts.filter(V => V.owner === p && V.wall).length : 0) + (P.crowned ? S.goal : 0) + (P.vpCards || 0) + (P.tribVP || 0) + devVP(S, p) + (P.medals || 0); }
+  function vp(S, p) { const P = S.players[p]; return P.settles + 2 * P.cities + (S.lrHolder === p ? 2 : 0) + (S.armyHolder === p ? S.armyPts : 0) + (P.raidPts || 0) + (S.wallVP ? S.wallVP * S.verts.filter(V => V.owner === p && V.wall).length : 0) + (P.crowned ? S.goal : 0) + (P.vpCards || 0) + (P.tribVP || 0) + devVP(S, p) + (P.medals || 0) + (S.volc && S.volc.keeper === p ? S.scen.volc.keeperVP : 0); }
   function log(S, m) { m.seq = S.logSeq = (S.logSeq || 0) + 1; S.log.push(m); if (S.log.length > 200) S.log.shift(); }
 
   function canSettleAt(S, v, p, setup) {
@@ -2085,7 +2096,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       if (H.res === 'gem' && S.scen && S.scen.veins) { const add = eraFx(S, 'gemrumor') ? 2 : 1; const g0 = H.gems || 0; H.gems = Math.min(S.scen.veinMax, g0 + add); if (H.gems > g0) { log(S, { k: 'veinGrow', h: hi, n: H.gems }); S.gemsMade = (S.gemsMade || 0) + H.gems - g0; } return; }   // 宝玉の導き：宝玉は土地に溜まる
       H.verts.forEach(v => {
         const V = S.verts[v]; if (V.owner < 0) return;
-        let k = (V.city ? 2 : (V.camp ? S.campYield : 1)) * yieldMul(S, n);
+        let k = (V.city ? 2 : (V.camp ? S.campYield : 1)) * yieldMul(S, n) + (H.black ? 1 : 0);   // 劫火：黒土は生産+1
         if (S.eraCard && ERA_BONUS[S.eraCard] === H.res) k += 1;
         if (H.res === 'gem') { k = (V.city ? 2 : 1) * (S.gemMul || 1); want[V.owner].gem = (want[V.owner].gem || 0) + k; return; }   // 宝玉は建物の分だけ（ボーナスなし）
         if (H.devBy === V.owner) k += (S.devBonus || 0) + ((S.devBonus || S.harvestDev) && S.eraCard === 'harvest' ? 1 : 0);   // v2.2：自分で開拓した土地は生産+1（豊穣の時代はさらに+1）
@@ -2196,6 +2207,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (c === 'peace') { const d = S.hexes.findIndex(H => H.res === 'desert'); S.robber = d; }   // 砂漠がなければ盤から外す   // 平和の時代：盗賊は砂漠に帰る（土地の生産を止めない）
     log(S, { k: 'era', i, card: S.eraCard });
     if (S.scen && S.scen.barb) barbEra(S, i);
+    if (S.scen && S.scen.volc) volcEra(S, i);
     // シナリオの時代（始まったときに1回だけ起きる）
     if (c === 'livestock') { S.supply.sheep = (S.supply.sheep || 0) + 3; S.players.forEach(P => gain(S, P.id, 'sheep', 1)); }
     if (c === 'seed') { S.supply.wheat = (S.supply.wheat || 0) + 3; S.players.forEach(P => gain(S, P.id, 'wheat', 1)); }
@@ -2360,6 +2372,43 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   }
   function barbWalls(S) { return S.barb ? S.barb.range.filter(v => S.verts[v].owner >= 0 && S.verts[v].wall).length : 0; }
   function barbDef(S) { return S.barb ? S.barb.def.reduce((a, b) => a + b, 0) + barbWalls(S) : 0; }
+  // ---- 劫火の胎動 ----
+  const VDIR = [[1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1]];   // 時計回り（北東・東・南東・南西・西・北西）
+  function volcCenter(S) { return S.hexes.findIndex(H => H.q === 0 && H.r === 0); }
+  function volcPath(S, d) { const out = []; const L = S.scen.volc.len; for (const dd of [d, (d + 3) % 6]) for (let k = 1; k <= L; k++) { const i = S.hexes.findIndex(H => H.q === VDIR[dd][0] * k && H.r === VDIR[dd][1] * k); if (i >= 0) out.push(i); } return out; }
+  function volcTarget(S) { const V = S.volc; if (!V) return -1; return (V.dir + (V.cw >= 0 ? 1 : 0) - (V.ccw >= 0 ? 1 : 0) + 6) % 6; }
+  function canTilt(S, way) { const V = S.volc; if (!V || !canBuild(S) || S.eraIdx < S.scen.volc.from || V[way] >= 0) return false; const other = way === 'cw' ? 'ccw' : 'cw'; if (V[other] === S.cur) return false; return hasAll(S.players[S.cur], S.scen.volc.tilt[way]); }
+  function tilt(S, way) {
+    if (!canTilt(S, way)) return false; const P = S.players[S.cur], c = S.scen.volc.tilt[way];
+    for (const r in c) spend(S, S.cur, r, c[r]);
+    S.volc[way] = S.cur; if (S.scen.volc.emberOnErupt) { } else P.embers = (P.embers || 0) + 1; S.tilts = (S.tilts || 0) + 1;
+    log(S, { k: 'tilt', p: S.cur, way, to: volcTarget(S) });
+    const K = S.scen.volc; if (S.volc.keeper !== S.cur && P.embers >= K.keeperN && (S.volc.keeper < 0 || P.embers > S.players[S.volc.keeper].embers)) { const from = S.volc.keeper; S.volc.keeper = S.cur; log(S, { k: 'keeper', p: S.cur, n: P.embers, from }); }
+    checkWin(S); return true;
+  }
+  function volcErupt(S) {
+    const d = volcTarget(S), path = volcPath(S, d), hit = [];
+    { const net = (S.volc.cw >= 0 ? 1 : 0) - (S.volc.ccw >= 0 ? 1 : 0); S._vs = S._vs || { shift: 0, cancel: 0, none: 0 }; S._vs[net ? 'shift' : (S.volc.cw >= 0 ? 'cancel' : 'none')]++;
+      S._vl = S._vl || S.players.map(() => 0); S.players.forEach(P => { if (path.some(h => S.hexes[h].num && S.hexes[h].verts.some(v => S.verts[v].owner === P.id))) S._vl[P.id]++; }); }
+    path.forEach(h => { const H = S.hexes[h];
+      if (H.num) { S.chips[H.num] = (S.chips[H.num] || 0) + 1; }
+      if (RES.includes(H.res)) S.supply[H.res] = (S.supply[H.res] || 0) + 1;
+      const had = !!H.num || RES.includes(H.res);
+      H.num = 0; H.res = 'waste'; H.devBy = undefined; H.starterDev = false; H.black = false; H.lava = true; H.lavaEra = S.eraIdx;
+      if (S.scen.volc.cityHit !== false) H.verts.forEach(v => { const V = S.verts[v]; if (V.owner >= 0 && V.city && !V.wall && !hit.some(x => x.v === v)) { V.city = false; const P = S.players[V.owner]; P.cities--; P.settles++; hit.push({ p: V.owner, v }); } });
+      if (had) S.burned = (S.burned || 0) + 1; });
+    if (S.chipMarket && typeof refillMarket === 'function') refillMarket(S);
+    log(S, { k: 'erupt', d, path, hit }); S.erupts = (S.erupts || 0) + 1; S.cityLost = (S.cityLost || 0) + hit.length;
+    if (S.devVP && S.devVP.title) { const c0 = S.devHolder >= 0 ? devCount(S, S.devHolder) : 0; if (S.devHolder >= 0 && c0 < S.devVP.n) S.devHolder = -1; }
+    if (S.scen.volc.emberOnErupt) { const w = S.volc.cw >= 0 && S.volc.ccw < 0 ? S.volc.cw : S.volc.ccw >= 0 && S.volc.cw < 0 ? S.volc.ccw : -1;   // 案：印は噴火の向きを実際に変えた人だけ
+      if (w >= 0) { const P = S.players[w]; P.embers = (P.embers || 0) + 1; const K = S.scen.volc; if (S.volc.keeper !== w && P.embers >= K.keeperN && (S.volc.keeper < 0 || P.embers > S.players[S.volc.keeper].embers)) { const from = S.volc.keeper; S.volc.keeper = w; log(S, { k: 'keeper', p: w, n: P.embers, from }); } } }
+    S.volc.dir = (d + S.scen.volc.step) % 6; S.volc.cw = -1; S.volc.ccw = -1;
+    updateLR(S); checkWin(S);
+  }
+  function volcEra(S, i) {
+    if (!S.volc) S.volc = { dir: Math.floor(rand(S) * 6), cw: -1, ccw: -1, keeper: -1 };
+    if (i >= S.scen.volc.first) volcErupt(S);
+  }
   function barbResolve(S) {
     const G = S.barb; if (!G) return; const total = barbDef(S);
     if (total >= G.str) {
@@ -2598,7 +2647,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   // 荒地：資源（残りのタイル）＋数字チップを選ぶ。土地代＋数字代
   // 中央：資源は決まっている。数字チップだけ選ぶ。土地代だけ
   function developable(S, p) {
-    return S.hexes.map((_, i) => i).filter(i => { const H = S.hexes[i]; return H.res !== 'desert' && !H.num && (S.draft || H.res === 'waste') && H.verts.some(v => S.verts[v].owner === p); });
+    return S.hexes.map((_, i) => i).filter(i => { const H = S.hexes[i]; return H.res !== 'desert' && !H.num && (S.draft || H.res === 'waste') && !(H.lava && S.scen && S.scen.volc && S.scen.volc.cool !== 0 && S.eraIdx <= H.lavaEra) && H.verts.some(v => S.verts[v].owner === p); });
   }
   function devCost(S, h) { return S.hexes[h].res === 'waste' && S.draft ? S.wasteCost : (S.devCenter || DEVELOP); }
   function chipOk(S, h, n) {
@@ -2630,6 +2679,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (H.vein && starter) { H.vein = false; const ws = S.hexes.map((X, i) => i).filter(i => S.hexes[i].ring === 2 && S.hexes[i].res === 'waste' && !S.hexes[i].vein && S.hexes[i] !== H); if (ws.length) S.hexes[ws[Math.floor(rand(S) * ws.length)]].vein = true; }   // 準備の開拓では鉱脈は出ない（別の荒地に移す）
     if (H.vein) { H.vein = false; H.res = 'gem'; H.gems = 0; S.veinFound = (S.veinFound || 0) + 1; }   // 宝玉の鉱脈を掘り当てた
     else if (H.res === 'waste') H.res = r;
+    if (H.lava) { H.lava = false; H.black = true; }   // 溶岩原を開拓し直すと黒土
     H.devBy = S.cur; if (starter || S.phase === 'setup-develop') H.starterDev = true;   // 開拓した人
     if (S.draft) { H.num = n; if (starter && S.starterBag) { S.chips[n]--; if (S.chipMarket && S.market.filter(x => x === n).length > S.chips[n]) { S.market.splice(S.market.indexOf(n), 1); refillMarket(S); } } if (!starter) { S.chips[n]--; if (S.chipMarket) { S.market.splice(S.market.indexOf(n), 1); refillMarket(S); } } }
   }
@@ -2672,10 +2722,14 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function consume(S, cost) { if (!S.marketMode) return; for (const r in cost) S.box[r] = (S.box[r] || 0) + cost[r]; }
   function updateMarket(S) {
     S.mkTurns = (S.mkTurns || 0) + 1;
+    if (S.boxPeriod) {   // 案：消費ボックスを在庫に戻す周期（相場の更新とは別）
+      S.bxTurns = (S.bxTurns || 0) + 1;
+      if (S.bxTurns >= S.boxPeriod) { if (S.stock) RES.forEach(r => { S.stock[r] += S.box[r] || 0; }); S.box = {}; S.bxTurns = 0; }
+    }
     if (S.mkTurns < S.marketPeriod) return;
-    if (S.stock) RES.forEach(r => { S.stock[r] += S.box[r] || 0; });   // 消費ボックスの資源がストックに戻る
+    if (S.stock && !S.boxPeriod) RES.forEach(r => { S.stock[r] += S.box[r] || 0; });   // 消費ボックスの資源がストックに戻る
     doImports(S);
-    if (!S.marketMode) { S.box = {}; S.mkTurns = 0; return; }
+    if (!S.marketMode) { if (!S.boxPeriod) S.box = {}; S.mkTurns = 0; return; }
     // scarce：在庫が少ない資源ほど「もらう」のが高い（在庫が少ない順に 5,5,4,3,2）。在庫がなければ消費の多い順
     const plenty = S.marketMode === 'plenty';   // 案：在庫が多い（プレイヤーが持っていない）資源ほど、もらうのが高い
     const scarce = S.marketMode === 'scarce' || plenty;
@@ -2685,7 +2739,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const ladder = S.marketMode === 'glut' || scarce ? MARKET_LADDER.slice().reverse() : MARKET_LADDER;
     S.rates = {}; order.forEach((r, i) => { S.rates[r] = ladder[i]; });
     log(S, { k: 'market', rates: Object.assign({}, S.rates), box: Object.assign({}, S.box) });
-    S.box = {}; S.mkTurns = 0;
+    if (!S.boxPeriod) S.box = {}; S.mkTurns = 0;
   }
   // 交換のレート（give を何枚出すと get が1枚もらえるか）。scarce の相場は「もらう資源」で決まり、それ以外は「出す資源」で決まる
   function portKinds(S, p, built) {
@@ -2750,7 +2804,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   }
 
   function setNumW(w) { NUMW = w; }
-  const API = { longestPath, defSet, isKn, hasKn, knSet, barbRange, barbDef, barbWalls, canDefendKnight, defendKnight, canMerc, hireMerc, devCount, devVP, mineTargets, mineAmt, mine, deliverRoute, canDeliver, deliver, costOf, stockOk, canDeposit, deposit, gemSellN, SCENARIOS, starterRes, canSellGem, sellGem, canTribute, tribute, SZ, seizeTargets, canSeize, seize, seizeGain, portKinds, SPEC_MIX, canBuySpec, buySpec, hasSpec, useSpec, raidTargetsFor, wallSpots, canWall, buildWall, MIL, canRaid, raid, raidTargets, raidCostOf, ERA_BONUS, roadThrough, ERA_CARDS, eraLeft, armyMinOf, eraOf, robberOn, RES, COST, DIST, PIP, FACES, MAX_COMBO, setNumW, get NUMW() { return NUMW; }, validCombo, pass, LIMIT_PIECES, newGame, rand, total, cardCount, afford, vp, canSettleAt, canRoadAt, canCity,
+  const API = { VDIR, volcPath, volcTarget, canTilt, tilt, longestPath, defSet, isKn, hasKn, knSet, barbRange, barbDef, barbWalls, canDefendKnight, defendKnight, canMerc, hireMerc, devCount, devVP, mineTargets, mineAmt, mine, deliverRoute, canDeliver, deliver, costOf, stockOk, canDeposit, deposit, gemSellN, SCENARIOS, starterRes, canSellGem, sellGem, canTribute, tribute, SZ, seizeTargets, canSeize, seize, seizeGain, portKinds, SPEC_MIX, canBuySpec, buySpec, hasSpec, useSpec, raidTargetsFor, wallSpots, canWall, buildWall, MIL, canRaid, raid, raidTargets, raidCostOf, ERA_BONUS, roadThrough, ERA_CARDS, eraLeft, armyMinOf, eraOf, robberOn, RES, COST, DIST, PIP, FACES, MAX_COMBO, setNumW, get NUMW() { return NUMW; }, validCombo, pass, LIMIT_PIECES, newGame, rand, total, cardCount, afford, vp, canSettleAt, canRoadAt, canCity,
     legalSettles, legalRoads, legalCities, setupSettle, setupRoad, deckComp, unknownComp, topSeven, SEVENS_DEFAULT, BONUS_DEFAULT, HANDMAX_DEFAULT, STOCK_DEFAULT, overHand, DEVELOP, CHIPS, yieldMul, developable, devCost, devTargets, chipOk, legalChips, starterBonusOf, STARTER_SET, STARTER_BONUS, campSpotsFree, setupCamp, setupDevelop, canDevelopNow, develop, canDraw, draw, stopDraw, canChoose, choose, trash,
     discard, robberVictims, moveRobber, canBuild, buildRoad, buildSettle, buildCity, rate, trade, endTurn, trashPrice, memo, noteRefused, canOffer, markOffer, playerTrade, hasAll, canKnight, playKnight, react, KNIGHT, MARKET_LADDER, longest };
   if (typeof module !== 'undefined') module.exports = API; else G.HD = API;
@@ -3215,6 +3269,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (LV(S, p) === 'easy' && Math.random() < (S.easyIdle != null ? S.easyIdle : 0.08)) return { t: 'end' };   // 初心者：建てられても手番を終えてしまうことがある
     if (LV(S, p) !== 'easy') { const st = stopStep(S, p); if (st) return st; }
     if (S.barb) { const bs = barbStep(S, p); if (bs) return bs; }
+    if (S.volc) { const vs = volcStep(S, p); if (vs) return vs; }
     if (wantKnight(S, p)) return { t: 'knight' };
     if (S.specOn) { const sp = specStep(S, p); if (sp) return sp; }
     if (S.scen) { const g = gemStep(S, p); if (g) return g; }
@@ -3329,6 +3384,25 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function chooseReact(S, victim) { return true; }
   // 騎士で攻めるか：1の札が2枚以上（1枚は守りに残す）、最大騎士力を取れる、または狙いが大きいとき
   // 蛮族の角笛：守るかどうか。狙われた範囲に自分の建物があり、自分が一番守っていない側なら守る。範囲外なら勲章が取れそうなときだけ
+  // 劫火の胎動：噴火で失うもの（生産の見込み＋都市の格下げ）
+  function volcLoss(S, d, q) {
+    let s = 0; HD.volcPath(S, d).forEach(h => { const H = S.hexes[h];
+      H.verts.forEach(v => { const V = S.verts[v]; if (V.owner !== q) return; const m = V.city ? 2 : V.camp ? S.campYield : 1;
+        s += (H.num ? PIP(H.num) * m * (H.black ? 1.4 : 1) * 1.2 : RES.includes(H.res) ? 0.6 : 0) + (H.devBy === q ? 0.8 : 0); if (V.city && !V.wall) s += 2.2 / Math.max(1, V.hexes.filter(x => HD.volcPath(S, d).includes(x)).length); }); });
+    return s;
+  }
+  function volcStep(S, p) {
+    const V = S.volc; let best = null, bv = S.volcThr != null ? S.volcThr : 1.6;
+    const t0 = HD.volcTarget(S), P = S.players[p];
+    const near = (P.embers || 0) + 1 >= 3 && (V.keeper < 0 || (P.embers || 0) + 1 > S.players[V.keeper].embers) && V.keeper !== p;
+    ['cw', 'ccw'].forEach(way => { if (!HD.canTilt(S, way)) return;
+      const t1 = (t0 + (way === 'cw' ? 1 : -1) + 6) % 6;
+      let v = volcLoss(S, t0, p) - volcLoss(S, t1, p);
+      S.players.forEach(Q => { if (Q.id !== p) v += 0.25 * (volcLoss(S, t1, Q.id) - volcLoss(S, t0, Q.id)) * (1 + 0.1 * HD.vp(S, Q.id)); });
+      v += S.scen.volc.keeperVP ? (S.scen.volc.emberOnErupt ? (V[way === 'cw' ? 'ccw' : 'cw'] < 0 ? (near ? 1.5 : 0.4) : 0) : (near ? 2.2 : 0.5)) : 0;
+      if (v > bv) { bv = v; best = { t: 'tilt', way }; } });
+    return best;
+  }
   function barbStep(S, p) {
     const G = S.barb, P = S.players[p]; if (!G) return null;
     const need = G.str - HD.barbDef(S);
@@ -3408,6 +3482,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const PHEX = ['#c8483f', '#e9e1cd', '#5585c8', '#d79c3c'];
   const NAMES = ['あなた', 'アルノ', 'ベルタ', 'カスパー'];
   const HUMAN = 0, U = 60;
+  let knightSnap = null;   // 騎士を出す前の状態（盗賊を置く前なら「やめる」で戻せる）
   const LVN = { 1: 'easy', 2: 'normal', 3: 'hard' }, LVJ = { 1: '初級', 2: '中級', 3: '上級' };   // BOTの強さ
   const setBots = lv => { S.botLv = S.players.map((_, i) => i === HUMAN ? null : LVN[lv] || 'normal'); S.uiLv = lv; };
   const saveLv = lv => { opts.lv = lv; try { localStorage.setItem('hexdeck.lv', String(lv)); } catch (_) {} };
@@ -4230,6 +4305,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
 
   // ---------- 描画 ----------
   function render() {
+    if (knightSnap && !(S.phase === 'robber' && S.knightAttack)) knightSnap = null;
     if (S.cur === HUMAN && S.phase === 'turn' && S.acted && HD.overHand(S, HUMAN) > 0) mode = 'trash';
     drawBoard();
     const P = S.players[HUMAN];
@@ -4443,7 +4519,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (S.phase === 'discard') { const x = S.pending.find(x => x.p === HUMAN); return x ? `7が出た：手札が${S.limit}枚以上なので<b>${x.n}枚</b> 捨ててください` : 'BOTが札を捨てています…'; }
     if (S.phase === 'react') return S.react.victim === HUMAN ? '<b>騎士で跳ね返しますか？</b>' : `${NAMES[S.react.victim]} が騎士で跳ね返すか考えています…`;
     if (S.phase === 'robber' && S.bouncing) return S.robberBy === HUMAN ? '跳ね返した！ <b>盗賊</b>を好きな土地へ動かせます（奪いはなし）' : `${NAMES[S.robberBy]} が跳ね返して盗賊を動かしています…`;
-    if (S.phase === 'robber') return S.robberBy === HUMAN ? (S.knightAttack ? '騎士の攻撃：' : 'バースト！ ') + '<b>盗賊</b>を動かす土地を選んで、そこに接する相手から1枚奪えます' : `${NAMES[S.robberBy]} が盗賊を動かしています…`;
+    if (S.phase === 'robber') return S.robberBy === HUMAN ? (S.knightAttack ? '騎士の攻撃：' : 'バースト！ ') + '<b>盗賊</b>を動かす土地を選んで、そこに接する相手から1枚奪えます' + (S.knightAttack && knightSnap ? ' <button class="btn kncancel" id="knCancel">やめる</button>' : '') : `${NAMES[S.robberBy]} が盗賊を動かしています…`;
     if (S.cur !== HUMAN) return `${NAMES[S.cur]} の番…`;
     if (S.phase === 'setup-camp') return `<b>スタート地点</b>を選んでください（あなたは${S.pickOrder.indexOf(HUMAN) + 1}番目に選び、手番は${S.n - S.pickOrder.indexOf(HUMAN)}番手）`;
     if (S.phase === 'setup-develop') return '拠点に接する荒地を1つ選び、<b>無料で開拓</b>してください（資源と数字を選ぶ）';
@@ -4688,7 +4764,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   $('aEnd').onclick = () => { if (busy) return; mode = null; HD.endTurn(S); after(); };
   $('aTrade').onclick = () => tradeDialog();
   $('aDefend').onclick = () => { if (busy) return; mode = null; defendDialog(); };
-  $('aKnight').onclick = () => { if (busy || !HD.canKnight(S)) return; mode = null; HD.playKnight(S); after(); };
+  $('aKnight').onclick = () => { if (busy || !HD.canKnight(S)) return; mode = null; try { knightSnap = structuredClone(S); } catch (_) { knightSnap = null; } HD.playKnight(S); after(); };
+  $('status').addEventListener('click', e => { if (!e.target.closest('#knCancel') || !knightSnap || S.phase !== 'robber') return; S = knightSnap; knightSnap = null; mode = null; render(); });
   $('myHand').addEventListener('click', e => {
     const sb = e.target.closest('button[data-s]'); if (sb && !sb.disabled && !busy) { useSpecUI(+sb.dataset.s); return; }
     const b = e.target.closest('button[data-i]'); if (!b || b.disabled || busy) return; const i = +b.dataset.i; const n = S.players[HUMAN].hand[i];
@@ -4929,7 +5006,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       sec('turn', '手番', flow([[`<span class="tf-deck sm"></span>`, '札を引く', '1枚引く。もう1枚引くか止める（最大2枚）'], [acard(3, 'sm') + acard(5, 'sm'), '数字を出す', '手札の1枚か合計で2〜12。全員が生産'], ['🔨', '建てる・交換', '建設・開拓・交換・特殊カード'], [IC('aEnd'), '終了', '次の人の番へ']]) +
         `<div class="rk-grid">${card(acard(4, 'sm'), 'アクション札', tbl(['札', '枚数', 'メモ'], [row('<b>1〜6</b>', `各${S.face}枚`, '1は騎士も兼ねる'), row('<b>7</b>', `${S.sevens}枚`, '引くとバースト')]))}
         ${card(IC('aTrash'), '処分（山札の圧縮）', ul([`建築の段階に手札の札を捨て札へ戻せる`, `1手番に1枚まで無料、2枚目からは資源${S.trashCost}枚`]))}</div>
-        ${ul(['数字の土地に接する建物の持ち主が資源をもらう（開拓地1・都市2・拠点' + S.campYield + '）。', '数字は出さなくてもよい（札は手札に残る）。8以上は2枚以上の合計が要る。', `手札に上限はないが、手札＋資源が<b>${S.limit}枚以上</b>だとバーストで半分を捨てる。`])}`),
+        ${ul(['数字の土地に接する建物の持ち主が資源をもらう（開拓地1・都市2・拠点' + S.campYield + '）。', '数字は出さなくてもよい（札は手札に残る）。8以上は2枚以上の合計が要る。', `手札に上限はないが、アクション札＋資源が<b>${S.limit}枚以上</b>だとバーストで半分を捨てる。`])}`),
       sec('build', '建設・開拓', tbl(['', '項目', '費用', '効果'], [
           row(TF.road(), '<b>道</b>', cost(C.road), '自分の道・建物から伸ばす。5本以上の一番長い道は最長交易路'),
           row(TF.house(), '<b>開拓地</b>', cost(C.settle), '1点。自分の道の先に、ほかの建物から1辺以上離して建てる'),
@@ -4939,7 +5016,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
           row(IC('aWall'), '<b>城壁</b>', cost(S.wallCost || { sheep: 1, ore: 2 }), '軍で壊されず、盗賊にも奪われない（点なし）'),
           row(IC('aShop'), '<b>特殊カード</b>', cost({ sheep: 1, wheat: 1, ore: 1 }), '市場の3枚から1枚（1手番1枚・次の番から使える）')], 'rtb-build') +
         ul(['数字チップは<b>右上の市場に並ぶ3枚</b>から選ぶ（使うと袋から補充）。隣り合う土地に同じ数字は置けない。', '開拓すると、その資源を1枚もらう。開拓した土地は接する全員が生産する（キューブは開拓した人の目印）。', S.devVP ? `自分で開拓した土地が${S.devVP.n}か所以上で一番多い人は<b>開拓者 +${S.devVP.vp}点</b>（多い人が出たら移る）。` : ''].filter(Boolean))),
-      sec('knight', '7と騎士', `<div class="rk-grid">${card(acard(7, 'sm'), 'バースト（7）', ul(['7を引いたら公開し、この番の生産はなし', `手札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てる`, '<b>引いた本人</b>が盗賊を動かし、接する相手から資源を1枚奪う', '山札の横に、見えていない7の出現確率が出る', '最初の時代は盗賊が出現しない']), 'red')}
+      sec('knight', '7と騎士', `<div class="rk-grid">${card(acard(7, 'sm'), 'バースト（7）', ul(['7を引いたら公開し、この番の生産はなし', `アクション札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てる`, '<b>引いた本人</b>が盗賊を動かし、接する相手から資源を1枚奪う', '山札の横に、見えていない7の出現確率が出る', '最初の時代は盗賊が出現しない']), 'red')}
         ${card(IC('aKnight'), '騎士（1の札）', ul(['数字の1としても、騎士としても使える', '建築中に出すと盗賊を動かし、接する相手から1枚奪う（1手番1回）', '奪われそうなときは騎士を捨てて<b>跳ね返せる</b>：奪いは無効、逆に1枚奪い、盗賊も動かせる', `${S.armyMin}回以上使い、一番多い人は<b>最大騎士力 +${S.armyPts}点</b>`]))}</div>`),
       sec('era', '時代・市場', `<p class="rl-note">${S.eraLen}周ごとに時代が変わる。時代が変わるたびに、市場の特殊カード3枚も入れ替わる。</p>` +
         tbl(['', '時代', '効果'], eras.map(k => row(ERA[k].ic || '', `<b>${ERA[k].n}</b>`, ERA[k].d)).concat([row('🃏', '<b>3番目から</b>', '下の時代カードから1枚引いて、その効果になる')]), 'rtb-era') + `<div class="rgrid">${deckEras.filter(k => ERA[k]).map(k => { const E = eraOf(k); return `<div class="rg"><span class="rg-ic">${E.ic || ''}</span><div><b>${E.n}</b><small>${E.d}</small></div></div>`; }).join('')}</div>` +
@@ -4954,7 +5031,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         <div class="rk-grid">${card('⚓', '港', tbl(['港', '交換', '輸入（建物を建てた人だけ・相場の更新ごと）'], [row('<b>2:1</b>', 'その資源を出すとき2:1', 'その資源を1枚'), row('<b>3:1</b>', 'どの資源でも3:1', '手持ちで一番少ない資源を1枚')]) + ul(['港に建物を建てるか、自分の道が届けば交換に使える（他人の建物がある港は不可）', '港は相場より有利なときだけ使える']))}
         ${card(IC('aTrade'), 'プレイヤーとの交換', ul(['自分の番に、何度でも交換を提案できる', '応じた人の中から相手を選ぶ', 'BOTは同じ相手と1手番1回まで。2:1より偏った交換や、一度断った条件より不利な提案には応じない']))}</div>`),
       sec('end', '得点・終わり方', tbl(['', '得点', '点', '条件'], [row(TF.house(), '<b>開拓地</b>', '1', '—'), row(TF.city(), '<b>都市</b>', '2', '開拓地を格上げ'), row('<span class="tf-badge sm">最長交易路</span>', '', '2', '5本以上つながった一番長い道'), row('<span class="tf-badge sm">最大騎士力</span>', '', String(S.armyPts), `騎士を${S.armyMin}回以上・一番多い`)].concat(S.devVP ? [row('<span class="tf-badge sm">開拓者</span>', '', String(S.devVP.vp), `開拓${S.devVP.n}か所以上・一番多い`)] : []).concat(S.milCards ? [row(acard(HD.MIL, 'sm'), '<b>軍の得点札</b>', `${S.raidVP} or ${S.raidVPCity}`, `開拓地を壊すと${S.raidVP}点・都市を壊すと${S.raidVPCity}点`)] : []), 'rtb-pts') +
-        ul([`誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人（${NAMES[(S.first + S.n - 1) % S.n]}）の番まで続けて終了。一番点の高い人の勝ち（同点なら先に届いた人）。`, `届いたあとに軍で壊されたり、収奪で最長交易路を失ったりして、周回の終わりに<b>${S.goal}点以上の人がいなければ</b>ゲームは続く。`])),
+        ul([`誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人の番まで続けて終了。一番点の高い人の勝ち（同点なら先に届いた人）。`, `届いたあとに軍で壊されたり、収奪で最長交易路を失ったりして、周回の終わりに<b>${S.goal}点以上の人がいなければ</b>ゲームは続く。`])),
     ].join('\n');
     const d = dlg(`<div class="rl-head"><h2>ルール</h2><div class="rl-tabs" role="tablist"><button data-s="start" class="on">はじまり</button><button data-s="turn">手番</button><button data-s="build">建設・開拓</button><button data-s="knight">7と騎士</button><button data-s="era">時代・市場</button><button data-s="atk">収奪・軍・城壁</button><button data-s="trade">相場・交換</button><button data-s="end">得点・終わり方</button>${S.scen ? '<button data-s="scen">シナリオ</button>' : ''}<button data-s="credit">クレジット</button></div></div><div class="rl-body">
       ${html}
@@ -5177,7 +5254,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const expert = [
       { h: 'カタンとの違い', f: mapThumb('random'), t: '資源を集めて道・開拓地・都市を建て、点を競う流れはカタンと同じです。<br>ここでは<b>違うところだけ</b>を紹介します。' },
       { h: 'サイコロ → アクション札', f: TF.row(...[1, 2, 3, 4, 5, 6].map(n => acard(n, 'md')), acard(7, 'md')), t: 'サイコロの代わりに共通の山札（1〜6が各5枚、7が2枚）。自分の番に1〜2枚引き、<b>手札を組み合わせた合計</b>で数字を出します。<br>出す数字を自分で選べるのが最大の違い。手札は持ち越せ、不要な札は処分できます。' },
-      { h: '7＝バースト', f: TF.row(acard(7, 'md')), t: `7を引くと自分の番の生産はなし。手札＋資源が<b>${L}枚以上</b>の人はカードの半分を捨て、引いた本人が盗賊を動かします。<br>見えていない7のカードの出現確率が表示されるので、2枚目を引くかどうかが勝負どころです。` },
+      { h: '7＝バースト', f: TF.row(acard(7, 'md')), t: `7を引くと自分の番の生産はなし。アクション札＋資源が<b>${L}枚以上</b>の人はカードの半分を捨て、引いた本人が盗賊を動かします。<br>見えていない7のカードの出現確率が表示されるので、2枚目を引くかどうかが勝負どころです。` },
       { h: '盤は自分で作る', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 9)), t: `中央の土地は資源だけ、外周は荒地。<b>自分の建物に接する荒地</b>（と数字のない中央の土地）を開拓して、資源と数字チップ（右上にある市場の3枚）を自分で決めます。費用は中央が羊毛1・小麦1、荒地が羊毛2・小麦2で、隣り合う土地に同じ数字は置けません。<br>最初は角の拠点（生産力3・都市にできない）から。${DV ? `最多開拓（${DV.n}か所以上）は<b>開拓者 +${DV.vp}点</b>。` : ''}` },
       { h: '在庫と相場', f: TF.row(`<span class="tf-port">5:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: `資源には<b>在庫</b>があり、切れた資源は生産されません。${MARKET}<br>港は道が届けば交換に使えます。${IMPORT}` },
       { h: '追加の要素', f: TF.row(`<span class="tf-badge era">時代カード</span>`, `<span class="tf-badge">特殊カード</span>`, `<span class="tf-badge atk">道の収奪・軍</span>`), t: `${EL}周ごとに効果が変わる<b>時代カード</b>、市場に並んでいる<b>特殊カード</b>、3つ目の時代からの<b>道の収奪</b>と<b>軍</b>（建物を壊す）、それを防ぐ<b>城壁</b>。<br>1の札は騎士の役割を兼ねていて、奪われそうなときは跳ね返すことも出来ます。` },
@@ -5234,7 +5311,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     { id: 'dev2', turn: true, h: '⑧ 土地を開拓する', enter: () => gift(S.wasteCost, '練習用に開拓の資源を配りました'), t: () => `建物に接する荒地は、資源を払えば開拓できます。<b>開拓できる土地</b>（目印の出ている荒地）をクリック。<br>荒地は${TF.cost(S.wasteCost)}。数字チップは右上の<b>市場</b>の3枚から選びます。選ぶ画面に<b>おすすめ</b>が出ます。`, done: () => S.hexes.filter(H => H.devBy === HUMAN).length > coach.b.dev, skip: () => !HD.developable(S, HUMAN).length },
     { id: 'trade', turn: true, tg: '#aTrade', h: '⑨ 交換する', enter: () => { const r = HD.RES.slice().sort((a, b) => S.rates[a] - S.rates[b])[0]; gift({ [r]: S.rates[r] }, '練習用に交換できる資源を配りました'); }, t: () => '足りない資源は<b>交換</b>で手に入れます（銀行・港・BOT）。<br>銀行のレート（左上）は<b>在庫が少ない資源ほど高く</b>なります。1回交換してみましょう。', done: () => S.trades > coach.b.trades || S.log.some(m => m.k === 'ptrade' && m.p === HUMAN && m.seq > coach.b.seq) },
     { id: 'end', turn: true, tg: '#aEnd', h: '⑩ 手番を終える', t: () => 'これで手番はおしまい。<b>終了</b>ボタンで次の人へ渡します。<br>（スペースキーでも終了できます）', done: () => S.cur !== HUMAN },
-    { id: 'burst', manual: true, h: '⑪ 7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が混ざっています。7を引くとその番は資源が出ず、手札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。<br>山札の横に、見えていない7の出現確率が出ます。引くか止めるかが勝負どころ。` },
+    { id: 'burst', manual: true, h: '⑪ 7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が混ざっています。7を引くとその番は資源が出ず、アクション札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。<br>山札の横に、見えていない7の出現確率が出ます。引くか止めるかが勝負どころ。` },
     { id: 'score', manual: true, h: '⑫ 点の取り方', t: () => `開拓地<b>1点</b>・都市<b>2点</b>。最長交易路・最大騎士力は<b>+2点</b>${S.devVP ? `、${S.devVP.n}か所以上開拓した一番の人は開拓者<b>+${S.devVP.vp}点</b>` : ''}。<br>1の札は<b>騎士</b>にもなり、盗賊を動かして資源を奪えます。先に<b>${S.goal}点</b>で勝ち！` },
     { id: 'fin', fin: true, h: 'チュートリアル完了！', t: () => 'このまま対局を続けられます。<br>時代・市場・収奪などの細かい説明は<b>マニュアル</b>や<b>ルール</b>でいつでも読めます。' },
   ];
