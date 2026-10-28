@@ -9,3 +9,7 @@ Designed by Freepik
 - Poker cards icons collection: https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm
 - Hand drawn playing card back design illustration: https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm
 変更点: 元の素材から絵札の枠内／カード面と裏面を切り出し、WebP に変換して使用。
+
+カード「ギャングスタ」52枚（img/gangsta/）とカード裏面「ギャングスタ」（back-gangsta.webp）:
+Designed by Freepik — Deck gangsta playing cards: https://www.magnific.com/free-vector/deck-gangsta-playing-cards_8083771.htm
+変更点: 元の素材から各カードと裏面を切り出し、WebP に変換して使用。
