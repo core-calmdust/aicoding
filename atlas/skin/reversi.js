@@ -12,6 +12,7 @@
   'use strict';
   const THREE = window.THREE, T3 = window.Table3D;
   if (!THREE || !T3 || !window.AtlasSkin || typeof window.setDisc !== 'function') return;
+  document.documentElement.classList.add('atlas-reversi');
   const boardDom = document.getElementById('board');
   const board = T3.MODELS.reversi(true), S = board.userData.S, Y = board.userData.top;
   const skin = AtlasSkin.init({

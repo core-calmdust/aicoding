@@ -58,7 +58,7 @@
   const seg = document.getElementById('segPieces');
   if (seg) {
     const b = document.createElement('button'); b.dataset.v = 'atlas3d'; seg.prepend(b);
-    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; b.textContent = LBL[l] || LBL.en; };
+    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja', nm = b.querySelector('.nm'); (nm || b).textContent = LBL[l] || LBL.en; };   // (.nm: the tile with its picture, shogi/index.html designThumbs)
     paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
     seg.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
