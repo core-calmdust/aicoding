@@ -106,7 +106,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .badge.new{background:var(--coral);box-shadow:0 2px 0 var(--coral2)}
 .badge.update{background:var(--sky);box-shadow:0 2px 0 var(--sky2)}
 .badge.beta{background:var(--grape);box-shadow:0 2px 0 var(--grape2)}
-.badge.premium{background:linear-gradient(135deg,#ffe07a,#ffb21e);color:#6a4200;box-shadow:0 2px 0 #d48a00}
 .tags{display:flex;flex-wrap:wrap;gap:5px}
 .tag{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px 0 6px;border-radius:99px;font-size:12px;font-weight:700;background:#fff;border:1.5px solid color-mix(in srgb,var(--c) 45%,#fff);color:color-mix(in srgb,var(--c) 85%,#000)}
 .tag svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -354,6 +353,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .gfilter{display:flex;align-items:center;gap:10px;margin:-2px 0 4px}
 .gfilter .cats{flex:1;min-width:0;padding-bottom:4px}
 .chip.cat{padding:6px 13px}
+.chip.cat.tg{gap:5px;padding-inline-start:9px;color:color-mix(in srgb,var(--c) 85%,#000);border-color:color-mix(in srgb,var(--c) 45%,#fff)}
+.chip.cat.tg svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.chip.cat.tg[aria-pressed=true]{background:var(--c);color:#fff;border-color:var(--c);box-shadow:0 2px 0 color-mix(in srgb,var(--c) 70%,#000)}
 .gsearch{flex:none;display:flex;align-items:center;gap:6px;width:240px;height:40px;padding:0 12px;border-radius:99px;background:#fff;border:2px solid var(--line);box-shadow:0 2px 0 var(--line);margin-bottom:4px}
 .gsearch:focus-within{border-color:var(--sky)}
 .gsearch span{display:grid;color:var(--ink2)}
@@ -941,16 +943,16 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="art.js?v=6"></script>
-<script src="../shared/atlas.js?v=20261028jb"></script>
+<script src="../shared/atlas.js?v=20261028tb"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261022ent"></script>
-<script src="i18n.js?v=23"></script>
+<script src="i18n.js?v=24"></script>
 <script src="table3d.js?v=66"></script>
 <script src="models/shogi.js?v=21"></script>
 <script src="models/chess.js?v=5"></script>
 <script src="models/backgammon.js?v=12"></script>
 <script src="models/goban.js?v=9"></script>
-<script src="icons3d.js?v=9"></script>
+<script src="icons3d.js?v=10"></script>
 <script src="games/reversi.js?v=11"></script>
 <script src="games/shogi-play.js?v=3"></script>
 <script src="games/shogi.js?v=5"></script>
@@ -975,6 +977,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=112"></script>
+<script src="app.js?v=113"></script>
 </body>
 </html>

@@ -175,12 +175,26 @@
       return g;
     },
     hex() {
-      // a 3 × 3 rhombus of the walnut hex board (red edges far / near, blue sides): a red chain, a blue stone, the red stone that connects dropping in
-      const g = new T.Group(), inner = new T.Group(), b = X.MODELS.hex(true, { n: 3, W: 4.6 }), U = b.userData;
-      inner.add(b); inner.rotation.y = -Math.PI / 12; g.add(inner);   // (icons.html turns every icon by 45°: the long diagonal ends up level)
-      const st = (i, col, s = 1.25) => { const m = U.stone(col); m.scale.set(s, s * 1.15, s); const [x, z] = U.pt(i); m.position.set(x, U.top, z); return m; };
-      inner.add(st(1, 1), st(4, 1), st(3, 2), st(5, 2));
-      const big = U.stone(1), [bx, bz] = U.pt(7); big.scale.set(2.1, 2.3, 2.1); big.position.set(bx + .1, U.top + 1.55, bz - .15); big.rotation.set(.45, 0, -.25); inner.add(big);
+      // the same chunky square block as the other games (not the wide rhombus board): a honeycomb inlay with red
+      // edges far / near and blue sides, a red chain, a blue stone, and the red stone that connects dropping in
+      const S3 = Math.sqrt(3), W = 512, m = 46, R = 70, cw = S3 * R, ox = (W - 3.5 * cw) / 2 + cw / 2, oy = (W - 5 * R) / 2 + R;
+      const cpt = (r, c) => [ox + cw * (c + (r % 2) * .5), oy + 1.5 * R * r];   // canvas centre of cell (row r, col c), 3 × 3
+      const top = M({ map: X.canvasTex('ichx', W, W, (c2) => {
+        c2.drawImage(X.wood('ichxw', '#7a4a28', '#331b0c').image, 0, 0, W, W);
+        c2.lineCap = 'round'; c2.lineWidth = 22;
+        c2.strokeStyle = '#d8342a'; [m * .5, W - m * .5].forEach(y => { c2.beginPath(); c2.moveTo(m, y); c2.lineTo(W - m, y); c2.stroke(); });
+        c2.strokeStyle = '#2a6fd6'; [m * .5, W - m * .5].forEach(x => { c2.beginPath(); c2.moveTo(x, m); c2.lineTo(x, W - m); c2.stroke(); });
+        for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+          const [x, y] = cpt(r, c); c2.beginPath();
+          for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); c2[j ? 'lineTo' : 'moveTo'](x + Math.cos(a) * R * .94, y + Math.sin(a) * R * .94); }
+          c2.closePath(); const alt = (r + 2 * c) % 3 === 0; c2.fillStyle = alt ? '#ecd3a2' : '#f6e4bd'; c2.fill(); c2.lineWidth = 4; c2.strokeStyle = 'rgba(60,34,12,.75)'; c2.stroke();
+        }
+      }), roughness: .45 });
+      const g = boardChunk(4, 3.6, top, M({ map: X.wood('ichxs', '#6a3f22', '#2a160a') }));
+      const wp = (r, c) => { const [x, y] = cpt(r, c); return [(x / W - .5) * 3.1, (y / W - .5) * 3.1]; };
+      const RED = gloss(0xd2301f), BLUE = gloss(0x2463c9), stone = (mat, s) => { const p = puck(.5, .28, mat, .45); p.scale.setScalar(s); return p; };
+      [[0, 1, RED], [2, 0, RED], [1, 1, BLUE], [2, 2, BLUE]].forEach(([r, c, mt]) => { const [x, z] = wp(r, c); g.add(at(stone(mt, .66), x, .5, z)); });
+      const [bx, bz] = wp(1, 0); g.add(at(stone(RED, 1.3), bx + .15, 1.95, bz - .1, .45, 0, -.3));   // the connecting stone, dropping in
       return g;
     },
     go() {

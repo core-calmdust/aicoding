@@ -17,43 +17,46 @@
   const N = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 
   /* ---------------- registry ---------------- */
-  // tags: ai online rated daily lessons puzzles openings variants netrank mobile
+  // tags: classic ai online rated daily lessons puzzles openings variants netrank mobile
+  // 定番 rule: 'classic' (定番) goes on every traditional, well-known game (shogi, chess, go, backgammon,
+  // mancala, hex…), listed first so it shows on every card. Puzzles (sudoku, SameGame, sliders…) and
+  // original games invented for this site (e.g. the hex-deck original) NEVER get it.
   const GAMES = [
-    { id: 'shogi', cat: 'chess', store: ['shogi-kaya-', 'shogi-rated-v1', 'shogi-online-name'], href: 'shogi/', color: '#e8a33d', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 613, ls: 15 },
+    { id: 'shogi', cat: 'chess', store: ['shogi-kaya-', 'shogi-rated-v1', 'shogi-online-name'], href: 'shogi/', color: '#e8a33d', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 613, ls: 15 },
       name: N('将棋', 'Shogi', '将棋', '쇼기', 'Shogi', 'Shogi', 'Shogi', 'Shogi', 'शोगी', 'شوغي') },
-    { id: 'chess', cat: 'chess', store: ['aicoding-chess', 'chess-online-name'], href: 'chess/', color: '#5a6b8c', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 445, ls: 20 },
+    { id: 'chess', cat: 'chess', store: ['aicoding-chess', 'chess-online-name'], href: 'chess/', color: '#5a6b8c', released: '2026-10-19', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 445, ls: 20 },
       name: N('チェス', 'Chess', '国际象棋', '체스', 'Ajedrez', 'Échecs', 'Xadrez', 'Schach', 'शतरंज', 'الشطرنج') },
-    { id: 'reversi', cat: 'line', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 1000, ls: 9 },
+    { id: 'reversi', cat: 'line', store: ['reversi-emerald-', 'reversi-rated-v1', 'reversi-online-name'], href: 'reversi/', color: '#22aa74', released: '2026-10-17', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 1000, ls: 9 },
       name: N('リバーシ V4', 'Reversi V4', '黑白棋 V4', '리버시 V4', 'Reversi V4', 'Reversi V4', 'Reversi V4', 'Reversi V4', 'रिवर्सी V4', 'ريفيرسي V4') },
-    { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1300 },
+    { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1300 },
       name: N('まいにち数独', 'Daily Sudoku', '每日数独', '매일 스도쿠', 'Sudoku Diario', 'Sudoku du jour', 'Sudoku Diário', 'Tägliches Sudoku', 'रोज़ का सुडोकू', 'سودوكو كل يوم') },
-    { id: 'speedsudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 500 },
+    { id: 'speedsudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 500 },
       name: N('すぴーど数独', 'Speed Sudoku', '速度数独', '스피드 스도쿠', 'Sudoku Veloz', 'Sudoku Express', 'Sudoku Veloz', 'Speed-Sudoku', 'स्पीड सुडोकू', 'سودوكو السرعة') },
-    { id: 'samegame', cat: 'puzzle', store: ['samegame-pop-v1'], href: 'samegame/', color: '#2e6f8e', released: '2026-10-21', premium: 1, tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 750 },
+    { id: 'samegame', cat: 'puzzle', store: ['samegame-pop-v1'], href: 'samegame/', color: '#2e6f8e', released: '2026-10-21', tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 750 },
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
-    { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', premium: 1, tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
+    { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
       name: N('だつごくスライダー！', 'Jailbreak Slider!', '越狱滑块！', '탈옥 슬라이더!', '¡Fuga Slider!', 'Évasion Slider !', 'Fuga Slider!', 'Ausbruch-Slider!', 'जेलब्रेक स्लाइडर!', 'الهروب سلايدر!') },
-    { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
+    { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2') },
-    { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 543, ls: 16 },
+    { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 543, ls: 16 },
       name: N('シャンチー（中国象棋）', 'Xiangqi', '中国象棋', '샹치(중국 장기)', 'Xiangqi (ajedrez chino)', 'Xiangqi (échecs chinois)', 'Xiangqi (xadrez chinês)', 'Xiangqi (Chinesisches Schach)', 'शियांगची (चीनी शतरंज)', 'شيانغ تشي (الشطرنج الصيني)') },
-    { id: 'tafl', cat: 'chess', store: ['aicoding-tafl', 'tafl-online-name'], href: 'tafl/', color: '#3f6f8f', released: '2026-10-25', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 390, ls: 16 },
+    { id: 'tafl', cat: 'chess', store: ['aicoding-tafl', 'tafl-online-name'], href: 'tafl/', color: '#3f6f8f', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 390, ls: 16 },
       name: N('ハイネタフル', 'Hnefatafl', '维京棋（Hnefatafl）', '흐네파타플', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'ह्नेफ़ाटाफ़ल', 'هنفتافل') },
-    { id: 'go', cat: 'line', store: ['aicoding-go', 'go-online-name'], href: 'go/', color: '#b8893f', released: '2026-10-22', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 21 },
+    { id: 'go', cat: 'line', store: ['aicoding-go', 'go-online-name'], href: 'go/', color: '#b8893f', released: '2026-10-22', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 21 },
       name: N('囲碁', 'Go', '围棋', '바둑', 'Go', 'Go', 'Go', 'Go', 'गो', 'غو') },
-    { id: 'gomoku', cat: 'line', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
+    { id: 'gomoku', cat: 'line', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
       name: N('五目並べ・連珠', 'Gomoku & Renju', '五子棋・连珠', '오목・렌주', 'Gomoku y Renju', 'Gomoku et Renju', 'Gomoku e Renju', 'Gomoku & Renju', 'गोमोकु और रेंजू', 'غوموكو ورينجو') },
-    { id: 'dots', cat: 'line', store: ['dots-puzzles-', 'dots-lessons-', 'dots-openings-', 'dots-daily-', 'dots-rated-v1', 'dots-rules-', 'dots-online-name'], href: 'dots/', color: '#4cc3ff', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 450, ls: 15 },
+    { id: 'dots', cat: 'line', store: ['dots-puzzles-', 'dots-lessons-', 'dots-openings-', 'dots-daily-', 'dots-rated-v1', 'dots-rules-', 'dots-online-name'], href: 'dots/', color: '#4cc3ff', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 450, ls: 15 },
       name: N('ドット・アンド・ボックス', 'Dots and Boxes', '点格棋', '도트 앤 박스', 'Puntos y cajas', 'Pipopipette', 'Pontinhos', 'Käsekästchen', 'डॉट्स एंड बॉक्सेज़', 'النقاط والمربعات') },
-    { id: 'connect4', cat: 'line', store: ['aicoding-connect4-v2', 'c4-rated-v1', 'connect4-online-name'], href: 'connect4/', color: '#ff6b6b', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 306, ls: 23 },
+    { id: 'connect4', cat: 'line', store: ['aicoding-connect4-v2', 'c4-rated-v1', 'connect4-online-name'], href: 'connect4/', color: '#ff6b6b', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 306, ls: 23 },
       name: N('コネクトフォー', 'Connect Four', '四子棋', '커넥트 포', 'Conecta 4', 'Puissance 4', 'Lig 4', 'Vier gewinnt', 'कनेक्ट फ़ोर', 'أربعة في صف') },
-    { id: 'mancala', cat: 'race', store: ['aicoding-mancala-v1', 'mancala-online-name'], href: 'mancala/', color: '#b98663', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 500, ls: 29 },
+    { id: 'mancala', cat: 'race', store: ['aicoding-mancala-v1', 'mancala-online-name'], href: 'mancala/', color: '#b98663', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 500, ls: 29 },
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا') },
-    { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2', 'backgammon-online-name'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 23 },
+    { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2', 'backgammon-online-name'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 23 },
       name: N('バックギャモン V2', 'Backgammon V2', '西洋双陆棋 V2', '백개먼 V2', 'Backgammon V2', 'Backgammon V2', 'Gamão V2', 'Backgammon V2', 'बैकगैमन V2', 'طاولة الزهر V2') },
-    { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
+    { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة') },
-    { id: 'hex', cat: 'line', store: ['aicoding-hex', 'hex-online-name'], href: 'hex/', color: '#4f86e8', released: '2026-10-25', premium: 1, tags: ['ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 403, ls: 13 },
+    { id: 'hex', cat: 'line', store: ['aicoding-hex', 'hex-online-name'], href: 'hex/', color: '#4f86e8', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 403, ls: 13 },
       name: N('ヘックス', 'Hex', '六贯棋', '헥스', 'Hex', 'Hex', 'Hex', 'Hex', 'हेक्स', 'هيكس') },
   ];
   GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg'; });
@@ -112,6 +115,7 @@
   /* ---------------- common tag & badge rules ---------------- */
   // tag order = display order. c = colour, i = small icon (svg path d)
   const TAGS = {
+    classic:  { c: '#b5532f', i: 'M4 20h16M6 20v-3h12v3M8 17l1-6h6l1 6M8 11h8M12 4l2 3h-4zM12 7v4' },
     ai:       { c: '#7552e0', i: 'M12 3a4 4 0 0 1 4 4v1h1a3 3 0 0 1 0 6h-1v1a4 4 0 0 1-8 0v-1H7a3 3 0 0 1 0-6h1V7a4 4 0 0 1 4-4z' },
     online:   { c: '#22aa74', i: 'M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' },
     rated:    { c: '#e09a00', i: 'M12 3l2.7 5.6l6.1.9l-4.4 4.3l1 6.1L12 17l-5.4 2.9l1-6.1l-4.4-4.3l6.1-.9z' },
@@ -132,13 +136,12 @@
   //   NEW     released within 14 days
   //   UPDATE  changelog entry within 7 days (and not NEW)
   //   BETA    g.beta
-  //   PREMIUM g.premium
+  //   (no PREMIUM badge any more: nearly every title had it, so it told players nothing)
   function badges(g) {
     const out = [];
     if (g.released && daysSince(g.released) <= 14) out.push('new');
     else { const u = lastUpdate(g.id); if (u && daysSince(u) <= 7) out.push('update'); }
     if (g.beta) out.push('beta');
-    if (g.premium) out.push('premium');
     return out.slice(0, 2);
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
