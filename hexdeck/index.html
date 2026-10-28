@@ -1319,6 +1319,95 @@ body.land .tut-fig{min-height:0}
 .rl-goal{padding:6px 14px;border-radius:999px;border:1px solid rgba(230,201,138,.45);color:var(--ivory2);font-size:14px}
 .rl-goal b{color:var(--gold2);font-family:var(--f-num);font-size:17px}
 @media (max-width:900px){.rl-fig{padding:10px}.rl-fig .tf-hex{width:60px;height:60px}.rl-map svg{width:90px}.rl-fig .acard.md{--w:36px}.rl-fig .tf-badge{font-size:12px;padding:6px 10px}.tf-port{width:50px;height:50px;font-size:16px}}
+/* ルール v2：表・カード */
+.rl-lead{font-size:17px;line-height:1.8;margin:0 0 14px;padding:12px 16px;border-radius:12px;background:rgba(230,201,138,.08);border:1px solid rgba(230,201,138,.25);color:#eef1f6}
+.rl-lead b,.rl-note b{color:var(--gold2)}
+.rl-note{font-size:15px;color:#c9d1de;margin:0 0 10px}
+.rl-h4{font-size:16px;color:var(--gold2);margin:18px 0 8px}.rl-h4 small{font-size:12px;color:#aab3c2;margin-left:8px;font-weight:400}
+.rl-sec ul.rl-ul{padding-left:1.1em;margin:6px 0 0}
+.rl-sec ul.rl-ul li{font-size:15px;line-height:1.65;margin:0 0 5px}
+.rk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:0 0 12px}
+.rk-grid.three{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.rk{background:rgba(255,255,255,.04);border:1px solid rgba(230,201,138,.22);border-radius:12px;padding:12px 14px}
+.rk.red{border-color:rgba(220,90,80,.45);background:rgba(160,40,30,.08)}
+.rk-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rk-h b{font-size:17px;color:var(--gold2)}
+.rk.red .rk-h b{color:#ff9d8f}
+.rk-ic{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;font-size:22px;gap:3px}
+.rk-ic svg{width:28px;height:28px}
+.rk-ic .acard{transform:scale(.8)}
+.rk-cost{display:flex;align-items:center;gap:8px;margin:0 0 6px;flex-wrap:wrap}
+.rc{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rc i{display:inline-flex;align-items:center;gap:1px;font-style:normal}
+.rc i b{font-size:14px;color:#fff}
+table.rtb{width:100%;border-collapse:collapse;font-size:15px;margin:4px 0 8px}
+table.rtb th{text-align:left;font-size:12.5px;color:#aab3c2;font-weight:500;padding:6px 8px;border-bottom:1px solid rgba(230,201,138,.3)}
+table.rtb td{padding:8px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:middle;line-height:1.5;color:#eef1f6}
+table.rtb td b{color:var(--gold2)}
+table.rtb tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+table.rtb td:first-child{width:44px;text-align:center;font-size:20px}
+table.rtb td:first-child svg{width:30px;height:30px;vertical-align:middle}
+table.rtb td:first-child .tf-rd{width:36px;height:12px}
+.rk table.rtb td:first-child{width:auto;font-size:15px}
+table.rtb-build td:nth-child(2){white-space:nowrap}
+table.rtb-build td:nth-child(3){white-space:nowrap}
+table.rtb-pts td:nth-child(3){font-family:var(--f-disp);font-size:18px;color:#fff;text-align:center;width:46px}
+table.rtb-pts .tf-badge{white-space:nowrap}
+.sp-ic{font-size:20px}
+.rflow{display:flex;align-items:stretch;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.rf{flex:1 1 140px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:10px 8px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(230,201,138,.22);position:relative}
+.rk .rf{padding:8px 6px;flex-basis:90px}
+.rf-n{position:absolute;top:6px;left:8px;font-size:12px;color:#aab3c2;font-family:var(--f-disp)}
+.rf-ic{min-height:40px;display:flex;align-items:center;justify-content:center;gap:3px;font-size:26px}
+.rf-ic svg{width:32px;height:32px}.rf-ic .tf-rd{width:40px;height:12px}
+.rf b{font-size:15px;color:var(--gold2)}
+.rf small{font-size:12.5px;color:#c9d1de;line-height:1.45}
+.rf-ar{align-self:center;color:var(--gold2);font-size:18px}
+.rl-mini svg{width:40px;height:40px}
+@media (max-width:900px){.rk-grid,.rk-grid.three{grid-template-columns:1fr}.rf-ar{display:none}.rf{flex-basis:calc(50% - 6px)}table.rtb{font-size:14px}table.rtb td{padding:7px 5px}table.rtb-build td:nth-child(3){white-space:normal}.rl-lead{font-size:15.5px}}
+.dlg.rules svg.ic{fill:none;stroke:var(--gold2);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;width:28px;height:28px}
+.dlg.rules svg.ic .fl{fill:var(--p0);stroke:#0b111b;stroke-width:1.4}
+.rk.red svg.ic{stroke:#ff9d8f}
+.rc .ri,.rc svg{width:22px;height:22px}
+.rc i{padding:2px 7px 2px 5px;border-radius:7px;border:1px solid rgba(0,0,0,.35);gap:3px}
+.rc i svg{width:16px!important;height:16px!important}
+.rc i b{font-size:13.5px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin:8px 0 6px}
+.rg{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.rg.sp{border-color:rgba(230,201,138,.25)}
+.rg-ic{font-size:22px;min-width:28px;text-align:center;line-height:1.2;color:var(--gold2)}
+.rg b{display:block;font-size:14.5px;color:#fff}.rg small{display:block;font-size:13px;color:#c9d1de;line-height:1.5;margin-top:2px}
+@media (max-width:900px){.rgrid{grid-template-columns:1fr}}
+/* 遊びながら覚えるチュートリアル */
+.tut-ask.three{grid-template-columns:1.3fr 1fr 1fr}
+.tut-ask button{position:relative;text-align:center}
+.tut-ask button.rec{border-color:var(--gold2);background:linear-gradient(180deg,rgba(230,201,138,.16),rgba(230,201,138,.05))}
+.tut-ask button em{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-style:normal;font-size:11px;padding:2px 10px;border-radius:999px;background:var(--gold2);color:#1b1405;font-weight:700;white-space:nowrap}
+.mp-tut button.rec{background:rgba(230,201,138,.16);border-color:var(--gold2)}
+.coach{position:fixed;z-index:60;left:16px;top:200px;width:clamp(280px,24vw,360px);background:linear-gradient(180deg,#1d2a3d,#142030);border:1.5px solid var(--gold2);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.55);padding:10px 14px 10px;color:var(--ivory)}
+.coach.co-in{animation:coPop .35s ease}
+@keyframes coPop{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+.co-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.co-tag{font-size:11px;letter-spacing:.1em;color:#1b1405;background:var(--gold2);border-radius:999px;padding:2px 9px;font-weight:700}
+.co-bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}.co-bar i{display:block;height:100%;background:var(--gold2);transition:width .4s}
+.co-x{width:26px;height:22px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ivory2);cursor:pointer;line-height:1}
+.co-body{display:flex;gap:12px;align-items:center}
+.co-fig{flex:none}
+.co-body h4{margin:0 0 4px;font-size:16.5px;color:var(--gold2);font-family:var(--f-disp);letter-spacing:.04em}
+.co-body p{margin:0;font-size:14.5px;line-height:1.65}
+.co-body p b{color:var(--gold2)}
+.co-body p svg{width:18px;height:18px;vertical-align:-3px}
+.co-gift{margin-top:5px!important;font-size:12.5px!important;color:#9fd3a8}
+.co-wait{color:var(--ivory2);animation:coBlink 1.4s ease-in-out infinite}
+@keyframes coBlink{50%{opacity:.5}}
+.co-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:8px}
+.co-foot .btn{padding:7px 16px;font-size:13.5px}
+.co-q{margin-right:auto;background:none;border:0;color:var(--ivory2);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px 0}
+.coach.min .co-body,.coach.min .co-foot{display:none}
+.coach.min{width:auto;min-width:220px}
+.coach-hl{position:relative;z-index:5;outline:3px solid var(--gold2)!important;outline-offset:3px;border-radius:10px;animation:coHl 1.1s ease-in-out infinite}
+@keyframes coHl{0%,100%{box-shadow:0 0 0 0 rgba(230,201,138,.7)}50%{box-shadow:0 0 0 9px rgba(230,201,138,0)}}
+@media (max-width:900px){.tut-ask.three{grid-template-columns:1fr}.coach{left:50%;transform:translateX(-50%);width:calc(100vw - 20px);top:calc(env(safe-area-inset-top) + 50px);padding:8px 11px}.co-body p{font-size:13.5px;line-height:1.55}.co-body h4{font-size:15px}.co-fig{display:none}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -4162,6 +4251,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     $('status').innerHTML = statusText();
     applyView();
     $('hbInfo').textContent = S.phase === 'over' ? '対局終了' : S.ending ? `最終周（${NAMES[(S.first + S.n - 1) % S.n]}の手番で終了）` : `ターン ${S.turn || '準備'} ・ 目標 ${S.goal}点 ・ 手札上限 ${S.limit - 1}枚`;
+    coachTick();
   }
   // ---------- 上の帯：銀行（在庫・もらうときのレート）、山札、チップ市場 ----------
   let topOpen = null;
@@ -4727,61 +4817,59 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     sync();
   }
   function rulesDialog() {
+    const C = HD.COST, IC = id => { const e = $(id); const g = e && e.querySelector('svg'); return g ? g.outerHTML : ''; };
+    const cost = c => `<span class="rc">${Object.keys(c).filter(r => c[r]).map(r => `<i class="r-${r}" title="${RESN[r]}">${resIcon(r, 16)}<b>${c[r]}</b></i>`).join('')}</span>`;
+    const card = (ic, title, body, cls = '') => `<div class="rk ${cls}"><div class="rk-h"><span class="rk-ic">${ic}</span><b>${title}</b></div>${body}</div>`;
+    const ul = xs => `<ul class="rl-ul">${xs.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    const row = (...c) => `<tr>${c.map(x => `<td>${x}</td>`).join('')}</tr>`;
+    const tbl = (head, rows, cls = '') => `<table class="rtb ${cls}"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+    const mapName = S.scen ? S.scen.name : S.bagInner ? '完全ランダム' : S.noDesert ? 'ランダム' : '固定';
+    const flow = xs => `<div class="rflow">${xs.map((x, k) => `${k ? '<span class="rf-ar">→</span>' : ''}<div class="rf"><span class="rf-n">${k + 1}</span><span class="rf-ic">${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></div>`).join('')}</div>`;
+    const eras = [S.scen && S.scen.era1 ? null : 'discover', S.scen && S.scen.era1 ? null : 'explore'].filter(Boolean);
+    const deckEras = (S.scen && S.scen.eras) || S.eraCards || HD.ERA_CARDS;
+    const specIds = Object.keys(Object.assign({}, HD.SPEC_MIX, S.scen && S.scen.specAdd || {})).filter(k => !(S.scen && (S.scen.specDel || []).includes(k)) && SPEC[k]);
+    const sec = (k, h, body) => `<section class="rl-sec" data-s="${k}"><h3>${h}</h3>${body}</section>`;
+    const html = [
+      sec('start', 'はじまり', `<p class="rl-lead">土地を開拓して資源と数字を決め、道と建物を広げて、先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに全員共通の<b>アクション札の山</b>を使います。</p>
+        <div class="rk-grid">${card(`<span class="rl-mini">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `マップ：${mapName}`, ul([S.noDesert ? '中央も資源の土地（砂漠なし）' : '中央は砂漠（盗賊の居場所）', 'まわりの6つは資源だけ決まっていて<b>数字なし</b>', '外周の12は<b>荒地</b>（資源も数字もなし）']))}
+        ${card('🚩', '準備の流れ', flow([['⛺', 'スタート地点', '角を選んで拠点を置く（0点・生産力' + S.campYield + '）'], ['⛏', '無料で開拓', '拠点のとなりの荒地に資源と数字（4〜12）'], [TF.road(), '道を1本', '拠点から伸ばす']]))}</div>
+        ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
+      sec('turn', '手番', flow([[`<span class="tf-deck sm"></span>`, '札を引く', '1枚引く。もう1枚引くか止める（最大2枚）'], [acard(3, 'sm') + acard(5, 'sm'), '数字を出す', '手札の1枚か合計で2〜12。全員が生産'], ['🔨', '建てる・交換', '建設・開拓・交換・特殊カード'], [IC('aEnd'), '終了', '次の人の番へ']]) +
+        `<div class="rk-grid">${card(acard(4, 'sm'), 'アクション札', tbl(['札', '枚数', 'メモ'], [row('<b>1〜6</b>', `各${S.face}枚`, '1は騎士も兼ねる'), row('<b>7</b>', `${S.sevens}枚`, '引くとバースト')]))}
+        ${card(IC('aTrash'), '処分（山札の圧縮）', ul([`建築の段階に手札の札を捨て札へ戻せる`, `1手番に1枚まで無料、2枚目からは資源${S.trashCost}枚`]))}</div>
+        ${ul(['数字の土地に接する建物の持ち主が資源をもらう（開拓地1・都市2・拠点' + S.campYield + '）。', '数字は出さなくてもよい（札は手札に残る）。8以上は2枚以上の合計が要る。', `手札に上限はないが、手札＋資源が<b>${S.limit}枚以上</b>だとバーストで半分を捨てる。`])}`),
+      sec('build', '建設・開拓', tbl(['', '項目', '費用', '効果'], [
+          row(TF.road(), '<b>道</b>', cost(C.road), '自分の道・建物から伸ばす。5本以上の一番長い道は最長交易路'),
+          row(TF.house(), '<b>開拓地</b>', cost(C.settle), '1点。自分の道の先に、ほかの建物から1辺以上離して建てる'),
+          row(TF.city(), '<b>都市</b>', cost(C.city), '2点。開拓地を格上げ（生産2倍）。拠点は都市にできない'),
+          row(IC('aDev'), '<b>開拓（中央）</b>', cost(S.devCenter || HD.DEVELOP), '数字のない中央の土地に数字チップを置く'),
+          row(IC('aDev'), '<b>開拓（荒地）</b>', cost(S.wasteCost), '荒地に資源（残りのタイル）と数字チップを置く'),
+          row(IC('aWall'), '<b>城壁</b>', cost(S.wallCost || { sheep: 1, ore: 2 }), '軍で壊されず、盗賊にも奪われない（点なし）'),
+          row(IC('aShop'), '<b>特殊カード</b>', cost({ sheep: 1, wheat: 1, ore: 1 }), '市場の3枚から1枚（1手番1枚・次の番から使える）')], 'rtb-build') +
+        ul(['数字チップは<b>右上の市場に並ぶ3枚</b>から選ぶ（使うと袋から補充）。隣り合う土地に同じ数字は置けない。', '開拓すると、その資源を1枚もらう。開拓した土地は接する全員が生産する（キューブは開拓した人の目印）。', S.devVP ? `自分で開拓した土地が${S.devVP.n}か所以上で一番多い人は<b>開拓者 +${S.devVP.vp}点</b>（多い人が出たら移る）。` : ''].filter(Boolean))),
+      sec('knight', '7と騎士', `<div class="rk-grid">${card(acard(7, 'sm'), 'バースト（7）', ul(['7を引いたら公開し、この番の生産はなし', `手札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てる`, '<b>引いた本人</b>が盗賊を動かし、接する相手から資源を1枚奪う', '山札の横に、見えていない7の出現確率が出る', '最初の時代は盗賊が出現しない']), 'red')}
+        ${card(IC('aKnight'), '騎士（1の札）', ul(['数字の1としても、騎士としても使える', '建築中に出すと盗賊を動かし、接する相手から1枚奪う（1手番1回）', '奪われそうなときは騎士を捨てて<b>跳ね返せる</b>：奪いは無効、逆に1枚奪い、盗賊も動かせる', `${S.armyMin}回以上使い、一番多い人は<b>最大騎士力 +${S.armyPts}点</b>`]))}</div>`),
+      sec('era', '時代・市場', `<p class="rl-note">${S.eraLen}周ごとに時代が変わる。時代が変わるたびに、市場の特殊カード3枚も入れ替わる。</p>` +
+        tbl(['', '時代', '効果'], eras.map(k => row(ERA[k].ic || '', `<b>${ERA[k].n}</b>`, ERA[k].d)).concat([row('🃏', '<b>3番目から</b>', '下の時代カードから1枚引いて、その効果になる')]), 'rtb-era') + `<div class="rgrid">${deckEras.filter(k => ERA[k]).map(k => { const E = eraOf(k); return `<div class="rg"><span class="rg-ic">${E.ic || ''}</span><div><b>${E.n}</b><small>${E.d}</small></div></div>`; }).join('')}</div>` +
+        `<h4 class="rl-h4">市場の特殊カード <small>${cost({ sheep: 1, wheat: 1, ore: 1 })}・1手番1枚・使えるのは1手番1枚</small></h4>` +
+        `<div class="rgrid">${specIds.map(k => `<div class="rg sp"><span class="rg-ic">${SPEC[k].ic}</span><div><b>${SPEC[k].n}</b><small>${SPEC[k].d}</small></div></div>`).join('')}</div>`),
+      sec('atk', '収奪・軍・城壁', `<p class="rl-note">3つ目の時代から使えます。</p><div class="rk-grid three">
+        ${S.seizeCost ? card(IC('aSeize'), '道の収奪', `<div class="rk-cost">${cost(S.seizeCost)}</div>` + ul(['自分の道（か建物）につながる相手の道を1本、自分の道にする', '自分とつなぐ側の端に相手の建物がある道は奪えない', '1手番1回。奪われた人は次の自分の番が終わるまで奪い返せない（🔒）', '奪った道の間に開拓地を建ててもよい']), 'red') : ''}
+        ${S.milCards ? card(IC('aRaid'), '軍', `<div class="rk-cost">${acard(HD.MIL, 'sm')}${cost(S.raidCost ? S.raidCost.settle : { wheat: 1, sheep: 2, ore: 3 })}</div>` + ul([`軍の札（${S.milCards}枚）が山札に混ざる`, '自分の道の先にある相手の開拓地・都市を壊す（拠点・城壁は不可）', `使った札は得点札：開拓地+${S.raidVP}点・都市+${S.raidVPCity}点`, '壊された人は次の自分の番が終わるまで跡地に建て直せない（🔒）']), 'red') : ''}
+        ${card(IC('aWall'), '城壁', `<div class="rk-cost">${cost(S.wallCost || { sheep: 1, ore: 2 })}</div>` + ul(['自分の開拓地・都市に築く', '軍で壊されない', '盗賊に資源を奪われない', '点はなし']))}</div>`),
+      sec('trade', '相場・交換', `<div class="rk-grid">${card('🏦', '銀行のレート（相場）', tbl(['在庫', 'もらうときのレート'], [row('一番少ない', '<b>5:1</b>'), row('2番目', '<b>5:1</b>'), row('3番目', '<b>4:1</b>'), row('4番目', '<b>3:1</b>'), row('一番多い', '<b>2:1</b>')]) + `<p class="rl-note">${S.marketPeriod}手番ごとに更新。</p>`)}
+        ${card('📦', '在庫と消費ボックス', flow([['💰', '払う', '建設・交換などで払った資源'], ['📦', '消費ボックス', `${S.marketPeriod}手番の間たまる`], ['🏦', '在庫へ', '相場の更新で戻る']]) + ul([`資源の在庫は各${S.stock ? HD.STOCK_DEFAULT[S.n] || 19 : '∞'}枚。切れた資源は生産されない（手番の人から順に配る）`]))}</div>
+        <div class="rk-grid">${card('⚓', '港', tbl(['港', '交換', '輸入（建物を建てた人だけ・相場の更新ごと）'], [row('<b>2:1</b>', 'その資源を出すとき2:1', 'その資源を1枚'), row('<b>3:1</b>', 'どの資源でも3:1', '手持ちで一番少ない資源を1枚')]) + ul(['港に建物を建てるか、自分の道が届けば交換に使える（他人の建物がある港は不可）', '港は相場より有利なときだけ使える']))}
+        ${card(IC('aTrade'), 'プレイヤーとの交換', ul(['自分の番に、何度でも交換を提案できる', '応じた人の中から相手を選ぶ', 'BOTは同じ相手と1手番1回まで。2:1より偏った交換や、一度断った条件より不利な提案には応じない']))}</div>`),
+      sec('end', '得点・終わり方', tbl(['', '得点', '点', '条件'], [row(TF.house(), '<b>開拓地</b>', '1', '—'), row(TF.city(), '<b>都市</b>', '2', '開拓地を格上げ'), row('<span class="tf-badge sm">最長交易路</span>', '', '2', '5本以上つながった一番長い道'), row('<span class="tf-badge sm">最大騎士力</span>', '', String(S.armyPts), `騎士を${S.armyMin}回以上・一番多い`)].concat(S.devVP ? [row('<span class="tf-badge sm">開拓者</span>', '', String(S.devVP.vp), `開拓${S.devVP.n}か所以上・一番多い`)] : []).concat(S.milCards ? [row(acard(HD.MIL, 'sm'), '<b>軍の得点札</b>', `${S.raidVP}/${S.raidVPCity}`, '軍で開拓地/都市を壊した')] : []), 'rtb-pts') +
+        ul([`誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人（${NAMES[(S.first + S.n - 1) % S.n]}）の番まで続けて終了。一番点の高い人の勝ち（同点なら先に届いた人）。`, `周回の終わりに${S.goal}点以上の人がいなければ（軍で壊されたなど）、最終周を取り消して続ける。`])),
+    ].join('\n');
     const d = dlg(`<div class="rl-head"><h2>ルール</h2><div class="rl-tabs" role="tablist"><button data-s="start" class="on">はじまり</button><button data-s="turn">手番</button><button data-s="build">建設・開拓</button><button data-s="knight">7と騎士</button><button data-s="era">時代・市場</button><button data-s="atk">収奪・軍・城壁</button><button data-s="trade">相場・交換</button><button data-s="end">得点・終わり方</button>${S.scen ? '<button data-s="scen">シナリオ</button>' : ''}<button data-s="credit">クレジット</button></div></div><div class="rl-body">
-      <section class="rl-sec" data-s="start"><h3>はじまり</h3><ul><li class="lead">土地を開拓して資源と数字を決め、道と開拓地を広げて先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに、全員共通の<b>アクション札の山</b>を使います。</li>
-        <li>${S.bagInner ? '<b>完全ランダム</b>：中央とまわりの6つ（計7つ）を、砂漠も入った袋から引く（そろわない資源もある。砂漠が出たら盗賊はそこから、出なければ開拓の時代に外周の荒地へ）。' : S.noDesert ? '<b>ランダムマップ</b>：中央も資源の土地。まわりの6つは5種類が1つずつ＋1つランダム。' : '<b>固定マップ</b>：中央は砂漠（盗賊の居場所）。まわりの6つは5種類が1つずつ＋1つランダム。'}${S.noDesert && !S.bagInner ? '砂漠はなく、盗賊は開拓の時代が始まったら外周の荒地のどれかに現れる。' : ''}これらの土地は資源だけ決まっていて<b>数字なし</b>。外周の12は<b>荒地</b>（資源も数字もなし）。</li>
-        <li>順番に、角の<b>スタート地点</b>を選んで拠点（0点、生産力${S.campYield}）を置く。<b>手番は選んだ順の逆</b>（最後に選んだ人から）。</li>
-        <li>拠点に接する荒地を1つ<b>無料で開拓</b>：好きな資源と、<b>4〜12</b>から数字チップを1つ<b>袋から</b>選ぶ（2・3は選べない。袋は6・8が3枚、他は2枚、2・12は1枚なので、先に取られると無くなる）。<b>11は資源2枚、12は資源3枚</b>のボーナス（好きな資源）→ 道を1本。</li>
-        <li>初期資源は 木材・レンガ・羊毛・小麦 を1枚ずつ。</li>
-        <li><b>開拓した土地</b>の数字チップには、左下に開拓した人の色のキューブが置かれる（だれが開拓したかの目印）。</li></ul></section>
-      <section class="rl-sec" data-s="turn"><h3>手番</h3><ul><li>山札から1枚引く（自分だけが見る）。もう1枚引くか止める（最大2枚）。1枚引いたら、2枚目を引かずに手札から札を選んで出してもよい。PCではスペースキーで「引く → 選んだ札を出す → 終了」を進められる。</li>
-        <li>アクション札は <b>1〜6</b>（各${S.face}枚）と <b>7</b>（${S.sevens}枚）。</li>
-        <li>引いた札と手札から<b>1枚、または何枚でも組み合わせた合計</b>で数字（2〜12、7以外）を作って出す。その数字の土地が<b>全員に</b>生産（開拓地1・都市2・拠点${S.campYield}枚）。</li>
-        <li>出さないこともできる（札は手札に残る）。2〜6は1枚で作れるが、8以上は2枚以上が要る。</li>
-        <li>建築・開拓・交換をして終了。手札の枚数に上限はない（ただし資源＋手札が${S.limit}枚以上だとバーストで半分捨てる）。</li>
-        <li><b>処分</b>：建築の段階に手札の札を捨て札に戻せる（山札の圧縮）。1手番に1枚までは無料、2枚目からは1枚ごとに資源${S.trashCost}枚。</li></ul></section>
-      <section class="rl-sec" data-s="build"><h3>建設・開拓</h3><ul><li><b>道</b>＝木材1・レンガ1、<b>開拓地</b>（1点）＝木材1・レンガ1・羊毛1・小麦1、<b>都市</b>（2点、開拓地を格上げ）＝小麦2・鉱石3。開拓地は自分の道の先に建て、建物どうしは1辺以上離す。</li>
-        <li>自分の建物に接する、数字のない土地に<b>数字チップ</b>を置く。チップは<b>市場に公開された3枚</b>からしか選べない（使ったら袋から補充。袋の中身は右に表示）。隣り合う土地に同じ数字は置けない。</li>
-        <li>中央の土地：<b>羊毛1＋小麦1</b>（土地代）。荒地：<b>羊毛2＋小麦2</b>（土地代＋数字代）で、資源も残りのタイルから選ぶ。</li>
-        <li>開拓した資源を1枚もらう。開拓した土地は、接する全員が同じだけ生産します（開拓した人の色のキューブが目印）。</li></ul></section>
-      <section class="rl-sec" data-s="knight"><h3>7と騎士</h3><ul><li>7を引いたら必ず公開し、この番の生産はなし。山札の横に、見えていない7のカードの出現確率が表示されます。</li>
-        <li>資源＋手札が<b>${S.limit}枚以上</b>の人は半分を捨てる。そのあと<b>バーストした本人</b>が盗賊を動かし、そこに接する相手から資源を1枚奪う。</li>
-        <li><b>1の札は騎士</b>を兼ねる（数字の1としても使える）。</li>
-        <li>自分の手番の建築中に、数字とは別に騎士を1枚出して盗賊を動かし、接する相手から1枚奪える（1手番に1回）。</li>
-        <li>盗賊で奪われそうになったら、手札の騎士を捨てて<b>跳ね返せる</b>：奪いは無効になり、逆に仕掛けた人から1枚奪う。さらに<b>盗賊を好きな土地へ動かせる</b>（動かした先では奪わない）。</li>
-        <li>騎士を${S.armyMin}回以上使い、ほかの誰より多い人は<b>最大騎士力</b>で${S.armyPts}点（跳ね返しも1回に数える）。</li></ul></section>
-      <section class="rl-sec" data-s="era"><h3>時代・市場</h3><ul><li><b>時代</b>：${S.eraLen}周ごとに時代が変わる。1番目は<b>発見の時代</b>（盗賊はまだいない：バーストしても盗賊は動かず、騎士の攻撃もない）、2番目は<b>開拓の時代</b>（盗賊が現れる）。3番目からは時代カードを1枚引き、その効果になる（${HD.ERA_CARDS.map(k => `${ERA[k].n}：${ERA[k].d}`).join('／')}）。</li>
-        <li><b>市場・特殊札</b>：建築中に羊毛1・小麦1・鉱石1で、市場に並んだ3枚から1枚買える（1手番1枚）。<b>時代が変わるたびに、市場の3枚は捨てて新しい3枚に入れ替わる</b>。買った番は使えない。使えるのは1手番に1枚：${Object.entries(SPEC).filter(([k]) => S.scen || (k !== 'hunt' && k !== 'jeweler')).map(([, D]) => `${D.n}＝${D.d}`).join('／')}。特殊札も手札の枚数に数える。</li></ul></section>
-      <section class="rl-sec" data-s="atk"><h3>収奪・軍・城壁</h3><ul>${S.seizeCost ? `<li><b>道の収奪</b>：3番目の時代から、自分の手番の建築中に <b>羊毛1・鉱石2</b> を払うと、自分の道（または建物）につながる相手の道を1本、自分の道にできる（1手番に1回まで）。自分とつなぐ側の端に相手の建物がある道は奪えない（反対側の端は相手の建物でもよい）。奪われた人は、次の自分の手番が終わるまでその道を奪い返せない（道に🔒の印）。奪った道の間に自分の開拓地を建てることもできる。</li>` : ''}
-        <li><b>軍</b>：3番目の時代が来たら、軍の札${S.milCards}枚が山札に混ざる。自分の手番の建築中に軍の札と <b>小麦1・羊毛2・鉱石3</b> を払うと、自分の道の端から1辺先までにある相手の開拓地・都市を壊せる（拠点と城壁のある建物は壊せない）。使った軍の札は<b>得点札</b>として手元に置く（開拓地なら+${S.raidVP}点、都市なら+${S.raidVPCity}点）。山札から減るので、1局に最大${S.milCards}回。${S.razeLock ? '壊された人は、次の自分の手番が終わるまでその跡地に建て直せない（🔒の印）。壊した人は道がつながっていれば跡地に建てられる。' : ''}</li>
-        <li><b>城壁</b>（羊毛1・鉱石2）：自分の開拓地・都市に築くと、軍で壊されず、盗賊にも奪われない（点はなし）。</li></ul></section>
-      <section class="rl-sec" data-s="trade"><h3>相場・交換</h3><ul><li>資源には<b>在庫</b>がある（各${S.stock ? HD.STOCK_DEFAULT[S.n] || 19 : '∞'}枚）。もらう資源は在庫から出て、在庫が切れた資源は生産されない（手番の人から順に配る）。</li>
-        <li>払った資源（建物・道・開拓・交換・処分・捨てた分）は「消費ボックス」に入り、相場の更新のときに在庫へ戻る（戻るまでのタイムラグがある）。</li>
-        <li>${S.marketPeriod}手番ごとに相場が変わる：<b>在庫が少ない資源ほど、銀行でもらうのが高い</b>（少ない順に 5:1・5:1・4:1・3:1・2:1）。同時に消費ボックスの資源が在庫に戻る。</li>
-        <li>港の交換（3:1／2:1）は相場より有利なときだけ使える。2:1港はその資源を出すとき、どの資源でも2:1でもらえる。</li>
-        <li><b>港</b>：港に建物を建てるか、<b>自分の道が港に届けば</b>使える（他人の建物がある港は不可）。相場が変わるたびに、<b>港に建物を建てた人だけ</b>在庫から1枚<b>輸入</b>できる（2:1港はその資源、3:1港は手持ちの一番少ない資源。道が届いているだけでは輸入なし）。</li>
-        <li>自分の手番に、ほかのプレイヤーへ資源の交換を何度でも提案できる。応じた人の中から相手を選ぶ。BOTは、同じ相手とは1手番に1回まで、2:1より偏った交換や、一度断った条件より不利な提案には応じない。</li>
-        <li>銀行との交換は相場のレート、港は 3:1／2:1。</li></ul></section>
-      <section class="rl-sec" data-s="end"><h3>得点・終わり方</h3><ul><li>開拓地1点、都市2点（拠点は都市にできない）、最長路（5本以上）2点、最大騎士力${S.armyPts}点${S.devVP ? `、<b>開拓者</b>${S.devVP.vp}点（自分で開拓した土地が${S.devVP.n}か所以上で、ほかの誰より多い人。準備の開拓も数える。より多く開拓した人が出たら移る）` : ''}。</li>
-        <li>誰かが${S.goal}点に届いたら、その周回の最後の人（${NAMES[(S.first + S.n - 1) % S.n]}）の手番まで続けてから終了。一番点の高い人の勝ち。同点なら先に${S.goal}点に届いた人の勝ち。</li><li>ただし周回の終わりに${S.goal}点以上の人が<b>だれもいなければ</b>（軍で壊されたなど）、最終周は取り消してゲームを続ける。</li></ul></section>
+      ${html}
       <section class="rl-sec scen" data-s="scen">${S.scen && S.scen.barb ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>2番目の時代から、時代の初めに蛮族の船が沖に現れる。上陸地点は点が一番高い人の建物が一番多い海岸（その辺から2辺以内が襲われる範囲）、強さ＝時代の番号×1.5（四捨五入）＋先頭の都市の数の半分（切り上げ）。</li><li>守備：騎士で守る（1の札＝騎士、2の札＝守備兵（守備専用）。盗賊は動かさない。1手番1回で、騎士の攻撃と合わせて1回。最大騎士力に数える）、傭兵を雇う（${Object.keys(S.scen.mercCost).map(r => RESN[r] + S.scen.mercCost[r]).join('・')}、1手番1回）、範囲にある城壁1つにつき+1。</li><li>次の時代に変わるとき：守備の合計が強さ以上なら撃退し、一番守った人（同数なら全員）に勲章+${S.scen.medalVP}点。足りなければ、範囲に建物がある人のうち一番守っていない人（同数なら全員）の、城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li></ul>` : S.scen && S.scen.veins ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>外周の荒地のどれか${S.scen.veins}つに宝玉の鉱脈が隠れている。開拓すると鉱脈が出ることがあり、その土地は宝玉の鉱脈になる（開拓した人は宝玉1つ）。</li><li>鉱脈の数字が出ると、宝玉はその土地に溜まる（最大${S.scen.veinMax}つ）。隣に建物がある人なら、自分の手番に掘れる（開拓地1つ・都市2つ、1手番に1つの鉱脈につき1回。盗賊がいる鉱脈は掘れない）。</li><li>宝玉${S.scen.deliverN}つを本国の港（王冠の港）まで運ぶと1点（最大${S.scen.deliverCap}点）。港まで道がつながっていればよく、他人の道を通るときは持ち主ごとに通行料（宝玉${S.scen.toll}つ）。宝玉1＝好きな資源${S.scen.gemSell}枚にも換えられる。盗賊を鉱脈に置くと溜まった宝玉を1つ持ち去る。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（本国の港が開く）、3番目＝宝玉の噂（隠れた鉱脈+${S.scen.rumorVeins}、溜まる宝玉が2倍）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。専用の札：宝石商（宝玉1→資源3）。1・2番手は準備で道をもう1本。</li></ul>` : S.scen ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>小麦・羊毛の土地はなく、荒地もはじめは木材・レンガ・鉱石のみ。家畜の発見・種麦の時代で羊毛・小麦のタイルが3枚ずつ増える。</li><li>宝玉の洞窟は宝玉を生産（建物1つにつき1、都市2。開拓のボーナスなし）。宝玉1＝好きな資源${S.scen.gemSell}枚。宝玉${S.scen.tribute}つの献上で目標点に届いた扱い。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（以後、宝玉を献上箱に納められる。納めた宝玉は売れず奪われない。箱が${S.scen.tribute}個で献上達成）、3番目＝宝玉の噂（荒地を宝玉の洞窟として開拓できる、宝玉のタイル+3）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。長引いたら家畜の発見・種麦・補給船・飢えの冬などが来る。専用の札：狩猟（羊毛2）・宝石商（宝玉1→資源3）。</li></ul>` : ''}</section>
       <section class="rl-sec" data-s="credit"><h3>クレジット</h3><p class="sub">効果音「<a href="https://orangefreesounds.com/shofar-sound/" target="_blank" rel="noopener">Shofar Sound</a>」 by alexander（Orange Free Sounds）／ <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>（改変なし）。起動時の曲「<a href="https://pixabay.com/music/modern-classical-ancient-empire-142301/" target="_blank" rel="noopener">Ancient Empire</a>」 by The_Mountain（Pixabay、Pixabay Content License。容量のため128kbpsに再圧縮）。バーストで手放すときの効果音「<a href="https://on-jin.com/sound/listshow.php?pagename=hito&title=%E3%82%AC%E3%83%BC%E3%83%B302&janl=%E4%BA%BA%E9%96%93%E7%B3%BB%E9%9F%B3&bunr=%E3%82%B7%E3%83%A7%E3%83%83%E3%82%AF&kate=%E6%83%85%E5%8B%95" target="_blank" rel="noopener">ガーン02</a>」「衝撃」：<a href="https://on-jin.com/" target="_blank" rel="noopener">On-Jin ～音人～</a>（音量をそろえて使用。素材の二次配布・無断利用は禁止）。そのほかの効果音はブラウザ内で合成。</p></section></div>
       <div class="foot"><button class="btn" id="cl">閉じる</button></div>`);
     d.classList.add('rules');
-    {   // 節ごとの図（チュートリアルと同じ部品）
-      const C = HD.COST, pt = (h, n) => `<span class="rl-pt">${h}<b>${n}</b></span>`;
-      const FIG = {
-        start: TF.row(`<span class="rl-map">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `<span class="rl-cap">${TF.hex('waste', 0)}<small>荒地</small></span>`, TF.op('→'), `<span class="rl-cap">${TF.hex('ore', 8)}<small>開拓した土地</small></span>`),
-        turn: TF.row(`<span class="tf-deck"></span>`, TF.op('→'), acard(3, 'md'), TF.op('＋'), acard(5, 'md'), TF.op('＝'), TF.hex('brick', 8)),
-        build: `<div class="tf-cost rl-cost"><div>${TF.road()}<span>道</span>${TF.cost(C.road)}</div><div>${TF.house()}<span>開拓地<small>1点</small></span>${TF.cost(C.settle)}</div><div>${TF.city()}<span>都市<small>2点</small></span>${TF.cost(C.city)}</div></div>`,
-        knight: TF.row(`<span class="rl-cap">${acard(7, 'md')}<small>バースト</small></span>`, `<span class="rl-cap">${acard(1, 'md')}<small>騎士（1）</small></span>`, `<span class="tf-badge">最大騎士力 +${S.armyPts}点</span>`),
-        era: TF.row(`<span class="tf-badge era">⏳ ${S.eraLen}周ごとに時代が変わる</span>`, `<span class="tf-badge">市場の特殊カード</span>`, `<span class="rl-cap">${TF.cost({ sheep: 1, wheat: 1, ore: 1 })}<small>1枚の値段</small></span>`),
-        atk: TF.row(`<span class="rl-cap"><span class="tf-badge atk">道の収奪</span><small>${TF.cost(S.seizeCost || { sheep: 1, ore: 2 })}</small></span>`, `<span class="rl-cap"><span class="tf-badge atk">軍</span><small>${TF.cost({ wheat: 1, sheep: 2, ore: 3 })}</small></span>`, `<span class="rl-cap"><span class="tf-badge era">城壁</span><small>${TF.cost(S.wallCost || { sheep: 1, ore: 2 })}</small></span>`),
-        trade: TF.row(`<span class="rl-cap"><span class="tf-port">5:1</span><small>銀行（在庫が少ない）</small></span>`, `<span class="rl-cap"><span class="tf-port">2:1</span><small>銀行（在庫が多い）</small></span>`, `<span class="rl-cap"><span class="tf-port">3:1</span><small>港</small></span>`),
-        end: `<div class="rl-pts">${pt(TF.house(), '開拓地 1点')}${pt(TF.city(), '都市 2点')}${pt('<span class="tf-badge">最長交易路</span>', '+2点')}${pt('<span class="tf-badge">最大騎士力</span>', '+' + S.armyPts + '点')}${S.devVP ? pt('<span class="tf-badge">開拓者</span>', '+' + S.devVP.vp + '点') : ''}<span class="rl-goal">目標 <b>${S.goal}点</b></span></div>`,
-      };
-      for (const k in FIG) { const sec = d.querySelector(`.rl-sec[data-s="${k}"] h3`); if (sec) sec.insertAdjacentHTML('afterend', `<div class="rl-fig">${FIG[k]}</div>`); }
-    }
     const show = k => { d.querySelectorAll('.rl-tabs button').forEach(b => b.classList.toggle('on', b.dataset.s === k)); d.querySelectorAll('.rl-sec').forEach(x => { x.hidden = x.dataset.s !== k; }); d.querySelector('.rl-body').scrollTop = 0; try { localStorage.setItem('hexdeck.rulesTab', k); } catch (_) {} };
     d.querySelector('.rl-tabs').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (b) show(b.dataset.s); });
     let k0 = 'start'; try { k0 = localStorage.getItem('hexdeck.rulesTab') || 'start'; } catch (_) {} if (!d.querySelector(`.rl-tabs button[data-s="${k0}"]`)) k0 = 'start'; show(k0);
@@ -4857,6 +4945,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { const d = [...document.querySelectorAll('.dlg')].pop(); if (d && !S.pending.some(x => x.p === HUMAN)) d.close(); else if (mode) { mode = null; render(); } } });
 
   function start() {
+    coachEnd();
     S = HD.newGame({ players: opts.players, goal: opts.map === 3 ? 11 : opts.map === 4 || opts.map === 5 ? 12 : 10, limit: opts.limit, sevens: opts.sevens, noDesert: opts.map === 1 || opts.map === 2, bagInner: opts.map === 2, wide: opts.map === 3, scenario: opts.map === 4 ? 'gemroad' : opts.map === 5 ? 'horn' : null, seed: (Math.random() * 2 ** 31) | 0 });
     mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
     render();
@@ -5030,19 +5119,93 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     draw();
     return d;
   }
+  // ===== 遊びながら覚えるチュートリアル（実際の盤で操作しながら進む） =====
+  let coach = null; const TAP = matchMedia('(pointer:coarse)').matches ? 'タップ' : 'クリック';
+  const myHexNums = () => { const out = []; S.hexes.forEach(H => { if (H.num && H.num !== 7 && H.verts.some(v => S.verts[v].owner === HUMAN)) out.push(H.num); }); return out; };
+  const gift = (o, note) => { const P = S.players[HUMAN]; let any = false; for (const r in o) if (P.res[r] < o[r]) { P.res[r] = o[r]; any = true; } if (any) coach.gift = note; };
+  const COACH = [
+    { id: 'intro', manual: true, h: '遊びながら覚えよう', t: () => `練習用の対局です（相手はBOT3人・目標${S.goal}点）。<br>この枠の指示に沿って、実際に盤を操作してみましょう。光っている所が次に押す場所です。` },
+    { id: 'camp', h: '① スタート地点を選ぶ', t: () => '盤の角に光る<b>スタート地点</b>から1つをクリックして<b>拠点</b>を置きます。<br>拠点は0点ですが、接する土地の数字が出ると資源を<b>' + S.campYield + '枚</b>もらえます。', done: () => S.players[HUMAN].camp >= 0, wait: () => S.phase !== 'setup-camp' || S.cur !== HUMAN },
+    { id: 'dev', h: '② 荒地を開拓する', t: () => '拠点のとなりの光っている<b>荒地</b>をクリックし、<b>資源</b>と<b>数字チップ</b>を選びます。<br>チップの点が多い<b>6・8</b>ほどよく出ます（この1回は無料）。', done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
+    { id: 'road', h: '③ 道を1本引く', t: () => '拠点から伸びる光った<b>辺</b>をクリックして道を置きます。<br>道の先に、あとで<b>開拓地</b>を建てられます。', done: () => S.players[HUMAN].roads >= 1, wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
+    { id: 'watch', h: '④ BOTの番を見る', t: () => 'あなたは最後の手番です。BOTの番を見てみましょう。<br>BOTが数字を出すと、<b>その数字の土地に接する建物を持つ全員</b>が資源をもらえます（あなたも）。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
+    { id: 'draw', turn: true, tg: '#deckSlot', h: '⑤ 札を引く', enter: () => { const P = S.players[HUMAN]; if (S.drawn.length) return; const ns = myHexNums(); const want = ns.find(n => n <= 6) || ns[0] || 6; const cards = want <= 6 ? [want] : [want - 6, 6].sort((a, b) => b - a); coach.need = cards.length; coach.want = want;
+        for (const c of cards.slice().reverse()) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } void P; },
+      t: () => `あなたの番です。光っている<b>山札</b>をクリックして札を引きます。${coach.need > 1 ? `<br>引いたら<b>もう1回</b>クリックして2枚目も引いてみましょう（1手番に最大2枚）。` : '<br>もう1枚引くこともできますが、<b>7</b>を引くとバーストします。'}`, done: () => S.drawn.length >= (coach.need || 1) || S.step === 'choose' || S.acted },
+    { id: 'play', turn: true, tg: '#myHand,#aPlay', h: '⑥ 数字を出す', t: () => `手札の札をクリックして選び、<b>札を選ぶ</b>で数字を出します。${coach.need > 1 ? `2枚を選ぶと合計（<b>${coach.want}</b>）になります。` : ''}<br><b>${coach.want}</b>の土地にはあなたの拠点が接しているので、資源がもらえます。`, done: () => S.acted },
+    { id: 'road2', turn: true, h: '⑦ 道を建てる', enter: () => gift({ wood: 1, brick: 1 }, '練習用に木材とレンガを配りました'), t: () => `資源を払って建設します。盤上の辺に出ている<b>道の目印</b>をクリックすると道が建ちます。<br>費用は${TF.cost(HD.COST.road)}。開拓地・都市も同じように目印から建てます。`, done: () => S.players[HUMAN].roads > coach.b.roads, skip: () => !HD.legalRoads(S, HUMAN).length },
+    { id: 'dev2', turn: true, h: '⑧ 土地を開拓する', enter: () => gift(S.wasteCost, '練習用に開拓の資源を配りました'), t: () => `建物に接する荒地は、資源を払えば開拓できます。<b>開拓できる土地</b>（目印の出ている荒地）をクリック。<br>荒地は${TF.cost(S.wasteCost)}。数字チップは右上の<b>市場</b>の3枚から選びます。`, done: () => S.hexes.filter(H => H.devBy === HUMAN).length > coach.b.dev, skip: () => !HD.developable(S, HUMAN).length },
+    { id: 'trade', turn: true, tg: '#aTrade', h: '⑨ 交換する', enter: () => { const r = HD.RES.slice().sort((a, b) => S.rates[a] - S.rates[b])[0]; gift({ [r]: S.rates[r] }, '練習用に交換できる資源を配りました'); }, t: () => '足りない資源は<b>交換</b>で手に入れます（銀行・港・BOT）。<br>銀行のレート（左上）は<b>在庫が少ない資源ほど高く</b>なります。1回交換してみましょう。', done: () => S.trades > coach.b.trades || S.log.some(m => m.k === 'ptrade' && m.p === HUMAN && m.seq > coach.b.seq) },
+    { id: 'end', turn: true, tg: '#aEnd', h: '⑩ 手番を終える', t: () => 'これで手番はおしまい。<b>終了</b>ボタンで次の人へ渡します。<br>（スペースキーでも終了できます）', done: () => S.cur !== HUMAN },
+    { id: 'burst', manual: true, h: '⑪ 7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が混ざっています。7を引くとその番は資源が出ず、手札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。<br>山札の横に、見えていない7の出現確率が出ます。引くか止めるかが勝負どころ。` },
+    { id: 'score', manual: true, h: '⑫ 点の取り方', t: () => `開拓地<b>1点</b>・都市<b>2点</b>。最長交易路・最大騎士力は<b>+2点</b>${S.devVP ? `、${S.devVP.n}か所以上開拓した一番の人は開拓者<b>+${S.devVP.vp}点</b>` : ''}。<br>1の札は<b>騎士</b>にもなり、盗賊を動かして資源を奪えます。先に<b>${S.goal}点</b>で勝ち！` },
+    { id: 'fin', fin: true, h: 'チュートリアル完了！', t: () => 'このまま対局を続けられます。<br>時代・市場・収奪などの細かい説明は<b>マニュアル</b>や<b>ルール</b>でいつでも読めます。' },
+  ];
+  function coachGo(i) {
+    coach.i = i; coach.gift = null; const st = COACH[i]; if (!st) { coachEnd(); return; }
+    const P = S.players[HUMAN]; coach.b = { roads: P.roads, dev: S.hexes.filter(H => H.devBy === HUMAN).length, trades: S.trades, seq: S.logSeq || 0 };
+    if (st.turn && coach.turnNo == null) coach.turnNo = S.turn;
+    if (st.skip && st.skip()) return coachGo(i + 1);
+    if (st.enter) { st.enter(); if (coach.gift) setTimeout(render, 0); }
+  }
+  function coachStart() {
+    document.querySelectorAll('.coach').forEach(x => x.remove());
+    const el = document.createElement('div'); el.className = 'coach'; el.setAttribute('role', 'dialog'); document.body.appendChild(el);
+    coach = { i: 0, el, turnNo: null };
+    el.addEventListener('click', e => {
+      const b = e.target.closest('button[data-c]'); if (!b) return; const c = b.dataset.c;
+      if (c === 'next' || c === 'skip') { coachGo(coach.i + 1); render(); }
+      else if (c === 'min') { el.classList.toggle('min'); }
+      else if (c === 'quit' || c === 'cont') coachEnd();
+      else if (c === 'manual') { coachEnd(); tutDialog('begin', null); }
+    });
+    coachGo(0); render();
+  }
+  function coachEnd() { if (!coach) return; coach.el.remove(); coach = null; document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl')); }
+  function coachTick() {
+    if (!coach) return;
+    if (S.phase === 'over') { coachEnd(); return; }
+    let st = COACH[coach.i], guard = 0;
+    while (st && guard++ < 20) {
+      if (st.turn && coach.turnNo != null && (S.turn !== coach.turnNo || S.cur !== HUMAN)) { const k = COACH.findIndex(x => x.id === 'burst'); if (coach.i < k) { coachGo(k); st = COACH[coach.i]; continue; } }
+      if (!st.manual && !st.fin && st.done && st.done()) { coachGo(coach.i + 1); st = COACH[coach.i]; continue; }
+      break;
+    }
+    if (!coach) return; st = COACH[coach.i]; if (!st) return;
+    const waiting = st.wait && st.wait();
+    const n = COACH.length - 1, k = Math.min(coach.i, n);
+    const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '');
+    if (coach.key !== key) {
+      coach.key = key;
+      coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
+        <div class="co-body">${st.f ? `<div class="co-fig">${st.f()}</div>` : ''}<div><h4>${st.h}</h4><p>${waiting ? `<span class="co-wait">${st.waitT || 'BOTの番です。少し待ちましょう…'}</span>` : st.t().replace(/クリック/g, TAP)}</p>${coach.gift && !waiting ? `<p class="co-gift">🎁 ${coach.gift}</p>` : ''}</div></div>
+        <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : (st.turn ? '<button class="btn" data-c="skip">とばす</button>' : '')}`}</div>`;
+      coach.el.classList.remove('co-in'); void coach.el.offsetWidth; coach.el.classList.add('co-in');
+    }
+    document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl'));
+    if (st.tg && !waiting && S.cur === HUMAN) st.tg.split(',').forEach(q => { const e = document.querySelector(q); if (e) e.classList.add('coach-hl'); });
+  }
+  function startTut() {
+    opts.map = 0;
+    let seed = (Math.random() * 2 ** 31) | 0;
+    for (let k = 0; k < 200; k++, seed++) { S = HD.newGame({ players: 4, goal: 10, limit: opts.limit, sevens: opts.sevens, seed }); if (S.cur === HUMAN && S.phase === 'setup-camp') break; }
+    mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
+    SND.unlock(); SND.bgmPlay();
+    coachStart(); pump();
+  }
   // 開いたとき：チュートリアルを見るか聞く（「次から表示しない」で省略）
   function tutAsk(done) {
     let skip = false; try { skip = localStorage.getItem('hexdeck.tutSkip') === '1'; } catch (_) {}
     if (skip) return done();
     const d = dlg(`<h2 style="text-align:center">ヘクスデッキへようこそ</h2>
       <p style="text-align:center;margin:0 0 14px">はじめにチュートリアルを見ますか？</p>
-      <div class="tut-ask"><button data-t="begin"><b>はじめての方</b><small>ゲームの流れを1から（14ページ）</small></button><button data-t="expert"><b>カタン経験者</b><small>カタンとの違いだけ（8ページ）</small></button></div>
+      <div class="tut-ask three"><button data-t="play" class="rec"><em>おすすめ</em><b>遊びながら覚える</b><small>はじめての方向け。実際の盤を操作しながら進む練習対局</small></button><button data-t="begin"><b>マニュアルを読む</b><small>はじめての方向け。ゲームの流れを1から（14ページ）</small></button><button data-t="expert"><b>カタン経験者</b><small>カタンとの違いだけ（8ページ）</small></button></div>
       <label class="tut-skip"><input type="checkbox" id="tuSkip"> 次から表示しない（マップ選択からいつでも見られます）</label>
       <div class="foot"><button class="btn" id="tuNo">見ないで始める</button></div>`);
     d.classList.add('tutask');
     const save = () => { try { localStorage.setItem('hexdeck.tutSkip', d.querySelector('#tuSkip').checked ? '1' : '0'); } catch (_) {} };
     d.querySelector('#tuNo').onclick = () => { save(); d.close(); done(); };
-    d.querySelectorAll('.tut-ask button').forEach(b => b.onclick = () => { save(); d.close(); tutDialog(b.dataset.t, done); });
+    d.querySelectorAll('.tut-ask button').forEach(b => b.onclick = () => { save(); d.close(); if (b.dataset.t === 'play') startTut(); else tutDialog(b.dataset.t, done); });
   }
   function mapPickDialog() {
     const d = dlg(`<h2 style="text-align:center">マップを選ぶ</h2>
@@ -5056,11 +5219,12 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       <div class="mappick" data-pane="scen" hidden>
         <button data-m="4" class="scen">${mapThumb('gemroad')}<b>宝玉の導き<em class="tst">シナリオ</em></b><small>荒地に隠れた鉱脈を掘り当て、<br>宝玉を本国の港まで運べ。目標12点</small></button>
         <button data-m="5" class="scen horn">${mapThumb('horn')}<b>蛮族の角笛<em class="tst">シナリオ</em></b><small>角笛が鳴れば蛮族が来る。<br>守るか、見捨てるか。目標12点</small></button>
-      </div></div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="begin">はじめての方</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
-    let picked = false, tutOpen = false; d.addEventListener('click', e => { const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
+      </div></div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="play" class="rec">遊びながら覚える</button><button data-tut="begin">マニュアル</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
+    let picked = false, tutOpen = false; d.addEventListener('click', e => { const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); if (tb.dataset.tut === 'play') startTut(); else tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
     try { const tb = localStorage.getItem('hexdeck.tab'); if (tb === 'scen') d.querySelector('.mptabs button[data-tab="scen"]').click(); } catch (_) {}
     const c0 = d.close; d.close = () => { c0(); if (tutOpen) return; SND.unlock(); SND.bgmPlay(); start(); };
   }
+  if (location.hash === '#dbg') window.__dbg = { S: () => S, after, B };   // 検証用
   S = HD.newGame({ players: opts.players, goal: opts.goal, limit: opts.limit, sevens: opts.sevens, seed: (Math.random() * 2 ** 31) | 0 }); render(); tutAsk(() => mapPickDialog());   // 曲はマップを選んでから流す
   window.HDUI = { get S() { return S; }, render: () => render() };
 })();
