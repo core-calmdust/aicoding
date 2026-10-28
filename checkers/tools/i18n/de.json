@@ -303,7 +303,7 @@
  "op.hint": "Der goldene Ring markiert den Stein, mit dem der beste Zug gespielt wird.",
  "op.auto": "Automatisch abspielen / Stopp (Leertaste)",
  "pz.title": "Dame-Aufgaben",
- "pz.desc": "Aufgaben „Gewinn in N“ und Schlagkombinationen „Materialgewinn in N“. Der Gegner verteidigt sich immer so zäh wie möglich. Es gibt genau einen richtigen ersten Zug, und jede Aufgabe wurde von der Engine (mit Endspieldatenbanken) geprüft.",
+ "pz.desc": "Aufgaben „Gewinne in N“ und „Gewinne Material in N“ zu vielen Themen: Schläge, Mehrfachsprünge, Durchbrüche, Verteidigung und Endspiele. Der Gegner verteidigt sich immer so zäh wie möglich. Es gibt genau einen richtigen ersten Zug, und jede Aufgabe wurde von der Engine (mit Endspieldatenbanken) geprüft.",
  "pz.retry": "Nochmal",
  "pz.answer": "Lösung",
  "pz.next": "Weiter",
