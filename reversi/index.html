@@ -1292,7 +1292,7 @@ html.pc2.dock-compact .side{align-self:start}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
    column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:#0b0b0b;--rb-s2:#f2f0e8}
-html.pc2.rb-on, html.pc2.rb-on body{--rbh:clamp(170px, calc(var(--vh) * .26), 250px);
+html.pc2.rb-on, html.pc2.rb-on body{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);
   --fmax:max(180px, min(var(--vh) - var(--pad) * 2 - var(--top) - var(--rbh) - var(--gap), 100vw - var(--padx) * 2 - var(--gap) - var(--rw), 1400px))}
 html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh);align-self:start}
@@ -1635,14 +1635,14 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=26"></script>
+<script src="../shared/headerbar.js?v=27"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1"></script>
-<script src="rbox.js?v=2"></script>
+<script src="rbox.js?v=3"></script>
 <script>
 'use strict';
 // ====================================================================== rules

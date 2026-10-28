@@ -69,7 +69,28 @@ html.rvbox-on .app{grid-template-rows:auto var(--rvbh);grid-template-areas:"boar
 @keyframes rvbspin{to{transform:rotate(360deg)}}
 .rvb-boardflag{display:none}
 html.rvb-study .rvb-boardflag{display:block;position:absolute;left:50%;top:2px;transform:translate(-50%,0);z-index:30;font-size:12px;font-weight:700;padding:3px 12px;border-radius:999px;background:#e8a33c;color:#1a1206;letter-spacing:.06em;white-space:nowrap;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-html.rvb-study .rvb-boardring{outline:3px solid rgba(232,163,60,.75);outline-offset:3px}
+html.rvb-study .rvb-boardring{outline:3px solid rgba(232,163,60,.75);outline-offset:3px}/* larger, easier-to-read text (PC, 2026-10-28): PV on one line so about four candidates fit */
+.rvbox{padding:8px 16px 8px;gap:5px}
+.rvbox .rvb-top{min-height:32px}
+.rvbox .rvb-list{gap:2px}
+.rvbox .rvb-head{font-size:16.5px}
+.rvbox .rvb-head .tag{font-size:13.5px;padding:1px 8px}
+.rvbox .rvb-flagS{font-size:13.5px}
+.rvbox .rvb-btn{font-size:14.5px;padding:6px 15px}
+.rvbox .rvb-btn.rs{padding:6px 18px}
+.rvbox .rvb-btn.ic{padding:6px 12px}
+.rvbox .rvb-lbl{font-size:12.5px}
+.rvbox .rvb-lbl small,.rvbox .rvb-st,.rvbox .rvb-mini{font-size:12px}
+.rvbox .rvb-mini{line-height:18px}
+.rvbox .rvb-ex{font-size:15.5px;line-height:1.65}
+.rvbox .rvb-ex .tip,.rvbox .rvb-ex p.rv-tip{font-size:14.5px}
+.rvbox .rvb-row{grid-template-columns:18px minmax(56px,auto) 62px minmax(0,1fr);align-items:center;gap:8px;padding:3px 10px;font-size:15px;line-height:1.4}
+.rvbox .rvb-row .rk{font-size:13px}
+.rvbox .rvb-row .pv{font-size:14px;display:block;white-space:nowrap;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.rvbox .rvb-row .pl{font-size:12px}
+.rvbox .rvb-wait,.rvbox .rvb-none{font-size:14px}
+.rvbox .rvb-foot{font-size:12px}
+html.rvb-study .rvb-boardflag{font-size:13.5px}
 `;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function create(o) {

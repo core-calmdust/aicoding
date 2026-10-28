@@ -184,13 +184,16 @@ function dockCenter() {
   if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
   app.style.top = '0px';   // a length (not auto), so the change of top can transition
   app.style.transition = 'top .45s cubic-bezier(.25,.8,.3,1)';
-  let raf = 0, cur = 0, own = 0, fitted = false;
+  let raf = 0, cur = 0, own = 0, fitted = false, rt = 0, recheck = 0;
   const isOpen = () => { const ds = getComputedStyle(dock); return document.body.classList.contains('dock-open') && ds.display !== 'none' && ds.position === 'fixed'; };
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
     let t = Infinity, b = -Infinity;
     for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
-    const now = shift(); return t === Infinity ? null : [t + now, b + now];
+    if (t === Infinity) return null;
+    // a review box fixed right under the board and the info column (connect4 / dots / morris rvbox.js: placed 16px below them)
+    const fb = document.querySelector('body > .rbox'); if (fb && fb.getClientRects().length && getComputedStyle(fb).position === 'fixed') b += 16 + fb.offsetHeight;
+    const now = shift(); return [t + now, b + now];
   };
   const region = () => {
     const bar = document.querySelector('header.hb, .atlas-top'), br = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent)
@@ -212,24 +215,41 @@ html.dock-compact .side .players .status:not(.low){display:none!important}
 html.dock-compact .side .players .count{margin-top:2px!important}
 html.dock-compact .side #evalCard{min-height:0!important;height:auto!important;flex:none!important}
 html.dock-compact .side #evalCard .evalbar{margin-top:6px!important}
-html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
+html.dock-compact .side #evalCard .navbar{margin-top:8px!important}
+html.dock-rvb .app > :is(.side, .side-r){align-self:stretch!important;height:0!important;min-height:100%!important;max-height:none!important;overflow-y:auto!important;scrollbar-width:thin}
+html.dock-rvb .app > :is(.side, .side-r) > .side-in{min-height:0!important}`;
   document.head.appendChild(cmp);
-  const apply = () => { css.textContent = R ? `html.dock-fit, html.dock-fit body{--vh:${Math.max(240, Math.floor(base - R))}px !important}` : ''; window.DockFit.extra = R; root.classList.toggle('dock-fit', R > 0); relayout(); };
+  // (with the review box under the board, the box may also get lower: down to 140px instead of the games' 170px)
+  const apply = () => { css.textContent = R ? `html.dock-fit:not(#_), html.dock-fit:not(#_) body{--vh:${Math.max(root.classList.contains('dock-rvb') ? 150 : 240, Math.floor(base - R))}px !important}
+html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp(140px, calc(var(--vh) * .28), 250px) !important;--rbh:clamp(140px, calc(var(--vh) * .27), 240px) !important;--bxh:clamp(140px, calc(var(--vh) * .28), 250px) !important}` : ''; window.DockFit.extra = R; root.classList.toggle('dock-fit', R > 0); relayout(); };
+  // a review box (rvbox.js / rbox.js / the games' own) under the board and the info column
+  const boxOn = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].some(b => b.getClientRects().length);
   window.DockFit = { extra: 0 };
-  const unfit = () => { const c = root.classList.contains('dock-compact'); root.classList.remove('dock-compact'); if (!fitted) { if (c) relayout(); return; } fitted = false; R = 0; apply(); };
+  const unfit = () => { const c = root.classList.contains('dock-compact') || root.classList.contains('dock-rvb'); root.classList.remove('dock-compact', 'dock-rvb'); if (!fitted) { if (c) relayout(); return; } fitted = false; R = 0; apply(); };
   // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
   // (games may redraw their board a moment after a resize, so each pass waits before measuring again)
   const wait = ms => new Promise(r => setTimeout(r, ms));
+  // a step can overshoot (the review box gets lower too, the board snaps to whole sizes): give back what is left over
+  const loosen = async my => {
+    for (let k = 0; k < 4 && R > 0; k++) {
+      const [top, bot] = region(), u = bounds(); if (!u || my !== gen) return;
+      const slack = (bot - top - 2 * M) - (u[1] - u[0]); if (slack < 12) return;
+      const keep = R; R = Math.max(0, R - Math.floor(slack) + 4); apply(); await wait(180); if (my !== gen) return;
+      const [t2, b2] = region(), u2 = bounds(); if (!u2) return;
+      if (u2[1] - u2[0] > b2 - t2 - 2 * M + 1) { R = keep; apply(); await wait(180); return; }   // too far: back to the last size that fitted
+    }
+  };
   const fit = async my => {
-    let prev = Infinity;
-    for (let k = 0; k < 6; k++) {
+    let prev = Infinity, good = R, stall = 0;
+    for (let k = 0; k < 10; k++) {
       const [top, bot] = region(), room = bot - top - 2 * M, u = bounds(); if (!u || my !== gen) return;
-      const over = (u[1] - u[0]) - room; if (over <= 1) return;
-      if (u[1] - u[0] >= prev - 1) { R = Math.max(0, R - lastStep); apply(); await wait(120); return; }   // no longer shrinking: undo the last step and stop
-      prev = u[1] - u[0];
+      const h = u[1] - u[0], over = h - room; if (over <= 4) { if (k) await loosen(my); return; }   // (a few px into the margin M is fine)
+      // a step that did not make it smaller (the board is limited by the width, or the layout is at its minimum): try a
+      // larger one; after three in a row, go back to the last size that helped and stop
+      if (h < prev - 1) { good = R; stall = 0; prev = h; } else if (++stall >= 3) { R = good; apply(); await wait(120); return; }
       if (!fitted) { base = vhPx(); if (!base) return; }
-      if (R > base) return;   // (--vh itself never goes below 240px; DockFit.extra may keep growing for JS-sized boards)
-      fitted = true; lastStep = Math.ceil(over) + 1; R += lastStep; apply();
+      if (R > base) { R = good; apply(); await wait(120); return; }   // (--vh itself never goes below 240px (150px with a review box); DockFit.extra may keep growing for JS-sized boards)
+      fitted = true; lastStep = Math.ceil(over) + 1 + (stall ? Math.round(base * .08 * stall) : 0); R += lastStep; apply();
       await wait(180);
     }
   };
@@ -237,26 +257,40 @@ html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
   const settle = async () => {
     const my = ++gen;
     if (!isOpen()) { cur = 0; app.style.top = '0px'; setTimeout(() => { if (!isOpen() && my === gen) unfit(); }, 460); return; }   // size back once it has scrolled back
+    // with the review box, the info column takes the height of the board's row (and scrolls) instead of making the row taller
+    if (boxOn() !== root.classList.contains('dock-rvb')) { root.classList.toggle('dock-rvb'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; }
     await fit(my); if (my !== gen || !isOpen()) return;
     // the info column too short for its cards: compact it (players smaller, graph / record / info line hidden — the
     // evaluation bar and the ◀ ▶ navigation stay), like the phone layout
     const sd = document.querySelector('.app .side');
     const ub = bounds(), rg = region(), still = ub && (ub[1] - ub[0]) > rg[1] - rg[0] - 2 * M + 2;   // still too tall after fitting
     if (sd && !root.classList.contains('dock-compact') && (still || sd.scrollHeight > sd.clientHeight + 4 || [...(sd.querySelector('.side-in') || sd).children].some(c => c.getClientRects().length && c.getBoundingClientRect().bottom > sd.getBoundingClientRect().bottom + 4))) { root.classList.add('dock-compact'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; await fit(my); if (my !== gen || !isOpen()) return; }   // compact first, then fit again from the full size
-    const [top, bot] = region(), u = bounds(); if (!u) return;
-    const d = Math.round((u[0] + u[1]) / 2 - (top + bot) / 2);   // (may be negative: a smaller layout is moved down to the middle)
+    const [top, bot] = region(), u = center(); if (!u) return;
+    // the dock may still have been moving when this started: look again, a moment later (and centre again if the game
+    // redrew its board a moment after the last resize)
+    if (recheck-- > 0) setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
+      if (Math.abs(b2 - bot) > 2 || Math.abs(t2 - top) > 2) settle(); else center(); }, 500);
+  };
+  const center = () => {
+    const [top, bot] = region(), u = bounds(); if (!u) return null;
+    let d = Math.round((u[0] + u[1]) / 2 - (top + bot) / 2);   // (may be negative: a smaller layout is moved down to the middle)
+    if (u[1] - u[0] > bot - top - 2 * M) d = Math.round(u[0] - top - M);   // still taller than the space: keep its top under the header
     if (d !== cur) { cur = d; app.style.top = -d + 'px'; }
+    return u;
   };
   // wait for the dock to finish opening / closing (its height animates), then settle
   const follow = () => {
-    cancelAnimationFrame(raf); let last = null, still = 0, n = 0;
+    cancelAnimationFrame(raf); let last = null, still = 0, n = 0; recheck = 2;
     const step = () => { const y = Math.round(dock.getBoundingClientRect().top); still = y === last ? still + 1 : 0; last = y; if (still >= 2 || ++n > 90) { settle(); return; } raf = requestAnimationFrame(step); };
     if (!isOpen()) { settle(); return; }
     raf = requestAnimationFrame(step);
   };
-  let wasOpen = isOpen();
-  new MutationObserver(() => { const o = isOpen(); if (o !== wasOpen) { wasOpen = o; follow(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  let rt = 0, ws = innerWidth + 'x' + innerHeight;
+  let wasOpen = isOpen(), wasBox = boxOn();
+  // the dock opened / closed, or (while it is open) the review box came or went: settle again
+  const mo = () => { const o = isOpen(), b = o && boxOn(); if (o !== wasOpen) { wasOpen = o; wasBox = b; follow(); } else if (o && b !== wasBox) { wasBox = b; clearTimeout(rt); rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); } };
+  new MutationObserver(mo).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(mo).observe(root, { attributes: true, attributeFilter: ['class'] });
+  let ws = innerWidth + 'x' + innerHeight;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
     rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }

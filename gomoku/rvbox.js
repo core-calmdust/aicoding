@@ -20,7 +20,7 @@
   const CSS = `
 .rvbox{display:none}
 .rvb-badge{display:none}
-html.rvb-on body{--rbh:clamp(170px, calc(var(--vh) * .27), 240px);--rbg:12px;--rbx:calc(var(--rbh) + var(--rbg))}
+html.rvb-on body{--rbh:clamp(180px, calc(var(--vh) * .31), 265px);--rbg:12px;--rbx:calc(var(--rbh) + var(--rbg))}
 html.rvb-on .app{grid-template-rows:var(--fh) var(--rbh)!important;grid-template-areas:"board side" "box box"!important;row-gap:var(--rbg)!important}
 html.rvb-on .app > .rvbox{display:grid;grid-area:box;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);height:var(--rbh);min-height:0;min-width:0;box-sizing:border-box;align-self:stretch;
   background:linear-gradient(180deg,var(--panel2,#222),var(--panel,#181818));border:1px solid var(--line,#444);border-radius:14px;overflow:hidden;color:var(--text,#eee);text-align:start}
@@ -67,7 +67,27 @@ html[lang=ar] .rvb-row .pv{text-align:end}
 .rvb-foot{font-size:11px;color:var(--dim,#888);padding:3px 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.rvb-on .rvb-badge.on{display:block;position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:40;pointer-events:none;
   background:linear-gradient(180deg,#f1d68e,#c9a24f);color:#1b1408;font-weight:800;font-size:12.5px;letter-spacing:.04em;padding:3px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap}
-html.rvb-on .frame.rvb-ken{box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 2px rgba(226,194,117,.85),0 0 22px rgba(226,194,117,.25)!important}
+html.rvb-on .frame.rvb-ken{box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 2px rgba(226,194,117,.85),0 0 22px rgba(226,194,117,.25)!important}/* larger, easier-to-read text (PC, 2026-10-28) */
+.rvb-l .rvb-h{font-size:16.5px}
+.rvb-l .tag{font-size:13.5px}
+.rvb-l p{font-size:15.5px;line-height:1.65}
+.rvb-l .rvb-dim,.rvb-l .rvb-kl{font-size:14px}
+.rvb-l button.rvb-see{font-size:13px}
+.rvb-t{font-size:14px}
+.rvb-st{font-size:12.5px}
+.rvb-btn{font-size:14px;padding:6px 13px}
+.rvb-btn svg{width:15px;height:15px}
+.rvb-cols,.rvb-row{grid-template-columns:22px minmax(64px,max-content) 74px minmax(0,1fr)}
+.rvb-cols{font-size:12px}
+.rvb-row{min-height:31px;font-size:15px}
+.rvb-row .rk{font-size:13px}
+.rvb-row .pl{font-size:12px}
+.rvb-row .va{font-size:14.5px}
+.rvb-row .va small{font-size:12px}
+.rvb-row .pv{font-size:14px}
+.rvb-msg{font-size:14px}
+.rvb-foot{font-size:12px}
+html.rvb-on .rvb-badge.on{font-size:13.5px}
 `;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const BACK = '<svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg>';
