@@ -1,7 +1,7 @@
 /* =====================================================================
    Checkers (English draughts) on the 3D table — a luxury lacquered board:
    high-gloss grey-black burl and ivory squares inside a burl border,
-   a thick rounded frame of clear acrylic on a dark lacquered core;
+   a thick rounded black lacquer frame;
    polished metal checkers (silver and gold) with concentric ring grooves
    on the top, kings stacked two high with a little crown.
    The lacquer mirrors the pieces (stencil reflections, PC only).
@@ -17,7 +17,7 @@
   const { canvasTex, makeNoise } = X;
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));   // phones: half-size procedural textures
   const LO = () => !!(X.coarse || X.lite);
-  const S = 8, MG = .36, FR = .56, HF = .3, HT = .5;   // field, burl border round the squares, acrylic frame width, field height, frame height
+  const S = 8, MG = .36, FR = .56, HF = .3, HT = .5;   // field, burl border round the squares, black frame width, field height, frame height
   const IN = S + 2 * MG, OW = IN + 2 * FR;
   const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
@@ -100,39 +100,22 @@
     g.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
     g.setIndex(idx); g.computeBoundingSphere(); return g;
   }
-  // clear acrylic (r128 has no transmission): a thin glossy coat with environment reflections, drawn last without depth writes,
-  // more opaque and a little cool-tinted at grazing angles (the bevels and walls light up like the edges of real acrylic)
-  function acrylic() {
-    return mat('acrylic', () => {
-      const TT = T(), lo = LO();
-      const m = lo ? new TT.MeshStandardMaterial({ color: lin(0xeef6f6), roughness: .08, metalness: 0, transparent: true, opacity: .14, depthWrite: false, envMapIntensity: 2.6 })
-        : phys({ color: 0xf2f8f8, roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .1, depthWrite: false, envMapIntensity: 3 });
-      m.onBeforeCompile = sh => {
-        sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
-          'float fres = pow( 1.0 - clamp( abs( dot( normalize( normal ), normalize( vViewPosition ) ) ), 0.0, 1.0 ), 2.0 );\n' +
-          'gl_FragColor = vec4( outgoingLight + vec3( 0.62, 0.86, 0.84 ) * fres * 0.9, clamp( diffuseColor.a + fres * 0.75, 0.0, 0.92 ) );');
-      };
-      m.customProgramCacheKey = () => 'ckAcrylic' + (lo ? 'L' : 'H');
-      m.userData.noMerge = true;
-      return m;
-    });
-  }
   function board() {
     const TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const ft = fieldTex(); ft.anisotropy = 8;
     const top = mat('top', () => { const m = phys({ map: ft, color: 0xffffff, roughness: .14, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.5 });
       Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); return m; });   // marks where reflections may show
-    // the core: a dark lacquered slab under the whole board (it is what shows through the clear frame)
+    // the core: a black lacquered slab under the whole board
     const bt = mat('burlTop', () => { const t = new TT.CanvasTexture(burl(SZ(768))); t.encoding = TT.sRGBEncoding; t.anisotropy = 4; return phys({ map: t, color: 0x4a4a50, roughness: .16, clearcoat: 1, clearcoatRoughness: .04 }); });
-    const sideM = mat('core', () => phys({ color: 0x141416, roughness: .22, clearcoat: 1, clearcoatRoughness: .06 }));
-    const core = new TT.Mesh(new TT.BoxGeometry(OW, HF, OW), [sideM, sideM, bt, sideM, sideM, sideM]); core.position.y = HF / 2; core.castShadow = core.receiveShadow = true; base.add(core);
-    // the frame: clear acrylic, a full rounded outer edge, a flat top, a smaller round into the inner wall
-    const A = OW / 2, H2 = HF + .24, r1 = .17, r2 = .07, prof = [[0, HF], [0, H2 - r1]], st = LO() ? 4 : 7;
+    const sideM = mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }));
+    const core = new TT.Mesh(new TT.BoxGeometry(OW - .02, HF, OW - .02), [sideM, sideM, bt, sideM, sideM, sideM]); core.position.y = HF / 2; core.castShadow = core.receiveShadow = true; base.add(core);
+    // the frame: black lacquer, a full rounded outer edge, a flat top, a smaller round into the inner wall
+    const A = OW / 2, H2 = HF + .24, r1 = .17, r2 = .07, prof = [[0, 0], [0, H2 - r1]], st = LO() ? 4 : 7;
     for (let i = 1; i <= st; i++) { const a = i / st * Math.PI / 2; prof.push([r1 - Math.cos(a) * r1, H2 - r1 + Math.sin(a) * r1]); }
     prof.push([FR - .08 - r2, H2]);
     for (let i = 1; i <= Math.ceil(st / 2); i++) { const a = i / Math.ceil(st / 2) * Math.PI / 2; prof.push([FR - .08 - r2 + Math.sin(a) * r2, H2 - r2 + Math.cos(a) * r2]); }
     prof.push([FR - .08, HF + .002]);
-    const fr = new TT.Mesh(sweep(A, prof), acrylic()); fr.castShadow = false; fr.receiveShadow = false; fr.renderOrder = 3; base.add(fr);
+    const fr = new TT.Mesh(sweep(A, prof), sideM); fr.castShadow = fr.receiveShadow = true; base.add(fr);   // the same black lacquer as the core: one solid border
     const fg = new TT.PlaneGeometry(IN, IN); fg.rotateX(-Math.PI / 2);
     const field = new TT.Mesh(fg, top); field.position.y = HF + .002; field.receiveShadow = true; field.renderOrder = -2; base.add(field);   // drawn first: the reflections test against it
     g.userData.S = S; g.userData.top = HF + .003; g.userData.outer = OW / S;
