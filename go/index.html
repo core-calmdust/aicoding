@@ -603,7 +603,7 @@ html.pc2 .ol-watch{flex:none}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
    column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:#111;--rb-s2:#f4f2ea}
-html.pc2.rb-on{--rbh:clamp(170px, calc(var(--vh) * .26), 250px);--bv:calc(var(--vh) - var(--pad) * 2 - 52px - var(--ttop) - var(--rbh) - var(--gap))}
+html.pc2.rb-on{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);--bv:calc(var(--vh) - var(--pad) * 2 - 52px - var(--ttop) - var(--rbh) - var(--gap))}
 html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh)}
 .rb-body .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b0e15;background:#8fe3b8}.rb-body .tag.dubious{background:#f2c060}.rb-body .tag.bad{background:#ff6b5b}
@@ -890,7 +890,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=26"></script>
+<script src="../shared/headerbar.js?v=27"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=23"></script>
 <script src="rules.js?v=2"></script>
@@ -899,7 +899,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/onlinesec.js?v=1"></script>
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="rbox.js?v=2"></script>
+<script src="rbox.js?v=3"></script>
 <script src="app.js?v=9"></script>
 <script src="learn.js?v=20261028rb"></script>
 <script src="online-ui.js?v=3"></script>

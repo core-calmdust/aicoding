@@ -38,7 +38,7 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const CSS = `
 @media ${MQ}{
-  :root{--rbh:clamp(170px, 27vh, 250px)}
+  :root{--rbh:clamp(185px, 30vh, 270px)}
   html.rb-on{--vh:calc(100vh - var(--hb-h, 0px) - var(--rbh)) !important}
   html.rb-on.ol-dock{--vh:calc(100vh - 108px - var(--hb-h, 0px) - var(--rbh)) !important}
   html.rb-on.ol-dock.ol-soon{--vh:calc(100vh - 46px - var(--hb-h, 0px) - var(--rbh)) !important}
@@ -86,7 +86,23 @@ html[lang=ar] .rb-row .sc{direction:ltr;text-align:right}
 .rb-flag{position:fixed;z-index:31;display:none;transform:translate(-50%, 0);padding:4px 14px;border-radius:999px;background:rgba(10,12,10,.88);border:1px solid var(--accent, #e2c275);color:var(--accent, #e2c275);font-weight:700;font-size:13.5px;letter-spacing:.06em;pointer-events:none;white-space:nowrap}
 html.rb-on .rb-flag.on{display:block}
 html[lang=ar] .rbox{direction:rtl}
-html[lang=ar] .rb-coach{text-align:right}
+html[lang=ar] .rb-coach{text-align:right}/* larger, easier-to-read text (PC, 2026-10-28) */
+.rbox{font-size:15px;padding:10px 16px 10px}
+.rb-head{font-size:16.5px}
+.rb-head .tag{font-size:14px}
+.rb-badge{font-size:13.5px}
+.rb-btn{font-size:14.5px;padding:6px 14px}
+.rb-btn.revert{padding:6px 18px}
+.rb-coach p,.rb-coach li{font-size:15.5px!important}
+.rb-note{font-size:14.5px}
+.rb-ch{font-size:13px}
+.rb-ch b{font-size:14px}
+.rb-row{grid-template-columns:24px minmax(58px, auto) minmax(70px, auto) minmax(0, 1fr);padding:4px 10px;font-size:15px}
+.rb-row .sc{font-size:14px}
+.rb-row .pv{font-size:14px}
+.rb-row .pl{font-size:12px}
+.rb-wait{font-size:13.5px}
+.rb-flag{font-size:14.5px}
 `;
   function init(adapter) {
     A = adapter;
@@ -103,6 +119,10 @@ html[lang=ar] .rb-coach{text-align:right}
     mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re);
     addEventListener('resize', () => { if (shown) place(); });
     if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (shown) place(); }); const watch = () => { const d = document.getElementById('dock'); if (d) ro.observe(d); else setTimeout(watch, 1000); }; watch(); }
+    // the page content slides up / down when the online dock opens (shared/headerbar.js: .app top, animated): follow it
+    const app = document.querySelector('.app');
+    if (app) { let until = 0; const run = () => { if (!shown) return; place(); if (performance.now() < until) requestAnimationFrame(run); };
+      new MutationObserver(() => { const go = performance.now() >= until; until = performance.now() + 700; if (go) requestAnimationFrame(run); }).observe(app, { attributes: true, attributeFilter: ['style'] }); }
     box.querySelector('#rbStudy').onclick = () => startCons();
     box.querySelector('#rbBack').onclick = () => { if (R.cons && A.consDepth() > 0) { setHover(null); A.consBack(); } };
     box.querySelector('#rbRevert').onclick = () => endCons();

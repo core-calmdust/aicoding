@@ -608,7 +608,7 @@ body.in-study .study-badge{display:block;position:absolute;top:calc(var(--u) * .
 body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(227,194,122,.25)!important}
 .ring.cand{border:3px solid #7fd0ff;box-shadow:0 0 16px rgba(127,208,255,.6)}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body.rvbox-on{--bxh:clamp(170px, calc(var(--vh) * .28), 250px);--u:min(var(--uw), (var(--vh) - var(--bxh) - 12px - 24px - 2 * var(--plate) - 16px) / 4.2, 132px)}
+  body.rvbox-on{--bxh:clamp(185px, calc(var(--vh) * .31), 265px);--u:min(var(--uw), (var(--vh) - var(--bxh) - 12px - 24px - 2 * var(--plate) - 16px) / 4.2, 132px)}
   body.rvbox-on .app{grid-template-rows:var(--CH) var(--bxh);row-gap:12px}
   body.rvbox-on #evalCard .graph{height:clamp(30px, calc(var(--CH) * .1), 70px)!important}
   body.rvbox-on #evalCard{padding:10px 14px}
@@ -655,6 +655,19 @@ body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(22
   .rvbox .tag{font-size:12.5px;font-weight:700;margin-inline-start:6px}
   .rvbox .tag.bad{color:#ff8b7d}.rvbox .tag.dubious{color:#f2c060}.rvbox .tag.best{color:#8fe3b8}.rvbox .tag.good{color:#9fc7ff}
   html[lang=ar] .rvbox .bx-body p, html[lang=ar] .rvbox .cr-list{direction:rtl;text-align:right}
+  /* larger, easier-to-read text (PC, 2026-10-28) */
+  .rvbox .bx-h .label{font-size:16px}
+  .rvbox .bx-body p,.rvbox .bx-body .cr-list li{font-size:15.5px}
+  .rvbox .bx-note{font-size:14px!important}
+  .rvbox .bx-ctl button{height:31px;font-size:14px;padding:0 14px}
+  .rvbox .bx-ctl button svg{width:15px;height:15px}
+  .rvbox .tag{font-size:13.5px}
+  .bx-c{min-height:31px;font-size:14.5px;padding:3px 10px}
+  .bx-c .rk{font-size:13px}
+  .bx-c .pl{font-size:12px}
+  .bx-c > .bx-m{font-size:15.5px}
+  .bx-c .pv{font-size:13.5px}
+  .bx-c{grid-template-columns:20px auto 60px minmax(0,1fr) auto}
 }
 .hb .pdisc{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
 .hb .hb-chip.hb-turn b{color:var(--accent)}
@@ -1160,7 +1173,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=26"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028B10"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=27"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028B10"><\/script><script src="online-ui.js?v=20261028L9"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

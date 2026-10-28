@@ -677,7 +677,7 @@ body .info-line{font-size:12.5px}
   .board-area{align-self:center}
   html.dock-compact .side{align-self:center}
   /* review box (rvbox.js) under the board + info column: the board gives up its height */
-  html.rvbox-on body{--rvbh:clamp(170px, calc(var(--vh) * .28), 250px);--rvbgap:12px;--cellh:calc((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rvbh) - var(--rvbgap)) / 9.7)}
+  html.rvbox-on body{--rvbh:clamp(180px, calc(var(--vh) * .32), 270px);--rvbgap:12px;--cellh:calc((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rvbh) - var(--rvbgap)) / 9.7)}
 }
 /* PC info column (360px): players one per row so the AI names stay readable */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
@@ -1335,13 +1335,13 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=26"></script>
+<script src="../shared/headerbar.js?v=27"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="i18n_v2.js?v=20261022rt"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="rvbox.js?v=20261028pv"></script>
+<script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="app.js?v=20261028pv2"></script>
 <script src="rules.js?v=20261021rb"></script>
