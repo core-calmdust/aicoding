@@ -39,27 +39,76 @@
     if (o.wrap) t.wrapS = t.wrapT = TT.RepeatWrapping;
     return (TX[key] = t);
   }
-  // nero marble: a deep indigo-black ground, soft violet clouds, a web of fine pale veins and the odd gold thread
+  // nero marble: layered violet clouds; veins are contour lines of domain-warped fbm fields, measured in real
+  // distance (value / gradient) so they stay crisp — a few bold veins that swell, pinch and fade, a second family
+  // that branches and crosses, hairline fractures in patches round them, ghost veins deeper in the stone,
+  // white / lilac / gold tints along the veins and faint crystalline glints
+  function marbleStone(g, w, h) {
+    const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
+    const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    // fields are evaluated on grids (coarse for the slow ones) and sampled bilinearly: fbm per texel would be far too slow
+    const grid = (G, fn) => { const a = new Float32Array((G + 1) * (G + 1)); for (let j = 0; j <= G; j++) for (let i = 0; i <= G; i++) a[j * (G + 1) + i] = fn(i / G, j / G); a.G = G; return a; };
+    const at = (a, u, v) => { const G = a.G, fx = Math.min(G - 1e-4, Math.max(0, u * G)), fy = Math.min(G - 1e-4, Math.max(0, v * G)), x = fx | 0, y = fy | 0, s = fx - x, t = fy - y, i = y * (G + 1) + x;
+      return (a[i] * (1 - s) + a[i + 1] * s) * (1 - t) + (a[i + G + 1] * (1 - s) + a[i + G + 2] * s) * t; };
+    const N1 = makeNoise(11), N2 = makeNoise(29), N3 = makeNoise(47), N4 = makeNoise(63), N5 = makeNoise(81), N6 = makeNoise(97);
+    const K = 4, R = Math.max(64, w >> 1);   // the field spans K noise units; the fine grids have half the texture's resolution
+    // two-level domain warp → folded, flowing shapes
+    const qx = grid(48, (u, v) => N1(u * K * .55, v * K * .55, 4)), qy = grid(48, (u, v) => N1(u * K * .55 + 5.2, v * K * .55 + 1.3, 4));
+    const P = (u, v) => [u * K + 2.2 * at(qx, u, v), v * K + 2.2 * at(qy, u, v)];
+    const rx = grid(96, (u, v) => { const [x, y] = P(u, v); return N2(x * .8 + 1.7, y * .8 + 9.2, 4); }), ry = grid(96, (u, v) => { const [x, y] = P(u, v); return N2(x * .8 + 8.3, y * .8 + 2.8, 4); });
+    const Wp = (u, v) => { const [x, y] = P(u, v); return [x + 1.6 * at(rx, u, v), y + 1.6 * at(ry, u, v), x, y]; };
+    const cl = grid(128, (u, v) => { const [x, y] = Wp(u, v); return N3(x * .5, y * .5, 5); });
+    const cl2 = grid(96, (u, v) => N3(u * K * 1.6 + 3, v * K * 1.6 + 7, 4));
+    const thk = grid(64, (u, v) => N5(u * K * .9 + 2, v * K * .9 + 4, 3));
+    const pat = grid(64, (u, v) => N5(u * K * .7 + 7, v * K * .7 + 1, 2));
+    const tin = grid(64, (u, v) => N2(u * K * .8 + 11, v * K * .8 + 4, 3));
+    const fB = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N4(x * .42, y * .42, 5); });
+    const fB2 = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N4(x * .6 + 3.1, y * .6 + 6.4, 4); });
+    const pat2 = grid(64, (u, v) => N3(u * K * .6 + 13, v * K * .6 + 2, 3));
+    const fH = grid(R, (u, v) => { const [x, y] = Wp(u, v); return N6(x * 1.25 + 4, y * 1.25 + 1, 4); });
+    const fH2 = grid(R, (u, v) => { const [, , x, y] = Wp(u, v); return N6(x * 2.3 + 9, y * 2.3 + 3, 3); });
+    const G0 = hexRGB('#08070d'), G1 = hexRGB('#17132a'), G2 = hexRGB('#342b5c'), G3 = hexRGB('#4a3f7a');
+    const VW = hexRGB('#f1edf7'), VL = hexRGB('#b6a6e2'), VG = hexRGB('#dcb66c'), VS = hexRGB('#6c5fa0');
+    let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    const img = g.createImageData(w, h), d = img.data, px = 1024 / w;   // line widths are tuned at 1024 px
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const u = (x + .5) / w, v = (y + .5) / h;
+      // clouds: deep layered violet haze
+      const c1 = at(cl, u, v);
+      let c = mix(G0, G1, sm(.3, .62, c1));
+      c = mix(c, G2, sm(.5, .78, c1) * .75);
+      c = mix(c, G3, sm(.62, .85, c1 * .7 + at(cl2, u, v) * .3) * .35);
+      // veins are contour lines of the fields, measured in real distance (value / gradient): crisp everywhere, never smeared
+      const e = 1 / w, D = (a, n) => { const gx = at(a, u + e, v) - n, gy = at(a, u, v + e) - n; return Math.abs(n - .5) / Math.max(1e-7, Math.hypot(gx, gy) / e); };
+      const prof = (dd, hw) => { const t = dd / hw; return t <= .5 ? 1 : t >= 1 ? 0 : sm(1, .5, t); }, soft = (dd, hw) => { const t = dd / hw; return t >= 1 ? 0 : (1 - t) * (1 - t); };
+      // bold veins swell and pinch along their length (and fade out in places); their ghosts lie deeper in the stone
+      const b = at(fB, u, v), b2 = at(fB2, u, v), dB = D(fB, b), dB2 = D(fB2, b2);
+      const tk = at(thk, u, v), thick = .0008 + .0068 * Math.pow(tk, 2.4), br = sm(.45, .62, at(pat2, u, v));   // a second family of veins that comes and goes: branches and crossings
+      const bold = Math.max(prof(dB, thick), prof(dB2, thick * .5 + .0004) * br), near = Math.max(soft(dB, .02), soft(dB2, .012) * br);
+      const ghost = soft(dB, .03) * .14 + soft(dB2, .02) * br * .08;
+      // hairline fractures in patches, clustering round the bold veins
+      const patch = sm(.42, .66, at(pat, u, v)), hw = Math.max(.0006, .7 / w);
+      const hair = prof(D(fH, at(fH, u, v)), hw) * (.25 + .75 * patch) + prof(D(fH2, at(fH2, u, v)), hw * .8) * Math.max(patch, near) * .85;
+      // vein colour: white with lilac and gold drifts
+      const tint = at(tin, u, v), gold = sm(.6, .72, tint), lil = sm(.48, .3, tint);
+      let vc = mix(VW, VL, .25 + lil * .6); vc = mix(vc, VG, gold * .85);
+      c = mix(c, VS, Math.min(1, ghost));
+      c = mix(c, mix(VL, vc, .6), Math.min(1, hair) * (.38 + near * .35) * Math.min(1, w / 1024 + .2));   // (half-size textures: the hairlines are wider in texels → fainter)
+      c = mix(c, vc, Math.min(1, bold) * .82);
+      // crystalline speckle: tiny glints, denser along the veins
+      const r = rnd();
+      if (r < .0006 + near * .012) c = mix(c, VL, .15 + rnd() * .35);   // (faint lilac glints, mostly along the veins)
+      else if (r > .997) c = mix(c, G0, .4);
+      const n = (rnd() - .5) * 3, i = (y * w + x) * 4;
+      d[i] = c[0] + n; d[i + 1] = c[1] + n; d[i + 2] = c[2] + n; d[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  }
+  // the field: the marble with a double gold stringing and corner fleurons
   function marble() {
     const S = SZ(1024);
     return canvasTex('nmMarble' + S, S, S, (g, w, h) => {
-      const N = makeNoise(11), N2 = makeNoise(29), img = g.createImageData(w, h), d = img.data;
-      const G0 = hexRGB('#0f0d1a'), G1 = hexRGB('#2c2650'), V = hexRGB('#c9c2e4'), AU = hexRGB('#d9b56a');
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const u = x / w, v = y / h;
-        const cloud = N(u * 2.2, v * 2.2, 4);
-        let c = lerp3(G0, G1, Math.pow(cloud, 2.2) * .9);
-        const wx = N2(u * 3 + 5, v * 3 + 5, 3) * 2.2;
-        const r1 = 1 - Math.abs(Math.sin((u * 2.6 + v * 1.4 + wx) * Math.PI)), r2 = 1 - Math.abs(Math.sin((u * 6.5 - v * 4.2 + wx * 1.6 + 3) * Math.PI));
-        const fade = Math.pow(N(u * 1.3 + 4, v * 1.3 + 4, 2), 1.6) * 1.6;   // the veins come and go
-        const vein = (Math.pow(r1, 40) * .7 + Math.pow(r1, 6) * .12 + Math.pow(r2, 90) * .35 * N(u * 5 + 9, v * 5, 2)) * fade;
-        c = lerp3(c, V, Math.min(1, vein) * .55);
-        const gold = Math.pow(1 - Math.abs(Math.sin((u * 1.7 - v * 2.3 + wx * .8 + 1.3) * Math.PI)), 160) * fade;
-        c = lerp3(c, AU, Math.min(1, gold) * .5);
-        const k = (Math.random() - .5) * 6, i = (y * w + x) * 4;
-        d[i] = c[0] + k; d[i + 1] = c[1] + k; d[i + 2] = c[2] + k; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
+      marbleStone(g, w, h);
       // the double gold stringing round the field (a fine line, a gap, a finer line)
       const s = w / (2 * F), e = (m) => [m * s, w - 2 * m * s];
       g.strokeStyle = 'rgba(226,194,117,.95)'; g.lineWidth = Math.max(1.5, .045 * s); { const [a, b] = e(.22); g.strokeRect(a, a, b, b); }
