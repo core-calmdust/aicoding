@@ -601,3 +601,75 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
 .lg1, .lg2 { white-space: nowrap; }
 @media (max-width: 380px) { .lg1 { font-size: 18px; } .lg2 { font-size: 10px; padding: 2px 5px; } .top .ib { width: 32px; height: 32px; } }
 @media (max-width: 340px) { .lg1 { font-size: 15px; -webkit-text-stroke-width: 1px; } .lg2 { font-size: 9px; padding: 2px 4px; letter-spacing: .02em; } .top .ib { width: 29px; height: 29px; } .top .ib .ico { width: 17px; height: 17px; } .top .icons { gap: 3px; } }
+
+/* ---------------- header: settings · language · home, with breathing room around the language picker ---------------- */
+.top #langSel { margin-inline: 6px; }
+@media (max-width: 400px) { .top #langSel { margin-inline: 4px; max-width: 84px; padding: 0 3px; } }
+.mx svg { width: 20px; height: 20px; display: block; }
+/* tablets: the profile's 6 links on one row */
+@media (min-width: 761px) and (max-width: 860px) { .plinks { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+/* ---------------- phones: bottom tab bar, one home section at a time (PC / tablet unchanged) ---------------- */
+.bnav { display: none; }
+@media (max-width: 760px) {
+  :root { --bnh: 68px; }
+  body.phnav[data-screen=home] { overflow: hidden; }
+  body.phnav[data-screen=home] #app { height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--bnh) + env(safe-area-inset-bottom)); }
+  body.phnav[data-screen=home] .top { flex: none; margin-bottom: 9px; }
+  body.phnav[data-screen=home] main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.phnav #home { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: stretch; }
+  body.phnav #htabs { display: none; }
+  body.phnav #home > .hpanel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -12px; padding: 30px 12px 18px; scrollbar-width: none; }
+  body.phnav #home > .hpanel::-webkit-scrollbar { display: none; }
+  body.phnav #home > .hpanel > * { flex-shrink: 0; }
+  body.phnav #coursePanel, body.phnav #modePanel { padding-top: 0; }
+  /* デイリー: the 3 cells + the searchlight, trimmed to fit one screen */
+  body.phnav .hpanel.daily { gap: 30px; }
+  body.phnav .dbox { display: block; padding: 14px 12px 12px; }
+  body.phnav .dhead p, body.phnav #dPuzzle > .note { display: none; }
+  body.phnav .dhead h3 { margin-bottom: 8px; font-size: 17px; }
+  body.phnav .dlvs { gap: 8px; }
+  body.phnav .dlv { grid-template-columns: 50px minmax(0, 1fr) 104px; gap: 8px; padding: 6px 7px; }
+  body.phnav .dic svg { width: 50px; height: 50px; }
+  body.phnav .dlt { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 3px 8px; justify-items: start; }
+  body.phnav .dlt > b, body.phnav .dlt > .chip { grid-column: 1 / -1; } body.phnav .dlt > b { font-size: 15px; line-height: 1.15; }
+  body.phnav .dlt small { white-space: nowrap; } body.phnav .dlt .dbest { flex-wrap: nowrap; white-space: nowrap; }
+  @media (max-width: 380px) {
+    body.phnav .dlv { grid-template-columns: 44px minmax(0, 1fr) 86px; gap: 6px; } body.phnav .dic svg { width: 44px; height: 44px; }
+    body.phnav .dlb .btn { font-size: 13px; padding: 4px; } body.phnav .dlt { column-gap: 5px; }
+  }
+  body.phnav .dlb { grid-column: auto; flex-direction: column; gap: 5px; }
+  body.phnav .dlb .btn { min-height: 36px; padding: 4px 6px; font-size: 14px; }
+  body.phnav .dlb .btn.sm { width: 100%; min-height: 28px; padding: 2px 6px; }
+  body.phnav .dlb .btn.sm .ico { width: 18px; height: 18px; }
+  body.phnav .dsl { padding: 18px 12px 12px; }
+  body.phnav .slrow p { margin-bottom: 4px; }
+  body.phnav .slic { width: 52px; height: 52px; } body.phnav .slic svg { width: 38px; height: 38px; }
+  body.phnav .dabtm { margin-top: 6px; }
+  /* マイページ: the full profile card + the calendar */
+  .hpanel.me { gap: 22px; padding-top: 18px !important; }
+  .hpanel.me .prof { margin: 0; }
+  .hpanel.me .plinks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .hpanel.me .plinks .btn { min-height: 48px; font-size: 12px; } .hpanel.me .plinks .btn span { font-size: 11.5px; letter-spacing: -.03em; }
+  .hpanel.me #dCal { background: var(--paper); border: 3px solid var(--ink); border-radius: var(--r); box-shadow: var(--sh); padding: 12px; }
+  /* ロッカー */
+  .hpanel.gacha #gachaPanel { padding: 16px 12px; }
+  /* the bar: the header's dark plate with its yellow edge, mirrored at the bottom */
+  body.phnav[data-screen=home] .bnav { display: flex; }
+  .bnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; gap: 5px; padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 1.5px) 0 0 / 7px 7px, linear-gradient(180deg, #303744, #232832);
+    border-top: 3px solid var(--ink); box-shadow: 0 -4px 0 -1px var(--yel), 0 -7px 0 -1px var(--ink); }
+  .bnav button { position: relative; flex: 1 1 0; min-width: 0; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 2px 0;
+    border: 2.5px solid transparent; border-radius: 8px; background: transparent; color: #c7ccd6; font-weight: 900; font-size: 11px; transition: transform .12s, background .12s; }
+  .bnav .bni { position: relative; display: grid; place-items: center; }
+  .bnav .ico { width: 24px; height: 24px; }
+  .bnav .bnl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.15; padding: 0 2px; }
+  .bnav .dot { position: absolute; top: -4px; right: -9px; width: 12px; height: 12px; border-radius: 50%; background: var(--red); border: 2px solid var(--ink); display: none; }
+  .bnav button:active { transform: translate(1px, 1px); }
+  .bnav button.on { border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); transform: translateY(-5px) rotate(-2deg); background: var(--org); color: #fff; }
+  .bnav button.on[data-p=course] { background: var(--blue); }
+  .bnav button.on[data-p=modes] { background: var(--grn); }
+  .bnav button.on[data-p=gacha] { background: var(--yel); color: var(--ink); }
+  .bnav button.on[data-p=me] { background: var(--paper); color: var(--ink); }
+  body.phnav[data-screen=home] #toast { bottom: calc(var(--bnh) + 18px + env(safe-area-inset-bottom)); }
+}
