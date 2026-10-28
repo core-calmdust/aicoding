@@ -214,7 +214,7 @@ const SKINS = {
     svg: { bg: ['#202022', '#19191b', '#101011'], rim: 'rgba(255,255,255,.08)', cup: ['#050506', '#121213', '#232326'], txt: '#f4e4bd', txt0: 'rgba(244,228,189,.4)', cap: 'rgba(226,194,117,.55)', line: 'rgba(255,255,255,.07)' } },
   walnut: { gems: [['#f6f0e6', '#cfc4b2', '#6f6658'], ['#e2e3e1', '#8d9092', '#33363a'], ['#f8dfc4', '#c08a5c', '#5e3b1f'], ['#ebe6d8', '#a9a089', '#4d4635'], ['#ffffff', '#e9e4da', '#9a9184'], ['#c9c9c9', '#55575a', '#161718']],
     svg: { bg: ['#6e3519', '#56290f', '#3e1d0c'], rim: 'rgba(226,194,117,.45)', cup: ['#120803', '#2a150b', '#552b15'], txt: '#f7e6c4', txt0: 'rgba(247,230,196,.4)', cap: 'rgba(247,230,196,.6)', line: 'rgba(255,220,170,.12)' } },
-  marble: { gems: [['#ffffff', '#f1ebe2', '#a49b90'], ['#9aa0aa', '#2d3036', '#050506'], ['#fff3c4', '#d6aa3e', '#6b4b0e'], ['#ffe6ec', '#e3a0b2', '#8a4a5c'], ['#c4d6fa', '#3657a8', '#0f1f4d']],
+  marble: { gems: [['#ffffff', '#ece6dc', '#968c7e'], ['#fff1c2', '#cfa13d', '#5e420c'], ['#8a8f97', '#25282d', '#030304'], ['#f6f5f2', '#aeaba5', '#4d4b47'], ['#fbeae4', '#d6a493', '#764838']],
     svg: { bg: ['#f8f5ef', '#ece7de', '#dcd5c9'], rim: '#c9a961', cup: ['#837c72', '#aaa397', '#e0dacf'], txt: '#4a3f33', txt0: 'rgba(74,63,51,.35)', cap: 'rgba(120,96,50,.75)', line: 'rgba(110,90,60,.18)' } },
   jade: { gems: [['#fff3c4', '#d6aa3e', '#6b4b0e'], ['#ffffff', '#f1ebe2', '#a49b90'], ['#ffd6c8', '#e65c42', '#7a1f10'], ['#ffe9f0', '#f09ab0', '#8a3b52'], ['#fff9e0', '#f3d77e', '#8a6a1a']],
     svg: { bg: ['#2e7a5c', '#1b5642', '#0d3327'], rim: 'rgba(226,194,117,.55)', cup: ['#03100b', '#0a261d', '#1b4c3a'], txt: '#f1e6c2', txt0: 'rgba(241,230,194,.4)', cap: 'rgba(226,194,117,.65)', line: 'rgba(226,194,117,.22)' } },
@@ -238,8 +238,54 @@ function newSeed() {
   return { el, x: 0, y: 0, slot: -1 };
 }
 // switch the board & stone design (stones already on the board are recoloured in place)
+// Calacatta marble, drawn once on a canvas: a warm white ground with soft clouds, a few bold grey veins with a gold
+// edge and fine hairline veins (fractal value noise + turbulent sine bands). Used by the board (CSS --mtex) and the
+// small SVG boards (a smaller copy).
+const MTEX = {};
+function marbleTex(W, H) {
+  const key = W + 'x' + H; if (MTEX[key]) return MTEX[key];
+  let url = '';
+  try {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d'), img = g.createImageData(W, H), d = img.data;
+    const P = new Uint8Array(512); { let r = 20261028; const p = []; for (let i = 0; i < 256; i++) p[i] = i; for (let i = 255; i > 0; i--) { r = (Math.imul(r, 1103515245) + 12345) >>> 0; const j = r % (i + 1); [p[i], p[j]] = [p[j], p[i]]; } for (let i = 0; i < 512; i++) P[i] = p[i & 255]; }
+    const V = new Float32Array(256); for (let i = 0; i < 256; i++) V[i] = P[i * 7 & 255] / 255;
+    const sm = t => t * t * (3 - 2 * t);
+    const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = sm(x - xi), yf = sm(y - yi), X = xi & 255, Y = yi & 255;
+      const a = V[P[P[X] + Y]], b = V[P[P[X + 1] + Y]], c = V[P[P[X] + Y + 1]], e = V[P[P[X + 1] + Y + 1]];
+      return a + (b - a) * xf + (c - a) * yf + (a - b - c + e) * xf * yf; };
+    const fbm = (x, y, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { s += a * vn(x * f, y * f); f *= 2.03; a *= 0.5; } return s; };
+    const k = 1024 / W;   // the pattern scales with the canvas, so the small copy looks the same
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const X = x * k, Y = y * k;
+      const tb = fbm(X / 430, Y / 430, 4);                 // large slow warp: long flowing veins
+      const tf = fbm(X / 120 + 31, Y / 120 + 17, 3);       // small wobble
+      const cloud = fbm(X / 300 + 7, Y / 300 + 3, 3);
+      const u1 = (X * 0.00105 + Y * 0.0019) + tb * 2.1 + tf * 0.18;
+      const v1 = Math.abs(Math.sin(u1 * Math.PI));                                 // 2–3 bold veins across the board
+      const w = 0.55 + 0.9 * fbm(X / 200 + 5, Y / 200 + 11, 2);                    // vein width varies along its length
+      const bold = Math.pow(1 - v1, 34 / w) * 1.1, soft = Math.pow(1 - v1, 4.5 / w) * 0.6;
+      const u3 = (X * 0.0007 - Y * 0.0011) + tb * 1.6 + 0.37, band = Math.pow(1 - Math.abs(Math.sin(u3 * Math.PI)), 7) * 0.5;   // wide shadowy drift
+      const u2 = (X * 0.0042 - Y * 0.0016) + tb * 3.2 + tf * 0.9;
+      const hair = Math.pow(1 - Math.abs(Math.sin(u2 * Math.PI)), 90) * (fbm(X / 160, Y / 160 + 50, 2) > 0.5 ? 0.8 : 0.25);
+      let r = 248 - cloud * 20, gg = 246 - cloud * 21, b = 241 - cloud * 24;   // warm white with faint clouds
+      r -= soft * 30 + band * 26; gg -= soft * 33 + band * 27; b -= soft * 44 + band * 30;                         // greige halo
+      const gold = Math.pow(1 - v1, 13 / w) * 0.75;
+      r -= gold * 10; gg -= gold * 30; b -= gold * 78;                          // gold-brown edge
+      const vb = Math.min(1, bold), vh = Math.min(1, hair);
+      r = r * (1 - vb) + 104 * vb; gg = gg * (1 - vb) + 99 * vb; b = b * (1 - vb) + 93 * vb;   // grey vein core
+      r = r * (1 - vh) + 160 * vh; gg = gg * (1 - vh) + 156 * vh; b = b * (1 - vh) + 150 * vh;
+      const i = (y * W + x) * 4; d[i] = r; d[i + 1] = gg; d[i + 2] = b; d[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    url = cv.toDataURL('image/jpeg', 0.86);
+  } catch (e) {}
+  return (MTEX[key] = url);
+}
+function marbleOn() { const u = marbleTex(880, 358); if (u) document.documentElement.style.setProperty('--mtex', `url(${u})`); }
 function skinApply(k) {
   settings.skin = SKINS[k] ? k : 'luxe';
+  if (settings.skin === 'marble') marbleOn();
   document.documentElement.dataset.sk = settings.skin;
   seedsEl.querySelectorAll('.seed').forEach(el => { if (el._gi !== undefined) paintSeed(el); });
 }
@@ -1122,12 +1168,14 @@ function miniBoard(counts, marks, path, opt) {
   const gems = SK.gems.map((g, j) => `<radialGradient id="${id}g${j}" cx=".33" cy=".28" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".2" stop-color="${g[0]}"/><stop offset=".6" stop-color="${g[1]}"/><stop offset="1" stop-color="${g[2]}"/></radialGradient>`).join('');
   const vb = opt.mini ? '292 4 176 184' : `0 0 ${MB.W} ${MB.H}`;
   let s = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" data-mb="${id}"><defs><marker id="${id}ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e2c275"/></marker><linearGradient id="${id}wd" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${C.bg[0]}"/><stop offset=".5" stop-color="${C.bg[1]}"/><stop offset="1" stop-color="${C.bg[2]}"/></linearGradient><radialGradient id="${id}cup" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="${C.cup[0]}"/><stop offset=".7" stop-color="${C.cup[1]}"/><stop offset="1" stop-color="${C.cup[2]}"/></radialGradient>${gems}</defs>`;
-  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#${id}wd)" stroke="${C.rim}" stroke-width="1.5"/>`;
+  const mt = SK === SKINS.marble ? marbleTex(480, 196) : '';
+  if (mt) s = s.replace('</defs>', `<pattern id="${id}mt" patternUnits="userSpaceOnUse" width="${MB.W}" height="${MB.H}"><image href="${mt}" width="${MB.W}" height="${MB.H}" preserveAspectRatio="none"/></pattern><pattern id="${id}mc" patternUnits="userSpaceOnUse" width="${MB.W}" height="${MB.H}" patternTransform="translate(137 61)"><image href="${mt}" width="${MB.W}" height="${MB.H}" preserveAspectRatio="none"/></pattern></defs>`);
+  s += `<rect x="2" y="2" width="${MB.W - 4}" height="${MB.H - 4}" rx="16" fill="url(#${id}${mt ? 'mt' : 'wd'})" stroke="${C.rim}" stroke-width="${mt ? 2.5 : 1.5}"/>`;
   s += `<line x1="70" x2="400" y1="85" y2="85" stroke="${C.line}" stroke-width="1"/>`;
   for (let i = 0; i < 14; i++) {
     const [x, y] = mbXY(i), mk = marks && marks[i];
-    if (isStore(i)) s += `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#${id}cup)"/>`;
-    else s += `<circle cx="${x}" cy="${y}" r="23" fill="url(#${id}cup)"/>`;
+    if (isStore(i)) s += (mt ? `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#${id}mc)"/>` : '') + `<rect x="${x - 22}" y="${y - 62}" width="44" height="124" rx="22" fill="url(#${id}cup)"${mt ? ' opacity=".62" stroke="rgba(176,140,70,.7)" stroke-width="1.4"' : ''}/>`;
+    else s += (mt ? `<circle cx="${x}" cy="${y}" r="23" fill="url(#${id}mc)"/>` : '') + `<circle cx="${x}" cy="${y}" r="23" fill="url(#${id}cup)"${mt ? ' opacity=".62" stroke="rgba(176,140,70,.7)" stroke-width="1.4"' : ''}/>`;
     const n = counts[i];
     // a few gems + the count
     const g = Math.min(n, isStore(i) ? 8 : 5);

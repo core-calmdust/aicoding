@@ -560,42 +560,48 @@ bdi{unicode-bidi:isolate}
 .brand:has(.brand-l){align-items:flex-end}
 @media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ================================================================ PC (common spec: mouse, >= 1040px wide, not a clearly tall window):
-   two columns — the board with its player bars on the left, a fixed-width info column on the right
-   (lesson / puzzle card → 形勢 → 振り返り → 棋譜). The board is wide and low, so the column is a little narrower than the common 360px. */
+   the wide board across the top (with its player bars), the info row below it — 形勢 | 振り返り | 棋譜
+   (lessons / puzzles: their card fills the row; review box on: 形勢 + 振り返り | review box | 棋譜). Title and menu are in the header bar. */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  :root{--rw:330px; --cg:20px; --px:24px; --plate:clamp(34px, calc(var(--vh) * .046), 42px)}
-  /* (declared on body, so the online dock below can change them) */
+  :root{--px:24px; --plate:clamp(34px, calc(var(--vh) * .046), 42px)}
+  /* (declared on body, so the online dock / review box below can change them) */
   body{
-    --uw:calc((100vw - 2 * var(--px) - var(--rw) - var(--cg)) / 9.7);
-    --u:min(var(--uw), (var(--vh) - 24px - 2 * var(--plate) - 16px) / 4.2, 132px);
-    --BH:calc(var(--u) * 4.2 + 2 * var(--plate) + 16px);
-    --CH:var(--BH);   /* the info column is as tall as the board (its cards scroll inside) */
+    --C:clamp(128px, calc(var(--vh) * .22), 210px);   /* height of the info row */
+    --uw:calc((100vw - 2 * var(--px)) / 9.7);
+    --uh:calc((var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C)) / 4.2);
+    --u:min(var(--uw), var(--uh), 132px);
     --bw:calc(var(--u) * 9.2); --bh:calc(var(--u) * 3.7);
   }
-  /* lessons / puzzles: the card needs some height even when the wide board is low */
-  body.in-lesson, body.in-puzzle{--CH:max(var(--BH), min(var(--vh) - 24px, 520px))}
-  body.dock-open:not(.ol-soon){--u:min(var(--uw), (var(--vh) + 61px - min(46vh, 380px) - 20px - 2 * var(--plate) - 16px) / 4.2, 132px)}
-  @media (max-width: 1299px){ :root{--rw:310px;--cg:16px;--px:16px} }
-  html,body{height:100%;overflow:hidden}
-  .app{display:grid;height:var(--vh);width:auto;margin:0;padding:12px var(--px);gap:0 var(--cg);align-content:center;justify-content:center;align-items:center;
-    grid-template-columns:calc(var(--u) * 9.7) var(--rw);grid-template-rows:var(--CH);grid-template-areas:none}
-  .board-area{grid-area:1 / 1;align-self:center;width:calc(var(--u) * 9.7);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1}
-  .side{grid-area:1 / 2;width:100%;height:var(--CH);max-height:none;min-height:0;display:block;container-type:normal}
-  .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
-  .side-in > *{flex:none;min-height:0;margin:0}
-  .side-in > .brand{display:none}   /* (title and menu are in the header bar) */
+  /* lessons / puzzles: the card needs a little more height */
+  body.in-lesson, body.in-puzzle{--C:clamp(170px, calc(var(--vh) * .3), 280px)}
+  body.dock-open:not(.ol-soon){--uh:calc((var(--vh) + 61px - min(46vh, 380px) - 20px - 2 * var(--plate) - 16px - 12px - var(--C)) / 4.2)}
+  @media (max-width: 1299px){ :root{--px:16px} }
+  html,body{height:100%;overflow-x:hidden;overflow-y:auto}
+  .app{display:grid;height:auto;min-height:var(--vh);width:min(calc(100vw - 2 * var(--px)), max(calc(var(--u) * 9.7), 1180px));margin:0 auto;padding:12px 0;gap:12px 14px;
+    align-content:center;justify-content:stretch;align-items:stretch;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto var(--C);grid-template-areas:"board board" "eval kifu"}
+  .app:has(.review-card.show){grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:"board board board" "eval rv kifu"}
+  .board-area{grid-area:board;justify-self:center;width:calc(var(--u) * 9.7);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1}
+  .side,.side-in{display:contents}
+  .side-in > .brand{display:none}
   .frame{align-self:center}
   .info-line{display:none}
-  #evalCard{display:flex;flex-direction:column;overflow:hidden;padding:12px 14px}
-  #evalCard .graph{flex:none;height:clamp(52px, calc(var(--CH) * .2), 130px)!important;margin-top:10px}
-  #evalCard .navbar{margin-top:8px;gap:4px}
-  #evalCard .navbar button{width:auto;flex:1 1 0;max-width:46px}
-  .kifu-card{flex:1 1 0;min-height:76px!important;overflow:hidden;padding:12px 14px}
-  .kifu{grid-template-columns:repeat(5,1fr)}
-  .review-card.show{flex:1.5 1 0;min-height:0!important;padding:12px 14px}
-  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:block;flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  #evalCard{grid-area:eval;display:flex;flex-direction:column;overflow:hidden;min-height:0!important;padding:12px 16px}
+  #evalCard .graph{flex:1 1 0;height:0!important;min-height:22px;margin-top:8px}
+  #evalCard .navbar{margin-top:6px;gap:4px}
+  #evalCard .navbar button{width:auto;flex:1 1 0;max-width:52px}
+  .kifu-card{grid-area:kifu;min-height:0!important;overflow:hidden;padding:12px 16px}
+  .kifu{grid-template-columns:repeat(8,1fr)}
+  .review-card.show{grid-area:rv;min-height:0!important;flex:none;padding:12px 14px}
+  body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:2 / 1 / 3 / -1;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,330px);grid-auto-rows:min-content;column-gap:24px;
+    overflow-y:auto;min-height:0;align-content:start;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   body.in-lesson :is(#evalCard,.kifu-card,.review-card), body.in-puzzle :is(#evalCard,.kifu-card,.review-card){display:none!important}
-  .lesson-card > .lesson-actions, .puzzle-card > .lesson-actions{flex-wrap:wrap;margin-top:8px}
+  .lesson-card > :not(.lesson-actions), .puzzle-card > :not(.lesson-actions){grid-column:1}
+  .lesson-card > .tolist, .puzzle-card > .tolist{justify-self:start}
+  .lesson-card > .lesson-actions{grid-column:2;grid-row:1 / span 5;flex-direction:column;align-self:center;margin-top:0}
+  .puzzle-card > .lesson-actions{grid-column:2;margin-top:8px}
+  .puzzle-card > .lesson-actions:nth-last-child(2){grid-row:1 / span 3;align-self:end}
+  .puzzle-card > .lesson-actions:last-child{grid-row:4 / span 3;align-self:start}
   .lesson-card h3,.puzzle-card h3{margin:2px 0 6px}
   .lesson-fb,.pz-status{min-height:0}
 }
@@ -626,21 +632,25 @@ bdi{unicode-bidi:isolate}
   .review-card.show{flex:none;overflow:visible}
 }
 }
-/* ================================================================ PC review box (below the board and the right column) + 検討 (study) mode */
+/* ================================================================ PC review box (in the info row under the board) + 検討 (study) mode */
 .rvbox{display:none}
 .study-badge{display:none}
 body.in-study .study-badge{display:block;position:absolute;top:calc(var(--u) * .06);left:50%;transform:translateX(-50%);z-index:30;padding:3px 14px;border-radius:99px;background:rgba(201,169,97,.95);color:#1a1206;font-weight:700;font-size:13px;letter-spacing:.06em;box-shadow:0 4px 14px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap}
 body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(227,194,122,.25)!important}
 .ring.cand{border:3px solid #7fd0ff;box-shadow:0 0 16px rgba(127,208,255,.6)}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body.rvbox-on{--bxh:clamp(185px, calc(var(--vh) * .31), 265px);--u:min(var(--uw), (var(--vh) - var(--bxh) - 12px - 24px - 2 * var(--plate) - 16px) / 4.2, 132px)}
-  body.rvbox-on .app{grid-template-rows:var(--CH) var(--bxh);row-gap:12px}
-  body.rvbox-on #evalCard .graph{height:clamp(30px, calc(var(--CH) * .1), 70px)!important}
-  body.rvbox-on #evalCard{padding:10px 14px}
-  body.rvbox-on .side{overflow:hidden}
-  body.rvbox-on .review-card.show{flex:1 1 0;min-height:0!important}
-  body.rvbox-on .kifu-card{flex:1 1 0;min-height:52px!important}
-  body.rvbox-on .rvbox{display:grid;grid-area:2 / 1 / 3 / 3;justify-self:stretch;width:auto;height:var(--bxh);
+  /* review box on: the info row grows to the box height; 形勢 above 振り返り on the left, the box in the middle, 棋譜 on the right */
+  body.rvbox-on{--bxh:clamp(185px, calc(var(--vh) * .31), 265px);--C:var(--bxh)}
+  body.rvbox-on .app, body.rvbox-on .app:has(.review-card.show){grid-template-columns:minmax(0,1fr) minmax(0,2.4fr) minmax(0,.9fr);grid-template-rows:auto calc(var(--C) * .5 - 6px) calc(var(--C) * .5 - 6px);
+    grid-template-areas:"board board board" "eval bx kifu" "rv bx kifu"}
+  body.rvbox-on .app:not(:has(.review-card.show)) #evalCard{grid-row:2 / 4}
+  body.rvbox-on #evalCard{padding:8px 12px}
+  body.rvbox-on #evalCard .evalrow{margin-bottom:4px}
+  body.rvbox-on #evalCard .navbar{margin-top:4px}
+  body.rvbox-on #evalCard .navbar button{height:26px}
+  body.rvbox-on .review-card.show{padding:8px 12px}
+  body.rvbox-on .kifu{grid-template-columns:repeat(4,1fr)}
+  body.rvbox-on .rvbox{display:grid;grid-area:bx;justify-self:stretch;width:auto;height:auto;
     grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;padding:12px 16px;min-height:0;box-sizing:border-box;position:relative;z-index:2}
   .rvbox .bx-l,.rvbox .bx-r{display:flex;flex-direction:column;min-height:0;min-width:0}
   .rvbox .bx-r{border-inline-start:1px solid var(--line);padding-inline-start:18px}
@@ -943,20 +953,32 @@ html[data-sk=walnut] .slot{background:radial-gradient(circle at 50% 40%,#120803 
 html[data-sk=walnut] .pitno{color:rgba(255,226,180,.42)}
 html[data-sk=walnut] .slabel{color:#d9b98a}
 
+/* marble: Calacatta drawn by app.js (--mtex) — polished sheen over the stone, a thin gold inlay, carved bevelled cups */
 html[data-sk=marble] .frame{background:
-    linear-gradient(118deg,transparent 0 21%,rgba(140,128,112,.20) 22%,transparent 23.5%,transparent 61%,rgba(140,128,112,.16) 62%,transparent 63.2%),
-    linear-gradient(32deg,transparent 0 38%,rgba(150,138,120,.14) 39%,transparent 40.5%,transparent 80%,rgba(150,138,120,.12) 81%,transparent 82%),
-    radial-gradient(120% 140% at 30% 0%,#fbf9f4 0%,#efeae1 48%,#ddd6ca 100%)!important;
-  box-shadow:0 46px 90px -34px rgba(0,0,0,.95),0 0 0 2px #c9a961,0 0 0 4px rgba(0,0,0,.35),inset 0 1px 0 #fff,inset 0 -24px 50px rgba(120,105,85,.22)!important}
-html[data-sk=marble] .board::before{background:linear-gradient(90deg,transparent,rgba(110,90,60,.18) 25%,rgba(110,90,60,.18) 75%,transparent)}
-html[data-sk=marble] .vert .board::before{background:linear-gradient(180deg,transparent,rgba(110,90,60,.18) 25%,rgba(110,90,60,.18) 75%,transparent)}
-html[data-sk=marble] .slot{background:radial-gradient(circle at 50% 38%,#837c72 0%,#a39c91 50%,#c7c0b4 82%,#e2dcd1 100%)!important;
-  box-shadow:inset 0 calc(var(--u) * .08) calc(var(--u) * .16) rgba(40,30,20,.55),inset 0 calc(var(--u) * -.02) calc(var(--u) * .04) rgba(255,255,255,.5),0 0 0 1px rgba(160,128,60,.45),0 calc(var(--u) * .02) 0 rgba(255,255,255,.7)!important}
-html[data-sk=marble] .pitno{color:rgba(70,58,44,.5)}
-html[data-sk=marble] .slabel{color:#7a6b58}
-html[data-sk=marble] .slabel.me{color:#9a7424}
-html[data-sk=marble] .turnlbl{color:#8a6a22;text-shadow:0 1px 0 rgba(255,255,255,.8),0 0 14px rgba(255,255,255,.6)}
-html[data-sk=marble] .badge.zero{color:rgba(60,48,34,.28)}
+    linear-gradient(162deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 22%,rgba(255,255,255,0) 58%,rgba(255,255,255,.18) 70%,rgba(255,255,255,0) 82%),
+    radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.25),transparent 60%),
+    var(--mtex, linear-gradient(#f4f1ec,#e6e0d6)) center / cover no-repeat,
+    #efebe4!important;
+  box-shadow:0 46px 90px -30px rgba(0,0,0,.95),0 0 0 1px #8a6a2c,0 0 0 3px #d9bb72,0 0 0 4px #7a5c22,inset 0 2px 1px rgba(255,255,255,.95),inset 0 -3px 6px rgba(90,70,40,.28),inset 0 -40px 70px rgba(110,95,70,.16)!important}
+html[data-sk=marble] .frame::before{display:block;inset:calc(var(--u) * .14);border-radius:calc(var(--u) * .44);border:1px solid rgba(176,140,70,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(255,255,255,.7)}
+html[data-sk=marble] .board::before{background:linear-gradient(90deg,transparent,rgba(160,128,64,.45) 20%,rgba(160,128,64,.45) 80%,transparent)}
+html[data-sk=marble] .vert .board::before{background:linear-gradient(180deg,transparent,rgba(160,128,64,.45) 20%,rgba(160,128,64,.45) 80%,transparent)}
+html[data-sk=marble] .slot{
+  background:radial-gradient(circle at 50% 30%,rgba(52,44,34,.62) 0%,rgba(70,60,46,.42) 42%,rgba(120,105,85,.16) 72%,rgba(255,255,255,0) 92%),
+    var(--mtex, #e6e0d6) 37% 61% / calc(var(--u) * 9.7) auto!important;
+  box-shadow:inset 0 calc(var(--u) * .11) calc(var(--u) * .16) rgba(30,22,12,.62),inset 0 calc(var(--u) * .03) calc(var(--u) * .03) rgba(30,22,12,.35),
+    inset 0 calc(var(--u) * -.04) calc(var(--u) * .05) rgba(255,255,255,.75),
+    0 0 0 calc(var(--u) * .018) rgba(168,132,60,.85),0 0 0 calc(var(--u) * .04) rgba(255,253,248,.55),
+    0 calc(var(--u) * .035) calc(var(--u) * .02) rgba(255,255,255,.85),0 calc(var(--u) * -.03) calc(var(--u) * .04) rgba(90,70,40,.3)!important}
+html[data-sk=marble] .slot:nth-child(3n){background-position:center,71% 18%!important}
+html[data-sk=marble] .slot:nth-child(3n+1){background-position:center,12% 77%!important}
+html[data-sk=marble] .slot.pit.can:hover,html[data-sk=marble] .slot.pit.can.hov{box-shadow:inset 0 calc(var(--u) * .11) calc(var(--u) * .16) rgba(30,22,12,.62),0 0 0 2px #b8902f,0 0 calc(var(--u) * .25) rgba(200,160,70,.55)!important}
+html[data-sk=marble] .pitno{color:rgba(90,72,44,.6)}
+html[data-sk=marble] .slabel{color:#6e5f4b}
+html[data-sk=marble] .slabel.me{color:#8f6a1c}
+html[data-sk=marble] .turnlbl{color:#8a6a22;text-shadow:0 1px 0 rgba(255,255,255,.9),0 0 16px rgba(255,255,255,.8)}
+html[data-sk=marble] .badge.zero{color:rgba(255,255,255,.4);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+html[data-sk=marble] .seed{box-shadow:0 calc(var(--u) * .03) calc(var(--u) * .04) rgba(40,30,15,.55),inset calc(var(--u) * -.02) calc(var(--u) * -.03) calc(var(--u) * .05) rgba(0,0,0,.3),inset 0 0 0 .5px rgba(255,255,255,.4)}
 
 html[data-sk=jade] .frame{background:
     radial-gradient(60% 80% at 78% 30%,rgba(160,230,190,.10),transparent 70%),
@@ -1260,7 +1282,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=27"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028sk2"><\/script><script src="online-ui.js?v=20261028sk2"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=27"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028below1"><\/script><script src="online-ui.js?v=20261028sk2"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
