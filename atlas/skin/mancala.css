@@ -23,3 +23,13 @@ html.atlas-mancala .side{position:relative;z-index:2}
 html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary){background:#fff!important;color:#2b3044!important;border:2px solid #efe3c8!important;box-shadow:0 2px 0 #efe3c8!important}
 html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary) svg{stroke:#2b3044!important}
 html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:disabled{opacity:.45}
+/* PC: the portal bar is the page's header bar (html.hb-atlas) — sized like the 2D page under its 56px bar (--hb-h = the 64px portal bar,
+   the page starts below it), so the board, the info row and the lesson / puzzle card stay above the online dock */
+html.atlas-mancala.hb-atlas{--vh:calc(100vh - 64px)}
+html.atlas-mancala.hb-atlas.ol-dock{--vh:calc(100vh - 108px - 64px)}
+@supports (height:100dvh){html.atlas-mancala.hb-atlas.ol-dock{--vh:calc(100dvh - 108px - 64px)}}
+html.atlas-mancala.hb-atlas,html.atlas-mancala.hb-atlas body{--hb-h:64px}
+html.atlas-mancala.hb-atlas body{padding-top:64px}
+html.atlas-mancala.hb-atlas .app{padding-top:12px!important}
+/* the card's action bar stands beside the guide (atlas/skin/common.js): that row takes the bar's place, the right column of the PC card */
+html.atlas-mancala :is(.lesson-card,.puzzle-card) > .atlas-foot.cb-foot{grid-column:2;grid-row:1 / span 6;align-self:center;margin-top:0}
