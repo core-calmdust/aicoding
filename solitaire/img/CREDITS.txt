@@ -3,7 +3,7 @@ J・Q・K の絵札（*.webp のうち J/Q/K）とカード裏面（back-red.web
 License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 変更点: 元の絵柄から絵札の枠内と裏面の部分を切り出し、WebP に変換して使用。
 
-絵札「アンティーク」（img/antique/）・カード「フラット」52枚（img/flat/）とカード裏面「アラベスク」「アラベスク黒」「モザイク」（back-ornate*.webp, back-mosaic.webp）:
+絵札「アンティーク」（img/antique/）・カード「フラット」52枚（img/flat/）とカード裏面「アラベスク」「アラベスク黒」「モザイク」（back-ornate*.webp）:
 Designed by Freepik
 - Illustration online gambling: https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm
 - Poker cards icons collection: https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm
@@ -13,3 +13,10 @@ Designed by Freepik
 カード「ギャングスタ」52枚（img/gangsta/）とカード裏面「ギャングスタ」（back-gangsta.webp）:
 Designed by Freepik — Deck gangsta playing cards: https://www.magnific.com/free-vector/deck-gangsta-playing-cards_8083771.htm
 変更点: 元の素材から各カードと裏面を切り出し、WebP に変換して使用。
+
+カード裏面「フローラル」「フローラル黒」「アズール」「アズール黒」「ラッキースカル」「ラッキースカル黒」（back-floral*.webp, back-azure*.webp, back-skull*.webp）:
+Designed by Freepik
+- Casino concept with skull: https://www.magnific.com/free-vector/casino-concept-with-skull_8224553.htm
+- Hand drawn playing card back design illustration: https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943756.htm
+- Hand drawn playing card back design illustration: https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943770.htm
+変更点: 元の素材から裏面部分を切り出し（スカルはカードの枠に配置）、WebP に変換して使用。
