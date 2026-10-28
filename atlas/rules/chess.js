@@ -240,19 +240,52 @@
     const Y = board.userData.top;
     if (T3.fit) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, seen from the player's side (pieces stand up)
     const marks = new TH.Group(); board.add(marks);
-    let pcs = {}, step = 0, stopped = false, busy = false, played = false, timers = [];
+    let pcs = {}, step = 0, stopped = false, busy = false, played = false, timers = [], epoch = 0;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick && T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const ep = epoch, t0 = performance.now(); (function s(n) { if (stopped || ep !== epoch) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick && T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     const xz = n => CS.cell(...at(n));
 
-    function mk(t, col) { const g = CS.piece(t, col, { reflect: true }); if (t === 'N') g.rotation.y = col === 'w' ? Math.PI / 2 - .5 : -Math.PI / 2 + .5; const sh = T3.contact(.34, .5); sh.position.y = .002; g.add(sh); return g; }
-    function clearPieces() { Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; }
-    function fall(g, delay, h = 1.4) { g.visible = false; later(() => { g.visible = true; anim(260, k => { g.position.y = Y + (1 - k) * (1 - k) * h; }); }, delay); }
-    function setBoard(st) {
-      clearPieces(); let i = 0;
-      st.pos.forEach(([t, n, col]) => { const g = mk(t, col), [x, z] = xz(n); g.position.set(x, Y, z); board.add(g); pcs[n] = g; fall(g, 40 + (i++) * 16); });
-      return i;
+    function mk(t, col) { const g = CS.piece(t, col, { reflect: true }); if (t === 'N') g.rotation.y = col === 'w' ? Math.PI / 2 - .5 : -Math.PI / 2 + .5; g.userData.ry0 = g.rotation.y; const sh = T3.contact(.34, .5); sh.position.y = .002; g.add(sh); return g; }
+    /* ---------- position changes: diffed against the pieces already on the board — a piece already on its square stays
+       exactly where it is, one that only changed squares glides there (the nearest of the same kind), a vanished one
+       lifts away and only new ones drop in; an identical position leaves the board untouched ---------- */
+    function fall(g, y, delay, h = 1.4) { g.visible = false; g.position.y = y; later(() => { g.visible = true; anim(260, k => { g.position.y = y + (1 - k) * (1 - k) * h; }, () => { g.position.y = y; }); }, delay); }
+    function liftOut(g) { const y0 = g.position.y, s0 = g.scale.x; if (!g.visible) { board.remove(g); return; } anim(260, k => { g.position.y = y0 + k * .9; g.scale.setScalar(Math.max(.01, s0 * (1 - k))); }, () => board.remove(g)); }
+    function settle(g, x, y, z, mv) {   // back to its resting pose on (x, y, z); false if it already rests there
+      const p = g.position, r = g.rotation, s = g.scale, ry = g.userData.ry0 || 0; g.userData.bob = false;
+      if (!g.visible) { p.set(x, y, z); r.set(0, ry, 0); s.set(1, 1, 1); fall(g, y, 40); return true; }
+      const d = Math.hypot(p.x - x, p.z - z);
+      if (d < 1e-3 && Math.abs(p.y - y) < 1e-3 && Math.abs(r.x) + Math.abs(r.y - ry) + Math.abs(r.z) < 1e-3 && Math.abs(s.x - 1) + Math.abs(s.y - 1) + Math.abs(s.z - 1) < 1e-3) return false;
+      const f = p.clone(), r0 = r.clone(), s0 = s.clone(), lift = mv ? Math.min(1, .3 + d * .08) : 0;
+      anim(mv ? Math.min(620, 300 + d * 45) : 200, k => { const e = io(k); p.set(f.x + (x - f.x) * e, f.y + (y - f.y) * e + Math.sin(k * Math.PI) * lift, f.z + (z - f.z) * e); r.set(r0.x * (1 - e), r0.y + (ry - r0.y) * e, r0.z * (1 - e)); s.set(s0.x + (1 - s0.x) * e, s0.y + (1 - s0.y) * e, s0.z + (1 - s0.z) * e); },
+        () => { p.set(x, y, z); r.set(0, ry, 0); s.set(1, 1, 1); if (mv) SFX.tok(.5, 1.05); });
+      return true;
+    }
+    // cur: [{ g, k, at }] on the board now; want: [{ k, at, … }]; spot(w) → [x, z, y?]; make(w) → a new piece. → { list: [{ g, w }], wait (ms until settled) }
+    function morph(cur, want, spot, make) {
+      const live = new Set(cur.map(c => c.g));
+      board.children.slice().forEach(o => { if (o.userData.pc && !live.has(o)) board.remove(o); });   // leftovers of an interrupted capture
+      const got = want.map(() => null), pool = cur.slice(), mv = new Set(), pairs = [];
+      want.forEach((w, i) => { const j = pool.findIndex(c => c.k === w.k && c.at === w.at); if (j >= 0) got[i] = pool.splice(j, 1)[0].g; });
+      want.forEach((w, i) => { if (got[i]) return; const [x, z] = spot(w); pool.forEach(c => { if (c.k === w.k) pairs.push([Math.hypot(c.g.position.x - x, c.g.position.z - z), i, c]); }); });
+      pairs.sort((a, b) => a[0] - b[0]).forEach(([, i, c]) => { if (got[i] || c.used) return; c.used = true; got[i] = c.g; mv.add(c.g); });
+      let nNew = 0, moved = 0;
+      const list = want.map((w, i) => {
+        const [x, z, y = Y] = spot(w); let g = got[i];
+        if (!g) { g = make(w); g.userData.pc = 1; g.position.set(x, y, z); board.add(g); fall(g, y, 40 + (nNew++) * 16); }
+        else if (settle(g, x, y, z, mv.has(g))) moved++;
+        return { g, w };
+      });
+      const gone = pool.filter(c => !c.used); gone.forEach(c => liftOut(c.g));
+      return { list, wait: Math.max(nNew ? 320 + nNew * 16 : 0, moved ? 640 : 0, gone.length ? 280 : 0) };
+    }
+    const kindOf = (t, col) => String(t).toUpperCase() + (col === 'b' || col === 1 ? 'b' : 'w');
+    function setBoard(st) {   // → ms until the board has settled
+      const cur = Object.keys(pcs).map(at => ({ g: pcs[at], at, k: kindOf(pcs[at].userData.type, pcs[at].userData.color) }));
+      const r = morph(cur, st.pos.map(([t, n, col]) => ({ k: kindOf(t, col), at: n, t, col })), w => xz(w.at), w => mk(w.t, w.col));
+      pcs = {}; r.list.forEach(({ g, w }) => { pcs[w.at] = g; });
+      return r.wait;
     }
     /* ---------- marks ---------- */
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); Object.values(pcs).forEach(p => { p.userData.bob = false; }); }
@@ -314,16 +347,16 @@
     }
     function go(n) {
       step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false;
-      timers.forEach(clearTimeout); timers = [];
+      timers.forEach(clearTimeout); timers = []; epoch++;
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
-      const cnt = setBoard(st);
+      const wait = setBoard(st);
       later(() => {
         (st.blue || []).forEach(q => tile(q, 0x1f6fe8, .45));
         (st.gold || []).forEach(q => tile(q, 0xffb020, .55, true));
         (st.glow || []).forEach(q => { const p = pcs[q]; if (p) p.userData.bob = true; tile(q, p ? 0xffc928 : 0xe0501e, .5, true); });
         if (st.sel) { tile(st.sel, 0x2fd17a, .6, true); const sp = pcs[st.sel]; anim(240, k => { sp.position.y = Y + .2 * io(k); }); }
         if (st.act) st.act.to.forEach(q => { if (pcs[q]) tile(q, 0xd8321c, .55, true); else ring(q); });
-      }, 420 + cnt * 16);
+      }, wait + 60);
       say(L.s[step].say); buttons();
     }
     function cellOf(e) {

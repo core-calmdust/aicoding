@@ -225,32 +225,58 @@
     const U = board.userData, Y = U.top, c = U.cell;
     if (T3.fit) T3.fit({ w: U.W + .3, d: U.W + 1.6, y: Y - 1.5, pitch: 1.12 });   // the whole board, seen a little from the player's side
     const marks = new TH.Group(), stones = new TH.Group(); board.add(marks, stones);
-    let st = {}, step = 0, stopped = false, busy = false, played = false, timers = [], phase = 0, targets = [], hand = null, idleT = 0;
+    let st = {}, step = 0, stopped = false, busy = false, played = false, timers = [], epoch = 0, phase = 0, targets = [], hand = null, idleT = 0;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick && T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const ep = epoch, t0 = performance.now(); (function s(n) { if (stopped || ep !== epoch) return; const k = Math.min(1, (n - t0) / dur); f(k); T3.kick && T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const xz = n => { const m = typeof n === 'number' ? n : cellOf(n); return U.pt(m % 15, 14 - Math.floor(m / 15)); };
     const H = c * .47 * GB.SH * 2;
 
     /* ---------- stones ---------- */
     function put(n, col, delay = 0, drop = true) {
       const g = new TH.Group(), s = GB.stone(col, c, (typeof n === 'number' ? n : cellOf(n)) * 7 + col), sh = T3.contact(c * .47, .5); sh.position.y = .002; g.add(sh, s);
-      const [x, z] = xz(n); g.position.set(x, Y, z); stones.add(g); st[n] = g; g.userData.s = s;
-      if (!drop) return g;
+      const [x, z] = xz(n); g.position.set(x, Y, z); stones.add(g); st[n] = g; g.userData.s = s; g.userData.sh = sh; g.userData.col = col;
+      if (drop) dropStone(g, col, delay);
+      return g;
+    }
+    function dropStone(g, col, delay) {
+      const s = g.userData.s, sh = g.userData.sh;
       g.visible = false;
       later(() => {
-        g.visible = true; const z0 = c * .45, h0 = c * 1.1; s.position.set(0, h0, z0); s.rotation.x = -.4; sh.material.opacity = 0;
+        g.visible = true; g.scale.set(1, 1, 1); const z0 = c * .45, h0 = c * 1.1; s.position.set(0, h0, z0); s.rotation.x = -.4; sh.material.opacity = 0;
         anim(280, k => { const e = 1 - Math.pow(1 - k, 3), hh = k < .72 ? h0 * (1 - Math.pow(k / .72, 2)) : 0; s.position.y = hh; s.position.z = z0 * (1 - e); s.rotation.x = -.4 * (1 - Math.min(1, k / .72)); sh.material.opacity = .5 * Math.min(1, k * 1.3); if (k > .72) { const q = (k - .72) / .28, sq = Math.sin(q * Math.PI) * .06; s.scale.set(1 + sq, 1 - sq * 1.6, 1 + sq); } },
           () => { s.position.set(0, 0, 0); s.rotation.x = 0; s.scale.set(1, 1, 1); });
         later(() => SFX.pachi(col === 1 ? 1 : 1.12), 200);
       }, delay);
-      return g;
     }
-    function clearStones() { while (stones.children.length) stones.remove(stones.children[0]); st = {}; }
-    function setBoard(S) {
-      clearStones(); let i = 0;
-      if (S.show) { SHOW.forEach((m, k) => put(m, k % 2 ? 2 : 1, 60 + (i++) * 45)); return i; }
-      S.b.forEach(n => put(n, 1, 60 + (i++) * 70)); S.w.forEach(n => put(n, 2, 60 + (i++) * 70));
-      return i;
+    function settleStone(g) {   // a stone that stays: back to rest if an interrupted animation left it mid-way → true if it had to
+      const s = g.userData.s, sh = g.userData.sh;
+      if (Math.abs(g.scale.x - 1) + s.position.length() + Math.abs(s.rotation.x) + Math.abs(s.scale.x - 1) + Math.abs(s.scale.y - 1) + (sh ? Math.abs(sh.material.opacity - .5) : 0) < 1e-3) return false;
+      const gs = g.scale.x, p0 = s.position.clone(), rx = s.rotation.x, ss = s.scale.clone(), o0 = sh ? sh.material.opacity : 0;
+      anim(200, k => { g.scale.setScalar(gs + (1 - gs) * k); s.position.copy(p0).multiplyScalar(1 - k); s.rotation.x = rx * (1 - k); s.scale.set(ss.x + (1 - ss.x) * k, ss.y + (1 - ss.y) * k, ss.z + (1 - ss.z) * k); if (sh) sh.material.opacity = o0 + (.5 - o0) * k; });
+      return true;
+    }
+    function liftStone(g) {   // a stone that is no longer in the position lifts off
+      const s = g.userData.s, sh = g.userData.sh, y0 = s.position.y, s0 = s.scale.x, o0 = sh ? sh.material.opacity : 0; g.userData.col = 0;
+      if (!g.visible) { stones.remove(g); return; }
+      anim(260, k => { s.position.y = y0 + c * .7 * k; s.scale.setScalar(Math.max(.01, s0 * (1 - k))); if (sh) sh.material.opacity = o0 * (1 - k); }, () => stones.remove(g));
+    }
+    // want: [[name, colour]] → diff against the stones already down (same colour on the same point stays untouched) → ms until settled
+    function morphStones(want, gap) {
+      const old = new Map(); Object.keys(st).forEach(k => { const g = st[k]; if (g.userData.col && !g.userData.temp) old.set(idx(k), g); });
+      const live = new Set(old.values()); stones.children.slice().forEach(o => { if (!live.has(o)) stones.remove(o); });   // leftovers of an interrupted capture / take-back
+      st = {}; let nNew = 0, moved = 0, gone = 0;
+      want.forEach(([q, col]) => {
+        const i = idx(q), g = old.get(i);
+        if (g && g.userData.col === col) { old.delete(i); st[q] = g; if (!g.visible) { g.visible = true; dropStone(g, col, 60 + (nNew++) * gap); } else if (settleStone(g)) moved++; return; }
+        put(q, col, 60 + (nNew++) * gap);
+      });
+      old.forEach(g => { liftStone(g); gone++; });
+      return Math.max(nNew ? 60 + nNew * gap + 260 : 0, moved ? 220 : 0, gone ? 280 : 0);
+    }
+    const idx = n => typeof n === 'number' ? n : /^\d+$/.test(n) ? +n : cellOf(n);
+    function setBoard(S) {   // → ms until the board has settled
+      if (S.show) return morphStones(SHOW.map((m, k) => [m, k % 2 ? 2 : 1]), 45);
+      return morphStones(S.b.map(n => [n, 1]).concat(S.w.map(n => [n, 2])), 70);
     }
     /* ---------- marks ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
@@ -317,10 +343,9 @@
     function arm(list) { targets = list.slice(); clearMarks(); const S = STEPS[step]; if (S.danger) bar(S.danger, 0xff4a3a, .38); (S.cross || []).forEach(cross); list.forEach(n => { if (!(S.act && S.act.forbid)) glow(n); }); armIdle(); }
     function go(n) {
       step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; phase = 0; targets = [];
-      timers.forEach(clearTimeout); timers = []; clearTimeout(idleT); hideHand();
+      timers.forEach(clearTimeout); timers = []; epoch++; clearTimeout(idleT); hideHand();
       const S = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
-      const cnt = setBoard(S);
-      let wait = 200 + cnt * 70;
+      let wait = setBoard(S);
       if (S.auto) { S.auto.forEach((m, i) => put(m, 2, wait + 300 + i * 300)); wait += 300 + S.auto.length * 300; }
       if (S.act) { busy = true; later(() => { busy = false; arm(S.act.to); tapLine(); }, wait + 150); }
       say(L.s[step].say); buttons();
@@ -340,7 +365,7 @@
       const a = S.act, stepNow = step;
       if (a.forbid) {   // the forbidden point: the stone hovers, shakes and is taken back
         busy = true; played = true; SFX.buzz();
-        const g = put(q, 1, 0, false), s = g.userData.s; s.position.y = c * .5;
+        const g = put(q, 1, 0, false), s = g.userData.s; g.userData.temp = true; s.position.y = c * .5;
         anim(700, k => { s.position.x = Math.sin(k * Math.PI * 7) * c * .12 * (1 - k); s.position.y = c * .5 + Math.sin(k * Math.PI) * c * .1; }, () => anim(220, k => { s.position.y = c * .5 + k * c; s.scale.setScalar(1 - k); }, () => { stones.remove(g); delete st[q]; if (step === stepNow) finish(() => line(`<span class="tag">${L.forb}</span>`)); }));
         return;
       }

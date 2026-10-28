@@ -116,18 +116,19 @@
     const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
     const P = q => [T3.cellPos(8, S, q & 7), T3.cellPos(8, S, q >> 3)];
     const marks = new TH.Group(); board.add(marks);
-    let discs = {}, cells = [], step = 0, stopped = false, busy = false, played = false, timers = [];
+    let discs = {}, cells = [], step = 0, stopped = false, busy = false, played = false, timers = [], epoch = 0;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const ep = epoch, t0 = performance.now(); (function s(n) { if (stopped || ep !== epoch) return; const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
 
     function makeDisc(q, color) {
       const g = new TH.Group(), top = T3.bevelDisc(.42, .1, W), bot = T3.bevelDisc(.42, .1, B);
       top.position.y = .1; g.add(bot, top); g.position.y = -.1;
       const inner = new TH.Group(); inner.add(g); const outer = new TH.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -.098; outer.add(ao);
-      const [x, z] = P(q); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0;
+      const [x, z] = P(q); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0; outer.userData.disc = 1;
       board.add(outer); return (discs[q] = { outer, inner, color });
     }
-    function drop(q, color, delay = 0, h = 2.2, snd = false) { const d = makeDisc(q, color); d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * h; }, () => { if (snd) SFX.tok(1, 1); }); }, delay); }
+    function dropIn(d, delay, h, snd) { d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * h; }, () => { d.outer.position.y = Y + .1; if (snd) SFX.tok(1, 1); }); }, delay); }
+    function drop(q, color, delay = 0, h = 2.2, snd = false) { dropIn(makeDisc(q, color), delay, h, snd); }
     function flip(q, color, delay) {
       const d = discs[q]; d.color = color; const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
       later(() => anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .8; }, () => SFX.tok(.45, 1.35 + Math.random() * .15)), delay);
@@ -139,11 +140,26 @@
     // pulse the glowing marks
     (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); marks.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(.85 + k * .3); m.material.opacity = .45 + k * .45; } }); requestAnimationFrame(pulse); })();
 
-    function setBoard(next) {   // swap the position: old discs hop away, new ones drop in
-      Object.values(discs).forEach(d => board.remove(d.outer)); discs = {};
-      cells = next.slice(); let i = 0;
-      cells.forEach((c, q) => { if (c) drop(q, c, 40 + (i++) * 14, 1.2); });
+    function setBoard(next) {   // diff against the discs already down: the same colour stays exactly as it is, the other colour
+      // turns over, a disc on an emptied square lifts away and only new ones drop in → ms until the board has settled
+      const old = discs, live = new Set(Object.values(old).map(d => d.outer));
+      board.children.slice().forEach(o => { if (o.userData.disc && !live.has(o)) board.remove(o); });   // leftovers of an interrupted step
+      discs = {}; cells = next.slice(); let nNew = 0, nFlip = 0, moved = 0, gone = 0;
+      cells.forEach((c, q) => {
+        const d = old[q]; delete old[q];
+        if (!c) { if (d) { liftOut(d); gone++; } return; }
+        if (!d) { drop(q, c, 40 + (nNew++) * 14, 1.2); return; }
+        discs[q] = d; const o = d.outer, [x, z] = P(q);
+        if (!o.visible) { d.color = c; d.inner.rotation.x = c === 1 ? Math.PI : 0; o.scale.set(1, 1, 1); o.position.set(x, Y + .1, z); dropIn(d, 40 + (nNew++) * 14, 1.2); return; }
+        if (d.color !== c) { o.scale.set(1, 1, 1); flip(q, c, 40 + (nFlip++) * 40); return; }
+        const to = c === 1 ? Math.PI : 0, y0 = o.position.y, r0 = d.inner.rotation.x, s0 = o.scale.x;
+        if (Math.abs(y0 - Y - .1) + Math.abs(r0 - to) + Math.abs(s0 - 1) < 1e-3) return;   // untouched
+        moved++; anim(200, k => { o.position.y = y0 + (Y + .1 - y0) * k; d.inner.rotation.x = r0 + (to - r0) * k; o.scale.setScalar(s0 + (1 - s0) * k); });
+      });
+      Object.values(old).forEach(d => { liftOut(d); gone++; });
+      return Math.max(nNew ? 300 + nNew * 14 : 0, nFlip ? 480 + nFlip * 40 : 0, moved ? 220 : 0, gone ? 280 : 0);
     }
+    function liftOut(d) { const o = d.outer, y0 = o.position.y; if (!o.visible) { board.remove(o); return; } anim(260, k => { o.position.y = y0 + k * .8; o.scale.setScalar(Math.max(.01, 1 - k)); }, () => board.remove(o)); }
 
     /* ---------- guide panel ---------- */
     const el = document.createElement('div'); el.className = 'rgd';
@@ -176,9 +192,9 @@
     }
     function go(n) {
       step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false;
+      timers.forEach(clearTimeout); timers = []; epoch++;
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
-      setBoard(st.cells);
-      const intro = 220 + cells.filter(Boolean).length * 14;
+      const intro = setBoard(st.cells) + 60;
       later(() => {
         if (st.glow) st.glow.forEach(n => { const m = tile(sq(n), 0xffe27a, .5); m.userData.pulse = true; });
         if (st.play) (st.play === 'any' ? legal(cells, 1) : st.play.map(sq)).forEach(ring);

@@ -293,7 +293,7 @@
       want.forEach(w => { const a = pool[w.side + ':' + w.at]; if (a && a.length) { const c = a.shift(); c.mode = 'keep'; next.push(c); } else miss.push(w); });
       const left = [].concat(...Object.values(pool));
       miss.forEach(w => { const i = left.findIndex(c => c.side === w.side); if (i >= 0) { const c = left.splice(i, 1)[0]; c.at = w.at; c.mode = 'move'; next.push(c); } else next.push({ side: w.side, at: w.at, m: mk(w.side), mode: 'new' }); });
-      left.forEach(c => board.remove(c.m));
+      left.forEach(c => { const m = c.m, y0 = m.position.y; anim(260, k => { m.position.y = y0 + k * .8; m.scale.setScalar(Math.max(.01, 1 - k)); }, () => board.remove(m)); });   // gone from the position: lifted away
       cks = next; restack();
       let nNew = 0, moved = false;
       cks.forEach((c, i) => {
