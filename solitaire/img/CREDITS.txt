@@ -3,7 +3,7 @@ J・Q・K の絵札（*.webp のうち J/Q/K）とカード裏面（back-red.web
 License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 変更点: 元の絵柄から絵札の枠内と裏面の部分を切り出し、WebP に変換して使用。
 
-絵札「アンティーク」（img/antique/）・「フラット」（img/flat/）とカード裏面「アラベスク」「アラベスク黒」「モザイク」（back-ornate*.webp, back-mosaic.webp）:
+絵札「アンティーク」（img/antique/）・カード「フラット」52枚（img/flat/）とカード裏面「アラベスク」「アラベスク黒」「モザイク」（back-ornate*.webp, back-mosaic.webp）:
 Designed by Freepik
 - Illustration online gambling: https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm
 - Poker cards icons collection: https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm
