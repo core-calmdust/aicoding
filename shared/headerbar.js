@@ -35,13 +35,18 @@ html.side-col .side .lesson-card .lh{flex-wrap:wrap;row-gap:6px}html.side-col .s
 /* player cards (common spec: whenever the info column stands beside the board — html.side-col): the side / count label is information, not a headline — keep it modest */
 html.side-col .side .players .count, html.side-col .side .players .count > span:first-child, html.side-col .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
 html.side-col .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
-/* …and the card itself compact: name on the left, the count / side on the right of the same line, the status line under it
+/* …and the card itself compact, one line: name on the left, then the status (only while it says something: thinking / check / win …
+   — the plain "to move" label is gone, the gold frame shows whose turn it is), then the count / side on the right; the count's
+   caption sits small on the left of the number so the number stays at the right edge and nothing wraps
    (not while a game clock is shown — those cards keep their own clock layout) */
-html.side-col body:not(.has-clk):not(.in-online) .side .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:1px;padding:8px 12px!important;min-height:0!important}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:0;row-gap:1px;padding:8px 12px!important;min-height:0!important}
 html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .top{grid-column:1;grid-row:1;min-width:0}
-html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .count, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .side-l, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .row{grid-column:2;grid-row:1;margin:0!important;text-align:end}
-html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .count, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .side-l, html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .row{grid-column:3;grid-row:1;margin:0!important;margin-inline-start:10px!important;text-align:end}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:2;grid-row:1;max-width:11em;margin-inline-start:8px;height:auto!important;line-height:1.3;text-align:end}
 html.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status:empty{display:none}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .count{display:flex;flex-direction:row-reverse;align-items:baseline;justify-content:flex-start;white-space:nowrap}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .count > small{display:inline;margin:0!important;margin-inline-end:6px!important;white-space:nowrap}
+html.side-col body:not(.has-clk):not(.in-online) .side .players .count > small:empty{display:none}
 html.side-col .side .card.players{padding-top:10px!important;padding-bottom:10px!important}
 :root{--hb-h:0px}
 html.hb-on,body.hb-on{--hb-h:${H}px}

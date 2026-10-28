@@ -406,7 +406,7 @@ function renderInfo() {
     else { const n = playerName(p); nmEl.classList.remove('pn'); nmEl.removeAttribute('title'); nmEl.textContent = n ? n + ' · ' + pname(p) : pname(p); }
     const el = $('#pl' + p);
     el.classList.toggle('active', !st.over && tm === p); el.classList.toggle('won', st.winner === p); el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.inCheck() ? ' · ' + t('st.check') : '') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? (pos.inCheck() ? t('st.check') : '') : '');
   }
   if (settings.mode === 'online' && !lesson && !puzzle) olClocks(); else olClocksOff();
   $('#btnResign').disabled = !canResign();

@@ -327,7 +327,7 @@ function renderInfo() {
     let s = '';
     if (st.winner === p) s = t('st.win');
     else if (thinking === p) s = t('thinking');
-    else if (!st.over && tm === p) { s = t('st.turn'); if (pos.cnt[3 - p][E.C.FIVE] > 0) s += ' · ' + t('st.four'); }
+    else if (!st.over && tm === p) { if (pos.cnt[3 - p][E.C.FIVE] > 0) s = t('st.four'); }
     $('#status' + p).textContent = s;
   }
   if (settings.mode === 'online' && !lesson && !puzzle) olClocks(); else olClocksOff();

@@ -1032,6 +1032,9 @@ html[lang=ar] .pf-input{direction:rtl}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* the two player cards stand side by side here (narrow): the AI's status (thinking · depth · score) keeps its own line under
+   the name instead of the shared inline slot, which would squeeze the name to "A…" */
+:root.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2;max-width:none;margin:0;text-align:start}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1286,7 +1289,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>

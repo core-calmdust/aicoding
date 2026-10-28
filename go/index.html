@@ -503,12 +503,14 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   body.rv-on #evalCard .graph{display:none}
   body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{display:none}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:22px;margin-top:0;line-height:1}
   .player .clk{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .player .count small{display:none}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
+  .player:has(.clk:not(:empty)){padding-bottom:16px}   /* the clock sits on the bottom edge */
   .player .name{min-width:0}
   .card{padding:10px 12px}
   .controls{padding:8px;gap:5px}
@@ -536,10 +538,10 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .brand h1{font-size:clamp(13px, calc((100vw - var(--bs) - 230px) / (var(--tl) * .64)), 16px)}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .count{font-size:18px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .graph{height:56px;margin-top:6px}
   .controls{gap:5px;padding:6px}
   .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
@@ -890,7 +892,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=23"></script>
@@ -901,7 +903,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rbox.js?v=5"></script>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 <script src="learn.js?v=20261028rb"></script>
 <script src="online-ui.js?v=3"></script>
 <script>

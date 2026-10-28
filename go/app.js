@@ -423,7 +423,7 @@ function renderInfo() {
     e.classList.toggle('active', !st.over && !cnting && tm === p);
     e.classList.toggle('won', st.winner === p);
     e.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && !cnting && tm === p ? t('st.turn') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : '';
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());

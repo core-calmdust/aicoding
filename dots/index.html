@@ -559,10 +559,11 @@ body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu st
   .review-card.show{flex:none;min-height:0;max-height:none;overflow:visible}
   .kifu-card{order:2}
   .info-line{display:none}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
   .player .top{min-width:0}
   .player .count{font-size:26px;margin-top:0;line-height:1}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
   .card{padding:10px 12px}
   .controls{padding:7px;gap:4px}
   .btn{padding:7px 0;gap:3px;font-size:10px;letter-spacing:0}
@@ -589,12 +590,12 @@ body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu st
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .swatch{width:14px;height:14px;font-size:8px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .controls{gap:4px;padding:6px}
   .btn{padding:6px 1px;font-size:9.5px;border-radius:8px;gap:2px}
   .btn svg{width:15px;height:15px}
@@ -1095,7 +1096,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="i18n-learn.js?v=20261021ru3"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
