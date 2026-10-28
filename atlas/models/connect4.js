@@ -134,11 +134,17 @@
   }
 
   /* ---------- geometry ---------- */
-  function rrShape(path, hw, hh, r) {
-    path.moveTo(-hw + r, -hh); path.lineTo(hw - r, -hh); path.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
-    path.lineTo(hw, hh - r); path.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
-    path.lineTo(-hw + r, hh); path.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
-    path.lineTo(-hw, -hh + r); path.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+  // rounded rectangle as a polyline without a repeated closing point
+  // (a duplicate start/end vertex made the bevelled extrusion tear at the corner)
+  function rrShape(path, hw, hh, r, seg = 5) {
+    const q = new (T().Path)();
+    q.moveTo(-hw + r, -hh); q.lineTo(hw - r, -hh); q.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
+    q.lineTo(hw, hh - r); q.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
+    q.lineTo(-hw + r, hh); q.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
+    q.lineTo(-hw, -hh + r); q.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+    const pts = q.getPoints(seg).filter((v, i, a) => i === 0 || v.distanceTo(a[i - 1]) > 1e-6);
+    while (pts.length > 2 && pts[pts.length - 1].distanceTo(pts[0]) < 1e-6) pts.pop();
+    path.setFromPoints(pts);
     return path;
   }
   const mesh = (geo, mat, cast = true) => { const m = new (T().Mesh)(geo, mat); m.castShadow = cast; m.receiveShadow = true; return m; };
@@ -146,10 +152,10 @@
   function tileGeo() {
     const k = 'c4tile' + (X.coarse ? 'c' : ''); if (GEO[k]) return GEO[k];
     const TT = T(), bv = .035, hw = TW / 2 - bv, cs = X.coarse ? 3 : 5;
-    const sh = rrShape(new TT.Shape(), hw, hw, .2); sh.holes.push(rrShape(new TT.Path(), .335 + bv, .335 + bv, .14 + bv));
+    const sh = rrShape(new TT.Shape(), hw, hw, .2, cs); sh.holes.push(rrShape(new TT.Path(), .335 + bv, .335 + bv, .14 + bv, cs));
     const dep = TD - 2 * bv, frame = new TT.ExtrudeGeometry(sh, { depth: dep, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: 2, curveSegments: cs });
     frame.translate(0, 0, -dep / 2);
-    const inlay = new TT.ShapeGeometry(rrShape(new TT.Shape(), .34, .34, .145), cs);
+    const inlay = new TT.ShapeGeometry(rrShape(new TT.Shape(), .34, .34, .145, cs), cs);
     X.share && (X.share(frame), X.share(inlay));
     return (GEO[k] = { frame, inlay, face: TD / 2 - .045 });
   }
@@ -166,13 +172,13 @@
   function stand(m) {
     const TT = T(), g = new TT.Group();
     // tray: a stitched leather ring (rim + walls) and a suede floor
-    const bv = .05, sh = rrShape(new TT.Shape(), TW_ / 2 - bv, TDp / 2 - bv, TR - bv);
-    sh.holes.push(rrShape(new TT.Path(), TW_ / 2 - WALL + bv, TDp / 2 - WALL + bv, TR - WALL + bv));
+    const bv = .05, sh = rrShape(new TT.Shape(), TW_ / 2 - bv, TDp / 2 - bv, TR - bv, X.coarse ? 8 : 12);
+    sh.holes.push(rrShape(new TT.Path(), TW_ / 2 - WALL + bv, TDp / 2 - WALL + bv, TR - WALL + bv, X.coarse ? 8 : 12));
     const ring = new TT.ExtrudeGeometry(sh, { depth: TH - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: X.coarse ? 2 : 3, curveSegments: X.coarse ? 8 : 12 });
     const tr = mesh(ring, [m.top, m.side]); tr.rotation.x = -Math.PI / 2; tr.position.y = bv; g.add(tr);
-    const fl = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - WALL + .01, TDp / 2 - WALL + .01, TR - WALL), X.coarse ? 8 : 12), m.suede, false);
+    const fl = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - WALL + .01, TDp / 2 - WALL + .01, TR - WALL, X.coarse ? 8 : 12), X.coarse ? 8 : 12), m.suede, false);
     fl.rotation.x = -Math.PI / 2; fl.position.y = FL; g.add(fl);
-    const base = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - .02, TDp / 2 - .02, TR - .02), 6), m.side, false); base.rotation.x = Math.PI / 2; base.position.y = .002; g.add(base);
+    const base = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - .02, TDp / 2 - .02, TR - .02, 6), 6), m.side, false); base.rotation.x = Math.PI / 2; base.position.y = .002; g.add(base);
     // walnut spine across the tray
     const spL = TW_ - 2 * WALL - .02, sp = mesh(X.RB(spL, SP_H - FL + .02, SP_D, .07, 3), m.walnut); sp.position.y = (SP_H + FL) / 2 - .01; g.add(sp);
     // eight bronze rails in brass ferrules
