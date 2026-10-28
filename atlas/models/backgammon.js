@@ -390,7 +390,7 @@
     const TT = T(), m = checkerMats(id);
     if (!ckGeo) {
       const R = CK_R, Hh = CK_H, pts = [[0, 0], [R - .02, 0], [R - .004, .006], [R, .022], [R, Hh - .022], [R - .004, Hh - .006], [R - .02, Hh], [R - .062, Hh], [R - .072, Hh - .008], [R - .076, Hh - .026], [0, Hh - .026]];
-      ckGeo = { rim: new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), 64), face: new TT.CircleGeometry(R - .075, 48) };
+      ckGeo = { rim: new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), 44), face: new TT.CircleGeometry(R - .075, 44) };
       ckGeo.face.rotateX(-Math.PI / 2); ckGeo.face.translate(0, Hh - .025, 0);
     }
     const g = new TT.Group();
@@ -411,7 +411,7 @@
   function die(id = 'gold', size = .8) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
     const body = new TT.Mesh(RB(size, size, size, size * .16, 4), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 14, 10), sp = size * .27;
+    const pg = new TT.SphereGeometry(size * .085, 10, 6), sp = size * .27;
     // face → (normal axis, u axis, v axis): the pip grid i → col (i % 3), row (i / 3 | 0) as seen from outside, top row towards −z (screen up) on the top face
     const F = { 1: [[0, 1, 0], [1, 0, 0], [0, 0, 1]], 6: [[0, -1, 0], [1, 0, 0], [0, 0, -1]], 3: [[1, 0, 0], [0, 0, -1], [0, -1, 0]], 4: [[-1, 0, 0], [0, 0, 1], [0, -1, 0]], 2: [[0, 0, 1], [1, 0, 0], [0, -1, 0]], 5: [[0, 0, -1], [-1, 0, 0], [0, -1, 0]] };
     for (const v in F) {
@@ -436,7 +436,7 @@
   function dieG(id = 'gold', size = .82) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
     const body = new TT.Mesh(RB(size, size, size, size * .16, 4), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 14, 10), sp = size * .76 / 3;
+    const pg = new TT.SphereGeometry(size * .085, 10, 6), sp = size * .76 / 3;
     for (const F of GF) for (const i of PIPS[F.v]) {
       const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h - size * .035, s = new TT.Mesh(pg, m.pip);
       s.position.set(F.n[0] * d + F.u[0] * cu + F.w[0] * cw, F.n[1] * d + F.u[1] * cu + F.w[1] * cw, F.n[2] * d + F.u[2] * cu + F.w[2] * cw);
@@ -460,7 +460,7 @@
       x.fillStyle = '#ecd39a'; x.font = '700 96px Georgia, "Times New Roman", serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(key, 128, 136);
       cubeTex[key] = tex(c, 4);
     }
-    const side = new TT.MeshPhysicalMaterial({ color: new TT.Color(0x2a1a12).convertSRGBToLinear(), map: tex(W_.rosewood(), 4), roughness: .3, clearcoat: .8, clearcoatRoughness: .1 });
+    const side = new TT.MeshPhysicalMaterial({ color: new TT.Color(0x2a1a12).convertSRGBToLinear(), map: cubeTex.side || (cubeTex.side = tex(W_.rosewood(), 4)), roughness: .3, clearcoat: .8, clearcoatRoughness: .1 });
     const top = new TT.MeshPhysicalMaterial({ map: cubeTex[key], roughness: .3, clearcoat: .8, clearcoatRoughness: .1 });
     const m = new TT.Mesh(RB(size, size, size, size * .14, 4), [side, side, top, side, side, side]); m.castShadow = m.receiveShadow = true;
     return m;

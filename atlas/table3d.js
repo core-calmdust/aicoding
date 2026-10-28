@@ -166,11 +166,17 @@
     return mesh(new (T().BoxGeometry)(w, h, d), mats, 0, h / 2, 0);
   }
   function disc(r, h, mat, seg = 40) { return mesh(new (T().CylinderGeometry)(r, r, h, seg), mat); }
-  function bevelDisc(r, h, mat) {   // rounded checker / stone
-    const pts = [], s = 12;
-    for (let i = 0; i <= s; i++) { const a = -Math.PI / 2 + Math.PI * i / s; pts.push(new (T().Vector2)(Math.max(.001, r - h / 2 + Math.cos(a) * h / 2), h / 2 + Math.sin(a) * h / 2)); }
-    pts.unshift(new (T().Vector2)(0, 0)); pts.push(new (T().Vector2)(0, h));
-    return mesh(new (T().LatheGeometry)(pts, 40), mat);
+  const discCache = {};
+  function bevelDisc(r, h, mat) {   // rounded checker / stone (one shared geometry per size: a reversi game puts 128 of them on the table)
+    const key = r.toFixed(4) + ',' + h.toFixed(4);
+    let g = discCache[key];
+    if (!g) {
+      const pts = [], s = 8;   // (8 steps round the rounded edge, 32 round the disc: ~45% of the old triangles, the same silhouette at this size)
+      for (let i = 0; i <= s; i++) { const a = -Math.PI / 2 + Math.PI * i / s; pts.push(new (T().Vector2)(Math.max(.001, r - h / 2 + Math.cos(a) * h / 2), h / 2 + Math.sin(a) * h / 2)); }
+      pts.unshift(new (T().Vector2)(0, 0)); pts.push(new (T().Vector2)(0, h));
+      g = discCache[key] = new (T().LatheGeometry)(pts, 32); SHARED.add(g);
+    }
+    return mesh(g, mat);
   }
   function stone(r, mat) { const m = mesh(new (T().SphereGeometry)(r, 32, 16), mat); m.scale.y = .42; return m; }
   // soft contact shadow (ambient occlusion) under a piece, so it sits on the surface instead of floating
@@ -295,8 +301,8 @@
         for (let k = 0; k <= seg; k++) { const a = -Math.PI / 2 + Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, e + Math.sin(a) * e)); }
         for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e)); }
         pts.push(new TT.Vector2(0, PH));
-        const body = mesh(new TT.LatheGeometry(pts, 36), M({ map: wood('xqp', '#e7c287', '#b8874a', 256, 256, 1.6), roughness: .45, clearcoat: .3, clearcoatRoughness: .5 }));
-        const cap = new TT.Mesh(new TT.CircleGeometry(PR * .9, 36), M({ map: face, roughness: .5, bumpScale: .003 }));
+        const body = mesh(new TT.LatheGeometry(pts, 28), M({ map: wood('xqp', '#e7c287', '#b8874a', 256, 256, 1.6), roughness: .45, clearcoat: .3, clearcoatRoughness: .5 }));
+        const cap = new TT.Mesh(new TT.CircleGeometry(PR * .9, 28), M({ map: face, roughness: .5, bumpScale: .003 }));
         cap.rotation.x = -Math.PI / 2; cap.position.y = PH + .002; cap.castShadow = false; cap.receiveShadow = true;
         const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR };
         return p;
@@ -364,8 +370,8 @@
       const pit = M({ color: 0x5e3a1a, roughness: .8 }), gems = [0xff6b6b, 0x4cc3ff, 0xffd23f, 0x4fd8a0, 0xa17cff, 0xff8fc7].map(c => M({ color: c, roughness: .15, metalness: .1 }));
       const addPit = (x, z, r, sx, cnt) => {
         const p = mesh(new (T().CylinderGeometry)(r, r * .82, .08, 32), pit); p.scale.x = sx; p.position.set(x, .93, z); g.add(p);
-        const rim = mesh(new (T().TorusGeometry)(r, .06, 8, 32), M({ color: 0xc9925a })); rim.rotation.x = Math.PI / 2; rim.scale.x = sx; rim.position.set(x, .95, z); g.add(rim);
-        for (let i = 0; i < cnt; i++) { const s = mesh(new (T().SphereGeometry)(.17, 14, 10), gems[(i + Math.round(x * 3)) % 6]); s.scale.y = .7; const a = i * 2.4, rr = .12 + .1 * (i % 3); s.position.set(x + Math.cos(a) * rr * sx, 1.04 + .08 * (i / 3 | 0), z + Math.sin(a) * rr); g.add(s); }
+        const rim = mesh(new (T().TorusGeometry)(r, .06, 6, 28), M({ color: 0xc9925a })); rim.rotation.x = Math.PI / 2; rim.scale.x = sx; rim.position.set(x, .95, z); g.add(rim);
+        for (let i = 0; i < cnt; i++) { const s = mesh(new (T().SphereGeometry)(.17, 10, 7), gems[(i + Math.round(x * 3)) % 6]); s.scale.y = .7; const a = i * 2.4, rr = .12 + .1 * (i % 3); s.position.set(x + Math.cos(a) * rr * sx, 1.04 + .08 * (i / 3 | 0), z + Math.sin(a) * rr); g.add(s); }
       };
       for (let i = 0; i < 6; i++) { addPit(-3.5 + i * 1.4, -1, .55, 1, 4); addPit(-3.5 + i * 1.4, 1, .55, 1, 4); }
       addPit(-4.75, 0, .5, 1.1, 3); addPit(4.75, 0, .5, 1.1, 5);
@@ -661,6 +667,8 @@
 
   // rounded box: a subdivided box whose edges are bent onto quarter-circles (exact normals, box UVs kept, so wood maps stay straight)
   const rbCache = {};
+  // cached geometries shared by many boards (rounded boxes, goban legs / stones / bowls): dispose() leaves them on the GPU
+  const SHARED = new WeakSet(), share = g => { SHARED.add(g); return g; };
   function RB(w, h, d, r, m = 3) {
     if (r == null) r = Math.min(.25, Math.min(w, h, d) * .2);
     r = Math.max(.001, Math.min(r, Math.min(w, h, d) / 2 - .0005));
@@ -690,7 +698,7 @@
     }
     UV.needsUpdate = true;
     P.needsUpdate = N.needsUpdate = true; g.computeBoundingSphere();
-    return (rbCache[key] = g);
+    SHARED.add(g); return (rbCache[key] = g);
   }
   /* ---------- toy-room props: toy chest, brick castle, retro TV game, and the Atlas Mon living in the room ---------- */
   const roomTicks = [];
@@ -746,14 +754,14 @@
   function decorate(g, FLOOR, mode) {
     const TT = T(), F = FLOOR;
     roomTicks.length = 0;
-    const box = (w, h, d, mat, x, y, z, ry = 0, par = g) => { const m = new TT.Mesh(RB(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; par.add(m); return m; };
+    const box = (w, h, d, mat, x, y, z, ry = 0, par = g) => { const m = new TT.Mesh(RB(w, h, d, null, 2), mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; par.add(m); return m; };
     const rbox = (w, h, d, r, mat) => { const m = new TT.Mesh(RB(w, h, d, r, 4), mat); m.castShadow = m.receiveShadow = true; return m; };
     const plastic = c => M({ color: c, roughness: .32, clearcoat: .5, clearcoatRoughness: .25 });
 
     // --- brick castle (toy building bricks): bricks with studs, built layer by layer ---
     const U = .8, BH = .96 * U * 1.2;
     const castle = new TT.Group(); castle.position.set(13.2, F, -13.6); castle.rotation.y = -.55; castle.scale.setScalar(.72); g.add(castle);
-    const studG = new TT.CylinderGeometry(.24, .245, .2, 24), studs = {};
+    const studG = new TT.CylinderGeometry(.24, .245, .2, 12), studs = {};   // (tiny studs far back: 12 sides are plenty)
     const brick = (cx, cz, layer, w, d, col, h = 1) => {   // cx,cz in studs; w,d in studs
       const mat = studs[col] || (studs[col] = { mat: plastic(col), pos: [] });
       const m = new TT.Mesh(RB(w * U - .03, BH * h - .02, d * U - .03, .06, 2), mat.mat);
@@ -799,7 +807,7 @@
     const lid = new TT.Group(); lid.position.set(0, CH, -CD / 2); lid.rotation.x = -1.95; chest.add(lid);
     box(CW + .1, th, CD + .1, chestM, 0, 0, CD / 2, 0, lid); box(CW + .12, .32, .4, paint, 0, .05, CD, 0, lid);
     // stuff inside (peeking over the rim)
-    const ballS = (r, c, x, y, z, par = chest) => { const m = new TT.Mesh(new TT.SphereGeometry(r, 28, 18), plastic(c)); m.position.set(x, y, z); m.castShadow = true; par.add(m); return m; };
+    const ballS = (r, c, x, y, z, par = chest) => { const m = new TT.Mesh(new TT.SphereGeometry(r, 22, 14), plastic(c)); m.position.set(x, y, z); m.castShadow = true; par.add(m); return m; };
     ballS(.9, 0xff8fc7, -1.6, CH - .3, -.3); ballS(.7, 0x3ccf91, 1.9, CH - .4, .6);
     const blk = (c, x, y, z, r) => { const b = rbox(1, 1, 1, .12, plastic(c)); b.position.set(x, y, z); b.rotation.set(r, r * 1.7, r * .5); chest.add(b); return b; };
     blk(0xffd23f, .2, CH - .1, -.9, .3); blk(0x36b4ff, 1, CH + .1, -.6, .8);
@@ -855,7 +863,7 @@
     const MON = window.Icons3D && Icons3D.MONS;
     if (MON) {
       const place = (id, h, x, y, z, ry, par = g) => {
-        if (!MON[id]) return; let m; try { m = lowPoly(MON[id], COARSE ? .38 : .6); } catch (e) { return; }   // PC: still round at this size, ~1/3 of the triangles
+        if (!MON[id]) return; let m; try { m = lowPoly(MON[id], COARSE ? .38 : .44); } catch (e) { return; }   // PC: still round at this size (~1/2 of the triangles of .6: the figures were ~100k of the room's ~200k)
         const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
         const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
         m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
@@ -990,7 +998,7 @@
     // zabuton (floor cushions) and a few toys on the tatami
     const cush = (x, z, r, c) => { const m = new TT.Mesh(new TT.BoxGeometry(6, .9, 6, 6, 1, 6), M({ color: c, roughness: .8 })); const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y * (1.2 - .5 * (Math.abs(p.getX(i)) + Math.abs(p.getZ(i))) / 6)); } m.geometry.computeVertexNormals(); m.position.set(x, FLOOR + .45, z); m.rotation.y = r; m.receiveShadow = true; m.castShadow = true; g.add(m); };
     cush(0, 13, .1, 0xd94a4a); cush(-13, 2, -.4, 0x3b6fd1);
-    const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 32, 20), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
+    const ball = new TT.Mesh(new TT.SphereGeometry(1.1, 26, 16), M({ color: 0xffc928, roughness: .3 })); ball.position.set(14, FLOOR + 1.1, 9); ball.castShadow = true; g.add(ball);
       decorate(g, FLOOR, mode);
       try { mergeStatic(g); } catch (e) { console.warn('[table3d] merge', e); }
     }
@@ -1092,39 +1100,69 @@
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
   const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
-  function dispose(o) { o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); }
-  // phones: free the GPU copies of the textures only the outgoing board used (the canvases stay cached, so a revisit
-  // simply re-uploads them). Without this, flicking through every game piles up 150 MB+ of board textures on the GPU
-  // and an older iPhone starts failing uploads (boards drawn without their wood / inlay).
+  function dispose(o) { o.traverse(x => { if (x.geometry && !SHARED.has(x.geometry)) x.geometry.dispose(); }); }
+  // free the GPU copies of the textures and the materials only the outgoing board used (every device: flicking through
+  // every game otherwise piles up 150 MB+ of board textures; the canvases stay cached, so a revisit simply re-uploads them).
+  // Shader programs are pinned first (see pinPrograms), so disposing a material never throws a program away → no recompiles.
   const TEXK = ['map', 'bumpMap', 'roughnessMap', 'metalnessMap', 'normalMap', 'alphaMap', 'emissiveMap', 'aoMap', 'clearcoatMap', 'clearcoatNormalMap', 'clearcoatRoughnessMap', 'sheenColorMap'];
-  const texOf = (o, set) => { o.traverse(x => { const ms = x.material ? (Array.isArray(x.material) ? x.material : [x.material]) : []; ms.forEach(m => TEXK.forEach(k => { const t = m[k]; if (t && t.isCanvasTexture) set.add(t); })); }); return set; };
-  function freeTextures(old, keep) {
-    if (!COARSE || !old) return;
-    const gone = texOf(old, new Set()); if (!gone.size) return;
-    const live = new Set(); keep.forEach(o => o && texOf(o, live));
-    gone.forEach(t => { if (!live.has(t)) t.dispose(); });
+  const matsOf = (o, set) => { o.traverse(x => { if (!x.material) return; if (Array.isArray(x.material)) x.material.forEach(m => m && set.add(m)); else set.add(x.material); }); return set; };
+  function pinPrograms() {   // keep every compiled program alive for the session (a few dozen variants at most)
+    const L = R && R.info.programs; if (L) for (const p of L) if (!p.__pin) { p.__pin = true; p.usedTimes++; }
+  }
+  function freeBoard(old, keep) {
+    if (!old) return;
+    const gm = matsOf(old, new Set()); if (!gm.size) return;
+    const lm = new Set(); keep.forEach(o => o && matsOf(o, lm));
+    const gt = new Set(), lt = new Set();
+    const tx = (ms, set) => ms.forEach(m => TEXK.forEach(k => { const t = m[k]; if (t && t.isTexture && !t.isRenderTargetTexture) set.add(t); }));
+    tx(gm, gt); tx(lm, lt);
+    pinPrograms();
+    gm.forEach(m => { if (!lm.has(m)) m.dispose(); });
+    gt.forEach(t => { if (!lt.has(t) && t !== (scene && scene.environment)) t.dispose(); });
+  }
+  // the last few showcase boards stay built (merged, uploaded): ‹ › back to one, or coming back from a table game, is instant
+  const KEEP_N = COARSE ? 2 : 3, kept = [];   // [{ id, c, st }]
+  // the settings a showcase board is built from (the goban look, the backgammon checker colours): a kept / prepared board is
+  // only reused while they are unchanged (a table game can change them)
+  const stamp = () => { try { const ls = localStorage; let ck = ''; try { ck = JSON.stringify(JSON.parse(ls.getItem('aicoding-backgammon-v2') || '{}').settings.ck || ''); } catch (e) {} return (ls.getItem('atlas-go-look') || '') + '|' + (ls.getItem('atlas-gomoku-look') || '') + '|' + ck; } catch (e) { return ''; } };
+  function keepBoard(id, c, next) {
+    kept.push({ id, c, st: stamp() });
+    while (kept.length > KEEP_N) { const k = kept.shift(); dispose(k.c); freeBoard(k.c, [scene, next, ...kept.map(e => e.c)]); }
+  }
+  function takeKept(id) {
+    const i = kept.findIndex(e => e.id === id); if (i < 0) return null;
+    const k = kept.splice(i, 1)[0];
+    if (k.st !== stamp()) { dispose(k.c); freeBoard(k.c, [scene, cur, ...kept.map(e => e.c)]); return null; }   // its look changed meanwhile: build afresh
+    return k.c.children[0] || null;
   }
   // build (and compile shaders for) a board ahead of time, e.g. on pointerdown, so the transition doesn't hitch
   const prepared = {};
   function prepare(id, extra) {
     if (!R || prepared[id] || !MODELS[id]) return;
+    if (kept.some(e => e.id === id)) return;
     const g = MODELS[id](), tmp = new (T().Scene)(); tmp.add(g); if (extra) tmp.add(extra);
+    g.userData.merged = true; try { mergeStatic(g); } catch (e) {}   // merged here (idle time), not at the swap
     try { R.compile(tmp, cam); } catch (e) {}
     tmp.remove(g); if (extra) tmp.remove(extra);
-    prepared[id] = { g, extra };
+    prepared[id] = { g, extra, st: stamp() };
   }
-  function take(id) { const p = prepared[id]; delete prepared[id]; return p; }
+  function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
     mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null;
-    const old = cur; if (old) { root.remove(old); dispose(old); }
-    const pre = !model && take(id);
-    const g = model || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
-    freeTextures(old, [scene, g]);   // (the room and the incoming board keep theirs)
+    const old = cur;
+    const back = !model && takeKept(id);
+    if (old) root.remove(old);
+    const pre = !model && !back && take(id);
+    const g = model || back || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
+    if (old) {
+      if (old.userData.showId && old.children[0] !== g) keepBoard(old.userData.showId, old, g);   // a showcase board: kept for a while
+      else if (old.children[0] !== g) { dispose(old); freeBoard(old, [scene, g, ...kept.map(e => e.c)]); }   // a game's live board: freed at once (the room, the incoming board and the kept ones keep theirs)
+    }
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
     if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
-    const c = new (T().Group)(); c.add(g); cur = c;
+    const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id;
     const land = () => {        // board drops in and lands with squash & stretch
       root.add(c);
       const t0 = performance.now();
@@ -1268,5 +1306,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
