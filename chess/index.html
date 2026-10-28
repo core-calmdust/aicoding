@@ -311,6 +311,10 @@ html.atlas-skin .dsg button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
+/* list views fill the fixed-size tabbed dialog; the Close / Back buttons stay pinned to the bottom when there is spare space */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){display:flex;flex-direction:column}
+#lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
+#lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
 .mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
