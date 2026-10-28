@@ -288,8 +288,7 @@ function wireCol(host) {
   host.querySelectorAll('[data-tj]').forEach(b => b.onclick = () => {
     const el = host.querySelector('#stier' + b.dataset.tj), bar = host.querySelector('.stjump');
     if (!el) return; C.SFX.tap(); setH();
-    const top = parseFloat(getComputedStyle(bar).top) || 0;
-    scrollTo({ top: scrollY + el.getBoundingClientRect().top - (top + bar.offsetHeight + 10), behavior: 'smooth' });
+    C.homeJump(el, bar);
   });
   host.querySelectorAll('[data-sc]').forEach(b => b.onclick = () => {
     const ci = +b.dataset.sc;

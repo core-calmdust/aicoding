@@ -792,3 +792,39 @@ html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC'
   #home .pts{font-size:18px}
 }
 @media (max-width:560px){.namebox .nmdesc{font-size:15px}.namebox .note{font-size:12.5px!important}.namebox .syncbox p{font-size:13.5px}}
+
+/* ---------- phones: home = one section at a time + fixed bottom tab bar (like the portal) ---------- */
+.htabs > .mob,.mepanel,.gselm{display:none}
+@media (max-width:760px){
+  :root{--tbH:calc(64px + env(safe-area-inset-bottom))}
+  /* the home area is exactly the space between the header and the bar; a long section scrolls inside it */
+  body.scr-home main{padding:0}
+  body.scr-home #home.on{height:calc(100vh - var(--hh) - env(safe-area-inset-top) - var(--tbH));height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - var(--tbH));overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;padding:12px max(14px,env(safe-area-inset-right)) 16px max(14px,env(safe-area-inset-left));animation:hfade .25s ease}
+  @keyframes hfade{from{opacity:0}}
+  #home .htabs{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;margin:0;height:var(--tbH);box-sizing:border-box;gap:2px;justify-content:space-around;border-radius:20px 20px 0 0;padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:var(--sheet);box-shadow:0 -4px 18px rgba(90,60,120,.13)}
+  #home .htabs > button{flex:1 1 0;min-width:0;max-width:96px;flex-direction:column;gap:3px;padding:6px 2px;border-radius:14px;font-size:11px;line-height:1.15}
+  #home .htabs > button span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  #home .htabs > button.mob{display:flex}
+  #home .htabs > button[hidden]{display:none}
+  #home .htabs > button svg{transition:transform .15s}
+  #home .htabs > button.on{background:color-mix(in srgb,var(--acc) 13%,transparent);color:var(--acc);box-shadow:none}
+  #home .htabs > button.on svg{transform:translateY(-1px) scale(1.1)}
+  /* which cards each tab shows */
+  #home:not([data-mt=me]) #profCard{display:none}
+  #home[data-mt=me] .hpanel,#home[data-mt=me] .gselm{display:none}
+  #home[data-mt=me] .mepanel{display:block}
+  .mepanel .card{margin-top:14px}
+  #home[data-mt=daily] .hpanel.daily .card:not(.today){display:none}
+  #home[data-mt=rec] .hpanel.daily .card.today{display:none}
+  #home[data-mt=daily] .hpanel.daily.on,#home[data-mt=rec] .hpanel.daily.on{gap:14px}
+  #home[data-mt=daily] .dcol,#home[data-mt=rec] .dcol{gap:14px}
+  #home[data-mt=rec] .cal{gap:3px}
+  #home[data-mt=rec] .day{aspect-ratio:auto;height:40px}
+  #home[data-mt=rec] .day .ms{margin-bottom:3px}
+  .gselm{display:block}
+  .megrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .megrid button{display:flex;align-items:center;gap:10px;min-width:0;padding:14px 12px;border-radius:18px;background:var(--surface2);color:var(--ink);font-weight:900;font-size:15px;text-align:start;line-height:1.25;box-shadow:0 3px 0 var(--keyedge,rgba(0,0,0,.08));transition:transform .1s}
+  .megrid button:active{transform:translateY(2px)}
+  .megrid button svg{width:34px;height:34px;flex:none}
+  .megrid button b{min-width:0;overflow-wrap:anywhere}
+}

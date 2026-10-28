@@ -386,6 +386,7 @@ function show(id) {
   screen = id;
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
   $('#main').classList.toggle('gm', id === 'game' || id === 'spd');
+  document.body.classList.toggle('scr-home', id === 'home'); // phones: home = fixed-height area + bottom tab bar
   scrollTo(0, 0);
 }
 function route() {
@@ -463,14 +464,32 @@ async function loadMyRanks() {
     if (screen === 'home') renderProfile();
   } catch (e) {}
 }
+/* phones (≤760px): the tabs become a bottom bar with two extra tabs — 記録 (rankings / goals / calendar,
+   i.e. the daily panel without the puzzle cards) and マイページ (profile + gacha / book / rankings / achievements) */
+const PHONE = matchMedia('(max-width:760px)');
 function setHomeTab(p) {
   const gm = gmode();
-  if (!['daily', 'col', 'var'].includes(p)) p = 'daily';
+  if (!['daily', 'col', 'var', 'rec', 'me'].includes(p)) p = 'daily';
   if (gm === 'su' && p === 'var' && (!PV || !E.setVariant)) p = 'daily';
   if (MODE === 'speed') DB.homeTabS = p; else DB.homeTab = p;
   persist();
-  $$('#htabs > button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === p && (x.dataset.m || 'su') === gm));
+  const pp = p === 'rec' || p === 'me' ? 'daily' : p; // panel shown on PC (the extra tabs only exist on phones)
+  $('#home').dataset.mt = PHONE.matches ? p : pp;
+  $$('#htabs > button').forEach(b => b.classList.toggle('on', b.dataset.p === (PHONE.matches ? p : pp)));
+  $$('.hpanel').forEach(x => x.classList.toggle('on', x.dataset.p === pp && (x.dataset.m || 'su') === gm));
+}
+/* the game selector sits in the tab row on PC and above the content on phones */
+function placeGsel() {
+  const g = $('#gsel'), to = PHONE.matches ? $('#gselM') : $('#htabs');
+  if (g && to && g.parentNode !== to) to.appendChild(g);
+}
+/* scroll a home section into view below a sticky bar (the home area scrolls by itself on phones) */
+function homeJump(el, bar) {
+  const sc = $('#home'), own = getComputedStyle(sc).overflowY === 'auto';
+  const top = parseFloat(getComputedStyle(bar).top) || 0;
+  const off = el.getBoundingClientRect().top - (top + bar.offsetHeight + 10);
+  if (own) sc.scrollTo({ top: sc.scrollTop + off - sc.getBoundingClientRect().top, behavior: 'smooth' });
+  else scrollTo({ top: scrollY + off, behavior: 'smooth' });
 }
 /* game selector (まいにち数独): すうどく ⇄ すぴーど, with a short speech bubble every time the home screen opens */
 const GM_ICON = {
@@ -535,8 +554,7 @@ function renderHome() {
   $$('#themes [data-tj]').forEach(b => b.onclick = () => {
     const el = $('#ctier' + b.dataset.tj), bar = $('#themes .stjump'); if (!el) return; SFX.tap();
     const tabs = $('#htabs'); document.documentElement.style.setProperty('--htH', (tabs ? tabs.offsetHeight : 0) + 'px');
-    const top = parseFloat(getComputedStyle(bar).top) || 0;
-    scrollTo({ top: scrollY + el.getBoundingClientRect().top - (top + bar.offsetHeight + 10), behavior: 'smooth' });
+    homeJump(el, bar);
   });
   // variants
   const vc = $('#vsets').closest('.card');
@@ -1901,7 +1919,14 @@ $('#tHint').onclick = onHint;
 $('#gTime').onclick = () => setPaused(!paused);
 $('#gResume').onclick = () => setPaused(false);
 $('#gBack').onclick = () => { if (G && G.kind === 'c') go('t/' + (cOf(G.ti, G.pi) + 1) + '/m'); else if (G && G.kind === 'x') go('v/' + (G.si + 1)); else go(''); };
-$$('#htabs > button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); });
+$$('#htabs > button').forEach(b => b.onclick = () => { SFX.tap(); setHomeTab(b.dataset.p); scrollTo({ top: 0 }); $('#home').scrollTop = 0; });
+$$('#mePanel [data-me]').forEach(b => b.onclick = () => {
+  SFX.tap();
+  const sp = MODE === 'speed' && SPD;
+  ({ gacha: openGacha, zukan: openZukan, rank: () => (sp ? SPD.openRank() : openRank()), ach: () => (sp ? SPD.openAch() : openAch()), set: openSettings, help: openHelp })[b.dataset.me]();
+});
+placeGsel();
+PHONE.addEventListener('change', () => { placeGsel(); if (screen === 'home') setHomeTab(MODE === 'speed' ? DB.homeTabS : DB.homeTab); });
 $('#logo').onclick = () => go('');
 if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); }; $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); }; }
 $('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
@@ -1931,7 +1956,7 @@ const CORE = {
   speedUrl: MODE === 'speed' ? './' : '../speed-sudoku/', speedUrlAbs: URL_SPEED, selfUrl: MODE === 'speed' ? '../sudoku/' : './',
   t, esc, fmtN, fmtTime, fmtDate, fmtMonth, locale, today, thisMonth, addDays, addMonths, persist, toast, confetti, SFX, vib,
   medal, miniMedal, badge, STAR, COIN, CROWN, FLAME, avatar, iconSvg, iconName, iconInfo, rarChip,
-  setScene, show, go, goHome, openModal, closeModals, openName, openGacha, openZukan, curTod,
+  setScene, show, go, goHome, homeJump, openModal, closeModals, openName, openGacha, openZukan, curTod,
   tutorial: k => { if (TUT) TUT.open(k, CORE); },
   refreshHome: () => { if (screen === 'home') renderHome(); },
 };
