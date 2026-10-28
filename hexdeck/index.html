@@ -1460,6 +1460,12 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 [data-lrp]{cursor:help}
 .rhov.on{stroke:rgba(255,210,100,.85);stroke-width:18px;filter:drop-shadow(0 0 8px rgba(255,200,90,1));animation:lrGlow2 1s ease-in-out infinite}
 @keyframes lrGlow2{50%{stroke:rgba(255,236,180,.45)}}
+.mp-lv{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 2px}
+.mp-lv span{font-size:13px;color:var(--ivory2)}
+.mp-lv button{padding:7px 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ivory2);font-size:13.5px;cursor:pointer}
+.mp-lv button.on{background:var(--gold2);color:#1b1405;border-color:var(--gold2);font-weight:700}
+.mp-lv button:not(.on):hover{border-color:var(--gold2);color:var(--gold2)}
+.mp-lv{margin:8px 0 0}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -2757,6 +2763,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const HD = (typeof module !== 'undefined') ? require('./engine.js') : G.HD;
   const { RES, PIP } = HD;
   const W = { wood: 1.0, brick: 1.0, sheep: 0.8, wheat: 1.0, ore: 0.9, gem: 1.7 };   // 宝玉（シナリオ）＝好きな資源2枚
+  // 難易度：easy（初心者）／normal（中級・既定）／hard（上級）。S.botLv[p] で席ごとに決める
+  const LV = (S, p) => (S.botLv && S.botLv[p]) || 'normal';
   const OPP = 0.25;      // 相手の生産を自分の損として数える割合
   const ROB = 1.3;       // 盗賊を受けたときの損（資源換算）
 
@@ -2771,7 +2779,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function cardValue(S, p, n) {
     if (n === 7) return 0;
     let opp = 0; S.players.forEach(P => { if (P.id !== p) opp += prodOf(S, P.id, n); });
-    return prodOf(S, p, n) - OPP * opp;
+    return prodOf(S, p, n) - (LV(S, p) === 'hard' ? (S.hardOPP != null ? S.hardOPP : 0.5) : OPP) * opp;
   }
   function produced(S, p) {
     const s = new Set();
@@ -2849,7 +2857,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     }
     return out;
   }
-  function playValue(S, p, n, k) { if (p === S.hoarder) k *= 3; const m = S.comboYield ? k : 1; const own = prodOf(S, p, n); return cardValue(S, p, n) * m + (own > 0 ? S.selfBonus : 0) - KEEP * k; }
+  function playValue(S, p, n, k) { if (p === S.hoarder) k *= 3; const m = S.comboYield ? k : 1; const own = prodOf(S, p, n); return cardValue(S, p, n) * m + (own > 0 ? S.selfBonus : 0) - (LV(S, p) === 'hard' ? (S.hardKEEP != null ? S.hardKEEP : 0.6) : KEEP) * k; }
   // 手札から出す最良の数字（出さない＝0点）
   function bestPlay(S, p, hand) {
     let best = { cards: [], n: 0, v: 0 };
@@ -2878,7 +2886,9 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         if (HD.hasSpec(S, 'bounty') && b0.cards.length && prodOf(S, p, b0.n) >= 2) return { t: 'spec', id: 'bounty' };
       }
     }
-    if (HD.canChoose(S)) { const b = bestPlay(S, p); return b.cards.length ? { t: 'choose', cards: b.cards, n: b.n } : { t: 'pass' }; }
+    if (HD.canChoose(S)) { const b = bestPlay(S, p);
+      if (LV(S, p) === 'easy' && b.cards.length && Math.random() < (S.easyMiss != null ? S.easyMiss : 0.15)) { const ok = P.hand.filter(n => n >= 2 && n <= 6 && HD.validCombo(S, [n])); if (ok.length) { const n = ok[Math.floor(Math.random() * ok.length)]; return { t: 'choose', cards: [n], n }; } }   // 初心者：ときどき1枚だけで出す
+      return b.cards.length ? { t: 'choose', cards: b.cards, n: b.n } : { t: 'pass' }; }
     if (!S.drawn.length) return { t: 'draw' };
     if (HD.topSeven(S)) return { t: 'stop' };
     const { c, size } = drawOdds(S, p);
@@ -2890,7 +2900,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const cc = HD.cardCount(P) + 1;
     const lim = cc >= S.limit - 1 ? 0.6 : 0;
     // バーストで失う：今出せる生産（＋上限超過）。本人が盗賊を動かすルールなら1枚奪える分だけ軽い
-    const bust = Math.max(0, now) + (S.robberSelf ? -0.8 : ROB) + (cc >= S.limit ? cc / 2 * 0.7 : 0);   // バーストで失う：今出せる生産＋盗賊（＋上限超過）
+    const bust = Math.max(0, now) + (S.robberSelf ? -0.8 : (LV(S, p) === 'hard' ? (S.hardROB != null ? S.hardROB : 2.5) : ROB)) + (cc >= S.limit ? cc / 2 * 0.7 : 0);   // バーストで失う：今出せる生産＋盗賊（＋上限超過）
+    if (LV(S, p) === 'easy' && Math.random() < (S.easyDraw != null ? S.easyDraw : 0.2)) return Math.random() < 0.5 ? { t: 'draw' } : { t: 'stop' };   // 初心者：引くか止めるかを勘で
     return (1 - p7) * (exp - now + 0.1) - p7 * bust - lim > 0.05 ? { t: 'draw' } : { t: 'stop' };
   }
 
@@ -2951,7 +2962,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         let sc = ((n ? PIP(n) * HD.yieldMul(S, n) : 3) + syn) * (need * Math.max(mine, 1) - 0.3 * opp) * (h === S.robber ? 0.4 : 1) / (setup ? 1 : Math.sqrt(cost / 2));
         if (setup) {
           // 初期チップは、実際の強さ（手札で作りやすいか）で評価し直す。人と同じように少しばらつかせる
-          sc = ((STARTER_VAL[n] || 3) + syn) * (need * Math.max(mine, 1) - 0.3 * opp) + (Math.random() - .5) * (S._noise != null ? S._noise : 2.4);
+          sc = ((STARTER_VAL[n] || 3) + syn) * (need * Math.max(mine, 1) - 0.3 * opp) + (Math.random() - .5) * (S._noise != null ? S._noise : LV(S, p) === 'easy' ? 4.5 : LV(S, p) === 'hard' ? (S.hardNoise != null ? S.hardNoise : 1.2) : 2.4);
           sc += HD.starterBonusOf(S, n) * (S._bonusW != null ? S._bonusW : BONUS_W);   // ボーナス資源の価値
         }
         if (!setup && S.devVP && S.devVP.title && S.botDevVP !== false) { const c = HD.devCount(S, p), D = S.devVP, h = S.devHolder != null ? S.devHolder : -1; if (h !== p && c + 1 >= D.n && (h < 0 || c + 1 > HD.devCount(S, h))) sc += 6 * D.vp; else if (h !== p && c < D.n) sc += 1.0 * D.vp; }
@@ -3141,8 +3152,10 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     // 一度断った提案と同じか、それより不利な提案は断る（受け取りが同じか少なく、払いが同じか多い）
     const worse = r => r.from === from && r.to === p && Object.keys(r.give).every(k => (give[k] || 0) <= r.give[k]) && Object.keys(give).every(k => k in r.give) && Object.keys(r.get).every(k => (get[k] || 0) >= r.get[k]);
     if (M.refused.some(worse)) return false;
-    const w = resNeed(S, p);
-    return bval(w, give) - bval(w, get) > 0.3;
+    const w = resNeed(S, p), lv = LV(S, p);
+    const out = lv === 'hard' && LV(S, from) !== 'hard';   // 上級：上級BOTどうしは普通に交換し、それ以外（あなた）には厳しい
+    if (out && HD.vp(S, from) >= HD.vp(S, p) && HD.vp(S, from) >= S.goal - 4) return false;   // 点で並ぶか上の相手とは終盤に交換しない
+    return bval(w, give) - bval(w, get) > (lv === 'easy' ? 0 : out ? (S.hardTrade != null ? S.hardTrade : 0.8) : 0.3);
   }
   // 返事をまとめて決め、断った分は記録する
   // 検討の打ち切り：同じ相手の提案を1手番に botPatience 回（既定3回）断ったら、その手番はもう応じない
@@ -3166,7 +3179,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   // ---- 終盤の阻止：相手が目標点に届いているとき、周回の終わりまでに目標点より下へ落とせる行動を探す ----
   // 軍で壊す・道を奪って最長路を外す・騎士で最大騎士力を奪う（実際に試して点の変化を見る）
   // 先回り：目標点の pre 点手前まで来ている相手も対象（自分より点が上の相手だけ）
-  function preOf(S, p) { return S.botPre != null && (S.botPreP == null || S.botPreP === p) ? S.botPre : (S.botPreP != null && S.botPreP !== p ? 0 : 2); }
+  function preOf(S, p) { if (LV(S, p) === 'hard' && S.botPre == null) return S.hardPre != null ? S.hardPre : 3; return S.botPre != null && (S.botPreP == null || S.botPreP === p) ? S.botPre : (S.botPreP != null && S.botPreP !== p ? 0 : 2); }
   function threats(S, p, pre) { const me = HD.vp(S, p); pre = pre || 0; return S.players.filter(Q => Q.id !== p && HD.vp(S, Q.id) >= S.goal - pre && (HD.vp(S, Q.id) >= S.goal || HD.vp(S, Q.id) > me)).map(Q => Q.id); }
   const closeW = (S, v) => v >= S.goal ? 1 : v >= S.goal - 1 ? (S.botPreW1 != null ? S.botPreW1 : 0.7) : (S.botPreW2 != null ? S.botPreW2 : 0.45);   // 目標点に近いほど、下げる価値が高い
   function trySim(S, f) { let C; try { C = structuredClone(S); } catch (_) { return null; } C.log = []; return f(C) ? C : null; }
@@ -3199,7 +3212,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function buildStep(S) {
     const p = S.cur, P = S.players[p], L = HD.LIMIT_PIECES;
     if (HD.overHand(S, p) > 0) return { t: 'trash', n: worstCard(S, p) };
-    { const st = stopStep(S, p); if (st) return st; }
+    if (LV(S, p) === 'easy' && Math.random() < (S.easyIdle != null ? S.easyIdle : 0.08)) return { t: 'end' };   // 初心者：建てられても手番を終えてしまうことがある
+    if (LV(S, p) !== 'easy') { const st = stopStep(S, p); if (st) return st; }
     if (S.barb) { const bs = barbStep(S, p); if (bs) return bs; }
     if (wantKnight(S, p)) return { t: 'knight' };
     if (S.specOn) { const sp = specStep(S, p); if (sp) return sp; }
@@ -3296,16 +3310,19 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   }
   function chooseRobber(S, mover) {
     const lead = S.players.map(P => HD.vp(S, P.id));
+    if (LV(S, mover) === 'easy' && Math.random() < 0.35) { const hs = S.hexes.map((H, i) => i).filter(i => i !== S.robber && S.hexes[i].verts.some(v => S.verts[v].owner >= 0 && S.verts[v].owner !== mover) && !S.hexes[i].verts.some(v => S.verts[v].owner === mover));
+      if (hs.length) { const h = hs[Math.floor(Math.random() * hs.length)]; const vs = HD.robberVictims(S, h, mover); return { h, victim: vs.length ? vs[Math.floor(Math.random() * vs.length)] : -1, score: 0 }; } }   // 初心者：盗賊の置き場所は適当
     let bh = -1, bs = -1e9;
     S.hexes.forEach((H, hi) => {
       if (hi === S.robber) return;
       let s = 0;
-      H.verts.forEach(v => { const V = S.verts[v]; if (V.owner < 0) return; const k = PIP(H.num) * HD.yieldMul(S, H.num) * (V.city ? 2 : 1); s += V.owner === mover ? -10 * k - 5 : k * (1 + lead[V.owner] * 0.15) + (S.eraCard === 'thief' ? (S.players[V.owner].gems || 0) * 3 : 0); });
+      H.verts.forEach(v => { const V = S.verts[v]; if (V.owner < 0) return; const k = PIP(H.num) * HD.yieldMul(S, H.num) * (V.city ? 2 : 1); s += V.owner === mover ? -10 * k - 5 : k * (1 + lead[V.owner] * 0.15 + (LV(S, mover) === 'hard' && LV(S, V.owner) !== 'hard' ? (S.hardFocusH != null ? S.hardFocusH : 0.4) : 0)) + (S.eraCard === 'thief' ? (S.players[V.owner].gems || 0) * 3 : 0); });
       if (H.res === 'gem' && VEIN(S)) s += (H.gems || 0) > 0 ? 2.5 : 0;
       if (s > bs) { bs = s; bh = hi; }
     });
     const vs = HD.robberVictims(S, bh, mover);
-    const victim = vs.length ? best(vs, o => lead[o] * 10 + HD.total(S.players[o].res) + (S.eraCard === 'thief' ? (S.players[o].gems || 0) * 15 : 0)) : -1;
+    const hv = o => LV(S, mover) === 'hard' && LV(S, o) !== 'hard' ? (S.hardFocus != null ? S.hardFocus : 8) : 0;   // 上級：上級BOT以外（あなた）を優先して狙う
+    const victim = vs.length ? best(vs, o => lead[o] * 10 + hv(o) + HD.total(S.players[o].res) + (S.eraCard === 'thief' ? (S.players[o].gems || 0) * 15 : 0)) : -1;
     return { h: bh, victim, score: bs };
   }
   // 跳ね返すか（BOT は持っていれば跳ね返す）
@@ -3350,7 +3367,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     return out;
   }
 
-  const API = { decideDraw, buildStep, setupSettle, setupRoad, chooseRobber, chooseReact, wantKnight, replyOffer, chooseBonus, chooseDiscard, chooseDevelop, chooseCamp, acceptOffer, pickPartner, resNeed, cardValue, vertScore, drawOdds, bestHand, bestPlay, combos, prodOf };
+  const API = { LV, decideDraw, buildStep, setupSettle, setupRoad, chooseRobber, chooseReact, wantKnight, replyOffer, chooseBonus, chooseDiscard, chooseDevelop, chooseCamp, acceptOffer, pickPartner, resNeed, cardValue, vertScore, drawOdds, bestHand, bestPlay, combos, prodOf };
   if (typeof module !== 'undefined') module.exports = API; else G.HDBot = API;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -3391,7 +3408,10 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const PHEX = ['#c8483f', '#e9e1cd', '#5585c8', '#d79c3c'];
   const NAMES = ['あなた', 'アルノ', 'ベルタ', 'カスパー'];
   const HUMAN = 0, U = 60;
-  let S = null, mode = null, busy = false, hint = null, opts = { players: 4, goal: 10, limit: 14, sevens: HD.SEVENS_DEFAULT, map: 0 }, devPick = null, sel = [], glowNums = [], flipKey = '';
+  const LVN = { 1: 'easy', 2: 'normal', 3: 'hard' }, LVJ = { 1: '初級', 2: '中級', 3: '上級' };   // BOTの強さ
+  const setBots = lv => { S.botLv = S.players.map((_, i) => i === HUMAN ? null : LVN[lv] || 'normal'); S.uiLv = lv; };
+  const saveLv = lv => { opts.lv = lv; try { localStorage.setItem('hexdeck.lv', String(lv)); } catch (_) {} };
+  let S = null, mode = null, busy = false, hint = null, opts = { players: 4, goal: 10, limit: 14, sevens: HD.SEVENS_DEFAULT, map: 0, lv: (() => { try { return +localStorage.getItem('hexdeck.lv') || 2; } catch (_) { return 2; } })() }, devPick = null, sel = [], glowNums = [], flipKey = '';
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const pn = p => `<span class="pn" style="color:${PCOL[p]}">${NAMES[p]}</span>`;
@@ -4293,7 +4313,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     $('players').innerHTML = [...Array(S.n).keys()].map(i => S.players[(S.first + i) % S.n]).map(Q => {
       const cnt = HD.cardCount(Q), warn = cnt >= S.limit - 2;
       return `<div class="pl${Q.id === S.cur && S.phase !== 'over' ? ' cur' : ''}" data-pid="${Q.id}"><span class="chip" style="background:${PCOL[Q.id]}"></span>
-        <span class="nm">${NAMES[Q.id]}<span class="ord">${(Q.id - S.first + S.n) % S.n + 1}番手</span>${Q.id === S.cur && S.phase !== 'over' ? '<em>手番</em>' : ''}${S.lrHolder === Q.id ? `<em class="lrb" data-lrp="${Q.id}" title="マウスを乗せると最長路が光ります">最長路</em>` : ''}${S.armyHolder === Q.id ? '<em>騎士力</em>' : ''}${S.devVP && S.devHolder === Q.id ? '<em>開拓者</em>' : ''}</span>
+        <span class="nm">${NAMES[Q.id]}<span class="ord">${(Q.id - S.first + S.n) % S.n + 1}番手${Q.id !== HUMAN && S.uiLv ? `・${LVJ[S.uiLv]}` : ''}</span>${Q.id === S.cur && S.phase !== 'over' ? '<em>手番</em>' : ''}${S.lrHolder === Q.id ? `<em class="lrb" data-lrp="${Q.id}" title="マウスを乗せると最長路が光ります">最長路</em>` : ''}${S.armyHolder === Q.id ? '<em>騎士力</em>' : ''}${S.devVP && S.devHolder === Q.id ? '<em>開拓者</em>' : ''}</span>
         <span class="vp">${HD.vp(S, Q.id)}<small>/ ${S.goal}</small></span>
         <div class="st">${(() => { const pk = [...HD.portKinds(S, Q.id)]; const mk = Q.milKept || 0;
           return `<span class="si hc${warn ? ' warn' : ''}" title="手札（資源＋札。7が出たとき${S.limit}枚以上なら半分捨てる）">${SI.hand}<b>${cnt}<small>/${S.limit - 1}</small></b></span>`
@@ -4873,6 +4893,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const o = Object.assign({}, opts);
     const d = dlg(`<h2>${first ? 'ナンバーランズ' : '新しい対局'}</h2>
       <h4>マップ</h4><div class="seg" data-k="map"><button data-v="0">固定<small style="display:block;font-size:11px;color:var(--muted)">中央に砂漠（初心者向け）</small></button><button data-v="1">ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央も資源の土地</small></button><button data-v="2">完全ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央の7つを袋から</small></button><button data-v="4">宝玉の導き<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="5">蛮族の角笛<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="3">横6縦5（試作）<small style="display:block;font-size:11px;color:var(--muted)">24マス・目標11点</small></button></div>
+      <h4>BOTの強さ</h4><div class="seg" data-k="lv"><button data-v="1">初級<small style="display:block;font-size:11px;color:var(--muted)">はじめての方に</small></button><button data-v="2">中級<small style="display:block;font-size:11px;color:var(--muted)">標準</small></button><button data-v="3">上級<small style="display:block;font-size:11px;color:var(--muted)">手強い</small></button></div>
       <h4>人数</h4><div class="seg" data-k="players"><button data-v="3">3人（BOT 2）</button><button data-v="4">4人（BOT 3）</button></div>
       <h4>目標点</h4><p class="sub" style="margin:2px 0 10px">基本マップは <b>10点</b>、シナリオ「宝玉の導き」は <b>12点</b>、横6縦5（試作）は <b>11点</b>。12点以上は拡張ルール用に準備中です。</p>
       <h4>7（バースト）の枚数</h4><div class="seg" data-k="sevens"><button data-v="1">1枚</button><button data-v="2">2枚</button><button data-v="3">3枚</button><button data-v="4">4枚</button></div>
@@ -4882,7 +4903,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     d.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.v) { o[b.closest('.seg').dataset.k] = +b.dataset.v; sync(); }
-      else if (b.id === 'nOk') { opts = o; d.close(); if (!first) start(); }
+      else if (b.id === 'nOk') { opts = o; saveLv(o.lv); d.close(); if (!first) start(); }
       else if (b.id === 'nNo') d.close();
     });
     sync();
@@ -5018,6 +5039,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function start() {
     coachEnd();
     S = HD.newGame({ players: opts.players, goal: opts.map === 3 ? 11 : opts.map === 4 || opts.map === 5 ? 12 : 10, limit: opts.limit, sevens: opts.sevens, noDesert: opts.map === 1 || opts.map === 2, bagInner: opts.map === 2, wide: opts.map === 3, scenario: opts.map === 4 ? 'gemroad' : opts.map === 5 ? 'horn' : null, seed: (Math.random() * 2 ** 31) | 0 });
+    setBots(opts.lv || 2);
     mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
     render();
     if (S.scen) prologue(() => pump()); else pump();
@@ -5132,7 +5154,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const MARKET = `払った資源（建物・道・開拓・交換などで使った分）はいったん<b>消費ボックス</b>に入り、${MP}手番ごとの相場の更新で在庫に戻ります。銀行のレートはそのときの在庫で決まり、<b>在庫が少ない資源ほど高く</b>（少ない順に 5:1・5:1・4:1・3:1・2:1）なります。`;
     const IMPORT = '港に建物を建てた人は、相場の更新のたびに在庫から1枚<b>輸入</b>できます（2:1の港はその資源、3:1の港は手持ちで一番少ない資源）。';
     const ATK = { h: '道の収奪・軍・城壁', f: TF.row(`<span class="tf-badge atk">道の収奪</span>`, `<span class="tf-badge atk">軍</span>`, `<span class="tf-badge era">城壁</span>`),
-      t: `3つ目の時代から使えます。<b>道の収奪</b>：羊毛1・鉱石2で、自分の道（か建物）につながる相手の道を1本奪う（自分とつなぐ側の端に相手の建物がある道は不可。1手番1回）。<br><b>軍</b>：山札に混ざる軍の札と小麦1・羊毛2・鉱石3で、自分の道の先にある相手の開拓地・都市を壊す（壊すと得点札：開拓地+${(S && S.raidVP) || 1}点・都市+${(S && S.raidVPCity) || 2}点）。<br><b>城壁</b>（羊毛1・鉱石2）を築いた建物は、軍で壊されず盗賊にも奪われません。` };
+      t: `3つ目の時代から使えます。<br><b>道の収奪</b>：羊毛1・鉱石2で、自分の道（か建物）につながる相手の道を1本奪う（自分とつなぐ側の端に相手の建物がある道は不可。1手番1回）。<br><b>軍</b>：山札に混ざる軍の札と小麦1・羊毛2・鉱石3で、自分の道の先にある相手の開拓地・都市を壊す（壊すと得点札：開拓地+${(S && S.raidVP) || 1}点・都市+${(S && S.raidVPCity) || 2}点）。<br><b>城壁</b>（羊毛1・鉱石2）を築いた建物は、軍で壊されず盗賊にも奪われません。` };
     const WIN = { h: '勝利条件', f: TF.row(`<span class="tf-badge">🏆 ${G}点</span>`, TF.op('→'), `<span class="tf-badge era">周回の終わりまで</span>`),
       t: `誰かが<b>${G}点</b>（シナリオは12点）に届いたら、その周回の<b>最後の人の番まで</b>続けて終了。一番点の高い人の勝ちです（同点なら先に届いた人）。<br>ただし、届いたあとに<b>軍で建物を壊されたり</b>、<b>道を収奪されて最長交易路を失ったり</b>して、周回の終わりに${G - 1}点以下になっていたら、ゲームはそのまま続きます。` };
     const begin = [
@@ -5269,6 +5291,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     opts.map = 0;
     let seed = (Math.random() * 2 ** 31) | 0;
     for (let k = 0; k < 200; k++, seed++) { S = HD.newGame({ players: 4, goal: 10, limit: opts.limit, sevens: opts.sevens, seed }); if (S.cur === HUMAN && S.phase === 'setup-camp') break; }
+    setBots(1);   // チュートリアルは初級BOTで固定
     mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
     SND.unlock(); SND.bgmPlay();
     coachStart(); pump();
@@ -5299,8 +5322,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       <div class="mappick" data-pane="scen" hidden>
         <button data-m="4" class="scen">${mapThumb('gemroad')}<b>宝玉の導き<em class="tst">シナリオ</em></b><small>荒地に隠れた鉱脈を掘り当て、<br>宝玉を本国の港まで運べ。目標12点</small></button>
         <button data-m="5" class="scen horn">${mapThumb('horn')}<b>蛮族の角笛<em class="tst">シナリオ</em></b><small>角笛が鳴れば蛮族が来る。<br>守るか、見捨てるか。目標12点</small></button>
-      </div></div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="play" class="rec">遊びながら覚える</button><button data-tut="begin">マニュアル</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
-    let picked = false, tutOpen = false; d.addEventListener('click', e => { const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); if (tb.dataset.tut === 'play') startTut(); else tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
+      </div></div><div class="mp-lv"><span>🤖 BOTの強さ</span>${[1, 2, 3].map(v => `<button data-lv="${v}" class="${(opts.lv || 2) === v ? 'on' : ''}">${LVJ[v]}</button>`).join('')}</div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="play" class="rec">遊びながら覚える</button><button data-tut="begin">マニュアル</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
+    let picked = false, tutOpen = false; d.addEventListener('click', e => { const lb = e.target.closest('button[data-lv]'); if (lb) { saveLv(+lb.dataset.lv); d.querySelectorAll('.mp-lv button').forEach(x => x.classList.toggle('on', x === lb)); return; } const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); if (tb.dataset.tut === 'play') startTut(); else tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
     try { const tb = localStorage.getItem('hexdeck.tab'); if (tb === 'scen') d.querySelector('.mptabs button[data-tab="scen"]').click(); } catch (_) {}
     const c0 = d.close; d.close = () => { c0(); if (tutOpen) return; SND.unlock(); SND.bgmPlay(); start(); };
   }
