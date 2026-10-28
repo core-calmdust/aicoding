@@ -482,13 +482,15 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   body.rv-on #evalCard .graph{display:none}
   body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{order:5}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:24px;margin-top:0;line-height:1}
   .player{position:relative}
   .player .clk{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .player .count small{font-size:10px;margin-left:3px}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
+  .player:has(.clk:not(:empty)){padding-bottom:16px}   /* the clock sits on the bottom edge */
   .card{padding:10px 12px}
   .controls{padding:8px;gap:5px}
   .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;letter-spacing:-.02em}
@@ -525,13 +527,13 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .pdisc{width:14px;height:14px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
   .evalrow .val{font-size:12px}
@@ -1115,7 +1117,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/cardbar.js?v=1"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1126,7 +1128,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rbox.js?v=3"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script src="online-ui.js?v=2"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other

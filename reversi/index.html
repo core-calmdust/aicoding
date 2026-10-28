@@ -680,10 +680,11 @@ body.in-lesson .controls{display:none}
   .side > .brand:has(.brand-l){align-items:center}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
   .player .top{min-width:0}
   .player .count{font-size:26px;margin-top:0;line-height:1}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
   .card{padding:10px 12px}
   .controls{padding:8px;gap:4px}
   .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;white-space:nowrap;letter-spacing:0}
@@ -710,12 +711,12 @@ body.in-lesson .controls{display:none}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .pdisc{width:14px;height:14px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
   .evalrow .val{font-size:12px}
@@ -1286,6 +1287,9 @@ html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh);align-self:st
 .rbpv.first{box-shadow:0 0 0 3px var(--accent),0 2px 8px rgba(0,0,0,.5)}
 .board.rb-hov .hint, .board.rb-hov .mark{opacity:.12}
 html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
+/* the two player cards stand side by side here (narrow): the AI's status (thinking · depth · score) keeps its own line under
+   the name instead of the shared inline slot, which would squeeze the name to "A…" */
+:root.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2;max-width:none;margin:0;text-align:start}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1624,7 +1628,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/cardbar.js?v=1"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>

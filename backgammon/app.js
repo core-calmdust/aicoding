@@ -1197,7 +1197,7 @@ function renderInfo() {
     let status = '';
     if (st.over && st.winner === s) status = t('st.win', { n: st.points });
     else if (thinking === s) status = t('thinking');
-    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : liveTurn() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : t('st.turn');
+    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : liveTurn() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : '';
     $('#status' + s).textContent = status;
   }
   renderStatusBox(st);

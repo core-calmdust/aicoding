@@ -1058,6 +1058,9 @@ html[lang=ar] .pf-input{direction:rtl}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* the two player cards stand side by side here (narrow): the AI's status (thinking · depth · score) keeps its own line under
+   the name instead of the shared inline slot, which would squeeze the name to "A…" */
+:root.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2;max-width:none;margin:0;text-align:start}
 /* new-game dialog fits without scrolling: PC (wide, two columns) uses the full window height (the overlay covers the online dock), phones get a compact one-column layout */
 @media (min-width: 760px) and (min-height: 600px) and (hover: hover){
   #newOverlay .modal,#newOverlay .modal:has(> .rules-offer:not(.hidden)){height:auto;max-height:calc(100dvh - 24px);overflow:hidden;padding:20px 30px 16px}
@@ -1363,7 +1366,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/headerbar.js?v=28"></script>
 <script src="../shared/cardbar.js?v=1"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>

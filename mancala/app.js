@@ -681,7 +681,6 @@ function renderPlates(b) {
     else if (resignedNow() && cur === game.moves.length) st = s === game.resigned ? (settings.mode === 'online' && window.olLoserLabel ? olLoserLabel() : Resign.label(LANG)) : t('st.win');
     else if (p.over) { const a = p.b[E.storeOf(s)], o = p.b[E.storeOf(1 - s)]; st = a > o ? t('st.win') : a === o ? t('st.draw') : ''; }
     else if (active && p.mv && p.mv.extra && p.mv.side === s) st = t('st.again');
-    else if (active) st = t('st.turn');
     $('#stat' + w).textContent = st;
   });
 }
