@@ -14,9 +14,10 @@ html, body { overflow-x: clip; }
 body { font-family: var(--font); color: var(--ink); background: var(--bg); min-height: 100vh; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
 /* background: exposed concrete (打ちっぱなし) — panel seams, form-tie holes, mottled cement */
 #bg { position: fixed; inset: 0; z-index: -1; background:
-  radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.22), transparent 55%),
+  radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.2), transparent 55%),
   radial-gradient(ellipse at 90% 100%, rgba(0,0,0,.12), transparent 60%),
-  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180' viewBox='0 0 360 180'%3E %3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .2 0 0 0 0 .2 0 0 0 .22 0'/%3E%3C/filter%3E %3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .1 0 0 0 .55 -.18'/%3E%3C/filter%3E %3Crect width='360' height='180' fill='%23b9b6b0'/%3E %3Crect width='360' height='180' filter='url(%23m)'/%3E %3Crect width='360' height='180' filter='url(%23n)'/%3E %3Cpath d='M0 .5H360M.5 0V180' stroke='%238f8b84' stroke-width='1.4'/%3E%3Cpath d='M0 2H360M2 0V180' stroke='rgba(255,255,255,.28)' stroke-width='1'/%3E %3Cg fill='%238a867f' stroke='rgba(255,255,255,.35)' stroke-width='.8'%3E %3Ccircle cx='45' cy='45' r='4.5'/%3E%3Ccircle cx='180' cy='45' r='4.5'/%3E%3Ccircle cx='315' cy='45' r='4.5'/%3E %3Ccircle cx='45' cy='135' r='4.5'/%3E%3Ccircle cx='180' cy='135' r='4.5'/%3E%3Ccircle cx='315' cy='135' r='4.5'/%3E%3C/g%3E %3Cg fill='rgba(0,0,0,.18)'%3E%3Ccircle cx='44' cy='44' r='2.4'/%3E%3Ccircle cx='179' cy='44' r='2.4'/%3E%3Ccircle cx='314' cy='44' r='2.4'/%3E%3Ccircle cx='44' cy='134' r='2.4'/%3E%3Ccircle cx='179' cy='134' r='2.4'/%3E%3Ccircle cx='314' cy='134' r='2.4'/%3E%3C/g%3E %3C/svg%3E") 0 0 / 360px 180px, #b9b6b0; }
+  radial-gradient(ellipse 40% 30% at 70% 30%, rgba(60,55,50,.06), transparent 70%),
+  url("bg-concrete.webp?v=1") 0 0 / 720px 360px, #b9b6b0; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; opacity: .45; }
 #app { max-width: 1240px; margin: 0 auto; padding: 10px 16px 40px; }
@@ -232,7 +233,8 @@ body[data-screen=play] #app { padding-bottom: 12px; }
 .gtitle { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; flex-wrap: wrap; }
 .gtitle b { font: 400 18px/1.15 var(--disp); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .gtitle small { display: flex; gap: 4px; align-items: center; } .gtitle small:empty { display: none; }
-.gclock { font: 800 15px 'Jost'; background: var(--ink); color: #fff; padding: 4px 10px; border-radius: 6px; }
+.gctl .gclock { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ink); color: #fff; border: 2.5px solid var(--ink); border-radius: 8px; padding: 1px 12px 2px; box-shadow: var(--sh2); min-width: 86px; height: 46px; }
+.gctl .gclock small { color: #d9d4c8; } .gctl .gclock b { font: 800 22px/1.05 'Jost'; font-variant-numeric: tabular-nums; }
 /* one compact control row right above the board: moves/best · stars · hint · undo · restart */
 .gctl { display: flex; align-items: center; gap: 8px; }
 .gctl .sp { flex: 1; }
@@ -282,7 +284,7 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
   #boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
   .gctl .gbtns { grid-area: btn; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; gap: 12px; }
   .gtitle b { font-size: 22px; }
-  .gctl .ns, .gctl .lim { height: 54px; min-width: 96px; padding: 2px 16px 3px; }
+  .gctl .ns, .gctl .lim, .gctl .gclock { height: 54px; min-width: 96px; padding: 2px 16px 3px; } .gctl .gclock b { font-size: 30px; }
   .gctl small { font-size: 12.5px; }
   .gctl .ns b { font-size: 30px; } .gctl .ns b i { font-size: 20px; } .gctl .ns b em { font-size: 22px; } .gctl .lim b { font-size: 26px; }
   .hst i { font-size: 28px; }
@@ -574,7 +576,7 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
   .lg1 { font-size: 21px; -webkit-text-stroke-width: 1.3px; text-shadow: 2px 2px 0 var(--ink); } .lg2 { font-size: 11px; padding: 3px 6px; border-width: 2px; letter-spacing: .06em; }
   .logo { gap: 4px; } .series { font-size: 10px; padding: 3px 6px; }
   .dlv { grid-template-columns: 60px minmax(0, 1fr); gap: 8px 10px; } .dlb { grid-column: 1 / -1; flex-direction: row; } .dlb .btn:first-child { flex: 1; } .dlb .btn.sm { width: auto; flex: none; padding-inline: 18px; } .dic svg { width: 60px; height: 60px; }
-  .gctl { gap: 6px; } .gctl .ns, .gctl .lim { min-width: 66px; padding: 1px 8px 2px; height: 44px; } .gbtn { width: 44px; height: 44px; } .hst i { font-size: 19px; }
+  .gctl { gap: 6px; } .gctl .ns, .gctl .lim, .gctl .gclock { min-width: 66px; padding: 1px 8px 2px; height: 44px; } .gbtn { width: 44px; height: 44px; } .hst i { font-size: 19px; }
   .gitems { grid-template-columns: repeat(4, 1fr); }
   .acard p { margin-top: 26px; }
 }
