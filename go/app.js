@@ -1136,18 +1136,31 @@ async function runReview() {
     if (i % 4 === 0 || i === game0.length) { renderReview(); renderGraph(); }
   }
   // pass 2: search the positions where the raw values suggest a mistake (or where the move was not the net's choice)
-  const sus = [];
+  // only the worst-looking moves are searched (biggest raw losses first, capped), and each position is searched once:
+  // the search after move i is the search before move i+1 when both are checked
+  let sus = [];
   for (let i = 0; i < game0.length; i++) {
     const a = run.list[i], b = run.list[i + 1]; if (!a || !b) continue;
     const mover = i === 0 ? ((st0 && st0.turn) || P1) : posAt(i).turn, s = mover === P1 ? 1 : -1;
-    const loss = (a.lead - b.lead) * s;
-    if (loss > 1.2 || (a.top[0] && a.top[0].m !== game0[i] && a.top[0].p > 0.5)) sus.push(i);
+    const loss = (a.lead - b.lead) * s, off = a.top[0] && a.top[0].m !== game0[i] && a.top[0].p > 0.5;
+    if (loss > 1.2 || off) sus.push({ i, sc: Math.max(loss, off ? a.top[0].p : 0) });
   }
+  const CAP = COARSE ? 20 : 36;
+  sus = sus.sort((x, y) => y.sc - x.sc).slice(0, CAP).map(x => x.i).sort((x, y) => x - y);
+  const net = COARSE ? 'light' : 'strong', got = new Map();
+  const search = async (j, visits, time) => {
+    if (got.has(j)) return got.get(j);
+    const r = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, j), komi: g0.komi, net, visits, time });
+    if (r) got.set(j, r);
+    return r;
+  };
+  const need = new Set(sus);
   run.phase2 = { done: 0, total: sus.length };
   for (const i of sus) {
     if (rv !== run) return;
-    const r = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, i), komi: g0.komi, net: COARSE ? 'light' : 'strong', visits: COARSE ? 24 : 48, time: 2500 });
-    const r2 = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, i + 1), komi: g0.komi, net: COARSE ? 'light' : 'strong', visits: COARSE ? 16 : 32, time: 2000 });
+    const r = await search(i, COARSE ? 24 : 48, 2500);
+    if (rv !== run) return;
+    const r2 = await search(i + 1, need.has(i + 1) ? (COARSE ? 24 : 48) : (COARSE ? 16 : 32), need.has(i + 1) ? 2500 : 2000);
     if (rv !== run) return;
     if (r && r2) {
       const mover = i === 0 ? ((st0 && st0.turn) || P1) : posAt(i).turn, s = mover === P1 ? 1 : -1;
