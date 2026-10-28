@@ -349,21 +349,6 @@
       box(0, 0, M({ color: 0xffc2c2 })); box(1, 0, M({ color: 0xbfe8ff }));
       return g;
     },
-    connect4() {
-      const g = new (T().Group)(), cols = 7, rows = 6, s = 1.15;
-      const W = cols * s + .5, H = rows * s + .5;
-      const sh = new (T().Shape)(); sh.moveTo(-W / 2, 0); sh.lineTo(W / 2, 0); sh.lineTo(W / 2, H); sh.lineTo(-W / 2, H); sh.closePath();
-      for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) { const h = new (T().Path)(); h.absarc(-W / 2 + .25 + s * (c + .5), .25 + s * (r + .5), .44, 0, Math.PI * 2, true); sh.holes.push(h); }
-      const frame = mesh(new (T().ExtrudeGeometry)(sh, { depth: .45, bevelEnabled: true, bevelSize: .08, bevelThickness: .08, bevelSegments: 2, curveSegments: 10 }), M({ color: 0x2a6fe8, roughness: .35 }));
-      frame.position.set(0, .6, -.22); g.add(frame);
-      [-W / 2 - .2, W / 2 + .2].forEach(x => { const f = mesh(new (T().BoxGeometry)(.5, .6, 3), M({ color: 0x1f58c0 })); f.position.set(x, .3, 0); g.add(f); });
-      const R = M({ color: 0xff5050, roughness: .35 }), Y = M({ color: 0xffd23f, roughness: .35 });
-      [[3, 0, R], [3, 1, Y], [2, 0, Y], [4, 0, R], [4, 1, R], [3, 2, R], [5, 0, Y], [2, 1, Y], [4, 2, Y]].forEach(([c, r, m]) => {
-        const d = disc(.44, .3, m, 18); d.rotation.x = Math.PI / 2; d.position.set(-W / 2 + .25 + s * (c + .5), .6 + .25 + s * (r + .5), 0); g.add(d);
-      });
-      g.position.z = -.5; g.scale.setScalar(.78);
-      return g;
-    },
     mancala() {
       const g = new (T().Group)();
       const body = mesh(new (T().BoxGeometry)(10.5, .9, 4.2), M({ map: wood('mc', '#b07842', '#6e4520', 512, 512, 1.4), roughness: .5 })); body.position.y = .45; g.add(body);
@@ -396,20 +381,6 @@
       stack(0, false, 2, B); stack(11, false, 5, W); stack(7, false, 3, W); stack(5, false, 5, B);
       const die = (x, z, ry) => { const d = mesh(new (T().BoxGeometry)(.6, .6, .6), M({ color: 0xffffff, roughness: .3 })); d.position.set(x, .83, z); d.rotation.y = ry; g.add(d); };
       die(2.4, .3, .4); die(3.3, -.2, -.3);
-      return g;
-    },
-    morris() {
-      const g = new (T().Group)(), S = 8.4;
-      const top = M({ map: canvasTex('nm', 1024, 1024, (c, W) => {
-        c.drawImage(wood('nmw', '#e2c08a', '#a8804a').image, 0, 0, W, W);
-        c.strokeStyle = '#3a2410'; c.lineWidth = 10; const p = v => 80 + v * (W - 160) / 6;
-        [0, 1, 2].forEach(k => c.strokeRect(p(k), p(k), p(6 - k) - p(k), p(6 - k) - p(k)));
-        c.beginPath(); [[3, 0, 3, 2], [3, 4, 3, 6], [0, 3, 2, 3], [4, 3, 6, 3]].forEach(([a, b, x, y]) => { c.moveTo(p(a), p(b)); c.lineTo(p(x), p(y)); }); c.stroke();
-        c.fillStyle = '#3a2410'; [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]].forEach(([x, y]) => { c.beginPath(); c.arc(p(x), p(y), 18, 0, 7); c.fill(); });
-      }) });
-      g.add(slab(S + .8, .6, S + .8, top, M({ color: 0x8a5a2a })));
-      const W = M({ color: 0xf3ead8, roughness: .35 }), B = M({ color: 0x5a2a1a, roughness: .35 }), p = v => -S / 2 + .4 + v * (S - .8) / 6 * (S - 1.2) / (S - .8);
-      [[0, 0, W], [3, 1, B], [6, 0, W], [2, 2, B], [4, 3, W], [5, 5, B], [3, 6, W], [1, 3, B]].forEach(([x, y, m]) => { const d = bevelDisc(.4, .22, m); d.position.set(p(x) - .02, .62, p(y)); g.add(d); });
       return g;
     },
     checkers() {   // English draughts: white / black squares, red and white men, one crowned king
