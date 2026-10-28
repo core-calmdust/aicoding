@@ -139,7 +139,7 @@ function initTable() {
     onPile: pi => pileTap(pi),
     onBad: () => sfx('bad'),
   });
-  $('#boardWrap').classList.add('felt-bg');
+  $('#boardWrap').querySelector('.felt').classList.add('felt-bg');
 }
 function draw(opt) { TB.set(st, opt); renderAll(); }
 
@@ -298,7 +298,9 @@ function startGame(v, opt) {
   // opt: { o, diff, deal: 'random'|'winnable'|'number'|'daily', no, undo }
   abandon();
   const V = S.VARIANTS[v]; set.v = v; save();
+  const my = ++finding;   // a later startGame cancels this one (a winnable deal still being searched must not replace it)
   const go = no => {
+    if (my !== finding) return;
     hideBusy();
     st = makeState(v, opt.o, no);
     G = { undo: [], el: 0, t0: 0, started: false, over: false, diff: opt.diff, deal: opt.deal, daily: opt.deal === 'daily' ? dailyKey() : null, undoOk: opt.undo !== 'off', counted: false };
@@ -306,7 +308,7 @@ function startGame(v, opt) {
     $('#stuck').classList.add('hidden'); $('#btnAuto').classList.add('hidden');
     TB.sel = null; TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('shuffle');
     saveGame(); checkAutoComplete();
-    setTimeout(() => { if (st && !G.started && !G.over) runAuto(() => { saveGame(); checkAutoComplete(); }); }, set.anim ? 52 * 22 + 500 : 50);
+    const st0 = st; setTimeout(() => { if (st === st0 && !G.started && !G.over) runAuto(() => { saveGame(); checkAutoComplete(); }); }, set.anim ? 52 * 22 + 500 : 50);
     if (V.solver && opt.deal !== 'winnable') preFind(v, opt.o);
   };
   if (opt.deal === 'number') return go(Math.max(1, Math.min(1000000, opt.no | 0 || 1)));
@@ -320,8 +322,8 @@ function startGame(v, opt) {
   if (opt.deal === 'winnable' && V.solver) {
     const k = cacheKey(v, opt.o), q = (D.pool || {})[k];
     if (q && q.length) { const no = q.shift(); save(); go(no); return; }
-    showBusy(t('busy.find')); const my = ++finding;
-    ask({ cmd: 'find', v, o: layoutOpts(opt.o), tries: 40, limit: 30000, timeout: 30000 }, r => { if (my !== finding) return; go(r && r.no || randNo()); }, () => ({ no: randNo() }));
+    showBusy(t('busy.find'));
+    ask({ cmd: 'find', v, o: layoutOpts(opt.o), tries: 40, limit: 30000, timeout: 30000 }, r => go(r && r.no || randNo()), () => ({ no: randNo() }));
     return;
   }
   go(randNo());
@@ -336,6 +338,7 @@ function preFind(v, o) {   // keep one winnable deal ready for the next game wit
 }
 function restart() {
   if (!st) return;
+  ++finding; hideBusy();
   const v = st.v, o = st.o, no = st.no, keep = { diff: G.diff, deal: G.deal, daily: G.daily, undoOk: G.undoOk, counted: G.counted && !G.over, el: G.over ? 0 : elapsed() };
   stopTimer();
   st = makeState(v, o, no);
@@ -429,13 +432,18 @@ function renderNums() {
   if (!st) return;
   const tm = fmtT(elapsed()), sc = hasScore() ? st.sc : null;
   const extra = st.v === 'klondike' ? (st.o.passes ? t('info.passes', { n: Math.max(0, st.o.passes - 1 - st.pass) }) : '') : st.v === 'spider' ? t('info.deals', { n: Math.ceil(st.p[S.pilesOf(st, 'stock')[0]].c.length / 10) }) + '　' + t('info.runs', { n: st.runs }) : '';
-  const ib = [`<span>⏱<b>${set.timer ? tm : '—'}</b></span>`, `<span>${esc(t('info.moves'))}<b>${st.mv}</b></span>`];
-  if (sc != null && set.score) ib.push(`<span>${esc(t('info.score'))}<b>${sc}</b></span>`);
-  ib.push(`<span>#<b>${st.no}</b></span>`);
-  $('#infobar').innerHTML = ib.join('');
-  const n = $('#nums'); if (n) n.innerHTML = `<div><small>${esc(t('info.time'))}</small><b>${set.timer ? tm : '—'}</b></div><div><small>${esc(t('info.moves'))}</small><b>${st.mv}</b></div><div><small>${esc(t('info.score'))}</small><b>${sc != null && set.score ? sc : '—'}</b></div>` + (extra ? `<div class="sub">${esc(extra)}</div>` : '');
-  if (HB && HB.on) HB.setInfo(`<span class="hb-chip"><b>${esc(vName(st.v))}</b>・${esc(diffLabel())}</span><span class="hb-chip">⏱ <b>${set.timer ? tm : '—'}</b></span><span class="hb-chip">${esc(t('info.moves'))} <b>${st.mv}</b></span>` + (sc != null && set.score ? `<span class="hb-chip">${esc(t('info.score'))} <b>${sc}</b></span>` : '') + (extra ? `<span class="hb-chip">${esc(extra)}</span>` : ''));
+  const rules = rulesSummary(st.v, st.o).concat(G.undoOk ? [] : [t('o.undo') + '：' + t('ov.undo.off')]).join(' ・ ');
+  const stat = (lab, val, cls) => `<span class="ss ${cls || ''}"><small>${esc(lab)}</small><b>${val}</b></span>`;
+  const stats = stat(t('info.time'), set.timer ? tm : '—', 'tm') + stat(t('info.moves'), st.mv) + (sc != null && set.score ? stat(t('info.score'), sc) : '');
+  const game = `<span class="sg" title="${esc(rules)}"><b>${esc(vName(st.v))}</b><em>${esc(diffLabel())}</em></span>`;
+  $('#infobar').innerHTML = game + stats;
+  if (HB && HB.on) HB.setInfo(game + `<span class="sdiv"></span>` + stats + (extra ? `<span class="sx">${esc(extra)}</span>` : ''));
 }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act=copy], [data-act=restart]'); if (!b || !st || b.closest('.rt')) return;
+  if (b.dataset.act === 'copy') { try { navigator.clipboard.writeText(String(st.no)).catch(() => {}); } catch (_) {} toast(t('copied')); }
+  else confirmBox(t('restartQ'), restart);
+});
 const GICON = {
   klondike: '<svg viewBox="0 0 54 44"><rect x="3" y="4" width="15" height="21" rx="2.5" fill="#7b1220"/><rect x="5" y="6" width="11" height="17" rx="1.5" fill="none" stroke="#f3e4c4" stroke-width=".8"/><rect x="20" y="4" width="15" height="21" rx="2.5" fill="#fbf6ea"/><text x="23" y="12" font-size="7" font-weight="700" fill="#c51f30" font-family="serif">A</text><rect x="37" y="4" width="15" height="21" rx="2.5" fill="none" stroke="#dcbb6c" stroke-dasharray="2 2"/><rect x="11" y="18" width="15" height="21" rx="2.5" fill="#fbf6ea" stroke="#0003"/><text x="14" y="26" font-size="7" font-weight="700" fill="#1b1c22" font-family="serif">K</text><rect x="28" y="22" width="15" height="21" rx="2.5" fill="#fbf6ea" stroke="#0003"/><text x="31" y="30" font-size="7" font-weight="700" fill="#c51f30" font-family="serif">Q</text></svg>',
   spider: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3, 4].map(i => `<rect x="${2 + i * 10.4}" y="${4 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${10 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${16 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/>`).join('') + '</g><g transform="translate(27 30)" fill="#1b1c22"><circle r="4"/><circle cy="-5" r="2.6"/><path d="M-3-1-11-6M3-1 11-6M-4 1-12 2M4 1 12 2M-3 3-10 9M3 3 10 9M-2-3-8-11M2-3 8-11" stroke="#1b1c22" stroke-width="1.3" fill="none"/></g></svg>',
@@ -445,16 +453,10 @@ function gIcon(v) { return GICON[v] || '<svg viewBox="0 0 54 44"><rect x="12" y=
 function renderSide() {
   if (!st) return;
   const r = rec(st.v, statKey()), dk = dailyKey(), dd = D.daily[dk] || {};
-  const chips = rulesSummary(st.v, st.o).concat(G.undoOk ? [] : [t('o.undo') + '：' + t('ov.undo.off')]);
-  let h = `<div class="card"><h3>${esc(t('side.game'))}</h3><div class="g-title"><b>${esc(vName(st.v))}</b><span class="badge">${esc(diffLabel())}</span></div><div class="chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` +
-    `<div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><span class="sp"></span><button class="sbtn" id="sCopy">${esc(t('copy'))}</button><button class="sbtn" id="sRestart">${esc(t('restart'))}</button></div></div>`;
-  h += `<div class="card"><div class="nums" id="nums"></div></div>`;
-  h += `<div class="card"><h3>${esc(t('side.stats'))}・${esc(vName(st.v))}（${esc(diffLabel())}）</h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row"><span class="sp"></span><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
-  h += `<div class="card"><h3>${esc(t('side.daily'))}　<span style="color:var(--muted);font-weight:400;letter-spacing:0">${dk}</span></h3><div class="daily-list">` + S.ORDER.map(v => `<div class="dl-item"><span class="dl-ico">${gIcon(v)}</span><span class="nm">${esc(vName(v))}</span>${dd[v] ? `<span class="ok">✓ ${fmtT(dd[v].t)}</span>` : ''}<button class="sbtn${dd[v] ? '' : ' go'}" data-daily="${v}">${esc(t(dd[v] ? 'daily.again' : 'daily.play'))}</button></div>`).join('') + `</div><div class="deal-row">${esc(t('daily.streak', { n: dailyStreak() }))}</div></div>`;
-  h += `<div class="card keys-card"><div class="keys">${t('keys')}</div></div>`;
+  let h = `<div class="card"><h3>${esc(t('side.stats'))}<span class="h3s">${esc(vName(st.v))}・${esc(diffLabel())}</span></h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><button type="button" class="sd" data-act="copy">${esc(t('copy'))}</button><span class="sp"></span><button type="button" class="sbtn" data-act="restart" id="sRestart">↺ ${esc(t('restart'))}</button><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
+  h += `<div class="card"><h3>${esc(t('side.daily'))}<span class="h3s">${dk}</span></h3><div class="daily-list">` + S.ORDER.map(v => `<div class="dl-item"><span class="dl-ico">${gIcon(v)}</span><span class="nm">${esc(vName(v))}</span>${dd[v] ? `<span class="ok">✓ ${fmtT(dd[v].t)}</span>` : ''}<button class="sbtn${dd[v] ? '' : ' go'}" data-daily="${v}">${esc(t(dd[v] ? 'daily.again' : 'daily.play'))}</button></div>`).join('') + `</div><div class="deal-row">${esc(t('daily.streak', { n: dailyStreak() }))}</div></div>`;
+  h += `<div class="card keys-card"><h3>${esc(t('side.keys'))}</h3><div class="keys">${t('keys')}</div></div>`;
   $('#side').innerHTML = h;
-  $('#sCopy').onclick = () => { try { navigator.clipboard.writeText(String(st.no)); } catch (e) {} toast(t('copied')); };
-  $('#sRestart').onclick = () => confirmBox(t('restartQ'), restart);
   $('#sStats').onclick = () => openStats(st.v);
   $$('#side [data-daily]').forEach(b => b.onclick = () => playDaily(b.dataset.daily));
   renderNums();
