@@ -1,0 +1,22 @@
+/* ===== dots skin (dots/?skin=atlas): the spiral notebook under the see-through DOM board =====
+   the frame (1.07 × the board) is the lower square of the notebook page; the spiral and the page head stand above it
+   (--dtband × the board), so the frame keeps that room free and the PC board is a little smaller */
+html.atlas-skin.atlas-dots .frame{background:transparent!important;box-shadow:none!important;border:0!important;margin-top:calc(var(--board) * var(--dtband, .29))!important}
+html.atlas-dots .frame::before,html.atlas-dots .frame::after,html.atlas-dots .board::after{display:none!important}
+html.atlas-dots .board{background:transparent!important;box-shadow:none!important;overflow:visible!important}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html.atlas-dots{--board:calc(min((var(--vh) - 64px - var(--pad) * 2 - 8px) / (1.07 + var(--dtband, .29)), var(--bw) / 1.07, 1000px))!important}   /* (64px: the portal's top bar) */
+  html.atlas-dots .app > .side{height:calc(var(--board) * (1.07 + var(--dtband, .29)))!important}
+}
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  html.atlas-dots{--board:calc(min((var(--vh) - 20px) / (1.07 + var(--dtband, .29)), (100vw - 300px) / 1.07, 916px))!important}
+}
+/* the ink is drawn on the 3D page: the page's own lines, boxes and dots are see-through (taps, previews, hints and marks stay) */
+html.atlas-dots #svg .guide,html.atlas-dots #svg .dot{display:none}
+html.atlas-dots #svg .edge,html.atlas-dots #svg .box{opacity:0!important}
+html.atlas-dots #svg .coord{fill:rgba(60,64,80,.55)!important}
+html.atlas-dots.atlas-skin{--p0:#d8343c!important;--p1:#2357c9!important;--p0d:#b02a31!important;--p1d:#1b46a3!important;--pv0:rgba(216,52,60,.45)!important;--pv1:rgba(35,87,201,.45)!important;
+  --glow0:rgba(216,52,60,.45)!important;--glow1:rgba(35,87,201,.45)!important;--hint:#f08a00!important;--hint-glow:rgba(240,138,0,.55)!important;--e0:#d8343c!important;--e1:#2357c9!important}
+html.atlas-dots #svg .preview{stroke-width:5!important;stroke-dasharray:10 7!important}
+html.atlas-dots #svg .hintline{stroke-width:14!important;opacity:.75}
+html.atlas-dots .side{position:relative;z-index:2}
