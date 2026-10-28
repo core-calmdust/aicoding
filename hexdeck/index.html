@@ -1284,6 +1284,41 @@ body.land .tut-fig{min-height:0}
 .tut-fig .tf-row .acard.md{--w:46px}
 @media (max-width:900px){.tut-fig .tf-row .acard.md{--w:40px}}
 .btn.primary:hover:not(:disabled){background:linear-gradient(180deg,#e6c47c,#b8924e);color:#1a1408}
+@media (max-width:900px){.tut-body{overflow-y:auto}}
+/* ルール画面：節ごとのタブ・大きめの文字 */
+.dlg.rules .in{width:min(980px,94vw);height:min(760px,90vh);display:flex;flex-direction:column;padding:22px 28px 18px;overflow:hidden}
+.rl-head h2{margin:0 0 10px}
+.rl-tabs{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.rl-tabs button{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ivory2);font-size:14px;cursor:pointer;letter-spacing:.04em}
+.rl-tabs button.on{background:linear-gradient(180deg,#e6c98a,#b8924e);color:#1a1408;border-color:transparent;font-weight:700}
+.rl-tabs button:not(.on):hover{border-color:var(--gold2);color:var(--gold2)}
+.rl-body{flex:1;min-height:0;overflow-y:auto;padding:14px 4px 6px}
+.rl-sec h3{font-family:var(--f-disp);font-size:22px;color:var(--gold2);margin:4px 0 12px;letter-spacing:.08em}
+.rl-sec ul{margin:0;padding-left:1.2em}
+.rl-sec li{font-size:17px;line-height:1.85;margin:0 0 12px;color:#eef1f6}
+.rl-sec li.lead{list-style:none;margin-left:-1.2em;padding:12px 16px;border-radius:12px;background:rgba(230,201,138,.08);border:1px solid rgba(230,201,138,.25)}
+.rl-sec li b{color:var(--gold2)}
+.rl-sec .sub{font-size:14px;line-height:1.8}
+.rl-sec.scen h3:first-child{margin-top:4px}
+.dlg.rules .foot{margin-top:10px}
+@media (max-width:900px){.dlg.rules .in{height:92vh;padding:16px 14px 12px}.rl-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.rl-tabs button{flex:none;font-size:13px;padding:7px 12px}.rl-sec li{font-size:15.5px;line-height:1.8}.rl-sec h3{font-size:19px}}
+/* スマホ縦：ヘッダーに全部のボタンを収める（ホームを右端に） */
+@media (max-width:520px){.hb{gap:4px;padding-left:10px;padding-right:8px}.brand b{font-size:15px;letter-spacing:.06em}.brand small{display:none}.menu button{padding:6px 3px}.menu svg{width:19px;height:19px}}
+@media (max-width:360px){.brand b{font-size:13px}.menu button{padding:5px 2px}.menu svg{width:17px;height:17px}}
+/* ルール画面の図 */
+.rl-fig{display:flex;align-items:center;justify-content:center;padding:14px;margin:0 0 16px;border-radius:14px;background:radial-gradient(120% 140% at 50% 0,rgba(230,201,138,.1),rgba(0,0,0,.12));border:1px solid var(--line)}
+.rl-fig .tf-hex{width:84px;height:84px}
+.rl-map svg{width:130px;display:block}
+.rl-cap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.rl-cap>small{font-size:12px;color:var(--ivory2);display:flex;align-items:center;gap:3px}
+.rl-cap>small b{font-family:var(--f-num);color:var(--gold2);margin-right:4px}
+.rl-cost{max-width:420px}
+.rl-pts{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:center}
+.rl-pt{display:flex;align-items:center;gap:6px;font-size:14px;color:#eef1f6}
+.rl-pt b{font-weight:500}
+.rl-goal{padding:6px 14px;border-radius:999px;border:1px solid rgba(230,201,138,.45);color:var(--ivory2);font-size:14px}
+.rl-goal b{color:var(--gold2);font-family:var(--f-num);font-size:17px}
+@media (max-width:900px){.rl-fig{padding:10px}.rl-fig .tf-hex{width:60px;height:60px}.rl-map svg{width:90px}.rl-fig .acard.md{--w:36px}.rl-fig .tf-badge{font-size:12px;padding:6px 10px}.tf-port{width:50px;height:50px;font-size:16px}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -1298,6 +1333,7 @@ body.land .tut-fig{min-height:0}
       <button id="btnFull" title="全画面"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" class="on"/><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" class="off"/></svg>全画面</button>
       <button id="btnSound" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" class="on"/><path d="M16 9l5 6M21 9l-5 6" class="off"/></svg>音</button>
       <button id="btnRules"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5zM9 10h6M9 14h6"/></svg>ルール</button>
+      <button id="btnHome" title="ホーム（ゲーム一覧へ）" aria-label="ホーム"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5"/></svg>ホーム</button>
     </nav>
   </header>
   <main class="board" id="board">
@@ -4691,51 +4727,65 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     sync();
   }
   function rulesDialog() {
-    dlg(`<h2>ルール（試作 v2.2）</h2>
-      <p>土地を開拓して資源と数字を決め、道と開拓地を広げて先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに、全員共通の<b>アクション札の山</b>を使います。</p>
-      <h4>はじまり</h4><ul>
+    const d = dlg(`<div class="rl-head"><h2>ルール</h2><div class="rl-tabs" role="tablist"><button data-s="start" class="on">はじまり</button><button data-s="turn">手番</button><button data-s="build">建設・開拓</button><button data-s="knight">7と騎士</button><button data-s="era">時代・市場</button><button data-s="atk">収奪・軍・城壁</button><button data-s="trade">相場・交換</button><button data-s="end">得点・終わり方</button>${S.scen ? '<button data-s="scen">シナリオ</button>' : ''}<button data-s="credit">クレジット</button></div></div><div class="rl-body">
+      <section class="rl-sec" data-s="start"><h3>はじまり</h3><ul><li class="lead">土地を開拓して資源と数字を決め、道と開拓地を広げて先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに、全員共通の<b>アクション札の山</b>を使います。</li>
         <li>${S.bagInner ? '<b>完全ランダム</b>：中央とまわりの6つ（計7つ）を、砂漠も入った袋から引く（そろわない資源もある。砂漠が出たら盗賊はそこから、出なければ開拓の時代に外周の荒地へ）。' : S.noDesert ? '<b>ランダムマップ</b>：中央も資源の土地。まわりの6つは5種類が1つずつ＋1つランダム。' : '<b>固定マップ</b>：中央は砂漠（盗賊の居場所）。まわりの6つは5種類が1つずつ＋1つランダム。'}${S.noDesert && !S.bagInner ? '砂漠はなく、盗賊は開拓の時代が始まったら外周の荒地のどれかに現れる。' : ''}これらの土地は資源だけ決まっていて<b>数字なし</b>。外周の12は<b>荒地</b>（資源も数字もなし）。</li>
-        <li>順番に、角の<b>スタート地点</b>を選んで拠点（0点、生産${S.campYield}枚）を置く。<b>手番は選んだ順の逆</b>（最後に選んだ人から）。</li>
+        <li>順番に、角の<b>スタート地点</b>を選んで拠点（0点、生産力${S.campYield}）を置く。<b>手番は選んだ順の逆</b>（最後に選んだ人から）。</li>
         <li>拠点に接する荒地を1つ<b>無料で開拓</b>：好きな資源と、<b>4〜12</b>から数字チップを1つ<b>袋から</b>選ぶ（2・3は選べない。袋は6・8が3枚、他は2枚、2・12は1枚なので、先に取られると無くなる）。<b>11は資源2枚、12は資源3枚</b>のボーナス（好きな資源）→ 道を1本。</li>
         <li>初期資源は 木材・レンガ・羊毛・小麦 を1枚ずつ。</li>
-        <li><b>開拓した土地</b>の数字チップには、左下に開拓した人の色のキューブが置かれる（だれが開拓したかの目印）。</li></ul>
-      <h4>手番</h4><ul>
-        <li>山札から1枚引く（自分だけが見る）。もう1枚引くか止める（最大2枚）。1枚引いたら、2枚目を引かずに手札から札を選んで出してもよい。PCではスペースキーで「引く → 選んだ札を出す → 終了」を進められる。</li>
+        <li><b>開拓した土地</b>の数字チップには、左下に開拓した人の色のキューブが置かれる（だれが開拓したかの目印）。</li></ul></section>
+      <section class="rl-sec" data-s="turn"><h3>手番</h3><ul><li>山札から1枚引く（自分だけが見る）。もう1枚引くか止める（最大2枚）。1枚引いたら、2枚目を引かずに手札から札を選んで出してもよい。PCではスペースキーで「引く → 選んだ札を出す → 終了」を進められる。</li>
         <li>アクション札は <b>1〜6</b>（各${S.face}枚）と <b>7</b>（${S.sevens}枚）。</li>
         <li>引いた札と手札から<b>1枚、または何枚でも組み合わせた合計</b>で数字（2〜12、7以外）を作って出す。その数字の土地が<b>全員に</b>生産（開拓地1・都市2・拠点${S.campYield}枚）。</li>
         <li>出さないこともできる（札は手札に残る）。2〜6は1枚で作れるが、8以上は2枚以上が要る。</li>
         <li>建築・開拓・交換をして終了。手札の枚数に上限はない（ただし資源＋手札が${S.limit}枚以上だとバーストで半分捨てる）。</li>
-        <li><b>処分</b>：建築の段階に手札の札を捨て札に戻せる（山札の圧縮）。1手番に1枚までは無料、2枚目からは1枚ごとに資源${S.trashCost}枚。</li></ul>
-      <h4>開拓</h4><ul>
+        <li><b>処分</b>：建築の段階に手札の札を捨て札に戻せる（山札の圧縮）。1手番に1枚までは無料、2枚目からは1枚ごとに資源${S.trashCost}枚。</li></ul></section>
+      <section class="rl-sec" data-s="build"><h3>建設・開拓</h3><ul><li><b>道</b>＝木材1・レンガ1、<b>開拓地</b>（1点）＝木材1・レンガ1・羊毛1・小麦1、<b>都市</b>（2点、開拓地を格上げ）＝小麦2・鉱石3。開拓地は自分の道の先に建て、建物どうしは1辺以上離す。</li>
         <li>自分の建物に接する、数字のない土地に<b>数字チップ</b>を置く。チップは<b>市場に公開された3枚</b>からしか選べない（使ったら袋から補充。袋の中身は右に表示）。隣り合う土地に同じ数字は置けない。</li>
         <li>中央の土地：<b>羊毛1＋小麦1</b>（土地代）。荒地：<b>羊毛2＋小麦2</b>（土地代＋数字代）で、資源も残りのタイルから選ぶ。</li>
-        <li>開拓した資源を1枚もらう。開拓した土地は、接する全員が同じだけ生産します（開拓した人の色のキューブが目印）。</li></ul>
-      <h4>バースト（7）</h4><ul>
-        <li>7を引いたら必ず公開し、この番の生産はなし。右の表で、見えていない札に7が何枚残っているか確かめられます。</li>
-        <li>資源＋手札が<b>${S.limit}枚以上</b>の人は半分を捨てる。そのあと<b>バーストした本人</b>が盗賊を動かし、そこに接する相手から資源を1枚奪う。</li></ul>
-      <h4>騎士</h4><ul>
+        <li>開拓した資源を1枚もらう。開拓した土地は、接する全員が同じだけ生産します（開拓した人の色のキューブが目印）。</li></ul></section>
+      <section class="rl-sec" data-s="knight"><h3>7と騎士</h3><ul><li>7を引いたら必ず公開し、この番の生産はなし。山札の横に、見えていない7のカードの出現確率が表示されます。</li>
+        <li>資源＋手札が<b>${S.limit}枚以上</b>の人は半分を捨てる。そのあと<b>バーストした本人</b>が盗賊を動かし、そこに接する相手から資源を1枚奪う。</li>
         <li><b>1の札は騎士</b>を兼ねる（数字の1としても使える）。</li>
         <li>自分の手番の建築中に、数字とは別に騎士を1枚出して盗賊を動かし、接する相手から1枚奪える（1手番に1回）。</li>
-        <li><b>時代</b>：${S.eraLen}周ごとに時代が変わる。1番目は<b>発見の時代</b>（盗賊はまだいない：バーストしても盗賊は動かず、騎士の攻撃もない）、2番目は<b>開拓の時代</b>（盗賊が現れる）。3番目からは時代カードを1枚引き、その効果になる（${HD.ERA_CARDS.map(k => `${ERA[k].n}：${ERA[k].d}`).join('／')}）。</li>
-        ${S.seizeCost ? `<li><b>道の収奪</b>：3番目の時代から、自分の手番の建築中に <b>羊毛1・鉱石2</b> を払うと、自分の道（または建物）につながる相手の道を1本、自分の道にできる（1手番に1回まで）。自分とつなぐ側の端に相手の建物がある道は奪えない（反対側の端は相手の建物でもよい）。奪われた人は、次の自分の手番が終わるまでその道を奪い返せない（道に🔒の印）。奪った道の間に自分の開拓地を建てることもできる。</li>` : ''}
-        <li><b>軍</b>：3番目の時代が来たら、軍の札${S.milCards}枚が山札に混ざる。自分の手番の建築中に軍の札と <b>小麦1・羊毛2・鉱石3</b> を払うと、自分の道の端から1辺先までにある相手の開拓地・都市を壊せる（拠点と城壁のある建物は壊せない）。使った軍の札は<b>得点札</b>として手元に置く（開拓地なら+${S.raidVP}点、都市なら+${S.raidVPCity}点）。山札から減るので、1局に最大${S.milCards}回。${S.razeLock ? '壊された人は、次の自分の手番が終わるまでその跡地に建て直せない（🔒の印）。壊した人は道がつながっていれば跡地に建てられる。' : ''}</li>
-        <li><b>城壁</b>（羊毛1・鉱石2）：自分の開拓地・都市に築くと、軍で壊されず、盗賊にも奪われない（点はなし）。</li>
-        <li><b>市場・特殊札</b>：建築中に羊毛1・小麦1・鉱石1で、市場に並んだ3枚から1枚買える（1手番1枚）。<b>時代が変わるたびに、市場の3枚は捨てて新しい3枚に入れ替わる</b>。買った番は使えない。使えるのは1手番に1枚：${Object.entries(SPEC).filter(([k]) => S.scen || (k !== 'hunt' && k !== 'jeweler')).map(([, D]) => `${D.n}＝${D.d}`).join('／')}。特殊札も手札の枚数に数える。</li>
-        <li><b>港</b>：港に建物を建てるか、<b>自分の道が港に届けば</b>使える（他人の建物がある港は不可）。相場が変わるたびに、<b>港に建物を建てた人だけ</b>在庫から1枚<b>輸入</b>できる（2:1港はその資源、3:1港は手持ちの一番少ない資源。道が届いているだけでは輸入なし）。</li>
         <li>盗賊で奪われそうになったら、手札の騎士を捨てて<b>跳ね返せる</b>：奪いは無効になり、逆に仕掛けた人から1枚奪う。さらに<b>盗賊を好きな土地へ動かせる</b>（動かした先では奪わない）。</li>
-        <li>騎士を${S.armyMin}回以上使い、ほかの誰より多い人は<b>最大騎士力</b>で${S.armyPts}点（跳ね返しも1回に数える）。</li></ul>
-      <h4>相場</h4><ul>
-        <li>資源には<b>在庫</b>がある（各${S.stock ? HD.STOCK_DEFAULT[S.n] || 19 : '∞'}枚）。もらう資源は在庫から出て、在庫が切れた資源は生産されない（手番の人から順に配る）。</li>
+        <li>騎士を${S.armyMin}回以上使い、ほかの誰より多い人は<b>最大騎士力</b>で${S.armyPts}点（跳ね返しも1回に数える）。</li></ul></section>
+      <section class="rl-sec" data-s="era"><h3>時代・市場</h3><ul><li><b>時代</b>：${S.eraLen}周ごとに時代が変わる。1番目は<b>発見の時代</b>（盗賊はまだいない：バーストしても盗賊は動かず、騎士の攻撃もない）、2番目は<b>開拓の時代</b>（盗賊が現れる）。3番目からは時代カードを1枚引き、その効果になる（${HD.ERA_CARDS.map(k => `${ERA[k].n}：${ERA[k].d}`).join('／')}）。</li>
+        <li><b>市場・特殊札</b>：建築中に羊毛1・小麦1・鉱石1で、市場に並んだ3枚から1枚買える（1手番1枚）。<b>時代が変わるたびに、市場の3枚は捨てて新しい3枚に入れ替わる</b>。買った番は使えない。使えるのは1手番に1枚：${Object.entries(SPEC).filter(([k]) => S.scen || (k !== 'hunt' && k !== 'jeweler')).map(([, D]) => `${D.n}＝${D.d}`).join('／')}。特殊札も手札の枚数に数える。</li></ul></section>
+      <section class="rl-sec" data-s="atk"><h3>収奪・軍・城壁</h3><ul>${S.seizeCost ? `<li><b>道の収奪</b>：3番目の時代から、自分の手番の建築中に <b>羊毛1・鉱石2</b> を払うと、自分の道（または建物）につながる相手の道を1本、自分の道にできる（1手番に1回まで）。自分とつなぐ側の端に相手の建物がある道は奪えない（反対側の端は相手の建物でもよい）。奪われた人は、次の自分の手番が終わるまでその道を奪い返せない（道に🔒の印）。奪った道の間に自分の開拓地を建てることもできる。</li>` : ''}
+        <li><b>軍</b>：3番目の時代が来たら、軍の札${S.milCards}枚が山札に混ざる。自分の手番の建築中に軍の札と <b>小麦1・羊毛2・鉱石3</b> を払うと、自分の道の端から1辺先までにある相手の開拓地・都市を壊せる（拠点と城壁のある建物は壊せない）。使った軍の札は<b>得点札</b>として手元に置く（開拓地なら+${S.raidVP}点、都市なら+${S.raidVPCity}点）。山札から減るので、1局に最大${S.milCards}回。${S.razeLock ? '壊された人は、次の自分の手番が終わるまでその跡地に建て直せない（🔒の印）。壊した人は道がつながっていれば跡地に建てられる。' : ''}</li>
+        <li><b>城壁</b>（羊毛1・鉱石2）：自分の開拓地・都市に築くと、軍で壊されず、盗賊にも奪われない（点はなし）。</li></ul></section>
+      <section class="rl-sec" data-s="trade"><h3>相場・交換</h3><ul><li>資源には<b>在庫</b>がある（各${S.stock ? HD.STOCK_DEFAULT[S.n] || 19 : '∞'}枚）。もらう資源は在庫から出て、在庫が切れた資源は生産されない（手番の人から順に配る）。</li>
         <li>払った資源（建物・道・開拓・交換・処分・捨てた分）は「消費ボックス」に入り、相場の更新のときに在庫へ戻る（戻るまでのタイムラグがある）。</li>
         <li>${S.marketPeriod}手番ごとに相場が変わる：<b>在庫が少ない資源ほど、銀行でもらうのが高い</b>（少ない順に 5:1・5:1・4:1・3:1・2:1）。同時に消費ボックスの資源が在庫に戻る。</li>
-        <li>港の交換（3:1／2:1）は相場より有利なときだけ使える。2:1港はその資源を出すとき、どの資源でも2:1でもらえる。</li></ul>
-      <h4>終わり方</h4><ul><li>誰かが${S.goal}点に届いたら、その周回の最後の人（${NAMES[(S.first + S.n - 1) % S.n]}）の手番まで続けてから終了。一番点の高い人の勝ち。同点なら先に${S.goal}点に届いた人の勝ち。</li><li>ただし周回の終わりに${S.goal}点以上の人が<b>だれもいなければ</b>（軍で壊されたなど）、最終周は取り消してゲームを続ける。</li></ul>
-      <h4>得点・交換</h4><ul><li>開拓地1点、都市2点（拠点は都市にできない）、最長路（5本以上）2点、最大騎士力${S.armyPts}点${S.devVP ? `、<b>開拓者</b>${S.devVP.vp}点（自分で開拓した土地が${S.devVP.n}か所以上で、ほかの誰より多い人。準備の開拓も数える。より多く開拓した人が出たら移る）` : ''}。</li>
+        <li>港の交換（3:1／2:1）は相場より有利なときだけ使える。2:1港はその資源を出すとき、どの資源でも2:1でもらえる。</li>
+        <li><b>港</b>：港に建物を建てるか、<b>自分の道が港に届けば</b>使える（他人の建物がある港は不可）。相場が変わるたびに、<b>港に建物を建てた人だけ</b>在庫から1枚<b>輸入</b>できる（2:1港はその資源、3:1港は手持ちの一番少ない資源。道が届いているだけでは輸入なし）。</li>
         <li>自分の手番に、ほかのプレイヤーへ資源の交換を何度でも提案できる。応じた人の中から相手を選ぶ。BOTは、同じ相手とは1手番に1回まで、2:1より偏った交換や、一度断った条件より不利な提案には応じない。</li>
-        <li>銀行との交換は相場のレート、港は 3:1／2:1。</li></ul>
-      ${S.scen && S.scen.barb ? `<h4>シナリオ：${S.scen.name}</h4><ul><li>2番目の時代から、時代の初めに蛮族の船が沖に現れる。上陸地点は点が一番高い人の建物が一番多い海岸（その辺から2辺以内が襲われる範囲）、強さ＝時代の番号×1.5（四捨五入）＋先頭の都市の数の半分（切り上げ）。</li><li>守備：騎士で守る（1の札＝騎士、2の札＝守備兵（守備専用）。盗賊は動かさない。1手番1回で、騎士の攻撃と合わせて1回。最大騎士力に数える）、傭兵を雇う（${Object.keys(S.scen.mercCost).map(r => RESN[r] + S.scen.mercCost[r]).join('・')}、1手番1回）、範囲にある城壁1つにつき+1。</li><li>次の時代に変わるとき：守備の合計が強さ以上なら撃退し、一番守った人（同数なら全員）に勲章+${S.scen.medalVP}点。足りなければ、範囲に建物がある人のうち一番守っていない人（同数なら全員）の、城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li></ul>` : S.scen && S.scen.veins ? `<h4>シナリオ：${S.scen.name}</h4><ul><li>外周の荒地のどれか${S.scen.veins}つに宝玉の鉱脈が隠れている。開拓すると鉱脈が出ることがあり、その土地は宝玉の鉱脈になる（開拓した人は宝玉1つ）。</li><li>鉱脈の数字が出ると、宝玉はその土地に溜まる（最大${S.scen.veinMax}つ）。隣に建物がある人なら、自分の手番に掘れる（開拓地1つ・都市2つ、1手番に1つの鉱脈につき1回。盗賊がいる鉱脈は掘れない）。</li><li>宝玉${S.scen.deliverN}つを本国の港（王冠の港）まで運ぶと1点（最大${S.scen.deliverCap}点）。港まで道がつながっていればよく、他人の道を通るときは持ち主ごとに通行料（宝玉${S.scen.toll}つ）。宝玉1＝好きな資源${S.scen.gemSell}枚にも換えられる。盗賊を鉱脈に置くと溜まった宝玉を1つ持ち去る。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（本国の港が開く）、3番目＝宝玉の噂（隠れた鉱脈+${S.scen.rumorVeins}、溜まる宝玉が2倍）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。専用の札：宝石商（宝玉1→資源3）。1・2番手は準備で道をもう1本。</li></ul>` : S.scen ? `<h4>シナリオ：${S.scen.name}</h4><ul><li>小麦・羊毛の土地はなく、荒地もはじめは木材・レンガ・鉱石のみ。家畜の発見・種麦の時代で羊毛・小麦のタイルが3枚ずつ増える。</li><li>宝玉の洞窟は宝玉を生産（建物1つにつき1、都市2。開拓のボーナスなし）。宝玉1＝好きな資源${S.scen.gemSell}枚。宝玉${S.scen.tribute}つの献上で目標点に届いた扱い。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（以後、宝玉を献上箱に納められる。納めた宝玉は売れず奪われない。箱が${S.scen.tribute}個で献上達成）、3番目＝宝玉の噂（荒地を宝玉の洞窟として開拓できる、宝玉のタイル+3）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。長引いたら家畜の発見・種麦・補給船・飢えの冬などが来る。専用の札：狩猟（羊毛2）・宝石商（宝玉1→資源3）。</li></ul>` : ''}
-      <h4>クレジット</h4><p class="sub">効果音「<a href="https://orangefreesounds.com/shofar-sound/" target="_blank" rel="noopener">Shofar Sound</a>」 by alexander（Orange Free Sounds）／ <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>（改変なし）。起動時の曲「<a href="https://pixabay.com/music/modern-classical-ancient-empire-142301/" target="_blank" rel="noopener">Ancient Empire</a>」 by The_Mountain（Pixabay、Pixabay Content License。容量のため128kbpsに再圧縮）。バーストで手放すときの効果音「<a href="https://on-jin.com/sound/listshow.php?pagename=hito&title=%E3%82%AC%E3%83%BC%E3%83%B302&janl=%E4%BA%BA%E9%96%93%E7%B3%BB%E9%9F%B3&bunr=%E3%82%B7%E3%83%A7%E3%83%83%E3%82%AF&kate=%E6%83%85%E5%8B%95" target="_blank" rel="noopener">ガーン02</a>」「衝撃」：<a href="https://on-jin.com/" target="_blank" rel="noopener">On-Jin ～音人～</a>（音量をそろえて使用。素材の二次配布・無断利用は禁止）。そのほかの効果音はブラウザ内で合成。</p>
-      <div class="foot"><button class="btn" id="cl">閉じる</button></div>`).querySelector('#cl').onclick = e => e.target.closest('.dlg').close();
+        <li>銀行との交換は相場のレート、港は 3:1／2:1。</li></ul></section>
+      <section class="rl-sec" data-s="end"><h3>得点・終わり方</h3><ul><li>開拓地1点、都市2点（拠点は都市にできない）、最長路（5本以上）2点、最大騎士力${S.armyPts}点${S.devVP ? `、<b>開拓者</b>${S.devVP.vp}点（自分で開拓した土地が${S.devVP.n}か所以上で、ほかの誰より多い人。準備の開拓も数える。より多く開拓した人が出たら移る）` : ''}。</li>
+        <li>誰かが${S.goal}点に届いたら、その周回の最後の人（${NAMES[(S.first + S.n - 1) % S.n]}）の手番まで続けてから終了。一番点の高い人の勝ち。同点なら先に${S.goal}点に届いた人の勝ち。</li><li>ただし周回の終わりに${S.goal}点以上の人が<b>だれもいなければ</b>（軍で壊されたなど）、最終周は取り消してゲームを続ける。</li></ul></section>
+      <section class="rl-sec scen" data-s="scen">${S.scen && S.scen.barb ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>2番目の時代から、時代の初めに蛮族の船が沖に現れる。上陸地点は点が一番高い人の建物が一番多い海岸（その辺から2辺以内が襲われる範囲）、強さ＝時代の番号×1.5（四捨五入）＋先頭の都市の数の半分（切り上げ）。</li><li>守備：騎士で守る（1の札＝騎士、2の札＝守備兵（守備専用）。盗賊は動かさない。1手番1回で、騎士の攻撃と合わせて1回。最大騎士力に数える）、傭兵を雇う（${Object.keys(S.scen.mercCost).map(r => RESN[r] + S.scen.mercCost[r]).join('・')}、1手番1回）、範囲にある城壁1つにつき+1。</li><li>次の時代に変わるとき：守備の合計が強さ以上なら撃退し、一番守った人（同数なら全員）に勲章+${S.scen.medalVP}点。足りなければ、範囲に建物がある人のうち一番守っていない人（同数なら全員）の、城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li></ul>` : S.scen && S.scen.veins ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>外周の荒地のどれか${S.scen.veins}つに宝玉の鉱脈が隠れている。開拓すると鉱脈が出ることがあり、その土地は宝玉の鉱脈になる（開拓した人は宝玉1つ）。</li><li>鉱脈の数字が出ると、宝玉はその土地に溜まる（最大${S.scen.veinMax}つ）。隣に建物がある人なら、自分の手番に掘れる（開拓地1つ・都市2つ、1手番に1つの鉱脈につき1回。盗賊がいる鉱脈は掘れない）。</li><li>宝玉${S.scen.deliverN}つを本国の港（王冠の港）まで運ぶと1点（最大${S.scen.deliverCap}点）。港まで道がつながっていればよく、他人の道を通るときは持ち主ごとに通行料（宝玉${S.scen.toll}つ）。宝玉1＝好きな資源${S.scen.gemSell}枚にも換えられる。盗賊を鉱脈に置くと溜まった宝玉を1つ持ち去る。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（本国の港が開く）、3番目＝宝玉の噂（隠れた鉱脈+${S.scen.rumorVeins}、溜まる宝玉が2倍）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。専用の札：宝石商（宝玉1→資源3）。1・2番手は準備で道をもう1本。</li></ul>` : S.scen ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>小麦・羊毛の土地はなく、荒地もはじめは木材・レンガ・鉱石のみ。家畜の発見・種麦の時代で羊毛・小麦のタイルが3枚ずつ増える。</li><li>宝玉の洞窟は宝玉を生産（建物1つにつき1、都市2。開拓のボーナスなし）。宝玉1＝好きな資源${S.scen.gemSell}枚。宝玉${S.scen.tribute}つの献上で目標点に届いた扱い。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（以後、宝玉を献上箱に納められる。納めた宝玉は売れず奪われない。箱が${S.scen.tribute}個で献上達成）、3番目＝宝玉の噂（荒地を宝玉の洞窟として開拓できる、宝玉のタイル+3）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。長引いたら家畜の発見・種麦・補給船・飢えの冬などが来る。専用の札：狩猟（羊毛2）・宝石商（宝玉1→資源3）。</li></ul>` : ''}</section>
+      <section class="rl-sec" data-s="credit"><h3>クレジット</h3><p class="sub">効果音「<a href="https://orangefreesounds.com/shofar-sound/" target="_blank" rel="noopener">Shofar Sound</a>」 by alexander（Orange Free Sounds）／ <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>（改変なし）。起動時の曲「<a href="https://pixabay.com/music/modern-classical-ancient-empire-142301/" target="_blank" rel="noopener">Ancient Empire</a>」 by The_Mountain（Pixabay、Pixabay Content License。容量のため128kbpsに再圧縮）。バーストで手放すときの効果音「<a href="https://on-jin.com/sound/listshow.php?pagename=hito&title=%E3%82%AC%E3%83%BC%E3%83%B302&janl=%E4%BA%BA%E9%96%93%E7%B3%BB%E9%9F%B3&bunr=%E3%82%B7%E3%83%A7%E3%83%83%E3%82%AF&kate=%E6%83%85%E5%8B%95" target="_blank" rel="noopener">ガーン02</a>」「衝撃」：<a href="https://on-jin.com/" target="_blank" rel="noopener">On-Jin ～音人～</a>（音量をそろえて使用。素材の二次配布・無断利用は禁止）。そのほかの効果音はブラウザ内で合成。</p></section></div>
+      <div class="foot"><button class="btn" id="cl">閉じる</button></div>`);
+    d.classList.add('rules');
+    {   // 節ごとの図（チュートリアルと同じ部品）
+      const C = HD.COST, pt = (h, n) => `<span class="rl-pt">${h}<b>${n}</b></span>`;
+      const FIG = {
+        start: TF.row(`<span class="rl-map">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `<span class="rl-cap">${TF.hex('waste', 0)}<small>荒地</small></span>`, TF.op('→'), `<span class="rl-cap">${TF.hex('ore', 8)}<small>開拓した土地</small></span>`),
+        turn: TF.row(`<span class="tf-deck"></span>`, TF.op('→'), acard(3, 'md'), TF.op('＋'), acard(5, 'md'), TF.op('＝'), TF.hex('brick', 8)),
+        build: `<div class="tf-cost rl-cost"><div>${TF.road()}<span>道</span>${TF.cost(C.road)}</div><div>${TF.house()}<span>開拓地<small>1点</small></span>${TF.cost(C.settle)}</div><div>${TF.city()}<span>都市<small>2点</small></span>${TF.cost(C.city)}</div></div>`,
+        knight: TF.row(`<span class="rl-cap">${acard(7, 'md')}<small>バースト</small></span>`, `<span class="rl-cap">${acard(1, 'md')}<small>騎士（1）</small></span>`, `<span class="tf-badge">最大騎士力 +${S.armyPts}点</span>`),
+        era: TF.row(`<span class="tf-badge era">⏳ ${S.eraLen}周ごとに時代が変わる</span>`, `<span class="tf-badge">市場の特殊カード</span>`, `<span class="rl-cap">${TF.cost({ sheep: 1, wheat: 1, ore: 1 })}<small>1枚の値段</small></span>`),
+        atk: TF.row(`<span class="rl-cap"><span class="tf-badge atk">道の収奪</span><small>${TF.cost(S.seizeCost || { sheep: 1, ore: 2 })}</small></span>`, `<span class="rl-cap"><span class="tf-badge atk">軍</span><small>${TF.cost({ wheat: 1, sheep: 2, ore: 3 })}</small></span>`, `<span class="rl-cap"><span class="tf-badge era">城壁</span><small>${TF.cost(S.wallCost || { sheep: 1, ore: 2 })}</small></span>`),
+        trade: TF.row(`<span class="rl-cap"><span class="tf-port">5:1</span><small>銀行（在庫が少ない）</small></span>`, `<span class="rl-cap"><span class="tf-port">2:1</span><small>銀行（在庫が多い）</small></span>`, `<span class="rl-cap"><span class="tf-port">3:1</span><small>港</small></span>`),
+        end: `<div class="rl-pts">${pt(TF.house(), '開拓地 1点')}${pt(TF.city(), '都市 2点')}${pt('<span class="tf-badge">最長交易路</span>', '+2点')}${pt('<span class="tf-badge">最大騎士力</span>', '+' + S.armyPts + '点')}${S.devVP ? pt('<span class="tf-badge">開拓者</span>', '+' + S.devVP.vp + '点') : ''}<span class="rl-goal">目標 <b>${S.goal}点</b></span></div>`,
+      };
+      for (const k in FIG) { const sec = d.querySelector(`.rl-sec[data-s="${k}"] h3`); if (sec) sec.insertAdjacentHTML('afterend', `<div class="rl-fig">${FIG[k]}</div>`); }
+    }
+    const show = k => { d.querySelectorAll('.rl-tabs button').forEach(b => b.classList.toggle('on', b.dataset.s === k)); d.querySelectorAll('.rl-sec').forEach(x => { x.hidden = x.dataset.s !== k; }); d.querySelector('.rl-body').scrollTop = 0; try { localStorage.setItem('hexdeck.rulesTab', k); } catch (_) {} };
+    d.querySelector('.rl-tabs').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (b) show(b.dataset.s); });
+    let k0 = 'start'; try { k0 = localStorage.getItem('hexdeck.rulesTab') || 'start'; } catch (_) {} if (!d.querySelector(`.rl-tabs button[data-s="${k0}"]`)) k0 = 'start'; show(k0);
+    d.querySelector('#cl').onclick = () => d.close();
   }
   function resignDialog() {
     if (S.phase === 'over') return;
@@ -4792,7 +4842,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   };
   document.addEventListener('pointerdown', e => { const d = $('sndPop'); if (d && !d.contains(e.target) && !e.target.closest('#btnSound')) d.remove(); });
   syncSoundBtn();
-  $('btnNew').onclick = newGameDialog; $('btnRules').onclick = rulesDialog; $('btnResign').onclick = resignDialog; $('btnHint').onclick = showHint;
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $('btnFull').hidden = true;   // iPhone などは全画面にできない
+  $('btnHome').onclick = () => { location.href = /^https?:/.test(location.protocol) && !/claude\.ai|claudeusercontent/.test(location.host) ? '../' : 'https://core-calmdust.github.io/aicoding/'; }; $('btnNew').onclick = newGameDialog; $('btnRules').onclick = rulesDialog; $('btnResign').onclick = resignDialog; $('btnHint').onclick = showHint;
   // スペース：山札を引く（2枚まで）→ 選んだ札を出す → 終了
   document.addEventListener('keydown', e => {
     if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -4917,29 +4968,35 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     op: t => `<span class="tf-op">${t}</span>`,
   };
   function tutPages(kind) {
-    const G = 10, L = (S && S.limit) || 14, C = HD.COST;
+    const G = 10, L = (S && S.limit) || 14, C = HD.COST, MP = (S && S.marketPeriod) || 3, EL = (S && S.eraLen) || 4, DV = S && S.devVP;
+    const MARKET = `払った資源（建物・道・開拓・交換などで使った分）はいったん<b>消費ボックス</b>に入り、${MP}手番ごとの相場の更新で在庫に戻ります。銀行のレートはそのときの在庫で決まり、<b>在庫が少ない資源ほど高く</b>（少ない順に 5:1・5:1・4:1・3:1・2:1）なります。`;
+    const IMPORT = '港に建物を建てた人は、相場の更新のたびに在庫から1枚<b>輸入</b>できます（2:1の港はその資源、3:1の港は手持ちで一番少ない資源）。';
+    const ATK = { h: '道の収奪・軍・城壁', f: TF.row(`<span class="tf-badge atk">道の収奪</span>`, `<span class="tf-badge atk">軍</span>`, `<span class="tf-badge era">城壁</span>`),
+      t: `3つ目の時代から使えます。<b>道の収奪</b>：羊毛1・鉱石2で、自分の道（か建物）につながる相手の道を1本奪う（自分とつなぐ側の端に相手の建物がある道は不可。1手番1回）。<br><b>軍</b>：山札に混ざる軍の札と小麦1・羊毛2・鉱石3で、自分の道の先にある相手の開拓地・都市を壊す（壊すと得点札：開拓地+${(S && S.raidVP) || 1}点・都市+${(S && S.raidVPCity) || 2}点）。<br><b>城壁</b>（羊毛1・鉱石2）を築いた建物は、軍で壊されず盗賊にも奪われません。` };
     const begin = [
       { h: 'ヘクスデッキへようこそ', f: mapThumb('fixed'), t: `土地を開拓して村を広げる、陣取りのボードゲームです。<br>開拓地や都市を建てて点を集め、先に<b>${G}点</b>（シナリオは12点）に届いた人の勝ち。相手はBOT3人です。` },
       { h: '5つの資源', f: `<div class="tf-res">${HD.RES.map(r => `<span>${resIcon(r, 40)}<small>${RESN[r]}</small></span>`).join('')}</div>`, t: '資源は<b>木材・レンガ・羊毛・小麦・鉱石</b>の5種類。<br>土地に接して建物を建てると、その土地の資源がもらえます。集めた資源で道や建物を作ります。' },
-      { h: '数字の土地', f: TF.row(TF.hex('wheat', 6), TF.op('→'), `<span class="tf-get">${TF.house()}${resIcon('wheat', 30)}<b>×1</b></span>`), t: '土地には<b>数字チップ</b>が置かれます。その数字が出ると、接している建物の持ち主が資源をもらえます（開拓地1枚・都市2枚）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。' },
-      { h: '準備：スタート地点', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 8)), t: 'はじめに、角の<b>スタート地点</b>を選んで拠点を置きます。<br>次に、拠点のとなりの荒地を<b>無料で開拓</b>（資源と数字を自分で決める）し、道を1本引きます。' },
+      { h: '数字の土地', f: TF.row(TF.hex('wheat', 6), TF.op('→'), `<span class="tf-get">${TF.house()}${resIcon('wheat', 30)}<b>×1</b></span>`), t: '土地には<b>数字チップ</b>が置かれます。その数字のカードが出ると（後述）、接している建物の持ち主が資源をもらえます（開拓地であれば1枚・都市であれば2枚）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。' },
+      { h: '準備：スタート地点', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 8)), t: 'はじめに、角の<b>スタート地点</b>を選んで拠点を置きます。<br>次に、拠点のとなりの荒地を<b>無料で開拓</b>（資源と数字を自分で決める）し、道を1本引きます。<br>序盤は道や開拓地で<b>木材とレンガ</b>をよく使います。' },
       { h: '手番① 札を引く', f: TF.row(`<span class="tf-deck"></span>`, TF.op('→'), acard(3, 'md'), acard(5, 'md')), t: 'サイコロの代わりに、みんなで使う<b>アクション札の山</b>があります。<br>自分の番に1枚引き、もう1枚引くか止めるかを選べます（最大2枚）。引いた札は手札に入ります。' },
       { h: '手番② 数字を出す', f: TF.row(acard(3, 'md'), TF.op('＋'), acard(5, 'md'), TF.op('＝'), TF.hex('brick', 8)), t: '手札から1枚、または何枚かを足して数字（2〜12）を作って出します。3と5なら<b>8</b>。<br>その数字の土地が、接する<b>全員</b>に資源を生みます。出さずに取っておくこともできます。' },
-      { h: '7はバースト', f: TF.row(acard(7, 'md')), t: `7を引くと<b>バースト</b>。その番は資源が出ません。<br>手札と資源を合わせて<b>${L}枚以上</b>持っている人は半分を手放し、引いた人が盗賊を動かして資源を1枚奪います（最初の時代は盗賊がいません）。` },
-      { h: '建てる', f: `<div class="tf-cost"><div>${TF.road()}<span>道</span>${TF.cost(C.road)}</div><div>${TF.house()}<span>開拓地<small>1点</small></span>${TF.cost(C.settle)}</div><div>${TF.city()}<span>都市<small>2点</small></span>${TF.cost(C.city)}</div></div>`, t: '資源を払って建てます。開拓地は自分の道の先に建て、建物どうしは1辺以上離します。<br>都市は開拓地を格上げしたもので、資源を2倍もらえます。' },
-      { h: '土地を開拓する', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('sheep', 5)), t: `建物のとなりの、<b>数字のない土地や荒地</b>は開拓できます。資源と、市場に出ている3枚の数字チップから1枚を選んで置きます（中央の土地は羊毛1・小麦1、荒地は羊毛2・小麦2）。<br>${S && S.devVP ? `${S.devVP.n}か所以上で一番多く開拓した人は<b>開拓者 +${S.devVP.vp}点</b>。` : ''}` },
-      { h: '交換', f: TF.row(`<span class="tf-port">4:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: '足りない資源は交換で手に入れます。<br>BOTに交換を持ちかけたり、銀行（相場のレート）や港（3:1・2:1）を使えます。相場は在庫の少ない資源ほど高くなります。' },
-      { h: '騎士と称号', f: TF.row(acard(1, 'md'), `<span class="tf-badge">最長交易路 2点</span>`, `<span class="tf-badge">最大騎士力 2点</span>`), t: '<b>1の札は騎士</b>にもなります。自分の番に出すと盗賊を動かし、資源を1枚奪えます。<br>道を5本以上つなげた一番の人は最長交易路、騎士を4回以上使った一番の人は最大騎士力（どちらも2点）。' },
-      { h: '時代と市場', f: TF.row(`<span class="tf-badge era">⏳ 時代が変わった</span>`, `<span class="tf-badge">市場の特殊札</span>`), t: '数周ごとに<b>時代</b>が変わり、「小麦が多く取れる」などの効果が起きます。<br>市場では羊毛・小麦・鉱石を1つずつ払って、便利な<b>特殊札</b>を買えます。' },
+      { h: '7はバースト', f: TF.row(acard(7, 'md')), t: `7を引くと<b>バースト</b>。その番は資源が出ません。<br>手札と資源を合わせて<b>${L}枚以上</b>持っている人はカードの半分を手放し、引いた人が盗賊を動かして資源を1枚奪います。<br>最初の時代は盗賊が出現しません。` },
+      { h: '建てる', f: `<div class="tf-cost"><div>${TF.road()}<span>道</span>${TF.cost(C.road)}</div><div>${TF.house()}<span>開拓地<small>1点</small></span>${TF.cost(C.settle)}</div><div>${TF.city()}<span>都市<small>2点</small></span>${TF.cost(C.city)}</div></div>`, t: '資源を支払って建てます。開拓地は自分の道の先に建て、建物どうしは1辺以上離します。<br>都市は開拓地を格上げしたもので、資源を2倍もらえます。' },
+      { h: '土地を開拓する', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('sheep', 5)), t: `建物のとなりの、<b>数字のない土地や荒地</b>は開拓できます。資源と、右上の市場に並ぶ3枚の数字チップから1枚を選んで置きます（中央の土地は羊毛1・小麦1、荒地は羊毛2・小麦2）。<br>${DV ? `${DV.n}か所以上で一番多く開拓した人は<b>開拓者</b>となり、勝利点を<b>+${DV.vp}点</b>獲得します。` : ''}` },
+      { h: '交換', f: TF.row(`<span class="tf-port">5:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: `足りない資源は、BOTに交換を持ちかけるか、銀行・港（3:1・2:1）で手に入れます。<br>${MARKET}` },
+      { h: '騎士と称号', f: TF.row(acard(1, 'md'), `<span class="tf-badge">最長交易路 +2点</span>`, `<span class="tf-badge">最大騎士力 +2点</span>`), t: '<b>1の札は騎士</b>にもなります。自分の番に出すと盗賊を動かし、資源を1枚奪えます。<br>道を5本以上つなげた一番長い道を持つ人は<b>最長交易路</b>、騎士を4回以上使い回数が一番多い人は<b>最大騎士力</b>の称号を得られます（どちらも勝利点+2点）。' },
+      ATK,
+      { h: '時代と市場', f: TF.row(`<span class="tf-badge era">⏳ 時代が変わった</span>`, `<span class="tf-badge">市場の特殊カード</span>`), t: `${EL}周ごとに<b>時代</b>が変わり、「小麦が多く取れる」などの効果が起きます。<br>市場では羊毛・小麦・鉱石を1つずつ払って、便利な<b>特殊カード</b>を購入できます。購入したカードは次のターンから利用できます。` },
       { h: '準備ができました！', end: true, t: '迷ったら画面上の<b>ヒント</b>や<b>ルール</b>を見てください。<br>さあ、マップを選んで対局をはじめましょう。' },
     ];
     const expert = [
       { h: 'カタンとの違い', f: mapThumb('random'), t: '資源を集めて道・開拓地・都市を建て、点を競う流れはカタンと同じです。<br>ここでは<b>違うところだけ</b>を紹介します。' },
-      { h: 'サイコロ → アクション札', f: TF.row(...[1, 2, 3, 4, 5, 6].map(n => acard(n, 'md')), acard(7, 'md')), t: 'サイコロの代わりに共通の山札（1〜6が各5枚、7が2枚）。自分の番に1〜2枚引き、<b>手札を組み合わせた合計</b>で数字を出します。<br>出す数字を自分で選べるのが最大の違い。手札は持ち越せ、不要な札は処分（山札の圧縮）できます。' },
-      { h: '7＝バースト', f: TF.row(acard(7, 'md')), t: `7を引くと自分の番の生産はなし。手札＋資源が<b>${L}枚以上</b>の人は半分を捨て、引いた本人が盗賊を動かします。<br>見えていない札の7の残りが表示されるので、2枚目を引くかどうかが勝負どころです。` },
-      { h: '盤は自分で作る', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 9)), t: `中央の土地は資源だけ、外周は荒地。建物に接する土地を<b>開拓</b>して、資源と数字チップ（市場の3枚）を自分で決めます。<br>最初は角の拠点（生産3枚・都市にできない）から。${S && S.devVP ? `最多開拓（${S.devVP.n}か所以上）は<b>開拓者 +${S.devVP.vp}点</b>。` : ''}` },
-      { h: '在庫と相場', f: TF.row(`<span class="tf-port">5:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: '資源には<b>在庫</b>があり、切れた資源は生産されません。銀行のレートは在庫に応じて<b>5:1〜2:1</b>で変わります。<br>港は道が届けば使え、港に建物を建てると定期的に<b>輸入</b>があります。' },
-      { h: '追加の要素', f: TF.row(`<span class="tf-badge era">時代カード</span>`, `<span class="tf-badge">特殊札</span>`, `<span class="tf-badge atk">道の収奪・軍</span>`), t: '周回ごとに効果が変わる<b>時代カード</b>、市場の<b>特殊札</b>、3番目の時代からの<b>道の収奪</b>と<b>軍</b>（建物を壊す）、それを防ぐ<b>城壁</b>。<br>1の札は騎士を兼ね、奪われそうなときは跳ね返せます。' },
+      { h: 'サイコロ → アクション札', f: TF.row(...[1, 2, 3, 4, 5, 6].map(n => acard(n, 'md')), acard(7, 'md')), t: 'サイコロの代わりに共通の山札（1〜6が各5枚、7が2枚）。自分の番に1〜2枚引き、<b>手札を組み合わせた合計</b>で数字を出します。<br>出す数字を自分で選べるのが最大の違い。手札は持ち越せ、不要な札は処分できます。' },
+      { h: '7＝バースト', f: TF.row(acard(7, 'md')), t: `7を引くと自分の番の生産はなし。手札＋資源が<b>${L}枚以上</b>の人はカードの半分を捨て、引いた本人が盗賊を動かします。<br>見えていない7のカードの出現確率が表示されるので、2枚目を引くかどうかが勝負どころです。` },
+      { h: '盤は自分で作る', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 9)), t: `中央の土地は資源だけ、外周は荒地。<b>自分の建物に接する荒地</b>（と数字のない中央の土地）を開拓して、資源と数字チップ（右上にある市場の3枚）を自分で決めます。費用は中央が羊毛1・小麦1、荒地が羊毛2・小麦2で、隣り合う土地に同じ数字は置けません。<br>最初は角の拠点（生産力3・都市にできない）から。${DV ? `最多開拓（${DV.n}か所以上）は<b>開拓者 +${DV.vp}点</b>。` : ''}` },
+      { h: '在庫と相場', f: TF.row(`<span class="tf-port">5:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: `資源には<b>在庫</b>があり、切れた資源は生産されません。${MARKET}<br>港は道が届けば交換に使えます。${IMPORT}` },
+      { h: '追加の要素', f: TF.row(`<span class="tf-badge era">時代カード</span>`, `<span class="tf-badge">特殊カード</span>`, `<span class="tf-badge atk">道の収奪・軍</span>`), t: `${EL}周ごとに効果が変わる<b>時代カード</b>、市場に並んでいる<b>特殊カード</b>、3つ目の時代からの<b>道の収奪</b>と<b>軍</b>（建物を壊す）、それを防ぐ<b>城壁</b>。<br>1の札は騎士の役割を兼ねていて、奪われそうなときは跳ね返すことも出来ます。` },
+      ATK,
       { h: '準備ができました！', end: true, t: '細かいルールは画面上の<b>ルール</b>でいつでも確認できます。<br>さあ、マップを選んで対局をはじめましょう。' },
     ];
     return kind === 'expert' ? expert : begin;
@@ -4979,7 +5036,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (skip) return done();
     const d = dlg(`<h2 style="text-align:center">ヘクスデッキへようこそ</h2>
       <p style="text-align:center;margin:0 0 14px">はじめにチュートリアルを見ますか？</p>
-      <div class="tut-ask"><button data-t="begin"><b>はじめての方</b><small>ゲームの流れを1から（13ページ）</small></button><button data-t="expert"><b>カタン経験者</b><small>カタンとの違いだけ（7ページ）</small></button></div>
+      <div class="tut-ask"><button data-t="begin"><b>はじめての方</b><small>ゲームの流れを1から（14ページ）</small></button><button data-t="expert"><b>カタン経験者</b><small>カタンとの違いだけ（8ページ）</small></button></div>
       <label class="tut-skip"><input type="checkbox" id="tuSkip"> 次から表示しない（マップ選択からいつでも見られます）</label>
       <div class="foot"><button class="btn" id="tuNo">見ないで始める</button></div>`);
     d.classList.add('tutask');
