@@ -371,5 +371,6 @@
 "dr.wait": "Spiele noch ein paar Züge, bevor du Remis anbietest",
 "dr.accepted": "Die KI hat das Remis angenommen",
 "dr.declined": "Die KI hat das Remis abgelehnt (sie will weiterspielen)",
-"dr.aiResigned": "Die KI hat aufgegeben"
+"dr.aiResigned": "Die KI hat aufgegeben",
+"ls.seqGood": "Guter Zug!"
 }

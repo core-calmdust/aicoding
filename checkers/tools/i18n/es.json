@@ -303,7 +303,7 @@
  "op.hint": "El anillo dorado marca la pieza que usa la mejor jugada.",
  "op.auto": "Reproducción automática / parar (Espacio)",
  "pz.title": "Problemas de damas",
- "pz.desc": "Problemas de «Gana en N» y golpes de «Gana material en N». El rival siempre defiende con la máxima resistencia. Hay exactamente una primera jugada correcta, y todos los problemas están verificados por el motor (con bases de datos de finales).",
+ "pz.desc": "Problemas de «Gana en N» y «Gana material en N» con muchos temas: golpes, saltos múltiples, rupturas, defensa y finales. El rival siempre defiende con la máxima resistencia. Hay una única primera jugada correcta y todos los problemas están verificados por el motor (con bases de finales).",
  "pz.retry": "Repetir",
  "pz.answer": "Solución",
  "pz.next": "Siguiente",

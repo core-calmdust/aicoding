@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0a17">
 <meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、入門〜戦術レッスン21ステップ、序盤の定跡、詰めモリス600問、今日の一問。">
@@ -321,6 +322,10 @@ body.in-online .controls{grid-template-columns:repeat(8,1fr)}   /* + 引き分�
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
+/* list views fill the fixed-size tabbed dialog; the Close / Back buttons stay pinned to the bottom when there is spare space */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){display:flex;flex-direction:column}
+#lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
+#lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
 .mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
@@ -508,7 +513,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .lesson-card,.puzzle-card{order:0}
   body.in-study .board-area{display:flex;flex-direction:column;gap:6px}
   body.in-study .st-nav{display:flex}
-  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
+  body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
   /* phone order (site rule): board → 形勢＋ナビ → 振り返り → 棋譜 */
   #evalCard{order:1}
@@ -518,13 +523,15 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   body.rv-on #evalCard .graph{display:none}
   body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{order:5}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:24px;margin-top:0;line-height:1}
   .player{position:relative}
   .player .clk{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
-  .player .count small{font-size:10px;margin-left:3px}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .count small{display:none}   /* the in-hand caption squeezed the names ("You · G…"); the hand trays by the board show it */
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
+  .player:has(.clk:not(:empty)){padding-bottom:16px}   /* the clock sits on the bottom edge */
   .card{padding:10px 12px}
   .controls{padding:7px;gap:4px}
   .btn{flex-direction:column;justify-content:center;padding:7px 0;gap:3px;font-size:10px;letter-spacing:0}
@@ -554,13 +561,13 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .pdisc{width:14px;height:14px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
   .evalrow .val{font-size:12px}
@@ -596,8 +603,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .kifu{font-size:13px}
   .side-in:has(.review-card.show) #evalCard{flex:.55 1 0;min-height:86px}
   .side-in:has(.review-card.show) #evalCard .graph{min-height:28px}
-  .side-in:has(.review-card.show) .kifu-card{flex:.5 1 0;min-height:92px}
-  .side-in > .review-card.show{flex:3 1 0;min-height:200px}
+  .side-in:has(.review-card.show) .kifu-card{flex:1 1 0;min-height:120px}   /* 振り返り and 棋譜 share the height half and half */
+  .side-in > .review-card.show{flex:1 1 0;min-height:160px}
   .player .count{font-size:clamp(36px, 4.6cqw, 56px)}
   .brand h1{font-size:clamp(16px, calc((100cqw - 190px) / (var(--tl) * .66)), 38px)}
 }
@@ -778,13 +785,13 @@ body .info-line{font-size:12.5px}
   .app > .side #evalCard .graph{display:block;height:clamp(48px, 9vh, 110px);max-height:none;min-height:0;flex:none}
   .app > .side .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
   .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
-  .app > .side .review-card.show{flex:3 1 0;min-height:200px}
-  .app > .side .side-in:has(.review-card.show) .kifu-card{flex:.5 1 0;min-height:110px}
+  .app > .side .review-card.show{flex:1 1 0;min-height:160px}
+  .app > .side .side-in:has(.review-card.show) .kifu-card{flex:1 1 0;min-height:120px}
   .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
   html.rb-on .app > .side #evalCard .graph{height:clamp(34px, 6vh, 70px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
-<link rel="stylesheet" href="online.css?v=20261028l9">
+<link rel="stylesheet" href="online.css?v=20261028mrn">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1063,8 +1070,9 @@ body .info-line{font-size:12.5px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/headerbar.js?v=28"></script>
+<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -1152,7 +1160,7 @@ function applyI18n() {
   { const b = $('#btnResign'); b.innerHTML = Resign.icon + '<span>' + Resign.label(LANG) + '</span>'; b.title = Resign.label(LANG); }
   renderBrand();
 }
-function renderBrand() { const tt = t('title.' + gv); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub.' + gv); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
+function renderBrand() { const tt = t('title.' + gv); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub.' + gv); { const h1 = $('#brandTitle').closest('h1') || document.querySelector('.brand h1'); if (h1) h1.style.setProperty('--tl', Math.max(14, tt.length)); } }
 let humanColor = P1;
 let reviewing = false;
 let evals = [];          // evals[i] = evaluation after i moves (first player's view)
@@ -1512,7 +1520,7 @@ function renderInfo() {
     el.classList.toggle('active', !st.over && tm === p);
     el.classList.toggle('won', st.winner === p);
     el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + ' · ' + phaseText(pos, p) : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? phaseText(pos, p) : '');
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
@@ -1801,15 +1809,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = gameOver(moves.length), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || gameOver(moves.length)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = gameOver(moves.length);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -3308,8 +3322,21 @@ document.addEventListener('keydown', e => {
 window.addEventListener('resize', () => renderFx());
 </script>
 <script src="online-ui.js?v=20261028l9"></script>
+<!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/morris.js?v=3')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=1'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

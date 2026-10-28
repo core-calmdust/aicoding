@@ -1070,21 +1070,45 @@ function wpActive() { return settings.mode === 'watch' && !!match && !lesson && 
 function wpOver() { const g = match.games.length - 1; return stateAt(g, match.games[g].actions.length).over && (!match.len || matchOver()); }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !wpOver(), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = wpActive() && wpOver(), on = wpActive() && (!over || cur < latestIdx()), b = $('#btnUndo');   // a finished game / match can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || wpOver()) return;
-  if (!wpPaused) {
+  if (!wpActive()) return;
+  const over = wpOver(), back = cur < latestIdx();
+  if (over && !back) return;
+  if (!wpPaused && !over) {
     wpPaused = true; busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false;
     if (turn && turn.ai) turn = null;   // an AI move being animated is dropped (it was not pushed yet); resuming plays it again
     render(); renderInfo(); renderButtons(); return;
   }
-  wpPaused = false; cur = latestIdx(); reviewing = false; turn = null; hintData = null;   // resume from the latest position
+  if (back && window.WatchPause) {   // an earlier position is shown: ask where to resume from (n = later turns / cube actions, over every later game of the match)
+    stopPlay();
+    const g = curGA()[0];
+    WatchPause.ask({ lang: LANG, n: latestIdx() - cur - (match.games.length - 1 - g), latest: over ? null : wpLatest, here: wpHere });
+    return;
+  }
+  wpLatest();
+}
+function wpLatest() {   // resume from the latest position
+  wpPaused = false; stopPlay(); cur = latestIdx(); reviewing = false; turn = null; hintData = null;
   const g = match.games.length - 1;
   if (stateAt(g, match.games[g].actions.length).over) { nextGame(); return; }   // paused between two games of a match
   afterAction();
+}
+function wpHere() {   // resume from the shown position: every action is a whole turn (roll + move) or a cube action, so any position is a turn boundary;
+  // the later actions and games of the match, their evals and results are dropped; the dice come from the seed (roll k of game g), so the same dice follow
+  if (!wpActive() || cur >= latestIdx()) { wpLatest(); return; }
+  const [g, a] = curGA();
+  wpPaused = false; stopPlay(); busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false;
+  match.games = match.games.slice(0, g + 1);
+  match.games[g].actions = match.games[g].actions.slice(0, a);
+  for (const k of [...evals.keys()]) { const [kg, ka] = k.split(':').map(Number); if (kg > g || (kg === g && ka > a)) evals.delete(k); }
+  gameOverShown = new Set([...gameOverShown].filter(k => +k.split(':')[0] < g));
+  turn = null; reviewing = false; cur = latestIdx(); hintData = null; selected = null; previewPlay = null; extraArrows = [];
+  hideOverlay('#resultOverlay');
+  save(); afterAction();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -1173,7 +1197,7 @@ function renderInfo() {
     let status = '';
     if (st.over && st.winner === s) status = t('st.win', { n: st.points });
     else if (thinking === s) status = t('thinking');
-    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : liveTurn() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : t('st.turn');
+    else if (!st.over && toMove === s) status = st.offered ? t('st.offer') : liveTurn() ? t('st.moving', { d: '\u2066' + turn.dice.join('-') + '\u2069' }) : '';
     $('#status' + s).textContent = status;
   }
   renderStatusBox(st);
@@ -1484,12 +1508,19 @@ let PCW = false;
 function pcFit() {
   const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js)
-  const narrow = w < 1300, rw = narrow ? 310 : 330, cg = narrow ? 16 : 20, px = narrow ? 16 : 24;   // (= the CSS --rw / --cg / --px)
-  const bxh = document.body.classList.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(250, (hgt - hb) * 0.28))) : 0;   // the PC review box under the board
+  const px = w < 1300 ? 16 : 24;   // (= the CSS --px)
+  const H = hgt - hb, B = document.body.classList;
+  // the info row under the board (対局者 | 形勢 | 振り返り | 棋譜); lessons / puzzles and the PC review box need a taller one
+  const bxh = B.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(340, H * 0.28))) : 0;
+  const ich = bxh || Math.round(B.contains('in-lesson') || B.contains('in-puzzle') ? Math.max(190, Math.min(380, H * 0.32)) : Math.max(150, Math.min(320, H * 0.25)));
   document.documentElement.style.setProperty('--bxh', bxh + 'px');
-  const base = hgt - hb - 24 - (bxh ? bxh + 12 : 0) - (window.olDockH ? olDockH() : 0);   // height for the board (and the info columns beside it)
-  const availW = w - 2 * px - rw - cg;
-  let u = Math.min(availW / 15.85, 100), h = base / u;
+  document.documentElement.style.setProperty('--ich', ich + 'px');
+  const side = B.contains('dock-open') && !B.contains('ol-soon');   // online dock open: the info goes beside the board (CSS: body.dock-open)
+  const rw = w < 1300 ? 310 : 330;   // (= the CSS --rw)
+  // (side: measured from the opened dock itself — bar + panel, min(46vh, 380px) in online.css — so the board never runs under it)
+  const base = side ? H - 24 - 47 - Math.min(hgt * 0.46, 380) : H - 24 - 12 - ich - (window.olDockH ? olDockH() : 0);   // height left for the board
+  const availW = w - 2 * px - (side ? rw + 16 : 0);
+  let u = Math.min(availW / 15.85, 170), h = base / u;   // (big windows: the board grows with the window)
   if (h < 7.2) { u = base / 7.2; h = 7.2; }
   return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
 }

@@ -2,11 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d1412">
+<meta name="theme-color" content="#061315">
+<script>try { var _bd = localStorage.getItem('connect4-skin'); if (['classic', 'walnut', 'neon', 'porcelain'].indexOf(_bd) >= 0) document.documentElement.dataset.bd = _bd; } catch (e) {}</script>
 <meta name="description" content="完全読みのAI・レッスン・詰めパズルを備えた、美しいブラウザ版コネクトフォー（四目並べ）。">
 <title>Connect Four V2</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Ccircle cx='22' cy='42' r='11' fill='%23e2c275'/%3E%3Ccircle cx='42' cy='42' r='11' fill='%23c8463b'/%3E%3Ccircle cx='42' cy='20' r='11' fill='%23e2c275'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230e7370'/%3E%3Ccircle cx='22' cy='42' r='11' fill='%23e6cd8c'/%3E%3Ccircle cx='42' cy='42' r='11' fill='%23e8946a'/%3E%3Ccircle cx='42' cy='20' r='11' fill='%23e6cd8c'/%3E%3C/svg%3E">
 <meta property="og:title" content="Connect Four V2 — 完全読みAIのコネクトフォー">
 <meta property="og:description" content="先手必勝を読み切る8段階AI、レッスン、詰めパズル。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
@@ -17,13 +19,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0b1110; --bg2:#121b19; --panel:#141f1c; --panel2:#1a2724; --line:#26372f;
-  --text:#e8eee9; --muted:#8fa39a; --dim:#5d7068;
-  --felt:#17573f; --felt2:#0e412e; --felt3:#07291c;
-  --brass:#c9a961; --brass2:#8e7440;
-  --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
-  --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;
-  --ruby1:#ffffff; --ruby2:#d4d9e0; --ruby3:#8f97a3; --ruby4:#3c424b;   /* platinum (second player) */
+  /* site theme "Lagoon" (2026-10-28): deep petrol teal + copper — a palette no other game on the site uses */
+  --bg:#061315; --bg2:#0a1d20; --panel:#0c2226; --panel2:#112c31; --line:#1d424a;
+  --text:#e4f1f1; --muted:#8db3b5; --dim:#58807f;
+  --brass:#e8946a; --brass2:#a35e40;
+  --accent:#ffb38a; --red:#ff6b5b; --good:#7fd6a4;
+  /* board + disc skin (html[data-bd], picked in the new-game dialog); these are the "lagoon" defaults */
+  --felt:#0e7370; --felt2:#09585a; --felt3:#043b3e; --plate-x:linear-gradient(transparent,transparent);
+  --frame-bg:linear-gradient(145deg,#103237 0%,#061619 55%,#0e2b30 100%);
+  --frame-edge:rgba(232,148,106,.28); --frame-line:rgba(232,148,106,.5);
+  --ring:rgba(232,148,106,.45); --back:radial-gradient(ellipse at 50% 30%,#0a1c1f,#020909 80%);
+  --crd:rgba(255,179,138,.6); --grain:.2; --last:rgba(255,255,255,.85); --gtxt:#1a160c; --rtxt:#121413;
+  --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;   /* first player's disc (gold) */
+  --ruby1:#ffffff; --ruby2:#d4d9e0; --ruby3:#8f97a3; --ruby4:#3c424b;   /* second player's disc (silver) */
   --vh: 100vh;
   --ttop: 58px;  /* room above the side panel for the title row (PC) */
   --pad: clamp(28px, 7vmin, 100px);
@@ -63,8 +71,8 @@ html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
 html,body{height:100%;overflow:hidden}
 body{
   background:
-    radial-gradient(1200px 700px at 30% -10%, #1b2b26 0%, transparent 60%),
-    radial-gradient(900px 600px at 110% 110%, #16231f 0%, transparent 60%),
+    radial-gradient(1200px 700px at 30% -10%, #0f2c30 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #0b2226 0%, transparent 60%),
     var(--bg);
   color:var(--text);
   font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
@@ -90,40 +98,41 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   position:relative;width:var(--fw);height:var(--fh);
   padding:calc(var(--cell) * var(--top)) calc(var(--cell)*0.42) calc(var(--cell)*0.55);
   border-radius:18px;
-  background:linear-gradient(145deg,#1d1813 0%,#0c0a08 55%,#19140e 100%);
-  box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25),inset 0 1px 0 rgba(255,255,255,.06);
+  background:var(--frame-bg);
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px var(--frame-edge),inset 0 1px 0 rgba(255,255,255,.06);
   user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
-.frame::before{content:"";position:absolute;left:calc(var(--cell)*0.42 - 5px);right:calc(var(--cell)*0.42 - 5px);top:calc(var(--cell) * var(--top) - 5px);bottom:calc(var(--cell)*0.55 - 5px);border-radius:8px;border:1px solid rgba(201,169,97,.55);pointer-events:none}
-.coords{position:absolute;left:calc(var(--cell)*0.42);bottom:0;width:calc(var(--cell)*7);height:calc(var(--cell)*0.55);display:flex;color:rgba(226,194,117,.55);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell)*0.2);pointer-events:none}
+.frame::before{content:"";position:absolute;left:calc(var(--cell)*0.42 - 5px);right:calc(var(--cell)*0.42 - 5px);top:calc(var(--cell) * var(--top) - 5px);bottom:calc(var(--cell)*0.55 - 5px);border-radius:8px;border:1px solid var(--frame-line);pointer-events:none}
+.coords{position:absolute;left:calc(var(--cell)*0.42);bottom:0;width:calc(var(--cell)*7);height:calc(var(--cell)*0.55);display:flex;color:var(--crd);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell)*0.2);pointer-events:none}
 .coords span{flex:1;display:flex;align-items:center;justify-content:center}
 .board{position:relative;width:calc(var(--cell)*7);height:calc(var(--cell)*6)}
-.back{position:absolute;inset:0;border-radius:6px;background:radial-gradient(ellipse at 50% 30%,#0d1714,#050908 80%)}
+.back{position:absolute;inset:0;border-radius:6px;background:var(--back)}
 .discs{position:absolute;inset:0}
 .disc{position:absolute;width:calc(var(--cell)*0.84);height:calc(var(--cell)*0.84);margin:calc(var(--cell)*0.08);border-radius:50%;will-change:transform}
 .disc::before{content:"";position:absolute;inset:16%;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.25)}
 .disc.p1{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35)}
 .disc.p2{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--ruby1) 0%,var(--ruby2) 26%,var(--ruby3) 68%,var(--ruby4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4)}
-.disc.last::after{content:"";position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 6px rgba(255,255,255,.8)}
+.disc.last::after{content:"";position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;background:var(--last);box-shadow:0 0 6px var(--last)}
 .board.hide-last .disc.last::after{display:none}
 .disc.ghost{opacity:.32;pointer-events:none}
 .disc.preview{opacity:.0;transition:opacity .15s}
 .disc.dim{filter:brightness(.55) saturate(.7)}
 .plate{position:absolute;inset:0;border-radius:6px;pointer-events:none;
   background:
+    var(--plate-x),
     radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.07), transparent 65%),
     radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt2) 70%, var(--felt3) 100%);
   -webkit-mask:radial-gradient(circle at 50% 50%, transparent calc(var(--cell)*0.38), #000 calc(var(--cell)*0.38 + 0.6px)) 0 0 / var(--cell) var(--cell);
   mask:radial-gradient(circle at 50% 50%, transparent calc(var(--cell)*0.38), #000 calc(var(--cell)*0.38 + 0.6px)) 0 0 / var(--cell) var(--cell);
 }
 .rings{position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) calc(var(--cell)*0.375), rgba(201,169,97,.42) calc(var(--cell)*0.38), rgba(0,0,0,.5) calc(var(--cell)*0.395), rgba(0,0,0,0) calc(var(--cell)*0.46)) 0 0 / var(--cell) var(--cell)}
-.grain{position:absolute;inset:0;pointer-events:none;opacity:.2;mix-blend-mode:overlay;border-radius:6px;
+  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) calc(var(--cell)*0.375), var(--ring) calc(var(--cell)*0.38), rgba(0,0,0,.5) calc(var(--cell)*0.395), rgba(0,0,0,0) calc(var(--cell)*0.46)) 0 0 / var(--cell) var(--cell)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:var(--grain);mix-blend-mode:overlay;border-radius:6px;
   -webkit-mask:radial-gradient(circle at 50% 50%, transparent calc(var(--cell)*0.38), #000 calc(var(--cell)*0.38 + 0.6px)) 0 0 / var(--cell) var(--cell);
   mask:radial-gradient(circle at 50% 50%, transparent calc(var(--cell)*0.38), #000 calc(var(--cell)*0.38 + 0.6px)) 0 0 / var(--cell) var(--cell);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .colhl{position:absolute;top:calc(var(--cell) * var(--top) * -1);bottom:0;width:var(--cell);pointer-events:none;opacity:0;transition:opacity .15s,left .08s;
-  background:linear-gradient(180deg,rgba(226,194,117,0),rgba(226,194,117,.10) 18%,rgba(226,194,117,.06));border-radius:10px}
+  background:linear-gradient(180deg,rgba(255,179,138,0),rgba(255,179,138,.10) 18%,rgba(255,179,138,.06));border-radius:10px}
 .colhl.show{opacity:1}
 .overlay-fx{position:absolute;inset:0;pointer-events:none;z-index:6}
 .hintlbl{position:absolute;width:var(--cell);height:var(--cell);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.8)}
@@ -131,9 +140,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hintlbl small{font-size:calc(var(--cell)*0.15);opacity:.85}
 .hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.draw{color:#d8e6ff}.hintlbl.heur{color:rgba(255,255,255,.75)}
 .hintlbl.best b{color:var(--accent)}
-.hintlbl.best::before{content:"";position:absolute;inset:9%;border-radius:50%;border:2px solid rgba(226,194,117,.85);box-shadow:0 0 10px rgba(226,194,117,.5)}
+.hintlbl.best::before{content:"";position:absolute;inset:9%;border-radius:50%;border:2px solid rgba(255,179,138,.85);box-shadow:0 0 10px rgba(255,179,138,.5)}
 .mark{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid;pointer-events:none;z-index:8}
-.mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(226,194,117,.7)}
+.mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(255,179,138,.7)}
 .mark.ng{border-color:#ff6b5b}
 .mark.threat{border:2px dashed rgba(255,255,255,.75);width:calc(var(--cell)*0.6);height:calc(var(--cell)*0.6);margin:calc(var(--cell)*0.2)}
 .mark.threat.op{border-color:rgba(214,220,228,.9)}
@@ -147,8 +156,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hits.can button{cursor:pointer}
 .toast{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
-  background:rgba(10,16,14,.88);backdrop-filter:blur(6px);
-  border:1px solid rgba(201,169,97,.45);color:var(--text);
+  background:rgba(5,16,18,.88);backdrop-filter:blur(6px);
+  border:1px solid rgba(232,148,106,.45);color:var(--text);
   padding:14px 26px;border-radius:12px;font-weight:700;letter-spacing:.08em;white-space:nowrap;
   opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
 }
@@ -163,6 +172,45 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .review-bar.show{display:flex}
 .review-bar button{padding:5px 10px;border-radius:7px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
 .review-bar button:hover{border-color:var(--brass2)}
+/* ---------------------------------------------------------------- board + disc skins (html[data-bd]; "lagoon" = the :root defaults) */
+html[data-bd=classic]{--felt:#2465d8;--felt2:#1b52b8;--felt3:#123c8c;--frame-bg:linear-gradient(145deg,#1a449a 0%,#0c2766 55%,#173d8f 100%);--frame-edge:rgba(150,185,255,.35);--frame-line:rgba(175,205,255,.5);
+  --ring:rgba(6,20,64,.75);--back:radial-gradient(ellipse at 50% 30%,#0e1d40,#040a1c 80%);--crd:rgba(195,215,255,.75);--grain:.1;
+  --gold1:#ffc0b6;--gold2:#ff5d4f;--gold3:#d42c20;--gold4:#78130b;--gtxt:#fff;--ruby1:#fff8cc;--ruby2:#ffd94a;--ruby3:#e3aa12;--ruby4:#7c5600}
+html[data-bd=walnut]{--felt:#8d5c35;--felt2:#714828;--felt3:#4b2e18;--frame-bg:linear-gradient(145deg,#3b2515 0%,#1f130a 55%,#342011 100%);--frame-edge:rgba(214,170,110,.3);--frame-line:rgba(214,170,110,.5);
+  --plate-x:repeating-linear-gradient(91deg,rgba(40,20,5,.16) 0 2px,transparent 2px 7px,rgba(255,225,180,.05) 7px 8px,transparent 8px 15px);
+  --ring:rgba(238,200,140,.4);--back:radial-gradient(ellipse at 50% 30%,#1c130b,#070402 80%);--crd:rgba(232,200,150,.7);--grain:.4;--last:#e5493a;
+  --gtxt:#fff;--gold1:#8a8d94;--gold2:#3a3c42;--gold3:#17181b;--gold4:#030304;--ruby1:#ffffff;--ruby2:#f4ecd9;--ruby3:#cdbf9e;--ruby4:#6d6250}
+html[data-bd=neon]{--felt:#1d2029;--felt2:#15171e;--felt3:#0c0d12;--frame-bg:linear-gradient(145deg,#1e212b 0%,#0a0b0f 60%,#191b23 100%);--frame-edge:rgba(80,228,255,.4);--frame-line:rgba(80,228,255,.6);
+  --ring:rgba(80,228,255,.7);--back:radial-gradient(ellipse at 50% 30%,#06070a,#000 80%);--crd:rgba(125,235,255,.7);--grain:.06;
+  --gold1:#ffd0ea;--gold2:#ff52b0;--gold3:#d01f82;--gold4:#5a0636;--ruby1:#dcfcff;--ruby2:#52e4ff;--ruby3:#14a8d0;--ruby4:#05465c}
+html[data-bd=neon] .frame{box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px var(--frame-edge),0 0 22px rgba(80,228,255,.18),inset 0 1px 0 rgba(255,255,255,.05)}
+html[data-bd=neon] .disc.p1{box-shadow:0 0 12px rgba(255,82,176,.6),inset 0 -4px 8px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(255,200,230,.5)}
+html[data-bd=neon] .disc.p2{box-shadow:0 0 12px rgba(82,228,255,.55),inset 0 -4px 8px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(210,250,255,.5)}
+html[data-bd=porcelain]{--felt:#f3eee4;--felt2:#e5ded0;--felt3:#cfc6b3;--frame-bg:linear-gradient(145deg,#ece6d9 0%,#cdc4b2 55%,#e3dccd 100%);--frame-edge:rgba(44,63,143,.35);--frame-line:rgba(44,63,143,.5);
+  --ring:rgba(44,63,143,.6);--back:radial-gradient(ellipse at 50% 30%,#2b3448,#111622 80%);--crd:rgba(44,63,143,.8);--grain:.12;
+  --gtxt:#fff;--rtxt:#fff;--gold1:#ffc8b9;--gold2:#f05b3d;--gold3:#c6341c;--gold4:#661607;--ruby1:#c3cdf5;--ruby2:#4c62c4;--ruby3:#2c3f8f;--ruby4:#111a44}
+html[data-bd=porcelain] .plate{background:var(--plate-x),radial-gradient(ellipse at 40% 30%,rgba(255,255,255,.55),transparent 60%),radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 70%,var(--felt3) 100%)}
+/* new-game dialog: phones one column; PC a wide two-column dialog (mode row on top, then strength | display + skins) like the other games */
+#newOverlay .ng-col{display:contents}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col{display:block}
+  #newOverlay .ng-cols:not(:has(#fColor:not(.hidden), #fLevel:not(.hidden))){grid-template-columns:minmax(0, 1fr)}   /* lessons / puzzles: only the skin row */
+  #newOverlay .ng-cols:not(:has(#fColor:not(.hidden), #fLevel:not(.hidden))) #fDesign{max-width:460px}
+  #newOverlay .modal-actions{margin-top:8px}
+  #newOverlay #segMode{flex-wrap:nowrap}
+  #newOverlay #segMode button{flex:1 1 0}
+}
+/* skin picker (new-game dialog): one mini board per skin */
+.bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.bdrow button svg{display:block;width:100%;height:auto;border-radius:5px}
+.bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;letter-spacing:0}
+.bdrow button:hover{border-color:var(--brass2);color:var(--text)}
+.bdrow button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(232,148,106,.45);background:rgba(232,148,106,.1)}
+@media (max-width: 520px){ .bdrow{gap:4px} .bdrow button{padding:4px 3px 5px;font-size:10px} }
 
 /* ---------------------------------------------------------------- side */
 .side{grid-area:side;width:100%;height:max(var(--fh), min(620px, var(--cv) * (6.55 + var(--top))));min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
@@ -187,13 +235,13 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 a.snd.home{text-decoration:none}
 .snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .snd .off-x{display:none}
-.snd.on{color:var(--accent);border-color:rgba(201,169,97,.5)}
+.snd.on{color:var(--accent);border-color:rgba(232,148,106,.5)}
 .snd:not(.on) .on-w{display:none}
 .snd:not(.on) .off-x{display:inline}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:14px}
 .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .player{position:relative;border-radius:12px;padding:12px;background:rgba(0,0,0,.18);border:1px solid transparent;transition:border-color .25s, background .25s;min-width:0}
-.player.active{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.07)}
+.player.active{border-color:rgba(232,148,106,.6);background:rgba(232,148,106,.07)}
 .player.won{border-color:rgba(127,214,164,.7);background:rgba(127,214,164,.08)}
 .player .top{display:flex;align-items:center;gap:8px;min-width:0}
 .pdisc{width:20px;height:20px;border-radius:50%;flex:none}
@@ -202,14 +250,14 @@ a.snd.home{text-decoration:none}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .clk{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--muted);padding:1px 7px;border-radius:7px;background:rgba(0,0,0,.28);border:1px solid var(--line);flex:none}
 .player .clk:empty{display:none}
-.player.active .clk{color:var(--accent);border-color:rgba(201,169,97,.6)}
+.player.active .clk{color:var(--accent);border-color:rgba(232,148,106,.6)}
 .player .clk.low{color:#ff9b90;border-color:rgba(255,107,91,.6)}
 .player .count{font-family:'Shippori Mincho B1',serif;font-size:36px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
 .player .count small{font-size:12px;color:var(--dim);font-family:'Zen Kaku Gothic New';font-weight:500;margin-left:6px;letter-spacing:.05em}
 .player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player.thinking .status{color:var(--accent)}
 .player.thinking .pdisc{animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(226,194,117,.25)}}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(255,179,138,.25)}}
 .evalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
 .evalrow .label{font-size:12px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
 .evalrow .val{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:13px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -217,14 +265,23 @@ a.snd.home{text-decoration:none}
 .evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,var(--gold3),var(--gold2));transition:width .5s ease}
 .evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,.6)}
 .graph{touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px;width:100%;height:clamp(40px, calc(var(--vh) * .09), 90px);display:block;cursor:pointer}
-.graph .zero{stroke:rgba(201,169,97,.35);stroke-dasharray:2 3}
+.graph .zero{stroke:rgba(232,148,106,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
+.graph .g1{fill:var(--gold2);fill-opacity:.45}.graph .g2{fill:var(--ruby2);fill-opacity:.38}
+.rules-offer{border-color:rgba(255,179,138,.5)!important;background:linear-gradient(90deg,rgba(232,148,106,.16),rgba(0,0,0,.15))!important}
+.rules-offer button{background:linear-gradient(180deg,#f6ab82,#c76c46)!important}
+/* shared rules tour / puzzle book (shared/*.js) in this page's copper accent */
+html .rt-steps button.cur{box-shadow:0 0 0 2px rgba(232,148,106,.6)}
+html :is(.rt-nav, .rt-finish) button.go, html .pb-cont, html .pbh-daily .go{background:linear-gradient(180deg,#f6ab82,#c76c46);box-shadow:none}
+html .pbh{--pbh-tint:rgba(232,148,106,.32)}
+html .pbh-title small{border-color:rgba(232,148,106,.4)}
+html .pbh-tabs button.sel{background:linear-gradient(180deg,rgba(232,148,106,.2),rgba(232,148,106,.06))}
 .controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}   /* 対局 待った 投了 ヒント レッスン パズル ルール: one row */
 body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no 待った / ヒント, + 引き分け提案 */
 .btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:12px;color:var(--muted);transition:border-color .2s,color .2s,background .2s;white-space:nowrap;min-width:0;overflow:hidden}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn:hover:not(:disabled){border-color:var(--brass2);color:var(--text)}
-.btn.on{color:var(--accent);border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.08)}
+.btn.on{color:var(--accent);border-color:rgba(232,148,106,.6);background:rgba(232,148,106,.08)}
 .btn:disabled{opacity:.35;cursor:default}
 .btn.primary{color:var(--text)}
 .kifu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -237,15 +294,15 @@ body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no �
 .kifu button i.p1{background:var(--gold2)}
 .kifu button i.p2{background:var(--ruby2)}
 .kifu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
-.kifu button.cur{background:rgba(201,169,97,.16);color:var(--accent)}
+.kifu button.cur{background:rgba(232,148,106,.16);color:var(--accent)}
 .kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}
 .kifu .empty{grid-column:1/-1;color:var(--dim);font-family:'Zen Kaku Gothic New';font-size:12px;padding:6px 0}
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono',monospace}
 
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:62;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay{position:fixed;inset:0;z-index:62;display:flex;align-items:center;justify-content:center;background:rgba(2,8,10,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#1a2724,#121c19);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#112c31,#0a1c1f);border:1px solid rgba(232,148,106,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
 .overlay.instant,.overlay.instant .modal{transition:none!important}
 .overlay{height:100vh;height:100dvh;bottom:auto}
@@ -257,7 +314,7 @@ body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no �
 .rt-mini{display:block;width:min(330px,100%);height:auto;cursor:pointer;touch-action:manipulation}
 .rt-main.has-board .rt-mini{width:100%;height:100%}
 .rt-mini.off{cursor:default}
-.rt-mini .rt-col:hover{fill:rgba(226,194,117,.12)}
+.rt-mini .rt-col:hover{fill:rgba(255,179,138,.12)}
 .rt-mini.off .rt-col:hover{fill:transparent}
 .rt-mini .rt-new{animation:rtFall .38s cubic-bezier(.55,0,1,.55)}
 @keyframes rtFall{from{transform:translateY(var(--fy))}to{transform:none}}
@@ -268,7 +325,7 @@ body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no �
 #rulesOverlay .ls-tabs{flex:none;margin-bottom:12px}
 #rulesBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 #rulesBody > .rt{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
-#rulesBody .rt-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(201,169,97,.18)}
+#rulesBody .rt-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(232,148,106,.18)}
 @media (orientation: landscape) and (min-width: 600px){ #rulesOverlay .modal{width:min(880px, 100%)} }
 @media (max-width: 420px){ #rulesBody .rt-steps{gap:4px} #rulesBody .rt-steps button{width:28px;height:28px} }
 @media (max-height: 560px){
@@ -285,12 +342,12 @@ body.in-online .controls{grid-template-columns:repeat(6,1fr)}   /* online: no �
   #rulesBody .rt-nav{padding-top:14px}
 }
 html[lang=ar] #rulesOverlay .rt-body{direction:rtl;text-align:right}
-.rl-lead{font-size:14.5px;line-height:1.8;color:#d6e2dc;margin:-6px 0 14px}
+.rl-lead{font-size:14.5px;line-height:1.8;color:#d3e6e6;margin:-6px 0 14px}
 .rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width: 620px){.rl-grid{grid-template-columns:1fr}}
 .rl-item{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:10px 12px}
 .rl-item h4{font-size:13.5px;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
-.rl-item p{font-size:13px;line-height:1.7;color:#d6e2dc}
+.rl-item p{font-size:13px;line-height:1.7;color:#d3e6e6}
 .rl-item svg{display:block;width:min(200px,100%);height:auto;margin:6px auto 8px}
 html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align:right}
 @media (max-width: 520px), (max-height: 560px){
@@ -307,7 +364,7 @@ html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align
 #segMode{flex-wrap:wrap}
 #segMode button{flex:1 0 30%}
 @media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
-.seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
+.seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(232,148,106,.45)}
 .level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
 .level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
 .level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
@@ -316,9 +373,13 @@ html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
+/* list views fill the fixed-size tabbed dialog; the Close / Back buttons stay pinned to the bottom when there is spare space */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){display:flex;flex-direction:column}
+#lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
+#lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go{background:linear-gradient(180deg,#f6ab82,#c76c46);color:#1b150a;border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
@@ -345,7 +406,7 @@ body.hb-on .controls.hb-menu{display:flex!important}
 .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
 .dots i.ok{background:#6fd3a0}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
 .lesson-prompt{font-size:14px;line-height:1.7}
-.ls-goal,.pz-goal{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.28);color:var(--text);display:flex;align-items:center;gap:8px}
+.ls-goal,.pz-goal{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:rgba(255,179,138,.08);border:1px solid rgba(255,179,138,.28);color:var(--text);display:flex;align-items:center;gap:8px}
 .pz-goal{font-size:15px;font-weight:700}
 .lesson-fb,.pz-status{margin-top:10px;font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
 .lesson-fb b.ok,.pz-status b.ok{color:#8fe3b8}.lesson-fb b.ng,.pz-status b.ng{color:#ff9b90}
@@ -353,7 +414,7 @@ body.hb-on .controls.hb-menu{display:flex!important}
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
 .lesson-actions button:hover:not(:disabled){color:var(--text)}
 .lesson-actions button:disabled{opacity:.35}
-.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.lesson-actions button.go{background:linear-gradient(180deg,#f6ab82,#c76c46);color:#1b150a;border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
 .lesson-item:hover{border-color:var(--brass2)}
@@ -363,7 +424,7 @@ body.hb-on .controls.hb-menu{display:flex!important}
 .lesson-item .tx small{display:block;font-size:12px;color:var(--dim);line-height:1.5}
 .lesson-item .st{font-size:12px;color:var(--dim);flex:none}
 .lesson-item .st.clear{color:#8fe3b8}
-.lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
+.lesson-intro p{font-size:14px;line-height:1.85;color:#cde0e0;margin-bottom:10px}
 .lesson-intro p b{color:var(--accent)}
 .lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
 .mini{display:block;margin:4px auto 12px;width:min(260px,80%);height:auto}
@@ -372,7 +433,7 @@ body.hb-on .controls.hb-menu{display:flex!important}
 .pz-grid button:hover{border-color:var(--brass2)}
 .pz-grid button.solved{border-color:rgba(111,211,160,.6);color:#8fe3b8}
 .pz-grid button.solved::after{content:" ✓"}
-.daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
+.daily{border-color:rgba(255,179,138,.55)!important;background:linear-gradient(90deg,rgba(232,148,106,.16),rgba(0,0,0,.2))!important}
 .daily .no{font-size:18px!important}
 
 /* review / share */
@@ -393,18 +454,18 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* 振り返り解説 (rvcoach.js) */
 .disc.rb-gh{opacity:.62;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:6}
 .disc.rb-gh.first{opacity:.9;outline:3px solid var(--accent);outline-offset:2px}
-.disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:#1a1408;text-shadow:0 0 4px rgba(255,255,255,.5)}
-.disc.rb-gh.p2 b{color:#2a2f36}
-.cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06)}
+.disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:var(--gtxt);text-shadow:0 0 4px rgba(127,127,127,.5)}
+.disc.rb-gh.p2 b{color:var(--rtxt)}
+.cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(232,148,106,.35);background:rgba(232,148,106,.06)}
 .cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
-.cr-box p{font-size:14.5px;line-height:1.75;color:#d6e2dc;margin:0 0 6px}
+.cr-box p{font-size:14.5px;line-height:1.75;color:#d3e6e6;margin:0 0 6px}
 .cr-mv b{color:var(--text)}
 .cr-mv .tag{font-size:12.5px;font-weight:700;margin-inline-start:6px}
 .cr-mv .tag.bad{color:#ff8b7d}.cr-mv .tag.dubious{color:#f2c060}
 .cr-list{margin:0 0 6px;padding-inline-start:18px}
-.cr-list li{font-size:14.5px;line-height:1.75;color:#d6e2dc;margin-bottom:5px}
+.cr-list li{font-size:14.5px;line-height:1.75;color:#d3e6e6;margin-bottom:5px}
 .cr-list li::marker{color:var(--brass)}
-.cr-tip{color:#e9dcb4!important}
+.cr-tip{color:#ffd9c2!important}
 .cr-coord{font-size:11.5px!important;color:var(--dim)!important;margin:4px 0 0!important}
 .cr-c{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);direction:ltr;unicode-bidi:isolate}
 .cr-go{font-size:12.5px;padding:1px 9px;border-radius:7px;border:1px solid var(--brass2);color:var(--accent);background:rgba(0,0,0,.2);margin-inline-start:4px;cursor:pointer}
@@ -413,7 +474,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .rv-list{display:grid;gap:4px;margin-top:10px}
 .rv-list button{display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font-size:12px;width:100%}
 .rv-list button:hover{border-color:var(--brass2)}
-.rv-list button.cur{border-color:var(--accent);background:rgba(201,169,97,.12)}
+.rv-list button.cur{border-color:var(--accent);background:rgba(232,148,106,.12)}
 .rv-list .tag{font-size:11px;font-weight:700;flex:none}
 .rv-list .tag.bad{color:#ff8b7d}.rv-list .tag.dubious{color:#f2c060}
 .rv-list .mv{font-family:'JetBrains Mono',monospace;flex:1;display:flex;align-items:center;gap:5px;white-space:nowrap}
@@ -455,10 +516,12 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .review-card{order:3}
   .kifu-card{order:4}
   .info-line{order:5}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:24px;margin-top:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
+  .player:has(.clk:not(:empty)){padding-bottom:16px}   /* the clock sits on the bottom edge */
   .player .clk{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .card{padding:10px 12px}
@@ -489,14 +552,15 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .pdisc{width:14px;height:14px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .player .clk{position:absolute;left:50%;bottom:1px;transform:translateX(-50%);font-size:10px;padding:0 4px;line-height:1.3}
+  .player:has(.clk:not(:empty)){padding-bottom:12px}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
@@ -545,13 +609,13 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
 .lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
 .lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(201,169,97,.14);color:var(--brass);overflow:hidden}
+.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(232,148,106,.14);color:var(--brass);overflow:hidden}
 .lx-tabs .ic svg, .lx-banner .ic svg{width:100%;height:100%;display:block;margin:0}
 .lx-tabs button .ic.sv, .lx-banner .ic.sv{background:none;padding:0}
 .lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
 .lx-tabs button:hover{border-color:var(--brass2)}
-.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
-.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(201,169,97,.28);background:linear-gradient(120deg,rgba(201,169,97,.14),rgba(0,0,0,.18) 70%)}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(232,148,106,.2),rgba(232,148,106,.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(232,148,106,.28);background:linear-gradient(120deg,rgba(232,148,106,.14),rgba(0,0,0,.18) 70%)}
 .lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#1a140c;background:linear-gradient(140deg,#e9cf8e,#a8873f);overflow:hidden}
 .lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
@@ -566,7 +630,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .lx-card.clear{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
 .lx-card.wide{grid-column:1 / -1}
 .lx-th{flex:none;width:88px;align-self:center}.lx-th svg{display:block;width:100%;height:auto;margin:0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-.lx-th.ico{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;font-size:34px;background:linear-gradient(140deg,rgba(201,169,97,.25),rgba(0,0,0,.2));border:1px solid rgba(201,169,97,.3)}
+.lx-th.ico{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;font-size:34px;background:linear-gradient(140deg,rgba(232,148,106,.25),rgba(0,0,0,.2));border:1px solid rgba(232,148,106,.3)}
 .lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .lx-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass)}
@@ -615,7 +679,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
 .fg-nav button:disabled{opacity:.3}
 .fg-nav b{font-family:'JetBrains Mono',monospace;font-size:13px;min-width:60px;color:var(--muted)}
 .fg-ev{display:block;font-size:14px;margin-bottom:3px}
-.fg-ev .ev-w1{color:#f2d07a}.fg-ev .ev-w2{color:#cfd8e2}.fg-ev .ev-d{color:#8fe3b8}
+.fg-ev .ev-w1{color:var(--gold2)}.fg-ev .ev-w2{color:var(--ruby2)}.fg-ev .ev-d{color:#8fe3b8}
 .fg-cap{display:block}
 html[lang=ar] .ls-fig figcaption{text-align:center}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #lessonIntroView .lesson-intro{column-gap:24px} }
@@ -623,7 +687,7 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 #pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
 #pzGrid .pb-tile .th > svg{width:100%;height:100%;border-radius:4px}
 #pzGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,12,.82);color:#fff;line-height:1.45}
-#pzGrid .pb-tile.hasth .n{background:#e6cd8c;color:#1a160c}#pzGrid .pb-tile.hasth.p2 .n{background:#d4d9e0;color:#121413}
+#pzGrid .pb-tile.hasth .n{background:var(--gold2);color:var(--gtxt)}#pzGrid .pb-tile.hasth.p2 .n{background:var(--ruby2);color:var(--rtxt)}
 #pzGrid .pb-tile.hasth .s, #pzGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
 #pzGrid .pb-tile.done .th{opacity:1}
 #pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
@@ -631,14 +695,14 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 /* puzzle collection (v3, same layout as Reversi): hero with overall progress, daily card, category tabs, theme cards with a board */
 .pzx{display:flex;flex-direction:column;gap:12px}
 .pzx-hero{position:relative;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:18px;overflow:hidden;
-  border:1px solid rgba(201,169,97,.32);background:radial-gradient(120% 140% at 0% 0%,rgba(29,107,76,.55),transparent 60%),linear-gradient(120deg,rgba(201,169,97,.16),rgba(0,0,0,.25) 70%)}
+  border:1px solid rgba(232,148,106,.32);background:radial-gradient(120% 140% at 0% 0%,rgba(14,115,112,.55),transparent 60%),linear-gradient(120deg,rgba(232,148,106,.16),rgba(0,0,0,.25) 70%)}
 .pzx-hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:220px;height:220px;border-radius:50%;opacity:.1;pointer-events:none;
   background:repeating-conic-gradient(from 45deg,#fff 0 25%,transparent 0 50%) 0 0/44px 44px;mask:radial-gradient(closest-side,#000 40%,transparent)}
-.pzx-hero .pb-ring{width:84px;height:84px;background:radial-gradient(closest-side,#132019 79%,transparent 81%),conic-gradient(#f2c060 calc(var(--p)*360deg),rgba(255,255,255,.09) 0)}
+.pzx-hero .pb-ring{width:84px;height:84px;background:radial-gradient(closest-side,#0a2125 79%,transparent 81%),conic-gradient(#f2c060 calc(var(--p)*360deg),rgba(255,255,255,.09) 0)}
 .pzx-hero .pb-ring b{font-size:22px}.pzx-hero .pb-ring small{font-size:11px}
 .pzx-hs{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;z-index:1}
 .pzx-title{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.1em;color:var(--text)}
-.pzx-title small{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--brass);margin-inline-start:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(201,169,97,.4);vertical-align:3px}
+.pzx-title small{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--brass);margin-inline-start:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(232,148,106,.4);vertical-align:3px}
 .pzx-lead{font-size:12px;color:var(--muted);line-height:1.6}
 .pzx-stats{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
 .pzx-stats .pb-st{font-size:14px;font-weight:700}.pzx-stats .pb-st .pb-star{width:15px;height:15px}
@@ -652,7 +716,7 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 .pzx-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .pzx-daily .tx b{font-size:15px}.pzx-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
 .pzx-daily .tx small{font-size:12px;color:var(--muted)}
-.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f6ab82,#c76c46)}
 .pzx-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
 .pzx .lx-tabs{margin:2px 0 0}
 .pzx .lx-tabs button .ic{background:none;color:var(--brass);padding:3px}
@@ -669,8 +733,8 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 .pzx-ic{position:absolute;inset:auto -6px -6px auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;padding:5px;color:#0b0f16;
   background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)}
 .pzx-ic > svg{width:100%;height:100%}
-.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3cf,#e6cd8c 55%,#a8893f);box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
-.pzx-tm.p2{background:radial-gradient(circle at 35% 30%,#fff,#d4d9e0 60%,#8e96a1)}
+.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 55%,var(--gold3));box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
+.pzx-tm.p2{background:radial-gradient(circle at 35% 30%,var(--ruby1),var(--ruby2) 60%,var(--ruby3))}
 .pzx-ghead .chips .pzx-diff{margin-inline-start:4px}.pzx-ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;line-height:1}
 .pzx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .pzx-top{display:flex;align-items:center;gap:8px;min-width:0}
@@ -719,7 +783,7 @@ html[lang=ar] .pzx :is(.pb-ring, .pzx-prog, .pzx-stats .pb-st, .pzx-title small)
 .pz-why .pz-pv, .pz-why .pz-oth{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;font-size:12.5px;color:var(--muted)}
 .pz-why small{font-size:11px;color:var(--dim);margin-inline-end:6px;letter-spacing:.04em}
 .pz-why .pzv{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#1a160c}
-.pz-why .pzv.p1{background:#e6cd8c}.pz-why .pzv.p2{background:#d4d9e0}
+.pz-why .pzv.p1{background:var(--gold2);color:var(--gtxt)}.pz-why .pzv.p2{background:var(--ruby2);color:var(--rtxt)}
 .pz-why .pz-pv i{font-style:normal;color:var(--dim);font-size:11px}
 html[lang=ar] .pz-why .pz-pv{direction:ltr;justify-content:flex-end}
 /* puzzle grid: each button shows the position */
@@ -746,11 +810,11 @@ html[lang=ar] .pz-why .pz-pv{direction:ltr;justify-content:flex-end}
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 .navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
 .navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
-.navbar button:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
+.navbar button:hover{color:var(--text);border-color:rgba(232,148,106,.5)}
 .navbar button:disabled{opacity:.35;pointer-events:none}
 .navbar button svg{width:16px;height:16px;fill:currentColor;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .navbar .i-pause{display:none}.navbar button.playing .i-pause{display:block}.navbar button.playing .i-play{display:none}
-.navbar button.playing{color:var(--accent);border-color:rgba(201,169,97,.6)}
+.navbar button.playing{color:var(--accent);border-color:rgba(232,148,106,.6)}
 
 /* larger text for lesson / puzzle explanations (same as Reversi) */
 .lesson-card .lt{font-size:13px}
@@ -831,7 +895,7 @@ body .info-line{font-size:12.5px}
   html.rb-on .app > .side #evalCard .graph{height:clamp(34px, 6vh, 70px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
-<link rel="stylesheet" href="online.css?v=20261028l9">
+<link rel="stylesheet" href="online.css?v=20261028sk">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -963,6 +1027,7 @@ body .info-line{font-size:12.5px}
       </div>
     </div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
       <div class="seg" id="segColor">
@@ -985,6 +1050,7 @@ body .info-line{font-size:12.5px}
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
+    </div><div class="ng-col">
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
       <div class="checks">
@@ -994,6 +1060,11 @@ body .info-line{font-size:12.5px}
         <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
       </div>
     </div>
+    <div class="field" id="fDesign">
+      <label data-i18n="bd.title"></label>
+      <div class="bdrow" id="bdRow"></div>
+    </div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
@@ -1085,15 +1156,16 @@ body .info-line{font-size:12.5px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261024ls"></script>
-<script src="learn.js?v=20261021c4p"></script><!-- lessons / puzzles strings -->
+<script src="i18n.js?v=20261028sk"></script>
+<script src="learn.js?v=20261028sk"></script><!-- lessons / puzzles strings -->
 <script src="rvcoach.js?v=20261021b"></script><!-- 振り返り解説 -->
-<script src="rvbox.js?v=20261028fs"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
+<script src="rvbox.js?v=20261028sk"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=2"></script>
-<script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/headerbar.js?v=28"></script>
+<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1152,7 +1224,47 @@ const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound:
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
-function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+// ---------------------------------------------------------------- board + disc skins (CSS: html[data-bd]; mini boards: SK_PAL)
+const SK_KEYS = ['lagoon', 'classic', 'walnut', 'neon', 'porcelain'], SK_STORE = 'connect4-skin';
+const SK_PAL = {   // frame, frame edge, plate, hole, hole rim, first / second disc [light, dark]
+  lagoon: { fr: '#0b2327', fe: 'rgba(232,148,106,.6)', pl: '#0e7370', ho: '#041214', rim: 'rgba(232,148,106,.6)', a: ['#f3dfa6', '#b39249'], b: ['#eef1f5', '#8f97a3'], fa: '#e6cd8c', fb: '#d4d9e0', ta: '#2a2418', tb: '#2a2f36', hi: 'rgba(230,205,140,.15)' },
+  classic: { fr: '#123479', fe: 'rgba(175,205,255,.6)', pl: '#2465d8', ho: '#081332', rim: 'rgba(6,20,64,.8)', a: ['#ff7a6c', '#c8281c'], b: ['#ffe36e', '#dca10e'], fa: '#f0493b', fb: '#ffd23f', ta: '#fff', tb: '#3a2a00', hi: 'rgba(255,255,255,.14)' },
+  walnut: { fr: '#2a190d', fe: 'rgba(214,170,110,.6)', pl: '#8d5c35', ho: '#120b05', rim: 'rgba(238,200,140,.5)', a: ['#55575d', '#0d0d0f'], b: ['#fbf6ea', '#c9bb99'], grain: 1, fa: '#26272b', fb: '#f2ead6', ta: '#fff', tb: '#2a2418', hi: 'rgba(255,225,170,.16)' },
+  neon: { fr: '#111217', fe: 'rgba(80,228,255,.75)', pl: '#1d2029', ho: '#020203', rim: 'rgba(80,228,255,.85)', a: ['#ff6dbd', '#c81c7c'], b: ['#7be9ff', '#139fc6'], glow: 1, fa: '#ff52b0', fb: '#52e4ff', ta: '#2a0018', tb: '#002a36', hi: 'rgba(80,228,255,.12)' },
+  porcelain: { fr: '#ddd6c7', fe: 'rgba(44,63,143,.6)', pl: '#f0ebe1', ho: '#1d2433', rim: 'rgba(44,63,143,.7)', a: ['#f4785c', '#bf3119'], b: ['#6578d0', '#26388a'], fa: '#e0502f', fb: '#3d51b0', ta: '#fff', tb: '#fff', hi: 'rgba(44,63,143,.16)' },
+};
+let SK = 'lagoon';
+try { const v = localStorage.getItem(SK_STORE); if (SK_KEYS.includes(v)) SK = v; } catch (e) {}
+function skApply(k) {
+  SK = SK_KEYS.includes(k) ? k : 'lagoon';
+  if (SK === 'lagoon') delete document.documentElement.dataset.bd; else document.documentElement.dataset.bd = SK;
+  try { localStorage.setItem(SK_STORE, SK); } catch (e) {}
+}
+function skSVG(k) {   // a small 7 x 6 board with a few discs in skin k
+  const P = SK_PAL[k], u = 12, pad = 5, W = 7 * u + pad * 2, H = 6 * u + pad * 2;
+  const pos = { '0,0': 1, '1,0': 2, '2,0': 1, '3,0': 1, '4,0': 2, '3,1': 2, '2,1': 1, '3,2': 1, '4,1': 2, '2,2': 2, '5,0': 1 };
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-hidden="true"><defs><radialGradient id="ska-${k}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${P.a[0]}"/><stop offset="1" stop-color="${P.a[1]}"/></radialGradient><radialGradient id="skb-${k}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${P.b[0]}"/><stop offset="1" stop-color="${P.b[1]}"/></radialGradient></defs>`;
+  s += `<rect x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="5" fill="${P.fr}" stroke="${P.fe}"/>`;
+  s += `<rect x="${pad - 1}" y="${pad - 1}" width="${7 * u + 2}" height="${6 * u + 2}" rx="3" fill="${P.pl}"/>`;
+  if (P.grain) for (let i = 0; i < 14; i++) s += `<line x1="${pad + i * 6.2}" y1="${pad - 1}" x2="${pad + i * 6.2 + 1.5}" y2="${pad + 6 * u + 1}" stroke="rgba(40,20,5,.22)" stroke-width="1"/>`;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) {
+    const x = pad + c * u + u / 2, y = pad + (5 - r) * u + u / 2, v = pos[c + ',' + r];
+    s += `<circle cx="${x}" cy="${y}" r="${u * 0.39}" fill="${v ? `url(#sk${v === 1 ? 'a' : 'b'}-${k})` : P.ho}" stroke="${P.rim}" stroke-width=".8"${v && P.glow ? ` style="filter:drop-shadow(0 0 1.6px ${v === 1 ? P.a[0] : P.b[0]})"` : ''}/>`;
+  }
+  return s + '</svg>';
+}
+function skPicker() {
+  const el = document.getElementById('bdRow'); if (!el) return;
+  el.innerHTML = SK_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === SK ? 'sel' : ''}" aria-pressed="${k === SK}">${skSVG(k)}<span>${t('bd.' + k)}</span></button>`).join('');
+}
+function t(k, v) {
+  if (SK !== 'lagoon' && (k === 'p1' || k === 'p2')) k = 'sk.' + SK + '.' + k;   // disc colour names follow the skin
+  let x = tRaw(k, v);
+  if (typeof x === 'string' && x.indexOf('%P') >= 0) x = x.replace(/%P([12])%/g, (_, n) => t('p' + n));   // lesson texts name the discs by the current skin's colours
+  if (SK !== 'lagoon' && (k === 'ng.first' || k === 'ng.second') && typeof x === 'string') { const n = t(k === 'ng.first' ? 'p1' : 'p2'); x = x.replace(/([（(])[^（()）]*([）)])\s*$/, (_, a, b) => a + n + b); }
+  return x;
+}
+function tRaw(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
 function applyI18n() {
@@ -1372,11 +1484,11 @@ function renderFx() {
   // threats (optional display)
   if (settings.threat && !st.winner && !lesson && !(window.olLive && olLive())) {
     for (const p of [P1, P2]) for (const [c, r] of emptyThreats(gridOf(shown), p)) {
-      const d = document.createElement('div'); d.className = 'mark threat' + (p === P2 ? ' op' : ''); d.style.borderColor = p === P1 ? 'rgba(230,205,140,.9)' : 'rgba(212,217,224,.95)';
+      const d = document.createElement('div'); d.className = 'mark threat' + (p === P2 ? ' op' : ''); d.style.borderColor = p === P1 ? 'var(--gold2)' : 'var(--ruby2)';
       discPos(d, c, r); fxEl.appendChild(d);
     }
   }
-  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; discPos(d, m.c, m.r); fxEl.appendChild(d); }
+  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; if (m.p) d.style.borderColor = m.p === P1 ? 'var(--gold2)' : 'var(--ruby2)'; discPos(d, m.c, m.r); fxEl.appendChild(d); }
   if (!drawReviewFx(g) && hintList && !st.winner && !rbCons()) drawHints(hintList, g, shown.length);
   rbDrawHover(g, shown);
 }
@@ -1477,7 +1589,7 @@ function renderInfo() {
     el.classList.toggle('active', !over && tm === p);
     el.classList.toggle('won', st.winner === p);
     el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!over && tm === p ? t('st.turn') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : '';
   }
   // eval
   $('#evalCard').classList.toggle('hidden', !settings.eval || !!(window.olLive && olLive()));   // online: no evaluation while the game is on
@@ -1523,8 +1635,8 @@ function renderGraph() {
   if (pts.length) { path = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L'); area = path + `L${pts[pts.length - 1][0].toFixed(1)},${H / 2}L0,${H / 2}Z`; }
   const cx = cur / (n - 1) * W;
   svg.innerHTML = `<defs><clipPath id="ctop"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="cbot"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
-    <path d="${area}" fill="rgba(229,195,108,.45)" clip-path="url(#ctop)"/>
-    <path d="${area}" fill="rgba(200,206,214,.38)" clip-path="url(#cbot)"/>
+    <path d="${area}" class="g1" clip-path="url(#ctop)"/>
+    <path d="${area}" class="g2" clip-path="url(#cbot)"/>
     <line class="zero" vector-effect="non-scaling-stroke" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
     <path d="${path}" fill="none" stroke="rgba(240,230,200,.85)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
     <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
@@ -1682,15 +1794,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !(gameOver(moves) || !!resigned), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = (gameOver(moves) || !!resigned), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || (gameOver(moves) || !!resigned)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = (gameOver(moves) || !!resigned);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; resigned = null; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -1763,15 +1881,15 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 function tourSVG(g, o) {
   o = o || {};
   const u = 44, pad = 10, top = 16, W = 7 * u + pad * 2, H = top + 6 * u + pad + 18;
-  const X = c => pad + (c + 0.5) * u, Y = r => top + (5 - r + 0.5) * u;
-  const disc = (c, r, p, cls) => { const x = X(c), y = Y(r); return `<g class="${cls || ''}" ${cls === 'rt-new' ? `style="--fy:${-(y - top + u / 2)}px"` : ''}><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="${p === 1 ? 'rgba(94,71,32,.45)' : 'rgba(60,66,75,.4)'}" stroke-width="1.3"/></g>`; };
-  let s = `<svg class="rt-mini${o.off ? ' off' : ''}" viewBox="0 0 ${W} ${H}" role="img"><rect x="1" y="${top - 6}" width="${W - 2}" height="${6 * u + pad + 7}" rx="10" fill="#14100c" stroke="rgba(201,169,97,.45)"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="5" fill="#17573f"/>`;
-  if (o.hl !== undefined) s += `<rect x="${pad + o.hl * u + 2}" y="${top + 1}" width="${u - 4}" height="${6 * u - 2}" rx="7" fill="rgba(226,194,117,.16)" stroke="rgba(226,194,117,.8)" stroke-width="1.5"><animate attributeName="opacity" values="1;.45;1" dur="1.6s" repeatCount="indefinite"/></rect>`;
-  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="#06100c" stroke="rgba(201,169,97,.4)" stroke-width="1"/>`;
+  const X = c => pad + (c + 0.5) * u, Y = r => top + (5 - r + 0.5) * u, K = SK_PAL[SK];
+  const disc = (c, r, p, cls) => { const x = X(c), y = Y(r); return `<g class="${cls || ''}" ${cls === 'rt-new' ? `style="--fy:${-(y - top + u / 2)}px"` : ''}><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? K.fa : K.fb}" stroke="${p === 1 ? K.a[1] : K.b[1]}" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.3"/></g>`; };
+  let s = `<svg class="rt-mini${o.off ? ' off' : ''}" viewBox="0 0 ${W} ${H}" role="img"><rect x="1" y="${top - 6}" width="${W - 2}" height="${6 * u + pad + 7}" rx="10" fill="${K.fr}" stroke="${K.fe}"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="5" fill="${K.pl}"/>`;
+  if (o.hl !== undefined) s += `<rect x="${pad + o.hl * u + 2}" y="${top + 1}" width="${u - 4}" height="${6 * u - 2}" rx="7" fill="rgba(255,179,138,.16)" stroke="rgba(255,179,138,.8)" stroke-width="1.5"><animate attributeName="opacity" values="1;.45;1" dur="1.6s" repeatCount="indefinite"/></rect>`;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="${K.ho}" stroke="${K.rim}" stroke-width="1"/>`;
   for (let c = 0; c < 7; c++) for (let r = 0; r < g[c].length; r++) s += disc(c, r, g[c][r], o.drop && o.drop[0] === c && o.drop[1] === r ? 'rt-new' : '');
   if (o.line) { const a = o.line[0], b = o.line[o.line.length - 1]; s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="#fff3cf" stroke-width="6" stroke-linecap="round" opacity=".8"/>`; }
-  for (const m of o.marks || []) s += `<circle cx="${X(m[0])}" cy="${Y(m[1])}" r="${u * 0.43}" fill="none" stroke="${m[2] === 'ng' ? '#ff6b5b' : '#e2c275'}" stroke-width="2.6" ${m[2] === 'dash' ? 'stroke-dasharray="5 4"' : ''}/>`;
-  for (let c = 0; c < 7; c++) s += `<text x="${X(c)}" y="${H - 5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" fill="rgba(226,194,117,.6)">${colName(c)}</text>`;
+  for (const m of o.marks || []) s += `<circle cx="${X(m[0])}" cy="${Y(m[1])}" r="${u * 0.43}" fill="none" stroke="${m[2] === 'ng' ? '#ff6b5b' : '#ffb38a'}" stroke-width="2.6" ${m[2] === 'dash' ? 'stroke-dasharray="5 4"' : ''}/>`;
+  for (let c = 0; c < 7; c++) s += `<text x="${X(c)}" y="${H - 5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" fill="rgba(255,179,138,.6)">${colName(c)}</text>`;
   for (let c = 0; c < 7; c++) s += `<rect class="rt-col" data-c="${c}" x="${pad + c * u}" y="0" width="${u}" height="${H}" fill="transparent"/>`;
   return s + '</svg>';
 }
@@ -1890,8 +2008,15 @@ function segSync() {
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
-  segSync(); showOverlay('#newOverlay');
+  segSync(); skPicker(); showOverlay('#newOverlay');
 }
+$('#bdRow').addEventListener('click', e => {
+  const b = e.target.closest('button[data-bd]'); if (!b) return;
+  skApply(b.dataset.bd); skPicker(); applyI18n(); segSync(); renderInfo(); renderFx();
+  if (lesson) renderLessonCard();
+  if (puzzle) renderPuzzleCard();
+  if (HB) HB.relabel();
+});
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
@@ -1909,7 +2034,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261021c4p').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261028sk').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles2';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1930,10 +2055,11 @@ function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneVi
 // lesson list (same layout as Gomoku): a tab per course, a banner, cards with a board picture and a short explanation
 const LS_COURSE = { centre: 'centre', threat: 'threat', block: 'basic', parity: 'parity', double: 'double' };
 // course icons: tiny boards drawn in SVG (disc colours of the game)
-const LS_ICON = (() => {
-  const D = (x, y, f, o) => `<circle cx="${x}" cy="${y}" r="3.1" fill="${f || '#e6cd8c'}"${o ? ` stroke="${o}" stroke-width="1.2" stroke-dasharray="1.6 1.2" fill-opacity="0"` : ''}/>`;
-  const W = '#d4d9e0', R = '#ff8b7d';
-  const wrap = b => `<svg viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5" fill="#1d6b4c"/>${b}</svg>`;
+const lsIcons = () => {
+  const K = SK_PAL[SK];
+  const D = (x, y, f, o) => `<circle cx="${x}" cy="${y}" r="3.1" fill="${f || K.fa}"${o ? ` stroke="${o}" stroke-width="1.2" stroke-dasharray="1.6 1.2" fill-opacity="0"` : ''}/>`;
+  const W = K.fb, R = '#ff8b7d';
+  const wrap = b => `<svg viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5" fill="${K.pl}" stroke="${K.fe}" stroke-width=".8"/>${b}</svg>`;
   return {
     basic: wrap(D(5, 18) + D(9.7, 18) + D(14.3, 18) + D(19, 18) + `<path d="M4 18h16" stroke="#fff" stroke-width="1.4" opacity=".7"/>` + D(9.7, 11, W)),
     centre: wrap(`<rect x="8.6" y="3" width="6.8" height="18" rx="3" fill="rgba(230,205,140,.25)"/>` + D(12, 18) + D(12, 11.5) + D(7, 18, W)),
@@ -1941,12 +2067,12 @@ const LS_ICON = (() => {
     double: wrap(D(7.5, 18) + D(12, 18) + D(16.5, 18) + D(3.2, 18, 0, '#fff') + D(20.8, 18, 0, '#fff')),
     parity: wrap(`<rect x="2" y="15" width="20" height="5" fill="rgba(230,205,140,.28)"/><rect x="2" y="5" width="20" height="5" fill="rgba(230,205,140,.28)"/>` + D(12, 7.5, 0, '#fff')),
     side: wrap(D(8, 12) + D(16, 12, W) + `<path d="M8 4.5v3M16 4.5v3" stroke="#fff" stroke-width="1.3"/>`),
-    opening: wrap(`<path d="M4 6.5c3-1.5 5.5-1.5 8 0v12c-2.5-1.5-5-1.5-8 0zM20 6.5c-3-1.5-5.5-1.5-8 0v12c2.5-1.5 5-1.5 8 0z" fill="#e6cd8c" opacity=".9"/><path d="M12 6.5v12" stroke="#1d6b4c" stroke-width="1"/>`),
-    endgame: wrap(`<path d="M7 4h10M7 20h10M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8s8 3 8 8" fill="none" stroke="#e6cd8c" stroke-width="1.6"/>`),
+    opening: wrap(`<path d="M4 6.5c3-1.5 5.5-1.5 8 0v12c-2.5-1.5-5-1.5-8 0zM20 6.5c-3-1.5-5.5-1.5-8 0v12c2.5-1.5 5-1.5 8 0z" fill="${K.fa}" opacity=".9"/><path d="M12 6.5v12" stroke="${K.pl}" stroke-width="1"/>`),
+    endgame: wrap(`<path d="M7 4h10M7 20h10M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8s8 3 8 8" fill="none" stroke="${K.fa}" stroke-width="1.6"/>`),
     mistakes: wrap(D(8, 18) + D(16, 18, W) + `<path d="M8 6l8 8M16 6l-8 8" stroke="${R}" stroke-width="2.2" stroke-linecap="round"/>`),
     adv: wrap(D(12, 12)),
   };
-})();
+};
 const LS_ORDER = ['basic', 'centre', 'threat', 'double', 'parity', 'side', 'opening', 'endgame', 'mistakes'];
 const lsCourse = s => s.course || LS_COURSE[s.id] || 'basic';
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -1971,9 +2097,10 @@ async function openLessons(course) {
       `<span class="lx-top"><span class="lx-no">STEP ${lsNo(i)}</span>${st}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
       `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro').replace(/\{fig\d*\}/g, ''))}</span>${lxBar(r ? r.best / n : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   }).join('');
+  const LSI = lsIcons();
   $('#lessonList').innerHTML = `<div class="lx">` +
-    (courses.length > 1 ? `<div class="lx-tabs many">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic sv">${LS_ICON[k] || '●'}</span><span class="nm">${t('lx.course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` : '') +
-    `<div class="lx-banner"><span class="ic sv">${LS_ICON[c] || '●'}</span><span class="tx"><b>${t('lx.course.' + c)}</b><small>${t('lx.course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    (courses.length > 1 ? `<div class="lx-tabs many">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic sv">${LSI[k] || '●'}</span><span class="nm">${t('lx.course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` : '') +
+    `<div class="lx-banner"><span class="ic sv">${LSI[c] || '●'}</span><span class="tx"><b>${t('lx.course.' + c)}</b><small>${t('lx.course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
     `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
@@ -1985,24 +2112,28 @@ function miniBoardSVG(cells, marks, o) {
   o = o || {};
   const g = Array.from({ length: 7 }, () => []), num = Array.from({ length: 7 }, () => []), cs = 30, ax = o.coords ? 14 : 0;
   for (const [c, r, p, n] of cells || []) { g[c][r] = p; if (n) num[c][r] = n; }
-  const Wd = 7 * cs + 12 + ax, Hd = 6 * cs + 12 + ax;
-  let s = `<svg class="mini" viewBox="${-ax} 0 ${Wd} ${Hd}" direction="ltr"><rect x="0" y="0" width="${7 * cs + 12}" height="${6 * cs + 12}" rx="8" fill="#1d6b4c" stroke="rgba(201,169,97,.5)"/>`;
-  if (o.rows) for (let r = 0; r < 6; r++) if (o.rows.includes(r)) s += `<rect x="3" y="${6 + (5 - r) * cs + 1}" width="${7 * cs + 6}" height="${cs - 2}" rx="5" fill="rgba(230,205,140,.13)"/>`;
-  if (o.cols) for (const c of o.cols) s += `<rect x="${6 + c * cs + 1}" y="3" width="${cs - 2}" height="${6 * cs + 6}" rx="8" fill="rgba(230,205,140,.16)"/>`;
+  const Wd = 7 * cs + 12 + ax, Hd = 6 * cs + 12 + ax, K = SK_PAL[SK];
+  // a dotted winning-cell mark (gold / red in the data) is drawn in the colour of the player it belongs to, so it matches the skin and the text
+  const owner = (c, r) => { const gg = Array.from({ length: 7 }, (_, x) => Array.from({ length: 6 }, (_, y) => g[x][y] || -1)); let o = 0; for (const pl of [1, 2]) { gg[c][r] = pl; if (lineThrough(gg, c, r, pl)) o = o ? -1 : pl; } return o > 0 ? o : 0; };
+  const mcol = mk => { const col = (mk[2] || '').toLowerCase(); if (mk[3] && (col === '#e5c36c' || col === '#e2c275' || col === '#ff6b5b')) { const o = owner(mk[0], mk[1]); if (o) return o === 1 ? K.fa : K.fb; } return col === '#e2c275' || col === '#e5c36c' ? '#ffb38a' : mk[2]; };
+  let s = `<svg class="mini" viewBox="${-ax} 0 ${Wd} ${Hd}" direction="ltr"><rect x="0" y="0" width="${7 * cs + 12}" height="${6 * cs + 12}" rx="8" fill="${K.pl}" stroke="${K.fe}"/>`;
+  if (o.rows) for (let r = 0; r < 6; r++) if (o.rows.includes(r)) s += `<rect x="3" y="${6 + (5 - r) * cs + 1}" width="${7 * cs + 6}" height="${cs - 2}" rx="5" fill="${K.hi}"/>`;
+  if (o.cols) for (const c of o.cols) s += `<rect x="${6 + c * cs + 1}" y="3" width="${cs - 2}" height="${6 * cs + 6}" rx="8" fill="${K.hi}"/>`;
   for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) {
     const v = g[c][r] || 0, x = 6 + c * cs + cs / 2, y = 6 + (5 - r) * cs + cs / 2;
-    const fill = v === 1 ? '#e6cd8c' : v === 2 ? '#d4d9e0' : '#08110e';
-    s += `<circle cx="${x}" cy="${y}" r="${cs * 0.4}" fill="${fill}"/>`;
-    if (num[c][r]) s += `<text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="#2a2418">${num[c][r]}</text>`;
+    const fill = v === 1 ? K.fa : v === 2 ? K.fb : K.ho;
+    s += `<circle cx="${x}" cy="${y}" r="${cs * 0.4}" fill="${fill}"${v ? '' : ` stroke="${K.rim}" stroke-width=".8"`}/>`;
+    if (num[c][r]) s += `<text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="${v === 2 ? K.tb : K.ta}">${num[c][r]}</text>`;
   }
   for (const mk of marks || []) {
     const x = 6 + mk[0] * cs + cs / 2, y = 6 + (5 - mk[1]) * cs + cs / 2;
     const bare = mk[2] === 'none';   // label only (e.g. a count written in an empty cell)
-    if (!bare) s += `<circle cx="${x}" cy="${y}" r="${cs * 0.36}" fill="${mk[5] || 'none'}" stroke="${mk[2] || '#fff'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`;
-    if (mk[4] !== undefined && mk[4] !== '') s += `<text x="${x}" y="${y + (bare ? 5 : 4.5)}" text-anchor="middle" font-size="${bare ? 14 : 12.5}" font-weight="700" font-family="JetBrains Mono,monospace" fill="${bare ? '#e6cd8c' : mk[2] || '#fff'}">${mk[4]}</text>`;
+    const mc = mcol(mk);
+    if (!bare) s += `<circle cx="${x}" cy="${y}" r="${cs * 0.36}" fill="${mk[5] || 'none'}" stroke="${mc || '#fff'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`;
+    if (mk[4] !== undefined && mk[4] !== '') s += `<text x="${x}" y="${y + (bare ? 5 : 4.5)}" text-anchor="middle" font-size="${bare ? 14 : 12.5}" font-weight="700" font-family="JetBrains Mono,monospace" fill="${bare ? '#ffd2b8' : mc || '#fff'}">${mk[4]}</text>`;
   }
   if (o.line) { const [a, b] = o.line, X = c => 6 + c * cs + cs / 2, Y = r => 6 + (5 - r) * cs + cs / 2; s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".75"/>`; }
-  if (ax) { for (let c = 0; c < 7; c++) s += `<text x="${6 + c * cs + cs / 2}" y="${6 * cs + 12 + 11}" text-anchor="middle" font-size="10.5" fill="#9fb3aa" font-family="JetBrains Mono,monospace">${'abcdefg'[c]}</text>`; for (let r = 0; r < 6; r++) s += `<text x="-7" y="${6 + (5 - r) * cs + cs / 2 + 4}" text-anchor="middle" font-size="10.5" fill="#9fb3aa" font-family="JetBrains Mono,monospace">${r + 1}</text>`; }
+  if (ax) { for (let c = 0; c < 7; c++) s += `<text x="${6 + c * cs + cs / 2}" y="${6 * cs + 12 + 11}" text-anchor="middle" font-size="10.5" fill="#9cc0c0" font-family="JetBrains Mono,monospace">${'abcdefg'[c]}</text>`; for (let r = 0; r < 6; r++) s += `<text x="-7" y="${6 + (5 - r) * cs + cs / 2 + 4}" text-anchor="middle" font-size="10.5" fill="#9cc0c0" font-family="JetBrains Mono,monospace">${r + 1}</text>`; }
   return s + '</svg>';
 }
 // figure in a lesson intro: {moves, num (number the discs), cells, marks, coords, rows, cols, line, seq (step-through line), cap}
@@ -2115,7 +2246,7 @@ function lessonAnswer(c) {
     lessonMarks = [{ c: ans, r: g0[ans].length, cls: 'ok' }];
     if (!ok) lessonMarks.push({ c, r: g0[c].length, cls: 'ng' });
     // show the threats the right move creates
-    if (P.marks) for (const [mc, mr] of P.marks) lessonMarks.push({ c: mc, r: mr, cls: 'threat' });
+    if (P.marks) for (const [mc, mr] of P.marks) lessonMarks.push({ c: mc, r: mr, cls: 'threat', p: toMoveOf(P.moves) });
     update(false);
   }, ok ? 1100 : 900);
   playChime(ok);
@@ -2133,8 +2264,8 @@ $('#lsHint').onclick = () => {
   const g = gridOf(P.moves), me = toMoveOf(P.moves), op = 3 - me;
   lessonMarks = [];
   const hm = s.hintMarks || (s.id === 'block' ? 'op' : (s.id === 'parity' || s.id === 'threat') ? 'me' : '');
-  if (hm === 'op' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), op)) lessonMarks.push({ c, r, cls: 'threat op' });
-  if (hm === 'me' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), me)) lessonMarks.push({ c, r, cls: 'threat' });
+  if (hm === 'op' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), op)) lessonMarks.push({ c, r, cls: 'threat op', p: op });
+  if (hm === 'me' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), me)) lessonMarks.push({ c, r, cls: 'threat', p: me });
   renderFx();
 };
 $('#lsNext').onclick = () => {
@@ -2524,7 +2655,7 @@ $('#pzHint').onclick = async () => {
   const shown = moves.slice(0, cur), g = gridOf(shown);
   if (Pz.kind !== 'mate') {   // winning squares of both sides (the answer itself is not revealed)
     Pz.hinted = true; const op = Pz.me === P1 ? P2 : P1;
-    lessonMarks = emptyThreats(g, Pz.me).map(([c, r]) => ({ c, r, cls: 'threat' })).concat(emptyThreats(g, op).map(([c, r]) => ({ c, r, cls: 'threat op' })));
+    lessonMarks = emptyThreats(g, Pz.me).map(([c, r]) => ({ c, r, cls: 'threat', p: Pz.me })).concat(emptyThreats(g, op).map(([c, r]) => ({ c, r, cls: 'threat op', p: op })));
     renderFx(); pzStatus(t('pz.hint.b')); return;
   }
   const left = Pz.n - Pz.used, list = await mateReq(shown, left); if (puzzle !== Pz || !list) return;
@@ -2870,7 +3001,7 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); renderFx();
-  if ($('#newOverlay').classList.contains('show')) segSync();
+  if ($('#newOverlay').classList.contains('show')) { segSync(); skPicker(); }
   if (lesson) { renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if (rulesOffer) rulesOffer.sync();
@@ -2953,8 +3084,21 @@ document.addEventListener('keydown', e => {
 </script>
 <script src="rated.js?v=20261022ol"></script><!-- レーティング戦 -->
 <script src="online-ui.js?v=20261028l9"></script><!-- オンライン対戦・Google連携 -->
+<!-- World Board Game Atlas portal skin: connect4/?skin=atlas — 3D leather & walnut tile tower (tiles fall between the rails), guide speech bubbles, portal look (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/connect4.js?v=2')).then(() => load('../atlas/games/connect4-tiles.js?v=1')).then(() => load('../atlas/skin/connect4.js?v=1'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

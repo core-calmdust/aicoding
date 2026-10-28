@@ -284,8 +284,11 @@ function svgArrow(svg, path, cls) {
   const n = pts.length, [ax, ay] = pts[n - 2], [bx, by] = pts[n - 1], dl = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / dl, uy = (by - ay) / dl;
   const ex = bx - ux * 0.3, ey = by - uy * 0.3; pts[n - 1] = [ex, ey];
   const h = 0.2;
+  const d = 'M' + pts.map(q => q[0].toFixed(3) + ',' + q[1].toFixed(3)).join('L') + `M${ex - ux * h - uy * h * 0.8},${ey - uy * h + ux * h * 0.8}L${ex},${ey}L${ex - ux * h + uy * h * 0.8},${ey - uy * h - ux * h * 0.8}`;
+  // the answer / mistake arrows of lessons and puzzles get a dark outline so they stand out on any board colour
+  if (/\b(ok|ng)\b/.test(cls || '')) { const o = document.createElementNS(NS, 'path'); o.setAttribute('d', d); o.setAttribute('class', 'arrow-ol'); o.setAttribute('stroke-width', 0.17); o.setAttribute('stroke-linejoin', 'round'); svg.appendChild(o); }
   const p = document.createElementNS(NS, 'path');
-  p.setAttribute('d', 'M' + pts.map(q => q[0].toFixed(3) + ',' + q[1].toFixed(3)).join('L') + `M${ex - ux * h - uy * h * 0.8},${ey - uy * h + ux * h * 0.8}L${ex},${ey}L${ex - ux * h + uy * h * 0.8},${ey - uy * h - ux * h * 0.8}`);
+  p.setAttribute('d', d);
   p.setAttribute('class', 'arrow ' + (cls || '')); p.setAttribute('stroke-width', 0.08); p.setAttribute('stroke-linejoin', 'round'); svg.appendChild(p);
 }
 // pieces of player p that the opponent could capture with its next move
@@ -393,7 +396,7 @@ function canHumanPlay() {
   if (gameOver(cur)) return false;
   if (animating) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
-  if (lesson) return !lesson.answered && !lesson.study;
+  if (lesson) return !lesson.answered && !lesson.study && !lesson.busy && toMoveAt(cur) === lesson.me;
   if (reviewing) return false;
   if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !isAIColor(toMoveAt(cur)) && !thinking;
@@ -419,7 +422,7 @@ function renderInfo() {
     el.classList.toggle('active', !st.over && tm === p);
     el.classList.toggle('won', st.winner === p);
     el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (lines ? ' · ' + t(lines >= 2 ? 'st.tuichi' : 'st.raichi') : '') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? (lines ? t(lines >= 2 ? 'st.tuichi' : 'st.raichi') : '') : '');
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
@@ -694,15 +697,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = gameOver(moves.length), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || gameOver(moves.length)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = gameOver(moves.length);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -1127,7 +1136,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1242,7 +1251,7 @@ function loadLessonProblem() {
   const P = lessonProblem();
   lesson.me = P.s.side;
   enterSpecial(P.s);
-  lesson.answered = false; lesson.hinted = false;
+  lesson.answered = false; lesson.hinted = false; lesson.busy = false; lesson.used = 0;
   update(false); renderLessonCard();
   $('#lsFb').innerHTML = '';
 }
@@ -1251,12 +1260,12 @@ function renderLessonCard() {
   $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
   const me = P.s.side;
-  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}${me === P2 ? ' k' : ''}"></span><span>${t('ls.turn', { c: pname(me) })} ${lesson.virt ? t('op.goal') : t('ls.' + s.id + '.goal')}</span></div>`;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}${me === P2 ? ' k' : ''}"></span><span>${t('ls.turn', { c: pname(me) })} ${lesson.virt ? t('op.goal') : t('ls.' + s.id + '.goal', { n: P.n || 1 })}</span></div>`;
   $('#lsHint').textContent = t('ls.hint');
   $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
   $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
   $('#lsNext').disabled = !lesson.answered;
-  $('#lsHint').disabled = lesson.answered;
+  $('#lsHint').disabled = lesson.answered || !!lesson.busy;
 }
 function problemPoints(P, m) {
   if (P.ok) return P.ok.includes(m) ? 20 : 0;
@@ -1271,6 +1280,7 @@ function problemPoints(P, m) {
 function markMove(pos, mm, cls) { lessonMarks.push({ arrow: [mFrom(mm), mTo(mm)], cls }); lessonMarks.push({ at: mTo(mm), cls }); }
 function lessonAnswer(m) {
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
+  if (P.n > 1) return seqAnswer(P, s, m);
   lesson.answered = true;
   const pts = problemPoints(P, m);
   if (P.ok) return okAnswer(P, s, m, pts);
@@ -1296,6 +1306,58 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
+// multi-move problems (P.n own moves, e.g. the 3-move escape / king capture of the basics course): every move must keep
+// a forced win within the moves left (engine.c puzzle(), exact); the engine then answers with its most stubborn defence.
+// A move that lets the win slip ends the problem (0 points): it is taken back and a move that works is shown.
+async function seqAnswer(P, s, m) {
+  const L = lesson, tok = busyToken, left = P.n - L.used;
+  L.busy = true; lessonMarks = []; renderLessonCard();
+  $('#lsFb').innerHTML = t('pz.checking');
+  const list = await mateReq(left);
+  if (lesson !== L || tok !== busyToken) return;
+  const before = posAt(cur).pos.clone(), e = list && list.find(x => x.m === m), dm = moveDur(m, before);
+  const good = (list || []).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
+  playMove2(m); L.used++;
+  const won = () => { const j = E.judge(posAt(cur).pos, []); return j.over && j.winner === L.me; };
+  const names = () => { const out = []; for (let i = 0; i < cur; i++) if (toMoveAt(i) === L.me) out.push(mvIn(posAt(i).pos, moves[i])); return out.join(' → '); };
+  const finish = ok => {
+    L.answered = true; L.busy = false; L.results[L.i] = ok ? 20 : 0; renderLessonCard();
+    playChime(ok);
+  };
+  if (won()) {
+    finish(true);
+    $('#lsFb').innerHTML = `<span class="pts ok">+${t('u.pt', { n: 20 })}</span> <b class="ok">${t('fb.perfect')}</b> ` + t('ls.' + s.id + '.why', { m: names() });
+    setTimeout(() => { if (lesson !== L || tok !== busyToken) return; lessonMarks = []; markMove(before, m, 'ok'); update(false); }, dm + 300);
+    return;
+  }
+  if (!e || !(e.need > 0) || e.need > left) {
+    finish(false);
+    const b = good[0] ? good[0].m : (L.used === 1 ? P.best : null);
+    $('#lsFb').innerHTML = `<span class="pts ng">+${t('u.pt', { n: 0 })}</span> <b class="ng">${t('fb.bad')}</b> ` + t('ls.' + s.id + '.ng', { x: mvIn(before, m), m: b != null ? mvIn(before, b) : '—', n: left });
+    setTimeout(() => {
+      if (lesson !== L || tok !== busyToken) return;
+      moves = moves.slice(0, cur - 1); cur = moves.length; sel = null; lessonMarks = [];
+      if (b != null) markMove(before, b, 'ok'); markMove(before, m, 'ng');
+      update(false);
+    }, dm + 700);
+    return;
+  }
+  $('#lsFb').innerHTML = t('pz.good');
+  const dl = await mateReq(P.n - L.used, true);
+  if (lesson !== L || tok !== busyToken) return;
+  await sleep(dm + 250);
+  if (lesson !== L || tok !== busyToken) return;
+  if (!dl || !dl.length) { finish(true); $('#lsFb').innerHTML = `<span class="pts ok">+${t('u.pt', { n: 20 })}</span> <b class="ok">${t('fb.perfect')}</b> ` + t('ls.' + s.id + '.why', { m: names() }); return; }
+  // the most stubborn reply; among equally good ones the one that lands closest to the king (it looks like real defence)
+  const b3 = posAt(cur).pos, N0 = b3.n, kd = x => { const k = b3.king, q = mTo(x); return Math.abs(Math.floor(k / N0) - Math.floor(q / N0)) + Math.abs(k % N0 - q % N0); };
+  const sv = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...dl.map(sv));
+  const r = dl.filter(e => sv(e) === top).sort((a, b) => kd(a.m) - kd(b.m))[0].m;
+  playMove2(r);
+  await sleep(moveDur(r, b3));
+  if (lesson !== L || tok !== busyToken) return;
+  L.busy = false; renderLessonCard(); boardEl.classList.toggle('can', canHumanPlay());
+  $('#lsFb').innerHTML = `<b class="ok">${t('ls.seqGood')}</b> ` + t('pz.yourMove', { n: P.n - L.used });
+}
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
@@ -1310,13 +1372,17 @@ function okAnswer(P, s, m, pts) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
-$('#lsHint').onclick = () => {
+$('#lsHint').onclick = async () => {
   if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
-  if (!lesson || lesson.answered) return;
+  if (!lesson || lesson.answered || lesson.busy) return;
   lesson.hinted = true;
-  const s = curStep(), P = lessonProblem();
+  const s = curStep(), P = lessonProblem(), L = lesson;
+  let good = P.ok || [P.best];
+  if (P.n > 1 && L.used > 0) {   // later moves of a multi-move problem: the moves that still force the win in time
+    const left = P.n - L.used, list = await mateReq(left); if (lesson !== L || L.answered || !list) return;
+    good = list.filter(x => x.need > 0 && x.need <= left).map(x => x.m);
+  }
   lessonMarks = [];
-  const good = P.ok || [P.best];
   for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();

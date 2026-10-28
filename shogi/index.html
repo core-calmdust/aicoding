@@ -294,6 +294,30 @@ body.in-lesson .review-card{display:none!important}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
+/* design pickers in the new-game dialog: little boards drawn with the real piece set / board colours (as in go / gomoku) */
+.dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.dsg button{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:4px;padding:4px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;font-style:normal;transition:border-color .2s,color .2s,background .2s}
+.dsg .th{display:block;width:100%;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.4);font-style:normal}
+.dsg .th > svg,.dsg .th > img{display:block;width:100%;height:auto}
+.dsg-bd .th{aspect-ratio:96/60}
+.dsg-bd .th > svg{height:100%}
+.dsg .nm{text-align:center;word-break:keep-all;overflow-wrap:anywhere;display:block}
+.dsg button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.dsg button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.12)}
+.dsg-now{display:none;font-weight:700;font-size:12px;color:var(--text);margin-left:8px}
+.dsg-field > label{display:inline-block}
+/* piece tiles: 玉・飛・歩 drawn by pieceEl on a strip of the current board */
+.pth{container-type:inline-size;padding:2px 0 3px;background:linear-gradient(170deg,#ecc67f 0%,#e2b66b 45%,#d6a55a 100%)}
+body.skin-grain .pth{background:linear-gradient(170deg,#e9be76 0%,#dcab60 50%,#cc9648 100%)}
+body.skin-metal .pth{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%)}
+body.skin-ink .pth{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%)}
+.pstrip{display:flex;justify-content:center;gap:3cqw}
+.pslot{position:relative;flex:none;--cw:28cqw;--ch:calc(var(--cw) * 1.1);width:var(--cw);height:var(--ch)}
+.pslot .pc{animation:none}
+.pth3d{background:linear-gradient(170deg,#f3d9a4,#dcb06a)}
+html.atlas-skin .dsg button{background:#f8f0e0;border-color:var(--line)}
+html.atlas-skin .dsg button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2);border-color:var(--brass)}
+@media (max-width: 520px){ .dsg{gap:3px} .dsg button{padding:2px;border-radius:7px} .dsg .nm{display:none} .dsg-now{display:inline} }
 .pc-credit{font-size:11px;color:var(--dim);margin:-6px 0 10px}
 .pc-credit:empty{display:none}
 .play-choice{display:grid;gap:8px;margin-top:16px}
@@ -604,8 +628,10 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   body.in-study .lesson-card{order:0}
   body.in-study .st-nav{display:flex}
   body.in-study .mt-strip{display:none!important}
-  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
+  body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4;padding:8px;gap:5px}
+  /* phone menu labels like chess: smaller, tighter text so every label stays whole */
+  .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:clip;font-size:9.5px;letter-spacing:-.04em}
   #evalCard{order:1}
   .review-card{order:2}
   .kifu-card{order:3;flex:none;min-height:110px}
@@ -1032,6 +1058,60 @@ html[lang=ar] .pf-input{direction:rtl}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* the two player cards stand side by side here (narrow): the AI's status (thinking · depth · score) keeps its own line under
+   the name instead of the shared inline slot, which would squeeze the name to "A…" */
+:root.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2;max-width:none;margin:0;text-align:start}
+/* new-game dialog fits without scrolling: PC (wide, two columns) uses the full window height (the overlay covers the online dock), phones get a compact one-column layout */
+@media (min-width: 760px) and (min-height: 600px) and (hover: hover){
+  #newOverlay .modal,#newOverlay .modal:has(> .rules-offer:not(.hidden)){height:auto;max-height:calc(100dvh - 24px);overflow:hidden;padding:20px 30px 16px}
+  #newOverlay h2{margin-bottom:12px}
+  #newOverlay .rules-offer{margin:0 0 12px;padding:8px 12px}
+  #newOverlay .field{margin-bottom:12px}
+  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{margin-bottom:6px}
+  #newOverlay .modal-actions{padding-top:12px;margin-top:0}
+  #newOverlay .credit{margin-top:8px}
+  #newOverlay #lvNote{font-size:10.5px;line-height:1.5}
+}
+@media (max-width: 520px){
+  #newOverlay{padding:8px}
+  #newOverlay .modal{max-height:calc(100dvh - 16px);padding:14px 14px 10px}
+  #newOverlay h2{font-size:20px;margin-bottom:6px}
+  #newOverlay .rules-offer{margin:0 0 8px;padding:6px 10px;font-size:11.5px;line-height:1.4}
+  #newOverlay .rules-offer button{padding:6px 10px;font-size:11.5px}
+  #newOverlay .field{margin-bottom:8px}
+  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{font-size:11px;margin-bottom:4px;letter-spacing:.06em}
+  #newOverlay .seg{padding:2px;gap:2px}
+  #newOverlay .seg button{padding:6px 2px;font-size:12px;white-space:normal;line-height:1.2}
+  #newOverlay #segMode{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay #segHandi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay #fHandi .vr-r{margin-top:6px}
+  /* short choices: label on the left, buttons on the right */
+  #fColor:not(.hidden),#fClock:not(.hidden){display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
+  #fColor > label,#fClock > label{margin:0!important;letter-spacing:0}
+  #newOverlay #fHandi .vr-r{display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
+  #newOverlay #fHandi .vr-r > label{margin:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;letter-spacing:0}
+  #newOverlay #segVariant button{padding:6px 2px}
+  #fOpts > label{display:none}
+  #newOverlay .field{margin-bottom:6px}
+  #newOverlay .rules-offer{font-size:11px;padding:5px 8px}
+  #newOverlay .field:has(> #segMode) > label{display:none}
+  #newOverlay #segClock button{white-space:nowrap;font-size:11px;letter-spacing:-.01em}
+  #newOverlay #segMode button{white-space:nowrap;font-size:11.5px;letter-spacing:-.02em;overflow:hidden;text-overflow:clip}
+  #newOverlay .rules-offer span{font-size:10.5px}
+  #newOverlay .level-wrap input{height:22px}
+  #newOverlay .level-name{height:auto;line-height:1.3}
+  #newOverlay .level-name small{line-height:1.3}
+  #newOverlay .lv-row .cs-sel{height:30px}
+  #lvNote{display:none}
+  #newOverlay .level-wrap{gap:2px}
+  #newOverlay .checks{gap:6px 10px}
+  #newOverlay .checks label{font-size:12px}
+  #newOverlay .pc-credit{margin:-3px 0 3px;font-size:10px;line-height:1.3}
+  #newOverlay .modal-actions{margin-top:10px}
+  #newOverlay .modal-actions .mbtn{padding:10px}
+  #newOverlay .credit{margin-top:6px;font-size:9.5px;line-height:1.4}
+}
+@media (max-width: 374px) and (pointer: coarse){ .controls{padding:6px;gap:4px} .controls .btn{padding-left:1px;padding-right:1px} }
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1150,9 +1230,9 @@ html[lang=ar] .pf-input{direction:rtl}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="intl" data-i18n="pc.intl"></button><button data-v="intl0" data-i18n="pc.intl0"></button></div></div>
+    <div class="field dsg-field"><label data-i18n="ng.pieces"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPieces"><button type="button" data-v="2kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><span class="th pth"></span><span class="nm" data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.ryoko"></span></button><button type="button" data-v="one"><span class="th pth"></span><span class="nm" data-i18n="pc.one"></span></button><button type="button" data-v="two"><span class="th pth"></span><span class="nm" data-i18n="pc.two"></span></button><button type="button" data-v="intl"><span class="th pth"></span><span class="nm" data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><span class="th pth"></span><span class="nm" data-i18n="pc.intl0"></span></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
-    <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
+    <div class="field dsg-field"><label data-i18n="ng.skin"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button></div></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0<br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
@@ -1286,8 +1366,9 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/headerbar.js?v=28"></script>
+<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -2173,14 +2254,24 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !!game && !lesson && !edit && !inStudy() && !net; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !game.over, b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = !!game.over, on = wpActive() && (!over || cur < game.moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || game.over) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelAI(); setStatus(0, ''); setStatus(1, ''); renderInfo(); return; }
-  wpPaused = false; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;   // resume from the latest position
+  const over = !!game.over;
+  if (!wpActive() || (over && cur >= game.moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelAI(); setStatus(0, ''); setStatus(1, ''); renderInfo(); return; }
+  if (cur < game.moves.length && window.WatchPause) { stopPlay(); WatchPause.ask({ lang: LANG, n: game.moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; stopPlay(); cur = game.moves.length; reviewing = false; hintMoves = null; sel = null; refresh(false); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves (their analysis) and a result are dropped — the review bar's この局面から再開 path
+  if (!wpActive() || cur >= game.moves.length) { wpLatest(); return; }
+  wpPaused = false; stopPlay(); busyToken++; cancelAI(); cancelAna();
+  game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; reviewing = false; hintMoves = null; sel = null;
+  if (game.clock) game.clock.t0 = Date.now();
+  hideOverlay('#resultOverlay');
   refresh(false);
 }
 $('#btnUndo').onclick = () => {
@@ -2394,6 +2485,7 @@ document.addEventListener('click', e => {
 const dlg = { mode: 'ai', color: 0, handicap: 0, clock: 0 };
 function segSel(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('sel', b.dataset.v === String(v))); }
 function openNewDialog() {
+  try { designThumbs(); } catch (e) {}
   Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode === 'ai' && game && game.rated ? 'rated' : settings.mode, color: settings.color, handicap: settings.handicap });
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
@@ -2443,7 +2535,89 @@ function applyLook() {
   $('#pcCredit').textContent = PIECE_SETS[settings.pieces] ? t('pc.credit', { a: PIECE_SETS[settings.pieces] }) : '';
   ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
   segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
+  designThumbs();
 }
+// ---- design pickers: each tile is a small piece of board drawn with that piece set on the current board (and the board tiles with the current pieces)
+const DSG_SKIN = {
+  classic: { b: ['#ecc67f', '#e2b66b', '#d6a55a'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#2a2018', '#16100b'], co: 'rgba(226,194,117,.75)', pc: ['#f7dca2', '#eccb85', '#ddb466'], ink: '#1c1209', red: '#b8231a', noise: '.03 .9', na: .28 },
+  grain: { b: ['#e9be76', '#dcab60', '#cc9648'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#3a2414', '#1f130a'], co: 'rgba(226,194,117,.75)', pc: ['#f5d79a', '#e6bf73', '#d2a252'], ink: '#1c1209', red: '#b8231a', noise: '.012 .16', na: .75 },
+  metal: { b: ['#c9d0d6', '#9aa3ab', '#8a939b'], line: 'rgba(20,28,34,.7)', star: '#1b2226', fr: ['#3b4248', '#1d2226'], co: 'rgba(210,220,228,.75)', pc: ['#f4f6f8', '#cfd5da', '#a9b1b8'], ink: '#15191c', red: '#c0281c', brushed: 1, imgF: 'saturate(.12) brightness(1.12) contrast(1.08)' },
+  ink: { b: ['#2b2622', '#25211d', '#1f1b18'], line: 'rgba(214,180,110,.5)', star: '#d6b46e', fr: ['#141414', '#070707'], co: 'rgba(214,180,110,.8)', pc: ['#2f2a25', '#26211c', '#1d1915'], ink: '#e9d39f', red: '#ff7a66', edge: 'rgba(214,180,110,.75)' },
+};
+const DSG_PW = [0, [.76, .82, .5], [.79, .85, .52], [.79, .85, .52], [.82, .88, .56], [.84, .9, .56], [.84, .9, .56], [.82, .88, .56], [.88, .94, .6]];
+let dsgUid = 0;
+function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
+  const promo = tp > 8, sz = DSG_PW[SIZE[tp]] || DSG_PW[5];
+  const rot = gote ? ` transform="rotate(180 ${cx} ${cy})"` : '';
+  if (PIECE_SETS[set]) {
+    const code = tp === OU ? (gote ? 'OU' : 'GY') : PCODE[tp], w = cw * 1.12, h = ch * 1.12;
+    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=2" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
+  }
+  const w = cw * sz[0], h = ch * sz[1], x = cx - w / 2, y = cy - h / 2;
+  const pts = [[.5, 0], [.83, .13], [.97, 1], [.03, 1], [.17, .13]].map(([a, b]) => `${(x + a * w).toFixed(2)},${(y + b * h).toFixed(2)}`).join(' ');
+  const col = promo ? S.red : S.ink;
+  let g = `<g${rot}><polygon points="${pts}" fill="url(#${id}p)"${S.edge ? ` stroke="${S.edge}" stroke-width=".5"` : ''} filter="url(#${id}s)"/>`;
+  if (set === 'intl' || set === 'intl0') g += intlSvg(tp, '', set === 'intl0').replace('<svg class="intl"', `<svg x="${x}" y="${y}" width="${w}" height="${h}" color="${S.ink}" overflow="visible"`);
+  else {
+    const fs = cw * sz[2], ty = y + h * .57;
+    const one = tp === OU ? (gote ? '王' : '玉') : KANJI[tp];
+    const two = tp === OU ? (gote ? '王将' : '玉将') : KANJI2[tp];
+    const tx = (str, yy, f) => `<text x="${cx}" y="${yy}" text-anchor="middle" dominant-baseline="central" font-family="'Shippori Mincho B1',serif" font-weight="800" font-size="${f}" fill="${col}">${str}</text>`;
+    g += set === 'two' ? tx(two[0], y + h * .4, fs * .62) + tx(two[1], y + h * .75, fs * .62) : tx(one, ty, fs);
+  }
+  return g + '</g>';
+}
+// kind 'pc': 2×2 squares with a gote rook and the sente king (large, so the piece style reads); kind 'bd': the corner of a board with its frame and coordinates
+// board tiles: the top-right corner of the board (frame, coordinates, a star point) with a few pieces of the current set
+function dsgThumb(set, skin) {
+  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'dsg' + (++dsgUid), W = 96, H = 60;
+  let defs = `<linearGradient id="${id}b" x1="0" y1="0" x2=".18" y2="1"><stop offset="0" stop-color="${S.b[0]}"/><stop offset=".5" stop-color="${S.b[1]}"/><stop offset="1" stop-color="${S.b[2]}"/></linearGradient>`
+    + `<linearGradient id="${id}p" x1="0" y1="0" x2=".1" y2="1"><stop offset="0" stop-color="${S.pc[0]}"/><stop offset=".45" stop-color="${S.pc[1]}"/><stop offset="1" stop-color="${S.pc[2]}"/></linearGradient>`
+    + `<linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.fr[0]}"/><stop offset="1" stop-color="${S.fr[1]}"/></linearGradient>`
+    + `<filter id="${id}s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy=".8" stdDeviation=".7" flood-color="#000" flood-opacity=".45"/></filter>`;
+  if (S.noise) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${S.noise}" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .45 0 0 0 0 .26 0 0 0 0 .07 0 0 0 1.4 -.2"/></filter>`;
+  if (S.brushed) defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.12)"/></pattern>`;
+  const fr = 8, by = fr, bw = W - fr, bh = H - fr;   // frame band on the top and right (as on the real board)
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true" style="font-style:normal"><defs>${defs}</defs><rect width="${W}" height="${H}" fill="url(#${id}f)"/>`;
+  s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}b)"/>`;
+  if (S.noise) s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" filter="url(#${id}n)" opacity="${S.na}"/>`;
+  if (S.brushed) s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}h)"/>`;
+  const ch = bh / 3.3, cw = ch / 1.1, n = Math.ceil(bw / cw), x0 = bw - n * cw;
+  let d = '';
+  for (let k = 1; k < n; k++) d += `M${(x0 + k * cw).toFixed(2)} ${by}V${H}`;
+  for (let k = 1; k <= 3; k++) d += `M0 ${(by + k * ch).toFixed(2)}H${bw}`;
+  s += `<path d="${d}" stroke="${S.line}" stroke-width=".8" fill="none"/><circle cx="${bw - 3 * cw}" cy="${by + 3 * ch}" r="1.5" fill="${S.star}"/>`;
+  const cf = `font-family="'Shippori Mincho B1',serif" font-size="5.6" fill="${S.co}" text-anchor="middle" dominant-baseline="central"`;
+  for (let i = 0; i < n; i++) { const c = n - i; if (c <= 5) s += `<text x="${x0 + (i + .5) * cw}" y="${fr / 2 + .3}" ${cf}>${'０１２３４５'[c]}</text>`; }
+  ['一', '二', '三'].forEach((z, i) => { s += `<text x="${W - fr / 2}" y="${by + (i + .5) * ch}" ${cf}>${z}</text>`; });
+  const at = (c, r) => [bw - (c - .5) * cw, by + (r - .5) * ch];   // c: file (1 = rightmost), r: rank
+  s += dsgPiece(2, true, ...at(1, 1), cw, ch, set, S, id) + dsgPiece(3, true, ...at(2, 1), cw, ch, set, S, id) + dsgPiece(1, true, ...at(3, 3), cw, ch, set, S, id) + dsgPiece(5, false, ...at(5, 2), cw, ch, set, S, id);
+  return s + '</svg>';
+}
+// piece tiles: 玉・飛・歩 side by side, built with the board's own piece renderer (pieceEl) so they look exactly like the pieces in play
+const pieceEl2D = pieceEl;   // the portal skin replaces window.pieceEl with its 3D sprites; the tiles always show the 2D set they stand for
+function dsgPieceStrip(set) {
+  const keep = [settings.pieces, flip]; settings.pieces = set; flip = false;
+  const wrap = document.createElement('span'); wrap.className = 'pstrip';
+  try { [OU, HI, FU].forEach(tp => { const c = document.createElement('span'); c.className = 'pslot'; c.appendChild(pieceEl2D(tp)); wrap.appendChild(c); }); }
+  finally { settings.pieces = keep[0]; flip = keep[1]; }
+  return wrap;
+}
+function designThumbs() {
+  dsgUid = 0;
+  document.querySelectorAll('#segPieces button[data-v] > .th.pth').forEach(e => { e.replaceChildren(dsgPieceStrip(e.parentNode.dataset.v)); });
+  // the portal's raised-lacquer 3D set (a text button added by atlas/skin/shogi.js) gets its picture here too
+  document.querySelectorAll('#segPieces button[data-v="atlas3d"]').forEach(b => { if (!b.querySelector('.th')) { const nm = b.textContent; b.innerHTML = '<span class="th pth3d"><img src="../images/atlas/shogi-thumb3d.webp?v=1" alt=""></span><span class="nm"></span>'; b.lastChild.textContent = nm; } });
+  const pcs = PIECE_SETS[settings.pieces] || ['one', 'two', 'intl', 'intl0'].includes(settings.pieces) ? settings.pieces : '2kanji_3d';
+  document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb(pcs, e.parentNode.dataset.v); });
+  setTimeout(designNow, 0);   // after the portal skin has moved the selection mark to its 3D set
+}
+// the chosen names next to the labels (phones show only the pictures)
+function designNow() {
+  const cur = id => { const x = document.querySelector(`#${id} button.sel > span:last-child`); return x ? x.textContent : ''; };
+  $('#pcNow').textContent = cur('segPieces'); $('#skNow').textContent = cur('segSkin');
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#segPieces,#segSkin')) setTimeout(designNow, 60); }, true);
 $('#segPieces').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pieces = b.dataset.v; applyLook(); save(); if (game) { renderBoard(false); renderHands(); } };
 $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applyLook(); save(); };
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.clock = +b.dataset.v; updDialog(); } };
@@ -4868,12 +5042,12 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=66')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/shogi.js?v=21')).then(() => load('../atlas/skin/shogi.js?v=7'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=7'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

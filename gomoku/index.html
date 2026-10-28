@@ -455,16 +455,17 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .lesson-card,.puzzle-card{order:0}
   body.in-study .board-area{display:flex;flex-direction:column;gap:6px}
   body.in-study .st-nav{display:flex}
-  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
+  body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
   #evalCard{order:2}
   .review-card{order:3}
   .kifu-card{order:4}
   .info-line{order:5}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:24px;margin-top:0;line-height:1}
-  .player .count small{font-size:10px;margin-left:3px}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .count small{display:none}   /* the caption squeezed the name to "あ…" — the number alone, as in the other games */
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
   .card{padding:10px 12px}
   .controls{padding:8px;gap:4px}
   .btn{flex-direction:column;justify-content:center;padding:7px 1px;gap:3px;font-size:10px;letter-spacing:0}
@@ -495,13 +496,13 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .top{flex:1;min-width:0;gap:6px}
   .pdisc{width:14px;height:14px}
   .player .name{font-size:11px}
   .player .count{font-size:20px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .evalrow{margin-bottom:5px}
   .evalrow .label{font-size:11px}
   .evalrow .val{font-size:12px}
@@ -1349,12 +1350,13 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/headerbar.js?v=28"></script>
+<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=2"></script>
-<script src="app.js?v=20261028rbwp1"></script>
+<script src="app.js?v=20261028rbwp1rptl"></script>
 <!-- World Board Game Atlas portal skin: gomoku/?skin=atlas — 3D legged go board (lacquer & gold 沈金 or kaya), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
@@ -1364,12 +1366,12 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=66')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/goban.js?v=9')).then(() => load('../atlas/skin/gomoku.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/goban.js?v=11')).then(() => load('../atlas/skin/gomoku.js?v=1'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

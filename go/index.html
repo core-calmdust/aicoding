@@ -255,6 +255,10 @@ body.counting .count-card{display:block}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 .modal-actions{display:flex;gap:10px;margin-top:22px}
+/* list views fill the fixed-size tabbed dialog; the Close / Back buttons stay pinned to the bottom when there is spare space */
+#lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){display:flex;flex-direction:column}
+#lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
+#lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.06em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
 .mbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4c);color:#1b150a;border-color:transparent}
@@ -494,7 +498,7 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .board-area{order:-1;flex:none;gap:6px}
   .lesson-card,.puzzle-card,.count-card{order:0}
   body.in-study .st-nav{display:flex}
-  body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
+  body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
   #evalCard{order:1}
   .review-card{order:2}
@@ -503,12 +507,14 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   body.rv-on #evalCard .graph{display:none}
   body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{display:none}
-  .player{padding:8px 10px 16px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .player .count{font-size:22px;margin-top:0;line-height:1}
   .player .clk{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:11px;padding:0 5px;line-height:1.45}
   .player:has(.clk:not(:empty)) .status{visibility:hidden}
   .player .count small{display:none}
-  .player .status{position:absolute;left:38px;right:8px;bottom:3px;height:12px;font-size:10px}
+  .player .status{position:absolute;left:38px;right:8px;bottom:2px;height:12px;font-size:9.5px;line-height:12px}
+  .player:has(.status:not(:empty)):not(:has(.clk:not(:empty))) .name{transform:translateY(-6px)}   /* thinking / check …: the name steps up, the status line under it */
+  .player:has(.clk:not(:empty)){padding-bottom:16px}   /* the clock sits on the bottom edge */
   .player .name{min-width:0}
   .card{padding:10px 12px}
   .controls{padding:8px;gap:5px}
@@ -536,10 +542,10 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .brand h1{font-size:clamp(13px, calc((100vw - var(--bs) - 230px) / (var(--tl) * .64)), 16px)}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
-  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-radius:9px}
+  .player{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px}
   .player .count{font-size:18px;margin:0;line-height:1}
   .player .count small{display:none}
-  .player .status{position:absolute;left:8px;right:6px;bottom:1px;height:11px;font-size:9px}
+  .player .status{position:absolute;left:8px;right:6px;bottom:0;height:10px;font-size:8.5px;line-height:10px}
   .graph{height:56px;margin-top:6px}
   .controls{gap:5px;padding:6px}
   .btn{flex-direction:row;justify-content:center;gap:4px;padding:6px 2px;font-size:10px;border-radius:8px}
@@ -890,8 +896,9 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/headerbar.js?v=28"></script>
+<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=23"></script>
 <script src="rules.js?v=2"></script>
@@ -900,8 +907,8 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/onlinesec.js?v=1"></script>
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="rbox.js?v=4"></script>
-<script src="app.js?v=13"></script>
+<script src="rbox.js?v=5"></script>
+<script src="app.js?v=18"></script>
 <script src="learn.js?v=20261028rb"></script>
 <script src="online-ui.js?v=3"></script>
 <script>
@@ -924,11 +931,11 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=66')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/goban.js?v=9')).then(() => load('../atlas/skin/go.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/goban.js?v=11')).then(() => load('../atlas/skin/go.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4" defer></script>
 <script src="../shared/atlas-account.js?v=4" defer></script>
 </body>

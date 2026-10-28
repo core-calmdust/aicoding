@@ -255,12 +255,17 @@
   // after load, in idle time: start the 3D table, then build every board ahead of time (one per idle slice),
   // so tapping an icon never has to build a board while the fly / smoke / sparkle effects are playing
   const idle = window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 2500 })) : (f => setTimeout(f, 300));
-  idle(() => {
+  // (none of this runs while a popup / confetti is up: building the table and compiling shaders is long main-thread work
+  // that made the login-bonus confetti hitch)
+  const fxBusy = () => CF.run || $('ov').classList.contains('on');
+  const boot = () => idle(() => {
+    if (!glOK && fxBusy()) return setTimeout(boot, 700);
     if (!glOK) initGL(); if (!glOK) return;
     const q = A_.byUpdate().map(g => g.id);
-    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
     setTimeout(next, 400);
   });
+  boot();
   // ‹ › buttons page the recent-updates row (one card step; hidden at either end)
   function updNav() {
     const row = $('updRow'), pv = $('updPrev'), nx = $('updNext'); if (!row || !pv) return;
@@ -380,7 +385,7 @@
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) Table3D.prepare(id, window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null); }
+  function warm(id) { if (initGL()) Table3D.prepare(id); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
@@ -500,7 +505,7 @@
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     const lv = pref[id + ':lv'] || Math.min(4, ad ? ad.levels : 4), side = pref[id + ':side'] || 1;
-    const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes[0]) : 0;   // board size (go)
+    const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
     const mode = ad && ad.modes && ad.modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
@@ -638,7 +643,7 @@
     }
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
-    $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close'));
+    $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
@@ -653,7 +658,7 @@
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true };
   let lastKind;
   function startPlay(kind) {
     const g = bvGame, ad = Atlas3D[g.id];
@@ -833,6 +838,20 @@
   }
   function closeBoard() { stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
+  // the room's time of day (auto = by the clock)
+  const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'] };
+  function renderTod() {
+    const btn = $('bvTodBtn'), menu = $('bvTodMenu'); if (!btn) return;
+    const L = TOD[lang] || TOD.en, K = ['auto', 'morning', 'day', 'evening', 'night'], cur = (window.Table3D && Table3D.timeOfDayPick) ? Table3D.timeOfDayPick() : 'auto';
+    const SW = { auto: 'conic-gradient(#ffd36b 0 25%,#ffe9a8 0 50%,#ff9d6b 0 75%,#3b4a8a 0)', morning: 'linear-gradient(#ffe7b0,#ffc9a0)', day: 'linear-gradient(#bfe6ff,#7fc8ff)', evening: 'linear-gradient(#ffb36b,#e0607a)', night: 'linear-gradient(#3b4a8a,#151a3a)' };
+    $('bvTodLb').textContent = L[K.indexOf(cur)];
+    menu.innerHTML = K.map((v, i) => `<button type="button" role="option" data-v="${v}" class="${v === cur ? 'on' : ''}" aria-selected="${v === cur}"><span class="sw" style="background:${SW[v]}"></span>${L[i]}</button>`).join('');
+    const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
+    menu.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); close(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.v); renderTod(); });
+    if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
+  }
+  renderTod();
   $('bvQuit').onclick = () => openBoard(bvGame.id);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
@@ -1025,24 +1044,46 @@
   function renderDress() {
     $('hDress').textContent = t('dress.h');
     $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, 150, { pop: true, clear: true, noChar: true })}${popChar(W.av, 150)}</button>
-      <div class="dname"><b>${esc(W.name || t('pf.player'))}</b><div class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</div></div>`;
+    // the worn character / background / frame names live here (the item grid below is icons only)
+    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
+      // the meta line (kind + rarity) above, the full name below (wraps, never cut off)
+      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
+    const PS = matchMedia('(max-width:760px)').matches ? 118 : 230;   // a smaller character on phones (the names sit beside it), a big one on PC
+    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+      <div class="dname"><div class="dpl"><b>${esc(W.name || t('pf.player'))}</b><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
+    dsegPos();
     const slot = dKind;
-    // sort: owned first (default) · rarity high → low · rarity low → high (owned first within the same rarity)
+    // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
-    const ownd = it => W.owned.includes(it.id) ? 1 : 0;
-    const list = ART.items.filter(it => it.kind === dKind).sort((a, b) => dSort === 'rarD' ? (b.rar - a.rar) || (ownd(b) - ownd(a)) : dSort === 'rarA' ? (a.rar - b.rar) || (ownd(b) - ownd(a)) : (ownd(b) - ownd(a)) || a.rar - b.rar);
-    $('dItems').innerHTML = list.map(it => {
+    const ownd = it => W.owned.includes(it.id) ? 1 : 0, idx = new Map(ART.items.map((it, i) => [it.id, i]));
+    const all = ART.items.filter(it => it.kind === dKind);
+    const list = (dSort === 'own' ? all.filter(ownd) : all).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
+    const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
+    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>` : list.map((it, i) => {
+      const head = dSort !== 'own' && (i === 0 || list[i - 1].rar !== it.rar) ? sec(it.rar) : '';
       const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return itemCard(it, '', (own ? '' : 'locked ') + (on ? 'sel' : ''));   // tap the card to wear it (no buttons); the worn one is outlined
+      return head + `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`;
     }).join('');
-    // tap an owned item's picture (the whole card) to wear it
-    $('dItems').querySelectorAll('.item').forEach(c => { const id = c.dataset.id; if (!W.owned.includes(id) || W.av[slot] === id) return;
-      c.classList.add('wearable'); c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
+    // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
+    $('dItems').querySelectorAll('.dic').forEach(c => { const id = c.dataset.id;
+      if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));
+      else if (W.av[slot] === id) c.onclick = () => pokeAvatar();
+      else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
     $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
+  }
+  // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
+  function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
+  addEventListener('resize', () => { if (page === 'dress') dsegPos(); });
+  function dressInfo(it) {
+    openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
+      <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
+      <div class="dbtns"><button class="btn sun" id="diG">${t('tab.gacha')}</button><button class="btn sky" id="diS">${t('tab.shop')}</button><button class="btn ghost" id="diX">${t('g.close')}</button></div></div>`, 'dsh');
+    $('diG').onclick = () => { closeSheet(); go('gacha'); };
+    $('diS').onclick = () => { closeSheet(); go('shop'); };
+    $('diX').onclick = closeSheet;
   }
   // tap the character in the dress-up preview: it reacts with a random little animation (+ hearts / stars / notes popping out)
   const POSES = ['hop', 'spin', 'wiggle', 'squish', 'dance', 'flip'];
@@ -1147,7 +1188,9 @@
         <button class="btn sun big" id="lbTake">${esc(t('ach.take'))}</button></div>`, 'lbs', take);
     $('lbTake').onclick = take;
     SFX.fanfare(250);
-    setTimeout(() => { if (!taken) confetti(40); }, 420);
+    // the first burst waits for the page to have loaded (images decoding, fonts) so it isn't drawn over a busy main thread
+    const burst = () => setTimeout(() => { if (!taken) confetti(40); }, 420);
+    if (document.readyState === 'complete') burst(); else addEventListener('load', burst, { once: true });
   }
   // coins burst out of the popup and fly into the coin counter (header pill, or the hero's pill on phones)
   function flyCoins(src, from, to, done) {

@@ -15,7 +15,10 @@
  *   key(): string — the position shown (changes when the shown position or the study line changes),
  *   explain(): { head, tag, html } — commentary of the viewed move (html strings),
  *   analyze(done): starts the search of the shown position; calls done(list, final) (list: [{ id, mv, val, sub, cls,
- *            pv: [{ t, s }], played }] best first; s = 1 / 2 side) — may call several times; returns a cancel function,
+ *            pv: [{ t, s }], played }] best first; s = 1 / 2 side) — may call several times; returns a cancel function
+ *            (called after a short wait on the position) — analyze(done, st): done(list, final, st) reports with st the depth
+ *            reached (cached per key() with the list; passed back as st to continue deeper when the position is shown again),
+ *   seed(): list | null — optional: candidates already known for the position (shown at once, before the search),
  *   hover(): called after the hovered candidate changed (the page redraws its board marks, reading RBox.hovered()),
  *   studyStart(), studyPlay(id) → bool, studyBack(), studyEnd(), studyLen() → n, studyInfo() → html (whose turn ...)
  * }
@@ -99,7 +102,13 @@ html.rb-study .rb-badge{display:block}/* larger, easier-to-read text (PC, 2026-1
 `;
 let halted = false;   // 停止 pressed: the candidates shown stay, no new run until 再開 or another position
 const running = () => !!(timer || cancel);
-let A = null, root = null, badge = null, on = false, study = false, curKey = null, cands = null, final = false, cancel = null, timer = 0, hov = null, lastEx = '', lastList = '', baseN = 0;
+let A = null, root = null, badge = null, on = false, study = false, curKey = null, cands = null, final = false, cancel = null, timer = 0, hov = null, lastEx = '', lastList = '', baseN = 0, paused = false;
+// results per position (A.key()): { cands, final, st } — the latest finished round of the continuous analysis and how deep it
+// got (st, passed back to A.analyze to continue deeper); coming back to a position shows it at once, finished ones are not searched again
+const cache = new Map(), CACHE_MAX = 400;
+// delay before searching after a step: stepping quickly through the record starts no search; longer when something is
+// already shown (cache, A.seed())
+const WAIT = 200, WAIT_SEEDED = 400;
 const $q = s => root.querySelector(s);
 function T(k, v) { const d = L[A.lang()] || L.en; let x = d[k] != null ? d[k] : L.en[k]; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -115,7 +124,7 @@ function init(adapter) {
   $q('#rbStudy').onclick = () => start();
   $q('#rbRestore').onclick = () => stop();
   $q('#rbBack').onclick = () => back();
-  $q('#rbRun').onclick = () => { if (running()) { halted = true; stopCalc(); renderList(); renderActs(); } else { halted = false; curKey = null; sync(); } };
+  $q('#rbRun').onclick = () => { if (running()) { halted = true; stopCalc(); renderList(); renderActs(); } else { halted = false; calc(0); renderList(); renderActs(); } };
   const list = $q('#rbList');
   list.addEventListener('click', e => { const b = e.target.closest('.rb-row'); if (!b || !cands) return; const c = cands[+b.dataset.k]; if (c) play(c.id); });
   list.addEventListener('mouseover', e => { const b = e.target.closest('.rb-row'); setHov(b && cands ? cands[+b.dataset.k] : null); });
@@ -161,11 +170,34 @@ function sync() {
   labels();
   const k = A.key();
   if (k !== curKey) {
-    curKey = k; stopCalc(); cands = null; final = false; halted = false; if (hov) { hov = null; try { A.hover(); } catch (e) {} }
-    timer = setTimeout(() => { timer = 0; const my = curKey; cancel = A.analyze((list, fin) => { if (curKey !== my || !on) return; cands = list || []; final = !!fin; if (fin) cancel = null; renderList(); renderActs(); }); renderActs(); }, 140);
+    curKey = k; stopCalc(); cands = null; final = false; halted = false; paused = false; if (hov) { hov = null; try { A.hover(); } catch (e) {} }
+    const c = cache.get(k);
+    if (c) { cands = c.cands; final = c.final; if (!final) calc(WAIT_SEEDED); }
+    else { let sd = null; try { sd = A.seed ? A.seed() : null; } catch (e) {} if (sd && sd.length) cands = sd; calc(cands ? WAIT_SEEDED : WAIT); }
   }
   renderEx(); renderList(); renderActs();
 }
+function calc(ms) {
+  timer = setTimeout(() => {
+    timer = 0; const my = curKey;
+    if (document.hidden) { paused = true; renderActs(); return; }
+    const c0 = cache.get(my);
+    cancel = A.analyze((list, fin, st) => {
+      if (curKey !== my || !on) return;
+      cands = list || []; final = !!fin;
+      if (fin) cancel = null;
+      if (st || fin) { cache.delete(my); cache.set(my, { cands, final, st }); if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value); }
+      renderList(); renderActs();
+    }, c0 && c0.st);
+    renderActs();
+  }, ms);
+}
+// a hidden tab does not keep the engine busy: the search stops and starts again when the page is shown
+document.addEventListener('visibilitychange', () => {
+  if (!A || !on) return;
+  if (document.hidden) { if (timer || cancel) { stopCalc(); paused = true; } }
+  else if (paused) { paused = false; if (!final && !halted && !timer && !cancel) calc(60); }
+});
 function stopCalc() { if (timer) { clearTimeout(timer); timer = 0; } if (cancel) { try { cancel(); } catch (e) {} cancel = null; } }
 function renderActs() {
   { const b = $q('#rbRun'), run = running(); b.hidden = !run && (final || !cands || !cands.length) && !halted; b.textContent = T(run ? 'stop' : 'resume'); b.title = T(run ? 'stopT' : 'resumeT'); b.classList.toggle('on', run); }
@@ -200,5 +232,5 @@ function start() { if (!on || study) return; baseN = A.baseMove ? A.baseMove() :
 function stop() { if (!study) return; study = false; document.documentElement.classList.remove('rb-study'); setHov(null); A.studyEnd(); sync(); }
 function back() { if (!study || !(A.studyLen() > 0)) return; setHov(null); A.studyBack(); sync(); }
 function play(id) { if (!on) return false; if (!study) start(); if (!study) return false; setHov(null); const ok = A.studyPlay(id); sync(); return ok; }
-window.RBox = { t: (k, v) => A ? T(k, v) : k, init, sync, start, stop, back, play, studying: () => study, isOn: () => on, hovered: () => hov, relabel: () => { if (A) { labels(); lastEx = ''; lastList = ''; if (on) { renderEx(); renderList(); } } } };
+window.RBox = { t: (k, v) => A ? T(k, v) : k, init, sync, start, stop, back, play, studying: () => study, isOn: () => on, hovered: () => hov, relabel: () => { cache.clear(); if (A) { labels(); lastEx = ''; lastList = ''; if (on) { renderEx(); renderList(); } } } };
 })();

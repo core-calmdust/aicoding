@@ -47,15 +47,19 @@
     wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي' },
   };
   const BTN = { lux: 'atlas3d', wood: 'atlaswood' };
-  const seg = document.getElementById('segSkin');
+  // the 3D sets sit in the game's piece-design row (with a picture); the board row only sets the board. Pieces and board are chosen independently.
+  const seg = document.getElementById('segPcs') || document.getElementById('segSkin');
+  let boardSet = mine || 'lux';   // the 3D board's wood follows the last 3D piece set picked (also while 2D pieces are shown)
+  try { const v = localStorage.getItem(PCK + '-bd'); if (v === 'wood' || v === 'lux') boardSet = mine || v; } catch (e) {}
   const skinNow = () => { try { return settings.skin || 'classic'; } catch (e) { return 'classic'; } };
-  function look() {   // selection mark and board tone follow the game's skin setting
+  function look() {
     const mineBtn = mine && BTN[mine];
-    if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === mineBtn); else if (x.dataset.v === 'atlas3d' || x.dataset.v === 'atlaswood') x.classList.remove('sel'); });
-    if (board.userData.setSet) board.userData.setSet(mine || 'lux');
-    if (board.userData.setTone) board.userData.setTone(mine ? 'classic' : skinNow());
+    if (seg) seg.querySelectorAll('button').forEach(x => { if (x.dataset.set) x.classList.toggle('sel', x.dataset.v === mineBtn); else if (mine) x.classList.remove('sel'); });
+    if (board.userData.setSet) board.userData.setSet(boardSet);
+    if (board.userData.setTone) board.userData.setTone(skinNow());
     IMG = mine ? IMGS[mine] || null : null; if (mine && !IMGS[mine]) loadSet(mine);
     document.documentElement.classList.toggle('atlas-svgpc', !mine);
+    try { designNow(); } catch (e) {}
     T3.kick(400);
   }
   function redraw() {
@@ -63,14 +67,18 @@
     try { renderReserves(posAt(cur).pos); } catch (e) {}
   }
   if (seg) {
-    const bs = ['wood', 'lux'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k; seg.prepend(b); return b; });
-    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.textContent = L[l] || L.en; }); };
+    const bs = ['wood', 'lux'].map(k => {
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k;
+      b.innerHTML = `<span class="th a3th"><img src="../images/atlas/chess-thumb-${k}.webp?v=1" alt=""></span><span class="nm"></span>`;
+      seg.prepend(b); return b;
+    });
+    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.querySelector('.nm').textContent = L[l] || L.en; }); try { designNow(); } catch (e) {} };
     paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
     seg.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
       mine = t.dataset.set || ''; try { localStorage.setItem(PCK, mine === 'wood' ? 'wood' : mine ? '1' : '0'); } catch (x) {}
-      if (mine) e.stopImmediatePropagation();
-      setTimeout(() => { look(); redraw(); }, 0);
+      if (mine) { boardSet = mine; try { localStorage.setItem(PCK + '-bd', mine); } catch (x) {} e.stopImmediatePropagation(); }
+      setTimeout(() => { look(); redraw(); }, 0);   // a 2D set: the game's own handler applies it first
     }, true);
   }
   if (typeof window.applySkin === 'function') { const oa = window.applySkin; window.applySkin = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }

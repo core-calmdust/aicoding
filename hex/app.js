@@ -170,12 +170,29 @@ const rotQ = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)');
 let ROT = rotQ.matches;
 let G = null;   // geometry of the drawn board: { n, rot, vb: [x, y, w, h], X[], Y[] }
 function hexXY(i, n) { const r = Math.floor(i / n), c = i % n; return [c + r / 2, r * SQ3 / 2]; }
-const tr = (x, y) => ROT ? [y, x] : [x, y];
+// ROT: false = flat (rows run across, slanted to the right), true = transposed (rows run down), 2 = diamond (the flat board turned
+// 30° so its long diagonal runs across: the PC's wide layout, 2026-10-28)
+const C30 = SQ3 / 2, rot30 = (x, y) => [x * C30 + y / 2, y * C30 - x / 2];
+const tr = (x, y) => ROT === 2 ? rot30(x, y) : ROT ? [y, x] : [x, y];
+// the diamond's view box: its plate and coordinates, with a little room round them
+// its plate: the rhombus with the two sharp (left / right) tips cut off a little outside the corner cells and their coordinates
+function diaPlate(n) {
+  let P = platePts(n, .98).map(([x, y]) => rot30(x, y));
+  const L = rot30(...hexXY(0, n))[0] - 1.3, R = rot30(...hexXY(n * n - 1, n))[0] + 1.3;
+  const clip = (P, f) => { const o = []; P.forEach((a, k) => { const b = P[(k + 1) % P.length], fa = f(a), fb = f(b); if (fa >= 0) o.push(a); if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); o.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); } }); return o; };
+  return clip(clip(P, p => p[0] - L), p => R - p[0]);
+}
+function diaVB(n) {
+  const P = diaPlate(n), xs = P.map(p => p[0]), ys = P.map(p => p[1]), mx = .3, my = .45;
+  const x0 = Math.min(...xs) - mx, x1 = Math.max(...xs) + mx, y0 = Math.min(...ys) - my, y1 = Math.max(...ys) + my;
+  return [x0, y0, x1 - x0, y1 - y0];
+}
 function geom(n) {
   const X = [], Y = [];
   for (let i = 0; i < n * n; i++) { const [x, y] = tr(...hexXY(i, n)); X.push(x); Y.push(y); }
   const mx = 1.35, my = 1.2;   // room for the edges and the coordinates
   let x0 = -.5 - mx, x1 = (n - 1) * 1.5 + .5 + mx, y0 = -HR - my, y1 = (n - 1) * SQ3 / 2 + HR + my;
+  if (ROT === 2) return { n, rot: ROT, vb: diaVB(n), X, Y };
   if (ROT) [x0, x1, y0, y1] = [y0, y1, x0, x1];
   return { n, rot: ROT, vb: [x0, y0, x1 - x0, y1 - y0], X, Y };
 }
@@ -184,7 +201,7 @@ function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + 
 // the corners of a hex (pointy-top before the transposition), as an SVG points string
 function hexPts(x, y, k = 1) {
   const out = [];
-  for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); let dx = Math.cos(a) * HR * k, dy = Math.sin(a) * HR * k; if (ROT) [dx, dy] = [dy, dx]; out.push((x + dx).toFixed(3) + ',' + (y + dy).toFixed(3)); }
+  for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); let dx = Math.cos(a) * HR * k, dy = Math.sin(a) * HR * k; if (ROT === 2) [dx, dy] = rot30(dx, dy); else if (ROT) [dx, dy] = [dy, dx]; out.push((x + dx).toFixed(3) + ',' + (y + dy).toFixed(3)); }
   return out.join(' ');
 }
 // the board's sides: segments of the outer cells' edges, coloured by whose edge they are (Red: top / bottom rows, Blue: left / right columns)
@@ -233,7 +250,7 @@ function drawBoardSVG(n) {
   document.documentElement.style.setProperty('--WU', vw.toFixed(3)); document.documentElement.style.setProperty('--HU', vh.toFixed(3));
   bdEl.setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
   // the plate: the board's outline, a little larger
-  const P = platePts(n, .98).map(([x, y]) => tr(x, y)).map(([x, y]) => x.toFixed(3) + ',' + y.toFixed(3)).join(' ');
+  const P = (ROT === 2 ? diaPlate(n) : platePts(n, .98).map(([x, y]) => tr(x, y))).map(([x, y]) => x.toFixed(3) + ',' + y.toFixed(3)).join(' ');
   let s = defsSVG() + `<polygon class="plate" points="${P}"/>`;
   const segs = rimSegs(n);
   s += `<path class="rimsh" d="${segPath(segs.r)}${segPath(segs.b)}" stroke-width=".26" transform="translate(.03,.05)"/>`;
@@ -254,24 +271,10 @@ function drawBoardSVG(n) {
   stoneEls.clear(); shownKey = '';
   boardEl.classList.toggle('no-num', !settings.num);
 }
-// PC layout (html.pc2, see index.html): the board also stands upright when that makes it larger — a window narrower than it is
-// wide enough for the flat board beside the info column (2026-10-28). Decided per window size / board size / review box shown
-// (not while the online dock refits the page).
-let rotKey = '', rotPc = false;
-function pcRot(n) {
-  const de = document.documentElement, pc = de.classList.contains('pc2');
-  const k = innerWidth + 'x' + innerHeight + (pc ? 'p' : '') + (de.classList.contains('rb-on') ? 'r' : '') + n;
-  if (k === rotKey) return rotPc;
-  rotKey = k; rotPc = false;
-  const app = document.querySelector('.app'); if (!pc || !app) return rotPc;
-  const pr = document.createElement('div');
-  pr.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:calc(100vw - var(--padx) * 2 - var(--gap) - var(--rw));height:calc(var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rbx, 0px))';
-  app.appendChild(pr); const r = pr.getBoundingClientRect(); pr.remove();
-  const w = (n - 1) * 1.5 + 1 + 2.7, h = (n - 1) * SQ3 / 2 + 2 * HR + 2.4;   // the flat board's view box (see geom)
-  const flat = Math.min(r.height / h, r.width / w), up = Math.min(r.height / w, r.width / h);
-  return (rotPc = up > flat * 1.08);
-}
-function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
+// PC layout (html.pc2 = PC_MQ, see index.html): the board is one wide band across the window with the info below it, so it is
+// always drawn as the diamond (long diagonal across, like Mancala / Backgammon's wide boards) (2026-10-28)
+function pcRot(n) { void n; return document.documentElement.classList.contains('pc2') ? 2 : false; }
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); document.documentElement.classList.toggle('bd-dia', ROT === 2); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
 window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
@@ -429,7 +432,7 @@ function renderInfo() {
     el.classList.toggle('active', !st.over && tm === p);
     el.classList.toggle('won', st.winner === p);
     el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.swapOk ? ' · ' + t('st.swapOk') : '') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? (pos.swapOk ? t('st.swapOk') : '') : '');
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
@@ -692,15 +695,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbS; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = gameOver(moves.length), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || gameOver(moves.length)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = gameOver(moves.length);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (rbS) { RBox.back(); return; }
@@ -2051,7 +2060,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 if (!hadSave) { setVariant(settings.n); gSwap = settings.swap; }
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ media: '(hover: hover) and (pointer: fine) and (min-width: 900px)', order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {

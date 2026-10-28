@@ -427,7 +427,7 @@ function renderInfo() {
     el.classList.toggle('active', !st.over && tm === p);
     el.classList.toggle('won', st.winner === p);
     el.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? t('st.turn') + (pos.hasCaps() ? ' · ' + t('st.jump') : '') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? (pos.hasCaps() ? t('st.jump') : '') : '');
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
@@ -736,15 +736,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = gameOver(moves.length), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || gameOver(moves.length)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = gameOver(moves.length);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -1176,7 +1182,7 @@ let LESSONS = null;
 const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
-function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
+function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
 let introIdx = 0;
 let savedGame = null;
 function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
@@ -1537,39 +1543,47 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
-// Puzzles replaced on 2026-10-21 (fun score, tools/refresh_fun.js): PUZZLES.old[themeId-j] keeps the previous puzzle of the slot.
-// A player who already had a record for the slot when this set first loaded keeps the old puzzle (the list is frozen then,
-// so solving the new puzzle later does not switch it back); daily puzzles dated up to PUZZLES.cut keep the old puzzle too.
-let pzOldSet = null;
-function pzOldKeys() {
-  if (pzOldSet) return pzOldSet;
-  const old = (PUZZLES && PUZZLES.old) || {}, key = STORE + '-pz-old-' + (PUZZLES && PUZZLES.cut || '');
-  let s = null; try { s = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
-  if (!Array.isArray(s)) {
-    const pr = pzProgress(); s = Object.keys(old).filter(k => pr[k] !== undefined);
-    try { if (Object.keys(old).length) localStorage.setItem(key, JSON.stringify(s)); } catch (e) {}
+// v3 (2026-10-28, tools/pzcurate.js): the collection was rebuilt as 10 mixed courses. A record of a v2 slot (old theme ids)
+// moves to the slot that now holds the same position (PUZZLES.mig, the best stars kept; "~" = a slot replaced on 2026-10-21,
+// moved only when this device had played the new puzzle there). All v2 records are kept aside in PZ_STORE-v2. Runs again
+// whenever v2 keys show up (a cloud merge with a device that synced before the update).
+const PZ_V2_KEY = /^(win[1-5]|shot2|shot3|shot22|ekings|emen)-\d+$/;
+function pzMigrate(pr) {
+  let M = null; try { M = PUZZLES && PUZZLES.mig; } catch (e) { return pr; }
+  if (!M) return pr;
+  const olds = Object.keys(pr).filter(k => PZ_V2_KEY.test(k));
+  if (!olds.length) return pr;
+  let frozen = null, bak = {};
+  try { frozen = JSON.parse(localStorage.getItem(STORE + '-pz-old-2026-10-21') || 'null'); } catch (e) {}
+  try { bak = JSON.parse(localStorage.getItem(PZ_STORE + '-v2') || '{}') || {}; } catch (e) {}
+  for (const k of olds) {
+    const v = starVal(pr[k]); delete pr[k];
+    bak[k] = Math.max(v, starVal(bak[k]));
+    let to = M[k]; if (!to || !v) continue;
+    if (to[0] === '~') { if (!Array.isArray(frozen) || frozen.includes(k)) continue; to = to.slice(1); }
+    if (v > starVal(pr[to])) pr[to] = v;
   }
-  return (pzOldSet = new Set(s));
+  pr._v = 3;
+  try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); localStorage.setItem(PZ_STORE + '-v2', JSON.stringify(bak)); } catch (e) {}
+  return pr;
 }
-function pzAt(T, j, date) {
-  const P = T.puzzles[j], o = PUZZLES && PUZZLES.old && PUZZLES.old[pzKey(T.id, j)];
-  if (!o) return P;
-  if (date && PUZZLES.cut && date <= PUZZLES.cut) return o;
-  return pzOldKeys().has(pzKey(T.id, j)) ? o : P;
-}
+const pzAt = (T, j) => T.puzzles[j];
 function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.2))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 // collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs 勝ち / ショット / 終盤 → theme cards with the position
-const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Win', 'Shot', 'End'], PZ_GIC = { Win: 'trophy', Shot: 'bolt', End: 'crown' };
-const PZ_TSVG = {
-  shot22: '<path d="M4 18 10 12l4 4 6-6"/><path d="M16 10h4v4"/><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/>',
-  ekings: '<path d="M3 9l4.5 3.5L12 6l4.5 6.5L21 9l-2 9H5z"/>',
-  emen: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
+const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Step', 'Tac', 'End'], PZ_GIC = { Step: 'sprout', Tac: 'bolt', End: 'crown' };
+const PZ_TSVG = {   // course badges (step1..step4 show their number)
+  shots: '<circle cx="7" cy="16" r="3"/><path d="M9.5 13.5 18 5M14 5h4v4"/>',
+  combo: '<path d="M3 18c2-6 4-6 6 0M9 18c2-6 4-6 6 0M15 18c2-6 4-6 6 0"/>',
+  crown: '<path d="M3 9l4.5 3.5L12 6l4.5 6.5L21 9l-2 9H5z"/>',
+  guard: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  kings: '<path d="M4 10l4 3 4-6 4 6 4-3-1.5 8h-13z"/><path d="M6 21h12"/>',
+  menend: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
 function pzThumbOf(T, j, date) { if (j < 0) j = T.puzzles.length - 1; const P = pzAt(T, j, date); return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
@@ -1630,6 +1644,7 @@ function startPuzzle(L, j, daily) {
 function renderPuzzleCard() {
   const Pz = puzzle, L = Pz.T, gain = Pz.goal === 'gain';
   $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('pz.th.' + L.id)} · ${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1}`;
+  if (Pz.P.t) $('#pzStep').textContent += ` · ${t('pz.tag.' + Pz.P.t)}`;
   $('#pzTitle').textContent = t(gain ? 'pz.gainIn' : 'pz.winIn', { n: Pz.n, g: Pz.g });
   $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${t(gain ? 'pz.goalGain' : 'pz.goal', { c: pname(Pz.me), n: Pz.n, g: Pz.g })}</span>`;
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? (Pz.bad && Pz.bad.includes(i) ? 'ng' : 'ok') : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');

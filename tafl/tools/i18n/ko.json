@@ -371,5 +371,6 @@
 "dr.wait": "무승부 제안은 몇 수 더 둔 뒤에 해 주세요",
 "dr.accepted": "AI가 무승부에 동의했습니다",
 "dr.declined": "AI가 무승부를 거절했습니다 (계속 두고 싶어 합니다)",
-"dr.aiResigned": "AI가 기권했습니다"
+"dr.aiResigned": "AI가 기권했습니다",
+"ls.seqGood": "좋은 수입니다!"
 }

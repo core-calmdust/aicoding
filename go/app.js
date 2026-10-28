@@ -107,7 +107,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=4';
+const ENGINE_URL = 'engine.js?v=6';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -121,7 +121,7 @@ function makeWorker() {
   return w;
 }
 let W = makeWorker();
-let W2 = null;            // a second worker only for the post-game review on PCs
+let W2 = null;            // a second worker only for the post-game review on PCs (whole-game pass, then the review box's searches; kept alive with its nets loaded)
 function jobBase(spec, list) { return { spec: spec || { n: game.n }, moves: list, komi: game.komi }; }
 function request(msg, onProgress, w) {
   w = w || W;
@@ -423,7 +423,7 @@ function renderInfo() {
     e.classList.toggle('active', !st.over && !cnting && tm === p);
     e.classList.toggle('won', st.winner === p);
     e.classList.toggle('thinking', thinking === p);
-    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && !cnting && tm === p ? t('st.turn') : '');
+    $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : '';
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
   document.body.classList.toggle('rated-live', rtLive());
@@ -496,18 +496,23 @@ function renderGraph() {
     <path d="${path}" fill="none" stroke="rgba(233,199,126,.9)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
     <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
 }
+let kifuHtml = '', kifuRaf = 0;
 function renderKifu() {
   const k = $('#kifu');
-  if (!moves.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
+  if (!moves.length) { kifuHtml = ''; k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
   const s0 = (startSpec && startSpec.turn) || P1;
   let html = '';
   for (let i = 1; i <= moves.length; i++) {
     const p = (i - 1) % 2 === 0 ? s0 : 3 - s0;
     const j = rvOpen && rv && !rv.running ? rvJudge(i - 1) : null, qc = j && j.q ? (j.q === 'bad' ? ' q-bad' : ' q-dub') : '';
-    html += `<button data-i="${i}" class="${i === cur ? 'cur' : ''}${qc}" title="${i}${j && j.q ? ' ' + t('q.' + j.q) : ''}"><em>${i}</em><i class="p${p}"></i>${mvAt(i - 1)}</button>`;
+    html += `<button data-i="${i}" class="${qc}" title="${i}${j && j.q ? ' ' + t('q.' + j.q) : ''}"><em>${i}</em><i class="p${p}"></i>${mvAt(i - 1)}</button>`;
   }
-  k.innerHTML = html;
-  const c = k.querySelector('.cur'); if (c) { const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; }
+  // only rebuilt when the record (or its marks) changed; a step just moves the "cur" class
+  if (html !== kifuHtml || k.children.length !== moves.length) { kifuHtml = html; k.innerHTML = html; }
+  else { const o = k.querySelector('.cur'); if (o) o.classList.remove('cur'); }
+  const c = k.children[cur - 1] || null; if (c) c.classList.add('cur');
+  // keep the current move in view — measured in the next frame, so a step forces no extra layout of the page
+  if (c && !kifuRaf) kifuRaf = requestAnimationFrame(() => { kifuRaf = 0; const c = k.querySelector('.cur'); if (!c) return; const top = c.offsetTop - k.offsetTop; if (top < k.scrollTop || top > k.scrollTop + k.clientHeight - 24) k.scrollTop = top - k.clientHeight / 2; });
 }
 $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 (() => {
@@ -643,6 +648,7 @@ async function analyzeCurrent(tok) {
     anaCache.set(key, { lead: r.lead, wr: r.wr, list: r.list }); apply(r); save();
     return;
   }
+  if (evals[idx]) return;   // value already known (whole-game review / earlier evaluation): no engine job while browsing
   if (rawCache.has(key)) { evals[idx] = rawCache.get(key); if (cur === idx) renderInfo(); return; }
   const r = await request({ type: 'policy', ...jobBase(startSpec, moves.slice(0, idx)), net: 'light' });
   if (!r) return;
@@ -732,15 +738,21 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbS; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = gameOver(moves.length), on = wpActive() && (!over || cur < moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || gameOver(moves.length)) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker(); thinking = 0; renderInfo(); return; }
-  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
-  update(false); afterPosition();
+  const over = gameOver(moves.length);
+  if (!wpActive() || (over && cur >= moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelWorker(); thinking = 0; renderInfo(); return; }
+  if (cur < moves.length && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = moves.length; reviewing = false; hintList = null; update(false); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves, their evals and any result are dropped (the kifu's この局面から再開 path)
+  if (!wpActive() || cur >= moves.length) { wpLatest(); return; }
+  wpPaused = false; reviewing = true; count = null; hideOverlay('#resultOverlay'); resumeHere();
 }
 function undo() {
   if (rbS) { RBox.back(); return; }
@@ -759,6 +771,9 @@ function viewAt(i) {
   i = Math.max(0, Math.min(moves.length, i));
   if (i === cur) return;
   busyToken++; thinking = 0;
+  // drop the engine jobs of the position left (hint / territory searches would otherwise queue up while stepping);
+  // not while the whole-game review is running in this worker (phones)
+  if (!(rv && rv.running && !W2)) cancelWorker();
   const step = i === cur + 1;
   cur = i; reviewing = i !== moves.length; hintList = null;
   update(step);
@@ -1127,18 +1142,31 @@ async function runReview() {
     if (i % 4 === 0 || i === game0.length) { renderReview(); renderGraph(); }
   }
   // pass 2: search the positions where the raw values suggest a mistake (or where the move was not the net's choice)
-  const sus = [];
+  // only the worst-looking moves are searched (biggest raw losses first, capped), and each position is searched once:
+  // the search after move i is the search before move i+1 when both are checked
+  let sus = [];
   for (let i = 0; i < game0.length; i++) {
     const a = run.list[i], b = run.list[i + 1]; if (!a || !b) continue;
     const mover = i === 0 ? ((st0 && st0.turn) || P1) : posAt(i).turn, s = mover === P1 ? 1 : -1;
-    const loss = (a.lead - b.lead) * s;
-    if (loss > 1.2 || (a.top[0] && a.top[0].m !== game0[i] && a.top[0].p > 0.5)) sus.push(i);
+    const loss = (a.lead - b.lead) * s, off = a.top[0] && a.top[0].m !== game0[i] && a.top[0].p > 0.5;
+    if (loss > 1.2 || off) sus.push({ i, sc: Math.max(loss, off ? a.top[0].p : 0) });
   }
+  const CAP = COARSE ? 20 : 36;
+  sus = sus.sort((x, y) => y.sc - x.sc).slice(0, CAP).map(x => x.i).sort((x, y) => x - y);
+  const net = COARSE ? 'light' : 'strong', got = new Map();
+  const search = async (j, visits, time) => {
+    if (got.has(j)) return got.get(j);
+    const r = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, j), komi: g0.komi, net, visits, time });
+    if (r) got.set(j, r);
+    return r;
+  };
+  const need = new Set(sus);
   run.phase2 = { done: 0, total: sus.length };
   for (const i of sus) {
     if (rv !== run) return;
-    const r = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, i), komi: g0.komi, net: COARSE ? 'light' : 'strong', visits: COARSE ? 24 : 48, time: 2500 });
-    const r2 = await req({ type: 'analyze', spec: st0 || { n: g0.n }, moves: game0.slice(0, i + 1), komi: g0.komi, net: COARSE ? 'light' : 'strong', visits: COARSE ? 16 : 32, time: 2000 });
+    const r = await search(i, COARSE ? 24 : 48, 2500);
+    if (rv !== run) return;
+    const r2 = await search(i + 1, need.has(i + 1) ? (COARSE ? 24 : 48) : (COARSE ? 16 : 32), need.has(i + 1) ? 2500 : 2000);
     if (rv !== run) return;
     if (r && r2) {
       const mover = i === 0 ? ((st0 && st0.turn) || P1) : posAt(i).turn, s = mover === P1 ? 1 : -1;
@@ -1157,6 +1185,12 @@ function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: 
 // judgement of move i+1 (played from position i): points lost (mover's view)
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
+  if (rv.running) return rvJudge0(i);
+  // finished review: the judgements never change — memoised (the record, the mistake list and the coach ask for all of them on every step)
+  const c = rv.jc && rv.jc.lang === LANG && rv.jc.n === game.n ? rv.jc : (rv.jc = { lang: LANG, n: game.n, a: [] });
+  return i in c.a ? c.a[i] : (c.a[i] = rvJudge0(i));
+}
+function rvJudge0(i) {
   const a = rv.list[i], b = rv.list[i + 1]; if (!a || !b) return null;
   const mover = toMoveAt(i), s = mover === P1 ? 1 : -1, m = moves[i];
   let loss, best;
@@ -1221,6 +1255,8 @@ function rvCoach() {
   }
   return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
 }
+let rvHtml = '';
+window.addEventListener('resize', () => { rvHtml = ''; });
 function renderReview() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
@@ -1228,7 +1264,7 @@ function renderReview() {
   const show = !lesson && !puzzle && rvOpen && rv;
   card.classList.toggle('show', !!show);
   document.body.classList.toggle('rv-on', !!show);
-  if (!show) return;
+  if (!show) { rvHtml = ''; return; }
   let html;
   if (rv.running) {
     const p2 = rv.phase2, a = p2 ? rv.total + p2.done : rv.done, b = p2 ? rv.total + p2.total : rv.total * 1.3;
@@ -1242,6 +1278,9 @@ function renderReview() {
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note" style="color:var(--dim);font-size:11px;line-height:1.6">${t('rv.note')}</div>`;
   }
+  const sig = html;
+  if (sig === rvHtml) return;   // unchanged (e.g. stepping on PC, where the commentary is in the review box): no DOM work
+  rvHtml = sig;
   const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
   { const cb = $('#rvBody > .cr-box'); if (cb) card.style.setProperty('--rvh', Math.round(cb.getBoundingClientRect().bottom - card.getBoundingClientRect().top + card.scrollTop + 14) + 'px'); else card.style.removeProperty('--rvh'); card.scrollTop = keepTop; }
@@ -1272,39 +1311,52 @@ function rbActive() {
   // confirmed — or a loaded / two-player record
   return gameOver(moves.length) || isCounting(moves.length) || settings.mode === 'pvp';
 }
-let W3 = null;
-function rbAnalyze(done) {
-  const pos = rbShown();
+// the review box's searches run in the review worker W2 (already holding the strong net after the whole-game pass): no third
+// worker / second copy of the net. Positions already searched by the whole-game review are shown at once (rbSeed); the box
+// (rbox.js) caches finished results per position, waits a moment before searching and cancels the search on every step.
+function rbWorker() { if (!W2) W2 = makeWorker(); return W2; }
+function rbFmt(r, fin) {
+  if (!r || !r.list) return [];
+  const turn = rbShown().turn, played = !rbS && cur < moves.length ? moves[cur] : -9;
+  const tot = r.list.reduce((a, c) => a + c.n, 0) || 1;
+  return r.list.filter((c, k) => c.n > 0 && (k < 3 || c.n / tot >= 0.02)).slice(0, 5).map(c => {
+    let side = 3 - turn; const pv = [];
+    for (const m of c.pv || []) { pv.push({ t: mvName(m), s: side, m }); side = 3 - side; }
+    return { id: c.m, mv: mvName(c.m), val: fmtLead(c.lead), sub: Math.round(c.wr * 100) + '%', cls: c.lead >= 0.5 ? 'good' : c.lead <= -0.5 ? 'bad' : '', pv: fin || c.pv ? pv : null, played: c.m === played };
+  });
+}
+// candidates of the shown position already computed (the whole-game review's search of a suspicious move, or the hint search)
+function rbSeedRaw() {
+  if (rbS || cur >= moves.length || statusAt(cur).over || isCounting(cur)) return null;
+  const a = rv && rv.key === gameKey() ? rv.list[cur] : null;
+  if (a && a.srch && a.srch.cands && a.srch.cands.length) return { list: a.srch.cands };
+  const h = anaCache.get(keyOf(cur));
+  return h && h.list && h.list.length ? h : null;
+}
+function rbSeed() { const r = rbSeedRaw(); return r ? rbFmt(r, false) : null; }
+function rbAnalyze(done, st) {
   if (!rbS && (statusAt(cur).over || isCounting(cur))) { done([], true); return null; }
   if (rbS && rbS.mv.length >= 2 && rbS.mv[rbS.mv.length - 1] === PASS && rbS.mv[rbS.mv.length - 2] === PASS) { done([], true); return null; }
-  const turn = pos.turn, played = !rbS && cur < moves.length ? moves[cur] : -9;
-  const fmtList = (r, fin) => {
-    if (!r || !r.list) return [];
-    const tot = r.list.reduce((a, c) => a + c.n, 0) || 1;
-    return r.list.filter((c, k) => c.n > 0 && (k < 3 || c.n / tot >= 0.02)).slice(0, 5).map(c => {
-      let side = 3 - turn; const pv = [];
-      for (const m of c.pv || []) { pv.push({ t: mvName(m), s: side, m }); side = 3 - side; }
-      return { id: c.m, mv: mvName(c.m), val: fmtLead(c.lead), sub: Math.round(c.wr * 100) + '%', cls: c.lead >= 0.5 ? 'good' : c.lead <= -0.5 ? 'bad' : '', pv: fin || c.pv ? pv : null, played: c.m === played };
-    });
-  };
-  if (!W3) W3 = makeWorker();
   // continuous analysis: deeper and deeper searches (visits ×2 each round, lines kept from the last finished round)
-  // until about 45 s have been spent or the box's 停止 cancels it (the last results stay on screen)
-  let live = true, last = null, spent = 0, k = 0;
+  // until about 45 s have been spent or the box's 停止 cancels it (the last results stay on screen).
+  // st = { k, spent, last }: where an earlier run on this position stopped (rbox.js caches it per position) — continue from there
+  const w = rbWorker(), sd = rbSeedRaw(), seedN = sd ? sd.list.reduce((a, c) => a + (c.n || 0), 0) : 0;
+  let live = true, last = st ? st.last : null, spent = st ? st.spent : 0, k = st ? st.k : 0;
   const v0 = game.n <= 9 ? 1600 : game.n <= 13 ? 900 : 600, LIMIT = 45000, job = jobBase(startSpec, rbMoves());
   (async () => {
     while (live) {
       const tm = Math.min(3500 * (1 << k), LIMIT - spent), t0 = performance.now();
-      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5 }, m => { if (live && !last) done(fmtList(m, false), false); }, W3);
+      // progress of the first round replaces the shown list once it has looked at more than what is already shown (seed)
+      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5, prog0: 120 }, m => { if (live && !last && m.visits >= seedN) done(rbFmt(m, false), false); }, w);
       if (!live) return;
       spent += performance.now() - t0; k++;
-      if (r) last = fmtList(r, true);
-      const end = !r || spent >= LIMIT - 500 || k > 6;
-      if (end) { live = false; done(last || [], true); return; }
-      done(last, false);
+      if (r) last = rbFmt(r, true);
+      const end = !r || spent >= LIMIT - 500 || k > 6, state = { k, spent, last };
+      if (end) { live = false; done(last || [], true, state); return; }
+      done(last, false, state);
     }
   })();
-  return () => { if (live) { live = false; W3.postMessage({ type: 'cancel' }); } };
+  return () => { if (live) { live = false; w.postMessage({ type: 'cancel' }); } };
 }
 function rbSeq() {
   const c = RBox.hovered(); if (!c) return null;
@@ -1349,6 +1401,7 @@ if (window.RBox) RBox.init({
     return { head: RBox.t('final') + (statusAt(moves.length).over ? ' · ' + escHb(resultLine(statusAt(moves.length))) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
   },
   analyze: rbAnalyze,
+  seed: rbSeed,
   hover: () => renderFx(),
   studyStart: () => { busyToken++; stopPlay(); hintList = null; rbS = { base: cur, pos: [posAt(cur)], mv: [] }; renderBoard(false); },
   studyPlay: rbStudyPlay,

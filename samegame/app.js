@@ -254,6 +254,48 @@ function renderHome() {
   if (homeTab === 'action') renderAction();
   if (homeTab === 'me') renderCal();
   if (homeTab === 'gacha') openGacha($('#gachaPanel'));
+  drawSG();
+}
+/* phones: tabs that stack several groups (アクション = modes + 3 mission ranks, a stage list = STAGE 1–5) get a row of
+   group chips fixed right above the bottom bar; only the chosen group is shown. The choice is kept in the settings. */
+function sgState() {
+  if (!PHONE.matches || $('#home').hidden) return null;
+  let key, gs, def;
+  if (homeTab === 'daily') {
+    const r = dlRec(today());
+    key = 'daily'; def = ['pe', 'p', 'ph'].some(k => r[k].left < 0) ? 'puzzle' : DACT.some(([, k]) => r[k].a < 3) ? 'act' : 'puzzle';
+    gs = [{ id: 'puzzle', lb: t('d.puzzle'), open: 1 }, { id: 'act', lb: t('d.act'), open: 1 }, { id: 'free', lb: t('f.title'), open: 1 }];
+  } else if (homeTab === 'action') {
+    key = 'action'; def = 'modes';
+    gs = [{ id: 'modes', lb: t('sg.modes'), open: 1 }].concat(MIS_TIER.map((k, tier) => {
+      const list = MIS.filter(m => m.tier === tier), stars = list.reduce((a, m) => a + (DB.act.mis[m.id] || 0), 0);
+      const prev = tier ? MIS.filter(m => m.tier === tier - 1 && DB.act.mis[m.id]).length : 10;
+      return { id: 'm' + tier, lb: t(k), sub: '★' + stars, open: prev >= UNLOCK };
+    }));
+  } else if (homeTab === 'stage' && themeOpen) {
+    const recs = stRec(themeOpen), nx = recs.findIndex((v, j) => !v && stageOpen(recs, j));
+    key = 'st.' + themeOpen; def = 's' + (nx < 0 ? 0 : Math.floor(nx / PER));
+    gs = [0, 1, 2, 3, 4].map(st => ({ id: 's' + st, lb: String(st + 1), sub: t(TIERS[st]), open: stageOpen(recs, st * PER), done: recs.slice(st * PER, st * PER + PER).every(v => v) }));
+  } else return null;
+  const v = (DB.set.sg || {})[key];
+  return { key, gs, sel: gs.some(g => g.id === v) ? v : def };
+}
+function drawSG() {
+  const bar = $('#sgbar'); if (!bar) return;
+  const S = sgState(), dp = $('.hpanel.daily');
+  document.body.classList.toggle('has-sg', !!S);
+  if (S && S.key === 'daily') dp.dataset.sg = S.sel; else delete dp.dataset.sg;
+  bar.hidden = !S;
+  if (!S) { bar.innerHTML = ''; return; }
+  bar.dataset.k = homeTab;
+  bar.innerHTML = S.gs.map(g => `<button type="button" data-sg="${g.id}" class="${g.id === S.sel ? 'on' : ''} ${g.open ? '' : 'lk'} ${g.done ? 'done' : ''}" aria-pressed="${g.id === S.sel}">${g.open ? '' : A.ICON.lock}<b>${esc(g.lb)}</b>${g.sub ? `<small>${esc(g.sub)}</small>` : ''}</button>`).join('');
+  const on = bar.querySelector('.on'); if (on) bar.scrollLeft = Math.max(0, on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2);
+  $$('button', bar).forEach(b => b.onclick = () => {
+    if (b.dataset.sg === S.sel) return;
+    DB.set.sg = Object.assign({}, DB.set.sg, { [S.key]: b.dataset.sg }); save();
+    if (homeTab === 'action') renderAction(); else if (themeOpen) renderTheme(themeOpen); else drawSG();
+    const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0;
+  });
 }
 function setHomeTab(p) {
   const same = p === homeTab; homeTab = p; if (p !== 'stage') themeOpen = null;
@@ -345,6 +387,7 @@ function renderThemes() {
   });
   el.innerHTML = html + '</div>';
   $$('.tcard', el).forEach(b => b.onclick = () => { themeOpen = b.dataset.th; renderTheme(themeOpen); maybeThemeTip(themeOpen); });
+  drawSG();
 }
 function renderTheme(th) {
   const el = $('#stagePanel'), recs = stRec(th), ti = THEMES.indexOf(th);
@@ -352,8 +395,10 @@ function renderTheme(th) {
   let html = `<div class="thead" style="--tc:${THEME_COL[ti]}"><button class="btn sm" id="thBack">${A.ICON.back}${esc(t('u.list'))}</button>
     <span class="tic">${A.themeIcon(th)}</span><div><h2>${esc(t('th.' + th))}</h2><p>${esc(t('th.' + th + '.r'))}</p>${th !== 'cl' ? `<button class="btn sm" id="thRule">${A.ICON.play}${esc(t('st.demo'))}</button>` : ''}</div>
     <div class="ring" style="--p:${recs.filter(v => v).length * 2}"><b>${recs.filter(v => v).length}</b><small>/50</small></div></div>`;
+  const SG = sgState();
   html += '<div class="stgs">';
   for (let s = 0; s < 5; s++) {
+    if (SG && SG.sel !== 's' + s) continue;
     const open = stageOpen(recs, s * PER), md = stMedal(recs, s), cl = recs.slice(s * PER, s * PER + PER).filter(v => v).length;
     const need = s ? Math.max(0, UNLOCK - recs.slice((s - 1) * PER, s * PER).filter(v => v).length) : 0;
     html += `<section class="stg tier${s}"><div class="stgh"><b>STAGE ${s + 1}</b><span class="tier">${esc(t(TIERS[s]))}</span><span class="cnt">${cl}/10</span>${md ? `<i class="medal m${md}"></i>` : ''}</div>`;
@@ -370,15 +415,18 @@ function renderTheme(th) {
   $('#thBack').onclick = () => { themeOpen = null; renderThemes(); };
   const tr = $('#thRule'); if (tr) tr.onclick = () => maybeThemeTip(th, true);
   $$('.tile', el).forEach(b => b.onclick = () => startStage(th, +b.dataset.j));
+  drawSG();
 }
 function renderAction() {
-  const el = $('#actPanel');
-  let html = `<div class="acards">
+  const el = $('#actPanel'), SG = sgState(), sgOn = id => !SG || SG.sel === id;
+  let html = !sgOn('modes') ? '' : `<div class="acards">
     <div class="card acard red"><div class="ptag">BLITZ</div><button class="qbtn qc" data-rule="blitz">?</button><span class="amini">${miniModeIcon('blitz')}</span><div class="abig">${A.burst(14, 47, 31, 'var(--yel)')}<b>60</b></div><h3>${esc(t('a.blitz'))}</h3><p>${esc(t('a.blitz.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></div><button class="btn big yel" id="aBlitz">${A.ICON.play}${esc(t('d.play'))}</button></div>
     <div class="card acard blue"><div class="ptag yel">RISE</div><button class="qbtn qc" data-rule="rise">?</button><span class="amini mrise"><i></i><i></i><i></i></span><div class="abig rise"><i></i><i></i><i></i><i></i></div><h3>${esc(t('a.rise'))}</h3><p>${esc(t('a.rise.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act.rise ? fmt(DB.act.rise) : '—'}</b></div><button class="btn big yel" id="aRise">${A.ICON.play}${esc(t('d.play'))}</button></div>
     ${NEW_MODES.map((m, i) => `<div class="card acard ${['grn', 'plum', 'teal'][i]}"><div class="ptag ${i === 1 ? 'yel' : ''}">${m.toUpperCase()}</div><button class="qbtn qc" data-rule="${m}">?</button><span class="amini">${miniModeIcon(m)}</span><div class="abig mic">${modeIcon(m)}</div><h3>${esc(t('a.' + m))}</h3><p>${esc(t('a.' + m + '.d'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${DB.act[m] ? fmt(DB.act[m]) : '—'}</b></div><button class="btn big yel" data-am="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`).join('')}
-  </div><div class="sechead"><h2>${esc(t('m.h'))}</h2><p>${esc(t('m.d'))}</p></div>`;
+  </div>`;
+  if (!SG || SG.sel !== 'modes') html += `<div class="sechead"><h2>${esc(t('m.h'))}</h2><p>${esc(t('m.d'))}</p></div>`;
   for (let tier = 0; tier < 3; tier++) {
+    if (!sgOn('m' + tier)) continue;
     const list = MIS.filter(m => m.tier === tier), stars = list.reduce((a, m) => a + (DB.act.mis[m.id] || 0), 0);
     const prev = tier ? MIS.filter(m => m.tier === tier - 1 && DB.act.mis[m.id]).length : 10, open = prev >= UNLOCK;
     html += `<section class="mtier mt${tier}"><div class="stgh"><b>${esc(t(MIS_TIER[tier]))}</b><span class="cnt">★ ${stars}/30</span></div>`;
@@ -387,11 +435,14 @@ function renderAction() {
     html += '</section>';
   }
   el.innerHTML = html;
+  drawSG();
+  if (!sgOn('modes')) { bindMis(el); return; }
   $('#aBlitz').onclick = () => startAction({ kind: 'blitz', m: 'blitz', k: 4, t: 60, g: ['hero', 'bomb', 'line', 'prism'] });
   $('#aRise').onclick = () => startAction({ kind: 'rise', m: 'rise', k: 4, t: 0, g: ['bomb'] });
   $$('[data-am]', el).forEach(b => b.onclick = () => { const m = b.dataset.am; startAction({ kind: m, m, k: m === 'order' ? 4 : 4, t: 60, g: m === 'fuse' ? ['bomb'] : ['hero'] }); });
-  $$('.mis', el).forEach(b => b.onclick = () => { const m = MIS[+b.dataset.m]; startAction({ kind: 'mission', m: m.m, k: m.k, t: m.t, g: m.g, mis: m }); });
+  bindMis(el);
 }
+function bindMis(el) { $$('.mis', el).forEach(b => b.onclick = () => { const m = MIS[+b.dataset.m]; startAction({ kind: 'mission', m: m.m, k: m.k, t: m.t, g: m.g, mis: m }); }); }
 const goalText = m => t('goal.' + m.goal[0], { n: m.goal[0] === 'score' ? fmt(m.goal[1]) : m.goal[1] });
 
 /* ============================================================ GAME ============================================================ */
@@ -1384,6 +1435,7 @@ function bind() {
   document.body.insertAdjacentHTML('afterbegin', A.SPRITE);
   $('#htabs').innerHTML = [['daily', 'ht.daily', A.ICON.daily], ['stage', 'ht.stage', A.ICON.stage], ['action', 'ht.action', A.ICON.action]].map(([p, k, ic]) => `<button data-p="${p}">${ic}<span data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
   $$('#htabs button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
+  $('#home').insertAdjacentHTML('beforeend', '<nav class="sgbar" id="sgbar" hidden></nav>');
   $('#bnav').setAttribute('role', 'tablist');
   $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${A.ICON[ic]}${p === 'me' ? '<i class="dot" hidden></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
   $$('#bnav button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
