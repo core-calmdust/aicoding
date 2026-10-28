@@ -1508,11 +1508,15 @@ let PCW = false;
 function pcFit() {
   const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js)
-  const narrow = w < 1300, rw = narrow ? 310 : 330, cg = narrow ? 16 : 20, px = narrow ? 16 : 24;   // (= the CSS --rw / --cg / --px)
-  const bxh = document.body.classList.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(250, (hgt - hb) * 0.28))) : 0;   // the PC review box under the board
+  const px = w < 1300 ? 16 : 24;   // (= the CSS --px)
+  const H = hgt - hb, B = document.body.classList;
+  // the info row under the board (対局者 | 形勢 | 振り返り | 棋譜); lessons / puzzles and the PC review box need a taller one
+  const bxh = B.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(250, H * 0.28))) : 0;
+  const ich = bxh || Math.round(B.contains('in-lesson') || B.contains('in-puzzle') ? Math.max(190, Math.min(290, H * 0.32)) : Math.max(150, Math.min(230, H * 0.25)));
   document.documentElement.style.setProperty('--bxh', bxh + 'px');
-  const base = hgt - hb - 24 - (bxh ? bxh + 12 : 0) - (window.olDockH ? olDockH() : 0);   // height for the board (and the info columns beside it)
-  const availW = w - 2 * px - rw - cg;
+  document.documentElement.style.setProperty('--ich', ich + 'px');
+  const base = H - 24 - 12 - ich - (window.olDockH ? olDockH() : 0);   // height left for the board
+  const availW = w - 2 * px;
   let u = Math.min(availW / 15.85, 100), h = base / u;
   if (h < 7.2) { u = base / 7.2; h = 7.2; }
   return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
