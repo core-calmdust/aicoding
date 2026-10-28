@@ -397,7 +397,7 @@ const goalText = m => t('goal.' + m.goal[0], { n: m.goal[0] === 'score' ? fmt(m.
 /* ============================================================ GAME ============================================================ */
 let G = null; // current game
 const boardEl = () => $('#board');
-function showScreen(id) { $$('.screen').forEach(s => s.hidden = s.id !== id); document.body.dataset.screen = id; window.scrollTo(0, 0); }
+function showScreen(id) { $$('.screen').forEach(s => s.hidden = s.id !== id); document.body.dataset.screen = id; window.scrollTo(0, 0); setTimeout(navSync, 0); }
 function newGame(cfg) {
   stopLoop();
   const g = Object.assign({ min: 2, keep: false, score: 0, hist: [], combo: 0, maxCombo: 0, lastPop: 0, fever: 0, feverT: 0, feverN: 0, heroN: 0, pops: 0, big: 0, over: false, busy: false, hinted: false, undone: false, retried: false, elapsed: 0 }, cfg);
@@ -1002,7 +1002,7 @@ function toast(s) { const e = $('#toast'); e.textContent = s; e.classList.add('o
 /* ============================================================ MODALS ============================================================ */
 function modal(html, cls = '') {
   const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false;
-  $('#modalBody').scrollTop = 0;
+  $('#modalBody').scrollTop = 0; setTimeout(navSync, 0);
   return $('#modalBody');
 }
 function closeModal() { if ($('#modal').classList.contains('mask') && ask.close) { ask.close(); return; } $('#modal').hidden = true; if (!$('#home').hidden) renderHome(); }
@@ -1403,6 +1403,30 @@ function bind() {
   });
   document.addEventListener('visibilitychange', () => { if (G && G.action) { if (document.hidden) G.paused = true; else { G.paused = false; G.last = performance.now(); } } });
 }
+/* ---------------- back swipe / browser back: one step back inside the app ----------------
+   While the app is anywhere but its root (daily tab, no dialog), one extra history entry is kept.
+   Going back pops it: we take one step back (close the dialog → leave the game → close the stage list → daily tab)
+   and add the entry again if we're still not at the root, so the next back steps again; at the root, back leaves the page. */
+const NAV = { skip: false };
+const navRoot = () => $('#modal').hidden && !$('#home').hidden && !themeOpen && homeTab === 'daily';
+function navSync() {
+  if (NAV.skip) return;
+  const trap = !!(history.state && history.state.sg);
+  if (!navRoot() && !trap) { try { history.pushState({ sg: 1 }, ''); } catch (e) {} }
+  else if (navRoot() && trap) { NAV.skip = true; history.back(); }   // closed with ✕ / a button: drop the spare entry (its popstate is ignored)
+}
+function navBack() {
+  if (!$('#modal').hidden) { closeModal(); return; }
+  if (!$('#play').hidden && G) { quitGame(); return; }
+  if (themeOpen) { themeOpen = null; renderThemes(); return; }
+  if (homeTab !== 'daily') { setHomeTab('daily'); return; }
+}
+addEventListener('popstate', () => {
+  if (NAV.skip) { NAV.skip = false; return; }
+  navBack(); setTimeout(navSync, 0);
+});
+document.addEventListener('click', () => setTimeout(navSync, 0), true);
+document.addEventListener('keydown', () => setTimeout(navSync, 0), true);
 async function boot() {
   bind(); applyI18n(); applySkin(); sndIcon();
   try { STG = await (await fetch('stages.json?v=2')).json(); } catch (e) { STG = null; }
