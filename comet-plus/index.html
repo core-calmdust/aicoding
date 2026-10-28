@@ -1525,6 +1525,11 @@ function drawRanking(ctx) {
             if (on) { ctx.fillStyle = 'rgba(127,233,255,0.14)'; ctx.fillRect(x - w / 2, L.srcY - 15, w, 30); ctx.strokeStyle = dcol; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2 + 0.5, L.srcY - 14.5, w - 1, 29); }
             ctx.fillStyle = on ? '#ffffff' : 'rgba(170,190,230,0.55)'; ctx.fillText(lb, x, L.srcY + 1, IS_MOBILE ? HUD_W / srcs.length - 12 : 132);
         });
+        if (!IS_MOBILE) { // タブ切り替えの操作表示（パッド: L / R、キーボード: Shift+Tab / Tab）
+            const pad = lastInputDevice === 'gamepad', xl = rankTabX(0, srcs.length) - 96, xr = rankTabX(srcs.length - 1, srcs.length) + 96;
+            ctx.save(); ctx.fillStyle = dcol; ctx.globalAlpha = 0.85; ctx.font = `700 14px ${config.fontFamily}`;
+            ctx.fillText(pad ? '◀ L' : '◀ ⇧TAB', xl, L.srcY + 1); ctx.fillText(pad ? 'R ▶' : 'TAB ▶', xr, L.srcY + 1); ctx.restore();
+        }
         if (rankView.src !== 'local') { // 集計期間
             const CO = window.CometOnline, per = rankView.src === 'd' ? CO.dayId() : rankView.src === 'w' ? CO.weekId() : '';
             if (per) { ctx.fillStyle = 'rgba(200,220,255,0.6)'; ctx.font = `500 ${IS_MOBILE ? 13 : 11}px ${config.fontFamily}`; ctx.fillText(per, cx, L.srcY + (IS_MOBILE ? 27 : 24)); }
@@ -1570,7 +1575,7 @@ function drawRanking(ctx) {
     // ページ（1-10 / … / 91-100）
     ctx.textAlign = 'center'; ctx.font = `600 ${IS_MOBILE ? 18 : 13}px ${config.fontFamily}`; ctx.fillStyle = 'rgba(200,220,255,0.8)';
     ctx.fillText(`${off + 1} - ${off + RANK_SHOW}`, cx, L.pageY);
-    ctx.fillStyle = dcol; ctx.fillText('◀', cx - (IS_MOBILE ? 200 : 70), L.pageY); ctx.fillText('▶', cx + (IS_MOBILE ? 200 : 70), L.pageY);
+    ctx.fillStyle = dcol; ctx.fillText('▲', cx - (IS_MOBILE ? 200 : 70), L.pageY); ctx.fillText('▼', cx + (IS_MOBILE ? 200 : 70), L.pageY); // 上下キーで前後のページ
     ctx.fillStyle = 'rgba(200,220,255,0.7)'; ctx.font = `500 ${IS_MOBILE ? 15 : 12}px ${config.fontFamily}`;
     ctx.fillText(TK('rk.hint'), cx, L.backY, HUD_W - 20);
     ctx.restore();
@@ -6707,7 +6712,16 @@ function project(x, y, h = 0) {
 // ---------------------------------
 const Q_MAX = PR, Q_MIN = IS_MOBILE ? 0.45 : 0.55;
 let quality = PR, qCeil = PR;
-const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9 };
+const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9, hold: 0 };
+// フルスクリーン切り替え・ウィンドウサイズ変更の直後は一時的にフレームが落ちるので、計測を止めて画質を戻す
+// （これで画質が下がると上部のHUDが別キャンバス表示になり、3D画面とずれて見えていた）
+function resetQualityAfterResize() {
+    perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; perf.good = 0; perf.lastRaise = -1e9;
+    qCeil = Q_MAX; simRealLast = null; // 切り替え中の空白で追いつき更新が連続しないよう時間の基準も取り直す
+    if (quality !== Q_MAX) { quality = Q_MAX; applyQuality(); }
+}
+document.addEventListener('fullscreenchange', resetQualityAfterResize);
+window.addEventListener('resize', () => { perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; });
 function applyQuality() {
     renderer.setPixelRatio(quality);
     renderer.setSize(VW, VH, false);
@@ -6716,6 +6730,7 @@ function applyQuality() {
     glowMat.uniforms.uScale.value = GLOW_BASE * quality;
 }
 function adaptQuality(now) {
+    if (now < perf.hold) { perf.t0 = 0; return; }
     if (!perf.t0) { perf.t0 = now; return; }
     if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; } // タブ復帰などの長い空白は無視
     perf.lastFrame = now;
