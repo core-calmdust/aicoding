@@ -20,8 +20,8 @@ function faceHtml(c) {
   const corner = `<div class="ix"><b>${rk}</b>${suitSvg(s)}</div><div class="ix ix2"><b>${rk}</b>${suitSvg(s)}</div>`;
   let mid;
   if (r > 10) {
-    mid = `<div class="fc">${window.Court ? Court.svg(r, s) : ''}</div>`;
-  } else if (r === 1) mid = s === 0 ? `<div class="ace a0"><svg class="orn" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18.4" fill="none" stroke="currentColor" stroke-width=".5"/><circle cx="20" cy="20" r="16.8" fill="none" stroke="currentColor" stroke-width=".25" stroke-dasharray=".6 1.2"/></svg>${suitSvg(s)}</div>` : `<div class="ace">${suitSvg(s)}</div>`;
+    mid = `<div class="fc"><img src="img/${'JQK'[r - 11]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async"></div>`;
+  } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
   return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div></div><div class="bk"></div>`;
 }

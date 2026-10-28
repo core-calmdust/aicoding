@@ -6,14 +6,15 @@ const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
 const FELTS = ['green', 'blue', 'wine', 'charcoal', 'teal', 'purple', 'walnut', 'linen'];
-const BACKS = ['crimson', 'navy', 'forest', 'wave', 'check', 'stars', 'deco', 'tartan'];
+const BACKS = ['red', 'blue', 'crimson', 'navy', 'forest', 'wave', 'stars', 'deco'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'crimson', face: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'red', face: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+if (!BACKS.includes(D.set.back)) { D.set.back = 'red'; document.documentElement.dataset.back = 'red'; }
 D.stats = D.stats || {}; D.daily = D.daily || {}; D.bank = D.bank || 0;
 function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
 const set = D.set;
@@ -536,7 +537,7 @@ function openSettings() {
     `<div class="sec"><span class="lab">${esc(t('set.tap'))}</span>${seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')}</div>` +
     `<div class="sec"><span class="lab">${esc(t('set.speed'))}</span>${seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')}</div>` +
     `<div class="sec">${ch('anim', t('set.anim'))}${ch('hl', t('set.hl'))}${ch('timer', t('set.timer'))}${ch('score', t('set.score'))}${ch('left', t('set.left'))}${ch('sound', t('set.sound'))}</div>` +
-    designHtml();
+    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a>（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a></p>`;
   const body = $('#setBody');
   body.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { set.auto = b.dataset.auto; save(); openSettings(); });
   body.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { set.tap = b.dataset.tap; TB.select(null); save(); openSettings(); });

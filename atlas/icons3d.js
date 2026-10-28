@@ -333,6 +333,22 @@
       const b2 = blk(2); b2.scale.setScalar(.75); g0.add(at(b2, .95, 2.35, -.5, -.5, .6, .4));
       return g0;
     },
+    solitaire() {   // chunky toy playing cards fanned on green baize; the Ace of spades pops up
+      const g0 = new T.Group();
+      const faceTex = (k, r, s) => X.canvasTex('ic-sol' + k, 256, 352, (c, W, H) => {
+        c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); const red = s === 1 || s === 2; c.fillStyle = red ? '#c0232e' : '#1f1f26';
+        c.font = 'bold 96px Georgia, serif'; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText(r, 20, 14);
+        c.font = '230px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('♠♥♦♣'[s], W / 2 + 10, H * .6);
+      });
+      const backTex = X.canvasTex('ic-solb', 256, 352, (c, W, H) => { c.fillStyle = '#a51e2f'; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 5; for (let i = -H; i < W + H; i += 22) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + H, H); c.stroke(); c.beginPath(); c.moveTo(i + H, 0); c.lineTo(i, H); c.stroke(); } c.strokeStyle = '#fbf3e2'; c.lineWidth = 14; c.strokeRect(14, 14, W - 28, H - 28); });
+      const edge = C(0xf3ead6, { roughness: .4 }), bk = M({ map: backTex, roughness: .45 });
+      const card = (top) => { const b = rbox(1.5, .16, 2.1, .12, edge); const f = mesh(new T.PlaneGeometry(1.36, 1.96), top); f.rotation.x = -Math.PI / 2; f.position.y = .165; return grp(b, f); };
+      g0.add(at(card(bk), -.55, 0, .2, 0, .35, 0));
+      g0.add(at(card(M({ map: faceTex('h', 'K', 1), roughness: .4 })), .1, .17, .1, 0, -.05, 0));
+      g0.add(at(card(M({ map: faceTex('d', 'Q', 2), roughness: .4 })), .65, .34, .25, 0, -.42, 0));
+      g0.add(at(card(M({ map: faceTex('s', 'A', 0), roughness: .35 })), -.1, 1.75, -.35, 1.05, .35, -.18));
+      return g0;
+    },
     jailbreak() {   // a 3×3 patch of concrete cell floor: crates, the orange inmate slipping through the bars, a gold key
       const g0 = new T.Group();
       const tile = C(0xd8d2c4, { roughness: .7 });
@@ -759,7 +775,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9] };
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {

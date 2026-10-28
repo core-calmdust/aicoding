@@ -1,0 +1,4 @@
+J・Q・K の絵札（*.webp のうち J/Q/K）とカード裏面（back-red.webp, back-blue.webp）の画像:
+"Classic Playing Cards" (Figma Community, https://www.figma.com/community/file/1272002619371253628/classic-playing-cards)
+License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+変更点: 元の絵柄から絵札の枠内と裏面の部分を切り出し、WebP に変換して使用。
