@@ -93,7 +93,7 @@ function applyI18n() {
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
   document.title = MODE === 'speed' ? t('sp.title') + ' — ' + t('sp.meta') : t('title') + ' — ' + t('meta.sub');
-  $('#langSel').value = LANG;
+  { const ls = $('#langSel'); if (ls) ls.value = LANG; }
   $('#kbHelp').innerHTML = t('kb.help');
 }
 
@@ -448,12 +448,14 @@ function renderProfile() {
       <div class="pstat"><small>${esc(t('prof.total'))}</small><b>${fmtN(MODE === 'speed' && SPD ? SPD.totalPts() : DB.sc.tot)}</b></div>
       <div class="pstat"><small>${esc(t('prof.rank'))}</small><b>${rk}</b>${myRanks.tot ? `<em>${esc(t('prof.totrank', { n: fmtN(myRanks.tot) }))}</em>` : ''}</div>
     </div>
-    <div class="pact"><span class="pts" title="${esc(t('pts.title'))}">${COIN}${fmtN(DB.pts)}</span><button class="btn sm" id="pGacha">${esc(t('ga.btn'))}</button><button class="btn sm ghost" id="pRank">${esc(t('rk.title'))}</button></div>
+    <div class="pact"><span class="pts" title="${esc(t('pts.title'))}">${COIN}${fmtN(DB.pts)}</span><button class="btn sm" id="pGacha">${esc(t('ga.btn'))}</button><button class="btn sm ghost" id="pRank">${esc(t('rk.title'))}</button><button class="btn sm ghost pcx" id="pZk">${esc(t('zk.title'))}</button><button class="btn sm ghost pcx" id="pAch">${esc(t('ach.title'))}<i class="achdot"></i></button></div>
   </div>`;
   $('#pAv').onclick = () => { SFX.tap(); openZukan(); };
   $('#pEdit').onclick = () => { SFX.tap(); openName(false); };
   $('#pGacha').onclick = () => { SFX.tap(); openGacha(); };
   $('#pRank').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openRank(); else openRank(); };
+  $('#pZk').onclick = () => { SFX.tap(); openZukan(); };
+  $('#pAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 }
 async function loadMyRanks() {
   if (!ON || !ON.available || !DB.prof.name) return;
@@ -1342,7 +1344,7 @@ function showResult(rec, o) {
     else if (a === 'view') closeModals();
   });
   openModal('mRes');
-  if (o.fresh.length) { SFX.ach(); $('#btnAch').classList.add('has'); }
+  if (o.fresh.length) { SFX.ach(); achNew(true); }
 }
 async function share(rec) {
   let s;
@@ -1443,14 +1445,16 @@ async function checkMonthAwards() {
       DB.rk[m] = r ? r.rank : 0;
       const fresh = syncAch(true); persist();
       fresh.forEach(a => toast(`${badge(a.tier, a.icon)}<span><b>${esc(t('res.newach'))} ${esc(a.name)}</b><small>${esc(a.desc)}</small></span>`));
-      if (fresh.length) { SFX.ach(); $('#btnAch').classList.add('has'); }
+      if (fresh.length) { SFX.ach(); achNew(true); }
     } catch (e) {}
   }
 }
 
 let achTab = 'daily';
+// achievement "new" badge: dots on the 実績 entries (profile card / マイページ) and on the マイページ tab
+function achNew(on) { document.body.classList.toggle('achnew', !!on); }
 function openAch() {
-  $('#btnAch').classList.remove('has');
+  achNew(false);
   const tabs = [['daily', 'ach.t.daily'], ['col', 'ach.t.col'], ['chal', 'ach.t.chal'], ['stats', 'ach.t.stats']];
   $('#achTabs').innerHTML = tabs.map(([k, l]) => `<button class="tab ${k === achTab ? 'on' : ''}" data-k="${k}">${esc(t(l))}</button>`).join('');
   $$('#achTabs .tab').forEach(b => b.onclick = () => { achTab = b.dataset.k; openAch(); });
@@ -1817,7 +1821,9 @@ function hbList() {
 function openSettings() {
   const items = [['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
-  $('#setBody').innerHTML = `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
+  const LN = { ja: '日本語', en: 'English', zh: '中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', hi: 'हिन्दी', ar: 'العربية' };
+  $('#setBody').innerHTML = `<label class="set langset"><span class="lbl"><b>${esc(t('set.lang'))}</b></span><select id="langSel" aria-label="Language">${Object.keys(LN).map(l => `<option value="${l}" ${l === LANG ? 'selected' : ''}>${LN[l]}</option>`).join('')}</select></label>`
+    + `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
     + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}${SPD ? ' ' + esc(t('hb.spdesc')) : ''}</small></span><div class="hbgrid">${hbList().map(k => { const ok = !k || hbOK(k), cur = DB.set[hbKey()] || '', on = cur === k && ok || (!k && cur && !hbOK(cur)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(bgName(k) + (ok ? '' : ' · ' + (isSpBg(k) ? SPD.bgCond(k) : t('hb.lock'))))}">${BG.svg(k || (MODE === 'speed' ? 'speedway' : 'daily'), 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(bgName(k))}</span></button>`; }).join('')}</div></div>`
     + items.map(([k, l]) => `<button class="set ${DB.set[k] ? 'on' : ''}" data-k="${k}"><span class="lbl"><b>${esc(t(l))}</b><small>${esc(t(l + '.d'))}</small></span><span class="sw"></span></button>`).join('')
     + syncSection() + `<button class="set" id="setName"><span class="lbl"><b>${esc(t('prof.edit'))}</b><small>${esc(DB.prof.name || '—')}</small></span></button><button class="danger" id="resetAll">${esc(t('set.reset'))}</button>`;
@@ -1825,11 +1831,15 @@ function openSettings() {
   $$('#setBody .set[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; DB.set[k] = !DB.set[k]; if (k === 'sound') saveSitePref(); b.classList.toggle('on', DB.set[k]); persist(); applySettings(); render(); SFX.tap(); });
   $$('#setBody .hbt:not(.lock)').forEach(b => b.onclick = () => { setHomeBg(b.dataset.hb); $$('#setBody .hbt').forEach(x => x.classList.toggle('on', x === b)); if (screen === 'home') homeScene(); });
   wireSync();
+  $('#langSel').onchange = e => {
+    LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
+    applyI18n(); route(); $('#mSet').classList.add('on'); openSettings(); // re-render the page underneath, keep the dialog open
+  };
   $('#setName').onclick = () => { closeModals(); setTimeout(() => openName(!DB.prof.name), 60); };
   $('#resetAll').onclick = () => { if (confirm(t('set.reset.q'))) { localStorage.removeItem(STORE); DB = load(); persist(true); closeModals(); go(''); } };
   openModal('mSet');
 }
-function applySettings() { $('#btnSound').classList.toggle('muted', !DB.set.sound); document.body.classList.toggle('still', !DB.set.motion); }
+function applySettings() { document.body.classList.toggle('still', !DB.set.motion); }
 let lastTod = null;
 function applyTod() {
   const tod = curTod(); if (tod === lastTod) return; lastTod = tod;
@@ -1929,14 +1939,8 @@ placeGsel();
 PHONE.addEventListener('change', () => { placeGsel(); if (screen === 'home') setHomeTab(MODE === 'speed' ? DB.homeTabS : DB.homeTab); });
 $('#logo').onclick = () => go('');
 if ($('#calPrev')) { $('#calPrev').onclick = () => { calMonth = addMonths(calMonth, -1); renderCal(); }; $('#calNext').onclick = () => { calMonth = addMonths(calMonth, 1); renderCal(); }; }
-$('#btnAch').onclick = () => { SFX.tap(); if (MODE === 'speed' && SPD) SPD.openAch(); else openAch(); };
 $('#btnSet').onclick = () => { SFX.tap(); openSettings(); };
 $('#btnHelp').onclick = () => { SFX.tap(); openHelp(); };
-$('#btnSound').onclick = () => { DB.set.sound = !DB.set.sound; saveSitePref(); persist(); applySettings(); SFX.tap(); };
-$('#langSel').onchange = e => {
-  LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
-  applyI18n(); route();
-};
 document.addEventListener('pointerdown', e => {
   if (screen !== 'game' || !G) return;
   if (e.target.closest('.board,.side,.hintcard,.gbar,.modal,.top')) return;
@@ -1951,7 +1955,7 @@ setInterval(() => { const td = today(); if (td !== lastDay) { lastDay = td; if (
 if (DEBUG) window.__sudoku = { get G() { return G; }, DB: () => DB, catalog, setValue, addPts: n => { DB.pts += n; persist(); } };
 /* ================= shared core for speed.js / tutorial.js ================= */
 const CORE = {
-  get DB() { return DB; }, get LANG() { return LANG; }, get screen() { return screen; },
+  achNew, get DB() { return DB; }, get LANG() { return LANG; }, get screen() { return screen; },
   MODE, BASE, ON, IC, BG, E, GACHA_COST, FIRST_SPEED,
   speedUrl: MODE === 'speed' ? './' : '../speed-sudoku/', speedUrlAbs: URL_SPEED, selfUrl: MODE === 'speed' ? '../sudoku/' : './',
   t, esc, fmtN, fmtTime, fmtDate, fmtMonth, locale, today, thisMonth, addDays, addMonths, persist, toast, confetti, SFX, vib,

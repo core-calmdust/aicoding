@@ -1266,4 +1266,7 @@ add("ar", {
 [['ja', '記録', 'マイページ'], ['en', 'Records', 'Me'], ['zh', '记录', '我的'], ['ko', '기록', '마이'], ['es', 'Registro', 'Perfil'],
  ['fr', 'Suivi', 'Profil'], ['pt', 'Registro', 'Perfil'], ['de', 'Verlauf', 'Profil'], ['hi', 'रिकॉर्ड', 'प्रोफ़ाइल'], ['ar', 'السجل', 'ملفي']]
   .forEach(([l, r, m]) => add(l, { 'ht.rec': r, 'ht.me': m }));
+// settings: language picker (moved out of the header)
+[['ja', '言語'], ['en', 'Language'], ['zh', '语言'], ['ko', '언어'], ['es', 'Idioma'], ['fr', 'Langue'], ['pt', 'Idioma'], ['de', 'Sprache'], ['hi', 'भाषा'], ['ar', 'اللغة']]
+  .forEach(([l, v]) => add(l, { 'set.lang': v }));
 })(window.I18N);

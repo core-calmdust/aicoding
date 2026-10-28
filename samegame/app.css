@@ -1256,7 +1256,7 @@ body[data-screen="play"] #app{padding-bottom:0}
   body.phnav[data-screen="home"] .top{flex:none}
   body.phnav[data-screen="home"] main{flex:1;min-height:0;display:flex;flex-direction:column}
   body.phnav #home{flex:1;min-height:0;display:flex;flex-direction:column}
-  body.phnav #htabs,body.phnav #btnGacha{display:none}
+  body.phnav #htabs{display:none}
   body.phnav #home>.hpanel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -12px;padding:24px 12px 18px;scrollbar-width:none}
   body.phnav #home>.hpanel::-webkit-scrollbar{display:none}
   body.phnav #home>.hpanel>*{flex-shrink:0}
@@ -1307,4 +1307,16 @@ body[data-screen="play"] #app{padding-bottom:0}
   body[data-skin="mid"] .bnav button{border-radius:16px}
   body[data-skin="mid"] .bnav button.on{border-color:transparent;box-shadow:none;transform:translateY(-2px)}
   body.phnav[data-screen="home"] #toast{bottom:calc(var(--bnh) + 18px + env(safe-area-inset-bottom))}
+}
+
+/* header trimmed to ルール / 設定 / ホーム: language + sound live in the settings dialog; gacha / book / achievements / ranking stay on the home screen */
+.sw.sel select,.sw.sel #langSel{width:auto;max-width:60%;height:38px;font-size:15px;padding:0 8px}
+.plinks .btn{position:relative}
+.plinks .dot{position:absolute;top:-7px;right:-7px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--ink)}
+.plinks .dot[hidden]{display:none}
+@media (min-width:761px) and (max-width:999px){
+  #home .prof{flex-wrap:wrap}
+  #home .prof .pextra{display:flex;flex-basis:100%;flex-direction:column;gap:8px}
+  #home .prof .pextra .plvbar,#home .prof .pextra .pst{display:none}
+  #home .prof .plinks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.plinks .btn{min-height:38px}
 }

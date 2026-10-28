@@ -818,3 +818,8 @@ window.SAME_I18N.ar = {
   const A = { ja: 'やすみ', en: 'Rest', zh: '休息', ko: '휴식', es: 'Descanso', fr: 'Repos', pt: 'Pausa', de: 'Pause', hi: 'आराम', ar: 'استراحة' };
   for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['d.done'] = A[l];
 })();
+// settings: language picker (moved out of the header)
+(function () {
+  const A = { ja: '言語', en: 'Language', zh: '语言', ko: '언어', es: 'Idioma', fr: 'Langue', pt: 'Idioma', de: 'Sprache', hi: 'भाषा', ar: 'اللغة' };
+  for (const l in A) { window.SAME_I18N[l] = window.SAME_I18N[l] || {}; window.SAME_I18N[l]['set.lang'] = A[l]; }
+})();

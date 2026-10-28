@@ -182,7 +182,7 @@ const ACH = [
   ['col30', () => [colOwned(), 50], 300], ['col100', () => [colOwned(), 200], 3000], ['colall', () => [colOwned(), COL_TOTAL], 10000],
 ];
 const achDone = () => ACH.filter(([id, f]) => { const [v, g] = f(DB.stats); return v >= g && !DB.ach[id]; }).length;
-function updateBadges() { const n = achDone(); $('#btnAch .dot').style.display = n ? 'block' : 'none'; const d = $('#bnav .dot'); if (d) d.hidden = !n; }
+function updateBadges() { const n = achDone(); $$('[data-go="ach"] .dot').forEach(e => e.hidden = !n); const d = $('#bnav .dot'); if (d) d.hidden = !n; }
 
 /* ---------------- online rankings ---------------- */
 const ON = window.SameOnline;
@@ -213,7 +213,7 @@ function profCard() {
     <div class="pextra"><div class="plvbar"><span>LV.${lv} → ${lv + 1}</span><span class="bar"><i style="width:${Math.min(100, (DB.life - 50 * (lv - 1) ** 2) / (50 * lv ** 2 - 50 * (lv - 1) ** 2) * 100)}%"></i></span></div>
       <ul class="pst"><li><span>${esc(t('ht.stage'))}</span><b>${Object.values(DB.st).filter(v => v).length}<small>/${ST_TOTAL}</small></b></li><li><span>${esc(t('m.h'))}</span><b>${Object.values(DB.act.mis).filter(v => v).length}<small>/30</small></b></li>
       <li><span>${esc(t('bk.title'))}</span><b>${colOwned()}<small>/${COL_TOTAL}</small></b></li><li><span>BLITZ</span><b>${DB.act.blitz ? fmt(DB.act.blitz) : '—'}</b></li></ul>
-      ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}</button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
+      ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.gacha}${esc(t('ga.title'))}</button><button class="btn" data-go="book">${A.ICON.book}${esc(t('bk.title'))}</button><button class="btn" data-go="ach">${A.ICON.trophy}${esc(t('ach.title'))}<i class="dot" hidden></i></button><button class="btn" data-go="rank">${A.ICON.rank}${esc(t('rk.title'))}</button></div></div>`;
   $$('[data-go]', $('#profCard')).forEach(b => b.onclick = () => ({ gacha: () => openGacha(), book: () => openBook(), ach: openAch, rank: () => openRank('p') })[b.dataset.go]());
   $('#pfEdit').onclick = () => openProfile();
   const pn = $('#profCard .pname'); pn.title = t('pf.name'); pn.onclick = () => {
@@ -1122,9 +1122,12 @@ function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
   const cur = document.body.dataset.skin;
   const skinPick = `<h3 class="mh3">${esc(t('set.skin'))}</h3><div class="skins">${SKINS.map(k => `<button class="skin ${k === cur ? 'on' : ''}" data-skin="${k}"><span class="sw4" data-s="${k}"><i></i><i></i><i></i><i></i></span><b>${esc(t('skin.' + k))}</b></button>`).join('')}</div>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${skinPick}${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}${syncSection()}
+  const LN = { ja: '日本語', en: 'English', zh: '中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', hi: 'हिन्दी', ar: 'العربية' };
+  const langPick = `<label class="sw sel"><span>${esc(t('set.lang'))}</span><select id="langSel" aria-label="Language">${LANGS.map(l => `<option value="${l}" ${l === lang ? 'selected' : ''}>${LN[l]}</option>`).join('')}</select></label>`;
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${langPick}${skinPick}${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}${syncSection()}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('set.tut'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
-  $$('[data-k]', body).forEach(c => c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; save(); sndIcon(); });
+  $$('[data-k]', body).forEach(c => c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'snd') { try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} if (c.checked) SND.coin(); } save(); });
+  $('#langSel').onchange = e => { lang = e.target.value; DB.set.lang = lang; save(); applyI18n(); renderHome(); if (G) hud(); openSettings(); };
   $$('[data-skin]', body).forEach(b => b.onclick = () => { DB.set.skin = b.dataset.skin; save(); applySkin(); renderHome(); openSettings(); });
   const si = $('#syIn'); if (si) si.onclick = () => { closeModal(); googleLogin(); };
   const sn = $('#syNow'); if (sn) sn.onclick = () => syncNow();
@@ -1132,7 +1135,6 @@ function openSettings() {
   $('#setTut').onclick = () => { closeModal(); tutorial('basic'); };
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'red'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
 }
-function sndIcon() { $('#btnSound').classList.toggle('muted', !DB.set.snd); }
 
 /* ---------------- tutorial (comic panels with the mascot) ---------------- */
 const TUT = {
@@ -1375,18 +1377,15 @@ function bind() {
   $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${A.ICON[ic]}${p === 'me' ? '<i class="dot" hidden></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
   $$('#bnav button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
   // header icons
-  const IC = { btnAch: 'trophy', btnGacha: 'gacha', btnBook: 'book', btnRank: 'rank', btnSet: 'gear', btnHelp: 'help', btnSound: 'sound', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
+  const IC = { btnSet: 'gear', btnHelp: 'help', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
-  $('#btnAch').onclick = openAch; $('#btnGacha').onclick = () => openGacha(); $('#btnBook').onclick = () => openBook(); $('#btnRank').onclick = () => openRank('p');
   $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => tutorial('basic');
-  $('#btnSound').onclick = () => { DB.set.snd = DB.set.snd ? 0 : 1; try { localStorage.setItem('atlas-sfx', DB.set.snd ? '1' : '0'); } catch (e) {} save(); sndIcon(); if (DB.set.snd) SND.coin(); };
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else setHomeTab('daily'); };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   $('#gBack').onclick = quitGame; $('#gUndo').onclick = undo; $('#gHint').onclick = hint; $('#gRestart').onclick = restart;
   const bw = $('#boardWrap');
   bw.addEventListener('pointerdown', e => { if (e.target.closest('.hero,.ink,.result,.cd')) return; if (e.target.closest('#board')) onTap(e); });
   bw.addEventListener('pointermove', onHover); bw.addEventListener('pointerleave', () => { hoverKey = ''; clearHover(); });
-  const ls = $('#langSel'); ls.value = lang; ls.onchange = () => { lang = ls.value; DB.set.lang = lang; save(); applyI18n(); renderHome(); if (G) hud(); };
   addEventListener('keydown', e => {
     if (tutorial.key) tutorial.key(e);
     if (e.key === 'Escape' && !$('#modal').hidden) closeModal();
@@ -1395,7 +1394,7 @@ function bind() {
   document.addEventListener('visibilitychange', () => { if (G && G.action) { if (document.hidden) G.paused = true; else { G.paused = false; G.last = performance.now(); } } });
 }
 async function boot() {
-  bind(); applyI18n(); applySkin(); sndIcon();
+  bind(); applyI18n(); applySkin();
   try { STG = await (await fetch('stages.json?v=2')).json(); } catch (e) { STG = null; }
   showScreen('home'); renderHome();
   if (!DB.tut.basic) { DB.tut.basic = 1; save(); setTimeout(() => tutorial('basic'), 400); }
