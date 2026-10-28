@@ -242,7 +242,8 @@ function renderCourses() {
   el.innerHTML = `<div class="sechead"><h2>${esc(t('co.mix.h'))}</h2><p>${esc(t('co.mix.d'))}</p></div><div class="tgrid">${mix.map(courseCard).join('')}</div>
     <div class="sechead"><h2>${esc(t('co.cls.h'))}</h2><p>${esc(t('co.cls.d'))}</p></div><div class="tgrid">${cls.map(courseCard).join('')}</div>`;
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
-  $$('[data-co]', el).forEach(b => { b.onclick = () => startStage(b.dataset.co, +b.dataset.j); });
+  // while nothing on the course is cleared yet, its story comes first (then the stage starts)
+  $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; if (!courseRecs(id).some(v => v)) { courseOpenId = id; showStory(Math.floor(j / PER), () => { courseOpenId = null; startStage(id, j); }); } else startStage(id, j); }; });
 }
 function openCourse(id) { courseOpenId = id; nav(); renderCourse(id); scrollTo(0, 0); }
 // stage tiles in sections of 10 (course: floors 1F…10F, mode: BLOCK A…E); a section opens once 6 of the one before are cleared
@@ -343,7 +344,7 @@ function startStage(src, j) {
   startPlay();
   // first visit of a floor: its story · a rule's first appearance: its explanation · the very first stage: a tip
   const tip = () => { if (m !== 'basic') maybeRuleTip(m); else if (j === 0 && !DB.tut.first) { DB.tut.first = 1; save(); setTimeout(() => floatTip(t('tip.first')), 500); } };
-  if (isC && !DB.tut['sy' + f]) { DB.tut['sy' + f] = 1; save(); showStory(f, tip); } else tip();
+  tip();
 }
 // one play per difficulty a day: the attempt starts when the cell opens; leaving keeps it (resume: same board, moves and clock)
 function startDaily(k) {
