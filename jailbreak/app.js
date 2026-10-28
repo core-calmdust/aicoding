@@ -809,7 +809,17 @@ const nameNudge = () => (ON && ON.available && !DB.name) ? `<button class="nudge
 function resultCard(head, body, btns, cls = '') {
   return `<div class="result ${cls}"><div class="rbody"><div class="rhead"><b>${esc(head)}</b></div>${body}</div><div class="rbtns">${btns.filter(Boolean).map(([a, l, c]) => `<button class="btn ${c || ''}" data-act="${a}">${esc(l)}</button>`).join('')}</div></div>`;
 }
-function showResult(html) { const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false; $$('[data-act]', m).forEach(b => { b.onclick = () => resultAct(b.dataset.act); }); }
+function showResult(html) { const m = $('#gameMsg'); m.innerHTML = html; m.hidden = false; $$('[data-act]', m).forEach(b => { b.onclick = () => resultAct(b.dataset.act); }); centerMsg(); }
+// PC: the result card sits on the centre of the board (not of the window, which the side panel shifts)
+function centerMsg() {
+  const r = $('#gameMsg .result'); if (!r) return; r.style.translate = '';
+  if (innerWidth < 1000 || !G || $('#play').hidden) return;
+  const b = boardEl().getBoundingClientRect(), c = r.getBoundingClientRect(); if (!b.width) return;
+  const dx = (b.left + b.width / 2) - (c.left + c.width / 2), dy = (b.top + b.height / 2) - (c.top + c.height / 2);
+  const cx = Math.max(8 - c.left, Math.min(innerWidth - 8 - c.right, dx)), cy = Math.max(8 - c.top, Math.min(innerHeight - 8 - c.bottom, dy));
+  r.style.translate = `${Math.round(cx)}px ${Math.round(cy)}px`;
+}
+addEventListener('resize', () => { if (!$('#gameMsg').hidden) centerMsg(); });
 function resultAct(a) {
   const m = $('#gameMsg');
   if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } return; }
