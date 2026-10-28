@@ -931,11 +931,9 @@ function resultAct(a) {
   if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } return; }
   if (a === 'undo1') { m.hidden = true; G.over = false; G.S = G.hist.pop() || G.S; G.moves--; buildBoard(); hud(); return; }
   if (a === 'next') {
-    // a floor story unlocked by this clear (or the next stage's floor) is shown before the next stage starts
-    const s = G.src, j = G.j + 1, go = () => startStage(s, j);
-    if (!courseOf(s)) return go();
-    const nf = Math.ceil(listOf(s).length / PER);
-    for (let f = Math.floor(j / PER); f < nf; f++) if (!DB.tut['sy_' + s + '_' + f] && floorOpenC(s, f)) { DB.tut['sy_' + s + '_' + f] = 1; save(); m.hidden = true; return showStory(f, go, s); }
+    // moving on to the next floor (after its last stage): that floor's story first, then the game
+    const s = G.src, j = G.j + 1, go = () => startStage(s, j), f = Math.floor(j / PER), k = 'sy_' + s + '_' + f;
+    if (courseOf(s) && j % PER === 0 && !DB.tut[k] && floorOpenC(s, f)) { DB.tut[k] = 1; save(); m.hidden = true; return showStory(f, go, s); }
     return go();
   }
   if (a === 'list') { listAfter = G.src; return leavePlay(); }
