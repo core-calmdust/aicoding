@@ -202,3 +202,19 @@ const S = {
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// new-game dialog: piece sets and boards chosen from pictures (pieces/README.md)
+(function () {
+const S = {
+ja: { 'ng.pcs': '駒のデザイン', 'ng.board': '盤のデザイン', 'pcs.std': 'スタンダード', 'pcs.celtic': 'ケルト', 'pcs.fantasy': 'ファンタジー', 'pcs.chessnut': 'モダン', 'pcs.papercut': '切り絵', 'pcs.rhosgfx': 'ポップ', 'pcs.credit': '駒の画像：{a}', 'sk.marble': '大理石', 'sk.tourney': '大会用グリーン', 'sk.ocean': 'オーシャン', 'sk.rosewood': 'ローズウッド' },
+en: { 'ng.pcs': 'Pieces', 'ng.board': 'Board', 'pcs.std': 'Standard', 'pcs.celtic': 'Celtic', 'pcs.fantasy': 'Fantasy', 'pcs.chessnut': 'Modern', 'pcs.papercut': 'Papercut', 'pcs.rhosgfx': 'Pop', 'pcs.credit': 'Piece images: {a}', 'sk.marble': 'Marble', 'sk.tourney': 'Tournament', 'sk.ocean': 'Ocean', 'sk.rosewood': 'Rosewood' },
+zh: { 'ng.pcs': '棋子样式', 'ng.board': '棋盘样式', 'pcs.std': '标准', 'pcs.celtic': '凯尔特', 'pcs.fantasy': '奇幻', 'pcs.chessnut': '现代', 'pcs.papercut': '剪纸', 'pcs.rhosgfx': '波普', 'pcs.credit': '棋子图片：{a}', 'sk.marble': '大理石', 'sk.tourney': '比赛绿', 'sk.ocean': '海洋蓝', 'sk.rosewood': '玫瑰木' },
+ko: { 'ng.pcs': '말 디자인', 'ng.board': '판 디자인', 'pcs.std': '스탠더드', 'pcs.celtic': '켈틱', 'pcs.fantasy': '판타지', 'pcs.chessnut': '모던', 'pcs.papercut': '페이퍼컷', 'pcs.rhosgfx': '팝', 'pcs.credit': '말 이미지: {a}', 'sk.marble': '대리석', 'sk.tourney': '대회용 그린', 'sk.ocean': '오션', 'sk.rosewood': '로즈우드' },
+es: { 'ng.pcs': 'Piezas', 'ng.board': 'Tablero', 'pcs.std': 'Estándar', 'pcs.celtic': 'Celta', 'pcs.fantasy': 'Fantasía', 'pcs.chessnut': 'Moderno', 'pcs.papercut': 'Papel recortado', 'pcs.rhosgfx': 'Pop', 'pcs.credit': 'Imágenes de piezas: {a}', 'sk.marble': 'Mármol', 'sk.tourney': 'Torneo', 'sk.ocean': 'Océano', 'sk.rosewood': 'Palisandro' },
+fr: { 'ng.pcs': 'Pièces', 'ng.board': 'Plateau', 'pcs.std': 'Standard', 'pcs.celtic': 'Celtique', 'pcs.fantasy': 'Fantaisie', 'pcs.chessnut': 'Moderne', 'pcs.papercut': 'Papier découpé', 'pcs.rhosgfx': 'Pop', 'pcs.credit': 'Images des pièces : {a}', 'sk.marble': 'Marbre', 'sk.tourney': 'Tournoi', 'sk.ocean': 'Océan', 'sk.rosewood': 'Palissandre' },
+pt: { 'ng.pcs': 'Peças', 'ng.board': 'Tabuleiro', 'pcs.std': 'Padrão', 'pcs.celtic': 'Celta', 'pcs.fantasy': 'Fantasia', 'pcs.chessnut': 'Moderno', 'pcs.papercut': 'Papel recortado', 'pcs.rhosgfx': 'Pop', 'pcs.credit': 'Imagens das peças: {a}', 'sk.marble': 'Mármore', 'sk.tourney': 'Torneio', 'sk.ocean': 'Oceano', 'sk.rosewood': 'Jacarandá' },
+de: { 'ng.pcs': 'Figuren', 'ng.board': 'Brett', 'pcs.std': 'Standard', 'pcs.celtic': 'Keltisch', 'pcs.fantasy': 'Fantasy', 'pcs.chessnut': 'Modern', 'pcs.papercut': 'Scherenschnitt', 'pcs.rhosgfx': 'Pop', 'pcs.credit': 'Figurenbilder: {a}', 'sk.marble': 'Marmor', 'sk.tourney': 'Turnier', 'sk.ocean': 'Ozean', 'sk.rosewood': 'Palisander' },
+hi: { 'ng.pcs': 'मोहरे', 'ng.board': 'बोर्ड', 'pcs.std': 'मानक', 'pcs.celtic': 'केल्टिक', 'pcs.fantasy': 'फ़ैंटेसी', 'pcs.chessnut': 'आधुनिक', 'pcs.papercut': 'पेपरकट', 'pcs.rhosgfx': 'पॉप', 'pcs.credit': 'मोहरों की छवियाँ: {a}', 'sk.marble': 'संगमरमर', 'sk.tourney': 'टूर्नामेंट', 'sk.ocean': 'सागर', 'sk.rosewood': 'शीशम' },
+ar: { 'ng.pcs': 'القطع', 'ng.board': 'الرقعة', 'pcs.std': 'قياسي', 'pcs.celtic': 'سلتي', 'pcs.fantasy': 'خيالي', 'pcs.chessnut': 'عصري', 'pcs.papercut': 'قص ورق', 'pcs.rhosgfx': 'بوب', 'pcs.credit': 'صور القطع: {a}', 'sk.marble': 'رخام', 'sk.tourney': 'بطولة', 'sk.ocean': 'محيط', 'sk.rosewood': 'خشب الورد' },
+};
+for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
+})();

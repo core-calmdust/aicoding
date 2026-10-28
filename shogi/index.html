@@ -294,6 +294,18 @@ body.in-lesson .review-card{display:none!important}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
+/* design pickers in the new-game dialog: little boards drawn with the real piece set / board colours (as in go / gomoku) */
+.dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.dsg button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.dsg .th{display:block;width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.dsg .th > svg{display:block;width:100%;height:100%}
+.dsg button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;justify-content:center}
+.dsg button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.dsg button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.12)}
+.dsg button:not(:has(.th)){justify-content:center;font-size:12px;font-weight:700;min-height:64px}
+html.atlas-skin .dsg button{background:#f8f0e0;border-color:var(--line)}
+html.atlas-skin .dsg button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2);border-color:var(--brass)}
+@media (max-width: 520px){ .dsg{gap:4px} .dsg button{padding:4px 3px 5px;font-size:10px} }
 .pc-credit{font-size:11px;color:var(--dim);margin:-6px 0 10px}
 .pc-credit:empty{display:none}
 .play-choice{display:grid;gap:8px;margin-top:16px}
@@ -1150,9 +1162,9 @@ html[lang=ar] .pf-input{direction:rtl}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.pieces"></label><div class="seg" id="segPieces"><button data-v="2kanji_3d" data-i18n="pc.3d"></button><button data-v="orangain" data-i18n="pc.orangain"></button><button data-v="1kanji_3d" data-i18n="pc.ryoko"></button><button data-v="one" data-i18n="pc.one"></button><button data-v="two" data-i18n="pc.two"></button><button data-v="intl" data-i18n="pc.intl"></button><button data-v="intl0" data-i18n="pc.intl0"></button></div></div>
+    <div class="field"><label data-i18n="ng.pieces"></label><div class="dsg" id="segPieces"><button type="button" data-v="2kanji_3d"><i class="th"></i><span data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><i class="th"></i><span data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><i class="th"></i><span data-i18n="pc.ryoko"></span></button><button type="button" data-v="one"><i class="th"></i><span data-i18n="pc.one"></span></button><button type="button" data-v="two"><i class="th"></i><span data-i18n="pc.two"></span></button><button type="button" data-v="intl"><i class="th"></i><span data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><i class="th"></i><span data-i18n="pc.intl0"></span></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
-    <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
+    <div class="field"><label data-i18n="ng.skin"></label><div class="dsg" id="segSkin"><button type="button" data-v="classic"><i class="th"></i><span data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><i class="th"></i><span data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><i class="th"></i><span data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><i class="th"></i><span data-i18n="sk.ink"></span></button></div></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0<br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
@@ -2453,6 +2465,75 @@ function applyLook() {
   $('#pcCredit').textContent = PIECE_SETS[settings.pieces] ? t('pc.credit', { a: PIECE_SETS[settings.pieces] }) : '';
   ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
   segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
+  designThumbs();
+}
+// ---- design pickers: each tile is a small piece of board drawn with that piece set on the current board (and the board tiles with the current pieces)
+const DSG_SKIN = {
+  classic: { b: ['#ecc67f', '#e2b66b', '#d6a55a'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#2a2018', '#16100b'], co: 'rgba(226,194,117,.75)', pc: ['#f7dca2', '#eccb85', '#ddb466'], ink: '#1c1209', red: '#b8231a', noise: '.03 .9', na: .28 },
+  grain: { b: ['#e9be76', '#dcab60', '#cc9648'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#3a2414', '#1f130a'], co: 'rgba(226,194,117,.75)', pc: ['#f5d79a', '#e6bf73', '#d2a252'], ink: '#1c1209', red: '#b8231a', noise: '.012 .16', na: .75 },
+  metal: { b: ['#c9d0d6', '#9aa3ab', '#8a939b'], line: 'rgba(20,28,34,.7)', star: '#1b2226', fr: ['#3b4248', '#1d2226'], co: 'rgba(210,220,228,.75)', pc: ['#f4f6f8', '#cfd5da', '#a9b1b8'], ink: '#15191c', red: '#c0281c', brushed: 1, imgF: 'saturate(.12) brightness(1.12) contrast(1.08)' },
+  ink: { b: ['#2b2622', '#25211d', '#1f1b18'], line: 'rgba(214,180,110,.5)', star: '#d6b46e', fr: ['#141414', '#070707'], co: 'rgba(214,180,110,.8)', pc: ['#2f2a25', '#26211c', '#1d1915'], ink: '#e9d39f', red: '#ff7a66', edge: 'rgba(214,180,110,.75)' },
+};
+const DSG_PW = [0, [.76, .82, .5], [.79, .85, .52], [.79, .85, .52], [.82, .88, .56], [.84, .9, .56], [.84, .9, .56], [.82, .88, .56], [.88, .94, .6]];
+let dsgUid = 0;
+function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
+  const promo = tp > 8, sz = DSG_PW[SIZE[tp]] || DSG_PW[5];
+  const rot = gote ? ` transform="rotate(180 ${cx} ${cy})"` : '';
+  if (PIECE_SETS[set]) {
+    const code = tp === OU ? (gote ? 'OU' : 'GY') : PCODE[tp], w = cw * 1.12, h = ch * 1.12;
+    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=2" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
+  }
+  const w = cw * sz[0], h = ch * sz[1], x = cx - w / 2, y = cy - h / 2;
+  const pts = [[.5, 0], [.83, .13], [.97, 1], [.03, 1], [.17, .13]].map(([a, b]) => `${(x + a * w).toFixed(2)},${(y + b * h).toFixed(2)}`).join(' ');
+  const col = promo ? S.red : S.ink;
+  let g = `<g${rot}><polygon points="${pts}" fill="url(#${id}p)"${S.edge ? ` stroke="${S.edge}" stroke-width=".5"` : ''} filter="url(#${id}s)"/>`;
+  if (set === 'intl' || set === 'intl0') g += intlSvg(tp, '', set === 'intl0').replace('<svg class="intl"', `<svg x="${x}" y="${y}" width="${w}" height="${h}" color="${S.ink}" overflow="visible"`);
+  else {
+    const fs = cw * sz[2], ty = y + h * .57;
+    const one = tp === OU ? (gote ? '王' : '玉') : KANJI[tp];
+    const two = tp === OU ? (gote ? '王将' : '玉将') : KANJI2[tp];
+    const tx = (str, yy, f) => `<text x="${cx}" y="${yy}" text-anchor="middle" dominant-baseline="central" font-family="'Shippori Mincho B1',serif" font-weight="800" font-size="${f}" fill="${col}">${str}</text>`;
+    g += set === 'two' ? tx(two[0], y + h * .4, fs * .62) + tx(two[1], y + h * .75, fs * .62) : tx(one, ty, fs);
+  }
+  return g + '</g>';
+}
+// kind 'pc': 2×2 squares with a gote rook and the sente king (large, so the piece style reads); kind 'bd': the corner of a board with its frame and coordinates
+function dsgThumb(kind, set, skin) {
+  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'dsg' + (++dsgUid), V = 64;
+  let defs = `<linearGradient id="${id}b" x1="0" y1="0" x2=".18" y2="1"><stop offset="0" stop-color="${S.b[0]}"/><stop offset=".5" stop-color="${S.b[1]}"/><stop offset="1" stop-color="${S.b[2]}"/></linearGradient>`
+    + `<linearGradient id="${id}p" x1="0" y1="0" x2=".1" y2="1"><stop offset="0" stop-color="${S.pc[0]}"/><stop offset=".45" stop-color="${S.pc[1]}"/><stop offset="1" stop-color="${S.pc[2]}"/></linearGradient>`
+    + `<linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.fr[0]}"/><stop offset="1" stop-color="${S.fr[1]}"/></linearGradient>`
+    + `<filter id="${id}s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy=".8" stdDeviation=".7" flood-color="#000" flood-opacity=".45"/></filter>`;
+  if (S.noise) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${S.noise}" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .45 0 0 0 0 .26 0 0 0 0 .07 0 0 0 1.4 -.2"/></filter>`;
+  if (S.brushed) defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.12)"/></pattern>`;
+  const fr = kind === 'bd' ? 9 : 0;   // frame band on the top and right (as on the real board)
+  const bx = 0, by = fr, bw = V - fr, bh = V - fr;
+  let s = `<svg viewBox="0 0 ${V} ${V}" aria-hidden="true"><defs>${defs}</defs>`;
+  if (fr) s += `<rect width="${V}" height="${V}" fill="url(#${id}f)"/>`;
+  s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}b)"/>`;
+  if (S.noise) s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" filter="url(#${id}n)" opacity="${S.na}"/>`;
+  if (S.brushed) s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}h)"/>`;
+  const n = kind === 'bd' ? 3 : 2, ch = kind === 'bd' ? bh / 3.45 : 31, cw = ch / 1.1;
+  const x0 = kind === 'bd' ? bx + bw - n * cw : (V - n * cw) / 2, y0 = kind === 'bd' ? by : (V - n * ch) / 2;
+  let d = '';
+  for (let k = 0; k <= n; k++) { const xx = x0 + k * cw, yy = y0 + k * ch; if (xx > bx + .5 && xx < bx + bw - .5) d += `M${xx.toFixed(2)} ${by}V${V}`; if (yy > by + .5 && yy < V - .5) d += `M${bx} ${yy.toFixed(2)}H${bx + bw}`; }
+  s += `<path d="${d}" stroke="${S.line}" stroke-width=".8" fill="none"/>`;
+  if (kind === 'bd') {
+    s += `<circle cx="${x0}" cy="${y0 + 3 * ch}" r="1.6" fill="${S.star}"/>`;
+    const fz = 6.2, cf = `font-family="'Shippori Mincho B1',serif" font-size="${fz}" fill="${S.co}" text-anchor="middle" dominant-baseline="central"`;
+    ['３', '２', '１'].forEach((z, i) => { s += `<text x="${x0 + (i + .5) * cw}" y="${fr / 2 + .3}" ${cf}>${z}</text>`; });
+    ['一', '二', '三'].forEach((z, i) => { s += `<text x="${V - fr / 2}" y="${by + (i + .5) * ch}" ${cf}>${z}</text>`; });
+    s += dsgPiece(2, true, x0 + 2.5 * cw, y0 + .5 * ch, cw, ch, set, S, id) + dsgPiece(1, true, x0 + 1.5 * cw, y0 + 1.5 * ch, cw, ch, set, S, id) + dsgPiece(4, false, x0 + .5 * cw, y0 + 2.5 * ch, cw, ch, set, S, id);
+  } else {
+    s += dsgPiece(6, true, x0 + 1.5 * cw, y0 + .5 * ch, cw, ch, set, S, id) + dsgPiece(OU, false, x0 + .5 * cw, y0 + 1.5 * ch, cw, ch, set, S, id);
+  }
+  return s + '</svg>';
+}
+function designThumbs() {
+  dsgUid = 0;
+  document.querySelectorAll('#segPieces button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('pc', e.parentNode.dataset.v, settings.skin); });
+  const pcs = PIECE_SETS[settings.pieces] || ['one', 'two', 'intl', 'intl0'].includes(settings.pieces) ? settings.pieces : '2kanji_3d';
+  document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('bd', pcs, e.parentNode.dataset.v); });
 }
 $('#segPieces').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pieces = b.dataset.v; applyLook(); save(); if (game) { renderBoard(false); renderHands(); } };
 $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applyLook(); save(); };
