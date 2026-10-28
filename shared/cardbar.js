@@ -9,6 +9,12 @@
 // Usage: include after the card markup — <script src="../shared/cardbar.js?v=N"></script>.
 // Text buttons keep their whole label: when they don't fit beside the icon tools, the text buttons move to a second row
 // (and wrap among themselves on very narrow cards) instead of being cut off.
+// Auto-advance (CardBar.autoNext): once a lesson / opening-drill problem is solved, the game asks for the next problem to come by
+// itself after a short success beat (the primary button fills up meanwhile). Any tap / key press before then (another button,
+// undo, leaving the lesson, a dialog …) cancels it, and the game's own check (opt.ok) must still hold when it fires.
+//   CardBar.autoNext({ ok: () => still-the-same-problem, ms: 1400, btn: 'lsNext', fire: () => …, since: CardBar.now() at the answer })
+//   (fire defaults to clicking btn; with since, a tap after that moment means no advance)
+//   CardBar.cancelAuto()
 // Portal skin (?skin=atlas): the same bar; atlas/skin/common.js puts it next to the guide character and skin.css gives it the portal look.
 (function () {
 'use strict';
@@ -51,6 +57,10 @@ const CSS = `
 .cb-t.go{background:var(--cb-go-bg,linear-gradient(180deg,#d8bb72,#a98a48));color:var(--cb-go-fg,#1b150a);border-color:transparent;box-shadow:0 6px 16px -10px var(--accent,#c9a961)}
 .cb-t.go:hover:not(:disabled){color:var(--cb-go-fg,#1b150a);filter:brightness(1.06)}
 .cb-t.go:disabled{opacity:.4}
+.cb-t.cb-auto{position:relative}
+.cb-t.cb-auto::before,.lesson-actions .cb-auto::before{content:'';position:absolute;inset-inline-start:0;bottom:0;height:3px;width:100%;background:currentColor;opacity:.45;transform-origin:left;animation:cb-auto var(--cb-auto-ms,1400ms) linear forwards;pointer-events:none}
+html[dir=rtl] .cb-auto::before{transform-origin:right}
+@keyframes cb-auto{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .cb-nx::after{content:'';flex:none;width:15px;height:15px;margin-inline-end:-4px;background:currentColor;-webkit-mask:${ICONS.next} center/contain no-repeat;mask:${ICONS.next} center/contain no-repeat}
 html[dir=rtl] .cb-nx::after,html[lang=ar] .cb-nx::after,html[dir=rtl] .cb-ic[data-cb=prev]::before,html[lang=ar] .cb-ic[data-cb=prev]::before{transform:scaleX(-1)}
 .cb-bar .cb-ic{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0!important;width:40px!important;height:40px!important;min-height:0!important;max-height:none!important;min-width:0!important;line-height:0!important;flex:none!important;vertical-align:middle}
@@ -111,5 +121,27 @@ function init() {
   build($('lessonCard'), { tools: [['lsList', 'list'], ['lsToList', 'list'], ['lsAuto', 'auto']], next: 'lsNext', quit: 'lsQuit' });
 }
 if (document.readyState === 'loading' && !($('puzzleCard') || $('lessonCard'))) document.addEventListener('DOMContentLoaded', init); else init();
-window.CardBar = { init };
+// ---- auto-advance after a solved lesson / drill problem
+let auto = null, lastAct = 0;
+function cancelAuto() { if (!auto) return; clearTimeout(auto.t); if (auto.btn) auto.btn.classList.remove('cb-auto'); auto = null; }
+function autoNext(opt) {
+  opt = opt || {}; cancelAuto();
+  if (opt.since != null && lastAct > opt.since) return;   // the player already acted after the answer (e.g. during its animation)
+  const btn = typeof opt.btn === 'string' ? $(opt.btn) : opt.btn || $('lsNext'), ms = opt.ms || 1400;
+  const me = { btn, t: 0 };
+  me.t = setTimeout(() => {
+    if (auto !== me) return;
+    cancelAuto();
+    try { if (opt.ok && !opt.ok()) return; } catch (e) { return; }
+    if (opt.fire) opt.fire();
+    else if (btn && !btn.disabled && btn.getClientRects().length) btn.click();
+  }, ms);
+  auto = me;
+  if (btn) { btn.style.setProperty('--cb-auto-ms', ms + 'ms'); btn.classList.remove('cb-auto'); void btn.offsetWidth; btn.classList.add('cb-auto'); }
+}
+// the player acting in the meantime (any button, the board, a key, leaving the page) cancels a pending advance
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastAct = performance.now(); cancelAuto(); }, true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAuto(); });
+window.addEventListener('pagehide', cancelAuto);
+window.CardBar = { init, autoNext, cancelAuto, autoPending: () => !!auto, now: () => performance.now() };
 })();

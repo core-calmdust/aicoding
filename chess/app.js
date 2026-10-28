@@ -1384,6 +1384,13 @@ function problemPoints(P, m) {
   const loss = sOfV(best) - sOfV(mine);
   return Math.max(0, Math.round(20 * (1 - loss / 0.45)));
 }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= (curStep().kind === 'drill' ? curStep().stages.length : curStep().problems.length)) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 function lessonAnswer(m) {
   const P = lessonProblem(), s = curStep(), { pos } = posAt(0);
   lesson.answered = true;
@@ -1400,6 +1407,7 @@ function lessonAnswer(m) {
   $('#lsFb').innerHTML = fb;
   playChime(pts >= 16);
   playMove2(m);
+  lsAuto(P._ok ? pts > 0 : pts >= 16, moveDur() + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;
@@ -1480,6 +1488,7 @@ function drillMove(m) {
     const par = L.stage.par, k = L.used, st = k <= par ? 3 : k <= par + 2 ? 2 : 1;
     L.results[L.i] = st;
     setTimeout(() => playChime(true), 150);
+    lsAuto(true, moveDur() + 1300);
     $('#lsFb').innerHTML = `<b class="ok">${t('dr.clear')}</b> <span class="dstars">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span><br>${t('dr.used', { n: k, p: par })}` + (st < 3 ? ` ${t('dr.tryPar')}` : '');
     renderLessonCard();
   } else $('#lsFb').innerHTML = t('dr.progress', { n: L.used, left: left.length });
@@ -1625,6 +1634,7 @@ function openingAnswer(P, m, pos) {
   const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : c ? 'fb.good' : 'fb.bad';
   $('#lsFb').innerHTML = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${c ? 'ok' : 'ng'}">${t(lbl)}</b> ` + (c ? t('op.yourPct', { m: ms, p: pc(c) }) : t('op.rare', { m: ms })) + `<br><small style="color:var(--dim)">${t('op.top')}: ${top}</small>`;
   playChime(pts >= 10); playMove2(m);
+  lsAuto(!!c, moveDur() + 1100);
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;

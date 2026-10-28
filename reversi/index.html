@@ -3194,6 +3194,13 @@ function showSquareLabels(cells) {
   for (const c of CN) { if (cells[c]) continue; lab(c, 'c0', t('lbl.corner')); X[c].forEach(q => lab(q, 'x', 'X')); C[c].forEach(q => lab(q, 'c', 'C')); }
 }
 function addMark(sq, cls) { const m = document.createElement('div'); m.className = 'mark ' + cls; cellEls[sq].appendChild(m); }
+// a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
+// The last problem of a lesson / drill keeps the usual 結果 button.
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || L.study || L.drill || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= L.probs.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
 function lessonAnswer(sq) {
   const L = lesson; if (L.answered) return;
   const pr = L.probs[L.i], p = positions[positions.length - 1];
@@ -3221,6 +3228,7 @@ function lessonAnswer(sq) {
   $('#lsFb').innerHTML = answerFeedback(sq);
   cellEls.forEach(c => c.classList.remove('legal'));
   renderLessonCard();
+  lsAuto(pts >= 16, 1500);
 }
 // feedback text for an answered problem (re-rendered when the language changes)
 // ---- opening problems: browse / replay the moves leading to the problem position
