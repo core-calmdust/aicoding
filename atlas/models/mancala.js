@@ -197,7 +197,7 @@
     }
   }
 
-  X.mancala = { board, stone, PITS, STORES };
+  X.mancala = { board, stone, PITS, STORES, heap, floorY, GEMS, G: { W, D, PX, PZ, PR, PDEP, SX, SL, SR, SDEP, TOP, RIM, SRAD, SFLAT } };   // (G: the geometry, for table play / the portal skin)
   X.MODELS.mancala = function (live) {
     const g = board();
     if (live) return g;

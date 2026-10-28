@@ -8,6 +8,7 @@
    visible sheet edges, a silver wire spiral through punched holes.
    Registers into Table3D:
      Table3D.MODELS.dots(live)   the notebook (+ the game and the pens unless live)
+     Table3D.dots = { notebook(game), pen(colour, capped), inkLine(), PW, PD, PY, … }
    ===================================================================== */
 (function () {
   'use strict';
@@ -135,7 +136,7 @@
     for (let i = 0; i < HOLES; i++) {
       const l = new TT.Mesh(lg, wire); l.position.set(holeX(i), (CB + PY) / 2 + .03, -PD / 2 + .32); l.rotation.x = -Math.PI * .27; l.castShadow = true; l.receiveShadow = true; g.add(l);
     }
-    g.userData.top = PY;
+    g.userData.top = PY; g.userData.page = front;   // (page: the top sheet — table play draws the game on it)
     return g;
   }
 
@@ -160,6 +161,7 @@
     g.position.y = R * 1.12; return g;
   }
 
+  X.dots = { notebook, pen, inkLine, PW, PD, PY, N, SP, GZ, RED, BLUE, HOLES, holeX };   // (for table play)
   X.MODELS.dots = function (live) {
     const TT = T(), root = new TT.Group(), nb = notebook(!live);
     nb.rotation.y = .06; nb.position.set(-.5, 0, 0); root.add(nb);

@@ -1,0 +1,25 @@
+/* ===== mancala skin (mancala/?skin=atlas): the piano-black 3D board under the see-through DOM board =====
+   #board (9.2 × 3.7 units) = the 3D board's top; the page's cups sit on the carved hollows (atlas/skin/mancala.js) */
+html.atlas-mancala .frame{background:transparent!important;box-shadow:none!important;border:0!important}
+html.atlas-mancala .frame::before,html.atlas-mancala .frame::after,html.atlas-mancala .board::before,html.atlas-mancala .board::after{display:none!important}
+html.atlas-mancala .board{background:transparent!important;box-shadow:none!important;overflow:visible!important}
+html.atlas-mancala .slot{background:transparent!important;box-shadow:none!important;border:0!important}
+html.atlas-mancala .slot.pit.can:hover,html.atlas-mancala .slot.pit.can.hov{box-shadow:0 0 0 2px rgba(255,214,110,.9),0 0 calc(var(--u) * .32) rgba(255,200,80,.6)!important}
+html.atlas-mancala .slot.pit.src{box-shadow:0 0 0 2px rgba(255,255,255,.7)!important}
+html.atlas-mancala .seed{filter:drop-shadow(0 calc(var(--u) * .025) calc(var(--u) * .025) rgba(0,0,0,.65))}
+html.atlas-mancala .pitno{color:rgba(240,210,140,.7)!important;font-weight:700}
+html.atlas-mancala .badge{background:rgba(10,10,12,.72)!important;border-color:rgba(226,194,117,.55)!important;color:#f4e4bd!important}
+html.atlas-mancala .badge.zero{color:rgba(244,228,189,.4)!important}
+html.atlas-mancala .badge.store{color:#ffd77a!important}
+html.atlas-mancala .slabel{color:rgba(240,214,150,.85)!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+/* the player plates above / below the board: portal cards, always above the 3D canvas */
+html.atlas-mancala .plate{position:relative;z-index:2;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important;color:var(--text)}
+html.atlas-mancala .plate.active{border-color:#ffc928!important;box-shadow:0 0 0 2px rgba(255,201,40,.45),0 10px 24px -16px rgba(80,40,0,.55)!important}
+html.atlas-mancala .plate .pname{color:#4a5068!important}
+html.atlas-mancala .plate .pstat{color:#8a90a2!important}
+html.atlas-mancala .plate .pscore{color:#2b3044!important}
+html.atlas-mancala .side{position:relative;z-index:2}
+/* the game's dark round icons (PC header bar, the phone toolbar) → the portal's light ones */
+html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary){background:#fff!important;color:#2b3044!important;border:2px solid #efe3c8!important;box-shadow:0 2px 0 #efe3c8!important}
+html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary) svg{stroke:#2b3044!important}
+html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:disabled{opacity:.45}
