@@ -1917,7 +1917,7 @@ function rvExplainHtml() {
   let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${no} <i class="p${ps.side ? 2 : 1}"></i><b>${sanOf(cur)}</b></span>${tag}</div>`;
   if (j.best === j.m) h += `<p>${t('rv.ex.same')}</p>`;
   else if (!j.q) h += `<p>${t('rv.ex.alt', { m: `<b class="bm">${ps.san(j.best)}</b>` })}</p>`;
-  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${ps.san(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${j.plain}</p>`;
+  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${ps.san(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${j.plain}</p>` + (window.ChessTip ? ChessTip.html(ps, j.m, rv.list[cur], rv.list[cur + 1], j.q) : '');   // 💡 tip (rvtip.js)
   return h + '</div>';
 }
 function renderReview() {
@@ -1933,7 +1933,7 @@ function renderReview() {
     const st = { 1: { n: 0, ok: 0, bad: 0, dubious: 0 }, 2: { n: 0, ok: 0, bad: 0, dubious: 0 } }, list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (!j) continue; const s = st[toMoveAt(i)]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); } }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = (rvbShow() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
+    html = (rvbShow() && RVB.pc() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => { const ps = posAt(x.i).pos; return `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${Math.floor(x.i / 2) + 1}${ps.side ? '…' : '.'} <i class="p${ps.side ? 2 : 1}"></i>${sanOf(x.i)} → ${ps.san(x.best)}</span><span class="ls">${x.desc}</span></button>`; }).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
