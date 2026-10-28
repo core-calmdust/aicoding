@@ -7183,8 +7183,8 @@ function updateTitleDemo(dt, showHub) {
         titleDemo.idx = n; titleDemo.t = 0;
         if (titleDemo.group) titleDemo.group.visible = false;
         titleDemo.group = null;
-        // そのボスが出るステージのテーマ（ボスk番目は 3(k+1) 面）。ハブは1面のテーマ
-        const ti = n < 0 ? 0 : (3 * n + 2) % themes.length;
+        // タイトルのテーマは全30種からランダムに切り替える（背景の色と形も一緒に変わる。直前と同じは避ける）
+        let ti; do { ti = Math.floor(Math.random() * themes.length); } while (ti === currentThemeIndex && themes.length > 1);
         if (ti !== currentThemeIndex) { currentThemeIndex = ti; applyThemeStyles(themes[ti]); }
         if (n >= 0) { titleDemo.group = buildDemo(n).grp; titleDemo.group.visible = true; }
     }

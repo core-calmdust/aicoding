@@ -108,6 +108,11 @@
             max-height: 100%;
         }
         
+        /* Gキー: 枠・ボタン・説明なしの画面のみフルスクリーン */
+        body.pure #info-area, body.pure #pc-mute-btn { display: none !important; }
+        body.pure #game-wrapper { padding: 0 !important; aspect-ratio: 900 / 600 !important; max-width: none !important; }
+        body.pure canvas { border: none !important; box-shadow: none !important; }
+        html:fullscreen body.pure { background-color: #000; }
         html:fullscreen .info-text {
             font-size: clamp(14px, 1.8vh, 24px);
             line-height: 1.5;
@@ -251,7 +256,14 @@
         // ================================================================= //
         // フルスクリーン機能
         // ================================================================= //
+        function togglePureFullScreen() { // Gキー: 枠・説明なしの画面のみフルスクリーン
+            if (document.fullscreenElement && document.body.classList.contains('pure')) { document.exitFullscreen(); return; }
+            document.body.classList.add('pure');
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { document.body.classList.remove('pure'); });
+        }
+        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('pure'); });
         function toggleFullScreen() {
+            if (document.fullscreenElement && document.body.classList.contains('pure')) { document.body.classList.remove('pure'); return; } // 画面のみ中のFは説明ありに切り替え
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
                     alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
@@ -1086,17 +1098,17 @@
             const useGamepadControls = lastInputDevice === 'gamepad';
             
             if (gameState === 'title') {
-                ruleInfo.innerHTML = isTouchDevice ? '' : 'F: Fullscreen';
+                ruleInfo.innerHTML = isTouchDevice ? '' : 'F: Fullscreen | G: Game only';
                 controlsInfo.innerHTML = isTouchDevice ? '' : (useGamepadControls ? `PAD: Select | START/BUTTON: START` : `KEYS: Select | ENTER: Start`);
             } else if (gameState === 'playing' || gameState === 'gameOver' || gameState === 'paused') {
                 if (isTouchDevice) {
                     ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins.`;
                     controlsInfo.innerHTML = `Drag to Move | Edge Hit: Smash`;
                 } else if (useGamepadControls) {
-                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> START: Pause | F: Fullscreen`;
+                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> START: Pause | F: Fullscreen | G: Game only`;
                     controlsInfo.innerHTML = `Pad/Keys: Move | Pad BTN: Boost <br> Edge Hit: Smash`;
                 } else {
-                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> P: Pause | F: Fullscreen`;
+                    ruleInfo.innerHTML = `First to ${WINNING_SCORE} wins. <br> P: Pause | F: Fullscreen | G: Game only`;
                     controlsInfo.innerHTML = `W/S or ↑↓/Mouse: Move <br> SHIFT: Boost | Edge Hit: Smash`;
                 }
             } else {
@@ -1323,6 +1335,7 @@
             if (key === 'f') {
                 toggleFullScreen();
             }
+            if (key === 'g') togglePureFullScreen();
             
             if (key === 'escape') {
                 if (gameState === 'playing') {
