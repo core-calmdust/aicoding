@@ -128,6 +128,27 @@ class VSearch {
     while (k--) p.undoMove();
     return out.map(m => this.p.toUsi(m));
   }
+  // one depth of the review box's continuous analysis: the best n root moves get exact scores, the rest only a bound
+  // (null-window search against the n-th best; re-searched when they beat it). Returns false when stopped.
+  mpvDepth(roots, d, n, onRoot) {
+    const p = this.p, top = [];
+    let thr = -INF;
+    roots.sort((a, b) => b.s - a.s);
+    for (const r of roots) {
+      p.doMove(r.m);
+      let s, exact = true;
+      if (r.r != null) s = -r.r;
+      else if (top.length < n) s = -this.search(d - 1, -INF, INF, 1);
+      else { s = -this.search(d - 1, -thr - 1, -thr, 1); if (s > thr && !this.stop) s = -this.search(d - 1, -INF, INF, 1); else exact = false; }
+      p.undoMove();
+      if (this.stop) return false;
+      r.s = s; r.x = exact; r.d = d;
+      if (exact) r.pv = this.pv(r.m, 12);   // now: the table may be cleared by a later search
+      if (exact) { top.push(s); top.sort((a, b) => b - a); if (top.length >= n) thr = top[n - 1]; if (onRoot) onRoot(); }
+    }
+    roots.sort((a, b) => (b.s - a.s) || (b.x - a.x));
+    return true;
+  }
   // think: best move (opts.noise > 0: every root move is scored exactly and the choice is loosened by up to `noise` points)
   think(o = {}, onProgress) {
     const p = this.p, roots = this.rootMoves();

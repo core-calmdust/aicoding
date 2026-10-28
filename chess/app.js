@@ -149,7 +149,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028rb'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261028pv'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -2012,18 +2012,19 @@ function rvbWorker() { if (!rvbW) rvbW = makeWorker(); return rvbW; }
 function rvbCands(push, done) {
   const w = rvbWorker(), id = ++jobId, mv = moves.slice(0, cur), fen = startFen, idx = cur;
   const played = !inStudy() && idx < moves.length ? moves[idx] : 0;
-  const conv = list => (list || []).slice().sort((a, b) => b.v - a.v).map(e => {
+  const conv = list => (list || []).map(e => {
     const lb = valLabel(e.v), p = E.replay(fen, mv).pos, parts = [];
-    for (let j = 0; j < e.pv.length && j < 8; j++) {
+    for (let j = 0; j < e.pv.length && j < 10; j++) {
       const m = e.pv[j], san = p.san(m);
       if (j) parts.push((p.side === 0 ? `${p.full}.` : j === 1 ? `${p.full}…` : '') + san);
       p.make(m);
     }
     const p0 = E.replay(fen, mv).pos;
-    return { move: hbEsc(p0.san(e.m)), val: lb.big, cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: hbEsc(parts.join(' ')), played: e.m === played, ref: { m: e.m, pv: e.pv, idx, key: keyOf(idx) } };
+    return { id: e.m, move: hbEsc(p0.san(e.m)), val: lb.big, cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: hbEsc(parts.join(' ')), played: e.m === played, ref: { m: e.m, pv: e.pv, idx, key: keyOf(idx) } };
   });
-  w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null), onProgress: m => push(conv(m.list)) });
-  w.postMessage({ type: 'multipv', fen, moves: mv, n: 4, time: 650, id });
+  const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+  w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}), onProgress: m => push(conv(m.list), info(m)) });
+  w.postMessage({ type: 'mpvLoop', fen, moves: mv, n: 4, depth: 60, id });   // continuous analysis: RVB terminates it to stop
   return () => { if (rvbW === w) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rvbW = null; } };
 }
 function rvbSummary() {

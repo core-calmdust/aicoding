@@ -586,6 +586,29 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
   loadRoot();
   writeList(depthDone, ord, vals, rootN);
 }
+// principal variation from the transposition table after a search (review box): IO[0] = n, IO[1..n] = moves, starting
+// with m0 (a root move); stops at a missing / illegal entry or a repeated position
+EXPORT(pv_line) int pv_line(int m0, int maxLen) {
+  loadRoot();
+  int n = 0; Move m = (Move)m0;
+  if (maxLen > 60) maxLen = 60;
+  while (n < maxLen) {
+    Move L[MAXMV]; int nl = genLegal(L), ok = 0;
+    for (int j = 0; j < nl; j++) if (L[j] == m) ok = 1;
+    if (!ok) break;
+    u8 c = makeMove(m); (void)c;
+    HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++;
+    IO[1 + n++] = m;
+    int rep = 0; for (int i = hn - 3; i >= 0; i--) if (HK[i] == KEY) { rep = 1; break; }
+    if (rep) break;
+    TTE *e = &TT[KEY & ((1 << TT_BITS) - 1)];
+    if (e->key != KEY || !e->m) break;
+    m = e->m;
+  }
+  loadRoot();
+  IO[0] = n;
+  return n;
+}
 // fixed-depth values of all root moves (weak levels)
 EXPORT(values) void values(int depth) {
   beginSearch(0); nodeLimitOn = 0;

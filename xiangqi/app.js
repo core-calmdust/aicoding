@@ -113,7 +113,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=2';
+const ENGINE_URL = 'engine.js?v=20261028pv';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1894,11 +1894,12 @@ function rvbCands(push, done) {
   const played = !inStudy() && idx < moves.length ? moves[idx] : -1;
   const conv = list => (list || []).map(e => {
     const lb = valLabel(e.v), p = E.replay(st0, mv).pos, names = [];
-    for (let j = 0; j < e.pv.length && j < 8; j++) { const m = e.pv[j]; if (!p.moves().includes(m)) break; names.push(mvIn(p, m)); p.play(m); }
-    return { move: `<bdi>${escHb(names[0] || '')}</bdi>`, val: lb.big + (lb.small ? ' ' + lb.small : ''), cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: names.slice(1).map(x => `<bdi>${escHb(x)}</bdi>`).join(' '), played: e.m === played, ref: { m: e.m, pv: e.pv, key: keyOf(idx) } };
+    for (let j = 0; j < e.pv.length && j < 10; j++) { const m = e.pv[j]; if (!p.moves().includes(m)) break; names.push(mvIn(p, m)); p.play(m); }
+    return { id: e.m, move: `<bdi>${escHb(names[0] || '')}</bdi>`, val: lb.big + (lb.small ? ' ' + lb.small : ''), cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: names.slice(1).map(x => `<bdi>${escHb(x)}</bdi>`).join(' '), played: e.m === played, ref: { m: e.m, pv: e.pv, key: keyOf(idx) } };
   });
-  w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null), onProgress: m => push(conv(m.list)) });
-  w.postMessage({ type: 'multipv', start: st0, moves: mv, n: 4, time: 800, plies: 8, id });
+  const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+  w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}), onProgress: m => push(conv(m.list), info(m)) });
+  w.postMessage({ type: 'mpvLoop', start: st0, moves: mv, n: 4, depth: 40, id });   // continuous analysis: RVB terminates it to stop
   return () => { if (rvbW === w) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rvbW = null; } };
 }
 function rvbRender() {
