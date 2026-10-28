@@ -136,5 +136,5 @@ function climb(R, rec, iters, opt = {}) {
 }
 const solveRec = (rec, cap) => { const P = E.decode(rec); return E.solve(P, P.s0, cap); };
 // canonical key of a layout (dedupe)
-const canon = rec => rec.r + '|' + rec.w + 'x' + rec.h + '|' + rec.g.replace(/[B-Y]/g, '*') + '|' + JSON.stringify([rec.ow, rec.gd, rec.pl, rec.dr, rec.lk, rec.gt, rec.n]);
+const canon = rec => rec.r + '|' + rec.w + 'x' + rec.h + '|' + rec.g.replace(/[B-Y]/g, '*') + '|' + JSON.stringify([rec.ow, rec.gd, rec.pl, rec.dr, rec.lk, rec.gt, rec.n, rec.lz, rec.hv, rec.sr, rec.sb, rec.sw, rec.vt]);
 module.exports = { E, Board, randomBoard, component, fastComp, climb, mutate, addBlock, hardest, solveRec, canon, ri, LET };

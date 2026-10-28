@@ -594,6 +594,12 @@ const MI = {
   dig: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" fill="#a1553a" stroke="#2a2622" stroke-width="3"/><path d="M4 16h40M4 30h40M18 4v12M30 16v14M14 30v14M36 30v14" stroke="#6e3524" stroke-width="2.4"/><path d="M20 18l6 6-4 4 6 6" fill="none" stroke="#2a2622" stroke-width="3"/><path d="M30 6l10 10-14 14" fill="none" stroke="#c7ccd6" stroke-width="4" stroke-linecap="round"/></svg>`,
   tilt: `<svg viewBox="0 0 48 48"><rect x="8" y="8" width="32" height="32" rx="4" fill="#d8d2c4" stroke="#2a2622" stroke-width="3" transform="rotate(14 24 24)"/><rect x="24" y="26" width="10" height="10" fill="#c98b55" stroke="#2a2622" stroke-width="2.4" transform="rotate(14 24 24)"/><path d="M4 8q6-6 14-4" fill="none" stroke="#2a2622" stroke-width="3" stroke-linecap="round"/></svg>`,
   big: `<svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="4" fill="#5c6b80" stroke="#2a2622" stroke-width="3"/><path d="M3 13.5h42M3 24h42M3 34.5h42M13.5 3v42M24 3v42M34.5 3v42" stroke="#8796ab" stroke-width="1.6"/><rect x="5" y="15" width="18" height="8" rx="3" fill="#f26b1d" stroke="#2a2622" stroke-width="2"/></svg>`,
+  laser: `<svg viewBox="0 0 48 48"><rect x="16" y="2" width="16" height="10" rx="2" fill="#3a3f4a" stroke="#2a2622" stroke-width="3"/><rect x="21" y="12" width="6" height="34" fill="#ff3b3b"/><rect x="23" y="12" width="2" height="34" fill="#fff"/><path d="M8 26h8M32 26h8" stroke="#ff8a8a" stroke-width="3" stroke-linecap="round"/></svg>`,
+  heavy: `<svg viewBox="0 0 48 48"><rect x="5" y="7" width="38" height="34" rx="4" fill="#59606e" stroke="#2a2622" stroke-width="3"/><circle cx="24" cy="24" r="9" fill="#c7ccd6" stroke="#2a2622" stroke-width="3"/><path d="M24 15v4M24 29v4M15 24h4M29 24h4" stroke="#2a2622" stroke-width="2.4"/><rect x="9" y="41" width="8" height="4" fill="#2a2622"/><rect x="31" y="41" width="8" height="4" fill="#2a2622"/></svg>`,
+  shutter: `<svg viewBox="0 0 48 48"><rect x="3" y="8" width="20" height="32" rx="3" fill="#d64541" stroke="#2a2622" stroke-width="3"/><path d="M3 16h20M3 24h20M3 32h20" stroke="#2a2622" stroke-width="2.4"/><rect x="25" y="8" width="20" height="32" rx="3" fill="none" stroke="#3d8fd1" stroke-width="3" stroke-dasharray="4 3"/><path d="M30 24h10" stroke="#3d8fd1" stroke-width="3"/></svg>`,
+  lights: `<svg viewBox="0 0 48 48"><rect x="12" y="4" width="24" height="40" rx="5" fill="#f4efe4" stroke="#2a2622" stroke-width="3"/><rect x="18" y="12" width="12" height="24" rx="3" fill="#2a2622"/><rect x="20" y="14" width="8" height="10" rx="2" fill="#ffcd3c"/><path d="M38 10l6-4M38 20h7M4 14l6 2" stroke="#2a2622" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  vent: `<svg viewBox="0 0 48 48"><rect x="3" y="3" width="18" height="18" rx="3" fill="#8d96a8" stroke="#2a2622" stroke-width="3"/><path d="M7 9h10M7 15h10" stroke="#2a2622" stroke-width="2.4"/><rect x="27" y="27" width="18" height="18" rx="3" fill="#8d96a8" stroke="#2a2622" stroke-width="3"/><path d="M31 33h10M31 39h10" stroke="#2a2622" stroke-width="2.4"/><path d="M14 24q0 10 10 10" fill="none" stroke="#ffcd3c" stroke-width="3.4" stroke-dasharray="3 3"/><path d="M22 30l4 4-4 4" fill="none" stroke="#ffcd3c" stroke-width="3"/></svg>`,
+  ta: `<svg viewBox="0 0 48 48"><circle cx="24" cy="27" r="17" fill="#f4efe4" stroke="#2a2622" stroke-width="3"/><rect x="20" y="3" width="8" height="6" rx="1" fill="#2a2622"/><path d="M24 27V15M24 27l8 5" stroke="#d64541" stroke-width="3.4" stroke-linecap="round"/><text x="24" y="44" text-anchor="middle" font-size="9" font-weight="900" fill="#2a2622" font-family="Jost,sans-serif">×10</text></svg>`
 };
 /* ---------------- floor skins (play board) ---------------- */
 const SKINS = [
@@ -616,10 +622,18 @@ function miniBoard(P, S, cls = 'mini') {
   P.pc.forEach((p, i) => {
     const x = S[2 * i]; if (x < 0) return; const y = S[2 * i + 1];
     const pw = (p.v ? 1 : p.l) * u - 1.6, ph = (p.v ? p.l : 1) * u - 1.6;
-    const fill = p.t === 'P' ? '#f26b1d' : p.t === 'Q' ? '#ff9a3c' : p.t === 'g' ? '#2f4d7a' : p.t === 'k' ? '#ffcd3c' : p.t === 'x' ? '#c98b55' : p.t === 'o' ? '#3d8fd1' : BCOL[i % BCOL.length];
+    const fill = p.t === 'P' ? '#f26b1d' : p.t === 'Q' ? '#ff9a3c' : p.t === 'g' ? '#2f4d7a' : p.t === 'k' ? '#ffcd3c' : p.t === 'x' ? '#c98b55' : p.t === 'o' ? '#3d8fd1' : p.hv ? '#4a505c' : BCOL[i % BCOL.length];
     s += `<rect x="${pad + 1 + x * u + .8}" y="${pad + 1 + y * u + .8}" width="${pw}" height="${ph}" rx="2" fill="${fill}" stroke="#2a2622" stroke-width=".8"/>`;
   });
   if (P.lock >= 0) s += `<circle cx="${X(P.lock) + 5}" cy="${Y(P.lock) + 5}" r="3.2" fill="rgba(42,38,34,.6)" stroke="#ffcd3c" stroke-width="1.6"/>`;   // keyhole on top: it can start under a block
+  // 2026-10 rules: beams, emitters, shutters, lights switch, vents, heavy safes
+  const EN = window.JBEngine;
+  if (P.lz && P.lz.length && EN) { const L = EN.lit(P, S, EN.grid(P, S)); L.forEach((v, c) => { if (v) s += `<rect x="${X(c) + 3.8}" y="${Y(c)}" width="2.4" height="${u}" fill="#ff3b3b" opacity=".85"/>`; }); P.lz.forEach(([c]) => { s += `<rect x="${X(c) + 1}" y="${Y(c) + 1}" width="${u - 2}" height="${u - 2}" rx="1.5" fill="#2a2622"/><circle cx="${X(c) + 5}" cy="${Y(c) + 5}" r="2" fill="#ff3b3b"/>`; }); }
+  (P.sr || []).forEach(c => { s += `<rect x="${X(c) + 1}" y="${Y(c) + 1}" width="${u - 2}" height="${u - 2}" fill="#d64541" stroke="#2a2622" stroke-width=".8"/>`; });
+  (P.sb || []).forEach(c => { s += `<rect x="${X(c) + 1.2}" y="${Y(c) + 1.2}" width="${u - 2.4}" height="${u - 2.4}" fill="none" stroke="#3d8fd1" stroke-width="1.4" stroke-dasharray="2 1.4"/>`; });
+  if (P.sw >= 0) s += `<rect x="${X(P.sw) + 2.5}" y="${Y(P.sw) + 1.5}" width="5" height="7" rx="1" fill="#ffcd3c" stroke="#2a2622" stroke-width="1"/>`;
+  if (P.vt) P.vt.forEach(c => { s += `<rect x="${X(c) + 1}" y="${Y(c) + 1}" width="${u - 2}" height="${u - 2}" rx="1.5" fill="none" stroke="#c7ccd6" stroke-width="1.4"/><path d="M${X(c) + 3} ${Y(c) + 4}h4M${X(c) + 3} ${Y(c) + 6.5}h4" stroke="#c7ccd6" stroke-width="1"/>`; });
+  P.pc.forEach((p, i) => { if (!p.hv || S[2 * i] < 0) return; const x = S[2 * i], y = S[2 * i + 1], cx = pad + 1 + (x + (p.v ? .5 : p.l / 2)) * u, cy = pad + 1 + (y + (p.v ? p.l / 2 : .5)) * u; s += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="#c7ccd6" stroke="#2a2622" stroke-width=".8"/>`; });
   return s + '</svg>';
 }
 window.JBArt = { INMATES, inmateSVG, GUARD, KEY, LOCK, ICON, MI, SKINS, miniBoard, BCOL, RAR: ['N', 'R', 'SR', 'SSR'] };

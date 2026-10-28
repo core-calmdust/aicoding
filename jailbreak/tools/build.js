@@ -84,6 +84,44 @@ const BUILD = {
     const nc = ri(R, 1, 3); for (let k = 0; k < nc; k++) { const c = pick(freeCells(b)); if (c != null) b.g[c] = '%'; }
     return b.rec('dig');
   },
+  // ---- 2026-10 rules ----
+  laser() {
+    const b = L.randomBoard(R, 6, 6, ri(R, 5, 9), { walls: ri(R, 0, 1) }), lz = [], ne = R() < .65 ? 1 : 2;
+    for (let k = 0; k < ne; k++) {
+      const x = ri(R, b.px + 2, 5), top = R() < .5, c = cellOf(b, x, top ? 0 : 5);
+      if (lz.some(e => e[0] % 6 === x)) continue;
+      clearCell(b, c); b.g[c] = '#'; lz.push([c, top ? 3 : 2]);
+    }
+    if (!lz.length) return null;
+    b.ex = { lz }; const r = b.rec('laser'); return E.safe(E.decode(r), E.decode(r).s0) ? r : null;
+  },
+  heavy() {
+    const b = L.randomBoard(R, 6, 6, ri(R, 6, 10), { walls: ri(R, 0, 1) }), ey = b.ey;
+    const ls = [...new Set(b.g.filter(c => /[B-Y]/.test(c)))]; if (!ls.length) return null;
+    const cross = ls.filter(ch => b.g.some((c, i) => c === ch && ((i / 6) | 0) === ey)), hv = {};
+    const n = ri(R, 1, 2); for (let k = 0; k < n; k++) { const pool = k === 0 && cross.length ? cross : ls; hv[pick(pool)] = 1; }
+    b.ex = { hv }; return b.rec('heavy');
+  },
+  shutter() {
+    const b = L.randomBoard(R, 6, 6, ri(R, 5, 9), { walls: ri(R, 0, 1) }), ey = b.ey;
+    const row = freeCells(b, c => ((c / 6) | 0) !== ey || c % 6 <= b.px + 1); const fc = freeCells(b);
+    const first = pick(row.length ? freeCells(b, c => !(((c / 6) | 0) !== ey || c % 6 <= b.px + 1)) : fc); if (first == null) return null;
+    const sr = [], sb = []; (R() < .5 ? sr : sb).push(first);
+    const n = ri(R, 1, 3); for (let k = 0; k < n; k++) { const c = pick(fc.filter(c => !sr.includes(c) && !sb.includes(c))); if (c == null) break; (sr.length <= sb.length ? sr : sb).push(c); }
+    b.ex = { sr, sb }; return b.rec('shutter');
+  },
+  lights() {
+    const r = BUILD.patrol(); if (!r) return null;
+    const ey = (r.h >> 1) - 1 + (r.h % 2), fc = []; for (let c = 0; c < 36; c++) if (r.g[c] === '.' && ((c / 6) | 0) !== ey) fc.push(c);
+    if (!fc.length) return null; r.sw = pick(fc); r.r = 'lights'; return r;
+  },
+  vent() {
+    const b = L.randomBoard(R, 6, 6, ri(R, 5, 9), { walls: ri(R, 0, 1) });
+    const nx = ri(R, 1, 3); for (let k = 0; k < nx; k++) { const c = pick(freeCells(b, c => ((c / 6) | 0) === b.ey)); if (c != null) b.g[c] = 'x'; }
+    const fc = freeCells(b); if (fc.length < 2) return null;
+    const a = pick(fc), far = fc.filter(c => Math.abs(c % 6 - a % 6) + Math.abs(((c / 6) | 0) - ((a / 6) | 0)) >= 3); if (!far.length) return null;
+    b.ex = { vt: [a, pick(far)] }; return b.rec('vent');
+  },
   tilt() {
     const b = L.randomBoard(R, 6, 6, ri(R, 2, 5), { walls: ri(R, 2, 5) });
     const nx = ri(R, 2, 4); for (let k = 0; k < nx; k++) { const c = pick(freeCells(b, c => ((c / 6) | 0) === b.ey && c % 6 > b.px)); if (c != null) b.g[c] = 'x'; }
@@ -94,16 +132,20 @@ const BUILD = {
 function mutRule(rec) {
   const w = rec.w, ey = (rec.h >> 1) - 1 + (rec.h % 2), g = rec.g.split(''), out = JSON.parse(JSON.stringify(rec)), op = R();
   const letters = [...new Set(g.filter(c => /[B-Y]/.test(c)))].filter(c => !(rec.gd && rec.gd[c]));
-  const marks = new Set([...(rec.dr || []), ...(rec.gt || []), rec.pl, rec.lk].filter(c => c != null));
+  const marks = new Set([...(rec.dr || []), ...(rec.gt || []), rec.pl, rec.lk, rec.sw, ...(rec.vt || []), ...(rec.sr || []), ...(rec.sb || [])].filter(c => c != null));
   if (op < .4) {
     const g2 = g.slice(); if (!L.addBlock(R, rec, g2, ey)) return null;
     if ((rec.gt || []).some(c => g2[c] !== '.')) return null;   // nothing may stand in the closed gate
     const nl = g2.find((c, i) => c !== g[i]);
     if (rec.r === 'oneway' && R() < .5) { out.ow = out.ow || {}; out.ow[nl] = R() < .5 ? 1 : -1; }
+    if (rec.r === 'heavy' && R() < .35) { out.hv = out.hv || {}; out.hv[nl] = 1; }
     out.g = g2.join('');
+    if (rec.r === 'laser' && !E.safe(E.decode(out), E.decode(out).s0)) return null;
   } else if (op < .75 && letters.length > 2) {
     const ch = pick(letters); out.g = g.map(c => c === ch ? '.' : c).join('');
     if (out.ow) { delete out.ow[ch]; if (rec.r === 'oneway' && Object.keys(out.ow).length < 2) return null; }
+    if (out.hv) { delete out.hv[ch]; if (rec.r === 'heavy' && !Object.keys(out.hv).length) return null; }
+    if (rec.r === 'laser' && !E.safe(E.decode(out), E.decode(out).s0)) return null;
   } else {
     const sp = g.map((c, i) => (c === 'k' || c === 'x') ? i : -1).filter(i => i >= 0), fc = g.map((c, i) => c === '.' && !marks.has(i) && !(rec.r === 'tilt' && ((i / w) | 0) === ey) ? i : -1).filter(i => i >= 0);
     if (!fc.length) return null;
@@ -111,6 +153,16 @@ function mutRule(rec) {
     if (sp.length && what < .5) { const a = pick(sp), b = pick(fc); g[b] = g[a]; g[a] = '.'; out.g = g.join(''); }
     else if (rec.lk != null) out.lk = pick(fc);
     else if (rec.pl != null) out.pl = pick(fc.filter(c => ((c / w) | 0) !== ey)) ?? rec.pl;
+    else if (rec.r === 'laser' && rec.lz && rec.lz.length) {
+      const k = Math.floor(R() * rec.lz.length), [c0] = rec.lz[k], px = g.indexOf('A') % w, x = ri(R, px + 2, w - 1), top = R() < .5, c = (top ? 0 : rec.h - 1) * w + x;
+      if (g[c] !== '.' || rec.lz.some((e, j) => j !== k && e[0] % w === x)) return null;
+      g[c0] = '.'; g[c] = '#'; out.g = g.join(''); out.lz[k] = [c, top ? 3 : 2];
+      if (!E.safe(E.decode(out), E.decode(out).s0)) return null;
+    }
+    else if (rec.r === 'heavy') { const ls = letters; if (!ls.length) return null; const ch = pick(ls); out.hv = out.hv || {}; if (out.hv[ch]) { delete out.hv[ch]; if (!Object.keys(out.hv).length) return null; } else out.hv[ch] = 1; }
+    else if (rec.r === 'shutter') { const all = [...(rec.sr || []).map(c => ['sr', c]), ...(rec.sb || []).map(c => ['sb', c])]; if (!all.length) return null; const [k, c] = pick(all); const nc = pick(fc.filter(x => !(rec.sr || []).includes(x) && !(rec.sb || []).includes(x))); if (nc == null) return null; out[k] = out[k].map(x => x === c ? nc : x); if (R() < .25 && all.length < 5) out[R() < .5 ? 'sr' : 'sb'] = [...(out[R() < .5 ? 'sr' : 'sb'] || [])]; }
+    else if (rec.r === 'lights') { const c = pick(fc.filter(c => ((c / w) | 0) !== ey)); if (c == null) return null; out.sw = c; }
+    else if (rec.r === 'vent' && rec.vt) { const k = R() < .5 ? 0 : 1, c = pick(fc.filter(c => c !== rec.vt[1 - k])); if (c == null) return null; out.vt[k] = c; }
     else if (rec.r === 'dig') { const cr = g.map((c, i) => c === '%' && i !== ey * w + w - 1 ? i : -1).filter(i => i >= 0); if (cr.length) { const a = pick(cr); g[a] = '.'; g[pick(fc)] = '%'; out.g = g.join(''); } else return null; }
     else return null;
   }
