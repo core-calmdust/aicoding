@@ -5,7 +5,7 @@
    them, finished boxes hatched and initialled in the colour of the player who
    closed them; the corner of the page curls up a little. A red and a blue
    ballpoint pen lie beside / on it. Hard navy back cover, page block with
-   visible sheet edges, a silver wire spiral through punched holes.
+   visible sheet edges, silver wire rings, one through each punched hole.
    Registers into Table3D:
      Table3D.MODELS.dots(live)   the notebook (+ the game and the pens unless live)
    ===================================================================== */
@@ -15,7 +15,7 @@
   const T = () => window.THREE;
   const { M, RB, makeNoise } = X;
 
-  const PW = 7.6, PD = 9.4;              // page size (x, z); the spiral runs along the far edge (−z)
+  const PW = 7.6, PD = 9.4;              // page size (x, z); the rings run along the far edge (−z)
   const CB = .07, BLK = .2;              // back cover and page block thickness
   const PY = CB + BLK + .004;            // the top page
   const N = 6, SP = 1.12, GZ = .45;      // dots per side, spacing, grid centre offset towards the reader
@@ -41,9 +41,9 @@
     c.fillStyle = 'rgba(70,110,170,.55)'; c.font = `600 ${U(.17)}px "Helvetica Neue",Arial,sans-serif`; c.textBaseline = 'alphabetic';
     c.fillText('No.', U(4.3), U(.98)); c.fillText('Date', U(5.6), U(.98));
     c.strokeStyle = 'rgba(70,110,170,.5)'; c.lineWidth = U(.01); c.beginPath(); c.moveTo(U(4.62), U(1)); c.lineTo(U(5.45), U(1)); c.moveTo(U(6.05), U(1)); c.lineTo(U(7.2), U(1)); c.stroke();
-    for (let i = 0; i < HOLES; i++) { const x = holeX(i) + PW / 2; c.beginPath(); c.arc(U(x), U(.32), U(.085), 0, 7); c.fillStyle = '#2a2c33'; c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = U(.012); c.stroke(); }
+    for (let i = 0; i < HOLES; i++) { const x = holeX(i) + PW / 2; c.beginPath(); c.arc(U(x), U(HZ), U(.1), 0, 7); c.fillStyle = '#25272d'; c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = U(.012); c.stroke(); }
   }
-  const HOLES = 19, holeX = i => -PW / 2 + .35 + i * (PW - .7) / (HOLES - 1);
+  const HZ = .32, HOLES = 19, holeX = i => -PW / 2 + .35 + i * (PW - .7) / (HOLES - 1);
   // a ballpoint stroke: a slightly bowed line drawn twice (pressure varies), with a small ink blob where the pen started
   function inkLine(c, x1, y1, x2, y2, col, w, rnd) {
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, bow = (rnd() - .5) * L * .06;
@@ -129,11 +129,13 @@
     pg.computeVertexNormals(); pg.translate(0, PY, 0);
     const front = new TT.Mesh(pg, M({ map: pageTex(game), roughness: .82, bump: false })); front.receiveShadow = true; front.castShadow = true; g.add(front);
     const back = new TT.Mesh(pg, M({ map: pageTex(false), roughness: .85, bump: false, side: TT.BackSide })); back.receiveShadow = true; g.add(back);
-    // the wire spiral: loops through the holes round the top edge of the whole block
-    const wire = M({ color: 0xc9ccd2, metalness: 1, roughness: .28 });
-    const lg = new TT.TorusGeometry(.2, .022, X.coarse ? 4 : 5, X.coarse ? 10 : 14, Math.PI * 1.55); lg.rotateY(Math.PI / 2);
+    // the wire rings: one closed loop per punched hole — down through the hole in the pages (and the cover below),
+    // round under the cover, up past the top edge of the block and back over into the same hole
+    const wire = M({ color: 0xc9ccd2, metalness: .8, roughness: .28 });
+    const hz = -PD / 2 + HZ, rz = .2, y0 = .006, y1 = PY + .06, ry = (y1 - y0) / 2;   // the loop's far side clears the cover edge (−PD/2 − .02)
+    const lg = new TT.TorusGeometry(rz, .022, X.coarse ? 4 : 6, X.coarse ? 12 : 20); lg.rotateY(Math.PI / 2); lg.scale(1, ry / rz, 1);
     for (let i = 0; i < HOLES; i++) {
-      const l = new TT.Mesh(lg, wire); l.position.set(holeX(i), (CB + PY) / 2 + .03, -PD / 2 + .32); l.rotation.x = -Math.PI * .27; l.castShadow = true; l.receiveShadow = true; g.add(l);
+      const l = new TT.Mesh(lg, wire); l.position.set(holeX(i), y0 + ry, hz - rz); l.castShadow = true; l.receiveShadow = true; g.add(l);
     }
     g.userData.top = PY;
     return g;
