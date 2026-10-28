@@ -1642,3 +1642,27 @@ hi: { 'lx.course.basic': 'बुनियादी', 'lx.course.basic.sub': 'ब
 ar: { 'lx.course.basic': 'الأساسيات', 'lx.course.basic.sub': 'الوسط، ثلاثة في صف، وتهديدات الخصم. ابدأ من هنا.', 'lx.course.adv': 'متقدّم', 'lx.course.adv.sub': 'نظرية الصفوف الفردية والزوجية والتهديد المزدوج: كيف تحسم الفوز.', 'lx.cleared': '{a}/{b} مكتملة' },
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// board + disc skins (new-game dialog) and the disc colour names of each skin (2026-10-28)
+(function () { const X = {
+ja: { 'bd.title': '盤と石のデザイン', 'bd.lagoon': 'ラグーン', 'bd.classic': 'クラシック', 'bd.walnut': 'ウォール​ナット', 'bd.neon': 'ネオン', 'bd.porcelain': '白磁',
+  'sk.classic.p1': '赤', 'sk.classic.p2': '黄', 'sk.walnut.p1': '黒', 'sk.walnut.p2': '白', 'sk.neon.p1': 'ピンク', 'sk.neon.p2': 'シアン', 'sk.porcelain.p1': '朱', 'sk.porcelain.p2': '藍' },
+en: { 'bd.title': 'Board & discs', 'bd.lagoon': 'Lagoon', 'bd.classic': 'Classic', 'bd.walnut': 'Walnut', 'bd.neon': 'Neon', 'bd.porcelain': 'Porcelain',
+  'sk.classic.p1': 'Red', 'sk.classic.p2': 'Yellow', 'sk.walnut.p1': 'Black', 'sk.walnut.p2': 'White', 'sk.neon.p1': 'Pink', 'sk.neon.p2': 'Cyan', 'sk.porcelain.p1': 'Vermilion', 'sk.porcelain.p2': 'Indigo' },
+zh: { 'bd.title': '棋盘与棋子', 'bd.lagoon': '泻湖', 'bd.classic': '经典', 'bd.walnut': '胡桃木', 'bd.neon': '霓虹', 'bd.porcelain': '白瓷',
+  'sk.classic.p1': '红', 'sk.classic.p2': '黄', 'sk.walnut.p1': '黑', 'sk.walnut.p2': '白', 'sk.neon.p1': '粉', 'sk.neon.p2': '青', 'sk.porcelain.p1': '朱', 'sk.porcelain.p2': '蓝' },
+ko: { 'bd.title': '보드와 돌 디자인', 'bd.lagoon': '라군', 'bd.classic': '클래식', 'bd.walnut': '월넛', 'bd.neon': '네온', 'bd.porcelain': '백자',
+  'sk.classic.p1': '빨강', 'sk.classic.p2': '노랑', 'sk.walnut.p1': '흑', 'sk.walnut.p2': '백', 'sk.neon.p1': '핑크', 'sk.neon.p2': '시안', 'sk.porcelain.p1': '주홍', 'sk.porcelain.p2': '남색' },
+es: { 'bd.title': 'Tablero y fichas', 'bd.lagoon': 'Laguna', 'bd.classic': 'Clásico', 'bd.walnut': 'Nogal', 'bd.neon': 'Neón', 'bd.porcelain': 'Porcelana',
+  'sk.classic.p1': 'Rojo', 'sk.classic.p2': 'Amarillo', 'sk.walnut.p1': 'Negro', 'sk.walnut.p2': 'Blanco', 'sk.neon.p1': 'Rosa', 'sk.neon.p2': 'Cian', 'sk.porcelain.p1': 'Bermellón', 'sk.porcelain.p2': 'Índigo' },
+fr: { 'bd.title': 'Plateau et pions', 'bd.lagoon': 'Lagon', 'bd.classic': 'Classique', 'bd.walnut': 'Noyer', 'bd.neon': 'Néon', 'bd.porcelain': 'Porcelaine',
+  'sk.classic.p1': 'Rouge', 'sk.classic.p2': 'Jaune', 'sk.walnut.p1': 'Noir', 'sk.walnut.p2': 'Blanc', 'sk.neon.p1': 'Rose', 'sk.neon.p2': 'Cyan', 'sk.porcelain.p1': 'Vermillon', 'sk.porcelain.p2': 'Indigo' },
+pt: { 'bd.title': 'Tabuleiro e peças', 'bd.lagoon': 'Laguna', 'bd.classic': 'Clássico', 'bd.walnut': 'Nogueira', 'bd.neon': 'Neon', 'bd.porcelain': 'Porcelana',
+  'sk.classic.p1': 'Vermelho', 'sk.classic.p2': 'Amarelo', 'sk.walnut.p1': 'Preto', 'sk.walnut.p2': 'Branco', 'sk.neon.p1': 'Rosa', 'sk.neon.p2': 'Ciano', 'sk.porcelain.p1': 'Vermelhão', 'sk.porcelain.p2': 'Índigo' },
+de: { 'bd.title': 'Brett und Steine', 'bd.lagoon': 'Lagune', 'bd.classic': 'Klassisch', 'bd.walnut': 'Nussbaum', 'bd.neon': 'Neon', 'bd.porcelain': 'Porzellan',
+  'sk.classic.p1': 'Rot', 'sk.classic.p2': 'Gelb', 'sk.walnut.p1': 'Schwarz', 'sk.walnut.p2': 'Weiß', 'sk.neon.p1': 'Pink', 'sk.neon.p2': 'Cyan', 'sk.porcelain.p1': 'Zinnober', 'sk.porcelain.p2': 'Indigo' },
+hi: { 'bd.title': 'बोर्ड और गोटियाँ', 'bd.lagoon': 'लैगून', 'bd.classic': 'क्लासिक', 'bd.walnut': 'अखरोट', 'bd.neon': 'नियॉन', 'bd.porcelain': 'पोर्सिलेन',
+  'sk.classic.p1': 'लाल', 'sk.classic.p2': 'पीला', 'sk.walnut.p1': 'काला', 'sk.walnut.p2': 'सफ़ेद', 'sk.neon.p1': 'गुलाबी', 'sk.neon.p2': 'सियान', 'sk.porcelain.p1': 'सिंदूरी', 'sk.porcelain.p2': 'नील' },
+ar: { 'bd.title': 'اللوحة والأقراص', 'bd.lagoon': 'البحيرة', 'bd.classic': 'كلاسيكي', 'bd.walnut': 'الجوز', 'bd.neon': 'نيون', 'bd.porcelain': 'الخزف',
+  'sk.classic.p1': 'الأحمر', 'sk.classic.p2': 'الأصفر', 'sk.walnut.p1': 'الأسود', 'sk.walnut.p2': 'الأبيض', 'sk.neon.p1': 'الوردي', 'sk.neon.p2': 'السماوي', 'sk.porcelain.p1': 'القرمزي', 'sk.porcelain.p2': 'النيلي' },
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
