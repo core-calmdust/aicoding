@@ -507,7 +507,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
       <a class="btn ghost" href="./jailbreak/" data-i18n="hero.cta2">新作 だつごくスライダー！ →</a>
     </div>
     <div class="stats reveal">
-      <div class="stat"><b id="stat-titles">15</b><span data-i18n="stat.titles">タイトル公開中</span></div>
+      <div class="stat"><b id="stat-titles">24</b><span data-i18n="stat.titles">タイトル公開中</span></div>
       <div class="stat"><b>2</b><span data-i18n="stat.awards">コンテスト受賞</span></div>
       <div class="stat"><b data-i18n="stat.free.num">0円</b><span data-i18n="stat.free">登録・インストール不要</span></div>
     </div>
@@ -787,8 +787,8 @@ const ARCADE = [
 const LAB = [
   { id:'hexdeck', href:'./hexdeck/', thumb:'images/hexdeck.webp', icon:'images/icons/hexdeck.svg', kind:'BOARD GAME', key:'hd', alpha:true, tags:['original','ai','mobile'], facts:{ maps:6, players:'1 vs BOT' } },
 ];
-// published-title count (previous versions excluded) — updates automatically when games are added
-(function () { const el = document.getElementById('stat-titles'); if (el) el.textContent = GAMES.filter(g => g.cat !== 'old').length + ARCADE.length; })();   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
+// published-title count: every game linked from this page (galleries + lab) — updates automatically when games are added
+(function () { const el = document.getElementById('stat-titles'); if (el) el.textContent = GAMES.length + ARCADE.length + LAB.length; })();   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
 
 // the 定番 (classic) tag icon — same drawing as Atlas.TAGS.classic in shared/atlas.js
 const ORIGINAL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 6.4L21 9.5l-5.2 4.3L17.4 21 12 17.3 6.6 21l1.6-7.2L3 9.5l6.8-1.1z"/></svg>';
