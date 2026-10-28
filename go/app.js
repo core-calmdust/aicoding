@@ -107,7 +107,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=5';
+const ENGINE_URL = 'engine.js?v=6';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -1315,14 +1315,28 @@ function rbSeedRaw() {
   return h && h.list && h.list.length ? h : null;
 }
 function rbSeed() { const r = rbSeedRaw(); return r ? rbFmt(r, false) : null; }
-function rbAnalyze(done) {
+function rbAnalyze(done, st) {
   if (!rbS && (statusAt(cur).over || isCounting(cur))) { done([], true); return null; }
   if (rbS && rbS.mv.length >= 2 && rbS.mv[rbS.mv.length - 1] === PASS && rbS.mv[rbS.mv.length - 2] === PASS) { done([], true); return null; }
+  // continuous analysis: deeper and deeper searches (visits ×2 each round, lines kept from the last finished round)
+  // until about 45 s have been spent or the box's 停止 cancels it (the last results stay on screen).
+  // st = { k, spent, last }: where an earlier run on this position stopped (rbox.js caches it per position) — continue from there
   const w = rbWorker(), sd = rbSeedRaw(), seedN = sd ? sd.list.reduce((a, c) => a + (c.n || 0), 0) : 0;
-  let live = true;
-  // progress reports replace the shown list once the search has looked at more than what is already shown
-  request({ type: 'analyze', preempt: true, ...jobBase(startSpec, rbMoves()), net: 'strong', visits: game.n <= 9 ? 1600 : game.n <= 13 ? 900 : 600, time: 3500, pv: 5, prog0: 120 }, m => { if (live && m.visits >= seedN) done(rbFmt(m, false), false); }, w)
-    .then(r => { if (live && r) { live = false; done(rbFmt(r, true), true); } });
+  let live = true, last = st ? st.last : null, spent = st ? st.spent : 0, k = st ? st.k : 0;
+  const v0 = game.n <= 9 ? 1600 : game.n <= 13 ? 900 : 600, LIMIT = 45000, job = jobBase(startSpec, rbMoves());
+  (async () => {
+    while (live) {
+      const tm = Math.min(3500 * (1 << k), LIMIT - spent), t0 = performance.now();
+      // progress of the first round replaces the shown list once it has looked at more than what is already shown (seed)
+      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5, prog0: 120 }, m => { if (live && !last && m.visits >= seedN) done(rbFmt(m, false), false); }, w);
+      if (!live) return;
+      spent += performance.now() - t0; k++;
+      if (r) last = rbFmt(r, true);
+      const end = !r || spent >= LIMIT - 500 || k > 6, state = { k, spent, last };
+      if (end) { live = false; done(last || [], true, state); return; }
+      done(last, false, state);
+    }
+  })();
   return () => { if (live) { live = false; w.postMessage({ type: 'cancel' }); } };
 }
 function rbSeq() {

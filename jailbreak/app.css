@@ -247,7 +247,9 @@ button:disabled { cursor: default; opacity: .45; }
 body[data-screen=play] #app { padding-bottom: 12px; }
 .gbar { display: flex; align-items: center; gap: 10px; }
 .gtitle { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; flex-wrap: wrap; }
-.gtitle b { font: 400 18px/1.15 var(--disp); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.gtitle b { font: 400 18px/1.15 var(--disp); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gtitle .ctag { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; background: var(--band, #2b313c); color: #fff; padding: 4px 10px 5px; border: 2.5px solid var(--ink); border-radius: 4px; box-shadow: var(--sh2); transform: rotate(-1.5deg); font-size: .82em; letter-spacing: .02em; }
+.gtitle .cfl { flex: none; font-family: 'Jost', var(--font); font-weight: 800; letter-spacing: .02em; }
 .gtitle small { display: flex; gap: 4px; align-items: center; } .gtitle small:empty { display: none; }
 .gctl .gclock { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ink); color: #fff; border: 2.5px solid var(--ink); border-radius: 8px; padding: 1px 12px 2px; box-shadow: var(--sh2); min-width: 86px; height: 46px; }
 .gctl .gclock small { color: #d9d4c8; } .gctl .gclock b { font: 800 22px/1.05 'Jost'; font-variant-numeric: tabular-nums; }
@@ -301,14 +303,25 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 .gctl .gbtns { grid-area: btn; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0; gap: 8px; }
 .gctl .gbtn { width: auto; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 14px; } .gbtn .gl { display: inline; white-space: nowrap; }
 @media (max-width: 760px) {
-  /* the board sits in the vertical middle of the space between the title row and the buttons (equal room above and below;
-     the rule line under the board is balanced by --ih, its height, added above the board) */
-  #play { grid-template-areas: "bar stat" "run run" "sl sl" "f1 f1" "board board" "tilt tilt" "info info" "f2 f2" "btn btn"; grid-template-rows: auto auto auto 1fr auto auto auto 1fr auto;
+  /* phone: the rule line sits right under the title row; the board stays in the vertical middle of the space above the buttons
+     (the tilt pad below is balanced by --ihT) */
+  #play { grid-template-areas: "bar stat" "info info" "run run" "sl sl" "f1 f1" "board board" "tilt tilt" "f2 f2" "btn btn"; grid-template-rows: auto auto auto auto 1fr auto auto 1fr auto;
     min-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
   .gctl .gbtns { padding-bottom: env(safe-area-inset-bottom, 0px); }
-  #boardWrap { margin-top: var(--ih, 0px); }
+  #boardWrap { margin-top: var(--ihT, 0px); margin-bottom: var(--ihB, 0px); }
   .gtitle { flex-wrap: nowrap; } .gtitle small { display: none; }
   .gbar { gap: 6px; } .gbar .ib { width: 38px; height: 38px; flex: none; }
+  /* phone: the title row is the game's top band, dark and tinted with the course / mode colour, hazard stripe underneath (like the home header) */
+  .gbar { position: relative; }
+  .gbar::before { content: ''; position: absolute; z-index: -1; left: -8px; width: 100vw; top: calc(-6px - env(safe-area-inset-top, 0px)); bottom: -8px;
+    background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 1.5px) 0 0 / 7px 7px, linear-gradient(180deg, color-mix(in srgb, var(--band, #2b313c) 45%, #232832), color-mix(in srgb, var(--band, #2b313c) 30%, #1b1f27));
+    border-bottom: 3px solid var(--ink); box-shadow: 0 7px 0 -1px var(--yel), 0 10px 0 -1px var(--ink); }
+  .gbar::after { content: ''; position: absolute; z-index: -1; left: -8px; width: 100vw; bottom: -17px; height: 7px; background: repeating-linear-gradient(-45deg, var(--yel) 0 10px, var(--ink) 10px 20px); border-bottom: 2.5px solid var(--ink); }
+  #gInfo { margin-top: 16px; }
+  .gtitle .cfl { color: #fff; text-shadow: 2px 2px 0 var(--ink); }
+  .gtitle b { font-size: 15px; gap: 6px; }
+  .gtitle .ctag { box-shadow: 2px 2px 0 var(--ink), 0 0 0 1.5px rgba(255,255,255,.35); }
+  .gstat:has(.gclock:not([hidden])) .hst { display: none; }
   .gstat { gap: 5px; } .hst i { font-size: 15px; }
   .gctl .ns, .gctl .lim, .gctl .gclock { min-width: 58px !important; height: 42px !important; padding: 1px 7px 2px !important; }
   .gctl .ns b, .gctl .gclock b { font-size: 19px !important; } .gctl small { font-size: 9.5px !important; }
@@ -316,7 +329,7 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 @media (min-width: 761px) {
   #play { column-gap: 12px; row-gap: 10px; }
   .gctl .gbtns { gap: 12px; }
-  .gtitle b { font-size: 22px; }
+  .gtitle b { font-size: 22px; overflow: visible; } .gtitle .ctag { flex: none; font-size: .78em; }
   .gctl .ns, .gctl .lim, .gctl .gclock { height: 54px; min-width: 96px; padding: 2px 16px 3px; } .gctl .gclock b { font-size: 30px; }
   .gctl small { font-size: 12.5px; }
   .gctl .ns b { font-size: 30px; } .gctl .ns b i { font-size: 20px; } .gctl .ns b em { font-size: 22px; } .gctl .lim b { font-size: 26px; }
@@ -487,7 +500,17 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
 .mtut .balloon { padding: 14px 18px; } .mtut .balloon b { font-size: 19px; } .mtut .balloon p { font-size: 16.5px; line-height: 1.7; }
 .mtut .tdemo { padding: 18px; } .mtut .mini.big { width: 270px; height: 270px; } .mtut .tdemo .note { font-size: 15px; }
 .mtut .mbtns .btn.big { min-width: 160px; font-size: 18px; min-height: 52px; }
-@media (max-width: 480px) { .mtut .mini.big { width: 220px; height: 220px; } .mtut .tmas { width: 72px; height: 72px; } .mtut .balloon p { font-size: 15px; } }
+/* phones: the rule explanation fits on screen in one piece */
+@media (max-width: 760px) {
+  .modal.mtut { padding: 10px; }
+  .modal.mtut .mbox { width: 100%; max-height: calc(100dvh - 20px); }
+  .mtut #modalBody, .modal.mtut #modalBody { padding: 16px 12px 12px; }
+  .mtut .ttl { margin-bottom: 6px; } .mtut .ttag { font-size: 17px; padding: 5px 10px; } .mtut .ttag svg { width: 26px; height: 26px; }
+  .mtut .tpanel { gap: 8px; } .mtut .tmas { width: 54px; height: 54px; }
+  .mtut .balloon { padding: 8px 11px; } .mtut .balloon b { font-size: 15px; } .mtut .balloon p { font-size: 13.5px; line-height: 1.55; }
+  .mtut .tdemo { margin-top: 8px; padding: 10px; } .mtut .mini.big { width: min(200px, 30dvh); height: min(200px, 30dvh); } .mtut .tdemo .note { font-size: 13px; margin-top: 6px; }
+  .mtut .mbtns { margin-top: 10px; } .mtut .mbtns .btn.big { min-width: 140px; font-size: 16px; min-height: 46px; padding: 8px 16px; }
+}
 .pfhead { display: flex; gap: 14px; align-items: center; }
 .pfn { flex: 1; }
 .fld { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 800; }

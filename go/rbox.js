@@ -16,7 +16,8 @@
  *   explain(): { head, tag, html } — commentary of the viewed move (html strings),
  *   analyze(done): starts the search of the shown position; calls done(list, final) (list: [{ id, mv, val, sub, cls,
  *            pv: [{ t, s }], played }] best first; s = 1 / 2 side) — may call several times; returns a cancel function
- *            (called after a short wait on the position; finished results are cached per key()),
+ *            (called after a short wait on the position) — analyze(done, st): done(list, final, st) reports with st the depth
+ *            reached (cached per key() with the list; passed back as st to continue deeper when the position is shown again),
  *   seed(): list | null — optional: candidates already known for the position (shown at once, before the search),
  *   hover(): called after the hovered candidate changed (the page redraws its board marks, reading RBox.hovered()),
  *   studyStart(), studyPlay(id) → bool, studyBack(), studyEnd(), studyLen() → n, studyInfo() → html (whose turn ...)
@@ -25,16 +26,16 @@
 (function () {
 'use strict';
 const L = {
-  ja: { visits: '{n}回', pass: 'パス', exact: '確定', final: '最終局面', finalNote: '棋譜や悪手一覧の手をクリックすると、その局面の解説と候補手を表示します。', expl: '解説', cands: '候補手', line: '読み筋', val: '評価', loading: '読み込み中…', study: '検討する', studyT: 'この局面から両者の手を自由に指して検討します', restore: '元に戻す', restoreT: '検討を始めた局面にすぐ戻ります（Esc）', back: '1手戻す', backT: '検討の手を1手戻します（←）', badge: '検討中', sHead: '検討中', sFrom: '{n}手目の局面から {k}手', sBody: '盤上で両者の手を自由に指せます。候補手の行をクリックするとその手を指します。［元に戻す］ですぐ元の局面に戻ります（棋譜・グラフは変わりません）。', played: '実戦', none: '候補手はありません（終局）', best: '最善', hov: '行にマウスを乗せると盤上に読み筋を表示' },
-  en: { visits: '{n} visits', pass: 'Pass', exact: 'exact', final: 'Final position', finalNote: 'Click a move in the record or the mistake list to see its commentary and the candidate moves.', expl: 'Commentary', cands: 'Candidate moves', line: 'Line', val: 'Eval', loading: 'Loading…', study: 'Explore', studyT: 'Play moves for both sides from this position', restore: 'Restore', restoreT: 'Back to the position where exploring started (Esc)', back: 'Back', backT: 'Take back one explored move (←)', badge: 'Exploring', sHead: 'Exploring', sFrom: '{k} moves from move {n}', sBody: 'Play either side’s moves on the board. Click a candidate row to play that move. [Restore] returns at once (the record and graph do not change).', played: 'Played', none: 'No candidate moves (game over)', best: 'Best', hov: 'Hover a row to see its line on the board' },
-  zh: { visits: '{n}次', pass: '跳过', exact: '精确', final: '终局局面', finalNote: '点击棋谱或失误列表中的着法，即显示该局面的解说和候选着法。', expl: '解说', cands: '候选着法', line: '变化', val: '评估', loading: '读取中…', study: '研究', studyT: '从此局面自由下双方的棋进行研究', restore: '还原', restoreT: '立即回到开始研究时的局面（Esc）', back: '退一步', backT: '撤回一步研究的着法（←）', badge: '研究中', sHead: '研究中', sFrom: '从第{n}手的局面起 {k}手', sBody: '可在棋盘上自由下双方的棋。点击候选行即下该着法。［还原］立即回到原局面（棋谱和曲线不变）。', played: '实战', none: '没有候选着法（终局）', best: '最佳', hov: '鼠标移到行上即在棋盘上显示变化' },
-  ko: { visits: '{n}회', pass: '패스', exact: '확정', final: '최종 국면', finalNote: '기보나 실수 목록의 수를 클릭하면 그 국면의 해설과 후보수를 표시합니다.', expl: '해설', cands: '후보수', line: '수순', val: '평가', loading: '불러오는 중…', study: '검토하기', studyT: '이 국면에서 양쪽 수를 자유롭게 두며 검토합니다', restore: '원래대로', restoreT: '검토를 시작한 국면으로 바로 돌아갑니다 (Esc)', back: '한 수 무르기', backT: '검토한 수를 한 수 무릅니다 (←)', badge: '검토 중', sHead: '검토 중', sFrom: '{n}수째 국면에서 {k}수', sBody: '판 위에서 양쪽 수를 자유롭게 둘 수 있습니다. 후보수 행을 클릭하면 그 수를 둡니다. [원래대로]로 바로 원래 국면에 돌아갑니다 (기보·그래프는 바뀌지 않습니다).', played: '실전', none: '후보수가 없습니다 (종국)', best: '최선', hov: '행에 마우스를 올리면 판 위에 수순을 표시' },
-  es: { visits: '{n} visitas', pass: 'Pasa', exact: 'exacto', final: 'Posición final', finalNote: 'Haz clic en una jugada de la partida o de la lista de errores para ver su comentario y las candidatas.', expl: 'Comentario', cands: 'Jugadas candidatas', line: 'Línea', val: 'Eval.', loading: 'Cargando…', study: 'Explorar', studyT: 'Juega libremente por ambos bandos desde esta posición', restore: 'Restaurar', restoreT: 'Volver al instante a la posición inicial de la exploración (Esc)', back: 'Atrás', backT: 'Deshacer una jugada explorada (←)', badge: 'Explorando', sHead: 'Explorando', sFrom: '{k} jugadas desde la jugada {n}', sBody: 'Juega en el tablero por ambos bandos. Haz clic en una fila candidata para jugarla. [Restaurar] vuelve al instante (la partida y el gráfico no cambian).', played: 'Jugada', none: 'No hay jugadas candidatas (fin)', best: 'Mejor', hov: 'Pasa el ratón por una fila para ver su línea en el tablero' },
-  fr: { visits: '{n} visites', pass: 'Passe', exact: 'exact', final: 'Position finale', finalNote: 'Cliquez sur un coup de la partie ou de la liste des erreurs pour voir son commentaire et les coups candidats.', expl: 'Commentaire', cands: 'Coups candidats', line: 'Variante', val: 'Éval.', loading: 'Chargement…', study: 'Explorer', studyT: 'Jouez librement les deux camps depuis cette position', restore: 'Rétablir', restoreT: 'Revenir aussitôt à la position de départ de l’exploration (Échap)', back: 'Reculer', backT: 'Annuler un coup exploré (←)', badge: 'Exploration', sHead: 'Exploration', sFrom: '{k} coups depuis le coup {n}', sBody: 'Jouez les coups des deux camps sur le plateau. Cliquez sur une ligne candidate pour jouer ce coup. [Rétablir] revient aussitôt (la partie et le graphique ne changent pas).', played: 'Joué', none: 'Aucun coup candidat (fin)', best: 'Meilleur', hov: 'Survolez une ligne pour voir sa variante sur le plateau' },
-  pt: { visits: '{n} visitas', pass: 'Passa', exact: 'exato', final: 'Posição final', finalNote: 'Clique num lance da partida ou da lista de erros para ver o comentário e os candidatos.', expl: 'Comentário', cands: 'Lances candidatos', line: 'Linha', val: 'Aval.', loading: 'Carregando…', study: 'Explorar', studyT: 'Jogue livremente pelos dois lados a partir desta posição', restore: 'Restaurar', restoreT: 'Voltar já à posição em que a exploração começou (Esc)', back: 'Voltar', backT: 'Desfazer um lance explorado (←)', badge: 'Explorando', sHead: 'Explorando', sFrom: '{k} lances a partir do lance {n}', sBody: 'Jogue pelos dois lados no tabuleiro. Clique numa linha candidata para jogar esse lance. [Restaurar] volta na hora (a partida e o gráfico não mudam).', played: 'Jogado', none: 'Sem lances candidatos (fim)', best: 'Melhor', hov: 'Passe o mouse numa linha para ver a sequência no tabuleiro' },
-  de: { visits: '{n} Besuche', pass: 'Passen', exact: 'exakt', final: 'Endstellung', finalNote: 'Klicke auf einen Zug der Partie oder der Fehlerliste, um Kommentar und Kandidatenzüge zu sehen.', expl: 'Kommentar', cands: 'Kandidatenzüge', line: 'Variante', val: 'Bew.', loading: 'Wird geladen…', study: 'Analysieren', studyT: 'Von dieser Stellung aus frei für beide Seiten ziehen', restore: 'Zurücksetzen', restoreT: 'Sofort zur Ausgangsstellung der Analyse zurück (Esc)', back: 'Zurück', backT: 'Einen analysierten Zug zurücknehmen (←)', badge: 'Analyse', sHead: 'Analyse', sFrom: '{k} Züge ab Zug {n}', sBody: 'Ziehe auf dem Brett frei für beide Seiten. Klicke auf eine Kandidatenzeile, um diesen Zug zu spielen. [Zurücksetzen] kehrt sofort zurück (Partie und Grafik bleiben unverändert).', played: 'Gespielt', none: 'Keine Kandidatenzüge (Partieende)', best: 'Bester', hov: 'Mauszeiger auf eine Zeile: Variante auf dem Brett' },
-  hi: { visits: '{n} बार', pass: 'पास', exact: 'सटीक', final: 'अंतिम स्थिति', finalNote: 'रिकॉर्ड या गलतियों की सूची में किसी चाल पर क्लिक करें तो उस स्थिति की टिप्पणी और संभावित चालें दिखती हैं।', expl: 'टिप्पणी', cands: 'संभावित चालें', line: 'लाइन', val: 'मूल्यांकन', loading: 'लोड हो रहा है…', study: 'जाँचें', studyT: 'इस स्थिति से दोनों पक्षों की चालें खुलकर खेलें', restore: 'वापस लाएँ', restoreT: 'जाँच शुरू होने वाली स्थिति पर तुरंत लौटें (Esc)', back: 'एक चाल पीछे', backT: 'जाँच की एक चाल वापस लें (←)', badge: 'जाँच जारी', sHead: 'जाँच जारी', sFrom: 'चाल {n} की स्थिति से {k} चालें', sBody: 'बोर्ड पर दोनों पक्षों की चालें खुलकर खेलें। किसी संभावित चाल की पंक्ति पर क्लिक करने से वह चाल खेली जाती है। [वापस लाएँ] से तुरंत मूल स्थिति पर लौटें (रिकॉर्ड और ग्राफ़ नहीं बदलते)।', played: 'खेली गई', none: 'कोई संभावित चाल नहीं (खेल समाप्त)', best: 'सर्वश्रेष्ठ', hov: 'पंक्ति पर माउस ले जाएँ तो बोर्ड पर लाइन दिखती है' },
-  ar: { visits: '{n} زيارة', pass: 'تمرير', exact: 'دقيق', final: 'الوضع النهائي', finalNote: 'انقر على نقلة في السجل أو قائمة الأخطاء لرؤية شرحها والنقلات المرشحة.', expl: 'الشرح', cands: 'النقلات المرشحة', line: 'التسلسل', val: 'التقييم', loading: 'جارٍ التحميل…', study: 'استكشاف', studyT: 'العب نقلات الطرفين بحرية من هذا الوضع', restore: 'استعادة', restoreT: 'العودة فورًا إلى الوضع الذي بدأ منه الاستكشاف (Esc)', back: 'تراجع', backT: 'التراجع عن نقلة مستكشفة (←)', badge: 'استكشاف', sHead: 'وضع الاستكشاف', sFrom: '{k} نقلات من النقلة {n}', sBody: 'العب نقلات الطرفين على اللوحة بحرية. انقر على صف مرشح للعب تلك النقلة. [استعادة] تعيدك فورًا (لا يتغير السجل ولا الرسم البياني).', played: 'المُلعوبة', none: 'لا توجد نقلات مرشحة (انتهت المباراة)', best: 'الأفضل', hov: 'مرّر الفأرة على صف لرؤية تسلسله على اللوحة' },
+  ja: { stop: '停止', resume: '再開', stopT: '解析を止めます（結果は残ります）', resumeT: '続きから解析します', visits: '{n}回', pass: 'パス', exact: '確定', final: '最終局面', finalNote: '棋譜や悪手一覧の手をクリックすると、その局面の解説と候補手を表示します。', expl: '解説', cands: '候補手', line: '読み筋', val: '評価', loading: '読み込み中…', study: '検討する', studyT: 'この局面から両者の手を自由に指して検討します', restore: '元に戻す', restoreT: '検討を始めた局面にすぐ戻ります（Esc）', back: '1手戻す', backT: '検討の手を1手戻します（←）', badge: '検討中', sHead: '検討中', sFrom: '{n}手目の局面から {k}手', sBody: '盤上で両者の手を自由に指せます。候補手の行をクリックするとその手を指します。［元に戻す］ですぐ元の局面に戻ります（棋譜・グラフは変わりません）。', played: '実戦', none: '候補手はありません（終局）', best: '最善', hov: '行にマウスを乗せると盤上に読み筋を表示' },
+  en: { stop: 'Stop', resume: 'Resume', stopT: 'Stop the analysis (results are kept)', resumeT: 'Continue the analysis', visits: '{n} visits', pass: 'Pass', exact: 'exact', final: 'Final position', finalNote: 'Click a move in the record or the mistake list to see its commentary and the candidate moves.', expl: 'Commentary', cands: 'Candidate moves', line: 'Line', val: 'Eval', loading: 'Loading…', study: 'Explore', studyT: 'Play moves for both sides from this position', restore: 'Restore', restoreT: 'Back to the position where exploring started (Esc)', back: 'Back', backT: 'Take back one explored move (←)', badge: 'Exploring', sHead: 'Exploring', sFrom: '{k} moves from move {n}', sBody: 'Play either side’s moves on the board. Click a candidate row to play that move. [Restore] returns at once (the record and graph do not change).', played: 'Played', none: 'No candidate moves (game over)', best: 'Best', hov: 'Hover a row to see its line on the board' },
+  zh: { stop: '停止', resume: '继续', stopT: '停止分析（保留结果）', resumeT: '继续分析', visits: '{n}次', pass: '跳过', exact: '精确', final: '终局局面', finalNote: '点击棋谱或失误列表中的着法，即显示该局面的解说和候选着法。', expl: '解说', cands: '候选着法', line: '变化', val: '评估', loading: '读取中…', study: '研究', studyT: '从此局面自由下双方的棋进行研究', restore: '还原', restoreT: '立即回到开始研究时的局面（Esc）', back: '退一步', backT: '撤回一步研究的着法（←）', badge: '研究中', sHead: '研究中', sFrom: '从第{n}手的局面起 {k}手', sBody: '可在棋盘上自由下双方的棋。点击候选行即下该着法。［还原］立即回到原局面（棋谱和曲线不变）。', played: '实战', none: '没有候选着法（终局）', best: '最佳', hov: '鼠标移到行上即在棋盘上显示变化' },
+  ko: { stop: '정지', resume: '재개', stopT: '분석을 멈춥니다(결과는 남습니다)', resumeT: '분석을 다시 시작합니다', visits: '{n}회', pass: '패스', exact: '확정', final: '최종 국면', finalNote: '기보나 실수 목록의 수를 클릭하면 그 국면의 해설과 후보수를 표시합니다.', expl: '해설', cands: '후보수', line: '수순', val: '평가', loading: '불러오는 중…', study: '검토하기', studyT: '이 국면에서 양쪽 수를 자유롭게 두며 검토합니다', restore: '원래대로', restoreT: '검토를 시작한 국면으로 바로 돌아갑니다 (Esc)', back: '한 수 무르기', backT: '검토한 수를 한 수 무릅니다 (←)', badge: '검토 중', sHead: '검토 중', sFrom: '{n}수째 국면에서 {k}수', sBody: '판 위에서 양쪽 수를 자유롭게 둘 수 있습니다. 후보수 행을 클릭하면 그 수를 둡니다. [원래대로]로 바로 원래 국면에 돌아갑니다 (기보·그래프는 바뀌지 않습니다).', played: '실전', none: '후보수가 없습니다 (종국)', best: '최선', hov: '행에 마우스를 올리면 판 위에 수순을 표시' },
+  es: { stop: 'Detener', resume: 'Reanudar', stopT: 'Detener el análisis (se conservan los resultados)', resumeT: 'Continuar el análisis', visits: '{n} visitas', pass: 'Pasa', exact: 'exacto', final: 'Posición final', finalNote: 'Haz clic en una jugada de la partida o de la lista de errores para ver su comentario y las candidatas.', expl: 'Comentario', cands: 'Jugadas candidatas', line: 'Línea', val: 'Eval.', loading: 'Cargando…', study: 'Explorar', studyT: 'Juega libremente por ambos bandos desde esta posición', restore: 'Restaurar', restoreT: 'Volver al instante a la posición inicial de la exploración (Esc)', back: 'Atrás', backT: 'Deshacer una jugada explorada (←)', badge: 'Explorando', sHead: 'Explorando', sFrom: '{k} jugadas desde la jugada {n}', sBody: 'Juega en el tablero por ambos bandos. Haz clic en una fila candidata para jugarla. [Restaurar] vuelve al instante (la partida y el gráfico no cambian).', played: 'Jugada', none: 'No hay jugadas candidatas (fin)', best: 'Mejor', hov: 'Pasa el ratón por una fila para ver su línea en el tablero' },
+  fr: { stop: 'Arrêter', resume: 'Reprendre', stopT: 'Arrêter l’analyse (les résultats restent)', resumeT: 'Reprendre l’analyse', visits: '{n} visites', pass: 'Passe', exact: 'exact', final: 'Position finale', finalNote: 'Cliquez sur un coup de la partie ou de la liste des erreurs pour voir son commentaire et les coups candidats.', expl: 'Commentaire', cands: 'Coups candidats', line: 'Variante', val: 'Éval.', loading: 'Chargement…', study: 'Explorer', studyT: 'Jouez librement les deux camps depuis cette position', restore: 'Rétablir', restoreT: 'Revenir aussitôt à la position de départ de l’exploration (Échap)', back: 'Reculer', backT: 'Annuler un coup exploré (←)', badge: 'Exploration', sHead: 'Exploration', sFrom: '{k} coups depuis le coup {n}', sBody: 'Jouez les coups des deux camps sur le plateau. Cliquez sur une ligne candidate pour jouer ce coup. [Rétablir] revient aussitôt (la partie et le graphique ne changent pas).', played: 'Joué', none: 'Aucun coup candidat (fin)', best: 'Meilleur', hov: 'Survolez une ligne pour voir sa variante sur le plateau' },
+  pt: { stop: 'Parar', resume: 'Retomar', stopT: 'Parar a análise (os resultados ficam)', resumeT: 'Retomar a análise', visits: '{n} visitas', pass: 'Passa', exact: 'exato', final: 'Posição final', finalNote: 'Clique num lance da partida ou da lista de erros para ver o comentário e os candidatos.', expl: 'Comentário', cands: 'Lances candidatos', line: 'Linha', val: 'Aval.', loading: 'Carregando…', study: 'Explorar', studyT: 'Jogue livremente pelos dois lados a partir desta posição', restore: 'Restaurar', restoreT: 'Voltar já à posição em que a exploração começou (Esc)', back: 'Voltar', backT: 'Desfazer um lance explorado (←)', badge: 'Explorando', sHead: 'Explorando', sFrom: '{k} lances a partir do lance {n}', sBody: 'Jogue pelos dois lados no tabuleiro. Clique numa linha candidata para jogar esse lance. [Restaurar] volta na hora (a partida e o gráfico não mudam).', played: 'Jogado', none: 'Sem lances candidatos (fim)', best: 'Melhor', hov: 'Passe o mouse numa linha para ver a sequência no tabuleiro' },
+  de: { stop: 'Stopp', resume: 'Weiter', stopT: 'Analyse anhalten (Ergebnisse bleiben)', resumeT: 'Analyse fortsetzen', visits: '{n} Besuche', pass: 'Passen', exact: 'exakt', final: 'Endstellung', finalNote: 'Klicke auf einen Zug der Partie oder der Fehlerliste, um Kommentar und Kandidatenzüge zu sehen.', expl: 'Kommentar', cands: 'Kandidatenzüge', line: 'Variante', val: 'Bew.', loading: 'Wird geladen…', study: 'Analysieren', studyT: 'Von dieser Stellung aus frei für beide Seiten ziehen', restore: 'Zurücksetzen', restoreT: 'Sofort zur Ausgangsstellung der Analyse zurück (Esc)', back: 'Zurück', backT: 'Einen analysierten Zug zurücknehmen (←)', badge: 'Analyse', sHead: 'Analyse', sFrom: '{k} Züge ab Zug {n}', sBody: 'Ziehe auf dem Brett frei für beide Seiten. Klicke auf eine Kandidatenzeile, um diesen Zug zu spielen. [Zurücksetzen] kehrt sofort zurück (Partie und Grafik bleiben unverändert).', played: 'Gespielt', none: 'Keine Kandidatenzüge (Partieende)', best: 'Bester', hov: 'Mauszeiger auf eine Zeile: Variante auf dem Brett' },
+  hi: { stop: 'रोकें', resume: 'फिर शुरू', stopT: 'विश्लेषण रोकें (नतीजे बने रहेंगे)', resumeT: 'विश्लेषण जारी रखें', visits: '{n} बार', pass: 'पास', exact: 'सटीक', final: 'अंतिम स्थिति', finalNote: 'रिकॉर्ड या गलतियों की सूची में किसी चाल पर क्लिक करें तो उस स्थिति की टिप्पणी और संभावित चालें दिखती हैं।', expl: 'टिप्पणी', cands: 'संभावित चालें', line: 'लाइन', val: 'मूल्यांकन', loading: 'लोड हो रहा है…', study: 'जाँचें', studyT: 'इस स्थिति से दोनों पक्षों की चालें खुलकर खेलें', restore: 'वापस लाएँ', restoreT: 'जाँच शुरू होने वाली स्थिति पर तुरंत लौटें (Esc)', back: 'एक चाल पीछे', backT: 'जाँच की एक चाल वापस लें (←)', badge: 'जाँच जारी', sHead: 'जाँच जारी', sFrom: 'चाल {n} की स्थिति से {k} चालें', sBody: 'बोर्ड पर दोनों पक्षों की चालें खुलकर खेलें। किसी संभावित चाल की पंक्ति पर क्लिक करने से वह चाल खेली जाती है। [वापस लाएँ] से तुरंत मूल स्थिति पर लौटें (रिकॉर्ड और ग्राफ़ नहीं बदलते)।', played: 'खेली गई', none: 'कोई संभावित चाल नहीं (खेल समाप्त)', best: 'सर्वश्रेष्ठ', hov: 'पंक्ति पर माउस ले जाएँ तो बोर्ड पर लाइन दिखती है' },
+  ar: { stop: 'إيقاف', resume: 'استئناف', stopT: 'إيقاف التحليل (تبقى النتائج)', resumeT: 'متابعة التحليل', visits: '{n} زيارة', pass: 'تمرير', exact: 'دقيق', final: 'الوضع النهائي', finalNote: 'انقر على نقلة في السجل أو قائمة الأخطاء لرؤية شرحها والنقلات المرشحة.', expl: 'الشرح', cands: 'النقلات المرشحة', line: 'التسلسل', val: 'التقييم', loading: 'جارٍ التحميل…', study: 'استكشاف', studyT: 'العب نقلات الطرفين بحرية من هذا الوضع', restore: 'استعادة', restoreT: 'العودة فورًا إلى الوضع الذي بدأ منه الاستكشاف (Esc)', back: 'تراجع', backT: 'التراجع عن نقلة مستكشفة (←)', badge: 'استكشاف', sHead: 'وضع الاستكشاف', sFrom: '{k} نقلات من النقلة {n}', sBody: 'العب نقلات الطرفين على اللوحة بحرية. انقر على صف مرشح للعب تلك النقلة. [استعادة] تعيدك فورًا (لا يتغير السجل ولا الرسم البياني).', played: 'المُلعوبة', none: 'لا توجد نقلات مرشحة (انتهت المباراة)', best: 'الأفضل', hov: 'مرّر الفأرة على صف لرؤية تسلسله على اللوحة' },
 };
 const CSS = `
 .rbox{display:none;box-sizing:border-box;min-width:0;min-height:0;contain:inline-size;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);gap:12px;padding:10px 12px;border-radius:14px;
@@ -54,6 +55,7 @@ const CSS = `
 .rb-acts .rb-restore{background:var(--rb-acc,#e2c275);border-color:var(--rb-acc,#e2c275);color:var(--rb-acc-ink,#1b150a);padding:4px 14px}
 .rb-acts .rb-restore:hover{filter:brightness(1.08)}
 .rb-acts [hidden]{display:none}
+.rb-acts .rb-run.on{color:#ffb4a8;border-color:rgba(255,140,120,.55)}
 .rb-body{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rb-line,rgba(255,255,255,.2)) transparent;padding-inline-end:4px}
 .rb-body p{margin:0 0 5px}
 .rb-body .rb-tip,.rb-body .cr-tip,.rb-body .why{color:var(--rb-tipc,#cfe9da)}
@@ -98,11 +100,14 @@ html.rb-study .rb-badge{display:block}/* larger, easier-to-read text (PC, 2026-1
 .rb-msg{font-size:14px}
 .rb-badge{font-size:14px}
 `;
+let halted = false;   // 停止 pressed: the candidates shown stay, no new run until 再開 or another position
+const running = () => !!(timer || cancel);
 let A = null, root = null, badge = null, on = false, study = false, curKey = null, cands = null, final = false, cancel = null, timer = 0, hov = null, lastEx = '', lastList = '', baseN = 0, paused = false;
-// finished searches per position (A.key()): coming back to a position shows its result at once, without searching again
+// results per position (A.key()): { cands, final, st } — the latest finished round of the continuous analysis and how deep it
+// got (st, passed back to A.analyze to continue deeper); coming back to a position shows it at once, finished ones are not searched again
 const cache = new Map(), CACHE_MAX = 400;
 // delay before searching after a step: stepping quickly through the record starts no search; longer when something is
-// already shown (the cache of the page, A.seed())
+// already shown (cache, A.seed())
 const WAIT = 200, WAIT_SEEDED = 400;
 const $q = s => root.querySelector(s);
 function T(k, v) { const d = L[A.lang()] || L.en; let x = d[k] != null ? d[k] : L.en[k]; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; }
@@ -112,13 +117,14 @@ function init(adapter) {
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   root = document.createElement('section'); root.className = 'rbox'; root.id = 'rbox'; root.setAttribute('aria-live', 'polite');
   root.innerHTML = `<div class="rb-pane rb-ex"><div class="rb-h"><span class="rb-ttl" id="rbTtl"></span><span class="rb-tag" id="rbTag"></span></div><div class="rb-body" id="rbBody"></div></div>
-    <div class="rb-pane rb-cd"><div class="rb-h"><span class="rb-ttl" id="rbCt"></span><span class="rb-sub" id="rbCs"></span><span class="rb-acts"><button class="rb-back" id="rbBack"></button><button class="rb-restore" id="rbRestore"></button><button class="rb-study" id="rbStudy"></button></span></div>
+    <div class="rb-pane rb-cd"><div class="rb-h"><span class="rb-ttl" id="rbCt"></span><span class="rb-sub" id="rbCs"></span><span class="rb-acts"><button class="rb-run" id="rbRun"></button><button class="rb-back" id="rbBack"></button><button class="rb-restore" id="rbRestore"></button><button class="rb-study" id="rbStudy"></button></span></div>
     <div class="rb-list" id="rbList"></div></div>`;
   A.host.appendChild(root);
   badge = document.createElement('div'); badge.className = 'rb-badge'; if (A.badgeHost) A.badgeHost.appendChild(badge);
   $q('#rbStudy').onclick = () => start();
   $q('#rbRestore').onclick = () => stop();
   $q('#rbBack').onclick = () => back();
+  $q('#rbRun').onclick = () => { if (running()) { halted = true; stopCalc(); renderList(); renderActs(); } else { halted = false; calc(0); renderList(); renderActs(); } };
   const list = $q('#rbList');
   list.addEventListener('click', e => { const b = e.target.closest('.rb-row'); if (!b || !cands) return; const c = cands[+b.dataset.k]; if (c) play(c.id); });
   list.addEventListener('mouseover', e => { const b = e.target.closest('.rb-row'); setHov(b && cands ? cands[+b.dataset.k] : null); });
@@ -164,9 +170,9 @@ function sync() {
   labels();
   const k = A.key();
   if (k !== curKey) {
-    curKey = k; stopCalc(); cands = null; final = false; paused = false; if (hov) { hov = null; try { A.hover(); } catch (e) {} }
+    curKey = k; stopCalc(); cands = null; final = false; halted = false; paused = false; if (hov) { hov = null; try { A.hover(); } catch (e) {} }
     const c = cache.get(k);
-    if (c) { cands = c; final = true; }
+    if (c) { cands = c.cands; final = c.final; if (!final) calc(WAIT_SEEDED); }
     else { let sd = null; try { sd = A.seed ? A.seed() : null; } catch (e) {} if (sd && sd.length) cands = sd; calc(cands ? WAIT_SEEDED : WAIT); }
   }
   renderEx(); renderList(); renderActs();
@@ -174,23 +180,27 @@ function sync() {
 function calc(ms) {
   timer = setTimeout(() => {
     timer = 0; const my = curKey;
-    if (document.hidden) { paused = true; return; }
-    cancel = A.analyze((list, fin) => {
+    if (document.hidden) { paused = true; renderActs(); return; }
+    const c0 = cache.get(my);
+    cancel = A.analyze((list, fin, st) => {
       if (curKey !== my || !on) return;
       cands = list || []; final = !!fin;
-      if (fin) { cancel = null; cache.delete(my); cache.set(my, cands); if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value); }
-      renderList();
-    });
+      if (fin) cancel = null;
+      if (st || fin) { cache.delete(my); cache.set(my, { cands, final, st }); if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value); }
+      renderList(); renderActs();
+    }, c0 && c0.st);
+    renderActs();
   }, ms);
 }
 // a hidden tab does not keep the engine busy: the search stops and starts again when the page is shown
 document.addEventListener('visibilitychange', () => {
   if (!A || !on) return;
   if (document.hidden) { if (timer || cancel) { stopCalc(); paused = true; } }
-  else if (paused) { paused = false; if (!final && !timer && !cancel) calc(60); }
+  else if (paused) { paused = false; if (!final && !halted && !timer && !cancel) calc(60); }
 });
 function stopCalc() { if (timer) { clearTimeout(timer); timer = 0; } if (cancel) { try { cancel(); } catch (e) {} cancel = null; } }
 function renderActs() {
+  { const b = $q('#rbRun'), run = running(); b.hidden = !run && (final || !cands || !cands.length) && !halted; b.textContent = T(run ? 'stop' : 'resume'); b.title = T(run ? 'stopT' : 'resumeT'); b.classList.toggle('on', run); }
   $q('#rbStudy').hidden = study; $q('#rbRestore').hidden = !study; $q('#rbBack').hidden = !study;
   $q('#rbBack').disabled = study && !(A.studyLen() > 0);
 }
@@ -210,8 +220,8 @@ function renderEx() {
 function renderList() {
   let h;
   const head = `<div class="rb-head"><span></span><span>${T('cands')}</span><span>${T('val')}</span><span>${T('line')}</span></div>`;
-  if (!cands) h = `<div class="rb-msg ld">${T('loading')}</div>`;
-  else if (!cands.length) h = `<div class="rb-msg">${final ? T('none') : T('loading')}</div>`;
+  if (!cands) h = halted ? `<div class="rb-msg">—</div>` : `<div class="rb-msg ld">${T('loading')}</div>`;
+  else if (!cands.length) h = `<div class="rb-msg">${final ? T('none') : halted ? '—' : T('loading')}</div>`;
   else h = head + cands.map((c, k) => `<button class="rb-row${k === 0 ? ' top' : ''}${hov && hov.id === c.id ? ' hov' : ''}" data-k="${k}"><span class="rb-rk">${k + 1}</span><span class="rb-mv"><bdi>${c.mv}</bdi>${c.played ? `<span class="rb-pl">${T('played')}</span>` : ''}</span><span class="rb-val ${c.cls || ''}">${c.val}${c.sub ? `<small>${c.sub}</small>` : ''}</span><span class="rb-pv">${(c.pv || []).length ? c.pv.map(p => `<span><i class="rb-d s${p.s}"></i><bdi>${p.t}</bdi></span>`).join('') : (final ? '' : '…')}</span></button>`).join('') + (final ? '' : `<div class="rb-msg ld"></div>`);
   if (h === lastList) return; lastList = h;
   $q('#rbList').innerHTML = h;

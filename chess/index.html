@@ -727,6 +727,9 @@ body .info-line{font-size:12.5px}
 /* 引分提案 (offer a draw): only in a live game vs the AI (body.ai-live, app.js) */
 #btnDraw{display:none!important}
 body.ai-live #btnDraw{display:flex!important}
+/* online: shown to both players while the game is on (body.ol-draw, app.js olDrawSync), never to spectators; .pend = my offer awaits an answer */
+body.in-online.ol-draw:not(.in-watch) #btnDraw{display:flex!important}
+#btnDraw.pend{opacity:.55}
 body.in-online .ol-only{display:flex!important}
 body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
 body.in-online .review-card, body.in-online #infoLine, body.in-online #evalCard .evalrow, body.in-online #evalCard .evalbar, body.in-online #evalCard .graph{display:none!important}
@@ -1271,6 +1274,14 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
     <div class="modal-actions"><button class="mbtn" onclick="document.getElementById('rtConfirm').classList.remove('show')" data-i18n="close"></button><button class="mbtn go" id="rtConfirmYes"></button></div>
   </div>
 </div>
+<!-- online: the opponent offers a draw -->
+<div class="overlay" id="olDrawDlg">
+  <div class="modal" style="width:min(420px,100%)">
+    <h2 id="olDrawHead"></h2>
+    <p id="olDrawText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
+    <div class="modal-actions"><button class="mbtn" id="olDrawNo" data-i18n="od.dec"></button><button class="mbtn go" id="olDrawYes" data-i18n="od.acc"></button></div>
+  </div>
+</div>
 <!-- first visit: online name + optional Google link (online play available only) -->
 <div class="overlay" id="profOverlay">
   <div class="modal" style="width:min(460px,100%)">
@@ -1344,7 +1355,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="engine.js?v=20261028pv"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=stale1"></script>
+<script src="online.js?v=stale1od"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/headerbar.js?v=27"></script>
@@ -1356,7 +1367,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="app.js?v=20261028wp1dr"></script>
+<script src="app.js?v=20261028wp1od"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -1372,7 +1383,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028jb" defer></script>
+<script src="../shared/atlas.js?v=20261028tf2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

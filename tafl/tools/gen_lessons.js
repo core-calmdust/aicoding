@@ -89,13 +89,13 @@ steps.push(make('b_hostile', 'basics', C, () => {
   if (p.moves().some(m => { const q = p.clone().play(m); return q.lastCaps.length && !r.ok.includes(m); })) return null;
   return r;
 }));
-// 4. the king escapes to a corner in one move
+// 4. the king escapes to a corner in one move (lessons.json: replaced by 3-move problems from tools/gen_lessons_seq.js — run it after this script)
 steps.push(make('b_escape', 'basics', C, () => randPos(C, 7 + rnd(6), 1 + rnd(4), P2, { kingEdge: true }), sp => {
   const r = okList(sp, (p, m) => p.clone().play(m).res === P2, 1); if (!r) return null;
   const p = pos(sp); if (p.moves().filter(m => p.at(m % 256) === 3).length < 4) return null;
   return r;
 }));
-// 5. capture the king (four sides, or three and the throne)
+// 5. capture the king (four sides, or three and the throne) (lessons.json: replaced by tools/gen_lessons_seq.js)
 steps.push(make('b_kingcap', 'basics', C, () => {
   const n = 11, f = F(C); let k = -1;
   for (let t = 0; t < 50; t++) { const i = rnd(121); if (f[i] & 1 || f[i] & 16) continue; k = i; break; }
@@ -109,7 +109,7 @@ steps.push(make('b_safe', 'basics', C, () => randPos(C, 5 + rnd(5), 3 + rnd(3), 
   const p = pos(sp); if (p.kingLines().length) return null;
   const me = p.turn, L = p.moves();
   if (capsSet(p, me).size === 0) return null;   // something of mine is attacked now
-  const good = L.filter(m => { const q = p.clone().play(m); return !q.res && capsSet(q, me).size === 0 && !oppCanWinNext(q) && q.lastCaps.length === 0; });
+  const good = L.filter(m => { const q = p.clone().play(m); return !q.res && capsSet(q, me).size === 0 && !oppCanWinNext(q); });   // capturing moves count too when they are safe
   if (!good.length || good.length > 6 || good.length > L.length / 4) return null;
   return { ok: good, best: good[0] };
 }));
