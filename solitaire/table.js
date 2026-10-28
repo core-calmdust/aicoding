@@ -20,11 +20,13 @@ function faceHtml(c) {
   const corner = `<div class="ix"><b>${rk}</b>${suitSvg(s)}</div><div class="ix ix2"><b>${rk}</b>${suitSvg(s)}</div>`;
   let mid;
   if (r > 10) {
-    const dir = Table.COURT_DIR[document.documentElement.dataset.court] || '';   // court art set: classic (img/), antique, flat
+    const dir = Table.COURT_DIR[document.documentElement.dataset.court === 'antique' ? 'antique' : 'classic'];   // court art set: classic (img/), antique, flat
     mid = `<div class="fc"><img src="img/${dir}${'JQK'[r - 11]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async"></div>`;
   } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
-  return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div></div><div class="bk"></div>`;
+  // the flat deck: every card is a whole-face image (img/flat/<rank><suit>.webp); the drawn face stays underneath for tiny cards
+  const full = document.documentElement.dataset.court === 'flat' ? `<img class="fimg" src="img/flat/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async">` : '';
+  return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div>${full}</div><div class="bk"></div>`;
 }
 const DOWN = 0.13, UP = 0.30, UPMIN = 0.13, DOWNMIN = 0.045;
 

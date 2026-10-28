@@ -27,7 +27,8 @@
 ## 画像のクレジット
 - 絵札（J・Q・K）とカード裏面「クラシック赤・青」："Classic Playing Cards"（Alborz Heydaryan、Figma Community）CC BY 4.0。`img/CREDITS.txt` 参照。ゲーム内の設定ダイアログにも表記。
 - 絵札「アンティーク」「フラット」と裏面「アラベスク」「アラベスク黒」「モザイク」：Designed by Freepik（magnific.com の3素材、出典明記で使用可）。`img/CREDITS.txt` 参照。
-- 絵札のデザインは `set.court`（classic / antique / flat）、画像は `img/`・`img/antique/`・`img/flat/`（flat はカード全面を使い、隅の数字も画像側）。
+- カードのデザインは `set.court`（classic / antique / flat）。classic・antique は絵札だけ画像（`img/`・`img/antique/`）、flat は52枚すべてを画像で表示（`img/flat/<A23456789TJQK><shdc>.webp`、とても小さいカードでは描画のカードに切り替え）。裏面の既定はアラベスク。
+- 新しいゲームのダイアログは「ゲーム」「ルール」「デザイン」のタブ。今日の配りはメイン画面の「今日のソリティア」から。
 
 ## 画面構成（ユーザー指定・共通仕様の右欄2列の例外）
 - PC：ゲームボードを画面横幅いっぱい（横長）。ゲーム名・難易度はタイトル横にサブタイトル程度の大きさ、時間・手数・得点は大きめの文字でヘッダーバーに。ボードの下に3列で「今日のソリティア」「成績（配り番号・最初からを含む）」「ショートカット」を、スクロールなしで画面内に収める。

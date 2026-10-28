@@ -6,7 +6,7 @@ const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
 const FELTS = ['green', 'blue', 'wine', 'charcoal', 'teal', 'purple', 'walnut', 'linen'];
-const BACKS = ['red', 'blue', 'ornate', 'ornateBlack', 'mosaic', 'crimson', 'navy', 'stars'];
+const BACKS = ['ornate', 'ornateBlack', 'red', 'blue', 'mosaic', 'crimson', 'navy', 'stars'];
 const COURTS = ['classic', 'antique', 'flat'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -14,8 +14,10 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'red', face: 'classic', court: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
-if (!BACKS.includes(D.set.back)) { D.set.back = 'red'; document.documentElement.dataset.back = 'red'; }
+D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'ornate', face: 'classic', court: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+if (D.set.backV !== 2 || !BACKS.includes(D.set.back)) { D.set.back = 'ornate'; D.set.backV = 2; }   // the default back became Arabesque (2026-10-29)
+document.documentElement.dataset.back = D.set.back;
+D.set.face = 'classic'; document.documentElement.dataset.face = 'classic';   // the card-face picker was removed
 if (!COURTS.includes(D.set.court)) D.set.court = 'classic';
 document.documentElement.dataset.court = D.set.court;
 D.stats = D.stats || {}; D.daily = D.daily || {}; D.bank = D.bank || 0;
@@ -452,6 +454,17 @@ const GICON = {
   spider: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3, 4].map(i => `<rect x="${2 + i * 10.4}" y="${4 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${10 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${16 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/>`).join('') + '</g><g transform="translate(27 30)" fill="#1b1c22"><circle r="4"/><circle cy="-5" r="2.6"/><path d="M-3-1-11-6M3-1 11-6M-4 1-12 2M4 1 12 2M-3 3-10 9M3 3 10 9M-2-3-8-11M2-3 8-11" stroke="#1b1c22" stroke-width="1.3" fill="none"/></g></svg>',
   freecell: '<svg viewBox="0 0 54 44"><g fill="none" stroke="#dcbb6c" stroke-width="1"><rect x="2" y="3" width="11" height="15" rx="2"/><rect x="15" y="3" width="11" height="15" rx="2"/></g><rect x="28" y="3" width="11" height="15" rx="2" fill="#fbf6ea"/><text x="30.5" y="10" font-size="6" font-weight="700" fill="#1b1c22" font-family="serif">A</text><rect x="41" y="3" width="11" height="15" rx="2" fill="#fbf6ea"/><text x="43.5" y="10" font-size="6" font-weight="700" fill="#c51f30" font-family="serif">2</text><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3].map(i => `<rect x="${3 + i * 12.5}" y="21" width="11" height="15" rx="2"/><rect x="${3 + i * 12.5}" y="27" width="11" height="15" rx="2"/>`).join('') + '</g></svg>',
 };
+// a little scene of real cards for each game (new-game dialog)
+const GART = {   // [card id | 'b' (back), x, y, rotation] in card units (width 1)
+  klondike: [['b', 0, 0, 0], ['b', .14, .12, 0], [12, 1.25, .1, -6], [24, 1.62, .42, 0], [36, 1.99, .74, 5]],
+  spider: [[12, .15, 0, -5], [11, .5, .28, -1], [10, .85, .56, 2], [9, 1.2, .84, 5], [8, 1.55, 1.12, 8]],
+  freecell: [['c', 0, 0, 0], ['c', .62, 0, 0], [0, 1.45, 0, -3], [26, 1.85, .05, 2], [39, 2.25, .1, 6]],
+};
+function gArt(v) {
+  const L = GART[v]; if (!L) return gIcon(v);
+  return `<span class="garts tbl">` + L.map(([c, x, y, r]) => c === 'c' ? `<span class="gslot" style="left:calc(var(--cw)*${x});top:calc(var(--cw)*${y})"></span>` :
+    `<span class="cd${c === 'b' ? ' dn' : ''}" style="left:calc(var(--cw)*${x});top:calc(var(--cw)*${y});transform:rotate(${r}deg)"><span class="in">${Table.faceHtml(c === 'b' ? 0 : c)}</span></span>`).join('') + `</span>`;
+}
 function gIcon(v) { return GICON[v] || '<svg viewBox="0 0 54 44"><rect x="12" y="6" width="22" height="31" rx="3" fill="#fbf6ea"/></svg>'; }
 function renderSide() {
   if (!st) return;
@@ -492,38 +505,48 @@ function toast(m) { const e = $('#toast'); e.textContent = m; e.classList.add('s
 let NG = null;   // draft { v, p: {diff,o,deal,undo,no} }
 function openNew() {
   const v = st ? st.v : set.v, p = JSON.parse(JSON.stringify(prefOf(v)));
-  NG = { v, p: Object.assign(p, { no: st ? st.no : 1 }) };
+  NG = { v, p: Object.assign(p, { no: st ? st.no : 1 }) }; ngTab = 'game';
   renderNew(); openOv('#newOverlay');
 }
 function draftFor(v) { const p = JSON.parse(JSON.stringify(prefOf(v))); p.no = NG.p.no; return p; }
 function seg(items, cur, attr) { return `<div class="seg">${items.map(([val, lab, dis]) => `<button type="button" data-${attr}="${esc(val)}" class="${String(val) === String(cur) ? 'sel' : ''}"${dis ? ' disabled' : ''}>${esc(lab)}</button>`).join('')}</div>`; }
+let ngTab = 'game';
 function renderNew() {
   const v = NG.v, V = S.VARIANTS[v], p = NG.p;
-  $('#ngGames').innerHTML = S.ORDER.map(id => `<button type="button" class="gtile${id === v ? ' sel' : ''}" data-g="${id}">${gIcon(id)}<span><b>${esc(vName(id))}</b><small>${esc(t('vd.' + id))}</small></span></button>`).join('');
-  let L = `<div class="sec"><span class="lab">${esc(t('new.diff'))}</span>${seg(DIFFS.map(d => [d, t('diff.' + d)]).concat([['custom', t('diff.custom')]]), p.diff, 'diff')}<p class="diff-desc">${esc(t('dd.' + v + '.' + p.diff) !== 'dd.' + v + '.' + p.diff ? t('dd.' + v + '.' + p.diff) : t('dd.custom'))}</p></div>`;
-  L += `<div class="sec"><span class="lab">${esc(t('new.deal'))}</span>${seg([['random', t('deal.random')], ['winnable', t('deal.winnable'), !V.solver], ['number', t('deal.number')], ['daily', t('deal.daily')]], p.deal, 'deal')}` +
-    (p.deal === 'number' ? `<div class="dno"><input id="ngNo" type="number" min="1" max="1000000" value="${p.no || 1}" inputmode="numeric" aria-label="${esc(t('deal.number'))}"></div>` : '') +
-    `<p class="diff-desc">${esc(t('dealD.' + p.deal))}${!V.solver && p.deal !== 'daily' ? '　' + esc(t('deal.winnable.na')) : ''}</p></div>`;
-  L += `<div class="sec"><span class="lab">${esc(t('new.rules'))}</span><div class="rules-box">` + (V.opts || []).map(x => `<div class="opt"><span>${esc(t('o.' + x.k))}</span>${seg(x.vals.map(val => [val, optVal(x.k, val)]), p.o[x.k], 'o-' + x.k)}</div>`).join('') +
-    `<div class="opt"><span>${esc(t('o.undo'))}</span>${seg([['on', t('ov.undo.on')], ['off', t('ov.undo.off')]], p.undo, 'undo')}</div></div></div>`;
-  $('#ngLeft').innerHTML = L;
-  $('#ngRight').innerHTML = designHtml();
-  // events
-  $$('#ngGames [data-g]').forEach(b => b.onclick = () => { NG.v = b.dataset.g; NG.p = draftFor(NG.v); renderNew(); });
-  $$('#ngLeft [data-diff]').forEach(b => b.onclick = () => { const d = b.dataset.diff; if (d === 'custom') NG.p.diff = 'custom'; else applyPreset(NG.v, NG.p, d); renderNew(); });
-  $$('#ngLeft [data-deal]').forEach(b => b.onclick = () => { NG.p.deal = b.dataset.deal; renderNew(); });
-  (V.opts || []).forEach(x => $$('#ngLeft [data-o-' + x.k + ']').forEach(b => b.onclick = () => { const raw = b.dataset['o-' + x.k] !== undefined ? b.dataset['o-' + x.k] : b.getAttribute('data-o-' + x.k); NG.p.o[x.k] = typeof x.def === 'number' ? +raw : raw; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); }));
-  $$('#ngLeft [data-undo]').forEach(b => b.onclick = () => { NG.p.undo = b.dataset.undo; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); });
+  const TABS = ['game', 'rules', 'design'];
+  $('#ngTabs').innerHTML = TABS.map(k => `<button type="button" role="tab" aria-selected="${k === ngTab}" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(vName(v))}</small>` : ''}</button>`).join('');
+  let h = '';
+  if (ngTab === 'game') {
+    h = `<div class="ng-games">` + S.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><ul>${t('vf.' + id).split('|').map(x => `<li>${esc(x)}</li>`).join('')}</ul><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>`;
+  } else if (ngTab === 'rules') {
+    const dsel = `<select id="ngDiff" class="nsel">${DIFFS.concat(['custom']).map(d => `<option value="${d}"${d === p.diff ? ' selected' : ''}>${esc(t('diff.' + d))}</option>`).join('')}</select>`;
+    const ddesc = t('dd.' + v + '.' + p.diff) !== 'dd.' + v + '.' + p.diff ? t('dd.' + v + '.' + p.diff) : t('dd.custom');
+    const deal = p.deal === 'daily' ? 'random' : p.deal;
+    h = `<div class="rl-top"><div class="rl-box"><span class="lab">${esc(t('new.diffSel'))}</span>${dsel}<p class="diff-desc">${esc(ddesc)}</p></div>` +
+      `<div class="rl-box"><span class="lab">${esc(t('new.deal'))}</span>${seg([['random', t('deal.random')], ['winnable', t('deal.winnable'), !V.solver], ['number', t('deal.number')]], deal, 'deal')}` +
+      (deal === 'number' ? `<div class="dno"><input id="ngNo" type="number" min="1" max="1000000" value="${p.no || 1}" inputmode="numeric" aria-label="${esc(t('deal.number'))}"></div>` : '') +
+      `<p class="diff-desc">${esc(t('dealD.' + deal))}${!V.solver ? '　' + esc(t('deal.winnable.na')) : ''}</p></div></div>` +
+      `<div class="lab rl-h">${esc(t('new.detail'))}</div><div class="rl-list">` +
+      (V.opts || []).map(x => `<div class="rl"><div class="rl-t"><b>${esc(t('o.' + x.k))}</b><small>${esc(t('o.' + x.k + '.h'))}</small></div>${seg(x.vals.map(val => [val, optVal(x.k, val)]), p.o[x.k], 'o-' + x.k)}</div>`).join('') +
+      `<div class="rl"><div class="rl-t"><b>${esc(t('o.undo'))}</b><small>${esc(t('o.undo.h'))}</small></div>${seg([['on', t('ov.undo.on')], ['off', t('ov.undo.off')]], p.undo, 'undo')}</div></div>`;
+  } else h = designHtml();
+  const body = $('#ngBody'); body.innerHTML = h; body.dataset.tab = ngTab;
+  $$('#ngTabs [data-tab]').forEach(b => b.onclick = () => { ngTab = b.dataset.tab; renderNew(); $('#ngBody').scrollTop = 0; });
+  $$('#ngBody [data-g]').forEach(b => b.onclick = () => { if (NG.v !== b.dataset.g) { NG.v = b.dataset.g; NG.p = draftFor(NG.v); } renderNew(); });
+  $$('#ngBody [data-g]').forEach(b => b.ondblclick = () => $('#btnStart').click());
+  const ds = $('#ngDiff'); if (ds) ds.onchange = () => { const d = ds.value; if (d === 'custom') NG.p.diff = 'custom'; else applyPreset(NG.v, NG.p, d); renderNew(); };
+  $$('#ngBody [data-deal]').forEach(b => b.onclick = () => { NG.p.deal = b.dataset.deal; renderNew(); });
+  (V.opts || []).forEach(x => $$('#ngBody [data-o-' + x.k + ']').forEach(b => b.onclick = () => { const raw = b.getAttribute('data-o-' + x.k); NG.p.o[x.k] = typeof x.def === 'number' ? +raw : raw; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); }));
+  $$('#ngBody [data-undo]').forEach(b => b.onclick = () => { NG.p.undo = b.dataset.undo; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); });
   const no = $('#ngNo'); if (no) no.oninput = () => { NG.p.no = +no.value; };
-  wireDesign($('#ngRight'));
+  if (ngTab === 'design') wireDesign(body);
 }
 function designHtml() {
   const mini = (cls, inner) => `<span class="mini-card">${inner}</span>`;
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
-  const face = FACES.map(f => `<button type="button" class="tile${set.face === f ? ' sel' : ''}" data-face="${f}"><span class="pv">${facePv(f)}</span><small>${esc(t('face.' + f))}</small></button>`).join('');
-  const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${k === 'flat' ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div><div class="sec"><span class="lab">${esc(t('new.face'))}</span><div class="tiles faces">${face}</div></div>`;
+  const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${k === 'flat' ? ' full' : ''}" src="img/${k === 'flat' ? 'flat/' : Table.COURT_DIR[k]}${k === 'flat' ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
+  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
@@ -548,9 +571,9 @@ function backCss(b) {   // read the rule for html[data-back=b] .bk from the styl
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
 $('#btnStart').onclick = () => {
   const v = NG.v, p = NG.p; const no = $('#ngNo'); if (no) p.no = +no.value;
-  const keep = set.prefs[v] = { diff: p.diff, o: p.o, deal: p.deal === 'daily' ? (set.prefs[v] && set.prefs[v].deal || 'random') : p.deal, undo: p.undo }; save();
+  if (p.deal === 'daily') p.deal = 'random';
+  const keep = set.prefs[v] = { diff: p.diff, o: p.o, deal: p.deal, undo: p.undo }; save();
   closeOv('#newOverlay');
-  if (p.deal === 'daily') return playDaily(v);
   startGame(v, { o: p.o, diff: p.diff, deal: p.deal, no: p.no, undo: p.undo }); void keep;
 };
 
