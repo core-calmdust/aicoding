@@ -934,18 +934,37 @@ function tutorial() {
   };
   draw();
 }
+// character lists (profile icons, collection): rarity filter + sort, remembered per viewer
+const SORTS = ['no', 'rar', 'rarA'];
+function sortList(items, rarOf, idOf) {
+  const m = DB.set.csort || 'no', f = DB.set.cflt ?? -1;
+  const a = items.filter(x => f < 0 || rarOf(x) === f);
+  return a.sort((x, y) => m === 'rar' ? rarOf(y) - rarOf(x) || idOf(x) - idOf(y) : m === 'rarA' ? rarOf(x) - rarOf(y) || idOf(x) - idOf(y) : idOf(x) - idOf(y));
+}
+function sortBar() {
+  const m = DB.set.csort || 'no', f = DB.set.cflt ?? -1;
+  return `<div class="sortbar"><div class="sgrp"><span>${esc(t('so.r'))}</span>${[-1, 0, 1, 2, 3].map(r => `<button class="rf r${r} ${r === f ? 'on' : ''}" data-cf="${r}">${r < 0 ? esc(t('so.all')) : A.RAR[r]}</button>`).join('')}</div>
+    <div class="sgrp"><span>${esc(t('so.label'))}</span>${SORTS.map(k => `<button class="${k === m ? 'on' : ''}" data-cs="${k}">${esc(t('so.' + k))}</button>`).join('')}</div></div>`;
+}
+// re-render a dialog without losing its scroll position
+function keepScroll(fn) { const y = $('#modalBody').scrollTop; fn(); $('#modalBody').scrollTop = y; }
+function bindSort(body, again) {
+  $$('[data-cs]', body).forEach(b => { b.onclick = () => { DB.set.csort = b.dataset.cs; save(); keepScroll(again); }; });
+  $$('[data-cf]', body).forEach(b => { b.onclick = () => { DB.set.cflt = +b.dataset.cf; save(); keepScroll(again); }; });
+}
 function openProfile() {
   const pend = openProfile.p || (openProfile.p = { icon: DB.icon, skin: DB.skin, frame: DB.frame, name: DB.name });
-  const owned = Object.keys(DB.own).map(Number).sort((a, b) => a - b);
+  const owned = sortList(Object.keys(DB.own).map(Number), id => A.INMATES[id].rar, id => id);
   const body = modal(`<h2 class="mh">${esc(t('pf.edit'))}</h2><div class="pfhead"><div class="pic big">${picHTML(pend.icon)}</div><div class="pfn"><label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(pend.name)}" placeholder="${esc(t('pf.ph'))}"></label><p class="note">${esc(t('pf.note'))}</p></div></div>
-    <h3 class="mh3">${esc(t('pf.icon'))}</h3><div class="cgrid">${owned.map(id => `<button class="cc ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.inmateSVG(id)}</button>`).join('')}</div>
+    <h3 class="mh3">${esc(t('pf.icon'))} <small>${Object.keys(DB.own).length}/${A.INMATES.length}</small></h3>${sortBar()}<div class="cgrid">${owned.map(id => `<button class="cc r${A.INMATES[id].rar} ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.inmateSVG(id)}<i class="rr">${A.RAR[A.INMATES[id].rar]}</i></button>`).join('') || `<p class="note">${esc(t('so.none'))}</p>`}</div>
     <h3 class="mh3">${esc(t('pf.skin'))}</h3><div class="skgrid">${SK.FLOORS.filter(s => DB.skinOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.skin ? 'on' : ''}" data-sk="${s.id}"><span class="skp" data-skin="${s.id}"></span><b>${esc(skinName(s.id))}</b></button>`).join('')}</div>
     <h3 class="mh3">${esc(t('pf.frame'))}</h3><div class="skgrid">${SK.FRAMES.filter(s => DB.frameOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.frame ? 'on' : ''}" data-fr="${s.id}"><span class="frp" data-frame="${s.id}"></span><b>${esc(frameName(s.id))}</b></button>`).join('')}</div>
     <div class="mbtns"><button class="btn big org" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mwide');
   const keep = () => { pend.name = $('#pfName').value; };
-  $$('[data-ic]', body).forEach(b => { b.onclick = () => { keep(); pend.icon = +b.dataset.ic; openProfile(); }; });
-  $$('[data-sk]', body).forEach(b => { b.onclick = () => { keep(); pend.skin = b.dataset.sk; openProfile(); }; });
-  $$('[data-fr]', body).forEach(b => { b.onclick = () => { keep(); pend.frame = b.dataset.fr; openProfile(); }; });
+  $$('[data-ic]', body).forEach(b => { b.onclick = () => { keep(); pend.icon = +b.dataset.ic; keepScroll(openProfile); }; });
+  bindSort(body, () => { keep(); openProfile(); });
+  $$('[data-sk]', body).forEach(b => { b.onclick = () => { keep(); pend.skin = b.dataset.sk; keepScroll(openProfile); }; });
+  $$('[data-fr]', body).forEach(b => { b.onclick = () => { keep(); pend.frame = b.dataset.fr; keepScroll(openProfile); }; });
   $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pend.icon; DB.skin = pend.skin; DB.frame = pend.frame; openProfile.p = null; save(); applySkin(); pushTotals(); closeModal(); };
   $('#modalX').addEventListener('click', () => { openProfile.p = null; }, { once: true });
 }
@@ -995,13 +1014,14 @@ function pull(n) {
 }
 function openBook(tab = 'c') {
   const own = { c: id => !!DB.own[id], s: id => DB.skinOwn.includes(id), f: id => DB.frameOwn.includes(id) };
-  const cells = tab === 'c' ? A.INMATES.map(c => `<div class="bkc ${DB.own[c.id] ? '' : 'no'} r${c.rar}">${DB.own[c.id] ? A.inmateSVG(c.id) : '<span>?</span>'}<i>${A.RAR[c.rar]}</i><small>No.${String(c.id + 1).padStart(3, '0')}</small></div>`)
-    : (tab === 's' ? SK.FLOORS : SK.FRAMES).map(s => { const has = own[tab](s.id), it = { t: tab, id: s.id };
+  const cells = tab === 'c' ? sortList(A.INMATES.slice(), c => c.rar, c => c.id).map(c => `<div class="bkc ${DB.own[c.id] ? '' : 'no'} r${c.rar}">${DB.own[c.id] ? A.inmateSVG(c.id) : '<span>?</span>'}<i>${A.RAR[c.rar]}</i><small>No.${String(c.id + 1).padStart(3, '0')}</small></div>`)
+    : sortList((tab === 's' ? SK.FLOORS : SK.FRAMES).map((s, i) => Object.assign({ i }, s)), s => s.rar, s => s.i).map(s => { const has = own[tab](s.id), it = { t: tab, id: s.id };
       return `<div class="bkc sk ${has ? '' : 'no'} r${s.rar}">${has ? itemSVG(it) : '<span>?</span>'}<i>${A.RAR[s.rar]}</i><small>${has ? esc(itemName(it)) : '???'}</small></div>`; });
   const nC = Object.keys(DB.own).length, nS = DB.skinOwn.length, nF = DB.frameOwn.length, tot = A.INMATES.length + SK.FLOORS.length + SK.FRAMES.length;
   const body = modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: nC + nS + nF, m: tot }))}</p>
-    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${SK.FLOORS.length}</small></button><button class="${tab === 'f' ? 'on' : ''}" data-bt="f">${esc(t('bk.f'))} <small>${nF}/${SK.FRAMES.length}</small></button></div><div class="bkgrid ${tab}">${cells.join('')}</div>`, 'mwide');
+    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${SK.FLOORS.length}</small></button><button class="${tab === 'f' ? 'on' : ''}" data-bt="f">${esc(t('bk.f'))} <small>${nF}/${SK.FRAMES.length}</small></button></div>${sortBar()}<div class="bkgrid ${tab}">${cells.join('') || `<p class="note">${esc(t('so.none'))}</p>`}</div>`, 'mwide');
   $$('[data-bt]', body).forEach(b => { b.onclick = () => openBook(b.dataset.bt); });
+  bindSort(body, () => openBook(tab));
 }
 // --- rankings
 async function openRank(tab = 'm') {
