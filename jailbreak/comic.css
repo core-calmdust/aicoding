@@ -232,3 +232,5 @@ html:not([lang=ja]) #board .pc.hv .wt::after { content: ''; }
 @keyframes cmShock { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-22%) scale(1.12, .92); } 70% { transform: translateY(0) scale(.95, 1.06); } 85% { transform: translateX(-5%); } 100% { transform: none; } }
 @keyframes cmPop { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1) rotate(8deg); } }
 @keyframes cmSweat { 0% { opacity: 0; transform: translateY(-30%) rotate(-20deg); } 20% { opacity: 1; } 100% { opacity: 1; transform: translateY(20%) rotate(-20deg); } }
+/* the tilted banner sits inside the scrolling body: keep room so its corners are never clipped */
+.result .rhead { padding: 10px 8px 6px; }

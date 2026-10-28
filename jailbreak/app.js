@@ -1014,9 +1014,11 @@ function confetti() {
   })(t0);
 }
 function toast(s) {
-  const e = $('#toast'); e.textContent = s; e.style.fontSize = '';
-  // always one line: shrink the text when it would not fit the window
-  const room = innerWidth - 32 - 34, w = e.scrollWidth - 32; if (w > room) e.style.fontSize = Math.max(10, Math.floor(parseFloat(getComputedStyle(e).fontSize) * room / w)) + 'px';
+  const e = $('#toast'); e.style.fontSize = '';
+  // up to two lines, broken only between words / after punctuation (never inside a word or phrase); shrink when that is not enough
+  e.innerHTML = String(s).split(/(\s+)/).map(w => /^\s+$/.test(w) ? ' ' : w.split(/(?<=[、。！？])/).filter(Boolean).map(p => `<span class="tw">${esc(p)}</span>`).join('')).join('');
+  const over = () => { const c = getComputedStyle(e); return e.offsetHeight - 20 > (parseFloat(c.lineHeight) || 20) * 2.2 || e.scrollWidth > e.clientWidth + 1; };
+  for (let k = 0; k < 8 && over(); k++) e.style.fontSize = (parseFloat(getComputedStyle(e).fontSize) * .92) + 'px';
   e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2200); }
 function floatTip(s) { const e = $('#gInfo'); if (e) { e.classList.remove('pulse'); void e.offsetWidth; e.classList.add('pulse'); } toast(s); }
 
