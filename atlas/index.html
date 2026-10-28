@@ -232,7 +232,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
 /* in a game (and the rules tour) only 'quit' is shown, where the × sits */
-.bv.playing .x{display:none!important}
+.bv.playing .x,.bv.playing .bvtod{display:none!important}
+/* time-of-day picker, left of the × */
+.bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:3;height:40px;display:flex;align-items:center;gap:4px;padding:0 6px 0 10px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);color:var(--ink)}
+.bvtod svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none}
+.bvtod select{border:0;background:transparent;font:700 13px var(--round,inherit);color:inherit;padding:0 2px;cursor:pointer;outline:none;max-width:120px}
 .bv.playing .quit{inset-inline-start:auto;inset-inline-end:14px}
 .magic{position:fixed;inset:0;z-index:95;pointer-events:none}
 .magic i{position:absolute;display:block;background:currentColor;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px currentColor)}
@@ -972,6 +976,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <div class="bv" id="bv" role="dialog" aria-modal="true">
   <div id="gl"></div>
   <button type="button" class="bvnav prev" id="bvPrev" aria-label="Previous game"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><button type="button" class="bvnav next" id="bvNext" aria-label="Next game"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <label class="bvtod" id="bvTodW"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><select id="bvTod" aria-label="Time of day"></select></label>
   <button class="icbtn x" id="bvClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <button class="btn sm ghost quit" id="bvQuit"></button>
   <div class="hud" id="hud"></div>
@@ -988,7 +993,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261022ent"></script>
 <script src="i18n.js?v=26"></script>
-<script src="table3d.js?v=71"></script>
+<script src="table3d.js?v=72"></script>
 <script src="models/shogi.js?v=22"></script>
 <script src="models/chess.js?v=8"></script>
 <script src="models/backgammon.js?v=14"></script>
@@ -1025,6 +1030,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=116"></script>
+<script src="app.js?v=117"></script>
 </body>
 </html>

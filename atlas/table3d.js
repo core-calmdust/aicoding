@@ -609,11 +609,23 @@
   };
 
   /* ---------- scene ---------- */
+  let mountOpts = {}, envBuild = null, roomObjs = [];
+  function setTimeOfDay(v) {   // rebuild the room's lights, sky and decor for another time of day
+    try { localStorage.setItem('atlas-tod', v); } catch (e) {}
+    if (!R || !scene || mountOpts.plain) return;
+    roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); });
+    const before = new Set(scene.children); buildRoom(scene, false); roomObjs = scene.children.filter(o => !before.has(o));
+    try { envBuild && envBuild(); } catch (e) {}
+    kick(600);
+  }
   let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
 
   /* ---------- the toy room: a chabudai (low round table) on tatami, walls, a window, toy shelves ----------
      Lighting follows the local time like the Sudoku backgrounds: morning / day / evening / night. */
+  // the room's time of day: 'auto' follows the clock, or morning / day / evening / night chosen on the board view (remembered)
+  const todPick = () => { try { const v = localStorage.getItem('atlas-tod'); return ['morning', 'day', 'evening', 'night'].includes(v) ? v : 'auto'; } catch (e) { return 'auto'; } };
+  const curTod = () => { const v = todPick(); return v === 'auto' ? timeOfDay(new Date().getHours()) : v; };
   function timeOfDay(h) { return h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
   const LOOK = {
     morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
@@ -884,7 +896,7 @@
   // the floor texture as an image + its size in world units, for a page background that matches the 3D floor
   function floorImage(kind) { return kind === 'tatami' ? { img: tatamiTex().map.image, w: TAT_W, h: TAT_L } : { img: woodTop('tblR5', '#c08446', '#6a3e1c').image, w: 40, h: 40 }; }
   function buildRoom(scene, plain) {
-    const TT = T(), mode = plain ? 'day' : timeOfDay(new Date().getHours()), L = LOOK[mode];   // the games themselves are always lit like daytime
+    const TT = T(), mode = plain ? 'day' : curTod(), L = LOOK[mode];   // the games themselves are always lit like daytime
     const g = new TT.Group(); scene.add(g); rbCap = 1;
     const FLOOR = -3.4;
     if (plain && localFloor) {   // skin pages: the floor is the page's own CSS background; the canvas only carries the board and its shadow
@@ -940,7 +952,10 @@
     // toy shelf on the back wall, with blocks, balls and board-game boxes
     const shelfM = M({ map: wood('shelf', '#d8a46a', '#a06a3a', 512, 512, 1.2), roughness: .55 });
     [5.4, 9.4].forEach(y => { const s = new TT.Mesh(RB(14, .4, 2.4), shelfM); s.position.set(10, y, 1.2); s.castShadow = s.receiveShadow = true; back.add(s); });
-    [[3.2], [16.8]].forEach(([x]) => { const s = new TT.Mesh(RB(.4, 8.6, 2.4), shelfM); s.position.set(x, 7.6, 1.2); back.add(s); });
+    // the side boards stand on the floor (not on the wainscot rail), with a bottom board and a kick plate
+    [[3.2], [16.8]].forEach(([x]) => { const s = new TT.Mesh(RB(.4, 11.9, 2.4), shelfM); s.position.set(x, 5.95, 1.2); s.castShadow = s.receiveShadow = true; back.add(s); });
+    { const b = new TT.Mesh(RB(13.2, .4, 2.4), shelfM); b.position.set(10, 1.3, 1.2); b.castShadow = b.receiveShadow = true; back.add(b);
+      const k = new TT.Mesh(RB(13.2, 1.1, .3), shelfM); k.position.set(10, .55, 2.25); k.receiveShadow = true; back.add(k); }
     const toy = (geo, col, x, y, z, ry = 0) => { const m = new TT.Mesh(geo, M({ color: col, roughness: .35 })); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; back.add(m); };
     const blk = RB(1, 1, 1);
     toy(blk, 0xff5d5d, 5, 6.1, 1.4, .3); toy(blk, 0x36b4ff, 6.2, 6.1, 1.2, -.2); toy(blk, 0xffc928, 5.6, 7.1, 1.3, .6);
@@ -984,13 +999,14 @@
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
     cam = new (T().PerspectiveCamera)(32, 1, .1, 200);
+    const envMake = () => {
     // studio-like image-based lighting (soft boxes) for believable reflections on lacquer, stones and discs
     try {
       const env = new (T().Scene)(), TT = T();
       const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
       // tinted by the hour (see LOOK): reflections and ambient follow morning / day / evening / night
-      const Lk = LOOK[opts.plain ? 'day' : timeOfDay(new Date().getHours())], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
+      const Lk = LOOK[opts.plain ? 'day' : curTod()], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
       for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = (.06 + .3 * y) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
       [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => {
@@ -1000,7 +1016,10 @@
       const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose();
       envOK = true;
     } catch (e) {}
-    localFloor = !!opts.local; buildRoom(scene, opts.plain || false);
+    };
+    envMake();
+    localFloor = !!opts.local; mountOpts = opts; envBuild = envMake;
+    { const before = new Set(scene.children); buildRoom(scene, opts.plain || false); roomObjs = scene.children.filter(o => !before.has(o)); }
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
@@ -1266,5 +1285,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
