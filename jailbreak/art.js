@@ -40,7 +40,7 @@ const CAST = [
   ['Nova', 'f', 0, 'twin', 'str/#21d8c8/#ff4fd8/7/0', 'thin', 'star', '#ff4fd8/#21d8c8', 'cat', 'cyber phones=#fff/#21d8c8', 'bolt'],
 ];
 const RARS = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3];
-const INMATES = CAST.map(([name, sex, sk, hair, hc, brow, eyes, iris, mouth, acc, suit], id) => ({ id, kind: hair, c: SKIN[sk], c2: hc, rar: RARS[id], sex, name, brow, eyes, iris: iris.split('/'), mouth, acc: acc.split(' '), suit }));
+const INMATES = CAST.map(([name, sex, sk, hair, hc, brow, eyes, iris, mouth, acc, suit, head], id) => ({ id, kind: hair, c: SKIN[sk], c2: hc, rar: RARS[id], sex, name, brow, eyes, iris: iris.split('/'), mouth, acc: acc ? acc.split(' ') : [], suit, head: head || sex }));
 const dk = (h, f = .76) => '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('');
 const base = s => s.includes('/') ? s.split('/')[1] : s;
 const S = (w = 3) => `stroke="${INK}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
@@ -59,7 +59,8 @@ const flame = (x, y, s, f, f2) => P(pts('M', x, y) + pts('C', x - s, y, x - s * 
   + (f2 ? PF(pts('M', x, y - .5) + pts('C', x - s * .5, y - .5, x - s * .5, y - s * .7, x, y - s * 1.2) + pts('C', x + s * .5, y - s * .7, x + s * .5, y - .5, x, y - .5) + 'Z', f2) : '');
 const stitch = (d, w = 1.3) => L(d, INK, w, ' stroke-dasharray="1.6 2.2"');
 let UID = 0;
-const HEAD = { m: 'M28 44Q28 20 50 20Q72 20 72 44V58Q72 75 59 81H41Q28 75 28 58Z', f: 'M30 44Q30 20 50 20Q70 20 70 44Q70 64 61 74Q50 83 39 74Q30 64 30 44Z' };
+const HEAD = { m: 'M28 44Q28 20 50 20Q72 20 72 44V58Q72 75 59 81H41Q28 75 28 58Z', f: 'M30 44Q30 20 50 20Q70 20 70 44Q70 64 61 74Q50 83 39 74Q30 64 30 44Z',
+  m2: 'M27 42Q27 19 50 19Q73 19 73 42V64Q73 78 62 82H38Q27 78 27 64Z', m3: 'M30 42Q30 18 50 18Q70 18 70 42V62Q70 78 58 84H42Q30 78 30 62Z', f2: 'M29 46Q29 21 50 21Q71 21 71 46Q71 70 50 80Q29 70 29 46Z' };
 /* hair: [back layer, front layer] — fills may be patterns */
 function hair(k, hc, F) {
   const h = F(hc), d = dk(base(hc)), sh = (x1, y1, x2, y2) => L(`M${x1} ${y1}Q${(x1 + x2) / 2} ${Math.min(y1, y2) - 3} ${x2} ${y2}`, '#fff', 2.4, ' opacity=".6"');
@@ -97,15 +98,45 @@ function hair(k, hc, F) {
     case 'hime': return [P('M25 42Q21 12 50 12Q79 12 75 42L77 96L23 96Z', h), P('M28 41Q27 16 50 16Q73 16 72 41Z', h) + SYM(P('M28 38L27 80L36 80L34 42Z', h, 2.8)) + sh(38, 23, 56, 20)];
     case 'bangs': return ['', P('M30 44Q29 22 50 22Q71 22 70 44L66 36L62 42L58 34L52 41L48 34L42 41L38 35L34 42Z', h)];
     case 'twin': return [SYM(P('M30 24Q8 22 6 48Q4 72 16 92Q16 72 22 58Q26 44 33 36Z', h, 3.2) + C(28, 24, 4.6, '#ffcd3c', 2)), P('M29 47Q27 17 50 16Q73 17 71 47Q68 33 60 30L56 38L50 30L44 38L40 30Q32 33 29 47Z', h)];
+    // ---- added for the 200-cast ----
+    case 'pigtails': return [SYM(P('M31 46Q13 48 11 68Q10 84 18 94Q20 78 25 68Q30 58 33 52Z', h, 3.2) + C(30, 49, 4, '#ff4fa0', 2)), P('M29 46Q27 17 50 16Q73 17 71 46Q67 32 58 29Q52 36 40 35Q33 37 29 46Z', h) + sh(38, 22, 56, 19)];
+    case 'sideshave': return ['', PF('M71 44Q71 26 60 22L60 31Q67 35 70 44Z', 'rgba(0,0,0,.18)') + L('M63 27l4 2-3 3 4 2', d, 1.4) + P('M66 30Q56 10 35 13Q19 20 24 46Q22 64 28 82Q31 60 36 44Q44 32 56 34Q62 33 66 30Z', h, 3.2) + sh(36, 18, 54, 16)];
+    case 'long': return [P('M25 42Q21 12 50 12Q79 12 75 42L80 98H20Z', h), P('M28 47Q26 15 50 15Q74 15 72 47Q66 27 50 24Q34 27 28 47Z', h) + SYM(P('M29 42Q25 62 27 84L33 82Q31 62 34 46Z', h, 2.6)) + L('M50 15v8', d, 2) + sh(36, 24, 46, 19)];
+    case 'curlybob': case 'longcurly': {
+      const lc = k === 'longcurly', pt = lc ? [[28, 18], [40, 11], [50, 9], [60, 11], [72, 18], [20, 30], [80, 30], [16, 44], [84, 44], [15, 58], [85, 58], [17, 72], [83, 72], [21, 86], [79, 86]] : [[30, 24], [40, 16], [50, 14], [60, 16], [70, 24], [25, 36], [75, 36], [23, 49], [77, 49], [25, 62], [75, 62], [31, 72], [69, 72]];
+      return [pt.map(([x, y]) => C(x, y, lc ? 10 : 9, h, 3)).join('') + PF(lc ? 'M18 34Q50 2 82 34L82 90H18Z' : 'M23 44Q23 15 50 15Q77 15 77 44Q77 73 50 73Q23 73 23 44Z', h), P('M28 46Q24 18 50 16Q76 18 72 46Q70 38 64 40Q62 32 56 36Q52 28 46 35Q40 30 37 39Q32 36 28 46Z', h) + L('M36 24q3-3 6-2M56 21q3-3 6-1', '#fff', 1.6, ' opacity=".5"')];
+    }
+    case 'topknot': return [C(50, 9, 7.5, h, 3) + P('M44 14h12l-1 5H45Z', '#e2402f', 2), PF('M28 44Q28 30 34 24L34 36Q30 38 28 44ZM72 44Q72 30 66 24L66 36Q70 38 72 44Z', 'rgba(0,0,0,.18)') + P('M33 38Q32 18 50 17Q68 18 67 38Q60 30 50 30Q40 30 33 38Z', h) + L('M40 28Q44 21 50 19M60 28Q56 21 50 19', d, 1.4)];
+    case 'wolf': return [P('M24 42Q18 14 50 12Q82 14 76 42L80 62L73 59L77 76L69 70L68 82L60 74H40L32 82L31 70L23 76L27 59L20 62Z', h, 3.2), P('M28 48Q24 18 50 16Q76 18 72 48L68 38L64 45L60 34L54 42L50 32L46 42L40 34L36 45L32 38Z', h) + sh(38, 22, 56, 19)];
+    case 'mullet': return [P('M30 46Q18 58 17 82Q27 87 35 80H65Q73 87 83 82Q82 58 70 46Z', h, 3.2), P('M28 45Q26 18 50 16Q74 18 72 45Q70 32 63 30L58 35L54 28L48 34L42 28L37 34Q31 34 28 45Z', h) + sh(40, 21, 58, 19)];
+    case 'spacebuns': return [SYM(P('M27 26Q12 42 17 70Q22 54 31 40Z', h, 2.8) + C(30, 19, 9.5, h, 3.2) + L('M24 14q6-4 12 0', '#fff', 1.6, ' opacity=".5"') + `<rect x="24" y="25" width="11" height="4.4" rx="2" fill="#21d8c8" ${S(1.6)} transform="rotate(-20 30 27)"/>`), P('M29 45Q28 18 50 17Q72 18 71 45Q66 28 50 26Q34 28 29 45Z', h) + L('M50 17v9', d, 2) + SYM(P('M33 34Q27 44 31 55L34 53Q32 45 37 39Z', h, 2))];
+    case 'drills': {
+      let b = '';
+      for (let i = 0; i < 6; i++) b += `<ellipse cx="${N(22 - i * .6)}" cy="${40 + i * 9}" rx="${N(8.4 - i * .7)}" ry="5.8" fill="${h}" ${S(2.6)}/>`;
+      return [P('M26 42Q22 14 50 13Q78 14 74 42L72 60H28Z', h) + SYM(b + P('M22 31L11 24L12 38Z', '#ff4fa0', 2) + P('M22 31L33 24L32 38Z', '#ff4fa0', 2) + C(22, 31, 2.8, '#ffcd3c', 1.6)), P('M28 44Q27 16 50 16Q73 16 72 44L66 40L60 42L54 39L50 42L46 39L40 42L34 40Z', h) + sh(38, 22, 56, 19)];
+    }
+    case 'cornrows': return ['', P('M28 44Q27 18 50 17Q73 18 72 44Q66 33 50 33Q34 33 28 44Z', h) + SYM(L('M32 40Q33 27 42 19M41 35Q42 25 46 18', d, 2.2, ' stroke-dasharray="2.4 1.4"')) + L('M50 33V17', d, 2.2, ' stroke-dasharray="2.4 1.4"')];
+    case 'flattop': return ['', P('M28 46L27 12H73L72 46Q66 31 50 31Q34 31 28 46Z', h) + L('M33 17h34M33 22h34', d, 1.2, ' opacity=".6"')];
+    case 'curtains': return ['', P('M27 50Q23 15 50 14Q77 15 73 50Q70 34 57 28Q52 27 50 31Q48 27 43 28Q30 34 27 50Z', h) + L('M50 15v14', d, 1.6) + sh(34, 26, 44, 19)];
+    case 'sidepart': return ['', P('M27 46Q24 16 46 14Q74 12 74 44Q72 30 63 27Q50 24 40 26Q32 32 27 46Z', h) + L('M40 16Q39 21 40 26', d, 2) + L('M44 19Q58 15 68 22', '#fff', 1.6, ' opacity=".6"')];
+    case 'puff': {
+      let b = '';
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; b += C(N(50 + Math.cos(a) * 15), N(11 + Math.sin(a) * 9), 8, h, 3); }
+      return [b + `<ellipse cx="50" cy="11" rx="16" ry="11" fill="${h}"/>`, P('M28 44Q27 18 50 17Q73 18 72 44Q66 30 50 29Q34 30 28 44Z', h) + L('M36 26Q43 20 50 19M64 26Q57 20 50 19', d, 1.4) + `<rect x="41" y="15" width="18" height="5" rx="2" fill="#ffcd3c" ${S(2)}/>`];
+    }
+    case 'emo': return [P('M26 46Q22 18 50 16Q78 18 74 46L76 70Q70 72 66 66H34Q30 72 24 70Z', h), P('M28 48Q24 15 50 14Q78 16 74 46L73 66Q67 64 64 54Q60 42 50 37Q40 34 30 42Z', h) + sh(40, 20, 60, 18)];
+    case 'bowl': return ['', P('M26 48Q22 14 50 14Q78 14 74 48Q72 42.5 69 42.5H31Q28 42.5 26 48Z', h) + L('M36 22q14-6 28 0', '#fff', 1.6, ' opacity=".5"')];
+    case 'sidepony': return [P('M34 24Q12 22 10 48Q9 70 20 90Q22 70 25 56Q28 42 36 32Z', h, 3.2) + C(31, 27, 4.6, '#ffcd3c', 2), P('M29 47Q27 17 50 16Q73 17 71 47Q68 33 60 30Q50 34 40 30Q32 33 29 47Z', h) + sh(48, 21, 64, 22)];
   }
   return ['', ''];
 }
 function brows(t, f) {
   if (f) {
-    const b = t === 'worry' ? 'M34 42Q40 37 46 40' : 'M33 42Q39 36 46 39';
+    const b = t === 'worry' ? 'M34 42Q40 37 46 40' : t === 'arch' ? 'M33 43Q36 34 46 38.4' : t === 'low' ? 'M33 43.4Q40 41 46 42.6' : 'M33 42Q39 36 46 39';
     return SYM(L(b, INK, 3));
   }
-  const D = { angry: 'M30 39L46 44L45 47.5L29.5 43Z', up: 'M31 41Q38 34 46 38L45 41Q38 38 32 44Z', flat: 'M31 40H46V44H31Z', worry: 'M31 43L46 38L46.5 41.5L32 46Z' };
+  if (t === 'uni') return P('M30 42Q40 36 50 41Q60 36 70 42L70 45.6Q60 40.4 50 44.6Q40 40.4 30 45.6Z', INK, 1.4);
+  const D = { angry: 'M30 39L46 44L45 47.5L29.5 43Z', up: 'M31 41Q38 34 46 38L45 41Q38 38 32 44Z', flat: 'M31 40H46V44H31Z', worry: 'M31 43L46 38L46.5 41.5L32 46Z', thick: 'M30 42Q38 33 47 37.6L46.6 43.4Q38 39.6 31 46.4Z' };
   return SYM(P(D[t], INK, 1.4));
 }
 /* left eye at (40,52); mirrored for the right one (iris2 = mismatched colour) */
@@ -120,6 +151,14 @@ function eye(t, ir, f, sk) {
     case 'wink': return L('M32.6 54Q40 46 47.4 54', INK, 3.6) + (f ? L('M33.6 51.2l-3.6-2.4M35.6 48.8l-2.2-3.4M39 47.4l-.6-3.8', INK, 2) : '');
     case 'dot': return `<ellipse cx="40" cy="53" rx="5.4" ry="5" fill="#fff" ${S(2)}/>` + C(40.5, 53.5, 1.8, INK) + L('M34 50.4Q40 46.4 46 50', INK, 2.6);
     case 'star': return `<ellipse cx="40" cy="52.5" rx="7.2" ry="7.8" fill="#fff" ${S(2)}/>` + C(40.8, 53, 5, ir, 1.4) + star(40.8, 53, 3.6, '#fff', .9) + L('M32.4 51Q40 42.4 47.6 50.4', INK, 3.4) + lash;
+    case 'heart': return `<ellipse cx="40" cy="52.5" rx="7" ry="7.4" fill="#fff" ${S(2)}/>` + heart(40.6, 53.4, 3.6, ir, 1.2) + C(38.6, 51.4, 1.1, '#fff') + L('M32.4 51Q40 42.6 47.6 50.4', INK, 3.4) + lash;
+    case 'happy': return L('M33 50.4Q40 58.4 47 50.4', INK, 3.6) + (f ? L('M33.4 51.2l-3.8-1.2M34.4 53.6l-3.4 1.8', INK, 2) : '');
+    case 'big': return `<ellipse cx="40" cy="52" rx="8" ry="9" fill="#fff" ${S(2)}/>` + C(40.8, 53, 6, ir, 1.4) + C(40.8, 53.6, 3, INK) + C(38.4, 50.6, 2, '#fff') + C(43, 56, 1, '#fff') + L('M31.6 50Q40 40.6 48.4 49.6', INK, 3.6) + lash;
+    case 'tired': return `<ellipse cx="40" cy="53" rx="6.4" ry="5.6" fill="#fff" ${S(2)}/>` + C(40.6, 54, 3.4, ir, 1.2) + C(40.6, 54, 1.3, INK) + PF('M33 52.2Q40 49 47.4 51V46H33Z', sk) + L('M33 51.6Q40 49.4 47.4 51.2', INK, 3.2) + L('M34 60.6Q40 63 46 60.4', dk(sk, .7), 1.6) + (f ? L('M33.4 51.4l-3.6-1.6', INK, 2) : '');
+    case 'side': case 'sideR': return `<ellipse cx="40" cy="52.5" rx="6.6" ry="6.8" fill="#fff" ${S(2)}/>` + iris(t === 'side' ? 43 : 37.4, 53.2, 3.8) + L('M33.2 50.2Q40 44.6 46.8 50', INK, 3.2) + lash;
+    case 'wide': return `<ellipse cx="40" cy="52" rx="7.4" ry="8.2" fill="#fff" ${S(2.2)}/>` + C(40.5, 53, 2.8, ir, 1) + C(40.5, 53, 1.1, INK) + L('M32 46.4Q40 40.6 48 46', INK, 2.2) + lash;
+    case 'slit': return P('M32 52.5Q40 44 48 52.5Q40 61 32 52.5Z', '#fff', 2) + `<circle cx="40.5" cy="52.5" r="4.4" fill="${ir}" ${S(1.2)}/><ellipse cx="40.5" cy="52.5" rx="1.1" ry="3.6" fill="${INK}"/>` + C(39, 50.8, .9, '#fff') + L('M31.4 52Q40 43 48.6 51.6', INK, 3.2) + lash;
+    case 'line': return L('M33 53Q40 51.4 47 53', INK, 3.6) + (f ? L('M33.6 52.6l-3.4-2.4M35.6 52l-2-3.2', INK, 2) : '');
   }
   return '';
 }
@@ -137,11 +176,22 @@ function mouth(t, f) {
     case 'lips': { const lc = c || '#e0344d'; return P('M41.5 66Q46 61.6 50 64Q54 61.6 58.5 66Q55 72.4 50 72.6Q45 72.4 41.5 66Z', lc, 2.4) + L('M42.6 66.2Q50 67.4 57.4 66', INK, 1.4) + L('M45 69.4q2 1 4 1', '#fff', 1.4, ' opacity=".7"'); }
     case 'bubble': return C(55, 68.5, 8.4, '#ff8fc0', 2.6) + L('M51.6 65q2.4-2.4 4.6-1.6', '#fff', 2) + L('M43 67q2 1 4 .4', INK, 2.4);
     case 'cat': return L('M42.5 65.4Q46 69.6 50 65.6Q54 69.6 57.5 65.4', INK, 2.8) + P('M52.6 66.8L53.8 70L55 67.2Z', '#fff', 1.2);
+    case 'buck': return P('M46 66.2h8v4.6Q50 72 46 70.8Z', '#fff', 1.4) + L('M50 66.8v4.2', INK, 1.1) + L('M41 64Q50 70 59 64', INK, 3);
+    case 'smile': return P('M41 64Q50 66 59 64Q57 72.6 50 72.6Q43 72.6 41 64Z', '#5a1d1d', 2.6) + PF('M45 70.4Q50 66.6 55 70.4Q50 72.8 45 70.4Z', '#ff6f8f');
+    case 'wavy': return L('M41 67q2.25-3 4.5 0t4.5 0t4.5 0t4.5 0', INK, 2.6);
+    case 'flat': return L('M43 67.4H57', INK, 3) + L('M57.4 66l1.4-1', INK, 1.8);
+    case 'gap': return P('M39 63Q50 66 61 63Q59 74 50 74Q41 74 39 63Z', '#fff', 2.8) + PF('M48.6 64.8h2.8v8.6h-2.8z', '#5a1d1d') + L('M40 67.6Q50 69.2 60 67.6', INK, 1.2);
+    case 'whistle': return `<ellipse cx="53" cy="67" rx="2.6" ry="2.6" fill="#5a1d1d" ${S(2.2)}/>` + L('M59 63.6l3.4-2M59.6 67.4h3.6M59 71l3.4 1.8', INK, 1.5);
+    case 'bite': return L('M42 66Q50 69.4 58 66', INK, 3) + P('M47 67.2h6v2.4Q50 70.6 47 69.6Z', '#fff', 1.3);
+    case 'braces': return P('M39 63Q50 66 61 63Q59 74 50 74Q41 74 39 63Z', '#fff', 2.8) + L('M40.4 67.4Q50 69.6 59.6 67.4', '#8d96a8', 2.2) + [43.4, 47.6, 52.4, 56.6].map(x => `<rect x="${x - 1.1}" y="66.6" width="2.2" height="2.2" fill="#d9dde6" ${S(.8)}/>`).join('');
+    case 'ohno': return P('M42 71Q42 62 50 62Q58 62 58 71Q50 68.6 42 71Z', '#5a1d1d', 2.6) + PF('M44.6 64.2Q50 62.6 55.4 64.2L55 66H45Z', '#fff');
+    case 'kiss': return L('M47.4 63.4Q52.4 63.8 50.8 66.6Q53.8 67.6 51.6 70.2Q49.8 71.2 47.4 70.4', INK, 2.6);
+    case 'smirk': return P('M43 66Q51 69 58.4 62.6L57.8 66.4Q51 71.6 44.4 67.6Z', '#fff', 2.2);
   }
   return '';
 }
 /* accessories under the hair ('u') or on top of everything */
-const UNDER = ['beard', 'stubble', 'freckles', 'blush', 'mole', 'scarEye', 'scarN', 'soot', 'starTat', 'boltTat', 'flameTat', 'burns', 'cyber', 'starSt', 'heartSt'];
+const UNDER = ['beard', 'stubble', 'freckles', 'blush', 'mole', 'scarEye', 'scarN', 'soot', 'starTat', 'boltTat', 'flameTat', 'burns', 'cyber', 'starSt', 'heartSt', 'tear', 'warpaint', 'dots3', 'cheekHeart', 'goatee', 'soulpatch', 'chinstrap'];
 function acc(a, I, u, F) {
   const [k, arg] = a.split('='), hc = base(I.c2), args = (arg || '').split('/').length > 2 ? [arg] : (arg || '').split('/');
   switch (k) {
@@ -189,7 +239,50 @@ function acc(a, I, u, F) {
       + P('M18 39Q50 30 82 37L80 44Q50 37 20 46Z', '#ffcd3c', 2.8) + `<rect x="27" y="17" width="16" height="10" rx="1.4" fill="#fff" ${S(1.8)} transform="rotate(-8 35 22)"/><text x="35" y="25" font-size="7" font-weight="900" text-anchor="middle" fill="${INK}" font-family="Jost,sans-serif" transform="rotate(-8 35 22)">${String(I.id + 1).padStart(3, '0')}</text>`
       + C(70, 22, 6.4, '#ff8a3d', 2.4) + L('M67.6 19.6l4.8 4.8M72.4 19.6l-4.8 4.8', INK, 1.8);
     case 'phones': { const [c1, c2] = args; return L('M23 46Q20 10 50 9Q80 10 77 46', INK, 7.6) + L('M23 46Q20 10 50 9Q80 10 77 46', c1, 3.6) + SYM(`<rect x="15" y="40" width="14" height="22" rx="6" fill="${c2}" ${S(3)}/>` + `<rect x="18.6" y="44" width="6.8" height="14" rx="3" fill="${c1}" ${S(1.6)}/>`) + bolt(22, 51, 4.4, '#fff', 1.2); }
-    case 'hood': return '';
+    case 'hood': case 'ehood': return '';
+    // ---- added for the 200-cast: face marks / facial hair (under) ----
+    case 'tear': return P('M35 60Q37.6 64 35 66.4Q32.4 64 35 60Z', args[0] || 'none', 1.4);
+    case 'warpaint': return SYM(L('M33 61.4h8M34 64.8h6', args[0] || '#e2402f', 2.4));
+    case 'dots3': return C(67, 59, 1.2, INK) + C(64.4, 62.4, 1.2, INK) + C(67.6, 65, 1.2, INK);
+    case 'cheekHeart': return heart(64, 63, 2.8, 'none', 1.3);
+    case 'goatee': return P('M44 72Q50 70 56 72Q56 80 50 82.4Q44 80 44 72Z', hc, 2.2);
+    case 'soulpatch': return P('M47.6 72.6h4.8l-1.2 5h-2.4Z', hc, 1.6);
+    case 'chinstrap': return P('M28 52Q29 72 40 80Q50 86 60 80Q71 72 72 52L69 52Q68 70 58 76.4Q50 80.4 42 76.4Q32 70 31 52Z', hc, 2);
+    // over
+    case 'handlebar': return P('M38 64Q43 58 50 61.4Q57 58 62 64Q66 62 67 57.6Q69 64.6 62 66.4Q57 66.4 50 63.8Q43 66.4 38 66.4Q31 64.6 33 57.6Q34 62 38 64Z', hc, 2);
+    case 'xband': return [45, -45].map(r => `<rect x="56" y="59.6" width="14" height="5" rx="2" fill="#fff" ${S(1.6)} transform="rotate(${r} 63 62)"/>`).join('');
+    case 'browcut': return L('M62.4 37l-2.2 8.6M65.6 37.8l-2.2 8.6', I.c, 1.6);
+    case 'lipring': return `<circle cx="55.4" cy="71.8" r="2.4" fill="none" stroke="${INK}" stroke-width="2.8"/><circle cx="55.4" cy="71.8" r="2.4" fill="none" stroke="#d9dde6" stroke-width="1.3"/>`;
+    case 'browring': return `<circle cx="66" cy="40.6" r="2.4" fill="none" stroke="${INK}" stroke-width="2.8"/><circle cx="66" cy="40.6" r="2.4" fill="none" stroke="#ffcd3c" stroke-width="1.3"/>`;
+    case 'sparkle': return star(13, 30, 5, '#fff', 1.4) + star(87, 40, 4, '#ffcd3c', 1.4) + star(84, 8, 3, '#ff4fa0', 1.2);
+    // ear / mouth / neck items (the "main accessory")
+    case 'lolly': return L('M56 68L69 75', INK, 3.6) + L('M56 68L69 75', '#fff', 1.8) + C(72, 77, 5.4, F(arg || 'str/#ff4fa0/#fff/3/45'), 2.4);
+    case 'pencil': return `<g transform="rotate(-20 22 46)"><rect x="20" y="36" width="5" height="20" fill="#ffcd3c" ${S(1.6)}/><path d="M20 56l2.5 5 2.5-5z" fill="#f2c9a0" ${S(1.4)}/><rect x="20" y="32.6" width="5" height="3.4" fill="#ff8fb0" ${S(1.4)}/></g>`;
+    case 'flower': return [0, 72, 144, 216, 288].map(a => C(N(25 + Math.cos(a * Math.PI / 180) * 4.6), N(41 + Math.sin(a * Math.PI / 180) * 4.6), 3.6, args[0] || '#ff4fa0', 1.6)).join('') + C(25, 41, 2.4, '#ffcd3c', 1.4);
+    case 'cuff': return L('M23.6 49.6q-2.6 4 .2 8.4', INK, 4.2) + L('M23.6 49.6q-2.6 4 .2 8.4', '#d9dde6', 2) + L('M24 58Q21 66 27 70', INK, 1.3, ' stroke-dasharray="1.4 1"') + C(27, 70, 1.6, '#d9dde6', 1);
+    case 'dangle': return SYM(L('M27 60v4', INK, 1.6) + bolt(27, 68, 4, args[0] || '#ffe600', 1.2));
+    case 'dice': return SYM(L('M27 60v4', INK, 1.6) + `<rect x="23.6" y="64" width="7" height="7" rx="1.4" fill="#fff" ${S(1.4)}/>` + C(27, 67.5, 1, INK));
+    case 'cherry': return SYM(L('M27 59.6Q28 63 26 66M27 59.6Q29 64 30.4 67', '#2a7a3a', 1.4) + C(25.6, 68, 2.6, '#e2402f', 1.2) + C(30.4, 69, 2.6, '#e2402f', 1.2));
+    case 'neckph': { const [c1, c2] = args; return L('M28 80Q50 94 72 80', INK, 5.4) + L('M28 80Q50 94 72 80', c1, 2.4) + SYM(`<rect x="22" y="73" width="12" height="15" rx="5" fill="${c2}" ${S(2.4)}/>`); }
+    // eyewear
+    case 'square': return SYM(`<rect x="31" y="46" width="17.4" height="13" rx="2.4" fill="rgba(255,255,255,.22)" stroke="${INK}" stroke-width="4.4"/><rect x="31" y="46" width="17.4" height="13" rx="2.4" fill="none" stroke="${arg || INK}" stroke-width="2"/>` + L('M34 49.4l3-2', '#fff', 1.6)) + L('M48.4 51h3.2', INK, 3) + L('M27 49h4M69 49h4', INK, 2.6);
+    case 'starsh': return SYM(star(40, 52.5, 10.4, arg || '#ffcd3c', 2.4) + L('M36 49l3-2', '#fff', 1.8)) + L('M47 50h6', INK, 2.6);
+    case 'heartsh': return SYM(heart(40, 54, 6.6, arg || '#ff4fa0', 2.4) + L('M35 50.4l3-2', '#fff', 1.6)) + L('M47 50h6', INK, 2.6);
+    case 'monocle': return `<circle cx="60" cy="52.5" r="8.6" fill="rgba(255,255,255,.2)" stroke="${INK}" stroke-width="4.4"/><circle cx="60" cy="52.5" r="8.6" fill="none" stroke="#ffcd3c" stroke-width="2"/>` + L('M66.6 58Q73 68 66 82', '#ffcd3c', 1.4, ' stroke-dasharray="2 1"') + L('M55 48.4l3-2', '#fff', 1.6);
+    case 'egog': return L('M25 52H75', INK, 7) + L('M25 52H75', args[0] || '#2f62d6', 3.4) + SYM(C(40, 52.5, 9.4, '#c7ccd6', 2.8) + C(40, 52.5, 6.6, args[1] || '#7fe0ff', 1.8) + L('M36 49l3-3', '#fff', 2));
+    case 'visorsh': return P('M26 45H74V54Q74 60 62 60Q54 60 50 56Q46 60 38 60Q26 60 26 54Z', arg || '#21d8c8', 2.8) + L('M30 48.4h40', '#fff', 1.6, ' opacity=".6"') + L('M32 53l6-3M57 53l6-3', '#fff', 1.4);
+    // headwear
+    case 'beret': return P('M23 33Q18 15 44 12Q72 9 80 24Q80 33 71 34Q50 28 29 37Z', F(arg), 3) + L('M30 33Q50 26 72 31', INK, 1.4, ' opacity=".5"') + P('M44 12l1-5 3 .4-1 5Z', INK, 1.4);
+    case 'sailor': return P('M31 33Q31 9 50 9Q69 9 69 33Z', '#fff', 3) + P('M23 33Q50 23 77 33L75 43Q50 33 25 43Z', '#fff', 3) + L('M25 37.6Q50 28.6 75 37.6', arg || '#2f62d6', 2.4);
+    case 'wrap': return P('M26 40Q24 12 50 12Q76 12 74 40Q50 32 26 40Z', F(arg), 3) + P('M50 14Q38 2 33 10Q34 18 50 15Z', F(arg), 2.4) + P('M50 14Q62 2 67 10Q66 18 50 15Z', F(arg), 2.4) + C(50, 14, 3.4, F(arg), 2.2);
+    case 'knit': { const [c1, c2] = args; return P('M58 7Q80 1 87 16Q77 15 67 13Z', c1, 2.6) + P('M25 40Q20 3 56 6Q80 10 75 40Z', c1, 3) + P('M23 32Q50 26 77 32V42Q50 36 23 42Z', c2, 2.8) + L('M30 33v8M37 31.6v8M44 30.6v8M51 30.4v8M58 30.6v8M65 31.6v8M72 33v8', INK, 1.1, ' opacity=".5"'); }
+    case 'hband': { const [c1, t] = args; return t === 'bow' ? P('M27 33Q50 25 73 33L73 39Q50 31 27 39Z', c1, 2.6) + P('M34 30L23 20L25 37Z', c1, 2.2) + P('M34 30L45 20L43 37Z', c1, 2.2) + C(34, 30, 3, c1, 2)
+        : P('M26 33Q50 24 74 33L74 42Q50 33 26 42Z', '#fff', 2.6) + L('M26.4 35.8Q50 27 73.6 35.8M26.4 39Q50 30.2 73.6 39', c1, 1.6); }
+    case 'visor': return P('M27 35Q50 27 73 35L73 40Q50 32 27 40Z', arg, 2.4) + P('M20 40Q50 31 80 40Q78 48 50 45Q22 48 20 40Z', 'rgba(47,190,120,.72)', 2.6) + L('M28 42Q50 37 72 42', '#fff', 1.4, ' opacity=".5"');
+    case 'cowboy': { const [c1, c2] = args; return P('M30 31Q26 6 40 8Q50 14 60 8Q74 6 70 31Z', c1, 3) + L('M30 28.6Q50 33.6 70 28.6', c2 || '#e2402f', 3) + P('M5 26Q14 40 50 37Q86 40 95 26Q94 45 50 45Q6 45 5 26Z', c1, 3) + L('M14 38Q50 44 86 38', '#fff', 1.2, ' opacity=".4"') + star(62, 28.4, 3, '#ffcd3c', 1.2); }
+    case 'trucker': { const [c1, c2] = args, mesh = F(`dot/${c2}/#fff/3/0`); return P('M24 38Q22 11 50 10Q78 11 76 38Z', c1, 3) + SYM(PF('M24.6 37Q23 18 36 13L39 37Z', mesh)) + P('M40 38Q40 27 50 27Q60 27 60 38Z', F(I.c2), 2.4) + `<rect x="40" y="28.8" width="20" height="3.4" rx="1" fill="${c2}" ${S(1.4)}/>` + L('M50 10V26', INK, 1.4) + C(50, 10.6, 2.2, c1, 1.4); }
+    case 'crown': return P('M27 36L24 10L35 21L42 4L50 18L58 4L65 21L76 10L73 36Q50 30 27 36Z', '#c7ccd6', 3) + L('M27 30Q50 24 73 30', '#9aa3b2', 1.4) + L('M30 16l3 14M46 10l2 19M60 10l-2 19', '#fff', 1.6, ' opacity=".6"') + C(42, 4, 3, '#ffcd3c', 1.6) + C(58, 4, 3, '#ff4fa0', 1.6) + C(24, 10, 2.6, '#2fb5ff', 1.4) + C(76, 10, 2.6, '#16c47a', 1.4) + C(50, 28.4, 3, '#e2402f', 1.6);
+    case 'bow': return `<g transform="rotate(-14 68 22)">${P('M68 22L52 12L54 32Z', F(arg), 2.6)}${P('M68 22L84 12L82 32Z', F(arg), 2.6)}${C(68, 22, 4.4, F(arg), 2.4)}</g>`;
   }
   return '';
 }
@@ -207,6 +300,17 @@ function deco(t, F, W) {
     case 'bolt': return bolt(28, 91, 6.4, '#ffe600', 2);
     case 'flame': return flame(28, 99, 4.4, '#e2402f', '#ffcd3c') + flame(36, 99, 3.4, '#ff7a1a', '#ffe600');
     case 'chain': return L('M38 80Q50 92 62 80', INK, 4) + L('M38 80Q50 92 62 80', '#d9dde6', 2, ' stroke-dasharray="2.4 1.6"') + C(50, 90, 4.6, '#2a2622', 2) + L('M48 88.4l1.6-1', '#fff', 1.2);
+    // ---- added for the 200-cast ----
+    case 'pocket': return L('M24.6 85V76', INK, 4.2) + L('M24.6 85V77', '#ffcd3c', 2) + P('M19 84h14v12H19z', '#ff9a3c', 2) + L('M19 88h14', INK, 1.6);
+    case 'zip': return L(`M50 92V101`, INK, 3.6) + L('M50 92.6V101', '#d9dde6', 1.6, ' stroke-dasharray="1.2 1.2"') + P('M48.4 94h3.2v4h-3.2z', '#d9dde6', 1.2);
+    case 'tie': return P('M47.6 92L50 89.4L52.4 92L51.6 101H48.4Z', F('str/#2f62d6/#ffcd3c/3/45'), 1.8);
+    case 'badge': return C(28, 90, 6.4, '#2fb5ff', 2) + C(28, 90, 3.6, '#fff', 1.4) + C(28, 90, 1.4, '#e2402f');
+    case 'tape': return [30, -30].map(r => `<rect x="18" y="87.6" width="20" height="5" fill="#c7ccd6" ${S(1.6)} transform="rotate(${r} 28 90)"/>`).join('');
+    case 'splat': return P('M27 83l1.6 4.6 4-3-1 5 5 .6-4 3.2 3 4-5-1.2-1 4.4-2.6-4-4 2 1-5-4.4-2 5-1.6z', '#2fd8c8', 1.6);
+    case 'bands': return PF(`M${W + 1.2} 95Q50 92 ${98.8 - W} 95V101H${W + .4}Z`, INK, ' opacity=".82"') + PF(`M${W + 2.4} 89Q50 86 ${97.6 - W} 89V91.6Q50 88.6 ${W + 2} 91.6Z`, INK, ' opacity=".82"');
+    case 'moon': return P('M30 83.4a7.4 7.4 0 1 0 6.4 11.4a6 6 0 1 1-6.4-11.4z', '#ffe600', 1.8);
+    case 'dice': return `<g transform="rotate(-12 28 90)"><rect x="22" y="84" width="12" height="12" rx="2" fill="#fff" ${S(2)}/>${C(25, 87, 1.2, INK)}${C(28, 90, 1.2, INK)}${C(31, 93, 1.2, INK)}</g>`;
+    case 'cherry': return L('M25 91Q27 84 32 83M31.4 92Q31 86 32 83', '#2a7a3a', 1.6) + C(25, 93.4, 3.4, '#e2402f', 1.6) + C(31.4, 94.4, 3.4, '#e2402f', 1.6);
   }
   return '';
 }
@@ -221,10 +325,10 @@ function inmateSVG(id, opt = {}) {
     return `url(#${id})`;
   };
   let [hb, hf] = hair(I.kind, I.c2, F);
-  const head = HEAD[I.sex];
+  const head = HEAD[I.head];
   const ear = SYM(P('M31 47Q21 44 22 53Q23 62 32 59Z', sk, 2.8) + L('M27.6 50q-2 2.4 0 5', INK, 1.4));
   const shade = `<g clip-path="url(#hc${u})">${PF('M62 10Q77 40 67 72Q61 82 47 90H100V10Z', sd)}${PF('M20 64Q50 80 80 64V100H20Z', sd, ' opacity=".45"')}</g>`;
-  const ir = I.iris, eyes = I.eyes === 'shades' ? '' : (has('eyepatch') ? '' : eye(I.eyes, ir[0], f, sk)) + (has('cyber') ? MIR(eye('round', '#ff3b3b', f, sk)) : MIR(eye(I.eyes === 'wink' ? 'round' : I.eyes, ir[1] || ir[0], f, sk)));
+  const ir = I.iris, eyes = I.eyes === 'shades' ? '' : (has('eyepatch') ? '' : eye(I.eyes, ir[0], f, sk)) + (has('cyber') ? MIR(eye('round', '#ff3b3b', f, sk)) : MIR(eye(I.eyes === 'wink' ? 'round' : I.eyes === 'side' ? 'sideR' : I.eyes, ir[1] || ir[0], f, sk)));
   const nose = f ? L('M49.6 58.6q2.2 1.6 0 2.8', INK, 2.2) : L('M51 55L48.6 61.4H53', INK, 2.4);
   const feat = brows(I.brow, f) + eyes + nose + mouth(I.mouth, f);
   const under = A.filter(a => UNDER.includes(a.split('=')[0])).map(a => acc(a, I, u, F)).join('');
@@ -235,10 +339,18 @@ function inmateSVG(id, opt = {}) {
     hb = P('M14 66Q10 14 50 12Q90 14 86 66Q80 92 50 94Q20 92 14 66Z', '#f26b1d', 3.2) + SYM(P('M20 30L18 2L40 16Z', '#f26b1d', 3) + P('M23 24L22 9L33 17Z', '#ff9ec4', 2)) + `<g transform="rotate(14 76 18)"><rect x="70" y="12" width="12" height="10" fill="${F('dot/#ffcd3c/#e2402f/4/0')}" ${S(1.8)}/></g>` + stitch('M71 13l10 0', 1);
     hf = hf + fur + `<rect x="18" y="56" width="10" height="9" rx="1" fill="${F('str/#2f62d6/#fff/4/45')}" ${S(1.8)} transform="rotate(-10 23 60)"/>`;
   }
+  // ear hood (cat / bear / bunny ears — clothing): replaces the back hair, thick rim framing the face
+  const eh = A.find(a => a.startsWith('ehood='));
+  if (eh) {
+    const [hc0, ty] = eh.split('=')[1].split('/'), inn = '#ff9ec4';
+    hb = (ty === 'cat' ? SYM(P('M22 32L18 4L42 16Z', hc0, 3) + P('M24 25L22 11L34 18Z', inn, 2)) : ty === 'bear' ? SYM(C(22, 17, 10, hc0, 3) + C(22, 17, 5, inn, 2))
+      : SYM(P('M28 22Q18 -6 29 -8Q40 -6 40 18Z', hc0, 3) + P('M31 16Q26 -1 30 -2Q35 -1 36 15Z', inn, 2))) + P('M14 66Q10 14 50 12Q90 14 86 66Q80 92 50 94Q20 92 14 66Z', hc0, 3.2);
+    hf += L('M23 72Q16 24 50 21Q84 24 77 72', INK, 9) + L('M23 72Q16 24 50 21Q84 24 77 72', dk(hc0, .85), 5) + (opt.noSuit ? '' : L('M38 76l-2 13M62 76l2 13', '#fff', 2));
+  }
   // jumpsuit collar + number tag
   const W = f ? 13 : 7;
   const suit = opt.noSuit ? '' : P('M42 68V86H58V68Z', sk, 2.8) + PF('M50 70H58V86H50Z', sd) +
-    P(`M${W} 101Q${W + 2} 80 37 77L50 92L63 77Q${98 - W} 80 ${100 - W} 101Z`, '#f26b1d', 3.2) + deco(I.suit, F, W) +
+    P(`M${W} 101Q${W + 2} 80 37 77L50 92L63 77Q${98 - W} 80 ${100 - W} 101Z`, '#f26b1d', 3.2) + I.suit.split('+').map(t => deco(t, F, W)).join('') +
     P('M37 77L44 95L50 92Z', '#ff9a3c', 2.6) + P('M63 77L56 95L50 92Z', '#ff9a3c', 2.6) +
     (has('choker') ? `<rect x="41" y="73" width="18" height="5" rx="2" fill="${INK}"/>` + [44, 50, 56].map(x => P(`M${x - 1.6} 78l1.6 3.4 1.6-3.4z`, '#d9dde6', 1)).join('') : '') +
     `<rect x="60" y="86" width="20" height="9" rx="2" fill="#fff" ${S(2.2)}/><text x="70" y="93.4" font-size="7.4" font-weight="900" text-anchor="middle" fill="${INK}" font-family="Jost,sans-serif">${String(id + 1).padStart(3, '0')}</text>`;
@@ -251,7 +363,7 @@ function inmateSVG(id, opt = {}) {
       : I.rar === 2 ? ray('rgba(255,255,255,.45)') + `<rect width="100" height="100" fill="${F('dot/rgba(0,0,0,0)/rgba(255,79,160,.22)/8/0')}"/>` + star(12, 14, 6, '#ffcd3c', 1.6) + star(88, 70, 5, '#ff4fa0', 1.6)
       : ray('rgba(255,205,60,.6)', 20) + flame(10, 100, 7, '#ff7a1a', '#ffcd3c') + flame(90, 100, 7, '#ff7a1a', '#ffcd3c') + star(12, 14, 7, '#ffcd3c', 1.8) + star(88, 16, 5, '#ff4fa0', 1.6) + heart(86, 76, 4, '#e2402f', 1.6) + bolt(13, 70, 6, '#7fe0ff', 1.6);
   }
-  const body = `${bg}${hb}${suit}${ear}${P(head, sk, 3.2)}${shade}${under}${feat}${hf}${over}`;   // F() above must run before defs are joined
+  const body = `${bg}${hb}${suit}${eh ? '' : ear}${P(head, sk, 3.2)}${shade}${under}${feat}${hf}${over}`;   // F() above must run before defs are joined
   return `<svg viewBox="0 0 100 100" class="inm" aria-hidden="true"><defs><clipPath id="hc${u}"><path d="${head}"/></clipPath>${defs.join('')}</defs>${body}</svg>`;
 }
 /* guard (patrol mode): pop-punk prison guard — oversized peaked cap with a checker band + star badge, mirrored shades, big moustache, navy uniform, baton */
