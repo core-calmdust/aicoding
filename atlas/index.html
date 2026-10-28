@@ -590,7 +590,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 #confetti{display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
 
 /* ---------- dress ---------- */
-.dress{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
+.dress{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:760px){.dress{grid-template-columns:1fr}}
 .dprev{padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;position:sticky;top:90px;overflow:hidden}
 .dprev .bgfill{position:absolute;inset:0;opacity:.85}
@@ -598,11 +598,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 /* worn names: player + character / background / frame, beside (phone) or under (PC) the character */
 .dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,253,247,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
 .dprev .dpl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:2px dashed rgba(0,0,0,.08)}
-.dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dprev .dpl .gnote{color:#5a6078;flex:none}
-.dprev .dw{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
+.dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow-wrap:anywhere}.dprev .dpl .gnote{color:#5a6078;flex:none}
+.dprev .dw{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
 .dprev .dw.on{background:rgba(54,180,255,.14)}
-.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;min-width:4.2em;white-space:nowrap}
-.dprev .dw b{font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dprev .dwh{display:flex;align-items:center;gap:6px}.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;white-space:nowrap}
+.dprev .dw b{font-weight:900;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
 .dprev .dw .rar{position:static;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
 .dprev.dark .dname{background:rgba(22,26,44,.74);border-color:rgba(255,255,255,.18)}.dprev.dark .dpl b,.dprev.dark .dpl .gnote,.dprev.dark .dw b,.dprev.dark .dw .dwk{color:#fff}.dprev.dark .dpl{border-color:rgba(255,255,255,.15)}
 @media (max-width:760px){
@@ -610,11 +610,24 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .dprev .poke{flex:none}
   .dprev .dname{flex:1;min-width:0;padding:8px 10px;gap:3px}
   .dprev .dpl b{font-size:15px}
-  .dprev .dw{font-size:12px;gap:6px}.dprev .dw .dwk{min-width:0;font-size:10px}
+  .dprev .dw{gap:0}.dprev .dw b{font-size:12px}.dprev .dw .dwk{font-size:10px}.dprev .dw .rar{font-size:9px;padding:0 5px}
 }
 /* the item list: a compact icon grid (rarity = border colour, lock = not owned yet, check = worn) */
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:12px}
 @media (max-width:760px){.dgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}}
+/* phone: the icon / background / frame switch is a tab row fixed right above the portal's bottom tab bar
+   (--tabsH = that bar's measured height incl. the safe area; the fallback matches its usual height) */
+@media (max-width:760px){
+  #pg-dress{padding-bottom:52px}
+  #dseg{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;margin:0;padding:4px 8px;gap:4px;border:0;border-top:2px solid var(--line);border-radius:0;background:rgba(255,253,247,.97);box-shadow:0 -6px 14px -10px rgba(60,40,10,.35)}
+  #dseg button{flex:1;padding:9px 4px;border-radius:12px;font-size:13.5px}
+  #dseg button[aria-pressed=true]{background:var(--sky);color:#fff}
+  .dbar{justify-content:flex-start}
+}
+/* rarity sections (rarity sorts): a small header with owned / total */
+.dsec{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:8px;padding-bottom:4px;border-bottom:2px solid var(--line)}.dsec:first-child{margin-top:0}
+.dsec .rar{position:static;font-size:12px;padding:2px 9px}.dsec .dsn{font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink2)}
+.dempty{grid-column:1/-1;text-align:center;padding:24px 0}
 .dic{position:relative;display:block;aspect-ratio:1;padding:3px;border:0;border-radius:16px;background:var(--rc);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1)}
 .dic .art{display:grid;place-items:center;width:100%;height:100%;border-radius:13px;background:#f6efdd;overflow:hidden}
 .dic .art svg{width:86%;height:86%}.dic[data-kind=bg] .art svg{width:100%;height:100%}
@@ -974,7 +987,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas.js?v=20261028ckpz"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261022ent"></script>
-<script src="i18n.js?v=25"></script>
+<script src="i18n.js?v=26"></script>
 <script src="table3d.js?v=69"></script>
 <script src="models/shogi.js?v=22"></script>
 <script src="models/chess.js?v=8"></script>
@@ -1008,6 +1021,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=115"></script>
+<script src="app.js?v=116"></script>
 </body>
 </html>
