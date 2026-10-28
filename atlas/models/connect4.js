@@ -3,8 +3,8 @@
      • a soft-cornered tray of deep teal pebble leather with cream saddle
        stitching round the rim and the walls; suede floor
      • a walnut spine across the tray; eight dark-bronze rails rise from brass
-       ferrules and carry a walnut header beam with brass end caps and seven
-       small gold column studs — the 7 × 6 grid reads at a glance
+       ferrules, open at the top (small brass tips) so tiles drop in from above;
+       seven brass column studs on the spine's front — the 7 × 6 grid reads at a glance
      • the counters are rounded-square tiles: a walnut frame with a leather
        inlay on both faces, saffron gold or pearl white (the game's gold /
        silver), stacking between the rails; spare tiles rest in the tray
@@ -26,7 +26,7 @@
   const TW_ = 9.6, TDp = 4.6, TR = 1.15, WALL = .22, TH = .78, FL = .14;   // tray: width, depth, corner radius, wall, height, floor
   const SP_H = .58, SP_D = .62;                       // spine top, depth
   const Y0 = SP_H + .012;                             // bottom of the first row
-  const RAIL = .13, YTOP = Y0 + 6 * PY + .2;          // rail section, rail top
+  const RAIL = .13, YTOP = Y0 + 6 * PY + .3;          // rail section, rail top
   const SCALE = .95;
   const colX = c => (c - 3) * PX, rowY = r => Y0 + r * PY + TW / 2;
 
@@ -182,11 +182,11 @@
       const r = mesh(railG, m.bronze); r.position.set(x, (YTOP + SP_H - .1) / 2, 0); g.add(r);
       const f = mesh(ferG, m.brass, false); f.position.set(x, SP_H + .03, 0); g.add(f);
     }
-    // header beam with brass end caps and the seven column studs
-    const BL = 7 * PX + .44, hb = mesh(X.RB(BL, .32, .34, .08, 3), m.walnut); hb.position.y = YTOP + .16; g.add(hb);
-    [-1, 1].forEach(s => { const c = mesh(X.RB(.1, .36, .38, .04, 2), m.brass); c.position.set(s * (BL / 2 + .03), YTOP + .16, 0); g.add(c); });
-    const stud = new TT.CylinderGeometry(.055, .065, .03, X.coarse ? 12 : 18);
-    for (let c = 0; c < 7; c++) { const s = mesh(stud, m.brass, false); s.rotation.x = Math.PI / 2; s.position.set(colX(c), YTOP + .16, .17 + .012); g.add(s); }
+    // the rails stay open at the top (tiles drop in from above): small brass tips; column studs on the spine's front
+    const tipG = X.RB(RAIL + .035, .07, RAIL + .035, .03, 2);
+    for (let k = 0; k < 8; k++) { const t = mesh(tipG, m.brass, false); t.position.set((k - 3.5) * PX, YTOP + .035, 0); g.add(t); }
+    const stud = new TT.CylinderGeometry(.06, .07, .03, X.coarse ? 12 : 18);
+    for (let c = 0; c < 7; c++) { const s = mesh(stud, m.brass, false); s.rotation.x = Math.PI / 2; s.position.set(colX(c), (SP_H + FL) / 2 + .03, SP_D / 2 + .012); g.add(s); }
     return g;
   }
 
