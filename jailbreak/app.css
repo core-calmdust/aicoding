@@ -243,6 +243,7 @@ body[data-screen=play] #app { padding-bottom: 12px; }
 .gbtn .hn { position: absolute; top: -8px; inset-inline-end: -8px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px; background: var(--org); color: #fff; border: 2px solid var(--ink); font: 800 12px/16px 'Jost'; display: grid; place-items: center; }
 .gbtn .hn.buy { background: #fff; padding: 0 1px; } .gbtn .hn .ico { width: 14px; height: 14px; }
 .gbtn:disabled .hn { display: none; }
+.gbtn .gl { display: none; }
 .runi { display: flex; gap: 8px; align-items: center; background: var(--navy); color: #fff; border: 2.5px solid var(--ink); border-radius: 8px; padding: 4px 12px; }
 .runi > span { display: flex; flex-direction: column; align-items: center; }
 .runi small { font-size: 10px; opacity: .8; font-weight: 800; } .runi b { font: 800 20px 'Jost'; }
@@ -271,13 +272,14 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
   .gctl { display: contents; }
   .gbar { grid-area: bar; } .gstat { grid-area: stat; justify-self: end; } #runInfo { grid-area: run; } .slbar { grid-area: sl; }
   #boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
-  .gctl .gbtns { grid-area: btn; justify-content: center; margin: 0; gap: 14px; }
+  .gctl .gbtns { grid-area: btn; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; gap: 12px; }
   .gtitle b { font-size: 22px; }
   .gctl .ns, .gctl .lim { height: 54px; min-width: 96px; padding: 2px 16px 3px; }
   .gctl small { font-size: 12.5px; }
   .gctl .ns b { font-size: 30px; } .gctl .ns b i { font-size: 20px; } .gctl .ns b em { font-size: 22px; } .gctl .lim b { font-size: 26px; }
   .hst i { font-size: 28px; }
-  .gbtn { width: 56px; height: 52px; } .gbtn .ico { width: 28px; height: 28px; }
+  .gbtn { width: auto; height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 16px; } .gbtn .ico { width: 26px; height: 26px; }
+  .gbtn .gl { display: inline; white-space: nowrap; }
 }
 
 /* ---------------- board ---------------- */
