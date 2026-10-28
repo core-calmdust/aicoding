@@ -159,6 +159,7 @@
         body.mobile #fullscreen-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         body.mobile #game-wrapper { transform: scale(var(--fit, 1)); transform-origin: center; }
         body.mobile #stage { touch-action: none; }
+        html, body.mobile, body.mobile * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; } /* ダブルタップ・長押しで拡大鏡や選択が出ないように */
         .mob-only { display: none !important; }
         body.mobile .mob-only { display: inline-flex !important; }
         body.mobile #topbar { display: none; }
@@ -383,7 +384,7 @@ const config = {
     canvasHeight: IS_MOBILE ? Math.round(1120 * MOB_K) : 780, // 奥行き
     playerSpeed: 300,
     playerSlowModeMultiplier: 0.5,
-    playerHitboxRadius: IS_MOBILE ? 11.9 : 3, // スマホは隕石（見た目の半径17）の70%
+    playerHitboxRadius: IS_MOBILE ? 11.9 : 3, // スマホは彗星（見た目の半径17）の70%
     playerVisualSize: 16,
     initialCometSpeed: IS_MOBILE ? 360 : 288, // スマホは縦長なので速め
     cometSpeedIncrease: IS_MOBILE ? 0.087 : 0.07,
@@ -394,7 +395,7 @@ const config = {
     starCount: 50,
     starScrollMultiplier: 16,
     starGlazeRadius: 20,
-    glazeDistance: 40,
+    glazeDistance: IS_MOBILE ? 74 : 40, // 無敵中（アイテム取得後）は INV_GLAZE_K 倍 // スマホは自機を2倍で表示しているので、グレイズ範囲（自機周りの円）も同じ比率に
     glazeScore: 750,
     starGlazeScore: 500,
     highScoreKeyStandard: 'cometPlusHighScore_standard',
@@ -409,7 +410,7 @@ const config = {
     energyItemScoreNormal: 10000,
     energyItemScoreSpecial: 50000,
     gravity: 600,
-    playerBulletSpeed: 880, // 1.1倍
+    playerBulletSpeed: IS_MOBILE ? 880 * 1.452 : 880, // 1.1倍。スマホはさらに1.452倍（1.32×1.1）
     playerBulletHitRadius: 12, // 3D化で狙いにくくなった分、弾の当たり判定を太く（オリジナルは幅3の点判定）
     monsterUFOBaseScore: 10000,
     monsterInvaderBaseScore: 3000,
@@ -661,7 +662,12 @@ class AudioHandler {
         this.seq5MelodyIndex = 0;
         this.hiHatPanIndex = 0;
         this.nextNoteTime = this.ctx.currentTime + 0.1;
+        // 曲の頭の時刻と、その時のステージ。以後のステージは「曲が何ループ鳴ったか」で決める（描画の遅れに左右されない）
+        this.bgmStartT = this.nextNoteTime; this.bgmBase = stage;
     }
+    loopSec() { return 60 / 130 / 4 * 128; } // 1ループ（8小節）の長さ
+    stageAtTime(t) { return this.bgmStartT == null ? stage : this.bgmBase + Math.max(0, Math.floor((t - this.bgmStartT) / this.loopSec() + 1e-4)); }
+    heardTime() { const lat = this.ctx ? (this.ctx.outputLatency || this.ctx.baseLatency || 0) : 0; return this.ctx.currentTime - Math.max(0, lat - 0.016); }
 
     scheduleBGM() {
         if (!this.bgmPlaying || !this.bgmBus) {
@@ -669,7 +675,9 @@ class AudioHandler {
         }
         // 再生済みの音のノードを溜め込まない（溜まるとスマホで処理落ちして音が割れる）
         if (this.bgmOscillators.length > 600) this.bgmOscillators.splice(0, this.bgmOscillators.length - 200);
-        const bgmStage = ((stage - 1) % 6) + 1;
+        const audioClock = this.bgmStartT != null;
+        const bgmStageAt = t => ((this.stageAtTime(t) - 1) % 6) + 1; // その音が鳴る時刻のステージに合わせたパート構成
+        const bgmStage = audioClock ? bgmStageAt(this.nextNoteTime) : ((stage - 1) % 6) + 1;
         const bpm = 130;
         const sixteenth = 60 / bpm / 4;
         const rootNote = 27.50;
@@ -903,39 +911,35 @@ class AudioHandler {
             }
             if (4 > lo && 4 <= hi) {
                 if ((beatInLoop - (this.seq4Off || 0) + 128) % 8 === 0) { // 入った拍から8分刻み（入りを待たせない）
-                    const degree = this.seq4Melody[this.seq4MelodyIndex];
+                    // メロディの位置は拍の位置から決める（数えて進める方式だと、音の飛ばしや曲のループのたびにずれていく）
+                    const degree = this.seq4Melody[Math.floor(((beatInLoop - (this.seq4Off || 0) + 128) % 128) / 8) % this.seq4Melody.length];
                     const note = rootNote * 16 * Math.pow(2, degree / 12);
                     createSequence4(t, note);
-                    this.seq4MelodyIndex = (this.seq4MelodyIndex + 1) % this.seq4Melody.length;
                 }
             }
             if (5 > lo && 5 <= hi) {
                 if (beatInLoop % 4 === 0) {
-                    const degree = this.seq5Melody[this.seq5MelodyIndex];
+                    const degree = this.seq5Melody[(beatInLoop / 4) % this.seq5Melody.length]; // 小節に揃えた位置（ループしてもずれない）
                     if (degree !== null) {
                         const note = rootNote * 8 * Math.pow(2, degree / 12);
                         createSequence5(t, note);
                     }
-                    this.seq5MelodyIndex = (this.seq5MelodyIndex + 1) % this.seq5Melody.length;
                 }
             }
         };
         // ステージが上がって新しいパートが加わったら、すでに先読みで予約済みの区間にも新パートの音を足す
         // （先読みの分だけ新パートの入りが遅れないように）
-        if (this.lastBgmStage != null && bgmStage > this.lastBgmStage) {
+        if (!audioClock && this.lastBgmStage != null && bgmStage > this.lastBgmStage) { // 曲の時計でステージを決めている時は、パートはループの頭でぴったり切り替わるので後足し不要
             const steps = [];
             for (let j = 1; this.nextNoteTime - j * sixteenth >= this.ctx.currentTime - 0.005 && j < 16; j++) steps.unshift(j);
-            if (this.lastBgmStage < 4 && bgmStage >= 4) { // メロディのパートは、すぐ次の拍（4分）から頭で入る
-                const first = steps.length ? (this.current16th - steps[0] + 128) % 128 : this.current16th;
-                let b0 = first; while (b0 % 4 !== 0) b0 = (b0 + 1) % 128;
-                this.seq4Off = b0 % 8; this.seq4MelodyIndex = 0;
-            }
+            // メロディのパートは常に小節の8分グリッドに揃えて鳴らす（入った拍に合わせて裏拍にずらすと、周回ごとに表/裏が入れ替わってずれて聞こえる）
+            this.seq4Off = 0;
             steps.forEach(j => layers((this.current16th - j + 128) % 128, this.nextNoteTime - j * sixteenth, this.lastBgmStage, bgmStage));
         }
         this.lastBgmStage = bgmStage;
         // 処理が大きく止まって予約が遅れたときは、遅れた分を鳴らさずに飛ばす（まとめて鳴ってリズムが崩れるのを防ぐ）
         while (this.nextNoteTime < this.ctx.currentTime - 0.06) { this.nextNoteTime += sixteenth; this.current16th = (this.current16th + 1) % 128; }
-        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.2 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音が飛ぶので0.2秒
+        while (this.nextNoteTime < this.ctx.currentTime + (IS_MOBILE ? 0.3 : 0.1)) { // 先読み: PCは0.1秒。スマホは処理落ちで予約が間に合わず音がずれるので0.3秒
             const beatInLoop = this.current16th % 128;
             const noteInMeasure = beatInLoop % 16;
             if (noteInMeasure === 0) {
@@ -970,7 +974,7 @@ class AudioHandler {
             if ([3, 7, 10, 15].includes(noteInMeasure)) {
                 createSequence(this.nextNoteTime, [rootNote * 8, rootNote * 16][Math.floor(Math.random() * 2)]);
             }
-            layers(beatInLoop, this.nextNoteTime, 1, bgmStage);
+            layers(beatInLoop, this.nextNoteTime, 1, audioClock ? bgmStageAt(this.nextNoteTime) : bgmStage);
             this.nextNoteTime += sixteenth;
             this.current16th = (this.current16th + 1) % 128;
         }
@@ -1186,7 +1190,7 @@ try { if (localStorage.getItem('atlas-sfx') === '0') audioHandler.isMuted = true
 // ---------------------------------
 // 多言語対応（サイト共通の 'aicoding-lang' を使う）
 // ---------------------------------
-const I18N = {"ja": {"f.pause_kb": "一時停止: P / 全画面: F / 画面のみ: G", "f.pause_pad": "一時停止: START / 全画面: F / 画面のみ: G", "f.energy": "{n}点ごとにエネルギーボックス", "f.avoid": "できるだけ長く彗星をよけ続けよう", "f.move_kb": "移動: 矢印キー | 低速: Z / SHIFT", "f.move_pad": "移動: 十字キー | 低速: A / B", "f.shoot_kb": "ショット: X / SPACE", "f.shoot_pad": "ショット: X / Y", "md.0": "敵を撃ち落として進むシューティング", "md.1": "エネルギーを保って生き残れ", "md.2": "降りそそぐ彗星の間を舞え", "md.3": "基本を順番に覚えよう", "start_kb": "Enterでスタート", "start_pad": "STARTボタンでスタート", "diff.title": "難易度", "diff.EASY": "シールド1・隕石が少ない・シールド1の時SP5個でボーナスシールド", "diff.STANDARD": "シールド1 · 1回までダメージOK", "diff.ARCADE": "シールドなし · 一発アウト（オリジナルと同じ）", "diff.keys_kb": "Enter: スタート · Q / Esc: もどる", "diff.keys_pad": "START: スタート · SELECT: もどる", "diff.special": "スペシャルアイテムでシールドが1回復", "p.resume_kb": "Pで再開", "p.resume_pad": "STARTで再開", "p.quit_kb": "Qでタイトルへ", "p.quit_pad": "SELECTでタイトルへ", "reset.msg": "ハイスコアをすべてリセットしますか？", "go.replay_kb": "Enterでもう一度", "go.replay_pad": "STARTでもう一度", "go.title_kb": "Qでタイトルへ", "go.title_pad": "SELECTでタイトルへ", "hud.bonus": "無敵中は彗星に当たるとボーナス！", "hud.noshield": "シールドなし", "hud.left": "のこり {n}", "hud.last": "あと1回で終了", "hud.approach": "{name} 接近中", "hud.destroyed": "{name} 撃破！", "webgl": "このブラウザではWebGLが使えません。", "btn.efx": "エフェクト", "btn.sound": "サウンド", "btn.home": "ホームへ", "home_back": "ホームへ戻る", "tut.label": "チュートリアル", "tut.done": "チュートリアル完了！", "tut.back": "タイトルに戻ります", "tut.hit": "当たった！ もう一度", "tut.0.t": "移動", "tut.0.kb": "← → キーで左右に移動しよう", "tut.0.pad": "十字キー / 左スティックで左右に移動しよう", "tut.0.p": "左 {a}　右 {b}", "tut.1.t": "低速移動", "tut.1.kb": "Z / Shift を押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.1.pad": "A / B ボタンを押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.1.p": "低速で移動 {a}%", "tut.2.t": "彗星をよける", "tut.2.x": "降ってくる彗星に当たらないように 8 秒間よけ続けよう", "tut.2.p": "{a} / 8.0 秒", "tut.3.t": "グレイズ", "tut.3.x": "彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう\n★グレイズすればするほどスコアが伸びて、回復アイテムがどんどん出る！", "tut.3.p": "グレイズ {a} / 5", "tut.4.t": "ショット", "tut.4.kb": "X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる", "tut.4.pad": "X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる", "tut.4.p": "撃破 {a} / 2", "tut.5.t": "エネルギー", "tut.5.x": "エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう\n回復するのはアイテムと、敵を倒したとき", "tut.5.p0": "アイテムを取る", "tut.5.p1": "回復！", "tut.6.t": "無敵", "tut.6.x": "アイテムを取ると少しの間だけ無敵。無敵中は彗星に体当たりでボーナス！ 5 個壊そう\n★無敵中に彗星を壊せば壊すほど、アイテムがどんどん出る！", "tut.6.p": "体当たり {a} / 5", "tut.7.t": "ボス", "tut.7.x": "3 面ごとにボスが登場。モザイク表示の間は弾が効かない。倒すと宝石がジャラジャラ！", "tut.7.p0": "ボスを倒そう", "tut.7.p1": "撃破！ 宝石を集めよう", "start_touch": "タップでスタート", "diff.keys_touch": "タップで選択 · もう一度タップでスタート", "p.resume_touch": "タップで再開", "p.quit_touch": "ここをタップでタイトルへ", "go.replay_touch": "タップでもう一度", "go.title_touch": "ここをタップでタイトルへ", "tut.0.touch": "画面をスワイプして左右に移動しよう", "tut.1.touch": "SLOWボタンを押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.4.touch": "SHOTボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる", "rotate": "画面を縦向きにしてください", "btn.pause": "一時停止", "btn.swap": "ボタンの左右を入れ替え", "back": "もどる", "btn.title": "タイトルへ戻る", "hud.sp2": "SHIELD 2 まで SP あと {n}", "tut.8.t": "ハイパー", "tut.8.x": "左右に揺れながら落ちてくる結晶のハイパーアイテムを取ると、10秒間スコア3倍＆自機が少し速くなる\n★ただし隕石と弾が速くなり、敵の弾も2倍に！ 取ってみよう", "tut.8.p0": "ハイパーアイテムを取ろう", "tut.8.p1": "HYPER！ スコア3倍中", "tut.5.sp": "★次は虹色に光るスペシャルアイテム！ 取ると回復に加えて、より長い時間無敵になる", "tut.5.p2": "スペシャルアイテムを取る"}, "en": {"f.pause_kb": "PAUSE: P / FULLSCREEN: F / GAME ONLY: G", "f.pause_pad": "PAUSE: START / FULLSCREEN: F / GAME ONLY: G", "f.energy": "ENERGY BOX EVERY {n} PTS", "f.avoid": "AVOID COMETS AS LONG AS POSSIBLE", "f.move_kb": "MOVE: ARROWS | SLOW: Z / SHIFT", "f.move_pad": "MOVE: D-PAD | SLOW: A / B", "f.shoot_kb": "SHOOT: X / SPACE", "f.shoot_pad": "SHOOT: X / Y", "md.0": "SHMUP-style blasting through enemies", "md.1": "Stay alive through energy", "md.2": "Dance between the falling comets", "md.3": "Learn the basics step by step", "start_kb": "Press Enter to Start", "start_pad": "Press Start to Start", "diff.title": "difficulty", "diff.EASY": "1 shield · fewer comets · 5 SP with 1 shield = bonus shield", "diff.STANDARD": "1 shield · survive 1 hit", "diff.ARCADE": "no shield · one hit and out (like the original)", "diff.keys_kb": "Enter: start · Q / Esc: back", "diff.keys_pad": "START: start · SELECT: back", "diff.special": "Special items restore 1 shield", "p.resume_kb": "Press P to Resume", "p.resume_pad": "Press START to Resume", "p.quit_kb": "Press Q for Title", "p.quit_pad": "Press SELECT for Title", "reset.msg": "RESET ALL HIGH SCORES?", "go.replay_kb": "Press Enter to Replay", "go.replay_pad": "Press START to Replay", "go.title_kb": "Press Q for Title", "go.title_pad": "Press SELECT for Title", "hud.bonus": "Bonus points for hitting comets!!", "hud.noshield": "NO SHIELD", "hud.left": "{n} LEFT", "hud.last": "LAST LIFE", "hud.approach": "{name} APPROACHING", "hud.destroyed": "{name} DESTROYED", "webgl": "WebGL is not available on this browser.", "btn.efx": "Effects", "btn.sound": "Sound", "btn.home": "Home", "home_back": "Back to Home", "tut.label": "TUTORIAL", "tut.done": "Tutorial complete!", "tut.back": "Returning to the title", "tut.hit": "Hit! Try again", "tut.0.t": "Move", "tut.0.kb": "Use ← → to move left and right", "tut.0.pad": "Use the D-pad / left stick to move left and right", "tut.0.p": "Left {a}   Right {b}", "tut.1.t": "Slow move", "tut.1.kb": "Hold Z / Shift while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.1.pad": "Hold A / B while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.1.p": "Slow moving {a}%", "tut.2.t": "Dodge comets", "tut.2.x": "Keep dodging the falling comets for 8 seconds", "tut.2.p": "{a} / 8.0 s", "tut.3.t": "Graze", "tut.3.x": "Pass right next to a comet to \"graze\" it for bonus points. Graze 5 times\n★The more you graze, the higher your score — and the more items drop!", "tut.3.p": "Grazes {a} / 5", "tut.4.t": "Shoot", "tut.4.kb": "Press X / Space to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible", "tut.4.pad": "Press X / Y to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible", "tut.4.p": "Defeated {a} / 2", "tut.5.t": "Energy", "tut.5.x": "Energy drains over time and with each shot; at 0 the game is over. Grab a recovery item\nEnergy comes back from items and from defeating enemies", "tut.5.p0": "Grab the item", "tut.5.p1": "Recovered!", "tut.6.t": "Invincible", "tut.6.x": "Items make you briefly invincible. Ram comets while invincible for bonus points! Smash 5\n★The more comets you smash while invincible, the more items drop!", "tut.6.p": "Smashed {a} / 5", "tut.7.t": "Boss", "tut.7.x": "A boss appears every 3 stages. Shots do nothing while it is pixelated. Defeat it for a shower of gems!", "tut.7.p0": "Defeat the boss", "tut.7.p1": "Defeated! Collect the gems", "start_touch": "Tap to Start", "diff.keys_touch": "Tap to select · tap again to start", "p.resume_touch": "Tap to Resume", "p.quit_touch": "Tap here for Title", "go.replay_touch": "Tap to Replay", "go.title_touch": "Tap here for Title", "tut.0.touch": "Swipe the screen to move left and right", "tut.1.touch": "Hold SLOW while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.4.touch": "Press SHOT to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible", "rotate": "Please rotate your device to portrait", "btn.pause": "Pause", "btn.swap": "Swap button side", "back": "back", "btn.title": "Back to Title", "hud.sp2": "{n} more SP for SHIELD 2", "tut.8.t": "Hyper", "tut.8.x": "Grab the swaying crystal Hyper item: 10 seconds of ×3 score and a slightly faster ship\n★But comets and bullets speed up and enemies fire twice as much! Try it", "tut.8.p0": "Grab the Hyper item", "tut.8.p1": "HYPER! Score ×3", "tut.5.sp": "★Next, the rainbow Special item! It restores energy and makes you invincible for longer", "tut.5.p2": "Grab the Special item"}, "zh": {"f.pause_kb": "暂停: P / 全屏: F / 仅游戏画面: G", "f.pause_pad": "暂停: START / 全屏: F / 仅游戏画面: G", "f.energy": "每 {n} 分出现能量箱", "f.avoid": "尽可能长时间躲避彗星", "f.move_kb": "移动: 方向键 | 慢速: Z / SHIFT", "f.move_pad": "移动: 十字键 | 慢速: A / B", "f.shoot_kb": "射击: X / SPACE", "f.shoot_pad": "射击: X / Y", "md.0": "击落敌人前进的射击模式", "md.1": "保持能量，存活下去", "md.2": "在倾泻的彗星间穿梭", "md.3": "一步步学习基础操作", "start_kb": "按 Enter 开始", "start_pad": "按 START 开始", "diff.title": "难度", "diff.EASY": "护盾1 · 陨石较少 · 有1个护盾时拿5个SP得额外护盾", "diff.STANDARD": "护盾 1 · 可承受 1 次伤害", "diff.ARCADE": "无护盾 · 一击出局（与原版相同）", "diff.keys_kb": "Enter: 开始 · Q / Esc: 返回", "diff.keys_pad": "START: 开始 · SELECT: 返回", "diff.special": "特殊道具可恢复 1 个护盾", "p.resume_kb": "按 P 继续", "p.resume_pad": "按 START 继续", "p.quit_kb": "按 Q 返回标题", "p.quit_pad": "按 SELECT 返回标题", "reset.msg": "重置所有最高分？", "go.replay_kb": "按 Enter 再玩一次", "go.replay_pad": "按 START 再玩一次", "go.title_kb": "按 Q 返回标题", "go.title_pad": "按 SELECT 返回标题", "hud.bonus": "无敌时撞击彗星可获得奖励分！", "hud.noshield": "无护盾", "hud.left": "剩余 {n}", "hud.last": "最后一命", "hud.approach": "{name} 接近中", "hud.destroyed": "{name} 已击破", "webgl": "此浏览器无法使用 WebGL。", "btn.efx": "特效", "btn.sound": "声音", "btn.home": "返回首页", "home_back": "返回主页", "tut.label": "教程", "tut.done": "教程完成！", "tut.back": "即将返回标题", "tut.hit": "被击中！再试一次", "tut.0.t": "移动", "tut.0.kb": "用 ← → 键左右移动", "tut.0.pad": "用十字键 / 左摇杆左右移动", "tut.0.p": "左 {a}　右 {b}", "tut.1.t": "慢速移动", "tut.1.kb": "按住 Z / Shift 移动即可慢速。只有中心变色的点会被击中", "tut.1.pad": "按住 A / B 移动即可慢速。只有中心变色的点会被击中", "tut.1.p": "慢速移动 {a}%", "tut.2.t": "躲避彗星", "tut.2.x": "持续躲避落下的彗星 8 秒", "tut.2.p": "{a} / 8.0 秒", "tut.3.t": "擦弹", "tut.3.x": "贴着彗星擦过即可「擦弹」获得奖励分。擦弹 5 次\n★擦弹越多，分数越高，道具掉得越多！", "tut.3.p": "擦弹 {a} / 5", "tut.4.t": "射击", "tut.4.kb": "按 X / Space 射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌", "tut.4.pad": "按 X / Y 射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌", "tut.4.p": "击破 {a} / 2", "tut.5.t": "能量", "tut.5.x": "能量随时间和射击减少，归零即游戏结束。去拿恢复道具吧\n道具和击败敌人都能恢复能量", "tut.5.p0": "拾取道具", "tut.5.p1": "已恢复！", "tut.6.t": "无敌", "tut.6.x": "拾取道具后会短暂无敌。无敌时撞击彗星可得奖励分！撞碎 5 个\n★无敌时撞碎的彗星越多，掉落的道具越多！", "tut.6.p": "撞击 {a} / 5", "tut.7.t": "首领", "tut.7.x": "每 3 关出现首领。马赛克显示时子弹无效。击败后宝石哗啦啦掉落！", "tut.7.p0": "击败首领", "tut.7.p1": "击破！收集宝石吧", "start_touch": "点击开始", "diff.keys_touch": "点击选择 · 再次点击开始", "p.resume_touch": "点击继续", "p.quit_touch": "点击此处返回标题", "go.replay_touch": "点击再玩一次", "go.title_touch": "点击此处返回标题", "tut.0.touch": "滑动屏幕左右移动", "tut.1.touch": "按住 SLOW 按钮移动即可慢速。只有中心变色的点会被击中", "tut.4.touch": "按 SHOT 按钮射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌", "rotate": "请将设备竖屏使用", "btn.pause": "暂停", "btn.swap": "左右交换按钮", "back": "返回", "btn.title": "返回标题", "hud.sp2": "再拿 {n} 个SP → 护盾2", "tut.8.t": "超级", "tut.8.x": "拿到左右摇摆落下的水晶超级道具，10秒内分数×3，自机稍微加速\n★但陨石和子弹会变快，敌人的子弹也翻倍！试试看", "tut.8.p0": "拿到超级道具", "tut.8.p1": "HYPER！分数×3中", "tut.5.sp": "★接下来是彩虹色的特殊道具！除了回复，还能更长时间无敌", "tut.5.p2": "拿到特殊道具"}, "ko": {"f.pause_kb": "일시정지: P / 전체화면: F / 게임 화면만: G", "f.pause_pad": "일시정지: START / 전체화면: F / 게임 화면만: G", "f.energy": "{n}점마다 에너지 박스", "f.avoid": "최대한 오래 혜성을 피하자", "f.move_kb": "이동: 방향키 | 저속: Z / SHIFT", "f.move_pad": "이동: 십자키 | 저속: A / B", "f.shoot_kb": "샷: X / SPACE", "f.shoot_pad": "샷: X / Y", "md.0": "적을 격추하며 나아가는 슈팅", "md.1": "에너지를 지키며 살아남아라", "md.2": "쏟아지는 혜성 사이를 누벼라", "md.3": "기본을 차근차근 배우자", "start_kb": "Enter로 시작", "start_pad": "START로 시작", "diff.title": "난이도", "diff.EASY": "실드1 · 운석 적음 · 실드 1개일 때 SP 5개로 보너스 실드", "diff.STANDARD": "실드 1 · 1번까지 피격 OK", "diff.ARCADE": "실드 없음 · 한 방에 아웃（오리지널과 동일）", "diff.keys_kb": "Enter: 시작 · Q / Esc: 뒤로", "diff.keys_pad": "START: 시작 · SELECT: 뒤로", "diff.special": "스페셜 아이템으로 실드 1개 회복", "p.resume_kb": "P로 재개", "p.resume_pad": "START로 재개", "p.quit_kb": "Q로 타이틀", "p.quit_pad": "SELECT로 타이틀", "reset.msg": "모든 하이스코어를 초기화할까요?", "go.replay_kb": "Enter로 다시 하기", "go.replay_pad": "START로 다시 하기", "go.title_kb": "Q로 타이틀", "go.title_pad": "SELECT로 타이틀", "hud.bonus": "무적 중에 혜성에 부딪히면 보너스!", "hud.noshield": "실드 없음", "hud.left": "남은 실드 {n}", "hud.last": "마지막 기회", "hud.approach": "{name} 접근 중", "hud.destroyed": "{name} 격파!", "webgl": "이 브라우저에서는 WebGL을 사용할 수 없습니다.", "btn.efx": "이펙트", "btn.sound": "사운드", "btn.home": "홈으로", "home_back": "홈으로 돌아가기", "tut.label": "튜토리얼", "tut.done": "튜토리얼 완료!", "tut.back": "타이틀로 돌아갑니다", "tut.hit": "맞았다! 다시 한 번", "tut.0.t": "이동", "tut.0.kb": "← → 키로 좌우로 이동하자", "tut.0.pad": "십자키 / 왼쪽 스틱으로 좌우로 이동하자", "tut.0.p": "왼쪽 {a}　오른쪽 {b}", "tut.1.t": "저속 이동", "tut.1.kb": "Z / Shift를 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.1.pad": "A / B 버튼을 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.1.p": "저속 이동 {a}%", "tut.2.t": "혜성 피하기", "tut.2.x": "떨어지는 혜성을 8초 동안 계속 피하자", "tut.2.p": "{a} / 8.0초", "tut.3.t": "그레이즈", "tut.3.x": "혜성을 아슬아슬하게 스치면 「그레이즈」 보너스. 5번 그레이즈하자\n★그레이즈를 할수록 점수가 오르고 아이템이 더 많이 나온다!", "tut.3.p": "그레이즈 {a} / 5", "tut.4.t": "샷", "tut.4.kb": "X / Space로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다", "tut.4.pad": "X / Y 버튼으로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다", "tut.4.p": "격파 {a} / 2", "tut.5.t": "에너지", "tut.5.x": "에너지는 시간과 샷으로 줄고 0이 되면 게임 오버. 회복 아이템을 먹자\n회복은 아이템과 적을 쓰러뜨렸을 때", "tut.5.p0": "아이템 획득", "tut.5.p1": "회복!", "tut.6.t": "무적", "tut.6.x": "아이템을 먹으면 잠시 무적. 무적 중엔 혜성에 몸통박치기로 보너스! 5개 부수자\n★무적 중에 혜성을 많이 부술수록 아이템이 더 많이 나온다!", "tut.6.p": "몸통박치기 {a} / 5", "tut.7.t": "보스", "tut.7.x": "3스테이지마다 보스 등장. 모자이크 상태일 땐 탄이 안 통한다. 쓰러뜨리면 보석이 와르르!", "tut.7.p0": "보스를 쓰러뜨리자", "tut.7.p1": "격파! 보석을 모으자", "start_touch": "탭하여 시작", "diff.keys_touch": "탭하여 선택 · 다시 탭하면 시작", "p.resume_touch": "탭하여 재개", "p.quit_touch": "여기를 탭하면 타이틀로", "go.replay_touch": "탭하여 다시 하기", "go.title_touch": "여기를 탭하면 타이틀로", "tut.0.touch": "화면을 스와이프해서 좌우로 이동하자", "tut.1.touch": "SLOW 버튼을 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.4.touch": "SHOT 버튼으로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다", "rotate": "기기를 세로로 돌려 주세요", "btn.pause": "일시정지", "btn.swap": "버튼 좌우 바꾸기", "back": "뒤로", "btn.title": "타이틀로 돌아가기", "hud.sp2": "SP {n}개 더 → 실드2", "tut.8.t": "하이퍼", "tut.8.x": "좌우로 흔들리며 떨어지는 크리스탈 하이퍼 아이템을 먹으면 10초간 점수 3배 & 자기가 조금 빨라진다\n★대신 운석과 탄이 빨라지고 적의 탄도 2배! 먹어 보자", "tut.8.p0": "하이퍼 아이템을 먹자", "tut.8.p1": "HYPER! 점수 3배 중", "tut.5.sp": "★다음은 무지개색으로 빛나는 스페셜 아이템! 회복에 더해 더 오래 무적이 된다", "tut.5.p2": "스페셜 아이템을 먹자"}, "es": {"f.pause_kb": "PAUSA: P / PANTALLA COMPLETA: F / SOLO JUEGO: G", "f.pause_pad": "PAUSA: START / PANTALLA COMPLETA: F / SOLO JUEGO: G", "f.energy": "CAJA DE ENERGÍA CADA {n} PTS", "f.avoid": "ESQUIVA COMETAS EL MAYOR TIEMPO POSIBLE", "f.move_kb": "MOVER: FLECHAS | LENTO: Z / SHIFT", "f.move_pad": "MOVER: CRUCETA | LENTO: A / B", "f.shoot_kb": "DISPARAR: X / ESPACIO", "f.shoot_pad": "DISPARAR: X / Y", "md.0": "Shooter: derriba enemigos para avanzar", "md.1": "Sobrevive administrando tu energía", "md.2": "Baila entre la lluvia de cometas", "md.3": "Aprende lo básico paso a paso", "start_kb": "Pulsa Enter para empezar", "start_pad": "Pulsa START para empezar", "diff.title": "dificultad", "diff.EASY": "1 escudo · menos cometas · 5 SP con 1 escudo = escudo extra", "diff.STANDARD": "1 escudo · aguantas 1 golpe", "diff.ARCADE": "sin escudo · un golpe y fuera (como el original)", "diff.keys_kb": "Enter: empezar · Q / Esc: volver", "diff.keys_pad": "START: empezar · SELECT: volver", "diff.special": "Los objetos especiales recuperan 1 escudo", "p.resume_kb": "Pulsa P para continuar", "p.resume_pad": "Pulsa START para continuar", "p.quit_kb": "Pulsa Q para ir al título", "p.quit_pad": "Pulsa SELECT para ir al título", "reset.msg": "¿BORRAR TODAS LAS PUNTUACIONES?", "go.replay_kb": "Pulsa Enter para repetir", "go.replay_pad": "Pulsa START para repetir", "go.title_kb": "Pulsa Q para ir al título", "go.title_pad": "Pulsa SELECT para ir al título", "hud.bonus": "¡Puntos extra al chocar con cometas!", "hud.noshield": "SIN ESCUDO", "hud.left": "QUEDAN {n}", "hud.last": "ÚLTIMA VIDA", "hud.approach": "¡{name} SE ACERCA!", "hud.destroyed": "¡{name} DESTRUIDO!", "webgl": "WebGL no está disponible en este navegador.", "btn.efx": "Efectos", "btn.sound": "Sonido", "btn.home": "Inicio", "home_back": "Volver al inicio", "tut.label": "TUTORIAL", "tut.done": "¡Tutorial completado!", "tut.back": "Volviendo al título", "tut.hit": "¡Te dieron! Otra vez", "tut.0.t": "Moverse", "tut.0.kb": "Usa ← → para moverte a izquierda y derecha", "tut.0.pad": "Usa la cruceta / stick izquierdo para moverte", "tut.0.p": "Izq. {a}   Der. {b}", "tut.1.t": "Movimiento lento", "tut.1.kb": "Mantén Z / Shift al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.1.pad": "Mantén A / B al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.1.p": "Moviéndote lento {a}%", "tut.2.t": "Esquiva cometas", "tut.2.x": "Esquiva los cometas que caen durante 8 segundos", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Roce", "tut.3.x": "Pasa rozando un cometa para un «roce» con puntos extra. Roza 5 veces\n★¡Cuanto más rozas, más puntos y más objetos caen!", "tut.3.p": "Roces {a} / 5", "tut.4.t": "Disparar", "tut.4.kb": "Pulsa X / Espacio para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve", "tut.4.pad": "Pulsa X / Y para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve", "tut.4.p": "Derribados {a} / 2", "tut.5.t": "Energía", "tut.5.x": "La energía baja con el tiempo y al disparar; a 0 se acaba la partida. Coge un objeto de recuperación\nSe recupera con objetos y al vencer enemigos", "tut.5.p0": "Coge el objeto", "tut.5.p1": "¡Recuperado!", "tut.6.t": "Invencible", "tut.6.x": "Los objetos te hacen invencible un momento. ¡Embiste cometas para ganar puntos! Rompe 5\n★¡Cuantos más cometas destrozas siendo invencible, más objetos caen!", "tut.6.p": "Embestidas {a} / 5", "tut.7.t": "Jefe", "tut.7.x": "Cada 3 fases aparece un jefe. Mientras está pixelado, los disparos no le afectan. ¡Derrótalo y lloverán gemas!", "tut.7.p0": "Derrota al jefe", "tut.7.p1": "¡Derrotado! Recoge las gemas", "start_touch": "Toca para empezar", "diff.keys_touch": "Toca para elegir · vuelve a tocar para empezar", "p.resume_touch": "Toca para continuar", "p.quit_touch": "Toca aquí para ir al título", "go.replay_touch": "Toca para repetir", "go.title_touch": "Toca aquí para ir al título", "tut.0.touch": "Desliza la pantalla para moverte a izquierda y derecha", "tut.1.touch": "Mantén SLOW al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.4.touch": "Pulsa SHOT para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve", "rotate": "Gira el dispositivo en vertical", "btn.pause": "Pausa", "btn.swap": "Cambiar lado de los botones", "back": "volver", "btn.title": "Volver al título", "hud.sp2": "{n} SP más → ESCUDO 2", "tut.8.t": "Hiper", "tut.8.x": "Coge el cristal Hiper que cae oscilando: 10 s de puntuación ×3 y nave algo más rápida\n★¡Pero cometas y balas van más rápido y los enemigos disparan el doble! Pruébalo", "tut.8.p0": "Coge el objeto Hiper", "tut.8.p1": "¡HYPER! Puntos ×3", "tut.5.sp": "★¡Ahora el objeto Especial arcoíris! Recupera energía y te hace invencible más tiempo", "tut.5.p2": "Coge el objeto Especial"}, "fr": {"f.pause_kb": "PAUSE : P / PLEIN ÉCRAN : F / JEU SEUL : G", "f.pause_pad": "PAUSE : START / PLEIN ÉCRAN : F / JEU SEUL : G", "f.energy": "BOÎTE D’ÉNERGIE TOUS LES {n} PTS", "f.avoid": "ÉVITEZ LES COMÈTES LE PLUS LONGTEMPS POSSIBLE", "f.move_kb": "BOUGER : FLÈCHES | LENT : Z / SHIFT", "f.move_pad": "BOUGER : CROIX | LENT : A / B", "f.shoot_kb": "TIRER : X / ESPACE", "f.shoot_pad": "TIRER : X / Y", "md.0": "Shoot : abattez les ennemis pour avancer", "md.1": "Survivez en gérant votre énergie", "md.2": "Dansez entre les comètes qui tombent", "md.3": "Apprenez les bases pas à pas", "start_kb": "Appuyez sur Entrée pour jouer", "start_pad": "Appuyez sur START pour jouer", "diff.title": "difficulté", "diff.EASY": "1 bouclier · moins de comètes · 5 SP avec 1 bouclier = bouclier bonus", "diff.STANDARD": "1 bouclier · encaissez 1 coup", "diff.ARCADE": "sans bouclier · un coup et c’est fini (comme l’original)", "diff.keys_kb": "Entrée : jouer · Q / Échap : retour", "diff.keys_pad": "START : jouer · SELECT : retour", "diff.special": "Les objets spéciaux rendent 1 bouclier", "p.resume_kb": "P pour reprendre", "p.resume_pad": "START pour reprendre", "p.quit_kb": "Q pour le titre", "p.quit_pad": "SELECT pour le titre", "reset.msg": "RÉINITIALISER TOUS LES RECORDS ?", "go.replay_kb": "Entrée pour rejouer", "go.replay_pad": "START pour rejouer", "go.title_kb": "Q pour le titre", "go.title_pad": "SELECT pour le titre", "hud.bonus": "Points bonus en percutant des comètes !", "hud.noshield": "SANS BOUCLIER", "hud.left": "RESTE {n}", "hud.last": "DERNIÈRE VIE", "hud.approach": "{name} EN APPROCHE", "hud.destroyed": "{name} DÉTRUIT !", "webgl": "WebGL n’est pas disponible sur ce navigateur.", "btn.efx": "Effets", "btn.sound": "Son", "btn.home": "Accueil", "home_back": "Retour à l'accueil", "tut.label": "TUTORIEL", "tut.done": "Tutoriel terminé !", "tut.back": "Retour à l’écran titre", "tut.hit": "Touché ! Encore une fois", "tut.0.t": "Se déplacer", "tut.0.kb": "Utilisez ← → pour aller à gauche et à droite", "tut.0.pad": "Utilisez la croix / le stick gauche pour vous déplacer", "tut.0.p": "Gauche {a}   Droite {b}", "tut.1.t": "Déplacement lent", "tut.1.kb": "Maintenez Z / Shift en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.1.pad": "Maintenez A / B en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.1.p": "Déplacement lent {a}%", "tut.2.t": "Esquiver", "tut.2.x": "Esquivez les comètes qui tombent pendant 8 secondes", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Frôler", "tut.3.x": "Frôlez une comète pour un « graze » et des points bonus. Frôlez 5 fois\n★Plus vous frôlez, plus le score grimpe et plus les objets tombent !", "tut.3.p": "Frôlements {a} / 5", "tut.4.t": "Tirer", "tut.4.kb": "X / Espace pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible", "tut.4.pad": "X / Y pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible", "tut.4.p": "Abattus {a} / 2", "tut.5.t": "Énergie", "tut.5.x": "L’énergie baisse avec le temps et les tirs ; à 0 c’est fini. Prenez un objet de soin\nL’énergie revient avec les objets et en battant des ennemis", "tut.5.p0": "Prenez l’objet", "tut.5.p1": "Récupéré !", "tut.6.t": "Invincible", "tut.6.x": "Les objets rendent brièvement invincible. Percutez des comètes pour des bonus ! Cassez-en 5\n★Plus vous brisez de comètes en étant invincible, plus les objets tombent !", "tut.6.p": "Percutées {a} / 5", "tut.7.t": "Boss", "tut.7.x": "Un boss apparaît tous les 3 niveaux. Pixelisé, il est insensible aux tirs. Battez-le pour une pluie de gemmes !", "tut.7.p0": "Battez le boss", "tut.7.p1": "Vaincu ! Ramassez les gemmes", "start_touch": "Touchez pour jouer", "diff.keys_touch": "Touchez pour choisir · touchez encore pour jouer", "p.resume_touch": "Touchez pour reprendre", "p.quit_touch": "Touchez ici pour le titre", "go.replay_touch": "Touchez pour rejouer", "go.title_touch": "Touchez ici pour le titre", "tut.0.touch": "Glissez sur l’écran pour aller à gauche et à droite", "tut.1.touch": "Maintenez SLOW en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.4.touch": "Appuyez sur SHOT pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible", "rotate": "Tournez l’appareil en mode portrait", "btn.pause": "Pause", "btn.swap": "Inverser le côté des boutons", "back": "retour", "btn.title": "Retour au titre", "hud.sp2": "Encore {n} SP → BOUCLIER 2", "tut.8.t": "Hyper", "tut.8.x": "Prenez le cristal Hyper qui tombe en zigzag : 10 s de score ×3 et vaisseau un peu plus rapide\n★Mais comètes et tirs accélèrent et les ennemis tirent deux fois plus ! Essayez", "tut.8.p0": "Prenez l'objet Hyper", "tut.8.p1": "HYPER ! Score ×3", "tut.5.sp": "★Maintenant l'objet Spécial arc-en-ciel ! Il rend de l'énergie et rend invincible plus longtemps", "tut.5.p2": "Prenez l'objet Spécial"}, "pt": {"f.pause_kb": "PAUSA: P / TELA CHEIA: F / SÓ O JOGO: G", "f.pause_pad": "PAUSA: START / TELA CHEIA: F / SÓ O JOGO: G", "f.energy": "CAIXA DE ENERGIA A CADA {n} PTS", "f.avoid": "DESVIE DOS COMETAS O MÁXIMO POSSÍVEL", "f.move_kb": "MOVER: SETAS | LENTO: Z / SHIFT", "f.move_pad": "MOVER: DIRECIONAL | LENTO: A / B", "f.shoot_kb": "ATIRAR: X / ESPAÇO", "f.shoot_pad": "ATIRAR: X / Y", "md.0": "Shooter: derrube inimigos para avançar", "md.1": "Sobreviva cuidando da energia", "md.2": "Dance entre a chuva de cometas", "md.3": "Aprenda o básico passo a passo", "start_kb": "Pressione Enter para começar", "start_pad": "Pressione START para começar", "diff.title": "dificuldade", "diff.EASY": "1 escudo · menos cometas · 5 SP com 1 escudo = escudo bônus", "diff.STANDARD": "1 escudo · aguenta 1 golpe", "diff.ARCADE": "sem escudo · um golpe e acabou (como o original)", "diff.keys_kb": "Enter: começar · Q / Esc: voltar", "diff.keys_pad": "START: começar · SELECT: voltar", "diff.special": "Itens especiais recuperam 1 escudo", "p.resume_kb": "P para continuar", "p.resume_pad": "START para continuar", "p.quit_kb": "Q para o título", "p.quit_pad": "SELECT para o título", "reset.msg": "APAGAR TODOS OS RECORDES?", "go.replay_kb": "Enter para jogar de novo", "go.replay_pad": "START para jogar de novo", "go.title_kb": "Q para o título", "go.title_pad": "SELECT para o título", "hud.bonus": "Pontos extras ao bater em cometas!", "hud.noshield": "SEM ESCUDO", "hud.left": "RESTAM {n}", "hud.last": "ÚLTIMA VIDA", "hud.approach": "{name} SE APROXIMANDO", "hud.destroyed": "{name} DESTRUÍDO!", "webgl": "WebGL não está disponível neste navegador.", "btn.efx": "Efeitos", "btn.sound": "Som", "btn.home": "Início", "home_back": "Voltar ao início", "tut.label": "TUTORIAL", "tut.done": "Tutorial concluído!", "tut.back": "Voltando ao título", "tut.hit": "Atingido! De novo", "tut.0.t": "Mover", "tut.0.kb": "Use ← → para ir para a esquerda e a direita", "tut.0.pad": "Use o direcional / analógico esquerdo para se mover", "tut.0.p": "Esq. {a}   Dir. {b}", "tut.1.t": "Movimento lento", "tut.1.kb": "Segure Z / Shift ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.1.pad": "Segure A / B ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.1.p": "Movendo devagar {a}%", "tut.2.t": "Desviar", "tut.2.x": "Desvie dos cometas que caem por 8 segundos", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Raspão", "tut.3.x": "Passe raspando num cometa para um «raspão» com pontos extras. Faça 5\n★Quanto mais você raspa, mais pontos e mais itens caem!", "tut.3.p": "Raspões {a} / 5", "tut.4.t": "Atirar", "tut.4.kb": "X / Espaço para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve", "tut.4.pad": "X / Y para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve", "tut.4.p": "Derrubados {a} / 2", "tut.5.t": "Energia", "tut.5.x": "A energia cai com o tempo e com os tiros; em 0 é fim de jogo. Pegue um item de recuperação\nRecupera com itens e ao derrotar inimigos", "tut.5.p0": "Pegue o item", "tut.5.p1": "Recuperado!", "tut.6.t": "Invencível", "tut.6.x": "Itens deixam você invencível por um tempo. Bata nos cometas para ganhar bônus! Quebre 5\n★Quanto mais cometas você destrói invencível, mais itens caem!", "tut.6.p": "Batidas {a} / 5", "tut.7.t": "Chefe", "tut.7.x": "Um chefe aparece a cada 3 fases. Pixelado, os tiros não funcionam. Derrote-o para uma chuva de gemas!", "tut.7.p0": "Derrote o chefe", "tut.7.p1": "Derrotado! Pegue as gemas", "start_touch": "Toque para começar", "diff.keys_touch": "Toque para escolher · toque de novo para começar", "p.resume_touch": "Toque para continuar", "p.quit_touch": "Toque aqui para o título", "go.replay_touch": "Toque para jogar de novo", "go.title_touch": "Toque aqui para o título", "tut.0.touch": "Deslize na tela para ir para a esquerda e a direita", "tut.1.touch": "Segure SLOW ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.4.touch": "Toque em SHOT para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve", "rotate": "Gire o aparelho para a vertical", "btn.pause": "Pausa", "btn.swap": "Trocar lado dos botões", "back": "voltar", "btn.title": "Voltar ao título", "hud.sp2": "Mais {n} SP → ESCUDO 2", "tut.8.t": "Hiper", "tut.8.x": "Pegue o cristal Hiper que cai balançando: 10 s de pontuação ×3 e nave um pouco mais rápida\n★Mas cometas e tiros ficam mais rápidos e os inimigos atiram o dobro! Experimente", "tut.8.p0": "Pegue o item Hiper", "tut.8.p1": "HYPER! Pontos ×3", "tut.5.sp": "★Agora o item Especial arco-íris! Recupera energia e deixa invencível por mais tempo", "tut.5.p2": "Pegue o item Especial"}, "de": {"f.pause_kb": "PAUSE: P / VOLLBILD: F / NUR SPIEL: G", "f.pause_pad": "PAUSE: START / VOLLBILD: F / NUR SPIEL: G", "f.energy": "ENERGIEBOX ALLE {n} PUNKTE", "f.avoid": "WEICHE DEN KOMETEN SO LANGE WIE MÖGLICH AUS", "f.move_kb": "BEWEGEN: PFEILE | LANGSAM: Z / SHIFT", "f.move_pad": "BEWEGEN: STEUERKREUZ | LANGSAM: A / B", "f.shoot_kb": "SCHIESSEN: X / LEERTASTE", "f.shoot_pad": "SCHIESSEN: X / Y", "md.0": "Shooter: Gegner abschießen und vorrücken", "md.1": "Überlebe mit deiner Energie", "md.2": "Tanze zwischen fallenden Kometen", "md.3": "Lerne die Grundlagen Schritt für Schritt", "start_kb": "Enter zum Starten", "start_pad": "START zum Starten", "diff.title": "schwierigkeit", "diff.EASY": "1 Schild · weniger Kometen · 5 SP bei 1 Schild = Bonusschild", "diff.STANDARD": "1 Schild · hält 1 Treffer aus", "diff.ARCADE": "kein Schild · ein Treffer und aus (wie das Original)", "diff.keys_kb": "Enter: Start · Q / Esc: zurück", "diff.keys_pad": "START: Start · SELECT: zurück", "diff.special": "Spezial-Items stellen 1 Schild wieder her", "p.resume_kb": "P zum Fortsetzen", "p.resume_pad": "START zum Fortsetzen", "p.quit_kb": "Q zum Titel", "p.quit_pad": "SELECT zum Titel", "reset.msg": "ALLE HIGHSCORES ZURÜCKSETZEN?", "go.replay_kb": "Enter für neue Runde", "go.replay_pad": "START für neue Runde", "go.title_kb": "Q zum Titel", "go.title_pad": "SELECT zum Titel", "hud.bonus": "Bonuspunkte für Kometen-Rammen!", "hud.noshield": "KEIN SCHILD", "hud.left": "NOCH {n}", "hud.last": "LETZTES LEBEN", "hud.approach": "{name} NÄHERT SICH", "hud.destroyed": "{name} ZERSTÖRT!", "webgl": "WebGL ist in diesem Browser nicht verfügbar.", "btn.efx": "Effekte", "btn.sound": "Ton", "btn.home": "Startseite", "home_back": "Zurück zur Startseite", "tut.label": "TUTORIAL", "tut.done": "Tutorial abgeschlossen!", "tut.back": "Zurück zum Titel", "tut.hit": "Getroffen! Nochmal", "tut.0.t": "Bewegen", "tut.0.kb": "Mit ← → nach links und rechts bewegen", "tut.0.pad": "Mit Steuerkreuz / linkem Stick nach links und rechts bewegen", "tut.0.p": "Links {a}   Rechts {b}", "tut.1.t": "Langsam", "tut.1.kb": "Halte Z / Shift beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.1.pad": "Halte A / B beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.1.p": "Langsam bewegt {a}%", "tut.2.t": "Ausweichen", "tut.2.x": "Weiche den fallenden Kometen 8 Sekunden lang aus", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Streifen", "tut.3.x": "Fliege knapp an einem Kometen vorbei („Graze“) für Bonuspunkte. 5-mal streifen\n★Je mehr du streifst, desto höher der Score – und desto mehr Items fallen!", "tut.3.p": "Gestreift {a} / 5", "tut.4.t": "Schießen", "tut.4.kb": "X / Leertaste zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar", "tut.4.pad": "X / Y zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar", "tut.4.p": "Abgeschossen {a} / 2", "tut.5.t": "Energie", "tut.5.x": "Energie sinkt mit der Zeit und beim Schießen; bei 0 ist Schluss. Hol dir ein Heil-Item\nEnergie gibt es durch Items und besiegte Gegner", "tut.5.p0": "Item holen", "tut.5.p1": "Aufgeladen!", "tut.6.t": "Unverwundbar", "tut.6.x": "Items machen kurz unverwundbar. Ramme dann Kometen für Bonuspunkte! Zerstöre 5\n★Je mehr Kometen du unverwundbar zerschmetterst, desto mehr Items fallen!", "tut.6.p": "Gerammt {a} / 5", "tut.7.t": "Boss", "tut.7.x": "Alle 3 Stages erscheint ein Boss. Verpixelt ist er immun gegen Schüsse. Besiege ihn für einen Edelsteinregen!", "tut.7.p0": "Besiege den Boss", "tut.7.p1": "Besiegt! Sammle die Edelsteine", "start_touch": "Tippen zum Starten", "diff.keys_touch": "Tippen zum Wählen · nochmal tippen zum Starten", "p.resume_touch": "Tippen zum Fortsetzen", "p.quit_touch": "Hier tippen für den Titel", "go.replay_touch": "Tippen für neue Runde", "go.title_touch": "Hier tippen für den Titel", "tut.0.touch": "Wische über den Bildschirm, um dich nach links und rechts zu bewegen", "tut.1.touch": "Halte SLOW beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.4.touch": "Tippe SHOT zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar", "rotate": "Bitte das Gerät hochkant drehen", "btn.pause": "Pause", "btn.swap": "Tastenseite tauschen", "back": "zurück", "btn.title": "Zurück zum Titel", "hud.sp2": "Noch {n} SP → SCHILD 2", "tut.8.t": "Hyper", "tut.8.x": "Schnapp dir den pendelnd fallenden Hyper-Kristall: 10 Sekunden ×3 Punkte und ein etwas schnelleres Schiff\n★Aber Kometen und Schüsse werden schneller und Gegner feuern doppelt so viel! Probier es aus", "tut.8.p0": "Schnapp dir das Hyper-Item", "tut.8.p1": "HYPER! Punkte ×3", "tut.5.sp": "★Jetzt das regenbogenfarbene Spezial-Item! Es gibt Energie und macht länger unverwundbar", "tut.5.p2": "Schnapp dir das Spezial-Item"}, "hi": {"f.pause_kb": "रोकें: P / फ़ुलस्क्रीन: F / केवल गेम: G", "f.pause_pad": "रोकें: START / फ़ुलस्क्रीन: F / केवल गेम: G", "f.energy": "हर {n} अंक पर एनर्जी बॉक्स", "f.avoid": "जितनी देर हो सके धूमकेतुओं से बचें", "f.move_kb": "चलें: तीर कुंजियाँ | धीमे: Z / SHIFT", "f.move_pad": "चलें: डी-पैड | धीमे: A / B", "f.shoot_kb": "शूट: X / SPACE", "f.shoot_pad": "शूट: X / Y", "md.0": "दुश्मनों को मार गिराते हुए आगे बढ़ें", "md.1": "एनर्जी बचाकर ज़िंदा रहें", "md.2": "गिरते धूमकेतुओं के बीच नाचें", "md.3": "बुनियादी बातें कदम-दर-कदम सीखें", "start_kb": "शुरू करने के लिए Enter दबाएँ", "start_pad": "शुरू करने के लिए START दबाएँ", "diff.title": "कठिनाई", "diff.EASY": "1 शील्ड · कम धूमकेतु · 1 शील्ड पर 5 SP से बोनस शील्ड", "diff.STANDARD": "1 शील्ड · 1 बार चोट सह सकते हैं", "diff.ARCADE": "कोई शील्ड नहीं · एक चोट और खेल ख़त्म (मूल जैसा)", "diff.keys_kb": "Enter: शुरू · Q / Esc: वापस", "diff.keys_pad": "START: शुरू · SELECT: वापस", "diff.special": "स्पेशल आइटम 1 शील्ड वापस देता है", "p.resume_kb": "जारी रखने के लिए P", "p.resume_pad": "जारी रखने के लिए START", "p.quit_kb": "टाइटल के लिए Q", "p.quit_pad": "टाइटल के लिए SELECT", "reset.msg": "सभी हाई-स्कोर रीसेट करें?", "go.replay_kb": "फिर से खेलने के लिए Enter", "go.replay_pad": "फिर से खेलने के लिए START", "go.title_kb": "टाइटल के लिए Q", "go.title_pad": "टाइटल के लिए SELECT", "hud.bonus": "अजेय रहते धूमकेतु से टकराएँ और बोनस पाएँ!", "hud.noshield": "शील्ड नहीं", "hud.left": "{n} बचे", "hud.last": "आख़िरी मौक़ा", "hud.approach": "{name} आ रहा है", "hud.destroyed": "{name} नष्ट!", "webgl": "इस ब्राउज़र में WebGL उपलब्ध नहीं है।", "btn.efx": "इफ़ेक्ट", "btn.sound": "आवाज़", "btn.home": "होम", "home_back": "होम पर वापस जाएँ", "tut.label": "ट्यूटोरियल", "tut.done": "ट्यूटोरियल पूरा!", "tut.back": "टाइटल पर लौट रहे हैं", "tut.hit": "लग गया! फिर से", "tut.0.t": "चलना", "tut.0.kb": "← → से बाएँ-दाएँ चलें", "tut.0.pad": "डी-पैड / बाएँ स्टिक से बाएँ-दाएँ चलें", "tut.0.p": "बाएँ {a}   दाएँ {b}", "tut.1.t": "धीमी चाल", "tut.1.kb": "Z / Shift दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.1.pad": "A / B दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.1.p": "धीमी चाल {a}%", "tut.2.t": "धूमकेतु से बचें", "tut.2.x": "गिरते धूमकेतुओं से 8 सेकंड तक बचते रहें", "tut.2.p": "{a} / 8.0 सेकंड", "tut.3.t": "ग्रेज़", "tut.3.x": "धूमकेतु के बिल्कुल पास से निकलें — “ग्रेज़” बोनस मिलता है। 5 बार ग्रेज़ करें\n★जितना ज़्यादा ग्रेज़ करेंगे, उतना स्कोर बढ़ेगा और उतने ज़्यादा आइटम गिरेंगे!", "tut.3.p": "ग्रेज़ {a} / 5", "tut.4.t": "शूट", "tut.4.kb": "X / Space से शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं", "tut.4.pad": "X / Y से शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं", "tut.4.p": "गिराए {a} / 2", "tut.5.t": "एनर्जी", "tut.5.x": "एनर्जी समय और शूट से घटती है; 0 होने पर खेल ख़त्म। रिकवरी आइटम उठाएँ\nएनर्जी आइटम और दुश्मन हराने से लौटती है", "tut.5.p0": "आइटम उठाएँ", "tut.5.p1": "रिकवर!", "tut.6.t": "अजेय", "tut.6.x": "आइटम लेने पर थोड़ी देर अजेय। तब धूमकेतुओं से टकराकर बोनस पाएँ! 5 तोड़ें\n★अजेय रहते जितने ज़्यादा धूमकेतु तोड़ेंगे, उतने ज़्यादा आइटम गिरेंगे!", "tut.6.p": "टक्कर {a} / 5", "tut.7.t": "बॉस", "tut.7.x": "हर 3 स्टेज पर बॉस आता है। पिक्सलेटेड रहते गोली असर नहीं करती। हराने पर रत्नों की बारिश!", "tut.7.p0": "बॉस को हराएँ", "tut.7.p1": "हरा दिया! रत्न इकट्ठा करें", "start_touch": "शुरू करने के लिए टैप करें", "diff.keys_touch": "चुनने के लिए टैप करें · शुरू करने के लिए फिर टैप करें", "p.resume_touch": "जारी रखने के लिए टैप करें", "p.quit_touch": "टाइटल के लिए यहाँ टैप करें", "go.replay_touch": "फिर से खेलने के लिए टैप करें", "go.title_touch": "टाइटल के लिए यहाँ टैप करें", "tut.0.touch": "स्क्रीन पर स्वाइप करके बाएँ-दाएँ चलें", "tut.1.touch": "SLOW दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.4.touch": "SHOT दबाकर शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं", "rotate": "कृपया डिवाइस को सीधा (पोर्ट्रेट) करें", "btn.pause": "रोकें", "btn.swap": "बटन की दिशा बदलें", "back": "वापस", "btn.title": "टाइटल पर लौटें", "hud.sp2": "{n} SP और → शील्ड 2", "tut.8.t": "हाइपर", "tut.8.x": "झूलते हुए गिरने वाला क्रिस्टल हाइपर आइटम लें: 10 सेकंड तक स्कोर ×3 और जहाज़ थोड़ा तेज़\n★लेकिन धूमकेतु और गोलियाँ तेज़ होंगी और दुश्मन दोगुनी गोलियाँ चलाएँगे! आज़माएँ", "tut.8.p0": "हाइपर आइटम लें", "tut.8.p1": "HYPER! स्कोर ×3", "tut.5.sp": "★अब इंद्रधनुषी स्पेशल आइटम! यह एनर्जी लौटाता है और ज़्यादा देर अजेय रखता है", "tut.5.p2": "स्पेशल आइटम लें"}, "ar": {"f.pause_kb": "إيقاف مؤقت: P / ملء الشاشة: F / اللعبة فقط: G", "f.pause_pad": "إيقاف مؤقت: START / ملء الشاشة: F / اللعبة فقط: G", "f.energy": "صندوق طاقة كل {n} نقطة", "f.avoid": "تفادَ المذنّبات أطول وقت ممكن", "f.move_kb": "تحرّك: الأسهم | ببطء: Z / SHIFT", "f.move_pad": "تحرّك: لوحة الاتجاهات | ببطء: A / B", "f.shoot_kb": "إطلاق: X / SPACE", "f.shoot_pad": "إطلاق: X / Y", "md.0": "أسقط الأعداء وتقدّم", "md.1": "ابقَ حيًّا بالحفاظ على طاقتك", "md.2": "راقص بين المذنّبات المتساقطة", "md.3": "تعلّم الأساسيات خطوة بخطوة", "start_kb": "اضغط Enter للبدء", "start_pad": "اضغط START للبدء", "diff.title": "الصعوبة", "diff.EASY": "درع واحد · مذنّبات أقل · 5 SP مع درع واحد = درع إضافي", "diff.STANDARD": "درع واحد · تتحمّل ضربة واحدة", "diff.ARCADE": "بلا درع · ضربة واحدة وتنتهي (مثل الأصل)", "diff.keys_kb": "Enter: ابدأ · Q / Esc: رجوع", "diff.keys_pad": "START: ابدأ · SELECT: رجوع", "diff.special": "العنصر الخاص يعيد درعًا واحدًا", "p.resume_kb": "اضغط P للمتابعة", "p.resume_pad": "اضغط START للمتابعة", "p.quit_kb": "اضغط Q للعنوان", "p.quit_pad": "اضغط SELECT للعنوان", "reset.msg": "إعادة ضبط كل أفضل النتائج؟", "go.replay_kb": "اضغط Enter للإعادة", "go.replay_pad": "اضغط START للإعادة", "go.title_kb": "اضغط Q للعنوان", "go.title_pad": "اضغط SELECT للعنوان", "hud.bonus": "نقاط إضافية عند صدم المذنّبات!", "hud.noshield": "بلا درع", "hud.left": "متبقٍّ {n}", "hud.last": "الفرصة الأخيرة", "hud.approach": "{name} يقترب", "hud.destroyed": "تم تدمير {name}!", "webgl": "WebGL غير متاح في هذا المتصفح.", "btn.efx": "المؤثرات", "btn.sound": "الصوت", "btn.home": "الرئيسية", "home_back": "العودة إلى الرئيسية", "tut.label": "الدليل التعليمي", "tut.done": "اكتمل الدليل!", "tut.back": "العودة إلى العنوان", "tut.hit": "أُصبت! حاول مجددًا", "tut.0.t": "التحرّك", "tut.0.kb": "استخدم ← → للتحرّك يمينًا ويسارًا", "tut.0.pad": "استخدم لوحة الاتجاهات / العصا اليسرى للتحرّك", "tut.0.p": "يسار {a}   يمين {b}", "tut.1.t": "الحركة البطيئة", "tut.1.kb": "اضغط مطوّلًا Z / Shift أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.1.pad": "اضغط مطوّلًا A / B أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.1.p": "حركة بطيئة {a}%", "tut.2.t": "تفادي المذنّبات", "tut.2.x": "تفادَ المذنّبات المتساقطة لمدة 8 ثوانٍ", "tut.2.p": "{a} / 8.0 ث", "tut.3.t": "الملامسة", "tut.3.x": "مُرّ بمحاذاة مذنّب لتحصل على نقاط «ملامسة». لامِس 5 مرات\n★كلما لامست أكثر، ارتفعت نقاطك وسقطت عناصر أكثر!", "tut.3.p": "ملامسة {a} / 5", "tut.4.t": "الإطلاق", "tut.4.kb": "اضغط X / Space للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة", "tut.4.pad": "اضغط X / Y للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة", "tut.4.p": "أُسقط {a} / 2", "tut.5.t": "الطاقة", "tut.5.x": "تقلّ الطاقة مع الوقت ومع كل طلقة، وعند 0 تنتهي اللعبة. التقط عنصر استشفاء\nتعود الطاقة بالعناصر وبهزيمة الأعداء", "tut.5.p0": "التقط العنصر", "tut.5.p1": "استُعيدت!", "tut.6.t": "المناعة", "tut.6.x": "العناصر تمنحك مناعة قصيرة. اصدم المذنّبات خلالها لتحصل على نقاط! حطّم 5\n★كلما حطّمت مذنّبات أكثر وأنت منيع، سقطت عناصر أكثر!", "tut.6.p": "صدم {a} / 5", "tut.7.t": "الزعيم", "tut.7.x": "يظهر زعيم كل 3 مراحل. لا تؤثّر الطلقات فيه وهو مُبكسل. اهزمه لتنهمر الجواهر!", "tut.7.p0": "اهزم الزعيم", "tut.7.p1": "هُزم! اجمع الجواهر", "start_touch": "المس للبدء", "diff.keys_touch": "المس للاختيار · المس مجددًا للبدء", "p.resume_touch": "المس للمتابعة", "p.quit_touch": "المس هنا للعودة إلى العنوان", "go.replay_touch": "المس للإعادة", "go.title_touch": "المس هنا للعودة إلى العنوان", "tut.0.touch": "اسحب على الشاشة للتحرّك يمينًا ويسارًا", "tut.1.touch": "اضغط مطوّلًا على SLOW أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.4.touch": "اضغط SHOT للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة", "rotate": "يرجى تدوير الجهاز إلى الوضع العمودي", "btn.pause": "إيقاف مؤقت", "btn.swap": "تبديل جهة الأزرار", "back": "رجوع", "btn.title": "العودة إلى الشاشة الرئيسية", "hud.sp2": "{n} SP أخرى ← درع 2", "tut.8.t": "هايبر", "tut.8.x": "التقط بلورة هايبر المتمايلة: 10 ثوانٍ بنقاط ×3 ومركبة أسرع قليلًا\n★لكن المذنّبات والطلقات تصبح أسرع ويطلق الأعداء ضعف الرصاص! جرّبه", "tut.8.p0": "التقط عنصر هايبر", "tut.8.p1": "HYPER! النقاط ×3", "tut.5.sp": "★الآن العنصر الخاص بألوان قوس قزح! يعيد الطاقة ويمنحك مناعة أطول", "tut.5.p2": "التقط العنصر الخاص"}};
+const I18N = {"ja": {"f.pause_kb": "一時停止: P / 全画面: F / 画面のみ: G", "f.pause_pad": "一時停止: START / 全画面: F / 画面のみ: G", "f.energy": "{n}点ごとにエネルギーボックス", "f.avoid": "できるだけ長く彗星をよけ続けよう", "f.move_kb": "移動: 矢印キー | 低速: Z / SHIFT", "f.move_pad": "移動: 十字キー | 低速: A / B", "f.shoot_kb": "ショット: X / SPACE", "f.shoot_pad": "ショット: X / Y", "md.0": "敵を撃ち落として進むシューティング", "md.1": "エネルギーを保って生き残れ", "md.2": "降りそそぐ彗星の間を舞え", "md.3": "基本を順番に覚えよう", "start_kb": "Enterでスタート", "start_pad": "STARTボタンでスタート", "diff.title": "難易度", "diff.EASY": "シールド1・彗星が少ない・シールド1の時SP5個でボーナスシールド", "diff.STANDARD": "シールド1 · 1回までダメージOK", "diff.ARCADE": "シールドなし · 一発アウト（オリジナルと同じ）", "diff.keys_kb": "Enter: スタート · Q / Esc: もどる", "diff.keys_pad": "START: スタート · SELECT: もどる", "diff.special": "スペシャルアイテムでシールドが1回復", "p.resume_kb": "Pで再開", "p.resume_pad": "STARTで再開", "p.quit_kb": "Qでタイトルへ", "p.quit_pad": "SELECTでタイトルへ", "reset.msg": "ハイスコアをすべてリセットしますか？", "go.replay_kb": "Enterでもう一度", "go.replay_pad": "STARTでもう一度", "go.title_kb": "Qでタイトルへ", "go.title_pad": "SELECTでタイトルへ", "hud.bonus": "無敵中は彗星や敵の弾に当たるとボーナス！", "hud.noshield": "シールドなし", "hud.left": "のこり {n}", "hud.last": "あと1回で終了", "hud.approach": "{name} 接近中", "hud.destroyed": "{name} 撃破！", "webgl": "このブラウザではWebGLが使えません。", "btn.efx": "エフェクト", "btn.sound": "サウンド", "btn.home": "ホームへ", "home_back": "ホームへ戻る", "tut.label": "チュートリアル", "tut.done": "チュートリアル完了！", "tut.back": "タイトルに戻ります", "tut.hit": "当たった！ もう一度", "tut.0.t": "移動", "tut.0.kb": "← → キーで左右に移動しよう", "tut.0.pad": "十字キー / 左スティックで左右に移動しよう", "tut.0.p": "左 {a}　右 {b}", "tut.1.t": "低速移動", "tut.1.kb": "Z / Shift を押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.1.pad": "A / B ボタンを押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.1.p": "低速で移動 {a}%", "tut.2.t": "彗星をよける", "tut.2.x": "降ってくる彗星に当たらないように 8 秒間よけ続けよう", "tut.2.p": "{a} / 8.0 秒", "tut.3.t": "グレイズ", "tut.3.x": "彗星のすれすれを通ると「グレイズ」でボーナス点。5 回グレイズしよう\n★グレイズすればするほどスコアが伸びて、回復アイテムがどんどん出る！", "tut.3.p": "グレイズ {a} / 5", "tut.4.t": "ショット", "tut.4.kb": "X / Space でショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる\n★弾を撃つとエネルギーを消費する。むやみに撃たず、しっかり狙って撃とう！", "tut.4.pad": "X / Y ボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる\n★弾を撃つとエネルギーを消費する。むやみに撃たず、しっかり狙って撃とう！", "tut.4.p": "撃破 {a} / 2", "tut.5.t": "エネルギー", "tut.5.x": "エネルギーは時間とショットで減り、0 でゲームオーバー。回復アイテムを取ろう\n回復するのはアイテムと、敵を倒したとき", "tut.5.p0": "アイテムを取る", "tut.5.p1": "回復！", "tut.6.t": "無敵", "tut.6.x": "アイテムを取ると少しの間だけ無敵。無敵中は彗星にも敵の弾にも体当たりでボーナス！ 敵の弾は彗星と同じ扱い\n★敵の弾に当たると高ボーナス！ 当たれば当たるほどアイテムがどんどん出る！", "tut.6.p": "彗星 {a} / 4 ・ 敵の弾 {b} / 4", "tut.7.t": "ボス", "tut.7.x": "3 面ごとにボスが登場。モザイク表示の間は弾が効かない。倒すと宝石がジャラジャラ！", "tut.7.p0": "ボスを倒そう", "tut.7.p1": "撃破！ 宝石を集めよう", "start_touch": "タップでスタート", "diff.keys_touch": "タップで選択 · もう一度タップでスタート", "p.resume_touch": "タップで再開", "p.quit_touch": "ここをタップでタイトルへ", "go.replay_touch": "タップでもう一度", "go.title_touch": "ここをタップでタイトルへ", "tut.0.touch": "画面をスワイプして左右に移動しよう", "tut.1.touch": "SLOWボタンを押しながら移動すると低速に。中心の色が変わる点だけが当たり判定", "tut.4.touch": "SHOTボタンでショット。敵を 2 体撃ち落とそう（画面に出せる弾は 1 発まで）\n敵を倒すとエネルギーが回復し、少しの間だけ無敵になる\n★弾を撃つとエネルギーを消費する。むやみに撃たず、しっかり狙って撃とう！", "rotate": "画面を縦向きにしてください", "btn.pause": "一時停止", "btn.swap": "ボタンの左右を入れ替え", "back": "もどる", "btn.title": "タイトルへ戻る", "hud.sp2": "SHIELD 2 まで SP あと {n}", "tut.8.t": "ハイパー", "tut.8.x": "左右に揺れながら落ちてくる結晶のハイパーアイテムを取ると、10秒間スコア3倍＆自機が少し速くなる\n★ただし彗星と弾が速くなり、敵の弾も2倍に！ 取ってみよう", "tut.8.p0": "ハイパーアイテムを取ろう", "tut.8.p1": "HYPER！ スコア3倍中", "tut.5.sp": "★次は虹色に光るスペシャルアイテム！ 取ると回復に加えて、より長い時間無敵になる", "tut.5.p2": "スペシャルアイテムを取る", "tut.s.t": "シールド", "tut.s.x": "ダメージを受けるとシールドが1減る（シールドが無い時に当たるとゲームオーバー）\n★虹色のスペシャルアイテムを取るとシールドが1回復！", "tut.s.p0": "ダメージを受ける", "tut.s.p1": "スペシャルアイテムでシールド回復", "tut.s.p2": "+1 SHIELD!"}, "en": {"f.pause_kb": "PAUSE: P / FULLSCREEN: F / GAME ONLY: G", "f.pause_pad": "PAUSE: START / FULLSCREEN: F / GAME ONLY: G", "f.energy": "ENERGY BOX EVERY {n} PTS", "f.avoid": "AVOID COMETS AS LONG AS POSSIBLE", "f.move_kb": "MOVE: ARROWS | SLOW: Z / SHIFT", "f.move_pad": "MOVE: D-PAD | SLOW: A / B", "f.shoot_kb": "SHOOT: X / SPACE", "f.shoot_pad": "SHOOT: X / Y", "md.0": "SHMUP-style blasting through enemies", "md.1": "Stay alive through energy", "md.2": "Dance between the falling comets", "md.3": "Learn the basics step by step", "start_kb": "Press Enter to Start", "start_pad": "Press Start to Start", "diff.title": "difficulty", "diff.EASY": "1 shield · fewer comets · 5 SP with 1 shield = bonus shield", "diff.STANDARD": "1 shield · survive 1 hit", "diff.ARCADE": "no shield · one hit and out (like the original)", "diff.keys_kb": "Enter: start · Q / Esc: back", "diff.keys_pad": "START: start · SELECT: back", "diff.special": "Special items restore 1 shield", "p.resume_kb": "Press P to Resume", "p.resume_pad": "Press START to Resume", "p.quit_kb": "Press Q for Title", "p.quit_pad": "Press SELECT for Title", "reset.msg": "RESET ALL HIGH SCORES?", "go.replay_kb": "Press Enter to Replay", "go.replay_pad": "Press START to Replay", "go.title_kb": "Press Q for Title", "go.title_pad": "Press SELECT for Title", "hud.bonus": "While invincible, hit comets and enemy bullets for a bonus!", "hud.noshield": "NO SHIELD", "hud.left": "{n} LEFT", "hud.last": "LAST LIFE", "hud.approach": "{name} APPROACHING", "hud.destroyed": "{name} DESTROYED", "webgl": "WebGL is not available on this browser.", "btn.efx": "Effects", "btn.sound": "Sound", "btn.home": "Home", "home_back": "Back to Home", "tut.label": "TUTORIAL", "tut.done": "Tutorial complete!", "tut.back": "Returning to the title", "tut.hit": "Hit! Try again", "tut.0.t": "Move", "tut.0.kb": "Use ← → to move left and right", "tut.0.pad": "Use the D-pad / left stick to move left and right", "tut.0.p": "Left {a}   Right {b}", "tut.1.t": "Slow move", "tut.1.kb": "Hold Z / Shift while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.1.pad": "Hold A / B while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.1.p": "Slow moving {a}%", "tut.2.t": "Dodge comets", "tut.2.x": "Keep dodging the falling comets for 8 seconds", "tut.2.p": "{a} / 8.0 s", "tut.3.t": "Graze", "tut.3.x": "Pass right next to a comet to \"graze\" it for bonus points. Graze 5 times\n★The more you graze, the higher your score — and the more items drop!", "tut.3.p": "Grazes {a} / 5", "tut.4.t": "Shoot", "tut.4.kb": "Press X / Space to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible\n★Every shot uses energy. Don't fire blindly — take careful aim!", "tut.4.pad": "Press X / Y to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible\n★Every shot uses energy. Don't fire blindly — take careful aim!", "tut.4.p": "Defeated {a} / 2", "tut.5.t": "Energy", "tut.5.x": "Energy drains over time and with each shot; at 0 the game is over. Grab a recovery item\nEnergy comes back from items and from defeating enemies", "tut.5.p0": "Grab the item", "tut.5.p1": "Recovered!", "tut.6.t": "Invincible", "tut.6.x": "Items make you briefly invincible. While invincible, ramming comets AND enemy bullets earns bonus points — bullets count just like comets\n★Enemy bullets are a big bonus! The more you hit, the more items appear!", "tut.6.p": "Comets {a}/4 · Bullets {b}/4", "tut.7.t": "Boss", "tut.7.x": "A boss appears every 3 stages. Shots do nothing while it is pixelated. Defeat it for a shower of gems!", "tut.7.p0": "Defeat the boss", "tut.7.p1": "Defeated! Collect the gems", "start_touch": "Tap to Start", "diff.keys_touch": "Tap to select · tap again to start", "p.resume_touch": "Tap to Resume", "p.quit_touch": "Tap here for Title", "go.replay_touch": "Tap to Replay", "go.title_touch": "Tap here for Title", "tut.0.touch": "Swipe the screen to move left and right", "tut.1.touch": "Hold SLOW while moving to slow down. Only the color-shifting dot in the center can be hit", "tut.4.touch": "Press SHOT to shoot. Shoot down 2 enemies (only 1 shot on screen at a time)\nDefeating an enemy restores energy and makes you briefly invincible\n★Every shot uses energy. Don't fire blindly — take careful aim!", "rotate": "Please rotate your device to portrait", "btn.pause": "Pause", "btn.swap": "Swap button side", "back": "back", "btn.title": "Back to Title", "hud.sp2": "{n} more SP for SHIELD 2", "tut.8.t": "Hyper", "tut.8.x": "Grab the swaying crystal Hyper item: 10 seconds of ×3 score and a slightly faster ship\n★But comets and bullets speed up and enemies fire twice as much! Try it", "tut.8.p0": "Grab the Hyper item", "tut.8.p1": "HYPER! Score ×3", "tut.5.sp": "★Next, the rainbow Special item! It restores energy and makes you invincible for longer", "tut.5.p2": "Grab the Special item", "tut.s.t": "Shield", "tut.s.x": "Taking damage costs 1 shield (with no shield left, a hit ends the game)\n★Grab a rainbow Special item to restore 1 shield!", "tut.s.p0": "Take a hit", "tut.s.p1": "Restore the shield with a Special item", "tut.s.p2": "+1 SHIELD!"}, "zh": {"f.pause_kb": "暂停: P / 全屏: F / 仅游戏画面: G", "f.pause_pad": "暂停: START / 全屏: F / 仅游戏画面: G", "f.energy": "每 {n} 分出现能量箱", "f.avoid": "尽可能长时间躲避彗星", "f.move_kb": "移动: 方向键 | 慢速: Z / SHIFT", "f.move_pad": "移动: 十字键 | 慢速: A / B", "f.shoot_kb": "射击: X / SPACE", "f.shoot_pad": "射击: X / Y", "md.0": "击落敌人前进的射击模式", "md.1": "保持能量，存活下去", "md.2": "在倾泻的彗星间穿梭", "md.3": "一步步学习基础操作", "start_kb": "按 Enter 开始", "start_pad": "按 START 开始", "diff.title": "难度", "diff.EASY": "护盾1 · 彗星较少 · 有1个护盾时拿5个SP得额外护盾", "diff.STANDARD": "护盾 1 · 可承受 1 次伤害", "diff.ARCADE": "无护盾 · 一击出局（与原版相同）", "diff.keys_kb": "Enter: 开始 · Q / Esc: 返回", "diff.keys_pad": "START: 开始 · SELECT: 返回", "diff.special": "特殊道具可恢复 1 个护盾", "p.resume_kb": "按 P 继续", "p.resume_pad": "按 START 继续", "p.quit_kb": "按 Q 返回标题", "p.quit_pad": "按 SELECT 返回标题", "reset.msg": "重置所有最高分？", "go.replay_kb": "按 Enter 再玩一次", "go.replay_pad": "按 START 再玩一次", "go.title_kb": "按 Q 返回标题", "go.title_pad": "按 SELECT 返回标题", "hud.bonus": "无敌中撞到彗星或敌人的子弹有奖励！", "hud.noshield": "无护盾", "hud.left": "剩余 {n}", "hud.last": "最后一命", "hud.approach": "{name} 接近中", "hud.destroyed": "{name} 已击破", "webgl": "此浏览器无法使用 WebGL。", "btn.efx": "特效", "btn.sound": "声音", "btn.home": "返回首页", "home_back": "返回主页", "tut.label": "教程", "tut.done": "教程完成！", "tut.back": "即将返回标题", "tut.hit": "被击中！再试一次", "tut.0.t": "移动", "tut.0.kb": "用 ← → 键左右移动", "tut.0.pad": "用十字键 / 左摇杆左右移动", "tut.0.p": "左 {a}　右 {b}", "tut.1.t": "慢速移动", "tut.1.kb": "按住 Z / Shift 移动即可慢速。只有中心变色的点会被击中", "tut.1.pad": "按住 A / B 移动即可慢速。只有中心变色的点会被击中", "tut.1.p": "慢速移动 {a}%", "tut.2.t": "躲避彗星", "tut.2.x": "持续躲避落下的彗星 8 秒", "tut.2.p": "{a} / 8.0 秒", "tut.3.t": "擦弹", "tut.3.x": "贴着彗星擦过即可「擦弹」获得奖励分。擦弹 5 次\n★擦弹越多，分数越高，道具掉得越多！", "tut.3.p": "擦弹 {a} / 5", "tut.4.t": "射击", "tut.4.kb": "按 X / Space 射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌\n★每次射击都会消耗能量。不要乱射，瞄准再打！", "tut.4.pad": "按 X / Y 射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌\n★每次射击都会消耗能量。不要乱射，瞄准再打！", "tut.4.p": "击破 {a} / 2", "tut.5.t": "能量", "tut.5.x": "能量随时间和射击减少，归零即游戏结束。去拿恢复道具吧\n道具和击败敌人都能恢复能量", "tut.5.p0": "拾取道具", "tut.5.p1": "已恢复！", "tut.6.t": "无敌", "tut.6.x": "拿到道具后短时间无敌。无敌中撞向彗星和敌人的子弹都能得分！敌人的子弹和彗星一样\n★撞到敌人的子弹有高额奖励！撞得越多，道具越多！", "tut.6.p": "彗星 {a}/4 · 子弹 {b}/4", "tut.7.t": "首领", "tut.7.x": "每 3 关出现首领。马赛克显示时子弹无效。击败后宝石哗啦啦掉落！", "tut.7.p0": "击败首领", "tut.7.p1": "击破！收集宝石吧", "start_touch": "点击开始", "diff.keys_touch": "点击选择 · 再次点击开始", "p.resume_touch": "点击继续", "p.quit_touch": "点击此处返回标题", "go.replay_touch": "点击再玩一次", "go.title_touch": "点击此处返回标题", "tut.0.touch": "滑动屏幕左右移动", "tut.1.touch": "按住 SLOW 按钮移动即可慢速。只有中心变色的点会被击中", "tut.4.touch": "按 SHOT 按钮射击。击落 2 个敌人（画面上同时只能有 1 发子弹）\n击败敌人可恢复能量，并短暂无敌\n★每次射击都会消耗能量。不要乱射，瞄准再打！", "rotate": "请将设备竖屏使用", "btn.pause": "暂停", "btn.swap": "左右交换按钮", "back": "返回", "btn.title": "返回标题", "hud.sp2": "再拿 {n} 个SP → 护盾2", "tut.8.t": "超级", "tut.8.x": "拿到左右摇摆落下的水晶超级道具，10秒内分数×3，自机稍微加速\n★但彗星和子弹会变快，敌人的子弹也翻倍！试试看", "tut.8.p0": "拿到超级道具", "tut.8.p1": "HYPER！分数×3中", "tut.5.sp": "★接下来是彩虹色的特殊道具！除了回复，还能更长时间无敌", "tut.5.p2": "拿到特殊道具", "tut.s.t": "护盾", "tut.s.x": "受到伤害会减少1个护盾（没有护盾时被击中就游戏结束）\n★拿到彩虹色的特殊道具可恢复1个护盾！", "tut.s.p0": "受到伤害", "tut.s.p1": "用特殊道具恢复护盾", "tut.s.p2": "+1 SHIELD!"}, "ko": {"f.pause_kb": "일시정지: P / 전체화면: F / 게임 화면만: G", "f.pause_pad": "일시정지: START / 전체화면: F / 게임 화면만: G", "f.energy": "{n}점마다 에너지 박스", "f.avoid": "최대한 오래 혜성을 피하자", "f.move_kb": "이동: 방향키 | 저속: Z / SHIFT", "f.move_pad": "이동: 십자키 | 저속: A / B", "f.shoot_kb": "샷: X / SPACE", "f.shoot_pad": "샷: X / Y", "md.0": "적을 격추하며 나아가는 슈팅", "md.1": "에너지를 지키며 살아남아라", "md.2": "쏟아지는 혜성 사이를 누벼라", "md.3": "기본을 차근차근 배우자", "start_kb": "Enter로 시작", "start_pad": "START로 시작", "diff.title": "난이도", "diff.EASY": "실드1 · 혜성 적음 · 실드 1개일 때 SP 5개로 보너스 실드", "diff.STANDARD": "실드 1 · 1번까지 피격 OK", "diff.ARCADE": "실드 없음 · 한 방에 아웃（오리지널과 동일）", "diff.keys_kb": "Enter: 시작 · Q / Esc: 뒤로", "diff.keys_pad": "START: 시작 · SELECT: 뒤로", "diff.special": "스페셜 아이템으로 실드 1개 회복", "p.resume_kb": "P로 재개", "p.resume_pad": "START로 재개", "p.quit_kb": "Q로 타이틀", "p.quit_pad": "SELECT로 타이틀", "reset.msg": "모든 하이스코어를 초기화할까요?", "go.replay_kb": "Enter로 다시 하기", "go.replay_pad": "START로 다시 하기", "go.title_kb": "Q로 타이틀", "go.title_pad": "SELECT로 타이틀", "hud.bonus": "무적 중에는 혜성이나 적의 탄에 맞으면 보너스!", "hud.noshield": "실드 없음", "hud.left": "남은 실드 {n}", "hud.last": "마지막 기회", "hud.approach": "{name} 접근 중", "hud.destroyed": "{name} 격파!", "webgl": "이 브라우저에서는 WebGL을 사용할 수 없습니다.", "btn.efx": "이펙트", "btn.sound": "사운드", "btn.home": "홈으로", "home_back": "홈으로 돌아가기", "tut.label": "튜토리얼", "tut.done": "튜토리얼 완료!", "tut.back": "타이틀로 돌아갑니다", "tut.hit": "맞았다! 다시 한 번", "tut.0.t": "이동", "tut.0.kb": "← → 키로 좌우로 이동하자", "tut.0.pad": "십자키 / 왼쪽 스틱으로 좌우로 이동하자", "tut.0.p": "왼쪽 {a}　오른쪽 {b}", "tut.1.t": "저속 이동", "tut.1.kb": "Z / Shift를 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.1.pad": "A / B 버튼을 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.1.p": "저속 이동 {a}%", "tut.2.t": "혜성 피하기", "tut.2.x": "떨어지는 혜성을 8초 동안 계속 피하자", "tut.2.p": "{a} / 8.0초", "tut.3.t": "그레이즈", "tut.3.x": "혜성을 아슬아슬하게 스치면 「그레이즈」 보너스. 5번 그레이즈하자\n★그레이즈를 할수록 점수가 오르고 아이템이 더 많이 나온다!", "tut.3.p": "그레이즈 {a} / 5", "tut.4.t": "샷", "tut.4.kb": "X / Space로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다\n★탄을 쏘면 에너지를 소비한다. 함부로 쏘지 말고 잘 노려서 쏘자!", "tut.4.pad": "X / Y 버튼으로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다\n★탄을 쏘면 에너지를 소비한다. 함부로 쏘지 말고 잘 노려서 쏘자!", "tut.4.p": "격파 {a} / 2", "tut.5.t": "에너지", "tut.5.x": "에너지는 시간과 샷으로 줄고 0이 되면 게임 오버. 회복 아이템을 먹자\n회복은 아이템과 적을 쓰러뜨렸을 때", "tut.5.p0": "아이템 획득", "tut.5.p1": "회복!", "tut.6.t": "무적", "tut.6.x": "아이템을 먹으면 잠시 무적. 무적 중에는 혜성과 적의 탄에 몸통 박치기로 보너스! 적의 탄도 혜성과 같은 취급\n★적의 탄에 맞으면 고득점 보너스! 맞을수록 아이템이 계속 나온다!", "tut.6.p": "혜성 {a}/4 · 탄 {b}/4", "tut.7.t": "보스", "tut.7.x": "3스테이지마다 보스 등장. 모자이크 상태일 땐 탄이 안 통한다. 쓰러뜨리면 보석이 와르르!", "tut.7.p0": "보스를 쓰러뜨리자", "tut.7.p1": "격파! 보석을 모으자", "start_touch": "탭하여 시작", "diff.keys_touch": "탭하여 선택 · 다시 탭하면 시작", "p.resume_touch": "탭하여 재개", "p.quit_touch": "여기를 탭하면 타이틀로", "go.replay_touch": "탭하여 다시 하기", "go.title_touch": "여기를 탭하면 타이틀로", "tut.0.touch": "화면을 스와이프해서 좌우로 이동하자", "tut.1.touch": "SLOW 버튼을 누른 채 이동하면 저속. 중앙의 색이 바뀌는 점만 판정이 있다", "tut.4.touch": "SHOT 버튼으로 샷. 적을 2마리 격추하자（화면에 쏠 수 있는 탄은 1발까지）\n적을 쓰러뜨리면 에너지가 회복되고 잠시 무적이 된다\n★탄을 쏘면 에너지를 소비한다. 함부로 쏘지 말고 잘 노려서 쏘자!", "rotate": "기기를 세로로 돌려 주세요", "btn.pause": "일시정지", "btn.swap": "버튼 좌우 바꾸기", "back": "뒤로", "btn.title": "타이틀로 돌아가기", "hud.sp2": "SP {n}개 더 → 실드2", "tut.8.t": "하이퍼", "tut.8.x": "좌우로 흔들리며 떨어지는 크리스탈 하이퍼 아이템을 먹으면 10초간 점수 3배 & 자기가 조금 빨라진다\n★대신 혜성과 탄이 빨라지고 적의 탄도 2배! 먹어 보자", "tut.8.p0": "하이퍼 아이템을 먹자", "tut.8.p1": "HYPER! 점수 3배 중", "tut.5.sp": "★다음은 무지개색으로 빛나는 스페셜 아이템! 회복에 더해 더 오래 무적이 된다", "tut.5.p2": "스페셜 아이템을 먹자", "tut.s.t": "실드", "tut.s.x": "대미지를 받으면 실드가 1 줄어든다 (실드가 없을 때 맞으면 게임 오버)\n★무지개색 스페셜 아이템을 먹으면 실드가 1 회복!", "tut.s.p0": "대미지를 받는다", "tut.s.p1": "스페셜 아이템으로 실드 회복", "tut.s.p2": "+1 SHIELD!"}, "es": {"f.pause_kb": "PAUSA: P / PANTALLA COMPLETA: F / SOLO JUEGO: G", "f.pause_pad": "PAUSA: START / PANTALLA COMPLETA: F / SOLO JUEGO: G", "f.energy": "CAJA DE ENERGÍA CADA {n} PTS", "f.avoid": "ESQUIVA COMETAS EL MAYOR TIEMPO POSIBLE", "f.move_kb": "MOVER: FLECHAS | LENTO: Z / SHIFT", "f.move_pad": "MOVER: CRUCETA | LENTO: A / B", "f.shoot_kb": "DISPARAR: X / ESPACIO", "f.shoot_pad": "DISPARAR: X / Y", "md.0": "Shooter: derriba enemigos para avanzar", "md.1": "Sobrevive administrando tu energía", "md.2": "Baila entre la lluvia de cometas", "md.3": "Aprende lo básico paso a paso", "start_kb": "Pulsa Enter para empezar", "start_pad": "Pulsa START para empezar", "diff.title": "dificultad", "diff.EASY": "1 escudo · menos cometas · 5 SP con 1 escudo = escudo extra", "diff.STANDARD": "1 escudo · aguantas 1 golpe", "diff.ARCADE": "sin escudo · un golpe y fuera (como el original)", "diff.keys_kb": "Enter: empezar · Q / Esc: volver", "diff.keys_pad": "START: empezar · SELECT: volver", "diff.special": "Los objetos especiales recuperan 1 escudo", "p.resume_kb": "Pulsa P para continuar", "p.resume_pad": "Pulsa START para continuar", "p.quit_kb": "Pulsa Q para ir al título", "p.quit_pad": "Pulsa SELECT para ir al título", "reset.msg": "¿BORRAR TODAS LAS PUNTUACIONES?", "go.replay_kb": "Pulsa Enter para repetir", "go.replay_pad": "Pulsa START para repetir", "go.title_kb": "Pulsa Q para ir al título", "go.title_pad": "Pulsa SELECT para ir al título", "hud.bonus": "¡Invencible, choca con cometas y balas enemigas para ganar bonus!", "hud.noshield": "SIN ESCUDO", "hud.left": "QUEDAN {n}", "hud.last": "ÚLTIMA VIDA", "hud.approach": "¡{name} SE ACERCA!", "hud.destroyed": "¡{name} DESTRUIDO!", "webgl": "WebGL no está disponible en este navegador.", "btn.efx": "Efectos", "btn.sound": "Sonido", "btn.home": "Inicio", "home_back": "Volver al inicio", "tut.label": "TUTORIAL", "tut.done": "¡Tutorial completado!", "tut.back": "Volviendo al título", "tut.hit": "¡Te dieron! Otra vez", "tut.0.t": "Moverse", "tut.0.kb": "Usa ← → para moverte a izquierda y derecha", "tut.0.pad": "Usa la cruceta / stick izquierdo para moverte", "tut.0.p": "Izq. {a}   Der. {b}", "tut.1.t": "Movimiento lento", "tut.1.kb": "Mantén Z / Shift al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.1.pad": "Mantén A / B al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.1.p": "Moviéndote lento {a}%", "tut.2.t": "Esquiva cometas", "tut.2.x": "Esquiva los cometas que caen durante 8 segundos", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Roce", "tut.3.x": "Pasa rozando un cometa para un «roce» con puntos extra. Roza 5 veces\n★¡Cuanto más rozas, más puntos y más objetos caen!", "tut.3.p": "Roces {a} / 5", "tut.4.t": "Disparar", "tut.4.kb": "Pulsa X / Espacio para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve\n★Cada disparo gasta energía. ¡No dispares a lo loco, apunta bien!", "tut.4.pad": "Pulsa X / Y para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve\n★Cada disparo gasta energía. ¡No dispares a lo loco, apunta bien!", "tut.4.p": "Derribados {a} / 2", "tut.5.t": "Energía", "tut.5.x": "La energía baja con el tiempo y al disparar; a 0 se acaba la partida. Coge un objeto de recuperación\nSe recupera con objetos y al vencer enemigos", "tut.5.p0": "Coge el objeto", "tut.5.p1": "¡Recuperado!", "tut.6.t": "Invencible", "tut.6.x": "Los objetos te dan invencibilidad un momento. Invencible, chocar con cometas Y balas enemigas da bonus: las balas cuentan como cometas\n★¡Las balas enemigas dan un gran bonus! ¡Cuanto más chocas, más objetos salen!", "tut.6.p": "Cometas {a}/4 · Balas {b}/4", "tut.7.t": "Jefe", "tut.7.x": "Cada 3 fases aparece un jefe. Mientras está pixelado, los disparos no le afectan. ¡Derrótalo y lloverán gemas!", "tut.7.p0": "Derrota al jefe", "tut.7.p1": "¡Derrotado! Recoge las gemas", "start_touch": "Toca para empezar", "diff.keys_touch": "Toca para elegir · vuelve a tocar para empezar", "p.resume_touch": "Toca para continuar", "p.quit_touch": "Toca aquí para ir al título", "go.replay_touch": "Toca para repetir", "go.title_touch": "Toca aquí para ir al título", "tut.0.touch": "Desliza la pantalla para moverte a izquierda y derecha", "tut.1.touch": "Mantén SLOW al moverte para ir lento. Solo el punto central que cambia de color recibe golpes", "tut.4.touch": "Pulsa SHOT para disparar. Derriba 2 enemigos (solo 1 disparo en pantalla a la vez)\nVencer a un enemigo recupera energía y te da invencibilidad breve\n★Cada disparo gasta energía. ¡No dispares a lo loco, apunta bien!", "rotate": "Gira el dispositivo en vertical", "btn.pause": "Pausa", "btn.swap": "Cambiar lado de los botones", "back": "volver", "btn.title": "Volver al título", "hud.sp2": "{n} SP más → ESCUDO 2", "tut.8.t": "Hiper", "tut.8.x": "Coge el cristal Hiper que cae oscilando: 10 s de puntuación ×3 y nave algo más rápida\n★¡Pero cometas y balas van más rápido y los enemigos disparan el doble! Pruébalo", "tut.8.p0": "Coge el objeto Hiper", "tut.8.p1": "¡HYPER! Puntos ×3", "tut.5.sp": "★¡Ahora el objeto Especial arcoíris! Recupera energía y te hace invencible más tiempo", "tut.5.p2": "Coge el objeto Especial", "tut.s.t": "Escudo", "tut.s.x": "Recibir daño cuesta 1 escudo (sin escudos, un golpe termina la partida)\n★¡Coge un objeto Especial arcoíris para recuperar 1 escudo!", "tut.s.p0": "Recibe un golpe", "tut.s.p1": "Recupera el escudo con un objeto Especial", "tut.s.p2": "+1 SHIELD!"}, "fr": {"f.pause_kb": "PAUSE : P / PLEIN ÉCRAN : F / JEU SEUL : G", "f.pause_pad": "PAUSE : START / PLEIN ÉCRAN : F / JEU SEUL : G", "f.energy": "BOÎTE D’ÉNERGIE TOUS LES {n} PTS", "f.avoid": "ÉVITEZ LES COMÈTES LE PLUS LONGTEMPS POSSIBLE", "f.move_kb": "BOUGER : FLÈCHES | LENT : Z / SHIFT", "f.move_pad": "BOUGER : CROIX | LENT : A / B", "f.shoot_kb": "TIRER : X / ESPACE", "f.shoot_pad": "TIRER : X / Y", "md.0": "Shoot : abattez les ennemis pour avancer", "md.1": "Survivez en gérant votre énergie", "md.2": "Dansez entre les comètes qui tombent", "md.3": "Apprenez les bases pas à pas", "start_kb": "Appuyez sur Entrée pour jouer", "start_pad": "Appuyez sur START pour jouer", "diff.title": "difficulté", "diff.EASY": "1 bouclier · moins de comètes · 5 SP avec 1 bouclier = bouclier bonus", "diff.STANDARD": "1 bouclier · encaissez 1 coup", "diff.ARCADE": "sans bouclier · un coup et c’est fini (comme l’original)", "diff.keys_kb": "Entrée : jouer · Q / Échap : retour", "diff.keys_pad": "START : jouer · SELECT : retour", "diff.special": "Les objets spéciaux rendent 1 bouclier", "p.resume_kb": "P pour reprendre", "p.resume_pad": "START pour reprendre", "p.quit_kb": "Q pour le titre", "p.quit_pad": "SELECT pour le titre", "reset.msg": "RÉINITIALISER TOUS LES RECORDS ?", "go.replay_kb": "Entrée pour rejouer", "go.replay_pad": "START pour rejouer", "go.title_kb": "Q pour le titre", "go.title_pad": "SELECT pour le titre", "hud.bonus": "Invincible, percutez comètes et tirs ennemis pour un bonus !", "hud.noshield": "SANS BOUCLIER", "hud.left": "RESTE {n}", "hud.last": "DERNIÈRE VIE", "hud.approach": "{name} EN APPROCHE", "hud.destroyed": "{name} DÉTRUIT !", "webgl": "WebGL n’est pas disponible sur ce navigateur.", "btn.efx": "Effets", "btn.sound": "Son", "btn.home": "Accueil", "home_back": "Retour à l'accueil", "tut.label": "TUTORIEL", "tut.done": "Tutoriel terminé !", "tut.back": "Retour à l’écran titre", "tut.hit": "Touché ! Encore une fois", "tut.0.t": "Se déplacer", "tut.0.kb": "Utilisez ← → pour aller à gauche et à droite", "tut.0.pad": "Utilisez la croix / le stick gauche pour vous déplacer", "tut.0.p": "Gauche {a}   Droite {b}", "tut.1.t": "Déplacement lent", "tut.1.kb": "Maintenez Z / Shift en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.1.pad": "Maintenez A / B en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.1.p": "Déplacement lent {a}%", "tut.2.t": "Esquiver", "tut.2.x": "Esquivez les comètes qui tombent pendant 8 secondes", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Frôler", "tut.3.x": "Frôlez une comète pour un « graze » et des points bonus. Frôlez 5 fois\n★Plus vous frôlez, plus le score grimpe et plus les objets tombent !", "tut.3.p": "Frôlements {a} / 5", "tut.4.t": "Tirer", "tut.4.kb": "X / Espace pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible\n★Chaque tir consomme de l'énergie. Ne tirez pas au hasard, visez bien !", "tut.4.pad": "X / Y pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible\n★Chaque tir consomme de l'énergie. Ne tirez pas au hasard, visez bien !", "tut.4.p": "Abattus {a} / 2", "tut.5.t": "Énergie", "tut.5.x": "L’énergie baisse avec le temps et les tirs ; à 0 c’est fini. Prenez un objet de soin\nL’énergie revient avec les objets et en battant des ennemis", "tut.5.p0": "Prenez l’objet", "tut.5.p1": "Récupéré !", "tut.6.t": "Invincible", "tut.6.x": "Les objets rendent invincible un court instant. Invincible, percuter comètes ET tirs ennemis rapporte des bonus : les tirs comptent comme des comètes\n★Les tirs ennemis rapportent gros ! Plus vous en touchez, plus d'objets apparaissent !", "tut.6.p": "Comètes {a}/4 · Tirs {b}/4", "tut.7.t": "Boss", "tut.7.x": "Un boss apparaît tous les 3 niveaux. Pixelisé, il est insensible aux tirs. Battez-le pour une pluie de gemmes !", "tut.7.p0": "Battez le boss", "tut.7.p1": "Vaincu ! Ramassez les gemmes", "start_touch": "Touchez pour jouer", "diff.keys_touch": "Touchez pour choisir · touchez encore pour jouer", "p.resume_touch": "Touchez pour reprendre", "p.quit_touch": "Touchez ici pour le titre", "go.replay_touch": "Touchez pour rejouer", "go.title_touch": "Touchez ici pour le titre", "tut.0.touch": "Glissez sur l’écran pour aller à gauche et à droite", "tut.1.touch": "Maintenez SLOW en bougeant pour ralentir. Seul le point central qui change de couleur peut être touché", "tut.4.touch": "Appuyez sur SHOT pour tirer. Abattez 2 ennemis (1 seul tir à l’écran à la fois)\nVaincre un ennemi rend de l’énergie et rend brièvement invincible\n★Chaque tir consomme de l'énergie. Ne tirez pas au hasard, visez bien !", "rotate": "Tournez l’appareil en mode portrait", "btn.pause": "Pause", "btn.swap": "Inverser le côté des boutons", "back": "retour", "btn.title": "Retour au titre", "hud.sp2": "Encore {n} SP → BOUCLIER 2", "tut.8.t": "Hyper", "tut.8.x": "Prenez le cristal Hyper qui tombe en zigzag : 10 s de score ×3 et vaisseau un peu plus rapide\n★Mais comètes et tirs accélèrent et les ennemis tirent deux fois plus ! Essayez", "tut.8.p0": "Prenez l'objet Hyper", "tut.8.p1": "HYPER ! Score ×3", "tut.5.sp": "★Maintenant l'objet Spécial arc-en-ciel ! Il rend de l'énergie et rend invincible plus longtemps", "tut.5.p2": "Prenez l'objet Spécial", "tut.s.t": "Bouclier", "tut.s.x": "Subir des dégâts coûte 1 bouclier (sans bouclier, un choc met fin à la partie)\n★Prenez un objet Spécial arc-en-ciel pour récupérer 1 bouclier !", "tut.s.p0": "Subissez un choc", "tut.s.p1": "Récupérez le bouclier avec un objet Spécial", "tut.s.p2": "+1 SHIELD!"}, "pt": {"f.pause_kb": "PAUSA: P / TELA CHEIA: F / SÓ O JOGO: G", "f.pause_pad": "PAUSA: START / TELA CHEIA: F / SÓ O JOGO: G", "f.energy": "CAIXA DE ENERGIA A CADA {n} PTS", "f.avoid": "DESVIE DOS COMETAS O MÁXIMO POSSÍVEL", "f.move_kb": "MOVER: SETAS | LENTO: Z / SHIFT", "f.move_pad": "MOVER: DIRECIONAL | LENTO: A / B", "f.shoot_kb": "ATIRAR: X / ESPAÇO", "f.shoot_pad": "ATIRAR: X / Y", "md.0": "Shooter: derrube inimigos para avançar", "md.1": "Sobreviva cuidando da energia", "md.2": "Dance entre a chuva de cometas", "md.3": "Aprenda o básico passo a passo", "start_kb": "Pressione Enter para começar", "start_pad": "Pressione START para começar", "diff.title": "dificuldade", "diff.EASY": "1 escudo · menos cometas · 5 SP com 1 escudo = escudo bônus", "diff.STANDARD": "1 escudo · aguenta 1 golpe", "diff.ARCADE": "sem escudo · um golpe e acabou (como o original)", "diff.keys_kb": "Enter: começar · Q / Esc: voltar", "diff.keys_pad": "START: começar · SELECT: voltar", "diff.special": "Itens especiais recuperam 1 escudo", "p.resume_kb": "P para continuar", "p.resume_pad": "START para continuar", "p.quit_kb": "Q para o título", "p.quit_pad": "SELECT para o título", "reset.msg": "APAGAR TODOS OS RECORDES?", "go.replay_kb": "Enter para jogar de novo", "go.replay_pad": "START para jogar de novo", "go.title_kb": "Q para o título", "go.title_pad": "SELECT para o título", "hud.bonus": "Invencível, bata em cometas e tiros inimigos para ganhar bônus!", "hud.noshield": "SEM ESCUDO", "hud.left": "RESTAM {n}", "hud.last": "ÚLTIMA VIDA", "hud.approach": "{name} SE APROXIMANDO", "hud.destroyed": "{name} DESTRUÍDO!", "webgl": "WebGL não está disponível neste navegador.", "btn.efx": "Efeitos", "btn.sound": "Som", "btn.home": "Início", "home_back": "Voltar ao início", "tut.label": "TUTORIAL", "tut.done": "Tutorial concluído!", "tut.back": "Voltando ao título", "tut.hit": "Atingido! De novo", "tut.0.t": "Mover", "tut.0.kb": "Use ← → para ir para a esquerda e a direita", "tut.0.pad": "Use o direcional / analógico esquerdo para se mover", "tut.0.p": "Esq. {a}   Dir. {b}", "tut.1.t": "Movimento lento", "tut.1.kb": "Segure Z / Shift ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.1.pad": "Segure A / B ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.1.p": "Movendo devagar {a}%", "tut.2.t": "Desviar", "tut.2.x": "Desvie dos cometas que caem por 8 segundos", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Raspão", "tut.3.x": "Passe raspando num cometa para um «raspão» com pontos extras. Faça 5\n★Quanto mais você raspa, mais pontos e mais itens caem!", "tut.3.p": "Raspões {a} / 5", "tut.4.t": "Atirar", "tut.4.kb": "X / Espaço para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve\n★Cada tiro gasta energia. Não atire à toa — mire bem!", "tut.4.pad": "X / Y para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve\n★Cada tiro gasta energia. Não atire à toa — mire bem!", "tut.4.p": "Derrubados {a} / 2", "tut.5.t": "Energia", "tut.5.x": "A energia cai com o tempo e com os tiros; em 0 é fim de jogo. Pegue um item de recuperação\nRecupera com itens e ao derrotar inimigos", "tut.5.p0": "Pegue o item", "tut.5.p1": "Recuperado!", "tut.6.t": "Invencível", "tut.6.x": "Itens deixam você invencível por um instante. Invencível, bater em cometas E tiros inimigos dá bônus: tiros contam como cometas\n★Tiros inimigos dão um bônus alto! Quanto mais você bate, mais itens aparecem!", "tut.6.p": "Cometas {a}/4 · Tiros {b}/4", "tut.7.t": "Chefe", "tut.7.x": "Um chefe aparece a cada 3 fases. Pixelado, os tiros não funcionam. Derrote-o para uma chuva de gemas!", "tut.7.p0": "Derrote o chefe", "tut.7.p1": "Derrotado! Pegue as gemas", "start_touch": "Toque para começar", "diff.keys_touch": "Toque para escolher · toque de novo para começar", "p.resume_touch": "Toque para continuar", "p.quit_touch": "Toque aqui para o título", "go.replay_touch": "Toque para jogar de novo", "go.title_touch": "Toque aqui para o título", "tut.0.touch": "Deslize na tela para ir para a esquerda e a direita", "tut.1.touch": "Segure SLOW ao se mover para ir devagar. Só o ponto central que muda de cor pode ser atingido", "tut.4.touch": "Toque em SHOT para atirar. Derrube 2 inimigos (só 1 tiro na tela por vez)\nDerrotar inimigos recupera energia e dá invencibilidade breve\n★Cada tiro gasta energia. Não atire à toa — mire bem!", "rotate": "Gire o aparelho para a vertical", "btn.pause": "Pausa", "btn.swap": "Trocar lado dos botões", "back": "voltar", "btn.title": "Voltar ao título", "hud.sp2": "Mais {n} SP → ESCUDO 2", "tut.8.t": "Hiper", "tut.8.x": "Pegue o cristal Hiper que cai balançando: 10 s de pontuação ×3 e nave um pouco mais rápida\n★Mas cometas e tiros ficam mais rápidos e os inimigos atiram o dobro! Experimente", "tut.8.p0": "Pegue o item Hiper", "tut.8.p1": "HYPER! Pontos ×3", "tut.5.sp": "★Agora o item Especial arco-íris! Recupera energia e deixa invencível por mais tempo", "tut.5.p2": "Pegue o item Especial", "tut.s.t": "Escudo", "tut.s.x": "Levar dano custa 1 escudo (sem escudo, um golpe encerra o jogo)\n★Pegue um item Especial arco-íris para recuperar 1 escudo!", "tut.s.p0": "Leve um golpe", "tut.s.p1": "Recupere o escudo com um item Especial", "tut.s.p2": "+1 SHIELD!"}, "de": {"f.pause_kb": "PAUSE: P / VOLLBILD: F / NUR SPIEL: G", "f.pause_pad": "PAUSE: START / VOLLBILD: F / NUR SPIEL: G", "f.energy": "ENERGIEBOX ALLE {n} PUNKTE", "f.avoid": "WEICHE DEN KOMETEN SO LANGE WIE MÖGLICH AUS", "f.move_kb": "BEWEGEN: PFEILE | LANGSAM: Z / SHIFT", "f.move_pad": "BEWEGEN: STEUERKREUZ | LANGSAM: A / B", "f.shoot_kb": "SCHIESSEN: X / LEERTASTE", "f.shoot_pad": "SCHIESSEN: X / Y", "md.0": "Shooter: Gegner abschießen und vorrücken", "md.1": "Überlebe mit deiner Energie", "md.2": "Tanze zwischen fallenden Kometen", "md.3": "Lerne die Grundlagen Schritt für Schritt", "start_kb": "Enter zum Starten", "start_pad": "START zum Starten", "diff.title": "schwierigkeit", "diff.EASY": "1 Schild · weniger Kometen · 5 SP bei 1 Schild = Bonusschild", "diff.STANDARD": "1 Schild · hält 1 Treffer aus", "diff.ARCADE": "kein Schild · ein Treffer und aus (wie das Original)", "diff.keys_kb": "Enter: Start · Q / Esc: zurück", "diff.keys_pad": "START: Start · SELECT: zurück", "diff.special": "Spezial-Items stellen 1 Schild wieder her", "p.resume_kb": "P zum Fortsetzen", "p.resume_pad": "START zum Fortsetzen", "p.quit_kb": "Q zum Titel", "p.quit_pad": "SELECT zum Titel", "reset.msg": "ALLE HIGHSCORES ZURÜCKSETZEN?", "go.replay_kb": "Enter für neue Runde", "go.replay_pad": "START für neue Runde", "go.title_kb": "Q zum Titel", "go.title_pad": "SELECT zum Titel", "hud.bonus": "Unverwundbar: Kometen und gegnerische Schüsse rammen gibt Bonus!", "hud.noshield": "KEIN SCHILD", "hud.left": "NOCH {n}", "hud.last": "LETZTES LEBEN", "hud.approach": "{name} NÄHERT SICH", "hud.destroyed": "{name} ZERSTÖRT!", "webgl": "WebGL ist in diesem Browser nicht verfügbar.", "btn.efx": "Effekte", "btn.sound": "Ton", "btn.home": "Startseite", "home_back": "Zurück zur Startseite", "tut.label": "TUTORIAL", "tut.done": "Tutorial abgeschlossen!", "tut.back": "Zurück zum Titel", "tut.hit": "Getroffen! Nochmal", "tut.0.t": "Bewegen", "tut.0.kb": "Mit ← → nach links und rechts bewegen", "tut.0.pad": "Mit Steuerkreuz / linkem Stick nach links und rechts bewegen", "tut.0.p": "Links {a}   Rechts {b}", "tut.1.t": "Langsam", "tut.1.kb": "Halte Z / Shift beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.1.pad": "Halte A / B beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.1.p": "Langsam bewegt {a}%", "tut.2.t": "Ausweichen", "tut.2.x": "Weiche den fallenden Kometen 8 Sekunden lang aus", "tut.2.p": "{a} / 8,0 s", "tut.3.t": "Streifen", "tut.3.x": "Fliege knapp an einem Kometen vorbei („Graze“) für Bonuspunkte. 5-mal streifen\n★Je mehr du streifst, desto höher der Score – und desto mehr Items fallen!", "tut.3.p": "Gestreift {a} / 5", "tut.4.t": "Schießen", "tut.4.kb": "X / Leertaste zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar\n★Jeder Schuss kostet Energie. Nicht wild drauflosfeuern – gut zielen!", "tut.4.pad": "X / Y zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar\n★Jeder Schuss kostet Energie. Nicht wild drauflosfeuern – gut zielen!", "tut.4.p": "Abgeschossen {a} / 2", "tut.5.t": "Energie", "tut.5.x": "Energie sinkt mit der Zeit und beim Schießen; bei 0 ist Schluss. Hol dir ein Heil-Item\nEnergie gibt es durch Items und besiegte Gegner", "tut.5.p0": "Item holen", "tut.5.p1": "Aufgeladen!", "tut.6.t": "Unverwundbar", "tut.6.x": "Items machen kurz unverwundbar. Dann bringt das Rammen von Kometen UND gegnerischen Schüssen Bonuspunkte – Schüsse zählen wie Kometen\n★Gegnerische Schüsse geben einen hohen Bonus! Je mehr du triffst, desto mehr Items erscheinen!", "tut.6.p": "Kometen {a}/4 · Schüsse {b}/4", "tut.7.t": "Boss", "tut.7.x": "Alle 3 Stages erscheint ein Boss. Verpixelt ist er immun gegen Schüsse. Besiege ihn für einen Edelsteinregen!", "tut.7.p0": "Besiege den Boss", "tut.7.p1": "Besiegt! Sammle die Edelsteine", "start_touch": "Tippen zum Starten", "diff.keys_touch": "Tippen zum Wählen · nochmal tippen zum Starten", "p.resume_touch": "Tippen zum Fortsetzen", "p.quit_touch": "Hier tippen für den Titel", "go.replay_touch": "Tippen für neue Runde", "go.title_touch": "Hier tippen für den Titel", "tut.0.touch": "Wische über den Bildschirm, um dich nach links und rechts zu bewegen", "tut.1.touch": "Halte SLOW beim Bewegen für langsames Tempo. Nur der farbwechselnde Punkt in der Mitte kann getroffen werden", "tut.4.touch": "Tippe SHOT zum Schießen. Schieße 2 Gegner ab (nur 1 Schuss gleichzeitig)\nBesiegte Gegner geben Energie zurück und machen kurz unverwundbar\n★Jeder Schuss kostet Energie. Nicht wild drauflosfeuern – gut zielen!", "rotate": "Bitte das Gerät hochkant drehen", "btn.pause": "Pause", "btn.swap": "Tastenseite tauschen", "back": "zurück", "btn.title": "Zurück zum Titel", "hud.sp2": "Noch {n} SP → SCHILD 2", "tut.8.t": "Hyper", "tut.8.x": "Schnapp dir den pendelnd fallenden Hyper-Kristall: 10 Sekunden ×3 Punkte und ein etwas schnelleres Schiff\n★Aber Kometen und Schüsse werden schneller und Gegner feuern doppelt so viel! Probier es aus", "tut.8.p0": "Schnapp dir das Hyper-Item", "tut.8.p1": "HYPER! Punkte ×3", "tut.5.sp": "★Jetzt das regenbogenfarbene Spezial-Item! Es gibt Energie und macht länger unverwundbar", "tut.5.p2": "Schnapp dir das Spezial-Item", "tut.s.t": "Schild", "tut.s.x": "Schaden kostet 1 Schild (ohne Schild ist das Spiel beim nächsten Treffer vorbei)\n★Schnapp dir ein regenbogenfarbenes Spezial-Item, um 1 Schild zurückzubekommen!", "tut.s.p0": "Einen Treffer einstecken", "tut.s.p1": "Schild mit einem Spezial-Item auffüllen", "tut.s.p2": "+1 SHIELD!"}, "hi": {"f.pause_kb": "रोकें: P / फ़ुलस्क्रीन: F / केवल गेम: G", "f.pause_pad": "रोकें: START / फ़ुलस्क्रीन: F / केवल गेम: G", "f.energy": "हर {n} अंक पर एनर्जी बॉक्स", "f.avoid": "जितनी देर हो सके धूमकेतुओं से बचें", "f.move_kb": "चलें: तीर कुंजियाँ | धीमे: Z / SHIFT", "f.move_pad": "चलें: डी-पैड | धीमे: A / B", "f.shoot_kb": "शूट: X / SPACE", "f.shoot_pad": "शूट: X / Y", "md.0": "दुश्मनों को मार गिराते हुए आगे बढ़ें", "md.1": "एनर्जी बचाकर ज़िंदा रहें", "md.2": "गिरते धूमकेतुओं के बीच नाचें", "md.3": "बुनियादी बातें कदम-दर-कदम सीखें", "start_kb": "शुरू करने के लिए Enter दबाएँ", "start_pad": "शुरू करने के लिए START दबाएँ", "diff.title": "कठिनाई", "diff.EASY": "1 शील्ड · कम धूमकेतु · 1 शील्ड पर 5 SP से बोनस शील्ड", "diff.STANDARD": "1 शील्ड · 1 बार चोट सह सकते हैं", "diff.ARCADE": "कोई शील्ड नहीं · एक चोट और खेल ख़त्म (मूल जैसा)", "diff.keys_kb": "Enter: शुरू · Q / Esc: वापस", "diff.keys_pad": "START: शुरू · SELECT: वापस", "diff.special": "स्पेशल आइटम 1 शील्ड वापस देता है", "p.resume_kb": "जारी रखने के लिए P", "p.resume_pad": "जारी रखने के लिए START", "p.quit_kb": "टाइटल के लिए Q", "p.quit_pad": "टाइटल के लिए SELECT", "reset.msg": "सभी हाई-स्कोर रीसेट करें?", "go.replay_kb": "फिर से खेलने के लिए Enter", "go.replay_pad": "फिर से खेलने के लिए START", "go.title_kb": "टाइटल के लिए Q", "go.title_pad": "टाइटल के लिए SELECT", "hud.bonus": "अजेय रहते धूमकेतु और दुश्मन की गोलियों से टकराने पर बोनस!", "hud.noshield": "शील्ड नहीं", "hud.left": "{n} बचे", "hud.last": "आख़िरी मौक़ा", "hud.approach": "{name} आ रहा है", "hud.destroyed": "{name} नष्ट!", "webgl": "इस ब्राउज़र में WebGL उपलब्ध नहीं है।", "btn.efx": "इफ़ेक्ट", "btn.sound": "आवाज़", "btn.home": "होम", "home_back": "होम पर वापस जाएँ", "tut.label": "ट्यूटोरियल", "tut.done": "ट्यूटोरियल पूरा!", "tut.back": "टाइटल पर लौट रहे हैं", "tut.hit": "लग गया! फिर से", "tut.0.t": "चलना", "tut.0.kb": "← → से बाएँ-दाएँ चलें", "tut.0.pad": "डी-पैड / बाएँ स्टिक से बाएँ-दाएँ चलें", "tut.0.p": "बाएँ {a}   दाएँ {b}", "tut.1.t": "धीमी चाल", "tut.1.kb": "Z / Shift दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.1.pad": "A / B दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.1.p": "धीमी चाल {a}%", "tut.2.t": "धूमकेतु से बचें", "tut.2.x": "गिरते धूमकेतुओं से 8 सेकंड तक बचते रहें", "tut.2.p": "{a} / 8.0 सेकंड", "tut.3.t": "ग्रेज़", "tut.3.x": "धूमकेतु के बिल्कुल पास से निकलें — “ग्रेज़” बोनस मिलता है। 5 बार ग्रेज़ करें\n★जितना ज़्यादा ग्रेज़ करेंगे, उतना स्कोर बढ़ेगा और उतने ज़्यादा आइटम गिरेंगे!", "tut.3.p": "ग्रेज़ {a} / 5", "tut.4.t": "शूट", "tut.4.kb": "X / Space से शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं\n★हर गोली ऊर्जा खर्च करती है। अंधाधुंध न चलाएँ — ध्यान से निशाना लगाएँ!", "tut.4.pad": "X / Y से शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं\n★हर गोली ऊर्जा खर्च करती है। अंधाधुंध न चलाएँ — ध्यान से निशाना लगाएँ!", "tut.4.p": "गिराए {a} / 2", "tut.5.t": "एनर्जी", "tut.5.x": "एनर्जी समय और शूट से घटती है; 0 होने पर खेल ख़त्म। रिकवरी आइटम उठाएँ\nएनर्जी आइटम और दुश्मन हराने से लौटती है", "tut.5.p0": "आइटम उठाएँ", "tut.5.p1": "रिकवर!", "tut.6.t": "अजेय", "tut.6.x": "आइटम लेने पर थोड़ी देर अजेय। अजेय रहते धूमकेतु और दुश्मन की गोलियों से टकराने पर बोनस! गोलियाँ भी धूमकेतु जैसी ही हैं\n★दुश्मन की गोलियों से ज़्यादा बोनस! जितना टकराओ, उतने ज़्यादा आइटम!", "tut.6.p": "धूमकेतु {a}/4 · गोलियाँ {b}/4", "tut.7.t": "बॉस", "tut.7.x": "हर 3 स्टेज पर बॉस आता है। पिक्सलेटेड रहते गोली असर नहीं करती। हराने पर रत्नों की बारिश!", "tut.7.p0": "बॉस को हराएँ", "tut.7.p1": "हरा दिया! रत्न इकट्ठा करें", "start_touch": "शुरू करने के लिए टैप करें", "diff.keys_touch": "चुनने के लिए टैप करें · शुरू करने के लिए फिर टैप करें", "p.resume_touch": "जारी रखने के लिए टैप करें", "p.quit_touch": "टाइटल के लिए यहाँ टैप करें", "go.replay_touch": "फिर से खेलने के लिए टैप करें", "go.title_touch": "टाइटल के लिए यहाँ टैप करें", "tut.0.touch": "स्क्रीन पर स्वाइप करके बाएँ-दाएँ चलें", "tut.1.touch": "SLOW दबाए रखकर चलें तो धीमे चलेंगे। सिर्फ़ बीच का रंग बदलता बिंदु ही चोट खाता है", "tut.4.touch": "SHOT दबाकर शूट करें। 2 दुश्मन गिराएँ (स्क्रीन पर एक बार में 1 ही गोली)\nदुश्मन हराने पर एनर्जी लौटती है और थोड़ी देर अजेय रहते हैं\n★हर गोली ऊर्जा खर्च करती है। अंधाधुंध न चलाएँ — ध्यान से निशाना लगाएँ!", "rotate": "कृपया डिवाइस को सीधा (पोर्ट्रेट) करें", "btn.pause": "रोकें", "btn.swap": "बटन की दिशा बदलें", "back": "वापस", "btn.title": "टाइटल पर लौटें", "hud.sp2": "{n} SP और → शील्ड 2", "tut.8.t": "हाइपर", "tut.8.x": "झूलते हुए गिरने वाला क्रिस्टल हाइपर आइटम लें: 10 सेकंड तक स्कोर ×3 और जहाज़ थोड़ा तेज़\n★लेकिन धूमकेतु और गोलियाँ तेज़ होंगी और दुश्मन दोगुनी गोलियाँ चलाएँगे! आज़माएँ", "tut.8.p0": "हाइपर आइटम लें", "tut.8.p1": "HYPER! स्कोर ×3", "tut.5.sp": "★अब इंद्रधनुषी स्पेशल आइटम! यह एनर्जी लौटाता है और ज़्यादा देर अजेय रखता है", "tut.5.p2": "स्पेशल आइटम लें", "tut.s.t": "शील्ड", "tut.s.x": "नुकसान होने पर 1 शील्ड घटती है (शील्ड न हो तो टकराते ही गेम ओवर)\n★इंद्रधनुषी स्पेशल आइटम लेने पर 1 शील्ड वापस मिलती है!", "tut.s.p0": "एक बार टकराएँ", "tut.s.p1": "स्पेशल आइटम से शील्ड वापस लें", "tut.s.p2": "+1 SHIELD!"}, "ar": {"f.pause_kb": "إيقاف مؤقت: P / ملء الشاشة: F / اللعبة فقط: G", "f.pause_pad": "إيقاف مؤقت: START / ملء الشاشة: F / اللعبة فقط: G", "f.energy": "صندوق طاقة كل {n} نقطة", "f.avoid": "تفادَ المذنّبات أطول وقت ممكن", "f.move_kb": "تحرّك: الأسهم | ببطء: Z / SHIFT", "f.move_pad": "تحرّك: لوحة الاتجاهات | ببطء: A / B", "f.shoot_kb": "إطلاق: X / SPACE", "f.shoot_pad": "إطلاق: X / Y", "md.0": "أسقط الأعداء وتقدّم", "md.1": "ابقَ حيًّا بالحفاظ على طاقتك", "md.2": "راقص بين المذنّبات المتساقطة", "md.3": "تعلّم الأساسيات خطوة بخطوة", "start_kb": "اضغط Enter للبدء", "start_pad": "اضغط START للبدء", "diff.title": "الصعوبة", "diff.EASY": "درع واحد · مذنّبات أقل · 5 SP مع درع واحد = درع إضافي", "diff.STANDARD": "درع واحد · تتحمّل ضربة واحدة", "diff.ARCADE": "بلا درع · ضربة واحدة وتنتهي (مثل الأصل)", "diff.keys_kb": "Enter: ابدأ · Q / Esc: رجوع", "diff.keys_pad": "START: ابدأ · SELECT: رجوع", "diff.special": "العنصر الخاص يعيد درعًا واحدًا", "p.resume_kb": "اضغط P للمتابعة", "p.resume_pad": "اضغط START للمتابعة", "p.quit_kb": "اضغط Q للعنوان", "p.quit_pad": "اضغط SELECT للعنوان", "reset.msg": "إعادة ضبط كل أفضل النتائج؟", "go.replay_kb": "اضغط Enter للإعادة", "go.replay_pad": "اضغط START للإعادة", "go.title_kb": "اضغط Q للعنوان", "go.title_pad": "اضغط SELECT للعنوان", "hud.bonus": "أثناء المناعة، اصطدم بالمذنّبات وطلقات الأعداء لتحصل على مكافأة!", "hud.noshield": "بلا درع", "hud.left": "متبقٍّ {n}", "hud.last": "الفرصة الأخيرة", "hud.approach": "{name} يقترب", "hud.destroyed": "تم تدمير {name}!", "webgl": "WebGL غير متاح في هذا المتصفح.", "btn.efx": "المؤثرات", "btn.sound": "الصوت", "btn.home": "الرئيسية", "home_back": "العودة إلى الرئيسية", "tut.label": "الدليل التعليمي", "tut.done": "اكتمل الدليل!", "tut.back": "العودة إلى العنوان", "tut.hit": "أُصبت! حاول مجددًا", "tut.0.t": "التحرّك", "tut.0.kb": "استخدم ← → للتحرّك يمينًا ويسارًا", "tut.0.pad": "استخدم لوحة الاتجاهات / العصا اليسرى للتحرّك", "tut.0.p": "يسار {a}   يمين {b}", "tut.1.t": "الحركة البطيئة", "tut.1.kb": "اضغط مطوّلًا Z / Shift أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.1.pad": "اضغط مطوّلًا A / B أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.1.p": "حركة بطيئة {a}%", "tut.2.t": "تفادي المذنّبات", "tut.2.x": "تفادَ المذنّبات المتساقطة لمدة 8 ثوانٍ", "tut.2.p": "{a} / 8.0 ث", "tut.3.t": "الملامسة", "tut.3.x": "مُرّ بمحاذاة مذنّب لتحصل على نقاط «ملامسة». لامِس 5 مرات\n★كلما لامست أكثر، ارتفعت نقاطك وسقطت عناصر أكثر!", "tut.3.p": "ملامسة {a} / 5", "tut.4.t": "الإطلاق", "tut.4.kb": "اضغط X / Space للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة\n★كل طلقة تستهلك الطاقة. لا تطلق عشوائيًا — صوّب جيدًا!", "tut.4.pad": "اضغط X / Y للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة\n★كل طلقة تستهلك الطاقة. لا تطلق عشوائيًا — صوّب جيدًا!", "tut.4.p": "أُسقط {a} / 2", "tut.5.t": "الطاقة", "tut.5.x": "تقلّ الطاقة مع الوقت ومع كل طلقة، وعند 0 تنتهي اللعبة. التقط عنصر استشفاء\nتعود الطاقة بالعناصر وبهزيمة الأعداء", "tut.5.p0": "التقط العنصر", "tut.5.p1": "استُعيدت!", "tut.6.t": "المناعة", "tut.6.x": "العناصر تمنحك مناعة لوقت قصير. أثناء المناعة، اصطدامك بالمذنّبات وبطلقات الأعداء يمنحك نقاطًا إضافية — الطلقات مثل المذنّبات\n★طلقات الأعداء تمنح مكافأة كبيرة! كلما اصطدمت أكثر ظهرت عناصر أكثر!", "tut.6.p": "مذنّبات {a}/4 · طلقات {b}/4", "tut.7.t": "الزعيم", "tut.7.x": "يظهر زعيم كل 3 مراحل. لا تؤثّر الطلقات فيه وهو مُبكسل. اهزمه لتنهمر الجواهر!", "tut.7.p0": "اهزم الزعيم", "tut.7.p1": "هُزم! اجمع الجواهر", "start_touch": "المس للبدء", "diff.keys_touch": "المس للاختيار · المس مجددًا للبدء", "p.resume_touch": "المس للمتابعة", "p.quit_touch": "المس هنا للعودة إلى العنوان", "go.replay_touch": "المس للإعادة", "go.title_touch": "المس هنا للعودة إلى العنوان", "tut.0.touch": "اسحب على الشاشة للتحرّك يمينًا ويسارًا", "tut.1.touch": "اضغط مطوّلًا على SLOW أثناء الحركة لتبطئ. النقطة المتغيّرة اللون في المنتصف فقط هي التي تُصاب", "tut.4.touch": "اضغط SHOT للإطلاق. أسقط عدوّين (طلقة واحدة فقط على الشاشة)\nهزيمة عدوّ تعيد الطاقة وتمنحك مناعة قصيرة\n★كل طلقة تستهلك الطاقة. لا تطلق عشوائيًا — صوّب جيدًا!", "rotate": "يرجى تدوير الجهاز إلى الوضع العمودي", "btn.pause": "إيقاف مؤقت", "btn.swap": "تبديل جهة الأزرار", "back": "رجوع", "btn.title": "العودة إلى الشاشة الرئيسية", "hud.sp2": "{n} SP أخرى ← درع 2", "tut.8.t": "هايبر", "tut.8.x": "التقط بلورة هايبر المتمايلة: 10 ثوانٍ بنقاط ×3 ومركبة أسرع قليلًا\n★لكن المذنّبات والطلقات تصبح أسرع ويطلق الأعداء ضعف الرصاص! جرّبه", "tut.8.p0": "التقط عنصر هايبر", "tut.8.p1": "HYPER! النقاط ×3", "tut.5.sp": "★الآن العنصر الخاص بألوان قوس قزح! يعيد الطاقة ويمنحك مناعة أطول", "tut.5.p2": "التقط العنصر الخاص", "tut.s.t": "الدرع", "tut.s.x": "تلقّي الضرر يكلّف درعًا واحدًا (وبدون درع تنتهي اللعبة عند الاصطدام)\n★التقط عنصرًا خاصًا بألوان قوس قزح لاستعادة درع واحد!", "tut.s.p0": "تلقَّ ضربة", "tut.s.p1": "استعد الدرع بعنصر خاص", "tut.s.p2": "+1 SHIELD!"}};
 let LANG = (() => {
     const qp = new URLSearchParams(location.search).get('lang');
     if (I18N[qp]) { try { localStorage.setItem('aicoding-lang', qp); } catch (e) {} return qp; }
@@ -1204,6 +1208,7 @@ const TK = k => { const suf = lastInputDevice === 'gamepad' ? '_pad' : lastInput
 // 字間を空けると文字の連結が崩れる言語（ヒンディー語・アラビア語）では字間をつけない
 const LS = px => (LANG === 'hi' || LANG === 'ar') ? '0px' : px;
 function applyLang() {
+    try { preloadFonts(); } catch (e) {} // 言語を変えたらその言語の文字も先読み
     document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
     const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
     canvas.dir = LANG === 'ar' ? 'rtl' : 'ltr';
@@ -1236,7 +1241,7 @@ const DIFFS = [
 ];
 let difficultyIndex = 1;
 // スコア倍率（ARCADE=1, STANDARD=0.7, EASY=0.5）。アイテム出現の得点間隔も同じ倍率で縮むので出現頻度は変わらない
-// ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに隕石と弾が1.25倍速、敵の弾が2倍
+// ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに彗星と弾が1.25倍速、敵の弾が2倍
 let hyperT = 0, nextHyperScore = 0;
 const HYPER_TIME = 10;
 const HYPER_TEST_RATE = 1; // テスト時はここを上げると出現率が上がる
@@ -1447,7 +1452,9 @@ function rankInput() { // ランキング画面の入力処理
     }
 }
 const rankTaps = [];
-const titleRankY = () => IS_MOBILE ? HUD_H * 0.8 : HUD_H - 32;
+const TITLE_UP = IS_MOBILE ? 40 : 62; // タイトル全体を持ち上げる量（ランキング行のぶん下寄りにならないように）
+const titleRankY = () => IS_MOBILE ? MENU_DY - TITLE_UP + TITLE_PIV + (592 - TITLE_PIV) * TITLE_S : HUD_H - 50; // ランキング/ネームのボタンの中心
+const titleBtnRect = k => { const w = IS_MOBILE ? 230 : 210, h = IS_MOBILE ? 60 : 32, gap = IS_MOBILE ? 22 : 18; return { x: HUD_W / 2 + (k ? gap / 2 : -gap / 2 - w), y: titleRankY() - h / 2, w, h }; };
 function rankLayout() {
     const top = IS_MOBILE ? HUD_H * 0.12 : 60;
     return { top, srcY: top + 62, tabY: top + 112, listY: top + (IS_MOBILE ? 160 : 140), rowH: IS_MOBILE ? 46 : 32, backY: IS_MOBILE ? HUD_H * 0.86 : HUD_H - 40 };
@@ -1548,10 +1555,12 @@ function shipTouches(x, y, r) {
 }
 function shieldCap() { return DIFFS[difficultyIndex].cap || maxShields; }
 function gainShield() {
-    if (tutorial) return;
+    if (tutorial && !(tutorial.step === TUT_SHIELD && tutorial.shieldPhase === 1)) return;
     if (shields < maxShields) {
         shields++;
-        effects.push({ type: 'shieldMsg', text: 'SHIELD +1', color: '#7dffd0', life: 80, maxLife: 80 });
+        effects = effects.filter(e => e.type !== 'shieldMsg');
+        effects.push({ type: 'shieldMsg', text: '+1 SHIELD', color: '#7dffd0', life: 90, maxLife: 90 });
+        if (tutorial) tutorial.shieldPhase = 2;
         return;
     }
     // EASYのみ: 満タンでさらにSPを5個取るとシールド2
@@ -1666,9 +1675,11 @@ let itemLagPeak = 0, itemLagT = 0, itemDryT = 0, itemWatchN = 0; // 大きなチ
 const TEST_START_STAGE = 1; // テスト用: このステージから開始（公開時は1）
 const ITEM_FLOOR_STAGE = 15; // この面以降は「エネルギーが尽きる時間の半分」ごとに必ずアイテムを降らせる
 let itemGapT = 0; // 最後にエネルギーアイテムが出てからの秒数
-const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「隕石が画面を0.9回流れる時間」待って元の間隔へ
-// 隕石が画面の上から下まで流れる秒数（ステージが進んで隕石が速くなるほど短い）
-function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY()); }
+const CHAIN_LAG_LINE = 10; // チェイン10以上なら、切れて画面のアイテムが無くなってから「彗星が画面を0.9回流れる時間」待って元の間隔へ
+// 彗星が画面の上から下まで流れる秒数（ステージが進んで彗星が速くなるほど短い）
+const MOB_FALL = IS_MOBILE ? 1.12 * 0.8 : 1; // スマホの彗星の落下速度（1.12倍→その0.8倍）
+const MOB_ITEM_FALL = IS_MOBILE ? 1.12 * 1.1 : 1; // スマホのアイテムの落下速度
+function cometScrollSec() { return (config.canvasHeight + TOP_EXT) / Math.max(1, currentCometSpeed * (1 + (stage - 1) * 0.08) * HY() * MOB_FALL); }
 let nextSpecialItemScore;
 let newHighScoreAchieved;
 let elapsedTime;
@@ -1751,6 +1762,9 @@ function applyThemeStyles(theme) {
             button.style.setProperty('--button-hover-bg', hexToRgba(theme.ui, 0.2));
         }
     });
+    // スマホのホームボタンはRANKING/NAMEと同じ半透明のガラス風に
+    const mhb = document.getElementById('m-home');
+    if (mhb) { mhb.style.background = `linear-gradient(180deg, ${hexToRgba(theme.ui, 0.12)}, ${hexToRgba(theme.ui, 0.03)} 50%, ${hexToRgba(theme.ui, 0.07)})`; mhb.style.color = '#ffffff'; mhb.style.borderColor = hexToRgba(theme.ui, 0.65); mhb.style.textShadow = `0 0 8px ${theme.ui}`; mhb.style.opacity = '1'; }
 }
 
 function init() {
@@ -2029,10 +2043,11 @@ function pollInput() {
             for (let k = 0; k < NAME_KEYS.length; k++) { const r = nameKeyRect(k); if (tp.x >= r.x - 2 && tp.x <= r.x + r.w + 2 && tp.y >= r.y - 3 && tp.y <= r.y + r.h + 3) { tapNameKey = k; break; } }
             continue;
         }
-        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 - 110)) < 100) { openRanking(); continue; }
-        if (gameState === 'title' && Math.abs(tp.y - titleRankY()) < 26 && Math.abs(tp.x - (HUD_W / 2 + 110)) < 100) { openNameEdit(); continue; }
+        const inBtn = k => { const r = titleBtnRect(k); return tp.x >= r.x - 6 && tp.x <= r.x + r.w + 6 && tp.y >= r.y - 8 && tp.y <= r.y + r.h + 8; };
+        if (gameState === 'title' && inBtn(0)) { openRanking(); continue; }
+        if (gameState === 'title' && inBtn(1)) { openNameEdit(); continue; }
         if (gameState === 'title') {
-            const ty = TITLE_PIV + (tp.y - (MENU_DY - 40) - TITLE_PIV) / TITLE_S;
+            const ty = TITLE_PIV + (tp.y - (MENU_DY - TITLE_UP) - TITLE_PIV) / TITLE_S;
             const i = Math.round((ty - 344 + 7) / 42);
             if (i >= 0 && i < titleMenuItems.length && Math.abs(ty - (344 + i * 42 - 7)) < 21) {
                 if (i === titleMenuIndex) input.replayTrigger = true; else tapSel = i;
@@ -2184,7 +2199,7 @@ if (reason === 'collision') {
         effects.push({ type: 'screenFlash', life: 15, maxLife: 15 });
 
         // ▼▼▼ 爆発エフェクトを動画のように強化 ▼▼▼
-        const particleCount = isEffectsEnabled ? 450 : 70; // ★ 変更点: パーティクル数を増加
+        const particleCount = isEffectsEnabled ? (IS_MOBILE ? 140 : 240) : 70; // 多すぎると一瞬重くなるので控えめに // ★ 変更点: パーティクル数を増加
         
         // ★ 変更点: 爆発専用の鮮やかなカラーパレットを定義
         const explosionColors = ['#ff3344', '#ff8800', '#ffff00', '#88ff00', '#00ffff', '#4488ff', '#ff00ff', '#ffffff'];
@@ -2360,8 +2375,11 @@ function updatePlayingState(dt_sec) {
     }
 
 
-    // Stage Progression
-    if (frameCount >= stageClearFrame) {
+    // Stage Progression: 曲が鳴っている時は「曲のループ」でステージを進める（音楽のループ・パートの増減とぴったり合わせる）
+    const ah = audioHandler;
+    if (ah.bgmPlaying && ah.bgmStartT != null && ah.ctx && ah.ctx.state === 'running') {
+        if (ah.stageAtTime(ah.heardTime()) > stage) { stageClearFrame = frameCount; setupNewStage(); } // 出現タイミングなどは今のフレームから数え直す
+    } else if (frameCount >= stageClearFrame) {
         setupNewStage();
     }
 
@@ -2381,7 +2399,7 @@ function updatePlayingState(dt_sec) {
 
     const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (stage - 1) * 0.2)));
     if (frameCount % spawnInterval === 0) {
-        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : (DIFFS[difficultyIndex].cometMul || 1)); // EASYは隕石2/3
+        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : (DIFFS[difficultyIndex].cometMul || 1) * (IS_MOBILE ? 2 / 3 : 1)); // EASYは彗星2/3。スマホは全難易度をさらに2/3（ARCADEはSTANDARDと同じ密度）
         for (; cometSpawnCarry >= 1; cometSpawnCarry--) {
             comets.push({
                 x: Math.random() * config.canvasWidth,
@@ -2476,7 +2494,7 @@ function updatePlayingState(dt_sec) {
         if (player.invincibleTimer <= 0) itemDryT += dt_sec; else itemDryT = 0;
         const clear = player.invincibleTimer <= 0 && (!items.some(it => it.type !== 'hyper') || itemDryT > cometScrollSec() * (stage >= 14 ? 1 : 2));
         if (!clear) { itemLagPeak = Math.max(itemLagPeak, chainCount); itemLagT = -1; }
-        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * (stage >= 14 ? 0.25 : 0.9) : 0; // 切れた瞬間にラグを決める（隕石が画面を0.9回流れる時間。STAGE14以降は死活問題なので0.25回・保険も1回に短縮）
+        else if (itemLagT < 0) itemLagT = itemLagPeak >= CHAIN_LAG_LINE ? cometScrollSec() * (stage >= 14 ? 0.25 : 0.9) : 0; // 切れた瞬間にラグを決める（彗星が画面を0.9回流れる時間。STAGE14以降は死活問題なので0.25回・保険も1回に短縮）
         if (clear && itemLagT > 0) itemLagT -= dt_sec;
         const settled = clear && itemLagT <= 0;
         if (settled) itemLagPeak = 0;
@@ -2523,7 +2541,7 @@ function updatePlayingState(dt_sec) {
             c.x += c.vx * dt_sec * HY();
             c.y += c.vy * dt_sec * HY();
         } else {
-            c.y += currentCometSpeed * stageSpeedMod * dt_sec * HY(); // ハイパー中は1.25倍
+            c.y += currentCometSpeed * stageSpeedMod * dt_sec * HY() * MOB_FALL; // ハイパー中は1.25倍。スマホはやや速く
         }
 
         if (c.y - c.radius > config.canvasHeight || c.x < -c.radius || c.x > config.canvasWidth + c.radius) {
@@ -2554,7 +2572,7 @@ function updatePlayingState(dt_sec) {
             }
         }
 
-        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+        const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance;
         if (!c.isGlazed && d < player.radius + c.radius + currentGlazeDistance) {
             c.isGlazed = true;
             if (tutorial) tutorial.glazes++;
@@ -2719,9 +2737,10 @@ function updatePlayingState(dt_sec) {
 
             if (isPlayerInvincible) {
                  if (dist < config.playerVisualSize + eb.radius) {
-                    const baseBonusScore = 1500;
+                    const baseBonusScore = 1500 * Math.pow(1.1, stage - 1); // 敵弾への体当たりはステージごとに1.1倍
                     const comboMultiplier = chainCount > 1 ? Math.pow(1.1, chainCount - 1) : 1;
                     const bonusScore = Math.floor(baseBonusScore * stageMultiplier * comboMultiplier);
+                    if (tutorial) tutorial.bsmash = (tutorial.bsmash || 0) + 1;
                     score += bonusScore;
                     scoreTexts.push({ x: player.x, y: player.y - 30, text: `+${bonusScore}`, life: 60, type: 'bonus' });
                     audioHandler.playSound('invincibleHit');
@@ -2735,7 +2754,7 @@ function updatePlayingState(dt_sec) {
                 }
             }
 
-            const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance;
+            const currentGlazeDistance = player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance;
             if (!eb.isGlazed && dist < player.radius + eb.radius + currentGlazeDistance) {
                 eb.isGlazed = true;
                 if (tutorial) tutorial.glazes++;
@@ -2762,7 +2781,7 @@ function updatePlayingState(dt_sec) {
             item.x = Math.max(16, Math.min(config.canvasWidth - 16, item.x + item.vx * dt_sec));
             item.y += item.vy * dt_sec;
         } else {
-            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * dt_sec;
+            item.y += config.energyItemSpeed * (item.type === 'hyper' ? 0.75 : 1) * MOB_ITEM_FALL * dt_sec;
             if (item.type === 'hyper') { // ハイパーは左右に大きく、ゆっくり揺れながら落ちてくる
                 const A = Math.min(200, config.canvasWidth / 2 - 50);
                 if (item.x0 == null) { item.x0 = Math.max(50 + A, Math.min(config.canvasWidth - 50 - A, item.x)); item.t = 0; }
@@ -2847,6 +2866,7 @@ const BS = IS_MOBILE ? 1.5 : 1.7;
 const COL_LANCE = new THREE.Color(0xff3050);
 const ENEMY_SPD = IS_MOBILE ? 1.4 : 1; // スマホは雑魚敵の動きを速めに
 const VS = IS_MOBILE ? 2.0 : 1;
+const INV_GLAZE_K = IS_MOBILE ? 1.5 * 0.9 : 1.5; // 無敵中のグレイズ範囲（自機周りの円）の倍率。スマホは0.9倍に
 const CK = IS_MOBILE ? 1.35 : 1; // 中央メッセージの間隔（スマホは文字が大きいので広め）
 const ES = IS_MOBILE ? 1 : 1.5; // PCは雑魚敵を1.5倍（見た目と当たり判定） // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
@@ -3402,8 +3422,12 @@ const TUTORIAL_STEPS = [
       progress: t => T('tut.4.p', { a: Math.min(2, t.kills) }) },
     { title: () => T('tut.5.t'), text: () => T(tutorial && tutorial.items >= 1 ? 'tut.5.sp' : 'tut.5.x'), goal: t => t.items >= 2, // 通常アイテム→虹色のスペシャルアイテムの順に取る
       progress: t => T(t.items >= 2 ? 'tut.5.p1' : t.items >= 1 ? 'tut.5.p2' : 'tut.5.p0') },
-    { title: () => T('tut.6.t'), text: () => T('tut.6.x'), goal: t => t.smash >= 5,
-      progress: t => T('tut.6.p', { a: Math.min(5, t.smash) }), comets: 1.6 },
+    // シールド: 必ず当たる光のラインで1減らし、スペシャルアイテムで+1回復するのを見せる
+    { title: () => T('tut.s.t'), text: () => T('tut.s.x'), goal: t => t.shieldPhase >= 2 && t.shieldT > 1.6,
+      progress: t => T(t.shieldPhase >= 2 ? 'tut.s.p2' : t.shieldPhase >= 1 ? 'tut.s.p1' : 'tut.s.p0') },
+    // 無敵: 彗星と敵の弾の両方に体当たり（敵の弾も彗星と同じ扱い）
+    { title: () => T('tut.6.t'), text: () => T('tut.6.x'), goal: t => t.smash >= 4 && (t.bsmash || 0) >= 4,
+      progress: t => T('tut.6.p', { a: Math.min(4, t.smash), b: Math.min(4, t.bsmash || 0) }), comets: 1.4 },
     { title: () => T('tut.7.t'), text: () => T('tut.7.x'), goal: t => t.bossDone && t.afterBoss > 2.5,
       progress: t => T(t.bossDone ? 'tut.7.p1' : 'tut.7.p0') },
     { title: () => T('tut.8.t'), text: () => T('tut.8.x'), goal: t => (t.hyper || 0) >= 1 && t.afterHyper > 3,
@@ -3429,6 +3453,7 @@ function tutorialHit() {
     player.maxInvincibleTimer = 60;
 }
 
+const TUT_SHIELD = 6, TUT_INV = 7, TUT_BOSS = 8, TUT_HYPER = 9; // チュートリアルのステップ番号
 function tutorialStepStart(i) {
     const t = tutorial;
     t.spawnT = 0;
@@ -3437,7 +3462,9 @@ function tutorialStepStart(i) {
     t.glazes = 0; t.kills = 0; t.items = 0; t.smash = 0;
     if (i === 4) { monsters = []; }
     if (i === 5) { energy = config.energyTotal * 0.3; items = []; }
-    if (i === 7) {
+    if (i === TUT_SHIELD) { items = []; maxShields = shields = 1; t.shieldPhase = 0; t.shieldT = 0; t.line = { y: -40 - TOP_EXT }; }
+    if (i === TUT_INV) t.bsmash = 0;
+    if (i === TUT_BOSS) {
         const saved = bossCount;
         bossCount = 0;
         spawnBoss();
@@ -3483,8 +3510,8 @@ function updateTutorial(dt) {
     t.lastX = player.x;
     if (input.slow && (input.left || input.right)) t.slowFrames++;
     if (t.step === 2 && t.hitFlash === 0) t.survive += dt;
-    if (t.step === 7 && t.bossSpawned && !boss) { t.bossDone = true; t.afterBoss += dt; }
-    if (t.step === 8 && (t.hyper || 0) >= 1) t.afterHyper = (t.afterHyper || 0) + dt;
+    if (t.step === TUT_BOSS && t.bossSpawned && !boss) { t.bossDone = true; t.afterBoss += dt; }
+    if (t.step === TUT_HYPER && (t.hyper || 0) >= 1) t.afterHyper = (t.afterHyper || 0) + dt;
 
     // ステップごとの出現
     t.spawnT += dt;
@@ -3502,12 +3529,31 @@ function updateTutorial(dt) {
     if (t.step === 5 && items.length === 0 && t.items < 2) {
         items.push({ x: Math.max(80, Math.min(config.canvasWidth - 80, player.x + (Math.random() < 0.5 ? -1 : 1) * 220)), y: -20, type: t.items === 0 ? 'normal' : 'special' });
     }
-    if (t.step === 8 && !(t.hyper >= 1) && !items.some(it => it.type === 'hyper')) {
+    if (t.step === TUT_HYPER && !(t.hyper >= 1) && !items.some(it => it.type === 'hyper')) {
         items.push({ x: Math.max(80, Math.min(config.canvasWidth - 80, player.x + (Math.random() < 0.5 ? -1 : 1) * 200)), y: -20, type: 'hyper' });
     }
-    if (t.step === 6) {
+    if (t.step === TUT_INV) {
         if (player.invincibleTimer < 40) triggerInvincibility(240);
         energy = config.energyTotal;
+        // 敵の弾も降らせる（体当たりで高ボーナス）
+        t.bulletT = (t.bulletT || 0) + dt;
+        if (t.bulletT > 0.45) { t.bulletT = 0; enemyBullets.push({ x: Math.max(30, Math.min(config.canvasWidth - 30, player.x + (Math.random() - 0.5) * 260)), y: -10, vx: (Math.random() - 0.5) * 40, vy: 200, radius: 5, isGlazed: false }); }
+    }
+    if (t.step === TUT_SHIELD) {
+        if (t.shieldPhase >= 2) t.shieldT += dt;
+        if (t.line) { // 横一列の光のライン: 自機の高さを通過したら必ずシールドが1減る
+            const prev = t.line.y; t.line.y += 300 * dt;
+            if (t.shieldPhase === 0 && prev < player.y && t.line.y >= player.y) {
+                shields = 0; hurtTimer = 120; t.shieldPhase = 1;
+                audioHandler.playSound('explosion'); audioHandler.playSound('bossHit');
+                screenShake = { intensity: 12, duration: 16 };
+                effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 26, maxLife: 26, radius: 20 });
+                effects.push({ type: 'screenFlash', life: 10, maxLife: 10 });
+                effects.push({ type: 'shieldMsg', text: 'SHIELD BREAK  ·  ' + T('hud.last'), color: '#ff5577', life: 90, maxLife: 90 });
+            }
+            if (t.line.y > config.canvasHeight + 40) t.line = null;
+        }
+        if (t.shieldPhase === 1 && !t.line && items.length === 0) items.push({ x: Math.max(80, Math.min(config.canvasWidth - 80, player.x + (Math.random() < 0.5 ? -1 : 1) * 200)), y: -20, type: 'special' });
     }
 
     if (st.goal(t)) {
@@ -3998,18 +4044,20 @@ const LIFT_T = 0.76; // スマホのボス: カメラまでの距離を76%に（
 function liftToCam(o) { o.position.sub(CAM_BASE).multiplyScalar(LIFT_T).add(CAM_BASE); }
 
 if (gl3dOK) {
-    composer = new EffectComposer(renderer);
+    // 画面の後処理用の描画先にもアンチエイリアス（MSAA）をかける。細い線や小さな光が動くたびにチラつくのを防ぐ
+    const msaa = renderer.capabilities.isWebGL2 && !IS_MOBILE ? 4 : 0; // スマホは負荷を増やさないためMSAAなし
+    composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(Math.round(VW * PR), Math.round(VH * PR), { type: THREE.HalfFloatType, samples: msaa }));
     composer.setPixelRatio(PR);
     composer.setSize(VW, VH);
     composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.6, 0.4, 0.38);
-    { const bk = IS_MOBILE ? 0.4 : 0.6; const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
+    { const bk = 0.6; /* スマホも低すぎるとグローが荒く見えるのでPCと同じ比率 */ const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * bk), Math.round(h * bk)); bloom.setSize(VW * PR, VH * PR); } // ブルームは低解像度で（GPU負荷＝遅延を減らす） // スマホはブルームを半解像度で
     composer.addPass(bloom);
     // ハイパー中の色調: ステージの色を活かしたまま色相を少し回し、鮮やかに（ハイパー中だけ有効）
     hyperGrade = new ShaderPass({
-        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 } },
+        uniforms: { tDiffuse: { value: null }, amt: { value: 0 }, t: { value: 0 }, gray: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; varying vec2 vUv;
+        fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float t; uniform float gray; varying vec2 vUv;
             void main(){
                 vec4 c = texture2D(tDiffuse, vUv);
                 const mat3 toY = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
@@ -4026,7 +4074,9 @@ if (gl3dOK) {
                 g = pow(max(g, 0.0), vec3(1.15)) * 1.1;
                 g += smoothstep(0.55, 1.0, l) * vec3(0.09, 0.035, 0.12) * (0.8 + 0.2 * sin(t * 7.0)); // 明部にピンクの白熱
                 float vig = 1.0 - amt * 0.3 * smoothstep(0.35, 0.85, length(vUv - 0.5));
-                gl_FragColor = vec4(mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0)), c.a);
+                vec3 o = mix(c.rgb, g * vig, clamp(amt, 0.0, 1.0));
+                float lo = dot(o, vec3(0.299, 0.587, 0.114));
+                gl_FragColor = vec4(mix(o, vec3(lo) * (1.0 - 0.2 * gray), gray), c.a); // エネルギー切れのゲームオーバーで白黒に（CSSのフィルターより軽い）
             }`
     });
     hyperGrade.enabled = false;
@@ -4053,21 +4103,29 @@ const glowMat = new THREE.ShaderMaterial({
         attribute float size;
         attribute vec3 gcolor;
         varying vec3 vColor;
+        varying float vFade;
         uniform float uScale;
         void main() {
             vColor = gcolor;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = size * uScale / -mv.z;
+            // 小さすぎる光は動くたびに画素の当たり方が変わってチラつくので、最小サイズを確保して明るさで補う
+            float ps = size * uScale / -mv.z, cps = max(ps, 7.0);
+            vFade = (ps * ps) / (cps * cps);
+            gl_PointSize = cps;
             gl_Position = projectionMatrix * mv;
         }`,
     fragmentShader: `
         varying vec3 vColor;
+        varying float vFade;
         void main() {
             float r = length(gl_PointCoord - 0.5) * 2.0;
             if (r > 1.0) discard;
-            float halo = pow(1.0 - r, 2.2) * 0.85;
-            float core = smoothstep(0.32, 0.0, r);
-            gl_FragColor = vec4(vColor * halo + vec3(core) * length(vColor) * 0.6, 1.0);
+            // なめらかなガウス風の減衰（縁は0へ滑らかに）。負荷はほぼ増えない
+            float r2 = r * r;
+            float halo = (exp(-r2 * 4.2) * 0.95 + exp(-r2 * 14.0) * 0.25) * (1.0 - r2) * 0.85;
+            float core = exp(-r2 * 22.0); // 芯もなめらかに（硬い点だとチラつく）
+            vec3 col = (vColor * halo + vec3(core) * length(vColor) * 0.55) * vFade;
+            gl_FragColor = vec4(col, 1.0); // ディザはグローに拾われてチラつくので入れない
         }`,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -4328,7 +4386,7 @@ function makeMotif(name, count, build, place, animate) {
     group.visible = false;
     world.add(group);
     const items = [];
-    if (IS_MOBILE) count = Math.ceil(count * 0.45); // スマホは背景オブジェクトを減らす
+    if (IS_MOBILE) count = Math.ceil(count * 0.3); // スマホは背景オブジェクトを減らす
     for (let i = 0; i < count; i++) {
         const it = build(i);
         it.i = i;
@@ -4515,8 +4573,20 @@ makeMotif('pillars', 84, i => {
 
 // テーマ（ステージ）→ モチーフ
 const MOTIF_FOR_THEME = [0, 5, 3, 2, 1, 4, 3, 1, 4, 2, 3, 5, 3, 0, 2, 5, 0, 2, 3, 4, 1, 5, 2, 0, 4, 3, 1, 5, 2, 5];
+// モチーフごとに材質を複製（切り替えで消える側だけをフェードアウトできるように）
+// 共有の材質（線・ガラス面など）はモチーフごとに複製して毎フレーム元に合わせ、フェード分だけ薄くする。
+// そのモチーフ専用の材質（毎フレーム明滅させているもの）は、明滅のあとにフェードを掛ける
+motifs.forEach(m => {
+    m.fade = 1; m.sync = []; m.own = [];
+    const uses = new Map();
+    m.group.traverse(o => { if (o.material) uses.set(o.material, (uses.get(o.material) || 0) + 1); });
+    const clones = new Map();
+    uses.forEach((n, mat) => { if (n > 1 || mat === buildingMatA || mat === buildingMatB) { const c = mat.clone(); clones.set(mat, c); m.sync.push([c, mat]); } else m.own.push(mat); });
+    m.group.traverse(o => { if (o.material && clones.has(o.material)) o.material = clones.get(o.material); });
+});
 let motifCur = motifs[0];
 let motifOld = null;
+const motifFading = []; // フェードアウト中の旧モチーフ
 let motifTrans = 1; // 0→1 で切り替え完了
 let lastThemeIdx = -1;
 let warpBoost = 0;
@@ -4699,8 +4769,11 @@ function updateMotifs(dt, ws, now) {
         const animate = lastThemeIdx !== -1 && (gameState === 'playing' || gameState === 'title');
         lastThemeIdx = currentThemeIndex;
         if (next !== motifCur) {
-            if (motifOld) motifOld.group.visible = false;
-            motifOld = animate ? motifCur : null;
+            if (motifOld && !motifFading.includes(motifOld)) motifFading.push(motifOld); // 前の切り替えの途中なら、そのままフェードを続ける
+            motifOld = null;
+            if (animate) { motifCur.fadeT = 0; motifFading.push(motifCur); }
+            const fi = motifFading.indexOf(next); if (fi >= 0) { motifFading.splice(fi, 1); }
+            next.fade = 1; next.group.position.y = 0; next.group.scale.set(1, 1, 1);
             if (!animate) motifCur.group.visible = false;
             motifCur = next;
             motifCur.group.visible = true;
@@ -4716,22 +4789,26 @@ function updateMotifs(dt, ws, now) {
         const back = 1 + 2.2 * Math.pow(motifTrans - 1, 3) + 1.2 * Math.pow(motifTrans - 1, 2);
         motifCur.group.position.y = -900 * (1 - back);
         motifCur.group.scale.set(1, Math.max(0.05, back), 1);
-        if (motifOld) {
-            motifOld.group.position.y = -1100 * e;
-            motifOld.group.scale.set(1 + e * 0.4, Math.max(0.02, 1 - e), 1 + e * 0.4);
-            if (motifTrans >= 1) { motifOld.group.visible = false; motifOld.group.position.y = 0; motifOld.group.scale.set(1, 1, 1); motifOld = null; }
-        }
     } else {
         motifCur.group.position.y = 0;
         motifCur.group.scale.set(1, 1, 1);
     }
-    [motifCur, motifOld].forEach(m => {
+    // 旧モチーフ: 沈みながら約2秒かけてフェードアウトしてから消す（パッと消えないように）
+    for (let i = motifFading.length - 1; i >= 0; i--) {
+        const m = motifFading[i]; m.fadeT += dt / 2.0;
+        const e = Math.min(1, m.fadeT), ee = 1 - Math.pow(1 - e, 2);
+        m.fade = 1 - ee; m.group.position.y = -420 * ee; m.group.scale.set(1 + ee * 0.25, Math.max(0.05, 1 - ee * 0.6), 1 + ee * 0.25);
+        if (e >= 1) { m.group.visible = false; m.group.position.y = 0; m.group.scale.set(1, 1, 1); m.fade = 1; motifFading.splice(i, 1); }
+    }
+    motifs.forEach(m => { if (!m.group.visible) return; m.sync.forEach(([c, o]) => { c.color.copy(o.color); c.opacity = o.opacity * m.fade; }); });
+    [motifCur, ...motifFading].forEach(m => {
         if (!m) return;
         m.items.forEach(it => {
             it.obj.position.z += ws * dt;
             if (it.obj.position.z > WORLD_NEAR) m.place(it, it.obj.position.z - WORLD_SPAN);
             if (m.animate) m.animate(it, rTime);
         });
+        if (m.fade < 1) m.own.forEach(mt => { mt.opacity *= m.fade; }); // 専用材質（毎フレーム明滅）もフェード
     });
 
     // 切り替え演出
@@ -4846,17 +4923,18 @@ let kickRingLife = 0;
 // ---------------------------------
 const field = new THREE.Group();
 scene.add(field);
-const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W, H + TOP_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.8, depthWrite: false }));
+const BOT_EXT = IS_MOBILE ? 700 : 0, TOP_EXT_M = IS_MOBILE ? 700 : 0, SIDE_EXT = IS_MOBILE ? 500 : 0; // スマホは板を画面全面に（上下左右に伸ばす）
+const fieldGlass = new THREE.Mesh(new THREE.PlaneGeometry(W + SIDE_EXT * 2, H + TOP_EXT + TOP_EXT_M + BOT_EXT), new THREE.MeshBasicMaterial({ color: 0x040010, transparent: true, opacity: 0.8, depthWrite: false }));
 fieldGlass.rotation.x = -Math.PI / 2;
 fieldGlass.position.y = -8;
-fieldGlass.position.z = -TOP_EXT / 2;
+fieldGlass.position.z = (-TOP_EXT - TOP_EXT_M + BOT_EXT) / 2;
 fieldGlass.renderOrder = 1;
 field.add(fieldGlass);
 
 const FIELD_GRID_STEP = 40;
-const GH = H + TOP_EXT, GZ0 = -H / 2 - TOP_EXT; // グリッドも伸ばした枠まで
+const GH = H + TOP_EXT + TOP_EXT_M + BOT_EXT, GZ0 = -H / 2 - TOP_EXT - TOP_EXT_M; // グリッドも伸ばした枠まで
 const fieldGridCountH = Math.ceil(GH / FIELD_GRID_STEP);
-const fieldGridHalfV = Math.floor((W / 2) / FIELD_GRID_STEP);
+const fieldGridHalfV = Math.floor((W / 2 + SIDE_EXT) / FIELD_GRID_STEP);
 const fieldGridPos = new Float32Array((fieldGridCountH + fieldGridHalfV * 2 + 1) * 6);
 const fieldGridGeo = new THREE.BufferGeometry();
 fieldGridGeo.setAttribute('position', new THREE.BufferAttribute(fieldGridPos, 3).setUsage(THREE.DynamicDrawUsage));
@@ -4870,13 +4948,13 @@ function updateFieldGrid() {
     let k = 0;
     for (let i = 0; i < fieldGridCountH; i++) {
         const z = GZ0 + ((i * FIELD_GRID_STEP + fieldScroll) % (fieldGridCountH * FIELD_GRID_STEP)) * (GH / (fieldGridCountH * FIELD_GRID_STEP));
-        fieldGridPos[k] = -W / 2; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
-        fieldGridPos[k + 3] = W / 2; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
+        fieldGridPos[k] = -W / 2 - SIDE_EXT; fieldGridPos[k + 1] = -4; fieldGridPos[k + 2] = z;
+        fieldGridPos[k + 3] = W / 2 + SIDE_EXT; fieldGridPos[k + 4] = -4; fieldGridPos[k + 5] = z; k += 6;
     }
     if (!fieldGridStaticDone) {
         for (let i = -fieldGridHalfV; i <= fieldGridHalfV; i++) {
             const x = i * FIELD_GRID_STEP;
-            fieldGridPos.set([x, -4, GZ0, x, -4, H / 2], k); k += 6;
+            fieldGridPos.set([x, -4, GZ0, x, -4, H / 2 + BOT_EXT], k); k += 6;
         }
         fieldGridStaticDone = true;
     }
@@ -5187,15 +5265,17 @@ function makeHyperObj() {
     // 浮遊リング: 途切れ途切れの光の帯
     const ring = new THREE.Group();
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x8fdcff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
-    for (let k = 0; k < 14; k++) {
+    { const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+      for (let k = 0; k < 14; k++) {
         if (k % 5 === 4) continue;
-        const a = k * Math.PI * 2 / 14, seg = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.8, 1.8), ringMat);
-        seg.position.set(Math.cos(a) * 34, 0, Math.sin(a) * 34); seg.rotation.y = -a + Math.PI / 2; ring.add(seg);
-    }
+        const a = k * Math.PI * 2 / 14; q.setFromAxisAngle(up, -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * 34, 0, Math.sin(a) * 34), q, one);
+        parts.push(new THREE.BoxGeometry(10.5, 0.8, 1.8).applyMatrix4(m4));
+      }
+      ring.add(new THREE.Mesh(mergeGeometries(parts), ringMat)); } // 区切りをまとめて1回で描く
     const tilt = new THREE.Group(); tilt.rotation.x = 0.45; // カメラ側に少し起こして形が見えるように
     // キラキラ: 周りで瞬く小さな光
     const sparks = [], sparkGeo = new THREE.OctahedronGeometry(1, 0); sparkGeo.scale(0.5, 0.5, 2.6);
-    for (let k = 0; k < 16; k++) {
+    for (let k = 0; k < (IS_MOBILE ? 6 : 16); k++) { // スマホはキラキラを減らす
         const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
         const sp = new THREE.Group(); const a1 = new THREE.Mesh(sparkGeo, sm), a2 = new THREE.Mesh(sparkGeo, sm); a2.rotation.y = Math.PI / 2; sp.add(a1, a2);
         const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 36;
@@ -5241,7 +5321,15 @@ function buildVoxelModel(art, px, heights) {
 const monsterModels = {}; // 中身は造形キットの定義のあと（ENEMY_BUILD）で入れる
 // ルーパーには画像風のハブを装着
 const monsterObjs = new Map();
+// 敵のモデルは使い回す（出現のたびに形を作ると、その瞬間にカクつくため）
+const monsterPool = {};
 function makeMonsterObj(m) {
+    const type0 = monsterModels[m.type] ? m.type : 'invader', pool = monsterPool[type0];
+    if (pool && pool.length) { const o = pool.pop(); o.userData.seed = Math.random() * 100; o.visible = true; scene.add(o); return o; }
+    return buildMonsterObj(m);
+}
+function releaseMonsterObj(obj) { scene.remove(obj); (monsterPool[obj.userData.type] = monsterPool[obj.userData.type] || []).push(obj); }
+function buildMonsterObj(m) {
     const type = monsterModels[m.type] ? m.type : 'invader';
     const obj = new THREE.Group();
     const body = ENEMY_BUILD[type](monsterModels[type]);
@@ -5256,7 +5344,7 @@ function makeMonsterObj(m) {
     }
     obj.userData.body = body;
     obj.userData.seed = Math.random() * 100;
-    obj.userData.type = m.type;
+    obj.userData.type = type;
     scene.add(obj);
     return obj;
 }
@@ -5297,7 +5385,7 @@ function part(geo, opt) {
   const m = new THREE.Mesh(geo, opt.mat); g.add(m);
   g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 14), opt.edge));
   if (opt.glass) g.add(new THREE.Mesh(triSubset(geo, opt.glassFrac || 0.3, opt.seed || 7), opt.glass));
-  if (opt.cage) { const c = geo.clone(); c.computeBoundingBox(); const ctr = new THREE.Vector3(); c.boundingBox.getCenter(ctr); c.translate(-ctr.x, -ctr.y, -ctr.z); c.scale(opt.cage, opt.cage, opt.cage); c.translate(ctr.x, ctr.y, ctr.z); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(c, 8), opt.cageMat)); }
+  if (opt.cage && !IS_MOBILE) { /* スマホはワイヤーの外殻を省いて描画を軽く */ const c = geo.clone(); c.computeBoundingBox(); const ctr = new THREE.Vector3(); c.boundingBox.getCenter(ctr); c.translate(-ctr.x, -ctr.y, -ctr.z); c.scale(opt.cage, opt.cage, opt.cage); c.translate(ctr.x, ctr.y, ctr.z); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(c, 8), opt.cageMat)); }
   return g;
 }
 // ワイヤーだけの多面体
@@ -5305,7 +5393,10 @@ const wireOnly = (geo, mat) => new THREE.LineSegments(new THREE.EdgesGeometry(ge
 // 途切れた光のリング
 function dashRing(R, n, len, th, mat, gap = 4) {
   const g = new THREE.Group();
-  for (let k = 0; k < n; k++) { if (k % gap === gap - 1) continue; const a = k / n * Math.PI * 2, s = new THREE.Mesh(new THREE.BoxGeometry(len, th, th * 1.6), mat); s.position.set(Math.cos(a) * R, 0, Math.sin(a) * R); s.rotation.y = -a + Math.PI / 2; g.add(s); }
+  // 区切りを1つの形にまとめて1回で描く（描画回数を減らす）
+  const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+  for (let k = 0; k < n; k++) { if (k % gap === gap - 1) continue; const a = k / n * Math.PI * 2; q.setFromAxisAngle(up, -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), q, one); parts.push(new THREE.BoxGeometry(len, th, th * 1.6).applyMatrix4(m4)); }
+  if (parts.length) g.add(new THREE.Mesh(mergeGeometries(parts), mat));
   return g;
 }
 
@@ -5538,7 +5629,10 @@ const wire = (geo, c, o = 0.6) => LAB.wireOnly(geo, LAB.line(c, o));
 function segRing(R, n, w, h, accent, gap = 0.16) {
     const g = new THREE.Group(), L = 2 * Math.PI * R / n * (1 - gap);
     const geo = LAB.loft([[-L / 2, w * 0.7, h * 0.7], [-L / 2 + 3, w, h], [L / 2 - 3, w, h], [L / 2, w * 0.7, h * 0.7]], 6); geo.rotateY(Math.PI / 2);
-    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, s = fuse(geo, accent, { cage: false, seed: k + 2 }); s.position.set(Math.cos(a) * R, 0, Math.sin(a) * R); s.rotation.y = -a + Math.PI / 2; g.add(s); }
+    // 節を1つの形にまとめて描く（描画回数を減らす）
+    const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -a + Math.PI / 2); m4.compose(new THREE.Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), q, one); parts.push(geo.clone().applyMatrix4(m4)); }
+    g.add(fuse(mergeGeometries(parts), accent, { cage: false, seed: 2 }));
     return g;
 }
 const bladeGeo = (len, w, h) => LAB.loft([[0, w * 0.5, h * 0.6], [len * 0.25, w, h], [len * 0.75, w * 0.6, h * 0.6], [len, 1, 1]], 6);
@@ -6467,23 +6561,24 @@ function spawnLink(tx, ty) {
     l.bend = Math.random() < 0.5 ? -1 : 1;
 }
 
-const debris = [];
-let loadLv = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
+const debris = [], debrisFree = [];
+let loadLv = 0, loadUpT = 0; // スマホの描画軽減レベル（0:通常 1:軽め 2:さらに軽く）
 function spawnBurst(x, y, color, count, opts = {}) {
     if (loadLv >= 1) count = Math.ceil(count * (loadLv >= 2 ? 0.35 : 0.6)); // 重い時は破片を減らす
     if (!isEffectsEnabled) count = Math.ceil(count / 3);
     for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2;
         const sp = rand(80, opts.speed || 320);
-        debris.push({
-            x: toX(x), y: opts.h || 10, z: toZ(y),
-            vx: Math.cos(a) * sp, vy: rand(120, opts.up || 420), vz: Math.sin(a) * sp,
-            life: rand(0.5, 1.1), max: 1.1,
-            color: color.clone ? color.clone() : hexColor(color).clone(),
-            size: rand(opts.minSize || 3, opts.maxSize || 7),
-            cube: opts.cube !== false && Math.random() < 0.6,
-            rx: rand(0, 6), ry: rand(0, 6), spin: rand(-8, 8),
-        });
+        // 破片は使い回す（毎回オブジェクトを作るとメモリ掃除でカクつくため）
+        const d = debrisFree.pop() || { color: new THREE.Color() };
+        d.x = toX(x); d.y = opts.h || 10; d.z = toZ(y);
+        d.vx = Math.cos(a) * sp; d.vy = rand(120, opts.up || 420); d.vz = Math.sin(a) * sp;
+        d.life = rand(0.5, 1.1); d.max = 1.1;
+        d.color.copy(color.isColor ? color : hexColor(color));
+        d.size = rand(opts.minSize || 3, opts.maxSize || 7);
+        d.cube = opts.cube !== false && Math.random() < 0.6;
+        d.rx = rand(0, 6); d.ry = rand(0, 6); d.spin = rand(-8, 8);
+        debris.push(d);
     }
 }
 
@@ -6726,10 +6821,12 @@ function render3D() {
 
     // スマホ: 画面のオブジェクトが一定数を超えたら描画を軽くする（後半ステージの処理落ち対策）
     if (IS_MOBILE) {
-        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + debris.length * 0.2 + (monsters ? monsters.length * 2 : 0);
-        if (loadLv < 2 && load > 280) loadLv = 2; else if (loadLv < 1 && load > 170) loadLv = 1;
-        else if (loadLv === 2 && load < 230) loadLv = 1; else if (loadLv === 1 && load < 130) loadLv = 0;
-        if (bloom) bloom.enabled = loadLv < 2; // 重い時はブルームを切る
+        // 撃破の破片など一瞬の増加では切り替えない（見た目が急に簡素になるのを防ぐ）。高い状態が1.5秒続いたら軽くする
+        const load = comets.length + enemyBullets.length * 1.5 + gems.length * 0.5 + (monsters ? monsters.length * 2 : 0);
+        const want = load > 320 ? 2 : load > 200 ? 1 : 0;
+        if (want > loadLv) { loadUpT = (loadUpT || 0) + dt; if (loadUpT > 1.5) { loadLv = want; loadUpT = 0; } } else loadUpT = 0;
+        if (want < loadLv && load < (loadLv === 2 ? 260 : 150)) loadLv = want;
+        if (bloom) bloom.enabled = true; // ブルームは切らない（光の見た目を保つ）
     }
     // 彗星（数が増えるほど光を控えめに）
     const cometDensityK = 1 / (1 + comets.length / 220);
@@ -6742,11 +6839,11 @@ function render3D() {
         const rot = rTime * 3 + c._r;
         const s = c.radius * 1.7 * VS * (1 + visualBeat * 0.2);
         cometBodies.add(x, y, z, s, s, s, rot, rot * 0.7, c._r, color);
-        if (loadLv < 2) cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
-        glow.add(x, y, z, color, (13 + visualBeat * 6) * (loadLv >= 1 ? 0.75 : 1), 0.3 * cometDensityK * (loadLv >= 1 ? 1.4 : 1)); // 重い時は光を小さく（描画面積を減らす）
+        cometWires.add(x, y, z, s * 1.5, s * 1.5, s * 1.5, -rot * 0.8, rot, 0, color);
+        glow.add(x, y, z, color, 13 + visualBeat * 6, 0.3 * cometDensityK); // 光の大きさは負荷で変えない（チカチカ防止） // 重い時は光を小さく（描画面積を減らす）
         if (efx && !IS_MOBILE) { // スマホは彗星の尾を省略
             let vx, vy;
-            if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod; }
+            if (c.vx !== undefined) { vx = c.vx; vy = c.vy; } else { vx = 0; vy = currentCometSpeed * stageSpeedMod * MOB_FALL; }
             const sp = Math.hypot(vx, vy) || 1;
             const len = 34 + sp * 0.09;
             trails.add(x - vx / sp * len, y, z - vy / sp * len, x, y, z, 12, color, 0.55 * cometDensityK);
@@ -6825,6 +6922,12 @@ function render3D() {
             const gc = m.type === 'invader' ? hexColor('#ffd060') : m.type === 'weaver' ? hexColor('#ff4fd8') : m.type === 'sentry' ? hexColor('#ff3a3a') : m.type === 'lance' ? hexColor('#5dff7a') : hsl(hue1, 1, 0.7);
             glow.add(obj.position.x, obj.position.y + 4, obj.position.z, gc, (m.type === 'looper' ? 75 : 70) * ES, 0.14);
         });
+        if (tutorial && tutorial.line) { // チュートリアルのシールド: 横一列のピカピカ光るライン
+            const z = toZ(tutorial.line.y), x0 = toX(0), x1 = toX(W), on = Math.floor(rTime * 12) % 2 === 0;
+            const lc = on ? COL_LANCE : COL_WHITE;
+            trails.add(x0, 16, z, x1, 16, z, 10, lc, 1.4); trails.add(x0, 17, z, x1, 17, z, 3, COL_WHITE, 1.6);
+            for (let k = 0; k <= 12; k++) glow.add(x0 + (x1 - x0) * k / 12, 16, z, lc, 60, on ? 0.9 : 0.5);
+        }
         enemyBullets.forEach(eb => {
             if (eb._r === undefined) eb._r = Math.random() * 10;
             const c = eb.isGlazed ? COL_GLAZE : hsl(rTime * 100 + eb.y, 1, 0.72);
@@ -6834,8 +6937,8 @@ function render3D() {
             bulletBodies.add(x, y, z, s, s * 1.2, s, rTime * 4 + eb._r, rTime * 6 + eb._r, 0, c);
             // 大きい弾（ECLIPSEなど）はハローが巨大になって眩しいので、大きさと明るさを抑える
             const gr = eb.radius > 5 ? 5 + (eb.radius - 5) * 0.3 : eb.radius, ga = eb.radius > 5 ? 0.7 : 1;
-            glow.add(x, y, z, c, gr * (loadLv >= 2 ? 9 : 13), 1.25 * ga);     // 色のハロー
-            if (loadLv < 1) glow.add(x, y + 2, z, COL_WHITE, gr * 5, 2.2 * ga);   // 白い芯
+            glow.add(x, y, z, c, gr * 13, 1.25 * ga);     // 色のハロー
+            glow.add(x, y + 2, z, COL_WHITE, gr * 5, 2.2 * ga);   // 白い芯
             if (efx && loadLv < 1) {
                 const sp = Math.hypot(eb.vx, eb.vy) || 1;
                 trails.add(x - eb.vx / sp * 26, y, z - eb.vy / sp * 26, x, y, z, 8, c, 0.6);
@@ -6850,7 +6953,7 @@ function render3D() {
             const c = obj.userData.type === 'looper' ? hexColor('#9400D3') : obj.userData.type === 'invader' ? hexColor('#ffd060') : hsl(frameCount * 2, 1, 0.65, new THREE.Color());
             spawnBurst(lx, ly, c, obj.userData.type === 'invader' ? 34 : 60, { speed: 420, up: 520, minSize: 3, maxSize: 8 });
         }
-        scene.remove(obj);
+        releaseMonsterObj(obj);
         monsterObjs.delete(m);
     });
 
@@ -6893,7 +6996,7 @@ function render3D() {
     for (let i = debris.length - 1; i >= 0; i--) {
         const d = debris[i];
         d.life -= simDt;
-        if (d.life <= 0) { debris.splice(i, 1); continue; }
+        if (d.life <= 0) { debris[i] = debris[debris.length - 1]; debris.pop(); debrisFree.push(d); continue; }
         d.vy -= 900 * simDt;
         d.x += d.vx * simDt; d.y += d.vy * simDt; d.z += d.vz * simDt;
         if (d.y < 0) { d.y = 0; d.vy *= -0.45; d.vx *= 0.7; d.vz *= 0.7; }
@@ -6933,7 +7036,7 @@ function render3D() {
         shipPivot.rotation.x = -0.12;
         playerGroup.scale.setScalar(VS * (1 + visualBeat * 0.18));
 
-        const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * 1.5 : config.glazeDistance);
+        const glazeR = player.radius + (player.invincibleTimer > 0 ? config.glazeDistance * INV_GLAZE_K : config.glazeDistance);
         glazeDisc.position.set(px, 11, pz); glazeDisc.scale.setScalar(glazeR);
         glazeRing.position.set(px, 11.5, pz); glazeRing.scale.setScalar(glazeR);
         glazeFillMat.color.copy(themeCur.player);
@@ -7035,13 +7138,16 @@ function render3D() {
     if (!gl3dOK) return;
     adaptQuality(now);
     if (efx) {
-        bloom.strength = (0.48 + visualBeat * 0.28) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
+        bloom.strength = (0.48 + visualBeat * (IS_MOBILE ? 0.12 : 0.28)) / (1 + comets.length / 260) * (1 - hyperK * (1 - hpLightK) * 0.45) + hyperK * 0.06 * hpLightK; // ハイパー中は光をにじませてネオン感を出す
         // 取ったら約1秒かけてじわっと変化し、切れたら約1秒かけて戻る（なめらかな曲線で）
         hyperLin = Math.max(0, Math.min(1, hyperLin + (hyperT > 0 ? 1 : -1) * (frozen ? 0 : dt) / 1.0));
         hyperK = hyperLin * hyperLin * (3 - 2 * hyperLin);
         if (hyperK < 0.002) hyperK = 0;
-        hyperGrade.enabled = hyperK > 0;
-        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ hyperGrade.uniforms.t.value = rTime;
+        const grayK = gameState === 'gameOver' && gameOverReason === 'energy' ? grayscaleAnimation.progress : 0;
+        hyperGrade.uniforms.gray.value = grayK;
+        hyperGrade.enabled = hyperK > 0 || grayK > 0;
+        hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ
+        hyperGrade.uniforms.t.value = rTime;
         composer.render(dt);
     } else {
         renderer.render(scene, camera);
@@ -7187,7 +7293,7 @@ function draw() {
             renderCtx.fillStyle = uiColor;
             
             renderCtx.textAlign = 'left';
-            renderCtx.fillText(`SCORE: ${score}`, 20, IS_MOBILE ? 46 : 40);
+            renderCtx.fillText(`SCORE: ${IS_MOBILE ? shortNum(score) : score}`, 20, IS_MOBILE ? 46 : 40); // スマホは大きな数をK/Mで短く（タイムと重ならないように）
 
             renderCtx.textAlign = 'center';
             renderCtx.fillText(formatTime(elapsedTime), HUD_W / 2 + (IS_MOBILE ? 22 : 0), IS_MOBILE ? 46 : 40);
@@ -7233,7 +7339,7 @@ function draw() {
                 renderCtx.textAlign = 'left';
                 renderCtx.fillText(tutorial ? T('tut.label') : gameMode.replace(' MODE', ''), 20, 84);
                 renderCtx.textAlign = 'right';
-                renderCtx.fillText(`HI: ${hiS}`, HUD_W - 20, 84);
+                renderCtx.fillText(`HI: ${shortNum(hiS)}`, HUD_W - 20, 84);
                 return;
             }
             renderCtx.textAlign = 'right';
@@ -7283,7 +7389,7 @@ function draw() {
     }
 
     // シールド表示（エネルギーバーの右）
-    if ((gameState === 'playing' || gameState === 'paused') && !tutorial) {
+    if ((gameState === 'playing' || gameState === 'paused') && (!tutorial || tutorial.step === TUT_SHIELD)) { // チュートリアルはシールドのステップだけ表示
         const sx = gameMode === 'STARTRAIL MODE' ? 20 : (IS_MOBILE ? 240 : 236), sy = IS_MOBILE ? 109 : HUD_H - 29, HR = IS_MOBILE ? 11 : 9, HG = IS_MOBILE ? 28 : 24;
         renderCtx.save();
         renderCtx.textAlign = 'left';
@@ -7653,15 +7759,36 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '1.5px';
         renderCtx.fillStyle = 'rgba(200,210,255,0.55)';
         renderCtx.fillText('(C) 2026 Archetypes Inc. / CALMDUST', cx, HUD_H - (IS_MOBILE ? 14 : 10));
-        // ランキングへの案内（スマホはタップ、PCは左右キー）
-        renderCtx.font = `600 ${IS_MOBILE ? 17 : 13}px ${config.fontFamily}`;
-        renderCtx.fillStyle = `rgba(160,235,255,${0.55 + 0.3 * Math.sin(frameCount * 0.08)})`;
-        const nm = lastName() || '--------';
-        if (IS_MOBILE) { renderCtx.fillText('▶ RANKING', cx - 110, titleRankY()); renderCtx.fillText(`NAME: ${nm}`, cx + 110, titleRankY()); }
-        else renderCtx.fillText(`${lastInputDevice === 'gamepad' ? '◀ ▶' : '← →'}  RANKING      ${lastInputDevice === 'gamepad' ? 'SELECT' : 'N'}:  NAME ${nm}`, cx, titleRankY());
+        // ランキング / ネームのボタン（スマホはタップ、PCはキーの案内つき）
+        const nm = lastName() || '--------', pad = lastInputDevice === 'gamepad';
+        const labels = IS_MOBILE ? ['RANKING', `NAME  ${nm}`] : [`${pad ? '◀ ▶' : '← →'}  RANKING`, `${pad ? 'SELECT' : 'N'}  NAME  ${nm}`];
+        renderCtx.textBaseline = 'middle';
+        labels.forEach((lb, k) => {
+            const r = titleBtnRect(k), pulse = IS_MOBILE ? 0.5 + 0.5 * Math.sin(frameCount * 0.06 + k * 1.4) : 0.5 + 0.5 * Math.sin(frameCount * 0.1);
+            renderCtx.save();
+            if (!IS_MOBILE) { // PCは枠なし。太字の文字を点滅させて目立たせる
+                renderCtx.globalAlpha = 0.45 + 0.55 * pulse; renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = 10;
+                if (hasLS) renderCtx.letterSpacing = '2px';
+                renderCtx.font = `700 15px ${config.fontFamily}`; renderCtx.fillStyle = '#ffffff';
+                renderCtx.fillText(lb, r.x + r.w / 2, r.y + r.h / 2 + 1); renderCtx.restore(); return;
+            }
+            // 半透明のガラス風ボタン: 背景が透けるテーマ色の薄い面＋上側のハイライト＋細い光る枠
+            renderCtx.beginPath(); if (renderCtx.roundRect) renderCtx.roundRect(r.x, r.y, r.w, r.h, IS_MOBILE ? 12 : 8); else renderCtx.rect(r.x, r.y, r.w, r.h);
+            const gg = renderCtx.createLinearGradient(0, r.y, 0, r.y + r.h);
+            gg.addColorStop(0, hexToRgba(theme.ui, 0.12)); gg.addColorStop(0.5, hexToRgba(theme.ui, 0.03)); gg.addColorStop(1, hexToRgba(theme.ui, 0.07));
+            renderCtx.fillStyle = gg; renderCtx.fill();
+            renderCtx.shadowColor = theme.ui; renderCtx.shadowBlur = 10 + pulse * 8;
+            renderCtx.strokeStyle = hexToRgba(theme.ui, 0.45 + pulse * 0.3); renderCtx.lineWidth = 1.5; renderCtx.stroke();
+            renderCtx.shadowBlur = IS_MOBILE ? 10 : 6;
+            if (hasLS) renderCtx.letterSpacing = IS_MOBILE ? '2px' : '1.5px';
+            renderCtx.font = `700 ${IS_MOBILE ? 22 : 14}px ${config.fontFamily}`;
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillText(lb, r.x + r.w / 2, r.y + r.h / 2 + 1, r.w - 16);
+            renderCtx.restore();
+        });
         renderCtx.restore();
         renderCtx.save();
-        renderCtx.translate(0, MENU_DY - 40); // 画面の上下中央に揃える
+        renderCtx.translate(0, MENU_DY - TITLE_UP); // 画面の上下中央に揃える
         if (IS_MOBILE) { renderCtx.translate(cx, TITLE_PIV); renderCtx.scale(TITLE_S, TITLE_S); renderCtx.translate(-cx, -TITLE_PIV); }
         const tMaxW = HUD_W / TITLE_S - 24;
         renderCtx.textAlign = 'center';
@@ -7729,7 +7856,7 @@ function draw() {
         const hsText = (highScoreCycle < 120 ? `HI-SCORE  STANDARD  ${highScoreStandard}` : highScoreCycle < 240 ? `HI-SCORE  JOURNEY  ${highScoreJourney}` : `HI-SCORE  STARTRAIL  ${highScoreStartrail}`) + hsDiff;
         renderCtx.font = `400 13px ${config.fontFamily}`;
         renderCtx.fillStyle = hexToRgba(theme.ui, 0.85);
-        renderCtx.fillText(hsText.toLowerCase(), cx, 566, tMaxW);
+        if (!IS_MOBILE) renderCtx.fillText(hsText.toLowerCase(), cx, 566, tMaxW); // スマホはランキングのボタンと重なるので出さない
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
 
@@ -7808,9 +7935,8 @@ function draw() {
 
     if (gameState === 'gameOver' && gameOverReason === 'energy') {
         const progress = grayscaleAnimation.progress;
-        const filterValue = `grayscale(${progress}) brightness(${1 - progress * 0.2})`;
-        stageEl.style.filter = filterValue;
-        stageEl.style.webkitFilter = filterValue;
+        // 白黒化は描画のシェーダーで行う（CSSのフィルターは重くてカクつくため）。エフェクトOFFの時だけCSSで
+        if (!isEffectsEnabled) { const fv = `grayscale(${progress}) brightness(${1 - progress * 0.2})`; stageEl.style.filter = fv; stageEl.style.webkitFilter = fv; }
     } else {
         if (stageEl.style.filter !== 'none') {
             stageEl.style.filter = 'none';
@@ -7891,6 +8017,13 @@ function updateExtraEnemy(m, dt) {
         else if (m.pt < 1.5) { m.aim = false; if (m.fired < 6 && m.pt > 1.1 + m.fired * 0.05) { m.fired++; shot(m.ang, 560); } }
         else if (m.pt > 2.1) { m.pt = 0; m.cyc++; }
     }
+}
+// 大きな得点を短く表示（10万未満はそのまま、以降は K / M / B。ゲーム中のスマホ表示用。最終得点は省略しない）
+function shortNum(n) {
+    if (n < 1e5) return String(n);
+    if (n < 1e6) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    if (n < 1e9) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+    return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
 }
 function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
 function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
@@ -8049,6 +8182,17 @@ window.addEventListener('resize', () => {
 });
 updateScale(); // 起動時にも合わせる
 if (document.fonts) document.fonts.ready.then(updateScale);
+// 文字のフォントを先読み（キャンバスの文字は初めて使う太さ・文字の時に読み込まれ、その瞬間にカクつくため）
+function preloadFonts() {
+    if (!document.fonts || !document.fonts.load) return;
+    try {
+        const dict = I18N[LANG] || I18N.en, chars = new Set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-×!?.,:;·/()[]%★✔…◀▶←→');
+        Object.values(dict).forEach(v => { for (const ch of String(v)) chars.add(ch); });
+        const text = [...chars].join('');
+        [300, 400, 500, 600, 700, 800].forEach(w => { document.fonts.load(`${w} 20px "Jura"`, text).catch(() => {}); document.fonts.load(`${w} 20px "M PLUS 1"`, text).catch(() => {}); });
+    } catch (e) {}
+}
+preloadFonts();
 window.addEventListener('load', updateScale);
 setTimeout(updateScale, 1500);
 
@@ -8158,16 +8302,45 @@ function prewarmGPU() {
             (o.userData.extra || []).forEach(e => { scene.remove(e); o.add(e); });
             tmp.add(o);
         });
-        ['ufo', 'invader', 'looper'].forEach(t => { const o = makeMonsterObj({ type: t }); scene.remove(o); tmp.add(o); });
+        // 敵は種類ごとに3体ずつ先に作って使い回す（GPUへの転送もここで済ませる）
+        const pooled = [];
+        ['ufo', 'invader', 'looper', 'weaver', 'sentry', 'lance'].forEach(t => { for (let k = 0; k < 3; k++) { const o = buildMonsterObj({ type: t, vx: 1 }); scene.remove(o); tmp.add(o); pooled.push(o); } });
+        prewarmGPU.pooled = pooled;
+        // ハイパー時の背景ポリゴン（全種類の形）も先にGPUへ送っておく
+        Object.values(hpGeo).forEach(list => list.forEach(v => { tmp.add(new THREE.Mesh(v.g, hpSolidMat)); tmp.add(new THREE.LineSegments(v.e, hpEdgeMat)); }));
         prewarmGPU.keep = tmp;
         const hidden = [];
         scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
         renderer.compile(scene, camera);
         renderer.compile(tmp, camera, scene);
+        // 一度だけ小さな画面に実際に描いて、形やテクスチャのGPU転送も済ませる（初登場時のカクつき防止）
+        const culled = [], rt = new THREE.WebGLRenderTarget(64, 64);
+        const noCull = root => root.traverse(o => { if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; } });
+        noCull(scene); noCull(tmp);
+        renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.render(tmp, camera); renderer.setRenderTarget(null);
+        culled.forEach(o => { o.frustumCulled = true; }); rt.dispose();
         hidden.forEach(o => { o.visible = false; });
+        (prewarmGPU.pooled || []).forEach(o => { tmp.remove(o); (monsterPool[o.userData.type] = monsterPool[o.userData.type] || []).push(o); });
+        // ハイパーの色調シェーダー（普段は無効）も一度通しておく
+        if (hyperGrade && composer) { hyperGrade.enabled = true; composer.render(); hyperGrade.enabled = false; }
     } catch (e) { console.warn('prewarm failed', e); }
 }
 prewarmGPU();
+// スマホ: ダブルタップやピンチでの拡大・拡大鏡（ルーペ）・文字選択を出さない（ボタンやリンク・言語選択はそのまま使える）
+if (IS_MOBILE) {
+    const isUi = t => t && t.closest && t.closest('a, button, select, input, label');
+    // iOS（Safari・Chrome共通のWebKit）は touchstart を止めないとダブルタップ長押しの拡大鏡が出るので、操作用UI以外では止める
+    // （ゲームの操作は pointer イベントで受けているので影響なし）
+    document.addEventListener('touchstart', e => { if (!isUi(e.target)) e.preventDefault(); }, { passive: false });
+    // touchstartを止めても音が鳴らせるよう、指を離した時（iOSで確実に音を許可される操作）にも音声を起こす
+    document.addEventListener('touchend', () => { try { if (!audioHandler.isInitialized) audioHandler.initialize(); else if (audioHandler.ctx && audioHandler.ctx.state === 'suspended' && gameState !== 'paused') audioHandler.ctx.resume(); } catch (e) {} }, { passive: true });
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', e => { const n = Date.now(); if (n - lastTouchEnd < 350 && !isUi(e.target)) e.preventDefault(); lastTouchEnd = n; }, { passive: false });
+    ['gesturestart', 'gesturechange', 'dblclick', 'selectstart', 'contextmenu'].forEach(ev => document.addEventListener(ev, e => { if (!isUi(e.target)) e.preventDefault(); }, { passive: false }));
+    document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+}
+// BGMの予約は描画とは別のタイマーでも回す（スマホで描画が一瞬止まっても、音の予約が遅れてリズムがずれないように）
+setInterval(() => { if (gameState === 'playing' && !document.hidden) audioHandler.scheduleBGM(); }, 40);
 requestAnimationFrame(gameLoop);
 
 </script>

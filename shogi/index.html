@@ -1279,7 +1279,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=24"></script>
+<script src="../shared/headerbar.js?v=26"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1290,6 +1290,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/hasami.js?v=20261021vb"></script>
 <script src="variants/variants.js?v=20261028pv"></script>
 <script src="rvbox.js?v=20261028pv"></script>
+<script src="rvtip.js?v=1"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2669,6 +2670,7 @@ function rvExplainHtml() {
   if (r.best === r.played) h += `<p>${t('rv.ex.same')}</p>`;
   else if (game.variant && window.Variants) h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p>` + Variants.rvNote(sf, r.played, r.best, a, b, q) + `<p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
   else h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p><p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
+  if (r.best !== r.played && window.ShogiTip) h += ShogiTip.html(sf, r.played, r.best, a, b, q);   // 💡 tip (rvtip.js)
   h += `<p class="pv"><span class="h">${t('rv.ex.pv')}</span> ${lineKanji(sf, pv).join(' ')}</p>`;
   h += `<button class="rv-pvbtn" id="rvPvBtn">${t(rvPvShow ? 'rv.ex.hidePv' : 'rv.ex.showPv')}</button></div>`;
   return h;
@@ -2693,7 +2695,7 @@ function renderReview() {
     }
     const names = kifList();
     const row = c => { const x = st[c]; return `<span>${c ? '☖' : '☗'} ${sideName(c)}</span><span><b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: x.n ? (x.drop / x.n * 100).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${x.c.best}</span><span class="good">${x.c.good}</span><span class="dubious">${x.c.dubious}</span><span class="bad">${x.c.bad}</span></span>`; };
-    html = opSummary() + (rvbShow() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
+    html = opSummary() + (rvbShow() && RVB.pc() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
     bad.sort((a, b) => b.drop - a.drop);
     if (bad.length && game.variant) { const x = bad[0]; html += `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">${t('vr.rv.sumBad', { i: x.i, m: names[x.i - 1], b: kan1(posAt(x.i - 1).sfen(), x.best) })}</div>`; }
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${names[x.i - 1]} → ${kan1(posAt(x.i - 1).sfen(), x.best)}</span><span class="ls">−${Math.round(x.drop * 100)}%</span></button>`).join('')}</div>`;
