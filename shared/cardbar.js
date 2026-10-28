@@ -7,6 +7,8 @@
 //   lesson: ▦ list · ▶ auto                                     |  ヒント (its label changes with the mode) · 次へ (primary)
 // Icon buttons carry their (translated) label as title + aria-label, kept in sync with the text the game writes into them.
 // Usage: include after the card markup — <script src="../shared/cardbar.js?v=N"></script>.
+// Text buttons keep their whole label: when they don't fit beside the icon tools, the text buttons move to a second row
+// (and wrap among themselves on very narrow cards) instead of being cut off.
 // Portal skin (?skin=atlas): the same bar; atlas/skin/common.js puts it next to the guide character and skin.css gives it the portal look.
 (function () {
 'use strict';
@@ -24,9 +26,9 @@ const ICONS = {
 const CSS = `
 :where(.cb-card){position:relative}
 .cb-card > .lh{padding-inline-end:36px}
-.cb-bar{display:flex;align-items:center;gap:8px;margin-top:12px;min-width:0}
+.cb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;min-width:0}
 .cb-tools{display:flex;align-items:center;gap:6px;flex:none}
-.cb-main{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:1 1 auto;min-width:0}
+.cb-main{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;flex:1 1 auto;min-width:0}
 .cb-main:empty{display:none}
 .cb-bar .hidden,.cb-card .cb-hide{display:none!important}
 .cb-bar button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;margin:0;
@@ -43,7 +45,7 @@ const CSS = `
 .cb-x{position:absolute;top:8px;inset-inline-end:8px;z-index:1;width:30px;height:30px;border-radius:50%;border-color:transparent;background:transparent;color:var(--dim,var(--muted,#999))}
 .cb-x::before{width:16px!important;height:16px!important}
 .cb-x:hover{background:rgba(255,255,255,.07)}
-.cb-t{flex:1 1 0;min-width:0;max-width:240px;height:40px;padding:0 12px;border-radius:11px;font-size:13px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.cb-t{flex:1 0 auto;min-width:0;max-width:100%;height:40px;padding:0 12px;border-radius:11px;font-size:13px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line,rgba(255,255,255,.12));background:rgba(0,0,0,.18);color:var(--muted,#aaa)}
 .cb-t:hover:not(:disabled){color:var(--text,#eee)}
 .cb-t.go{background:var(--cb-go-bg,linear-gradient(180deg,#d8bb72,#a98a48));color:var(--cb-go-fg,#1b150a);border-color:transparent;box-shadow:0 6px 16px -10px var(--accent,#c9a961)}
