@@ -81,7 +81,7 @@ function tone(a, t0, f, dur, g, type) {
   o.connect(gn).connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
 }
 // recorded sounds (snd/place.mp3, snd/shuffle.mp3): decoded once after the first gesture; synthesized fallback until then
-const SND = {}, SND_SRC = { place: 'snd/place.mp3?v=1', shuffle: 'snd/shuffle.mp3?v=1', flip: 'snd/flip.mp3?v=1' };
+const SND = {}, SND_SRC = { place: 'snd/place.mp3?v=2', shuffle: 'snd/shuffle.mp3?v=2', flip: 'snd/flip.mp3?v=1', draw: 'snd/draw.mp3?v=1' };
 function loadSnd(a) {
   for (const k in SND_SRC) if (!SND[k]) { SND[k] = 'loading'; fetch(SND_SRC[k]).then(r => r.arrayBuffer()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { SND[k] = buf; }).catch(() => { SND[k] = null; }); }
 }
@@ -98,7 +98,8 @@ function sfx(k) {
   if (k === 'place') card(n);
   else if (k === 'flip') { card(n); turn(n + .16, .9); }   // a card placed, then the hidden one under it turned up
   else if (k === 'turn') turn(n);
-  else if (k === 'draw') turn(n);
+  else if (k === 'draw') { if (!play(a, 'draw', n, 1, vary())) turn(n); }
+  else if (k === 'touch') card(n, .55);
   else if (k === 'found') { card(n); tone(a, n + .04, 1318.5, .35, .045); tone(a, n + .04, 1975.5, .3, .02); }
   else if (k === 'run') { card(n); [784, 988, 1175, 1568].forEach((f, i) => tone(a, n + .05 + i * .07, f, .5, .06, 'triangle')); }
   else if (k === 'shuffle') { if (!play(a, 'shuffle', n, 1)) for (let i = 0; i < 9; i++) noise(a, n + i * .045, .06, 2600 + Math.random() * 800, .9, .35); }
@@ -145,6 +146,7 @@ function initTable() {
     onDouble: (pi, ci) => toFoundation(pi, ci),
     onPile: pi => pileTap(pi),
     onBad: () => sfx('bad'),
+    onTouch: pi => { if (st && st.L[pi].k === 'tab') sfx('touch'); },
   });
   $('#boardWrap').querySelector('.felt').classList.add('felt-bg');
 }

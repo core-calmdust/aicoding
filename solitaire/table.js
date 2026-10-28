@@ -182,7 +182,7 @@ class Table {
       if (this.sel) { this.o.onPile && this.o.onPile(p.pi); return; }
       this.shake(p.pi, p.ci); this.o.onBad && this.o.onBad(); return;
     }
-    e.preventDefault();
+    e.preventDefault(); if (this.o.onTouch) this.o.onTouch(p.pi);
     const els = st.p[p.pi].c.slice(p.ci).map(c => this.cards.get(c));
     const r = this.el.getBoundingClientRect();
     this.drag = { pi: p.pi, ci: p.ci, els, x0: e.clientX, y0: e.clientY, r, started: false, id: e.pointerId, base: els.map(x => ({ x: x._p.x, y: x._p.y })) };
