@@ -105,7 +105,7 @@ const SMODES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt'
 const RULE_OF = { silent: 'silent', big: 'big' };
 const COURSES = () => ST ? ST.courses : [];
 const courseOf = id => COURSES().find(c => c.id === id);
-const COURSE_COL = { halden: '#5f9a8f', singsing: '#6a93b5', sanquentin: '#b5866a', abashiri: '#5a6b7f', alcatraz: '#2b313c', folsom: '#8e9aa8', leavenworth: '#7f8c6a', lasante: '#7a6fa6', devil: '#8f5a6f' };
+const COURSE_COL = { halden: '#5f9a8f', singsing: '#6a93b5', fremantle: '#c08a3e', dartmoor: '#5f7a66', colditz: '#9a4f5a', lecumberri: '#3f3a5a', sanquentin: '#b5866a', abashiri: '#5a6b7f', alcatraz: '#2b313c', folsom: '#8e9aa8', leavenworth: '#7f8c6a', lasante: '#7a6fa6', devil: '#8f5a6f' };
 const MODE_COL = { silent: '#3b3f6e', key: '#c99a1a', plate: '#d47a1f', oneway: '#2f74b5', ice: '#3aa3c9', patrol: '#2f4d7a', twin: '#c2502a', dig: '#8a4b33', tilt: '#6b7d3a', big: '#4d5a6e', sl: '#1b2333', chain: '#7d2f45', laser: '#b8323a', heavy: '#4a505c', shutter: '#7a3f9a', lights: '#b58a12', vent: '#4f7383', ta: '#1f7a6a' };
 const listOf = src => { const c = courseOf(src); return c ? c.st : (ST && ST.modes[src]) || []; };
 const recsOfList = L => L.map(r => DB.st[r.k] || 0);
@@ -1249,7 +1249,7 @@ function bind() {
 }
 async function boot() {
   bind(); applyI18n(); applySkin();
-  try { [ST, DL] = await Promise.all([fetch('stages.json?v=3').then(r => r.json()), fetch('daily.json?v=2').then(r => r.json())]); } catch (e) { ST = DL = null; }
+  try { [ST, DL] = await Promise.all([fetch('stages.json?v=4').then(r => r.json()), fetch('daily.json?v=2').then(r => r.json())]); } catch (e) { ST = DL = null; }
   showScreen('home'); renderHome();
   if (!DB.tut.basic && !Q.has('notut')) { DB.tut.basic = 1; save(); setTimeout(tutorial, 400); }
   loginBonus();

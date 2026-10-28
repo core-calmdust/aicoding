@@ -12,7 +12,7 @@ const COURSES = [
   { id: 'halden', kind: 'mix', lo: 4, hi: 10, lv: 0 },
   { id: 'singsing', kind: 'mix', lo: 6, hi: 12, lv: 1 },
   { id: 'sanquentin', kind: 'mix', lo: 8, hi: 15, lv: 2 },
-  { id: 'abashiri', kind: 'mix', lo: 11, hi: 18, lv: 3 },
+  { id: 'abashiri', kind: 'mix', lo: 11, hi: 18, lv: 4 },   // 超上級 since 2026-10-28; Fremantle / Dartmoor / Colditz / Lecumberri come from tools/addcourses.js
   { id: 'alcatraz', kind: 'mix', lo: 19, hi: 28, lv: 4 },
   { id: 'folsom', kind: 'classic', lo: 4, hi: 11, lv: 1 },
   { id: 'leavenworth', kind: 'classic', lo: 8, hi: 15, lv: 2 },
