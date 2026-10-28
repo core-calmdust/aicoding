@@ -455,7 +455,18 @@
       const g = new (T().Group)();
       const top = M({ map: grid('sd', '#fffdf6', '#2b3044', 9, 9, { lw: 3, after: (c, W) => { c.lineWidth = 9; for (let i = 0; i <= 3; i++) { c.beginPath(); c.moveTo(i * W / 3, 0); c.lineTo(i * W / 3, W); c.moveTo(0, i * W / 3); c.lineTo(W, i * W / 3); c.stroke(); } c.fillStyle = '#2b3044'; c.font = '700 70px Fredoka, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; const d = '530070000600195000098000060800060003400803001700020006060000280000419005000080079'; for (let i = 0; i < 81; i++) if (d[i] !== '0') c.fillText(d[i], (i % 9 + .5) * W / 9, ((i / 9 | 0) + .55) * W / 9); } }), roughness: .9 });
       const p = slab(8, .08, 8, top, M({ color: 0xf0ead8 })); p.rotation.y = .12; g.add(p);
-      const pen = mesh(new (T().CylinderGeometry)(.12, .12, 5, 12), M({ color: 0xff8fc7 })); pen.rotation.z = Math.PI / 2; pen.rotation.y = .6; pen.position.set(3.6, .25, 3.4); g.add(pen);
+      // a pink ballpoint pen: cap with a metal clip, barrel, white grip, tapered tip with a metal point (built along +Y, then laid down)
+      const pen = new (T().Group)(), PT = T(), pk = M({ color: 0xff8fc7, roughness: .35, clearcoat: .6 }), pk2 = M({ color: 0xff5fae, roughness: .3, clearcoat: .6 }), wt = M({ color: 0xfff6fa, roughness: .5 }), mt = M({ color: 0xd9dde4, metalness: .85, roughness: .25 });
+      const part = (geo, mat, y) => { const m = mesh(geo, mat); m.position.y = y; pen.add(m); return m; };
+      part(new PT.CylinderGeometry(.13, .13, 2.9, 14), pk, .35);                       // barrel
+      part(new PT.CylinderGeometry(.155, .155, 1.25, 14), pk2, 2.05);                  // cap
+      part(new PT.SphereGeometry(.155, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2), pk2, 2.675);   // rounded cap end
+      part(new PT.BoxGeometry(.05, 1.0, .09), mt, 1.95).position.z = .17;              // clip
+      part(new PT.CylinderGeometry(.14, .14, .7, 14), wt, -1.45);                      // grip
+      part(new PT.CylinderGeometry(.14, .045, .5, 14), pk, -2.05);                      // tapered tip
+      part(new PT.ConeGeometry(.045, .14, 8), mt, -2.37).rotation.x = Math.PI;          // metal point
+      pen.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      pen.rotation.z = Math.PI / 2; pen.rotation.y = .6; pen.position.set(3.6, .25, 3.4); g.add(pen);
       return g;
     },
     speedsudoku() {   // a chunky 4×4 tray of number tiles, a stopwatch and a lightning bolt
