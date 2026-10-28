@@ -261,7 +261,11 @@ function renderHome() {
 function sgState() {
   if (!PHONE.matches || $('#home').hidden) return null;
   let key, gs, def;
-  if (homeTab === 'action') {
+  if (homeTab === 'daily') {
+    const r = dlRec(today());
+    key = 'daily'; def = ['pe', 'p', 'ph'].some(k => r[k].left < 0) ? 'puzzle' : DACT.some(([, k]) => r[k].a < 3) ? 'act' : 'puzzle';
+    gs = [{ id: 'puzzle', lb: t('d.puzzle'), open: 1 }, { id: 'act', lb: t('d.act'), open: 1 }, { id: 'free', lb: t('f.title'), open: 1 }];
+  } else if (homeTab === 'action') {
     key = 'action'; def = 'modes';
     gs = [{ id: 'modes', lb: t('sg.modes'), open: 1 }].concat(MIS_TIER.map((k, tier) => {
       const list = MIS.filter(m => m.tier === tier), stars = list.reduce((a, m) => a + (DB.act.mis[m.id] || 0), 0);
@@ -278,8 +282,9 @@ function sgState() {
 }
 function drawSG() {
   const bar = $('#sgbar'); if (!bar) return;
-  const S = sgState();
+  const S = sgState(), dp = $('.hpanel.daily');
   document.body.classList.toggle('has-sg', !!S);
+  if (S && S.key === 'daily') dp.dataset.sg = S.sel; else delete dp.dataset.sg;
   bar.hidden = !S;
   if (!S) { bar.innerHTML = ''; return; }
   bar.dataset.k = homeTab;
@@ -288,7 +293,7 @@ function drawSG() {
   $$('button', bar).forEach(b => b.onclick = () => {
     if (b.dataset.sg === S.sel) return;
     DB.set.sg = Object.assign({}, DB.set.sg, { [S.key]: b.dataset.sg }); save();
-    if (homeTab === 'action') renderAction(); else if (themeOpen) renderTheme(themeOpen);
+    if (homeTab === 'action') renderAction(); else if (themeOpen) renderTheme(themeOpen); else drawSG();
     const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0;
   });
 }
