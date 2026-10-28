@@ -25,4 +25,4 @@
 - ルール説明の進み具合：`aicoding-solitaire-rules-<種類>`、ルールを見たか：`aicoding-solitaire-rules-seen`
 
 ## 画像のクレジット
-- 絵札（J・Q・K）とカード裏面「クラシック赤・青」："Classic Playing Cards"（Figma Community）CC BY 4.0。`img/CREDITS.txt` 参照。ゲーム内の設定ダイアログにも表記。
+- 絵札（J・Q・K）とカード裏面「クラシック赤・青」："Classic Playing Cards"（Alborz Heydaryan、Figma Community）CC BY 4.0。`img/CREDITS.txt` 参照。ゲーム内の設定ダイアログにも表記。
