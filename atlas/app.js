@@ -1032,22 +1032,26 @@
     $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
     // the worn character / background / frame names live here (the item grid below is icons only)
     const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
-      return `<div class="dw${k === dKind ? ' on' : ''}"><span class="dwk">${t('kind.' + k)}</span><b>${it ? esc(iname(it)) : '—'}</b>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div>`; }).join('');
-    const PS = matchMedia('(max-width:760px)').matches ? 118 : 150;   // a smaller character on phones (the names sit beside it)
+      // the meta line (kind + rarity) above, the full name below (wraps, never cut off)
+      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
+    const PS = matchMedia('(max-width:760px)').matches ? 118 : 230;   // a smaller character on phones (the names sit beside it), a big one on PC
     $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
       <div class="dname"><div class="dpl"><b>${esc(W.name || t('pf.player'))}</b><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
+    dsegPos();
     const slot = dKind;
-    // sort: owned first (default) · rarity high -> low · rarity low -> high.
-    // With the rarity sorts the owned items come first (by rarity), then the unowned ones in the catalogue's order.
+    // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
     const ownd = it => W.owned.includes(it.id) ? 1 : 0, idx = new Map(ART.items.map((it, i) => [it.id, i]));
-    const list = ART.items.filter(it => it.kind === dKind).sort((a, b) => (ownd(b) - ownd(a)) || (!ownd(a) && dSort !== 'own' ? 0 : dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || idx.get(a.id) - idx.get(b.id));
-    $('dItems').innerHTML = list.map(it => {
+    const all = ART.items.filter(it => it.kind === dKind);
+    const list = (dSort === 'own' ? all.filter(ownd) : all).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
+    const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
+    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>` : list.map((it, i) => {
+      const head = dSort !== 'own' && (i === 0 || list[i - 1].rar !== it.rar) ? sec(it.rar) : '';
       const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`;
+      return head + `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`;
     }).join('');
     // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
     $('dItems').querySelectorAll('.dic').forEach(c => { const id = c.dataset.id;
@@ -1056,6 +1060,9 @@
       else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
     $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
   }
+  // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
+  function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
+  addEventListener('resize', () => { if (page === 'dress') dsegPos(); });
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
