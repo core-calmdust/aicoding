@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c0809">
 <meta name="description" content="宝石の種をまく本格マンカラ。カラハ・基本・入門・スンカの4ルール、10段階AI（終盤は完全読み）、レッスンとパズル、今日の一問。">
@@ -713,13 +714,15 @@ body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(22
   body.dock-open:not(.ol-soon) .app{width:auto!important;justify-content:center!important;align-content:start!important;column-gap:16px!important;row-gap:10px!important;
     grid-template-columns:calc(var(--u) * 9.7) var(--rw)!important;grid-template-rows:var(--CH)!important;grid-template-areas:"board side"!important}
   /* review box on: it shares the right column with the info (info above, box below; both scroll) */
-  body.dock-open.rvbox-on:not(.ol-soon) .app{grid-template-rows:calc(var(--CH) * .42 - 5px) calc(var(--CH) * .58 - 5px)!important;grid-template-areas:"board side" "board bx"!important}
+  body.dock-open.rvbox-on:not(.ol-soon) .app{grid-template-rows:calc(var(--CH) * .6 - 5px) calc(var(--CH) * .4 - 5px)!important;grid-template-areas:"board side" "board bx"!important}
   body.dock-open.rvbox-on:not(.ol-soon) .board-area{align-self:center}
   body.dock-open.rvbox-on:not(.ol-soon) .rvbox{grid-template-columns:minmax(0,1fr)!important;align-content:start;overflow-y:auto;padding:10px 12px!important;gap:8px!important}
   body.dock-open.rvbox-on:not(.ol-soon) .rvbox .bx-r{border-inline-start:none;padding-inline-start:0}
   body.dock-open.rvbox-on:not(.ol-soon) .rvbox .bx-body{flex:none;overflow:visible}
+  body.dock-open.rvbox-on:not(.ol-soon) .rvbox{grid-auto-rows:max-content}
+  body.dock-open.rvbox-on:not(.ol-soon) .rvbox :is(.bx-l,.bx-r){min-height:auto!important;height:auto!important}
   html body.dock-open:not(.ol-soon) .side{display:block;grid-area:side;height:0!important;min-height:100%!important;max-height:none!important;align-self:stretch!important;overflow-y:auto!important;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-  body.dock-open:not(.ol-soon) .side-in{display:flex;flex-direction:column;gap:10px;min-height:100%}
+  body.dock-open:not(.ol-soon) .side-in{display:flex;flex-direction:column;gap:10px;height:100%;min-height:0}   /* (fixed height: 棋譜 takes what is left and scrolls inside) */
   body.dock-open:not(.ol-soon) .side-in > *{flex:none!important;grid-row:auto!important}
   body.dock-open:not(.ol-soon) .lesson-card, body.dock-open:not(.ol-soon) .puzzle-card{grid-template-columns:minmax(0,1fr)!important}
   body.dock-open:not(.ol-soon) :is(.lesson-card,.puzzle-card) > *{grid-column:1!important;grid-row:auto!important}
@@ -728,11 +731,12 @@ body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(22
   body.dock-open:not(.ol-soon) #evalCard{order:2}
   body.dock-open:not(.ol-soon) #evalCard .graph{flex:none;height:56px!important}
   @media (max-height: 999px){ html body.dock-open:not(.ol-soon) .side #graph{display:none!important} }   /* short window: no graph, so 棋譜 fits */
-  /* with the review box in the column too: 棋譜 first, then 形勢 (the box has the commentary; the summary card steps aside) */
-  body.dock-open.rvbox-on:not(.ol-soon) .side-in > .kifu-card{order:1;min-height:80px!important}
+  /* with the review box in the column too: 形勢 → 棋譜 (scrolls inside); the box below has the commentary, the summary card steps aside */
   body.dock-open.rvbox-on:not(.ol-soon) .side-in > #evalCard{order:2}
+  body.dock-open.rvbox-on:not(.ol-soon) .side-in > .kifu-card{order:3;min-height:72px!important}
   body.dock-open.rvbox-on:not(.ol-soon) .side-in > .review-card{display:none!important}
-  body.dock-open:not(.ol-soon) .kifu-card{order:3;flex:1 0 auto!important;min-height:96px!important}
+  body.dock-open:not(.ol-soon) .kifu-card{order:3;flex:1 1 0!important;min-height:96px!important;display:flex!important;flex-direction:column;overflow:hidden}
+  body.dock-open:not(.ol-soon) .kifu-card .kifu{flex:1 1 auto;min-height:0;overflow-y:auto}
   body.dock-open:not(.ol-soon) .kifu{grid-template-columns:repeat(5,1fr)}
 }
 .hb .pdisc{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
@@ -1312,8 +1316,23 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
   } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=28"><\/script><script src="../shared/cardbar.js?v=2"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028big2"><\/script><script src="online-ui.js?v=20261028sk2"><\/script>');
 })();
 </script>
+<!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  if (window.__ROTWRAP) { document.documentElement.classList.add('atlas-ready'); if (window.AtlasLoading) AtlasLoading.hide(); return; }   // phone landscape wrapper: the skin runs in the turned page inside
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
+  const css2 = document.createElement('link'); css2.rel = 'stylesheet'; css2.href = '../atlas/skin/mancala.css?v=2'; document.head.appendChild(css2);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/mancala.js?v=2')).then(() => load('../atlas/skin/mancala.js?v=2'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028gorank" defer></script>
+<script src="../shared/atlas.js?v=20261028gorank2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac2" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

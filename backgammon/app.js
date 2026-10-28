@@ -1517,7 +1517,8 @@ function pcFit() {
   document.documentElement.style.setProperty('--ich', ich + 'px');
   const side = B.contains('dock-open') && !B.contains('ol-soon');   // online dock open: the info goes beside the board (CSS: body.dock-open)
   const rw = w < 1300 ? 310 : 330;   // (= the CSS --rw)
-  const base = H - 24 - (side ? 0 : 12 + ich) - (window.olDockH ? olDockH() : 0);   // height left for the board
+  // (side: measured from the opened dock itself — bar + panel, min(46vh, 380px) in online.css — so the board never runs under it)
+  const base = side ? H - 24 - 47 - Math.min(hgt * 0.46, 380) : H - 24 - 12 - ich - (window.olDockH ? olDockH() : 0);   // height left for the board
   const availW = w - 2 * px - (side ? rw + 16 : 0);
   let u = Math.min(availW / 15.85, 170), h = base / u;   // (big windows: the board grows with the window)
   if (h < 7.2) { u = base / 7.2; h = 7.2; }
