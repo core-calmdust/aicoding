@@ -74,7 +74,7 @@
     // phones held upright: the long board stands up the screen (camera rolled), your row on the right and your store at the top as in the 2D game
     const tall = innerHeight > innerWidth * 1.15;
     if (tall) board.rotation.y = Math.PI;
-    if (T3.fit) T3.fit(tall ? { w: 5.6, d: 12.0, y: G.TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: G.TOP, pitch: 1.05 });
+    if (T3.fit) T3.fit(tall ? { w: 6.4, d: 13.4, y: G.TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: G.TOP, pitch: 1.05 });
     const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = +ctx.size === 6 ? 6 : 4, RULES = 'kalah';
     const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => s ? t('bv.second') : t('bv.first');
