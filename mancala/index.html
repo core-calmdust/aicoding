@@ -1033,6 +1033,18 @@ html[data-sk=ocean] .slot{background:radial-gradient(circle at 50% 42%,#020811 0
 html[data-sk=ocean] .pitno{color:rgba(190,220,255,.42)}
 html[data-sk=ocean] .slabel{color:#a9c6e6}
 html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04) rgba(0,0,0,.6),inset 0 0 0 .5px rgba(255,255,255,.5),0 0 calc(var(--u) * .06) rgba(160,230,255,.35)}
+/* 振り返り and 棋譜 share the height half and half in every layout (2026-10-28): side by side or one above the other, both boxes
+   are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
+  body.rvbox-on .app:has(.review-card.show){grid-template-columns:minmax(0,2.4fr) minmax(0,.9fr) minmax(0,1fr);grid-template-areas:"board board board" "bx eval rv" "bx eval kifu"}
+  body.rvbox-on .review-card.show{overflow-y:auto}
+}
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=20261028sk">
 </head>
