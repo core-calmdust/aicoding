@@ -45,9 +45,23 @@ function applyI18n() {
 }
 
 /* ---------------- sound (WebAudio synth) ---------------- */
-let AC = null, gestured = false;
-addEventListener('pointerdown', () => { gestured = true; }, { once: true, capture: true });
-function ac() { if (!gestured) return null; if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+// iOS only lets audio start inside a real tap (touchend / click), and suspends or "interrupts" the context after a call,
+// the lock screen or switching apps. So: create and wake the context inside every tap (a silent 1-sample buffer
+// unlocks it), and wake it again when the page comes back.
+let AC = null;
+function unlockAudio() {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state !== 'running') {
+      AC.resume();
+      const b = AC.createBuffer(1, 1, 22050), src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) {}
+}
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+const wakeAudio = () => { if (AC && AC.state !== 'running' && !document.hidden) { try { AC.resume(); } catch (e) {} } };
+document.addEventListener('visibilitychange', wakeAudio); addEventListener('pageshow', wakeAudio); addEventListener('focus', wakeAudio);
+function ac() { if (!AC) return null; if (AC.state !== 'running') { try { AC.resume(); } catch (e) {} } return AC; }
 function tone(f, d = .1, type = 'square', v = .07, slide = 0, delay = 0) {
   if (!DB.set.snd) return; const a = ac(); if (!a) return;
   const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + delay;
