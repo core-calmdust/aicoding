@@ -2,7 +2,7 @@
    Hnefatafl on the portal.
    · The board card (levels, sides, modes, board size): level names come from the game
      (tafl/i18n.js: 15級 … 1級, 初段 … 五段 = levels 1 … 20), ratings = the game's RT_LV.
-     Board size picks the rule set: 11 × 11 Copenhagen, 9 × 9 Tablut, 7 × 7 Brandubh.
+     Board size picks the rule set: 11 × 11 Copenhagen (the default), 9 × 9 Tablut, 7 × 7 Brandubh; the picker shows just 7×7 / 9×9 / 11×11.
      Side: first = the attackers (they move first), second = the defenders with the king.
    · Table play (ちゃぶ台で遊ぶ): start(ctx) plays on the 3D board (Table3D.MODELS.tafl) with
      the full game's rules and AI — ../tafl/engine.js on the page (moves, captures, shieldwall,
@@ -328,5 +328,5 @@
     return { name: i <= 15 ? L.kyu.replace('{n}', 16 - i) : L.dan[i - 16], desc: '', rating: RATING[i - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.tafl = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [11, 9, 7], sizeLabel: l => SIZE_L[l] || SIZE_L.en, sizeName: (z, l) => ((TX[l] || TX.en).rule[VAR[z]] || '') + ' ' + z + '×' + z, levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.tafl = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [7, 9, 11], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
 })();

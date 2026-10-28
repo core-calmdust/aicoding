@@ -371,5 +371,6 @@
 "dr.wait": "Jouez encore quelques coups avant de proposer la nulle",
 "dr.accepted": "L’IA a accepté la nulle",
 "dr.declined": "L'IA a refusé la nulle (elle veut continuer)",
-"dr.aiResigned": "L'IA a abandonné"
+"dr.aiResigned": "L'IA a abandonné",
+"ls.seqGood": "Bon coup !"
 }

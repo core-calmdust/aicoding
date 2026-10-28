@@ -371,5 +371,6 @@
 "dr.wait": "Juega unas jugadas más antes de ofrecer tablas",
 "dr.accepted": "La IA aceptó las tablas",
 "dr.declined": "La IA rechazó las tablas (quiere seguir)",
-"dr.aiResigned": "La IA abandonó"
+"dr.aiResigned": "La IA abandonó",
+"ls.seqGood": "¡Buena jugada!"
 }
