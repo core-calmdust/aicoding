@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 /* =====================================================================
    World Board Game Atlas — one shared account for every game
    (shared/atlas-account.js; needs shared/atlas.js and, for real sync,
@@ -35,7 +36,7 @@
 
   const loadScript = src => { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); })); };   // shared with the games' online.js
   const emit = () => subs.forEach(f => { try { f(state()); } catch (e) {} });
-  const state = () => ({ available: !!(CFG || MOCK), ready: !!ready, user: user && !user.isAnonymous ? { name: user.displayName || '', photo: user.photoURL || '', email: user.email || '' } : null, syncing, last, err, games });
+  const state = () => ({ available: !!(CFG || MOCK), ready: !!ready, user: user && !user.isAnonymous ? { name: user.displayName || '', photo: user.photoURL || '', email: maskMail(user.email) } : null, syncing, last, err, games });
 
   /* ---------- the games' own projects: sign in / out together ---------- */
   function frameCall(g, msg) {

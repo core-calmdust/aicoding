@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 // Online play for Gomoku & Renju (ported from the Chess / Shogi pages): lobby, Elo rating, rating-based matchmaking, rooms, chat, spectating.
 // Moves are coordinates (h8, j10), stored in games/<gid>/moves as one space-separated string. Games are played with renju rules.
 // Game record (field names shared with the other games): w = uid of the player who moves FIRST (black stones in gomoku),
@@ -184,8 +185,8 @@
 
   // the linked Google account of this session (null: anonymous / not signed in)
   function account() {
-    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: a.email, name: a.name } : null; }
-    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; }
+    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: maskMail(a.email), name: a.name } : null; }
+    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null; } catch (e) { return null; }
   }
   // drop this session's live records (before switching account / signing out)
   async function dropLive() {
