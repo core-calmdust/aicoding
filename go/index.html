@@ -6,10 +6,10 @@
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c0f16">
-<meta name="description" content="本格囲碁。KataGo系の学習ネットを使った26段階のAI（15級〜八段・プロ級）、5〜19路盤、日本ルール・中国ルール、置き碁、形勢判断と振り返り解説、レッスン・定石解説・詰碁500問、オンライン対戦。">
+<meta name="description" content="本格囲碁。KataGo系の学習ネットを使った27段階のAI（18級〜八段・アマ最強）、5〜19路盤、日本ルール・中国ルール、置き碁、形勢判断と振り返り解説、レッスン・定石解説・詰碁500問、オンライン対戦。">
 <title>Go</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e1b469'/%3E%3Cpath d='M12 20h40M12 32h40M12 44h40M20 12v40M32 12v40M44 12v40' stroke='%232a1c0e' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23141414'/%3E%3Ccircle cx='44' cy='20' r='9' fill='%23f4f1ea' stroke='%23999'/%3E%3C/svg%3E">
-<meta property="og:title" content="囲碁 — 5〜19路・26段階AI・詰碁500問">
+<meta property="og:title" content="囲碁 — 5〜19路・27段階AI・詰碁500問">
 <meta property="og:description" content="強いAI、置き碁、形勢判断、振り返り解説、レッスン・定石解説・詰碁、オンライン対戦。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/go/">
@@ -935,7 +935,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
-<script src="../shared/atlas.js?v=20261028ckpz" defer></script>
+<script src="../shared/atlas.js?v=20261028gorank" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4" defer></script>
 <script src="../shared/atlas-account.js?v=4" defer></script>
 </body>

@@ -47,7 +47,7 @@ const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG]
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 25 steps labelled with the ranks measured on 19x19 against KataGo's human-like model (MODEL_CARD.md):
 // 18級 … 1級, 初段 … 八段, then the strongest. 11級 and 8級 sit halfway between their neighbours' settings (not measured).
-const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't3'];
+const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1'];
 const LV_MAX = RANKS.length - 1;
 // rank as a number: 18級 = -17 … 1級 = 0, 初段 = 1 … 八段 = 8, beyond = 9+
 const rankVal = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))]; const v = +r.slice(1); return r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v; };
@@ -1015,7 +1015,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo): 9x9, 5 min + 20 s byo-yomi
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { base: 300000, byo: 20000 };
 // rating of each AI step on the kyu / dan scale (100 per kyu: 15級 = 450 … 1級 = 1850, then about 100 per dan)
-const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => 1850 + 100 * rankVal(i + 1)));   // 18級 150 … 1級 1850, 初段 1950 … 八段 2650, the strongest 3050
+const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => 1850 + 100 * rankVal(i + 1)));   // 18級 150 … 1級 1850, 初段 1950 … 八段 2650, top amateur 2750
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
