@@ -86,7 +86,7 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 .ru-main:not(.has-board) > :first-child{margin-top:auto}
 .ru-main:not(.has-board) > :last-child{margin-bottom:auto}
 #rulesBody > .ru-steps{flex:none}
-#rulesBody > .ru-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(201,169,97,.18)}
+#rulesBody > .ru-nav{flex:none;margin-top:10px;padding-top:12px;border-top:1px solid rgba(var(--acc-rgb),.18)}
 @media (orientation: landscape) and (max-height: 560px){ #lessonOverlay .modal[data-view=rulesView]{width:min(900px, calc(100vw - 20px))!important} }
 @media (max-height: 560px){
   #rulesView > .ls-tabs{margin-bottom:6px}
@@ -147,22 +147,22 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 .lesson-list.op-list{align-items:start}
 .op-sub{grid-column:1 / -1;margin:0 0 6px}
 .op-sub button{font-size:15px;padding:10px 6px}
-.op-head{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:14px 16px;border-radius:12px;background:rgba(201,169,97,.08);border:1px solid rgba(201,169,97,.28)}
+.op-head{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:14px 16px;border-radius:12px;background:rgba(var(--acc-rgb),.08);border:1px solid rgba(var(--acc-rgb),.28)}
 .op-lead{flex:1 1 320px;font-size:16.5px;line-height:1.65;color:var(--text);margin:0}
 .op-cnt{font-size:13.5px;color:var(--dim);white-space:nowrap}.op-cnt.clear{color:#8fe3b8}
 .op-about{flex:1 1 100%}
 .op-about summary{cursor:pointer;font-size:14.5px;color:var(--brass);padding:4px 0;list-style-position:inside}
 .op-about summary:hover{color:var(--accent)}
-.op-about p{font-size:15.5px;line-height:1.8;color:#cfd8d2;margin:8px 0 0}
+.op-about p{font-size:15.5px;line-height:1.8;color:var(--soft);margin:8px 0 0}
 .op-about p b{color:var(--accent)}
 .op-card{display:flex;flex-direction:column;gap:8px;padding:14px 16px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);cursor:pointer;transition:border-color .2s,background .2s,transform .15s;min-width:0}
-.op-card:hover,.op-card:focus-visible{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.05);outline:none}
+.op-card:hover,.op-card:focus-visible{border-color:rgba(var(--acc-rgb),.6);background:rgba(var(--acc-rgb),.05);outline:none}
 .op-card.done{border-color:rgba(111,211,160,.4)}
 .oc-top{display:flex;align-items:center;gap:10px}
 .oc-no{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--brass);border:1px solid var(--brass2)}
 .oc-nm{flex:1;min-width:0;font-size:16.5px;color:var(--accent);letter-spacing:.02em;line-height:1.4}
 .oc-ok{color:#8fe3b8;font-weight:700;font-size:17px}
-.oc-sum{font-size:15px;line-height:1.7;color:#d6dfda;margin:0}
+.oc-sum{font-size:15px;line-height:1.7;color:var(--soft);margin:0}
 .hm{color:var(--accent);font-weight:600;white-space:nowrap}
 .oc-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .oc-badge{font-size:12.5px;line-height:1.5;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
@@ -178,7 +178,7 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 .oc-open{margin-left:auto;font-size:13.5px;color:var(--brass)}
 .op-basic{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr);gap:4px 24px;padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18)}
 .op-basic h3{font-family:'Shippori Mincho B1',serif;font-size:19px;color:var(--brass);letter-spacing:.04em;margin:0 0 6px}
-.op-basic p{font-size:16px;line-height:1.8;color:#d6dfda;margin:0 0 10px}
+.op-basic p{font-size:16px;line-height:1.8;color:var(--soft);margin:0 0 10px}
 .op-basic p:last-child{margin-bottom:0}
 .op-basic p b{color:var(--accent)}
 .op-basic figure.mini{margin:6px auto 0;max-width:240px}
@@ -208,9 +208,9 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 .od-sec{padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18);margin-bottom:12px}
 .od-sec h3{font-family:'Shippori Mincho B1',serif;font-size:18.5px;color:var(--brass);letter-spacing:.04em;margin:0 0 8px}
 .od-pts{margin:0;padding-inline-start:20px}
-.od-pts li{font-size:16px;line-height:1.8;color:#d6dfda;margin-bottom:6px}
+.od-pts li{font-size:16px;line-height:1.8;color:var(--soft);margin-bottom:6px}
 .od-pts li::marker{color:var(--brass)}
-#odNow p{font-size:16px;line-height:1.8;color:#d6dfda;margin:0 0 8px}
+#odNow p{font-size:16px;line-height:1.8;color:var(--soft);margin:0 0 8px}
 #odNow p:last-child{margin-bottom:0}
 #odNow b{color:var(--accent)}
 .od-actions{display:flex;flex-direction:column;gap:10px;margin-top:4px}
@@ -227,8 +227,9 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 /* ---------------------------------------------------------------- new-game dialog: 2 columns on PC */
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){
   #newOverlay .modal{width:min(980px, calc(100vw - 64px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:36px;align-content:start;padding:28px 34px;
-    grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size disp" "order level" "rated level2" "act act"}
-  #newOverlay .modal.m-rated{grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size rated" "disp rated" ". rated" "act act"}
+    grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size disp" "order level" "rated level2" "skin skin" "act act"}
+  #newOverlay .modal.m-rated{grid-template-areas:"h h" "offer offer" "rules rules" "mode mode" "info info" "size rated" "disp rated" ". rated" "skin skin" "act act"}
+  #newOverlay #fSkin{grid-area:skin;margin-top:4px}
   #newOverlay .modal > *{grid-column:1 / -1}
   #newOverlay .modal > h2{grid-area:h}
   #newOverlay #rulesOffer{grid-area:offer}
@@ -276,17 +277,17 @@ figure.mini figcaption{font-size:14.5px;line-height:1.7}
 body.rated-live #evLine, body.rated-live #graph{visibility:hidden}
 
 /* ---------------------------------------------------------------- 振り返り解説 (coach review) */
-.cr-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06)}
+.cr-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(var(--acc-rgb),.35);background:rgba(var(--acc-rgb),.06)}
 .cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
-.cr-box p{font-size:14px;line-height:1.75;color:#d6dfda;margin:0 0 6px}
+.cr-box p{font-size:14px;line-height:1.75;color:var(--soft);margin:0 0 6px}
 .cr-box p:last-child{margin-bottom:0}
 .cr-mv b{color:var(--text)}
 .cr-mv .tag{font-size:12.5px;font-weight:700;margin-left:6px}
 .cr-mv .tag.bad{color:#ff8b7d}.cr-mv .tag.dubious{color:#f2c060}.cr-mv .tag.best,.cr-mv .tag.good{color:#8fe3b8}
 .cr-why{color:var(--muted)!important}
-.cr-tip{color:#e9dcb4!important}
+.cr-tip{color:var(--accent)!important}
 .cr-list{margin:0;padding-inline-start:18px}
-.cr-list li{font-size:14px;line-height:1.75;color:#d6dfda;margin-bottom:5px}
+.cr-list li{font-size:14px;line-height:1.75;color:var(--soft);margin-bottom:5px}
 .cr-list li::marker{color:var(--brass)}
 .cr-go{font-size:12.5px;padding:1px 9px;border-radius:7px;border:1px solid var(--brass2);color:var(--accent);background:rgba(0,0,0,.2);margin-inline-start:4px}
 
@@ -313,14 +314,14 @@ html[lang=ar] #newOverlay .field > label{direction:rtl;text-align:right}
 .lx-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 12px}
 .lx-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:13px;min-width:0}
 .lx-tabs button .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(201,169,97,.14);color:var(--brass);overflow:hidden}
+.lx-tabs button .ic{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:rgba(var(--acc-rgb),.14);color:var(--brass);overflow:hidden}
 .lx-tabs .ic svg, .lx-banner .ic svg{width:100%;height:100%;display:block;margin:0}
 .lx-tabs button .ic.sv, .lx-banner .ic.sv{background:none;padding:0}
 .lx-tabs button .ct{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}.lx-tabs button .ct.ok{color:#8fe3b8}
 .lx-tabs button:hover{border-color:var(--brass2)}
-.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(201,169,97,.2),rgba(201,169,97,.06));box-shadow:inset 0 -2px 0 var(--brass)}
-.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(201,169,97,.28);background:linear-gradient(120deg,rgba(201,169,97,.14),rgba(0,0,0,.18) 70%)}
-.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#1a140c;background:linear-gradient(140deg,#e9cf8e,#a8873f);overflow:hidden}
+.lx-tabs button.sel{color:var(--text);border-color:var(--brass);background:linear-gradient(180deg,rgba(var(--acc-rgb),.2),rgba(var(--acc-rgb),.06));box-shadow:inset 0 -2px 0 var(--brass)}
+.lx-banner{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(var(--acc-rgb),.28);background:linear-gradient(120deg,rgba(var(--acc-rgb),.14),rgba(0,0,0,.18) 70%)}
+.lx-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:var(--go-ink);background:linear-gradient(140deg,var(--go1),var(--go2));overflow:hidden}
 .lx-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .lx-banner .tx b{font-family:'Shippori Mincho B1',serif;font-size:17px;color:var(--brass)}
 .lx-banner .tx small{font-size:12px;color:var(--muted);line-height:1.6}
@@ -334,7 +335,7 @@ html[lang=ar] #newOverlay .field > label{direction:rtl;text-align:right}
 .lx-card.clear{border-color:rgba(111,211,160,.35);background:linear-gradient(120deg,rgba(47,125,90,.16),rgba(0,0,0,.22) 60%)}
 .lx-card.wide{grid-column:1 / -1}
 .lx-th{flex:none;width:88px;align-self:center}.lx-th svg{display:block;width:100%;height:auto;margin:0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-.lx-th.ico{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;font-size:34px;background:linear-gradient(140deg,rgba(201,169,97,.25),rgba(0,0,0,.2));border:1px solid rgba(201,169,97,.3)}
+.lx-th.ico{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;font-size:34px;background:linear-gradient(140deg,rgba(var(--acc-rgb),.25),rgba(0,0,0,.2));border:1px solid rgba(var(--acc-rgb),.3)}
 .lx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .lx-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lx-no{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brass)}
