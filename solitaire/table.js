@@ -20,10 +20,8 @@ function faceHtml(c) {
   const corner = `<div class="ix"><b>${rk}</b>${suitSvg(s)}</div><div class="ix ix2"><b>${rk}</b>${suitSvg(s)}</div>`;
   let mid;
   if (r > 10) {
-    const em = ['emJ', 'emQ', 'emK'][r - 11];
-    const half = `<div class="fh"><svg class="em" viewBox="0 0 24 24"><use href="#${em}"/></svg><b>${rk}</b>${suitSvg(s, 'fs')}</div>`;
-    mid = `<div class="fc">${half}${half.replace('class="fh"', 'class="fh fh2"')}</div>`;
-  } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
+    mid = `<div class="fc">${window.Court ? Court.svg(r, s) : ''}</div>`;
+  } else if (r === 1) mid = s === 0 ? `<div class="ace a0"><svg class="orn" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18.4" fill="none" stroke="currentColor" stroke-width=".5"/><circle cx="20" cy="20" r="16.8" fill="none" stroke="currentColor" stroke-width=".25" stroke-dasharray=".6 1.2"/></svg>${suitSvg(s)}</div>` : `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
   return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div></div><div class="bk"></div>`;
 }
@@ -93,13 +91,14 @@ class Table {
       const sl = this.slots[i]; sl.style.transform = `translate(${x0}px,${y0}px)`;
       sl.classList.toggle('dead', l.k === 'stock' && !n && !(S.VARIANTS[st.v].canStock && S.VARIANTS[st.v].canStock(st)));
       sl.classList.toggle('filled', n > 0);
-      let dy = UP * u, dd = DOWN * u, dx = 0;
+      const upMax = !this.o.mini && g.H / u > 8.5 ? 0.40 : UP;
+      let dy = upMax * u, dd = DOWN * u, dx = 0;
       if (l.fan === 'v') {
         const avail = g.H - y0 - ch - 6, need = P.d * dd + Math.max(0, n - P.d - 1) * dy;
         if (need > avail && need > 0) {
           const k = Math.max(0, avail) / need;
           dd = Math.max(DOWNMIN * u, dd * k); dy = Math.max(UPMIN * u, (avail - P.d * dd) / Math.max(1, n - P.d - 1));
-          dy = Math.min(dy, UP * u);
+          dy = Math.min(dy, upMax * u);
         }
       }
       let bottom = y0 + ch;
