@@ -8,7 +8,7 @@
      Worker (WebAssembly search + learned evaluation + endgame databases, levels 1..20),
      asked exactly as checkers/app.js asks it ({ type:'think', start, moves, level }).
      ctx.mode 'pvp': two players take turns on one device (Black first, at the bottom).
-     Board and pieces: atlas/models/checkers.js (acrylic-framed lacquer board, gold and
+     Board and pieces: atlas/models/checkers.js (lacquer board in a black lacquer frame, gold and
      silver turned-metal checkers; Black = gold, White = silver).
    Rendering is on demand: animations kick Table3D; nothing loops while idle.
    ===================================================================== */

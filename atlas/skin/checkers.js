@@ -4,7 +4,7 @@
    online play with the 2D version, lessons, openings, puzzles, review /
    analysis, the coach…). This file:
      • draws the luxury board (atlas/models/checkers.js: lacquer field, clear
-       acrylic frame) with the 3D table; the camera is aligned to the DOM board,
+       black lacquer frame) with the 3D table; the camera is aligned to the DOM board,
        which stays on top (transparent) for taps, selection, destinations, marks,
        hints and labels. The DOM frame becomes the 3D board's outer edge
        (9.84 × 9.84 squares); the captured pieces sit on its frame band
@@ -43,7 +43,8 @@ html.atlas-checkers .lines rect{fill:transparent!important}
 html.atlas-checkers .lines .num{fill:rgba(255,248,230,.5)!important}
 html.atlas-checkers .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important}
 html.atlas-checkers .pieces .pc:not(.hov)::before{box-shadow:none!important;animation:none!important}
-html.atlas-checkers .pieces .pc .crown{display:none!important}
+html.atlas-checkers .pieces .pc .crown{inset:27%!important;opacity:.95;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))!important}   /* seen from straight above the 3D stack is hard to read: the crown mark stays */
+html.atlas-checkers .pieces .pc:not(.king) .crown{display:none!important}
 html.atlas-checkers .pieces .pc.sel{box-shadow:0 0 0 3px rgba(80,232,150,.95),0 0 18px rgba(80,232,150,.75)!important}
 html.atlas-checkers .pieces .pc.mustjump{animation:ckMJ 1.1s ease-in-out infinite!important}
 @keyframes ckMJ{0%,100%{box-shadow:0 0 0 2px rgba(255,180,40,.75),0 0 10px rgba(255,180,40,.45)}50%{box-shadow:0 0 0 4px rgba(255,180,40,.95),0 0 22px rgba(255,180,40,.85)}}
@@ -75,7 +76,7 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
 
   const skin = AtlasSkin.init({
     board: boardDom,
-    outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // acrylic edge to acrylic edge
+    outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // frame edge to frame edge
     guide: '../images/atlas/g-crab.webp', guideFallback: '../images/atlas/checkers.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: 'lines|\\.pc|\\.rv|reserve|sqfx|\\.dest|\\.mark|\\.hov|fxsvg|hintlbl|frame|prompt|crown',
@@ -99,16 +100,16 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
 
   /* ---------- the new-game dialog: the 3D set replaces the 2D board / piece designs ---------- */
   const NOTE = {
-    ja: ['3D高級盤', '漆塗りの盤面とクリアアクリルの枠、金（黒）と銀（白）の金属駒で表示しています。'],
-    en: ['Luxury 3D board', 'Lacquered field in a clear acrylic frame, with gold (Black) and silver (White) metal checkers.'],
-    zh: ['3D豪华棋盘', '漆面棋盘配透明亚克力边框，金色（黑方）与银色（白方）金属棋子。'],
-    ko: ['3D 고급 판', '옻칠 판면과 투명 아크릴 테두리, 금(흑)·은(백) 금속 말로 표시합니다.'],
-    es: ['Tablero 3D de lujo', 'Campo lacado en marco de acrílico transparente, con piezas metálicas doradas (negras) y plateadas (blancas).'],
-    fr: ['Damier 3D de luxe', 'Champ laqué dans un cadre en acrylique transparent, pions métalliques or (Noirs) et argent (Blancs).'],
-    pt: ['Tabuleiro 3D de luxo', 'Campo laqueado em moldura de acrílico transparente, com peças de metal douradas (pretas) e prateadas (brancas).'],
-    de: ['Luxus-3D-Brett', 'Lackiertes Spielfeld im klaren Acrylrahmen, mit goldenen (Schwarz) und silbernen (Weiß) Metallsteinen.'],
-    hi: ['3D लक्ज़री बोर्ड', 'लाख वाला बोर्ड, पारदर्शी ऐक्रेलिक फ़्रेम, और सुनहरी (काला) व चाँदी (सफ़ेद) धातु की गोटियाँ।'],
-    ar: ['رقعة فاخرة ثلاثية الأبعاد', 'سطح مطلي بالورنيش داخل إطار أكريليك شفاف، مع قطع معدنية ذهبية (الأسود) وفضية (الأبيض).'],
+    ja: ['3D高級盤', '漆塗りの盤面と黒漆の枠、金（黒）と銀（白）の金属駒で表示しています。'],
+    en: ['Luxury 3D board', 'Lacquered field in a black lacquer frame, with gold (Black) and silver (White) metal checkers.'],
+    zh: ['3D豪华棋盘', '漆面棋盘配黑漆边框，金色（黑方）与银色（白方）金属棋子。'],
+    ko: ['3D 고급 판', '옻칠 판면과 검은 옻칠 테두리, 금(흑)·은(백) 금속 말로 표시합니다.'],
+    es: ['Tablero 3D de lujo', 'Campo lacado en marco de laca negra, con piezas metálicas doradas (negras) y plateadas (blancas).'],
+    fr: ['Damier 3D de luxe', 'Champ laqué dans un cadre en laque noire, pions métalliques or (Noirs) et argent (Blancs).'],
+    pt: ['Tabuleiro 3D de luxo', 'Campo laqueado em moldura de laca preta, com peças de metal douradas (pretas) e prateadas (brancas).'],
+    de: ['Luxus-3D-Brett', 'Lackiertes Spielfeld im schwarzen Lackrahmen, mit goldenen (Schwarz) und silbernen (Weiß) Metallsteinen.'],
+    hi: ['3D लक्ज़री बोर्ड', 'लाख वाला बोर्ड, काले लाख का फ़्रेम, और सुनहरी (काला) व चाँदी (सफ़ेद) धातु की गोटियाँ।'],
+    ar: ['رقعة فاخرة ثلاثية الأبعاد', 'سطح مطلي بالورنيش داخل إطار من الورنيش الأسود، مع قطع معدنية ذهبية (الأسود) وفضية (الأبيض).'],
   };
   const fd = document.getElementById('fDesign');
   if (fd) {

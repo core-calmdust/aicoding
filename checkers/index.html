@@ -1198,7 +1198,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="rvbox.js?v=2"></script>
 <script src="app.js?v=20261028pz4tlsk"></script>
 <script src="online-ui.js?v=3sec1l9"></script>
-<!-- World Board Game Atlas portal skin: checkers/?skin=atlas — 3D luxury board (lacquer field, clear acrylic frame, gold & silver metal checkers), guide speech bubbles, portal look (all features kept) -->
+<!-- World Board Game Atlas portal skin: checkers/?skin=atlas — 3D luxury board (lacquer field, black lacquer frame, gold & silver metal checkers), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
@@ -1207,7 +1207,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=71')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/checkers.js?v=2')).then(() => load('../atlas/skin/checkers.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/checkers.js?v=3')).then(() => load('../atlas/skin/checkers.js?v=1'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
