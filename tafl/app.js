@@ -63,7 +63,7 @@ function applyI18n() {
   document.title = t('meta.title');
   renderBrand();
 }
-function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = gv !== 'copenhagen' && !lesson && !puzzle ? t('rule.' + gv) : t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length + ($('#brandSub').textContent.length * .5))); }
+function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = gv !== 'copenhagen' && !lesson && !puzzle ? t('rule.' + gv) : t('sub'); const h1 = $('#brandTitle').closest('h1'); if (h1) h1.style.setProperty('--tl', Math.max(14, tt.length + ($('#brandSub').textContent.length * .5))); }   // (the portal skin moves the h1 into its top bar)
 let humanColor = P2;
 let reviewing = false;
 let ken = null, kenSw = false, rvbHov = null, BOX = null;   // PC review box: exploring (検討) state, swap flag, hovered candidate, the box
