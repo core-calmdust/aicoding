@@ -169,6 +169,7 @@ function checks(rec, P, path, o, why, m) {
   if (r === 'shutter') {
     const x = clone(rec); delete x.sr; delete x.sb; x.r = 'basic'; const xo = optOf(x);
     if (xo > 0 && xo >= o) why.push('shutters do not matter');
+    if ((rec.sr || []).some(c => (rec.sb || []).includes(c))) why.push('red and blue on one cell');
   }
   if (r === 'lights') {
     if (!m.lights) why.push('switch not used');

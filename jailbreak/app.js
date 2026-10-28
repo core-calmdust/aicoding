@@ -469,7 +469,7 @@ function endTA() {
   DB.stats.taRuns = (DB.stats.taRuns || 0) + 1; if (best) DB.best.ta = ms;
   const coins = addCoin(80 + Math.max(0, 180 - ms / 1000)); save();
   if (ON && ON.available && DB.name) ON.putDaily(run.date, 'ta', Object.assign({ s: Math.max(0, 200000 - Math.round(ms / 100)) }, who())).catch(() => {});
-  showResult(resultCard('ALL CLEAR!', `<div class="rscore">${fmtT(ms)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}<div class="rstats"><span><b>${run.perf}</b>${esc(t('r.perf'))}</span><span><b>${fmtT(DB.best.ta)}</b>${esc(t('d.best'))}</span></div>${coinLine(coins)}${nameNudge()}`,
+  showResult(resultCard('ALL CLEAR!', `<div class="rscore">${fmtT(ms)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}<div class="rstats"><span><b>${run.perf}<small>/10</small></b>${esc(t('ta.perf'))}</span><span><b>${fmtT(DB.best.ta)}</b>${esc(t('d.best'))}</span></div>${coinLine(coins)}${nameNudge()}`,
     [['again', t('r.retry'), 'org'], ['rank', t('rk.title')], ['home', t('u.home')]]));
   if (DB.set.anim) confetti(); updateBadges();
 }

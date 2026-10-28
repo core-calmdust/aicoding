@@ -23,6 +23,7 @@ for (const r of rules) {
   const seen = new Set(), C = [];
   fs.readFileSync(path.join(dir, 'm_' + r + '.jsonl'), 'utf8').split('\n').filter(Boolean).forEach(l => {
     const x = JSON.parse(l), rec = Object.assign({ w: 6, h: 6 }, x.rec, { r }); delete rec.o; delete rec.N; delete rec.s;
+    if ((rec.sr || []).some(c => (rec.sb || []).includes(c))) return;
     const c = L.canon(rec); if (seen.has(c)) return; seen.add(c); C.push({ rec, o: x.o, sc: x.sc, c });
   });
   const slots = PL.modeSlots(r), used = new Set();

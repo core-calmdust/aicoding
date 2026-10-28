@@ -4,6 +4,7 @@
 const I = window.JB_I18N = window.JB_I18N || {};
 const add = (l, o) => { I[l] = Object.assign(I[l] || {}, o); };
 add('ja', {
+  'ta.perf': '最短で脱出',
   'mo.laser': 'レーザー', 'mo.laser.s': '赤い光線に囚人は入れない。', 'mo.laser.r': '壁の発射口から赤いレーザーが出ています。囚人はレーザーの上に入れません。ブロックや木箱を置けば光線をさえぎれます。',
   'mo.heavy': '重い金庫', 'mo.heavy.s': '金庫は1手に1マスしか動かない。', 'mo.heavy.r': '鉄の金庫はとても重く、1手で1マスしか動かせません。ほかのブロックは今までどおり何マスでも動かせます。',
   'mo.shutter': '交互シャッター', 'mo.shutter.s': '赤と青のシャッターが1手ごとに入れ替わる。', 'mo.shutter.r': '1手ごとに赤と青のシャッターが交互に閉まります（最初は赤が閉まっている）。閉まったマスには入れません。シャッターの上にいるブロックは閉じ込められず、そのまま動けます。',
@@ -16,6 +17,7 @@ add('ja', {
   'ach.modesAll': 'ルールモード全750問クリア',
 });
 add('en', {
+  'ta.perf': 'Perfect escapes',
   'mo.laser': 'Lasers', 'mo.laser.s': 'Inmates can’t step into the red beam.', 'mo.laser.r': 'Emitters in the walls fire red lasers. Inmates can’t step into a beam. Put a block or crate in the way to cut it.',
   'mo.heavy': 'Heavy Safe', 'mo.heavy.s': 'The safe moves only one cell a move.', 'mo.heavy.r': 'The steel safe is very heavy: each move shifts it just one cell. Other blocks still slide as far as you like.',
   'mo.shutter': 'Shutters', 'mo.shutter.s': 'Red and blue shutters swap every move.', 'mo.shutter.r': 'Red and blue shutters close in turn with every move (red starts closed). Nothing can enter a closed one; a block already standing in one is not trapped.',
@@ -28,6 +30,7 @@ add('en', {
   'ach.modesAll': 'Clear all 750 rule-mode stages',
 });
 add('zh', {
+  'ta.perf': '最短逃脱',
   'mo.laser': '激光', 'mo.laser.s': '囚犯不能进入红色激光。', 'mo.laser.r': '墙上的发射口射出红色激光。囚犯不能走进激光。放一个方块或木箱就能挡住光线。',
   'mo.heavy': '沉重保险箱', 'mo.heavy.s': '保险箱每步只能移动1格。', 'mo.heavy.r': '铁保险箱非常重，每步只能移动1格。其他方块照常想滑多远都行。',
   'mo.shutter': '交替闸门', 'mo.shutter.s': '红蓝闸门每步交替开关。', 'mo.shutter.r': '每走一步，红色和蓝色闸门轮流关闭（一开始红色关闭）。关闭的格子不能进入；已经停在闸门上的方块不会被困住。',
@@ -40,6 +43,7 @@ add('zh', {
   'ach.modesAll': '通关全部750个规则模式关卡',
 });
 add('ko', {
+  'ta.perf': '최단 탈출',
   'mo.laser': '레이저', 'mo.laser.s': '죄수는 빨간 광선에 들어갈 수 없다.', 'mo.laser.r': '벽의 발사구에서 빨간 레이저가 나온다. 죄수는 레이저 위로 들어갈 수 없다. 블록이나 나무상자를 놓으면 광선을 막을 수 있다.',
   'mo.heavy': '무거운 금고', 'mo.heavy.s': '금고는 한 수에 한 칸만.', 'mo.heavy.r': '철 금고는 아주 무거워서 한 수에 한 칸만 움직인다. 다른 블록은 평소처럼 몇 칸이든 움직일 수 있다.',
   'mo.shutter': '교대 셔터', 'mo.shutter.s': '빨강・파랑 셔터가 한 수마다 바뀐다.', 'mo.shutter.r': '한 수마다 빨강과 파랑 셔터가 번갈아 닫힌다(처음엔 빨강이 닫힘). 닫힌 칸에는 들어갈 수 없다. 이미 셔터 위에 있는 블록은 갇히지 않는다.',
@@ -52,6 +56,7 @@ add('ko', {
   'ach.modesAll': '규칙 모드 750스테이지 전부 클리어',
 });
 add('es', {
+  'ta.perf': 'Fugas perfectas',
   'mo.laser': 'Láseres', 'mo.laser.s': 'Los presos no pueden entrar en el rayo rojo.', 'mo.laser.r': 'Emisores en las paredes disparan láseres rojos. Un preso no puede entrar en un rayo. Pon un bloque o una caja delante para cortarlo.',
   'mo.heavy': 'Caja fuerte', 'mo.heavy.s': 'La caja fuerte avanza una casilla por jugada.', 'mo.heavy.r': 'La caja fuerte de acero pesa muchísimo: cada jugada la mueve solo una casilla. Los demás bloques se deslizan lo que quieras.',
   'mo.shutter': 'Persianas', 'mo.shutter.s': 'Las persianas roja y azul se turnan.', 'mo.shutter.r': 'Con cada jugada se cierran por turnos las persianas rojas y azules (al principio, la roja). Nada entra en una cerrada; un bloque que ya está encima no queda atrapado.',
@@ -64,6 +69,7 @@ add('es', {
   'ach.modesAll': 'Supera las 750 fases de modos',
 });
 add('fr', {
+  'ta.perf': 'Évasions parfaites',
   'mo.laser': 'Lasers', 'mo.laser.s': 'Les détenus ne peuvent pas entrer dans le rayon rouge.', 'mo.laser.r': 'Des émetteurs dans les murs tirent des lasers rouges. Un détenu ne peut pas entrer dans un rayon. Place un bloc ou une caisse devant pour le couper.',
   'mo.heavy': 'Coffre-fort', 'mo.heavy.s': 'Le coffre n’avance que d’une case par coup.', 'mo.heavy.r': 'Le coffre en acier est très lourd : chaque coup ne le déplace que d’une case. Les autres blocs glissent aussi loin que tu veux.',
   'mo.shutter': 'Volets', 'mo.shutter.s': 'Les volets rouges et bleus alternent.', 'mo.shutter.r': 'À chaque coup, les volets rouges et bleus se ferment à tour de rôle (le rouge est fermé au début). Rien n’entre dans un volet fermé ; un bloc déjà dessus n’est pas coincé.',
@@ -76,6 +82,7 @@ add('fr', {
   'ach.modesAll': 'Réussir les 750 niveaux des modes',
 });
 add('pt', {
+  'ta.perf': 'Fugas perfeitas',
   'mo.laser': 'Lasers', 'mo.laser.s': 'Os presos não podem entrar no raio vermelho.', 'mo.laser.r': 'Emissores nas paredes disparam lasers vermelhos. Um preso não pode entrar num raio. Ponha um bloco ou caixa na frente para cortá-lo.',
   'mo.heavy': 'Cofre pesado', 'mo.heavy.s': 'O cofre anda só uma casa por jogada.', 'mo.heavy.r': 'O cofre de aço é muito pesado: cada jogada o move só uma casa. Os outros blocos deslizam quanto quiser.',
   'mo.shutter': 'Persianas', 'mo.shutter.s': 'Persianas vermelha e azul se alternam.', 'mo.shutter.r': 'A cada jogada, as persianas vermelhas e azuis fecham alternadamente (a vermelha começa fechada). Nada entra numa fechada; um bloco que já está nela não fica preso.',
@@ -88,6 +95,7 @@ add('pt', {
   'ach.modesAll': 'Passe as 750 fases dos modos',
 });
 add('de', {
+  'ta.perf': 'Perfekte Ausbrüche',
   'mo.laser': 'Laser', 'mo.laser.s': 'Häftlinge dürfen nicht in den roten Strahl.', 'mo.laser.r': 'Sender in den Wänden schießen rote Laser. Häftlinge können nicht in einen Strahl gehen. Stell einen Block oder eine Kiste davor, um ihn zu unterbrechen.',
   'mo.heavy': 'Schwerer Tresor', 'mo.heavy.s': 'Der Tresor bewegt sich nur ein Feld pro Zug.', 'mo.heavy.r': 'Der Stahltresor ist sehr schwer: Jeder Zug schiebt ihn nur ein Feld. Andere Blöcke gleiten so weit du willst.',
   'mo.shutter': 'Rollgitter', 'mo.shutter.s': 'Rote und blaue Gitter wechseln jeden Zug.', 'mo.shutter.r': 'Mit jedem Zug schließen abwechselnd die roten und die blauen Gitter (zu Beginn das rote). In ein geschlossenes Gitter kommt nichts hinein; ein Block, der schon darauf steht, bleibt beweglich.',
@@ -100,6 +108,7 @@ add('de', {
   'ach.modesAll': 'Alle 750 Modusstufen lösen',
 });
 add('hi', {
+  'ta.perf': 'सबसे कम चालों में',
   'mo.laser': 'लेज़र', 'mo.laser.s': 'कैदी लाल किरण में नहीं जा सकते।', 'mo.laser.r': 'दीवारों में लगे यंत्र लाल लेज़र छोड़ते हैं। कैदी किरण में नहीं जा सकता। किरण रोकने के लिए सामने कोई ब्लॉक या बक्सा रखो।',
   'mo.heavy': 'भारी तिजोरी', 'mo.heavy.s': 'तिजोरी एक चाल में सिर्फ़ एक खाना।', 'mo.heavy.r': 'स्टील की तिजोरी बहुत भारी है: हर चाल में वह सिर्फ़ एक खाना खिसकती है। बाकी ब्लॉक पहले की तरह जितना चाहो खिसकते हैं।',
   'mo.shutter': 'बदलते शटर', 'mo.shutter.s': 'लाल और नीले शटर हर चाल बदलते हैं।', 'mo.shutter.r': 'हर चाल पर लाल और नीले शटर बारी-बारी से बंद होते हैं (शुरू में लाल बंद)। बंद शटर में कुछ नहीं जा सकता; जो ब्लॉक पहले से उस पर है वह फँसता नहीं।',
@@ -112,6 +121,7 @@ add('hi', {
   'ach.modesAll': 'मोड के सभी 750 स्टेज पार करें',
 });
 add('ar', {
+  'ta.perf': 'هروب مثالي',
   'mo.laser': 'الليزر', 'mo.laser.s': 'لا يدخل السجين الشعاع الأحمر.', 'mo.laser.r': 'تطلق أجهزة في الجدران أشعة ليزر حمراء. لا يستطيع السجين دخول الشعاع. ضع كتلة أو صندوقًا أمامه لقطعه.',
   'mo.heavy': 'الخزنة الثقيلة', 'mo.heavy.s': 'الخزنة تتحرك خانة واحدة فقط كل حركة.', 'mo.heavy.r': 'الخزنة الفولاذية ثقيلة جدًا: كل حركة تزيحها خانة واحدة فقط. أما بقية الكتل فتنزلق كما تشاء.',
   'mo.shutter': 'البوابات المتناوبة', 'mo.shutter.s': 'البوابات الحمراء والزرقاء تتبادل كل حركة.', 'mo.shutter.r': 'مع كل حركة تُغلق البوابات الحمراء والزرقاء بالتناوب (الحمراء مغلقة في البداية). لا يدخل شيء بوابة مغلقة، والكتلة الواقفة عليها أصلًا لا تُحبس.',
