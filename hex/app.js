@@ -271,34 +271,10 @@ function drawBoardSVG(n) {
   stoneEls.clear(); shownKey = '';
   boardEl.classList.toggle('no-num', !settings.num);
 }
-// PC layout (html.pc2, see index.html): the board also stands upright when that makes it larger — a window narrower than it is
-// wide enough for the flat board beside the info column (2026-10-28). Decided per window size / board size / review box shown
-// (not while the online dock refits the page).
-let rotKey = '', rotPc = false;
-function pcRot(n) {
-  const de = document.documentElement, pc = de.classList.contains('pc2');
-  const k = innerWidth + 'x' + innerHeight + (pc ? 'p' : '') + (de.classList.contains('rb-on') ? 'r' : '') + n;
-  if (k === rotKey) return rotPc;
-  rotKey = k; rotPc = false;
-  const app = document.querySelector('.app'); if (!pc || !app) return rotPc;
-  const pr = document.createElement('div');
-  pr.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:calc(100vw - var(--padx) * 2 - var(--gap) - var(--rw));height:calc(var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rbx, 0px))';
-  app.appendChild(pr); const r = pr.getBoundingClientRect(); pr.remove();
-  const w = (n - 1) * 1.5 + 1 + 2.7, h = (n - 1) * SQ3 / 2 + 2 * HR + 2.4;   // the flat board's view box (see geom)
-  const flat = Math.min(r.height / h, r.width / w), up = Math.min(r.height / w, r.width / h);
-  const dv = diaVB(n), dia = Math.min(r.height / dv[3], r.width / dv[2]);
-  // the diamond (wide, like Mancala's board) unless standing upright makes the board clearly larger (a squarish window)
-  return (rotPc = up > Math.max(flat, dia) * 1.08 ? true : dia >= flat * .85 ? 2 : false);
-}
-// PC diamond: the two player plates sit in the empty top corners of the board frame (Red by its top-left edge, Blue by its
-// top-right edge); every other layout keeps them in the info column
-function placePlayers() {
-  const pl = document.querySelector('.players'), ev = $('#evalCard'); if (!pl || !ev) return;
-  document.documentElement.classList.toggle('bd-dia', ROT === 2);
-  if (ROT === 2) { if (pl.parentNode !== frameEl) frameEl.appendChild(pl); }
-  else if (pl.parentNode === frameEl) ev.parentNode.insertBefore(pl, ev);
-}
-function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); placePlayers(); }
+// PC layout (html.pc2 = PC_MQ, see index.html): the board is one wide band across the window with the info below it, so it is
+// always drawn as the diamond (long diagonal across, like Mancala / Backgammon's wide boards) (2026-10-28)
+function pcRot(n) { void n; return document.documentElement.classList.contains('pc2') ? 2 : false; }
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); document.documentElement.classList.toggle('bd-dia', ROT === 2); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
 window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
@@ -2084,7 +2060,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 if (!hadSave) { setVariant(settings.n); gSwap = settings.swap; }
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ media: '(hover: hover) and (pointer: fine) and (min-width: 900px)', order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
