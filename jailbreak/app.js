@@ -733,7 +733,7 @@ function win() {
     const ti0 = G.ti0 ?? titleIdx(); if (titleIdx() > ti0) ev.push(t('ev.title', { t: t('ti.' + titleIdx()) }));
     const nj = jj + 1, canNext = nj < N && secOpenQ(recsA, nj);
     html = resultCard('ESCAPED!', starRow(stars) + `<p class="rmv">${esc(t('r.moves', { m: mv, o }))}</p><p>${esc(t(G.hinted ? 'r.s0' : stars === 3 ? 'r.s3' : stars === 2 ? 'r.s2' : 'r.s1', { n: o + slack(o) }))}</p>${ev.map(e => `<div class="ev">${esc(e)}</div>`).join('')}${coinLine(coins)}`,
-      [canNext ? ['next', t('r.next'), 'org'] : null, ['retry', t('r.retry')], ['list', t('u.list')]]);
+      [['retry', t('r.retry')], canNext ? ['next', t('r.next'), 'org'] : null, ['list', t('u.list')]]);
     [0, 1, 2].forEach(i => i < stars && setTimeout(() => SND.star(i), 500 + i * 180));
     pushTotals();
   } else if (G.kind === 'daily') {
