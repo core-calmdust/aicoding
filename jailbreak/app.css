@@ -180,7 +180,9 @@ button:disabled { cursor: default; opacity: .45; }
 }
 .ccard:active, .mcard:active { transform: none; box-shadow: var(--sh); }
 .cmain:active { opacity: .8; }
-.ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ctl { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; min-width: 0; }
+.ctl b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; letter-spacing: -.02em; }
+.ctl .lvc { flex: none; }
 .cont { align-self: stretch; }
 .mnext { display: inline-flex; align-items: center; gap: 4px; font: 800 12px var(--font); color: var(--org); } .mnext .ico { width: 14px; height: 14px; }
 .mcard, .ccard { cursor: pointer; }
