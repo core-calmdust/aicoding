@@ -170,12 +170,29 @@ const rotQ = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)');
 let ROT = rotQ.matches;
 let G = null;   // geometry of the drawn board: { n, rot, vb: [x, y, w, h], X[], Y[] }
 function hexXY(i, n) { const r = Math.floor(i / n), c = i % n; return [c + r / 2, r * SQ3 / 2]; }
-const tr = (x, y) => ROT ? [y, x] : [x, y];
+// ROT: false = flat (rows run across, slanted to the right), true = transposed (rows run down), 2 = diamond (the flat board turned
+// 30° so its long diagonal runs across: the PC's wide layout, 2026-10-28)
+const C30 = SQ3 / 2, rot30 = (x, y) => [x * C30 + y / 2, y * C30 - x / 2];
+const tr = (x, y) => ROT === 2 ? rot30(x, y) : ROT ? [y, x] : [x, y];
+// the diamond's view box: its plate and coordinates, with a little room round them
+// its plate: the rhombus with the two sharp (left / right) tips cut off a little outside the corner cells and their coordinates
+function diaPlate(n) {
+  let P = platePts(n, .98).map(([x, y]) => rot30(x, y));
+  const L = rot30(...hexXY(0, n))[0] - 1.3, R = rot30(...hexXY(n * n - 1, n))[0] + 1.3;
+  const clip = (P, f) => { const o = []; P.forEach((a, k) => { const b = P[(k + 1) % P.length], fa = f(a), fb = f(b); if (fa >= 0) o.push(a); if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); o.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); } }); return o; };
+  return clip(clip(P, p => p[0] - L), p => R - p[0]);
+}
+function diaVB(n) {
+  const P = diaPlate(n), xs = P.map(p => p[0]), ys = P.map(p => p[1]), mx = .3, my = .45;
+  const x0 = Math.min(...xs) - mx, x1 = Math.max(...xs) + mx, y0 = Math.min(...ys) - my, y1 = Math.max(...ys) + my;
+  return [x0, y0, x1 - x0, y1 - y0];
+}
 function geom(n) {
   const X = [], Y = [];
   for (let i = 0; i < n * n; i++) { const [x, y] = tr(...hexXY(i, n)); X.push(x); Y.push(y); }
   const mx = 1.35, my = 1.2;   // room for the edges and the coordinates
   let x0 = -.5 - mx, x1 = (n - 1) * 1.5 + .5 + mx, y0 = -HR - my, y1 = (n - 1) * SQ3 / 2 + HR + my;
+  if (ROT === 2) return { n, rot: ROT, vb: diaVB(n), X, Y };
   if (ROT) [x0, x1, y0, y1] = [y0, y1, x0, x1];
   return { n, rot: ROT, vb: [x0, y0, x1 - x0, y1 - y0], X, Y };
 }
@@ -184,7 +201,7 @@ function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + 
 // the corners of a hex (pointy-top before the transposition), as an SVG points string
 function hexPts(x, y, k = 1) {
   const out = [];
-  for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); let dx = Math.cos(a) * HR * k, dy = Math.sin(a) * HR * k; if (ROT) [dx, dy] = [dy, dx]; out.push((x + dx).toFixed(3) + ',' + (y + dy).toFixed(3)); }
+  for (let j = 0; j < 6; j++) { const a = Math.PI / 180 * (60 * j - 90); let dx = Math.cos(a) * HR * k, dy = Math.sin(a) * HR * k; if (ROT === 2) [dx, dy] = rot30(dx, dy); else if (ROT) [dx, dy] = [dy, dx]; out.push((x + dx).toFixed(3) + ',' + (y + dy).toFixed(3)); }
   return out.join(' ');
 }
 // the board's sides: segments of the outer cells' edges, coloured by whose edge they are (Red: top / bottom rows, Blue: left / right columns)
@@ -233,7 +250,7 @@ function drawBoardSVG(n) {
   document.documentElement.style.setProperty('--WU', vw.toFixed(3)); document.documentElement.style.setProperty('--HU', vh.toFixed(3));
   bdEl.setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
   // the plate: the board's outline, a little larger
-  const P = platePts(n, .98).map(([x, y]) => tr(x, y)).map(([x, y]) => x.toFixed(3) + ',' + y.toFixed(3)).join(' ');
+  const P = (ROT === 2 ? diaPlate(n) : platePts(n, .98).map(([x, y]) => tr(x, y))).map(([x, y]) => x.toFixed(3) + ',' + y.toFixed(3)).join(' ');
   let s = defsSVG() + `<polygon class="plate" points="${P}"/>`;
   const segs = rimSegs(n);
   s += `<path class="rimsh" d="${segPath(segs.r)}${segPath(segs.b)}" stroke-width=".26" transform="translate(.03,.05)"/>`;
@@ -269,9 +286,19 @@ function pcRot(n) {
   app.appendChild(pr); const r = pr.getBoundingClientRect(); pr.remove();
   const w = (n - 1) * 1.5 + 1 + 2.7, h = (n - 1) * SQ3 / 2 + 2 * HR + 2.4;   // the flat board's view box (see geom)
   const flat = Math.min(r.height / h, r.width / w), up = Math.min(r.height / w, r.width / h);
-  return (rotPc = up > flat * 1.08);
+  const dv = diaVB(n), dia = Math.min(r.height / dv[3], r.width / dv[2]);
+  // the diamond (wide, like Mancala's board) unless standing upright makes the board clearly larger (a squarish window)
+  return (rotPc = up > Math.max(flat, dia) * 1.08 ? true : dia >= flat * .85 ? 2 : false);
 }
-function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
+// PC diamond: the two player plates sit in the empty top corners of the board frame (Red by its top-left edge, Blue by its
+// top-right edge); every other layout keeps them in the info column
+function placePlayers() {
+  const pl = document.querySelector('.players'), ev = $('#evalCard'); if (!pl || !ev) return;
+  document.documentElement.classList.toggle('bd-dia', ROT === 2);
+  if (ROT === 2) { if (pl.parentNode !== frameEl) frameEl.appendChild(pl); }
+  else if (pl.parentNode === frameEl) ev.parentNode.insertBefore(pl, ev);
+}
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); placePlayers(); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
 window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
