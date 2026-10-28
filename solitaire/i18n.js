@@ -415,3 +415,27 @@ ar: { 'tab.game': 'اللعبة', 'tab.rules': 'القواعد', 'tab.design': '
   'o.suits.h': 'نوع واحد للمبتدئين، أربعة للخبراء.', 'o.move.h': 'أي المتتاليات تتحرك معًا.', 'o.dealEmpty.h': 'هل يجوز التوزيع مع عمود فارغ.',
   'o.cells.h': 'خانات أقل، صعوبة أكبر.', 'o.cols.h': 'أعمدة أقل، أعمدة أطول وصعوبة أكبر.', 'o.build.h': 'ما الذي يوضع على العمود.', 'o.supermove.h': 'نقل متتاليات كاملة عبر الأماكن الفارغة.', 'o.undo.h': 'بدون تراجع، كل نقلة مهمة.' },
 });
+(function (A) { for (const l in A) Object.assign(I18N[l], A[l]); })({
+ja: { 'tab.play': 'プレイ', 'set.auto.h': '「安全なときだけ」は、まだ使うかもしれないカードは残します。', 'set.tap.h': 'ドラッグはどちらの設定でも使えます。' },
+en: { 'tab.play': 'Play', 'set.auto.h': '“When safe” keeps cards you might still need on the table.', 'set.tap.h': 'Dragging works with either setting.' },
+zh: { 'tab.play': '操作', 'set.auto.h': '“安全时”会保留可能还用得到的牌。', 'set.tap.h': '两种设置下都可以拖动。' },
+ko: { 'tab.play': '플레이', 'set.auto.h': '「안전할 때만」은 아직 쓸 수 있는 카드를 남깁니다.', 'set.tap.h': '드래그는 어느 설정에서도 됩니다.' },
+es: { 'tab.play': 'Juego', 'set.auto.h': '«Si es seguro» deja en la mesa las cartas que aún puedas necesitar.', 'set.tap.h': 'Arrastrar funciona con ambas opciones.' },
+fr: { 'tab.play': 'Jeu', 'set.auto.h': '« Si c’est sûr » garde les cartes encore utiles.', 'set.tap.h': 'Le glisser fonctionne dans les deux cas.' },
+pt: { 'tab.play': 'Jogo', 'set.auto.h': '“Quando seguro” mantém as cartas que ainda podem ser úteis.', 'set.tap.h': 'Arrastar funciona nas duas opções.' },
+de: { 'tab.play': 'Spiel', 'set.auto.h': '„Wenn sicher“ lässt Karten liegen, die du noch brauchen könntest.', 'set.tap.h': 'Ziehen funktioniert in beiden Fällen.' },
+hi: { 'tab.play': 'खेल', 'set.auto.h': '"जब सुरक्षित" उन पत्तों को रहने देता है जो अभी काम आ सकते हैं।', 'set.tap.h': 'खींचना दोनों में काम करता है।' },
+ar: { 'tab.play': 'اللعب', 'set.auto.h': '«عندما يكون آمنًا» يُبقي الأوراق التي قد تحتاجها.', 'set.tap.h': 'السحب يعمل في الحالتين.' },
+});
+(function (A) { for (const l in A) I18N[l].credit2 = A[l]; })({
+ja: 'カード「アンティーク」「フラット」「ギャングスタ」と、カードの裏（アラベスク・フローラル・アズール・ギャングスタ・ラッキースカル）：',
+en: 'Antique, Flat and Gangsta cards and the Arabesque, Floral, Azure, Gangsta and Lucky skull backs:',
+zh: '“古典”“扁平”“黑帮”纸牌及牌背（阿拉伯纹・花卉・蔚蓝・黑帮・幸运骷髅）：',
+ko: '「앤티크」「플랫」「갱스터」 카드와 뒷면(아라베스크・플로럴・애저・갱스터・럭키 스컬):',
+es: 'Cartas antiguas, planas y Gangsta, y reversos arabesco, floral, azur, Gangsta y calavera:',
+fr: 'Cartes anciennes, plates et Gangsta, et dos arabesque, floral, azur, Gangsta et tête de mort :',
+pt: 'Cartas antigas, planas e Gangsta, e versos arabesco, floral, azul, Gangsta e caveira:',
+de: 'Karten Antik, Flach und Gangsta sowie die Rückseiten Arabeske, Floral, Azur, Gangsta und Totenkopf:',
+hi: 'पुराने, फ़्लैट और गैंगस्टा पत्ते तथा पीठ (अरबेस्क, फ़्लोरल, नीला, गैंगस्टा, लकी खोपड़ी):',
+ar: 'أوراق عتيقة ومسطّحة وغانغستا، وظهر الأرابيسك والزهري واللازوردي وغانغستا وجمجمة الحظ:',
+});

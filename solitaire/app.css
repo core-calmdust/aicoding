@@ -229,7 +229,7 @@ html[data-back=floral] .bk{background:#fff url(img/back-floral.webp) center/91% 
 html[data-back=azure] .bk{background:#fff url(img/back-azure.webp) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=floralBlack] .bk{background:#1c1c1c url(img/back-floral-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=azureBlack] .bk{background:#1c1c1c url(img/back-azure-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
-html[data-back=skull] .bk{background:#faf9f6 url(img/back-skull.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=skull] .bk{background:#fff url(img/back-skull.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=skullBlack] .bk{background:#333 url(img/back-skull-black.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=floral] .cd .bk::after,html[data-back=azure] .cd .bk::after,html[data-back=floralBlack] .cd .bk::after,html[data-back=azureBlack] .cd .bk::after,html[data-back=skull] .cd .bk::after,html[data-back=skullBlack] .cd .bk::after{display:none}
 html[data-back=red] .cd .bk::after,html[data-back=blue] .cd .bk::after,html[data-back=ornate] .cd .bk::after,html[data-back=ornateBlack] .cd .bk::after,html[data-back=mosaic] .cd .bk::after{display:none}
@@ -404,3 +404,43 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 .ng-body .tiles.faces .pv{height:104px;gap:6px}
 .ng-body .tiles.faces .ct-pv{width:46px;height:68px}
 @media (max-width:760px){.ng-body .tiles.felts{grid-template-columns:repeat(4,1fr)}.ng-body .tiles.backs{grid-template-columns:repeat(4,1fr)}.ng-body .tiles.faces{grid-template-columns:repeat(2,1fr)}}
+
+/* difficulty picker (custom, not the system select) */
+.dsel{position:relative}
+.dsel-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(220,187,108,.55);background:linear-gradient(180deg,#1b2d24,#12201a);color:var(--text);cursor:pointer;font-family:inherit;text-align:start}
+.dsel-btn b{font-size:15px;letter-spacing:.06em}
+.dsel-btn svg{width:18px;height:18px;flex:none;stroke-width:2.2;margin-inline-start:auto;color:var(--accent);transition:transform .2s}
+.dsel.open .dsel-btn svg{transform:rotate(180deg)}
+.dsel-pips{font-style:normal;color:var(--accent);font-size:12px;letter-spacing:2px}
+.dsel-pips s{text-decoration:none;opacity:.25}
+.dsel-list{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);display:none;flex-direction:column;padding:6px;border-radius:12px;border:1px solid rgba(220,187,108,.45);background:#13221b;box-shadow:0 16px 36px rgba(0,0,0,.55)}
+.dsel.open .dsel-list{display:flex}
+.dsel-list button{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border:0;border-radius:8px;background:none;color:var(--text);text-align:start;cursor:pointer;font-family:inherit}
+.dsel-list button span{display:flex;align-items:center;gap:10px}
+.dsel-list button b{font-size:14px}
+.dsel-list button small{font-size:11.5px;color:var(--muted);line-height:1.5}
+.dsel-list button:hover{background:rgba(220,187,108,.1)}
+.dsel-list button.sel{background:rgba(220,187,108,.18)}
+/* design tab: two columns */
+.dz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px}
+.ng-body .dz .tiles.faces{grid-template-columns:repeat(2,1fr)}
+.ng-body .dz .tiles.felts{grid-template-columns:repeat(4,1fr)}
+.ng-body .dz .tiles.felts .pv{height:22px}
+.ng-body .dz .tiles.backs{grid-template-columns:repeat(5,1fr)}
+.ng-body .dz .tiles.backs .pv{height:84px}
+.ng-body .dz .tiles.backs .mini-card{width:52px;height:74px;--cw:52px}
+.ng-body .dz .tiles.faces .pv{height:92px}
+.ng-body .dz .tiles.faces .ct-pv{width:42px;height:62px}
+/* settings */
+.set-cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.set-cols .rl{grid-template-columns:minmax(0,1fr) auto}
+.set-cols .rl .seg{min-width:250px}
+.tgl{position:relative;display:inline-block;width:44px;height:24px;cursor:pointer}
+.tgl input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.tgl i{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid var(--line);transition:.2s}
+.tgl i::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#cfd6d2;transition:.2s}
+.tgl input:checked + i{background:linear-gradient(180deg,#e2c477,#a8873f);border-color:transparent}
+.tgl input:checked + i::after{left:23px;background:#1d1606}
+.tgl input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px}
+#setOverlay .credit{margin-top:16px}
+@media (max-width:760px){.dz,.set-cols{grid-template-columns:1fr}.set-cols .rl .seg{min-width:0}.ng-body .dz .tiles.backs{grid-template-columns:repeat(4,1fr)}}
