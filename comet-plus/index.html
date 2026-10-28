@@ -1302,8 +1302,9 @@ let onlineResult = null; // ゲームオーバー時のオンライン登録: { 
 function onlineSubmit(k, entry) {
     if (!RankOnline.enabled || !entry.n || !(entry.s > 0)) return;
     const res = onlineResult = { state: 'sending', key: k };
+    const t0 = entry.t || Date.now(), when = new Date(t0);
     window.CometOnline.submit(k, { n: entry.n, s: entry.s, st: entry.st || 0 }, entry.t)
-        .then(r => { res.state = 'done'; res.r = r; RankOnline.forget(k); })
+        .then(r => { res.state = 'done'; res.r = r; RankOnline.forget(k); const CO = window.CometOnline; rankRecentNote(k, { t: t0, d: r && r.d && r.d.best ? CO.dayId(when) : null, w: r && r.w && r.w.best ? CO.weekId(when) : null, a: !!(r && r.a && r.a.best) }); })
         .catch(e => { console.warn('online submit', e && e.message || e); res.state = 'error'; });
 }
 const rankTabReq = []; // Tabキーでのタブ移動（keydownで積み、rankInputで処理）
@@ -1314,8 +1315,24 @@ const NAME_KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['DEL', 'END']);
 // 登録名は1つに固定（初回のランキング入りで入力。以後は自動で使う。タイトルでSELECT/Nキーで変更）。旧バージョンの名前は使わない
 const lastName = () => { try { return (localStorage.getItem('cometPlusName_v2') || '').replace(/[^A-Z]/g, '').slice(0, NAME_MAX); } catch (e) { return ''; } };
 const typedLetters = []; // ネーム登録中にキーボードで打った文字
+// 直近に更新したランキング（ランキング画面を開いたとき最初にそこを表示）: { mi, di, loc, d: 日付ID, w: 週ID, a, t }
+const RANK_RECENT_KEY = 'cometPlusRankRecent_v1';
+const rankKeyIdx = k => { const p = String(k).split('_'); return { mi: Math.max(0, ['std', 'jny', 'str'].indexOf(p[0])), di: Math.max(0, DIFFS.findIndex(d => d.id.toLowerCase() === p[1])) }; };
+function rankRecentLoad() { try { const r = JSON.parse(localStorage.getItem(RANK_RECENT_KEY) || 'null'); return r && typeof r === 'object' ? r : null; } catch (e) { return null; } }
+function rankRecentNote(k, upd) { // upd: { loc: true } またはオンライン送信結果から { d, w, a }
+    const { mi, di } = rankKeyIdx(k), old = rankRecentLoad();
+    const r = old && old.mi === mi && old.di === di && upd.t === old.t ? old : { mi, di, t: upd.t };
+    Object.assign(r, upd.loc ? { loc: true } : {}, upd.d ? { d: upd.d } : {}, upd.w ? { w: upd.w } : {}, upd.a ? { a: true } : {});
+    try { localStorage.setItem(RANK_RECENT_KEY, JSON.stringify(r)); } catch (e) {}
+}
 function openRanking() {
     rankView.diff = difficultyIndex; rankView.mode = Math.max(0, RANK_MODES.findIndex(m => m[0] === titleMenuItems[titleMenuIndex])); rankView.page = 0;
+    const rc = rankRecentLoad(), CO = window.CometOnline;
+    if (rc) { // 直近に更新した難易度・モード・期間（その期間が今も続いているもの）を表示
+        rankView.diff = rc.di; rankView.mode = rc.mi;
+        const on = RankOnline.enabled && CO;
+        rankView.src = on && rc.d && rc.d === CO.dayId() ? 'd' : on && rc.w && rc.w === CO.weekId() ? 'w' : on && rc.a ? 'a' : rc.loc ? 'local' : on ? 'a' : 'local';
+    }
     if (!RANK_SRCS().includes(rankView.src)) rankView.src = 'local';
     gameState = 'ranking'; audioHandler.playSound('menu'); rankRefreshOnline();
 }
@@ -1338,6 +1355,7 @@ function openNameEdit() { // タイトルから名前を変更
 function registerRank(k, entry) { // 固定の名前で登録
     entry.n = lastName() || 'PLAYER';
     rankResult = { rank: RankLocal.add(k, entry), key: k };
+    if (rankResult.rank > 0) rankRecentNote(k, { t: entry.t || Date.now(), loc: true });
     onlineSubmit(k, entry);
 }
 function finishNameEntry() {
@@ -1347,6 +1365,7 @@ function finishNameEntry() {
     if (ne.edit) { nameEntry = null; gameState = 'title'; audioHandler.playSound('waveClear'); return; }
     ne.entry.n = ne.name;
     rankResult = { rank: RankLocal.add(ne.key, ne.entry), key: ne.key };
+    if (rankResult.rank > 0) rankRecentNote(ne.key, { t: ne.entry.t || Date.now(), loc: true });
     onlineSubmit(ne.key, ne.entry);
     nameEntry = null; gameOverAt = performance.now(); // 登録直後のタップでリトライしないように
     audioHandler.playSound('waveClear');
@@ -3848,7 +3867,7 @@ function update(timestamp) {
 
             // --- 入力処理 ---
             if (input.nameTrigger) { openNameEdit(); return; }
-            if (input.leftTrigger || input.rightTrigger) { openRanking(); if (input.leftTrigger) rankView.diff = (rankView.diff + DIFFS.length - 1) % DIFFS.length; else rankView.diff = (rankView.diff + 1) % DIFFS.length; return; } // 左右でランキング画面へ
+            if (input.leftTrigger || input.rightTrigger) { openRanking(); return; } // 左右でランキング画面へ（直近に更新したランキングから表示）
             const prevMenuIndex = titleMenuIndex;
             if (input.upTrigger) {
                 titleMenuIndex = (titleMenuIndex - 1 + titleMenuItems.length) % titleMenuItems.length;
