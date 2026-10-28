@@ -303,7 +303,7 @@
  "op.hint": "O anel dourado marca a peça usada no melhor lance.",
  "op.auto": "Reprodução automática / parar (Espaço)",
  "pz.title": "Problemas de damas",
- "pz.desc": "Problemas de \"Vença em N\" e golpes de \"Ganhe material em N\". O adversário sempre defende com a máxima resistência. Há exatamente um primeiro lance correto, e todos os problemas foram verificados pelo motor (com bases de dados de finais).",
+ "pz.desc": "Problemas de «Vença em N» e «Ganhe material em N» com muitos temas: golpes, capturas múltiplas, rupturas, defesa e finais. O adversário sempre defende da forma mais teimosa. Há um único primeiro lance correto, e todos os problemas foram verificados pelo motor (com bases de finais).",
  "pz.retry": "Repetir",
  "pz.answer": "Solução",
  "pz.next": "Próximo",

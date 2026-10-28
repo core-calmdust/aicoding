@@ -303,7 +303,7 @@
  "op.hint": "L'anneau doré marque la pièce que joue le meilleur coup.",
  "op.auto": "Lecture auto / arrêt (Espace)",
  "pz.title": "Problèmes de dames",
- "pz.desc": "Problèmes « Gagner en N » et « Gagner du matériel en N » (coups). L'adversaire se défend toujours le plus obstinément possible. Il y a exactement un premier coup correct, et chaque problème a été vérifié par le moteur (avec les bases de finales).",
+ "pz.desc": "Problèmes « Gagner en N » et « Gagner du matériel en N » sur de nombreux thèmes : coups, rafles, percées, défense et finales. L’adversaire se défend toujours au mieux. Il n’y a qu’un seul bon premier coup, et chaque problème a été vérifié par le moteur (avec bases de finales).",
  "pz.retry": "Recommencer",
  "pz.answer": "Solution",
  "pz.next": "Suivant",
