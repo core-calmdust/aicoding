@@ -213,7 +213,7 @@
         // グローバル変数 & 定数
         // ================================================================= //
         
-        const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('pongCanvas'), ctx = canvas.getContext('2d', { desynchronized: true }) /* 低遅延キャンバス: 描いた絵をすぐ画面に出す（入力遅延の軽減） */;
         const gameWrapper = document.getElementById('game-wrapper');
         const infoArea = document.getElementById('info-area');
         const ruleInfo = document.getElementById('rule-info'), controlsInfo = document.getElementById('controls-info');

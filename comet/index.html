@@ -901,7 +901,7 @@ class AudioHandler {
 // ゲームのメインロジック
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { desynchronized: true }) /* 低遅延キャンバス: 描いた絵をすぐ画面に出す（入力遅延の軽減） */;
 const offscreenCanvas = document.createElement('canvas');
 offscreenCanvas.width = config.canvasWidth;
 offscreenCanvas.height = config.canvasHeight;
