@@ -4265,6 +4265,45 @@ function glowInstMaterial(k, extra = {}) {
     return m;
 }
 
+// 両面表示・加算合成・深度書き込みなしの半透明材質は、表裏を2回に分けて描いても1回で描いても結果は同じ。
+// three.js の既定（2回描画）だと描画回数が倍になり、毎回シェーダーの選び直しも起きてメモリ掃除のカクつきの原因になるので1回にまとめる
+function singlePassAdditive(root) {
+    root.traverse(o => {
+        const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : null;
+        if (ms) ms.forEach(m => { if (m.transparent && m.side === THREE.DoubleSide && m.blending === THREE.AdditiveBlending && !m.depthWrite) m.forceSinglePass = true; });
+    });
+}
+// 動かない部品（同じ材質のメッシュ・線）を1つの形にまとめて描画回数を減らす（見た目は同じ）。keep に入れた部品とその子は触らない
+function mergeStatic(root, keep = []) {
+    root.updateMatrixWorld(true);
+    const inv = root.matrixWorld.clone().invert(), _mm = new THREE.Matrix4();
+    const buckets = new Map(), taken = [];
+    const ok = o => (o.isMesh && !o.isInstancedMesh) || o.isLineSegments;
+    const visit = o => {
+        if (keep.includes(o)) return;
+        if (o !== root && ok(o) && o.visible) {
+            let all = true; o.traverse(c => { if (c !== o && (!ok(c) || keep.includes(c) || !c.visible)) all = false; });
+            if (all) {
+                o.traverse(c => {
+                    const key = (c.isMesh ? 'm' : 'l') + c.material.uuid;
+                    let b = buckets.get(key); if (!b) { b = { line: !c.isMesh, mat: c.material, geos: [] }; buckets.set(key, b); }
+                    let g = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone();
+                    for (const k of Object.keys(g.attributes)) if (k !== 'position' && !(c.isMesh && k === 'normal')) g.deleteAttribute(k);
+                    if (c.isMesh && !g.attributes.normal) g.computeVertexNormals();
+                    g.applyMatrix4(_mm.multiplyMatrices(inv, c.matrixWorld));
+                    b.geos.push(g);
+                });
+                taken.push(o);
+                return;
+            }
+        }
+        o.children.slice().forEach(visit);
+    };
+    visit(root);
+    taken.forEach(o => o.parent.remove(o));
+    buckets.forEach(b => { const g = mergeGeometries(b.geos); root.add(b.line ? new THREE.LineSegments(g, b.mat) : new THREE.Mesh(g, b.mat)); });
+}
+
 // ---------------------------------
 // バッチ描画ユーティリティ
 // ---------------------------------
@@ -4442,22 +4481,27 @@ const buildingMatA = new THREE.LineBasicMaterial({ color: 0x8fb4ff, transparent:
 const buildingMatB = new THREE.LineBasicMaterial({ color: 0xff7a3c, transparent: true, opacity: 0.38 });
 // ワイヤーフレームの一部の面を、窓ガラスのように半透明のポリゴンにする（暗めにゆっくり明暗）
 const glassMats = [0, 1, 2].map(() => new THREE.MeshBasicMaterial({ color: 0x6040ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-const _glassGeo = new THREE.PlaneGeometry(1, 1);
+const _glassGeo = new THREE.PlaneGeometry(1, 1), _glassTmp = new THREE.Object3D();
 const ringGlassMat = new THREE.MeshBasicMaterial({ color: 0x6040ff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 function addGlass(obj, w, d, h, step, count) {
     const floors = Math.max(1, Math.floor(h / step));
+    const byMat = new Map(); // 窓は材質ごとに1つの形にまとめる（1枚ずつだと描画回数が多い）
     for (let n = 0; n < count; n++) {
         const face = Math.floor(Math.random() * 4), fw = face % 2 ? d : w;
         const k0 = Math.floor(Math.random() * floors), len = Math.min(floors - k0, 1 + Math.floor(Math.random() * 4)); // 1〜4階分の帯
-        const m = new THREE.Mesh(_glassGeo, glassMats[Math.floor(Math.random() * glassMats.length)]);
+        const m = _glassTmp; m.position.set(0, 0, 0); m.rotation.set(0, 0, 0);
+        const mat = glassMats[Math.floor(Math.random() * glassMats.length)];
         const part = Math.random() < 0.5 ? 1 : 0.5, off = part < 1 ? (Math.random() < 0.5 ? -0.25 : 0.25) * fw : 0;
         m.scale.set(fw * part * 0.94, step * len * 0.9, 1);
         const y = (k0 + len / 2) * step;
         if (face === 0) m.position.set(off, y, d / 2 + 0.5);
         else if (face === 2) m.position.set(off, y, -d / 2 - 0.5);
         else { m.position.set((face === 1 ? 1 : -1) * (w / 2 + 0.5), y, off); m.rotation.y = Math.PI / 2; }
-        obj.add(m);
+        m.updateMatrix();
+        if (!byMat.has(mat)) byMat.set(mat, []);
+        byMat.get(mat).push(_glassGeo.clone().applyMatrix4(m.matrix));
     }
+    byMat.forEach((list, mat) => obj.add(new THREE.Mesh(list.length > 1 ? mergeGeometries(list) : list[0], mat)));
 }
 function quadGlass(quads) { // [[a,b,c,d], ...] の四角形を半透明ポリゴンに
     const p = [];
@@ -5107,7 +5151,8 @@ function updateFrame(dt) {
         const sd = frameS[i];
         let y = Math.sin(sd * 0.012 - rTime * 2.2) * 1.5; // 常時のゆらぎ
         let out = 0;
-        for (const w of frameWaves) {
+        for (let wi = 0; wi < frameWaves.length; wi++) { // for...of は毎回イテレーターを作るので添字で回す（640点×毎フレーム）
+            const w = frameWaves[wi];
             const front = w.age * 2600;            // 波頭の位置（下辺中央から左右へ）
             const u = (sd - front) / 140;
             const env = Math.exp(-u * u) * Math.exp(-w.age * 2.2) * (1 - sd / halfP * 0.35);
@@ -5268,6 +5313,9 @@ function makeShipModel() {
     return g;
 }
 const shipModel = makeShipModel();
+// 自機の部品（約85回の描画）を材質ごとにまとめる。回る推進ユニットは別にまとめる
+mergeStatic(shipModel.userData.prop);
+mergeStatic(shipModel, [shipModel.userData.prop, shipModel.userData.core, shipModel.userData.ring]);
 shipPivot.add(shipModel);
 playerGroup.add(shipPivot);
 scene.add(playerGroup);
@@ -5441,6 +5489,7 @@ function buildMonsterObj(m) {
     obj.userData.body = body;
     obj.userData.seed = Math.random() * 100;
     obj.userData.type = type;
+    singlePassAdditive(obj);
     scene.add(obj);
     return obj;
 }
@@ -6602,6 +6651,7 @@ function renderBoss(dt) {
         });
         collect(bossObj);
         (bossObj.userData.extra || []).forEach(collect);
+        singlePassAdditive(bossObj); (bossObj.userData.extra || []).forEach(singlePassAdditive);
         bossObjFor = boss;
         bossObj.scale.setScalar(BS);
         scene.add(bossObj);
@@ -6760,9 +6810,11 @@ function adaptQuality(now) {
 }
 
 const _aliveSet = new Set();
+let frameTs = null; // このフレームの rAF 時刻（画面の更新タイミング）
 function render3D() {
-    const now = performance.now();
-    let dt = Math.min(0.05, (now - rLast) / 1000);
+    // 描画の時間は rAF の時刻で進める（処理を始めた時刻だと、フルスクリーン切り替え後などに処理の開始がばらつき、表示は60Hzでも動きの刻みが不揃いになってカクついて見える）
+    const now = frameTs !== null && Math.abs(performance.now() - frameTs) < 100 ? frameTs : performance.now();
+    let dt = Math.max(0, Math.min(0.05, (now - rLast) / 1000));
     rLast = now;
     const frozen = gameState === 'paused' || gameState === 'confirmReset';
     const simDt = frozen ? 0 : dt;
@@ -8212,6 +8264,7 @@ function movePlayerRT(ms) {
 }
 function gameLoop(timestamp) {
     if (window.__bootBusy) { simRealLast = null; requestAnimationFrame(gameLoop); return; } // 起動ロゴ表示中はゲームの描画を止めてロゴを滑らかに
+    frameTs = timestamp !== undefined ? timestamp : null;
     if (timestamp !== undefined) {
         if (simRealLast === null) simRealLast = timestamp;
         let delta = Math.min(250, timestamp - simRealLast);
@@ -8447,12 +8500,16 @@ function prewarmGPU() {
         // ハイパー時の背景ポリゴン（全種類の形）も先にGPUへ送っておく
         Object.values(hpGeo).forEach(list => list.forEach(v => { tmp.add(new THREE.Mesh(v.g, hpSolidMat)); tmp.add(new THREE.LineSegments(v.e, hpEdgeMat)); }));
         prewarmGPU.keep = tmp;
+        singlePassAdditive(scene); singlePassAdditive(tmp);
         const hidden = [];
         scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+        tmp.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
         renderer.compile(scene, camera);
         renderer.compile(tmp, camera, scene);
         // 一度だけ小さな画面に実際に描いて、形やテクスチャのGPU転送も済ませる（初登場時のカクつき防止）
+        // 実際のゲーム画面は後処理用の描画先（リニア色空間）に描くので、その設定のシェーダーも用意する（ボス初登場時のコンパイル待ち対策）
         const culled = [], rt = new THREE.WebGLRenderTarget(64, 64);
+        renderer.setRenderTarget(rt); renderer.compile(scene, camera); renderer.compile(tmp, camera, scene); renderer.setRenderTarget(null);
         const noCull = root => root.traverse(o => { if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; } });
         noCull(scene); noCull(tmp);
         renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.render(tmp, camera); renderer.setRenderTarget(null);
@@ -8461,6 +8518,8 @@ function prewarmGPU() {
         (prewarmGPU.pooled || []).forEach(o => { tmp.remove(o); (monsterPool[o.userData.type] = monsterPool[o.userData.type] || []).push(o); });
         // ハイパーの色調シェーダー（普段は無効）も一度通しておく
         if (hyperGrade && composer) { hyperGrade.enabled = true; composer.render(); hyperGrade.enabled = false; }
+        // コンパイル済みのシェーダーも、初めて使う瞬間に完成待ち（数百ms）が起きるので、読み込み中に済ませておく（ボス初登場時のカクつき防止）
+        renderer.info.programs.forEach(p => { try { p.getUniforms(); p.getAttributes(); } catch (e) {} });
     } catch (e) { console.warn('prewarm failed', e); }
 }
 prewarmGPU();
