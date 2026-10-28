@@ -1207,6 +1207,83 @@ body.land .mptabs{margin:0 0 6px}body.land .mptabs button{padding:5px 16px;font-
 .tale-h.prolog.horn{background:radial-gradient(120% 120% at 50% 0%,rgba(200,90,70,.3),rgba(26,10,8,.75));border-color:rgba(200,90,70,.6)}
 .prolog.horn .ptag{color:#ffc2b0}
 .prolog.horn .ptitle{color:#ffece6;text-shadow:0 0 18px rgba(200,80,60,.7)}
+/* チュートリアル */
+.dlg.tut .in{width:min(900px,94vw);height:min(600px,88vh);display:flex;flex-direction:column;padding:22px 26px 18px;overflow:hidden}
+.tut-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.tut-kind{font-family:var(--f-disp);color:var(--gold2);letter-spacing:.14em;font-size:15px}
+.tut-steps{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.tut-steps button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;padding:0}
+.tut-steps button.done{color:var(--gold2);border-color:rgba(230,201,138,.4)}
+.tut-steps button.on{background:linear-gradient(180deg,#e6c98a,#b8924e);color:#1a1408;border-color:transparent;font-weight:700}
+.tut-body{flex:1;min-height:0;overflow:hidden;position:relative}
+.tut-page{height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;align-items:center}
+.tut-page.inR{animation:tutR .28s ease-out}.tut-page.inL{animation:tutL .28s ease-out}
+@keyframes tutR{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes tutL{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.tut-fig{display:flex;align-items:center;justify-content:center;min-height:200px;padding:16px;border-radius:16px;background:radial-gradient(120% 120% at 50% 0,rgba(230,201,138,.1),rgba(0,0,0,.15));border:1px solid var(--line)}
+.tut-fig>svg{max-width:280px;width:100%}
+.tut-txt h3{font-family:var(--f-disp);font-size:clamp(20px,2.2vw,26px);color:var(--gold2);margin:0 0 10px;letter-spacing:.06em}
+.tut-txt p{font-size:clamp(15px,1.4vw,17px);line-height:1.9;color:#eef1f6;margin:0}
+.tut-txt b{color:var(--gold2)}
+.tf-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.tf-hex{width:96px;height:96px}
+.tf-op{font-size:26px;color:var(--gold2);font-family:var(--f-num)}
+.tf-pc{width:30px;height:30px}.tf-rd{width:46px;height:14px}
+.tf-get{display:flex;align-items:center;gap:6px;font-size:18px;color:#eef1f6}
+.tf-res{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.tf-res span{display:flex;flex-direction:column;align-items:center;gap:6px}
+.tf-res small{font-size:12px;color:var(--ivory2)}
+.tf-cost{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+.tf-cost>div{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);min-width:0}
+.tf-cost>div>svg:first-child{flex:none;width:40px}
+.tf-cost>div>span{font-size:14px;color:#eef1f6;flex:1;min-width:0;white-space:nowrap}
+.tf-cost>div b{font-family:var(--f-num);font-size:15px;color:var(--gold2);margin:0 6px 0 1px}
+.tf-cost>div .ri,.tf-cost>div svg:not(:first-child){flex:none}
+.tut-page>*{min-width:0}
+@media (min-width:901px){.tf-hex{width:128px;height:128px}.tut-fig{min-height:280px}}
+.tf-port{display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;border-radius:50%;background:#0d1726;border:1.5px solid #c9a45c;color:#e6c98a;font-family:'Bodoni Moda',serif;font-size:19px}
+.tf-badge{display:inline-block;padding:8px 14px;border-radius:999px;background:linear-gradient(180deg,#e6c98a,#b8924e);color:#1a1408;font-weight:700;font-size:14px}
+.tf-badge.era{background:rgba(230,201,138,.15);color:var(--gold2);border:1px solid rgba(230,201,138,.4)}
+.tf-badge.atk{background:linear-gradient(180deg,#ff9a7a,#c0392b);color:#2a0606}
+.tf-deck{display:inline-block;width:56px;height:78px;border-radius:9px;background:linear-gradient(160deg,#1b2c52,#0b1430);border:2px solid #7f9fd0;box-shadow:3px 3px 0 #0b1430,6px 6px 0 #1b2c52}
+.tut-page.end{grid-template-columns:1fr}
+.tut-end{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%}
+.tut-party{font-size:54px}
+.tut-end h3{font-family:var(--f-disp);font-size:28px;color:var(--gold2);margin:0}
+.tut-end p{font-size:17px;line-height:1.9;color:#eef1f6;margin:0}
+.tut-endb{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.tut-endb .btn{min-width:200px}
+.tut-foot{margin-top:12px;display:grid!important;grid-template-columns:repeat(3,1fr);gap:10px}
+.tut-foot .btn[hidden]{display:block!important;visibility:hidden}
+.dlg.tutask .in{width:min(560px,94vw)}
+.tut-ask{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tut-ask button{display:flex;flex-direction:column;gap:6px;align-items:center;padding:18px 10px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--ivory);cursor:pointer}
+.tut-ask button:hover{border-color:var(--gold2)}
+.tut-ask b{font-family:var(--f-disp);font-size:18px;color:var(--gold2);letter-spacing:.08em}
+.tut-ask small{font-size:12px;color:var(--ivory2)}
+.tut-skip{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.mp-tut{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.mp-tut span{font-size:13px;color:var(--ivory2)}
+.mp-tut button{padding:7px 16px;border-radius:999px;border:1px solid rgba(230,201,138,.45);background:transparent;color:var(--gold2);font-size:13px;cursor:pointer}
+.mp-tut button:hover{background:rgba(230,201,138,.12)}
+@media (max-width:900px){
+  .dlg.tut .in{height:min(720px,92vh);padding:16px 14px 12px}
+  .tut-page{grid-template-columns:1fr;gap:12px;align-content:start}
+  .tut-fig{min-height:150px;padding:10px}
+  .tf-hex{width:72px;height:72px}
+  .tut-txt h3{font-size:19px}
+  .tut-txt p{font-size:14.5px;line-height:1.75}
+  .tut-steps button{width:22px;height:22px;font-size:10px}
+  .tut-ask{grid-template-columns:1fr}
+}
+body.land .dlg.tut .in{height:calc(100% - 16px)}
+body.land .tut-page{grid-template-columns:1fr 1.2fr;gap:14px}
+body.land .tut-fig{min-height:0}
+.tf-cost>div>span{display:flex;flex-direction:column;line-height:1.2}
+.tf-cost>div>span small{font-size:11px;color:var(--gold2)}
+.tut-fig .tf-row .acard.md{--w:46px}
+@media (max-width:900px){.tut-fig .tf-row .acard.md{--w:40px}}
+.btn.primary:hover:not(:disabled){background:linear-gradient(180deg,#e6c47c,#b8924e);color:#1a1408}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -4826,6 +4903,90 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     }
     return `<svg viewBox="-80 -70 160 140" width="100%" aria-hidden="true"><defs><linearGradient id="thumbQ" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f6b4b"/><stop offset=".33" stop-color="#9a4e37"/><stop offset=".66" stop-color="#c9a24e"/><stop offset="1" stop-color="#7d8794"/></linearGradient></defs>${o}</svg>`;
   }
+
+  // ---- チュートリアル（はじめての方／カタン経験者） ----
+  const TF = {   // 図（小さなSVG・既存の札とアイコン）
+    hex(res, num, extra = '') { const C = { wood: '#3f6b4b', brick: '#9a4e37', sheep: '#86a05a', wheat: '#c9a24e', ore: '#7d8794', waste: '#4a443b', desert: '#c8b083' };
+      const pts = r => [...Array(6).keys()].map(k => { const a = Math.PI / 180 * (60 * k - 30); return (50 + r * Math.cos(a)).toFixed(1) + ',' + (50 + r * Math.sin(a)).toFixed(1); }).join(' ');
+      return `<svg viewBox="0 0 100 100" class="tf-hex"><polygon points="${pts(46)}" fill="#d8c79e"/><polygon points="${pts(42)}" fill="${C[res]}"/>${res !== 'waste' && res !== 'desert' ? `<use href="#i-${res}" x="36" y="14" width="28" height="28" opacity=".8"/>` : '<text x="50" y="36" text-anchor="middle" font-size="10" fill="rgba(235,226,205,.7)" font-family="Zen Kaku Gothic New,sans-serif">荒地</text>'}${num ? `<circle cx="50" cy="60" r="14" fill="#f4ecda" stroke="#8a6a2c"/><text x="50" y="66" text-anchor="middle" font-size="16" font-family="Bodoni Moda,serif" fill="${num === 6 || num === 8 ? '#a2322a' : '#1d2430'}" font-weight="700">${num}</text>` : ''}${extra}</svg>`; },
+    house: (c = '#c0392b') => `<svg viewBox="0 0 24 24" class="tf-pc"><path d="M3 21V10l9-8 9 8v11z" fill="${c}" stroke="#0b111b" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    city: (c = '#c0392b') => `<svg viewBox="0 0 28 24" class="tf-pc"><path d="M2 22V9l6-5 6 5V5h12v17z" fill="${c}" stroke="#0b111b" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    road: (c = '#c0392b') => `<svg viewBox="0 0 40 12" class="tf-rd"><rect x="2" y="3" width="36" height="6" rx="3" fill="${c}" stroke="#0b111b" stroke-width="1.4"/></svg>`,
+    cost: c => Object.keys(c).map(r => `${resIcon(r, 22)}<b>${c[r]}</b>`).join(''),
+    row: (...xs) => `<div class="tf-row">${xs.join('')}</div>`,
+    op: t => `<span class="tf-op">${t}</span>`,
+  };
+  function tutPages(kind) {
+    const G = 10, L = (S && S.limit) || 14, C = HD.COST;
+    const begin = [
+      { h: 'ヘクスデッキへようこそ', f: mapThumb('fixed'), t: `土地を開拓して村を広げる、陣取りのボードゲームです。<br>開拓地や都市を建てて点を集め、先に<b>${G}点</b>（シナリオは12点）に届いた人の勝ち。相手はBOT3人です。` },
+      { h: '5つの資源', f: `<div class="tf-res">${HD.RES.map(r => `<span>${resIcon(r, 40)}<small>${RESN[r]}</small></span>`).join('')}</div>`, t: '資源は<b>木材・レンガ・羊毛・小麦・鉱石</b>の5種類。<br>土地に接して建物を建てると、その土地の資源がもらえます。集めた資源で道や建物を作ります。' },
+      { h: '数字の土地', f: TF.row(TF.hex('wheat', 6), TF.op('→'), `<span class="tf-get">${TF.house()}${resIcon('wheat', 30)}<b>×1</b></span>`), t: '土地には<b>数字チップ</b>が置かれます。その数字が出ると、接している建物の持ち主が資源をもらえます（開拓地1枚・都市2枚）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。' },
+      { h: '準備：スタート地点', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 8)), t: 'はじめに、角の<b>スタート地点</b>を選んで拠点を置きます。<br>次に、拠点のとなりの荒地を<b>無料で開拓</b>（資源と数字を自分で決める）し、道を1本引きます。' },
+      { h: '手番① 札を引く', f: TF.row(`<span class="tf-deck"></span>`, TF.op('→'), acard(3, 'md'), acard(5, 'md')), t: 'サイコロの代わりに、みんなで使う<b>アクション札の山</b>があります。<br>自分の番に1枚引き、もう1枚引くか止めるかを選べます（最大2枚）。引いた札は手札に入ります。' },
+      { h: '手番② 数字を出す', f: TF.row(acard(3, 'md'), TF.op('＋'), acard(5, 'md'), TF.op('＝'), TF.hex('brick', 8)), t: '手札から1枚、または何枚かを足して数字（2〜12）を作って出します。3と5なら<b>8</b>。<br>その数字の土地が、接する<b>全員</b>に資源を生みます。出さずに取っておくこともできます。' },
+      { h: '7はバースト', f: TF.row(acard(7, 'md')), t: `7を引くと<b>バースト</b>。その番は資源が出ません。<br>手札と資源を合わせて<b>${L}枚以上</b>持っている人は半分を手放し、引いた人が盗賊を動かして資源を1枚奪います（最初の時代は盗賊がいません）。` },
+      { h: '建てる', f: `<div class="tf-cost"><div>${TF.road()}<span>道</span>${TF.cost(C.road)}</div><div>${TF.house()}<span>開拓地<small>1点</small></span>${TF.cost(C.settle)}</div><div>${TF.city()}<span>都市<small>2点</small></span>${TF.cost(C.city)}</div></div>`, t: '資源を払って建てます。開拓地は自分の道の先に建て、建物どうしは1辺以上離します。<br>都市は開拓地を格上げしたもので、資源を2倍もらえます。' },
+      { h: '土地を開拓する', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('sheep', 5)), t: `建物のとなりの、<b>数字のない土地や荒地</b>は開拓できます。資源と、市場に出ている3枚の数字チップから1枚を選んで置きます（中央の土地は羊毛1・小麦1、荒地は羊毛2・小麦2）。<br>${S && S.devVP ? `${S.devVP.n}か所以上で一番多く開拓した人は<b>開拓者 +${S.devVP.vp}点</b>。` : ''}` },
+      { h: '交換', f: TF.row(`<span class="tf-port">4:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: '足りない資源は交換で手に入れます。<br>BOTに交換を持ちかけたり、銀行（相場のレート）や港（3:1・2:1）を使えます。相場は在庫の少ない資源ほど高くなります。' },
+      { h: '騎士と称号', f: TF.row(acard(1, 'md'), `<span class="tf-badge">最長交易路 2点</span>`, `<span class="tf-badge">最大騎士力 2点</span>`), t: '<b>1の札は騎士</b>にもなります。自分の番に出すと盗賊を動かし、資源を1枚奪えます。<br>道を5本以上つなげた一番の人は最長交易路、騎士を4回以上使った一番の人は最大騎士力（どちらも2点）。' },
+      { h: '時代と市場', f: TF.row(`<span class="tf-badge era">⏳ 時代が変わった</span>`, `<span class="tf-badge">市場の特殊札</span>`), t: '数周ごとに<b>時代</b>が変わり、「小麦が多く取れる」などの効果が起きます。<br>市場では羊毛・小麦・鉱石を1つずつ払って、便利な<b>特殊札</b>を買えます。' },
+      { h: '準備ができました！', end: true, t: '迷ったら画面上の<b>ヒント</b>や<b>ルール</b>を見てください。<br>さあ、マップを選んで対局をはじめましょう。' },
+    ];
+    const expert = [
+      { h: 'カタンとの違い', f: mapThumb('random'), t: '資源を集めて道・開拓地・都市を建て、点を競う流れはカタンと同じです。<br>ここでは<b>違うところだけ</b>を紹介します。' },
+      { h: 'サイコロ → アクション札', f: TF.row(...[1, 2, 3, 4, 5, 6].map(n => acard(n, 'md')), acard(7, 'md')), t: 'サイコロの代わりに共通の山札（1〜6が各5枚、7が2枚）。自分の番に1〜2枚引き、<b>手札を組み合わせた合計</b>で数字を出します。<br>出す数字を自分で選べるのが最大の違い。手札は持ち越せ、不要な札は処分（山札の圧縮）できます。' },
+      { h: '7＝バースト', f: TF.row(acard(7, 'md')), t: `7を引くと自分の番の生産はなし。手札＋資源が<b>${L}枚以上</b>の人は半分を捨て、引いた本人が盗賊を動かします。<br>見えていない札の7の残りが表示されるので、2枚目を引くかどうかが勝負どころです。` },
+      { h: '盤は自分で作る', f: TF.row(TF.hex('waste', 0), TF.op('→'), TF.hex('ore', 9)), t: `中央の土地は資源だけ、外周は荒地。建物に接する土地を<b>開拓</b>して、資源と数字チップ（市場の3枚）を自分で決めます。<br>最初は角の拠点（生産3枚・都市にできない）から。${S && S.devVP ? `最多開拓（${S.devVP.n}か所以上）は<b>開拓者 +${S.devVP.vp}点</b>。` : ''}` },
+      { h: '在庫と相場', f: TF.row(`<span class="tf-port">5:1</span>`, `<span class="tf-port">3:1</span>`, `<span class="tf-port">2:1</span>`), t: '資源には<b>在庫</b>があり、切れた資源は生産されません。銀行のレートは在庫に応じて<b>5:1〜2:1</b>で変わります。<br>港は道が届けば使え、港に建物を建てると定期的に<b>輸入</b>があります。' },
+      { h: '追加の要素', f: TF.row(`<span class="tf-badge era">時代カード</span>`, `<span class="tf-badge">特殊札</span>`, `<span class="tf-badge atk">道の収奪・軍</span>`), t: '周回ごとに効果が変わる<b>時代カード</b>、市場の<b>特殊札</b>、3番目の時代からの<b>道の収奪</b>と<b>軍</b>（建物を壊す）、それを防ぐ<b>城壁</b>。<br>1の札は騎士を兼ね、奪われそうなときは跳ね返せます。' },
+      { h: '準備ができました！', end: true, t: '細かいルールは画面上の<b>ルール</b>でいつでも確認できます。<br>さあ、マップを選んで対局をはじめましょう。' },
+    ];
+    return kind === 'expert' ? expert : begin;
+  }
+  function tutDialog(kind, done) {
+    const P = tutPages(kind); let i = 0, dir = 0;
+    const d = dlg(`<div class="tut-top"><div class="tut-kind">${kind === 'expert' ? 'カタン経験者向け' : 'はじめての方へ'}</div><div class="tut-steps"></div></div><div class="tut-body"><div class="tut-page"></div></div>
+      <div class="foot tut-foot"><button class="btn" id="tuPrev">前へ</button><button class="btn" id="tuClose">閉じる</button><button class="btn primary" id="tuNext">次へ</button></div>`, () => { document.removeEventListener('keydown', key, true); done && done(); });
+    d.classList.add('tut');
+    const page = d.querySelector('.tut-page');
+    function draw() {
+      const p = P[i];
+      d.querySelector('.tut-steps').innerHTML = P.map((_, k) => `<button class="${k === i ? 'on' : k < i ? 'done' : ''}" data-k="${k}" aria-label="${k + 1}ページ目">${k + 1}</button>`).join('');
+      page.className = 'tut-page' + (p.end ? ' end' : '') + (dir ? ' in' + (dir > 0 ? 'R' : 'L') : '');
+      page.innerHTML = p.end ? `<div class="tut-end"><div class="tut-party">🎉</div><h3>${p.h}</h3><p>${p.t}</p><div class="tut-endb"><button class="btn primary" id="tuGo">マップを選ぶ</button><button class="btn" id="tuOther">${kind === 'expert' ? 'はじめての方向けを見る' : 'カタン経験者向けを見る'}</button></div></div>`
+        : `<div class="tut-fig">${p.f || ''}</div><div class="tut-txt"><h3>${p.h}</h3><p>${p.t}</p></div>`;
+      d.querySelector('#tuPrev').disabled = i === 0; d.querySelector('#tuNext').hidden = !!p.end;
+      const go = d.querySelector('#tuGo'); if (go) go.onclick = () => d.close();
+      const ot = d.querySelector('#tuOther'); if (ot) ot.onclick = () => { const cb = done; done = null; d.close(); tutDialog(kind === 'expert' ? 'begin' : 'expert', cb); };
+    }
+    const move = k => { if (k < 0 || k >= P.length || k === i) return; dir = k > i ? 1 : -1; i = k; draw(); };
+    d.querySelector('#tuPrev').onclick = () => move(i - 1);
+    d.querySelector('#tuNext').onclick = () => move(i + 1);
+    d.querySelector('#tuClose').onclick = () => d.close();
+    d.querySelector('.tut-steps').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) move(+b.dataset.k); });
+    function key(e) { if (!document.body.contains(d)) return; if (e.key === 'ArrowRight') { move(i + 1); e.preventDefault(); e.stopImmediatePropagation(); } else if (e.key === 'ArrowLeft') { move(i - 1); e.preventDefault(); e.stopImmediatePropagation(); } else if (e.key === 'Escape') { d.close(); e.stopImmediatePropagation(); } }
+    document.addEventListener('keydown', key, true);
+    { let x0 = null, y0 = 0, t0 = 0; const body = d.querySelector('.tut-body');   // スマホ：左右スワイプでページ送り
+      body.addEventListener('touchstart', e => { if (e.target.closest('button')) return; const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; t0 = Date.now(); }, { passive: true });
+      body.addEventListener('touchend', e => { if (x0 == null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) >= 56 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - t0 < 900) move(i + (dx < 0 ? 1 : -1)); }, { passive: true }); }
+    draw();
+    return d;
+  }
+  // 開いたとき：チュートリアルを見るか聞く（「次から表示しない」で省略）
+  function tutAsk(done) {
+    let skip = false; try { skip = localStorage.getItem('hexdeck.tutSkip') === '1'; } catch (_) {}
+    if (skip) return done();
+    const d = dlg(`<h2 style="text-align:center">ヘクスデッキへようこそ</h2>
+      <p style="text-align:center;margin:0 0 14px">はじめにチュートリアルを見ますか？</p>
+      <div class="tut-ask"><button data-t="begin"><b>はじめての方</b><small>ゲームの流れを1から（13ページ）</small></button><button data-t="expert"><b>カタン経験者</b><small>カタンとの違いだけ（7ページ）</small></button></div>
+      <label class="tut-skip"><input type="checkbox" id="tuSkip"> 次から表示しない（マップ選択からいつでも見られます）</label>
+      <div class="foot"><button class="btn" id="tuNo">見ないで始める</button></div>`);
+    d.classList.add('tutask');
+    const save = () => { try { localStorage.setItem('hexdeck.tutSkip', d.querySelector('#tuSkip').checked ? '1' : '0'); } catch (_) {} };
+    d.querySelector('#tuNo').onclick = () => { save(); d.close(); done(); };
+    d.querySelectorAll('.tut-ask button').forEach(b => b.onclick = () => { save(); d.close(); tutDialog(b.dataset.t, done); });
+  }
   function mapPickDialog() {
     const d = dlg(`<h2 style="text-align:center">マップを選ぶ</h2>
       <div class="mptabs" role="tablist"><button class="on" data-tab="std" role="tab">スタンダード</button><button data-tab="scen" role="tab">シナリオ集</button></div>
@@ -4838,12 +4999,12 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       <div class="mappick" data-pane="scen" hidden>
         <button data-m="4" class="scen">${mapThumb('gemroad')}<b>宝玉の導き<em class="tst">シナリオ</em></b><small>荒地に隠れた鉱脈を掘り当て、<br>宝玉を本国の港まで運べ。目標12点</small></button>
         <button data-m="5" class="scen horn">${mapThumb('horn')}<b>蛮族の角笛<em class="tst">シナリオ</em></b><small>角笛が鳴れば蛮族が来る。<br>守るか、見捨てるか。目標12点</small></button>
-      </div></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
-    let picked = false; d.addEventListener('click', e => { const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
+      </div></div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="begin">はじめての方</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
+    let picked = false, tutOpen = false; d.addEventListener('click', e => { const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
     try { const tb = localStorage.getItem('hexdeck.tab'); if (tb === 'scen') d.querySelector('.mptabs button[data-tab="scen"]').click(); } catch (_) {}
-    const c0 = d.close; d.close = () => { c0(); SND.unlock(); SND.bgmPlay(); start(); };
+    const c0 = d.close; d.close = () => { c0(); if (tutOpen) return; SND.unlock(); SND.bgmPlay(); start(); };
   }
-  S = HD.newGame({ players: opts.players, goal: opts.goal, limit: opts.limit, sevens: opts.sevens, seed: (Math.random() * 2 ** 31) | 0 }); render(); mapPickDialog();   // 曲はマップを選んでから流す
+  S = HD.newGame({ players: opts.players, goal: opts.goal, limit: opts.limit, sevens: opts.sevens, seed: (Math.random() * 2 ** 31) | 0 }); render(); tutAsk(() => mapPickDialog());   // 曲はマップを選んでから流す
   window.HDUI = { get S() { return S; }, render: () => render() };
 })();
 </script>
