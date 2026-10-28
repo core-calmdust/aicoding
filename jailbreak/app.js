@@ -448,7 +448,8 @@ function cellSize() {
   // the frame (board + .32 cell of ring + 3px ink a side) fills the play column; the EXIT sign sits on the ring
   const P = G.P, phone = innerWidth < 760;
   const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', '.slbar'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
-  const H = Math.max(240, innerHeight - used - (phone ? 20 : 84));
+  const under = ['#gInfo', '#tiltPad'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
+  const H = Math.max(240, innerHeight - used - (phone ? 20 + under : 84));
   const W = phone ? Math.min(innerWidth, 560) - 16 : Math.min(innerWidth - 80, 900);
   return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + .64), (H - 8) / (P.h + .64))));
 }
@@ -532,7 +533,9 @@ function render(anim = true, ev) {
   const dg = P.cracks.length ? E.digs(P, S, g) : [];
   $$('.crack', boardEl()).forEach(e => e.classList.toggle('can', dg.includes(+e.dataset.c)));
 }
-function relayout() { if (!G || $('#play').hidden) return; const cs = cellSize(); if (cs !== G.cs) buildBoard(); }
+// phone: the height of what sits under the board (rule line, tilt pad) is mirrored above it so the board is truly centred
+function balance() { const pl = $('#play'); if (!pl || pl.hidden) return; const h = ['#gInfo', '#tiltPad'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0); pl.style.setProperty('--ih', h + 'px'); }
+function relayout() { if (!G || $('#play').hidden) return; balance(); const cs = cellSize(); if (cs !== G.cs) buildBoard(); }
 addEventListener('resize', () => { clearTimeout(relayout.t); relayout.t = setTimeout(relayout, 120); });
 function boardIn() { const b = boardEl(); b.classList.remove('bin'); void b.offsetWidth; b.classList.add('bin'); }
 
@@ -573,6 +576,7 @@ function renderInfo() {
   const m = G.m, el = $('#gInfo');
   const k = G.kind === 'sl' ? 'sl' : G.kind === 'chain' ? 'chain' : m === 'basic' ? 'basic' : m;
   el.innerHTML = `<span class="ii">${A.MI[k] || A.MI.big}</span><span>${esc(t('in.' + k))}</span>${k !== 'basic' ? `<button class="btn sm qbtn" data-rule="${k}">?</button>` : ''}`;
+  balance();
 }
 setInterval(() => { if (G && G.kind === 'daily' && !G.over) { const c = $('#gClock'); if (c) { const el = ((G.paused && G.pz ? G.pz : Date.now()) - G.t0) / 1000; c.innerHTML = `<small>${esc(t('g.time'))}${G.undoN ? ` · ${esc(t('g.undo'))}×${G.undoN}` : ''}</small><b>${mmss(el)}</b>`; } } }, 250);
 

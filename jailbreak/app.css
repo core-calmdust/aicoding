@@ -294,16 +294,19 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 .gctl .gbtns { margin-inline-start: auto; }
 /* play screen (all widths): title row with moves/best (+ stars, clock) on the right, the board, then hint / undo / restart as three wide buttons.
    PC: top-aligned column as wide as the board frame, buttons under the board. Phone: buttons at the bottom of the screen. */
-#play { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "btn btn" "info info"; column-gap: 8px; row-gap: 8px; }
+#play { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "info info" "btn btn"; column-gap: 8px; row-gap: 8px; }
 .gctl { display: contents; }
 .gbar { grid-area: bar; min-width: 0; } .gstat { grid-area: stat; justify-self: end; } #runInfo { grid-area: run; } .slbar { grid-area: sl; }
 #boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
 .gctl .gbtns { grid-area: btn; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0; gap: 8px; }
 .gctl .gbtn { width: auto; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 14px; } .gbtn .gl { display: inline; white-space: nowrap; }
 @media (max-width: 760px) {
-  #play { grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "info info" "fill fill" "btn btn"; grid-template-rows: auto auto auto auto auto auto 1fr auto;
+  /* the board sits in the vertical middle of the space between the title row and the buttons (equal room above and below;
+     the rule line under the board is balanced by --ih, its height, added above the board) */
+  #play { grid-template-areas: "bar stat" "run run" "sl sl" "f1 f1" "board board" "tilt tilt" "info info" "f2 f2" "btn btn"; grid-template-rows: auto auto auto 1fr auto auto auto 1fr auto;
     min-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
   .gctl .gbtns { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #boardWrap { margin-top: var(--ih, 0px); }
   .gtitle { flex-wrap: nowrap; } .gtitle small { display: none; }
   .gbar { gap: 6px; } .gbar .ib { width: 38px; height: 38px; flex: none; }
   .gstat { gap: 5px; } .hst i { font-size: 15px; }
