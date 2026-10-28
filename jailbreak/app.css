@@ -17,7 +17,7 @@ body { font-family: var(--font); color: var(--ink); background: var(--bg); min-h
   radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.2), transparent 55%),
   radial-gradient(ellipse at 90% 100%, rgba(0,0,0,.12), transparent 60%),
   radial-gradient(ellipse 40% 30% at 70% 30%, rgba(60,55,50,.06), transparent 70%),
-  url("bg-concrete.webp?v=1") 0 0 / 720px 360px, #b9b6b0; }
+  url("bg-concrete.webp?v=2") 0 0 / 960px 960px, #b3b1ac; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; opacity: .45; }
 #app { max-width: 1240px; margin: 0 auto; padding: 10px 16px 40px; }
