@@ -596,12 +596,8 @@ bdi{unicode-bidi:isolate}
   body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:2 / 1 / 3 / -1;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,330px);grid-auto-rows:min-content;column-gap:24px;
     overflow-y:auto;min-height:0;align-content:start;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   body.in-lesson :is(#evalCard,.kifu-card,.review-card), body.in-puzzle :is(#evalCard,.kifu-card,.review-card){display:none!important}
-  .lesson-card > :not(.lesson-actions), .puzzle-card > :not(.lesson-actions){grid-column:1}
-  .lesson-card > .tolist, .puzzle-card > .tolist{justify-self:start}
-  .lesson-card > .lesson-actions{grid-column:2;grid-row:1 / span 5;flex-direction:column;align-self:center;margin-top:0}
-  .puzzle-card > .lesson-actions{grid-column:2;margin-top:8px}
-  .puzzle-card > .lesson-actions:nth-last-child(2){grid-row:1 / span 3;align-self:end}
-  .puzzle-card > .lesson-actions:last-child{grid-row:4 / span 3;align-self:start}
+  .lesson-card > :not(.cb-bar), .puzzle-card > :not(.cb-bar){grid-column:1}
+  .lesson-card > .cb-bar, .puzzle-card > .cb-bar{grid-column:2;grid-row:1 / span 6;align-self:center;margin-top:0}
   .lesson-card h3,.puzzle-card h3{margin:2px 0 6px}
   .lesson-fb,.pz-status{min-height:0}
 }
@@ -826,12 +822,8 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   .frame{grid-area:fr;justify-self:center}
   .lesson-card,.puzzle-card{grid-area:ls}
   body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(220px,300px);column-gap:16px;grid-auto-rows:min-content;align-content:start}
-  .lesson-card > :not(.lesson-actions), .puzzle-card > :not(.lesson-actions){grid-column:1}
-  .lesson-card > .tolist,.puzzle-card > .tolist{justify-self:start}
-  .lesson-card > .lesson-actions{grid-column:2;grid-row:1 / span 5;flex-direction:column;align-self:center;margin-top:0}
-  .puzzle-card > .lesson-actions{grid-column:2;margin-top:6px}
-  .puzzle-card > .lesson-actions:nth-last-child(2){grid-row:1 / span 3;align-self:end}
-  .puzzle-card > .lesson-actions:last-child{grid-row:4 / span 3;align-self:start}
+  .lesson-card > :not(.cb-bar), .puzzle-card > :not(.cb-bar){grid-column:1}
+  .lesson-card > .cb-bar, .puzzle-card > .cb-bar{grid-column:2;grid-row:1 / span 6;align-self:center;margin-top:0}
   .controls{grid-area:ctrl;display:flex!important;gap:6px!important;padding:0!important;background:none!important;border:none!important;box-shadow:none!important}
   .controls .btn{flex:1;flex-direction:row!important;justify-content:center;gap:5px;padding:9px 4px!important;font-size:12px!important}
   .controls .btn span{display:inline!important}
@@ -1282,7 +1274,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=27"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028below1"><\/script><script src="online-ui.js?v=20261028sk2"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=7"><\/script><script src="../shared/headerbar.js?v=27"><\/script><script src="../shared/cardbar.js?v=1"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale1"><\/script><script src="app.js?v=20261028below1"><\/script><script src="online-ui.js?v=20261028sk2"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

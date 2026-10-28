@@ -622,27 +622,8 @@ body.in-puzzle .players, body.in-puzzle #evalCard, body.in-puzzle .kifu-card, bo
 .pz-goal{margin:6px 0 8px;padding:9px 12px;border-radius:10px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.3);font-size:15px;font-weight:700}
 .pz-status{font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
 .pz-status b.ok{color:#8fe3b8}.pz-status b.ng{color:#ff9b90}
+#puzzleCard.pz-daily #pzPrev, #puzzleCard.pz-daily #pzNext{display:none}
 /* puzzle card: primary actions (equal tiles, icon over label) / quieter navigation row / quit in the header */
-.pz-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.pz-head .lt{min-width:0}
-.pz-quit{flex:none;display:inline-flex;align-items:center;gap:4px;padding:5px 10px 5px 8px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12px;font-weight:700;white-space:nowrap}
-.pz-quit:hover{color:var(--text);border-color:var(--muted)}
-.pz-quit svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
-.pz-acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
-.pz-acts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:62px;padding:8px 4px;border-radius:12px;border:1px solid rgba(226,194,117,.32);background:rgba(226,194,117,.07);color:var(--text);font-size:13px;font-weight:700;line-height:1.2;text-align:center;transition:background .15s,border-color .15s,opacity .15s}
-.pz-acts button:hover:not(:disabled){background:rgba(226,194,117,.15);border-color:rgba(226,194,117,.55)}
-.pz-acts svg{width:20px;height:20px;stroke:var(--brass);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.pz-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.pz-nav button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:40px;padding:6px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700;line-height:1.15;text-align:center;transition:background .15s,color .15s,opacity .15s}
-.pz-nav button:hover:not(:disabled){color:var(--text)}
-.pz-nav svg{flex:none;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pz-nav button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
-.pz-nav.pz-daily{grid-template-columns:1fr}
-.pz-nav.pz-daily #pzPrev, .pz-nav.pz-daily #pzNext{display:none}
-:is(.pz-acts, .pz-nav) button:disabled{opacity:.35;cursor:default}
-html[lang=ar] .pz-nav{direction:rtl}
-html[lang=ar] .pz-nav svg.chev{transform:scaleX(-1)}
-html[lang=ar] .pz-head{direction:rtl}
 body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line{display:none!important}
 body.in-lesson .controls{display:none}
 .lesson-card .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -973,8 +954,6 @@ html[lang=ar] .pzx :is(.pb-ring, .pzx-prog, .pzx-stats .pb-st, .pzx-title small)
 .op-info-s p, .ob-info p{font-size:15px;line-height:1.9}
 .op-dr button{font-size:13px;padding:5px 12px}
 .pz-goal{font-size:16.5px}
-.pz-acts button{font-size:14px;min-height:66px}
-.pz-nav button{font-size:14px}
 .pz-status{font-size:15px;line-height:1.85}
 .lesson-intro p{font-size:15.5px;line-height:1.9}
 .lesson-intro p.note{font-size:14px}
@@ -1353,19 +1332,18 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
       </div>
     </div>
     <div class="card puzzle-card" id="puzzleCard">
-      <div class="lh pz-head"><span class="lt" id="pzStep"></span><button id="pzQuit" class="pz-quit" data-i18n-title="ls.quit"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="ls.quit"></span></button></div>
+      <div class="lh"><span class="lt" id="pzStep"></span></div>
       <h3 id="pzTitle"></h3>
       <div class="pz-goal" id="pzGoal"></div>
       <div class="pz-status" id="pzStatus"></div>
-      <div class="pz-acts">
-        <button id="pzHint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="ls.hint"></span></button>
-        <button id="pzRetry"><svg viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10"/></svg><span data-i18n="pz.retry"></span></button>
-        <button id="pzAnswer"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="pz.answer"></span></button>
-      </div>
-      <div class="pz-nav">
-        <button id="pzPrev" data-i18n-title="pz.prevT"><svg class="chev" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span data-i18n="pz.prev"></span></button>
-        <button id="pzList" data-i18n-title="pz.list"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span data-i18n="pz.listS"></span></button>
-        <button id="pzNext" data-i18n-title="pz.next"><span data-i18n="pz.nextS"></span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="lesson-actions">
+        <button id="pzHint" data-i18n="ls.hint"></button>
+        <button id="pzRetry" data-i18n="pz.retry"></button>
+        <button id="pzAnswer" data-i18n="pz.answer"></button>
+        <button id="pzList" data-i18n="pz.list"></button>
+        <button id="pzPrev" data-i18n="pz.prevT"></button>
+        <button id="pzNext" data-i18n="pz.next"></button>
+        <button id="pzQuit" data-i18n="ls.quit"></button>
       </div>
     </div>
     <div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>
@@ -1647,6 +1625,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/cardbar.js?v=1"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
@@ -3761,7 +3740,7 @@ function pzButtons() {
   $('#pzPrev').disabled = !!P.daily || P.k <= 0;
   $('#pzNext').disabled = !!P.daily || P.k + 1 >= lv.puzzles.length || !PZBook.isOpen(pzRecs(P.li), P.k + 1);
   $('#pzNext').classList.toggle('go', P.state === 'solved' && !$('#pzNext').disabled);
-  $('.pz-nav').classList.toggle('pz-daily', !!P.daily);
+  $('#puzzleCard').classList.toggle('pz-daily', !!P.daily);
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function themeLine() { const tg = (puzzle.pz.tags || []); return tg.length ? `<br><span style="color:var(--accent)">${t('pz.theme')} ${tg.map(x => t('pz.tag.' + x)).join(' / ')}</span>` : ''; }
