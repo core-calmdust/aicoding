@@ -1412,7 +1412,9 @@ const navRoot = () => $('#modal').hidden && !$('#home').hidden && !themeOpen && 
 function navSync() {
   if (NAV.skip) return;
   const trap = !!(history.state && history.state.sg);
-  if (!navRoot() && !trap) { try { history.pushState({ sg: 1 }, ''); } catch (e) {} }
+  // push only right after a tap / key: an entry added without user activation is skipped by the browser's back (iOS / Chrome)
+  const act = !navigator.userActivation || navigator.userActivation.isActive;
+  if (!navRoot() && !trap && act) { try { history.pushState({ sg: 1 }, ''); } catch (e) {} }
   else if (navRoot() && trap) { NAV.skip = true; history.back(); }   // closed with ✕ / a button: drop the spare entry (its popstate is ignored)
 }
 function navBack() {
@@ -1426,6 +1428,7 @@ addEventListener('popstate', () => {
   navBack(); setTimeout(navSync, 0);
 });
 document.addEventListener('click', () => setTimeout(navSync, 0), true);
+document.addEventListener('pointerup', () => setTimeout(navSync, 0), true);
 document.addEventListener('keydown', () => setTimeout(navSync, 0), true);
 async function boot() {
   bind(); applyI18n(); applySkin(); sndIcon();
