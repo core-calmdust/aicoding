@@ -896,19 +896,30 @@ function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && 
 function wpOver() { return P[game.moves.length].over || resignedNow(); }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !wpOver(), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = wpOver(), back = reviewing && cur < game.moves.length, on = wpActive() && (!over || back), b = $('#btnUndo');   // a finished game can be continued from an earlier position (cur lags one move behind while the last sowing is animated: not 'back')
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || wpOver()) return;
-  if (!wpPaused) {
+  const over = wpOver(), back = reviewing && cur < game.moves.length;
+  if (!wpActive() || (over && !back)) return;
+  if (!wpPaused && !over) {
     wpPaused = true; busyToken++; cancelWorker('ai'); thinking = -1;
     if (animating && !reviewing) { stopAnim(); cur = game.moves.length; fxMarks = []; update(); save(); }   // a sowing in progress finishes at once
     renderInfo(); return;
   }
-  wpPaused = false; stopAnim(); cur = game.moves.length; reviewing = false; fxMarks = [];   // resume from the latest position
-  update(); afterPosition();
+  if (back && window.WatchPause) { stopPlay(); WatchPause.ask({ lang: LANG, n: game.moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; stopAnim(); stopPlay(); cur = game.moves.length; reviewing = false; fxMarks = []; update(); afterPosition(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position (an extra-turn chain may be cut: the side to move there plays on); the later sowings, evals and a result are dropped — the 待った path
+  if (!wpActive() || cur >= game.moves.length) { wpLatest(); return; }
+  const i = cur;
+  wpPaused = false; busyToken++; cancelWorker('ai'); thinking = -1; stopAnim(); stopPlay();
+  game.moves = game.moves.slice(0, i); game.resigned = null; recompute(); cur = i; reviewing = false; gameOverShown = false; fxMarks = [];
+  evals.length = Math.min(evals.length, i + 1); anaLists.length = Math.min(anaLists.length, i + 1);
+  $('#resultOverlay').classList.remove('show');
+  update(); save(); afterPosition();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }

@@ -1643,7 +1643,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -2333,14 +2333,23 @@ function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && 
 function wpOver() { return !positions[positions.length - 1].toMove || !!resignedBy() || !!(clock && clock.lost); }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !wpOver(), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = wpOver(), back = cur < positions.length - 1, on = wpActive() && (!over || back), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || wpOver()) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelAI(); setStatus(BLACK, ''); setStatus(WHITE, ''); renderInfo(); return; }
-  wpPaused = false; cur = positions.length - 1; reviewing = false;   // resume from the latest position
+  const over = wpOver(), back = cur < positions.length - 1;
+  if (!wpActive() || (over && !back)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelAI(); setStatus(BLACK, ''); setStatus(WHITE, ''); renderInfo(); return; }
+  if (back && window.WatchPause) { if (typeof stopPlay === 'function') stopPlay(); WatchPause.ask({ lang: LANG, n: positions.length - 1 - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; cur = positions.length - 1; reviewing = false; update(null); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves (with their evals, a resignation, the clocks) are dropped — the kifu's この局面から再開 path
+  if (!wpActive() || cur >= positions.length - 1) { wpLatest(); return; }
+  wpPaused = false; busyToken++; cancelAI(); cancelAna();
+  positions.length = cur + 1; reviewing = false; clockReset();
+  hideOverlay('#resultOverlay');
   update(null);
 }
 function undo() {
