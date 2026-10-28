@@ -10,7 +10,15 @@
 //   5. Replace `null` below with that object, then bump the ?v= of firebase-config.js in jailbreak/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, rankings show "coming soon" (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDgHloSiLlcIjCYb6JjohnQT69BaTiQ0T8",
+  authDomain: "jailbreak-slider.firebaseapp.com",
+  databaseURL: "https://jailbreak-slider-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jailbreak-slider",
+  storageBucket: "jailbreak-slider.firebasestorage.app",
+  messagingSenderId: "487363897259",
+  appId: "1:487363897259:web:b00bfabedd531e955254ee"
+};
 // App Check (reCAPTCHA v3 / Enterprise), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA *site key* here (public by design). null = App Check is skipped and everything works as before.
-window.FIREBASE_APPCHECK_SITE_KEY = null;
+window.FIREBASE_APPCHECK_SITE_KEY = '6LceZAUuAAAAAMq1-4wVvHYxWfrj0I5Sn20Ui7fn';   // reCAPTCHA Enterprise (Fraud Defense) site key
