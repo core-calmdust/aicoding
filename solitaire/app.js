@@ -73,20 +73,35 @@ function tone(a, t0, f, dur, g, type) {
   gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(g, t0 + .01); gn.gain.exponentialRampToValueAtTime(.0008, t0 + dur);
   o.connect(gn).connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
 }
+// recorded sounds (snd/place.mp3, snd/shuffle.mp3): decoded once after the first gesture; synthesized fallback until then
+const SND = {}, SND_SRC = { place: 'snd/place.mp3?v=1', shuffle: 'snd/shuffle.mp3?v=1' };
+function loadSnd(a) {
+  for (const k in SND_SRC) if (!SND[k]) { SND[k] = 'loading'; fetch(SND_SRC[k]).then(r => r.arrayBuffer()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { SND[k] = buf; }).catch(() => { SND[k] = null; }); }
+}
+function play(a, k, t, gain, rate) {
+  const b = SND[k]; if (!b || b === 'loading') return false;
+  const s = a.createBufferSource(), g = a.createGain(); s.buffer = b; s.playbackRate.value = rate || 1; g.gain.value = gain == null ? 1 : gain;
+  s.connect(g).connect(a.destination); s.start(t); return true;
+}
+const vary = () => .93 + Math.random() * .14;   // a little pitch variation so repeated cards don't sound mechanical
 function sfx(k) {
-  if (!set.sound || document.hidden) return; const a = ac(); if (!a) return; const n = a.currentTime + .005;
-  if (k === 'place') noise(a, n, .07, 2400, .9, .55);
-  else if (k === 'flip') { noise(a, n, .05, 3600, 1.2, .35); noise(a, n + .03, .05, 2000, 1, .3); }
-  else if (k === 'draw') noise(a, n, .09, 3000, .7, .45);
-  else if (k === 'found') { noise(a, n, .05, 2600, 1, .4); tone(a, n + .02, 1318.5, .35, .07); tone(a, n + .02, 1975.5, .3, .03); }
-  else if (k === 'run') [784, 988, 1175, 1568].forEach((f, i) => tone(a, n + i * .07, f, .5, .07, 'triangle'));
-  else if (k === 'deal') for (let i = 0; i < 9; i++) noise(a, n + i * .045, .06, 2600 + Math.random() * 800, .9, .35);
+  if (!set.sound || document.hidden) return; const a = ac(); if (!a) return; loadSnd(a); const n = a.currentTime + .005;
+  const card = (t, g) => play(a, 'place', t, g == null ? .9 : g, vary()) || noise(a, t, .07, 2400, .9, .55);
+  if (k === 'place') card(n);
+  else if (k === 'flip') { card(n, .8); }
+  else if (k === 'draw') card(n, .7);
+  else if (k === 'found') { card(n); tone(a, n + .04, 1318.5, .35, .045); tone(a, n + .04, 1975.5, .3, .02); }
+  else if (k === 'run') { card(n); [784, 988, 1175, 1568].forEach((f, i) => tone(a, n + .05 + i * .07, f, .5, .06, 'triangle')); }
+  else if (k === 'shuffle') { if (!play(a, 'shuffle', n, 1)) for (let i = 0; i < 9; i++) noise(a, n + i * .045, .06, 2600 + Math.random() * 800, .9, .35); }
+  else if (k === 'deal') for (let i = 0; i < 5; i++) card(n + i * .07, .55 + Math.random() * .25);   // spider: a card onto every column
   else if (k === 'bad') tone(a, n, 196, .18, .08, 'triangle');
   else if (k === 'ok') { tone(a, n, 1046.5, .5, .12, 'triangle'); tone(a, n + .2, 1318.5, .7, .12, 'triangle'); }
   else if (k === 'ng') tone(a, n, 220, .3, .08, 'sine');
   else if (k === 'win') [523.3, 659.3, 784, 1046.5, 1318.5, 1568].forEach((f, i) => { tone(a, n + i * .09, f, .9, .09, 'triangle'); tone(a, n + i * .09, f * 2, .5, .02); });
   else if (k === 'hint') tone(a, n, 880, .25, .05);
 }
+// decode the recordings as soon as the page may make sound
+['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => { const a = ac(); if (a) loadSnd(a); }, { once: true, passive: true }));
 
 /* ---------------- game state ---------------- */
 let st = null, G = null;   // G: { undo:[], el (ms), t0, started, over, diff, deal, daily, counted }
@@ -146,7 +161,7 @@ function userMove(mv, quiet) {
 }
 function playEv(ev) {
   if (ev.runs && ev.runs.length) sfx('run');
-  else if (ev.stock) sfx(ev.recycle ? 'flip' : ev.deal ? 'deal' : 'draw');
+  else if (ev.stock) sfx(ev.recycle ? 'shuffle' : ev.deal ? 'deal' : 'draw');
   else if (ev.tk === 'found') sfx('found');
   else sfx(ev.flips.length ? 'flip' : 'place');
 }
@@ -286,7 +301,7 @@ function startGame(v, opt) {
     G = { undo: [], el: 0, t0: 0, started: false, over: false, diff: opt.diff, deal: opt.deal, daily: opt.deal === 'daily' ? dailyKey() : null, undoOk: opt.undo !== 'off', counted: false };
     if (v === 'klondike' && st.o.scoring === 'vegasCum') { st.sc = D.bank - 52; G.bank0 = D.bank; }
     $('#stuck').classList.add('hidden'); $('#btnAuto').classList.add('hidden');
-    TB.sel = null; TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('deal');
+    TB.sel = null; TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('shuffle');
     saveGame(); checkAutoComplete();
     setTimeout(() => { if (st && !G.started && !G.over) runAuto(() => { saveGame(); checkAutoComplete(); }); }, set.anim ? 52 * 22 + 500 : 50);
     if (V.solver && opt.deal !== 'winnable') preFind(v, opt.o);
@@ -324,7 +339,7 @@ function restart() {
   G = { undo: [], el: keep.el, t0: 0, started: keep.counted, over: false, diff: keep.diff, deal: keep.deal, daily: keep.daily, undoOk: keep.undoOk, counted: keep.counted };
   if (v === 'klondike' && st.o.scoring === 'vegasCum') { st.sc = D.bank - 52; G.bank0 = D.bank; }
   $('#stuck').classList.add('hidden'); $('#btnAuto').classList.add('hidden');
-  TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('deal'); saveGame();
+  TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('shuffle'); saveGame();
 }
 function curOpt() { return { o: st.o, diff: G.diff, deal: G.deal === 'daily' ? 'number' : G.deal, no: st.no, undo: G.undoOk ? 'on' : 'off' }; }
 
