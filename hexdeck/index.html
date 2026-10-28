@@ -1579,7 +1579,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const SEVENS_DEFAULT = 2;
   const BONUS_DEFAULT = { 2: [0, 0], 3: [0, 0, 0], 4: [0, 0, 0, 0] };
   const EXTRA_ROADS = { 2: [0, 0], 3: [0, 1, 0], 4: [0, 1, 1, 2] };
-  const DRAFT_ROADS = { 3: [0, 1, 0], 4: [0, 1, 1, 1] };   // 2026-10-28：相場を1周ごとにしたら先手有利に（4人 29.3/25.4/22.6/22.7%）→ 4人は2〜4番手、3人は2番手に道+1（23.5/27.4/24.1/25.0%、3人 31.0/35.1/33.9%）   // 2026-10-28：＋1廃止に合わせて3人戦の道の補正も廃止（旧 3: [0, 1, 2]）   // 2026-10-25：3人戦の手番の補正（2番手に道+1、3番手に道+2）
+  const DRAFT_ROADS = {};   // 2026-10-29：相場を人数+1手番ごと・輸入を各自の手番にして補正は廃止（4人 23.9/24.7/25.0/26.3%）。旧メモ：相場を1周ごとにしたら先手有利に（4人 29.3/25.4/22.6/22.7%）→ 4人は2〜4番手、3人は2番手に道+1（23.5/27.4/24.1/25.0%、3人 31.0/35.1/33.9%）   // 2026-10-28：＋1廃止に合わせて3人戦の道の補正も廃止（旧 3: [0, 1, 2]）   // 2026-10-25：3人戦の手番の補正（2番手に道+1、3番手に道+2）
   const HANDMAX_DEFAULT = 99;   // v1.2：手札の上限なし（資源＋手札14枚以上のバーストが実質の上限）
   const MARKET_LADDER = [2, 3, 4, 5, 5];
   const MIL = 9, SZ = 10;   // SZ：収奪の札（案）
@@ -1631,7 +1631,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       id: 'horn', name: '蛮族の角笛', goal: 12,
       barb: { base: 1.5, baseN: { 3: 1.25 }, cityDiv: 2, range: 2, from: 1, defArmy: 'none' },   // 強さ＝時代の番号×1.5（四捨五入）＋先頭の都市数÷2（切り上げ）。from：この時代から予告
       defSet: [1, 2],                             // 守備に使える札：1（騎士）と 2（守備兵：守備専用）
-      draftRoads: { 3: [0, 1, 2], 4: [0, 2, 2, 3] },   // 2026-10-28：相場1周ごとで再調整（4人 25.3/27.0/25.3/22.5%）  旧            // 手番の補正：3・4番手に道+1（4000局：25.2/24.2/26.3/24.4%）
+      draftRoads: { 3: [0, 0, 0], 4: [0, 0, 0, 1] },   // 2026-10-29：相場 人数+1手番・輸入は各自の手番で再調整（4人 24.6/26.9/24.4/24.1%、3人 補正なし 34.8/33.0/32.2%）  旧   // 2026-10-28：相場1周ごとで再調整（4人 25.3/27.0/25.3/22.5%）  旧            // 手番の補正：3・4番手に道+1（4000局：25.2/24.2/26.3/24.4%）
       mercCost: { sheep: 1, wheat: 1, ore: 1 },   // 傭兵：守備+1（1手番1回）
       medalVP: 1,
       eraSeq: [], eraFirst: [],
@@ -1657,7 +1657,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       specAdd: { jeweler: 2 }, specDel: [],
       gemSell: 1,
       goal: 12,   // 2026-10-28：目標12点（10点＝62ターンで短い）
-      draftRoads: { 4: [0, 0, 0, 0] },   // 2026-10-28：相場1周ごとで補正なしが均衡（22.2/25.2/27.8/24.8%）  旧 [1,1,0,0]：   // 手番順の補正：1・2番手に道+1（2000局：補正なし 19.8/24.7/26.2/29.4% → 25.1/26.9/23.0/25.1%）
+      draftRoads: { 4: [1, 1, 0, 0] },   // 2026-10-29：再調整（24.0/25.9/24.5/25.6%、補正なしは 21.0/24.3/26.9/27.9%）  旧   // 2026-10-28：相場1周ごとで補正なしが均衡（22.2/25.2/27.8/24.8%）  旧 [1,1,0,0]：   // 手番順の補正：1・2番手に道+1（2000局：補正なし 19.8/24.7/26.2/29.4% → 25.1/26.9/23.0/25.1%）
     },
   };
   const ringOf = (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
@@ -1852,8 +1852,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     S.marketMode = opts.marketMode !== undefined ? opts.marketMode : 'scarce';   // v1.7：在庫が少ない資源ほど「もらう」のが高い
     S.knights = opts.knights != null ? opts.knights : true;
     S.armyMin = opts.armyMin || 4; S.armyPts = opts.armyPts != null ? opts.armyPts : 2;   // 最大騎士力：必要回数・点数                      // 1の札は騎士を兼ねる
-    S.marketPeriod = opts.marketPeriod || S.n || 4;   // 2026-10-28：相場の更新（在庫の戻し・輸入も）は1周ごと（人数と同じ手番数）
-    S.box = {}; S.boxPeriod = opts.boxPeriod || 0;
+    S.marketPeriod = opts.marketPeriod || (S.n || 4) + 1;   // 2026-10-28：相場の更新（在庫の戻し・輸入も）は1周ごと（人数と同じ手番数）
+    S.box = {}; S.boxPeriod = opts.boxPeriod || 0; S.importOwn = opts.importOwn !== undefined ? !!opts.importOwn : true;   // 2026-10-29：輸入は各自の手番の始めに1枚 if (opts.mkOffset) S.mkTurns = opts.mkOffset;   // 検証用：相場の更新のタイミングをずらす
     S.rates = {}; RES.forEach(r => { S.rates[r] = opts.marketStart || 4; });            // 1手番に出せる交換の提案            // 組み合わせは何枚でも（既定）
     S.chipMarket = opts.chipMarket != null ? opts.chipMarket : 3;   // 数字チップの市場（公開3枚）
     S.starterSet = opts.starterSet || null;               // 準備の開拓の順（same＝地点を選んだ順／reverse）
@@ -2751,10 +2751,11 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     return ks;
   }
   // 輸入：相場が変わるたびに、港を使える人は在庫から1枚受け取る（2:1港はその資源、3:1港は手持ちの一番少ない資源）
-  function doImports(S) {
+  function doImports(S, only) {
     if (!S.portImport) return;
+    if (S.importOwn && only == null) return;   // 案：輸入は各自の手番の始めに
     for (let i = 0; i < S.n; i++) {
-      const p = (S.cur + i) % S.n, P = S.players[p], ks = portKinds(S, p, S.importBuilt); if (!ks.size) continue;
+      const p = (S.cur + i) % S.n; if (only != null && p !== only) continue; const P = S.players[p], ks = portKinds(S, p, S.importBuilt); if (!ks.size) continue;
       const allow = ks.has('any') ? RES.slice() : RES.filter(r => ks.has(r));
       const cand = allow.filter(r => !S.stock || S.stock[r] > 0).sort((a, b) => P.res[a] - P.res[b] || (S.stock ? S.stock[b] - S.stock[a] : 0));
       if (cand.length) { const r = (S.importChooser && S.importChooser(S, p, cand)) || cand[0]; gain(S, p, r, 1); log(S, { k: 'import', p, r }); S.imports = (S.imports || 0) + 1; }
@@ -2802,7 +2803,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     // 自分の手番以外で目標点に届いた人（跳ね返しで騎士力など）も、ここで最終周に入れる
     if (S.fullRound && !S.ending) { const r = S.players.map(P => P.id).find(p => vp(S, p) >= S.goal); if (r != null) { S.ending = true; S.reached = r; if (S._first1 == null) S._first1 = r; log(S, { k: 'lastRound', p: r }); } }
     if (S.ending && (S.cur + 1) % S.n === S.first) { if (finishRound(S)) return true; }
-    S.cur = (S.cur + 1) % S.n; S.mined = []; S.mercUsed = false; S.acted = false; S.drawn = []; S.step = 'draw'; S.turn++; eraTick(S); S.trades = 0; S.offers = 0; S.knightUsed = false; S._extraDraw = false; S.raidUsed = false; S.seizeUsed = false; S.seizeN = 0; S.seizeLeft = 0; S._szc = 0; S.specUsed = false; S.specBought = false; S._bounty = false; S._ship = false; S.trashed = 0; S.memo = { refused: [], traded: {} }; updateMarket(S); refill(S);
+    S.cur = (S.cur + 1) % S.n; S.mined = []; S.mercUsed = false; S.acted = false; S.drawn = []; S.step = 'draw'; S.turn++; eraTick(S); S.trades = 0; S.offers = 0; S.knightUsed = false; S._extraDraw = false; S.raidUsed = false; S.seizeUsed = false; S.seizeN = 0; S.seizeLeft = 0; S._szc = 0; S.specUsed = false; S.specBought = false; S._bounty = false; S._ship = false; S.trashed = 0; S.memo = { refused: [], traded: {} }; updateMarket(S); if (S.importOwn) doImports(S, S.cur); refill(S);
     log(S, { k: 'turn', p: S.cur }); return true;
   }
 
@@ -4431,7 +4432,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     forest: { n: '森林の時代', d: '木材の生産 +1（建物ごと）', ic: '🌲' },
     trade: { n: '交易の時代', d: '銀行のレートが1安い（2:1まで）', ic: '⚖' },
     knight: { n: '騎士の時代', d: `最大騎士力が${Math.max(1, (S && S.armyMin || 4) - 1)}回から取れる`, ic: '🛡' },
-    famine: { n: '飢饉の時代', d: '小麦の生産 −1（建物ごと）。相場の更新が2手番ごとに早まる', ic: '🥀' },
+    famine: { n: '飢饉の時代', d: '小麦の生産 −1（建物ごと）。相場の更新が1手番早まる', ic: '🥀' },
     voyage: { n: '大航海の時代', d: '3:1の港が2:1になる', ic: '⛵' },
     mine: { n: '鉱山の時代', d: '鉱石の生産 +1（建物ごと）', ic: '⛏' },
     pasture: { n: '牧畜の時代', d: '羊毛の生産 +1（建物ごと）', ic: '🐑' },
@@ -5005,7 +5006,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       sec('start', 'はじまり', `<p class="rl-lead">土地を開拓して資源と数字を決め、道と建物を広げて、先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに全員共通の<b>アクション札の山</b>を使います。</p>
         <div class="rk-grid">${card(`<span class="rl-mini">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `マップ：${mapName}`, ul([S.noDesert ? '中央も資源の土地（砂漠なし）' : '中央は砂漠（盗賊の居場所）', 'まわりの6つは資源だけ決まっていて<b>数字なし</b>', '外周の12は<b>荒地</b>（資源も数字もなし）']))}
         ${card('🚩', '準備の流れ', flow([['⛺', 'スタート地点', '角を選んで拠点を置く（0点・生産力' + S.campYield + '）'], ['⛏', '無料で開拓', '拠点のとなりの荒地に資源と数字（4〜12）'], [TF.road(), '道を1本', '拠点から伸ばす']]))}</div>
-        ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', (() => { const d = S.scen && S.scen.draftRoads && S.scen.draftRoads[S.n] || ({ 3: [0, 1, 0], 4: [0, 1, 1, 1] })[S.n] || []; const t = d.map((x, i) => x ? `${i + 1}番手+${x}` : '').filter(Boolean); return t.length ? `手番順の補正：準備で道を追加（${t.join('・')}）。` : ''; })(), `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
+        ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', (() => { const d = S.scen && S.scen.draftRoads && S.scen.draftRoads[S.n] || []; const t = d.map((x, i) => x ? `${i + 1}番手+${x}` : '').filter(Boolean); return t.length ? `手番順の補正：準備で道を追加（${t.join('・')}）。` : ''; })(), `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
       sec('turn', '手番', flow([[`<span class="tf-deck sm"></span>`, '札を引く', '1枚引く。もう1枚引くか止める（最大2枚）'], [acard(3, 'sm') + acard(5, 'sm'), '数字を出す', '手札の1枚か合計で2〜12。全員が生産'], ['🔨', '建てる・交換', '建設・開拓・交換・特殊カード'], [IC('aEnd'), '終了', '次の人の番へ']]) +
         `<div class="rk-grid">${card(acard(4, 'sm'), 'アクション札', tbl(['札', '枚数', 'メモ'], [row('<b>1〜6</b>', `各${S.face}枚`, '1は騎士も兼ねる'), row('<b>7</b>', `${S.sevens}枚`, '引くとバースト')]))}
         ${card(IC('aTrash'), '処分（山札の圧縮）', ul([`建築の段階に手札の札を捨て札へ戻せる`, `1手番に1枚まで無料、2枚目からは資源${S.trashCost}枚`]))}</div>
@@ -5029,9 +5030,9 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         ${S.seizeCost ? card(IC('aSeize'), '道の収奪', `<div class="rk-cost">${cost(S.seizeCost)}</div>` + ul(['自分の道（か建物）につながる相手の道を1本、自分の道にする', '自分とつなぐ側の端に相手の建物がある道は奪えない', '1手番1回。奪われた人は次の自分の番が終わるまで奪い返せない（🔒）', '奪った道の間に開拓地を建ててもよい']), 'red') : ''}
         ${S.milCards ? card(IC('aRaid'), '軍', `<div class="rk-cost">${acard(HD.MIL, 'sm')}${cost(S.raidCost ? S.raidCost.settle : { wheat: 1, sheep: 2, ore: 3 })}</div>` + ul([`軍の札（${S.milCards}枚）が山札に混ざる`, '自分の道の先にある相手の開拓地・都市を壊す（拠点・城壁は不可）', `使った札は得点札：開拓地+${S.raidVP}点・都市+${S.raidVPCity}点`, '壊された人は次の自分の番が終わるまで跡地に建て直せない（🔒）']), 'red') : ''}
         ${card(IC('aWall'), '城壁', `<div class="rk-cost">${cost(S.wallCost || { sheep: 1, ore: 2 })}</div>` + ul(['自分の開拓地・都市に築く', '軍で壊されない', '盗賊に資源を奪われない', '点はなし']))}</div>`),
-      sec('trade', '相場・交換', `<div class="rk-grid">${card('🏦', '銀行のレート（相場）', tbl(['在庫', 'もらうときのレート'], [row('一番少ない', '<b>5:1</b>'), row('2番目', '<b>5:1</b>'), row('3番目', '<b>4:1</b>'), row('4番目', '<b>3:1</b>'), row('一番多い', '<b>2:1</b>')]) + `<p class="rl-note">${S.marketPeriod}手番ごとに更新。</p>`)}
+      sec('trade', '相場・交換', `<div class="rk-grid">${card('🏦', '銀行のレート（相場）', tbl(['在庫', 'もらうときのレート'], [row('一番少ない', '<b>5:1</b>'), row('2番目', '<b>5:1</b>'), row('3番目', '<b>4:1</b>'), row('4番目', '<b>3:1</b>'), row('一番多い', '<b>2:1</b>')]) + `<p class="rl-note">${S.marketPeriod}手番ごと（人数＋1）に更新。更新の直後に手番が来る人は毎回1人ずつずれる。</p>`)}
         ${card('📦', '在庫と消費ボックス', flow([['💰', '払う', '建設・交換などで払った資源'], ['📦', '消費ボックス', `${S.marketPeriod}手番の間たまる`], ['🏦', '在庫へ', '相場の更新で戻る']]) + ul([`資源の在庫は各${S.stock ? HD.STOCK_DEFAULT[S.n] || 19 : '∞'}枚。切れた資源は生産されない（手番の人から順に配る）`]))}</div>
-        <div class="rk-grid">${card('⚓', '港', tbl(['港', '交換', '輸入（建物を建てた人だけ・相場の更新ごと）'], [row('<b>2:1</b>', 'その資源を出すとき2:1', 'その資源を1枚'), row('<b>3:1</b>', 'どの資源でも3:1', '手持ちで一番少ない資源を1枚')]) + ul(['港に建物を建てるか、自分の道が届けば交換に使える（他人の建物がある港は不可）', '港は相場より有利なときだけ使える']))}
+        <div class="rk-grid">${card('⚓', '港', tbl(['港', '交換', '輸入（建物を建てた人だけ・自分の手番の始めに）'], [row('<b>2:1</b>', 'その資源を出すとき2:1', 'その資源を1枚'), row('<b>3:1</b>', 'どの資源でも3:1', '手持ちで一番少ない資源を1枚')]) + ul(['港に建物を建てるか、自分の道が届けば交換に使える（他人の建物がある港は不可）', '港は相場より有利なときだけ使える']))}
         ${card(IC('aTrade'), 'プレイヤーとの交換', ul(['自分の番に、何度でも交換を提案できる', '応じた人の中から相手を選ぶ', 'BOTは同じ相手と1手番1回まで。2:1より偏った交換や、一度断った条件より不利な提案には応じない']))}</div>`),
       sec('end', '得点・終わり方', tbl(['', '得点', '点', '条件'], [row(TF.house(), '<b>開拓地</b>', '1', '—'), row(TF.city(), '<b>都市</b>', '2', '開拓地を格上げ'), row('<span class="tf-badge sm">最長交易路</span>', '', '2', '5本以上つながった一番長い道'), row('<span class="tf-badge sm">最大騎士力</span>', '', String(S.armyPts), `騎士を${S.armyMin}回以上・一番多い`)].concat(S.devVP ? [row('<span class="tf-badge sm">開拓者</span>', '', String(S.devVP.vp), `開拓${S.devVP.n}か所以上・一番多い`)] : []).concat(S.milCards ? [row(acard(HD.MIL, 'sm'), '<b>軍の得点札</b>', `${S.raidVP} or ${S.raidVPCity}`, `開拓地を壊すと${S.raidVP}点・都市を壊すと${S.raidVPCity}点`)] : []), 'rtb-pts') +
         ul([`誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人の番まで続けて終了。一番点の高い人の勝ち（同点なら先に届いた人）。`, `届いたあとに軍で壊されたり、収奪で最長交易路を失ったりして、周回の終わりに<b>${S.goal}点以上の人がいなければ</b>ゲームは続く。`])),
@@ -5133,7 +5134,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
           <li>2番目の時代から、時代が始まるたびに<b>蛮族の船</b>が沖に現れる。上陸するのは<b>点が一番高い人の建物が一番多い海岸</b>で、強さは時代が進むほど増え（2→3→5→6…）、先頭の都市が多いほど上がる。どちらも盤上に表示される。</li>
           <li>次の時代に変わるとき（角笛が鳴るとき）、<b>全員の守備の合計</b>と強さを比べる。守備は、<b>騎士で守る</b>（1か2の札を1枚）、<b>傭兵を雇う</b>（${Object.keys(C.mercCost).map(r => RESN[r] + C.mercCost[r]).join('・')}）、範囲にある<b>城壁</b>（1つ+1）で増える。</li>
           <li>守備が強さ以上なら<b>撃退</b>。一番守った人に<b>勲章 +${C.medalVP}点</b>。足りなければ、範囲（赤い輪）に建物がある人のうち<b>一番守っていない人</b>が襲われる：城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li>
-          <li>このシナリオでは<b>2の札が「守備兵」</b>になる（数字の2としても使える）。1の札（騎士）は盗賊を動かす（攻め）か守備隊に送る（守り）かを選べ、2の札は守りにだけ使える。守りに使った札は<b>最大騎士力に数えない</b>（守りの報酬は勲章）。後手は準備で道を追加（4人：2・3番手に+2、4番手に+3／3人：2番手+1・3番手+2）。</li>
+          <li>このシナリオでは<b>2の札が「守備兵」</b>になる（数字の2としても使える）。1の札（騎士）は盗賊を動かす（攻め）か守備隊に送る（守り）かを選べ、2の札は守りにだけ使える。守りに使った札は<b>最大騎士力に数えない</b>（守りの報酬は勲章）。4人戦は4番手が準備で道を1本追加。</li>
           <li>目標は<b>${S.goal}点</b>。</li>
         </ul></div></div>
         <div class="foot"><button class="btn primary" id="plGo">上陸する</button></div>`, done);
@@ -5230,9 +5231,9 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     op: t => `<span class="tf-op">${t}</span>`,
   };
   function tutPages(kind) {
-    const G = 10, L = (S && S.limit) || 14, C = HD.COST, MP = (S && S.marketPeriod) || 3, EL = (S && S.eraLen) || 4, DV = S && S.devVP;
+    const G = 10, L = (S && S.limit) || 14, C = HD.COST, MP = (S && S.marketPeriod) || 5, EL = (S && S.eraLen) || 4, DV = S && S.devVP;
     const MARKET = `払った資源（建物・道・開拓・交換などで使った分）はいったん<b>消費ボックス</b>に入り、${MP}手番ごとの相場の更新で在庫に戻ります。銀行のレートはそのときの在庫で決まり、<b>在庫が少ない資源ほど高く</b>（少ない順に 5:1・5:1・4:1・3:1・2:1）なります。`;
-    const IMPORT = '港に建物を建てた人は、相場の更新のたびに在庫から1枚<b>輸入</b>できます（2:1の港はその資源、3:1の港は手持ちで一番少ない資源）。';
+    const IMPORT = '港に建物を建てた人は、自分の手番の始めに在庫から1枚<b>輸入</b>できます（2:1の港はその資源、3:1の港は手持ちで一番少ない資源）。';
     const ATK = { h: '道の収奪・軍・城壁', f: TF.row(`<span class="tf-badge atk">道の収奪</span>`, `<span class="tf-badge atk">軍</span>`, `<span class="tf-badge era">城壁</span>`),
       t: `3つ目の時代から使えます。<br><b>道の収奪</b>：羊毛1・鉱石2で、自分の道（か建物）につながる相手の道を1本奪う（自分とつなぐ側の端に相手の建物がある道は不可。1手番1回）。<br><b>軍</b>：山札に混ざる軍の札と小麦1・羊毛2・鉱石3で、自分の道の先にある相手の開拓地・都市を壊す（壊すと得点札：開拓地+${(S && S.raidVP) || 1}点・都市+${(S && S.raidVPCity) || 2}点）。<br><b>城壁</b>（羊毛1・鉱石2）を築いた建物は、軍で壊されず盗賊にも奪われません。` };
     const WIN = { h: '勝利条件', f: TF.row(`<span class="tf-badge">🏆 ${G}点</span>`, TF.op('→'), `<span class="tf-badge era">周回の終わりまで</span>`),
