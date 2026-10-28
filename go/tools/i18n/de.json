@@ -288,7 +288,7 @@
 "daily.best": "Rekord {n}",
 "rv.title": "Analyse",
 "rv.btn": "Analyse",
-"rv.btn.title": "Die ganze Partie mit der KI analysieren",
+"rv.btn.title": "Die ganze Partie mit der KI analysieren (Fehler und Ungenauigkeiten)",
 "rv.running": "Analysiere {a}/{b}",
 "rv.check": "prüfe {a}/{b}",
 "rv.done": "Analyse fertig",

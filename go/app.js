@@ -1251,7 +1251,9 @@ function rbMoves() { return rbS ? moves.slice(0, rbS.base).concat(rbS.mv) : move
 function rbActive() {
   if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || settings.mode === 'online' || rtLive()) return false;
   if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
-  return gameOver(moves.length) || settings.mode === 'pvp';   // finished games (or a loaded / two-player record)
+  // finished games — also while the dead stones are being marked after both passed (整地), so 分析 works before the count is
+  // confirmed — or a loaded / two-player record
+  return gameOver(moves.length) || isCounting(moves.length) || settings.mode === 'pvp';
 }
 let W3 = null;
 function rbAnalyze(done) {
