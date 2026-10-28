@@ -537,7 +537,7 @@ function openSettings() {
     `<div class="sec"><span class="lab">${esc(t('set.tap'))}</span>${seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')}</div>` +
     `<div class="sec"><span class="lab">${esc(t('set.speed'))}</span>${seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')}</div>` +
     `<div class="sec">${ch('anim', t('set.anim'))}${ch('hl', t('set.hl'))}${ch('timer', t('set.timer'))}${ch('score', t('set.score'))}${ch('left', t('set.left'))}${ch('sound', t('set.sound'))}</div>` +
-    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a>（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a></p>`;
+    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a></p>`;
   const body = $('#setBody');
   body.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { set.auto = b.dataset.auto; save(); openSettings(); });
   body.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { set.tap = b.dataset.tap; TB.select(null); save(); openSettings(); });
