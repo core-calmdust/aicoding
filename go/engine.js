@@ -85,7 +85,7 @@ async function search(I, job, o) {
   const nch = E.search_init(o.nodes || 400000);
   if (!nch) return null;
   const t0 = performance.now();
-  let done = 1, lastP = t0;
+  let done = 1, lastP = t0, gap = o.prog0 || 280;   // first progress report after prog0 ms (quick first display), then every ~280 ms
   const maxV = o.visits || 100, maxT = o.time || 1e9;
   while (done < maxV) {
     const k = Math.min(o.slice || 4, maxV - done);
@@ -94,7 +94,7 @@ async function search(I, job, o) {
     if (!got) break;
     const now = performance.now();
     if (now - t0 > maxT && done >= (o.minVisits || 1)) break;
-    if (o.progress && now - lastP > 280) { lastP = now; o.progress(results(I, n, 24)); }
+    if (o.progress && now - lastP > gap) { lastP = now; gap = 280; o.progress(results(I, n, 24)); }
     await yieldNow();
     if (curJob !== my) return null;
   }
@@ -204,7 +204,7 @@ async function analyze(job, post) {
     lead: res.sc, wr: (res.wl + 1) / 2, visits: res.visits,
     list: res.list.filter(c => c.n > 0).map(c => ({ m: c.m, lead: c.sc, wr: (c.wl + 1) / 2, n: c.n, p: c.p })),
   });
-  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, slice: 3, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
+  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, slice: 3, prog0: job.prog0, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
   if (!res) return null;
   const out = fmt(res);
   if (job.pv) addPV(I, job, out.list.slice(0, job.pv));
