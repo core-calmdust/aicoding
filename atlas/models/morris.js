@@ -60,13 +60,13 @@
     const cl = grid(128, (u, v) => { const [x, y] = Fw(u, v); return N3(x * .7, y * .45, 5); });
     const cl2 = grid(96, (u, v) => { const [x, y] = F0(u, v); return N3(x * 2 + 3, y * 1.2 + 7, 4); });
     // vein phases: a gradient across the flow plus turbulence; every integer level is a vein (classic marble, sin(y + turbulence))
-    const fV = grid(R, (u, v) => { const [x, y] = Fw(u, v); return y * .55 + N4(x * .9, y * .9, 4) * 1.7; });            // main veins
+    const fV = grid(R, (u, v) => { const [x, y] = Fw(u, v); return y * .38 + N4(x * .9, y * .9, 4) * 1.2; });            // main veins
     const fF = grid(R, (u, v) => { const [x, y] = Fw(u, v); return y * 1.35 + N6(x * 1.6 + 4, y * 1.6 + 1, 3) * 2.4 + .37; });  // finer veins
     const fBd = grid(128, (u, v) => { const [x, y] = Fw(u, v); return N5(x * .45 + 9, y * .5 + 3, 2); }); // broad bands
     const slow = (seed, f) => grid(64, (u, v) => { const [x, y] = F0(u, v); return seed(x * f, y * f * .6, 3); });
     const thk = slow((x, y, o) => N5(x + 2, y + 4, o), 1.4), opa = slow((x, y, o) => N2(x + 7, y + 1, o), 1.1), gate = slow((x, y, o) => N3(x + 13, y + 2, o), 1.3), tin = slow((x, y, o) => N1(x + 11, y + 4, o), .9);
     const G0 = hexRGB('#08070d'), G1 = hexRGB('#17132a'), G2 = hexRGB('#342b5c'), G3 = hexRGB('#4a3f7a');
-    const VW = hexRGB('#efeaf6'), VL = hexRGB('#b3a3df'), VG = hexRGB('#d9b46c'), VS = hexRGB('#5d5190');
+    const VW = hexRGB('#a59bc2'), VL = hexRGB('#7d71a8'), VG = hexRGB('#a88c5a'), VS = hexRGB('#4a3f78');   // muted lilac-grey / soft gold: the dark stone dominates, the gold inlay reads on top
     let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
     const img = g.createImageData(w, h), d = img.data, e = 1.5 / R, pxMin = .9 / w;
     // a vein across signed distance sd: solid core, crisp fall-off on one side, a long feather on the other
@@ -83,11 +83,11 @@
       const grad = a => Math.max(1e-7, Math.hypot(at(a, u + e, v) - at(a, u - e, v), at(a, u, v + e) - at(a, u, v - e)) / (2 * e));   // (central differences over ~1.5 grid cells: smooth, no blocky steps)
       // broad diffuse bands blended into the ground
       const nb = at(fBd, u, v), sb = (nb - .5) / grad(fBd);
-      c = mix(c, VS, Math.exp(-Math.pow(sb / .045, 2)) * .2);
+      c = mix(c, VS, Math.exp(-Math.pow(sb / .045, 2)) * .12);
       // main veins: width swells and tapers, opacity drifts along the length; secondary veins split off at shallow angles
-      const pv = at(fV, u, v), gv = grad(fV), n = pv - Math.round(pv) + .5, tk = at(thk, u, v), op = sm(.28, .62, at(opa, u, v)), gt = sm(.45, .66, at(gate, u, v));
-      const hw = .0008 + .013 * sm(.2, .85, tk);
-      let V = vein((n - .5) / gv, hw) * (.4 + .6 * op);
+      const pv = at(fV, u, v), gv = grad(fV), n = pv - Math.round(pv) + .5, tk = at(thk, u, v), op = sm(.4, .72, at(opa, u, v)), gt = sm(.45, .66, at(gate, u, v));
+      const hw = .0006 + .0065 * sm(.35, .9, tk);
+      let V = vein((n - .5) / gv, hw) * (.15 + .85 * op);
       V = Math.max(V, vein((n - .5 - .02) / gv, hw * .45) * gt * (.3 + .6 * op));
       V = Math.max(V, vein((.5 - .035 - n) / gv, hw * .35) * gt * op * .7);
       const near = Math.exp(-Math.abs(n - .5) / gv / .02);
@@ -96,8 +96,8 @@
       // vein colour: white with lilac and gold drifts
       const tint = at(tin, u, v), gold = sm(.58, .7, tint), lil = sm(.5, .3, tint);
       let vc = mix(VW, VL, .2 + lil * .6); vc = mix(vc, VG, gold * .8);
-      c = mix(c, mix(VL, vc, .5), Math.min(1, F) * .6);
-      c = mix(c, vc, Math.min(1, V) * .92);
+      c = mix(c, mix(VL, vc, .5), Math.min(1, F) * .3);
+      c = mix(c, vc, Math.min(1, V) * .65);
       // crystalline speckle: tiny glints, denser along the veins
       const r = rnd();
       if (r < .0006 + near * .01) c = mix(c, VL, .12 + rnd() * .3);
