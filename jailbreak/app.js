@@ -770,6 +770,8 @@ addEventListener('popstate', e => {
     nav(); return ask(t('q.quit'), [[t('q.keep'), 'org'], [t('q.home'), '', () => { endRun(); history.back(); }]]);
   }
   if (!$('#modal').hidden) { $('#modal').hidden = true; afterModal = null; }
+  // leaving a course / rule-mode stage (back button, browser back, edge swipe) lands on that course's / mode's stage list
+  if (G && !$('#play').hidden && G.kind === 'stage' && !listAfter) listAfter = G.src;
   homeTab = st.tab || 'daily'; courseOpenId = st.co || null; modeOpenId = st.mo || null;
   // "list" from a result: land on that course's / mode's stage list
   if (listAfter) { const L = listAfter; listAfter = null; if (courseOf(L)) { homeTab = 'course'; courseOpenId = L; modeOpenId = null; } else { homeTab = 'modes'; modeOpenId = L; courseOpenId = null; } if (G && !$('#play').hidden) { G = null; showScreen('home'); } nav(); }
