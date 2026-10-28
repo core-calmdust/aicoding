@@ -6,8 +6,8 @@ const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
 const FELTS = ['green', 'blue', 'wine', 'charcoal', 'teal', 'purple', 'walnut', 'linen'];
-const BACKS = ['ornate', 'ornateBlack', 'red', 'blue', 'mosaic', 'crimson', 'navy', 'stars'];
-const COURTS = ['classic', 'antique', 'flat'];
+const BACKS = ['ornate', 'ornateBlack', 'red', 'blue', 'mosaic', 'gangsta', 'crimson', 'navy'];
+const COURTS = ['classic', 'antique', 'flat', 'gangsta'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -545,8 +545,8 @@ function designHtml() {
   const mini = (cls, inner) => `<span class="mini-card">${inner}</span>`;
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
-  const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${k === 'flat' ? ' full' : ''}" src="img/${k === 'flat' ? 'flat/' : Table.COURT_DIR[k]}${k === 'flat' ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div>`;
+  const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${Table.FULL_DECKS.includes(k) ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${Table.FULL_DECKS.includes(k) ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
+  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
@@ -585,7 +585,7 @@ function openSettings() {
     `<div class="sec"><span class="lab">${esc(t('set.tap'))}</span>${seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')}</div>` +
     `<div class="sec"><span class="lab">${esc(t('set.speed'))}</span>${seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')}</div>` +
     `<div class="sec">${ch('anim', t('set.anim'))}${ch('hl', t('set.hl'))}${ch('timer', t('set.timer'))}${ch('score', t('set.score'))}${ch('left', t('set.left'))}${ch('sound', t('set.sound'))}</div>` +
-    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a><br>${esc(t('credit2'))}<br><a href="https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm" target="_blank" rel="noopener">Illustration online gambling</a>・<a href="https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm" target="_blank" rel="noopener">Poker cards icons collection</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm" target="_blank" rel="noopener">Hand drawn playing card back design</a>：Designed by Freepik</p>`;
+    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a><br>${esc(t('credit2'))}<br><a href="https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm" target="_blank" rel="noopener">Illustration online gambling</a>・<a href="https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm" target="_blank" rel="noopener">Poker cards icons collection</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm" target="_blank" rel="noopener">Hand drawn playing card back design</a>・<a href="https://www.magnific.com/free-vector/deck-gangsta-playing-cards_8083771.htm" target="_blank" rel="noopener">Deck gangsta playing cards</a>：Designed by Freepik</p>`;
   const body = $('#setBody');
   body.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { set.auto = b.dataset.auto; save(); openSettings(); });
   body.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { set.tap = b.dataset.tap; TB.select(null); save(); openSettings(); });
@@ -688,6 +688,9 @@ if (window.RulesOffer) RulesOffer.init({ game: 'solitaire', lang: () => LANG, op
   }
   const p = prefOf(set.v); startGame(set.v, { o: p.o, diff: p.diff, deal: p.deal, undo: p.undo });
 })();
+
+// opening the page shows the new-game dialog (this game only, at the user's request; the saved game stays behind it)
+setTimeout(() => { if (!/[?&]nonew\b/.test(location.search) && !$('#resultOverlay').classList.contains('show')) openNew(); }, 60);
 
 window.SolApp = { _st: () => st, _G: () => G, _move: m => userMove(m), t, get LANG() { return LANG; }, sfx, startGame, prefOf, openNew, vName, optVal, gIcon, set, closeOv, openOv, toast };
 })();
