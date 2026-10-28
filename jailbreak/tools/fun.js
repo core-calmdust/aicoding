@@ -88,7 +88,7 @@ function analyze(rec, opt = {}) {
   return { o, score: m.score, ok: !why.length, why, m, path };
 }
 function lineStats(P, path) {
-  const moved = {}, dirs = {}; let detour = 0, S = P.s0, guardSteps = 0, digs = 0;
+  const moved = {}, dirs = {}; let detour = 0, S = P.s0, guardSteps = 0, digs = 0, lights = 0, vents = 0, heavyMoves = 0;
   for (const mv of path) {
     const ev = {};
     if (mv[0] >= 0) {
@@ -97,11 +97,12 @@ function lineStats(P, path) {
       const p = P.pc[i]; if ((p.t === 'P' && mv[1] < 0) || (p.t === 'Q' && mv[2] < 0)) detour = 1;
     } else if (mv[0] === -1) digs++;
     else { for (let i = 0; i < P.pc.length; i++) moved[i] = moved[i] || 0; }
-    S = E.apply(P, S, mv, ev); if (ev.guards) guardSteps += ev.guards.length;
+    if (mv[0] >= 0 && P.pc[mv[0]].hv) heavyMoves++;
+    S = E.apply(P, S, mv, ev); if (ev.guards) guardSteps += ev.guards.length; if (ev.lights) lights++; if (ev.vent) vents++;
     if (ev.tilt) ev.tilt.forEach(([i]) => { moved[i] = (moved[i] || 0) + 1; });
   }
   const ks = Object.keys(moved).filter(k => moved[k] > 0), ki = P.pc.findIndex(p => p.t === 'k');
-  return { keyMoves: ki >= 0 ? moved[ki] || 0 : 0, pieces: ks.length, reuse: ks.filter(k => moved[k] > 1).length, back: Object.values(dirs).filter(s => s.size > 1).length, detour, guardSteps, digs, movable: P.pc.filter(p => p.t !== 'g').length };
+  return { lights, vents, heavyMoves, keyMoves: ki >= 0 ? moved[ki] || 0 : 0, pieces: ks.length, reuse: ks.filter(k => moved[k] > 1).length, back: Object.values(dirs).filter(s => s.size > 1).length, detour, guardSteps, digs, movable: P.pc.filter(p => p.t !== 'g').length };
 }
 // interplay = share of the moves that come back to a piece already moved (a pure "clear the blockers one by one" chain scores 0)
 function scoreOf(m, o) {
@@ -154,6 +155,30 @@ function checks(rec, P, path, o, why, m) {
     const inner = []; for (let c = 0; c < rec.g.length; c++) if (rec.g[c] === '%' && c !== ex) inner.push(c);
     if (inner.length) { const wo = optOf(wallify(rec, (ch, i) => inner.includes(i))); if (wo === o) why.push('inner cracks do not matter'); }
     else why.push('no inner cracks');
+  }
+  // ---- 2026-10 rules: each must really shape the solution ----
+  if (r === 'laser') {
+    const x = clone(rec); delete x.lz; x.r = 'basic'; const xo = optOf(x);
+    if (xo > 0 && xo >= o) why.push('laser does not matter');
+  }
+  if (r === 'heavy') {
+    if ((m.heavyMoves || 0) < 2) why.push('safe barely moves');
+    const x = clone(rec); delete x.hv; x.r = 'basic'; const xo = optOf(x);
+    if (xo > 0 && xo >= o) why.push('weight does not matter');
+  }
+  if (r === 'shutter') {
+    const x = clone(rec); delete x.sr; delete x.sb; x.r = 'basic'; const xo = optOf(x);
+    if (xo > 0 && xo >= o) why.push('shutters do not matter');
+  }
+  if (r === 'lights') {
+    if (!m.lights) why.push('switch not used');
+    if (m.guardSteps < 2) why.push('guard hardly moves');
+    const x = clone(rec); delete x.sw; x.r = 'patrol'; if (optOf(x) === o) why.push('switch does not matter');
+  }
+  if (r === 'vent') {
+    if (!m.vents) why.push('vent not used');
+    const x = clone(rec); delete x.vt; x.r = 'basic'; const xo = optOf(x);
+    if (xo > 0 && xo <= o) why.push('vent does not matter');
   }
   if (r === 'plate') {
     if (rec.g[rec.pl] !== '.') why.push('plate starts covered');

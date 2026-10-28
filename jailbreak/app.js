@@ -15,7 +15,7 @@ const Q = new URLSearchParams(location.search);
 
 /* ---------------- save data ---------------- */
 const DEF = () => ({ v: 1, coin: 0, life: 0, name: '', icon: 0, own: { 0: 1, 1: 1 }, skin: 'concrete', skinOwn: ['concrete', 'brick'], frame: 'steel', frameOwn: ['steel'],
-  set: { snd: 1, anim: 1, lang: '' }, st: {}, dl: {}, best: { sl: 0, chain: 0, chainN: 0 },
+  set: { snd: 1, anim: 1, lang: '' }, st: {}, dl: {}, best: { sl: 0, chain: 0, chainN: 0, ta: 0 },
   stats: { esc: 0, moves: 0, perfect: 0, hints: 0, dig: 0, key: 0, plate: 0, gacha: 0, days: 0, dgold: 0, slRuns: 0, chainRuns: 0 }, ach: {}, tut: {}, login: '', lbs: 0 });
 function load() {
   let d; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
@@ -101,12 +101,12 @@ let ST = null, DL = null;
 // courses (stages.json v2): prison courses of 10 floors × 10 stages — 'mix' (classic + rule stages) and 'classic' (plain sliding);
 // rule modes of 50 stages. Every stage carries its save key `k` (stages kept from the first edition keep their old key → records stay).
 const PER = 10, UNLOCK = 6, MODE_N = 50, SUPER = 20;
-const SMODES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt', 'silent', 'big'];   // stage modes (50 each)
+const SMODES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt', 'laser', 'heavy', 'shutter', 'lights', 'vent', 'silent', 'big'];   // stage modes (50 each)
 const RULE_OF = { silent: 'silent', big: 'big' };
 const COURSES = () => ST ? ST.courses : [];
 const courseOf = id => COURSES().find(c => c.id === id);
 const COURSE_COL = { halden: '#5f9a8f', singsing: '#6a93b5', sanquentin: '#b5866a', abashiri: '#5a6b7f', alcatraz: '#2b313c', folsom: '#8e9aa8', leavenworth: '#7f8c6a', lasante: '#7a6fa6', devil: '#8f5a6f' };
-const MODE_COL = { silent: '#3b3f6e', key: '#c99a1a', plate: '#d47a1f', oneway: '#2f74b5', ice: '#3aa3c9', patrol: '#2f4d7a', twin: '#c2502a', dig: '#8a4b33', tilt: '#6b7d3a', big: '#4d5a6e', sl: '#1b2333', chain: '#7d2f45' };
+const MODE_COL = { silent: '#3b3f6e', key: '#c99a1a', plate: '#d47a1f', oneway: '#2f74b5', ice: '#3aa3c9', patrol: '#2f4d7a', twin: '#c2502a', dig: '#8a4b33', tilt: '#6b7d3a', big: '#4d5a6e', sl: '#1b2333', chain: '#7d2f45', laser: '#b8323a', heavy: '#4a505c', shutter: '#7a3f9a', lights: '#b58a12', vent: '#4f7383', ta: '#1f7a6a' };
 const listOf = src => { const c = courseOf(src); return c ? c.st : (ST && ST.modes[src]) || []; };
 const recsOfList = L => L.map(r => DB.st[r.k] || 0);
 const courseRecs = id => recsOfList(listOf(id));
@@ -157,6 +157,7 @@ const ACH = [
   ['modesAll', () => [SMODES.reduce((a, m) => a + modeCleared(m), 0), SMODES.length * MODE_N], 4000],
   ['sl3k', () => [DB.best.sl, 3000], 200], ['sl8k', () => [DB.best.sl, 8000], 600],
   ['chain10', () => [DB.best.chainN, 10], 200], ['chain30', () => [DB.best.chainN, 30], 800],
+  ['ta1', s => [s.taRuns || 0, 1], 100], ['ta60', () => [DB.best.ta && DB.best.ta <= 60000 ? 1 : 0, 1], 600],
   ['daily1', () => [Object.values(DB.dl).filter(dayPlayed).length, 1], 50], ['streak7', () => [streak(), 7], 300], ['streak30', () => [streak(), 30], 1200], ['gold10', () => [Object.values(DB.dl).filter(dayGold).length, 10], 500],
   ['dig50', s => [s.dig, 50], 200], ['key30', s => [s.key, 30], 200],
   ['col12', () => [Object.keys(DB.own).length, 12], 300], ['col50', () => [Object.keys(DB.own).length, 50], 800], ['col100', () => [Object.keys(DB.own).length, 100], 1500],
@@ -342,13 +343,13 @@ function showStory(f, then, co = courseOpenId) {
 }
 function renderModes() {
   const el = $('#modePanel');
-  const sc = (m, best, extra) => `<div class="card acard" style="--mc:${MODE_COL[m]}"><div class="ptag">${esc(t('mo.' + m))}</div><button class="qbtn qc" data-rule="${m}">?</button><span class="aic">${A.MI[m]}</span><p>${esc(t('mo.' + m + '.s'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best ? fmt(best) : '—'}</b>${extra || ''}</div><button class="btn big org" data-sm="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
-  let html = `<section class="card panel secbox sb-run"><div class="ptag">${esc(t('mo.h'))}</div><p class="secd">${esc(t('mo.d'))}</p><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div>
+  const sc = (m, best, extra) => `<div class="card acard" style="--mc:${MODE_COL[m]}"><div class="ptag">${esc(t('mo.' + m))}</div><button class="qbtn qc" data-rule="${m}">?</button><span class="aic">${A.MI[m]}</span><p>${esc(t('mo.' + m + '.s'))}</p><div class="dbest"><span>${esc(t('d.best'))}</span><b>${best < 0 ? (DB.best.ta ? fmtT(DB.best.ta) : '—') : best ? fmt(best) : '—'}</b>${extra || ''}</div><button class="btn big org" data-sm="${m}">${A.ICON.play}${esc(t('d.play'))}</button></div>`;
+  let html = `<section class="card panel secbox sb-run"><div class="ptag">${esc(t('mo.h'))}</div><p class="secd">${esc(t('mo.d'))}</p><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}${sc('ta', -1)}</div>
     </section><section class="card panel secbox sb-rule"><div class="ptag">${esc(t('mo.h2'))}</div><p class="secd">${esc(t('mo.d2'))}</p><div class="mgrid">`;
   SMODES.forEach(m => { const recs = modeRecs(m), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), N = recs.length;
     html += `<div class="mcard" style="--mc:${MODE_COL[m]}"><button class="cmain" data-mode="${m}" data-j="${contIdx(m)}"><span class="mic">${A.MI[m]}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('mo.' + m + '.s'))}</small><span class="bar"><i style="width:${done / N * 100}%"></i></span><span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><span class="mnext">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} ${contIdx(m) + 1}</span></span></span></button>${done === N ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`; });
   el.innerHTML = html + '</div></section>';
-  $$('[data-sm]', el).forEach(b => { b.onclick = () => b.dataset.sm === 'sl' ? startSearch(false) : startChain(); });
+  $$('[data-sm]', el).forEach(b => { b.onclick = () => b.dataset.sm === 'sl' ? startSearch(false) : b.dataset.sm === 'ta' ? startTA() : startChain(); });
   // a rule-mode card starts its next stage straight away (the stage list opens from the result screen's "list")
   $$('[data-mode]', el).forEach(b => { b.onclick = () => startStage(b.dataset.mode, +b.dataset.j); });
   $$('[data-cont]', el).forEach(b => { b.onclick = () => startStage(b.dataset.cont, +b.dataset.j); });
@@ -428,6 +429,50 @@ function startChain() {
   newGame(rec, { kind: 'chain', m: 'basic', run, budget: chainBudget(0, rec.o), title: t('mo.chain'), tag: [t('mo.chain'), '', MODE_COL.chain] });
   startPlay(); maybeRuleTip('chain');
 }
+// TIME ATTACK ×10: today's 10 cells (same for everyone), the clock runs until the 10th escape; ranking by time
+const TA_O = [4, 5, 6, 7, 7, 8, 9, 10, 11, 12];
+const fmtT = ms => { const tn = Math.floor(ms / 100); return `${Math.floor(tn / 600)}:${pad(Math.floor(tn / 10) % 60)}.${tn % 10}`; };
+function taList(d) {
+  const rnd = E.rng(E.hashStr('jb-ta-' + d)), L = DL.sprint;
+  return TA_O.map(o => { const c = L.filter(r => r.o === o); return (c.length ? c : L)[Math.floor(rnd() * (c.length || L.length))]; });
+}
+function startTA() {
+  const d = today(), list = taList(d), run = { list, k: 0, n: 0, perf: 0, el: 0, last: 0, date: d, score: 0 };
+  newGame(list[0], { kind: 'ta', m: 'basic', run, title: t('mo.ta'), tag: [t('mo.ta'), '1/10', MODE_COL.ta] });
+  startPlay(); G.busy = true;
+  maybeRuleTip('ta', false, () => { if (G && G.run === run) countdown(() => { run.last = performance.now(); loopTA(); }); });
+}
+function loopTA() {
+  cancelAnimationFrame(raf);
+  const f = now => {
+    if (!G || G.kind !== 'ta' || G.over) return;
+    const run = G.run; if (!G.paused) run.el += now - run.last; run.last = now;
+    const el = $('#taTime'); if (el) el.textContent = fmtT(run.el);
+    raf = requestAnimationFrame(f);
+  };
+  raf = requestAnimationFrame(f);
+}
+function taEscape(perfect) {
+  const run = G.run; run.n++; if (perfect) run.perf++;
+  G.busy = true; floatText(perfect ? 'SILENT!' : 'NICE!');
+  if (run.k >= TA_O.length - 1) { hud(); return setTimeout(endTA, 450); }
+  setTimeout(() => {
+    if (!G || G.over) return; run.k++;
+    newGame(run.list[run.k], { kind: 'ta', m: 'basic', run, title: t('mo.ta'), tag: [t('mo.ta'), (run.k + 1) + '/10', MODE_COL.ta] });
+    boardIn();
+  }, 450);
+}
+function endTA() {
+  if (!G || G.over) return;
+  G.over = true; cancelAnimationFrame(raf); hud();
+  const run = G.run, ms = Math.round(run.el), best = !DB.best.ta || ms < DB.best.ta;
+  DB.stats.taRuns = (DB.stats.taRuns || 0) + 1; if (best) DB.best.ta = ms;
+  const coins = addCoin(80 + Math.max(0, 180 - ms / 1000)); save();
+  if (ON && ON.available && DB.name) ON.putDaily(run.date, 'ta', Object.assign({ s: Math.max(0, 200000 - Math.round(ms / 100)) }, who())).catch(() => {});
+  showResult(resultCard('ALL CLEAR!', `<div class="rscore">${fmtT(ms)}</div>${best ? `<div class="ev">${esc(t('r.best'))}</div>` : ''}<div class="rstats"><span><b>${run.perf}</b>${esc(t('r.perf'))}</span><span><b>${fmtT(DB.best.ta)}</b>${esc(t('d.best'))}</span></div>${coinLine(coins)}${nameNudge()}`,
+    [['again', t('r.retry'), 'org'], ['rank', t('rk.title')], ['home', t('u.home')]]));
+  if (DB.set.anim) confetti(); updateBadges();
+}
 function nextRunPuzzle() {
   const run = G.run; run.k++;
   const rec = slPick(run.rnd, run.k), o = { kind: G.kind, m: 'basic', run, title: G.title, tag: G.tag };
@@ -463,6 +508,7 @@ function pieceHTML(p, i) {
   if (p.t === 'g') return `<span class="gd">${A.GUARD}</span><i class="gdir"></i><b class="gbadge"></b>`;
   if (p.t === 'k') return `<span class="kk">${A.KEY}</span>`;
   if (p.t === 'x') return '<span class="crate"></span>';
+  if (p.hv) return `<span class="bk safe ${p.v ? 'v' : 'h'}${p.l}"><i class="dial"></i><b class="wt">1</b></span>`;
   return `<span class="bk ${p.v ? 'v' : 'h'}${p.l}">${p.t === 'o' ? `<span class="chev ${p.v ? (p.f > 0 ? 'd' : 'u') : (p.f > 0 ? 'r' : 'l')}">${'<i></i>'.repeat(big ? p.l + 1 : 2)}</span>` : ''}</span>`;
 }
 function buildBoard() {
@@ -481,15 +527,23 @@ function buildBoard() {
   P.doors.forEach(c => { html += `<div class="cell door" ${at(c)}><i></i></div>`; });
   if (P.lock >= 0) html += `<div class="cell lockc" ${at(P.lock)}>${A.LOCK}</div>`;
   P.gate.forEach(c => { html += `<div class="cell gate" ${at(c)}><i></i></div>`; });
-  html += '</div>';
+  // 2026-10 rules
+  P.lz.forEach(([c, d]) => { html += `<div class="cell lzem d${d}" ${at(c)}><i></i></div>`; });
+  P.sr.forEach(c => { html += `<div class="cell shut sr" data-c="${c}" ${at(c)}><i></i></div>`; });
+  P.sb.forEach(c => { html += `<div class="cell shut sb" data-c="${c}" ${at(c)}><i></i></div>`; });
+  if (P.sw >= 0) html += `<div class="cell lsw" ${at(P.sw)}><i></i></div>`;
+  if (P.vt) P.vt.forEach((c, k) => { html += `<div class="cell vent v${k}" ${at(c)}><i></i></div>`; });
+  html += '</div><div class="beams"></div>';
   // exits (prisoner rows / columns)
   P.pc.forEach((p, i) => {
     if (p.t === 'P') html += `<div class="exit er" style="top:${P.s0[2 * i + 1] * cs}px;height:${cs}px"><span class="sign">${A.ICON.exit}</span></div>`;
     if (p.t === 'Q') html += `<div class="exit eb" style="left:${P.s0[2 * i] * cs}px;width:${cs}px"><span class="sign">${A.ICON.exit}</span></div>`;
   });
-  html += '<div class="pcs">' + P.pc.map((p, i) => `<div class="pc t${p.t} ${p.v ? 'pv' : 'ph'} l${p.l} c${i % A.BCOL.length}" data-i="${i}" style="width:${(p.v ? 1 : p.l) * cs}px;height:${(p.v ? p.l : 1) * cs}px">${pieceHTML(p, i)}</div>`).join('') + '</div>';
+  html += '<div class="pcs">' + P.pc.map((p, i) => `<div class="pc t${p.t} ${p.v ? 'pv' : 'ph'} l${p.l} c${i % A.BCOL.length}${p.hv ? ' hv' : ''}" data-i="${i}" style="width:${(p.v ? 1 : p.l) * cs}px;height:${(p.v ? p.l : 1) * cs}px">${pieceHTML(p, i)}</div>`).join('') + '</div>';
   if (P.lock >= 0) html += `<div class="cell lockmk" ${at(P.lock)}>${A.LOCK}</div>`;   // the keyhole stays visible even under a block
   if (P.plate >= 0) html += `<div class="cell platemk" ${at(P.plate)}></div>`;           // so does the pressure switch
+  if (P.sw >= 0) html += `<div class="cell lswmk" ${at(P.sw)}></div>`;                    // and the lights switch
+  if (P.vt) P.vt.forEach((c, k) => { html += `<div class="cell ventmk v${k}" ${at(c)}></div>`; });
   html += '<div class="ghost" hidden></div><div class="beam" hidden></div>';
   b.innerHTML = html;
   G.els = $$('.pc', b);
@@ -507,12 +561,14 @@ function render(anim = true, ev) {
       if (!el.classList.contains('gone')) {
         el.classList.add('gone');
         if (anim && ev && ev.esc && ev.esc.includes(i)) { const px = el._last || [0, 0]; el.style.transition = 'transform .5s ease-in, opacity .5s ease-in .2s'; el.style.transform = p.t === 'P' ? tr(P.w + 1, px[1]) : tr(px[0], P.h + 1); el.style.opacity = '0'; el.classList.add('run'); }
+        else if (anim && ev && ev.key === i && false) {}
         else if (anim && ev && ev.key === i) { el.style.transition = 'transform .35s, opacity .35s'; el.style.transform = tr(P.lock % P.w, (P.lock / P.w) | 0) + ' scale(.2) rotate(180deg)'; el.style.opacity = '0'; }
         else { el.style.opacity = '0'; }
       }
       return;
     }
     el.classList.remove('gone'); el.style.opacity = '';
+    if (anim && ev && ev.vent && ev.vent[0] === i) { el.style.transition = 'none'; el.classList.remove('warp'); void el.offsetWidth; el.classList.add('warp'); }
     el.style.transform = tr(x, y); el._last = [x, y];
     if (p.t === 'g') {
       // full information: which way the guard walks, and in how many of your moves it takes its next step
@@ -533,6 +589,22 @@ function render(anim = true, ev) {
   const m = S[P.iCr]; $$('.crack', boardEl()).forEach(e => { const k = +e.dataset.k; e.classList.toggle('dug', !(m >> k & 1)); });
   const dg = P.cracks.length ? E.digs(P, S, g) : [];
   $$('.crack', boardEl()).forEach(e => e.classList.toggle('can', dg.includes(+e.dataset.c)));
+  // lasers: one beam per emitter, up to the first wall / piece (prisoners never stand in one)
+  const bm = $('.beams', boardEl());
+  if (bm && P.lz.length) {
+    let h = '';
+    for (const [c, d] of P.lz) {
+      const [dx, dy] = E.DIRS[d]; let x = c % P.w + dx, y = ((c / P.w) | 0) + dy, n = 0; const x0 = x, y0 = y;
+      while (x >= 0 && y >= 0 && x < P.w && y < P.h) { const v = g[y * P.w + x]; if (v < 0 || (v > 0 && P.pc[v - 1].t !== 'P' && P.pc[v - 1].t !== 'Q')) break; n++; x += dx; y += dy; }
+      if (!n) continue;
+      const lx = dx < 0 ? x0 - n + 1 : x0, ly = dy < 0 ? y0 - n + 1 : y0, vert = !!dy;
+      h += `<i class="lb ${vert ? 'v' : 'h'}" style="transform:${tr(lx, ly)};width:${(vert ? 1 : n) * G.cs}px;height:${(vert ? n : 1) * G.cs}px"></i>`;
+    }
+    bm.innerHTML = h;
+  }
+  // shutters (shut = bars down; a piece in a shut shutter keeps it jammed open)
+  if (P.iSh >= 0) $$('.shut', boardEl()).forEach(e => { const c = +e.dataset.c; e.classList.toggle('closed', !!E.shutNow(P, S, c)); e.classList.toggle('jam', !!E.shutNow(P, S, c) && g[c] > 0); });
+  if (P.sw >= 0) { const v = g[P.sw], on = v > 0 && P.pc[v - 1].t !== 'g'; $$('.lsw, .lswmk', boardEl()).forEach(e => e.classList.toggle('on', on)); }
 }
 // phone: the height of what sits under the board (rule line, tilt pad) is mirrored above it so the board is truly centred
 function balance() {
@@ -571,7 +643,8 @@ function hud() {
   const lim = $('#gLim'); lim.hidden = !G.limit;
   if (G.limit) { lim.className = `lim ${mv >= G.limit ? 'hot' : mv >= G.limit - 1 ? 'warm' : ''}`; lim.innerHTML = `<small>${esc(t(G.kind === 'chain' ? 'u.budget' : 'u.limit'))}</small><b>${G.limit - mv}</b>`; }
   const run = G.run, bi = $('#runInfo');
-  if (run) { bi.hidden = false; bi.innerHTML = `<span class="rs"><small>${esc(t('u.score'))}</small><b>${fmt(run.score)}</b></span><span><small>${esc(t('u.escaped'))}</small><b>${run.n}</b></span>${G.kind === 'chain' ? `<span class="lives">${[0, 1, 2].map(i => `<i class="${i < run.lives ? 'on' : ''}"></i>`).join('')}</span>${run.combo > 1 ? `<span class="combo">×${(1 + .1 * run.combo).toFixed(1)}</span>` : ''}` : `<span class="tm" id="slTime">${SL_TIME}</span>`}`; }
+  if (run && G.kind === 'ta') { bi.hidden = false; bi.innerHTML = `<span class="rs"><small>${esc(t('ta.q'))}</small><b>${run.k + 1}<small>/10</small></b></span><span class="tm" id="taTime">${fmtT(run.el)}</span>`; }
+  else if (run) { bi.hidden = false; bi.innerHTML = `<span class="rs"><small>${esc(t('u.score'))}</small><b>${fmt(run.score)}</b></span><span><small>${esc(t('u.escaped'))}</small><b>${run.n}</b></span>${G.kind === 'chain' ? `<span class="lives">${[0, 1, 2].map(i => `<i class="${i < run.lives ? 'on' : ''}"></i>`).join('')}</span>${run.combo > 1 ? `<span class="combo">×${(1 + .1 * run.combo).toFixed(1)}</span>` : ''}` : `<span class="tm" id="slTime">${SL_TIME}</span>`}`; }
   else bi.hidden = true;
   const hb = $('#gHint'), left = hintsLeft();
   hb.hidden = G.kind !== 'stage'; hb.disabled = G.over;
@@ -582,7 +655,7 @@ function hud() {
 }
 function renderInfo() {
   const m = G.m, el = $('#gInfo');
-  const k = G.kind === 'sl' ? 'sl' : G.kind === 'chain' ? 'chain' : m === 'basic' ? 'basic' : m;
+  const k = G.kind === 'sl' ? 'sl' : G.kind === 'chain' ? 'chain' : G.kind === 'ta' ? 'ta' : m === 'basic' ? 'basic' : m;
   el.innerHTML = `<span class="ii">${A.MI[k] || A.MI.big}</span><span>${esc(t('in.' + k))}</span>${k !== 'basic' ? `<button class="btn sm qbtn" data-rule="${k}">?</button>` : ''}`;
   balance();
 }
@@ -652,13 +725,16 @@ function doMove(m) {
   else SND.slide(Math.abs(m[1] || m[2]));
   if (ev.key != null) { DB.stats.key++; setTimeout(() => { SND.key(); setTimeout(SND.gate, 250); }, 120); toast(t('tip.keyUsed')); }
   if (ev.guards) setTimeout(SND.guard, 140);
+  if (ev.lights) { flash('dark'); SND.door(false); toast(t('tip.lights')); }
+  if (ev.vent) { noise(.25, .1, 600); tone(300, .2, 'triangle', .06, 2.2, .05); }
+  if (ev.shut) tone(ev.shut && G.S[G.P.iSh] ? 240 : 200, .05, 'square', .025);
   render(true, ev);
   if (ev.esc) { SND.esc(); }
   clearHint(); hud();
   if (E.solved(G.P, G.S)) { G.busy = true; setTimeout(() => { G.busy = false; win(); }, 520); return; }
   if (G.limit && G.moves >= G.limit) { G.busy = true; setTimeout(() => { G.busy = false; overLimit(); }, 300); return; }
   // rule sets with one-way effects can reach a dead end: tell the player
-  if (G.m !== 'basic' && G.m !== 'big' && G.m !== 'silent' && G.m !== 'plate') {
+  if (!['basic', 'big', 'silent', 'plate', 'heavy', 'shutter'].includes(G.m)) {
     const S = G.S; setTimeout(() => { if (!G || G.S !== S) return; const r = E.solve(G.P, S, 60000); $('#deadEnd').hidden = !(r.n < 0 && !r.capped); }, 60);
   } else $('#deadEnd').hidden = true;
 }
@@ -669,7 +745,7 @@ function undo() {
 }
 function restart() {
   if (!G || G.busy) return;
-  if (G.kind === 'sl' || G.kind === 'chain') { if (G.over) return; G.S = G.P.s0.slice(); G.hist = []; G.moves = 0; buildBoard(); hud(); return; }
+  if (G.kind === 'sl' || G.kind === 'chain' || G.kind === 'ta') { if (G.over) return; G.S = G.P.s0.slice(); G.hist = []; G.moves = 0; buildBoard(); hud(); return; }
   if (G.over) return;
   G.S = G.P.s0.slice(); G.hist = []; G.moves = 0; G.retried = true; $('#deadEnd').hidden = true; $('#gameMsg').hidden = true;
   buildBoard(); hud(); tone(440, .08, 'triangle', .05, .7);
@@ -718,6 +794,7 @@ function win() {
   const o = G.rec.o, mv = G.moves, perfect = mv <= o;
   DB.stats.esc++; if (perfect) DB.stats.perfect++;
   if (G.kind === 'sl' || G.kind === 'chain') return runEscape(perfect);
+  if (G.kind === 'ta') return taEscape(perfect);
   G.over = true; hud();
   let html = '', coins = 0;
   if (G.kind === 'stage') {
@@ -817,9 +894,9 @@ function resultAct(a) {
   if (a === 'next') { const s = G.src; return startStage(s, G.j + 1); }
   if (a === 'list') { listAfter = G.src; return leavePlay(); }
   if (a === 'home') return leavePlay();
-  if (a === 'rank') return openRank(G.kind === 'daily' ? G.dk : 'sl');
+  if (a === 'rank') return openRank(G.kind === 'daily' ? G.dk : G.kind === 'ta' ? 'ta' : 'sl');
   if (a === 'name') return openProfile();
-  if (a === 'again') { if (G.kind === 'sl') return startSearch(G.run.daily); return startChain(); }
+  if (a === 'again') { if (G.kind === 'sl') return startSearch(G.run.daily); if (G.kind === 'ta') return startTA(); return startChain(); }
 }
 // leaving a course / rule-mode stage lands on that course's / mode's stage list ("list" on a result does the same)
 function goHome() {
@@ -831,6 +908,7 @@ function goHome() {
 }
 const leavePlay = goHome;
 function quitGame() {
+  if (G && G.kind === 'ta' && !G.over) return ask(t('q.quit'), [[t('q.keep'), 'org'], [t('q.home'), '', () => { G.over = true; cancelAnimationFrame(raf); leavePlay(); }]]);
   if (G && (G.kind === 'sl' || G.kind === 'chain') && !G.over) return ask(t('q.quit'), [[t('q.keep'), 'org'], [t('q.home'), '', () => { endRun(); leavePlay(); }]]);
   leavePlay();
 }
@@ -930,6 +1008,12 @@ const RULE_EX = {
   dig: { g: '......' + '...#..' + '...AA%' + '...#..' + '......' + '......', r: 'dig' },
   tilt: { g: '......' + '....x.' + 'AA....' + '..#...' + '......' + '..x...', r: 'tilt' },
   big: { w: 8, h: 8, g: '........' + '..B.....' + '..B.....' + 'AAB.....' + '...CCC..' + '........' + '........' + '........' },
+  laser: { g: '....#.' + 'CC....' + 'AA....' + '......' + '......' + '......', r: 'laser', lz: [[4, 3]] },
+  heavy: { g: '......' + '...B..' + 'AA.B..' + '......' + '......' + '......', r: 'heavy', hv: { B: 1 } },
+  shutter: { g: '......' + '......' + 'AA....' + '......' + '......' + '......', r: 'shutter', sr: [15], sb: [16] },
+  lights: { g: '......' + '....Y.' + 'AA....' + '......' + 'B.....' + 'B.....', r: 'lights', gd: { Y: 1 }, sw: 18 },
+  vent: { g: '......' + '......' + 'AA.x..' + '......' + '......' + '......', r: 'vent', vt: [9, 33] },
+  ta: { g: '..B...' + '..B...' + 'AAB...' + '...CC.' + '......' + '......' },
 };
 function maybeRuleTip(m, force, then) {
   if (!force && DB.tut['r_' + m]) { if (then) then(); return false; } DB.tut['r_' + m] = 1; save();
@@ -941,7 +1025,7 @@ function maybeRuleTip(m, force, then) {
 }
 // the rules button: how to play + every rule with its explanation
 function openRules() {
-  const rs = ['basic', ...SMODES, 'sl', 'chain'];
+  const rs = ['basic', ...SMODES, 'sl', 'chain', 'ta'];
   const body = modal(`<h2 class="mh">${esc(t('u.rules'))}</h2><p class="note">${esc(t('ru.d'))}</p><div class="rugrid">${rs.map(m => `<button class="rucard" data-ru="${m}" style="--mc:${MODE_COL[m] || '#555c6a'}"><span class="mic">${A.MI[m] || A.MI.big}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('in.' + m))}</small></span></button>`).join('')}</div>`, 'mwide');
   $$('[data-ru]', body).forEach(b => { b.onclick = () => { const m = b.dataset.ru; if (m === 'basic') tutorial(); else { maybeRuleTip(m, true); afterModal = openRules; } }; });
 }
@@ -1049,18 +1133,18 @@ function openBook(tab = 'c') {
 }
 // --- rankings
 async function openRank(tab = 'm') {
-  const tabs = [['e', 'dl.e'], ['m', 'dl.m'], ['h', 'dl.h'], ['sl', 'd.sl'], ['chain', 'mo.chain'], ['stars', 'rk.stars']];
-  const body = modal(`<h2 class="mh">${esc(t('rk.title'))}</h2><div class="mtabs rtabs">${tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-tab="${k}">${esc(t(l))}</button>`).join('')}</div><p class="note rkn">${esc(t(['e', 'm', 'h', 'sl'].includes(tab) ? 'rk.today' : 'rk.all', { d: today() }))}</p><div id="rkBody"><div class="loading">${esc(t('rk.load'))}</div></div>`, 'mrank mwide');
+  const tabs = [['e', 'dl.e'], ['m', 'dl.m'], ['h', 'dl.h'], ['sl', 'd.sl'], ['ta', 'mo.ta'], ['chain', 'mo.chain'], ['stars', 'rk.stars']];
+  const body = modal(`<h2 class="mh">${esc(t('rk.title'))}</h2><div class="mtabs rtabs">${tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-tab="${k}">${esc(t(l))}</button>`).join('')}</div><p class="note rkn">${esc(t(['e', 'm', 'h', 'sl', 'ta'].includes(tab) ? 'rk.today' : 'rk.all', { d: today() }))}</p><div id="rkBody"><div class="loading">${esc(t('rk.load'))}</div></div>`, 'mrank mwide');
   $$('[data-tab]', body).forEach(b => { b.onclick = () => openRank(b.dataset.tab); });
   const el = $('#rkBody');
   if (!ON || !ON.available) { el.innerHTML = `<div class="soon">${A.MI.sl}<p>${esc(t('rk.off'))}</p></div>`; return; }
-  const path = ['e', 'm', 'h', 'sl'].includes(tab) ? `jb/d/${today()}/${tab}` : 'jb/' + tab;
+  const path = ['e', 'm', 'h', 'sl', 'ta'].includes(tab) ? `jb/d/${today()}/${tab}` : 'jb/' + tab;
   try {
     const [list, me] = await Promise.all([ON.top(path, 50), ON.mine(path)]);
     if (!el.isConnected) return;
     el.innerHTML = (DB.name ? '' : `<button class="nudge" id="rkName">${esc(t('r.nudge'))}</button>`) +
-      (list.length ? `<ol class="rlist">${list.map((r, i) => `<li class="${r.uid === ON.uid ? 'me' : ''} p${i + 1}"><b class="rn">${i + 1}</b><span class="ri">${A.inmateSVG((r.i | 0) % A.INMATES.length)}</span><span class="rnm">${esc(r.n)}</span><b class="rs">${fmt(r.s)}</b></li>`).join('')}</ol>` : `<p class="note">${esc(t('rk.empty'))}</p>`) +
-      (me && me.rank > 50 ? `<div class="rme">${esc(t('rk.me', { r: me.rank, s: fmt(me.me.s) }))}</div>` : '');
+      (list.length ? `<ol class="rlist">${list.map((r, i) => `<li class="${r.uid === ON.uid ? 'me' : ''} p${i + 1}"><b class="rn">${i + 1}</b><span class="ri">${A.inmateSVG((r.i | 0) % A.INMATES.length)}</span><span class="rnm">${esc(r.n)}</span><b class="rs">${tab === 'ta' ? fmtT((200000 - r.s) * 100) : fmt(r.s)}</b></li>`).join('')}</ol>` : `<p class="note">${esc(t('rk.empty'))}</p>`) +
+      (me && me.rank > 50 ? `<div class="rme">${esc(t('rk.me', { r: me.rank, s: tab === 'ta' ? fmtT((200000 - me.me.s) * 100) : fmt(me.me.s) }))}</div>` : '');
     const nb = $('#rkName'); if (nb) nb.onclick = () => openProfile();
   } catch (e) { el.innerHTML = `<p class="note">${esc(t('rk.err'))}</p>`; }
 }
@@ -1120,13 +1204,13 @@ function bind() {
 }
 async function boot() {
   bind(); applyI18n(); applySkin();
-  try { [ST, DL] = await Promise.all([fetch('stages.json?v=2').then(r => r.json()), fetch('daily.json?v=2').then(r => r.json())]); } catch (e) { ST = DL = null; }
+  try { [ST, DL] = await Promise.all([fetch('stages.json?v=3').then(r => r.json()), fetch('daily.json?v=2').then(r => r.json())]); } catch (e) { ST = DL = null; }
   showScreen('home'); renderHome();
   if (!DB.tut.basic && !Q.has('notut')) { DB.tut.basic = 1; save(); setTimeout(tutorial, 400); }
   loginBonus();
   if (ON && ON.available) ON.init().catch(() => {});
 }
 // test hooks (Playwright) — read-only handles + the real game entry points
-window.JBApp = { get DB() { return DB; }, get G() { return G; }, get ST() { return ST; }, get DL() { return DL; }, startStage, startDaily, startSearch, startChain, doMove, tilt, hint, nextMove, renderHome, openRank };
+window.JBApp = { get DB() { return DB; }, get G() { return G; }, get ST() { return ST; }, get DL() { return DL; }, startStage, startDaily, startSearch, startChain, startTA, doMove, tilt, hint, nextMove, renderHome, openRank };
 boot();
 })();

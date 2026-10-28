@@ -4,7 +4,9 @@
 'use strict';
 const RULES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt'];
 // highest optimal count each rule set reaches reliably with the generator
-const CAP = { basic: 33, big: 34, silent: 26, key: 19, plate: 21, oneway: 18, ice: 18, patrol: 19, twin: 22, dig: 19, tilt: 16 };
+const CAP = { basic: 33, big: 34, silent: 26, key: 19, plate: 21, oneway: 18, ice: 18, patrol: 19, twin: 22, dig: 19, tilt: 16, laser: 15, heavy: 16, shutter: 15, lights: 14, vent: 15 };
+// the 2026-10 rules: a mode only (not in the courses), move counts spread evenly up to the cap
+const NEW = ['laser', 'heavy', 'shutter', 'lights', 'vent'];
 const lerp = (a, b, t) => Math.round(a + (b - a) * t);
 const COURSES = [
   { id: 'halden', kind: 'mix', lo: 4, hi: 10, lv: 0 },
@@ -44,7 +46,7 @@ function courseSlots(C, rnd) {
   }
   return out;
 }
-const MODES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt', 'silent', 'big'];
+const MODES = ['key', 'plate', 'oneway', 'ice', 'patrol', 'twin', 'dig', 'tilt', 'silent', 'big', ...NEW];
 function modeSlots(m) {
   const cap = CAP[m], out = [];
   for (let k = 0; k < 50; k++) {
@@ -54,6 +56,7 @@ function modeSlots(m) {
     else o = lerp(Math.min(18, cap), Math.min(m === 'big' ? 30 : 22, cap), (k - 42) / 7);
     if (m === 'big') o = k < 2 ? 6 + k : lerp(8, 30, k / 49);
     if (m === 'silent') o = k < 2 ? 5 + k : lerp(7, 24, k / 49);
+    if (NEW.includes(m)) o = k < 2 ? 4 + k : lerp(6, cap, (k - 2) / 47);
     out.push({ r: m, o });
   }
   return out;
@@ -62,7 +65,7 @@ function plan(seed = 20261028) {
   const E = require('../engine.js'), rnd = E.rng(seed);
   return { courses: COURSES.map(C => Object.assign({}, C, { slots: courseSlots(C, rnd) })), modes: MODES.map(m => ({ id: m, slots: modeSlots(m) })) };
 }
-module.exports = { plan, COURSES, MODES, RULES, CAP };
+module.exports = { plan, modeSlots, COURSES, MODES, RULES, NEW, CAP };
 if (require.main === module) {
   const P = plan(), need = {};
   const add = (r, o) => { if (r === 'tut') return; const rr = r === 'silent' ? 'basic' : r, k = rr + ':' + o; need[k] = (need[k] || 0) + 1; };
