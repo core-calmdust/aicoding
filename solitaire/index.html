@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-solitaire') || '{}') || {}).set || {}; document.documentElement.dataset.felt = S.felt || 'green'; document.documentElement.dataset.back = S.back || 'crimson'; document.documentElement.dataset.face = S.face || 'classic'; } catch (e) {}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ソリティア | 世界のボドゲ大全</title>
+<meta name="description" content="クロンダイク・スパイダー・フリーセルを1つで。難易度やルールを細かく選べ、勝てる配り・ヒント・統計・今日の配りつき。">
+<meta name="theme-color" content="#0d1612">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2312241b'/%3E%3Crect x='14' y='12' width='26' height='36' rx='4' fill='%23f7f1e3' transform='rotate(-12 27 30)'/%3E%3Crect x='24' y='14' width='26' height='36' rx='4' fill='%23fffaf0' stroke='%23d9b86a' stroke-width='1.5'/%3E%3Cpath d='M37 22c-2 3-6 5.4-6 8.4a3 3 0 0 0 5 2.2c-.2 1.6-.8 2.6-1.8 3.4h5.6c-1-.8-1.6-1.8-1.8-3.4a3 3 0 0 0 5-2.2c0-3-4-5.4-6-8.4z' fill='%23c8202f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=1">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="s0" d="M12 1.6C9.3 5.6 3 9.4 3 14.1a4.6 4.6 0 0 0 7.7 3.3c-.3 2.3-1.2 3.7-2.7 4.8h8c-1.5-1.1-2.4-2.5-2.7-4.8A4.6 4.6 0 0 0 21 14.1c0-4.7-6.3-8.5-9-12.5z"/>
+    <path id="s1" d="M12 21.6C5.9 16.8 2.4 13.3 2.4 8.9A5 5 0 0 1 12 6.7a5 5 0 0 1 9.6 2.2c0 4.4-3.5 7.9-9.6 12.7z"/>
+    <path id="s2" d="M12 1.6 20.2 12 12 22.4 3.8 12z"/>
+    <path id="s3" d="M12 2.2a4.4 4.4 0 0 0-4 6.3 4.4 4.4 0 1 0 2.7 7.6c-.3 2.5-1.3 4.5-2.7 6.1h8c-1.4-1.6-2.4-3.6-2.7-6.1A4.4 4.4 0 1 0 16 8.5a4.4 4.4 0 0 0-4-6.3z"/>
+    <g id="emK"><path d="M3 17 2 7l5 4 5-7 5 7 5-4-1 10z"/><rect x="3" y="18.5" width="18" height="2.6" rx="1"/></g>
+    <g id="emQ"><path d="M12 3.5c1.6 2.6 4.6 3.4 7 2.4-.6 3.6-2.6 6.5-5.2 7.6L12 20l-1.8-6.5C7.6 12.4 5.6 9.5 5 5.9c2.4 1 5.4.2 7-2.4z"/><circle cx="12" cy="21" r="1.6"/></g>
+    <g id="emJ"><path d="M17.5 2.5C10 5 6.5 11 6 20.5l2.2.3c.8-5.2 3-8.8 6.2-11.4-1.8 3-2.8 6.2-3 9.8l2 .2c.6-6.6 2.7-11.3 4.1-16.9z"/><circle cx="6.8" cy="21.6" r="1.4"/></g>
+  </defs>
+</svg>
+<div class="app" id="app">
+  <div class="brand">
+    <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1><span id="brandTitle">ソリティア</span><small id="brandSub">Solitaire</small></h1></div>
+    <span class="brand-r">
+      <button id="btnSound" class="snd" data-i18n-title="btn.sound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+      <button id="btnSettings" class="snd" data-i18n-title="btn.settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
+      <a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
+    </span>
+  </div>
+  <div class="controls">
+    <button class="btn primary" id="btnNew" data-i18n-title="btn.new.t"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
+    <button class="btn" id="btnUndo" data-i18n-title="btn.undo.t"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
+    <button class="btn" id="btnHint" data-i18n-title="btn.hint.t"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
+    <button class="btn" id="btnRules" data-i18n-title="btn.rules.t"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><span data-i18n="btn.rules"></span></button>
+    <button class="btn" id="btnStats" data-i18n-title="btn.stats.t"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span data-i18n="btn.stats"></span></button>
+  </div>
+  <main class="stage">
+    <div class="board-wrap" id="boardWrap">
+      <div class="table main" id="table" data-noswipe></div>
+      <button class="auto-btn hidden" id="btnAuto"><svg viewBox="0 0 24 24"><path d="M5 4l14 8-14 8z"/></svg><span data-i18n="auto"></span></button>
+      <div class="stuck hidden" id="stuck"><p data-i18n="stuck"></p><div><button class="mbtn" id="stUndo" data-i18n="btn.undo"></button><button class="mbtn" id="stRestart" data-i18n="restart"></button><button class="mbtn go" id="stNew" data-i18n="btn.new"></button></div></div>
+    </div>
+    <div class="infobar" id="infobar"></div>
+    <aside class="side" id="side"></aside>
+  </main>
+</div>
+
+<!-- new game -->
+<div class="overlay" id="newOverlay"><div class="modal wide">
+  <h2 data-i18n="new.h"></h2>
+  <div class="ng-games" id="ngGames"></div>
+  <div class="ng-cols">
+    <div class="ng-col" id="ngLeft"></div>
+    <div class="ng-col" id="ngRight"></div>
+  </div>
+  <div class="modal-actions half"><button class="mbtn" id="btnNewClose" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
+</div></div>
+
+<!-- settings -->
+<div class="overlay" id="setOverlay"><div class="modal">
+  <h2 data-i18n="set.h"></h2>
+  <div id="setBody"></div>
+  <div class="modal-actions"><button class="mbtn go" id="btnSetClose" data-i18n="close"></button></div>
+</div></div>
+
+<!-- rules -->
+<div class="overlay" id="rulesOverlay"><div class="modal rules-modal">
+  <div class="rv-tabs" id="rulesTabs"></div>
+  <div id="rulesBody"></div>
+</div></div>
+
+<!-- statistics -->
+<div class="overlay" id="statsOverlay"><div class="modal stats-modal">
+  <h2 data-i18n="st.h"></h2>
+  <div class="rv-tabs" id="statsTabs"></div>
+  <div class="stats-body" id="statsBody"></div>
+  <div class="modal-actions"><button class="mbtn" id="btnStatsReset" data-i18n="st.reset"></button><button class="mbtn go" id="btnStatsClose" data-i18n="close"></button></div>
+</div></div>
+
+<!-- result -->
+<div class="overlay" id="resultOverlay"><div class="modal res-modal">
+  <div class="res-ico">🏆</div>
+  <h2 data-i18n="res.win"></h2>
+  <div class="res-body" id="resBody"></div>
+  <div class="modal-actions"><button class="mbtn" id="btnResStats" data-i18n="btn.stats"></button><button class="mbtn" id="btnResAgain" data-i18n="res.again"></button><button class="mbtn go" id="btnResNext" data-i18n="res.next"></button></div>
+</div></div>
+
+<!-- confirm -->
+<div class="overlay" id="confirmOverlay"><div class="modal small">
+  <p class="cf-msg" id="cfMsg"></p>
+  <div class="modal-actions half"><button class="mbtn" id="cfNo" data-i18n="no"></button><button class="mbtn go" id="cfYes" data-i18n="yes"></button></div>
+</div></div>
+
+<!-- busy (finding a winnable deal) -->
+<div class="overlay busy" id="busyOverlay"><div class="modal small"><div class="spin"></div><p id="busyMsg"></p></div></div>
+
+<canvas id="winCanvas" class="win-cv hidden"></canvas>
+<div class="toast" id="toast"></div>
+
+<script src="i18n.js?v=1"></script>
+<script src="variants.js?v=1"></script>
+<script src="solver.js?v=1"></script>
+<script src="../shared/rulesoffer.js?v=8"></script>
+<script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/ruletour.js?v=28"></script>
+<script src="table.js?v=1"></script>
+<script src="app.js?v=1"></script>
+<script src="rules.js?v=1"></script>
+</body>
+</html>

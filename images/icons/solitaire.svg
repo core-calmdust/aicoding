@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="solitaire-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a23"/><stop offset="1" stop-color="#0a110d"/></linearGradient>
+    <radialGradient id="solitaire-tint" cx=".22" cy=".12" r=".95"><stop offset="0" stop-color="#3fd08a" stop-opacity=".30"/><stop offset=".6" stop-color="#3fd08a" stop-opacity=".04"/><stop offset="1" stop-color="#3fd08a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="solitaire-face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#ecdfc2"/></linearGradient>
+    <linearGradient id="solitaire-back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d23447"/><stop offset="1" stop-color="#7b1220"/></linearGradient>
+    <pattern id="solitaire-lat" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H5M0 0V5" stroke="#fff" stroke-opacity=".22" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#solitaire-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#solitaire-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <g transform="rotate(-16 40 52)"><rect x="22" y="24" width="32" height="45" rx="4.5" fill="url(#solitaire-back)"/><rect x="22" y="24" width="32" height="45" rx="4.5" fill="url(#solitaire-lat)"/><rect x="25" y="27" width="26" height="39" rx="2.8" fill="none" stroke="#fbf1dd" stroke-width="1.2"/></g>
+  <g transform="rotate(10 56 50)">
+    <rect x="40" y="24" width="32" height="45" rx="4.5" fill="#00000055" transform="translate(1.5 2)"/>
+    <rect x="40" y="24" width="32" height="45" rx="4.5" fill="url(#solitaire-face)" stroke="#d9b86a" stroke-width="1"/>
+    <text x="45" y="35" font-family="Georgia, serif" font-weight="700" font-size="10" fill="#1b1c22">A</text>
+    <path d="M56 37C52.7 41.3 47.5 44.5 47.5 48.6a4 4 0 0 0 6.8 2.8c-.3 2-1 3.3-2.3 4.2h8c-1.3-.9-2-2.2-2.3-4.2a4 4 0 0 0 6.8-2.8c0-4.1-5.2-7.3-8.5-11.6z" fill="#1b1c22" transform="translate(0 -1) scale(1)"/>
+  </g>
+</svg>
