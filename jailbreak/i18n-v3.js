@@ -26,4 +26,7 @@ add('ar', { 'so.label': 'الترتيب', 'so.r': 'الندرة', 'so.all': 'ا�
 // phone tab bar (2026-10-28): short labels for the locker and my-page tabs
 const TABS = { ja: ['ロッカー', 'マイページ'], en: ['Locker', 'Me'], zh: ['储物柜', '我的'], ko: ['사물함', '마이'], es: ['Taquilla', 'Perfil'], fr: ['Casier', 'Profil'], pt: ['Armário', 'Perfil'], de: ['Spind', 'Profil'], hi: ['लॉकर', 'प्रोफ़ाइल'], ar: ['الخزانة', 'ملفي'] };
 for (const l in TABS) add(l, { 'ht.gacha': TABS[l][0], 'ht.me': TABS[l][1] });
+// phone sub-tabs above the tab bar (2026-10-28): short category labels [breakout courses, classic, score modes, rule modes]
+const SUB = { ja: ['脱獄コース', 'クラシック', 'スコア', 'ルール'], en: ['Breakout', 'Classic', 'Score', 'Rules'], zh: ['越狱路线', '经典', '计分', '规则'], ko: ['탈옥', '클래식', '스코어', '규칙'], es: ['Fuga', 'Clásico', 'Puntos', 'Reglas'], fr: ['Évasion', 'Classique', 'Score', 'Règles'], pt: ['Fuga', 'Clássico', 'Pontos', 'Regras'], de: ['Ausbruch', 'Klassisch', 'Punkte', 'Regeln'], hi: ['जेलब्रेक', 'क्लासिक', 'स्कोर', 'नियम'], ar: ['الهروب', 'كلاسيكي', 'النقاط', 'القواعد'] };
+for (const l in SUB) add(l, { 'sub.mix': SUB[l][0], 'sub.cls': SUB[l][1], 'sub.run': SUB[l][2], 'sub.rule': SUB[l][3] });
 })();
