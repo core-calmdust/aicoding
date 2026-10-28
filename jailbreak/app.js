@@ -432,9 +432,10 @@ const boardEl = () => $('#board');
 // when the screen is too short for it. PC: as large as the window height allows (up to 860px across), centred.
 function cellSize() {
   const P = G.P, phone = innerWidth < 760, twin = P.pc.some(p => p.t === 'Q');
-  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', ...(phone ? ['.gstat'] : [])].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
+  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
   const H = Math.max(240, innerHeight - used - (phone ? 26 : 84));
-  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min(W / (P.w + 1.2), H / (P.h + (twin ? 1.3 : .8))))); }
+  // phone: the frame is centred; a little room on both sides lets the EXIT sign stick out on the right
+  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + 1.24), H / (P.h + (twin ? 1.3 : .8))))); }
   // PC: the frame (board + .32 cell a side) is as wide as the play column; the EXIT sign may stick out on the right
   const W = Math.min(innerWidth - 80, 900);
   return Math.max(36, Math.floor(Math.min((W - 6) / (P.w + .72), H / (P.h + (twin ? 1.3 : .76)))));
@@ -455,7 +456,7 @@ function buildBoard() {
   b.style.setProperty('--cs', cs + 'px'); b.style.width = P.w * cs + 'px'; b.style.height = P.h * cs + 'px';
   b.dataset.mode = G.m; b.dataset.w = P.w;
   const wr = $('#boardWrap'), phone = innerWidth < 760;
-  wr.style.paddingRight = phone ? Math.round(cs * .46) + 'px' : ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
+  wr.style.paddingRight = ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
   // PC: the play column (title row, buttons, rule line) takes the width of the board's frame
   $('#play').style.maxWidth = phone ? '' : Math.max(440, Math.round(cs * (P.w + .72)) + 6) + 'px';
   let html = '<div class="floor"></div><div class="fxl">';
