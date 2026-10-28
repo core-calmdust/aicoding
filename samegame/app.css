@@ -1386,3 +1386,9 @@ body[data-screen="play"] #app{padding-bottom:0}
 /* language picker inside the settings dialog (the header has ? / settings / home, like the sudoku apps) */
 .sw.lrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sw.lrow #langSel{width:auto!important;min-width:128px;margin:0!important;font-size:15px!important;height:36px;padding:0 8px!important}
+
+/* PC play screen: centre the side panel and the board as ONE group vertically, so the panel top lines up with the board top */
+@media (min-width:1000px){
+  #play #gMain,#gMain{margin-top:0!important}
+  #play{padding-top:max(12px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))!important;align-items:start}
+}
