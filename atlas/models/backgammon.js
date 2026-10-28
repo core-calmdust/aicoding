@@ -291,9 +291,9 @@
   function hinge(m, x, z, len) {
     const TT = T(), g = new TT.Group(), y = FY + RH;
     const leaf = new TT.Mesh(RB(.92, .014, len, .006, 2), m.metal); leaf.position.set(0, y + .005, 0); leaf.castShadow = leaf.receiveShadow = true; g.add(leaf);
-    const kn = new TT.Mesh(new TT.CylinderGeometry(.04, .04, len + .02, 18), m.metal); kn.rotation.x = Math.PI / 2; kn.position.set(0, y + .02, 0); kn.castShadow = true; g.add(kn);
-    for (let k = 1; k < 4; k++) { const r = new TT.Mesh(new TT.CylinderGeometry(.0415, .0415, .006, 18), m.metalDark); r.rotation.x = Math.PI / 2; r.position.set(0, y + .02, -len / 2 + len * k / 4); g.add(r); }
-    const sg = new TT.CylinderGeometry(.03, .032, .012, 16), slot = new TT.BoxGeometry(.045, .004, .007);
+    const kn = new TT.Mesh(new TT.CylinderGeometry(.04, .04, len + .02, 10), m.metal); kn.rotation.x = Math.PI / 2; kn.position.set(0, y + .02, 0); kn.castShadow = true; g.add(kn);
+    for (let k = 1; k < 4; k++) { const r = new TT.Mesh(new TT.CylinderGeometry(.0415, .0415, .006, 10), m.metalDark); r.rotation.x = Math.PI / 2; r.position.set(0, y + .02, -len / 2 + len * k / 4); g.add(r); }
+    const sg = new TT.CylinderGeometry(.03, .032, .012, 8), slot = new TT.BoxGeometry(.045, .004, .007);
     for (const sx of [-.3, .3]) for (const sz of [-len * .32, len * .32]) {
       const s = new TT.Mesh(sg, m.metal); s.position.set(sx, y + .018, sz); g.add(s);
       const sl = new TT.Mesh(slot, m.metalDark); sl.position.set(sx, y + .025, sz); sl.rotation.y = (sx * sz > 0 ? .6 : -.4); g.add(sl);
@@ -311,7 +311,7 @@
       path.add(new TT.LineCurve3(V(...a), V(...b)));
       path.add(new TT.QuadraticBezierCurve3(V(...b), V(...corner), V(...c2)));
     }
-    const geo = new TT.TubeGeometry(path, 260, .03, 10, true), t = new TT.Mesh(geo, m.metal); t.castShadow = true; return t;
+    const geo = new TT.TubeGeometry(path, 120, .03, 6, true), t = new TT.Mesh(geo, m.metal); t.castShadow = true; return t;
   }
   // scarlet: gold corner guards (an L over the top + flaps down the sides) and case clasps
   function corner(m, g, sx, sz) {
@@ -390,7 +390,7 @@
     const TT = T(), m = checkerMats(id);
     if (!ckGeo) {
       const R = CK_R, Hh = CK_H, pts = [[0, 0], [R - .02, 0], [R - .004, .006], [R, .022], [R, Hh - .022], [R - .004, Hh - .006], [R - .02, Hh], [R - .062, Hh], [R - .072, Hh - .008], [R - .076, Hh - .026], [0, Hh - .026]];
-      ckGeo = { rim: new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), 44), face: new TT.CircleGeometry(R - .075, 44) };
+      ckGeo = { rim: new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), X.coarse ? 20 : 24), face: new TT.CircleGeometry(R - .075, X.coarse ? 20 : 24) };
       ckGeo.face.rotateX(-Math.PI / 2); ckGeo.face.translate(0, Hh - .025, 0);
     }
     const g = new TT.Group();
@@ -410,8 +410,8 @@
   }
   function die(id = 'gold', size = .8) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
-    const body = new TT.Mesh(RB(size, size, size, size * .16, 4), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 10, 6), sp = size * .27;
+    const body = new TT.Mesh(RB(size, size, size, size * .16, 2), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
+    const pg = new TT.SphereGeometry(size * .085, 6, 4), sp = size * .27;
     // face → (normal axis, u axis, v axis): the pip grid i → col (i % 3), row (i / 3 | 0) as seen from outside, top row towards −z (screen up) on the top face
     const F = { 1: [[0, 1, 0], [1, 0, 0], [0, 0, 1]], 6: [[0, -1, 0], [1, 0, 0], [0, 0, -1]], 3: [[1, 0, 0], [0, 0, -1], [0, -1, 0]], 4: [[-1, 0, 0], [0, 0, 1], [0, -1, 0]], 2: [[0, 0, 1], [1, 0, 0], [0, -1, 0]], 5: [[0, 0, -1], [-1, 0, 0], [0, -1, 0]] };
     for (const v in F) {
@@ -435,8 +435,8 @@
     .map(([v, n, u, w]) => ({ v, n: [n[0], n[2], n[1]], u: [u[0], u[2], u[1]], w: [w[0], w[2], w[1]] }));
   function dieG(id = 'gold', size = .82) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
-    const body = new TT.Mesh(RB(size, size, size, size * .16, 4), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 10, 6), sp = size * .76 / 3;
+    const body = new TT.Mesh(RB(size, size, size, size * .16, 2), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
+    const pg = new TT.SphereGeometry(size * .085, 6, 4), sp = size * .76 / 3;
     for (const F of GF) for (const i of PIPS[F.v]) {
       const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h - size * .035, s = new TT.Mesh(pg, m.pip);
       s.position.set(F.n[0] * d + F.u[0] * cu + F.w[0] * cw, F.n[1] * d + F.u[1] * cu + F.w[1] * cw, F.n[2] * d + F.u[2] * cu + F.w[2] * cw);

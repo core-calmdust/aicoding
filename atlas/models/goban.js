@@ -404,9 +404,9 @@
     const key = 'leg' + h.toFixed(3) + r.toFixed(3); if (geos[key]) return geos[key];
     const TT = T();
     const P = [[0, 0], [.6, 0], [.78, .025], [.93, .085], [1, .17], [.97, .26], [.84, .34], [.64, .4], [.52, .425], [.5, .44], [.58, .455], [.6, .475], [.5, .5], [.42, .53], [.4, .56], [.46, .62], [.62, .7], [.8, .79], [.9, .87], [.93, .94], [.9, .985], [.8, 1], [0, 1]];
-    const pts = []; for (let i = 0; i < P.length - 1; i++) { const [r0, y0] = P[i], [r1, y1] = P[i + 1]; for (let k = 0, K = 2; k < K; k++) { const t = k / K; pts.push(new TT.Vector2(Math.max(.0005, (r0 + (r1 - r0) * t) * r), (y0 + (y1 - y0) * t) * h)); } }
+    const pts = []; for (let i = 0; i < P.length - 1; i++) { const [r0, y0] = P[i], [r1, y1] = P[i + 1]; for (let k = 0, K = 1; k < K; k++) { const t = k / K; pts.push(new TT.Vector2(Math.max(.0005, (r0 + (r1 - r0) * t) * r), (y0 + (y1 - y0) * t) * h)); } }
     pts.push(new TT.Vector2(.0005, h));
-    const g = new TT.LatheGeometry(pts, X.coarse ? 48 : 64), p = g.attributes.position;   // (the legs stand in the board's shadow: 2 steps per profile segment and 6–8 per lobe keep the shape at ~1/3 of the triangles)
+    const g = new TT.LatheGeometry(pts, X.coarse ? 24 : 32), p = g.attributes.position;   // (the legs stand in the board's shadow: 2 steps per profile segment and 6–8 per lobe keep the shape at ~1/3 of the triangles)
     for (let i = 0; i < p.count; i++) {   // lobes: rounded petals, sharp creases between them
       const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), k = .9 + .1 * Math.sqrt(Math.abs(Math.cos(4 * a)));
       p.setX(i, x * k); p.setZ(i, z * k);
@@ -449,7 +449,7 @@
   function stoneGeo(r, heap) {   // heap: the stones piled in a bowl (half hidden by each other) → coarser
     const key = 'st' + r.toFixed(4) + (heap ? 'h' : ''); if (geos[key]) return geos[key];
     const TT = T(), pts = [], h = r * SH;
-    const N = heap ? 6 : X.coarse ? 8 : 11;   // phones: fewer still (dozens of stones in the bowls)
+    const N = heap ? 4 : X.coarse ? 6 : 7;   // phones: fewer still (dozens of stones in the bowls)
     for (let i = 0; i <= N; i++) {   // from the rim up to the crown; denser near the rounded rim
       const t = i / N, a = t * Math.PI / 2, x = Math.cos(a), yy = Math.sin(a);
       const rr = r * Math.pow(x, .82), y = h * Math.pow(yy, .9) * (1 + .04 * (1 - x));
@@ -458,7 +458,7 @@
     pts[pts.length - 1].x = .0004;
     const lowers = pts.slice(1).reverse().map(v => new TT.Vector2(v.x, -v.y));
     const all = lowers.reverse().concat(pts);   // bottom crown → rim → top crown
-    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), heap ? 18 : X.coarse ? 22 : 30);
+    const g = new TT.LatheGeometry(all.sort((a, b) => a.y - b.y), heap ? 12 : X.coarse ? 16 : 20);
     g.translate(0, h, 0);
     const p = g.attributes.position, uv = g.attributes.uv;   // planar UVs from the top: the shell's stripes run straight across
     for (let i = 0; i < p.count; i++) uv.setXY(i, .5 + p.getX(i) / (2 * r), .5 + p.getZ(i) / (2 * r));
@@ -538,7 +538,7 @@
     const OUT = [[0, 0], [.6, 0], [.64, .012], [.645, .04], [.66, .055], [.74, .09], [.86, .19], [.95, .33], [.995, .48], [.99, .62], [.94, .76], [.87, .87], [.81, .95], [.79, 1], [.775, 1.015]];
     const IN = [[.735, 1.015], [.725, .99], [.77, .93], [.85, .81], [.91, .66], [.93, .52], [.9, .37], [.8, .24], [.62, .16], [.3, .135], [0, .13]];
     const prof = OUT.concat(IN).map(([r, y]) => [r * R, y * H]);
-    const body = new TT.Mesh(lathe('bowl' + k, prof, 56), m.side); body.castShadow = body.receiveShadow = true;
+    const body = new TT.Mesh(lathe('bowl' + k, prof, X.coarse ? 28 : 36), m.side); body.castShadow = body.receiveShadow = true;
     { const uv = body.geometry.attributes.uv; if (!body.geometry.userData.uvFix) { body.geometry.userData.uvFix = 1; for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * 2); } }   // the side grain repeats twice up the profile
     g.add(body);
     // stones heaped inside: a gentle dome reaching up towards the lip
@@ -557,7 +557,7 @@
     });
     // the lid (separate: it can sit on the bowl or lie upside down beside it)
     const LP = [[0, .4], [.3, .39], [.56, .345], [.74, .27], [.84, .17], [.875, .08], [.875, .02], [.86, 0], [.8, 0], [.8, .05], [.77, .09], [.62, .2], [.35, .28], [0, .3]];
-    const lg = lathe('lid' + k, LP.map(([r, y]) => [r * R, y * R]), 56);
+    const lg = lathe('lid' + k, LP.map(([r, y]) => [r * R, y * R]), X.coarse ? 28 : 36);
     if (!lg.userData.uvFix) { lg.userData.uvFix = 1; const p = lg.attributes.position, uv = lg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, .5 + p.getX(i) / (1.8 * R), .5 + p.getZ(i) / (1.8 * R)); }   // seen from above: the end-grain rings of the turned lid
     const lid = new TT.Group(), lm = new TT.Mesh(lg, m.top); lm.castShadow = lm.receiveShadow = true; lid.add(lm);
     g.userData.lid = lid; g.userData.R = R; g.userData.H = H * 1.015; g.userData.lidH = R * .4;
@@ -606,7 +606,7 @@
     // the bowls stand beside the board on the chabudai, lids upside down next to them
     const R = c * 2.4;
     [[1, 6.15, 1.9], [2, -6.15, -1.9]].forEach(([col, x, z]) => {
-      const bw = bowl(col, c, { R, stones: 24 }); bw.position.set(x, 0, z); g.add(bw);
+      const bw = bowl(col, c, { R, stones: 12 }); bw.position.set(x, 0, z); g.add(bw);
       const lid = bw.userData.lid; lid.rotation.x = Math.PI; lid.position.set(x + (x > 0 ? -.15 : .15), R * .4, z + (z > 0 ? -2.55 : 2.55)); g.add(lid);
     });
     return g;
@@ -630,7 +630,7 @@
     });
     const R = 1.28;   // the same bowls as gomoku's
     [[1, 6.15, 1.9], [2, -6.15, -1.9]].forEach(([col, x, z]) => {
-      const bw = bowl(col, c, { R, stones: 30 }); bw.position.set(x, 0, z); g.add(bw);
+      const bw = bowl(col, c, { R, stones: 14 }); bw.position.set(x, 0, z); g.add(bw);
       const lid = bw.userData.lid; lid.rotation.x = Math.PI; lid.position.set(x + (x > 0 ? -.15 : .15), R * .4, z + (z > 0 ? -2.55 : 2.55)); g.add(lid);
     });
     return g;
