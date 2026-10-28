@@ -239,12 +239,16 @@ function courseCard(c) {
     <span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><em class="mv">${esc(t('u.movesR', { a: Math.min(...os), b: Math.max(...os) }))}</em></span><span class="mnext">${A.ICON.play}${esc(t(started ? 'u.cont' : 'u.start1'))} ${floorLabel(j)}</span></span></button>${comp ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`;
 }
 const floorLabel = j => `${Math.floor(j / PER) + 1}F-${(j % PER) + 1}`;
+// long course names shrink until they fit beside the level chip (all languages)
+function fitNames(el) { requestAnimationFrame(() => $$('.ctl b', el).forEach(b => { b.style.fontSize = ''; let f = parseFloat(getComputedStyle(b).fontSize); while (b.scrollWidth > b.clientWidth + 1 && f > 11) { f -= .5; b.style.fontSize = f + 'px'; } })); }
+addEventListener('resize', () => { const el = $('#coursePanel'); if (el && !el.closest('[hidden]')) fitNames(el); });
 function renderCourses() {
   const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
   el.innerHTML = `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>
     <section class="card panel secbox sb-cls"><div class="ptag">${esc(t('co.cls.h'))}</div><p class="secd">${esc(t('co.cls.d'))}</p><div class="tgrid">${cls.map(courseCard).join('')}</div></section>`;
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
   // while nothing on the course is cleared yet, its story comes first (then the stage starts)
+  fitNames(el);
   $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; if (!courseRecs(id).some(v => v)) { courseOpenId = id; showStory(Math.floor(j / PER), () => { courseOpenId = null; startStage(id, j); }); } else startStage(id, j); }; });
 }
 function openCourse(id) { courseOpenId = id; nav(); renderCourse(id); scrollTo(0, 0); }
