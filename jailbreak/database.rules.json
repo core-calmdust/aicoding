@@ -1,6 +1,14 @@
 {
   "rules": {
     "jb": {
+      "sync": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['d', 't']) && newData.child('d').isString() && newData.child('d').val().length <= 400000 && newData.child('t').isNumber()",
+          "$other": { ".validate": "$other === 'd' || $other === 't'" }
+        }
+      },
       "d": {
         "$date": {
           ".validate": "$date.matches(/^20[0-9][0-9]-[01][0-9]-[0-3][0-9]$/)",
