@@ -158,7 +158,7 @@ async function pushTotals() {
 }
 
 /* ============================================================ HOME ============================================================ */
-let homeTab = 'daily', courseOpenId = null, modeOpenId = null, afterModal = null;
+let homeTab = 'daily', courseOpenId = null, modeOpenId = null, afterModal = null, listAfter = null;
 function updateCoins() { $$('.coinv').forEach(e => { e.textContent = fmt(DB.coin); }); }
 function picHTML(icon = DB.icon) { return A.inmateSVG(icon, { bg: '#cfd6de' }); }
 function profCard() {
@@ -232,18 +232,17 @@ const lvChip = lv => `<span class="lvc lv${lv}">${esc(t('lv.' + lv))}</span>`;
 function courseCard(c) {
   const recs = courseRecs(c.id), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), N = recs.length, comp = done === N;
   const os = c.st.map(r => r.o), j = contIdx(c.id), started = done > 0 || (DB.last || {})[c.id] != null;
-  return `<div class="tcard ccard ${comp ? 'comp' : ''}" style="--tc:${COURSE_COL[c.id]}"><button class="cmain" data-co="${c.id}"><span class="tic">${courseIcon(c.id)}</span><span class="tt"><span class="ctl"><b>${esc(t('cs.' + c.id))}</b>${lvChip(c.lv)}</span><small>${esc(t('cs.' + c.id + '.d'))}</small>
+  return `<div class="tcard ccard ${comp ? 'comp' : ''}" style="--tc:${COURSE_COL[c.id]}"><button class="cmain" data-co="${c.id}" data-j="${j}"><span class="tic">${courseIcon(c.id)}</span><span class="tt"><span class="ctl"><b>${esc(t('cs.' + c.id))}</b>${lvChip(c.lv)}</span><small>${esc(t('cs.' + c.id + '.d'))}</small>
     <span class="bar"><i style="width:${done / N * 100}%"></i></span>
-    <span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><em class="mv">${esc(t('u.movesR', { a: Math.min(...os), b: Math.max(...os) }))}</em></span></span></button>
-    <button class="btn sm cont ${started ? 'org' : ''}" data-cont="${c.id}" data-j="${j}">${A.ICON.play}${esc(t(started ? 'u.cont' : 'u.start1'))}<small>${floorLabel(j)}</small></button>${comp ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`;
+    <span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><em class="mv">${esc(t('u.movesR', { a: Math.min(...os), b: Math.max(...os) }))}</em></span><span class="mnext">${A.ICON.play}${esc(t(started ? 'u.cont' : 'u.start1'))} ${floorLabel(j)}</span></span></button>${comp ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`;
 }
 const floorLabel = j => `${Math.floor(j / PER) + 1}F-${(j % PER) + 1}`;
 function renderCourses() {
   const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
   el.innerHTML = `<div class="sechead"><h2>${esc(t('co.mix.h'))}</h2><p>${esc(t('co.mix.d'))}</p></div><div class="tgrid">${mix.map(courseCard).join('')}</div>
     <div class="sechead"><h2>${esc(t('co.cls.h'))}</h2><p>${esc(t('co.cls.d'))}</p></div><div class="tgrid">${cls.map(courseCard).join('')}</div>`;
-  $$('[data-co]', el).forEach(b => { b.onclick = () => openCourse(b.dataset.co); });
-  $$('[data-cont]', el).forEach(b => { b.onclick = () => startStage(b.dataset.cont, +b.dataset.j); });
+  // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
+  $$('[data-co]', el).forEach(b => { b.onclick = () => startStage(b.dataset.co, +b.dataset.j); });
 }
 function openCourse(id) { courseOpenId = id; nav(); renderCourse(id); scrollTo(0, 0); }
 // stage tiles in sections of 10 (course: floors 1F…10F, mode: BLOCK A…E); a section opens once 6 of the one before are cleared
@@ -294,10 +293,11 @@ function renderModes() {
   let html = `<div class="sechead"><h2>${esc(t('mo.h'))}</h2><p>${esc(t('mo.d'))}</p></div><div class="acards">${sc('sl', DB.best.sl)}${sc('chain', DB.best.chain, DB.best.chainN ? `<small>${esc(t('ch.n', { n: DB.best.chainN }))}</small>` : '')}</div>
     <div class="sechead"><h2>${esc(t('mo.h2'))}</h2><p>${esc(t('mo.d2'))}</p></div><div class="mgrid">`;
   SMODES.forEach(m => { const recs = modeRecs(m), done = recs.filter(v => v).length, stars = recs.reduce((a, b) => a + b, 0), N = recs.length;
-    html += `<div class="mcard" style="--mc:${MODE_COL[m]}"><button class="cmain" data-mode="${m}"><span class="mic">${A.MI[m]}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('mo.' + m + '.s'))}</small><span class="bar"><i style="width:${done / N * 100}%"></i></span><span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em></span></span></button><button class="btn sm cont ${done ? 'org' : ''}" data-cont="${m}" data-j="${contIdx(m)}">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))}<small>${contIdx(m) + 1}</small></button>${done === N ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`; });
+    html += `<div class="mcard" style="--mc:${MODE_COL[m]}"><button class="cmain" data-mode="${m}" data-j="${contIdx(m)}"><span class="mic">${A.MI[m]}</span><span class="mt"><b>${esc(t('mo.' + m))}</b><small>${esc(t('mo.' + m + '.s'))}</small><span class="bar"><i style="width:${done / N * 100}%"></i></span><span class="tmeta"><em>${done}/${N}</em><em class="st">★ ${stars}/${N * 3}</em><span class="mnext">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} ${contIdx(m) + 1}</span></span></span></button>${done === N ? `<span class="crown">${esc(t('co.comp'))}</span>` : ''}</div>`; });
   el.innerHTML = html + '</div>';
   $$('[data-sm]', el).forEach(b => { b.onclick = () => b.dataset.sm === 'sl' ? startSearch(false) : startChain(); });
-  $$('[data-mode]', el).forEach(b => { b.onclick = () => { modeOpenId = b.dataset.mode; nav(); renderMode(modeOpenId); scrollTo(0, 0); maybeRuleTip(modeOpenId); }; });
+  // a rule-mode card starts its next stage straight away (the stage list opens from the result screen's "list")
+  $$('[data-mode]', el).forEach(b => { b.onclick = () => startStage(b.dataset.mode, +b.dataset.j); });
   $$('[data-cont]', el).forEach(b => { b.onclick = () => startStage(b.dataset.cont, +b.dataset.j); });
 }
 function renderMode(m) {
@@ -391,12 +391,13 @@ const boardEl = () => $('#board');
 // Phones: the frame always spans the full width, whatever the board (a 7×7 board just gets smaller cells), and only shrinks
 // when the screen is too short for it. PC: as large as the window height allows (up to 860px across), centred.
 function cellSize() {
-  const P = G.P, phone = innerWidth < 760, wrap = $('#boardWrap');
-  const W = phone ? Math.min(innerWidth, 560) - 16 : Math.min(wrap.clientWidth || innerWidth, 860);
-  const used = ['.gbar', '#gctl', '#gInfo', '#runInfo', '#tiltPad', '.top'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
-  const H = Math.max(240, innerHeight - used - (phone ? 26 : 50));
-  const twin = P.pc.some(p => p.t === 'Q'), across = P.w + 1.2, down = P.h + (twin ? 1.3 : .8);
-  return Math.max(28, Math.floor(Math.min(W / across, H / down)));
+  const P = G.P, phone = innerWidth < 760, twin = P.pc.some(p => p.t === 'Q');
+  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', ...(phone ? ['.gstat'] : [])].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
+  const H = Math.max(240, innerHeight - used - (phone ? 26 : 84));
+  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min(W / (P.w + 1.2), H / (P.h + (twin ? 1.3 : .8))))); }
+  // PC: the frame (board + .32 cell a side) is as wide as the play column; the EXIT sign may stick out on the right
+  const W = Math.min(innerWidth - 80, 900);
+  return Math.max(36, Math.floor(Math.min((W - 6) / (P.w + .72), H / (P.h + (twin ? 1.3 : .76)))));
 }
 const tr = (x, y) => `translate(${x * G.cs}px, ${y * G.cs}px)`;
 // TWIN: the partner is another inmate you own (or the next one)
@@ -413,7 +414,10 @@ function buildBoard() {
   const P = G.P, b = boardEl(); G.cs = cellSize(); const cs = G.cs;
   b.style.setProperty('--cs', cs + 'px'); b.style.width = P.w * cs + 'px'; b.style.height = P.h * cs + 'px';
   b.dataset.mode = G.m; b.dataset.w = P.w;
-  const wr = $('#boardWrap'); wr.style.paddingRight = Math.round(cs * .46) + 'px'; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
+  const wr = $('#boardWrap'), phone = innerWidth < 760;
+  wr.style.paddingRight = phone ? Math.round(cs * .46) + 'px' : ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
+  // PC: the play column (title row, buttons, rule line) takes the width of the board's frame
+  $('#play').style.maxWidth = phone ? '' : Math.max(440, Math.round(cs * (P.w + .72)) + 6) + 'px';
   let html = '<div class="floor"></div><div class="fxl">';
   const at = c => `style="transform:${tr(c % P.w, (c / P.w) | 0)}"`;
   P.walls.forEach(c => { html += `<div class="cell wall" ${at(c)}></div>`; });
@@ -740,7 +744,7 @@ function resultAct(a) {
   if (a === 'retry') { if (G.kind === 'stage') { const s = G.src, j = G.j; startStage(s, j); G.retried = true; } return; }
   if (a === 'undo1') { m.hidden = true; G.over = false; G.S = G.hist.pop() || G.S; G.moves--; buildBoard(); hud(); return; }
   if (a === 'next') { const s = G.src; return startStage(s, G.j + 1); }
-  if (a === 'list') return leavePlay();
+  if (a === 'list') { listAfter = G.src; return leavePlay(); }
   if (a === 'home') return leavePlay();
   if (a === 'rank') return openRank(G.kind === 'daily' ? G.dk : 'sl');
   if (a === 'name') return openProfile();
@@ -766,7 +770,9 @@ addEventListener('popstate', e => {
   }
   if (!$('#modal').hidden) { $('#modal').hidden = true; afterModal = null; }
   homeTab = st.tab || 'daily'; courseOpenId = st.co || null; modeOpenId = st.mo || null;
-  if (G && !$('#play').hidden) goHome(); else renderHome();
+  // "list" from a result: land on that course's / mode's stage list
+  if (listAfter) { const L = listAfter; listAfter = null; if (courseOf(L)) { homeTab = 'course'; courseOpenId = L; modeOpenId = null; } else { homeTab = 'modes'; modeOpenId = L; courseOpenId = null; } if (G && !$('#play').hidden) { G = null; showScreen('home'); } nav(); }
+  if (G && !$('#play').hidden) goHome(); else { $('#gameMsg').hidden = true; renderHome(); }
 });
 (function homeSwipe() {
   let T = null;

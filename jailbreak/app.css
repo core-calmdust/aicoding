@@ -158,7 +158,10 @@ button:disabled { cursor: default; opacity: .45; }
 .ccard:active, .mcard:active { transform: none; box-shadow: var(--sh); }
 .cmain:active { opacity: .8; }
 .ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.cont { align-self: stretch; } .cont small { font: 800 12px 'Jost'; opacity: .85; margin-inline-start: 4px; }
+.cont { align-self: stretch; }
+.mnext { display: inline-flex; align-items: center; gap: 4px; font: 800 12px var(--font); color: var(--org); } .mnext .ico { width: 14px; height: 14px; }
+.mcard, .ccard { cursor: pointer; }
+.ccard .cmain, .mcard .cmain { cursor: pointer; } .cont small { font: 800 12px 'Jost'; opacity: .85; margin-inline-start: 4px; }
 .lvc { display: inline-block; font-size: 11px; font-weight: 900; padding: 1px 7px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; vertical-align: middle; white-space: nowrap; font-family: var(--font); }
 .lvc.lv0 { background: #bfe6c9; } .lvc.lv1 { background: #cfe3f5; } .lvc.lv2 { background: #ffe0a8; } .lvc.lv3 { background: #ffc0a8; } .lvc.lv4 { background: var(--ink); color: var(--yel); }
 .supc { display: inline-block; font-size: 11px; font-weight: 900; padding: 1px 6px; background: var(--ink); color: var(--yel); border-radius: 3px; white-space: nowrap; }
@@ -259,10 +262,22 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 .tpad .ib { width: 56px; height: 48px; background: var(--yel); }
 .tpad .ib.hint, .gbtn.hint { animation: glow .7s infinite alternate; }
 .dead { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); z-index: 6; border: 2.5px solid var(--ink); background: var(--red); color: #fff; font-weight: 800; padding: 6px 14px; border-radius: 20px; box-shadow: var(--sh2); white-space: nowrap; }
-/* PC: the play screen sits in the middle of the window */
+/* phones: one row above the board — moves/best · stars · hint · undo · restart */
+.gstat, .gbtns { display: flex; align-items: center; gap: 8px; }
+.gctl .gbtns { margin-inline-start: auto; }
+/* PC: top-aligned column as wide as the board frame. Title row with moves/best + stars on the right, buttons under the board */
 @media (min-width: 761px) {
-  body[data-screen=play] main { min-height: calc(100vh - 110px); display: flex; flex-direction: column; justify-content: center; }
-  body[data-screen=play] #play { width: 100%; }
+  #play { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "btn btn" "info info"; column-gap: 12px; row-gap: 10px; }
+  .gctl { display: contents; }
+  .gbar { grid-area: bar; } .gstat { grid-area: stat; justify-self: end; } #runInfo { grid-area: run; } .slbar { grid-area: sl; }
+  #boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
+  .gctl .gbtns { grid-area: btn; justify-content: center; margin: 0; gap: 14px; }
+  .gtitle b { font-size: 22px; }
+  .gctl .ns, .gctl .lim { height: 54px; min-width: 96px; padding: 2px 16px 3px; }
+  .gctl small { font-size: 12.5px; }
+  .gctl .ns b { font-size: 30px; } .gctl .ns b i { font-size: 20px; } .gctl .ns b em { font-size: 22px; } .gctl .lim b { font-size: 26px; }
+  .hst i { font-size: 28px; }
+  .gbtn { width: 56px; height: 52px; } .gbtn .ico { width: 28px; height: 28px; }
 }
 
 /* ---------------- board ---------------- */
