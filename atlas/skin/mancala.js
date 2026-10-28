@@ -42,6 +42,8 @@
     },
   });
   if (!skin) return;
+  // the game's 「横画面でも遊べます」 tip would come on every visit: not in the portal skin
+  try { rotTipDone = true; const ro = document.getElementById('rotTipOverlay'); if (ro) ro.classList.remove('show'); } catch (e) {}
 
   /* ---------- the page's cups on the carved hollows ---------- */
   window.slotUV = function (i) {
@@ -64,7 +66,11 @@
       for (let i = 0; i < 14; i++) {
         const el = slotEls[i]; if (!el) continue;
         if (isStore(i)) { el.style.width = (v ? sh : sw) + 'px'; el.style.height = (v ? sw : sh) + 'px'; } else { el.style.width = el.style.height = pw + 'px'; }
-        const n = pitNoEls[i]; if (n) { const p = slotUV(i), [nx, ny] = toPx(p.x, p.y + (p.bottom ? 1 : -1) * (G.PR * S + .2)); n.style.left = nx + 'px'; n.style.top = ny + 'px'; }
+        // the count: a small gold label on the board beside the hollow (pits: on the outer edge; stores: below their near end), never over the gems
+        const p = slotUV(i), b = badgeEls[i];
+        const [bx, by] = isStore(i) ? toPx(p.x, p.y + (G.SL + G.SR) * S + .3) : toPx(p.x, p.y + (p.bottom ? 1 : -1) * (G.PR * S + .2));
+        if (b) { b.style.left = bx + 'px'; b.style.top = by + 'px'; }
+        const n = pitNoEls[i]; if (n) n.style.display = 'none';   // (the pit numbers: the count takes their place)
       }
       orient();
     } catch (e) {}
