@@ -219,7 +219,7 @@ function renderHome() {
 /* phones: コース / モード show one category at a time, picked from a row of chips fixed just above the tab bar.
    The choice is kept per tab (DB.set.sub); before any choice, コース opens on the category holding the next unfinished course. */
 const SUBS = { course: ['mix', 'cls'], modes: ['run', 'rule'] };
-const subCount = { mix: () => COURSES().filter(c => c.kind === 'mix').length, cls: () => COURSES().filter(c => c.kind === 'classic').length, run: () => 2, rule: () => SMODES.length };
+const subCount = { mix: () => COURSES().filter(c => c.kind === 'mix').length, cls: () => COURSES().filter(c => c.kind === 'classic').length, run: () => 3, rule: () => SMODES.length };
 function subOf(tab) {
   const s = (DB.set.sub || {})[tab];
   if (SUBS[tab].includes(s)) return s;
