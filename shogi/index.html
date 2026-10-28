@@ -1287,7 +1287,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -2173,14 +2173,24 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !!game && !lesson && !edit && !inStudy() && !net; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !game.over, b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = !!game.over, on = wpActive() && (!over || cur < game.moves.length), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || game.over) return;
-  if (!wpPaused) { wpPaused = true; busyToken++; cancelAI(); setStatus(0, ''); setStatus(1, ''); renderInfo(); return; }
-  wpPaused = false; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;   // resume from the latest position
+  const over = !!game.over;
+  if (!wpActive() || (over && cur >= game.moves.length)) return;
+  if (!wpPaused && !over) { wpPaused = true; busyToken++; cancelAI(); setStatus(0, ''); setStatus(1, ''); renderInfo(); return; }
+  if (cur < game.moves.length && window.WatchPause) { stopPlay(); WatchPause.ask({ lang: LANG, n: game.moves.length - cur, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; stopPlay(); cur = game.moves.length; reviewing = false; hintMoves = null; sel = null; refresh(false); }   // resume from the latest position
+function wpHere() {   // resume from the shown position: the later moves (their analysis) and a result are dropped — the review bar's この局面から再開 path
+  if (!wpActive() || cur >= game.moves.length) { wpLatest(); return; }
+  wpPaused = false; stopPlay(); busyToken++; cancelAI(); cancelAna();
+  game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; reviewing = false; hintMoves = null; sel = null;
+  if (game.clock) game.clock.t0 = Date.now();
+  hideOverlay('#resultOverlay');
   refresh(false);
 }
 $('#btnUndo').onclick = () => {

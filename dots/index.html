@@ -1096,7 +1096,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
 <script src="../shared/headerbar.js?v=27"></script>
-<script src="../shared/watchpause.js?v=1"></script>
+<script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script><!-- only RuleTour.intro() for the rules intro page -->
@@ -1504,15 +1504,27 @@ var wpPaused = false;
 function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbCons() && !!SF; }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !SF.over, b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const back = viewPly !== null, on = wpActive() && (!SF.over || back), b = $('#btnUndo');   // a finished game can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || SF.over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || SF.over) return;
-  if (!wpPaused) { wpPaused = true; busy++; cancelAI(); renderInfo(); return; }
-  wpPaused = false; viewPly = null; hintEdge = -1; badEdge = -1;   // resume from the latest position
-  refresh(false); next();
+  const over = SF.over, back = viewPly !== null;
+  if (!wpActive() || (over && !back)) return;
+  if (!wpPaused && !over) { wpPaused = true; busy++; cancelAI(); renderInfo(); return; }
+  if (back && window.WatchPause) { WatchPause.ask({ lang: LANG, n: game.moves.length - viewPly, latest: over ? null : wpLatest, here: wpHere }); return; }   // an earlier position is shown: ask where to resume from
+  wpLatest();
+}
+function wpLatest() { wpPaused = false; stopPlay(); viewPly = null; hintEdge = -1; badEdge = -1; refresh(false); next(); }   // resume from the latest position
+function wpHere() {   // resume from the shown position (a turn may be cut between two lines of a chain — the side that drew the shown line's box keeps the move); the later lines, the review and the result are dropped
+  if (!wpActive() || viewPly === null) { wpLatest(); return; }
+  const n = viewPly;
+  wpPaused = false; stopPlay(); busy++; cancelAI(); cancelAna();
+  hintEdge = -1; badEdge = -1; lastEval = null; viewPly = null; rvCancel(); rv = null; chainCount = 0;
+  game.moves.length = n;
+  $('#resultOverlay').classList.remove('show');
+  refresh(false); save();
+  next();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
@@ -1710,7 +1722,7 @@ function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0]
 let rv = null;        // { key, n, items[], mover[], sc[][], done, total, running, ws[] }
 let rvOpen = true;
 const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
-function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && (SF.over || settings.mode === 'pvp'); }
+function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && (SF.over || settings.mode === 'pvp' || (settings.mode === 'watch' && wpPaused)); }   // AI同士: the record can be browsed while paused
 function rvCancel() { if (rv && rv.running) { rv.ws.forEach(w => w.terminate()); rv = null; } }
 function rvOnce(w, n, edges, played, ms) {
   return new Promise(resolve => {

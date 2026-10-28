@@ -1070,21 +1070,45 @@ function wpActive() { return settings.mode === 'watch' && !!match && !lesson && 
 function wpOver() { const g = match.games.length - 1; return stateAt(g, match.games[g].actions.length).over && (!match.len || matchOver()); }
 function wpRender() {
   if (settings.mode !== 'watch') wpPaused = false;
-  const on = wpActive() && !wpOver(), b = $('#btnUndo');
-  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  const over = wpActive() && wpOver(), on = wpActive() && (!over || cur < latestIdx()), b = $('#btnUndo');   // a finished game / match can be continued from an earlier position
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused || over ? 'resume' : 'pause') : null, LANG);
   if (on) b.disabled = false;
 }
 function wpToggle() {
-  if (!wpActive() || wpOver()) return;
-  if (!wpPaused) {
+  if (!wpActive()) return;
+  const over = wpOver(), back = cur < latestIdx();
+  if (over && !back) return;
+  if (!wpPaused && !over) {
     wpPaused = true; busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false;
     if (turn && turn.ai) turn = null;   // an AI move being animated is dropped (it was not pushed yet); resuming plays it again
     render(); renderInfo(); renderButtons(); return;
   }
-  wpPaused = false; cur = latestIdx(); reviewing = false; turn = null; hintData = null;   // resume from the latest position
+  if (back && window.WatchPause) {   // an earlier position is shown: ask where to resume from (n = later turns / cube actions, over every later game of the match)
+    stopPlay();
+    const g = curGA()[0];
+    WatchPause.ask({ lang: LANG, n: latestIdx() - cur - (match.games.length - 1 - g), latest: over ? null : wpLatest, here: wpHere });
+    return;
+  }
+  wpLatest();
+}
+function wpLatest() {   // resume from the latest position
+  wpPaused = false; stopPlay(); cur = latestIdx(); reviewing = false; turn = null; hintData = null;
   const g = match.games.length - 1;
   if (stateAt(g, match.games[g].actions.length).over) { nextGame(); return; }   // paused between two games of a match
   afterAction();
+}
+function wpHere() {   // resume from the shown position: every action is a whole turn (roll + move) or a cube action, so any position is a turn boundary;
+  // the later actions and games of the match, their evals and results are dropped; the dice come from the seed (roll k of game g), so the same dice follow
+  if (!wpActive() || cur >= latestIdx()) { wpLatest(); return; }
+  const [g, a] = curGA();
+  wpPaused = false; stopPlay(); busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false;
+  match.games = match.games.slice(0, g + 1);
+  match.games[g].actions = match.games[g].actions.slice(0, a);
+  for (const k of [...evals.keys()]) { const [kg, ka] = k.split(':').map(Number); if (kg > g || (kg === g && ka > a)) evals.delete(k); }
+  gameOverShown = new Set([...gameOverShown].filter(k => +k.split(':')[0] < g));
+  turn = null; reviewing = false; cur = latestIdx(); hintData = null; selected = null; previewPlay = null; extraArrows = [];
+  hideOverlay('#resultOverlay');
+  save(); afterAction();
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
