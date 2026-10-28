@@ -240,6 +240,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bvtodb .cv{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;transition:transform .2s}
 .bvtodb[aria-expanded=true] .cv{transform:translateY(1px) rotate(-135deg)}
 .bvtodm{position:absolute;top:calc(100% + 8px);inset-inline-end:0;min-width:150px;padding:6px;border-radius:16px;background:#fff;border:2px solid var(--line);box-shadow:0 4px 0 var(--line),0 14px 30px -12px rgba(60,40,10,.35);display:flex;flex-direction:column;gap:2px;animation:todIn .16s ease-out}
+.bvtodm[hidden]{display:none!important}
 @keyframes todIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .bvtodm button{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;border:0;background:transparent;font:700 14px var(--round,inherit);color:var(--ink);cursor:pointer;text-align:start}
 .bvtodm button:hover{background:#fff4dc}
