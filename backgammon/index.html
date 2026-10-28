@@ -844,9 +844,12 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
 body.in-study .study-badge{display:block;position:absolute;top:calc(var(--u) * .62);left:50%;transform:translateX(-50%);z-index:30;padding:3px 14px;border-radius:99px;background:rgba(226,194,117,.95);color:#1a1206;font-weight:700;font-size:13px;letter-spacing:.06em;box-shadow:0 4px 14px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap}
 body.in-study .frame{outline:2px solid rgba(226,194,117,.85);outline-offset:3px}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  /* review box on: the info row is the box height — 対局者 above 形勢 on the left, the box in the middle, 振り返り above 棋譜 on the right */
-  body.rvbox-on .app, body.rvbox-on .app:has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,1fr) minmax(0,2.3fr) minmax(0,1fr)!important;
-    grid-template-rows:var(--fh) calc(var(--ich) * .5 - 6px) calc(var(--ich) * .5 - 6px)!important;grid-template-areas:"board board board" "pl bx rv" "ev bx kf"!important}
+  /* review box on: the info row is the box height — 解説 (the box) on the left, 対局者 above 形勢 in the middle, 振り返り above 棋譜 on the right */
+  /* (the online dock's compact mode (shared/headerbar.js) hides 棋譜 / the graph of a side column: here they stay, the row just gets smaller) */
+  html.dock-compact body .side .kifu-card{display:flex!important}
+  html.dock-compact body .side #graph{display:block!important}
+  body.rvbox-on .app, body.rvbox-on .app:has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:var(--fh) calc(var(--ich) * .5 - 6px) calc(var(--ich) * .5 - 6px)!important;grid-template-areas:"board board board" "bx pl rv" "bx ev kf"!important}
   body.rvbox-on .app:not(:has(:is(.review-card,.hint-card).show)) .kifu-card{grid-row:2 / 4}
   body.rvbox-on #evalCard{padding:8px 12px}
   body.rvbox-on #evalCard .navbar{margin-top:4px}
@@ -924,6 +927,34 @@ body.in-study .frame{outline:2px solid rgba(226,194,117,.85);outline-offset:3px}
   .bx-c .pv{font-size:13px}
   .bx-cube p{font-size:15px!important}
   .bx-cube .mono{font-size:13.5px!important}
+}
+/* PC with the online dock open: little height is left, so the info goes beside the board again (board | a scrolling column:
+   lesson / puzzle card, 対局者, 形勢, ヒント / 振り返り, 棋譜) — 棋譜 always stays visible; the review box (if on) shares that column */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  body.dock-open:not(.ol-soon){--rw:330px}
+  @media (max-width: 1299px){ body.dock-open:not(.ol-soon){--rw:310px} }
+  html:not(.rot) body.dock-open:not(.ol-soon) .app{width:auto!important;justify-content:center!important;align-content:start!important;column-gap:16px!important;row-gap:10px!important;
+    grid-template-columns:var(--fw) var(--rw)!important;grid-template-rows:var(--fh)!important;grid-template-areas:"board side"!important}
+  html:not(.rot) body.dock-open.rvbox-on:not(.ol-soon) .app{grid-template-rows:calc(var(--fh) * .45 - 5px) calc(var(--fh) * .55 - 5px)!important;grid-template-areas:"board side" "board bx"!important}
+  html body.dock-open:not(.ol-soon) .side{display:block!important;grid-area:side;height:0!important;min-height:100%!important;max-height:none!important;align-self:stretch!important;overflow-y:auto!important;scrollbar-width:thin}
+  body.dock-open:not(.ol-soon) .side-in{display:flex!important;flex-direction:column;gap:10px;min-height:100%}
+  body.dock-open:not(.ol-soon) .side-in > *{flex:none!important}
+  body.dock-open:not(.ol-soon) .side-in > :is(.review-card,.hint-card).show{max-height:150px}
+  body.dock-open:not(.ol-soon) .side-in > .kifu-card{flex:1 0 auto!important;min-height:110px!important}
+  body.dock-open:not(.ol-soon) .players .pl-head, body.dock-open:not(.ol-soon) .players .pl-info{display:none!important}
+  body.dock-open:not(.ol-soon) .players .player{padding:4px 12px!important}
+  html.dock-compact body.dock-open:not(.ol-soon) .side #graph{display:none!important}   /* short window: no graph, so 棋譜 fits */
+  @media (min-height: 1000px){ html.dock-compact body.dock-open:not(.ol-soon) .side #graph{display:block!important;flex:none!important;height:50px!important} }
+  /* with the review box in the column too: 対局者, 棋譜, 形勢 (the box has the commentary; the summary card steps aside) */
+  body.dock-open.rvbox-on:not(.ol-soon) .side-in > .players{order:1}
+  body.dock-open.rvbox-on:not(.ol-soon) .side-in > .kifu-card{order:2;min-height:90px!important}
+  body.dock-open.rvbox-on:not(.ol-soon) .side-in > #evalCard{order:3}
+  body.dock-open.rvbox-on:not(.ol-soon) .side-in > .review-card{display:none!important}
+  html.dock-compact body.dock-open.rvbox-on:not(.ol-soon) .side #graph{display:none!important}
+  body.dock-open.rvbox-on:not(.ol-soon) .board-area{align-self:center}
+  body.dock-open.rvbox-on:not(.ol-soon) .rvbox{grid-template-columns:minmax(0,1fr)!important;align-content:start;overflow-y:auto;padding:10px 12px!important;gap:8px!important}
+  body.dock-open.rvbox-on:not(.ol-soon) .rvbox .bx-r{border-inline-start:none;padding-inline-start:0}
+  body.dock-open.rvbox-on:not(.ol-soon) .rvbox .bx-body{flex:none;overflow:visible}
 }
 /* review commentary (all layouts) */
 .rv-cur{margin:10px 0 4px;padding:10px 12px;border-radius:12px;border:1px solid rgba(201,169,97,.35);background:linear-gradient(160deg,rgba(201,169,97,.10),rgba(0,0,0,.18))}
@@ -1319,7 +1350,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="app.js?v=20261028below1tl"></script>
+<script src="app.js?v=20261028big2"></script>
 <script src="op.js?v=20261021op"></script>
 <script src="online-ui.js?v=20261028L9"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
