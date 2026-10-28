@@ -219,7 +219,7 @@ function frameRule(x) {
 let sheet = null;
 function css() {
   if (sheet) return sheet;
-  const base = `#board{isolation:isolate}#board::before{content:'';position:absolute;inset:calc(var(--cs) * -.32);z-index:-1;border-radius:6px;pointer-events:none}
+  const base = `#board{isolation:isolate}#board::before{content:'';position:absolute;inset:calc(var(--cs) * -.32);z-index:-1;border-radius:calc(4px + var(--cs) * .32);pointer-events:none}
 .frp{display:block;width:100%;aspect-ratio:1.4;border:2px solid #2a2622;border-radius:6px;position:relative}
 .frp::after{content:'';position:absolute;inset:18%;background:#e2ded4;border:1.5px solid rgba(0,0,0,.35);border-radius:2px}`;
   sheet = base + FLOORS.filter(f => f.kind).map(floorRule).join('') + FRAMES.map(frameRule).join('');
