@@ -5,20 +5,22 @@
 const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
-const FELTS = ['green', 'blue', 'wine', 'charcoal', 'teal', 'purple', 'walnut', 'linen'];
-const BACKS = ['ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'skull', 'skullBlack', 'red', 'blue', 'gangsta', 'crimson', 'navy'];
-const COURTS = ['classic', 'antique', 'flat', 'gangsta'];
+const FELTS = ['teal', 'green', 'blue', 'wine', 'charcoal', 'purple', 'walnut', 'linen'];
+const BACKS = ['ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'red', 'blue', 'gangsta', 'skull', 'skullBlack', 'crimson', 'navy'];
+const COURTS = ['gangsta', 'classic', 'antique', 'flat'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'ornate', face: 'classic', court: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'teal', back: 'ornate', face: 'classic', court: 'gangsta', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
 if (D.set.backV !== 2 || !BACKS.includes(D.set.back)) { D.set.back = 'ornate'; D.set.backV = 2; }   // the default back became Arabesque (2026-10-29)
 document.documentElement.dataset.back = D.set.back;
 D.set.face = 'classic'; document.documentElement.dataset.face = 'classic';   // the card-face picker was removed
-if (!COURTS.includes(D.set.court)) D.set.court = 'classic';
+if (D.set.defV !== 3) { D.set.court = 'gangsta'; D.set.felt = 'teal'; D.set.defV = 3; }   // new defaults (2026-10-29): Gangsta cards on a teal table
+if (!COURTS.includes(D.set.court)) D.set.court = 'gangsta';
+document.documentElement.dataset.felt = D.set.felt;
 document.documentElement.dataset.court = D.set.court;
 D.stats = D.stats || {}; D.daily = D.daily || {}; D.bank = D.bank || 0;
 function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
@@ -469,8 +471,8 @@ function gIcon(v) { return GICON[v] || '<svg viewBox="0 0 54 44"><rect x="12" y=
 function renderSide() {
   if (!st) return;
   const r = rec(st.v, statKey()), dk = dailyKey(), dd = D.daily[dk] || {};
-  let h = `<div class="card keys-card"><h3>${esc(t('side.keys'))}</h3><div class="keys">${t('keys')}</div></div>`;
-  h += `<div class="card"><h3>${esc(t('side.stats'))}<span class="h3s">${esc(vName(st.v))}・${esc(diffLabel())}</span></h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><button type="button" class="sd" data-act="copy">${esc(t('copy'))}</button><span class="sp"></span><button type="button" class="sbtn" data-act="restart" id="sRestart">↺ ${esc(t('restart'))}</button><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
+  let h = `<div class="card"><h3>${esc(t('side.stats'))}<span class="h3s">${esc(vName(st.v))}・${esc(diffLabel())}</span></h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><button type="button" class="sd" data-act="copy">${esc(t('copy'))}</button><span class="sp"></span><button type="button" class="sbtn" data-act="restart" id="sRestart">↺ ${esc(t('restart'))}</button><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
+  h += `<div class="card keys-card"><h3>${esc(t('side.keys'))}</h3><div class="keys">${t('keys')}</div></div>`;
   h += `<div class="card"><h3>${esc(t('side.daily'))}<span class="h3s">${dk}</span></h3><div class="daily-list">` + S.ORDER.map(v => `<div class="dl-item"><span class="dl-ico">${gIcon(v)}</span><span class="nm">${esc(vName(v))}</span>${dd[v] ? `<span class="ok">✓ ${fmtT(dd[v].t)}</span>` : ''}<button class="sbtn${dd[v] ? '' : ' go'}" data-daily="${v}">${esc(t(dd[v] ? 'daily.again' : 'daily.play'))}</button></div>`).join('') + `</div><div class="deal-row">${esc(t('daily.streak', { n: dailyStreak() }))}</div></div>`;
   $('#side').innerHTML = h;
   $('#sStats').onclick = () => openStats(st.v);
@@ -511,6 +513,8 @@ function openNew() {
 function draftFor(v) { const p = JSON.parse(JSON.stringify(prefOf(v))); p.no = NG.p.no; return p; }
 function seg(items, cur, attr) { return `<div class="seg">${items.map(([val, lab, dis]) => `<button type="button" data-${attr}="${esc(val)}" class="${String(val) === String(cur) ? 'sel' : ''}"${dis ? ' disabled' : ''}>${esc(lab)}</button>`).join('')}</div>`; }
 let ngTab = 'game';
+const pips = d => { const n = { easy: 1, normal: 2, hard: 3, expert: 4 }[d]; return n ? '♦'.repeat(n) + '<s>' + '♦'.repeat(4 - n) + '</s>' : '✎'; };
+document.addEventListener('click', e => { if (!e.target.closest('.dsel')) document.querySelectorAll('.dsel.open').forEach(x => x.classList.remove('open')); });
 function renderNew() {
   const v = NG.v, V = S.VARIANTS[v], p = NG.p;
   const TABS = ['game', 'rules', 'design'];
@@ -519,7 +523,9 @@ function renderNew() {
   if (ngTab === 'game') {
     h = `<div class="ng-games">` + S.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><ul>${t('vf.' + id).split('|').map(x => `<li>${esc(x)}</li>`).join('')}</ul><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>`;
   } else if (ngTab === 'rules') {
-    const dsel = `<select id="ngDiff" class="nsel">${DIFFS.concat(['custom']).map(d => `<option value="${d}"${d === p.diff ? ' selected' : ''}>${esc(t('diff.' + d))}</option>`).join('')}</select>`;
+    const dd = d => t('dd.' + v + '.' + d) !== 'dd.' + v + '.' + d ? t('dd.' + v + '.' + d) : t('dd.custom');
+    const dsel = `<div class="dsel" id="ngDiff"><button type="button" class="dsel-btn" aria-haspopup="listbox"><b>${esc(t('diff.' + p.diff))}</b><i class="dsel-pips">${pips(p.diff)}</i><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>` +
+      `<div class="dsel-list" role="listbox">${DIFFS.concat(['custom']).map(d => `<button type="button" role="option" data-dv="${d}" class="${d === p.diff ? 'sel' : ''}"><span><b>${esc(t('diff.' + d))}</b><i class="dsel-pips">${pips(d)}</i></span><small>${esc(dd(d))}</small></button>`).join('')}</div></div>`;
     const ddesc = t('dd.' + v + '.' + p.diff) !== 'dd.' + v + '.' + p.diff ? t('dd.' + v + '.' + p.diff) : t('dd.custom');
     const deal = p.deal === 'daily' ? 'random' : p.deal;
     h = `<div class="rl-top"><div class="rl-box"><span class="lab">${esc(t('new.diffSel'))}</span>${dsel}<p class="diff-desc">${esc(ddesc)}</p></div>` +
@@ -534,7 +540,10 @@ function renderNew() {
   $$('#ngTabs [data-tab]').forEach(b => b.onclick = () => { ngTab = b.dataset.tab; renderNew(); $('#ngBody').scrollTop = 0; });
   $$('#ngBody [data-g]').forEach(b => b.onclick = () => { if (NG.v !== b.dataset.g) { NG.v = b.dataset.g; NG.p = draftFor(NG.v); } renderNew(); });
   $$('#ngBody [data-g]').forEach(b => b.ondblclick = () => $('#btnStart').click());
-  const ds = $('#ngDiff'); if (ds) ds.onchange = () => { const d = ds.value; if (d === 'custom') NG.p.diff = 'custom'; else applyPreset(NG.v, NG.p, d); renderNew(); };
+  const ds = $('#ngDiff'); if (ds) {
+    ds.querySelector('.dsel-btn').onclick = e => { e.stopPropagation(); ds.classList.toggle('open'); };
+    ds.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { const d = b.dataset.dv; if (d === 'custom') NG.p.diff = 'custom'; else applyPreset(NG.v, NG.p, d); renderNew(); });
+  }
   $$('#ngBody [data-deal]').forEach(b => b.onclick = () => { NG.p.deal = b.dataset.deal; renderNew(); });
   (V.opts || []).forEach(x => $$('#ngBody [data-o-' + x.k + ']').forEach(b => b.onclick = () => { const raw = b.getAttribute('data-o-' + x.k); NG.p.o[x.k] = typeof x.def === 'number' ? +raw : raw; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); }));
   $$('#ngBody [data-undo]').forEach(b => b.onclick = () => { NG.p.undo = b.dataset.undo; NG.p.diff = matchPreset(NG.v, NG.p); renderNew(); });
@@ -546,7 +555,7 @@ function designHtml() {
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
   const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${Table.FULL_DECKS.includes(k) ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${Table.FULL_DECKS.includes(k) ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div>`;
+  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div><div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
@@ -578,15 +587,23 @@ $('#btnStart').onclick = () => {
 };
 
 /* settings */
+const CREDIT_HTML = () => `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a><br>${esc(t('credit2'))}<br><a href="https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm" target="_blank" rel="noopener">Illustration online gambling</a>・<a href="https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm" target="_blank" rel="noopener">Poker cards icons collection</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm" target="_blank" rel="noopener">Hand drawn playing card back design</a>・<a href="https://www.magnific.com/free-vector/deck-gangsta-playing-cards_8083771.htm" target="_blank" rel="noopener">Deck gangsta playing cards</a>・<a href="https://www.magnific.com/free-vector/casino-concept-with-skull_8224553.htm" target="_blank" rel="noopener">Casino concept with skull</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943756.htm" target="_blank" rel="noopener">Hand drawn card back (2)</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943770.htm" target="_blank" rel="noopener">Hand drawn card back (3)</a>：Designed by Freepik</p>`;
+let setTab = 'play';
 function openSettings() {
-  const ch = (k, lab) => `<label class="chk"><input type="checkbox" data-k="${k}"${set[k] ? ' checked' : ''}>${esc(lab)}</label>`;
-  $('#setBody').innerHTML =
-    `<div class="sec"><span class="lab">${esc(t('set.auto'))}</span>${seg([['off', t('set.auto.off')], ['safe', t('set.auto.safe')], ['all', t('set.auto.all')]], set.auto, 'auto')}</div>` +
-    `<div class="sec"><span class="lab">${esc(t('set.tap'))}</span>${seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')}</div>` +
-    `<div class="sec"><span class="lab">${esc(t('set.speed'))}</span>${seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')}</div>` +
-    `<div class="sec">${ch('anim', t('set.anim'))}${ch('hl', t('set.hl'))}${ch('timer', t('set.timer'))}${ch('score', t('set.score'))}${ch('left', t('set.left'))}${ch('sound', t('set.sound'))}</div>` +
-    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a><br>${esc(t('credit2'))}<br><a href="https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm" target="_blank" rel="noopener">Illustration online gambling</a>・<a href="https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm" target="_blank" rel="noopener">Poker cards icons collection</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm" target="_blank" rel="noopener">Hand drawn playing card back design</a>・<a href="https://www.magnific.com/free-vector/deck-gangsta-playing-cards_8083771.htm" target="_blank" rel="noopener">Deck gangsta playing cards</a>・<a href="https://www.magnific.com/free-vector/casino-concept-with-skull_8224553.htm" target="_blank" rel="noopener">Casino concept with skull</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943756.htm" target="_blank" rel="noopener">Hand drawn card back (2)</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943770.htm" target="_blank" rel="noopener">Hand drawn card back (3)</a>：Designed by Freepik</p>`;
+  const sw = (k, lab, help) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div><label class="tgl"><input type="checkbox" data-k="${k}"${set[k] ? ' checked' : ''}><i></i></label></div>`;
+  const row = (lab, help, html) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div>${html}</div>`;
+  $('#setTabs').innerHTML = ['play', 'design'].map(k => `<button type="button" class="${k === setTab ? 'sel' : ''}" data-st="${k}">${esc(t(k === 'play' ? 'tab.play' : 'tab.design'))}</button>`).join('');
+  let h;
+  if (setTab === 'play') h = `<div class="set-cols"><div class="rl-list">` +
+      row(t('set.auto'), t('set.auto.h'), seg([['off', t('set.auto.off')], ['safe', t('set.auto.safe')], ['all', t('set.auto.all')]], set.auto, 'auto')) +
+      row(t('set.tap'), t('set.tap.h'), seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')) +
+      row(t('set.speed'), '', seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')) +
+      `</div><div class="rl-list">` + sw('anim', t('set.anim')) + sw('hl', t('set.hl')) + sw('timer', t('set.timer')) + sw('score', t('set.score')) + sw('left', t('set.left')) + sw('sound', t('set.sound')) +
+      `</div></div>` + CREDIT_HTML();
+  else h = designHtml();
+  $('#setBody').innerHTML = h;
   const body = $('#setBody');
+  $$('#setTabs [data-st]').forEach(b => b.onclick = () => { setTab = b.dataset.st; openSettings(); });
   body.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { set.auto = b.dataset.auto; save(); openSettings(); });
   body.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { set.tap = b.dataset.tap; TB.select(null); save(); openSettings(); });
   body.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { set.speed = b.dataset.speed; applySpeed(); save(); openSettings(); });
@@ -596,8 +613,8 @@ function openSettings() {
     if (k === 'left' && st) { st.L = S.VARIANTS[st.v].layout(layoutOpts(st.o)); TB.set(st); }
     save(); renderAll();
   });
-  wireDesign(body);
-  openOv('#setOverlay');
+  if (setTab === 'design') wireDesign(body);
+  if (!$('#setOverlay').classList.contains('show')) openOv('#setOverlay');
 }
 function applySpeed() { document.documentElement.style.setProperty('--mt', (mt() || 1) / 1000 + 's'); }
 $('#btnSetClose').onclick = () => closeOv('#setOverlay');
