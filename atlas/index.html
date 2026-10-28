@@ -462,7 +462,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .item.sel{outline:4px solid var(--sky);outline-offset:-2px}
 .dbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.dbar .seg{margin:0}
 .dsort{display:flex;gap:4px;padding:4px;border-radius:99px;background:#fff;border:2px solid var(--line)}.dsort button{border:0;background:none;font:inherit;font-weight:800;font-size:13px;color:var(--ink2);padding:6px 12px;border-radius:99px;cursor:pointer}.dsort button[aria-pressed=true]{background:var(--ink);color:#fff}
-#dItems .item.sel{position:relative}#dItems .item.sel::after{content:'✓';position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;font-size:15px;display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .price{display:inline-flex;align-items:center;gap:4px}
 .price i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .shophead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -593,16 +592,46 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 /* ---------- dress ---------- */
 .dress{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:760px){.dress{grid-template-columns:1fr}}
-.dprev{padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;position:sticky;top:90px;overflow:hidden}
+.dprev{padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;position:sticky;top:90px;overflow:hidden}
 .dprev .bgfill{position:absolute;inset:0;opacity:.85}
 .dprev > *:not(.bgfill){position:relative}
-@media (max-width:760px){.dprev{position:relative;top:auto;flex-direction:row}}
-.dprev .dname{text-align:center;padding:8px 18px 9px;border-radius:16px;background:rgba(255,253,247,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9)}
-.dprev .dname b{font-size:20px;color:var(--ink)}.dprev .dname .gnote{color:#5a6078;font-weight:700}
-.dprev.dark .dname{background:rgba(22,26,44,.72);border-color:rgba(255,255,255,.18)}.dprev.dark .dname b,.dprev.dark .dname .gnote{color:#fff}
+/* worn names: player + character / background / frame, beside (phone) or under (PC) the character */
+.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,253,247,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
+.dprev .dpl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:2px dashed rgba(0,0,0,.08)}
+.dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dprev .dpl .gnote{color:#5a6078;flex:none}
+.dprev .dw{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
+.dprev .dw.on{background:rgba(54,180,255,.14)}
+.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;min-width:4.2em;white-space:nowrap}
+.dprev .dw b{font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dprev .dw .rar{position:static;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
+.dprev.dark .dname{background:rgba(22,26,44,.74);border-color:rgba(255,255,255,.18)}.dprev.dark .dpl b,.dprev.dark .dpl .gnote,.dprev.dark .dw b,.dprev.dark .dw .dwk{color:#fff}.dprev.dark .dpl{border-color:rgba(255,255,255,.15)}
+@media (max-width:760px){
+  .dprev{position:relative;top:auto;flex-direction:row;padding:12px;gap:10px}
+  .dprev .poke{flex:none}
+  .dprev .dname{flex:1;min-width:0;padding:8px 10px;gap:3px}
+  .dprev .dpl b{font-size:15px}
+  .dprev .dw{font-size:12px;gap:6px}.dprev .dw .dwk{min-width:0;font-size:10px}
+}
+/* the item list: a compact icon grid (rarity = border colour, lock = not owned yet, check = worn) */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:12px}
+@media (max-width:760px){.dgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}}
+.dic{position:relative;display:block;aspect-ratio:1;padding:3px;border:0;border-radius:16px;background:var(--rc);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1)}
+.dic .art{display:grid;place-items:center;width:100%;height:100%;border-radius:13px;background:#f6efdd;overflow:hidden}
+.dic .art svg{width:86%;height:86%}.dic[data-kind=bg] .art svg{width:100%;height:100%}
+.dic.r3 .art{background:radial-gradient(circle at 50% 40%,#fff,#f3e6ff)}.dic.r4 .art{background:radial-gradient(circle at 50% 40%,#fffbe8,#ffe7a8)}
+.dic .rl{position:absolute;left:3px;bottom:3px;font-family:var(--round);font-weight:700;font-size:9px;line-height:1;color:#fff;padding:2px 4px 2px 3px;border-radius:0 7px 0 12px;background:var(--rc)}
+.dic.locked{opacity:.92}.dic.locked .art{background:#eceae4}.dic.locked .art svg{filter:brightness(0) opacity(.13)}
+.dic .lk{position:absolute;right:5px;top:5px;width:18px;height:18px;border-radius:50%;background:rgba(43,48,68,.72);color:#fff;display:grid;place-items:center}.dic .lk svg{width:11px;height:11px}
+.dic.sel{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--sky)}
+.dic.sel::after{content:'✓';position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;font-size:13px;display:grid;place-items:center;border:2px solid #fff}
+.dic:not(.locked):not(.sel):hover{transform:translateY(-3px)}.dic:active{transform:scale(.94)}
+@media (max-width:760px){.dic{border-radius:13px;padding:2.5px}.dic .art{border-radius:11px}.dic .rl{font-size:8px}.dic .lk{width:15px;height:15px;right:3px;top:3px}.dic .lk svg{width:9px;height:9px}}
+/* unowned item info sheet */
+.sheet.dsh{width:min(380px,100%)}
+.dinfo .item{width:150px;margin:0 auto 12px}.dinfo h3{margin:0 0 4px}.dinfo .dget{font-size:14px;font-weight:700;color:var(--ink2);margin:12px 0 16px}
+.dinfo .dbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 /* dress-up preview: tap the character → it reacts (hop / spin / wiggle / squish / dance / flip) */
 .dprev .poke{border:0;padding:0;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
-#dItems .item.wearable{cursor:pointer;transition:transform .15s}#dItems .item.wearable:hover{transform:translateY(-3px)}#dItems .item.wearable:active{transform:scale(.97)}
 .dprev .poke .av-ch{transform-box:fill-box;transform-origin:50% 90%;animation:avIdle 3.2s ease-in-out infinite}
 @keyframes avIdle{50%{transform:scale(1.025,.975)}}
 .dprev .poke.p-hop .av-ch{animation:avHop .9s cubic-bezier(.3,.7,.4,1)}
@@ -920,7 +949,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
     <h2 class="h" id="hDress"></h2>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
-      <div><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div><div class="items" id="dItems"></div></div>
+      <div><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div><div class="dgrid" id="dItems"></div></div>
     </div>
   </section>
 
@@ -945,7 +974,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas.js?v=20261028ckpz"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261022ent"></script>
-<script src="i18n.js?v=24"></script>
+<script src="i18n.js?v=25"></script>
 <script src="table3d.js?v=68"></script>
 <script src="models/shogi.js?v=22"></script>
 <script src="models/chess.js?v=8"></script>
@@ -976,6 +1005,6 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
-<script src="app.js?v=114"></script>
+<script src="app.js?v=115"></script>
 </body>
 </html>
