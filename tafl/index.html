@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-tafl') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'birch'; document.documentElement.dataset.pcs = S.pcs || 'bone'; } catch (e) {}</script>
 <script>/* phones (portrait): freeze the height the board is sized from, so it doesn't grow/shrink while the browser bars slide away on scroll; re-measured only when the width changes (rotation) */
 (function () { const R = document.documentElement, mq = matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)'); let w = 0;
@@ -1167,7 +1168,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=7"></script>
+<script src="../shared/rulesoffer.js?v=8"></script>
 <script src="../shared/headerbar.js?v=29"></script>
 <script src="../shared/cardbar.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1179,8 +1180,21 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=2"></script>
-<script src="app.js?v=20261028rbwp1tfrptl"></script>
+<script src="app.js?v=20261028rbwp1tfrptlsk"></script>
 <script src="online-ui.js?v=1l9"></script>
+<!-- World Board Game Atlas portal skin: tafl/?skin=atlas — 3D viking oak board with carved walnut / bone pieces, guide speech bubbles, portal look (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=22'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=9')).then(() => load('../atlas/skin/tafl.js?v=1'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261028u" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
