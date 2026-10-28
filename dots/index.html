@@ -925,6 +925,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
 <script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/watchpause.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script><!-- only RuleTour.intro() for the rules intro page -->
@@ -1236,6 +1237,7 @@ function renderInfo() {
   $('#btnAnalyze').disabled = !canReview() || !!(rv && rv.running);
   $('#btnShare').disabled = !L.length || !!game.setup;
   $('#btnUndo').disabled = !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = !canHumanMove() || settings.mode === 'watch' || settings.mode === 'online';
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1287,7 +1289,7 @@ function applyMove(e, fromHuman) {
 function next() {
   renderInfo();
   if (S.over) { setTimeout(showResult, 650); return; }
-  if (isAITurn()) aiTurn();
+  if (isAITurn() && !wpPaused) aiTurn();
 }
 function aiTurn() {
   const tok = ++busy;
@@ -1326,7 +1328,23 @@ function canUndo() {
   if (settings.mode === 'pvp') return game.moves.length > 0;
   return S.log.some(x => x.pl === game.human);
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbCons() && !!SF; }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !SF.over, b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || SF.over) return;
+  if (!wpPaused) { wpPaused = true; busy++; cancelAI(); renderInfo(); return; }
+  wpPaused = false; viewPly = null; hintEdge = -1; badEdge = -1;   // resume from the latest position
+  refresh(false); next();
+}
 function undo() {
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   busy++; cancelAI(); cancelAna();
   hintEdge = -1; badEdge = -1; lastEval = null; viewPly = null; rvCancel(); rv = null;
@@ -1341,7 +1359,7 @@ function undo() {
   next();
 }
 function newGame() {
-  busy++; cancelAI(); cancelAna();
+  busy++; cancelAI(); cancelAna(); wpPaused = false;
   hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0; viewPly = null; rvCancel(); rv = null;
   game = { n: settings.size, moves: [], human: settings.order === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.order, setup: null };
   builtFor = '';
@@ -1405,6 +1423,7 @@ document.addEventListener('keydown', ev => {
   const open = [...document.querySelectorAll('.overlay.show')].map(o => o.id);
   if (open.some(id => id !== 'resultOverlay')) return;
   ev.preventDefault();
+  if (wpActive()) { undo(); return; }
   if (!canUndo()) return;
   $('#resultOverlay').classList.remove('show');
   undo();

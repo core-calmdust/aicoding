@@ -1280,6 +1280,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/watchpause.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1833,6 +1834,7 @@ function renderInfo() {
   $('#evalCard').dataset.rtnote = t('rt.noEval');
   if (game.rated && !lesson) { $('#btnUndo').disabled = true; if (!game.over) $('#btnHint').disabled = true; }
   $('#btnAnalyze').disabled = rtLive();
+  wpRender();
   if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
   $('#btnSound').classList.toggle('on', settings.sound);
@@ -1904,7 +1906,7 @@ function newGame(rated) {
   studyEnd(true);
   if (net) leaveOnlineGame();
   rtForfeit();
-  busyToken++; cancelAI(); cancelAna(); rvCancel();
+  busyToken++; cancelAI(); cancelAna(); rvCancel(); wpPaused = false;
   exitLesson(true);
   if (rated && !rated.id) rated = null;
   const vr = window.Variants ? Variants.forGame(rated) : '';   // 5五将棋 / はさみ将棋: always even
@@ -2048,6 +2050,7 @@ async function schedule() {
     showResult(); return;
   }
   const side = P.side, idx = cur;
+  if (wpPaused && isAI(side)) return;   // AI同士: paused
   if (isAI(side)) {
     setStatus(side, t('thinking'), true);
     const t0 = performance.now();
@@ -2158,7 +2161,23 @@ $('#btnPlayResume').onclick = () => { hideOverlay('#playOverlay'); $('#btnResume
 $('#btnPlayNew').onclick = () => { hideOverlay('#playOverlay'); openNewDialog(); };
 $('#btnPlayCancel').onclick = () => hideOverlay('#playOverlay');
 $('#playOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#playOverlay'); });
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !!game && !lesson && !edit && !inStudy() && !net; }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !game.over, b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || game.over) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelAI(); setStatus(0, ''); setStatus(1, ''); renderInfo(); return; }
+  wpPaused = false; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;   // resume from the latest position
+  refresh(false);
+}
 $('#btnUndo').onclick = () => {
+  if (wpActive()) { wpToggle(); return; }
   if (inStudy()) { studyBack(); return; }
   if (!game || !game.moves.length || settings.mode === 'online' || game.rated) return;
   busyToken++; cancelAI(); cancelAna();

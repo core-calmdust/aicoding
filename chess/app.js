@@ -392,6 +392,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? ev.s : 0)) + '%';
   renderGraph(); renderKifu(); hbInfo(pos, st, ev);
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  wpRender();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnFlip').classList.toggle('on', !!settings.flip);
@@ -572,7 +573,7 @@ function commit(m, dragged) {
 function newGame(rated) {
   studyEnd(true);
   if (net) leaveOnlineGame();
-  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   startFen = null;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   rgame = null; coachQ = new Map();
@@ -617,7 +618,7 @@ function playMove(m) {
 }
 function afterPosition() { const tok = ++busyToken; analyzeCurrent(tok); maybeAI(tok); }
 async function maybeAI(tok) {
-  if (lesson || puzzle || reviewing || inStudy() || gameOver(cur)) return;
+  if (lesson || puzzle || reviewing || wpPaused || inStudy() || gameOver(cur)) return;
   const p = toMoveAt(cur); if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now();
@@ -679,7 +680,23 @@ function canUndo() {
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !inStudy(); }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || gameOver(moves.length)) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker('ai'); thinking = 0; renderInfo(); return; }
+  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
+  update(false); afterPosition();
+}
 function undo() {
+  if (wpActive()) { wpToggle(); return; }
   studyEnd();
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;

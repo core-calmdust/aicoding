@@ -1636,6 +1636,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/headerbar.js?v=27"></script>
+<script src="../shared/watchpause.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -2085,6 +2086,7 @@ function renderInfo() {
   document.body.classList.toggle('rated-live', rl);
   $('#evalCard').dataset.rtnote = t('rt.noEval');
   $('#btnUndo').disabled = settings.mode === 'online' || !!net || rtG || settings.mode === 'watch' || !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rl; $('#btnAnalyze').disabled = rl;
   $('#btnHint').classList.toggle('on', settings.hint);
@@ -2172,7 +2174,7 @@ function levelFor(c) { if (rated && settings.mode === 'ai') return rated.lv; ret
 function newGame(r) {
   rtForfeit();
   rated = r && r.id ? r : null;
-  busyToken++; cancelAI(); cancelAna();
+  busyToken++; cancelAI(); cancelAna(); wpPaused = false;
   if (rated) humanColor = Math.random() < 0.5 ? 1 : 2;      // rated: random colour
   else if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
@@ -2217,6 +2219,7 @@ async function schedule(animInfo) {
   setStatus(BLACK, ''); setStatus(WHITE, '');
   if (reviewing || lesson || puzzle || net || (clock && clock.lost) || resignedBy()) return;
   const p = positions[cur];
+  if (wpPaused && p.toMove && isAITurnColor(p.toMove)) return;   // AI同士: paused
   if (animInfo && animInfo.passed) {
     toast(t('pass', { c: cname(animInfo.passer) })); playPass();
   }
@@ -2317,8 +2320,25 @@ function canUndo() {
   for (let i = positions.length - 2; i >= 0; i--) if (positions[i].toMove === humanColor) return true;
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !net && !rbS && positions.length > 0; }
+function wpOver() { return !positions[positions.length - 1].toMove || !!resignedBy() || !!(clock && clock.lost); }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !wpOver(), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || wpOver()) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelAI(); setStatus(BLACK, ''); setStatus(WHITE, ''); renderInfo(); return; }
+  wpPaused = false; cur = positions.length - 1; reviewing = false;   // resume from the latest position
+  update(null);
+}
 function undo() {
   if (rbS) { RBox.back(); return; }
+  if (wpActive()) { wpToggle(); return; }
   if (settings.mode === 'watch' || rtGame() || !canUndo()) return;
   busyToken++; cancelAI(); cancelAna();
   let i = positions.length - 2;

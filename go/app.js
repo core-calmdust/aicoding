@@ -434,6 +434,7 @@ function renderInfo() {
   $('#evalFill').style.width = (ev && !ev.final ? Math.round(ev.wr * 100) : ev && ev.final ? (ev.winner === P1 ? 100 : ev.winner === P2 ? 0 : 50) : 50) + '%';
   renderGraph(); renderKifu(); renderPlaybar(); renderCount();
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = rtLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
@@ -528,7 +529,7 @@ function handicapSpec(n, k) { if (k < 2) return null; return { n, stones: R.hand
 // boards under 9x9 are scored by area (Chinese): their komi is the perfect-play margin, which only works when stones count
 const effRule = (n, rule) => n < 9 ? 'cn' : rule;
 function newGame(rated) {
-  busyToken++; cancelWorker(); thinking = 0;
+  busyToken++; cancelWorker(); thinking = 0; wpPaused = false;
   rgame = null; rtHold = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], byo: [0, 0], t: Date.now() });
   const n = rated ? RT_SIZE : settings.size, rule = effRule(n, settings.rule), ha = rated ? 0 : settings.ha;
@@ -558,7 +559,7 @@ function afterPosition() {
 }
 let aiErrs = 0;
 async function maybeAI(tok) {
-  if (lesson || puzzle || reviewing || gameOver(cur) || isCounting(cur)) return;
+  if (lesson || puzzle || reviewing || wpPaused || gameOver(cur) || isCounting(cur)) return;
   const p = toMoveAt(cur);
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); svg.classList.remove('can');
@@ -726,8 +727,24 @@ function canUndo() {
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !rbS; }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !gameOver(moves.length), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || gameOver(moves.length)) return;
+  if (!wpPaused) { wpPaused = true; busyToken++; cancelWorker(); thinking = 0; renderInfo(); return; }
+  wpPaused = false; cur = moves.length; reviewing = false; hintList = null;   // resume from the latest position
+  update(false); afterPosition();
+}
 function undo() {
   if (rbS) { RBox.back(); return; }
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   busyToken++; cancelWorker(); thinking = 0;
   let i = cur - 1;

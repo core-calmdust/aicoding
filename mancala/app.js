@@ -662,6 +662,7 @@ function renderInfo() {
   $('#evalFill').style.width = (50 + 50 * (ev ? sq(ev.v) : 0)) + '%';
   renderGraph(); renderKifu();
   $('#btnUndo').disabled = !canUndo();
+  wpRender();
   $('#btnResign').disabled = !canResign();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnHint').disabled = settings.mode === 'watch' || settings.mode === 'online';
@@ -737,7 +738,7 @@ function update() {
 
 // ====================================================================== flow
 function newGame() {
-  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay();
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay(); wpPaused = false;
   rvCancel(); rv = null; rvOpen = false;
   const human = settings.color === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
   game = { rules: settings.rules, seeds: settings.seeds, moves: [], human, setup: null, resigned: null };
@@ -801,6 +802,7 @@ function afterPosition() {
   if (lesson || puzzle) return;
   if (settings.mode === 'online') { if (!(window.olNoAna && olNoAna())) analyzeCurrent(tok); return; }   // online: the result comes from online-ui.js; no analysis while it is played
   if (resignedNow()) { if (reviewing) analyzeCurrent(tok); return; }
+  if (wpPaused && !reviewing && isAISide(p.side)) return;
   if (!reviewing && isAISide(p.side)) maybeAI(tok);
   else analyzeCurrent(tok);
 }
@@ -888,7 +890,28 @@ function canUndo() {
   for (let i = cur - 1; i >= 0; i--) if (P[i].side === game.human) return true;
   return false;
 }
+// AI同士 (watch): the 待った button is 停止 / 再開 (shared/watchpause.js); Ctrl+Z toggles it too
+var wpPaused = false;
+function wpActive() { return settings.mode === 'watch' && !lesson && !puzzle && !inStudy() && P.length > 0; }
+function wpOver() { return P[game.moves.length].over || resignedNow(); }
+function wpRender() {
+  if (settings.mode !== 'watch') wpPaused = false;
+  const on = wpActive() && !wpOver(), b = $('#btnUndo');
+  if (window.WatchPause) WatchPause.set(b, on ? (wpPaused ? 'resume' : 'pause') : null, LANG);
+  if (on) b.disabled = false;
+}
+function wpToggle() {
+  if (!wpActive() || wpOver()) return;
+  if (!wpPaused) {
+    wpPaused = true; busyToken++; cancelWorker('ai'); thinking = -1;
+    if (animating && !reviewing) { stopAnim(); cur = game.moves.length; fxMarks = []; update(); save(); }   // a sowing in progress finishes at once
+    renderInfo(); return;
+  }
+  wpPaused = false; stopAnim(); cur = game.moves.length; reviewing = false; fxMarks = [];   // resume from the latest position
+  update(); afterPosition();
+}
 function undo() {
+  if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = -1; stopAnim(); stopPlay();
   let i = cur - 1;
