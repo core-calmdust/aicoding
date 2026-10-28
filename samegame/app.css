@@ -1382,3 +1382,7 @@ body[data-screen="play"] #app{padding-bottom:0}
 @media (max-width:400px){ .top #langSel{margin-inline:5px} }
 /* dialog close button: the ✕ is an SVG centred in the square (the text glyph sat low) */
 .mx svg{width:20px;height:20px;display:block}
+
+/* language picker inside the settings dialog (the header has ? / settings / home, like the sudoku apps) */
+.sw.lrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sw.lrow #langSel{width:auto!important;min-width:128px;margin:0!important;font-size:15px!important;height:36px;padding:0 8px!important}
