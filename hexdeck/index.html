@@ -1467,6 +1467,8 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 .mp-lv button:not(.on):hover{border-color:var(--gold2);color:var(--gold2)}
 .mp-lv{margin:8px 0 0}
 .status .kncancel{margin-left:10px;padding:4px 14px;font-size:13px;pointer-events:auto}
+.buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:4.3s}
+@media (prefers-reduced-motion:reduce){.buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:1.3s}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -1577,7 +1579,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const SEVENS_DEFAULT = 2;
   const BONUS_DEFAULT = { 2: [0, 0], 3: [0, 0, 0], 4: [0, 0, 0, 0] };
   const EXTRA_ROADS = { 2: [0, 0], 3: [0, 1, 0], 4: [0, 1, 1, 2] };
-  const DRAFT_ROADS = {};   // 2026-10-28：＋1廃止に合わせて3人戦の道の補正も廃止（旧 3: [0, 1, 2]）   // 2026-10-25：3人戦の手番の補正（2番手に道+1、3番手に道+2）
+  const DRAFT_ROADS = { 3: [0, 1, 0], 4: [0, 1, 1, 1] };   // 2026-10-28：相場を1周ごとにしたら先手有利に（4人 29.3/25.4/22.6/22.7%）→ 4人は2〜4番手、3人は2番手に道+1（23.5/27.4/24.1/25.0%、3人 31.0/35.1/33.9%）   // 2026-10-28：＋1廃止に合わせて3人戦の道の補正も廃止（旧 3: [0, 1, 2]）   // 2026-10-25：3人戦の手番の補正（2番手に道+1、3番手に道+2）
   const HANDMAX_DEFAULT = 99;   // v1.2：手札の上限なし（資源＋手札14枚以上のバーストが実質の上限）
   const MARKET_LADDER = [2, 3, 4, 5, 5];
   const MIL = 9, SZ = 10;   // SZ：収奪の札（案）
@@ -1629,7 +1631,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       id: 'horn', name: '蛮族の角笛', goal: 12,
       barb: { base: 1.5, baseN: { 3: 1.25 }, cityDiv: 2, range: 2, from: 1, defArmy: 'none' },   // 強さ＝時代の番号×1.5（四捨五入）＋先頭の都市数÷2（切り上げ）。from：この時代から予告
       defSet: [1, 2],                             // 守備に使える札：1（騎士）と 2（守備兵：守備専用）
-      draftRoads: { 3: [0, 1, 2], 4: [0, 0, 1, 1] },            // 手番の補正：3・4番手に道+1（4000局：25.2/24.2/26.3/24.4%）
+      draftRoads: { 3: [0, 1, 2], 4: [0, 2, 2, 3] },   // 2026-10-28：相場1周ごとで再調整（4人 25.3/27.0/25.3/22.5%）  旧            // 手番の補正：3・4番手に道+1（4000局：25.2/24.2/26.3/24.4%）
       mercCost: { sheep: 1, wheat: 1, ore: 1 },   // 傭兵：守備+1（1手番1回）
       medalVP: 1,
       eraSeq: [], eraFirst: [],
@@ -1655,7 +1657,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       specAdd: { jeweler: 2 }, specDel: [],
       gemSell: 1,
       goal: 12,   // 2026-10-28：目標12点（10点＝62ターンで短い）
-      draftRoads: { 4: [1, 1, 0, 0] },   // 手番順の補正：1・2番手に道+1（2000局：補正なし 19.8/24.7/26.2/29.4% → 25.1/26.9/23.0/25.1%）
+      draftRoads: { 4: [0, 0, 0, 0] },   // 2026-10-28：相場1周ごとで補正なしが均衡（22.2/25.2/27.8/24.8%）  旧 [1,1,0,0]：   // 手番順の補正：1・2番手に道+1（2000局：補正なし 19.8/24.7/26.2/29.4% → 25.1/26.9/23.0/25.1%）
     },
   };
   const ringOf = (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
@@ -1850,7 +1852,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     S.marketMode = opts.marketMode !== undefined ? opts.marketMode : 'scarce';   // v1.7：在庫が少ない資源ほど「もらう」のが高い
     S.knights = opts.knights != null ? opts.knights : true;
     S.armyMin = opts.armyMin || 4; S.armyPts = opts.armyPts != null ? opts.armyPts : 2;   // 最大騎士力：必要回数・点数                      // 1の札は騎士を兼ねる
-    S.marketPeriod = opts.marketPeriod || 3; S.box = {}; S.boxPeriod = opts.boxPeriod || 0;
+    S.marketPeriod = opts.marketPeriod || S.n || 4;   // 2026-10-28：相場の更新（在庫の戻し・輸入も）は1周ごと（人数と同じ手番数）
+    S.box = {}; S.boxPeriod = opts.boxPeriod || 0;
     S.rates = {}; RES.forEach(r => { S.rates[r] = opts.marketStart || 4; });            // 1手番に出せる交換の提案            // 組み合わせは何枚でも（既定）
     S.chipMarket = opts.chipMarket != null ? opts.chipMarket : 3;   // 数字チップの市場（公開3枚）
     S.starterSet = opts.starterSet || null;               // 準備の開拓の順（same＝地点を選んだ順／reverse）
@@ -3740,8 +3743,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       : e.k === 'raid' ? `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> の<b>軍</b>が ${vic} の${e.city ? '都市' : '開拓地'}を攻め落とした（+${e.city ? S.raidVPCity : S.raidVP}点）`
       : `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> が${took}<b>${H.nm}</b>を手にした（+${H.pts()}点）`;
     buyQ = buyQ.then(() => new Promise(res => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, T = reduce ? 1300 : 2600;
-      const el = document.createElement('div'); el.className = 'buyov honor' + (H.atk ? ' atk' : '') + (H.cls ? ' ' + H.cls : '');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, long = /^barb/.test(e.k), T = reduce ? 1300 : long ? 4300 : 2600;   // 蛮族の演出は長め
+      const el = document.createElement('div'); el.className = 'buyov honor' + (long ? ' long' : '') + (H.atk ? ' atk' : '') + (H.cls ? ' ' + H.cls : '');
       el.innerHTML = `<div class="bx"><div class="bcard" style="--pc:${PHEX[e.p]}"><span class="bic">${H.ic}</span><span class="bnm"${H.nm.length >= 5 ? ' style="font-size:14px;letter-spacing:.04em"' : ''}>${H.nm}</span></div>
         <span class="btl">${H.tl}</span><small class="bq">「${q}」</small><small class="bcap">${cap}</small></div>`;
       document.body.appendChild(el); el.classList.add('go');
@@ -4989,7 +4992,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const C = HD.COST, IC = id => { const e = $(id); const g = e && e.querySelector('svg'); return g ? g.outerHTML : ''; };
     const cost = c => `<span class="rc">${Object.keys(c).filter(r => c[r]).map(r => `<i class="r-${r}" title="${RESN[r]}">${resIcon(r, 16)}<b>${c[r]}</b></i>`).join('')}</span>`;
     const card = (ic, title, body, cls = '') => `<div class="rk ${cls}"><div class="rk-h"><span class="rk-ic">${ic}</span><b>${title}</b></div>${body}</div>`;
-    const ul = xs => `<ul class="rl-ul">${xs.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    const ul = xs => `<ul class="rl-ul">${xs.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ul>`;
     const row = (...c) => `<tr>${c.map(x => `<td>${x}</td>`).join('')}</tr>`;
     const tbl = (head, rows, cls = '') => `<table class="rtb ${cls}"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
     const mapName = S.scen ? S.scen.name : S.bagInner ? '完全ランダム' : S.noDesert ? 'ランダム' : '固定';
@@ -5002,7 +5005,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       sec('start', 'はじまり', `<p class="rl-lead">土地を開拓して資源と数字を決め、道と建物を広げて、先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに全員共通の<b>アクション札の山</b>を使います。</p>
         <div class="rk-grid">${card(`<span class="rl-mini">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `マップ：${mapName}`, ul([S.noDesert ? '中央も資源の土地（砂漠なし）' : '中央は砂漠（盗賊の居場所）', 'まわりの6つは資源だけ決まっていて<b>数字なし</b>', '外周の12は<b>荒地</b>（資源も数字もなし）']))}
         ${card('🚩', '準備の流れ', flow([['⛺', 'スタート地点', '角を選んで拠点を置く（0点・生産力' + S.campYield + '）'], ['⛏', '無料で開拓', '拠点のとなりの荒地に資源と数字（4〜12）'], [TF.road(), '道を1本', '拠点から伸ばす']]))}</div>
-        ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
+        ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', (() => { const d = S.scen && S.scen.draftRoads && S.scen.draftRoads[S.n] || ({ 3: [0, 1, 0], 4: [0, 1, 1, 1] })[S.n] || []; const t = d.map((x, i) => x ? `${i + 1}番手+${x}` : '').filter(Boolean); return t.length ? `手番順の補正：準備で道を追加（${t.join('・')}）。` : ''; })(), `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
       sec('turn', '手番', flow([[`<span class="tf-deck sm"></span>`, '札を引く', '1枚引く。もう1枚引くか止める（最大2枚）'], [acard(3, 'sm') + acard(5, 'sm'), '数字を出す', '手札の1枚か合計で2〜12。全員が生産'], ['🔨', '建てる・交換', '建設・開拓・交換・特殊カード'], [IC('aEnd'), '終了', '次の人の番へ']]) +
         `<div class="rk-grid">${card(acard(4, 'sm'), 'アクション札', tbl(['札', '枚数', 'メモ'], [row('<b>1〜6</b>', `各${S.face}枚`, '1は騎士も兼ねる'), row('<b>7</b>', `${S.sevens}枚`, '引くとバースト')]))}
         ${card(IC('aTrash'), '処分（山札の圧縮）', ul([`建築の段階に手札の札を捨て札へ戻せる`, `1手番に1枚まで無料、2枚目からは資源${S.trashCost}枚`]))}</div>
@@ -5130,7 +5133,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
           <li>2番目の時代から、時代が始まるたびに<b>蛮族の船</b>が沖に現れる。上陸するのは<b>点が一番高い人の建物が一番多い海岸</b>で、強さは時代が進むほど増え（2→3→5→6…）、先頭の都市が多いほど上がる。どちらも盤上に表示される。</li>
           <li>次の時代に変わるとき（角笛が鳴るとき）、<b>全員の守備の合計</b>と強さを比べる。守備は、<b>騎士で守る</b>（1か2の札を1枚）、<b>傭兵を雇う</b>（${Object.keys(C.mercCost).map(r => RESN[r] + C.mercCost[r]).join('・')}）、範囲にある<b>城壁</b>（1つ+1）で増える。</li>
           <li>守備が強さ以上なら<b>撃退</b>。一番守った人に<b>勲章 +${C.medalVP}点</b>。足りなければ、範囲（赤い輪）に建物がある人のうち<b>一番守っていない人</b>が襲われる：城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li>
-          <li>このシナリオでは<b>2の札が「守備兵」</b>になる（数字の2としても使える）。1の札（騎士）は盗賊を動かす（攻め）か守備隊に送る（守り）かを選べ、2の札は守りにだけ使える。守りに使った札は<b>最大騎士力に数えない</b>（守りの報酬は勲章）。後手は準備で道を追加（4人：3・4番手に+1、3人：2番手+1・3番手+2）。</li>
+          <li>このシナリオでは<b>2の札が「守備兵」</b>になる（数字の2としても使える）。1の札（騎士）は盗賊を動かす（攻め）か守備隊に送る（守り）かを選べ、2の札は守りにだけ使える。守りに使った札は<b>最大騎士力に数えない</b>（守りの報酬は勲章）。後手は準備で道を追加（4人：2・3番手に+2、4番手に+3／3人：2番手+1・3番手+2）。</li>
           <li>目標は<b>${S.goal}点</b>。</li>
         </ul></div></div>
         <div class="foot"><button class="btn primary" id="plGo">上陸する</button></div>`, done);
@@ -5301,7 +5304,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     { id: 'intro', manual: true, h: '遊びながら覚えよう', t: () => `練習用の対局です（相手はBOT3人・目標${S.goal}点）。<br>この枠の指示に沿って、実際に盤を操作してみましょう。光っている所が次に押す場所です。` },
     { id: 'camp', h: '① スタート地点を選ぶ', t: () => '盤の角に光る<b>スタート地点</b>から1つをクリックして<b>拠点</b>を置きます。<br>拠点は0点ですが、接する土地の数字が出ると資源を<b>' + S.campYield + '枚</b>もらえます。', done: () => S.players[HUMAN].camp >= 0, wait: () => S.phase !== 'setup-camp' || S.cur !== HUMAN },
     { id: 'dev', h: '② 荒地を開拓する', t: () => { coachRec(null); const b = coach.best && coachRec(coach.best.h); return '拠点のとなりの光っている<b>荒地</b>をクリックし、<b>資源</b>と<b>数字チップ</b>を選びます（この1回は無料）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。' + (b ? `<span class="co-rec">おすすめ：${b.r ? resIcon(b.r, 18) + RESN[b.r] + '＋' : ''}<b>${b.n}</b>（選ぶ画面にも表示）</span>` : ''); }, done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
-    { id: 'road', h: '③ 道を1本引く', t: () => '拠点から伸びる光った<b>辺</b>をクリックして道を置きます。<br>道の先に、あとで<b>開拓地</b>を建てられます。', done: () => S.players[HUMAN].roads >= 1, wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
+    { id: 'road', h: '③ 道を1本引く', t: () => S.players[HUMAN].roads >= 1 ? '<b>手番順の補正</b>で、後手のあなたはもう1本道を置けます。最初の道の先の光った<b>辺</b>をクリックしてください。' : '拠点から伸びる光った<b>辺</b>をクリックして道を置きます。<br>道の先に、あとで<b>開拓地</b>を建てられます。', done: () => S.phase === 'turn' || (S.players[HUMAN].roads >= 1 && !S.setupSteps.slice(S.setupIdx).some(x => x.p === HUMAN)), wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
     { id: 'watch', h: '④ BOTの番を見る', t: () => 'あなたは最後の手番です。BOTの番を見てみましょう。<br>BOTが数字を出すと、<b>その数字の土地に接する建物を持つ全員</b>が資源をもらえます（あなたも）。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
     { id: 'draw', turn: true, tg: '#deckSlot', h: '⑤ 札を引く', enter: () => { const P = S.players[HUMAN]; if (S.drawn.length) return; const ns = myHexNums(); const want = ns.find(n => n <= 6) || ns[0] || 6; const cards = want <= 6 ? [want] : [want - 6, 6].sort((a, b) => b - a); coach.need = cards.length; coach.want = want;
         for (const c of cards.slice().reverse()) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } void P; },
@@ -5353,7 +5356,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (!coach) return; st = COACH[coach.i]; if (!st) return;
     const waiting = st.wait && st.wait();
     const n = COACH.length - 1, k = Math.min(coach.i, n);
-    const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '');
+    const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
     if (coach.key !== key) {
       coach.key = key;
       coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
