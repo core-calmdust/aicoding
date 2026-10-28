@@ -144,6 +144,17 @@ button:disabled { cursor: default; opacity: .45; }
 .tcard.lockd { filter: grayscale(.7); opacity: .75; }
 .ccard, .mcard { flex-direction: column; align-items: stretch; gap: 8px; }
 .cmain { display: flex; gap: 12px; align-items: center; text-align: start; border: 0; background: none; padding: 0; width: 100%; }
+/* PC: cards in a row share one height, the text block has a fixed layout and the play button sits on the bottom edge */
+@media (min-width: 861px) {
+  .tgrid, .mgrid { align-items: stretch; }
+  .ccard .cmain, .mcard .cmain { flex: 1; align-items: flex-start; }
+  .ccard .tic, .mcard .mic { margin-top: 26px; }
+  .ccard .tt, .mcard .mt { height: 100%; }
+  .ccard .tt small, .mcard .mt small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; min-height: calc(1.35em * 3); }
+  .ccard .tt .bar, .mcard .mt .bar { margin-top: auto; }
+  .ctl { flex-wrap: nowrap; min-height: 26px; } .ctl b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .cont { margin-top: auto; }
+}
 .ccard:active, .mcard:active { transform: none; box-shadow: var(--sh); }
 .cmain:active { opacity: .8; }
 .ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
