@@ -149,7 +149,7 @@ const ACH = [
   ['colAll', () => [Object.keys(DB.own).length + DB.skinOwn.length + DB.frameOwn.length, A.INMATES.length + SK.FLOORS.length + SK.FRAMES.length], 5000],
 ];
 const achReady = () => ACH.filter(([id, f]) => { const [v, g] = f(DB.stats); return v >= g && !DB.ach[id]; }).length;
-function updateBadges() { const on = achReady() ? 'block' : 'none'; $$('#btnAch .dot, [data-go="ach"] .dot').forEach(d => { d.style.display = on; }); }
+function updateBadges() { const on = achReady() ? 'block' : 'none'; $$('[data-go="ach"] .dot, #bnav .dot').forEach(d => { d.style.display = on; }); }
 
 /* ---------------- online ---------------- */
 const ON = window.JBOnline;
@@ -172,19 +172,39 @@ function profCard() {
       <ul class="pst"><li><span>${esc(t('ht.course'))}</span><b>${courseClears()}<small>/${courseTotal() || 900}</small></b></li>
       <li><span>${esc(t('ht.modes'))}</span><b>${SMODES.reduce((a, m) => a + modeCleared(m), 0)}<small>/${SMODES.length * MODE_N}</small></b></li>
       <li><span>${esc(t('pf.esc'))}</span><b>${fmt(DB.stats.esc)}</b></li><li><span>${esc(t('pf.perfect'))}</span><b>${fmt(DB.stats.perfect)}</b></li></ul>
-      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.locker}<span>${esc(t('ga.title'))}</span></button><button class="btn" data-go="book">${A.ICON.book}<span>${esc(t('bk.title'))}</span></button><button class="btn" data-go="ach">${A.ICON.trophy}<span>${esc(t('ach.title'))}</span><i class="dot"></i></button><button class="btn" data-go="rank">${A.ICON.rank}<span>${esc(t('rk.title'))}</span></button></div></div>`;
-  $$('[data-go]', $('#profCard')).forEach(b => { b.onclick = () => ({ gacha: openGacha, book: () => openBook(), ach: openAch, rank: () => openRank('m') })[b.dataset.go](); });
+      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.locker}<span>${esc(t('ga.title'))}</span></button><button class="btn" data-go="book">${A.ICON.book}<span>${esc(t('bk.title'))}</span></button><button class="btn" data-go="ach">${A.ICON.trophy}<span>${esc(t('ach.title'))}</span><i class="dot"></i></button><button class="btn" data-go="rank">${A.ICON.rank}<span>${esc(t('rk.title'))}</span></button><button class="btn" data-go="rules">${A.ICON.modes}<span>${esc(t('u.rules'))}</span></button><button class="btn" data-go="tut">${A.ICON.help}<span>${esc(t('help'))}</span></button></div></div>`;
+  $$('[data-go]', $('#profCard')).forEach(b => { b.onclick = () => ({ gacha: () => openGacha(), book: () => openBook(), ach: openAch, rank: () => openRank('m'), rules: () => openRules(), tut: () => tutorial() })[b.dataset.go](); });
   $('#pfEdit').onclick = () => openProfile();
 }
+/* phones (portrait): one section at a time + a fixed tab bar at the bottom. The profile card and the calendar move into
+   マイページ and the Lucky Locker gets a tab of its own. PC / tablet keep the original layout. */
+const PHONE = matchMedia('(max-width:760px)');
+const UICON = '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const BNAV = [['daily', 'ht.daily', 'daily'], ['course', 'ht.course', 'course'], ['modes', 'ht.modes', 'modes'], ['gacha', 'ht.gacha', 'locker'], ['me', 'ht.me', 'user']];
+function layoutHome() {
+  const ph = PHONE.matches, me = $('.hpanel.me');
+  if (ph) { if ($('#profCard').parentNode !== me) me.append($('#profCard'), $('#dCal')); }
+  else if ($('#profCard').parentNode === me) { $('#home').prepend($('#profCard')); $('#dBox').append($('#dCal')); }
+  document.body.classList.toggle('phnav', ph);
+}
 function renderHome() {
+  layoutHome();
+  if (!PHONE.matches && (homeTab === 'gacha' || homeTab === 'me')) homeTab = 'daily';
   profCard(); updateCoins(); updateBadges();
   $$('#htabs button').forEach(b => b.classList.toggle('on', b.dataset.p === homeTab));
+  $$('#bnav button').forEach(b => { const on = b.dataset.p === homeTab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   $$('.hpanel').forEach(p => { p.hidden = p.dataset.p !== homeTab; });
+  if (homeTab === 'gacha') openGacha($('#gachaPanel'));
   if (!ST || !DL) { $('#dBox').innerHTML = `<p class="note">${esc(t('err.load'))}</p>`; return; }
-  if (homeTab === 'daily') renderDaily();
+  if (homeTab === 'daily' || homeTab === 'me') renderDaily();
   if (homeTab === 'course') courseOpenId ? renderCourse(courseOpenId) : renderCourses();
   if (homeTab === 'modes') modeOpenId ? renderMode(modeOpenId) : renderModes();
 }
+function setHomeTab(p) {
+  const same = p === homeTab && !courseOpenId && !modeOpenId; homeTab = p; courseOpenId = modeOpenId = null;
+  renderHome(); if (!same) { const pn = $(`.hpanel[data-p="${p}"]`); if (pn) pn.scrollTop = 0; scrollTo(0, 0); }
+}
+PHONE.addEventListener('change', () => { if (!$('#home').hidden) renderHome(); else layoutHome(); });
 const ruleChip = r => r && r !== 'basic' ? `<span class="chip rc" style="--mc:${MODE_COL[r]}">${A.MI[r]}${esc(t('mo.' + r))}</span>` : `<span class="chip rc">${esc(t('mo.basic'))}</span>`;
 function renderDaily() {
   const d = today(), r = dlOf(d);
@@ -257,7 +277,6 @@ function renderCourses() {
   fitNames(el);
   $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; storyThen(id, j, () => startStage(id, j)); }; });
 }
-function openCourse(id) { courseOpenId = id; nav(); renderCourse(id); scrollTo(0, 0); }
 // stage tiles in sections of 10 (course: floors 1F…10F, mode: BLOCK A…E); a section opens once 6 of the one before are cleared
 function stageTiles(src, recs) {
   const L = listOf(src), isC = !!courseOf(src), n = recs.length;
@@ -287,7 +306,7 @@ function renderCourse(id) {
   const el = $('#coursePanel'), recs = courseRecs(id), done = recs.filter(v => v).length, j = contIdx(id);
   el.innerHTML = `<div class="thead" style="--tc:${COURSE_COL[id]}"><button class="btn sm" id="flBack">${A.ICON.back}${esc(t('u.list'))}</button><span class="tic">${courseIcon(id)}</span>
     <div><h2>${esc(t('cs.' + id))} ${lvChip(c.lv)}</h2><p>${esc(t('cs.' + id + '.d'))}</p><button class="btn sm org" id="coCont">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} <small>${floorLabel(j)}</small></button></div><div class="ring" style="--p:${done / recs.length * 100}"><b>${done}</b><small>/${recs.length}</small></div></div>` + stageTiles(id, recs);
-  $('#flBack').onclick = () => history.back();
+  $('#flBack').onclick = closeList;
   $('#coCont').onclick = () => storyThen(id, j, () => startStage(id, j));
   $$('[data-sy]', el).forEach(b => { b.onclick = e => { e.stopPropagation(); showStory(+b.dataset.sy, null, id); }; });
   $$('.tile', el).forEach(b => { b.onclick = () => { const jj = +b.dataset.j; storyThen(id, jj, () => startStage(id, jj)); }; });
@@ -324,16 +343,17 @@ function renderMode(m) {
   const el = $('#modePanel'), recs = modeRecs(m), done = recs.filter(v => v).length, j = contIdx(m);
   el.innerHTML = `<div class="thead" style="--tc:${MODE_COL[m]}"><button class="btn sm" id="moBack">${A.ICON.back}${esc(t('u.list'))}</button><span class="tic mtic">${A.MI[m]}</span>
     <div><h2>${esc(t('mo.' + m))}</h2><p>${esc(t('mo.' + m + '.r'))}</p><div class="hbtns"><button class="btn sm org" id="moCont">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} <small>${j + 1}</small></button><button class="btn sm" id="moRule">?${esc(t('u.rules'))}</button></div></div><div class="ring" style="--p:${done / recs.length * 100}"><b>${done}</b><small>/${recs.length}</small></div></div>` + stageTiles(m, recs);
-  $('#moBack').onclick = () => history.back();
+  $('#moBack').onclick = closeList;
   $('#moRule').onclick = () => maybeRuleTip(m, true);
   $('#moCont').onclick = () => startStage(m, j);
   $$('.tile', el).forEach(b => { b.onclick = () => startStage(m, +b.dataset.j); });
 }
+function closeList() { courseOpenId = modeOpenId = null; renderHome(); const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0; scrollTo(0, 0); }
 document.addEventListener('click', e => { const b = e.target.closest('[data-rule]'); if (b) { e.stopPropagation(); maybeRuleTip(b.dataset.rule, true); } });
 
 /* ============================================================ GAME ============================================================ */
 let G = null;
-function showScreen(id) { $$('.screen').forEach(s => { s.hidden = s.id !== id; }); document.body.dataset.screen = id; scrollTo(0, 0); }
+function showScreen(id) { $$('.screen').forEach(s => { s.hidden = s.id !== id; }); document.body.dataset.screen = id; scrollTo(0, 0); setTimeout(navSync, 0); }
 // kinds: stage (course 'c' or a stage mode) · daily · sl (searchlight, dsl = daily) · chain
 function newGame(rec, o) {
   const P = E.decode(rec);
@@ -402,7 +422,7 @@ function nextRunPuzzle() {
   boardIn();
 }
 function startPlay() {
-  $('#gameMsg').hidden = true; const was = !$('#play').hidden; showScreen('play'); nav(was); relayout(); hud(); renderInfo();
+  $('#gameMsg').hidden = true; showScreen('play'); relayout(); hud(); renderInfo();
 }
 
 /* ---------------- board DOM ---------------- */
@@ -776,40 +796,54 @@ function resultAct(a) {
   if (a === 'name') return openProfile();
   if (a === 'again') { if (G.kind === 'sl') return startSearch(G.run.daily); return startChain(); }
 }
-function goHome() { cancelAnimationFrame(raf); G = null; $('#deadEnd').hidden = true; $('#gameMsg').hidden = true; showScreen('home'); renderHome(); }
-// leaving the play screen goes back through the browser history (so the phone's back swipe does the same): you land where you started
-function leavePlay() { if (history.state && history.state.s === 'play') history.back(); else goHome(); }
+// leaving a course / rule-mode stage lands on that course's / mode's stage list ("list" on a result does the same)
+function goHome() {
+  cancelAnimationFrame(raf);
+  if (G && G.kind === 'stage' && !listAfter) listAfter = G.src;
+  if (listAfter) { const L = listAfter; listAfter = null; if (courseOf(L)) { homeTab = 'course'; courseOpenId = L; modeOpenId = null; } else { homeTab = 'modes'; modeOpenId = L; courseOpenId = null; } }
+  G = null; $('#deadEnd').hidden = true; $('#gameMsg').hidden = true; if (!$('#modal').hidden) { $('#modal').hidden = true; afterModal = null; setPaused(false); }
+  showScreen('home'); renderHome(); const pn = $(`.hpanel[data-p="${homeTab}"]`); if (pn) pn.scrollTop = 0;
+}
+const leavePlay = goHome;
 function quitGame() {
   if (G && (G.kind === 'sl' || G.kind === 'chain') && !G.over) return ask(t('q.quit'), [[t('q.keep'), 'org'], [t('q.home'), '', () => { endRun(); leavePlay(); }]]);
   leavePlay();
 }
-/* ---------------- navigation history (back / forward, the phone's edge swipe, a sideways swipe on the home screen) ---------------- */
-function nav(replace) {
-  const st = { s: $('#play').hidden ? 'home' : 'play', tab: homeTab, co: courseOpenId, mo: modeOpenId, d: (history.state && history.state.d || 0) + (replace ? 0 : 1) };
-  try { history[replace ? 'replaceState' : 'pushState'](st, ''); } catch (e) {}
+/* ---------------- back swipe / browser back: one step back inside the app ----------------
+   While the app is anywhere but its root (デイリー tab, no dialog, no game), one spare history entry is kept.
+   Going back pops it: we take one step back (close the dialog → leave the game → close the stage list → デイリー tab)
+   and add the entry again if we're still not at the root, so the next back steps again; at the root, back leaves the page. */
+const NAV = { skip: false };
+const navRoot = () => $('#modal').hidden && !$('#home').hidden && !courseOpenId && !modeOpenId && homeTab === 'daily';
+function navSync() {
+  if (NAV.skip) return;
+  const trap = !!(history.state && history.state.jb);
+  // push only right after a tap / key: an entry added without user activation is skipped by the browser's back (iOS / Chrome)
+  const act = !navigator.userActivation || navigator.userActivation.isActive;
+  if (!navRoot() && !trap && act) { try { history.pushState({ jb: 1 }, ''); } catch (e) {} }
+  else if (navRoot() && trap) { NAV.skip = true; history.back(); }   // closed with ✕ / a button: drop the spare entry (its popstate is ignored)
 }
-addEventListener('popstate', e => {
-  const st = e.state || { s: 'home', tab: 'daily' };
-  if (st.s === 'play') { if (!G || $('#play').hidden) history.back(); return; }   // a finished game can't be re-entered
-  if (G && !$('#play').hidden && (G.kind === 'sl' || G.kind === 'chain') && !G.over) {
-    nav(); return ask(t('q.quit'), [[t('q.keep'), 'org'], [t('q.home'), '', () => { endRun(); history.back(); }]]);
-  }
-  if (!$('#modal').hidden) { $('#modal').hidden = true; afterModal = null; }
-  // leaving a course / rule-mode stage (back button, browser back, edge swipe) lands on that course's / mode's stage list
-  if (G && !$('#play').hidden && G.kind === 'stage' && !listAfter) listAfter = G.src;
-  homeTab = st.tab || 'daily'; courseOpenId = st.co || null; modeOpenId = st.mo || null;
-  // "list" from a result: land on that course's / mode's stage list
-  if (listAfter) { const L = listAfter; listAfter = null; if (courseOf(L)) { homeTab = 'course'; courseOpenId = L; modeOpenId = null; } else { homeTab = 'modes'; modeOpenId = L; courseOpenId = null; } if (G && !$('#play').hidden) { G = null; showScreen('home'); } nav(); }
-  if (G && !$('#play').hidden) goHome(); else { $('#gameMsg').hidden = true; renderHome(); }
+function navBack() {
+  if (!$('#modal').hidden) { if (!$('#home').hidden) afterModal = null; closeModal(); return; }
+  if (!$('#play').hidden) { if (G) quitGame(); else goHome(); return; }
+  if (courseOpenId || modeOpenId) { closeList(); return; }
+  if (homeTab !== 'daily') { setHomeTab('daily'); return; }
+}
+addEventListener('popstate', () => {
+  if (NAV.skip) { NAV.skip = false; return; }
+  navBack(); setTimeout(navSync, 0);
 });
+document.addEventListener('click', () => setTimeout(navSync, 0), true);
+document.addEventListener('pointerup', () => setTimeout(navSync, 0), true);
+document.addEventListener('keydown', () => setTimeout(navSync, 0), true);
+// a sideways swipe on the home screen (tablets / touch PCs, where there is no tab bar) = one step back
 (function homeSwipe() {
   let T = null;
-  addEventListener('touchstart', e => { if ($('#home').hidden || !$('#modal').hidden || e.touches.length > 1) { T = null; return; } const p = e.touches[0]; T = { x: p.clientX, y: p.clientY, t: Date.now() }; }, { passive: true });
+  addEventListener('touchstart', e => { if ($('#home').hidden || !$('#modal').hidden || e.touches.length > 1 || PHONE.matches) { T = null; return; } const p = e.touches[0]; T = { x: p.clientX, y: p.clientY, t: Date.now() }; }, { passive: true });
   addEventListener('touchend', e => {
     if (!T) return; const p = e.changedTouches[0], dx = p.clientX - T.x, dy = p.clientY - T.y, dt = Date.now() - T.t; T = null;
     if (dt > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .6) return;
-    const back = (document.documentElement.dir === 'rtl') ? dx < 0 : dx > 0;
-    if (back) { if (history.state && history.state.d > 0) history.back(); } else history.forward();
+    if ((document.documentElement.dir === 'rtl') ? dx < 0 : dx > 0) navBack();
   }, { passive: true });
 })();
 
@@ -836,7 +870,8 @@ function floatTip(s) { const e = $('#gInfo'); if (e) { e.classList.remove('pulse
 
 /* ============================================================ MODALS ============================================================ */
 function modal(html, cls = '') {
-  afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; setPaused(true);
+  { const ls = $('#langSel'), lh = $('#langHold'); if (ls && lh && ls.parentNode !== lh) lh.append(ls); }   // the picker lives in settings; park it before the body is replaced
+  afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; setPaused(true); setTimeout(navSync, 0);
   centerOnBoard();
   return $('#modalBody');
 }
@@ -937,10 +972,13 @@ const frameName = id => SK.nameOf(frameOf(id), lang);
 const itemName = it => it.t === 'c' ? t('in.n', { n: it.id + 1 }) : it.t === 's' ? skinName(it.id) : frameName(it.id);
 const itemSVG = it => it.t === 'c' ? A.inmateSVG(it.id) : it.t === 's' ? `<span class="skp" data-skin="${it.id}"></span>` : `<span class="frp" data-frame="${it.id}"></span>`;
 function rollOne(g) { let r = Math.random(), rar = 0; for (const [k, p] of RATE) { if (r < p) { rar = k; break; } r -= p; } if (g && rar < 2) rar = 2; const pool = GPOOL[rar]; return pool[(Math.random() * pool.length) | 0]; }
-function openGacha() {
-  modal(`<h2 class="mh">${esc(t('ga.title'))}</h2><div class="gmach"><div class="glock">${'<i></i>'.repeat(6)}<b>LUCKY LOCKER</b></div><div class="gcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
+function openGacha(into) {
+  // phones: the locker is a tab of its own (the profile link goes there too)
+  if (!into && PHONE.matches && !$('#home').hidden) { if (!$('#modal').hidden) { $('#modal').hidden = true; setPaused(false); } return setHomeTab('gacha'); }
+  const html = `<h2 class="mh">${esc(t('ga.title'))}</h2><div class="gmach"><div class="glock">${'<i></i>'.repeat(6)}<b>LUCKY LOCKER</b></div><div class="gcoin">${A.ICON.coin}<b class="coinv">${fmt(DB.coin)}</b></div>
     <div class="gbtns"><button class="btn big org" id="g1" ${DB.coin < G_COST ? 'disabled' : ''}>${esc(t('ga.one'))}<small>${A.ICON.coin}${G_COST}</small></button><button class="btn big blue" id="g10" ${DB.coin < G_COST10 ? 'disabled' : ''}>${esc(t('ga.ten'))}<small>${A.ICON.coin}${fmt(G_COST10)}</small></button></div>
-    <p class="note">${esc(t('ga.rate'))}</p><p class="note">${esc(t('ga.dup', { a: REFUND[0], b: REFUND[1], c: REFUND[2], d: REFUND[3] }))}</p></div><div id="gaRes"></div>`, 'mwide');
+    <p class="note">${esc(t('ga.rate'))}</p><p class="note">${esc(t('ga.dup', { a: REFUND[0], b: REFUND[1], c: REFUND[2], d: REFUND[3] }))}</p></div><div id="gaRes"></div>`;
+  if (into) into.innerHTML = html; else modal(html, 'mwide');
   $('#g1').onclick = () => pull(1); $('#g10').onclick = () => pull(10);
 }
 function pull(n) {
@@ -983,11 +1021,10 @@ async function openRank(tab = 'm') {
 }
 function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
-  const LN = { ja: '日本語', en: 'English', zh: '中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', hi: 'हिन्दी', ar: 'العربية' };
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2><label class="sw sel"><span>${esc(t('set.lang'))}</span><select id="langSel" aria-label="Language">${LANGS.map(l => `<option value="${l}" ${l === lang ? 'selected' : ''}>${LN[l]}</option>`).join('')}</select></label>${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}<div class="sw lrow"><span>${esc(t('set.lang'))}</span><span id="langSlot"></span></div>${sw('anim', 'set.anim')}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('help'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
+  { const slot = $('#langSlot'), ls = $('#langSel'); if (slot && ls) { ls.value = lang; slot.append(ls); } }
   $$('[data-k]', body).forEach(c => { c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'snd') { try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} if (c.checked) SND.coin(); } save(); }; });
-  $('#langSel').onchange = e => { lang = e.target.value; DB.set.lang = lang; save(); applyI18n(); if (G) { hud(); renderInfo(); } openSettings(); };
   $('#setTut').onclick = () => tutorial();
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'org'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
 }
@@ -1007,12 +1044,17 @@ function loginBonus() {
 /* ---------------- boot ---------------- */
 function bind() {
   $('#htabs').innerHTML = [['daily', 'ht.daily', A.ICON.daily], ['course', 'ht.course', A.ICON.course], ['modes', 'ht.modes', A.ICON.modes]].map(([p, k, ic]) => `<button data-p="${p}">${ic}<span data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
-  $$('#htabs button').forEach(b => { b.onclick = () => { if (homeTab === b.dataset.p && !courseOpenId && !modeOpenId) return; homeTab = b.dataset.p; courseOpenId = modeOpenId = null; nav(); renderHome(); scrollTo(0, 0); }; });
-  const IC = { btnAch: 'trophy', btnSet: 'gear', btnHelp: 'help', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
+  $$('#htabs button').forEach(b => { b.onclick = () => setHomeTab(b.dataset.p); });
+  $('#bnav').setAttribute('role', 'tablist');
+  $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${ic === 'user' ? UICON : A.ICON[ic]}${p === 'me' ? '<i class="dot"></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
+  $$('#bnav button').forEach(b => { b.onclick = () => setHomeTab(b.dataset.p); });
+  // header: only settings / language / home (sound and how-to-play → settings; locker, collection, achievements, rankings, rules → profile card / tabs)
+  const IC = { btnHelp: 'help', btnSet: 'gear', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, k] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[k]); }
-  $('#btnAch').onclick = openAch;
-  $('#btnSet').onclick = openSettings; $('#btnHelp').onclick = () => openRules();
-  $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else if (homeTab !== 'daily' || courseOpenId || modeOpenId) { homeTab = 'daily'; courseOpenId = modeOpenId = null; nav(); renderHome(); } };
+  $('#btnSet').onclick = openSettings;
+  $('#btnHelp').onclick = () => tutorial();
+  const ls = $('#langSel'); ls.value = lang; ls.onchange = () => { lang = ls.value; DB.set.lang = lang; save(); applyI18n(); if (G) { hud(); renderInfo(); } else renderHome(); };
+  $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else setHomeTab('daily'); };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   $('#gBack').onclick = quitGame; $('#gUndo').onclick = undo; $('#gHint').onclick = hint; $('#gRestart').onclick = restart;
   $('#deadEnd').onclick = undo;
@@ -1034,7 +1076,7 @@ function bind() {
 async function boot() {
   bind(); applyI18n(); applySkin();
   try { [ST, DL] = await Promise.all([fetch('stages.json?v=2').then(r => r.json()), fetch('daily.json?v=2').then(r => r.json())]); } catch (e) { ST = DL = null; }
-  showScreen('home'); nav(true); renderHome();
+  showScreen('home'); renderHome();
   if (!DB.tut.basic && !Q.has('notut')) { DB.tut.basic = 1; save(); setTimeout(tutorial, 400); }
   loginBonus();
   if (ON && ON.available) ON.init().catch(() => {});
