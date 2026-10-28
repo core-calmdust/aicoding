@@ -59,7 +59,7 @@ function applyI18n() {
   $('#swapLbl').textContent = t('swap.btn');
   renderBrand();
 }
-function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
+function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); const h1 = $('#brandTitle').closest('h1'); if (h1) h1.style.setProperty('--tl', Math.max(14, tt.length)); }   // (the portal skin moves the h1 into its top bar)
 let humanColor = P1;
 let reviewing = false;
 let rbS = null;          // review box study (検討モード, rbox.js): { base, pos: [Pos], mv: [moves] }

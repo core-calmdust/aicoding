@@ -1,7 +1,7 @@
 /* =====================================================================
    Go (囲碁) on the portal.
    · The board card (levels, sides, modes, board size): level names come from the game
-     (go/i18n.js: 15級 … 1級, 初段 … 八段, アマ最強 / プロ級 / 最強 = levels 1 … 26),
+     (levels 1 … 27 labelled like go/app.js RANKS: 18級 … 1級, 初段 … 八段, then the strongest),
      ratings = the game's RT_LV (450 + 100 per step).
    · Table play (ちゃぶ台で遊ぶ): start(ctx) plays on the 3D go board (atlas/models/goban.js,
      the look chosen in the game's 3D skin, 'atlas-go-look') with the full game's rules and AI:
@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../go/', RULES = BASE + 'rules.js?v=2', ENGINE = BASE + 'engine.js?v=3';   // same files / versions as go/index.html + go/app.js → shared cache
+  const BASE = '../go/', RULES = BASE + 'rules.js?v=2', ENGINE = BASE + 'engine.js?v=7';   // same files / versions as go/index.html + go/app.js → shared cache
   let rulesP = null;
   function loadRules() {
     if (window.GoRules) return Promise.resolve(window.GoRules);
@@ -320,11 +320,13 @@
 
   /* ---------- the board card ---------- */
   const LVN = {"ja": {"kyu": "{n}級", "dan": ["初段", "二段", "三段", "四段", "五段", "六段", "七段", "八段"], "top": ["アマ最強", "プロ級", "最強"], "lvd": ["はじめての方", "ルールを覚えた方", "対局に慣れた方", "腕に自信のある方", "高段者・腕試し"]}, "en": {"kyu": "{n} kyu", "dan": ["1 dan", "2 dan", "3 dan", "4 dan", "5 dan", "6 dan", "7 dan", "8 dan"], "top": ["Top amateur", "Pro level", "Strongest"], "lvd": ["New to Go", "Know the rules", "Regular players", "Strong players", "Strong players"]}, "zh": {"kyu": "{n}级", "dan": ["初段", "二段", "三段", "四段", "五段", "六段", "七段", "八段"], "top": ["业余顶尖", "职业级", "最强"], "lvd": ["围棋新手", "已了解规则", "常下棋的棋手", "实力较强的棋手", "高段棋手"]}, "ko": {"kyu": "{n}급", "dan": ["1단", "2단", "3단", "4단", "5단", "6단", "7단", "8단"], "top": ["아마 최강", "프로급", "최강"], "lvd": ["바둑이 처음인 분", "규칙을 아는 분", "대국에 익숙한 분", "실력에 자신 있는 분", "고단자"]}, "es": {"kyu": "{n} kyu", "dan": ["1 dan", "2 dan", "3 dan", "4 dan", "5 dan", "6 dan", "7 dan", "8 dan"], "top": ["Aficionado top", "Nivel pro", "El más fuerte"], "lvd": ["Nuevos en el Go", "Conocen las reglas", "Jugadores habituales", "Jugadores fuertes", "Jugadores fuertes"]}, "fr": {"kyu": "{n} kyu", "dan": ["1 dan", "2 dan", "3 dan", "4 dan", "5 dan", "6 dan", "7 dan", "8 dan"], "top": ["Amateur de pointe", "Niveau pro", "Le plus fort"], "lvd": ["Débutants au go", "Connaissent les règles", "Joueurs réguliers", "Joueurs forts", "Joueurs forts"]}, "pt": {"kyu": "{n} kyu", "dan": ["1 dan", "2 dan", "3 dan", "4 dan", "5 dan", "6 dan", "7 dan", "8 dan"], "top": ["Amador de elite", "Nível pro", "O mais forte"], "lvd": ["Novos no Go", "Conhecem as regras", "Jogadores frequentes", "Jogadores fortes", "Jogadores fortes"]}, "de": {"kyu": "{n} Kyu", "dan": ["1 Dan", "2 Dan", "3 Dan", "4 Dan", "5 Dan", "6. Dan", "7. Dan", "8. Dan"], "top": ["Spitzenamateur", "Profiniveau", "Stärkste Stufe"], "lvd": ["Neu beim Go", "Kennen die Regeln", "Regelmäßige Spieler", "Starke Spieler", "Starke Spieler"]}, "hi": {"kyu": "{n} क्यू", "dan": ["1 डान", "2 डान", "3 डान", "4 डान", "5 डान", "6 दान", "7 दान", "8 दान"], "top": ["शीर्ष शौकिया", "प्रो स्तर", "सबसे मज़बूत"], "lvd": ["गो में नए", "नियम जानते हैं", "नियमित खिलाड़ी", "मज़बूत खिलाड़ी", "मज़बूत खिलाड़ी"]}, "ar": {"kyu": "{n} كيو", "dan": ["1 دان", "2 دان", "3 دان", "4 دان", "5 دان", "6 دان", "7 دان", "8 دان"], "top": ["أقوى الهواة", "مستوى المحترفين", "الأقوى"], "lvd": ["جدد على غو", "يعرفون القواعد", "لاعبون منتظمون", "لاعبون أقوياء", "لاعبون أقوياء"]}};
-  function levelInfo(i, lang) {   // i = 1..26 (the game's level: 15 kyu … 8 dan, top amateur, pro, strongest)
-    const L = LVN[lang] || LVN.en;
-    const name = i <= 15 ? L.kyu.replace('{n}', 16 - i) : i <= 23 ? L.dan[i - 16] : L.top[i - 24];
-    return { name, desc: '', rating: 450 + 100 * (i - 1), who: L.lvd[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4] };
+  // same as go/app.js RANKS (ranks measured against KataGo's human-like model, see go/MODEL_CARD.md)
+  const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1'];
+  function levelInfo(i, lang) {   // i = 1..27
+    const L = LVN[lang] || LVN.en, r = RANKS[i], v = +r.slice(1), rv = r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v;
+    const name = r[0] === 'k' ? L.kyu.replace('{n}', v) : r[0] === 'd' ? L.dan[v - 1] : L.top[v - 1];
+    return { name, desc: '', rating: 1850 + 100 * rv, who: L.lvd[rv <= -12 ? 0 : rv <= -6 ? 1 : rv <= 0 ? 2 : rv <= 5 ? 3 : 4] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.go = { levels: 26, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', sizes: [9, 13, 19], sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.go = { levels: 27, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', sizes: [9, 13, 19], sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
 })();

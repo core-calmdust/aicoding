@@ -222,3 +222,13 @@ html:not([lang=ja]) #board .pc.hv .wt::after { content: ''; }
 @keyframes cmWarp { 0% { opacity: 0; filter: brightness(2) blur(2px); } 60% { opacity: 1; } 100% { filter: none; } }
 .flash.dark { background: rgba(10, 12, 20, .78); animation: cmDark .9s ease-out forwards; }
 @keyframes cmDark { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
+/* lights out: startled guards (jump, "!?" bubble, open mouth, sweat drop) */
+#board .pc.tg .gmouth, #board .pc.tg .gsweat, #board .pc.tg .gshock { display: none; }
+#board .pc.tg.shock > .gd { animation: cmShock .5s cubic-bezier(.3,1.6,.5,1) both; }
+#board .pc.tg.shock .gmouth { display: block; position: absolute; left: 50%; top: 63%; width: 30%; height: 26%; z-index: 2; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle at 50% 70%, #ff6f8f 0 35%, #3a1018 38%); border: 2px solid var(--ink); }
+#board .pc.tg.shock .gsweat { display: block; position: absolute; right: 8%; top: 18%; width: 14%; height: 20%; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #8fd8ff; border: 2px solid var(--ink); transform: rotate(-20deg); animation: cmSweat 1.4s ease-in both; }
+#board .pc.tg.shock .gshock { display: grid; place-items: center; position: absolute; right: -14%; top: -22%; z-index: 6; min-width: 46%; height: 40%; padding: 0 6%; border-radius: 999px; background: #fff; border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font: 900 calc(var(--cs) * .26)/1 'Jost', sans-serif; color: #d6283b; animation: cmPop .35s cubic-bezier(.3,1.8,.5,1) both; pointer-events: none; }
+#board .pc.tg.shock .gbadge { opacity: 0; }
+@keyframes cmShock { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-22%) scale(1.12, .92); } 70% { transform: translateY(0) scale(.95, 1.06); } 85% { transform: translateX(-5%); } 100% { transform: none; } }
+@keyframes cmPop { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1) rotate(8deg); } }
+@keyframes cmSweat { 0% { opacity: 0; transform: translateY(-30%) rotate(-20deg); } 20% { opacity: 1; } 100% { opacity: 1; transform: translateY(20%) rotate(-20deg); } }
