@@ -444,12 +444,13 @@ const boardEl = () => $('#board');
 // Board size. The board + its frame + the EXIT sign take (w + 1.2) cells across, (h + .8) down (+ .5 more for TWIN's bottom exit).
 // Phones: the frame always spans the full width, whatever the board (a 7×7 board just gets smaller cells), and only shrinks
 // when the screen is too short for it. PC: as large as the window height allows (up to 860px across), centred.
+const hOfTilt = () => { const e = $('#tiltPad'); return e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0; };
 function cellSize() {
   // the frame (board + .32 cell of ring + 3px ink a side) fills the play column; the EXIT sign sits on the ring
   const P = G.P, phone = innerWidth < 760;
   const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', '.slbar'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
   const under = ['#gInfo', '#tiltPad'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
-  const H = Math.max(240, innerHeight - used - (phone ? 20 + under : 84));
+  const H = Math.max(240, innerHeight - used - (phone ? 20 + hOfTilt() : 84));
   const W = phone ? Math.min(innerWidth, 560) - 16 : Math.min(innerWidth - 80, 900);
   return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + .64), (H - 8) / (P.h + .64))));
 }
@@ -534,7 +535,12 @@ function render(anim = true, ev) {
   $$('.crack', boardEl()).forEach(e => e.classList.toggle('can', dg.includes(+e.dataset.c)));
 }
 // phone: the height of what sits under the board (rule line, tilt pad) is mirrored above it so the board is truly centred
-function balance() { const pl = $('#play'); if (!pl || pl.hidden) return; const h = ['#gInfo', '#tiltPad'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0); pl.style.setProperty('--ih', h + 'px'); }
+function balance() {
+  const pl = $('#play'); if (!pl || pl.hidden) return;
+  const hOf = q => { const e = $(q); return e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0; };
+  const top = 0, bot = hOf('#tiltPad') + (innerWidth < 760 ? 0 : hOf('#gInfo'));
+  pl.style.setProperty('--ihT', Math.max(0, bot - top) + 'px'); pl.style.setProperty('--ihB', Math.max(0, top - bot) + 'px');
+}
 function relayout() { if (!G || $('#play').hidden) return; balance(); const cs = cellSize(); if (cs !== G.cs) buildBoard(); }
 addEventListener('resize', () => { clearTimeout(relayout.t); relayout.t = setTimeout(relayout, 120); });
 function boardIn() { const b = boardEl(); b.classList.remove('bin'); void b.offsetWidth; b.classList.add('bin'); }
