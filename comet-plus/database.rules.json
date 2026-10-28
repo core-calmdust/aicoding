@@ -9,14 +9,15 @@
           "$key": {
             ".read": "auth != null",
             ".indexOn": [
-              "s"
+              "s",
+              "u"
             ],
             ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
-            "$uid": {
-              ".write": "auth != null && auth.uid === $uid && newData.exists()",
-              ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+            "$id": {
+              ".write": "auth != null && !data.exists() && newData.exists() && newData.child('u').val() === auth.uid",
+              ".validate": "newData.hasChildren(['u', 'n', 's', 'st', 't']) && newData.child('u').isString() && newData.child('u').val().length <= 128 && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
               "$other": {
-                ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
+                ".validate": "$other === 'u' || $other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
               }
             }
           }
@@ -28,14 +29,15 @@
           "$key": {
             ".read": "auth != null",
             ".indexOn": [
-              "s"
+              "s",
+              "u"
             ],
             ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
-            "$uid": {
-              ".write": "auth != null && auth.uid === $uid && newData.exists()",
-              ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+            "$id": {
+              ".write": "auth != null && !data.exists() && newData.exists() && newData.child('u').val() === auth.uid",
+              ".validate": "newData.hasChildren(['u', 'n', 's', 'st', 't']) && newData.child('u').isString() && newData.child('u').val().length <= 128 && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
               "$other": {
-                ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
+                ".validate": "$other === 'u' || $other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
               }
             }
           }
@@ -45,14 +47,15 @@
         "$key": {
           ".read": "auth != null",
           ".indexOn": [
-            "s"
+            "s",
+            "u"
           ],
           ".validate": "$key.matches(/^(std|jny|str)_(easy|standard|arcade)_(pc|mobile)$/)",
-          "$uid": {
-            ".write": "auth != null && auth.uid === $uid && newData.exists()",
-            ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
+          "$id": {
+            ".write": "auth != null && !data.exists() && newData.exists() && newData.child('u').val() === auth.uid",
+            ".validate": "newData.hasChildren(['u', 'n', 's', 'st', 't']) && newData.child('u').isString() && newData.child('u').val().length <= 128 && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000",
             "$other": {
-              ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
+              ".validate": "$other === 'u' || $other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
             }
           }
         }
