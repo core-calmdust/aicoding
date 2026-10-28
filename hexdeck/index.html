@@ -1469,6 +1469,23 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 .status .kncancel{margin-left:10px;padding:4px 14px;font-size:13px;pointer-events:auto}
 .buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:4.3s}
 @media (prefers-reduced-motion:reduce){.buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:1.3s}}
+/* 劫火の胎動 */
+.mappick button.scen.volc{border-color:rgba(230,120,50,.6);background:linear-gradient(160deg,#36190c,var(--panel2))}
+.mappick button.scen.volc .tst{border-color:#ffab6a;color:#ffd0a8}
+.tale-h.prolog.volc{background:radial-gradient(120% 120% at 50% 0%,rgba(240,110,40,.32),rgba(26,10,6,.78));border-color:rgba(240,120,50,.6)}
+.prolog.volc .ptag{color:#ffd0a8}
+.prolog.volc .ptitle{color:#fff0e2;text-shadow:0 0 18px rgba(255,110,40,.75)}
+#map .lavaf{fill:rgba(120,30,10,.55);stroke:rgba(255,110,50,.35);stroke-width:1.5}
+#map .vpath{fill:rgba(255,90,30,.12);stroke:rgba(255,110,50,.75);stroke-width:2.5;stroke-dasharray:6 4;pointer-events:none;animation:vpulse 1.6s ease-in-out infinite}
+@keyframes vpulse{50%{fill:rgba(255,90,30,.24)}}
+#map .varrow line,#map .varrow path{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#map .varrow.now line,#map .varrow.now path{stroke:#ff6a2a;stroke-width:5;filter:drop-shadow(0 0 5px rgba(255,100,40,.9))}
+#map .varrow.next line,#map .varrow.next path{stroke:rgba(255,190,140,.55);stroke-width:3;stroke-dasharray:5 6}
+#map .volcano{pointer-events:none}
+.si.em b{color:#ffb27a}
+.pl em.keeper{background:linear-gradient(180deg,#ff9a4a,#c8501e);color:#1b0904}
+.tl-pick button{flex:1 1 200px;gap:4px}
+.tl-pick .tl-st{color:#ffb27a}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -1508,7 +1525,7 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
     <div class="acts">
       <div class="agrp">
       <button class="ib" id="aTrade" title="交換"><svg class="ic" viewBox="0 0 24 24"><path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/></svg><span class="lab">交換</span></button>
-      <button class="ib" id="aDefend" title="守備（蛮族の角笛）" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l3-2 3 2v11M13 20V9l3-2 3 2v11M8 12v2M16 12v2"/></svg><span class="lab">守備</span></button><button class="ib" id="aKnight" title="騎士（手札の1を出して盗賊を動かす）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 3 8.4 7 10 4-1.6 7-5.4 7-10V6z"/><path d="M12 7.5v9M8.5 11h7"/></svg><span class="lab">騎士</span><em class="bd" id="bKnight"></em></button>
+      <button class="ib" id="aTilt" title="供物（劫火の胎動：噴火の向きを1つずらす）" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M3 20h18M6 20l4-9h4l4 9M10 11c0-2 1-3 2-5 1 2 2 3 2 5M12 6V3"/></svg><span class="lab">供物</span></button><button class="ib" id="aDefend" title="守備（蛮族の角笛）" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l3-2 3 2v11M13 20V9l3-2 3 2v11M8 12v2M16 12v2"/></svg><span class="lab">守備</span></button><button class="ib" id="aKnight" title="騎士（手札の1を出して盗賊を動かす）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 3 8.4 7 10 4-1.6 7-5.4 7-10V6z"/><path d="M12 7.5v9M8.5 11h7"/></svg><span class="lab">騎士</span><em class="bd" id="bKnight"></em></button>
       <button class="ib" id="aSeize" title="道の収奪（3番目の時代から）"><svg class="ic" viewBox="0 0 24 24"><path d="M3 17 10 10M14 6l7-3-3 7M13 11l-3 3M6 21l4-4 3 3"/></svg><span class="lab">収奪</span><span class="cost"><i class="ci-sheep"></i><i class="ci-ore"></i><i class="ci-ore"></i></span></button><button class="ib" id="aRaid" title="軍（3番目の時代から。道の先の相手の開拓地・都市を壊す）"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4l9 9M20 4l-9 9M7.5 13.5 4 17l3 3 3.5-3.5M16.5 13.5 20 17l-3 3-3.5-3.5"/></svg><span class="lab">軍</span><span class="cost"><i class="ci-wheat"></i><i class="ci-sheep"></i><i class="ci-sheep"></i><i class="ci-ore"></i><i class="ci-ore"></i><i class="ci-ore"></i></span><em class="bd" id="bRaid"></em></button>
       </div><div class="agrp">
       <button class="ib" id="aRoad" title="道"><svg class="ic" viewBox="0 0 24 24"><path class="fl" d="M8.2 20.6 5.4 18.8 15.8 3.4l2.8 1.8z"/></svg><span class="lab">道</span><span class="cost"><i class="ci-wood"></i><i class="ci-brick"></i></span><em class="bd" id="bRoad"></em></button>
@@ -1641,8 +1658,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     // 劫火の胎動（2026-10-28）：中央は火山。時代の変わり目に、火山暦の方向とその反対の2方向へ溶岩が2マス流れる（土地は溶岩原に戻り、開拓し直すと黒土：生産+1）。
     // 供物の枠（時計回り：小麦1・羊毛1／反時計回り：レンガ1・鉱石1）は各時代1回ずつ。使われた枠の向きへ1つずれる（両方なら打ち消し）。枠を使うと炎の印、3つ以上で最多＝火の守り手+2点
     volcano: {
-      id: 'volcano', name: '劫火の胎動', goal: 12,
-      volc: { from: 1, first: 2, step: 2, len: 2, keeperN: 3, keeperVP: 2, tilt: { cw: { wheat: 1, sheep: 1 }, ccw: { brick: 1, ore: 1 } } },
+      id: 'volcano', name: '劫火の胎動', goal: 10,   // 2026-10-29：溶岩2マス・10点で約80ターン（24.9/27.0/22.9/25.3%）
+      volc: { from: 1, first: 2, step: 2, len: 2, keeperN: 3, keeperVP: 2, cityHit: false, cool: 0, exclusive: true, tilt: { cw: { wheat: 1, sheep: 1 }, ccw: { brick: 1, ore: 1 } } },
       eraSeq: [], eraFirst: [],
       eras: ['golden', 'forest', 'mine', 'pasture', 'kiln', 'trade', 'knight', 'voyage', 'market', 'war', 'harvest', 'peace'],
       specAdd: {}, specDel: [],
@@ -2380,7 +2397,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function volcCenter(S) { return S.hexes.findIndex(H => H.q === 0 && H.r === 0); }
   function volcPath(S, d) { const out = []; const L = S.scen.volc.len; for (const dd of [d, (d + 3) % 6]) for (let k = 1; k <= L; k++) { const i = S.hexes.findIndex(H => H.q === VDIR[dd][0] * k && H.r === VDIR[dd][1] * k); if (i >= 0) out.push(i); } return out; }
   function volcTarget(S) { const V = S.volc; if (!V) return -1; return (V.dir + (V.cw >= 0 ? 1 : 0) - (V.ccw >= 0 ? 1 : 0) + 6) % 6; }
-  function canTilt(S, way) { const V = S.volc; if (!V || !canBuild(S) || S.eraIdx < S.scen.volc.from || V[way] >= 0) return false; const other = way === 'cw' ? 'ccw' : 'cw'; if (V[other] === S.cur) return false; return hasAll(S.players[S.cur], S.scen.volc.tilt[way]); }
+  function canTilt(S, way) { const V = S.volc; if (!V || !canBuild(S) || S.eraIdx < S.scen.volc.from || V[way] >= 0) return false; const other = way === 'cw' ? 'ccw' : 'cw'; if (V[other] === S.cur) return false; if (S.scen.volc.exclusive !== false && V[other] >= 0) return false; /* 早い者勝ち：片方が使われたら反対の枠は閉じる */ return hasAll(S.players[S.cur], S.scen.volc.tilt[way]); }
   function tilt(S, way) {
     if (!canTilt(S, way)) return false; const P = S.players[S.cur], c = S.scen.volc.tilt[way];
     for (const r in c) spend(S, S.cur, r, c[r]);
@@ -3638,12 +3655,30 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const d = dlg(`<h2>⚔ 蛮族の角笛 <small style="font-size:14px;color:var(--muted)">強さ ${G.str}・守備 ${df}${wl ? `（城壁 ${wl}を含む）` : ''}</small></h2>
       <p class="sub" style="margin:0 0 8px">次の時代に変わるとき、全員の守備の合計が強さ以上なら撃退（一番守った人に勲章 +${C.medalVP}点。守りに使った札は最大騎士力に数えない）。足りなければ、赤い輪の範囲に建物がある人のうち<b>一番守っていない人</b>が襲われる（城壁のない都市1つが開拓地に、都市がなければ資源の半分）。</p>
       <ul style="margin:0 0 10px">${rows}</ul>
-      <div class="pick"><button id="dfK" ${HD.canDefendKnight(S) ? '' : 'disabled'}>騎士で守る<small>${HD.defSet(S).join('・')}の札を1枚（2を先に使う。1手番1回・騎士力にも数える）</small></button>
+      <div class="pick"><button id="dfK" ${HD.canDefendKnight(S) ? '' : 'disabled'}>騎士で守る<small>${HD.defSet(S).join('・')}の札を1枚（2を先に使う。1手番1回・騎士力には数えない）</small></button>
       <button id="dfM" ${HD.canMerc(S) ? '' : 'disabled'}>傭兵を雇う<small>${Object.keys(C.mercCost).map(r => RESN[r] + C.mercCost[r]).join('・')}（1手番1回）</small></button></div>
       <div class="foot"><button class="btn" data-x>閉じる</button></div>`);
     d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; if (b.dataset.x != null) return d.close();
       if (b.id === 'dfK') { d.close(); if (HD.defendKnight(S)) { toast('騎士を守備隊に送った（守備+1）'); after(); } }
       else if (b.id === 'dfM') { d.close(); if (HD.hireMerc(S)) { toast('傭兵を雇った（守備+1）'); after(); } } });
+  }
+  // 劫火の胎動：方向の名前と供物の画面
+  const VNAME = ['北東', '東', '南東', '南西', '西', '北西'];
+  const vpair = d => `${VNAME[d]}・${VNAME[(d + 3) % 6]}`;
+  function tiltDialog() {
+    const V = S.volc; if (!V) return;
+    const C = S.scen.volc, t = HD.volcTarget(S), nm = p => p === HUMAN ? 'あなた' : NAMES[p];
+    const open = S.eraIdx >= C.from, slot = (way, lab, rot) => { const by = V[way], other = V[way === 'cw' ? 'ccw' : 'cw'];
+      const st = by >= 0 ? `使用済み（${nm(by)}）` : other >= 0 ? '閉じている（反対の枠が使われた）' : !open ? '2番目の時代から' : '空き';
+      return `<button id="tl-${way}" ${HD.canTilt(S, way) ? '' : 'disabled'}><b>${lab}</b><small>${TF.cost(C.tilt[way])}</small><small>噴火が ${vpair((V.dir + rot + 6) % 6)} にずれる</small><small class="tl-st">${st}</small></button>`; };
+    const d = dlg(`<h2>🌋 火山への供物 <small style="font-size:14px;color:var(--muted)">炎の印 ${S.players[HUMAN].embers || 0}</small></h2>
+      <p class="sub" style="margin:0 0 6px">火山暦の次の噴火：<b>${vpair(V.dir)}</b>${t !== V.dir ? ` → 供物で <b style="color:#ffb27a">${vpair(t)}</b>` : ''}。時代の変わり目に、その2方向へ溶岩が${C.len}マス流れる。</p>
+      <p class="sub" style="margin:0 0 10px">枠は時計回り・反時計回りが<b>1つの時代に1回ずつ</b>。<b>早い者勝ち</b>で、どちらかが使われるともう片方は閉じる。使うと<b>炎の印</b>を1つもらう（${C.keeperN}つ以上で一番多い人が<b>火の守り手 +${C.keeperVP}点</b>）。</p>
+      <div class="pick tl-pick">${slot('cw', '時計回りに1つ', 1)}${slot('ccw', '反時計回りに1つ', -1)}</div>
+      <div class="foot"><button class="btn" data-x>閉じる</button></div>`);
+    d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; if (b.dataset.x != null) return d.close();
+      const way = b.id === 'tl-cw' ? 'cw' : b.id === 'tl-ccw' ? 'ccw' : null; if (!way) return;
+      d.close(); if (HD.tilt(S, way)) { toast(`供物を捧げた：次の噴火は <b>${vpair(HD.volcTarget(S))}</b>（炎の印 +1）`); after(); } });
   }
   // 宝玉の導き：掘る／運ぶ／売る
   function veinDialog() {
@@ -3725,6 +3760,16 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       '鐘が鳴り止まない。倉は破られ、城壁のない町から火の手が上がった。',
       '「だれも来てくれなかった……」焼け跡に立ち尽くす人々。',
       '蛮族は奪うだけ奪って、また海へ消えていった。'] },
+    erupt: { tl: 'ERUPTION', nm: '噴火', ic: '🌋', atk: true, long: true, q: [
+      '大地が脈打ち、山が咆哮した。赤い川が、谷を呑み込んでいく。',
+      '空が灰で暗くなる。逃げ遅れた畑は、もう溶岩の下だ。',
+      '「山の神がお怒りだ……」老人たちは、黒い煙を見上げて祈った。',
+      '炎の舌が大地を舐める。焼けた土は、やがて最も肥えた土になる。'] },
+    keeper: { tl: 'FLAME KEEPER', nm: '火の守り手', ic: '🔥', pts: () => (S.scen && S.scen.volc ? S.scen.volc.keeperVP : 2), q: [
+      '供物の煙がまっすぐ天へ昇る。山は、我らの声を聞いている。',
+      '炎を鎮める者に、大地は実りで応える。',
+      '祭壇の火は絶やさない。それが、この地に生きる者の誇りだ。',
+      '山の機嫌を読めるのは、長く火を見つめてきた者だけだ。'] },
     veinFound: { tl: 'TREASURE', nm: '宝玉の鉱脈', ic: '💎', cls: 'gem', q: [
       '鍬の先が、硬い何かに当たった。土を払うと、紫の光がこぼれ出た。',
       '見つけたぞ！ 噂は本当だった。この荒野の下に、宝玉が眠っていた！',
@@ -3740,11 +3785,12 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       : e.k === 'barbNews' ? `<b>蛮族の船</b>が現れた（強さ<b>${e.str}</b>）。狙いは <b style="color:${PHEX[e.leader]}">${nm(e.leader)}</b> の近く。次の時代に上陸する`
       : e.k === 'barbWin' ? `守備${e.def}で強さ${e.str}の蛮族を撃退！${e.top && e.top.length ? ` 勲章（+${(S.scen && S.scen.medalVP) || 1}点）：${e.top.map(p => `<b style="color:${PHEX[p]}">${nm(p)}</b>`).join('・')}` : ''}`
       : e.k === 'barbLose' ? `守備${e.def}では強さ${e.str}に届かなかった：${e.hits.map(h => `<b style="color:${PHEX[h.p]}">${nm(h.p)}</b> ${h.kind === 'city' ? 'の都市が開拓地に' : `が資源${h.n}枚を奪われた`}`).join('、') || '被害なし'}`
+      : e.k === 'erupt' ? `火山が<b>${vpair(e.d)}</b>へ噴火した。焼けた土地 ${e.path.filter(h => S.hexes[h]).length}か所（溶岩原は開拓し直すと黒土：生産+1）${e.hit && e.hit.length ? '・都市の格下げ ' + e.hit.length : ''}`
       : e.k === 'veinFound' ? `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> が<b>宝玉の鉱脈</b>を掘り当てた（宝玉1つ。数字${e.n}で宝玉が溜まる）`
       : e.k === 'raid' ? `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> の<b>軍</b>が ${vic} の${e.city ? '都市' : '開拓地'}を攻め落とした（+${e.city ? S.raidVPCity : S.raidVP}点）`
       : `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> が${took}<b>${H.nm}</b>を手にした（+${H.pts()}点）`;
     buyQ = buyQ.then(() => new Promise(res => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, long = /^barb/.test(e.k), T = reduce ? 1300 : long ? 4300 : 2600;   // 蛮族の演出は長め
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, long = /^barb/.test(e.k) || !!H.long, T = reduce ? 1300 : long ? 4300 : 2600;   // 蛮族の演出は長め
       const el = document.createElement('div'); el.className = 'buyov honor' + (long ? ' long' : '') + (H.atk ? ' atk' : '') + (H.cls ? ' ' + H.cls : '');
       el.innerHTML = `<div class="bx"><div class="bcard" style="--pc:${PHEX[e.p]}"><span class="bic">${H.ic}</span><span class="bnm"${H.nm.length >= 5 ? ' style="font-size:14px;letter-spacing:.04em"' : ''}>${H.nm}</span></div>
         <span class="btl">${H.tl}</span><small class="bq">「${q}」</small><small class="bcap">${cap}</small></div>`;
@@ -3879,6 +3925,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       else if (e.k === 'devTitle' || e.k === 'army' || e.k === 'lr') { add('win'); honorFx(e); }
       else if (e.k === 'veinFound') { add('gain'); honorFx(e); }
       else if (e.k === 'barbWin' || e.k === 'barbLose' || e.k === 'barbNews') { add(e.k === 'barbWin' ? 'win' : 'raid'); honorFx(e); }
+      else if (e.k === 'erupt') { add('raid'); honorFx(e); }
+      else if (e.k === 'keeper') { add('win'); honorFx(e); }
       else if (e.k === 'defend') add('knight');
       else if (e.k === 'mine' || e.k === 'deliver') add(e.k === 'deliver' ? 'buy' : 'gain');
       else if (e.k === 'road') add('road');
@@ -3949,7 +3997,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     S.hexes.forEach((H, i) => {
       o += `<polygon class="hex" points="${hexPath(H, .985)}" fill="url(#${GRAD[H.res]})"/>`;
       o += `<polygon points="${hexPath(H, .88)}" fill="none" stroke="rgba(255,255,255,.08)"/>`;
-      if (H.res === 'waste') o += `<polygon points="${hexPath(H, .985)}" fill="url(#pWaste)" opacity=".55"/><text x="${H.x * U}" y="${H.y * U - 25}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="2" fill="rgba(235,226,205,.55)">荒地</text>`;
+      if (H.res === 'waste') o += `<polygon points="${hexPath(H, .985)}" fill="url(#pWaste)" opacity=".55"/><text x="${H.x * U}" y="${H.y * U - 25}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="2" fill="rgba(235,226,205,.55)">${H.lava ? '溶岩原' : '荒地'}</text>`;
       else if (!(H.res === 'gem' && S.scen && S.scen.veins)) o += `<use href="#i-${H.res}" x="${H.x * U - 15}" y="${H.y * U - 44}" width="30" height="30" opacity=".75"/>`;
       if (!H.num && H.res !== 'desert' && H.res !== 'waste') o += `<text x="${H.x * U}" y="${H.y * U + 16}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="1" fill="rgba(255,255,255,.7)">数字なし</text>`;
       if (H.num) {
@@ -3964,6 +4012,9 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         }
         o += `</g>`;
       }
+      if (H.lava) o += `<polygon class="lavaf" points="${hexPath(H, .985)}"/><path d="M${H.x * U - 22} ${H.y * U - 8}l10 6 6-9 9 8 8-4" fill="none" stroke="rgba(255,120,60,.55)" stroke-width="2" stroke-linecap="round"/>`;
+      if (H.black) o += `<g transform="translate(${H.x * U},${H.y * U - 30})"><title>黒土：生産+1</title><rect x="-18" y="-8" width="36" height="15" rx="7.5" fill="#1a1110" stroke="#ff9a5a" stroke-width="1"/><text y="3.5" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="9.5" font-weight="700" fill="#ffc69a">黒土+1</text></g>`;
+      if (S.volc && H.q === 0 && H.r === 0) o += `<g class="volcano" transform="translate(${H.x * U},${H.y * U})"><title>火山</title><polygon points="${hexPath({ x: 0, y: 0 }, .9)}" fill="#2a120d"/><path d="M-26 18 -9-10h18l17 28z" fill="#5a2a1c" stroke="#120806" stroke-width="2"/><path d="M-9-10q9 7 18 0" fill="#ff7a3a"/><path d="M-3-10l-3 12M4-10l4 14" stroke="#ff8a4a" stroke-width="3" stroke-linecap="round"/><circle cx="-6" cy="-24" r="6" fill="rgba(80,70,70,.8)"/><circle cx="4" cy="-31" r="8" fill="rgba(80,70,70,.6)"/></g>`;
       if (H.res === 'gem' && S.scen && S.scen.veins) {   // 宝玉の導き：土地に溜まった宝玉（最大3）
         const g = H.gems || 0, mx = S.scen.veinMax, can = S.cur === HUMAN && HD.mineTargets(S, HUMAN).includes(i);
         o += `<g class="vgem${can ? ' can' : ''}" transform="translate(${H.x * U},${H.y * U - 30})"><title>溜まった宝玉 ${g}/${mx}${can ? '（宝玉ボタンから掘れる）' : ''}</title><rect x="${-mx * 8 - 3}" y="-8" width="${mx * 16 + 6}" height="16" rx="8" fill="rgba(13,23,38,.85)" stroke="${can ? '#e6c98a' : '#8b62b8'}" stroke-width="${can ? 1.8 : 1}"/>`;
@@ -4034,6 +4085,14 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       // 都市（資源が足りるときだけ、自分の建物の上に）
       if (P.cities < L.city && HD.afford(P, 'city')) HD.legalCities(S, HUMAN).forEach(v => { const V = S.verts[v];
         o += `<g class="ghost ok gcity" data-g="city" data-id="${v}" transform="translate(${V.x * U + 17},${V.y * U - 19})"><circle class="hit" r="${Math.max(15, 16 * px)}"/><circle class="badge" r="15"/><path d="M-9 7V-2l4.5-4 4.5 4v-4h9v13z" fill="${col}"/><text y="-17" text-anchor="middle">都市</text></g>`; });
+    }
+    if (S.volc) {   // 劫火の胎動：次の噴火（実線）と、その次（点線）の方向
+      const t = HD.volcTarget(S), nx = (t + S.scen.volc.step) % 6;
+      const arrow = (d, cls) => { const far = S.hexes.find(H => H.q === HD.VDIR[d][0] * S.scen.volc.len && H.r === HD.VDIR[d][1] * S.scen.volc.len); if (!far) return '';
+        const L = Math.hypot(far.x, far.y), ux = far.x / L, uy = far.y / L, x1 = ux * .7 * U, y1 = uy * .7 * U, x2 = (far.x + ux * .55) * U, y2 = (far.y + uy * .55) * U;
+        return `<g class="varrow ${cls}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><path d="M${x2} ${y2}l${(-ux * 14 - uy * 8).toFixed(1)} ${(-uy * 14 + ux * 8).toFixed(1)}M${x2} ${y2}l${(-ux * 14 + uy * 8).toFixed(1)} ${(-uy * 14 - ux * 8).toFixed(1)}"/></g>`; };
+      if (S.eraIdx >= 1 || S.turn > 0) { HD.volcPath(S, t).forEach(h => { o += `<polygon class="vpath" points="${hexPath(S.hexes[h], .93)}"/>`; });
+        o += arrow(nx, 'next') + arrow((nx + 3) % 6, 'next') + arrow(t, 'now') + arrow((t + 3) % 6, 'now'); }
     }
     if (S.phase === 'robber' && S.robberBy === HUMAN) S.hexes.forEach((H, i) => { if (i !== S.robber) o += `<polygon class="ht" data-h="${i}" points="${hexPath(H, .9)}"/>`; });
     svg.innerHTML = o;
@@ -4372,6 +4431,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     $('aTrash').disabled = !(my && S.acted && P.hand.length && (!HD.trashPrice(S) || HD.RES.some(r => P.res[r] >= S.trashCost)));
     $('aTrash').querySelector('.lab').innerHTML = my && S.acted && HD.trashPrice(S) ? `処分<small>資源${S.trashCost}</small>` : `処分<small>${my && S.acted ? '無料' : ''}</small>`;
     $('aKnight').disabled = !(my && HD.canKnight(S));
+    $('aTilt').hidden = !S.volc; if (S.volc) $('aTilt').disabled = !(my && (HD.canTilt(S, 'cw') || HD.canTilt(S, 'ccw')));
     $('aDefend').hidden = !(S.scen && S.scen.barb); if (S.scen && S.scen.barb) { $('aDefend').disabled = !(my && (HD.canDefendKnight(S) || HD.canMerc(S))); $('aDefend').classList.toggle('pulse', !!(my && S.barb && HD.barbDef(S) < S.barb.str && S.barb.range.some(v => S.verts[v].owner === HUMAN))); }
     $('aShop').hidden = !S.specOn; $('aShop').disabled = !(my && S.acted && S.shop.length);
     { const ts = my && HD.canRaid(S) ? HD.raidTargets(S, HUMAN).filter(v => HD.hasAll(P, HD.raidCostOf(S, v))) : [];
@@ -4393,7 +4453,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     $('players').innerHTML = [...Array(S.n).keys()].map(i => S.players[(S.first + i) % S.n]).map(Q => {
       const cnt = HD.cardCount(Q), warn = cnt >= S.limit - 2;
       return `<div class="pl${Q.id === S.cur && S.phase !== 'over' ? ' cur' : ''}" data-pid="${Q.id}"><span class="chip" style="background:${PCOL[Q.id]}"></span>
-        <span class="nm">${NAMES[Q.id]}<span class="ord">${(Q.id - S.first + S.n) % S.n + 1}番手${Q.id !== HUMAN && S.uiLv ? `・${LVJ[S.uiLv]}` : ''}</span>${Q.id === S.cur && S.phase !== 'over' ? '<em>手番</em>' : ''}${S.lrHolder === Q.id ? `<em class="lrb" data-lrp="${Q.id}" title="マウスを乗せると最長路が光ります">最長路</em>` : ''}${S.armyHolder === Q.id ? '<em>騎士力</em>' : ''}${S.devVP && S.devHolder === Q.id ? '<em>開拓者</em>' : ''}</span>
+        <span class="nm">${NAMES[Q.id]}<span class="ord">${(Q.id - S.first + S.n) % S.n + 1}番手${Q.id !== HUMAN && S.uiLv ? `・${LVJ[S.uiLv]}` : ''}</span>${Q.id === S.cur && S.phase !== 'over' ? '<em>手番</em>' : ''}${S.lrHolder === Q.id ? `<em class="lrb" data-lrp="${Q.id}" title="マウスを乗せると最長路が光ります">最長路</em>` : ''}${S.volc && S.volc.keeper === Q.id ? '<em class="keeper">火の守り手</em>' : ''}${S.armyHolder === Q.id ? '<em>騎士力</em>' : ''}${S.devVP && S.devHolder === Q.id ? '<em>開拓者</em>' : ''}</span>
         <span class="vp">${HD.vp(S, Q.id)}<small>/ ${S.goal}</small></span>
         <div class="st">${(() => { const pk = [...HD.portKinds(S, Q.id)]; const mk = Q.milKept || 0;
           return `<span class="si hc${warn ? ' warn' : ''}" title="手札（資源＋札。7が出たとき${S.limit}枚以上なら半分捨てる）">${SI.hand}<b>${cnt}<small>/${S.limit - 1}</small></b></span>`
@@ -4402,6 +4462,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
             + (S.devVP ? `<span class="si dv" title="自分で開拓した土地（${S.devVP.n}か所以上で一番多い人が開拓者 +${S.devVP.vp}点）"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><b>${HD.devCount(S, Q.id)}</b></span>` : '')
             + `<span class="si mk${mk ? '' : ' zero'}" title="軍の得点札">${SI.mil}<b>${mk}</b></span>`
             + (S.scen && S.scen.veins ? `<span class="si gm${Q.gems ? '' : ' zero'}" title="宝玉（持っている数）・本国へ運んだ点">${SI.gem}<b>${Q.gems || 0}</b><small class="chest">運${Q.tribVP || 0}</small></span>` : '')
+            + (S.volc ? `<span class="si em${Q.embers ? '' : ' zero'}" title="炎の印（${S.scen.volc.keeperN}つ以上で一番多い人が火の守り手 +${S.scen.volc.keeperVP}点）">🔥<b>${Q.embers || 0}</b></span>` : '')
             + (S.scen && S.scen.barb ? `<span class="si md${Q.medals ? '' : ' zero'}" title="守護者の勲章（蛮族を撃退して一番守った）">🎖<b>${Q.medals || 0}</b><small class="chest">守${S.barb ? S.barb.def[Q.id] : 0}</small></span>` : '')
             + (S.scen && S.scen.tribute ? `<span class="si gm${Q.gems ? '' : ' zero'}${Q.crowned ? ' crown' : ''}" title="宝玉（${S.scen.tribute}つで献上）${Q.crowned ? '：献上済み' : ''}">${SI.gem}<b>${Q.crowned ? '献' : Q.gems || 0}</b>${S.envoy && !Q.crowned ? `<small class="chest">箱${Q.chest || 0}</small>` : ''}</span>` : '')
             + `<span class="si pt${pk.length ? '' : ' zero'}" title="使える港${pk.length ? '：' + pk.map(k => k === 'any' ? '3:1' : RESN[k] + ' 2:1').join('・') : 'なし'}">${SI.port}<span class="pks">${pk.length ? pk.map(k => k === 'any' ? '<i class="any">3:1</i>' : `<i class="r-${k}">${resIcon(k, 12)}</i>`).join('') : '<b>—</b>'}</span></span>`; })()}</div>
@@ -4567,6 +4628,9 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       case 'produce': { const s = e.gains.map((x, p) => Object.keys(x).length ? `${pn(p)} ${g(x)}` : '').filter(Boolean); return s.length ? `　${e.n}の生産：${s.join('、')}` : `　${e.n}の生産：なし`; }
       case 'bust': return `${pn(e.p)} <b>バースト！</b> この番の生産なし`;
       case 'barbNews': return `<b>蛮族の船</b>が沖に現れた（強さ${e.str}）。次の時代に上陸する`;
+      case 'tilt': return `${pn(e.p)} 火山に供物（${e.way === 'cw' ? '時計回り' : '反時計回り'}）：次の噴火は ${vpair(e.to)}`;
+      case 'erupt': return `<b>火山が噴火</b>（${vpair(e.d)}）：${e.path.length}か所が溶岩原に${e.hit && e.hit.length ? `・都市${e.hit.length}つが開拓地に` : ''}`;
+      case 'keeper': return `${pn(e.p)} が<b>火の守り手</b>（炎の印${e.n}・+${S.scen.volc.keeperVP}点）`;
       case 'defend': return `${pn(e.p)} ${e.how === 'merc' ? '傭兵を雇った' : '騎士を守備隊に送った'}（守備+1）`;
       case 'barbWin': return `<b>蛮族を撃退！</b>（強さ${e.str}・守備${e.def}）${e.top.length ? `勲章：${e.top.map(p => pn(p)).join('・')}` : ''}`;
       case 'barbLose': return `<b>蛮族が上陸した</b>（強さ${e.str}・守備${e.def}）：${e.hits.map(h => `${pn(h.p)} ${h.kind === 'city' ? '都市が開拓地に' : `資源${h.n}枚を奪われた`}`).join('、') || '被害なし'}`;
@@ -4768,6 +4832,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   $('aEnd').onclick = () => { if (busy) return; mode = null; HD.endTurn(S); after(); };
   $('aTrade').onclick = () => tradeDialog();
   $('aDefend').onclick = () => { if (busy) return; mode = null; defendDialog(); };
+  $('aTilt').onclick = () => { if (busy) return; mode = null; tiltDialog(); };
   $('aKnight').onclick = () => { if (busy || !HD.canKnight(S)) return; mode = null; try { knightSnap = structuredClone(S); } catch (_) { knightSnap = null; } HD.playKnight(S); after(); };
   $('status').addEventListener('click', e => { if (!e.target.closest('#knCancel') || !knightSnap || S.phase !== 'robber') return; S = knightSnap; knightSnap = null; mode = null; render(); });
   $('myHand').addEventListener('click', e => {
@@ -4973,10 +5038,10 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function newGameDialog(first) {
     const o = Object.assign({}, opts);
     const d = dlg(`<h2>${first ? 'ナンバーランズ' : '新しい対局'}</h2>
-      <h4>マップ</h4><div class="seg" data-k="map"><button data-v="0">固定<small style="display:block;font-size:11px;color:var(--muted)">中央に砂漠（初心者向け）</small></button><button data-v="1">ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央も資源の土地</small></button><button data-v="2">完全ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央の7つを袋から</small></button><button data-v="4">宝玉の導き<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="5">蛮族の角笛<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="3">横6縦5（試作）<small style="display:block;font-size:11px;color:var(--muted)">24マス・目標11点</small></button></div>
+      <h4>マップ</h4><div class="seg" data-k="map"><button data-v="0">固定<small style="display:block;font-size:11px;color:var(--muted)">中央に砂漠（初心者向け）</small></button><button data-v="1">ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央も資源の土地</small></button><button data-v="2">完全ランダム<small style="display:block;font-size:11px;color:var(--muted)">中央の7つを袋から</small></button><button data-v="4">宝玉の導き<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="5">蛮族の角笛<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="6">劫火の胎動<small style="display:block;font-size:11px;color:var(--muted)">シナリオ</small></button><button data-v="3">横6縦5（試作）<small style="display:block;font-size:11px;color:var(--muted)">24マス・目標11点</small></button></div>
       <h4>BOTの強さ</h4><div class="seg" data-k="lv"><button data-v="1">初級<small style="display:block;font-size:11px;color:var(--muted)">はじめての方に</small></button><button data-v="2">中級<small style="display:block;font-size:11px;color:var(--muted)">標準</small></button><button data-v="3">上級<small style="display:block;font-size:11px;color:var(--muted)">手強い</small></button></div>
       <h4>人数</h4><div class="seg" data-k="players"><button data-v="3">3人（BOT 2）</button><button data-v="4">4人（BOT 3）</button></div>
-      <h4>目標点</h4><p class="sub" style="margin:2px 0 10px">基本マップは <b>10点</b>、シナリオは <b>11点</b>、横6縦5（試作）は <b>11点</b>。12点以上は拡張ルール用に準備中です。</p>
+      <h4>目標点</h4><p class="sub" style="margin:2px 0 10px">基本マップは <b>10点</b>、シナリオは <b>11点</b>（劫火の胎動は10点）、横6縦5（試作）は <b>11点</b>。12点以上は拡張ルール用に準備中です。</p>
       <h4>7（バースト）の枚数</h4><div class="seg" data-k="sevens"><button data-v="1">1枚</button><button data-v="2">2枚</button><button data-v="3">3枚</button><button data-v="4">4枚</button></div>
       <h4>所持上限（資源＋手札）</h4><div class="seg" data-k="limit"><button data-v="12">12枚</button><button data-v="14">14枚</button><button data-v="16">16枚</button></div>
       <div class="foot"><button class="btn primary" id="nOk">対局開始</button>${first ? '' : '<button class="btn" id="nNo">閉じる</button>'}</div>`, first ? () => start() : undefined);
@@ -5004,7 +5069,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const sec = (k, h, body) => `<section class="rl-sec" data-s="${k}"><h3>${h}</h3>${body}</section>`;
     const html = [
       sec('start', 'はじまり', `<p class="rl-lead">土地を開拓して資源と数字を決め、道と建物を広げて、先に<b>${S.goal}点</b>に届いた人の勝ち。サイコロの代わりに全員共通の<b>アクション札の山</b>を使います。</p>
-        <div class="rk-grid">${card(`<span class="rl-mini">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `マップ：${mapName}`, ul([S.noDesert ? '中央も資源の土地（砂漠なし）' : '中央は砂漠（盗賊の居場所）', 'まわりの6つは資源だけ決まっていて<b>数字なし</b>', '外周の12は<b>荒地</b>（資源も数字もなし）']))}
+        <div class="rk-grid">${card(`<span class="rl-mini">${mapThumb(S.scen && S.scen.veins ? 'gemroad' : S.scen && S.scen.barb ? 'horn' : S.scen && S.scen.volc ? 'volcano' : S.bagInner ? 'bag' : S.noDesert ? 'random' : 'fixed')}</span>`, `マップ：${mapName}`, ul([S.noDesert ? '中央も資源の土地（砂漠なし）' : '中央は砂漠（盗賊の居場所）', 'まわりの6つは資源だけ決まっていて<b>数字なし</b>', '外周の12は<b>荒地</b>（資源も数字もなし）']))}
         ${card('🚩', '準備の流れ', flow([['⛺', 'スタート地点', '角を選んで拠点を置く（0点・生産力' + S.campYield + '）'], ['⛏', '無料で開拓', '拠点のとなりの荒地に資源と数字（4〜12）'], [TF.road(), '道を1本', '拠点から伸ばす']]))}</div>
         ${ul(['手番は<b>スタート地点を選んだ順の逆</b>（最後に選んだ人から）。', '初期チップの11は資源2枚、12は資源3枚のボーナス。2・3は選べない。', (() => { const d = S.scen && S.scen.draftRoads && S.scen.draftRoads[S.n] || []; const t = d.map((x, i) => x ? `${i + 1}番手+${x}` : '').filter(Boolean); return t.length ? `手番順の補正：準備で道を追加（${t.join('・')}）。` : ''; })(), `初期資源は ${cost({ wood: 1, brick: 1, sheep: 1, wheat: 1 })}。`])}`),
       sec('turn', '手番', flow([[`<span class="tf-deck sm"></span>`, '札を引く', '1枚引く。もう1枚引くか止める（最大2枚）'], [acard(3, 'sm') + acard(5, 'sm'), '数字を出す', '手札の1枚か合計で2〜12。全員が生産'], ['🔨', '建てる・交換', '建設・開拓・交換・特殊カード'], [IC('aEnd'), '終了', '次の人の番へ']]) +
@@ -5039,7 +5104,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     ].join('\n');
     const d = dlg(`<div class="rl-head"><h2>ルール</h2><div class="rl-tabs" role="tablist"><button data-s="start" class="on">はじまり</button><button data-s="turn">手番</button><button data-s="build">建設・開拓</button><button data-s="knight">7と騎士</button><button data-s="era">時代・市場</button><button data-s="atk">収奪・軍・城壁</button><button data-s="trade">相場・交換</button><button data-s="end">得点・終わり方</button>${S.scen ? '<button data-s="scen">シナリオ</button>' : ''}<button data-s="credit">クレジット</button></div></div><div class="rl-body">
       ${html}
-      <section class="rl-sec scen" data-s="scen">${S.scen && S.scen.barb ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>2番目の時代から、時代の初めに蛮族の船が沖に現れる。上陸地点は点が一番高い人の建物が一番多い海岸（その辺から2辺以内が襲われる範囲）、強さ＝時代の番号×${(S.scen.barb.baseN && S.scen.barb.baseN[S.n]) || S.scen.barb.base}（四捨五入）＋先頭の都市の数の半分（切り上げ）。</li><li>守備：騎士で守る（1の札＝騎士、2の札＝守備兵（守備専用）。盗賊は動かさない。1手番1回で、騎士の攻撃と合わせて1回。<b>最大騎士力には数えない</b>）、傭兵を雇う（${Object.keys(S.scen.mercCost).map(r => RESN[r] + S.scen.mercCost[r]).join('・')}、1手番1回）、範囲にある城壁1つにつき+1。</li><li>次の時代に変わるとき：守備の合計が強さ以上なら撃退し、一番守った人（同数なら全員）に勲章+${S.scen.medalVP}点。足りなければ、範囲に建物がある人のうち一番守っていない人（同数なら全員）の、城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li></ul>` : S.scen && S.scen.veins ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>外周の荒地のどれか${S.scen.veins}つに宝玉の鉱脈が隠れている。開拓すると鉱脈が出ることがあり、その土地は宝玉の鉱脈になる（開拓した人は宝玉1つ）。</li><li>鉱脈の数字が出ると、宝玉はその土地に溜まる（最大${S.scen.veinMax}つ）。隣に建物がある人なら、自分の手番に掘れる（開拓地1つ・都市2つ、1手番に1つの鉱脈につき1回。盗賊がいる鉱脈は掘れない）。</li><li>宝玉${S.scen.deliverN}つを本国の港（王冠の港）まで運ぶと1点（最大${S.scen.deliverCap}点）。港まで道がつながっていればよく、他人の道を通るときは持ち主ごとに通行料（宝玉${S.scen.toll}つ）。宝玉1＝好きな資源${S.scen.gemSell}枚にも換えられる。盗賊を鉱脈に置くと溜まった宝玉を1つ持ち去る。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（本国の港が開く）、3番目＝宝玉の噂（隠れた鉱脈+${S.scen.rumorVeins}、溜まる宝玉が2倍）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。専用の札：宝石商（宝玉1→資源3）。1・2番手は準備で道をもう1本。</li></ul>` : S.scen ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>小麦・羊毛の土地はなく、荒地もはじめは木材・レンガ・鉱石のみ。家畜の発見・種麦の時代で羊毛・小麦のタイルが3枚ずつ増える。</li><li>宝玉の洞窟は宝玉を生産（建物1つにつき1、都市2。開拓のボーナスなし）。宝玉1＝好きな資源${S.scen.gemSell}枚。宝玉${S.scen.tribute}つの献上で目標点に届いた扱い。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（以後、宝玉を献上箱に納められる。納めた宝玉は売れず奪われない。箱が${S.scen.tribute}個で献上達成）、3番目＝宝玉の噂（荒地を宝玉の洞窟として開拓できる、宝玉のタイル+3）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。長引いたら家畜の発見・種麦・補給船・飢えの冬などが来る。専用の札：狩猟（羊毛2）・宝石商（宝玉1→資源3）。</li></ul>` : ''}</section>
+      <section class="rl-sec scen" data-s="scen">${S.scen && S.scen.volc ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>中央は火山。3番目の時代から、時代の変わり目に<b>火山暦の方向とその反対</b>へ溶岩が${S.scen.volc.len}マス流れる。火山暦は毎回時計回りに${S.scen.volc.step}つ進む（実線＝次の噴火、点線＝その次）。</li><li>溶岩を浴びた土地は数字チップと資源を失い<b>溶岩原</b>に（建物は残る）。荒地と同じ費用で開拓し直せて、開拓すると<b>黒土</b>（生産+1）。</li><li><b>供物</b>（1手番1回）：時計回り＝${Object.keys(S.scen.volc.tilt.cw).map(r => RESN[r] + S.scen.volc.tilt.cw[r]).join('・')}、反時計回り＝${Object.keys(S.scen.volc.tilt.ccw).map(r => RESN[r] + S.scen.volc.tilt.ccw[r]).join('・')}で、次の噴火を1つずらす。枠は各時代1回ずつ・<b>早い者勝ち</b>（片方が使われるともう片方は閉じる）。</li><li>供物ごとに<b>炎の印</b>1つ。${S.scen.volc.keeperN}つ以上で一番多い人は<b>火の守り手 +${S.scen.volc.keeperVP}点</b>（上回る人が出たら移る）。</li></ul>` : S.scen && S.scen.barb ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>2番目の時代から、時代の初めに蛮族の船が沖に現れる。上陸地点は点が一番高い人の建物が一番多い海岸（その辺から2辺以内が襲われる範囲）、強さ＝時代の番号×${(S.scen.barb.baseN && S.scen.barb.baseN[S.n]) || S.scen.barb.base}（四捨五入）＋先頭の都市の数の半分（切り上げ）。</li><li>守備：騎士で守る（1の札＝騎士、2の札＝守備兵（守備専用）。盗賊は動かさない。1手番1回で、騎士の攻撃と合わせて1回。<b>最大騎士力には数えない</b>）、傭兵を雇う（${Object.keys(S.scen.mercCost).map(r => RESN[r] + S.scen.mercCost[r]).join('・')}、1手番1回）、範囲にある城壁1つにつき+1。</li><li>次の時代に変わるとき：守備の合計が強さ以上なら撃退し、一番守った人（同数なら全員）に勲章+${S.scen.medalVP}点。足りなければ、範囲に建物がある人のうち一番守っていない人（同数なら全員）の、城壁のない都市1つが開拓地に戻る（都市がなければ資源の半分を失う）。</li></ul>` : S.scen && S.scen.veins ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>外周の荒地のどれか${S.scen.veins}つに宝玉の鉱脈が隠れている。開拓すると鉱脈が出ることがあり、その土地は宝玉の鉱脈になる（開拓した人は宝玉1つ）。</li><li>鉱脈の数字が出ると、宝玉はその土地に溜まる（最大${S.scen.veinMax}つ）。隣に建物がある人なら、自分の手番に掘れる（開拓地1つ・都市2つ、1手番に1つの鉱脈につき1回。盗賊がいる鉱脈は掘れない）。</li><li>宝玉${S.scen.deliverN}つを本国の港（王冠の港）まで運ぶと1点（最大${S.scen.deliverCap}点）。港まで道がつながっていればよく、他人の道を通るときは持ち主ごとに通行料（宝玉${S.scen.toll}つ）。宝玉1＝好きな資源${S.scen.gemSell}枚にも換えられる。盗賊を鉱脈に置くと溜まった宝玉を1つ持ち去る。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（本国の港が開く）、3番目＝宝玉の噂（隠れた鉱脈+${S.scen.rumorVeins}、溜まる宝玉が2倍）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。専用の札：宝石商（宝玉1→資源3）。1・2番手は準備で道をもう1本。</li></ul>` : S.scen ? `<h3>シナリオ：${S.scen.name}</h3><ul><li>小麦・羊毛の土地はなく、荒地もはじめは木材・レンガ・鉱石のみ。家畜の発見・種麦の時代で羊毛・小麦のタイルが3枚ずつ増える。</li><li>宝玉の洞窟は宝玉を生産（建物1つにつき1、都市2。開拓のボーナスなし）。宝玉1＝好きな資源${S.scen.gemSell}枚。宝玉${S.scen.tribute}つの献上で目標点に届いた扱い。</li><li>時代：1番目＝大陸の発見、2番目＝本国の使者（以後、宝玉を献上箱に納められる。納めた宝玉は売れず奪われない。箱が${S.scen.tribute}個で献上達成）、3番目＝宝玉の噂（荒地を宝玉の洞窟として開拓できる、宝玉のタイル+3）、4番目＝盗掘の夜（盗賊・騎士は宝玉を奪う）。長引いたら家畜の発見・種麦・補給船・飢えの冬などが来る。専用の札：狩猟（羊毛2）・宝石商（宝玉1→資源3）。</li></ul>` : ''}</section>
       <section class="rl-sec" data-s="credit"><h3>クレジット</h3><p class="sub">効果音「<a href="https://orangefreesounds.com/shofar-sound/" target="_blank" rel="noopener">Shofar Sound</a>」 by alexander（Orange Free Sounds）／ <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>（改変なし）。起動時の曲「<a href="https://pixabay.com/music/modern-classical-ancient-empire-142301/" target="_blank" rel="noopener">Ancient Empire</a>」 by The_Mountain（Pixabay、Pixabay Content License。容量のため128kbpsに再圧縮）。バーストで手放すときの効果音「<a href="https://on-jin.com/sound/listshow.php?pagename=hito&title=%E3%82%AC%E3%83%BC%E3%83%B302&janl=%E4%BA%BA%E9%96%93%E7%B3%BB%E9%9F%B3&bunr=%E3%82%B7%E3%83%A7%E3%83%83%E3%82%AF&kate=%E6%83%85%E5%8B%95" target="_blank" rel="noopener">ガーン02</a>」「衝撃」：<a href="https://on-jin.com/" target="_blank" rel="noopener">On-Jin ～音人～</a>（音量をそろえて使用。素材の二次配布・無断利用は禁止）。そのほかの効果音はブラウザ内で合成。</p></section></div>
       <div class="foot"><button class="btn" id="cl">閉じる</button></div>`);
     d.classList.add('rules');
@@ -5119,7 +5184,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
 
   function start() {
     coachEnd();
-    S = HD.newGame({ players: opts.players, goal: opts.map === 3 ? 11 : opts.map === 4 || opts.map === 5 ? 11 : 10, limit: opts.limit, sevens: opts.sevens, noDesert: opts.map === 1 || opts.map === 2, bagInner: opts.map === 2, wide: opts.map === 3, scenario: opts.map === 4 ? 'gemroad' : opts.map === 5 ? 'horn' : null, seed: (Math.random() * 2 ** 31) | 0 });
+    S = HD.newGame({ players: opts.players, goal: opts.map === 3 ? 11 : opts.map === 4 || opts.map === 5 ? 11 : opts.map === 6 ? 10 : 10, limit: opts.limit, sevens: opts.sevens, noDesert: opts.map === 1 || opts.map === 2, bagInner: opts.map === 2, wide: opts.map === 3, scenario: opts.map === 4 ? 'gemroad' : opts.map === 5 ? 'horn' : opts.map === 6 ? 'volcano' : null, seed: (Math.random() * 2 ** 31) | 0 });
     setBots(opts.lv || 2);
     mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
     render();
@@ -5138,6 +5203,21 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
           <li>目標は<b>${S.goal}点</b>。</li>
         </ul></div></div>
         <div class="foot"><button class="btn primary" id="plGo">上陸する</button></div>`, done);
+      d.classList.add('prologue');
+      d.querySelector('#plGo').onclick = () => d.close();
+      return;
+    }
+    if (C.volc) {
+      const V = C.volc;
+      const d = dlg(`<div class="pl-grid"><div class="tale-h prolog volc"><div class="ptag">SCENARIO</div><div class="ptitle">${C.name}</div><p class="tale-q">「大地が脈打つたび、<br>炎の道が刻まれる。<br>焼かれた土は、<br>やがて最も肥えた土になる」</p>${mapThumb('volcano')}</div>
+        <div class="pl-side"><h3>この大陸のルール</h3><ul class="pl-rules">
+          <li>中央は<b>火山</b>。3番目の時代から、<b>時代の変わり目に噴火</b>し、<b>矢印の方向とその反対</b>の2方向へ溶岩が${V.len}マス流れる。噴火の方向は<b>火山暦</b>で決まっていて、毎回時計回りに${V.step}つ進む（盤の実線が次、点線がその次）。</li>
+          <li>溶岩を浴びた土地は数字チップと資源を失って<b>溶岩原</b>になる（建物はそのまま）。溶岩原は荒地と同じように開拓し直せて、開拓すると<b>黒土</b>（生産+1）になる。</li>
+          <li><b>供物</b>で噴火の向きを1つずらせる：時計回りは${Object.keys(V.tilt.cw).map(r => RESN[r] + V.tilt.cw[r]).join('・')}、反時計回りは${Object.keys(V.tilt.ccw).map(r => RESN[r] + V.tilt.ccw[r]).join('・')}。枠は1つの時代に1回ずつで<b>早い者勝ち</b>（どちらかが使われると、もう片方は閉じる）。</li>
+          <li>供物を捧げると<b>炎の印</b>を1つもらう。${V.keeperN}つ以上で一番多い人は<b>火の守り手 +${V.keeperVP}点</b>（上回る人が出たら移る）。</li>
+          <li>目標は<b>${S.goal}点</b>。</li>
+        </ul></div></div>
+        <div class="foot"><button class="btn primary" id="plGo">火山の地へ</button></div>`, done);
       d.classList.add('prologue');
       d.querySelector('#plGo').onclick = () => d.close();
       return;
@@ -5180,6 +5260,14 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         if (ring === 0) o += `<path d="M${x - 2} ${y + 7}V${y - 6}a2 2 0 0 1 4 0V${y + 7}M${x - 2} ${y}h-3v-4M${x + 2} ${y - 2}h3v-3" fill="none" stroke="#6b5a3a" stroke-width="1.8" stroke-linecap="round"/>`; }
       o += `<g transform="translate(58,-50)"><circle r="13" fill="#2b0d0d" stroke="#ff8a6a" stroke-width="1.5"/><path d="M-7 1h14l-3 5h-8z" fill="#c9a45c"/><path d="M0 1V-9M0-8l6 5H0z" fill="#e8d6c0"/></g>`;
       o += `<circle cx="34" cy="-30" r="9" fill="none" stroke="#ff6b4a" stroke-width="1.4" stroke-dasharray="3 2"/>`;
+      return `<svg viewBox="-80 -78 160 156" width="100%" aria-hidden="true">${o}</svg>`;
+    }
+    if (kind === 'volcano') {   // 劫火の胎動：中央の火山＋溶岩の矢印
+      for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) { if (Math.abs(q + r) > 2) continue; const [x, y] = hx(q, r); const ring = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+        const lava = (q === 1 && r === -1) || (q === 2 && r === -2) || (q === -1 && r === 1) || (q === -2 && r === 2);
+        o += `<polygon points="${poly(x, y, R * 1.06)}" fill="#d8c79e"/><polygon points="${poly(x, y, R * .96)}" fill="${ring === 0 ? '#2a120d' : lava ? '#5a2216' : ring === 1 ? C[inner[k++ % 6]] : '#4a443b'}" stroke="rgba(0,0,0,.25)"/>`;
+        if (ring === 0) o += `<path d="M${x - 9} ${y + 6}l5-9h8l5 9z" fill="#6a2c1c"/><path d="M${x - 4} ${y - 3}q4 3 8 0" fill="#ff7a3a"/>`; }
+      [[1, -1], [-1, 1]].forEach(([dq, dr]) => { const [x2, y2] = hx(dq * 2.5, dr * 2.5); o += `<line x1="0" y1="0" x2="${x2}" y2="${y2}" stroke="#ff7a3a" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>`; });
       return `<svg viewBox="-80 -78 160 156" width="100%" aria-hidden="true">${o}</svg>`;
     }
     if (kind === 'gemroad') {   // 宝玉の導き：普通の盤＋外周に隠れた鉱脈（？）＋王冠の港2つ
@@ -5402,13 +5490,14 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       </div>
       <div class="mappick" data-pane="scen" hidden>
         <button data-m="4" class="scen">${mapThumb('gemroad')}<b>宝玉の導き<em class="tst">シナリオ</em></b><small>荒地に隠れた鉱脈を掘り当て、<br>宝玉を本国の港まで運べ。目標11点</small></button>
+        <button data-m="6" class="scen volc">${mapThumb('volcano')}<b>劫火の胎動<em class="tst">シナリオ</em></b><small>火山が脈打ち、溶岩が大地を焼く。<br>焼けた土は黒土に。目標10点</small></button>
         <button data-m="5" class="scen horn">${mapThumb('horn')}<b>蛮族の角笛<em class="tst">シナリオ</em></b><small>角笛が鳴れば蛮族が来る。<br>守るか、見捨てるか。目標11点</small></button>
       </div></div><div class="mp-lv"><span>🤖 BOTの強さ</span>${[1, 2, 3].map(v => `<button data-lv="${v}" class="${(opts.lv || 2) === v ? 'on' : ''}">${LVJ[v]}</button>`).join('')}</div><div class="mp-tut"><span>📖 チュートリアル</span><button data-tut="play" class="rec">遊びながら覚える</button><button data-tut="begin">マニュアル</button><button data-tut="expert">カタン経験者</button></div><p class="sub" style="text-align:center">人数や目標点はヘッダーの「対局」から変えられます</p>`);
     let picked = false, tutOpen = false; d.addEventListener('click', e => { const lb = e.target.closest('button[data-lv]'); if (lb) { saveLv(+lb.dataset.lv); d.querySelectorAll('.mp-lv button').forEach(x => x.classList.toggle('on', x === lb)); return; } const tb = e.target.closest('button[data-tut]'); if (tb) { tutOpen = true; d.close(); if (tb.dataset.tut === 'play') startTut(); else tutDialog(tb.dataset.tut, () => mapPickDialog()); return; } const t = e.target.closest('button[data-tab]'); if (t) { d.querySelectorAll('.mptabs button').forEach(x => x.classList.toggle('on', x === t)); d.querySelectorAll('.mappick[data-pane]').forEach(x => { x.hidden = x.dataset.pane !== t.dataset.tab; }); try { localStorage.setItem('hexdeck.tab', t.dataset.tab); } catch (_) {} return; } const b = e.target.closest('button[data-m]'); if (!b) return; opts.map = +b.dataset.m; picked = true; d.close(); });
     try { const tb = localStorage.getItem('hexdeck.tab'); if (tb === 'scen') d.querySelector('.mptabs button[data-tab="scen"]').click(); } catch (_) {}
     const c0 = d.close; d.close = () => { c0(); if (tutOpen) return; SND.unlock(); SND.bgmPlay(); start(); };
   }
-  if (location.hash === '#dbg') window.__dbg = { S: () => S, after, B, devDialog };   // 検証用
+  if (location.hash === '#dbg') window.__dbg = { S: () => S, after, B, devDialog, tiltDialog };   // 検証用
   S = HD.newGame({ players: opts.players, goal: opts.goal, limit: opts.limit, sevens: opts.sevens, seed: (Math.random() * 2 ** 31) | 0 }); render(); tutAsk(() => mapPickDialog());   // 曲はマップを選んでから流す
   window.HDUI = { get S() { return S; }, render: () => render() };
 })();
