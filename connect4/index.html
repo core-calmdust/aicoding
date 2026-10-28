@@ -28,7 +28,7 @@
   --frame-bg:linear-gradient(145deg,#103237 0%,#061619 55%,#0e2b30 100%);
   --frame-edge:rgba(232,148,106,.28); --frame-line:rgba(232,148,106,.5);
   --ring:rgba(232,148,106,.45); --back:radial-gradient(ellipse at 50% 30%,#0a1c1f,#020909 80%);
-  --crd:rgba(255,179,138,.6); --grain:.2; --last:rgba(255,255,255,.85);
+  --crd:rgba(255,179,138,.6); --grain:.2; --last:rgba(255,255,255,.85); --gtxt:#1a160c; --rtxt:#121413;
   --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;   /* first player's disc (gold) */
   --ruby1:#ffffff; --ruby2:#d4d9e0; --ruby3:#8f97a3; --ruby4:#3c424b;   /* second player's disc (silver) */
   --vh: 100vh;
@@ -174,11 +174,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 /* ---------------------------------------------------------------- board + disc skins (html[data-bd]; "lagoon" = the :root defaults) */
 html[data-bd=classic]{--felt:#2465d8;--felt2:#1b52b8;--felt3:#123c8c;--frame-bg:linear-gradient(145deg,#1a449a 0%,#0c2766 55%,#173d8f 100%);--frame-edge:rgba(150,185,255,.35);--frame-line:rgba(175,205,255,.5);
   --ring:rgba(6,20,64,.75);--back:radial-gradient(ellipse at 50% 30%,#0e1d40,#040a1c 80%);--crd:rgba(195,215,255,.75);--grain:.1;
-  --gold1:#ffc0b6;--gold2:#ff5d4f;--gold3:#d42c20;--gold4:#78130b;--ruby1:#fff8cc;--ruby2:#ffd94a;--ruby3:#e3aa12;--ruby4:#7c5600}
+  --gold1:#ffc0b6;--gold2:#ff5d4f;--gold3:#d42c20;--gold4:#78130b;--gtxt:#fff;--ruby1:#fff8cc;--ruby2:#ffd94a;--ruby3:#e3aa12;--ruby4:#7c5600}
 html[data-bd=walnut]{--felt:#8d5c35;--felt2:#714828;--felt3:#4b2e18;--frame-bg:linear-gradient(145deg,#3b2515 0%,#1f130a 55%,#342011 100%);--frame-edge:rgba(214,170,110,.3);--frame-line:rgba(214,170,110,.5);
   --plate-x:repeating-linear-gradient(91deg,rgba(40,20,5,.16) 0 2px,transparent 2px 7px,rgba(255,225,180,.05) 7px 8px,transparent 8px 15px);
   --ring:rgba(238,200,140,.4);--back:radial-gradient(ellipse at 50% 30%,#1c130b,#070402 80%);--crd:rgba(232,200,150,.7);--grain:.4;--last:#e5493a;
-  --gold1:#8a8d94;--gold2:#3a3c42;--gold3:#17181b;--gold4:#030304;--ruby1:#ffffff;--ruby2:#f4ecd9;--ruby3:#cdbf9e;--ruby4:#6d6250}
+  --gtxt:#fff;--gold1:#8a8d94;--gold2:#3a3c42;--gold3:#17181b;--gold4:#030304;--ruby1:#ffffff;--ruby2:#f4ecd9;--ruby3:#cdbf9e;--ruby4:#6d6250}
 html[data-bd=neon]{--felt:#1d2029;--felt2:#15171e;--felt3:#0c0d12;--frame-bg:linear-gradient(145deg,#1e212b 0%,#0a0b0f 60%,#191b23 100%);--frame-edge:rgba(80,228,255,.4);--frame-line:rgba(80,228,255,.6);
   --ring:rgba(80,228,255,.7);--back:radial-gradient(ellipse at 50% 30%,#06070a,#000 80%);--crd:rgba(125,235,255,.7);--grain:.06;
   --gold1:#ffd0ea;--gold2:#ff52b0;--gold3:#d01f82;--gold4:#5a0636;--ruby1:#dcfcff;--ruby2:#52e4ff;--ruby3:#14a8d0;--ruby4:#05465c}
@@ -187,8 +187,21 @@ html[data-bd=neon] .disc.p1{box-shadow:0 0 12px rgba(255,82,176,.6),inset 0 -4px
 html[data-bd=neon] .disc.p2{box-shadow:0 0 12px rgba(82,228,255,.55),inset 0 -4px 8px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(210,250,255,.5)}
 html[data-bd=porcelain]{--felt:#f3eee4;--felt2:#e5ded0;--felt3:#cfc6b3;--frame-bg:linear-gradient(145deg,#ece6d9 0%,#cdc4b2 55%,#e3dccd 100%);--frame-edge:rgba(44,63,143,.35);--frame-line:rgba(44,63,143,.5);
   --ring:rgba(44,63,143,.6);--back:radial-gradient(ellipse at 50% 30%,#2b3448,#111622 80%);--crd:rgba(44,63,143,.8);--grain:.12;
-  --gold1:#ffc8b9;--gold2:#f05b3d;--gold3:#c6341c;--gold4:#661607;--ruby1:#c3cdf5;--ruby2:#4c62c4;--ruby3:#2c3f8f;--ruby4:#111a44}
+  --gtxt:#fff;--rtxt:#fff;--gold1:#ffc8b9;--gold2:#f05b3d;--gold3:#c6341c;--gold4:#661607;--ruby1:#c3cdf5;--ruby2:#4c62c4;--ruby3:#2c3f8f;--ruby4:#111a44}
 html[data-bd=porcelain] .plate{background:var(--plate-x),radial-gradient(ellipse at 40% 30%,rgba(255,255,255,.55),transparent 60%),radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 70%,var(--felt3) 100%)}
+/* new-game dialog: phones one column; PC a wide two-column dialog (mode row on top, then strength | display + skins) like the other games */
+#newOverlay .ng-col{display:contents}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){
+  #newOverlay .modal{width:min(980px, calc(100vw - 64px));padding:20px 28px 18px}
+  #newOverlay .modal h2{margin-bottom:12px}
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col{display:block}
+  #newOverlay .ng-cols:not(:has(#fColor:not(.hidden), #fLevel:not(.hidden))){grid-template-columns:minmax(0, 1fr)}   /* lessons / puzzles: only the skin row */
+  #newOverlay .ng-cols:not(:has(#fColor:not(.hidden), #fLevel:not(.hidden))) #fDesign{max-width:460px}
+  #newOverlay .modal-actions{margin-top:8px}
+  #newOverlay #segMode{flex-wrap:nowrap}
+  #newOverlay #segMode button{flex:1 1 0}
+}
 /* skin picker (new-game dialog): one mini board per skin */
 .bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
@@ -436,8 +449,8 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* 振り返り解説 (rvcoach.js) */
 .disc.rb-gh{opacity:.62;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:6}
 .disc.rb-gh.first{opacity:.9;outline:3px solid var(--accent);outline-offset:2px}
-.disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:#1a1408;text-shadow:0 0 4px rgba(255,255,255,.5)}
-.disc.rb-gh.p2 b{color:#2a2f36}
+.disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:var(--gtxt);text-shadow:0 0 4px rgba(127,127,127,.5)}
+.disc.rb-gh.p2 b{color:var(--rtxt)}
 .cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(232,148,106,.35);background:rgba(232,148,106,.06)}
 .cr-h{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--brass);letter-spacing:.06em;margin-bottom:6px}
 .cr-box p{font-size:14.5px;line-height:1.75;color:#d3e6e6;margin:0 0 6px}
@@ -658,7 +671,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
 .fg-nav button:disabled{opacity:.3}
 .fg-nav b{font-family:'JetBrains Mono',monospace;font-size:13px;min-width:60px;color:var(--muted)}
 .fg-ev{display:block;font-size:14px;margin-bottom:3px}
-.fg-ev .ev-w1{color:#f2d07a}.fg-ev .ev-w2{color:#cfd8e2}.fg-ev .ev-d{color:#8fe3b8}
+.fg-ev .ev-w1{color:var(--gold2)}.fg-ev .ev-w2{color:var(--ruby2)}.fg-ev .ev-d{color:#8fe3b8}
 .fg-cap{display:block}
 html[lang=ar] .ls-fig figcaption{text-align:center}
 @media (min-width: 900px) and (min-height: 561px) and (pointer: fine){ #lessonIntroView .lesson-intro{column-gap:24px} }
@@ -666,7 +679,7 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 #pzGrid .pb-tile .th{position:absolute;inset:5px 5px 17px;display:grid;place-items:center;opacity:.92}
 #pzGrid .pb-tile .th > svg{width:100%;height:100%;border-radius:4px}
 #pzGrid .pb-tile.hasth .n{position:absolute;top:3px;left:4px;z-index:1;font-size:10.5px;padding:0 4px;border-radius:5px;background:rgba(10,12,12,.82);color:#fff;line-height:1.45}
-#pzGrid .pb-tile.hasth .n{background:#e6cd8c;color:#1a160c}#pzGrid .pb-tile.hasth.p2 .n{background:#d4d9e0;color:#121413}
+#pzGrid .pb-tile.hasth .n{background:var(--gold2);color:var(--gtxt)}#pzGrid .pb-tile.hasth.p2 .n{background:var(--ruby2);color:var(--rtxt)}
 #pzGrid .pb-tile.hasth .s, #pzGrid .pb-tile.hasth .nx{position:relative;z-index:1;height:16px;display:flex;align-items:center}
 #pzGrid .pb-tile.done .th{opacity:1}
 #pzGrid .pb-tile.lk .th{filter:grayscale(1) brightness(.6)}
@@ -712,8 +725,8 @@ html[lang=ar] .ls-fig figcaption{text-align:center}
 .pzx-ic{position:absolute;inset:auto -6px -6px auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;padding:5px;color:#0b0f16;
   background:linear-gradient(140deg,var(--c),var(--c2));box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)}
 .pzx-ic > svg{width:100%;height:100%}
-.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3cf,#e6cd8c 55%,#a8893f);box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
-.pzx-tm.p2{background:radial-gradient(circle at 35% 30%,#fff,#d4d9e0 60%,#8e96a1)}
+.pzx-tm{position:absolute;top:-4px;inset-inline-start:-4px;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 55%,var(--gold3));box-shadow:0 0 0 2px rgba(10,14,12,.85),0 2px 4px rgba(0,0,0,.5)}
+.pzx-tm.p2{background:radial-gradient(circle at 35% 30%,var(--ruby1),var(--ruby2) 60%,var(--ruby3))}
 .pzx-ghead .chips .pzx-diff{margin-inline-start:4px}.pzx-ic .gl{font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:15px;line-height:1}
 .pzx-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .pzx-top{display:flex;align-items:center;gap:8px;min-width:0}
@@ -762,7 +775,7 @@ html[lang=ar] .pzx :is(.pb-ring, .pzx-prog, .pzx-stats .pb-st, .pzx-title small)
 .pz-why .pz-pv, .pz-why .pz-oth{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;font-size:12.5px;color:var(--muted)}
 .pz-why small{font-size:11px;color:var(--dim);margin-inline-end:6px;letter-spacing:.04em}
 .pz-why .pzv{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#1a160c}
-.pz-why .pzv.p1{background:#e6cd8c}.pz-why .pzv.p2{background:#d4d9e0}
+.pz-why .pzv.p1{background:var(--gold2);color:var(--gtxt)}.pz-why .pzv.p2{background:var(--ruby2);color:var(--rtxt)}
 .pz-why .pz-pv i{font-style:normal;color:var(--dim);font-size:11px}
 html[lang=ar] .pz-why .pz-pv{direction:ltr;justify-content:flex-end}
 /* puzzle grid: each button shows the position */
@@ -1006,6 +1019,7 @@ body .info-line{font-size:12.5px}
       </div>
     </div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
       <div class="seg" id="segColor">
@@ -1028,6 +1042,7 @@ body .info-line{font-size:12.5px}
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
+    </div><div class="ng-col">
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
       <div class="checks">
@@ -1041,6 +1056,7 @@ body .info-line{font-size:12.5px}
       <label data-i18n="bd.title"></label>
       <div class="bdrow" id="bdRow"></div>
     </div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
@@ -1133,7 +1149,7 @@ body .info-line{font-size:12.5px}
 </div>
 
 <script src="i18n.js?v=20261028sk"></script>
-<script src="learn.js?v=20261021c4p"></script><!-- lessons / puzzles strings -->
+<script src="learn.js?v=20261028sk"></script><!-- lessons / puzzles strings -->
 <script src="rvcoach.js?v=20261021b"></script><!-- 振り返り解説 -->
 <script src="rvbox.js?v=20261028sk"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="../shared/placement.js?v=1"></script>
@@ -1202,11 +1218,11 @@ let LANG = detectLang();
 // ---------------------------------------------------------------- board + disc skins (CSS: html[data-bd]; mini boards: SK_PAL)
 const SK_KEYS = ['lagoon', 'classic', 'walnut', 'neon', 'porcelain'], SK_STORE = 'connect4-skin';
 const SK_PAL = {   // frame, frame edge, plate, hole, hole rim, first / second disc [light, dark]
-  lagoon: { fr: '#0b2327', fe: 'rgba(232,148,106,.6)', pl: '#0e7370', ho: '#041214', rim: 'rgba(232,148,106,.6)', a: ['#f3dfa6', '#b39249'], b: ['#eef1f5', '#8f97a3'] },
-  classic: { fr: '#123479', fe: 'rgba(175,205,255,.6)', pl: '#2465d8', ho: '#081332', rim: 'rgba(6,20,64,.8)', a: ['#ff7a6c', '#c8281c'], b: ['#ffe36e', '#dca10e'] },
-  walnut: { fr: '#2a190d', fe: 'rgba(214,170,110,.6)', pl: '#8d5c35', ho: '#120b05', rim: 'rgba(238,200,140,.5)', a: ['#55575d', '#0d0d0f'], b: ['#fbf6ea', '#c9bb99'], grain: 1 },
-  neon: { fr: '#111217', fe: 'rgba(80,228,255,.75)', pl: '#1d2029', ho: '#020203', rim: 'rgba(80,228,255,.85)', a: ['#ff6dbd', '#c81c7c'], b: ['#7be9ff', '#139fc6'], glow: 1 },
-  porcelain: { fr: '#ddd6c7', fe: 'rgba(44,63,143,.6)', pl: '#f0ebe1', ho: '#1d2433', rim: 'rgba(44,63,143,.7)', a: ['#f4785c', '#bf3119'], b: ['#6578d0', '#26388a'] },
+  lagoon: { fr: '#0b2327', fe: 'rgba(232,148,106,.6)', pl: '#0e7370', ho: '#041214', rim: 'rgba(232,148,106,.6)', a: ['#f3dfa6', '#b39249'], b: ['#eef1f5', '#8f97a3'], fa: '#e6cd8c', fb: '#d4d9e0', ta: '#2a2418', tb: '#2a2f36', hi: 'rgba(230,205,140,.15)' },
+  classic: { fr: '#123479', fe: 'rgba(175,205,255,.6)', pl: '#2465d8', ho: '#081332', rim: 'rgba(6,20,64,.8)', a: ['#ff7a6c', '#c8281c'], b: ['#ffe36e', '#dca10e'], fa: '#f0493b', fb: '#ffd23f', ta: '#fff', tb: '#3a2a00', hi: 'rgba(255,255,255,.14)' },
+  walnut: { fr: '#2a190d', fe: 'rgba(214,170,110,.6)', pl: '#8d5c35', ho: '#120b05', rim: 'rgba(238,200,140,.5)', a: ['#55575d', '#0d0d0f'], b: ['#fbf6ea', '#c9bb99'], grain: 1, fa: '#26272b', fb: '#f2ead6', ta: '#fff', tb: '#2a2418', hi: 'rgba(255,225,170,.16)' },
+  neon: { fr: '#111217', fe: 'rgba(80,228,255,.75)', pl: '#1d2029', ho: '#020203', rim: 'rgba(80,228,255,.85)', a: ['#ff6dbd', '#c81c7c'], b: ['#7be9ff', '#139fc6'], glow: 1, fa: '#ff52b0', fb: '#52e4ff', ta: '#2a0018', tb: '#002a36', hi: 'rgba(80,228,255,.12)' },
+  porcelain: { fr: '#ddd6c7', fe: 'rgba(44,63,143,.6)', pl: '#f0ebe1', ho: '#1d2433', rim: 'rgba(44,63,143,.7)', a: ['#f4785c', '#bf3119'], b: ['#6578d0', '#26388a'], fa: '#e0502f', fb: '#3d51b0', ta: '#fff', tb: '#fff', hi: 'rgba(44,63,143,.16)' },
 };
 let SK = 'lagoon';
 try { const v = localStorage.getItem(SK_STORE); if (SK_KEYS.includes(v)) SK = v; } catch (e) {}
@@ -1235,6 +1251,7 @@ function skPicker() {
 function t(k, v) {
   if (SK !== 'lagoon' && (k === 'p1' || k === 'p2')) k = 'sk.' + SK + '.' + k;   // disc colour names follow the skin
   let x = tRaw(k, v);
+  if (typeof x === 'string' && x.indexOf('%P') >= 0) x = x.replace(/%P([12])%/g, (_, n) => t('p' + n));   // lesson texts name the discs by the current skin's colours
   if (SK !== 'lagoon' && (k === 'ng.first' || k === 'ng.second') && typeof x === 'string') { const n = t(k === 'ng.first' ? 'p1' : 'p2'); x = x.replace(/([（(])[^（()）]*([）)])\s*$/, (_, a, b) => a + n + b); }
   return x;
 }
@@ -1462,7 +1479,7 @@ function renderFx() {
       discPos(d, c, r); fxEl.appendChild(d);
     }
   }
-  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; discPos(d, m.c, m.r); fxEl.appendChild(d); }
+  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; if (m.p) d.style.borderColor = m.p === P1 ? 'var(--gold2)' : 'var(--ruby2)'; discPos(d, m.c, m.r); fxEl.appendChild(d); }
   if (!drawReviewFx(g) && hintList && !st.winner && !rbCons()) drawHints(hintList, g, shown.length);
   rbDrawHover(g, shown);
 }
@@ -1855,11 +1872,11 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 function tourSVG(g, o) {
   o = o || {};
   const u = 44, pad = 10, top = 16, W = 7 * u + pad * 2, H = top + 6 * u + pad + 18;
-  const X = c => pad + (c + 0.5) * u, Y = r => top + (5 - r + 0.5) * u;
-  const disc = (c, r, p, cls) => { const x = X(c), y = Y(r); return `<g class="${cls || ''}" ${cls === 'rt-new' ? `style="--fy:${-(y - top + u / 2)}px"` : ''}><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="${p === 1 ? 'rgba(94,71,32,.45)' : 'rgba(60,66,75,.4)'}" stroke-width="1.3"/></g>`; };
-  let s = `<svg class="rt-mini${o.off ? ' off' : ''}" viewBox="0 0 ${W} ${H}" role="img"><rect x="1" y="${top - 6}" width="${W - 2}" height="${6 * u + pad + 7}" rx="10" fill="#071a1d" stroke="rgba(232,148,106,.45)"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="5" fill="#17573f"/>`;
+  const X = c => pad + (c + 0.5) * u, Y = r => top + (5 - r + 0.5) * u, K = SK_PAL[SK];
+  const disc = (c, r, p, cls) => { const x = X(c), y = Y(r); return `<g class="${cls || ''}" ${cls === 'rt-new' ? `style="--fy:${-(y - top + u / 2)}px"` : ''}><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${p === 1 ? K.fa : K.fb}" stroke="${p === 1 ? K.a[1] : K.b[1]}" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${u * 0.24}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.3"/></g>`; };
+  let s = `<svg class="rt-mini${o.off ? ' off' : ''}" viewBox="0 0 ${W} ${H}" role="img"><rect x="1" y="${top - 6}" width="${W - 2}" height="${6 * u + pad + 7}" rx="10" fill="${K.fr}" stroke="${K.fe}"/><rect x="${pad}" y="${top}" width="${7 * u}" height="${6 * u}" rx="5" fill="${K.pl}"/>`;
   if (o.hl !== undefined) s += `<rect x="${pad + o.hl * u + 2}" y="${top + 1}" width="${u - 4}" height="${6 * u - 2}" rx="7" fill="rgba(255,179,138,.16)" stroke="rgba(255,179,138,.8)" stroke-width="1.5"><animate attributeName="opacity" values="1;.45;1" dur="1.6s" repeatCount="indefinite"/></rect>`;
-  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="#031214" stroke="rgba(232,148,106,.4)" stroke-width="1"/>`;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="${u * 0.38}" fill="${K.ho}" stroke="${K.rim}" stroke-width="1"/>`;
   for (let c = 0; c < 7; c++) for (let r = 0; r < g[c].length; r++) s += disc(c, r, g[c][r], o.drop && o.drop[0] === c && o.drop[1] === r ? 'rt-new' : '');
   if (o.line) { const a = o.line[0], b = o.line[o.line.length - 1]; s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="#fff3cf" stroke-width="6" stroke-linecap="round" opacity=".8"/>`; }
   for (const m of o.marks || []) s += `<circle cx="${X(m[0])}" cy="${Y(m[1])}" r="${u * 0.43}" fill="none" stroke="${m[2] === 'ng' ? '#ff6b5b' : '#ffb38a'}" stroke-width="2.6" ${m[2] === 'dash' ? 'stroke-dasharray="5 4"' : ''}/>`;
@@ -1987,6 +2004,8 @@ function openNewDialog() {
 $('#bdRow').addEventListener('click', e => {
   const b = e.target.closest('button[data-bd]'); if (!b) return;
   skApply(b.dataset.bd); skPicker(); applyI18n(); segSync(); renderInfo(); renderFx();
+  if (lesson) renderLessonCard();
+  if (puzzle) renderPuzzleCard();
   if (HB) HB.relabel();
 });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
@@ -2006,7 +2025,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261021c4p').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261028sk').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles2';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -2027,10 +2046,11 @@ function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneVi
 // lesson list (same layout as Gomoku): a tab per course, a banner, cards with a board picture and a short explanation
 const LS_COURSE = { centre: 'centre', threat: 'threat', block: 'basic', parity: 'parity', double: 'double' };
 // course icons: tiny boards drawn in SVG (disc colours of the game)
-const LS_ICON = (() => {
-  const D = (x, y, f, o) => `<circle cx="${x}" cy="${y}" r="3.1" fill="${f || '#e6cd8c'}"${o ? ` stroke="${o}" stroke-width="1.2" stroke-dasharray="1.6 1.2" fill-opacity="0"` : ''}/>`;
-  const W = '#d4d9e0', R = '#ff8b7d';
-  const wrap = b => `<svg viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5" fill="#0e7370"/>${b}</svg>`;
+const lsIcons = () => {
+  const K = SK_PAL[SK];
+  const D = (x, y, f, o) => `<circle cx="${x}" cy="${y}" r="3.1" fill="${f || K.fa}"${o ? ` stroke="${o}" stroke-width="1.2" stroke-dasharray="1.6 1.2" fill-opacity="0"` : ''}/>`;
+  const W = K.fb, R = '#ff8b7d';
+  const wrap = b => `<svg viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5" fill="${K.pl}" stroke="${K.fe}" stroke-width=".8"/>${b}</svg>`;
   return {
     basic: wrap(D(5, 18) + D(9.7, 18) + D(14.3, 18) + D(19, 18) + `<path d="M4 18h16" stroke="#fff" stroke-width="1.4" opacity=".7"/>` + D(9.7, 11, W)),
     centre: wrap(`<rect x="8.6" y="3" width="6.8" height="18" rx="3" fill="rgba(230,205,140,.25)"/>` + D(12, 18) + D(12, 11.5) + D(7, 18, W)),
@@ -2038,12 +2058,12 @@ const LS_ICON = (() => {
     double: wrap(D(7.5, 18) + D(12, 18) + D(16.5, 18) + D(3.2, 18, 0, '#fff') + D(20.8, 18, 0, '#fff')),
     parity: wrap(`<rect x="2" y="15" width="20" height="5" fill="rgba(230,205,140,.28)"/><rect x="2" y="5" width="20" height="5" fill="rgba(230,205,140,.28)"/>` + D(12, 7.5, 0, '#fff')),
     side: wrap(D(8, 12) + D(16, 12, W) + `<path d="M8 4.5v3M16 4.5v3" stroke="#fff" stroke-width="1.3"/>`),
-    opening: wrap(`<path d="M4 6.5c3-1.5 5.5-1.5 8 0v12c-2.5-1.5-5-1.5-8 0zM20 6.5c-3-1.5-5.5-1.5-8 0v12c2.5-1.5 5-1.5 8 0z" fill="#e6cd8c" opacity=".9"/><path d="M12 6.5v12" stroke="#0e7370" stroke-width="1"/>`),
-    endgame: wrap(`<path d="M7 4h10M7 20h10M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8s8 3 8 8" fill="none" stroke="#e6cd8c" stroke-width="1.6"/>`),
+    opening: wrap(`<path d="M4 6.5c3-1.5 5.5-1.5 8 0v12c-2.5-1.5-5-1.5-8 0zM20 6.5c-3-1.5-5.5-1.5-8 0v12c2.5-1.5 5-1.5 8 0z" fill="${K.fa}" opacity=".9"/><path d="M12 6.5v12" stroke="${K.pl}" stroke-width="1"/>`),
+    endgame: wrap(`<path d="M7 4h10M7 20h10M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8s8 3 8 8" fill="none" stroke="${K.fa}" stroke-width="1.6"/>`),
     mistakes: wrap(D(8, 18) + D(16, 18, W) + `<path d="M8 6l8 8M16 6l-8 8" stroke="${R}" stroke-width="2.2" stroke-linecap="round"/>`),
     adv: wrap(D(12, 12)),
   };
-})();
+};
 const LS_ORDER = ['basic', 'centre', 'threat', 'double', 'parity', 'side', 'opening', 'endgame', 'mistakes'];
 const lsCourse = s => s.course || LS_COURSE[s.id] || 'basic';
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -2068,9 +2088,10 @@ async function openLessons(course) {
       `<span class="lx-top"><span class="lx-no">STEP ${lsNo(i)}</span>${st}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
       `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro').replace(/\{fig\d*\}/g, ''))}</span>${lxBar(r ? r.best / n : 0, r && r.clear ? 'ok' : '')}</span></button>`;
   }).join('');
+  const LSI = lsIcons();
   $('#lessonList').innerHTML = `<div class="lx">` +
-    (courses.length > 1 ? `<div class="lx-tabs many">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic sv">${LS_ICON[k] || '●'}</span><span class="nm">${t('lx.course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` : '') +
-    `<div class="lx-banner"><span class="ic sv">${LS_ICON[c] || '●'}</span><span class="tx"><b>${t('lx.course.' + c)}</b><small>${t('lx.course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    (courses.length > 1 ? `<div class="lx-tabs many">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}"><span class="ic sv">${LSI[k] || '●'}</span><span class="nm">${t('lx.course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` : '') +
+    `<div class="lx-banner"><span class="ic sv">${LSI[c] || '●'}</span><span class="tx"><b>${t('lx.course.' + c)}</b><small>${t('lx.course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
     `<div class="lx-grid">${cards}</div></div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
@@ -2082,21 +2103,25 @@ function miniBoardSVG(cells, marks, o) {
   o = o || {};
   const g = Array.from({ length: 7 }, () => []), num = Array.from({ length: 7 }, () => []), cs = 30, ax = o.coords ? 14 : 0;
   for (const [c, r, p, n] of cells || []) { g[c][r] = p; if (n) num[c][r] = n; }
-  const Wd = 7 * cs + 12 + ax, Hd = 6 * cs + 12 + ax;
-  let s = `<svg class="mini" viewBox="${-ax} 0 ${Wd} ${Hd}" direction="ltr"><rect x="0" y="0" width="${7 * cs + 12}" height="${6 * cs + 12}" rx="8" fill="#0e7370" stroke="rgba(232,148,106,.5)"/>`;
-  if (o.rows) for (let r = 0; r < 6; r++) if (o.rows.includes(r)) s += `<rect x="3" y="${6 + (5 - r) * cs + 1}" width="${7 * cs + 6}" height="${cs - 2}" rx="5" fill="rgba(230,205,140,.13)"/>`;
-  if (o.cols) for (const c of o.cols) s += `<rect x="${6 + c * cs + 1}" y="3" width="${cs - 2}" height="${6 * cs + 6}" rx="8" fill="rgba(230,205,140,.16)"/>`;
+  const Wd = 7 * cs + 12 + ax, Hd = 6 * cs + 12 + ax, K = SK_PAL[SK];
+  // a dotted winning-cell mark (gold / red in the data) is drawn in the colour of the player it belongs to, so it matches the skin and the text
+  const owner = (c, r) => { const gg = Array.from({ length: 7 }, (_, x) => Array.from({ length: 6 }, (_, y) => g[x][y] || -1)); let o = 0; for (const pl of [1, 2]) { gg[c][r] = pl; if (lineThrough(gg, c, r, pl)) o = o ? -1 : pl; } return o > 0 ? o : 0; };
+  const mcol = mk => { const col = (mk[2] || '').toLowerCase(); if (mk[3] && (col === '#e5c36c' || col === '#e2c275' || col === '#ff6b5b')) { const o = owner(mk[0], mk[1]); if (o) return o === 1 ? K.fa : K.fb; } return col === '#e2c275' || col === '#e5c36c' ? '#ffb38a' : mk[2]; };
+  let s = `<svg class="mini" viewBox="${-ax} 0 ${Wd} ${Hd}" direction="ltr"><rect x="0" y="0" width="${7 * cs + 12}" height="${6 * cs + 12}" rx="8" fill="${K.pl}" stroke="${K.fe}"/>`;
+  if (o.rows) for (let r = 0; r < 6; r++) if (o.rows.includes(r)) s += `<rect x="3" y="${6 + (5 - r) * cs + 1}" width="${7 * cs + 6}" height="${cs - 2}" rx="5" fill="${K.hi}"/>`;
+  if (o.cols) for (const c of o.cols) s += `<rect x="${6 + c * cs + 1}" y="3" width="${cs - 2}" height="${6 * cs + 6}" rx="8" fill="${K.hi}"/>`;
   for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) {
     const v = g[c][r] || 0, x = 6 + c * cs + cs / 2, y = 6 + (5 - r) * cs + cs / 2;
-    const fill = v === 1 ? '#e6cd8c' : v === 2 ? '#d4d9e0' : '#031214';
-    s += `<circle cx="${x}" cy="${y}" r="${cs * 0.4}" fill="${fill}"/>`;
-    if (num[c][r]) s += `<text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="#2a2418">${num[c][r]}</text>`;
+    const fill = v === 1 ? K.fa : v === 2 ? K.fb : K.ho;
+    s += `<circle cx="${x}" cy="${y}" r="${cs * 0.4}" fill="${fill}"${v ? '' : ` stroke="${K.rim}" stroke-width=".8"`}/>`;
+    if (num[c][r]) s += `<text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="700" font-family="JetBrains Mono,monospace" fill="${v === 2 ? K.tb : K.ta}">${num[c][r]}</text>`;
   }
   for (const mk of marks || []) {
     const x = 6 + mk[0] * cs + cs / 2, y = 6 + (5 - mk[1]) * cs + cs / 2;
     const bare = mk[2] === 'none';   // label only (e.g. a count written in an empty cell)
-    if (!bare) s += `<circle cx="${x}" cy="${y}" r="${cs * 0.36}" fill="${mk[5] || 'none'}" stroke="${mk[2] || '#fff'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`;
-    if (mk[4] !== undefined && mk[4] !== '') s += `<text x="${x}" y="${y + (bare ? 5 : 4.5)}" text-anchor="middle" font-size="${bare ? 14 : 12.5}" font-weight="700" font-family="JetBrains Mono,monospace" fill="${bare ? '#e6cd8c' : mk[2] || '#fff'}">${mk[4]}</text>`;
+    const mc = mcol(mk);
+    if (!bare) s += `<circle cx="${x}" cy="${y}" r="${cs * 0.36}" fill="${mk[5] || 'none'}" stroke="${mc || '#fff'}" stroke-width="2.4" stroke-dasharray="${mk[3] ? '4 3' : ''}"/>`;
+    if (mk[4] !== undefined && mk[4] !== '') s += `<text x="${x}" y="${y + (bare ? 5 : 4.5)}" text-anchor="middle" font-size="${bare ? 14 : 12.5}" font-weight="700" font-family="JetBrains Mono,monospace" fill="${bare ? '#ffd2b8' : mc || '#fff'}">${mk[4]}</text>`;
   }
   if (o.line) { const [a, b] = o.line, X = c => 6 + c * cs + cs / 2, Y = r => 6 + (5 - r) * cs + cs / 2; s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".75"/>`; }
   if (ax) { for (let c = 0; c < 7; c++) s += `<text x="${6 + c * cs + cs / 2}" y="${6 * cs + 12 + 11}" text-anchor="middle" font-size="10.5" fill="#9cc0c0" font-family="JetBrains Mono,monospace">${'abcdefg'[c]}</text>`; for (let r = 0; r < 6; r++) s += `<text x="-7" y="${6 + (5 - r) * cs + cs / 2 + 4}" text-anchor="middle" font-size="10.5" fill="#9cc0c0" font-family="JetBrains Mono,monospace">${r + 1}</text>`; }
@@ -2212,7 +2237,7 @@ function lessonAnswer(c) {
     lessonMarks = [{ c: ans, r: g0[ans].length, cls: 'ok' }];
     if (!ok) lessonMarks.push({ c, r: g0[c].length, cls: 'ng' });
     // show the threats the right move creates
-    if (P.marks) for (const [mc, mr] of P.marks) lessonMarks.push({ c: mc, r: mr, cls: 'threat' });
+    if (P.marks) for (const [mc, mr] of P.marks) lessonMarks.push({ c: mc, r: mr, cls: 'threat', p: toMoveOf(P.moves) });
     update(false);
   }, ok ? 1100 : 900);
   playChime(ok);
@@ -2230,8 +2255,8 @@ $('#lsHint').onclick = () => {
   const g = gridOf(P.moves), me = toMoveOf(P.moves), op = 3 - me;
   lessonMarks = [];
   const hm = s.hintMarks || (s.id === 'block' ? 'op' : (s.id === 'parity' || s.id === 'threat') ? 'me' : '');
-  if (hm === 'op' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), op)) lessonMarks.push({ c, r, cls: 'threat op' });
-  if (hm === 'me' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), me)) lessonMarks.push({ c, r, cls: 'threat' });
+  if (hm === 'op' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), op)) lessonMarks.push({ c, r, cls: 'threat op', p: op });
+  if (hm === 'me' || hm === 'both') for (const [c, r] of emptyThreats(gridOf(P.moves), me)) lessonMarks.push({ c, r, cls: 'threat', p: me });
   renderFx();
 };
 $('#lsNext').onclick = () => {
@@ -2621,7 +2646,7 @@ $('#pzHint').onclick = async () => {
   const shown = moves.slice(0, cur), g = gridOf(shown);
   if (Pz.kind !== 'mate') {   // winning squares of both sides (the answer itself is not revealed)
     Pz.hinted = true; const op = Pz.me === P1 ? P2 : P1;
-    lessonMarks = emptyThreats(g, Pz.me).map(([c, r]) => ({ c, r, cls: 'threat' })).concat(emptyThreats(g, op).map(([c, r]) => ({ c, r, cls: 'threat op' })));
+    lessonMarks = emptyThreats(g, Pz.me).map(([c, r]) => ({ c, r, cls: 'threat', p: Pz.me })).concat(emptyThreats(g, op).map(([c, r]) => ({ c, r, cls: 'threat op', p: op })));
     renderFx(); pzStatus(t('pz.hint.b')); return;
   }
   const left = Pz.n - Pz.used, list = await mateReq(shown, left); if (puzzle !== Pz || !list) return;
