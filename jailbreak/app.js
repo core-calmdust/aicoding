@@ -45,9 +45,23 @@ function applyI18n() {
 }
 
 /* ---------------- sound (WebAudio synth) ---------------- */
-let AC = null, gestured = false;
-addEventListener('pointerdown', () => { gestured = true; }, { once: true, capture: true });
-function ac() { if (!gestured) return null; if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+// iOS only lets audio start inside a real tap (touchend / click), and suspends or "interrupts" the context after a call,
+// the lock screen or switching apps. So: create and wake the context inside every tap (a silent 1-sample buffer
+// unlocks it), and wake it again when the page comes back.
+let AC = null;
+function unlockAudio() {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state !== 'running') {
+      AC.resume();
+      const b = AC.createBuffer(1, 1, 22050), src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(0);
+    }
+  } catch (e) {}
+}
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+const wakeAudio = () => { if (AC && AC.state !== 'running' && !document.hidden) { try { AC.resume(); } catch (e) {} } };
+document.addEventListener('visibilitychange', wakeAudio); addEventListener('pageshow', wakeAudio); addEventListener('focus', wakeAudio);
+function ac() { if (!AC) return null; if (AC.state !== 'running') { try { AC.resume(); } catch (e) {} } return AC; }
 function tone(f, d = .1, type = 'square', v = .07, slide = 0, delay = 0) {
   if (!DB.set.snd) return; const a = ac(); if (!a) return;
   const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + delay;
@@ -431,14 +445,12 @@ const boardEl = () => $('#board');
 // Phones: the frame always spans the full width, whatever the board (a 7×7 board just gets smaller cells), and only shrinks
 // when the screen is too short for it. PC: as large as the window height allows (up to 860px across), centred.
 function cellSize() {
-  const P = G.P, phone = innerWidth < 760, twin = P.pc.some(p => p.t === 'Q');
-  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
-  const H = Math.max(240, innerHeight - used - (phone ? 26 : 84));
-  // phone: the frame is centred; a little room on both sides lets the EXIT sign stick out on the right
-  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + 1.24), H / (P.h + (twin ? 1.3 : .8))))); }
-  // PC: the frame (board + .32 cell a side) is as wide as the play column; the EXIT sign may stick out on the right
-  const W = Math.min(innerWidth - 80, 900);
-  return Math.max(36, Math.floor(Math.min((W - 6) / (P.w + .72), H / (P.h + (twin ? 1.3 : .76)))));
+  // the frame (board + .32 cell of ring + 3px ink a side) fills the play column; the EXIT sign sits on the ring
+  const P = G.P, phone = innerWidth < 760;
+  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', '.slbar'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
+  const H = Math.max(240, innerHeight - used - (phone ? 20 : 84));
+  const W = phone ? Math.min(innerWidth, 560) - 16 : Math.min(innerWidth - 80, 900);
+  return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + .64), (H - 8) / (P.h + .64))));
 }
 const tr = (x, y) => `translate(${x * G.cs}px, ${y * G.cs}px)`;
 // TWIN: the partner is another inmate you own (or the next one)
@@ -456,9 +468,9 @@ function buildBoard() {
   b.style.setProperty('--cs', cs + 'px'); b.style.width = P.w * cs + 'px'; b.style.height = P.h * cs + 'px';
   b.dataset.mode = G.m; b.dataset.w = P.w;
   const wr = $('#boardWrap'), phone = innerWidth < 760;
-  wr.style.paddingRight = ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
+  wr.style.paddingRight = ''; wr.style.paddingBottom = '';
   // PC: the play column (title row, buttons, rule line) takes the width of the board's frame
-  $('#play').style.maxWidth = phone ? '' : Math.max(440, Math.round(cs * (P.w + .72)) + 6) + 'px';
+  $('#play').style.maxWidth = phone ? '' : Math.max(440, Math.round(cs * (P.w + .64)) + 6) + 'px';
   let html = '<div class="floor"></div><div class="fxl">';
   const at = c => `style="transform:${tr(c % P.w, (c / P.w) | 0)}"`;
   P.walls.forEach(c => { html += `<div class="cell wall" ${at(c)}></div>`; });

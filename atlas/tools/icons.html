@@ -1,7 +1,9 @@
 <!doctype html>
 <!-- Dev tool: renders every board model in table3d.js to a transparent PNG for the portal's 3D icons.
      Open via a local server: http://localhost:8000/atlas/tools/icons.html?id=reversi  → window.SHOT holds the data URL.
-     The repo's images/atlas/<id>.webp files were made with this page (headless Chromium) — rerun after changing a model. -->
+     The repo's images/atlas/<id>.webp files were made with this page (headless Chromium) — rerun after changing a model.
+     Post-process for game icons (320×320): crop to the content, contain-fit, then move the widest row (the plinth's left/right
+     corners) to y = 204 so every icon's base sits at the same height in the grids (scale down around that row only if the top would clip). -->
 <html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

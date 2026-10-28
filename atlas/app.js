@@ -104,12 +104,12 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === "checkers" || g.id === "samegame" ? 4 : g.id === "go" ? 3 : g.id === "speedsudoku" ? 3 : g.id === "jailbreak" || g.id === "xiangqi" || g.id === "tafl" ? 3 : 2}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=5` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
   function tagHtml(k) { const T = A_.TAGS[k]; return `<span class="tag" style="--c:${T.c}"><svg viewBox="0 0 24 24"><path d="${T.i}"/></svg>${esc(t('tag.' + k))}</span>`; }
-  function badgeHtml(b) { return `<span class="badge ${b}">${{ new: 'NEW', update: 'UPDATE', beta: 'BETA', premium: 'PREMIUM' }[b]}</span>`; }
+  function badgeHtml(b) { return `<span class="badge ${b}">${{ new: 'NEW', update: 'UPDATE', beta: 'BETA' }[b] || ''}</span>`; }
   function ring(pct, col) {
     const r = 22, c = 2 * Math.PI * r;
     return `<span class="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/></svg>${pct}%</span>`;
@@ -289,20 +289,22 @@
   /* home game list: category chips + search (the chip is remembered per viewer) */
   let gCat = 'all', gQ = '';
   try { gCat = localStorage.getItem('atlas-cat') || 'all'; } catch (e) {}
-  if (gCat !== 'all' && !(A_.CATS || []).includes(gCat)) gCat = 'all';
+  // 'classic' is a tag chip (定番) next to the category chips: it filters by g.tags instead of g.cat
+  const inCat = (g, k) => k === 'all' || (k === 'classic' ? g.tags.includes('classic') : g.cat === k);
+  if (gCat !== 'all' && gCat !== 'classic' && !(A_.CATS || []).includes(gCat)) gCat = 'all';
   // lower-case, full-width → half-width, katakana → hiragana: 「りばーし」 finds リバーシ
   const norm = s => String(s).normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[\s・·\-_.]/g, '');
   const hay = g => norm([g.id, ...Object.values(g.name), ...g.tags, ...g.tags.map(k => t('tag.' + k)), ...g.tags.map(k => I.en['tag.' + k] || ''), t('cat.' + g.cat)].join('|'));
   function visibleGames() {
     const q = norm(gQ.trim());
-    return A_.byUpdate().filter(g => (gCat === 'all' || g.cat === gCat) && (!q || hay(g).includes(q)));
+    return A_.byUpdate().filter(g => inCat(g, gCat) && (!q || hay(g).includes(q)));
   }
   const SRCH = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
   // the same chips + search on the home grid and on the games tab (they share one filter state)
   function renderFilter(ids = { chips: 'catChips', q: 'gSearch', ic: 'gSearchIc' }, onChange = renderGrid) {
-    const cats = ['all', ...(A_.CATS || [])], C = $(ids.chips);
-    C.innerHTML = cats.map(k => { const n = k === 'all' ? A_.GAMES.length : A_.GAMES.filter(g => g.cat === k).length;
-      return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
+    const cats = ['all', 'classic', ...(A_.CATS || [])], C = $(ids.chips);
+    C.innerHTML = cats.map(k => { const n = A_.GAMES.filter(g => inCat(g, k)).length, T = k === 'classic' && A_.TAGS.classic;
+      return `<button type="button" class="chip cat${T ? ' tg' : ''}" data-k="${k}" aria-pressed="${gCat === k}"${T ? ` style="--c:${T.c}"` : ''}>${T ? `<svg viewBox="0 0 24 24"><path d="${T.i}"/></svg>` : ''}${esc(t(T ? 'tag.classic' : 'cat.' + k))} <em>${n}</em></button>`; }).join('');
     C.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
       C.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); onChange(); });
     const s = $(ids.q); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
@@ -327,7 +329,7 @@
     const list = visibleGames();
     const rnd = list.length ? `<button type="button" class="ic rnd" id="rndTile" style="--c:#8d6bff" aria-label="${esc(t('rnd.n'))}"><span class="art">${RND_SVG}<img class="rimg" alt="" decoding="async" hidden></span>
       <span class="lab"><span class="n">${esc(t('rnd.n'))}</span><span class="pr"><i style="width:100%"></i></span></span></button>` : '';
-    $('iconGrid').innerHTML = rnd + list.map(g => { const b = A_.badges(g).filter(x => x !== 'premium')[0];
+    $('iconGrid').innerHTML = rnd + list.map(g => { const b = A_.badges(g)[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
         <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
     $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');

@@ -162,7 +162,7 @@ FLOORS.forEach(f => Object.assign(f.n, NAMES[f.id] || {}));
    kind → background of the ring round the board (#board::before). a, b: colours */
 const RV = c => `radial-gradient(circle, ${c} 0 1.5px, rgba(0,0,0,.45) 1.6px 2.8px, transparent 3px)`;
 const XK = {
-  solid: (a, b) => `linear-gradient(160deg, rgba(255,255,255,.18), transparent 40%, rgba(0,0,0,.18)), ${a}`,
+  solid: (a, b) => `${a}`,
   rivet: (a, b) => `${RV(b)} 0 0 / 18px 18px, linear-gradient(160deg, rgba(255,255,255,.2), transparent 45%, rgba(0,0,0,.2)), ${a}`,
   stripe: (a, b) => `repeating-linear-gradient(-45deg, ${a} 0 10px, ${b} 10px 20px)`,
   wood: (a, b) => `repeating-linear-gradient(90deg, transparent 0 9px, rgba(0,0,0,.12) 9px 10px), repeating-linear-gradient(0deg, transparent 0 14px, ${b} 14px 16px), ${a}`,
