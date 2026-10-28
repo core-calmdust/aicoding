@@ -1288,9 +1288,22 @@ function rbAnalyze(done) {
     });
   };
   if (!W3) W3 = makeWorker();
-  let live = true;
-  request({ type: 'analyze', preempt: true, ...jobBase(startSpec, rbMoves()), net: 'strong', visits: game.n <= 9 ? 1600 : game.n <= 13 ? 900 : 600, time: 3500, pv: 5 }, m => { if (live) done(fmtList(m, false), false); }, W3)
-    .then(r => { if (live && r) { live = false; done(fmtList(r, true), true); } });
+  // continuous analysis: deeper and deeper searches (visits ×2 each round, lines kept from the last finished round)
+  // until about 45 s have been spent or the box's 停止 cancels it (the last results stay on screen)
+  let live = true, last = null, spent = 0, k = 0;
+  const v0 = game.n <= 9 ? 1600 : game.n <= 13 ? 900 : 600, LIMIT = 45000, job = jobBase(startSpec, rbMoves());
+  (async () => {
+    while (live) {
+      const tm = Math.min(3500 * (1 << k), LIMIT - spent), t0 = performance.now();
+      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5 }, m => { if (live && !last) done(fmtList(m, false), false); }, W3);
+      if (!live) return;
+      spent += performance.now() - t0; k++;
+      if (r) last = fmtList(r, true);
+      const end = !r || spent >= LIMIT - 500 || k > 6;
+      if (end) { live = false; done(last || [], true); return; }
+      done(last, false);
+    }
+  })();
   return () => { if (live) { live = false; W3.postMessage({ type: 'cancel' }); } };
 }
 function rbSeq() {
