@@ -109,3 +109,27 @@ ja: { 'lx.cleared': '{a}/{b} 合格' }, en: { 'lx.cleared': '{a}/{b} passed' }, 
 fr: { 'lx.cleared': '{a}/{b} réussies' }, pt: { 'lx.cleared': '{a}/{b} aprovadas' }, de: { 'lx.cleared': '{a}/{b} bestanden' }, hi: { 'lx.cleared': '{a}/{b} पास' }, ar: { 'lx.cleared': '{a}/{b} ناجحة' },
 };
 for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();
+// board / piece designs (new-game dialog)
+(() => { const X = {
+ja: { 'sk.board': '盤のデザイン', 'sk.pieces': '駒のデザイン', 'skb.royal': 'ロイヤル', 'skb.walnut': 'ウォールナット', 'skb.marble': '黒大理石', 'skb.slate': '黒板', 'skb.parchment': '古地図', 'skb.pastel': 'ゆめかわ',
+  'skp.gold': '金と銀', 'skp.coin': 'コイン', 'skp.glass': 'ガラス玉', 'skp.gem': '宝石', 'skp.candy': 'キャンディ', 'skp.pearl': '真珠' },
+en: { 'sk.board': 'Board design', 'sk.pieces': 'Piece design', 'skb.royal': 'Royal', 'skb.walnut': 'Walnut', 'skb.marble': 'Black marble', 'skb.slate': 'Chalkboard', 'skb.parchment': 'Old map', 'skb.pastel': 'Dreamy pastel',
+  'skp.gold': 'Gold & silver', 'skp.coin': 'Coins', 'skp.glass': 'Glass marbles', 'skp.gem': 'Gems', 'skp.candy': 'Candy', 'skp.pearl': 'Pearls' },
+zh: { 'sk.board': '棋盘样式', 'sk.pieces': '棋子样式', 'skb.royal': '皇家紫', 'skb.walnut': '胡桃木', 'skb.marble': '黑大理石', 'skb.slate': '黑板', 'skb.parchment': '古地图', 'skb.pastel': '梦幻粉彩',
+  'skp.gold': '金与银', 'skp.coin': '硬币', 'skp.glass': '玻璃珠', 'skp.gem': '宝石', 'skp.candy': '糖果', 'skp.pearl': '珍珠' },
+ko: { 'sk.board': '판 디자인', 'sk.pieces': '말 디자인', 'skb.royal': '로열', 'skb.walnut': '월넛', 'skb.marble': '흑대리석', 'skb.slate': '칠판', 'skb.parchment': '옛 지도', 'skb.pastel': '드림 파스텔',
+  'skp.gold': '금과 은', 'skp.coin': '동전', 'skp.glass': '유리구슬', 'skp.gem': '보석', 'skp.candy': '캔디', 'skp.pearl': '진주' },
+es: { 'sk.board': 'Diseño del tablero', 'sk.pieces': 'Diseño de las fichas', 'skb.royal': 'Real', 'skb.walnut': 'Nogal', 'skb.marble': 'Mármol negro', 'skb.slate': 'Pizarra', 'skb.parchment': 'Mapa antiguo', 'skb.pastel': 'Pastel',
+  'skp.gold': 'Oro y plata', 'skp.coin': 'Monedas', 'skp.glass': 'Canicas', 'skp.gem': 'Gemas', 'skp.candy': 'Caramelos', 'skp.pearl': 'Perlas' },
+fr: { 'sk.board': 'Style du plateau', 'sk.pieces': 'Style des pions', 'skb.royal': 'Royal', 'skb.walnut': 'Noyer', 'skb.marble': 'Marbre noir', 'skb.slate': 'Ardoise', 'skb.parchment': 'Carte ancienne', 'skb.pastel': 'Pastel',
+  'skp.gold': 'Or et argent', 'skp.coin': 'Pièces', 'skp.glass': 'Billes', 'skp.gem': 'Gemmes', 'skp.candy': 'Bonbons', 'skp.pearl': 'Perles' },
+pt: { 'sk.board': 'Design do tabuleiro', 'sk.pieces': 'Design das peças', 'skb.royal': 'Real', 'skb.walnut': 'Nogueira', 'skb.marble': 'Mármore negro', 'skb.slate': 'Lousa', 'skb.parchment': 'Mapa antigo', 'skb.pastel': 'Pastel',
+  'skp.gold': 'Ouro e prata', 'skp.coin': 'Moedas', 'skp.glass': 'Bolinhas de gude', 'skp.gem': 'Gemas', 'skp.candy': 'Balas', 'skp.pearl': 'Pérolas' },
+de: { 'sk.board': 'Brettdesign', 'sk.pieces': 'Steindesign', 'skb.royal': 'Royal', 'skb.walnut': 'Nussbaum', 'skb.marble': 'Schwarzer Marmor', 'skb.slate': 'Schiefertafel', 'skb.parchment': 'Alte Karte', 'skb.pastel': 'Pastell',
+  'skp.gold': 'Gold & Silber', 'skp.coin': 'Münzen', 'skp.glass': 'Murmeln', 'skp.gem': 'Edelsteine', 'skp.candy': 'Bonbons', 'skp.pearl': 'Perlen' },
+hi: { 'sk.board': 'बोर्ड डिज़ाइन', 'sk.pieces': 'गोटी डिज़ाइन', 'skb.royal': 'शाही', 'skb.walnut': 'अखरोट', 'skb.marble': 'काला संगमरमर', 'skb.slate': 'ब्लैकबोर्ड', 'skb.parchment': 'पुराना नक्शा', 'skb.pastel': 'पेस्टल',
+  'skp.gold': 'सोना-चाँदी', 'skp.coin': 'सिक्के', 'skp.glass': 'काँच के कंचे', 'skp.gem': 'रत्न', 'skp.candy': 'कैंडी', 'skp.pearl': 'मोती' },
+ar: { 'sk.board': 'تصميم اللوحة', 'sk.pieces': 'تصميم القطع', 'skb.royal': 'ملكي', 'skb.walnut': 'خشب الجوز', 'skb.marble': 'رخام أسود', 'skb.slate': 'سبّورة', 'skb.parchment': 'خريطة قديمة', 'skb.pastel': 'باستيل',
+  'skp.gold': 'ذهب وفضة', 'skp.coin': 'عملات', 'skp.glass': 'كرات زجاجية', 'skp.gem': 'أحجار كريمة', 'skp.candy': 'حلوى', 'skp.pearl': 'لآلئ' },
+};
+for (const l in X) window.I18N[l] = Object.assign(window.I18N[l] || {}, X[l]); })();

@@ -1163,8 +1163,8 @@ body .info-line{font-size:12.5px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
 <script src="../shared/pzbook.js?v=2"></script>
-<script src="../shared/headerbar.js?v=28"></script>
-<script src="../shared/cardbar.js?v=2"></script>
+<script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/cardbar.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -3089,16 +3089,16 @@ document.addEventListener('keydown', e => {
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=21'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=22'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=8')).then(() => load('../atlas/models/connect4.js?v=3')).then(() => load('../atlas/games/connect4-tiles.js?v=1')).then(() => load('../atlas/skin/connect4.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=9')).then(() => load('../atlas/models/connect4.js?v=3')).then(() => load('../atlas/games/connect4-tiles.js?v=1')).then(() => load('../atlas/skin/connect4.js?v=1'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261028gorank2" defer></script>
+<script src="../shared/atlas.js?v=20261028u" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261022ent" defer></script>
 </body>

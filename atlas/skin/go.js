@@ -50,8 +50,8 @@
     RIM = (U.W - S) / 2 / c;                                         // the 3D board's margin around the DOM board (cells)
     const span = n + 1;   // the DOM board in cells; the frame is shrunk so the band under it (near side + legs) fits the page
     de.style.setProperty('--goband', ((below + .35) / span).toFixed(4));
-    // about the 2D board's size: only part of the near side / legs band has to fit inside the 2D frame's height (the rest may hang below)
-    de.style.setProperty('--gok', (1 / (1 + (0.3 * (below + .35) + RIM) / span)).toFixed(4));
+    // about the 2D board's size: the whole near side / legs band fits inside the 2D frame's height, so the play bar below never slides under the online dock
+    de.style.setProperty('--gok', (1 / (1 + ((below + .35) + RIM) / span)).toFixed(4));
     for (const [, o] of st3) group.remove(o.g); st3.clear(); lastMark = -2;
     root.add(group);
   }
@@ -88,6 +88,11 @@ html.atlas-go.atlas-go3d .bsvg .lm{display:none}
 html.atlas-go .bsvg .ghost{opacity:.55}
 html.atlas-go .side{align-self:start!important}
 html.atlas-go body.counting #evalCard .graph{display:none}
+html.atlas-go .playbar{position:relative;z-index:2;box-sizing:border-box;padding:5px 6px 5px 14px;border-radius:14px;background:rgba(255,253,247,.9);box-shadow:0 4px 14px rgba(40,24,8,.25),inset 0 0 0 1px rgba(120,90,50,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+html.atlas-go .playbar .pb-turn{color:#6d6358!important}
+html.atlas-go .playbar .pb-turn b{color:#2a2420!important}
+html.atlas-go .playbar .pbtn{background:#fff!important;color:#2a2420!important;border:1.5px solid #e3d8c4!important}
+html.atlas-go .playbar .pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4c)!important;color:#1b150a!important;border-color:transparent!important}
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){html.atlas-go .side-in > *{width:min(var(--bs), 100%)}}`;
   document.head.appendChild(css);
 

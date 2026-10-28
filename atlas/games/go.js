@@ -325,7 +325,7 @@
   function levelInfo(i, lang) {   // i = 1..27
     const L = LVN[lang] || LVN.en, r = RANKS[i], v = +r.slice(1), rv = r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v;
     const name = r[0] === 'k' ? L.kyu.replace('{n}', v) : r[0] === 'd' ? L.dan[v - 1] : L.top[v - 1];
-    return { name, desc: '', rating: 1850 + 100 * rv, who: L.lvd[rv <= -12 ? 0 : rv <= -6 ? 1 : rv <= 0 ? 2 : rv <= 5 ? 3 : 4] };
+    return { name, desc: '', rating: rv <= 5 ? 2000 + 100 * rv : Math.min(2700, 2500 + 50 * (rv - 5)) /* EGF scale, as go/app.js */, who: L.lvd[rv <= -12 ? 0 : rv <= -6 ? 1 : rv <= 0 ? 2 : rv <= 5 ? 3 : 4] };
   }
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.go = { levels: 27, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', sizes: [9, 13, 19], sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself

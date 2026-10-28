@@ -667,7 +667,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // rated: the record with the newest game, its history united by game id; settings / name: newest wins.
 const MorrisSync = (() => {
   const META = 'morris-sync-meta';
-  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'threat', 'hint', 'level', 'level2', 'rule', 'color', 'lang'];
+  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'threat', 'hint', 'level', 'level2', 'rule', 'color', 'bd', 'pcs', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -747,6 +747,7 @@ const MorrisSync = (() => {
     put(META, m);
     save();
     if (LANG !== langWas) olLangChanged(true);
+    if (typeof skinApply === 'function') skinApply();
     renderInfo();
   }
   return { snapshot, merge, apply, mergeDaily, mergeRated };

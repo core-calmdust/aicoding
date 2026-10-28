@@ -1015,7 +1015,9 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo): 9x9, 5 min + 20 s byo-yomi
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { base: 300000, byo: 20000 };
 // rating of each AI step on the kyu / dan scale (100 per kyu: 15級 = 450 … 1級 = 1850, then about 100 per dan)
-const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => 1850 + 100 * rankVal(i + 1)));   // 18級 150 … 1級 1850, 初段 1950 … 八段 2650, top amateur 2750
+// AI ratings on the EGF scale (GoR): 1級 2000, 初段 2100, 100 per rank up to 五段 2500, then 50 per rank (六段 2550 … 八段 2650), top amateur 2700
+const egfOf = i => { const v = rankVal(i); return v <= 5 ? 2000 + 100 * v : Math.min(2700, 2500 + 50 * (v - 5)); };
+const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => egfOf(i + 1)));
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
