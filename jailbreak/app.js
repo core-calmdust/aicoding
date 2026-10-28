@@ -242,6 +242,12 @@ const floorLabel = j => `${Math.floor(j / PER) + 1}F-${(j % PER) + 1}`;
 // long course names shrink until they fit beside the level chip (all languages)
 function fitNames(el) { requestAnimationFrame(() => $$('.ctl b', el).forEach(b => { b.style.fontSize = ''; let f = parseFloat(getComputedStyle(b).fontSize); while (b.scrollWidth > b.clientWidth + 1 && f > 11) { f -= .5; b.style.fontSize = f + 'px'; } })); }
 addEventListener('resize', () => { const el = $('#coursePanel'); if (el && !el.closest('[hidden]')) fitNames(el); });
+// the first time you play a floor of a course, its story comes first
+function storyThen(co, j, go) {
+  const f = Math.floor(j / PER), k = 'sy_' + co + '_' + f;
+  if (DB.tut[k] || !floorOpenC(co, f)) return go();
+  DB.tut[k] = 1; save(); showStory(f, go, co);
+}
 function renderCourses() {
   const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
   el.innerHTML = `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>
@@ -249,7 +255,7 @@ function renderCourses() {
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
   // while nothing on the course is cleared yet, its story comes first (then the stage starts)
   fitNames(el);
-  $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; if (!courseRecs(id).some(v => v)) { courseOpenId = id; showStory(Math.floor(j / PER), () => { courseOpenId = null; startStage(id, j); }); } else startStage(id, j); }; });
+  $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; storyThen(id, j, () => startStage(id, j)); }; });
 }
 function openCourse(id) { courseOpenId = id; nav(); renderCourse(id); scrollTo(0, 0); }
 // stage tiles in sections of 10 (course: floors 1F…10F, mode: BLOCK A…E); a section opens once 6 of the one before are cleared
@@ -261,9 +267,9 @@ function stageTiles(src, recs) {
     const open = secOpenQ(recs, s * PER), md = secMedal(recs, s), cl = recs.slice(s * PER, s * PER + PER).filter(v => v).length;
     const need = s ? Math.max(0, UNLOCK - recs.slice((s - 1) * PER, s * PER).filter(v => v).length) : 0;
     const sup = L.slice(s * PER, s * PER + PER).some(r => r.o >= SUPER);
-    const head = isC ? `<b class="fln">${esc(t('fl.' + s))}</b><button class="ib sm sybtn" data-sy="${s}" aria-label="${esc(t('sy.btn'))}">${A.ICON.book}</button>` : `<b>BLOCK ${String.fromCharCode(65 + s)}</b><span class="tier">${esc(t('tier.' + Math.min(s, 4)))}</span>`;
+    const head = isC ? (open ? `<b class="fln">${esc(floorName(src, s))}</b><button class="ib sm sybtn" data-sy="${s}" aria-label="${esc(t('sy.btn'))}">${A.ICON.book}</button>` : `<b class="fln">${s + 1}F ？？？</b>`) : `<b>BLOCK ${String.fromCharCode(65 + s)}</b><span class="tier">${esc(t('tier.' + Math.min(s, 4)))}</span>`;
     html += `<section class="stg tier${s}"><div class="stgh">${head}${sup ? `<span class="supc">${esc(t('u.super'))}</span>` : ''}<span class="cnt">${cl}/${PER}</span>${md ? `<i class="medal m${md}"></i>` : ''}</div>`;
-    if (!open) html += `<div class="locked">${A.ICON.lock}${esc(isC ? t('st.lockF', { f: t('fl.' + (s - 1)), n: need }) : t('st.lock', { s: String.fromCharCode(64 + s), n: need }))}</div>`;
+    if (!open) html += `<div class="locked">${A.ICON.lock}${esc(isC ? t('st.lockF', { f: floorName(src, s - 1), n: need }) : t('st.lock', { s: String.fromCharCode(64 + s), n: need }))}</div>`;
     else {
       html += '<div class="tiles">';
       for (let j = s * PER; j < s * PER + PER; j++) {
@@ -282,14 +288,21 @@ function renderCourse(id) {
   el.innerHTML = `<div class="thead" style="--tc:${COURSE_COL[id]}"><button class="btn sm" id="flBack">${A.ICON.back}${esc(t('u.list'))}</button><span class="tic">${courseIcon(id)}</span>
     <div><h2>${esc(t('cs.' + id))} ${lvChip(c.lv)}</h2><p>${esc(t('cs.' + id + '.d'))}</p><button class="btn sm org" id="coCont">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} <small>${floorLabel(j)}</small></button></div><div class="ring" style="--p:${done / recs.length * 100}"><b>${done}</b><small>/${recs.length}</small></div></div>` + stageTiles(id, recs);
   $('#flBack').onclick = () => history.back();
-  $('#coCont').onclick = () => startStage(id, j);
-  $$('[data-sy]', el).forEach(b => { b.onclick = e => { e.stopPropagation(); showStory(+b.dataset.sy); }; });
-  $$('.tile', el).forEach(b => { b.onclick = () => startStage(id, +b.dataset.j); });
+  $('#coCont').onclick = () => storyThen(id, j, () => startStage(id, j));
+  $$('[data-sy]', el).forEach(b => { b.onclick = e => { e.stopPropagation(); showStory(+b.dataset.sy, null, id); }; });
+  $$('.tile', el).forEach(b => { b.onclick = () => { const jj = +b.dataset.j; storyThen(id, jj, () => startStage(id, jj)); }; });
 }
 // the floor's story: an illustration of the location + a few lines (shown the first time you play a stage on that floor)
-function showStory(f, then) {
-  const body = modal(`<div class="story" style="--tc:${COURSE_COL[courseOpenId] || '#5a6b7f'}"><div class="syfig">${window.JBStory ? JBStory.scene(f, A.inmateSVG(DB.icon)) : ''}<span class="sytag">${esc(t('sy.tag'))} ${f + 1}F</span></div>
-    <h2 class="mh">${esc(t('fl.' + f))}</h2><p class="sytx">${esc(t('sy.' + f))}</p><div class="mbtns"><button class="btn big org" id="syGo">${A.ICON.play}${esc(t('sy.go'))}</button></div></div>`, 'mwide');
+// per-course stories (stories.js): floor names and texts in 10 languages; falls back to the shared floor texts
+const story = (co, f) => (window.JB_STORIES && JB_STORIES[co] && JB_STORIES[co][f]) || null;
+const L10 = o => o ? (o[lang] || o.en || o.ja) : '';
+const floorName = (co, f) => { const s = story(co, f); return s ? L10(s.fl) : t('fl.' + f); };
+// a floor's story can be read once that floor is unlocked
+const floorOpenC = (co, f) => secOpenQ(courseRecs(co), f * PER);
+function showStory(f, then, co = courseOpenId) {
+  const S = story(co, f), sc = S ? S.sc : f, tx = S ? L10(S.tx) : t('sy.' + f);
+  const body = modal(`<div class="story" style="--tc:${COURSE_COL[co] || '#5a6b7f'}"><div class="syfig">${window.JBStory ? JBStory.scene(sc, A.inmateSVG(DB.icon)) : ''}<span class="sytag">${esc(t('sy.tag'))} ${f + 1}F</span></div>
+    <h2 class="mh">${esc(co ? t('cs.' + co) + ' · ' : '')}${esc(floorName(co, f))}</h2><p class="sytx">${esc(tx)}</p><div class="mbtns"><button class="btn big org" id="syGo">${A.ICON.play}${esc(t('sy.go'))}</button></div></div>`, 'mwide');
   afterModal = then || null;
   $('#syGo', body).onclick = closeModal;
   SND.page && SND.page();
@@ -668,7 +681,7 @@ function win() {
     const recsB = recsOfList(listOf(G.src));
     if (stars > old) { DB.st[key] = stars; coins = addCoin((stars - old) * 8 + (old ? 0 : 12) + (G.rec.o >= SUPER ? (stars - old) * 4 : 0)); }
     const recsA = recsOfList(listOf(G.src)), jj = G.j, s = (jj / PER) | 0, N = recsA.length;
-    const ev = [], secName = k => G.isC ? t('fl.' + k) : 'BLOCK ' + String.fromCharCode(65 + k);
+    const ev = [], secName = k => G.isC ? floorName(G.src, k) : 'BLOCK ' + String.fromCharCode(65 + k);
     if (secMedal(recsA, s) > secMedal(recsB, s)) ev.push(t('ev.medalS', { s: secName(s) }));
     if ((s + 1) * PER < N && !secOpen(recsB, (s + 1) * PER) && secOpen(recsA, (s + 1) * PER)) ev.push(t('ev.unlockS', { s: secName(s + 1) }));
     if (recsA.every(v => v) && !recsB.every(v => v)) ev.push(t('ev.comp'));
