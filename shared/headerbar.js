@@ -201,7 +201,7 @@ function dockCenter() {
     const now = shift(); return [t + now, b + now];
   };
   const region = () => {
-    const bar = document.querySelector('header.hb, .atlas-top'), br = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent)
+    const bar = [...document.querySelectorAll('header.hb, .atlas-top')].find(b => b.getClientRects().length), br = bar ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent; portal: the game's own bar is hidden, use the portal's)
     return [br && br.height ? br.bottom : 0, dock.getBoundingClientRect().top];
   };
   const vhPx = () => { const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;visibility:hidden;height:var(--vh)'; app.appendChild(pr); const h = pr.getBoundingClientRect().height; pr.remove(); return h; };
