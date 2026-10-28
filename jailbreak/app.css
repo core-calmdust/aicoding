@@ -801,3 +801,14 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
   .result .rbtns .btn { font-size: 18px; min-height: 52px; padding: 0 22px; }
 }
 .dlt > b .medal { margin-left: 6px; vertical-align: -2px; }
+
+/* Google sign-in + cloud sync */
+.gbtn { background: #fff !important; color: #1f1f1f !important; border-color: #dadce0 !important; gap: 8px; font-weight: 700; }
+.gbtn svg { flex: none; }
+.gacc { display: flex; align-items: center; gap: 8px; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 6px 10px; font-size: 12px; min-width: 0; text-align: start; }
+.gacc svg { flex: none; } .gacc span { display: flex; flex-direction: column; min-width: 0; } .gacc small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #5f5a52; }
+.pextra .gbtn { width: 100%; min-height: 42px; font-size: 13.5px; }
+.syncbox { margin-top: 6px; padding: 4px 0 10px; border-bottom: 2px dashed #ddd3c2; }
+.syncbox .mh3 { display: flex; align-items: center; gap: 8px; margin: 12px 0 6px; }
+.syncbox .gacc { margin-top: 4px; } .syncbox .mbtns { margin-top: 10px; } .syncbox .systat:empty { display: none; } .syncbox .systat { font-weight: 700; color: var(--grn); }
+.syncbox .gbtn { white-space: nowrap; min-width: 220px; } .syncbox .gbtn span { white-space: nowrap; }

@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- World Board Game Atlas — hidden helper frame (loaded by shared/atlas-account.js).
      Signs ONE game's own Firebase project (its online play / rated games) in with the Google
-     credential of the shared Atlas sign-in, as that game page's default app — so the game page
+     credential of the shared Atlas sign-in, as that game page's own (default or named) app — so the game page
      finds itself already signed in (same origin → same saved session) and needs no second login.
      ?g=<game folder>  (its firebase-config.js is loaded)      messages: {op:'in', idToken, accessToken} | {op:'out'} -->
 <html><head><meta charset="utf-8"></head><body>
@@ -17,8 +17,9 @@
     await load('../' + g + '/firebase-config.js');
     if (!window.FIREBASE_CONFIG) throw new Error('no-config');
     await load(FB + 'firebase-app-compat.js'); await load(FB + 'firebase-auth-compat.js');
-    firebase.initializeApp(window.FIREBASE_CONFIG);   // the game page's own default app → its saved session
-    auth = firebase.auth();
+    // the game page's own app → its saved session (a few games use a named app instead of the default one)
+    const name = { jailbreak: 'jailbreak' }[g];
+    auth = (name ? firebase.initializeApp(window.FIREBASE_CONFIG, name) : firebase.initializeApp(window.FIREBASE_CONFIG)).auth();
     await new Promise(res => { const off = auth.onAuthStateChanged(() => { off(); res(); }); });
   })();
   async function signIn(idToken, accessToken) {

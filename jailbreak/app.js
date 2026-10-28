@@ -26,7 +26,7 @@ function load() {
 }
 let DB = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') DB.set.snd = sp === '1' ? 1 : 0; } catch (e) {}   // site-wide sound switch (shared with the portal)
-const save = () => { DB.mt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+const save = () => { DB.mt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.__jbSchedPush) window.__jbSchedPush(); };
 
 /* ---------------- i18n ---------------- */
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
@@ -187,9 +187,10 @@ function profCard() {
       <ul class="pst"><li><span>${esc(t('ht.course'))}</span><b>${courseClears()}<small>/${courseTotal() || 900}</small></b></li>
       <li><span>${esc(t('ht.modes'))}</span><b>${SMODES.reduce((a, m) => a + modeCleared(m), 0)}<small>/${SMODES.length * MODE_N}</small></b></li>
       <li><span>${esc(t('pf.esc'))}</span><b>${fmt(DB.stats.esc)}</b></li><li><span>${esc(t('pf.perfect'))}</span><b>${fmt(DB.stats.perfect)}</b></li></ul>
-      <div class="plinks"><button class="btn" data-go="gacha">${A.ICON.locker}<span>${esc(t('ga.title'))}</span></button><button class="btn" data-go="book">${A.ICON.book}<span>${esc(t('bk.title'))}</span></button><button class="btn" data-go="ach">${A.ICON.trophy}<span>${esc(t('ach.title'))}</span><i class="dot"></i></button><button class="btn" data-go="rank">${A.ICON.rank}<span>${esc(t('rk.title'))}</span></button><button class="btn" data-go="rules">${A.ICON.modes}<span>${esc(t('u.rules'))}</span></button><button class="btn" data-go="tut">${A.ICON.help}<span>${esc(t('help'))}</span></button></div></div>`;
+      ${googleBox()}<div class="plinks"><button class="btn" data-go="gacha">${A.ICON.locker}<span>${esc(t('ga.title'))}</span></button><button class="btn" data-go="book">${A.ICON.book}<span>${esc(t('bk.title'))}</span></button><button class="btn" data-go="ach">${A.ICON.trophy}<span>${esc(t('ach.title'))}</span><i class="dot"></i></button><button class="btn" data-go="rank">${A.ICON.rank}<span>${esc(t('rk.title'))}</span></button><button class="btn" data-go="rules">${A.ICON.modes}<span>${esc(t('u.rules'))}</span></button><button class="btn" data-go="tut">${A.ICON.help}<span>${esc(t('help'))}</span></button></div></div>`;
   $$('[data-go]', $('#profCard')).forEach(b => { b.onclick = () => ({ gacha: () => openGacha(), book: () => openBook(), ach: openAch, rank: () => openRank('m'), rules: () => openRules(), tut: () => tutorial() })[b.dataset.go](); });
   $('#pfEdit').onclick = () => openProfile();
+  const gb = $('#pfGoogle'); if (gb) gb.onclick = googleLogin;
 }
 /* phones (portrait): one section at a time + a fixed tab bar at the bottom. The profile card and the calendar move into
    マイページ and the Lucky Locker gets a tab of its own. PC / tablet keep the original layout. */
@@ -1206,11 +1207,14 @@ async function openRank(tab = 'm') {
 }
 function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}<div class="sw lrow"><span>${esc(t('set.lang'))}</span><span id="langSlot"></span></div>${sw('anim', 'set.anim')}
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}<div class="sw lrow"><span>${esc(t('set.lang'))}</span><span id="langSlot"></span></div>${sw('anim', 'set.anim')}${syncSection()}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('help'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
   { const slot = $('#langSlot'), ls = $('#langSel'); if (slot && ls) { ls.value = lang; slot.append(ls); } }
   $$('[data-k]', body).forEach(c => { c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'snd') { try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} if (c.checked) SND.coin(); } save(); }; });
   $('#setTut').onclick = () => tutorial();
+  const si = $('#syIn'); if (si) si.onclick = () => googleLogin();
+  const sn = $('#syNow'); if (sn) sn.onclick = () => syncNow();
+  const so = $('#syOut'); if (so) so.onclick = () => ask(t('sync.logout.q'), [[t('q.cancel'), 'org'], [t('sync.logout'), '', async () => { await pushNow(); try { await ON.logout(); } catch (e) {} toast(t('sync.out')); renderHome(); }]]);
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'org'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
 }
 function applySkin() {
@@ -1225,6 +1229,83 @@ function loginBonus() {
   const n = DB.lbs % 7 === 0 ? 150 : 30; addCoin(n); save();
   setTimeout(() => toast(t('lb.msg', { n, d: DB.lbs })), 900);
 }
+
+/* ---------------- Google sign-in + cloud sync (jb/sync/<uid>) ---------------- */
+const GICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
+const acct = () => { try { return ON && ON.available && ON.account ? ON.account() : null; } catch (e) { return null; } };
+let pushT = 0, syncing = false, lastSync = 0, syncErr = false;
+window.__jbSchedPush = () => { if (!acct() || syncing) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 4000); };
+async function pushNow() { clearTimeout(pushT); if (!acct()) return; try { await ON.push(JSON.stringify(DB)); lastSync = Date.now(); syncErr = false; } catch (e) { syncErr = true; } }
+addEventListener('pagehide', () => { if (pushT) pushNow(); });
+// local + cloud → nothing earned on either device is lost: best of every record, union of everything owned
+function mergeDB(L, C) {
+  const newer = (C.mt || 0) > (L.mt || 0), out = JSON.parse(JSON.stringify(newer ? C : L)), o = newer ? L : C;
+  const mx = (a, b) => Math.max(a || 0, b || 0), mn0 = (a, b) => a && b ? Math.min(a, b) : (a || b || 0);
+  const maxMap = k => { out[k] = out[k] || {}; for (const x in (o[k] || {})) out[k][x] = mx(out[k][x], o[k][x]); };
+  ['st', 'stats', 'hu'].forEach(maxMap);
+  out.dl = out.dl || {}; for (const d in (o.dl || {})) { const a = out.dl[d] || (out.dl[d] = {}), b = o.dl[d] || {};
+    for (const k in b) { const x = a[k], y = b[k]; if (!y) continue; if (!x) { a[k] = y; continue; }
+      if (k === 'sl') a[k] = { s: mx(x.s, y.s), a: mx(x.a, y.a) };
+      else { const r = { s: mx(x.s, y.s), md: mx(x.md, y.md), mv: mn0(x.mv, y.mv) }; if (!r.md && (x.p || y.p)) r.p = x.p || y.p; a[k] = r; } } }
+  out.best = out.best || {}; const ob = o.best || {};
+  for (const k of ['sl', 'chain', 'chainN']) out.best[k] = mx(out.best[k], ob[k]);
+  out.best.ta = mn0(out.best.ta, ob.ta);
+  out.own = Object.assign({}, o.own || {}, out.own || {});
+  out.skinOwn = [...new Set([...(out.skinOwn || []), ...(o.skinOwn || [])])];
+  out.frameOwn = [...new Set([...(out.frameOwn || []), ...(o.frameOwn || [])])];
+  out.ach = Object.assign({}, o.ach || {}, out.ach || {}); out.tut = Object.assign({}, o.tut || {}, out.tut || {});
+  out.last = Object.assign({}, o.last || {}, out.last || {});
+  out.coin = mx(out.coin, o.coin); out.life = mx(out.life, o.life);
+  if ((o.login || '') > (out.login || '')) { out.login = o.login; out.lbs = o.lbs; }
+  if (!out.name) { out.name = o.name || ''; if (o.name) out.icon = o.icon; }
+  out.set = Object.assign({}, L.set || {});   // sound / language / effects stay as set on this device
+  out.mt = Math.max(L.mt || 0, C.mt || 0);
+  return out;
+}
+async function syncNow(quiet) {
+  if (!acct() || syncing) return; syncing = true; refreshSync();
+  try {
+    const c = await ON.pull();
+    if (c && c.d) {
+      const merged = mergeDB(DB, JSON.parse(c.d)), base = DEF();
+      for (const k in base) if (merged[k] === undefined) merged[k] = base[k];
+      for (const k of ['set', 'best', 'stats']) merged[k] = Object.assign({}, base[k], merged[k]);
+      DB = merged; try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {}
+    }
+    syncing = false; await pushNow(); if (syncErr) throw new Error('push');
+    if (!quiet) toast(t('sync.done')); applySkin(); updateCoins(); if (!$('#home').hidden) renderHome();
+  } catch (e) { syncErr = true; if (!quiet) toast(t('sync.err')); }
+  syncing = false; refreshSync();
+}
+// ranking entries that move to the Google account's uid when it already exists (removed under the old uid, then re-posted)
+const DAILY_KS = ['e', 'm', 'h', 'sl'];
+function myRankPaths() { return ['jb/stars', 'jb/chain', ...DAILY_KS.map(k => `jb/d/${today()}/${k}`)]; }
+function repostScores() {
+  pushTotals();
+  if (!DB.name) return;
+  const r = DB.dl[today()]; if (!r) return;
+  DAILY_KS.forEach(k => { const x = r[k]; if (x && x.s > 0 && (k === 'sl' ? x.a > 0 : x.md > 0)) ON.putDaily(today(), k, Object.assign({ s: x.s }, who())).catch(() => {}); });
+}
+async function googleLogin() {
+  if (!ON || !ON.available) return;
+  try { const old = ON.uid; const r = await ON.google(myRankPaths()); await syncNow(); if (r && r.uid !== old) repostScores(); else pushTotals(); renderHome(); refreshSync(); }
+  catch (e) { if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/user-cancelled')) return; toast(t('sync.err')); }
+}
+function googleBox() {
+  if (!ON || !ON.available) return '';
+  const a = acct();
+  return a ? `<div class="gacc">${GICON}<span><b>${esc(t('sync.on'))}</b><small>${esc(a.email || a.name)}</small></span></div>` : `<button class="btn gbtn" id="pfGoogle">${GICON}<span>${esc(t('sync.google'))}</span></button>`;
+}
+const syncStat = () => syncing ? t('sync.ing') : syncErr ? t('sync.err') : lastSync ? t('sync.last', { t: new Date(lastSync).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) }) : '';
+function syncSection() {
+  if (!ON || !ON.available) return '';
+  const a = acct();
+  return `<div class="syncbox" id="syncBox"><h3 class="mh3">${GICON}${esc(t('sync.title'))}</h3>${a
+    ? `<div class="gacc"><span><b>${esc(t('sync.on'))}</b><small>${esc(a.email || a.name)}</small></span></div><p class="note">${esc(t('sync.on2', { e: a.email || a.name }))}</p><p class="note systat" id="syStat">${esc(syncStat())}</p><div class="mbtns"><button class="btn" id="syNow">${esc(t('sync.now'))}</button><button class="btn" id="syOut">${esc(t('sync.logout'))}</button></div>`
+    : `<p class="note">${esc(t('sync.desc'))}</p><div class="mbtns"><button class="btn gbtn" id="syIn">${GICON}<span>${esc(t('sync.google'))}</span></button></div>`}</div>`;
+}
+addEventListener('jb-auth', () => { if (acct()) syncNow(true).then(() => { pushTotals(); renderHome(); }); });
+function refreshSync() { const s = $('#syStat'); if (s) s.textContent = syncStat(); }
 
 /* ---------------- boot ---------------- */
 function bind() {
@@ -1264,9 +1345,9 @@ async function boot() {
   showScreen('home'); renderHome();
   if (!DB.tut.basic && !Q.has('notut')) { DB.tut.basic = 1; save(); setTimeout(tutorial, 400); }
   loginBonus();
-  if (ON && ON.available) ON.init().catch(() => {});
+  if (ON && ON.available) ON.init().then(() => { if (acct()) { syncNow(true); profCard(); } }).catch(() => {});
 }
 // test hooks (Playwright) — read-only handles + the real game entry points
-window.JBApp = { get DB() { return DB; }, get G() { return G; }, get ST() { return ST; }, get DL() { return DL; }, startStage, startDaily, startSearch, startChain, startTA, doMove, tilt, hint, nextMove, renderHome, openRank, toast };
+window.JBApp = { get DB() { return DB; }, get G() { return G; }, get ST() { return ST; }, get DL() { return DL; }, startStage, startDaily, startSearch, startChain, startTA, doMove, tilt, hint, nextMove, renderHome, openRank, toast, openSettings, googleLogin, syncNow, mergeDB, save };
 boot();
 })();
