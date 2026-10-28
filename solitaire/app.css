@@ -129,7 +129,7 @@ html[data-felt=walnut] .felt-bg{background:
   .stage{--info-h:196px}
   .board-wrap{height:calc(100vh - var(--hb-h, 56px) - var(--info-h) - 46px);min-height:400px;--rail:26px}
   .infobar{display:none}
-  .side{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;height:var(--info-h);align-items:stretch}
+  .side{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;height:var(--info-h);align-items:stretch}
   .side .card{height:100%;min-height:0;overflow:hidden;padding:11px 14px}
   .side .card h3{margin-bottom:6px}
   .side .daily-list{gap:4px}.side .dl-item{padding:4px 8px}.side .dl-ico{width:22px;height:22px}
