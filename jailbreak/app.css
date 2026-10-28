@@ -301,9 +301,9 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 .gctl .gbtns { grid-area: btn; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0; gap: 8px; }
 .gctl .gbtn { width: auto; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 14px; } .gbtn .gl { display: inline; white-space: nowrap; }
 @media (max-width: 760px) {
-  /* phone: the rule line sits above the board; the board stays in the vertical middle of the space between the title row and
-     the buttons (the rule line above and the tilt pad below are balanced by --ihT / --ihB) */
-  #play { grid-template-areas: "bar stat" "run run" "sl sl" "f1 f1" "info info" "board board" "tilt tilt" "f2 f2" "btn btn"; grid-template-rows: auto auto auto 1fr auto auto auto 1fr auto;
+  /* phone: the rule line sits right under the title row; the board stays in the vertical middle of the space above the buttons
+     (the tilt pad below is balanced by --ihT) */
+  #play { grid-template-areas: "bar stat" "info info" "run run" "sl sl" "f1 f1" "board board" "tilt tilt" "f2 f2" "btn btn"; grid-template-rows: auto auto auto auto 1fr auto auto 1fr auto;
     min-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
   .gctl .gbtns { padding-bottom: env(safe-area-inset-bottom, 0px); }
   #boardWrap { margin-top: var(--ihT, 0px); margin-bottom: var(--ihB, 0px); }
