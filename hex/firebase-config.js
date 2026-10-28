@@ -19,9 +19,17 @@
 //      then bump the ?v= of firebase-config.js in hex/index.html.
 // The web config is public by design; access is protected by the Realtime Database rules.
 // While this is null, online play shows "coming soon" and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDf_oHOWwz4q6ZrOB1k-ZornCx8239iB78",
+  authDomain: "hex-multiplay.firebaseapp.com",
+  databaseURL: "https://hex-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hex-multiplay",
+  storageBucket: "hex-multiplay.firebasestorage.app",
+  messagingSenderId: "425780151807",
+  appId: "1:425780151807:web:ec39d940f29cfb6f81d3ca"
+};
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
 // Setup: create the key for core-calmdust.github.io, register it in Firebase console → App Check → this web app, publish the page
 // with the key, then turn on enforcement for Realtime Database (local testing: ?appcheckdebug=1 on localhost prints a debug token).
-window.FIREBASE_APPCHECK_SITE_KEY = null;
+window.FIREBASE_APPCHECK_SITE_KEY = '6LdqnAUuAAAAACDI7YUP_Z1i6yy95FnsKKnvi9uD';   // reCAPTCHA Enterprise (Fraud Defense) site key

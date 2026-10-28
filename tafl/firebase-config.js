@@ -30,4 +30,4 @@ window.FIREBASE_CONFIG = {
 };
 // App Check (reCAPTCHA v3), optional extra protection: once enforced in the console, only this site's pages can use the database.
 // Put the reCAPTCHA v3 *site key* here (public by design). null = App Check is skipped and everything works as before.
-window.FIREBASE_APPCHECK_SITE_KEY = null;
+window.FIREBASE_APPCHECK_SITE_KEY = '6LeyTgUuAAAAAGTFvTYECmlm-2erCu6nnvf9Fdwc';   // reCAPTCHA Enterprise (Fraud Defense) site key
