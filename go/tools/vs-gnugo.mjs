@@ -1,5 +1,7 @@
-// Calibration anchor: an AI level (the page's own worker code) against GNU Go 3.8 over GTP.
+// Calibration anchor: an AI level (the page's own worker code) against GNU Go 3.8 (or any GTP engine) over GTP.
 //   node tools/vs-gnugo.mjs <level> [games=10] [size=19] [gnugoLevel=10]
+//   GTP_CMD="katago gtp -model human.bin.gz -human-model human.bin.gz -config human.cfg -override-config humanSLProfile=rank_5k,maxVisits=1" \
+//     node tools/vs-gnugo.mjs <level> …   (another GTP engine instead of GNU Go, e.g. KataGo's human-like model at a given rank)
 // Chinese scoring, komi 7.5. Clear games are adjudicated by the light net's score estimate (|lead| > 25 twice, after move 120 on 19x19).
 import { spawn } from 'child_process';
 import { createWorker } from './workerhost.mjs';
@@ -13,7 +15,8 @@ const toV = m => m < 0 ? 'pass' : COLS[m % n] + (n - Math.floor(m / n));
 const fromV = v => { v = v.trim().toUpperCase(); if (v === 'PASS') return -1; if (v === 'RESIGN') return -2; return (n - +v.slice(1)) * n + COLS.indexOf(v[0]); };
 
 function gtp() {
-  const p = spawn('/usr/games/gnugo', ['--mode', 'gtp', '--level', String(gl), '--chinese-rules']);
+  const argv = process.env.GTP_CMD ? process.env.GTP_CMD.split(/\s+/) : ['/usr/games/gnugo', '--mode', 'gtp', '--level', String(gl), '--chinese-rules'];
+  const p = spawn(argv[0], argv.slice(1), { stdio: ['pipe', 'pipe', 'ignore'] });
   let buf = '', waiters = [];
   p.stdout.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n\n')) >= 0) { const r = buf.slice(0, i); buf = buf.slice(i + 2); const w = waiters.shift(); w && w(r); } });
   const cmd = c => new Promise(res => { waiters.push(r => res(r.replace(/^[=?]\s*/, ''))); p.stdin.write(c + '\n'); });
@@ -61,4 +64,4 @@ for (let g = 0; g < games; g++) {
   process.stderr.write(`L${level} game ${g + 1}: AI ${aiBlack ? 'B' : 'W'} ${moves.length} moves, ${aiWon ? 'AI' : 'GNU Go'} wins (${why})\n`);
 }
 const p = (won + 0.5) / (tot + 1), elo = -400 * Math.log10(1 / p - 1);
-console.log(JSON.stringify({ level, gnugo: gl, n, games: tot, won, elo_vs_gnugo: Math.round(elo), sec: Math.round((Date.now() - t0) / 1000) }));
+console.log(JSON.stringify({ level, opp: process.env.GTP_CMD || 'gnugo ' + gl, n, games: tot, won, elo_vs_gnugo: Math.round(elo), sec: Math.round((Date.now() - t0) / 1000) }));
