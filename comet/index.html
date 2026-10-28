@@ -96,6 +96,10 @@
             justify-content: center;
             align-items: center;
         }
+        /* Gキー: 枠・ボタン・説明なしの画面のみフルスクリーン */
+        body.pure #buttons-container, body.pure #instructions-container, body.pure .home-link, body.pure #home-link { display: none !important; }
+        body.pure canvas { border: none !important; box-shadow: none !important; }
+        body.pure #fullscreen-root:fullscreen { background-color: #000; }
         #fullscreen-root:fullscreen #game-wrapper {
             transform: scale(var(--scale-factor, 1));
             transform-origin: center;
@@ -897,7 +901,7 @@ class AudioHandler {
 // ゲームのメインロジック
 // ---------------------------------
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { desynchronized: true }) /* 低遅延キャンバス: 描いた絵をすぐ画面に出す（入力遅延の軽減） */;
 const offscreenCanvas = document.createElement('canvas');
 offscreenCanvas.width = config.canvasWidth;
 offscreenCanvas.height = config.canvasHeight;
@@ -931,6 +935,7 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyF') {
         toggleFullScreen();
     }
+    if (e.code === 'KeyG') togglePureFullScreen(); // 枠・説明なしの画面のみフルスクリーン
 });
 window.addEventListener('keyup', e => {
     keyState[e.code] = false;
@@ -1158,12 +1163,12 @@ async function startGame(mode) {
 
 function updateInstructions() {
     const pauseText = lastInputDevice === 'keyboard' ? 'PAUSE: P' : 'PAUSE: START';
-    mainInstruction.textContent = `${pauseText} / FULLSCREEN: F`;
+    mainInstruction.textContent = `FULLSCREEN: F / GAME ONLY: G`; // 1行に収まるようPAUSEは2行目へ
     
     if (gameMode === 'STARTRAIL MODE') {
-        extraInstruction.textContent = 'AVOID COMETS AS LONG AS POSSIBLE';
+        extraInstruction.textContent = `AVOID COMETS AS LONG AS POSSIBLE / ${pauseText}`;
     } else {
-        extraInstruction.textContent = 'ENERGY BOX @ 10,000 PTS';
+        extraInstruction.textContent = `ENERGY BOX @ 10,000 PTS / ${pauseText}`;
     }
 
     const moveText = lastInputDevice === 'keyboard' ? 'MOVE: ARROWS' : 'MOVE: PAD';
@@ -3024,8 +3029,18 @@ effectsToggleButton.addEventListener('click', () => {
     effectsToggleButton.textContent = isEffectsEnabled ? 'EFX ON' : 'EFX OFF';
 });
 
+function togglePureFullScreen() {
+    const root = document.getElementById('fullscreen-root');
+    if (document.fullscreenElement && document.body.classList.contains('pure')) { document.exitFullscreen(); return; }
+    document.body.classList.add('pure');
+    if (!document.fullscreenElement) root.requestFullscreen().catch(() => { document.body.classList.remove('pure'); updateScale(); });
+    updateScale();
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('pure'); });
 function toggleFullScreen() {
     const e = document.getElementById('fullscreen-root');
+    // 画面のみモード中にFを押したら、説明ありのフルスクリーンに切り替える
+    if (document.fullscreenElement && document.body.classList.contains('pure')) { document.body.classList.remove('pure'); updateScale(); return; }
     if (!document.fullscreenElement) {
         e.requestFullscreen().catch(err => {
             alert(`フルスクリーンモードにできませんでした: ${err.message}`);
@@ -3042,9 +3057,10 @@ function updateScale() {
     // スケール計算とスタイル適用を次の描画フレームに同期させる
     requestAnimationFrame(() => {
         if (document.fullscreenElement === r) {
-            const instructionHeight = document.getElementById('instructions-container').offsetHeight;
+            const pure = document.body.classList.contains('pure');
+            const instructionHeight = pure ? 0 : document.getElementById('instructions-container').offsetHeight;
             const totalGameHeight = document.getElementById('gameCanvas').offsetHeight + instructionHeight;
-            const margin = 20;
+            const margin = pure ? 0 : 20;
             const effectiveWidth = w.offsetWidth + margin;
             const effectiveHeight = totalGameHeight + margin;
             const scaleX = r.clientWidth / effectiveWidth;
