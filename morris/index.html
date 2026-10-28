@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>/* board / piece design before the first paint (2D only) */ try { if (!/[?&]skin=atlas\b/.test(location.search)) { var _s = (JSON.parse(localStorage.getItem('aicoding-morris') || '{}') || {}).settings || {}; if (/^[a-z]+$/.test(_s.bd || '')) document.documentElement.dataset.bd = _s.bd; if (/^[a-z]+$/.test(_s.pcs || '')) document.documentElement.dataset.pcs = _s.pcs; } } catch (e) {}</script>
 <meta name="theme-color" content="#0d0a17">
 <meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、入門〜戦術レッスン21ステップ、序盤の定跡、詰めモリス600問、今日の一問。">
 <title>Nine Men's Morris</title>
@@ -20,11 +21,8 @@
 :root{
   --bg:#0d0a17; --bg2:#141022; --panel:#181329; --panel2:#211a37; --line:#352b52;
   --text:#ece8f5; --muted:#a59cbf; --dim:#6c6488;
-  --felt:#342c6b; --felt2:#262056; --felt3:#130f31;
   --brass:#c9a961; --brass2:#8e7440;
   --accent:#e2c275; --red:#ff6b5b; --good:#7fd6a4;
-  --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;
-  --plat1:#ffffff; --plat2:#d4d9e0; --plat3:#8f97a3; --plat4:#3c424b;
   --vh: 100vh;
   --ttop: 58px;
   --pad: clamp(28px, 7vmin, 100px);
@@ -89,52 +87,54 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   position:relative;width:var(--fw);height:var(--fh);
   padding:calc(var(--cell) * .85) calc(var(--cell) * .25);
   border-radius:18px;
-  background:linear-gradient(145deg,#1d1813 0%,#0c0a08 55%,#19140e 100%);
-  box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25),inset 0 1px 0 rgba(255,255,255,.06);
+  background:var(--frame-bg);
+  box-shadow:var(--frame-sh);
   user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
-.board{position:relative;width:calc(var(--cell) * 7);height:calc(var(--cell) * 7);border-radius:10px;cursor:default;
+.board{position:relative;width:calc(var(--cell) * 7);height:calc(var(--cell) * 7);border-radius:10px;cursor:default}
+.board,.skb{
   background:
-    radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.07), transparent 62%),
+    radial-gradient(ellipse at 50% 38%, var(--bd-sheen), transparent 62%),
     radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt2) 68%, var(--felt3) 100%);
-  box-shadow:inset 0 0 0 1px rgba(201,169,97,.5),inset 0 0 40px rgba(0,0,0,.45),0 0 0 5px #0d0a07,0 0 0 6px rgba(201,169,97,.35)}
+  box-shadow:var(--bd-sh)}
 .board.can{cursor:pointer}
-.board::after{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:.16;mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.board::after,.skb::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:var(--tex-op);mix-blend-mode:var(--tex-blend);background-image:var(--tex);background-size:var(--tex-size)}
 .lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.lines .sh{stroke:rgba(0,0,0,.55)}
+.lines .sh{stroke:var(--lsh)}
 .lines .ln{stroke:url(#brassG)}
-.lines .pt{fill:#120c26;stroke:rgba(226,194,117,.85)}
+.lines .lg{filter:var(--ln-filter)}
+.lines .pt{fill:var(--ptf);stroke:var(--pts)}
 .pieces,.fx{position:absolute;inset:0}
 .fx{pointer-events:none;z-index:6}
 .pc{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .68);height:calc(var(--cell) * 7 / var(--S) * .68);margin:calc(var(--cell) * 7 / var(--S) * -.34) 0 0 calc(var(--cell) * 7 / var(--S) * -.34);border-radius:50%;will-change:transform;z-index:2;transition:filter .25s}
-.pc::before{content:"";position:absolute;inset:18%;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.25)}
+.pc::before{content:"";position:absolute;inset:var(--pc-in-at);border-radius:50%;clip-path:var(--pc-in-clip);box-shadow:var(--pc-in)}
+.pc.p1::before,.rv.p1::before{background:var(--pc1-in-bg)}.pc.p2::before,.rv.p2::before{background:var(--pc2-in-bg)}
 .pc::after{content:"";position:absolute;left:50%;top:50%;width:14%;height:14%;transform:translate(-50%,-50%);border-radius:50%;background:transparent}
-.pc.p1,.rv.p1{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35),0 6px 10px -4px rgba(0,0,0,.7)}
-.pc.p2,.rv.p2{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--plat1) 0%,var(--plat2) 26%,var(--plat3) 68%,var(--plat4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4),0 6px 10px -4px rgba(0,0,0,.7)}
-.pc.last::after{background:rgba(255,255,255,.88);box-shadow:0 0 6px rgba(255,255,255,.85)}
-.pc.p2.last::after{background:rgba(40,46,56,.85);box-shadow:0 0 5px rgba(255,255,255,.6)}
+.pc.p1,.rv.p1{background:var(--pc1-bg);box-shadow:var(--rim),var(--pc1-sh)}
+.pc.p2,.rv.p2{background:var(--pc2-bg);box-shadow:var(--rim),var(--pc2-sh)}
+.pc.p1.last::after{background:var(--last1);box-shadow:0 0 6px var(--last1g)}
+.pc.p2.last::after{background:var(--last2);box-shadow:0 0 5px var(--last2g)}
 .board.hide-last .pc.last::after{background:transparent;box-shadow:none}
-.pc.sel{z-index:4;box-shadow:0 0 0 3px rgba(255,236,170,.95),0 0 22px rgba(226,194,117,.85),0 10px 18px -6px rgba(0,0,0,.8)}
+.pc.sel{z-index:4;box-shadow:0 0 0 3px rgba(var(--hl),.95),0 0 22px rgba(var(--hl2),.85),0 10px 18px -6px rgba(0,0,0,.8)}
 .pc.tent{opacity:.92}
 .pc.dim{filter:brightness(.5) saturate(.7)}
 .pc.rmable{cursor:pointer}
-.pc.rmable::before{box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * 7 / var(--S) * .09) rgba(255,107,91,.0);animation:rmp 1s ease-in-out infinite}
+.pc.rmable::before{clip-path:none;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * 7 / var(--S) * .09) rgba(255,107,91,.0);animation:rmp 1s ease-in-out infinite}
 @keyframes rmp{50%{box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * 7 / var(--S) * .2) rgba(255,107,91,.75)}}
-.dest{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .3);height:calc(var(--cell) * 7 / var(--S) * .3);margin:calc(var(--cell) * 7 / var(--S) * -.15) 0 0 calc(var(--cell) * 7 / var(--S) * -.15);border-radius:50%;background:rgba(255,236,170,.8);box-shadow:0 0 12px rgba(255,236,170,.9);z-index:3}
+.dest{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .3);height:calc(var(--cell) * 7 / var(--S) * .3);margin:calc(var(--cell) * 7 / var(--S) * -.15) 0 0 calc(var(--cell) * 7 / var(--S) * -.15);border-radius:50%;background:rgba(var(--hl),.85);box-shadow:0 0 12px rgba(var(--hl),.9),0 0 0 1.5px var(--dest-rim);z-index:3}
 .hov{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .68);height:calc(var(--cell) * 7 / var(--S) * .68);margin:calc(var(--cell) * 7 / var(--S) * -.34) 0 0 calc(var(--cell) * 7 / var(--S) * -.34);border-radius:50%;opacity:.3;pointer-events:none;z-index:1}
 .mark{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .84);height:calc(var(--cell) * 7 / var(--S) * .84);margin:calc(var(--cell) * 7 / var(--S) * -.42) 0 0 calc(var(--cell) * 7 / var(--S) * -.42);border-radius:50%;border:3px solid;pointer-events:none;z-index:8}
-.mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(226,194,117,.7)}
+.mark.ok{border-color:rgb(var(--hl2));box-shadow:0 0 14px rgba(var(--hl2),.7)}
 .mark.ng{border-color:#ff6b5b}
-.mark.from{border:2px dashed rgba(255,255,255,.45);width:calc(var(--cell) * 7 / var(--S) * .5);height:calc(var(--cell) * 7 / var(--S) * .5);margin:calc(var(--cell) * 7 / var(--S) * -.25) 0 0 calc(var(--cell) * 7 / var(--S) * -.25)}
+.mark.from{border:2px dashed rgba(var(--mkw),.5);width:calc(var(--cell) * 7 / var(--S) * .5);height:calc(var(--cell) * 7 / var(--S) * .5);margin:calc(var(--cell) * 7 / var(--S) * -.25) 0 0 calc(var(--cell) * 7 / var(--S) * -.25)}
 .board.hide-last .mark.from{display:none}
 .mark.took{border:0;width:calc(var(--cell) * 7 / var(--S) * .42);height:calc(var(--cell) * 7 / var(--S) * .42);margin:calc(var(--cell) * 7 / var(--S) * -.21) 0 0 calc(var(--cell) * 7 / var(--S) * -.21)}
-.mark.took::before,.mark.took::after{content:"";position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(255,120,105,.7);transform:rotate(45deg)}
+.mark.took::before,.mark.took::after{content:"";position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(var(--mkx),.8);transform:rotate(45deg)}
 .mark.took::after{transform:rotate(-45deg)}
 .board.hide-last .mark.took{display:none}
-.mark.threat{border:2.5px dashed rgba(242,207,122,.95);box-shadow:0 0 8px rgba(242,207,122,.45);width:calc(var(--cell) * 7 / var(--S) * .5);height:calc(var(--cell) * 7 / var(--S) * .5);margin:calc(var(--cell) * 7 / var(--S) * -.25) 0 0 calc(var(--cell) * 7 / var(--S) * -.25)}
-.mark.threat.op{border-color:rgba(226,232,240,.95);box-shadow:0 0 8px rgba(190,205,225,.45);border-style:dotted}
-.mark.played{border:3px dashed rgba(255,255,255,.85);box-shadow:0 0 10px rgba(255,255,255,.35)}
+.mark.threat{border:2.5px dashed rgba(var(--thr1),.95);box-shadow:0 0 8px rgba(var(--thr1),.45);width:calc(var(--cell) * 7 / var(--S) * .5);height:calc(var(--cell) * 7 / var(--S) * .5);margin:calc(var(--cell) * 7 / var(--S) * -.25) 0 0 calc(var(--cell) * 7 / var(--S) * -.25)}
+.mark.threat.op{border-color:rgba(var(--thr2),.95);box-shadow:0 0 8px rgba(var(--thr2),.45);border-style:dotted}
+.mark.played{border:3px dashed rgba(var(--mkw),.85);box-shadow:0 0 10px rgba(var(--mkw),.35)}
 .mark.played.bad{border-color:#ff6b5b;box-shadow:0 0 12px rgba(255,107,91,.55)}
 .mark.played.dubious{border-color:#f2c060;box-shadow:0 0 12px rgba(242,192,96,.5)}
 .hintlbl{position:absolute;width:calc(var(--cell) * 7 / var(--S));height:calc(var(--cell) * 7 / var(--S));margin:calc(var(--cell) * 7 / var(--S) * -.5) 0 0 calc(var(--cell) * 7 / var(--S) * -.5);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.8)}
@@ -142,7 +142,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hintlbl small{font-size:calc(var(--cell) * 7 / var(--S) * .14);opacity:.95;background:rgba(14,9,26,.7);border-radius:4px;padding:0 .25em;margin-top:1px}
 .hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.heur{color:rgba(255,255,255,.85)}.hintlbl.neg{color:#ffc2b8}
 .hintlbl.best b{color:var(--accent)}
-.hintlbl.best::before{content:"";position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(226,194,117,.85);box-shadow:0 0 10px rgba(226,194,117,.5)}
+.hintlbl.best::before{content:"";position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(var(--hl2),.9);box-shadow:0 0 10px rgba(var(--hl2),.5)}
 .hintlbl.on-pc{color:#fff}
 /* phones: bigger 勝/負/value labels on the small board (PC keeps the sizes above) */
 @media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-height: 560px){
@@ -151,20 +151,20 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 }
 .fxsvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .millfx{z-index:1}
-.fxsvg .mill{stroke:rgba(255,236,170,.9);stroke-linecap:round;filter:drop-shadow(0 0 7px rgba(255,226,140,1));stroke-dasharray:20;stroke-dashoffset:20;animation:drawl .55s ease-out forwards}
+.fxsvg .mill{stroke:rgba(var(--hl),.9);stroke-linecap:round;filter:drop-shadow(0 0 7px rgba(var(--hl),1));stroke-dasharray:20;stroke-dashoffset:20;animation:drawl .55s ease-out forwards}
 .fxsvg .mill.old{animation:none;stroke-dashoffset:0;opacity:.6}
-.pc.inmill{box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.45),0 0 0 2px rgba(255,236,170,.75),0 0 18px rgba(255,226,140,.75)}
-.pc.inmill.old{box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.4),0 0 0 1.5px rgba(255,236,170,.45),0 0 10px rgba(255,226,140,.35)}
+.pc.inmill{box-shadow:inset 0 -4px 8px rgba(0,0,0,.3),0 0 0 2px rgba(var(--hl),.8),0 0 18px rgba(var(--hl),.75)}
+.pc.inmill.old{box-shadow:inset 0 -4px 8px rgba(0,0,0,.3),0 0 0 1.5px rgba(var(--hl),.5),0 0 10px rgba(var(--hl),.35)}
 @keyframes drawl{to{stroke-dashoffset:0}}
-.fxsvg .arrow{stroke:rgba(226,194,117,.9);fill:none;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(0,0,0,.8))}
-.fxsvg .arrow.ok{stroke:rgba(226,194,117,.95)}
+.fxsvg .arrow{stroke:rgba(var(--hl2),.9);fill:none;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(0,0,0,.8))}
+.fxsvg .arrow.ok{stroke:rgba(var(--hl2),.95)}
 .fxsvg .arrow.rbh{opacity:.75}.fxsvg .arrow.rbh.p1{stroke:var(--gold2)}.fxsvg .arrow.rbh.p2{stroke:var(--plat2)}.fxsvg .arrow.rbh.first{opacity:1}
 .rbh-num{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .44);height:calc(var(--cell) * 7 / var(--S) * .44);margin:calc(var(--cell) * 7 / var(--S) * -.22) 0 0 calc(var(--cell) * 7 / var(--S) * -.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 calc(var(--cell) * 7 / var(--S) * .24) 'JetBrains Mono',monospace;color:#1a1408;z-index:9;pointer-events:none;opacity:.88;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .rbh-num.p1{background:var(--gold2)}.rbh-num.p2{background:var(--plat2);color:#2a2f36}
 .rbh-num.first{opacity:1;outline:3px solid var(--accent);outline-offset:1px}
 .fxsvg .arrow.ng{stroke:rgba(255,107,91,.9)}
-.fxsvg .arrow.pl{stroke:rgba(255,255,255,.8);stroke-dasharray:.08 .08}
-.coords-x,.coords-y{position:absolute;pointer-events:none;color:rgba(226,194,117,.55);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .17);line-height:1}
+.fxsvg .arrow.pl{stroke:rgba(var(--mkw),.8);stroke-dasharray:.08 .08}
+.coords-x,.coords-y{position:absolute;pointer-events:none;color:var(--coord);font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .17);line-height:1}
 .coords-x{left:calc(var(--cell) * .25);width:calc(var(--cell) * 7);top:calc(var(--cell) * 7.85 + 7px);height:calc(var(--cell) * .2)}
 .coords-y{top:calc(var(--cell) * .85);height:calc(var(--cell) * 7);left:0;width:calc(var(--cell) * .25 - 5px)}
 .coords-x span,.coords-y span{position:absolute;transform:translate(-50%,-50%)}
@@ -173,10 +173,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .reserve.top{top:0}.reserve.bot{bottom:0}
 .reserve .rv{position:relative;width:calc(var(--cell) * .46);height:calc(var(--cell) * .46);border-radius:50%;margin-left:calc(var(--cell) * -.1);flex:none;transition:opacity .2s}
 .reserve .rv:first-child{margin-left:0}
-.reserve .rv::before{content:"";position:absolute;inset:18%;border-radius:50%;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
-.reserve.turn::after{content:"";position:absolute;left:30%;right:30%;bottom:calc(var(--cell) * .06);height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(226,194,117,.85),transparent)}
+.reserve .rv::before{content:"";position:absolute;inset:var(--pc-in-at);border-radius:50%;clip-path:var(--pc-in-clip);box-shadow:var(--pc-in)}
+.reserve.turn::after{content:"";position:absolute;left:30%;right:30%;bottom:calc(var(--cell) * .06);height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(var(--hl2),.9),transparent)}
 .reserve.top.turn::after{bottom:auto;top:calc(var(--cell) * .06)}
-.reserve .cap{position:absolute;right:calc(var(--cell) * .3);display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .2);color:var(--dim)}
+.reserve .cap{position:absolute;right:calc(var(--cell) * .3);display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .2);color:var(--capc)}
 .reserve .cap i{width:calc(var(--cell) * .24);height:calc(var(--cell) * .24);border-radius:50%;opacity:.55;display:inline-block}
 .toast{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
@@ -191,6 +191,161 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .prompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--cell) * .2);z-index:15;font-size:12.5px;color:var(--accent);white-space:nowrap;letter-spacing:.06em;pointer-events:none;opacity:0;transition:opacity .2s;background:rgba(10,14,22,.88);border:1px solid rgba(201,169,97,.4);border-radius:999px;padding:3px 12px}
 .prompt.show{opacity:1}
 
+/* ---------------------------------------------------------------- board & piece skins (2026-10-28)
+   html[data-bd] = board design, html[data-pcs] = piece set (picked in the new-game dialog, kept in settings.bd / settings.pcs).
+   Everything is variables so the picker previews (.skp[data-bd][data-pcs]) can show any combination next to the live board.
+   Piece sets keep the gold (warm, first player) / silver (cool, second player) roles, so "Gold" / "Silver" in the texts still fit. */
+:root, [data-bd=royal]{
+  --felt:#342c6b; --felt2:#262056; --felt3:#130f31; --bd-sheen:rgba(255,255,255,.07);
+  --bd-sh:inset 0 0 0 1px rgba(201,169,97,.5),inset 0 0 40px rgba(0,0,0,.45),0 0 0 5px #0d0a07,0 0 0 6px rgba(201,169,97,.35);
+  --frame-bg:linear-gradient(145deg,#1d1813 0%,#0c0a08 55%,#19140e 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25),inset 0 1px 0 rgba(255,255,255,.06);
+  --tex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-op:.16; --tex-blend:overlay; --tex-size:auto;
+  --ln1:#f2dc9c; --ln2:#c9a961; --ln3:#e6cd8c; --lsh:rgba(0,0,0,.55); --ln-filter:none;
+  --ptf:#120c26; --pts:rgba(226,194,117,.85); --coord:rgba(226,194,117,.55); --capc:var(--dim);
+  --hl:255,236,170; --hl2:226,194,117; --dest-rim:transparent; --mkw:255,255,255; --mkx:255,120,105; --thr1:242,207,122; --thr2:226,232,240;
+  --rim:0 0 0 0 transparent;
+  --mb:#2a1f55; --mbs:rgba(201,169,97,.5); --ml:#c9a961; --mpt:#120c26;
+}
+[data-bd=walnut]{
+  --felt:#86562f; --felt2:#653f20; --felt3:#3b2311; --bd-sheen:rgba(255,232,190,.12);
+  --bd-sh:inset 0 0 0 1px rgba(255,225,170,.25),inset 0 0 36px rgba(0,0,0,.42),0 0 0 5px #1c1008,0 0 0 6px rgba(214,170,110,.4);
+  --frame-bg:linear-gradient(145deg,#2e1b0e 0%,#170d06 55%,#2a180b 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(214,170,110,.25),inset 0 1px 0 rgba(255,255,255,.06);
+  --tex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600' preserveAspectRatio='none'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0025 .05' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .1 0 0 0 0 .03 0 0 0 1.8 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-op:.7; --tex-blend:multiply; --tex-size:100% 100%;
+  --ln1:#fff0cf; --ln2:#e8cc96; --ln3:#f6e0b2; --lsh:rgba(20,8,0,.6);
+  --ptf:#4a2c15; --pts:#f1dbab; --coord:rgba(235,205,150,.6);
+  --mb:#653f20; --mbs:rgba(235,205,150,.5); --ml:#ecd3a2; --mpt:#3b2311;
+}
+[data-bd=marble]{
+  --felt:#3b2c4c; --felt2:#251a32; --felt3:#100a17; --bd-sheen:rgba(225,205,255,.1);
+  --bd-sh:inset 0 0 0 1px rgba(226,194,117,.6),inset 0 0 40px rgba(0,0,0,.5),0 0 0 5px #08060a,0 0 0 6px rgba(226,194,117,.6);
+  --frame-bg:linear-gradient(145deg,#19131f 0%,#060408 55%,#151019 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(226,194,117,.45),inset 0 1px 0 rgba(255,255,255,.07);
+  --tex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500' preserveAspectRatio='none'%3E%3Cfilter id='v' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.005 .009' numOctaves='5' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .84 0 0 0 0 1 -6 0 0 0 1.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)'/%3E%3C/svg%3E");
+  --tex-op:.5; --tex-blend:screen; --tex-size:100% 100%;
+  --ln1:#fff0bf; --ln2:#d9b262; --ln3:#f0d48c;
+  --ptf:#0e0914; --pts:#e8c980; --coord:rgba(232,201,128,.6);
+  --mb:#251a32; --mbs:rgba(226,194,117,.65); --ml:#d9b262; --mpt:#0e0914;
+}
+[data-bd=slate]{
+  --felt:#43554f; --felt2:#33433e; --felt3:#1e2a26; --bd-sheen:rgba(255,255,255,.07);
+  --bd-sh:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 40px rgba(0,0,0,.45),0 0 0 5px #5e3f22,0 0 0 6px rgba(0,0,0,.35);
+  --frame-bg:linear-gradient(145deg,#b88a55 0%,#8c6036 50%,#ab7c49 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 0 rgba(0,0,0,.2);
+  --tex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400' preserveAspectRatio='none'%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.2 -1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  --tex-op:.32; --tex-blend:screen; --tex-size:100% 100%;
+  --ln1:#f6f4ea; --ln2:#e9e6d8; --ln3:#fbfaf2; --lsh:rgba(0,0,0,.2); --ln-filter:url(#chalkF);
+  --ptf:#33433e; --pts:#f1efe4; --coord:rgba(58,34,14,.8); --capc:rgba(50,30,12,.85);
+  --hl:255,240,150; --hl2:255,226,120;
+  --mb:#33433e; --mbs:#8c6036; --ml:#ecebe0; --mpt:#33433e;
+}
+[data-bd=parchment]{
+  --felt:#efdfb8; --felt2:#dcc290; --felt3:#a98250; --bd-sheen:rgba(255,250,230,.3);
+  --bd-sh:inset 0 0 0 1px rgba(90,60,25,.5),inset 0 0 50px rgba(110,70,25,.5),0 0 0 5px #2a190c,0 0 0 6px rgba(201,169,97,.45);
+  --frame-bg:linear-gradient(145deg,#4c2f19 0%,#2a180b 55%,#452a1a 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.3),inset 0 1px 0 rgba(255,255,255,.07);
+  --tex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400' preserveAspectRatio='none'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='5' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .28 0 0 0 0 .1 0 0 0 2 -.75'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --tex-op:.55; --tex-blend:multiply; --tex-size:100% 100%;
+  --ln1:#5e3d1d; --ln2:#4a2e14; --ln3:#6a4422; --lsh:rgba(255,246,222,.4);
+  --ptf:#e9d6aa; --pts:#4a2e14; --coord:rgba(226,194,140,.6);
+  --hl:22,112,140; --hl2:18,96,124; --dest-rim:rgba(255,255,255,.75); --mkw:60,38,18; --mkx:190,40,30; --thr1:176,104,8; --thr2:62,74,98;
+  --rim:0 0 0 1.5px rgba(60,35,10,.55);
+  --mb:#e2cc98; --mbs:#6a4422; --ml:#5a3a1c; --mpt:#e9d6aa;
+}
+[data-bd=pastel]{
+  --felt:#c9a8ee; --felt2:#ab88dc; --felt3:#8767c4; --bd-sheen:rgba(255,255,255,.24);
+  --bd-sh:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 0 30px rgba(90,40,140,.25),0 0 0 5px #fde4f1,0 0 0 6px rgba(255,160,205,.75);
+  --frame-bg:linear-gradient(145deg,#ffd9ec 0%,#f7bcdb 55%,#ffd2e7 100%);
+  --frame-sh:0 40px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.6),inset 0 1px 0 rgba(255,255,255,.75);
+  --tex:radial-gradient(circle,rgba(255,255,255,.6) 0 1.6px,transparent 2.3px);
+  --tex-op:.55; --tex-blend:normal; --tex-size:16px 16px;
+  --ln1:#ffffff; --ln2:#fff2fa; --ln3:#ffffff; --lsh:rgba(110,60,160,.35);
+  --ptf:#ff9cc8; --pts:#ffffff; --coord:rgba(170,70,130,.8); --capc:rgba(150,60,120,.9);
+  --hl:255,255,255; --hl2:255,236,110; --dest-rim:rgba(255,110,180,.85); --thr1:255,232,110; --thr2:255,255,255;
+  --rim:0 0 0 1.5px rgba(120,60,150,.35);
+  --mb:#ab88dc; --mbs:#ffb6d9; --ml:#ffffff; --mpt:#ff9cc8;
+}
+:root, [data-pcs=gold]{
+  --gold1:#fff6dc; --gold2:#e6cd8c; --gold3:#b39249; --gold4:#5e4720;
+  --plat1:#ffffff; --plat2:#d4d9e0; --plat3:#8f97a3; --plat4:#3c424b;
+  --pc1-bg:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);
+  --pc2-bg:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--plat1) 0%,var(--plat2) 26%,var(--plat3) 68%,var(--plat4) 100%);
+  --pc1-sh:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35),0 6px 10px -4px rgba(0,0,0,.7);
+  --pc2-sh:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4),0 6px 10px -4px rgba(0,0,0,.7);
+  --pc-in-at:18%; --pc-in:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.25); --pc-in-clip:none; --pc1-in-bg:none; --pc2-in-bg:none;
+  --last1:rgba(255,255,255,.88); --last1g:rgba(255,255,255,.85); --last2:rgba(40,46,56,.85); --last2g:rgba(255,255,255,.6);
+  --m1:#e6cd8c; --m1s:#8a6d33; --m2:#d4d9e0; --m2s:#7d8591;
+}
+[data-pcs=coin]{   /* brass / nickel coins with a hole (the hole shows the board) */
+  --gold1:#fbe7a6; --gold2:#dcb55e; --gold3:#a8822f; --gold4:#5a4216; --plat1:#f4f6f8; --plat2:#c9ced6; --plat3:#8e959f; --plat4:#4a5058;
+  --pc1-bg:radial-gradient(circle,var(--felt2) 0 13%,#4d3812 14% 17%,transparent 17.5% 73%,rgba(90,62,16,.65) 74% 77%,rgba(255,240,190,.5) 78% 80%,transparent 81%),repeating-conic-gradient(from 0deg,rgba(255,255,255,0) 0 7.5deg,rgba(255,250,220,.1) 7.5deg 15deg),linear-gradient(135deg,#fdeeb8 0%,#e2bd64 35%,#ad8634 65%,#f1d68c 100%);
+  --pc2-bg:radial-gradient(circle,var(--felt2) 0 13%,#3c4249 14% 17%,transparent 17.5% 73%,rgba(50,56,64,.6) 74% 77%,rgba(255,255,255,.55) 78% 80%,transparent 81%),repeating-conic-gradient(from 0deg,rgba(255,255,255,0) 0 7.5deg,rgba(255,255,255,.12) 7.5deg 15deg),linear-gradient(135deg,#ffffff 0%,#cdd2d9 35%,#8e959f 65%,#e6e9ed 100%);
+  --pc1-sh:inset 0 -3px 5px rgba(0,0,0,.3),inset 0 2px 2px rgba(255,255,255,.45),0 5px 8px -3px rgba(0,0,0,.7);
+  --pc2-sh:inset 0 -3px 5px rgba(0,0,0,.3),inset 0 2px 2px rgba(255,255,255,.55),0 5px 8px -3px rgba(0,0,0,.7);
+  --pc-in:none; --last2:rgba(255,255,255,.9); --last2g:rgba(255,255,255,.85);
+  --m1:#dcb55e; --m1s:#6b4f1a; --m2:#c9ced6; --m2s:#5c636d;
+}
+[data-pcs=glass]{   /* amber / aqua glass marbles with a swirl inside */
+  --gold1:#ffe2a0; --gold2:#f0a93a; --gold3:#b86a12; --gold4:#5a2e04; --plat1:#e8f8ff; --plat2:#8fd0f0; --plat3:#3f8fc0; --plat4:#163e66;
+  --pc1-bg:radial-gradient(circle at 32% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 16%),radial-gradient(circle at 62% 74%,rgba(255,236,170,.8) 0 10%,rgba(255,236,170,0) 38%),radial-gradient(circle at 50% 50%,rgba(255,200,96,.84) 0%,rgba(228,140,30,.9) 58%,rgba(120,58,4,.97) 100%);
+  --pc2-bg:radial-gradient(circle at 32% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 16%),radial-gradient(circle at 62% 74%,rgba(210,245,255,.8) 0 10%,rgba(210,245,255,0) 38%),radial-gradient(circle at 50% 50%,rgba(170,226,250,.84) 0%,rgba(66,150,206,.9) 58%,rgba(18,58,104,.97) 100%);
+  --pc1-sh:inset 0 -3px 6px rgba(80,30,0,.35),inset 0 0 0 1px rgba(255,230,180,.4),0 6px 10px -4px rgba(0,0,0,.65);
+  --pc2-sh:inset 0 -3px 6px rgba(0,30,60,.35),inset 0 0 0 1px rgba(220,245,255,.45),0 6px 10px -4px rgba(0,0,0,.65);
+  --pc-in-at:24%; --pc-in:none;
+  --pc1-in-bg:conic-gradient(from 20deg,transparent 0 18deg,rgba(255,248,215,.6) 34deg,transparent 58deg 190deg,rgba(255,248,215,.5) 208deg,transparent 232deg);
+  --pc2-in-bg:conic-gradient(from 20deg,transparent 0 18deg,rgba(240,252,255,.65) 34deg,transparent 58deg 190deg,rgba(240,252,255,.55) 208deg,transparent 232deg);
+  --last2:rgba(255,255,255,.9); --last2g:rgba(255,255,255,.85);
+  --m1:#f0a93a; --m1s:#8a4a08; --m2:#8fd0f0; --m2s:#2d6f9c;
+}
+[data-pcs=gem]{   /* brilliant-cut topaz / diamond: radial facets and an octagonal table */
+  --gold1:#fff0b8; --gold2:#f5b93c; --gold3:#c47e14; --gold4:#6a3c04; --plat1:#ffffff; --plat2:#dfeaf5; --plat3:#9fb4c8; --plat4:#56697c;
+  --pc1-bg:conic-gradient(from 22.5deg,#ffe08a 0 45deg,#e8a92e 45deg 90deg,#ffd36b 90deg 135deg,#b8741a 135deg 180deg,#f2b843 180deg 225deg,#9a5c10 225deg 270deg,#ffcf5c 270deg 315deg,#d08a22 315deg 360deg);
+  --pc2-bg:conic-gradient(from 22.5deg,#ffffff 0 45deg,#c9dbeb 45deg 90deg,#f2f8fd 90deg 135deg,#8ea6bd 135deg 180deg,#e3eef8 180deg 225deg,#7690a8 225deg 270deg,#fbfdff 270deg 315deg,#a9c0d6 315deg 360deg);
+  --pc1-sh:inset 0 0 0 1px rgba(255,240,200,.55),0 0 0 1px rgba(90,50,0,.45),0 6px 10px -4px rgba(0,0,0,.7);
+  --pc2-sh:inset 0 0 0 1px rgba(255,255,255,.7),0 0 0 1px rgba(40,60,85,.4),0 6px 10px -4px rgba(0,0,0,.7);
+  --pc-in-at:27%; --pc-in:none; --pc-in-clip:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);
+  --pc1-in-bg:linear-gradient(135deg,#fff6cf 0%,#ffd76e 45%,#e8a52a 100%); --pc2-in-bg:linear-gradient(135deg,#ffffff 0%,#eef5fc 45%,#b9cde0 100%);
+  --last1:rgba(110,60,0,.9); --last1g:rgba(255,255,255,.7); --last2:rgba(40,56,76,.85);
+  --m1:#f5b93c; --m1s:#8a5208; --m2:#e3eef8; --m2s:#6f8aa3;
+}
+[data-pcs=candy]{   /* lemon / soda peppermint candies */
+  --gold1:#fff8c8; --gold2:#ffd84d; --gold3:#f0b020; --gold4:#a86f00; --plat1:#f0faff; --plat2:#9fd8ff; --plat3:#4fa8e0; --plat4:#1d5f94;
+  --pc1-bg:radial-gradient(circle at 34% 27%,rgba(255,255,255,.92) 0 8%,rgba(255,255,255,0) 24%),radial-gradient(circle,transparent 0 79%,rgba(255,255,255,.7) 80% 86%,transparent 87%),repeating-conic-gradient(from 10deg,#ffd23c 0 22.5deg,#fff4bf 22.5deg 45deg);
+  --pc2-bg:radial-gradient(circle at 34% 27%,rgba(255,255,255,.92) 0 8%,rgba(255,255,255,0) 24%),radial-gradient(circle,transparent 0 79%,rgba(255,255,255,.7) 80% 86%,transparent 87%),repeating-conic-gradient(from 10deg,#7cc6f6 0 22.5deg,#e8f7ff 22.5deg 45deg);
+  --pc1-sh:inset 0 -3px 6px rgba(170,95,0,.35),0 0 0 1px rgba(190,120,0,.35),0 5px 8px -3px rgba(0,0,0,.55);
+  --pc2-sh:inset 0 -3px 6px rgba(20,80,140,.35),0 0 0 1px rgba(40,110,170,.35),0 5px 8px -3px rgba(0,0,0,.55);
+  --pc-in-at:33%; --pc-in:0 0 0 1px rgba(255,255,255,.6);
+  --pc1-in-bg:radial-gradient(circle,#fffbe6 0 60%,#ffe58a 62% 100%); --pc2-in-bg:radial-gradient(circle,#f7fcff 0 60%,#bfe5ff 62% 100%);
+  --last1:rgba(170,95,0,.95); --last1g:rgba(255,255,255,.7); --last2:rgba(20,90,150,.95);
+  --m1:#ffd84d; --m1s:#c48a00; --m2:#9fd8ff; --m2s:#3a8fc8;
+}
+[data-pcs=pearl]{   /* golden / white pearls with a soft rainbow sheen */
+  --gold1:#fffaf0; --gold2:#f0d9a0; --gold3:#c9a45c; --gold4:#7a5a24; --plat1:#ffffff; --plat2:#eceef3; --plat3:#bfc4d0; --plat4:#6c7384;
+  --pc1-bg:conic-gradient(from 120deg,rgba(255,170,210,.2),rgba(170,220,255,.22),rgba(255,240,170,.2),rgba(200,170,255,.2),rgba(255,170,210,.2)),radial-gradient(circle at 34% 28%,#fffdf6 0%,#f6e4b6 20%,#dcbc78 58%,#8f6d33 100%);
+  --pc2-bg:conic-gradient(from 120deg,rgba(255,170,210,.22),rgba(170,220,255,.25),rgba(255,240,170,.2),rgba(200,170,255,.22),rgba(255,170,210,.22)),radial-gradient(circle at 34% 28%,#ffffff 0%,#f3f4f8 20%,#cfd3dd 60%,#7b8295 100%);
+  --pc1-sh:inset 0 -4px 8px rgba(80,50,10,.3),0 6px 10px -4px rgba(0,0,0,.65);
+  --pc2-sh:inset 0 -4px 8px rgba(40,46,70,.3),0 6px 10px -4px rgba(0,0,0,.65);
+  --pc-in-at:12%; --pc-in:none;
+  --pc1-in-bg:radial-gradient(circle at 30% 26%,rgba(255,255,255,.95) 0 9%,rgba(255,255,255,0) 26%); --pc2-in-bg:var(--pc1-in-bg);
+  --last1:rgba(120,80,20,.9); --last1g:rgba(255,255,255,.7); --last2:rgba(60,66,84,.85);
+  --m1:#ecd29a; --m1s:#8f6d33; --m2:#eef0f5; --m2s:#7b8295;
+}
+/* pickers (new-game dialog): one live mini board per design, drawn with that design's variables */
+.skrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.skrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.skrow button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.skrow button.sel{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.1)}
+.skrow button .nm{max-width:100%;text-align:center;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center}
+.skp{position:relative;display:block;width:100%;aspect-ratio:1;padding:9%;border-radius:7px;background:var(--frame-bg);box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.skb{position:relative;display:block;width:100%;height:100%;border-radius:4px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 0 10px rgba(0,0,0,.35)!important}
+.skb svg{position:absolute;inset:0;width:100%;height:100%}
+.skb .pc{width:21%;height:21%;margin:-10.5% 0 0 -10.5%;will-change:auto;z-index:1}
+.skp.big .skb .pc{width:40%;height:40%;margin:-20% 0 0 -20%}
+.field > label .sknm{color:var(--text);margin-inline-start:6px;letter-spacing:.04em}
+html.atlas-skin #fDesign, html.atlas-skin #fPieces{display:none!important}   /* the portal plays on its own 3D board */
 /* ---------------------------------------------------------------- side */
 .side{grid-area:side;width:100%;height:max(var(--fh), min(620px, var(--cv) * 8.7));min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
@@ -245,8 +400,9 @@ a.snd.home{text-decoration:none}
 .rt-res{font-family:'JetBrains Mono',monospace}
 body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated-live #evalCard .graph{display:none}
 .pdisc{width:20px;height:20px;border-radius:50%;flex:none;display:inline-block}
-.pdisc.p1{background:radial-gradient(circle at 35% 30%,var(--gold1),var(--gold2) 35%,var(--gold3) 85%)}
-.pdisc.p2{background:radial-gradient(circle at 35% 30%,var(--plat1),var(--plat2) 35%,var(--plat3) 85%)}
+.pdisc{position:relative}
+.pdisc.p1{background:var(--pc1-bg);box-shadow:var(--pc1-sh)}
+.pdisc.p2{background:var(--pc2-bg);box-shadow:var(--pc2-sh)}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .count{font-family:'Shippori Mincho B1',serif;font-size:36px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .player .count small{font-size:12px;color:var(--dim);font-family:'Zen Kaku Gothic New';font-weight:500;margin-left:6px;letter-spacing:.05em}
@@ -690,6 +846,24 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #newOverlay .rulecards{gap:14px}
   #newOverlay .modal-actions{max-width:560px;justify-self:end;width:100%}
 }
+/* phones: the whole new-game dialog fits without scrolling (mode 4 x 2, rule cards in one row, design tiles without names) */
+@media (max-width: 520px){
+  #newOverlay .modal{padding:14px 14px 12px}
+  #newOverlay .modal h2{margin-bottom:8px}
+  #newOverlay .field{margin-bottom:10px}
+  #newOverlay .field > label{margin-bottom:5px}
+  #newOverlay #segMode{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay #segMode button{font-size:11.5px;padding:6px 2px;white-space:normal;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+  #newOverlay .rulecards{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #newOverlay .rulecard{display:flex;align-items:center;gap:6px;padding:6px 7px;min-width:0}
+  #newOverlay .rulecard svg{width:28px;height:28px;margin:0;flex:none}
+  #newOverlay .rulecard b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #newOverlay .rulecard small{display:none}
+  #newOverlay .level-wrap{gap:2px}#newOverlay .level-wrap input{height:26px}
+  #newOverlay .checks{gap:6px 10px}
+  #newOverlay .skrow{gap:4px}#newOverlay .skrow button{padding:3px;border-radius:8px}#newOverlay .skrow .nm{display:none}
+  #newOverlay .modal-actions{margin-top:10px}
+}
 /* PC: rules tutorial with a big board + big text; the tabbed dialogs (rules / lessons / openings / puzzles) share one fixed size */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
@@ -931,6 +1105,7 @@ body .info-line{font-size:12.5px}
       <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
       <div class="rulecards" id="ruleCards"></div>
     </div>
+    <div class="ng-col ng-l">
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
       <div class="seg" id="segColor">
@@ -961,6 +1136,16 @@ body .info-line{font-size:12.5px}
         <label><input type="checkbox" id="optAnim"><span data-i18n="opt.anim"></span></label>
         <label><input type="checkbox" id="optThreat"><span data-i18n="opt.threat"></span></label>
       </div>
+    </div>
+    </div><div class="ng-col ng-r">
+    <div class="field" id="fDesign">
+      <label><span data-i18n="sk.board"></span><span class="sknm" id="bdName"></span></label>
+      <div class="skrow" id="bdRow"></div>
+    </div>
+    <div class="field" id="fPieces">
+      <label><span data-i18n="sk.pieces"></span><span class="sknm" id="pcName"></span></label>
+      <div class="skrow" id="pcRow"></div>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
@@ -1065,7 +1250,7 @@ body .info-line{font-size:12.5px}
 </div>
 
 <script src="i18n.js?v=20261024ls"></script>
-<script src="i18n_more.js?v=20261021lx"></script>
+<script src="i18n_more.js?v=20261028sk"></script>
 <script src="i18n_coach.js?v=4"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1143,7 +1328,7 @@ function threatPoints(pos, p) {   // empty points where p would close a mill wit
 
 // ====================================================================== state
 const STORE = 'aicoding-morris';
-const settings = { mode: 'ai', rule: 'nine', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '' };
+const settings = { mode: 'ai', rule: 'nine', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, bd: 'royal', pcs: 'gold', lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -1262,16 +1447,52 @@ const reduceMotion = false /* site rule: animations are never skipped for the OS
 const animOn = () => settings.anim && !reduceMotion;
 const ptX = i => (G.pts[i][0] + 0.5) / G.size * 100, ptY = i => (G.pts[i][1] + 0.5) / G.size * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
+// ---------------------------------------------------------------- board & piece skins (CSS: html[data-bd] / html[data-pcs]; previews: .skp)
+const BD_KEYS = ['royal', 'walnut', 'marble', 'slate', 'parchment', 'pastel'], PCS_KEYS = ['gold', 'coin', 'glass', 'gem', 'candy', 'pearl'];
+const ATLAS = document.documentElement.classList.contains('atlas-skin');
+// line gradient + chalk filter for one board picture (ids are per picture: the stops take the colours of the picture's own skin)
+function skDefs(gid, fid, S) {
+  return `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--ln1)"/><stop offset=".5" style="stop-color:var(--ln2)"/><stop offset="1" style="stop-color:var(--ln3)"/></linearGradient>`
+    + `<filter id="${fid}" filterUnits="userSpaceOnUse" x="-1" y="-1" width="${S + 2}" height="${S + 2}"><feTurbulence type="fractalNoise" baseFrequency="${(9 / S).toFixed(2)}" numOctaves="2" seed="3" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="${(S * .012).toFixed(3)}" xChannelSelector="R" yChannelSelector="G" result="d"/>`
+    + `<feComponentTransfer in="t" result="m"><feFuncA type="discrete" tableValues="1 1 .55 1 .8 1"/></feComponentTransfer><feComposite in="d" in2="m" operator="in"/></filter></defs>`;
+}
+function skinApply() {
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'royal';
+  if (!PCS_KEYS.includes(settings.pcs)) settings.pcs = 'gold';
+  if (ATLAS) return;   // the portal plays on its own 3D board: the 2D designs stay at their defaults there
+  document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
+}
+let skN = 0;
+function skPreview(bd, pcs, big) {
+  const id = 'sk' + (++skN), g = E.geom('nine'), S = g.size, sw = 0.13, c = i => [g.pts[i][0] + 0.5, g.pts[i][1] + 0.5];
+  let v = skDefs(id + 'g', id + 'f', S) + `<g class="lg" style="filter:${bd === 'slate' ? `url(#${id}f)` : 'none'}">`, pcs$ = '';
+  if (big) {   // piece tile: two big pieces on a line of the board
+    v += `<line x1="0.3" y1="3.5" x2="6.7" y2="3.5" style="stroke:url(#${id}g)" stroke-width="${sw * 1.4}" stroke-linecap="round"/><line x1="3.5" y1="3.5" x2="3.5" y2="7" style="stroke:url(#${id}g)" stroke-width="${sw * 1.4}"/><circle cx="3.5" cy="3.5" r=".22" style="fill:var(--ptf);stroke:var(--pts)" stroke-width="${sw}"/>`;
+    pcs$ = `<i class="pc p1" style="left:25%;top:50%"></i><i class="pc p2 last" style="left:75%;top:50%"></i>`;
+  } else {
+    g.adj.forEach((a, i) => a.forEach(j => { if (j > i) { const [x1, y1] = c(i), [x2, y2] = c(j); v += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:url(#${id}g)" stroke-width="${sw}" stroke-linecap="round"/>`; } }));
+    for (let i = 0; i < g.n; i++) { const [x, y] = c(i); v += `<circle cx="${x}" cy="${y}" r=".17" style="fill:var(--ptf);stroke:var(--pts)" stroke-width="${sw * .7}"/>`; }
+    const at = (n, p) => { const i = g.index[n], [x, y] = c(i); return `<i class="pc p${p}" style="left:${x / S * 100}%;top:${y / S * 100}%"></i>`; };
+    pcs$ = at('a7', 1) + at('d7', 1) + at('d6', 2) + at('f4', 2) + at('d2', 1) + at('g1', 2);
+  }
+  return `<span class="skp${big ? ' big' : ''}" data-bd="${bd}" data-pcs="${pcs}"><span class="skb"><svg viewBox="0 0 ${S} ${S}">${v}</g></svg>${pcs$}</span></span>`;
+}
+function skinPicker() {
+  $('#bdRow').innerHTML = BD_KEYS.map(k => `<button type="button" data-k="${k}" class="${k === settings.bd ? 'sel' : ''}" aria-pressed="${k === settings.bd}" title="${t('skb.' + k)}">${skPreview(k, settings.pcs)}<span class="nm">${t('skb.' + k)}</span></button>`).join('');
+  $('#pcRow').innerHTML = PCS_KEYS.map(k => `<button type="button" data-k="${k}" class="${k === settings.pcs ? 'sel' : ''}" aria-pressed="${k === settings.pcs}" title="${t('skp.' + k)}">${skPreview(settings.bd, k, true)}<span class="nm">${t('skp.' + k)}</span></button>`).join('');
+  $('#bdName').textContent = t('skb.' + settings.bd); $('#pcName').textContent = t('skp.' + settings.pcs);
+}
 function drawLines() {
   const S = G.size, sw = 0.065 * S / 7, r = 0.1 * S / 7;
   boardEl.style.setProperty('--S', S);
-  let s = `<defs><linearGradient id="brassG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2dc9c"/><stop offset=".5" stop-color="#c9a961"/><stop offset="1" stop-color="#e6cd8c"/></linearGradient></defs>`;
+  let s = skDefs('brassG', 'chalkF', S) + '<g class="lg">';
   const segs = [];
   G.adj.forEach((a, i) => a.forEach(j => { if (j > i) segs.push([i, j]); }));
   const c = i => [G.pts[i][0] + 0.5, G.pts[i][1] + 0.5];
   for (const [i, j] of segs) { const [x1, y1] = c(i), [x2, y2] = c(j); s += `<line class="sh" x1="${x1 + sw * .3}" y1="${y1 + sw * .4}" x2="${x2 + sw * .3}" y2="${y2 + sw * .4}" stroke-width="${sw * 1.6}" stroke-linecap="round"/>`; }
   for (const [i, j] of segs) { const [x1, y1] = c(i), [x2, y2] = c(j); s += `<line class="ln" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${sw}" stroke-linecap="round"/>`; }
   for (let i = 0; i < G.n; i++) { const [x, y] = c(i); s += `<circle class="pt" cx="${x}" cy="${y}" r="${r}" stroke-width="${sw * .8}"/>`; }
+  s += '</g>';
   linesEl.setAttribute('viewBox', `0 0 ${S} ${S}`);
   linesEl.innerHTML = s;
   // coordinates outside the playing surface (letters below, numbers on the left)
@@ -1916,11 +2137,11 @@ function miniSVG(variant, b, o) {
   o = o || {};
   const g = E.geom(variant), S = g.size, u = 30, pad = 6, W = S * u + pad * 2;
   const X = i => pad + (g.pts[i][0] + 0.5) * u, Y = i => pad + (g.pts[i][1] + 0.5) * u;
-  let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#2a1f55" stroke="rgba(201,169,97,.5)"/>`;
-  g.adj.forEach((a, i) => a.forEach(j => { if (j > i) s += `<line x1="${X(i)}" y1="${Y(i)}" x2="${X(j)}" y2="${Y(j)}" stroke="#c9a961" stroke-width="2"/>`; }));
-  for (let i = 0; i < g.n; i++) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="3" fill="#120c26" stroke="#c9a961" stroke-width="1.2"/>`;
+  let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" style="fill:var(--mb);stroke:var(--mbs)"/>`;
+  g.adj.forEach((a, i) => a.forEach(j => { if (j > i) s += `<line x1="${X(i)}" y1="${Y(i)}" x2="${X(j)}" y2="${Y(j)}" style="stroke:var(--ml)" stroke-width="2"/>`; }));
+  for (let i = 0; i < g.n; i++) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="3" style="fill:var(--mpt);stroke:var(--ml)" stroke-width="1.2"/>`;
   for (const [a, c] of o.mills || []) s += `<line x1="${X(a)}" y1="${Y(a)}" x2="${X(c)}" y2="${Y(c)}" stroke="rgba(255,240,200,.9)" stroke-width="7" stroke-linecap="round" opacity=".45"/>`;
-  for (const k in b || {}) { const p = b[k]; s += `<circle cx="${X(k)}" cy="${Y(k)}" r="${u * 0.34}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.5"/>`; }
+  for (const k in b || {}) { const p = b[k]; s += `<circle cx="${X(k)}" cy="${Y(k)}" r="${u * 0.34}" style="fill:var(--m${p === 1 ? 1 : 2});stroke:var(--m${p === 1 ? 1 : 2}s)" stroke-width="1.5"/>`; }
   for (const k in o.marks || {}) {
     const v = o.marks[k], x = X(k), y = Y(k);
     if (v === 'x') s += `<path d="M${x - 7},${y - 7}L${x + 7},${y + 7}M${x + 7},${y - 7}L${x - 7},${y + 7}" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round"/>`;
@@ -1950,14 +2171,14 @@ function renderRuleCards() {
 function tourSVG(v, b, o) {
   const g = E.geom(v), S = g.size, u = 30, pad = 6, W = S * u + pad * 2;
   const X = i => pad + (g.pts[i][0] + 0.5) * u, Y = i => pad + (g.pts[i][1] + 0.5) * u;
-  let s = `<svg class="tour" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#2a1f55" stroke="rgba(201,169,97,.5)"/>`;
-  g.adj.forEach((a, i) => a.forEach(j => { if (j > i) s += `<line x1="${X(i)}" y1="${Y(i)}" x2="${X(j)}" y2="${Y(j)}" stroke="#c9a961" stroke-width="2"/>`; }));
-  for (let i = 0; i < g.n; i++) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="3" fill="#120c26" stroke="#c9a961" stroke-width="1.2"/>`;
+  let s = `<svg class="tour" viewBox="0 0 ${W} ${W}"><rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" style="fill:var(--mb);stroke:var(--mbs)"/>`;
+  g.adj.forEach((a, i) => a.forEach(j => { if (j > i) s += `<line x1="${X(i)}" y1="${Y(i)}" x2="${X(j)}" y2="${Y(j)}" style="stroke:var(--ml)" stroke-width="2"/>`; }));
+  for (let i = 0; i < g.n; i++) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="3" style="fill:var(--mpt);stroke:var(--ml)" stroke-width="1.2"/>`;
   for (const m of o.mills || []) s += `<line x1="${X(m[0])}" y1="${Y(m[0])}" x2="${X(m[2])}" y2="${Y(m[2])}" stroke="rgba(255,240,200,.9)" stroke-width="7" stroke-linecap="round" opacity=".45"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="4.5" fill="rgba(255,236,170,.85)"/>`;
   for (let i = 0; i < g.n; i++) if (b[i]) {
     const p = b[i];
-    s += `<circle class="${i === o.last ? 'pop' : ''}" cx="${X(i)}" cy="${Y(i)}" r="${u * 0.34}" fill="${p === 1 ? '#e6cd8c' : '#d4d9e0'}" stroke="${p === 1 ? '#8a6d33' : '#7d8591'}" stroke-width="1.5"/>`;
+    s += `<circle class="${i === o.last ? 'pop' : ''}" cx="${X(i)}" cy="${Y(i)}" r="${u * 0.34}" style="fill:var(--m${p === 1 ? 1 : 2});stroke:var(--m${p === 1 ? 1 : 2}s)" stroke-width="1.5"/>`;
   }
   if (o.sel >= 0) s += `<circle cx="${X(o.sel)}" cy="${Y(o.sel)}" r="${u * 0.44}" fill="none" stroke="#ffe9a8" stroke-width="2.6"/>`;
   for (const i of o.rm || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.44}" fill="none" stroke="#ff6b5b" stroke-width="2.2" stroke-dasharray="4 3"/>`;
@@ -2114,7 +2335,7 @@ function segSync() {
 function openNewDialog() {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2 };
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
-  segSync(); showOverlay('#newOverlay');
+  segSync(); skinPicker(); showOverlay('#newOverlay');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
@@ -2123,6 +2344,9 @@ $('#ngRulesHelp').onclick = () => openRules(draft.rule);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
+// designs apply at once (the board behind the dialog changes) and are kept right away
+$('#bdRow').onclick = e => { const b = e.target.closest('button[data-k]'); if (!b) return; settings.bd = b.dataset.k; skinApply(); save(); skinPicker(); };
+$('#pcRow').onclick = e => { const b = e.target.closest('button[data-k]'); if (!b) return; settings.pcs = b.dataset.k; skinApply(); save(); skinPicker(); };
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'lesson') { openLessons(); return; }
@@ -3216,6 +3440,7 @@ function dailySolved(date, hinted) {
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'morris', lang: () => LANG, open: () => openRules(gv, 0), watch: '#rulesOverlay' });
 const hadSave = load();
+skinApply();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 if (!hadSave) setVariant(settings.rule);
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
@@ -3232,7 +3457,7 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); renderFx();
-  if ($('#newOverlay').classList.contains('show')) segSync();
+  if ($('#newOverlay').classList.contains('show')) { segSync(); skinPicker(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
   if (lesson) renderLessonCard();
@@ -3321,7 +3546,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261028l9"></script>
+<script src="online-ui.js?v=20261028sk"></script>
 <!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
