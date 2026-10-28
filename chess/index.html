@@ -287,6 +287,22 @@ a.snd.home{text-decoration:none}
 #segMode button{flex:1 0 30%}
 @media (max-width: 520px){#segMode{display:grid;grid-template-columns:1fr 1fr}}
 .seg button.sel{background:var(--panel2);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45)}
+/* design pickers in the new-game dialog: little boards drawn with each piece set / board (as in go / gomoku) */
+.dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.dsg.dsg-pc{grid-template-columns:repeat(6,minmax(0,1fr))}
+.dsg button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
+.dsg .th{display:block;width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.45)}
+.dsg .th > svg{display:block;width:100%;height:100%}
+.dsg .th .eye{fill:currentColor;stroke:none}
+.dsg button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;justify-content:center}
+.dsg button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.dsg button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.12)}
+.dsg button:not(:has(.th)){justify-content:center;font-size:12px;font-weight:700;min-height:64px}
+.pc-credit{font-size:11px;color:var(--dim);margin:6px 0 0}
+.pc-credit:empty{display:none}
+html.atlas-skin .dsg button{background:#f8f0e0;border-color:var(--line)}
+html.atlas-skin .dsg button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2);border-color:var(--brass)}
+@media (max-width: 520px){ .dsg{gap:4px} .dsg.dsg-pc{grid-template-columns:repeat(3,minmax(0,1fr))} .dsg button{padding:4px 3px 5px;font-size:10px} }
 .level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
 .level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
 .level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
@@ -614,7 +630,17 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   #lessonOverlay .lesson-list > p, #puzzleOverlay .lesson-list > p{grid-column:1 / -1}
   #lessonOverlay .lesson-list > .daily, #puzzleOverlay .lesson-list > .daily{grid-column:1 / -1}
   .pz-grid{grid-template-columns:repeat(10, 1fr)}
-  #newOverlay .modal{width:min(560px, calc(100vw - 64px))}
+  #newOverlay .modal{width:min(1040px, calc(100vw - 64px))}
+  /* PC: settings in two columns (colour / strength / display | pieces / board), the mode row across the top */
+  #newOverlay .ng-cols{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:32px;align-items:start}
+  #newOverlay .ng-col > .field:first-child{margin-top:0}
+  #newOverlay .ng-mode #segMode{display:flex;flex-wrap:nowrap}
+  #newOverlay .ng-mode #segMode button{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:6px;padding-right:6px}
+  /* Start / Close stay visible: only the two columns scroll when the window is short */
+  #newOverlay .modal{display:flex;flex-direction:column;overflow:hidden}
+  #newOverlay .ng-cols{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:2px}
+  #newOverlay .modal-actions{flex:none;margin-top:14px}
+  #newOverlay #segSkin button span{min-height:1.3em}
 }
 
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
@@ -1027,6 +1053,33 @@ body.skin-ink #bFill stop:nth-child(1){stop-color:#8a2a22}body.skin-ink #bFill s
 body.skin-ink .pw{stroke:#4a3410}body.skin-ink .pw .eye{fill:#4a3410}
 body.skin-ink .pb{stroke:#d4af55}body.skin-ink .pb .eye{fill:#d4af55}
 body.skin-ink .squares text.on-l{fill:#d4af55}body.skin-ink .squares text.on-d{fill:#b8954a}
+/* more boards: marble, tournament green, ocean blue, rosewood (the standard pieces keep their ivory / ebony colours) */
+body.skin-marble #sqLight stop:nth-child(1){stop-color:#f3f0ea}body.skin-marble #sqLight stop:nth-child(2){stop-color:#dcd7cd}
+body.skin-marble #sqDark stop:nth-child(1){stop-color:#7f8d89}body.skin-marble #sqDark stop:nth-child(2){stop-color:#57635f}
+body.skin-marble .board::after{opacity:.5;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.0035 .006' numOctaves='5' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .34 0 0 0 0 .33 -2.2 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='gamma' amplitude='1' exponent='2.4' offset='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");background-size:100% 100%}
+body.skin-marble .frame{background:linear-gradient(145deg,#3c4241 0%,#1b1f1e 55%,#333938 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(220,226,222,.25)}
+body.skin-marble .board{box-shadow:0 0 0 5px #111413,0 0 0 6px rgba(220,226,222,.4),0 12px 30px rgba(0,0,0,.6)}
+body.skin-marble .squares text.on-l{fill:#57635f}body.skin-marble .squares text.on-d{fill:#f3f0ea}
+body.skin-tourney #sqLight stop:nth-child(1){stop-color:#f0f0d6}body.skin-tourney #sqLight stop:nth-child(2){stop-color:#e6e6c6}
+body.skin-tourney #sqDark stop:nth-child(1){stop-color:#7a9a5a}body.skin-tourney #sqDark stop:nth-child(2){stop-color:#688a4a}
+body.skin-tourney .board::after{opacity:.07}
+body.skin-tourney .frame{background:linear-gradient(145deg,#1f2b1b 0%,#0e140c 55%,#1a2417 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(170,200,140,.25)}
+body.skin-tourney .board{box-shadow:0 0 0 5px #0b1009,0 0 0 6px rgba(170,200,140,.4),0 12px 30px rgba(0,0,0,.6)}
+body.skin-tourney .squares text.on-l{fill:#688a4a}body.skin-tourney .squares text.on-d{fill:#f0f0d6}
+body.skin-ocean #sqLight stop:nth-child(1){stop-color:#e6eef4}body.skin-ocean #sqLight stop:nth-child(2){stop-color:#cfdce6}
+body.skin-ocean #sqDark stop:nth-child(1){stop-color:#6489a6}body.skin-ocean #sqDark stop:nth-child(2){stop-color:#476f8e}
+body.skin-ocean .board::after{opacity:.1}
+body.skin-ocean .frame{background:linear-gradient(145deg,#1a2a3b 0%,#0a121b 55%,#162433 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(150,190,220,.28)}
+body.skin-ocean .board{box-shadow:0 0 0 5px #08101a,0 0 0 6px rgba(150,190,220,.45),0 12px 30px rgba(0,0,0,.6)}
+body.skin-ocean .squares text.on-l{fill:#476f8e}body.skin-ocean .squares text.on-d{fill:#e6eef4}
+body.skin-rosewood #sqLight stop:nth-child(1){stop-color:#f2d7ad}body.skin-rosewood #sqLight stop:nth-child(2){stop-color:#ddb986}
+body.skin-rosewood #sqDark stop:nth-child(1){stop-color:#71382a}body.skin-rosewood #sqDark stop:nth-child(2){stop-color:#4b2016}
+body.skin-rosewood .board::after{opacity:.42;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900' viewBox='0 0 900 900' preserveAspectRatio='none'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.002 .04' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .12 0 0 0 0 .05 0 0 0 1.6 -.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:100% 100%}
+body.skin-rosewood .frame{background:linear-gradient(145deg,#33190f 0%,#170905 55%,#2b140b 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(214,160,110,.3)}
+body.skin-rosewood .board{box-shadow:0 0 0 5px #120604,0 0 0 6px rgba(214,160,110,.45),0 12px 30px rgba(0,0,0,.6)}
+body.skin-rosewood .squares text.on-l{fill:#71382a}body.skin-rosewood .squares text.on-d{fill:#f2d7ad}
+/* image piece sets (pieces/README.md) */
+.pc svg.pimg{overflow:visible}
 
 .coach{position:absolute;left:50%;top:8px;transform:translate(-50%,-6px);z-index:16;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:700;background:rgba(14,16,22,.9);border:1px solid var(--line);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
 .coach.show{opacity:1;transform:translate(-50%,0)}
@@ -1142,7 +1195,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <div class="overlay" id="newOverlay">
   <div class="modal">
     <h2 data-i18n="ng.title"></h2>
-    <div class="field">
+    <div class="field ng-mode">
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
@@ -1154,6 +1207,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
         <button data-v="puzzle" data-i18n="ng.puzzle"></button>
       </div>
     </div>
+    <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fColor">
@@ -1193,7 +1247,10 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
+    </div><div class="ng-col">
+    <div class="field" id="fPcs"><label data-i18n="ng.pcs"></label><div class="dsg dsg-pc" id="segPcs"><button type="button" data-v="std"><i class="th"></i><span data-i18n="pcs.std"></span></button><button type="button" data-v="celtic"><i class="th"></i><span data-i18n="pcs.celtic"></span></button><button type="button" data-v="fantasy"><i class="th"></i><span data-i18n="pcs.fantasy"></span></button><button type="button" data-v="chessnut"><i class="th"></i><span data-i18n="pcs.chessnut"></span></button><button type="button" data-v="papercut"><i class="th"></i><span data-i18n="pcs.papercut"></span></button><button type="button" data-v="rhosgfx"><i class="th"></i><span data-i18n="pcs.rhosgfx"></span></button></div><div class="pc-credit" id="pcCredit"></div></div>
+    <div class="field" id="fBoard"><label data-i18n="ng.board"></label><div class="dsg" id="segSkin"><button type="button" data-v="classic"><i class="th"></i><span data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><i class="th"></i><span data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><i class="th"></i><span data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><i class="th"></i><span data-i18n="sk.ink"></span></button><button type="button" data-v="marble"><i class="th"></i><span data-i18n="sk.marble"></span></button><button type="button" data-v="tourney"><i class="th"></i><span data-i18n="sk.tourney"></span></button><button type="button" data-v="ocean"><i class="th"></i><span data-i18n="sk.ocean"></span></button><button type="button" data-v="rosewood"><i class="th"></i><span data-i18n="sk.rosewood"></span></button></div></div>
+    </div></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
@@ -1362,12 +1419,12 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="i18n_v2.js?v=20261022rt"></script>
+<script src="i18n_v2.js?v=20261028dsg"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="app.js?v=20261028wp1odrp"></script>
+<script src="app.js?v=20261028wp1odrpdsg"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>

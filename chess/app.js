@@ -83,7 +83,7 @@ function hanging(pos, color) {
 
 // ====================================================================== state
 const STORE = 'aicoding-chess';
-const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', coach: true };
+const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', pcs: 'std', coach: true };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -136,6 +136,7 @@ function applyI18n() {
   const sel = document.getElementById('langSel'); if (sel) sel.value = LANG;
   document.title = t('meta.title');
   try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS
+  try { $('#pcCredit').textContent = PIECE_SETS[settings.pcs] ? t('pcs.credit', { a: PIECE_SETS[settings.pcs] }) : ''; } catch (e) {}
 }
 let humanColor = P1;
 let reviewing = false;
@@ -225,7 +226,13 @@ let flipped = false;
 function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
 const sqX = s => flipped ? 7 - (s & 7) : (s & 7), sqY = s => flipped ? (s >> 4) : 7 - (s >> 4);
 function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; }
-function pieceSVG(p) { return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'}"><use href="#s${PT[p & 7]}"/></svg>`; }
+// image piece sets (pieces/README.md: lichess sets under MIT / Apache 2.0 / CC BY 4.0 / CC0); 'std' = the drawn set below, coloured by the board skin
+const PIECE_SETS = { celtic: 'Maurizio Monge (MIT)', fantasy: 'Maurizio Monge (MIT)', chessnut: 'Alexis Luengas (Apache 2.0)', papercut: 'Nikolay Anzarov (CC BY 4.0)', rhosgfx: 'RhosGFX (CC0)' };
+const pieceImg = (set, p) => `pieces/${set}/${p & 8 ? 'b' : 'w'}${PT[p & 7]}.svg?v=1`;
+function pieceSVG(p) {
+  if (PIECE_SETS[settings.pcs]) return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'} pimg"><image href="${pieceImg(settings.pcs, p)}" x="5" y="5" width="90" height="90"/></svg>`;
+  return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'}"><use href="#s${PT[p & 7]}"/></svg>`;
+}
 function drawSquares() {
   let s = '';
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) s += `<rect x="${x}" y="${y}" width="1.002" height="1.002" class="${(x + y) & 1 ? 'd' : 'l'}"/>`;
@@ -2987,7 +2994,7 @@ async function googleLink() {
 // rated record: the one with the newer last game (else more games), settings / name: newest change wins.
 const ChessSync = (() => {
   const META = 'chess-sync-meta', RU_KEY = 'aicoding-chess-rules-seen';
-  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'coach', 'level', 'level2', 'lvv', 'style', 'color', 'lang'];
+  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'pcs', 'coach', 'level', 'level2', 'lvv', 'style', 'color', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
@@ -3145,11 +3152,82 @@ if (olOn()) { accRender(); setTimeout(() => { dockStart().then(() => { if (signe
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 // board & piece skin: applied immediately, kept with the settings
+const SKINS = ['classic', 'grain', 'metal', 'ink', 'marble', 'tourney', 'ocean', 'rosewood'];
+let pcsShown = 'std';
 function applySkin() {
-  ['grain', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, settings.skin === k));
-  $('#segSkin').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === (settings.skin || 'classic')));
+  if (!SKINS.includes(settings.skin)) settings.skin = 'classic';
+  if (!PIECE_SETS[settings.pcs]) settings.pcs = 'std';
+  SKINS.forEach(k => { if (k !== 'classic') document.body.classList.toggle('skin-' + k, settings.skin === k); });
+  $('#segSkin').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === settings.skin));
+  $('#segPcs').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === settings.pcs));
+  $('#pcCredit').textContent = PIECE_SETS[settings.pcs] ? t('pcs.credit', { a: PIECE_SETS[settings.pcs] }) : '';
+  designThumbs();
+  if (pcsShown !== settings.pcs) {   // redraw the pieces on the board, the captured pieces and the promotion picker
+    pcsShown = settings.pcs;
+    try { for (const [, el] of pcEls) el.innerHTML = pieceSVG(+el.dataset.p); } catch (e) {}
+    try { renderReserves(posAt(cur).pos); } catch (e) {}
+  }
+}
+// ---- design pickers: a few squares of each board with the current pieces, and each piece set on the current board
+const DSG_SKIN = {
+  classic: { l: ['#ead8b3', '#d9c194'], d: ['#a77c50', '#8a6440'], fr: ['#1d1813', '#0c0a08'], ring: 'rgba(201,169,97,.45)', cl: '#8a6440', cd: '#ecdcbc', tex: 'fine' },
+  grain: { l: ['#f3d7a0', '#dfb977'], d: ['#8e5a2a', '#6c401b'], fr: ['#3a2414', '#1f130a'], ring: 'rgba(201,169,97,.45)', cl: '#7a4a20', cd: '#f3d7a0', tex: 'grain' },
+  metal: { l: ['#dfe4e8', '#b9c1c8'], d: ['#77828c', '#545e67'], fr: ['#3b4248', '#1d2226'], ring: 'rgba(200,210,220,.4)', cl: '#545e67', cd: '#e6eaed', tex: 'brushed',
+    w: ['#ffffff', '#dde2e6', '#9ba4ac', '#3e464d'], b: ['#5c6670', '#2b3238', '#0c0f12', '#d2d9df'] },
+  ink: { l: ['#57504a', '#433d37'], d: ['#1c1a18', '#100f0e'], fr: ['#141414', '#070707'], ring: 'rgba(212,175,85,.6)', cl: '#d4af55', cd: '#b8954a',
+    w: ['#fff3c8', '#e7c46a', '#a47a26', '#4a3410'], b: ['#8a2a22', '#5a120e', '#2a0605', '#d4af55'] },
+  marble: { l: ['#f3f0ea', '#dcd7cd'], d: ['#7f8d89', '#57635f'], fr: ['#3c4241', '#1b1f1e'], ring: 'rgba(220,226,222,.4)', cl: '#57635f', cd: '#f3f0ea', tex: 'marble' },
+  tourney: { l: ['#f0f0d6', '#e6e6c6'], d: ['#7a9a5a', '#688a4a'], fr: ['#1f2b1b', '#0e140c'], ring: 'rgba(170,200,140,.4)', cl: '#688a4a', cd: '#f0f0d6' },
+  ocean: { l: ['#e6eef4', '#cfdce6'], d: ['#6489a6', '#476f8e'], fr: ['#1a2a3b', '#0a121b'], ring: 'rgba(150,190,220,.45)', cl: '#476f8e', cd: '#e6eef4' },
+  rosewood: { l: ['#f2d7ad', '#ddb986'], d: ['#71382a', '#4b2016'], fr: ['#33190f', '#170905'], ring: 'rgba(214,160,110,.45)', cl: '#71382a', cd: '#f2d7ad', tex: 'grain2' },
+};
+const DSG_PW = ['#fff8e4', '#ecd7a0', '#b8954d', '#6b5126'], DSG_PB = ['#5d636d', '#2a2e35', '#0f1114', '#b9c1cc'];
+let dsgUid = 0;
+function dsgPiece(set, p, x, y, w, S, id) {
+  if (PIECE_SETS[set]) return `<image href="${pieceImg(set, p)}" x="${x + w * .02}" y="${y + w * .02}" width="${w * .96}" height="${w * .96}"/>`;
+  const C = p & 8 ? S.b || DSG_PB : S.w || DSG_PW, k = p & 8 ? 'b' : 'w';
+  return `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="0 0 100 100" style="fill:url(#${id}${k});stroke:${C[3]};stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;color:${C[3]}"><use href="#s${PT[p & 7]}"/></svg>`;
+}
+// kind 'pc': 2×2 squares, a white king and a black knight (large, so the set reads); kind 'bd': the a1 corner of the board with its frame and coordinates
+function dsgThumb(kind, set, skin) {
+  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'cdsg' + (++dsgUid), V = 64;
+  const W = S.w || DSG_PW, B = S.b || DSG_PB;
+  let defs = `<linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.l[0]}"/><stop offset="1" stop-color="${S.l[1]}"/></linearGradient>`
+    + `<linearGradient id="${id}d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.d[0]}"/><stop offset="1" stop-color="${S.d[1]}"/></linearGradient>`
+    + `<linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.fr[0]}"/><stop offset="1" stop-color="${S.fr[1]}"/></linearGradient>`
+    + `<linearGradient id="${id}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${W[0]}"/><stop offset=".45" stop-color="${W[1]}"/><stop offset="1" stop-color="${W[2]}"/></linearGradient>`
+    + `<linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${B[0]}"/><stop offset=".5" stop-color="${B[1]}"/><stop offset="1" stop-color="${B[2]}"/></linearGradient>`
+    + `<filter id="${id}s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="1" stdDeviation=".8" flood-color="#000" flood-opacity=".5"/></filter>`;
+  const tex = { fine: ['fractalNoise', '.03 .8', '0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .15 0 0 0 .9 0', .22, ''],
+    grain: ['fractalNoise', '.012 .2', '0 0 0 0 .42 0 0 0 0 .24 0 0 0 0 .06 0 0 0 1.6 -.15', .5, ''],
+    grain2: ['fractalNoise', '.012 .2', '0 0 0 0 .3 0 0 0 0 .12 0 0 0 0 .05 0 0 0 1.6 -.15', .42, ''],
+    marble: ['turbulence', '.012 .021', '0 0 0 0 .3 0 0 0 0 .34 0 0 0 0 .33 -2.2 0 0 0 1', .55, '<feComponentTransfer><feFuncA type="gamma" amplitude="1" exponent="2.4" offset="0"/></feComponentTransfer>'] }[S.tex];
+  if (tex) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="${tex[0]}" baseFrequency="${tex[1]}" numOctaves="4" seed="3"/><feColorMatrix values="${tex[2]}"/>${tex[4]}</filter>`;
+  if (S.tex === 'brushed') defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.14)"/></pattern>`;
+  const fr = kind === 'bd' ? 7 : 0, n = kind === 'bd' ? 3 : 2, q = (V - fr) / n;   // frame band on the left and bottom
+  let s = `<svg viewBox="0 0 ${V} ${V}" aria-hidden="true"><defs>${defs}</defs>`;
+  if (fr) s += `<rect width="${V}" height="${V}" fill="url(#${id}f)"/>`;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) s += `<rect x="${fr + c * q}" y="${r * q}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(r + c + n) % 2 ? 'd' : 'l'})"/>`;
+  if (tex) s += `<rect x="${fr}" y="0" width="${V - fr}" height="${V - fr}" filter="url(#${id}n)" opacity="${tex[3]}"/>`;
+  if (S.tex === 'brushed') s += `<rect x="${fr}" y="0" width="${V - fr}" height="${V - fr}" fill="url(#${id}h)"/>`;
+  if (fr) s += `<path d="M${fr} 0V${V - fr}H${V}" fill="none" stroke="${S.ring}" stroke-width=".8"/>`;
+  const g = (p, c, r, k) => `<g filter="url(#${id}s)">${dsgPiece(set, p, fr + c * q + q * (1 - k) / 2, r * q + q * (1 - k) / 2, q * k, S, id)}</g>`;
+  if (kind === 'bd') {
+    // the bottom-left square is dark (a1), coordinates inside the squares like the real board
+    const tf = `font-family="'JetBrains Mono',monospace" font-weight="700" font-size="4.6"`;
+    ['a', 'b', 'c'].forEach((z, i) => { s += `<text x="${fr + (i + 1) * q - 1.4}" y="${V - fr - 1.4}" text-anchor="end" ${tf} fill="${(i + 2 + n) % 2 ? S.cl : S.cd}">${z}</text>`; });
+    ['3', '2', '1'].forEach((z, i) => { s += `<text x="${fr + 1.3}" y="${i * q + 5.2}" ${tf} fill="${(i + n) % 2 ? S.cd : S.cl}">${z}</text>`; });
+    s += g(4, 0, 2, .9) + g(1, 1, 1, .9) + g(10, 2, 0, .9);   // white rook a1, white pawn b2, black knight c3
+  } else s += g(6, 0, 1, .96) + g(10, 1, 0, .96);   // white king, black knight
+  return s + '</svg>';
+}
+function designThumbs() {
+  dsgUid = 0;
+  document.querySelectorAll('#segPcs button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('pc', e.parentNode.dataset.v, settings.skin); });
+  document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('bd', settings.pcs, e.parentNode.dataset.v); });
 }
 $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applySkin(); save(); };
+$('#segPcs').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pcs = b.dataset.v; applySkin(); save(); };
 applySkin();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
