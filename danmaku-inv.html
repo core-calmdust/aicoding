@@ -37,6 +37,10 @@
         #game-container { position: relative; }
         canvas { background-color: #000000; border-width: 3px; border-style: solid; transition: box-shadow 0.1s ease-in-out, border-color 0.5s ease; display: block; }
         canvas.pulse { transition: box-shadow 0.05s ease-in-out; }
+        /* Gキー: 枠・ボタン・説明なしの画面のみフルスクリーン */
+        body.pure #controls-info, body.pure #sound-toggle, body.pure #effect-toggle { display: none !important; }
+        body.pure canvas { border: none !important; box-shadow: none !important; }
+        body.pure #fullscreen-wrapper { background-color: #000; }
         #sound-toggle, #effect-toggle {
             position: absolute;
             bottom: 10px;
@@ -91,7 +95,7 @@
             </div>
             <footer id="controls-info" aria-label="操作方法">
                 <div>MOVE: ARROWS/AD/PAD | SHOT: SPACE/BUTTON</div>
-                <div>PAUSE: P/START | FULLSCREEN: F</div>
+                <div>PAUSE: P/START | FULLSCREEN: F | GAME ONLY: G</div>
             </footer>
         </div>
     </main>
@@ -1012,17 +1016,27 @@
                     scalableContent.style.transform = '';
                     return;
                 }
-                const contentWidth = 806;
-                const contentHeight = 600 + 6 + 20 + 45;
-                const EFFECT_MARGIN = 40; 
+                const pure = document.body.classList.contains('pure');
+                const contentWidth = pure ? 800 : 806;
+                const contentHeight = pure ? 600 : 600 + 6 + 20 + 45;
+                const EFFECT_MARGIN = pure ? 0 : 40; 
                 const availableWidth = wrapper.clientWidth - (EFFECT_MARGIN * 2);
                 const availableHeight = wrapper.clientHeight - (EFFECT_MARGIN * 2);
                 const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
                 scalableContent.style.transform = `scale(${scale})`;
             }
 
+            function togglePureFullScreen() { // Gキー: 枠・説明なしの画面のみフルスクリーン
+                const wrapper = document.getElementById('fullscreen-wrapper');
+                if (document.fullscreenElement && document.body.classList.contains('pure')) { document.exitFullscreen(); return; }
+                document.body.classList.add('pure');
+                if (!document.fullscreenElement) wrapper.requestFullscreen().catch(() => { document.body.classList.remove('pure'); resizeAndScaleContent(); });
+                resizeAndScaleContent();
+            }
+            document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('pure'); resizeAndScaleContent(); });
             function toggleFullScreen() {
                 const wrapper = document.getElementById('fullscreen-wrapper');
+                if (document.fullscreenElement && document.body.classList.contains('pure')) { document.body.classList.remove('pure'); resizeAndScaleContent(); return; } // 画面のみ中のFは説明ありに切り替え
                 if (!document.fullscreenElement) {
                     wrapper.requestFullscreen().catch(err => {
                         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
@@ -1227,6 +1241,11 @@
                 if (code === 'KeyF') {
                     e.preventDefault();
                     toggleFullScreen();
+                    return;
+                }
+                if (code === 'KeyG') {
+                    e.preventDefault();
+                    togglePureFullScreen();
                     return;
                 }
                 
