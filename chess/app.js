@@ -137,6 +137,7 @@ function applyI18n() {
   document.title = t('meta.title');
   try { accRender(); } catch (e) {}   // the Google chip / account box are built in JS
   try { $('#pcCredit').textContent = PIECE_SETS[settings.pcs] ? t('pcs.credit', { a: PIECE_SETS[settings.pcs] }) : ''; } catch (e) {}
+  try { designNow(); } catch (e) {}
 }
 let humanColor = P1;
 let reviewing = false;
@@ -3188,9 +3189,10 @@ function dsgPiece(set, p, x, y, w, S, id) {
   const C = p & 8 ? S.b || DSG_PB : S.w || DSG_PW, k = p & 8 ? 'b' : 'w';
   return `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="0 0 100 100" style="fill:url(#${id}${k});stroke:${C[3]};stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;color:${C[3]}"><use href="#s${PT[p & 7]}"/></svg>`;
 }
-// kind 'pc': 2×2 squares, a white king and a black knight (large, so the set reads); kind 'bd': the a1 corner of the board with its frame and coordinates
+// kind 'pc': a strip of three squares with a white king, a black queen and a white knight, drawn exactly as on the board (the same symbols / images);
+// kind 'bd': the a1 corner of the board with its frame and coordinates
 function dsgThumb(kind, set, skin) {
-  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'cdsg' + (++dsgUid), V = 64;
+  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'cdsg' + (++dsgUid);
   const W = S.w || DSG_PW, B = S.b || DSG_PB;
   let defs = `<linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.l[0]}"/><stop offset="1" stop-color="${S.l[1]}"/></linearGradient>`
     + `<linearGradient id="${id}d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.d[0]}"/><stop offset="1" stop-color="${S.d[1]}"/></linearGradient>`
@@ -3204,27 +3206,33 @@ function dsgThumb(kind, set, skin) {
     marble: ['turbulence', '.012 .021', '0 0 0 0 .3 0 0 0 0 .34 0 0 0 0 .33 -2.2 0 0 0 1', .55, '<feComponentTransfer><feFuncA type="gamma" amplitude="1" exponent="2.4" offset="0"/></feComponentTransfer>'] }[S.tex];
   if (tex) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="${tex[0]}" baseFrequency="${tex[1]}" numOctaves="4" seed="3"/><feColorMatrix values="${tex[2]}"/>${tex[4]}</filter>`;
   if (S.tex === 'brushed') defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.14)"/></pattern>`;
-  const fr = kind === 'bd' ? 7 : 0, n = kind === 'bd' ? 3 : 2, q = (V - fr) / n;   // frame band on the left and bottom
-  let s = `<svg viewBox="0 0 ${V} ${V}" aria-hidden="true"><defs>${defs}</defs>`;
-  if (fr) s += `<rect width="${V}" height="${V}" fill="url(#${id}f)"/>`;
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) s += `<rect x="${fr + c * q}" y="${r * q}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(r + c + n) % 2 ? 'd' : 'l'})"/>`;
-  if (tex) s += `<rect x="${fr}" y="0" width="${V - fr}" height="${V - fr}" filter="url(#${id}n)" opacity="${tex[3]}"/>`;
-  if (S.tex === 'brushed') s += `<rect x="${fr}" y="0" width="${V - fr}" height="${V - fr}" fill="url(#${id}h)"/>`;
-  if (fr) s += `<path d="M${fr} 0V${V - fr}H${V}" fill="none" stroke="${S.ring}" stroke-width=".8"/>`;
+  const bd = kind === 'bd', VW = bd ? 96 : 90, VH = bd ? 60 : 30, fr = bd ? 6 : 0, rows = bd ? 3 : 1, q = (VH - fr) / rows, cols = Math.ceil((VW - fr) / q);
+  let s = `<svg viewBox="0 0 ${VW} ${VH}" aria-hidden="true" style="font-style:normal"><defs>${defs}</defs>`;
+  if (fr) s += `<rect width="${VW}" height="${VH}" fill="url(#${id}f)"/>`;
+  // square (c, r): c = file from the left (0 = a), r = rank from the top; a1 (bottom-left) is dark
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) s += `<rect x="${fr + c * q}" y="${r * q}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(c + rows - 1 - r) % 2 ? 'l' : 'd'})"/>`;
+  if (tex) s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" filter="url(#${id}n)" opacity="${tex[3]}"/>`;
+  if (S.tex === 'brushed') s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" fill="url(#${id}h)"/>`;
+  if (fr) s += `<path d="M${fr} 0V${VH - fr}H${VW}" fill="none" stroke="${S.ring}" stroke-width=".8"/>`;
   const g = (p, c, r, k) => `<g filter="url(#${id}s)">${dsgPiece(set, p, fr + c * q + q * (1 - k) / 2, r * q + q * (1 - k) / 2, q * k, S, id)}</g>`;
-  if (kind === 'bd') {
-    // the bottom-left square is dark (a1), coordinates inside the squares like the real board
-    const tf = `font-family="'JetBrains Mono',monospace" font-weight="700" font-size="4.6"`;
-    ['a', 'b', 'c'].forEach((z, i) => { s += `<text x="${fr + (i + 1) * q - 1.4}" y="${V - fr - 1.4}" text-anchor="end" ${tf} fill="${(i + 2 + n) % 2 ? S.cl : S.cd}">${z}</text>`; });
-    ['3', '2', '1'].forEach((z, i) => { s += `<text x="${fr + 1.3}" y="${i * q + 5.2}" ${tf} fill="${(i + n) % 2 ? S.cd : S.cl}">${z}</text>`; });
-    s += g(4, 0, 2, .9) + g(1, 1, 1, .9) + g(10, 2, 0, .9);   // white rook a1, white pawn b2, black knight c3
-  } else s += g(6, 0, 1, .96) + g(10, 1, 0, .96);   // white king, black knight
+  if (bd) {
+    const tf = `font-family="'JetBrains Mono',monospace" font-weight="700" font-size="4" font-style="normal"`;
+    for (let c = 0; c < cols; c++) s += `<text x="${fr + (c + 1) * q - 1.2}" y="${VH - fr - 1.2}" text-anchor="end" ${tf} fill="${c % 2 ? S.cl : S.cd}">${'abcdefgh'[c]}</text>`;
+    ['3', '2', '1'].forEach((z, i) => { s += `<text x="${fr + 1.1}" y="${i * q + 4.6}" ${tf} fill="${(i + rows - 1) % 2 ? S.cl : S.cd}">${z}</text>`; });
+    s += g(4, 0, 2, .9) + g(1, 1, 1, .9) + g(2, 2, 2, .9) + g(10, 3, 0, .9) + g(9, 4, 0, .9);   // Ra1 Pb2 Nc1 / nd3 pe3
+  } else s += g(6, 0, 0, .94) + g(13, 1, 0, .94) + g(2, 2, 0, .94);   // white king, black queen, white knight
   return s + '</svg>';
 }
 function designThumbs() {
   dsgUid = 0;
-  document.querySelectorAll('#segPcs button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('pc', e.parentNode.dataset.v, settings.skin); });
+  document.querySelectorAll('#segPcs button[data-v] > .th.cpth').forEach(e => { e.innerHTML = dsgThumb('pc', e.parentNode.dataset.v, settings.skin); });
   document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('bd', settings.pcs, e.parentNode.dataset.v); });
+  designNow();
+}
+// the chosen names next to the labels (phones show only the pictures)
+function designNow() {
+  const cur = id => { const x = document.querySelector(`#${id} button.sel .nm`); return x ? x.textContent : ''; };
+  const a = $('#pcNow'), b = $('#skNow'); if (a) a.textContent = cur('segPcs'); if (b) b.textContent = cur('segSkin');
 }
 $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applySkin(); save(); };
 $('#segPcs').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pcs = b.dataset.v; applySkin(); save(); };

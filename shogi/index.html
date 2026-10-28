@@ -296,16 +296,28 @@ body.in-lesson .review-card{display:none!important}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
 /* design pickers in the new-game dialog: little boards drawn with the real piece set / board colours (as in go / gomoku) */
 .dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.dsg button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
-.dsg .th{display:block;width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-.dsg .th > svg{display:block;width:100%;height:100%}
-.dsg button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;justify-content:center}
+.dsg button{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:4px;padding:4px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;font-style:normal;transition:border-color .2s,color .2s,background .2s}
+.dsg .th{display:block;width:100%;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.4);font-style:normal}
+.dsg .th > svg,.dsg .th > img{display:block;width:100%;height:auto}
+.dsg-bd .th{aspect-ratio:96/60}
+.dsg-bd .th > svg{height:100%}
+.dsg .nm{text-align:center;word-break:keep-all;overflow-wrap:anywhere;display:block}
 .dsg button:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
 .dsg button.sel{border-color:var(--brass);color:var(--text);box-shadow:0 0 0 1px rgba(201,169,97,.45);background:rgba(201,169,97,.12)}
-.dsg button:not(:has(.th)){justify-content:center;font-size:12px;font-weight:700;min-height:64px}
+.dsg-now{display:none;font-weight:700;font-size:12px;color:var(--text);margin-left:8px}
+.dsg-field > label{display:inline-block}
+/* piece tiles: 玉・飛・歩 drawn by pieceEl on a strip of the current board */
+.pth{container-type:inline-size;padding:2px 0 3px;background:linear-gradient(170deg,#ecc67f 0%,#e2b66b 45%,#d6a55a 100%)}
+body.skin-grain .pth{background:linear-gradient(170deg,#e9be76 0%,#dcab60 50%,#cc9648 100%)}
+body.skin-metal .pth{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%)}
+body.skin-ink .pth{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%)}
+.pstrip{display:flex;justify-content:center;gap:3cqw}
+.pslot{position:relative;flex:none;--cw:28cqw;--ch:calc(var(--cw) * 1.1);width:var(--cw);height:var(--ch)}
+.pslot .pc{animation:none}
+.pth3d{background:linear-gradient(170deg,#f3d9a4,#dcb06a)}
 html.atlas-skin .dsg button{background:#f8f0e0;border-color:var(--line)}
 html.atlas-skin .dsg button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2);border-color:var(--brass)}
-@media (max-width: 520px){ .dsg{gap:4px} .dsg button{padding:4px 3px 5px;font-size:10px} }
+@media (max-width: 520px){ .dsg{gap:3px} .dsg button{padding:2px;border-radius:7px} .dsg .nm{display:none} .dsg-now{display:inline} }
 .pc-credit{font-size:11px;color:var(--dim);margin:-6px 0 10px}
 .pc-credit:empty{display:none}
 .play-choice{display:grid;gap:8px;margin-top:16px}
@@ -618,6 +630,8 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   body.in-study .mt-strip{display:none!important}
   body.in-study #lsHint,body.in-study .lesson-actions #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4;padding:8px;gap:5px}
+  /* phone menu labels like chess: smaller, tighter text so every label stays whole */
+  .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:clip;font-size:9.5px;letter-spacing:-.04em}
   #evalCard{order:1}
   .review-card{order:2}
   .kifu-card{order:3;flex:none;min-height:110px}
@@ -1044,6 +1058,57 @@ html[lang=ar] .pf-input{direction:rtl}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* new-game dialog fits without scrolling: PC (wide, two columns) uses the full window height (the overlay covers the online dock), phones get a compact one-column layout */
+@media (min-width: 760px) and (min-height: 600px) and (hover: hover){
+  #newOverlay .modal,#newOverlay .modal:has(> .rules-offer:not(.hidden)){height:auto;max-height:calc(100dvh - 24px);overflow:hidden;padding:20px 30px 16px}
+  #newOverlay h2{margin-bottom:12px}
+  #newOverlay .rules-offer{margin:0 0 12px;padding:8px 12px}
+  #newOverlay .field{margin-bottom:12px}
+  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{margin-bottom:6px}
+  #newOverlay .modal-actions{padding-top:12px;margin-top:0}
+  #newOverlay .credit{margin-top:8px}
+  #newOverlay #lvNote{font-size:10.5px;line-height:1.5}
+}
+@media (max-width: 520px){
+  #newOverlay{padding:8px}
+  #newOverlay .modal{max-height:calc(100dvh - 16px);padding:14px 14px 10px}
+  #newOverlay h2{font-size:20px;margin-bottom:6px}
+  #newOverlay .rules-offer{margin:0 0 8px;padding:6px 10px;font-size:11.5px;line-height:1.4}
+  #newOverlay .rules-offer button{padding:6px 10px;font-size:11.5px}
+  #newOverlay .field{margin-bottom:8px}
+  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{font-size:11px;margin-bottom:4px;letter-spacing:.06em}
+  #newOverlay .seg{padding:2px;gap:2px}
+  #newOverlay .seg button{padding:6px 2px;font-size:12px;white-space:normal;line-height:1.2}
+  #newOverlay #segMode{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay #segHandi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay #fHandi .vr-r{margin-top:6px}
+  /* short choices: label on the left, buttons on the right */
+  #fColor:not(.hidden),#fClock:not(.hidden){display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
+  #fColor > label,#fClock > label{margin:0!important;letter-spacing:0}
+  #newOverlay #fHandi .vr-r{display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
+  #newOverlay #fHandi .vr-r > label{margin:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;letter-spacing:0}
+  #newOverlay #segVariant button{padding:6px 2px}
+  #fOpts > label{display:none}
+  #newOverlay .field{margin-bottom:6px}
+  #newOverlay .rules-offer{font-size:11px;padding:5px 8px}
+  #newOverlay .field:has(> #segMode) > label{display:none}
+  #newOverlay #segClock button{white-space:nowrap;font-size:11px;letter-spacing:-.01em}
+  #newOverlay #segMode button{white-space:nowrap;font-size:11.5px;letter-spacing:-.02em;overflow:hidden;text-overflow:clip}
+  #newOverlay .rules-offer span{font-size:10.5px}
+  #newOverlay .level-wrap input{height:22px}
+  #newOverlay .level-name{height:auto;line-height:1.3}
+  #newOverlay .level-name small{line-height:1.3}
+  #newOverlay .lv-row .cs-sel{height:30px}
+  #lvNote{display:none}
+  #newOverlay .level-wrap{gap:2px}
+  #newOverlay .checks{gap:6px 10px}
+  #newOverlay .checks label{font-size:12px}
+  #newOverlay .pc-credit{margin:-3px 0 3px;font-size:10px;line-height:1.3}
+  #newOverlay .modal-actions{margin-top:10px}
+  #newOverlay .modal-actions .mbtn{padding:10px}
+  #newOverlay .credit{margin-top:6px;font-size:9.5px;line-height:1.4}
+}
+@media (max-width: 374px) and (pointer: coarse){ .controls{padding:6px;gap:4px} .controls .btn{padding-left:1px;padding-right:1px} }
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1162,9 +1227,9 @@ html[lang=ar] .pf-input{direction:rtl}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field"><label data-i18n="ng.pieces"></label><div class="dsg" id="segPieces"><button type="button" data-v="2kanji_3d"><i class="th"></i><span data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><i class="th"></i><span data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><i class="th"></i><span data-i18n="pc.ryoko"></span></button><button type="button" data-v="one"><i class="th"></i><span data-i18n="pc.one"></span></button><button type="button" data-v="two"><i class="th"></i><span data-i18n="pc.two"></span></button><button type="button" data-v="intl"><i class="th"></i><span data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><i class="th"></i><span data-i18n="pc.intl0"></span></button></div></div>
+    <div class="field dsg-field"><label data-i18n="ng.pieces"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPieces"><button type="button" data-v="2kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><span class="th pth"></span><span class="nm" data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.ryoko"></span></button><button type="button" data-v="one"><span class="th pth"></span><span class="nm" data-i18n="pc.one"></span></button><button type="button" data-v="two"><span class="th pth"></span><span class="nm" data-i18n="pc.two"></span></button><button type="button" data-v="intl"><span class="th pth"></span><span class="nm" data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><span class="th pth"></span><span class="nm" data-i18n="pc.intl0"></span></button></div></div>
     <div class="pc-credit" id="pcCredit"></div>
-    <div class="field"><label data-i18n="ng.skin"></label><div class="dsg" id="segSkin"><button type="button" data-v="classic"><i class="th"></i><span data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><i class="th"></i><span data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><i class="th"></i><span data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><i class="th"></i><span data-i18n="sk.ink"></span></button></div></div>
+    <div class="field dsg-field"><label data-i18n="ng.skin"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button></div></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0<br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
@@ -2416,6 +2481,7 @@ document.addEventListener('click', e => {
 const dlg = { mode: 'ai', color: 0, handicap: 0, clock: 0 };
 function segSel(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('sel', b.dataset.v === String(v))); }
 function openNewDialog() {
+  try { designThumbs(); } catch (e) {}
   Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode === 'ai' && game && game.rated ? 'rated' : settings.mode, color: settings.color, handicap: settings.handicap });
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
@@ -2498,43 +2564,56 @@ function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
   return g + '</g>';
 }
 // kind 'pc': 2×2 squares with a gote rook and the sente king (large, so the piece style reads); kind 'bd': the corner of a board with its frame and coordinates
-function dsgThumb(kind, set, skin) {
-  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'dsg' + (++dsgUid), V = 64;
+// board tiles: the top-right corner of the board (frame, coordinates, a star point) with a few pieces of the current set
+function dsgThumb(set, skin) {
+  const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'dsg' + (++dsgUid), W = 96, H = 60;
   let defs = `<linearGradient id="${id}b" x1="0" y1="0" x2=".18" y2="1"><stop offset="0" stop-color="${S.b[0]}"/><stop offset=".5" stop-color="${S.b[1]}"/><stop offset="1" stop-color="${S.b[2]}"/></linearGradient>`
     + `<linearGradient id="${id}p" x1="0" y1="0" x2=".1" y2="1"><stop offset="0" stop-color="${S.pc[0]}"/><stop offset=".45" stop-color="${S.pc[1]}"/><stop offset="1" stop-color="${S.pc[2]}"/></linearGradient>`
     + `<linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${S.fr[0]}"/><stop offset="1" stop-color="${S.fr[1]}"/></linearGradient>`
     + `<filter id="${id}s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy=".8" stdDeviation=".7" flood-color="#000" flood-opacity=".45"/></filter>`;
   if (S.noise) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${S.noise}" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .45 0 0 0 0 .26 0 0 0 0 .07 0 0 0 1.4 -.2"/></filter>`;
   if (S.brushed) defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.12)"/></pattern>`;
-  const fr = kind === 'bd' ? 9 : 0;   // frame band on the top and right (as on the real board)
-  const bx = 0, by = fr, bw = V - fr, bh = V - fr;
-  let s = `<svg viewBox="0 0 ${V} ${V}" aria-hidden="true"><defs>${defs}</defs>`;
-  if (fr) s += `<rect width="${V}" height="${V}" fill="url(#${id}f)"/>`;
-  s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}b)"/>`;
-  if (S.noise) s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" filter="url(#${id}n)" opacity="${S.na}"/>`;
-  if (S.brushed) s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}h)"/>`;
-  const n = kind === 'bd' ? 3 : 2, ch = kind === 'bd' ? bh / 3.45 : 31, cw = ch / 1.1;
-  const x0 = kind === 'bd' ? bx + bw - n * cw : (V - n * cw) / 2, y0 = kind === 'bd' ? by : (V - n * ch) / 2;
+  const fr = 8, by = fr, bw = W - fr, bh = H - fr;   // frame band on the top and right (as on the real board)
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true" style="font-style:normal"><defs>${defs}</defs><rect width="${W}" height="${H}" fill="url(#${id}f)"/>`;
+  s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}b)"/>`;
+  if (S.noise) s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" filter="url(#${id}n)" opacity="${S.na}"/>`;
+  if (S.brushed) s += `<rect x="0" y="${by}" width="${bw}" height="${bh}" fill="url(#${id}h)"/>`;
+  const ch = bh / 3.3, cw = ch / 1.1, n = Math.ceil(bw / cw), x0 = bw - n * cw;
   let d = '';
-  for (let k = 0; k <= n; k++) { const xx = x0 + k * cw, yy = y0 + k * ch; if (xx > bx + .5 && xx < bx + bw - .5) d += `M${xx.toFixed(2)} ${by}V${V}`; if (yy > by + .5 && yy < V - .5) d += `M${bx} ${yy.toFixed(2)}H${bx + bw}`; }
-  s += `<path d="${d}" stroke="${S.line}" stroke-width=".8" fill="none"/>`;
-  if (kind === 'bd') {
-    s += `<circle cx="${x0}" cy="${y0 + 3 * ch}" r="1.6" fill="${S.star}"/>`;
-    const fz = 6.2, cf = `font-family="'Shippori Mincho B1',serif" font-size="${fz}" fill="${S.co}" text-anchor="middle" dominant-baseline="central"`;
-    ['３', '２', '１'].forEach((z, i) => { s += `<text x="${x0 + (i + .5) * cw}" y="${fr / 2 + .3}" ${cf}>${z}</text>`; });
-    ['一', '二', '三'].forEach((z, i) => { s += `<text x="${V - fr / 2}" y="${by + (i + .5) * ch}" ${cf}>${z}</text>`; });
-    s += dsgPiece(2, true, x0 + 2.5 * cw, y0 + .5 * ch, cw, ch, set, S, id) + dsgPiece(1, true, x0 + 1.5 * cw, y0 + 1.5 * ch, cw, ch, set, S, id) + dsgPiece(4, false, x0 + .5 * cw, y0 + 2.5 * ch, cw, ch, set, S, id);
-  } else {
-    s += dsgPiece(6, true, x0 + 1.5 * cw, y0 + .5 * ch, cw, ch, set, S, id) + dsgPiece(OU, false, x0 + .5 * cw, y0 + 1.5 * ch, cw, ch, set, S, id);
-  }
+  for (let k = 1; k < n; k++) d += `M${(x0 + k * cw).toFixed(2)} ${by}V${H}`;
+  for (let k = 1; k <= 3; k++) d += `M0 ${(by + k * ch).toFixed(2)}H${bw}`;
+  s += `<path d="${d}" stroke="${S.line}" stroke-width=".8" fill="none"/><circle cx="${bw - 3 * cw}" cy="${by + 3 * ch}" r="1.5" fill="${S.star}"/>`;
+  const cf = `font-family="'Shippori Mincho B1',serif" font-size="5.6" fill="${S.co}" text-anchor="middle" dominant-baseline="central"`;
+  for (let i = 0; i < n; i++) { const c = n - i; if (c <= 5) s += `<text x="${x0 + (i + .5) * cw}" y="${fr / 2 + .3}" ${cf}>${'０１２３４５'[c]}</text>`; }
+  ['一', '二', '三'].forEach((z, i) => { s += `<text x="${W - fr / 2}" y="${by + (i + .5) * ch}" ${cf}>${z}</text>`; });
+  const at = (c, r) => [bw - (c - .5) * cw, by + (r - .5) * ch];   // c: file (1 = rightmost), r: rank
+  s += dsgPiece(2, true, ...at(1, 1), cw, ch, set, S, id) + dsgPiece(3, true, ...at(2, 1), cw, ch, set, S, id) + dsgPiece(1, true, ...at(3, 3), cw, ch, set, S, id) + dsgPiece(5, false, ...at(5, 2), cw, ch, set, S, id);
   return s + '</svg>';
+}
+// piece tiles: 玉・飛・歩 side by side, built with the board's own piece renderer (pieceEl) so they look exactly like the pieces in play
+const pieceEl2D = pieceEl;   // the portal skin replaces window.pieceEl with its 3D sprites; the tiles always show the 2D set they stand for
+function dsgPieceStrip(set) {
+  const keep = [settings.pieces, flip]; settings.pieces = set; flip = false;
+  const wrap = document.createElement('span'); wrap.className = 'pstrip';
+  try { [OU, HI, FU].forEach(tp => { const c = document.createElement('span'); c.className = 'pslot'; c.appendChild(pieceEl2D(tp)); wrap.appendChild(c); }); }
+  finally { settings.pieces = keep[0]; flip = keep[1]; }
+  return wrap;
 }
 function designThumbs() {
   dsgUid = 0;
-  document.querySelectorAll('#segPieces button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('pc', e.parentNode.dataset.v, settings.skin); });
+  document.querySelectorAll('#segPieces button[data-v] > .th.pth').forEach(e => { e.replaceChildren(dsgPieceStrip(e.parentNode.dataset.v)); });
+  // the portal's raised-lacquer 3D set (a text button added by atlas/skin/shogi.js) gets its picture here too
+  document.querySelectorAll('#segPieces button[data-v="atlas3d"]').forEach(b => { if (!b.querySelector('.th')) { const nm = b.textContent; b.innerHTML = '<span class="th pth3d"><img src="../images/atlas/shogi-thumb3d.webp?v=1" alt=""></span><span class="nm"></span>'; b.lastChild.textContent = nm; } });
   const pcs = PIECE_SETS[settings.pieces] || ['one', 'two', 'intl', 'intl0'].includes(settings.pieces) ? settings.pieces : '2kanji_3d';
-  document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb('bd', pcs, e.parentNode.dataset.v); });
+  document.querySelectorAll('#segSkin button[data-v] > .th').forEach(e => { e.innerHTML = dsgThumb(pcs, e.parentNode.dataset.v); });
+  setTimeout(designNow, 0);   // after the portal skin has moved the selection mark to its 3D set
 }
+// the chosen names next to the labels (phones show only the pictures)
+function designNow() {
+  const cur = id => { const x = document.querySelector(`#${id} button.sel > span:last-child`); return x ? x.textContent : ''; };
+  $('#pcNow').textContent = cur('segPieces'); $('#skNow').textContent = cur('segSkin');
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#segPieces,#segSkin')) setTimeout(designNow, 60); }, true);
 $('#segPieces').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.pieces = b.dataset.v; applyLook(); save(); if (game) { renderBoard(false); renderHands(); } };
 $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.skin = b.dataset.v; applyLook(); save(); };
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.clock = +b.dataset.v; updDialog(); } };

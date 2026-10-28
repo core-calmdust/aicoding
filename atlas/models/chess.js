@@ -359,7 +359,7 @@
     block.position.y = THICK / 2; block.castShadow = block.receiveShadow = true; block.renderOrder = -2; g.add(block);   // drawn first: the reflections test against it
     // the game's board skins tint the lacquer a little
     const tinted = [topMat, side], base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460 };
+    const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460, marble: 0xf2f1ee, tourney: 0xdce8cf, ocean: 0xd2e0ee, rosewood: 0xe8c4b2 };
     let curSet = 'lux';
     g.userData.setSet = name => {
       if (!SETS[name] || (name === curSet && topMat.map === topMaps[name])) return; curSet = name;   // topMat is shared by every board: another board may have left a different set on it
