@@ -32,7 +32,7 @@
   }
   let db = null, uid = null, profile = null, ready = null;
   // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
-  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: {},
+  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: { draw: true },
     decorate: typeof secDecorate === 'function' ? (...a) => secDecorate(...a) : null,
     onProfile: p => { profile = p; if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
   const secure = () => !!(SEC && SEC.secure());
@@ -658,15 +658,26 @@
       if (g === null) return null;
       if (g.status !== 'play' || moveCount(g.moves) !== n) return;
       if (sideOf(g, uid) !== (n % 2 ? 'b' : 'w')) return;       // not my turn
-      g.moves = g.moves ? g.moves + ' ' + uci : uci; if (!chargeClock(g)) return; g.t = db.stamp(), g.lm = uid; return g;
+      g.moves = g.moves ? g.moves + ' ' + uci : uci; if (!chargeClock(g)) return; g.t = db.stamp(), g.lm = uid;
+      if (g.offer && g.offer.by !== uid) g.offer = null;          // moving declines the opponent's draw offer (an own offer stays)
+      return g;
     });
     return r.committed;
   }
-  const resign = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play') return; g.status = 'resign'; g.loser = uid; return g; });
+  const resign = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play') return; g.status = 'resign'; g.loser = uid; g.offer = null; return g; });
   // the opponent's flag fell (with GRACE for latency). draw = the claimer cannot mate with its material (FIDE: then the game is drawn)
-  const claimTimeout = (gid, oppUid, draw) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || db.now() - g.t < mainOf(g, sideOf(g, oppUid)) + GRACE) return; g.status = 'timeout'; g.loser = oppUid; if (draw) g.draw = true; return g; });
+  const claimTimeout = (gid, oppUid, draw) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || db.now() - g.t < mainOf(g, sideOf(g, oppUid)) + GRACE) return; g.status = 'timeout'; g.loser = oppUid; if (draw) g.draw = true; g.offer = null; return g; });
   // game ended on the board: win = winning colour (1 White, 2 Black) or 0 for a draw; reason = mate | stalemate | rep | fifty | material; n = moves played
-  const markOver = (gid, win, reason, n) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || moveCount(g.moves) !== n) return; g.status = 'over'; g.win = win; g.reason = reason; return g; });
+  const markOver = (gid, win, reason, n) => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || moveCount(g.moves) !== n) return; g.status = 'over'; g.win = win; g.reason = reason; g.offer = null; return g; });
+  // draw offer (offer = { by: uid, n: moves played }): one at a time, by a player of the game; it stays until the opponent answers
+  // (accept → status 'draw', win 0, reason 'agree'; decline → offer removed) or moves (which declines it)
+  const isPlayer = g => g.w === uid || g.b === uid;
+  const offerDraw = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || !isPlayer(g) || (g.offer && g.offer.by)) return; g.offer = { by: uid, n: moveCount(g.moves) }; return g; });
+  const answerDraw = (gid, yes) => db.txn('games/' + gid, g => {
+    if (g === null) return null;
+    if (g.status !== 'play' || !isPlayer(g) || !g.offer || !g.offer.by || g.offer.by === uid) return;
+    if (yes) { g.status = 'draw'; g.win = 0; g.reason = 'agree'; } g.offer = null; return g;
+  });
 
   // apply the rating change for my side once per game. score: 1 / .5 / 0
   // own: my own view of a game that ended on the board (null = not finished here → disputed). Secure protocol: OnlineSec settles
@@ -728,7 +739,7 @@
     getGame: gid => db.get('games/' + gid), resumeRoom,
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
     setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat, roomGameOf, spectate, watchCount,
-    watchGame, sendMove, moveCount, UCI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
+    watchGame, sendMove, moveCount, UCI_RE, resign, claimTimeout, markOver, offerDraw, answerDraw, applyResult, topPlayers, elo,
     cleanName, defaultName, localName, account, google, logout, onAuth, pull, push, configured: !!CFG,
     get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile); }, now: () => (db ? db.now() : Date.now()),
     get secure() { return secure(); }, secMsg: k => (window.OnlineSec ? OnlineSec.msg(k) : ''),

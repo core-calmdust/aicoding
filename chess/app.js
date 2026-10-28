@@ -103,6 +103,19 @@ let LANG = detectLang();
     hi: { btn: 'ड्रॉ प्रस्ताव', agree: 'सहमति से ड्रॉ', wait: 'दोबारा प्रस्ताव से पहले कुछ और चालें चलें', accepted: 'AI ड्रॉ के लिए राज़ी हो गया', declined: 'AI ने ड्रॉ ठुकरा दिया (वह खेलना जारी रखना चाहता है)' },
     ar: { btn: 'عرض تعادل', agree: 'تعادل بالاتفاق', wait: 'العب بضع نقلات أخرى قبل عرض التعادل مجددًا', accepted: 'وافق الذكاء الاصطناعي على التعادل', declined: 'رفض الذكاء الاصطناعي التعادل (يريد المتابعة)' } };
   for (const l in DR) if (I18N[l]) { const d = DR[l], L = I18N[l]; if (L['dr.btn'] === undefined) L['dr.btn'] = d.btn; if (L['res.why.agree'] === undefined) L['res.why.agree'] = d.agree; for (const k of ['wait', 'accepted', 'declined']) if (L['dr.' + k] === undefined) L['dr.' + k] = d[k]; } }
+// 引分提案 in online games: confirmation, the opponent's dialog, answers
+{ const OD = {
+    ja: { q: '相手に引き分けを提案しますか？（相手が断るか次の手を指すと取り消されます）', yes: '提案する', sent: '引き分けを提案しました…', head: '引き分けの提案', got: '相手が引き分けを提案しています。受けますか？', acc: '受ける', dec: '断る', declined: '相手は引き分けを断りました', pending: '引き分けの提案に対する返事を待っています' },
+    en: { q: 'Offer your opponent a draw? (It lapses if they decline or make their next move.)', yes: 'Offer draw', sent: 'Draw offered…', head: 'Draw offer', got: 'Your opponent offers a draw. Accept?', acc: 'Accept', dec: 'Decline', declined: 'Your opponent declined the draw', pending: 'Waiting for the answer to your draw offer' },
+    zh: { q: '要向对手提和吗？（对手拒绝或走下一步后即失效）', yes: '提和', sent: '已提和…', head: '提和', got: '对手提议和棋。接受吗？', acc: '接受', dec: '拒绝', declined: '对手拒绝了和棋', pending: '正在等待对手对提和的答复' },
+    ko: { q: '상대에게 무승부를 제안할까요? (상대가 거절하거나 다음 수를 두면 취소됩니다)', yes: '제안하기', sent: '무승부를 제안했습니다…', head: '무승부 제안', got: '상대가 무승부를 제안했습니다. 수락할까요?', acc: '수락', dec: '거절', declined: '상대가 무승부를 거절했습니다', pending: '무승부 제안에 대한 답을 기다리는 중입니다' },
+    es: { q: '¿Ofrecer tablas a tu rival? (Se anula si las rechaza o hace su siguiente jugada.)', yes: 'Ofrecer tablas', sent: 'Tablas ofrecidas…', head: 'Oferta de tablas', got: 'Tu rival ofrece tablas. ¿Aceptas?', acc: 'Aceptar', dec: 'Rechazar', declined: 'Tu rival rechazó las tablas', pending: 'Esperando la respuesta a tu oferta de tablas' },
+    fr: { q: 'Proposer la nulle à votre adversaire ? (La proposition tombe s\'il refuse ou joue son coup suivant.)', yes: 'Proposer nulle', sent: 'Nulle proposée…', head: 'Proposition de nulle', got: 'Votre adversaire propose la nulle. Accepter ?', acc: 'Accepter', dec: 'Refuser', declined: 'Votre adversaire a refusé la nulle', pending: 'En attente de la réponse à votre proposition de nulle' },
+    pt: { q: 'Propor empate ao adversário? (A proposta cai se ele recusar ou fizer o próximo lance.)', yes: 'Propor empate', sent: 'Empate proposto…', head: 'Proposta de empate', got: 'Seu adversário propõe empate. Aceitar?', acc: 'Aceitar', dec: 'Recusar', declined: 'Seu adversário recusou o empate', pending: 'Aguardando a resposta à sua proposta de empate' },
+    de: { q: 'Deinem Gegner Remis anbieten? (Das Angebot verfällt, wenn er ablehnt oder seinen nächsten Zug macht.)', yes: 'Remis anbieten', sent: 'Remis angeboten…', head: 'Remisangebot', got: 'Dein Gegner bietet Remis an. Annehmen?', acc: 'Annehmen', dec: 'Ablehnen', declined: 'Dein Gegner hat das Remis abgelehnt', pending: 'Warte auf die Antwort auf dein Remisangebot' },
+    hi: { q: 'प्रतिद्वंद्वी को ड्रॉ का प्रस्ताव दें? (उनके मना करने या अगली चाल चलने पर यह रद्द हो जाएगा)', yes: 'प्रस्ताव दें', sent: 'ड्रॉ का प्रस्ताव भेजा…', head: 'ड्रॉ प्रस्ताव', got: 'प्रतिद्वंद्वी ड्रॉ का प्रस्ताव दे रहे हैं। स्वीकारें?', acc: 'स्वीकारें', dec: 'मना करें', declined: 'प्रतिद्वंद्वी ने ड्रॉ ठुकरा दिया', pending: 'ड्रॉ प्रस्ताव के जवाब की प्रतीक्षा है' },
+    ar: { q: 'هل تعرض التعادل على خصمك؟ (يسقط العرض إذا رفضه أو لعب نقلته التالية)', yes: 'اعرض التعادل', sent: 'تم عرض التعادل…', head: 'عرض تعادل', got: 'خصمك يعرض التعادل. هل تقبل؟', acc: 'قبول', dec: 'رفض', declined: 'رفض خصمك التعادل', pending: 'بانتظار الرد على عرض التعادل' } };
+  for (const l in OD) if (I18N[l]) for (const k in OD[l]) if (I18N[l]['od.' + k] === undefined) I18N[l]['od.' + k] = OD[l][k]; }
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 const LV = i => t('lv')[i];
@@ -784,7 +797,42 @@ function playerDraw() {
   reviewing = false; hintList = null; sel = null; closePromo();
   save(); update(false); onGameEnd(statusAt(moves.length));
 }
-$('#btnDraw').onclick = playerDraw;
+// 引分提案 in an online game (Online.offerDraw / answerDraw): one pending offer at a time, again only after a few moves;
+// the opponent answers in a dialog [断る][受ける] (a move also declines it); accepted = status 'draw' (reason 'agree')
+function olDrawLive() { return olLive() && !!net.game && net.game.status === 'play'; }
+function olDrawOffer() {
+  if (!olDrawLive()) return;
+  const g = net.game;
+  if (g.offer && g.offer.by) { toast(t(g.offer.by === Online.uid ? 'od.pending' : 'od.got'), 1800); return; }
+  if (net.odAt != null && moves.length - net.odAt < 6) { toast(t('dr.wait'), 1800); return; }
+  olConfirm(t('od.q'), t('od.yes'), () => {
+    if (!olDrawLive()) return;
+    const gid = net.gid, n = moves.length;
+    Online.offerDraw(gid).then(r => { if (net && net.gid === gid && r && r.committed) { net.odAt = n; toast(t('od.sent'), 1600); } }).catch(e => { console.warn(e); toast(t('ol.error'), 2000); });
+  });
+}
+function olDrawAnswer(yes) {
+  hideOverlay('#olDrawDlg');
+  if (!olDrawLive()) return;
+  Online.answerDraw(net.gid, yes).catch(e => { console.warn(e); toast(t('ol.error'), 2000); });
+}
+// after every game update: the header button, the opponent's dialog, "declined" for the offerer
+function olDrawSync() {
+  const g = net && net.game, live = olDrawLive(), by = live && g.offer && g.offer.by ? g.offer.by : null;
+  document.body.classList.toggle('ol-draw', live);
+  const b = $('#btnDraw'); if (b) b.classList.toggle('pend', by === Online.uid);
+  if (net) {
+    if (by === Online.uid && typeof g.offer.n === 'number') net.odAt = g.offer.n;
+    if (net.odBy === Online.uid && !by && live) toast(t('od.declined'), 2200);      // my offer was removed by the opponent (answer or move)
+    const key = by && by !== Online.uid ? net.gid + ':' + g.offer.n : null;
+    if (key && net.odKey !== key) { $('#olDrawHead').textContent = t('od.head'); $('#olDrawText').textContent = t('od.got'); showOverlay('#olDrawDlg'); }
+    net.odKey = key; net.odBy = by;
+  }
+  if (!by || by === Online.uid) hideOverlay('#olDrawDlg');
+}
+$('#olDrawNo').onclick = () => olDrawAnswer(false);
+$('#olDrawYes').onclick = () => olDrawAnswer(true);
+$('#btnDraw').onclick = () => { if (settings.mode === 'online') olDrawOffer(); else playerDraw(); };
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (settings.mode === 'online') return;
@@ -2464,7 +2512,7 @@ function leaveOnlineGame() {
   if (!net.spectate) olLiveClear();
   net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
   const wasOver = net.over;
-  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender();
+  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender(); olDrawSync();
   if (settings.mode === 'online') settings.mode = 'pvp';
   gameOverShown = gameOver(moves.length) || !!wasOver;
   if (olOn() && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
@@ -2507,6 +2555,7 @@ function onNetGame(g) {
   } else renderInfo();
   if (!spec && g.status === 'play' && ms.length === moves.length) netMarkOver();
   if (g.status !== 'play' && !net.done) finishOnline(g);
+  olDrawSync();
   if (net && net.done) olAfter();
 }
 // a finished position on the board (mate, stalemate, repetition, 50 moves, material) is reported by either player
@@ -2569,6 +2618,7 @@ async function finishOnline(g) {
   let winner, why;
   if (g.status === 'resign') { winner = g.loser === W ? P2 : P1; why = 'resign'; }
   else if (g.status === 'timeout') { winner = g.draw ? 0 : g.loser === W ? P2 : P1; why = g.draw ? 'timeDraw' : 'time'; }
+  else if (g.status === 'draw') { winner = 0; why = 'agree'; }          // draw offer accepted
   else { winner = typeof g.win === 'number' ? g.win : bst.over ? bst.winner || 0 : 0; why = g.reason || bst.why || 'mate'; }
   net.over = { over: true, winner, draw: !winner, why };
   gameOverShown = true; sel = null; closePromo();
