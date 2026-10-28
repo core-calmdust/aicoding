@@ -16,7 +16,7 @@
               ".write": "auth != null && auth.uid === $uid && newData.exists()",
               ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
               "$other": {
-                ".validate": false
+                ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
               }
             }
           }
@@ -35,7 +35,7 @@
               ".write": "auth != null && auth.uid === $uid && newData.exists()",
               ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
               "$other": {
-                ".validate": false
+                ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
               }
             }
           }
@@ -52,7 +52,7 @@
             ".write": "auth != null && auth.uid === $uid && newData.exists()",
             ".validate": "newData.hasChildren(['n', 's', 'st', 't']) && newData.child('n').isString() && newData.child('n').val().matches(/^[A-Z]{1,8}$/) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 1000000000000 && (newData.child('s').val() % 1 === 0) && newData.child('st').isNumber() && newData.child('st').val() >= 0 && newData.child('st').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 600000 && (!data.exists() || newData.child('s').val() > data.child('s').val())",
             "$other": {
-              ".validate": false
+              ".validate": "$other === 'n' || $other === 's' || $other === 'st' || $other === 't'"
             }
           }
         }
