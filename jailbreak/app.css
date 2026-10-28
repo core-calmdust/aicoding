@@ -492,6 +492,21 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
 .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
 .cc { border: 2.5px solid var(--ink); border-radius: 10px; background: #cfd6de; padding: 0; aspect-ratio: 1; overflow: hidden; }
 .cc svg { width: 100%; height: 100%; display: block; } .cc.on { box-shadow: 0 0 0 3px var(--org); background: var(--yel); }
+.cc { position: relative; }
+.cc .rr, .bkc > i { position: absolute; top: 2px; left: 2px; font: 800 9.5px/1 'Jost'; font-style: normal; padding: 2px 4px; border-radius: 4px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); }
+.r1 > .rr, .bkc.r1 > i { background: #cfe3f5; } .r2 > .rr, .bkc.r2 > i { background: #e3cff5; } .r3 > .rr, .bkc.r3 > i { background: linear-gradient(135deg, #ffe58a, #ffb83c); }
+.cc.r1 { background: #dbe7f2; } .cc.r2 { background: #e8dbf3; } .cc.r3 { background: #fff0c2; }
+.sortbar { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 10px; }
+.sgrp { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.sgrp > span { font-size: 12px; font-weight: 800; color: #5f5a52; margin-inline-end: 2px; }
+.sgrp button { border: 2px solid var(--ink); background: #fff; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-weight: 800; }
+.sgrp button.on { background: var(--navy); color: #fff; }
+.sgrp .rf.r1.on { background: #2f74b5; } .sgrp .rf.r2.on { background: #7a4fc9; } .sgrp .rf.r3.on { background: #d49a12; }
+.mh3 small { font: 700 12px 'Jost'; color: var(--mute); }
+/* collection cells keep one size whether the item is owned or still "?" */
+.bkc > svg, .bkc > span, .bkc > .skp, .bkc > .frp { width: 100%; aspect-ratio: 1; flex: none; }
+.bkc > span:not(.skp):not(.frp) { display: grid; place-items: center; font: 800 30px/1 'Jost'; }
+.bkc small { display: block; width: 100%; height: 1.4em; line-height: 1.4em; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .skgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
 .skb { border: 2.5px solid var(--ink); border-radius: 10px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; align-items: center; font-size: 12px; }
 .skb.on { box-shadow: 0 0 0 3px var(--org); }
