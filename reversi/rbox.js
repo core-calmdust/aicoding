@@ -77,7 +77,24 @@ const CSS = `
 @keyframes rbspin{to{transform:rotate(360deg)}}
 .rb-badge{position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:30;pointer-events:none;padding:3px 12px;border-radius:999px;font-size:12.5px;font-weight:700;letter-spacing:.04em;
   background:var(--rb-acc,#e2c275);color:var(--rb-acc-ink,#1b150a);box-shadow:0 2px 10px rgba(0,0,0,.35);display:none}
-html.rb-study .rb-badge{display:block}
+html.rb-study .rb-badge{display:block}/* larger, easier-to-read text (PC, 2026-10-28) */
+.rbox{font-size:15px;line-height:1.55;padding:10px 14px}
+.rb-ttl{font-size:16px}
+.rb-sub{font-size:13px}
+.rb-tag .tag{font-size:13px}
+.rb-acts button{font-size:13.5px;padding:5px 12px}
+.rb-acts .rb-restore{padding:5px 16px}
+.rb-body .rb-note{font-size:14px}
+.rb-head,.rb-row{grid-template-columns:24px minmax(58px,auto) 92px minmax(0,1fr)}
+.rb-head{font-size:12.5px}
+.rb-row{min-height:32px;font-size:15px}
+.rb-rk{width:22px;height:22px;font-size:12px}
+.rb-pl{font-size:11.5px}
+.rb-val small{font-size:12px}
+.rb-pv{font-size:14px}
+.rb-d{width:9px;height:9px}
+.rb-msg{font-size:14px}
+.rb-badge{font-size:14px}
 `;
 let A = null, root = null, badge = null, on = false, study = false, curKey = null, cands = null, final = false, cancel = null, timer = 0, hov = null, lastEx = '', lastList = '', baseN = 0;
 const $q = s => root.querySelector(s);

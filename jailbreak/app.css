@@ -17,7 +17,7 @@ body { font-family: var(--font); color: var(--ink); background: var(--bg); min-h
   radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.2), transparent 55%),
   radial-gradient(ellipse at 90% 100%, rgba(0,0,0,.12), transparent 60%),
   radial-gradient(ellipse 40% 30% at 70% 30%, rgba(60,55,50,.06), transparent 70%),
-  url("bg-concrete.webp?v=1") 0 0 / 720px 360px, #b9b6b0; }
+  url("bg-concrete.webp?v=2") 0 0 / 960px 960px, #b3b1ac; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; opacity: .45; }
 #app { max-width: 1240px; margin: 0 auto; padding: 10px 16px 40px; }
@@ -292,25 +292,38 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
 /* phones: one row above the board — moves/best · stars · hint · undo · restart */
 .gstat, .gbtns { display: flex; align-items: center; gap: 8px; }
 .gctl .gbtns { margin-inline-start: auto; }
-/* PC: top-aligned column as wide as the board frame. Title row with moves/best + stars on the right, buttons under the board */
+/* play screen (all widths): title row with moves/best (+ stars, clock) on the right, the board, then hint / undo / restart as three wide buttons.
+   PC: top-aligned column as wide as the board frame, buttons under the board. Phone: buttons at the bottom of the screen. */
+#play { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "btn btn" "info info"; column-gap: 8px; row-gap: 8px; }
+.gctl { display: contents; }
+.gbar { grid-area: bar; min-width: 0; } .gstat { grid-area: stat; justify-self: end; } #runInfo { grid-area: run; } .slbar { grid-area: sl; }
+#boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
+.gctl .gbtns { grid-area: btn; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0; gap: 8px; }
+.gctl .gbtn { width: auto; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 14px; } .gbtn .gl { display: inline; white-space: nowrap; }
+@media (max-width: 760px) {
+  #play { grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "info info" "fill fill" "btn btn"; grid-template-rows: auto auto auto auto auto auto 1fr auto;
+    min-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+  .gctl .gbtns { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .gtitle { flex-wrap: nowrap; } .gtitle small { display: none; }
+  .gbar { gap: 6px; } .gbar .ib { width: 38px; height: 38px; flex: none; }
+  .gstat { gap: 5px; } .hst i { font-size: 15px; }
+  .gctl .ns, .gctl .lim, .gctl .gclock { min-width: 58px !important; height: 42px !important; padding: 1px 7px 2px !important; }
+  .gctl .ns b, .gctl .gclock b { font-size: 19px !important; } .gctl small { font-size: 9.5px !important; }
+}
 @media (min-width: 761px) {
-  #play { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "bar stat" "run run" "sl sl" "board board" "tilt tilt" "btn btn" "info info"; column-gap: 12px; row-gap: 10px; }
-  .gctl { display: contents; }
-  .gbar { grid-area: bar; } .gstat { grid-area: stat; justify-self: end; } #runInfo { grid-area: run; } .slbar { grid-area: sl; }
-  #boardWrap { grid-area: board; padding: 0; } .tpad { grid-area: tilt; } #gInfo { grid-area: info; }
-  .gctl .gbtns { grid-area: btn; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; gap: 12px; }
+  #play { column-gap: 12px; row-gap: 10px; }
+  .gctl .gbtns { gap: 12px; }
   .gtitle b { font-size: 22px; }
   .gctl .ns, .gctl .lim, .gctl .gclock { height: 54px; min-width: 96px; padding: 2px 16px 3px; } .gctl .gclock b { font-size: 30px; }
   .gctl small { font-size: 12.5px; }
   .gctl .ns b { font-size: 30px; } .gctl .ns b i { font-size: 20px; } .gctl .ns b em { font-size: 22px; } .gctl .lim b { font-size: 26px; }
   .hst i { font-size: 28px; }
-  .gbtn { width: auto; height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 16px; } .gbtn .ico { width: 26px; height: 26px; }
-  .gbtn .gl { display: inline; white-space: nowrap; }
+  .gctl .gbtn { height: 52px; gap: 8px; font-size: 16px; } .gctl .gbtn .ico { width: 26px; height: 26px; }
 }
 
 /* ---------------- board ---------------- */
 .board { --cs: 56px; flex: none; --floor: #d8d2c4; --floor2: #cdc6b6; --frame: #3a3f4a; --frame2: #555c6a;
-  position: relative; border-radius: 4px; box-shadow: 0 0 0 calc(var(--cs) * .32) var(--frame), 0 0 0 calc(var(--cs) * .32 + 3px) var(--ink), 8px 10px 0 calc(var(--cs) * .32 + 3px) rgba(0,0,0,.35); margin: calc(var(--cs) * .36); }
+  position: relative; border-radius: 4px; box-shadow: 0 0 0 calc(var(--cs) * .32) var(--frame), 0 0 0 calc(var(--cs) * .32 + 3px) var(--ink), 6px 6px 0 calc(var(--cs) * .32 + 3px) var(--ink); margin: calc(var(--cs) * .36); }
 .board.bin { animation: bin .35s ease-out; }
 .floor { position: absolute; inset: 0; border-radius: 3px; background-color: var(--floor);
   background-image: linear-gradient(var(--floor2) 2px, transparent 2px), linear-gradient(90deg, var(--floor2) 2px, transparent 2px), radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 60%);
@@ -479,6 +492,21 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
 .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
 .cc { border: 2.5px solid var(--ink); border-radius: 10px; background: #cfd6de; padding: 0; aspect-ratio: 1; overflow: hidden; }
 .cc svg { width: 100%; height: 100%; display: block; } .cc.on { box-shadow: 0 0 0 3px var(--org); background: var(--yel); }
+.cc { position: relative; }
+.cc .rr, .bkc > i { position: absolute; top: 2px; left: 2px; font: 800 9.5px/1 'Jost'; font-style: normal; padding: 2px 4px; border-radius: 4px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); }
+.r1 > .rr, .bkc.r1 > i { background: #cfe3f5; } .r2 > .rr, .bkc.r2 > i { background: #e3cff5; } .r3 > .rr, .bkc.r3 > i { background: linear-gradient(135deg, #ffe58a, #ffb83c); }
+.cc.r1 { background: #dbe7f2; } .cc.r2 { background: #e8dbf3; } .cc.r3 { background: #fff0c2; }
+.sortbar { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 10px; }
+.sgrp { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.sgrp > span { font-size: 12px; font-weight: 800; color: #5f5a52; margin-inline-end: 2px; }
+.sgrp button { border: 2px solid var(--ink); background: #fff; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-weight: 800; }
+.sgrp button.on { background: var(--navy); color: #fff; }
+.sgrp .rf.r1.on { background: #2f74b5; } .sgrp .rf.r2.on { background: #7a4fc9; } .sgrp .rf.r3.on { background: #d49a12; }
+.mh3 small { font: 700 12px 'Jost'; color: var(--mute); }
+/* collection cells keep one size whether the item is owned or still "?" */
+.bkc > svg, .bkc > span, .bkc > .skp, .bkc > .frp { width: 100%; aspect-ratio: 1; flex: none; }
+.bkc > span:not(.skp):not(.frp) { display: grid; place-items: center; font: 800 30px/1 'Jost'; }
+.bkc small { display: block; width: 100%; height: 1.4em; line-height: 1.4em; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .skgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
 .skb { border: 2.5px solid var(--ink); border-radius: 10px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; align-items: center; font-size: 12px; }
 .skb.on { box-shadow: 0 0 0 3px var(--org); }
@@ -593,7 +621,7 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
   .lg1 { font-size: 21px; -webkit-text-stroke-width: 1.3px; text-shadow: 2px 2px 0 var(--ink); } .lg2 { font-size: 11px; padding: 3px 6px; border-width: 2px; letter-spacing: .06em; }
   .logo { gap: 4px; } .series { font-size: 10px; padding: 3px 6px; }
   .dlv { grid-template-columns: 60px minmax(0, 1fr); gap: 8px 10px; } .dlb { grid-column: 1 / -1; flex-direction: row; } .dlb .btn:first-child { flex: 1; } .dlb .btn.sm { width: auto; flex: none; padding-inline: 18px; } .dic svg { width: 60px; height: 60px; }
-  .gctl { gap: 6px; } .gctl .ns, .gctl .lim, .gctl .gclock { min-width: 66px; padding: 1px 8px 2px; height: 44px; } .gbtn { width: 44px; height: 44px; } .hst i { font-size: 19px; }
+
   .gitems { grid-template-columns: repeat(4, 1fr); }
   .acard p { margin-top: 26px; }
 }

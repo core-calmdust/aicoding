@@ -262,6 +262,12 @@ const floorLabel = j => `${Math.floor(j / PER) + 1}F-${(j % PER) + 1}`;
 // long course names shrink until they fit beside the level chip (all languages)
 function fitNames(el) { requestAnimationFrame(() => $$('.ctl b', el).forEach(b => { b.style.fontSize = ''; let f = parseFloat(getComputedStyle(b).fontSize); while (b.scrollWidth > b.clientWidth + 1 && f > 11) { f -= .5; b.style.fontSize = f + 'px'; } })); }
 addEventListener('resize', () => { const el = $('#coursePanel'); if (el && !el.closest('[hidden]')) fitNames(el); });
+// the first time you play a floor of a course, its story comes first
+function storyThen(co, j, go) {
+  const f = Math.floor(j / PER), k = 'sy_' + co + '_' + f;
+  if (DB.tut[k] || !floorOpenC(co, f)) return go();
+  DB.tut[k] = 1; save(); showStory(f, go, co);
+}
 function renderCourses() {
   const el = $('#coursePanel'), mix = COURSES().filter(c => c.kind === 'mix'), cls = COURSES().filter(c => c.kind === 'classic');
   el.innerHTML = `<section class="card panel secbox sb-mix"><div class="ptag">${esc(t('co.mix.h'))}</div><p class="secd">${esc(t('co.mix.d'))}</p><div class="tgrid">${mix.map(courseCard).join('')}</div></section>
@@ -269,7 +275,7 @@ function renderCourses() {
   // a course card starts its next stage straight away (the stage list opens from the result screen's "list")
   // while nothing on the course is cleared yet, its story comes first (then the stage starts)
   fitNames(el);
-  $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; if (!courseRecs(id).some(v => v)) showStory(Math.floor(j / PER), () => startStage(id, j), id); else startStage(id, j); }; });
+  $$('[data-co]', el).forEach(b => { b.onclick = () => { const id = b.dataset.co, j = +b.dataset.j; storyThen(id, j, () => startStage(id, j)); }; });
 }
 // stage tiles in sections of 10 (course: floors 1F…10F, mode: BLOCK A…E); a section opens once 6 of the one before are cleared
 function stageTiles(src, recs) {
@@ -280,9 +286,9 @@ function stageTiles(src, recs) {
     const open = secOpenQ(recs, s * PER), md = secMedal(recs, s), cl = recs.slice(s * PER, s * PER + PER).filter(v => v).length;
     const need = s ? Math.max(0, UNLOCK - recs.slice((s - 1) * PER, s * PER).filter(v => v).length) : 0;
     const sup = L.slice(s * PER, s * PER + PER).some(r => r.o >= SUPER);
-    const head = isC ? `<b class="fln">${esc(t('fl.' + s))}</b><button class="ib sm sybtn" data-sy="${s}" aria-label="${esc(t('sy.btn'))}">${A.ICON.book}</button>` : `<b>BLOCK ${String.fromCharCode(65 + s)}</b><span class="tier">${esc(t('tier.' + Math.min(s, 4)))}</span>`;
+    const head = isC ? (open ? `<b class="fln">${esc(floorName(src, s))}</b><button class="ib sm sybtn" data-sy="${s}" aria-label="${esc(t('sy.btn'))}">${A.ICON.book}</button>` : `<b class="fln">${s + 1}F ？？？</b>`) : `<b>BLOCK ${String.fromCharCode(65 + s)}</b><span class="tier">${esc(t('tier.' + Math.min(s, 4)))}</span>`;
     html += `<section class="stg tier${s}"><div class="stgh">${head}${sup ? `<span class="supc">${esc(t('u.super'))}</span>` : ''}<span class="cnt">${cl}/${PER}</span>${md ? `<i class="medal m${md}"></i>` : ''}</div>`;
-    if (!open) html += `<div class="locked">${A.ICON.lock}${esc(isC ? t('st.lockF', { f: t('fl.' + (s - 1)), n: need }) : t('st.lock', { s: String.fromCharCode(64 + s), n: need }))}</div>`;
+    if (!open) html += `<div class="locked">${A.ICON.lock}${esc(isC ? t('st.lockF', { f: floorName(src, s - 1), n: need }) : t('st.lock', { s: String.fromCharCode(64 + s), n: need }))}</div>`;
     else {
       html += '<div class="tiles">';
       for (let j = s * PER; j < s * PER + PER; j++) {
@@ -301,14 +307,21 @@ function renderCourse(id) {
   el.innerHTML = `<div class="thead" style="--tc:${COURSE_COL[id]}"><button class="btn sm" id="flBack">${A.ICON.back}${esc(t('u.list'))}</button><span class="tic">${courseIcon(id)}</span>
     <div><h2>${esc(t('cs.' + id))} ${lvChip(c.lv)}</h2><p>${esc(t('cs.' + id + '.d'))}</p><button class="btn sm org" id="coCont">${A.ICON.play}${esc(t(done ? 'u.cont' : 'u.start1'))} <small>${floorLabel(j)}</small></button></div><div class="ring" style="--p:${done / recs.length * 100}"><b>${done}</b><small>/${recs.length}</small></div></div>` + stageTiles(id, recs);
   $('#flBack').onclick = closeList;
-  $('#coCont').onclick = () => startStage(id, j);
-  $$('[data-sy]', el).forEach(b => { b.onclick = e => { e.stopPropagation(); showStory(+b.dataset.sy); }; });
-  $$('.tile', el).forEach(b => { b.onclick = () => startStage(id, +b.dataset.j); });
+  $('#coCont').onclick = () => storyThen(id, j, () => startStage(id, j));
+  $$('[data-sy]', el).forEach(b => { b.onclick = e => { e.stopPropagation(); showStory(+b.dataset.sy, null, id); }; });
+  $$('.tile', el).forEach(b => { b.onclick = () => { const jj = +b.dataset.j; storyThen(id, jj, () => startStage(id, jj)); }; });
 }
 // the floor's story: an illustration of the location + a few lines (shown the first time you play a stage on that floor)
-function showStory(f, then, cid = courseOpenId) {
-  const body = modal(`<div class="story" style="--tc:${COURSE_COL[cid] || '#5a6b7f'}"><div class="syfig">${window.JBStory ? JBStory.scene(f, A.inmateSVG(DB.icon)) : ''}<span class="sytag">${esc(t('sy.tag'))} ${f + 1}F</span></div>
-    <h2 class="mh">${esc(t('fl.' + f))}</h2><p class="sytx">${esc(t('sy.' + f))}</p><div class="mbtns"><button class="btn big org" id="syGo">${A.ICON.play}${esc(t('sy.go'))}</button></div></div>`, 'mwide');
+// per-course stories (stories.js): floor names and texts in 10 languages; falls back to the shared floor texts
+const story = (co, f) => (window.JB_STORIES && JB_STORIES[co] && JB_STORIES[co][f]) || null;
+const L10 = o => o ? (o[lang] || o.en || o.ja) : '';
+const floorName = (co, f) => { const s = story(co, f); return s ? L10(s.fl) : t('fl.' + f); };
+// a floor's story can be read once that floor is unlocked
+const floorOpenC = (co, f) => secOpenQ(courseRecs(co), f * PER);
+function showStory(f, then, co = courseOpenId) {
+  const S = story(co, f), sc = S ? S.sc : f, tx = S ? L10(S.tx) : t('sy.' + f);
+  const body = modal(`<div class="story" style="--tc:${COURSE_COL[co] || '#5a6b7f'}"><div class="syfig">${window.JBStory ? JBStory.scene(sc, A.inmateSVG(DB.icon)) : ''}<span class="sytag">${esc(t('sy.tag'))} ${f + 1}F</span></div>
+    <h2 class="mh">${esc(co ? t('cs.' + co) + ' · ' : '')}${esc(floorName(co, f))}</h2><p class="sytx">${esc(tx)}</p><div class="mbtns"><button class="btn big org" id="syGo">${A.ICON.play}${esc(t('sy.go'))}</button></div></div>`, 'mwide');
   afterModal = then || null;
   $('#syGo', body).onclick = closeModal;
   SND.page && SND.page();
@@ -419,9 +432,10 @@ const boardEl = () => $('#board');
 // when the screen is too short for it. PC: as large as the window height allows (up to 860px across), centred.
 function cellSize() {
   const P = G.P, phone = innerWidth < 760, twin = P.pc.some(p => p.t === 'Q');
-  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top', ...(phone ? ['.gstat'] : [])].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
+  const used = ['.gbar', '.gbtns', '#gInfo', '#runInfo', '#tiltPad', '.top'].reduce((a, q) => { const e = $(q); return a + (e && !e.hidden && e.offsetParent ? e.offsetHeight + 8 : 0); }, 0);
   const H = Math.max(240, innerHeight - used - (phone ? 26 : 84));
-  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min(W / (P.w + 1.2), H / (P.h + (twin ? 1.3 : .8))))); }
+  // phone: the frame is centred; a little room on both sides lets the EXIT sign stick out on the right
+  if (phone) { const W = Math.min(innerWidth, 560) - 16; return Math.max(28, Math.floor(Math.min((W - 8) / (P.w + 1.24), H / (P.h + (twin ? 1.3 : .8))))); }
   // PC: the frame (board + .32 cell a side) is as wide as the play column; the EXIT sign may stick out on the right
   const W = Math.min(innerWidth - 80, 900);
   return Math.max(36, Math.floor(Math.min((W - 6) / (P.w + .72), H / (P.h + (twin ? 1.3 : .76)))));
@@ -442,7 +456,7 @@ function buildBoard() {
   b.style.setProperty('--cs', cs + 'px'); b.style.width = P.w * cs + 'px'; b.style.height = P.h * cs + 'px';
   b.dataset.mode = G.m; b.dataset.w = P.w;
   const wr = $('#boardWrap'), phone = innerWidth < 760;
-  wr.style.paddingRight = phone ? Math.round(cs * .46) + 'px' : ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
+  wr.style.paddingRight = ''; wr.style.paddingBottom = P.pc.some(p => p.t === 'Q') ? Math.round(cs * .5) + 'px' : '';
   // PC: the play column (title row, buttons, rule line) takes the width of the board's frame
   $('#play').style.maxWidth = phone ? '' : Math.max(440, Math.round(cs * (P.w + .72)) + 6) + 'px';
   let html = '<div class="floor"></div><div class="fxl">';
@@ -688,7 +702,7 @@ function win() {
     const recsB = recsOfList(listOf(G.src));
     if (stars > old) { DB.st[key] = stars; coins = addCoin((stars - old) * 8 + (old ? 0 : 12) + (G.rec.o >= SUPER ? (stars - old) * 4 : 0)); }
     const recsA = recsOfList(listOf(G.src)), jj = G.j, s = (jj / PER) | 0, N = recsA.length;
-    const ev = [], secName = k => G.isC ? t('fl.' + k) : 'BLOCK ' + String.fromCharCode(65 + k);
+    const ev = [], secName = k => G.isC ? floorName(G.src, k) : 'BLOCK ' + String.fromCharCode(65 + k);
     if (secMedal(recsA, s) > secMedal(recsB, s)) ev.push(t('ev.medalS', { s: secName(s) }));
     if ((s + 1) * PER < N && !secOpen(recsB, (s + 1) * PER) && secOpen(recsA, (s + 1) * PER)) ev.push(t('ev.unlockS', { s: secName(s + 1) }));
     if (recsA.every(v => v) && !recsB.every(v => v)) ev.push(t('ev.comp'));
@@ -920,18 +934,37 @@ function tutorial() {
   };
   draw();
 }
+// character lists (profile icons, collection): rarity filter + sort, remembered per viewer
+const SORTS = ['no', 'rar', 'rarA'];
+function sortList(items, rarOf, idOf) {
+  const m = DB.set.csort || 'no', f = DB.set.cflt ?? -1;
+  const a = items.filter(x => f < 0 || rarOf(x) === f);
+  return a.sort((x, y) => m === 'rar' ? rarOf(y) - rarOf(x) || idOf(x) - idOf(y) : m === 'rarA' ? rarOf(x) - rarOf(y) || idOf(x) - idOf(y) : idOf(x) - idOf(y));
+}
+function sortBar() {
+  const m = DB.set.csort || 'no', f = DB.set.cflt ?? -1;
+  return `<div class="sortbar"><div class="sgrp"><span>${esc(t('so.r'))}</span>${[-1, 0, 1, 2, 3].map(r => `<button class="rf r${r} ${r === f ? 'on' : ''}" data-cf="${r}">${r < 0 ? esc(t('so.all')) : A.RAR[r]}</button>`).join('')}</div>
+    <div class="sgrp"><span>${esc(t('so.label'))}</span>${SORTS.map(k => `<button class="${k === m ? 'on' : ''}" data-cs="${k}">${esc(t('so.' + k))}</button>`).join('')}</div></div>`;
+}
+// re-render a dialog without losing its scroll position
+function keepScroll(fn) { const y = $('#modalBody').scrollTop; fn(); $('#modalBody').scrollTop = y; }
+function bindSort(body, again) {
+  $$('[data-cs]', body).forEach(b => { b.onclick = () => { DB.set.csort = b.dataset.cs; save(); keepScroll(again); }; });
+  $$('[data-cf]', body).forEach(b => { b.onclick = () => { DB.set.cflt = +b.dataset.cf; save(); keepScroll(again); }; });
+}
 function openProfile() {
   const pend = openProfile.p || (openProfile.p = { icon: DB.icon, skin: DB.skin, frame: DB.frame, name: DB.name });
-  const owned = Object.keys(DB.own).map(Number).sort((a, b) => a - b);
+  const owned = sortList(Object.keys(DB.own).map(Number), id => A.INMATES[id].rar, id => id);
   const body = modal(`<h2 class="mh">${esc(t('pf.edit'))}</h2><div class="pfhead"><div class="pic big">${picHTML(pend.icon)}</div><div class="pfn"><label class="fld"><span>${esc(t('pf.name'))}</span><input id="pfName" maxlength="12" value="${esc(pend.name)}" placeholder="${esc(t('pf.ph'))}"></label><p class="note">${esc(t('pf.note'))}</p></div></div>
-    <h3 class="mh3">${esc(t('pf.icon'))}</h3><div class="cgrid">${owned.map(id => `<button class="cc ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.inmateSVG(id)}</button>`).join('')}</div>
+    <h3 class="mh3">${esc(t('pf.icon'))} <small>${Object.keys(DB.own).length}/${A.INMATES.length}</small></h3>${sortBar()}<div class="cgrid">${owned.map(id => `<button class="cc r${A.INMATES[id].rar} ${id === pend.icon ? 'on' : ''}" data-ic="${id}">${A.inmateSVG(id)}<i class="rr">${A.RAR[A.INMATES[id].rar]}</i></button>`).join('') || `<p class="note">${esc(t('so.none'))}</p>`}</div>
     <h3 class="mh3">${esc(t('pf.skin'))}</h3><div class="skgrid">${SK.FLOORS.filter(s => DB.skinOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.skin ? 'on' : ''}" data-sk="${s.id}"><span class="skp" data-skin="${s.id}"></span><b>${esc(skinName(s.id))}</b></button>`).join('')}</div>
     <h3 class="mh3">${esc(t('pf.frame'))}</h3><div class="skgrid">${SK.FRAMES.filter(s => DB.frameOwn.includes(s.id)).map(s => `<button class="skb ${s.id === pend.frame ? 'on' : ''}" data-fr="${s.id}"><span class="frp" data-frame="${s.id}"></span><b>${esc(frameName(s.id))}</b></button>`).join('')}</div>
     <div class="mbtns"><button class="btn big org" id="pfSave">${esc(t('u.save'))}</button></div>`, 'mwide');
   const keep = () => { pend.name = $('#pfName').value; };
-  $$('[data-ic]', body).forEach(b => { b.onclick = () => { keep(); pend.icon = +b.dataset.ic; openProfile(); }; });
-  $$('[data-sk]', body).forEach(b => { b.onclick = () => { keep(); pend.skin = b.dataset.sk; openProfile(); }; });
-  $$('[data-fr]', body).forEach(b => { b.onclick = () => { keep(); pend.frame = b.dataset.fr; openProfile(); }; });
+  $$('[data-ic]', body).forEach(b => { b.onclick = () => { keep(); pend.icon = +b.dataset.ic; keepScroll(openProfile); }; });
+  bindSort(body, () => { keep(); openProfile(); });
+  $$('[data-sk]', body).forEach(b => { b.onclick = () => { keep(); pend.skin = b.dataset.sk; keepScroll(openProfile); }; });
+  $$('[data-fr]', body).forEach(b => { b.onclick = () => { keep(); pend.frame = b.dataset.fr; keepScroll(openProfile); }; });
   $('#pfSave').onclick = () => { DB.name = $('#pfName').value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); DB.icon = pend.icon; DB.skin = pend.skin; DB.frame = pend.frame; openProfile.p = null; save(); applySkin(); pushTotals(); closeModal(); };
   $('#modalX').addEventListener('click', () => { openProfile.p = null; }, { once: true });
 }
@@ -981,13 +1014,14 @@ function pull(n) {
 }
 function openBook(tab = 'c') {
   const own = { c: id => !!DB.own[id], s: id => DB.skinOwn.includes(id), f: id => DB.frameOwn.includes(id) };
-  const cells = tab === 'c' ? A.INMATES.map(c => `<div class="bkc ${DB.own[c.id] ? '' : 'no'} r${c.rar}">${DB.own[c.id] ? A.inmateSVG(c.id) : '<span>?</span>'}<i>${A.RAR[c.rar]}</i><small>No.${String(c.id + 1).padStart(3, '0')}</small></div>`)
-    : (tab === 's' ? SK.FLOORS : SK.FRAMES).map(s => { const has = own[tab](s.id), it = { t: tab, id: s.id };
+  const cells = tab === 'c' ? sortList(A.INMATES.slice(), c => c.rar, c => c.id).map(c => `<div class="bkc ${DB.own[c.id] ? '' : 'no'} r${c.rar}">${DB.own[c.id] ? A.inmateSVG(c.id) : '<span>?</span>'}<i>${A.RAR[c.rar]}</i><small>No.${String(c.id + 1).padStart(3, '0')}</small></div>`)
+    : sortList((tab === 's' ? SK.FLOORS : SK.FRAMES).map((s, i) => Object.assign({ i }, s)), s => s.rar, s => s.i).map(s => { const has = own[tab](s.id), it = { t: tab, id: s.id };
       return `<div class="bkc sk ${has ? '' : 'no'} r${s.rar}">${has ? itemSVG(it) : '<span>?</span>'}<i>${A.RAR[s.rar]}</i><small>${has ? esc(itemName(it)) : '???'}</small></div>`; });
   const nC = Object.keys(DB.own).length, nS = DB.skinOwn.length, nF = DB.frameOwn.length, tot = A.INMATES.length + SK.FLOORS.length + SK.FRAMES.length;
   const body = modal(`<h2 class="mh">${esc(t('bk.title'))}</h2><p class="note">${esc(t('bk.d', { n: nC + nS + nF, m: tot }))}</p>
-    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${SK.FLOORS.length}</small></button><button class="${tab === 'f' ? 'on' : ''}" data-bt="f">${esc(t('bk.f'))} <small>${nF}/${SK.FRAMES.length}</small></button></div><div class="bkgrid ${tab}">${cells.join('')}</div>`, 'mwide');
+    <div class="mtabs"><button class="${tab === 'c' ? 'on' : ''}" data-bt="c">${esc(t('bk.c'))} <small>${nC}/${A.INMATES.length}</small></button><button class="${tab === 's' ? 'on' : ''}" data-bt="s">${esc(t('bk.s'))} <small>${nS}/${SK.FLOORS.length}</small></button><button class="${tab === 'f' ? 'on' : ''}" data-bt="f">${esc(t('bk.f'))} <small>${nF}/${SK.FRAMES.length}</small></button></div>${sortBar()}<div class="bkgrid ${tab}">${cells.join('') || `<p class="note">${esc(t('so.none'))}</p>`}</div>`, 'mwide');
   $$('[data-bt]', body).forEach(b => { b.onclick = () => openBook(b.dataset.bt); });
+  bindSort(body, () => openBook(tab));
 }
 // --- rankings
 async function openRank(tab = 'm') {
