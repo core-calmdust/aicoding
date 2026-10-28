@@ -6,15 +6,18 @@ const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
 const FELTS = ['green', 'blue', 'wine', 'charcoal', 'teal', 'purple', 'walnut', 'linen'];
-const BACKS = ['red', 'blue', 'crimson', 'navy', 'forest', 'wave', 'stars', 'deco'];
+const BACKS = ['red', 'blue', 'ornate', 'ornateBlack', 'mosaic', 'crimson', 'navy', 'stars'];
+const COURTS = ['classic', 'antique', 'flat'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'red', face: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'green', back: 'red', face: 'classic', court: 'classic', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
 if (!BACKS.includes(D.set.back)) { D.set.back = 'red'; document.documentElement.dataset.back = 'red'; }
+if (!COURTS.includes(D.set.court)) D.set.court = 'classic';
+document.documentElement.dataset.court = D.set.court;
 D.stats = D.stats || {}; D.daily = D.daily || {}; D.bank = D.bank || 0;
 function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
 const set = D.set;
@@ -453,8 +456,8 @@ function gIcon(v) { return GICON[v] || '<svg viewBox="0 0 54 44"><rect x="12" y=
 function renderSide() {
   if (!st) return;
   const r = rec(st.v, statKey()), dk = dailyKey(), dd = D.daily[dk] || {};
-  let h = `<div class="card"><h3>${esc(t('side.stats'))}<span class="h3s">${esc(vName(st.v))}・${esc(diffLabel())}</span></h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><button type="button" class="sd" data-act="copy">${esc(t('copy'))}</button><span class="sp"></span><button type="button" class="sbtn" data-act="restart" id="sRestart">↺ ${esc(t('restart'))}</button><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
-  h += `<div class="card"><h3>${esc(t('side.daily'))}<span class="h3s">${dk}</span></h3><div class="daily-list">` + S.ORDER.map(v => `<div class="dl-item"><span class="dl-ico">${gIcon(v)}</span><span class="nm">${esc(vName(v))}</span>${dd[v] ? `<span class="ok">✓ ${fmtT(dd[v].t)}</span>` : ''}<button class="sbtn${dd[v] ? '' : ' go'}" data-daily="${v}">${esc(t(dd[v] ? 'daily.again' : 'daily.play'))}</button></div>`).join('') + `</div><div class="deal-row">${esc(t('daily.streak', { n: dailyStreak() }))}</div></div>`;
+  let h = `<div class="card"><h3>${esc(t('side.daily'))}<span class="h3s">${dk}</span></h3><div class="daily-list">` + S.ORDER.map(v => `<div class="dl-item"><span class="dl-ico">${gIcon(v)}</span><span class="nm">${esc(vName(v))}</span>${dd[v] ? `<span class="ok">✓ ${fmtT(dd[v].t)}</span>` : ''}<button class="sbtn${dd[v] ? '' : ' go'}" data-daily="${v}">${esc(t(dd[v] ? 'daily.again' : 'daily.play'))}</button></div>`).join('') + `</div><div class="deal-row">${esc(t('daily.streak', { n: dailyStreak() }))}</div></div>`;
+  h += `<div class="card"><h3>${esc(t('side.stats'))}<span class="h3s">${esc(vName(st.v))}・${esc(diffLabel())}</span></h3><div class="srow"><div><small>${esc(t('st.played'))}</small><b>${r.n}</b></div><div><small>${esc(t('st.rate'))}</small><b>${pct(r)}</b></div><div><small>${esc(t('st.streak'))}</small><b>${r.cur}</b></div><div><small>${esc(t('st.time'))}</small><b>${r.bt ? fmtT(r.bt) : '—'}</b></div></div><div class="deal-row">${esc(t('info.deal'))} <code>#${st.no}</code><button type="button" class="sd" data-act="copy">${esc(t('copy'))}</button><span class="sp"></span><button type="button" class="sbtn" data-act="restart" id="sRestart">↺ ${esc(t('restart'))}</button><button class="sbtn" id="sStats">${esc(t('st.more'))}</button></div></div>`;
   h += `<div class="card keys-card"><h3>${esc(t('side.keys'))}</h3><div class="keys">${t('keys')}</div></div>`;
   $('#side').innerHTML = h;
   $('#sStats').onclick = () => openStats(st.v);
@@ -519,7 +522,8 @@ function designHtml() {
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
   const face = FACES.map(f => `<button type="button" class="tile${set.face === f ? ' sel' : ''}" data-face="${f}"><span class="pv">${facePv(f)}</span><small>${esc(t('face.' + f))}</small></button>`).join('');
-  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.face'))}</span><div class="tiles faces">${face}</div></div>`;
+  const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${k === 'flat' ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
+  return `<div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles">${felt}</div></div><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles">${back}</div></div><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div><div class="sec"><span class="lab">${esc(t('new.face'))}</span><div class="tiles faces">${face}</div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
@@ -530,6 +534,7 @@ function facePv(f) {   // two small real cards rendered in that face style
 }
 function wireDesign(root) {
   root.querySelectorAll('[data-felt]').forEach(b => b.onclick = () => { set.felt = b.dataset.felt; document.documentElement.dataset.felt = set.felt; save(); root.innerHTML = designHtml(); wireDesign(root); });
+  root.querySelectorAll('[data-court]').forEach(b => b.onclick = () => { set.court = b.dataset.court; document.documentElement.dataset.court = set.court; Table.all.forEach(x => x.faces()); save(); root.innerHTML = designHtml(); wireDesign(root); });
   root.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { set.back = b.dataset.back; document.documentElement.dataset.back = set.back; save(); root.innerHTML = designHtml(); wireDesign(root); });
   root.querySelectorAll('[data-face]').forEach(b => b.onclick = () => { set.face = b.dataset.face; document.documentElement.dataset.face = set.face; Table.applyFace(); save(); root.innerHTML = designHtml(); wireDesign(root); });
   // back previews show their own design regardless of the current one
@@ -557,7 +562,7 @@ function openSettings() {
     `<div class="sec"><span class="lab">${esc(t('set.tap'))}</span>${seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')}</div>` +
     `<div class="sec"><span class="lab">${esc(t('set.speed'))}</span>${seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')}</div>` +
     `<div class="sec">${ch('anim', t('set.anim'))}${ch('hl', t('set.hl'))}${ch('timer', t('set.timer'))}${ch('score', t('set.score'))}${ch('left', t('set.left'))}${ch('sound', t('set.sound'))}</div>` +
-    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a></p>`;
+    designHtml() + `<p class="credit">${esc(t('credit'))}<br><a href="https://www.figma.com/community/file/1272002619371253628/classic-playing-cards" target="_blank" rel="noopener">Classic Playing Cards</a> by Alborz Heydaryan（Figma Community）・<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a><br>${esc(t('credit2'))}<br><a href="https://www.magnific.com/free-vector/illustration-online-gambling_3139780.htm" target="_blank" rel="noopener">Illustration online gambling</a>・<a href="https://www.magnific.com/free-vector/poker-cards-icons-collection_1045019.htm" target="_blank" rel="noopener">Poker cards icons collection</a>・<a href="https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943765.htm" target="_blank" rel="noopener">Hand drawn playing card back design</a>：Designed by Freepik</p>`;
   const body = $('#setBody');
   body.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { set.auto = b.dataset.auto; save(); openSettings(); });
   body.querySelectorAll('[data-tap]').forEach(b => b.onclick = () => { set.tap = b.dataset.tap; TB.select(null); save(); openSettings(); });
