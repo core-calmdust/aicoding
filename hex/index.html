@@ -726,7 +726,7 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
 .evalbar .fill{background:linear-gradient(90deg,var(--pr3),var(--pr2))}
 .hb .hb-info .hb-chip{flex:none}
 @media (max-width: 1600px){.hb .hb-info .hb-chip.opt{display:none}}
-@media (max-width: 1360px){.hb .hb-info .hb-chip.cnt{display:none}}
+@media (max-width: 1520px){.hb .hb-info .hb-chip.cnt{display:none}}
 .player .count small{white-space:nowrap}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1){ .player .count small{display:block;margin:4px 0 0;font-size:12px;line-height:1.3;white-space:normal} }
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
@@ -776,7 +776,7 @@ html[data-pcs=sun]{--pr1:#ffe08a;--pr2:#f0a020;--pr3:#a8600a;--pr4:#4a2600;--pb1
    height and the width the column leaves allow (it stands upright when that makes it larger, see app.js pcRot); the column is
    as tall as the board and scrolls inside when its cards need more room; on wide screens the pair stays centred (2026-10-28).
    --rbx: the height the review box (rbox.js) takes under the board and the column while it is shown */
-html.pc2{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(18px, 1.8vw, 30px);--rw:360px;--rbx:0px;
+html.pc2{--pad:clamp(14px, 2.6vmin, 30px);--padx:clamp(16px, 2vw, 32px);--gap:clamp(18px, 1.8vw, 30px);--rw:clamp(300px, 22vw, 380px);--rbx:0px;
   --cell:max(14px, min((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rbx)) / var(--HU), (100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / var(--WU), 76px))}
 html.pc2 .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:start;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--ttop)) var(--padx) var(--pad)}
 html.pc2 .side{width:var(--rw);height:var(--fh);max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;container-type:normal}
@@ -789,11 +789,26 @@ html.pc2 .review-card.show{flex:1.4 1 0;min-height:120px}
 html.pc2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:100px}
 html.pc2 .lesson-actions{flex-wrap:wrap}
 html.pc2 .ol-watch{flex:none}
+/* PC wide layout (app.js pcRot / placePlayers, 2026-10-28): the board is drawn as a diamond (long diagonal across, like Mancala's
+   wide board); the player plates sit in its empty top corners (Red by its top-left edge, Blue by its top-right edge) and the
+   swap button / prompt in its bottom corners, so the info column holds evaluation, review and kifu */
+html.bd-dia .frame > .players{position:absolute;top:12px;left:12px;right:12px;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:0;margin:0;background:none;border:0;box-shadow:none;pointer-events:none}
+html.bd-dia .frame > .players .player{width:min(250px, calc(var(--fw) * .25));pointer-events:auto;padding:9px 12px 10px;background:rgba(10,14,26,.62);border-color:rgba(255,255,255,.07)}
+html.bd-dia .frame > .players .player.active{border-color:rgba(201,169,97,.6);background:rgba(40,32,18,.72)}
+html.bd-dia .frame > .players .player.won{border-color:rgba(127,214,164,.7)}
+html.bd-dia .frame > .players #pl2 .top{flex-direction:row-reverse}
+html.bd-dia .frame > .players #pl2 .top .clk{margin-left:0;margin-right:auto}
+html.bd-dia .frame > .players #pl2 :is(.count, .status){text-align:right}
+html.bd-dia .frame > .players .player .count{font-size:clamp(24px, calc(var(--fw) * .03), 36px);margin-top:2px}
+html.bd-dia .frame > .players .player .count small{display:block;margin:2px 0 0;font-size:11.5px;line-height:1.3}
+html.bd-dia .swapbtn{left:16px;top:auto;bottom:16px;transform:none}
+html.bd-dia .prompt{left:auto;right:16px;bottom:16px;transform:none}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the info
    column (commentary | candidate moves with their lines | study mode); the board and the column give up its height (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:var(--pr2);--rb-s2:var(--pb2)}
 html.pc2.rb-on{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);--rbx:calc(var(--rbh) + var(--gap))}
-html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
+html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox";grid-template-columns:auto minmax(var(--rw), 600px)}
+html.pc2.rb-on .side{width:auto}   /* (the board gives up height for the box: the column takes the width it leaves) */
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh)}
 html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 .rbpv{position:absolute;width:calc(var(--cell) * .66);height:calc(var(--cell) * .66);margin:calc(var(--cell) * -.33) 0 0 calc(var(--cell) * -.33);border-radius:50%;display:grid;place-items:center;z-index:9;pointer-events:none;font:800 calc(var(--cell) * .3)/1 system-ui,sans-serif;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.45);opacity:.9}
@@ -1097,7 +1112,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="online.js?v=stale1"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rbox.js?v=3"></script>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 <script src="online-ui.js?v=2"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other
