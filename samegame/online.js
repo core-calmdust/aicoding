@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 /* さめが〜め POP! — online rankings. Shares the まいにち数独 Firebase project (everyday-sudoku), stored under same/.
    ?mock=1 uses an in-browser mock with fake rivals for testing. */
 (function () {
@@ -73,7 +74,7 @@ window.SameOnline = {
   },
   async putScore(path, v) { await init(); await db.set(`${path}/${uid}`, { n: clean(v.n), i: v.i | 0, s: Math.round(v.s) }); },
   async top(path, n = 50) { await init(); return db.top(path, n); },
-  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; } },
+  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null; } catch (e) { return null; } },
   get mock() { return MOCK; },
   // Google sign-in: upgrades the anonymous account when possible; when the Google account already exists,
   // this player's anonymous ranking entries (paths) are removed and the existing account is used.

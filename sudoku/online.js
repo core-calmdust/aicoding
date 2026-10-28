@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 /* まいにち数独 — online rankings (Firebase Realtime Database, anonymous auth)
    ?mock=1 uses an in-browser mock (localStorage) with some fake rivals, for testing. */
 (function () {
@@ -110,7 +111,7 @@ window.SudokuOnline = {
   async topDaily(date, d, n = 50) { await init(); return db.top(`daily/${date}/${d}`, 't', n, true); },
   async topScore(path, n = 50) { await init(); return db.top(path, 's', n, false); },
   async myDaily(date, d) { await init(); const me = await db.get(`daily/${date}/${d}/${uid}`); if (!me) return null; return { me, rank: 1 + await db.better(`daily/${date}/${d}`, 't', me.t, true) }; },
-  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; } },
+  account() { if (MOCK) return null; try { const u = firebase.auth().currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null; } catch (e) { return null; } },
   // sign in with Google; the anonymous account is upgraded when possible.
   // paths: this player's ranking entries to remove from the anonymous account when switching to an existing Google account
   async google(paths) {

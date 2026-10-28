@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 // Online play for Chess (ported from the Shogi page): lobby, Elo rating, rating-based matchmaking, rooms, chat, spectating.
 // Moves are UCI strings (e2e4, e7e8q), stored in games/<gid>/moves as one space-separated string.
 // Game record: w = White's uid (moves first), b = Black's uid; wn/bn names, wr/br ratings, mw/mb clock (ms left), t = time of the last move.
@@ -183,8 +184,8 @@
 
   // the linked Google account of this session (null: anonymous / not signed in)
   function account() {
-    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: a.email, name: a.name } : null; }
-    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null; } catch (e) { return null; }
+    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: maskMail(a.email), name: a.name } : null; }
+    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null; } catch (e) { return null; }
   }
   // drop this session's live records (before switching account / signing out)
   async function dropLive() {

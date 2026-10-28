@@ -1,3 +1,4 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
 /* だつごく！スライド — online rankings (own Firebase project: jailbreak/firebase-config.js, data under jb/).
    jb/d/<date>/<e|m|h|sl>/<uid> = { n, i, s }  daily best scores · jb/chain/<uid> all-time CHAIN ESCAPE · jb/stars/<uid> total stars
    jb/sync/<uid> = { d: JSON string of the save data, t: ms }  Google sign-in cloud sync (own uid only)
@@ -89,8 +90,8 @@ window.JBOnline = {
   async top(path, n = 50) { await init(); return db.top(path, n); },
   // signed-in Google account ({ email, name }) or null (anonymous player)
   account() {
-    if (MOCK) { const a = mockAcct(); return a ? { email: a.email, name: a.name } : null; }
-    const au = fbAuth(), u = au && au.currentUser; return u && !u.isAnonymous ? { email: u.email || '', name: u.displayName || '' } : null;
+    if (MOCK) { const a = mockAcct(); return a ? { email: maskMail(a.email), name: a.name } : null; }
+    const au = fbAuth(), u = au && au.currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null;
   },
   // Google sign-in: upgrades (links) the anonymous player when possible, so the uid and rankings stay. When that Google
   // account is already used by another player, this device's anonymous ranking entries (paths) are removed and the
