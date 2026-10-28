@@ -1,7 +1,7 @@
 /* =====================================================================
    Checkers (English draughts) on the 3D table — a luxury lacquered board:
    high-gloss grey-black burl and ivory squares inside a burl border,
-   a thick rounded frame of swirled gold / grey / white marble resin;
+   a thick rounded frame of clear acrylic on a dark lacquered core;
    polished metal checkers (silver and gold) with concentric ring grooves
    on the top, kings stacked two high with a little crown.
    The lacquer mirrors the pieces (stencil reflections, PC only).
@@ -17,7 +17,7 @@
   const { canvasTex, makeNoise } = X;
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));   // phones: half-size procedural textures
   const LO = () => !!(X.coarse || X.lite);
-  const S = 8, MG = .36, FR = .56, HF = .3, HT = .5;   // field, burl border round the squares, marble frame width, field height, frame height
+  const S = 8, MG = .36, FR = .56, HF = .3, HT = .5;   // field, burl border round the squares, acrylic frame width, field height, frame height
   const IN = S + 2 * MG, OW = IN + 2 * FR;
   const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
@@ -56,25 +56,6 @@
     const N = makeNoise(53);
     return pix('ckIvory', W, W, (x, y) => { const t = (N(x * 3, y * 160, 2) - .5) * .5 + (N(x * 2.5, y * 2.5, 3) - .5) * .6; return [228 - t * 14, 221 - t * 16, 203 - t * 22]; });
   }
-  // marbled resin: long swirled streaks of olive-grey, gold and white (stretched along the frame)
-  function marble() {
-    const N = makeNoise(17), TAU = Math.PI * 2;
-    const C = [hexRGB('#23221c'), hexRGB('#4a4636'), hexRGB('#7a6c48'), hexRGB('#a98d52'), hexRGB('#8d8c86'), hexRGB('#ebe8df')];
-    return pix('ckMarble2', SZ(1024), SZ(512), (x, y) => {
-      const px = x * 6, py = y * 4;
-      const w1 = N(px * .5, py * 1.2, 4), w2 = N(px * 1.6 + w1 * 2, py * 3 + w1 * 2, 3);
-      const f = py * 2.2 + w1 * 1.6 + w2 * .7;   // long streaks along u, gently waving
-      const b = Math.sin(f * TAU) * .5 + .5, fine = N(px * 5 + w2 * 3, py * 30 + w2 * 6, 2);
-      const vein = Math.pow(1 - Math.abs(Math.sin((f * 2.7 + fine * .9) * Math.PI)), 34);
-      let col;
-      if (b < .35) col = mix(C[0], C[1], b / .35);
-      else if (b < .7) col = mix(C[1], C[2], (b - .35) / .35);
-      else col = mix(C[2], C[3], (b - .7) / .3);
-      const grey = N(px * .7 + 9, py * 2 + 3, 3); if (grey > .6) col = mix(col, C[4], Math.min(.8, (grey - .6) * 2.5));
-      col = mix(col, C[5], vein * .85);
-      const k = 1 + (fine - .5) * .22; return [col[0] * k, col[1] * k, col[2] * k];
-    });
-  }
   function fieldTex() {
     return canvasTex('ckField1', SZ(2048), SZ(2048), (c, Wd) => {
       const k = Wd / IN, BU = burl(SZ(768)), IV = ivory(SZ(512)), rnd = makeNoise(5);
@@ -94,7 +75,7 @@
     });
   }
 
-  /* ---------- the marble frame: a profile swept round the square (mitred corners) ---------- */
+  /* ---------- the frame: a profile swept round the square (mitred corners) ---------- */
   function sweep(A, prof) {
     const TT = T(), P = [], N = [], UV = [], idx = [], nrm = [], arc = [0];
     for (let i = 0; i < prof.length; i++) {
@@ -119,24 +100,42 @@
     g.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
     g.setIndex(idx); g.computeBoundingSphere(); return g;
   }
+  // clear acrylic (r128 has no transmission): a thin glossy coat with environment reflections, drawn last without depth writes,
+  // more opaque and a little cool-tinted at grazing angles (the bevels and walls light up like the edges of real acrylic)
+  function acrylic() {
+    return mat('acrylic', () => {
+      const TT = T(), lo = LO();
+      const m = lo ? new TT.MeshStandardMaterial({ color: lin(0xeef6f6), roughness: .08, metalness: 0, transparent: true, opacity: .14, depthWrite: false, envMapIntensity: 2.6 })
+        : phys({ color: 0xf2f8f8, roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .1, depthWrite: false, envMapIntensity: 3 });
+      m.onBeforeCompile = sh => {
+        sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+          'float fres = pow( 1.0 - clamp( abs( dot( normalize( normal ), normalize( vViewPosition ) ) ), 0.0, 1.0 ), 2.0 );\n' +
+          'gl_FragColor = vec4( outgoingLight + vec3( 0.62, 0.86, 0.84 ) * fres * 0.9, clamp( diffuseColor.a + fres * 0.75, 0.0, 0.92 ) );');
+      };
+      m.customProgramCacheKey = () => 'ckAcrylic' + (lo ? 'L' : 'H');
+      m.userData.noMerge = true;
+      return m;
+    });
+  }
   function board() {
     const TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const ft = fieldTex(); ft.anisotropy = 8;
     const top = mat('top', () => { const m = phys({ map: ft, color: 0xffffff, roughness: .14, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.5 });
       Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); return m; });   // marks where reflections may show
-    const frameM = mat('frame', () => { const mt = new TT.CanvasTexture(marble()); mt.encoding = TT.sRGBEncoding; mt.anisotropy = 4; mt.wrapS = mt.wrapT = TT.RepeatWrapping; return phys({ map: mt, color: 0xffffff, roughness: .2, metalness: .12, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }); });
-    const dark = mat('groove', () => phys({ color: 0x141414, roughness: .4 }));
-    // profile: the outer wall, a full rounded top edge, a flat top, a smaller round into the inner wall, down to the field, a dark step at the foot
-    const A = OW / 2, r1 = .17, r2 = .07, prof = [[0, 0], [0, HT - r1]], st = LO() ? 4 : 7;
-    for (let i = 1; i <= st; i++) { const a = i / st * Math.PI / 2; prof.push([r1 - Math.cos(a) * r1, HT - r1 + Math.sin(a) * r1]); }
-    prof.push([FR - .08 - r2, HT]);
-    for (let i = 1; i <= Math.ceil(st / 2); i++) { const a = i / Math.ceil(st / 2) * Math.PI / 2; prof.push([FR - .08 - r2 + Math.sin(a) * r2, HT - r2 + Math.cos(a) * r2]); }
-    prof.push([FR - .08, HF + .06]);
-    const fr = new TT.Mesh(sweep(A, prof), frameM); fr.castShadow = fr.receiveShadow = true; base.add(fr);
-    const step = new TT.Mesh(sweep(A, [[FR - .08, HF + .06], [FR - .08, HF + .045], [FR, HF + .045], [FR, HF]]), dark); step.receiveShadow = true; base.add(step);   // a fine black step between frame and field
+    // the core: a dark lacquered slab under the whole board (it is what shows through the clear frame)
+    const bt = mat('burlTop', () => { const t = new TT.CanvasTexture(burl(SZ(768))); t.encoding = TT.sRGBEncoding; t.anisotropy = 4; return phys({ map: t, color: 0x4a4a50, roughness: .16, clearcoat: 1, clearcoatRoughness: .04 }); });
+    const sideM = mat('core', () => phys({ color: 0x141416, roughness: .22, clearcoat: 1, clearcoatRoughness: .06 }));
+    const core = new TT.Mesh(new TT.BoxGeometry(OW, HF, OW), [sideM, sideM, bt, sideM, sideM, sideM]); core.position.y = HF / 2; core.castShadow = core.receiveShadow = true; base.add(core);
+    // the frame: clear acrylic, a full rounded outer edge, a flat top, a smaller round into the inner wall
+    const A = OW / 2, H2 = HF + .24, r1 = .17, r2 = .07, prof = [[0, HF], [0, H2 - r1]], st = LO() ? 4 : 7;
+    for (let i = 1; i <= st; i++) { const a = i / st * Math.PI / 2; prof.push([r1 - Math.cos(a) * r1, H2 - r1 + Math.sin(a) * r1]); }
+    prof.push([FR - .08 - r2, H2]);
+    for (let i = 1; i <= Math.ceil(st / 2); i++) { const a = i / Math.ceil(st / 2) * Math.PI / 2; prof.push([FR - .08 - r2 + Math.sin(a) * r2, H2 - r2 + Math.cos(a) * r2]); }
+    prof.push([FR - .08, HF + .002]);
+    const fr = new TT.Mesh(sweep(A, prof), acrylic()); fr.castShadow = false; fr.receiveShadow = false; fr.renderOrder = 3; base.add(fr);
     const fg = new TT.PlaneGeometry(IN, IN); fg.rotateX(-Math.PI / 2);
-    const field = new TT.Mesh(fg, top); field.position.y = HF; field.receiveShadow = true; field.renderOrder = -2; base.add(field);   // drawn first: the reflections test against it
-    g.userData.S = S; g.userData.top = HF + .001; g.userData.outer = OW / S;
+    const field = new TT.Mesh(fg, top); field.position.y = HF + .002; field.receiveShadow = true; field.renderOrder = -2; base.add(field);   // drawn first: the reflections test against it
+    g.userData.S = S; g.userData.top = HF + .003; g.userData.outer = OW / S;
     g.userData.pt = (x, y) => [-S / 2 + x + .5, -S / 2 + y + .5];   // x: column left → right, y: row far → near
     g.userData.piece = piece;
     return g;
