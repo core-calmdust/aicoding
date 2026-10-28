@@ -107,15 +107,15 @@ function legalFor(job, m) {
   return m === PASS || rp.pos.legal(m);
 }
 
-// ---------------------------------------------------------------- strength levels (25): 18級 … 1級 (1–16), 初段 … 八段 (17–24), 最強 (25)
+// ---------------------------------------------------------------- strength levels (27): 18級 … 1級 (1–18), 初段 … 八段 (19–26), 最強 (27)
 // measured on 19x19 against KataGo's human-like model (b18c384nbt-humanv0, one evaluation per move) at rank_10k … rank_9d
 // (see MODEL_CARD.md): the labels in app.js / atlas/games/go.js (RANKS) follow those results.
-// levels 1–18: one net evaluation per move, a move drawn from the policy (temperature) with some looser picks;
-// levels 19–25: search (visits) with the light / strong net.
+// levels 1–20: one net evaluation per move, a move drawn from the policy (temperature) with some looser picks;
+// levels 21–27: search (visits) with the light / strong net.
 const LEVELS = [null,
   { T: 2.1, slip: 0.55, top: 80 }, { T: 2.03, slip: 0.5, top: 72 }, { T: 1.97, slip: 0.46, top: 66 }, { T: 1.9, slip: 0.42, top: 60 },
-  { T: 1.75, slip: 0.33, top: 45 }, { T: 1.7, slip: 0.31, top: 42 }, { T: 1.7, slip: 0.30, top: 40 }, { T: 1.6, slip: 0.25, top: 36 },
-  { T: 1.5, slip: 0.21, top: 32 }, { T: 1.4, slip: 0.17, top: 28 }, { T: 1.3, slip: 0.14, top: 24 }, { T: 1.2, slip: 0.11, top: 20 },
+  { T: 1.75, slip: 0.33, top: 45 }, { T: 1.7, slip: 0.31, top: 42 }, { T: 1.7, slip: 0.30, top: 40 }, { T: 1.65, slip: 0.275, top: 38 }, { T: 1.6, slip: 0.25, top: 36 },
+  { T: 1.5, slip: 0.21, top: 32 }, { T: 1.45, slip: 0.19, top: 30 }, { T: 1.4, slip: 0.17, top: 28 }, { T: 1.3, slip: 0.14, top: 24 }, { T: 1.2, slip: 0.11, top: 20 },
   { T: 0.9, slip: 0.055, top: 14 }, { T: 0.8, slip: 0.04, top: 12 }, { T: 0.7, slip: 0.03, top: 10 }, { T: 0.6, slip: 0.02, top: 8 },
   { T: 0.5, slip: 0.01, top: 6 }, { T: 0.3, slip: 0, top: 4 }, { net: 'light', visits: 3, time: 1200 }, { net: 'light', visits: 6, time: 1500 },
   { net: 'light', visits: 12, time: 2000 }, { net: 'light', visits: 20, time: 2500 }, { net: 'light', visits: 32, time: 3000 }, { net: 'strong', visits: 64, time: 4500 },
