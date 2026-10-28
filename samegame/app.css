@@ -1409,3 +1409,68 @@ body[data-screen="play"] #app{padding-bottom:0}
   #play #gMain,#gMain{margin-top:0!important}
   #play{padding-top:max(12px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))!important;align-items:start}
 }
+
+/* ===== phones: デイリー split by the group chips (puzzle / action / free play) — one section at a time, with the details
+   that the stacked layout had to hide (descriptions, notes, ranking buttons, tries left) ===== */
+@media (max-width:760px){
+  body.phnav .hpanel.daily[data-sg]{row-gap:0!important}
+  body.phnav .hpanel.daily[data-sg="puzzle"]>:is(#dBlitz,#dFree),
+  body.phnav .hpanel.daily[data-sg="act"]>:is(#dBox,#dFree),
+  body.phnav .hpanel.daily[data-sg="free"]>:is(#dBox,#dBlitz){display:none!important}
+  /* daily puzzle: one row per difficulty */
+  body.phnav [data-sg="puzzle"] .dhead{margin:6px 0 12px}
+  body.phnav .hpanel.daily[data-sg] .dbest span{white-space:nowrap}
+  body.phnav .hpanel.daily[data-sg]>*,body.phnav .hpanel.daily[data-sg] #dPuzzle{min-width:0;max-width:100%;box-sizing:border-box}
+  body.phnav .hpanel.daily[data-sg] .dlv{min-width:0}
+  #home>.sgbar[data-k="daily"] button{padding:0 8px;min-width:0}
+  #home>.sgbar[data-k="daily"] button b{font-size:14px;letter-spacing:0}
+  @media (max-width:370px){#home>.sgbar[data-k="daily"]{gap:5px!important}#home>.sgbar[data-k="daily"] button{padding:0 6px}#home>.sgbar[data-k="daily"] button b{font-size:12.5px}}
+  body.phnav [data-sg="puzzle"] .dhead h3{font-size:19px}
+  body.phnav [data-sg="puzzle"] .dhead p{display:block;font-size:13.5px;line-height:1.5;margin-bottom:8px}
+  body.phnav [data-sg="puzzle"] #dPuzzle>.note{display:block;font-size:12.5px;margin:12px 0 0;line-height:1.5}
+  body.phnav [data-sg="puzzle"] .dlvs{grid-template-columns:1fr!important;gap:10px}
+  body.phnav [data-sg="puzzle"] .dlv{flex-direction:row!important;align-items:center!important;padding:10px 12px;gap:12px}
+  body.phnav [data-sg="puzzle"] .dic{width:72px!important;height:72px!important;margin:0!important;flex:none}
+  body.phnav [data-sg="puzzle"] .dlt{align-items:flex-start!important;text-align:start!important;flex:1;min-width:0}
+  body.phnav [data-sg="puzzle"] .dlt>b{font-size:19px}
+  body.phnav [data-sg="puzzle"] .dlt small{font-size:12.5px}
+  body.phnav [data-sg="puzzle"] .dlt .dbest{flex-direction:row;align-items:center;gap:6px;margin-top:4px}
+  body.phnav [data-sg="puzzle"] .dlt .dbest span{display:inline;font-size:12px}
+  body.phnav [data-sg="puzzle"] .dlt .dbest b{font-size:20px;min-height:0}
+  body.phnav [data-sg="puzzle"] .dlb{flex-direction:column!important;width:auto;flex:none;gap:6px}
+  body.phnav [data-sg="puzzle"] .dlb .btn:first-child{min-height:40px;padding:4px 14px;font-size:14px}
+  body.phnav [data-sg="puzzle"] .dlb .btn.sm{display:inline-flex;width:100%;min-height:34px}
+  body.phnav [data-sg="puzzle"] .dlb .btn.sm svg{width:18px;height:18px}
+  body.phnav [data-sg="puzzle"] .dlt .dbest{flex-wrap:wrap}
+  @media (max-width:370px){
+    body.phnav [data-sg="puzzle"] .dlv{padding:8px;gap:8px}
+    body.phnav [data-sg="puzzle"] .dic{width:56px!important;height:56px!important}
+    body.phnav [data-sg="puzzle"] .dlt>b{font-size:17px}
+    body.phnav [data-sg="puzzle"] .dlb .btn:first-child{padding:4px 9px;font-size:13px}
+  }
+  /* daily action: one row per mode with its rule line, best score and tries left */
+  body.phnav [data-sg="act"] #dBlitz{padding:26px 12px 12px!important}
+  body.phnav [data-sg="act"] .dasub{display:block!important;font-size:12.5px;line-height:1.45;margin:8px 0 10px!important}
+  body.phnav [data-sg="act"] .dacts{grid-template-columns:1fr!important;gap:8px;margin-top:0}
+  body.phnav [data-sg="act"] .dacts .dact{display:grid!important;grid-template-columns:48px minmax(0,1fr)!important;grid-template-areas:"ic t" "b b"!important;align-items:start;padding:9px 10px!important;gap:6px 10px!important}
+  body.phnav [data-sg="act"] .dact .daic{float:none;margin:0;width:48px!important;height:48px!important}
+  body.phnav [data-sg="act"] .daic svg{width:36px;height:36px}
+  body.phnav [data-sg="act"] .mm60{font-size:22px}
+  body.phnav [data-sg="act"] .dact .dat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm bs" "ds ds";align-items:center;gap:1px 6px!important;min-height:0;padding-right:34px}
+  body.phnav [data-sg="act"] .dat>b{grid-area:nm;font-size:16px}
+  body.phnav [data-sg="act"] .dadesc{grid-area:ds;display:block;font-size:12px;font-weight:600;color:var(--sub);line-height:1.35}
+  body.phnav [data-sg="act"] #dBlitz .dat .dbest{grid-area:bs;display:flex;flex-direction:row;align-items:center;gap:5px;margin:0!important}
+  body.phnav [data-sg="act"] .dat .dbest span{display:inline;font-size:11px}
+  body.phnav [data-sg="act"] .dat .dbest b{font-size:18px}
+  body.phnav [data-sg="act"] .dact .dabtm{display:flex!important;align-items:center;clear:none;padding-top:0;gap:6px!important}
+  body.phnav [data-sg="act"] .dabtm .tries{display:flex!important;flex-wrap:wrap;justify-content:center;align-items:center;gap:3px 4px;width:58px;margin:0 auto 0 2px!important}
+  body.phnav [data-sg="act"] .dabtm .tries i{width:10px;height:10px;border-width:1.5px}
+  body.phnav [data-sg="act"] .dabtm .tries em{display:block;flex-basis:100%;text-align:center;font-style:normal;font-size:11px;font-weight:800;white-space:nowrap}
+  body.phnav [data-sg="act"] .dact .dabtm [data-da]{display:inline-flex;flex:none;width:auto;min-height:38px!important;padding:2px 14px!important;font-size:14px!important}
+  body.phnav [data-sg="act"] .dact .dabtm [data-rank]{display:inline-flex!important;width:38px!important;min-height:38px!important}
+  /* free play: show the explanation too */
+  body.phnav [data-sg="free"] #dFree .sub{display:block;font-size:13.5px;line-height:1.5;margin:12px 0}
+  body.phnav [data-sg="free"] .dthumb.ficon{width:84px!important}
+  body.phnav [data-sg="free"] #dFree .frow{margin-bottom:10px}
+  body.phnav [data-sg="free"] #dFree .fopts .chipb{min-height:48px}
+}
