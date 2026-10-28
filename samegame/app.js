@@ -1001,6 +1001,7 @@ function toast(s) { const e = $('#toast'); e.textContent = s; e.classList.add('o
 
 /* ============================================================ MODALS ============================================================ */
 function modal(html, cls = '') {
+  { const ls = $('#langSel'), lh = $('#langHold'); if (ls && lh && ls.parentNode !== lh) lh.append(ls); }   // the picker lives in settings; park it before the body is replaced
   const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false;
   $('#modalBody').scrollTop = 0; setTimeout(navSync, 0);
   return $('#modalBody');
@@ -1129,8 +1130,9 @@ function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
   const cur = document.body.dataset.skin;
   const skinPick = `<h3 class="mh3">${esc(t('set.skin'))}</h3><div class="skins">${SKINS.map(k => `<button class="skin ${k === cur ? 'on' : ''}" data-skin="${k}"><span class="sw4" data-s="${k}"><i></i><i></i><i></i><i></i></span><b>${esc(t('skin.' + k))}</b></button>`).join('')}</div>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}${skinPick}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}${syncSection()}
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}<div class="sw lrow"><span>${esc(t('set.lang'))}</span><span id="langSlot"></span></div>${skinPick}${sw('anim', 'set.anim')}${sw('emb', 'set.emb')}${syncSection()}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('set.tut'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
+  { const slot = $('#langSlot'), ls = $('#langSel'); if (slot && ls) { ls.value = lang; slot.append(ls); } }
   $$('[data-k]', body).forEach(c => c.onchange = () => {
     DB.set[c.dataset.k] = c.checked ? 1 : 0;
     if (c.dataset.k === 'snd') { try { localStorage.setItem('atlas-sfx', DB.set.snd ? '1' : '0'); } catch (e) {} if (DB.set.snd) SND.coin(); }
@@ -1386,9 +1388,10 @@ function bind() {
   $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${A.ICON[ic]}${p === 'me' ? '<i class="dot" hidden></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
   $$('#bnav button').forEach(b => b.onclick = () => setHomeTab(b.dataset.p));
   // header: only settings / language / home (sound, how-to-play → settings; gacha, collection, achievements, rankings → profile card / tabs)
-  const IC = { btnSet: 'gear', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
+  const IC = { btnHelp: 'help', btnSet: 'gear', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, ic] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[ic]); }
   $('#btnSet').onclick = openSettings;
+  $('#btnHelp').onclick = () => tutorial('basic');
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else setHomeTab('daily'); };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   $('#gBack').onclick = quitGame; $('#gUndo').onclick = undo; $('#gHint').onclick = hint; $('#gRestart').onclick = restart;

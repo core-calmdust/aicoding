@@ -673,3 +673,8 @@ body[data-floor=neon] .floor { box-shadow: inset 0 0 30px rgba(255, 79, 216, .35
   .bnav button.on[data-p=me] { background: var(--paper); color: var(--ink); }
   body.phnav[data-screen=home] #toast { bottom: calc(var(--bnh) + 18px + env(safe-area-inset-bottom)); }
 }
+
+/* language picker inside the settings dialog (the header has ? / settings / home, like the sudoku apps) */
+.sw.lrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sw.lrow #langSel{width:auto!important;min-width:128px;margin:0!important;font-size:15px!important;height:36px;padding:0 8px!important}
+.dlb .btn{white-space:nowrap}

@@ -857,6 +857,7 @@ function floatTip(s) { const e = $('#gInfo'); if (e) { e.classList.remove('pulse
 
 /* ============================================================ MODALS ============================================================ */
 function modal(html, cls = '') {
+  { const ls = $('#langSel'), lh = $('#langHold'); if (ls && lh && ls.parentNode !== lh) lh.append(ls); }   // the picker lives in settings; park it before the body is replaced
   afterModal = null; const m = $('#modal'); m.className = 'modal ' + cls; $('#modalBody').innerHTML = html; m.hidden = false; $('#modalBody').scrollTop = 0; setPaused(true); setTimeout(navSync, 0);
   centerOnBoard();
   return $('#modalBody');
@@ -1007,8 +1008,9 @@ async function openRank(tab = 'm') {
 }
 function openSettings() {
   const sw = (k, l) => `<label class="sw"><span>${esc(t(l))}</span><input type="checkbox" data-k="${k}" ${DB.set[k] ? 'checked' : ''}><i></i></label>`;
-  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}${sw('anim', 'set.anim')}
+  const body = modal(`<h2 class="mh">${esc(t('set.title'))}</h2>${sw('snd', 'set.snd')}<div class="sw lrow"><span>${esc(t('set.lang'))}</span><span id="langSlot"></span></div>${sw('anim', 'set.anim')}
     <div class="mbtns"><button class="btn" id="setTut">${esc(t('help'))}</button><button class="btn" id="setReset">${esc(t('set.reset'))}</button></div>`);
+  { const slot = $('#langSlot'), ls = $('#langSel'); if (slot && ls) { ls.value = lang; slot.append(ls); } }
   $$('[data-k]', body).forEach(c => { c.onchange = () => { DB.set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'snd') { try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} if (c.checked) SND.coin(); } save(); }; });
   $('#setTut').onclick = () => tutorial();
   $('#setReset').onclick = () => ask(t('set.reset.q'), [[t('q.cancel'), 'org'], [t('set.reset'), '', () => { localStorage.removeItem(KEY); location.reload(); }]]);
@@ -1034,9 +1036,10 @@ function bind() {
   $('#bnav').innerHTML = BNAV.map(([p, k, ic]) => `<button type="button" role="tab" data-p="${p}"><span class="bni">${ic === 'user' ? UICON : A.ICON[ic]}${p === 'me' ? '<i class="dot"></i>' : ''}</span><span class="bnl" data-i18n="${k}">${esc(t(k))}</span></button>`).join('');
   $$('#bnav button').forEach(b => { b.onclick = () => setHomeTab(b.dataset.p); });
   // header: only settings / language / home (sound and how-to-play → settings; locker, collection, achievements, rankings, rules → profile card / tabs)
-  const IC = { btnSet: 'gear', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
+  const IC = { btnHelp: 'help', btnSet: 'gear', homeLink: 'home', gBack: 'back', gUndo: 'undo', gHint: 'hint', gRestart: 'retry' };
   for (const [id, k] of Object.entries(IC)) { const e = $('#' + id); if (e) e.insertAdjacentHTML('afterbegin', A.ICON[k]); }
   $('#btnSet').onclick = openSettings;
+  $('#btnHelp').onclick = () => tutorial();
   const ls = $('#langSel'); ls.value = lang; ls.onchange = () => { lang = ls.value; DB.set.lang = lang; save(); applyI18n(); if (G) { hud(); renderInfo(); } else renderHome(); };
   $('#logo').onclick = () => { if (!$('#play').hidden) quitGame(); else setHomeTab('daily'); };
   $('#modalX').onclick = closeModal; $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
