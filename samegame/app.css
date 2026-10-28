@@ -1244,7 +1244,7 @@ body[data-screen="play"] #app{padding-bottom:0}
 @media (min-width:1000px){
   /* the board column shrinks to the board, and the side panel + board are centred as one group */
   #play{grid-template-columns:330px minmax(0,max-content);justify-content:center;padding-bottom:16px}
-  #boardWrap{margin-top:max(0px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))}
+  #gMain{margin-top:max(0px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))}
 }
 
 /* ===== phones: bottom tab bar, one home section at a time ===== */
@@ -1256,18 +1256,15 @@ body[data-screen="play"] #app{padding-bottom:0}
   body.phnav[data-screen="home"] .top{flex:none}
   body.phnav[data-screen="home"] main{flex:1;min-height:0;display:flex;flex-direction:column}
   body.phnav #home{flex:1;min-height:0;display:flex;flex-direction:column}
-  body.phnav #htabs,body.phnav #btnGacha{display:none}
+  body.phnav #htabs{display:none}
   body.phnav #home>.hpanel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -12px;padding:24px 12px 18px;scrollbar-width:none}
   body.phnav #home>.hpanel::-webkit-scrollbar{display:none}
   body.phnav #home>.hpanel>*{flex-shrink:0}
-  /* デイリー: puzzle + daily action, trimmed so both fit one screen */
+  /* デイリー: puzzle + daily action (one screen), free play below */
   body.phnav .hpanel.daily{row-gap:28px!important}
-  body.phnav #home>.hpanel.daily{padding-bottom:10px}
   body.phnav #dPuzzle>.note{display:none}
   body.phnav .dic{width:50px!important;height:50px!important}
   body.phnav .dhead{margin-bottom:8px}
-  /* アクション: free play first */
-  body.phnav .hpanel[data-p="action"] #dFree{margin-bottom:28px}
   /* マイページ: full profile card + calendar / login bonus */
   body.phnav .hpanel.me{display:flex;flex-direction:column;gap:26px}
   .hpanel.me .prof{flex-wrap:wrap;margin:0;row-gap:12px}
@@ -1307,4 +1304,62 @@ body[data-screen="play"] #app{padding-bottom:0}
   body[data-skin="mid"] .bnav button{border-radius:16px}
   body[data-skin="mid"] .bnav button.on{border-color:transparent;box-shadow:none;transform:translateY(-2px)}
   body.phnav[data-screen="home"] #toast{bottom:calc(var(--bnh) + 18px + env(safe-area-inset-bottom))}
+}
+
+/* ===== header: only 設定・言語・ホーム ===== */
+.top .icons{flex-wrap:nowrap;width:auto!important;flex:none;margin-inline-start:auto}
+.lg1{white-space:nowrap}
+@media (max-width:600px){ .top{flex-wrap:nowrap} .top .brand{min-width:0} }
+@media (max-width:400px){ .lg1{font-size:20px;-webkit-text-stroke-width:1.5px}.lg2{font-size:24px} #langSel{width:60px;font-size:11px;padding:0 1px} }
+/* collection / achievements / rankings live in the profile card (PC, tablet) and マイページ (phone) */
+.plinks .btn{position:relative}
+.plinks .dot{position:absolute;top:-7px;right:-7px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--ink)}
+@media (min-width:761px) and (max-width:999px){
+  #home .prof{flex-wrap:wrap}
+  #home .pextra{display:block;flex-basis:100%}
+  #home .pextra>:not(.plinks){display:none}
+  #home .plinks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  #home .plinks .btn{font-size:15px;min-height:40px}
+}
+
+/* ===== play: one control row under the board — progress / time bar on the left, icon buttons on the right ===== */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+#play .gorder{order:3}
+#play #gMain{order:4;margin-top:10px}
+#gMain #boardWrap{margin-top:0}
+.gctl{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
+.gctli{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.gctli:not(:has(> :not([hidden]):not(:empty))){display:none}
+#gCtl .gtrack{margin:0;max-width:none;padding:8px 12px 10px}
+#gCtl .gtl{margin-bottom:6px}
+#gCtl .gmd{margin-top:8px}
+#gCtl .gclock{margin:6px 0 0}
+#gCtl .gfoot{margin:0;flex:none;display:flex;gap:8px;flex-wrap:nowrap}
+#gCtl .gfoot .btn.ibtn{flex:none;width:52px;height:52px;min-height:52px;padding:0}
+#gCtl .gfoot .btn.ibtn svg{width:26px;height:26px}
+#gCtl .blitzi{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:7px 10px}
+.btime{flex:1 1 100%;display:flex;align-items:center;gap:6px;min-width:0}
+.btime b{font-family:var(--f-sfx);font-size:24px;line-height:1;min-width:1.5em;text-align:end}
+.btime small{font-size:12px;font-weight:700}
+.btime .fbar{flex:1;height:14px}
+.btime .fbar i{background:var(--grn)}
+.btime.low b{color:var(--red);animation:lowt .5s ease-in-out infinite alternate}.btime.low .fbar i{background:var(--red)}
+.gbar.nosub .gsub{display:none}
+@media (max-width:999px){
+  /* ORDER: a compact order queue above the board so it is always on screen */
+  #gOrder{margin:8px 0 0;max-width:none;padding:8px 12px}
+  #gOrder .goh{margin-bottom:4px}#gOrder .goh b{font-size:15px}
+  #gOrder .goq{gap:8px}#gOrder .goq i{font-size:18px}
+  #gOrder .goq .blk{--cs:38px!important}#gOrder .goq .blk.now{--cs:52px!important;outline-width:3px}
+  #gOrder .gohint{display:none}
+}
+@media (min-width:1000px){
+  #play{grid-template-rows:auto auto auto auto 1fr;grid-template-areas:"bar main" "order main" "meters main" "info main" ". main"}
+  #play #gMain{grid-area:main;margin-top:max(0px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))}
+  .gctl{width:0;min-width:100%}
+  #gMain{min-width:380px}
+  #gCtl .gtrack{border:var(--line);padding:10px 16px 12px}
+  #gCtl .gfoot .btn.ibtn{width:58px;height:58px;min-height:58px}
+  .gbar.nosub .gscore{grid-column:1/-1}
+  .gorder{grid-area:order}
 }
