@@ -481,7 +481,7 @@ function olResRender() {
   if (g.next || g.post === 'again') h = `<span>${t('ol.pAgain')}</span>`, again.disabled = true;
   else if (g.post) h = `<span>${t(g.post === 'no' ? 'ol.pNo' : g.post === 'timeout' ? 'ol.pTimeout' : g.post === 'host' ? 'ol.pHost' : 'ol.pLeft')}</span>`, again.disabled = true;
   else if (g.again && g.again.by === me) { h = `<span>${t('ol.reqSent')} <b class="cd">${Math.max(0, Math.ceil((ON.REMATCH_MS - (ON.now() - g.again.t)) / 1000))}</b></span>`; again.disabled = true; }
-  else if (g.again) { h = `<span>${t('ol.reqGot')}</span><button class="mbtn go" id="olAccept">${t('ol.accept')}</button><button class="mbtn" id="olDecline">${t('ol.decline')}</button>`; again.textContent = t('ol.accept'); }
+  else if (g.again) { h = `<span>${t('ol.reqGot')}</span><button class="mbtn" id="olDecline">${t('ol.decline')}</button><button class="mbtn go" id="olAccept">${t('ol.accept')}</button>`; again.textContent = t('ol.accept'); }
   box.className = 'ol-res ol-again' + (g.post && g.post !== 'again' ? ' muted' : '');
   if (!h) box.classList.add('hidden');
   if (box.dataset.h === h) return;          // unchanged (the 1-second refresh): keep the buttons

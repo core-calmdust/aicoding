@@ -1,7 +1,6 @@
 /* さめが〜め POP! — texts (ja / en). Other languages: i18n-more.js */
 window.SAME_I18N = window.SAME_I18N || {};
 window.SAME_I18N.ja = {
-  'set.lang': '言語',
   'skin.swiss': 'スイス・ミニマル', 'skin.wa': '和モダン', 'skin.mid': 'ミッドセンチュリー', 'skin.pixel': 'ドット絵',
   'gi.rule': 'ルール', 'gi.blocks': 'しかけブロック',
   'st.demo': 'ルールの動きを見る',
@@ -11,7 +10,7 @@ window.SAME_I18N.ja = {
   'skin.riso': 'リソグラフ',
   'skin.night': 'ナイトPOP',
   'title.doc': 'さめが〜め POP! — ポップアートのさめがめ', series: '世界のボドゲ大全', title: 'さめが〜め', home: 'ホーム', help: 'あそびかた',
-  'ht.daily': 'デイリー', 'ht.stage': 'ステージ', 'ht.action': 'アクション',
+  'ht.daily': 'デイリー', 'ht.stage': 'ステージ', 'ht.action': 'アクション', 'ht.me': 'マイページ',
   'pf.edit': 'プロフィール', 'pf.guest': 'ゲスト', 'pf.streak': '日連続', 'pf.name': 'ニックネーム（ランキングに表示）', 'pf.ph': '12文字まで', 'pf.note': 'ニックネームを決めるとランキングに参加できます。', 'pf.icon': 'アイコン（ガチャで増えます）',
   'd.puzzle': 'デイリーパズル', 'd.puzzle.h': '今日の盤面でハイスコア', 'd.puzzle.d': '全員が同じ盤に挑戦。何度でも遊べて、いちばん良いスコアがランキングに残ります。',
   'd.blitz': 'デイリーBLITZ', 'd.blitz.h': '60秒スコアアタック', 'd.blitz.d': '今日のBLITZは1日3回まで。消えたあとは上から補充、連続で消すとコンボ。',
@@ -67,7 +66,6 @@ window.SAME_I18N.ja = {
   'tu.a4.h': 'ヒーローをキャッチ', 'tu.a4': 'ときどき飛んでくるヒーローをタップすると +3秒と300点。インクが飛んできたらタップでふき取ろう。',
 };
 window.SAME_I18N.en = {
-  'set.lang': 'Language',
   'skin.swiss': 'Swiss minimal', 'skin.wa': 'Japanese modern', 'skin.mid': 'Mid-century', 'skin.pixel': 'Pixel',
   'gi.rule': 'Rules', 'gi.blocks': 'Special blocks',
   'st.demo': 'Watch how it works',
@@ -77,7 +75,7 @@ window.SAME_I18N.en = {
   'skin.riso': 'Risograph',
   'skin.night': 'Night POP',
   'title.doc': 'SameGame POP! — pop-art tile clearing', series: 'World Board Game Atlas', title: 'SameGame', home: 'Home', help: 'How to play',
-  'ht.daily': 'Daily', 'ht.stage': 'Stages', 'ht.action': 'Action',
+  'ht.daily': 'Daily', 'ht.stage': 'Stages', 'ht.action': 'Action', 'ht.me': 'Me',
   'pf.edit': 'Profile', 'pf.guest': 'Guest', 'pf.streak': 'day streak', 'pf.name': 'Nickname (shown in rankings)', 'pf.ph': 'Up to 12 characters', 'pf.note': 'Set a nickname to join the rankings.', 'pf.icon': 'Icon (get more from the gacha)',
   'd.puzzle': 'Daily Puzzle', 'd.puzzle.h': "Top score on today's board", 'd.puzzle.d': 'Everyone plays the same board. Play as often as you like — your best score goes on the ranking.',
   'd.blitz': 'Daily BLITZ', 'd.blitz.h': '60-second score attack', 'd.blitz.d': "Today's BLITZ: 3 tries. Cleared spaces refill from the top; keep clearing for combos.",

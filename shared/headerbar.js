@@ -20,12 +20,18 @@
 //   hb.relabel()                       // re-translate the added rules button after a language change
 (function () {
 'use strict';
-const MQ = '(hover: hover) and (pointer: fine) and (min-width: 820px)';
+// PC layout (common spec): mouse + wide enough for left panel + board + right panel, and not a tall window; otherwise the phone layout
+const MQ = '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
 const H = 56;
 const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد' };
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب' };
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
+/* lesson / puzzle card buttons in the PC info column (common spec): two per row, labels on one line */
+html.side-col .side .lesson-actions{display:grid!important;grid-template-columns:repeat(auto-fit, minmax(118px, 1fr));gap:8px}
+html.side-col .side .lesson-actions > button{white-space:nowrap;min-width:0;flex:none!important}
+html.side-col .side .lesson-actions > button.hidden{display:none!important}
+html.side-col .side .lesson-card .lh{flex-wrap:wrap;row-gap:6px}html.side-col .side .lesson-card .lh .lt{white-space:nowrap}
 /* player cards (common spec: whenever the info column stands beside the board — html.side-col): the side / count label is information, not a headline — keep it modest */
 html.side-col .side .players .count, html.side-col .side .players .count > span:first-child, html.side-col .side .players [id^=pip]{font-size:clamp(20px, 1.6vw, 26px)!important;line-height:1.15!important}
 html.side-col .side .players .side-l{font-size:clamp(15px, 1.15vw, 18px)!important;line-height:1.3!important}
@@ -254,6 +260,21 @@ html.dock-compact .side #evalCard .navbar{margin-top:8px!important}`;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
     rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
 }
+// a draw-offer button in the top menu (PC header / phone) leaves no room: the puzzle button is left out of the header then (common spec)
+function drawNoPuzzle() {
+  const upd = () => {
+    const d = document.getElementById('btnDraw'), p = document.querySelector('#btnPuzzle, #btnTsume');
+    if (!p) return;
+    if (!d || d.parentElement !== p.parentElement) { p.classList.remove('hb-skip'); return; }   // same button row (PC header menu or phone top menu)
+    const on = !!(d && getComputedStyle(d).display !== 'none' && !d.classList.contains('hidden'));
+    p.classList.toggle('hb-skip', on);
+  };
+  if (!document.getElementById('hbSkipCss')) { const st = document.createElement('style'); st.id = 'hbSkipCss'; st.textContent = '.hb-skip{display:none!important}'; document.head.appendChild(st); }
+  let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; upd(); }); };
+  new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'hidden'], subtree: true });
+  window.addEventListener('resize', later); upd();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(drawNoPuzzle, 0)); else setTimeout(drawNoPuzzle, 0);
 // html.side-col: the info column (.side) stands beside the board (not stacked under it) — the compact player cards use it
 function sideCol() {
   const side = document.querySelector('.app .side'), app = document.querySelector('.app'); if (!side || !app) return;

@@ -27,8 +27,14 @@
     </div>
     <span class="sp"></span>
     <div class="icons">
+      <button class="ib" id="btnGacha" data-i18n-title="ga.title"></button>
+      <button class="ib" id="btnBook" data-i18n-title="bk.title"></button>
+      <button class="ib" id="btnRank" data-i18n-title="rk.title"></button>
+      <button class="ib" id="btnAch" data-i18n-title="ach.title"><i class="dot"></i></button>
       <button class="ib" id="btnHelp" data-i18n-title="help"></button>
       <button class="ib" id="btnSet" data-i18n-title="set.title"></button>
+      <button class="ib snd" id="btnSound" data-i18n-title="set.snd"></button>
+      <select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
       <a href="../" class="ib" id="homeLink" data-i18n-title="home"></a>
     </div>
   </header>
@@ -44,6 +50,8 @@
       </div>
       <div class="hpanel" data-p="stage" hidden><div id="stagePanel"></div></div>
       <div class="hpanel" data-p="action" hidden><div id="actPanel"></div></div>
+      <div class="hpanel gacha" data-p="gacha" hidden><div class="card panel" id="gachaPanel"></div></div>
+      <div class="hpanel me" data-p="me" hidden></div>
     </section>
 
     <section class="screen" id="play" hidden>
@@ -70,6 +78,7 @@
     </section>
   </main>
 </div>
+<nav class="bnav" id="bnav"></nav>
 
 <div class="modal" id="modal" hidden><div class="mbox"><button class="ib mx" id="modalX" aria-label="close">✕</button><div id="modalBody"></div></div></div>
 <canvas id="fx"></canvas>
@@ -77,11 +86,11 @@
 
 <script src="engine.js?v=22"></script>
 <script src="art.js?v=23"></script>
-<script src="i18n.js?v=4"></script>
-<script src="i18n-more.js?v=59"></script>
+<script src="i18n.js?v=5"></script>
+<script src="i18n-more.js?v=60"></script>
 <script src="../sudoku/firebase-config.js?v=ac2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=32"></script>
-<script src="app.js?v=67"></script>
+<script src="app.js?v=68"></script>
 </body>
 </html>

@@ -814,6 +814,66 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8);
     return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], wasm: true };
   }
+  // review box: the best few moves with their lines (each search excludes the moves already found), best first
+  function multiPV(m) {
+    const n = m.n || 4, out = [], legal = replay(m.fen, m.moves).pos.legal();
+    const lineOf = us => { const p = replay(m.fen, m.moves).pos, pv = []; for (const u of us) { const x = p.fromUci(u); if (!x) break; pv.push(x); p.make(x); } return pv; };
+    if (!X) {
+      const L = analyze(m.fen, m.moves, m.time || 800).list.sort((a, b) => b.v - a.v).slice(0, n);
+      return L.map(e => ({ m: e.m, v: e.v, pv: [e.m] }));
+    }
+    const ex = [];
+    for (let k = 0; k < Math.min(n, legal.length); k++) {
+      wSet(m.fen, m.moves);
+      if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+      X.set_excluded(ex.length);
+      const ms = (m.time || 600) * (k ? 0.7 : 1), cm = X.think(ms * 0.5, ms, 64, 0);
+      X.set_excluded(0);
+      if (!cm) break;
+      ex.push(cm);
+      const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8 + 64), us = [];
+      for (let j = 0; j < r[4] && j < 10; j++) us.push(wUci(r[8 + j]));
+      if (!us.length || us[0] !== wUci(cm)) us.splice(0, us.length, wUci(cm));
+      const pv = lineOf(us); if (!pv.length) break;
+      out.push({ m: pv[0], v: toJS(r[1]), pv, depth: r[2] });
+      self.postMessage({ id: m.id, type: 'progress', list: out.slice() });
+    }
+    return out;
+  }
+  // review box, continuous analysis: the best m.n moves at depth 1, 2, 3, ... (each search excludes the moves already
+  // found at that depth), posted after every depth (and after each line from depth 8 on, partial: true). Ends at m.depth
+  // or two depths after a mate shows up; the page terminates the worker to stop it sooner.
+  function mpvLoop(m) {
+    const legal = replay(m.fen, m.moves).pos.legal(), n = Math.min(m.n || 4, legal.length), maxD = m.depth || 60;
+    if (!X || !n) { const out = n ? multiPV(m) : []; self.postMessage({ id: m.id, type: 'result', list: out, depth: out.length ? out[0].depth || 1 : 0 }); return; }
+    const lineOf = us => { const p = replay(m.fen, m.moves).pos, pv = []; for (const u of us) { const x = p.fromUci(u); if (!x) break; pv.push(x); p.make(x); } return pv; };
+    let nodes = 0, prev = [], last = 0, mateAt = 0;
+    for (let d = 1; d <= maxD; d++) {
+      const ex = [], out = [];
+      for (let k = 0; k < n; k++) {
+        wSet(m.fen, m.moves);
+        if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+        X.set_excluded(ex.length);
+        const cm = X.think(0, 0, d, 0);
+        X.set_excluded(0);
+        if (!cm) break;
+        ex.push(cm);
+        const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8 + 64), us = [];
+        nodes += r[3] >>> 0;
+        for (let j = 0; j < r[4] && j < 12; j++) us.push(wUci(r[8 + j]));
+        if (!us.length || us[0] !== wUci(cm)) us.splice(0, us.length, wUci(cm));
+        const pv = lineOf(us); if (!pv.length) break;
+        out.push({ m: pv[0], v: toJS(r[1]), pv });
+        if (d >= 8 && k < n - 1) self.postMessage({ id: m.id, type: 'progress', depth: d, nodes, partial: true, list: out.concat(prev.filter(e => !out.some(x => x.m === e.m))).slice(0, n) });
+      }
+      if (!out.length) break;
+      prev = out; last = d;
+      self.postMessage({ id: m.id, type: 'progress', depth: d, nodes, list: out.slice() });
+      if (Math.abs(out[0].v) > MATET) { if (!mateAt) mateAt = d; if (d >= mateAt + 2) break; }
+      if (legal.length === 1 && d >= 4) break;
+    }
+    self.postMessage({ id: m.id, type: 'result', depth: last, nodes, list: prev });
+  }
   self.onmessage = async e => {
     const m = e.data;
     try {
@@ -825,7 +885,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         if (X) { const pos = wSet(m.fen, m.moves); r = wRootLoop(pos, m.time || 1000, 64, 150, (l, d) => prog(l.map(x => ({ m: pos.fromUci(wUci(x.cm)), v: x.v, kind: x.kind })), d)); }
         else r = analyze(m.fen, m.moves, m.time || 1000, prog);
         self.postMessage({ id: m.id, type: 'result', ...r });
-      } else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.fen, m.moves, m.n, m.defend, m.maxNodes) });
+      } else if (m.type === 'multipv') self.postMessage({ id: m.id, type: 'result', list: multiPV(m) });
+      else if (m.type === 'mpvLoop') mpvLoop(m);
+      else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.fen, m.moves, m.n, m.defend, m.maxNodes) });
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

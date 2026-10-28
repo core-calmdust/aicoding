@@ -64,7 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 html:not(.atlas-skin) .frame{padding-right:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .coords.right{width:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*-0.14)}
-@media (max-aspect-ratio: 1/1) and (pointer: coarse), (max-width: 700px) and (max-aspect-ratio: 1/1){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   html:not(.atlas-skin) .frame{padding-right:var(--fp)}
   html:not(.atlas-skin) .coords.right{width:var(--fp)}
   html:not(.atlas-skin) .board-area > .hand.bottom{left:0;margin-top:calc(var(--fp) - var(--cw)*0.16)}
@@ -579,10 +579,12 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
 .mark.ng{border-color:#ff6b5b}
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse), (max-width: 700px) and (max-aspect-ratio: 1/1){
+/* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
+   except a phone held sideways (below) */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   :root{--top:0px}
   .side > .brand{position:static;width:calc(var(--bw) + var(--fp) + var(--cw)*0.16);max-width:100%;flex:none}
-  :root{--cw:min(calc((100vw - 20px) / 9.75), 90px)}
+  :root{--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px)}
   .graph{height:64px}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px,env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
@@ -614,7 +616,7 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   .btn svg{width:17px;height:17px}
   .graph{height:64px}
 }
-@media (min-aspect-ratio: 1/1) and (max-height: 560px){
+@media (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
   :root{--top:0px}
   .side{display:flex;flex-direction:column;gap:8px}
   .side > .brand{position:static}
@@ -710,9 +712,9 @@ body.in-online #evalCard .navbar{margin-top:0}
 .dock{display:none}
 .mtabs{display:none}
 @media not all and (pointer: coarse){
-  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px));--padx:clamp(14px, 3vw, var(--pad));--cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 500px);--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 12.6), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
-  @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--sidew:clamp(220px, calc(100vw - 34px - (var(--vh) - 20px) / 10.8 * 12.9), 340px);--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 34px - var(--sidew)) / 12.9))} }
-  @media (max-width: 700px) and (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} body:not(.no-online) .app{padding-bottom:124px} }
+  body:not(.no-online){--vh:calc(100dvh - 46px - 62px - var(--hb-h, 0px))}
+  /* phone layout with a mouse (narrow / tall PC window): the dock stays at the bottom, the page leaves room for it */
+  @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)} body:not(.no-online) .app{padding-bottom:124px} }
   body:not(.no-online) .dock{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,#24180f,#150e09);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45)}
   .dock-panel{height:62px;overflow:hidden;transition:height .25s ease}
   body.dock-open .dock-panel{height:min(42vh,380px)}
@@ -762,7 +764,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 @media (pointer: coarse){
   body:not(.no-online){--vh:calc(100lvh - 50px - 40px - env(safe-area-inset-bottom));--padx:clamp(14px, 3vw, var(--pad));--cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.8);--sidew:clamp(260px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 500px);--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 12.6), 120px);--ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   @media (min-aspect-ratio: 1/1) and (max-height: 560px){ body:not(.no-online){--sidew:clamp(220px, calc(100vw - 34px - (var(--vh) - 20px) / 10.8 * 12.9), 340px);--cw:min(calc((var(--vh) - 20px) / 10.8), calc((100vw - 34px - var(--sidew)) / 12.9))} }
-  @media (max-aspect-ratio: 1/1){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), 90px)} }
+  @media (max-aspect-ratio: 1/1), (min-height: 561px){ body:not(.no-online){--cw:min(calc((100vw - 20px) / 9.75), calc((var(--vh) - 200px) / 12.6), 90px)} }
   body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#150e09;border-top:1px solid var(--line)}
   .mtabs button{flex:1;font-size:13px;color:var(--muted);letter-spacing:.06em}
   .mtabs button.sel{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
@@ -831,7 +833,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media (pointer: fine) and (min-aspect-ratio: 1/1) and (min-height: 561px), (pointer: fine) and (max-aspect-ratio: 1/1) and (min-width: 701px), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--cw) * 12.55);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--cw) * 12.55) / 18), 30px)}
@@ -841,8 +843,8 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
   .board-area{align-self:start}
   html.dock-compact .side{align-self:start}
 }
-/* narrow info column (square / tall windows): players stacked one per row, the 7 buttons in two rows so the labels stay readable */
-@media not all and (pointer: coarse){
+/* narrow info column (PC: the fixed-width columns): players stacked one per row, the 7 buttons in two rows so the labels stay readable */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 340px){
   .side-in{gap:8px}
   .side-in > .card{padding:12px}
@@ -856,7 +858,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
   .kifu-card{min-height:90px}
 }
 }
-@media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media (pointer: coarse) and (max-width: 900px), (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 /* ---- online: player names never overflow the two boxes; big clocks; rematch prompt; public chat (shared by the shogi / reversi pages) */
 .players{grid-template-columns:repeat(2,minmax(0,1fr))}
 .player{min-width:0}
@@ -888,7 +890,7 @@ body.in-online .player .side-l{font-size:18px;line-height:1.2;margin:0}
   .player .clk.on{padding:3px 7px 4px}
   .player .clk small{font-size:9.5px;margin-bottom:2px}
 }
-@media (min-aspect-ratio: 1/1) and (max-height: 560px){ .player .clk b{font-size:20px} .player .clk small{display:none} }
+@media (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ .player .clk b{font-size:20px} .player .clk small{display:none} }
 .ol-again{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:rgba(201,169,97,.1);border:1px solid rgba(201,169,97,.45);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;font-size:14px;line-height:1.6;text-align:center}
 .ol-again > span{flex:1 1 100%}
 .ol-again b.cd{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--accent);margin:0 2px}
@@ -996,6 +998,33 @@ html[lang=ar] .pf-input{direction:rtl}
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
+/* ---------------------------------------------------------------- PC layout (common spec, shared/headerbar.js MEDIA): two columns —
+   the board with both komadai on the left, a fixed-width info column on the right (players, evaluation, review, record, lessons /
+   tsume, editor, spectating). The board takes the smaller of the window height and the width left by the column; the column is as
+   tall as the board and scrolls inside. On wide screens the pair stays together in the middle. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  :root, body:not(.no-online){--rw:360px;--pad:clamp(14px, 2.6vh, 32px);--padx:clamp(16px, 2vw, 36px);--gap:clamp(16px, 2vw, 32px);
+    --cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 10.6);
+    --cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 12.6), 120px);
+    --ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
+  .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--top)) var(--padx) var(--pad)}
+  .side{grid-area:side;width:var(--rw);height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + 4px);max-height:none}
+  .board-area{align-self:center}
+  html.dock-compact .side{align-self:center}
+  .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .side-in > *{flex-shrink:0}
+  .side-in > #evalCard{flex:none}
+  .side-in > .kifu-card{flex:1 1 0;min-height:140px}
+  .side-in > .review-card.show{flex:1.6 1 0;min-height:180px;overflow-y:auto}
+  .side-in:has(.review-card.show) > .kifu-card{flex:.7 1 0;min-height:110px}
+  .side .review-card .rv-list{max-height:none}
+  .side .ed-pal{grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+  .side .ed-pal button{min-width:0}
+  .side .ed-pal button .pc{--cw:26px}
+  /* review box (rvbox.js) under the board + info column: the board gives up its height */
+  html.rvbox-on:root, html.rvbox-on body:not(.no-online){--rvbh:clamp(170px, calc(var(--vh) * .28), 250px);--rvbgap:12px;
+    --cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top) - var(--rvbh) - var(--rvbgap)) / 10.6)}
+}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
 @media (min-width: 900px) and (hover: hover) and (pointer: fine){
   .brand-r{gap:10px}
@@ -1118,7 +1147,7 @@ html[lang=ar] .pf-input{direction:rtl}
     <div class="pc-credit" id="pcCredit"></div>
     <div class="field"><label data-i18n="ng.skin"></label><div class="seg" id="segSkin"><button data-v="classic" data-i18n="sk.classic"></button><button data-v="grain" data-i18n="sk.grain"></button><button data-v="metal" data-i18n="sk.metal"></button><button data-v="ink" data-i18n="sk.ink"></button></div></div>
     </div></div>
-    <div class="modal-actions"><button class="mbtn go" id="btnStart" data-i18n="start"></button><button class="mbtn" id="btnCancelNew" data-i18n="close"></button></div>
+    <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
     <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a> · Apache-2.0<br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
   </div>
 </div>
@@ -1244,22 +1273,24 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="engine.js?v=20261021v2"></script>
+<script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=22"></script>
+<script src="../shared/headerbar.js?v=26"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=sec1"></script>
-<script src="variants/search.js?v=20261021vb"></script>
+<script src="online.js?v=stale1"></script>
+<script src="variants/search.js?v=20261028pv"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261025va"></script>
+<script src="variants/variants.js?v=20261028pv"></script>
+<script src="rvbox.js?v=20261028pv"></script>
+<script src="rvtip.js?v=1"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1364,7 +1395,7 @@ function load() {
   } catch (e) {}
   return false;
 }
-function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, game: lesson ? null : game })); } catch (e) {} }
+function save() { if (inStudy()) return; try { localStorage.setItem(STORE, JSON.stringify({ settings, game: lesson ? null : game })); } catch (e) {} }
 
 // ====================================================================== workers
 let weights = null;
@@ -1383,7 +1414,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261021v2');
+  const w = new Worker('engine.js?v=20261028pv');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1613,6 +1644,7 @@ function clearSel() { sel = null; sqEls.forEach(c => c.classList.remove('sel', '
 function canInteract() {
   if (!game || promoPending) return false;
   if (lesson) return lesson.waiting;
+  if (inStudy()) return !game.over;
   if (reviewing || game.over) return false;
   if (settings.mode === 'online') return !!net && !net.done && !!net.game && net.game.status === 'play' && !net.pending && P.side === net.me && cur === game.moves.length;
   if (settings.mode === 'watch') return false;
@@ -1742,6 +1774,7 @@ function drawArrows() {
       }
     }
   }
+  if (rvbHover && RVB && RVB.on && rvbHover.key === rvbKey()) html = html.replace(/<line[^>]*\/>|<circle[^>]*\/>|<text[^>]*>[^<]*<\/text>/g, '') + rvbArrows();
   arrowsEl.innerHTML = html;
 }
 
@@ -1793,7 +1826,7 @@ function renderInfo() {
   renderGraph(); renderKifu();
   const humanCanUndo = settings.mode !== 'watch' && game.moves.length > 0;
   $('#btnUndo').disabled = !humanCanUndo;
-  $('#btnResign').disabled = !!game.over || settings.mode === 'watch';
+  $('#btnResign').disabled = !!game.over || settings.mode === 'watch' || inStudy();
   $('#btnHint').disabled = !!game.over;
   // rated game: no undo at all (also not after the end), no hint / analysis / evaluation while it is going
   document.body.classList.toggle('rated-live', rtLive());
@@ -1805,9 +1838,10 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.remove('show');
   if (reviewing) $('#reviewText').textContent = t('review.label', { n: cur });
-  hbInfo();
+  hbInfo(); rvbRender();
 }
 function renderGraph() {
+  if (inStudy()) return;
   const svg = $('#graph'); const W = 300, H = 74, n = Math.max(game.moves.length + 1, 40);
   const pts = []; let last = 0;
   for (let i = 0; i <= game.moves.length; i++) {
@@ -1835,6 +1869,7 @@ function kifList() {
   return game._kif;
 }
 function renderKifu() {
+  if (inStudy()) return;
   const k = $('#kifu');
   if (!game.moves.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
   const names = kifList();
@@ -1866,6 +1901,7 @@ function setStatus(c, text, thinking) {
 function isAI(c) { return settings.mode === 'watch' || (settings.mode === 'ai' && c !== game.human); }
 function levelOf(c) { if (game && game.rated && settings.mode === 'ai') return game.rated.lv; return settings.mode === 'watch' ? (c === 0 ? settings.level : settings.level2) : settings.level; }
 function newGame(rated) {
+  studyEnd(true);
   if (net) leaveOnlineGame();
   rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
@@ -1903,6 +1939,7 @@ let playTimer = null;
 function stopPlay() { if (playTimer) { clearInterval(playTimer); playTimer = null; } const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (!game || lesson) return;
+  if (inStudy()) studyEnd();
   const N = game.moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -1931,10 +1968,12 @@ document.addEventListener('keydown', e => {
   if (lesson) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
+  if (inStudy()) { e.preventDefault(); return; }
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
 function viewAt(i) {
+  studyEnd(true);
   if (!game || lesson) return;
   busyToken++; cancelAI(); cancelAna();
   cur = i; reviewing = i !== game.moves.length || !!game.over && i !== game.moves.length;
@@ -1980,6 +2019,7 @@ function checkEnd() {
   if (n >= 512) game.over = { winner: -1, reason: 'max', ply: n };
 }
 function humanMove(m) {
+  if (inStudy()) { studyMove(m); return; }
   if (lesson) { lessonMove(m); return; }
   if (settings.mode === 'online') { netMove(m); return; }
   const before = cur;
@@ -1993,9 +2033,18 @@ async function schedule() {
   setStatus(0, ''); setStatus(1, '');
   if (!game || reviewing || lesson) return;
   if (settings.mode === 'online') return;      // online: no AI, the result dialog comes from finishOnline()
+  if (inStudy()) {   // study mode (review box): no AI, no result dialog — only the evaluation of the position
+    const idx = cur, side = P.side;
+    if (game.over || !settings.eval) return;
+    const res = await anaCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 900 } });
+    if (!res || res.error || token !== busyToken || cur !== idx || !inStudy()) return;
+    game.info[idx].ev = side === 0 ? res.score : -res.score; renderInfo();
+    return;
+  }
   if (game.over) {
     if (game.resultShown) return;      // the result dialog appears only when the game actually ends
-    await sleep(600); if (token !== busyToken) return;
+    const g = game;
+    await sleep(600); if (token !== busyToken || g !== game || lesson || edit) return;   // (not when a lesson / the editor / another game was opened in the meantime)
     showResult(); return;
   }
   const side = P.side, idx = cur;
@@ -2110,6 +2159,7 @@ $('#btnPlayNew').onclick = () => { hideOverlay('#playOverlay'); openNewDialog();
 $('#btnPlayCancel').onclick = () => hideOverlay('#playOverlay');
 $('#playOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#playOverlay'); });
 $('#btnUndo').onclick = () => {
+  if (inStudy()) { studyBack(); return; }
   if (!game || !game.moves.length || settings.mode === 'online' || game.rated) return;
   busyToken++; cancelAI(); cancelAna();
   let n = game.moves.length;
@@ -2200,6 +2250,7 @@ function mistakeProblems() {
   return out;
 }
 $('#btnMistakes').onclick = () => {
+  studyEnd(true);
   const probs = mistakeProblems(); if (!probs.length) return;
   hideOverlay('#resultOverlay');
   busyToken++; cancelAI(); cancelAna();
@@ -2442,6 +2493,7 @@ let edit = null;
 const ED_TYPES = [FU, KY, KE, GI, KI, KA, HI, OU];
 const TOTAL = [0, 18, 4, 4, 4, 2, 2, 4];
 function startEdit(fromCurrent) {
+  studyEnd(true);
   rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
@@ -2558,6 +2610,7 @@ function thinkOnce(w, idx, time) {
 }
 function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
 async function runReview() {
+  studyEnd();
   if (!game || lesson || game.moves.length < 2) return;
   rvCancel(); busyToken++; cancelAI(); cancelAna();
   const n = game.moves.length, todo = [];
@@ -2617,12 +2670,14 @@ function rvExplainHtml() {
   if (r.best === r.played) h += `<p>${t('rv.ex.same')}</p>`;
   else if (game.variant && window.Variants) h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p>` + Variants.rvNote(sf, r.played, r.best, a, b, q) + `<p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
   else h += `<p>${t(q === 'best' ? 'rv.ex.alt' : 'rv.ex.best', { m: `<b class="bm">${kan1(sf, r.best)}</b>` })}<span class="ft">${rvFeat(sf, r.best)}</span></p><p class="wr">${t('rv.ex.wr', { a: pct(wrB), b: pct(wrP) })}</p>`;
+  if (r.best !== r.played && window.ShogiTip) h += ShogiTip.html(sf, r.played, r.best, a, b, q);   // 💡 tip (rvtip.js)
   h += `<p class="pv"><span class="h">${t('rv.ex.pv')}</span> ${lineKanji(sf, pv).join(' ')}</p>`;
   h += `<button class="rv-pvbtn" id="rvPvBtn">${t(rvPvShow ? 'rv.ex.hidePv' : 'rv.ex.showPv')}</button></div>`;
   return h;
 }
 function sideName(c) { return settings.mode === 'ai' ? (c === game.human ? t('you') : 'AI') : cname(c); }
 function renderReview() {
+  if (inStudy()) return;
   const card = $('#reviewCard');
   const show = !lesson && game && rvOpen && (rvRun || game.rv);
   card.classList.toggle('show', !!show);
@@ -2640,7 +2695,7 @@ function renderReview() {
     }
     const names = kifList();
     const row = c => { const x = st[c]; return `<span>${c ? '☖' : '☗'} ${sideName(c)}</span><span><b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> <span class="h">${t('rv.avg', { l: x.n ? (x.drop / x.n * 100).toFixed(1) : '0.0' })}</span></span><span class="rv-chips"><span class="best">${x.c.best}</span><span class="good">${x.c.good}</span><span class="dubious">${x.c.dubious}</span><span class="bad">${x.c.bad}</span></span>`; };
-    html = opSummary() + rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
+    html = opSummary() + (rvbShow() && RVB.pc() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span class="h" style="text-align:right">${t('q.best')}/${t('q.good')}/${t('q.dubious')}/${t('q.bad')}</span>${row(0)}${row(1)}</div>`;
     bad.sort((a, b) => b.drop - a.drop);
     if (bad.length && game.variant) { const x = bad[0]; html += `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">${t('vr.rv.sumBad', { i: x.i, m: names[x.i - 1], b: kan1(posAt(x.i - 1).sfen(), x.best) })}</div>`; }
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i - 1}" class="${cur === x.i - 1 ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i}. ${names[x.i - 1]} → ${kan1(posAt(x.i - 1).sfen(), x.best)}</span><span class="ls">−${Math.round(x.drop * 100)}%</span></button>`).join('')}</div>`;
@@ -2652,6 +2707,129 @@ $('#rvBody').addEventListener('click', e => { const ob = e.target.closest('[data
 $('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
+
+// ---------------------------------------------------------------- PC review box (rvbox.js): commentary, candidate moves with lines, study mode
+// study mode: `game` is swapped for a copy of the record up to the studied position (the game itself is kept in rvStudy);
+// the record, graph and review card are not redrawn meanwhile, nothing is saved, and "back to game" puts everything back.
+var rvStudy = null, rvbHover = null, rvbW = null, rvbJob = null, RVB = null;
+function inStudy() { return !!(rvStudy && game === rvStudy.line); }
+const rvbKey = () => game.start + '|' + game.moves.slice(0, cur).join(',');
+function rvbShow() {
+  const g = inStudy() ? rvStudy.orig : game;
+  if (!RVB || !g || lesson || edit || settings.mode === 'online' || rtLive() || !rvOpen || rvRun || !g.rv) return false;
+  return inStudy() || !!g.over || settings.mode === 'pvp';   // not during a game in progress vs the AI
+}
+function rvbStart() {
+  if (inStudy() || !rvbShow()) return false;
+  stopPlay(); busyToken++; cancelAI(); cancelAna(); sel = null; hintMoves = null;
+  const g0 = game, sg = { start: g0.start, moves: g0.moves.slice(0, cur), info: g0.info.slice(0, cur + 1).map(x => ({ ev: x && x.ev != null ? x.ev : null })), human: g0.human, over: null };
+  if (g0.variant) sg.variant = g0.variant;
+  rvStudy = { orig: g0, line: sg, cur, reviewing, base: cur };
+  game = sg; reviewing = false;
+  refresh(false);
+  return true;
+}
+function studyMove(m) {
+  stopPlay(); busyToken++; cancelAna();
+  const usi = P.toUsi(m), capture = !E.isDrop(m) && (P.board[E.mTo(m)] || (P.variant === 'hasami' && P.capCount(E.mFrom(m), E.mTo(m))));
+  game.moves.length = cur; game.info.length = cur + 1;
+  game.moves.push(usi); game.info.push({ ev: null });
+  cur = game.moves.length; hintMoves = null; sel = null; rvbHover = null; game.over = null;
+  P = posAt(cur);
+  playPiece(!!capture);
+  checkEnd();
+  renderBoard(true); renderInfo(); schedule();
+}
+function studyBack() {
+  if (!inStudy() || cur <= rvStudy.base) return;
+  busyToken++; cancelAna();
+  game.moves.length = cur - 1; game.info.length = cur; game.over = null; cur = game.moves.length; hintMoves = null; sel = null; rvbHover = null;
+  refresh(false);
+}
+// back to the game position (quiet: the caller redraws)
+function studyEnd(quiet) {
+  if (!rvStudy) return;
+  const S = rvStudy; rvStudy = null; rvbHover = null;
+  if (game !== S.line) return;   // the game was replaced meanwhile: nothing to restore
+  busyToken++; cancelAI(); cancelAna(); sel = null; hintMoves = null;
+  if (promoPending) { promoPending.remove(); promoPending = null; }
+  game = S.orig; cur = S.cur; reviewing = S.reviewing;
+  if (!quiet) { refresh(false); renderReview(); }
+}
+function rvbKill() { if (rvbW) { rvbW.terminate(); rvbW = null; } rvbJob = null; }
+// continuous analysis (rvbox.js runs it): the worker searches depth 1, 2, 3, ... and posts the best 4 moves with their
+// lines after every depth; RVB stops it (terminate) on another position, the time limit or Stop
+function rvbCands(push, done) {
+  const sf = P.sfen(), key = rvbKey(), mv = game.moves.slice(0, cur), vr = game.variant && window.Variants ? game.variant : '';
+  const played = !inStudy() && cur < game.moves.length ? game.moves[cur] : '';
+  const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 10)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
+  const val = s => Math.abs(s) >= E.MATE - 200 ? fmtScore(s) : Math.round(winRate(s) * 100) + '%';
+  const conv = list => (list || []).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
+    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
+  rvbKill();
+  const id = ++jobId, w = rvbW = vr ? Variants.newWorker() : makeWorker(null);
+  rvbJob = id;
+  w.onmessage = e => { const m = e.data; if (!m || m.id !== id || rvbJob !== id) return; const info = { depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial };
+    if (m.type === 'progress') { if (m.list) push(conv(m.list), info); } else { rvbJob = null; done(m.error ? null : conv(m.list), info); } };
+  w.onerror = () => { if (rvbJob === id) { rvbJob = null; done(null); } };
+  const go = () => { if (rvbJob === id) w.postMessage({ type: 'mpvLoop', variant: vr, sfen: game.start, moves: mv, opts: { n: 4, depth: vr ? 30 : 40 }, id }); };
+  if (vr) go(); else weightsReady.then(() => setTimeout(go, 0));
+  return () => { if (rvbW === w) rvbKill(); };
+}
+function rvbSummary() {
+  const g = game, st = [0, 1].map(() => ({ n: 0, ok: 0, bad: 0, dubious: 0 }));
+  for (let i = 1; i <= g.moves.length; i++) { const r = rvLoss(i); if (!r) continue; const x = st[sideAtPly(i - 1)], q = qOfDrop(r.drop); x.n++; if (r.drop <= 0.06) x.ok++; if (q === 'bad' || q === 'dubious') x[q]++; }
+  let h = g.over ? `<p><b>${escHb(t('hb.over'))}</b></p>` : '';
+  for (const c of [0, 1]) { const x = st[c]; h += `<p>${c ? '☖' : '☗'} ${escHb(sideName(c))}: ${t('rv.acc')} <b>${x.n ? Math.round(x.ok / x.n * 100) : 0}%</b> · ${t('q.bad')} ${x.bad} · ${t('q.dubious')} ${x.dubious}</p>`; }
+  return h;
+}
+function rvbRender() {
+  if (!RVB) return;
+  if (rvStudy && !inStudy()) { rvStudy = null; rvbHover = null; }
+  if (!game || !rvbShow()) { RVB.render({ show: false }); return; }
+  const over = !!game.over && cur === game.moves.length, sf = P.sfen();
+  let head, explain = '';
+  if (inStudy()) {
+    const k = cur - rvStudy.base, names = kifList();
+    head = `${escHb(RVB.T('from', { n: rvStudy.base, k }))}${k ? ` · ${escHb(names[cur - 1] || '')}` : ''}`;
+    const ev = evAt(cur);
+    explain = over ? `<p><b>${escHb(t('hb.over'))}</b></p>` : `<p>${escHb(t('hb.turn', { c: (P.side ? '☖' : '☗') + cname(P.side) }))}${ev != null ? ` · ${escHb(fmtScore(ev))} (${escHb(cname(0))} ${Math.round(winRate(ev) * 100)}%)` : ''}</p>`;
+  } else if (cur < game.moves.length) {
+    const r = rvLoss(cur + 1), q = r ? qOfDrop(r.drop) : '';
+    head = `${escHb(t('rv.ex.move', { n: cur + 1 }))} <b>${escHb(kan1(sf, game.moves[cur]))}</b>${q ? `<span class="tag ${q}">${escHb(t('q.' + q))}</span>` : ''}`;
+    explain = rvExplainHtml().replace(/<div class="rv-ex-h">[\s\S]*?<\/div>/, '').replace(/<p class="pv">[\s\S]*?<\/p>/, '').replace(/<button class="rv-pvbtn"[\s\S]*?<\/button>/, '');
+  } else { head = escHb(RVB.T('final')); explain = rvbSummary(); }
+  const done = over || !P.legalMoves(false).length;
+  RVB.render({ show: true, study: inStudy(), canBack: inStudy() && cur > rvStudy.base, head, explain, unit: RVB.T('unit'), key: done ? '' : rvbKey(), start: done ? null : rvbCands });
+}
+// the hovered candidate on the board: its arrow (gold), then the reply (light blue)
+function rvbArrows() {
+  const h = rvbHover, p = posAt(cur); let out = '';
+  (h.pv || [h.u]).slice(0, 2).forEach((u, k) => {
+    let m; try { m = p.fromUsi(u); } catch (e) { return; }
+    const col = k ? 'rgba(120,190,255,.85)' : 'rgba(226,150,30,.95)', to = sqToDisp(E.mTo(m)), tx = (to % 9) * 100 + 50, ty = ((to / 9) | 0) * 110 + 55;
+    if (E.isDrop(m)) out += `<circle cx="${tx}" cy="${ty}" r="38" fill="none" stroke="${col}" stroke-width="8"/>`;
+    else { const fr = sqToDisp(E.mFrom(m)), fx = (fr % 9) * 100 + 50, fy = ((fr / 9) | 0) * 110 + 55, len = Math.hypot(tx - fx, ty - fy) || 1, ux = (tx - fx) / len, uy = (ty - fy) / len;
+      out += `<line x1="${fx + ux * 20}" y1="${fy + uy * 20}" x2="${tx - ux * 22}" y2="${ty - uy * 22}" stroke="${col}" stroke-width="${k ? 9 : 14}" stroke-linecap="round" marker-end="url(#ah)"/>`; }
+    out += `<text x="${tx}" y="${ty + 44}" font-size="26" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.7)" stroke-width="5" paint-order="stroke">${k + 1}</text>`;
+    p.doMove(m); p.sp = 0;
+  });
+  return out;
+}
+if (window.RvBox && window.HeaderBar && !document.documentElement.classList.contains('atlas-skin')) RVB = RvBox.create({
+  app: document.querySelector('.app'), media: HeaderBar.MEDIA, lang: () => LANG, boardWrap: document.querySelector('.board-area .frame'), boardRing: boardEl,
+  refresh: () => { if (game) { drawArrows(); rvbRender(); } },
+  onStudy: () => rvbStart(),
+  onRestore: () => studyEnd(),
+  onBack: () => studyBack(),
+  onHover: ref => { rvbHover = ref; drawArrows(); },
+  onPick: ref => {
+    if (!ref || ref.key !== rvbKey()) return;
+    if (!inStudy() && !rvbStart()) return;
+    let m; try { m = P.fromUsi(ref.u); } catch (e) { return; }
+    if (canInteract() && P.legalMoves(true).includes(m)) studyMove(m);
+  },
+});
 
 // ====================================================================== kifu share / load
 const HANDI_NAMES = ['平手', '香落ち', '角落ち', '飛車落ち', '二枚落ち', '四枚落ち', '六枚落ち'];
@@ -2874,6 +3052,7 @@ function replayUsi(start, usis, n) {
   return { start, moves: usis, n };
 }
 function openLoaded(r) {
+  studyEnd(true);
   rtForfeit();
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   exitLesson(true);
@@ -3388,6 +3567,7 @@ function examResult() {
   return Math.max(0, Math.min(LESSONS.grades.length - 1, Math.floor((fin + mean) / 2 + 0.4)));
 }
 function startLesson(gi) {
+  studyEnd(true);
   busyToken++; cancelAI(); cancelAna();
   const g = gradeAt(gi);
   if (!g.problems.length) { toast('—'); return; }
@@ -3401,6 +3581,7 @@ function startLesson(gi) {
   loadProblem();
 }
 function loadProblem() {
+  studyEnd(true);
   const pr = lesson.probs[lesson.k];
   if (lesson.endless && lesson.g) tsPin(lesson.g, lesson.k, pr);   // a replaced slot keeps the version played here
   lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = ''; lesson.offline = false; lesson.dev = 0;
@@ -3847,7 +4028,7 @@ function olRender(view) {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
     B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${Online.room && Online.room.title ? `<b class="ol-rtitle">${olEsc(Online.room.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
-      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olBack">${t('ol.back')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: '将棋 SHOGI', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
 }
@@ -3929,6 +4110,7 @@ setTimeout(async () => {
 
 // spec = room code: watch the game read-only (spectator) instead of playing it
 function startOnlineGame(gid, intro, spec) {
+  studyEnd(true);
   if (net && net.gid === gid) return;
   rtForfeit();
   const saved = spec ? (net ? (net.spectate ? net.saved : null) : (lesson || edit ? null : { game, mode: settings.mode })) : null;
@@ -4389,7 +4571,7 @@ applyI18n();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
   if (had && game.clock && !(game.rated && !game.over)) { game.clock.t0 = Date.now(); game.clock.hold = true; }   // rated: the clock keeps running across a reload; otherwise it waits for the first move
   if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
-  else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); openNewDialog(); }
+  else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
   const q = new URLSearchParams(location.search);
   // ?room=CODE (or #room=CODE): join a friend's online room
   const room = (q.get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -4491,7 +4673,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   if (box) {
     box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
     if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }

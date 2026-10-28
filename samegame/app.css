@@ -1229,23 +1229,82 @@ body[data-skin="mid"] .gi .gk{bottom:auto;top:5px;left:auto;right:5px;translate:
 .goh .gotime b{font-family:var(--f-sfx);font-size:22px;line-height:1.1;color:inherit}.goh .gotime small{font-size:12px;font-weight:700}
 .goh .gotime.low{background:var(--red)}
 .goh .gostk{margin-left:auto}.goh .gostk+.gotime{margin-left:0}
-/* header slimmed: gacha/book/achievements/ranking live on the profile card (all widths); language + sound in settings */
-.plinks .btn{position:relative}
-.plinks .dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--ink);display:none}
-[dir="rtl"] .plinks .dot{right:auto;left:-6px}
-.slang select{height:38px;border:var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:700;padding:0 8px;max-width:60%}
+
+/* ===== play screen: centred on every screen size ===== */
+body[data-screen="play"] #app{padding-bottom:0}
+/* effects that pop past the screen edge (the action-mode countdown overshoots) must not widen the page:
+   on phones that zoomed the whole play screen out and pushed it off-centre */
+#app{overflow-x:clip}
 @media (max-width:999px){
-  .prof{flex-wrap:wrap}
-  .plinks{flex-basis:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-  .plinks .btn{min-height:38px;font-size:14px;padding:4px 6px;min-width:0}
-  .plinks .btn span{overflow:hidden;text-overflow:ellipsis}
+  /* vertical centring with flexible spacers (they collapse to 0 when the content is taller than the screen) */
+  #play{min-height:100dvh;padding-bottom:12px}
+  #play::before,#play::after{content:'';flex:1 1 0;order:0}
+  #play::after{order:99}
 }
-@media (max-width:600px){
-  .plinks{gap:5px}.plinks .btn{flex-direction:column;gap:1px;font-size:12px;min-height:46px;padding:3px 2px}
-  .plinks .btn svg{width:18px;height:18px}
-  .plinks .btn span{max-width:100%;white-space:nowrap}
+@media (min-width:1000px){
+  /* the board column shrinks to the board, and the side panel + board are centred as one group */
+  #play{grid-template-columns:330px minmax(0,max-content);justify-content:center;padding-bottom:16px}
+  #boardWrap{margin-top:max(0px,calc((100dvh - 32px - var(--bh,100dvh)) / 2))}
 }
-@media (max-width:600px){
-  .top .icons{width:auto;justify-content:flex-end;gap:6px;margin-inline-start:auto}
-  .plinks .btn{font-size:11px;letter-spacing:-.02em}
+
+/* ===== phones: bottom tab bar, one home section at a time ===== */
+.bnav{display:none}
+@media (max-width:760px){
+  :root{--bnh:66px}
+  body.phnav[data-screen="home"]{overflow:hidden}
+  body.phnav[data-screen="home"] #app{height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(var(--bnh) + env(safe-area-inset-bottom))}
+  body.phnav[data-screen="home"] .top{flex:none}
+  body.phnav[data-screen="home"] main{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.phnav #home{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.phnav #htabs,body.phnav #btnGacha{display:none}
+  body.phnav #home>.hpanel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -12px;padding:24px 12px 18px;scrollbar-width:none}
+  body.phnav #home>.hpanel::-webkit-scrollbar{display:none}
+  body.phnav #home>.hpanel>*{flex-shrink:0}
+  /* デイリー: puzzle + daily action, trimmed so both fit one screen */
+  body.phnav .hpanel.daily{row-gap:28px!important}
+  body.phnav #home>.hpanel.daily{padding-bottom:10px}
+  body.phnav #dPuzzle>.note{display:none}
+  body.phnav .dic{width:50px!important;height:50px!important}
+  body.phnav .dhead{margin-bottom:8px}
+  /* アクション: free play first */
+  body.phnav .hpanel[data-p="action"] #dFree{margin-bottom:28px}
+  /* マイページ: full profile card + calendar / login bonus */
+  body.phnav .hpanel.me{display:flex;flex-direction:column;gap:26px}
+  .hpanel.me .prof{flex-wrap:wrap;margin:0;row-gap:12px}
+  .hpanel.me .pinfo{min-width:84px}.hpanel.me .plc .plv{display:none}
+  .hpanel.me .pextra{display:flex;flex-direction:column;gap:10px;flex-basis:100%}
+  .hpanel.me .plvbar{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900}
+  .hpanel.me .plvbar>span:first-child{white-space:nowrap}.hpanel.me .plvbar .bar{flex:1;margin:0}
+  .hpanel.me .pst{list-style:none;margin:0;padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;background:var(--card);border:2px solid var(--ink)}
+  .hpanel.me .pst li{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:13px;font-weight:700;min-width:0}
+  .hpanel.me .pst li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hpanel.me .pst b{font-family:var(--f-sfx);font-size:19px;font-weight:400;white-space:nowrap}.hpanel.me .pst small{font-size:11.5px;margin-inline-start:2px}
+  .hpanel.me .plinks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hpanel.me .plinks .btn{font-size:14.5px;min-height:42px}
+  body[data-skin="mid"] .hpanel.me .pst{border:0;border-radius:14px}
+  .hpanel.me #dCal{background:var(--card);border:var(--line);box-shadow:var(--shadow);padding:14px}
+  body[data-skin="mid"] .hpanel.me #dCal{border:0;border-radius:22px}
+  .hpanel.me .calg span{height:auto;aspect-ratio:1.15;font-size:11px}
+  /* ガチャ */
+  .hpanel.gacha #gachaPanel{padding:16px 14px}
+  body[data-skin="mid"] .hpanel.gacha #gachaPanel{border-radius:22px}
+  /* the bar */
+  body.phnav[data-screen="home"] .bnav{display:flex}
+  .bnav{position:fixed;left:0;right:0;bottom:0;z-index:50;gap:6px;background:var(--card);border-top:var(--line);padding:7px 8px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -5px 0 color-mix(in srgb,var(--ink) 10%,transparent)}
+  .bnav button{position:relative;flex:1 1 0;min-width:0;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px 0;border:2.5px solid transparent;background:transparent;color:var(--text);font-weight:900;font-size:11px;transition:transform .12s,background .12s}
+  .bnav .bni{position:relative;display:grid;place-items:center}
+  .bnav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+  .bnav .bnl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.15}
+  .bnav .dot{position:absolute;top:-4px;right:-9px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid var(--ink)}
+  .bnav button:active{transform:translate(1px,1px)}
+  .bnav button.on{border-color:var(--ink);box-shadow:3px 3px 0 var(--ink);transform:translateY(-4px) rotate(-2deg);background:var(--blue);color:var(--on)}
+  .bnav button.on[data-p="stage"]{background:var(--red)}
+  .bnav button.on[data-p="action"]{background:var(--ink);color:var(--yel)}
+  .bnav button.on[data-p="gacha"]{background:var(--yel);color:#2b2522}
+  .bnav button.on[data-p="me"]{background:var(--pink);color:#2b2522}
+  .bnav button.on .dot{border-color:var(--card)}
+  body:is([data-skin="swiss"],[data-skin="wa"],[data-skin="pixel"]) .bnav button.on{transform:translateY(-4px)}
+  body[data-skin="mid"] .bnav{border-top:0;box-shadow:0 -8px 24px -12px rgba(0,0,0,.35)}
+  body[data-skin="mid"] .bnav button{border-radius:16px}
+  body[data-skin="mid"] .bnav button.on{border-color:transparent;box-shadow:none;transform:translateY(-2px)}
+  body.phnav[data-screen="home"] #toast{bottom:calc(var(--bnh) + 18px + env(safe-area-inset-bottom))}
 }

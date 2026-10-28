@@ -26,9 +26,11 @@ function posAt(i) {
 const sideP = pos => pos.side ? P2 : P1;
 function statusAt(i) {
   if (lesson && lesson.drill) return { over: false };
-  if (localOver && localOver.mv === moves && i === moves.length && !lesson && !puzzle && !net) return localOver;
-  if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
-  if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
+  if (!inStudy()) {
+    if (localOver && localOver.mv === moves && i === moves.length && !lesson && !puzzle && !net) return localOver;
+    if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
+    if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
+  }
   const { pos, hashes, legal } = posAt(i);
   if (!legal.length) return pos.inCheck() ? { over: true, winner: pos.side ? P1 : P2, why: 'mate' } : { over: true, winner: 0, draw: true, why: 'stalemate' };
   if (pos.half >= 100) return { over: true, winner: 0, draw: true, why: 'fifty' };
@@ -138,6 +140,7 @@ function load() {
   return false;
 }
 function save() {
+  if (inStudy()) return;
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp', flip: false }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   try { localStorage.setItem(STORE, JSON.stringify({ settings, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resigned: localOver && localOver.mv === moves ? { winner: localOver.winner } : null })); } catch (e) {}
@@ -146,7 +149,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261021L'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261028pv'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -307,7 +310,7 @@ function renderFx() {
     for (const q of drillStarsLeft()) { const d = document.createElement('div'); d.className = 'star'; d.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>'; placeAt(d, E.sqOf(q)); fxEl.appendChild(d); }
   }
   if (labelList) drawLabels(labelList);
-  else if (!drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  else if (!drawRvbFx(svg) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
 }
 function valLabel(v) {
   if (v > MATET) return { cls: 'win', big: t('lb.win', { n: (MATE - v + 1) >> 1 }) };
@@ -349,6 +352,7 @@ function levelFor(p) { if (rgame && settings.mode === 'ai') return rgame.lv; ret
 function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
   if (gameOver(cur) || animating) return false;
+  if (inStudy()) return true;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
   if (lesson) return !lesson.answered;
   if (reviewing) return false;
@@ -391,7 +395,7 @@ function renderInfo() {
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnFlip').classList.toggle('on', !!settings.flip);
-  renderReview();
+  renderReview(); rvbRender();
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
@@ -420,6 +424,7 @@ function hbInfo(pos, st, ev) {
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
 function renderGraph() {
+  if (inStudy()) return;
   const svg = $('#graph'), W = 300, H = 74, n = Math.max(moves.length + 1, 40);
   const pts = []; let last = 0;
   for (let i = 0; i <= moves.length; i++) { let v = evalAt(i); if (v == null) v = last; last = v; pts.push([i / (n - 1) * W, H / 2 - v * (H / 2 - 4)]); }
@@ -433,6 +438,7 @@ function renderGraph() {
     <line class="cur" x1="${cx}" x2="${cx}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
 }
 function renderKifu() {
+  if (inStudy()) return;
   const k = $('#kifu');
   if (!moves.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
   const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side, html = '';
@@ -554,6 +560,7 @@ function openPromo(cands, to) {
 function closePromo(resync) { if (promoEl) { promoEl.remove(); promoEl = null; if (resync) syncPieces(posAt(cur).pos.b); } }
 function commit(m, dragged) {
   sel = null; closePromo();
+  if (inStudy()) return studyMove(m);
   if (lesson && lesson.drill) return drillMove(m);
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
@@ -563,6 +570,7 @@ function commit(m, dragged) {
 
 // ====================================================================== flow
 function newGame(rated) {
+  studyEnd(true);
   if (net) leaveOnlineGame();
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   startFen = null;
@@ -602,13 +610,14 @@ function playMove(m) {
   evals.length = moves.length; hintList = null;
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
   update(true); save();
-  const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), moveDur() + 450);
+  const st = statusAt(cur), mv = moves;
+  // (the dialog only for this game: not when a lesson / puzzle / another game was opened in the meantime)
+  if (st.over) setTimeout(() => { if (moves === mv && !lesson && !puzzle) onGameEnd(st); }, moveDur() + 450);
   afterPosition();
 }
 function afterPosition() { const tok = ++busyToken; analyzeCurrent(tok); maybeAI(tok); }
 async function maybeAI(tok) {
-  if (lesson || puzzle || reviewing || gameOver(cur)) return;
+  if (lesson || puzzle || reviewing || inStudy() || gameOver(cur)) return;
   const p = toMoveAt(cur); if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now();
@@ -646,7 +655,7 @@ async function analyzeCurrent(tok) {
   anaCache.set(key, res.list); apply(res.list); save();
 }
 function onGameEnd(st) {
-  if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
+  if (settings.mode === 'online' || lesson || puzzle) return;   // the result dialog only for a game that has just ended on the board          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor, aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
@@ -671,6 +680,7 @@ function canUndo() {
   return false;
 }
 function undo() {
+  studyEnd();
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   let i = cur - 1;
@@ -679,6 +689,7 @@ function undo() {
   hideOverlay('#resultOverlay'); update(false); save(); afterPosition();
 }
 function viewAt(i) {
+  studyEnd();
   if (lesson || puzzle) return;
   i = Math.max(0, Math.min(moves.length, i)); if (i === cur) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
@@ -686,7 +697,7 @@ function viewAt(i) {
   cur = i; reviewing = i !== moves.length; hintList = null;
   update(step); afterPosition();
 }
-function resumeHere() { if (!reviewing) return; if (rgame) { viewAt(moves.length); return; } moves = moves.slice(0, cur); evals.length = cur + 1; reviewing = false; gameOverShown = false; update(false); save(); afterPosition(); }
+function resumeHere() { studyEnd(); if (!reviewing) return; if (rgame) { viewAt(moves.length); return; } moves = moves.slice(0, cur); evals.length = cur + 1; reviewing = false; gameOverShown = false; update(false); save(); afterPosition(); }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
 function confetti() {
@@ -706,7 +717,7 @@ $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
 // 投了 (common spec, shared/resign.js): ends the game as your loss after "投了しますか？" → はい
 function canResign() {
-  if (lesson || puzzle) return false;
+  if (lesson || puzzle || inStudy()) return false;
   if (settings.mode === 'online') return olLive() && !!net.game && net.game.status === 'play';
   if (settings.mode === 'watch') return false;
   if (rtLive()) return true;
@@ -1048,7 +1059,7 @@ const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
 let introIdx = 0, savedGame = null;
-function stashGame() { olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
+function stashGame() { studyEnd(true); olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
 function exitSpecial() {
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
@@ -1837,6 +1848,7 @@ let rv = null, rvOpen = false;
 const gameKey = () => keyOf(moves.length);
 function rvCancel() { if (rv && rv.ws) { rv.ws.forEach(w => { w.terminate(); w.jobs.forEach(j => j.resolve(null)); }); rv.ws = null; } if (rv && rv.running) rv = null; }
 async function runReview() {
+  studyEnd();
   if (lesson || puzzle) return;
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (net) return;
@@ -1868,7 +1880,7 @@ async function runReview() {
   if (gameKey() === key) save();
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (!matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
   const L = rv.list[i]; if (!L || !L.length) return null;
@@ -1905,10 +1917,11 @@ function rvExplainHtml() {
   let h = `<div class="rv-ex"><div class="rv-ex-h"><span>${no} <i class="p${ps.side ? 2 : 1}"></i><b>${sanOf(cur)}</b></span>${tag}</div>`;
   if (j.best === j.m) h += `<p>${t('rv.ex.same')}</p>`;
   else if (!j.q) h += `<p>${t('rv.ex.alt', { m: `<b class="bm">${ps.san(j.best)}</b>` })}</p>`;
-  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${ps.san(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${j.plain}</p>`;
+  else h += `<p>${t('rv.ex.best', { m: `<b class="bm">${ps.san(j.best)}</b>` })} <span class="ls">${j.desc}</span></p><p class="why">${j.plain}</p>` + (window.ChessTip ? ChessTip.html(ps, j.m, rv.list[cur], rv.list[cur + 1], j.q) : '');   // 💡 tip (rvtip.js)
   return h + '</div>';
 }
 function renderReview() {
+  if (inStudy()) return;
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
@@ -1920,7 +1933,7 @@ function renderReview() {
     const st = { 1: { n: 0, ok: 0, bad: 0, dubious: 0 }, 2: { n: 0, ok: 0, bad: 0, dubious: 0 } }, list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (!j) continue; const s = st[toMoveAt(i)]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); } }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
+    html = (rvbShow() && RVB.pc() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => { const ps = posAt(x.i).pos; return `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${Math.floor(x.i / 2) + 1}${ps.side ? '…' : '.'} <i class="p${ps.side ? 2 : 1}"></i>${sanOf(x.i)} → ${ps.san(x.best)}</span><span class="ls">${x.desc}</span></button>`; }).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
@@ -1958,6 +1971,112 @@ function startMistakes(probs) {
 }
 $('#btnMistakes').onclick = () => { const p = mistakeProblems(); if (!p.length) return; hideOverlay('#resultOverlay'); startMistakes(p); };
 
+// ---------------------------------------------------------------- PC review box (rvbox.js): commentary, candidate moves with lines, study mode
+// study mode: `moves` is swapped for a copy of the game up to the studied position (the game itself is kept in rvStudy);
+// the record, graph and review card are not redrawn meanwhile, nothing is saved, and "back to game" puts everything back.
+var rvStudy = null, rvbHover = null, rvbW = null, RVB = null;
+function inStudy() { return !!(rvStudy && moves === rvStudy.line); }
+function rvbGameKey() { return inStudy() ? (startFen || '') + '|' + rvStudy.orig.join(',') : gameKey(); }
+function rvbShow() {
+  if (!RVB || lesson || puzzle || net || settings.mode === 'online' || rtLive() || !rvOpen || !rv || rv.running || rv.key !== rvbGameKey()) return false;
+  return inStudy() || gameOver(moves.length) || settings.mode === 'pvp';   // not during a game in progress vs the AI
+}
+function rvbStart() {
+  if (inStudy() || !rvbShow()) return false;
+  stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; sel = null; closePromo();
+  rvStudy = { orig: moves, cur, evals, reviewing, gameOverShown, base: cur };
+  moves = moves.slice(0, cur); rvStudy.line = moves; evals = evals.slice(0, cur + 1); reviewing = false; hintList = null;
+  update(false); afterPosition();
+  return true;
+}
+function studyMove(m) {
+  moves.length = cur; moves.push(m); cur = moves.length; evals.length = cur; hintList = null; rvbHover = null;
+  animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
+  update(true); afterPosition();
+}
+function studyBack() {
+  if (!inStudy() || cur <= rvStudy.base) return;
+  busyToken++; animating = false; moves.length = cur - 1; cur = moves.length; evals.length = cur + 1; hintList = null; rvbHover = null;
+  update(false); afterPosition();
+}
+// back to the game position (quiet: the caller redraws)
+function studyEnd(quiet) {
+  if (!rvStudy) return;
+  const S = rvStudy; rvStudy = null; rvbHover = null;
+  if (moves !== S.line) return;   // the game was replaced meanwhile: nothing to restore
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false; sel = null; closePromo();
+  moves = S.orig; cur = S.cur; evals = S.evals; reviewing = S.reviewing; gameOverShown = S.gameOverShown; hintList = null;
+  if (!quiet) { shownKey = ''; update(false); afterPosition(); }
+}
+function rvbWorker() { if (!rvbW) rvbW = makeWorker(); return rvbW; }
+function rvbCands(push, done) {
+  const w = rvbWorker(), id = ++jobId, mv = moves.slice(0, cur), fen = startFen, idx = cur;
+  const played = !inStudy() && idx < moves.length ? moves[idx] : 0;
+  const conv = list => (list || []).map(e => {
+    const lb = valLabel(e.v), p = E.replay(fen, mv).pos, parts = [];
+    for (let j = 0; j < e.pv.length && j < 10; j++) {
+      const m = e.pv[j], san = p.san(m);
+      if (j) parts.push((p.side === 0 ? `${p.full}.` : j === 1 ? `${p.full}…` : '') + san);
+      p.make(m);
+    }
+    const p0 = E.replay(fen, mv).pos;
+    return { id: e.m, move: hbEsc(p0.san(e.m)), val: lb.big, cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: hbEsc(parts.join(' ')), played: e.m === played, ref: { m: e.m, pv: e.pv, idx, key: keyOf(idx) } };
+  });
+  const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+  w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}), onProgress: m => push(conv(m.list), info(m)) });
+  w.postMessage({ type: 'mpvLoop', fen, moves: mv, n: 4, depth: 60, id });   // continuous analysis: RVB terminates it to stop
+  return () => { if (rvbW === w) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rvbW = null; } };
+}
+function rvbSummary() {
+  const st = statusAt(moves.length), out = [];
+  const res = st.over ? (st.winner ? t('ev.won', { c: pname(st.winner) }) : t('res.draw')) + (st.why ? ` (${t('res.why.' + st.why)})` : '') : '';
+  if (res) out.push(`<p><b>${res}</b></p>`);
+  const n = { 1: { n: 0, ok: 0, bad: 0, dubious: 0 }, 2: { n: 0, ok: 0, bad: 0, dubious: 0 } };
+  for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (!j) continue; const s = n[toMoveAt(i)]; s.n++; if (j.ok) s.ok++; if (j.q) s[j.q]++; }
+  for (const p of [P1, P2]) { const s = n[p]; out.push(`<p>${sideLabel(p)} (${pname(p)}): ${t('rv.acc')} <b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b> · ${t('q.bad')} ${s.bad} · ${t('q.dubious')} ${s.dubious}</p>`); }
+  return out.join('');
+}
+function rvbRender() {
+  if (!RVB) return;
+  if (rvStudy && !inStudy()) { rvStudy = null; rvbHover = null; }
+  if (!rvbShow()) { RVB.render({ show: false }); return; }
+  const key = keyOf(cur), over = gameOver(cur), pos = posAt(cur).pos;
+  let head, explain = '';
+  if (inStudy()) {
+    const k = cur - rvStudy.base, last = k ? `${hbEsc(sanOf(cur - 1))}` : '';
+    head = `${hbEsc(RVB.T('from', { n: rvStudy.base, k }))}${last ? ` · <span>${last}</span>` : ''}`;
+    const ev = over ? null : evals[cur];
+    explain = over ? `<p><b>${hbEsc(statusAt(cur).winner ? t('ev.won', { c: pname(statusAt(cur).winner) }) : t('res.draw'))}</b></p>` : `<p>${hbEsc(t('hb.turn', { c: pname(sideP(pos)) }))}${ev ? ' · ' + hbEsc(evalText(ev)) : ''}</p>`;
+  } else if (cur < moves.length) {
+    const no = `${pos.full}${pos.side ? '…' : '.'}`, j = rvJudge(cur);
+    const q = !j ? '' : j.q || (j.best === j.m ? 'best' : 'good');
+    head = `<b>${no} ${hbEsc(sanOf(cur))}</b>${q ? `<span class="tag ${q}">${hbEsc(t('cq.' + q))}</span>` : ''}`;
+    explain = rvExplainHtml().replace(/<div class="rv-ex-h">[\s\S]*?<\/div>/, '');
+  } else { head = hbEsc(RVB.T('final')); explain = rvbSummary(); }
+  RVB.render({ show: true, study: inStudy(), canBack: inStudy() && cur > rvStudy.base, head, explain, unit: RVB.T('unit'), key: over ? '' : key, start: over ? null : rvbCands });
+}
+// the hovered candidate on the board: its arrow, the reply fainter
+function drawRvbFx(svg) {
+  const h = rvbHover; if (!h || !RVB || !RVB.on || h.key !== keyOf(cur)) return false;
+  const pv = h.pv && h.pv.length ? h.pv : [h.m];
+  pv.slice(0, 3).forEach((m, i) => arrow(svg, mFrom(m), mTo(m), i === 0 ? '' : i === 1 ? 'a3 rvb-reply' : 'a3 rvb-reply2'));
+  hlDiv('sel', mFrom(pv[0]));
+  return true;
+}
+if (window.RvBox && window.HeaderBar && !document.documentElement.classList.contains('atlas-skin')) RVB = RvBox.create({
+  app: document.querySelector('.app'), media: HeaderBar.MEDIA, lang: () => LANG, boardWrap: $('#frame'), boardRing: $('#board'),
+  refresh: () => { renderFx(); rvbRender(); },
+  onStudy: () => rvbStart(),
+  onRestore: () => studyEnd(),
+  onBack: () => studyBack(),
+  onHover: ref => { rvbHover = ref; renderFx(); },
+  onPick: ref => {
+    if (!ref || ref.key !== keyOf(cur)) return;
+    if (!inStudy() && !rvbStart()) return;
+    if (posAt(cur).legal.includes(ref.m) && canHumanPlay()) studyMove(ref.m);
+  },
+});
+
 // ====================================================================== share / load (PGN, FEN, UCI, URL)
 function parseGameText(v) {
   v = (v || '').trim(); if (!v) return null;
@@ -1984,6 +2103,7 @@ function parseGameText(v) {
   return { fen, list };
 }
 function openLoaded(fen, list, n) {
+  studyEnd(true);
   ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   if (net) leaveOnlineGame();
@@ -2172,7 +2292,7 @@ function olRender(view) {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
     B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${R.title ? `<b class="ol-rtitle">${olEsc(R.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
-      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olBack">${t('ol.back')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: 'Chess', url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
 }
@@ -2548,7 +2668,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
   btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
@@ -2951,7 +3071,7 @@ $('#langSel').onchange = e => {
 };
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); if (!olRoomQ) openNewDialog(); }
+else if (!hadSave) { update(false); if (!olRoomQ) afterPosition(); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
 else { update(false); afterPosition(); }
 // ?room=CODE (or #room=CODE): join a friend's online room
 if (olRoomQ) {
@@ -2975,6 +3095,7 @@ function backToBoard() { document.querySelectorAll('.overlay.show').forEach(o =>
 function rsInProgress() { return !lesson && !puzzle && moves.length > 0 && !gameOver(moves.length); }
 function rsViewing() { return !lesson && !puzzle && reviewing; }
 function rsOpen() {
+  studyEnd();
   if (net) { openNewDialog(); return; }
   if (!rsInProgress() && !rsViewing()) { openNewDialog(); return; }
   $('#rsText').textContent = rsViewing() ? t('rs.viewing', { n: cur }) : t('rs.playing', { n: moves.length });
@@ -2987,6 +3108,7 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (inStudy()) studyEnd();
   const N = moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -3016,6 +3138,7 @@ document.addEventListener('keydown', e => {
   if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
+  if (inStudy()) { e.preventDefault(); return; }
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });

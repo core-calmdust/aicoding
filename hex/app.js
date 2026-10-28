@@ -62,6 +62,7 @@ function applyI18n() {
 function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
 let humanColor = P1;
 let reviewing = false;
+let rbS = null;          // review box study (検討モード, rbox.js): { base, pos: [Pos], mv: [moves] }
 let manualEnd = null;    // resignation in a game vs the AI or between two players: { over, winner, why, n }
 let aiVals = [];         // the AI's own search values (its view), newest last: for its resignations
 let evals = [];          // evals[i] = evaluation after i moves (Red's view)
@@ -105,7 +106,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -253,8 +254,26 @@ function drawBoardSVG(n) {
   stoneEls.clear(); shownKey = '';
   boardEl.classList.toggle('no-num', !settings.num);
 }
-function ensureBoard(n) { if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
+// PC layout (html.pc2, see index.html): the board also stands upright when that makes it larger — a window narrower than it is
+// wide enough for the flat board beside the info column (2026-10-28). Decided per window size / board size / review box shown
+// (not while the online dock refits the page).
+let rotKey = '', rotPc = false;
+function pcRot(n) {
+  const de = document.documentElement, pc = de.classList.contains('pc2');
+  const k = innerWidth + 'x' + innerHeight + (pc ? 'p' : '') + (de.classList.contains('rb-on') ? 'r' : '') + n;
+  if (k === rotKey) return rotPc;
+  rotKey = k; rotPc = false;
+  const app = document.querySelector('.app'); if (!pc || !app) return rotPc;
+  const pr = document.createElement('div');
+  pr.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;width:calc(100vw - var(--padx) * 2 - var(--gap) - var(--rw));height:calc(var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rbx, 0px))';
+  app.appendChild(pr); const r = pr.getBoundingClientRect(); pr.remove();
+  const w = (n - 1) * 1.5 + 1 + 2.7, h = (n - 1) * SQ3 / 2 + 2 * HR + 2.4;   // the flat board's view box (see geom)
+  const flat = Math.min(r.height / h, r.width / w), up = Math.min(r.height / w, r.width / h);
+  return (rotPc = up > flat * 1.08);
+}
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
+window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
 let shownKey = '';
 function stoneSVG(i, p, cls) {
@@ -275,6 +294,7 @@ function syncStones(pos, animCell) {
   void html;
 }
 function renderBoard(anim) {
+  if (rbS) { const p = rbShown(); ensureBoard(p.n); syncStones(p, -1); renderFx(); boardEl.classList.add('can'); return; }
   const { pos } = posAt(cur), key = keyOf(cur);
   ensureBoard(pos.n);
   const prev = shownKey; shownKey = key;
@@ -296,6 +316,7 @@ function fxDiv(cls, i) { const d = document.createElement('div'); d.className = 
 function renderFx() {
   fxEl.innerHTML = '';
   if (!G) return;
+  if (rbS) { rbStudyFx(); return; }
   const { pos } = posAt(cur), st = statusAt(cur), m = cur > 0 ? moves[cur - 1] : -1;
   const over = bdEl.querySelector('#over'), thr = bdEl.querySelector('#thr');
   if (!over || !thr) return;
@@ -319,6 +340,7 @@ function renderFx() {
   for (const k of lessonMarks) fxDiv('mark ' + k.cls, k.at);
   if (labelList) drawLabels(labelList);
   else if (!drawReviewFx() && hintList && !st.over) drawHints(hintList);
+  rbHoverFx();
   renderPrompt();
 }
 function renderPrompt() {
@@ -505,8 +527,8 @@ function setHover(i) {
   const g = bdEl.querySelector('#over'); if (!g) return;
   const old = g.querySelector('.ghost'); if (old) old.remove();
   ghostAt = -1;
-  if (i < 0 || !canHumanPlay()) return;
-  const { pos } = posAt(cur); if (pos.at(i)) return;
+  if (i < 0 || !(rbS || canHumanPlay())) return;
+  const pos = rbS ? rbShown() : posAt(cur).pos; if (pos.at(i) || pos.winner()) return;
   const tmp = document.createElementNS(NS, 'g'); tmp.innerHTML = stoneSVG(i, pos.side, 'ghost'); g.appendChild(tmp.firstChild); ghostAt = i;
 }
 boardEl.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { const i = cellAt(e.clientX, e.clientY); if (i !== ghostAt) setHover(i); } });
@@ -516,6 +538,7 @@ $('#swapBtn').addEventListener('click', e => { e.stopPropagation(); ctx(); if (!
 function cancelSel() { }
 function onCell(i) {
   ctx();
+  if (rbS) { if (i >= 0) RBox.play(i); return; }
   if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle) rsOpen(); return; }
   if (i < 0) return;
   const { pos } = posAt(cur);
@@ -556,7 +579,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) { if (st.why === 'connect') sConnect(d); setTimeout(() => onGameEnd(st), d + 650); }
+  if (st.over) { if (st.why === 'connect') sConnect(d); const mv = moves; setTimeout(() => { if (moves === mv) onGameEnd(st); }, d + 650); }   // (same game only)
   afterPosition();
 }
 function afterPosition() {
@@ -639,6 +662,7 @@ async function analyzeCurrent(tok) {
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
+  if (lesson || puzzle) return;   // (a lesson / puzzle opened meanwhile: the game result is only shown right when the game ends)
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
@@ -653,7 +677,8 @@ function onGameEnd(st) {
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
-  setTimeout(() => showOverlay('#resultOverlay'), 700);
+  const mv = moves;
+  setTimeout(() => { if (moves === mv && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700);   // not when a lesson / puzzle / other game was opened meanwhile
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -662,6 +687,7 @@ function canUndo() {
   return false;
 }
 function undo() {
+  if (rbS) { RBox.back(); return; }
   if (!canUndo()) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   let i = cur - 1;
@@ -671,6 +697,7 @@ function undo() {
   update(false); save(); afterPosition();
 }
 function viewAt(i) {
+  if (rbS) RBox.stop();
   if (lesson || puzzle) return;
   i = Math.max(0, Math.min(moves.length, i));
   if (i === cur) return;
@@ -1753,16 +1780,20 @@ function crExplain(i, j) {   // { kind, txt } for move i (played from position i
   if (pos.ply < pos.n && (r === 0 || r === pos.n - 1 || c === 0 || c === pos.n - 1) && !edge) return { kind: 'edge', txt: t('cr.edge', { b: crName(pos, b) }) };
   return { kind: 'gen', txt: t('cr.gen', { d: j.desc, b: crName(pos, b) }) };
 }
+// commentary of the move played from the position shown: { head, tag, body } (the coach card and the review box)
+function rvCoachMove() {
+  const i = cur, j = rvJudge(i), who = toMoveAt(i);
+  const head = t('cr.move', { n: i + 1, who: sideLabel(who), m: '<bdi>' + mvAt(i) + '</bdi>' });
+  const tag = j && j.q ? `<span class="tag ${j.q}">${t('q.' + j.q)}</span>` : j && j.ok ? `<span class="tag best">${t('q.best')}</span>` : '';
+  if (!j) return { head, tag, body: `<p>${t('cr.noData')}</p>` };
+  const x = crExplain(i, j);
+  return { head, tag, body: `<p>${x.txt}</p>` + (x.kind ? `<p class="cr-tip">${t('cr.tip.' + x.kind)}</p>` : '') };
+}
 function rvCoach() {
   let h = `<div class="cr-box"><div class="cr-h">${t('cr.title')}</div>`;
   if (cur < moves.length) {   // one move
-    const i = cur, j = rvJudge(i), who = toMoveAt(i);
-    h += `<p class="cr-mv"><b>${t('cr.move', { n: i + 1, who: sideLabel(who), m: '<bdi>' + mvAt(i) + '</bdi>' })}</b>${j && j.q ? ` <span class="tag ${j.q}">${t('q.' + j.q)}</span>` : j && j.ok ? ` <span class="tag best">${t('q.best')}</span>` : ''}</p>`;
-    if (!j) return h + `<p>${t('cr.noData')}</p></div>`;
-    const x = crExplain(i, j);
-    h += `<p>${x.txt}</p>`;
-    if (x.kind) h += `<p class="cr-tip">${t('cr.tip.' + x.kind)}</p>`;
-    return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
+    const x = rvCoachMove();
+    return h + `<p class="cr-mv"><b>${x.head}</b>${x.tag ? ' ' + x.tag : ''}</p>${x.body}<p class="cr-more">${t('cr.nav')}</p></div>`;
   }
   const sides = settings.mode === 'ai' ? [humanColor] : [P1, P2], all = [];
   const st = {}; sides.forEach(p => (st[p] = { n: 0, ok: 0, bad: 0, dubious: 0 }));
@@ -1783,6 +1814,7 @@ function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('y
 function renderReview() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
+  if (window.RBox) RBox.sync();
   const show = !lesson && !puzzle && rvOpen && rv;
   card.classList.toggle('show', !!show);
   document.body.classList.toggle('rv-on', !!show);
@@ -1793,7 +1825,7 @@ function renderReview() {
   } else {
     const list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (j && j.q) list.push({ i, ...j }); }
-    html = rvCoach();
+    html = RBox.isOn() ? '' : rvCoach();
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${toMoveAt(x.i)}"></i>${mvAt(x.i)} → ${mvIn(posAt(x.i).pos, x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
@@ -1805,6 +1837,7 @@ function renderReview() {
 }
 // on the board: the analysis of the viewed position, the move actually played and the best move
 function drawReviewFx() {
+  if (rbS) return false;
   if (lesson || puzzle || !rvOpen || !rv || rv.running || rv.key !== gameKey() || cur >= moves.length) return false;
   const L = rv.list[cur]; if (!L) return false;
   drawHints(L);
@@ -1816,6 +1849,81 @@ $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+
+// ====================================================================== review box (PC): commentary + candidate moves with lines + study mode (rbox.js)
+function rbShown() { return rbS ? rbS.pos[rbS.pos.length - 1] : posAt(cur).pos; }
+function rbActive() {
+  if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || settings.mode === 'online' || rtLive()) return false;
+  if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
+  return gameOver(moves.length) || settings.mode === 'pvp';   // finished games (or a loaded / two-player record)
+}
+let rbW = null;
+function rbAnalyze(done) {
+  const pos = rbShown();
+  if (pos.winner() || (!rbS && statusAt(cur).over)) { done([], true); return null; }
+  const turn = pos.side, played = !rbS && cur < moves.length ? moves[cur] : -9;
+  const list = rbS ? moves.slice(0, rbS.base).concat(rbS.mv) : moves.slice(0, cur);
+  if (!rbW) rbW = makeWorker();
+  const w = rbW, id = ++jobId;
+  new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: startObj(), moves: list, time: 2000, max: 12, pv: 5, id }); }).then(r => {
+    if (w !== rbW || !r || r.error) { if (w === rbW) done([], true); return; }
+    const L = r.list || [], max = Math.max(1, ...L.map(e => e.n || 0));
+    done(L.filter((e, k) => k < 3 || e.kind === 'exact' || (e.n || 0) >= max * .01).slice(0, 5).sort((a, b) => b.v - a.v).map(e => {
+      let p = pos.clone(); const pv = [];
+      try { p.play(e.m); for (const m of e.pv || []) { pv.push({ t: mvIn(p, m), s: p.side, m }); p.play(m); } } catch (err) {}
+      const V = valLabel(e.v), wr = wrOf(e.v);
+      return { id: e.m, mv: mvIn(pos, e.m), val: V.big, sub: e.kind === 'exact' ? '' : RBox.t('visits', { n: e.n }), cls: wr >= .55 ? 'good' : wr <= .45 ? 'bad' : '', pv, played: e.m === played };
+    }), true);
+  });
+  return () => { if (w === rbW && w.jobs.has(id)) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rbW = null; } };
+}
+function rbHoverFx() {
+  const c = window.RBox && RBox.hovered(); if (!c || !G) return;
+  const p0 = rbShown(); fxEl.querySelectorAll('.hintlbl').forEach(e => e.style.opacity = '.15');
+  const seq = [{ m: c.id, s: p0.side }].concat((c.pv || []).map(x => ({ m: x.m, s: x.s })));
+  seq.forEach((x, k) => { if (x.m == null || x.m < 0 || x.m === SWAP) return; const d = fxDiv('rbpv s' + x.s + (k === 0 ? ' first' : ''), x.m); d.textContent = k + 1; });
+}
+function rbStudyFx() {
+  const pos = rbShown(), over = bdEl.querySelector('#over'), thr = bdEl.querySelector('#thr'); if (!over || !thr) return;
+  for (const [, el] of stoneEls) el.classList.remove('dim', 'win');
+  let o = ''; const c = pos.last;
+  if (c >= 0 && (rbS.mv.length || rbS.base > 0)) o += `<circle class="lastdot" cx="${G.X[c].toFixed(3)}" cy="${G.Y[c].toFixed(3)}" r=".1"/>`;
+  const w = pos.winner();
+  if (w) { const path = pos.path(w); if (path) { const set = new Set(path); for (const [i, el] of stoneEls) { if (set.has(i)) el.classList.add('win'); else if (pos.at(i) !== w) el.classList.add('dim'); } o += `<path class="winline" d="M${path.map(i => G.X[i].toFixed(3) + ',' + G.Y[i].toFixed(3)).join('L')}"/>`; } }
+  over.innerHTML = o; thr.innerHTML = '';
+  rbHoverFx();
+  $('#swapBtn').classList.remove('show'); $('#prompt').classList.remove('show');
+}
+function rbStudyPlay(m) {
+  const pos = rbShown();
+  if (!pos.legal(m)) { if (m >= 0 && m !== SWAP && pos.at(m)) toast(t('cant.taken')); return false; }
+  const np = pos.clone().play(m);
+  rbS.pos.push(np); rbS.mv.push(m);
+  if (m === SWAP) { for (const [, el] of stoneEls) el.remove(); stoneEls.clear(); syncStones(np, -1); sSwap(); }
+  else { syncStones(np, m); sPlace(); }
+  renderFx();
+  return true;
+}
+if (window.RBox) RBox.init({
+  host: $('.app'), badgeHost: frameEl, lang: () => LANG,
+  active: rbActive,
+  key: () => (rbS ? 'S' + rbS.mv.join(',') : 'G') + '|' + keyOf(rbS ? rbS.base : cur),
+  baseMove: () => cur,
+  explain: () => {
+    if (cur < moves.length) { const x = rvCoachMove(); return { head: x.head, tag: x.tag, html: x.body }; }
+    const st = statusAt(moves.length);
+    const h = rvCoach().replace(/^<div class="cr-box"><div class="cr-h">[^<]*<\/div>/, '').replace(/<\/div>$/, '').replace(/<p class="cr-more">.*?<\/p>/, '');
+    return { head: RBox.t('final') + (st.winner ? ' · ' + escHb(t('hb.won', { c: pname(st.winner) })) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
+  },
+  analyze: rbAnalyze,
+  hover: () => renderFx(),
+  studyStart: () => { busyToken++; stopPlay(); hintList = null; rbS = { base: cur, pos: [posAt(cur).pos.clone()], mv: [] }; renderBoard(false); },
+  studyPlay: rbStudyPlay,
+  studyBack: () => { if (rbS && rbS.mv.length) { const m = rbS.mv.pop(); rbS.pos.pop(); if (m === SWAP) { for (const [, el] of stoneEls) el.remove(); stoneEls.clear(); } syncStones(rbShown(), -1); renderFx(); } },
+  studyEnd: () => { rbS = null; for (const [, el] of stoneEls) el.remove(); stoneEls.clear(); shownKey = ''; renderBoard(false); renderInfo(); },
+  studyLen: () => rbS ? rbS.mv.length : 0,
+  studyInfo: () => { const p = rbShown(), w = p.winner(); return `<b>${escHb(w ? t('hb.won', { c: pname(w) }) : t('hb.turn', { c: pname(p.side) }))}</b>` + (w ? '' : ` · ${[P1, P2].map(q => `<i class="rb-d s${q}"></i> ${escHb(t('need', { n: p.need(q) }))}`).join(' ')}`); },
+});
 
 // ====================================================================== share / load
 const K64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -1942,7 +2050,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); }   // (no new-game dialog on load: the empty board waits — 対局 opens it)
 else { update(false); afterPosition(); }
 // expose for tests
 window.__hx = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, encMoves, decMoves, onCell, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, openReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, get OPEN() { return OPEN; }, playMove, viewAt, cellAt, get G() { return G; }, commit, get gN() { return gN; } };
@@ -1987,6 +2095,8 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (rbS && what === 'prev') { RBox.back(); return; }   // review box study: ◀ takes back an explored move
+  if (rbS) RBox.stop();
   const N = moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }

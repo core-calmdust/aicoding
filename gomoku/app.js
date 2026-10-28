@@ -33,9 +33,9 @@ function posAt(i) {
 }
 const stCache = new Map();
 function statusAt(i) {
-  if (net && net.over && i === moves.length && !lesson && !puzzle) return net.over;
-  if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
-  if (resigned && i === moves.length && !lesson && !puzzle && resigned.k === rsKey()) return { over: true, winner: 3 - resigned.by, why: 'resign' };
+  if (net && net.over && i === moves.length && !lesson && !puzzle && !kenSw) return net.over;
+  if (rgame && rgame.over && i === moves.length && !lesson && !puzzle && !kenSw) return rgame.over;
+  if (resigned && !kenSw && i === moves.length && !lesson && !puzzle && resigned.k === rsKey()) return { over: true, winner: 3 - resigned.by, why: 'resign' };
   const k = keyOf(i); if (stCache.has(k)) return stCache.get(k);
   const pos = posAt(i);
   let st = pos.status();
@@ -80,6 +80,7 @@ function applyI18n() {
 function renderBrandSub() { const el = $('#brandSub'); if (el) el.textContent = lesson || puzzle ? '' : t('rule.' + rule); }
 let humanColor = P1;
 let reviewing = false;
+let ken = null, kenSw = false, rvbHov = null, BOX = null;   // PC review box: exploring (検討) state, swap flag, hovered candidate, the box
 let evals = [];
 let busyToken = 0;
 let lesson = null, puzzle = null;
@@ -116,7 +117,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261021nn4'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261028rb'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -202,6 +203,7 @@ function syncStones(i, fresh) {
   }
 }
 function renderBoard(anim) {
+  if (ken && !kenSw) { if (kenOk()) return kenSwap(() => renderBoard(anim)); ken = null; }
   const key = keyOf(cur), prev = shownKey; shownKey = key;
   const fresh = anim && cur > 0 && prev === keyOf(cur - 1) ? moves[cur - 1] : -1;
   syncStones(cur, fresh);
@@ -219,6 +221,7 @@ function mk(cls, m, attrs) { const d = document.createElement('div'); d.classNam
 function ghost(m, color, cls) { const el = stoneEl(color); el.classList.add(cls); placeAt(el, m, 0.94); fxEl.appendChild(el); return el; }
 const FORBID_K = ['', '33', '44', 'OL'];
 function renderFx() {
+  if (ken && !kenSw) { if (kenOk()) return kenSwap(renderFx); ken = null; }
   fxEl.innerHTML = '';
   const pos = posAt(cur), st = statusAt(cur), last = cur > 0 ? moves[cur - 1] : -1;
   if (last >= 0 && settings.last && !st.over) mk('last', last);
@@ -242,9 +245,10 @@ function renderFx() {
   }
   for (const k of lessonMarks) mk(k.cls, k.at);
   if (labelList) drawLabels(labelList);
-  else if (!drawReviewFx() && hintList && !st.over) drawHints(hintList);
+  else if (!(rvbHov && BOX && BOX.shown) && !drawReviewFx() && hintList && !st.over) drawHints(hintList);
   if (pend >= 0 && canHumanPlay() && !pos.at(pend)) ghost(pend, pos.side, 'pend');
-  else if (hover >= 0 && canHumanPlay() && !pos.at(hover) && !confirmOn()) ghost(hover, pos.side, 'ghost');
+  else if (hover >= 0 && canHumanPlay() && !pos.at(hover) && !confirmOn() && !rvbHov) ghost(hover, pos.side, 'ghost');
+  rvbFx(pos);
 }
 function valLabel(v) {
   if (v > WINT) return { cls: 'win', big: t('lbl.win') };
@@ -278,6 +282,7 @@ function isAIColor(p) { return settings.mode === 'watch' || (settings.mode === '
 function levelFor(p) { if (rgame && settings.mode === 'ai') return rgame.lv; return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
 function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
+  if (ken && kenOk()) return kenSwap(() => !gameOver(cur));
   if (gameOver(cur) || animating) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
   if (lesson) return !lesson.answered && !lesson.study;
@@ -393,6 +398,7 @@ function pointAt(x, y) {
 boardEl.addEventListener('pointerdown', e => {
   ctx(); if (e.button > 0) return;
   const m = pointAt(e.clientX, e.clientY); if (m < 0) { if (pend >= 0) { pend = -1; renderFx(); } return; }
+  if (ken && kenOk()) { kenSwap(() => { if (canHumanPlay()) onPoint(m); }); if (ken && ken.dirty) { ken.dirty = false; update(true); } return; }
   if (lesson && lesson.pick && !lesson.answered) { lessonAnswer(m); return; }
   if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle) { if (settings.mode === 'online') viewAt(moves.length); else rsOpen(); } return; }
   onPoint(m);
@@ -427,6 +433,7 @@ function onPoint(m) {
 function lessonMarksFlash(m) { const d = mk('ng', m); setTimeout(() => d.remove(), 1200); }
 function commit(m) {
   pend = -1; hover = -1;
+  if (ken && kenSw) { ken.line.push(m); ken.dirty = true; return; }
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
   if (settings.mode === 'online') return netMove(m);
@@ -490,7 +497,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; boardEl.classList.toggle('can', canHumanPlay()); }, moveDur());
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), moveDur() + 500);
+  if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, moveDur() + 500); }   // only if this game is still on the board
   afterPosition();
 }
 function moveDur() { return animOn() ? 200 : 20; }
@@ -527,7 +534,9 @@ async function analyzeCurrent(tok) {
   if (!res || res.error) return;
   anaCache.set(key, res.list); apply(res.list); coachResolve(idx, res.list); save();
 }
+// the result dialog only when a game ends right now on the board (never for a lesson / puzzle, nor for a finished game that is restored)
 function onGameEnd(st) {
+  if (lesson || puzzle) return;
   if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
@@ -544,7 +553,7 @@ function onGameEnd(st) {
   $('#resultSub').innerHTML = sub;
   const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
-  setTimeout(() => showOverlay('#resultOverlay'), 900);
+  { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle && !net) showOverlay('#resultOverlay'); }, 900); }
 }
 // ---------------------------------------------------------------- resign (common spec, shared/resign.js)
 // The 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ); はい ends the game as your loss
@@ -584,7 +593,9 @@ function undo() {
 }
 function viewAt(i) {
   if (lesson || puzzle) return;
-  i = Math.max(0, Math.min(moves.length, i)); if (i === cur) return;
+  i = Math.max(0, Math.min(moves.length, i));
+  if (ken) { kenStop(); if (i === cur) { update(false); afterPosition(); return; } }
+  if (i === cur) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   const step = i === cur + 1;
   cur = i; reviewing = i !== moves.length; hintList = null;
@@ -1741,7 +1752,7 @@ async function runReview() {
   if (gameKey() === key) save();
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
-function revealReview() { if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
+function revealReview() { if (getComputedStyle($('.app > .side')).display === 'contents') setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudge(i) {
   if (!rv || rv.key !== gameKey()) return null;
   const L = rv.list[i]; if (!L || !L.length) return null;
@@ -1833,24 +1844,26 @@ function rvExplainHtml() {
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
 function renderReview() {
+  if (kenSw) return;
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
   card.classList.toggle('show', !!show);
-  if (!show) return;
+  if (!show) { rvbUpdate(); return; }
   let html;
   if (rv.running) html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
   else {
     const st = { 1: { n: 0, ok: 0, bad: 0, dubious: 0 }, 2: { n: 0, ok: 0, bad: 0, dubious: 0 } }, list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (!j) continue; const s = st[toMoveAt(i)]; s.n++; if (j.ok) s.ok++; if (j.q) { s[j.q]++; list.push({ i, ...j }); } }
     const row = p => { const s = st[p]; return `<span class="who"><span class="pdisc p${p}"></span>${sideLabel(p)}</span><span><b>${s.n ? Math.round(s.ok / s.n * 100) : 0}%</b></span><span class="rv-chips"><span class="bad">${t('q.bad')} ${s.bad}</span><span class="dubious">${t('q.dubious')} ${s.dubious}</span></span>`; };
-    html = rvExplainHtml() + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
+    html = (rvbWant() ? '' : rvExplainHtml()) + `<div class="rv-sum"><span></span><span class="h">${t('rv.acc')}</span><span></span>${row(P1)}${row(P2)}</div>`;
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${toMoveAt(x.i)}"></i>${sanOf(x.i)} → ${sqName(x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
     html += `<div class="rv-note" style="color:var(--dim);font-size:11px;line-height:1.6">${t('rv.note')}</div>`;
   }
   $('#rvBody').innerHTML = html;
+  rvbUpdate();
 }
 function drawReviewFx() {
   if (lesson || puzzle || !rvOpen || !rv || rv.running || rv.key !== gameKey() || cur >= moves.length) return false;
@@ -1882,6 +1895,104 @@ function startMistakes(probs) {
   loadLessonProblem();
 }
 $('#btnMistakes').onclick = () => { const p = mistakeProblems(); if (!p.length) return; hideOverlay('#resultOverlay'); startMistakes(p); };
+
+// ====================================================================== PC review box (振り返りボックス: 解説 + 候補手と読み筋 + 検討モード)
+// Under the board and the right column while a reviewed game is shown on a PC (rvbox.js). 検討: from the position on the board
+// both sides' moves can be tried; the record, the graph and the review stay those of the game. While exploring, the board
+// functions run with the explored line swapped in for the record (kenSwap), so the game itself is never touched.
+const GTIP = {
+  ja: { win: '勝ちがある局面では、まず四三や連続の四などの決め手を探しましょう。', block: '相手の三や四は、自分の攻めより先に止めるのが基本です。', four: '四は相手に必ず受けさせる手。受けた石の位置まで読んでから打ちましょう。', three: '活三を作ると相手は受けるしかありません。攻めの主導権を握れます。', shape: '石を連携させ、次に二や三が作りやすい形を意識しましょう。' },
+  en: { win: 'When there is a win, look for the finishing blow first: a four-three or a chain of fours.', block: 'Stop the opponent’s threes and fours before you go on with your own attack.', four: 'A four must be answered. Read where the reply lands before you play it.', three: 'An open three forces a reply — it keeps the initiative with you.', shape: 'Keep your stones connected so the next move can make a two or a three.' },
+  zh: { win: '有胜机时，先找四三或连续冲四等决胜手。', block: '对方的活三、冲四，基本上要先于自己的进攻挡住。', four: '冲四对方必须应。先算好对方挡在哪里再下。', three: '做出活三，对方只能应对，主动权就在你手里。', shape: '让棋子互相呼应，下一手更容易形成二或三。' },
+  ko: { win: '이길 수 있는 국면에서는 먼저 4-3이나 연속 4 같은 결정타를 찾으세요.', block: '상대의 3이나 4는 자신의 공격보다 먼저 막는 것이 기본입니다.', four: '4는 상대가 반드시 막아야 하는 수. 막는 자리까지 읽고 두세요.', three: '열린 3을 만들면 상대는 막을 수밖에 없어 주도권을 쥘 수 있습니다.', shape: '돌을 서로 연결해 다음에 2나 3을 만들기 쉬운 모양을 의식하세요.' },
+  es: { win: 'Cuando hay victoria, busca primero el golpe final: un cuatro-tres o una cadena de cuatros.', block: 'Detén los tres y cuatros del rival antes de seguir con tu ataque.', four: 'Un cuatro obliga a responder. Calcula dónde caerá la respuesta antes de jugarlo.', three: 'Un tres abierto obliga a responder y te da la iniciativa.', shape: 'Mantén tus piedras conectadas para que la siguiente jugada forme un dos o un tres.' },
+  fr: { win: 'Quand il y a un gain, cherchez d’abord le coup décisif : un quatre-trois ou une suite de quatre.', block: 'Arrêtez les trois et les quatre adverses avant de poursuivre votre attaque.', four: 'Un quatre oblige à répondre. Calculez où tombe la réponse avant de le jouer.', three: 'Un trois ouvert force la réponse et vous garde l’initiative.', shape: 'Gardez vos pierres reliées pour que le coup suivant forme un deux ou un trois.' },
+  pt: { win: 'Quando há vitória, procure primeiro o golpe final: um quatro-três ou uma sequência de quatros.', block: 'Pare os três e quatros do rival antes de continuar o seu ataque.', four: 'Um quatro obriga a responder. Calcule onde cai a resposta antes de jogar.', three: 'Um três aberto força a resposta e mantém a iniciativa com você.', shape: 'Mantenha as pedras ligadas para que o próximo lance forme um dois ou um três.' },
+  de: { win: 'Gibt es einen Gewinn, suche zuerst den entscheidenden Zug: Vier-Drei oder eine Kette von Vieren.', block: 'Stoppe gegnerische Dreier und Vierer, bevor du selbst weiter angreifst.', four: 'Ein Vierer muss beantwortet werden. Rechne vorher, wo die Antwort landet.', three: 'Ein offener Dreier erzwingt eine Antwort – so behältst du die Initiative.', shape: 'Halte deine Steine verbunden, damit der nächste Zug einen Zweier oder Dreier bildet.' },
+  hi: { win: 'जीत संभव हो तो पहले निर्णायक चाल खोजें: चार-तीन या लगातार चार।', block: 'अपने हमले से पहले विरोधी के तीन और चार को रोकना मूल नियम है।', four: 'चार का जवाब देना ही पड़ता है। चलने से पहले सोचें कि जवाब कहाँ आएगा।', three: 'खुला तीन बनाने पर विरोधी को रोकना ही पड़ता है — पहल आपके हाथ में रहती है।', shape: 'पत्थरों को जुड़ा रखें ताकि अगली चाल से दो या तीन बन सके।' },
+  ar: { win: 'إذا وُجد فوز فابحث أولًا عن الضربة الحاسمة: أربعة-ثلاثة أو سلسلة من الأربعات.', block: 'أوقف ثلاثيات الخصم ورباعياته قبل أن تواصل هجومك.', four: 'الأربعة تُجبر الخصم على الرد. احسب موضع الرد قبل أن تلعبها.', three: 'الثلاثة المفتوحة تُجبر على الرد وتُبقي المبادرة معك.', shape: 'حافظ على ترابط أحجارك ليصنع الحجر التالي اثنين أو ثلاثة.' }
+};
+const kenMoves = () => moves.slice(0, ken.base).concat(ken.line);
+function kenOk() { return !!(ken && ken.gk === gameKey() && rvOpen && rv && !lesson && !puzzle && !net && BOX && BOX.pc()); }
+function kenSwap(fn) {
+  if (!ken || kenSw) return fn();
+  const sm = moves, sc = cur, sr = reviewing, sh = hintList;
+  moves = kenMoves(); cur = moves.length; reviewing = false; hintList = null; kenSw = true;
+  try { return fn(); } finally { kenSw = false; moves = sm; cur = sc; reviewing = sr; hintList = sh; }
+}
+function kenStart(first) {
+  if (ken || !rvbWant()) return;
+  stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; pend = -1;
+  ken = { base: cur, line: [], gk: gameKey(), dirty: false };
+  if (first !== undefined && posAt(cur).isLegal(first)) ken.line.push(first);
+  rvbHov = null; if (BOX) BOX.clearHover();
+  update(first !== undefined);
+}
+function kenStop() { if (!ken) return; ken = null; rvbHov = null; if (BOX) BOX.clearHover(); pend = -1; }
+function kenBack() { if (!ken || !ken.line.length) return; ken.line.pop(); rvbHov = null; update(false); }
+function kenReset() { if (!ken) return; kenStop(); update(false); afterPosition(); }
+function kenPick(e) {
+  if (!ken) { kenStart(e.m); return; }
+  kenSwap(() => { if (canHumanPlay() && posAt(cur).isLegal(e.m)) { ken.line.push(e.m); ken.dirty = true; } });
+  if (ken.dirty) { ken.dirty = false; rvbHov = null; update(true); }
+}
+function rvbWant() { return !!(BOX && BOX.pc() && rvOpen && rv && rv.key === gameKey() && !lesson && !puzzle && !net && !rtLive() && settings.mode !== 'online'); }
+function rvbFx(pos) {
+  if (!rvbHov || !BOX || !BOX.shown || rvbHov.k !== keyOf(cur)) return;
+  const e = rvbHov.e, me = pos.side;
+  if (pos.at(e.m)) return;
+  mk('hl', e.m);
+  const g0 = ghost(e.m, me, 'rvb-g'); g0.firstChild.textContent = '1';
+  (e.pv || []).forEach((m, i) => { if (pos.at(m)) return; const el = ghost(m, i % 2 ? me : 3 - me, 'rvb-g'); el.classList.add('rvb-p'); el.firstChild.textContent = String(i + 2); });
+}
+function rvbSummary() {
+  const st = statusAt(moves.length), sides = settings.mode === 'ai' ? [humanColor] : [P1, P2], S = {}, all = [];
+  sides.forEach(p => (S[p] = { n: 0, ok: 0, bad: 0, dubious: 0 }));
+  for (let i = 0; i < moves.length; i++) { const who = toMoveAt(i); if (!S[who]) continue; const j = rvJudge(i); if (!j) continue; const x = S[who]; x.n++; if (j.ok) x.ok++; if (j.q) { x[j.q]++; all.push({ i, who, ...j }); } }
+  let h = `<div class="rvb-h">${t('hb.over')} · ${st.winner ? t('res.pWin', { c: pname(st.winner) }) : st.draw ? t('res.draw') : ''} · ${t('info.moves', { n: moves.length })}</div>`;
+  for (const p of sides) { const x = S[p]; h += `<p>${BOX.t('sumWho', { who: sideLabel(p), p: x.n ? Math.round(x.ok / x.n * 100) : 0, b: x.bad, d: x.dubious })}</p>`; }
+  if (!all.length) h += `<p class="rvb-tip">${BOX.t('clean')}</p>`;
+  else { const x = all.slice().sort((a, b) => b.loss - a.loss)[0]; h += `<p><b>${BOX.t('turn')}</b> ${x.i + 1}. <b>${sqName(x.m)}</b> <span class="tag ${x.q}" style="font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b1110">${t('q.' + x.q)}</span> → <b>${sqName(x.best)}</b><button class="rvb-see" data-goto="${x.i}">${BOX.t('see')}</button></p>`; }
+  return h;
+}
+function rvbLeft() {
+  if (rv.running) return `<p class="rvb-dim">${BOX.t('analyzing', { a: rv.done, b: rv.total })}</p>`;
+  if (cur >= moves.length) return rvbSummary();
+  const j = rvJudge(cur); let h = rvExplainHtml();
+  if (j && j.q) { const tip = (GTIP[LANG] || GTIP.en)[bestKind(posAt(cur), j.best)]; if (tip) h += `<p class="rvb-tip">💡 ${tip}</p>`; }
+  return h;
+}
+function rvbKenLeft(key) {
+  const L = BOX.cached(key), pos = posAt(cur), ev = L && L.length ? evalFromList(L, pos.side) : null, st = statusAt(cur);
+  let h = `<div class="rvb-h">${BOX.t('kenFrom', { n: ken.base + 1 })}</div>`;
+  h += `<p>${BOX.t('kenEval')}: <b>${st.over ? (st.winner ? t('res.pWin', { c: pname(st.winner) }) : t('res.draw')) : ev ? evalText(ev) : '…'}</b></p>`;
+  h += `<p class="rvb-dim">${BOX.t('kenLine')}: <span class="rvb-kl">${ken.line.length ? ken.line.map((m, i) => (ken.base + i + 1) + '.' + sqName(m)).join(' ') : BOX.t('kenNone')}</span></p>`;
+  h += `<p class="rvb-dim">${BOX.t('kenHelp')}</p>`;
+  return h;
+}
+function rvbUpdate() {
+  if (!BOX || kenSw) return;
+  if (!rvbWant()) { if (ken) { kenStop(); setTimeout(() => update(false), 0); } BOX.update(null); return; }
+  kenSwap(() => {
+    const pos = posAt(cur), key = keyOf(cur), me = pos.side, over = statusAt(cur).over, at = cur;
+    const playedM = !ken && cur < moves.length ? moves[cur] : -1;
+    BOX.update({
+      key, over, k: 5,
+      req: { rule, start: startPos, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
+      seed: !ken && rv.list[at] ? rv.list[at] : null,
+      sub: over ? '' : t('hb.turn', { c: pname(me) }),
+      left: ken ? () => kenSwap(() => rvbKenLeft(key)) : () => rvbLeft(),
+      ken: ken ? { from: ken.base + 1, canBack: ken.line.length > 0 } : null,
+      fmt: e => { const lb = valLabel(e.v); return { mv: `<i style="background:${me === P1 ? '#111;box-shadow:inset 0 0 0 1px #777' : '#f3efe6'}"></i>${sqName(e.m)}`, val: lb.big, cls: lb.cls, pv: e.pv ? e.pv.map(sqName).join(' ') : '', played: e.m === playedM }; }
+    });
+  });
+}
+if (window.RvBox) BOX = RvBox.create({
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261028rb',
+  onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
+  onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
+  onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
+});
 
 // ====================================================================== share / load (coordinates, URL)
 function parseGameText(v) {
@@ -2098,7 +2209,7 @@ function olRender(view) {
     const url = location.origin + location.pathname + '?room=' + olRoom + (Online.mock ? '&mock=1' : '');
     const priv = Online.roomPriv;
     B.innerHTML = `<div class="ol-wait ${priv ? 'ol-closed' : 'ol-open'}"><span class="ol-lock">${t(priv ? 'ol.keyRoom' : 'ol.openRoom')}</span>${R.title ? `<b class="ol-rtitle">${olEsc(R.title)}</b>` : ''}<small>${t(priv ? 'ol.roomKey' : 'ol.roomCode')}</small><div class="ol-code" id="olRoomCode">${olRoom}</div><small class="ol-tcinfo">${t('ol.tcStart', { tc: tcName(Online.roomTc) })}</small><small>${t(priv ? 'ol.roomInfoKey' : 'ol.roomInfoOpen')}</small><small>${t('ol.roomKeep')} <b class="ol-left">${olLeftText()}</b></small></div>
-      <div class="ol-acts ol-racts"><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olBack">${t('ol.back')}</button></div>`;
+      <div class="ol-acts ol-racts"><button class="mbtn" id="olBack">${t('ol.back')}</button><button class="mbtn warn" id="olCloseRoom">${t('ol.closeRoom')}</button><button class="mbtn" id="olCopy">${t('ol.copyLink')}</button></div>`;
     $('#olCopy').onclick = async () => { try { if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: t('meta.title'), url }); else { await navigator.clipboard.writeText(url); toast(t('ol.linkCopied'), 1400); } } catch (e) {} };
   }
 }
@@ -2693,7 +2804,7 @@ function olAfter() {
   if (g.post === 'again') h = `<span>${olX(t('ol.againGo'))}</span>`;
   else if (g.post) { h = `<span>${olX(olPostText(g))}</span>`; muted = true; }
   else if (pending && g.again.by === me) h = `<span>${olX(t('ol.againWait', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span>`;
-  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button>`;
+  else if (pending) h = `<span>${olX(t('ol.againAsk', { s: '\u0001' })).replace('\u0001', `<b class="cd">${left}</b>`)}</span><button class="mbtn" id="olAgainNo">${olX(t('ol.againNo'))}</button><button class="mbtn go" id="olAgainYes">${olX(t('ol.againYes'))}</button>`;
   box.classList.toggle('hidden', !h); box.classList.toggle('muted', muted);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
   btn.disabled = !!(pending && g.again.by === me) || g.post === 'again';
@@ -2860,7 +2971,7 @@ $('#langSel').onchange = e => {
 };
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); if (!olRoomQ) openNewDialog(); }
+else if (!hadSave) { update(false); if (!olRoomQ) afterPosition(); }   // no saved game: the starting position, waiting (the settings dialog opens from 対局)
 else { update(false); afterPosition(); }
 // ?room=CODE (or #room=CODE): join a friend's online room
 if (olRoomQ) {
@@ -2896,6 +3007,7 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (ken && kenOk()) { if (what === 'prev') kenBack(); return; }   // exploring: ◀ takes one explored move back, the rest waits for 元に戻す
   const N = moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -2925,6 +3037,7 @@ document.addEventListener('keydown', e => {
   if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
+  if (ken && kenOk()) { e.preventDefault(); return; }   // exploring: the record keys are off (use ◀ / 元に戻す in the box)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
@@ -2934,6 +3047,7 @@ window.addEventListener('resize', () => renderFx());
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+
 if (HB) HB.onChange(() => renderInfo());
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 renderInfo();

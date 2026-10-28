@@ -38,11 +38,9 @@
 @media (hover: hover) and (pointer: fine) and (max-width: 819px), (hover: hover) and (pointer: fine) and (max-height: 680px){:root{--pad:clamp(14px, 3vmin, 28px)}}
 /* online dock opened (shared/headerbar.js dock-fit lowers --vh): a board limited by the window width (narrow info column)
    still gives back what --vh loses, so every fit step makes the layout smaller; the info column takes the width it frees (2026-10-25) */
-@media not all and (pointer: coarse){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.ol-dock{--vbase:calc(100vh - 108px - var(--hb-h))}
   @supports (height:100dvh){html.ol-dock{--vbase:calc(100dvh - 108px - var(--hb-h))}}
-  body.dock-open .side{height:calc(var(--board) * 1.07)}   /* (no taller floor while the dock is open: the fit / compact steps size it) */
-  html.dock-fit{--board:calc(min(var(--bv), 100vw - var(--padx) * 2 - var(--gap) - 260px - max(0px, var(--vbase, var(--vh)) - var(--vh))) / 1.07);--sidew:clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--board) * 1.07, 520px)}
 }
 @supports (height:100lvh){:root{--vh:100lvh}}
 /* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar */
@@ -241,7 +239,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 #rvBody > .cr-box:first-child{margin:0 0 12px}
 /* the review card scrolls; its height shows the 振り返り解説 box (--rvh, set in renderReview), the numbers below it scroll into view */
 .review-card.show:not(.slim){flex:none!important;min-height:0!important;max-height:var(--rvh, 260px)!important;overflow-y:auto!important}
-@media (min-width: 900px) and (min-height: 561px){body.reviewing .graph{height:40px}}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){body.reviewing .graph{height:40px}}
 .review-card.show{display:block;flex:1.4 1 0;min-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
 .rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
@@ -279,6 +277,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .bl-num.p0 circle{fill:var(--p0)}.bl-num.p1 circle{fill:var(--p1)}
 .bl-num text{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
 .bl-num.first circle{stroke:var(--accent);stroke-width:3}
+.bestline.rb-first{stroke-dasharray:none;stroke-width:9}
 body.viewing #svg{cursor:default}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .daily{border-color:rgba(226,194,117,.55)!important;background:linear-gradient(90deg,rgba(201,169,97,.16),rgba(0,0,0,.2))!important}
@@ -336,6 +335,7 @@ body.viewing #svg{cursor:default}
 body.in-lesson .lesson-card{display:block}
 body.in-puzzle .puzzle-card{display:block}
 body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .controls, body.in-puzzle .controls, body.in-lesson .kifu-card, body.in-puzzle .kifu-card, body.in-lesson .info-line, body.in-puzzle .info-line, body.in-lesson #progCard, body.in-puzzle #progCard{display:none!important}
+body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu stays during lessons / puzzles */
 .lh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .lt{font-size:12px;color:var(--brass);letter-spacing:.12em}
 .lesson-card h3,.puzzle-card h3{font-family:'Shippori Mincho B1',serif;font-size:20px;margin:4px 0 8px;letter-spacing:.06em}
@@ -374,7 +374,9 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 .lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
 
 /* ---------------------------------------------------------------- responsive */
-@media (max-aspect-ratio: 1/1) and (pointer: coarse){
+/* phone layout (common spec 2026-10-28): everything that is not the PC layout (narrow / tall PC windows, tablets, phones),
+   except a phone held sideways (its own layout below) */
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){ @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
   :root{--board:calc(min(100vw - 20px, var(--vh) - 230px, 900px) / 1.07)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
@@ -409,7 +411,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
   .btn svg{width:17px;height:17px}
   .kifu-card{flex:none;min-height:110px}
   .kifu{max-height:none;overflow:visible}
-}
+}}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
   :root{--board:calc(min(var(--vh) - 20px, 100vw - 300px, 980px) / 1.07)}
@@ -446,7 +448,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card, body.in-lesson .contro
 }
 @container (max-width: 480px){ .brand h1 small{display:none} }
 /* narrow info column (squarish windows, 2026-10-25): one player per row, the buttons in two rows, the kifu header may wrap */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @container (max-width: 359px){
   .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}
   .controls{grid-auto-flow:row!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
@@ -521,12 +523,12 @@ body .rv-view button{font-size:13.5px}
 .brand a.series:hover{opacity:1;color:var(--accent)}
 .brand:has(.brand-l){align-items:flex-end}
 /* PC: title above the board's top-left corner (same as gomoku); the icons stay above the side panel */
-@media not all and (pointer: coarse), (pointer: coarse) and (min-width: 901px) and (min-aspect-ratio: 1/1) and (min-height: 561px){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .side > .brand{justify-content:flex-end}
   .side > .brand .brand-l{position:absolute;right:calc(100% + var(--gap));bottom:0;width:calc(var(--board) * 1.07);max-width:none}
   .side > .brand .brand-l h1{font-size:clamp(20px, calc(calc(var(--board) * 1.07) / 18), 30px)}
 }
-@media (pointer: coarse) and (max-width: 900px){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){ .brand a.series{display:none} .brand:has(.brand-l){align-items:center} }
 
 /* ---------------------------------------------------------------- learning: tabs, rules tutorial, lessons, openings, puzzles */
 .ls-desc{font-size:13px;color:var(--muted);margin:-8px 0 14px;line-height:1.7}
@@ -650,14 +652,37 @@ html[lang=ar] :is(.ls-desc, .rules-offer, .ru-task, figure.mini figcaption, .op-
 html[lang=ar] .ru-task{text-align:center}
 html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-radius:8px 0 0 8px}
 /* PC: header icon set (sound / language / home) one size larger; phones unchanged */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine){
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .brand-r{gap:10px}
   .brand-r .snd,.brand-r a.snd{width:36px;height:34px;border-radius:9px}
   .brand-r .snd svg,.brand-r a.snd svg{width:20px;height:20px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
+/* PC layout (2026-10-28, back to two columns at the user's request): the board on the left, a fixed-width (360px) info
+   column on the right (lesson / puzzle / watch cards, players, boxes left / evaluation graph / ◀ ▶, review, record, info line). The board takes the
+   smaller of the window height and the width left by the column; on wide screens the pair stays in the middle. The column
+   is as tall as the board (a little taller when the board is limited by the width) and scrolls inside. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  :root{--sidew:360px;--pad:clamp(14px, 2.2vh, 28px);--padx:clamp(16px, 2vw, 40px);--gap:clamp(18px, 1.8vw, 34px);
+    --bw:calc(100vw - var(--padx) * 2 - var(--gap) - var(--sidew));
+    --bv:min(var(--vh) - var(--pad) * 2, 1100px);
+    --board:calc(min(var(--bv), var(--bw)) / 1.07)}
+  /* online dock opened (shared dock-fit lowers --vh): a width-limited board gives back what --vh loses too */
+  html.dock-fit{--board:calc(min(var(--bv), var(--bw) - max(0px, var(--vbase, var(--vh)) - var(--vh))) / 1.07)}
+  .app{grid-template-columns:auto var(--sidew);grid-template-areas:"board side";justify-content:center;align-items:center;align-content:center;padding:var(--pad) var(--padx)}
+  .app > .side{height:max(calc(var(--board) * 1.07), min(var(--vh) - var(--pad) * 2, 520px));max-height:none;min-height:0}
+  .app > .side > .side-in{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;gap:10px}
+  .app > .side > .side-in > *{flex:none}
+  .app > .side #progCard .graph{display:block;height:clamp(48px, 9vh, 110px);max-height:none;min-height:0}
+  body.reviewing .app > .side #progCard .graph{height:clamp(36px, 6vh, 80px)}
+  .app > .side .info-line{display:block;margin-top:auto;padding:4px 0 2px;line-height:1.6;white-space:normal}
+  .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
+  .app > .side .review-card.show{flex:1.4 1 0;min-height:120px}
+  .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
+  html.rb-on body.reviewing .app > .side #progCard .graph{height:clamp(30px, 5vh, 60px)}   /* review box open (rvbox.js): a lower board */
+}
 </style>
-<link rel="stylesheet" href="online.css?v=20261021v">
+<link rel="stylesheet" href="online.css?v=20261028l9">
 </head>
 <body>
 <div class="app">
@@ -806,8 +831,8 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
       </div>
     </div>
     <div class="modal-actions">
-      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
+      <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
   </div>
 </div>
@@ -862,9 +887,9 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
     <h2 data-i18n="rs.title"></h2>
     <p id="rsText" style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 4px"></p>
     <div class="modal-actions" style="flex-wrap:wrap">
-      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
-      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
       <button class="mbtn" id="rsCancel" data-i18n="close"></button>
+      <button class="mbtn" id="rsRestart" data-i18n="rs.restart"></button>
+      <button class="mbtn go" id="rsResume" data-i18n="rs.resume"></button>
     </div>
   </div>
 </div>
@@ -899,17 +924,18 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="i18n-learn.js?v=20261021ru3"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
-<script src="../shared/headerbar.js?v=22"></script>
+<script src="../shared/headerbar.js?v=26"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=fin1"><!-- learn-ui -->
-<script src="engine.js?v=20261020d5"></script>
+<script src="engine.js?v=20261028rb"></script>
+<script src="rvbox.js?v=20261028rb"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261024ls"></script>
-<script src="i18n-online.js?v=20261020gh"></script>
+<script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=sec1"></script>
+<script src="online.js?v=stale1"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -1012,7 +1038,7 @@ function shortName(i) {
   return i === 0 ? t('pA') : t('pB');
 }
 function isAITurn() {
-  if (!S || S.over || viewPly !== null) return false;
+  if (!S || S.over || viewPly !== null || rbCons()) return false;
   if (lesson || settings.mode === 'online') return false;
   if (puzzle) return S.turn === 1 && puzzle.state === 'play';
   if (settings.mode === 'watch') return true;
@@ -1020,6 +1046,7 @@ function isAITurn() {
   return false;
 }
 function canHumanMove() {
+  if (rbCons()) return !!S && !S.over;   // 検討 (review box study): both sides
   if (!S || S.over || viewPly !== null || isAITurn()) return false;
   if (lesson) return !lesson.answered;
   if (puzzle) return puzzle.state === 'play' && !puzzle.waiting;
@@ -1034,7 +1061,7 @@ function edgeName(e) {
 }
 
 // ====================================================================== workers
-function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261020d5'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261028rb'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
@@ -1127,7 +1154,8 @@ function renderBoard(anim) {
   if (hintEdge >= 0 && !p.drawn[hintEdge]) { const [x1, y1, x2, y2] = edgeXY(hintEdge); el('line', { x1, y1, x2, y2, class: 'hintline' }, gFx); }
   if (badEdge >= 0 && !p.drawn[badEdge]) { const [x1, y1, x2, y2] = edgeXY(badEdge); el('line', { x1, y1, x2, y2, class: 'badline' }, gFx); }
   if (lesson) drawAids();
-  if (viewPly !== null) drawReviewOverlay();
+  if (viewPly !== null && !rbCons() && !(rbHov !== null && rbOn())) drawReviewOverlay();
+  rbDrawHover();
   document.body.classList.toggle('viewing', viewPly !== null);
   $('#board').classList.toggle('no-anim', !settings.anim);
   svg.classList.toggle('can-move', canHumanMove());
@@ -1234,7 +1262,7 @@ function hbInfo() {
 function refresh(anim) {
   SF = compute(game);
   if (viewPly !== null && (viewPly >= game.moves.length || viewPly < 0)) viewPly = null;
-  S = viewPly === null ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly), human: game.human, setup: game.setup });
+  S = viewPly === null && !rbCons() ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly === null ? game.moves.length : viewPly).concat(rbCons() ? csLine : []), human: game.human, setup: game.setup });
   renderBoard(anim); renderInfo(); renderReview(); renderGraph();
 }
 function applyMove(e, fromHuman) {
@@ -1287,6 +1315,7 @@ function aiTurn() {
 }
 function humanMove(e) {
   ac();
+  if (rbCons()) return rbStudyPlay(e);
   if (lesson) return lessonAnswer(e);
   if (puzzle) return puzzleHumanMove(e);
   if (settings.mode === 'online') return olHumanMove(e);
@@ -1452,7 +1481,9 @@ function restoreGame() {
   hintEdge = -1; badEdge = -1; lastEval = null;
   if (savedGame) { game = savedGame.game; rv = savedGame.rv && !savedGame.rv.running ? savedGame.rv : null; viewPly = rv ? savedGame.viewPly : null; savedGame = null; }
   builtFor = '';
-  refresh(false); next();
+  refresh(false);
+  // (not next(): for a finished game it would show the result dialog again — results only appear when a game ends on the spot)
+  renderInfo(); if (!S.over && isAITurn()) aiTurn();
 }
 function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0] + (rem + v) / 2, S.scores[1] + (rem - v) / 2]; }
 
@@ -1521,7 +1552,8 @@ function rvJudge(i) {
 }
 function rvQuality(i) { const j = rv && !rv.running ? rvJudge(i) : null; return j ? j.q : null; }
 const fmtLoss = j => Math.round(j.loss * 10) / 10, approxMark = j => j.exact ? '' : '≈';
-function renderReview() {
+function renderReview() { renderReview0(); if (window.RvBox) RvBox.refresh(); }
+function renderReview0() {
   const card = $('#reviewCard');
   const hasRv = !!rv && rv.key === game.moves.join(',');
   const show = !lesson && !puzzle && ((rvOpen && hasRv) || viewPly !== null);
@@ -1549,7 +1581,7 @@ function renderReview() {
     if (bad.length) html += `<div class="rv-list">${bad.slice(0, 8).sort((a, b) => a.i - b.i).map(x => `<button data-i="${x.i}" class="${viewPly === x.i ? 'cur' : ''}"><span class="tag ${x.j.q}">${t('q.' + x.j.q)}</span><span class="mv">${x.i + 1}. <i class="p${rv.mover[x.i]}"></i>${edgeName(game.moves[x.i])} → ${edgeName(x.j.it.bestMove)}</span><span class="ls">${approxMark(x.j)}−${fmtLoss(x.j)}</span></button>`).join('')}</div>`;
     else html += `<div style="font-size:12px;color:#8fe3b8;margin-top:8px">${t('rv.clean')}</div>`;
     html += `<div class="rv-note">${t('rv.note')}${approx ? ' ' + t('rv.approx') : ''}</div>`;
-    if (typeof rvCoach === 'function') html = rvCoach() + html;   /* learn-ui: 振り返り解説 — first, above the numbers */
+    if (typeof rvCoach === 'function' && !rbOn()) html = rvCoach() + html;   /* (PC review box: the commentary is there instead) */   /* learn-ui: 振り返り解説 — first, above the numbers */
   }
   const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
@@ -1587,6 +1619,7 @@ function drawReviewOverlay() {
 }
 function viewAt(i) {
   if (!canReview()) return;
+  if (rbCons()) RvBox.endCons(true);   // leaving the studied position ends the study
   hintEdge = -1; badEdge = -1;
   viewPly = i === null || i >= game.moves.length ? null : Math.max(0, i);
   refresh(false);
@@ -1598,6 +1631,81 @@ $('#rvPrev').onclick = () => { if (viewPly !== null) viewAt(viewPly - 1); };
 $('#rvNext').onclick = () => { if (viewPly !== null) viewAt(viewPly + 1); };
 $('#rvLive').onclick = () => viewAt(null);
 $('#btnAnalyze').onclick = () => { if (rv && !rv.running && rv.key === game.moves.join(',')) { rvOpen = true; viewAt(viewPly === null ? 0 : viewPly); return; } runReview(); };
+
+// ====================================================================== review box (PC, rvbox.js): candidates + 検討
+let csLine = [];      // 検討: edges drawn from the reviewed position (not part of the record)
+let rbW = null, rbBusy = false, rbLines = {}, rbHov = null;
+const rbCons = () => !!(window.RvBox && RvBox.cons);
+// only after the game (or while stepping back through the record): never during a game in progress, rated or online
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === game.moves.join(',') && (viewPly !== null || !!(SF && SF.over)) && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
+function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
+function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+function rbLineHtml(line) {
+  const q = S.p.clone(); let turn = S.turn;
+  return line.map(e => { const h = `<span style="color:${turn ? 'var(--p1)' : 'var(--p0)'}">${edgeName(e)}</span>`; if (!q.play(e)) turn ^= 1; return h; });
+}
+function rbRows(list, exact, lines) {
+  const me = S.turn, rem = S.G.B - S.p.filled, played = !rbCons() && viewPly !== null ? game.moves[viewPly] : -1;
+  return list.slice(0, 5).map(x => {
+    const v = Math.max(-rem, Math.min(rem, x.v)), a = S.scores[me] + (rem + v) / 2, b = S.scores[1 - me] + (rem - v) / 2;
+    const f = z => Math.round(z * 10) / 10, sc = me === 0 ? [a, b] : [b, a];
+    return { mv: x.m, move: edgeName(x.m), score: (exact ? '' : '≈') + f(sc[0]) + ' – ' + f(sc[1]), cls: a > b + 0.25 ? 'win' : a < b - 0.25 ? 'loss' : 'draw',
+      pv: lines && lines[x.m] ? rbLineHtml(lines[x.m]) : null, played: x.m === played };
+  });
+}
+function rbStudyPlay(e) { if (!S || S.over || S.p.drawn[e]) return; csLine.push(e); hintEdge = -1; badEdge = -1; refresh(true); playLine(); }
+if (window.RvBox) RvBox.init({
+  active: rbActive, lang: () => LANG, key: () => game.n + ':' + game.moves.slice(0, viewPly === null ? game.moves.length : viewPly).concat(rbCons() ? csLine : []).join(','), boardEl: () => $('#board'),
+  head() {
+    if (viewPly === null) return `${escH(t('cr.title'))} · ${escH(RvBox.tx('final'))}`;
+    const i = viewPly, j = rvJudge(i);
+    return `${escH(t('cr.move', { n: i + 1, who: shortName(rv.mover[i]) }))} <span class="mv" style="color:var(--accent)">${edgeName(game.moves[i])}</span>` + (j ? `<span class="tag ${j.q}">${escH(t('q.' + j.q))}</span>` : '');
+  },
+  coach: () => typeof rvCoach === 'function' ? rvCoach() : '',
+  cands(onUpdate) {
+    rbLines = {};
+    if (!S || S.over || S.p.undrawn === 0) { onUpdate([], true); return; }
+    if (!rbW) rbW = makeWorker(null);
+    rbBusy = true;
+    const w = rbW, id = ++jobId, edges = [];
+    for (let e = 0; e < S.G.E; e++) if (S.p.drawn[e]) edges.push(e);
+    w.onmessage = ev => {
+      const m = ev.data; if (m.id !== id) return;
+      if (m.type === 'error') { rbBusy = false; onUpdate([], true); return; }
+      const fin = m.type === 'candsDone'; if (fin) rbBusy = false;
+      rbLines = m.lines || {};
+      onUpdate(rbRows(m.list, m.exact, m.lines), fin);
+      if (rbHov !== null) renderBoard(false);
+    };
+    w.postMessage({ type: 'cands', id, R: game.n, C: game.n, edges, ms: game.n === 5 ? 1200 : 900, n: 5, plies: 8, ply: game.n === 5 ? 90 : 60 });
+  },
+  cancel: rbCancel,
+  hover(mv) { rbHov = mv; renderBoard(false); },
+  consStart() { csLine = []; hintEdge = -1; badEdge = -1; stopPlay(); busy++; refresh(false); },
+  consPlay(e) { rbStudyPlay(e); },
+  consBack() { if (csLine.length) { csLine.pop(); refresh(false); } },
+  consEnd(silent) { csLine = []; rbHov = null; if (!silent) refresh(false); else { S = viewPly === null ? SF : compute({ n: game.n, moves: game.moves.slice(0, viewPly), human: game.human, setup: game.setup }); renderBoard(false); } },
+  consDepth: () => csLine.length,
+  goto: i => viewAt(i),
+});
+// hovered candidate: the move and its line, numbered, on the board (as the review's best line)
+function rbDrawHover() {
+  if (rbHov === null || !rbOn() || !S) return;
+  const line = rbLines[rbHov] || [rbHov], q = S.p.clone(); let turn = S.turn;
+  const labels = [];
+  line.forEach((e, k) => {
+    if (q.drawn[e]) return;
+    const [a1, b1, a2, b2] = edgeXY(e);
+    el('line', { x1: a1, y1: b1, x2: a2, y2: b2, class: 'bestline p' + turn + (k ? '' : ' rb-first') }, gFx);
+    labels.push([(a1 + a2) / 2, (b1 + b2) / 2, k + 1, turn]);
+    if (!q.play(e)) turn ^= 1;
+  });
+  for (const [x, y, k, pl] of labels) {
+    const g = el('g', { class: 'bl-num p' + pl + (k === 1 ? ' first' : '') }, gFx);
+    el('circle', { cx: x, cy: y, r: 14 }, g);
+    const tx = el('text', { x, y: y + 1 }, g); tx.textContent = k;
+  }
+}
 // evaluation graph (predicted final margin, first player up) + record navigation with ← → ↑ ↓ / Space
 function scoreDiffs() {
   const G = E.geom(game.n, game.n), p = new E.Pos(G), out = [0]; let turn = 0, d = 0;
@@ -1671,7 +1779,7 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.overlay.show') || lesson || puzzle) return;
   if (e.key === 'Escape' && viewPly !== null) { stopPlay(); viewAt(null); return; }
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
-  if (!k || !canReview()) return;
+  if (!k || !canReview() || rbCons()) return;   // 検討中: no record navigation (the box has ◀ and 元に戻す)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
@@ -1783,7 +1891,8 @@ refresh(false);
 if (loadFromHash()) { /* a shared game opens in 2-player mode */ }
 else if (hadSave && game.moves.length && !S.over) { toast(t('saved'), 1400); next(); }
 else if (hadSave && game.moves.length) { /* finished game: just show it */ }
-else openNew();
+else if (hadSave) { renderInfo(); if (!S.over && isAITurn()) aiTurn(); }   // saved game without moves (or resigned at once): no new-game dialog, no result dialog on load
+else newGame();             // first visit: a fresh game with the default settings (the 対局 button opens the dialog)
 
 // "対局" button: if a game is in progress (or a past move is on screen) ask whether to continue from here or start over
 function rsInProgress() { return !lesson && !puzzle && game.moves.length > 0 && S && !S.over; }
@@ -1797,7 +1906,7 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
-<script src="online-ui.js?v=20261021rsgsec1"></script>
+<script src="online-ui.js?v=20261028l9"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261028jb" defer></script>

@@ -1203,10 +1203,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   }
   // the NNUE evaluation for normal play, hints and analysis; the beginner levels (noise) keep the linear evaluation they were tuned with
   function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
+  let wReady = Promise.resolve();   // the wasm engine (and its NNUE) loaded, or failed
   try {
     const url = new URL((simdOK ? 'engine_simd.wasm' : 'engine.wasm') + (self.location.search || ''), self.location.href);
-    WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
-      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) loadNNUE(x).catch(() => { nueReady = false; }); })
+    wReady = WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
+      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) return loadNNUE(x).catch(() => { nueReady = false; }); })
       .catch(() => { X = null; });
   } catch (e) { X = null; }
   function wsetup(d) {
@@ -1315,6 +1316,94 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       const o = d.opts || {};
       const res = (useWasm() ? (nueUse(true), wsetup(d), wasmAnalyze) : (oo, cb) => se.analyze({ ...oo, onDepth: cb }))({ time: o.time, depth: o.depth }, (list, depth) => self.postMessage({ type: 'analysisProgress', id: d.id, depth, list: list.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s })) }));
       self.postMessage({ type: 'analysis', id: d.id, list: res.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s, depth: r.d })) });
+      return;
+    }
+    if (d.type === 'multipv') {
+      // review box: the best few moves with their lines (each search leaves out the moves already found), best first
+      setup(d);
+      const o = d.opts || {}, n = Math.min(o.n || 4, pos.legalMoves(false).length), ex = [], out = [];
+      for (let k = 0; k < n; k++) {
+        const ms = (o.time || 700) * (k ? 0.7 : 1);
+        let r;
+        setup(d);
+        if (useWasm()) {
+          nueUse(true); wsetup(d);
+          if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+          X.set_exclude(ex.length);
+          const mv = X.root_search(ms, 0, 0);
+          if (!mv) break;
+          const rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+          r = { m: mv, score: X.res_score(), pv: Array.from(rr.subarray(4, 4 + rr[3])) };
+        } else {
+          const res = se.rootSearch({ time: ms, exclude: ex.slice() });
+          if (!res.move) break;
+          r = { m: res.move, score: res.score, pv: res.pv && res.pv.length ? res.pv : [res.move] };
+        }
+        if (r.pv[0] !== r.m) r.pv = [r.m];
+        ex.push(r.m);
+        out.push({ move: pos.toUsi(r.m), score: r.score, pv: r.pv.slice(0, 10).map(m => pos.toUsi(m)) });
+        self.postMessage({ type: 'progress', id: d.id, list: out.slice() });
+      }
+      // short lines are extended move by move with quick searches (6-8 moves are shown)
+      for (const e of out) {
+        for (let g = 0; e.pv.length < 7 && g < 7; g++) {
+          const d2 = { sfen: d.sfen, moves: (d.moves || []).concat(e.pv) };
+          let mv = 0;
+          if (useWasm()) { wsetup(d2); X.set_exclude(0); mv = X.root_search(110, 0, 0); }
+          else { setup(d2); const res = se.rootSearch({ time: 110 }); mv = res.move; }
+          if (!mv) break;
+          setup(d2); const u = pos.toUsi(mv);
+          if (!pos.legalMoves(true).includes(mv)) break;
+          e.pv.push(u);
+        }
+        self.postMessage({ type: 'progress', id: d.id, list: out.slice() });
+      }
+      self.postMessage({ type: 'result', id: d.id, list: out });
+      return;
+    }
+    if (d.type === 'mpvLoop') {
+      // review box, continuous analysis: the best opts.n moves at depth 1, 2, 3, ... (each search leaves out the moves
+      // already found at that depth), posted after every depth (and after each line from depth 6 on, partial: true).
+      // Ends at opts.depth, or two depths after a mate shows up; the page terminates the worker to stop it sooner.
+      wReady.then(() => {
+        const o = d.opts || {};
+        setup(d);
+        const nl = pos.legalMoves(false).length, n = Math.min(o.n || 4, nl), maxD = o.depth || 30;
+        let nodes = 0, prev = [], mateAt = 0, last = 0;
+        for (let depth = 1; n && depth <= maxD; depth++) {
+          const ex = [], out = [];
+          for (let k = 0; k < n; k++) {
+            let r;
+            if (useWasm()) {
+              nueUse(true); wsetup(d);
+              if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+              X.set_exclude(ex.length);
+              const mv = X.root_search(0, depth, 0);
+              if (!mv) break;
+              const h = new Int32Array(X.memory.buffer, X.res_ptr(), 4), rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + Math.min(64, h[3]));
+              nodes += h[2];
+              r = { m: mv, score: X.res_score(), pv: Array.from(rr.subarray(4)) };
+            } else {
+              setup(d);
+              const res = se.rootSearch({ depth, exclude: ex.slice(), noMate: depth > 1 });
+              if (!res.move) break;
+              nodes += res.nodes || 0;
+              r = { m: res.move, score: res.score, pv: res.pv && res.pv.length ? res.pv : [res.move] };
+            }
+            if (r.pv[0] !== r.m) r.pv = [r.m];
+            ex.push(r.m);
+            setup(d);
+            out.push({ move: pos.toUsi(r.m), score: r.score, pv: r.pv.slice(0, 12).map(m => pos.toUsi(m)) });
+            if (depth >= 6 && k < n - 1) self.postMessage({ type: 'progress', id: d.id, depth, nodes, partial: true, list: out.concat(prev.filter(e => !out.some(x => x.move === e.move))).slice(0, n) });
+          }
+          if (!out.length) break;
+          prev = out;
+          self.postMessage({ type: 'progress', id: d.id, depth, nodes, list: out.slice() }); last = depth;
+          if (Math.abs(out[0].score) >= MATE - 200) { if (!mateAt) mateAt = depth; if (depth >= mateAt + 2) break; }
+          if (nl === 1 && depth >= 4) break;
+        }
+        self.postMessage({ type: 'result', id: d.id, depth: last, nodes, list: prev });
+      });
       return;
     }
     if (d.type === 'mate') {

@@ -205,3 +205,8 @@ html[lang=ar] .pf-input,html[lang=ar] .ol-me input{direction:rtl}
   body:not(.no-online):not(.mtab-online) .mt-strip{display:flex;flex-direction:column;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));height:40px;z-index:45;padding:0 14px;background:#0f1715;border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
 }
 html[lang=ar] :is(.dk-chat, .mt-strip){direction:rtl}
+/* phone layout in a mouse window (narrow / tall PC window, common spec 2026-10-28): the page scrolls, so its end stays clear of the dock */
+@media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  body:not(.no-online) .app{padding-bottom:124px}
+  body.ol-soon:not(.no-online) .app{padding-bottom:62px}
+} }

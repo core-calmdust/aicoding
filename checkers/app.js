@@ -26,9 +26,9 @@ function posAt(i) {
 }
 // {over, winner, draw, why}
 function statusAt(i) {
-  if (manualEnd && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
-  if (settings.mode === 'online' && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
-  if (rgame && rgame.over && i === moves.length && !lesson && !puzzle) return rgame.over;
+  if (manualEnd && !kenSw && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
+  if (settings.mode === 'online' && !kenSw && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
+  if (rgame && rgame.over && !kenSw && i === moves.length && !lesson && !puzzle) return rgame.over;
   const { pos, hashes } = posAt(i);
   return E.judge(pos, hashes);
 }
@@ -63,6 +63,7 @@ function applyI18n() {
 function renderBrand() { const tt = t('title'); $('#brandTitle').textContent = tt; $('#brandSub').textContent = t('sub'); document.querySelector('.brand h1').style.setProperty('--tl', Math.max(14, tt.length)); }
 let humanColor = P1;
 let reviewing = false;
+let ken = null, kenSw = false, rvbHov = null, BOX = null;   // PC review box: exploring (検討) state, swap flag, hovered candidate, the box
 let manualEnd = null;    // resignation / agreed draw in a game vs the AI or between two players: { over, winner, draw, why, n }
 let aiVals = [];         // the AI's own search values (its view), newest last: for its draw offers and resignations
 let evals = [];          // evals[i] = evaluation after i moves (Black's view)
@@ -103,7 +104,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=rb1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -261,6 +262,7 @@ function renderReserves(pos) {
   }
 }
 function renderBoard(anim) {
+  if (ken && !kenSw) { if (kenOk()) return kenSwap(() => renderBoard(anim)); ken = null; }
   const want = flipFor(); if (want !== flip) { flip = want; drawLines(); pcEls.forEach(el => el.remove()); pcEls.clear(); }
   const { pos } = posAt(cur), key = keyOf(cur);
   const prev = shownKey; shownKey = key;
@@ -309,6 +311,7 @@ function threatened(pos, p) {
   return s;
 }
 function renderFx() {
+  if (ken && !kenSw) { if (kenOk()) return kenSwap(renderFx); ken = null; }
   fxEl.innerHTML = '';
   const { pos } = posAt(cur), st = statusAt(cur), m = cur > 0 ? moves[cur - 1] : -1;
   const svg = fxSvg(); $('#millfx').innerHTML = '';
@@ -334,7 +337,8 @@ function renderFx() {
   }
   for (const k of lessonMarks) { if (k.arrow) svgArrow(svg, k.arrow, k.cls); else fxDiv('mark ' + k.cls, k.at); }
   if (labelList) drawLabels(labelList);
-  else if (!drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  else if (!(rvbHov && BOX && BOX.shown) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  rvbFx(svg, pos);
   renderPrompt();
 }
 function renderPrompt() {
@@ -394,6 +398,7 @@ function isAIColor(p) { return settings.mode === 'watch' || (settings.mode === '
 function levelFor(p) { if (rgame && settings.mode === 'ai') return rgame.lv; return settings.mode === 'watch' ? (p === P1 ? settings.level : settings.level2) : settings.level; }
 function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
+  if (ken && kenOk()) return kenSwap(() => !gameOver(cur) && !animating);
   if (gameOver(cur)) return false;
   if (animating) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
@@ -513,6 +518,7 @@ function squareAt(clientX, clientY) {
 }
 let hoverEl = null;
 function setHover(i) {
+  if (ken && !kenSw && kenOk()) return kenSwap(() => setHover(i));
   if (hoverEl) { hoverEl.remove(); hoverEl = null; }
   if (i < 0 || !canHumanPlay() || !sel) return;
   const { pos } = posAt(cur), k = sel.trail.length;
@@ -525,6 +531,7 @@ boardEl.addEventListener('click', e => { const i = squareAt(e.clientX, e.clientY
 function cancelSel() { if (!sel) return; sel = null; renderFx(); }
 function onSquare(i) {
   ctx();
+  if (ken && !kenSw && kenOk()) { kenSwap(() => onSquare(i)); kenFlush(); return; }
   if (!canHumanPlay()) { if (reviewing && !lesson && !puzzle) rsOpen(); return; }
   const { pos } = posAt(cur), me = pos.turn, legal = pos.moves();
   if (i < 0) { cancelSel(); return; }
@@ -559,6 +566,7 @@ function onSquare(i) {
 }
 function commit(m) {
   sel = null; setHover(-1);
+  if (ken && kenSw) { ken.before = posAt(cur).pos; ken.line.push(m); ken.dirty = true; return; }
   if (lesson) return lessonAnswer(m);
   if (puzzle) return puzzleMove(m);
   if (settings.mode === 'online' && window.olHumanMove) return olHumanMove(m);
@@ -589,7 +597,7 @@ function playMove(m) {
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true); save();
   const st = statusAt(cur);
-  if (st.over) setTimeout(() => onGameEnd(st), d + 450);
+  if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, d + 450); }   // only if this game is still on the board
   afterPosition();
 }
 function afterPosition() {
@@ -696,7 +704,9 @@ async function analyzeCurrent(tok) {
   apply(res.list);
   save();
 }
+// the result dialog only when a game ends right now on the board (never for a lesson / puzzle, nor for a finished game that is restored)
 function onGameEnd(st) {
+  if (lesson || puzzle) return;
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
@@ -712,7 +722,7 @@ function onGameEnd(st) {
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
-  setTimeout(() => showOverlay('#resultOverlay'), 700);
+  { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -732,6 +742,7 @@ function undo() {
 function viewAt(i) {
   if (lesson || puzzle) return;
   i = Math.max(0, Math.min(moves.length, i));
+  if (ken) { kenStop(); if (i === cur) { update(false); afterPosition(); return; } }
   if (i === cur) return;
   busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
   const step = i === cur + 1;
@@ -1808,7 +1819,7 @@ async function runReview() {
   renderInfo(); renderFx(); toast(t('rv.done'), 1200);
 }
 function revealReview() {
-  if (matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+  if (getComputedStyle($('.app > .side')).display === 'contents') setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
 }
 // judgement of move i+1 (played from position i)
 function rvJudge(i) {
@@ -1881,19 +1892,20 @@ function rvCoach() {
 }
 function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
 function renderReview() {
+  if (kenSw) return;
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
   const show = !lesson && !puzzle && rvOpen && rv;
   card.classList.toggle('show', !!show);
   document.body.classList.toggle('rv-on', !!show);
-  if (!show) return;
+  if (!show) { rvbUpdate(); return; }
   let html;
   if (rv.running) {
     html = `<div style="font-size:12px;color:var(--muted)">${t('rv.running', { a: rv.done, b: rv.total })}</div><div class="rv-prog"><i style="width:${rv.total ? rv.done / rv.total * 100 : 0}%"></i></div>`;
   } else {
     const list = [];
     for (let i = 0; i < moves.length; i++) { const j = rvJudge(i); if (j && j.q) list.push({ i, ...j }); }
-    html = rvCoach();
+    html = rvbWant() ? '' : rvCoach();
     const shown = list.length > 10 ? list.slice().sort((a, b) => (b.q === 'bad') - (a.q === 'bad') || b.loss - a.loss).slice(0, 10).sort((a, b) => a.i - b.i) : list;
     if (shown.length) html += `<div class="rv-list">${shown.map(x => `<button data-i="${x.i}" class="${cur === x.i ? 'cur' : ''}"><span class="tag ${x.q}">${t('q.' + x.q)}</span><span class="mv">${x.i + 1}. <i class="p${toMoveAt(x.i)}"></i>${mvAt(x.i)} → ${mvIn(posAt(x.i).pos, x.best)}</span><span class="ls">${x.desc}</span></button>`).join('')}</div>`;
     else html += `<div class="rv-note" style="color:#8fe3b8">${t('rv.clean')}</div>`;
@@ -1902,6 +1914,7 @@ function renderReview() {
   const keepTop = card.scrollTop;
   $('#rvBody').innerHTML = html;
   { const cb = $('#rvBody > .cr-box'); if (cb) card.style.setProperty('--rvh', Math.round(cb.getBoundingClientRect().bottom - card.getBoundingClientRect().top + card.scrollTop + 14) + 'px'); else card.style.removeProperty('--rvh'); card.scrollTop = keepTop; }
+  rvbUpdate();
 }
 // on the board: the analysis of the viewed position, the move actually played and the best move
 function drawReviewFx(svg) {
@@ -1917,6 +1930,92 @@ $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
+
+// ====================================================================== PC review box (振り返りボックス: 解説 + 候補手と読み筋 + 検討モード)
+// Under the board and the info column while a reviewed game is shown on a PC (rvbox.js). 検討: from the position on the board
+// both sides' moves can be tried; the record, the graph and the review stay those of the game. While exploring, the board
+// functions run with the explored line swapped in for the record (kenSwap), so the game itself is never touched.
+const kenMoves = () => moves.slice(0, ken.base).concat(ken.line);
+function kenOk() { return !!(ken && ken.gk === gameKey() && rvOpen && rv && !lesson && !puzzle && BOX && BOX.pc()); }
+function kenSwap(fn) {
+  if (!ken || kenSw) return fn();
+  const sm = moves, sc = cur, sr = reviewing, sh = hintList;
+  moves = kenMoves(); cur = moves.length; reviewing = false; hintList = null; kenSw = true;
+  try { return fn(); } finally { kenSw = false; moves = sm; cur = sc; reviewing = sr; hintList = sh; }
+}
+const rvbPath = (p, m) => E.path(p, m);
+function kenStart(first) {
+  if (ken || !rvbWant()) return;
+  stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; sel = null;
+  ken = { base: cur, line: [], gk: gameKey(), dirty: false };
+  rvbHov = null; if (BOX) BOX.clearHover();
+  if (first !== undefined && posAt(cur).pos.moves().includes(first)) { ken.before = posAt(cur).pos; ken.line.push(first); ken.dirty = true; kenFlush(); }
+  else update(false);
+}
+function kenFlush() {
+  if (!ken || !ken.dirty) return;
+  ken.dirty = false; rvbHov = null;
+  const m = ken.line[ken.line.length - 1], d = moveDur(m, ken.before);
+  animating = animOn(); setTimeout(() => { animating = false; renderFx(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
+  update(true);
+}
+function kenStop() { if (!ken) return; ken = null; rvbHov = null; sel = null; animating = false; if (BOX) BOX.clearHover(); }
+function kenBack() { if (!ken || !ken.line.length) return; ken.line.pop(); rvbHov = null; sel = null; animating = false; update(false); }
+function kenReset() { if (!ken) return; kenStop(); update(false); afterPosition(); }
+function kenPick(e) {
+  if (!ken) { kenStart(e.m); return; }
+  kenSwap(() => { if (canHumanPlay() && posAt(cur).pos.moves().includes(e.m)) { sel = null; ken.before = posAt(cur).pos; ken.line.push(e.m); ken.dirty = true; } });
+  kenFlush();
+}
+function rvbWant() { return !!(BOX && BOX.pc() && rvOpen && rv && rv.key === gameKey() && !lesson && !puzzle && !rtLive() && settings.mode !== 'online' && !(window.olLive && olLive())); }
+function rvbFx(svg, pos) {
+  if (!rvbHov || !BOX || !BOX.shown || rvbHov.k !== keyOf(cur) || sel) return;
+  const e = rvbHov.e;
+  if (!pos.moves().includes(e.m)) return;
+  svgArrow(svg, rvbPath(pos, e.m), 'rvb1');
+  let p = pos.clone().play(e.m);
+  (e.pv || []).slice(0, 3).forEach((m, k) => { if (!p.moves().includes(m)) return; svgArrow(svg, rvbPath(p, m), 'rvb2'); const d = fxDiv('rvb-n', mTo(m)); d.textContent = String(k + 2); p = p.clone().play(m); });
+  const d0 = fxDiv('rvb-n first', mTo(e.m)); d0.textContent = '1';
+}
+const rvbDot = p => `<i style="background:${p === P1 ? '#2e2e2e;box-shadow:inset 0 0 0 1.5px #9a9a9a' : '#efe5cf'}"></i>`;
+function rvbLine(pos, list, n0) { let p = pos.clone(), out = []; for (const m of list) { if (!p.moves().includes(m)) break; out.push((n0 ? (n0 + out.length) + '.' : '') + mvIn(p, m)); p = p.clone().play(m); } return out.join(' '); }
+function rvbLeft() {
+  if (rv.running) return `<p class="rvb-dim">${BOX.t('analyzing', { a: rv.done, b: rv.total })}</p>`;
+  let h = rvCoach().replace(/class="cr-see" data-i=/g, 'class="cr-see rvb-see" data-goto=');
+  if (cur >= moves.length) { const st = statusAt(moves.length); h = `<div class="rvb-h">${st.over ? (st.winner ? t('res.pWin', { c: pname(st.winner) }) : t('res.draw')) + ' · ' : ''}${t('info.moves', { n: moves.length })}</div>` + h; }
+  return h;
+}
+function rvbKenLeft(key) {
+  const L = BOX.cached(key), { pos } = posAt(cur), ev = L && L.length ? evalFromList(L, pos.turn) : null, st = statusAt(cur);
+  let h = `<div class="rvb-h">${BOX.t('kenFrom', { n: ken.base + 1 })}</div>`;
+  h += `<p>${BOX.t('kenEval')}: <b>${st.over ? (st.winner ? t('res.pWin', { c: pname(st.winner) }) : t('res.draw')) : ev ? evalText(ev) : '…'}</b></p>`;
+  h += `<p class="rvb-dim">${BOX.t('kenLine')}: <span class="rvb-kl"><bdi>${ken.line.length ? rvbLine(posAt(ken.base).pos, ken.line, ken.base + 1) : BOX.t('kenNone')}</bdi></span></p>`;
+  h += `<p class="rvb-dim">${BOX.t('kenHelp')}</p>`;
+  return h;
+}
+function rvbUpdate() {
+  if (!BOX || kenSw) return;
+  if (!rvbWant()) { if (ken) { kenStop(); setTimeout(() => update(false), 0); } BOX.update(null); return; }
+  kenSwap(() => {
+    const { pos } = posAt(cur), key = keyOf(cur), me = pos.turn, over = statusAt(cur).over, at = cur;
+    const playedM = !ken && cur < moves.length ? moves[cur] : -1;
+    BOX.update({
+      key, over, k: 5,
+      req: { start: startSpec, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
+      seed: !ken && rv.list[at] ? rv.list[at] : null,
+      sub: over ? '' : t('hb.turn', { c: pname(me) }),
+      left: ken ? () => kenSwap(() => rvbKenLeft(key)) : () => rvbLeft(),
+      ken: ken ? { from: ken.base + 1, canBack: ken.line.length > 0 } : null,
+      fmt: e => { const lb = valLabel(e.v); return { mv: rvbDot(me) + '<bdi>' + mvIn(pos, e.m) + '</bdi>', val: lb.big, small: lb.small, cls: /loss/.test(lb.cls) ? 'loss' : /win/.test(lb.cls) ? 'win' : /neg/.test(lb.cls) ? 'neg' : '', pv: e.pv ? rvbLine(pos.clone().play(e.m), e.pv) : '', played: e.m === playedM }; }
+    });
+  });
+}
+if (window.RvBox) BOX = RvBox.create({
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
+  onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
+  onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
+  onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
+});
 
 // ====================================================================== share / load
 const K64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -1942,7 +2041,7 @@ function parseGameText(v) {
   v = (v || '').trim();
   const h = v.match(/#(.*)$/);
   if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const list = decMoves(q.get('k') || ''); if (!list) return null; return { list, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }
-  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ').replace(/\*|1-0|0-1|1\/2-1\/2/g, ' ');
+  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ');   // results as whole tokens only (not the 0-1 inside 10-14)
   const toks = v.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
   const pos = E.Pos.from(null), out = [];
@@ -2030,6 +2129,7 @@ applyI18n();
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
@@ -2045,7 +2145,7 @@ $('#langSel').onchange = e => {
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
 if (loadFromHash()) { /* shared game opened */ }
-else if (!hadSave) { update(false); openNewDialog(); }
+else if (!hadSave) { update(false); afterPosition(); }   // no saved game: the starting position, waiting (the settings dialog opens from 対局)
 else { update(false); afterPosition(); }
 // expose for tests
 window.__ck = { get moves() { return moves; }, get cur() { return cur; }, settings, get rv() { return rv; }, rvJudge, dailyPick, parseGameText, encMoves, decMoves, onSquare, statusAt, posAt, newGame, get lesson() { return lesson; }, get puzzle() { return puzzle; }, get sel() { return sel; }, startLesson, startPuzzle, lessonsReady, puzzlesReady, get LESSONS() { return LESSONS; }, get PUZZLES() { return PUZZLES; }, playMove, viewAt };
@@ -2090,6 +2190,7 @@ let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {
   if (lesson || puzzle) return;
+  if (ken && kenOk()) { if (what === 'prev') kenBack(); return; }   // exploring: ◀ takes one explored move back, the rest waits for 元に戻す
   const N = moves.length;
   if (what === 'play') {
     if (playTimer) { stopPlay(); return; }
@@ -2118,6 +2219,7 @@ document.addEventListener('keydown', e => {
   if (lesson || puzzle) return;
   const k = { ArrowLeft: 'prev', ArrowRight: 'next', ArrowUp: 'last', ArrowDown: 'first', ' ': 'play' }[e.key];
   if (!k) return;
+  if (ken && kenOk()) { e.preventDefault(); return; }   // exploring: the record keys are off (use ◀ / 元に戻す in the box)
   e.preventDefault(); if (tg && tg.blur && tg !== document.body) tg.blur();
   navGo(k);
 });
