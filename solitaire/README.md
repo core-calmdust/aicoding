@@ -23,3 +23,6 @@
 ## 保存
 - `localStorage['aicoding-solitaire']`：設定・遊び途中のゲーム（元に戻す履歴つき）・統計（種類×難易度）・今日の配りの記録・勝てる配りの先読み
 - ルール説明の進み具合：`aicoding-solitaire-rules-<種類>`、ルールを見たか：`aicoding-solitaire-rules-seen`
+
+## 画像のクレジット
+- 絵札（J・Q・K）とカード裏面「クラシック赤・青」："Classic Playing Cards"（Figma Community）CC BY 4.0。`img/CREDITS.txt` 参照。ゲーム内の設定ダイアログにも表記。

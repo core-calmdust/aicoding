@@ -565,6 +565,36 @@
       });
       return g;
     },
+    // Solitaire (Klondike): a green baize mat with a deal in progress — stock, waste, four foundations, seven fanned columns
+    solitaire() {
+      const TT = T(), g = new TT.Group(), W = 9.4, D = 7.4, cw = 1.04, cd = 1.46, ch = .035, gx = 1.3;
+      const felt = canvasTex('solFelt', 512, 512, (c, w) => { const gr = c.createRadialGradient(w / 2, w / 2, 40, w / 2, w / 2, w * .75); gr.addColorStop(0, '#2b7a51'); gr.addColorStop(1, '#14462d'); c.fillStyle = gr; c.fillRect(0, 0, w, w); for (let i = 0; i < 9000; i++) { c.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},.045)`; c.fillRect(Math.random() * w, Math.random() * w, 1.5, 1.5); } });
+      g.add(mesh(RB(W + .5, .5, D + .5, .25, 3), M({ map: wood('solRim', '#6a3f22', '#3a2010'), roughness: .45, clearcoat: .4 }), 0, .25, 0));
+      g.add(slab(W, .08, D, M({ map: felt, roughness: .95, bump: false }), M({ color: 0x1d5a3a })).translateY(.5));
+      const SUIT = ['♠', '♥', '♦', '♣'], RK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      const face = (r, s) => canvasTex('solC' + r + s, 160, 224, (c, w, h) => {
+        c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, w, h); const red = s === 1 || s === 2; c.fillStyle = red ? '#c0232e' : '#1f1f26';
+        c.font = 'bold 44px Georgia, serif'; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(RK[r - 1], 12, 10); c.font = '34px serif'; c.fillText(SUIT[s], 14, 56);
+        if (r > 10) { c.strokeStyle = '#a8873f'; c.lineWidth = 4; c.strokeRect(40, 36, 80, 152); c.font = 'italic bold 70px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(RK[r - 1], 80, 112); }
+        else { c.font = '96px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(SUIT[s], 84, 128); }
+      });
+      const back = canvasTex('solBack', 160, 224, (c, w, h) => { c.fillStyle = '#9b1c2b'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 3; for (let i = -h; i < w + h; i += 14) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + h, h); c.stroke(); c.beginPath(); c.moveTo(i + h, 0); c.lineTo(i, h); c.stroke(); } c.strokeStyle = '#fbf3e2'; c.lineWidth = 8; c.strokeRect(10, 10, w - 20, h - 20); });
+      const edge = M({ color: 0xf2ead8, roughness: .6 }), mb = M({ map: back, roughness: .5, bump: false });
+      const card = (r, s, up, x, z, y) => { const top = up ? M({ map: face(r, s), roughness: .45, bump: false }) : mb; const m = mesh(RB(cw, ch, cd, .012, 1), [edge, edge, top, mb, edge, edge], x, y, z); g.add(m); return m; };
+      const X0 = -3 * gx, Z0 = -D / 2 + .25 + cd / 2, Y = .56;
+      for (let k = 0; k < 6; k++) card(1, 0, false, X0, Z0, Y + k * ch);                  // stock
+      card(7, 1, true, X0 + gx, Z0, Y); card(4, 3, true, X0 + gx + .22, Z0, Y + ch); card(9, 2, true, X0 + gx + .44, Z0, Y + 2 * ch);   // waste (draw 3)
+      [[2, 0], [1, 1], [3, 2], [0, 3]].forEach(([n, s], i) => { for (let k = 1; k <= n; k++) card(k, s, true, X0 + (3 + i) * gx, Z0, Y + k * ch); });   // foundations
+      const COLS = [[[13, 3]], [[12, 1], [11, 0]], [[10, 2]], [[13, 1], [12, 3], [11, 2]], [[8, 0], [7, 1]], [[5, 3]], [[13, 0], [12, 2], [11, 3], [10, 1]]];
+      COLS.forEach((up, i) => {
+        let z = Z0 + cd + .35, y = Y;
+        for (let k = 0; k < i; k++) { card(1, 0, false, X0 + i * gx, z, y); z += .14; y += ch; }
+        up.forEach(([r, s]) => { card(r, s, true, X0 + i * gx, z, y); z += .38; y += ch; });
+      });
+      // one card lifted in mid-move
+      const fly = card(6, 1, true, X0 + 5.5 * gx, Z0 + cd + 1.6, 1.7); fly.rotation.set(-.35, .2, .12);
+      return g;
+    },
     jailbreak() {   // a steel-framed 6×6 cell: concrete floor, crates and lockers, the orange inmate sliding out through the gap, a gold key
       const TT = T(), g = new TT.Group(), N = 6, cs = 1.15, S = N * cs;
       const steel = M({ color: 0x3a3f4a, roughness: .35, metalness: .5 }), steel2 = M({ color: 0x5d6575, roughness: .3, metalness: .6 });
