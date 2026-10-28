@@ -250,8 +250,8 @@ function renderDaily() {
   $('#dPuzzle').innerHTML = `<div class="ptag">${esc(t('d.title'))}<i>${esc(d.slice(5).replace('-', '/'))}</i></div>
     <div class="dhead"><h3>${esc(t('d.head'))}</h3><p>${esc(t('d.desc'))}</p></div>
     <div class="dlvs">${DIFFS.map(D => { const rec = dRec(d, D.k), P = E.decode(rec), rr = r[D.k], played = rr.md > 0, going = !played && !!rr.p;
-      return `<div class="dlv lv-${D.k}"><div class="dic">${A.miniBoard(P, P.s0)}</div><div class="dlt"><b>${esc(t('dl.' + D.k))}</b>${ruleChip(rec.r)}<small>${esc(t('u.opt', { n: rec.o }))}</small>
-        <span class="dbest"><span>${esc(t('d.best'))}</span><b>${played ? fmt(rr.s) : '—'}</b>${rr.md ? `<i class="medal m${rr.md}"></i>` : ''}</span></div>
+      return `<div class="dlv lv-${D.k}"><div class="dic">${A.miniBoard(P, P.s0)}</div><div class="dlt"><b>${esc(t('dl.' + D.k))}${rr.md ? `<i class="medal m${rr.md}"></i>` : ''}</b>${ruleChip(rec.r)}<small>${esc(t('u.opt', { n: rec.o }))}</small>
+        <span class="dbest"><span>${esc(t('d.best'))}</span><b>${played ? fmt(rr.s) : '—'}</b></span></div>
         <div class="dlb"><button class="btn ${D.k === 'e' ? 'blue' : D.k === 'm' ? 'org' : 'dark'}" data-dl="${D.k}" ${played ? 'disabled' : ''}>${played ? '' : A.ICON.play}${esc(t(played ? 'd.done' : going ? 'd.resume' : 'd.play'))}</button><button class="btn sm" data-rank="${D.k}" aria-label="${esc(t('rk.title'))}">${A.ICON.rank}</button></div></div>`; }).join('')}</div>
     <p class="note">${esc(t('d.medals'))}</p>`;
   const left = DSL_TRIES - r.sl.a;
