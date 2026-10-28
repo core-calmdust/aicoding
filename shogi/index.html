@@ -1273,7 +1273,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=7"></script>
-<script src="engine.js?v=20261028rb"></script>
+<script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
@@ -1285,11 +1285,11 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1"></script>
-<script src="variants/search.js?v=20261028rb"></script>
+<script src="variants/search.js?v=20261028pv"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261028rb"></script>
-<script src="rvbox.js?v=1"></script>
+<script src="variants/variants.js?v=20261028pv"></script>
+<script src="rvbox.js?v=20261028pv"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -1413,7 +1413,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261028rb');
+  const w = new Worker('engine.js?v=20261028pv');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -2755,19 +2755,22 @@ function studyEnd(quiet) {
   if (!quiet) { refresh(false); renderReview(); }
 }
 function rvbKill() { if (rvbW) { rvbW.terminate(); rvbW = null; } rvbJob = null; }
+// continuous analysis (rvbox.js runs it): the worker searches depth 1, 2, 3, ... and posts the best 4 moves with their
+// lines after every depth; RVB stops it (terminate) on another position, the time limit or Stop
 function rvbCands(push, done) {
   const sf = P.sfen(), key = rvbKey(), mv = game.moves.slice(0, cur), vr = game.variant && window.Variants ? game.variant : '';
   const played = !inStudy() && cur < game.moves.length ? game.moves[cur] : '';
-  const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 8)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
+  const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 10)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
   const val = s => Math.abs(s) >= E.MATE - 200 ? fmtScore(s) : Math.round(winRate(s) * 100) + '%';
-  const conv = list => (list || []).slice().sort((a, b) => b.score - a.score).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
-    return { move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
+  const conv = list => (list || []).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
+    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
   rvbKill();
   const id = ++jobId, w = rvbW = vr ? Variants.newWorker() : makeWorker(null);
   rvbJob = id;
-  w.onmessage = e => { const m = e.data; if (!m || m.id !== id || rvbJob !== id) return; if (m.type === 'progress') { if (m.list) push(conv(m.list)); } else { rvbJob = null; done(m.error ? null : conv(m.list)); } };
+  w.onmessage = e => { const m = e.data; if (!m || m.id !== id || rvbJob !== id) return; const info = { depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial };
+    if (m.type === 'progress') { if (m.list) push(conv(m.list), info); } else { rvbJob = null; done(m.error ? null : conv(m.list), info); } };
   w.onerror = () => { if (rvbJob === id) { rvbJob = null; done(null); } };
-  const go = () => { if (rvbJob !== id) return; if (vr) w.postMessage({ type: 'analyze', variant: vr, sfen: game.start, moves: mv, opts: { time: 1500, top: 4, pv: true }, id }); else w.postMessage({ type: 'multipv', sfen: game.start, moves: mv, opts: { n: 4, time: 700 }, id }); };
+  const go = () => { if (rvbJob === id) w.postMessage({ type: 'mpvLoop', variant: vr, sfen: game.start, moves: mv, opts: { n: 4, depth: vr ? 30 : 40 }, id }); };
   if (vr) go(); else weightsReady.then(() => setTimeout(go, 0));
   return () => { if (rvbW === w) rvbKill(); };
 }

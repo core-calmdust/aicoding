@@ -399,11 +399,42 @@ function multiPV(start, moves, n, ms, plies, onProgress) {
   return top;
 }
 
+// review box, continuous analysis: the best n moves at depth 1, 2, 3, ... (each search excludes the moves already found
+// at that depth; the line comes from the transposition table), reported after every depth (and after each line from
+// depth 7 on, partial). Ends at maxD or two depths after a win / loss shows up; the page terminates the worker to stop.
+function mpvLoop(start, moves, n, maxD, post) {
+  const { pos } = replay(start, moves), legal = pos.moves();
+  n = Math.min(n || 4, legal.length);
+  if (!WX || !n) { const l = n ? multiPV(start, moves, n, 800, 8) : []; post('result', { list: l, depth: l.length ? 1 : 0 }); return; }
+  let nodes = 0, prev = [], last = 0, mateAt = 0;
+  for (let d = 1; d <= (maxD || 40); d++) {
+    const ex = [], out = [];
+    for (let k = 0; k < n; k++) {
+      if (!wSetup(start, moves, ex)) break;
+      let cm, v;
+      if (legal.length - ex.length === 1) { WX.values(d); const L = wList(); if (!L.length) break; cm = toC(L[0].m); v = L[0].v; }   // best() does not search a lone move
+      else { WX.best(d, 0, 0); const r = wIO(); if (r[0] < 0) break; cm = r[0]; v = r[1]; nodes += r[3] * 1000; }
+      const m = fromC(cm); if (!legal.includes(m) || ex.includes(m)) break;
+      const pl = WX.pv_line(cm, 12), io = wIO(), pv = [];
+      for (let j = 0; j < pl; j++) pv.push(fromC(io[1 + j]));
+      if (pv[0] !== m) pv.splice(0, pv.length, m);
+      ex.push(m); out.push({ m, v, pv });
+      if (d >= 7 && k < n - 1) post('progress', { depth: d, nodes, partial: true, list: out.concat(prev.filter(e => !out.some(x => x.m === e.m))).slice(0, n) });
+    }
+    if (!out.length) break;
+    prev = out; last = d;
+    post('progress', { depth: d, nodes, list: out.slice() });
+    if (Math.abs(out[0].v) > WINT) { if (!mateAt) mateAt = d; if (d >= mateAt + 2) break; }
+    if (legal.length === 1 && d >= 4) break;
+  }
+  post('result', { list: prev, depth: last, nodes });
+}
+
 const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, Pos, name, parse, sqName, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, RAYS, setWasm: x => { WX = x; }, toC, fromC };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261025a';
+  const V = 'v=20261028pv';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -423,7 +454,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         } else if (m.type === 'multipv') {
           const list = multiPV(m.start, m.moves, m.n, m.time || 800, m.plies, l => self.postMessage({ id: m.id, type: 'progress', list: l.map(e => ({ m: e.m, v: e.v, pv: e.pv.slice() })) }));
           self.postMessage({ id: m.id, type: 'result', list });
-        } else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.checks) });
+        } else if (m.type === 'mpvLoop') mpvLoop(m.start, m.moves, m.n, m.depth, (type, o) => self.postMessage({ id: m.id, type, ...o, list: o.list.map(e => ({ m: e.m, v: e.v, pv: e.pv.slice() })) }));
+        else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.checks) });
         else if (m.type === 'newgame') { if (WX) WX.new_game(); self.postMessage({ id: m.id, type: 'result' }); }
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
