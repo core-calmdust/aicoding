@@ -273,8 +273,8 @@ function statOf(v) { return D.stats[v] || (D.stats[v] = {}); }
 const SEATPOS = [[50, 84], [9, 62], [14, 21], [50, 11], [86, 21], [91, 62]];
 const BETPOS = [[50, 65], [23, 60], [27, 36], [50, 28], [73, 36], [77, 60]];
 // portrait tables: side seats pulled in so the name plates stay on the felt
-const SEATPOS_T = [[50, 87], [18, 64], [20, 23], [50, 11], [80, 23], [82, 64]];
-const BETPOS_T = [[50, 71], [27, 57], [29, 33], [50, 25], [71, 33], [73, 57]];
+const SEATPOS_T = [[50, 87], [18, 64], [20, 24], [50, 14.5], [80, 24], [82, 64]];   // top seat low enough for its speech bubble
+const BETPOS_T = [[50, 71], [27, 57], [29, 34], [50, 28.5], [71, 34], [73, 57]];
 let lastBubble = {};
 function bubble(s, txt) { lastBubble[s] = { txt, at: Date.now(), hand: T.hand }; }
 /* DOM patching: keep the elements that did not change (no re-played animations, no image reloads = no flicker).
@@ -388,7 +388,7 @@ function render(o) {
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
     if (s.bet > 0) { const [bx, by] = (tall || narrow ? BETPOS_T : BETPOS)[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
   });
-  box.classList.toggle('nb', narrow && !!V.board && V.hole < 4);   // squeezed phone table: the pot goes under the board
+  box.classList.toggle('nb', narrow && !!V.board && (V.hole < 4 || W < 350));   // squeezed phone table: the pot goes under the board
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
   if (o.deal && set.anim) {
