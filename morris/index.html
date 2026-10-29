@@ -122,7 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .pc.rmable::before{clip-path:none;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * 7 / var(--S) * .09) rgba(255,107,91,.0);animation:rmp 1s ease-in-out infinite}
 @keyframes rmp{50%{box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * 7 / var(--S) * .2) rgba(255,107,91,.75)}}
 .dest{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .3);height:calc(var(--cell) * 7 / var(--S) * .3);margin:calc(var(--cell) * 7 / var(--S) * -.15) 0 0 calc(var(--cell) * 7 / var(--S) * -.15);border-radius:50%;background:rgba(var(--hl),.85);box-shadow:0 0 12px rgba(var(--hl),.9),0 0 0 1.5px var(--dest-rim);z-index:3}
-.hov{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .68);height:calc(var(--cell) * 7 / var(--S) * .68);margin:calc(var(--cell) * 7 / var(--S) * -.34) 0 0 calc(var(--cell) * 7 / var(--S) * -.34);border-radius:50%;opacity:.3;pointer-events:none;z-index:1}
+.hov:not(.ck-bi){position:absolute;width:calc(var(--cell) * 7 / var(--S) * .68);height:calc(var(--cell) * 7 / var(--S) * .68);margin:calc(var(--cell) * 7 / var(--S) * -.34) 0 0 calc(var(--cell) * 7 / var(--S) * -.34);border-radius:50%;opacity:.3;pointer-events:none;z-index:1}
 .mark{position:absolute;width:calc(var(--cell) * 7 / var(--S) * .84);height:calc(var(--cell) * 7 / var(--S) * .84);margin:calc(var(--cell) * 7 / var(--S) * -.42) 0 0 calc(var(--cell) * 7 / var(--S) * -.42);border-radius:50%;border:3px solid;pointer-events:none;z-index:8}
 .mark.ok{border-color:rgb(var(--hl2));box-shadow:0 0 14px rgba(var(--hl2),.7)}
 .mark.ng{border-color:#ff6b5b}
@@ -994,6 +994,25 @@ body .info-line{font-size:12.5px}
   body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
   body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
+/* coach (coach.js, shared/coachkit.js): next to the evaluation; hidden in lessons, puzzles, online games and live rated games */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
+#coachCard.ck-off{padding:8px 12px}
+#coachCard.ck-off .ck-h{margin-bottom:4px}
+#coachCard.ck-off .ck-muted{font-size:12px;line-height:1.6}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  .app > .side > .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+  .app > .side .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.8 1 0;min-height:110px}
+  .app > .side .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px}
+}
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  #coachCard{order:0}
+}
+/* result dialog: the three buttons stay on one line each (no wrapped labels on phones) */
+#resultOverlay .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr));gap:8px}
+#resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
+#resultOverlay .modal-actions .mbtn.hidden{display:none}
 </style>
 </head>
 <body>
@@ -1084,6 +1103,7 @@ body .info-line{font-size:12.5px}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -1094,7 +1114,7 @@ body .info-line{font-size:12.5px}
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1274,6 +1294,10 @@ body .info-line{font-size:12.5px}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="i18n_more.js?v=20261028sk"></script>
 <script src="i18n_coach.js?v=4"></script>
+<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
@@ -1350,7 +1374,7 @@ function threatPoints(pos, p) {   // empty points where p would close a mill wit
 
 // ====================================================================== state
 const STORE = 'aicoding-morris';
-const settings = { mode: 'ai', rule: 'nine', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, bd: 'royal', pcs: 'gold', lang: '' };
+const settings = { mode: 'ai', rule: 'nine', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, coach: true, last: true, threat: false, bd: 'royal', pcs: 'gold', lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -1672,6 +1696,7 @@ function renderFx() {
   for (const k of lessonMarks) { if (k.arrow) svgArrow(svg, k.arrow[0], k.arrow[1], k.cls); else fxDiv('mark ' + k.cls, k.at); }
   if (labelList) drawLabels(labelList);
   else if (!drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  if (window.MorrisCoach && !labelList) MorrisCoach.fx(svg);
   renderPrompt();
 }
 function renderPrompt() {
@@ -1784,6 +1809,7 @@ function renderInfo() {
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
+  if (window.MorrisCoach) MorrisCoach.render();
 }
 // PC header bar: whose turn + phase, pieces of each side (in hand / on board), evaluation (when shown), move number
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1982,7 +2008,8 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  const coachOn = window.MorrisCoach && MorrisCoach.active();
+  if (!settings.eval && !settings.hint && !coachOn) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
@@ -1990,18 +2017,20 @@ async function analyzeCurrent(tok) {
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
-  if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
+  if (anaCache.has(key)) { apply(anaCache.get(key)); if (window.MorrisCoach) MorrisCoach.cands(key, anaCache.get(key)); return; }
   cancelWorker('ana');
   const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1600 : 1000 }, m => apply(m.list));
   if (!res || res.error) return;
   anaCache.set(key, res.list);
   apply(res.list);
+  if (window.MorrisCoach) MorrisCoach.cands(key, res.list);   // coach (coach.js): the candidates of this position
   save();
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -2015,6 +2044,14 @@ function onGameEnd(st) {
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !st || !st.over) return;
+  if (st.why === 'resign' && moves.length < 2) return;   // (resigned before playing: not a game)
+  const opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI ' + LV(settings.level) + (gv !== 'nine' ? ' · ' + t('rule.' + gv) : '');
+  const why = st.why === 'resign' ? t('ol.youResigned') : st.why ? t('res.why.' + st.why) : '';
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + settings.level) + (gv !== 'nine' ? ':' + gv : ''), n: moves.length, why });
 }
 // 投了 (common spec, shared/resign.js): after 対局 and 待った; asks 投了しますか？ and only はい ends the game as a loss.
 // vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns; online: online-ui.js sends the resignation.
@@ -3478,6 +3515,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
 drawLines();
+if (window.GameRecord) GameRecord.init({ game: 'morris', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.MorrisCoach) MorrisCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
@@ -3490,6 +3529,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); skinPicker(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.MorrisCoach) MorrisCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) renderLessonCard();
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) ($('#lsVarTabs').classList.contains('hidden') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
@@ -3576,7 +3617,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261028sk"></script>
+<script src="online-ui.js?v=20261030ck"></script>
 <!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

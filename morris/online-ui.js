@@ -406,6 +406,7 @@ async function finishOnline(g) {
     const score = !winner ? 0.5 : winner === me ? 1 : 0;
     try { net.result.rating = await ON.applyResult(gid, g, score); } catch (e) { console.warn(e); }
     syncTouch();
+    try { if (window.GameRecord) { const op = 3 - me; GameRecord.add({ mode: 'online', res: !winner ? 'd' : winner === me ? 'w' : 'l', side: me - 1, opp: olShortName(op) + (typeof (op === P1 ? g.br : g.wr) === 'number' ? ' (' + (op === P1 ? g.br : g.wr) + ')' : ''), key: 'ol:' + olShortName(op), n: moves.length, why: net.result.why || '' }); } } catch (e) {}   // 勝敗記録 (shared/record.js)
   }
   if (!net || net.gid !== gid) return;
   setTimeout(() => { if (net && net.gid === gid) olShowResult(); }, g.status === 'over' ? 900 : 250);
