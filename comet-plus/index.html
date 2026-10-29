@@ -3957,7 +3957,7 @@ function update(timestamp) {
         updateInstructions();
         if (input.pauseTrigger) {
             gameState = 'playing';
-            lastTimestamp = 0;
+            lastTimestamp = simTime; // 再開直後も1更新ぶん進める（0にすると再開の1フレームだけ止まって見える）
             resumeAudioClock();
         } else if (input.titleTrigger) {
              audioHandler.stopBgm();
@@ -5834,7 +5834,7 @@ NB.SERPENT = () => {
         head.rotation.y = Math.atan2(dx, dy);
         (b.segs || []).forEach((s, k) => {
             const m = segs[k]; if (!m) return; m.visible = true;
-            m.position.set(toX(s.x), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(s.y));
+            m.position.set(toX(ix(s)), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(iy(s)));
             const p = k ? b.segs[k - 1] : b; m.rotation.set(0, Math.atan2(p.x - s.x, p.y - s.y), Math.sin(t * 3 + k) * 0.3);
         });
     };
@@ -5854,7 +5854,7 @@ NB.LANCER = () => {
         body.rotation.z = t * (b.mode === 'dash' ? 20 : 2);
         const len = config.canvasHeight - b.y;
         tele.visible = !!b.telegraph; tele.scale.set((1 + Math.sin(t * 40) * 0.2) * BS, len, 1);
-        tele.position.set(toX(b.x), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
+        tele.position.set(toX(ix(b)), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
     };
     return g;
 };
@@ -8177,7 +8177,7 @@ function snapshotPrev() {
     const sp = o => { o._px = o.x; o._py = o.y; };
     if (player) sp(player);
     if (playerBullet) sp(playerBullet);
-    if (boss) sp(boss);
+    if (boss) { sp(boss); if (boss.segs) boss.segs.forEach(sp); }
     if (comets) comets.forEach(sp);
     if (enemyBullets) enemyBullets.forEach(sp);
     if (items) items.forEach(sp);
