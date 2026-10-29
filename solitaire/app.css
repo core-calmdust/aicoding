@@ -563,3 +563,5 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
   .gcard b{font-size:14.5px}
   .ng-body .tiles small{font-size:9px;letter-spacing:0;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
 }
+/* phone: no "all statistics" button in the record card (the Stats button in the toolbar opens the same) */
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){ #sStats{display:none} }
