@@ -1,5 +1,5 @@
 /* ポーカー — equity / coach worker (poker/worker.js): keeps the page smooth while thousands of deals are simulated */
-importScripts('engine.js?v=1', 'pre.js?v=1', 'equity.js?v=2');
+importScripts('engine.js?v=2', 'pre.js?v=1', 'equity.js?v=3');
 self.onmessage = e => {
   const d = e.data;
   try {

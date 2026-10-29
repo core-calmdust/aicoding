@@ -1090,3 +1090,31 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
   #ngBody[data-tab=rules] .diff-desc{font-size:14px}
 }
 .pk .board-wrap::before{border-radius:calc(var(--R) - 4px)}
+/* lessons: the same box as the rules (PC) so it does not jump between the list, a lesson and the result */
+@media (min-width:761px){
+  .lesson-modal{width:min(980px,calc(100vw - 24px));height:min(calc(100dvh - 32px),900px);max-height:none}
+  .lesson-modal .lc-body{flex:1;min-height:0;overflow:auto}
+  .lesson-modal .lq{flex:1;min-height:0}
+  .lesson-modal .lq-main{flex:1;min-height:0;overflow:auto}
+}
+/* study tools: fixed box like the rules, larger text (PC) */
+@media (min-width:761px){
+  .tools-modal{width:min(980px,calc(100vw - 24px));height:min(calc(100dvh - 32px),900px);max-height:none;display:flex;flex-direction:column}
+  .tools-modal .tl-body{flex:1;min-height:0;max-height:none;overflow:auto}
+  .tools-modal .lab{font-size:13.5px}
+  .tools-modal .diff-desc{font-size:14px;line-height:1.75}
+  .tools-modal .seg button{font-size:14.5px;padding:9px 10px}
+  .tools-modal .szb{font-size:14px;padding:7px 12px}
+  .tools-modal .tp-n{font-size:14.5px}
+  .tools-modal .tp-r>b{font-size:17px}.tools-modal .tp-r>small{font-size:12.5px}
+  .tools-modal .ts{width:40px;height:54px;font-size:17px}.tools-modal .ts small{font-size:15px}
+  .tools-modal .pkc{height:36px;font-size:13px}.tools-modal .pkc small{font-size:11px}
+  .tools-modal .kv{font-size:14.5px}.tools-modal .kv b{font-size:15px}
+  .tools-modal .od-in label{font-size:13px}.tools-modal .od-in input{font-size:16px}
+  .tools-modal .rc{font-size:12px}.tools-modal .rc small{font-size:10px}
+  .tools-modal .rc-k{font-size:36px}.tools-modal .rc-info>span{font-size:14px}
+  .tools-modal .rc-eqs small{font-size:11.5px}.tools-modal .rc-eqs b{font-size:15px}
+  .tools-modal .hr>b{font-size:16px}.tools-modal .hr>small{font-size:13.5px}.tools-modal .hr>em{font-size:13.5px}.tools-modal .hr-i{font-size:15px}
+  .tools-modal .hr .mc{width:30px;height:42px;font-size:15px}
+  .tools-modal .ng-tabs button{font-size:16px}
+}

@@ -80,7 +80,7 @@ function sfx(k) {
 
 /* ---------------- worker (equity / coach) ---------------- */
 let worker = null, wid = 0; const wcb = {};
-function W() { if (worker === false) return null; if (!worker) { try { worker = new Worker('worker.js?v=2'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data.err ? null : e.data.r); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } } return worker; }
+function W() { if (worker === false) return null; if (!worker) { try { worker = new Worker('worker.js?v=3'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data.err ? null : e.data.r); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } } return worker; }
 function ask(msg, cb, fallback) {
   const w = W(); if (!w) { setTimeout(() => cb(fallback()), 5); return; }
   const id = ++wid; msg.id = id; wcb[id] = cb; w.postMessage(msg);
@@ -378,7 +378,7 @@ function render(o) {
       return Cards.html(visible ? c : null, { cls: cls, style: `--k:${k}` });
     }).join('');
     const bub = !done && lastBubble[i] && lastBubble[i].hand === T.hand && Date.now() - lastBubble[i].at < 2600 ? lastBubble[i].txt : '';
-    const info = done && showAll && !s.folded ? t('hand.' + P.handInfo(T, i).cat) : '';
+    const info = done && showAll && !s.folded ? handName(P.handInfo(T, i)) : '';
     const style = s.bot ? t('style.' + s.bot.style) : '';
     h += `<div class="seat${hero ? ' me' : ''}${s.folded && T.phase !== 'idle' ? ' folded' : ''}${toAct ? ' act' : ''}${winners.has(i) ? ' win' : ''}${s.allin ? ' allin' : ''}${V.stud ? ' stud' : ''}${V.hole >= 4 && !V.stud ? ' many' : ''}" style="left:${x}%;top:${y}%" data-seat="${i}" data-k="seat${i}">` +
       `<div class="sc">${cards}</div>` +
@@ -478,7 +478,7 @@ function renderSide() {
     else if (!c) body = `<p class="muted calc"><span class="spin s"></span>${esc(t('hud.calc'))}</p>`;
     else {
       const winW = c.win * 100, tieW = c.tie * 100;
-      const handNow = T.seats[HERO].cards.length ? t('hand.' + P.catOf(V.omaha ? P.bestOmaha(T.seats[HERO].cards, T.board, V.short) : P.evalCards(T.seats[HERO].cards.concat(T.board), V.short), V.short)) : '';
+      const handNow = !T.seats[HERO].cards.length ? '' : V.low27 ? handName(P.handInfo(T, HERO)) : t('hand.' + P.catOf(V.omaha ? P.bestOmaha(T.seats[HERO].cards, T.board, V.short) : P.evalCards(T.seats[HERO].cards.concat(T.board), V.short), V.short));
       body = `<div class="eqbig"><b>${pct(c.eq)}</b><small>${esc(t('hud.eq', { n: c.nOpp }))}</small></div>` +
         `<div class="eqbar"><i class="w" style="width:${winW}%"></i><i class="t" style="width:${tieW}%"></i><span class="need" style="left:${Math.min(100, c.need * 100)}%" title="${esc(t('hud.need'))}"></span></div>` +
         `<div class="kv"><span>${esc(t('hud.hand'))}</span><b>${esc(handNow)}</b></div>` +
@@ -542,7 +542,7 @@ function showResult() {
   const R = T.result, el = $('#pkResult');
   const lines = R.pots.map((p, k) => {
     const ws = p.winners.map(i => T.seats[i].name).join('・');
-    const how = R.showdown ? t('hand.' + P.handInfo(T, p.winners[0]).cat) : t('res.uncontested');
+    const how = R.showdown ? handName(P.handInfo(T, p.winners[0])) : t('res.uncontested');
     return `<div class="rl-p">${R.pots.length > 1 ? `<small>${esc(k ? t('res.side', { n: k }) : t('res.main'))}</small>` : ''}<b>${esc(ws)}</b><span>${p.amt} · ${esc(how)}</span></div>`;
   }).join('');
   el.innerHTML = lines; el.classList.add('show');
@@ -593,7 +593,10 @@ const GART = {   // a few cards for each game (new-game dialog)
   shortdeck: [[5, 0, .1, -6], [6, .45, .05, 0], [7, .9, .1, 6], [8, 1.35, .2, 10], [0, 1.85, .35, 14]],
   stud: [['b', 0, .2, 0], ['b', .38, .2, 0], [12, .9, .2, 0], [25, 1.28, .2, 0], [38, 1.66, .2, 0]],
   draw: [[1, 0, .1, -12], [14, .42, 0, -6], [27, .84, -.03, 0], [40, 1.26, 0, 6], [9, 1.68, .1, 12]],
+  triple: [[6, 0, .1, -12], [17, .42, 0, -6], [29, .84, -.03, 0], [41, 1.26, 0, 6], [14, 1.68, .1, 12]],   // 7-5-4-3-2: the best 2-7 low
 };
+// the name of a made hand (2-7 lowball: "8-6-5-4-2 low")
+function handName(info) { return info.low && info.cat === 'low' ? info.name + ' ' + t('hand.low') : t('hand.' + info.cat); }
 function gArt(v) { return `<span class="garts">` + GART[v].map(([c, x, y, r]) => `<span class="cd${c === 'b' ? ' dn' : ''}" style="left:calc(var(--cw)*${x});top:calc(var(--cw)*${y});transform:rotate(${r}deg)"><span class="in">${Cards.face(c === 'b' ? 0 : c)}</span></span>`).join('') + `</span>`; }
 const pipsD = d => '♦'.repeat(d) + '<s>' + '♦'.repeat(4 - d) + '</s>';
 function renderNew() {
