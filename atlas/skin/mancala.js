@@ -42,8 +42,18 @@
     },
   });
   if (!skin) return;
-  // the game's 「横画面でも遊べます」 tip would come on every visit: not in the portal skin
-  try { rotTipDone = true; const ro = document.getElementById('rotTipOverlay'); if (ro) ro.classList.remove('show'); } catch (e) {}
+  // phones: the landscape (rotate) button in the portal bar, as in backgammon; the game asks once per visit (rotTip) whether to turn the board
+  (function rotBtn(tries) {
+    const bar = document.querySelector('.atlas-top'), rot = document.getElementById('btnRot');
+    if (!bar || !rot) { if (tries < 30) setTimeout(() => rotBtn(tries + 1), 150); return; }
+    if (!matchMedia('(pointer: coarse)').matches || document.getElementById('atlasRot')) return;
+    const home = bar.querySelector('a.atlas-ic[aria-label=Portal]'), rb = document.createElement('button');
+    rb.type = 'button'; rb.id = 'atlasRot'; rb.innerHTML = rot.innerHTML; rb.setAttribute('aria-label', rot.getAttribute('aria-label') || 'Landscape');
+    const sync = () => { rb.className = 'atlas-ic atlas-rot-b' + (rot.classList.contains('on') ? ' on' : '') + (rot.classList.contains('hintpulse') ? ' pulse' : ''); rb.title = rot.title || ''; };
+    rb.onclick = e => { e.stopPropagation(); rot.click(); setTimeout(sync, 0); };
+    new MutationObserver(sync).observe(rot, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
+    bar.insertBefore(rb, home || null);
+  })(0);
 
   /* ---------- the page's cups on the carved hollows ---------- */
   window.slotUV = function (i) {

@@ -836,6 +836,8 @@ html.pc2 body .side-in > .review-card.show{flex:1.5 1 0!important;min-width:0!im
 html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
 html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
 html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+/* portal 3D skin on phones: the same distance from the 3D board to the boxes above / below as in reversi (~15px) */
+@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area > #frame{margin-top:calc(var(--board) * .045 - 11px)!important;margin-bottom:calc(var(--board) * .045 - 13px)!important} }
 </style>
 <link rel="stylesheet" href="online.css?v=3">
 </head>
