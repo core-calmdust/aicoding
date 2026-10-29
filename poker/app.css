@@ -1243,9 +1243,10 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .m-hud[data-pos=mid],.m-hud[data-pos=center]{inset:auto;left:50%;transform:translate(-50%,0);top:calc(var(--rail) + (100% - 2 * var(--rail)) * .44 + var(--chh) * .5 + 10px);display:grid;grid-template-columns:1fr 1fr;gap:5px;transition:opacity .2s}
   .m-hud[data-pos=center]{top:46%;transform:translate(-50%,-50%)}
   .m-hud[data-pos=mid] .mh,.m-hud[data-pos=center] .mh{position:static;display:contents}
-  .m-hud[data-pos=mid] .mh span,.m-hud[data-pos=center] .mh span{flex-direction:column;align-items:center;gap:0;min-width:74px;padding:3px 6px}
+  .m-hud[data-pos=mid] .mh span,.m-hud[data-pos=center] .mh span{flex-direction:row;align-items:baseline;justify-content:space-between;gap:6px;min-width:98px;padding:2px 8px}
   .m-hud[data-pos=mid] small,.m-hud[data-pos=center] small{font-size:9.5px}
-  .m-hud[data-pos=mid] b,.m-hud[data-pos=center] b{font-size:13px}
+  .m-hud[data-pos=mid] b,.m-hud[data-pos=center] b{font-size:12.5px}
+  .m-hud[data-pos=mid]{gap:4px}
   .pk-result.show ~ .m-hud[data-pos=mid],.pk-result.show ~ .m-hud[data-pos=center]{opacity:0}
   .m-hud b.pos{color:#8fe3b8}.m-hud b.neg{color:#ff9b90}
   /* action bar: three big buttons, then the sizing */
@@ -1264,16 +1265,10 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .app{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .brand,.controls{flex:none}
-  .stage{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .stage > *{flex:none}
-  .pk .pk-left{display:contents}
-  .pk .board-wrap{order:1;flex:1 1 auto!important;height:auto!important;min-height:160px!important}
-  .pk .actbar{order:3}
+  .pk .board-wrap{height:min(660px,max(calc(var(--sh,560px) - 182px),118vw))}
   /* the info panel opens between the table and the action bar (tab bar toggles it); the table shrinks to make room */
-  .pk .side{order:2;display:none!important;max-height:min(36%,300px);overflow-y:auto;overscroll-behavior:contain;border-radius:16px}
-  body.pk.mt-open .side{display:flex!important}
-  body.pk.mt-open .m-hud{display:none}
-  body.pk.mt-open .ab-size{display:none}
   .pk .side > [data-pt]{display:none}
   .pk .side[data-pt=eq] > [data-pt=eq],.pk .side[data-pt=coach] > [data-pt=coach],.pk .side[data-pt=log] > [data-pt=log],.pk .side[data-pt=sess] > [data-pt=sess]{display:block}
   .pk .side .card h3{font-size:13px}
@@ -1294,3 +1289,4 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .mh span{min-width:82px;gap:6px;padding:3px 8px}
   .m-hud small{font-size:9.5px}.m-hud b{font-size:13px}
 }
+.pk-table.nb .pk-pot{top:calc(44% + var(--chh) * .5 + 8px);transform:translate(-50%,0)}
