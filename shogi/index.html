@@ -70,6 +70,7 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var
   html:not(.atlas-skin) .board-area > .hand.bottom{left:0;margin-top:calc(var(--fp) - var(--cw)*0.16)}
 }
 .hand .hname{font-size:calc(var(--cw)*0.16);color:rgba(226,194,117,.7);text-align:center;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hand .hn-n{display:none}
 .hslot{touch-action:none;position:relative;height:var(--ch);width:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .hslot .cnt{position:absolute;right:2%;bottom:4%;z-index:3;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cw)*0.2);color:#fff;background:rgba(0,0,0,.7);border-radius:9px;padding:0 5px;line-height:1.4}
 .hslot.sel{background:rgba(226,194,117,.25);box-shadow:inset 0 0 0 2px var(--accent)}
@@ -623,6 +624,12 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
   .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:22px}
   .players{order:-2;padding:8px;gap:8px}
+  /* phones: the names sit on the komadai bars (☗ name), so the players card is only needed for clocks / online */
+  body:not(.has-clk):not(.in-online) .card.players{display:none!important}
+  .hand .hn-s{display:none}
+  .hand .hn-n{display:inline}
+  .hand .hname{max-width:40%;font-size:12.5px;letter-spacing:.04em;color:rgba(236,214,160,.85)}
+  .hand.turn{box-shadow:inset 0 0 0 1.5px rgba(201,169,97,.75),0 0 12px rgba(201,169,97,.25)}
   .player .side-l{display:none}
   .lesson-card{order:-2}
   body.in-study .lesson-card{order:0}
@@ -1719,7 +1726,11 @@ function renderHands() {
   const bottomCol = flip ? 1 : 0;
   for (const [el, col] of [[$('#handBottom'), bottomCol], [$('#handTop'), bottomCol ^ 1]]) {
     el.innerHTML = '';
-    const nm = document.createElement('div'); nm.className = 'hname'; nm.textContent = (col ? '☖' : '☗') + cname(col);
+    const nm = document.createElement('div'); nm.className = 'hname';
+    // phones show the player's name here (the players card is hidden there): ☗ + 先手 (PC) / ☗ + name (phone)
+    nm.innerHTML = `<span class="hn-m">${col ? '☖' : '☗'}</span><span class="hn-s"></span><span class="hn-n"></span>`;
+    nm.querySelector('.hn-s').textContent = cname(col); nm.querySelector('.hn-n').textContent = playerName(col);
+    el.classList.toggle('turn', !!game && !game.over && P.side === col);
     el.appendChild(nm);
     for (const tp of [HI, KA, KI, GI, KE, KY, FU]) {
       const n = P.hand[col * 8 + tp]; if (!n) continue;

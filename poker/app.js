@@ -532,13 +532,12 @@ function mTabs() {
   const sc = $('.stage'), max = sc.scrollHeight - sc.clientHeight; if (sc.scrollTop > max + 1) sc.scrollTop = Math.max(0, max);
 }
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
-  const same = $('#side').dataset.pt === b.dataset.pt;
-  set.mTab = b.dataset.pt; save(); mTabs();
-  // keep the table in view: bring the box up only to just past the middle of the screen; tap again → back to the top
-  const sc = $('.stage'), top = sc.getBoundingClientRect().top, y = $('#side').getBoundingClientRect().top - top, h = sc.clientHeight;
-  if (same && sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' });
-  else if (y > h * .55) sc.scrollTo({ top: Math.min(sc.scrollHeight - h, sc.scrollTop + y - h * .55), behavior: 'smooth' });
-  setTimeout(() => { const max = sc.scrollHeight - sc.clientHeight; if (sc.scrollTop > max + 1) sc.scrollTo({ top: Math.max(0, max) }); }, 450);
+  const sc = $('.stage'), same = $('#side').dataset.pt === b.dataset.pt;
+  if (same) { if (sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' }); return; }   // tap again: back to the table
+  set.mTab = b.dataset.pt; save(); mTabs();   // mTabs() keeps the view inside the (maybe shorter) content in the same frame — no jump
+  // only when the box is (almost) out of sight, bring its top up to just past the middle of the screen
+  const h = sc.clientHeight, y = $('#side').getBoundingClientRect().top - sc.getBoundingClientRect().top;
+  if (y > h * .85) sc.scrollTo({ top: Math.min(sc.scrollHeight - h, sc.scrollTop + y - h * .55), behavior: 'smooth' });
 });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
