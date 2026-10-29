@@ -183,6 +183,7 @@ function playEv(ev) {
 function afterMove() {
   saveGame();
   $('#stuck').classList.add('hidden');
+  if (!G.over && !G.auto && canAutoComplete()) { autoComplete(); return; }   // the win is decided: everything sweeps up at once
   runAuto(() => {
     if (G.over) return;
     if (S.won(st)) return win();
@@ -199,20 +200,25 @@ function runAuto(done) {
   };
   if (S.autoMove(st, set.auto)) setTimeout(step, Math.max(60, mt() * .6)); else done();
 }
-function canAutoComplete() {
-  const V = S.VARIANTS[st.v]; if (!V.solver) return false;
-  const c = S.clone(st);
-  if (c.p.some((P, i) => c.L[i].k === 'tab' && P.d > 0)) return false;
-  for (let k = 0; k < 120; k++) { const m = S.autoMove(c, 'all'); if (!m) break; S.apply(c, m); }
-  return S.won(c);
+// the rest of the game once it is decided: only foundation moves and stock turns (every card face up). Mutates s; null if it does not win.
+function finishMoves(s) {
+  const V = S.VARIANTS[s.v], out = [];
+  if (!S.pilesOf(s, 'found').length || s.p.some((P, i) => s.L[i].k === 'tab' && P.d > 0)) return null;
+  for (let k = 0; k < 400 && !S.won(s); k++) {
+    let m = S.autoMove(s, 'all');
+    if (!m) { if (V.canStock && V.canStock(s)) m = { s: 1 }; else return null; }
+    out.push(m); S.apply(s, m);
+  }
+  return S.won(s) ? out : null;
 }
+function canAutoComplete() { return !!S.VARIANTS[st.v].solver && !!finishMoves(S.clone(st)); }
 function checkAutoComplete() { $('#btnAuto').classList.toggle('hidden', G.over || !canAutoComplete()); }
 function autoComplete() {
   if (G.auto || G.over) return;
   $('#btnAuto').classList.add('hidden'); G.undo.push(snap()); G.auto = true;
   // the finish is decided: every remaining card sweeps up to the foundations in one quick wave (normal flight speed, staggered starts)
-  const order = []; let mv;
-  while ((mv = S.autoMove(st, 'all')) && order.length < 210) { order.push(st.p[mv.f].c[mv.i]); S.apply(st, mv); }
+  const plan = finishMoves(S.clone(st)) || [], order = [];
+  for (const mv of plan) { if (!S.legal(st, mv)) break; if (!mv.s) order.push(st.p[mv.f].c[mv.i]); S.apply(st, mv); }
   const gap = set.anim ? 18 : 0;
   TB.set(st, { stagger: order, step: gap }); renderAll(); saveGame();
   for (let i = 0; i < order.length; i += 3) setTimeout(() => sfx('place'), i * gap + mt() * .8);
