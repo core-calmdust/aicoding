@@ -40,7 +40,7 @@ const capCount = m => E.popc(mCap(m));
 
 // ====================================================================== state
 const STORE = 'aicoding-checkers';
-const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'classic', pcs: 'ebony' };
+const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'classic', pcs: 'ebony' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -339,6 +339,7 @@ function renderFx() {
   if (labelList) drawLabels(labelList);
   else if (!(rvbHov && BOX && BOX.shown) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
   rvbFx(svg, pos);
+  if (window.CheckersCoach && !labelList && !lessonMarks.length) CheckersCoach.fx(svg, pos);
   renderPrompt();
 }
 function renderPrompt() {
@@ -449,6 +450,7 @@ function renderInfo() {
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
+  if (window.CheckersCoach) CheckersCoach.render();
 }
 // PC header bar: whose turn, pieces of each side, evaluation (when shown), move number
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -689,10 +691,12 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  const coachOn = !!(window.CheckersCoach && CheckersCoach.active());
+  if (!settings.eval && !settings.hint && !coachOn) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
+    if (window.CheckersCoach) CheckersCoach.cands(key, list);
     const ev = evalFromList(list, mover);
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
@@ -711,6 +715,7 @@ function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -724,6 +729,13 @@ function onGameEnd(st) {
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
   { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || !st || !st.over || !moves.length) return;
+  const h = humanColor, opp = rgame ? `AI ${rtLvName(rgame.lv)} · R${rgame.or}` : `AI ${LV(settings.level)}`;
+  const why = st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why);
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === h ? 'w' : 'l', side: h - 1, opp, key: rgame ? 'rt:' + rgame.lv : 'ai:' + settings.level, n: moves.length, why });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1136,6 +1148,7 @@ function rtForfeit() {
   busyToken++; cancelWorker('ai'); thinking = 0;
   rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
   const x = rtSettle(rgame.over); save();
+  if (moves.length) recordGame(rgame.over);
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }
@@ -2169,6 +2182,10 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+// 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
+if (window.GameRecord) GameRecord.init({ game: 'checkers', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
+if (window.CheckersCoach) CheckersCoach.init();
+openReady.then(() => { if (window.CheckersCoach) CheckersCoach.render(); });
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
@@ -2180,6 +2197,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.CheckersCoach) CheckersCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (document.querySelector('.ls-tabs button.sel[data-v=open]') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) (openChoiceIdx >= 0 ? openOpeningChoice(openChoiceIdx) : openIntro(introIdx)); }
