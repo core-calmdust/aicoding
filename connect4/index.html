@@ -112,7 +112,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .disc::before{content:"";position:absolute;inset:16%;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.25)}
 .disc.p1{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35)}
 .disc.p2{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--ruby1) 0%,var(--ruby2) 26%,var(--ruby3) 68%,var(--ruby4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4)}
-.disc.last::after{content:"";position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;background:var(--last);box-shadow:0 0 6px var(--last)}
+.disc.last::after{content:"";position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;width:20%;height:20%;background:var(--last);box-shadow:0 0 0 2px rgba(10,10,12,.7),0 0 6px var(--last)}   /* dark rim: visible on the light discs too */
 .board.hide-last .disc.last::after{display:none}
 .disc.ghost{opacity:.32;pointer-events:none}
 .disc.preview{opacity:.0;transition:opacity .15s}
@@ -135,21 +135,24 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   background:linear-gradient(180deg,rgba(255,179,138,0),rgba(255,179,138,.10) 18%,rgba(255,179,138,.06));border-radius:10px}
 .colhl.show{opacity:1}
 .overlay-fx{position:absolute;inset:0;pointer-events:none;z-index:6}
-.hintlbl{position:absolute;width:var(--cell);height:var(--cell);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.hintlbl{position:absolute;width:var(--cell);height:var(--cell);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:7;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 0 2px #000,0 1px 3px rgba(0,0,0,.9)}
+.hintlbl::after{content:'';position:absolute;inset:22%;border-radius:50%;background:rgba(6,10,12,.72);z-index:-1}   /* a dark disc behind the label: readable on every skin (light porcelain too) */
 .hintlbl b{font-size:calc(var(--cell)*0.26);font-weight:700}
 .hintlbl small{font-size:calc(var(--cell)*0.15);opacity:.85}
 .hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.draw{color:#d8e6ff}.hintlbl.heur{color:rgba(255,255,255,.75)}
 .hintlbl.best b{color:var(--accent)}
-.hintlbl.best::before{content:"";position:absolute;inset:9%;border-radius:50%;border:2px solid rgba(255,179,138,.85);box-shadow:0 0 10px rgba(255,179,138,.5)}
+.hintlbl.best::before{content:"";position:absolute;inset:9%;border-radius:50%;border:3px solid #ffb38a;box-shadow:0 0 0 2px rgba(8,10,14,.85),inset 0 0 0 2px rgba(8,10,14,.85),0 0 10px rgba(255,179,138,.6)}
 .mark{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid;pointer-events:none;z-index:8}
-.mark.ok{border-color:var(--accent);box-shadow:0 0 14px rgba(255,179,138,.7)}
-.mark.ng{border-color:#ff6b5b}
-.mark.threat{border:2px dashed rgba(255,255,255,.75);width:calc(var(--cell)*0.6);height:calc(var(--cell)*0.6);margin:calc(var(--cell)*0.2)}
+.mark.ok{border-color:#ffb38a;box-shadow:0 0 0 2px rgba(8,10,14,.85),inset 0 0 0 2px rgba(8,10,14,.85),0 0 14px rgba(255,179,138,.7)}
+/* coach candidates (common rule): bright green with a dark rim, visible on every skin */
+.mark.ck-mark{border:4px solid #3df59a;box-shadow:0 0 0 2px #08120c,inset 0 0 0 2px #08120c,0 0 12px rgba(61,245,154,.65)}
+.mark.ng{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(8,10,14,.85),inset 0 0 0 2px rgba(8,10,14,.85)}
+.mark.threat{border:2.5px dashed #fff;filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 2px rgba(0,0,0,.9));width:calc(var(--cell)*0.6);height:calc(var(--cell)*0.6);margin:calc(var(--cell)*0.2)}
 .mark.threat.op{border-color:rgba(214,220,228,.9)}
-.winring{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid #fff3cf;box-shadow:0 0 18px rgba(255,236,170,.85),inset 0 0 12px rgba(255,236,170,.6);pointer-events:none;z-index:8;animation:winp 1.1s ease-in-out infinite}
+.winring{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid #fff3cf;box-shadow:0 0 0 3px rgba(20,14,4,.9),inset 0 0 0 2px rgba(20,14,4,.6),0 0 18px rgba(255,236,170,.85),inset 0 0 12px rgba(255,236,170,.6);pointer-events:none;z-index:8;animation:winp 1.1s ease-in-out infinite}
 @keyframes winp{50%{transform:scale(1.08);box-shadow:0 0 28px rgba(255,236,170,1),inset 0 0 18px rgba(255,236,170,.8)}}
 .winline{position:absolute;inset:0;z-index:9;pointer-events:none;overflow:visible}
-.winline line{stroke:rgba(255,243,207,.9);stroke-width:calc(var(--cell)*0.06);stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,236,170,.9));stroke-dasharray:1000;stroke-dashoffset:1000;animation:drawl .6s ease-out forwards}
+.winline line{stroke:#fff3cf;stroke-width:calc(var(--cell)*0.06);stroke-linecap:round;filter:drop-shadow(0 0 1.5px rgba(20,14,4,.95)) drop-shadow(0 0 6px rgba(255,236,170,.9));stroke-dasharray:1000;stroke-dashoffset:1000;animation:drawl .6s ease-out forwards}
 @keyframes drawl{to{stroke-dashoffset:0}}
 .hits{position:absolute;left:0;right:0;top:calc(var(--cell) * var(--top) * -1);bottom:0;display:grid;grid-template-columns:repeat(7,1fr);z-index:10}
 .hits button{cursor:default}
@@ -386,7 +389,8 @@ html[lang=ar] :is(.rl-lead, .rl-item, #rulesOverlay h2){direction:rtl;text-align
 .result-disc .pdisc{width:46px;height:46px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
 .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.7}
 .hidden{display:none!important}
-.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
+.confetti-box{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:200;contain:strict}
+.confetti{position:absolute;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
 
 @media (pointer: coarse){.disc.ghost,.colhl{display:none}}
@@ -472,7 +476,7 @@ html[lang=ar] #coachCard{direction:rtl;text-align:right}
 .rv-chips .bad{color:#ff8b7d}.rv-chips .dubious{color:#f2c060}
 /* 振り返り解説 (rvcoach.js) */
 .disc.rb-gh{opacity:.62;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:6}
-.disc.rb-gh.first{opacity:.9;outline:3px solid var(--accent);outline-offset:2px}
+.disc.rb-gh.first{opacity:.9;outline:3px solid #3df59a;outline-offset:2px;box-shadow:0 0 0 7px rgba(8,18,12,.85)}
 .disc.rb-gh b{font:700 calc(var(--cell) * .3) 'JetBrains Mono',monospace;color:var(--gtxt);text-shadow:0 0 4px rgba(127,127,127,.5)}
 .disc.rb-gh.p2 b{color:var(--rtxt)}
 .cr-box{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(232,148,106,.35);background:rgba(232,148,106,.06)}
@@ -502,9 +506,9 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .rv-list .ls{color:var(--dim);font-size:11px;white-space:nowrap}
 .rv-note{font-size:12px;margin-top:8px}
 .kifu button.q-dub{box-shadow:inset 0 -2px 0 #f2c060}
-.mark.played{border:3px dashed rgba(255,255,255,.85);box-shadow:0 0 10px rgba(255,255,255,.35)}
-.mark.played.bad{border-color:#ff6b5b;box-shadow:0 0 12px rgba(255,107,91,.55)}
-.mark.played.dubious{border-color:#f2c060;box-shadow:0 0 12px rgba(242,192,96,.5)}
+.mark.played{border:3px dashed #fff;box-shadow:none;filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 3px rgba(0,0,0,.9))}
+.mark.played.bad{border-color:#ff5a48}
+.mark.played.dubious{border-color:#ffc94a}
 .kifu-head .kb{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
@@ -1209,7 +1213,7 @@ body .info-line{font-size:12.5px}
 <script src="online.js?v=stale2"></script>
 <script src="../shared/coachkit.js?v=6"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=2"></script>
+<script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script>
 'use strict';
@@ -1893,12 +1897,15 @@ function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); 
 function confetti() {
   if (!settings.anim || reduceMotion) return;
   const cols = ['#e6cd8c', '#fff6dc', '#d4d9e0', '#ffffff', '#b39249'];
+  // the pieces fall inside a clipping layer the size of the screen: nothing reaches past its edges (a fixed piece
+  // outside the screen let iOS zoom the page out, and the bottom tab bar then sat in the middle of the screen)
+  const box = document.createElement('div'); box.className = 'confetti-box'; document.body.appendChild(box); setTimeout(() => box.remove(), 4300);
   for (let i = 0; i < 70; i++) {
     const c = document.createElement('div'); c.className = 'confetti';
     c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
     c.style.setProperty('--dx', (Math.random() - 0.5) * 200 + 'px'); c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
     c.style.animationDuration = 1.8 + Math.random() * 1.6 + 's'; c.style.animationDelay = Math.random() * 0.4 + 's';
-    document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
+    box.appendChild(c);
   }
 }
 
