@@ -36,7 +36,7 @@
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
     { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
       name: N('だつごくスライダー！', 'Jailbreak Slider!', '越狱滑块！', '탈옥 슬라이더!', '¡Fuga Slider!', 'Évasion Slider !', 'Fuga Slider!', 'Ausbruch-Slider!', 'जेलब्रेक स्लाइडर!', 'الهروب سلايدر!') },
-    { id: 'poker', cat: 'puzzle', store: ['aicoding-poker'], href: 'poker/', color: '#8a9a3a', released: '2026-10-29', tags: ['classic', 'card', 'ai', 'lessons', 'variants', 'mobile'], total: { ls: 18 },
+    { id: 'poker', cat: 'puzzle', store: ['aicoding-poker'], href: 'poker/', color: '#b9b4aa', released: '2026-10-29', tags: ['classic', 'card', 'ai', 'lessons', 'variants', 'mobile'], total: { ls: 18 },
       name: N('ポーカー', 'Poker', '扑克', '포커', 'Póker', 'Poker', 'Pôquer', 'Poker', 'पोकर', 'بوكر') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير') },
