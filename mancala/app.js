@@ -740,6 +740,7 @@ function renderInfo() {
   $('#btnShare').disabled = !game.moves.length;
   $('#btnAnalyze').disabled = !game.moves.length;
   renderReview(); renderBox();
+  if (window.MancalaCoach) MancalaCoach.render();
   const nav = $('#navBar'); nav.querySelector('[data-n=first]').disabled = nav.querySelector('[data-n=prev]').disabled = cur === 0;
   nav.querySelector('[data-n=next]').disabled = nav.querySelector('[data-n=last]').disabled = cur >= game.moves.length;
   const mode = settings.mode === 'ai' ? `AI Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
@@ -928,6 +929,14 @@ function onGameEnd() {
   if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
+  recordGame(w < 0 ? 'd' : w === game.human ? 'w' : 'l', a + '–' + o);
+}
+// 勝敗記録 (shared/record.js): games against the AI (online games are recorded in online-ui.js finishOnline)
+function recordGame(res, why) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !game.moves.length || game.recorded) return;
+  game.recorded = true;
+  const h = game.human;
+  try { GameRecord.add({ mode: 'ai', res, side: h, opp: `AI Lv.${settings.level} ${LV(settings.level)}`, key: 'ai:' + settings.level + ':' + game.rules, n: game.moves.length, why: [t('rule.' + game.rules), why].filter(Boolean).join(' · ') }); } catch (e) {}
 }
 function canResign() {
   if (inStudy()) return false;
@@ -952,6 +961,7 @@ function resignGame() {
   if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => $('#resultOverlay').classList.add('show'), 300);
+  if (settings.mode === 'ai' && game.moves.some((_, i) => P[i].side === game.human)) recordGame('l', Resign.label(LANG));
 }
 function canUndo() {
   if (inStudy()) return false;
@@ -2472,6 +2482,9 @@ try { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.
 $('#btnResign').innerHTML = Resign.icon + '<span></span>';
 applyI18n();
 if (window.PZBook) PZBook.setLang(LANG);
+// 勝敗記録 (shared/record.js) and the coach switch (coach.js) go into the menu / icon set before the header bar takes them
+if (window.GameRecord) GameRecord.init({ game: 'mancala', lang: () => LANG, menu: '.controls', sides: () => [t('p0'), t('p1')] });
+if (window.MancalaCoach) MancalaCoach.init();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { setTimeout(layout, 30); renderInfo(); });
@@ -2482,6 +2495,8 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   if (window.PZBook) PZBook.setLang(LANG);
   if (HB) HB.relabel();
+  if (window.MancalaCoach) MancalaCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); renderFx();
   if ($('#newOverlay').classList.contains('show')) segSync();
