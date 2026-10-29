@@ -55,7 +55,7 @@ const CSS = `
 .ck-br{display:flex;flex-direction:column;gap:6px}
 .ck-bi{position:relative;padding:8px 10px 8px 12px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-inline-start:3px solid var(--ck-c,#d8b56a)}
 .ck-bi.c-atk{--ck-c:#f2a65a}.ck-bi.c-def{--ck-c:#7fb2ff}.ck-bi.c-mat{--ck-c:#8fe3b8}.ck-bi.c-mate{--ck-c:#ff7b6b}.ck-bi.c-dev{--ck-c:#c9b6ff}.ck-bi.c-calm{--ck-c:#b9b2a2}
-.ck-bi.hov{background:rgba(255,255,255,.07)}
+.ck-bi.ck-hov{background:rgba(255,255,255,.07)}
 .ck-bt{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .ck-bt .tg{font-size:11px;font-weight:800;padding:1px 8px;border-radius:6px;background:color-mix(in srgb, var(--ck-c) 22%, transparent);color:var(--ck-c);letter-spacing:.04em;white-space:nowrap}
 .ck-bt b{font-size:13.5px;color:var(--text,#eee)}
@@ -177,9 +177,9 @@ function bind(root, o) {
   root.querySelectorAll('[data-ck=more]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onMore && o.onMore(); });
   root.querySelectorAll('[data-ck=reveal]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onReveal && o.onReveal(); });
   if (o.onHover) root.querySelectorAll('.ck-bi[data-mv]').forEach(b => {
-    b.onmouseenter = () => { b.classList.add('hov'); o.onHover(b.dataset.mv); };
-    b.onmouseleave = () => { b.classList.remove('hov'); o.onHover(null); };
-    b.onclick = () => { const on = !b.classList.contains('hov'); root.querySelectorAll('.ck-bi.hov').forEach(x => x.classList.remove('hov')); b.classList.toggle('hov', on); o.onHover(on ? b.dataset.mv : null); };
+    b.onmouseenter = () => { b.classList.add('ck-hov'); o.onHover(b.dataset.mv); };
+    b.onmouseleave = () => { b.classList.remove('ck-hov'); o.onHover(null); };
+    b.onclick = () => { const on = !b.classList.contains('ck-hov'); root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov')); b.classList.toggle('ck-hov', on); o.onHover(on ? b.dataset.mv : null); };
   });
 }
 window.CoachKit = { css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
