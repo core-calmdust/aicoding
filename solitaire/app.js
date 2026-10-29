@@ -22,6 +22,8 @@ if (D.set.defV !== 3) { D.set.court = 'gangsta'; D.set.felt = 'teal'; D.set.defV
 if (!COURTS.includes(D.set.court)) D.set.court = 'gangsta';
 document.documentElement.dataset.felt = D.set.felt;
 document.documentElement.dataset.court = D.set.court;
+if (D.set.cmode !== 'real') D.set.cmode = 'simple';
+document.documentElement.dataset.cmode = D.set.cmode;
 D.stats = D.stats || {}; D.daily = D.daily || {}; D.bank = D.bank || 0;
 function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
 const set = D.set;
@@ -608,7 +610,7 @@ function designHtml() {
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
   const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${Table.FULL_DECKS.includes(k) ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${Table.FULL_DECKS.includes(k) ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
+  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div><div class="cmode"><span>${esc(t('cmode.h'))}</span>${seg([['simple', t('cmode.simple')], ['real', t('cmode.real')]], set.cmode, 'cmode')}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
@@ -620,6 +622,7 @@ function facePv(f) {   // two small real cards rendered in that face style
 function wireDesign(root) {
   root.querySelectorAll('[data-felt]').forEach(b => b.onclick = () => { set.felt = b.dataset.felt; document.documentElement.dataset.felt = set.felt; save(); root.innerHTML = designHtml(); wireDesign(root); });
   root.querySelectorAll('[data-court]').forEach(b => b.onclick = () => { set.court = b.dataset.court; document.documentElement.dataset.court = set.court; Table.all.forEach(x => x.faces()); save(); root.innerHTML = designHtml(); wireDesign(root); });
+  root.querySelectorAll('[data-cmode]').forEach(b => b.onclick = () => { set.cmode = b.dataset.cmode; document.documentElement.dataset.cmode = set.cmode; save(); Table.all.forEach(x => x.relayout()); root.innerHTML = designHtml(); wireDesign(root); });
   root.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { set.back = b.dataset.back; document.documentElement.dataset.back = set.back; save(); root.innerHTML = designHtml(); wireDesign(root); });
   root.querySelectorAll('[data-face]').forEach(b => b.onclick = () => { set.face = b.dataset.face; document.documentElement.dataset.face = set.face; Table.applyFace(); save(); root.innerHTML = designHtml(); wireDesign(root); });
   // back previews show their own design regardless of the current one
