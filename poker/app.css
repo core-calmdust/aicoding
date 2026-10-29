@@ -43,7 +43,7 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 #btnSound .off-x{display:none}#btnSound:not(.on) .off-x{display:block}#btnSound:not(.on) .on-w{display:none}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:9px;font:inherit;font-size:12px;height:32px;padding:0 6px;cursor:pointer}
 .controls{display:flex;gap:6px;padding:4px max(10px,env(safe-area-inset-left)) 8px}
-.btn{flex:1 1 0;min-width:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:50px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,#1f2847,#151517);color:var(--text);cursor:pointer;font-size:11.5px;padding:0 4px}
+.btn{flex:1 1 0;min-width:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:50px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,#232327,#151517);color:var(--text);cursor:pointer;font-size:11.5px;padding:0 4px}
 .btn svg{width:19px;height:19px}
 .btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .btn:hover{border-color:rgba(216,212,204,.45)}
@@ -213,7 +213,7 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 /* ---------- card backs ---------- */
 .cd .bk::after{content:'';position:absolute;inset:calc(var(--cw)*.055);border-radius:calc(var(--cw)*.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
 html[data-back=crimson] .bk{background:repeating-linear-gradient(45deg,rgba(255,255,255,.16) 0 1.5px,transparent 1.5px 7px),repeating-linear-gradient(-45deg,rgba(255,255,255,.16) 0 1.5px,transparent 1.5px 7px),linear-gradient(160deg,#c3283a,#7b1220);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #fbf5ea,0 0 0 1px rgba(0,0,0,.4)}
-html[data-back=navy] .bk{background:radial-gradient(circle at 50% 50%,rgba(216,212,204,.5) 0 8%,transparent 9%),repeating-radial-gradient(circle at 50% 50%,transparent 0 6px,rgba(216,212,204,.22) 6px 7px),linear-gradient(160deg,#20335f,#0d1a36);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #e9d9b0,0 0 0 1px rgba(0,0,0,.4)}
+html[data-back=navy] .bk{background:radial-gradient(circle at 50% 50%,rgba(220,187,108,.5) 0 8%,transparent 9%),repeating-radial-gradient(circle at 50% 50%,transparent 0 6px,rgba(220,187,108,.22) 6px 7px),linear-gradient(160deg,#20335f,#0d1a36);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #e9d9b0,0 0 0 1px rgba(0,0,0,.4)}
 html[data-back=forest] .bk{background:radial-gradient(circle,rgba(255,255,255,.22) 1.2px,transparent 1.6px) 0 0/8px 8px,linear-gradient(160deg,#2b7a4f,#11402a);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #f4efe0,0 0 0 1px rgba(0,0,0,.4)}
 html[data-back=wave] .bk{background:radial-gradient(circle at 50% 100%,transparent 0 3px,#cfe3f5 3px 4px,transparent 4px 6px,#cfe3f5 6px 7px,transparent 7px 9px,#cfe3f5 9px 10px,#1d4f8f 10px) 0 0/20px 10px,radial-gradient(circle at 0 50%,transparent 0 3px,#cfe3f5 3px 4px,transparent 4px 6px,#cfe3f5 6px 7px,transparent 7px 9px,#cfe3f5 9px 10px,#1d4f8f 10px) 10px 5px/20px 10px,#1d4f8f;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #fff,0 0 0 1px rgba(0,0,0,.4)}
 html[data-back=red] .bk{background:#fff url(../solitaire/img/back-red.webp) center/90.5% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.3)}
@@ -236,7 +236,7 @@ html[data-back=red] .cd .bk::after,html[data-back=blue] .cd .bk::after,html[data
 .tile .ct-pv{width:24px;height:36px;object-fit:fill;border:1px solid rgba(0,0,0,.35);background:#fff;padding:2px;border-radius:3px}
 .tile .ct-pv.full{padding:0;object-fit:cover}
 html[data-back=check] .bk{background:conic-gradient(#3a1018 25%,#7a1f2c 0 50%,#3a1018 0 75%,#7a1f2c 0) 0 0/10px 10px;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #e8d4a2,0 0 0 1px rgba(0,0,0,.4)}
-html[data-back=deco] .bk{background:radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(216,212,204,.85) 5px 6px,transparent 6px 9px,rgba(216,212,204,.6) 9px 10px,transparent 10px) 0 0/20px 12px,#111316;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #bfbbb2,0 0 0 1px rgba(0,0,0,.5)}
+html[data-back=deco] .bk{background:radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(220,187,108,.85) 5px 6px,transparent 6px 9px,rgba(220,187,108,.6) 9px 10px,transparent 10px) 0 0/20px 12px,#111316;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #c9a85c,0 0 0 1px rgba(0,0,0,.5)}
 html[data-back=tartan] .bk{background:repeating-linear-gradient(0deg,rgba(20,60,30,.55) 0 4px,transparent 4px 10px,rgba(255,220,120,.35) 10px 11px,transparent 11px 16px),repeating-linear-gradient(90deg,rgba(20,60,30,.55) 0 4px,transparent 4px 10px,rgba(255,220,120,.35) 10px 11px,transparent 11px 16px),#a5222f;box-shadow:inset 0 0 0 calc(var(--cw)*.045) #f6efe0,0 0 0 1px rgba(0,0,0,.4)}
 
 /* ---------- dialogs ---------- */
@@ -406,7 +406,7 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 
 /* difficulty picker (custom, not the system select) */
 .dsel{position:relative}
-.dsel-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(216,212,204,.55);background:linear-gradient(180deg,#1e2746,#141416);color:var(--text);cursor:pointer;font-family:inherit;text-align:start}
+.dsel-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(216,212,204,.55);background:linear-gradient(180deg,#1f1f23,#141416);color:var(--text);cursor:pointer;font-family:inherit;text-align:start}
 .dsel-btn b{font-size:15px;letter-spacing:.06em}
 .dsel-btn svg{width:18px;height:18px;flex:none;stroke-width:2.2;margin-inline-start:auto;color:var(--accent);transition:transform .2s}
 .dsel.open .dsel-btn svg{transform:rotate(180deg)}
@@ -938,7 +938,7 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#232327 0%,transpare
 #tutLayer.center .tut-hole{box-shadow:0 0 0 9999px rgba(5,5,6,.62)}
 #tutLayer.act .tut-hole{animation:tutPulse 1.4s ease-in-out infinite}
 @keyframes tutPulse{50%{box-shadow:0 0 0 3px #8fe3b8,0 0 26px 8px rgba(143,227,184,.6),0 0 0 9999px rgba(5,5,6,.5)}}
-.tut-box{position:fixed;width:min(360px,calc(100vw - 24px));pointer-events:auto;padding:14px 16px 12px;border-radius:16px;background:linear-gradient(180deg,#202024,#151b33);border:1px solid rgba(230,226,218,.55);box-shadow:0 14px 40px rgba(0,0,0,.55);color:var(--text);transition:left .35s,top .35s}
+.tut-box{position:fixed;width:min(360px,calc(100vw - 24px));pointer-events:auto;padding:14px 16px 12px;border-radius:16px;background:linear-gradient(180deg,#202024,#141416);border:1px solid rgba(230,226,218,.55);box-shadow:0 14px 40px rgba(0,0,0,.55);color:var(--text);transition:left .35s,top .35s}
 #tutLayer.center .tut-box{width:min(440px,calc(100vw - 24px))}
 .tut-box.shake{animation:pkShake .35s}
 .tut-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
