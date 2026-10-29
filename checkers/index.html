@@ -697,6 +697,23 @@ html[lang=ar] .lx-banner .pg{text-align:left}
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
 #coachCard.ck-off .ck-muted{font-size:12px}
+/* board markers: readable on every board design (light and dark squares) — bright colour with a dark rim (common spec) */
+.fxsvg .arrow{stroke-width:.085px;filter:drop-shadow(0 0 1px #0b0806) drop-shadow(0 0 3px rgba(0,0,0,.9))!important}
+.fxsvg .arrow.ok{stroke:#ffd25a}
+.fxsvg .arrow.ng{stroke:#ff5a48}
+.fxsvg .arrow.pl{stroke:#fff}
+.fxsvg .arrow.ck{stroke:#3df59a!important;stroke-width:.1px;filter:drop-shadow(0 0 1px #08120c) drop-shadow(0 0 3px rgba(0,0,0,.9))!important}
+.fxsvg .arrow.rvb1{stroke:#ffd25a}
+.fxsvg .arrow.rvb2{stroke:#9fc7ff}
+.sqfx.last{background:rgba(255,214,90,.28)!important;box-shadow:inset 0 0 0 3px rgba(255,214,90,.95),inset 0 0 0 5px rgba(0,0,0,.45)!important}
+.sqfx.lastf{background:rgba(255,214,90,.14)!important;box-shadow:inset 0 0 0 2px rgba(255,214,90,.7),inset 0 0 0 4px rgba(0,0,0,.35)!important}
+.sqfx.trail{background:rgba(255,214,90,.3)!important;box-shadow:inset 0 0 0 2px rgba(255,214,90,.8)!important}
+.dest{background:#ffe08a!important;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 0 10px rgba(255,214,90,.9)!important}
+.dest.mid{background:rgba(255,224,138,.8)!important}
+.mark.took::before,.mark.took::after{width:3px!important;background:#ff5a48!important;box-shadow:0 0 0 1px rgba(0,0,0,.65)!important}
+.mark.from{border-color:#fff!important;box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 1px rgba(0,0,0,.6)!important}
+.mark.ok,.mark.ng,.mark.played,.mark.threat{box-shadow:0 0 0 1.5px rgba(0,0,0,.65),inset 0 0 0 1.5px rgba(0,0,0,.5)!important}
+.hintlbl.best::before{border:3px solid #ffd25a;box-shadow:0 0 0 1.5px rgba(0,0,0,.7),inset 0 0 0 1.5px rgba(0,0,0,.5)}
 #coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 .navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
 .navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
@@ -1228,7 +1245,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="rvbox.js?v=2"></script>
 <script src="../shared/coachkit.js?v=6"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=2"></script>
+<script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script src="app.js?v=20261030ck1"></script>
 <script src="online-ui.js?v=3sec1l9ck1"></script>
