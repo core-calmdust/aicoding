@@ -49,7 +49,7 @@ const isCapAt = i => !!posAt(i).pos.at(mTo(moves[i]));
 
 // ====================================================================== state
 const STORE = 'aicoding-xiangqi';
-const settings = { mode: 'ai', rule: 'standard', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'wood', pcs: 'wood', nota: 'auto' };
+const settings = { mode: 'ai', rule: 'standard', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, coach: true, last: true, threat: false, num: true, lang: '', bd: 'wood', pcs: 'wood', nota: 'auto' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -332,6 +332,7 @@ function renderFx() {
   for (const k of lessonMarks) { if (k.arrow) svgArrow(svg, k.arrow, k.cls); else fxDiv('mark ' + k.cls, k.at); }
   if (labelList) drawLabels(labelList);
   else if (!drawRvbFx(svg) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  if (window.XqCoach && !labelList) XqCoach.fx(svg);   // coach: the hovered candidate's arrow
   renderPrompt();
 }
 function renderPrompt() {
@@ -445,6 +446,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview(); rvbRender();
+  if (window.XqCoach) XqCoach.render();
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
@@ -677,7 +679,7 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  if (!settings.eval && !settings.hint && !(window.XqCoach && XqCoach.active())) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
@@ -697,6 +699,7 @@ function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown || lesson || puzzle) return;   // the result dialog only for a game that has just ended on the board
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -710,6 +713,13 @@ function onGameEnd(st) {
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || inStudy() || !st || !st.over) return;
+  if (st.why === 'resign' && moves.length < 2) return;   // (resigned before playing: not a game)
+  const why = st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why);
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI ' + LV(settings.level), key: rgame ? 'rt:' + rgame.lv : 'ai:' + settings.level, n: moves.length, why });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1114,6 +1124,7 @@ function rtForfeit() {
   busyToken++; cancelWorker('ai'); thinking = 0;
   rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
   const x = rtSettle(rgame.over); save();
+  if (!gameOverShown) { gameOverShown = true; recordGame(rgame.over); }
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }
@@ -1382,6 +1393,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings (famous lines, studied move by move, then practice)
 let OPEN = null, openChoiceIdx = -1;
+function OPEN_DATA() { return OPEN; }   // (coach.js: the named first moves of each opening)
 const openReady = fetch('openings.json?v=1').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
@@ -2087,6 +2099,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'xiangqi', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.XqCoach) XqCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
@@ -2097,6 +2111,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.XqCoach) XqCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (document.querySelector('.ls-tabs button.sel[data-v=open]') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) (openChoiceIdx >= 0 ? openOpeningChoice(openChoiceIdx) : openIntro(introIdx)); }
