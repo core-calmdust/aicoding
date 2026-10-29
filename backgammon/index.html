@@ -1093,7 +1093,7 @@ html.lnd body{overflow:hidden}
 html.lnd body .app.app.app{position:relative;display:grid!important;grid-template-columns:minmax(0,1fr) 60px!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"top top" "board rail"!important;
   gap:6px 8px!important;height:var(--lnd-h,var(--vh))!important;align-items:start!important;min-height:0!important;width:auto!important;margin:0!important;padding:4px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important;align-content:stretch!important;justify-content:stretch!important;overflow:hidden!important}
 html.lnd .side, html.lnd .side-in{display:contents!important}
-html.lnd :is(.brand,.sbox,.players,.info-line,.scroll-jump,.rvbox,#mtabs,.mt-strip,#btnRecord,#btnLesson,#btnPuzzle){display:none!important}
+html.lnd :is(.brand,.sbox,.players,.info-line,.scroll-jump,.rvbox,#mtabs,.mt-strip,#btnRecord,#btnLesson,#btnPuzzle,#lndTop #btnRules,.controls #btnRules){display:none!important}
 html.lnd body:not(.mtab-online) .dock{display:none!important}
 html.lnd #lndTop{grid-area:top;display:flex;align-items:center;gap:6px;min-width:0;height:36px}
 html.lnd #lndTop .brand-l{flex:0 1 auto;min-width:40px;overflow:hidden}
@@ -1126,6 +1126,9 @@ html.lnd #lndDrawer{display:flex;flex-direction:column;gap:6px;position:absolute
   transform:translateX(calc(100% + 76px));visibility:hidden;transition:transform .34s cubic-bezier(.2,1.25,.4,1),visibility 0s .34s}
 html.lnd body.lnd-open #lndDrawer{transform:translateX(0);visibility:visible;transition:transform .34s cubic-bezier(.2,1.25,.4,1),visibility 0s}
 html.lnd body.lnd-drag #lndDrawer{transition:none!important;visibility:visible}
+html.lnd:not(.rot) #lndDrawer{touch-action:pan-y}
+html.lnd #lndRail button span{white-space:pre;text-align:center;line-height:1.15;max-height:2.45em}
+html.lnd, html.lnd body{overscroll-behavior:none}
 html.lnd #lndDrawer > *{width:auto!important;max-width:none!important;margin:0!important;flex:none!important;order:0!important;grid-area:auto!important}
 html.lnd #lndDrawer > .card{padding:10px 12px;border-radius:12px}
 html.lnd #lndDrawer > #coachCard, html.lnd #lndDrawer > #reviewCard, html.lnd #lndDrawer > #evalCard, html.lnd #lndDrawer > .kifu-card, html.lnd #lndDrawer > #lndLearn{display:none!important}
@@ -1155,7 +1158,7 @@ html.lnd body.it-nav[data-lt=kifu] #lndDrawer{padding-bottom:52px}
 html.lnd body.mtab-online .dock{left:var(--lnd-dl)!important;right:auto!important;top:var(--lnd-dt)!important;bottom:6px!important;width:var(--lnd-dw)!important;border-radius:14px;border:1px solid var(--line);z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
 html.lnd body.mtab-online{overflow:hidden}
 html.lnd body.lnd-rec .grc-ov{inset:auto!important;left:var(--lnd-dl)!important;top:var(--lnd-dt)!important;width:var(--lnd-dw)!important;height:var(--lnd-dh)!important;padding:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
-@keyframes lndIn{from{transform:translateX(60%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes lndIn{from{transform:translateX(calc(100% + 76px))}to{transform:none}}
 html.lnd body.lnd-rec .grc{width:100%!important;max-height:100%!important;border-radius:14px}
 html.lnd body.lnd-rec .grc-hd{padding:10px 12px 6px}html.lnd body.lnd-rec .grc-hd h2{font-size:17px}
 html.lnd body.lnd-rec .grc-tabs{padding:0 12px 8px}html.lnd body.lnd-rec .grc-tabs button{font-size:12px;padding:5px 10px;white-space:nowrap}
@@ -1494,7 +1497,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="app.js?v=20261030dr1"></script>
 <script src="op.js?v=20261021opan"></script>
 <script src="online-ui.js?v=20261030ck1"></script>
-<script src="land.js?v=2"></script>
+<script src="land.js?v=4"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
