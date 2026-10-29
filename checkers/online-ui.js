@@ -409,6 +409,7 @@ async function finishOnline(g) {
     const score = !winner ? 0.5 : winner === me ? 1 : 0;
     try { net.result.rating = await ON.applyResult(gid, g, score); } catch (e) { console.warn(e); }
     syncTouch();
+    try { if (window.GameRecord && moves.length) { const on = me === 1 ? g.wn : g.bn, orr = me === 1 ? g.wr : g.br; GameRecord.add({ mode: 'online', res: !winner ? 'd' : winner === me ? 'w' : 'l', side: me - 1, opp: (on || '?') + (orr != null ? ' (' + orr + ')' : ''), key: 'ol:' + (on || '?'), n: moves.length, why: net.result.why }); } } catch (e) {}
   }
   if (!net || net.gid !== gid) return;
   setTimeout(() => { if (net && net.gid === gid && !lesson && !puzzle) olShowResult(); }, g.status === 'over' ? 900 : 250);
