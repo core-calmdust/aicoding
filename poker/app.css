@@ -1263,7 +1263,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   /* side cards → tabs */
   /* app shell: header + tab bar stay put, only the middle scrolls (no position:fixed → no jumping bar) */
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-  .app{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  .app{position:fixed;inset:0;height:auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .brand,.controls{flex:none}
   .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .stage > *{flex:none}
