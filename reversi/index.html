@@ -666,6 +666,7 @@ body.in-lesson .controls{display:none}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   .controls{order:-4}
+  #coachCard{order:0}
   #evalCard{order:1}
   .review-card{order:2}
   .kifu-card{order:3}
@@ -975,6 +976,10 @@ body .rv-list{gap:6px} body .rv-list button{font-size:14.5px;padding:8px 10px} b
 body .rv-note{font-size:13.5px!important;line-height:1.65!important}
 body .info-line{font-size:12.5px}
 @media (min-height: 561px){ @container (min-width: 420px){ body #evalCard{min-height:150px} body #evalCard .graph{min-height:40px} } }
+/* result dialog: the buttons stay on one line each (common spec: labels never wrap) */
+#resultOverlay .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr));gap:8px}
+#resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
+#resultOverlay .modal-actions .mbtn.hidden{display:none}
 #exportOverlay .modal-actions{gap:8px} #exportOverlay .mbtn{min-width:0;flex:1 1 0;padding-left:4px;padding-right:4px;letter-spacing:0;line-height:1.3;hyphens:auto}
 @media (max-width:520px){ #exportOverlay .mbtn{font-size:13px} #exportOverlay .seg button{font-size:12px;padding-left:2px;padding-right:2px} }
 #exportOverlay .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -1272,6 +1277,14 @@ html.pc2 .kifu-head{flex-wrap:wrap;row-gap:2px}
 html.pc2 .review-card.show{flex:1.4 1 0;min-height:120px}
 html.pc2 .side-in:has(.review-card.show) .kifu-card{flex:.8 1 0;min-height:100px}
 html.pc2 .ol-watch{flex:none}
+/* coach (coach.js): under the evaluation card; on PC it takes the spare height of the column and scrolls inside */
+#coachCard.hidden{display:none}
+html.pc2 .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+html.pc2 .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:100px}
+html.pc2 .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) #evalCard .graph{height:40px}
+html.pc2 .side-in > #coachCard.ck-off{padding:8px 12px}
+html.pc2 #coachCard.ck-off .ck-h{margin-bottom:4px}
+html.pc2 #coachCard.ck-off .ck-muted{font-size:12px;line-height:1.55}
 html.pc2.dock-compact .side{align-self:start}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
    column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
@@ -1392,6 +1405,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -1401,7 +1415,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/><circle cx="7.75" cy="7.75" r="2" fill="currentColor"/><circle cx="16.25" cy="16.25" r="2"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1651,6 +1665,10 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
 <script src="rbox.js?v=3"></script>
+<script src="../shared/coachkit.js?v=4"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1674,7 +1692,7 @@ function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1)
 
 // ====================================================================== state
 const STORE = 'reversi-emerald-v1';
-const settings = { mode: 'ai', color: 1, clock: 0, level: 14, level2: 14, lvV: 2, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: false, lang: '' };
+const settings = { mode: 'ai', color: 1, clock: 0, level: 14, level2: 14, lvV: 2, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: true, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return SUPPORTED.find(l => n.startsWith(l)) || 'en'; }
 let LANG = detectLang();
@@ -2105,6 +2123,7 @@ function renderInfo() {
   const opn = gameOpening();
   $('#infoLine').textContent = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : '');
   renderReview();
+  if (window.ReversiCoach) ReversiCoach.render();
 }
 // name of the opening played so far (first move normalised to f5 by symmetry)
 const OP_SYM = { 37: s => s, 44: s => (s & 7) * 8 + (s >> 3), 26: s => 63 - s, 19: s => (7 - (s & 7)) * 8 + (7 - (s >> 3)) };
@@ -2273,7 +2292,7 @@ async function schedule(animInfo) {
           positions[idx].ana = list.map(x => ({ move: x.move, score: x.score }));
           let best = -1e9; for (const x of list) best = Math.max(best, x.score);
           positions[idx].evalB = p.toMove === BLACK ? best : -best;
-          if (done) { renderInfo(); save(); }
+          if (done) { renderInfo(); save(); } else if (window.ReversiCoach) ReversiCoach.render();
           showHints(list, done);
         }
       });
@@ -2299,6 +2318,7 @@ function onCellClick(sq) {
   const q = settings.coach && settings.mode !== 'watch' && settings.mode !== 'online' && !rtLive() ? judgeMove(p, sq) : null;
   clockOnMove(p.toMove);
   const a = applyMove(sq);
+  if (q && (q.cls === 'dubious' || q.cls === 'bad') && window.ReversiCoach && ReversiCoach.isBookMove(cur)) { q.cls = 'good'; q.text = t('q.good'); }   // a book move is never called a mistake
   if (q) { positions[cur].q = q.cls; showCoach(q); }
   playPlace(a.flips.length);
   update(a); moveFx(a);
@@ -2403,10 +2423,20 @@ function showResult() {
   $('#resultTitle').textContent = title; $('#resultSub').textContent = sub;
   if (rx) $('#resultSub').innerHTML = esc(sub) + `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`}<br><small style="color:var(--muted)">${esc(t('rt.opp', { lv: rtLvName(rated.lv), r: rated.or }))}</small>`;
   countUp($('#resB'), b); countUp($('#resW'), w);
+  recordGame(b, w, lost, tl);
   if (lost ? settings.mode === 'pvp' || lost !== humanColor : (settings.mode === 'ai' && (humanColor === BLACK ? b > w : w > b)) || (settings.mode === 'pvp' && b !== w)) confetti();
   showOverlay('#resultOverlay');
 }
 
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
+function recordGame(b, w, lost, tl) {
+  const L0 = positions[positions.length - 1];
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || net || L0.recd || positions.length < 2) return;
+  if (lost && !positions.slice(1).some(p => p.mover === humanColor)) return;   // resigned / timed out before playing a move
+  L0.recd = 1; save();
+  const me = lost ? (lost === humanColor ? -1 : 1) : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
+  GameRecord.add({ mode: rtGame() ? 'rated' : 'ai', res: me > 0 ? 'w' : me < 0 ? 'l' : 'd', side: humanColor === BLACK ? 0 : 1, opp: 'AI ' + (rtGame() ? rtLvName(lv) : LV(lv)), key: (rtGame() ? 'rt:' : 'ai:') + lv, n: positions.length - 1, why: lost ? t(tl ? 'res.time' : 'rt.resigned') : b + ' - ' + w });
+}
 // ====================================================================== game clock (offline games: vs AI = only your clock, two players = both)
 // Main time, then byoyomi per move (same choices as shogi). A clock runs only for the side to move at the latest
 // position (passes are implicit: the side that moves next is simply positions[last].toMove); browsing / review /
@@ -4653,6 +4683,7 @@ async function finishOnline(g) {
   const diff = r.now - r.old;
   $('#resultSub').innerHTML = (why ? why + '<br>' : '') + (r.rated ? `R ${r.old} → <b>${r.now}</b> (${diff >= 0 ? '+' : ''}${diff})` : r.note ? esc(Online.secMsg(r.note)) : t('ol.unrated'));
   playChime(score >= 0.5); if (score === 1) confetti();
+  try { if (window.GameRecord) GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: net.me === BLACK ? 0 : 1, opp: (net.me === BLACK ? g.wn : g.bn) + ' (' + (net.me === BLACK ? g.wr : g.br) + ')', key: 'ol:' + (net.me === BLACK ? g.wn : g.bn), n: positions.length - 1, why: why || (b + ' - ' + w) }); } catch (e) {}
   showOverlay('#resultOverlay');
 }
 // clicking the dimmed area outside a dialog does the same as its close button
@@ -4774,12 +4805,15 @@ else if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lan
 else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {} }
 applyI18n();
 if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
+if (window.GameRecord) GameRecord.init({ game: 'reversi', lang: () => LANG, menu: '.controls', sides: () => [cname(BLACK), cname(WHITE)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.ReversiCoach) ReversiCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
+  if (window.ReversiCoach) ReversiCoach.relabel(); if (window.GameRecord) GameRecord.relabel();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   renderInfo(); segSync && Object.keys(draft).length && segSync();
