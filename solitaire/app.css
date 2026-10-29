@@ -481,10 +481,19 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 .stats-body .diff-desc{font-size:14px}
 @media (min-width:761px){
   .gcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:12px 14px;overflow:hidden}
-  .gcard .gart{padding:6px 0;align-self:stretch}
-  .gcard .garts{--cw:27px;--chh:37.8px}
+  .gcard .gart{flex:1 1 auto;min-height:0;padding:8px 0;align-self:stretch;align-items:center}
+  .gcard .garts{--cw:38px;--chh:53.2px}
   .gcard b{font-size:19px;align-self:flex-start}
-  .gcard p{font-size:12px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .gcard ul{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;margin-top:auto}
-  .gcard li{font-size:11px;padding:2px 8px}
+  .gcard p{font-size:12.5px;line-height:1.65;color:var(--text);opacity:.82;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:calc(12.5px*1.65*3)}
 }
+
+/* rules tutorial: overview of the game on the intro page */
+.rt-ov{display:flex;gap:16px;align-items:center;padding:12px 14px;margin:0 0 12px;border-radius:14px;border:1px solid rgba(220,187,108,.3);background:linear-gradient(180deg,rgba(220,187,108,.08),rgba(0,0,0,.12))}
+.rt-ov-art{flex:none;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;background:radial-gradient(90% 90% at 50% 40%,#1d7474,#0b3535);box-shadow:inset 0 0 0 1px rgba(201,162,78,.5)}
+.rt-ov-art .garts{--cw:40px;--chh:56px}
+.rt-ov-t{min-width:0}
+.rt-ov-t p{margin:0 0 8px;font-size:14px;line-height:1.7}
+.rt-ov-t ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:5px}
+.rt-ov-t li{font-size:12.5px;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.rt-ov-t li::before{content:'♦';color:var(--accent);margin-inline-end:6px;font-size:10px}
+@media (max-width:760px){.rt-ov{flex-direction:column;align-items:stretch}.rt-ov-art{align-self:center}.rt-ov-art .garts{--cw:32px;--chh:44.8px}}

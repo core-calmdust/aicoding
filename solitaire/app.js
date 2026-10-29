@@ -207,9 +207,14 @@ function checkAutoComplete() { $('#btnAuto').classList.toggle('hidden', G.over |
 function autoComplete() {
   if (G.auto || G.over) return;
   $('#btnAuto').classList.add('hidden'); G.undo.push(snap()); G.auto = true;
+  // the finish is decided: cards fly up quickly (shorter flight, ~3× the pace of normal auto moves)
+  const root = document.documentElement.style, fast = Math.min(mt(), 160);
+  root.setProperty('--mt', (fast || 1) / 1000 + 's');
+  let k = 0;
   const step = () => {
-    const mv = S.autoMove(st, 'all'); if (!mv) { G.auto = false; if (S.won(st)) win(); else afterMove(); return; }
-    const ev = S.apply(st, mv); playEv(ev); draw(); setTimeout(step, Math.max(50, mt() * .35));
+    const mv = S.autoMove(st, 'all');
+    if (!mv) { setTimeout(() => root.setProperty('--mt', (mt() || 1) / 1000 + 's'), fast + 60); G.auto = false; if (S.won(st)) win(); else afterMove(); return; }
+    const ev = S.apply(st, mv); if (k++ % 2 === 0 || ev.flips.length) playEv(ev); draw(); setTimeout(step, Math.max(25, fast * .22));
   };
   step();
 }
@@ -569,7 +574,7 @@ function renderNew() {
   $('#ngTabs').innerHTML = TABS.map(k => `<button type="button" role="tab" aria-selected="${k === ngTab}" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(vName(v))}</small>` : ''}</button>`).join('');
   let h = '';
   if (ngTab === 'game') {
-    h = `<div class="ng-games">` + S.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><ul>${t('vf.' + id).split('|').map(x => `<li>${esc(x)}</li>`).join('')}</ul><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>`;
+    h = `<div class="ng-games">` + S.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>`;
   } else if (ngTab === 'rules') {
     const dd = d => t('dd.' + v + '.' + d) !== 'dd.' + v + '.' + d ? t('dd.' + v + '.' + d) : t('dd.custom');
     const dsel = `<div class="dsel" id="ngDiff"><button type="button" class="dsel-btn" aria-haspopup="listbox"><b>${esc(t('diff.' + p.diff))}</b><i class="dsel-pips">${pips(p.diff)}</i><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>` +
@@ -757,5 +762,5 @@ if (window.RulesOffer) RulesOffer.init({ game: 'solitaire', lang: () => LANG, op
 // opening the page shows the new-game dialog (this game only, at the user's request; the saved game stays behind it)
 setTimeout(() => { if (!/[?&]nonew\b/.test(location.search) && !$('#resultOverlay').classList.contains('show')) openNew(); }, 60);
 
-window.SolApp = { _st: () => st, _G: () => G, _move: m => userMove(m), t, get LANG() { return LANG; }, sfx, startGame, prefOf, openNew, vName, optVal, gIcon, set, closeOv, openOv, toast };
+window.SolApp = { _st: () => st, _G: () => G, _move: m => userMove(m), t, gArt, get LANG() { return LANG; }, sfx, startGame, prefOf, openNew, vName, optVal, gIcon, set, closeOv, openOv, toast };
 })();
