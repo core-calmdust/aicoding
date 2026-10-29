@@ -1118,3 +1118,22 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
   .tools-modal .hr .mc{width:30px;height:42px;font-size:15px}
   .tools-modal .ng-tabs button{font-size:16px}
 }
+/* rules dialog tabs: one row (6 games + tutorial + lessons), scrolls sideways if the dialog is narrow */
+#rulesTabs{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-bottom:2px;gap:5px}
+#rulesTabs::-webkit-scrollbar{display:none}
+#rulesTabs button{flex:none;white-space:nowrap;padding:6px 11px;font-size:12.5px}
+#rulesTabs .rv-tab-lesson{padding:6px 10px}
+/* statistics: same fixed box as the rules, one-row tabs, larger text */
+#statsTabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:center}
+#statsTabs::-webkit-scrollbar{display:none}
+#statsTabs button{flex:none;white-space:nowrap;padding:6px 11px;font-size:12.5px}
+@media (min-width:761px){
+  .stats-modal{width:min(980px,calc(100vw - 24px));height:min(calc(100dvh - 32px),900px);max-height:none;display:flex;flex-direction:column}
+  .stats-modal .stats-body{flex:1;min-height:0;overflow:auto}
+  #statsTabs button{font-size:14px;padding:7px 14px}
+  .st-grid{gap:10px}.st-grid div{padding:11px 14px}
+  .st-grid small{font-size:13.5px}.st-grid b{font-size:24px}
+  .st-graph small{font-size:14px}.st-graph svg{height:160px}
+  .stats-modal .diff-desc{font-size:14px;line-height:1.75}
+  .bdg-h b{font-size:17px}.bdg-c b{font-size:13.5px}.bdg-c small{font-size:12px}.bdg-c .bdg{width:84px}
+}
