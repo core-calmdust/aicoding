@@ -24,9 +24,10 @@ function openList() {
 }
 function open(i) {
   const h = A.D.hist[i]; if (!h) { A.toast(t('rv.none')); return; }
-  R = { i, k: steps(h).length };
+  R = { i, h, k: steps(h).length };
   draw(); A.openOv('#reviewOverlay');
 }
+function openHand(h) { if (!h || !h.log) return; R = { i: -1, h, k: steps(h).length }; draw(); A.openOv('#reviewOverlay'); }
 function stateAt(h, k) {   // board, pot, stacks, last actions after the first k steps
   const V = P.VARIANTS[h.v], st = steps(h), shown = st.slice(0, k), cur = shown[shown.length - 1];
   const street = cur ? cur.st : 0;
@@ -47,7 +48,7 @@ function label(e) {
   return e.a;
 }
 function draw() {
-  const h = A.D.hist[R.i], V = P.VARIANTS[h.v], me = A.HERO, st = steps(h), S = stateAt(h, R.k);
+  const h = R.h, V = P.VARIANTS[h.v], me = A.HERO, st = steps(h), S = stateAt(h, R.k);
   const seats = h.names.map((nm, i) => {
     const cards = h.cards[i] || [], visible = i === me || (S.end && h.showdown && !h.folded[i]);
     let shownCards = cards;
@@ -78,18 +79,18 @@ function draw() {
     `<div class="rv-grid"><div class="rv-left"><div class="rv-board">${V.board ? mini(S.board.concat(Array(5 - S.board.length).fill(null)).map((c, k) => k < S.board.length ? c : undefined).filter(c => c !== undefined)) : ''}<span class="rv-pot">${esc(t('pot'))} <b>${S.pot}</b></span></div><div class="rv-seats">${seats}</div>` +
     `<div class="rv-nav"><button class="szb" data-go="0">⏮</button><button class="szb" data-go="-1">◀</button><span>${R.k} / ${st.length}</span><button class="szb" data-go="1">▶</button><button class="szb" data-go="9999">⏭</button></div>${coachBox}</div>` +
     `<div class="rv-right"><div class="rv-acts">${acts.join('')}</div></div></div>` +
-    `<div class="modal-actions"><button class="mbtn" id="rvBack">${esc(t('rv.back'))}</button><button class="mbtn go" id="rvClose">${esc(t('close'))}</button></div>`;
+    `<div class="modal-actions">${R.i >= 0 ? `<button class="mbtn" id="rvBack">${esc(t('rv.back'))}</button>` : ''}<button class="mbtn go" id="rvClose">${esc(t('close'))}</button></div>`;
   $('#rvClose').onclick = () => { R = null; A.closeOv('#reviewOverlay'); };
-  $('#rvBack').onclick = () => { R = null; openList(); };
+  if ($('#rvBack')) $('#rvBack').onclick = () => { R = null; openList(); };
   document.querySelectorAll('#reviewModal [data-go]').forEach(b => b.onclick = () => { const g = +b.dataset.go; R.k = g === 0 ? 0 : g === 9999 ? st.length : Math.max(0, Math.min(st.length, R.k + g)); draw(); });
   document.querySelectorAll('#reviewModal [data-k]').forEach(b => b.onclick = () => { R.k = +b.dataset.k; draw(); });
   const cur = document.querySelector('#reviewModal .rv-a.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
 }
 document.addEventListener('keydown', e => {
   if (!R || !$('#reviewOverlay').classList.contains('show')) return;
-  const h = A.D.hist[R.i], n = steps(h).length;
+  const h = R.h, n = steps(h).length;
   if (e.key === 'ArrowRight') R.k = Math.min(n, R.k + 1); else if (e.key === 'ArrowLeft') R.k = Math.max(0, R.k - 1); else if (e.key === 'ArrowDown') R.k = n; else if (e.key === 'ArrowUp') R.k = 0; else return;
   e.preventDefault(); draw();
 });
-window.PokerReview = { open, openList, mini };
+window.PokerReview = { open, openHand, openList, mini };
 })();

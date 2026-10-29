@@ -273,8 +273,10 @@ function build(v) {
 }
 function tabs() {
   $('#rulesTabs').innerHTML = P.ORDER.filter(v => RULES[v]).map(v => `<button type="button" data-v="${v}" class="${v === cur ? 'sel' : ''}">${esc(A.vName(v))}</button>`).join('') +
+    (window.PokerTut ? `<button type="button" class="rv-tab-lesson" data-tut="1">▶ ${esc(PokerTut.L('entry'))}</button>` : '') +
     `<button type="button" class="rv-tab-lesson" data-lesson="1">${esc(A.t('btn.lesson'))} ›</button>`;
   document.querySelectorAll('#rulesTabs [data-v]').forEach(b => b.onclick = () => show(b.dataset.v, 0));
+  const tu = document.querySelector('#rulesTabs [data-tut]'); if (tu) tu.onclick = () => { if (cur && tours[cur]) tours[cur].stop(); A.closeOv('#rulesOverlay'); PokerTut.start(); };
   const lb = document.querySelector('#rulesTabs [data-lesson]'); if (lb) lb.onclick = () => { if (cur && tours[cur]) tours[cur].stop(); A.closeOv('#rulesOverlay'); window.PokerLessons && PokerLessons.open(); };
 }
 function show(v, page) {
