@@ -21,16 +21,13 @@ html[data-felt=wine]{--felt1:#7a2434;--felt2:#3b0e18}
 html[data-felt=charcoal]{--felt1:#3a3f45;--felt2:#16191c}
 html[data-felt=teal]{--felt1:#1d7474;--felt2:#0b3535}
 html[data-felt=purple]{--felt1:#56357f;--felt2:#24123d}
-html[data-felt=walnut]{--felt1:#7b5232;--felt2:#3d2512}
+html[data-felt=mocha]{--felt1:#6e4a2f;--felt2:#2e1b0f}
 html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,.3);--felt-ink:rgba(90,60,20,.16)}
 .felt-bg{background:
   radial-gradient(70% 60% at 50% 38%, rgba(255,255,255,.10), rgba(255,255,255,0) 70%),
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M0 0L6 6M6 0L0 6' stroke='%23000' stroke-opacity='.10' stroke-width='.6'/%3E%3C/svg%3E"),
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
   radial-gradient(120% 95% at 50% 30%, var(--felt1), var(--felt2))}
-html[data-felt=walnut] .felt-bg{background:
-  repeating-linear-gradient(92deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px, rgba(255,255,255,.04) 9px 10px, transparent 10px 23px),
-  radial-gradient(120% 90% at 50% 20%, var(--felt1), var(--felt2))}
 
 /* ---------- layout ---------- */
 .app{display:flex;flex-direction:column;min-height:100vh}

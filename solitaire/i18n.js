@@ -472,3 +472,5 @@ de: {"cmode.h": "Stil", "cmode.simple": "Einfach", "cmode.real": "Echt"},
 hi: {"cmode.h": "शैली", "cmode.simple": "सरल", "cmode.real": "असली"},
 ar: {"cmode.h": "النمط", "cmode.simple": "بسيط", "cmode.real": "واقعي"},
 });
+/* brown felt (replaces walnut) */
+(function (A) { for (const l in A) I18N[l]['felt.mocha'] = A[l]; })({"ja": "モカ", "en": "Mocha", "zh": "摩卡", "ko": "모카", "es": "Moca", "fr": "Moka", "pt": "Moca", "de": "Mokka", "hi": "मोका", "ar": "موكا"});
