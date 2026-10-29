@@ -102,15 +102,23 @@ register({ id: 'plo', deck: 52, hole: 4, board: [3, 1, 1], omaha: true, limits: 
 register({ id: 'shortdeck', deck: 36, short: true, hole: 2, board: [3, 1, 1], limits: ['nl', 'pl', 'fl'], limit: 'nl', ante: true, streets: ['pre', 'flop', 'turn', 'river'] });
 register({ id: 'stud', deck: 52, hole: 0, stud: true, board: null, limits: ['fl'], limit: 'fl', ante: true, streets: ['3rd', '4th', '5th', '6th', '7th'] });
 register({ id: 'draw', deck: 52, hole: 5, draw: true, board: null, limits: ['nl', 'pl', 'fl'], limit: 'nl', streets: ['pre', 'post'] });
+// 2-7 triple draw: lowball (the worst high hand wins; aces are high, straights and flushes count), three draws
+register({ id: 'triple', deck: 52, hole: 5, draw: true, draws: 3, low27: true, board: null, limits: ['fl', 'nl', 'pl'], limit: 'fl', streets: ['pre', 'd1', 'd2', 'd3'] });
+// 2-7 low: the lower the high-hand value, the better → a score where higher still wins
+const LOWMAX = 10 * 1048576;
+function lowScore(cards) { return LOWMAX - evalCards(cards, false); }
+const lowName = cards => cards.map(V).sort((a, b) => b - a).map(vch).join('-');
 
 // the score of a seat's hand (all cards known)
 function scoreOf(T, s) {
   const Vr = VARIANTS[T.v], P = T.seats[s];
   if (Vr.omaha) return bestOmaha(P.cards, T.board, Vr.short);
+  if (Vr.low27) return lowScore(P.cards);
   return evalCards(P.cards.concat(T.board), Vr.short);
 }
 function handInfo(T, s) {   // { score, cat, five }
   const Vr = VARIANTS[T.v], P = T.seats[s];
+  if (Vr.low27) { const hi = evalCards(P.cards, false), cat = catOf(hi, false); return { score: LOWMAX - hi, cat: cat === 'high' ? 'low' : cat, five: P.cards.slice(), low: true, name: lowName(P.cards) }; }
   const b = bestFive(P.cards.concat(T.board), Vr.short, Vr.omaha, P.cards, T.board);
   return { score: b.score, cat: catOf(b.score, Vr.short), five: b.cards };
 }
@@ -176,7 +184,7 @@ function startHand(T, rng) {
 // stud: the order of up cards for the bring-in (lowest rank, then ♣ < ♦ < ♥ < ♠)
 const studLow = c => V(c) * 4 + [3, 2, 1, 0][SUIT(c)];
 const isFL = T => T.limit === 'fl';
-const betUnit = T => { const Vr = VARIANTS[T.v]; if (Vr.stud) return T.street >= 2 ? T.big : T.small; if (Vr.draw) return T.street >= 1 ? T.big : T.small; return T.street >= 2 ? T.big : T.small; };
+const betUnit = T => { const Vr = VARIANTS[T.v]; if (Vr.stud) return T.street >= 2 ? T.big : T.small; if (Vr.draw) return T.street >= (Vr.draws > 1 ? 2 : 1) ? T.big : T.small; return T.street >= 2 ? T.big : T.small; };
 // what the player to act may do: { fold, check, call (amount to add), minTo, maxTo (raise / bet totals), cap }
 function legal(T) {
   if (T.phase !== 'bet' || T.toAct < 0) return null;
@@ -242,7 +250,7 @@ function nextStreet(T) {
   const last = Vr.streets.length - 1;
   if (T.street >= last) return finish(T);
   T.street++;
-  if (Vr.draw && T.street === 1 && T.phase !== 'drawn') {   // the draw: every player in the hand changes cards before the second round
+  if (Vr.draw && T.street >= 1 && T.street <= (Vr.draws || 1) && T.phase !== 'drawn') {   // a draw: every player in the hand changes cards before the next betting round
     T.phase = 'draw'; T.drawOrder = []; let j = T.btn; for (let k = 0; k < T.seats.length; k++) { j = nextSeat(T, j, x => inHand(T, x)); if (!T.drawOrder.includes(j)) T.drawOrder.push(j); }
     T.toAct = T.drawOrder[0]; return;
   }
@@ -271,7 +279,7 @@ function bestShowing(T) {
 }
 function runOut(T) {   // everyone is all in: deal the remaining streets
   const Vr = VARIANTS[T.v];
-  while (T.street < Vr.streets.length - 1) { T.street++; if (Vr.draw && T.street === 1 && T.phase !== 'drawn') { T.seats.forEach(s => { if (!s.folded && !s.bot && !s.drawn) s.drawn = []; }); } dealStreet(T); }
+  while (T.street < Vr.streets.length - 1) { T.street++; if (Vr.draw && T.street >= 1) { T.seats.forEach(s => { if (!s.folded && !s.bot && !s.drawn) s.drawn = []; }); } dealStreet(T); }
   finish(T);
 }
 // draw (5-card draw): the seat to act discards the cards at these indexes and gets new ones
@@ -286,7 +294,11 @@ function draw(T, idxs) {
   if (k < T.drawOrder.length - 1) { T.toAct = T.drawOrder[k + 1]; return true; }
   T.phase = 'drawn';
   const acting = T.seats.filter((s, j) => canAct(T, j)).length;
-  if (acting < 2) { T.toAct = -1; finish(T); return true; }
+  if (acting < 2) {   // nobody left to bet: go straight on to the next draw (triple draw) or the showdown
+    const Vr = VARIANTS[T.v];
+    if (Vr.draw && T.street < (Vr.draws || 1)) { T.phase = 'bet'; nextStreet(T); return true; }
+    T.toAct = -1; finish(T); return true;
+  }
   T.phase = 'bet'; T.toAct = nextSeat(T, T.btn, j => canAct(T, j));
   return true;
 }
@@ -328,5 +340,5 @@ function finish(T) {
 function clone(T) { return JSON.parse(JSON.stringify(T)); }
 
 G.PK = { SUIT, RANK, V, vch, cardStr, parse, mulberry, shuffle, deckOf, evalCards, bestOmaha, bestFive, catOf, kick, KEY, CAT_N, CAT_S, VARIANTS, ORDER, register,
-  newTable, startHand, legal, act, draw, finish, scoreOf, handInfo, potTotal, stBets, upCards, studLow, live, canAct, nextSeat, clone, betUnit, C };
+  lowScore, lowName, LOWMAX, newTable, startHand, legal, act, draw, finish, scoreOf, handInfo, potTotal, stBets, upCards, studLow, live, canAct, nextSeat, clone, betUnit, C };
 })(typeof self !== 'undefined' ? self : this);

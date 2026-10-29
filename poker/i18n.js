@@ -154,3 +154,16 @@ ar: {"series": "أطلس ألعاب الطاولة العالمية", "meta.titl
   hi: { 'why.openRange': 'अभी तक किसी ने रेज़ नहीं किया है और यह हाथ आपकी पोज़िशन की ओपनिंग रेंज में है। कॉल नहीं, रेज़ से खेल में आएं और पहल अपने हाथ में लें।', 'why.threeBet': 'प्रीमियम हाथ: रेज़ के जवाब में री-रेज़ (3-बेट) करके पॉट बड़ा करें।' },
   ar: { 'why.openRange': 'لم يرفع أحد بعد، وهذه اليد ضمن نطاق الافتتاح لمقعدك. ادخل بالرفع لا بالمجاراة، وخذ زمام المبادرة.', 'why.threeBet': 'يد ممتازة: أمام الرفع، أعد الرفع (3-bet) لتكبير الوعاء.' },
 });
+/* 2-7 triple draw */
+(function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({
+  ja: { 'v.triple': '2-7 トリプルドロー', 'vg.triple': '弱い手が勝つ「ロー」のポーカー。一番強いのは 7-5-4-3-2。交換が3回あり、ペア・ストレート・フラッシュは悪い手になります。', 'hand.low': 'ロー', 'st.d1': '1回目の交換後', 'st.d2': '2回目の交換後', 'st.d3': '3回目の交換後' },
+  en: { 'v.triple': '2-7 Triple Draw', 'vg.triple': 'Lowball: the worst hand wins. The best is 7-5-4-3-2. Three draws; pairs, straights and flushes are bad hands.', 'hand.low': 'low', 'st.d1': 'After draw 1', 'st.d2': 'After draw 2', 'st.d3': 'After draw 3' },
+  zh: { 'v.triple': '2-7 三次换牌', 'vg.triple': '小牌获胜的“低牌”扑克。最强的是 7-5-4-3-2。共换牌三次，对子、顺子、同花都是坏牌。', 'hand.low': '低牌', 'st.d1': '第1次换牌后', 'st.d2': '第2次换牌后', 'st.d3': '第3次换牌后' },
+  ko: { 'v.triple': '2-7 트리플 드로우', 'vg.triple': '낮은 패가 이기는 「로우」 포커. 최강은 7-5-4-3-2. 교환은 3번이며 페어·스트레이트·플러시는 나쁜 패입니다.', 'hand.low': '로우', 'st.d1': '1번째 교환 후', 'st.d2': '2번째 교환 후', 'st.d3': '3번째 교환 후' },
+  es: { 'v.triple': '2-7 Triple Draw', 'vg.triple': 'Lowball: gana la peor mano. La mejor es 7-5-4-3-2. Tres cambios; parejas, escaleras y colores son malas manos.', 'hand.low': 'baja', 'st.d1': 'Tras el 1.er cambio', 'st.d2': 'Tras el 2.º cambio', 'st.d3': 'Tras el 3.er cambio' },
+  fr: { 'v.triple': '2-7 Triple Draw', 'vg.triple': 'Lowball : la plus mauvaise main gagne. La meilleure est 7-5-4-3-2. Trois tirages ; paires, quintes et couleurs sont de mauvaises mains.', 'hand.low': 'low', 'st.d1': 'Après le 1er tirage', 'st.d2': 'Après le 2e tirage', 'st.d3': 'Après le 3e tirage' },
+  pt: { 'v.triple': '2-7 Triple Draw', 'vg.triple': 'Lowball: vence a pior mão. A melhor é 7-5-4-3-2. Três trocas; pares, sequências e flushes são mãos ruins.', 'hand.low': 'baixa', 'st.d1': 'Após a 1ª troca', 'st.d2': 'Após a 2ª troca', 'st.d3': 'Após a 3ª troca' },
+  de: { 'v.triple': '2-7 Triple Draw', 'vg.triple': 'Lowball: Die schlechteste Hand gewinnt. Die beste ist 7-5-4-3-2. Drei Tauschrunden; Paare, Straßen und Flushes sind schlechte Hände.', 'hand.low': 'Low', 'st.d1': 'Nach dem 1. Tausch', 'st.d2': 'Nach dem 2. Tausch', 'st.d3': 'Nach dem 3. Tausch' },
+  hi: { 'v.triple': '2-7 ट्रिपल ड्रॉ', 'vg.triple': 'लोबॉल: सबसे कमज़ोर हाथ जीतता है। सबसे अच्छा 7-5-4-3-2 है। तीन बार पत्ते बदलें; जोड़ी, स्ट्रेट और फ़्लश बुरे हाथ हैं।', 'hand.low': 'लो', 'st.d1': 'पहले बदलाव के बाद', 'st.d2': 'दूसरे बदलाव के बाद', 'st.d3': 'तीसरे बदलाव के बाद' },
+  ar: { 'v.triple': '2-7 تريبل درو', 'vg.triple': 'لوبول: تفوز أضعف يد. الأفضل هي 7-5-4-3-2. ثلاث مرات تبديل؛ الأزواج والستريت والفلاش أيادٍ سيئة.', 'hand.low': 'لو', 'st.d1': 'بعد التبديل الأول', 'st.d2': 'بعد التبديل الثاني', 'st.d3': 'بعد التبديل الثالث' },
+});

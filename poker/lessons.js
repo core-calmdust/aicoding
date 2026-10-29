@@ -1,5 +1,5 @@
 /* ポーカー — lessons (poker/lessons.js)
-   5 categories · 17 lessons. Each lesson = a short explanation (with an example) + 5 problems made fresh every time
+   5 categories · 18 lessons. Each lesson = a short explanation (with an example) + 5 problems made fresh every time
    by the rules engine (so the answers are always right), 4 of 5 to pass. Progress: localStorage 'aicoding-poker-lessons'.
    The dialog has the common tabs ルール → レッスン (the rules tab opens the tutorial, rules.js). */
 (function () {
@@ -121,6 +121,13 @@ const G = {
     const ups = deal(4), low = ups.slice().sort((a, b) => P.studLow(a) - P.studLow(b))[0];
     return { q: L('q.stud'), vis: `<div class="lq-hands four">${ups.map((c, i) => `<div><small>${'ABCD'[i]}</small>${cardsH([null, null, c])}</div>`).join('')}</div>`, opts: ['A', 'B', 'C', 'D'], ans: ups.indexOf(low), exp: L('e.stud') };
   },
+  low27() {   // which is the better 2-7 low
+    const mk = () => { for (let k = 0; k < 400; k++) { const h = deal(5); const c = P.catOf(P.evalCards(h), false); if (c === 'high' && Math.max(...h.map(P.V)) <= 11) return h; } return deal(5); };
+    let a = mk(), b = Math.random() < 0.25 ? deal(5) : mk(); let sa = P.lowScore(a), sb = P.lowScore(b);
+    if (sa === sb) { b = mk(); sb = P.lowScore(b); }
+    const nm = h => { const c = P.catOf(P.evalCards(h), false); return c === 'high' ? P.lowName(h) + ' ' + t('hand.low') : t('hand.' + c); };
+    return { q: L('q.low27'), vis: `<div class="lq-hands"><div><small>A</small>${cardsH(a)}</div><div><small>B</small>${cardsH(b)}</div></div>`, opts: ['A', 'B'], ans: sa > sb ? 0 : 1, exp: L('e.low27', { a: nm(a), b: nm(b) }) };
+  },
   drawc() {
     for (let k = 0; k < 400; k++) {
       const h = deal(5), plan = E.drawPlan(h, P.VARIANTS.draw), n = plan.length;
@@ -147,11 +154,11 @@ const CATS_L = [
   { id: 'math', ico: '<svg viewBox="0 0 24 24"><path d="M5 19 19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>', items: [['outs', 'outs'], ['rule24', 'rule24'], ['odds', 'odds'], ['callfold', 'callfold'], ['ev', 'ev']] },
   { id: 'pre', ico: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>', items: [['pre', 'pre'], ['range', 'range']] },
   { id: 'post', ico: '<svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 5-7 4 4"/></svg>', items: [['nuts', 'nuts'], ['draws', 'draws']] },
-  { id: 'games', ico: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>', items: [['omaha', 'omaha'], ['short', 'short'], ['stud', 'stud'], ['drawc', 'drawc']] },
+  { id: 'games', ico: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>', items: [['omaha', 'omaha'], ['short', 'short'], ['stud', 'stud'], ['drawc', 'drawc'], ['low27', 'low27']] },
 ];
 const ALL = []; CATS_L.forEach(c => c.items.forEach(([id, gen]) => ALL.push({ id, gen, cat: c.id })));
 // a small picture for each lesson card
-const PIC = { rank: 'AS KS QS JS TS', best7: '7H 7D 7C 2S 2D', flow: 'AH KD', pos: 'QS QH', outs: 'AH KH 9H 4H', rule24: '9S 8S', odds: 'JC TC', callfold: 'TS TD', ev: 'AC QD', pre: 'AS AD', range: 'KH QH', nuts: 'AH KH QH JH TH', draws: '8D 7D 6S 5H', omaha: 'AS AD KS KD', short: '6S 7D 8C 9H AS', stud: '3C 9H KS', drawc: '4H 4D 9C KS 2D' };
+const PIC = { rank: 'AS KS QS JS TS', best7: '7H 7D 7C 2S 2D', flow: 'AH KD', pos: 'QS QH', outs: 'AH KH 9H 4H', rule24: '9S 8S', odds: 'JC TC', callfold: 'TS TD', ev: 'AC QD', pre: 'AS AD', range: 'KH QH', nuts: 'AH KH QH JH TH', draws: '8D 7D 6S 5H', omaha: 'AS AD KS KD', short: '6S 7D 8C 9H AS', stud: '3C 9H KS', drawc: '4H 4D 9C KS 2D', low27: '7S 5H 4D 3C 2S' };
 let cat = 'basic', cur = null, top = 'lessons';
 function progress(id) { return PR[id] || { best: 0, pass: false }; }
 function listHtml() {
@@ -279,6 +286,10 @@ ja: {
   'tip.stud': '相手の表のカードは全部見えます。死んでいる（他の人が持っている）カードを覚えるのがコツ。',
   'x.drawc': '5カードドローは1回だけカードを替えられます。目安：ストレート以上は替えない、ツーペアは1枚、スリーカードは2枚、ワンペアは3枚、4枚フラッシュ・両面ストレートは1枚、何もなければAを残して残りを替える。',
   'tip.drawc': '替えた枚数は相手にも見えます。替えない（スタンドパット）は強さのアピールにもなります。',
+  'l.low27': '2-7ローボール', 'lp.low27': '弱い手ほど強い', 'ld.low27': '2-7トリプルドローの手の強さ。Aは高く、ストレート・フラッシュは悪い手。',
+  'x.low27': '2-7ローボールでは一番「弱い」手が勝ちます。まず役（ペア・ストレート・フラッシュ）がない方が強く、役なしどうしは一番高いカードが低い方の勝ち。同じなら2番目、3番目…と比べます。Aは常に一番高いカードです。最強は 7-5-4-3-2。',
+  'tip.low27': '「8ロー」は一番高いカードが8の手。8-5-4-3-2のように2番目以下も低いほど強い（スムーズ）。',
+  'q.low27': '2-7ローボールで強い（低い）のはどっち？', 'e.low27': 'Aは{a}、Bは{b}。役なしで、一番高いカードから順に低い方が勝ちです。',
   'q.rank': 'どちらの手が強い？', 'q.best7': 'この7枚で作れる最強の役は？', 'q.outs': 'ストレートかフラッシュになるアウツは何枚？（次の1枚で）', 'q.r24f': 'フロップでアウツ{n}枚。リバーまでに完成する確率はおよそ？', 'q.r24t': 'ターンでアウツ{n}枚。リバーで完成する確率はおよそ？',
   'q.odds': 'ポット{p}に相手が{b}ベット。コールに必要な勝率は？', 'q.cf': 'ポット{p}・相手のベット{b}。あなたの勝率は{e}。どうする？', 'q.ev': 'ポット{p}（相手のベット込み）。{c}払ってコールする。勝率{e}のときのEVは？',
   'q.pre': 'ランダムな相手1人に対して、勝率が高いのはどっち？', 'q.range': '6人卓の{p}から、{k}でレイズして参加する？（標準的なレンジ）', 'q.nuts': 'このボードで一番強くなる手札は？', 'q.draw': 'このドローは何？', 'q.omaha': 'オマハのルールで、この手の役は？', 'q.short': 'ショートデッキのルールで、強いのはどっち？', 'q.stud': 'ブリングインを払うのは誰？（表のカード）', 'q.drawc': 'この手なら何枚替える？',
@@ -344,6 +355,10 @@ en: {
   'tip.stud': 'You see every up card — remember which cards are dead.',
   'x.drawc': 'In Five Card Draw you change cards once. Guide: keep straights and better, draw one to two pair, two to trips, three to a pair, one to a four-flush or open-ended straight, else keep an ace and change the rest.',
   'tip.drawc': 'Everyone sees how many you draw; standing pat signals strength.',
+  'l.low27': '2-7 lowball', 'lp.low27': 'The worst hand wins', 'ld.low27': 'Hand values in 2-7 Triple Draw: aces high, straights and flushes are bad.',
+  'x.low27': 'In 2-7 lowball the worst hand wins. A hand with no pair, straight or flush beats one with them; between those, the lower highest card wins, then the second card and so on. Aces are always high. The best hand is 7-5-4-3-2.',
+  'tip.low27': 'An “8-low” has 8 as its highest card. The lower the following cards (8-5-4-3-2), the stronger — a “smooth” low.',
+  'q.low27': 'In 2-7 lowball, which hand is better (lower)?', 'e.low27': 'A is {a}, B is {b}. No made hand, then the lower cards from the top win.',
   'q.rank': 'Which hand is stronger?', 'q.best7': 'The best hand of these seven cards?', 'q.outs': 'How many outs make a straight or flush (next card)?', 'q.r24f': '{n} outs on the flop. Your chance by the river is about…', 'q.r24t': '{n} outs on the turn. Your chance on the river is about…',
   'q.odds': 'The pot is {p} and the opponent bets {b}. The equity you need to call?', 'q.cf': 'Pot {p}, the bet {b}, your equity {e}. What do you do?', 'q.ev': 'The pot is {p} (bet included). You call {c} with {e} equity. Your EV?',
   'q.pre': 'Against one random hand, which has more equity?', 'q.range': 'Six-handed from {p}: do you open-raise {k}? (standard range)', 'q.nuts': 'Which holding makes the best hand on this board?', 'q.draw': 'What kind of draw is this?', 'q.omaha': 'Under Omaha rules this hand is…', 'q.short': 'Under Short Deck rules, which is stronger?', 'q.stud': 'Who posts the bring-in? (up cards)', 'q.drawc': 'How many cards do you draw?',
@@ -378,3 +393,6 @@ ar: {"lead": "من ترتيب الأيدي إلى الإكويتي واحتما�
 };
 window.PokerLessons = { open, G, LT };
 })();
+
+/* 2-7 lowball lesson (other languages) */
+(function (A) { const X = window.PokerLessons.LT; for (const l in A) { if (!X[l]) X[l] = {}; Object.assign(X[l], A[l]); } })({"zh":{"l.low27":"2-7低牌","lp.low27":"最差的牌获胜","ld.low27":"2-7三次换牌的牌力：A为大牌，顺子和同花是坏牌。","x.low27":"在2-7低牌中最差的牌获胜。没有对子、顺子、同花的牌胜过有这些的牌；在此之中，最大牌越小越赢，然后比第二张，依此类推。A永远是大牌。最好的牌是7-5-4-3-2。","tip.low27":"“8低”指最大牌是8的牌。后面的牌越小（8-5-4-3-2）越强——即“顺滑”的低牌。","q.low27":"在2-7低牌中，哪手牌更好（更低）？","e.low27":"A是{a}，B是{b}。都没有成牌时，从最大的牌开始比，较小者获胜。"},"ko":{"l.low27":"2-7 로우볼","lp.low27":"가장 나쁜 패가 이긴다","ld.low27":"2-7 트리플 드로우의 패 순위: 에이스는 하이, 스트레이트와 플러시는 나쁨.","x.low27":"2-7 로우볼에서는 가장 나쁜 패가 이깁니다. 페어·스트레이트·플러시가 없는 패가 있는 패를 이기고, 그중에서는 가장 높은 카드가 낮은 쪽이, 이어서 두 번째 카드 순으로 비교해 이깁니다. 에이스는 항상 하이입니다. 최고의 패는 7-5-4-3-2입니다.","tip.low27":"“8 로우”는 가장 높은 카드가 8인 패입니다. 뒤따르는 카드가 낮을수록(8-5-4-3-2) 강한 “스무스” 로우입니다.","q.low27":"2-7 로우볼에서 어느 패가 더 좋을까요(더 낮을까요)?","e.low27":"A는 {a}, B는 {b}. 메이드 핸드가 없으면 위에서부터 낮은 카드가 이깁니다."},"es":{"l.low27":"Lowball 2-7","lp.low27":"Gana la peor mano","ld.low27":"Valor de las manos en 2-7 Triple Draw: el as es alto, escaleras y colores son malos.","x.low27":"En el lowball 2-7 gana la peor mano. Una mano sin pareja, escalera ni color vence a una que los tenga; entre ellas gana la de carta más alta más baja, luego la segunda carta y así sucesivamente. El as siempre es alto. La mejor mano es 7-5-4-3-2.","tip.low27":"Un “8 low” tiene el 8 como carta más alta. Cuanto más bajas sean las siguientes (8-5-4-3-2), más fuerte — un low “suave”.","q.low27":"En lowball 2-7, ¿qué mano es mejor (más baja)?","e.low27":"A es {a}, B es {b}. Sin jugada hecha, ganan las cartas más bajas empezando por arriba."},"fr":{"l.low27":"Lowball 2-7","lp.low27":"La pire main gagne","ld.low27":"Valeur des mains au 2-7 Triple Draw : l’as est haut, quintes et couleurs sont mauvaises.","x.low27":"Au lowball 2-7, la pire main gagne. Une main sans paire, quinte ni couleur bat une main qui en a ; entre elles, la carte la plus haute la plus basse gagne, puis la deuxième carte, et ainsi de suite. L’as est toujours haut. La meilleure main est 7-5-4-3-2.","tip.low27":"Un « 8 low » a le 8 comme carte la plus haute. Plus les cartes suivantes sont basses (8-5-4-3-2), plus il est fort — un low « smooth ».","q.low27":"Au lowball 2-7, quelle main est meilleure (plus basse) ?","e.low27":"A est {a}, B est {b}. Sans main faite, les cartes les plus basses en partant du haut gagnent."},"pt":{"l.low27":"Lowball 2-7","lp.low27":"A pior mão vence","ld.low27":"Valor das mãos no 2-7 Triple Draw: ás alto, sequências e flushes são ruins.","x.low27":"No lowball 2-7 a pior mão vence. Uma mão sem par, sequência ou flush vence uma que os tenha; entre essas, vence a de carta mais alta mais baixa, depois a segunda carta e assim por diante. O ás é sempre alto. A melhor mão é 7-5-4-3-2.","tip.low27":"Um “8 low” tem o 8 como carta mais alta. Quanto mais baixas as cartas seguintes (8-5-4-3-2), mais forte — um low “suave”.","q.low27":"No lowball 2-7, qual mão é melhor (mais baixa)?","e.low27":"A é {a}, B é {b}. Sem jogo feito, vencem as cartas mais baixas a partir do topo."},"de":{"l.low27":"2-7 Lowball","lp.low27":"Die schlechteste Hand gewinnt","ld.low27":"Handwerte im 2-7 Triple Draw: Asse hoch, Straßen und Flushes sind schlecht.","x.low27":"Im 2-7 Lowball gewinnt die schlechteste Hand. Eine Hand ohne Paar, Straße oder Flush schlägt eine mit solchen; unter diesen gewinnt die niedrigere höchste Karte, dann die zweite Karte und so weiter. Asse sind immer hoch. Die beste Hand ist 7-5-4-3-2.","tip.low27":"Ein „8-Low“ hat die 8 als höchste Karte. Je niedriger die folgenden Karten (8-5-4-3-2), desto stärker — ein „smooth“ Low.","q.low27":"Welche Hand ist im 2-7 Lowball besser (niedriger)?","e.low27":"A ist {a}, B ist {b}. Ohne fertige Hand gewinnen die niedrigeren Karten von oben."},"hi":{"l.low27":"2-7 लोबॉल","lp.low27":"सबसे खराब हाथ जीतता है","ld.low27":"2-7 ट्रिपल ड्रॉ में हाथों का मूल्य: इक्का ऊँचा, स्ट्रेट और फ्लश खराब।","x.low27":"2-7 लोबॉल में सबसे खराब हाथ जीतता है। बिना जोड़ी, स्ट्रेट या फ्लश वाला हाथ इनवाले हाथ को हराता है; उनमें, जिसका सबसे ऊँचा पत्ता छोटा हो वह जीतता है, फिर दूसरा पत्ता, और इसी तरह। इक्का हमेशा ऊँचा होता है। सबसे अच्छा हाथ 7-5-4-3-2 है।","tip.low27":"“8-लो” में सबसे ऊँचा पत्ता 8 होता है। बाक़ी पत्ते जितने छोटे (8-5-4-3-2), उतना मज़बूत — एक “स्मूथ” लो।","q.low27":"2-7 लोबॉल में कौन-सा हाथ बेहतर (ज़्यादा लो) है?","e.low27":"A है {a}, B है {b}। बना हुआ हाथ न हो तो ऊपर से छोटे पत्ते जीतते हैं।"},"ar":{"l.low27":"لوبول 2-7","lp.low27":"أسوأ يد تفوز","ld.low27":"قيم الأيدي في 2-7 تريبل درو: الآص عالٍ، والستريت والفلاش سيئة.","x.low27":"في لوبول 2-7 تفوز أسوأ يد. اليد الخالية من الزوج والستريت والفلاش تهزم اليد التي فيها ذلك؛ وبينها تفوز اليد ذات أعلى ورقة أدنى، ثم الورقة الثانية وهكذا. الآص دائمًا عالٍ. أفضل يد هي 7-5-4-3-2.","tip.low27":"«لو 8» يد أعلى ورقة فيها 8. كلما انخفضت الأوراق التالية (8-5-4-3-2) كانت أقوى — لو «ناعمة».","q.low27":"في لوبول 2-7، أي يد أفضل (أدنى)؟","e.low27":"A هي {a}، وB هي {b}. بلا يد مكتملة، تفوز الأوراق الأدنى بدءًا من الأعلى."}});

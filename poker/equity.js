@@ -40,7 +40,8 @@ function equity(spec) {
   const needBoard = boardN - board0.length;
   // full enumeration: every hand known and at most 2 board cards to come
   const allKnown = spec.hands.every(h => h && h.length === holeN) && !Vr.stud && !Vr.draw;
-  const score = (hands, board) => hands.map(h => Vr.omaha ? P.bestOmaha(h, board, Vr.short) : P.evalCards(h.concat(board), Vr.short));
+  const score = (hands, board) => hands.map(h => Vr.omaha ? P.bestOmaha(h, board, Vr.short) : Vr.low27 ? P.lowScore(h) : P.evalCards(h.concat(board), Vr.short));
+  const drawsLeft = spec.drawsLeft != null ? spec.drawsLeft : (Vr.draw && spec.drawn === false ? 1 : 0);
   const tally = sc => { const best = Math.max(...sc); const w = []; sc.forEach((s, i) => { if (s === best) w.push(i); }); if (w.length === 1) win[w[0]]++; else w.forEach(i => { tie[i] += 1 / w.length; }); };
   let total = 0;
   if (allKnown && needBoard <= 2) {
@@ -62,7 +63,7 @@ function equity(spec) {
           return [a, b];
         }
         while (have.length < holeN) have.push(take());
-        if (Vr.draw && spec.drawn === false) { const dis = drawPlan(have, Vr); dis.forEach(k => { have[k] = take(); }); }
+        for (let d = 0; d < drawsLeft; d++) { const dis = drawPlan(have, Vr); if (!dis.length) break; dis.forEach(k => { have[k] = take(); }); }
         return have;
       });
       const board = board0.slice(); while (board.length < boardN) board.push(take());
@@ -74,6 +75,7 @@ function equity(spec) {
 
 /* ---------- 5-card draw: which cards to change ---------- */
 function drawPlan(cards, Vr) {
+  if (Vr && Vr.low27) return lowPlan(cards);
   const cnt = {}; cards.forEach(c => { const v = P.V(c); cnt[v] = (cnt[v] || 0) + 1; });
   const multi = Object.keys(cnt).filter(v => cnt[v] >= 2).map(Number);
   const s = P.evalCards(cards, false), cat = P.catOf(s, false);
@@ -90,6 +92,22 @@ function drawPlan(cards, Vr) {
   return vals[ord[0]] === 14 ? ord.slice(2) : ord.slice(2);
 }
 
+/* 2-7 lowball: keep distinct low cards (2–8, no aces), break pairs, straights and flushes.
+   Stand pat with a made 9-low or better. */
+function lowPlan(cards) {
+  const v = cards.map(P.V), uniq = new Set(v).size === 5;
+  const sc = P.evalCards(cards, false), cat = P.catOf(sc, false);
+  if (uniq && cat === 'high' && Math.max(...v) <= 9) return [];
+  const ord = [0, 1, 2, 3, 4].sort((a, b) => v[a] - v[b]), keep = [], seen = new Set();
+  for (const k of ord) { if (v[k] <= 8 && !seen.has(v[k])) { keep.push(k); seen.add(v[k]); } }
+  if (keep.length === 5) {   // five low cards but a straight or a flush: change the highest
+    const kc = keep.map(k => cards[k]), c2 = P.catOf(P.evalCards(kc, false), false);
+    if (c2 !== 'high') keep.pop();
+  }
+  // four to a straight-free, flush-free low: drop a card if the four make a 4-straight run? keep it simple
+  return [0, 1, 2, 3, 4].filter(k => !keep.includes(k));
+}
+
 /* ---------- what the table looks like to one seat ---------- */
 // opponents' cards are unknown (stud: up cards are known). Returns an equity spec from seat s's point of view.
 function viewSpec(T, s, iters) {
@@ -102,7 +120,7 @@ function viewSpec(T, s, iters) {
     if (Vr.stud) hands.push(P.upCards(Q)); else hands.push(null);
     ranges.push(rangeOf(T, i));
   });
-  return { v: T.v, hands: hands.map(h => h && h.length ? h : null), board: T.board.slice(), dead, iters, ranges, drawn: !(Vr.draw && T.street === 0), opp };
+  return { v: T.v, hands: hands.map(h => h && h.length ? h : null), board: T.board.slice(), dead, iters, ranges, drawn: !(Vr.draw && T.street === 0), drawsLeft: Vr.draw ? Math.max(0, (Vr.draws || 1) - T.street) : 0, opp };
 }
 // a guess of a player's range from what they did this hand (hold'em-like games): top x%
 function rangeOf(T, i) {
