@@ -11,7 +11,7 @@ const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
   offNote: 'コーチ機能はオフになっています。上のスイッチ（電球のマーク）をオンにすると、局面の考え方や候補手の解説が表示されます。',
-  idle: '対局が始まると、ここに局面の考え方を表示します。', oppTurn: '相手の手番です。相手が次に何をしてくるか、予想してみよう。予想が当たるほど読みの力がつきます。', over: '対局が終わりました。棋譜の［解析］で一局を振り返れます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
+  idle: '対局が始まると、ここに局面の考え方を表示します。', oppTurn: '相手の手番です。相手が次に何をしてくるか、予想してみよう。予想が当たるほど読みの力がつきます。', overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。', over: '対局が終わりました。棋譜の［解析］で一局を振り返れます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
   calc: '候補手を考えています…', form: '形勢', mat: '駒割り', stage: '局面', you: 'あなた',
   'st.open': '序盤', 'st.mid': '中盤', 'st.end': '終盤',
   'f.win': '勝勢', 'f.big': '優勢', 'f.adv': '有利', 'f.sl': 'やや有利', 'f.even': '互角', 'f.sld': 'やや不利', 'f.dis': '不利', 'f.bad': '劣勢', 'f.lost': '敗勢',
@@ -145,7 +145,7 @@ ja: {
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
   offNote: 'The coach is switched off. Turn on the switch at the top (the light bulb) to see how to think about the position and the candidate moves explained.',
-  idle: 'Once a game starts, the coach explains how to think about the position here.', oppTurn: "It's your opponent's turn. Try to guess what they will play next — the more often you guess right, the stronger your reading gets.", over: 'The game is over. Use [Analyze] in the record to review it.', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
+  idle: 'Once a game starts, the coach explains how to think about the position here.', oppTurn: "It's your opponent's turn. Try to guess what they will play next — the more often you guess right, the stronger your reading gets.", overRv: 'The game is over. Analyze it to see a move-by-move review here (best moves, mistakes and why).', over: 'The game is over. Use [Analyze] in the record to review it.', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
   calc: 'Thinking about candidate moves…', form: 'Position', mat: 'Material', stage: 'Phase', you: 'you',
   'st.open': 'Opening', 'st.mid': 'Middlegame', 'st.end': 'Endgame',
   'f.win': 'winning', 'f.big': 'clearly better', 'f.adv': 'better', 'f.sl': 'slightly better', 'f.even': 'equal', 'f.sld': 'slightly worse', 'f.dis': 'worse', 'f.bad': 'clearly worse', 'f.lost': 'losing',
@@ -574,11 +574,22 @@ function verdictHtml() {
 function render() {
   if (!card) return;
   if (ShogiCoach.sw) ShogiCoach.sw.sync();
-  const on = active(), can = usable();
+  const rv = !!document.querySelector('#reviewCard.show');
+  // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the
+  // coach tab shows the review instead; before the review exists, a short note with a button to start it
+  const playing = !!(game && !game.over && cur === game.moves.length && !reviewing);
+  const on = active(), can = usable() && (playing || (game && game.over && !rv));
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on);
-  document.body.classList.toggle('ck-tab', can || !!(document.querySelector('#reviewCard.show')));
+  document.body.classList.toggle('ck-tab', can || rv);
+  if (rv && !S.rvWas) { const b = document.querySelector('#mtabs [data-it=coach]'); if (b && getComputedStyle(b).display !== 'none' && document.body.dataset.it !== 'coach') b.click(); }
+  S.rvWas = rv;
   if (!can) return;
+  if (game.over) {
+    put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('overRv'))}</p><div class="ck-sec"><button type="button" class="ck-rvgo" data-ck="rv">${esc(t('rv.analyze'))}</button></div>` + (on ? verdictHtml() : ''));
+    const b = card.querySelector('[data-ck=rv]'); if (b) b.onclick = () => { if (typeof runReview === 'function') runReview(); };
+    return;
+  }
   if (!on) return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('offNote'))}</p>`);
   let h = `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span>${game && !game.over && !game.variant ? `<small>${esc(tx('st.' + ((factsNow() || {}).stage || 'mid')))}</small>` : ''}</h3>`;
   if (game.over) { h += `<p class="ck-muted">${esc(tx('over'))}</p>` + verdictHtml(); return put(h); }
@@ -668,6 +679,7 @@ function init() {
   if (!window.CoachKit) return;
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
+  { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   try { S.reveal = !!settings.coachReveal; } catch (e) {}
   ShogiCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
