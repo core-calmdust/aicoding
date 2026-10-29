@@ -10,11 +10,11 @@
 'use strict';
 (() => {
 const SHORT = {
-  ja: ['コーチ', '形勢・棋譜', 'レッスン', '戦績', 'オンライン'], en: ['Coach', 'Eval · Moves', 'Learn', 'Record', 'Online'],
-  zh: ['教练', '形势·棋谱', '学习', '战绩', '在线'], ko: ['코치', '형세·기보', '레슨', '전적', '온라인'],
-  es: ['Guía', 'Eval. · Jugadas', 'Aprender', 'Historial', 'En línea'], fr: ['Coach', 'Éval. · Coups', 'Leçons', 'Bilan', 'En ligne'],
-  pt: ['Treino', 'Aval. · Lances', 'Aprender', 'Histórico', 'Online'], de: ['Coach', 'Bew. · Züge', 'Lernen', 'Bilanz', 'Online'],
-  hi: ['कोच', 'स्थिति · चालें', 'सीखें', 'रिकॉर्ड', 'ऑनलाइन'], ar: ['المدرب', 'التقييم · النقلات', 'تعلّم', 'السجل', 'أونلاين'],
+  ja: ['コーチ', '形勢・棋譜', 'ルール\nレッスン', '戦績', 'オンライン'], en: ['Coach', 'Eval · Moves', 'Rules\nLessons', 'Record', 'Online'],
+  zh: ['教练', '形势·棋谱', '规则\n课程', '战绩', '在线'], ko: ['코치', '형세·기보', '규칙\n레슨', '전적', '온라인'],
+  es: ['Guía', 'Eval. · Jugadas', 'Reglas\nLecciones', 'Historial', 'En línea'], fr: ['Coach', 'Éval. · Coups', 'Règles\nLeçons', 'Bilan', 'En ligne'],
+  pt: ['Treino', 'Aval. · Lances', 'Regras\nLições', 'Histórico', 'Online'], de: ['Coach', 'Bew. · Züge', 'Regeln\nLektionen', 'Bilanz', 'Online'],
+  hi: ['कोच', 'स्थिति · चालें', 'नियम\nपाठ', 'रिकॉर्ड', 'ऑनलाइन'], ar: ['المدرب', 'التقييم · النقلات', 'القواعد\nالدروس', 'السجل', 'أونلاين'],
 };
 const TABS = ['coach', 'kifu', 'learn', 'rec', 'online'];
 const IC = {
@@ -84,7 +84,7 @@ function relabel() {
   });
   learn.querySelectorAll('button').forEach((b, i) => { const v = typeof t === 'function' ? t(LEARN[i][1]) : ''; const s = b.querySelector('span'); if (s.textContent !== v) s.textContent = v; });
   // a label that does not fit even on two lines: icon only (the title / aria-label keep the name)
-  requestAnimationFrame(() => rail.querySelectorAll('button:not(.ic-only) span').forEach(s => { if (s.scrollWidth > s.clientWidth + 1 || s.scrollHeight > s.clientHeight + 1) s.parentNode.classList.add('ic-only'); }));
+  requestAnimationFrame(() => rail.querySelectorAll('button:not(.ic-only) span').forEach(s => { if (s.scrollWidth > s.clientWidth + 2 || s.scrollHeight > s.clientHeight + 3) s.parentNode.classList.add('ic-only'); }));
 }
 const lessonOn = () => body.classList.contains('in-lesson') || body.classList.contains('in-puzzle');
 function select() {
@@ -114,7 +114,7 @@ function show(k) {
   place();
   if (k === 'rec') { if (body.classList.contains('mtab-online') && typeof mtab === 'function') mtab('game'); if (window.GameRecord) { body.classList.add('lnd-rec'); GameRecord.open(); } open = false; body.classList.remove('lnd-open'); select(); return; }
   if (window.GameRecord && body.classList.contains('lnd-rec')) { GameRecord.close(); body.classList.remove('lnd-rec'); }
-  if (k === 'online') { open = false; body.classList.remove('lnd-open'); if (typeof mtab === 'function') mtab('online'); select(); return; }
+  if (k === 'online') { const was = body.classList.contains('mtab-online'); open = false; body.classList.remove('lnd-open'); if (typeof mtab === 'function') mtab(was ? 'game' : 'online'); select(); return; }   // the same tab again closes it
   if (body.classList.contains('mtab-online') && typeof mtab === 'function') mtab('game');
   tab = k; try { localStorage.setItem(KEY, k); } catch (er) {}
   setOpen(true); drawer.scrollTop = 0;
@@ -149,7 +149,8 @@ document.addEventListener('touchmove', e => {
   sw.dx = dx;
   const off = sw.open ? Math.max(0, dx) : Math.max(0, sw.w + 76 + Math.min(0, dx));
   drawer.style.transform = `translateX(${off}px)`;
-}, { passive: true, capture: true });
+  if (e.cancelable) e.preventDefault();   // the page must not pan under the finger
+}, { passive: false, capture: true });
 document.addEventListener('touchend', () => {
   if (!sw) return;
   const s = sw; sw = null;

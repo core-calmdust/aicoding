@@ -20,6 +20,7 @@ const ICON = {
 };
 const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
 const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', hi: 'रिकॉर्ड', ar: 'السجل' };
+const LTAB = {ja: 'ルール\nレッスン', en: 'Rules\nLessons', zh: '规则\n课程', ko: '규칙\n레슨', es: 'Reglas\nLecciones', fr: 'Règles\nLeçons', pt: 'Regras\nLições', de: 'Regeln\nLektionen', hi: 'नियम\nपाठ', ar: 'القواعد\nالدروس' };
 const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
 let rail = null, panel = null, learn = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
@@ -30,11 +31,12 @@ const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['
 const coachOk = () => document.body.classList.contains('ck-tab');
 const pinned = () => document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
 const onlineOn = () => document.body.classList.contains('mtab-online');
+const recOn = () => document.body.classList.contains('lt-rec');
 function label(k) {
   const l = lang();
   if (k === 'coach') return window.MancalaCoach ? MancalaCoach.tx('head') : 'Coach';
   if (k === 'ek') return tt('eval', 'Eval');
-  if (k === 'learn') return tt('btn.lesson', LEARN[l] || LEARN.en);
+  if (k === 'learn') return LTAB[l] || LTAB.en;
   if (k === 'rec') return REC[l] || REC.en;
   return ONL[l] || ONL.en;
 }
@@ -51,8 +53,13 @@ function build() {
   rail.addEventListener('click', e => {
     const b = e.target.closest('[data-lt]'); if (!b) return;
     const k = b.dataset.lt;
-    if (k === 'rec') { close(); if (window.GameRecord) GameRecord.open(); return; }
-    if (k === 'online') { const was = onlineOn(); close(); if (!was && typeof mtab === 'function') mtab('online'); sync(); return; }
+    if (k === 'rec') {   // 戦績 slides in at the drawer's place (the same tab again closes it)
+      const was = recOn(); close(); if (onlineOn() && typeof mtab === 'function') mtab('game');
+      if (window.GameRecord) { if (was) { GameRecord.close(); document.body.classList.remove('lt-rec'); } else { document.body.classList.add('lt-rec'); GameRecord.open(); } }
+      sync(); return;
+    }
+    if (recOn() && window.GameRecord) { GameRecord.close(); document.body.classList.remove('lt-rec'); }
+    if (k === 'online') { const was = onlineOn(); close(); if (recOn() && window.GameRecord) { GameRecord.close(); document.body.classList.remove('lt-rec'); } if (typeof mtab === 'function') mtab(was ? 'game' : 'online'); sync(); return; }   // the same tab again closes it
     if (onlineOn() && typeof mtab === 'function') mtab('game');
     if (open && cur === k) { close(); return; }
     cur = k; saved = true; try { localStorage.setItem(KEY, k); } catch (er) {}
@@ -68,7 +75,7 @@ function relabel() {
     b.setAttribute('aria-label', l); b.title = l;
   });
   const row = (k, ic, desc) => `<button type="button" data-go="${k}">${ICON[ic]}<span>${tt('btn.' + k, k)}${desc ? `<small>${desc}</small>` : ''}</span></button>`;
-  const h = `<h3>${label('learn')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', '')) + row('puzzle', 'puzzle', tt('btn.puzzle.title', ''));
+  const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', '')) + row('puzzle', 'puzzle', tt('btn.puzzle.title', ''));
   if (learn.dataset.h !== h) { learn.dataset.h = h; learn.innerHTML = h; }
   fit();
 }
@@ -89,7 +96,7 @@ function sync() {
   if (cur === 'coach' && !coachOk()) cur = 'ek';
   const ol = onlineOn();
   rail.querySelectorAll('[data-lt]').forEach(b => {
-    const k = b.dataset.lt, sel = ol ? k === 'online' : open && k === cur;
+    const k = b.dataset.lt, sel = recOn() ? k === 'rec' : ol ? k === 'online' : open && k === cur;
     b.classList.toggle('sel', sel); b.setAttribute('aria-selected', sel ? 'true' : 'false');
     if (k === 'coach') b.hidden = !coachOk();
     if (k === 'online') b.hidden = document.body.classList.contains('no-online');
@@ -122,6 +129,7 @@ function refit() {
 function check() { if (MQ.matches && !document.documentElement.classList.contains('atlas-skin')) enter(); else leave(); }
 // a tap on the board closes the drawer (and does not play a pit)
 document.addEventListener('click', e => {
+  if (on && recOn() && e.target.closest && e.target.closest('.frame') && window.GameRecord) { e.stopPropagation(); e.preventDefault(); GameRecord.close(); document.body.classList.remove('lt-rec'); sync(); return; }
   if (!on || !open || pinned()) return;
   if (e.target.closest && (e.target.closest('#ltPanel') || e.target.closest('#ltRail') || e.target.closest('.overlay') || e.target.closest('.ck-pop'))) return;
   if (e.target.closest && e.target.closest('.frame')) { e.stopPropagation(); e.preventDefault(); close(); }
@@ -146,7 +154,8 @@ document.addEventListener('touchmove', e => {
   sw.dx = dx;
   const w = W(), off = sw.mode === 'open' ? Math.max(0, Math.min(w, w + dx)) : Math.max(0, Math.min(w, dx));
   panel.style.transform = `translateX(${off}px)`;
-}, { passive: true });
+  if (e.cancelable) e.preventDefault();   // the page must not pan sideways under the finger
+}, { passive: false });
 document.addEventListener('touchend', () => {
   if (!sw) return;
   const s = sw; sw = null;
@@ -165,6 +174,7 @@ new MutationObserver(() => {
   ckWas = a; sync();
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 { const rc = $('#reviewCard'); if (rc) new MutationObserver(() => { const rv = rc.classList.contains('show'); if (rv && !rvWas) cur = 'coach'; rvWas = rv; sync(); }).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
+new MutationObserver(() => { const ov = $('.grc-ov'); if (recOn() && (!ov || !ov.classList.contains('show'))) { document.body.classList.remove('lt-rec'); sync(); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 if (MQ.addEventListener) MQ.addEventListener('change', check); else MQ.addListener(check);
 addEventListener('resize', () => fit());
