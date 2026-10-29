@@ -524,7 +524,7 @@ function fx(svg, pos) {
   if (!active() || !myTurn() || sel) return;
   const L = S.hov != null ? [S.hov] : (S.items || []);
   const legal = pos.moves();
-  for (const m of L) if (legal.includes(m)) svgArrow(svg, E.path(pos, m), 'ck');
+  for (const m of L) if (legal.includes(m)) svgArrow(svg, E.path(pos, m), 'ok');
 }
 // the analysis list of a position (progress lists too, so a quick move can still be graded)
 function cands(key, list) { if (list && list.length) { S.lists.set(key, list); if (S.lists.size > 400) S.lists.delete(S.lists.keys().next().value); } }

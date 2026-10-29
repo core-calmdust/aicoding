@@ -517,7 +517,7 @@ function fx(svg) {
   if (S.hov == null || !active() || !myTurn() || sel) return;
   if (!posAt(cur).pos.moves().includes(S.hov)) return;
   const m = S.hov, f = mFrom(m), to = mTo(m), r = mRm(m);
-  if (f !== NONE) svgArrow(svg, f, to, 'ck'); else fxDiv('mark ck', to);
+  if (f !== NONE) svgArrow(svg, f, to, 'ok'); else fxDiv('mark ok', to);
   if (r !== NONE) fxDiv('mark ng', r);
 }
 function cands(key, list) {

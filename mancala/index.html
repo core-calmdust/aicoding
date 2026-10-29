@@ -115,14 +115,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .ring.ok{border:3px solid var(--accent)}
 .ring.ng{border:3px solid #ff6b5b}
 .ring.played{border:3px dashed rgba(255,255,255,.85)}
-/* every board marker keeps a dark rim, so it stays visible on light (marble) and coloured (jade / ocean / walnut) boards */
-.ring{filter:drop-shadow(0 0 1px #0a0806) drop-shadow(0 0 2px rgba(0,0,0,.85))}
-.ring.ok{border-color:#ffd66b}
-/* coach candidates (common rule): bright green with a dark rim */
-.ring.ck{border:3.5px solid #3df59a;box-shadow:0 0 14px rgba(61,245,154,.55),inset 0 0 10px rgba(61,245,154,.35);filter:drop-shadow(0 0 1px #08120c) drop-shadow(0 0 3px rgba(0,0,0,.9));z-index:2}
-.hintlbl,.tip,.chip{filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
-html[data-sk=marble] .ring:not(.ck):not(.cap):not(.ng):not(.cand):not(.played.bad):not(.played.dubious){border-color:#8a5d00}
-html[data-sk=marble] .ring.played:not(.bad):not(.dubious){border-color:#2a2420}
 .ring.played.bad{border-color:#ff6b5b}.ring.played.dubious{border-color:#f2c060}
 @keyframes tpulse{50%{box-shadow:0 0 26px rgba(226,194,117,.8);transform:translate(-50%,-50%) scale(1.06)}}
 .chip{position:absolute;transform:translate(-50%,-50%);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:calc(var(--u) * .17);color:#fff3cf;background:rgba(201,169,97,.85);color:#1b150a;border-radius:6px;padding:0 4px;line-height:1.3;box-shadow:0 2px 6px rgba(0,0,0,.4)}
@@ -663,7 +655,6 @@ bdi{unicode-bidi:isolate}
 body.in-study .study-badge{display:block;position:absolute;top:calc(var(--u) * .06);left:50%;transform:translateX(-50%);z-index:30;padding:3px 14px;border-radius:99px;background:rgba(201,169,97,.95);color:#1a1206;font-weight:700;font-size:13px;letter-spacing:.06em;box-shadow:0 4px 14px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap}
 body.in-study .frame{box-shadow:0 0 0 2px rgba(227,194,122,.85),0 0 28px rgba(227,194,122,.25)!important}
 .ring.cand{border:3px solid #7fd0ff;box-shadow:0 0 16px rgba(127,208,255,.6)}
-html[data-sk=ocean] .ring.cand{border-color:#ffe36b;box-shadow:0 0 16px rgba(255,227,107,.55)}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   /* review box on: the info row grows to the box height; the box on the left, 形勢 above the 振り返り summary in the middle, 棋譜 on the right */
   /* (the online dock's compact mode (shared/headerbar.js) hides 棋譜 / the graph of a side column: here they stay, the row just gets smaller) */
@@ -1369,7 +1360,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=6"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=2"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030ck1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=6"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=1"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030ck1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->

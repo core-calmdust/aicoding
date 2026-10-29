@@ -285,8 +285,8 @@ function svgArrow(svg, path, cls) {
   const ex = bx - ux * 0.3, ey = by - uy * 0.3; pts[n - 1] = [ex, ey];
   const h = 0.2;
   const d = 'M' + pts.map(q => q[0].toFixed(3) + ',' + q[1].toFixed(3)).join('L') + `M${ex - ux * h - uy * h * 0.8},${ey - uy * h + ux * h * 0.8}L${ex},${ey}L${ex - ux * h + uy * h * 0.8},${ey - uy * h - ux * h * 0.8}`;
-  // every arrow gets a dark outline so it stands out on any board colour (birch, oak, stone, fjord, leather)
-  { const o = document.createElementNS(NS, 'path'); o.setAttribute('d', d); o.setAttribute('class', 'arrow-ol'); o.setAttribute('stroke-width', 0.17); o.setAttribute('stroke-linejoin', 'round'); svg.appendChild(o); }
+  // the answer / mistake arrows of lessons and puzzles get a dark outline so they stand out on any board colour
+  if (/\b(ok|ng)\b/.test(cls || '')) { const o = document.createElementNS(NS, 'path'); o.setAttribute('d', d); o.setAttribute('class', 'arrow-ol'); o.setAttribute('stroke-width', 0.17); o.setAttribute('stroke-linejoin', 'round'); svg.appendChild(o); }
   const p = document.createElementNS(NS, 'path');
   p.setAttribute('d', d);
   p.setAttribute('class', 'arrow ' + (cls || '')); p.setAttribute('stroke-width', 0.08); p.setAttribute('stroke-linejoin', 'round'); svg.appendChild(p);

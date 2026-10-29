@@ -1870,19 +1870,17 @@ function askPromotion(s, cands) {
 }
 function drawArrows() {
   { const hb = $('#btnHint'); if (hb) hb.classList.toggle('on', (typeof hintBusy !== 'undefined' && hintBusy) || !!(hintMoves && !hintMoves.coach && game && hintMoves.ply === cur)); }   // the hint button shows ON while its arrows are on the board
-  let html = '<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker><marker id="ahk" viewBox="0 0 12 12" refX="7" refY="6" markerWidth="3.4" markerHeight="3.4" orient="auto"><path d="M0 0 12 6 0 12z" fill="rgba(8,14,10,.85)"/></marker></defs>';
+  let html = '<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs>';
   if (hintMoves && hintMoves.ply === cur && !reviewing) {
     hintMoves.list.forEach((h, i) => {
       const m = P.fromUsi(h.move), to = sqToDisp(E.mTo(m));
       const tx = (to % 9) * 100 + 50, ty = ((to / 9) | 0) * 110 + 55;
-      // coach candidates: bright green; hint: gold / blue — every arrow on a dark rim so it reads on any board skin
-      const col = hintMoves.coach ? '#3df59a' : i === 0 ? '#ffb22e' : '#5ab0ff', w = hintMoves.coach || i === 0 ? 14 : 10;
-      if (E.isDrop(m)) html += `<circle cx="${tx}" cy="${ty}" r="38" fill="none" stroke="rgba(8,14,10,.85)" stroke-width="14"/><circle cx="${tx}" cy="${ty}" r="38" fill="none" stroke="${col}" stroke-width="8"/>`;
+      const col = i === 0 ? 'rgba(226,150,30,.92)' : 'rgba(40,110,190,.75)';
+      if (E.isDrop(m)) html += `<circle cx="${tx}" cy="${ty}" r="38" fill="none" stroke="${col}" stroke-width="8"/>`;
       else {
         const fr = sqToDisp(E.mFrom(m)), fx = (fr % 9) * 100 + 50, fy = ((fr / 9) | 0) * 110 + 55;
         const len = Math.hypot(tx - fx, ty - fy), ux = (tx - fx) / len, uy = (ty - fy) / len;
-        const ln = (c, sw, mk) => `<line x1="${fx + ux * 20}" y1="${fy + uy * 20}" x2="${tx - ux * 22}" y2="${ty - uy * 22}" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"${mk ? ' marker-end="url(#ah)"' : ' marker-end="url(#ahk)"'}/>`;
-        html += ln('rgba(8,14,10,.85)', w + 7, false) + ln(col, w, true);
+        html += `<line x1="${fx + ux * 20}" y1="${fy + uy * 20}" x2="${tx - ux * 22}" y2="${ty - uy * 22}" stroke="${col}" stroke-width="${i === 0 ? 14 : 10}" stroke-linecap="round" marker-end="url(#ah)"/>`;
       }
       html += `<text x="${tx}" y="${ty + 44}" font-size="26" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.7)" stroke-width="5" paint-order="stroke" font-family="JetBrains Mono">${h.label || fmtScore(h.score)}</text>`;
     });

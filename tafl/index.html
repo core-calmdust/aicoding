@@ -881,32 +881,6 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 } }
 /* portal 3D skin on phones: the 3D board looks smaller than its DOM frame — pull the boxes above / below to the same distance as the other games */
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:-24px;margin-bottom:-26px} }
-/* board markers: bright colours with a dark rim, readable on every board skin (birch / oak / stone / fjord / leather).
-   Coach candidates and answers: bright green #3df59a with a dark rim (common rule). */
-.fxsvg .arrow{stroke:#ffd34d;filter:none}
-.fxsvg .arrow.ok{stroke:#3df59a}
-.fxsvg .arrow.ng{stroke:#ff5a48}
-.fxsvg .arrow.pl{stroke:#fff;stroke-dasharray:.1 .07}
-.fxsvg .arrow.rvb1{stroke:#ffd34d}
-.fxsvg .arrow.rvb2{stroke:#8fc0ff;stroke-dasharray:.12 .07}
-.fxsvg .arrow-ol{stroke:rgba(10,14,28,.9)}
-.sqfx.last{background:rgba(255,214,90,.3);box-shadow:inset 0 0 0 2px rgba(10,14,28,.55),inset 0 0 0 4px rgba(255,214,90,.95)}
-.sqfx.lastf{background:rgba(255,214,90,.16);box-shadow:inset 0 0 0 2px rgba(10,14,28,.35),inset 0 0 0 3px rgba(255,214,90,.55)}
-.sqfx.esc{background:rgba(79,227,255,.22);box-shadow:inset 0 0 0 2px rgba(10,14,28,.6),inset 0 0 0 4px #4fe3ff}
-.sqfx.path{background:rgba(79,227,255,.16);box-shadow:inset 0 0 0 1px rgba(10,14,28,.3)}
-.dest{background:#fff0a8;box-shadow:0 0 0 2px rgba(10,14,28,.8),0 0 10px rgba(255,236,170,.8)}
-.dest.cap{background:#ff7a5c;box-shadow:0 0 0 2px rgba(10,14,28,.8),0 0 12px rgba(255,110,80,.85)}
-.dest.win{background:#3df59a;box-shadow:0 0 0 2px rgba(10,14,28,.8),0 0 14px rgba(61,245,154,.85)}
-.mark.from{border:2px dashed rgba(255,255,255,.95);box-shadow:0 0 0 2px rgba(10,14,28,.55)}
-.mark.took::before,.mark.took::after{width:3px;background:#ff5a48;box-shadow:0 0 0 1.5px rgba(10,14,28,.8)}
-.mark.threat{border-color:#ffd34d;box-shadow:0 0 0 2px rgba(10,14,28,.7),inset 0 0 0 2px rgba(10,14,28,.5)}
-.mark.threat.op{border-color:#fff;box-shadow:0 0 0 2px rgba(10,14,28,.7),inset 0 0 0 2px rgba(10,14,28,.5)}
-.mark.played{border-color:#fff;box-shadow:0 0 0 2px rgba(10,14,28,.7)}
-.mark.played.bad{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(10,14,28,.7)}
-.mark.played.dubious{border-color:#ffc94d;box-shadow:0 0 0 2px rgba(10,14,28,.7)}
-.pc.threat::before{box-shadow:inset 0 2px 3px rgba(0,0,0,.35),0 0 0 calc(var(--cell) * .05) #ff5a48,0 0 0 calc(var(--cell) * .05 + 2px) rgba(10,14,28,.75)}
-.hintlbl.best::before{border:2.5px solid #ffd34d;box-shadow:0 0 0 2px rgba(10,14,28,.7),0 0 10px rgba(255,211,77,.5)}
-.rvb-n{box-shadow:0 0 0 2px rgba(10,14,28,.8),0 1px 4px rgba(0,0,0,.6)}
 /* coach (coach.js, shared/coachkit.js): next to the evaluation; hidden where it can't be used */
 #coachCard.hidden{display:none!important}
 body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
@@ -1248,7 +1222,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
-<script src="app.js?v=mk1-20261030coach1"></script>
+<script src="app.js?v=20261030coach1"></script>
 <script src="online-ui.js?v=1l9c1"></script>
 <!-- World Board Game Atlas portal skin: tafl/?skin=atlas — 3D viking oak board with carved walnut / bone pieces, guide speech bubbles, portal look (all features kept) -->
 <script>
