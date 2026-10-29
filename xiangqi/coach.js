@@ -597,7 +597,7 @@ function put(h) {
 function fx(svg) {
   if (!active() || !S.arrows || !myTurn()) return;
   const list = S.hover != null ? S.arrows.filter(m => m === S.hover) : [];
-  for (const m of list) svgArrow(svg, mPath(m), 'ok');
+  for (const m of list) svgArrow(svg, mPath(m), 'ok ck');
 }
 function init() {
   if (!window.CoachKit) return;

@@ -177,9 +177,10 @@ function bind(root, o) {
   root.querySelectorAll('[data-ck=more]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onMore && o.onMore(); });
   root.querySelectorAll('[data-ck=reveal]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onReveal && o.onReveal(); });
   if (o.onHover) root.querySelectorAll('.ck-bi[data-mv]').forEach(b => {
-    b.onmouseenter = () => { b.classList.add('ck-hov'); o.onHover(b.dataset.mv); };
-    b.onmouseleave = () => { b.classList.remove('ck-hov'); o.onHover(null); };
-    b.onclick = () => { const on = !b.classList.contains('ck-hov'); root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov')); b.classList.toggle('ck-hov', on); o.onHover(on ? b.dataset.mv : null); };
+    // mouse: hover shows the move; touch: a tap toggles it (the emulated mouseenter of a tap must not cancel the tap)
+    b.onpointerenter = e => { if (e.pointerType !== 'mouse') return; b.classList.add('ck-hov'); o.onHover(b.dataset.mv); };
+    b.onpointerleave = e => { if (e.pointerType !== 'mouse') return; b.classList.remove('ck-hov'); o.onHover(null); };
+    b.onclick = e => { if (e.pointerType === 'mouse') return; const mv = b.dataset.mv, on = !(root.dataset.ckSel === mv); delete root.dataset.ckSel; root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov')); if (on) { root.dataset.ckSel = mv; b.classList.add('ck-hov'); } o.onHover(on ? mv : null); };
   });
 }
 window.CoachKit = { css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
