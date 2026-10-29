@@ -657,6 +657,7 @@ async function finishOnline(g) {
   if (me >= 0) {
     const score = winner === me ? 1 : 0;
     try { n.result.rating = await ON.applyResult(n.mid, g, score); olRecord(n.result.rating, g, score); } catch (e) { console.warn(e); }
+    try { if (window.GameRecord) { const o = 1 - me, r = n.result.rating; GameRecord.add({ mode: g.rated ? 'rated' : 'online', res: score ? 'w' : 'l', side: me, opp: olShortName(o) + (r && r.rated && typeof (o ? g.wr : g.br) === 'number' ? ' (' + (o ? g.wr : g.br) + ')' : ''), key: 'ol:' + olShortName(o), n: match.games.reduce((x, gm) => x + gm.actions.filter(a => a.t === 'r').length, 0), why: n.result.why || '' }); } } catch (e) {}
     syncTouch();
   }
   if (net !== n) return;

@@ -32,7 +32,7 @@ function applyI18n() {
 
 // ====================================================================== settings / state
 const STORE = 'aicoding-backgammon-v2';
-const settings = { mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: false, anim: true, sound: true, hint: false, lang: '' };
+const settings = { mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: true, anim: true, sound: true, hint: false, lang: '' };
 const $ = s => document.querySelector(s);
 // the game's own animation setting is the only switch (the OS "reduce motion" preference is not used: the user
 // asked for dice / checker animations to play regardless)
@@ -656,8 +656,9 @@ function commitTurn() {
   if (lesson) { lessonSubmit(turn); return; }
   if (puzzle) { puzzleSubmit(turn); return; }
   const tt = turn; turn = null; selected = null;
+  const rateAt = settings.coach && !isAI(tt.side) && settings.mode !== 'watch' && settings.mode !== 'online' && tt.plays.length > 1 ? { g: curGA()[0], a: match.games[curGA()[0]].actions.length, nRolls: curState().nRolls } : null;
   pushAction({ t: 'r', d: tt.dice, m: moves });
-  if (settings.coach && !isAI(tt.side) && settings.mode !== 'watch' && settings.mode !== 'online' && tt.plays.length > 1) coachRate(tt, moves);
+  if (rateAt) coachRate(tt, moves, rateAt);
 }
 // ---- pointer interaction
 // ---- forced landscape: when the page is CSS-rotated 90deg, map screen coordinates into the page's own frame
@@ -970,6 +971,7 @@ function onGameOver(g) {
     setTimeout(() => { if (match && !wpPaused && isLatest() && !lesson && !puzzle && stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !matchOver()) nextGame(); }, 2600);
     return;
   }
+  recordGame(g, st);
   if (youWin || settings.mode === 'pvp') confetti();
   $('#resultDisc').innerHTML = `<span class="pdisc p${st.winner}"></span>`;
   let title;
@@ -984,6 +986,14 @@ function onGameOver(g) {
   $('#resultSub').innerHTML = sub;
   $('#btnAgain').textContent = mOver || !match.len ? (match.len ? t('res.again') : t('bb.again')) : t('bb.nextGame');
   setTimeout(() => { if (isLatest()) showOverlay('#resultOverlay'); }, 900);
+}
+// 勝敗記録 (shared/record.js): each finished game against the AI (online matches: online-ui.js finishOnline)
+function recordGame(g, st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !match) return;
+  const acts = match.games[g].actions;
+  if (st.resigned && !acts.some((a, i) => a.t === 'r' && actorOf(g, i) === humanSide)) return;   // resigned before playing a move
+  const why = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
+  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level), key: 'ai:' + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
 }
 function nextGame() {
   hideOverlay('#resultOverlay');
@@ -1223,6 +1233,7 @@ function renderInfo() {
   $('#plMeta').textContent = match.len ? `${t('info.match', { n: match.len })} ${gm.start[0]}–${gm.start[1]}` : '';
   hbInfo(st, g, ev);
   if (window.olAfterInfo) olAfterInfo();
+  if (window.BGCoach) BGCoach.render();
 }
 // PC header bar: whose turn + dice, pip counts, win chance (only when the evaluation display is on), match score
 var HB = null;
@@ -1440,6 +1451,7 @@ function renderArrows() {
   const colors = new Set();
   const arr = [];
   if (bxHover) arr.push(bxHover);
+  else if (window.BGCoach && BGCoach.arrow) arr.push(BGCoach.arrow);
   else if (previewPlay) arr.push(previewPlay);
   else if (settings.hint && hintData && hintData.list && turn && hintData.key === hintKey() && !turn.steps.length && !lesson && !puzzle) arr.push({ side: hintData.side, start: hintData.start, moves: hintData.list[0].moves, cls: 'hint' });
   for (const a of extraArrows) arr.push(a);
@@ -1450,12 +1462,14 @@ function renderArrows() {
   }
   arrowsEl.innerHTML = `<defs>${[...colors].map(defs).join('')}</defs>` + h;
 }
-async function coachRate(tt, moves) {
+async function coachRate(tt, moves, at) {
   const k = BG.key(tt.pos);
   const r = await request('ana', { type: 'analyze', pos: tt.start, side: tt.side, dice: tt.dice, ply: 1, keep: 6, max: 3, played: k, time: 1200 });
   if (!r || !r.list || !r.played) return;
   const loss = Math.max(0, r.list[0].e - r.played.e);
-  const cls = qualOf(loss, r.list[0].key === k);
+  let cls = qualOf(loss, r.list[0].key === k);
+  // the coach card (coach.js): the previous-play verdict; a book play (openings.json) is never called a mistake
+  if (window.BGCoach && at) cls = BGCoach.rated({ m: match, g: at.g, a: at.a, nRolls: at.nRolls, side: tt.side, dice: tt.dice, moves, start: tt.start, key: k, cls, loss, bestMoves: r.list[0].moves }) || cls;
   showCoach(cls, cls === 'best' ? t('q.best') : `${t('q.' + cls)}  −${loss.toFixed(3)}  (${t('q.bestIs', { m: BG.notation(r.list[0].moves) })})`);
 }
 async function coachCube(g, st, take) {
@@ -1512,7 +1526,8 @@ function pcFit() {
   const H = hgt - hb, B = document.body.classList;
   // the info row under the board (対局者 | 形勢 | 振り返り | 棋譜); lessons / puzzles and the PC review box need a taller one
   const bxh = B.contains('rvbox-on') ? Math.round(Math.max(170, Math.min(340, H * 0.28))) : 0;
-  const ich = bxh || Math.round(B.contains('in-lesson') || B.contains('in-puzzle') ? Math.max(190, Math.min(380, H * 0.32)) : Math.max(150, Math.min(320, H * 0.25)));
+  const ckOn = !!document.querySelector('#coachCard:not(.hidden):not(.ck-off)');   // the coach (coach.js) needs a taller row
+  const ich = bxh || Math.round(B.contains('in-lesson') || B.contains('in-puzzle') ? Math.max(190, Math.min(380, H * 0.32)) : ckOn ? Math.max(200, Math.min(360, H * 0.33)) : Math.max(150, Math.min(320, H * 0.25)));
   document.documentElement.style.setProperty('--bxh', bxh + 'px');
   document.documentElement.style.setProperty('--ich', ich + 'px');
   const dockSide = B.contains('dock-open') && !B.contains('ol-soon');   // online dock open: the info goes beside the board (CSS: body.dock-open)
@@ -3110,9 +3125,14 @@ $('#langSel').onchange = e => {
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (window.PZBook) PZBook.setLang(LANG);
   if (HB) HB.relabel();
+  if (window.BGCoach) BGCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
 };
 if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+// 勝敗記録 (shared/record.js) and the coach switch (coach.js): both go into the menu / icon set before the header bar takes them
+if (window.GameRecord) GameRecord.init({ game: 'backgammon', lang: () => LANG, menu: '.controls', sides: () => [pname(0), pname(1)] });
+if (window.BGCoach) BGCoach.init();
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { try { updateGeom(); if (match) renderInfo(); } catch (e) {} });
 updateGeom();
