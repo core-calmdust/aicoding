@@ -139,11 +139,15 @@ class Table {
       else if (e.style.transitionDelay) { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; }
       e.style.transform = `translate(${p.x}px,${p.y}px)`;
       e.style.zIndex = moved.includes(e) ? 900 + p.z : p.z;
+      if (opt.deal && anim) {   // the deck shuffles on top; each dealt card slides out from under it and flies over everything
+        if (st.L[p.pi].k === 'stock') e.style.zIndex = 950 + p.ci;
+        else { e.style.zIndex = 700 + (k - 1); const z = 1000 + p.z; clearTimeout(e._dz); e._dz = setTimeout(() => { e.style.zIndex = z; }, (k - 1) * (opt.step || 22)); }
+      }
       e.classList.toggle('dn', !p.up);
       e.classList.toggle('sel', !!this.sel && this.sel.pi === p.pi && p.ci >= this.sel.ci);
     });
-    if (moved.length) { clearTimeout(this._zt); this._zt = setTimeout(() => moved.forEach(e => { if (e._p) e.style.zIndex = e._p.z; }), 420 + (opt.stagger ? opt.stagger.length * (opt.step || 0) : 0)); }
-    if (opt.deal && anim) setTimeout(() => this.cards.forEach(e => { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; }), (k + 2) * (opt.step || 22) + flight + 700);
+    if (moved.length && !(opt.deal && anim)) { clearTimeout(this._zt); this._zt = setTimeout(() => moved.forEach(e => { if (e._p) e.style.zIndex = e._p.z; }), 420 + (opt.stagger ? opt.stagger.length * (opt.step || 0) : 0)); }
+    if (opt.deal && anim) { clearTimeout(this._zt); this._zt = setTimeout(() => this.cards.forEach(e => { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; if (e._p) e.style.zIndex = e._p.z; }), (k + 2) * (opt.step || 22) + flight + 700); }
     this.pos = pos;
     if (!anim) { void el.offsetWidth; requestAnimationFrame(() => el.classList.remove('noanim')); }
   }
