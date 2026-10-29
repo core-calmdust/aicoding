@@ -1184,7 +1184,10 @@ document.documentElement.style.setProperty('--gh', HUD_H + 'px');
 const HUD_OX = (HUD_W - config.canvasWidth) / 2;
 canvas.width = HUD_W * HUD_SCALE;
 canvas.height = HUD_H * HUD_SCALE;
-const ctx = canvas.getContext('2d', { desynchronized: true });
+// 低遅延（desynchronized）キャンバスは画面の垂直同期を待たずに表示されるため、映像が画面の更新とずれたり裂けたりする。
+// 動きを画面の更新と揃えるため通常は使わない（?desync=1 で従来の低遅延表示）
+const DESYNC = new URLSearchParams(location.search).get('desync') === '1';
+const ctx = canvas.getContext('2d', { desynchronized: DESYNC });
 const stageEl = document.getElementById('stage');
 
 const audioHandler = new AudioHandler();
@@ -3954,7 +3957,7 @@ function update(timestamp) {
         updateInstructions();
         if (input.pauseTrigger) {
             gameState = 'playing';
-            lastTimestamp = 0;
+            lastTimestamp = simTime; // 再開直後も1更新ぶん進める（0にすると再開の1フレームだけ止まって見える）
             resumeAudioClock();
         } else if (input.titleTrigger) {
              audioHandler.stopBgm();
@@ -4055,7 +4058,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 function drawTitleTextMorph(renderCtx, x, y, font, color) {
     const originalText = 'outburst+';
     const chars = "!?#$@%&<>*=/+abcdefghijklmnopqrstuvwxyz0123456789";
-    const now = Date.now();
+    const now = uiTime; // 画面のフレームクロック（実時刻だと表示の刻みとずれる）
     const cycle = 2000; // 2秒周期
     const timeInCycle = now % cycle;
     let textToShow = '';
@@ -4117,8 +4120,8 @@ let renderer, scene, camera, composer, bloom, hyperGrade, hyperK = 0, hyperLin =
 try {
     const glc = document.getElementById('glCanvas');
     let glctx = null;
-    if (!IS_MOBILE) { // PCは低遅延モード（描画をすぐ画面に出す）
-        try { glctx = glc.getContext('webgl2', { desynchronized: true, antialias: true, alpha: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { glctx = null; }
+    if (!IS_MOBILE) { // PC
+        try { glctx = glc.getContext('webgl2', { desynchronized: DESYNC, antialias: true, alpha: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { glctx = null; }
     }
     renderer = new THREE.WebGLRenderer(glctx ? { canvas: glc, context: glctx } : { canvas: glc, antialias: !IS_MOBILE, powerPreference: 'high-performance' });
     renderer.setPixelRatio(PR);
@@ -5831,7 +5834,7 @@ NB.SERPENT = () => {
         head.rotation.y = Math.atan2(dx, dy);
         (b.segs || []).forEach((s, k) => {
             const m = segs[k]; if (!m) return; m.visible = true;
-            m.position.set(toX(s.x), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(s.y));
+            m.position.set(toX(ix(s)), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(iy(s)));
             const p = k ? b.segs[k - 1] : b; m.rotation.set(0, Math.atan2(p.x - s.x, p.y - s.y), Math.sin(t * 3 + k) * 0.3);
         });
     };
@@ -5851,7 +5854,7 @@ NB.LANCER = () => {
         body.rotation.z = t * (b.mode === 'dash' ? 20 : 2);
         const len = config.canvasHeight - b.y;
         tele.visible = !!b.telegraph; tele.scale.set((1 + Math.sin(t * 40) * 0.2) * BS, len, 1);
-        tele.position.set(toX(b.x), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
+        tele.position.set(toX(ix(b)), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
     };
     return g;
 };
@@ -6741,7 +6744,6 @@ const COL_ORANGE = new THREE.Color(0xff8a20);
 // ---------------------------------
 // 描画ステート
 // ---------------------------------
-let rLast = performance.now();
 let prevBeatR = 0;
 let simDtR = 0;
 let rTime = 0;
@@ -6767,11 +6769,11 @@ const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9, hold: 0 };
 // （これで画質が下がると上部のHUDが別キャンバス表示になり、3D画面とずれて見えていた）
 function resetQualityAfterResize() {
     perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; perf.good = 0; perf.lastRaise = -1e9;
-    qCeil = Q_MAX; simRealLast = null; // 切り替え中の空白で追いつき更新が連続しないよう時間の基準も取り直す
+    qCeil = Q_MAX; frameClock.reset(); // 切り替え中の空白で追いつき更新が連続しないよう、画面の周期と位相も測り直す
     if (quality !== Q_MAX) { quality = Q_MAX; applyQuality(); }
 }
 document.addEventListener('fullscreenchange', resetQualityAfterResize);
-window.addEventListener('resize', () => { perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; });
+window.addEventListener('resize', () => { perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; frameClock.reset(); });
 function applyQuality() {
     renderer.setPixelRatio(quality);
     renderer.setSize(VW, VH, false);
@@ -6812,10 +6814,9 @@ function adaptQuality(now) {
 const _aliveSet = new Set();
 let frameTs = null; // このフレームの rAF 時刻（画面の更新タイミング）
 function render3D() {
-    // 描画の時間は rAF の時刻で進める（処理を始めた時刻だと、フルスクリーン切り替え後などに処理の開始がばらつき、表示は60Hzでも動きの刻みが不揃いになってカクついて見える）
-    const now = frameTs !== null && Math.abs(performance.now() - frameTs) < 100 ? frameTs : performance.now();
-    let dt = Math.max(0, Math.min(0.05, (now - rLast) / 1000));
-    rLast = now;
+    // 見た目の動きもゲームと同じフレームクロックで進める（rAFの時刻の揺らぎを持ち込まない。60Hzなら毎フレーム1/60秒ずつ）
+    const now = frameTs !== null ? frameTs : performance.now(); // 実時刻は画質調整の計測だけに使う
+    const dt = Math.max(0, Math.min(0.1, frameMs / 1000));
     const frozen = gameState === 'paused' || gameState === 'confirmReset';
     const simDt = frozen ? 0 : dt;
     simDtR = simDt;
@@ -6940,8 +6941,8 @@ function render3D() {
     camFollow += (followTarget - camFollow) * Math.min(1, dt * 2.5);
     let shakeX = 0, shakeY = 0;
     if (screenShake.intensity > 0 && gameState !== 'paused' && gameState !== 'confirmReset') { // 停止中は揺らさない
-        shakeX = (Math.random() - 0.5) * 2 * screenShake.intensity * 0.9;
-        shakeY = (Math.random() - 0.5) * 2 * screenShake.intensity * 0.9;
+        shakeX = shakeR[0] * 2 * screenShake.intensity * 0.9;
+        shakeY = shakeR[1] * 2 * screenShake.intensity * 0.9;
     }
     const beatPush = visualBeat * 7;
     camera.position.set(CAM_BASE.x + camFollow + shakeX, CAM_BASE.y - beatPush + shakeY, CAM_BASE.z - beatPush * 0.7);
@@ -7175,7 +7176,7 @@ function render3D() {
     if (playerVisible && shields > 0) {
         for (let k = 0; k < shields; k++) {
             const a = rTime * 3.2 + k * Math.PI * 2 / shields;
-            glow.add(toX(player.x) + Math.cos(a) * 30, 18, toZ(player.y) + Math.sin(a) * 30, COL_CYAN, 22, 1.3);
+            glow.add(toX(plX()) + Math.cos(a) * 30, 18, toZ(plY()) + Math.sin(a) * 30, COL_CYAN, 22, 1.3);
         }
     }
     glazeDisc.visible = glazeRing.visible = showPlayer;
@@ -7183,7 +7184,7 @@ function render3D() {
     hitDot.visible = false;
     if (showPlayer) {
         // 自機は補間せず最新位置で描く（PCは移動も毎フレーム実時間なので、見た目・当たり判定・弾の位置が一致）
-        const px = toX(player.x), pz = toZ(player.y);
+        const px = toX(plX()), pz = toZ(plY());
         const bankTarget = frozen ? shipBank : (input.left && !input.right ? 0.55 : input.right && !input.left ? -0.55 : 0);
         shipBank += (bankTarget - shipBank) * Math.min(1, dt * 10);
         playerGroup.position.set(px, 12 + Math.sin(rTime * 4) * 2, pz);
@@ -7243,8 +7244,8 @@ function render3D() {
         if (e.type !== 'shockwave' || e.hud || !efx) return;
         const s = shockPool[si++];
         if (!s) return;
-        const progress = 1 - e.life / e.maxLife;
-        const alpha = e.life / e.maxLife;
+        const progress = 1 - lifeI(e) / e.maxLife;
+        const alpha = lifeI(e) / e.maxLife;
         const r = e.radius + progress * 300;
         s.ring.visible = s.sph.visible = true;
         s.ring.position.set(toX(e.x), 3, toZ(e.y));
@@ -7276,7 +7277,7 @@ function render3D() {
         l.life -= dt;
         const a = Math.max(0, l.life / l.max);
         l.line.visible = true;
-        const sx = toX(player.x), sz = toZ(player.y), tx = toX(l.tx), tz = toZ(l.ty);
+        const sx = toX(plX()), sz = toZ(plY()), tx = toX(l.tx), tz = toZ(l.ty);
         const mx = (sx + tx) / 2 + (tz - sz) * 0.35 * l.bend, mz = (sz + tz) / 2 - (tx - sx) * 0.35 * l.bend;
         for (let i = 0; i < LINK_PTS; i++) {
             const t = i / (LINK_PTS - 1);
@@ -7376,7 +7377,7 @@ function draw() {
     renderCtx.clearRect(0, 0, HUD_W, HUD_H);
     renderCtx.save();
     if (screenShake.intensity > 0 && gameState !== 'paused' && gameState !== 'confirmReset') { // 停止中は揺らさない
-        renderCtx.translate((Math.random() - 0.5) * screenShake.intensity * 0.6, (Math.random() - 0.5) * screenShake.intensity * 0.6);
+        renderCtx.translate(shakeR[2] * screenShake.intensity * 0.6, shakeR[3] * screenShake.intensity * 0.6);
     }
 
     if (!gl3dOK) {
@@ -7424,7 +7425,7 @@ function draw() {
             const hue = st.type === 'gem' ? 40 + (st.life * 7) % 30 : (frameCount * 5 + st.x) % 360;
             const scoreColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
             const glowColor = `hsla(${hue}, 100%, 70%, ${alpha / 2})`;
-            const sp = project(st.x, st.y, 24);
+            const sp = project(ix(st), iy(st), 24);
             renderCtx.globalAlpha = alpha;
             if (st.type === 'gem') {
                 renderCtx.fillStyle = scoreColor;
@@ -7718,9 +7719,9 @@ function draw() {
             }, theme.ui, true);
             renderCtx.globalAlpha = 1;
         } else if (e.type === 'shockwave' && e.hud && isEffectsEnabled) {
-            const progress = 1 - e.life / e.maxLife;
+            const progress = 1 - lifeI(e) / e.maxLife;
             const radius = e.radius + progress * 300;
-            const alpha = e.life / e.maxLife;
+            const alpha = lifeI(e) / e.maxLife;
             renderCtx.save();
             renderCtx.globalAlpha = alpha * 0.8;
             renderCtx.strokeStyle = '#ffffff';
@@ -7796,7 +7797,7 @@ function draw() {
         for (let i = 0; i < pauseMsg.length; i++) {
             const char = pauseMsg[i];
             const charWidth = renderCtx.measureText(char).width;
-            const hue = (Date.now() / 15 + i * 30) % 360;
+            const hue = (uiTime / 15 + i * 30) % 360;
             const gamingColor = `hsl(${hue}, 100%, 70%)`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = gamingColor;
@@ -7898,7 +7899,7 @@ function draw() {
             // シールドのアイコン
             for (let k = 0; k < 2; k++) {
                 const hx = cx + 196 + k * 26, hy = y - 8, on = k < d.shields, bonus = !on && k < (d.cap || 0); // EASYのボーナスシールドは点滅
-                const blink = Math.floor(performance.now() / 350) % 2;
+                const blink = Math.floor(uiTime / 350) % 2;
                 renderCtx.beginPath();
                 for (let v = 0; v < 6; v++) { const a = Math.PI / 6 + v * Math.PI / 3; renderCtx[v ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * 10, hy + Math.sin(a) * 10); }
                 renderCtx.closePath();
@@ -8176,13 +8177,14 @@ function snapshotPrev() {
     const sp = o => { o._px = o.x; o._py = o.y; };
     if (player) sp(player);
     if (playerBullet) sp(playerBullet);
-    if (boss) sp(boss);
+    if (boss) { sp(boss); if (boss.segs) boss.segs.forEach(sp); }
     if (comets) comets.forEach(sp);
     if (enemyBullets) enemyBullets.forEach(sp);
     if (items) items.forEach(sp);
     if (monsters) monsters.forEach(sp);
     if (particles) particles.forEach(sp);
     if (gems) gems.forEach(sp);
+    if (scoreTexts) scoreTexts.forEach(sp);
 }
 // 新しい雑魚の動きと攻撃
 function updateExtraEnemy(m, dt) {
@@ -8216,8 +8218,11 @@ function shortNum(n) {
     return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
 }
 function ix(o) { if (o._px === undefined) return o.x; const d = o.x - o._px; return Math.abs(d) > 120 ? o.x : o._px + d * simAlpha; }
+// 自機の表示位置: PCは毎フレーム動かしているので最新位置、スマホはゲーム更新で動くので補間
+const plX = () => IS_MOBILE ? ix(player) : player.x, plY = () => IS_MOBILE ? iy(player) : player.y;
+// 1更新ごとに減る寿命を補間（衝撃波の広がりを高リフレッシュレートでも滑らかに）
+const lifeI = e => Math.min(e.maxLife, e.life + 1 - simAlpha);
 function iy(o) { if (o._py === undefined) return o.y; const d = o.y - o._py; return Math.abs(d) > 120 ? o.y : o._py + d * simAlpha; }
-let simRealLast = null;
 let simAcc = 0;
 let simTime = 0;
 // PC: HUDの2Dキャンバスを3D画面に重ねて描き、画面を1枚にする（2枚の合成待ちをなくして表示遅延を減らす）
@@ -8262,33 +8267,85 @@ function movePlayerRT(ms) {
     const sp = config.playerSpeed * (slow ? config.playerSlowModeMultiplier : 1) * (player.invincibleTimer > 0 ? 1.1 : 1) * (hyperT > 0 ? 1.1 : 1);
     player.x = Math.max(0, Math.min(config.canvasWidth, player.x + (kr ? 1 : -1) * sp * ms / 1000));
 }
+// 画面のリフレッシュに合わせた時間の刻み（フレームクロック）
+// rAFの時刻は±1〜2msほど揺らぐので、そのまま使うと1フレームの進み幅が不揃いになり、
+// 60Hzでも更新が0回/2回のフレームが出てカクつく。そこで直近のフレーム間隔の中央値から画面の周期を求め、
+// 「前のフレームから画面が何回更新されたか」を整数で数えて、その回数ぶんだけ時間を進める。
+// - 60Hz付近の画面: 1回の表示につき必ず1回だけゲームを進める（補間なしで画面とぴったり同期）
+// - それ以外（120Hz/144Hzなど）: 毎フレーム「周期ぶん」ずつ一定の幅で進め、位置は補間して描く
+// 見た目だけの動き（背景・回転・カメラなど）もすべてこの時間で進めるので、ゲームと同じ刻みで動く
+const frameClock = {
+    period: SIM_STEP, // 推定した画面の更新周期(ms)
+    hist: [], grid: null, last: null,
+    locked: true,     // 60Hz付近 → 1表示1更新
+    ms: SIM_STEP,     // このフレームで進めるゲーム時間(ms)
+    n: 1,             // 前のフレームから画面が更新された回数
+    reset() { this.hist.length = 0; this.grid = null; this.last = null; }, // フルスクリーン切り替え・リサイズ後に測り直す
+    tick(ts) {
+        if (this.last !== null) {
+            const d = ts - this.last;
+            if (d > 2 && d < 60) { this.hist.push(d); if (this.hist.length > 120) this.hist.shift(); }
+            if (this.hist.length >= 5) {
+                // 直近の間隔が今の周期から大きく外れたら（別の画面へ移動・リフレッシュレート変更など）、古い記録を捨ててすぐ切り替える
+                const rc = this.hist.slice(-15).sort((x, y) => x - y), rm = rc[rc.length >> 1];
+                if (rc.length >= 9 && Math.abs(rm - this.period) > this.period * 0.15) this.hist = this.hist.slice(-15);
+                // 中央値の±20%に入る間隔だけを平均（飛んだフレームや揺らぎに引っ張られない）
+                const a = this.hist.slice().sort((x, y) => x - y), med = a[a.length >> 1];
+                let sum = 0, cnt = 0;
+                for (const v of a) if (v > med * 0.8 && v < med * 1.2) { sum += v; cnt++; }
+                const est = sum / cnt;
+                // 大きく変わったとき（別の画面へ移動など）はすぐ、普段はゆっくり追従（補間の幅を一定に保つ）
+                this.period += Math.abs(est - this.period) > this.period * 0.15 ? est - this.period : (est - this.period) * 0.03;
+            }
+        }
+        this.last = ts;
+        // 60Hz付近（59.94Hzなども含む）は1表示1更新。境目で切り替わり続けないよう、外れる側は幅を広く取る
+        this.locked = this.locked ? (this.period > 16.0 && this.period < 17.4) : (this.period > 16.45 && this.period < 16.9);
+        let n = 1;
+        if (this.grid === null) this.grid = ts;
+        else {
+            // 揺らぎで0回/2回と数えないよう、1.65周期を超えて初めて「1回飛んだ」とみなす
+            n = Math.max(1, Math.floor((ts - this.grid) / this.period + 0.35));
+            if (n > 6) { n = 1; this.grid = ts; } // タブ復帰・切り替え中の長い空白は追いつかず、そこから刻み直す
+            else { this.grid += n * this.period; this.grid += (ts - this.grid) * 0.1; } // 位相はゆっくり実時刻に合わせる
+        }
+        this.n = n;
+        this.ms = n * (this.locked ? SIM_STEP : this.period);
+        return this.ms;
+    },
+};
+let frameMs = SIM_STEP;  // このフレームで進んだゲーム時間（見た目の動きもこれで進める）
+let uiTime = 0;          // 画面表示用の時計（一時停止中も進む。タイトル文字・停止中の文字の色などに使う）
+let shakeR = [0, 0, 0, 0]; // 画面揺れの乱数はゲーム更新ごとに1回だけ引く（3DとHUDで同じ揺れ）
 function gameLoop(timestamp) {
-    if (window.__bootBusy) { simRealLast = null; requestAnimationFrame(gameLoop); return; } // 起動ロゴ表示中はゲームの描画を止めてロゴを滑らかに
-    frameTs = timestamp !== undefined ? timestamp : null;
-    if (timestamp !== undefined) {
-        if (simRealLast === null) simRealLast = timestamp;
-        let delta = Math.min(250, timestamp - simRealLast);
-        // 高リフレッシュレート画面では、入力の変化があれば半ステップ以上溜まった時点で前倒しで進める
-        if (inputDirty && simAcc + delta >= SIM_STEP * 0.5 && simAcc + delta < SIM_STEP) { simAcc = SIM_STEP - delta; }
+    if (window.__bootBusy) { frameClock.reset(); requestAnimationFrame(gameLoop); return; } // 起動ロゴ表示中はゲームの描画を止めてロゴを滑らかに
+    frameTs = timestamp !== undefined ? timestamp : performance.now();
+    const ms = frameClock.tick(frameTs);
+    frameMs = ms; uiTime += ms;
+    if (!IS_MOBILE) movePlayerRT(Math.min(100, ms)); // PCの自機はゲーム時間で毎フレーム動かす（60Hzなら1更新ぶんずつ一定）
+    let steps = 0;
+    if (frameClock.locked) {
+        // 60Hz: 画面の更新回数ぶんだけ進める（通常は必ず1回）
         inputDirty = false;
-        simRealLast = timestamp;
-        // 60Hz付近の揺らぎは1ステップ分に吸着させる（0回/2回更新が交互に起きるカクつき防止）
-        if (Math.abs(delta - SIM_STEP) < 1.6) delta = SIM_STEP;
-        else if (Math.abs(delta - SIM_STEP * 2) < 2.0) delta = SIM_STEP * 2;
-        if (!IS_MOBILE) movePlayerRT(Math.min(50, timestamp - (gameLoop._lt || timestamp)));
-        gameLoop._lt = timestamp;
-        simAcc += delta;
-        let steps = 0;
-        while (simAcc >= SIM_STEP && steps < 6) {
+        for (; steps < frameClock.n; steps++) { simTime += SIM_STEP; snapshotPrev(); update(simTime); }
+        simAcc = 0; simAlpha = 1; // 最新の状態をそのまま描く
+    } else {
+        // 高リフレッシュレート画面では、入力の変化があれば半ステップ以上溜まった時点で前倒しで進める
+        if (inputDirty && simAcc + ms >= SIM_STEP * 0.5 && simAcc + ms < SIM_STEP) simAcc = SIM_STEP - ms;
+        inputDirty = false;
+        simAcc += ms;
+        while (simAcc >= SIM_STEP - 1e-6 && steps < 8) {
             simTime += SIM_STEP;
             snapshotPrev();
             update(simTime);
             simAcc -= SIM_STEP;
             steps++;
         }
-        if (steps >= 6) simAcc = 0;
+        if (simAcc >= SIM_STEP) simAcc = 0;
+        simAcc = Math.max(0, simAcc);
         simAlpha = Math.min(1, simAcc / SIM_STEP);
     }
+    if (steps > 0) shakeR = [Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5];
     draw();
     if (HUD_IN_GL) {
         // 最高画質で動いている間だけHUDを3D画面に重ねる（解像度が下がったらHUDがぼやけないよう従来の2枚表示に戻す）
