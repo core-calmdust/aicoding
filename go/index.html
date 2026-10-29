@@ -628,7 +628,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
   body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 /* portal 3D skin on phones: the 3D board (rim + thickness) reaches past the DOM frame — leave room above and below it */
-@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:14px} html.atlas-skin #playbar{margin-top:22px} }
+@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:14px} html.atlas-skin #playbar{margin-top:-9px} }
 </style>
 <link rel="stylesheet" href="online.css?v=2">
 </head>

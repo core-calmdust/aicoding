@@ -37,3 +37,16 @@ html.atlas-mancala :is(.lesson-card,.puzzle-card) > .atlas-foot.cb-foot{grid-col
 @media (max-aspect-ratio: 1/1) and (pointer: coarse){ html.atlas-mancala{--u:min((100vw - 24px) / 4.2, (var(--vh) - 90px) / 9.7, 100px)!important} }
 /* phones held sideways: the portal bar (64px) is above the page — the board fits between it, the player plates and the bottom tabs */
 @media (min-aspect-ratio: 1/1) and (pointer: coarse){ html.atlas-mancala{--u:min((var(--vh) - 64px - var(--plate) - 40px) / 4.2, (100vw - 24px) / 9.7, 112px)!important} }
+html.atlas-mancala .atlas-rot-b svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html.atlas-mancala .atlas-rot-b.on{color:#d93c3c}
+html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!important}
+/* phones sideways (held or the turned page): a slim portal bar, the board about as wide as the 2D page's */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px){
+  html.atlas-mancala .atlas-top{height:42px}
+  html.atlas-mancala .atlas-brand img{width:28px;height:28px}
+  html.atlas-mancala .atlas-brand small{display:none}
+  html.atlas-mancala :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:34px}
+  html.atlas-mancala.atlas-skin .app{padding-top:46px!important}
+  html.atlas-mancala{--u:min((100vw - 290px) / 9.7, (var(--vh) - 42px - var(--plate) - 22px) / 4.2, 112px)!important}
+}
+@media (max-width:420px) and (pointer: coarse){ html.atlas-mancala .atlas-top{gap:6px} html.atlas-mancala .atlas-top :is(.atlas-ic,.atlas-lbtn){width:38px;min-width:38px;height:38px} html.atlas-mancala .atlas-brand img{width:32px;height:32px} }

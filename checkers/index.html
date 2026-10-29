@@ -895,6 +895,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   :root{--cell:min((100vw - 20px) / 8.5, (var(--vh) - 250px) / 9.5, 100px);--fw:calc(var(--cell) * 8.5);--fh:calc(var(--cell) * 9.5)}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
+/* portal 3D skin on phones: the same distance from the 3D board to the boxes above / below as in reversi (~15px) */
+@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area > #frame{margin-top:calc(var(--board) * .045 - 7px)!important;margin-bottom:calc(var(--board) * .045 - 7px)!important} }
 </style>
 <link rel="stylesheet" href="online.css?v=3l9">
 <style>
