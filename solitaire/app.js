@@ -5,7 +5,7 @@
 const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
-const FELTS = ['teal', 'green', 'blue', 'wine', 'charcoal', 'purple', 'walnut', 'linen'];
+const FELTS = ['teal', 'green', 'blue', 'wine', 'charcoal', 'purple', 'mocha', 'linen'];
 const BACKS = ['skullBlack', 'skull', 'gangsta', 'ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'hex', 'cube', 'red', 'blue', 'crimson', 'navy'];
 const COURTS = ['gangsta', 'classic', 'antique', 'flat'];
 const FACES = ['classic', 'large', 'four'];
@@ -20,6 +20,7 @@ document.documentElement.dataset.back = D.set.back;
 D.set.face = 'classic'; document.documentElement.dataset.face = 'classic';   // the card-face picker was removed
 if (D.set.defV !== 3) { D.set.court = 'gangsta'; D.set.felt = 'teal'; D.set.defV = 3; }   // new defaults (2026-10-29): Gangsta cards on a teal table
 if (!COURTS.includes(D.set.court)) D.set.court = 'gangsta';
+if (D.set.felt === 'walnut') D.set.felt = 'mocha';   // the wood-grain table was replaced by a brown felt (2026-10-29)
 document.documentElement.dataset.felt = D.set.felt;
 document.documentElement.dataset.court = D.set.court;
 if (D.set.cmode !== 'real') D.set.cmode = 'simple';
@@ -610,10 +611,10 @@ function designHtml() {
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
   const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${Table.FULL_DECKS.includes(k) ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${Table.FULL_DECKS.includes(k) ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div><div class="cmode"><span>${esc(t('cmode.h'))}</span>${seg([['simple', t('cmode.simple')], ['real', t('cmode.real')]], set.cmode, 'cmode')}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
+  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div><div class="cmode" title="${esc(t('cmode.h'))}">${seg([['simple', t('cmode.simple')], ['real', t('cmode.real')]], set.cmode, 'cmode')}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
 }
 function feltStyle(f) {
-  const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];
+  const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], mocha: ['#6e4a2f', '#2e1b0f'], linen: ['#efe6d2', '#d6c7a6'] }[f];
   return `background:radial-gradient(120% 90% at 50% 20%,${c[0]},${c[1]})`;
 }
 function facePv(f) {   // two small real cards rendered in that face style
