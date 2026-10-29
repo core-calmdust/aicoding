@@ -21,7 +21,7 @@ Designed by Freepik
 - Hand drawn playing card back design illustration: https://www.magnific.com/free-vector/hand-drawn-playing-card-back-design-illustration_94943770.htm
 変更点: 元の素材から裏面部分を切り出し（スカルはカードの枠に配置）、WebP に変換して使用。
 
-カード裏面「ヘキサゴン」「キューブ紫」（back-hex.webp, back-cube.webp）:
+カード裏面「ヘキサゴン」「キューブ」（back-hex.webp, back-cube.webp）:
 Designed by Freepik
 - Isometric pattern cover collection: https://www.magnific.com/free-vector/isometric-pattern-cover-collection_4436330.htm
 - Isometric pattern cover collection: https://www.magnific.com/free-vector/isometric-pattern-cover-collection_4334304.htm

@@ -440,9 +440,9 @@ hi: 'पुराने, फ़्लैट और गैंगस्टा प�
 ar: 'أوراق عتيقة ومسطّحة وغانغستا، وظهر الأرابيسك والزهري واللازوردي وغانغستا وجمجمة الحظ:',
 });
 (function (A) { for (const l in A) Object.assign(I18N[l], A[l]); })({
-ja: { 'back.hex': 'ヘキサゴン', 'back.cube': 'キューブ紫' }, en: { 'back.hex': 'Hexagon', 'back.cube': 'Purple cubes' },
-zh: { 'back.hex': '六边形', 'back.cube': '紫色立方' }, ko: { 'back.hex': '헥사곤', 'back.cube': '퍼플 큐브' },
-es: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos morados' }, fr: { 'back.hex': 'Hexagone', 'back.cube': 'Cubes violets' },
-pt: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos roxos' }, de: { 'back.hex': 'Sechseck', 'back.cube': 'Lila Würfel' },
-hi: { 'back.hex': 'षट्भुज', 'back.cube': 'बैंगनी घन' }, ar: { 'back.hex': 'سداسي', 'back.cube': 'مكعبات بنفسجية' },
+ja: { 'back.hex': 'ヘキサゴン', 'back.cube': 'キューブ' }, en: { 'back.hex': 'Hexagon', 'back.cube': 'Cubes' },
+zh: { 'back.hex': '六边形', 'back.cube': '立方体' }, ko: { 'back.hex': '헥사곤', 'back.cube': '큐브' },
+es: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos' }, fr: { 'back.hex': 'Hexagone', 'back.cube': 'Cubes' },
+pt: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos' }, de: { 'back.hex': 'Sechseck', 'back.cube': 'Würfel' },
+hi: { 'back.hex': 'षट्भुज', 'back.cube': 'घन' }, ar: { 'back.hex': 'سداسي', 'back.cube': 'مكعبات' },
 });
