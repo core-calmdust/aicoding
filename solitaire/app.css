@@ -157,7 +157,7 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 .slot.k-cell{background:rgba(0,0,0,.12)}
 .cd{position:absolute;left:0;top:0;width:var(--cw);height:var(--chh);transition:transform var(--mt) cubic-bezier(.2,.8,.25,1),box-shadow .2s;will-change:transform;perspective:600px;cursor:grab}
 .noanim .cd,.noanim .cd .in{transition:none!important}
-.cd .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .3s ease}
+.cd .in{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .34s ease}
 .cd.dn .in{transform:rotateY(180deg)}
 .cd.dn{cursor:default}
 .cd .fr,.cd .bk{position:absolute;inset:0;border-radius:calc(var(--cw)*.085);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
