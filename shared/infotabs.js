@@ -14,15 +14,18 @@
 const MQ = '(pointer: coarse) and (max-width: 760px) and (orientation: portrait)';
 const KEY = 'atlas-infotab';
 // icons (common spec: the bottom tabs show an icon above a short label, like poker)
+// (ONL: short label of the online tab)
 const IC = {
   coach: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg>',
   eval: '<svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg>',
   kifu: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   online: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
 };
+const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
 const CSS = `
 .mtabs [data-it]{display:none}
 .mtabs .it-ic{display:none}
+.mtabs .it-sh{display:none}
 @media ${MQ}{
   body.it-on .mtabs [data-t=game]:not([data-it]){display:none}
   body.it-on .mtabs [data-it]{display:flex}
@@ -31,6 +34,9 @@ const CSS = `
   body.it-on .mtabs button .it-ic{display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
   body.it-on .mtabs button .it-lb{display:block;max-width:100%;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body.it-on .mtabs button .it-lb em{font-size:10px;margin-left:3px}
+  body.it-on .mtabs .it-lb > span{display:none}
+  body.it-on .mtabs .it-sh{font-weight:inherit}
+  body.it-on .mtabs .it-sh{display:inline}
   body.it-on .mtabs button.sel .it-ic{stroke:var(--accent,#d8b56a)}
   body.it-on .mtabs button.sel::before{content:'';position:absolute;top:0;left:28%;right:28%;height:2px;border-radius:2px;background:var(--accent,#d8b56a)}
   body.it-on.no-online .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#111);border-top:1px solid var(--line,rgba(255,255,255,.1))}
@@ -61,6 +67,11 @@ function init(tries) {
   // the online button: icon + its label (counts stay inside the label)
   const ol = bar.querySelector('[data-t=online]');
   if (ol && !ol.querySelector('.it-ic')) { const lb = document.createElement('span'); lb.className = 'it-lb'; while (ol.firstChild) lb.appendChild(ol.firstChild); ol.innerHTML = IC.online.replace('<svg', '<svg class="it-ic"'); ol.appendChild(lb); }
+  // the tab says only "online" (the games' own label says "online play"); the counts stay
+  const sh = ol && document.createElement('b');
+  if (sh) { sh.className = 'it-sh'; ol.querySelector('.it-lb').prepend(sh); }
+  const shLab = () => { if (!sh) return; const l = (document.documentElement.lang || 'ja').slice(0, 2), v = ONL[l] || ONL.en; if (sh.textContent !== v) sh.textContent = v; };
+  shLab(); new MutationObserver(shLab).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   const labOf = el => { const l = el.querySelector('.ck-h > span, .evalrow .label, .progrow .label, .kifu-head .label [data-i18n], .kifu-head .label'); return l ? l.textContent.trim() : ''; };
   const relabel = () => order.forEach(k => { const a = labOf(box[k]), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
   relabel();
