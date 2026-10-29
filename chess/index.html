@@ -551,6 +551,12 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   .brand-r{gap:6px}
   .brand a{font-size:11px}
   .players{order:-2;padding:8px;gap:8px}
+  /* phones: names, turn and material (+n) are on the captured-piece bars above / below the board → no players card (kept online for the clocks) */
+  body:not(.in-online) .card.players{display:none!important}
+  body:not(.in-online) .reserve .who{font-size:13px;gap:7px;color:rgba(232,226,210,.78)}
+  body:not(.in-online) .reserve.turn .who{color:var(--accent);font-weight:700}
+  body:not(.in-online) .reserve .who .pdisc{width:14px!important;height:14px!important}
+  body:not(.in-online) .reserve .adv{font-size:13px}
   .board-area{order:-1;flex:none}
   .lesson-card,.puzzle-card{order:0}
   body.in-study .board-area{display:flex;flex-direction:column;gap:6px}
