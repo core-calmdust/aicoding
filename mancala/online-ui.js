@@ -450,6 +450,8 @@ async function finishOnline(g) {
   if (me > 0) {
     const score = !winner ? 0.5 : winner === me ? 1 : 0;
     try { net.result.rating = await ON.applyResult(gid, g, score); olRecord(net && net.result.rating, gid, g, score); } catch (e) { console.warn(e); }
+    // 勝敗記録 (shared/record.js)
+    try { if (window.GameRecord) { const os = 2 - me; GameRecord.add({ mode: g.rated ? 'rated' : 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: me - 1, opp: olShortName(os), key: 'ol:' + olShortName(os), n: (g.moves || []).length, why: [varName(g.v), net && net.result && net.result.why].filter(Boolean).join(' · ') }); } } catch (e) {}
     syncTouch();
   }
   if (!net || net.gid !== gid) return;
