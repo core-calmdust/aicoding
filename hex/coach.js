@@ -570,7 +570,7 @@ function drawFx() { try { renderFx(); } catch (e) {} }
 function fx() {
   if (!active() || !S.items || !myTurn() || typeof fxDiv !== 'function' || !G) return;
   const list = S.hov != null ? S.items.filter(d => String(d.u) === String(S.hov)) : (S.reveal ? S.items : []);
-  list.forEach(d => { if (d.u < 0 || d.u === SWAP) return; const k = S.items.indexOf(d) + 1, el = fxDiv('ckmk' + (S.hov != null ? ' hov' : ''), d.u); el.textContent = k; });
+  list.forEach(d => { if (d.u < 0 || d.u === SWAP) return; const k = S.items.indexOf(d) + 1, el = fxDiv('coach-mk' + (S.hov != null ? ' hov' : ''), d.u); el.textContent = k; });
 }
 function init() {
   if (!window.CoachKit) return;
