@@ -43,7 +43,10 @@ const CSS = `
   body.it-on.no-online .mtabs [data-t=online]{display:none}
   body.it-on.no-online .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
   body.it-on:not(.mtab-online) [data-itc].it-off{display:none!important}
-  body.it-on .it-nav{margin-top:8px}
+  #itNav{display:none}
+  body.it-on.it-nav #itNav{display:flex;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));z-index:44;padding:6px 10px;background:var(--bg,#111);border-top:1px solid var(--line,rgba(255,255,255,.1))}
+  body.it-on.it-nav #itNav .navbar{margin:0;width:100%;max-width:420px}
+  body.it-on.it-nav .app{padding-bottom:calc(150px + env(safe-area-inset-bottom))!important}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
 }`;
 let cur = 'eval', saved = false;
@@ -86,17 +89,30 @@ function init(tries) {
     document.querySelectorAll('[data-itc]').forEach(el => { const off = el.dataset.itc !== cur; if (el.classList.contains('it-off') !== off) el.classList.toggle('it-off', off); });
     placeNav();
   };
-  // the move navigation (|< < ▶ > >|) lives in the 形勢 box; on phones it goes with whichever tab is open (棋譜 / coach too)
+  // the move navigation (|< < ▶ > >|) lives in the 形勢 box; on phones it sits in a fixed strip right above the bottom tabs
+  // whenever there are moves to step through (any tab; not on the online screen)
   const nav = document.getElementById('navBar'), navHome = nav && nav.parentElement, navNext = nav && nav.nextSibling;
-  const navMq = matchMedia(MQ);
+  const navMq = matchMedia(MQ), kifuEl = document.getElementById('kifu');
+  let strip = null;
   function placeNav() {
     if (!nav) return;
-    const tgt = navMq.matches && cur !== 'eval' && box[cur] ? box[cur] : navHome;
-    if (tgt === navHome) { if (nav.parentElement !== navHome) navHome.insertBefore(nav, navNext && navNext.parentNode === navHome ? navNext : null); }
-    else if (nav.parentElement !== tgt) tgt.appendChild(nav);
-    nav.classList.toggle('it-nav', tgt !== navHome);
+    const phone = navMq.matches;
+    if (phone && !strip) { strip = document.createElement('div'); strip.id = 'itNav'; document.body.appendChild(strip); }
+    if (phone) { if (nav.parentElement !== strip) strip.appendChild(nav); }
+    else if (nav.parentElement !== navHome) navHome.insertBefore(nav, navNext && navNext.parentNode === navHome ? navNext : null);
+    const has = !!kifuEl && kifuEl.children.length > 0 && !kifuEl.querySelector(':scope > .empty');
+    const on = phone && has && !document.body.classList.contains('mtab-online');
+    if (document.body.classList.contains('it-nav') !== on) document.body.classList.toggle('it-nav', on);
+    if (on) {   // right above the tab bar — and above the online chat strip when the game shows one there
+      let t = bar.getBoundingClientRect().top;
+      document.querySelectorAll('.mt-strip').forEach(m => { const r = m.getBoundingClientRect(); if (r.height && getComputedStyle(m).display !== 'none' && r.top < t && r.bottom > t - 4) t = r.top; });
+      if (t > 0) { const b = Math.round(innerHeight - t) + 'px'; if (strip.style.bottom !== b) strip.style.bottom = b; }
+    }
   }
   if (navMq.addEventListener) navMq.addEventListener('change', () => placeNav());
+  if (kifuEl) new MutationObserver(() => placeNav()).observe(kifuEl, { childList: true });
+  addEventListener('resize', () => placeNav());
+  setInterval(() => { if (document.body.classList.contains('it-nav')) placeNav(); }, 1000);   // the chat strip comes and goes
   // selection: the game's mtab() marks every data-t=game button; keep only the chosen info tab marked
   const fix = () => {
     apply();
