@@ -219,7 +219,7 @@ function autoComplete() {
   // the finish is decided: every remaining card sweeps up to the foundations in one quick wave (normal flight speed, staggered starts)
   const plan = finishMoves(S.clone(st)) || [], order = [];
   for (const mv of plan) { if (!S.legal(st, mv)) break; if (!mv.s) order.push(st.p[mv.f].c[mv.i]); S.apply(st, mv); }
-  const gap = set.anim ? 18 : 0;
+  const gap = set.anim ? 28 : 0;
   TB.set(st, { stagger: order, step: gap }); renderAll(); saveGame();
   for (let i = 0; i < order.length; i += 3) setTimeout(() => sfx('place'), i * gap + mt() * .8);
   setTimeout(() => { G.auto = false; if (S.won(st)) win(); else afterMove(); }, order.length * gap + mt() + 60);
