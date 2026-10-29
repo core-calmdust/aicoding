@@ -6102,7 +6102,7 @@ NB.LOOM = () => {
 NB.KESTREL = () => {
     // 猛禽の滑空機: 少ないポリゴンの装甲（胴・頭・くちばし・翼の骨）に、ワイヤーで描いた羽根の輪郭と骨組み、
     //   うすいガラスの翼面を重ねる。狙う間は翼を広げて羽ばたき、頭が自機を追う。突進では翼をたたみ、進む方向へ機首を向けて光の尾を引く
-    const g0 = new THREE.Group(), g = new THREE.Group(), C = 0xd0e8ff, B = 0x9fc8ff, GD = 0xffd060, R = 0xff3050; g.scale.setScalar(1.3); g0.add(g);
+    const g0 = new THREE.Group(), g = new THREE.Group(), C = 0xc8b48a, B = 0xffd27a, GD = 0xffd060, R = 0xfff0c0; g.scale.setScalar(1.3); g0.add(g);
     g.add(fuse(LAB.loft([[-38, 10, 8], [-14, 22, 16], [12, 20, 15], [30, 10, 9]], 6), C, { glass: 0.3, tint: 0.25, cage: 1.18 }));
     const head = new THREE.Group(); head.position.set(0, 5, 32); g.add(head);
     head.add(fuse(LAB.loft([[-4, 13, 11], [8, 10, 8]], 6), C, { cage: 1.2, glass: 0.3, tint: 0.25 }));
@@ -6122,8 +6122,8 @@ NB.KESTREL = () => {
         const sh = []; const root = [0, 0]; const outline = [[s * 2, 4], ...tips, [s * 58, 0]];
         for (let i = 0; i < outline.length - 1; i++) sh.push(root[0], 0, root[1], outline[i][0], 0, outline[i][1], outline[i + 1][0], 0, outline[i + 1][1]);
         const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sh, 3));
-        piv.add(new THREE.Mesh(sg, LAB.glass(B, 0.12)));
-        const edge = new THREE.Line(new THREE.BufferGeometry().setFromPoints(outline.map(([x, z]) => new THREE.Vector3(x, 0.6, z))), LAB.line(0xe8f6ff, 0.9)); piv.add(edge);
+        piv.add(new THREE.Mesh(sg, LAB.glass(B, 0.1)));
+        const edge = new THREE.Line(new THREE.BufferGeometry().setFromPoints(outline.map(([x, z]) => new THREE.Vector3(x, 0.6, z))), LAB.line(0xfff4dc, 0.9)); piv.add(edge);
         const tip = new THREE.Mesh(new THREE.OctahedronGeometry(2, 0), LAB.glow(GD)); tip.position.set(s * 58, 0, 0); piv.add(tip);
         return { piv, s };
     });
@@ -6133,6 +6133,14 @@ NB.KESTREL = () => {
     tail.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tp), LAB.line(B, 0.6)));
     const ts = []; for (let i = 0; i < tt.length - 1; i++) ts.push(0, 0, -34, tt[i][0], 0, tt[i][1], tt[i + 1][0], 0, tt[i + 1][1]);
     const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(ts, 3)); tail.add(new THREE.Mesh(tg, LAB.glass(B, 0.12)));
+    // 神々しさ: 頭上の光輪、冠の結晶、尾から伸びる光の飾り羽、足元の聖なる円
+    const halo = new THREE.Group(); halo.position.set(0, 16, 26); halo.rotation.x = -1.0; g.add(halo);
+    halo.add(segRing(14, 12, 2.4, 1.6, GD, 0.25)); const haloD = LAB.dashRing(19, 20, 4, 0.8, LAB.glass(0xfff4dc, 0.45), 3); halo.add(haloD);
+    const crown = []; for (let k = 0; k < 3; k++) { const c = crystal(1.4, 5 + (k === 1 ? 2 : 0), 4); c.rotateX(-0.6); c.translate((k - 1) * 3.2, 8, -3); crown.push(c); }
+    head.add(fuse(mergeGeometries(crown), GD, { cage: false, glass: 0.4, tint: 0.5 }));
+    const plumes = [-1, 1].map(s => { const ln = polyLine(12, 0xffe8a8, 0.8); g.add(ln); const tip = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), LAB.glow(0xfff0c0)); g.add(tip); return { ln, tip, s, pts: Array.from({ length: 12 }, () => new THREE.Vector3()) }; });
+    const sigil = new THREE.Group(); sigil.position.y = -14; g.add(sigil);
+    sigil.add(LAB.dashRing(46, 36, 6, 0.8, LAB.glass(GD, 0.35), 3)); sigil.add(wire(new THREE.CylinderGeometry(38, 38, 0.1, 6, 1, true), GD, 0.3));
     const trail = LAB.dashRing(60, 30, 8, 1.4, LAB.glass(C, 0.5), 3); trail.scale.set(1, 1, 0.4); g.add(trail);
     const sp = []; for (let k = 0; k < 10; k++) { const x = (k % 5 - 2) * 12, y = (k < 5 ? 4 : -4); sp.push(new THREE.Vector3(x, y, -40 - (k % 3) * 8), new THREE.Vector3(x, y, -90 - (k % 4) * 12)); }
     const streaks = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(sp), LAB.line(0xd8f0ff, 0.6)); g.add(streaks);
@@ -6146,6 +6154,8 @@ NB.KESTREL = () => {
         head.rotation.y += ((dash ? 0 : Math.max(-0.5, Math.min(0.5, px * 0.002))) - head.rotation.y) * 0.1;
         g.rotation.z = dash ? Math.sin(t * 20) * 0.06 : Math.sin(t * 1.5) * 0.1; tail.rotation.y = Math.sin(t * 2) * 0.1;
         trail.visible = streaks.visible = dash; streaks.position.z = -((t * 300) % 20);
+        haloD.rotation.y = t * 1.2; sigil.rotation.y = t * 0.3; sigil.visible = !dash;
+        plumes.forEach(({ ln, tip, s, pts }) => { pts.forEach((p, i) => { const u = i / 11; p.set(s * (3 + u * 10) + Math.sin(t * 3 - u * 4) * 4 * u, 2 - u * 3, -40 - u * 60); }); setLine(ln, pts); tip.position.copy(pts[11]); });
     };
     g0.userData.anim = g.userData.anim; return g0;
 };
