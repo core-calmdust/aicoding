@@ -292,7 +292,7 @@ function renderFx() {
       const v = own[i]; if (Math.abs(v) < 0.2) continue;
       const [x, y] = xyOf(i), s = 0.15 + Math.min(1, Math.abs(v)) * 0.32;
       if (pos.b[i] && (pos.b[i] === P1) === (v > 0)) continue;
-      el('rect', { x: x - s / 2, y: y - s / 2, width: s, height: s, rx: 0.03, fill: v > 0 ? `rgba(10,10,12,${0.35 + Math.abs(v) * 0.5})` : `rgba(250,248,242,${0.35 + Math.abs(v) * 0.55})`, class: 'own' }, gT);
+      el('rect', { x: x - s / 2, y: y - s / 2, width: s, height: s, rx: 0.03, fill: v > 0 ? `rgba(10,10,12,${0.35 + Math.abs(v) * 0.5})` : `rgba(250,248,242,${0.35 + Math.abs(v) * 0.55})`, stroke: v > 0 ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.55)', 'stroke-width': 0.03, class: 'own' }, gT);
     }
   }
   // last move
@@ -301,7 +301,7 @@ function renderFx() {
     const [x, y] = xyOf(m);
     el('circle', { cx: x, cy: y, r: 0.24, class: 'lm', stroke: pos.b[m] === P1 ? '#fff' : '#111' }, gM);
   }
-  if (pos.ko >= 0 && !st.over) { const [x, y] = xyOf(pos.ko); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'ko' }, gM); }
+  if (pos.ko >= 0 && !st.over) { const [x, y] = xyOf(pos.ko); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'halo' }, gM); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'ko' }, gM); }
   // move numbers (the last 50 moves of the shown position, or all in reviews of short games)
   if (settings.num) {
     const from = Math.max(0, cur - 300);
@@ -319,14 +319,16 @@ function renderFx() {
   rbHoverFx(gH);
   updateGhost();
 }
+// marks drawn twice: a dark halo under the coloured line, so they read on every board skin (light wood, washi, dark lacquer, night)
 function markAt(g, k) {
-  if (k.arrow) { const [a, b] = k.arrow.map(xyOf); el('path', { d: `M${a[0]},${a[1]}L${b[0]},${b[1]}`, class: 'arrow' }, g); return; }
+  const two = (tag, a, cls) => { el(tag, Object.assign({}, a, { class: 'halo' }), g); el(tag, Object.assign({}, a, { class: cls }), g); };
+  if (k.arrow) { const [a, b] = k.arrow.map(xyOf); two('path', { d: `M${a[0]},${a[1]}L${b[0]},${b[1]}` }, 'arrow'); return; }
   const [x, y] = xyOf(k.at);
-  if (k.cls === 'x') el('path', { d: `M${x - .2},${y - .2}L${x + .2},${y + .2}M${x + .2},${y - .2}L${x - .2},${y + .2}`, class: 'mk-x' }, g);
-  else if (k.cls === 'tri') el('path', { d: `M${x},${y - .27}L${x + .24},${y + .15}L${x - .24},${y + .15}Z`, class: 'mk-tri' }, g);
+  if (k.cls === 'x') two('path', { d: `M${x - .2},${y - .2}L${x + .2},${y + .2}M${x + .2},${y - .2}L${x - .2},${y + .2}` }, 'mk-x');
+  else if (k.cls === 'tri') two('path', { d: `M${x},${y - .27}L${x + .24},${y + .15}L${x - .24},${y + .15}Z` }, 'mk-tri');
   else if (k.cls === 'sq') el('rect', { x: x - .18, y: y - .18, width: .36, height: .36, class: 'mk-sq' }, g);
-  else if (k.cls === 'dash') el('circle', { cx: x, cy: y, r: 0.42, class: 'mk-dash' }, g);
-  else el('circle', { cx: x, cy: y, r: 0.42, class: k.cls === 'ng' ? 'mk-ng' : 'mk-ok' }, g);
+  else if (k.cls === 'dash') two('circle', { cx: x, cy: y, r: 0.42 }, 'mk-dash');
+  else two('circle', { cx: x, cy: y, r: 0.42 }, k.cls === 'ng' ? 'mk-ng' : 'mk-ok');
 }
 function labelAt(g, L) {
   const [x, y] = xyOf(L.at), pos = posAt(cur);
@@ -343,7 +345,8 @@ function drawHints(list, g) {
     if (k > 0 && (c.n / tot < 0.03 || loss > 6)) return;
     const col = loss < 0.6 ? 'rgba(80,210,140,.88)' : loss < 2 ? 'rgba(180,220,90,.85)' : loss < 4 ? 'rgba(240,200,80,.85)' : 'rgba(255,120,90,.85)';
     const [x, y] = xyOf(c.m), gg = el('g', { class: 'hint' }, g);
-    el('circle', { cx: x, cy: y, r: 0.45, class: 'hc', fill: col, stroke: k === 0 ? '#fff6d0' : 'rgba(0,0,0,.35)', 'stroke-width': k === 0 ? 0.08 : 0.04 }, gg);
+    el('circle', { cx: x, cy: y, r: 0.47, fill: 'none', stroke: 'rgba(0,0,0,.8)', 'stroke-width': 0.1 }, gg);
+    el('circle', { cx: x, cy: y, r: 0.45, class: 'hc', fill: col.replace(/,\.8\d\)$/, ',.96)'), stroke: k === 0 ? '#fff6d0' : 'rgba(0,0,0,.55)', 'stroke-width': k === 0 ? 0.08 : 0.04 }, gg);
     const tx = el('text', { x, y: y + 0.02, 'font-size': 0.32, fill: '#111' }, gg); tx.textContent = fmtLead(c.lead);
   });
 }
@@ -1392,7 +1395,7 @@ function rbHoverFx(gH) {
 function rbStudyFx(gM, gH) {
   const pos = rbShown(), m = rbS.mv.length ? rbS.mv[rbS.mv.length - 1] : (rbS.base > 0 ? moves[rbS.base - 1] : null);
   if (settings.last && m != null && m !== PASS && pos.b[m]) { const [x, y] = xyOf(m); el('circle', { cx: x, cy: y, r: 0.24, class: 'lm', stroke: pos.b[m] === P1 ? '#fff' : '#111' }, gM); }
-  if (pos.ko >= 0) { const [x, y] = xyOf(pos.ko); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'ko' }, gM); }
+  if (pos.ko >= 0) { const [x, y] = xyOf(pos.ko); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'halo' }, gM); el('rect', { x: x - 0.22, y: y - 0.22, width: 0.44, height: 0.44, class: 'ko' }, gM); }
   rbHoverFx(gH);
 }
 function rbStudyPlay(i) {
