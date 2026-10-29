@@ -1287,6 +1287,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .brand-r{gap:4px}.snd{width:30px}
   .mh.l{left:calc(var(--rail) + 3.5%)}.mh.r{right:calc(var(--rail) + 3.5%)}
   .mh span{min-width:82px;gap:6px;padding:3px 8px}
+  .m-hud[data-pos=mid]{display:none}
   .m-hud small{font-size:9.5px}.m-hud b{font-size:13px}
 }
 .pk-table.nb .pk-pot{top:calc(44% + var(--chh) * .5 + 8px);transform:translate(-50%,0)}
