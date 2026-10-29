@@ -103,16 +103,19 @@ function init(tries) {
     const has = !!kifuEl && kifuEl.children.length > 0 && !kifuEl.querySelector(':scope > .empty');
     const on = phone && has && !document.body.classList.contains('mtab-online');
     if (document.body.classList.contains('it-nav') !== on) document.body.classList.toggle('it-nav', on);
-    if (on) {   // right above the tab bar — and above the online chat strip when the game shows one there
-      let t = bar.getBoundingClientRect().top;
-      document.querySelectorAll('.mt-strip').forEach(m => { const r = m.getBoundingClientRect(); if (r.height && getComputedStyle(m).display !== 'none' && r.top < t && r.bottom > t - 4) t = r.top; });
-      if (t > 0) { const b = Math.round(innerHeight - t) + 'px'; if (strip.style.bottom !== b) strip.style.bottom = b; }
-    }
+    // the strip sits right above the tab bar; the game's online chat strip (if any) moves up above it
+    const chats = document.querySelectorAll('.mt-strip');
+    if (on) {
+      const t = bar.getBoundingClientRect().top;
+      if (t > 0) {
+        const b = Math.round(innerHeight - t); if (strip.style.bottom !== b + 'px') strip.style.bottom = b + 'px';
+        const cb = (b + strip.offsetHeight) + 'px'; chats.forEach(m => { if (m.style.bottom !== cb) m.style.setProperty('bottom', cb, 'important'); });
+      }
+    } else chats.forEach(m => { if (m.style.bottom) m.style.removeProperty('bottom'); });
   }
   if (navMq.addEventListener) navMq.addEventListener('change', () => placeNav());
   if (kifuEl) new MutationObserver(() => placeNav()).observe(kifuEl, { childList: true });
   addEventListener('resize', () => placeNav());
-  setInterval(() => { if (document.body.classList.contains('it-nav')) placeNav(); }, 1000);   // the chat strip comes and goes
   // selection: the game's mtab() marks every data-t=game button; keep only the chosen info tab marked
   const fix = () => {
     apply();
