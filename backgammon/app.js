@@ -214,9 +214,9 @@ function setGeom(flat, h, u) {
 // a taller lesson / puzzle strip — then the board also gets narrower (u) so it still fits without scrolling
 function flatFit() {
   const w = ROT ? innerHeight : innerWidth, hgt = ROT ? innerWidth : innerHeight;
-  if (document.documentElement.classList.contains('lnd')) {   // (land.js) board on the left, tab rail + panel (about 1/3) on the right
+  if (document.documentElement.classList.contains('lnd')) {   // (land.js) the board as large as it fits beside the tab rail (the info is a drawer over it)
     const tp = document.getElementById('lndTop'), th = tp && tp.offsetHeight ? tp.offsetHeight : 36;
-    const availH = hgt - th - 6 - 10, boardW = Math.max(300, w * 0.6 - 10);
+    const availH = hgt - th - 6 - 10, boardW = Math.max(300, w - 60 - 8 - 16 - 8);
     const u = Math.min(boardW / 15.85, availH / 6.4, 60);
     return { h: Math.max(6.4, Math.min(12, availH / u)), u };
   }
