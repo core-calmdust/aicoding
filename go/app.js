@@ -715,6 +715,7 @@ function onGameEnd(st) {
   if (lesson || puzzle) return;   // (a lesson / puzzle opened meanwhile: the game result is only shown right when the game ends)
   if (settings.mode === 'online') return;
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -729,6 +730,14 @@ function onGameEnd(st) {
   $('#resultSub').innerHTML = sub;
   const mv = moves;
   setTimeout(() => { if (moves === mv && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700);   // not when a lesson / puzzle / other game was opened meanwhile
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || !st || !st.over || st.rec || !moves.length) return;
+  st.rec = 1;
+  const why = st.why === 'score' ? resultLine(st) : st.why ? t('why.' + st.why) : '';
+  const lv = rgame ? rgame.lv : settings.level;
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + ' · ' + game.n + '×' + game.n, key: (rgame ? 'rt:' : 'ai:') + lv + ':' + game.n, n: moves.length, why });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1077,7 +1086,7 @@ function rtForfeit() {
   if (!rtLive()) return null;
   busyToken++; cancelWorker(); thinking = 0;
   rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
-  const x = rtSettle(rgame.over); save();
+  const x = rtSettle(rgame.over); save(); recordGame(rgame.over);
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }

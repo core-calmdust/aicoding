@@ -743,6 +743,8 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+if (window.GameRecord) GameRecord.init({ game: 'go', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.GoCoach) GoCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
@@ -754,6 +756,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.GoCoach) GoCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (document.querySelector('.ls-tabs button.sel[data-v=open]') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) (openChoiceIdx >= 0 ? openOpeningChoice(openChoiceIdx) : openIntro(introIdx)); }

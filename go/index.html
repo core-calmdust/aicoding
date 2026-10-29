@@ -268,6 +268,18 @@ body.counting .count-card{display:block}
 .result-disc .pdisc{width:46px;height:46px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
 .result-sub{text-align:center;color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.75}
 .hidden{display:none!important}
+/* coach (coach.js, shared/coachkit.js) */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+#coachCard.ck-off .ck-muted{font-size:12px}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
+#coachCard.ck-off .ck-h{margin-bottom:4px}
+#coachCard .ck-sec-h button{white-space:nowrap;flex:none}
+#coachCard .ck-sec-h > span{min-width:0}
+/* result dialog: button labels never wrap (common spec) — buttons wrap to a second row instead */
+#resultOverlay .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr));gap:8px}
+#resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
+#resultOverlay .modal-actions .mbtn.hidden{display:none}
 body.rv-on #evalCard.hidden{display:block!important}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:200;pointer-events:none;border-radius:2px;animation:conf linear forwards}
 @keyframes conf{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
@@ -495,11 +507,12 @@ html:is([lang=hi],[lang=ar]) :is(.modal h2, .lesson-card h3, .puzzle-card h3, .r
   .brand-r{gap:6px}
   .brand a.series{display:none}
   .players{order:-2;padding:8px;gap:8px}
-  .board-area{order:-1;flex:none;gap:6px}
+  .board-area{order:-1;flex:none;gap:8px}
   .lesson-card,.puzzle-card,.count-card{order:0}
   body.in-study .st-nav{display:flex}
   body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
+  #coachCard{order:0}
   #evalCard{order:1}
   .review-card{order:2}
   .kifu-card{order:4}
@@ -606,6 +619,9 @@ html.pc2 .lesson-prompt{font-size:15px;line-height:1.7}
 html.pc2 .lesson-actions{flex-wrap:wrap}
 html.pc2 .lesson-actions button{flex:1 1 auto;min-width:0;white-space:nowrap;padding:9px 8px}
 html.pc2 .ol-watch{flex:none}
+html.pc2 .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+html.pc2 .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:110px}
+html.pc2 .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
    column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:#111;--rb-s2:#f4f2ea}
@@ -704,6 +720,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
       <div class="lesson-actions"><button id="cntResume" data-i18n="cnt.resume"></button><button id="cntOk" class="go" data-i18n="cnt.ok"></button></div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card" id="evalCard">
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
       <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
@@ -727,7 +744,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -923,9 +940,13 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="online.js?v=stale2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rbox.js?v=5"></script>
-<script src="app.js?v=20"></script>
-<script src="learn.js?v=20261028rban"></script>
-<script src="online-ui.js?v=3"></script>
+<script src="app.js?v=21"></script>
+<script src="../shared/coachkit.js?v=4"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="learn.js?v=20261029coach"></script>
+<script src="online-ui.js?v=4"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other
    layout (phones, tablets, narrow / clearly tall windows) is the one stacked column */

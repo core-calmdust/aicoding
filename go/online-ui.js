@@ -450,6 +450,7 @@ async function finishOnline(g) {
     let own;
     if (g.status === 'over') { try { own = await olOwnScore(gid, g, me); } catch (e) { console.warn(e); own = null; } }
     try { net.result.rating = await ON.applyResult(gid, g, score, own); } catch (e) { console.warn(e); }
+    try { if (window.GameRecord && moves.length) { const on = olShortName(3 - me); GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: me - 1, opp: on + ' · ' + varName(g.v), key: 'ol:' + on, n: moves.length, why: net.result.why || '' }); } } catch (e) {}
     syncTouch();
   }
   if (!net || net.gid !== gid) return;
