@@ -1291,3 +1291,6 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .m-hud small{font-size:9.5px}.m-hud b{font-size:13px}
 }
 .pk-table.nb .pk-pot{top:calc(44% + var(--chh) * .5 + 8px);transform:translate(-50%,0)}
+/* 戦績 (shared/record.js): on phones it lives in the bottom tab bar, so the menu button is only for wider screens */
+@media (max-width:760px){.controls .grc-menu{display:none}}
+@media (max-width:760px){.m-tabs button span{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip;letter-spacing:-.01em}}

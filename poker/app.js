@@ -119,8 +119,16 @@ function endTutorial() {
   if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) { T = D.cur; render(); if (T.phase === 'bet' || T.phase === 'draw') loop(); }
   else startSession('holdem');
 }
+/* 勝敗記録 (shared/record.js): one entry per session — when the table is cashed out / replaced, the session's net decides win / loss */
+function recordSession() {
+  if (!window.GameRecord || !T || T.tut || !T.session || !T.session.hands || T.session.recorded) return;
+  const S = T.session; S.recorded = true;
+  const sg = n => (n > 0 ? '+' : '') + n, bb = Math.round(S.net / T.bb * 10) / 10;
+  try { GameRecord.add({ mode: 'ai', res: S.net > 0 ? 'w' : S.net < 0 ? 'l' : 'd', opp: vName(T.v) + ' · ' + t('lim.' + T.limit), key: T.v + ':' + T.limit, why: t('grc.hands', { n: S.hands }) + ' · ' + t('ss.net') + ' ' + sg(S.net) + ' (' + sg(bb) + ' bb)' }); } catch (e) {}
+}
 function startSession(v) {
   if (window.PokerTut) PokerTut.hide();
+  recordSession();
   const p = prefOf(v); set.v = v;
   const used = [];
   const seats = [{ name: t('you'), stack: p.stack * 2, human: true }];
@@ -531,6 +539,7 @@ function mTabs() {
   // a shorter box after a switch: don't leave the view scrolled past the end (iOS keeps the old position → empty space)
   const sc = $('.stage'), max = sc.scrollHeight - sc.clientHeight; if (sc.scrollTop > max + 1) sc.scrollTop = Math.max(0, max);
 }
+$('#mTabRec').onclick = () => window.GameRecord && GameRecord.open();   // 戦績: opens the record dialog (not a panel)
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
   const sc = $('.stage'), same = $('#side').dataset.pt === b.dataset.pt;
   if (same) { if (sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' }); return; }   // tap again: back to the table
@@ -723,7 +732,7 @@ $('#btnResign').onclick = () => {
 $('#btnStats').onclick = openStats;
 $('#btnTools').onclick = () => window.PokerTools && PokerTools.open();
 $('#btnLesson').onclick = () => window.PokerLessons && PokerLessons.open();
-$('#langSel').onchange = () => { LANG = $('#langSel').value; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} applyI18n(); if (T) T.seats[HERO].name = t('you'); render(); if (window.SolRules && SolRules.relang) SolRules.relang(); };
+$('#langSel').onchange = () => { LANG = $('#langSel').value; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} applyI18n(); if (T) T.seats[HERO].name = t('you'); render(); if (window.SolRules && SolRules.relang) SolRules.relang(); if (window.GameRecord) GameRecord.relabel(); };
 document.addEventListener('keydown', e => {
   if (e.target.closest('input:not([type=range]), select, textarea') || $('.overlay.show')) return;
   const k = e.key.toLowerCase();
@@ -742,6 +751,7 @@ window.addEventListener('resize', () => { if (T) render(); });
 
 /* ---------------- start ---------------- */
 applyI18n();
+if (window.GameRecord) GameRecord.init({ game: 'poker', lang: () => LANG, menu: '.controls' });   // 勝敗記録: menu button before the header bar takes the menu
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnTools', '#btnStats'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => setTimeout(() => { if (T) render(); }, 0));
 if (window.RulesOffer) RulesOffer.init({ game: 'poker', lang: () => LANG, open: () => window.PokerRules && PokerRules.open(NG ? NG.v : T && T.v), watch: '#rulesOverlay' });

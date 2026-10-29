@@ -169,3 +169,8 @@ ar: {"series": "أطلس ألعاب الطاولة العالمية", "meta.titl
 });
 // short label for the "new game" button on phones
 [['zh', '新游戏'], ['ko', '새 게임'], ['es', 'Nueva'], ['fr', 'Nouvelle'], ['pt', 'Novo'], ['de', 'Neu'], ['hi', 'नया'], ['ar', 'جديد']].forEach(([l, s]) => { if (I18N[l]) I18N[l]['btn.new.s'] = s; });
+// 戦績 (record) tab on phones + the hand count in a session record
+(function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({
+  ja: { 'side.record': '戦績', 'grc.hands': '{n}ハンド' }, en: { 'side.record': 'Record', 'grc.hands': '{n} hands' }, zh: { 'side.record': '战绩', 'grc.hands': '{n} 手' }, ko: { 'side.record': '전적', 'grc.hands': '{n}핸드' }, es: { 'side.record': 'Historial', 'grc.hands': '{n} manos' },
+  fr: { 'side.record': 'Bilan', 'grc.hands': '{n} mains' }, pt: { 'side.record': 'Histórico', 'grc.hands': '{n} mãos' }, de: { 'side.record': 'Bilanz', 'grc.hands': '{n} Hände' }, hi: { 'side.record': 'रिकॉर्ड', 'grc.hands': '{n} हाथ' }, ar: { 'side.record': 'السجل', 'grc.hands': '{n} يد' },
+});
