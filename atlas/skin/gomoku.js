@@ -34,6 +34,7 @@
   de.style.setProperty('--gmrim', RIM.toFixed(3));
 
   const skin = AtlasSkin.init({
+    margin: 0.18,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     outer: r => { const u = r.height / 16; return { top: r.top - RIM * u, height: (16 + 2 * RIM + below) * u }; },
     guide: '../images/atlas/g-stone.webp', guideFallback: '../images/atlas/gomoku.webp',

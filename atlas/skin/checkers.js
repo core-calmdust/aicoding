@@ -75,6 +75,7 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   document.head.appendChild(st);
 
   const skin = AtlasSkin.init({
+    margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // frame edge to frame edge
     guide: '../images/atlas/g-crab.webp', guideFallback: '../images/atlas/checkers.webp',

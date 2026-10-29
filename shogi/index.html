@@ -1414,7 +1414,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/variants.js?v=20261028pv"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/coachkit.js?v=4"></script>
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=6"></script>
 <script src="coach-i18n.js?v=5"></script>
@@ -5118,7 +5118,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=9')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=8'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=9'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -5126,6 +5126,6 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas.js?v=20261029t" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
-<script src="../shared/infotabs.js?v=8" defer></script>
+<script src="../shared/infotabs.js?v=9" defer></script>
 </body>
 </html>

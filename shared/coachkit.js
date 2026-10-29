@@ -29,7 +29,7 @@ const CSS = `
 .ck-sw svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ck-sw i{position:relative;width:28px;height:16px;border-radius:9px;background:rgba(255,255,255,.14);transition:background .2s;flex:none}
 .ck-sw i::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#cfc8b8;transition:transform .2s,background .2s}
-.ck-sw.on{color:var(--text,#eee)}
+.ck-sw.on{color:var(--text,#eee);border-color:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent);background:color-mix(in srgb, var(--accent,#d8b56a) 12%, rgba(0,0,0,.2))}   /* lit like the sound button when on */
 .ck-sw.on svg{stroke:var(--accent,#d8b56a)}
 .ck-sw.on i{background:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent)}
 .ck-sw.on i::after{transform:translateX(12px);background:#fff}

@@ -45,6 +45,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
   const HALF_D = 4.7 * SC;                   // the frame's half depth (world)
 
   const skin = AtlasSkin.init({
+    margin: .28,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     outer: r => { const k = r.height / S; return { top: r.top + r.height / 2 - HALF_D * k, height: (2 * HALF_D + .35) * k }; },
     guide: '../images/atlas/g-owl.webp', guideFallback: '../images/atlas/morris.webp',
