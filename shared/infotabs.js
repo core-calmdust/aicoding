@@ -6,64 +6,100 @@
 // Without online (body.no-online) the bar is still shown, with the info buttons only.
 // Labels come from the boxes' own headings (so they follow the game language).
 //
-// Usage: <script src="../shared/infotabs.js?v=1" defer></script> — no setup. Boxes: #evalCard (or #progCard) and .kifu-card.
+// Usage: <script src="../shared/infotabs.js?v=1" defer></script> — no setup. Boxes: #evalCard (or #progCard) and .kifu-card,
+// plus the coach (#coachCard, shared/coachkit.js) when the game has one: its tab is shown while body.ck-tab is set.
+// Every tab shows an icon above its label (also the online tab).
 (function () {
 'use strict';
 const MQ = '(pointer: coarse) and (max-width: 760px) and (orientation: portrait)';
 const KEY = 'atlas-infotab';
+// icons (common spec: the bottom tabs show an icon above a short label, like poker)
+const IC = {
+  coach: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg>',
+  eval: '<svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg>',
+  kifu: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  online: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
+};
 const CSS = `
 .mtabs [data-it]{display:none}
+.mtabs .it-ic{display:none}
 @media ${MQ}{
   body.it-on .mtabs [data-t=game]:not([data-it]){display:none}
-  body.it-on .mtabs [data-it]{display:block}
+  body.it-on .mtabs [data-it]{display:flex}
+  body.it-on .mtabs [data-it][hidden]{display:none}
+  body.it-on .mtabs button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 0 3px;font-size:10.5px;letter-spacing:.02em;line-height:1.2;box-shadow:none!important;position:relative;-webkit-tap-highlight-color:transparent}
+  body.it-on .mtabs button .it-ic{display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  body.it-on .mtabs button .it-lb{display:block;max-width:100%;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.it-on .mtabs button .it-lb em{font-size:10px;margin-left:3px}
+  body.it-on .mtabs button.sel .it-ic{stroke:var(--accent,#d8b56a)}
+  body.it-on .mtabs button.sel::before{content:'';position:absolute;top:0;left:28%;right:28%;height:2px;border-radius:2px;background:var(--accent,#d8b56a)}
   body.it-on.no-online .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#111);border-top:1px solid var(--line,rgba(255,255,255,.1))}
   body.it-on.no-online .mtabs [data-t=online]{display:none}
   body.it-on.no-online .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
-  body.it-on:not(.mtab-online)[data-it=eval] [data-itc=kifu],
-  body.it-on:not(.mtab-online)[data-it=kifu] [data-itc=eval]{display:none!important}
+  body.it-on:not(.mtab-online) [data-itc].it-off{display:none!important}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
 }`;
-let cur = 'eval';
-try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu') cur = v; } catch (e) {}
+let cur = 'eval', saved = false;
+try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu' || v === 'coach') { cur = v; saved = true; } } catch (e) {}
 
+// tabs: coach (optional: #coachCard, shown while body.ck-tab — the game sets it), eval (#evalCard / #progCard), kifu (.kifu-card).
+// Other boxes that belong to a tab carry data-itc="<tab>" themselves (e.g. the review card under the coach tab).
 function init(tries) {
   if (window.__ROTWRAP || window.__EMBED) return;   // the rotated (landscape) board and embedded copies keep their own layout
   const bar = document.getElementById('mtabs'), game = bar && bar.querySelector('[data-t=game]:not([data-it])');
   const ev = document.getElementById('evalCard') || document.getElementById('progCard'), kf = document.querySelector('.kifu-card');
+  const ck = document.getElementById('coachCard');
   if (!bar || !game || !ev || !kf) { if (tries < 40) setTimeout(() => init(tries + 1), 150); return; }
   if (bar.querySelector('[data-it]')) return;
   const st = document.createElement('style'); st.id = 'infoTabsCss'; st.textContent = CSS; document.head.appendChild(st);
-  ev.dataset.itc = 'eval'; kf.dataset.itc = 'kifu';
-  const mk = it => { const b = document.createElement('button'); b.type = 'button'; b.dataset.t = 'game'; b.dataset.it = it; return b; };
-  const bE = mk('eval'), bK = mk('kifu');
-  game.after(bE, bK);
-  const labOf = el => { const l = el.querySelector('.evalrow .label, .progrow .label, .kifu-head .label [data-i18n], .kifu-head .label'); return l ? l.textContent.trim() : ''; };
-  const relabel = () => { const a = labOf(ev), b = labOf(kf); if (bE.textContent !== a) bE.textContent = a; if (bK.textContent !== b) bK.textContent = b; };
+  ev.dataset.itc = 'eval'; kf.dataset.itc = 'kifu'; if (ck) ck.dataset.itc = 'coach';
+  const box = { coach: ck, eval: ev, kifu: kf };
+  const mk = it => { const b = document.createElement('button'); b.type = 'button'; b.dataset.t = 'game'; b.dataset.it = it; b.innerHTML = IC[it].replace('<svg', '<svg class="it-ic"') + '<span class="it-lb"></span>'; return b; };
+  const btn = { coach: ck ? mk('coach') : null, eval: mk('eval'), kifu: mk('kifu') };
+  const order = ['coach', 'eval', 'kifu'].filter(k => btn[k]);
+  game.after(...order.map(k => btn[k]));
+  // the online button: icon + its label (counts stay inside the label)
+  const ol = bar.querySelector('[data-t=online]');
+  if (ol && !ol.querySelector('.it-ic')) { const lb = document.createElement('span'); lb.className = 'it-lb'; while (ol.firstChild) lb.appendChild(ol.firstChild); ol.innerHTML = IC.online.replace('<svg', '<svg class="it-ic"'); ol.appendChild(lb); }
+  const labOf = el => { const l = el.querySelector('.ck-h > span, .evalrow .label, .progrow .label, .kifu-head .label [data-i18n], .kifu-head .label'); return l ? l.textContent.trim() : ''; };
+  const relabel = () => order.forEach(k => { const a = labOf(box[k]), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
   relabel();
-  new MutationObserver(relabel).observe(ev, { subtree: true, childList: true, characterData: true });
-  new MutationObserver(relabel).observe(kf, { subtree: true, childList: true, characterData: true });
+  order.forEach(k => new MutationObserver(relabel).observe(box[k], { subtree: true, childList: true, characterData: true }));
+  const avail = k => k !== 'coach' || document.body.classList.contains('ck-tab');
+  const apply = () => {
+    if (!avail(cur)) cur = 'eval';
+    if (btn.coach) { const h = !avail('coach'); if (btn.coach.hidden !== h) btn.coach.hidden = h; }
+    if (document.body.dataset.it !== cur) document.body.dataset.it = cur;
+    document.querySelectorAll('[data-itc]').forEach(el => { const off = el.dataset.itc !== cur; if (el.classList.contains('it-off') !== off) el.classList.toggle('it-off', off); });
+  };
   // selection: the game's mtab() marks every data-t=game button; keep only the chosen info tab marked
   const fix = () => {
+    apply();
     const onGame = !document.body.classList.contains('mtab-online');
-    [bE, bK].forEach(b => { const want = onGame && b.dataset.it === cur; if (b.classList.contains('sel') !== want) b.classList.toggle('sel', want); });
+    order.forEach(k => { const b = btn[k], want = onGame && k === cur; if (b.classList.contains('sel') !== want) b.classList.toggle('sel', want); });
   };
+  // the coach tab appears: open it once if the player never chose a tab
+  let ckWas = avail('coach');
   new MutationObserver(fix).observe(bar, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  new MutationObserver(fix).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => { const a = avail('coach'); if (a && !ckWas && !saved) cur = 'coach'; ckWas = a; fix(); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  if (ck && avail('coach') && !saved) cur = 'coach';
   bar.addEventListener('click', e => {
     const b = e.target.closest('[data-it]'); if (!b) return;
     const again = cur === b.dataset.it && !document.body.classList.contains('mtab-online');
-    cur = b.dataset.it; document.body.dataset.it = cur; try { localStorage.setItem(KEY, cur); } catch (x) {}
+    cur = b.dataset.it; saved = true; try { localStorage.setItem(KEY, cur); } catch (x) {}
+    apply();
     // a shorter box: keep the page inside its new length in the same frame (iOS otherwise shows empty space / loses the fixed bar)
     { const se = document.scrollingElement || document.documentElement, max = se.scrollHeight - innerHeight; if (scrollY > max) scrollTo(0, Math.max(0, max)); }
     // the game's own handler then runs mtab('game') (board view); bring the box into view
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const box = cur === 'eval' ? ev : kf, r = box.getBoundingClientRect();
+      const el = box[cur], r = el.getBoundingClientRect();
       if (again && r.top < innerHeight * .5) window.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the board
-      else if (r.bottom > innerHeight - 60 || r.top < 0) box.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      else if (r.top > innerHeight - 140) window.scrollTo({ top: scrollY + r.top - innerHeight * .45, behavior: 'smooth' });
+      else if (r.top < 0) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
       fix();
     }));
   }, true);
-  document.body.dataset.it = cur; document.body.classList.add('it-on'); fix();
+  document.body.classList.add('it-on'); fix();
 }
 /* (not in the portal's 3D skin: its board has its own spacing, so the strips would float away from it)
    strips (opt-in: <script … data-strips>): games whose two sides sit at the top and bottom of the board (checkers, xiangqi,
