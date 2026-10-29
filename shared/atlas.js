@@ -36,7 +36,7 @@
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
     { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
       name: N('だつごくスライダー！', 'Jailbreak Slider!', '越狱滑块！', '탈옥 슬라이더!', '¡Fuga Slider!', 'Évasion Slider !', 'Fuga Slider!', 'Ausbruch-Slider!', 'जेलब्रेक स्लाइडर!', 'الهروب سلايدر!') },
-    { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', beta: true, tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
+    { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2') },
