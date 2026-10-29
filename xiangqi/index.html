@@ -803,6 +803,30 @@ html[data-pcs=west] .pc .ic{display:block}
 /* coach candidate arrows: bright green with a dark rim, readable on the wooden board in every skin */
 .fxsvg .arrow.ck{stroke:#3df59a!important;stroke-width:.1px;filter:drop-shadow(0 0 1px #08120c) drop-shadow(0 0 3px rgba(0,0,0,.9))}
 .fxsvg .arrow.pl{stroke:rgba(60,40,20,.75)}
+/* board markers (every skin): bright colours with a dark rim, so they read on the light wood, paper and jade boards as well
+   as on the dark lacquer / slate ones — yellow = best / hint, white = played, blue = last move / legal moves, red = capture / check / mistake */
+.fxsvg .arrow{stroke:#45b8ff;stroke-width:.1px;filter:drop-shadow(0 0 .6px #05080d) drop-shadow(0 0 .6px #05080d) drop-shadow(0 1px 3px rgba(0,0,0,.7))}
+.fxsvg .arrow.ok{stroke:#ffd23a}
+.fxsvg .arrow.ng{stroke:#ff5a48}
+.fxsvg .arrow.pl{stroke:#ffffff;stroke-dasharray:.1 .08}
+.fxsvg .arrow.rvb2{stroke:#8fd3ff;stroke-dasharray:.12 .09}
+.sqfx.last{box-shadow:0 0 0 2px rgba(5,10,20,.85),0 0 0 4.5px #3fb0ff,0 0 0 6px rgba(5,10,20,.7),0 0 14px rgba(63,176,255,.6)}
+.sqfx.lastf{border:3px solid #3fb0ff;box-shadow:0 0 0 1.5px rgba(5,10,20,.85),inset 0 0 0 1.5px rgba(5,10,20,.85)}
+.sqfx.chk{background:radial-gradient(circle,rgba(255,40,30,.7),rgba(255,40,30,0) 72%)}
+.pc.incheck{box-shadow:0 0 0 2px rgba(20,0,0,.9),0 0 0 5px #ff3b2a,0 0 0 6.5px rgba(20,0,0,.8),0 0 20px rgba(255,60,40,.85)}
+.pc.sel{box-shadow:0 0 0 2px rgba(5,10,20,.9),0 0 0 5px #45b8ff,0 0 0 6.5px rgba(5,10,20,.8),0 0 18px rgba(69,184,255,.7)}
+.dest{background:#45b8ff;border:2px solid rgba(5,10,20,.85);box-shadow:0 0 0 1.5px rgba(255,255,255,.75),0 0 10px rgba(69,184,255,.8);box-sizing:border-box}
+.dest.cap{background:transparent;border:3.5px solid #ff4a3a;box-shadow:0 0 0 2px rgba(20,0,0,.85),inset 0 0 0 2px rgba(20,0,0,.85),0 0 12px rgba(255,74,58,.6)}
+.mark.ok{border-color:#ffd23a;box-shadow:0 0 0 2px rgba(10,6,0,.85),inset 0 0 0 2px rgba(10,6,0,.85),0 0 14px rgba(255,210,58,.6)}
+.mark.ng{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(20,0,0,.85),inset 0 0 0 2px rgba(20,0,0,.85)}
+.mark.played{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.85),inset 0 0 0 2px rgba(0,0,0,.85)}
+.mark.played.bad{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(20,0,0,.85),inset 0 0 0 2px rgba(20,0,0,.85),0 0 12px rgba(255,90,72,.55)}
+.mark.played.dubious{border-color:#ffc23a;box-shadow:0 0 0 2px rgba(20,10,0,.85),inset 0 0 0 2px rgba(20,10,0,.85)}
+.mark.rvbsel{border:3px solid #ffd23a;box-shadow:0 0 0 2px rgba(10,6,0,.85),inset 0 0 0 2px rgba(10,6,0,.85)}
+.mark.took::before,.mark.took::after{width:3px;background:#ff4a3a;box-shadow:0 0 0 1.5px rgba(20,0,0,.85)}
+.mark.from{border:2.5px dashed #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.7)}
+.hintlbl.best::before{border:3px solid #ffd23a;box-shadow:0 0 0 2px rgba(10,6,0,.85),inset 0 0 0 2px rgba(10,6,0,.85),0 0 10px rgba(255,210,58,.5)}
+.hintlbl.best b{color:#ffd23a}
 .hintlbl b{font-size:calc(var(--cell) * .24)}
 .hintlbl small{font-size:calc(var(--cell) * .15)}
 .reserve{justify-content:flex-start;padding-inline-start:calc(var(--cell) * .35);gap:calc(var(--cell) * .02)}
@@ -883,8 +907,6 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
   /* review box (rvbox.js) under the board + info column: the board gives up its height */
   html.rvbox-on{--rvbh:clamp(180px, calc(var(--vh) * .32), 270px);--rvbgap:12px;
     --cell:min((var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rvbh) - var(--rvbgap)) / 12, (100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 9.5, 110px)}
-  .fxsvg .arrow.rvb2{stroke:rgba(160,200,255,.75);stroke-dasharray:.12 .09}
-  .mark.rvbsel{border-color:var(--accent);border-width:2px}
   .rvbox .cr-tip{color:#e9dcb4}
   .rvbox .cr-see{font:inherit;font-size:12px;padding:1px 8px;border-radius:6px;border:1px solid var(--line);color:var(--accent);margin-inline-start:6px}
 }
