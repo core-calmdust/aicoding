@@ -1596,7 +1596,7 @@ applyLand();
 })();
 // ---- one-time tip for phone users in portrait: landscape play is available (queued behind any open dialog)
 const LAND_TIP = STORE + '-landtip';
-function landTipWanted() { return !landOn && mqCoarse.matches && mqPortrait.matches; }   // shown on every visit in portrait (once per page load)
+function landTipWanted() { let seen = false; try { seen = sessionStorage.getItem('bg-landtip') === '1'; } catch (e) {} return !seen && !landOn && mqCoarse.matches && mqPortrait.matches; }   // shown on every visit in portrait (once per page load)
 function pulseLand() { const b = $('#btnLand'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 4500); }
 function closeLandTip(on) { hideOverlay('#landTipOverlay'); if (on) setLand(true); setTimeout(pulseLand, 250); }
 $('#ltKeep').onclick = () => closeLandTip(false);
@@ -1607,6 +1607,7 @@ if (landTipWanted()) {
     if (document.querySelector('.overlay.show') || lesson || puzzle) return;
     clearInterval(iv);
     document.body.classList.toggle('no-anim', !settings.anim);
+    try { sessionStorage.setItem('bg-landtip', '1'); } catch (e) {}
     showOverlay('#landTipOverlay');
   }, 700);
 }

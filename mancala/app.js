@@ -2406,6 +2406,7 @@ $('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); i
 
 // ====================================================================== landscape option (phones)
 const ROT_KEY = 'aicoding-mancala-landscape';
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#btnRot')) rotTipSeenSet(); }, true);   // used the landscape mode: no tip again this visit
 function rotOn() { try { return localStorage.getItem(ROT_KEY) === '1'; } catch (e) { return false; } }
 function renderRotBtn() { const b = $('#btnRot'); if (b) b.classList.toggle('on', rotOn()); }
 $('#btnRot').onclick = async () => {
@@ -2435,7 +2436,9 @@ renderRotBtn();
 // tip for phone users: landscape mode exists. Shown on every visit in portrait while the option is off,
 // queued until no dialog is open (new-game dialog, resumed game, lesson / puzzle, animations)
 let rotTipDone = false;
-function rotTipEligible() { return !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
+const rotTipSeen = () => { try { return sessionStorage.getItem('mancala-rottip') === '1'; } catch (e) { return false; } };
+function rotTipSeenSet() { try { sessionStorage.setItem('mancala-rottip', '1'); } catch (e) {} }
+function rotTipEligible() { return !rotTipSeen() && !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
 function maybeRotTip() { /* kept for the dialog handlers; the queue below does the work */ }
 function startRotTip() {
   if (!rotTipEligible()) return;
@@ -2443,7 +2446,7 @@ function startRotTip() {
     if (rotTipDone || !rotTipEligible()) { clearInterval(iv); return; }
     if (window.innerWidth > window.innerHeight) return;                       // held sideways: wait
     if (document.querySelector('.overlay.show') || lesson || puzzle || animating || document.hidden) return;
-    clearInterval(iv); rotTipDone = true;
+    clearInterval(iv); rotTipDone = true; rotTipSeenSet();
     $('#rotTipOverlay').classList.add('show');
   }, 700);
 }
