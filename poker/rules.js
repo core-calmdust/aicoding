@@ -326,6 +326,7 @@ function open(v) {
   A.openOv('#rulesOverlay');
   requestAnimationFrame(() => show(v || cur || 'holdem', 0));
 }
+document.addEventListener('dragstart', e => { if (e.target.closest document.getElementById('btnRules')document.getElementById('btnRules') e.target.closest('img,.cd,.card,svg')) e.preventDefault(); });
 document.getElementById('btnRules').onclick = () => open(cur || (A.T && A.T.v));
 document.getElementById('rulesOverlay').addEventListener('pointerdown', e => { if (e.target.id === 'rulesOverlay') { if (cur && tours[cur]) tours[cur].stop(); A.closeOv('#rulesOverlay'); } });
 window.PokerRules = { open, RT, relang() { if (document.getElementById('rulesOverlay').classList.contains('show') && cur) { tabs(); tours[cur].render(); } } };
