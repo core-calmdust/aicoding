@@ -616,8 +616,10 @@ function marks() {
     if (d.m == null || d.m < 0 || pos.b[d.m]) continue;
     if (S.hov != null && S.hov !== d.m) continue;
     const [x, y] = xyOf(d.m), g = el('g', { class: 'hint ck-mk' }, gH);
-    el('circle', { cx: x, cy: y, r: 0.44, class: 'hc', fill: S.hov === d.m ? 'rgba(242,166,90,.95)' : 'rgba(233,199,126,.88)', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.05 }, g);
-    const t0 = el('text', { x, y: y + 0.02, 'font-size': 0.4, fill: '#1b150a' }, g); t0.textContent = d.label;
+    // common rule: coach marks are bright green with a dark rim, readable on every board skin
+    el('circle', { cx: x, cy: y, r: 0.49, fill: 'none', stroke: '#08120c', 'stroke-width': 0.12, opacity: 0.9 }, g);
+    el('circle', { cx: x, cy: y, r: 0.45, class: 'hc', fill: '#3df59a', stroke: S.hov === d.m ? '#ffffff' : '#0b3d24', 'stroke-width': S.hov === d.m ? 0.09 : 0.05 }, g);
+    const t0 = el('text', { x, y: y + 0.02, 'font-size': 0.46, fill: '#06140c' }, g); t0.textContent = d.label;
   }
 }
 function setOn(v) {
