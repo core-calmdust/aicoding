@@ -353,7 +353,7 @@ function render(o) {
   if (!T) return;
   const V = P.VARIANTS[T.v], box = $('#pkTable'), W = box.clientWidth, H = box.clientHeight;
   const narrow = W < 640, tall = H > W * (narrow ? .95 : 1.1);   // portrait boards have room for much bigger cards
-  const cw = Math.max(26, Math.min(W / (V.stud ? (narrow || tall ? 10.5 : 13.5) : (narrow || tall ? 7.2 : 9.8)), H / (V.stud ? (tall ? 8 : 6.6) : (tall ? 8.2 : 5.7)), tall ? 170 : 130));
+  const cw = Math.max(26, Math.min(W / (V.stud ? (narrow || tall ? 10.5 : 13.5) : (narrow || tall ? 7.2 : 9.8)), H / (V.stud ? (tall || narrow ? 8 : 6.6) : (tall || narrow ? 8.2 : 5.7)), tall ? 170 : 130));
   const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   const done = T.phase === 'done', showAll = done && T.result && T.result.showdown;
   const winners = done ? new Set(T.result.pots.flatMap(p => p.winners || [])) : new Set();
@@ -388,6 +388,7 @@ function render(o) {
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
     if (s.bet > 0) { const [bx, by] = (tall || narrow ? BETPOS_T : BETPOS)[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
   });
+  box.classList.toggle('nb', narrow && !!V.board && V.hole < 4);   // squeezed phone table: the pot goes under the board
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
   if (o.deal && set.anim) {
@@ -526,14 +527,15 @@ function mTabs() {
   const side = $('#side'), have = new Set($$('#side [data-pt]').map(e => e.dataset.pt));
   let cur = set.mTab && have.has(set.mTab) ? set.mTab : have.has('coach') ? 'coach' : have.has('eq') ? 'eq' : 'log';
   side.dataset.pt = cur;
-  const open = document.body.classList.contains('mt-open');
-  $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', open && b.dataset.pt === cur); });
+  $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', b.dataset.pt === cur); });
 }
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
-  const open = document.body.classList.contains('mt-open'), pt = b.dataset.pt;
-  if (open && $('#side').dataset.pt === pt) document.body.classList.remove('mt-open');   // tap the open tab again: close
-  else { set.mTab = pt; save(); document.body.classList.add('mt-open'); }
-  mTabs(); $('#side').scrollTop = 0;
+  const same = $('#side').dataset.pt === b.dataset.pt;
+  set.mTab = b.dataset.pt; save(); mTabs();
+  // keep the table in view: bring the box up only to just past the middle of the screen; tap again → back to the top
+  const sc = $('.stage'), top = sc.getBoundingClientRect().top, y = $('#side').getBoundingClientRect().top - top, h = sc.clientHeight;
+  if (same && sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' });
+  else if (y > h * .55) sc.scrollTo({ top: sc.scrollTop + y - h * .55, behavior: 'smooth' });
 });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
@@ -541,6 +543,8 @@ function fitLabels() {
 }
 addEventListener('resize', () => requestAnimationFrame(fitLabels));
 /* phones: the scrolling middle's height → the table size (--sh) */
+{ const sc = $('.stage'), upd = () => { const h = sc.clientHeight; if (h) document.documentElement.style.setProperty('--sh', h + 'px'); };
+  if (window.ResizeObserver) new ResizeObserver(upd).observe(sc); upd(); }
 /* the table follows its box (phones: it shrinks while the info panel is open) */
 if (window.ResizeObserver) { let lw = 0, lh = 0, q = 0; new ResizeObserver(() => { const b = $('#pkTable'); if (!b || (b.clientWidth === lw && b.clientHeight === lh)) return; lw = b.clientWidth; lh = b.clientHeight; if (!q) q = requestAnimationFrame(() => { q = 0; if (T) render(); }); }).observe($('#pkTable')); }
 function boardStr(st) {
@@ -747,5 +751,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
 
-window.PokerApp = { showTab(pt) { set.mTab = pt; document.body.classList.add('mt-open'); mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
+window.PokerApp = { showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
 })();
