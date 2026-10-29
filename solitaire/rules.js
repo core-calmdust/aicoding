@@ -445,10 +445,14 @@ const IMG = '../images/icons/solitaire.svg';
 const L = () => A.LANG, T = v => (RT[L()] || RT.en)[v] || RT.en[v];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let cur = null; const tours = {}, mounts = {};
+// "what kind of game is it": picture, short description and the key facts (moved here from the new-game dialog)
+function overview(v) {
+  return `<div class="rt-ov"><span class="rt-ov-art">${A.gArt(v)}</span><div class="rt-ov-t"><p>${esc(A.t('vg.' + v))}</p><ul>${A.t('vf.' + v).split('|').map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div>`;
+}
 function build(v) {
   if (tours[v]) return tours[v];
   const m = document.createElement('div'); m.className = 'rt-mount'; m.dataset.v = v; $('#rulesBody').appendChild(m); mounts[v] = m;
-  const R = RULES[v], pages = [{ id: 'intro', title: () => esc(A.vName(v)), body: () => '', html: () => RuleTour.intro({ img: IMG, origin: esc(T(v).origin), players: esc(T(v).players), time: esc(T(v).time), history: esc(T(v).hist), win: esc(T(v).win), culture: esc(T(v).cult), lang: L() }) }];
+  const R = RULES[v], pages = [{ id: 'intro', title: () => esc(A.vName(v)), body: () => '', html: () => overview(v) + RuleTour.intro({ img: IMG, origin: esc(T(v).origin), players: esc(T(v).players), time: esc(T(v).time), history: esc(T(v).hist), win: esc(T(v).win), culture: esc(T(v).cult), lang: L() }) }];
   R.pages.forEach((mkSt, j) => {
     pages.push({ id: 'p' + j, title: () => esc(T(v).p[j].t), body: () => esc(T(v).p[j].b), task: () => esc(T(v).p[j].task),
       setup(api) {
