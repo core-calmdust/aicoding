@@ -1,47 +1,62 @@
 'use strict';
-// Phone landscape (also the turned page of the "landscape on a phone held upright" option): the info boxes become tabs.
-// A compact tab rail at the right edge of the board (コーチ / 形勢 / 棋譜 / 戦績 / オンライン) and a side panel of about a third
-// of the screen that shows the chosen box. The boxes are moved into the panel while this layout is on and put back in
-// their places when it is left (PC / portrait keep their own layouts). 戦績 opens the record dialog; オンライン shows the
-// online dock in the panel. Labels are never cut: a label that does not fit its tab is hidden (the tab keeps its aria-label).
+// Phone landscape (also the turned page of the "landscape on a phone held upright" option): a tab rail at the right edge
+// (コーチ / 形勢・棋譜 / レッスン / 戦績 / オンライン). A tab slides a drawer in from the right over the board with the chosen
+// box; the same tab again, a tap on the board or a swipe to the right closes it; a swipe to the left from the right edge
+// opens it (the drawer follows the finger). 形勢 and 棋譜 share one page (thin graph, long move list). The レッスン tab holds
+// ルール / レッスン / パズル (the top menu keeps only ルール in this layout). 戦績 opens the record dialog, オンライン the online
+// dock in the drawer's place. Lessons / puzzles keep their card open beside the board. The boxes are moved into the drawer
+// while this layout is on and put back when it is left (PC / portrait keep their layouts).
 (() => {
 const MQ = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
 const KEY = 'mancala-landtab';
 const ICON = {
   coach: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg>',
-  eval: '<svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg>',
-  kifu: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  ek: '<svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg>',
+  learn: '<svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg>',
   rec: '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>',
   online: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
+  rules: '<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>',
+  puzzle: '<svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg>',
 };
 const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
 const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', hi: 'रिकॉर्ड', ar: 'السجل' };
+const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
-let rail = null, panel = null, on = false, cur = 'coach', saved = false, homes = [];
-try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'eval' || v === 'kifu') { cur = v; saved = true; } } catch (e) {}
+let rail = null, panel = null, learn = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
+try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
 const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
-const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['eval', $('#evalCard')], ['kifu', $('.kifu-card')], ['ls', $('.lesson-card')], ['ls', $('.puzzle-card')]].filter(x => x[1]);
+const tt = (k, d) => (typeof t === 'function' ? t(k) : d);
+const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['ek', $('#evalCard')], ['ek', $('.kifu-card')], ['learn', learn], ['ls', $('.lesson-card')], ['ls', $('.puzzle-card')]].filter(x => x[1]);
 const coachOk = () => document.body.classList.contains('ck-tab');
+const pinned = () => document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
+const onlineOn = () => document.body.classList.contains('mtab-online');
 function label(k) {
   const l = lang();
   if (k === 'coach') return window.MancalaCoach ? MancalaCoach.tx('head') : 'Coach';
-  if (k === 'eval') return typeof t === 'function' ? t('eval') : 'Eval';
-  if (k === 'kifu') return typeof t === 'function' ? t('kifu') : 'Moves';
+  if (k === 'ek') return tt('eval', 'Eval');
+  if (k === 'learn') return tt('btn.lesson', LEARN[l] || LEARN.en);
   if (k === 'rec') return REC[l] || REC.en;
   return ONL[l] || ONL.en;
 }
 function build() {
   rail = document.createElement('nav'); rail.id = 'ltRail'; rail.setAttribute('role', 'tablist');
-  rail.innerHTML = ['coach', 'eval', 'kifu', 'rec', 'online'].map(k => `<button type="button" data-lt="${k}">${ICON[k]}<span></span></button>`).join('');
+  rail.innerHTML = ['coach', 'ek', 'learn', 'rec', 'online'].map(k => `<button type="button" data-lt="${k}">${ICON[k]}<span></span></button>`).join('');
   panel = document.createElement('div'); panel.id = 'ltPanel';
+  learn = document.createElement('div'); learn.id = 'ltLearn';
+  learn.addEventListener('click', e => {
+    const b = e.target.closest('[data-go]'); if (!b) return;
+    close();
+    const id = { rules: '#btnRules', lesson: '#btnLesson', puzzle: '#btnPuzzle' }[b.dataset.go], el = $(id); if (el) el.click();
+  });
   rail.addEventListener('click', e => {
     const b = e.target.closest('[data-lt]'); if (!b) return;
     const k = b.dataset.lt;
-    if (k === 'rec') { if (window.GameRecord) GameRecord.open(); return; }
-    if (k === 'online') { if (typeof mtab === 'function') mtab(document.body.classList.contains('mtab-online') ? 'game' : 'online'); sync(); return; }
-    if (document.body.classList.contains('mtab-online') && typeof mtab === 'function') mtab('game');
+    if (k === 'rec') { close(); if (window.GameRecord) GameRecord.open(); return; }
+    if (k === 'online') { const was = onlineOn(); close(); if (!was && typeof mtab === 'function') mtab('online'); sync(); return; }
+    if (onlineOn() && typeof mtab === 'function') mtab('game');
+    if (open && cur === k) { close(); return; }
     cur = k; saved = true; try { localStorage.setItem(KEY, k); } catch (er) {}
-    sync(); panel.scrollTop = 0;
+    setOpen(true); panel.scrollTop = 0;
   });
   relabel();
 }
@@ -52,6 +67,9 @@ function relabel() {
     if (s.textContent !== l) s.textContent = l;
     b.setAttribute('aria-label', l); b.title = l;
   });
+  const row = (k, ic, desc) => `<button type="button" data-go="${k}">${ICON[ic]}<span>${tt('btn.' + k, k)}${desc ? `<small>${desc}</small>` : ''}</span></button>`;
+  const h = `<h3>${label('learn')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', '')) + row('puzzle', 'puzzle', tt('btn.puzzle.title', ''));
+  if (learn.dataset.h !== h) { learn.dataset.h = h; learn.innerHTML = h; }
   fit();
 }
 // a label that does not fit the rail is hidden (never cut off)
@@ -59,12 +77,19 @@ function fit() {
   if (!rail || !on) return;
   rail.querySelectorAll('[data-lt] span').forEach(s => { s.style.display = ''; if (s.scrollWidth > s.parentNode.clientWidth - 2) s.style.display = 'none'; });
 }
+function setOpen(v) {
+  open = !!v && on && !pinned();
+  document.body.classList.toggle('lt-open', open);
+  panel.style.transform = '';
+  sync();
+}
+function close() { if (open) setOpen(false); }
 function sync() {
   if (!on) return;
-  if (cur === 'coach' && !coachOk()) cur = 'eval';
-  const online = document.body.classList.contains('mtab-online');
+  if (cur === 'coach' && !coachOk()) cur = 'ek';
+  const ol = onlineOn();
   rail.querySelectorAll('[data-lt]').forEach(b => {
-    const k = b.dataset.lt, sel = online ? k === 'online' : k === cur;
+    const k = b.dataset.lt, sel = ol ? k === 'online' : open && k === cur;
     b.classList.toggle('sel', sel); b.setAttribute('aria-selected', sel ? 'true' : 'false');
     if (k === 'coach') b.hidden = !coachOk();
     if (k === 'online') b.hidden = document.body.classList.contains('no-online');
@@ -80,14 +105,14 @@ function enter() {
   for (const h of homes) { h.el.dataset.ltc = h.k; panel.appendChild(h.el); }
   document.body.classList.add('lt-on');
   if (!saved && coachOk()) cur = 'coach';
-  sync(); refit();
+  setOpen(false); refit();
 }
 function leave() {
-  if (!on) return; on = false;
-  for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); }
+  if (!on) return; on = false; open = false;
+  for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
   homes = [];
   rail.remove(); panel.remove();
-  document.body.classList.remove('lt-on'); delete document.body.dataset.lt;
+  document.body.classList.remove('lt-on', 'lt-open'); delete document.body.dataset.lt;
   refit();
 }
 function refit() {
@@ -95,17 +120,54 @@ function refit() {
   setTimeout(() => { try { layout(); } catch (e) {} fit(); }, 30);
 }
 function check() { if (MQ.matches && !document.documentElement.classList.contains('atlas-skin')) enter(); else leave(); }
-// the coach tab appears / the review opens: show the coach tab
+// a tap on the board closes the drawer (and does not play a pit)
+document.addEventListener('click', e => {
+  if (!on || !open || pinned()) return;
+  if (e.target.closest && (e.target.closest('#ltPanel') || e.target.closest('#ltRail') || e.target.closest('.overlay') || e.target.closest('.ck-pop'))) return;
+  if (e.target.closest && e.target.closest('.frame')) { e.stopPropagation(); e.preventDefault(); close(); }
+}, true);
+document.addEventListener('pointerdown', e => {
+  if (on && open && !pinned() && e.target.closest && e.target.closest('.frame') && !e.target.closest('#ltPanel')) { e.stopPropagation(); }
+}, true);
+// swipes: left from the right edge opens, right on the open drawer closes; the drawer follows the finger
+let sw = null;
+const W = () => panel.getBoundingClientRect().width + 80;
+document.addEventListener('touchstart', e => {
+  if (!on || pinned() || e.touches.length !== 1 || document.querySelector('.overlay.show')) return;
+  const x = e.touches[0].clientX, y = e.touches[0].clientY;
+  if (open && e.target.closest && e.target.closest('#ltPanel')) sw = { x, y, mode: 'close', dx: 0 };
+  else if (!open && !onlineOn() && x > innerWidth - 90) sw = { x, y, mode: 'open', dx: 0 };
+  else sw = null;
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (!sw) return;
+  const dx = e.touches[0].clientX - sw.x, dy = e.touches[0].clientY - sw.y;
+  if (!sw.go) { if (Math.abs(dx) < 10) return; if (Math.abs(dy) > Math.abs(dx)) { sw = null; return; } sw.go = true; panel.classList.add('drag'); }
+  sw.dx = dx;
+  const w = W(), off = sw.mode === 'open' ? Math.max(0, Math.min(w, w + dx)) : Math.max(0, Math.min(w, dx));
+  panel.style.transform = `translateX(${off}px)`;
+}, { passive: true });
+document.addEventListener('touchend', () => {
+  if (!sw) return;
+  const s = sw; sw = null;
+  if (!s.go) return;
+  panel.classList.remove('drag'); panel.style.transform = '';
+  if (s.mode === 'open' && s.dx < -50) { if (cur === 'coach' && !coachOk()) cur = 'ek'; setOpen(true); }
+  else if (s.mode === 'close' && s.dx > 50) setOpen(false);
+  else setOpen(open);
+}, { passive: true });
+// the coach tab appears / the review opens: the coach tab is chosen (the drawer stays as it is)
 let ckWas = coachOk(), rvWas = false;
 new MutationObserver(() => {
-  const a = coachOk(), rv = !!$('#reviewCard.show');
-  if ((a && !ckWas && !saved) || (rv && !rvWas)) cur = 'coach';
-  ckWas = a; rvWas = rv; sync();
+  const a = coachOk();
+  if (a && !ckWas && !saved) cur = 'coach';
+  const pin = pinned(); if (on && pin !== !!document.body.dataset.ltpin) { if (pin) document.body.dataset.ltpin = '1'; else delete document.body.dataset.ltpin; close(); refit(); }
+  ckWas = a; sync();
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 { const rc = $('#reviewCard'); if (rc) new MutationObserver(() => { const rv = rc.classList.contains('show'); if (rv && !rvWas) cur = 'coach'; rvWas = rv; sync(); }).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
 new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 if (MQ.addEventListener) MQ.addEventListener('change', check); else MQ.addListener(check);
 addEventListener('resize', () => fit());
 check();
-window.LandTabs = { on: () => on, sync, relabel };
+window.LandTabs = { on: () => on, open: k => { if (k) cur = k; setOpen(true); }, close, sync, relabel };
 })();
