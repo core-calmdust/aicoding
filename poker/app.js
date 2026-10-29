@@ -271,6 +271,9 @@ function statOf(v) { return D.stats[v] || (D.stats[v] = {}); }
 // seat positions on the oval (percent of the table area); seat 0 (the player) bottom centre
 const SEATPOS = [[50, 84], [9, 62], [14, 21], [50, 11], [86, 21], [91, 62]];
 const BETPOS = [[50, 65], [23, 60], [27, 36], [50, 28], [73, 36], [77, 60]];
+// portrait tables: side seats pulled in so the name plates stay on the felt
+const SEATPOS_T = [[50, 87], [18, 64], [20, 23], [50, 11], [80, 23], [82, 64]];
+const BETPOS_T = [[50, 71], [27, 57], [29, 33], [50, 25], [71, 33], [73, 57]];
 let lastBubble = {};
 function bubble(s, txt) { lastBubble[s] = { txt, at: Date.now(), hand: T.hand }; }
 /* DOM patching: keep the elements that did not change (no re-played animations, no image reloads = no flicker).
@@ -366,7 +369,7 @@ function render(o) {
   h += `<div class="pk-pot${pot ? '' : ' empty'}" data-k="pot">${pot ? chipStack(pot, 3) : '<span class="chipico"></span>'}<b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
   // seats
   T.seats.forEach((s, i) => {
-    const [x, y] = SEATPOS[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
+    const [x, y] = (tall ? SEATPOS_T : SEATPOS)[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
     const cards = s.cards.map((c, k) => {
       const up = V.stud ? s.up[k] : false;
       const visible = hero || up || (showAll && !s.folded && (set.showBots || winners.has(i) || true));
@@ -382,7 +385,7 @@ function render(o) {
       `<div class="plate"><span class="ava av${i}">${hero ? '★' : esc(s.name[0])}</span><span class="pn"><b>${esc(s.name)}</b><small>${hero ? esc(t('you.sub')) : esc(style)}</small></span><span class="st">${s.stack}</span></div>` +
       (bub ? `<div class="bub" data-k="bub${T.hand}-${lastBubble[i].at}">${esc(bub)}</div>` : '') + (info ? `<div class="hinfo">${esc(info)}</div>` : '') +
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
-    if (s.bet > 0) { const [bx, by] = BETPOS[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
+    if (s.bet > 0) { const [bx, by] = (tall ? BETPOS_T : BETPOS)[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
   });
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
@@ -450,6 +453,7 @@ function resultLine() {
 /* ---------------- side panel ---------------- */
 const pct = x => (x * 100).toFixed(1) + '%';
 /* situational tips (tips.js): computed once per spot */
+const gl = h => window.PokerGloss ? PokerGloss.mark(h, LANG) : h;   // glossary terms (gloss.js)
 function tipsNow(c) {
   if (!window.PokerTips || !T) return [];
   const key = spotKey(); if (G.tipsKey === key && G.tips) return G.tips;
@@ -459,7 +463,7 @@ function tipsNow(c) {
 function tipsHtml(list) {
   if (!list || !list.length) return '';
   const n = 3, open = !!set.tipsOpen, show = open ? list : list.slice(0, n);
-  return `<div class="tips" data-k="tips"><div class="tips-h">💡 ${esc(PokerTips.ui('head', LANG))}</div><ul>${show.map(x => `<li>${esc(PokerTips.text(x, LANG))}</li>`).join('')}</ul>` +
+  return `<div class="tips" data-k="tips"><div class="tips-h">💡 ${esc(PokerTips.ui('head', LANG))}</div><ul>${show.map(x => `<li>${gl(esc(PokerTips.text(x, LANG)))}</li>`).join('')}</ul>` +
     (list.length > n ? `<button type="button" class="tips-more" id="tipsMore">${esc(open ? PokerTips.ui('less', LANG) : PokerTips.ui('more', LANG, { n: list.length - n }))}</button>` : '') + `</div>`;
 }
 function renderSide() {
@@ -487,7 +491,7 @@ function renderSide() {
   if (set.coach) {
     let body;
     const last = G.verdict && G.verdict.hand === T.hand ? G.verdict : null;
-    if (myTurn && c) body = `<div class="rec"><span class="rb">${esc(t('rec.' + c.rec))}</span><p>${esc(t('why.' + c.why[0], { eq: pct(c.eq), need: pct(c.need), fair: pct(c.fair) }))}</p></div>` + tipsHtml(tipsNow(c));
+    if (myTurn && c) body = `<div class="rec"><span class="rb">${esc(t('rec.' + c.rec))}</span><p>${gl(esc(t('why.' + c.why[0], { eq: pct(c.eq), need: pct(c.need), fair: pct(c.fair) })))}</p></div>` + tipsHtml(tipsNow(c));
     else if (myTurn) body = `<p class="muted calc"><span class="spin s"></span>${esc(t('hud.calc'))}</p>`;
     else body = '';
     if (last) body += `<div class="verdict g${last.grade}"><b>${esc(t('grade.' + last.grade))}</b><span>${esc(t('verdict', { a: t('rec.' + last.a), rec: t('rec.' + last.rec) }))}</span></div>`;

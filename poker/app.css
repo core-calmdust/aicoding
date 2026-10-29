@@ -1069,3 +1069,24 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
   .szb{padding:8px 9px;font-size:14px;white-space:nowrap}
   .szb kbd{margin-left:4px}
 }
+/* glossary terms */
+.gl{border-bottom:1.5px dotted rgba(236,210,140,.75);cursor:help;color:inherit;outline:none}
+.gl:hover,.gl:focus{color:#fff4d4;border-bottom-color:#ecd28c;background:rgba(236,210,140,.12);border-radius:3px}
+#glTip{position:fixed;z-index:7000;max-width:min(340px,calc(100vw - 20px));padding:10px 13px;border-radius:12px;background:#0e1328;border:1px solid rgba(236,210,140,.6);box-shadow:0 10px 30px rgba(0,0,0,.6);color:var(--text);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+#glTip.show{opacity:1;transform:none;pointer-events:auto}
+#glTip b{display:block;font-size:14px;color:#ecd28c;margin-bottom:4px}
+#glTip p{margin:0;font-size:13.5px;line-height:1.7}
+/* the table's corners: one circular radius, the rail lines and the felt concentric with it */
+.pk .board-wrap{--R:min(16vw,22vh,210px);border-radius:var(--R)}
+.pk .board-wrap::after{border-radius:calc(var(--R) - var(--rail) * .5 + 2px)}
+.pk .board-wrap > .felt{border-radius:max(14px,calc(var(--R) - var(--rail)))}
+@media (max-width:760px){.pk .board-wrap{--R:110px}}
+/* new-game dialog: rules tab, larger text */
+@media (min-width:761px){
+  .rl{padding:13px 16px;gap:16px}
+  .rl-t b{font-size:16px}
+  .rl-t small{font-size:13px;line-height:1.6}
+  .rl .seg button{font-size:14px;padding:9px 10px}
+  #ngBody[data-tab=rules] .diff-desc{font-size:14px}
+}
+.pk .board-wrap::before{border-radius:calc(var(--R) - 4px)}
