@@ -384,6 +384,7 @@ function render() {
   if (cur !== moves.length || reviewing) { clearFx(); h += `<p class="ck-muted">${esc(tx('viewing'))}</p>`; return put(h); }
   if (!myTurn()) { clearFx(); h += `<p class="ck-muted">${esc(tx('oppTurn'))}</p>` + verdictHtml(); return put(h); }
   const key = moves, f = fAll, cl = candInfo(key, f);
+  if (S.hovKey !== key) { S.hovKey = key; S.hov = null; }
   // summary chips
   const chips = [];
   const ev = evals[cur];
@@ -453,7 +454,23 @@ function put(h) {
     onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hov = null; drawFx(); render(); },
     onHover: u => { S.hov = u == null ? null : +u; drawFx(); },
   });
+  // touch (iPhone): a tap toggles the candidate on the board. The pointer type is taken from pointerdown, because a
+  // tap's click is not a PointerEvent (or reports "mouse") on some WebKit versions
+  card.querySelectorAll('.ck-bi[data-mv]').forEach(b => {
+    b.onclick = e => {
+      if (S.pt === 'mouse') return;   // mouse: hover shows it
+      e.stopPropagation();
+      const mv = +b.dataset.mv, on = S.hov !== mv;
+      S.hov = on ? mv : null; drawFx(); markRows();
+    };
+  });
+  markRows();
   drawFx();
+}
+function markRows() {
+  if (!card) return;
+  card.querySelectorAll('.ck-bi[data-mv]').forEach(b => b.classList.toggle('ck-hov', S.hov != null && +b.dataset.mv === S.hov));
+  if (S.hov != null) card.dataset.ckSel = String(S.hov); else delete card.dataset.ckSel;
 }
 // the candidate cells on the board (revealed moves only): a ring on the cell the disc would land in
 function clearFx() { if (typeof fxEl !== 'undefined' && fxEl) fxEl.querySelectorAll('.ck-mark').forEach(x => x.remove()); }
@@ -475,6 +492,7 @@ function init() {
   if (!window.CoachKit) return;
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
+  if (card) card.addEventListener('pointerdown', e => { S.pt = e.pointerType; }, true);
   { const rc = document.getElementById('reviewCard'); if (rc) { rc.dataset.itc = 'coach'; if (window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); } }
   if (settings.coach === undefined) settings.coach = true;
   try { S.reveal = !!settings.coachReveal; } catch (e) {}
