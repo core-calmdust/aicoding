@@ -1506,6 +1506,11 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 #map .varrow.now .vring{fill:none;stroke:rgba(255,170,100,.7);stroke-width:1.5;animation:vring 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes vring{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){#map .varrow.now .vring{animation:none}}
+/* チュートリアル：今のステップ以外の操作を薄く */
+body.coach-lock #dock .ib:not(.coach-hl):not([hidden]),body.coach-lock .playbar .btn:not(.coach-hl):not(#aPlay){opacity:.32;filter:saturate(.4)}
+body.coach-lock #myHand .acard.spec:not(.coach-hl){opacity:.5}
+.coach.nudge{animation:coNudge .45s ease}
+@keyframes coNudge{20%{translate:-6px 0}40%{translate:6px 0}60%{translate:-4px 0}80%{translate:3px 0}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -4257,6 +4262,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         const H = S.hexes[id], c = toScr(H.x * U, H.y * U), R = sc * U * .9; const dc = Math.hypot(px - c.x, py - c.y);
         d = Math.max(0, dc - R * .8) + PICK_PX * .6; if (dc > R) return;
       }
+      { const lk = coachLock(); if (lk && !lk.map.includes(kind)) return; }   // チュートリアル：今のステップの目印だけ
       if (d < PICK_PX) out.push({ kind, id, el, d, on });
     });
     out.sort((a, b) => a.d - b.d);
@@ -5204,6 +5210,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   document.addEventListener('keydown', e => {
     if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) || document.querySelector('#dlgs .dlg') || busy) return;
+    { const lk = coachLock(); if (lk) { e.preventDefault(); if (lk.key === 'draw' && HD.canDraw(S)) { closePop(); HD.draw(S); mode = null; after(); } else if (lk.key === 'end' && !$('aEnd').disabled) $('aEnd').click(); else coachNudge(); return; } }
     const ok = id => { const b = $(id); return b && !b.hidden && !b.disabled; };
     e.preventDefault();
     if (S.cur === HUMAN && HD.canDraw(S)) { closePop(); HD.draw(S); mode = null; after(); return; }
@@ -5419,10 +5426,20 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   let coach = null; const TAP = matchMedia('(pointer:coarse)').matches ? 'タップ' : 'クリック';
   const myHexNums = () => { const out = []; S.hexes.forEach(H => { if (H.num && H.num !== 7 && H.verts.some(v => S.verts[v].owner === HUMAN)) out.push(H.num); }); return out; };
   const gift = (o, note) => { const P = S.players[HUMAN]; let any = false; for (const r in o) if (P.res[r] < o[r]) { P.res[r] = o[r]; any = true; } if (any) coach.gift = note; };
-  const noSeven = () => { for (let k = 1; k <= 2; k++) { const i = S.deck.length - k; if (i >= 0 && S.deck[i] === 7) { const j = S.deck.findIndex(x => x !== 7); if (j >= 0 && j < S.deck.length - 2) [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]]; } } };
+  const noSeven = () => { for (let k = 1; k <= 3; k++) { const i = S.deck.length - k; if (i >= 0 && S.deck[i] === 7) { const j = S.deck.findIndex(x => x !== 7); if (j >= 0 && j < S.deck.length - 3) [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]]; } } };
   const myTurnNew = () => S.phase === 'turn' && S.cur === HUMAN && !S.acted && S.turn !== coach.lastTurn;
   const P0 = () => S.players[HUMAN];
   const spec0 = () => (P0().spec || []).length;
+  const PLAYA = () => S.drawn.length || S.step !== 'draw' ? { dom: ['#myHand', '#aPlay'] } : { dom: ['#deckSlot'], key: 'draw' };
+  const ALLOW = { draw: () => ({ dom: ['#deckSlot'], key: 'draw' }), play: () => ({ dom: ['#myHand', '#aPlay'] }), road2: () => ({ map: ['road'] }), dev2: () => ({ map: ['dev'] }), trade: () => ({ dom: ['#aTrade'] }),
+    end: () => ({ dom: ['#aEnd'], key: 'end' }), end2: () => ({ dom: ['#aEnd'], key: 'end' }), end3: () => ({ dom: ['#aEnd'], key: 'end' }), play2: PLAYA, play3: PLAYA,
+    settle: () => ({ map: ['road', 'settle'] }), city: () => ({ map: ['city'] }), shop: () => ({ dom: ['[data-sb]'] }), knight: () => ({ dom: ['#aKnight', '#knCancel'], map: ['robber'] }), spec: () => ({ dom: ['#myHand .spec'] }) };
+  // チュートリアル中の自分の手番：今のステップで使う操作だけ許す（それ以外は押せない）
+  function coachLock() {
+    if (!coach || S.cur !== HUMAN || !(S.phase === 'turn' || S.phase === 'robber')) return null;
+    const st = COACH[coach.i]; if (!st || !st.blk) return null;
+    const f = ALLOW[st.id]; return Object.assign({ dom: [], map: [], key: '' }, f ? f() : {});
+  }
   const COACH = [
     { id: 'intro', manual: true, h: '遊びながら覚えよう', t: () => `練習用の対局です（相手は初級BOT3人・目標${S.goal}点）。<br>この枠の指示に沿って、実際に盤を操作しながら<b>3手番</b>かけてひと通り覚えます。光っている所が次に押す場所です。<br><small>練習用に、時代は2周ごとに進みます。</small>` },
     // ---- 準備 ----
@@ -5499,7 +5516,15 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     });
     coachGo(0); render();
   }
-  function coachEnd() { if (!coach) return; coach.el.remove(); coach = null; document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl')); }
+  function coachNudge() { if (!coach) return; coach.el.classList.remove('nudge'); void coach.el.offsetWidth; coach.el.classList.add('nudge'); }
+  document.addEventListener('click', e => {
+    const lk = coachLock(); if (!lk) return;
+    const t = e.target; if (!t.closest || t.closest('.coach') || t.closest('.dlg') || t.closest('#topbar') || t.closest('#map')) return;
+    const hit = t.closest('button, [data-s], [data-sb], .acard, #deckTap'); if (!hit) return;
+    if (lk.dom.some(q => hit.closest(q) || hit.matches(q))) { if (!(hit.closest('#myHand') && hit.classList.contains('spec') && !lk.dom.includes('#myHand .spec'))) return; }
+    e.preventDefault(); e.stopImmediatePropagation(); coachNudge();
+  }, true);
+  function coachEnd() { if (!coach) return; coach.el.remove(); coach = null; document.body.classList.remove('coach-lock'); document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl')); }
   function coachTick() {
     if (!coach) return;
     if (S.phase === 'over') { coachEnd(); return; }
@@ -5510,6 +5535,8 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       break;
     }
     if (!coach) return; st = COACH[coach.i]; if (!st) return;
+    if (st.blk && S.cur === HUMAN && S.phase === 'turn' && !S.acted) noSeven();   // 練習中は自分の番に7を引かない
+    document.body.classList.toggle('coach-lock', !!coachLock());
     const waiting = st.wait && st.wait();
     const n = COACH.length - 1, k = Math.min(coach.i, n);
     const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
