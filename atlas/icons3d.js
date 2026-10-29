@@ -349,6 +349,36 @@
       g0.add(at(card(M({ map: faceTex('s', 'A', 0), roughness: .35 })), -.1, 1.75, -.35, 1.05, .35, -.18));
       return g0;
     },
+    poker() {   // a luxury black felt square: toy chip stacks (red / black / white), pocket aces leaning on the chips, a dealer button
+      const g0 = new T.Group();
+      const faceTex = (k, r, su) => X.canvasTex('ic-pk' + k, 256, 352, (c, W, H) => {
+        c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); const red = su === 1 || su === 2; c.fillStyle = red ? '#c0232e' : '#1f1f26';
+        c.font = 'bold 96px Georgia, serif'; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText(r, 20, 14);
+        c.font = '230px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('♠♥♦♣'[su], W / 2 + 10, H * .6);
+      });
+      const edge = C(0xf3ead6, { roughness: .4 });
+      const card = (top) => { const b = rbox(1.4, .14, 1.96, .12, edge); const f = mesh(new T.PlaneGeometry(1.26, 1.82), top); f.rotation.x = -Math.PI / 2; f.position.y = .145; return grp(b, f); };
+      // chip: fat rounded disc + white edge inserts + inlay disc on top
+      const chipTex = (k, body, ins) => X.canvasTex('ic-pkc' + k, 256, 256, (c, W, H) => {
+        c.fillStyle = body; c.beginPath(); c.arc(W / 2, H / 2, W / 2, 0, 7); c.fill();
+        c.fillStyle = ins; for (let i = 0; i < 8; i++) { c.save(); c.translate(W / 2, H / 2); c.rotate(i * Math.PI / 4); c.fillRect(-14, -W / 2, 28, 34); c.restore(); }
+        c.fillStyle = '#f6f1e4'; c.beginPath(); c.arc(W / 2, H / 2, W * .3, 0, 7); c.fill();
+        c.strokeStyle = body; c.lineWidth = 6; c.setLineDash([12, 8]); c.beginPath(); c.arc(W / 2, H / 2, W * .25, 0, 7); c.stroke();
+      });
+      const chip = (k, body, ins, hex) => { const p = puck(.62, .2, gloss(hex), .35); const top = mesh(new T.CircleGeometry(.56, 40), M({ map: chipTex(k, body, ins), roughness: .3 })); top.rotation.x = -Math.PI / 2; top.position.y = .203; return grp(p, top); };
+      const stack = (k, body, ins, hex, n, x, z) => { for (let i = 0; i < n; i++) g0.add(at(chip(k, body, ins, hex), x + (i % 2 ? .03 : -.02), i * .2, z + (i % 3 === 1 ? .03 : 0), 0, i * .7, 0)); };
+      stack('r', '#c8203a', '#f7f1e3', 0xc8203a, 5, .55, -.6);
+      stack('k', '#23262e', '#e8c66e', 0x23262e, 3, 1.15, .45);
+      stack('w', '#efe9db', '#2f5fb8', 0xefe9db, 2, .55, 1.05);
+      // pocket aces leaning on the red stack
+      g0.add(at(card(M({ map: faceTex('as', 'A', 0), roughness: .35 })), -.85, 0, .35, 0, .55, 0));
+      g0.add(at(card(M({ map: faceTex('ah', 'A', 1), roughness: .35 })), -.3, .15, .55, 0, .12, 0));
+      // dealer button
+      const dTex = X.canvasTex('ic-pkd', 256, 256, (c, W) => { c.fillStyle = '#f7f4ec'; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill(); c.fillStyle = '#1f1f26'; c.font = 'bold 150px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('D', W / 2, W / 2 + 8); });
+      const db = grp(puck(.42, .16, C(0xf7f4ec, { roughness: .3 }), .4), at(mesh(new T.CircleGeometry(.4, 36), M({ map: dTex, roughness: .3 })), 0, .081, 0, -Math.PI / 2, 0, 0));
+      g0.add(at(db, 1.2, .08, -.8, 0, .3, 0));
+      return g0;
+    },
     jailbreak() {   // a 3×3 patch of concrete cell floor: crates, the orange inmate slipping through the bars, a gold key
       const g0 = new T.Group();
       const tile = C(0xd8d2c4, { roughness: .7 });
@@ -775,7 +805,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9] };
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {
