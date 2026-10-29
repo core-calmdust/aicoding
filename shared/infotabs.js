@@ -179,6 +179,20 @@ function strips(tries) {
   if (window.ResizeObserver) new ResizeObserver(fit).observe(board);
   document.body.classList.add('ps-on');
 }
-const start = () => { init(0); if (STRIPS) strips(0); };
+/* online chat strip on the game screen (phones): only while the chat is lively — a post in the last 30 minutes.
+   Otherwise the strip is hidden there (the chat is still on the online screen). Reads the games' own `chat` (global binding). */
+const FRESH = 30 * 60000;
+function chatFresh() {
+  const st = document.createElement('style'); st.textContent = 'body:not(.chat-fresh) .mt-strip{display:none!important}'; document.head.appendChild(st);
+  const upd = () => {
+    let last = 0;
+    try { if (typeof chat !== 'undefined' && chat && chat.list && chat.list.length) { const m = chat.list[chat.list.length - 1]; last = typeof m.t === 'number' ? m.t : 0; } } catch (e) {}
+    const on = last > 0 && Date.now() - last < FRESH;
+    if (document.body.classList.contains('chat-fresh') !== on) document.body.classList.toggle('chat-fresh', on);
+  };
+  const strip = document.getElementById('mtStrip'); if (strip) new MutationObserver(upd).observe(strip, { childList: true, subtree: true, characterData: true });
+  setInterval(upd, 30000); upd();
+}
+const start = () => { chatFresh(); init(0); if (STRIPS) strips(0); };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
