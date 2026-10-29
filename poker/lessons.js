@@ -182,8 +182,8 @@ function renderShell() {
   let body;
   if (!cur) body = `<div class="lc-body">${listHtml()}</div><div class="modal-actions"><button class="mbtn go" id="lcClose">${esc(t('close'))}</button></div>`;
   else body = playHtml();
-  M.innerHTML = `<h2>${esc(t('btn.lesson'))}</h2>${tabs}${body}`;
-  M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') { A.closeOv('#lessonOverlay'); window.PokerRules && PokerRules.open(); } });
+  M.innerHTML = `${tabs}${body}`;
+  M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') window.PokerRules && PokerRules.open(); });
   if (!cur) {
     M.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderShell(); });
     M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l));

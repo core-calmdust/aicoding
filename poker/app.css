@@ -1197,3 +1197,11 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#232327 0%,transpare
 .tgl input:checked + i{background:linear-gradient(180deg,#e8596d,#a82a3d)}
 .tgl input:checked + i::after{background:#f6f3ec}
 .seg button.sel{border-color:var(--hl);box-shadow:inset 0 -2px 0 var(--hl)}
+/* rules | lessons: one box (top tabs), the same size on phones too */
+.rules-modal .lt-top{margin:0 0 10px}
+@media (max-width:760px){
+  .rules-modal,.lesson-modal{height:calc(100dvh - 20px);max-height:calc(100dvh - 20px)}
+  .lesson-modal .lc-body{flex:1;min-height:0;overflow:auto}
+  .lesson-modal .lq{flex:1;min-height:0;display:flex;flex-direction:column}
+  .lesson-modal .lq-main{flex:1;min-height:0;overflow:auto}
+}
