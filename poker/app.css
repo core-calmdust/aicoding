@@ -1020,3 +1020,52 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
 .bdg-c em{position:absolute;top:6px;right:8px;font:700 11px 'JetBrains Mono',monospace;font-style:normal;color:#ecd28c}
 @media (max-width:760px){.bdg-grid{grid-template-columns:repeat(3,1fr)}.bdg-c .bdg{width:60px}}
 .lc-tab .bdg.locked,.lc-head .bdg.locked{filter:grayscale(1) brightness(.8);opacity:.6}
+/* SVG chips (override the CSS chips) */
+.chs{height:auto;gap:1px;align-items:flex-end}
+.chsv{display:block;width:calc(var(--cw)*.56);height:auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));overflow:visible}
+.pk-pot .chsv{width:calc(var(--cw)*.6)}
+/* larger name plates on PC (scale with the card size) */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .plate{gap:9px;padding:5px 16px 5px 5px}
+  .ava{width:clamp(34px,calc(var(--cw)*.36),46px);height:clamp(34px,calc(var(--cw)*.36),46px);font-size:clamp(15px,calc(var(--cw)*.16),20px)}
+  .pn b{font-size:clamp(15px,calc(var(--cw)*.155),19px);max-width:150px}
+  .pn small{font-size:clamp(11.5px,calc(var(--cw)*.115),14px)}
+  .plate .st{font-size:clamp(16px,calc(var(--cw)*.17),21px)}
+  .bub{font-size:14px;padding:4px 12px}
+  .pk-bet{font-size:clamp(14px,calc(var(--cw)*.17),20px)}
+}
+/* larger name plates on PC (scale with the card size) */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .plate{gap:9px;padding:5px 16px 5px 5px}
+  .ava{width:clamp(34px,calc(var(--cw)*.36),50px);height:clamp(34px,calc(var(--cw)*.36),50px);font-size:clamp(15px,calc(var(--cw)*.16),21px)}
+  .pn b{font-size:clamp(15px,calc(var(--cw)*.155),21px);max-width:170px}
+  .pn small{font-size:clamp(11.5px,calc(var(--cw)*.115),15px)}
+  .plate .st{font-size:clamp(16px,calc(var(--cw)*.17),23px)}
+  .bub{font-size:clamp(13px,calc(var(--cw)*.13),17px);padding:4px 12px}
+  .pk-bet{font-size:clamp(14px,calc(var(--cw)*.17),22px)}
+}
+.chsv{width:clamp(18px,calc(var(--cw)*.36),50px)}
+.pk-pot .chsv{width:clamp(20px,calc(var(--cw)*.4),56px)}
+/* action bar: bigger buttons, readable shortcut keys */
+.abtn kbd,.szb kbd{display:inline-block;min-width:1.5em;padding:1px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.35);border-bottom-width:2px;background:rgba(0,0,0,.25);font:700 11.5px 'JetBrains Mono',monospace;line-height:1.35;text-align:center;color:#e9e4d6}
+.abtn.go kbd{color:#2a1f08;border-color:rgba(42,31,8,.45);background:rgba(255,255,255,.28)}
+.abtn{flex-direction:row;gap:10px}
+.abtn b{font-weight:700}
+.szb kbd{margin-left:6px;font-size:10.5px;padding:0 5px;opacity:.85}
+.ab-size input[type=range]{height:22px}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .actbar{min-height:78px;gap:10px 16px;padding:10px 16px}
+  .abtn{min-width:150px;padding:13px 20px;font-size:19px;border-radius:14px}
+  .abtn kbd{font-size:13px;padding:2px 8px}
+  .szb{padding:9px 14px;font-size:15px;border-radius:10px}
+  .ab-size input[type=range]{width:min(260px,22vw)}
+}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .actbar{flex-wrap:nowrap}
+  .ab-btns.main{flex:none;flex-wrap:nowrap}
+  .abtn{min-width:128px;padding:12px 16px;font-size:18px}
+  .ab-size{flex:1 1 auto;min-width:0;flex-wrap:nowrap;gap:5px}
+  .ab-size input[type=range]{flex:1 1 80px;min-width:60px;width:auto}
+  .szb{padding:8px 9px;font-size:14px;white-space:nowrap}
+  .szb kbd{margin-left:4px}
+}

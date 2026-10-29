@@ -299,18 +299,57 @@ function morphKids(a, b) {
 }
 function patch(el, html) { const t = document.createElement(el.tagName); t.innerHTML = html; morphKids(el, t); }
 /* chips: amount → small stacks (white 1BB, red 5, green 25, black 100, purple 500) */
+/* chips: amount → stacks of casino chips drawn in SVG (side band with edge inserts, face with inlay and value)
+   white 1BB · red 5 · green 25 · black 100 · purple 500 */
 const CHIPS = [[500, 'p'], [100, 'k'], [25, 'g'], [5, 'r'], [1, 'w']];
+const CHIPC = {   // body, darker body, edge inserts, inlay, text
+  w: ['#efe9db', '#b9b1a0', '#2f5fb8', '#fbf8f0', '#2f5fb8'], r: ['#c8203a', '#7a0d1e', '#f7f1e3', '#f3e7d0', '#a3142b'],
+  g: ['#1d8b52', '#0d4a2b', '#f7f1e3', '#eef3e6', '#167043'], k: ['#23262e', '#0b0c10', '#e8c66e', '#f1ede2', '#23262e'], p: ['#6f36b8', '#391a66', '#f7f1e3', '#f0e9f8', '#5b2a9c'],
+};
+const CHIPV = { w: '1', r: '5', g: '25', k: '100', p: '500' };
+function chipSvg(c, n) {
+  const [body, dark, ins, inlay, txt] = CHIPC[c], W = 40, rx = 19, ry = 8.6, t = 5, cx = 20, base = 8 + (n - 1) * t + 2 * ry - ry + 1;
+  const H = Math.ceil(base + ry + t + 2);
+  let g = '';
+  for (let k = 0; k < n; k++) {
+    const y = base - k * t;   // centre of the chip's top face
+    // side band: lower half-ellipse extruded by t
+    g += `<path d="M${cx - rx} ${y}v${t}a${rx} ${ry} 0 0 0 ${2 * rx} 0v-${t}a${rx} ${ry} 0 0 1 -${2 * rx} 0z" fill="${dark}"/>`;
+    g += `<path d="M${cx - rx} ${y}v${t}a${rx} ${ry} 0 0 0 ${2 * rx} 0v-${t}a${rx} ${ry} 0 0 1 -${2 * rx} 0z" fill="url(#chS)" opacity=".55"/>`;
+    // edge inserts on the visible side (angles 20°…160°)
+    [25, 60, 95, 130, 165].forEach(a => {
+      const r = a * Math.PI / 180, x = cx + rx * Math.cos(r), yy = y + ry * Math.sin(r), w = 2.4 * Math.sin(r) + .4;
+      g += `<rect x="${(x - w / 2).toFixed(2)}" y="${(yy + .5).toFixed(2)}" width="${w.toFixed(2)}" height="${(t - 1).toFixed(2)}" fill="${ins}" opacity=".95"/>`;
+    });
+    // top face
+    g += `<ellipse cx="${cx}" cy="${y}" rx="${rx}" ry="${ry}" fill="${body}" stroke="${dark}" stroke-width=".6"/>`;
+    if (k === n - 1) {
+      // rim inserts on the face (8 spots)
+      for (let a = 0; a < 360; a += 45) {
+        const r1 = (a - 6) * Math.PI / 180, r2 = (a + 6) * Math.PI / 180, o = .97, i = .76;
+        const P = (r, f) => `${(cx + rx * f * Math.cos(r)).toFixed(2)} ${(y + ry * f * Math.sin(r)).toFixed(2)}`;
+        g += `<path d="M${P(r1, o)}L${P(r2, o)}L${P(r2, i)}L${P(r1, i)}z" fill="${ins}"/>`;
+      }
+      g += `<ellipse cx="${cx}" cy="${y}" rx="${rx * .62}" ry="${ry * .62}" fill="${inlay}" stroke="${dark}" stroke-width=".5"/>`;
+      g += `<ellipse cx="${cx}" cy="${y}" rx="${rx * .52}" ry="${ry * .52}" fill="none" stroke="${txt}" stroke-width=".55" stroke-dasharray="1.4 1"/>`;
+      g += `<text x="${cx}" y="${y + 2.5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="800" font-size="${CHIPV[c].length > 2 ? 6 : 7.4}" fill="${txt}" transform="translate(0 ${y}) scale(1 .62) translate(0 -${y})">${CHIPV[c]}</text>`;
+      g += `<ellipse cx="${cx}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#chF)"/>`;
+    }
+  }
+  return `<svg class="chsv" viewBox="0 0 ${W} ${H}" style="--h:${H}">${g}</svg>`;
+}
 function chipStack(amt, maxStacks) {
   let u = Math.max(1, Math.round(amt / (T ? T.bb : 2))); const stacks = [];
-  for (const [v, c] of CHIPS) { let n = Math.floor(u / v); if (!n) continue; u -= n * v; stacks.push([c, Math.min(n, 5)]); if (stacks.length >= (maxStacks || 2)) break; }
+  for (const [v, c] of CHIPS) { let n = Math.floor(u / v); if (!n) continue; u -= n * v; stacks.push([c, Math.min(n, 6)]); if (stacks.length >= (maxStacks || 2)) break; }
   if (!stacks.length) stacks.push(['w', 1]);
-  return `<span class="chs">${stacks.map(([c, n]) => `<span class="chst">${Array.from({ length: n }, (_, k) => `<i class="ch ch-${c}" style="--k:${k}"></i>`).join('')}</span>`).join('')}</span>`;
+  return `<span class="chs">${stacks.map(([c, n]) => chipSvg(c, n)).join('')}</span>`;
 }
 function render(o) {
   o = o || {};
   if (!T) return;
   const V = P.VARIANTS[T.v], box = $('#pkTable'), W = box.clientWidth, H = box.clientHeight;
-  const narrow = W < 640, cw = Math.max(26, Math.min(W / (V.stud ? (narrow ? 11 : 15) : (narrow ? 7.4 : 11.2)), H / (V.stud ? 6.6 : 5.6), 112));
+  const narrow = W < 640, tall = H > W * 1.1;   // portrait boards have room for much bigger cards
+  const cw = Math.max(26, Math.min(W / (V.stud ? (narrow || tall ? 10.5 : 13.5) : (narrow || tall ? 7.2 : 9.8)), H / (V.stud ? (tall ? 8 : 6.6) : (tall ? 8.2 : 5.7)), tall ? 170 : 130));
   const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   const done = T.phase === 'done', showAll = done && T.result && T.result.showdown;
   const winners = done ? new Set(T.result.pots.flatMap(p => p.winners || [])) : new Set();
@@ -381,17 +420,17 @@ function renderActbar() {
   const pot = P.potTotal(T), rec = set.coach && G.coach ? G.coach.rec : null;
   const recCls = a => rec && (rec === a || (a === 'call' && rec === 'check' && L.check)) ? ' rec' : '';
   let h = `<div class="ab-btns main">`;
-  h += L.fold ? `<button class="abtn fold${recCls('fold')}" data-a="fold"><b>${esc(t('act.fold'))}</b><small>F</small></button>` : '';
-  h += L.check ? `<button class="abtn${recCls('check')}" data-a="check"><b>${esc(t('act.check'))}</b><small>C</small></button>` : `<button class="abtn${recCls('call')}" data-a="call"><b>${esc(t('act.call'))} ${L.call}</b><small>C</small></button>`;
+  h += L.fold ? `<button class="abtn fold${recCls('fold')}" data-a="fold"><b>${esc(t('act.fold'))}</b><kbd>F</kbd></button>` : '';
+  h += L.check ? `<button class="abtn${recCls('check')}" data-a="check"><b>${esc(t('act.check'))}</b><kbd>C</kbd></button>` : `<button class="abtn${recCls('call')}" data-a="call"><b>${esc(t('act.call'))} ${L.call}</b><kbd>C</kbd></button>`;
   if (L.canRaise) {
     const word = T.curBet === 0 ? t('act.bet') : t('act.raise');
-    if (L.minTo === L.maxTo) h += `<button class="abtn go${recCls('raise')}" data-a="raise" data-to="${L.minTo}"><b>${esc(word)} ${L.minTo}</b><small>R</small></button>`;
+    if (L.minTo === L.maxTo) h += `<button class="abtn go${recCls('raise')}" data-a="raise" data-to="${L.minTo}"><b>${esc(word)} ${L.minTo}</b><kbd>R</kbd></button>`;
     else {
       const cur = Math.max(L.minTo, Math.min(L.maxTo, G.raiseTo || L.minTo));
-      h += `<button class="abtn go${recCls('raise')}" data-a="raise" id="abRaise"><b>${esc(word)} <span id="abTo">${cur}</span></b><small>R</small></button>`;
+      h += `<button class="abtn go${recCls('raise')}" data-a="raise" id="abRaise"><b>${esc(word)} <span id="abTo">${cur}</span></b><kbd>R</kbd></button>`;
       h += `</div><div class="ab-size"><input type="range" id="abRange" min="${L.minTo}" max="${L.maxTo}" step="1" value="${cur}" aria-label="${esc(word)}">` +
         [['min', L.minTo], ['half', T.curBet + Math.round((pot + L.toCall) / 2)], ['3q', T.curBet + Math.round((pot + L.toCall) * .75)], ['pot', T.curBet + pot + L.toCall], ['allin', L.maxTo]]
-          .map(([k, v]) => `<button class="szb" data-to="${Math.max(L.minTo, Math.min(L.maxTo, v))}">${esc(t('sz.' + k))}</button>`).join('');
+          .map(([k, v], j) => `<button class="szb" data-to="${Math.max(L.minTo, Math.min(L.maxTo, v))}">${esc(t('sz.' + k))}<kbd>${j + 1}</kbd></button>`).join('');
     }
   }
   h += `</div>`;
@@ -643,7 +682,7 @@ $('#btnTools').onclick = () => window.PokerTools && PokerTools.open();
 $('#btnLesson').onclick = () => window.PokerLessons && PokerLessons.open();
 $('#langSel').onchange = () => { LANG = $('#langSel').value; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} applyI18n(); if (T) T.seats[HERO].name = t('you'); render(); if (window.SolRules && SolRules.relang) SolRules.relang(); };
 document.addEventListener('keydown', e => {
-  if (e.target.closest('input, select, textarea') || $('.overlay.show')) return;
+  if (e.target.closest('input:not([type=range]), select, textarea') || $('.overlay.show')) return;
   const k = e.key.toLowerCase();
   if (T && T.phase === 'bet' && T.toAct === HERO) {
     const L = P.legal(T);
@@ -651,6 +690,8 @@ document.addEventListener('keydown', e => {
     else if (k === 'c') heroAct({ a: L.check ? 'check' : 'call' });
     else if (k === 'r' && L.canRaise) heroAct({ a: 'raise', to: $('#abRange') ? +$('#abRange').value : L.minTo });
     else if (k === 'h') $('#btnHint').click();
+    else if (/^[1-5]$/.test(k)) { const b = $$('#actbar .ab-size .szb')[+k - 1]; if (b) b.click(); }
+    else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && $('#abRange')) { e.preventDefault(); const rg = $('#abRange'); rg.value = Math.max(+rg.min, Math.min(+rg.max, +rg.value + (e.key === 'ArrowUp' ? T.bb : -T.bb))); rg.oninput(); }
   } else if (T && T.phase === 'done' && !T.tut && (k === ' ' || k === 'enter' || k === 'n')) { e.preventDefault(); nextHand(); }
   else if (k === 'n' && !T) openNew();
 });
@@ -669,5 +710,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
 
-window.PokerApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, ask, gArt, HERO, statOf };
+window.PokerApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
 })();
