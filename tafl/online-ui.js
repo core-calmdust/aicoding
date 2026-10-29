@@ -408,6 +408,7 @@ async function finishOnline(g) {
   if (me > 0) {
     const score = !winner ? 0.5 : winner === me ? 1 : 0;
     try { net.result.rating = await ON.applyResult(gid, g, score); } catch (e) { console.warn(e); }
+    try { if (window.GameRecord && moves.length) { const op = me === P1 ? P2 : P1; GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: me - 1, opp: olShortName(op), key: 'ol:' + olShortName(op), n: moves.length, why: net.result.why || '' }); } } catch (e) {}
     syncTouch();
   }
   if (!net || net.gid !== gid) return;
