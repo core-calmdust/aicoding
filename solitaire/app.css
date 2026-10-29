@@ -541,3 +541,13 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
   .ng-body .dz-felt .tiles.felts{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
   .ng-body .dz-felt .tiles.felts .pv{height:16px}
 }
+/* design tab (PC): the card-design box is as tall as the card-back box, the table row sits at the bottom */
+@media (min-width:761px){
+  .ng-body:has(> .dz){display:flex;flex-direction:column}
+  .ng-body .dz{align-items:stretch}
+  .ng-body .dz-r{display:flex;flex-direction:column}
+  .ng-body .dz-r .sec{flex:1 1 auto;display:flex;flex-direction:column;margin-bottom:0}
+  .ng-body .dz .tiles.faces{flex:1 1 auto;grid-auto-rows:1fr}
+  .ng-body .dz .tiles.faces .tile{height:100%;justify-content:center}
+  .ng-body .dz-felt{margin-top:auto;padding-top:14px}
+}
