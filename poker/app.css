@@ -976,3 +976,11 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
 .coach-card{max-height:none}
 @media (hover:hover) and (pointer:fine) and (min-width:1040px){.pk .felt-print{bottom:25%;width:min(66%,760px);opacity:.85}}
 @media (hover:hover) and (pointer:fine) and (min-width:1040px){.pk .side>.card{flex-shrink:0}.pk .side .log-card{flex:1 0 220px}}
+/* larger coach + hand log */
+.pk .side .coach-card h3,.pk .side .log-card h3{font-size:14px}
+.coach-card .rb{font-size:16px;padding:4px 16px}
+.coach-card .rec p{font-size:15px;line-height:1.75}
+.coach-card .verdict{font-size:14px}.coach-card .verdict b{font-size:15.5px}
+.coach-card .tips-h{font-size:13.5px}.coach-card .tips li{font-size:14.5px;line-height:1.75}.coach-card .tips-more{font-size:14px}
+.coach-card .muted{font-size:14px}
+.log-card .pk-log{font-size:14.5px}.log-card .lg{padding:2px 2px}.log-card .lg-st{font-size:12.5px;margin-top:8px}
