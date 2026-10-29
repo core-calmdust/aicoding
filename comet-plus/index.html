@@ -8284,18 +8284,25 @@ const frameClock = {
     tick(ts) {
         if (this.last !== null) {
             const d = ts - this.last;
-            if (d > 2 && d < 60) { this.hist.push(d); if (this.hist.length > 31) this.hist.shift(); }
+            if (d > 2 && d < 60) { this.hist.push(d); if (this.hist.length > 120) this.hist.shift(); }
             if (this.hist.length >= 5) {
+                // 直近の間隔が今の周期から大きく外れたら（別の画面へ移動・リフレッシュレート変更など）、古い記録を捨ててすぐ切り替える
+                const rc = this.hist.slice(-15).sort((x, y) => x - y), rm = rc[rc.length >> 1];
+                if (rc.length >= 9 && Math.abs(rm - this.period) > this.period * 0.15) this.hist = this.hist.slice(-15);
+                // 中央値の±20%に入る間隔だけを平均（飛んだフレームや揺らぎに引っ張られない）
                 const a = this.hist.slice().sort((x, y) => x - y), med = a[a.length >> 1];
+                let sum = 0, cnt = 0;
+                for (const v of a) if (v > med * 0.8 && v < med * 1.2) { sum += v; cnt++; }
+                const est = sum / cnt;
                 // 大きく変わったとき（別の画面へ移動など）はすぐ、普段はゆっくり追従（補間の幅を一定に保つ）
-                this.period += Math.abs(med - this.period) > this.period * 0.15 ? med - this.period : (med - this.period) * 0.05;
+                this.period += Math.abs(est - this.period) > this.period * 0.15 ? est - this.period : (est - this.period) * 0.03;
             }
         }
         this.last = ts;
-        this.locked = this.period > 16.45 && this.period < 16.9; // 59.2〜60.8Hz（59.94Hzなどの「60Hz」画面）
+        // 60Hz付近（59.94Hzなども含む）は1表示1更新。境目で切り替わり続けないよう、外れる側は幅を広く取る
+        this.locked = this.locked ? (this.period > 16.0 && this.period < 17.4) : (this.period > 16.45 && this.period < 16.9);
         let n = 1;
         if (this.grid === null) this.grid = ts;
-        else if (ts - this.grid < this.period * 0.3) n = 0; // 同じ表示更新の中で2回呼ばれた時は進めない
         else {
             // 揺らぎで0回/2回と数えないよう、1.65周期を超えて初めて「1回飛んだ」とみなす
             n = Math.max(1, Math.floor((ts - this.grid) / this.period + 0.35));
