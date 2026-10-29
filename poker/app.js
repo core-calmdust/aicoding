@@ -528,6 +528,8 @@ function mTabs() {
   let cur = set.mTab && have.has(set.mTab) ? set.mTab : have.has('coach') ? 'coach' : have.has('eq') ? 'eq' : 'log';
   side.dataset.pt = cur;
   $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', b.dataset.pt === cur); });
+  // a shorter box after a switch: don't leave the view scrolled past the end (iOS keeps the old position → empty space)
+  const sc = $('.stage'), max = sc.scrollHeight - sc.clientHeight; if (sc.scrollTop > max + 1) sc.scrollTop = Math.max(0, max);
 }
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
   const same = $('#side').dataset.pt === b.dataset.pt;
@@ -535,7 +537,8 @@ $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
   // keep the table in view: bring the box up only to just past the middle of the screen; tap again → back to the top
   const sc = $('.stage'), top = sc.getBoundingClientRect().top, y = $('#side').getBoundingClientRect().top - top, h = sc.clientHeight;
   if (same && sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' });
-  else if (y > h * .55) sc.scrollTo({ top: sc.scrollTop + y - h * .55, behavior: 'smooth' });
+  else if (y > h * .55) sc.scrollTo({ top: Math.min(sc.scrollHeight - h, sc.scrollTop + y - h * .55), behavior: 'smooth' });
+  setTimeout(() => { const max = sc.scrollHeight - sc.clientHeight; if (sc.scrollTop > max + 1) sc.scrollTo({ top: Math.max(0, max) }); }, 450);
 });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
