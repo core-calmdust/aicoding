@@ -47,7 +47,7 @@ html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!i
   html.atlas-mancala .atlas-brand small{display:none}
   html.atlas-mancala :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:34px}
   html.atlas-mancala.atlas-skin .app{padding-top:46px!important}
-  html.atlas-mancala{--u:min((100vw - 32px) / 9.7, (var(--vh) - 42px - 14px) / 4.2, 120px)!important}
+  html.atlas-mancala{--u:min((100vw - 32px) / 9.7, (var(--vh) - 42px - 60px) / 4.2, 120px)!important}
   /* no player boxes: the names (with 先手 / 後手) are on the board, next to their stores */
   html.atlas-mancala .board-area > .plate{display:none!important}
   html.atlas-mancala .slabel{font-size:0!important;letter-spacing:0!important}

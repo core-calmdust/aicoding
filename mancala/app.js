@@ -686,7 +686,7 @@ function renderPlates(b) {
 }
 function renderStoreLabels() {
   if (!storeLbl.length) return;
-  for (const d of storeLbl) { const st = +d.dataset.st, side = st === 6 ? 0 : 1; d.textContent = shortName(side); d.classList.toggle('me', !puzzle && !lesson ? (settings.mode === 'ai' ? side === game.human : side === 0) : side === 0); }
+  for (const d of storeLbl) { const st = +d.dataset.st, side = st === 6 ? 0 : 1; d.textContent = shortName(side); d.dataset.full = sideName(side) + (settings.mode === 'pvp' || lesson || puzzle ? '' : ' · ' + t(side === 0 ? 'p0' : 'p1')); d.classList.toggle('me', !puzzle && !lesson ? (settings.mode === 'ai' ? side === game.human : side === 0) : side === 0); }
 }
 function renderTurnLabel() {
   renderStoreLabels();
