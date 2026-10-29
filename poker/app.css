@@ -1232,7 +1232,6 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   #btnNew .m-s{display:inline}
   .infobar{display:none!important}
   .stage{gap:10px;padding:0 8px 12px}
-  .pk .board-wrap{flex:none;height:clamp(300px,calc(var(--sh,560px) - 182px),640px)}
   /* the session numbers on the empty felt under the board */
   .m-hud{display:block;position:absolute;inset:0;z-index:1;pointer-events:none}
   .mh{position:absolute;bottom:calc(var(--rail) + 6%);display:flex;flex-direction:column;gap:5px}
@@ -1265,8 +1264,16 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .app{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .brand,.controls{flex:none}
-  .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .stage{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .stage > *{flex:none}
+  .pk .pk-left{display:contents}
+  .pk .board-wrap{order:1;flex:1 1 auto!important;height:auto!important;min-height:160px!important}
+  .pk .actbar{order:3}
+  /* the info panel opens between the table and the action bar (tab bar toggles it); the table shrinks to make room */
+  .pk .side{order:2;display:none!important;max-height:min(36%,300px);overflow-y:auto;overscroll-behavior:contain;border-radius:16px}
+  body.pk.mt-open .side{display:flex!important}
+  body.pk.mt-open .m-hud{display:none}
+  body.pk.mt-open .ab-size{display:none}
   .pk .side > [data-pt]{display:none}
   .pk .side[data-pt=eq] > [data-pt=eq],.pk .side[data-pt=coach] > [data-pt=coach],.pk .side[data-pt=log] > [data-pt=log],.pk .side[data-pt=sess] > [data-pt=sess]{display:block}
   .pk .side .card h3{font-size:13px}
