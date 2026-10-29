@@ -484,8 +484,9 @@ function fx() {
   if (!card || !active() || !myTurn()) return;
   const pos = posAt(cur);
   const shown = S.op ? [] : S.reveal && S.cls ? S.cls.dirs.map(d => d.m) : [];
-  shown.forEach((m, i) => { if (m !== S.hov && !pos.at(m)) { const d = document.createElement('div'); d.className = 'hintlbl ck-mk' + (i === 0 ? ' best' : ''); placeAt(d, m); d.innerHTML = `<b>${i + 1}</b>`; fxEl.appendChild(d); } });
-  if (S.hov >= 0 && !pos.at(S.hov)) { ghost(S.hov, pos.side, 'ghost'); mk('hl', S.hov); }
+  const hinted = new Set([...fxEl.querySelectorAll('.hintlbl:not(.ck-mk)')].map(d => d.style.left + '|' + d.style.top));   // (a hint value already marks the point)
+  shown.forEach((m, i) => { if (m !== S.hov && !pos.at(m) && !hinted.has(((1 + m % 15 - .5) / 16 * 100) + '%|' + ((15 - Math.floor(m / 15) - .5) / 16 * 100) + '%')) { const d = document.createElement('div'); d.className = 'hintlbl ck-mk' + (i === 0 ? ' best' : ''); placeAt(d, m); d.innerHTML = `<b>${i + 1}</b>`; fxEl.appendChild(d); } });
+  if (S.hov >= 0 && !pos.at(S.hov)) { ghost(S.hov, pos.side, 'ghost'); mk('ck', S.hov); }
 }
 function init() {
   if (!window.CoachKit) return;
