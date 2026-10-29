@@ -5444,6 +5444,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const spec0 = () => (P0().spec || []).length;
   const PLAYA = () => S.drawn.length || S.step !== 'draw' ? { dom: ['#myHand', '#aPlay', '#aPass'] } : { dom: ['#deckSlot'], key: 'draw' };
   const ALLOW = { camp: () => ({ map: ['camp'] }), dev: () => ({ map: ['dev'] }), road: () => ({ map: ['sroad'] }), draw: () => ({ dom: ['#deckSlot'], key: 'draw' }), play: () => ({ dom: ['#myHand', '#aPlay'] }), road2: () => ({ map: ['road'] }), dev2: () => ({ map: ['dev'] }), trade: () => ({ dom: ['#aTrade'] }),
+    draw2: () => ({ dom: ['#deckSlot'], key: 'draw' }), bust2: () => ({ dom: ['#deckSlot'], key: 'draw' }),
     end: () => ({ dom: ['#aEnd'], key: 'end' }), end2: () => ({ dom: ['#aEnd'], key: 'end' }), end3: () => ({ dom: ['#aEnd'], key: 'end' }), play2: PLAYA, play3: PLAYA,
     settle: () => ({ map: ['road', 'settle'] }), city: () => ({ map: ['city'] }), shop: () => ({ dom: ['[data-sb="0"]'] }), knight: () => ({ dom: ['#aKnight', '#knCancel'], map: ['robber'] }), spec: () => ({ dom: ['#myHand .spec'] }) };
   // チュートリアル：置く場所はこちらで決める（ステップごとに1か所）
@@ -5493,7 +5494,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     { id: 'trade', blk: 1, tg: '#aTrade', h: '1手番目：交換する', enter: () => { const r = HD.RES.slice().sort((a, b) => S.rates[a] - S.rates[b])[0]; gift({ [r]: S.rates[r] }, '練習用に交換できる資源を配りました'); }, t: () => { const t = coachTarget(); return `足りない資源は<b>交換</b>ボタンから手に入れます。今回は<b>銀行</b>で、${t ? `<b>${RESN[t.give]}${HD.rate(S, HUMAN, t.give, t.get)}枚</b>を出して<b>${RESN[t.get]}1枚</b>をもらいましょう` : '1回交換してみましょう'}。<br>銀行のレートは在庫が少ない資源ほど高くなります。港（2:1・3:1）やBOTとの交換もありますが、それは後で。`; }, done: () => S.trades > coach.b.trades || S.log.some(m => m.k === 'ptrade' && m.p === HUMAN && m.seq > coach.b.seq) },
     { id: 'end', blk: 1, tg: '#aEnd', h: '1手番目：手番を終える', t: () => 'これで手番はおしまい。<b>終了</b>ボタン（砂時計）で次の人へ渡します。<br>（スペースキーでも終了できます）', done: () => S.cur !== HUMAN },
     // ---- 画面の見方（BOTの番の間に読む） ----
-    { id: 'burst', manual: true, h: '7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が${S.sevens}枚混ざっています。7を引くとその番は資源が出ず、アクション札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。引いた人は盗賊を動かします（最初の時代は盗賊なし）。<br>持ちすぎないこと、2枚目を引くかの見極めが大切です。` },
+    { id: 'burst', manual: true, h: '山札の7に注意', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が${S.sevens}枚混ざっていて、引くと<b>バースト</b>します。どうなるかは、次のあなたの番で実際に体験してみましょう。` },
     { id: 'uiBank', manual: true, tg: '#bank', h: '画面の見方：相場', t: () => `この欄は<b>資源の在庫</b>と<b>銀行のレート</b>です。在庫が少ない資源ほど銀行で手に入れるのが高く（5:1〜2:1）、在庫が0の資源は生産されません。<br>払った資源は消費ボックスに入り、<b>${S.marketPeriod}手番ごと</b>の相場の更新で在庫に戻ります。` },
     { id: 'uiEra', manual: true, tg: '#eraChip,#sideEra,#eraBan', h: '画面の見方：時代', t: () => `<b>時代</b>は${S.eraLen}周ごとに変わります。1番目は<b>発見の時代</b>（盗賊なし）、2番目は<b>開拓の時代</b>（盗賊と騎士が使える）、3番目からは時代カードで「小麦が多く取れる」などの効果が起きます。●は今の時代の残りの周回です。` },
     { id: 'uiDeck', manual: true, tg: '#deckChip,#deckInfo', h: '画面の見方：山札', t: () => '山札の残り枚数と、<b>次に7が出る確率</b>です。押すと、まだ見えていない札の内訳が分かります。<br>確率が高いときは1枚で止める、低いときは2枚目を狙う、が基本です。' },
@@ -5503,7 +5504,10 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     { id: 'uiLog', manual: true, tg: '#log,#logBtn', h: '画面の見方：記録', t: () => 'だれが何をしたか、何の数字で誰が何をもらったかは<b>記録</b>に残ります。BOTの動きが気になったらここを見ましょう。' },
     { id: 'wait2', h: '次の番を待つ', t: () => 'BOTの番が終わると、あなたの2手番目です。次は<b>開拓地・都市・特殊カード</b>を覚えます。', done: myTurnNew, waitT: 'BOTの番です。少し待ちましょう…', wait: () => !myTurnNew() },
     // ---- 2手番目：建てる・買う ----
-    { id: 'play2', blk: 2, tg: () => S.drawn.length || S.step !== 'draw' ? '#myHand,#aPlay' : '#deckSlot', h: '2手番目：引いて出す', enter: () => rigTop(), t: () => `前と同じように、山札から札を<b>1枚</b>引いて、数字を出しましょう。今回は<b>${coach.want}</b>が出ます（あなたの土地の数字）。`, done: () => S.acted },
+    { id: 'draw2', blk: 2, tg: '#deckSlot', h: '2手番目：札を1枚引く', enter: () => rigTop(), t: () => 'あなたの2手番目です。まず山札から札を<b>1枚</b>引きましょう。', done: () => S.drawn.length >= 1 || S.acted },
+    { id: 'bust2', blk: 2, tg: '#deckSlot', h: '2手番目：もう1枚引いてみる', enter: () => { const P = P0(), need = S.limit - HD.cardCount(P); if (need > 0) { P.res.wood += need; coach.gift = `アクション札＋資源がちょうど${S.limit}枚になるよう、練習用に木材を配りました`; } const k = S.deck.lastIndexOf(7); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(7); } },
+      t: () => S.phase === 'discard' ? `<b>7</b>が出て<b>バースト</b>！ この番は誰も資源をもらえません。<br>アクション札＋資源が${S.limit}枚以上なので、<b>半分（${(S.pending.find(x => x.p === HUMAN) || {}).n || ''}枚）</b>を選んで手放します。今回は木材を多めに手放すのがおすすめです。` : `欲張って<b>もう1枚</b>引いてみましょう。山札の横の確率が、次に<b>7</b>が出る確率です。<br>今あなたはアクション札＋資源を<b>${S.limit}枚</b>持っています。何が起きるか見てみましょう。`, done: () => S.acted && S.phase === 'turn' && !S.pending.some(x => x.p === HUMAN) },
+    { id: 'bustx', blk: 2, manual: true, f: () => acard(7, 'md'), h: '2手番目：これがバースト', t: () => `<b>7</b>を引いたので、この番は<b>数字を出せず、誰も資源をもらえません</b>。さらにアクション札＋資源が<b>${S.limit}枚以上</b>あった人は、<b>半分を捨てる</b>ことになりました。<br>次の時代からは、7を引いた人が盗賊も動かします。札を2枚目まで引くか、持ちすぎていないかに気をつけましょう。<br>建設はこのまま続けられます。` },
     { id: 'settle', blk: 2, h: '2手番目：開拓地を建てる', enter: () => { const c = HD.legalSettles(S, HUMAN).length ? HD.COST.settle : Object.fromEntries(HD.RES.map(r => [r, (HD.COST.settle[r] || 0) + (HD.COST.road[r] || 0)])); gift(c, '練習用に開拓地（と道）の資源を配りました'); },
       t: () => HD.legalSettles(S, HUMAN).length ? `<b>金色の輪</b>の交点（家の目印）をクリックすると<b>開拓地</b>（1点）が建ちます。<br>費用は${TF.cost(HD.COST.settle)}。ほかの建物から<b>1辺以上</b>離れた交点にしか建てられません。` : `開拓地は、ほかの建物から1辺以上離れた<b>自分の道の先</b>に建てます。まず<b>金色の輪</b>の辺に道を伸ばし、次に出る輪の交点に建てましょう。<br>費用は${TF.cost(HD.COST.settle)}。`,
       done: () => P0().settles > coach.b.settles, skip: () => !HD.legalSettles(S, HUMAN).length && !HD.legalRoads(S, HUMAN).length },
@@ -5571,11 +5575,11 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       break;
     }
     if (!coach) return; st = COACH[coach.i]; if (!st) return;
-    if (S.phase === 'turn' && !S.acted) noSeven();   // 練習中はだれも7を引かない（バーストは説明だけ）
+    if (S.phase === 'turn' && !S.acted && st.id !== 'bust2') noSeven();   // 練習中はだれも7を引かない（バーストは説明だけ）
     document.body.classList.toggle('coach-lock', !!coachLock());
     const waiting = st.wait && st.wait();
     const n = COACH.length - 1, k = Math.min(coach.i, n);
-    const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
+    const key = coach.i + ':' + S.phase + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
     if (coach.key !== key) {
       coach.key = key;
       coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル ${k + 1}/${n + 1}</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
