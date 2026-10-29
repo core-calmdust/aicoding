@@ -930,3 +930,10 @@ html:not(.lp) .ci-sub{font-size:clamp(18px, calc(var(--H) * .03), 34px)}
 html:not(.lp) .ci-txt{gap:clamp(10px, calc(var(--H) * .016), 22px);max-width:66%}
 html.lp .ci-line{font-size:clamp(14px, calc(var(--H) * .045), 20px)}
 html.lp .ci-kana{font-size:clamp(14px, calc(var(--H) * .045), 20px)}
+
+/* 戦績 (shared/record.js): icon + label pill in the home header */
+.top .ib.rec{width:auto;display:inline-flex;align-items:center;gap:6px;padding:0 12px 0 10px;font-weight:700;font-size:14px;white-space:nowrap;letter-spacing:.02em}
+.top .ib.rec svg{width:20px;height:20px;flex:none}
+.top .ib.rec span{white-space:nowrap}
+@media (max-width: 760px){ html:not(.lp):not(.ds) .top .ib.rec{width:auto;padding:0 10px 0 8px;font-size:13px;gap:5px} html:not(.lp):not(.ds) .top .ib.rec svg{width:18px;height:18px} }
+html.lp .top .ib.rec{width:auto}

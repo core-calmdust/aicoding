@@ -231,7 +231,9 @@ function renderHome() {
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
 $('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
-$('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); });
+$('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); if (window.GameRecord) GameRecord.relabel(); });
+// 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
+if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#home .top', btnClass: 'ib rec' }); const rb = $('#btnRecord'); if (rb) $('#home .top').insertBefore(rb, $('#btnGacha')); }
 function applyLite() {
   document.documentElement.classList.toggle('lite', !!DB.set.lite);
   const b = $('#btnLite');
@@ -868,12 +870,20 @@ async function showRyuukyoku(d) {
   await waitClick(box, '.nx');
   closeModal();
 }
+// 勝敗記録 (shared/record.js): one entry per finished game vs the BOTs — 1st = win, 4th = loss, 2nd / 3rd = draw
+const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة' };
+function recordGame(d, myRank) {
+  if (!window.GameRecord || /[?&]auto/.test(location.search) || !G || !G.rules) return;
+  const r = G.rules, lv = DB.set.lv;
+  try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + lv, why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
+}
 async function showFinal(d) {
   const rank = d.rank;
   const myRank = rank.indexOf(ME);
   // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan pays double
   const coins = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++; save();
+  recordGame(d, myRank);
   const box = modal(`
     <div class="final">
       <h2>${t('final')}</h2>
