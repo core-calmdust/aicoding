@@ -1265,7 +1265,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .app{position:fixed;inset:0;height:auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .brand,.controls{flex:none}
-  .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
   .stage > *{flex:none}
   .pk .board-wrap{height:min(660px,max(calc(var(--sh,560px) - 182px),118vw))}
   /* the info panel opens between the table and the action bar (tab bar toggles it); the table shrinks to make room */
