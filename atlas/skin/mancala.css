@@ -47,6 +47,11 @@ html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!i
   html.atlas-mancala .atlas-brand small{display:none}
   html.atlas-mancala :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:34px}
   html.atlas-mancala.atlas-skin .app{padding-top:46px!important}
-  html.atlas-mancala{--u:min((100vw - 40px) / 9.7, (var(--vh) - 42px - var(--plate) - 22px) / 4.2, 112px)!important}
+  html.atlas-mancala{--u:min((100vw - 32px) / 9.7, (var(--vh) - 42px - 14px) / 4.2, 120px)!important}
+  /* no player boxes: the names (with 先手 / 後手) are on the board, next to their stores */
+  html.atlas-mancala .board-area > .plate{display:none!important}
+  html.atlas-mancala .slabel{font-size:0!important;letter-spacing:0!important}
+  html.atlas-mancala .slabel::after{content:attr(data-full);font-size:calc(var(--u) * .17);letter-spacing:.04em;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;padding:1px 8px;border-radius:99px;background:rgba(10,10,12,.55);border:1px solid rgba(226,194,117,.35)}
+  html.atlas-mancala .slabel.me::after{color:#ffd77a;border-color:rgba(255,215,122,.75)}
 }
 @media (max-width:420px) and (pointer: coarse){ html.atlas-mancala .atlas-top{gap:6px} html.atlas-mancala .atlas-top :is(.atlas-ic,.atlas-lbtn){width:38px;min-width:38px;height:38px} html.atlas-mancala .atlas-brand img{width:32px;height:32px} }
