@@ -6104,7 +6104,6 @@ NB.KESTREL = () => {
     //   うすいガラスの翼面を重ねる。狙う間は翼を広げて羽ばたき、頭が自機を追う。突進では翼をたたみ、進む方向へ機首を向けて光の尾を引く
     const g0 = new THREE.Group(), g = new THREE.Group(), C = 0xd0e8ff, B = 0x9fc8ff, GD = 0xffd060, R = 0xff3050; g.scale.setScalar(1.3); g0.add(g);
     g.add(fuse(LAB.loft([[-38, 10, 8], [-14, 22, 16], [12, 20, 15], [30, 10, 9]], 6), C, { glass: 0.3, tint: 0.25, cage: 1.18 }));
-    g.add(wire(new THREE.OctahedronGeometry(30, 0), B, 0.25));
     const head = new THREE.Group(); head.position.set(0, 5, 32); g.add(head);
     head.add(fuse(LAB.loft([[-4, 13, 11], [8, 10, 8]], 6), C, { cage: 1.2, glass: 0.3, tint: 0.25 }));
     head.add(fuse(LAB.loft([[7, 7, 6, 0], [16, 4, 4, -1], [21, 0.8, 1, -6]], 4, Math.PI / 4), GD, { cage: false, glass: 0, tint: 0.5 }));
@@ -6112,14 +6111,13 @@ NB.KESTREL = () => {
     // 羽根の輪郭（線だけ）を作る: 根元 x0, 向き a, 長さ L, 幅 w
     const featherPts = (out, x0, z0, a, L, w) => { const d = [Math.sin(a), Math.cos(a)], n = [d[1], -d[0]]; const P = [[x0, z0], [x0 + d[0] * L * 0.3 + n[0] * w / 2, z0 + d[1] * L * 0.3 + n[1] * w / 2], [x0 + d[0] * L, z0 + d[1] * L], [x0 + d[0] * L * 0.3 - n[0] * w / 2, z0 + d[1] * L * 0.3 - n[1] * w / 2]];
         for (let i = 0; i < 4; i++) { const p = P[i], q = P[(i + 1) % 4]; out.push(new THREE.Vector3(p[0], 0, p[1]), new THREE.Vector3(q[0], 0, q[1])); }
-        out.push(new THREE.Vector3(x0, 0, z0), new THREE.Vector3(P[2][0], 0, P[2][1])); return P[2]; };
+        return P[2]; };
     const wings = [-1, 1].map(s => {
         const piv = new THREE.Group(); piv.position.set(s * 8, 3, 4); g.add(piv);
         const arm = fuse(LAB.loft([[0, 8, 6], [30, 6, 4], [56, 2, 2]], 4, Math.PI / 4), C, { cage: 1.25, glass: 0.3, tint: 0.3 }); arm.rotation.y = s * Math.PI / 2; piv.add(arm);
         const pts = [], tips = [];
-        for (let f = 0; f < 9; f++) { const x = s * (10 + f * 5.2), a = Math.PI + s * (0.02 + Math.pow(f / 8, 2) * 1.15), L = 34 + f * 2.4 - Math.max(0, f - 6) * 6; tips.push(featherPts(pts, x, 0, a, L, 9)); }
-        for (let f = 0; f < 6; f++) featherPts(pts, s * (6 + f * 7), 2, Math.PI + s * 0.1, 18 - f, 8);
-        const lines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(B, 0.75)); lines.position.y = 0.5; piv.add(lines);
+        for (let f = 0; f < 5; f++) { const x = s * (12 + f * 10), a = Math.PI + s * (0.05 + Math.pow(f / 4, 2) * 1.1), L = 36 + f * 3 - Math.max(0, f - 3) * 8; tips.push(featherPts(pts, x, 0, a, L, 11)); }
+        const lines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(B, 0.6)); lines.position.y = 0.5; piv.add(lines);
         // 翼面: 先端をつないだ1枚のうすいガラス
         const sh = []; const root = [0, 0]; const outline = [[s * 2, 4], ...tips, [s * 58, 0]];
         for (let i = 0; i < outline.length - 1; i++) sh.push(root[0], 0, root[1], outline[i][0], 0, outline[i][1], outline[i + 1][0], 0, outline[i + 1][1]);
@@ -6130,9 +6128,9 @@ NB.KESTREL = () => {
         return { piv, s };
     });
     // 尾羽: ワイヤーの扇＋うすいガラス
-    const tp = [], tt = []; for (let k = 0; k < 7; k++) tt.push(featherPts(tp, 0, -34, Math.PI + (k - 3) * 0.17, 30 - Math.abs(k - 3) * 2.5, 8));
+    const tp = [], tt = []; for (let k = 0; k < 5; k++) tt.push(featherPts(tp, 0, -34, Math.PI + (k - 2) * 0.22, 30 - Math.abs(k - 2) * 3, 9));
     const tail = new THREE.Group(); g.add(tail);
-    tail.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tp), LAB.line(B, 0.75)));
+    tail.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tp), LAB.line(B, 0.6)));
     const ts = []; for (let i = 0; i < tt.length - 1; i++) ts.push(0, 0, -34, tt[i][0], 0, tt[i][1], tt[i + 1][0], 0, tt[i + 1][1]);
     const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(ts, 3)); tail.add(new THREE.Mesh(tg, LAB.glass(B, 0.12)));
     const trail = LAB.dashRing(60, 30, 8, 1.4, LAB.glass(C, 0.5), 3); trail.scale.set(1, 1, 0.4); g.add(trail);
