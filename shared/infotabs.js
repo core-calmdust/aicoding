@@ -53,6 +53,8 @@ function init(tries) {
     const b = e.target.closest('[data-it]'); if (!b) return;
     const again = cur === b.dataset.it && !document.body.classList.contains('mtab-online');
     cur = b.dataset.it; document.body.dataset.it = cur; try { localStorage.setItem(KEY, cur); } catch (x) {}
+    // a shorter box: keep the page inside its new length in the same frame (iOS otherwise shows empty space / loses the fixed bar)
+    { const se = document.scrollingElement || document.documentElement, max = se.scrollHeight - innerHeight; if (scrollY > max) scrollTo(0, Math.max(0, max)); }
     // the game's own handler then runs mtab('game') (board view); bring the box into view
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const box = cur === 'eval' ? ev : kf, r = box.getBoundingClientRect();
@@ -63,7 +65,8 @@ function init(tries) {
   }, true);
   document.body.dataset.it = cur; document.body.classList.add('it-on'); fix();
 }
-/* strips (opt-in: <script … data-strips>): games whose two sides sit at the top and bottom of the board (checkers, xiangqi,
+/* (not in the portal's 3D skin: its board has its own spacing, so the strips would float away from it)
+   strips (opt-in: <script … data-strips>): games whose two sides sit at the top and bottom of the board (checkers, xiangqi,
    tafl, morris…) — on phones the players card is split: the opponent's cell goes above the board, yours below it,
    so the board itself shows who plays which side and the card above the board disappears. Clocks / online stay in the cells. */
 const STRIPS = !!(document.currentScript && document.currentScript.hasAttribute('data-strips'));
@@ -71,17 +74,17 @@ const YOU = /あなた|\bYou\b|你|당신|\bTú\b|\bVous\b|\bVocê\b|\bDu\b|आ�
 const SCSS = `
 @media ${MQ}{
   body.ps-on .card.players{display:contents!important}
-  html body.ps-on .card.players > .player{order:-2!important;display:flex!important;width:var(--ps-w,100%);max-width:100%;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:0;padding:6px 12px;border-radius:12px;background:var(--panel,rgba(0,0,0,.25));border:1px solid var(--line,rgba(255,255,255,.1));box-sizing:border-box}
-  html body.ps-on .card.players > .player[data-ps=bot]{order:-1!important}
-  html body.ps-on .card.players > .player .top{margin:0;min-width:0}
-  html body.ps-on .card.players > .player .count{margin:0 0 0 auto!important;flex:none!important;width:auto!important;text-align:right!important;font-size:22px;line-height:1;order:2}
-  html body.ps-on .card.players > .player .top{order:1;flex:1 1 auto!important}
-  html body.ps-on .card.players > .player .status{order:3}
-  html body.ps-on .card.players > .player .status{position:static;margin:0 0 0 auto;font-size:11.5px}
+  html:not(.atlas-skin) body.ps-on .card.players > .player{order:-2!important;display:flex!important;width:var(--ps-w,100%);max-width:100%;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:0;padding:6px 12px;border-radius:12px;background:var(--panel,rgba(0,0,0,.25));border:1px solid var(--line,rgba(255,255,255,.1));box-sizing:border-box}
+  html:not(.atlas-skin) body.ps-on .card.players > .player[data-ps=bot]{order:-1!important}
+  html:not(.atlas-skin) body.ps-on .card.players > .player .top{margin:0;min-width:0}
+  html:not(.atlas-skin) body.ps-on .card.players > .player .count{margin:0 0 0 auto!important;flex:none!important;width:auto!important;text-align:right!important;font-size:22px;line-height:1;order:2}
+  html:not(.atlas-skin) body.ps-on .card.players > .player .top{order:1;flex:1 1 auto!important}
+  html:not(.atlas-skin) body.ps-on .card.players > .player .status{order:3}
+  html:not(.atlas-skin) body.ps-on .card.players > .player .status{position:static;margin:0 0 0 auto;font-size:11.5px}
   body.ps-on .card.players > :not(.player){display:none}
 }`;
 function strips(tries) {
-  if (window.__ROTWRAP || window.__EMBED) return;
+  if (window.__ROTWRAP || window.__EMBED || document.documentElement.classList.contains('atlas-skin')) return;
   const card = document.querySelector('.card.players'), ps = card ? [...card.querySelectorAll(':scope > .player')] : [], board = document.querySelector('.board-area');
   if (ps.length !== 2 || !board) { if (tries < 40) setTimeout(() => strips(tries + 1), 150); return; }
   const st = document.createElement('style'); st.id = 'infoStripsCss'; st.textContent = SCSS; document.head.appendChild(st);
