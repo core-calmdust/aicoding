@@ -222,7 +222,7 @@ html[data-back=wave] .bk{background:radial-gradient(circle at 50% 100%,transpare
 html[data-back=red] .bk{background:#fff url(img/back-red.webp) center/90.5% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=blue] .bk{background:#fff url(img/back-blue.webp) center/90.5% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=ornate] .bk{background:#fff url(img/back-ornate.webp) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.3)}
-html[data-back=ornateBlack] .bk{background:#1c1c1c url(img/back-ornate-black.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=ornateBlack] .bk{background:#1c1c1c url(img/back-ornate-black.webp?v=2) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=gangsta] .bk{background:#3a3a3a url(img/back-gangsta.webp) center/86% 90% no-repeat;box-shadow:inset 0 0 0 calc(var(--cw)*.04) #f4f4f2,0 0 0 1px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=gangsta] .cd .bk::after{display:none}
 html[data-back=floral] .bk{background:#fff url(img/back-floral.webp) center/91% 93.5% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
