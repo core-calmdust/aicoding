@@ -6,7 +6,7 @@ const S = window.SOL, $ = s => document.querySelector(s), $$ = s => [...document
 const STORE = 'aicoding-solitaire', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const DIFFS = ['easy', 'normal', 'hard', 'expert'];
 const FELTS = ['teal', 'green', 'blue', 'wine', 'charcoal', 'purple', 'walnut', 'linen'];
-const BACKS = ['ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'red', 'blue', 'gangsta', 'skull', 'skullBlack', 'crimson', 'navy'];
+const BACKS = ['skullBlack', 'skull', 'gangsta', 'ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'red', 'blue', 'crimson', 'navy'];
 const COURTS = ['gangsta', 'classic', 'antique', 'flat'];
 const FACES = ['classic', 'large', 'four'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -14,8 +14,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'teal', back: 'ornate', face: 'classic', court: 'gangsta', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
-if (D.set.backV !== 2 || !BACKS.includes(D.set.back)) { D.set.back = 'ornate'; D.set.backV = 2; }   // the default back became Arabesque (2026-10-29)
+D.set = Object.assign({ v: 'klondike', prefs: {}, felt: 'teal', back: 'skullBlack', face: 'classic', court: 'gangsta', auto: 'safe', tap: 'auto', anim: 1, speed: 'normal', left: 0, timer: 1, score: 1, hl: 1, sound: true, lang: '' }, D.set || {});
+if (D.set.backV !== 3 || !BACKS.includes(D.set.back)) { D.set.back = 'skullBlack'; D.set.backV = 3; }   // the default back became Lucky Skull black (2026-10-29)
 document.documentElement.dataset.back = D.set.back;
 D.set.face = 'classic'; document.documentElement.dataset.face = 'classic';   // the card-face picker was removed
 if (D.set.defV !== 3) { D.set.court = 'gangsta'; D.set.felt = 'teal'; D.set.defV = 3; }   // new defaults (2026-10-29): Gangsta cards on a teal table

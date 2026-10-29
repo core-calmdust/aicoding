@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-solitaire') || '{}') || {}).set || {}; document.documentElement.dataset.felt = S.defV === 3 ? (S.felt || 'teal') : 'teal'; document.documentElement.dataset.back = (S.backV === 2 && ['ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'red', 'blue', 'gangsta', 'skull', 'skullBlack', 'crimson', 'navy'].includes(S.back)) ? S.back : 'ornate'; document.documentElement.dataset.court = S.defV === 3 ? (S.court || 'gangsta') : 'gangsta'; document.documentElement.dataset.face = 'classic'; } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-solitaire') || '{}') || {}).set || {}; document.documentElement.dataset.felt = S.defV === 3 ? (S.felt || 'teal') : 'teal'; document.documentElement.dataset.back = (S.backV === 3 && ['skullBlack', 'skull', 'gangsta', 'ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'red', 'blue', 'crimson', 'navy'].includes(S.back)) ? S.back : 'skullBlack'; document.documentElement.dataset.court = S.defV === 3 ? (S.court || 'gangsta') : 'gangsta'; document.documentElement.dataset.face = 'classic'; } catch (e) {}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソリティア | 世界のボドゲ大全</title>
 <meta name="description" content="クロンダイク・スパイダー・フリーセルを1つで。難易度やルールを細かく選べ、勝てる配り・ヒント・統計・今日の配りつき。">
@@ -117,8 +117,8 @@
 <script src="../shared/rulesoffer.js?v=8"></script>
 <script src="../shared/headerbar.js?v=29"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="table.js?v=7"></script>
-<script src="app.js?v=16"></script>
+<script src="table.js?v=8"></script>
+<script src="app.js?v=17"></script>
 <script src="rules.js?v=1"></script>
 <script src="../shared/atlas.js?v=20261028v" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>

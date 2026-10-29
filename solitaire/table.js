@@ -25,7 +25,7 @@ function faceHtml(c) {
   } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
   // the flat / gangsta decks: every card is a whole-face image (img/flat/<rank><suit>.webp); the drawn face stays underneath for tiny cards
-  const deck = document.documentElement.dataset.court, full = Table.FULL_DECKS.includes(deck) ? `<img class="fimg" src="img/${deck}/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async">` : '';
+  const deck = document.documentElement.dataset.court, full = Table.FULL_DECKS.includes(deck) ? `<img class="fimg" src="img/${deck}/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp?v=2" alt="" draggable="false" decoding="async">` : '';
   return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div>${full}</div><div class="bk"></div>`;
 }
 const DOWN = 0.13, UP = 0.30, UPMIN = 0.13, DOWNMIN = 0.045;
