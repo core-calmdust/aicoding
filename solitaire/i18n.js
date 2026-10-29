@@ -461,14 +461,14 @@ ar: {"v.golf": "الغولف", "v.tripeaks": "القمم الثلاث", "v.pyram
 });
 /* small-card display mode (phones) */
 (function (A) { for (const l in A) Object.assign(I18N[l], A[l]); })({
-ja: {"cmode.h": "小さいカードの表示", "cmode.simple": "シンプル", "cmode.real": "リアル"},
-en: {"cmode.h": "Small cards", "cmode.simple": "Simple", "cmode.real": "Real"},
-zh: {"cmode.h": "小牌显示", "cmode.simple": "简洁", "cmode.real": "真实"},
-ko: {"cmode.h": "작은 카드 표시", "cmode.simple": "심플", "cmode.real": "리얼"},
-es: {"cmode.h": "Cartas pequeñas", "cmode.simple": "Simple", "cmode.real": "Real"},
-fr: {"cmode.h": "Petites cartes", "cmode.simple": "Simple", "cmode.real": "Réel"},
-pt: {"cmode.h": "Cartas pequenas", "cmode.simple": "Simples", "cmode.real": "Real"},
-de: {"cmode.h": "Kleine Karten", "cmode.simple": "Einfach", "cmode.real": "Echt"},
-hi: {"cmode.h": "छोटे पत्ते", "cmode.simple": "सरल", "cmode.real": "असली"},
-ar: {"cmode.h": "الأوراق الصغيرة", "cmode.simple": "بسيط", "cmode.real": "واقعي"},
+ja: {"cmode.h": "スタイル", "cmode.simple": "シンプル", "cmode.real": "リアル"},
+en: {"cmode.h": "Style", "cmode.simple": "Simple", "cmode.real": "Real"},
+zh: {"cmode.h": "风格", "cmode.simple": "简洁", "cmode.real": "真实"},
+ko: {"cmode.h": "스타일", "cmode.simple": "심플", "cmode.real": "리얼"},
+es: {"cmode.h": "Estilo", "cmode.simple": "Simple", "cmode.real": "Real"},
+fr: {"cmode.h": "Style", "cmode.simple": "Simple", "cmode.real": "Réel"},
+pt: {"cmode.h": "Estilo", "cmode.simple": "Simples", "cmode.real": "Real"},
+de: {"cmode.h": "Stil", "cmode.simple": "Einfach", "cmode.real": "Echt"},
+hi: {"cmode.h": "शैली", "cmode.simple": "सरल", "cmode.real": "असली"},
+ar: {"cmode.h": "النمط", "cmode.simple": "بسيط", "cmode.real": "واقعي"},
 });
