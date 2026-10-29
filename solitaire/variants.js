@@ -380,17 +380,228 @@ register({
   solvable() { return true; },
 });
 
+/* =====================================================================
+   Shared helpers for the "pyramid-shaped" games (TriPeaks, Pyramid)
+   Each tableau position is its own pile of kind 'pk' (one card). A pk pile is covered while a non-empty
+   pk pile one row lower overlaps it (worked out from the layout, so the tutorial boards work the same way).
+   ===================================================================== */
+const COVER = new WeakMap();
+function coverOf(L) {
+  let m = COVER.get(L); if (m) return m;
+  m = L.map((a, i) => a.k !== 'pk' ? [] : L.map((b, j) => (b.k === 'pk' && j !== i && b.y > a.y + 0.05 && b.y - a.y < 0.85 && Math.abs(b.x - a.x) < 0.9) ? j : -1).filter(j => j >= 0));
+  COVER.set(L, m); return m;
+}
+const covered = (st, i) => coverOf(st.L)[i].some(j => st.p[j].c.length);
+const pkFree = (st, i) => st.L[i].k === 'pk' && st.p[i].c.length > 0 && !covered(st, i);
+const pkLeft = st => pilesOf(st, 'pk').reduce((n, i) => n + st.p[i].c.length, 0);
+function uncover(st, ev) {   // a face-down pk card turns up once nothing covers it
+  pilesOf(st, 'pk').forEach(i => { const P = st.p[i]; if (P.c.length && P.d > 0 && !covered(st, i)) { P.d = 0; ev.flips.push(i); } });
+}
+const nextTo = (a, b, wrap) => { const d = Math.abs(RANK(a) - RANK(b)); return d === 1 || (!!wrap && d === 12); };
+function drawOne(st, ev) {   // stock → waste, one card face up
+  const S = st.p[pilesOf(st, 'stock')[0]], W = st.p[pilesOf(st, 'waste')[0]];
+  W.c.push(S.c.pop()); S.d = S.c.length; ev.draw = 1;
+}
+const stockLen = st => { const i = pilesOf(st, 'stock')[0]; return i == null ? 0 : st.p[i].c.length; };
+
+/* =====================================================================
+   ゴルフ (Golf)
+   ===================================================================== */
+register({
+  id: 'golf', decks: 1, solver: true, search: 'dfs',
+  opts: [
+    { k: 'wrap', vals: [0, 1], def: 0 },        // K and A count as next to each other
+    { k: 'kingBlock', vals: [1, 0], def: 1 },   // nothing may be played on a King (without wrap)
+    { k: 'rows', vals: [5, 4, 6], def: 5 },     // cards per column
+  ],
+  presets: {
+    easy:   { wrap: 1, kingBlock: 0, rows: 5, deal: 'winnable', undo: 'on' },
+    normal: { wrap: 0, kingBlock: 1, rows: 5, deal: 'winnable', undo: 'on' },
+    hard:   { wrap: 0, kingBlock: 1, rows: 5, deal: 'random', undo: 'on' },
+    expert: { wrap: 0, kingBlock: 1, rows: 6, deal: 'random', undo: 'off' },
+  },
+  layout(o) {
+    const L = [], X = c => c * (1 + GAP), y2 = CH + (o.rows - 1) * 0.40 + 0.45;
+    for (let i = 0; i < 7; i++) L.push({ k: 'tab', x: X(i), y: 0, fan: 'v', n: i });
+    L.push({ k: 'stock', x: X(o.left ? 4 : 2), y: y2, fan: 'n' });
+    L.push({ k: 'waste', x: X(o.left ? 2 : 3), y: y2, fan: o.left ? 'hl' : 'h' });
+    return L;
+  },
+  deal(rng, o) {
+    const deck = shuffle([...Array(52).keys()], rng), p = [];
+    for (let i = 0; i < 7; i++) p.push({ c: deck.splice(0, o.rows), d: 0 });
+    p.push({ c: deck, d: 0 }, { c: [], d: 0 });
+    p[8].c.push(p[7].c.pop()); p[7].d = p[7].c.length;
+    return p;
+  },
+  canPick(st, f, i) { return st.L[f].k === 'tab' && i === st.p[f].c.length - 1; },
+  canDrop(st, f, i, t) {
+    if (st.L[t].k !== 'waste' || st.L[f].k !== 'tab') return false;
+    const W = st.p[t]; if (!W.c.length) return true;
+    const u = top(W), c = st.p[f].c[i];
+    if (st.o.kingBlock && !st.o.wrap && RANK(u) === 13) return false;
+    return nextTo(u, c, st.o.wrap);
+  },
+  canStock(st) { return stockLen(st) > 0; },
+  stock: drawOne,
+  won(st) { return pilesOf(st, 'tab').every(i => !st.p[i].c.length); },
+  score(st, ev) { if (ev.tk === 'waste') { st.sc += 1; if (this.won(st)) st.sc += stockLen(st); } },
+  rank(st, mv) {
+    if (mv.s) return -10;
+    const c = st.p[mv.f].c[mv.i]; let v = 10 + st.p[mv.f].c.length;
+    pilesOf(st, 'tab').forEach(i => { if (i !== mv.f && st.p[i].c.length && nextTo(top(st.p[i]), c, st.o.wrap)) v += 4; });
+    return v;
+  },
+  eval(st) { return -10 * pilesOf(st, 'tab').reduce((n, i) => n + st.p[i].c.length, 0) + stockLen(st); },
+  key(st) { return pilesOf(st, 'tab').map(i => st.p[i].c.length).join('') + '|' + stockLen(st) + '|' + top(st.p[pilesOf(st, 'waste')[0]]); },
+  solvable() { return true; },
+});
+
+/* =====================================================================
+   トライピークス (TriPeaks)
+   ===================================================================== */
+const TP_S = 1.06, TP_DY = 0.6;
+register({
+  id: 'tripeaks', decks: 1, solver: true,
+  opts: [
+    { k: 'wrap', vals: [1, 0], def: 1 },
+    { k: 'faceUp', vals: [0, 1], def: 0 },   // every peak card face up from the start
+  ],
+  presets: {
+    easy:   { wrap: 1, faceUp: 1, deal: 'winnable', undo: 'on' },
+    normal: { wrap: 1, faceUp: 0, deal: 'winnable', undo: 'on' },
+    hard:   { wrap: 0, faceUp: 0, deal: 'random', undo: 'on' },
+    expert: { wrap: 0, faceUp: 0, deal: 'random', undo: 'off' },
+  },
+  layout(o) {
+    const L = [], P = (x, y, r) => L.push({ k: 'pk', x: x * TP_S, y: y * TP_DY, fan: 'n', z: 100 + r * 4 });
+    [1.5, 4.5, 7.5].forEach(x => P(x, 0, 0));
+    [1, 2, 4, 5, 7, 8].forEach(x => P(x, 1, 1));
+    for (let i = 0; i < 9; i++) P(i + 0.5, 2, 2);
+    for (let i = 0; i < 10; i++) P(i, 3, 3);
+    const y2 = 3 * TP_DY + CH + 0.4;
+    L.push({ k: 'stock', x: (o.left ? 5.4 : 3.6) * TP_S, y: y2, fan: 'n' });
+    L.push({ k: 'waste', x: (o.left ? 3.6 : 5.4) * TP_S, y: y2, fan: 'n' });
+    return L;
+  },
+  deal(rng, o) {
+    const deck = shuffle([...Array(52).keys()], rng), p = [];
+    for (let i = 0; i < 28; i++) p.push({ c: [deck.pop()], d: o.faceUp || i >= 18 ? 0 : 1 });
+    p.push({ c: deck, d: 0 }, { c: [], d: 0 });
+    p[29].c.push(p[28].c.pop()); p[28].d = p[28].c.length;
+    return p;
+  },
+  canPick(st, f) { return pkFree(st, f) && st.p[f].d === 0; },
+  canDrop(st, f, i, t) {
+    if (st.L[t].k !== 'waste' || st.L[f].k !== 'pk') return false;
+    const W = st.p[t]; return !W.c.length || nextTo(top(W), st.p[f].c[i], st.o.wrap);
+  },
+  canStock(st) { return stockLen(st) > 0; },
+  stock(st, ev) { drawOne(st, ev); st.runs = 0; },
+  after(st, ev) { uncover(st, ev); },
+  won(st) { return pkLeft(st) === 0; },
+  score(st, ev) {   // a run of cards without turning the stock scores 1, 2, 3…; each peak cleared +15
+    if (ev.fk !== 'pk') return;
+    st.runs++; st.sc += st.runs;
+    if (st.L[ev.mv.f].z === 100) st.sc += 15;
+  },
+  rank(st, mv) {
+    if (mv.s) return -10;
+    const s2 = clone(st), ev = { flips: [] }; s2.p[mv.t].c.push(s2.p[mv.f].c.pop()); uncover(s2, ev);
+    let v = 10 + 12 * ev.flips.length + st.L[mv.f].y * 2;
+    const c = st.p[mv.f].c[0];
+    pilesOf(st, 'pk').forEach(i => { if (i !== mv.f && pkFree(st, i) && st.p[i].d === 0 && nextTo(st.p[i].c[0], c, st.o.wrap)) v += 4; });
+    return v;
+  },
+  eval(st) { return -10 * pkLeft(st) + stockLen(st); },
+  key(st) { return pilesOf(st, 'pk').map(i => st.p[i].c.length).join('') + '|' + stockLen(st) + '|' + top(st.p[pilesOf(st, 'waste')[0]]); },
+  solvable() { return true; },
+});
+
+/* =====================================================================
+   ピラミッド (Pyramid)
+   ===================================================================== */
+const PY_S = 1.06, PY_DY = 0.55, PY_X = 1.55;
+register({
+  id: 'pyramid', decks: 1, solver: true, search: 'dfs',
+  opts: [
+    { k: 'passes', vals: [3, 2, 1, 0], def: 3 },   // times through the stock: 0 = unlimited
+  ],
+  presets: {
+    easy:   { passes: 0, deal: 'winnable', undo: 'on' },
+    normal: { passes: 3, deal: 'winnable', undo: 'on' },
+    hard:   { passes: 2, deal: 'random', undo: 'on' },
+    expert: { passes: 1, deal: 'random', undo: 'off' },
+  },
+  layout(o) {
+    const L = [], ox = o.left ? 0 : PY_X;
+    for (let r = 0; r < 7; r++) for (let i = 0; i <= r; i++) L.push({ k: 'pk', x: ox + ((6 - r) / 2 + i) * PY_S, y: r * PY_DY, fan: 'n', z: 100 + r * 4 });
+    const sx = o.left ? 7 * PY_S + 0.5 : 0, fx = o.left ? 0 : 7 * PY_S + PY_X + 0.5;
+    L.push({ k: 'stock', x: sx, y: 0, fan: 'n' });
+    L.push({ k: 'waste', x: sx, y: ROW2, fan: 'n' });
+    L.push({ k: 'found', x: o.left ? sx : fx, y: o.left ? 2 * ROW2 : 0, fan: 'n', n: 0, discard: 1 });
+    return L;
+  },
+  deal(rng) {
+    const deck = shuffle([...Array(52).keys()], rng), p = [];
+    for (let i = 0; i < 28; i++) p.push({ c: [deck.pop()], d: 0 });
+    p.push({ c: deck, d: deck.length }, { c: [], d: 0 }, { c: [], d: 0 });
+    return p;
+  },
+  canPick(st, f, i) {
+    const k = st.L[f].k, P = st.p[f];
+    if (k === 'pk') return pkFree(st, f);
+    return k === 'waste' && i === P.c.length - 1;
+  },
+  canDrop(st, f, i, t) {
+    const k = st.L[t].k, T = st.p[t], c = st.p[f].c[i];
+    if (k === 'found') return RANK(c) === 13;
+    if (RANK(c) === 13 || !T.c.length) return false;
+    if (k === 'pk') return pkFree(st, t) && RANK(top(T)) + RANK(c) === 13;
+    if (k === 'waste') return st.L[f].k === 'pk' && RANK(top(T)) + RANK(c) === 13;
+    return false;
+  },
+  canStock(st) { const W = st.p[pilesOf(st, 'waste')[0]]; if (!W || pilesOf(st, 'stock')[0] == null) return false; return stockLen(st) > 0 || (W.c.length > 0 && (!st.o.passes || st.pass < st.o.passes - 1)); },
+  stock(st, ev) {
+    const S = st.p[pilesOf(st, 'stock')[0]], W = st.p[pilesOf(st, 'waste')[0]];
+    if (S.c.length) drawOne(st, ev);
+    else { S.c = W.c.reverse(); W.c = []; S.d = S.c.length; st.pass++; ev.recycle = true; }
+  },
+  after(st, ev) {   // a card dropped on its partner (sum 13): both go to the discard pile
+    if (!ev.mv || ev.mv.t == null || ev.tk === 'found') return;
+    const T = st.p[ev.mv.t], n = T.c.length;
+    if (n >= 2 && RANK(T.c[n - 1]) + RANK(T.c[n - 2]) === 13) {
+      st.p[pilesOf(st, 'found')[0]].c.push(...T.c.splice(n - 2)); ev.tk = 'found'; ev.pair = 1;
+    }
+  },
+  won(st) { return pkLeft(st) === 0; },
+  safe(st, c) { return RANK(c) === 13; },
+  score(st, ev) { if (ev.tk === 'found') st.sc += 5; if (ev.tk === 'found' && this.won(st)) st.sc += 50; },
+  rank(st, mv) {
+    if (mv.s) return stockLen(st) ? -10 : -30;
+    const fk = st.L[mv.f].k, tk = st.L[mv.t].k; let v = 20;
+    if (fk === 'pk') v += 4 + st.L[mv.f].y * 3;
+    if (tk === 'pk') v += 4 + st.L[mv.t].y * 3;
+    if (fk === 'waste' || tk === 'waste') v -= 2;
+    return v;
+  },
+  eval(st) { return -10 * pkLeft(st) - (st.o.passes ? 3 * st.pass : 0); },
+  key(st) { return pilesOf(st, 'pk').map(i => st.p[i].c.length).join('') + '|' + st.p[pilesOf(st, 'stock')[0]].c.join(',') + '|' + st.p[pilesOf(st, 'waste')[0]].c.join(',') + (st.o.passes ? '|' + st.pass : ''); },
+  solvable() { return true; },
+});
+
 /* ---------- canonical key (solver transpositions) ---------- */
 function key(st) {
   const V = VARIANTS[st.v], tabs = [], cells = [], rest = [];
+  if (V.key) return V.key(st);
   st.p.forEach((P, i) => {
     const k = st.L[i].k, s = P.d + ':' + P.c.join(',');
     if (k === 'tab') tabs.push(s); else if (k === 'cell') cells.push(s); else if (k === 'found') rest.push(P.c.length ? top(P) : -1); else rest.push(k[0] + s);
   });
   tabs.sort(); cells.sort();
-  const pass = V.id === 'klondike' && st.o.passes ? '|' + st.pass : '';
+  const pass = st.o.passes ? '|' + st.pass : '';
   return rest.join(';') + '|' + cells.join(';') + '|' + tabs.join('/') + pass;
 }
 
-G.SOL = { CH, GAP, ROW2, SUIT, RANK, RED, VARIANTS, ORDER, register, newGame, defaults, clone, moves, legal, apply, won, autoMove, stuck, key, pilesOf, top, mulberry, hashStr, shuffle, msDeal, altRun, suitRun, rankRun, safeAlt, toFound, foundTop };
+G.SOL = { CH, GAP, ROW2, SUIT, RANK, RED, VARIANTS, ORDER, register, newGame, defaults, clone, moves, legal, apply, won, autoMove, stuck, key, pilesOf, top, mulberry, hashStr, shuffle, msDeal, altRun, suitRun, rankRun, safeAlt, toFound, foundTop, covered, pkFree };
 })(typeof self !== 'undefined' ? self : this);

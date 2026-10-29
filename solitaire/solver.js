@@ -6,7 +6,7 @@
      solve { st, limit }                     → { ok, path:[moves], nodes, out }   (out: node limit reached) */
 (function (G) {
 'use strict';
-if (typeof SOL === 'undefined' && typeof importScripts === 'function') importScripts('variants.js?v=1');
+if (typeof SOL === 'undefined' && typeof importScripts === 'function') importScripts('variants.js?v=2');
 const S = G.SOL;
 function dfs(st0, limit) {
   const V = S.VARIANTS[st0.v], seen = new Set(), path = [];
@@ -85,7 +85,7 @@ function find(v, o, tries, limit, seed, det) {
   }
   return { no: null, nodes };
 }
-function solve(st0, limit) { return bestFirst(st0, limit); }
+function solve(st0, limit) { return S.VARIANTS[st0.v].search === 'dfs' ? dfs(st0, limit) : bestFirst(st0, limit); }
 G.SOLVER = { solve, dfs, find, bestFirst, evalGeneric };
 if (typeof importScripts === 'function' && typeof document === 'undefined') {
   G.onmessage = e => {

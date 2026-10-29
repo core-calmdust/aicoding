@@ -58,7 +58,7 @@ class Table {
     this.slots.forEach(s => s.remove()); this.slots = [];
     this.st.L.forEach((l, i) => {
       const d = document.createElement('div'); d.className = 'slot k-' + l.k + (l.stack ? ' stack' : ''); d.dataset.pi = i;
-      if (l.k === 'found' && !l.stack) d.innerHTML = '<span>A</span>';
+      if (l.k === 'found' && !l.stack && !l.discard) d.innerHTML = '<span>A</span>';
       if (l.stack && l.n > 0) d.classList.add('ghost');
       if (l.k === 'stock') d.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
       this.el.insertBefore(d, this.layer); this.slots.push(d);
@@ -111,7 +111,7 @@ class Table {
         else if (l.fan === 'h' || l.fan === 'hl') { const k = Math.max(0, j - (n - 3)); x = x0 + (l.fan === 'h' ? 1 : -1) * k * 0.22 * u; }
         else if (l.k === 'stock' && l.deal) { const grp = Math.floor(j / 10); x = x0 - grp * 0.16 * u; }
         else if (l.k === 'stock' || l.k === 'found' || l.k === 'cell') { const k = Math.floor(j / (this.o.mini ? 99 : 8)); x = x0 + k * 0.012 * u; y = y0 - k * 0.012 * u; }
-        pos.set(c, { x, y, z: j + (l.k === 'tab' ? 100 : 10) + (l.k === 'waste' ? 50 : 0), up: j >= P.d && l.k !== 'stock', pi: i, ci: j });
+        pos.set(c, { x, y, z: j + (l.z != null ? l.z : (l.k === 'tab' ? 100 : 10) + (l.k === 'waste' ? 50 : 0)), up: j >= P.d && l.k !== 'stock', pi: i, ci: j });
         bottom = Math.max(bottom, y + ch);
       });
       this.rects[i] = { x: x0, y: y0, w: u + (l.fan === 'h' ? 0.44 * u : 0), h: (l.fan === 'v' ? Math.max(bottom, y0 + ch) - y0 + ch * 0.6 : ch) };
@@ -239,7 +239,7 @@ class Table {
     this.layout(true);   // back to where it was
   }
 }
-Table.faceHtml = faceHtml; Table.RK = RK; Table.COURT_DIR = { classic: '', antique: 'antique/', flat: 'flat/', gangsta: 'gangsta/' }; Table.FULL_DECKS = ['flat', 'gangsta'];   // whole-face image decks (all 52 cards)
+Table.faceHtml = faceHtml; Table.RK = RK; Table.PIPS = PIPS; Table.COURT_DIR = { classic: '', antique: 'antique/', flat: 'flat/', gangsta: 'gangsta/' }; Table.FULL_DECKS = ['flat', 'gangsta'];   // whole-face image decks (all 52 cards)
 Table.all = new Set();
 Table.applyFace = el => { const f = document.documentElement.dataset.face || 'classic'; (el ? [el] : [...Table.all].map(x => x.el)).forEach(e => { e.classList.toggle('face-large', f === 'large'); e.classList.toggle('face-four', f === 'four'); }); };
 window.Table = Table;
