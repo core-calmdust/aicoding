@@ -846,8 +846,12 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   html,body{height:auto!important;overflow-x:hidden!important;overflow-y:auto!important}
   .app{display:grid!important;height:auto!important;min-height:var(--vh);align-content:start;justify-content:stretch;gap:6px 8px!important;
     padding:6px max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left))!important;
-    grid-template-columns:auto minmax(0,1fr) minmax(0,1fr)!important;
-    grid-template-areas:"brand ctrl ctrl" "fr fr fr" "ls ls ls" "ev ev kf" "rv rv rv"!important}
+    grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto!important;
+    grid-template-areas:"brand ctrl ctrl icons" "fr fr fr fr" "ls ls ls ls" "ev ev kf kf" "rv rv rv rv"!important}
+  /* title on the left, the menu in the middle, the icon set (rotate · sound · language · home) on the right */
+  html:not(.atlas-skin) .brand{display:contents!important}
+  html:not(.atlas-skin) .brand-l{grid-area:brand;align-self:center}
+  html:not(.atlas-skin) .brand-r{grid-area:icons;align-self:center;display:flex;gap:5px}
   /* the menu sits above the board (below it, it was under the bottom tabs); no player boxes — the names (先手 / 後手) are on the board by the stores */
   .board-area > .plate{display:none!important}
   .slabel{font-size:0!important;letter-spacing:0!important}
