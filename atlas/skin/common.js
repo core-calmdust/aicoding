@@ -31,7 +31,7 @@
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const placeHost = () => {   // the canvas covers the board with a margin for the bezel / legs and the shadow
       const b = box(), r = { width: b.w, height: b.h }; if (!b.w) return;
-      const m = Math.round(Math.max(b.w, b.h) * .3);
+      const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));   // o.margin: a flat board with a short shadow needs less canvas (fewer pixels to draw)
       Object.assign(host.style, { left: (b.x - m) + 'px', top: (b.y - m) + 'px', width: (b.w + 2 * m) + 'px', height: (b.h + 2 * m) + 'px' });
       boardDom.style.transform = TILT ? `perspective(${Math.round(b.h * PERSP)}px) rotateX(${TILT}deg)` : '';
       if (o.units) unitPx = r.height / o.units;

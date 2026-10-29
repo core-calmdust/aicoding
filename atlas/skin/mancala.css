@@ -66,3 +66,6 @@ html.mc-barmenu .atlas-top > .controls .btn span{overflow:hidden;text-overflow:c
 @media (max-width:760px){html.mc-barmenu .atlas-top > .controls .btn span{display:none!important}}
 html.mc-barmenu .atlas-coin{display:none}
 html.mc-barmenu.atlas-skin .app{padding-top:52px!important}
+/* lighter on phones: no animated glow background under the wooden floor (it is covered anyway), no per-gem filter */
+html.atlas-mancala #bgfx{display:none!important}
+@media (pointer: coarse){ html.atlas-mancala .seed{filter:none!important} html.atlas-mancala .seed.fly{filter:none!important} }
