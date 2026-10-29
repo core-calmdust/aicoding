@@ -43,6 +43,7 @@ const CSS = `
   body.it-on.no-online .mtabs [data-t=online]{display:none}
   body.it-on.no-online .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
   body.it-on:not(.mtab-online) [data-itc].it-off{display:none!important}
+  body.it-on .it-nav{margin-top:8px}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
 }`;
 let cur = 'eval', saved = false;
@@ -83,7 +84,19 @@ function init(tries) {
     if (btn.coach) { const h = !avail('coach'); if (btn.coach.hidden !== h) btn.coach.hidden = h; }
     if (document.body.dataset.it !== cur) document.body.dataset.it = cur;
     document.querySelectorAll('[data-itc]').forEach(el => { const off = el.dataset.itc !== cur; if (el.classList.contains('it-off') !== off) el.classList.toggle('it-off', off); });
+    placeNav();
   };
+  // the move navigation (|< < ▶ > >|) lives in the 形勢 box; on phones it goes with whichever tab is open (棋譜 / coach too)
+  const nav = document.getElementById('navBar'), navHome = nav && nav.parentElement, navNext = nav && nav.nextSibling;
+  const navMq = matchMedia(MQ);
+  function placeNav() {
+    if (!nav) return;
+    const tgt = navMq.matches && cur !== 'eval' && box[cur] ? box[cur] : navHome;
+    if (tgt === navHome) { if (nav.parentElement !== navHome) navHome.insertBefore(nav, navNext && navNext.parentNode === navHome ? navNext : null); }
+    else if (nav.parentElement !== tgt) tgt.appendChild(nav);
+    nav.classList.toggle('it-nav', tgt !== navHome);
+  }
+  if (navMq.addEventListener) navMq.addEventListener('change', () => placeNav());
   // selection: the game's mtab() marks every data-t=game button; keep only the chosen info tab marked
   const fix = () => {
     apply();

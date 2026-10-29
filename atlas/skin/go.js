@@ -59,6 +59,7 @@
 
   const outerFn = r => { const u = r.height / (n + 1); return { top: r.top - RIM * u, height: (n + 1 + 2 * RIM + below) * u }; };
   const skin = AtlasSkin.init({
+    margin: 0.22,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     outer: r => outerFn(r),
     guide: '../images/atlas/g-stone.webp', guideFallback: '../images/atlas/go.webp',

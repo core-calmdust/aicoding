@@ -93,6 +93,7 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
   document.head.appendChild(css);
 
   const skin = AtlasSkin.init({
+    margin: 0.14,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
     outer: r => ({ top: r.top, height: r.height }),
     guide: '../images/atlas/g-stone.webp', guideFallback: '../images/atlas/hex.webp',

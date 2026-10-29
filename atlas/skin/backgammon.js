@@ -44,6 +44,7 @@
   }
 
   const skin = AtlasSkin.init({
+    margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: frameEl,
     outer: r => ({ top: r.top, height: r.height }),
     guide: '../images/atlas/g-dice.webp', guideFallback: '../images/atlas/backgammon.webp',
