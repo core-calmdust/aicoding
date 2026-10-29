@@ -575,7 +575,7 @@ $('#btnStatsReset').onclick = () => confirmBox(t('st.resetQ'), () => { delete D.
 /* ---------------- dialogs ---------------- */
 function openOv(sel) { $$('.overlay.show').forEach(o => { if (o.id !== 'busyOverlay') o.classList.remove('show'); }); $(sel).classList.add('show'); }
 function closeOv(sel) { $(sel).classList.remove('show'); }
-$$('.overlay').forEach(o => o.addEventListener('pointerdown', e => { if (e.target === o && !['busyOverlay', 'rulesOverlay', 'lessonOverlay'].includes(o.id)) { if (o.id === 'confirmOverlay') cfDone(false); o.classList.remove('show'); } }));
+$$('.overlay').forEach(o => o.addEventListener('pointerdown', e => { if (e.target === o && !['busyOverlay', 'rulesOverlay'].includes(o.id)) { if (o.id === 'confirmOverlay') cfDone(false); o.classList.remove('show'); } }));
 let cfCb = null;
 function confirmBox(msg, yes) { $('#cfMsg').textContent = msg; cfCb = yes; openOv('#confirmOverlay'); setTimeout(() => $('#cfNo').focus(), 30); }
 function cfDone(ok) { closeOv('#confirmOverlay'); const f = cfCb; cfCb = null; if (ok && f) f(); }
