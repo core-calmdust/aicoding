@@ -596,11 +596,11 @@ function openSettings() {
   const row = (lab, help, html) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div>${html}</div>`;
   $('#setTabs').innerHTML = ['play', 'design'].map(k => `<button type="button" class="${k === setTab ? 'sel' : ''}" data-st="${k}">${esc(t(k === 'play' ? 'tab.play' : 'tab.design'))}</button>`).join('');
   let h;
-  if (setTab === 'play') h = `<div class="set-cols"><div class="rl-list">` +
+  if (setTab === 'play') h = `<div class="set-cols"><div class="rl-list">` + sw('anim', t('set.anim')) + sw('hl', t('set.hl')) + sw('timer', t('set.timer')) + sw('score', t('set.score')) + sw('left', t('set.left')) + sw('sound', t('set.sound')) +
+      `</div><div class="rl-list">` +
       row(t('set.auto'), t('set.auto.h'), seg([['off', t('set.auto.off')], ['safe', t('set.auto.safe')], ['all', t('set.auto.all')]], set.auto, 'auto')) +
       row(t('set.tap'), t('set.tap.h'), seg([['auto', t('set.tap.auto')], ['select', t('set.tap.select')]], set.tap, 'tap')) +
       row(t('set.speed'), '', seg([['slow', t('set.speed.slow')], ['normal', t('set.speed.normal')], ['fast', t('set.speed.fast')]], set.speed, 'speed')) +
-      `</div><div class="rl-list">` + sw('anim', t('set.anim')) + sw('hl', t('set.hl')) + sw('timer', t('set.timer')) + sw('score', t('set.score')) + sw('left', t('set.left')) + sw('sound', t('set.sound')) +
       `</div></div>` + CREDIT_HTML();
   else h = designHtml();
   $('#setBody').innerHTML = h;
