@@ -1520,6 +1520,7 @@ body.coach-lock #shopList .btn:not(.coach-hl){opacity:.3;filter:saturate(.3)}
 /* チュートリアル：押す場所が隠れるときは枠をよける */
 .coach.dodge{left:auto;right:16px}
 @media (max-width:900px){.coach.dodge{left:50%;right:auto;top:auto;bottom:calc(env(safe-area-inset-bottom) + 10px)}}
+@media (max-width:900px){body:has(.dlg) .coach.dodge{top:calc(env(safe-area-inset-top) + 50px);bottom:auto}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -2177,6 +2178,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function draw(S) {
     if (!canDraw(S)) return null;
     refill(S);
+    if (S._no7 && S.deck[S.deck.length - 1] === 7) { const j = S.deck.findIndex(x => x !== 7); if (j >= 0) [S.deck[j], S.deck[S.deck.length - 1]] = [S.deck[S.deck.length - 1], S.deck[j]]; }   // チュートリアル：必要な場面以外で7は引かせない
     const c = S.deck.pop();
     if (c === 7 && S._extraDraw) { S.discard.push(7); log(S, { k: 'chance7', p: S.cur }); return -7; }   // 好機の手番は7を引いてもバーストしない
     if (c === 7 && S.players[S.cur].spec && S.players[S.cur].spec.some(x => x.id === 'ward' && x.t < S.turn)) {
@@ -3850,6 +3852,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       <div class="shop">${S.shop.map((id, i) => { const D = SPEC[id]; return `<div class="sc"><div class="acard md spec"><span class="si2">${D.ic}</span><span class="sn">${D.n}</span></div><div class="sd"><b>${D.n}</b><span>${D.d}</span></div><button class="btn${can ? ' primary' : ''}" data-b="${i}" ${can ? '' : 'disabled'}>買う</button></div>`; }).join('') || '<p>売り切れ</p>'}</div>
       <p class="sub">山の残り ${S.specDeck.length} 枚。市場は時代が変わると入れ替わります。買った札は次の手番から使えます（守り札は7を引いたとき自動）。${!can && S.specBought ? '<br>この手番はもう買いました。' : ''}</p>
       <div class="foot"><button class="btn" data-x>閉じる</button></div>`);
+    if (coach && COACH[coach.i] && COACH[coach.i].id === 'shop') d.querySelectorAll('button[data-b]').forEach(b => { if (b.dataset.b !== '0') b.disabled = true; });   // チュートリアル：買うカードを指定
     d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.x != null) return d.close(); if (b.dataset.b != null) { if (HD.buySpec(S, +b.dataset.b)) { d.close(); toast(`<b>${SPEC[P.spec[P.spec.length - 1].id].n}</b>を買いました`); after(); } } });
   }
   // ---------- 効果音（Web Audio で合成。ファイルなし）----------
@@ -5062,7 +5065,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       d.querySelector('#dr').innerHTML = HD.RES.map(r => { const k = sel.res[r] || 0;
         return `<div class="srow"><span class="sres">${resIcon(r, 24)}<span>${RESN[r]}<small>所持 ${P.res[r]}</small></span></span>
           <span class="sctl${k ? ' on' : ''}"><button data-dr="${r}" data-dv="-1" ${k ? '' : 'disabled'} aria-label="${RESN[r]}を捨てる数を減らす">−</button><b>${k}</b><button data-dr="${r}" data-dv="1" ${k < P.res[r] && cnt() < x.n ? '' : 'disabled'} aria-label="${RESN[r]}を捨てる数を増やす">＋</button></span></div>`; }).join('');
-      d.querySelector('#dh').innerHTML = P.hand.map((n, i) => `<button data-h="${i}" class="${handSel.has(i) ? 'sel' : ''}" ${!handSel.has(i) && cnt() >= x.n ? 'disabled' : ''}>${acard(n, 'sm')}</button>`).join('') || '<small style="color:var(--muted)">なし</small>';
+      d.querySelector('#dh').innerHTML = P.hand.map((n, i) => `<button data-h="${i}" class="${handSel.has(i) ? 'sel' : ''}" ${(!handSel.has(i) && cnt() >= x.n) || coach ? 'disabled' : ''}>${acard(n, 'sm')}</button>`).join('') || '<small style="color:var(--muted)">なし</small>';
       d.querySelector('#dOk').disabled = cnt() !== x.n;
       d.querySelector('#dOk').textContent = `手放す（${cnt()}/${x.n}）`;
     }
@@ -5446,12 +5449,13 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const myTurnNew = () => S.phase === 'turn' && S.cur === HUMAN && !S.acted && S.turn !== coach.lastTurn;
   const P0 = () => S.players[HUMAN];
   const rigTop = () => { if (S.drawn.length) return; const ns = myHexNums().filter(n => n >= 2 && n <= 6); const want = ns[0] || 6; const k = S.deck.lastIndexOf(want); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(want); } coach.want = want; };   // 次に引く札＝自分の土地の数字
+  const shopVis = () => { const e = document.getElementById('shopBox'); return !!(e && e.offsetParent); };
   const spec0 = () => (P0().spec || []).length;
   const PLAYA = () => S.drawn.length || S.step !== 'draw' ? { dom: ['#myHand', '#aPlay', '#aPass'] } : { dom: ['#deckSlot'], key: 'draw' };
   const ALLOW = { camp: () => ({ map: ['camp'] }), dev: () => ({ map: ['dev'] }), road: () => ({ map: ['sroad'] }), draw: () => ({ dom: ['#deckSlot'], key: 'draw' }), play: () => ({ dom: ['#myHand', '#aPlay'] }), road2: () => ({ map: ['road'] }), dev2: () => ({ map: ['dev'] }), trade: () => ({ dom: ['#aTrade'] }),
-    cards: () => ({ dom: ['#deckSlot'], key: 'draw' }), seven: () => ({ dom: ['#deckSlot'], key: 'draw' }),
-    ...Object.fromEntries([1, 2, 3, 4, 5, 6].map(n => ['end' + n, () => ({ dom: ['#aEnd'], key: 'end' })])), ...Object.fromEntries([3, 4, 5].map(n => ['draw' + n, PLAYA])), draw6: () => S.drawn.length < 2 && S.step === 'draw' ? { dom: ['#deckSlot'], key: 'draw' } : { dom: ['#myHand', '#aPlay'] },
-    settle: () => ({ map: ['road', 'settle'] }), city: () => ({ map: ['city'] }), shop: () => ({ dom: ['[data-sb="0"]'] }), knight: () => ({ dom: ['#aKnight', '#knCancel'], map: ['robber'] }), spec: () => ({ dom: ['#myHand .spec'] }) };
+    cards: () => ({ dom: ['#deckSlot'], key: 'draw' }), trash: () => ({ dom: ['#aTrash', '#myHand'] }), seven: () => ({ dom: ['#deckSlot'], key: 'draw' }),
+    ...Object.fromEntries([1, 2, 3, 4, 5, 6].map(n => ['end' + n, () => ({ dom: ['#aEnd'], key: 'end' })])), ...Object.fromEntries([3, 4].map(n => ['draw' + n, PLAYA])), draw5: () => S.drawn.length < 2 && S.step === 'draw' ? { dom: ['#deckSlot'], key: 'draw' } : { dom: ['#myHand', '#aPlay'] }, draw6: () => S.drawn.length < 2 && S.step === 'draw' ? { dom: ['#deckSlot'], key: 'draw' } : { dom: ['#myHand', '#aPlay'] },
+    settle: () => ({ map: ['road', 'settle'] }), city: () => ({ map: ['city'] }), shop: () => ({ dom: ['[data-sb="0"]', '#aShop'] }), knight: () => ({ dom: ['#aKnight', '#knCancel'], map: ['robber'] }), spec: () => ({ dom: ['#myHand .spec'] }) };
   // チュートリアル：置く場所はこちらで決める（ステップごとに1か所）
   function bestRoadForSettle() { let best = null, bv = -1; HD.legalRoads(S, HUMAN).forEach(e => { const o = S.edges[e].owner; S.edges[e].owner = HUMAN; const n = HD.legalSettles(S, HUMAN).length; S.edges[e].owner = o; if (n > bv) { bv = n; best = e; } }); return best; }
   const TGT = {
@@ -5495,7 +5499,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     // ---- 1手番目：アクション札と7 ----
     { id: 'cards', blk: 1, tg: '#deckSlot', h: '1手番目：アクション札を引く', t: () => `数字は<b>アクション札</b>で出します。札には<b>1〜6</b>が書かれていて、山札から引いた札は手札に入ります。<br>光っている<b>山札</b>をクリックして1枚引きましょう${TAP === 'クリック' ? '（<b>スペースキー</b>でも引けます）' : ''}。`, done: () => S.drawn.length >= 1 || S.acted },
     { id: 'seven', blk: 1, tg: '#deckSlot', h: '1手番目：2枚目と7', enter: () => { const P = P0(), need = S.limit - HD.cardCount(P); if (need > 0) { P.res.wood += need; coach.gift = `アクション札＋資源がちょうど${S.limit}枚になるよう、練習用に木材を配りました`; } const k = S.deck.lastIndexOf(7); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(7); } },
-      t: () => S.phase === 'discard' ? `<b>7</b>が出て<b>バースト</b>！ この番は数字を出せず、誰も資源をもらえません。<br>さらにアクション札＋資源が<b>${S.limit}枚以上</b>あると、<b>半分（${(S.pending.find(x => x.p === HUMAN) || {}).n || ''}枚）</b>を手放します。今回は木材を多めに手放すのがおすすめです。` : `1手番に<b>2枚</b>まで引けます。ただし山札には<b>7</b>が${S.sevens}枚混ざっていて、7を引くと<b>バースト</b>します。<br>練習のため、山札の一番上を<b>7</b>にしてあります。もう1枚引いて、何が起きるか見てみましょう。`, done: () => S.acted && S.phase === 'turn' && !S.pending.some(x => x.p === HUMAN) },
+      t: () => S.phase === 'discard' ? `<b>7</b>が出て<b>バースト</b>！ この番は数字を出せず、誰も資源をもらえません。<br>さらにアクション札＋資源が<b>${S.limit}枚以上</b>あると、<b>半分（${(S.pending.find(x => x.p === HUMAN) || {}).n || ''}枚）</b>を手放します。今回は<b>資源だけ</b>（木材を多め）を手放しましょう。アクション札は残しておきます。` : `1手番に<b>2枚</b>まで引けます。ただし山札には<b>7</b>が${S.sevens}枚混ざっていて、7を引くと<b>バースト</b>します。<br>練習のため、山札の一番上を<b>7</b>にしてあります。もう1枚引いて、何が起きるか見てみましょう。`, done: () => S.acted && S.phase === 'turn' && !S.pending.some(x => x.p === HUMAN) },
     { id: 'odds', blk: 1, manual: true, tg: '#deckChip,#deckInfo', h: '1手番目：7が出る確率', t: () => '光っている所に、山札の残り枚数と<b>次に7が出る確率</b>が出ています。押すと、まだ出ていない札の内訳も見られます。<br>確率が高いときは1枚で止める、低いときは2枚目を狙う、が基本です。<br>バーストした番でも建設はできますが、今回はこのまま終えましょう。' },
     END('end1', 1, '次の手番で、数字を出して資源をもらいます。'),
     W('w2', '次の番を待つ', '次は<b>数字を出して資源をもらい</b>、<b>道</b>を建てます。'),
@@ -5524,16 +5528,22 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     END('end4', 4),
     W('w5', '次の番を待つ', '次は<b>特殊カード</b>を買います。'),
     // ---- 5手番目：特殊カード・処分 ----
-    { id: 'draw5', blk: 5, tg: () => S.drawn.length || S.step !== 'draw' ? '#myHand,#aPlay' : '#deckSlot', h: '5手番目：引いて出す', enter: () => rigTop(), t: () => 'まず札を引いて数字を出しましょう。', done: () => S.acted },
-    { id: 'shopx', blk: 5, manual: true, tg: '#shopBox', h: '5手番目：特殊カードとは', t: () => `光っている<b>市場</b>には<b>特殊カード</b>が並んでいます。羊毛・小麦・鉱石を1つずつ払うと1枚買えます（1手番1枚）。<br>買ったカードは手札に並び、<b>次の自分の番から</b>使えます。` },
-    { id: 'shop', blk: 5, tg: '[data-sb="0"]', h: '5手番目：特殊カードを買う', enter: () => gift({ sheep: 1, wheat: 1, ore: 1 }, '練習用に特殊カードの資源を配りました'), t: () => `いちばん上の<b>「${SPEC[S.shop[0]] ? SPEC[S.shop[0]].n : ''}」</b>の<b>買う</b>ボタンを押しましょう。${SPEC[S.shop[0]] ? `<br>効果：${SPEC[S.shop[0]].d}。` : ''}`, done: () => spec0() > coach.b.spec, skip: () => !S.shop || !S.shop.length },
-    { id: 'trash', blk: 5, manual: true, tg: '#aTrash', h: '5手番目：処分', t: () => `要らないアクション札は<b>処分</b>ボタンで山札から抜けます（1手番に1枚無料、2枚目からは資源${S.trashCost}枚）。<br>弱い札を抜くと、欲しい数字を引きやすくなります。` },
+    { id: 'draw5', blk: 5, tg: () => S.drawn.length < 2 && S.step === 'draw' ? '#deckSlot' : '#myHand,#aPlay', h: '5手番目：2枚引いて出す',
+      enter: () => { if (S.drawn.length) return; const ns = myHexNums().filter(n => n >= 2 && n <= 6); const want = ns[0] || 6; coach.want = want; coach.junk = [5, 4, 3, 2, 6].find(v => v !== want && !ns.includes(v) && S.deck.includes(v)) || [5, 4, 3, 2, 6].find(v => v !== want && S.deck.includes(v)); for (const c of [coach.junk, want]) { const k = c == null ? -1 : S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } },
+      cardOK: n => n !== coach.junk, t: () => S.drawn.length < 2 && S.step === 'draw' ? '札を<b>2枚</b>引きましょう（もう一度押すと2枚目）。' : `<b>${coach.want}</b>の札だけを選んで数字を出しましょう。もう1枚の<b>${coach.junk}</b>は、このあと処分します。`, done: () => S.acted },
+    { id: 'shopx', blk: 5, manual: true, tg: () => shopVis() ? '#shopBox' : '#aShop', h: '5手番目：特殊カードとは', t: () => `${shopVis() ? '光っている<b>市場</b>' : '光っている<b>市場</b>ボタンの中'}には<b>特殊カード</b>が並んでいます。羊毛・小麦・鉱石を1つずつ払うと1枚買えます（1手番1枚）。<br>買ったカードは手札に並び、<b>次の自分の番から</b>使えます。` },
+    { id: 'shop', blk: 5, tg: () => shopVis() ? '[data-sb="0"]' : '#aShop', h: '5手番目：特殊カードを買う', enter: () => gift({ sheep: 1, wheat: 1, ore: 1 }, '練習用に特殊カードの資源を配りました'), t: () => `${shopVis() ? '' : '<b>市場</b>ボタンを押し、'}いちばん上の<b>「${SPEC[S.shop[0]] ? SPEC[S.shop[0]].n : ''}」</b>の<b>買う</b>ボタンを押しましょう。${SPEC[S.shop[0]] ? `<br>効果：${SPEC[S.shop[0]].d}。` : ''}`, done: () => spec0() > coach.b.spec, skip: () => !S.shop || !S.shop.length },
+    { id: 'trash', blk: 5, tg: () => mode === 'trash' ? '#myHand' : '#aTrash', h: '5手番目：札を処分する',
+      enter: () => { const h = P0().hand, mine = myHexNums(); coach.trashN = h.includes(coach.junk) ? coach.junk : h.filter(n => n !== 1 && !mine.some(m => m === n || m - n >= 1 && m - n <= 6)).sort((a, b) => a - b)[0] ?? h.filter(n => n !== 1)[0]; },
+      cardOK: n => mode !== 'trash' || n === coach.trashN,
+      t: () => `手札の要らないアクション札は<b>処分</b>で捨て札へ戻せます（1手番に1枚無料、2枚目からは資源${S.trashCost}枚）。手札には上限があるので、使い道の少ない札を減らしておきましょう。<br>` + (mode === 'trash' ? `手札の<b>${coach.trashN}</b>の札をクリックしましょう。` : `<b>処分</b>ボタンを押し、手札の<b>${coach.trashN}</b>の札を選びます。`),
+      done: () => S.log.some(m => m.k === 'trash' && m.p === HUMAN && m.seq > coach.b.seq), skip: () => !P0().hand.some(n => n !== 1) },
     END('end5', 5, `次の番の前に<b>時代</b>が変わります。`),
     W('w6', '時代が変わる', () => `<b>時代</b>は${S.eraLen}周ごとに変わります。いまから<b>開拓の時代</b>で、<b>騎士</b>が使えるようになります。`, 'BOTの番です。時代が変わるのを待ちましょう…'),
     // ---- 6手番目：特殊カードを使う・騎士・称号 ----
     { id: 'draw6', blk: 6, tg: () => S.drawn.length < 2 && S.step === 'draw' ? '#deckSlot' : '#myHand,#aPlay', h: '6手番目：2枚引いて出す',
       enter: () => { if (S.drawn.length) return; const ns = myHexNums().filter(n => n >= 2 && n <= 6); const want = ns[0] || 6; coach.want = want; for (const c of [1, want]) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } },
-      t: () => S.drawn.length < 2 && S.step === 'draw' ? `山札から札を<b>2枚</b>引きましょう（もう一度押すと2枚目）。` : `<b>${coach.want}</b>の札だけを選んで数字を出しましょう。<br>引いた<b>1の札</b>は数字の1にもなりますが、<b>騎士</b>にもなります。次に騎士として使うので、手札に残しておきます。`, done: () => S.acted },
+      cardOK: n => n !== 1, t: () => S.drawn.length < 2 && S.step === 'draw' ? `山札から札を<b>2枚</b>引きましょう（もう一度押すと2枚目）。` : `<b>${coach.want}</b>の札だけを選んで数字を出しましょう。<br>引いた<b>1の札</b>は数字の1にもなりますが、<b>騎士</b>にもなります。次に騎士として使うので、手札に残しておきます。`, done: () => S.acted },
     { id: 'spec', blk: 6, tg: '#myHand', h: '6手番目：特殊カードを使う', enter: () => { coach.wfR = ['ore', 'wheat', 'sheep', 'brick', 'wood'].find(r => !S.stock || S.stock[r] >= 3) || 'ore'; },
       t: () => `前の番に買った<b>特殊カード</b>（天の恵み）が手札で光っています。クリックすると使えます（1手番1枚）。<br>開いた画面で<b>${RESN[coach.wfR]}を3枚</b>選び、<b>決める</b>を押しましょう。`, done: () => S.specUsed, skip: () => !(P0().spec || []).some(x => x.t < S.turn) },
     { id: 'knight', blk: 6, tg: '#aKnight', enter: () => { if (!HD.hasKn(S, P0().hand)) { const i = S.deck.lastIndexOf(1); if (i >= 0) S.deck.splice(i, 1); P0().hand.push(1); P0().hand.sort((a, b) => a - b); coach.gift = '練習用に1の札を配りました'; } }, h: '6手番目：騎士を使う',
@@ -5576,10 +5586,12 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const lk = coachLock(); if (!lk) return;
     const t = e.target; if (!t.closest || t.closest('.coach') || t.closest('.dlg') || t.closest('.pop') || t.closest('#topbar') || t.closest('#map')) return;
     const hit = t.closest('button, [data-s], [data-sb], .acard, #deckTap'); if (!hit) return;
+    const hc = hit.closest('#myHand button[data-i]'); const st = COACH[coach.i];
+    if (hc && st && st.cardOK && !st.cardOK(S.players[HUMAN].hand[+hc.dataset.i])) { e.preventDefault(); e.stopImmediatePropagation(); coachNudge(); return; }
     if (lk.dom.some(q => hit.closest(q) || hit.matches(q))) { if (!(hit.closest('#myHand') && hit.classList.contains('spec') && !lk.dom.includes('#myHand .spec'))) return; }
     e.preventDefault(); e.stopImmediatePropagation(); coachNudge();
   }, true);
-  function coachEnd() { if (!coach) return; coach.el.remove(); coach = null; document.body.classList.remove('coach-lock'); document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl')); }
+  function coachEnd() { if (!coach) return; S._no7 = false; coach.el.remove(); coach = null; document.body.classList.remove('coach-lock'); document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl')); }
   function coachTick() {
     if (!coach) return;
     if (S.phase === 'over') { coachEnd(); return; }
@@ -5590,16 +5602,17 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       break;
     }
     if (!coach) return; st = COACH[coach.i]; if (!st) return;
+    S._no7 = st.id !== 'seven';
     if (S.phase === 'turn' && !S.acted && st.id !== 'seven') noSeven();   // 練習中はだれも7を引かない（バーストは説明だけ）
     document.body.classList.toggle('coach-lock', !!coachLock());
     const waiting = st.wait && st.wait();
     const n = COACH.length - 1, k = Math.min(coach.i, n);
-    const key = coach.i + ':' + S.phase + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
+    const key = coach.i + ':' + S.phase + ':' + S.step + ':' + S.drawn.length + ':' + mode + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
     if (coach.key !== key) {
       coach.key = key;
       coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル ${k + 1}/${n + 1}</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
         <div class="co-body">${st.f ? `<div class="co-fig">${st.f()}</div>` : ''}<div><h4>${st.h}</h4><p>${waiting ? `<span class="co-wait">${st.waitT || 'BOTの番です。少し待ちましょう…'}</span>` : st.t().replace(/クリック/g, TAP)}</p>${coach.gift && !waiting ? `<p class="co-gift">🎁 ${coach.gift}</p>` : ''}</div></div>
-        <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : (st.blk ? '<button class="btn" data-c="skip">とばす</button>' : '')}`}</div>`;
+        <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : ''}`}</div>`;
       coach.el.classList.remove('co-in'); void coach.el.offsetWidth; coach.el.classList.add('co-in');
     }
     document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl'));
