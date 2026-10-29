@@ -931,3 +931,36 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
   .tp{grid-template-columns:56px 1fr}.tp-r,.tp select{grid-column:1/-1}
 }
 .mc-row,.pkr-row,.pk-row,.rgrid,.tp-c{direction:ltr}
+/* ===================== tutorial (spotlight + bubble) ===================== */
+#tutLayer{position:fixed;inset:0;z-index:4500;pointer-events:none;display:none}
+#tutLayer.show{display:block}
+.tut-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 2px #ecd28c,0 0 18px 4px rgba(236,210,140,.55),0 0 0 9999px rgba(4,6,14,.58);transition:left .35s,top .35s,width .35s,height .35s;pointer-events:none}
+#tutLayer.center .tut-hole{box-shadow:0 0 0 9999px rgba(4,6,14,.62)}
+#tutLayer.act .tut-hole{animation:tutPulse 1.4s ease-in-out infinite}
+@keyframes tutPulse{50%{box-shadow:0 0 0 3px #8fe3b8,0 0 26px 8px rgba(143,227,184,.6),0 0 0 9999px rgba(4,6,14,.5)}}
+.tut-box{position:fixed;width:min(360px,calc(100vw - 24px));pointer-events:auto;padding:14px 16px 12px;border-radius:16px;background:linear-gradient(180deg,#222b4d,#151b33);border:1px solid rgba(236,210,140,.55);box-shadow:0 14px 40px rgba(0,0,0,.55);color:var(--text);transition:left .35s,top .35s}
+#tutLayer.center .tut-box{width:min(440px,calc(100vw - 24px))}
+.tut-box.shake{animation:pkShake .35s}
+.tut-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tut-top em{font:600 11px 'JetBrains Mono',monospace;font-style:normal;color:var(--accent);letter-spacing:.06em}
+.tut-x{border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px}
+.tut-x:hover{color:var(--text)}
+.tut-box>b{display:block;font-size:16px;color:#fff4d4;margin-bottom:4px}
+.tut-box p{margin:0;font-size:13.5px;line-height:1.75}
+.tut-box p b{color:#f3e3b5}
+.tut-btns{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px}
+.tut-btns .mbtn{padding:8px 14px}
+.tut-do{font-size:13px;color:#8fe3b8;font-weight:700}
+.tut-offer{width:min(480px,calc(100vw - 24px));text-align:center}
+.tut-offer .to-art{display:flex;justify-content:center;margin:4px 0 6px}
+.tut-offer .to-art .garts{position:relative;display:block;width:150px;height:96px;--cw:46px;--chh:64px}
+.tut-offer p{font-size:13.5px;line-height:1.75;margin:0 0 10px}
+.to-list{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:5px;text-align:start}
+.to-list li{font-size:13px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.to-list li::before{content:'✓ ';color:#8fe3b8}
+.to-chk{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:10px;cursor:pointer}
+.lc-tut{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:10px 14px;border-radius:14px;border:1px solid rgba(143,227,184,.5);background:linear-gradient(90deg,rgba(143,227,184,.12),rgba(143,227,184,.02));color:var(--text);cursor:pointer;text-align:start;font:inherit}
+.lc-tut:hover{border-color:#8fe3b8}
+.lc-tut b{font-size:14px;color:#cff5df}.lc-tut small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.lc-tut .go{margin-left:auto;font-size:18px;color:#8fe3b8}
+.rv-tabs [data-tut] + [data-lesson]{margin-left:0}

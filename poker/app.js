@@ -102,7 +102,24 @@ function newBot(p, k, used) {
   const pool = NAMES.filter(n => !used.includes(n)); const name = pool[Math.floor(Math.random() * pool.length)];
   return { name, stack: p.stack * 2, bot: { style: botStyle(p.mix, k), level: p.level } };
 }
+/* the tutorial: one scripted hold'em hand on the real table (tutorial.js drives the steps) */
+function startTutorial() {
+  clearTimeout(G.timer); G.review = null; set.hud = 1; set.coach = 1;
+  const names = ['Bella', 'Carlos', 'Dana', 'Eli', 'Fiona'];
+  const seats = [{ name: t('you'), stack: 200, human: true }].concat(names.map((n, k) => ({ name: n, stack: 200, bot: { style: STYLE_KEYS[k % 4], level: 2 } })));
+  const prev = D.cur;
+  T = P.newTable({ v: 'holdem', limit: 'nl', sb: 1, bb: 2, seats, btn: 5 });
+  T.tut = true; T.session = { hands: 0, net: 0, start: Date.now(), rebuys: 0, buyin: 200 };
+  D.cur = prev;   // the saved table stays the real one
+  nextHand();
+}
+function endTutorial() {
+  clearTimeout(G.timer); T = null;
+  if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) { T = D.cur; render(); if (T.phase === 'bet' || T.phase === 'draw') loop(); }
+  else startSession('holdem');
+}
 function startSession(v) {
+  if (window.PokerTut) PokerTut.hide();
   const p = prefOf(v); set.v = v;
   const used = [];
   const seats = [{ name: t('you'), stack: p.stack * 2, human: true }];
@@ -125,12 +142,13 @@ function nextHand() {
   });
   T.seats[HERO].name = t('you');
   P.startHand(T, P.mulberry(randSeed()));
+  if (T.tut && window.PokerTut) PokerTut.setup(T);
   G.coach = null; G.coachKey = ''; G.sel = []; G.decisions = []; G.dealtAt = Date.now();
   G.hist = { v: T.v, t: Date.now(), names: T.seats.map(s => s.name), styles: T.seats.map(s => s.bot ? s.bot.style : null), btn: T.btn, start: T.startStacks.slice(), sb: T.sb, bb: T.bb, ante: T.ante, limit: T.limit, cards: null, notes: [] };
   sfx('shuffle');
   render({ deal: true });
   save();
-  G.timer = setTimeout(loop, set.anim ? 700 * mt() + 300 : 50);
+  G.timer = setTimeout(() => T.tut && window.PokerTut ? PokerTut.ev('deal', loop) : loop(), set.anim ? 700 * mt() + 300 : 50);
 }
 function loop() {
   clearTimeout(G.timer);
@@ -143,10 +161,10 @@ function loop() {
     G.timer = setTimeout(() => { const ix = E.botDraw(T, s); P.draw(T, ix); bubble(s, ix.length ? t('act.drawN', { n: ix.length }) : t('act.pat')); if (ix.length) sfx('deal'); render(); save(); loop(); }, botDelay());
     render(); return;
   }
-  if (s === HERO) { render(); requestCoach(); sfx('turn'); return; }
+  if (s === HERO) { render(); requestCoach(); sfx('turn'); if (T.tut && window.PokerTut) PokerTut.ev('turn' + T.street); return; }
   render();
   G.timer = setTimeout(() => {
-    const m = E.decide(T, s, T.seats[s].bot);
+    const m = T.tut && window.PokerTut ? PokerTut.botMove(T, s) : E.decide(T, s, T.seats[s].bot);
     doAct(s, m);
   }, botDelay() * (0.7 + Math.random() * 0.6));
 }
@@ -158,7 +176,8 @@ function doAct(s, m) {
   sfx(e.a === 'fold' ? 'fold' : e.a === 'check' ? 'check' : (e.amt || 0) > pot * 0.6 ? 'bigchips' : 'chips');
   if (T.street !== before || T.phase === 'done') { setTimeout(() => { if (T.board.length) sfx('flip'); }, 180); }
   render(); save();
-  G.timer = setTimeout(loop, T.street !== before ? 450 * mt() + 150 : 120);
+  const nextStreet = T.street !== before && T.phase !== 'done';
+  G.timer = setTimeout(() => nextStreet && T.tut && window.PokerTut ? PokerTut.ev('street' + T.street, loop) : loop(), T.street !== before ? 450 * mt() + 150 : 120);
   void L;
 }
 function actLabel(e) {
@@ -173,6 +192,7 @@ function actLabel(e) {
 /* the player's action (from the action bar or the keyboard) */
 function heroAct(m) {
   if (!T || T.phase !== 'bet' || T.toAct !== HERO) return;
+  if (T.tut && window.PokerTut && !PokerTut.allow(m)) return;
   const L = P.legal(T);
   // grade the decision against the coach (computed for this exact spot)
   const c = G.coach && G.coachKey === spotKey() ? G.coach : null;
@@ -181,7 +201,7 @@ function heroAct(m) {
     const grade = gradeOf(c, a, L);
     G.hist.notes.push({ st: T.street, a, rec: c.rec, eq: c.eq, need: c.need, ev: c.ev, grade, pot: c.pot, toCall: c.toCall, board: T.board.slice(), i: T.log.length });
     showVerdict(grade, c, a);
-    const S = statOf(T.v); S.dec = (S.dec || 0) + 1; if (grade <= 1) S.good = (S.good || 0) + 1;
+    if (!T.tut) { const S = statOf(T.v); S.dec = (S.dec || 0) + 1; if (grade <= 1) S.good = (S.good || 0) + 1; }
   }
   doAct(HERO, m);
 }
@@ -216,8 +236,8 @@ function handOver() {
   const R = T.result, hero = T.seats[HERO];
   const net = R.net[HERO];
   T.session.hands++; T.session.net += net;
-  // statistics
-  const S = statOf(T.v), pre = T.log.filter(e => e.st === 0 && e.s === HERO);
+  // statistics (not for the tutorial hand)
+  const S = T.tut ? {} : statOf(T.v), pre = T.log.filter(e => e.st === 0 && e.s === HERO);
   S.hands = (S.hands || 0) + 1;
   if (pre.some(e => e.a === 'call' || e.a === 'raise' || e.a === 'bet')) S.vpip = (S.vpip || 0) + 1;
   if (pre.some(e => e.a === 'raise' || e.a === 'bet')) S.pfr = (S.pfr || 0) + 1;
@@ -233,11 +253,12 @@ function handOver() {
   G.hist.board = T.board.slice(); G.hist.log = T.log.slice(); G.hist.folded = T.seats.map(s => s.folded);
   G.hist.won = R.won.slice(); G.hist.net = R.net.slice(); G.hist.showdown = R.showdown; G.hist.hand = T.hand;
   G.hist.scores = R.scores;
-  D.hist.push(G.hist); if (D.hist.length > 60) D.hist = D.hist.slice(-60);
+  if (!T.tut) { D.hist.push(G.hist); if (D.hist.length > 60) D.hist = D.hist.slice(-60); } else G.tutHist = G.hist;
   save();
   render({ show: true });
   if (R.won[HERO] > 0) sfx(potSz > T.bb * 30 ? 'win' : 'bigchips'); else sfx('chips');
   showResult();
+  if (T.tut && window.PokerTut) { PokerTut.ev('done'); return; }
   if (set.autoNext) G.timer = setTimeout(nextHand, 3400 * Math.max(.6, mt()));
 }
 function statOf(v) { return D.stats[v] || (D.stats[v] = {}); }
@@ -248,6 +269,31 @@ const SEATPOS = [[50, 84], [9, 62], [14, 21], [50, 11], [86, 21], [91, 62]];
 const BETPOS = [[50, 65], [23, 60], [27, 36], [50, 28], [73, 36], [77, 60]];
 let lastBubble = {};
 function bubble(s, txt) { lastBubble[s] = { txt, at: Date.now(), hand: T.hand }; }
+/* DOM patching: keep the elements that did not change (no re-played animations, no image reloads = no flicker).
+   Children with data-k are matched by key, cards by data-c, the rest by position. */
+const keyOf = n => n.nodeType === 1 ? (n.getAttribute('data-k') || (n.hasAttribute('data-c') ? 'c' + n.getAttribute('data-c') : null)) : null;
+function same(a, b) { return a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && keyOf(a) === keyOf(b))); }
+function morphNode(a, b) {
+  if (a.nodeType === 3) { if (a.data !== b.data) a.data = b.data; return; }
+  for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+  for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+  morphKids(a, b);
+}
+function morphKids(a, b) {
+  const old = [...a.childNodes], keyed = new Map();
+  old.forEach(n => { const k = keyOf(n); if (k && !keyed.has(k)) keyed.set(k, n); });
+  const used = new Set(), nb = [...b.childNodes];
+  let idx = 0;
+  nb.forEach((n, i) => {
+    const k = keyOf(n); let m = null;
+    if (k) { m = keyed.get(k); if (m && (used.has(m) || !same(m, n))) m = null; }
+    else { while (idx < old.length && (keyOf(old[idx]) || used.has(old[idx]))) idx++; if (idx < old.length && same(old[idx], n)) m = old[idx++]; }
+    if (m) { used.add(m); morphNode(m, n); } else m = n;
+    const at = a.childNodes[i]; if (at !== m) a.insertBefore(m, at || null);
+  });
+  [...a.childNodes].slice(nb.length).forEach(n => n.remove());
+}
+function patch(el, html) { const t = document.createElement(el.tagName); t.innerHTML = html; morphKids(el, t); }
 function render(o) {
   o = o || {};
   if (!T) return;
@@ -264,9 +310,9 @@ function render(o) {
   if (showAll) T.seats.forEach((s, i) => { if (!s.folded) best5[i] = new Set(P.handInfo(T, i).five); });
   const winFive = new Set(); if (showAll) winners.forEach(i => { (best5[i] || []).forEach(c => winFive.add(c)); });
   if (V.board) {
-    h += `<div class="pk-board">` + [0, 1, 2, 3, 4].map(k => T.board[k] != null ? Cards.html(T.board[k], { cls: (o.deal ? '' : 'in-board') + (showAll && winFive.size && !winFive.has(T.board[k]) ? ' dim' : '') + (showAll && winFive.has(T.board[k]) ? ' hi' : '') }) : `<span class="pk-slot"></span>`).join('') + `</div>`;
+    h += `<div class="pk-board" data-k="board">` + [0, 1, 2, 3, 4].map(k => T.board[k] != null ? Cards.html(T.board[k], { cls: (o.deal ? '' : 'in-board') + (showAll && winFive.size && !winFive.has(T.board[k]) ? ' dim' : '') + (showAll && winFive.has(T.board[k]) ? ' hi' : '') }) : `<span class="pk-slot"></span>`).join('') + `</div>`;
   }
-  h += `<div class="pk-pot${pot ? '' : ' empty'}"><span class="chipico"></span><b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
+  h += `<div class="pk-pot${pot ? '' : ' empty'}" data-k="pot"><span class="chipico"></span><b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
   // seats
   T.seats.forEach((s, i) => {
     const [x, y] = SEATPOS[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
@@ -280,14 +326,14 @@ function render(o) {
     const bub = !done && lastBubble[i] && lastBubble[i].hand === T.hand && Date.now() - lastBubble[i].at < 2600 ? lastBubble[i].txt : '';
     const info = done && showAll && !s.folded ? t('hand.' + P.handInfo(T, i).cat) : '';
     const style = s.bot ? t('style.' + s.bot.style) : '';
-    h += `<div class="seat${hero ? ' me' : ''}${s.folded && T.phase !== 'idle' ? ' folded' : ''}${toAct ? ' act' : ''}${winners.has(i) ? ' win' : ''}${s.allin ? ' allin' : ''}${V.stud ? ' stud' : ''}${V.hole >= 4 && !V.stud ? ' many' : ''}" style="left:${x}%;top:${y}%" data-seat="${i}">` +
+    h += `<div class="seat${hero ? ' me' : ''}${s.folded && T.phase !== 'idle' ? ' folded' : ''}${toAct ? ' act' : ''}${winners.has(i) ? ' win' : ''}${s.allin ? ' allin' : ''}${V.stud ? ' stud' : ''}${V.hole >= 4 && !V.stud ? ' many' : ''}" style="left:${x}%;top:${y}%" data-seat="${i}" data-k="seat${i}">` +
       `<div class="sc">${cards}</div>` +
       `<div class="plate"><span class="ava av${i}">${hero ? '★' : esc(s.name[0])}</span><span class="pn"><b>${esc(s.name)}</b><small>${hero ? esc(t('you.sub')) : esc(style)}</small></span><span class="st">${s.stack}</span></div>` +
-      (bub ? `<div class="bub">${esc(bub)}</div>` : '') + (info ? `<div class="hinfo">${esc(info)}</div>` : '') +
+      (bub ? `<div class="bub" data-k="bub${T.hand}-${lastBubble[i].at}">${esc(bub)}</div>` : '') + (info ? `<div class="hinfo">${esc(info)}</div>` : '') +
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
-    if (s.bet > 0) { const [bx, by] = BETPOS[i]; h += `<div class="pk-bet" style="left:${bx}%;top:${by}%"><span class="chipico"></span>${s.bet}</div>`; }
+    if (s.bet > 0) { const [bx, by] = BETPOS[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%"><span class="chipico"></span>${s.bet}</div>`; }
   });
-  box.innerHTML = h;
+  if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
   if (o.deal && set.anim) {
     const br = box.getBoundingClientRect(), cx = br.left + br.width / 2, cy = br.top + br.height * .42;
@@ -316,7 +362,7 @@ function renderActbar() {
   }
   if (T.phase === 'done') {
     bar.innerHTML = `<div class="ab-msg">${esc(resultLine())}</div><div class="ab-btns"><button class="abtn" id="abReview">${esc(t('btn.review'))}</button><button class="abtn go" id="abNext">${esc(t('next'))}</button></div>`;
-    $('#abNext').onclick = nextHand; $('#abReview').onclick = () => window.PokerReview && PokerReview.open(D.hist.length - 1);
+    $('#abNext').onclick = () => T.tut && window.PokerTut ? PokerTut.finish() : nextHand(); $('#abReview').onclick = () => window.PokerReview && (T.tut ? PokerReview.openHand(G.tutHist) : PokerReview.open(D.hist.length - 1));
     return;
   }
   if (!myTurn) { const who = T.toAct >= 0 ? T.seats[T.toAct] : null; bar.innerHTML = `<div class="ab-msg wait">${who ? esc(t('wait', { n: who.name })) : ''}</div>`; return; }
@@ -398,7 +444,7 @@ function renderSide() {
   const S = T.session, bb100 = S.hands >= 10 ? ((S.net / T.bb) / S.hands * 100).toFixed(1) : '—';
   h += `<div class="card"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))} · ${esc(t('lim.' + T.limit))}</span></h3><div class="srow"><div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net >= 0 ? 'pos' : 'neg'}">${S.net >= 0 ? '+' : ''}${S.net}</b></div><div><small>bb/100</small><b>${bb100}</b></div><div><small>${esc(t('ss.stack'))}</small><b>${T.seats[HERO].stack}</b></div></div>` +
     `<div class="deal-row"><button class="sbtn" id="sHist">${esc(t('btn.history'))}</button><button class="sbtn" id="sStats">${esc(t('btn.stats'))}</button><button class="sbtn" id="sTools">${esc(t('btn.tools'))}</button></div></div>`;
-  $('#side').innerHTML = h;
+  patch($('#side'), h);
   const lg = $('#pkLog'); if (lg) lg.scrollTop = lg.scrollHeight;
   $('#sHist').onclick = () => window.PokerReview && PokerReview.openList();
   $('#sStats').onclick = openStats;
@@ -578,7 +624,7 @@ document.addEventListener('keydown', e => {
     else if (k === 'c') heroAct({ a: L.check ? 'check' : 'call' });
     else if (k === 'r' && L.canRaise) heroAct({ a: 'raise', to: $('#abRange') ? +$('#abRange').value : L.minTo });
     else if (k === 'h') $('#btnHint').click();
-  } else if (T && T.phase === 'done' && (k === ' ' || k === 'enter' || k === 'n')) { e.preventDefault(); nextHand(); }
+  } else if (T && T.phase === 'done' && !T.tut && (k === ' ' || k === 'enter' || k === 'n')) { e.preventDefault(); nextHand(); }
   else if (k === 'n' && !T) openNew();
 });
 window.addEventListener('resize', () => { if (T) render(); });
@@ -590,11 +636,11 @@ if (HB) HB.onChange(() => setTimeout(() => { if (T) render(); }, 0));
 if (window.RulesOffer) RulesOffer.init({ game: 'poker', lang: () => LANG, open: () => window.PokerRules && PokerRules.open(NG ? NG.v : T && T.v), watch: '#rulesOverlay' });
 $('#btnSound').classList.toggle('on', !!set.sound);
 // resume the saved table (the hand in progress continues); otherwise start a hold'em table right away
-if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v]) {
+if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
   T = D.cur; T.seats[HERO].name = t('you');
   G.hist = { v: T.v, t: Date.now(), names: T.seats.map(s => s.name), styles: T.seats.map(s => s.bot ? s.bot.style : null), btn: T.btn, start: (T.startStacks || []).slice(), sb: T.sb, bb: T.bb, ante: T.ante, limit: T.limit, notes: [] };
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
 
-window.PokerApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, ask, gArt, HERO, statOf };
+window.PokerApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, ask, gArt, HERO, statOf };
 })();

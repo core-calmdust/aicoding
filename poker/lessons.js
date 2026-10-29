@@ -160,7 +160,8 @@ function listHtml() {
   const head = `<div class="lc-head"><span class="lc-ico lg">${c.ico}</span><div><b>${esc(L('cat.' + c.id))}</b><p>${esc(L('catd.' + c.id))}</p></div><div class="lc-prog"><small>${esc(L('passed', { n: done, m: c.items.length }))}</small><span class="bar"><i style="width:${done / c.items.length * 100}%"></i></span></div></div>`;
   const cards = c.items.map(([id], k) => { const pr = progress(id), n = ALL.findIndex(x => x.id === id) + 1;
     return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${id}"><span class="lc-pic">${cardsH(PIC[id].split(' ').map(P.parse))}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${n}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? L('st.pass') : pr.best ? L('st.tried', { n: pr.best }) : L('st.new'))}</small></span><b>${esc(L('l.' + id))}</b><i>${esc(L('lp.' + id))}</i><span class="lc-d">${esc(L('ld.' + id))}</span><span class="bar"><i style="width:${(pr.best || 0) / 5 * 100}%"></i></span></span></button>`; void k; }).join('');
-  return `<p class="lc-lead">${esc(L('lead'))}</p><div class="lc-tabs">${tabs}</div>${head}<div class="lc-grid">${cards}</div>`;
+  const tut = window.PokerTut ? `<button type="button" class="lc-tut" id="lcTut"><span>▶</span><span><b>${esc(PokerTut.L('entry'))}</b><small>${esc(PokerTut.L('entry.d'))}</small></span><span class="go">›</span></button>` : '';
+  return `<p class="lc-lead">${esc(L('lead'))}</p>${tut}<div class="lc-tabs">${tabs}</div>${head}<div class="lc-grid">${cards}</div>`;
 }
 function open(o) {
   top = 'lessons'; cur = null;
@@ -178,6 +179,7 @@ function renderShell() {
   if (!cur) {
     M.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderShell(); });
     M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l));
+    const tb = $('#lcTut'); if (tb) tb.onclick = () => { A.closeOv('#lessonOverlay'); PokerTut.start(); };
     $('#lcClose').onclick = () => A.closeOv('#lessonOverlay');
   } else wirePlay();
 }
