@@ -384,6 +384,18 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.03em}
+/* coach (coach.js, shared/coachkit.js) */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rvbox-on #coachCard{display:none!important}
+#coachCard.ck-off .ck-muted{font-size:12px;line-height:1.6}
+#coachCard .ck-rvgo{border:1px solid transparent;border-radius:10px;padding:9px 18px;font:700 13.5px inherit;white-space:nowrap;cursor:pointer;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a}
+#coachCard .ck-sum span{white-space:normal;max-width:100%}
+/* buttons never wrap (result dialog: 振り返る / 分析 / もう一局 on a 390px phone) */
+.mbtn{white-space:nowrap}
+#resultOverlay .modal-actions{flex-wrap:wrap;gap:8px}
+#resultOverlay .modal-actions .mbtn{flex:1 1 auto;min-width:0;padding:12px 10px;letter-spacing:.01em}
+#resultOverlay .modal-actions .mbtn.go{flex-basis:100%}
+@media (min-width: 480px){ #resultOverlay .modal-actions .mbtn.go{flex-basis:auto} }
 #resumeOverlay .mbtn{white-space:nowrap;flex:1 1 auto}
 /* phone landscape: jump between the board and the info panels below it */
 .sbox{display:none;unicode-bidi:plaintext}
@@ -516,13 +528,15 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   html:not(.rot) .side-in > *{width:var(--fw);max-width:100%;flex:none}
   html:not(.rot) .controls{order:-4}
   html:not(.rot) .brand{order:-5;height:28px;align-items:center;padding:0 4px}
-  html:not(.rot) .brand h1{font-size:19px;letter-spacing:.05em}
+  html:not(.rot) .brand h1{font-size:18px;letter-spacing:.02em}
+  html:not(.rot) .brand-r #langSel{max-width:64px}   /* (room for the coach switch: the title stays whole) */
   html:not(.rot) .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
   html:not(.rot) .brand-r{gap:6px}
   html:not(.rot) .players{order:-2;padding:6px;gap:6px}
   html:not(.rot) .board-area{order:-1;flex:none}
   html:not(.rot) .lesson-card, html:not(.rot) .puzzle-card{order:0;flex:none;overflow:visible}
   html:not(.rot) .hint-card{order:2}
+  html:not(.rot) #coachCard{order:1}
   html:not(.rot) #evalCard{order:3}
   html:not(.rot) .review-card{order:4}
   html:not(.rot) .kifu-card{order:5}
@@ -549,11 +563,12 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   /* phone landscape (and every other landscape window below the PC layout: tablets, small PC windows): one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   :root{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html,body{height:auto;overflow-x:hidden;overflow-y:auto}
-  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "sbox ctrl" "board board" "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "sbox ctrl" "board board" "ls ls" "hint hint" "ck ck" "ev ev" "rv rv" "kf kf"}
   .sbox{grid-area:sbox;display:flex;align-items:center;min-width:0;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;display:block;line-height:28px}
   body:is(.in-lesson,.in-puzzle) .sbox{display:none}
   .side, .side-in{display:contents}
   .board-area{grid-area:board;justify-self:center}
+  #coachCard{grid-area:ck}
   .frame{touch-action:pan-y}
   .brand{grid-area:brand;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;height:32px;padding:0 2px;min-width:0}
   .brand-l{min-width:0;flex:0 1 auto;overflow:hidden}
@@ -619,11 +634,12 @@ html[lang=ar] .op-info{border-left:none;border-right:3px solid var(--brass);bord
   /* phone landscape: one slim top row (title + icons, both players, menu), the flattened board across the full width, panels below (page scrolls) */
   html.rot{--gh:7;--u:min((var(--vw) - 12px) / 15.85, 60px);--fw:calc(var(--u) * 15.85);--fh:calc(var(--u) * var(--gh))}
   html.rot body{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
-  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "sbox ctrl" "board board" "ls ls" "hint hint" "ev ev" "rv rv" "kf kf"}
+  html.rot .app{display:grid;height:auto;min-height:var(--vh);align-content:start;justify-content:stretch;gap:4px 8px;padding:4px max(6px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand players" "sbox ctrl" "board board" "ls ls" "hint hint" "ck ck" "ev ev" "rv rv" "kf kf"}
   html.rot .sbox{grid-area:sbox;display:flex;align-items:center;min-width:0;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;display:block;line-height:28px}
   html.rot body:is(.in-lesson,.in-puzzle) .sbox{display:none}
   html.rot .side, html.rot .side-in{display:contents}
   html.rot .board-area{grid-area:board;justify-self:center}
+  html.rot #coachCard{grid-area:ck}
   html.rot .frame{touch-action:none}
   html.rot body{touch-action:none}
   html.rot .brand{grid-area:brand;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;height:32px;padding:0 2px;min-width:0}
@@ -808,6 +824,11 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
     justify-content:stretch;align-content:center;align-items:stretch;
     grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:var(--fh) var(--ich, 180px);grid-template-areas:"board board board" "pl ev kf"}
   html:not(.rot) .app:has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,.95fr);grid-template-areas:"board board board board" "pl ev rv kf"}
+  /* the coach (coach.js) takes a wide column of the info row; switched off it stays as a narrow note */
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)){grid-template-columns:minmax(0,.9fr) minmax(0,1.7fr) minmax(0,.95fr) minmax(0,.9fr);grid-template-areas:"board board board board" "pl ck ev kf"}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard.ck-off:not(.hidden)){grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(0,1.1fr) minmax(0,1fr)}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)):has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,.85fr) minmax(0,1.1fr) minmax(0,.8fr);grid-template-areas:"board board board board board" "pl ck ev rv kf"}
+  #coachCard{grid-area:ck;overflow-y:auto;min-height:0;padding:12px 14px;scrollbar-width:thin}
   body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:minmax(0,1fr) minmax(0,2.4fr)!important;grid-template-areas:"board board" "pl ls"!important}
   .board-area{grid-area:board;justify-self:center;align-self:center;position:relative;z-index:1}
   .side, .side-in{display:contents}
@@ -946,6 +967,8 @@ body.in-study .frame{outline:2px solid rgba(226,194,117,.85);outline-offset:3px}
   :is(body.dock-open:not(.ol-soon), body.wide-side) .side-in > :is(.review-card,.hint-card).show{max-height:150px}
   :is(body.dock-open:not(.ol-soon), body.wide-side) .side-in > .kifu-card{flex:1 1 0!important;min-height:96px!important;overflow:hidden}
   :is(body.dock-open:not(.ol-soon), body.wide-side) .side-in > .kifu-card .kifu{flex:1 1 auto;min-height:0;overflow-y:auto}
+  :is(body.dock-open:not(.ol-soon), body.wide-side) .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0!important;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+  :is(body.dock-open:not(.ol-soon), body.wide-side) .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:none}
   body.dock-open:not(.ol-soon) .players .pl-head, body.dock-open:not(.ol-soon) .players .pl-info{display:none!important}
   body.dock-open:not(.ol-soon) .players .player{padding:4px 12px!important}
   html.dock-compact body.dock-open:not(.ol-soon) .side #graph{display:none!important}   /* short window: no graph, so 棋譜 fits */
@@ -1149,6 +1172,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -1163,7 +1187,7 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
       <div class="kifu-head"><span class="label" data-i18n="hint.title"></span><button id="hintClose" data-i18n="close"></button></div>
       <div id="hintBody"></div>
     </div>
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1367,9 +1391,13 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="app.js?v=20261030lt2"></script>
+<script src="../shared/coachkit.js?v=4"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="app.js?v=20261030ck2"></script>
 <script src="op.js?v=20261021opan"></script>
-<script src="online-ui.js?v=20261028L9"></script>
+<script src="online-ui.js?v=20261030ck1"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
