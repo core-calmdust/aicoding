@@ -87,7 +87,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .board::after{content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;opacity:.22;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .35' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .15 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .hl{position:absolute;width:12.5%;height:12.5%;pointer-events:none;z-index:1}
-.hl.last{background:rgba(226,194,117,.38)}
+.hl.last{background:rgba(236,200,100,.42);box-shadow:inset 0 0 0 2px rgba(255,214,110,.7)}
 .board.hide-last .hl.last{display:none}
 .hl.sel{background:rgba(255,236,170,.5);box-shadow:inset 0 0 0 3px rgba(255,236,170,.9)}
 .hl.check{background:radial-gradient(circle,rgba(255,70,50,.9) 0%,rgba(255,70,50,.55) 35%,rgba(255,70,50,0) 72%)}
@@ -141,8 +141,8 @@ body.rated-live #btnHint, body.rated-live #btnUndo{opacity:.35}
 .study-bar > span{display:block;height:100%;background:var(--brass)}
 
 .dot{position:absolute;width:12.5%;height:12.5%;pointer-events:none;z-index:5;display:flex;align-items:center;justify-content:center}
-.dot::before{content:"";width:30%;height:30%;border-radius:50%;background:rgba(20,14,8,.35)}
-.dot.cap::before{width:86%;height:86%;background:transparent;box-shadow:inset 0 0 0 calc(var(--cell) * .07) rgba(20,14,8,.38)}
+.dot::before{content:"";width:30%;height:30%;border-radius:50%;background:rgba(20,14,8,.42);box-shadow:0 0 0 2px rgba(255,248,230,.32)}
+.dot.cap::before{width:86%;height:86%;background:transparent;box-shadow:inset 0 0 0 calc(var(--cell) * .07) rgba(20,14,8,.42),0 0 0 2px rgba(255,248,230,.3)}
 .pieces,.fx{position:absolute;inset:0}
 .fx{pointer-events:none}
 .pc{position:absolute;width:12.5%;height:12.5%;z-index:3;will-change:transform;pointer-events:none}
@@ -152,10 +152,13 @@ body.rated-live #btnHint, body.rated-live #btnUndo{opacity:.35}
 .pc.ghost{opacity:.35}
 .pc.dim{filter:brightness(.55) saturate(.6)}
 .fxsvg{position:absolute;inset:0;z-index:7;width:100%;height:100%;overflow:visible;pointer-events:none}
-.fxsvg .arrow{fill:rgba(226,194,117,.82);stroke:none}
-.fxsvg .arrow.a2{fill:rgba(226,194,117,.5)}.fxsvg .arrow.a3{fill:rgba(226,194,117,.32)}
-.fxsvg .arrow.ng{fill:rgba(255,107,91,.75)}
-.fxsvg .arrow.pl{fill:rgba(255,255,255,.5)}
+.fxsvg .arrow{fill:rgba(240,204,110,.92);stroke:rgba(20,12,4,.85);stroke-width:.03px;stroke-linejoin:round;paint-order:stroke}   /* dark rim: readable on light, wooden and dark skins */
+.fxsvg .arrow.a2{fill:rgba(240,204,110,.66)}.fxsvg .arrow.a3{fill:rgba(240,204,110,.46)}
+.fxsvg .arrow.ng{fill:rgba(255,95,78,.9)}
+.fxsvg .arrow.pl{fill:rgba(255,255,255,.72)}
+/* coach candidate arrows: bright green with a dark rim, readable on every board skin */
+.fxsvg .arrow.ck{fill:#3df59a;stroke:#06140c;stroke-width:.035px;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 0 .03px rgba(0,0,0,.9))}
+.fxsvg .arrow.ck.ck2{fill-opacity:.8}.fxsvg .arrow.ck.ck3{fill-opacity:.62}
 .hintlbl{position:absolute;width:12.5%;height:12.5%;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;pointer-events:none;z-index:9;font-family:'JetBrains Mono',monospace;line-height:1.05;padding:3% 4%}
 .hintlbl b{font-size:calc(var(--cell) * .2);font-weight:700;background:rgba(14,10,6,.82);border-radius:6px;padding:0 .25em;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
 .hintlbl.best b{color:var(--accent);box-shadow:0 0 0 1.5px rgba(226,194,117,.85)}
@@ -532,6 +535,14 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
+#resultOverlay .modal-actions{flex-wrap:wrap;gap:8px}
+#resultOverlay .mbtn{white-space:nowrap;flex:1 1 auto;min-width:max-content;padding-left:10px;padding-right:10px;letter-spacing:.02em}   /* labels never wrap: a long one sends the buttons to a second row */
+/* coach (coach.js + shared/coachkit.js) */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard,body.in-study #coachCard{display:none!important}
+.ck-card .ck-sum span{white-space:normal}
+html[lang=ar] #coachCard{direction:rtl;text-align:right}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
@@ -563,6 +574,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
   body.in-study .st-nav{display:flex}
   body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
+  #coachCard{order:1}
   #evalCard{order:2}
   .review-card{order:3}
   .kifu-card{order:4}
@@ -714,6 +726,14 @@ body .info-line{font-size:12.5px}
   .side-in > #evalCard{flex:none}
   .side-in > .kifu-card{flex:1 1 0;min-height:140px}
   .side-in > .review-card.show{flex:1.6 1 0;min-height:180px}
+  .side-in > #coachCard:not(.hidden){flex:none}
+  .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:none}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .navbar{margin-top:8px}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.6 1 0;min-height:96px}
+  #coachCard.ck-off{padding:8px 12px}
+  #coachCard.ck-off .ck-h{margin-bottom:3px}
+  #coachCard.ck-off .ck-muted{font-size:12px;line-height:1.55}
   .board-area{align-self:center}
   html.dock-compact .side{align-self:center}
   /* review box (rvbox.js) under the board + info column: the board gives up its height */
@@ -1222,6 +1242,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -1234,7 +1255,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
       <button class="btn" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="dr.btn"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1480,7 +1501,11 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="app.js?v=20261028dsg2tlan"></script>
+<script src="../shared/coachkit.js?v=6"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="app.js?v=20261030ck"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>

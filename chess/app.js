@@ -345,6 +345,7 @@ function renderFx() {
   }
   if (labelList) drawLabels(labelList);
   else if (!drawRvbFx(svg) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  if (!labelList && window.ChessCoach) ChessCoach.drawFx(svg);   // coach (coach.js): revealed / hovered candidates
 }
 function valLabel(v) {
   if (v > MATET) return { cls: 'win', big: t('lb.win', { n: (MATE - v + 1) >> 1 }) };
@@ -431,6 +432,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#btnFlip').classList.toggle('on', !!settings.flip);
   renderReview(); rvbRender();
+  if (window.ChessCoach) ChessCoach.render();
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
@@ -634,7 +636,8 @@ function coachMove(idx, m) {
   if (!coachOn() || toMoveAt(idx) !== humanColor) return;
   const key = keyOf(idx), list = anaCache.get(key) || (anaLast && anaLast.key === key ? anaLast.list : null);
   if (!list || !list.length) return;
-  const q = gradeMove(list, m); if (!q) return;
+  let q = gradeMove(list, m); if (!q) return;
+  if ((q === 'dubious' || q === 'bad') && window.ChessCoach && ChessCoach.isBook(idx, m)) q = 'good';   // a book move is never called a mistake
   coachQ.set(idx, { q, list, m }); coachShow(q);
 }
 function playMove(m) {
@@ -675,7 +678,7 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || settings.mode === 'online') { hintList = null; return; }
-  if (!settings.eval && !settings.hint && !(coachOn() && toMoveAt(idx) === humanColor)) return;
+  if (!settings.eval && !settings.hint && !(coachOn() && toMoveAt(idx) === humanColor) && !(window.ChessCoach && ChessCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list || !list.length) return;
@@ -690,6 +693,7 @@ async function analyzeCurrent(tok) {
   anaCache.set(key, res.list); apply(res.list); save();
 }
 function onGameEnd(st) {
+  recordGame(st);
   if (settings.mode === 'online' || lesson || puzzle) return;   // the result dialog only for a game that has just ended on the board          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
@@ -707,6 +711,15 @@ function onGameEnd(st) {
   const mk = settings.mode === 'ai' ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
   setTimeout(() => showOverlay('#resultOverlay'), 700);
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
+let recordedMv = null;
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
+  if (st.why === 'resign' && moves.length < 2) return;   // resigning before playing is not a game
+  recordedMv = moves;
+  const lv = levelFor(3 - humanColor), opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI Lv.' + lv + ' ' + LV(lv);
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + lv), n: Math.ceil(moves.length / 2), why: t('res.why.' + st.why) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -2657,6 +2670,7 @@ async function finishOnline(g) {
     return;
   }
   const score = !winner ? 0.5 : winner === net.me ? 1 : 0, gid = net.gid;
+  try { if (window.GameRecord && moves.length) GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: net.me - 1, opp: (net.me === P1 ? g.bn : g.wn) + ' (' + (net.me === P1 ? g.br : g.wr) + ')', key: 'ol:' + (net.me === P1 ? g.bn : g.wn), n: Math.ceil(moves.length / 2), why: whyTxt(true) }); } catch (e) {}
   // my own view of a game that ended on the board (null: the board is not finished here → the end is disputed, no rating change)
   const own = bst.over ? (!(bst.winner || 0) ? 0.5 : bst.winner === net.me ? 1 : 0) : null;
   let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
@@ -3252,6 +3266,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n(); orient(); drawSquares();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'chess', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
+if (window.ChessCoach) ChessCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 openReady.then(() => { if (HB && HB.on) renderInfo(); });
@@ -3264,6 +3280,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) segSync();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.ChessCoach) ChessCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) {
     const tab = ($('#lessonListView .ls-tabs button.sel') || {}).dataset;
