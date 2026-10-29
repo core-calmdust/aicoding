@@ -33,6 +33,10 @@ const CSS = `
 .ck-sw.on svg{stroke:var(--accent,#d8b56a)}
 .ck-sw.on i{background:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent)}
 .ck-sw.on i::after{transform:translateX(12px);background:#fff}
+.ck-h .ck-sw{margin-left:auto;height:24px;padding:0 3px;border-radius:13px;gap:6px;font-size:11.5px}
+.ck-h small + .ck-sw{margin-left:10px}
+.ck-h .ck-sw svg{display:none}
+.ck-h .ck-sw span{display:none!important}
 @media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){.ck-sw{padding:0 7px;gap:5px}.ck-sw span{display:none}.ck-sw i{width:24px;height:14px}.ck-sw i::after{width:10px;height:10px}.ck-sw.on i::after{transform:translateX(10px)}}
 .ck-card h3.ck-h{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;letter-spacing:.08em;color:var(--muted,#aaa);font-weight:600}
 .ck-card h3.ck-h svg{width:16px;height:16px;fill:none;stroke:var(--accent,#d8b56a);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -94,9 +98,14 @@ function sw(o) {
   const el = document.createElement('button'); el.type = 'button'; el.className = 'ck-sw'; el.id = o.id || 'btnCoachSw';
   const sync = () => { const on = !!o.get(), l = o.label(on), h = ICON.coach + `<span>${esc(l.text)}</span><i></i>`; el.classList.toggle('on', on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } el.title = l.title || l.text; el.setAttribute('aria-label', l.title || l.text); };
   el.addEventListener('click', () => { o.set(!o.get()); sync(); });
-  if (host) host.insertBefore(el, host.firstChild);
+  // the switch lives at the top right of the coach card (its heading h3.ck-h); the card re-renders, so re-attach it each time
+  const card = document.getElementById(o.card || 'coachCard');
+  const place = () => { const h = card && card.querySelector('h3.ck-h'); if (h) { if (el.parentElement !== h) h.appendChild(el); } else if (!card && host && el.parentElement !== host) host.insertBefore(el, host.firstChild); };
+  if (card && window.MutationObserver) new MutationObserver(place).observe(card, { childList: true });
+  place();
   // same height / corners / frame as the icon buttons next to it (each game sizes its own icon set)
   const fit = () => {
+    if (el.closest('.ck-h')) { el.style.height = el.style.borderRadius = el.style.borderColor = el.style.background = ''; return; }
     const sib = [...(el.parentElement ? el.parentElement.children : [])].filter(x => x !== el && x.offsetHeight && /^(BUTTON|A)$/.test(x.tagName)), ref = sib.find(x => !x.classList.contains('on')) || sib[0];
     if (!ref) return;
     const cs = getComputedStyle(ref), h = ref.offsetHeight + 'px';

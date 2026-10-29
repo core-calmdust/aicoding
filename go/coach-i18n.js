@@ -4,7 +4,7 @@
 zh: {
   overRv: '对局结束。进行分析后，这里会显示每一手的复盘（最佳着法、坏棋及原因）。',
   head: '教练', sw: '教练', swT: '开启／关闭教练（思路讲解）', on: '教练 ON', off: '教练 OFF',
-  offNote: '教练功能已关闭。打开上方的开关（灯泡图标），就会显示局面的思路和候选着法的讲解。',
+  offNote: '教练功能已关闭。打开右上角的开关，就会显示局面的思路和候选着法的讲解。',
   oppTurn: '现在轮到对手。试着预测对手下一步会下在哪里吧。猜中得越多，计算能力就越强。', over: '对局结束。可以用棋谱的［分析］回顾这一局。', viewing: '正在查看过去的局面。回到最新局面后教练会继续。', counting: '正在确认终局。确认死子后按“OK”。',
   calc: '正在思考候选着法…', form: '形势', caps: '提子', stage: '阶段', fuseki: '布局', who: '{k}（{w}）', meC: '你', opC: '对手', area: '角', weak: '弱棋',
   'st.open': '布局', 'st.mid': '中盘', 'st.end': '官子',
@@ -87,7 +87,7 @@ zh: {
 ko: {
   overRv: '대국이 끝났습니다. 분석하면 이 칸에 한 수씩 돌아보기(최선수·악수와 그 이유)가 표시됩니다.',
   head: '코치', sw: '코치', swT: '코치(생각하는 법 해설) 켜기／끄기', on: '코치 ON', off: '코치 OFF',
-  offNote: '코치 기능이 꺼져 있습니다. 위의 스위치(전구 아이콘)를 켜면 국면을 생각하는 법과 후보수 해설이 표시됩니다.',
+  offNote: '코치 기능이 꺼져 있습니다. 오른쪽 위의 스위치를 켜면 국면을 생각하는 법과 후보수 해설이 표시됩니다.',
   oppTurn: '상대의 차례입니다. 상대가 다음에 어디에 둘지 예상해 보세요. 예상이 맞을수록 수읽기 실력이 늡니다.', over: '대국이 끝났습니다. 기보의 [분석]으로 한 판을 돌아볼 수 있습니다.', viewing: '지난 국면을 보고 있습니다. 최신 국면으로 돌아가면 코치가 다시 시작합니다.', counting: '종국을 확인하는 중입니다. 사석을 확인한 뒤 OK를 누르세요.',
   calc: '후보수를 생각하는 중…', form: '형세', caps: '따낸 돌', stage: '국면', fuseki: '포석', who: '{k}({w})', meC: '나', opC: '상대', area: '귀', weak: '약한 돌',
   'st.open': '포석', 'st.mid': '중반', 'st.end': '끝내기',
@@ -168,7 +168,7 @@ ko: {
 es: {
   overRv: 'La partida ha terminado. Analízala para ver aquí un repaso jugada a jugada (mejores jugadas, errores y por qué).',
   head: 'Entrenador', sw: 'Entrenador', swT: 'Activar / desactivar el entrenador (cómo pensar)', on: 'Entrenador ON', off: 'Entrenador OFF',
-  offNote: 'El entrenador está desactivado. Activa el interruptor de arriba (la bombilla) para ver cómo pensar la posición y las jugadas candidatas explicadas.',
+  offNote: 'El entrenador está desactivado. Activa el interruptor de arriba a la derecha para ver cómo pensar la posición y las jugadas candidatas explicadas.',
   oppTurn: 'Le toca a tu rival. Intenta adivinar dónde jugará: cuanto más aciertes, mejor leerás.', over: 'La partida ha terminado. Usa [Analizar] en el registro para repasarla.', viewing: 'Estás viendo una posición anterior. El entrenador vuelve en la última posición.', counting: 'Recuento final. Revisa las piedras muertas y pulsa OK.',
   calc: 'Pensando jugadas candidatas…', form: 'Posición', caps: 'Prisioneros', stage: 'Fase', fuseki: 'Apertura', who: '{k} ({w})', meC: 'tú', opC: 'rival', area: 'Esquinas', weak: 'Grupos débiles',
   'st.open': 'Apertura', 'st.mid': 'Medio juego', 'st.end': 'Final (yose)',
@@ -249,7 +249,7 @@ es: {
 fr: {
   overRv: 'La partie est terminée. Analysez-la pour voir ici une revue coup par coup (meilleurs coups, erreurs et pourquoi).',
   head: 'Coach', sw: 'Coach', swT: 'Activer / désactiver le coach (comment réfléchir)', on: 'Coach ON', off: 'Coach OFF',
-  offNote: 'Le coach est désactivé. Activez l’interrupteur en haut (l’ampoule) pour voir comment réfléchir à la position et les coups candidats expliqués.',
+  offNote: 'Le coach est désactivé. Activez l’interrupteur en haut à droite pour voir comment réfléchir à la position et les coups candidats expliqués.',
   oppTurn: 'C’est au tour de votre adversaire. Essayez de deviner où il va jouer : plus vous devinez juste, plus votre lecture progresse.', over: 'La partie est terminée. Utilisez [Analyser] dans le relevé pour la revoir.', viewing: 'Vous regardez une position antérieure. Le coach reprend à la dernière position.', counting: 'Décompte final. Vérifiez les pierres mortes puis appuyez sur OK.',
   calc: 'Recherche des coups candidats…', form: 'Position', caps: 'Prisonniers', stage: 'Phase', fuseki: 'Ouverture', who: '{k} ({w})', meC: 'vous', opC: 'adversaire', area: 'Coins', weak: 'Groupes faibles',
   'st.open': 'Ouverture', 'st.mid': 'Milieu de partie', 'st.end': 'Fin de partie (yose)',
@@ -331,7 +331,7 @@ fr: {
 pt: {
   overRv: 'A partida terminou. Analise-a para ver aqui uma revisão lance a lance (melhores lances, erros e por quê).',
   head: 'Treinador', sw: 'Treinador', swT: 'Ligar / desligar o treinador (como pensar)', on: 'Treinador ON', off: 'Treinador OFF',
-  offNote: 'O treinador está desligado. Ligue a chave no topo (a lâmpada) para ver como pensar na posição e as jogadas candidatas explicadas.',
+  offNote: 'O treinador está desligado. Ligue a chave no canto superior direito para ver como pensar na posição e as jogadas candidatas explicadas.',
   oppTurn: 'É a vez do adversário. Tente adivinhar onde ele vai jogar — quanto mais acertar, melhor será sua leitura.', over: 'A partida terminou. Use [Analisar] no registro para revê-la.', viewing: 'Você está vendo uma posição anterior. O treinador volta na última posição.', counting: 'Contagem final. Confira as pedras mortas e toque em OK.',
   calc: 'Pensando em jogadas candidatas…', form: 'Posição', caps: 'Prisioneiros', stage: 'Fase', fuseki: 'Abertura', who: '{k} ({w})', meC: 'você', opC: 'adversário', area: 'Cantos', weak: 'Grupos fracos',
   'st.open': 'Abertura', 'st.mid': 'Meio-jogo', 'st.end': 'Final (yose)',
@@ -412,7 +412,7 @@ pt: {
 de: {
   overRv: 'Die Partie ist vorbei. Analysiere sie, um hier eine Zug-für-Zug-Rückschau zu sehen (beste Züge, Fehler und warum).',
   head: 'Coach', sw: 'Coach', swT: 'Coach (Denkhilfen) ein / aus', on: 'Coach AN', off: 'Coach AUS',
-  offNote: 'Der Coach ist ausgeschaltet. Schalte oben den Schalter (die Glühbirne) ein, um Denkhilfen zur Stellung und erklärte Kandidatenzüge zu sehen.',
+  offNote: 'Der Coach ist ausgeschaltet. Schalte den Schalter oben rechts ein, um Denkhilfen zur Stellung und erklärte Kandidatenzüge zu sehen.',
   oppTurn: 'Dein Gegner ist am Zug. Versuche zu erraten, wohin er spielt – je öfter du richtig liegst, desto besser liest du.', over: 'Die Partie ist vorbei. Mit [Analyse] im Protokoll kannst du sie nachspielen.', viewing: 'Du siehst eine frühere Stellung. Der Coach meldet sich in der aktuellen Stellung zurück.', counting: 'Auszählung. Prüfe die toten Steine und drücke OK.',
   calc: 'Kandidatenzüge werden berechnet…', form: 'Stellung', caps: 'Gefangene', stage: 'Phase', fuseki: 'Eröffnung', who: '{k} ({w})', meC: 'du', opC: 'Gegner', area: 'Ecken', weak: 'Schwache Gruppen',
   'st.open': 'Eröffnung', 'st.mid': 'Mittelspiel', 'st.end': 'Endspiel (Yose)',
@@ -493,7 +493,7 @@ de: {
 hi: {
   overRv: 'खेल खत्म हुआ। विश्लेषण करें तो यहाँ हर चाल की समीक्षा (सबसे अच्छी चालें, गलतियाँ और उनके कारण) दिखेगी।',
   head: 'कोच', sw: 'कोच', swT: 'कोच (सोचने के तरीके) चालू / बंद करें', on: 'कोच ON', off: 'कोच OFF',
-  offNote: 'कोच बंद है। ऊपर का स्विच (बल्ब) चालू करें, तो स्थिति को सोचने का तरीका और संभावित चालों की व्याख्या दिखेगी।',
+  offNote: 'कोच बंद है। ऊपर दाईं ओर का स्विच चालू करें, तो स्थिति को सोचने का तरीका और संभावित चालों की व्याख्या दिखेगी।',
   oppTurn: 'विरोधी की बारी है। अंदाज़ा लगाइए कि वह अगली चाल कहाँ चलेगा — जितनी बार सही अंदाज़ा, उतनी बेहतर गणना।', over: 'खेल खत्म हुआ। रिकॉर्ड में [विश्लेषण] से खेल दोबारा देखें।', viewing: 'आप पिछली स्थिति देख रहे हैं। नवीनतम स्थिति पर लौटने पर कोच फिर शुरू होगा।', counting: 'गिनती हो रही है। मरे हुए पत्थर जाँचें, फिर OK दबाएँ।',
   calc: 'संभावित चालें सोची जा रही हैं…', form: 'स्थिति', caps: 'बंदी पत्थर', stage: 'चरण', fuseki: 'शुरुआत', who: '{k} ({w})', meC: 'आप', opC: 'विरोधी', area: 'कोने', weak: 'कमज़ोर समूह',
   'st.open': 'शुरुआत', 'st.mid': 'मध्य खेल', 'st.end': 'अंत खेल (योसे)',
@@ -572,7 +572,7 @@ hi: {
 ar: {
   overRv: 'انتهت المباراة. حلّلها لترى هنا مراجعة نقلةً نقلة (أفضل النقلات والأخطاء وأسبابها).',
   head: 'المدرّب', sw: 'المدرّب', swT: 'تشغيل / إيقاف المدرّب (طريقة التفكير)', on: 'المدرّب ON', off: 'المدرّب OFF',
-  offNote: 'المدرّب متوقف. شغّل المفتاح في الأعلى (المصباح) لترى طريقة التفكير في الوضع وشرح النقلات المرشحة.',
+  offNote: 'المدرّب متوقف. شغّل المفتاح في أعلى هذه البطاقة لترى طريقة التفكير في الوضع وشرح النقلات المرشحة.',
   oppTurn: 'الدور لخصمك. حاول أن تتوقع أين سيلعب — كلما أصبت أكثر تحسّنت قراءتك.', over: 'انتهت المباراة. استخدم [تحليل] في السجل لمراجعتها.', viewing: 'أنت تشاهد وضعًا سابقًا. يعود المدرّب عند آخر وضع.', counting: 'جارٍ العدّ. تحقّق من الأحجار الميتة ثم اضغط OK.',
   calc: 'جارٍ التفكير في النقلات المرشحة…', form: 'الوضع', caps: 'الأسرى', stage: 'المرحلة', fuseki: 'الافتتاح', who: '{k} ({w})', meC: 'أنت', opC: 'الخصم', area: 'الزوايا', weak: 'مجموعات ضعيفة',
   'st.open': 'الافتتاح', 'st.mid': 'وسط اللعب', 'st.end': 'النهاية (يوسي)',

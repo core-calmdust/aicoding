@@ -12,7 +12,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
-  offNote: 'コーチ機能はオフになっています。上のスイッチ（電球のマーク）をオンにすると、局面の考え方や候補手の解説が表示されます。',
+  offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補手の解説が表示されます。',
   overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。',
   oppTurn: '相手の手番です。相手が次にどこに打ってくるか、予想してみよう。予想が当たるほど読みの力がつきます。', over: '対局が終わりました。棋譜の［分析］で一局を振り返れます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。', counting: '終局の確認中です。死に石を確かめてから「OK」を押しましょう。',
   calc: '候補手を考えています…', form: '形勢', caps: 'アゲハマ', stage: '局面', fuseki: '布石', who: '{k}（{w}）', meC: 'あなた', opC: '相手', area: '陣地', weak: '弱い石',
@@ -124,7 +124,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
-  offNote: 'The coach is switched off. Turn on the switch at the top (the light bulb) to see how to think about the position and the candidate moves explained.',
+  offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate moves explained.',
   overRv: 'The game is over. Analyze it to see a move-by-move review here (best moves, mistakes and why).',
   oppTurn: "It's your opponent's turn. Try to guess where they will play next — the more often you guess right, the stronger your reading gets.", over: 'The game is over. Use [Analyze] in the record to review it.', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.', counting: 'Counting the result. Check the dead stones, then press OK.',
   calc: 'Thinking about candidate moves…', form: 'Position', caps: 'Prisoners', stage: 'Phase', fuseki: 'Opening', who: '{k} ({w})', meC: 'you', opC: 'opponent', area: 'Corners', weak: 'Weak groups',
@@ -616,10 +616,11 @@ function marks() {
     if (d.m == null || d.m < 0 || pos.b[d.m]) continue;
     if (S.hov != null && S.hov !== d.m) continue;
     const [x, y] = xyOf(d.m), g = el('g', { class: 'hint ck-mk' }, gH);
-    // common rule: coach marks are bright green with a dark rim, readable on every board skin
-    el('circle', { cx: x, cy: y, r: 0.49, fill: 'none', stroke: '#08120c', 'stroke-width': 0.12, opacity: 0.9 }, g);
-    el('circle', { cx: x, cy: y, r: 0.45, class: 'hc', fill: '#3df59a', stroke: S.hov === d.m ? '#ffffff' : '#0b3d24', 'stroke-width': S.hov === d.m ? 0.09 : 0.05 }, g);
-    const t0 = el('text', { x, y: y + 0.02, 'font-size': 0.46, fill: '#06140c' }, g); t0.textContent = d.label;
+    // common rule: green coach marks — translucent here (a ghost stone), so the board keeps its look
+    const hv = S.hov === d.m;
+    el('circle', { cx: x, cy: y, r: 0.47, fill: 'none', stroke: '#08120c', 'stroke-width': 0.05, opacity: 0.35 }, g);
+    el('circle', { cx: x, cy: y, r: 0.43, class: 'hc', fill: '#3df59a', 'fill-opacity': hv ? 0.55 : 0.36, stroke: hv ? '#ffffff' : '#2fd683', 'stroke-width': hv ? 0.07 : 0.05, 'stroke-opacity': 0.9 }, g);
+    const t0 = el('text', { x, y: y + 0.02, 'font-size': 0.44, fill: '#05301a', 'font-weight': 700 }, g); t0.textContent = d.label;
   }
 }
 function setOn(v) {
