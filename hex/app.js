@@ -38,7 +38,7 @@ const mvName = (m, n) => m === SWAP ? t('mv.swap') : E.nameOf(m, n);
 
 // ====================================================================== state
 const STORE = 'aicoding-hex';
-const settings = { mode: 'ai', n: 11, swap: true, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, path: true, lang: '', bd: 'walnut', pcs: 'classic' };
+const settings = { mode: 'ai', n: 11, swap: true, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, coach: true, last: true, threat: false, num: true, path: true, lang: '', bd: 'walnut', pcs: 'classic' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -344,6 +344,7 @@ function renderFx() {
   if (labelList) drawLabels(labelList);
   else if (!drawReviewFx() && hintList && !st.over) drawHints(hintList);
   rbHoverFx();
+  if (window.HexCoach) HexCoach.fx();   // coach: rings on its candidates
   renderPrompt();
 }
 function renderPrompt() {
@@ -455,6 +456,7 @@ function renderInfo() {
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
+  if (window.HexCoach) HexCoach.render();   // coach (coach.js)
 }
 // PC header bar: whose turn, stones of each side, evaluation (when shown), move number
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -648,13 +650,14 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  if (!settings.eval && !settings.hint && !(window.HexCoach && HexCoach.active())) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
     const ev = evalFromList(list, mover);
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
+    else if (window.HexCoach) HexCoach.render();   // (the coach's verdict on the previous move uses the earlier positions' lists too)
   };
   if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
   cancelWorker('ana');
@@ -669,6 +672,7 @@ function onGameEnd(st) {
   if (lesson || puzzle) return;   // (a lesson / puzzle opened meanwhile: the game result is only shown right when the game ends)
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -683,6 +687,13 @@ function onGameEnd(st) {
   $('#resultSub').innerHTML = sub;
   const mv = moves;
   setTimeout(() => { if (moves === mv && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700);   // not when a lesson / puzzle / other game was opened meanwhile
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || startSpec) return;
+  if (st.why === 'resign' && !st.aiResigned && moves.length < 2) return;   // (resigned before playing: not a game)
+  const lv = rgame ? rgame.lv : settings.level;
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + ' · ' + gN + '×' + gN, key: (rgame ? 'rt:' : 'ai:') + lv + ':' + gN, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why, { c: pname(st.winner) }) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1047,6 +1058,7 @@ function rtForfeit() {
   if (!rtLive()) return null;
   busyToken++; cancelWorker('ai'); thinking = 0;
   rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
+  recordGame(rgame.over);
   const x = rtSettle(rgame.over); save();
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
@@ -2069,6 +2081,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 if (!hadSave) { setVariant(settings.n); gSwap = settings.swap; }
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'hex', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.HexCoach) HexCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ media: '(hover: hover) and (pointer: fine) and (min-width: 900px)', order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
@@ -2079,6 +2093,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.HexCoach) HexCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (document.querySelector('.ls-tabs button.sel[data-v=open]') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) (openChoiceIdx >= 0 ? openOpeningChoice(openChoiceIdx) : openChoiceIdx === -2 ? openFirstMap(G ? G.n : 11) : openIntro(introIdx)); }
