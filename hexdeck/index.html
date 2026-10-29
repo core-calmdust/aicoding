@@ -4169,7 +4169,10 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   }
   function k1() { const r = $('map').getBoundingClientRect(); return r.width ? Math.max(base.w / r.width, base.h / r.height) : 1; }
   function applyView() {
-    if (!cbox) return; fitBase();
+    if (!cbox) return;
+    { const r = $('map').getBoundingClientRect(), k = (r.width | 0) + 'x' + (r.height | 0) + ':' + ORI.land + ':' + cbox.x + ',' + cbox.y + ',' + cbox.w;   // 拡大・移動中は、画面の大きさが変わらない限り基準を固定（BOTの番で表示がずれない）
+      const zoomedNow = view.z > 1.02 || Math.abs(view.x) > 1 || Math.abs(view.y) > 1;
+      if (!base || !zoomedNow || applyView.k !== k) fitBase(); applyView.k = k; }
     view.z = Math.max(1, Math.min(ZMAX, view.z));
     const w = base.w / view.z, h = base.h / view.z, lx = (base.w - w) / 2 + base.w * .18, ly = (base.h - h) / 2 + base.h * .18;
     view.x = Math.max(-lx, Math.min(lx, view.x)); view.y = Math.max(-ly, Math.min(ly, view.y));
