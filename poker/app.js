@@ -89,7 +89,7 @@ function ask(msg, cb, fallback) {
 /* ---------------- game ---------------- */
 let T = null, G = { busy: false, coach: null, coachKey: '', sel: [], hist: null, timer: 0, review: null };
 const mt = () => !set.anim ? 0 : set.speed === 'slow' ? 1.5 : set.speed === 'fast' ? .55 : 1;
-const botDelay = () => !set.anim ? 120 : Math.round(650 * mt());
+const botDelay = () => !set.anim ? 120 : Math.round(620 * mt());
 const HERO = 0;
 function randSeed() { return (Math.random() * 4294967296) >>> 0; }
 function botStyle(mix, k) {
@@ -132,7 +132,9 @@ function startSession(v) {
 }
 function nextHand() {
   if (!T) return;
-  clearTimeout(G.timer); hideResult();
+  clearTimeout(G.timer);
+  if (T.phase === 'done' && T.result && G.recorded !== T.hand + ':' + T.v && G.hist) { const an = set.autoNext; set.autoNext = 0; handOver(); set.autoNext = an; clearTimeout(G.timer); }   // pressed "next" before the hand was recorded
+  hideResult();
   const p = prefOf(T.v);
   // busted CPU players leave and new ones sit down; the player rebuys automatically
   const used = T.seats.map(s => s.name);
@@ -163,10 +165,10 @@ function loop() {
   }
   if (s === HERO) { render(); requestCoach(); sfx('turn'); if (T.tut && window.PokerTut) PokerTut.ev('turn' + T.street); return; }
   render();
-  G.timer = setTimeout(() => {
-    const m = T.tut && window.PokerTut ? PokerTut.botMove(T, s) : E.decide(T, s, T.seats[s].bot);
-    doAct(s, m);
-  }, botDelay() * (0.7 + Math.random() * 0.6));
+  // decide first: simple moves (fold / check) go quickly, calls a little slower, bets and raises take the full "thinking" time
+  const m = T.tut && window.PokerTut ? PokerTut.botMove(T, s) : E.decide(T, s, T.seats[s].bot);
+  const k = m.a === 'fold' ? 0.3 : m.a === 'check' ? 0.38 : m.a === 'call' ? 0.6 : 1;
+  G.timer = setTimeout(() => doAct(s, m), botDelay() * k * (0.8 + Math.random() * 0.4));
 }
 function doAct(s, m) {
   const before = T.street, L = P.legal(T), pot = P.potTotal(T);
@@ -233,6 +235,7 @@ function heroDraw() {
   render(); save(); G.timer = setTimeout(loop, 300);
 }
 function handOver() {
+  if (G.recorded === T.hand + ':' + T.v) return; G.recorded = T.hand + ':' + T.v;
   const R = T.result, hero = T.seats[HERO];
   const net = R.net[HERO];
   T.session.hands++; T.session.net += net;
@@ -651,7 +654,7 @@ if (window.RulesOffer) RulesOffer.init({ game: 'poker', lang: () => LANG, open: 
 $('#btnSound').classList.toggle('on', !!set.sound);
 // resume the saved table (the hand in progress continues); otherwise start a hold'em table right away
 if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
-  T = D.cur; T.seats[HERO].name = t('you');
+  T = D.cur; T.seats[HERO].name = t('you'); if (T.phase === 'done') G.recorded = T.hand + ':' + T.v;
   G.hist = { v: T.v, t: Date.now(), names: T.seats.map(s => s.name), styles: T.seats.map(s => s.bot ? s.bot.style : null), btn: T.btn, start: (T.startStacks || []).slice(), sb: T.sb, bb: T.bb, ante: T.ante, limit: T.limit, notes: [] };
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
