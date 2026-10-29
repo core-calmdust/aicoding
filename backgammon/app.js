@@ -214,6 +214,12 @@ function setGeom(flat, h, u) {
 // a taller lesson / puzzle strip — then the board also gets narrower (u) so it still fits without scrolling
 function flatFit() {
   const w = ROT ? innerHeight : innerWidth, hgt = ROT ? innerWidth : innerHeight;
+  if (document.documentElement.classList.contains('lnd')) {   // (land.js) board on the left, tab rail + panel (about 1/3) on the right
+    const tp = document.getElementById('lndTop'), th = tp && tp.offsetHeight ? tp.offsetHeight : 36;
+    const availH = hgt - th - 6 - 10, boardW = Math.max(300, w * 0.6 - 10);
+    const u = Math.min(boardW / 15.85, availH / 6.4, 60);
+    return { h: Math.max(6.4, Math.min(12, availH / u)), u };
+  }
   let top = 34;
   const app = document.querySelector('.app');
   if (app && typeof lrect === 'function') {
@@ -1184,7 +1190,7 @@ function statusText(st) {
   if (settings.mode === 'online' && isLatest() && window.olStatusNow && !(turn && !isAI(turn.side))) { const o = olStatusNow(); if (o != null) now = o; }
   return [last, now].filter(Boolean).join(' · ');
 }
-function renderStatusBox(st) { const el = $('#statusBox'); if (!el || (!match && !lesson && !puzzle)) return; const txt = statusText(st || shownState()); if (el.textContent !== txt) { el.textContent = txt; el.title = txt; } }
+function renderStatusBox(st) { const el = $('#statusBox'); if (!el || (!match && !lesson && !puzzle)) return; const txt = statusText(st || shownState()); if (el.textContent !== txt) { el.textContent = txt; el.title = txt; } if (window.BGLand) BGLand.say(txt); }
 $('#statusBox').addEventListener('click', () => { const txt = $('#statusBox').textContent; if (txt) toast(txt, 2600); });
 // ====================================================================== info panel
 function renderInfo() {
@@ -1234,6 +1240,7 @@ function renderInfo() {
   hbInfo(st, g, ev);
   if (window.olAfterInfo) olAfterInfo();
   if (window.BGCoach) BGCoach.render();
+  if (window.BGLand) BGLand.info();
 }
 // PC header bar: whose turn + dice, pip counts, win chance (only when the evaluation display is on), match score
 var HB = null;
@@ -1545,6 +1552,7 @@ function pcFit() {
   return { h: Math.min(12, h), u: Math.max(dfx ? 16 : 30, u) };   // with the online dock open the board may get smaller
 }
 function updateGeom() {
+  if (window.BGLand) BGLand.sync();   // phone landscape layout (land.js) first: it decides the room the board gets
   const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
   if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); }
   if (!pcw) document.body.classList.remove('wide-side');
