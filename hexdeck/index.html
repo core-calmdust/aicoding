@@ -5613,14 +5613,14 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル ${k + 1}/${n + 1}</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
         <div class="co-body">${st.f ? `<div class="co-fig">${st.f()}</div>` : ''}<div><h4>${st.h}</h4><p>${waiting ? `<span class="co-wait">${st.waitT || 'BOTの番です。少し待ちましょう…'}</span>` : st.t().replace(/クリック/g, TAP)}</p>${coach.gift && !waiting ? `<p class="co-gift">🎁 ${coach.gift}</p>` : ''}</div></div>
         <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : ''}`}</div>`;
-      coach.el.classList.remove('co-in'); void coach.el.offsetWidth; coach.el.classList.add('co-in');
+      if (coach.animI !== coach.i) { coach.animI = coach.i; coach.el.classList.remove('co-in'); void coach.el.offsetWidth; coach.el.classList.add('co-in'); }   // 揺れないよう、アニメはステップが変わったときだけ
     }
     document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl'));
     if (st.tg && !waiting && (st.manual || S.cur === HUMAN)) (typeof st.tg === 'function' ? st.tg() : st.tg).split(',').forEach(q => { const e = document.querySelector(q); if (e) e.classList.add('coach-hl'); });
     // 押す場所が案内の枠に隠れるときは、枠を反対側へよける
     const tg = [...document.querySelectorAll('#map .cotgt, .coach-hl')];
-    const dk = coach.i + ':' + tg.map(e => { const r = e.getBoundingClientRect(); return (r.x | 0) + ',' + (r.y | 0); }).join(';');
-    if (coach.dodgeK !== dk) {
+    const dk = coach.i + ':' + tg.map(e => { const r = e.getBoundingClientRect(); return Math.round(r.x / 40) + ',' + Math.round(r.y / 40); }).join(';');
+    if (tg.length && coach.dodgeK !== dk) {   // 押す場所がない間（BOTの番など）は位置を変えない
       coach.dodgeK = dk; coach.el.classList.remove('dodge');
       const c = coach.el.getBoundingClientRect();
       const hit = tg.some(e => { const r = e.getBoundingClientRect(); return r.width && r.right > c.left && r.left < c.right && r.bottom > c.top && r.top < c.bottom; });
