@@ -5328,6 +5328,7 @@ const glazeDisc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), glazeFillMat);
 glazeDisc.rotation.x = -Math.PI / 2;
 glazeDisc.renderOrder = 5;
 scene.add(glazeDisc);
+let slowVis = 0;
 const glazeRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 const glazeRing = new THREE.Mesh(new THREE.RingGeometry(0.97, 1.0, 64), glazeRingMat);
 glazeRing.rotation.x = -Math.PI / 2;
@@ -5681,46 +5682,6 @@ BOSSES.push({ name: 'ORACLE', desc: 'ジオデシック球の装甲が、ワイ�
 } });
 
 // 5. HYDRA: 3本の首（節の連なり）を持つ多頭の機械竜。頭は装甲＋ガラス、首はワイヤーの骨と装甲の節が交互
-BOSSES.push({ name: 'HYDRA', desc: '3本の首を持つ機械竜。首は装甲の節とワイヤーの骨が交互に連なり、頭がそれぞれ別々に動く', build() {
-  const g = new THREE.Group(), C = 0x9cff5a, R = 0xff3355;
-  const mA = armor(0x4a5a48), mD = armor(0x1f2a24), eL = line(C), cL = line(C, 0.35);
-  const body = loft([[-60, 60, 50, 0], [-20, 110, 70, 0], [40, 100, 60, 0], [90, 50, 36, 0]], 8, Math.PI / 8);
-  g.add(part(body, { mat: mA, edge: eL, glass: glass(C, 0.2), glassFrac: 0.22, cage: 1.1, cageMat: cL }));
-  const heart = new THREE.Mesh(new THREE.OctahedronGeometry(16, 0), glow(R)); heart.position.set(0, 30, 0); g.add(heart);
-  const headGeo = loft([[0, 26, 20, 0], [18, 32, 24, 2], [40, 22, 14, 0], [56, 8, 6, -2]], 6);
-  const jaw = loft([[10, 22, 8, -10], [40, 16, 6, -12], [52, 6, 3, -12]], 4, Math.PI / 4);
-  const necks = [];
-  [-1, 0, 1].forEach((s, i) => {
-    const segs = [];
-    for (let k = 0; k < 7; k++) {
-      const seg = new THREE.Group();
-      if (k % 2) seg.add(wireOnly(new THREE.CylinderGeometry(9, 11, 16, 6), line(C, 0.7)));
-      else { const m = new THREE.Mesh(new THREE.CylinderGeometry(12, 13, 14, 6), k % 4 ? mA : mD); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), eL)); seg.add(m); }
-      seg.rotation.x = Math.PI / 2; g.add(seg); segs.push(seg);
-    }
-    const head = new THREE.Group();
-    head.add(part(headGeo, { mat: mA, edge: eL, glass: glass(C, 0.3), glassFrac: 0.3, seed: i + 2 }));
-    head.add(part(jaw, { mat: mD, edge: eL }));
-    [-1, 1].forEach(e => { const eye = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), glow(R)); eye.position.set(e * 9, 8, 22); head.add(eye); });
-    g.add(head); necks.push({ s, segs, head, i });
-  });
-  g.rotation.y = Math.PI; g.position.y = -50;
-  g.userData.anim = t => {
-    necks.forEach(n => {
-      const base = new THREE.Vector3(n.s * 40, 20, -50);
-      let prev = base.clone();
-      n.segs.forEach((sg, k) => {
-        const u = (k + 1) / 8, sw = Math.sin(t * 1.6 + n.i * 2 + u * 3) * 30 * u;
-        const p = new THREE.Vector3(n.s * (40 + u * 70) + sw, 20 + u * 130 + Math.sin(t * 2 + n.i) * 14 * u, -50 - u * 90);
-        sg.position.copy(p); sg.lookAt(prev); sg.rotateX(Math.PI / 2); prev = p;
-      });
-      const hp = n.segs[n.segs.length - 1].position.clone().add(new THREE.Vector3(0, 6, -16));
-      n.head.position.copy(hp); n.head.rotation.set(-0.2 + Math.sin(t * 2.2 + n.i) * 0.2, n.s * 0.3 + Math.PI, 0);
-    });
-    heart.rotation.y = t * 2; heart.scale.setScalar(1 + 0.15 * Math.sin(t * 6));
-  };
-  return g;
-} });
 
 
     const by = {}; BOSSES.forEach(b => { by[b.name] = b.build; });
@@ -5793,71 +5754,53 @@ NB.AXIS = () => {
     g.userData.anim = (o, b, t) => { hub.rotation.y = t * 1.8; ring.rotation.y = -t * 0.8; dash.rotation.y = t * 0.5; };
     return g;
 };
+// 2. PRISM: 六角の双錐の結晶（最初の形）を、PULSAR と同じく装甲とワイヤーが混ざった姿に。
+//    結晶の面は斜めの境界で、装甲（ガラス面つき）→ ワイヤー → 剥がれた破片へとほどけ、破片は周りを回る。
+//    中に逆向きのワイヤー結晶と白い芯、外をピンクのワイヤーの殻と光の輪が回る。ワープ中は透けて縮む
 NB.PRISM = () => {
-    const g = new THREE.Group();
-    const outer = fuse(crystal(30, 70, 6), 0x66e0ff, { glass: 0.5, glassOp: 0.35 });
-    const inner = new THREE.Mesh(new THREE.IcosahedronGeometry(16, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true }));
-    const shell = wire(new THREE.IcosahedronGeometry(58, 0), 0xff5ad8, 0.5);
-    g.add(outer, inner, shell);
+    const g = new THREE.Group(), C = 0x66e0ff, P = 0xff5ad8;
+    const body = new THREE.Group(); g.add(body);
+    // 結晶の面を細かく割る（三角形を4分割×2回）
+    let src = crystal(34, 74, 6).toNonIndexed().attributes.position.array, tris = [];
+    for (let k = 0; k < src.length; k += 9) tris.push([[src[k], src[k + 1], src[k + 2]], [src[k + 3], src[k + 4], src[k + 5]], [src[k + 6], src[k + 7], src[k + 8]]]);
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+    for (let it = 0; it < 2; it++) { const nt = []; tris.forEach(([a, b, c]) => { const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a); nt.push([a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]); }); tris = nt; }
+    const solid = [], wireT = [], frags = [];
+    tris.forEach(t => { const cx = (t[0][0] + t[1][0] + t[2][0]) / 3, cy = (t[0][1] + t[1][1] + t[2][1]) / 3, cz = (t[0][2] + t[1][2] + t[2][2]) / 3;
+        const v = cx * 0.022 + cy * 0.006 + Math.sin(cz * 0.12 + cy * 0.05) * 0.3; // 斜めの境界
+        if (v < 0.22) solid.push(t); else if (v < 0.62) wireT.push(t); else frags.push(t); });
+    const mk = arr => { const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(arr.flat(2), 3)); o.computeVertexNormals(); return o; };
+    const sG = mk(solid);
+    body.add(new THREE.Mesh(sG, LAB.armor(0x52789a, 0x0c2c3c)), new THREE.LineSegments(new THREE.EdgesGeometry(sG, 1), LAB.line(C, 0.85)));
+    body.add(new THREE.Mesh(LAB.triSubset(sG, 0.22, 5), LAB.glass(C, 0.4)));
+    body.add(new THREE.LineSegments(new THREE.WireframeGeometry(mk(wireT)), LAB.line(C, 0.5)));
+    // 剥がれた破片
+    const fr = []; const armF = LAB.armor(0x3e5a70, 0x08202c), glF = LAB.glass(C, 0.5), edF = LAB.line(C, 0.9);
+    frags.forEach((t, i) => { if (i % 2) return; const geo = mk([t]); geo.computeBoundingSphere(); const c = geo.boundingSphere.center.clone(); geo.translate(-c.x, -c.y, -c.z);
+        const m = new THREE.Mesh(geo, i % 3 ? armF : glF); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edF));
+        m.userData = { base: c, sp: 0.25 + (i % 7) * 0.05, ph: i * 0.7, out: 1.25 + (i % 5) * 0.1 }; g.add(m); fr.push(m); });
+    // 中: 逆向きのワイヤー結晶と白い芯
+    const innerW = wire(crystal(14, 40, 6), P, 0.7); innerW.rotation.x = Math.PI; body.add(innerW);
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(8, 0), new THREE.MeshBasicMaterial({ color: 0xffd8f4, transparent: true, opacity: 0.8 })); body.add(core);
+    core.add(wire(new THREE.IcosahedronGeometry(12, 1), 0xffffff, 0.45));
+    // 外: ピンクのワイヤーの殻、光の輪、回る結晶の欠片
+    const shell = wire(new THREE.IcosahedronGeometry(66, 1), P, 0.18); g.add(shell);
+    const shell2 = new THREE.Group();
+    const ring = LAB.dashRing(84, 40, 12, 2, LAB.glass(P, 0.6), 5); const rt = new THREE.Group(); rt.rotation.z = 0.35; rt.add(ring); g.add(rt);
     const shards = [];
-    for (let k = 0; k < 4; k++) { const s = fuse(crystal(6, 18, 4), 0xff5ad8, { cage: false }); g.add(s); shards.push(s); }
-    const mats = []; g.traverse(c => { if (c.material) { c.material.transparent = true; mats.push([c.material, c.material.opacity]); } });
+    for (let k = 0; k < 4; k++) { const s = fuse(crystal(6, 18, 4), P, { cage: false, glass: 0.4 }); g.add(s); shards.push(s); }
+    const mats = []; g.traverse(c => { if (c.material && !mats.some(([m]) => m === c.material)) { c.material.transparent = true; mats.push([c.material, c.material.opacity]); } });
+    const Y = new THREE.Vector3(0, 1, 0);
     g.userData.anim = (o, b, t) => {
-        outer.rotation.y = t * 1.2; inner.rotation.set(t * 3, t * 2, 0); shell.rotation.set(-t * 0.5, t * 0.8, 0);
-        shards.forEach((s, k) => { const a = t * 2.5 + k * Math.PI / 2; s.position.set(Math.cos(a) * 75, Math.sin(t * 3 + k) * 20, Math.sin(a) * 75); s.rotation.set(t * 4, t * 3, 0); });
-        mats.forEach(([m, op]) => { m.opacity = op * b.alpha; });
-        o.scale.setScalar((0.4 + b.alpha * 0.6) * BS);
+        body.rotation.y = t * 0.6; innerW.rotation.y = -t * 1.4; core.rotation.set(t * 3, t * 2, 0);
+        fr.forEach(m => { const u = m.userData, k = u.out + 0.08 * Math.sin(t * 1.5 + u.ph); m.position.copy(u.base).multiplyScalar(k); m.position.applyAxisAngle(Y, t * 0.6 + t * u.sp * 0.3); m.rotation.set(t * u.sp * 3, t * u.sp * 2, 0); });
+        shell.rotation.set(-t * 0.5, t * 0.8, 0); shell2.rotation.set(t * 0.2, -t * 0.4, 0); ring.rotation.y = t * 0.9;
+        shards.forEach((s, k) => { const a = t * 2 + k * Math.PI / 2; s.position.set(Math.cos(a) * 92, Math.sin(t * 3 + k) * 18, Math.sin(a) * 92); s.rotation.set(t * 4, t * 3, 0); });
+        const al = b.alpha ?? 1; mats.forEach(([m, op]) => { m.opacity = op * al; });
+        o.scale.setScalar((0.4 + al * 0.6) * BS);
     };
     return g;
-};
-NB.SERPENT = () => {
-    const g = new THREE.Group();
-    const head = new THREE.Group();
-    head.add(fuse(LAB.loft([[-26, 30, 22, 0], [-6, 40, 28, 2], [18, 30, 18, 0], [34, 10, 8, -2]], 6), 0x9cff5a, { glass: 0.3 }));
-    head.add(fuse(LAB.loft([[-4, 26, 8, -12], [22, 18, 6, -14], [32, 6, 3, -14]], 4, Math.PI / 4), 0x2fd08a, { cage: false }));
-    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5), new THREE.MeshBasicMaterial({ color: 0xff3355 })); e.position.set(s * 11, 9, 16); head.add(e); });
-    g.add(head);
-    const segs = [];
-    const vert = LAB.loft([[-12, 20, 18], [-6, 26, 22], [6, 26, 22], [12, 20, 18]], 6);
-    const fin = LAB.loft([[-8, 3, 4, 12], [0, 3, 14, 18], [8, 2, 4, 12]], 4, Math.PI / 4);
-    for (let k = 0; k < 8; k++) {
-        const m = new THREE.Group();
-        m.add(fuse(vert, k % 2 ? 0x2fd08a : 0x1aa0ff, { cage: false, seed: k + 3 }));
-        m.add(fuse(fin, 0x9cff5a, { cage: false, glass: 0 }));
-        m.add(wire(new THREE.TorusGeometry(18, 1, 3, 8), k % 2 ? 0x9cff5a : 0x7fe9ff, 0.5));
-        m.scale.setScalar((1 - k * 0.045) * BS);
-        scene.add(m); m.userData.lift = true; segs.push(m);
-    }
-    g.userData.extra = segs;
-    g.userData.anim = (o, b, t) => {
-        const dx = b.hist && b.hist[3] ? b.x - b.hist[3].x : 0, dy = b.hist && b.hist[3] ? b.y - b.hist[3].y : 1;
-        head.rotation.y = Math.atan2(dx, dy);
-        (b.segs || []).forEach((s, k) => {
-            const m = segs[k]; if (!m) return; m.visible = true;
-            m.position.set(toX(ix(s)), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(iy(s)));
-            const p = k ? b.segs[k - 1] : b; m.rotation.set(0, Math.atan2(p.x - s.x, p.y - s.y), Math.sin(t * 3 + k) * 0.3);
-        });
-    };
-    return g;
-};
-NB.LANCER = () => {
-    const g = new THREE.Group(), body = new THREE.Group();
-    body.add(fuse(LAB.loft([[-56, 6, 6], [-30, 26, 20], [10, 34, 24], [44, 20, 14], [72, 3, 3]], 6), 0xff3a3a, { glass: 0.3 }));
-    [-1, 1].forEach(s => { const f = fuse(bladeGeo(70, 16, 5), 0xd0d6e8, { cage: false, tint: 0.15 }); f.rotation.y = s * (Math.PI / 2 - 0.45); f.position.set(s * 10, 0, -14); /* 左右へ、少し後ろに流れる翼 */ body.add(f); });
-    const eng = new THREE.Mesh(new THREE.CircleGeometry(8, 10), new THREE.MeshBasicMaterial({ color: 0xff6060 })); eng.position.z = -57; eng.rotation.y = Math.PI; body.add(eng);
-    body.add(wire(new THREE.TorusGeometry(30, 1, 3, 10), 0xff8080, 0.4));
-    g.add(body);
-    const lineMat = new THREE.MeshBasicMaterial({ color: 0xff2040, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-    const tele = new THREE.Mesh(new THREE.PlaneGeometry(60, 1), lineMat); tele.rotation.x = -Math.PI / 2; scene.add(tele);
-    g.userData.extra = [tele];
-    g.userData.anim = (o, b, t) => {
-        body.rotation.z = t * (b.mode === 'dash' ? 20 : 2);
-        const len = config.canvasHeight - b.y;
-        tele.visible = !!b.telegraph; tele.scale.set((1 + Math.sin(t * 40) * 0.2) * BS, len, 1);
-        tele.position.set(toX(ix(b)), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
-    };
-    return g;
-};
+};;
 NB.MIRROR = () => {
     const g = new THREE.Group();
     const mk = c => { const u = new THREE.Group(); u.add(fuse(crystal(16, 46, 6), c, { glass: 0.55, glassOp: 0.4 })); u.add(wire(new THREE.TorusGeometry(30, 1, 3, 6), c, 0.6)); return u; };
@@ -5869,51 +5812,6 @@ NB.MIRROR = () => {
         L.rotation.y = t * 2; R.rotation.y = -t * 2; L.children[1].rotation.x = t; R.children[1].rotation.x = -t;
         beam.scale.x = d / BS; beam.computeLineDistances();
     };
-    return g;
-};
-NB.HIVE = () => {
-    const g = new THREE.Group(), body = new THREE.Group();
-    const hex = LAB.loft([[-22, 34, 34], [22, 34, 34]], 6, 0); hex.rotateX(-Math.PI / 2);
-    const cells = [];
-    [[0, 0], [-32, -18], [32, -18], [-32, 18], [32, 18], [0, 36], [0, -36]].forEach(([x, z], k) => {
-        const c = fuse(hex, 0x9a6cff, { seed: k + 1, cage: false }); c.position.set(x, 0, z); body.add(c);
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffb020 })); cap.position.set(x, 24, z); body.add(cap); cells.push(cap);
-    });
-    body.add(wire(new THREE.IcosahedronGeometry(76, 0), 0x9a6cff, 0.25));
-    g.add(body);
-    const door = s => { const d = fuse(LAB.loft([[-6, 46, 14], [6, 46, 14]], 4, Math.PI / 4), 0xdddddd, { cage: false, tint: 0.1 }); d.rotation.y = Math.PI / 2; d.position.set(s * 26, -6, 52); g.add(d); return d; };
-    const doorL = door(-1), doorR = door(1);
-    g.userData.anim = (o, b, t) => {
-        cells.forEach((c, k) => { c.position.y = 24 + Math.max(0, Math.sin(t * 4 + k)) * 10; });
-        const op = b.doors > 0 ? 1 : 0; doorL.position.x = -26 - op * 30; doorR.position.x = 26 + op * 30;
-        body.rotation.y = Math.sin(t * 0.8) * 0.2;
-    };
-    return g;
-};
-NB.MONOLITH = () => {
-    const g = new THREE.Group(), star = new THREE.Group();
-    star.add(fuse(loftY([[-60, 40, 40], [40, 30, 30], [70, 0.5, 0.5]], 4, Math.PI / 4), 0xd8e0ff, { glass: 0.3, tint: 0.2 }));
-    const eye = new THREE.Mesh(new THREE.OctahedronGeometry(9), new THREE.MeshBasicMaterial({ color: 0xff2a6a })); eye.position.set(0, 10, 18); star.add(eye);
-    const cage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(95, 0)), new THREE.LineBasicMaterial({ color: 0xff40a0, transparent: true, opacity: 0.7 }));
-    const halo = LAB.dashRing(70, 36, 10, 2, LAB.glass(0xff40a0, 0.7), 4); halo.position.y = 30;
-    g.add(star, cage, halo);
-    const cubes = [];
-    for (let k = 0; k < 6; k++) { const c = fuse(crystal(7, 14, 4), 0xff2a6a, { cage: false }); g.add(c); cubes.push(c); }
-    g.userData.anim = (o, b, t) => {
-        star.rotation.y = t * 0.5; cage.rotation.set(-t * 0.3, t * 0.5, 0); halo.rotation.y = -t;
-        cage.material.color.setHex([0xff40a0, 0x40c0ff, 0xffc040][b.phase || 0]);
-        cubes.forEach((c, k) => { const a = t * 1.8 + k * Math.PI / 3; c.position.set(Math.cos(a) * 120, Math.sin(a * 2) * 30, Math.sin(a) * 120); c.rotation.set(t * 3, t * 2, 0); });
-    };
-    return g;
-};
-NB.VORTEX = () => {
-    const g = new THREE.Group();
-    const core = fuse(new THREE.IcosahedronGeometry(24, 0), 0x4cf2ff, { glass: 0.4 });
-    const knot = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusKnotGeometry(46, 6, 64, 5, 2, 3), 20), LAB.line(0xa070ff, 0.75));
-    const arms = new THREE.Group();
-    for (let k = 0; k < 3; k++) { const a = fuse(bladeGeo(70, 18, 6), 0xa070ff, { cage: false, seed: k }); a.rotation.y = k * Math.PI * 2 / 3; a.position.set(Math.cos(-k * Math.PI * 2 / 3) * 10, 0, Math.sin(-k * Math.PI * 2 / 3) * 10); arms.add(a); }
-    g.add(core, knot, arms);
-    g.userData.anim = (o, b, t) => { core.rotation.set(t, t * 1.4, 0); knot.rotation.set(Math.PI / 2, 0, t * 1.6); arms.rotation.y = -t * 2.2; };
     return g;
 };
 NB.TRIDENT = () => {
@@ -5943,21 +5841,6 @@ NB.ORBIT = () => {
     g.userData.anim = (o, b, t) => { core.rotation.set(t * 0.8, t, 0); shell.rotation.set(-t * 0.4, t * 0.6, 0); path.rotation.y = t * 0.3; sats.forEach((s, k) => { const a = (b.spin || t) + k * Math.PI * 2 / 3; s.position.set(Math.cos(a) * 80, 0, Math.sin(a) * 80); s.rotation.set(t * 3, t * 2, 0); }); };
     return g;
 };
-NB.LATTICE = () => {
-    const g = new THREE.Group();
-    const cage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(90, 90, 90, 3, 3, 3)), LAB.line(0x80a0ff, 0.6));
-    const core = fuse(bevelBox(34, 34, 34), 0xc8d4ff, { glass: 0.45 });
-    const inner = wire(new THREE.OctahedronGeometry(30, 0), 0xffffff, 0.7);
-    const cornerG = new THREE.OctahedronGeometry(6, 0), corners = new THREE.Group();
-    [-1, 1].forEach(x => [-1, 1].forEach(y => [-1, 1].forEach(z => { const c = new THREE.Mesh(cornerG, LAB.glow(0x80a0ff)); c.position.set(x * 45, y * 45, z * 45); corners.add(c); })));
-    g.add(cage, core, inner, corners);
-    const mats = []; g.traverse(c => { if (c.material) { c.material.transparent = true; mats.push([c.material, c.material.opacity]); } });
-    g.userData.anim = (o, b, t) => {
-        cage.rotation.set(t * 0.4, t * 0.6, 0); corners.rotation.copy(cage.rotation); core.rotation.set(-t, t * 1.3, 0); inner.rotation.set(t * 1.5, -t, 0);
-        mats.forEach(([m, op]) => { m.opacity = op * (b.alpha ?? 1); });
-    };
-    return g;
-};
 NB.SPINDLE = () => {
     const g = new THREE.Group(), sp = new THREE.Group();
     sp.add(fuse(loftY([[-56, 1, 1], [-30, 50, 50], [-8, 76, 76], [8, 76, 76], [30, 50, 50], [56, 1, 1]], 8, Math.PI / 8), 0xffb040, { glass: 0.3 }));
@@ -5965,17 +5848,6 @@ NB.SPINDLE = () => {
     g.add(sp);
     const ring = LAB.dashRing(62, 32, 9, 1.6, LAB.glass(0xffffff, 0.55), 4); g.add(ring);
     g.userData.anim = (o, b, t) => { sp.rotation.y = t * 6; sp.rotation.z = Math.sin(t * 2) * 0.25; ring.rotation.y = -t * 2; };
-    return g;
-};
-NB.GYRO = () => {
-    const g = new THREE.Group();
-    const core = fuse(new THREE.IcosahedronGeometry(18, 0), 0xffffff, { glass: 0.5, tint: 0.1 }); g.add(core);
-    const rings = [40, 54, 68].map((r, k) => { const m = segRing(r, 10 + k * 2, 6, 5, [0xff4090, 0x40c0ff, 0xffd040][k]); m.rotation.x = Math.PI / 2; const p = new THREE.Group(); p.add(m); g.add(p); return p; });
-    g.userData.anim = (o, b, t) => {
-        const c = b.charge || 0;
-        rings.forEach((m, k) => { m.rotation.set((1 - c) * (t * (1 + k)), (1 - c) * t * (0.7 + k * 0.4), 0); });
-        core.scale.setScalar(1 + c * 0.4); core.rotation.y = t * 3;
-    };
     return g;
 };
 NB.BEACON = () => {
@@ -5988,26 +5860,6 @@ NB.BEACON = () => {
     beam.geometry.translate(0, -60, 0);
     const head = new THREE.Group(); head.position.y = 10; head.add(beam); g.add(lamp, head);
     g.userData.anim = (o, b, t) => { lamp.rotation.y = t * 4; head.rotation.set(Math.PI / 2, 0, -((b.spin ?? Math.PI / 2) - Math.PI / 2)); };
-    return g;
-};
-NB.SHARD = () => {
-    const g = new THREE.Group();
-    const a = fuse(crystal(16, 40, 5), 0x7ad0ff, { glass: 0.45 }), c = fuse(crystal(16, 40, 5), 0xff7ab0, { glass: 0.45 });
-    const link = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: 8, gapSize: 6, transparent: true, opacity: 0.5 }));
-    g.add(a, c, link);
-    g.userData.anim = (o, b, t) => {
-        const sp = b.spin ?? t, d = (b.d ?? 90) * FS / BS;
-        a.position.set(Math.cos(sp) * d, 0, Math.sin(sp) * d * 0.6 / FS); c.position.set(-a.position.x, 0, -a.position.z);
-        a.rotation.set(t * 2, t, 0); c.rotation.set(-t * 2, t, 0);
-        link.geometry.setAttribute('position', new THREE.Float32BufferAttribute([...a.position.toArray(), ...c.position.toArray()], 3)); link.computeLineDistances();
-    };
-    return g;
-};
-NB.WAVE = () => {
-    const g = new THREE.Group(), segs = [];
-    const seg = LAB.loft([[-9, 8, 6], [-3, 14, 12], [6, 12, 10], [10, 4, 4]], 6); seg.rotateY(Math.PI / 2);
-    for (let k = -6; k <= 6; k++) { const m = new THREE.Group(); m.add(fuse(seg, k % 2 ? 0x40c0ff : 0x40ffd0, { cage: false, seed: k + 7 })); m.add(wire(new THREE.TorusGeometry(9, 0.6, 3, 6), 0x40ffd0, 0.5)); m.children[1].rotation.y = Math.PI / 2; m.position.x = k * 13; g.add(m); segs.push(m); }
-    g.userData.anim = (o, b, t) => { segs.forEach((m, i) => { m.position.z = Math.sin(t * 4 + i * 0.6) * 18; m.position.y = Math.cos(t * 4 + i * 0.6) * 6; m.rotation.x = t * 2 + i; }); };
     return g;
 };
 NB.CROWN = () => {
@@ -6053,23 +5905,6 @@ NB.LOTUS = () => {
     g.userData.anim = (o, b, t) => { const op = b.open ?? (Math.sin(t) + 1) / 2; petals.forEach((pv, k) => { pv.rotation.x = -0.9 + op * 0.9; pv.rotation.y = k * Math.PI / 4 + t * 0.4; }); core.rotation.set(t, t * 2, 0); };
     return g;
 };
-NB.CIPHER = () => {
-    const g = new THREE.Group();
-    const frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(88, 4, 88, 4, 1, 4)), LAB.line(0x60ffb0, 0.6)); g.add(frame);
-    const nodes = [0, 1, 2, 3].map(() => { const n = new THREE.Group(); n.add(fuse(crystal(10, 14, 4), 0x40ff90, { cage: false })); n.add(wire(new THREE.BoxGeometry(22, 22, 22), 0x40ff90, 0.5)); g.add(n); return n; });
-    const core = fuse(new THREE.OctahedronGeometry(20, 0), 0xe0fff0, { glass: 0.5, tint: 0.15 }); g.add(core);
-    g.userData.anim = (o, b, t) => { const sp = b.spin ?? t; frame.rotation.y = -sp; nodes.forEach((n, k) => { const a = sp + k * Math.PI / 2; n.position.set(Math.cos(a) * 62, 0, Math.sin(a) * 62); n.rotation.set(t * 2, t, 0); }); core.rotation.set(t, t * 1.5, 0); };
-    return g;
-};
-NB.QUASAR = () => {
-    const g = new THREE.Group();
-    const core = fuse(new THREE.IcosahedronGeometry(28, 1), 0xb0d0ff, { glass: 0.35 });
-    const jets = [-1, 1].map(s => { const j = new THREE.Mesh(new THREE.ConeGeometry(14, 90, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0x80c0ff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); j.position.y = s * 60; if (s < 0) j.rotation.x = Math.PI; return j; });
-    const disk = segRing(52, 20, 8, 3, 0xffffff); const disk2 = LAB.dashRing(70, 44, 7, 1.4, LAB.glass(0x80c0ff, 0.6), 4);
-    g.add(core, ...jets, disk, disk2);
-    g.userData.anim = (o, b, t) => { const c = b.charge || 0; core.scale.setScalar(1 + c * 0.35); jets.forEach(j => { j.scale.set(1 + c, 1 + c * 0.6, 1 + c); }); disk.rotation.y = t * 2; disk2.rotation.y = -t; g.rotation.z = Math.sin(t * 0.7) * 0.3; };
-    return g;
-};
 NB.TITAN = () => {
     const g = new THREE.Group();
     const hull = fuse(LAB.loft([[-50, 60, 26, 0], [-30, 110, 40, 0], [30, 110, 40, 0], [50, 70, 30, 0]], 8, Math.PI / 8), 0x707890, { glass: 0.2, tint: 0.2 });
@@ -6079,16 +5914,6 @@ NB.TITAN = () => {
     for (let k = 0; k < 4; k++) { const p = fuse(LAB.loft([[-20, 18, 30], [20, 18, 30]], 6), 0xff8040, { cage: false, seed: k }); g.add(p); plates.push(p); }
     const eye = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff3040 })); eye.position.set(0, 6, 46); g.add(eye);
     g.userData.anim = (o, b, t) => { plates.forEach((p, k) => { const sx = k % 2 ? 1 : -1, sz = k < 2 ? -1 : 1; p.position.set(sx * 70, Math.sin(t * 2 + k) * 6, sz * 24); p.rotation.z = sx * 0.3; }); eye.scale.x = 0.6 + (Math.sin(t * 4) + 1) * 0.3; };
-    return g;
-};
-NB.ZENITH = () => {
-    const g = new THREE.Group(), star = new THREE.Group();
-    star.add(fuse(crystal(26, 52, 4), 0xffffff, { glass: 0.4, tint: 0.1 }));
-    const s2 = fuse(crystal(26, 52, 4), 0x6040ff, { glass: 0.4 }); s2.rotation.set(0, Math.PI / 4, Math.PI / 2); star.add(s2);
-    const cage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(90, 1)), LAB.line(0xffd040, 0.5));
-    const halo = segRing(70, 16, 6, 4, 0xffd040);
-    g.add(star, cage, halo);
-    g.userData.anim = (o, b, t) => { star.rotation.set(t, t * 1.4, 0); cage.rotation.set(-t * 0.3, t * 0.4, 0); halo.rotation.y = t * 0.6; cage.material.color.setHex([0xffd040, 0xff4090, 0x40e0ff][b.phase || 0]); };
     return g;
 };
 // 作り直し（より凝った造形）: TRIDENT / COMB / SPINDLE / RAZOR / TITAN / BEACON
@@ -6204,28 +6029,6 @@ NB.BEACON = () => {
     return g;
 };
 // 新ボス（名前ごと一新）: CHORUS / LOOM / NAUTILUS / KESTREL / GLACIER / MEDUSA
-NB.CHORUS = () => {
-    // 3つの仮面の聖歌隊: 光の五線譜の弧の上に浮かぶ仮面。撃つ順に仮面の口が光って開く
-    const g = new THREE.Group(), C = 0xffd27a, P = 0xff5a8a;
-    const staff = new THREE.Group();
-    for (let k = 0; k < 5; k++) { const pts = []; for (let i = 0; i <= 24; i++) { const u = i / 24 * Math.PI, r = 62 + k * 5; pts.push(new THREE.Vector3(Math.cos(u) * r, -k * 2, -Math.sin(u) * r * 0.45 + 18)); } staff.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(C, 0.45))); }
-    g.add(staff);
-    const maskGeo = LAB.loft([[-14, 24, 30, 0], [-4, 32, 38, 0], [8, 28, 34, -2], [16, 14, 18, -4]], 8, Math.PI / 8);
-    const masks = [-1, 0, 1].map(k => {
-        const m = new THREE.Group(); m.position.set(k * 48, 0, k === 0 ? -6 : 8);
-        m.scale.setScalar(1.3); m.add(fuse(maskGeo, k === 0 ? P : C, { glass: 0.3, seed: k + 3, cage: 1.14 }));
-        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.ConeGeometry(3, 10, 3), LAB.glow(0xffffff)); e.rotation.x = Math.PI / 2; e.rotation.z = s * 0.5; e.position.set(s * 7, 8, 16); m.add(e); });
-        const mouth = new THREE.Mesh(new THREE.TorusGeometry(5, 1.6, 4, 10), LAB.glow(P)); mouth.position.set(0, -8, 16); m.add(mouth);
-        const halo = LAB.dashRing(20, 14, 5, 1.2, LAB.glass(C, 0.8), 3); halo.position.y = 24; m.add(halo);
-        g.add(m); return { m, mouth, halo };
-    });
-    g.userData.anim = (o, b, t) => {
-        const c = (b.t || 0) % 120, sing = c < 60 ? Math.floor(c / 20) : -1;
-        masks.forEach((x, k) => { const on = k === sing || c >= 85 && c < 100; x.mouth.scale.setScalar(on ? 1.9 : 0.8); x.m.position.y = Math.sin(t * 2 + k) * 4 + (on ? 4 : 0); x.m.rotation.y = Math.sin(t * 1.3 + k) * 0.25; x.halo.rotation.y = t * (k - 1 || 1.5); });
-        staff.rotation.y = Math.sin(t * 0.6) * 0.1;
-    };
-    return g;
-};
 NB.LOOM = () => {
     // 光の機織り機: 左右の柱で糸巻きが回り、張られた光の糸の上を杼（ひ）が往復する。カーテン弾の瞬間に糸が光る
     const g = new THREE.Group(), C = 0x40ffa0, W = 0xd8fff0;
@@ -6243,26 +6046,6 @@ NB.LOOM = () => {
         spools.forEach((sp, k) => { sp.rotation.x = (k ? -1 : 1) * t * 3; });
         threadMat.opacity = c < 12 ? 1 : 0.4; threadMat.color.setHex(c < 12 ? 0xffffff : W);
     };
-    return g;
-};
-NB.NAUTILUS = () => {
-    // 機械のオウム貝: 対数らせんに部屋が並ぶ殻。殻は装甲とガラス、仕切りはワイヤー。開口部から輪の弾を放つ
-    const g = new THREE.Group(), C = 0xffb040, A = 0x7fe9ff, shell = new THREE.Group();
-    const N = 16;
-    for (let i = 0; i < N; i++) {
-        const a0 = i * 0.42, a1 = (i + 1) * 0.42, r0 = 8 * Math.exp(a0 * 0.24), r1 = 8 * Math.exp(a1 * 0.24);
-        const p0 = [Math.cos(a0) * r0, Math.sin(a0) * r0], p1 = [Math.cos(a1) * r1, Math.sin(a1) * r1];
-        const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-        const ch = fuse(LAB.loft([[0, r0 * 0.9, r0 * 0.8], [len, r1 * 0.9, r1 * 0.8]], 8, Math.PI / 8), i % 2 ? C : 0xffd090, { cage: false, glass: 0.3, seed: i });
-        ch.position.set(p0[0], 0, p0[1]); ch.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + Math.PI / 2; shell.add(ch);
-        const wall = wire(new THREE.TorusGeometry(r1 * 0.42, 0.6, 3, 8), A, 0.6); wall.position.set(p1[0], 0, p1[1]); wall.rotation.y = ch.rotation.y; shell.add(wall);
-    }
-    const mouth = new THREE.Mesh(new THREE.TorusGeometry(16, 2.5, 4, 16), LAB.glow(A)); shell.add(mouth);
-    const pts = []; const aE = N * 0.42, rE = 8 * Math.exp(aE * 0.24); mouth.position.set(Math.cos(aE) * rE, 0, Math.sin(aE) * rE); mouth.rotation.y = -aE;
-    for (let k = 0; k < 5; k++) { const tn = wire(new THREE.ConeGeometry(2, 30, 3), A, 0.6); tn.position.copy(mouth.position).add(new THREE.Vector3(Math.cos(aE + 1.6) * 14, (k - 2) * 6, Math.sin(aE + 1.6) * 14)); tn.rotation.z = Math.PI / 2; shell.add(tn); pts.push(tn); }
-    shell.position.set(-26, 0, -14); shell.scale.setScalar(1.35); g.add(shell);
-    g.add(LAB.dashRing(78, 36, 9, 1.6, LAB.glass(A, 0.5), 4));
-    g.userData.anim = (o, b, t) => { shell.rotation.y = t * 1.6; shell.rotation.z = Math.sin(t * 1.2) * 0.15; pts.forEach((tn, k) => { tn.rotation.y = Math.sin(t * 4 + k) * 0.4; }); mouth.scale.setScalar(1 + 0.2 * Math.sin(t * 6)); };
     return g;
 };
 NB.KESTREL = () => {
@@ -6383,6 +6166,621 @@ NB.TESTUDO = () => {
         neck.position.z += ((roar ? 66 : 54) - neck.position.z) * 0.15; neck.rotation.x = roar ? -0.25 : Math.sin(t * 1.2) * 0.06; neck.rotation.y = Math.sin(t * 0.7) * 0.2;
         jaw.scale.setScalar(roar ? 1.8 : 0.8); eyes.forEach(e => e.scale.setScalar(roar ? 1.6 : 1));
         top.rotation.y = t; wall.rotation.y = -t * 0.3; wall.scale.setScalar(roar ? 1.1 : 1); g.rotation.z = Math.sin(t * 1.6) * 0.03;
+    };
+    return g;
+};
+
+// ---------------------------------
+// 作り込み版のボス（装甲＋ガラス面＋発光ライン＋ワイヤー殻を何層も重ねる。HALO / BLOOM / PULSAR と同じ密度）
+// HIVE / MONOLITH / VORTEX / CHORUS / LATTICE / NAUTILUS / HYDRA / GYRO / SHARD / WAVE / CIPHER / QUASAR / ZENITH
+// ---------------------------------
+const glowM = c => LAB.glow(c);
+const sstep = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+// 中心の発光コア: 白い芯＋色の結晶＋2重のワイヤー殻
+function coreGem(r, c1, c2) {
+    const g = new THREE.Group();
+    const gem = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), new THREE.MeshBasicMaterial({ color: c1, transparent: true, opacity: 0.65 }));
+    gem.add(new THREE.Mesh(new THREE.OctahedronGeometry(r * 0.48, 0), glowM(0xffffff)));
+    const s1 = wire(new THREE.IcosahedronGeometry(r * 1.3, 1), 0xffffff, 0.6), s2 = wire(new THREE.DodecahedronGeometry(r * 1.75, 0), c2, 0.45);
+    g.add(gem, s1, s2);
+    g.userData.gem = gem;
+    g.userData.spin = t => { gem.rotation.set(t * 0.7, t * 1.1, 0); s1.rotation.set(-t * 0.4, t * 0.6, 0); s2.rotation.set(t * 0.25, -t * 0.45, t * 0.1); };
+    return g;
+}
+// 点の列を通る線（毎フレーム書き換える用）
+function polyLine(n, c, o = 0.8) {
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(n * 3), 3));
+    return new THREE.Line(geo, LAB.line(c, o));
+}
+const setLine = (ln, pts) => { const a = ln.geometry.attributes.position; pts.forEach((p, i) => a.setXYZ(i, p.x, p.y, p.z)); a.needsUpdate = true; ln.geometry.computeBoundingSphere(); };
+
+// 8. HIVE: 巣の母艦。段差のある六角セルの巣盤（琥珀の蜜が波打って光る）を装甲の襟とワイヤーのドームが包む。
+//    6本の脚が支え、働き蜂のドローンが周りを回る。前の格納庫の扉が開いてインベーダーを産む
+NB.HIVE = () => {
+    const g = new THREE.Group(), body = new THREE.Group(), P = 0x9a6cff, A = 0xffb020;
+    const R = 12.5, cellsA = [], cellsB = [], caps = [];
+    const capMat = glowM(A), capGeo = new THREE.CylinderGeometry(R * 0.62, R * 0.62, 2, 6); capGeo.rotateY(Math.PI / 2);
+    for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) {
+        if (Math.abs(q + r) > 2) continue;
+        const x = R * 1.5 * q, z = R * Math.sqrt(3) * (r + q / 2), d = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+        const h = [30, 22, 14][d];
+        const hex = LAB.loft([[-h / 2, R * 1.84, R * 1.84], [h / 2 - 2, R * 1.84, R * 1.84], [h / 2, R * 1.5, R * 1.5]], 6, 0); hex.rotateX(-Math.PI / 2); hex.translate(x, h / 2 - 8, z);
+        ((q + r) % 2 ? cellsA : cellsB).push(hex);
+        const cap = new THREE.Mesh(capGeo, capMat); cap.position.set(x, h - 7, z); body.add(cap); caps.push({ cap, h, d, k: caps.length, x, z });
+    }
+    body.add(fuse(mergeGeometries(cellsA), P, { glass: 0.3, seed: 3, cage: false }));
+    body.add(fuse(mergeGeometries(cellsB), 0x6a4cd8, { glass: 0.22, seed: 5, cage: false }));
+    // 装甲の襟（巣盤のまわり）と、ワイヤーのドーム
+    const collar = segRing(58, 12, 12, 14, P, 0.1); collar.position.y = -2; body.add(collar);
+    const rim = LAB.dashRing(66, 36, 9, 1.6, LAB.glass(A, 0.7), 4); body.add(rim);
+    const dome = wire(new THREE.IcosahedronGeometry(64, 1), P, 0.32); dome.scale.set(1, 0.55, 1); body.add(dome);
+    // 脚: 外へ張り出して下へ折れる装甲の脚、先が光る
+    const legGeo = LAB.loft([[0, 10, 8], [20, 9, 6, -4], [34, 6, 4, -14], [42, 2, 2, -22]], 4, Math.PI / 4);
+    const legs = [];
+    for (let k = 0; k < 6; k++) {
+        const piv = new THREE.Group(); piv.rotation.y = k * Math.PI / 3 + Math.PI / 6; piv.position.y = -6;
+        const leg = fuse(legGeo, 0x6a4cd8, { cage: false, glass: 0.25, seed: k }); leg.position.z = 56; piv.add(leg);
+        const tip = new THREE.Mesh(new THREE.OctahedronGeometry(3.5, 0), glowM(A)); tip.position.set(0, -22, 98); piv.add(tip);
+        body.add(piv); legs.push(piv);
+    }
+    g.add(body);
+    // 格納庫: 前（自機側）の光る口と、左右に開く装甲扉
+    const bay = new THREE.Mesh(new THREE.BoxGeometry(46, 14, 6), LAB.glass(A, 0.55)); bay.position.set(0, -4, 58); g.add(bay);
+    const door = s => { const d = fuse(LAB.loft([[-5, 26, 18], [5, 26, 18]], 4, Math.PI / 4), 0xdcd6ff, { cage: false, tint: 0.12 }); d.rotation.y = Math.PI / 2; d.position.set(s * 13, -4, 62); g.add(d); return d; };
+    const doorL = door(-1), doorR = door(1);
+    // 働き蜂のドローン
+    const drones = [], dGeo = crystal(4, 9, 4);
+    for (let k = 0; k < 6; k++) { const d = new THREE.Group(); d.add(fuse(dGeo, A, { cage: false, glass: 0.4, seed: k + 2 })); const w = new THREE.Mesh(new THREE.PlaneGeometry(14, 5), LAB.glass(0xffffff, 0.35)); w.rotation.x = -Math.PI / 2; d.add(w); d.rotation.z = Math.PI / 2; g.add(d); drones.push({ d, w, k }); }
+    const path = LAB.dashRing(84, 48, 5, 1, LAB.glass(A, 0.35), 3); path.rotation.x = 0.25; g.add(path);
+    let op = 0;
+    g.userData.anim = (o, b, t) => {
+        caps.forEach(c => { const w = Math.max(0, Math.sin(t * 3 - c.d * 1.2 + c.k * 0.4)); c.cap.position.y = c.h - 7 + w * 5; c.cap.scale.set(1, 1 + w * 2, 1); });
+        op += ((b.doors > 0 ? 1 : 0) - op) * 0.2; doorL.position.x = -13 - op * 22; doorR.position.x = 13 + op * 22; bay.scale.y = 1 + op * 0.6;
+        body.rotation.y = Math.sin(t * 0.8) * 0.12; rim.rotation.y = t * 0.5; dome.rotation.y = -t * 0.2;
+        legs.forEach((l, k) => { l.rotation.z = Math.sin(t * 2 + k) * 0.05; });
+        drones.forEach(({ d, w, k }) => { const a = t * 1.1 + k * Math.PI / 3; d.position.set(Math.cos(a) * 84, Math.sin(a) * 84 * 0.25 + Math.sin(t * 5 + k) * 3, Math.sin(a) * 84); d.rotation.y = -a; w.scale.x = 0.6 + 0.4 * Math.abs(Math.sin(t * 40 + k)); });
+    };
+    return g;
+};
+
+
+// 11. VORTEX: 渦の機関。光る目の核から、2本の腕が対数らせんに伸びる（装甲の羽根が外ほど大きく）。
+//     らせんへ吸い込まれる光の粒と、傾いた3重の輪。渦の向きは攻撃に合わせて左右に切り替わる
+NB.VORTEX = () => {
+    const g = new THREE.Group(), C = 0x4cf2ff, V = 0xa070ff;
+    const core = fuse(new THREE.IcosahedronGeometry(20, 1), C, { glass: 0.4, tint: 0.25 }); g.add(core);
+    const eye = coreGem(9, 0xbff8ff, V); g.add(eye);
+    const spiral = new THREE.Group(); g.add(spiral);
+    const finGeo = LAB.loft([[-1, 2, 2], [0.2, 10, 3.2], [0.7, 8, 2.4], [1, 1, 1]], 4, Math.PI / 4);
+    for (let arm = 0; arm < 2; arm++) for (let i = 0; i < 9; i++) {
+        const a = i * 0.55 + arm * Math.PI, r = 26 * Math.exp(0.14 * i), s = 0.7 + i * 0.16;
+        const f = new THREE.Group(); f.add(fuse(finGeo, i % 2 ? V : C, { cage: i > 5 ? 1.15 : false, glass: 0.3, seed: i + arm * 9 }));
+        f.scale.set(s * 1.3, s, s * 10); f.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); f.rotation.y = -a - 0.95; spiral.add(f);
+        if (i % 3 === 2) { const gl = new THREE.Mesh(new THREE.OctahedronGeometry(2.5 + i * 0.3, 0), glowM(i % 2 ? V : 0xffffff)); gl.position.copy(f.position).multiplyScalar(1.08); gl.position.y = 4; spiral.add(gl); }
+    }
+    const knot = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusKnotGeometry(38, 4, 64, 5, 2, 3), 20), LAB.line(V, 0.55)); knot.rotation.x = Math.PI / 2; g.add(knot);
+    const rings = [[54, 0.35, C], [72, -0.3, V], [88, 0.15, 0xffffff]].map(([R, tilt, c], k) => { const p = new THREE.Group(), r = LAB.dashRing(R, 30 + k * 10, 8, 1.4, LAB.glass(c, 0.55), 3 + k); p.rotation.x = tilt; p.add(r); g.add(p); return r; });
+    // 吸い込まれる光の粒
+    const motes = [];
+    for (let k = 0; k < 14; k++) { const m = new THREE.Mesh(new THREE.OctahedronGeometry(1.8, 0), glowM(k % 2 ? C : 0xffffff)); g.add(m); motes.push({ m, ph: k / 14 }); }
+    let w = 1.6, ang = 0;
+    g.userData.anim = (o, b, t) => {
+        const dir = Math.floor((b.t || 0) / 240) % 2 ? -1 : 1;
+        w += (dir * 1.6 - w) * 0.03; ang += w * 0.016;
+        spiral.rotation.y = -ang; core.rotation.set(t * 0.6, -ang * 0.6, 0); eye.userData.spin(t);
+        knot.rotation.z = ang * 0.8; rings.forEach((r, k) => { r.rotation.y = -ang * (0.5 + k * 0.3) * (k % 2 ? -1 : 1); });
+        motes.forEach(({ m, ph }) => { const u = (t * 0.35 + ph) % 1, r = 96 * (1 - u) + 10, a = -ang - u * 5 + ph * 20; m.position.set(Math.cos(a) * r, Math.sin(u * Math.PI) * 6, Math.sin(a) * r); m.scale.setScalar(0.6 + u); });
+    };
+    return g;
+};
+
+// 12. CHORUS: 3つの仮面の聖歌隊。仮面は冠のトゲ・頬当て・垂れ布のワイヤーまで作り込み、
+//     背後には扇状に並んだパイプオルガンとバラ窓。歌う仮面の口と、パイプの先が光る
+NB.CHORUS = () => {
+    const g = new THREE.Group(), C = 0xffd27a, P = 0xff5a8a;
+    // 扇状のパイプオルガン（奥側に、カメラへ起こして並べる）
+    const organ = new THREE.Group(); organ.position.set(0, -10, -30); organ.rotation.x = 0.55; g.add(organ);
+    const pipeTips = [];
+    for (let k = 0; k < 11; k++) {
+        const a = (k / 10 - 0.5) * 2.6, L = 52 + (5 - Math.abs(k - 5)) * 9;
+        const piv = new THREE.Group(); piv.rotation.y = Math.PI + a; organ.add(piv);
+        const pipe = fuse(LAB.loft([[0, 8, 8], [L - 6, 8, 8], [L - 4, 11, 11], [L, 11, 11]], 8, Math.PI / 8), k % 2 ? 0xc8a050 : 0xffe0a0, { cage: false, glass: 0.25, seed: k, tint: 0.4 });
+        pipe.position.z = 26; piv.add(pipe);
+        const tip = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), glowM(k % 2 ? C : P)); tip.position.z = 26 + L + 4; piv.add(tip); pipeTips.push(tip);
+    }
+    const rose = new THREE.Group(); rose.position.set(0, 4, -24); rose.rotation.x = -1.0; g.add(rose);
+    rose.add(segRing(40, 16, 5, 4, C, 0.2));
+    const roseDash = LAB.dashRing(30, 24, 6, 1.2, LAB.glass(P, 0.75), 3); rose.add(roseDash);
+    for (let k = 0; k < 8; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 36), LAB.glass(C, 0.5)); sp.rotation.y = k * Math.PI / 8; rose.add(sp); }
+    // 光の五線譜
+    const staff = new THREE.Group();
+    for (let k = 0; k < 5; k++) { const pts = []; for (let i = 0; i <= 24; i++) { const u = i / 24 * Math.PI, r = 62 + k * 5; pts.push(new THREE.Vector3(Math.cos(u) * r, -k * 2, -Math.sin(u) * r * 0.45 + 18)); } staff.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(C, 0.4))); }
+    g.add(staff);
+    const maskGeo = LAB.loft([[-14, 24, 30, 0], [-4, 32, 38, 0], [8, 28, 34, -2], [16, 14, 18, -4]], 8, Math.PI / 8);
+    const cheekGeo = LAB.loft([[-6, 6, 18, -4], [4, 8, 22, -6], [10, 3, 10, -8]], 4, Math.PI / 4);
+    const spikeGeo = crystal(2.4, 9, 4);
+    const masks = [-1, 0, 1].map(k => {
+        const m = new THREE.Group(); m.position.set(k * 48, 0, k === 0 ? -6 : 8);
+        m.scale.setScalar(1.3); m.add(fuse(maskGeo, k === 0 ? P : C, { glass: 0.3, seed: k + 3, cage: 1.14 }));
+        [-1, 1].forEach(s => { const ch = fuse(cheekGeo, k === 0 ? 0xffc0d0 : 0xfff0c0, { cage: false, glass: 0, tint: 0.5 }); ch.position.x = s * 14; ch.rotation.y = s * 0.3; m.add(ch);
+            const e = new THREE.Mesh(new THREE.ConeGeometry(3, 10, 3), glowM(0xffffff)); e.rotation.x = Math.PI / 2; e.rotation.z = s * 0.5; e.position.set(s * 7, 8, 16); m.add(e); });
+        // 冠のトゲ
+        const spk = []; for (let i = 0; i < 5; i++) { const a = (i - 2) * 0.42, o2 = new THREE.Object3D(); o2.position.set(Math.sin(a) * 15, 18 + Math.cos(a) * 6, 4); o2.rotation.z = -a; o2.scale.set(1, i === 2 ? 1.4 : 1, 1); o2.updateMatrix(); spk.push(spikeGeo.clone().applyMatrix4(o2.matrix)); }
+        m.add(fuse(mergeGeometries(spk), k === 0 ? P : C, { cage: false, glass: 0.4 }));
+        // 垂れ布（ワイヤー）
+        const vp = []; for (let i = 0; i < 6; i++) { const x = (i - 2.5) * 5; vp.push(new THREE.Vector3(x, -16, 12), new THREE.Vector3(x * 1.3, -30, 8 + Math.abs(x) * 0.3)); }
+        const veil = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(vp), LAB.line(k === 0 ? P : C, 0.5)); m.add(veil);
+        const mouth = new THREE.Mesh(new THREE.TorusGeometry(5, 1.6, 4, 10), glowM(P)); mouth.position.set(0, -8, 16); m.add(mouth);
+        const voice = new THREE.Mesh(new THREE.CircleGeometry(4.2, 10), LAB.glass(0xffffff, 0.8)); voice.position.set(0, -8, 16.2); m.add(voice);
+        const halo = LAB.dashRing(20, 14, 5, 1.2, LAB.glass(C, 0.8), 3); halo.position.y = 28; m.add(halo);
+        g.add(m); return { m, mouth, voice, halo, veil };
+    });
+    g.userData.anim = (o, b, t) => {
+        const c = (b.t || 0) % 120, sing = c < 60 ? Math.floor(c / 20) : -1, all = c >= 85 && c < 100;
+        masks.forEach((x, k) => { const on = k === sing || all; x.mouth.scale.setScalar(on ? 1.9 : 0.8); x.voice.scale.setScalar(on ? 2 : 0.01); x.m.position.y = Math.sin(t * 2 + k) * 4 + (on ? 4 : 0); x.m.rotation.y = Math.sin(t * 1.3 + k) * 0.25; x.halo.rotation.y = t * (k - 1 || 1.5); x.veil.rotation.x = Math.sin(t * 1.7 + k) * 0.12; });
+        pipeTips.forEach((p, k) => { const lit = all || (sing >= 0 && Math.abs((k - 5) / 3.4 - (sing - 1)) < 0.6); p.scale.setScalar(lit ? 1.8 + 0.4 * Math.sin(t * 20 + k) : 0.8 + 0.2 * Math.sin(t * 2 + k)); });
+        roseDash.rotation.y = t * 0.8; staff.rotation.y = Math.sin(t * 0.6) * 0.1;
+    };
+    return g;
+};
+
+// 15. LATTICE: 光の超立方体。装甲の梁で組んだ外の立方体と、逆に回る内の立方体を光の線がつなぐ。
+//     中心の核から十字（＋）とX字の発射口が伸び、撃つ瞬間に光る。ワープ中は全体が透ける
+NB.LATTICE = () => {
+    const g = new THREE.Group(), C = 0x80a0ff, W = 0xc8d4ff;
+    const beams = (S, th) => { const parts = [], h = S / 2; const E = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+        E.forEach((ax, i) => [-1, 1].forEach(u => [-1, 1].forEach(v => { const geo = new THREE.BoxGeometry(i === 0 ? S - th : th, i === 1 ? S - th : th, i === 2 ? S - th : th); const o = [0, 0, 0], others = [0, 1, 2].filter(j => j !== i); o[others[0]] = u * h; o[others[1]] = v * h; geo.translate(o[0], o[1], o[2]); parts.push(geo); })));
+        return mergeGeometries(parts); };
+    const outer = new THREE.Group(); outer.add(fuse(beams(92, 6), C, { glass: 0.3, cage: false, seed: 3 })); g.add(outer);
+    outer.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(92, 92, 92, 3, 3, 3)), LAB.line(C, 0.25)));
+    const corners = [];
+    [-1, 1].forEach(x => [-1, 1].forEach(y => [-1, 1].forEach(z => { const c = new THREE.Mesh(new THREE.OctahedronGeometry(6, 0), glowM(0xbfd0ff)); c.position.set(x * 46, y * 46, z * 46); outer.add(c); corners.push(c); })));
+    const inner = new THREE.Group(); inner.add(fuse(beams(44, 4), 0xe0e8ff, { glass: 0.4, cage: false, tint: 0.2, seed: 7 })); g.add(inner);
+    const links = new THREE.LineSegments(new THREE.BufferGeometry(), LAB.line(0xbff0ff, 0.7)); links.geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(48), 3)); g.add(links);
+    const core = coreGem(12, W, C); g.add(core);
+    // 十字とX字の発射口
+    const ports = [];
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cross = k % 2 === 0, L = cross ? 30 : 20;
+        const p = fuse(LAB.loft([[0, 6, 6], [L * 0.6, 9, 9], [L, 1, 1]], 4, Math.PI / 4), cross ? 0xffffff : C, { cage: false, glass: 0.4, seed: k }); p.rotation.y = Math.PI / 2 - a; p.position.set(Math.cos(a) * 16, 0, Math.sin(a) * 16); g.add(p);
+        const f = new THREE.Mesh(new THREE.OctahedronGeometry(3, 0), glowM(cross ? 0xffffff : 0x9fb8ff)); f.position.set(Math.cos(a) * (18 + L), 0, Math.sin(a) * (18 + L)); g.add(f); ports.push({ f, cross }); }
+    const mats = []; g.traverse(c => { if (c.material) { c.material.transparent = true; mats.push([c.material, c.material.opacity]); } });
+    const _v = new THREE.Vector3(), _w = new THREE.Vector3();
+    g.userData.anim = (o, b, t) => {
+        outer.rotation.set(t * 0.3, t * 0.45, 0); inner.rotation.set(-t * 0.7, -t * 0.5, t * 0.3); core.userData.spin(t);
+        const a = links.geometry.attributes.position; let i = 0;
+        [-1, 1].forEach(x => [-1, 1].forEach(y => [-1, 1].forEach(z => { _v.set(x * 46, y * 46, z * 46).applyEuler(outer.rotation); _w.set(x * 22, y * 22, z * 22).applyEuler(inner.rotation); a.setXYZ(i++, _v.x, _v.y, _v.z); a.setXYZ(i++, _w.x, _w.y, _w.z); })));
+        a.needsUpdate = true; links.geometry.computeBoundingSphere();
+        const c = (b.t || 0) % 120, fc = Math.max(0, 1 - Math.abs(c - 10) / 8), fx = Math.max(0, 1 - Math.abs(c - 40) / 8);
+        ports.forEach(({ f, cross }) => f.scale.setScalar(1 + (cross ? fc : fx) * 2.2));
+        corners.forEach((m, k) => m.scale.setScalar(1 + 0.3 * Math.sin(t * 4 + k)));
+        mats.forEach(([m, op]) => { m.opacity = op * (b.alpha ?? 1); });
+    };
+    return g;
+};
+
+// 16. NAUTILUS: 機械のオウム貝。対数らせんの殻（装甲＋ガラス、仕切りのワイヤー、光る縫い目）に、
+//     光る目と6本の触手。まわりで2重の輪が逆回転する（攻撃の2重リングと同じ）
+NB.NAUTILUS = () => {
+    const g = new THREE.Group(), C = 0xffb040, A = 0x7fe9ff, shell = new THREE.Group();
+    const N = 16, seams = [], walls = [];
+    for (let i = 0; i < N; i++) {
+        const a0 = i * 0.42, a1 = (i + 1) * 0.42, r0 = 8 * Math.exp(a0 * 0.24), r1 = 8 * Math.exp(a1 * 0.24);
+        const p0 = [Math.cos(a0) * r0, Math.sin(a0) * r0], p1 = [Math.cos(a1) * r1, Math.sin(a1) * r1];
+        const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+        const ch = fuse(LAB.loft([[0, r0 * 0.9, r0 * 0.8], [len * 0.5, (r0 + r1) * 0.5, (r0 + r1) * 0.45], [len, r1 * 0.9, r1 * 0.8]], 8, Math.PI / 8), i % 2 ? C : 0xffd090, { cage: i > 9 ? 1.1 : false, glass: 0.3, seed: i });
+        ch.position.set(p0[0], 0, p0[1]); ch.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + Math.PI / 2; shell.add(ch);
+        const _o = new THREE.Object3D(); _o.position.set(p1[0], 0, p1[1]); _o.rotation.y = ch.rotation.y; _o.updateMatrix();
+        walls.push(new THREE.EdgesGeometry(new THREE.TorusGeometry(r1 * 0.42, 0.6, 3, 8), 1).applyMatrix4(_o.matrix));
+        if (i % 2 === 0) { const sm = new THREE.Mesh(new THREE.TorusGeometry(r1 * 0.47, 0.5, 3, 12), glowM(i % 4 ? A : 0xffe0a0)); sm.position.copy(_o.position); sm.rotation.y = ch.rotation.y; shell.add(sm); seams.push(sm); }
+    }
+    shell.add(new THREE.LineSegments(mergeGeometries(walls), LAB.line(A, 0.6)));
+    const aE = N * 0.42, rE = 8 * Math.exp(aE * 0.24), mx = Math.cos(aE) * rE, mz = Math.sin(aE) * rE;
+    const mouth = new THREE.Mesh(new THREE.TorusGeometry(16, 2.5, 4, 16), glowM(A)); mouth.position.set(mx, 0, mz); mouth.rotation.y = -aE; shell.add(mouth);
+    const pearl = coreGem(7, 0xffe0b0, C); pearl.position.set(mx * 0.92, 0, mz * 0.92); shell.add(pearl);
+    // 目
+    const eye = new THREE.Group(); eye.add(new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), glowM(0xffffff)), wire(new THREE.IcosahedronGeometry(9, 1), A, 0.7));
+    const iris = new THREE.Mesh(new THREE.TorusGeometry(6.5, 1.2, 4, 12), glowM(C)); eye.add(iris);
+    eye.position.set(mx + Math.cos(aE + 1.7) * 26, 10, mz + Math.sin(aE + 1.7) * 26); shell.add(eye);
+    // 触手: 開口部から伸びる節の連なり
+    const tentacles = [], segGeo = LAB.loft([[0, 6, 6], [6, 5, 5], [9, 3.4, 3.4]], 6);
+    for (let k = 0; k < 4; k++) {
+        const root = new THREE.Group(); root.position.set(mx + Math.cos(aE + 1.57) * 12, (k - 1.5) * 5, mz + Math.sin(aE + 1.57) * 12); root.rotation.y = -aE - 1.57 + Math.PI / 2 + (k - 1.5) * 0.2; shell.add(root);
+        let parent = root; const segs = [];
+        for (let i = 0; i < 4; i++) { const s = new THREE.Group(); s.add(LAB.part(segGeo, { mat: LAB.armor(i % 2 ? 0xc89040 : 0x8a6a40, 0x2a1a08), edge: LAB.line(i % 2 ? C : A, 0.8) })); s.position.z = i ? 8 : 0; s.scale.setScalar(1 - i * 0.14); parent.add(s); parent = s; segs.push(s); }
+        const tip = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), glowM(A)); tip.position.z = 10; parent.add(tip);
+        tentacles.push({ segs, k });
+    }
+    shell.position.set(-26, 0, -14); shell.scale.setScalar(1.35); g.add(shell);
+    const r1 = LAB.dashRing(78, 36, 9, 1.6, LAB.glass(A, 0.55), 4), r2 = segRing(90, 20, 5, 4, C, 0.35), r3 = LAB.dashRing(100, 44, 7, 1.2, LAB.glass(C, 0.4), 3);
+    g.add(r1, r2, r3);
+    g.userData.anim = (o, b, t) => {
+        shell.rotation.y = t * 0.9; shell.rotation.z = Math.sin(t * 1.2) * 0.15; pearl.userData.spin(t);
+        tentacles.forEach(({ segs, k }) => segs.forEach((s, i) => { s.rotation.y = Math.sin(t * 3 + k * 0.9 - i * 0.7) * 0.32; s.rotation.x = Math.sin(t * 2.2 + k) * 0.12; }));
+        mouth.scale.setScalar(1 + 0.2 * Math.sin(t * 6)); iris.rotation.x = t * 3;
+        seams.forEach((s, k) => s.scale.setScalar(1 + 0.08 * Math.sin(t * 5 - k)));
+        r1.rotation.y = t * 1.2; r2.rotation.y = -t * 0.9; r3.rotation.y = t * 0.5;
+    };
+    return g;
+};
+
+// 18. HYDRA: 3つ首の機械竜。鱗の装甲板と背びれの結晶が並ぶ胴、尾。首は装甲の椎骨と光る環が交互に連なり、
+//     頭は角・あご・光る目まで作り込む。撃つ番の頭が持ち上がって口を開き、喉が光る（当たり判定の位置に頭を置く）
+NB.HYDRA = () => {
+    const g = new THREE.Group(), C = 0x9cff5a, R = 0xff3355, D = 0x2fd08a;
+    const torso = new THREE.Group(); torso.position.set(0, -6, -44); g.add(torso);
+    torso.add(fuse(LAB.loft([[-40, 20, 14, 0], [-20, 56, 28, 2], [8, 64, 30, 2], [26, 50, 24, 0], [36, 30, 16, -2]], 8, Math.PI / 8), 0x4a8a50, { glass: 0.22, tint: 0.4, cage: 1.08 }));
+    // 鱗の装甲板（背中に2列）
+    const scaleGeo = LAB.loft([[-5, 12, 3], [3, 14, 4], [8, 4, 2]], 4, Math.PI / 4), scl = [[], []], _o = new THREE.Object3D();
+    for (let i = 0; i < 6; i++) [-1, 1].forEach(s => { _o.position.set(s * (10 + (3 - Math.abs(i - 2.5)) * 3), 15, -30 + i * 10); _o.rotation.set(-0.3, 0, s * 0.35); _o.updateMatrix(); scl[i % 2].push(scaleGeo.clone().applyMatrix4(_o.matrix)); });
+    torso.add(fuse(mergeGeometries(scl[0]), D, { cage: false, glass: 0, tint: 0.5 }), fuse(mergeGeometries(scl[1]), C, { cage: false, glass: 0, tint: 0.5 }));
+    // 背びれの結晶（まとめて1つの形に）
+    const spn = []; for (let i = 0; i < 5; i++) { const sg = crystal(3, 9 + (2 - Math.abs(i - 2)) * 3, 4); _o.position.set(0, 22, -26 + i * 11); _o.rotation.set(-0.4, 0, 0); _o.updateMatrix(); spn.push(sg.applyMatrix4(_o.matrix)); }
+    torso.add(fuse(mergeGeometries(spn), C, { cage: false, glass: 0.5 }));
+    const heart = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), glowM(R)); heart.position.set(0, 16, 4); torso.add(heart);
+    // 尾
+    const tail = []; let tp = torso;
+    for (let i = 0; i < 6; i++) { const s = new THREE.Group(); s.add(fuse(LAB.loft([[0, 14 - i * 2, 10 - i * 1.3], [-12, 11 - i * 2, 8 - i * 1.3]], 6), i % 2 ? D : 0x4a8a50, { cage: false, glass: 0, seed: i })); s.position.z = i ? -12 : -40; tp.add(s); tp = s; tail.push(s); }
+    const tailTip = fuse(crystal(4, 12, 4), C, { cage: false, glass: 0.5 }); tailTip.rotation.x = Math.PI / 2; tailTip.position.z = -18; tp.add(tailTip);
+    // 頭
+    const skull = LAB.loft([[-14, 22, 16, 0], [-2, 28, 20, 2], [12, 20, 13, 1], [26, 8, 6, -1]], 6);
+    const jawGeo = LAB.loft([[0, 18, 6, 0], [24, 12, 4, -1], [32, 4, 2, -1]], 4, Math.PI / 4);
+    const hornGeo = crystal(2.6, 11, 4), segGeo = LAB.loft([[-5, 14, 12], [0, 16, 14], [5, 12, 10]], 6);
+    const heads = [-1, 0, 1].map(k => {
+        const head = new THREE.Group();
+        head.add(fuse(skull, k === 0 ? C : D, { glass: 0.3, seed: k + 2, cage: 1.12 }));
+        const jaw = new THREE.Group(); jaw.position.set(0, -5, -6); jaw.add(fuse(jawGeo, 0x4a8a50, { cage: false, glass: 0, tint: 0.5 })); head.add(jaw);
+        [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(3.4, 0), glowM(R)); e.position.set(s * 9, 7, 6); e.scale.set(1, 0.6, 1.6); head.add(e);
+            const h = fuse(hornGeo, 0xd8ffc0, { cage: false, glass: 0.4, tint: 0.3 }); h.position.set(s * 8, 12, -10); h.rotation.set(-1.0, 0, s * 0.35); head.add(h); });
+        const throat = new THREE.Mesh(new THREE.SphereGeometry(5, 10, 8), glowM(0xffe0a0)); throat.position.set(0, -2, 14); head.add(throat);
+        const crest = LAB.dashRing(14, 12, 4, 1, LAB.glass(C, 0.7), 3); crest.position.y = 4; head.add(crest);
+        g.add(head);
+        const segs = [];
+        for (let i = 0; i < 6; i++) { const s = new THREE.Group(); s.add(fuse(segGeo, i % 2 ? D : 0x4a8a50, { cage: false, glass: 0, seed: i + k * 7 })); if (i % 2 === 0) { const r = new THREE.Mesh(new THREE.TorusGeometry(8, 1.2, 4, 10), glowM(C)); s.add(r); } s.scale.setScalar(1 - i * 0.06); g.add(s); segs.push(s); }
+        return { k, head, jaw, throat, crest, segs, lift: 0 };
+    });
+    const _p = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _m = new THREE.Vector3(), _Z = new THREE.Vector3(0, 0, 1);
+    g.userData.anim = (o, b, t) => {
+        const bt = b.t || 0, cur = Math.floor(bt / 30) % 3 - 1, ph = (bt % 30) / 30;
+        heads.forEach(h => {
+            const on = h.k === cur, tg = on ? 1 - ph : 0; h.lift += (tg - h.lift) * 0.25;
+            const hz = ((h.k === 0 ? -20 : 10) + Math.sin(bt * 0.05 + h.k) * 12) / BS;
+            h.head.position.set(h.k * 70, 14 + h.lift * 10, hz);
+            h.head.rotation.set(-0.15 - h.lift * 0.35 + Math.sin(t * 2 + h.k) * 0.08, h.k * -0.25 + Math.sin(t * 1.3 + h.k) * 0.15, 0);
+            h.jaw.rotation.x = 0.1 + h.lift * 0.7; h.throat.scale.setScalar(0.5 + h.lift * 1.3); h.crest.rotation.y = t * 2;
+            // 首: 肩→頭を2次ベジェで結ぶ
+            _a.set(h.k * 18, 8, -30); _b.set(h.k * 58, 30, -26); _m.copy(h.head.position).add(_p.set(0, 0, -16));
+            h.segs.forEach((s, i) => { const u = (i + 1) / 7, iu = 1 - u; s.position.set(iu * iu * _a.x + 2 * iu * u * _b.x + u * u * _m.x, iu * iu * _a.y + 2 * iu * u * _b.y + u * u * _m.y, iu * iu * _a.z + 2 * iu * u * _b.z + u * u * _m.z);
+                const u2 = Math.min(1, u + 0.05), iu2 = 1 - u2; _p.set(iu2 * iu2 * _a.x + 2 * iu2 * u2 * _b.x + u2 * u2 * _m.x, iu2 * iu2 * _a.y + 2 * iu2 * u2 * _b.y + u2 * u2 * _m.y, iu2 * iu2 * _a.z + 2 * iu2 * u2 * _b.z + u2 * u2 * _m.z); s.quaternion.setFromUnitVectors(_Z, _p.sub(s.position).normalize()); });
+        });
+        tail.forEach((s, i) => { s.rotation.y = Math.sin(t * 1.8 - i * 0.6) * 0.18; });
+        heart.rotation.y = t * 2; heart.scale.setScalar(1 + 0.15 * Math.sin(t * 6));
+    };
+    return g;
+};
+
+// 19. GYRO: ジャイロスコープ。3重のジンバル（装甲の節の輪＋内側の光の輪＋軸受けのポッド＋軸）が
+//     ゆっくりと別々に傾き、溜めが終わる瞬間に全部が水平にそろって光る（その瞬間にまとめて撃つ）
+NB.GYRO = () => {
+    const g = new THREE.Group(), cols = [0xff4090, 0x40c0ff, 0xffd040];
+    const core = fuse(new THREE.IcosahedronGeometry(17, 1), 0xffffff, { glass: 0.45, tint: 0.1 }); g.add(core);
+    const gem = coreGem(7, 0xffffff, 0xffd040); g.add(gem);
+    let parent = g; const gim = [];
+    [36, 54, 72].forEach((R, k) => {
+        const piv = new THREE.Group(); parent.add(piv);
+        const ring = new THREE.Group(); piv.add(ring);
+        ring.add(segRing(R, 12 + k * 4, 7, 6, cols[k], 0.12));
+        const inner = LAB.dashRing(R - 7, 24 + k * 8, 6, 1.2, LAB.glass(cols[k], 0.75), 3); ring.add(inner);
+        [-1, 1].forEach(s => { const pod = fuse(crystal(4, 8, 6), cols[k], { cage: false, glass: 0.4 }); pod.rotation.z = Math.PI / 2; pod.position.x = s * (R + 6); piv.add(pod);
+            const lamp = new THREE.Mesh(new THREE.OctahedronGeometry(2.6, 0), glowM(0xffffff)); lamp.position.x = s * (R + 13); piv.add(lamp); });
+        const axle = new THREE.Mesh(new THREE.BoxGeometry((R + 6) * 2, 1, 1), LAB.glass(cols[k], 0.4)); piv.add(axle);
+        gim.push({ piv, ring, inner, k }); parent = piv;
+    });
+    const flash = LAB.dashRing(86, 48, 6, 1.4, LAB.glass(0xffffff, 0.6), 3); g.add(flash);
+    const fm = flash.children[0].material;
+    g.userData.anim = (o, b, t) => {
+        const c = b.charge || 0, w = sstep(0, 0.2, c) * (1 - sstep(0.72, 0.96, c));
+        gim.forEach(({ piv, ring, inner, k }) => {
+            const a = w * 1.1 * Math.sin(t * (0.45 + k * 0.12) + k * 2.1);
+            if (k === 1) piv.rotation.set(0, 0, a); else piv.rotation.set(a, 0, 0);
+            ring.rotation.y = t * (0.35 + k * 0.15) * (k % 2 ? -1 : 1); inner.rotation.y = -t * 0.5;
+        });
+        const lock = 1 - w; core.scale.setScalar(1 + c * 0.3); core.rotation.y = t * 0.8; gem.userData.spin(t);
+        flash.rotation.y = t * 0.3; flash.scale.setScalar(1 + lock * c * 0.15); fm.opacity = 0.15 + lock * c * 0.7;
+    };
+    return g;
+};
+
+// 21. SHARD: 割れた結晶。左右の半身はそれぞれ大きな結晶と小さな結晶の群れ・六角のワイヤーの檻・光る芯。
+//     2つは光の帯（流れる光の粒）でつながり、割れ目の中心にはひびの入った核が残る
+NB.SHARD = () => {
+    const g = new THREE.Group();
+    const half = (c, c2, seed) => {
+        const h = new THREE.Group();
+        h.add(fuse(crystal(14, 36, 5), c, { glass: 0.45, seed }));
+        [[16, -8, 0.7, 0.5], [-14, -4, -0.8, 0.45], [4, 12, 0.3, 0.4], [-6, -14, -0.2, 0.35]].forEach(([x, z, rz, s], i) => { const m = fuse(crystal(10, 30, 5), i % 2 ? c2 : c, { glass: 0.4, cage: false, seed: seed + i }); m.position.set(x, -6, z); m.rotation.set(z * 0.03, 0, rz); m.scale.setScalar(s * 1.6); h.add(m); });
+        const cage = wire(new THREE.CylinderGeometry(26, 26, 46, 6, 2, true), c, 0.35); h.add(cage);
+        const pip = new THREE.Mesh(new THREE.OctahedronGeometry(6, 0), glowM(0xffffff)); h.add(pip);
+        const ring = LAB.dashRing(36, 20, 7, 1.2, LAB.glass(c, 0.7), 3); ring.rotation.x = 0.4; h.add(ring);
+        h.scale.setScalar(0.82); g.add(h); return { h, cage, ring, pip };
+    };
+    const A = half(0x7ad0ff, 0xbfe8ff, 2), B = half(0xff7ab0, 0xffc0dc, 9);
+    const link = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: 8, gapSize: 6, transparent: true, opacity: 0.5 })); g.add(link);
+    const beads = []; for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), glowM(k % 2 ? 0x7ad0ff : 0xff7ab0)); g.add(m); beads.push(m); }
+    const crack = new THREE.Group(); crack.add(wire(new THREE.IcosahedronGeometry(14, 0), 0xffffff, 0.6));
+    const shards = []; for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.TetrahedronGeometry(4, 0), LAB.glass(k % 2 ? 0x7ad0ff : 0xff7ab0, 0.7)); crack.add(s); shards.push(s); }
+    g.add(crack);
+    g.userData.anim = (o, b, t) => {
+        const sp = b.spin ?? t, d = (b.d ?? 90) * FS / BS;
+        A.h.position.set(Math.cos(sp) * d, 0, Math.sin(sp) * d * 0.6 / FS); B.h.position.set(-A.h.position.x, 0, -A.h.position.z);
+        A.h.rotation.set(Math.sin(t * 1.3) * 0.3, t * 0.9, 0); B.h.rotation.set(-Math.sin(t * 1.3) * 0.3, -t * 0.9, 0);
+        [A, B].forEach((x, i) => { x.cage.rotation.y = -t * 0.6 * (i ? -1 : 1); x.ring.rotation.y = t * 2; const f = ((b.t || 0) % 48) / 48, on = i ? f < 0.5 : f >= 0.5; x.pip.scale.setScalar(on ? 1.3 : 0.8); });
+        link.geometry.setAttribute('position', new THREE.Float32BufferAttribute([...A.h.position.toArray(), ...B.h.position.toArray()], 3)); link.computeLineDistances();
+        beads.forEach((m, k) => { const u = (t * 0.6 + k / 6) % 1, v = k % 2 ? u : 1 - u; m.position.lerpVectors(A.h.position, B.h.position, v); m.position.y = Math.sin(v * Math.PI) * 6; });
+        crack.rotation.set(t * 0.5, t * 0.8, 0); shards.forEach((s, k) => { const a = t * 1.5 + k * 1.26; s.position.set(Math.cos(a) * 10, Math.sin(a * 1.3) * 6, Math.sin(a) * 10); s.rotation.set(t * 3, t * 2, 0); });
+    };
+    return g;
+};
+
+
+
+// 28. QUASAR: クエーサー。光る核を3重の降着円盤（装甲の節の輪・ガラスの円盤・光の輪）が回り、
+//     両極からガラスの噴流（らせんのワイヤーと流れる光の粒）が伸びる。磁力線のループが核を包む。溜めると噴流が伸びる
+NB.QUASAR = () => {
+    const g = new THREE.Group(), body = new THREE.Group(), B = 0x80c0ff, V = 0xb080ff;
+    body.rotation.z = 0.55; g.add(body);
+    const core = fuse(new THREE.IcosahedronGeometry(24, 1), 0xb0d0ff, { glass: 0.35, tint: 0.2 }); body.add(core);
+    const gem = coreGem(10, 0xffffff, B); body.add(gem);
+    const disk = new THREE.Group(); body.add(disk);
+    const d1 = segRing(42, 18, 8, 3, 0xffffff), d2 = segRing(58, 26, 7, 2.4, V, 0.22), d3 = LAB.dashRing(74, 48, 7, 1.3, LAB.glass(B, 0.7), 4), d4 = LAB.dashRing(86, 56, 5, 1, LAB.glass(0xffffff, 0.35), 3);
+    d2.rotation.z = 0.06; d3.rotation.x = -0.05; disk.add(d1, d2, d3, d4);
+    const plate = new THREE.Mesh(new THREE.RingGeometry(32, 80, 48, 1), LAB.glass(B, 0.1)); plate.rotation.x = -Math.PI / 2; disk.add(plate);
+    const jetMat = LAB.glass(B, 0.22), jetIn = LAB.glass(0xc8e4ff, 0.22);
+    const jets = [-1, 1].map(s => {
+        const j = new THREE.Group(); j.scale.y = s; body.add(j);
+        const outer = new THREE.Mesh(new THREE.ConeGeometry(14, 90, 10, 1, true), jetMat); outer.position.y = 60; outer.rotation.x = Math.PI; j.add(outer);
+        const inner = new THREE.Mesh(new THREE.ConeGeometry(5, 110, 8, 1, true), jetIn); inner.position.y = 70; inner.rotation.x = Math.PI; j.add(inner);
+        const hp = []; for (let i = 0; i <= 60; i++) { const u = i / 60, a = u * Math.PI * 8, r = 4 + u * 12; hp.push(new THREE.Vector3(Math.cos(a) * r, 16 + u * 90, Math.sin(a) * r)); }
+        const helix = new THREE.Line(new THREE.BufferGeometry().setFromPoints(hp), LAB.line(V, 0.7)); j.add(helix);
+        const beads = []; for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), glowM(0xa8d4ff)); j.add(m); beads.push(m); }
+        const collar = LAB.dashRing(16, 12, 5, 1.2, LAB.glass(0xffffff, 0.8), 3); collar.position.y = 22; j.add(collar);
+        return { j, helix, beads, collar };
+    });
+    const loops = new THREE.Group(); body.add(loops);
+    for (let k = 0; k < 4; k++) { const pts = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * 30 + 30, Math.sin(a) * 52, 0)); } const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(k % 2 ? V : B, 0.4)); l.rotation.y = k * Math.PI / 2; loops.add(l); }
+    g.userData.anim = (o, b, t) => {
+        const c = b.charge || 0;
+        core.scale.setScalar(1 + c * 0.3); core.rotation.y = t; gem.userData.spin(t); gem.scale.setScalar(1 + c * 0.6);
+        d1.rotation.y = t * 1.6; d2.rotation.y = -t * 1.1; d3.rotation.y = t * 0.7; d4.rotation.y = -t * 0.4;
+        jets.forEach(({ j, helix, beads, collar }, i) => { const L = 1 + c * 0.7; j.scale.set(1 + c * 0.4, (i ? 1 : -1) * L, 1 + c * 0.4); helix.rotation.y = t * 3; collar.rotation.y = -t * 2;
+            beads.forEach((m, k) => { const u = (t * (0.5 + c * 1.5) + k / 4) % 1; m.position.set(0, 20 + u * 100, 0); m.scale.setScalar(1.4 - u); }); });
+        loops.rotation.y = t * 0.3; body.rotation.x = Math.sin(t * 0.7) * 0.2;
+    };
+    return g;
+};
+
+
+// 10. MONOLITH: 星の神殿。半透明の八面体の中で核が光り、その8つの面から三角錐の尖塔が伸びて星型八面体になる（尖塔は呼吸するように浮く）。
+//     縁取りと冠石の付いた4枚の黒い石板（光る紋様入り）、足元の紋様の輪、傾いた2重の光輪。攻撃フェーズごとに紋様と輪の色が変わる
+NB.MONOLITH = () => {
+    const g = new THREE.Group(), star = new THREE.Group(), PH = [0xff40a0, 0x40c0ff, 0xffc040];
+    const K = 30;
+    const octGlass = new THREE.Mesh(new THREE.OctahedronGeometry(K, 0), LAB.glass(0xd8e0ff, 0.16)); star.add(octGlass, wire(new THREE.OctahedronGeometry(K, 0), 0xffffff, 0.7));
+    const core = coreGem(11, 0xff2a6a, 0xff9ad0); star.add(core);
+    const points = [];
+    [-1, 1].forEach(sx => [-1, 1].forEach(sy => [-1, 1].forEach(sz => {
+        const a = [sx * K, 0, 0], b2 = [0, sy * K, 0], c = [0, 0, sz * K], tip = [sx * K, sy * K, sz * K];
+        const v = [...tip, ...a, ...b2, ...tip, ...b2, ...c, ...tip, ...c, ...a, ...a, ...c, ...b2];
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); geo.computeVertexNormals();
+        const even = (sx * sy * sz) > 0, p = fuse(geo, even ? 0xd8e0ff : 0x9aa8e0, { glass: 0.4, tint: 0.18, seed: points.length + 2, cage: false });
+        // 尖塔の先の小さな光
+        const lt = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), glowM(even ? 0xffd0e8 : 0xb0c8ff)); lt.position.set(...tip).multiplyScalar(1.06); p.add(lt);
+        star.add(p); points.push({ p, n: new THREE.Vector3(sx, sy, sz).normalize(), k: points.length });
+    })));
+    g.add(star);
+    const phMat = glowM(PH[0]), phGlass = LAB.glass(PH[0], 0.6), phLine = LAB.line(PH[0], 0.4);
+    // 石板: 黒い板＋縁取りのワイヤー＋冠石＋浮いた台座＋両面の紋様
+    const runeParts = [];
+    [[0, 24, 2, 10], [0, 12, 9, 1.6], [-3, 4, 1.6, 6], [3, 4, 1.6, 6], [0, -6, 6, 1.6], [0, -14, 1.6, 8], [-5, -24, 1.6, 4], [5, -24, 1.6, 4], [0, -30, 9, 1.6]].forEach(([x, y, w, h]) => { const r = new THREE.BoxGeometry(w, h, 1); r.translate(x, y, 5.6); runeParts.push(r); });
+    const runeGeo = mergeGeometries(runeParts), slabGeo = bevelBox(22, 72, 9), capGeo = loftY([[0, 22, 9], [4, 22, 9], [10, 0.5, 0.5]], 4, Math.PI / 4), baseGeo = bevelBox(28, 6, 13);
+    const slabs = [];
+    for (let k = 0; k < 4; k++) {
+        const piv = new THREE.Group(), s = new THREE.Group();
+        s.add(fuse(slabGeo, 0x8090c0, { tint: 0.04, glass: 0.1, seed: k + 1, cage: false }));
+        s.add(wire(new THREE.BoxGeometry(25, 75, 12), 0xb8c4f0, 0.35));
+        const cap = fuse(capGeo, 0xd8e0ff, { cage: false, glass: 0.3, tint: 0.2 }); cap.position.y = 36; s.add(cap);
+        const base = fuse(baseGeo, 0x8090c0, { cage: false, glass: 0, tint: 0.05 }); base.position.y = -44; s.add(base);
+        const rune = new THREE.Mesh(runeGeo, phMat); s.add(rune); const back = rune.clone(); back.rotation.y = Math.PI; s.add(back);
+        s.position.z = 70; s.rotation.x = -0.45; piv.add(s); piv.rotation.y = k * Math.PI / 2 + Math.PI / 4; g.add(piv); slabs.push({ piv, s, base, cap, k });
+    }
+    // 足元の紋様の輪
+    const floor = new THREE.Group(); floor.position.y = -34; g.add(floor);
+    floor.add(segRing(58, 24, 5, 2, 0x8090c0, 0.25));
+    const ticks = []; for (let k = 0; k < 24; k++) { const tk = new THREE.BoxGeometry(1.2, 0.6, k % 3 ? 4 : 8); const a = k / 24 * Math.PI * 2; tk.rotateY(-a); tk.translate(Math.cos(a) * 50, 0, Math.sin(a) * 50); ticks.push(tk); }
+    floor.add(new THREE.Mesh(mergeGeometries(ticks), phMat));
+    const halo1 = LAB.dashRing(64, 40, 9, 1.6, phGlass, 4), halo2 = LAB.dashRing(54, 30, 7, 1.3, LAB.glass(0xffffff, 0.4), 3);
+    const tiltA = new THREE.Group(), tiltB = new THREE.Group(); tiltA.add(halo1); tiltB.add(halo2); tiltA.rotation.x = 0.5; tiltB.rotation.z = 0.7; g.add(tiltA, tiltB);
+    const cage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(90, 0)), phLine); g.add(cage);
+    const frags = []; const fGeo = new THREE.TetrahedronGeometry(4, 0);
+    for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(fGeo, k % 2 ? LAB.armor(0x8090c0) : phGlass); f.add(new THREE.LineSegments(new THREE.EdgesGeometry(fGeo), LAB.line(0xffffff, 0.6))); g.add(f); frags.push(f); }
+    const phC = new THREE.Color(PH[0]);
+    g.userData.anim = (o, b, t) => {
+        star.rotation.set(t * 0.3, t * 0.45, 0); core.userData.spin(t);
+        points.forEach(({ p, n, k }) => { const out = 2 + 4 * Math.max(0, Math.sin(t * 2 - k * 0.8)); p.position.copy(n).multiplyScalar(out); });
+        phC.lerp(_c(PH[b.phase || 0]), 0.08); phMat.color.copy(phC); phGlass.color.copy(phC); phLine.color.copy(phC);
+        slabs.forEach(({ piv, s, base, cap, k }) => { piv.rotation.y = k * Math.PI / 2 + Math.PI / 4 - t * 0.35; s.position.y = Math.sin(t * 1.5 + k * 1.6) * 6; base.position.y = -44 - 3 * Math.sin(t * 1.5 + k * 1.6 + 1); cap.position.y = 36 + 2 + 2 * Math.sin(t * 2 + k); });
+        floor.rotation.y = t * 0.2; halo1.rotation.y = -t * 0.8; halo2.rotation.y = t * 1.1; cage.rotation.set(-t * 0.15, t * 0.25, 0);
+        frags.forEach((f, k) => { const a = t * 1.0 + k * Math.PI / 4; f.position.set(Math.cos(a) * 96, Math.sin(a * 2) * 20, Math.sin(a) * 96); f.rotation.set(t * 2, t * 1.5, 0); });
+    };
+    return g;
+};
+
+// 22. WAVE: 波のエイ。平たい胴から左右に、肋骨の装甲板と半透明の膜でできた翼が伸び、翼全体が波のようにうねる。
+//     翼端の発射口から波打つ弾を撃つ。光は小さな灯りだけにして、まぶしさを抑えた配色
+NB.WAVE = () => {
+    const g = new THREE.Group(), C = 0x3fb8d8, T = 0x38c8a8, D = 0x2a6a80;
+    const body = fuse(LAB.loft([[-40, 10, 6, 0], [-22, 30, 11, 1], [6, 38, 13, 2], [28, 26, 10, 1], [44, 8, 4, -1]], 8, Math.PI / 8), D, { glass: 0.18, tint: 0.3, cage: 1.08, glassOp: 0.18 }); g.add(body);
+    const ridge = []; for (let i = 0; i < 5; i++) { const cg = crystal(2, 4 + (2 - Math.abs(i - 2)) * 1.5, 4); cg.rotateX(-0.5); cg.translate(0, 9, -24 + i * 10); ridge.push(cg); }
+    g.add(fuse(mergeGeometries(ridge), C, { cage: false, glass: 0.2, glassOp: 0.2 }));
+    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), glowM(0x7fe0f0)); e.position.set(s * 8, 6, 34); e.scale.set(1, 0.6, 1.5); g.add(e); });
+    // 尾
+    const tail = []; let tp = g;
+    for (let i = 0; i < 5; i++) { const s = new THREE.Group(); s.add(fuse(LAB.loft([[0, 6 - i, 4 - i * 0.5], [-10, 5 - i, 3.4 - i * 0.5]], 6), i % 2 ? C : D, { cage: false, glass: 0 })); s.position.z = i ? -10 : -40; tp.add(s); tp = s; tail.push(s); }
+    // 翼: 肋骨（装甲）と、肋骨の間の膜
+    const NR = 7, ribGeo = [], wings = [];
+    for (let i = 0; i < NR; i++) { const ch = 36 - i * 3.6; ribGeo.push(LAB.loft([[-ch / 2, 3, 2.4], [-ch / 6, 4.4, 3], [ch / 3, 3.4, 2.4], [ch / 2, 1.2, 1.2]], 6)); }
+    [-1, 1].forEach(s => {
+        const ribs = ribGeo.map((geo, i) => { const r = fuse(geo, i % 2 ? C : T, { cage: false, glass: i % 2 ? 0 : 0.25, glassOp: 0.2, seed: i }); g.add(r); return r; });
+        const mem = new THREE.BufferGeometry(), pos = new Float32Array((NR - 1) * 6 * 3); mem.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const memMesh = new THREE.Mesh(mem, LAB.glass(C, 0.13)); g.add(memMesh);
+        const lead = polyLine(NR, 0x9fe8f0, 0.55), trail = polyLine(NR, T, 0.35); g.add(lead, trail);
+        const pod = new THREE.Group(); g.add(pod);
+        pod.add(fuse(LAB.loft([[-14, 6, 6], [-4, 13, 10], [8, 12, 9], [16, 7, 6]], 8, Math.PI / 8), D, { glass: 0.2, glassOp: 0.2, cage: 1.12, tint: 0.3 }));
+        const muzzle = new THREE.Mesh(new THREE.TorusGeometry(4.2, 1, 4, 12), LAB.glass(T, 0.7)); muzzle.position.z = 16; pod.add(muzzle);
+        const lamp = new THREE.Mesh(new THREE.OctahedronGeometry(1.8, 0), glowM(0x9ff0e0)); lamp.position.z = 17; pod.add(lamp);
+        const pr = LAB.dashRing(12, 12, 4, 0.8, LAB.glass(C, 0.45), 3); pr.rotation.x = Math.PI / 2; pod.add(pr);
+        wings.push({ s, ribs, mem, memMesh, lead, trail, pod, lamp, pr });
+    });
+    const _l = Array.from({ length: NR }, () => new THREE.Vector3()), _t = Array.from({ length: NR }, () => new THREE.Vector3());
+    g.userData.anim = (o, b, t) => {
+        const bt = b.t || 0, ph = bt * 0.06;
+        wings.forEach(({ s, ribs, mem, lead, trail, pod, lamp, pr }) => {
+            const P = mem.attributes.position.array; let q = 0;
+            ribs.forEach((r, i) => { const u = (i + 1) / NR, x = s * (14 + i * 7.6), y = Math.sin(ph * 0.8 + t * 1.5 - i * 0.7) * 9 * u, sl = Math.cos(ph * 0.8 + t * 1.5 - i * 0.7) * 0.5 * u, ch = 36 - i * 3.6;
+                r.position.set(x, y, -i * 1.2); r.rotation.set(0, 0, s * -sl);
+                _l[i].set(x, y + 2, ch / 2 - i * 1.2); _t[i].set(x, y + 1, -ch / 2 - i * 1.2); });
+            for (let i = 0; i < NR - 1; i++) { const a = _l[i], b2 = _t[i], c = _l[i + 1], d = _t[i + 1]; [a, b2, c, c, b2, d].forEach(v => { P[q++] = v.x; P[q++] = v.y - 1; P[q++] = v.z; }); }
+            mem.attributes.position.needsUpdate = true; mem.computeBoundingSphere();
+            setLine(lead, _l); setLine(trail, _t);
+            pod.position.set(s * 62, _l[NR - 1].y, 4); pod.rotation.z = s * Math.sin(ph) * 0.2; pr.rotation.z = t * 1.5 * s;
+            lamp.scale.setScalar(bt % 5 < 2 ? 1.4 : 1);
+        });
+        tail.forEach((s, i) => { s.rotation.y = Math.sin(t * 2.2 - i * 0.7) * 0.22; });
+        body.position.y = Math.sin(t * 1.5 + 1) * 2;
+    };
+    return g;
+};
+
+// 27. CIPHER: 神の暗号。光る聖なる結晶の核を、メタトロンキューブ（13の円と、それを結ぶ光の線）と金の光輪が包む。
+//     左右に羽根を重ねた大きな翼、背後に放射状の後光。まわりを4つの天使の灯火（小さな翼と光輪の付いた結晶）が回り、灯火から十字に撃つ
+NB.CIPHER = () => {
+    const g = new THREE.Group(), GOLD = 0xffd27a, WH = 0xfff4dc, SKY = 0xbfe8ff;
+    // 後光（放射状の細い光）
+    const rays = []; for (let k = 0; k < 24; k++) { const L = k % 2 ? 46 : 64, r = new THREE.PlaneGeometry(k % 2 ? 1.6 : 2.6, L); r.rotateX(-Math.PI / 2); r.translate(0, 0, 20 + L / 2); r.rotateY(k / 24 * Math.PI * 2); rays.push(r); }
+    const rayM = new THREE.Mesh(mergeGeometries(rays), LAB.glass(GOLD, 0.1)); rayM.position.y = -14; g.add(rayM);
+    // メタトロンキューブ
+    const met = new THREE.Group(); met.position.y = -8; g.add(met);
+    const P = [new THREE.Vector3()]; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6; P.push(new THREE.Vector3(Math.cos(a) * 21, 0, Math.sin(a) * 21)); P.push(new THREE.Vector3(Math.cos(a) * 42, 0, Math.sin(a) * 42)); }
+    const lp = []; for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) lp.push(P[i], P[j]);
+    met.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), LAB.line(GOLD, 0.28)));
+    const cp = []; P.forEach(c => { for (let i = 0; i < 24; i++) { const a0 = i / 24 * Math.PI * 2, a1 = (i + 1) / 24 * Math.PI * 2; cp.push(new THREE.Vector3(c.x + Math.cos(a0) * 10.5, 0, c.z + Math.sin(a0) * 10.5), new THREE.Vector3(c.x + Math.cos(a1) * 10.5, 0, c.z + Math.sin(a1) * 10.5)); } });
+    met.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(cp), LAB.line(WH, 0.45)));
+    const studs = P.map(c => { const s = new THREE.OctahedronGeometry(1.8, 0); s.translate(c.x, 0, c.z); return s; });
+    met.add(new THREE.Mesh(mergeGeometries(studs), glowM(GOLD)));
+    // 金の光輪（水平の輪と、背後に立つ輪）
+    const ringH = segRing(50, 24, 5, 3, GOLD, 0.15); ringH.position.y = -6; g.add(ringH);
+    const halo = new THREE.Group(); halo.position.set(0, 18, -24); halo.rotation.x = -1.1; g.add(halo);
+    halo.add(segRing(30, 18, 4, 3, GOLD, 0.2)); const haloDash = LAB.dashRing(37, 30, 6, 1, LAB.glass(WH, 0.6), 3); halo.add(haloDash);
+    // 聖なる結晶の核
+    const core = new THREE.Group(); core.position.y = 10; g.add(core);
+    core.add(fuse(crystal(10, 26, 6), WH, { glass: 0.45, glassOp: 0.3, tint: 0.15, cage: 1.15 }));
+    const inner = fuse(crystal(5, 34, 4), GOLD, { glass: 0.3, cage: false, tint: 0.4 }); inner.rotation.y = Math.PI / 4; core.add(inner);
+    const gem = coreGem(5, 0xfff0c8, GOLD); core.add(gem);
+    const gy = new THREE.Group(); gy.rotation.z = 0.5; core.add(gy); gy.add(LAB.dashRing(20, 18, 5, 0.9, LAB.glass(SKY, 0.6), 3));
+    // 大きな翼（羽根を扇状に重ねる）
+    const wings = [-1, 1].map(s => {
+        const root = new THREE.Group(); root.position.set(s * 14, 8, -12); root.rotation.set(-0.5, s * 0.25, 0); g.add(root);
+        const fs = [];
+        for (let i = 0; i < 6; i++) { const len = 62 - i * 6, f = fuse(bladeGeo(len, 12 - i * 0.8, 3), i % 2 ? WH : 0xffe8b0, { cage: i === 0 ? 1.08 : false, glass: 0.3, glassOp: 0.22, tint: 0.3, seed: i + (s > 0 ? 0 : 6) }); const piv = new THREE.Group(); piv.rotation.y = s * (Math.PI / 2 + 0.25 - i * 0.24); piv.add(f); root.add(piv); fs.push(piv); }
+        return { root, fs, s };
+    });
+    // 天使の灯火
+    const rotor = new THREE.Group(); g.add(rotor);
+    const lanterns = [];
+    const lw = []; [-1, 1].forEach(s => { const w = bladeGeo(14, 6, 1.6); w.rotateY(s * (Math.PI / 2 - 0.5)); w.translate(s * 2, 2, -2); lw.push(w); });
+    const lwGeo = mergeGeometries(lw);
+    for (let k = 0; k < 4; k++) {
+        const a = k * Math.PI / 2, n = new THREE.Group(); n.position.set(Math.cos(a) * 62, 4, Math.sin(a) * 62); rotor.add(n);
+        n.add(fuse(crystal(4, 9, 4), WH, { cage: false, glass: 0.4, glassOp: 0.3, tint: 0.2 }));
+        const wg = fuse(lwGeo, GOLD, { cage: false, glass: 0, tint: 0.4 }); n.add(wg);
+        const hr = LAB.dashRing(7, 10, 3, 0.6, LAB.glass(GOLD, 0.8), 3); hr.position.y = 13; n.add(hr);
+        const lamp = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), glowM(0xfff0c8)); n.add(lamp);
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 40), LAB.glass(GOLD, 0.3)); beam.position.set(-Math.cos(a) * 40, 2, -Math.sin(a) * 40); beam.rotation.y = Math.PI / 2 - a; rotor.add(beam);
+        lanterns.push({ n, wg, hr, lamp });
+    }
+    g.userData.anim = (o, b, t) => {
+        const sp = b.spin ?? t; rotor.rotation.y = -sp;
+        met.rotation.y = t * 0.15; rayM.rotation.y = -t * 0.06; ringH.rotation.y = -t * 0.3; haloDash.rotation.y = t * 0.6;
+        core.position.y = 10 + Math.sin(t * 1.4) * 3; inner.rotation.y = Math.PI / 4 + t * 0.8; gem.userData.spin(t); gy.rotation.y = t;
+        wings.forEach(({ fs, s }) => fs.forEach((f, i) => { f.rotation.z = s * (0.12 + 0.1 * Math.sin(t * 1.3 - i * 0.25)); f.rotation.x = -0.15 - i * 0.03; }));
+        const pulse = ((b.t || 0) % 26) / 26;
+        lanterns.forEach(({ n, wg, hr, lamp }, k) => { wg.scale.x = 1 + 0.15 * Math.sin(t * 6 + k); hr.rotation.y = t * 2; lamp.scale.setScalar(1 + (1 - pulse) * 0.8); n.position.y = 4 + Math.sin(t * 2 + k) * 3; });
+    };
+    return g;
+};;
+
+// 30. ZENITH: 最終形態の人工生命体。半透明の膜に包まれた脈打つ心臓核を、骨の肋骨と光る血管が抱く。
+//     背骨と6本の触手が波打ち、正面の大きな目が自機を追う。3つの細胞（衛星）が攻撃フェーズを表し、今のフェーズの細胞がふくらむ
+NB.ZENITH = () => {
+    const g = new THREE.Group(), PH = [0xffd040, 0xff4090, 0x40e0ff], BONE = 0xd8d0c0, FL = 0x9a6cff;
+    const phGlow = glowM(PH[0]), phLine = LAB.line(PH[0], 0.5), phGlass = LAB.glass(PH[0], 0.5);
+    // 心臓と膜
+    const heart = new THREE.Group(); g.add(heart);
+    const hm = new THREE.Mesh(new THREE.IcosahedronGeometry(13, 1), new THREE.MeshBasicMaterial({ color: 0xc04a78, transparent: true, opacity: 0.6 })); heart.add(hm);
+    const hn = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), phGlow); heart.add(hn);
+    const hw = wire(new THREE.IcosahedronGeometry(17, 1), 0xffc0d0, 0.5); heart.add(hw);
+    const memb = new THREE.Group(); g.add(memb);
+    memb.add(new THREE.Mesh(new THREE.SphereGeometry(32, 18, 12), LAB.glass(FL, 0.1)), wire(new THREE.IcosahedronGeometry(33, 2), FL, 0.16));
+    // 肋骨（両側5本ずつ、1つの形にまとめる）と血管
+    const ribs = [], veins = [];
+    for (let i = 0; i < 5; i++) [-1, 1].forEach(s => {
+        const z = -24 + i * 12, R = 30 + Math.sin((i + 0.5) / 5 * Math.PI) * 14, pts = [];
+        for (let j = 0; j <= 10; j++) { const a = 0.15 + j / 10 * 2.3; pts.push(new THREE.Vector3(s * Math.sin(a) * R, Math.cos(a) * R * 0.8 + 4, z + Math.sin(a) * 4)); }
+        const cv = new THREE.CatmullRomCurve3(pts); ribs.push(new THREE.TubeGeometry(cv, 14, 2.4, 5, false));
+        const vp = cv.getPoints(20).map(p => p.clone().multiplyScalar(1.07)); for (let j = 0; j < vp.length - 1; j++) veins.push(vp[j], vp[j + 1]);
+    });
+    const cage = new THREE.Group(); g.add(cage);
+    cage.add(fuse(mergeGeometries(ribs), BONE, { cage: false, glass: 0.15, glassOp: 0.2, tint: 0.5 }));
+    const veinL = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(veins), phLine); cage.add(veinL);
+    // 胸骨
+    cage.add(fuse(LAB.loft([[-30, 5, 4, 32], [0, 7, 5, 34], [26, 5, 4, 32]], 6), BONE, { cage: false, glass: 0, tint: 0.5 }));
+    // 背骨（後ろへ伸びて波打つ）
+    const spine = [], vGeo = mergeGeometries([LAB.loft([[-4, 12, 9], [0, 14, 11], [4, 11, 8]], 6), (() => { const c = crystal(1.8, 6, 4); c.translate(0, 9, 0); return c; })()].map(x => x.index ? x.toNonIndexed() : x));
+    for (let i = 0; i < 8; i++) { const v = fuse(vGeo, i % 2 ? BONE : 0xb0a8c8, { cage: false, glass: 0, tint: 0.5 }); v.scale.setScalar(1 - i * 0.07); g.add(v); spine.push(v); }
+    // 触手
+    const tendrils = [], segGeo = LAB.loft([[0, 6, 6], [6, 5, 5], [10, 3.6, 3.6]], 6);
+    const segMat = LAB.armor(0xb8a8d0, 0x1a1028), segEdge = LAB.line(FL, 0.7);
+    [0.75, 1.55, 2.3, -0.75, -1.55, -2.3].forEach((a0, k) => {
+        const root = new THREE.Group(); root.position.set(Math.sin(a0) * 34, 0, Math.cos(a0) * 30 - 4); root.rotation.y = a0; root.scale.setScalar(1.45); g.add(root);
+        let parent = root; const segs = [];
+        for (let i = 0; i < 5; i++) { const s = new THREE.Group(); s.add(new THREE.Mesh(segGeo, segMat), new THREE.LineSegments(new THREE.EdgesGeometry(segGeo, 14), segEdge)); s.position.z = i ? 9.5 : 0; s.scale.setScalar(1 - i * 0.1); parent.add(s); parent = s; segs.push(s); }
+        const tip = new THREE.Mesh(new THREE.OctahedronGeometry(2.6, 0), phGlow); tip.position.z = 11; tip.scale.z = 1.8; parent.add(tip);
+        tendrils.push({ segs, k });
+    });
+    // 目
+    const eye = new THREE.Group(); eye.position.set(0, 14, 42); eye.scale.setScalar(1.25); g.add(eye);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(11, 16, 12), LAB.armor(0xe8e4f4, 0x201828)); eye.add(ball);
+    const iris = new THREE.Mesh(new THREE.TorusGeometry(5.4, 1.6, 6, 18), phGlow); iris.position.z = 9.6; eye.add(iris);
+    const pupil = new THREE.Mesh(new THREE.CircleGeometry(4, 16), new THREE.MeshBasicMaterial({ color: 0x05030d })); pupil.position.z = 10.6; eye.add(pupil);
+    const lids = [1, -1].map(s => { const l = new THREE.Mesh(new THREE.SphereGeometry(12.2, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), LAB.armor(0x8a80a8, 0x100c18)); l.rotation.x = s > 0 ? -0.4 : Math.PI + 0.4; eye.add(l); return { l, s }; });
+    eye.add(LAB.wireOnly(new THREE.IcosahedronGeometry(15, 1), LAB.line(FL, 0.35)));
+    // 細胞（衛星）
+    const cells = PH.map((c, k) => { const s = new THREE.Group(); s.add(new THREE.Mesh(new THREE.SphereGeometry(9, 12, 8), LAB.glass(c, 0.18)), wire(new THREE.IcosahedronGeometry(9.5, 1), c, 0.4)); const nu = new THREE.Mesh(new THREE.IcosahedronGeometry(3.6, 0), glowM(c)); s.add(nu); g.add(s); return { s, nu, k }; });
+    const halo = LAB.dashRing(76, 44, 7, 1.2, phGlass, 4); const ht = new THREE.Group(); ht.rotation.x = 0.35; ht.add(halo); g.add(ht);
+    const phC = new THREE.Color(PH[0]);
+    g.userData.anim = (o, b, t) => {
+        const ph = b.phase || 0;
+        phC.lerp(_c(PH[ph]), 0.08); phGlow.color.copy(phC); phLine.color.copy(phC); phGlass.color.copy(phC);
+        const beat = Math.pow(Math.max(0, Math.sin(t * 2.6)), 8) + 0.6 * Math.pow(Math.max(0, Math.sin(t * 2.6 - 0.5)), 8);
+        heart.scale.setScalar(1 + beat * 0.25); hm.rotation.set(t * 0.4, t * 0.6, 0); hw.rotation.set(-t * 0.3, t * 0.2, 0);
+        memb.scale.setScalar(1 + beat * 0.05 + Math.sin(t * 1.2) * 0.02); phLine.opacity = 0.3 + beat * 0.6;
+        cage.scale.set(1 + Math.sin(t * 1.2) * 0.04, 1 + Math.sin(t * 1.2) * 0.03, 1);
+        spine.forEach((v, i) => { v.position.set(Math.sin(t * 2 - i * 0.6) * i * 1.4, 4 - i * 0.6, -34 - i * 9.5); v.rotation.y = Math.cos(t * 2 - i * 0.6) * 0.3; });
+        tendrils.forEach(({ segs, k }) => segs.forEach((s, i) => { s.rotation.y = Math.sin(t * 2.2 + k * 1.1 - i * 0.7) * 0.3; s.rotation.x = Math.sin(t * 1.6 + k - i * 0.5) * 0.15; }));
+        const px = typeof player !== 'undefined' ? player.x - (b.x ?? 0) : 0, py = typeof player !== 'undefined' ? player.y - (b.y ?? 0) : 300;
+        const ya = Math.max(-0.6, Math.min(0.6, Math.atan2(px, Math.max(60, py)))); eye.rotation.y += (ya - eye.rotation.y) * 0.1; eye.rotation.x = 0.35;
+        const blink = (t % 4.3) < 0.15 ? 1 : 0; lids.forEach(({ l, s }) => { l.rotation.x = s > 0 ? -0.4 + blink * 0.5 : Math.PI + 0.4 - blink * 0.5; });
+        cells.forEach(({ s, nu, k }) => { const a = t * 0.6 + k * Math.PI * 2 / 3, on = k === ph; s.position.set(Math.cos(a) * 92, 6 + Math.sin(t * 2 + k) * 5, Math.sin(a) * 92); s.scale.setScalar((on ? 1.45 : 0.9) * (1 + beat * 0.08)); nu.rotation.set(t, t * 1.3, 0); });
+        halo.rotation.y = t * 0.4;
     };
     return g;
 };
@@ -6581,7 +6979,7 @@ const BOSS_BUILDERS = [
     // MANTA（新造形）
     () => labBoss('MANTA', 0.36),
     // HYDRA（新造形）
-    () => labBoss('HYDRA', 0.5),
+    () => NB.HYDRA(),
     // GYRO（新造形）
     () => NB.GYRO(),
     // BEACON（新造形）
@@ -7200,8 +7598,9 @@ function render3D() {
         glazeRing.position.set(px, 11.5, pz); glazeRing.scale.setScalar(glazeR);
         glazeFillMat.color.copy(themeCur.player);
         glazeRingMat.color.copy(themeCur.player);
-        glazeFillMat.opacity = efx ? 0.025 + visualBeat * 0.04 : 0.0;
-        glazeRingMat.opacity = efx ? 0.16 + visualBeat * 0.22 : 0.3;
+        slowVis += ((input.slow && !frozen ? 1 : 0) - slowVis) * Math.min(1, dt * 12); // スロー中はグレイズ円の縁を少し濃く
+        glazeFillMat.opacity = efx ? 0.025 + visualBeat * 0.04 + slowVis * 0.02 : 0.0;
+        glazeRingMat.opacity = (efx ? 0.16 + visualBeat * 0.22 : 0.3) + slowVis * 0.24;
 
         // エンジン
         if (playerVisible) {
