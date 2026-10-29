@@ -44,6 +44,7 @@ function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   $$('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   $$('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); e.setAttribute('aria-label', e.title); });
+  requestAnimationFrame(() => fitLabels());
   $('#langSel').value = LANG; document.title = t('meta.title');
   $('#brandTitle').textContent = t('title'); $('#brandSub').textContent = LANG === 'en' ? '' : 'Poker';
 }
@@ -485,7 +486,7 @@ function renderSide() {
         (c.toCall ? `<div class="kv"><span>${esc(t('hud.odds'))}</span><b>${c.toCall} : ${c.pot} → ${pct(c.need)}</b></div><div class="kv"><span>${esc(t('hud.ev'))}</span><b class="${c.ev >= 0 ? 'pos' : 'neg'}">${c.ev >= 0 ? '+' : ''}${c.ev.toFixed(1)}</b></div>` : `<div class="kv"><span>${esc(t('hud.fair'))}</span><b>${pct(c.fair)}</b></div>`) +
         (c.outs ? `<div class="kv"><span>${esc(t('hud.outs'))}</span><b>${c.outs.length}${c.outs.length ? ` <em>(≈${pct(Math.min(1, c.outs.length * (T.board.length === 3 ? 4 : 2) / 100))})</em>` : ''}</b></div>` : '');
     }
-    h += `<div class="card"><h3>${esc(t('side.eq'))}</h3>${body}</div>`;
+    h += `<div class="card" data-pt="eq"><h3>${esc(t('side.eq'))}</h3>${body}</div>`;
   }
   // coach
   if (set.coach) {
@@ -496,7 +497,7 @@ function renderSide() {
     else body = '';
     if (last) body += `<div class="verdict g${last.grade}"><b>${esc(t('grade.' + last.grade))}</b><span>${esc(t('verdict', { a: t('rec.' + last.a), rec: t('rec.' + last.rec) }))}</span></div>`;
     if (!body) body = `<p class="muted">${esc(t('coach.idle'))}</p>`;
-    h += `<div class="card coach-card"><h3>${esc(t('side.coach'))}</h3>${body}</div>`;
+    h += `<div class="card coach-card" data-pt="coach"><h3>${esc(t('side.coach'))}</h3>${body}</div>`;
   }
   // this hand (the "棋譜")
   const streets = V.streets;
@@ -507,10 +508,10 @@ function renderSide() {
     const nm = T.seats[e.s].name, lab = e.a === 'sb' ? t('act.sb') + ' ' + e.amt : e.a === 'bb' ? t('act.bb') + ' ' + e.amt : e.a === 'bring' ? t('act.bring') + ' ' + e.amt : e.a === 'draw' ? t('act.drawN', { n: e.n }) : actLabel(e);
     lines.push(`<div class="lg${e.s === HERO ? ' me' : ''}"><b>${esc(nm)}</b><span>${esc(lab)}</span></div>`);
   });
-  h += `<div class="card log-card"><h3>${esc(t('side.log'))}<span class="h3s">#${T.hand}</span></h3><div class="pk-log" id="pkLog">${lines.join('')}</div></div>`;
+  h += `<div class="card log-card" data-pt="log"><h3>${esc(t('side.log'))}<span class="h3s">#${T.hand}</span></h3><div class="pk-log" id="pkLog">${lines.join('')}</div></div>`;
   // session
   const S = T.session, bb100 = S.hands >= 10 ? ((S.net / T.bb) / S.hands * 100).toFixed(1) : '—';
-  h += `<div class="card"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))} · ${esc(t('lim.' + T.limit))}</span></h3><div class="srow"><div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net >= 0 ? 'pos' : 'neg'}">${S.net >= 0 ? '+' : ''}${S.net}</b></div><div><small>bb/100</small><b>${bb100}</b></div><div><small>${esc(t('ss.stack'))}</small><b>${T.seats[HERO].stack}</b></div></div>` +
+  h += `<div class="card" data-pt="sess"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))} · ${esc(t('lim.' + T.limit))}</span></h3><div class="srow"><div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net >= 0 ? 'pos' : 'neg'}">${S.net >= 0 ? '+' : ''}${S.net}</b></div><div><small>bb/100</small><b>${bb100}</b></div><div><small>${esc(t('ss.stack'))}</small><b>${T.seats[HERO].stack}</b></div></div>` +
     `<div class="deal-row"><button class="sbtn" id="sHist">${esc(t('btn.history'))}</button><button class="sbtn" id="sStats">${esc(t('btn.stats'))}</button><button class="sbtn" id="sTools">${esc(t('btn.tools'))}</button></div></div>`;
   patch($('#side'), h);
   const lg = $('#pkLog'); if (lg) lg.scrollTop = lg.scrollHeight;
@@ -518,7 +519,27 @@ function renderSide() {
   const tm = $('#tipsMore'); if (tm) tm.onclick = () => { set.tipsOpen = set.tipsOpen ? 0 : 1; save(); renderSide(); };
   $('#sStats').onclick = openStats;
   $('#sTools').onclick = () => window.PokerTools && PokerTools.open();
+  mTabs();
 }
+/* phones: the side cards become tabs (bar at the bottom of the screen) */
+function mTabs() {
+  const side = $('#side'), have = new Set($$('#side [data-pt]').map(e => e.dataset.pt));
+  let cur = set.mTab && have.has(set.mTab) ? set.mTab : have.has('coach') ? 'coach' : have.has('eq') ? 'eq' : 'log';
+  side.dataset.pt = cur;
+  $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', b.dataset.pt === cur); });
+}
+$$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
+  const same = set.mTab === b.dataset.pt && $('#side').dataset.pt === b.dataset.pt;
+  set.mTab = b.dataset.pt; save(); mTabs();
+  const r = $('#side').getBoundingClientRect(), bar = $('#mTabs').getBoundingClientRect().top;
+  if (same && r.top < 60) window.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the table
+  else if (r.top > innerHeight * .45 || r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 8, behavior: 'smooth' });
+});
+/* phones: make the header labels fit (no "…") */
+function fitLabels() {
+  $$('.controls .btn span').forEach(sp => { sp.style.fontSize = ''; if (!sp.offsetParent) return; let f = parseFloat(getComputedStyle(sp).fontSize); while (sp.scrollWidth > sp.clientWidth + .5 && f > 8) { f -= .5; sp.style.fontSize = f + 'px'; } });
+}
+addEventListener('resize', () => requestAnimationFrame(fitLabels));
 function boardStr(st) {
   const V = P.VARIANTS[T.v]; let n = 0; for (let k = 0; k < st; k++) n += V.board[k]; const cs = T.board.slice(n - V.board[st - 1], n);
   return cs.map(c => `${P.vch(P.V(c))}${'♠♥♦♣'[P.SUIT(c)]}`).join(' ');
@@ -532,6 +553,12 @@ function renderNums() {
   const stat = (lab, val) => `<span class="ss"><small>${esc(lab)}</small><b>${val}</b></span>`;
   const stats = stat(t('pot'), P.potTotal(T)) + stat(t('ss.hand'), '#' + T.hand);
   $('#infobar').innerHTML = game + stats;
+  // phones: the game name in the header, the session numbers on the felt
+  const mg = `<b>${esc(vName(T.v))}</b><em>${esc(t('lim.' + T.limit))} · ${stakes}</em>`; if ($('#mGame').innerHTML !== mg) $('#mGame').innerHTML = mg;
+  const S = T.session, hs = (lab, val, cls) => `<span><small>${esc(lab)}</small><b${cls ? ` class="${cls}"` : ''}>${val}</b></span>`;
+  const bb100 = S.hands >= 10 ? ((S.net / T.bb) / S.hands * 100).toFixed(1) : '—';
+  const hv = P.VARIANTS[T.v], mhPos = hv.stud || hv.draw || hv.hole >= 4 ? (hv.board ? 'mid' : 'center') : 'corner'; if ($('#mHud').dataset.pos !== mhPos) $('#mHud').dataset.pos = mhPos;
+  patch($('#mHud'), `<div class="mh l">${hs(t('ss.hands'), S.hands) + hs(t('ss.net'), (S.net >= 0 ? '+' : '') + S.net, S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : '')}</div><div class="mh r">${hs(t('ss.stack'), T.seats[HERO].stack) + hs('bb/100', bb100)}</div>`);
   if (HB && HB.on) HB.setInfo(game + `<span class="sdiv"></span>` + stats);
   void V;
 }
@@ -717,5 +744,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
 
-window.PokerApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
+window.PokerApp = { showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
 })();
