@@ -134,13 +134,14 @@ class Table {
     pos.forEach((p, id) => {
       const e = this.cards.get(id);
       if (opt.deal && anim) { e.style.transition = ''; e.style.transitionDelay = (k++ * (opt.step || 22)) + 'ms'; e.querySelector('.in').style.transitionDelay = e.style.transitionDelay; }
+      else if (opt.stagger && anim && opt.stagger.includes(id)) { const d = opt.stagger.indexOf(id) * (opt.step || 0) + 'ms'; e.style.transitionDelay = d; e.querySelector('.in').style.transitionDelay = d; }   // a wave of cards (auto complete)
       else if (e.style.transitionDelay) { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; }
       e.style.transform = `translate(${p.x}px,${p.y}px)`;
       e.style.zIndex = moved.includes(e) ? 900 + p.z : p.z;
       e.classList.toggle('dn', !p.up);
       e.classList.toggle('sel', !!this.sel && this.sel.pi === p.pi && p.ci >= this.sel.ci);
     });
-    if (moved.length) { clearTimeout(this._zt); this._zt = setTimeout(() => moved.forEach(e => { if (e._p) e.style.zIndex = e._p.z; }), 420); }
+    if (moved.length) { clearTimeout(this._zt); this._zt = setTimeout(() => moved.forEach(e => { if (e._p) e.style.zIndex = e._p.z; }), 420 + (opt.stagger ? opt.stagger.length * (opt.step || 0) : 0)); }
     if (opt.deal && anim) setTimeout(() => this.cards.forEach(e => { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; }), (k + 2) * (opt.step || 22) + 500);
     this.pos = pos;
     if (!anim) { void el.offsetWidth; requestAnimationFrame(() => el.classList.remove('noanim')); }
