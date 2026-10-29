@@ -5754,74 +5754,60 @@ NB.AXIS = () => {
     g.userData.anim = (o, b, t) => { hub.rotation.y = t * 1.8; ring.rotation.y = -t * 0.8; dash.rotation.y = t * 0.5; };
     return g;
 };
-// 2. PRISM: 光を分ける結晶。何層にも重なった多面体の結晶（外はガラス、中に逆向きの結晶と光る芯）を、
-//    浮かぶ3本の三角柱の枠が三角形に囲む。中心から虹の6色の光が扇状に広がり、虹色の欠片の輪と2重の屈折の輪が回る。ワープ中は透けて縮む
+// 2. PRISM: ブリリアントカットの巨大な宝石。上から見ると八角のテーブル面と放射状のファセットが並び、
+//    ファセットごとに虹色がにじむ。中できらめきが瞬き、まわりを6枚の鏡の板が回って、鏡から鏡へ虹の光線が星形に跳ね返る。
+//    ワープするときは宝石がファセットごとにばらけて透け、出現地点で組み上がる
 NB.PRISM = () => {
-    const g = new THREE.Group(), RB = [0xff4060, 0xff9a40, 0xffe040, 0x50ff90, 0x40c0ff, 0xa060ff];
-    const core = new THREE.Group(); g.add(core);
-    const outer = fuse(crystal(22, 48, 8), 0x9ae8ff, { glass: 0.5, glassOp: 0.3, tint: 0.2, cage: 1.12 }); core.add(outer);
-    const mid = fuse(crystal(13, 36, 6), 0xff8ae0, { glass: 0.4, glassOp: 0.3, cage: false }); mid.rotation.x = Math.PI; core.add(mid);
-    const gem = coreGem(6, 0xffffff, 0x9ae8ff); core.add(gem);
-    // 三角柱の枠
-    const frame = new THREE.Group(); g.add(frame);
-    const bars = [];
-    for (let k = 0; k < 3; k++) {
-        const a = k * Math.PI * 2 / 3, piv = new THREE.Group(); piv.rotation.y = -a; frame.add(piv);
-        const bar = fuse(LAB.loft([[-40, 8, 8], [-34, 11, 11], [34, 11, 11], [40, 8, 8]], 3, Math.PI / 2), k === 0 ? 0xd8f4ff : k === 1 ? 0xffd8f4 : 0xf4ffd8, { glass: 0.45, glassOp: 0.28, tint: 0.2, seed: k + 2, cage: 1.15 });
-        bar.rotation.y = Math.PI / 2; bar.position.z = 38; piv.add(bar);
-        const node = new THREE.Mesh(new THREE.OctahedronGeometry(3.6, 0), glowM(0xffffff)); node.position.set(0, 0, -76); node.scale.y = 1.6; piv.add(node);
-        bars.push(bar);
+    const g = new THREE.Group(), RB = [0xff6080, 0xffa860, 0xffe870, 0x70ffa8, 0x60c8ff, 0xb080ff, 0xff80e0, 0x80fff0];
+    const gem = new THREE.Group(); gem.rotation.x = -0.18; g.add(gem);
+    const N = 8, RG = 46, RT = 24, HC = 14, HP = 40;
+    const P = (r, a, y) => [Math.cos(a) * r, y, Math.sin(a) * r];
+    const geoOf = tris => { const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3)); o.computeVertexNormals(); return o; };
+    const facets = [];
+    for (let k = 0; k < N; k++) {
+        const a0 = k / N * Math.PI * 2, a1 = (k + 1) / N * Math.PI * 2, am = (a0 + a1) / 2;
+        const t0 = P(RT, a0, HC), t1 = P(RT, a1, HC), g0 = P(RG, a0, 0), g1 = P(RG, a1, 0), gm = P(RG * 1.02, am, 0), sm = P((RT + RG) / 2, am, HC * 0.55);
+        // 冠（クラウン）: テーブルの縁から外周へ、星形と凧形のファセット
+        const crown = geoOf([t0, sm, t1, t0, g0, sm, sm, g0, gm, sm, gm, g1, sm, g1, t1]);
+        // 底（パビリオン）: 外周から尖った先へ
+        const cul = [0, -HP, 0], pv = geoOf([g0, cul, gm, gm, cul, g1]);
+        [[crown, 0.45, 1.06], [pv, 0.35, 1.0]].forEach(([geo, gl, cg], j) => {
+            const f = fuse(geo, _c(0xe8f4ff).lerp(_c(RB[k]), j ? 0.75 : 0.55).getHex(), { glass: gl, glassOp: 0.26, tint: 0.3, seed: k * 2 + j, cage: j ? false : cg });
+            gem.add(f); facets.push({ f, dir: new THREE.Vector3(Math.cos(am), j ? -0.5 : 0.4, Math.sin(am)).normalize(), k, j });
+        });
     }
-    // 虹の光（中心から扇状に）
-    const fan = new THREE.Group(); g.add(fan);
-    RB.forEach((c, k) => { const L = 88, r = new THREE.Mesh(new THREE.PlaneGeometry(5, L), LAB.glass(c, 0.22)); r.geometry.rotateX(-Math.PI / 2); r.geometry.translate(0, 0, 18 + L / 2); r.rotation.y = (k - 2.5) * 0.12 + Math.PI; fan.add(r); });
-    const inBeam = new THREE.Mesh(new THREE.PlaneGeometry(3, 70), LAB.glass(0xffffff, 0.25)); inBeam.geometry.rotateX(-Math.PI / 2); inBeam.geometry.translate(0, 0, 18 + 35); fan.add(inBeam);
-    // 虹色の欠片の輪（色ごとに1つの形にまとめる）
-    const shardRing = new THREE.Group(); g.add(shardRing);
-    RB.forEach((c, k) => { const parts = []; for (let i = 0; i < 3; i++) { const sg = crystal(3, 8, 4), a = (k * 3 + i) / 18 * Math.PI * 2; sg.rotateZ(0.4); sg.rotateY(-a); sg.translate(Math.cos(a) * 64, Math.sin(a * 3) * 6, Math.sin(a) * 64); parts.push(sg); } shardRing.add(fuse(mergeGeometries(parts), c, { cage: false, glass: 0.4, glassOp: 0.35, tint: 0.5 })); });
-    const r1 = LAB.dashRing(52, 36, 7, 1.2, LAB.glass(0xffffff, 0.55), 3), r2 = LAB.dashRing(80, 48, 6, 1, LAB.glass(0x9ae8ff, 0.4), 4);
-    const t1 = new THREE.Group(), t2 = new THREE.Group(); t1.rotation.x = 0.4; t2.rotation.z = -0.35; t1.add(r1); t2.add(r2); g.add(t1, t2);
-    const shell = wire(new THREE.IcosahedronGeometry(60, 1), 0xff5ad8, 0.22); g.add(shell);
+    const tblPts = []; for (let k = 0; k < N; k++) { const a0 = k / N * Math.PI * 2, a1 = (k + 1) / N * Math.PI * 2; tblPts.push([0, HC, 0], P(RT, a1, HC), P(RT, a0, HC)); }
+    const table = fuse(geoOf(tblPts), 0xf4faff, { glass: 0.6, glassOp: 0.18, tint: 0.08, cage: false }); gem.add(table); facets.push({ f: table, dir: new THREE.Vector3(0, 1, 0), k: 0, j: 2 });
+    // 中のきらめき（十字の光）と芯
+    const glints = [];
+    for (let k = 0; k < 7; k++) { const s = new THREE.Group(), m = LAB.glass(k % 2 ? 0xffffff : RB[k], 0.9); [0, Math.PI / 2].forEach(r => { const p = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 14), m); p.rotation.set(-Math.PI / 2, 0, r); s.add(p); }); const a = k * 2.4, r = k ? 8 + (k % 3) * 9 : 0; s.position.set(Math.cos(a) * r, HC + 1 - (k % 2) * 10, Math.sin(a) * r); gem.add(s); glints.push({ s, ph: k * 1.7 }); }
+    const heart = coreGem(6, 0xffffff, 0x9ae8ff); heart.position.y = -6; gem.add(heart);
+    // 鏡の板と、鏡から鏡へ跳ね返る虹の光線
+    const mirGeo = new THREE.CylinderGeometry(13, 13, 1.6, 3); mirGeo.rotateX(Math.PI / 2);
+    const mirrors = [];
+    for (let k = 0; k < 6; k++) { const m = new THREE.Group(); m.add(fuse(mirGeo, 0xd8e8ff, { glass: 0.6, glassOp: 0.3, tint: 0.1, cage: false, seed: k })); const dot = new THREE.Mesh(new THREE.OctahedronGeometry(2, 0), glowM(RB[k])); m.add(dot); g.add(m); mirrors.push(m); }
+    const order = [0, 2, 4, 1, 3, 5, 0], NB2 = order.length + 1;
+    const beamGeo = new THREE.BufferGeometry(); beamGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(NB2 * 3), 3));
+    const bc = new Float32Array(NB2 * 3); [0xffffff, ...order.map(i => RB[i])].forEach((c, i) => { const cc = _c(c); bc[i * 3] = cc.r; bc[i * 3 + 1] = cc.g; bc[i * 3 + 2] = cc.b; }); beamGeo.setAttribute('color', new THREE.BufferAttribute(bc, 3));
+    const beam = new THREE.Line(beamGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false })); g.add(beam); const beam2 = new THREE.Line(beamGeo, beam.material); beam2.position.y = 1.2; g.add(beam2);
+    const ring = LAB.dashRing(64, 40, 6, 1, LAB.glass(0xd8f0ff, 0.45), 3); g.add(ring);
+    const ring2 = new THREE.Group(); ring2.rotation.x = 0.5; ring2.add(LAB.dashRing(88, 54, 5, 0.9, LAB.glass(0xffb0e8, 0.35), 4)); g.add(ring2);
     const mats = []; g.traverse(c => { if (c.material) { c.material.transparent = true; mats.push([c.material, c.material.opacity]); } });
     g.userData.anim = (o, b, t) => {
-        outer.rotation.y = t * 0.8; mid.rotation.y = -t * 1.3; gem.userData.spin(t); core.position.y = Math.sin(t * 1.6) * 3;
-        frame.rotation.y = t * 0.35; bars.forEach((bar, k) => { bar.rotation.z = t * 0.9 + k; });
-        fan.rotation.y = -t * 0.5; shardRing.rotation.y = t * 0.6; r1.rotation.y = -t; r2.rotation.y = t * 0.5; shell.rotation.set(-t * 0.3, t * 0.4, 0);
-        const al = b.alpha ?? 1; mats.forEach(([m, op]) => { m.opacity = op * al; });
-        o.scale.setScalar((0.4 + al * 0.6) * BS);
+        const al = b.alpha ?? 1, sp = 1 - al;
+        gem.rotation.y = t * 0.45;
+        facets.forEach(({ f, dir, k, j }) => { f.position.copy(dir).multiplyScalar(sp * 34); f.rotation.set(sp * (k % 2 ? 1 : -1) * 0.8, 0, sp * (j - 0.5)); });
+        glints.forEach(({ s, ph }) => { const w = Math.max(0, Math.sin(t * 3 + ph)); s.scale.setScalar(0.2 + w * w * 1.1); s.rotation.y = t; });
+        heart.userData.spin(t);
+        const P2 = beamGeo.attributes.position; P2.setXYZ(0, 0, 4, 0);
+        mirrors.forEach((m, k) => { const a = t * 0.5 + k * Math.PI / 3, r = 76 - sp * 40; m.position.set(Math.cos(a) * r, 6 + Math.sin(t * 1.4 + k) * 5, Math.sin(a) * r); m.rotation.set(0, -a - Math.PI / 2, 0); m.rotateX(-0.6); m.rotateZ(t * 0.8 + k); });
+        order.forEach((i, n) => { const p = mirrors[i].position; P2.setXYZ(n + 1, p.x, p.y, p.z); }); P2.needsUpdate = true; beamGeo.computeBoundingSphere();
+        ring.rotation.y = -t * 0.7; ring2.children[0].rotation.y = t * 0.4;
+        mats.forEach(([m, op]) => { m.opacity = op * al; });
+        o.scale.setScalar((0.55 + al * 0.45) * BS);
     };
     return g;
 };;
-NB.SERPENT = () => {
-    const g = new THREE.Group();
-    const head = new THREE.Group();
-    head.add(fuse(LAB.loft([[-26, 30, 22, 0], [-6, 40, 28, 2], [18, 30, 18, 0], [34, 10, 8, -2]], 6), 0x9cff5a, { glass: 0.3 }));
-    head.add(fuse(LAB.loft([[-4, 26, 8, -12], [22, 18, 6, -14], [32, 6, 3, -14]], 4, Math.PI / 4), 0x2fd08a, { cage: false }));
-    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5), new THREE.MeshBasicMaterial({ color: 0xff3355 })); e.position.set(s * 11, 9, 16); head.add(e); });
-    g.add(head);
-    const segs = [];
-    const vert = LAB.loft([[-12, 20, 18], [-6, 26, 22], [6, 26, 22], [12, 20, 18]], 6);
-    const fin = LAB.loft([[-8, 3, 4, 12], [0, 3, 14, 18], [8, 2, 4, 12]], 4, Math.PI / 4);
-    for (let k = 0; k < 8; k++) {
-        const m = new THREE.Group();
-        m.add(fuse(vert, k % 2 ? 0x2fd08a : 0x1aa0ff, { cage: false, seed: k + 3 }));
-        m.add(fuse(fin, 0x9cff5a, { cage: false, glass: 0 }));
-        m.add(wire(new THREE.TorusGeometry(18, 1, 3, 8), k % 2 ? 0x9cff5a : 0x7fe9ff, 0.5));
-        m.scale.setScalar((1 - k * 0.045) * BS);
-        scene.add(m); m.userData.lift = true; segs.push(m);
-    }
-    g.userData.extra = segs;
-    g.userData.anim = (o, b, t) => {
-        const dx = b.hist && b.hist[3] ? b.x - b.hist[3].x : 0, dy = b.hist && b.hist[3] ? b.y - b.hist[3].y : 1;
-        head.rotation.y = Math.atan2(dx, dy);
-        (b.segs || []).forEach((s, k) => {
-            const m = segs[k]; if (!m) return; m.visible = true;
-            m.position.set(toX(ix(s)), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(iy(s)));
-            const p = k ? b.segs[k - 1] : b; m.rotation.set(0, Math.atan2(p.x - s.x, p.y - s.y), Math.sin(t * 3 + k) * 0.3);
-        });
-    };
-    return g;
-};
 NB.LANCER = () => {
     const g = new THREE.Group(), body = new THREE.Group();
     body.add(fuse(LAB.loft([[-56, 6, 6], [-30, 26, 20], [10, 34, 24], [44, 20, 14], [72, 3, 3]], 6), 0xff3a3a, { glass: 0.3 }));
