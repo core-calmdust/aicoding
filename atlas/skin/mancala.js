@@ -54,6 +54,18 @@
     new MutationObserver(sync).observe(rot, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
     bar.insertBefore(rb, home || null);
   })(0);
+  // the store labels carry the player's full name (AI 中級＋ · 後手) — shown on the board when the phone is held sideways (no player boxes then)
+  (function fullNames() {
+    const names = [document.getElementById('nameTop'), document.getElementById('nameBot')].filter(Boolean);
+    const upd = () => document.querySelectorAll('.slabel').forEach(l => {
+      const short = l.textContent.trim(), n = names.find(e => short && e.textContent.trim().startsWith(short));
+      const full = n ? n.textContent.trim() : short; if (l.dataset.full !== full) l.dataset.full = full;
+    });
+    const mo = new MutationObserver(upd);
+    names.forEach(e => mo.observe(e, { subtree: true, childList: true, characterData: true }));
+    const sl = document.getElementById('slots'); if (sl) new MutationObserver(upd).observe(sl, { subtree: true, childList: true, characterData: true });
+    upd();
+  })();
 
   /* ---------- the page's cups on the carved hollows ---------- */
   window.slotUV = function (i) {
