@@ -984,3 +984,39 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
 .coach-card .tips-h{font-size:13.5px}.coach-card .tips li{font-size:14.5px;line-height:1.75}.coach-card .tips-more{font-size:14px}
 .coach-card .muted{font-size:14px}
 .log-card .pk-log{font-size:14.5px}.log-card .lg{padding:2px 2px}.log-card .lg-st{font-size:12.5px;margin-top:8px}
+/* ===================== chips ===================== */
+.chs{display:inline-flex;align-items:flex-end;gap:2px;flex:none;height:calc(var(--cw)*.42 + 10px);align-self:center}
+.chst{position:relative;display:inline-block;width:calc(var(--cw)*.3);height:calc(var(--cw)*.42 + 10px)}
+.ch{position:absolute;left:0;bottom:calc(var(--k) * var(--cw) * .06);width:calc(var(--cw)*.3);height:calc(var(--cw)*.3);border-radius:50%;background:radial-gradient(circle,var(--c1) 0 30%,transparent 31%),repeating-conic-gradient(var(--c1) 0 30deg,#f6efdc 30deg 45deg);box-shadow:0 0 0 1.5px var(--c2),0 2px 0 var(--c2),0 3px 3px rgba(0,0,0,.45)}
+.ch::after{content:'';position:absolute;inset:26%;border-radius:50%;border:1px dashed rgba(255,255,255,.7)}
+.ch-w{--c1:#e9e4d6;--c2:#8d8574}.ch-w{background:radial-gradient(circle,#f4f0e4 0 30%,transparent 31%),repeating-conic-gradient(#d9d2bf 0 30deg,#3a5fb5 30deg 45deg)}.ch-w::after{border-color:rgba(58,95,181,.7)}
+.ch-r{--c1:#c8243a;--c2:#6b0a12}.ch-g{--c1:#1f8a52;--c2:#0b4227}.ch-k{--c1:#22252e;--c2:#000}.ch-p{--c1:#7a3fc4;--c2:#3b1468}
+.pk-bet{gap:6px;padding:3px 10px 3px 6px}
+.pk-pot .chs{margin-right:2px}
+/* ===================== badges ===================== */
+.bdg{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
+.bdg.locked{filter:grayscale(1) brightness(.45) contrast(.9);opacity:.55}
+.bdg.sm{width:34px;height:34px}.bdg.md{width:68px;height:68px}
+.lc-ico .bdg.sm{margin:-4px 0 0}
+.lc-bdg{display:inline-block;margin-top:6px;font-style:normal;font-size:12px;color:var(--muted)}.lc-bdg.got{color:#ecd28c}
+#bdgPop{position:fixed;inset:0;z-index:5500;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(0,0,0,.25),rgba(0,0,0,.6));cursor:pointer}
+#bdgPop.show{display:flex;animation:bpFade .3s ease}
+@keyframes bpFade{from{opacity:0}}
+.bp-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;color:#fff4d4}
+.bp-in img{position:relative;width:min(300px,58vw);height:auto;filter:drop-shadow(0 12px 30px rgba(0,0,0,.6));animation:bpIn .7s cubic-bezier(.2,1.4,.3,1)}
+@keyframes bpIn{from{transform:scale(.2) rotate(-25deg);opacity:0}}
+.bp-rays{position:absolute;left:50%;top:min(150px,29vw);width:min(560px,110vw);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:repeating-conic-gradient(rgba(255,226,140,.22) 0 8deg,transparent 8deg 22deg);mask:radial-gradient(circle,#000 20%,transparent 68%);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);animation:bpSpin 9s linear infinite}
+@keyframes bpSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.bp-in small{position:relative;margin-top:10px;font:700 13px 'JetBrains Mono',monospace;letter-spacing:.14em;color:#8fe3b8;text-transform:uppercase}
+.bp-in b{position:relative;font:700 30px 'Cormorant Garamond','Shippori Mincho B1',serif;letter-spacing:.04em;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.bp-in span{position:relative;font-size:15px;color:#f3e3b5;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.bdg-col{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.bdg-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}.bdg-h b{font-size:15px;color:var(--accent)}.bdg-h small{font:600 13px 'JetBrains Mono',monospace;color:var(--muted)}
+.bdg-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.bdg-c{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);text-align:center}
+.bdg-c.got{border-color:rgba(236,210,140,.45);background:rgba(236,210,140,.06)}
+.bdg-c .bdg{width:72px}
+.bdg-c b{font-size:12px;color:#fff4d4}.bdg-c small{font-size:10.5px;color:var(--muted);line-height:1.4}
+.bdg-c em{position:absolute;top:6px;right:8px;font:700 11px 'JetBrains Mono',monospace;font-style:normal;color:#ecd28c}
+@media (max-width:760px){.bdg-grid{grid-template-columns:repeat(3,1fr)}.bdg-c .bdg{width:60px}}
+.lc-tab .bdg.locked,.lc-head .bdg.locked{filter:grayscale(1) brightness(.8);opacity:.6}

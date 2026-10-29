@@ -1,0 +1,3 @@
+バッジ画像（img/badges/*.webp）:
+Designed by Freepik — Poker glossy labels set: https://www.magnific.com/free-vector/poker-glossy-labels-set_3977302.htm
+変更点: 元の素材から12個のラベルを切り出して背景を透過し、WebP に変換して使用。

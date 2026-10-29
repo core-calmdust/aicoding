@@ -155,9 +155,9 @@ let cat = 'basic', cur = null, top = 'lessons';
 function progress(id) { return PR[id] || { best: 0, pass: false }; }
 function listHtml() {
   const c = CATS_L.find(x => x.id === cat), passed = id => progress(id).pass;
-  const tabs = CATS_L.map(x => `<button type="button" class="lc-tab${x.id === cat ? ' sel' : ''}" data-cat="${x.id}"><span class="lc-ico">${x.ico}</span><b>${esc(L('cat.' + x.id))}</b><small>${x.items.filter(([id]) => passed(id)).length}/${x.items.length}</small></button>`).join('');
+  const tabs = CATS_L.map(x => `<button type="button" class="lc-tab${x.id === cat ? ' sel' : ''}" data-cat="${x.id}"><span class="lc-ico">${window.PokerBadges ? PokerBadges.img(PokerBadges.LESSON[x.id], 'sm') : x.ico}</span><b>${esc(L('cat.' + x.id))}</b><small>${x.items.filter(([id]) => passed(id)).length}/${x.items.length}</small></button>`).join('');
   const done = c.items.filter(([id]) => passed(id)).length;
-  const head = `<div class="lc-head"><span class="lc-ico lg">${c.ico}</span><div><b>${esc(L('cat.' + c.id))}</b><p>${esc(L('catd.' + c.id))}</p></div><div class="lc-prog"><small>${esc(L('passed', { n: done, m: c.items.length }))}</small><span class="bar"><i style="width:${done / c.items.length * 100}%"></i></span></div></div>`;
+  const head = `<div class="lc-head"><span class="lc-ico lg">${window.PokerBadges ? PokerBadges.img(PokerBadges.LESSON[c.id], 'md') : c.ico}</span><div><b>${esc(L('cat.' + c.id))}</b><p>${esc(L('catd.' + c.id))}</p>${window.PokerBadges ? `<em class="lc-bdg${PokerBadges.has(PokerBadges.LESSON[c.id]) ? ' got' : ''}">🏅 ${esc(PokerBadges.has(PokerBadges.LESSON[c.id]) ? PokerBadges.L('lessonGot') : PokerBadges.L('lessonBadge'))} — ${esc(PokerBadges.L('n.' + PokerBadges.LESSON[c.id]))}</em>` : ''}</div><div class="lc-prog"><small>${esc(L('passed', { n: done, m: c.items.length }))}</small><span class="bar"><i style="width:${done / c.items.length * 100}%"></i></span></div></div>`;
   const cards = c.items.map(([id], k) => { const pr = progress(id), n = ALL.findIndex(x => x.id === id) + 1;
     return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${id}"><span class="lc-pic">${cardsH(PIC[id].split(' ').map(P.parse))}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${n}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? L('st.pass') : pr.best ? L('st.tried', { n: pr.best }) : L('st.new'))}</small></span><b>${esc(L('l.' + id))}</b><i>${esc(L('lp.' + id))}</i><span class="lc-d">${esc(L('ld.' + id))}</span><span class="bar"><i style="width:${(pr.best || 0) / 5 * 100}%"></i></span></span></button>`; void k; }).join('');
   const tut = window.PokerTut ? `<button type="button" class="lc-tut" id="lcTut"><span>▶</span><span><b>${esc(PokerTut.L('entry'))}</b><small>${esc(PokerTut.L('entry.d'))}</small></span><span class="go">›</span></button>` : '';
@@ -222,7 +222,7 @@ function wirePlay() {
   const go = $('#lqGo'); if (go) go.onclick = () => {
     if (cur.step === -1) { cur.step = 0; renderShell(); return; }
     cur.chosen = null; cur.i++;
-    if (cur.i >= cur.qs.length) { const pr = progress(cur.id); PR[cur.id] = { best: Math.max(pr.best || 0, cur.score), pass: pr.pass || cur.score >= 4 }; saveP(); if (cur.score >= 4) A.sfx('win'); }
+    if (cur.i >= cur.qs.length) { const pr = progress(cur.id); PR[cur.id] = { best: Math.max(pr.best || 0, cur.score), pass: pr.pass || cur.score >= 4 }; saveP(); if (cur.score >= 4) { A.sfx('win'); if (window.PokerBadges) setTimeout(() => PokerBadges.checkLessons(CATS_L, id => progress(id).pass), 400); } }
     renderShell();
   };
   const rt = $('#lqRetry'); if (rt) rt.onclick = () => start(cur.id);
