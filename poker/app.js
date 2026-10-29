@@ -80,7 +80,7 @@ function sfx(k) {
 
 /* ---------------- worker (equity / coach) ---------------- */
 let worker = null, wid = 0; const wcb = {};
-function W() { if (worker === false) return null; if (!worker) { try { worker = new Worker('worker.js?v=1'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data.err ? null : e.data.r); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } } return worker; }
+function W() { if (worker === false) return null; if (!worker) { try { worker = new Worker('worker.js?v=2'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data.err ? null : e.data.r); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } } return worker; }
 function ask(msg, cb, fallback) {
   const w = W(); if (!w) { setTimeout(() => cb(fallback()), 5); return; }
   const id = ++wid; msg.id = id; wcb[id] = cb; w.postMessage(msg);
@@ -199,7 +199,7 @@ function heroAct(m) {
   if (c) {
     const a = m.a === 'raise' ? 'raise' : m.a === 'fold' ? 'fold' : (L.check ? 'check' : 'call');
     const grade = gradeOf(c, a, L);
-    G.hist.notes.push({ st: T.street, a, rec: c.rec, eq: c.eq, need: c.need, ev: c.ev, grade, pot: c.pot, toCall: c.toCall, board: T.board.slice(), i: T.log.length });
+    G.hist.notes.push({ st: T.street, a, rec: c.rec, eq: c.eq, need: c.need, ev: c.ev, grade, pot: c.pot, toCall: c.toCall, board: T.board.slice(), i: T.log.length, tips: tipsNow(c).slice(0, 8).map(x => ({ k: x.k, v: x.v })) });
     showVerdict(grade, c, a);
     if (!T.tut) { const S = statOf(T.v); S.dec = (S.dec || 0) + 1; if (grade <= 1) S.good = (S.good || 0) + 1; }
   }
@@ -398,6 +398,19 @@ function resultLine() {
 
 /* ---------------- side panel ---------------- */
 const pct = x => (x * 100).toFixed(1) + '%';
+/* situational tips (tips.js): computed once per spot */
+function tipsNow(c) {
+  if (!window.PokerTips || !T) return [];
+  const key = spotKey(); if (G.tipsKey === key && G.tips) return G.tips;
+  try { G.tips = PokerTips.make(T, HERO, c); } catch (e) { G.tips = []; }
+  G.tipsKey = key; return G.tips;
+}
+function tipsHtml(list) {
+  if (!list || !list.length) return '';
+  const n = 3, open = !!set.tipsOpen, show = open ? list : list.slice(0, n);
+  return `<div class="tips" data-k="tips"><div class="tips-h">💡 ${esc(PokerTips.ui('head', LANG))}</div><ul>${show.map(x => `<li>${esc(PokerTips.text(x, LANG))}</li>`).join('')}</ul>` +
+    (list.length > n ? `<button type="button" class="tips-more" id="tipsMore">${esc(open ? PokerTips.ui('less', LANG) : PokerTips.ui('more', LANG, { n: list.length - n }))}</button>` : '') + `</div>`;
+}
 function renderSide() {
   if (!T) return;
   const V = P.VARIANTS[T.v], c = G.coach && G.coachKey === spotKey() ? G.coach : null, myTurn = T.toAct === HERO && T.phase === 'bet';
@@ -423,7 +436,7 @@ function renderSide() {
   if (set.coach) {
     let body;
     const last = G.verdict && G.verdict.hand === T.hand ? G.verdict : null;
-    if (myTurn && c) body = `<div class="rec"><span class="rb">${esc(t('rec.' + c.rec))}</span><p>${esc(t('why.' + c.why[0], { eq: pct(c.eq), need: pct(c.need), fair: pct(c.fair) }))}</p></div>`;
+    if (myTurn && c) body = `<div class="rec"><span class="rb">${esc(t('rec.' + c.rec))}</span><p>${esc(t('why.' + c.why[0], { eq: pct(c.eq), need: pct(c.need), fair: pct(c.fair) }))}</p></div>` + tipsHtml(tipsNow(c));
     else if (myTurn) body = `<p class="muted calc"><span class="spin s"></span>${esc(t('hud.calc'))}</p>`;
     else body = '';
     if (last) body += `<div class="verdict g${last.grade}"><b>${esc(t('grade.' + last.grade))}</b><span>${esc(t('verdict', { a: t('rec.' + last.a), rec: t('rec.' + last.rec) }))}</span></div>`;
@@ -447,6 +460,7 @@ function renderSide() {
   patch($('#side'), h);
   const lg = $('#pkLog'); if (lg) lg.scrollTop = lg.scrollHeight;
   $('#sHist').onclick = () => window.PokerReview && PokerReview.openList();
+  const tm = $('#tipsMore'); if (tm) tm.onclick = () => { set.tipsOpen = set.tipsOpen ? 0 : 1; save(); renderSide(); };
   $('#sStats').onclick = openStats;
   $('#sTools').onclick = () => window.PokerTools && PokerTools.open();
 }

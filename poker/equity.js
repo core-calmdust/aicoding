@@ -189,11 +189,19 @@ function coach(T, s, iters) {
   const evCall = eq * (pot + toCall) - toCall;
   let rec, why = [];
   if (toCall === 0) {
-    if (eq > Math.max(0.55, fair * 1.7) && L.canRaise) { rec = 'raise'; why.push('valueBet'); }
+    if (eq > Math.min(0.75, Math.max(0.55, fair * 1.5)) && L.canRaise) { rec = 'raise'; why.push('valueBet'); }
     else { rec = 'check'; why.push(eq > fair ? 'checkPot' : 'checkWeak'); }
-  } else if (eq > Math.max(0.6, fair * 2) && L.canRaise) { rec = 'raise'; why.push('valueRaise'); }
+  } else if (eq > Math.min(0.78, Math.max(0.6, fair * 2)) && L.canRaise) { rec = 'raise'; why.push('valueRaise'); }
   else if (eq >= need) { rec = 'call'; why.push('odds'); }
   else { rec = 'fold'; why.push('noOdds'); }
+  // preflop (two hole cards): follow the standard opening ranges by seat, re-raise premium hands
+  if (T.street === 0 && Vr.board && !Vr.omaha && T.seats[s].cards.length === 2 && L.canRaise) {
+    const key = handKey(T.seats[s].cards[0], T.seats[s].cards[1]), pct = PCT[key];
+    const pos = ['BTN', 'SB', 'BB', 'UTG', 'HJ', 'CO'][(s - T.btn + 6) % 6], open = { UTG: 0.15, HJ: 0.19, CO: 0.27, BTN: 0.45, SB: 0.38, BB: 0.2 }[pos];
+    const raised = T.curBet > T.bb;
+    if (!raised && pct <= open && rec !== 'raise') { rec = 'raise'; why = ['openRange']; }
+    else if (raised && pct <= 0.04 && rec !== 'raise') { rec = 'raise'; why = ['threeBet']; }
+  }
   const outs = (!Vr.stud && !Vr.draw && T.board.length >= 3 && T.board.length < 5) ? countOuts(T, s) : null;
   return { eq, win: e.win[0], tie: e.tie[0], need, ev: evCall, pot, toCall, rec, why, outs, nOpp, fair };
 }
