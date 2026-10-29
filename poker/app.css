@@ -964,3 +964,4 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
 .lc-tut b{font-size:14px;color:#cff5df}.lc-tut small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .lc-tut .go{margin-left:auto;font-size:18px;color:#8fe3b8}
 .rv-tabs [data-tut] + [data-lesson]{margin-left:0}
+@media (min-width:900px){.tut-box{width:min(460px,calc(100vw - 24px));padding:18px 20px 16px}#tutLayer.center .tut-box{width:min(540px,calc(100vw - 24px))}.tut-top em{font-size:13px}.tut-x{font-size:14px}.tut-box>b{font-size:21px;margin-bottom:8px}.tut-box p{font-size:16.5px;line-height:1.8}.tut-do{font-size:15px}.tut-btns .mbtn{padding:10px 20px;font-size:15.5px}.tut-offer{width:min(560px,calc(100vw - 24px))}.tut-offer h2{font-size:24px}.tut-offer p{font-size:16px}.to-list li{font-size:15px;padding:8px 12px}.to-chk{font-size:14px}}
