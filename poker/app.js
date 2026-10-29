@@ -16,7 +16,7 @@ const STYLE_KEYS = ['tag', 'lag', 'rock', 'station'];
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'holdem', prefs: {}, felt: 'green', back: 'skullBlack', court: 'gangsta', cmode: 'simple', sound: true, anim: 1, speed: 'normal', hud: 1, coach: 1, autoNext: 1, showBots: 1, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'holdem', prefs: {}, felt: 'teal', back: 'skullBlack', court: 'gangsta', cmode: 'simple', sound: true, anim: 1, speed: 'normal', hud: 1, coach: 1, autoNext: 1, showBots: 1, lang: '' }, D.set || {});
 D.stats = D.stats || {}; D.hist = D.hist || [];
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });

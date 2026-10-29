@@ -1137,3 +1137,39 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
   .stats-modal .diff-desc{font-size:14px;line-height:1.75}
   .bdg-h b{font-size:17px}.bdg-c b{font-size:13.5px}.bdg-c small{font-size:12px}.bdg-c .bdg{width:84px}
 }
+/* ===== study tools: layout pass ===== */
+.tl-calc{grid-template-columns:minmax(0,1fr) 340px;gap:22px}
+.tp{grid-template-columns:auto auto minmax(0,1fr);gap:8px 12px;padding:10px 14px}
+.tp-n{white-space:nowrap}
+.tp > .szb,.tp > select{justify-self:start}
+.tp select{min-width:150px}
+.tp-r{grid-column:1/-1;display:flex;align-items:center;gap:12px;min-height:0}
+.tp-r:empty{display:none}
+.tp-r>b{order:-1;min-width:70px;font-size:20px}
+.tp-r .eqbar{flex:1;height:12px;margin:0}
+.tp-r>small{grid-column:auto;white-space:nowrap}
+.tl-sec{margin:12px 0}
+.tl-go{margin-top:6px}
+.picker{gap:4px}.pk-row{gap:3px}
+.tl-odds{margin-top:16px}
+.rc{background:rgba(255,255,255,calc(.04 + var(--x) * .08));color:rgba(233,236,245,.55);opacity:1}
+.rc.in{background:linear-gradient(180deg,rgba(236,210,140,calc(.35 + var(--x) * .6)),rgba(201,162,78,calc(.3 + var(--x) * .55)));color:#1d1606}
+.rc.in small{opacity:.85}
+.rc:hover{outline:1px solid rgba(255,255,255,.4)}
+.tl-range{grid-template-columns:minmax(0,1fr) 300px;gap:22px}
+.rgrid{max-width:600px;gap:3px}
+.rc-eqs{grid-template-columns:1fr;gap:6px}
+.rc-eqs div{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:10px;padding:6px 10px;background:rgba(255,255,255,.04)}
+.rc-eqs .eqbar{margin:0;height:10px}
+.rc-eqs b{text-align:end}
+.tl-hands{grid-template-columns:minmax(0,1fr) 300px;gap:24px}
+@media (min-width:761px){
+  .tools-modal .tp-n{font-size:15px}
+  .tools-modal .tp-r>b{font-size:22px}
+  .tools-modal .tp-r>small{font-size:13.5px}
+  .tools-modal .pkc{height:40px;font-size:14px}.tools-modal .pkc small{font-size:12px}
+  .tools-modal .rc{font-size:12.5px}.tools-modal .rc small{font-size:10.5px}
+  .tools-modal .rc-eqs small{font-size:13px}.tools-modal .rc-eqs b{font-size:15px}
+}
+@media (max-width:760px){.tp{grid-template-columns:auto 1fr}.tp > .szb,.tp > select{grid-column:1/-1}.tp-r{flex-wrap:wrap}}
+@media (min-width:761px){.tools-modal .rgrid{max-width:min(600px,calc(100dvh - 330px))}}

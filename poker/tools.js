@@ -53,11 +53,11 @@ function rangeHtml() {
   const cells = E.ALLKEYS.map(k => {
     const eq = PRE[k] ? PRE[k][n - 1] / 1000 : E.preEq(k, n), base = 1 / (n + 1), x = Math.max(0, Math.min(1, (eq - base * .6) / (1 - base * .6)));
     const inR = E.PCT[k] <= POS[pos];
-    return `<button type="button" class="rc${inR ? ' in' : ''}${k === sel ? ' sel' : ''}" data-cell="${k}" style="--h:${Math.round(220 - x * 220)}"><b>${k}</b><small>${Math.round(eq * 100)}</small></button>`;
+    return `<button type="button" class="rc${inR ? ' in' : ''}${k === sel ? ' sel' : ''}" data-cell="${k}" style="--x:${x.toFixed(2)}"><b>${k}</b><small>${Math.round(eq * 100)}</small></button>`;
   }).join('');
   const k = sel, eqs = PRE[k] || [1, 2, 3, 4, 5].map(j => Math.round(E.preEq(k, j) * 1000));
   const info = `<div class="rc-info"><b class="rc-k">${k}</b><span>${esc(t('tl.combos', { n: E.COMBOS(k) }))} · ${esc(t('tl.top', { n: (E.PCT[k] * 100).toFixed(1) }))}</span>` +
-    `<div class="rc-eqs">${eqs.map((e, j) => `<div><small>${esc(t('tl.vsN', { n: j + 1 }))}</small><b>${(e / 10).toFixed(1)}%</b></div>`).join('')}</div>` +
+    `<div class="rc-eqs">${eqs.map((e, j) => `<div><small>${esc(t('tl.vsN', { n: j + 1 }))}</small><span class="eqbar"><i class="w" style="width:${e / 10}%"></i></span><b>${(e / 10).toFixed(1)}%</b></div>`).join('')}</div>` +
     `<p class="diff-desc">${esc(Object.keys(POS).filter(p => E.PCT[k] <= POS[p]).length ? t('tl.openFrom', { p: Object.keys(POS).filter(p => E.PCT[k] <= POS[p]).join(' · ') }) : t('tl.openNone'))}</p></div>`;
   return `<div class="tl-range"><div class="rg-l"><div class="rg-ctl"><span class="lab">${esc(t('tl.vs'))}</span><span>${[1, 2, 3, 4, 5].map(j => `<button type="button" class="szb${j === n ? ' sel' : ''}" data-rn="${j}">${j}</button>`).join('')}</span>` +
     `<span class="lab">${esc(t('tl.pos'))}</span><span>${Object.keys(POS).map(p => `<button type="button" class="szb${p === pos ? ' sel' : ''}" data-pos="${p}" title="${esc(t('tl.posName.' + p))}">${p}</button>`).join('')}</span></div>` +
