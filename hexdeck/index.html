@@ -1521,6 +1521,14 @@ body.coach-lock #shopList .btn:not(.coach-hl){opacity:.3;filter:saturate(.3)}
 .coach.dodge{left:auto;right:16px}
 @media (max-width:900px){.coach.dodge{left:50%;right:auto;top:auto;bottom:calc(env(safe-area-inset-bottom) + 10px)}}
 @media (max-width:900px){body:has(.dlg) .coach.dodge{top:calc(env(safe-area-inset-top) + 50px);bottom:auto}}
+/* スマホ：ダイアログ表示中は案内を上部の細い帯にして、ダイアログを優先 */
+@media (max-width:900px){
+  body:has(.dlg) .coach{top:calc(env(safe-area-inset-top) + 4px)!important;bottom:auto!important;padding:5px 10px}
+  body:has(.dlg) .coach .co-body p:not(.co-gift),body:has(.dlg) .coach .co-foot,body:has(.dlg) .coach .co-x,body:has(.dlg) .coach .co-fig{display:none}
+  body:has(.dlg) .coach .co-body h4{margin:2px 0 0;font-size:14px}
+  body:has(.dlg) .coach .co-top{margin:0}
+  body:has(.coach) .dlg{padding-top:calc(env(safe-area-inset-top) + 84px)}
+}
 </style>
 <div class="app" id="app">
   <header class="hb">
