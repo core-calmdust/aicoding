@@ -86,7 +86,7 @@ class Table {
     const st = this.st, g = this.geom(), u = g.u, ch = u * S.CH, el = this.el;
     this.g = g;
     el.style.setProperty('--cw', u + 'px'); el.style.setProperty('--chh', ch + 'px');
-    el.classList.toggle('tiny', u < 54); el.classList.toggle('small', u >= 54 && u < 78);
+    el.classList.remove('tiny', 'small');   // the chosen card design is always shown in full, even on small (phone) cards
     if (!anim) el.classList.add('noanim');
     const pos = new Map(); this.rects = [];
     st.L.forEach((l, i) => {
