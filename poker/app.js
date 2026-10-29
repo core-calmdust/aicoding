@@ -261,6 +261,7 @@ function handOver() {
   render({ show: true });
   if (R.won[HERO] > 0) sfx(potSz > T.bb * 30 ? 'win' : 'bigchips'); else sfx('chips');
   showResult();
+  if (window.PokerBadges && !T.tut) { const TT = T; setTimeout(() => { if (T === TT) PokerBadges.checkHand(TT); }, 900); }
   if (T.tut && window.PokerTut) { PokerTut.ev('done'); return; }
   if (set.autoNext) G.timer = setTimeout(nextHand, 3400 * Math.max(.6, mt()));
 }
@@ -297,11 +298,19 @@ function morphKids(a, b) {
   [...a.childNodes].slice(nb.length).forEach(n => n.remove());
 }
 function patch(el, html) { const t = document.createElement(el.tagName); t.innerHTML = html; morphKids(el, t); }
+/* chips: amount → small stacks (white 1BB, red 5, green 25, black 100, purple 500) */
+const CHIPS = [[500, 'p'], [100, 'k'], [25, 'g'], [5, 'r'], [1, 'w']];
+function chipStack(amt, maxStacks) {
+  let u = Math.max(1, Math.round(amt / (T ? T.bb : 2))); const stacks = [];
+  for (const [v, c] of CHIPS) { let n = Math.floor(u / v); if (!n) continue; u -= n * v; stacks.push([c, Math.min(n, 5)]); if (stacks.length >= (maxStacks || 2)) break; }
+  if (!stacks.length) stacks.push(['w', 1]);
+  return `<span class="chs">${stacks.map(([c, n]) => `<span class="chst">${Array.from({ length: n }, (_, k) => `<i class="ch ch-${c}" style="--k:${k}"></i>`).join('')}</span>`).join('')}</span>`;
+}
 function render(o) {
   o = o || {};
   if (!T) return;
   const V = P.VARIANTS[T.v], box = $('#pkTable'), W = box.clientWidth, H = box.clientHeight;
-  const cw = Math.max(26, Math.min(W / (V.stud ? 17 : 13.5), H / (V.stud ? 7.2 : 6.4), 92));
+  const narrow = W < 640, cw = Math.max(26, Math.min(W / (V.stud ? (narrow ? 11 : 15) : (narrow ? 7.4 : 11.2)), H / (V.stud ? 6.6 : 5.6), 112));
   const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   const done = T.phase === 'done', showAll = done && T.result && T.result.showdown;
   const winners = done ? new Set(T.result.pots.flatMap(p => p.winners || [])) : new Set();
@@ -315,7 +324,7 @@ function render(o) {
   if (V.board) {
     h += `<div class="pk-board" data-k="board">` + [0, 1, 2, 3, 4].map(k => T.board[k] != null ? Cards.html(T.board[k], { cls: (o.deal ? '' : 'in-board') + (showAll && winFive.size && !winFive.has(T.board[k]) ? ' dim' : '') + (showAll && winFive.has(T.board[k]) ? ' hi' : '') }) : `<span class="pk-slot"></span>`).join('') + `</div>`;
   }
-  h += `<div class="pk-pot${pot ? '' : ' empty'}" data-k="pot"><span class="chipico"></span><b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
+  h += `<div class="pk-pot${pot ? '' : ' empty'}" data-k="pot">${pot ? chipStack(pot, 3) : '<span class="chipico"></span>'}<b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
   // seats
   T.seats.forEach((s, i) => {
     const [x, y] = SEATPOS[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
@@ -334,7 +343,7 @@ function render(o) {
       `<div class="plate"><span class="ava av${i}">${hero ? '★' : esc(s.name[0])}</span><span class="pn"><b>${esc(s.name)}</b><small>${hero ? esc(t('you.sub')) : esc(style)}</small></span><span class="st">${s.stack}</span></div>` +
       (bub ? `<div class="bub" data-k="bub${T.hand}-${lastBubble[i].at}">${esc(bub)}</div>` : '') + (info ? `<div class="hinfo">${esc(info)}</div>` : '') +
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
-    if (s.bet > 0) { const [bx, by] = BETPOS[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%"><span class="chipico"></span>${s.bet}</div>`; }
+    if (s.bet > 0) { const [bx, by] = BETPOS[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
   });
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
@@ -504,7 +513,8 @@ function renderStats() {
   $('#statsTabs').innerHTML = P.ORDER.map(v => `<button type="button" data-v="${v}" class="${v === statsV ? 'sel' : ''}">${esc(vName(v))}</button>`).join('');
   $$('#statsTabs [data-v]').forEach(b => b.onclick = () => { statsV = b.dataset.v; renderStats(); });
   const S = D.stats[statsV] || {};
-  if (!S.hands) { $('#statsBody').innerHTML = `<p class="muted center">${esc(t('st.none'))}</p>`; return; }
+  const badges = window.PokerBadges ? PokerBadges.collection() : '';
+  if (!S.hands) { $('#statsBody').innerHTML = `<p class="muted center">${esc(t('st.none'))}</p>` + badges; return; }
   const r = (a, b) => b ? (a / b * 100).toFixed(1) + '%' : '—';
   const cells = [['st.hands', S.hands], ['st.net', (S.net >= 0 ? '+' : '') + (S.net || 0)], ['bb/100', ((S.bbNet || 0) / S.hands * 100).toFixed(1)], ['st.won', r(S.won || 0, S.hands)],
     ['VPIP', r(S.vpip || 0, S.hands)], ['PFR', r(S.pfr || 0, S.hands)], ['AF', S.calls ? ((S.aggr || 0) / S.calls).toFixed(2) : '—'], ['WTSD', r(S.wtsd || 0, S.hands)], ['W$SD', r(S.wsd || 0, S.wtsd || 0)],
@@ -514,7 +524,7 @@ function renderStats() {
   const zero = hh - (0 - mn) / ((mx - mn) || 1) * hh;
   $('#statsBody').innerHTML = `<div class="st-grid">${cells.map(([k, v]) => `<div><small>${esc(k.startsWith('st.') ? t(k) : k)}</small><b>${v}</b></div>`).join('')}</div>` +
     `<div class="st-graph"><small>${esc(t('st.graph'))}</small><svg viewBox="0 0 ${w} ${hh}" preserveAspectRatio="none"><line x1="0" x2="${w}" y1="${zero}" y2="${zero}" class="z"/><path d="${path}"/></svg></div>` +
-    `<p class="diff-desc">${esc(t('st.help'))}</p>`;
+    `<p class="diff-desc">${esc(t('st.help'))}</p>` + badges;
 }
 $('#btnStatsClose').onclick = () => closeOv('#statsOverlay');
 $('#btnStatsReset').onclick = () => confirmBox(t('st.resetQ'), () => { delete D.stats[statsV]; save(); renderStats(); });
@@ -609,7 +619,7 @@ function openSettings() {
   if (setTab === 'design') wireDesign($('#setBody'));
   openOv('#setOverlay');
 }
-const CREDIT_HTML = () => `<p class="credit">${esc(t('credit'))}</p>`;
+const CREDIT_HTML = () => `<p class="credit">${esc(t('credit'))}<br>Badges: Designed by Freepik — “Poker glossy labels set”</p>`;
 $('#btnSetClose').onclick = () => closeOv('#setOverlay');
 
 /* ---------------- buttons & keys ---------------- */
