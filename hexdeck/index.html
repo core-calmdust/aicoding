@@ -265,7 +265,6 @@ button.acard.sel{transform:translateY(-10px);outline:2px solid var(--gold2);outl
 .gdev text{fill:var(--gold2);font-family:var(--f-body);font-size:12px;letter-spacing:.2em;font-weight:700}
 .gdev:hover polygon{fill:rgba(230,201,138,.25)}
 @keyframes breathe{50%{opacity:.6}}
-@media (prefers-reduced-motion:reduce){.ghost.ok,.groad.ok .vis{animation:none}}
 .pop{position:absolute;z-index:5;min-width:190px;max-width:260px;background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:12px 14px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .pop .pt{font-family:var(--f-disp);font-size:15px;color:var(--gold2);margin-bottom:8px}
 .pop .pcs{display:flex;gap:8px;flex-wrap:wrap}
@@ -282,7 +281,6 @@ button.acard.tapdraw{cursor:pointer;border:0;animation:deckPulse 1.6s ease-in-ou
 button.acard.tapdraw .tl{position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);white-space:nowrap;font-family:var(--f-body);font-size:11px;color:var(--gold2);letter-spacing:.1em}
 button.acard.tapdraw:hover{transform:translateY(-4px)}
 @keyframes deckPulse{50%{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 22px rgba(230,201,138,.55),inset 0 0 0 1px var(--gold),inset 0 0 0 5px #1a2a40,inset 0 0 0 6px rgba(201,164,92,.5)}}
-@media (prefers-reduced-motion:reduce){button.acard.tapdraw{animation:none}}
 .reveal{padding-bottom:18px}
 
 /* 判定用の透明な形（見た目には出さない） */
@@ -674,7 +672,6 @@ body{margin:0}
 .tray #myHand button.acard.sel:hover{transform:translateY(-42%) scale(1.16)}
 .tray #myHand button.acard.trashable:hover{transform:translateY(-22px) scale(1.08) rotate(-3deg);z-index:5}
 @media (hover:none){.tray #myHand button.acard.can:hover:not(.sel){transform:none}}
-@media (prefers-reduced-motion:reduce){.tray #myHand .acard{transition:none}}
 
 /* スマホ：上の情報を2段で大きく、山札も大きく */
 @media (max-width:900px){
@@ -991,7 +988,6 @@ html,body{overscroll-behavior:none}
 @keyframes bstbg{0%{background:rgba(120,10,10,0)}8%{background:rgba(160,20,15,.55)}18%{background:rgba(40,4,4,.62)}80%{background:rgba(40,4,4,.55)}100%{background:rgba(40,4,4,0)}}
 @keyframes b7in{0%{opacity:0;transform:rotate(-25deg) scale(2.2)}18%{opacity:1;transform:rotate(6deg) scale(1)}24%{transform:rotate(-3deg) translateX(-6px)}30%{transform:rotate(2deg) translateX(5px)}36%{transform:none}82%{opacity:1}100%{opacity:0;transform:scale(.9)}}
 @keyframes bstx{0%,12%{opacity:0;transform:translateY(14px) scale(1.15)}26%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.burst.go .b7,.burst.go span,.burst.go small{animation-duration:1.8s;animation-timing-function:linear}}
 /* バーストで手放すときの小話 */
 .dlg.tale .in{max-width:560px}
 .tale-h{margin:-4px -4px 12px;padding:18px 20px 16px;border-radius:12px;background:radial-gradient(120% 120% at 50% 0%,rgba(226,87,76,.22),rgba(20,8,8,.6));border:1px solid rgba(226,87,76,.45);text-align:center}
@@ -1089,7 +1085,6 @@ html,body{overscroll-behavior:none}
 @keyframes buybg{0%{background:rgba(20,60,160,0)}8%{background:rgba(40,100,220,.5)}20%{background:rgba(6,16,44,.66)}78%{background:rgba(6,16,44,.6)}100%{background:rgba(6,16,44,0)}}
 @keyframes buycard{0%{opacity:0;transform:rotate(25deg) scale(2.2)}16%{opacity:1;transform:rotate(-6deg) scale(1)}22%{transform:rotate(3deg) translateY(-4px)}28%{transform:none}100%{transform:none}}
 @keyframes buytx{0%,12%{opacity:0;transform:translateY(14px) scale(1.12)}26%{opacity:1;transform:none}74%{opacity:1}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.buyov.go,.buyov.go .bcard,.buyov.go .btl,.buyov.go .bcap,.buyov.go .bds{animation-duration:1.1s;animation-timing-function:linear}}
 @media (max-width:900px){.buyov .bcard{width:96px;height:134px}.buyov .bic{font-size:42px}}
 /* PC：ACQUIREDと説明の間を広げ、説明の文字を大きく */
 @media (min-width:901px){.buyov .bcap{margin-top:30px;font-size:28px}.buyov .bds{font-size:18px;margin-top:4px;max-width:760px}}
@@ -1168,7 +1163,6 @@ body.land .dlg h2{margin-top:0}
 .buyov.honor .bcap{color:#eefff4}
 .buyov.honor.go .btl,.buyov.honor.go .bq,.buyov.honor.go .bcap{animation:buytx 2.6s forwards}
 @keyframes honorbg{0%{background:rgba(20,120,60,0)}8%{background:rgba(50,190,100,.55)}20%{background:rgba(4,26,14,.84)}78%{background:rgba(4,26,14,.8)}100%{background:rgba(4,26,14,0)}}
-@media (prefers-reduced-motion:reduce){.buyov.honor.go,.buyov.honor.go .bcard,.buyov.honor.go .btl,.buyov.honor.go .bq,.buyov.honor.go .bcap{animation-duration:1.3s;animation-timing-function:linear}}
 @media (min-width:901px){.buyov.honor .bq{margin-top:22px}.buyov.honor .bcap{margin-top:12px}}
 #players .pl.gothonor{animation:gothonor .9s ease-out}
 @keyframes gothonor{0%{box-shadow:0 0 0 0 rgba(110,230,150,.9)}100%{box-shadow:0 0 0 14px rgba(110,230,150,0)}}
@@ -1468,7 +1462,6 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 .mp-lv{margin:8px 0 0}
 .status .kncancel{margin-left:10px;padding:4px 14px;font-size:13px;pointer-events:auto}
 .buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:4.3s}
-@media (prefers-reduced-motion:reduce){.buyov.honor.long.go,.buyov.honor.long.go .bcard,.buyov.honor.long.go .btl,.buyov.honor.long.go .bq,.buyov.honor.long.go .bcap{animation-duration:1.3s}}
 /* 劫火の胎動 */
 .mappick button.scen.volc{border-color:rgba(230,120,50,.6);background:linear-gradient(160deg,#36190c,var(--panel2))}
 .mappick button.scen.volc .tst{border-color:#ffab6a;color:#ffd0a8}
@@ -1500,12 +1493,10 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 #map .varrow.now .vember{fill:#ffb070;stroke:#fff1dc;stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(255,140,60,1))}
 #map .varrow.next line{stroke:rgba(255,200,160,.5);stroke-width:2;stroke-dasharray:2 6;stroke-linecap:round;filter:none}
 #map .varrow.next .vtip{stroke-dasharray:none;fill:none;stroke:rgba(255,200,160,.6);stroke-width:1.6;stroke-linejoin:round;filter:none}
-@media (prefers-reduced-motion:reduce){#map .varrow.now .vchev,#map .vglow,#map .vpath{animation:none;opacity:1}}
 #map .varrow.now .vband{fill-opacity:1;filter:drop-shadow(0 0 8px rgba(255,100,30,.8))}
 #map .varrow.now .vchev{stroke:rgba(60,16,6,.75);stroke-width:1;stroke-linejoin:round}
 #map .varrow.now .vring{fill:none;stroke:rgba(255,170,100,.7);stroke-width:1.5;animation:vring 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes vring{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
-@media (prefers-reduced-motion:reduce){#map .varrow.now .vring{animation:none}}
 /* チュートリアル：今のステップ以外の操作を薄く */
 body.coach-lock #dock .ib:not(.coach-hl):not([hidden]),body.coach-lock .playbar .btn:not(.coach-hl):not(#aPlay){opacity:.32;filter:saturate(.4)}
 body.coach-lock #myHand .acard.spec:not(.coach-hl){opacity:.5}
@@ -3754,7 +3745,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   function buyFx(e) {   // バーストの青い版：画面を青く染め、中央に札と「ACQUIRED」。最後に札が買った人の欄へ飛ぶ
     const D = e.id && SPEC[e.id]; if (!D) return;
     buyQ = buyQ.then(() => new Promise(res => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, T = reduce ? 1100 : 2100;
+      const reduce = false, T = reduce ? 1100 : 2100;
       const el = document.createElement('div'); el.className = 'buyov';
       el.innerHTML = `<div class="bx"><div class="bcard" style="--pc:${PHEX[e.p]}"><span class="bic">${D.ic}</span><span class="bnm">${D.n}</span></div>
         <span class="btl">ACQUIRED</span><small class="bcap"><b style="color:${PHEX[e.p]}">${e.p === HUMAN ? 'あなた' : NAMES[e.p]}</b> が市場で「${D.n}」を手に入れた</small><small class="bds">${D.d}</small></div>`;
@@ -3841,7 +3832,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       : e.k === 'raid' ? `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> の<b>軍</b>が ${vic} の${e.city ? '都市' : '開拓地'}を攻め落とした（+${e.city ? S.raidVPCity : S.raidVP}点）`
       : `<b style="color:${PHEX[e.p]}">${nm(e.p)}</b> が${took}<b>${H.nm}</b>を手にした（+${H.pts()}点）`;
     buyQ = buyQ.then(() => new Promise(res => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, long = /^barb/.test(e.k) || !!H.long, T = reduce ? 1300 : long ? 4300 : 2600;   // 蛮族の演出は長め
+      const reduce = false, long = /^barb/.test(e.k) || !!H.long, T = reduce ? 1300 : long ? 4300 : 2600;   // 蛮族の演出は長め
       const el = document.createElement('div'); el.className = 'buyov honor' + (long ? ' long' : '') + (H.atk ? ' atk' : '') + (H.cls ? ' ' + H.cls : '');
       el.innerHTML = `<div class="bx"><div class="bcard" style="--pc:${PHEX[e.p]}"><span class="bic">${H.ic}</span><span class="bnm"${H.nm.length >= 5 ? ' style="font-size:14px;letter-spacing:.04em"' : ''}>${H.nm}</span></div>
         <span class="btl">${H.tl}</span><small class="bq">「${q}」</small><small class="bcap">${cap}</small></div>`;
