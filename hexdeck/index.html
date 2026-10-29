@@ -5419,23 +5419,60 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   let coach = null; const TAP = matchMedia('(pointer:coarse)').matches ? 'タップ' : 'クリック';
   const myHexNums = () => { const out = []; S.hexes.forEach(H => { if (H.num && H.num !== 7 && H.verts.some(v => S.verts[v].owner === HUMAN)) out.push(H.num); }); return out; };
   const gift = (o, note) => { const P = S.players[HUMAN]; let any = false; for (const r in o) if (P.res[r] < o[r]) { P.res[r] = o[r]; any = true; } if (any) coach.gift = note; };
+  const noSeven = () => { for (let k = 1; k <= 2; k++) { const i = S.deck.length - k; if (i >= 0 && S.deck[i] === 7) { const j = S.deck.findIndex(x => x !== 7); if (j >= 0 && j < S.deck.length - 2) [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]]; } } };
+  const myTurnNew = () => S.phase === 'turn' && S.cur === HUMAN && !S.acted && S.turn !== coach.lastTurn;
+  const P0 = () => S.players[HUMAN];
+  const spec0 = () => (P0().spec || []).length;
   const COACH = [
-    { id: 'intro', manual: true, h: '遊びながら覚えよう', t: () => `練習用の対局です（相手はBOT3人・目標${S.goal}点）。<br>この枠の指示に沿って、実際に盤を操作してみましょう。光っている所が次に押す場所です。` },
-    { id: 'camp', h: '① スタート地点を選ぶ', t: () => '盤の角に光る<b>スタート地点</b>から1つをクリックして<b>拠点</b>を置きます。<br>拠点は0点ですが、接する土地の数字が出ると資源を<b>' + S.campYield + '枚</b>もらえます。', done: () => S.players[HUMAN].camp >= 0, wait: () => S.phase !== 'setup-camp' || S.cur !== HUMAN },
-    { id: 'dev', h: '② 荒地を開拓する', t: () => { coachRec(null); const b = coach.best && coachRec(coach.best.h); return '拠点のとなりの光っている<b>荒地</b>をクリックし、<b>資源</b>と<b>数字チップ</b>を選びます（この1回は無料）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。' + (b ? `<span class="co-rec">おすすめ：${b.r ? resIcon(b.r, 18) + RESN[b.r] + '＋' : ''}<b>${b.n}</b>（選ぶ画面にも表示）</span>` : ''); }, done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
-    { id: 'road', h: '③ 道を1本引く', t: () => S.players[HUMAN].roads >= 1 ? '<b>手番順の補正</b>で、後手のあなたはもう1本道を置けます。最初の道の先の光った<b>辺</b>をクリックしてください。' : '拠点から伸びる光った<b>辺</b>をクリックして道を置きます。<br>道の先に、あとで<b>開拓地</b>を建てられます。', done: () => S.phase === 'turn' || (S.players[HUMAN].roads >= 1 && !S.setupSteps.slice(S.setupIdx).some(x => x.p === HUMAN)), wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
-    { id: 'watch', h: '④ BOTの番を見る', t: () => 'あなたは最後の手番です。BOTの番を見てみましょう。<br>BOTが数字を出すと、<b>その数字の土地に接する建物を持つ全員</b>が資源をもらえます（あなたも）。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
-    { id: 'draw', turn: true, tg: '#deckSlot', h: '⑤ 札を引く', enter: () => { const P = S.players[HUMAN]; if (S.drawn.length) return; const ns = myHexNums(); const want = ns.find(n => n <= 6) || ns[0] || 6; const cards = want <= 6 ? [want] : [want - 6, 6].sort((a, b) => b - a); coach.need = cards.length; coach.want = want;
-        for (const c of cards.slice().reverse()) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } void P; },
+    { id: 'intro', manual: true, h: '遊びながら覚えよう', t: () => `練習用の対局です（相手は初級BOT3人・目標${S.goal}点）。<br>この枠の指示に沿って、実際に盤を操作しながら<b>3手番</b>かけてひと通り覚えます。光っている所が次に押す場所です。<br><small>練習用に、時代は2周ごとに進みます。</small>` },
+    // ---- 準備 ----
+    { id: 'camp', h: 'スタート地点を選ぶ', t: () => '盤の角に光る<b>スタート地点</b>から1つをクリックして<b>拠点</b>を置きます。<br>拠点は0点ですが、接する土地の数字が出ると資源を<b>' + S.campYield + '枚</b>もらえます（都市にはできません）。', done: () => P0().camp >= 0, wait: () => S.phase !== 'setup-camp' || S.cur !== HUMAN },
+    { id: 'dev', h: '荒地を開拓する', t: () => { coachRec(null); const b = coach.best && coachRec(coach.best.h); return '拠点のとなりの光っている<b>荒地</b>をクリックし、<b>資源</b>と<b>数字チップ</b>を選びます（この1回は無料）。<br>チップの点が多い<b>6・8</b>ほどよく出ます。11・12を選ぶとボーナス資源がもらえます。' + (b ? `<span class="co-rec">おすすめ：${b.r ? resIcon(b.r, 18) + RESN[b.r] + '＋' : ''}<b>${b.n}</b>（選ぶ画面にも表示）</span>` : ''); }, done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
+    { id: 'road', h: '道を引く', t: () => P0().roads >= 1 ? '<b>手番順の補正</b>で、後手のあなたはもう1本道を置けます。最初の道の先の光った<b>辺</b>をクリックしてください。' : '拠点から伸びる光った<b>辺</b>をクリックして道を置きます。<br>道の先に、あとで<b>開拓地</b>を建てられます。', done: () => S.phase === 'turn' || (P0().roads >= 1 && !S.setupSteps.slice(S.setupIdx).some(x => x.p === HUMAN)), wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
+    { id: 'watch', h: 'BOTの番を見る', t: () => 'あなたは4番手です。まずBOTの番を見てみましょう。<br>BOTが数字を出すと、<b>その数字の土地に接する建物を持つ全員</b>が資源をもらえます（あなたも）。右の<b>記録</b>に何が起きたか出ます。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
+    // ---- 1手番目：基本 ----
+    { id: 'draw', blk: 1, tg: '#deckSlot', h: '1手番目：札を引く', enter: () => { if (S.drawn.length) return; const ns = myHexNums(); const want = ns.find(n => n <= 6) || ns[0] || 6; const cards = want <= 6 ? [want] : [want - 6, 6].sort((a, b) => b - a); coach.need = cards.length; coach.want = want;
+        for (const c of cards.slice().reverse()) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } },
       t: () => `あなたの番です。光っている<b>山札</b>をクリックして札を引きます${TAP === 'クリック' ? '（<b>スペースキー</b>でも引けます）' : ''}。${coach.need > 1 ? `<br>引いたら<b>もう1回</b>クリックして2枚目も引いてみましょう（1手番に最大2枚）。` : '<br>もう1枚引くこともできますが、<b>7</b>を引くとバーストします。'}`, done: () => S.drawn.length >= (coach.need || 1) || S.step === 'choose' || S.acted },
-    { id: 'play', turn: true, tg: '#myHand,#aPlay', h: '⑥ 数字を出す', t: () => `手札の札をクリックして選び、<b>札を選ぶ</b>で数字を出します。${coach.need > 1 ? `2枚を選ぶと合計（<b>${coach.want}</b>）になります。` : ''}<br><b>${coach.want}</b>の土地にはあなたの拠点が接しているので、資源がもらえます。`, done: () => S.acted },
-    { id: 'road2', turn: true, h: '⑦ 道を建てる', enter: () => gift({ wood: 1, brick: 1 }, '練習用に木材とレンガを配りました'), t: () => `資源を払って建設します。盤上の辺に出ている<b>道の目印</b>をクリックすると道が建ちます。<br>費用は${TF.cost(HD.COST.road)}。開拓地・都市も同じように目印から建てます。`, done: () => S.players[HUMAN].roads > coach.b.roads, skip: () => !HD.legalRoads(S, HUMAN).length },
-    { id: 'dev2', turn: true, h: '⑧ 土地を開拓する', enter: () => gift(S.wasteCost, '練習用に開拓の資源を配りました'), t: () => `建物に接する荒地は、資源を払えば開拓できます。<b>開拓できる土地</b>（目印の出ている荒地）をクリック。<br>荒地は${TF.cost(S.wasteCost)}。数字チップは右上の<b>市場</b>の3枚から選びます。選ぶ画面に<b>おすすめ</b>が出ます。`, done: () => S.hexes.filter(H => H.devBy === HUMAN).length > coach.b.dev, skip: () => !HD.developable(S, HUMAN).length },
-    { id: 'trade', turn: true, tg: '#aTrade', h: '⑨ 交換する', enter: () => { const r = HD.RES.slice().sort((a, b) => S.rates[a] - S.rates[b])[0]; gift({ [r]: S.rates[r] }, '練習用に交換できる資源を配りました'); }, t: () => '足りない資源は<b>交換</b>で手に入れます（銀行・港・BOT）。<br>銀行のレート（左上）は<b>在庫が少ない資源ほど高く</b>なります。1回交換してみましょう。', done: () => S.trades > coach.b.trades || S.log.some(m => m.k === 'ptrade' && m.p === HUMAN && m.seq > coach.b.seq) },
-    { id: 'end', turn: true, tg: '#aEnd', h: '⑩ 手番を終える', t: () => 'これで手番はおしまい。<b>終了</b>ボタンで次の人へ渡します。<br>（スペースキーでも終了できます）', done: () => S.cur !== HUMAN },
-    { id: 'burst', manual: true, h: '⑪ 7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が混ざっています。7を引くとその番は資源が出ず、アクション札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。<br>山札の横に、見えていない7の出現確率が出ます。引くか止めるかが勝負どころ。` },
-    { id: 'score', manual: true, h: '⑫ 点の取り方', t: () => `開拓地<b>1点</b>・都市<b>2点</b>。最長交易路・最大騎士力は<b>+2点</b>${S.devVP ? `、${S.devVP.n}か所以上開拓した一番の人は開拓者<b>+${S.devVP.vp}点</b>` : ''}。<br>1の札は<b>騎士</b>にもなり、盗賊を動かして資源を奪えます。先に<b>${S.goal}点</b>で勝ち！` },
-    { id: 'fin', fin: true, h: 'チュートリアル完了！', t: () => 'このまま対局を続けられます。<br>時代・市場・収奪などの細かい説明は<b>マニュアル</b>や<b>ルール</b>でいつでも読めます。' },
+    { id: 'play', blk: 1, tg: '#myHand,#aPlay', h: '1手番目：数字を出す', t: () => `手札の札をクリックして選び、<b>札を選ぶ</b>で数字を出します。${coach.need > 1 ? `2枚を選ぶと合計（<b>${coach.want}</b>）になります。` : ''}<br><b>${coach.want}</b>の土地にはあなたの拠点が接しているので、資源がもらえます。使わなかった札は手札に残り、次の番以降に使えます。`, done: () => S.acted },
+    { id: 'road2', blk: 1, h: '1手番目：道を建てる', enter: () => gift({ wood: 1, brick: 1 }, '練習用に木材とレンガを配りました'), t: () => `資源を払って建設します。盤上の辺に出ている<b>道の目印</b>をクリックすると道が建ちます。<br>費用は${TF.cost(HD.COST.road)}。下のボタンの小さな四角は、必要な資源がそろっているかの目安です。`, done: () => P0().roads > coach.b.roads, skip: () => !HD.legalRoads(S, HUMAN).length },
+    { id: 'dev2', blk: 1, h: '1手番目：土地を開拓する', enter: () => gift(S.wasteCost, '練習用に開拓の資源を配りました'), t: () => `建物に接する荒地は、資源を払えば開拓できます。<b>開拓できる土地</b>（目印の出ている荒地）をクリック。<br>荒地は${TF.cost(S.wasteCost)}。数字チップは<b>チップの市場</b>の3枚から選びます。開拓した資源を1枚もらえます。`, done: () => S.hexes.filter(H => H.devBy === HUMAN).length > coach.b.dev, skip: () => !HD.developable(S, HUMAN).length },
+    { id: 'trade', blk: 1, tg: '#aTrade', h: '1手番目：交換する', enter: () => { const r = HD.RES.slice().sort((a, b) => S.rates[a] - S.rates[b])[0]; gift({ [r]: S.rates[r] }, '練習用に交換できる資源を配りました'); }, t: () => '足りない資源は<b>交換</b>ボタンから手に入れます。<br><b>銀行</b>（左上のレート）、<b>港</b>（建物か道が届けば2:1・3:1）、<b>BOTとの交換</b>（提案して、応じた人から選ぶ）の3通り。1回交換してみましょう。', done: () => S.trades > coach.b.trades || S.log.some(m => m.k === 'ptrade' && m.p === HUMAN && m.seq > coach.b.seq) },
+    { id: 'end', blk: 1, tg: '#aEnd', h: '1手番目：手番を終える', t: () => 'これで手番はおしまい。<b>終了</b>ボタン（砂時計）で次の人へ渡します。<br>（スペースキーでも終了できます）', done: () => S.cur !== HUMAN },
+    // ---- 画面の見方（BOTの番の間に読む） ----
+    { id: 'burst', manual: true, h: '7はバースト', f: () => acard(7, 'md'), t: () => `山札には<b>7</b>が${S.sevens}枚混ざっています。7を引くとその番は資源が出ず、アクション札＋資源が<b>${S.limit}枚以上</b>の人は半分を捨てます。引いた人は盗賊を動かします（最初の時代は盗賊なし）。<br>持ちすぎないこと、2枚目を引くかの見極めが大切です。` },
+    { id: 'uiBank', manual: true, tg: '#bank', h: '画面の見方：相場', t: () => `この欄は<b>資源の在庫</b>と<b>銀行のレート</b>です。在庫が少ない資源ほど銀行で手に入れるのが高く（5:1〜2:1）、在庫が0の資源は生産されません。<br>払った資源は消費ボックスに入り、<b>${S.marketPeriod}手番ごと</b>の相場の更新で在庫に戻ります。` },
+    { id: 'uiEra', manual: true, tg: '#eraChip,#sideEra,#eraBan', h: '画面の見方：時代', t: () => `<b>時代</b>は${S.eraLen}周ごとに変わります。1番目は<b>発見の時代</b>（盗賊なし）、2番目は<b>開拓の時代</b>（盗賊と騎士が使える）、3番目からは時代カードで「小麦が多く取れる」などの効果が起きます。●は今の時代の残りの周回です。` },
+    { id: 'uiDeck', manual: true, tg: '#deckChip,#deckInfo', h: '画面の見方：山札', t: () => '山札の残り枚数と、<b>次に7が出る確率</b>です。押すと、まだ見えていない札の内訳が分かります。<br>確率が高いときは1枚で止める、低いときは2枚目を狙う、が基本です。' },
+    { id: 'uiChip', manual: true, tg: '#mktChip', h: '画面の見方：チップの市場', t: () => '開拓するときに置ける<b>数字チップ</b>の3枚です。使うと袋から補充されます。<br>欲しい数字が並んだときが開拓のチャンス。隣り合う土地に同じ数字は置けません。' },
+    { id: 'uiShop', manual: true, tg: '#shopBox', h: '画面の見方：特殊カードの市場', t: () => `羊毛・小麦・鉱石を1つずつ払うと、ここに並ぶ<b>特殊カード</b>を1枚買えます（1手番1枚）。<br>買ったカードは手札に並び、<b>次の自分の番から</b>使えます。時代が変わると並びが入れ替わります。` },
+    { id: 'uiPlayers', manual: true, tg: '#players', h: '画面の見方：プレイヤー欄', t: () => 'プレイヤー欄は各プレイヤーの状況です。大きな数字が<b>点</b>、その下に<b>手札の枚数</b>・<b>一番長い道</b>・<b>騎士を使った回数</b>・<b>開拓した土地の数</b>・<b>軍の得点</b>が並びます。⚓は使える港です。<br>称号を持つ人には名前の横に札が付きます。' },
+    { id: 'uiLog', manual: true, tg: '#log,#logBtn', h: '画面の見方：記録', t: () => 'だれが何をしたか、何の数字で誰が何をもらったかは<b>記録</b>に残ります。BOTの動きが気になったらここを見ましょう。' },
+    { id: 'wait2', h: '次の番を待つ', t: () => 'BOTの番が終わると、あなたの2手番目です。次は<b>開拓地・都市・特殊カード</b>を覚えます。', done: myTurnNew, waitT: 'BOTの番です。少し待ちましょう…', wait: () => !myTurnNew() },
+    // ---- 2手番目：建てる・買う ----
+    { id: 'play2', blk: 2, tg: '#deckSlot,#myHand,#aPlay', h: '2手番目：引いて出す', enter: () => noSeven(), t: () => '前と同じように、山札から札を引いて、手札で数字を作って出しましょう。<br>出さずに手札に残しておくこともできます（<b>出さない</b>ボタン）。', done: () => S.acted },
+    { id: 'settle', blk: 2, h: '2手番目：開拓地を建てる', enter: () => { const c = HD.legalSettles(S, HUMAN).length ? HD.COST.settle : Object.fromEntries(HD.RES.map(r => [r, (HD.COST.settle[r] || 0) + (HD.COST.road[r] || 0)])); gift(c, '練習用に開拓地（と道）の資源を配りました'); },
+      t: () => HD.legalSettles(S, HUMAN).length ? `道の先の交点に出ている<b>家の目印</b>をクリックすると<b>開拓地</b>（1点）が建ちます。<br>費用は${TF.cost(HD.COST.settle)}。ほかの建物から<b>1辺以上</b>離れた交点にしか建てられません。` : `開拓地は、ほかの建物から1辺以上離れた<b>自分の道の先</b>に建てます。まず<b>道</b>を伸ばしてから、家の目印をクリックしましょう。<br>費用は${TF.cost(HD.COST.settle)}。`,
+      done: () => P0().settles > coach.b.settles, skip: () => !HD.legalSettles(S, HUMAN).length && !HD.legalRoads(S, HUMAN).length },
+    { id: 'city', blk: 2, h: '2手番目：都市にする', enter: () => gift(HD.COST.city, '練習用に都市の資源を配りました'), t: () => `開拓地の上に出ている<b>都市の目印</b>をクリックすると<b>都市</b>（2点）に格上げできます。<br>費用は${TF.cost(HD.COST.city)}。都市は資源を<b>2倍</b>もらえます。`, done: () => P0().cities > coach.b.cities, skip: () => !HD.legalCities(S, HUMAN).length },
+    { id: 'shop', blk: 2, tg: '#shopBox', h: '2手番目：特殊カードを買う', enter: () => gift({ sheep: 1, wheat: 1, ore: 1 }, '練習用に特殊カードの資源を配りました'), t: () => '市場の<b>買う</b>ボタンで、気になる特殊カードを1枚買ってみましょう（羊毛・小麦・鉱石を1つずつ）。<br>買ったカードは次のあなたの番から使えます。', done: () => spec0() > coach.b.spec, skip: () => !S.shop || !S.shop.length },
+    { id: 'trash', blk: 2, manual: true, tg: '#aTrash', h: '2手番目：処分（山札の圧縮）', t: () => `手札の要らない札は<b>処分</b>ボタンで捨て札へ戻せます（1手番に1枚無料、2枚目からは資源${S.trashCost}枚）。<br>弱い札を山札から抜いていくと、強い札を引きやすくなります。` },
+    { id: 'hint', blk: 2, manual: true, tg: '#btnHint', h: '2手番目：ヒント', t: () => '迷ったら上の<b>ヒント</b>ボタン。おすすめの一手（建てる場所・出す数字など）を光らせて教えてくれます。' },
+    { id: 'end2', blk: 2, tg: '#aEnd', h: '2手番目：手番を終える', t: () => 'ここで手番を終えましょう。<br>次の番の前に時代が<b>開拓の時代</b>に変わり、盗賊と騎士が使えるようになります。', done: () => S.cur !== HUMAN },
+    { id: 'wait3', h: '時代が変わる', t: () => '<b>開拓の時代</b>になりました。7を引いた人は盗賊を動かし、接する相手から資源を1枚奪います。盗賊のいる土地は資源を生みません。<br>次のあなたの番で<b>騎士</b>を使ってみます。', done: myTurnNew, waitT: 'BOTの番です。時代が変わるのを待ちましょう…', wait: () => !myTurnNew() },
+    // ---- 3手番目：騎士と称号 ----
+    { id: 'play3', blk: 3, tg: '#deckSlot,#myHand,#aPlay', h: '3手番目：引いて出す', enter: () => noSeven(), t: () => '札を引いて数字を出しましょう。<br><b>1の札</b>は数字の1としても使えますが、<b>騎士</b>にもなります。次で使うので、1は残しておくのがおすすめです。', done: () => S.acted },
+    { id: 'knight', blk: 3, tg: '#aKnight', h: '3手番目：騎士を使う', enter: () => { if (!HD.hasKn(S, P0().hand)) { const i = S.deck.lastIndexOf(1); if (i >= 0) S.deck.splice(i, 1); P0().hand.push(1); P0().hand.sort((a, b) => a - b); coach.gift = '練習用に1の札（騎士）を配りました'; } },
+      t: () => '<b>騎士</b>ボタンを押すと1の札を出して、<b>盗賊</b>を好きな土地へ動かせます。次に光る土地をクリックし、そこに建物がある相手から資源を<b>1枚</b>奪います（1手番1回）。<br>盗賊を置く前なら「やめる」で取り消せます。', done: () => S.knightUsed && S.phase === 'turn', skip: () => !HD.robberOn(S) },
+    { id: 'bounce', blk: 3, manual: true, f: () => acard(1, 'md'), h: '3手番目：跳ね返し', t: () => '相手に盗賊で奪われそうになったとき、手札に1の札があれば<b>跳ね返せます</b>。奪いは無効になり、逆に1枚奪って盗賊も動かせます。<br>騎士を攻めに使うか、守りに取っておくかが悩みどころです。' },
+    { id: 'spec', blk: 3, tg: '#myHand', h: '3手番目：特殊カードを使う', t: () => '前の番に買った<b>特殊カード</b>が手札に並んでいます（光っている札）。クリックすると使えます（1手番1枚）。<br>カードによって使えるタイミングが違い、押せないときは名前の上にマウスを乗せると説明が出ます。', done: () => S.specUsed, skip: () => !(P0().spec || []).some(x => x.t < S.turn) },
+    { id: 'titles', blk: 3, manual: true, tg: '#players', h: '3手番目：称号（+点）', t: () => `<b>最長交易路</b>：5本以上つながった一番長い道の人に+2点。道やプレイヤー欄の道の本数にマウスを乗せると、どの道か光ります。<br><b>最大騎士力</b>：騎士を${S.armyMin}回以上使い、一番多い人に+${S.armyPts}点（あなたは今${P0().knights}回）。${S.devVP ? `<br><b>開拓者</b>：自分で開拓した土地が${S.devVP.n}か所以上で一番多い人に+${S.devVP.vp}点。` : ''}<br>どれも上回る人が出たら移ります。` },
+    { id: 'end3', blk: 3, tg: '#aEnd', h: '3手番目：手番を終える', t: () => '手番を終えましょう。基本の操作はこれでひと通りです。', done: () => S.cur !== HUMAN },
+    // ---- 先の要素とボタン ----
+    { id: 'later', manual: true, tg: '#aSeize,#aRaid,#aWall', h: 'これから出てくるもの', t: () => `3つ目の時代からは<b>道の収奪</b>（相手の道を奪う）、<b>軍</b>（山札に混ざる軍の札で相手の建物を壊す・得点札）、それを防ぐ<b>城壁</b>が使えます。<br>先頭の人を止める手段として覚えておきましょう。` },
+    { id: 'buttons', manual: true, tg: '#btnRules,#btnUndo,#btnNew,#btnSound', h: '上のボタン', t: () => '<b>ルール</b>：いつでもルールを表と図で確認できます。<b>待った</b>：直前の操作を取り消せます（使えるときだけ）。<b>対局</b>：マップ・人数・BOTの強さを変えて新しく始めます。<b>音</b>：BGMと効果音の設定。' },
+    { id: 'score', manual: true, h: '点の取り方（まとめ）', t: () => `開拓地<b>1点</b>・都市<b>2点</b>・最長交易路と最大騎士力<b>+2点</b>${S.devVP ? `・開拓者<b>+${S.devVP.vp}点</b>` : ''}・軍の得点札。<br>誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人の番まで続けて、一番点の高い人の勝ちです。` },
+    { id: 'fin', fin: true, h: 'チュートリアル完了！', t: () => 'これでシステムはひと通りです。このまま対局を続けられます。<br>細かい説明は<b>マニュアル</b>や<b>ルール</b>でいつでも読めます。' },
   ];
   function coachRec(h) {   // チュートリアル中：開拓のおすすめ（BOTの評価を使う）
     if (!coach) return null; const ck = coach.i + ':' + S.phase + ':' + S.turn; if (coach.bestK !== ck) { coach.bestK = ck; coach.best = null; try { coach.best = B.chooseDevelop(S, HUMAN); } catch (_) {} } const b = coach.best; if (!b || h == null) return null;
@@ -5444,15 +5481,15 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   }
   function coachGo(i) {
     coach.i = i; coach.gift = null; const st = COACH[i]; if (!st) { coachEnd(); return; }
-    const P = S.players[HUMAN]; coach.b = { roads: P.roads, dev: S.hexes.filter(H => H.devBy === HUMAN).length, trades: S.trades, seq: S.logSeq || 0 };
-    if (st.turn && coach.turnNo == null) coach.turnNo = S.turn;
+    const P = S.players[HUMAN]; coach.b = { roads: P.roads, dev: S.hexes.filter(H => H.devBy === HUMAN).length, trades: S.trades, seq: S.logSeq || 0, settles: P.settles, cities: P.cities, spec: (P.spec || []).length };
+    if (st.blk && coach.blkTurn[st.blk] == null && S.cur === HUMAN && S.phase === 'turn') { coach.blkTurn[st.blk] = S.turn; coach.lastTurn = S.turn; }
     if (st.skip && st.skip()) return coachGo(i + 1);
     if (st.enter) { st.enter(); if (coach.gift) setTimeout(render, 0); }
   }
   function coachStart() {
     document.querySelectorAll('.coach').forEach(x => x.remove());
     const el = document.createElement('div'); el.className = 'coach'; el.setAttribute('role', 'dialog'); document.body.appendChild(el);
-    coach = { i: 0, el, turnNo: null };
+    coach = { i: 0, el, blkTurn: {}, lastTurn: -1 };
     el.addEventListener('click', e => {
       const b = e.target.closest('button[data-c]'); if (!b) return; const c = b.dataset.c;
       if (c === 'next' || c === 'skip') { coachGo(coach.i + 1); render(); }
@@ -5468,7 +5505,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (S.phase === 'over') { coachEnd(); return; }
     let st = COACH[coach.i], guard = 0;
     while (st && guard++ < 20) {
-      if (st.turn && coach.turnNo != null && (S.turn !== coach.turnNo || S.cur !== HUMAN)) { const k = COACH.findIndex(x => x.id === 'burst'); if (coach.i < k) { coachGo(k); st = COACH[coach.i]; continue; } }
+      if (st.blk && coach.blkTurn[st.blk] != null && (S.turn !== coach.blkTurn[st.blk] || S.cur !== HUMAN)) { let k = coach.i; while (COACH[k] && COACH[k].blk === st.blk) k++; coachGo(k); st = COACH[coach.i]; continue; }   // 手番が終わったら、その手番の残りは飛ばす
       if (!st.manual && !st.fin && st.done && st.done()) { coachGo(coach.i + 1); st = COACH[coach.i]; continue; }
       break;
     }
@@ -5478,18 +5515,18 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const key = coach.i + ':' + (waiting ? 1 : 0) + ':' + (coach.gift || '') + ':' + (coach.need || '') + ':' + S.players[HUMAN].roads;
     if (coach.key !== key) {
       coach.key = key;
-      coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
+      coach.el.innerHTML = `<div class="co-top"><span class="co-tag">チュートリアル ${k + 1}/${n + 1}</span><span class="co-bar"><i style="width:${k / n * 100}%"></i></span><button class="co-x" data-c="min" title="小さくする">–</button></div>
         <div class="co-body">${st.f ? `<div class="co-fig">${st.f()}</div>` : ''}<div><h4>${st.h}</h4><p>${waiting ? `<span class="co-wait">${st.waitT || 'BOTの番です。少し待ちましょう…'}</span>` : st.t().replace(/クリック/g, TAP)}</p>${coach.gift && !waiting ? `<p class="co-gift">🎁 ${coach.gift}</p>` : ''}</div></div>
-        <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : (st.turn ? '<button class="btn" data-c="skip">とばす</button>' : '')}`}</div>`;
+        <div class="co-foot">${st.fin ? '<button class="btn" data-c="manual">マニュアルを読む</button><button class="btn primary" data-c="cont">このまま続ける</button>' : `<button class="co-q" data-c="quit">チュートリアルを終える</button>${st.manual ? '<button class="btn primary" data-c="next">次へ</button>' : (st.blk ? '<button class="btn" data-c="skip">とばす</button>' : '')}`}</div>`;
       coach.el.classList.remove('co-in'); void coach.el.offsetWidth; coach.el.classList.add('co-in');
     }
     document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl'));
-    if (st.tg && !waiting && S.cur === HUMAN) st.tg.split(',').forEach(q => { const e = document.querySelector(q); if (e) e.classList.add('coach-hl'); });
+    if (st.tg && !waiting && (st.manual || S.cur === HUMAN)) st.tg.split(',').forEach(q => { const e = document.querySelector(q); if (e) e.classList.add('coach-hl'); });
   }
   function startTut() {
     opts.map = 0;
     let seed = (Math.random() * 2 ** 31) | 0;
-    for (let k = 0; k < 200; k++, seed++) { S = HD.newGame({ players: 4, goal: 10, limit: opts.limit, sevens: opts.sevens, seed }); if (S.cur === HUMAN && S.phase === 'setup-camp') break; }
+    for (let k = 0; k < 200; k++, seed++) { S = HD.newGame({ players: 4, goal: 10, limit: opts.limit, sevens: opts.sevens, seed, eraLen: 2 }); if (S.cur === HUMAN && S.phase === 'setup-camp') break; }
     setBots(1);   // チュートリアルは初級BOTで固定
     mode = null; hint = null; flipKey = ''; glowNums = []; bustSeen = -1;
     SND.unlock(); SND.bgmPlay();
@@ -5501,7 +5538,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (skip) return done();
     const d = dlg(`<h2 style="text-align:center">ナンバーランズへようこそ</h2>
       <p style="text-align:center;margin:0 0 14px">はじめにチュートリアルを見ますか？</p>
-      <div class="tut-ask three"><button data-t="play" class="rec"><em>おすすめ</em><span class="for">はじめての方</span><b>遊びながら覚える</b><small>実際の盤を操作しながら<br>進む練習対局</small></button><button data-t="begin"><span class="for">はじめての方</span><b>マニュアルを読む</b><small>ゲームの流れを1から<br>15ページで解説</small></button><button data-t="expert"><span class="for">カタン経験者</span><b>違いだけ読む</b><small>カタンと違うところだけを<br>9ページで解説</small></button></div>
+      <div class="tut-ask three"><button data-t="play" class="rec"><em>おすすめ</em><span class="for">はじめての方</span><b>遊びながら覚える</b><small>実際の盤を操作しながら<br>3手番でひと通り覚える練習対局</small></button><button data-t="begin"><span class="for">はじめての方</span><b>マニュアルを読む</b><small>ゲームの流れを1から<br>15ページで解説</small></button><button data-t="expert"><span class="for">カタン経験者</span><b>違いだけ読む</b><small>カタンと違うところだけを<br>9ページで解説</small></button></div>
       <label class="tut-skip"><input type="checkbox" id="tuSkip"> <span>次から表示しない<small>（マップ選択からいつでも見られます）</small></span></label>
       <div class="foot"><button class="btn" id="tuNo">見ないで始める</button></div>`);
     d.classList.add('tutask');
