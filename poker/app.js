@@ -370,7 +370,7 @@ function render(o) {
   h += `<div class="pk-pot${pot ? '' : ' empty'}" data-k="pot">${pot ? chipStack(pot, 3) : '<span class="chipico"></span>'}<b>${pot}</b><small>${esc(t('pot'))}</small></div>`;
   // seats
   T.seats.forEach((s, i) => {
-    const [x, y] = (tall ? SEATPOS_T : SEATPOS)[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
+    const [x, y] = (tall || narrow ? SEATPOS_T : SEATPOS)[i], hero = i === HERO, toAct = T.toAct === i && (T.phase === 'bet' || T.phase === 'draw');
     const cards = s.cards.map((c, k) => {
       const up = V.stud ? s.up[k] : false;
       const visible = hero || up || (showAll && !s.folded && (set.showBots || winners.has(i) || true));
@@ -386,7 +386,7 @@ function render(o) {
       `<div class="plate"><span class="ava av${i}">${hero ? '★' : esc(s.name[0])}</span><span class="pn"><b>${esc(s.name)}</b><small>${hero ? esc(t('you.sub')) : esc(style)}</small></span><span class="st">${s.stack}</span></div>` +
       (bub ? `<div class="bub" data-k="bub${T.hand}-${lastBubble[i].at}">${esc(bub)}</div>` : '') + (info ? `<div class="hinfo">${esc(info)}</div>` : '') +
       (T.btn === i && !V.stud ? `<span class="dbtn">D</span>` : '') + `</div>`;
-    if (s.bet > 0) { const [bx, by] = (tall ? BETPOS_T : BETPOS)[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
+    if (s.bet > 0) { const [bx, by] = (tall || narrow ? BETPOS_T : BETPOS)[i]; h += `<div class="pk-bet" data-k="bet${i}" style="left:${bx}%;top:${by}%">${chipStack(s.bet)}<span>${s.bet}</span></div>`; }
   });
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
   // dealing: cards fly in from the dealer (the centre)
@@ -526,14 +526,14 @@ function mTabs() {
   const side = $('#side'), have = new Set($$('#side [data-pt]').map(e => e.dataset.pt));
   let cur = set.mTab && have.has(set.mTab) ? set.mTab : have.has('coach') ? 'coach' : have.has('eq') ? 'eq' : 'log';
   side.dataset.pt = cur;
-  $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', b.dataset.pt === cur); });
+  const open = document.body.classList.contains('mt-open');
+  $$('#mTabs [data-pt]').forEach(b => { b.hidden = !have.has(b.dataset.pt); b.classList.toggle('sel', open && b.dataset.pt === cur); });
 }
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
-  const same = set.mTab === b.dataset.pt && $('#side').dataset.pt === b.dataset.pt;
-  set.mTab = b.dataset.pt; save(); mTabs();
-  const sc = $('.stage'), top = sc.getBoundingClientRect().top, r = $('#side').getBoundingClientRect(), h = sc.clientHeight;
-  if (same && r.top - top < 60) sc.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the table
-  else if (r.top - top > h * .45 || r.top < top) sc.scrollTo({ top: sc.scrollTop + r.top - top - 8, behavior: 'smooth' });
+  const open = document.body.classList.contains('mt-open'), pt = b.dataset.pt;
+  if (open && $('#side').dataset.pt === pt) document.body.classList.remove('mt-open');   // tap the open tab again: close
+  else { set.mTab = pt; save(); document.body.classList.add('mt-open'); }
+  mTabs(); $('#side').scrollTop = 0;
 });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
@@ -541,8 +541,8 @@ function fitLabels() {
 }
 addEventListener('resize', () => requestAnimationFrame(fitLabels));
 /* phones: the scrolling middle's height → the table size (--sh) */
-{ const sc = $('.stage'), upd = () => { const h = sc.clientHeight; if (h) document.documentElement.style.setProperty('--sh', h + 'px'); };
-  if (window.ResizeObserver) new ResizeObserver(upd).observe(sc); upd(); }
+/* the table follows its box (phones: it shrinks while the info panel is open) */
+if (window.ResizeObserver) { let lw = 0, lh = 0, q = 0; new ResizeObserver(() => { const b = $('#pkTable'); if (!b || (b.clientWidth === lw && b.clientHeight === lh)) return; lw = b.clientWidth; lh = b.clientHeight; if (!q) q = requestAnimationFrame(() => { q = 0; if (T) render(); }); }).observe($('#pkTable')); }
 function boardStr(st) {
   const V = P.VARIANTS[T.v]; let n = 0; for (let k = 0; k < st; k++) n += V.board[k]; const cs = T.board.slice(n - V.board[st - 1], n);
   return cs.map(c => `${P.vch(P.V(c))}${'♠♥♦♣'[P.SUIT(c)]}`).join(' ');
@@ -747,5 +747,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
   render(); if (T.phase === 'done' || T.phase === 'idle' || T.phase === 'over') { render(); } else loop();
 } else startSession(set.v);
 
-window.PokerApp = { showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
+window.PokerApp = { showTab(pt) { set.mTab = pt; document.body.classList.add('mt-open'); mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
 })();
