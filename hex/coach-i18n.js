@@ -3,7 +3,7 @@
 (() => { if (!window.HexCoach) return; HexCoach.merge({
 zh: {
   head: '教练', sw: '教练', swT: '开启／关闭教练（思路讲解）', on: '教练 ON', off: '教练 OFF',
-  offNote: '教练功能已关闭。打开上方的开关（灯泡图标），即可显示局面的思路和候选着法的讲解。',
+  offNote: '教练功能已关闭。打开右上角的开关，即可显示局面的思路和候选着法的讲解。',
   oppTurn: '现在轮到对手。试着预测对手下一步会下在哪里吧。猜中得越多，计算能力就越强。', overRv: '对局结束。分析后，这里会显示逐手复盘（最佳着法、坏棋及原因）。', viewing: '正在查看过去的局面。回到最新局面后教练会继续。',
   calc: '正在思考候选着法…', form: '形势', stage: '阶段',
   'st.open': '开局', 'st.mid': '中局', 'st.end': '终局',
@@ -91,7 +91,7 @@ zh: {
 },
 ko: {
   head: '코치', sw: '코치', swT: '코치(생각하는 법 해설) 켜기／끄기', on: '코치 ON', off: '코치 OFF',
-  offNote: '코치 기능이 꺼져 있습니다. 위쪽 스위치(전구 표시)를 켜면 국면을 생각하는 법과 후보수 해설이 표시됩니다.',
+  offNote: '코치 기능이 꺼져 있습니다. 오른쪽 위의 스위치를 켜면 국면을 생각하는 법과 후보수 해설이 표시됩니다.',
   oppTurn: '상대 차례입니다. 상대가 다음에 어디에 둘지 예상해 봅시다. 예상이 맞을수록 수읽기 실력이 늡니다.', overRv: '대국이 끝났습니다. 분석하면 이 칸에 한 수씩 복기(최선수·악수와 그 이유)가 표시됩니다.', viewing: '지난 국면을 보고 있습니다. 최신 국면으로 돌아가면 코치가 다시 시작됩니다.',
   calc: '후보수를 생각하는 중…', form: '형세', stage: '국면',
   'st.open': '초반', 'st.mid': '중반', 'st.end': '종반',
@@ -179,7 +179,7 @@ ko: {
 },
 es: {
   head: 'Entrenador', sw: 'Entrenador', swT: 'Activar / desactivar el entrenador (cómo pensar)', on: 'Entrenador ON', off: 'Entrenador OFF',
-  offNote: 'El entrenador está desactivado. Activa el interruptor de arriba (la bombilla) para ver cómo pensar la posición y las jugadas candidatas explicadas.',
+  offNote: 'El entrenador está desactivado. Activa el interruptor de arriba a la derecha para ver cómo pensar la posición y las jugadas candidatas explicadas.',
   oppTurn: 'Le toca a tu rival. Intenta adivinar dónde jugará: cuanto más aciertes, más fuerte será tu lectura.', overRv: 'La partida ha terminado. Analízala para ver aquí un repaso jugada a jugada (mejores jugadas, errores y por qué).', viewing: 'Estás viendo una posición anterior. El entrenador vuelve en la posición actual.',
   calc: 'Pensando jugadas candidatas…', form: 'Posición', stage: 'Fase',
   'st.open': 'Apertura', 'st.mid': 'Medio juego', 'st.end': 'Final',
@@ -267,7 +267,7 @@ es: {
 },
 fr: {
   head: 'Coach', sw: 'Coach', swT: 'Activer / désactiver le coach (comment réfléchir)', on: 'Coach ON', off: 'Coach OFF',
-  offNote: 'Le coach est désactivé. Activez l’interrupteur en haut (l’ampoule) pour voir comment réfléchir à la position et les coups candidats expliqués.',
+  offNote: 'Le coach est désactivé. Activez l’interrupteur en haut à droite pour voir comment réfléchir à la position et les coups candidats expliqués.',
   oppTurn: 'C’est au tour de l’adversaire. Essayez de deviner où il va jouer : plus vous devinez juste, plus votre lecture progresse.', overRv: 'La partie est terminée. Analysez-la pour voir ici une revue coup par coup (meilleurs coups, erreurs et pourquoi).', viewing: 'Vous regardez une position antérieure. Le coach reprend à la position actuelle.',
   calc: 'Recherche des coups candidats…', form: 'Position', stage: 'Phase',
   'st.open': 'Ouverture', 'st.mid': 'Milieu de partie', 'st.end': 'Finale',
@@ -355,7 +355,7 @@ fr: {
 },
 pt: {
   head: 'Treinador', sw: 'Treinador', swT: 'Ligar / desligar o treinador (como pensar)', on: 'Treinador ON', off: 'Treinador OFF',
-  offNote: 'O treinador está desligado. Ligue o interruptor em cima (a lâmpada) para ver como pensar a posição e os lances candidatos explicados.',
+  offNote: 'O treinador está desligado. Ligue o interruptor no canto superior direito para ver como pensar a posição e os lances candidatos explicados.',
   oppTurn: 'É a vez do adversário. Tente adivinhar onde ele vai jogar: quanto mais acertar, mais forte fica sua leitura.', overRv: 'A partida terminou. Analise-a para ver aqui uma revisão lance a lance (melhores lances, erros e por quê).', viewing: 'Você está vendo uma posição anterior. O treinador volta na posição atual.',
   calc: 'Pensando em lances candidatos…', form: 'Posição', stage: 'Fase',
   'st.open': 'Abertura', 'st.mid': 'Meio-jogo', 'st.end': 'Final',
@@ -443,7 +443,7 @@ pt: {
 },
 de: {
   head: 'Coach', sw: 'Coach', swT: 'Coach (Denkhilfen) ein / aus', on: 'Coach AN', off: 'Coach AUS',
-  offNote: 'Der Coach ist ausgeschaltet. Schalte oben den Schalter (die Glühbirne) ein, um Denkhilfen zur Stellung und erklärte Kandidatenzüge zu sehen.',
+  offNote: 'Der Coach ist ausgeschaltet. Schalte den Schalter oben rechts ein, um Denkhilfen zur Stellung und erklärte Kandidatenzüge zu sehen.',
   oppTurn: 'Dein Gegner ist am Zug. Versuche zu erraten, wohin er setzt – je öfter du richtig liegst, desto stärker wird dein Lesen.', overRv: 'Die Partie ist vorbei. Analysiere sie, um hier einen Rückblick Zug für Zug zu sehen (beste Züge, Fehler und warum).', viewing: 'Du siehst eine frühere Stellung. In der aktuellen Stellung macht der Coach weiter.',
   calc: 'Suche Kandidatenzüge…', form: 'Stellung', stage: 'Phase',
   'st.open': 'Eröffnung', 'st.mid': 'Mittelspiel', 'st.end': 'Endspiel',
@@ -531,7 +531,7 @@ de: {
 },
 hi: {
   head: 'कोच', sw: 'कोच', swT: 'कोच (सोचने के तरीके) चालू / बंद', on: 'कोच ON', off: 'कोच OFF',
-  offNote: 'कोच बंद है। ऊपर का स्विच (बल्ब) चालू करें, तो स्थिति पर सोचने का तरीका और उम्मीदवार चालों की व्याख्या दिखेगी।',
+  offNote: 'कोच बंद है। ऊपर दाईं ओर का स्विच चालू करें, तो स्थिति पर सोचने का तरीका और उम्मीदवार चालों की व्याख्या दिखेगी।',
   oppTurn: 'विरोधी की बारी है। अंदाज़ा लगाइए कि वह अगली गोटी कहाँ रखेगा — जितना सही अंदाज़ा, उतनी मज़बूत गणना।', overRv: 'खेल खत्म हुआ। विश्लेषण करें तो यहाँ हर चाल की समीक्षा (सबसे अच्छी चालें, गलतियाँ और कारण) दिखेगी।', viewing: 'आप पिछली स्थिति देख रहे हैं। नवीनतम स्थिति पर कोच फिर शुरू होगा।',
   calc: 'उम्मीदवार चालें सोची जा रही हैं…', form: 'स्थिति', stage: 'चरण',
   'st.open': 'शुरुआत', 'st.mid': 'मध्य खेल', 'st.end': 'अंतिम खेल',
@@ -619,7 +619,7 @@ hi: {
 },
 ar: {
   head: 'المدرّب', sw: 'المدرّب', swT: 'تشغيل / إيقاف المدرّب (طريقة التفكير)', on: 'المدرّب يعمل', off: 'المدرّب متوقف',
-  offNote: 'المدرّب متوقف. شغّل المفتاح في الأعلى (المصباح) لترى طريقة التفكير في الوضع وشرح النقلات المرشّحة.',
+  offNote: 'المدرّب متوقف. شغّل المفتاح في أعلى هذه البطاقة لترى طريقة التفكير في الوضع وشرح النقلات المرشّحة.',
   oppTurn: 'دور خصمك. حاول أن تخمّن أين سيلعب: كلما أصبت أكثر قويت قراءتك.', overRv: 'انتهت المباراة. حلّلها لترى هنا مراجعة نقلة بنقلة (أفضل النقلات والأخطاء وأسبابها).', viewing: 'أنت تشاهد وضعًا سابقًا. يعود المدرّب في الوضع الأخير.',
   calc: 'جارٍ التفكير في النقلات المرشّحة…', form: 'الوضع', stage: 'المرحلة',
   'st.open': 'الافتتاح', 'st.mid': 'وسط اللعب', 'st.end': 'النهاية',

@@ -12,7 +12,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
-  offNote: 'コーチ機能はオフになっています。上のスイッチ（電球のマーク）をオンにすると、局面の考え方や候補の線の解説が表示されます。',
+  offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補の線の解説が表示されます。',
   oppTurn: '相手の手番です。相手がどの線を引くか予想してみよう。安全な線が何本残っているか数えておくと、先が読みやすくなります。',
   aiTurn: 'AIが考えています。どの線を引いてくるか予想してみよう。',
   overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由、長い鎖の本数が決まった場面）が表示されます。',
@@ -113,7 +113,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
-  offNote: 'The coach is switched off. Turn on the switch at the top (the light bulb) to see how to think about the position and the candidate lines explained.',
+  offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate lines explained.',
   oppTurn: "It's your opponent's turn. Try to guess which line they will draw — counting how many safe lines are left makes it easier to see ahead.",
   aiTurn: 'The AI is thinking. Try to guess which line it will draw.',
   overRv: 'The game is over. Analyse it to see a move-by-move review here (best moves, mistakes and why, and where the number of long chains was decided).',
@@ -298,7 +298,7 @@ function catTxt(d, f) {
 }
 
 // --------------------------------------------------------------------------------------------- analysis (own worker)
-const S0 = { open: false, reveal: false, info: new Map(), job: null, w: null, hover: null, items: [] };
+const S0 = { open: false, reveal: true, info: new Map(), job: null, w: null, hover: null, items: [] };
 const keyAt = i => game.n + ':' + game.moves.slice(0, i).join(',');
 function ask(i) {
   const key = keyAt(i);
@@ -505,7 +505,7 @@ function render() {
     else if (cl.only) why += sp() + esc(tx('recOnly')); else if (cl.sharp) why += sp() + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += sp() + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S0.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: true,
       items: cl.dirs.map((d, i) => { const g = gapOf(d, i, cl.exact), dup = cl.dirs.slice(0, i).some(x => x.k.k === d.k.k); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: ttl(d), text: gl(esc(dup ? (d.after ? tx('est', { k: d.after.mode, w: tx('you'), p: tx(f.even ? 'p.even' : 'p.odd') }) : '') : catTxt(d, f))), gap: g[0], gcls: g[1], move: String(d.u), mvName: edgeName(d.u) }; }),
     });
   } else if (!op) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -542,7 +542,6 @@ function init() {
   if (settings.coach === undefined) settings.coach = true;
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
-  try { S0.reveal = !!settings.coachReveal; } catch (e) {}
   DotsCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
   // follow the game: wrap the main script's refresh / renderInfo / renderBoard (classic-script globals)
   const _refresh = refresh, _renderInfo = renderInfo, _renderBoard = renderBoard;

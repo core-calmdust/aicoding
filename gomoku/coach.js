@@ -13,7 +13,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
-  offNote: 'コーチ機能はオフになっています。上のスイッチ（電球のマーク）をオンにすると、局面の考え方や候補手の解説が表示されます。',
+  offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補手の解説が表示されます。',
   oppTurn: '相手の手番です。相手が次にどこに打つか予想してみよう。相手の三や四の狙いを先に読めると、守りが楽になります。', over: '対局が終わりました。棋譜の［解析］で一局を振り返れます。', overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
   calc: '候補手を考えています…', form: '形勢', you: 'あなた',
   'st.open': '序盤', 'st.mid': '中盤', 'st.end': '終盤',
@@ -95,7 +95,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
-  offNote: 'The coach is switched off. Turn on the switch at the top (the light bulb) to see how to think about the position and the candidate moves explained.',
+  offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate moves explained.',
   oppTurn: "It's your opponent's turn. Try to guess where they will play — reading their threes and fours in advance makes defending much easier.", over: 'The game is over. Use [Analyze] in the record to review it.', overRv: 'The game is over. Analyze it to see a move-by-move review here (best moves, mistakes and why).', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
   calc: 'Thinking about candidate moves…', form: 'Position', you: 'you',
   'st.open': 'Opening', 'st.mid': 'Middlegame', 'st.end': 'Endgame',
