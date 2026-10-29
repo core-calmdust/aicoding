@@ -496,6 +496,8 @@ function render() {
   if (rv && !S.rvWas) { const b = document.querySelector('#mtabs [data-it=coach]'); if (b && getComputedStyle(b).display !== 'none' && document.body.dataset.it !== 'coach') b.click(); }
   S.rvWas = rv;
   if (!can) { S.items = null; return; }
+  // no analysis for this position yet (e.g. the first position after loading): ask once
+  if (on && playing && typeof analyzeCurrent === 'function' && !listAt(cur)) { const k = moves.slice(0, cur).join(','); if (S.ask !== k) { S.ask = k; setTimeout(() => { if (!listAt(cur)) analyzeCurrent(busyToken); }, 300); } }
   if (over) {
     S.items = null;
     put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('overRv'))}</p><div class="ck-sec"><button type="button" class="ck-rvgo" data-ck="rv">${esc(t('rv.btn'))}</button></div>` + (on ? verdictHtml() : ''));
