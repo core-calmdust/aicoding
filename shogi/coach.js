@@ -44,6 +44,18 @@ ja: {
   'op.aig2.t': '飛車先をさらに伸ばす', 'op.aig2.x': '飛車先の歩をさらに伸ばして、相掛かりへ。早く飛車先の歩を交換して主導権を取りにいきます。',
   'op.kk2.t': '角道を開ける', 'op.kk2.x': '角道を開けて、角換わりや横歩取りの可能性も残す手。',
   bkH: '定跡の候補 — 実戦でよく指される手', bkIntro: '強いソフト同士の対局（Floodgate）で、この局面で実際に指された手の割合です。序盤は評価値の小さな差より、定跡どおりに駒組みを進めることが大切です。', 'bk.share': '採用率 {x}', bkWhy: 'この局面は定跡の範囲です。実戦でいちばん多いのは {m}（{c}・採用率{x}）。', prevBook: '定跡どおりの手です（実戦での採用率{x}）。', prevOff: 'この局面の定跡は {m}（採用率{x}）などです。',
+  who: '{k}（{w}）', senkei: '戦型', castleH: '囲い', meC: 'あなた', opC: '相手', 'cs.done': '{n}（完成）', 'cs.part': '{n}に組みかけ', 'cs.none': 'まだ囲っていない', moyo: '{n}模様', fixed: '{n}',
+  'ck.mino': '美濃囲い', 'ck.takamino': '高美濃', 'ck.ginkan': '銀冠', 'ck.ana': '穴熊', 'ck.funa': '舟囲い', 'ck.yagura': '矢倉囲い', 'ck.gangi': '雁木', 'ck.naka': '中住まい', 'ck.kanimino': '片美濃',
+  'tp.castleDone': 'あなたの{c}が完成しました。守りが整ったら、次は攻めの準備（飛車・角・銀・桂の活用）に移ろう。',
+  'tp.castlePart': 'あなたは{c}に組んでいる途中です。戦いが始まる前に囲いを完成させると安心です。',
+  'tp.oppCastle': '相手は{c}です。囲いにはそれぞれ弱点があります（例：美濃は端と頭、穴熊は端や上からの攻め、矢倉は上からの攻め）。',
+  'sk.yagura': '矢倉模様：角道を止めてじっくり組み合う戦い。矢倉囲いを完成させ、棒銀・早繰り銀・雀刺しなどで攻めるのが定跡です。',
+  'sk.aigakari': '相掛かり：お互いに飛車先の歩を伸ばし合う戦い。序盤から飛車が活躍しやすく、駒組みが短いのが特徴です。',
+  'sk.kakugawari': '角換わり：角を交換した戦い。お互いに角を打ち込まれる隙を作らないよう、腰掛け銀・早繰り銀・棒銀などで組みます。',
+  'sk.yokofu': '横歩取り：飛車で横歩を取った激しい戦い。序盤から一手のミスが命取りになりやすいので、定跡手順を大切に。',
+  'sk.furi': '対抗形（居飛車対振り飛車）：振り飛車側は美濃囲い、居飛車側は舟囲い・穴熊・左美濃などに囲うのが一般的です。',
+  'sk.aifuri': '相振り飛車：お互いに飛車を振った戦い。囲いは矢倉・美濃・金無双など。相手の玉に向けて攻めの筋を作ります。',
+  'sk.ibisha': '相居飛車：お互いに飛車を元の筋で使う戦い。このあと矢倉・角換わり・相掛かりなどに分かれていきます。',
   tipsH: '考え方のヒント', more: 'ほかのヒント（{n}）', less: 'たたむ',
   prev: '前の手 {m}：{q}', prevBest: '{c}の方針で、AIの第一候補と同じ手です。', prevAlt: 'AIの第一候補は {m}（{c}）でした。', prevAltOk: 'AIの第一候補 {m}（{c}）と同じくらい良い手です。',
   // categories: tag / badge / explanation ({p} the piece, {c} the captured piece)
@@ -166,6 +178,18 @@ en: {
   'op.aig2.t': "Push the rook's pawn further", 'op.aig2.x': 'Pushes on toward Double Wing, planning an early rook-pawn exchange to take the initiative.',
   'op.kk2.t': "Open the bishop's diagonal", 'op.kk2.x': 'Opens the diagonal, keeping Bishop Exchange and Side Pawn Capture possible.',
   bkH: 'Book moves — what strong players choose here', bkIntro: 'How often each move was played in this position in games between strong engines (Floodgate). In the opening, following the standard lines matters more than small evaluation differences.', 'bk.share': 'played {x}', bkWhy: 'This position is still in the opening book. The most played move is {m} ({c}, played {x}).', prevBook: 'A book move (played {x} of the time).', prevOff: 'The book moves here are {m} (played {x}) and others.',
+  who: '{k} ({w})', senkei: 'Opening', castleH: 'Castle', meC: 'you', opC: 'opponent', 'cs.done': '{n} (complete)', 'cs.part': 'building {n}', 'cs.none': 'no castle yet', moyo: 'heading for {n}', fixed: '{n}',
+  'ck.mino': 'Mino', 'ck.takamino': 'High Mino', 'ck.ginkan': 'Silver Crown', 'ck.ana': 'Anaguma', 'ck.funa': 'Boat castle', 'ck.yagura': 'Yagura castle', 'ck.gangi': 'Gangi', 'ck.naka': 'Middle king', 'ck.kanimino': 'Half Mino',
+  'tp.castleDone': 'Your {c} is complete. With the defence in place, start preparing the attack (rook, bishop, silver, knight).',
+  'tp.castlePart': 'You are building a {c}. Finish it before the fighting starts.',
+  'tp.oppCastle': 'Your opponent has a {c}. Every castle has weak spots (Mino: the edge and its head; Anaguma: the edge and attacks from above; Yagura: attacks from above).',
+  'sk.yagura': 'Yagura: a slow game with the bishop diagonals closed. Complete the Yagura castle, then attack with Climbing Silver, Rapid Silver or Sparrow attack.',
+  'sk.aigakari': 'Double Wing: both sides push their rook pawns. Rooks get active early and the build-up is short.',
+  'sk.kakugawari': 'Bishop Exchange: the bishops are traded. Build (Reclining Silver, Rapid Silver, Climbing Silver) without leaving squares where a bishop can be dropped.',
+  'sk.yokofu': 'Side Pawn Capture: a sharp game after the rook takes the side pawn. One slip in the opening can lose quickly, so follow the book lines.',
+  'sk.furi': 'Static Rook vs Ranging Rook: the Ranging Rook side usually castles in Mino; the Static Rook side in Boat, Anaguma or Left Mino.',
+  'sk.aifuri': 'Double Ranging Rook: both rooks swung. Castles are Yagura, Mino or Gold Fortress; build attacking files toward the enemy king.',
+  'sk.ibisha': 'Double Static Rook: both rooks stay home. The game will branch into Yagura, Bishop Exchange, Double Wing and others.',
   tipsH: 'How to think', more: 'More tips ({n})', less: 'Show less',
   prev: 'Previous move {m}: {q}', prevBest: 'A "{c}" move — the same as the AI\'s first choice.', prevAlt: "The AI's first choice was {m} ({c}).", prevAltOk: "About as good as the AI's first choice, {m} ({c}).",
   'c.mate': 'Mate', 'b.mate': 'Mate', 'x.mate': 'There is a mate. Keep checking and close every escape square of the enemy king — that is the basic pattern of a mate.',
@@ -302,6 +326,32 @@ function hanging(p, c) {
   }
   return out.sort((x, y) => y.v - x.v);
 }
+// castles (from each side's own view: files / ranks as if it were sente). [name, king square, other pieces]
+const CASTLES = [
+  ['ana', [[1, 9]], [[GI, 2, 8], [KI, 3, 9]]], ['ana', [[9, 9]], [[GI, 8, 8], [KI, 7, 9]]],
+  ['ginkan', [[2, 8]], [[GI, 2, 7], [KI, 3, 8]]],
+  ['takamino', [[2, 8]], [[GI, 3, 8], [KI, 4, 7], [KI, 4, 9]]],
+  ['mino', [[2, 8]], [[GI, 3, 8], [KI, 4, 9], [KI, 5, 8]]],
+  ['kanimino', [[2, 8]], [[GI, 3, 8], [KI, 4, 9]]],
+  ['yagura', [[8, 8]], [[GI, 7, 7], [KI, 7, 8], [KI, 6, 7], [FU, 7, 6], [FU, 6, 6]]],
+  ['gangi', [[6, 9], [7, 9], [7, 8]], [[GI, 6, 7], [GI, 4, 7], [FU, 6, 6], [KI, 5, 8]]],
+  ['funa', [[7, 8]], [[KI, 6, 9], [KI, 5, 8]]],
+  ['naka', [[5, 8]], [[KI, 7, 8], [KI, 3, 8]]],
+];
+function castleOf(p, c) {
+  const at = (f, r) => p.board[c ? (10 - r - 1) * 9 + (9 - (10 - f)) : (r - 1) * 9 + (9 - f)];
+  const own = t => t + (c ? 16 : 0);
+  let best = null;
+  for (const [k, ks, pcs] of CASTLES) {
+    const kOk = ks.some(([f, r]) => at(f, r) === own(OU));
+    const hit = pcs.filter(([t, f, r]) => at(f, r) === own(t)).length;
+    const score = (kOk ? 1 : 0) + hit, total = 1 + pcs.length;
+    const done = kOk && hit === pcs.length;
+    if (done) return { k, done: true };
+    if (score >= Math.max(2, total - 1) && (!best || score / total > best.r)) best = { k, done: false, r: score / total };
+  }
+  return best;
+}
 function facts(p, n) {
   const us = p.side, them = us ^ 1, f = { us, them, n };
   f.check = p.inCheck();
@@ -326,6 +376,8 @@ function facts(p, n) {
   for (const t of [HI, KA, KI, GI, KE, KY, FU]) { const c = p.hand[us * 8 + t]; if (c) f.handList.push(pn(t) + (c > 1 ? '×' + c : '')); }
   f.pawnHand = p.hand[us * 8 + FU] > 0;
   f.promo = p.legalMoves(true).some(m => !E.isDrop(m) && E.mPromo(m));
+  try { f.cs = [castleOf(p, 0), castleOf(p, 1)]; } catch (e) { f.cs = [null, null]; }
+  try { f.sk = window.ShogiStrategy && n >= 6 ? ShogiStrategy.classify(E, p) : null; } catch (e) { f.sk = null; }
   return f;
 }
 // what a candidate move is about
@@ -396,6 +448,10 @@ function tipsOf(f, info, cl) {
     if (f.dUs >= 4 && !f.check) add('tp.kDanger', 66);
     if (f.dThem >= 3.5 && !f.mate1) add('tp.atkChance', 60);
     if (f.igyoku && f.n >= 10 && f.stage !== 'end') add('tp.igyoku', f.stage === 'open' ? 56 : 62);
+    const myC = f.cs && f.cs[f.us], opC = f.cs && f.cs[f.them];
+    if (myC && f.stage !== 'end') add(myC.done ? 'tp.castleDone' : 'tp.castlePart', myC.done ? 40 : 50, { c: tx('ck.' + myC.k) });
+    if (opC && opC.done && f.stage !== 'open') add('tp.oppCastle', 36, { c: tx('ck.' + opC.k) });
+    if (f.sk && f.stage !== 'end' && f.n < 60) add('sk.' + (f.sk.id || 'ibisha'), f.stage === 'open' ? 54 : 30);
     if (f.kingRook && f.n >= 6 && f.stage !== 'end') add('tp.kingRook', 52);
     if (!f.igyoku && f.stage === 'mid' && f.guards <= 1) add('tp.thin', 46, { n: f.guards });
     if (f.handList.length) add('tp.hand', f.stage === 'end' ? 44 : 38, { list: f.handList.join(tx('sep')) });
@@ -535,6 +591,16 @@ function render() {
   // summary chips
   const chips = [];
   if (wr != null && settings.eval) chips.push({ k: tx('form'), v: esc(tx('f.' + formOf(wr)) + ' ' + pctS(wr)), cls: wr >= .54 ? 'pos' : wr <= .46 ? 'neg' : '' });
+  if (!f.variant && f.sk) {
+    const nm = window.ShogiStrategy && ShogiStrategy.localName ? ShogiStrategy.localName(f.sk, LANG) : f.sk.ja;
+    const settled = f.sk.id === 'furi' || f.sk.id === 'aifuri' || f.sk.id === 'kakugawari' || f.sk.id === 'yokofu' || f.n >= 30;
+    chips.push({ k: tx('senkei'), v: esc(tx(settled ? 'fixed' : 'moyo', { n: nm })) });
+  }
+  if (!f.variant && f.cs && f.stage !== 'end') {
+    const cs = c => { const x = f.cs[c]; return x ? tx(x.done ? 'cs.done' : 'cs.part', { n: tx('ck.' + x.k) }) : tx('cs.none'); };
+    chips.push({ k: tx('who', { k: tx('castleH'), w: tx('meC') }), v: esc(cs(f.us)), cls: f.cs[f.us] && f.cs[f.us].done ? 'pos' : '' });
+    if (f.cs[f.them]) chips.push({ k: tx('who', { k: tx('castleH'), w: tx('opC') }), v: esc(cs(f.them)) });
+  }
   if (!f.variant && f.mat != null) chips.push({ k: tx('mat'), v: esc(Math.abs(f.mat) < 1 ? tx('mat.even') : tx(f.mat > 0 ? 'mat.up' : 'mat.down', { x: Math.abs(f.mat) })), cls: f.mat >= 1 ? 'pos' : f.mat <= -1 ? 'neg' : '' });
   h += CoachKit.summary(chips);
   const op = openingOf();
