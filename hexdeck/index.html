@@ -5450,6 +5450,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const P0 = () => S.players[HUMAN];
   const rigTop = () => { if (S.drawn.length) return; const ns = myHexNums().filter(n => n >= 2 && n <= 6); const want = ns[0] || 6; const k = S.deck.lastIndexOf(want); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(want); } coach.want = want; };   // 次に引く札＝自分の土地の数字
   const shopVis = () => { const e = document.getElementById('shopBox'); return !!(e && e.offsetParent); };
+  const SP = () => matchMedia('(max-width:900px)').matches;   // スマホの画面か
   const spec0 = () => (P0().spec || []).length;
   const PLAYA = () => S.drawn.length || S.step !== 'draw' ? { dom: ['#myHand', '#aPlay', '#aPass'] } : { dom: ['#deckSlot'], key: 'draw' };
   const ALLOW = { camp: () => ({ map: ['camp'] }), dev: () => ({ map: ['dev'] }), road: () => ({ map: ['sroad'] }), draw: () => ({ dom: ['#deckSlot'], key: 'draw' }), play: () => ({ dom: ['#myHand', '#aPlay'] }), road2: () => ({ map: ['road'] }), dev2: () => ({ map: ['dev'] }), trade: () => ({ dom: ['#aTrade'] }),
@@ -5495,7 +5496,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     { id: 'dev', h: '準備：荒地を開拓する', t: () => { const b = coachTarget(); return 'まだ何も取れない土地が<b>荒地</b>です。<b>開拓</b>すると、資源の種類と<b>数字チップ</b>を決めて、資源の取れる土地に変わります。<br>拠点のとなりの<b>金色の輪</b>の荒地をクリックしましょう（この1回は無料）。' + (b ? `<span class="co-rec">今回は ${resIcon(b.r, 18)}${RESN[b.r]}＋<b>${b.n}</b> にします</span>` : ''); }, done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
     { id: 'chip', manual: true, tg: '#mktChip', h: '準備：数字チップ', t: () => `いま置いた<b>数字</b>が、その土地の番号です。ゲーム中にこの数字が出ると、となりに建物を持つ人が資源をもらえます。<br>チップの点が多い<b>6・8</b>ほどよく出ます。<br>チップは<b>右上で光っている</b><b>チップの市場</b>の3枚から選び、使うと補充されます（となり合う土地に同じ数字は置けません）。` },
     { id: 'road', h: '準備：道を引く', t: () => P0().roads >= 1 ? '後手のあなたは、もう1本道を置けます（手番順の補正）。最初の道の先、<b>金色の輪</b>の辺をクリックしてください。' : '土地のふちの辺に<b>道</b>を置きます。道の先に、あとで<b>開拓地</b>を建てられます。<br>拠点から伸びる<b>金色の輪</b>の辺をクリックしましょう。', done: () => S.phase === 'turn' || (P0().roads >= 1 && !S.setupSteps.slice(S.setupIdx).some(x => x.p === HUMAN)), wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
-    { id: 'watch', tg: '#log,#logBtn', h: 'BOTの番を見る', t: () => 'あなたは4番手です。まずBOTの番を見てみましょう。<br>BOTが<b>数字</b>を出すと、その数字の土地のとなりに建物を持つ<b>全員</b>が資源をもらえます（あなたも）。何が起きたかは右の<b>記録</b>に出ます。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
+    { id: 'watch', tg: '#log,#logBtn', h: 'BOTの番を見る', t: () => 'あなたは4番手です。まずBOTの番を見てみましょう。<br>BOTが<b>数字</b>を出すと、その数字の土地のとなりに建物を持つ<b>全員</b>が資源をもらえます（あなたも）。何が起きたかは' + (SP() ? '盤の左下の<b>記録</b>ボタンで見られます。' : '右の<b>記録</b>に出ます。'), done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
     // ---- 1手番目：アクション札と7 ----
     { id: 'cards', blk: 1, tg: '#deckSlot', h: '1手番目：アクション札を引く', t: () => `数字は<b>アクション札</b>で出します。札には<b>1〜6</b>が書かれていて、山札から引いた札は手札に入ります。<br>光っている<b>山札</b>をクリックして1枚引きましょう${TAP === 'クリック' ? '（<b>スペースキー</b>でも引けます）' : ''}。`, done: () => S.drawn.length >= 1 || S.acted },
     { id: 'seven', blk: 1, tg: '#deckSlot', h: '1手番目：2枚目と7', enter: () => { const P = P0(), need = S.limit - HD.cardCount(P); if (need > 0) { P.res.wood += need; coach.gift = `アクション札＋資源がちょうど${S.limit}枚になるよう、練習用に木材を配りました`; } const k = S.deck.lastIndexOf(7); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(7); } },
@@ -5508,7 +5509,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         for (const c of cards.slice().reverse()) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } },
       t: () => `山札から札を引きましょう。${coach.need > 1 ? '引いたら<b>もう1回</b>押して2枚目も引きます。' : '今回は1枚で止めます。'}`, done: () => S.drawn.length >= (coach.need || 1) || S.step === 'choose' || S.acted },
     { id: 'play', blk: 2, tg: '#myHand,#aPlay', h: '2手番目：数字を出す', t: () => `手札の札をクリックして選び、<b>札を選ぶ</b>で数字を出します。2枚を選ぶと合計の数字になります（7にはできません）。<br><b>${coach.want}</b>の土地にはあなたの拠点がとなり合っているので、資源がもらえます。使わなかった札は手札に残ります。`, done: () => S.acted },
-    { id: 'road2', blk: 2, h: '2手番目：道を建てる', enter: () => gift({ wood: 1, brick: 1 }, '練習用に木材とレンガを配りました'), t: () => `資源を払うと建設できます。<b>道</b>の費用は${TF.cost(HD.COST.road)}。<br><b>金色の輪</b>の辺をクリックしましょう。下のボタンの小さな四角は、資源がそろっているかの目安です。`, done: () => P0().roads > coach.b.roads, skip: () => !HD.legalRoads(S, HUMAN).length },
+    { id: 'road2', blk: 2, h: '2手番目：道を建てる', enter: () => gift({ wood: 1, brick: 1 }, '練習用に木材とレンガを配りました'), t: () => `資源を払うと建設できます。<b>道</b>の費用は${TF.cost(HD.COST.road)}。<br><b>金色の輪</b>の辺をクリックしましょう。${SP() ? '' : '下のボタンの小さな四角は、資源がそろっているかの目安です。'}`, done: () => P0().roads > coach.b.roads, skip: () => !HD.legalRoads(S, HUMAN).length },
     END('end2', 2),
     W('w3', '次の番を待つ', '次は<b>開拓</b>と<b>交換</b>を覚えます。'),
     // ---- 3手番目：開拓・交換 ----
@@ -5524,7 +5525,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       t: () => (HD.legalSettles(S, HUMAN).length ? '' : 'まず<b>金色の輪</b>の辺に道を伸ばします。<br>') + `<b>開拓地</b>は<b>1点</b>の建物で、自分の道の先の角に建てます（ほかの建物から1辺以上離れた所だけ）。費用は${TF.cost(HD.COST.settle)}。<br><b>金色の輪</b>の角をクリックしましょう。`,
       done: () => P0().settles > coach.b.settles, skip: () => !HD.legalSettles(S, HUMAN).length && !HD.legalRoads(S, HUMAN).length },
     { id: 'city', blk: 4, h: '4手番目：都市にする', enter: () => gift(HD.COST.city, '練習用に都市の資源を配りました'), t: () => `開拓地は<b>都市</b>（<b>2点</b>）に格上げできます。都市は資源を<b>2倍</b>もらえます。費用は${TF.cost(HD.COST.city)}。<br><b>金色の輪</b>の開拓地をクリックしましょう。`, done: () => P0().cities > coach.b.cities, skip: () => !HD.legalCities(S, HUMAN).length },
-    { id: 'pts', blk: 4, manual: true, tg: '#players', h: '4手番目：点とプレイヤー欄', t: () => `光っている<b>プレイヤー欄</b>の大きな数字が<b>点</b>です。あなたの点が増えたのを確かめましょう。<br>その下は、手札の枚数・一番長い道の長さ・騎士を使った回数・開拓した土地の数などです。` },
+    { id: 'pts', blk: 4, manual: true, tg: '#players', h: '4手番目：点とプレイヤー欄', t: () => SP() ? `上の光っている<b>プレイヤー欄</b>の大きな数字が<b>点</b>です（赤があなた）。あなたの点が増えたのを確かめましょう。<br>その下の数字は、アクション札＋資源の枚数／上限です。` : `光っている<b>プレイヤー欄</b>の大きな数字が<b>点</b>です。あなたの点が増えたのを確かめましょう。<br>その下は、手札の枚数・一番長い道の長さ・騎士を使った回数・開拓した土地の数などです。` },
     END('end4', 4),
     W('w5', '次の番を待つ', '次は<b>特殊カード</b>を買います。'),
     // ---- 5手番目：特殊カード・処分 ----
@@ -5548,11 +5549,11 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       t: () => `前の番に買った<b>特殊カード</b>（天の恵み）が手札で光っています。クリックすると使えます（1手番1枚）。<br>開いた画面で<b>${RESN[coach.wfR]}を3枚</b>選び、<b>決める</b>を押しましょう。`, done: () => S.specUsed, skip: () => !(P0().spec || []).some(x => x.t < S.turn) },
     { id: 'knight', blk: 6, tg: '#aKnight', enter: () => { if (!HD.hasKn(S, P0().hand)) { const i = S.deck.lastIndexOf(1); if (i >= 0) S.deck.splice(i, 1); P0().hand.push(1); P0().hand.sort((a, b) => a - b); coach.gift = '練習用に1の札を配りました'; } }, h: '6手番目：騎士を使う',
       t: () => '<b>1の札</b>は<b>騎士</b>としても使えます。騎士は<b>盗賊</b>のコマを動かし、そこに建物を持つ相手から資源を<b>1枚</b>もらえます。盗賊のいる土地は資源を生みません。<br><b>騎士</b>ボタンを押してから、<b>金色の輪</b>の土地をクリックしましょう（置く前なら「やめる」で取り消せます）。', done: () => S.knightUsed && S.phase === 'turn', skip: () => !HD.robberOn(S) },
-    { id: 'titles', blk: 6, manual: true, tg: '#players', h: '6手番目：称号（+点）', t: () => `<b>最大騎士力</b>：騎士を${S.armyMin}回以上使い、一番多い人に+${S.armyPts}点（あなたは今${P0().knights}回）。<br><b>最長交易路</b>：5本以上つながった一番長い道の人に+2点。道にマウスを乗せると、どの道か光ります。${S.devVP ? `<br><b>開拓者</b>：自分で開拓した土地が${S.devVP.n}か所以上で一番多い人に+${S.devVP.vp}点。` : ''}` },
+    { id: 'titles', blk: 6, manual: true, tg: '#players', h: '6手番目：称号（+点）', t: () => `<b>最大騎士力</b>：騎士を${S.armyMin}回以上使い、一番多い人に+${S.armyPts}点（あなたは今${P0().knights}回）。<br><b>最長交易路</b>：5本以上つながった一番長い道の人に+2点。${SP() ? '' : '道にマウスを乗せると、どの道か光ります。'}${S.devVP ? `<br><b>開拓者</b>：自分で開拓した土地が${S.devVP.n}か所以上で一番多い人に+${S.devVP.vp}点。` : ''}` },
     END('end6', 6, '基本の操作はこれでひと通りです。'),
     // ---- まとめ ----
     { id: 'later', manual: true, h: '覚えておくと良いこと', t: () => `開拓の時代からは、<b>7</b>を引いた人も盗賊を動かします。手札に1の札があれば、盗賊で奪われるのを<b>跳ね返せます</b>。<br>3つ目の時代からは、相手の道を奪う<b>収奪</b>や、建物を壊す<b>軍</b>、それを防ぐ<b>城壁</b>も出てきます。` },
-    { id: 'buttons', manual: true, tg: '#btnRules,#btnHint,#btnUndo,#btnNew', h: '上のボタン', t: () => '<b>ヒント</b>：おすすめの一手を光らせます。<b>ルール</b>：ルールを表と図で確認。<b>待った</b>：直前の操作を取り消し。<b>対局</b>：マップ・人数・BOTの強さを変えて新しく始めます。' },
+    { id: 'buttons', manual: true, tg: '#btnRules,#btnHint,#btnUndo,#btnNew', h: '上のボタン', t: () => SP() ? '上のアイコンです。<b>電球</b>：おすすめの一手を光らせるヒント。<b>書類</b>：ルールを表と図で確認。<b>戻る矢印</b>：直前の操作を取り消す「待った」。<b>＋</b>：マップ・人数・BOTの強さを変えて新しく対局。' : '<b>ヒント</b>：おすすめの一手を光らせます。<b>ルール</b>：ルールを表と図で確認。<b>待った</b>：直前の操作を取り消し。<b>対局</b>：マップ・人数・BOTの強さを変えて新しく始めます。' },
     { id: 'score', manual: true, h: '勝ち方（まとめ）', t: () => `開拓地<b>1点</b>・都市<b>2点</b>・称号<b>+点</b>。<br>誰かが<b>${S.goal}点</b>に届いたら、その周回の最後の人の番まで続けて、一番点の高い人の勝ちです。` },
     { id: 'fin', fin: true, h: 'チュートリアル完了！', t: () => 'このまま対局を続けられます。<br>細かい説明は<b>マニュアル</b>や<b>ルール</b>でいつでも読めます。' },
   ];
