@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="poker-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2244"/><stop offset="1" stop-color="#0a0e1e"/></linearGradient>
+    <radialGradient id="poker-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#6b86ff" stop-opacity=".32"/><stop offset=".6" stop-color="#6b86ff" stop-opacity=".05"/><stop offset="1" stop-color="#6b86ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="poker-face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#ecdfc2"/></linearGradient>
+    <linearGradient id="poker-chip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c477"/><stop offset="1" stop-color="#a8873f"/></linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#poker-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#poker-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#fff" stroke-opacity=".11" stroke-width="1.5"/>
+  <g transform="rotate(-14 38 46)">
+    <rect x="20" y="20" width="32" height="45" rx="4.5" fill="url(#poker-face)" stroke="#000" stroke-opacity=".25"/>
+    <text x="25" y="33" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#1d1d24">A</text>
+    <path d="M36 37c-4 4.5-8 7-8 11a4 4 0 0 0 7 2.4l-1.6 5.2h5.2l-1.6-5.2a4 4 0 0 0 7-2.4c0-4-4-6.5-8-11z" fill="#1d1d24"/>
+  </g>
+  <g transform="rotate(12 58 46)">
+    <rect x="42" y="22" width="32" height="45" rx="4.5" fill="url(#poker-face)" stroke="#000" stroke-opacity=".25"/>
+    <text x="47" y="35" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#c8243a">K</text>
+    <path d="M58 56c-6-4.6-9-7.6-9-11a4.4 4.4 0 0 1 9-1.6a4.4 4.4 0 0 1 9 1.6c0 3.4-3 6.4-9 11z" fill="#c8243a"/>
+  </g>
+  <g transform="translate(64 70)">
+    <ellipse cx="0" cy="4" rx="15" ry="6" fill="#000" opacity=".35"/>
+    <ellipse cx="0" cy="2" rx="15" ry="6" fill="#7b5a1f"/>
+    <ellipse cx="0" cy="0" rx="15" ry="6" fill="url(#poker-chip)"/>
+    <ellipse cx="0" cy="0" rx="9.5" ry="3.8" fill="none" stroke="#fff6dc" stroke-width="1.6" stroke-dasharray="3 2.4"/>
+  </g>
+</svg>
