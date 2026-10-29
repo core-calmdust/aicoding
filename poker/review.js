@@ -69,7 +69,8 @@ function draw() {
   if (note && note.a !== 'draw') {
     coachBox = `<div class="verdict g${note.grade}"><b>${esc(t('grade.' + note.grade))}</b><span>${esc(t('verdict', { a: t('rec.' + note.a), rec: t('rec.' + note.rec) }))}</span>` +
       `<span class="rv-nums">${esc(t('rv.nums', { eq: (note.eq * 100).toFixed(1) + '%', need: (note.need * 100).toFixed(1) + '%', ev: (note.ev >= 0 ? '+' : '') + note.ev.toFixed(1) }))}</span>` +
-      `<span class="rv-why">${esc(t(note.grade === 0 ? 'rv.good' : 'rv.why.' + note.rec, { eq: (note.eq * 100).toFixed(1) + '%', need: (note.need * 100).toFixed(1) + '%' }))}</span></div>`;
+      `<span class="rv-why">${esc(t(note.grade === 0 ? 'rv.good' : 'rv.why.' + note.rec, { eq: (note.eq * 100).toFixed(1) + '%', need: (note.need * 100).toFixed(1) + '%' }))}</span></div>` +
+      (note.tips && note.tips.length && window.PokerTips ? `<div class="tips rv-tips"><div class="tips-h">💡 ${esc(PokerTips.ui('head', A.LANG))}</div><ul>${note.tips.map(x => `<li>${esc(PokerTips.text(x, A.LANG))}</li>`).join('')}</ul></div>` : '');
   } else if (note && note.a === 'draw') coachBox = `<div class="verdict g${note.grade}"><b>${esc(t('grade.' + note.grade))}</b><span>${esc(t('rv.draw', { n: note.drew.length, m: note.plan.length }))}</span></div>`;
   else if (S.end) {
     const notes = h.notes || [], bad = notes.filter(n => n.grade >= 2).length, good = notes.filter(n => n.grade === 0).length;

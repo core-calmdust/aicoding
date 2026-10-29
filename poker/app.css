@@ -965,3 +965,14 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#1d2950 0%,transpare
 .lc-tut .go{margin-left:auto;font-size:18px;color:#8fe3b8}
 .rv-tabs [data-tut] + [data-lesson]{margin-left:0}
 @media (min-width:900px){.tut-box{width:min(460px,calc(100vw - 24px));padding:18px 20px 16px}#tutLayer.center .tut-box{width:min(540px,calc(100vw - 24px))}.tut-top em{font-size:13px}.tut-x{font-size:14px}.tut-box>b{font-size:21px;margin-bottom:8px}.tut-box p{font-size:16.5px;line-height:1.8}.tut-do{font-size:15px}.tut-btns .mbtn{padding:10px 20px;font-size:15.5px}.tut-offer{width:min(560px,calc(100vw - 24px))}.tut-offer h2{font-size:24px}.tut-offer p{font-size:16px}.to-list li{font-size:15px;padding:8px 12px}.to-chk{font-size:14px}}
+/* coach tips */
+.tips{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(220,187,108,.06);border:1px solid rgba(220,187,108,.25)}
+.tips-h{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.06em;margin-bottom:6px}
+.tips ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.tips li{font-size:13px;line-height:1.7;padding-left:12px;position:relative}
+.tips li::before{content:'';position:absolute;left:0;top:.7em;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.tips-more{margin-top:8px;border:0;background:none;color:var(--accent);font:600 12.5px inherit;cursor:pointer;padding:2px 0}
+.rv-tips{margin-top:8px}
+.coach-card{max-height:none}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){.pk .felt-print{bottom:25%;width:min(66%,760px);opacity:.85}}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){.pk .side>.card{flex-shrink:0}.pk .side .log-card{flex:1 0 220px}}
