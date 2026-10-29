@@ -47,13 +47,11 @@ const CSS = `
   body.it-on.it-nav #itNav{display:flex;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));z-index:44;padding:6px 10px;background:var(--bg,#111);border-top:1px solid var(--line,rgba(255,255,255,.1))}
   body.it-on.it-nav #itNav .navbar{margin:0;width:100%;max-width:420px}
   body.it-on.it-nav .app{padding-bottom:calc(150px + env(safe-area-inset-bottom))!important}
-  /* iPhone: keep the bottom bar pinned and stop scrolling past the content.
-     The page itself (not body) scrolls; .app is sized by the small viewport so it never exceeds the visible area when the toolbar shows. */
-  html:has(body.it-on){overflow-x:hidden!important;overflow-y:auto!important;height:auto!important;overscroll-behavior-y:none}
-  body.it-on{overflow:visible!important;overflow-x:clip!important;height:auto!important;min-height:0!important;overscroll-behavior-y:none}
-  body.it-on .app{min-height:100vh!important}
-  @supports (height:100svh){body.it-on .app{min-height:100svh!important}}
-  body.it-on .mtabs{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;z-index:45;transform:translateZ(0)}
+  /* app shell like poker: the page itself never scrolls; .app (between the top and the bar) is the scroller,
+     the bar sits below it → no jumping bar, no scrolling past the content (iOS toolbar / rubber band) */
+  html.it-on,html.it-on body.it-on{height:100%!important;overflow:hidden!important;overscroll-behavior:none}
+  html.it-on body.it-on .app{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:var(--it-b,calc(50px + env(safe-area-inset-bottom)))!important;height:auto!important;min-height:0!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px!important;margin:0!important}
+  body.it-on .mtabs{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;z-index:45}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
 }`;
 let cur = 'eval', saved = false;
@@ -139,19 +137,37 @@ function init(tries) {
     const again = cur === b.dataset.it && !document.body.classList.contains('mtab-online');
     cur = b.dataset.it; saved = true; try { localStorage.setItem(KEY, cur); } catch (x) {}
     apply();
-    // a shorter box: keep the page inside its new length in the same frame (iOS otherwise shows empty space / loses the fixed bar)
-    { const se = document.scrollingElement || document.documentElement, max = se.scrollHeight - innerHeight; if (scrollY > max) scrollTo(0, Math.max(0, max)); }
+    const sc = scroller(), H = sc.clientHeight, top0 = sc.getBoundingClientRect().top;
+    // a shorter box: keep the view inside its new length in the same frame
+    { const max = sc.scrollHeight - H; if (sc.scrollTop > max) sc.scrollTop = Math.max(0, max); }
     // the game's own handler then runs mtab('game') (board view); bring the box into view
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const el = box[cur], r = el.getBoundingClientRect();
-      if (again && r.top < innerHeight * .5) window.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the board
-      else if (r.top > innerHeight - 140) window.scrollTo({ top: scrollY + r.top - innerHeight * .45, behavior: 'smooth' });
-      else if (r.top < 0) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      const el = box[cur], y = el.getBoundingClientRect().top - top0;
+      if (again && y < H * .5) sc.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the board
+      else if (y > H * .85) sc.scrollTo({ top: Math.min(sc.scrollHeight - H, sc.scrollTop + y - H * .55), behavior: 'smooth' });
+      else if (y < 0) sc.scrollTo({ top: sc.scrollTop + y - 8, behavior: 'smooth' });
       fix();
     }));
   }, true);
-  document.body.classList.add('it-on'); fix();
+  document.body.classList.add('it-on'); document.documentElement.classList.add('it-on'); fix();
+  // the scroller ends at the top of the bar (or of the move strip above it)
+  const setB = () => {
+    if (!navMq.matches) return;
+    const t = bar.getBoundingClientRect().top, st = document.body.classList.contains('it-nav') && strip ? strip.offsetHeight : 0;
+    const v = t > 0 ? Math.round(innerHeight - t + st) + 'px' : '';
+    if (document.documentElement.style.getPropertyValue('--it-b') !== v) v ? document.documentElement.style.setProperty('--it-b', v) : document.documentElement.style.removeProperty('--it-b');
+  };
+  setB(); addEventListener('resize', setB); new MutationObserver(setB).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  if (window.ResizeObserver) new ResizeObserver(setB).observe(bar);
 }
+// the phone scroller (.app when the shell is on, else the page)
+function scroller() { const a = document.querySelector('.app'); return a && document.documentElement.classList.contains('it-on') && getComputedStyle(a).position === 'fixed' ? a : (document.scrollingElement || document.documentElement); }
+window.InfoTabs = Object.assign(window.InfoTabs || {}, { scroller });
+// the page can't scroll while the shell is on: the games' own window.scrollTo / scrollBy (e.g. "back to the board") go to .app
+{ const fwd = name => { const orig = window[name]; window[name] = function (a, b) { const sc = scroller();
+    if (sc === document.scrollingElement || sc === document.documentElement) return orig.apply(window, arguments);
+    return typeof a === 'object' && a ? sc[name](a) : sc[name](0, +b || 0); }; };
+  fwd('scrollTo'); fwd('scrollBy'); }
 /* (not in the portal's 3D skin: its board has its own spacing, so the strips would float away from it)
    strips (opt-in: <script … data-strips>): games whose two sides sit at the top and bottom of the board (checkers, xiangqi,
    tafl, morris…) — on phones the players card is split: the opponent's cell goes above the board, yours below it,

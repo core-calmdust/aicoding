@@ -180,8 +180,33 @@ function bind(root, o) {
     // mouse: hover shows the move; touch: a tap toggles it (the emulated mouseenter of a tap must not cancel the tap)
     b.onpointerenter = e => { if (e.pointerType !== 'mouse') return; b.classList.add('ck-hov'); o.onHover(b.dataset.mv); };
     b.onpointerleave = e => { if (e.pointerType !== 'mouse') return; b.classList.remove('ck-hov'); o.onHover(null); };
-    b.onclick = e => { if (e.pointerType === 'mouse') return; const mv = b.dataset.mv, on = !(root.dataset.ckSel === mv); delete root.dataset.ckSel; root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov')); if (on) { root.dataset.ckSel = mv; b.classList.add('ck-hov'); } o.onHover(on ? mv : null); };
+    // iOS Safari reports pointerType 'mouse' (or nothing) on the click of a tap → take it from the pointerdown
+    b.onpointerdown = e => { b._pt = e.pointerType; };
+    b.onclick = e => {
+      const pt = b._pt || e.pointerType; b._pt = null; if (pt === 'mouse') return;
+      const mv = b.dataset.mv, on = !(root.dataset.ckSel === mv); delete root.dataset.ckSel;
+      root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov'));
+      if (on) { root.dataset.ckSel = mv; b.classList.add('ck-hov'); }
+      o.onHover(on ? mv : null);
+      if (on) showBoard();
+    };
   });
+  // a re-render keeps the tapped move selected
+  if (o.onHover && root.dataset.ckSel) {
+    const r = [...root.querySelectorAll('.ck-bi[data-mv]')].find(x => x.dataset.mv === root.dataset.ckSel);
+    if (r) { r.classList.add('ck-hov'); o.onHover(r.dataset.mv); } else { delete root.dataset.ckSel; o.onHover(null); }
+  }
+}
+// phones: after a tap, if the board is mostly out of sight, scroll it into view so the arrow can be seen
+function showBoard() {
+  const bd = document.querySelector('.board-area'); if (!bd) return;
+  const sc = window.InfoTabs && InfoTabs.scroller ? InfoTabs.scroller() : (document.scrollingElement || document.documentElement);
+  const isDoc = sc === document.scrollingElement || sc === document.documentElement;
+  const vt = isDoc ? 0 : sc.getBoundingClientRect().top, vb = isDoc ? innerHeight : sc.getBoundingClientRect().bottom;
+  const r = bd.getBoundingClientRect(), seen = Math.max(0, Math.min(r.bottom, vb) - Math.max(r.top, vt));
+  if (seen >= Math.min(r.height, vb - vt) * .8) return;
+  const dy = r.top - vt - 4;
+  (isDoc ? window : sc).scrollBy({ top: dy, behavior: 'smooth' });
 }
 window.CoachKit = { css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
 })();
