@@ -1051,10 +1051,10 @@ html[lang=ar] .pf-input{direction:rtl}
   .side-in > *{flex-shrink:0}
   .side-in > #evalCard{flex:none}
   .side-in > .kifu-card{flex:1 1 0;min-height:140px}
-  .side-in > #coachCard:not(.hidden){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
-  .side-in:has(> #coachCard:not(.hidden)) > .kifu-card{flex:.7 1 0;min-height:110px}
-  .side-in:has(> #coachCard:not(.hidden)) > .review-card.show{flex:1.2 1 0}
-  .side-in:has(> #coachCard:not(.hidden)) > #evalCard .graph{height:40px}
+  .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:110px}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .review-card.show{flex:1.2 1 0}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px}
   .side-in > .review-card.show{flex:1.6 1 0;min-height:180px;overflow-y:auto}
   .side-in:has(.review-card.show) > .kifu-card{flex:.7 1 0;min-height:110px}
   .side .review-card .rv-list{max-height:none}
@@ -1410,9 +1410,10 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/variants.js?v=20261028pv"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="../shared/coachkit.js?v=2"></script>
-<script src="coach.js?v=1"></script>
-<script src="coach-i18n.js?v=1"></script>
+<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=3"></script>
+<script src="coach-i18n.js?v=2"></script>
 <script>
 'use strict';
 const E = ShogiEngine;
@@ -2213,6 +2214,7 @@ async function schedule() {
       if (before && before.best != null && !lv.noise) {
         const after = -res.score; // human's view after his move
         prev.q = qOfDrop(Math.max(0, winRate(before.best) - winRate(after)));
+        { const sh = window.ShogiCoach && ShogiCoach.bookShare(idx - 1, game.moves[idx - 1]); if (sh >= 0.03 && (prev.q === 'dubious' || prev.q === 'bad')) prev.q = 'good'; }   // a book move is never called a mistake
         prev.coachB = { s: res.score, bm: res.move, pv: (res.pv || []).slice(0, 5) };
         coach(prev.q);
       }
@@ -2253,6 +2255,7 @@ function showResult() {
   const o = game.over; if (!o) return;
   if (lesson || game.lessonGame || edit) return;   // never over a lesson / tsume / editor (a finished earlier game must not pop up)
   game.resultShown = true; save();
+  recordGame();
   let title;
   if (o.winner < 0) title = t('res.draw');
   else if (settings.mode === 'ai') title = o.winner === game.human ? t('res.win') : t('res.lose');
@@ -2266,6 +2269,18 @@ function showResult() {
   $('#btnMistakes').textContent = t('rv.btn', { n: mk.length });
   showOverlay('#resultOverlay');
   playChime(settings.mode !== 'ai' || o.winner === game.human);
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
+function recordGame() {
+  if (!window.GameRecord || !game || !game.over || game.recorded || (settings.mode !== 'ai')) return;
+  const o = game.over, h = game.human;
+  if (o.ply < 2 && o.reason === 'resign') return;   // (resigned before playing: not a game)
+  Object.defineProperty(game, 'recorded', { value: true, enumerable: true, writable: true, configurable: true });
+  const lvN = i => game.variant ? Variants.lvName(i) : t('lv')[i];
+  const vn = game.variant ? ' · ' + (game.variant === 'mini' ? (LANG === 'ja' ? '5五将棋' : 'Minishogi') : (LANG === 'ja' ? 'はさみ将棋' : 'Hasami Shogi')) : '';
+  const opp = game.rated ? 'AI ' + rtLvName(game.rated.lv) : 'AI ' + lvN(settings.level) + vn;
+  const why = o.reason === 'mate' ? t('res.mate', { n: o.ply }) : o.reason === 'resign' ? t('res.resign', { n: o.ply }) : t('res.' + o.reason);
+  GameRecord.add({ mode: game.rated ? 'rated' : 'ai', res: o.winner < 0 ? 'd' : o.winner === h ? 'w' : 'l', side: h, opp, key: (game.rated ? 'rt:' + game.rated.lv : 'ai:' + settings.level) + (game.variant || ''), n: o.ply, why });
 }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
@@ -2434,7 +2449,7 @@ $('#btnCopy').onclick = () => {
   if (game.over) s += `${String(game.moves.length + 1).padStart(4)} ${game.over.reason === 'mate' || game.over.reason === 'resign' ? '投了' : game.over.reason === 'declare' ? '入玉勝ち' : game.over.reason === 'time' ? '切れ負け' : game.over.reason === 'abandon' ? '中断' : '千日手'}\n`;
   navigator.clipboard.writeText(s).then(() => toast(t('copied')), () => toast('copy failed'));
 };
-$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (HB) HB.relabel(); if (window.ShogiCoach) ShogiCoach.relabel(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
+$('#langSel').onchange = e => { setTimeout(() => { if (game) { renderKifu(); if ($('#reviewCard').classList.contains('show')) try { renderReview(); } catch (er) {} } }, 0); LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (HB) HB.relabel(); if (window.ShogiCoach) ShogiCoach.relabel(); if (window.GameRecord) GameRecord.relabel(); $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join(''); updDialog(); if (game) { renderInfo(); renderHands(); } if (lesson) renderLesson(); save(); };
 document.addEventListener('click', e => { if (sel && !e.target.closest('.board') && !e.target.closest('.hand') && !e.target.closest('.promo')) clearSel(); });
 
 // ====================================================================== rated games against the AI (local Elo, kept apart from the online rating)
@@ -3756,6 +3771,7 @@ $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons
 // first-time banner in the new-game dialog → the rules tutorial (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > tsume > resign) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'shogi', lang: () => LANG, menu: '.controls', sides: () => [cname(0), cname(1)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.ShogiCoach) ShogiCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { if (game) renderInfo(); });
@@ -4491,6 +4507,7 @@ async function finishOnline(g) {
     return;
   }
   renderBoard(false); renderInfo(); save();
+  try { if (window.GameRecord) GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: net.me, opp: (net.me === 0 ? g.wn : g.bn) + ' (' + (net.me === 0 ? g.wr : g.br) + ')', key: 'ol:' + (net.me === 0 ? g.wn : g.bn), n: game.moves.length, why: reason === 'resign' ? t('ol.wResign') : reason === 'time' ? t('ol.wTime') : reason === 'mate' ? t('res.mate', { n: game.moves.length }) : t('res.' + reason) }); } catch (e) {}
   const gid = net.gid;
   let r = { old: Online.profile.rating, now: Online.profile.rating, rated: !!g.rated };
   const own = loc ? (loc.winner < 0 ? 0.5 : loc.winner === net.me ? 1 : 0) : null;   // my own view of a game ended on the board
@@ -5105,6 +5122,6 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas.js?v=20261029t" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
-<script src="../shared/infotabs.js?v=6" defer></script>
+<script src="../shared/infotabs.js?v=7" defer></script>
 </body>
 </html>

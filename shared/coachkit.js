@@ -29,7 +29,7 @@ const CSS = `
 .ck-sw svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ck-sw i{position:relative;width:28px;height:16px;border-radius:9px;background:rgba(255,255,255,.14);transition:background .2s;flex:none}
 .ck-sw i::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#cfc8b8;transition:transform .2s,background .2s}
-.ck-sw.on{color:var(--text,#eee);border-color:color-mix(in srgb, var(--accent,#d8b56a) 60%, transparent)}
+.ck-sw.on{color:var(--text,#eee)}
 .ck-sw.on svg{stroke:var(--accent,#d8b56a)}
 .ck-sw.on i{background:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent)}
 .ck-sw.on i::after{transform:translateX(12px);background:#fff}
@@ -97,10 +97,10 @@ function sw(o) {
   if (host) host.insertBefore(el, host.firstChild);
   // same height / corners / frame as the icon buttons next to it (each game sizes its own icon set)
   const fit = () => {
-    const ref = [...(el.parentElement ? el.parentElement.children : [])].find(x => x !== el && x.offsetHeight && /^(BUTTON|A)$/.test(x.tagName));
+    const sib = [...(el.parentElement ? el.parentElement.children : [])].filter(x => x !== el && x.offsetHeight && /^(BUTTON|A)$/.test(x.tagName)), ref = sib.find(x => !x.classList.contains('on')) || sib[0];
     if (!ref) return;
     const cs = getComputedStyle(ref), h = ref.offsetHeight + 'px';
-    if (el.style.height !== h) { el.style.height = h; el.style.borderRadius = cs.borderRadius; el.style.borderColor = el.classList.contains('on') ? '' : cs.borderColor; el.style.background = cs.backgroundColor; }
+    if (el.style.height !== h || el.style.borderColor !== cs.borderColor) { el.style.height = h; el.style.borderRadius = cs.borderRadius; el.style.borderColor = cs.borderColor; el.style.background = cs.backgroundColor; }
   };
   if (window.ResizeObserver && host) new ResizeObserver(fit).observe(host);
   addEventListener('resize', fit);

@@ -10,6 +10,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
+  offNote: 'コーチ機能はオフになっています。上のスイッチ（電球のマーク）をオンにすると、局面の考え方や候補手の解説が表示されます。',
   idle: '対局が始まると、ここに局面の考え方を表示します。', oppTurn: '相手の手番です。相手が次に何をしてくるか、予想してみよう。予想が当たるほど読みの力がつきます。', over: '対局が終わりました。棋譜の［解析］で一局を振り返れます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
   calc: '候補手を考えています…', form: '形勢', mat: '駒割り', stage: '局面', you: 'あなた',
   'st.open': '序盤', 'st.mid': '中盤', 'st.end': '終盤',
@@ -24,6 +25,25 @@ ja: {
   show: '手を見る', hide: '手を隠す',
   'tt.move': '{p}を動かす', 'tt.drop': '{p}を打つ', 'tt.cap': '{p}で{c}を取る', 'tt.promo': '{p}を成る',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
+  opH: '序盤の分かれ道 — 作戦の選び方', opIntro: '序盤の数手で戦型（作戦）が決まります。まずは定番の2つを覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種',
+  'op.kaku.t': '角道を開ける', 'op.kaku.x': '角の通り道を開ける、もっとも多く指される手。このあと居飛車にも振り飛車にもできる柔軟さが魅力です。相手も角道を開ければ、角換わり・横歩取りなどの激しい戦いにもつながります。',
+  'op.hisha.t': '飛車先の歩を突く', 'op.hisha.x': '飛車の前の歩を突いて、居飛車（飛車を元の筋で使う）をはっきりさせる手。次に飛車先の歩を交換するのがねらいで、相掛かり・矢倉・角換わりなどへ進みます。',
+  'op.hashi.t': '端歩で様子を見る', 'op.hashi.x': '端の歩を突いて相手の出方を見る変わり種。作戦を決めるのを一手遅らせられます。端歩は終盤の玉の逃げ道や端攻めに関わり、藤井システムのように早い端歩を作戦に組み込む指し方もあります。',
+  'op.naka.t': '中央の歩を突く', 'op.naka.x': '中央の歩を突く手。中飛車（飛車を5筋に振る）をめざすときによく指されます。',
+  'op.gk.t': '角道を開け返す', 'op.gk.x': '後手も角道を開けるもっとも普通の応手。角交換の可能性が生まれ、角換わり・横歩取り・振り飛車など多くの戦型に分かれます。',
+  'op.gh.t': '飛車先を伸ばす', 'op.gh.x': '飛車先を伸ばして居飛車をはっきりさせる手。角道を開けないぶん、矢倉などの落ち着いた戦いになりやすい手です。',
+  'op.gn.t': '中央の歩を突く', 'op.gn.x': '中央の歩を突いて、中飛車をめざす手。',
+  'op.aig.t': '飛車先を伸ばし合う', 'op.aig.x': 'お互いに飛車先を伸ばす相居飛車。相掛かり（お互いに飛車先の歩を交換し合う戦い）になりやすい手です。',
+  'op.gk2.t': '角道を開ける', 'op.gk2.x': '角道を開けて柔軟に構える手。居飛車にも振り飛車にもできます。',
+  'op.i2.t': '居飛車にする', 'op.i2.x': '飛車先の歩を突いて居飛車に。相手も居飛車なら角換わり・横歩取り、振り飛車なら対抗形になります。',
+  'op.tome.t': '角道を止める', 'op.tome.x': '角道を止めて角交換を避ける手。四間飛車などの振り飛車や、矢倉に組むときに使います。',
+  'op.kk.t': '角を交換する', 'op.kk.x': '早めに角を交換する手。お互いの持ち駒に角が入るので、角を打たれる隙に注意が必要な激しい展開になります。',
+  'op.ishi.t': '石田流をめざす', 'op.ishi.x': '7筋の歩をさらに伸ばして、石田流（三間飛車の攻撃型）をめざす積極的な手。',
+  'op.yag.t': '銀を上がる（矢倉）', 'op.yag.x': '銀を上がって玉の守りと攻めの両方に備える手。矢倉に組む定番の進め方です。',
+  'op.kw.t': '飛車先を突く', 'op.kw.x': '飛車先を伸ばして攻めの形を作る手。角換わりや相掛かりへ進みます。',
+  'op.aig2.t': '飛車先をさらに伸ばす', 'op.aig2.x': '飛車先の歩をさらに伸ばして、相掛かりへ。早く飛車先の歩を交換して主導権を取りにいきます。',
+  'op.kk2.t': '角道を開ける', 'op.kk2.x': '角道を開けて、角換わりや横歩取りの可能性も残す手。',
+  bkH: '定跡の候補 — 実戦でよく指される手', bkIntro: '強いソフト同士の対局（Floodgate）で、この局面で実際に指された手の割合です。序盤は評価値の小さな差より、定跡どおりに駒組みを進めることが大切です。', 'bk.share': '採用率 {x}', bkWhy: 'この局面は定跡の範囲です。実戦でいちばん多いのは {m}（{c}・採用率{x}）。', prevBook: '定跡どおりの手です（実戦での採用率{x}）。', prevOff: 'この局面の定跡は {m}（採用率{x}）などです。',
   tipsH: '考え方のヒント', more: 'ほかのヒント（{n}）', less: 'たたむ',
   prev: '前の手 {m}：{q}', prevBest: '{c}の方針で、AIの第一候補と同じ手です。', prevAlt: 'AIの第一候補は {m}（{c}）でした。', prevAltOk: 'AIの第一候補 {m}（{c}）と同じくらい良い手です。',
   // categories: tag / badge / explanation ({p} the piece, {c} the captured piece)
@@ -112,6 +132,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
+  offNote: 'The coach is switched off. Turn on the switch at the top (the light bulb) to see how to think about the position and the candidate moves explained.',
   idle: 'Once a game starts, the coach explains how to think about the position here.', oppTurn: "It's your opponent's turn. Try to guess what they will play next — the more often you guess right, the stronger your reading gets.", over: 'The game is over. Use [Analyze] in the record to review it.', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
   calc: 'Thinking about candidate moves…', form: 'Position', mat: 'Material', stage: 'Phase', you: 'you',
   'st.open': 'Opening', 'st.mid': 'Middlegame', 'st.end': 'Endgame',
@@ -126,6 +147,25 @@ en: {
   show: 'Show moves', hide: 'Hide moves',
   'tt.move': 'Move the {p}', 'tt.drop': 'Drop a {p}', 'tt.cap': 'The {p} takes the {c}', 'tt.promo': 'Promote the {p}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
+  opH: 'Opening crossroads — choosing a plan', opIntro: 'The first few moves decide the type of game. Learn the two standard choices first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual',
+  'op.kaku.t': "Open the bishop's diagonal", 'op.kaku.x': "The most popular move: it opens the bishop's path and keeps both Static Rook and Ranging Rook open. If the opponent opens theirs too, sharp games like Bishop Exchange or Side Pawn Capture can follow.",
+  'op.hisha.t': "Push the rook's pawn", 'op.hisha.x': "Pushes the pawn in front of the rook and commits to Static Rook (the rook stays on its file). The aim is to exchange that pawn soon; it leads to Double Wing, Yagura or Bishop Exchange.",
+  'op.hashi.t': 'Wait with an edge pawn', 'op.hashi.x': "An unusual waiting move on the edge: you see the opponent's plan before choosing yours. Edge pawns matter later for the king's escape and edge attacks, and some plans (like the Fujii System) build an early edge pawn into the strategy.",
+  'op.naka.t': 'Push the central pawn', 'op.naka.x': 'Pushes the central pawn, often heading for Central Rook (the rook goes to the 5th file).',
+  'op.gk.t': "Open the bishop's diagonal too", 'op.gk.x': "The most normal reply: White opens the bishop's path as well. A bishop exchange becomes possible, and the game can branch into Bishop Exchange, Side Pawn Capture, Ranging Rook and more.",
+  'op.gh.t': "Push the rook's pawn", 'op.gh.x': "Commits to Static Rook. With the bishop's path still closed, the game tends to be calmer, like Yagura.",
+  'op.gn.t': 'Push the central pawn', 'op.gn.x': 'Pushes the central pawn, heading for Central Rook.',
+  'op.aig.t': "Both push the rook's pawns", 'op.aig.x': "Both sides play Static Rook; this often becomes Double Wing, where both exchange their rook pawns.",
+  'op.gk2.t': "Open the bishop's diagonal", 'op.gk2.x': 'A flexible reply: Static Rook and Ranging Rook are both still possible.',
+  'op.i2.t': 'Go Static Rook', 'op.i2.x': "Push the rook's pawn for Static Rook. Against Static Rook this leads to Bishop Exchange or Side Pawn Capture; against Ranging Rook to an opposite-wing game.",
+  'op.tome.t': "Close the bishop's diagonal", 'op.tome.x': 'Closes the diagonal to avoid a bishop exchange; used for Ranging Rook (such as Fourth File Rook) or for Yagura.',
+  'op.kk.t': 'Exchange bishops', 'op.kk.x': 'An early bishop exchange. Both sides then hold a bishop in hand, so watch out for bishop drops — the game gets sharp.',
+  'op.ishi.t': 'Aim for Ishida', 'op.ishi.x': 'Pushes the 7th-file pawn further, aiming for the Ishida formation (an attacking Third File Rook).',
+  'op.yag.t': 'Bring up the silver (Yagura)', 'op.yag.x': 'The silver comes up to help both defence and attack — the standard way to build Yagura.',
+  'op.kw.t': "Push the rook's pawn", 'op.kw.x': 'Builds the attack with the rook pawn, heading for Bishop Exchange or Double Wing.',
+  'op.aig2.t': "Push the rook's pawn further", 'op.aig2.x': 'Pushes on toward Double Wing, planning an early rook-pawn exchange to take the initiative.',
+  'op.kk2.t': "Open the bishop's diagonal", 'op.kk2.x': 'Opens the diagonal, keeping Bishop Exchange and Side Pawn Capture possible.',
+  bkH: 'Book moves — what strong players choose here', bkIntro: 'How often each move was played in this position in games between strong engines (Floodgate). In the opening, following the standard lines matters more than small evaluation differences.', 'bk.share': 'played {x}', bkWhy: 'This position is still in the opening book. The most played move is {m} ({c}, played {x}).', prevBook: 'A book move (played {x} of the time).', prevOff: 'The book moves here are {m} (played {x}) and others.',
   tipsH: 'How to think', more: 'More tips ({n})', less: 'Show less',
   prev: 'Previous move {m}: {q}', prevBest: 'A "{c}" move — the same as the AI\'s first choice.', prevAlt: "The AI's first choice was {m} ({c}).", prevAltOk: "About as good as the AI's first choice, {m} ({c}).",
   'c.mate': 'Mate', 'b.mate': 'Mate', 'x.mate': 'There is a mate. Keep checking and close every escape square of the enemy king — that is the basic pattern of a mate.',
@@ -326,8 +366,10 @@ const pctS = x => Math.round(x * 100) + '%';
 // --------------------------------------------------------------------------------------------- state / rendering
 const S = { open: false, reveal: false, key: '', f: null, cls: null };
 let card = null;
-function active() {
-  return !!(game && settings.coach && !lesson && !edit && !game.lessonGame && !game.rated && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
+function active() { return !!(settings.coach && usable()); }
+// the coach could be used here (it may still be switched off)
+function usable() {
+  return !!(game && !lesson && !edit && !game.lessonGame && !game.rated && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
 }
 function myTurn() { return game && !game.over && cur === game.moves.length && !reviewing && (settings.mode === 'pvp' || P.side === game.human); }
 function factsNow() {
@@ -394,6 +436,40 @@ function candInfo(list, f) {
   const r = { list, items, dirs, best: items[0], branch: close.length >= 2 && best < WIN, sharp: second != null && second >= 0.12 && best < WIN ? pctS(second) : '', only: second != null && second >= 0.25 };
   S.cls = r; return r;
 }
+// opening crossroads (平手 only): the main plans of the first moves, shown with their moves (they are knowledge, not a hint)
+const HIRATE = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
+const OPEN = {
+  '': [['7g7f', 'main', 'kaku'], ['2g2f', 'main', 'hisha'], ['1g1f', 'alt', 'hashi'], ['5g5f', 'alt', 'naka']],
+  '7g7f': [['3c3d', 'main', 'gk'], ['8c8d', 'main', 'gh'], ['5c5d', 'alt', 'gn']],
+  '2g2f': [['8c8d', 'main', 'aig'], ['3c3d', 'main', 'gk2']],
+  '7g7f 3c3d': [['2g2f', 'main', 'i2'], ['6g6f', 'main', 'tome'], ['7f7e', 'alt', 'ishi'], ['8h2b+', 'alt', 'kk']],
+  '7g7f 8c8d': [['7i6h', 'main', 'yag'], ['2g2f', 'main', 'kw']],
+  '2g2f 8c8d': [['2f2e', 'main', 'aig2'], ['7g7f', 'main', 'kk2']],
+  '2g2f 3c3d': [['7g7f', 'main', 'kk2'], ['2f2e', 'main', 'aig2']],
+};
+// the opening book (index.html BOOK: Floodgate move frequencies) for the position after `ply` moves of this game
+function bookAt(ply) {
+  if (typeof BOOK === 'undefined' || !BOOK || !game || game.variant || game.start !== HIRATE || ply > 24) return null;
+  const p = posAt(ply), e = BOOK[p.sfen().replace(/ \d+$/, '')];
+  if (!e || !e.length) return null;
+  const tot = e.reduce((a, b) => a + b[1], 0); if (tot < 30) return null;
+  return { p, tot, list: e.map(([u, c, w]) => ({ u, share: c / tot, win: w })) };
+}
+function bookShare(ply, u) { const b = bookAt(ply); if (!b) return null; const x = b.list.find(y => y.u === u); return x ? x.share : 0; }
+function openingOf() {
+  if (!game || game.variant || game.start !== HIRATE || cur > 3) return null;
+  const e = OPEN[game.moves.slice(0, cur).join(' ')]; if (!e) return null;
+  const p = newPos(); p.setSfen(P.sfen());
+  const cands = (game.info[cur] && game.info[cur].cands) || [], best = cands.length ? winRate(cands[0].score) : null;
+  const out = [];
+  for (const [u, kind, key] of e) {
+    let m; try { m = p.fromUsi(u); } catch (er) { continue; } if (!m) continue;
+    let nm = ''; try { nm = (p.side ? '△' : '▲') + kifName(p, m, -1); } catch (er) {}
+    const share = bookShare(cur, u);
+    out.push({ u, nm, kind, key, share });
+  }
+  return out.sort((a, b) => (a.kind === b.kind ? (b.share || 0) - (a.share || 0) : a.kind === 'main' ? -1 : 1));
+}
 function gapOf(d, i) { return i === 0 ? ['gap.best', 'g0'] : d <= 0.02 ? ['gap.eq', 'g1'] : d <= 0.05 ? ['gap.eq', 'g1'] : d <= 0.12 ? ['gap.lt', 'g2'] : ['gap.bad', 'g3']; }
 // what the move does, in a few words (the plan's tag says why)
 function ttl(d) {
@@ -416,17 +492,23 @@ function verdictHtml() {
   const before = game.info[i - 1] || {};
   const names = kifList(); const mv = names[i - 1] || '';
   let body = '';
+  const bk = bookAt(i - 1);
+  if (bk) {
+    const sh = bk.list.find(x => x.u === game.moves[i - 1]);
+    if (sh && sh.share >= 0.03) return CoachKit.verdict(sh.share >= 0.15 ? 0 : 1, esc(tx('prev', { m: mv, q: t('q.' + (sh.share >= 0.15 ? 'best' : 'good')) })), esc(tx('prevBook', { x: pctS(sh.share) })));
+    try { const top = bk.list[0], m = bk.p.fromUsi(top.u); body = esc(tx('prevOff', { m: (bk.p.side ? '△' : '▲') + kifName(bk.p, m, -1), x: pctS(top.share) })) + ' '; } catch (e) {}
+  }
   try {
     const p = posAt(i - 1);
     if (before.bm && before.bm !== game.moves[i - 1]) {
       const m = p.fromUsi(before.bm); let k = { k: 'wait', p: '', c: '' };
       if (!game.variant) { const ff = facts(posAt(i - 1), i - 1); k = classify(posAt(i - 1), m, ff); }
       const bn = (p.side ? '△' : '▲') + kifName(p, m, -1);
-      body = esc(tx(q === 'best' || q === 'good' ? 'prevAltOk' : 'prevAlt', { m: bn, c: tx('c.' + k.k) }));
+      body += esc(tx(q === 'best' || q === 'good' ? 'prevAltOk' : 'prevAlt', { m: bn, c: tx('c.' + k.k) }));
     } else if (before.bm) {
       const m = p.fromUsi(game.moves[i - 1]); let k = { k: 'wait' };
       if (!game.variant) { const ff = facts(posAt(i - 1), i - 1); k = classify(posAt(i - 1), m, ff); }
-      body = esc(tx('prevBest', { c: tx('c.' + k.k) }));
+      body += esc(tx('prevBest', { c: tx('c.' + k.k) }));
     }
     if (window.ShogiTip && inf.coachB && before.bm) body += ShogiTip.html(p.sfen(), game.moves[i - 1], before.bm, { s: before.best, bm: before.bm, pv: before.bpv }, inf.coachB, q).replace(/<p class="rv-tip">/, '<br>').replace(/<\/p>$/, '');
   } catch (e) {}
@@ -435,10 +517,12 @@ function verdictHtml() {
 function render() {
   if (!card) return;
   if (ShogiCoach.sw) ShogiCoach.sw.sync();
-  const on = active();
-  card.classList.toggle('hidden', !on);
-  document.body.classList.toggle('ck-tab', on || !!(document.querySelector('#reviewCard.show')));
-  if (!on) return;
+  const on = active(), can = usable();
+  card.classList.toggle('hidden', !can);
+  card.classList.toggle('ck-off', can && !on);
+  document.body.classList.toggle('ck-tab', can || !!(document.querySelector('#reviewCard.show')));
+  if (!can) return;
+  if (!on) return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('offNote'))}</p>`);
   let h = `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span>${game && !game.over && !game.variant ? `<small>${esc(tx('st.' + ((factsNow() || {}).stage || 'mid')))}</small>` : ''}</h3>`;
   if (game.over) { h += `<p class="ck-muted">${esc(tx('over'))}</p>` + verdictHtml(); return put(h); }
   if (cur !== game.moves.length || reviewing) { h += `<p class="ck-muted">${esc(tx('viewing'))}</p>`; return put(h); }
@@ -452,7 +536,31 @@ function render() {
   if (wr != null && settings.eval) chips.push({ k: tx('form'), v: esc(tx('f.' + formOf(wr)) + ' ' + pctS(wr)), cls: wr >= .54 ? 'pos' : wr <= .46 ? 'neg' : '' });
   if (!f.variant && f.mat != null) chips.push({ k: tx('mat'), v: esc(Math.abs(f.mat) < 1 ? tx('mat.even') : tx(f.mat > 0 ? 'mat.up' : 'mat.down', { x: Math.abs(f.mat) })), cls: f.mat >= 1 ? 'pos' : f.mat <= -1 ? 'neg' : '' });
   h += CoachKit.summary(chips);
-  if (cl && cl.best) {
+  const op = openingOf();
+  if (op) {
+    S.op = op;
+    h += CoachKit.branches({
+      head: tx('opH'), intro: esc(tx('opIntro')), reveal: true,
+      items: op.map(d => ({ tag: tx('op.' + d.kind), cls: d.kind === 'main' ? 'c-mat' : 'c-dev', title: esc(tx('op.' + d.key + '.t')), text: gl(esc(tx('op.' + d.key + '.x'))), gap: d.share ? tx('bk.share', { x: pctS(d.share) }) : '', gcls: d.share >= .2 ? 'g0' : d.share ? 'g1' : '', move: d.u, mvName: d.nm })),
+    });
+  } else S.op = null;
+  const bk = !op && bookAt(cur);
+  if (bk) {
+    const p = bk.p, f2 = factsNow();
+    const items = bk.list.filter(x => x.share >= 0.03).slice(0, 4).map(x => {
+      let m = 0, k = { k: 'wait', p: '', c: '' }, nm = '';
+      try { m = p.fromUsi(x.u); k = classify(p, m, f2); nm = (p.side ? '△' : '▲') + kifName(p, m, -1); } catch (er) {}
+      return { u: x.u, k, nm, share: x.share, drop0: m && E.isDrop(m) };
+    });
+    if (items.length) {
+      S.op = items.map(d => ({ u: d.u, kind: 'main' }));
+      const b = items[0];
+      h += CoachKit.rec(tx('b.' + b.k.k), gl(esc(tx('bkWhy', { m: b.nm, c: tx('c.' + b.k.k), x: pctS(b.share) }))), RCLS[b.k.k] || '');
+      h += CoachKit.branches({ head: tx('bkH'), intro: esc(tx('bkIntro')), reveal: true,
+        items: items.map(d => ({ tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d)), text: gl(esc(catTxt(d.k))), gap: tx('bk.share', { x: pctS(d.share) }), gcls: d.share >= .2 ? 'g0' : 'g1', move: d.u, mvName: d.nm })) });
+    }
+  }
+  if (!op && !(bk && S.op) && cl && cl.best) {
     const b = cl.best;
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(winRate(b.score))), p: Math.round(winRate(b.score) * 100) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
@@ -461,7 +569,7 @@ function render() {
       head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: d.u, mvName: d.nm }; }),
     });
-  } else h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
+  } else if (!op && !(bk && S.op)) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, { ev: evMe, wr }, cl);
   h += CoachKit.tips({ head: tx('tipsH'), list: tl.map(x => ({ html: gl(esc(tx(x.k, x.v || {}))), hi: x.hi })), open: S.open, more: tx('more', { n: Math.max(0, tl.length - 3) }), less: tx('less') });
   h += verdictHtml();
@@ -478,6 +586,11 @@ function put(h) {
 }
 // candidate arrows on the board (revealed moves only)
 function arrows(u) {
+  if (S.op && myTurn()) {
+    const list = u ? S.op.filter(d => d.u === u) : [];
+    if (!list.length) { if (hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); } return; }
+    hintMoves = { ply: cur, coach: 1, list: list.map(d => ({ move: d.u, label: d.key ? tx('op.' + d.kind) : String(S.op.indexOf(d) + 1) })) }; drawArrows(); return;
+  }
   const info = game && game.info[cur], cl = info && S.cls;
   if (!S.reveal || !cl || !myTurn()) { if (hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); } return; }
   const list = u ? cl.dirs.filter(d => d.u === u) : cl.dirs;
@@ -501,5 +614,5 @@ function setOn(v) {
 }
 function relabel() { if (ShogiCoach.sw) ShogiCoach.sw.sync(); S.key = ''; render(); }
 function merge(more) { for (const l in more) TX[l] = Object.assign({}, TX[l] || {}, more[l], { gl: Object.assign({}, (TX[l] || {}).gl || {}, more[l].gl || {}) }); }
-window.ShogiCoach = { init, render, relabel, merge, tx, TX, active, arrows };
+window.ShogiCoach = { bookShare, init, render, relabel, merge, tx, TX, active, arrows };
 })();
