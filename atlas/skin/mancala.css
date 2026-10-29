@@ -47,6 +47,6 @@ html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!i
   html.atlas-mancala .atlas-brand small{display:none}
   html.atlas-mancala :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:34px}
   html.atlas-mancala.atlas-skin .app{padding-top:46px!important}
-  html.atlas-mancala{--u:min((100vw - 290px) / 9.7, (var(--vh) - 42px - var(--plate) - 22px) / 4.2, 112px)!important}
+  html.atlas-mancala{--u:min((100vw - 40px) / 9.7, (var(--vh) - 42px - var(--plate) - 22px) / 4.2, 112px)!important}
 }
 @media (max-width:420px) and (pointer: coarse){ html.atlas-mancala .atlas-top{gap:6px} html.atlas-mancala .atlas-top :is(.atlas-ic,.atlas-lbtn){width:38px;min-width:38px;height:38px} html.atlas-mancala .atlas-brand img{width:32px;height:32px} }

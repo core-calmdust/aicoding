@@ -2436,8 +2436,10 @@ renderRotBtn();
 // tip for phone users: landscape mode exists. Shown on every visit in portrait while the option is off,
 // queued until no dialog is open (new-game dialog, resumed game, lesson / puzzle, animations)
 let rotTipDone = false;
-const rotTipSeen = () => { try { return sessionStorage.getItem('mancala-rottip') === '1'; } catch (e) { return false; } };
-function rotTipSeenSet() { try { sessionStorage.setItem('mancala-rottip', '1'); } catch (e) {} }
+// asked on every page load (like backgammon), except right after the landscape button reloaded the page (turning it off / on)
+const rotTipSkip = (() => { try { const v = sessionStorage.getItem('mancala-rottip-skip') === '1'; sessionStorage.removeItem('mancala-rottip-skip'); return v; } catch (e) { return false; } })();
+const rotTipSeen = () => rotTipSkip;
+function rotTipSeenSet() { try { sessionStorage.setItem('mancala-rottip-skip', '1'); } catch (e) {} }
 function rotTipEligible() { return !rotTipSeen() && !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
 function maybeRotTip() { /* kept for the dialog handlers; the queue below does the work */ }
 function startRotTip() {
@@ -2446,7 +2448,7 @@ function startRotTip() {
     if (rotTipDone || !rotTipEligible()) { clearInterval(iv); return; }
     if (window.innerWidth > window.innerHeight) return;                       // held sideways: wait
     if (document.querySelector('.overlay.show') || lesson || puzzle || animating || document.hidden) return;
-    clearInterval(iv); rotTipDone = true; rotTipSeenSet();
+    clearInterval(iv); rotTipDone = true;
     $('#rotTipOverlay').classList.add('show');
   }, 700);
 }
