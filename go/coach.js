@@ -625,7 +625,7 @@ function marks() {
 }
 function setOn(v) {
   settings.coach = !!v; save();
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   render(); renderFx();
   if (v) want();
 }

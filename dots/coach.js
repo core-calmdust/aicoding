@@ -553,7 +553,7 @@ function init() {
 }
 function setOn(v) {
   settings.coach = !!v; save();
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   S0.hover = null; render(); drawNow();
 }
 function relabel() { if (DotsCoach.sw) DotsCoach.sw.sync(); S0.cls = null; card && (card.dataset.h = ''); render(); }

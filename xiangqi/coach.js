@@ -610,7 +610,7 @@ function init() {
 }
 function setOn(v) {
   settings.coach = !!v; save();
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   S.hover = null; render(); renderFx();
   if (v && !gameOver(cur) && !listAt(cur)) analyzeCurrent(busyToken);
 }

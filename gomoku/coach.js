@@ -499,7 +499,7 @@ function init() {
 function setOn(v) {
   settings.coach = !!v; save();
   try { const o = document.getElementById('optCoach'); if (o) o.checked = settings.coach; } catch (e) {}
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   S.hov = -1;
   render(); renderFx();
   if (v && wants(cur) && !listAt(cur)) analyzeCurrent(busyToken);
