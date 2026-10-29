@@ -5329,6 +5329,9 @@ glazeDisc.rotation.x = -Math.PI / 2;
 glazeDisc.renderOrder = 5;
 scene.add(glazeDisc);
 let slowVis = 0;
+const glazeRing2Mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+const glazeRing2 = new THREE.Mesh(new THREE.RingGeometry(0.955, 0.985, 64), glazeRing2Mat); // スロー中だけ出す内側の2本目の縁
+glazeRing2.rotation.x = -Math.PI / 2; glazeRing2.renderOrder = 5; glazeRing2.visible = false; scene.add(glazeRing2);
 const glazeRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 const glazeRing = new THREE.Mesh(new THREE.RingGeometry(0.97, 1.0, 64), glazeRingMat);
 glazeRing.rotation.x = -Math.PI / 2;
@@ -7578,6 +7581,7 @@ function render3D() {
         }
     }
     glazeDisc.visible = glazeRing.visible = showPlayer;
+    if (!showPlayer) glazeRing2.visible = false;
     shield.visible = meter.visible = false;
     hitDot.visible = false;
     if (showPlayer) {
@@ -7599,8 +7603,9 @@ function render3D() {
         glazeFillMat.color.copy(themeCur.player);
         glazeRingMat.color.copy(themeCur.player);
         slowVis += ((input.slow && !frozen ? 1 : 0) - slowVis) * Math.min(1, dt * 12); // スロー中はグレイズ円の縁を少し濃く
-        glazeFillMat.opacity = efx ? 0.025 + visualBeat * 0.04 + slowVis * 0.02 : 0.0;
-        glazeRingMat.opacity = (efx ? 0.16 + visualBeat * 0.22 : 0.3) + slowVis * 0.24;
+        glazeFillMat.opacity = (efx ? 0.025 + visualBeat * 0.04 : 0.0) + slowVis * 0.1;
+        glazeRingMat.opacity = (efx ? 0.16 + visualBeat * 0.22 : 0.3) + slowVis * 0.6;
+        if (slowVis > 0.01) { glazeRingMat.color.lerp(COL_WHITE, slowVis * 0.35); glazeRing2.visible = true; glazeRing2.position.set(px, 11.6, pz); glazeRing2.scale.setScalar(glazeR * 0.94); glazeRing2Mat.color.copy(themeCur.player); glazeRing2Mat.opacity = slowVis * 0.45; } else glazeRing2.visible = false;
 
         // エンジン
         if (playerVisible) {
