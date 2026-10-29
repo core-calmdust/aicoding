@@ -23,7 +23,7 @@ ja: {
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
   show: '手を見る', hide: '手を隠す',
-  'tt.move': '{p}を動かす', 'tt.drop': '{p}を打つ', 'tt.cap': '{p}で{c}を取る', 'tt.promo': '{p}を成る',
+  'tt.move': '{sq}の{p}を動かす', 'tt.move0': '{p}を動かす', 'tt.pawn': '{f}筋の歩を突く', 'tt.clash': '{f}筋の歩をぶつける', 'tt.drop': '{p}を打つ', 'tt.cap': '{p}で{c}を取る', 'tt.promo': '{sq}の{p}を成る', 'tt.promo0': '{p}を成る',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   opH: '序盤の分かれ道 — 作戦の選び方', opIntro: '序盤の数手で戦型（作戦）が決まります。まずは定番の2つを覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種',
   'op.kaku.t': '角道を開ける', 'op.kaku.x': '角の通り道を開ける、もっとも多く指される手。このあと居飛車にも振り飛車にもできる柔軟さが魅力です。相手も角道を開ければ、角換わり・横歩取りなどの激しい戦いにもつながります。',
@@ -145,7 +145,7 @@ en: {
   brH: 'Branching point — plans to choose from', brIntro: "None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.",
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
   show: 'Show moves', hide: 'Hide moves',
-  'tt.move': 'Move the {p}', 'tt.drop': 'Drop a {p}', 'tt.cap': 'The {p} takes the {c}', 'tt.promo': 'Promote the {p}',
+  'tt.move': 'Move the {p} on {sq}', 'tt.move0': 'Move the {p}', 'tt.pawn': 'Push the {f}-file pawn', 'tt.clash': 'Push the {f}-file pawn into the enemy pawn', 'tt.drop': 'Drop a {p}', 'tt.cap': 'The {p} takes the {c}', 'tt.promo': 'Promote the {p} on {sq}', 'tt.promo0': 'Promote the {p}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening crossroads — choosing a plan', opIntro: 'The first few moves decide the type of game. Learn the two standard choices first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual',
   'op.kaku.t': "Open the bishop's diagonal", 'op.kaku.x': "The most popular move: it opens the bishop's path and keeps both Static Rook and Ranging Rook open. If the opponent opens theirs too, sharp games like Bishop Exchange or Side Pawn Capture can follow.",
@@ -335,7 +335,7 @@ function classify(p, m, f) {
   const cap = drop ? 0 : p.board[to];
   const ok = p.king[us], ek = p.king[us ^ 1];
   p.doMove(m); const chk = p.inCheck(), mate = chk && !p.hasLegalMove(); p.undoMove();
-  const r = { p: pn(tp), c: cap ? pn(E.typeOf(cap)) : '' };
+  const r = { p: pn(tp), c: cap ? pn(E.typeOf(cap)) : '', sq: drop ? null : from, tp };
   const mk = k => Object.assign(r, { k });
   if (mate) return mk('mate');
   if (f.check) return mk(tp === OU ? 'escape' : 'block');
@@ -473,12 +473,13 @@ function openingOf() {
 function gapOf(d, i) { return i === 0 ? ['gap.best', 'g0'] : d <= 0.02 ? ['gap.eq', 'g1'] : d <= 0.05 ? ['gap.eq', 'g1'] : d <= 0.12 ? ['gap.lt', 'g2'] : ['gap.bad', 'g3']; }
 // what the move does, in a few words (the plan's tag says why)
 function ttl(d) {
-  const k = d.k; if (k.k === 'pawn' || k.k === 'clash' || k.k === 'mate' || k.k === 'block') return '';
-  if (!k.p) return tx('b.' + k.k);
+  const k = d.k; if (!k.p) return tx('b.' + k.k);
   if (d.drop0) return tx('tt.drop', { p: k.p });
   if (k.c) return tx('tt.cap', { p: k.p, c: k.c });
-  if (k.k === 'promo') return tx('tt.promo', { p: k.p });
-  return tx('tt.move', { p: k.p });
+  const v = { p: k.p, sq: k.sq != null ? sqName(k.sq) : '', f: k.sq != null ? (L() === 'ja' ? '０１２３４５６７８９'[E.sqFile(k.sq)] : E.sqFile(k.sq)) : '' };
+  if (k.tp === 1 && k.sq != null) return tx(k.k === 'clash' ? 'tt.clash' : 'tt.pawn', v);
+  if (k.k === 'promo') return tx(k.sq != null ? 'tt.promo' : 'tt.promo0', v);
+  return tx(k.sq != null ? 'tt.move' : 'tt.move0', v);
 }
 function catTxt(k) { return tx('x.' + k.k, { p: k.p || '', c: k.c || '' }); }
 

@@ -72,7 +72,8 @@ function init(tries) {
   if (sh) { sh.className = 'it-sh'; ol.querySelector('.it-lb').prepend(sh); }
   const shLab = () => { if (!sh) return; const l = (document.documentElement.lang || 'ja').slice(0, 2), v = ONL[l] || ONL.en; if (sh.textContent !== v) sh.textContent = v; };
   shLab(); new MutationObserver(shLab).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
-  const labOf = el => { const l = el.querySelector('.ck-h > span, .evalrow .label, .progrow .label, .kifu-head .label [data-i18n], .kifu-head .label'); return l ? l.textContent.trim() : ''; };
+  // (in priority order: the kifu heading's own word, not the opening name shown beside it)
+  const labOf = el => { for (const q of ['.ck-h > span', '.evalrow .label', '.progrow .label', '.kifu-head .label [data-i18n]', '.kifu-head .label']) { const l = el.querySelector(q); if (l) return l.textContent.trim(); } return ''; };
   const relabel = () => order.forEach(k => { const a = labOf(box[k]), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
   relabel();
   order.forEach(k => new MutationObserver(relabel).observe(box[k], { subtree: true, childList: true, characterData: true }));
