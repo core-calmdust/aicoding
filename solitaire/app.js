@@ -326,9 +326,9 @@ function startGame(v, opt) {
     G = { undo: [], el: 0, t0: 0, started: false, over: false, diff: opt.diff, deal: opt.deal, daily: opt.deal === 'daily' ? dailyKey() : null, undoOk: opt.undo !== 'off', counted: false };
     if (v === 'klondike' && st.o.scoring === 'vegasCum') { st.sc = D.bank - 52; G.bank0 = D.bank; }
     $('#stuck').classList.add('hidden'); $('#btnAuto').classList.add('hidden');
-    TB.sel = null; TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('shuffle');
+    TB.sel = null; TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 18 : 34 }); renderAll(); sfx('shuffle');
     saveGame(); checkAutoComplete();
-    const st0 = st; setTimeout(() => { if (st === st0 && !G.started && !G.over) runAuto(() => { saveGame(); checkAutoComplete(); }); }, set.anim ? 52 * 22 + 500 : 50);
+    const st0 = st; setTimeout(() => { if (st === st0 && !G.started && !G.over) runAuto(() => { saveGame(); checkAutoComplete(); }); }, set.anim ? 52 * 34 + 700 : 50);
     if (V.solver && opt.deal !== 'winnable') preFind(v, opt.o);
   };
   if (opt.deal === 'number') return go(Math.max(1, Math.min(1000000, opt.no | 0 || 1)));
@@ -365,7 +365,7 @@ function restart() {
   G = { undo: [], el: keep.el, t0: 0, started: keep.counted, over: false, diff: keep.diff, deal: keep.deal, daily: keep.daily, undoOk: keep.undoOk, counted: keep.counted };
   if (v === 'klondike' && st.o.scoring === 'vegasCum') { st.sc = D.bank - 52; G.bank0 = D.bank; }
   $('#stuck').classList.add('hidden'); $('#btnAuto').classList.add('hidden');
-  TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 12 : 22 }); renderAll(); sfx('shuffle'); saveGame();
+  TB.set(st, { deal: true, anim: !!set.anim, step: v === 'spider' ? 18 : 34 }); renderAll(); sfx('shuffle'); saveGame();
 }
 function curOpt() { return { o: st.o, diff: G.diff, deal: G.deal === 'daily' ? 'number' : G.deal, no: st.no, undo: G.undoOk ? 'on' : 'off' }; }
 
