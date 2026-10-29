@@ -456,7 +456,9 @@ function hi(k) {
   try {
     if (k < 0 || !myTurn()) { hiPit = -1; renderFx(); return; }
     const i = pitIndex(P[cur].side, k);
-    renderFx(); fxRing(i, 'ok'); drawPreview(i);
+    renderFx(); drawPreview(i);
+    fxEl.querySelectorAll('.ring:not(.cap)').forEach(r => r.classList.add('ck'));   // the coach's preview (landing pit) in the coach colour too
+    fxRing(i, 'ck');
   } catch (e) {}
 }
 function init() {
