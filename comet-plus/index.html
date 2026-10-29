@@ -6100,42 +6100,41 @@ NB.LOOM = () => {
     return g;
 };
 NB.KESTREL = () => {
-    // 猛禽の滑空機（作り込み版）: 装甲の胴とかぎ爪、金のくちばしと赤い目の頭。翼は骨の装甲・雨覆い・風切り羽の3層（羽根は層ごとに1つの形）で、
-    //   縁に光のライン。尾羽は扇。狙う間は翼を広げて羽ばたき、頭が自機を追う。突進では翼をたたみ、進む方向へ機首を向けて光の尾を引く
+    // 猛禽の滑空機: 少ないポリゴンの装甲（胴・頭・くちばし・翼の骨）に、ワイヤーで描いた羽根の輪郭と骨組み、
+    //   うすいガラスの翼面を重ねる。狙う間は翼を広げて羽ばたき、頭が自機を追う。突進では翼をたたみ、進む方向へ機首を向けて光の尾を引く
     const g0 = new THREE.Group(), g = new THREE.Group(), C = 0xd0e8ff, B = 0x9fc8ff, GD = 0xffd060, R = 0xff3050; g.scale.setScalar(1.3); g0.add(g);
-    const body = new THREE.Group(); g.add(body);
-    body.add(fuse(LAB.loft([[-38, 10, 8, 0], [-18, 22, 16, 1], [6, 24, 18, 2], [24, 18, 14, 2], [36, 10, 9, 3]], 8, Math.PI / 8), C, { glass: 0.28, tint: 0.25, cage: 1.1 }));
-    // 胸の金の装甲板と背中の推進器
-    body.add(fuse(LAB.loft([[-6, 14, 4, -7], [12, 16, 5, -6], [26, 9, 3, -4]], 6), GD, { cage: false, glass: 0, tint: 0.45 }));
-    [-1, 1].forEach(s => { const th = fuse(LAB.loft([[-34, 5, 5, 6, s * 6], [-20, 7, 7, 7, s * 6], [-10, 5, 5, 7, s * 6]], 8, Math.PI / 8), B, { cage: false, glass: 0 }); body.add(th);
-        const fl = new THREE.Mesh(new THREE.CircleGeometry(2.6, 10), LAB.glass(0xa8e0ff, 0.85)); fl.position.set(s * 6, 6, -34.2); fl.rotation.y = Math.PI; body.add(fl); });
-    // かぎ爪
-    const claws = []; [-1, 1].forEach(s => { for (let k = 0; k < 3; k++) { const c = crystal(1.4, 5, 4); c.rotateX(1.2 + k * 0.25); c.translate(s * 7 + (k - 1) * 2, -10, 6 + k); claws.push(c); } });
-    body.add(fuse(mergeGeometries(claws), GD, { cage: false, glass: 0, tint: 0.5 }));
-    // 頭
-    const head = new THREE.Group(); head.position.set(0, 6, 36); g.add(head);
-    head.add(fuse(LAB.loft([[-6, 14, 12, 0], [4, 15, 13, 1], [12, 11, 9, 0]], 6), C, { cage: false, glass: 0.3, tint: 0.25 }));
-    head.add(fuse(LAB.loft([[10, 8, 7, 0], [18, 5, 5, -1], [23, 2, 3, -4], [25, 0.6, 1, -7]], 4, Math.PI / 4), GD, { cage: false, glass: 0, tint: 0.5 }));
-    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), LAB.glow(R)); e.position.set(s * 5, 3, 8); e.scale.set(1, 0.6, 1.6); head.add(e); });
-    const crest = []; for (let k = 0; k < 3; k++) { const c = crystal(1.2, 6 - k, 4); c.rotateX(-1.1); c.translate((k - 1) * 3, 7, -6 - Math.abs(k - 1) * 2); crest.push(c); }
-    head.add(fuse(mergeGeometries(crest), GD, { cage: false, glass: 0.4 }));
-    // 翼
-    const merged = (list) => mergeGeometries(list.map(x => x.index ? x.toNonIndexed() : x));
+    g.add(fuse(LAB.loft([[-38, 10, 8], [-14, 22, 16], [12, 20, 15], [30, 10, 9]], 6), C, { glass: 0.3, tint: 0.25, cage: 1.18 }));
+    g.add(wire(new THREE.OctahedronGeometry(30, 0), B, 0.25));
+    const head = new THREE.Group(); head.position.set(0, 5, 32); g.add(head);
+    head.add(fuse(LAB.loft([[-4, 13, 11], [8, 10, 8]], 6), C, { cage: 1.2, glass: 0.3, tint: 0.25 }));
+    head.add(fuse(LAB.loft([[7, 7, 6, 0], [16, 4, 4, -1], [21, 0.8, 1, -6]], 4, Math.PI / 4), GD, { cage: false, glass: 0, tint: 0.5 }));
+    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), LAB.glow(R)); e.position.set(s * 4.5, 3, 6); e.scale.set(1, 0.6, 1.6); head.add(e); });
+    // 羽根の輪郭（線だけ）を作る: 根元 x0, 向き a, 長さ L, 幅 w
+    const featherPts = (out, x0, z0, a, L, w) => { const d = [Math.sin(a), Math.cos(a)], n = [d[1], -d[0]]; const P = [[x0, z0], [x0 + d[0] * L * 0.3 + n[0] * w / 2, z0 + d[1] * L * 0.3 + n[1] * w / 2], [x0 + d[0] * L, z0 + d[1] * L], [x0 + d[0] * L * 0.3 - n[0] * w / 2, z0 + d[1] * L * 0.3 - n[1] * w / 2]];
+        for (let i = 0; i < 4; i++) { const p = P[i], q = P[(i + 1) % 4]; out.push(new THREE.Vector3(p[0], 0, p[1]), new THREE.Vector3(q[0], 0, q[1])); }
+        out.push(new THREE.Vector3(x0, 0, z0), new THREE.Vector3(P[2][0], 0, P[2][1])); return P[2]; };
     const wings = [-1, 1].map(s => {
-        const piv = new THREE.Group(); piv.position.set(s * 9, 3, 6); g.add(piv);
-        const arm = fuse(LAB.loft([[0, 9, 6], [22, 8, 5], [44, 5, 3], [56, 2, 2]], 6), C, { cage: false, glass: 0.25, tint: 0.3 }); arm.rotation.y = s * Math.PI / 2; piv.add(arm);
-        const _o = new THREE.Object3D(), cov = [], pri = [];
-        for (let f = 0; f < 8; f++) { const x = s * (6 + f * 6.5); const fg = bladeGeo(26 - f * 1.2, 13, 2); _o.position.set(x, 1.5, 3); _o.rotation.set(0, Math.PI + s * (0.05 + f * 0.05), 0); _o.updateMatrix(); cov.push(fg.applyMatrix4(_o.matrix)); }
-        for (let f = 0; f < 11; f++) { const x = s * (12 + f * 4.4), len = 40 + f * 2.2 - Math.max(0, f - 8) * 7; const fg = bladeGeo(len, 12, 1.6); _o.position.set(x, 0, 0); _o.rotation.set(0, Math.PI + s * (0.02 + Math.pow(f / 10, 2) * 1.1), 0); _o.updateMatrix(); pri.push(fg.applyMatrix4(_o.matrix)); }
-        const covM = fuse(merged(cov), B, { cage: false, glass: 0.3, glassOp: 0.25, tint: 0.3 }), priM = fuse(merged(pri), s > 0 ? 0xbfe0ff : 0xbfe0ff, { cage: 1.05, glass: 0.35, glassOp: 0.22, tint: 0.2, seed: 4 });
-        const priP = new THREE.Group(); priP.position.x = s * 30; priM.position.x = -s * 30; priP.add(priM); piv.add(covM, priP);
+        const piv = new THREE.Group(); piv.position.set(s * 8, 3, 4); g.add(piv);
+        const arm = fuse(LAB.loft([[0, 8, 6], [30, 6, 4], [56, 2, 2]], 4, Math.PI / 4), C, { cage: 1.25, glass: 0.3, tint: 0.3 }); arm.rotation.y = s * Math.PI / 2; piv.add(arm);
+        const pts = [], tips = [];
+        for (let f = 0; f < 9; f++) { const x = s * (10 + f * 5.2), a = Math.PI + s * (0.02 + Math.pow(f / 8, 2) * 1.15), L = 34 + f * 2.4 - Math.max(0, f - 6) * 6; tips.push(featherPts(pts, x, 0, a, L, 9)); }
+        for (let f = 0; f < 6; f++) featherPts(pts, s * (6 + f * 7), 2, Math.PI + s * 0.1, 18 - f, 8);
+        const lines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), LAB.line(B, 0.75)); lines.position.y = 0.5; piv.add(lines);
+        // 翼面: 先端をつないだ1枚のうすいガラス
+        const sh = []; const root = [0, 0]; const outline = [[s * 2, 4], ...tips, [s * 58, 0]];
+        for (let i = 0; i < outline.length - 1; i++) sh.push(root[0], 0, root[1], outline[i][0], 0, outline[i][1], outline[i + 1][0], 0, outline[i + 1][1]);
+        const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sh, 3));
+        piv.add(new THREE.Mesh(sg, LAB.glass(B, 0.12)));
+        const edge = new THREE.Line(new THREE.BufferGeometry().setFromPoints(outline.map(([x, z]) => new THREE.Vector3(x, 0.6, z))), LAB.line(0xe8f6ff, 0.9)); piv.add(edge);
         const tip = new THREE.Mesh(new THREE.OctahedronGeometry(2, 0), LAB.glow(GD)); tip.position.set(s * 58, 0, 0); piv.add(tip);
-        return { piv, priP, s };
+        return { piv, s };
     });
-    // 尾羽の扇
-    const tl = []; for (let k = 0; k < 7; k++) { const fg = bladeGeo(34 - Math.abs(k - 3) * 3, 8, 2); fg.rotateY(Math.PI + (k - 3) * 0.16); fg.translate(0, 2, -34); tl.push(fg); }
-    const tail = fuse(merged(tl), B, { cage: false, glass: 0.3, glassOp: 0.22, tint: 0.3 }); g.add(tail);
-    // 突進の光の尾と流線
+    // 尾羽: ワイヤーの扇＋うすいガラス
+    const tp = [], tt = []; for (let k = 0; k < 7; k++) tt.push(featherPts(tp, 0, -34, Math.PI + (k - 3) * 0.17, 30 - Math.abs(k - 3) * 2.5, 8));
+    const tail = new THREE.Group(); g.add(tail);
+    tail.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tp), LAB.line(B, 0.75)));
+    const ts = []; for (let i = 0; i < tt.length - 1; i++) ts.push(0, 0, -34, tt[i][0], 0, tt[i][1], tt[i + 1][0], 0, tt[i + 1][1]);
+    const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(ts, 3)); tail.add(new THREE.Mesh(tg, LAB.glass(B, 0.12)));
     const trail = LAB.dashRing(60, 30, 8, 1.4, LAB.glass(C, 0.5), 3); trail.scale.set(1, 1, 0.4); g.add(trail);
     const sp = []; for (let k = 0; k < 10; k++) { const x = (k % 5 - 2) * 12, y = (k < 5 ? 4 : -4); sp.push(new THREE.Vector3(x, y, -40 - (k % 3) * 8), new THREE.Vector3(x, y, -90 - (k % 4) * 12)); }
     const streaks = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(sp), LAB.line(0xd8f0ff, 0.6)); g.add(streaks);
@@ -6144,7 +6143,7 @@ NB.KESTREL = () => {
         const dash = b.mode === 'dash';
         fold += ((dash ? 1 : 0) - fold) * 0.18;
         const tgt = dash ? -(b.dir || 1) * 1.25 : 0; yaw += (tgt - yaw) * 0.15; g.rotation.y = yaw;
-        wings.forEach(({ piv, priP, s }) => { piv.rotation.y = s * fold * 1.1; piv.rotation.z = s * (dash ? 0.08 : 0.12 + Math.sin(t * 4.5) * 0.2); priP.rotation.y = -s * (1 - fold) * 0.1 * Math.sin(t * 4.5 + 1); });
+        wings.forEach(({ piv, s }) => { piv.rotation.y = s * fold * 1.1; piv.rotation.z = s * (dash ? 0.08 : 0.12 + Math.sin(t * 4.5) * 0.2); });
         const px = typeof player !== 'undefined' ? player.x - (b.x ?? 0) : 0;
         head.rotation.y += ((dash ? 0 : Math.max(-0.5, Math.min(0.5, px * 0.002))) - head.rotation.y) * 0.1;
         g.rotation.z = dash ? Math.sin(t * 20) * 0.06 : Math.sin(t * 1.5) * 0.1; tail.rotation.y = Math.sin(t * 2) * 0.1;
