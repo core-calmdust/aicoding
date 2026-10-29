@@ -16,6 +16,7 @@ const L = (k, v) => { const T = LT[A.LANG] || LT.en; let x = T[k]; if (x === und
 const hn = (s, short) => t('hand.' + P.catOf(s, short));
 const pc = x => (x * 100).toFixed(0) + '%';
 const cardsH = (cs, o) => window.PokerReview.mini(cs, o);
+const G2 = h => window.PokerGloss ? PokerGloss.mark(h, A.LANG) : h;
 
 /* ---------------- problem generators: () => { q (html), opts: [html], ans: index, exp (text) } ---------------- */
 function handOfCat(cat, short) {   // random 5 cards of a given natural category
@@ -195,14 +196,14 @@ function playHtml() {
   const dots = `<span class="lq-dots">${cur.qs.map((q, k) => `<i class="${k < cur.i ? (q.ok ? 'ok' : 'ng') : k === cur.i && cur.step >= 0 ? 'cur' : ''}"></i>`).join('')}</span>`;
   let main;
   if (cur.step === -1) {   // the explanation
-    main = `<div class="lq-intro"><span class="lc-pic lg">${cardsH(PIC[id].split(' ').map(P.parse))}</span><div><p>${L('x.' + id)}</p><p class="lq-tip">💡 ${L('tip.' + id)}</p></div></div>`;
+    main = `<div class="lq-intro"><span class="lc-pic lg">${cardsH(PIC[id].split(' ').map(P.parse))}</span><div><p>${G2(L('x.' + id))}</p><p class="lq-tip">💡 ${G2(L('tip.' + id))}</p></div></div>`;
   } else if (cur.i >= cur.qs.length) {   // result
     const pass = cur.score >= 4;
     main = `<div class="lq-end"><div class="lq-score ${pass ? 'ok' : ''}">${cur.score} / 5</div><b>${esc(pass ? L('end.pass') : L('end.fail'))}</b><p>${esc(pass ? L('end.passD') : L('end.failD'))}</p></div>`;
   } else {
     const q = cur.qs[cur.i], ch = cur.chosen;
     main = `<div class="lq-q"><p class="lq-qt">${esc(q.q)}</p>${q.vis || ''}<div class="lq-opts${q.html ? ' cards' : ''}">${q.opts.map((o, k) => `<button type="button" class="lq-o${ch != null ? (k === q.ans ? ' right' : k === ch ? ' wrong' : ' off') : ''}" data-o="${k}"${ch != null ? ' disabled' : ''}>${q.html ? o : esc(o)}</button>`).join('')}</div>` +
-      (ch != null ? `<div class="lq-exp ${ch === q.ans ? 'ok' : 'ng'}"><b>${esc(ch === q.ans ? L('right') : L('wrong'))}</b><p>${esc(q.exp)}</p></div>` : '') + `</div>`;
+      (ch != null ? `<div class="lq-exp ${ch === q.ans ? 'ok' : 'ng'}"><b>${esc(ch === q.ans ? L('right') : L('wrong'))}</b><p>${G2(esc(q.exp))}</p></div>` : '') + `</div>`;
   }
   const foot = cur.step === -1 ? `<button class="mbtn" id="lqList">${esc(L('backList'))}</button><button class="mbtn go" id="lqGo">${esc(L('startQ'))}</button>`
     : cur.i >= cur.qs.length ? `<button class="mbtn" id="lqList">${esc(L('backLesson'))}</button><button class="mbtn" id="lqRetry">${esc(L('retry'))}</button><button class="mbtn go" id="lqNext">${esc(L('nextLesson'))}</button>`
