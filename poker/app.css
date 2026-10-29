@@ -1205,3 +1205,7 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#232327 0%,transpare
   .lesson-modal .lq{flex:1;min-height:0;display:flex;flex-direction:column}
   .lesson-modal .lq-main{flex:1;min-height:0;overflow:auto}
 }
+/* no text / card selection or image dragging with the mouse */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
+img,svg{-webkit-user-drag:none;user-drag:none}
