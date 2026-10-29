@@ -551,3 +551,8 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
   .ng-body .dz .tiles.faces .tile{height:100%;justify-content:center}
   .ng-body .dz-felt{margin-top:auto;padding-top:14px}
 }
+@media (max-width:760px){
+  .ng-body .dz .tiles.faces{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ng-body .dz .tiles.faces .pv{height:66px}
+  .ng-body .dz .tiles.faces .ct-pv{width:38px;height:55px}
+}
