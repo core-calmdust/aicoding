@@ -927,7 +927,9 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   body.lt-on.in-lesson .app, body.lt-on.in-puzzle .app{grid-template-columns:auto minmax(0,1fr) auto var(--ltw, 300px)!important;grid-template-areas:"brand ctrl ctrl icons" "fr fr fr pn"!important}
   body.lt-on .brand-r{justify-self:end}
   body.lt-on .controls .btn span{display:none!important}
-  body.lt-on .controls .btn{padding:6px 0!important}
+  body.lt-on .controls .btn{padding:0!important;flex:none!important;width:36px!important;height:32px!important;gap:0!important;border-radius:8px!important;justify-content:center}
+  body.lt-on .controls .btn svg{width:17px!important;height:17px!important}
+  body.lt-on .controls{gap:4px!important;align-items:center;justify-content:flex-start}
   body.lt-on .controls :is(.grc-menu, #btnLesson, #btnPuzzle, #btnRules){display:none!important}
   body.lt-on .frame{align-self:center}
   body.lt-on .slabel{font-size:max(10px, calc(var(--u) * .2))!important;letter-spacing:.04em!important}
