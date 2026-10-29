@@ -441,6 +441,24 @@ body.hb-on .controls.hb-menu{display:flex!important}
 :where(.review-card.show){flex:1.6 1 0;min-height:96px}
 .review-card.show{display:block;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
+/* coach (coach.js + shared/coachkit.js) */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+.ck-card .ck-sum span{white-space:normal}
+html[lang=ar] #coachCard{direction:rtl;text-align:right}
+#resultOverlay .modal-actions{flex-wrap:wrap;gap:8px}
+#resultOverlay .mbtn{white-space:nowrap;flex:1 1 auto;min-width:max-content;padding-left:10px;padding-right:10px;letter-spacing:.02em}   /* labels never wrap: a long one sends the buttons to a second row */
+/* PC: the coach shares the info column (it scrolls inside; the evaluation and the record stay visible) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  .side-in > #coachCard:not(.hidden){flex:none}
+  .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard{flex:none;min-height:0}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:none}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.55 1 0;min-height:88px}
+  #coachCard.ck-off{padding:8px 12px}
+  #coachCard.ck-off .ck-h{margin-bottom:3px}
+  #coachCard.ck-off .ck-muted{font-size:12px;line-height:1.55}
+}
 .rv-prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 4px}
 .rv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brass),var(--accent));transition:width .2s}
 .rv-sum{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;font-size:12px;margin-top:2px;align-items:center}
@@ -511,6 +529,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .lesson-card,.puzzle-card{order:0}
+  #coachCard{order:1}
   .controls{order:-4}
   #evalCard{order:2}
   .review-card{order:3}
@@ -990,6 +1009,7 @@ body .info-line{font-size:12.5px}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card" id="evalCard">
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
       <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
@@ -1186,6 +1206,10 @@ body .info-line{font-size:12.5px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
+<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1233,7 +1257,7 @@ const canDrop = (moves, c) => gridOf(moves)[c].length < ROWS;
 
 // ====================================================================== state
 const STORE = 'aicoding-connect4-v2';
-const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '' };
+const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, coach: true, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -1504,6 +1528,7 @@ function renderFx() {
   for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; if (m.p) d.style.borderColor = m.p === P1 ? 'var(--gold2)' : 'var(--ruby2)'; discPos(d, m.c, m.r); fxEl.appendChild(d); }
   if (!drawReviewFx(g) && hintList && !st.winner && !rbCons()) drawHints(hintList, g, shown.length);
   rbDrawHover(g, shown);
+  if (window.C4Coach) C4Coach.drawFx();
 }
 // convert an engine list entry into a label (mover's view)
 function entryLabel(e, nm) {
@@ -1622,6 +1647,7 @@ function renderInfo() {
   hbInfo(shown, st, tm, ev);
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   if (window.olAfterInfo) olAfterInfo();
+  if (window.C4Coach) C4Coach.render();
 }
 // PC header bar: whose turn, move number, evaluation (hidden in rated games and when the evaluation is off)
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1736,7 +1762,7 @@ async function analyzeCurrent(tok) {
   const shown = moves.slice(0, cur), idx = cur;
   if (gameOver(shown) || lesson || puzzle) { hintList = null; return; }
   if (window.olLive && olLive()) { hintList = null; return; }   // online: no analysis while the game is on
-  if (!settings.eval && !settings.hint) return;
+  if (!settings.eval && !settings.hint && !(window.C4Coach && C4Coach.active())) return;
   const key = shown;
   const apply = (list, final) => {
     if (tok !== busyToken && final !== 'cache') { /* stale */ }
@@ -1748,6 +1774,7 @@ async function analyzeCurrent(tok) {
       ev = { s: pv.side === P1 ? 0.8 : -0.8, kind: 'win', side: pv.side };
     }
     if (ev) evals[idx] = ev;
+    if (window.C4Coach && list) C4Coach.cands(key, list);   // coach (coach.js): the candidates of this position
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
   if (anaCache.has(key)) { apply(anaCache.get(key), 'cache'); return; }
@@ -1762,6 +1789,7 @@ function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -1780,6 +1808,15 @@ const RS_TXT = {
   es: ['Te rendiste', '{c} se rindió'], fr: ['Vous avez abandonné', '{c} a abandonné'], pt: ['Você desistiu', '{c} desistiu'],
   de: ['Du hast aufgegeben', '{c} hat aufgegeben'], hi: ['आपने हार मानी', '{c} ने हार मानी'], ar: ['لقد استسلمت', 'استسلم {c}'],
 };
+// 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js
+let recordedMv = null;
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || recordedMv === moves) return;
+  if (st.resign && moves.length < 2) return;   // resigning before playing is not a game
+  recordedMv = moves;
+  const rated = !!(window.rtGame && rtGame()), lv = levelFor(humanColor === P1 ? P2 : P1);
+  GameRecord.add({ mode: rated ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI Lv.' + lv + ' ' + LV(lv), key: (rated ? 'rt:' : 'ai:') + lv, n: moves.length, why: st.resign ? resignText(st) : st.draw ? t('res.drawSub') : '' });
+}
 function resignText(st) { const x = RS_TXT[LANG] || RS_TXT.en; return settings.mode === 'pvp' ? x[1].replace('{c}', pname(st.loser)) : x[0]; }
 function canResign() {
   if (settings.mode === 'online') return !lesson && !puzzle && typeof olLive === 'function' && olLive();
@@ -3016,6 +3053,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' }) : null;
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'connect4', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
+if (window.C4Coach) C4Coach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 var HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => renderInfo());
 $('#langSel').onchange = e => {
@@ -3027,6 +3066,8 @@ $('#langSel').onchange = e => {
   if (puzzle) renderPuzzleCard();
   if (rulesOffer) rulesOffer.sync();
   if (HB) HB.relabel();
+  if (window.C4Coach) C4Coach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
@@ -3104,7 +3145,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 <script src="rated.js?v=20261022ol"></script><!-- レーティング戦 -->
-<script src="online-ui.js?v=20261028l9"></script><!-- オンライン対戦・Google連携 -->
+<script src="online-ui.js?v=20261030ck"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas portal skin: connect4/?skin=atlas — 3D leather & walnut tile tower (tiles fall between the rails), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
