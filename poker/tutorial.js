@@ -92,6 +92,7 @@ function show(st) {
     `<b>${esc(L('t.' + st.k))}</b><p>${L('b.' + st.k, vars)}</p><div class="tut-btns">${btns}</div>`;
   layer.classList.add('show'); layer.classList.toggle('center', !st.at); layer.classList.toggle('act', !!st.need);
   const el = st.at && document.querySelector([].concat(st.at)[0]);
+  { const pt = el && el.closest && el.closest('#side [data-pt]'); if (pt && A.showTab) A.showTab(pt.dataset.pt); }   // phones: open that tab
   if (el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
   requestAnimationFrame(() => place(st));
   const nx = $('#tutNext'); if (nx) { nx.onclick = () => { A.sfx('flip'); next(); }; setTimeout(() => nx.focus({ preventScroll: true }), 30); }

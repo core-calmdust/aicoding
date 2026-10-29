@@ -1209,3 +1209,76 @@ body.pk{background:radial-gradient(1100px 700px at 25% -10%,#232327 0%,transpare
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
 img,svg{-webkit-user-drag:none;user-drag:none}
+
+/* ================= phones: header with the game name, icons, numbers on the felt, tabs at the bottom ================= */
+.m-game,.m-hud,.m-tabs,.m-s{display:none}
+@media (hover:none){.abtn kbd,.szb kbd{display:none}}
+@media (max-width:760px){
+  /* header: series + game name on the left, small icon buttons on the right */
+  .brand{padding:8px 12px 2px;gap:8px}
+  .brand h1{display:none}
+  .brand-l .series{font-size:10px;letter-spacing:.08em}
+  .m-game{display:flex;align-items:baseline;gap:8px;min-width:0;flex-wrap:wrap;row-gap:0}
+  .m-game b{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;font-weight:800;font-size:19px;line-height:1.2;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .m-game em{font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+  .brand-r{gap:5px}
+  .snd{width:32px;height:32px}
+  #langSel{max-width:70px;padding:0 4px}
+  .controls{gap:5px;padding:4px 10px 8px}
+  .btn{height:48px;border-radius:12px;font-size:10.5px;gap:3px;padding:0 2px}
+  .btn svg{width:20px;height:20px}
+  .btn span{overflow:visible;text-overflow:clip;letter-spacing:-.01em}
+  #btnNew [data-i18n="btn.new"]{display:none}
+  #btnNew .m-s{display:inline}
+  .infobar{display:none!important}
+  .stage{gap:10px;padding:0 8px 12px}
+  .pk .board-wrap{height:clamp(320px,calc(100svh - 362px),620px)}
+  /* the session numbers on the empty felt under the board */
+  .m-hud{display:block;position:absolute;inset:0;z-index:1;pointer-events:none}
+  .mh{position:absolute;bottom:calc(var(--rail) + 6%);display:flex;flex-direction:column;gap:5px}
+  .mh.l{left:calc(var(--rail) + 5%)}.mh.r{right:calc(var(--rail) + 5%)}
+  .mh span{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:96px;padding:4px 10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(216,212,204,.15)}
+  .m-hud small{font-size:10px;color:rgba(232,228,218,.66);letter-spacing:.04em;white-space:nowrap}
+  .m-hud b{font:700 14px 'JetBrains Mono',monospace;color:#f3efe6;line-height:1.2}
+  /* games with 4+ cards in the hand: a small 2×2 block in the middle instead of the corners */
+  .m-hud[data-pos=mid],.m-hud[data-pos=center]{inset:auto;left:50%;transform:translate(-50%,0);top:calc(var(--rail) + (100% - 2 * var(--rail)) * .44 + var(--chh) * .5 + 10px);display:grid;grid-template-columns:1fr 1fr;gap:5px;transition:opacity .2s}
+  .m-hud[data-pos=center]{top:46%;transform:translate(-50%,-50%)}
+  .m-hud[data-pos=mid] .mh,.m-hud[data-pos=center] .mh{position:static;display:contents}
+  .m-hud[data-pos=mid] .mh span,.m-hud[data-pos=center] .mh span{flex-direction:column;align-items:center;gap:0;min-width:74px;padding:3px 6px}
+  .m-hud[data-pos=mid] small,.m-hud[data-pos=center] small{font-size:9.5px}
+  .m-hud[data-pos=mid] b,.m-hud[data-pos=center] b{font-size:13px}
+  .pk-result.show ~ .m-hud[data-pos=mid],.pk-result.show ~ .m-hud[data-pos=center]{opacity:0}
+  .m-hud b.pos{color:#8fe3b8}.m-hud b.neg{color:#ff9b90}
+  /* action bar: three big buttons, then the sizing */
+  .actbar{padding:10px;gap:8px;flex-direction:column;align-items:stretch;min-height:68px;justify-content:center}
+  .ab-btns{width:100%}
+  .ab-btns.main{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+  .ab-btns:not(.main){display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+  .abtn{min-width:0;padding:13px 6px;font-size:16px;justify-content:center;border-radius:13px;white-space:nowrap}
+  .abtn kbd,.szb kbd{display:none}
+  .ab-size{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}
+  .ab-size input[type=range]{grid-column:1/-1;width:100%;height:28px;margin:0}
+  .szb{padding:9px 2px;font-size:12.5px;white-space:nowrap;text-align:center;border-radius:10px}
+  .ab-msg{padding:4px 0}
+  /* side cards → tabs */
+  .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+  .pk .side > [data-pt]{display:none}
+  .pk .side[data-pt=eq] > [data-pt=eq],.pk .side[data-pt=coach] > [data-pt=coach],.pk .side[data-pt=log] > [data-pt=log],.pk .side[data-pt=sess] > [data-pt=sess]{display:block}
+  .pk .side .card h3{font-size:13px}
+  .pk .side .log-card .pk-log{max-height:none}
+  .m-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;padding:4px 8px calc(4px + env(safe-area-inset-bottom));background:rgba(11,11,13,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid rgba(216,212,204,.14)}
+  .m-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--muted);font:600 11px 'Zen Kaku Gothic New',sans-serif;padding:7px 0 5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .m-tabs button[hidden]{display:none}
+  .m-tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .m-tabs button.sel{color:#f6f2ea}
+  .m-tabs button.sel svg{stroke:var(--hl2)}
+  .m-tabs button.sel::before{content:'';position:absolute;top:-4px;left:28%;right:28%;height:2px;border-radius:2px;background:var(--hl)}
+}
+@media (max-width:400px){
+  .m-game b{font-size:17px}
+  #langSel{max-width:62px;font-size:11px}
+  .brand-r{gap:4px}.snd{width:30px}
+  .mh.l{left:calc(var(--rail) + 3.5%)}.mh.r{right:calc(var(--rail) + 3.5%)}
+  .mh span{min-width:82px;gap:6px;padding:3px 8px}
+  .m-hud small{font-size:9.5px}.m-hud b{font-size:13px}
+}

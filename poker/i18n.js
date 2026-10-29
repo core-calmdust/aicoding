@@ -2,7 +2,7 @@
 const I18N = {
 ja: {
   series: '世界のボドゲ大全', 'meta.title': 'ポーカー | 世界のボドゲ大全', title: 'ポーカー', back: 'ホームへ',
-  'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.t': 'ゲームの種類・CPU・デザインを選んで始める',
+  'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.s': '新規', 'btn.new.t': 'ゲームの種類・CPU・デザインを選んで始める',
   'btn.resign': '精算', 'btn.resign.t': 'このテーブルを精算して席を立つ（新しいテーブルで始め直す）',
   'btn.hint': 'ヒント', 'btn.hint.t': 'コーチのおすすめを見る（H）', 'btn.rules': 'ルール', 'btn.rules.t': 'ルール説明（チュートリアル）',
   'btn.lesson': 'レッスン', 'btn.lesson.t': '役・ポットオッズ・戦略を問題で学ぶ', 'btn.tools': '研究', 'btn.tools.t': '勝率・EV計算機、スターティングハンド表、役一覧',
@@ -68,7 +68,7 @@ ja: {
 },
 en: {
   series: 'World Board Game Atlas', 'meta.title': 'Poker | World Board Game Atlas', title: 'Poker', back: 'Home',
-  'btn.sound': 'Sound', 'btn.settings': 'Settings', 'btn.new': 'New game', 'btn.new.t': 'Choose the game, the CPU players and the design',
+  'btn.sound': 'Sound', 'btn.settings': 'Settings', 'btn.new': 'New game', 'btn.new.s': 'New', 'btn.new.t': 'Choose the game, the CPU players and the design',
   'btn.resign': 'Cash out', 'btn.resign.t': 'Cash out of this table and start a fresh one',
   'btn.hint': 'Hint', 'btn.hint.t': 'What the coach recommends (H)', 'btn.rules': 'Rules', 'btn.rules.t': 'Rules (tutorial)',
   'btn.lesson': 'Lessons', 'btn.lesson.t': 'Learn hand rankings, pot odds and strategy with problems', 'btn.tools': 'Study', 'btn.tools.t': 'Equity & EV calculator, starting-hand chart, hand rankings',
@@ -167,3 +167,5 @@ ar: {"series": "أطلس ألعاب الطاولة العالمية", "meta.titl
   hi: { 'v.triple': '2-7 ट्रिपल ड्रॉ', 'vg.triple': 'लोबॉल: सबसे कमज़ोर हाथ जीतता है। सबसे अच्छा 7-5-4-3-2 है। तीन बार पत्ते बदलें; जोड़ी, स्ट्रेट और फ़्लश बुरे हाथ हैं।', 'hand.low': 'लो', 'st.d1': 'पहले बदलाव के बाद', 'st.d2': 'दूसरे बदलाव के बाद', 'st.d3': 'तीसरे बदलाव के बाद' },
   ar: { 'v.triple': '2-7 تريبل درو', 'vg.triple': 'لوبول: تفوز أضعف يد. الأفضل هي 7-5-4-3-2. ثلاث مرات تبديل؛ الأزواج والستريت والفلاش أيادٍ سيئة.', 'hand.low': 'لو', 'st.d1': 'بعد التبديل الأول', 'st.d2': 'بعد التبديل الثاني', 'st.d3': 'بعد التبديل الثالث' },
 });
+// short label for the "new game" button on phones
+[['zh', '新游戏'], ['ko', '새 게임'], ['es', 'Nueva'], ['fr', 'Nouvelle'], ['pt', 'Novo'], ['de', 'Neu'], ['hi', 'नया'], ['ar', 'جديد']].forEach(([l, s]) => { if (I18N[l]) I18N[l]['btn.new.s'] = s; });
