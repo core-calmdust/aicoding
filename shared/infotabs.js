@@ -47,6 +47,13 @@ const CSS = `
   body.it-on.it-nav #itNav{display:flex;justify-content:center;position:fixed;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));z-index:44;padding:6px 10px;background:var(--bg,#111);border-top:1px solid var(--line,rgba(255,255,255,.1))}
   body.it-on.it-nav #itNav .navbar{margin:0;width:100%;max-width:420px}
   body.it-on.it-nav .app{padding-bottom:calc(150px + env(safe-area-inset-bottom))!important}
+  /* iPhone: keep the bottom bar pinned and stop scrolling past the content.
+     The page itself (not body) scrolls; .app is sized by the small viewport so it never exceeds the visible area when the toolbar shows. */
+  html:has(body.it-on){overflow-x:hidden!important;overflow-y:auto!important;height:auto!important;overscroll-behavior-y:none}
+  body.it-on{overflow:visible!important;overflow-x:clip!important;height:auto!important;min-height:0!important;overscroll-behavior-y:none}
+  body.it-on .app{min-height:100vh!important}
+  @supports (height:100svh){body.it-on .app{min-height:100svh!important}}
+  body.it-on .mtabs{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;z-index:45;transform:translateZ(0)}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
 }`;
 let cur = 'eval', saved = false;
