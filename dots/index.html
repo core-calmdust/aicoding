@@ -300,6 +300,15 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .coach.p0{border-color:var(--p0);color:#ffd2c4}.coach.p1{border-color:var(--p1);color:#d3e8ff}
 .coach.gold{border-color:var(--accent);color:var(--accent)}
 
+/* coach (coach.js / shared/coachkit.js): the card near the 形勢 box; the hovered candidate line on the board */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+#coachCard.ck-off{padding:10px 14px}
+#coachCard.ck-off .ck-h{margin-bottom:4px}
+#coachCard.ck-off .ck-muted{font-size:12px;line-height:1.6}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--go1),var(--go2));color:var(--go-ink);cursor:pointer;white-space:nowrap}
+.ckline{stroke:var(--hint);stroke-width:10;stroke-linecap:round;stroke-dasharray:6 10;opacity:.95;pointer-events:none;filter:drop-shadow(0 0 5px var(--hint-glow))}
+#resultOverlay .mbtn{white-space:nowrap}
 /* ---------------------------------------------------------------- side */
 .side{grid-area:side;width:100%;height:max(calc(var(--board) * 1.07), min(620px, var(--bv)));min-height:0;max-height:calc(var(--vh) - var(--pad) * 2);container-type:inline-size}
 .side-in{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
@@ -554,6 +563,7 @@ body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu st
   .players{order:-2;padding:8px;gap:8px}
   .board-area{order:-1;flex:none}
   .controls{order:-4}
+  #coachCard{order:1}
   #progCard{order:1}
   .review-card{order:1}
   /* reviewing on a phone: a compact 形勢 bar with the ◀ ▶ navigation right under the board, then the review */
@@ -843,6 +853,9 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   .app > .side .kifu-card{flex:1 1 auto;min-height:130px}
   .app > .side .review-card.show{flex:1.4 1 0;min-height:120px}
   .app > .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one player per row: full names in the 360px column */
+  .app > .side #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+  .app > .side .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:110px}
+  .app > .side .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #progCard .graph{height:40px}
   html.rb-on body.reviewing .app > .side #progCard .graph{height:clamp(30px, 5vh, 60px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
@@ -952,6 +965,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -961,7 +975,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M5 5h6v6H5zM13 13h6v6h-6z"/><path d="M13 5h6M13 8h6M5 13v6M8 13v6"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div class="rv-view hidden" id="rvView"><button id="rvPrev" aria-label="prev">◀</button><span id="rvText"></span><button id="rvNext" aria-label="next">▶</button><button id="rvLive" data-i18n="rv.live"></button></div>
       <div id="rvBody"></div>
@@ -1128,6 +1142,10 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
+<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -1148,7 +1166,7 @@ function applyI18n() {
 }
 
 // ====================================================================== state
-const settings = { mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '' };
+const settings = { mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '', coach: true };
 // game: n, moves[], human (player index of the human in 'ai' mode), setup {edges, owners} for lessons/puzzles
 let game = { n: 4, moves: [], human: 0, setup: null };
 let S = null;              // derived state (see compute)
@@ -1612,6 +1630,17 @@ function showResult() {
   $('#resultSub').textContent = (SF.resigned >= 0 ? (settings.mode === 'ai' ? t('ol.youResigned') : t('ol.wResign', { p: shortName(SF.resigned) })) + ' · ' : '') + (settings.mode === 'ai' ? t('res.vs', { name: t('lv')[settings.level], lv: settings.level, n: game.n }) : t('res.pvp', { n: game.n }));
   playChime(win);
   $('#resultOverlay').classList.add('show');
+  recordGame();
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated) that the player took part in; online games: online-ui.js finishOnline()
+function recordGame() {
+  if (!window.GameRecord || !SF || !SF.over || game.recorded || settings.mode !== 'ai' || lesson || puzzle || game.setup) return;
+  const h = game.human, mine = SF.log.some(x => x.pl === h);
+  if (!mine && SF.resigned >= 0) return;   // resigned before playing a move: not recorded
+  game.recorded = true;
+  const rated = !!(window.rtGame && rtGame()), lv = levelFor(1 - h);
+  const res = SF.resigned >= 0 ? (SF.resigned === h ? 'l' : 'w') : SF.scores[h] > SF.scores[1 - h] ? 'w' : SF.scores[h] < SF.scores[1 - h] ? 'l' : 'd';
+  GameRecord.add({ mode: rated ? 'rated' : 'ai', res, side: h, opp: 'AI Lv.' + lv + ' ' + t('lv')[lv] + ' · ' + game.n + '×' + game.n, key: (rated ? 'rt:' : 'ai:') + lv + ':' + game.n, n: game.moves.length, why: SF.resigned >= 0 ? t('ol.youResigned') : SF.scores[h] + '–' + SF.scores[1 - h] });
 }
 $('#btnReview').onclick = () => $('#resultOverlay').classList.remove('show');
 $('#btnResAnalyze').onclick = () => { $('#resultOverlay').classList.remove('show'); runReview(); };
@@ -2130,9 +2159,12 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) segSync();
   rulesOfferSync();
   if (HB) HB.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   learnLangChanged();
 };
 learnInit();
+if (window.GameRecord) GameRecord.init({ game: 'dots', lang: () => LANG, menu: '.controls', sides: () => [t('ng.first'), t('ng.second')] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.DotsCoach) DotsCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(0), lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { if (S) renderInfo(); });
@@ -2158,7 +2190,7 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
 </script>
-<script src="online-ui.js?v=20261028l9"></script>
+<script src="online-ui.js?v=20261030ck"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas portal skin: dots/?skin=atlas — 3D spiral notebook with red / blue ballpoint lines, guide speech bubbles, portal look (all features kept) -->
 <script>
