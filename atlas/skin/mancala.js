@@ -54,6 +54,18 @@
     new MutationObserver(sync).observe(rot, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
     bar.insertBefore(rb, home || null);
   })(0);
+  // phones sideways: the game's menu (対局 · 待った …) goes into the portal bar, between the title and the icons
+  (function menuInBar() {
+    const bar = document.querySelector('.atlas-top'), ctr = document.querySelector('.controls'); if (!bar || !ctr) return;
+    const home = ctr.parentElement, next = ctr.nextSibling, sp = bar.querySelector('.sp');
+    const mq = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px)');
+    const apply = () => {
+      if (mq.matches) { if (ctr.parentElement !== bar) bar.insertBefore(ctr, sp || bar.children[1]); de.classList.add('mc-barmenu'); }
+      else { if (ctr.parentElement === bar) home.insertBefore(ctr, next && next.parentNode === home ? next : null); de.classList.remove('mc-barmenu'); }
+    };
+    if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
+    apply();
+  })();
 
   /* ---------- the page's cups on the carved hollows ---------- */
   window.slotUV = function (i) {
