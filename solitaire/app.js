@@ -81,7 +81,7 @@ function tone(a, t0, f, dur, g, type) {
   o.connect(gn).connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
 }
 // recorded sounds (snd/place.mp3, snd/shuffle.mp3): decoded once after the first gesture; synthesized fallback until then
-const SND = {}, SND_SRC = { place: 'snd/place.mp3?v=2', shuffle: 'snd/shuffle.mp3?v=2', flip: 'snd/flip.mp3?v=1', draw: 'snd/draw.mp3?v=1' };
+const SND = {}, SND_SRC = { place: 'snd/place.mp3?v=2', shuffle: 'snd/shuffle.mp3?v=2', flip: 'snd/flip.mp3?v=1', draw: 'snd/draw.mp3?v=1', win: 'snd/win.mp3?v=1' };
 function loadSnd(a) {
   for (const k in SND_SRC) if (!SND[k]) { SND[k] = 'loading'; fetch(SND_SRC[k]).then(r => r.arrayBuffer()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { SND[k] = buf; }).catch(() => { SND[k] = null; }); }
 }
@@ -107,7 +107,7 @@ function sfx(k) {
   else if (k === 'bad') tone(a, n, 196, .18, .08, 'triangle');
   else if (k === 'ok') { tone(a, n, 1046.5, .5, .12, 'triangle'); tone(a, n + .2, 1318.5, .7, .12, 'triangle'); }
   else if (k === 'ng') tone(a, n, 220, .3, .08, 'sine');
-  else if (k === 'win') [523.3, 659.3, 784, 1046.5, 1318.5, 1568].forEach((f, i) => { tone(a, n + i * .09, f, .9, .09, 'triangle'); tone(a, n + i * .09, f * 2, .5, .02); });
+  else if (k === 'win') { if (!play(a, 'win', n, .9)) [523.3, 659.3, 784, 1046.5, 1318.5, 1568].forEach((f, i) => { tone(a, n + i * .09, f, .9, .09, 'triangle'); tone(a, n + i * .09, f * 2, .5, .02); }); }
   else if (k === 'hint') tone(a, n, 880, .25, .05);
 }
 // decode the recordings as soon as the page may make sound
@@ -146,7 +146,7 @@ function initTable() {
     onDouble: (pi, ci) => toFoundation(pi, ci),
     onPile: pi => pileTap(pi),
     onBad: () => sfx('bad'),
-    onTouch: pi => { if (st && st.L[pi].k === 'tab') sfx('touch'); },
+    onTouch: pi => { if (st && (st.L[pi].k === 'tab' || st.L[pi].k === 'pk')) sfx('touch'); },
   });
   $('#boardWrap').querySelector('.felt').classList.add('felt-bg');
 }
@@ -262,7 +262,7 @@ function undo() {
 let worker = null, wid = 0; const wcb = {};
 function W() {
   if (worker === false) return null;
-  if (!worker) { try { worker = new Worker('solver.js?v=1'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } }
+  if (!worker) { try { worker = new Worker('solver.js?v=2'); worker.onmessage = e => { const f = wcb[e.data.id]; delete wcb[e.data.id]; if (f) f(e.data); }; worker.onerror = () => { worker = false; }; } catch (e) { worker = false; return null; } }
   return worker;
 }
 function ask(msg, cb, fallback) {
@@ -381,9 +381,9 @@ function win() {
   saveGame(); renderAll();
   sfx('win');
   const show = () => showResult(tm, recs);
-  if (set.anim) cascade(show); else setTimeout(show, 300);
+  if (set.anim) preloadSprites().then(() => cascade(show)); else setTimeout(show, 300);
 }
-function hasScore() { return st.v === 'spider' || (st.v === 'klondike' && st.o.scoring !== 'none'); }
+function hasScore() { const V = S.VARIANTS[st.v]; return !!V.score && st.o.scoring !== 'none'; }
 function showResult(tm, recs) {
   if (!G.over) return;
   const r = rec(st.v, statKey());
@@ -400,8 +400,8 @@ function cascade(done) {
   const cv = $('#winCanvas'), ctx = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1);
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.scale(dpr, dpr); cv.classList.remove('hidden');
   const u = TB.g.u, w = u, h = u * S.CH, br = $('#table').getBoundingClientRect();
-  const F = S.pilesOf(st, 'found').map(i => ({ i, c: st.p[i].c.slice(), x: br.left + TB.g.ox + st.L[i].x * u, y: br.top + TB.g.oy + st.L[i].y * u }));
-  const queue = []; for (let r = 0; r < 13; r++) F.forEach(f => { const c = f.c[f.c.length - 1 - r]; if (c != null) queue.push({ c, x: f.x, y: f.y }); });
+  const F = S.pilesOf(st, 'found').concat(S.pilesOf(st, 'waste')).map(i => ({ i, c: st.p[i].c.slice(), x: br.left + TB.g.ox + st.L[i].x * u, y: br.top + TB.g.oy + st.L[i].y * u }));
+  const queue = []; for (let r = 0; r < 52; r++) F.forEach(f => { const c = f.c[f.c.length - 1 - r]; if (c != null) queue.push({ c, x: f.x, y: f.y }); });
   const live = []; let k = 0, last = 0, stop = false, raf = 0;
   const end = () => { if (stop) return; stop = true; cancelAnimationFrame(raf); cv.classList.add('hidden'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); cv.onclick = null; done(); };
   cv.onclick = end;
@@ -422,7 +422,46 @@ function cascade(done) {
   raf = requestAnimationFrame(frame);
   setTimeout(end, 14000);
 }
+/* the bouncing cards of the win cascade look like the cards on the table (the deck chosen in the design settings) */
+const CIMG = {}, SPR = {};
+function cImg(src) { let im = CIMG[src]; if (!im) { im = CIMG[src] = new Image(); im.decoding = 'async'; im.src = src; } return im; }
+const imgOk = im => im.complete && im.naturalWidth > 0;
+function cardSrc(c) {
+  const deck = document.documentElement.dataset.court, s = S.SUIT(c), r = S.RANK(c);
+  if (Table.FULL_DECKS.includes(deck)) return `img/${deck}/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp?v=2`;
+  return r > 10 ? `img/${Table.COURT_DIR[deck === 'antique' ? 'antique' : 'classic']}${'JQK'[r - 11]}${'shdc'[s]}.webp` : null;
+}
+function preloadSprites() {
+  const srcs = new Set(); for (let c = 0; c < 52; c++) { const u = cardSrc(c); if (u) srcs.add(u); }
+  const ps = [...srcs].map(u => { const im = cImg(u); return imgOk(im) ? null : new Promise(ok => { im.addEventListener('load', ok, { once: true }); im.addEventListener('error', ok, { once: true }); }); }).filter(Boolean);
+  return Promise.race([Promise.all(ps), new Promise(ok => setTimeout(ok, 900))]);
+}
+function cardSprite(c, w, h) {
+  const deck = document.documentElement.dataset.court, key = deck + ':' + c + ':' + Math.round(w);
+  if (SPR[key]) return SPR[key];
+  const src = cardSrc(c), im = src ? cImg(src) : null; if (im && !imgOk(im)) return null;
+  const dpr = Math.min(2, devicePixelRatio || 1), cv = document.createElement('canvas'); cv.width = Math.ceil(w * dpr); cv.height = Math.ceil(h * dpr);
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const rr = w * .085, s = S.SUIT(c), r = S.RANK(c), col = s === 1 || s === 2 ? '#c51f30' : '#1b1c22', SU = '♠♥♦♣'[s];
+  g.save(); g.beginPath(); g.roundRect ? g.roundRect(.5, .5, w - 1, h - 1, rr) : g.rect(.5, .5, w - 1, h - 1); g.fillStyle = '#fdfbf5'; g.fill(); g.clip();
+  if (Table.FULL_DECKS.includes(deck)) g.drawImage(im, 0, 0, w, h);
+  else {
+    g.fillStyle = col; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const ix = (rot) => { g.save(); if (rot) { g.translate(w, h); g.rotate(Math.PI); }
+      g.font = `600 ${w * .2}px 'Bodoni Moda','Playfair Display',serif`; g.fillText(Table.RK[r - 1], w * .088, h * .085);
+      g.font = `${w * .13}px serif`; g.fillText(SU, w * .088, h * .17); g.restore(); };
+    ix(false); ix(true);
+    if (r > 10) g.drawImage(im, w * .153, h * .115, w * (1 - .153 - .158), h * (1 - .115 - .118));
+    else if (r === 1) { g.font = `${w * (s === 0 ? .55 : .38)}px serif`; g.fillText(SU, w / 2, h / 2); }
+    else Table.PIPS[r].forEach(([px, py]) => { const x = w * (.32 + px * .36), y = h * (.17 + py * .66); g.save(); g.translate(x, y); if (py > .5) g.rotate(Math.PI); g.font = `${w * .2}px serif`; g.fillText(SU, 0, 0); g.restore(); });
+  }
+  g.restore();
+  g.beginPath(); g.roundRect ? g.roundRect(.5, .5, w - 1, h - 1, rr) : g.rect(.5, .5, w - 1, h - 1); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.stroke();
+  return (SPR[key] = cv);
+}
 function drawCard(ctx, c, x, y, w, h) {
+  const sp = cardSprite(c, w, h); if (sp) { ctx.drawImage(sp, x, y, w, h); return; }
+
   const r = w * .085, s = S.SUIT(c), red = s === 1 || s === 2, face = document.documentElement.dataset.face;
   const col = face === 'four' && s === 2 ? '#1f5fbf' : face === 'four' && s === 3 ? '#1c7a3c' : red ? '#c51f30' : '#1b1c22';
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
@@ -440,7 +479,8 @@ function rulesSummary(v, o) {
 function renderNums() {
   if (!st) return;
   const tm = fmtT(elapsed()), sc = hasScore() ? st.sc : null;
-  const extra = st.v === 'klondike' ? (st.o.passes ? t('info.passes', { n: Math.max(0, st.o.passes - 1 - st.pass) }) : '') : st.v === 'spider' ? t('info.deals', { n: Math.ceil(st.p[S.pilesOf(st, 'stock')[0]].c.length / 10) }) + '　' + t('info.runs', { n: st.runs }) : '';
+  const stk = S.pilesOf(st, 'stock').length ? st.p[S.pilesOf(st, 'stock')[0]].c.length : 0, pas = st.o.passes ? t('info.passes', { n: Math.max(0, st.o.passes - 1 - st.pass) }) : '';
+  const extra = st.v === 'klondike' ? pas : st.v === 'spider' ? t('info.deals', { n: Math.ceil(stk / 10) }) + '　' + t('info.runs', { n: st.runs }) : st.v === 'pyramid' ? (pas || t('info.stock', { n: stk })) : (st.v === 'golf' || st.v === 'tripeaks') ? t('info.stock', { n: stk }) : '';
   const rules = rulesSummary(st.v, st.o).concat(G.undoOk ? [] : [t('o.undo') + '：' + t('ov.undo.off')]).join(' ・ ');
   const stat = (lab, val, cls) => `<span class="ss ${cls || ''}"><small>${esc(lab)}</small><b>${val}</b></span>`;
   const stats = stat(t('info.time'), set.timer ? tm : '—', 'tm') + stat(t('info.moves'), st.mv) + (sc != null && set.score ? stat(t('info.score'), sc) : '');
@@ -457,12 +497,18 @@ const GICON = {
   klondike: '<svg viewBox="0 0 54 44"><rect x="3" y="4" width="15" height="21" rx="2.5" fill="#7b1220"/><rect x="5" y="6" width="11" height="17" rx="1.5" fill="none" stroke="#f3e4c4" stroke-width=".8"/><rect x="20" y="4" width="15" height="21" rx="2.5" fill="#fbf6ea"/><text x="23" y="12" font-size="7" font-weight="700" fill="#c51f30" font-family="serif">A</text><rect x="37" y="4" width="15" height="21" rx="2.5" fill="none" stroke="#dcbb6c" stroke-dasharray="2 2"/><rect x="11" y="18" width="15" height="21" rx="2.5" fill="#fbf6ea" stroke="#0003"/><text x="14" y="26" font-size="7" font-weight="700" fill="#1b1c22" font-family="serif">K</text><rect x="28" y="22" width="15" height="21" rx="2.5" fill="#fbf6ea" stroke="#0003"/><text x="31" y="30" font-size="7" font-weight="700" fill="#c51f30" font-family="serif">Q</text></svg>',
   spider: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3, 4].map(i => `<rect x="${2 + i * 10.4}" y="${4 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${10 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/><rect x="${2 + i * 10.4}" y="${16 + (i % 2) * 6}" width="9.5" height="13" rx="1.8"/>`).join('') + '</g><g transform="translate(27 30)" fill="#1b1c22"><circle r="4"/><circle cy="-5" r="2.6"/><path d="M-3-1-11-6M3-1 11-6M-4 1-12 2M4 1 12 2M-3 3-10 9M3 3 10 9M-2-3-8-11M2-3 8-11" stroke="#1b1c22" stroke-width="1.3" fill="none"/></g></svg>',
   freecell: '<svg viewBox="0 0 54 44"><g fill="none" stroke="#dcbb6c" stroke-width="1"><rect x="2" y="3" width="11" height="15" rx="2"/><rect x="15" y="3" width="11" height="15" rx="2"/></g><rect x="28" y="3" width="11" height="15" rx="2" fill="#fbf6ea"/><text x="30.5" y="10" font-size="6" font-weight="700" fill="#1b1c22" font-family="serif">A</text><rect x="41" y="3" width="11" height="15" rx="2" fill="#fbf6ea"/><text x="43.5" y="10" font-size="6" font-weight="700" fill="#c51f30" font-family="serif">2</text><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3].map(i => `<rect x="${3 + i * 12.5}" y="21" width="11" height="15" rx="2"/><rect x="${3 + i * 12.5}" y="27" width="11" height="15" rx="2"/>`).join('') + '</g></svg>',
+  golf: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2].map(i => [0, 1, 2].map(j => `<rect x="${3 + i * 12}" y="${3 + j * 6}" width="10.5" height="14" rx="1.8"/>`).join('')).join('') + '</g><path d="M44 40V10" stroke="#dcbb6c" stroke-width="1.6"/><path d="M44 10l8 4-8 4z" fill="#c51f30"/><ellipse cx="44" cy="40.5" rx="6" ry="1.6" fill="#0005"/></svg>',
+  tripeaks: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [[0, 0], [1, 0], [2, 0]].map(([p]) => `<rect x="${6 + p * 16}" y="4" width="10" height="13" rx="1.6"/><rect x="${1 + p * 16}" y="12" width="10" height="13" rx="1.6"/><rect x="${11 + p * 16}" y="12" width="10" height="13" rx="1.6"/>`).join('') + '</g><g fill="#7b1220" stroke="#0003"><rect x="17" y="29" width="10" height="13" rx="1.6"/></g><g fill="#fbf6ea" stroke="#0003"><rect x="29" y="29" width="10" height="13" rx="1.6"/></g></svg>',
+  pyramid: '<svg viewBox="0 0 54 44"><g fill="#fbf6ea" stroke="#0003">' + [0, 1, 2, 3].map(r => Array.from({ length: r + 1 }, (_, i) => `<rect x="${21.5 - r * 5.5 + i * 11}" y="${3 + r * 9}" width="10" height="13" rx="1.6"/>`).join('')).join('') + '</g></svg>',
 };
 // a little scene of real cards for each game (new-game dialog)
 const GART = {   // [card id | 'b' (back), x, y, rotation] in card units (width 1)
   klondike: [['b', 0, 0, 0], ['b', .14, .12, 0], [12, 1.25, .1, -6], [24, 1.62, .42, 0], [36, 1.99, .74, 5]],
   spider: [[12, .15, 0, -5], [11, .5, .28, -1], [10, .85, .56, 2], [9, 1.2, .84, 5], [8, 1.55, 1.12, 8]],
   freecell: [['c', 0, 0, 0], ['c', .62, 0, 0], [0, 1.45, 0, -3], [26, 1.85, .05, 2], [39, 2.25, .1, 6]],
+  golf: [[47, 0, 0, 0], [16, 0, .32, 0], [6, 0, .64, 0], ['b', 1.35, .55, 0], [33, 1.9, .5, -4], [45, 2.25, .62, 5]],
+  tripeaks: [['b', .95, 0, 0], ['b', .5, .45, 0], ['b', 1.4, .45, 0], [8, .05, .9, -2], [22, .95, .9, 0], [36, 1.85, .9, 3]],
+  pyramid: [[8, 1.08, 0, 0], [24, .6, .45, 0], [41, 1.56, .45, 0], [18, .12, .9, 0], [38, 1.08, .9, 0], [45, 2.04, .9, 0]],
 };
 function gArt(v) {
   const L = GART[v]; if (!L) return gIcon(v);
@@ -557,7 +603,7 @@ function designHtml() {
   const felt = FELTS.map(f => `<button type="button" class="tile${set.felt === f ? ' sel' : ''}" data-felt="${f}"><span class="pv felt-pv" style="${feltStyle(f)}"></span><small>${esc(t('felt.' + f))}</small></button>`).join('');
   const back = BACKS.map(b => `<button type="button" class="tile${set.back === b ? ' sel' : ''}" data-back="${b}"><span class="pv"><span class="mini-card bk-pv" data-b="${b}"><span class="bk"></span></span></span><small>${esc(t('back.' + b))}</small></button>`).join('');
   const court = COURTS.map(k => `<button type="button" class="tile${set.court === k ? ' sel' : ''}" data-court="${k}"><span class="pv">${['K', 'Q', 'J'].map((r, i) => `<img class="ct-pv${Table.FULL_DECKS.includes(k) ? ' full' : ''}" src="img/${Table.COURT_DIR[k]}${Table.FULL_DECKS.includes(k) ? ['A', '7', 'K'][i] : r}${'hsd'[i]}.webp" alt="">`).join('')}</span><small>${esc(t('court.' + k))}</small></button>`).join('');
-  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div><div class="sec"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div></div></div>`;
+  return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
 }
 function feltStyle(f) {
   const c = { green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], walnut: ['#7b5232', '#3d2512'], linen: ['#efe6d2', '#d6c7a6'] }[f];

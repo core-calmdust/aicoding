@@ -446,3 +446,45 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 .tgl input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px}
 #setOverlay .credit{margin-top:16px}
 @media (max-width:760px){.dz,.set-cols{grid-template-columns:1fr}.set-cols .rl .seg{min-width:0}.ng-body .dz .tiles.backs{grid-template-columns:repeat(4,1fr)}}
+
+/* ---------- 6 game types: compact game cards (2 rows) / today's solitaire in 2 columns ---------- */
+.slot.k-pk{display:none}
+.slot.k-found[data-discard]{border-style:solid}
+@media (min-width:761px){
+  .ng-games{grid-template-rows:repeat(2,minmax(0,1fr));gap:12px}
+  .gcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:14px;row-gap:4px;padding:12px 14px;align-content:start}
+  .gcard .gart{grid-row:1/4;align-self:start;padding:10px 8px}
+  .gcard .garts{--cw:36px;--chh:50.4px}
+  .gcard b{font-size:19px;align-self:end}
+  .gcard p{font-size:12px;line-height:1.6}
+  .gcard ul{flex-direction:row;flex-wrap:wrap;gap:4px;margin:4px 0 0;align-self:start}
+  .gcard li{font-size:11px;padding:2px 8px}
+  .gcard .gpick{top:10px;right:10px;width:22px;height:22px;font-size:12px}
+}
+.side .daily-list{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.side .dl-item{gap:6px;padding:4px 6px;min-width:0}
+.side .dl-item .nm{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.side .dl-item .ok{font-size:0}.side .dl-item .ok::first-letter{font-size:12px}
+.side .dl-item .sbtn{padding:3px 8px;font-size:11.5px}
+.dz-felt{margin-top:14px}
+.ng-body .dz-felt .tiles.felts{grid-template-columns:repeat(8,minmax(0,1fr))}
+.ng-body .dz-felt .tiles.felts .pv{height:26px}
+@media (max-width:760px){.ng-body .dz-felt .tiles.felts{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* statistics: larger text */
+.stats-modal{width:min(880px,calc(100vw - 24px))}
+.stats-body table{font-size:16px}
+.stats-body th{font-size:13.5px}
+.stats-body th,.stats-body td{padding:11px 8px}
+.stats-body td{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace}
+.stats-body td:first-child{font-family:inherit;font-weight:700}
+#statsTabs button{font-size:15px;padding:8px 16px}
+.stats-body .diff-desc{font-size:14px}
+@media (min-width:761px){
+  .gcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:12px 14px;overflow:hidden}
+  .gcard .gart{padding:6px 0;align-self:stretch}
+  .gcard .garts{--cw:27px;--chh:37.8px}
+  .gcard b{font-size:19px;align-self:flex-start}
+  .gcard p{font-size:12px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .gcard ul{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;margin-top:auto}
+  .gcard li{font-size:11px;padding:2px 8px}
+}
