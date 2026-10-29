@@ -26,6 +26,7 @@
 
   const skin = AtlasSkin.init({
     board: boardEl,
+    margin: .1,   // a low, flat board: a small canvas around it is enough (old phones: far fewer pixels)
     outer: r => ({ top: r.top, height: r.height }),
     guide: '../images/atlas/g-gem.webp', guideFallback: '../images/atlas/mancala.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
