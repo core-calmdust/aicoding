@@ -5764,7 +5764,7 @@ NB.PRISM = () => {
     const g = new THREE.Group(), C = 0x66e0ff, P = 0xff5ad8;
     const body = new THREE.Group(); g.add(body);
     // 結晶の面を細かく割る（三角形を4分割×2回）
-    let src = crystal(34, 74, 6).toNonIndexed().attributes.position.array, tris = [];
+    const cg0 = crystal(34, 74, 6); let src = (cg0.index ? cg0.toNonIndexed() : cg0).attributes.position.array, tris = [];
     for (let k = 0; k < src.length; k += 9) tris.push([[src[k], src[k + 1], src[k + 2]], [src[k + 3], src[k + 4], src[k + 5]], [src[k + 6], src[k + 7], src[k + 8]]]);
     const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
     for (let it = 0; it < 2; it++) { const nt = []; tris.forEach(([a, b, c]) => { const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a); nt.push([a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]); }); tris = nt; }
@@ -5803,7 +5803,55 @@ NB.PRISM = () => {
         o.scale.setScalar((0.4 + al * 0.6) * BS);
     };
     return g;
-};;
+};
+NB.SERPENT = () => {
+    const g = new THREE.Group();
+    const head = new THREE.Group();
+    head.add(fuse(LAB.loft([[-26, 30, 22, 0], [-6, 40, 28, 2], [18, 30, 18, 0], [34, 10, 8, -2]], 6), 0x9cff5a, { glass: 0.3 }));
+    head.add(fuse(LAB.loft([[-4, 26, 8, -12], [22, 18, 6, -14], [32, 6, 3, -14]], 4, Math.PI / 4), 0x2fd08a, { cage: false }));
+    [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(5), new THREE.MeshBasicMaterial({ color: 0xff3355 })); e.position.set(s * 11, 9, 16); head.add(e); });
+    g.add(head);
+    const segs = [];
+    const vert = LAB.loft([[-12, 20, 18], [-6, 26, 22], [6, 26, 22], [12, 20, 18]], 6);
+    const fin = LAB.loft([[-8, 3, 4, 12], [0, 3, 14, 18], [8, 2, 4, 12]], 4, Math.PI / 4);
+    for (let k = 0; k < 8; k++) {
+        const m = new THREE.Group();
+        m.add(fuse(vert, k % 2 ? 0x2fd08a : 0x1aa0ff, { cage: false, seed: k + 3 }));
+        m.add(fuse(fin, 0x9cff5a, { cage: false, glass: 0 }));
+        m.add(wire(new THREE.TorusGeometry(18, 1, 3, 8), k % 2 ? 0x9cff5a : 0x7fe9ff, 0.5));
+        m.scale.setScalar((1 - k * 0.045) * BS);
+        scene.add(m); m.userData.lift = true; segs.push(m);
+    }
+    g.userData.extra = segs;
+    g.userData.anim = (o, b, t) => {
+        const dx = b.hist && b.hist[3] ? b.x - b.hist[3].x : 0, dy = b.hist && b.hist[3] ? b.y - b.hist[3].y : 1;
+        head.rotation.y = Math.atan2(dx, dy);
+        (b.segs || []).forEach((s, k) => {
+            const m = segs[k]; if (!m) return; m.visible = true;
+            m.position.set(toX(ix(s)), 10 + Math.sin(t * 6 - k * 0.6) * 6, toZ(iy(s)));
+            const p = k ? b.segs[k - 1] : b; m.rotation.set(0, Math.atan2(p.x - s.x, p.y - s.y), Math.sin(t * 3 + k) * 0.3);
+        });
+    };
+    return g;
+};
+NB.LANCER = () => {
+    const g = new THREE.Group(), body = new THREE.Group();
+    body.add(fuse(LAB.loft([[-56, 6, 6], [-30, 26, 20], [10, 34, 24], [44, 20, 14], [72, 3, 3]], 6), 0xff3a3a, { glass: 0.3 }));
+    [-1, 1].forEach(s => { const f = fuse(bladeGeo(70, 16, 5), 0xd0d6e8, { cage: false, tint: 0.15 }); f.rotation.y = s * (Math.PI / 2 - 0.45); f.position.set(s * 10, 0, -14); /* 左右へ、少し後ろに流れる翼 */ body.add(f); });
+    const eng = new THREE.Mesh(new THREE.CircleGeometry(8, 10), new THREE.MeshBasicMaterial({ color: 0xff6060 })); eng.position.z = -57; eng.rotation.y = Math.PI; body.add(eng);
+    body.add(wire(new THREE.TorusGeometry(30, 1, 3, 10), 0xff8080, 0.4));
+    g.add(body);
+    const lineMat = new THREE.MeshBasicMaterial({ color: 0xff2040, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const tele = new THREE.Mesh(new THREE.PlaneGeometry(60, 1), lineMat); tele.rotation.x = -Math.PI / 2; scene.add(tele);
+    g.userData.extra = [tele];
+    g.userData.anim = (o, b, t) => {
+        body.rotation.z = t * (b.mode === 'dash' ? 20 : 2);
+        const len = config.canvasHeight - b.y;
+        tele.visible = !!b.telegraph; tele.scale.set((1 + Math.sin(t * 40) * 0.2) * BS, len, 1);
+        tele.position.set(toX(ix(b)), 2, toZ(b.y + len / 2)); lineMat.opacity = 0.35 + Math.sin(t * 30) * 0.2;
+    };
+    return g;
+};
 NB.MIRROR = () => {
     const g = new THREE.Group();
     const mk = c => { const u = new THREE.Group(); u.add(fuse(crystal(16, 46, 6), c, { glass: 0.55, glassOp: 0.4 })); u.add(wire(new THREE.TorusGeometry(30, 1, 3, 6), c, 0.6)); return u; };
@@ -6719,7 +6767,7 @@ NB.CIPHER = () => {
         lanterns.forEach(({ n, wg, hr, lamp }, k) => { wg.scale.x = 1 + 0.15 * Math.sin(t * 6 + k); hr.rotation.y = t * 2; lamp.scale.setScalar(1 + (1 - pulse) * 0.8); n.position.y = 4 + Math.sin(t * 2 + k) * 3; });
     };
     return g;
-};;
+};
 
 // 30. ZENITH: 最終形態の人工生命体。半透明の膜に包まれた脈打つ心臓核を、骨の肋骨と光る血管が抱く。
 //     背骨と6本の触手が波打ち、正面の大きな目が自機を追う。3つの細胞（衛星）が攻撃フェーズを表し、今のフェーズの細胞がふくらむ
