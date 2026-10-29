@@ -92,5 +92,8 @@
   orient();
   try { layout(); } catch (e) {}
   new MutationObserver(() => { orient(); }).observe(document.getElementById('frame'), { attributes: true, attributeFilter: ['class'] });
+  // the board's size changes after the skin CSS arrives / on rotation: the still scene must be drawn again
+  if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(() => T3.kick(600))).observe(boardEl);
+  addEventListener('resize', () => setTimeout(() => T3.kick(600), 60));
 
 })();

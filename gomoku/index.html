@@ -1004,6 +1004,8 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   body:not(.no-online), html.dock-fit body:not(.no-online){--cell:min((100vw - 20px) / 16.5, (var(--vh) - 230px) / 16.5, 58px);--fw:calc(var(--cell) * 16.5);--fh:calc(var(--cell) * 16.5)}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
+/* portal 3D skin on phones: the 3D board looks smaller than its DOM frame — pull the boxes above / below to the same distance as the other games */
+@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:4px;margin-bottom:-19px} }
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —

@@ -33,3 +33,7 @@ html.atlas-mancala.hb-atlas body{padding-top:64px}
 html.atlas-mancala.hb-atlas .app{padding-top:12px!important}
 /* the card's action bar stands beside the guide (atlas/skin/common.js): that row takes the bar's place, the right column of the PC card */
 html.atlas-mancala :is(.lesson-card,.puzzle-card) > .atlas-foot.cb-foot{grid-column:2;grid-row:1 / span 6;align-self:center;margin-top:0}
+/* phones upright: the board as wide as the screen allows (the page scrolls; no need to fit the whole height) */
+@media (max-aspect-ratio: 1/1) and (pointer: coarse){ html.atlas-mancala{--u:min((100vw - 24px) / 4.2, (var(--vh) - 90px) / 9.7, 100px)!important} }
+/* phones held sideways: the portal bar (64px) is above the page — the board fits between it, the player plates and the bottom tabs */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse){ html.atlas-mancala{--u:min((var(--vh) - 64px - var(--plate) - 40px) / 4.2, (100vw - 24px) / 9.7, 112px)!important} }

@@ -879,6 +879,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   :root{--cell:min((100vw - 20px) / (var(--S) + .5), (var(--vh) - 250px) / (var(--S) + 1.5), calc(800px / var(--S)));--fw:calc(var(--cell) * (var(--S) + .5));--fh:calc(var(--cell) * (var(--S) + 1.5))}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
+/* portal 3D skin on phones: the 3D board looks smaller than its DOM frame — pull the boxes above / below to the same distance as the other games */
+@media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:-26px;margin-bottom:-27px} }
 </style>
 <link rel="stylesheet" href="online.css?v=1l9">
 <style>
