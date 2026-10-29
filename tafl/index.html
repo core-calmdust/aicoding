@@ -881,6 +881,28 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 } }
 /* portal 3D skin on phones: the 3D board looks smaller than its DOM frame — pull the boxes above / below to the same distance as the other games */
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:-24px;margin-bottom:-26px} }
+/* coach (coach.js, shared/coachkit.js): next to the evaluation; hidden where it can't be used */
+#coachCard.hidden{display:none!important}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+#coachCard.ck-off .ck-muted{font-size:12px}
+#coachCard.ck-off h3.ck-h{margin-bottom:4px}
+#coachCard .ck-sec-h button,#coachCard .ck-more{white-space:nowrap}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
+#coachCard .ck-sec-h{flex-wrap:wrap}
+#resultOverlay .modal-actions{flex-wrap:wrap}
+#resultOverlay .mbtn{white-space:nowrap;min-width:0;flex:1 1 auto}
+@media (max-width: 560px){ #resultOverlay .mbtn{letter-spacing:0;padding:12px 8px;font-size:14px} }
+@media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
+@media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  #coachCard{order:0}
+}}}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  .app > .side > .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:220px;overflow-y:auto;scrollbar-width:thin}
+  .app > .side > .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:110px}
+  .app > .side > .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px;flex:none;min-height:0}
+  .app > .side > .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard{flex:none;min-height:0}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=1l9">
 <style>
@@ -978,6 +1000,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card" id="evalCard">
       <div class="evalrow"><span class="label" data-i18n="eval"></span><span class="val" id="evalText">—</span></div>
       <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
@@ -1001,7 +1024,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1195,8 +1218,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="online.js?v=stale2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=2"></script>
-<script src="app.js?v=20261028rbwp1tfrptlskan"></script>
-<script src="online-ui.js?v=1l9"></script>
+<script src="../shared/coachkit.js?v=4"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="app.js?v=20261030coach1"></script>
+<script src="online-ui.js?v=1l9c1"></script>
 <!-- World Board Game Atlas portal skin: tafl/?skin=atlas — 3D viking oak board with carved walnut / bone pieces, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

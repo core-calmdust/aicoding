@@ -335,6 +335,7 @@ function renderFx() {
   for (const k of lessonMarks) { if (k.arrow) svgArrow(svg, k.arrow, k.cls); else if (k.sq) fxDiv('sqfx ' + k.cls, k.at); else fxDiv('mark ' + k.cls, k.at); }
   if (labelList) drawLabels(labelList);
   else if (!(rvbHov && BOX && BOX.shown) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
+  if (window.TaflCoach) TaflCoach.fx(svg);   // coach: the hovered candidate's arrow
   rvbFx(svg, pos);
   renderPrompt();
 }
@@ -444,6 +445,7 @@ function renderInfo() {
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st, lines);
+  if (window.TaflCoach) TaflCoach.render();
 }
 // PC header bar: whose turn, pieces of each side, evaluation (when shown), move number
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -650,10 +652,11 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
-  if (!settings.eval && !settings.hint) return;
+  if (!settings.eval && !settings.hint && !(window.TaflCoach && TaflCoach.active())) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
+    if (window.TaflCoach) TaflCoach.list(key, list);   // coach (coach.js): the candidates of this position
     const ev = evalFromList(list, mover);
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
@@ -672,6 +675,7 @@ function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -685,6 +689,13 @@ function onGameEnd(st) {
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
   { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated) the player took part in; online games: online-ui.js finishOnline()
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle) return;
+  if (!moves.some((m, i) => toMoveAt(i) === humanColor)) return;   // no move of the player: not recorded
+  const lv = rgame ? rgame.lv : settings.level;
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + (gv !== 'copenhagen' ? ' · ' + t('rule.' + gv) : ''), key: (rgame ? 'rt:' : 'ai:') + lv + ':' + gv, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -2126,6 +2137,8 @@ if (!hadSave) setVariant(settings.rule);
 applyI18n();
 drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'tafl', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.TaflCoach) TaflCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
@@ -2137,6 +2150,8 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.TaflCoach) TaflCoach.relabel();
+  if (window.GameRecord) GameRecord.relabel();
   if (lesson) { if (lesson.study) showStudy(false); else renderLessonCard(); }
   if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) (document.querySelector('.ls-tabs button.sel[data-v=open]') ? openOpenings() : openLessons()); else if (!$('#lessonIntroView').classList.contains('hidden')) (openChoiceIdx >= 0 ? openOpeningChoice(openChoiceIdx) : openIntro(introIdx)); }
