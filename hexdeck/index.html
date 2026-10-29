@@ -1405,8 +1405,8 @@ table.rtb-pts .tf-badge{white-space:nowrap}
 .co-q{margin-right:auto;background:none;border:0;color:var(--ivory2);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px 0}
 .coach.min .co-body,.coach.min .co-foot{display:none}
 .coach.min{width:auto;min-width:220px}
-.coach-hl{position:relative;z-index:5;outline:3px solid var(--gold2)!important;outline-offset:3px;border-radius:10px;animation:coHl 1.1s ease-in-out infinite}
-@keyframes coHl{0%,100%{box-shadow:0 0 0 0 rgba(230,201,138,.7)}50%{box-shadow:0 0 0 9px rgba(230,201,138,0)}}
+.coach-hl{position:relative;z-index:5;outline:3px solid var(--gold2)!important;outline-offset:-3px;border-radius:10px;animation:coHl 1.1s ease-in-out infinite}
+@keyframes coHl{0%,100%{box-shadow:inset 0 0 0 0 rgba(240,210,140,0),0 0 0 0 rgba(240,210,140,0);filter:brightness(1)}50%{box-shadow:inset 0 0 26px 4px rgba(240,210,140,.55),0 0 18px 2px rgba(240,210,140,.55);filter:brightness(1.28)}}
 @media (max-width:900px){.tut-ask.three{grid-template-columns:1fr}.coach{left:50%;transform:translateX(-50%);width:calc(100vw - 20px);top:calc(env(safe-area-inset-top) + 50px);padding:8px 11px}.co-body p{font-size:13.5px;line-height:1.55}.co-body h4{font-size:15px}.co-fig{display:none}}
 .dlg.tutask .in{width:min(900px,94vw)}
 .tut-ask.three{grid-template-columns:repeat(3,1fr);gap:14px}
@@ -3663,6 +3663,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     const d = dlg(`<h2>${title}</h2><p>${msg}</p><div class="stp one" id="rp"></div><div class="foot"><button class="btn primary" id="rpOk" disabled>決める</button><button class="btn" data-x>やめる</button></div>`);
     const draw = () => { d.querySelector('#rp').innerHTML = HD.RES.map(r => { const v = c[r] || 0, left = S.stock ? S.stock[r] : 99;
       return `<div class="srow"><span class="sres">${resIcon(r, 24)}<span>${RESN[r]}<small>在庫 ${left}</small></span></span><span class="sctl${v ? ' on' : ''}"><button data-r="${r}" data-dv="-1" ${v ? '' : 'disabled'}>−</button><b>${v}</b><button data-r="${r}" data-dv="1" ${sum() < k && v < left ? '' : 'disabled'}>＋</button></span></div>`; }).join('');
+      { const lr = coach && COACH[coach.i] && COACH[coach.i].id === 'spec' && coach.wfR; if (lr) d.querySelectorAll('#rp button[data-r]').forEach(b => { if (b.dataset.r !== lr) b.disabled = true; }); }   // チュートリアル：選ぶ資源を指定
       d.querySelector('#rpOk').disabled = sum() !== k; d.querySelector('#rpOk').textContent = `決める（${sum()}/${k}）`; };
     d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; if (b.dataset.x != null) return d.close();
       if (b.dataset.r) { c[b.dataset.r] = Math.max(0, (c[b.dataset.r] || 0) + +b.dataset.dv); draw(); }
@@ -5449,7 +5450,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
   const PLAYA = () => S.drawn.length || S.step !== 'draw' ? { dom: ['#myHand', '#aPlay', '#aPass'] } : { dom: ['#deckSlot'], key: 'draw' };
   const ALLOW = { camp: () => ({ map: ['camp'] }), dev: () => ({ map: ['dev'] }), road: () => ({ map: ['sroad'] }), draw: () => ({ dom: ['#deckSlot'], key: 'draw' }), play: () => ({ dom: ['#myHand', '#aPlay'] }), road2: () => ({ map: ['road'] }), dev2: () => ({ map: ['dev'] }), trade: () => ({ dom: ['#aTrade'] }),
     cards: () => ({ dom: ['#deckSlot'], key: 'draw' }), seven: () => ({ dom: ['#deckSlot'], key: 'draw' }),
-    ...Object.fromEntries([1, 2, 3, 4, 5, 6].map(n => ['end' + n, () => ({ dom: ['#aEnd'], key: 'end' })])), ...Object.fromEntries([3, 4, 5, 6].map(n => ['draw' + n, PLAYA])),
+    ...Object.fromEntries([1, 2, 3, 4, 5, 6].map(n => ['end' + n, () => ({ dom: ['#aEnd'], key: 'end' })])), ...Object.fromEntries([3, 4, 5].map(n => ['draw' + n, PLAYA])), draw6: () => S.drawn.length < 2 && S.step === 'draw' ? { dom: ['#deckSlot'], key: 'draw' } : { dom: ['#myHand', '#aPlay'] },
     settle: () => ({ map: ['road', 'settle'] }), city: () => ({ map: ['city'] }), shop: () => ({ dom: ['[data-sb="0"]'] }), knight: () => ({ dom: ['#aKnight', '#knCancel'], map: ['robber'] }), spec: () => ({ dom: ['#myHand .spec'] }) };
   // チュートリアル：置く場所はこちらで決める（ステップごとに1か所）
   function bestRoadForSettle() { let best = null, bv = -1; HD.legalRoads(S, HUMAN).forEach(e => { const o = S.edges[e].owner; S.edges[e].owner = HUMAN; const n = HD.legalSettles(S, HUMAN).length; S.edges[e].owner = o; if (n > bv) { bv = n; best = e; } }); return best; }
@@ -5488,7 +5489,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     // ---- 準備 ----
     { id: 'camp', h: '準備：スタート地点を選ぶ', t: () => '盤の六角形が<b>土地</b>で、土地の角に建物を置きます。<br><b>金色の輪</b>の角をクリックして、最初の建物<b>拠点</b>を置きましょう（ふだんは自由に選べます）。<br>拠点は0点ですが、となりの土地から資源をもらえます。', done: () => P0().camp >= 0, wait: () => S.phase !== 'setup-camp' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
     { id: 'dev', h: '準備：荒地を開拓する', t: () => { const b = coachTarget(); return 'まだ何も取れない土地が<b>荒地</b>です。<b>開拓</b>すると、資源の種類と<b>数字チップ</b>を決めて、資源の取れる土地に変わります。<br>拠点のとなりの<b>金色の輪</b>の荒地をクリックしましょう（この1回は無料）。' + (b ? `<span class="co-rec">今回は ${resIcon(b.r, 18)}${RESN[b.r]}＋<b>${b.n}</b> にします</span>` : ''); }, done: () => S.hexes.some(H => H.devBy === HUMAN), wait: () => S.phase !== 'setup-develop' || S.cur !== HUMAN, waitT: 'BOTがスタート地点を選んでいます…' },
-    { id: 'chip', manual: true, tg: '#mktChip', h: '準備：数字チップ', t: () => `いま置いた<b>数字</b>が、その土地の番号です。ゲーム中にこの数字が出ると、となりに建物を持つ人が資源をもらえます。<br>チップの点が多い<b>6・8</b>ほどよく出ます。<br>チップは光っている<b>チップの市場</b>の3枚から選び、使うと補充されます（となり合う土地に同じ数字は置けません）。` },
+    { id: 'chip', manual: true, tg: '#mktChip', h: '準備：数字チップ', t: () => `いま置いた<b>数字</b>が、その土地の番号です。ゲーム中にこの数字が出ると、となりに建物を持つ人が資源をもらえます。<br>チップの点が多い<b>6・8</b>ほどよく出ます。<br>チップは<b>右上で光っている</b><b>チップの市場</b>の3枚から選び、使うと補充されます（となり合う土地に同じ数字は置けません）。` },
     { id: 'road', h: '準備：道を引く', t: () => P0().roads >= 1 ? '後手のあなたは、もう1本道を置けます（手番順の補正）。最初の道の先、<b>金色の輪</b>の辺をクリックしてください。' : '土地のふちの辺に<b>道</b>を置きます。道の先に、あとで<b>開拓地</b>を建てられます。<br>拠点から伸びる<b>金色の輪</b>の辺をクリックしましょう。', done: () => S.phase === 'turn' || (P0().roads >= 1 && !S.setupSteps.slice(S.setupIdx).some(x => x.p === HUMAN)), wait: () => S.phase !== 'setup-road' || S.cur !== HUMAN, waitT: 'BOTの準備を待っています…' },
     { id: 'watch', tg: '#log,#logBtn', h: 'BOTの番を見る', t: () => 'あなたは4番手です。まずBOTの番を見てみましょう。<br>BOTが<b>数字</b>を出すと、その数字の土地のとなりに建物を持つ<b>全員</b>が資源をもらえます（あなたも）。何が起きたかは右の<b>記録</b>に出ます。', done: () => S.phase === 'turn' && S.cur === HUMAN && !S.acted },
     // ---- 1手番目：アクション札と7 ----
@@ -5519,7 +5520,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
       t: () => (HD.legalSettles(S, HUMAN).length ? '' : 'まず<b>金色の輪</b>の辺に道を伸ばします。<br>') + `<b>開拓地</b>は<b>1点</b>の建物で、自分の道の先の角に建てます（ほかの建物から1辺以上離れた所だけ）。費用は${TF.cost(HD.COST.settle)}。<br><b>金色の輪</b>の角をクリックしましょう。`,
       done: () => P0().settles > coach.b.settles, skip: () => !HD.legalSettles(S, HUMAN).length && !HD.legalRoads(S, HUMAN).length },
     { id: 'city', blk: 4, h: '4手番目：都市にする', enter: () => gift(HD.COST.city, '練習用に都市の資源を配りました'), t: () => `開拓地は<b>都市</b>（<b>2点</b>）に格上げできます。都市は資源を<b>2倍</b>もらえます。費用は${TF.cost(HD.COST.city)}。<br><b>金色の輪</b>の開拓地をクリックしましょう。`, done: () => P0().cities > coach.b.cities, skip: () => !HD.legalCities(S, HUMAN).length },
-    { id: 'pts', blk: 4, manual: true, tg: '#players', h: '4手番目：点とプレイヤー欄', t: () => `光っている<b>プレイヤー欄</b>の大きな数字が<b>点</b>です。あなたの点が増えたのを確かめましょう。<br>その下は、手札の枚数・一番長い道・騎士を使った回数・開拓した土地の数などです。` },
+    { id: 'pts', blk: 4, manual: true, tg: '#players', h: '4手番目：点とプレイヤー欄', t: () => `光っている<b>プレイヤー欄</b>の大きな数字が<b>点</b>です。あなたの点が増えたのを確かめましょう。<br>その下は、手札の枚数・一番長い道の長さ・騎士を使った回数・開拓した土地の数などです。` },
     END('end4', 4),
     W('w5', '次の番を待つ', '次は<b>特殊カード</b>を買います。'),
     // ---- 5手番目：特殊カード・処分 ----
@@ -5530,8 +5531,11 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     END('end5', 5, `次の番の前に<b>時代</b>が変わります。`),
     W('w6', '時代が変わる', () => `<b>時代</b>は${S.eraLen}周ごとに変わります。いまから<b>開拓の時代</b>で、<b>騎士</b>が使えるようになります。`, 'BOTの番です。時代が変わるのを待ちましょう…'),
     // ---- 6手番目：特殊カードを使う・騎士・称号 ----
-    { id: 'draw6', blk: 6, tg: () => S.drawn.length || S.step !== 'draw' ? '#myHand,#aPlay' : '#deckSlot', h: '6手番目：引いて出す', enter: () => rigTop(), t: () => 'まず札を引いて数字を出しましょう。<b>1の札</b>は次に騎士として使うので、残しておきましょう。', done: () => S.acted },
-    { id: 'spec', blk: 6, tg: '#myHand', h: '6手番目：特殊カードを使う', t: () => '前の番に買った<b>特殊カード</b>が手札で光っています。クリックすると使えます（1手番1枚）。', done: () => S.specUsed, skip: () => !(P0().spec || []).some(x => x.t < S.turn) },
+    { id: 'draw6', blk: 6, tg: () => S.drawn.length < 2 && S.step === 'draw' ? '#deckSlot' : '#myHand,#aPlay', h: '6手番目：2枚引いて出す',
+      enter: () => { if (S.drawn.length) return; const ns = myHexNums().filter(n => n >= 2 && n <= 6); const want = ns[0] || 6; coach.want = want; for (const c of [1, want]) { const k = S.deck.lastIndexOf(c); if (k >= 0) { S.deck.splice(k, 1); S.deck.push(c); } } },
+      t: () => S.drawn.length < 2 && S.step === 'draw' ? `山札から札を<b>2枚</b>引きましょう（もう一度押すと2枚目）。` : `<b>${coach.want}</b>の札だけを選んで数字を出しましょう。<br>引いた<b>1の札</b>は数字の1にもなりますが、<b>騎士</b>にもなります。次に騎士として使うので、手札に残しておきます。`, done: () => S.acted },
+    { id: 'spec', blk: 6, tg: '#myHand', h: '6手番目：特殊カードを使う', enter: () => { coach.wfR = ['ore', 'wheat', 'sheep', 'brick', 'wood'].find(r => !S.stock || S.stock[r] >= 3) || 'ore'; },
+      t: () => `前の番に買った<b>特殊カード</b>（天の恵み）が手札で光っています。クリックすると使えます（1手番1枚）。<br>開いた画面で<b>${RESN[coach.wfR]}を3枚</b>選び、<b>決める</b>を押しましょう。`, done: () => S.specUsed, skip: () => !(P0().spec || []).some(x => x.t < S.turn) },
     { id: 'knight', blk: 6, tg: '#aKnight', enter: () => { if (!HD.hasKn(S, P0().hand)) { const i = S.deck.lastIndexOf(1); if (i >= 0) S.deck.splice(i, 1); P0().hand.push(1); P0().hand.sort((a, b) => a - b); coach.gift = '練習用に1の札を配りました'; } }, h: '6手番目：騎士を使う',
       t: () => '<b>1の札</b>は<b>騎士</b>としても使えます。騎士は<b>盗賊</b>のコマを動かし、そこに建物を持つ相手から資源を<b>1枚</b>もらえます。盗賊のいる土地は資源を生みません。<br><b>騎士</b>ボタンを押してから、<b>金色の輪</b>の土地をクリックしましょう（置く前なら「やめる」で取り消せます）。', done: () => S.knightUsed && S.phase === 'turn', skip: () => !HD.robberOn(S) },
     { id: 'titles', blk: 6, manual: true, tg: '#players', h: '6手番目：称号（+点）', t: () => `<b>最大騎士力</b>：騎士を${S.armyMin}回以上使い、一番多い人に+${S.armyPts}点（あなたは今${P0().knights}回）。<br><b>最長交易路</b>：5本以上つながった一番長い道の人に+2点。道にマウスを乗せると、どの道か光ります。${S.devVP ? `<br><b>開拓者</b>：自分で開拓した土地が${S.devVP.n}か所以上で一番多い人に+${S.devVP.vp}点。` : ''}` },
