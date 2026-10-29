@@ -211,13 +211,15 @@ function autoComplete() {
   if (G.auto || G.over) return;
   $('#btnAuto').classList.add('hidden'); G.undo.push(snap()); G.auto = true;
   // the finish is decided: cards fly up quickly (shorter flight, ~3× the pace of normal auto moves)
-  const root = document.documentElement.style, fast = Math.min(mt(), 160);
+  const root = document.documentElement.style, fast = Math.min(mt(), 120);
   root.setProperty('--mt', (fast || 1) / 1000 + 's');
   let k = 0;
   const step = () => {
     const mv = S.autoMove(st, 'all');
     if (!mv) { setTimeout(() => root.setProperty('--mt', (mt() || 1) / 1000 + 's'), fast + 60); G.auto = false; if (S.won(st)) win(); else afterMove(); return; }
-    const ev = S.apply(st, mv); if (k++ % 2 === 0 || ev.flips.length) playEv(ev); draw(); setTimeout(step, Math.max(25, fast * .22));
+    const ev = S.apply(st, mv); if (k++ % 3 === 0 || ev.flips.length) playEv(ev);
+    const mv2 = S.autoMove(st, 'all'); if (mv2) { S.apply(st, mv2); k++; }   // two cards per frame
+    draw(); setTimeout(step, 16);
   };
   step();
 }
