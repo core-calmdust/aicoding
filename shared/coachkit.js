@@ -33,10 +33,13 @@ const CSS = `
 .ck-sw.on svg{stroke:var(--accent,#d8b56a)}
 .ck-sw.on i{background:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent)}
 .ck-sw.on i::after{transform:translateX(12px);background:#fff}
-.ck-h .ck-sw{margin-left:auto;height:24px;padding:0 3px;border-radius:13px;gap:6px;font-size:11.5px}
-.ck-h small + .ck-sw{margin-left:10px}
+.ck-h .ck-sw,.ck-h .ck-sw.on{margin-left:auto;height:28px;padding:0;border:0!important;background:none!important;box-shadow:none;gap:0}
+.ck-h small + .ck-sw{margin-left:12px}
 .ck-h .ck-sw svg{display:none}
 .ck-h .ck-sw span{display:none!important}
+.ck-h .ck-sw i,.ck-h .ck-sw.on i{width:46px!important;height:24px!important;border-radius:12px}
+.ck-h .ck-sw i::after{top:3px;left:3px;width:18px!important;height:18px!important}
+.ck-h .ck-sw.on i::after{transform:translateX(22px)!important}
 @media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){.ck-sw{padding:0 7px;gap:5px}.ck-sw span{display:none}.ck-sw i{width:24px;height:14px}.ck-sw i::after{width:10px;height:10px}.ck-sw.on i::after{transform:translateX(10px)}}
 .ck-card h3.ck-h{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;letter-spacing:.08em;color:var(--muted,#aaa);font-weight:600}
 .ck-card h3.ck-h svg{width:16px;height:16px;fill:none;stroke:var(--accent,#d8b56a);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
