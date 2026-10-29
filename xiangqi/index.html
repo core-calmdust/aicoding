@@ -478,6 +478,15 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .paste-ta{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical}
 .paste-ta:focus{outline:none;border-color:var(--brass2)}
 #resultOverlay .mbtn{padding:12px 6px;letter-spacing:.04em}
+/* result dialog: button labels never wrap (common spec) — buttons wrap to a second row instead */
+#resultOverlay .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr));gap:8px}
+#resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
+#resultOverlay .modal-actions .mbtn.hidden{display:none}
+/* coach (coach.js, shared/coachkit.js) */
+#coachCard.hidden{display:none}
+body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+#coachCard.ck-off .ck-muted{font-size:12px}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
@@ -503,7 +512,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   body.in-study .st-nav{display:flex}
   body.in-study #lsHint,body.in-study .cb-bar #lsAuto,body.in-study:not(.st-end) #lsNext{display:none}
   .controls{order:-4}
-  /* phone order (site rule): board → 形勢＋ナビ → 振り返り → 棋譜 */
+  /* phone order (site rule): board → コーチ → 形勢＋ナビ → 振り返り → 棋譜 */
+  #coachCard{order:0}
   #evalCard{order:1}
   .review-card{order:2}
   .kifu-card{order:4}
@@ -861,6 +871,10 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
   .side-in > .kifu-card{flex:1 1 0;min-height:140px}
   .side-in > .review-card.show{flex:1.6 1 0;min-height:180px}
   .side-in:has(.review-card.show) > .kifu-card{flex:.6 1 0;min-height:110px}
+  .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:240px;overflow-y:auto;scrollbar-width:thin}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.7 1 0;min-height:110px}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .review-card.show{flex:1.2 1 0}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px}
   .side .player:has(.clk:not(:empty)) .count small{display:none}   /* clock shown: the piece summary would squeeze the name */
   .player .count small{display:block;margin:2px 0 0;font-size:11.5px;line-height:1.3;white-space:nowrap}
   body:not(.has-clk):not(.in-online) .side .players{grid-template-columns:minmax(0,1fr)!important;gap:6px}   /* one per row: side by side the piece summary squeezed the names to "あ…" */
@@ -986,6 +1000,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
       </div>
     </div>
 
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card controls">
       <button class="btn primary" id="btnNew" data-i18n-title="btn.new.title"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
       <button class="btn" id="btnUndo" data-i18n-title="btn.undo.title"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="btn.undo"></span></button>
@@ -996,7 +1011,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1190,8 +1205,12 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="online.js?v=stale2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
-<script src="app.js?v=20261028pv2wp1rptlskan"></script>
-<script src="online-ui.js?v=20261028pc"></script>
+<script src="../shared/coachkit.js?v=3"></script>
+<script src="../shared/record.js?v=1"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="app.js?v=20261030ck1"></script>
+<script src="online-ui.js?v=20261030ck1"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
