@@ -210,18 +210,13 @@ function checkAutoComplete() { $('#btnAuto').classList.toggle('hidden', G.over |
 function autoComplete() {
   if (G.auto || G.over) return;
   $('#btnAuto').classList.add('hidden'); G.undo.push(snap()); G.auto = true;
-  // the finish is decided: cards fly up quickly (shorter flight, ~3× the pace of normal auto moves)
-  const root = document.documentElement.style, fast = Math.min(mt(), 120);
-  root.setProperty('--mt', (fast || 1) / 1000 + 's');
-  let k = 0;
-  const step = () => {
-    const mv = S.autoMove(st, 'all');
-    if (!mv) { setTimeout(() => root.setProperty('--mt', (mt() || 1) / 1000 + 's'), fast + 60); G.auto = false; if (S.won(st)) win(); else afterMove(); return; }
-    const ev = S.apply(st, mv); if (k++ % 3 === 0 || ev.flips.length) playEv(ev);
-    const mv2 = S.autoMove(st, 'all'); if (mv2) { S.apply(st, mv2); k++; }   // two cards per frame
-    draw(); setTimeout(step, 16);
-  };
-  step();
+  // the finish is decided: every remaining card sweeps up to the foundations in one quick wave (normal flight speed, staggered starts)
+  const order = []; let mv;
+  while ((mv = S.autoMove(st, 'all')) && order.length < 210) { order.push(st.p[mv.f].c[mv.i]); S.apply(st, mv); }
+  const gap = set.anim ? 18 : 0;
+  TB.set(st, { stagger: order, step: gap }); renderAll(); saveGame();
+  for (let i = 0; i < order.length; i += 3) setTimeout(() => sfx('place'), i * gap + mt() * .8);
+  setTimeout(() => { G.auto = false; if (S.won(st)) win(); else afterMove(); }, order.length * gap + mt() + 60);
 }
 function destinations(pi, ci) {
   const V = S.VARIANTS[st.v], out = [];
