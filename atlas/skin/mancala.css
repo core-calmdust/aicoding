@@ -47,7 +47,7 @@ html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!i
   html.atlas-mancala .atlas-brand small{display:none}
   html.atlas-mancala :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:34px}
   html.atlas-mancala.atlas-skin .app{padding-top:46px!important}
-  html.atlas-mancala{--u:min((100vw - 32px) / 9.7, (var(--vh) - 42px - 60px) / 4.2, 120px)!important}
+  html.atlas-mancala{--u:min((100vw - 32px) / 9.7, (var(--vh) - 46px - 20px) / 4.2, 120px)!important}
   /* no player boxes: the names (with 先手 / 後手) are on the board, next to their stores */
   html.atlas-mancala .board-area > .plate{display:none!important}
   html.atlas-mancala .slabel{font-size:0!important;letter-spacing:0!important}
@@ -55,3 +55,14 @@ html.atlas-mancala .atlas-rot-b.pulse{box-shadow:0 0 0 3px rgba(255,201,40,.7)!i
   html.atlas-mancala .slabel.me::after{color:#ffd77a;border-color:rgba(255,215,122,.75)}
 }
 @media (max-width:420px) and (pointer: coarse){ html.atlas-mancala .atlas-top{gap:6px} html.atlas-mancala .atlas-top :is(.atlas-ic,.atlas-lbtn){width:38px;min-width:38px;height:38px} html.atlas-mancala .atlas-brand img{width:32px;height:32px} }
+/* phones sideways: the menu inside the portal bar (title | menu | icons) */
+html.mc-barmenu .atlas-top{height:46px!important;gap:8px}
+html.mc-barmenu .atlas-top .sp{display:none}
+html.mc-barmenu .atlas-brand span{display:none}
+html.mc-barmenu .atlas-top > .controls{flex:1 1 auto;min-width:0;display:flex!important;gap:5px!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;height:auto!important;width:auto!important;max-width:none!important}
+html.mc-barmenu .atlas-top > .controls .btn{flex:1 1 0;min-width:0;height:34px!important;padding:0 2px!important;flex-direction:row!important;gap:4px!important;font-size:11px!important;border-radius:10px!important;white-space:nowrap}
+html.mc-barmenu .atlas-top > .controls .btn svg{width:16px!important;height:16px!important}
+html.mc-barmenu .atlas-top > .controls .btn span{overflow:hidden;text-overflow:clip}
+@media (max-width:760px){html.mc-barmenu .atlas-top > .controls .btn span{display:none!important}}
+html.mc-barmenu .atlas-coin{display:none}
+html.mc-barmenu.atlas-skin .app{padding-top:52px!important}
