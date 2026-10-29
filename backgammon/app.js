@@ -1515,10 +1515,13 @@ function pcFit() {
   const ich = bxh || Math.round(B.contains('in-lesson') || B.contains('in-puzzle') ? Math.max(190, Math.min(380, H * 0.32)) : Math.max(150, Math.min(320, H * 0.25)));
   document.documentElement.style.setProperty('--bxh', bxh + 'px');
   document.documentElement.style.setProperty('--ich', ich + 'px');
-  const side = B.contains('dock-open') && !B.contains('ol-soon');   // online dock open: the info goes beside the board (CSS: body.dock-open)
-  const rw = w < 1300 ? 310 : 330;   // (= the CSS --rw)
+  const dockSide = B.contains('dock-open') && !B.contains('ol-soon');   // online dock open: the info goes beside the board (CSS: body.dock-open)
+  const wide = !dockSide && w / hgt >= 1.6;   // a wide window (16:10 or wider): board on the left, the info in a column on the right (CSS: body.wide-side)
+  B.toggle('wide-side', wide);
+  const side = dockSide || wide;
+  const rw = dockSide ? (w < 1300 ? 310 : 330) : (w < 1300 ? 310 : w < 1700 ? 340 : 380);   // (= the CSS --rw)
   // (side: measured from the opened dock itself — bar + panel, min(46vh, 380px) in online.css — so the board never runs under it)
-  const base = side ? H - 24 - 47 - Math.min(hgt * 0.46, 380) : H - 24 - 12 - ich - (window.olDockH ? olDockH() : 0);   // height left for the board
+  const base = dockSide ? H - 24 - 47 - Math.min(hgt * 0.46, 380) : wide ? H - 24 - (window.olDockH ? olDockH() : 0) : H - 24 - 12 - ich - (window.olDockH ? olDockH() : 0);   // height left for the board
   const availW = w - 2 * px - (side ? rw + 16 : 0);
   let u = Math.min(availW / 15.85, 170), h = base / u;   // (big windows: the board grows with the window)
   if (h < 7.2) { u = base / 7.2; h = 7.2; }
@@ -1527,6 +1530,7 @@ function pcFit() {
 function updateGeom() {
   const pcw = mqPCW.matches && !ROT && !mqCoarse.matches;
   if (pcw !== PCW) { PCW = pcw; document.documentElement.classList.toggle('pcw', pcw); }
+  if (!pcw) document.body.classList.remove('wide-side');
   const flat = ROT || landPhone() || PCW, f = flat ? (PCW ? pcFit() : flatFit()) : { h: 12, u: 0 };
   if (flat === G.FLAT && Math.abs(f.h - G.H) < 0.05 && Math.abs(f.u - (G.U || 0)) < 0.3 && geomReady) return;
   G.U = f.u; setGeom(flat, f.h, f.u);
