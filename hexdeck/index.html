@@ -1486,6 +1486,26 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
 .pl em.keeper{background:linear-gradient(180deg,#ff9a4a,#c8501e);color:#1b0904}
 .tl-pick button{flex:1 1 200px;gap:4px}
 .tl-pick .tl-st{color:#ffb27a}
+/* 劫火の胎動：タイルと矢印（v2） */
+#map .vglow{pointer-events:none;animation:vglow 2.4s ease-in-out infinite}
+@keyframes vglow{50%{fill:rgba(255,130,50,.32)}}
+#map .vpath{fill:rgba(255,110,40,.08);stroke:rgba(255,140,70,.55);stroke-width:2;stroke-dasharray:none;animation:vpulse2 2s ease-in-out infinite}
+@keyframes vpulse2{50%{fill:rgba(255,110,40,.18);stroke:rgba(255,170,100,.8)}}
+#map .varrow{pointer-events:none}
+#map .varrow.now .vband{stroke:none;filter:drop-shadow(0 0 6px rgba(255,100,30,.75))}
+#map .varrow.now .vcore{stroke:#ffd6a8;stroke-width:1.6;stroke-linecap:round;opacity:.9;stroke-dasharray:none;filter:none}
+#map .varrow.now .vchev{fill:#fff1dc;stroke:none;filter:none;animation:vchev 1.4s linear infinite;opacity:.2}
+#map .varrow.now .vchev.c1{animation-delay:.35s}#map .varrow.now .vchev.c2{animation-delay:.7s}
+@keyframes vchev{0%,100%{opacity:.15}30%{opacity:1}}
+#map .varrow.now .vember{fill:#ffb070;stroke:#fff1dc;stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(255,140,60,1))}
+#map .varrow.next line{stroke:rgba(255,200,160,.5);stroke-width:2;stroke-dasharray:2 6;stroke-linecap:round;filter:none}
+#map .varrow.next .vtip{stroke-dasharray:none;fill:none;stroke:rgba(255,200,160,.6);stroke-width:1.6;stroke-linejoin:round;filter:none}
+@media (prefers-reduced-motion:reduce){#map .varrow.now .vchev,#map .vglow,#map .vpath{animation:none;opacity:1}}
+#map .varrow.now .vband{fill-opacity:1;filter:drop-shadow(0 0 8px rgba(255,100,30,.8))}
+#map .varrow.now .vchev{stroke:rgba(60,16,6,.75);stroke-width:1;stroke-linejoin:round}
+#map .varrow.now .vring{fill:none;stroke:rgba(255,170,100,.7);stroke-width:1.5;animation:vring 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes vring{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){#map .varrow.now .vring{animation:none}}
 </style>
 <div class="app" id="app">
   <header class="hb">
@@ -1564,6 +1584,11 @@ table.rtb-pts td:nth-child(3){white-space:nowrap;width:auto}
     <radialGradient id="gOre" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#8e97a3"/><stop offset="1" stop-color="#4d5561"/></radialGradient>
     <radialGradient id="gGem" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#8b62b8"/><stop offset="1" stop-color="#4a2f6b"/></radialGradient>
     <radialGradient id="gDesert" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#bba57c"/><stop offset="1" stop-color="#83704f"/></radialGradient>
+    <radialGradient id="gVolc" cx="50%" cy="38%" r="72%"><stop offset="0" stop-color="#7c4430"/><stop offset=".55" stop-color="#55291d"/><stop offset="1" stop-color="#341912"/></radialGradient>
+    <radialGradient id="gLava" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5b4038"/><stop offset="1" stop-color="#2f2220"/></radialGradient>
+    <pattern id="pLava" width="34" height="30" patternUnits="userSpaceOnUse"><path d="M2 8l7 4 5-6 8 5 6-3M5 22l6-3 7 5 6-4 8 2" fill="none" stroke="rgba(255,128,64,.42)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="15" r="1" fill="rgba(255,170,100,.5)"/></pattern>
+    <symbol id="i-volcano" viewBox="0 0 32 32"><path d="M3 27 11.5 12h9L29 27z" fill="#f1e3d6"/><path d="M11.5 12c2 2.2 7 2.2 9 0" fill="#ff8a4a"/><path d="M14 12.6l-1.6 5.4 2.8-2 1.4 3.6 1.4-3.4 2.4 1.6-1.5-5.2" fill="#ff8a4a" opacity=".9"/><path d="M15 9c-2-1.5-1-4 1.5-4 .5-2.5 4.5-2.5 5 0 2.4 0 2.8 3 .8 4" fill="none" stroke="#f1e3d6" stroke-width="1.6" stroke-linecap="round" opacity=".7"/></symbol>
+    <symbol id="i-lava" viewBox="0 0 32 32"><path d="M4 22c4-4 7 1 11-2s6-6 13-3" fill="none" stroke="#f1e3d6" stroke-width="2.4" stroke-linecap="round"/><path d="M6 27c4-2 8 1 12-1s5-3 9-2" fill="none" stroke="#ff9a5a" stroke-width="1.8" stroke-linecap="round" opacity=".85"/><circle cx="22" cy="10" r="2.2" fill="#ff9a5a" opacity=".8"/><circle cx="14" cy="8" r="1.4" fill="#f1e3d6" opacity=".7"/></symbol>
     <radialGradient id="gWaste" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5a5348"/><stop offset="1" stop-color="#36322c"/></radialGradient>
     <pattern id="pWaste" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><path d="M0 5h10" stroke="rgba(230,201,138,.18)" stroke-width="1"/><circle cx="3" cy="2" r=".8" fill="rgba(0,0,0,.25)"/></pattern>
     <radialGradient id="gLand" cx="50%" cy="50%" r="55%"><stop offset=".78" stop-color="#d8c79e"/><stop offset="1" stop-color="#a99567"/></radialGradient>
@@ -3995,10 +4020,13 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     }
     // ヘックス
     S.hexes.forEach((H, i) => {
-      o += `<polygon class="hex" points="${hexPath(H, .985)}" fill="url(#${GRAD[H.res]})"/>`;
+      const vc = S.volc && H.q === 0 && H.r === 0;   // 劫火の胎動：中央の火山・溶岩原は専用のタイル
+      o += `<polygon class="hex" points="${hexPath(H, .985)}" fill="url(#${vc ? 'gVolc' : H.lava ? 'gLava' : GRAD[H.res]})"/>`;
       o += `<polygon points="${hexPath(H, .88)}" fill="none" stroke="rgba(255,255,255,.08)"/>`;
-      if (H.res === 'waste') o += `<polygon points="${hexPath(H, .985)}" fill="url(#pWaste)" opacity=".55"/><text x="${H.x * U}" y="${H.y * U - 25}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="2" fill="rgba(235,226,205,.55)">${H.lava ? '溶岩原' : '荒地'}</text>`;
-      else if (!(H.res === 'gem' && S.scen && S.scen.veins)) o += `<use href="#i-${H.res}" x="${H.x * U - 15}" y="${H.y * U - 44}" width="30" height="30" opacity=".75"/>`;
+      if (H.lava) o += `<polygon points="${hexPath(H, .985)}" fill="url(#pLava)"/><use href="#i-lava" x="${H.x * U - 15}" y="${H.y * U - 46}" width="30" height="30" opacity=".75"/><text x="${H.x * U}" y="${H.y * U - 8}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="2" fill="rgba(255,214,190,.62)">溶岩原</text>`;
+      else if (vc) o += `<use href="#i-volcano" x="${H.x * U - 19}" y="${H.y * U - 26}" width="38" height="38" opacity=".85"/><circle cx="${H.x * U}" cy="${H.y * U - 10}" r="16" fill="rgba(255,110,40,.18)" class="vglow"/>`;
+      else if (H.res === 'waste') o += `<polygon points="${hexPath(H, .985)}" fill="url(#pWaste)" opacity=".55"/><text x="${H.x * U}" y="${H.y * U - 25}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="2" fill="rgba(235,226,205,.55)">荒地</text>`;
+      else if (!(H.res === 'gem' && S.scen && S.scen.veins) && !vc) o += `<use href="#i-${H.res}" x="${H.x * U - 15}" y="${H.y * U - 44}" width="30" height="30" opacity=".75"/>`;
       if (!H.num && H.res !== 'desert' && H.res !== 'waste') o += `<text x="${H.x * U}" y="${H.y * U + 16}" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="10" letter-spacing="1" fill="rgba(255,255,255,.7)">数字なし</text>`;
       if (H.num) {
         const hot = HD.PIP(H.num) >= 4.5, pip = Math.round(HD.PIP(H.num));
@@ -4012,9 +4040,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
         }
         o += `</g>`;
       }
-      if (H.lava) o += `<polygon class="lavaf" points="${hexPath(H, .985)}"/><path d="M${H.x * U - 22} ${H.y * U - 8}l10 6 6-9 9 8 8-4" fill="none" stroke="rgba(255,120,60,.55)" stroke-width="2" stroke-linecap="round"/>`;
-      if (H.black) o += `<g transform="translate(${H.x * U},${H.y * U - 30})"><title>黒土：生産+1</title><rect x="-18" y="-8" width="36" height="15" rx="7.5" fill="#1a1110" stroke="#ff9a5a" stroke-width="1"/><text y="3.5" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="9.5" font-weight="700" fill="#ffc69a">黒土+1</text></g>`;
-      if (S.volc && H.q === 0 && H.r === 0) o += `<g class="volcano" transform="translate(${H.x * U},${H.y * U})"><title>火山</title><polygon points="${hexPath({ x: 0, y: 0 }, .9)}" fill="#2a120d"/><path d="M-26 18 -9-10h18l17 28z" fill="#5a2a1c" stroke="#120806" stroke-width="2"/><path d="M-9-10q9 7 18 0" fill="#ff7a3a"/><path d="M-3-10l-3 12M4-10l4 14" stroke="#ff8a4a" stroke-width="3" stroke-linecap="round"/><circle cx="-6" cy="-24" r="6" fill="rgba(80,70,70,.8)"/><circle cx="4" cy="-31" r="8" fill="rgba(80,70,70,.6)"/></g>`;
+      if (H.black) o += `<g transform="translate(${H.x * U},${H.y * U + 36})"><title>黒土：生産+1</title><rect x="-18" y="-8" width="36" height="15" rx="7.5" fill="#1a1110" stroke="#ff9a5a" stroke-width="1"/><text y="3.5" text-anchor="middle" font-family="Zen Kaku Gothic New,sans-serif" font-size="9.5" font-weight="700" fill="#ffc69a">黒土+1</text></g>`;
       if (H.res === 'gem' && S.scen && S.scen.veins) {   // 宝玉の導き：土地に溜まった宝玉（最大3）
         const g = H.gems || 0, mx = S.scen.veinMax, can = S.cur === HUMAN && HD.mineTargets(S, HUMAN).includes(i);
         o += `<g class="vgem${can ? ' can' : ''}" transform="translate(${H.x * U},${H.y * U - 30})"><title>溜まった宝玉 ${g}/${mx}${can ? '（宝玉ボタンから掘れる）' : ''}</title><rect x="${-mx * 8 - 3}" y="-8" width="${mx * 16 + 6}" height="16" rx="8" fill="rgba(13,23,38,.85)" stroke="${can ? '#e6c98a' : '#8b62b8'}" stroke-width="${can ? 1.8 : 1}"/>`;
@@ -4089,8 +4115,13 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (S.volc) {   // 劫火の胎動：次の噴火（実線）と、その次（点線）の方向
       const t = HD.volcTarget(S), nx = (t + S.scen.volc.step) % 6;
       const arrow = (d, cls) => { const far = S.hexes.find(H => H.q === HD.VDIR[d][0] * S.scen.volc.len && H.r === HD.VDIR[d][1] * S.scen.volc.len); if (!far) return '';
-        const L = Math.hypot(far.x, far.y), ux = far.x / L, uy = far.y / L, x1 = ux * .7 * U, y1 = uy * .7 * U, x2 = (far.x + ux * .55) * U, y2 = (far.y + uy * .55) * U;
-        return `<g class="varrow ${cls}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><path d="M${x2} ${y2}l${(-ux * 14 - uy * 8).toFixed(1)} ${(-uy * 14 + ux * 8).toFixed(1)}M${x2} ${y2}l${(-ux * 14 + uy * 8).toFixed(1)} ${(-uy * 14 - ux * 8).toFixed(1)}"/></g>`; };
+        const L = Math.hypot(far.x, far.y), ux = far.x / L, uy = far.y / L, nx = -uy, ny = ux, a = .62, e = L + .5, P = t => [ux * t * U, uy * t * U];
+        const [x1, y1] = P(a), [x2, y2] = P(e), f = v => v.toFixed(1);
+        const wedge = (t, w) => { const [cx, cy] = P(t); return `M${f(cx + ux * 6)} ${f(cy + uy * 6)}L${f(cx - ux * 5 + nx * w)} ${f(cy - uy * 5 + ny * w)}L${f(cx - ux * 2)} ${f(cy - uy * 2)}L${f(cx - ux * 5 - nx * w)} ${f(cy - uy * 5 - ny * w)}z`; };
+        if (cls === 'next') return `<g class="varrow next"><line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"/><path class="vtip" d="${wedge(e + .05, 6)}"/></g>`;
+        const ribbon = `M${f(x1 + nx * 3)} ${f(y1 + ny * 3)}L${f(x2 - ux * 12 + nx * 13)} ${f(y2 - uy * 12 + ny * 13)}L${f(x2 + ux * 9)} ${f(y2 + uy * 9)}L${f(x2 - ux * 12 - nx * 13)} ${f(y2 - uy * 12 - ny * 13)}L${f(x1 - nx * 3)} ${f(y1 - ny * 3)}z`;   // 根元が細く先が広い溶岩の帯
+        const gid = 'vg' + d;
+        return `<g class="varrow now"><defs><linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"><stop offset="0" stop-color="#ff6a20" stop-opacity="0"/><stop offset=".35" stop-color="#ff6a20" stop-opacity=".35"/><stop offset="1" stop-color="#ffa050" stop-opacity=".62"/></linearGradient></defs><path class="vband" d="${ribbon}" style="fill:url(#${gid})"/><line class="vcore" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"/>${[0, 1, 2].map(k => `<path class="vchev c${k}" d="${wedge(a + (e - a) * (k + 1) / 4, 8.5)}"/>`).join('')}<circle class="vring" cx="${f(x2 + ux * 14)}" cy="${f(y2 + uy * 14)}" r="9"/><circle class="vember" cx="${f(x2 + ux * 14)}" cy="${f(y2 + uy * 14)}" r="4.5"/></g>`; };
       if (S.eraIdx >= 1 || S.turn > 0) { HD.volcPath(S, t).forEach(h => { o += `<polygon class="vpath" points="${hexPath(S.hexes[h], .93)}"/>`; });
         o += arrow(nx, 'next') + arrow((nx + 3) % 6, 'next') + arrow(t, 'now') + arrow((t + 3) % 6, 'now'); }
     }
@@ -4237,8 +4268,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     if (!t) { t = document.createElement('div'); t.id = 'rtip'; t.className = 'rtip'; $('board').appendChild(t); }
     const E = S.edges[e], p = E.owner, len = HD.roadThrough(S, e), Q = S.players[p];
     const hold = S.lrHolder === p;
-    t.innerHTML = `<div class="rt1">${who(p)} の交易路</div><div class="rt2"><b>${len}</b><span>本（この道を通る一番長いつながり）</span></div>
-      <div class="rt3">その人の最長 ${Q.lr} 本${hold ? '・<em>最長路</em>' : S.lrHolder >= 0 ? `（最長路は ${NAMES[S.lrHolder]} の ${S.players[S.lrHolder].lr} 本）` : '（最長路は5本以上で2点）'}</div>`;
+    t.innerHTML = `<div class="rt1">${who(p)} の交易路${hold ? ' <em>最長路</em>' : ''}</div><div class="rt2"><b>${len}</b><span>本 / 最長 ${Q.lr}本</span></div>`;
     t.hidden = false;
     const bx = $('board').getBoundingClientRect(); let x = ev.clientX - bx.left + 16, y = ev.clientY - bx.top + 16;
     if (x + t.offsetWidth > bx.width - 8) x = ev.clientX - bx.left - t.offsetWidth - 16;
