@@ -914,6 +914,51 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   .review-card.show{grid-area:rv}
   #coachCard{grid-area:ck}
 }
+/* phone landscape with the tab rail + side panel (landtabs.js): header in one row, the board on the left,
+   the rail at the right edge of the board and the chosen box in a panel of about a third of the screen */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  body.lt-on{--lth:calc(var(--vh, 100vh) - 6px - 34px - 8px)}
+  html:has(body.lt-on), body.lt-on{height:100%!important;overflow:hidden!important}
+  body.lt-on .app{height:100vh!important;min-height:0!important;box-sizing:border-box;overflow:hidden;
+    padding:6px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left))!important;gap:8px!important;
+    grid-template-columns:auto minmax(0,1fr) 52px var(--ltw, 280px)!important;grid-template-rows:34px minmax(0,1fr)!important;
+    grid-template-areas:"brand ctrl ctrl icons" "fr fr rl pn"!important}
+  body.lt-on .brand-r{justify-self:end}
+  body.lt-on .controls .btn span{display:none!important}
+  body.lt-on .controls .btn{padding:6px 0!important}
+  body.lt-on .controls .grc-menu{display:none!important}
+  body.lt-on .frame{align-self:center}
+  body.lt-on .info-line, body.lt-on .mtabs, body.lt-on .mt-strip, body.lt-on #itNav{display:none!important}
+  body.lt-on #ltRail{grid-area:rl;display:flex;flex-direction:column;gap:4px;align-self:stretch;min-height:0;overflow-y:auto;scrollbar-width:none;justify-content:flex-start;
+    padding:4px 0;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+  body.lt-on #ltRail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;padding:4px 2px;border-radius:9px;
+    color:var(--muted);font-size:9.5px;line-height:1.15;letter-spacing:0;white-space:nowrap;position:relative;-webkit-tap-highlight-color:transparent}
+  body.lt-on #ltRail button[hidden]{display:none}
+  body.lt-on #ltRail button span{display:block;max-width:100%;overflow:visible}
+  body.lt-on #ltRail svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  body.lt-on #ltRail button.sel{color:var(--accent);background:rgba(201,169,97,.12)}
+  body.lt-on #ltRail button.sel::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:2px;border-radius:2px;background:var(--accent)}
+  body.lt-on .slabel{font-size:max(10px, calc(var(--u) * .2))!important;letter-spacing:.04em!important}
+  body.lt-on .slabel::after{content:none!important}
+  body.lt-on #ltPanel{grid-area:pn;align-self:stretch;display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  body.lt-on #ltPanel > *{flex:none;width:auto!important;margin:0!important;grid-area:auto!important}
+  body.lt-on #ltPanel > [data-ltc]:not([data-ltc=ls]){display:none!important}
+  body.lt-on[data-lt=coach] #ltPanel > #coachCard:not(.hidden), body.lt-on[data-lt=coach] #ltPanel > #reviewCard.show{display:block!important}
+  body.lt-on[data-lt=eval] #ltPanel > #evalCard{display:flex!important;flex-direction:column}
+  body.lt-on[data-lt=kifu] #ltPanel > .kifu-card{display:flex!important;flex-direction:column}
+  body.lt-on #ltPanel #evalCard .graph{height:90px}
+  body.lt-on #ltPanel .kifu{grid-template-columns:repeat(5,1fr);max-height:none;overflow:visible}
+  body.lt-on #ltPanel .kifu-card{min-height:0!important}
+  body.lt-on #ltPanel .card{padding:10px 12px}
+  /* lessons / puzzles: their card fills the panel, no tabs */
+  body.lt-on.in-lesson #ltRail, body.lt-on.in-puzzle #ltRail{display:none}
+  body.lt-on.in-lesson .app, body.lt-on.in-puzzle .app{grid-template-areas:"brand ctrl ctrl icons" "fr fr pn pn"!important}
+  body.lt-on.in-lesson #ltPanel > .lesson-card, body.lt-on.in-puzzle #ltPanel > .puzzle-card{display:flex!important;flex-direction:column;gap:8px}
+  body.lt-on #ltPanel > .lesson-card > *, body.lt-on #ltPanel > .puzzle-card > *{grid-column:auto!important;grid-row:auto!important}
+  /* online: the dock fills the panel (the rail stays) */
+  body.lt-on.mtab-online .dock{left:auto!important;right:max(10px, env(safe-area-inset-right))!important;top:48px!important;bottom:6px!important;width:var(--ltw, 280px);border-radius:12px;border:1px solid var(--line)}
+  body.lt-on.mtab-online{overflow:hidden}
+}
 /* one-time tip: landscape mode */
 .rottip{width:min(400px,100%);text-align:center}
 .rottip h2{margin:6px 0 10px}
@@ -1369,7 +1414,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=6"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=2"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030ck1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=6"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=2"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030lt1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->

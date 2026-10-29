@@ -2523,6 +2523,11 @@ function fixSize() {
   fixW = W; fixH = H; fixPortrait = portrait;
   root.setProperty('--vh', H + 'px');
   if (portrait) root.setProperty('--u', Math.floor(Math.min((W - 24) / 4.2, (H - (dk.contains('ol-dock') ? 222 : 172)) / 9.7, 100)) + 'px');   // with the bottom bars both player plates stay above them
+  else if ((H <= 560 || W <= 900) && document.body.classList.contains('lt-on')) {   // phone landscape with the tab rail + side panel (landtabs.js): the board fills what is left of the width
+    const lw = Math.round(Math.min(360, Math.max(240, W * .33)));
+    root.setProperty('--ltw', lw + 'px');
+    root.setProperty('--u', Math.floor(Math.min((window.innerHeight - 6 - 34 - 8 - 14) / 4.2, (W - 20 - 8 - 52 - 8 - lw) / 9.7, 110)) + 'px');
+  }
   else if (H <= 560 || W <= 900) root.setProperty('--u', Math.floor(Math.min((H - 6 - 34 - 6 - 8) / 4.2, (W - 24) / 9.7, 110)) + 'px');   // board across the width, cards below
   else root.removeProperty('--u');
 }
