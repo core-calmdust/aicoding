@@ -230,8 +230,10 @@ html[data-back=azure] .bk{background:#fff url(img/back-azure.webp) center/91% 93
 html[data-back=floralBlack] .bk{background:#1c1c1c url(img/back-floral-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=azureBlack] .bk{background:#1c1c1c url(img/back-azure-black.webp) center/90% 92% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=skull] .bk{background:#fff url(img/back-skull.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=hex] .bk{background:#1b2a4a url(img/back-hex.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
+html[data-back=cube] .bk{background:#4a2f6b url(img/back-cube.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
 html[data-back=skullBlack] .bk{background:#333 url(img/back-skull-black.webp) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.3)}
-html[data-back=floral] .cd .bk::after,html[data-back=azure] .cd .bk::after,html[data-back=floralBlack] .cd .bk::after,html[data-back=azureBlack] .cd .bk::after,html[data-back=skull] .cd .bk::after,html[data-back=skullBlack] .cd .bk::after{display:none}
+html[data-back=floral] .cd .bk::after,html[data-back=azure] .cd .bk::after,html[data-back=floralBlack] .cd .bk::after,html[data-back=azureBlack] .cd .bk::after,html[data-back=skull] .cd .bk::after,html[data-back=skullBlack] .cd .bk::after,html[data-back=hex] .cd .bk::after,html[data-back=cube] .cd .bk::after{display:none}
 html[data-back=red] .cd .bk::after,html[data-back=blue] .cd .bk::after,html[data-back=ornate] .cd .bk::after,html[data-back=ornateBlack] .cd .bk::after,html[data-back=mosaic] .cd .bk::after{display:none}
 /* court art sets: the flat set is a whole card face (its own corner indices) */
 .tile .ct-pv{width:24px;height:36px;object-fit:fill;border:1px solid rgba(0,0,0,.35);background:#fff;padding:2px;border-radius:3px}

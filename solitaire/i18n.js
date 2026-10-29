@@ -428,8 +428,8 @@ hi: { 'tab.play': 'खेल', 'set.auto.h': '"जब सुरक्षित" 
 ar: { 'tab.play': 'اللعب', 'set.auto.h': '«عندما يكون آمنًا» يُبقي الأوراق التي قد تحتاجها.', 'set.tap.h': 'السحب يعمل في الحالتين.' },
 });
 (function (A) { for (const l in A) I18N[l].credit2 = A[l]; })({
-ja: 'カード「アンティーク」「フラット」「ギャングスタ」と、カードの裏（アラベスク・フローラル・アズール・ギャングスタ・ラッキースカル）：',
-en: 'Antique, Flat and Gangsta cards and the Arabesque, Floral, Azure, Gangsta and Lucky skull backs:',
+ja: 'カード「アンティーク」「フラット」「ギャングスタ」と、カードの裏（アラベスク・フローラル・アズール・ヘキサゴン・キューブ・ギャングスタ・ラッキースカル）：',
+en: 'Antique, Flat and Gangsta cards and the Arabesque, Floral, Azure, Hexagon, Cubes, Gangsta and Lucky skull backs:',
 zh: '“古典”“扁平”“黑帮”纸牌及牌背（阿拉伯纹・花卉・蔚蓝・黑帮・幸运骷髅）：',
 ko: '「앤티크」「플랫」「갱스터」 카드와 뒷면(아라베스크・플로럴・애저・갱스터・럭키 스컬):',
 es: 'Cartas antiguas, planas y Gangsta, y reversos arabesco, floral, azur, Gangsta y calavera:',
@@ -438,4 +438,11 @@ pt: 'Cartas antigas, planas e Gangsta, e versos arabesco, floral, azul, Gangsta 
 de: 'Karten Antik, Flach und Gangsta sowie die Rückseiten Arabeske, Floral, Azur, Gangsta und Totenkopf:',
 hi: 'पुराने, फ़्लैट और गैंगस्टा पत्ते तथा पीठ (अरबेस्क, फ़्लोरल, नीला, गैंगस्टा, लकी खोपड़ी):',
 ar: 'أوراق عتيقة ومسطّحة وغانغستا، وظهر الأرابيسك والزهري واللازوردي وغانغستا وجمجمة الحظ:',
+});
+(function (A) { for (const l in A) Object.assign(I18N[l], A[l]); })({
+ja: { 'back.hex': 'ヘキサゴン', 'back.cube': 'キューブ紫' }, en: { 'back.hex': 'Hexagon', 'back.cube': 'Purple cubes' },
+zh: { 'back.hex': '六边形', 'back.cube': '紫色立方' }, ko: { 'back.hex': '헥사곤', 'back.cube': '퍼플 큐브' },
+es: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos morados' }, fr: { 'back.hex': 'Hexagone', 'back.cube': 'Cubes violets' },
+pt: { 'back.hex': 'Hexágono', 'back.cube': 'Cubos roxos' }, de: { 'back.hex': 'Sechseck', 'back.cube': 'Lila Würfel' },
+hi: { 'back.hex': 'षट्भुज', 'back.cube': 'बैंगनी घन' }, ar: { 'back.hex': 'سداسي', 'back.cube': 'مكعبات بنفسجية' },
 });
