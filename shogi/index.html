@@ -67,7 +67,10 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var
 @media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   html:not(.atlas-skin) .frame{padding-right:var(--fp)}
   html:not(.atlas-skin) .coords.right{width:var(--fp)}
-  html:not(.atlas-skin) .board-area > .hand.bottom{left:0;margin-top:calc(var(--fp) - var(--cw)*0.16)}
+  html:not(.atlas-skin) .board-area > .hand.bottom{left:0;margin-top:0}
+  /* phones: one gap between every box — menu, opponent, board, you, the boxes below (common spec) */
+  .app{gap:8px!important}
+  .board-area{gap:8px!important}
 }
 .hand .hname{font-size:calc(var(--cw)*0.16);color:rgba(226,194,117,.7);text-align:center;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hand .hn-n{display:none}
