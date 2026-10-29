@@ -697,6 +697,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
 #coachCard.ck-off .ck-muted{font-size:12px}
+#coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 .navbar{display:flex;justify-content:center;gap:6px;margin-top:8px}
 .navbar button{width:40px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--muted);display:flex;align-items:center;justify-content:center}
 .navbar button:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
@@ -1031,7 +1032,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
       <button class="btn" id="btnPuzzle" data-i18n-title="btn.puzzle.title"><svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg><span data-i18n="btn.puzzle"></span></button>
     </div>
 
-    <div class="card review-card" id="reviewCard">
+    <div class="card review-card" id="reviewCard" data-itc="coach">
       <div class="kifu-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose" data-i18n="close"></button></div>
       <div id="rvBody"></div>
     </div>
@@ -1227,8 +1228,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="rvbox.js?v=2"></script>
 <script src="../shared/coachkit.js?v=3"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=1"></script>
-<script src="coach-i18n.js?v=1"></script>
+<script src="coach.js?v=2"></script>
+<script src="coach-i18n.js?v=2"></script>
 <script src="app.js?v=20261030ck1"></script>
 <script src="online-ui.js?v=3sec1l9ck1"></script>
 <!-- World Board Game Atlas portal skin: checkers/?skin=atlas — 3D luxury board (lacquer field, black lacquer frame, gold & silver metal checkers), guide speech bubbles, portal look (all features kept) -->
