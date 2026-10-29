@@ -432,7 +432,7 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 .ng-body .dz .tiles.faces .pv{height:92px}
 .ng-body .dz .tiles.faces .ct-pv{width:42px;height:62px}
 /* settings */
-.set-cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.set-cols{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
 .set-cols .rl{grid-template-columns:minmax(0,1fr) auto}
 .set-cols .rl .seg{min-width:250px}
 .tgl{position:relative;display:inline-block;width:44px;height:24px;cursor:pointer}
