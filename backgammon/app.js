@@ -1440,14 +1440,15 @@ function playArrows(side, start, moves, color, dashed) {
     else { const n = q[side * 26 + to]; [x1, y1] = ckXY(side, to, n - 1, n); }
     const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(1.2, Math.abs(x1 - x0) * 0.18 + 0.2) * (y0 < G.MID && y1 < G.MID ? -1 : 1);
     const id = 'ah' + color.replace(/[^a-z0-9]/gi, '');
-    h += `<path d="M${x0 * S} ${y0 * S} Q${mx * S} ${my * S} ${x1 * S} ${y1 * S}" stroke="rgba(0,0,0,.45)" stroke-width="15" fill="none" ${dashed ? 'stroke-dasharray="18 14"' : ''}/>`;
-    h += `<path d="M${x0 * S} ${y0 * S} Q${mx * S} ${my * S} ${x1 * S} ${y1 * S}" stroke="${color}" stroke-width="9" ${dashed ? 'stroke-dasharray="18 14"' : ''} marker-end="url(#${id})" opacity=".92"/>`;
+    h += `<path d="M${x0 * S} ${y0 * S} Q${mx * S} ${my * S} ${x1 * S} ${y1 * S}" stroke="#08120c" stroke-width="15" fill="none" opacity=".85" ${dashed ? 'stroke-dasharray="20 12" stroke-dashoffset="1"' : ''}/>`;
+    h += `<path d="M${x0 * S} ${y0 * S} Q${mx * S} ${my * S} ${x1 * S} ${y1 * S}" stroke="${color}" stroke-width="9" ${dashed ? 'stroke-dasharray="18 14"' : ''} marker-end="url(#${id})"/>`;
   }
   return h;
 }
 function renderArrows() {
   let h = '';
-  const defs = c => `<marker id="ah${c.replace(/[^a-z0-9]/gi, '')}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`;
+  // (common rule: every arrow has a dark rim so it reads on every skin — light leather, camel, marble …)
+  const defs = c => `<marker id="ah${c.replace(/[^a-z0-9]/gi, '')}" viewBox="-2 -2 14 14" refX="6" refY="5" markerWidth="4.6" markerHeight="4.6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}" stroke="#08120c" stroke-width="1.4" stroke-linejoin="round"/></marker>`;
   const colors = new Set();
   const arr = [];
   if (bxHover) arr.push(bxHover);
@@ -1456,7 +1457,8 @@ function renderArrows() {
   else if (settings.hint && hintData && hintData.list && turn && hintData.key === hintKey() && !turn.steps.length && !lesson && !puzzle) arr.push({ side: hintData.side, start: hintData.start, moves: hintData.list[0].moves, cls: 'hint' });
   for (const a of extraArrows) arr.push(a);
   for (const a of arr) {
-    const col = a.cls === 'cand' ? '#7fd0ff' : a.cls === 'bad' ? '#ff7b6b' : a.cls === 'played' ? 'rgba(255,255,255,.85)' : '#ffe6a0';
+    // coach candidates: bright green (common rule); hint / best: bright gold; mistake: red (dashed); played: white (dashed)
+    const col = a.cls === 'cand' ? '#3df59a' : a.cls === 'bad' ? '#ff6b5b' : a.cls === 'played' ? '#ffffff' : '#ffd54a';
     colors.add(col);
     h += playArrows(a.side, a.start, a.moves, col, a.cls === 'bad' || a.cls === 'played');
   }
