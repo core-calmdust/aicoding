@@ -352,7 +352,7 @@ function render(o) {
   o = o || {};
   if (!T) return;
   const V = P.VARIANTS[T.v], box = $('#pkTable'), W = box.clientWidth, H = box.clientHeight;
-  const narrow = W < 640, tall = H > W * 1.1;   // portrait boards have room for much bigger cards
+  const narrow = W < 640, tall = H > W * (narrow ? .95 : 1.1);   // portrait boards have room for much bigger cards
   const cw = Math.max(26, Math.min(W / (V.stud ? (narrow || tall ? 10.5 : 13.5) : (narrow || tall ? 7.2 : 9.8)), H / (V.stud ? (tall ? 8 : 6.6) : (tall ? 8.2 : 5.7)), tall ? 170 : 130));
   const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   const done = T.phase === 'done', showAll = done && T.result && T.result.showdown;
@@ -531,15 +531,18 @@ function mTabs() {
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
   const same = set.mTab === b.dataset.pt && $('#side').dataset.pt === b.dataset.pt;
   set.mTab = b.dataset.pt; save(); mTabs();
-  const r = $('#side').getBoundingClientRect(), bar = $('#mTabs').getBoundingClientRect().top;
-  if (same && r.top < 60) window.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the table
-  else if (r.top > innerHeight * .45 || r.top < 0) window.scrollTo({ top: window.scrollY + r.top - 8, behavior: 'smooth' });
+  const sc = $('.stage'), top = sc.getBoundingClientRect().top, r = $('#side').getBoundingClientRect(), h = sc.clientHeight;
+  if (same && r.top - top < 60) sc.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the table
+  else if (r.top - top > h * .45 || r.top < top) sc.scrollTo({ top: sc.scrollTop + r.top - top - 8, behavior: 'smooth' });
 });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
   $$('.controls .btn span').forEach(sp => { sp.style.fontSize = ''; if (!sp.offsetParent) return; let f = parseFloat(getComputedStyle(sp).fontSize); while (sp.scrollWidth > sp.clientWidth + .5 && f > 8) { f -= .5; sp.style.fontSize = f + 'px'; } });
 }
 addEventListener('resize', () => requestAnimationFrame(fitLabels));
+/* phones: the scrolling middle's height → the table size (--sh) */
+{ const sc = $('.stage'), upd = () => { const h = sc.clientHeight; if (h) document.documentElement.style.setProperty('--sh', h + 'px'); };
+  if (window.ResizeObserver) new ResizeObserver(upd).observe(sc); upd(); }
 function boardStr(st) {
   const V = P.VARIANTS[T.v]; let n = 0; for (let k = 0; k < st; k++) n += V.board[k]; const cs = T.board.slice(n - V.board[st - 1], n);
   return cs.map(c => `${P.vch(P.V(c))}${'♠♥♦♣'[P.SUIT(c)]}`).join(' ');

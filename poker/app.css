@@ -1232,7 +1232,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   #btnNew .m-s{display:inline}
   .infobar{display:none!important}
   .stage{gap:10px;padding:0 8px 12px}
-  .pk .board-wrap{height:clamp(320px,calc(100svh - 362px),620px)}
+  .pk .board-wrap{flex:none;height:clamp(300px,calc(var(--sh,560px) - 182px),640px)}
   /* the session numbers on the empty felt under the board */
   .m-hud{display:block;position:absolute;inset:0;z-index:1;pointer-events:none}
   .mh{position:absolute;bottom:calc(var(--rail) + 6%);display:flex;flex-direction:column;gap:5px}
@@ -1261,12 +1261,17 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .szb{padding:9px 2px;font-size:12.5px;white-space:nowrap;text-align:center;border-radius:10px}
   .ab-msg{padding:4px 0}
   /* side cards → tabs */
-  .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+  /* app shell: header + tab bar stay put, only the middle scrolls (no position:fixed → no jumping bar) */
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  .brand,.controls{flex:none}
+  .stage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .stage > *{flex:none}
   .pk .side > [data-pt]{display:none}
   .pk .side[data-pt=eq] > [data-pt=eq],.pk .side[data-pt=coach] > [data-pt=coach],.pk .side[data-pt=log] > [data-pt=log],.pk .side[data-pt=sess] > [data-pt=sess]{display:block}
   .pk .side .card h3{font-size:13px}
   .pk .side .log-card .pk-log{max-height:none}
-  .m-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;padding:4px 8px calc(4px + env(safe-area-inset-bottom));background:rgba(11,11,13,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid rgba(216,212,204,.14)}
+  .m-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);flex:none;position:relative;z-index:60;padding:4px 8px calc(4px + env(safe-area-inset-bottom));background:rgba(11,11,13,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid rgba(216,212,204,.14)}
   .m-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--muted);font:600 11px 'Zen Kaku Gothic New',sans-serif;padding:7px 0 5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .m-tabs button[hidden]{display:none}
   .m-tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
