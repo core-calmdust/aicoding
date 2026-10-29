@@ -539,7 +539,7 @@ function init() {
 }
 function setOn(v) {
   settings.coach = !!v; save();
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   S.hov = null; render(); renderFx();
   if (v && !listAt(cur)) analyzeCurrent(busyToken);
 }

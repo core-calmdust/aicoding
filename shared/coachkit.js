@@ -33,6 +33,8 @@ const CSS = `
 .ck-sw.on svg{stroke:var(--accent,#d8b56a)}
 .ck-sw.on i{background:color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent)}
 .ck-sw.on i::after{transform:translateX(12px);background:#fff}
+.ck-flash{position:fixed;left:50%;top:50%;z-index:400;transform:translate(-50%,-50%) scale(.92);padding:12px 22px;border-radius:14px;background:rgba(10,10,12,.86);color:#fff;font:700 15px/1.3 inherit;letter-spacing:.04em;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.ck-flash.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .ck-h .ck-sw,.ck-h .ck-sw.on{margin-left:auto;height:28px;padding:0;border:0!important;background:none!important;box-shadow:none;gap:0}
 .ck-h small + .ck-sw{margin-left:12px}
 .ck-h .ck-sw svg{display:none}
@@ -100,7 +102,16 @@ function sw(o) {
   const host = typeof o.mount === 'string' ? document.querySelector(o.mount) : o.mount;
   const el = document.createElement('button'); el.type = 'button'; el.className = 'ck-sw'; el.id = o.id || 'btnCoachSw';
   const sync = () => { const on = !!o.get(), l = o.label(on), h = ICON.coach + `<span>${esc(l.text)}</span><i></i>`; el.classList.toggle('on', on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } el.title = l.title || l.text; el.setAttribute('aria-label', l.title || l.text); };
-  el.addEventListener('click', () => { o.set(!o.get()); sync(); });
+  el.addEventListener('click', () => {
+    // keep the view where it is (the card's height changes)
+    const sc = window.InfoTabs && InfoTabs.scroller ? InfoTabs.scroller() : (document.scrollingElement || document.documentElement), top = sc.scrollTop;
+    const cd = document.getElementById(o.card || 'coachCard'), phone = sc !== document.scrollingElement && sc !== document.documentElement;
+    const h = cd && phone && o.get() ? cd.offsetHeight : 0;
+    o.set(!o.get()); sync();
+    // phones: switching off keeps the box as tall as it was, so the view (and the switch under the finger) stays put
+    if (cd) cd.style.minHeight = h && !o.get() ? h + 'px' : '';
+    sc.scrollTop = top; requestAnimationFrame(() => { sc.scrollTop = top; });
+  });
   // the switch lives at the top right of the coach card (its heading h3.ck-h); the card re-renders, so re-attach it each time
   const card = document.getElementById(o.card || 'coachCard');
   const place = () => { const h = card && card.querySelector('h3.ck-h'); if (h) { if (el.parentElement !== h) h.appendChild(el); } else if (!card && host && el.parentElement !== host) host.insertBefore(el, host.firstChild); };
@@ -220,5 +231,13 @@ function showBoard() {
   const dy = r.top - vt - 4;
   (isDoc ? window : sc).scrollBy({ top: dy, behavior: 'smooth' });
 }
-window.CoachKit = { css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
+// a short notice in the middle of what is on screen now (the page is not scrolled to show it)
+let flashEl = null, flashT = 0;
+function flash(msg, ms) {
+  css();
+  if (!flashEl) { flashEl = document.createElement('div'); flashEl.className = 'ck-flash'; flashEl.setAttribute('role', 'status'); document.body.appendChild(flashEl); }
+  flashEl.textContent = msg; flashEl.classList.remove('show'); void flashEl.offsetWidth; flashEl.classList.add('show');
+  clearTimeout(flashT); flashT = setTimeout(() => flashEl.classList.remove('show'), ms || 1300);
+}
+window.CoachKit = { flash, css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
 })();

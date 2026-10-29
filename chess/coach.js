@@ -691,7 +691,7 @@ function init() {
 function setOn(v) {
   settings.coach = !!v; save();
   try { const o = document.getElementById('optCoach'); if (o) o.checked = settings.coach; } catch (e) {}
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   render();
   if (v && myTurn() && !listAt(cur) && typeof analyzeCurrent === 'function') analyzeCurrent(busyToken);
 }

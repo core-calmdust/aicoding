@@ -537,7 +537,7 @@ function init() {
 }
 function setOn(v) {
   settings.coach = !!v; save();
-  if (typeof toast === 'function') toast(tx(v ? 'on' : 'off'));
+  CoachKit.flash(tx(v ? 'on' : 'off'));
   S.hov = null; redraw();
   render();
   if (v && !listAt(keyOf(cur)) && typeof analyzeCurrent === 'function' && typeof busyToken !== 'undefined') analyzeCurrent(busyToken);
