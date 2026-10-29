@@ -249,6 +249,7 @@ function renderFx() {
   if (pend >= 0 && canHumanPlay() && !pos.at(pend)) ghost(pend, pos.side, 'pend');
   else if (hover >= 0 && canHumanPlay() && !pos.at(hover) && !confirmOn() && !rvbHov) ghost(hover, pos.side, 'ghost');
   rvbFx(pos);
+  if (window.GomokuCoach) GomokuCoach.fx();   // coach: revealed / hovered candidates
 }
 function valLabel(v) {
   if (v > WINT) return { cls: 'win', big: t('lbl.win') };
@@ -347,6 +348,7 @@ function renderInfo() {
   renderReview(); renderBrandSub();
   const mode = settings.mode === 'ai' ? 'AI ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : settings.mode === 'online' ? t('ol.title') : t('ng.pvp');
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${t('rule.' + rule)}  ·  ${mode}  ·  ← → ${t('info.browse')}`;
+  if (window.GomokuCoach) GomokuCoach.render();   // coach card (coach.js)
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
 function renderGraph() {
@@ -481,7 +483,9 @@ function coachMove(idx, m) {
     request('coach', { type: 'analyze', moves: after, time: 500 }).then(r => { if (r && r.list && coachPend === pend) coachResolve(idx + 1, r.list); });
     return;
   }
-  const q = gradeVals(best, mine, m); coachQ.set(idx, { q, list, m }); coachShow(q);
+  let q = gradeVals(best, mine, m);
+  { const bk = window.GomokuCoach && GomokuCoach.bookAt(idx); if (bk && bk.list.some(x => x.m === m) && (q === 'dubious' || q === 'bad')) q = 'good'; }   // a book move (study line) is never called a mistake
+  coachQ.set(idx, { q, list, m }); coachShow(q);
 }
 function coachResolve(idx, list) {
   const c = coachPend; if (!c || c.idx + 1 !== idx || moves[c.idx] !== c.m || !list.length) return;
@@ -521,7 +525,7 @@ async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
   if (rtLive() || settings.mode === 'online') { hintList = null; return; }
-  if (!settings.eval && !settings.hint && !(coachOn() && (toMoveAt(idx) === humanColor || coachPend))) return;
+  if (!settings.eval && !settings.hint && !(coachOn() && (toMoveAt(idx) === humanColor || coachPend)) && !(window.GomokuCoach && GomokuCoach.wants(idx))) return;
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list || !list.length) return;
@@ -541,6 +545,7 @@ function onGameEnd(st) {
   if (settings.mode === 'online') return;          // online: the result dialog comes from finishOnline()
   if (moves.length !== cur || gameOverShown) return;
   gameOverShown = true;
+  recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor, aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
@@ -555,6 +560,17 @@ function onGameEnd(st) {
   const mk = settings.mode === 'ai' && !rgame ? mistakeProblems() : [];
   $('#btnMistakes').classList.toggle('hidden', !mk.length); $('#btnMistakes').textContent = t('mk.btn', { n: mk.length });
   { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle && !net) showOverlay('#resultOverlay'); }, 900); }
+}
+// 勝敗記録 (shared/record.js): games against the AI (free / rated) the player took part in; online games: finishOnline()
+let recKey = '';
+function recordGame(st) {
+  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !st || !st.over) return;
+  const k = rule + '|' + moves.join(',') + '|' + (rgame ? rgame.id : ''); if (recKey === k || (rgame && rgame.recorded)) return;
+  if (!moves.some((m, i) => toMoveAt(i) === humanColor)) return;   // resigned / abandoned before playing a move: not recorded
+  recKey = k; if (rgame) rgame.recorded = true;
+  const lv = rgame ? rgame.lv : settings.level;
+  const why = st.why === 'resign' ? t('ol.wResign') : st.why === 'time' ? t('ol.wTime') : st.why === 'abandon' ? t('ol.wResign') : t('res.why.' + st.why);
+  try { GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + (rgame ? '' : ' · ' + t('rule.' + rule)), key: (rgame ? 'rt:' + lv : 'ai:' + lv + ':' + rule), n: moves.length, why }); } catch (e) {}
 }
 // ---------------------------------------------------------------- resign (common spec, shared/resign.js)
 // The 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ); はい ends the game as your loss
@@ -1022,7 +1038,7 @@ function rtForfeit() {
   if (!rtLive()) return null;
   busyToken++; cancelWorker('ai'); thinking = 0;
   rgame.over = { over: true, winner: humanColor === P1 ? P2 : P1, why: 'abandon' };
-  const x = rtSettle(rgame.over); save();
+  const x = rtSettle(rgame.over); recordGame(rgame.over); save();
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }
@@ -2483,6 +2499,7 @@ async function finishOnline(g) {
   $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: moves.length }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(r.note ? Online.secMsg(r.note) : t('ol.unrated')));
   showOverlay('#resultOverlay');
   playChime(score >= 0.5); if (score === 1) confetti();
+  try { if (window.GameRecord && Online.moveCount(g.moves) > 0) GameRecord.add({ mode: 'online', res: score === 1 ? 'w' : score === 0 ? 'l' : 'd', side: net.me - 1, opp: nameOf(3 - net.me) || '?', key: 'ol:' + (nameOf(3 - net.me) || '?'), n: moves.length, why: whyTxt(false) }); } catch (e) {}
   dockRender();
 }
 // side-panel name: "you" tag + name (cut with … when long) + rating (always visible)
@@ -2995,6 +3012,7 @@ $('#langSel').onchange = e => {
   if ($('#lessonOverlay').classList.contains('show') && openChoiceIdx >= 0 && !$('#lessonIntroView').classList.contains('hidden')) openOpeningChoice(openChoiceIdx);
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.GomokuCoach) GomokuCoach.relabel(); if (window.GameRecord) GameRecord.relabel();
   if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
   if ($('#lessonOverlay').classList.contains('show')) { if (!$('#lessonListView').classList.contains('hidden')) openLessons(); else if (!$('#lessonIntroView').classList.contains('hidden')) openIntro(introIdx); }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
@@ -3077,6 +3095,8 @@ window.addEventListener('resize', () => renderFx());
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
+if (window.GameRecord) GameRecord.init({ game: 'gomoku', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
+if (window.GomokuCoach) GomokuCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 
 if (HB) HB.onChange(() => renderInfo());
