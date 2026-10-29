@@ -132,16 +132,20 @@ class Table {
     const flight = (parseFloat(getComputedStyle(el).getPropertyValue('--mt')) || .3) * 1000;
     if (opt.deal && anim) void this.layer.offsetWidth;
     let k = 0;
+    // deal order: row by row across the piles (like dealing by hand); the cards that stay in the stock do not wait their turn
+    const dealIx = new Map();
+    if (opt.deal && anim) [...pos.entries()].filter(([, p]) => st.L[p.pi].k !== 'stock').sort((a, b) => a[1].ci - b[1].ci || a[1].pi - b[1].pi).forEach(([id], i) => dealIx.set(id, i));
     pos.forEach((p, id) => {
       const e = this.cards.get(id);
-      if (opt.deal && anim) { const d = k++ * (opt.step || 22); e.style.transition = ''; e.style.transitionDelay = d + 'ms'; e.querySelector('.in').style.transitionDelay = (p.up ? d + flight : d) + 'ms'; }   // face-up cards turn over once they have landed
+      if (opt.deal && anim) { const i = dealIx.has(id) ? dealIx.get(id) : -1, d = Math.max(0, i) * (opt.step || 22); k = Math.max(k, i + 1); e.style.transition = ''; e.style.transitionDelay = d + 'ms'; e.querySelector('.in').style.transitionDelay = (p.up ? d + flight : d) + 'ms'; }   // face-up cards turn over once they have landed
       else if (opt.stagger && anim && opt.stagger.includes(id)) { const d = opt.stagger.indexOf(id) * (opt.step || 0) + 'ms'; e.style.transitionDelay = d; e.querySelector('.in').style.transitionDelay = d; }   // a wave of cards (auto complete)
       else if (e.style.transitionDelay) { e.style.transitionDelay = ''; e.querySelector('.in').style.transitionDelay = ''; }
       e.style.transform = `translate(${p.x}px,${p.y}px)`;
       e.style.zIndex = moved.includes(e) ? 900 + p.z : p.z;
-      if (opt.deal && anim) {   // the deck shuffles on top; each dealt card slides out from under it and flies over everything
-        if (st.L[p.pi].k === 'stock') e.style.zIndex = 950 + p.ci;
-        else { e.style.zIndex = 700 + (k - 1); const z = 1000 + p.z; clearTimeout(e._dz); e._dz = setTimeout(() => { e.style.zIndex = z; }, (k - 1) * (opt.step || 22)); }
+      if (opt.deal && anim) {   // the deck: the next card to go is on top; a dealt card flies over everything
+        const i = dealIx.has(id) ? dealIx.get(id) : -1;
+        if (i < 0) e.style.zIndex = 10 + p.ci;
+        else { e.style.zIndex = 800 - i; const z = 1000 + p.z; clearTimeout(e._dz); e._dz = setTimeout(() => { e.style.zIndex = z; }, i * (opt.step || 22)); }
       }
       e.classList.toggle('dn', !p.up);
       e.classList.toggle('sel', !!this.sel && this.sel.pi === p.pi && p.ci >= this.sel.ci);
