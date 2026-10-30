@@ -320,78 +320,47 @@ function buildDragon() {
     const g = new THREE.Group(); g.rotation.order = 'YXZ'; root.add(g);
     const mk = (p, x, y, z) => { const o = new THREE.Object3D(); o.position.set(x, y, z); p.add(o); return o; };
 
+    // 抽象化した竜: 少ないポリゴンの菱形・楔・棘だけで組み、節と節のあいだは離して浮かせる
     // ---- 胴体 ----
-    const torsoSt = [[-32, 14, 12, 0], [-18, 26, 22, 1], [-2, 32, 27, 2], [14, 30, 25, 3], [26, 19, 16, 5], [33, 12, 10, 7]];
-    g.add(fuse(loft(torsoSt, 6), C, { glass: 0.26, cage: 1.14, seed: 3 }));
-    g.add(fuse(loft([[-24, 14, 4, -9], [-6, 22, 5, -11], [12, 20, 4, -9.5], [28, 9, 3, -5]], 6), GD, { cage: false, glass: 0.45, tint: 0.5, seed: 9 })); // 腹の鱗
-    const core = new THREE.Mesh(new THREE.OctahedronGeometry(5, 0), glowM(_c(GD).multiplyScalar(1.6))); core.position.set(0, -2, 12); core.scale.set(1, 0.7, 1.5); g.add(core); // 胸の炉
-    const topAt = z => { for (let i = 0; i < torsoSt.length - 1; i++) { const a = torsoSt[i], b = torsoSt[i + 1]; if (z >= a[0] && z <= b[0]) { const t = (z - a[0]) / (b[0] - a[0]); return (a[3] + a[2] / 2) * (1 - t) + (b[3] + b[2] / 2) * t; } } return 0; };
-    // 背びれの結晶（騎手の位置はあける）
-    { const L = []; for (let z = -28; z <= 30; z += 7) { if (z > -2 && z < 16) continue; const h = 4 + (1 - Math.abs(z - 8) / 40) * 6; const c = spike(1.7, h); c.rotateX(-0.55); c.translate(0, topAt(z) - 1.2, z); L.push(c); }
-      g.add(fuse(mergeGeometries(L), M, { cage: false, glass: 0.5, tint: 0.45 })); }
-    // 脇腹の光の筋
-    [-1, 1].forEach(s => { const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints([[-28, 0], [-14, 3], [2, 4], [18, 3.5], [30, 6]].map(([z, y]) => new THREE.Vector3(s * (z < -20 ? 7 : z > 24 ? 9 : 15.5), y, z))), lineM(C, 0.75)); g.add(ln); });
+    g.add(fuse(loft([[-30, 9, 7, 0], [-6, 26, 20, 2], [6, 26, 20, 2], [30, 9, 7, 6]], 4, Math.PI / 4), C, { glass: 0.3, cage: 1.22, seed: 3 }));
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(5, 0), glowM(_c(GD).multiplyScalar(1.6))); core.position.set(0, 2, 2); core.scale.set(1, 0.8, 1.5); g.add(core); // 胸の炉
+    { const sp = spike(2.2, 12, 3); sp.rotateX(-0.7); sp.translate(0, 11, -14); g.add(fuse(sp, M, { cage: false, glass: 0.5, tint: 0.45 })); } // 背の棘ひとつ
 
-    // ---- 首と頭 ----
-    const neckBase = new THREE.Group(); neckBase.position.set(0, 9, 31); g.add(neckBase);
+    // ---- 首と頭（浮いた菱形の連なり）----
+    const neckBase = new THREE.Group(); neckBase.position.set(0, 8, 33); g.add(neckBase);
     const neck = []; let par = neckBase;
-    const nGeo = loft([[0, 13, 12], [5, 14, 13], [10, 11.5, 10.5]], 6);
-    for (let k = 0; k < 5; k++) {
-        const s = new THREE.Group(); s.userData.rigid = true; s.position.z = k ? 9 : 0; par.add(s);
-        const sc = 1 - k * 0.07;
-        const seg = fuse(nGeo, k % 2 ? V : C, { cage: false, glass: 0.25, seed: k + 2 }); seg.scale.setScalar(sc); s.add(seg);
-        const fin = spike(1.4, 5 - k * 0.4); fin.rotateX(-0.6); fin.translate(0, 6 * sc, 4); s.add(fuse(fin, M, { cage: false, glass: 0.5, tint: 0.45 }));
-        const ring = wire(new THREE.TorusGeometry(8.5 * sc, 0.6, 3, 8), k % 2 ? C : M, 0.5); ring.position.z = 9; s.add(ring);
+    const nGeo = loft([[0, 7, 7], [5, 11, 10], [10, 6, 6]], 4, Math.PI / 4);
+    for (let k = 0; k < 3; k++) {
+        const s = new THREE.Group(); s.userData.rigid = true; s.position.z = k ? 13 : 0; par.add(s);
+        const seg = fuse(nGeo, k % 2 ? V : C, { cage: false, glass: 0.3, seed: k + 2 }); seg.scale.setScalar(1 - k * 0.1); s.add(seg);
+        const ring = wire(new THREE.TorusGeometry(8 - k, 0.5, 3, 6), k % 2 ? C : M, 0.55); ring.position.z = 11.5; s.add(ring);
         neck.push(s); par = s;
     }
-    const head = new THREE.Group(); head.userData.rigid = true; head.position.z = 10; par.add(head);
-    head.add(fuse(loft([[-6, 15, 13, 1], [4, 18, 13.5, 2], [13, 14, 9, 1], [23, 9, 6, 0], [31, 4.5, 3.5, -1]], 6), C, { glass: 0.3, cage: 1.18, seed: 4 }));
-    const jaw = new THREE.Group(); jaw.userData.rigid = true; jaw.position.set(0, -3.5, 2); head.add(jaw);
-    jaw.add(fuse(loft([[0, 12, 5, -2], [13, 9.5, 4, -3], [26, 3.5, 2.2, -3]], 4, Math.PI / 4), V, { cage: false, glass: 0.3 }));
-    { const T = []; for (let k = 0; k < 6; k++) { [-1, 1].forEach(s => { const t = spike(0.6, 2.4, 3); t.rotateX(Math.PI); t.translate(s * (4.2 - k * 0.45), -0.6, 8 + k * 3.2); T.push(t); const u = spike(0.55, 2, 3); u.translate(s * (3.6 - k * 0.4), -3.6, 6 + k * 3); T.push(u); }); }
-      const tm = gm(mergeGeometries(T), 0xfff0e0); tm.scale.setScalar(0.98); head.add(tm); }
-    const maw = new THREE.Mesh(new THREE.BoxGeometry(5, 1.6, 16), glowM(_c(GD).multiplyScalar(1.4))); maw.position.set(0, -2.6, 16); head.add(maw); // 口の中の火
-    const eyes = [-1, 1].map(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(2.3, 0), glowM(_c(GD).multiplyScalar(2))); e.position.set(s * 6.6, 4.4, 11); e.scale.set(0.7, 0.55, 1.9); e.rotation.y = s * 0.25; head.add(e); return e; });
-    [-1, 1].forEach(s => { // 眉の刃・角・頬のひれ
-        const brow = loft([[0, 3.2, 3, 0, 0], [8, 2.6, 2.4, 1.5, s * 1.4], [16, 0.6, 0.6, 3, s * 2.6]], 4, Math.PI / 4); brow.rotateY(Math.PI); brow.translate(s * 6.8, 7.2, 16);
-        head.add(fuse(brow, M, { cage: false, glass: 0.35, tint: 0.4 }));
-        const horn = loft([[0, 5.2, 5.2, 0, 0], [9, 4.2, 4.2, 3.5, s * 2.5], [19, 3, 3, 5, s * 5], [28, 1.6, 1.6, 4, s * 6.5], [34, 0.3, 0.3, 2, s * 7]], 6);
-        const hg = new THREE.Group(); hg.add(fuse(horn, W, { cage: 1.25, glass: 0.3, tint: 0.2 })); hg.position.set(s * 5.5, 8, -1); hg.rotation.set(-0.35, Math.PI + s * 0.18, 0); head.add(hg);
-        const horn2 = loft([[0, 3, 3, 0, 0], [8, 2, 2, 2, s * 2], [14, 0.4, 0.4, 2.5, s * 3.5]], 4, Math.PI / 4);
-        const h2 = new THREE.Group(); h2.add(fuse(horn2, W, { cage: false, glass: 0.3, tint: 0.2 })); h2.position.set(s * 7.5, 2, -2); h2.rotation.set(0.15, Math.PI + s * 0.45, 0); head.add(h2);
-        const frill = []; for (let k = 0; k < 3; k++) { const f = spike(0.9, 7 - k * 1.4, 3); f.rotateZ(s * (1.25 + k * 0.18)); f.rotateY(s * 0.3); f.translate(s * 7.5, -1 + k * 2.4, 1 - k * 2); frill.push(f); }
-        head.add(fuse(mergeGeometries(frill), V, { cage: false, glass: 0.5, tint: 0.45 }));
-    });
-    { const cr = []; for (let k = 0; k < 4; k++) { const c = spike(1.2, 6 - k, 3); c.rotateX(-0.9); c.translate(0, 8.5 - k * 0.6, 6 - k * 4.5); cr.push(c); } head.add(fuse(mergeGeometries(cr), M, { cage: false, glass: 0.5, tint: 0.45 })); }
+    const head = new THREE.Group(); head.userData.rigid = true; head.position.z = 14; par.add(head);
+    head.add(fuse(loft([[-4, 12, 9, 2], [7, 15, 10, 2], [28, 1.5, 1.5, -1]], 4, Math.PI / 4), C, { glass: 0.35, cage: 1.3, seed: 4 }));
+    const jaw = new THREE.Group(); jaw.userData.rigid = true; jaw.position.set(0, -3, 3); head.add(jaw);
+    jaw.add(fuse(loft([[0, 9, 4, -1], [20, 1, 1, -2]], 3, -Math.PI / 2), V, { cage: false, glass: 0.4 }));
+    const maw = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 10), glowM(_c(GD).multiplyScalar(1.4))); maw.position.set(0, -2.4, 13); head.add(maw);
+    const eyes = [-1, 1].map(s => { const e = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), glowM(_c(GD).multiplyScalar(2))); e.position.set(s * 5.5, 4.5, 9); e.scale.set(0.7, 0.5, 2); head.add(e); return e; });
+    [-1, 1].forEach(s => { const horn = loft([[0, 4, 4, 0, 0], [18, 2.4, 2.4, 4, s * 4], [34, 0.3, 0.3, 4, s * 8]], 3, Math.PI / 2); horn.rotateY(Math.PI); horn.rotateX(-0.3); horn.translate(s * 4.5, 7, 0); head.add(fuse(horn, W, { cage: false, glass: 0.35, tint: 0.2 })); });
     const eyeTrails = [trail(14, GD, 0.55), trail(14, GD, 0.55)];
 
-    // ---- 脚（たたんだ後ろ脚・前脚）----
-    [-1, 1].forEach(s => {
-        const leg = new THREE.Group(); leg.position.set(s * 12, -5, -14); leg.rotation.y = s * -0.12; g.add(leg);
-        leg.add(fuse(loft([[0, 11, 12, 0], [-9, 9, 10, -4], [-16, 6, 7, -8], [-22, 4.5, 5, -6], [-30, 3.2, 3.2, -5]], 6), s > 0 ? C : C, { cage: false, glass: 0.25, seed: 6 }));
-        const cl = []; for (let k = -1; k <= 1; k++) { const c = spike(0.8, 5, 3); c.rotateX(Math.PI / 2 + 0.6); c.translate(k * 1.6, -6, -30); cl.push(c); }
-        leg.add(gm(mergeGeometries(cl), 0xfff0e0));
-        const arm = new THREE.Group(); arm.position.set(s * 10, -8, 20); g.add(arm);
-        arm.add(fuse(loft([[0, 6, 6, 0], [5, 4.6, 4.6, -5], [10, 3.4, 3.4, -7], [15, 2.2, 2.2, -6]], 6), V, { cage: false, glass: 0.25 }));
-    });
-
-    // ---- 翼 ----
+    // ---- 翼（細い骨＋大きな膜）----
     const FING = [{ L: 100, a: 0.02 }, { L: 92, a: 0.5 }, { L: 80, a: 0.96 }, { L: 66, a: 1.4 }]; // 大きな翼
     const memMat = new THREE.MeshLambertMaterial({ polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2, color: 0x2a1a58, emissive: 0x2a0c50, emissiveIntensity: 0.7, flatShading: true, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false });
     const memGlass = glass(V, 0.16);
+    const bone = (L, w, col) => { const b = fuse(loft([[0, w, w], [L, w * 0.35, w * 0.35]], 3, Math.PI / 2), col, { cage: false, glass: 0.3 }); return b; };
     const wings = [-1, 1].map(s => {
-        const sh = new THREE.Group(); sh.userData.rigid = true; sh.rotation.order = 'ZYX'; sh.position.set(s * 12, 13, 13); g.add(sh);
-        const hum = fuse(loft([[0, 10, 9], [20, 8, 7], [40, 5.5, 5.5]], 6), C, { cage: 1.2, glass: 0.3, seed: 8 }); hum.rotation.y = s * Math.PI / 2; sh.add(hum);
-        const shArm = spike(1.8, 9); shArm.rotateZ(-s * 0.5); shArm.translate(s * 4, 4, 0); sh.add(fuse(shArm, M, { cage: false, glass: 0.5, tint: 0.45 })); // 肩の棘
+        const sh = new THREE.Group(); sh.userData.rigid = true; sh.rotation.order = 'ZYX'; sh.position.set(s * 11, 12, 12); g.add(sh);
+        const hum = bone(40, 7, C); hum.rotation.y = s * Math.PI / 2; sh.add(hum);
         const el = new THREE.Group(); el.userData.rigid = true; el.rotation.order = 'ZYX'; el.position.x = s * 40; sh.add(el);
-        const fore = fuse(loft([[0, 6, 6], [26, 4.6, 4.6], [50, 3.6, 3.6]], 6), V, { cage: 1.22, glass: 0.3, seed: 2 }); fore.rotation.y = s * Math.PI / 2; el.add(fore);
+        const fore = bone(50, 4.5, V); fore.rotation.y = s * Math.PI / 2; el.add(fore);
         el.add(gm(new THREE.OctahedronGeometry(2.6, 0), C, 1.4));
         const wr = new THREE.Group(); wr.userData.rigid = true; wr.rotation.order = 'ZYX'; wr.position.x = s * 50; el.add(wr);
-        const claw = spike(1.3, 8, 3); claw.rotateX(Math.PI / 2 - 0.3); claw.rotateZ(s * 0.3); wr.add(gm(claw, 0xfff0e0));
-        wr.add(gm(new THREE.OctahedronGeometry(2.4, 0), GD, 1.5));
+        wr.add(gm(new THREE.OctahedronGeometry(2.6, 0), GD, 1.5));
         const fingers = FING.map((F, i) => {
             const fg = new THREE.Group(); fg.userData.rigid = true; wr.add(fg);
-            const b = fuse(loft([[0, 4, 3.6], [F.L * 0.45, 2.9, 2.5], [F.L * 0.85, 1.6, 1.4], [F.L, 0.4, 0.4]], 4, Math.PI / 4), i ? V : C, { cage: false, glass: 0.3, seed: i + 11 }); b.rotation.y = s * Math.PI / 2; fg.add(b);
+            const b = bone(F.L, 2.6, i ? V : C); b.rotation.y = s * Math.PI / 2; fg.add(b);
             const tip = mk(fg, s * F.L, 0, 0);
             if (i === 0) { const tg = gm(new THREE.OctahedronGeometry(2, 0), C, 1.8); tg.position.copy(tip.position); fg.add(tg); }
             return { fg, tip, a: F.a };
@@ -405,55 +374,45 @@ function buildDragon() {
         const lead = polyLine(4, 0xd8fbff, 0.95), trailE = polyLine(9, M, 0.85), vein = polyLine(5, V, 0.5), vein2 = polyLine(4, C, 0.35);
         g.add(lead, trailE, vein, vein2);
         return { s, sh, el, wr, fingers, memGeo, lead, trailE, vein, vein2,
-            S: mk(sh, 0, 0, 0), E: mk(el, 0, 0, 0), W: mk(wr, 0, 0, 0), B: mk(g, s * 8, 5, -36),
+            S: mk(sh, 0, 0, 0), E: mk(el, 0, 0, 0), W: mk(wr, 0, 0, 0), B: mk(g, s * 6, 4, -30),
             tipTrail: trail(12, C, 0.5) };
     });
 
-    // ---- 尾 ----
-    const tailBase = new THREE.Group(); tailBase.position.set(0, 3, -31); tailBase.rotation.y = Math.PI; g.add(tailBase);
+    // ---- 尾（離れて浮かぶ菱形の連なり）----
+    const tailBase = new THREE.Group(); tailBase.position.set(0, 2, -33); tailBase.rotation.y = Math.PI; g.add(tailBase);
     const tail = []; par = tailBase;
-    const tGeo = loft([[0, 12, 10], [5, 12, 10], [10, 9.5, 8]], 6);
+    const tGeo = loft([[0, 5, 5], [6, 10, 8], [12, 4, 4]], 4, Math.PI / 4);
     let tl = 1;
-    for (let k = 0; k < 12; k++) {
-        const s = new THREE.Group(); s.userData.rigid = true; s.position.z = k ? 9.2 * tl / 0.93 : 0; par.add(s);
-        const seg = fuse(tGeo, k % 2 ? V : C, { cage: false, glass: 0.22, seed: k + 20 }); seg.scale.setScalar(tl); s.add(seg);
-        if (k % 2 === 0) { const f = spike(1.3, 5 * tl + 1); f.rotateX(0.55); f.translate(0, 5 * tl, 3 * tl); s.add(fuse(f, M, { cage: false, glass: 0.5, tint: 0.45 })); }
-        tail.push(s); par = s; tl *= 0.92;
+    for (let k = 0; k < 6; k++) {
+        const s = new THREE.Group(); s.userData.rigid = true; s.position.z = k ? 15 * tl / 0.86 : 0; par.add(s);
+        const seg = fuse(tGeo, k % 2 ? V : C, { cage: false, glass: 0.3, seed: k + 20 }); seg.scale.setScalar(tl); s.add(seg);
+        tail.push(s); par = s; tl *= 0.86;
     }
-    const tip = new THREE.Group(); tip.userData.rigid = true; tip.position.z = 9 * tl; par.add(tip);
-    [-1, 1].forEach(s => { const b = loft([[0, 2, 1.2, 0, 0], [6, 3.6, 1.2, 0, s * 3.5], [15, 0.4, 0.4, 0, s * 2]], 4, Math.PI / 4); tip.add(fuse(b, M, { cage: false, glass: 0.6, tint: 0.5 })); });
+    const tip = new THREE.Group(); tip.userData.rigid = true; tip.position.z = 15 * tl; par.add(tip);
+    tip.add(fuse(loft([[0, 2, 1, 0], [8, 12, 1, 0], [20, 0.4, 0.4, 0]], 4, Math.PI / 4), M, { cage: false, glass: 0.6, tint: 0.5 }));
     const tipG = gm(new THREE.OctahedronGeometry(2.2, 0), M, 2); tipG.position.z = 3; tip.add(tipG);
     const tailTrail = trail(18, M, 0.5);
-    const tipM = mk(tip, 0, 0, 6);
+    const tipM = mk(tip, 0, 0, 10);
 
-    // ---- 騎手 ----
-    const saddle = fuse(loft([[-9, 15, 4, 15.6], [0, 17, 5.5, 16.6], [9, 14, 4, 16]], 6), GD, { cage: false, glass: 0.3, tint: 0.45 }); g.add(saddle);
-    const rider = new THREE.Group(); rider.position.set(0, 18.5, 3); g.add(rider);
+    // ---- 騎手（光る結晶の人影）----
+    const rider = new THREE.Group(); rider.position.set(0, 17, 4); g.add(rider);
     const hip = new THREE.Group(); rider.add(hip);
-    hip.add(fuse(loftY([[0, 8, 6], [4, 9, 6.5]], 6), W, { cage: false, glass: 0, tint: 0.15, edgeOp: 0.55 }));
-    const chest = new THREE.Group(); chest.userData.rigid = true; chest.position.y = 3.5; chest.rotation.x = 0.45; hip.add(chest);
-    chest.add(fuse(loftY([[0, 8.5, 6], [6, 10.5, 7], [11, 9.5, 6.5], [12.5, 4, 4]], 6), W, { cage: false, glass: 0.12, tint: 0.15, edgeOp: 0.55 }));
-    chest.add(fuse(loftY([[2, 9, 7.6], [9, 10, 7.8]], 6), COL.C, { cage: false, glass: 0.35, tint: 0.5, edgeOp: 0.7 })); // 胸当て
-    const rHead = new THREE.Group(); rHead.userData.rigid = true; rHead.position.y = 13; chest.add(rHead);
-    rHead.add(fuse(loftY([[0, 4, 4], [3, 7, 7.4], [7, 6.6, 7], [9.5, 2.5, 2.5]], 8, Math.PI / 8), W, { cage: 1.25, glass: 0.12, tint: 0.15, edgeOp: 0.6 }));
-    const visor = gm(new THREE.BoxGeometry(6.4, 1.3, 1), C, 2); visor.position.set(0, 4.6, 3.3); rHead.add(visor);
-    const crest = loft([[0, 1, 2.5, 0], [5, 0.8, 4, 2], [10, 0.3, 0.6, 3]], 4, Math.PI / 4); crest.rotateY(Math.PI); crest.translate(0, 8, 2); rHead.add(fuse(crest, COL.M, { cage: false, glass: 0.5, tint: 0.5 }));
-    const hands = [-1, 1].map(s => {
-        const sh = new THREE.Group(); sh.position.set(s * 5, 10, 0); chest.add(sh);
-        const a = fuse(loft([[0, 3, 3, 0, 0], [7, 2.6, 2.6, -3.5, s * 0.5], [13, 2.2, 2.2, -4.5, -s * 0.6]], 6), W, { cage: false, glass: 0, tint: 0.15, edgeOp: 0.55 }); sh.add(a);
-        const h = new THREE.Mesh(new THREE.OctahedronGeometry(1.5, 0), glowM(_c(GD).multiplyScalar(1.4))); h.position.set(-s * 0.6, -4.5, 13); sh.add(h);
-        return h;
-    });
-    [-1, 1].forEach(s => { const lg = fuse(loft([[0, 4, 4.5, 0, 0], [6, 3.5, 3.6, -1.5, s * 3], [10, 3, 3, -6, s * 5.5], [14, 2.4, 2.8, -8, s * 6]], 6), W, { cage: false, glass: 0, tint: 0.15, edgeOp: 0.55 }); lg.position.set(s * 2, 1, 0); hip.add(lg); });
+    hip.add(wire(new THREE.TorusGeometry(7, 0.4, 3, 6).rotateX(Math.PI / 2), GD, 0.6)); // 鞍のかわりの光の輪
+    const chest = new THREE.Group(); chest.userData.rigid = true; chest.position.y = 1; chest.rotation.x = 0.45; hip.add(chest);
+    chest.add(fuse(loftY([[0, 2, 2], [6, 8, 6], [13, 3, 3]], 4, Math.PI / 4), W, { cage: 1.35, glass: 0.2, tint: 0.15, edgeOp: 0.7 }));
+    const rHead = new THREE.Group(); rHead.userData.rigid = true; rHead.position.y = 14; chest.add(rHead);
+    rHead.add(fuse(new THREE.IcosahedronGeometry(3.6, 0), W, { cage: 1.4, glass: 0.2, tint: 0.15, edgeOp: 0.7 }));
+    const visor = gm(new THREE.BoxGeometry(5, 1, 1), C, 2); visor.position.set(0, 0.5, 3.2); rHead.add(visor);
+    const hands = [-1, 1].map(s => { const h = new THREE.Mesh(new THREE.OctahedronGeometry(1.3, 0), glowM(_c(GD).multiplyScalar(1.4))); h.position.set(s * 4, 7, 4); chest.add(h); return h; });
     const reins = [polyLine(2, GD, 0.85), polyLine(2, GD, 0.85)]; g.add(...reins);
-    const reinAnchor = [-1, 1].map(s => mk(neck[1], s * 6, 3, 4));
+    const reinAnchor = [-1, 1].map(s => mk(neck[1], s * 5, 3, 4));
     // 首巻き（ひるがえるリボン）
     const SC = 14, scGeo = new THREE.BufferGeometry();
     scGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SC * 2 * 3), 3));
     { const idx = []; for (let i = 0; i < SC - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } scGeo.setIndex(idx); }
     const scarf = new THREE.Mesh(scGeo, glass(COL.M, 0.45)); scarf.frustumCulled = false; g.add(scarf);
     const scarfEdge = polyLine(SC, 0xffb8f0, 0.9); g.add(scarfEdge);
-    const scarfRoot = mk(rHead, 0, 1, -2.5);
+    const scarfRoot = mk(rHead, 0, -1, -2.5);
 
     // ---- 加護の輪（羽ばたくと光る）----
     const aura = new THREE.Group(); aura.position.set(0, 4, 4); g.add(aura);
@@ -500,7 +459,7 @@ function buildDragon() {
         g.rotation.z = dead ? g.rotation.z + dt * 5 : Math.sin(t * 1.3) * 0.05;
         g.position.y = -a * 8; // 打ち下ろしで体が持ち上がる
         // 首: S字、頭は視線を保つ
-        const nb = [-0.62, -0.22, 0.08, 0.28, 0.32];
+        const nb = [-0.55, 0.05, 0.3];
         neck.forEach((n, k) => { n.rotation.x = nb[k] + Math.sin(t * 2.2 - k * 0.6) * 0.04 + (dead ? 0.3 : 0); n.rotation.y = Math.sin(t * 1.1 - k * 0.5) * 0.04; });
         const sum = nb.reduce((m, v) => m + v, 0);
         head.rotation.x = -(sum + g.rotation.x) * 0.75 + 0.1;
@@ -617,27 +576,44 @@ function addMorph(geo, per, cy) {
     }
     geo.setAttribute('aC', new THREE.BufferAttribute(C, 3)); geo.setAttribute('aD', new THREE.BufferAttribute(D, 3)); geo.setAttribute('aR', new THREE.BufferAttribute(Rr, 1));
 }
-function morphMat(base, u) {
+// 混沌の状態（mk=1）では、破片が回転しながら洞窟のまわりを渦を巻いて漂い続ける。uF は消えていく古い世界用
+const uTime = { value: 0 };
+const MORPH_V = `
+	float r2 = fract(aR * 7.31);
+	float mk = clamp(uK * 2.2 - aR * 1.2, 0.0, 1.0); mk = mk * mk * (3.0 - 2.0 * mk); vK = mk;
+	vec3 loc = transformed - aC;
+	float tb = mk * (uT * (1.2 + r2 * 3.0) + aR * 6.2832), tc = cos(tb), ts = sin(tb);
+	loc = vec3(tc * loc.x - ts * loc.z, loc.y * mix(1.0, tc, mk), ts * loc.x + tc * loc.z) * mix(1.0, 0.6, mk) * (1.0 - uF);
+	float an = mk * ((aR - 0.5) * 5.0 + uT * (0.5 + r2 * 0.9) * (aR < 0.5 ? -1.0 : 1.0));
+	vec2 dd = vec2(cos(an) * aD.x - sin(an) * aD.y, sin(an) * aD.x + cos(an) * aD.y);
+	vec3 wob = vec3(sin(uT * 1.7 + aR * 40.0), cos(uT * 1.3 + r2 * 40.0), sin(uT * 1.1 + aR * 17.0)) * 28.0 * mk;
+	transformed = aC + loc + vec3(dd, aD.z) * mk + wob;`;
+function morphMat(base, u, f) {
     const m = base.clone(); m.userData = {};
     const add = base.blending === THREE.AdditiveBlending;
     m.onBeforeCompile = sh => {
-        sh.uniforms.uK = u;
-        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tfloat mk = clamp(uK * 1.8 - aR * 0.8, 0.0, 1.0); mk = mk * mk * (3.0 - 2.0 * mk); vK = mk;\n\tfloat an = mk * (aR - 0.5) * 6.0; vec2 dd = vec2(cos(an) * aD.x - sin(an) * aD.y, sin(an) * aD.x + cos(an) * aD.y);\n\ttransformed = mix(transformed, aC, mk * 0.8) + vec3(dd, aD.z) * mk;');
-        sh.fragmentShader = 'varying float vK;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\t' + (add ? 'diffuseColor.rgb *= 1.0 - vK * vK;' : ''));
+        sh.uniforms.uK = u; sh.uniforms.uF = f; sh.uniforms.uT = uTime;
+        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nuniform float uF;\nuniform float uT;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + MORPH_V);
+        sh.fragmentShader = 'varying float vK;\nuniform float uF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\t' + (add ? 'diffuseColor.rgb *= (1.0 - uF) * (1.0 - vK * 0.35);' : ''));
     };
-    m.customProgramCacheKey = () => 'morph-' + (add ? 'a' : 'o');
+    m.customProgramCacheKey = () => 'morph2-' + (add ? 'a' : 'o');
     return m;
 }
 function morphify(grp, cy) {
-    const u = { value: 1 }, mats = new Map();
+    const u = { value: 1 }, f = { value: 0 }, mats = new Map();
     grp.traverse(o => { if ((o.isMesh || o.isLineSegments) && o.material.userData.shared) {
         addMorph(o.geometry, o.isLineSegments ? 2 : 3, cy);
-        if (!mats.has(o.material)) mats.set(o.material, morphMat(o.material, u)); o.material = mats.get(o.material);
+        if (!mats.has(o.material)) mats.set(o.material, morphMat(o.material, u, f)); o.material = mats.get(o.material);
         o.geometry.computeBoundingSphere(); o.geometry.boundingSphere.radius += 330; } }); // 散った破片も映るよう判定を広げる
-    return u;
+    u.f = f; return u;
 }
-const MSPD = 1.9;
-function tickK(c, dt) { if (c.delay > 0) { c.delay -= dt; return; } c.k += Math.max(-dt * MSPD, Math.min(dt * MSPD, c.to - c.k)); c.u.value = c.k; }
+// 崩れるのは速く、混沌から組み上がるのはゆっくり（破片ごとに時間差があるので徐々にステージになる）
+const M_OUT = 2.4, M_IN = 0.62, M_FADE = 0.9;
+function tickK(c, dt) {
+    if (c.delay > 0) { c.delay -= dt; return; }
+    const sp = c.to > c.k ? M_OUT : M_IN; c.k += Math.max(-dt * sp, Math.min(dt * sp, c.to - c.k)); c.u.value = c.k;
+    if (c.to === 1 && c.k >= 1) { c.fade = Math.min(1, (c.fade || 0) + dt / M_FADE); c.u.f.value = c.fade; } // 混沌のまま漂ってから消える
+}
 const dying = [];
 const waveDelay = dd => Math.min(0.9, Math.abs(dd) * 0.00034); // 竜の位置から前後へ広がる波
 
@@ -717,7 +693,7 @@ function buildChunk(ci) {
     const cy = cave((ci + 0.5) * CH).cy, u = morphify(grp, cy);
     scene.add(grp);
     const mid = (ci + 0.5) * CH;
-    return { obj: grp, u, k: 1, to: 0, delay: S.t < S.evoUntil ? 0.12 + waveDelay(mid - S.d) * 0.5 : 0 }; // 崩れる世界と同時に組み上がる
+    return { obj: grp, u, k: 1, to: 0, delay: S.t < S.evoUntil ? 0.2 + waveDelay(mid - S.d) * 0.4 : 0 }; // 崩れた破片の混沌の中から組み上がる
 }
 function disposeObj(o) {
     scene.remove(o);
@@ -787,6 +763,31 @@ function spawnGates(d) {
     }
 }
 const gateSpacing = () => Math.max(480, 690 - gateIdx * 5);
+
+// =====================================================================
+// 洞窟の外側の混沌: 内と外の区別はなく、遊んでいる場所だけが形を保っている。
+// 外はポリゴンの破片と散らばった線が渦を巻いて漂い続ける（カメラが引くと見える）
+// =====================================================================
+const FT = IS_MOBILE ? 500 : 1300, FLN = IS_MOBILE ? 500 : 1300;
+const field = (() => {
+    const g = new THREE.Group(), mk = (n, per) => { const geo = new THREE.BufferGeometry(), N = n * per;
+        ['position', 'aC', 'aD', 'color'].forEach(k => geo.setAttribute(k, new THREE.BufferAttribute(new Float32Array(N * 3), 3))); geo.setAttribute('aR', new THREE.BufferAttribute(new Float32Array(N), 1)); return geo; };
+    const tg = mk(FT, 3), lg = mk(FLN, 2);
+    const fill = (geo, n, per, sz) => { const P = geo.attributes.position.array, C = geo.attributes.aC.array, D = geo.attributes.aD.array, Rr = geo.attributes.aR.array;
+        for (let i = 0; i < n; i++) {
+            const z = 500 - Math.random() * 3000, a = Math.random() * Math.PI * 2, r = 240 + Math.pow(Math.random(), 0.8) * 1100, rr = Math.random(), s0 = sz * (0.4 + Math.random());
+            const dx = Math.cos(a) * r * 1.2, dy = Math.sin(a) * r * 0.85;
+            for (let j = 0; j < per; j++) { const v = i * per + j;
+                C.set([0, 0, z], v * 3); D.set([dx, dy, (Math.random() - 0.5) * 120], v * 3); Rr[v] = rr;
+                P.set([(Math.random() - 0.5) * s0, (Math.random() - 0.5) * s0, z + (Math.random() - 0.5) * s0 * 1.6], v * 3); } } };
+    fill(tg, FT, 3, 34); fill(lg, FLN, 2, 90);
+    const u = { value: 1 }, f = { value: 0 };
+    const tm = new THREE.Mesh(tg, morphMat(SM.flat, u, f)), lm = new THREE.LineSegments(lg, morphMat(SM.line, u, f));
+    tm.frustumCulled = lm.frustumCulled = false; g.add(tm, lm); scene.add(g);
+    g.recolor = () => { const paintC = (geo, n, per, k) => { const c = geo.attributes.color.array; for (let i = 0; i < n; i++) { const col = lineCol(Math.random(), i).multiplyScalar(k * (0.5 + Math.random() * 0.7)); for (let j = 0; j < per; j++) c.set([col.r, col.g, col.b], (i * per + j) * 3); } geo.attributes.color.needsUpdate = true; };
+        paintC(tg, FT, 3, 0.55); paintC(lg, FLN, 2, 0.9); };
+    g.recolor(); return g;
+})();
 
 // =====================================================================
 // 粒子・演出
@@ -912,9 +913,9 @@ function resetWorld() {
     dragon.g.rotation.set(0, 0, 0); dragon.resetTrails(); S.evoUntil = 0;
     updateChunks(S.d, 99);
 }
-function applyPalInstant() { bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); }
+function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); }
 // 10ゲートごとの進化: 竜は中空に浮かんで無敵。世界が分解して虚空になり、新しい形で組み上がってからゲーム再開
-const EVO_T = 1.5;
+const EVO_T = 2.0;
 function evolve() {
     S.stage++; setPal(S.stage);
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.evoY = S.y; S.lastAutoFlap = 0;
@@ -926,7 +927,8 @@ function evolve() {
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
         const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.5 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; if (gt.ring) gt.ring.visible = false; dying.push(old);
         if (gt.passed) { gates.splice(i, 1); continue; }
-        buildGate(gt); gt.delay = 0.25 + old.delay; }
+        buildGate(gt); gt.delay = 0.35 + old.delay; }
+    field.recolor();
     const p0 = new THREE.Vector3(0, S.y, -S.d); [PAL.cry[0], PAL.cry[1]].forEach((c, i) => setTimeout(() => burstRing(p0.clone().setZ(-S.d - 60), c, 1.6 + i * 0.5, false, 0.45, 3), i * 120));
     const el = document.getElementById('stage'); el.style.setProperty('--sc', '#' + _c(PAL.line ? PAL.line[0] : 0xffffff).getHexString());
     document.getElementById('stN').textContent = 'STAGE ' + (S.stage + 1); document.getElementById('stM').textContent = PAL.name + (S.stage >= PALS.length ? ' +' : '');
@@ -1000,24 +1002,29 @@ function pollPads() {
 
 // ---- メインループ ----
 resetWorld();
-let last = performance.now(), acc = 0;
+let last = -1; const dtHist = [];
 const H = 1 / 120;
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    // フレーム間隔: 画面のリフレッシュ間隔（直近の中央値）にそろえて、時刻のゆらぎによるカクつきを消す
+    const raw = last < 0 ? 1 / 60 : (now - last) / 1000; last = now;
+    dtHist.push(raw); if (dtHist.length > 31) dtHist.shift();
+    const ref = [...dtHist].sort((a, b) => a - b)[dtHist.length >> 1];
+    const dt = Math.min(0.05, Math.abs(raw - ref) < ref * 0.35 ? ref : raw);
     pollPads();
-    S.t += dt; if (S.mode === 'dead') S.deadT += dt;
-    acc += dt; while (acc >= H) { step(H); acc -= H; }
+    S.t += dt; uTime.value = S.t; if (S.mode === 'dead') S.deadT += dt;
+    { const n = Math.max(1, Math.ceil(dt / H - 1e-6)); for (let i = 0; i < n; i++) step(dt / n); } // 毎フレーム同じ量だけ進める（端数の持ち越しによるガタつきをなくす）
     if (S.mode !== 'title') spawnGates(S.d);
     updateChunks(S.d, 1);
     for (const [, c] of chunks) tickK(c, dt);
-    for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].k >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
+    for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].fade >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
     // 古いゲートを片付ける
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
     gates.forEach(gt => { tickK(gt, dt); const vis = gt.k < 0.35; gt.bars.forEach(b => b.visible = vis); gt.veil.visible = vis; if (gt.ring) gt.ring.visible = vis; if (gt.flash > 0) { gt.flash = Math.max(0, gt.flash - dt * 2); } const k = 1.6 + gt.flash * 3; gt.bars.forEach(b => b.material.color.setHex(gt.stage ? 0xffffff : gt.col).multiplyScalar(gt.stage ? k * 0.9 : k)); if (gt.ring) gt.ring.rotation.y = S.t * 0.8; gt.veil.material.opacity = 0.035 + gt.flash * 0.25; });
     // 竜
     dragon.root.position.set(0, S.y, -S.d);
+    field.position.set(0, cave(S.d).cy, -S.d);
     dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' });
     // カメラ: 後ろ上から（洞窟からはみ出さない）
     const eu = S.mode === 'evo' ? Math.min(1, S.evoT / EVO_T) : 0, sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
