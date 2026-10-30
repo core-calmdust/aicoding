@@ -1953,7 +1953,7 @@ function step(h) {
     // 地形のギミックに当たると即ゲームオーバー
     for (const gt of gates) {
         if (gt.passed) continue;
-        if (Math.abs(S.d - gt.d) < GT / 2 + HIT_R) { const v = gt.axis === 'x' ? S.x : S.y; if (v + HIT_R > gt.top || v - HIT_R < gt.bot) { gameOver(); return; } }
+        if (Math.abs(S.d - gt.d) < GT / 2 + HIT_R) { const v = gt.axis === 'x' ? S.x : S.y; if (!gt.hit && (v + HIT_R > gt.top || v - HIT_R < gt.bot)) { gt.hit = true; boom(new THREE.Vector3(S.x, S.y, -S.d), [PAL.gate[0], 0xffffff], 16); S.shake = 0.8; damage(); if (S.mode !== 'play') return; } } // 壁は1ダメージ（同じ壁で何度も受けない）
         if (S.d - HIT_R > gt.d + GT / 2) gt.passed = true;
     }
 }
@@ -2168,7 +2168,7 @@ function frame(now) {
     updateItems(dt); updateHexGate(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.7 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.7秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
-    if (S.mode !== 'title') spawnGates(S.d);
+    if (S.mode !== 'title') { if (S.stage < 2) nextGateD = Math.max(nextGateD, S.d + VIEW); spawnGates(S.d); } // 壁のギミックは3面から
     updateChunks(S.d, 1);
     for (const [, c] of chunks) tickK(c, dt);
     for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].fade >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
