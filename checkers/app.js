@@ -40,7 +40,7 @@ const capCount = m => E.popc(mCap(m));
 
 // ====================================================================== state
 const STORE = 'aicoding-checkers';
-const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'classic', pcs: 'ebony' };
+const settings = { mode: 'ai', rule: 'english', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'tournament', pcs: 'ebony' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -856,11 +856,11 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 32 chars, side } ; o: { cls, marks: {sq: 'ring'|'ng'|'x'|'dash'}, arrows: [[squares...]], flip, click, sel, dest: [], last, nums }
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['classic', 'tournament', 'walnut', 'marble', 'navy'], PC_KEYS = ['ebony', 'red', 'redwhite', 'mono'];
+const BD_KEYS = ['tournament', 'classic', 'walnut', 'marble', 'navy'], PC_KEYS = ['ebony', 'red', 'redwhite', 'mono'];
 const BD_PAL = { classic: ['#2c5440', '#d3be93'], tournament: ['#232120', '#b8322a'], walnut: ['#5c3a20', '#dcc08f'], marble: ['#5d6368', '#e4e1db'], navy: ['#1d3c72', '#c0cbdc'] };
 const PC_PAL = { ebony: [['#3b302b', '#0d0a09'], ['#efe5cf', '#8f8166']], red: [['#3b302b', '#0d0a09'], ['#d9473a', '#5a0f0a']], redwhite: [['#d9473a', '#5a0f0a'], ['#efe5cf', '#8f8166']], mono: [['#262626', '#000'], ['#f6f6f4', '#86867f']] };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'classic';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'tournament';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'ebony';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
