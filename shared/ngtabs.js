@@ -25,6 +25,9 @@ const CSS = `
 .ngt-on .ngt-hide, .modal.ngt-on .ngt-hide, .modal.ngt-on :is(.ng-cols,.ng-col).ngt-hide{display:none!important}
 /* one spacing everywhere (the gap between two rows of settings): between the blocks, around the tabs and inside the frame */
 .modal.ngt-on{--ngt-g:6px;padding:12px!important}
+/* the dialog sits at the bottom of the screen, so the tabs and the buttons stay in the same place whichever tab is open */
+#newOverlay:has(> .modal.ngt-on){align-items:flex-end!important;padding-bottom:max(10px, env(safe-area-inset-bottom))!important}
+#newOverlay > .modal.ngt-on{margin-top:auto!important;margin-bottom:0!important}
 .modal.ngt-on h2{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
@@ -50,6 +53,7 @@ function init() {
     // design: keep the design blocks (and the boxes that hold them), the title, the tabs and the action buttons
     const walk = parent => [...parent.children].forEach(el => {
       if (el.matches('[data-ng=design]') || keep(el) || el.matches('script,style')) return;
+      if (bar.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) return;   // (notes under the buttons stay, so the tabs don't move)
       if (el.querySelector('[data-ng=design]') || el.contains(bar) || el.querySelector('.modal-actions')) { walk(el); return; }
       el.classList.add('ngt-hide');
     });
