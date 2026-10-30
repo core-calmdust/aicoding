@@ -1,83 +1,106 @@
-/* NgTabs — on phones the new-game dialog is split into two tabs at its bottom: ルール (how the game is played)
-   and デザイン (board / pieces / colours — picked from their icons). A game marks its look fields with data-ng="design"
-   (on the .field / block); everything else in the dialog is the ルール tab. Header (h2) and the action buttons stay.
-   <script src="../shared/ngtabs.js?v=1"></script> after the dialog; nothing else to call. */
+/* NgTabs — on phones the new-game dialog becomes a full-screen sheet like poker's: the settings scroll on top, then the
+   action buttons (閉じる / 対局開始), then a tab bar at the very bottom:
+     ゲーム (only when the game has variants: blocks marked data-ng="game", shown as cards with art + description)
+     ルール (everything not marked; under its label the chosen variant's name)
+     デザイン (blocks marked data-ng="design": board / pieces / colours, picked from their icons)
+   Shared card styles for the ゲーム tab: .ngt-gcards > button.ngt-gcard[.sel] > .gart + b + p (+ .gpick).
+   The variant's name for the ルール tab comes from the chosen card's <b> (or the chosen button / option text).
+   <script src="../shared/ngtabs.js?v=7"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
 const L = {
+  game: { ja: 'ゲーム', en: 'Game', zh: '游戏', ko: '게임', es: 'Juego', fr: 'Jeu', pt: 'Jogo', de: 'Spiel', hi: 'खेल', ar: 'اللعبة' },
   rules: { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد' },
   design: { ja: 'デザイン', en: 'Design', zh: '外观', ko: '디자인', es: 'Diseño', fr: 'Apparence', pt: 'Visual', de: 'Design', hi: 'डिज़ाइन', ar: 'التصميم' },
 };
-const IC = {
-  rules: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
-  design: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4-4-7.4-9-7.4z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg>',
-};
 const CSS = `
 .ngt-bar{display:none}
-/* tabs, not buttons: a line across the dialog, the chosen tab lit with a bar on that line */
-.ngt-on .ngt-bar{display:flex;gap:0;margin:0!important;padding:0;background:inherit;border-top:1px solid var(--line,rgba(255,255,255,.14))}
-.ngt-bar button{flex:1 1 0;position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:0 6px;border:0;border-radius:0;background:none;box-shadow:none;color:var(--muted,#aaa);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ngt-bar button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ngt-bar button.sel{color:var(--text,#eee)}
-.ngt-bar button.sel svg{stroke:var(--accent,#d8b56a)}
-.ngt-bar button.sel::before{content:'';position:absolute;top:-1px;left:18%;right:18%;height:3px;border-radius:0 0 3px 3px;background:var(--accent,#d8b56a)}
+.ngt-foot{display:contents}
 .ngt-on .ngt-hide, .modal.ngt-on .ngt-hide, .modal.ngt-on :is(.ng-cols,.ng-col).ngt-hide{display:none!important}
-/* one spacing everywhere (the gap between two rows of settings): between the blocks, around the tabs and inside the frame */
-.modal.ngt-on{--ngt-g:6px;padding:12px!important}
-/* the dialog sits at the bottom of the screen, so the tabs and the buttons stay in the same place whichever tab is open */
-#newOverlay:has(> .modal.ngt-on){align-items:flex-end!important;padding-bottom:max(10px, env(safe-area-inset-bottom))!important}
-#newOverlay > .modal.ngt-on{margin-top:auto!important;margin-bottom:0!important}
-.modal.ngt-on h2{margin:0 0 var(--ngt-g)!important}
+/* the sheet (like poker on phones) */
+#newOverlay:has(> .modal.ngt-on){padding:0!important;align-items:stretch!important;justify-content:stretch!important}
+#newOverlay > .modal.ngt-on{--ngt-g:6px;width:100vw!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border:0!important;border-radius:0!important;
+  padding:10px 12px 0!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;overscroll-behavior:contain}
+#newOverlay > .modal.ngt-on > *{flex-shrink:0}
+.modal.ngt-on h2{margin:0 0 var(--ngt-g)!important;font-size:17px!important}
 .modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
-.ngt-foot{display:contents}
-.modal.ngt-on .ngt-foot{display:block;position:sticky;bottom:-12px;z-index:4;margin:var(--ngt-g) -12px -12px;padding:0 12px 12px;background:inherit}
-.modal.ngt-on .ngt-foot .ngt-bar{position:static!important;margin:0!important}
-.modal.ngt-on .modal-actions{margin:var(--ngt-g) 0 0!important}
+/* the footer: buttons, then the tabs at the very bottom (stays put; the settings above scroll) */
+.modal.ngt-on .ngt-foot{display:block;position:sticky;bottom:0;z-index:4;margin:auto -12px 0;padding:0;background:inherit}
+.modal.ngt-on .ngt-foot > :not(.ngt-bar){margin-left:12px!important;margin-right:12px!important}
+.modal.ngt-on .modal-actions{margin-top:8px!important;margin-bottom:0!important}
+.modal.ngt-on .ngt-foot .ngt-bar{display:flex;gap:4px;margin:8px 0 0!important;padding:0 6px env(safe-area-inset-bottom);border-top:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.25)}
+.ngt-bar button{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:9px 6px 10px;border:0;border-top:2px solid transparent;border-radius:0;background:none;box-shadow:none;color:var(--muted,#aaa);font:inherit;font-size:13.5px;font-weight:600;letter-spacing:.08em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ngt-bar button small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;font-weight:400;letter-spacing:.02em;color:var(--muted,#aaa);opacity:.8}
+.ngt-bar button small:empty{display:none}
+.ngt-bar button.sel{color:var(--text,#eee);border-top-color:var(--accent,#d8b56a)}
+/* ゲーム tab: variant cards (art, name, short description) */
+.ngt-gcards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ngt-gcard{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.22);color:var(--text,#eee);font:inherit;text-align:start;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
+.ngt-gcard .gart{display:flex;align-items:center;justify-content:center;min-height:64px;padding:4px 0}
+.ngt-gcard .gart svg,.ngt-gcard .gart img{max-width:100%;max-height:72px}
+.ngt-gcard b{font-size:15px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ngt-gcard p{margin:0;font-size:11px;line-height:1.5;color:var(--muted,#aaa)}
+.ngt-gcard .gpick{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#111;background:transparent}
+.ngt-gcard.sel{border-color:var(--accent,#d8b56a);background:color-mix(in srgb, var(--accent,#d8b56a) 12%, rgba(0,0,0,.22))}
+.ngt-gcard.sel .gpick{background:var(--accent,#d8b56a)}
+.ngt-gcard.sel .gpick::after{content:'✓'}
 `;
 const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
+const isSel = b => b.classList.contains('sel') || b.classList.contains('on') || b.classList.contains('active') || b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true';
 function init() {
   const ov = document.getElementById('newOverlay'), modal = ov && ov.querySelector('.modal');
-  if (!modal || !modal.querySelector('[data-ng=design]')) return;
+  if (!modal || !modal.querySelector('[data-ng=design], [data-ng=game]')) return;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+  const hasGame = () => !!modal.querySelector('[data-ng=game]');
   const bar = document.createElement('div'); bar.className = 'ngt-bar'; bar.setAttribute('role', 'tablist');
-  bar.innerHTML = ['rules', 'design'].map(k => `<button type="button" role="tab" data-ngt="${k}">${IC[k]}<span></span></button>`).join('');
-  // the bar sits right above the action buttons (or at the end of the dialog)
+  // footer: the last action buttons and anything after them, then the tabs
   const acts = [...modal.querySelectorAll('.modal-actions')].pop();
-  if (acts && acts.parentNode) acts.parentNode.insertBefore(bar, acts); else modal.appendChild(bar);
-  // the tabs, the buttons and any note under them form one footer that stays at the bottom of the dialog
   const foot = document.createElement('div'); foot.className = 'ngt-foot';
-  bar.parentNode.insertBefore(foot, bar);
-  for (let n = bar; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; }
-  let cur = 'rules';
-  const keep = el => el === bar || el.tagName === 'H2' || el.classList.contains('modal-actions') || el.contains(bar) && false;
+  if (acts && acts.parentNode) { acts.parentNode.insertBefore(foot, acts); for (let n = acts; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; } }
+  else modal.appendChild(foot);
+  foot.appendChild(bar);
+  const tabs = () => (hasGame() ? ['game'] : []).concat(['rules'].concat(modal.querySelector('[data-ng=design]') ? ['design'] : []));
+  let cur = hasGame() ? 'game' : 'rules';
+  // the chosen variant's name (under ルール)
+  const gameName = () => {
+    const g = modal.querySelector('[data-ng=game]'); if (!g) return '';
+    const card = [...g.querySelectorAll('.ngt-gcard')].find(isSel); if (card) { const b = card.querySelector('b'); return (b ? b.textContent : card.textContent).trim(); }
+    const btn = [...g.querySelectorAll('button')].find(isSel); if (btn) return btn.textContent.trim();
+    const s = g.querySelector('select'); return s && s.selectedOptions[0] ? s.selectedOptions[0].text.trim() : '';
+  };
   function mark() {
     modal.querySelectorAll('.ngt-hide').forEach(e => e.classList.remove('ngt-hide'));
     if (!MQ.matches) return;
-    if (cur === 'rules') { modal.querySelectorAll('[data-ng=design]').forEach(e => e.classList.add('ngt-hide')); return; }
-    // design: keep the design blocks (and the boxes that hold them), the title, the tabs and the action buttons
+    if (cur === 'rules') { modal.querySelectorAll('[data-ng=design], [data-ng=game]').forEach(e => e.classList.add('ngt-hide')); return; }
+    // ゲーム / デザイン: only that tab's blocks (and the boxes that hold them), the title and the footer
+    const sel = `[data-ng=${cur}]`;
     const walk = parent => [...parent.children].forEach(el => {
-      if (el.matches('[data-ng=design]') || keep(el) || el.matches('script,style')) return;
-      if (bar.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) return;   // (notes under the buttons stay, so the tabs don't move)
-      if (el.querySelector('[data-ng=design]') || el.contains(bar) || el.querySelector('.modal-actions')) { walk(el); return; }
+      if (el.matches(sel) || el === foot || el.tagName === 'H2' || el.matches('script,style')) return;
+      if (el.querySelector(sel)) { walk(el); return; }
       el.classList.add('ngt-hide');
     });
     walk(modal);
   }
-  const acts2 = () => [...modal.querySelectorAll('.modal-actions')].pop();
-  const ah = () => { const a = acts2(); if (a) modal.style.setProperty('--ngt-ah', a.offsetHeight + 'px'); };
-  if (window.ResizeObserver && acts2()) new ResizeObserver(ah).observe(acts2());
   function sync() {
-    ah();
     const on = MQ.matches; modal.classList.toggle('ngt-on', on);
-    const l = lang();
-    bar.querySelectorAll('[data-ngt]').forEach(b => { const k = b.dataset.ngt, t = L[k][l] || L[k].en, s = b.querySelector('span'); if (s.textContent !== t) s.textContent = t; b.classList.toggle('sel', k === cur); b.setAttribute('aria-selected', k === cur ? 'true' : 'false'); });
+    const ks = tabs(); if (!ks.includes(cur)) cur = ks[0];
+    const l = lang(), gn = gameName();
+    const h = ks.map(k => `<button type="button" role="tab" data-ngt="${k}"><span></span>${k === 'rules' && ks.includes('game') ? '<small></small>' : ''}</button>`).join('');
+    if (bar.dataset.h !== h) { bar.dataset.h = h; bar.innerHTML = h; }
+    bar.querySelectorAll('[data-ngt]').forEach(b => {
+      const k = b.dataset.ngt, t = L[k][l] || L[k].en, s = b.querySelector('span'), sm = b.querySelector('small');
+      if (s.textContent !== t) s.textContent = t; if (sm && sm.textContent !== gn) sm.textContent = gn;
+      b.classList.toggle('sel', k === cur); b.setAttribute('aria-selected', k === cur ? 'true' : 'false');
+    });
     mark();
   }
   bar.addEventListener('click', e => { const b = e.target.closest('[data-ngt]'); if (!b || b.dataset.ngt === cur) return; cur = b.dataset.ngt; sync(); modal.scrollTop = 0; });
-  // the dialog opens on ルール
-  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { cur = 'rules'; sync(); } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  // opens on the first tab; the variant's name follows the choice
+  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { cur = tabs()[0]; sync(); } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  const g = modal.querySelector('[data-ng=game]');
+  if (g) new MutationObserver(() => { const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
   sync();
