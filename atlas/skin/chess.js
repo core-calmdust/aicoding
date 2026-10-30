@@ -70,7 +70,7 @@
   if (seg) {
     const bs = ['wood', 'lux'].map(k => {
       const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k;
-      b.innerHTML = `<span class="th a3th"><img src="../images/atlas/chess-thumb-${k}.webp?v=1" alt=""></span><span class="nm"></span>`;
+      b.innerHTML = `<span class="th a3th"><img src="../images/atlas/chess-thumb-${k}.webp?v=2" alt=""></span><span class="nm"></span>`;
       seg.prepend(b); return b;
     });
     const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.querySelector('.nm').textContent = L[l] || L.en; }); try { designNow(); } catch (e) {} };
