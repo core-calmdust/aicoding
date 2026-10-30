@@ -1727,12 +1727,17 @@ resetWorld();
 let last = -1; const dtHist = [];
 const H = 1 / 120;
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
-const perf = { n: 0, late: 0, good: 0, half: false, skip: false };
+const perf = { n: 0, late: 0, good: 0, half: false, skip: false, grace: 0, nat: 1 / 60, lastRaf: -1, natH: [] };
+// 画面サイズやフルスクリーンが変わった直後は描画が一時的に詰まるので、その間は判定しない。
+// 判定はやり直し（下げた解像度・半分の更新も元に戻して測り直す）
+function perfReset() { perf.n = perf.late = perf.good = 0; perf.half = false; perf.grace = 2.0; dtHist.length = 0; perf.natH.length = 0; last = -1; PR_CAP = 9; if (PR < PR_T) setPR(PR_T); }
+addEventListener('resize', perfReset); document.addEventListener('fullscreenchange', perfReset); document.addEventListener('visibilitychange', perfReset);
 function setPR(v) { PR = v; renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false); composer.setPixelRatio(PR); composer.setSize(VW, VH); }
 function adapt(raw, ref) {
+    if (perf.grace > 0) { perf.grace -= raw; perf.n = perf.late = 0; return; }
     perf.n++; if (raw > ref * 1.45) perf.late++;
     if (perf.n < 90) return;
-    if (perf.late > 5) { perf.good = 0; if (PR > 1.001) { PR_CAP = Math.max(1, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && ref < 0.0125) perf.half = true; }
+    if (perf.late > 5) { perf.good = 0; if (PR > 1.001) { PR_CAP = Math.max(1, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && perf.nat < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
     else if (perf.late === 0 && ++perf.good >= 5 && PR < PR_T - 0.001) { perf.good = 0; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
     perf.n = 0; perf.late = 0;
 }
@@ -1740,6 +1745,10 @@ const damp = (x, v, to, w, dt) => { const k = Math.min(dt, 0.05), a = w * w * (t
 const sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 function frame(now) {
     requestAnimationFrame(frame);
+    // 画面本来の更新間隔（間引く前）を測る。60Hzの画面で半分の更新（30fps）にはしない
+    if (perf.lastRaf >= 0) { const r = (now - perf.lastRaf) / 1000; if (r > 0 && r < 0.1) { perf.natH.push(r); if (perf.natH.length > 31) perf.natH.shift(); perf.nat = [...perf.natH].sort((a, b) => a - b)[perf.natH.length >> 1]; } }
+    perf.lastRaf = now;
+    if (perf.half && perf.natH.length > 20 && perf.nat > 0.0125) { perf.half = false; dtHist.length = 0; }
     if (perf.half) { perf.skip = !perf.skip; if (perf.skip) return; }
     const raw = last < 0 ? 1 / 60 : (now - last) / 1000; last = now;
     dtHist.push(raw); if (dtHist.length > 31) dtHist.shift();
