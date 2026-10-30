@@ -1554,7 +1554,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { IN.keys[e.code] = false; });
 const toLogical = e => { const r = gameEl.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * VW, (e.clientY - r.top) / r.height * VH]; };
 addEventListener('pointermove', e => { const [x, y] = toLogical(e); IN.mx = x; IN.my = y; IN.mouseAt = S.t; if (e.pointerType === 'mouse') IN.padUsed = false; });
-addEventListener('pointerdown', e => { if (e.button > 0) return; if (S.mode === 'play' || S.mode === 'evo') IN.mouseLock = true; else startGame(); });
+addEventListener('pointerdown', e => { if (e.button > 0) return; audio(); if (S.mode === 'play' || S.mode === 'evo') IN.mouseLock = true; else if (e.pointerType === 'touch') startGame(); }); // マウスのクリックでは始めない（タッチ画面だけタップで開始）
 addEventListener('pointerup', e => { if (e.button > 0) return; IN.mouseLock = false; });
 addEventListener('touchstart', e => { if (e.target.closest && e.target.closest('.btn')) return; e.preventDefault(); }, { passive: false });
 addEventListener('contextmenu', e => e.preventDefault());
