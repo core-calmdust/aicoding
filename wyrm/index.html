@@ -900,6 +900,7 @@ let hitQ = 0;
 function hitSlot() { const now = q16(AC.currentTime + 0.01), t = Math.max(now, hitQ + S16 * 0.999); if (t - now > S16 * 3.5) return -1; hitQ = t; return t; }
 // 定位: PANV を設定してから鳴らすと、その音を左右に振る（キック・ベースなど中央の音は使わない）
 let PANV = 0;
+const wide = x => { x = Math.max(-1, Math.min(1, x)); return Math.sign(x) * Math.pow(Math.abs(x), 0.55); }; // 画面の端に寄るほどしっかり振る
 function toOut(node, dest = master, pan = PANV) { if (!pan) { node.connect(dest); return; } const p = AC.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); node.connect(p).connect(dest); }
 function voice(t, f, type, a, d, gain, toFx = 0.6, det = 0) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.detune.value = det;
@@ -934,7 +935,7 @@ function beatPulse() { if (!MUS.on || !AC) return 0; const st = MUS.n + (AC.curr
 // ロック音: ロックのたびに4分・8分・16分音符のどれかでランダムに刻む（2拍ぶん、だんだん小さく）
 function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
     const div = [4, 2, 1][Math.floor(Math.random() * 3)], cnt = 8 / div;
-    for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); const pp = Math.max(-0.9, Math.min(0.9, pan + (i % 2 ? -0.35 : 0.35) * Math.sign(pan || 1))); PANV = pp; tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); PANV = 0; hat808(ti, 0.32 * k, false, -pp * 0.8); } }
+    for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); const pp = Math.max(-1, Math.min(1, pan + (i % 2 ? -0.55 : 0.55) * Math.sign(pan || 1))); PANV = pp; tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); PANV = 0; hat808(ti, 0.32 * k, false, -pp); } }
 // 808系のハイハット: 金属的な比の矩形波6本を高域だけ通して短く切る
 const HAT_F = [205.3, 304.4, 369.6, 522.7, 540, 800];
 function hat808(t, gain, open = false, pan = 0) {
@@ -951,7 +952,7 @@ function sfxHit(order, volley, pan = 0) {
     const m = ch[order % ch.length] + 12 + 12 * Math.floor(order / ch.length);
     PANV = pan; tone(t, m, 0.13); PANV = 0; 
     if (order === 0) { voice(t, mtof(ch[0] - 12), 'sine', 0.005, 0.35, 0.28, 0); }
-    if (order === volley - 1 && volley >= 4 && t - AC.currentTime < S16 * 2) { [0, 2, 4, 6].forEach((k, i) => { PANV = (i % 2 ? 0.6 : -0.6); tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true); PANV = 0; }); } // 大量撃破のきらめき
+    if (order === volley - 1 && volley >= 4 && t - AC.currentTime < S16 * 2) { [0, 2, 4, 6].forEach((k, i) => { PANV = (i % 2 ? 0.95 : -0.95); tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true); PANV = 0; }); } // 大量撃破のきらめき
 }
 // =====================================================================
 // 音楽: 4つ打ちのキック・和音に合わせたベース・和音のヒット・シーケンス・やわらかなパッド
@@ -1467,7 +1468,7 @@ function updateShots(dt) {
 function killShot(i) { const s = shots[i]; [s.L.mesh, s.L.core].forEach(o => { scene.remove(o); o.geometry.dispose(); o.material.dispose(); }); shots.splice(i, 1); }
 function hitTarget(t, order, volley) {
     if (!t.alive) return;
-    t.alive = false; sfxHit(order, volley, Math.max(-0.8, Math.min(0.8, (toScreen(t.obj ? epos(t, _sp) : _sp.set(t.x, t.y, -(S.d + t.rz)))[0] / VW * 2 - 1) * 0.8)));
+    t.alive = false; sfxHit(order, volley, wide(toScreen(t.obj ? epos(t, _sp) : _sp.set(t.x, t.y, -(S.d + t.rz)))[0] / VW * 2 - 1));
     if (t.obj) { const p = epos(t); removeEnemy(t); boom(p, [PAL.gate[0], PAL.gate[1], 0xffffff], 22); burstRing(p, PAL.gate[1], 0.9, false, 0.7, 3.5);
         S.score += 100 * Math.max(1, volley); S.kills++; if (S.kills >= S.quota && S.mode === 'play') S.evoPending = 0.35; }
     else { const p = new THREE.Vector3(t.x, t.y, -(S.d + t.rz)); boom(p, [PAL.gate[2], 0xffffff], 8); S.score += 10; }
@@ -1531,7 +1532,7 @@ function updateLock() {
         const e8 = MUS.on && AC ? Math.floor((MUS.n + (AC.currentTime - MUS.t) / S16) / 2) : Math.floor(S.t / (S16 * 2)); // いまの8分音符の番号
         let can = e8 !== S.lock8; // ロックは8分音符ごとに1つだけ
         const tryLock = (t, wp) => { if (!can || locks.length >= 8 || t.locked || !t.alive || t.rz < 60) return; const [sx, sy, sz] = toScreen(wp); if (sz > 1) return;
-            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1, (sx / VW * 2 - 1) * 0.8); S.lock8 = e8; can = false; } };
+            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1, wide(sx / VW * 2 - 1)); S.lock8 = e8; can = false; } };
         for (const e of enemies) tryLock(e, epos(e, _sp));
         for (const b of bullets) tryLock(b, _sp.set(b.x, b.y, -(S.d + b.rz)));
     }
