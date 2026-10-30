@@ -1708,15 +1708,19 @@ function spawnHexGate() {
         const r = HEX_R * (1 + i * 0.55), z = i * 60, geo = oct(r, 12 + i * 4, 22 + i * 4, z), fg = new THREE.Group();
         fg.add(new THREE.Mesh(geo, white), new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edge)); fg.userData.sp = (i % 2 ? -1 : 1) * (0.5 + i * 0.35); g.add(fg); frames.push(fg);
     }
-    // 枠と枠のあいだを面でつなぐ（漏斗の内側の壁）。8面ずつ、2色を交互に。枠と一緒には回さない
+    // 枠と枠のあいだを面でつなぐ（漏斗の内側の壁）。9割は不透明な壁、1割だけ半透明の窓。枠と一緒には回さない
     {
-        const pos = [], cols = [], cA = new THREE.Color(0xd6dbe4), cB = new THREE.Color(0x9aa2b2), V = (r, a, z) => [Math.cos(a) * r, Math.sin(a) * r, z];
+        const P = [[], []], C = [[], []], cA = new THREE.Color(0xd6dbe4), cB = new THREE.Color(0x9aa2b2), V = (r, a, z) => [Math.cos(a) * r, Math.sin(a) * r, z];
         for (let i = 0; i < 4; i++) { const ra = HEX_R * (1 + i * 0.55) / Math.cos(Math.PI / 8), rb = HEX_R * (1 + (i + 1) * 0.55) / Math.cos(Math.PI / 8), za = i * 60, zb = (i + 1) * 60;
-            for (let k = 0; k < 8; k++) { const a0 = k / 8 * Math.PI * 2 + Math.PI / 8, a1 = a0 + Math.PI / 4, A = V(ra, a0, za), B = V(ra, a1, za), C = V(rb, a1, zb), D = V(rb, a0, zb), c = (i + k) % 2 ? cA : cB;
-                [A, B, C, A, C, D].forEach(v => { pos.push(...v); cols.push(c.r, c.g, c.b); }); } }
-        const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); fg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); fg.computeVertexNormals();
-        const faceM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, transparent: true, opacity: 0.82, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 }); enemyFog(faceM);
-        g.add(new THREE.Mesh(fg, faceM), new THREE.LineSegments(new THREE.EdgesGeometry(fg, 10), edge));
+            for (let k = 0; k < 8; k++) { const a0 = k / 8 * Math.PI * 2 + Math.PI / 8, a1 = a0 + Math.PI / 4, A = V(ra, a0, za), B = V(ra, a1, za), C2 = V(rb, a1, zb), D = V(rb, a0, zb), c = (i + k) % 2 ? cA : cB;
+                const w = (i * 8 + k) % 10 === 3 ? 1 : 0; // 32面のうち約1割を窓に
+                [A, B, C2, A, C2, D].forEach(v => { P[w].push(...v); C[w].push(c.r, c.g, c.b); }); } }
+        const mk = w => { const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(P[w], 3)); fg.setAttribute('color', new THREE.Float32BufferAttribute(C[w], 3)); fg.computeVertexNormals(); return fg; };
+        const solidM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 });
+        const glassM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, transparent: true, opacity: 0.3, depthWrite: false });
+        [solidM, glassM].forEach(enemyFog);
+        const g0 = mk(0), g1 = mk(1);
+        g.add(new THREE.Mesh(g0, solidM), new THREE.LineSegments(new THREE.EdgesGeometry(g0, 10), edge), new THREE.Mesh(g1, glassM), new THREE.LineSegments(new THREE.EdgesGeometry(g1, 10), edge));
     }
     // 支柱: 内側の枠の角から外側の枠の角へ、赤と黒の山形を交互に並べる
     const spokes = new THREE.Group(), r0 = HEX_R / Math.cos(Math.PI / 8) + 6, r1 = HEX_R * (1 + 4 * 0.55) / Math.cos(Math.PI / 8) + 20, z1 = 4 * 60;
