@@ -1623,13 +1623,14 @@ function startGame() {
     audio(); musicStart();
     if (S.mode === 'dead' && S.deadT < 0.8) return;
     if (S.mode === 'dead') resetWorld();
+    S.itemDone = false; items.forEach(it => disposeObj(it.obj)); items.length = 0;
     S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name };
 }
 const EVO_T = 1.5;
 function evolve() {
     S.stage++; setPal(S.stage); setSoundStage(S.stage);
-    S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve();
+    S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve(); sfxClap(); S.itemDone = false; // ステージが変わる瞬間にもクラップ
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
     enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
     for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.12; dying.push(c); } chunks.clear(); // 散り方は控えめに
@@ -1642,6 +1643,26 @@ function evolve() {
     S.kills = 0; S.quota = QUOTA(S.stage); S.speed = Math.min(420, 300 + S.stage * 20); S.evoSpd = S.speed;
     S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name + (S.stage >= PALS.length ? ' +' : '') };
 }
+// ---------------- 回復アイテム（3面ごとに1個、HP＋1。最大3）----------------
+const items = [];
+const itemMat = new THREE.MeshBasicMaterial({ color: 0x6dffb0 }), itemLine = new THREE.LineBasicMaterial({ color: 0xd8fff0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+enemyFog(itemMat); enemyFog(itemLine); // 暗くても見えるように
+function spawnItem() {
+    const g = new THREE.Group(), core = new THREE.Mesh(new THREE.OctahedronGeometry(14, 0), itemMat); g.add(core);
+    const cross = new THREE.Group(); [[30, 8, 8], [8, 30, 8]].forEach(([w, h, d]) => cross.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)), itemLine)));
+    g.add(cross, new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(26, 0)), itemLine)); scene.add(g);
+    const cv = cave(S.d + 1800); items.push({ obj: g, core, cross, x: S.x * 0.5, y: cv.cy + (S.y - cave(S.d).cy) * 0.5, rz: 1800, t: 0 });
+}
+function updateItems(dt) {
+    if (S.mode === 'play' && S.stage % 3 === 2 && !S.itemDone && S.kills >= S.quota * 0.4) { S.itemDone = true; spawnItem(); } // 3面・6面・9面…の途中で1個
+    for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; it.t += dt; it.rz -= 300 * dt;
+        it.x += (S.x - it.x) * Math.min(1, dt * 0.25); it.y += (S.y - it.y) * Math.min(1, dt * 0.25); // ゆっくり近くへ寄ってくる
+        it.obj.position.set(it.x, it.y + Math.sin(it.t * 3) * 6, -(S.d + it.rz)); it.core.rotation.set(it.t * 1.5, it.t * 2, 0); it.cross.rotation.z = it.t; it.obj.children[2].rotation.set(-it.t, it.t * 0.7, 0);
+        const got = S.mode === 'play' && Math.abs(it.rz) < 30 && Math.hypot(it.x - S.x, it.y - S.y) < 46;
+        if (got) { S.hp = Math.min(3, S.hp + 1); sfxHeal(); boom(it.obj.position.clone(), [0x6dffb0, 0xffffff], 18); S.banner = { t: 0, n: 'HP +1', m: '' }; }
+        if (got || it.rz < -150) { disposeObj(it.obj); items.splice(i, 1); } }
+}
+function sfxHeal() { if (!audio()) return; const t = q16(AC.currentTime + 0.01), ch = chordAt(t); sfxClap(); ch.slice(1, 6).forEach((m, i) => { PANV = i % 2 ? 0.5 : -0.5; tone(t + i * S16 / 2, m + 24, 0.12, true); }); PANV = 0; }
 function damage() {
     if (S.inv > 0 || S.mode !== 'play') return;
     S.hp--; S.inv = 1.6; S.dmg = 1; S.shake = 0.6; sfxDamage(); dragon.setAccent(0xff3050);
@@ -1742,7 +1763,7 @@ function drawHUD() {
     const c1 = hex(PAL.line ? PAL.line[0] : 0xffffff), c2 = hex(PAL.wing);
     T(String(S.score).padStart(7, '0'), VW / 2, 40, 30, c1, c2, 'center', 1, false, 2);
     // 体力: 六角形2つ
-    for (let i = 0; i < 2; i++) { const cx = 112 + i * 34, cy = 40; ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; ug.shadowColor = c1; ug.shadowBlur = i < S.hp ? 10 * UIS : 0;
+    for (let i = 0; i < Math.max(2, S.hp); i++) { const cx = 112 + i * 34, cy = 40; ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; ug.shadowColor = c1; ug.shadowBlur = i < S.hp ? 10 * UIS : 0;
         poly(Array.from({ length: 6 }, (_, k) => [cx + Math.cos(k * Math.PI / 3) * 13, cy + Math.sin(k * Math.PI / 3) * 13])); ug.stroke(); if (i < S.hp) { ug.globalAlpha = 0.5; ug.fillStyle = c1; ug.fill(); } ug.restore(); }
     T('HP', 74, 40, 12, c1, c2, 'left', 0.8);
     // 進化までの撃破数
@@ -1864,7 +1885,7 @@ function frame(now) {
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     litEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
-    updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
+    updateItems(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') spawnGates(S.d);
@@ -1916,7 +1937,7 @@ function frame(now) {
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, startGame, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
