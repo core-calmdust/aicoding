@@ -1176,8 +1176,11 @@ html.lnd #lndLearn button svg{width:24px;height:24px;flex:none;fill:none;stroke:
 html.lnd #lndLearn button:active{background:rgba(226,194,117,.12)}
 /* ルール / レッスン / パズル: rounded square icon tiles, one above the other (2026-10-30) */
 html.lnd #lndLearn{align-items:center!important;gap:10px!important}
-html.lnd #lndLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:84px;height:84px;padding:6px 4px;box-sizing:border-box;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
-html.lnd #lndLearn button svg{width:28px!important;height:28px!important;margin:0!important}
+/* the レッスン tab is a sub-menu: a small box beside its tab, just big enough for the three tiles */
+html.lnd body[data-lt=learn]:not(.in-lesson):not(.in-puzzle) #lndDrawer{width:auto!important;top:calc(50% - 104px)!important;bottom:auto!important;padding:8px!important}
+html.lnd #lndLearn button{gap:4px!important;font-size:10.5px!important}
+html.lnd #lndLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:62px;height:58px;padding:4px 2px;box-sizing:border-box;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
+html.lnd #lndLearn button svg{width:22px!important;height:22px!important;margin:0!important}
 html.lnd #lndLearn button > span{display:block}
 html.lnd #lndLearn button small{display:none!important}
 /* the move navigation (rotated page: it lives in a fixed strip) sits at the bottom of the 形勢・棋譜 page */

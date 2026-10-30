@@ -995,8 +995,12 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   body.lt-on #ltLearn button small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:normal;margin-top:2px}
   /* ルール / レッスン / パズル: rounded square icon tiles, one above the other (2026-10-30) */
   body.lt-on #ltLearn{align-items:center!important;gap:10px!important}
-  body.lt-on #ltLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:84px;height:84px;padding:6px 4px;box-sizing:border-box;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
-  body.lt-on #ltLearn button svg{width:28px!important;height:28px!important;margin:0!important}
+  /* the レッスン tab is a sub-menu: a small box beside its tab, just big enough for the three tiles */
+  body.lt-on[data-lt=learn]:not(.in-lesson):not(.in-puzzle) #ltPanel{width:auto!important;min-width:0;top:calc(50% - 104px)!important;bottom:auto!important;padding:8px!important}
+  body.lt-on[data-lt=learn] #ltLearn h3{display:none}
+  body.lt-on #ltLearn button{gap:4px!important;font-size:10.5px!important}
+  body.lt-on #ltLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:62px;height:58px;padding:4px 2px;box-sizing:border-box;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
+  body.lt-on #ltLearn button svg{width:22px!important;height:22px!important;margin:0!important}
   body.lt-on #ltLearn button > span{display:block}
   body.lt-on #ltLearn button small{display:none!important}
   /* lessons / puzzles: their card stays open beside the board */
