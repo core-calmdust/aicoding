@@ -826,6 +826,15 @@ html.pc2 .side > .brand:not(:has(*)){display:none}
 /* the swap button / prompt sit in the board's empty bottom corners */
 html.bd-dia .swapbtn{left:calc(50% - var(--fw) / 2 + 16px);top:auto;bottom:16px;transform:none}
 html.bd-dia .prompt{left:auto;right:calc(50% - var(--fw) / 2 + 16px);bottom:16px;transform:none}
+/* PC: the two players sit in the board's empty top corners (diamond board), so the row under the board is
+   コーチ 1/2 | 形勢 1/4 | 棋譜 1/4 (2026-10-30) */
+html.pc2.bd-dia:not(.rb-on) .app{position:relative}
+html.pc2.bd-dia:not(.rb-on) :is(.side, .side-in){position:static}
+html.pc2.bd-dia:not(.rb-on) .side-in > .players{position:absolute;z-index:5;top:calc(var(--pad) + 14px);left:calc(var(--padx) + 14px);right:calc(var(--padx) + 14px);display:flex;flex-direction:row;justify-content:space-between;gap:12px;padding:0;margin:0;background:none;border:0;box-shadow:none;overflow:visible;pointer-events:none}
+html.pc2.bd-dia:not(.rb-on) .side-in > .players .player{flex:none;width:clamp(170px, 15vw, 240px);pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+html.pc2.bd-dia:not(.rb-on) .side-in > .players .player .count{font-size:clamp(24px, 2.2vw, 34px)}
+html.pc2.bd-dia:not(.rb-on) .side-in > #coachCard:not(.hidden){flex:2 1 0}
+html.pc2.bd-dia:not(.rb-on) .side-in > #evalCard, html.pc2.bd-dia:not(.rb-on) .side-in > .kifu-card{flex:1 1 0}
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box (commentary | candidate moves
    with their lines | study mode); it sits on the left of the row under the board, next to the info cards (players + evaluation | review + kifu),
    and that row grows a little (2026-10-28) */
@@ -1186,7 +1195,7 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
 <script src="../shared/atlas.js?v=20261029t" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
-<script src="../shared/infotabs.js?v=13" defer></script>
+<script src="../shared/infotabs.js?v=14" defer></script>
 <script src="../shared/pickdrop.js?v=3"></script>
 </body>
 </html>
