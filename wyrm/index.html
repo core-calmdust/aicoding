@@ -940,11 +940,15 @@ function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = 
 function sfxClap() {
     if (!audio()) return; const t = MUS.on ? q16(AC.currentTime + 0.005) : AC.currentTime;
     const n = noise(), bp = AC.createBiquadFilter(), hp = AC.createBiquadFilter(), g = AC.createGain();
-    bp.type = 'bandpass'; bp.frequency.value = 1150; bp.Q.value = 1.1; hp.type = 'highpass'; hp.frequency.value = 500;
+    bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.7; hp.type = 'highpass'; hp.frequency.value = 1100; // 明るめ
     g.gain.setValueAtTime(0.0001, t);
     [0, 0.011, 0.022].forEach(o => { g.gain.setValueAtTime(0.0001, t + o); g.gain.exponentialRampToValueAtTime(0.5, t + o + 0.002); g.gain.exponentialRampToValueAtTime(0.06, t + o + 0.01); });
     g.gain.setValueAtTime(0.4, t + 0.031); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    n.connect(bp).connect(hp).connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.25; g.connect(s2).connect(fx); n.start(t); n.stop(t + 0.25);
+    n.connect(bp).connect(hp).connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.35; g.connect(s2).connect(fx); n.start(t); n.stop(t + 0.25);
+    // 高域のきらめきを足す
+    const n2 = noise(), sh = AC.createBiquadFilter(), g2 = AC.createGain(); sh.type = 'highpass'; sh.frequency.value = 6500;
+    g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.22, t + 0.003); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    n2.connect(sh).connect(g2).connect(master); n2.start(t); n2.stop(t + 0.14);
 }
 // 808系のハイハット: 金属的な比の矩形波6本を高域だけ通して短く切る
 const HAT_F = [205.3, 304.4, 369.6, 522.7, 540, 800];
