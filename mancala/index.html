@@ -969,12 +969,17 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   html:has(body.lt-on), body.lt-on{overscroll-behavior:none}
   body.lt-on:not(.lt-open) #ltPanel:not(.drag){visibility:hidden;transition:transform .32s cubic-bezier(.2,1.25,.4,1),visibility 0s .32s}
   body.lt-on.in-lesson #ltPanel, body.lt-on.in-puzzle #ltPanel{visibility:visible!important}
-  html body.lt-on:is(.in-lesson, .in-puzzle) #ltPanel > :is(#ltLearn, #coachCard, #reviewCard, #evalCard, .kifu-card){display:none!important}
+  html body.lt-on:is(.in-lesson, .in-puzzle) #ltPanel > :is(#ltLearn, #coachCard, #reviewCard, #evalCard, .kifu-card, #ltCoachRest){display:none!important}
   body.lt-on.in-lesson #ltPanel, body.lt-on.in-puzzle #ltPanel{position:static;grid-area:pn;align-self:stretch;transform:none;transition:none;box-shadow:none;width:auto;min-height:0;background:none;border:0;padding:0}
   body.lt-on #ltPanel > *{flex:none;width:auto!important;margin:0!important;grid-area:auto!important}
   body.lt-on #ltPanel > [data-ltc]:not([data-ltc=ls]){display:none!important}
   body.lt-on #ltPanel > [data-ltc=ls]:not(.show){display:none}
   body.lt-on[data-lt=coach] #ltPanel > #coachCard:not(.hidden), body.lt-on[data-lt=coach] #ltPanel > #reviewCard.show{display:block!important}
+  /* the coach can't work now (AI vs AI, online…): the コーチ tab stays and its box says so (landtabs.js) */
+  body.lt-on.lt-ckrest[data-lt=coach] #ltPanel > #ltCoachRest{display:block!important}
+  body.lt-on #itCoachRest{display:none!important}
+  /* 戦績 in the drawer's place: closed by a swipe to the right, its tab again or a tap on the board (no 閉じる button) */
+  body.lt-on.lt-rec .grc-ft [data-act=close]{display:none!important}
   body.lt-on[data-lt=ek] #ltPanel > #evalCard{display:flex!important;flex-direction:column}
   body.lt-on[data-lt=ek] #ltPanel > .kifu-card{display:flex!important;flex-direction:column;flex:1 1 auto!important;min-height:140px!important}
   body.lt-on[data-lt=learn] #ltPanel > #ltLearn{display:flex!important}
@@ -1459,7 +1464,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=11"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=4"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=7"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=11"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=5"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=8"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->

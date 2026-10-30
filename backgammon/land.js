@@ -16,6 +16,20 @@ const SHORT = {
   pt: ['Treino', 'Aval. · Lances', 'Regras\nLições', 'Histórico', 'Online'], de: ['Coach', 'Bew. · Züge', 'Regeln\nLektionen', 'Bilanz', 'Online'],
   hi: ['कोच', 'स्थिति · चालें', 'नियम\nपाठ', 'रिकॉर्ड', 'ऑनलाइन'], ar: ['المدرب', 'التقييم · النقلات', 'القواعد\nالدروس', 'السجل', 'أونلاين'],
 };
+// the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated, lessons…) its box says so (the same
+// words as shared/infotabs.js on portrait phones)
+const REST = {
+  ja: 'コーチはAIとの対局・二人対戦の間に使えます。AI同士・オンライン・レッスンなどの間はお休みです。終局後の振り返りは、このタブで見られます。',
+  en: 'The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.',
+  zh: '教练在与AI对局或双人对战时可用。AI对AI、在线对局、课程等期间暂停。终局后可在此标签查看复盘。',
+  ko: '코치는 AI 대국과 2인 대국 중에 사용할 수 있습니다. AI끼리 대국·온라인·레슨 등에서는 쉽니다. 대국이 끝나면 이 탭에서 복기를 볼 수 있습니다.',
+  es: 'El entrenador funciona cuando juegas contra la IA o contra un amigo en este dispositivo. Descansa en IA contra IA, partidas en línea, lecciones, etc. Al terminar, el repaso aparece en esta pestaña.',
+  fr: 'Le coach est disponible quand vous jouez contre l’IA ou à deux sur cet appareil. Il se repose pendant IA contre IA, les parties en ligne, les leçons, etc. Après la partie, l’analyse s’affiche dans cet onglet.',
+  pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
+  de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
+  hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+};
 const TABS = ['coach', 'kifu', 'learn', 'rec', 'online'];
 const IC = {
   coach: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>',
@@ -31,7 +45,8 @@ let active = false, tab = 'coach', moved = [], open = false;
 try { const v = localStorage.getItem(KEY); if (['coach', 'kifu', 'learn'].includes(v)) tab = v; } catch (e) {}
 const app = $('.app');
 const mk = (tag, id) => { const e = document.createElement(tag); e.id = id; return e; };
-const top = mk('div', 'lndTop'), rail = mk('nav', 'lndRail'), drawer = mk('div', 'lndDrawer'), learn = mk('div', 'lndLearn');
+const top = mk('div', 'lndTop'), rail = mk('nav', 'lndRail'), drawer = mk('div', 'lndDrawer'), learn = mk('div', 'lndLearn'), rest = mk('div', 'lndCoachRest');
+rest.className = 'card ck-card lnd-rest'; rest.innerHTML = `<h3 class="ck-h"><svg viewBox="0 0 24 24">${IC.coach}</svg><span></span></h3><p class="ck-muted"></p>`;
 rail.setAttribute('aria-label', 'tabs');
 rail.innerHTML = TABS.map(k => `<button type="button" data-lt="${k}"><svg viewBox="0 0 24 24">${IC[k]}</svg><span></span></button>`).join('');
 // レッスン tab: rules · lessons · puzzles (the same actions as the menu buttons; lessons / puzzles leave the top menu here)
@@ -68,7 +83,7 @@ function enter() {
   app.append(top, rail, drawer, nbox);
   put($('.brand-l'), top); put($('.controls'), top); put($('.brand-r'), top);
   drawer.appendChild(learn);
-  for (const s of ['#lessonCard', '#puzzleCard', '#hintCard', '#coachCard', '#reviewCard', '#evalCard', '.kifu-card']) put($(s), drawer);
+  for (const s of ['#lessonCard', '#puzzleCard', '#hintCard', '#coachCard', '#reviewCard', '#evalCard', '.kifu-card']) { put($(s), drawer); if (s === '#coachCard') drawer.appendChild(rest); }
   const fr = $('#frame'); fr.append(chips[0], chips[1], msg);
   html.classList.add('lnd');
   html.style.setProperty('--lnd-h', (ROT ? innerWidth : innerHeight) + 'px');
@@ -78,7 +93,7 @@ function leave() {
   html.classList.remove('lnd');
   for (const [el, ph] of moved.reverse()) { ph.parentNode.insertBefore(el, ph); ph.remove(); }
   moved = [];
-  top.remove(); rail.remove(); drawer.remove(); nbox.remove(); body.classList.remove('lnd-nav'); learn.remove(); chips.forEach(c => c.remove()); msg.remove();
+  top.remove(); rail.remove(); drawer.remove(); nbox.remove(); body.classList.remove('lnd-nav'); learn.remove(); rest.remove(); body.classList.remove('lnd-ckrest'); chips.forEach(c => c.remove()); msg.remove();
 }
 function sync() {
   const w = want();
@@ -104,6 +119,7 @@ function relabel() {
     const s = b.querySelector('span'), v = SHORT[l][i];
     if (s.textContent !== v) { s.textContent = v; b.title = v; b.setAttribute('aria-label', v); b.classList.remove('ic-only'); }
   });
+  { const rh = rest.querySelector('span'), rp = rest.querySelector('p'), v = (window.BGCoach && BGCoach.tx('head')) || SHORT[l][0], r = REST[l] || REST.en; if (rh.textContent !== v) rh.textContent = v; if (rp.textContent !== r) rp.textContent = r; }
   learn.querySelectorAll('button').forEach((b, i) => { const v = typeof t === 'function' ? t(LEARN[i][1]) : ''; const s = b.querySelector('span'); if (s.textContent !== v) s.textContent = v; });
   // a label that does not fit even on two lines: icon only (the title / aria-label keep the name)
   requestAnimationFrame(() => rail.querySelectorAll('button:not(.ic-only) span').forEach(s => { if (s.scrollWidth > s.clientWidth + 2 || s.scrollHeight > s.clientHeight + 3) s.parentNode.classList.add('ic-only'); }));
@@ -111,14 +127,15 @@ function relabel() {
 const lessonOn = () => body.classList.contains('in-lesson') || body.classList.contains('in-puzzle');
 function select() {
   const ck = body.classList.contains('ck-tab');
-  if (tab === 'coach' && !ck) tab = 'kifu';
-  if (lessonOn() && (tab === 'coach' || tab === 'kifu')) tab = 'learn';
+  if (lessonOn() && tab === 'kifu') tab = 'learn';
+  const rs = !ck && !document.querySelector('#reviewCard.show');
+  if (body.classList.contains('lnd-ckrest') !== rs) body.classList.toggle('lnd-ckrest', rs);
   const onl = body.classList.contains('mtab-online'), rec = body.classList.contains('lnd-rec');
   if (body.dataset.lt !== tab) body.dataset.lt = tab;
   rail.querySelectorAll('button').forEach(b => {
     const k = b.dataset.lt, sel = rec ? k === 'rec' : onl ? k === 'online' : open && k === tab;
     b.classList.toggle('sel', sel);
-    b.hidden = (k === 'coach' && !ck) || (k === 'online' && body.classList.contains('no-online'));
+    b.hidden = k === 'online' && body.classList.contains('no-online');
   });
 }
 function setOpen(v) {
@@ -159,10 +176,14 @@ let sw = null;
 const P = e => { const q = e.touches ? e.touches[0] || e.changedTouches[0] : e; return lp(q); };
 document.addEventListener('touchstart', e => {
   if (!active || e.touches.length !== 1) return;
+  sw = null;
   const [x, y] = P(e), W = ROT ? innerHeight : innerWidth;
-  const inDrawer = open && e.target.closest('#lndDrawer'), edge = !open && !lessonOn() && (x > W - 80) && !e.target.closest('#lndTop');
+  // the 戦績 / オンライン box in the drawer's place closes the same way
+  const side = body.classList.contains('lnd-rec') ? e.target.closest('.grc-ov') : body.classList.contains('mtab-online') ? e.target.closest('.dock') : null;
+  if (side) { sw = { x, y, open: true, dx: 0, live: false, w: side.offsetWidth || 300, el: side, side: true }; return; }
+  const inDrawer = open && e.target.closest('#lndDrawer'), edge = !open && !anyOpen() && !lessonOn() && (x > W - 80) && !e.target.closest('#lndTop');
   if (!inDrawer && !edge) return;
-  sw = { x, y, open: !!inDrawer, dx: 0, live: false, w: drawer.offsetWidth || 300 };
+  sw = { x, y, open: !!inDrawer, dx: 0, live: false, w: drawer.offsetWidth || 300, el: drawer };
 }, { passive: true, capture: true });
 document.addEventListener('touchmove', e => {
   if (!sw) return;
@@ -172,17 +193,25 @@ document.addEventListener('touchmove', e => {
     if (ay >= 6 && ay >= ax * .8) { sw = null; return; }
     if (ax < 12 || ax < ay * 1.6) return;
     sw.live = true; body.classList.add('lnd-drag');
+    if (sw.side) { sw.el.style.animation = 'none'; sw.el.style.transition = 'none'; }
   }
   sw.dx = dx;
   const off = sw.open ? Math.max(0, dx) : Math.max(0, sw.w + 76 + Math.min(0, dx));
-  drawer.style.transform = `translateX(${off}px)`;
+  sw.el.style.transform = `translateX(${off}px)`;
   if (e.cancelable) e.preventDefault();   // the page must not pan under the finger
 }, { passive: false, capture: true });
 document.addEventListener('touchend', () => {
   if (!sw) return;
   const s = sw; sw = null;
   if (!s.live) return;
-  body.classList.remove('lnd-drag'); drawer.style.transform = '';
+  body.classList.remove('lnd-drag');
+  if (s.side) {   // 戦績 / オンライン: slides out to the right (or back), then closes
+    const el = s.el, out = s.dx > 60;
+    el.style.transition = 'transform .2s ease-out'; el.style.transform = out ? `translateX(${s.w + 90}px)` : '';
+    setTimeout(() => { if (out) close(); el.style.transition = ''; el.style.transform = ''; el.style.animation = ''; }, out ? 200 : 220);
+    return;
+  }
+  drawer.style.transform = '';
   if (s.open && s.dx > 60) close();
   else if (!s.open && s.dx < -50) show(tab);
 }, { capture: true });

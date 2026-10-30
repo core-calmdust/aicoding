@@ -286,6 +286,8 @@ function usable() {
   return !!(typeof match !== 'undefined' && match && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
 }
 function active() { return !!(settings.coach && usable()); }
+// AI同士 (watch): the coach computes nothing during the game; when it is over, the coach tab offers the review as usual
+const watching = () => !!(typeof match !== 'undefined' && match && !lesson && !puzzle && settings.mode === 'watch' && !(typeof inStudy === 'function' && inStudy()));
 const human = s => settings.mode === 'pvp' || s === humanSide;
 function live() {   // latest position of the current game
   const [g, a] = curGA();
@@ -456,8 +458,8 @@ function render() {
   // phones' coach tab shows the review (#reviewCard, data-itc="coach") instead; before a review exists, a short note with
   // a button that starts it
   const rv = !!document.querySelector('#reviewCard.show');
-  const L0 = usable() ? live() : null, playing = !!(L0 && L0.latest && !L0.st.over);
-  const can = usable() && (playing || (L0 && L0.latest && L0.st.over && !rv)), on = active();
+  const L0 = usable() || watching() ? live() : null, playing = !!(usable() && L0 && L0.latest && !L0.st.over);
+  const can = (usable() && (playing || (L0 && L0.latest && L0.st.over && !rv))) || !!(watching() && L0 && L0.latest && L0.st.over && !rv), on = active();
   const was = card.className;
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on && playing);

@@ -268,6 +268,10 @@ function usable() {
   return !!(game && P.length && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
 }
 function active() { return !!(settings.coach && usable()); }
+// AI同士 (watch): the coach computes nothing during the game; when it is over, the coach tab offers the review as usual
+function watchOver() {
+  return !!(game && P.length && !lesson && !puzzle && settings.mode === 'watch' && !(typeof inStudy === 'function' && inStudy()) && overNow() && cur === game.moves.length && !reviewing);
+}
 function overNow() { return P[game.moves.length].over || game.resigned != null; }
 function myTurn() {
   if (!usable() || overNow() || cur !== game.moves.length || reviewing || thinking >= 0) return false;
@@ -372,7 +376,7 @@ function render() {
   // coach tab shows the review instead; before the review exists, a short note with a button to start it
   const rvOn = !!document.querySelector('#reviewCard.show');
   const playing = !!(usable() && !overNow() && cur === game.moves.length && !reviewing);
-  const can = usable() && (playing || (overNow() && !rvOn)), on = active();
+  const can = (usable() && (playing || (overNow() && !rvOn))) || (watchOver() && !rvOn), on = active();
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on && playing);
   document.body.classList.toggle('ck-tab', can || rvOn);

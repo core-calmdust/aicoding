@@ -21,20 +21,35 @@ const ICON = {
 const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
 const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', hi: 'रिकॉर्ड', ar: 'السجل' };
 const LTAB = {ja: 'ルール\nレッスン', en: 'Rules\nLessons', zh: '规则\n课程', ko: '규칙\n레슨', es: 'Reglas\nLecciones', fr: 'Règles\nLeçons', pt: 'Regras\nLições', de: 'Regeln\nLektionen', hi: 'नियम\nपाठ', ar: 'القواعد\nالدروس' };
+// the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated…) its box says so (the same words as
+// shared/infotabs.js on portrait phones)
+const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب' };
+const REST = {
+  ja: 'コーチはAIとの対局・二人対戦の間に使えます。AI同士・オンライン・レッスンなどの間はお休みです。終局後の振り返りは、このタブで見られます。',
+  en: 'The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.',
+  zh: '教练在与AI对局或双人对战时可用。AI对AI、在线对局、课程等期间暂停。终局后可在此标签查看复盘。',
+  ko: '코치는 AI 대국과 2인 대국 중에 사용할 수 있습니다. AI끼리 대국·온라인·레슨 등에서는 쉽니다. 대국이 끝나면 이 탭에서 복기를 볼 수 있습니다.',
+  es: 'El entrenador funciona cuando juegas contra la IA o contra un amigo en este dispositivo. Descansa en IA contra IA, partidas en línea, lecciones, etc. Al terminar, el repaso aparece en esta pestaña.',
+  fr: 'Le coach est disponible quand vous jouez contre l’IA ou à deux sur cet appareil. Il se repose pendant IA contre IA, les parties en ligne, les leçons, etc. Après la partie, l’analyse s’affiche dans cet onglet.',
+  pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
+  de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
+  hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+};
 const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
-let rail = null, panel = null, learn = null, nbox = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
+let rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
 try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
 const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
 const tt = (k, d) => (typeof t === 'function' ? t(k) : d);
-const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['ek', $('#evalCard')], ['ek', $('.kifu-card')], ['learn', learn], ['ls', $('.lesson-card')], ['ls', $('.puzzle-card')]].filter(x => x[1]);
-const coachOk = () => document.body.classList.contains('ck-tab');
+const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['coach', rest], ['ek', $('#evalCard')], ['ek', $('.kifu-card')], ['learn', learn], ['ls', $('.lesson-card')], ['ls', $('.puzzle-card')]].filter(x => x[1]);
+const coachOk = () => document.body.classList.contains('ck-tab');   // the coach (or its review) can work now
 const pinned = () => document.body.classList.contains('in-lesson') || document.body.classList.contains('in-puzzle');
 const onlineOn = () => document.body.classList.contains('mtab-online');
 const recOn = () => document.body.classList.contains('lt-rec');
 function label(k) {
   const l = lang();
-  if (k === 'coach') return window.MancalaCoach ? MancalaCoach.tx('head') : 'Coach';
+  if (k === 'coach') return (window.MancalaCoach && MancalaCoach.tx('head')) || CKL[l] || CKL.en;
   if (k === 'ek') return tt('eval', 'Eval');
   if (k === 'learn') return LTAB[l] || LTAB.en;
   if (k === 'rec') return REC[l] || REC.en;
@@ -45,6 +60,8 @@ function build() {
   rail.innerHTML = ['coach', 'ek', 'learn', 'rec', 'online'].map(k => `<button type="button" data-lt="${k}">${ICON[k]}<span></span></button>`).join('');
   panel = document.createElement('div'); panel.id = 'ltPanel';
   learn = document.createElement('div'); learn.id = 'ltLearn';
+  rest = document.createElement('div'); rest.id = 'ltCoachRest'; rest.className = 'card ck-card lt-rest';
+  rest.innerHTML = `<h3 class="ck-h">${ICON.coach}<span></span></h3><p class="ck-muted"></p>`;
   learn.addEventListener('click', e => {
     const b = e.target.closest('[data-go]'); if (!b) return;
     close();
@@ -100,12 +117,18 @@ function relabel() {
   const row = (k, ic, desc) => `<button type="button" data-go="${k}">${ICON[ic]}<span>${tt('btn.' + k, k)}${desc ? `<small>${desc}</small>` : ''}</span></button>`;
   const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', '')) + row('puzzle', 'puzzle', tt('btn.puzzle.title', ''));
   if (learn.dataset.h !== h) { learn.dataset.h = h; learn.innerHTML = h; }
+  const l = lang(), rh = rest.querySelector('span'), rp = rest.querySelector('p'), rt = REST[l] || REST.en;
+  if (rh.textContent !== label('coach')) rh.textContent = label('coach');
+  if (rp.textContent !== rt) rp.textContent = rt;
   fit();
 }
 // a label that does not fit the rail is hidden (never cut off)
 function fit() {
   if (!rail || !on) return;
-  rail.querySelectorAll('[data-lt] span').forEach(s => { s.style.display = ''; if (s.scrollWidth > s.parentNode.clientWidth - 2) s.style.display = 'none'; });
+  rail.querySelectorAll('[data-lt] span').forEach(s => {
+    if (s.parentNode.hidden || !s.parentNode.clientWidth) return;   // (a hidden button has no width: never judge it then)
+    s.style.display = ''; if (s.scrollWidth > s.parentNode.clientWidth - 2) s.style.display = 'none';
+  });
 }
 function setOpen(v) {
   open = !!v && on && !pinned();
@@ -116,15 +139,15 @@ function setOpen(v) {
 function close() { if (open) setOpen(false); }
 function sync() {
   if (!on) return;
-  if (cur === 'coach' && !coachOk()) cur = 'ek';
   const ol = onlineOn();
   rail.querySelectorAll('[data-lt]').forEach(b => {
     const k = b.dataset.lt, sel = recOn() ? k === 'rec' : ol ? k === 'online' : open && k === cur;
     b.classList.toggle('sel', sel); b.setAttribute('aria-selected', sel ? 'true' : 'false');
-    if (k === 'coach') b.hidden = !coachOk();
-    if (k === 'online') b.hidden = document.body.classList.contains('no-online');
+    if (k === 'online' && b.hidden !== document.body.classList.contains('no-online')) { b.hidden = !b.hidden; fit(); }
   });
   if (document.body.dataset.lt !== cur) document.body.dataset.lt = cur;
+  const rs = !coachOk() && !document.querySelector('#reviewCard.show');
+  if (document.body.classList.contains('lt-ckrest') !== rs) document.body.classList.toggle('lt-ckrest', rs);
   navSync();
 }
 function enter() {
@@ -143,7 +166,7 @@ function leave() {
   for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
   homes = [];
   rail.remove(); panel.remove(); nbox.remove();
-  document.body.classList.remove('lt-on', 'lt-open', 'lt-nav'); delete document.body.dataset.lt;
+  document.body.classList.remove('lt-on', 'lt-open', 'lt-nav', 'lt-ckrest'); delete document.body.dataset.lt;
   refit();
 }
 function refit() {
@@ -161,15 +184,25 @@ document.addEventListener('click', e => {
 document.addEventListener('pointerdown', e => {
   if (on && open && !pinned() && e.target.closest && e.target.closest('.frame') && !e.target.closest('#ltPanel')) { e.stopPropagation(); }
 }, true);
-// swipes: left from the right edge opens, right on the open drawer closes; the drawer follows the finger
+// swipes: left from the right edge opens, right on the open drawer (or the 戦績 / オンライン box in its place) closes it;
+// the box follows the finger
 let sw = null;
-const W = () => panel.getBoundingClientRect().width + 80;
+const W = el => el.getBoundingClientRect().width + 80;
+// the 戦績 / オンライン box (it is not the drawer): closed as its tab would
+function closeSide() {
+  if (recOn() && window.GameRecord) { GameRecord.close(); document.body.classList.remove('lt-rec'); }
+  if (onlineOn() && typeof mtab === 'function') mtab('game');
+  sync();
+}
 document.addEventListener('touchstart', e => {
-  if (!on || pinned() || e.touches.length !== 1 || document.querySelector('.overlay.show')) return;
-  const x = e.touches[0].clientX, y = e.touches[0].clientY;
-  if (open && e.target.closest && e.target.closest('#ltPanel')) sw = { x, y, mode: 'close', dx: 0 };
-  else if (!open && !onlineOn() && x > innerWidth - 90) sw = { x, y, mode: 'open', dx: 0 };
-  else sw = null;
+  sw = null;
+  if (!on || pinned() || e.touches.length !== 1) return;
+  const x = e.touches[0].clientX, y = e.touches[0].clientY, tg = e.target.closest ? e.target : null;
+  const side = tg && (recOn() ? tg.closest('.grc-ov') : onlineOn() ? tg.closest('.dock') : null);
+  if (side) { sw = { x, y, mode: 'close', dx: 0, el: side, side: true }; return; }
+  if (document.querySelector('.overlay.show')) return;
+  if (open && tg && tg.closest('#ltPanel')) sw = { x, y, mode: 'close', dx: 0, el: panel };
+  else if (!open && !onlineOn() && !recOn() && x > innerWidth - 90) sw = { x, y, mode: 'open', dx: 0, el: panel };
 }, { passive: true });
 document.addEventListener('touchmove', e => {
   if (!sw) return;
@@ -179,18 +212,25 @@ document.addEventListener('touchmove', e => {
     if (ay >= 6 && ay >= ax * .8) { sw = null; return; }
     if (ax < 12 || ax < ay * 1.6) return;
     sw.go = true; panel.classList.add('drag');
+    if (sw.side) { sw.el.style.animation = 'none'; sw.el.style.transition = 'none'; }
   }
   sw.dx = dx;
-  const w = W(), off = sw.mode === 'open' ? Math.max(0, Math.min(w, w + dx)) : Math.max(0, Math.min(w, dx));
-  panel.style.transform = `translateX(${off}px)`;
+  const w = W(sw.el), off = sw.mode === 'open' ? Math.max(0, Math.min(w, w + dx)) : Math.max(0, Math.min(w, dx));
+  sw.el.style.transform = `translateX(${off}px)`;
   if (e.cancelable) e.preventDefault();   // the page must not pan sideways under the finger
 }, { passive: false });
 document.addEventListener('touchend', () => {
   if (!sw) return;
   const s = sw; sw = null;
   if (!s.go) return;
+  if (s.side) {   // 戦績 / オンライン: slides out to the right (or back), then closes
+    const el = s.el, out = s.dx > 50;
+    el.style.transition = 'transform .2s ease-out'; el.style.transform = out ? `translateX(${W(el)}px)` : '';
+    setTimeout(() => { if (out) closeSide(); el.style.transition = ''; el.style.transform = ''; el.style.animation = ''; }, out ? 200 : 220);
+    panel.classList.remove('drag'); return;
+  }
   panel.classList.remove('drag'); panel.style.transform = '';
-  if (s.mode === 'open' && s.dx < -50) { if (cur === 'coach' && !coachOk()) cur = 'ek'; setOpen(true); }
+  if (s.mode === 'open' && s.dx < -50) setOpen(true);
   else if (s.mode === 'close' && s.dx > 50) setOpen(false);
   else setOpen(open);
 }, { passive: true });
