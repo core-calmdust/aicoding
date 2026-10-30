@@ -170,7 +170,7 @@ function updateWarp(dt, w) {
     warp.visible = w > 0.02; if (!warp.visible) return;
     const len = 30 + w * 380, c = new THREE.Color(PAL.line ? PAL.line[0] : 0xffffff);
     warpD.forEach((d, i) => { d.z += dt * (900 + w * 4200); if (d.z > -20) { d.z -= 940; const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 110; d.x = Math.cos(a) * r; d.y = Math.sin(a) * r; }
-        const o = i * 6, k = w * Math.min(1, (d.z + 940) / 300) * 0.18;
+        const o = i * 6, k = w * Math.min(1, (d.z + 940) / 300) * 0.1;
         warpP[o] = d.x; warpP[o + 1] = d.y; warpP[o + 2] = d.z; warpP[o + 3] = d.x; warpP[o + 4] = d.y; warpP[o + 5] = d.z - len;
         warpC[o] = c.r * k; warpC[o + 1] = c.g * k; warpC[o + 2] = c.b * k; warpC[o + 3] = warpC[o + 4] = warpC[o + 5] = 0; });
     warpG.attributes.position.needsUpdate = true; warpG.attributes.color.needsUpdate = true;
@@ -645,7 +645,7 @@ function morphify(grp, cy, rv = REVEAL) {
     u.f = f; u.a = a; return u;
 }
 // 崩れるのは速く、混沌から組み上がるのはゆっくり（破片ごとに時間差があるので徐々にステージになる）
-const M_OUT = 1.0, M_IN = 0.62, M_FADE = 0.7; // 崩れ方は控えめにゆっくり、次の世界と重なりながら移る
+const M_OUT = 0.7, M_IN = 0.62, M_FADE = 0.7; // 崩れ方は控えめにゆっくり、次の世界と重なりながら移る
 function tickK(c, dt) {
     if (c.delay > 0) { c.delay -= dt; return; }
     const sp = c.to > c.k ? M_OUT : (c.spIn || M_IN); c.k += Math.max(-dt * sp, Math.min(dt * sp, c.to - c.k)); c.u.value = c.k;
@@ -731,7 +731,7 @@ function buildChunk(ci) {
     scene.add(grp);
     const mid = (ci + 0.5) * CH;
     if (S.t < S.startUntil) { u.a.value = 0.3; return { obj: grp, u, k: 1, to: 0, delay: 0, spIn: 1 }; } // 開始時: 近くから軽く集まる（1秒）
-    if (S.t < S.evoUntil) { u.a.value = 0.12; return { obj: grp, u, k: 1, to: 0, delay: 0.1 + waveDelay(mid - S.d) * 0.25, spIn: 1 / 0.9 }; } // 進化中: 混沌から組み上がる
+    if (S.t < S.evoUntil) { u.a.value = 0.06; return { obj: grp, u, k: 1, to: 0, delay: 0.1 + waveDelay(mid - S.d) * 0.25, spIn: 1 / 0.9 }; } // 進化中: 混沌から組み上がる
     return { obj: grp, u, k: 1, to: 0, delay: 0 };
 }
 function disposeObj(o) {
@@ -1545,7 +1545,7 @@ function hitTarget(t, order, volley) {
     if (!t.alive) return;
     t.alive = false; sfxHit(order, volley, wide(toScreen(t.obj ? epos(t, _sp) : _sp.set(t.x, t.y, -(S.d + t.rz)))[0] / VW * 2 - 1));
     if (t.obj) { const p = epos(t); removeEnemy(t); boom(p, [PAL.gate[0], PAL.gate[1], 0xffffff], 22); burstRing(p, PAL.gate[1], 0.9, false, 0.7, 3.5);
-        S.score += 100 * Math.max(1, volley); S.kills++; if (S.kills >= S.quota && S.mode === 'play') S.evoPending = 0.35; }
+        S.score += 100 * Math.max(1, volley); S.kills++; if (S.kills >= S.quota && S.mode === 'play' && !hexGate) spawnHexGate(); }
     else { const p = new THREE.Vector3(t.x, t.y, -(S.d + t.rz)); boom(p, [PAL.gate[2], 0xffffff], 8); S.score += 10; }
 }
 
@@ -1647,6 +1647,7 @@ function startGame() {
     if (S.mode === 'dead' && S.deadT < 0.8) return;
     if (S.mode === 'dead') resetWorld();
     S.itemDone = false; items.forEach(it => disposeObj(it.obj)); items.length = 0;
+    if (hexGate) { disposeObj(hexGate.obj); hexGate = null; }
     S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name };
 }
@@ -1656,10 +1657,10 @@ function evolve() {
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve(); S.itemDone = false;
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
     enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
-    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.12; dying.push(c); } chunks.clear(); // 散り方は控えめに
+    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.06; dying.push(c); } chunks.clear(); // 散り方は控えめに
     S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
-        gt.u.a.value = 0.12; const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; dying.push(old);
+        gt.u.a.value = 0.06; const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; dying.push(old);
         if (gt.passed || gt.d < S.d + 200) { gates.splice(i, 1); continue; }
         buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }
     field.recolor();
@@ -1681,7 +1682,7 @@ function updateItems(dt) {
     for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; it.t += dt; it.rz -= 300 * dt;
         it.x += (S.x - it.x) * Math.min(1, dt * 0.25); it.y += (S.y - it.y) * Math.min(1, dt * 0.25); // ゆっくり近くへ寄ってくる
         it.obj.position.set(it.x, it.y + Math.sin(it.t * 3) * 6, -(S.d + it.rz)); it.core.rotation.set(it.t * 1.5, it.t * 2, 0); it.cross.rotation.z = it.t; it.obj.children[2].rotation.set(-it.t, it.t * 0.7, 0);
-        const got = S.mode === 'play' && Math.abs(it.rz) < 24 && Math.hypot(it.x - S.x, it.y - S.y) < 20 + HIT_R * 1.5; // 胴体の1.5倍の範囲にアイテムが触れたら取得
+        const got = S.mode === 'play' && Math.abs(it.rz) < 40 && Math.hypot(it.x - S.x, it.y - S.y) < 32 + HIT_R * 1.5; // 外周のフレーム（少し広め）が胴体の1.5倍の範囲に触れたら取得
         if (got) { S.hp = Math.min(3, S.hp + 1); sfxHeal(); boom(it.obj.position.clone(), [0x6dffb0, 0xffffff], 18); S.banner = { t: 0, n: 'HP +1', m: '' }; }
         if (got || it.rz < -150) { disposeObj(it.obj); items.splice(i, 1); } }
 }
@@ -1690,6 +1691,35 @@ function damage() {
     if (S.inv > 0 || S.mode !== 'play') return;
     S.hp--; S.inv = 1.6; S.dmg = 1; S.glitch = 0.7; S.shake = 0.6; sfxDamage(); dragon.setAccent(0xff3050);
     if (S.hp <= 0) gameOver();
+}
+// ---------------- 六角形のゲート: ノルマ達成後に出現し、くぐると次のステージへ（くぐれないとダメージを受けて次へ）----------------
+let hexGate = null;
+const HEX_R = 82; // くぐれる穴の半径
+function spawnHexGate() {
+    const d = S.d + 1700, cv = cave(d), g = new THREE.Group(), col = _c(PAL.cry[0]).lerp(_c(0xffffff), 0.35);
+    const ringMat = new THREE.MeshBasicMaterial({ color: col }), lineMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+    const faceMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    [ringMat, lineMat, faceMat].forEach(enemyFog);
+    const hex = (r, th, dep) => { const parts = []; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + Math.PI / 6, L = r; const b = new THREE.BoxGeometry(L + th * 0.6, th, dep); b.rotateZ(a + Math.PI / 2); b.translate(Math.cos(a) * r * 0.866, Math.sin(a) * r * 0.866, 0); parts.push(b); } return mergeGeometries(parts); };
+    const ring = new THREE.Mesh(hex(HEX_R + 8, 7, 10), ringMat), outer = new THREE.LineSegments(new THREE.EdgesGeometry(hex(HEX_R + 26, 3, 3)), lineMat);
+    const inner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(HEX_R, 6)), lineMat), face = new THREE.Mesh(new THREE.CircleGeometry(HEX_R, 6), faceMat);
+    g.add(ring, outer, inner, face);
+    const x = (Math.random() - 0.5) * Math.min(160, cv.hw * 0.6), y = cv.cy + (Math.random() - 0.5) * Math.min(90, cv.hh * 0.5);
+    g.position.set(x, y, -d); scene.add(g);
+    hexGate = { d, x, y, obj: g, ring, outer, inner, face, t: 0, done: false };
+    for (let i = gates.length - 1; i >= 0; i--) if (Math.abs(gates[i].d - d) < 520) { disposeObj(gates[i].obj); gates.splice(i, 1); } // 近くの壁は取り除く
+    S.banner = { t: 0, n: 'GATE', m: 'PASS THROUGH' };
+}
+function updateHexGate(dt) {
+    const h = hexGate; if (!h) return; h.t += dt;
+    h.ring.rotation.z = h.t * 0.4; h.outer.rotation.z = -h.t * 0.25; const p = 1 + beatPulse() * 0.06; h.inner.scale.setScalar(p); h.face.material.opacity = 0.06 + beatPulse() * 0.08;
+    if (!h.done && S.d >= h.d && S.mode === 'play') {
+        h.done = true;
+        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R - HIT_R) { sfxHeal(); S.score += 1000; } // くぐれた
+        else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
+        evolve();
+    }
+    if (h.done && S.d > h.d + 400) { disposeObj(h.obj); hexGate = null; }
 }
 function gameOver() {
     musicStop();
@@ -1702,7 +1732,7 @@ function step(h) {
     const cv = cave(S.d);
     if (S.mode === 'evo') { // 進化中: 無敵。竜は変わりゆく世界の中を漂う
         S.evoT += h; const env = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
-        S.speed = S.evoSpd * (1 + 0.35 * env); // 世界が組み替わるあいだは一気に加速
+        S.speed = S.evoSpd * (1 + 0.15 * env); // 世界が組み替わるあいだは一気に加速
         const tx = Math.sin(S.evoT * 2.1 + 0.7) * 50 * env, ty = cv.cy + Math.sin(S.evoT * 2.6) * 25 * env;
         S.vx = (tx - S.x) * 2.2; S.vy = (ty - S.y) * 2.2; S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.speed = S.evoSpd; S.waveT = 1.0; nextGateD = Math.max(nextGateD, S.d + 1800); }
@@ -1904,11 +1934,11 @@ function frame(now) {
         const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
         S.rx += (tx - S.rx) * Math.min(1, dt * 2.2); S.ry += (ty - S.ry) * Math.min(1, dt * 2.2); /* 照準はもっさり重めについてくる */ S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
-    if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
+    if (S.mode === 'play' && !hexGate) { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     litEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
-    updateItems(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
+    updateItems(dt); updateHexGate(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.7 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.7秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') spawnGates(S.d);
@@ -1944,7 +1974,7 @@ function frame(now) {
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
     updateShards(dt);
     const wk = S.mode === 'evo' ? Math.sin(eu * Math.PI) : 0;
-    camera.fov = baseFov + Math.pow(wk, 0.7) * 4; camera.updateProjectionMatrix(); updateWarp(dt, wk);
+    camera.fov = baseFov + Math.pow(wk, 0.7) * 2; camera.updateProjectionMatrix(); updateWarp(dt, wk);
     { const sf = Math.max(0.55, 1 - S.stage * 0.09); bloom.strength = (0.42 + S.reveal * 0.32 + wk * 0.1) * sf; bloom.threshold = 0.42 + Math.min(0.2, S.stage * 0.04); } // 後半の面ほど光のにじみを抑える
     { // 暗闇の中から、撃破を重ねるほどステージの姿があらわになり、進化の直前で最高潮に
         const want = S.mode === 'title' ? 0.75 : S.mode === 'evo' ? 1 : Math.min(1, S.kills / S.quota); S.reveal += (want - S.reveal) * Math.min(1, dt * (S.mode === 'evo' ? 0.8 : 1.5));
@@ -1960,7 +1990,7 @@ function frame(now) {
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
