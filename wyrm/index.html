@@ -945,7 +945,27 @@ function hat808(t, gain, open = false, pan = 0) {
     HAT_F.forEach(f => { const o = AC.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(bp); o.start(t); o.stop(t + d + 0.02); });
     bp.connect(hp).connect(g); toOut(g, master, pan);
 }
-function sfxFire(n) { if (!audio()) return; const t = AC.currentTime; const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3800, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18 + n * 0.02, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.22); }
+// 発射音: ステージごとに違う音色で、いま鳴っている和音の音を高い方から順にたどる（ロック音とは別の、音楽的な発射音）
+// t は音楽の拍にそろえた時刻、n は一斉射撃の何発目か
+function sfxFire(n, t, total = 1) {
+    if (!audio()) return; t = t || AC.currentTime;
+    const ch = chordAt(t), up = ch.slice(1).map(m => m + 24).sort((x, y) => y - x), m = up[n % up.length] - 12 * Math.floor(n / up.length);
+    const f = mtof(m), k = 0.11 * (1 - n / Math.max(8, total * 1.6)); PANV = (n % 2 ? 0.6 : -0.6);
+    switch (S.stage % 6) {
+        case 0: { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f * 2, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.04); // しずくのように落ちる
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(k * 1.3, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3); o.connect(g); toOut(g); const s2 = AC.createGain(); s2.gain.value = 0.5; g.connect(s2).connect(fx); o.start(t); o.stop(t + 0.32); break; }
+        case 1: pluck(t, m, k * 0.9, 'square', 2600, 0.16, [0]); break; // 角ばったチッ
+        case 2: bell(t, m, k * 1.1, 2, 1.6, 0.4, 0.6); break; // 短いベル
+        case 3: { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(f / 2, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.05); // 駆け上がる
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(k * 1.4, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26); o.connect(g); toOut(g); o.start(t); o.stop(t + 0.28); break; }
+        case 4: pluck(t, m, k * 0.8, 'sawtooth', 5200, 0.22, [-11, 11]); break; // 少しずらした2本のノコギリ波
+        default: voice(t, f, 'sine', 0.003, 0.28, k, 0.6); voice(t, f * 1.5, 'sine', 0.003, 0.2, k * 0.5, 0.6); // 5度を重ねた澄んだ音
+    }
+    PANV = 0;
+    // 下地の風切り音（ごく小さく）
+    const s = noise(), bp = AC.createBiquadFilter(), g = AC.createGain(); bp.type = 'bandpass'; bp.Q.value = 3; bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(3800, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); s.connect(bp).connect(g).connect(master); s.start(t); s.stop(t + 0.22);
+}
 // 命中: 一斉射撃の何発目かで和音を上へたどる。最初の一発は根音の低いアタックも
 function sfxHit(order, volley, pan = 0) {
     if (!audio()) return; const t = hitSlot(); if (t < 0) return; const ch = chordAt(t);
@@ -1547,8 +1567,11 @@ function updateLock() {
         for (const b of bullets) tryLock(b, _sp.set(b.x, b.y, -(S.d + b.rz)));
     }
     if (!held && lockHeldPrev && S.mode === 'play') {
-        if (locks.length) { const v = locks.slice(); v.forEach((t, i) => setTimeout(() => { if (S.mode === 'play' || S.mode === 'evo') launch(t, i, v.length); sfxFire(i); }, i * 55)); }
-        else { const dir = aimDir(); launch(null, 0, 1, dir); sfxFire(0); }
+        // 発射は音楽の拍にそろえる: 次の16分音符の頭から、32分音符おきに1本ずつ
+        const t0 = AC && MUS.on ? q16(AC.currentTime + 0.01) : 0, gap = S16 / 2;
+        const at = i => AC && MUS.on ? Math.max(0, (t0 + i * gap - AC.currentTime) * 1000) : i * 55;
+        if (locks.length) { const v = locks.slice(); v.forEach((t, i) => { if (t0) sfxFire(i, t0 + i * gap, v.length); setTimeout(() => { if (S.mode === 'play' || S.mode === 'evo') launch(t, i, v.length); if (!t0) sfxFire(i); }, at(i)); }); }
+        else { const dir = aimDir(); if (t0) sfxFire(0, t0, 1); setTimeout(() => { if (S.mode === 'play') launch(null, 0, 1, dir); if (!t0) sfxFire(0); }, at(0)); }
         locks.forEach((t, i) => { t.lockN = i + 1; if (!marked.includes(t)) marked.push(t); }); locks.length = 0;
     }
     for (let i = marked.length - 1; i >= 0; i--) { const t = marked[i]; if (!t.alive || !(enemies.includes(t) || bullets.includes(t))) marked.splice(i, 1); }
