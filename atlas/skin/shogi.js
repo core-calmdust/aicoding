@@ -94,6 +94,7 @@
     res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=1'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
+    window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once
     try { renderBoard(false); renderHands(); } catch (e) {}
   });
 })();
