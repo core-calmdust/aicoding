@@ -2171,14 +2171,15 @@ async function gmDiagram(mode) {
   const st = statusAt(cur), tm = posAt(cur).side;
   let cap = cur ? `${cur}. ${pname(at.get(top(moves[cur - 1])))} ${sanOf(cur - 1)}` : RX.tx('start');
   cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(tm) })) + '　' + t('rule.' + rule);
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
-  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap.replace(/rule\.\w+$/, ''), players: pl, path: 'gomoku', titleFont: RX.SERIF,
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
+  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap.replace(/rule\.\w+$/, ''), players: pl, moves: mode === 'moves' ? moves.slice(0, cur).map((m, k) => `${k + 1}.${sanOf(k)}`) : null, path: 'gomoku', titleFont: RX.SERIF,
     draw: (g, x, y) => RX.goBoard(g, x, y, { n: N, cell: c, at: i => at.get(i) || 0, stars: [3 * N + 3, 3 * N + 11, 7 * N + 7, 11 * N + 3, 11 * N + 11], last: cur ? top(moves[cur - 1]) : -1, nums: mode === 'num' ? nums : null, cols: 'ABCDEFGHIJKLMNO' }) });
 }
 RecordExport.attach({ btn: '#btnShare', key: 'gomoku', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'moves', label: 'h8 i9 …', ext: 'txt', text: () => moves.map(sqName).join(' ') + '\n' }, { id: 'rec', label: '1.h8 2.i9 …', ext: 'txt', text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: gmSgf }],
-  url: () => startPos ? '' : shareUrl(), image: { modes: ['num', 'board'], draw: gmDiagram } });
+  formats: () => [{ id: 'moves', label: 'h8 i9 …', ext: 'txt', meta: false, text: () => moves.map(sqName).join(' ') + '\n' }, { id: 'rec', label: '1.h8 2.i9 …', ext: 'txt', text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: gmSgf }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'Black', sgf: 'PB' }, { label: pname(P2), name: playerName(P2), tag: 'White', sgf: 'PW' }],
+  url: () => startPos ? '' : shareUrl(), image: { modes: ['num', 'board', 'moves'], draw: gmDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

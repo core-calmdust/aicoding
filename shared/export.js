@@ -10,7 +10,10 @@
 //     btn: '#btnShare', key: 'chess', title: 'Chess',
 //     lang: () => LANG, toast: (m) => toast(m), show / hide: optional overlay show / hide functions,
 //     empty: () => !moves.length,                       // nothing to export -> toast tx('empty')
-//     formats: () => [{ id: 'pgn', label: 'PGN', ext: 'pgn', text: () => pgnText() }, ...],
+//     formats: () => [{ id: 'pgn', label: 'PGN', ext: 'pgn', text: () => pgnText() }, ...],   // meta: false = no title / names
+//                                                       (FEN, bare move strings); meta: 'self' = the text puts them in itself
+//     sides: () => [{ label: 'White', name: 'You', tag: 'White', sgf: 'PW' }, ...],   // the two name fields: side label,
+//                                                       the game's default name, PGN-style header tag / SGF property to fill
 //     url: () => shareUrl(),                            // optional: adds a URL tab (shared on phones with navigator.share)
 //     image: { modes: ['board', 'moves'], draw: async mode => canvas }   // optional: adds the 局面図 tab
 //   })
@@ -19,16 +22,16 @@
 (function () {
 'use strict';
 const TX = {
-  ja: { title: '棋譜・局面図', img: '局面図', board: '盤面', moves: '手順つき', num: '手順番号', download: 'ダウンロード', copy: 'コピー', share: '共有', copyUrl: 'URLをコピー', copied: 'コピーしました', saved: '保存しました', close: '閉じる', empty: '棋譜がありません', btnT: '棋譜を一般的な形式で書き出し・局面図を画像で共有', start: '開始局面', after: '{n}手目 {m} まで', toMove: '{s}の番', record: '棋譜', vs: '対', ttl: 'タイトル', date: '日付を入れる' },
-  en: { title: 'Record & diagram', img: 'Diagram', board: 'Board', moves: 'With moves', num: 'Numbered', download: 'Download', copy: 'Copy', share: 'Share', copyUrl: 'Copy URL', copied: 'Copied', saved: 'Saved', close: 'Close', empty: 'No moves yet', btnT: 'Export the record in standard formats or share a diagram image', start: 'Starting position', after: 'After move {n}: {m}', toMove: '{s} to move', record: 'Moves', vs: 'vs', ttl: 'Title', date: 'Include date' },
-  zh: { title: '棋谱・局面图', img: '局面图', board: '盘面', moves: '附棋谱', num: '手顺编号', download: '下载', copy: '复制', share: '分享', copyUrl: '复制链接', copied: '已复制', saved: '已保存', close: '关闭', empty: '还没有棋谱', btnT: '以通用格式导出棋谱，或以图片分享局面图', start: '初始局面', after: '第{n}手 {m} 之后', toMove: '{s}走', record: '棋谱', vs: '对', ttl: '标题', date: '加入日期' },
-  ko: { title: '기보・국면도', img: '국면도', board: '판면', moves: '수순 포함', num: '수순 번호', download: '다운로드', copy: '복사', share: '공유', copyUrl: 'URL 복사', copied: '복사했습니다', saved: '저장했습니다', close: '닫기', empty: '기보가 없습니다', btnT: '기보를 표준 형식으로 내보내거나 국면도를 이미지로 공유', start: '시작 국면', after: '{n}수째 {m} 까지', toMove: '{s} 차례', record: '기보', vs: '대', ttl: '제목', date: '날짜 넣기' },
-  es: { title: 'Partida y diagrama', img: 'Diagrama', board: 'Tablero', moves: 'Con jugadas', num: 'Numerado', download: 'Descargar', copy: 'Copiar', share: 'Compartir', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Guardado', close: 'Cerrar', empty: 'Aún no hay jugadas', btnT: 'Exportar la partida en formatos estándar o compartir un diagrama', start: 'Posición inicial', after: 'Tras la jugada {n}: {m}', toMove: 'Juegan {s}', record: 'Jugadas', vs: 'vs', ttl: 'Título', date: 'Incluir fecha' },
-  fr: { title: 'Partie et diagramme', img: 'Diagramme', board: 'Plateau', moves: 'Avec coups', num: 'Numéroté', download: 'Télécharger', copy: 'Copier', share: 'Partager', copyUrl: "Copier l'URL", copied: 'Copié', saved: 'Enregistré', close: 'Fermer', empty: 'Aucun coup pour le moment', btnT: 'Exporter la partie aux formats standard ou partager un diagramme', start: 'Position initiale', after: 'Après le coup {n} : {m}', toMove: 'Trait aux {s}', record: 'Coups', vs: 'contre', ttl: 'Titre', date: 'Inclure la date' },
-  pt: { title: 'Partida e diagrama', img: 'Diagrama', board: 'Tabuleiro', moves: 'Com lances', num: 'Numerado', download: 'Baixar', copy: 'Copiar', share: 'Compartilhar', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Salvo', close: 'Fechar', empty: 'Ainda não há lances', btnT: 'Exportar a partida em formatos padrão ou compartilhar um diagrama', start: 'Posição inicial', after: 'Após o lance {n}: {m}', toMove: 'Vez das {s}', record: 'Lances', vs: 'x', ttl: 'Título', date: 'Incluir data' },
-  de: { title: 'Partie & Diagramm', img: 'Diagramm', board: 'Brett', moves: 'Mit Zügen', num: 'Nummeriert', download: 'Herunterladen', copy: 'Kopieren', share: 'Teilen', copyUrl: 'URL kopieren', copied: 'Kopiert', saved: 'Gespeichert', close: 'Schließen', empty: 'Noch keine Züge', btnT: 'Partie in Standardformaten exportieren oder ein Diagramm teilen', start: 'Ausgangsstellung', after: 'Nach Zug {n}: {m}', toMove: '{s} am Zug', record: 'Züge', vs: 'gegen', ttl: 'Titel', date: 'Datum einfügen' },
-  hi: { title: 'रिकॉर्ड और आरेख', img: 'आरेख', board: 'बोर्ड', moves: 'चालों सहित', num: 'क्रमांकित', download: 'डाउनलोड', copy: 'कॉपी', share: 'शेयर', copyUrl: 'URL कॉपी करें', copied: 'कॉपी हो गया', saved: 'सहेजा गया', close: 'बंद करें', empty: 'अभी कोई चाल नहीं', btnT: 'रिकॉर्ड को मानक प्रारूपों में निर्यात करें या आरेख छवि साझा करें', start: 'आरंभिक स्थिति', after: 'चाल {n} के बाद: {m}', toMove: '{s} की बारी', record: 'चालें', vs: 'बनाम', ttl: 'शीर्षक', date: 'तारीख शामिल करें' },
-  ar: { title: 'السجل والمخطط', img: 'مخطط', board: 'اللوحة', moves: 'مع النقلات', num: 'مرقّم', download: 'تنزيل', copy: 'نسخ', share: 'مشاركة', copyUrl: 'نسخ الرابط', copied: 'تم النسخ', saved: 'تم الحفظ', close: 'إغلاق', empty: 'لا توجد نقلات بعد', btnT: 'تصدير السجل بصيغ قياسية أو مشاركة صورة المخطط', start: 'الوضع الابتدائي', after: 'بعد النقلة {n}: {m}', toMove: 'دور {s}', record: 'النقلات', vs: 'ضد', ttl: 'العنوان', date: 'إدراج التاريخ' },
+  ja: { title: '棋譜・局面図', img: '局面図', board: '盤面', moves: '手順つき', num: '手順番号', download: 'ダウンロード', copy: 'コピー', share: '共有', copyUrl: 'URLをコピー', copied: 'コピーしました', saved: '保存しました', close: '閉じる', empty: '棋譜がありません', btnT: '棋譜を一般的な形式で書き出し・局面図を画像で共有', start: '開始局面', after: '{n}手目 {m} まで', toMove: '{s}の番', record: '棋譜', vs: '対', ttl: 'タイトル', date: '日付を入れる', nm: '名前' },
+  en: { title: 'Record & diagram', img: 'Diagram', board: 'Board', moves: 'With moves', num: 'Numbered', download: 'Download', copy: 'Copy', share: 'Share', copyUrl: 'Copy URL', copied: 'Copied', saved: 'Saved', close: 'Close', empty: 'No moves yet', btnT: 'Export the record in standard formats or share a diagram image', start: 'Starting position', after: 'After move {n}: {m}', toMove: '{s} to move', record: 'Moves', vs: 'vs', ttl: 'Title', date: 'Include date', nm: 'Name' },
+  zh: { title: '棋谱・局面图', img: '局面图', board: '盘面', moves: '附棋谱', num: '手顺编号', download: '下载', copy: '复制', share: '分享', copyUrl: '复制链接', copied: '已复制', saved: '已保存', close: '关闭', empty: '还没有棋谱', btnT: '以通用格式导出棋谱，或以图片分享局面图', start: '初始局面', after: '第{n}手 {m} 之后', toMove: '{s}走', record: '棋谱', vs: '对', ttl: '标题', date: '加入日期', nm: '名字' },
+  ko: { title: '기보・국면도', img: '국면도', board: '판면', moves: '수순 포함', num: '수순 번호', download: '다운로드', copy: '복사', share: '공유', copyUrl: 'URL 복사', copied: '복사했습니다', saved: '저장했습니다', close: '닫기', empty: '기보가 없습니다', btnT: '기보를 표준 형식으로 내보내거나 국면도를 이미지로 공유', start: '시작 국면', after: '{n}수째 {m} 까지', toMove: '{s} 차례', record: '기보', vs: '대', ttl: '제목', date: '날짜 넣기', nm: '이름' },
+  es: { title: 'Partida y diagrama', img: 'Diagrama', board: 'Tablero', moves: 'Con jugadas', num: 'Numerado', download: 'Descargar', copy: 'Copiar', share: 'Compartir', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Guardado', close: 'Cerrar', empty: 'Aún no hay jugadas', btnT: 'Exportar la partida en formatos estándar o compartir un diagrama', start: 'Posición inicial', after: 'Tras la jugada {n}: {m}', toMove: 'Juegan {s}', record: 'Jugadas', vs: 'vs', ttl: 'Título', date: 'Incluir fecha', nm: 'Nombre' },
+  fr: { title: 'Partie et diagramme', img: 'Diagramme', board: 'Plateau', moves: 'Avec coups', num: 'Numéroté', download: 'Télécharger', copy: 'Copier', share: 'Partager', copyUrl: "Copier l'URL", copied: 'Copié', saved: 'Enregistré', close: 'Fermer', empty: 'Aucun coup pour le moment', btnT: 'Exporter la partie aux formats standard ou partager un diagramme', start: 'Position initiale', after: 'Après le coup {n} : {m}', toMove: 'Trait aux {s}', record: 'Coups', vs: 'contre', ttl: 'Titre', date: 'Inclure la date', nm: 'Nom' },
+  pt: { title: 'Partida e diagrama', img: 'Diagrama', board: 'Tabuleiro', moves: 'Com lances', num: 'Numerado', download: 'Baixar', copy: 'Copiar', share: 'Compartilhar', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Salvo', close: 'Fechar', empty: 'Ainda não há lances', btnT: 'Exportar a partida em formatos padrão ou compartilhar um diagrama', start: 'Posição inicial', after: 'Após o lance {n}: {m}', toMove: 'Vez das {s}', record: 'Lances', vs: 'x', ttl: 'Título', date: 'Incluir data', nm: 'Nome' },
+  de: { title: 'Partie & Diagramm', img: 'Diagramm', board: 'Brett', moves: 'Mit Zügen', num: 'Nummeriert', download: 'Herunterladen', copy: 'Kopieren', share: 'Teilen', copyUrl: 'URL kopieren', copied: 'Kopiert', saved: 'Gespeichert', close: 'Schließen', empty: 'Noch keine Züge', btnT: 'Partie in Standardformaten exportieren oder ein Diagramm teilen', start: 'Ausgangsstellung', after: 'Nach Zug {n}: {m}', toMove: '{s} am Zug', record: 'Züge', vs: 'gegen', ttl: 'Titel', date: 'Datum einfügen', nm: 'Name' },
+  hi: { title: 'रिकॉर्ड और आरेख', img: 'आरेख', board: 'बोर्ड', moves: 'चालों सहित', num: 'क्रमांकित', download: 'डाउनलोड', copy: 'कॉपी', share: 'शेयर', copyUrl: 'URL कॉपी करें', copied: 'कॉपी हो गया', saved: 'सहेजा गया', close: 'बंद करें', empty: 'अभी कोई चाल नहीं', btnT: 'रिकॉर्ड को मानक प्रारूपों में निर्यात करें या आरेख छवि साझा करें', start: 'आरंभिक स्थिति', after: 'चाल {n} के बाद: {m}', toMove: '{s} की बारी', record: 'चालें', vs: 'बनाम', ttl: 'शीर्षक', date: 'तारीख शामिल करें', nm: 'नाम' },
+  ar: { title: 'السجل والمخطط', img: 'مخطط', board: 'اللوحة', moves: 'مع النقلات', num: 'مرقّم', download: 'تنزيل', copy: 'نسخ', share: 'مشاركة', copyUrl: 'نسخ الرابط', copied: 'تم النسخ', saved: 'تم الحفظ', close: 'إغلاق', empty: 'لا توجد نقلات بعد', btnT: 'تصدير السجل بصيغ قياسية أو مشاركة صورة المخطط', start: 'الوضع الابتدائي', after: 'بعد النقلة {n}: {m}', toMove: 'دور {s}', record: 'النقلات', vs: 'ضد', ttl: 'العنوان', date: 'إدراج التاريخ', nm: 'الاسم' },
 };
 let O = null, ov = null, fmt = '', mode = '', blob = null, job = 0;
 const L = () => { const l = (O && O.lang && O.lang()) || 'ja'; return TX[l] ? l : 'en'; };
@@ -42,6 +45,10 @@ function meta(key) {
   try { title = localStorage.getItem('rx-title-' + key) || ''; date = localStorage.getItem('rx-date-' + key) !== '0'; } catch (e) {}
   return { title: title.trim(), date, day: new Date() };
 }
+// player names typed in the dialog (per game, kept only when the user changed them): RecordExport.name(i, dflt[, key])
+function nameOv(key) { key = key || (O && O.key) || ''; try { const a = JSON.parse(localStorage.getItem('rx-names-' + key) || '[]'); return [a[0] || '', a[1] || '']; } catch (e) { return ['', '']; } }
+function setName(key, i, v) { const a = nameOv(key); a[i] = String(v || '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, 40); try { if (a[0] || a[1]) localStorage.setItem('rx-names-' + key, JSON.stringify(a)); else localStorage.removeItem('rx-names-' + key); } catch (e) {} }
+function name(i, dflt, key) { const v = nameOv(key)[i]; return v || (dflt == null ? '' : String(dflt)); }
 function setMeta(key, m) { try { if (m.title != null) localStorage.setItem('rx-title-' + key, m.title); if (m.date != null) localStorage.setItem('rx-date-' + key, m.date ? '1' : '0'); } catch (e) {} }
 const LOC = { zh: 'zh-CN', hi: 'hi-IN', pt: 'pt-BR' };
 function dateText(d, lang) { lang = lang || L(); try { return new Intl.DateTimeFormat(LOC[lang] || lang, { year: 'numeric', month: 'long', day: 'numeric' }).format(d); } catch (e) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; } }
@@ -49,11 +56,13 @@ function dateText(d, lang) { lang = lang || L(); try { return new Intl.DateTimeF
 // Event / EventDate) and SGF (GN[] / DT[]). Other formats are returned unchanged.
 function applyMeta(s, m) {
   if (typeof s !== 'string' || !s) return s;
+  const pls = (m.players || []).filter(p => p && p.name);
   const d = m.day, ymd = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   if (/^\s*\(;/.test(s)) {
     const e = v => v.replace(/[\]\\]/g, '\\$&'), prop = k => new RegExp(k + '\\[(?:\\\\.|[^\\]\\\\])*\\]');
     s = s.replace(prop('GN'), '').replace(prop('DT'), '');
-    const ins = (m.title ? `GN[${e(m.title)}]` : '') + (m.date ? `DT[${ymd}]` : '');
+    let ins = (m.title ? `GN[${e(m.title)}]` : '') + (m.date ? `DT[${ymd}]` : '');
+    for (const p of pls) if (p.sgf) { s = s.replace(prop(p.sgf), ''); ins += `${p.sgf}[${e(p.name)}]`; }
     let k = s.indexOf('(;') + 2, br = false;   // end of the root node: the next ';' / '(' / ')' outside a [value]
     for (; k < s.length; k++) { const c = s[k]; if (br) { if (c === '\\') k++; else if (c === ']') br = false; } else if (c === '[') br = true; else if (c === ';' || c === '(' || c === ')') break; }
     while (k > 0 && /\s/.test(s[k - 1])) k--;
@@ -67,6 +76,7 @@ function applyMeta(s, m) {
   if (m.title) { const i = idx('Event'), ln = `${pre}[Event "${q(m.title)}"]`; if (i >= 0) hdr[i] = ln; else hdr.splice(pre ? 0 : idx('Game') + 1, 0, ln); }
   let i = idx('Date'); if (i >= 0) hdr[i] = `${pre}[Date "${m.date ? dot : '????.??.??'}"]`;
   i = idx('EventDate'); if (i >= 0) { if (m.date) hdr[i] = `${pre}[EventDate "${dot}"]`; else hdr.splice(i, 1); }
+  for (const p of pls) if (p.tag) { const ln = `${pre}[${p.tag} "${q(p.name)}"]`, j = idx(p.tag); if (j >= 0) hdr[j] = ln; else { const r = idx('Result'); hdr.splice(r >= 0 ? r : hdr.length, 0, ln); } }
   return hdr.concat(ls.slice(n)).join('\n');
 }
 const cleanTitle = t => String(t || '').split(/\s[|｜—–-]\s|[|｜]/)[0].trim();
@@ -77,12 +87,20 @@ function hide() { if (O.hide) O.hide(ov); else ov.classList.remove('show'); }
 function build() {
   if (ov) return;
   ov = document.createElement('div'); ov.className = 'overlay rx-ov'; ov.id = 'rxOverlay';
-  ov.innerHTML = `<div class="modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
-<div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line,rgba(255,255,255,.18));background:rgba(0,0,0,.22);color:var(--text,#eee)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
+  const IN = 'flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line,rgba(255,255,255,.18));background:rgba(0,0,0,.22);color:var(--text,#eee)';
+  const nmL = i => `<label style="flex:1 1 0;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-nl${i}" style="white-space:nowrap;opacity:.85;max-width:40%;overflow:hidden;text-overflow:ellipsis"></span><input class="rx-nm${i}" data-i="${i}" type="text" maxlength="40" autocomplete="off" spellcheck="false" style="${IN}"></label>`;
+  // one fixed size whatever the tab: the stage (image preview / record text) has a fixed height, text scrolls inside it,
+  // and the rows above keep their place (visibility) even for formats that do not use them
+  ov.innerHTML = `<div class="modal rx-modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
+<div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:nowrap;margin-bottom:8px;font-size:13px"><label style="flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="${IN}"></label><label style="flex:none;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
+<div class="rx-names" style="display:flex;gap:8px 12px;align-items:center;margin-bottom:10px;font-size:13px">${nmL(0)}${nmL(1)}</div>
 <div class="seg rx-fmt" style="margin-bottom:10px;flex-wrap:wrap"></div>
-<div class="rx-stage" style="height:var(--rx-sh,min(56vh,600px));display:flex;flex-direction:column;min-height:0"><textarea class="rx-text" readonly spellcheck="false" style="width:100%;flex:1 1 auto;min-height:0;height:auto;overflow:auto;background:rgba(0,0,0,.28);color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:10px;padding:10px;font:12px/1.55 'JetBrains Mono',ui-monospace,monospace;resize:none;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left"></textarea>
-<div class="rx-img" style="display:none;flex:1 1 auto;min-height:0;flex-direction:column;align-items:center;text-align:center"><div class="seg rx-mode" style="margin-bottom:8px;flex:none"></div><div style="flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center"><img class="rx-prev" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.14));background:#fff"></div></div></div>
+<div class="rx-stage" style="height:var(--rx-sh,min(52vh,560px));display:flex;flex-direction:column;min-height:0;overflow:hidden"><textarea class="rx-text" readonly spellcheck="false" style="width:100%;flex:1 1 0;min-height:0;height:auto;overflow:auto;background:rgba(0,0,0,.28);color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:10px;padding:10px;font:12px/1.55 'JetBrains Mono',ui-monospace,monospace;resize:none;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left;box-sizing:border-box;margin:0"></textarea>
+<div class="rx-img" style="display:none;flex:1 1 0;min-height:0;flex-direction:column;align-items:center;text-align:center"><div class="seg rx-mode" style="margin-bottom:8px;flex:none"></div><div class="rx-pw" style="flex:1 1 0;min-height:0;width:100%;position:relative"><img class="rx-prev" alt="" style="position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.14));background:#fff;box-sizing:border-box"></div></div></div>
 <div class="modal-actions"><button class="mbtn rx-close"></button><button class="mbtn rx-dl"></button><button class="mbtn go rx-copy"></button></div></div>`;
+  if (!document.getElementById('rxStyle')) { const st = document.createElement('style'); st.id = 'rxStyle';   // button labels never wrap
+    st.textContent = '#rxOverlay .modal-actions{display:flex;gap:8px}#rxOverlay .modal-actions .mbtn{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:6px;padding-right:6px;letter-spacing:.02em}#rxOverlay .rx-mode{flex-wrap:nowrap;max-width:100%}#rxOverlay .rx-mode button{min-width:max-content;white-space:nowrap;text-overflow:clip}@media (max-width:520px){#rxOverlay .modal-actions .mbtn{font-size:14px}}';
+    document.head.appendChild(st); }
   document.body.appendChild(ov);
   const q = s => ov.querySelector(s);
   ov.addEventListener('click', e => { if (e.target === ov) hide(); });
@@ -91,6 +109,10 @@ function build() {
   const ti = q('.rx-ttl');
   ['keydown', 'keyup', 'keypress'].forEach(t => ti.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') ti.blur(); }));
   ti.addEventListener('input', () => { setMeta(O.key, { title: ti.value }); clearTimeout(tm); tm = setTimeout(render, fmt === 'img' ? 220 : 0); });
+  [0, 1].forEach(i => { const ni = q('.rx-nm' + i);
+    ['keydown', 'keyup', 'keypress'].forEach(t => ni.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') ni.blur(); }));
+    ni.addEventListener('input', () => { const d = sideList()[i].name || ''; setName(O.key, i, ni.value.trim() === d.trim() ? '' : ni.value); clearTimeout(tm); tm = setTimeout(render, fmt === 'img' ? 220 : 0); });
+    ni.addEventListener('blur', () => { if (!ni.value.trim()) render(); }); });
   q('.rx-date').onchange = e => { setMeta(O.key, { date: e.target.checked }); render(); };
   q('.rx-fmt').onclick = e => { const b = e.target.closest('button'); if (!b) return; fmt = b.dataset.v; try { localStorage.setItem('rx-fmt-' + O.key, fmt); } catch (er) {} render(); };
   q('.rx-mode').onclick = e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.v; try { localStorage.setItem('rx-mode-' + O.key, mode); } catch (er) {} render(); };
@@ -119,6 +141,8 @@ function fmtList() {
   if (u) a.push({ id: 'url', label: 'URL', ext: 'txt', text: () => u });
   return a;
 }
+// the two sides: [{ label, name (the game's default), tag (PGN-style header), sgf (SGF property) }]
+const sideList = () => { let a = []; try { a = (O.sides && O.sides()) || []; } catch (e) {} return [0, 1].map(i => Object.assign({ label: '', name: '' }, a[i] || {})); };
 const modeList = () => (O.image && O.image.modes) || ['board'];
 async function render() {
   const q = s => ov.querySelector(s), list = fmtList();
@@ -130,15 +154,18 @@ async function render() {
   const m = meta(O.key);
   q('.rx-tl').textContent = tx('ttl'); q('.rx-dt').textContent = tx('date'); q('.rx-date').checked = m.date;
   const ti = q('.rx-ttl'); ti.placeholder = cleanTitle(O.title); if (document.activeElement !== ti) ti.value = m.title;
-  q('.rx-meta').style.visibility = fmt === 'url' ? 'hidden' : 'visible';
+  const f0 = list.find(x => x.id === fmt), uses = fmt === 'img' || !!(f0 && f0.id !== 'url' && f0.meta !== false);
+  q('.rx-meta').style.visibility = uses ? 'visible' : 'hidden';
+  const sides = sideList(), ov2 = nameOv(O.key);
+  q('.rx-names').style.display = O.sides ? 'flex' : 'none'; q('.rx-names').style.visibility = uses ? 'visible' : 'hidden';
+  sides.forEach((sd, i) => { q('.rx-nl' + i).textContent = sd.label; const ni = q('.rx-nm' + i); ni.placeholder = tx('nm'); ni.title = sd.label; if (document.activeElement !== ni) ni.value = ov2[i] || sd.name || ''; });
+  m.players = sides.map((sd, i) => ({ tag: sd.tag, sgf: sd.sgf, name: ov2[i] }));
   const img = fmt === 'img';
-  q('.rx-text').style.display = img ? 'none' : ''; q('.rx-img').style.display = img ? 'flex' : 'none'; if (!img) { q('.rx-stage').style.height = 'min(56vh,600px)'; }
+  q('.rx-text').style.display = img ? 'none' : ''; q('.rx-img').style.display = img ? 'flex' : 'none';
   q('.rx-copy').textContent = tx(img ? 'share' : fmt === 'url' ? 'copyUrl' : 'copy');
-  if (!img) { const f = list.find(x => x.id === fmt); let v = ''; try { v = f ? f.text() : ''; if (f && f.id !== 'url' && f.meta !== false) v = applyMeta(v, m); } catch (e) { console.error(e); v = String(e); } q('.rx-text').value = v; return; }
+  if (!img) { const f = f0; let v = ''; try { v = f ? f.text() : ''; if (f && f.id !== 'url' && f.meta !== false && f.meta !== 'self') v = applyMeta(v, m); } catch (e) { console.error(e); v = String(e); } q('.rx-text').value = v; return; }
   const ms = modeList();
   q('.rx-mode').style.visibility = ms.length > 1 ? 'visible' : 'hidden';
-  // the box keeps one size (the board image's); only 局面図＋棋譜 ('moves') may make it taller
-  const tall = mode === 'moves'; q('.rx-stage').style.height = tall ? 'auto' : 'min(56vh,600px)'; q('.rx-prev').style.maxHeight = tall ? 'min(76vh,900px)' : '100%';
   q('.rx-mode').innerHTML = ms.map(m => `<button data-v="${m}" class="${m === mode ? 'sel' : ''}">${esc(tx(m))}</button>`).join('');
   const my = ++job; blob = null;
   let cv; try { cv = await O.image.draw(mode); } catch (e) { console.error(e); return; }
@@ -151,8 +178,17 @@ function open() {
   if (O.empty && O.empty()) { toast(O.emptyMsg ? O.emptyMsg() : tx('empty')); return; }
   build();
   try { fmt = localStorage.getItem('rx-fmt-' + O.key) || ''; mode = localStorage.getItem('rx-mode-' + O.key) || ''; } catch (e) {}
-  render(); show();
+  render(); show(); fit();
 }
+// the stage keeps one height for every tab; it only shrinks (once per opening / resize) when the dialog would not fit the screen
+function fit() {
+  if (!ov || !ov.classList.contains('show')) return;
+  const st = ov.querySelector('.rx-stage'), md = ov.querySelector('.modal');
+  st.style.removeProperty('--rx-sh');
+  const over = md.scrollHeight - md.clientHeight;
+  if (over > 1) st.style.setProperty('--rx-sh', Math.max(180, Math.floor(st.getBoundingClientRect().height - over)) + 'px');
+}
+window.addEventListener('resize', () => { clearTimeout(fit.t); fit.t = setTimeout(fit, 120); });
 function attach(o) {
   O = o;
   const b = typeof o.btn === 'string' ? document.querySelector(o.btn) : o.btn;
@@ -185,7 +221,8 @@ function wrap(g, tokens, w) {
   if (line) lines.push(line); return lines;
 }
 // A white sheet: title / caption on top, the board (drawn by o.draw(g, x, y)), players, an optional move list, the site URL.
-// o: { bw, bh, title, caption, players: [{ name, swatch: (g, x, y, r) => {} }], moves: [tokens] | null, path, font, minW }
+// o: { bw, bh, title, caption, players: [{ name, swatch: (g, x, y, r) => {} }], moves: [tokens] | null, path, font, minW,
+//      key / lang (pages that draw a sheet without attach(), e.g. shogi) }
 function sheet(o) {
   const M = o.margin || 34, font = o.font || SANS, dpr = 2;
   const W = Math.max(o.bw + M * 2, o.minW || 560), cw = W - M * 2;
@@ -202,7 +239,7 @@ function sheet(o) {
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
   const ink = '#16130f';
   g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = ink;
-  const mt = O ? meta(O.key) : { title: '', date: false, day: new Date() }, ds = mt.date ? dateText(mt.day) : '';
+  const mk = o.key || (O && O.key), mt = mk ? meta(mk) : { title: '', date: false, day: new Date() }, ds = mt.date ? dateText(mt.day, o.lang) : '';
   let dw = 0; if (ds) { g.font = `14px ${font}`; dw = g.measureText(ds).width + 16; }
   const ht = mt.title || o.title || '';
   let fs = 19; g.font = `700 ${fs}px ${o.titleFont || font}`; while (fs > 13 && g.measureText(ht).width > cw - dw) { fs--; g.font = `700 ${fs}px ${o.titleFont || font}`; }
@@ -260,5 +297,5 @@ function goBoard(g, x0, y0, o) {
   }
   return { w: L + 2 * m, h: L + 2 * m };
 }
-window.RecordExport = { meta, setMeta, applyMeta, dateText, goBoard, attach, open, tx, sheet, loadImg, fonts, disc, wrap, lines, SANS, SERIF, stamp };
+window.RecordExport = { meta, setMeta, name, setName, names: key => [name(0, '', key), name(1, '', key)], applyMeta, dateText, goBoard, attach, open, tx, sheet, loadImg, fonts, disc, wrap, lines, SANS, SERIF, stamp };
 })();

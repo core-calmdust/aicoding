@@ -1331,7 +1331,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=3"></script>
-<script src="../shared/export.js?v=4"></script>
+<script src="../shared/export.js?v=5"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
@@ -3527,9 +3527,9 @@ async function mrDiagram(mode) {
   const st = statusAt(cur);
   cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.side) })) + '　' + MR_NAME[gv];
   const col = p => p === P1 ? '#fff' : '#1b1b1b';
-  const pl = [P1, P2].map(p => ({ name: `${pname(p)}${playerName(p) ? ' ' + playerName(p) : ''}${pos.hand[p] ? ' · ' + t('hand', { n: pos.hand[p] }) : ''}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, col(p), '#111', 1.3) }));
+  const pl = [P1, P2].map(p => ({ name: `${pname(p)}${RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''}${pos.hand[p] ? ' · ' + t('hand', { n: pos.hand[p] }) : ''}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, col(p), '#111', 1.3) }));
   const lm = cur ? moves[cur - 1] : -1;
-  return RX.sheet({ bw: B + 2 * M, bh: B + 2 * M, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'morris', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+  return RX.sheet({ bw: B + 2 * M, bh: B + 2 * M, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: mode === 'moves' ? (() => { const tk = []; moves.slice(0, cur).forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(mrStd(m)); }); return tk; })() : null, path: 'morris', titleFont: RX.SERIF, draw: (g, x0, y0) => {
     const ox = x0 + M, oy = y0 + M, P = i => [ox + G.pts[i][0] * S, oy + G.pts[i][1] * S];
     g.strokeStyle = '#111'; g.lineWidth = 2.2; g.lineCap = 'round';
     const seg = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
@@ -3548,8 +3548,9 @@ async function mrDiagram(mode) {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'morris', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'std', label: 'a1-a4xd7', ext: 'txt', text: mrRecord }, { id: 'own', label: '[' + gv + ']', ext: 'txt', text: () => recordText() + '\n' }],
-  url: shareUrl, image: { modes: ['board'], draw: mrDiagram } });
+  formats: () => [{ id: 'std', label: 'a1-a4xd7', ext: 'txt', text: mrRecord }, { id: 'own', label: '[' + gv + ']', ext: 'txt', meta: false, text: () => recordText() + '\n' }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'White' }, { label: pname(P2), name: playerName(P2), tag: 'Black' }],
+  url: shareUrl, image: { modes: ['board', 'moves'], draw: mrDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

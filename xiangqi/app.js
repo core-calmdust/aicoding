@@ -2088,7 +2088,7 @@ async function xqDiagram(mode) {
   cap += '　' + (st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.turn) }));
   const tokens = []; if (mode === 'moves') { const q = E.Pos.from(startSpec); moves.slice(0, cur).forEach((m, i) => { tokens.push((i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + E.name(q, m, LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf')); q.play(m); }); }
   const lt = cur ? mTo(moves[cur - 1]) : -1, lf = cur ? mFrom(moves[cur - 1]) : -1;
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, '#fbf6ea', p === P1 ? red : ink, 1.8) }));
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, '#fbf6ea', p === P1 ? red : ink, 1.8) }));
   return RX.sheet({ bw: BW + 2.3 * S, bh: BH + 2.3 * S, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: tokens, path: 'xiangqi', font: "'Zen Kaku Gothic New'," + serif, titleFont: serif, draw: (g, x0, y0) => {
     const ox = x0 + 1.15 * S, oy = y0 + 1.15 * S, X = c => ox + c * S, Y = r => oy + r * S, F = S * 0.6;
     g.strokeStyle = ink; g.lineWidth = 2.6; g.strokeRect(ox - F, oy - F, BW + 2 * F, BH + 2 * F);
@@ -2117,7 +2117,8 @@ async function xqDiagram(mode) {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'xiangqi', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'wxf', label: 'PGN (WXF)', ext: 'pgn', text: () => xqPgn('WXF') }, { id: 'iccs', label: 'PGN (ICCS)', ext: 'pgn', text: () => xqPgn('ICCS') }, { id: 'zh', label: 'PGN (中文)', ext: 'pgn', text: () => xqPgn('Chinese') }, { id: 'fen', label: 'FEN', ext: 'fen', text: () => xqFen(posAt(cur).pos, cur) + '\n' }],
+  formats: () => [{ id: 'wxf', label: 'PGN (WXF)', ext: 'pgn', text: () => xqPgn('WXF') }, { id: 'iccs', label: 'PGN (ICCS)', ext: 'pgn', text: () => xqPgn('ICCS') }, { id: 'zh', label: 'PGN (中文)', ext: 'pgn', text: () => xqPgn('Chinese') }, { id: 'fen', label: 'FEN', ext: 'fen', meta: false, text: () => xqFen(posAt(cur).pos, cur) + '\n' }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'Red' }, { label: pname(P2), name: playerName(P2), tag: 'Black' }],
   url: () => startSpec ? null : shareUrl(), image: { modes: ['board', 'moves'], draw: xqDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');

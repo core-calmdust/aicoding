@@ -2174,8 +2174,8 @@ async function ckDiagram(mode) {
       const cy = y - r * 0.12, w = r * 0.62; g.fillStyle = ln; g.beginPath(); g.moveTo(x - w, cy + w * 0.45); g.lineTo(x - w, cy - w * 0.35); g.lineTo(x - w * 0.5, cy + w * 0.05); g.lineTo(x, cy - w * 0.55); g.lineTo(x + w * 0.5, cy + w * 0.05); g.lineTo(x + w, cy - w * 0.35); g.lineTo(x + w, cy + w * 0.45); g.closePath(); g.fill();
     }
   };
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1a1a1a' : '#fff', '#111', 1.3) }));
-  return RX.sheet({ bw: B + 8, bh: B + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'checkers', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1a1a1a' : '#fff', '#111', 1.3) }));
+  return RX.sheet({ bw: B + 8, bh: B + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: mode === 'moves' ? (() => { const q = E.Pos.from(startSpec), tk = []; moves.slice(0, cur).forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(E.name(q, m)); q.play(m); }); return tk; })() : null, path: 'checkers', titleFont: RX.SERIF, draw: (g, x0, y0) => {
     const ox = x0 + 4, oy = y0 + 4;
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
       const x = ox + c * S, y = oy + r * S, dark = (r + c) & 1;
@@ -2192,8 +2192,9 @@ async function ckDiagram(mode) {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'checkers', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'pdn', label: 'PDN', ext: 'pdn', text: ckPdn }, { id: 'fen', label: 'FEN', ext: 'txt', text: () => ckFen(posAt(cur).pos) + '\n' }],
-  url: shareUrl, image: { modes: ['board', 'num'], draw: ckDiagram } });
+  formats: () => [{ id: 'pdn', label: 'PDN', ext: 'pdn', text: ckPdn }, { id: 'fen', label: 'FEN', ext: 'txt', meta: false, text: () => ckFen(posAt(cur).pos) + '\n' }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'Black' }, { label: pname(P2), name: playerName(P2), tag: 'White' }],
+  url: shareUrl, image: { modes: ['board', 'num', 'moves'], draw: ckDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

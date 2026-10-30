@@ -1507,15 +1507,16 @@ async function goDiagram(mode) {
   const st = statusAt(cur);
   cap += '　' + (st.over && cur === moves.length ? (st.draw ? 'Jigo' : (st.winner === P1 ? 'B+' : 'W+') + (st.why === 'score' ? st.diff : st.why === 'time' ? 'T' : 'R')) : RX.tx('toMove', { s: pname(pos.turn) }));
   const info = `${n}×${n} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}`;
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
   const W = (n - 1) * c + 2 * c * 0.95;
-  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap + '　' + info, players: pl, path: 'go', titleFont: RX.SERIF,
+  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap + '　' + info, players: pl, moves: mode === 'moves' ? moves.slice(0, cur).map((m, k) => `${k + 1}.${mvName(m)}`) : null, path: 'go', titleFont: RX.SERIF,
     draw: (g, x, y) => RX.goBoard(g, x, y, { n, cell: c, at: i => pos.b[i], stars: R.starPoints(n), last: mode === 'num' ? -1 : last, nums: mode === 'num' ? nums : null, cols: R.COLS }) });
 }
 RecordExport.attach({ btn: '#btnShare', key: 'go', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
   formats: () => [{ id: 'sgf', label: 'SGF', ext: 'sgf', mime: 'application/x-go-sgf', text: () => sgfText() + '\n' }],
-  url: shareUrl, image: { modes: ['board', 'num'], draw: goDiagram } });
+  sides: () => [{ label: pname(P1), name: playerName(P1), sgf: 'PB' }, { label: pname(P2), name: playerName(P2), sgf: 'PW' }],
+  url: shareUrl, image: { modes: ['board', 'num', 'moves'], draw: goDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

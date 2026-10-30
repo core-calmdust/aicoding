@@ -2066,9 +2066,9 @@ async function hxDiagram(mode) {
   let cap = cur ? `${cur}. ${pname(posAt(cur - 1).pos.side)} ${moves[cur - 1] === SWAP ? 'swap' : E.name(pos, moves[cur - 1])}` : RX.tx('start');
   const st = statusAt(cur);
   cap += '　' + (st.over && cur === moves.length ? `${pname(st.winner)} +` : RX.tx('toMove', { s: pname(pos.side) })) + `　${n}×${n}${gSwap ? ' · swap' : ''}`;
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, rr) => RX.disc(g, x, y, rr, p === P1 ? RED : BLUE, ink, 1.2) }));
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, rr) => RX.disc(g, x, y, rr, p === P1 ? RED : BLUE, ink, 1.2) }));
   const last = cur ? (moves[cur - 1] === SWAP ? pos.last : moves[cur - 1]) : -1;
-  return RX.sheet({ bw: BW, bh: BH, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Hex', caption: cap, players: pl, path: 'hex', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+  return RX.sheet({ bw: BW, bh: BH, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Hex', caption: cap, players: pl, moves: mode === 'moves' ? (() => { const q = posAt(0).pos.clone(); return moves.slice(0, cur).map((m, k) => { const x = `${k + 1}.${m === SWAP ? 'swap' : E.name(q, m)}`; q.play(m); return x; }); })() : null, path: 'hex', titleFont: RX.SERIF, draw: (g, x0, y0) => {
     const ox = x0 + 34 + w, oy = y0 + 34 + r;
     const C = (c, rr) => [ox + c * w + rr * w / 2, oy + rr * r * 1.5];
     const hexPath = (x, y, k) => { g.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; const px = x + k * Math.cos(a), py = y + k * Math.sin(a); if (i) g.lineTo(px, py); else g.moveTo(px, py); } g.closePath(); };
@@ -2093,8 +2093,9 @@ async function hxDiagram(mode) {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'hex', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'moves', label: 'a1 swap …', ext: 'txt', text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: hxSgf }],
-  url: shareUrl, image: { modes: ['board', 'num'], draw: hxDiagram } });
+  formats: () => [{ id: 'moves', label: 'a1 swap …', ext: 'txt', meta: false, text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: hxSgf }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), sgf: 'PB' }, { label: pname(P2), name: playerName(P2), sgf: 'PW' }],
+  url: shareUrl, image: { modes: ['board', 'num', 'moves'], draw: hxDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };
