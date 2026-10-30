@@ -120,9 +120,11 @@ function init() {
     });
     mark();
   }
-  bar.addEventListener('click', e => { const b = e.target.closest('[data-ngt]'); if (!b || b.dataset.ngt === cur) return; cur = b.dataset.ngt; sync(); modal.scrollTop = 0; });
+  // each tab keeps its own scroll position while the dialog is open
+  let tabTop = {};
+  bar.addEventListener('click', e => { const b = e.target.closest('[data-ngt]'); if (!b || b.dataset.ngt === cur) return; tabTop[cur] = modal.scrollTop; cur = b.dataset.ngt; sync(); modal.scrollTop = tabTop[cur] || 0; });
   // opens on the first tab; the variant's name follows the choice
-  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { cur = tabs()[0]; sync(); } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { tabTop = {}; cur = tabs()[0]; sync(); modal.scrollTop = 0; } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
   const g = modal.querySelector('[data-ng=game]');
   // (the block shown / hidden → the tabs; otherwise only the name; sync() itself toggles .ngt-hide on the block, so compare first)
   let tk = tabs().join();

@@ -1430,10 +1430,10 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="online.js?v=stale2"></script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
-<script src="variants/vtext.js?v=20261030sv"></script>
+<script src="variants/vtext.js?v=20261030sv3"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261030sv"></script>
+<script src="variants/variants.js?v=20261030sv3"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=12"></script>
@@ -1992,6 +1992,7 @@ function hbClock() {
   el.hidden = !txt; if (txt && el.dataset.v !== txt) { el.dataset.v = txt; el.innerHTML = `⏱ <b>${escHb(txt)}</b>`; }
 }
 function renderInfo() {
+  try { if (window.Variants && Variants.showSeed) Variants.showSeed(game); } catch (e) {}
   try { const c = !lesson && game && !game.lessonGame && !game.variant && game.moves.length >= 8 ? ShogiStrategy.classifyGame(E, game.start, game.moves.slice(0, cur)) : null; $('#senkei').textContent = c ? '· ' + (ShogiStrategy.localName ? ShogiStrategy.localName(c, LANG) : (LANG === 'ja' ? c.ja : c.en)) : ''; } catch (e) {}
   olPName($('#nameBlack'), 0); olPName($('#nameWhite'), 1);
   $('#pBlack').classList.toggle('active', !game.over && P.side === 0);
@@ -2100,6 +2101,7 @@ function newGame(rated) {
   }
   game = newRecord(start, human);
   if (vr) game.variant = vr;
+  if (vr === 'random') game.seed = Variants.seed();
   if (rated) game.rated = rated;
   else if (window.CpuStyle && !vr) CpuStyle.attach(game, settings);   // game.cs: the CPU's chosen strategy per side
   clockInit();
@@ -5199,7 +5201,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=15" defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
-<script src="../shared/ngtabs.js?v=12"></script>
+<script src="../shared/ngtabs.js?v=13"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 </body>
 </html>
