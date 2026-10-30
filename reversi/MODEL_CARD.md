@@ -13,7 +13,6 @@ Reversi V4 の AI が局面の良し悪しを判断するための評価関数�
 探索エンジン `engine.js` と組み合わせて、ブラウザ上で動作します。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/reversi/
-- **ライセンス**: Apache License 2.0（`LICENSE` を参照）
 - **作成**: core-calmdust（AIコーディングによる制作）
 - **バージョン**: v3（2026-10-18）
 
@@ -162,9 +161,4 @@ const raw = await new Response(new Blob([buf]).stream().pipeThrough(new Decompre
 ReversiEngine.setWeights(new Int16Array(raw), 30); // 1フェーズあたりのサイズから v1/v2 を自動判別
 ```
 
-## ライセンス
-
-Copyright 2026 core-calmdust
-
-この重みと `engine.js` は Apache License, Version 2.0 で公開しています。
 詳しくは同じフォルダの `LICENSE` を参照してください。

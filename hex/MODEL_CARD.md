@@ -5,7 +5,6 @@
 ブラウザの Web Worker で動かします。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/hex/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE`）
 - **バージョン**: v1（2026-10-25）
 - **ビルド**: `tools/build.sh`（wasm32、初期メモリ64MB・最大128MB）。同じソースから `tools/native.c` でネイティブ版（調整・生成用）も作れる
 

@@ -4,7 +4,6 @@
 探索エンジン `engine.js`（αβ探索＋四追い・三四の読み切り）と組み合わせ、ブラウザ上（Web Worker）で動きます。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/gomoku/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE`）
 - **バージョン**: v2（2026-10-21：連珠ネット v4・標準ネット v2）
 
 ## 連珠：ニューラルネット評価（v4, 2026-10-21）

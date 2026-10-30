@@ -5,7 +5,7 @@
  *
  * Nets: vibego nets distilled from KataGo (Sander Land, CC-BY-4.0; KataGo networks by David J Wu, MIT-style).
  *   light = b7c106nbt (fast; weak levels, phones), strong = b10c128nbt (dan levels, analysis).
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 'use strict';
 importScripts('rules.js?v=2');

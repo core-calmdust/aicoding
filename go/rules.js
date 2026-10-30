@@ -3,7 +3,7 @@
  * Boards 5x5 … 19x19. A point is an index i = y*n + x (x = column from the left, y = row from the top); PASS = -1.
  * Captures, suicide is illegal, simple ko + positional superko (a move may not repeat an earlier whole-board position).
  * Scoring: Japanese (territory + prisoners) or Chinese (area), dead stones given by the caller.
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function (root) {
 'use strict';

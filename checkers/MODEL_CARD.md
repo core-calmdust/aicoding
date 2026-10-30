@@ -4,7 +4,6 @@
 小さなニューラルネットの形勢評価と4駒以下の終盤データベースを組み合わせています。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/checkers/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE`）
 - **バージョン**: v1（2026-10-21）
 
 ## 形勢評価ネット（`evalnet.bin.gz`）

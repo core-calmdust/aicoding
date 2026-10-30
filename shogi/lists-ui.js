@@ -3,7 +3,7 @@
  * category tabs (icon + name + progress) → banner card of the chosen category (description, n/N, bar) →
  * grid of item cards (mini board on the left; number, state, name, gist, 2–3 line description, progress bar on the right).
  * Also: SVG mini boards from an SFEN, and position thumbnails for the tsume tiles.
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function () {
 'use strict';

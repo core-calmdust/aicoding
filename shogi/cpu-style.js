@@ -1,5 +1,5 @@
 'use strict';
-// Shogi — the CPU's chosen opening strategy (戦型指定). Copyright 2026 core-calmdust — Apache License 2.0
+// Shogi — the CPU's chosen opening strategy (戦型指定). Copyright 2026 core-calmdust
 // The new-game dialog lets the player pick what the CPU plays (四間飛車, 矢倉, 棒銀 …). In the opening the CPU then
 //   1. plays book moves (Floodgate frequencies) that are consistent with the plan, preferring the plan's own moves;
 //   2. out of book, plays the plan's next scripted move (pieces walk along "chains" of squares) when it is legal and

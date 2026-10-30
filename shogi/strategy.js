@@ -1,5 +1,5 @@
 // Opening classification (戦型判定) shared by the page and the build tools.
-// Copyright 2026 core-calmdust — Apache License 2.0
+// Copyright 2026 core-calmdust
 (function (root) {
   'use strict';
   // E = ShogiEngine, pos = Position. Returns {id, ja, en} or null.
