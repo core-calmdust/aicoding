@@ -612,7 +612,7 @@ function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   startFen = null;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  rgame = null; coachQ = new Map();
+  rgame = null; coachQ = new Map(); settings.rsNoRec = false;
   if (rated) { humanColor = Math.random() < 0.5 ? P1 : P2; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null;
   hideOverlay('#resultOverlay');
@@ -715,7 +715,7 @@ function onGameEnd(st) {
 // 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
 let recordedMv = null;
 function recordGame(st) {
-  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
   if (st.why === 'resign' && moves.length < 2) return;   // resigning before playing is not a game
   recordedMv = moves;
   const lv = levelFor(3 - humanColor), opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI Lv.' + lv + ' ' + LV(lv);
@@ -885,7 +885,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   if (v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
   setTimeout(() => inst(false), 150);
 }));
-$('#btnResume').onclick = resumeHere;
+$('#btnResume').onclick = () => { if (rgame || net || lesson || puzzle || !reviewing) { resumeHere(); return; } openNewDialog(true); };
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
 $('#btnAgain').onclick = () => {
@@ -999,10 +999,24 @@ function segSync() {
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
-function openNewDialog() {
+function openNewDialog(resume) {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : net ? 'online' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, style: settings.style || '' };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optCoach').checked = settings.coach;
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fStyle' }); else ResumeNG.close(); }
   segSync(); showOverlay('#newOverlay');
+}
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = humanColor;
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, coach: $('#optCoach').checked, flip: false });
+  studyEnd(); stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; wpPaused = false; sel = null;
+  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) { settings.rsNoRec = true; coachQ = new Map(); }   // taken over midway: not a game of the player's for the record
+  if (reviewing) { moves = moves.slice(0, cur); evals.length = cur + 1; localOver = null; }
+  cur = moves.length; reviewing = false; hintList = null; gameOverShown = false;
+  hideOverlay('#resultOverlay');
+  orient(); drawSquares(); shownKey = ''; update(false); save(); afterPosition();
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; const d = styleDef(draft.style); if (d && draft.color !== (d.side === 'w' ? P2 : P1)) draft.style = ''; segSync(); } };
@@ -1015,6 +1029,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'online') { openOnline(); return; }
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  if (draft.resume) { resumeWith(); return; }
   exitSpecial();
   if (draft.mode === 'rated') { rtStart(); return; }
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, style: draft.mode === 'ai' ? draft.style || '' : settings.style, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, coach: $('#optCoach').checked, flip: false });
@@ -3324,7 +3339,7 @@ function rsOpen() {
 }
 $('#rsCancel').onclick = () => $('#resumeOverlay').classList.remove('show');
 $('#rsRestart').onclick = () => { $('#resumeOverlay').classList.remove('show'); openNewDialog(); };
-$('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
+$('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (rgame || settings.mode === 'online') { if (reviewing) resumeHere(); return; } openNewDialog(true); };   // the settings dialog in resume mode (rated games go on as they are)
 let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = $('#navPlay'); if (b) b.classList.remove('playing'); }
 function navGo(what) {

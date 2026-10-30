@@ -1593,7 +1593,7 @@ function undo() {
   next();
 }
 function newGame() {
-  busy++; cancelAI(); cancelAna(); wpPaused = false;
+  busy++; cancelAI(); cancelAna(); wpPaused = false; settings.rsNoRec = false;
   hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0; viewPly = null; rvCancel(); rv = null;
   game = { n: settings.size, moves: [], human: settings.order === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.order, setup: null };
   builtFor = '';
@@ -1647,7 +1647,7 @@ function showResult() {
 }
 // 勝敗記録 (shared/record.js): games against the AI (free / rated) that the player took part in; online games: online-ui.js finishOnline()
 function recordGame() {
-  if (!window.GameRecord || !SF || !SF.over || game.recorded || settings.mode !== 'ai' || lesson || puzzle || game.setup) return;
+  if (!window.GameRecord || !SF || !SF.over || game.recorded || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || game.setup) return;
   const h = game.human, mine = SF.log.some(x => x.pl === h);
   if (!mine && SF.resigned >= 0) return;   // resigned before playing a move: not recorded
   game.recorded = true;
@@ -1737,10 +1737,24 @@ function skinPicker() {
   el.innerHTML = SKINS.map(k => `<button type="button" data-sk="${k}" class="${k === settings.skin ? 'sel' : ''}" aria-pressed="${k === settings.skin}"><span class="skp"><span class="skp-b">${skinSVG(k)}</span></span><span>${t('sk.' + k)}</span></button>`).join('');
 }
 $('#skRow').addEventListener('click', e => { const b = e.target.closest('button[data-sk]'); if (!b) return; skinApply(b.dataset.sk); save(); skinPicker(); });
-function openNew() {
+function openNew(resume) {
   if (typeof rulesOfferSync === 'function') rulesOfferSync();
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, size: settings.size, order: settings.order, level: settings.level, level2: settings.level2, eval: settings.eval, anim: settings.anim };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.order = game.human; }   // 「ここから再開」: the same dialog, only what fits going on from this position
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fSize' }); else ResumeNG.close(); }
   segSync(); $('#newOverlay').classList.add('show');
+}
+// 「ここから再開」 with the chosen settings: the lines drawn up to the shown position are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = game.human;
+  Object.assign(settings, { mode: draft.mode, order: draft.order, level: draft.level, level2: draft.level2, eval: draft.eval, anim: draft.anim });
+  if (typeof stopPlay === 'function') stopPlay(); busy++; cancelAI(); cancelAna(); wpPaused = false; aiPending = false;
+  if (settings.mode === 'ai') game.human = settings.order === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.order;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== game.human)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  hintEdge = -1; badEdge = -1; lastEval = null; chainCount = 0; rvCancel(); rv = null;
+  if (viewPly !== null) { game.moves.length = viewPly; viewPly = null; }
+  $('#resultOverlay').classList.remove('show');
+  refresh(false); save(); next();
 }
 document.querySelectorAll('#segMode button').forEach(b => b.onclick = () => { draft.mode = b.dataset.v; segSync(); });
 document.querySelectorAll('#segSize button').forEach(b => b.onclick = () => { draft.size = +b.dataset.v; segSync(); });
@@ -1754,6 +1768,7 @@ $('#btnStart').onclick = () => {
   $('#newOverlay').classList.remove('show'); ac();
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  if (draft.resume) { resumeWith(); return; }
   endLesson(true); endPuzzle(true); savedGame = null;
   Object.assign(settings, { mode: draft.mode, size: draft.size, order: draft.order, level: draft.level, level2: draft.level2, eval: draft.eval, anim: draft.anim });
   newGame();
@@ -2201,9 +2216,9 @@ function rsOpen() {
 }
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
-document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (viewPly !== null) viewAt(null); };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if ((window.rtGame && rtGame()) || settings.mode === 'online') { if (viewPly !== null) viewAt(null); return; } openNew(true); };   // the settings dialog in resume mode (rated games go on as they are)
 </script>
-<script src="online-ui.js?v=20261030ck"></script>
+<script src="online-ui.js?v=20261030rs"></script>
 <script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas portal skin: dots/?skin=atlas — 3D spiral notebook with red / blue ballpoint lines, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -2224,7 +2239,8 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" defer></script>
-<script src="../shared/pickdrop.js?v=5"></script>
+<script src="../shared/pickdrop.js?v=6"></script>
 <script src="../shared/ngtabs.js?v=12"></script>
+<script src="../shared/resumeng.js?v=1"></script>
 </body>
 </html>

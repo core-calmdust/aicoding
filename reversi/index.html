@@ -2207,7 +2207,7 @@ function levelFor(c) { if (rated && settings.mode === 'ai') return rated.lv; ret
 function newGame(r) {
   rtForfeit();
   rated = r && r.id ? r : null;
-  busyToken++; cancelAI(); cancelAna(); wpPaused = false;
+  busyToken++; cancelAI(); cancelAna(); wpPaused = false; settings.rsNoRec = false;
   if (rated) humanColor = Math.random() < 0.5 ? 1 : 2;      // rated: random colour
   else if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
   positions = [{ cells: initialCells(), toMove: BLACK, last: -1, mover: 0, evalB: 0 }];
@@ -2399,6 +2399,7 @@ function viewAt(i) {
 }
 $('#btnLatest').onclick = () => { reviewing = false; cur = positions.length - 1; update(null); };
 $('#btnResume').onclick = () => {
+  if (!rtGame() && !net && !lesson && !puzzle && reviewing) { openNew(true); return; }   // the settings dialog in resume mode
   if (rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; }   // rated: no taking back
   positions.length = cur + 1; reviewing = false; clockReset();
   update(null);
@@ -2438,7 +2439,7 @@ function showResult() {
 // 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
 function recordGame(b, w, lost, tl) {
   const L0 = positions[positions.length - 1];
-  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || net || L0.recd || positions.length < 2) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || net || L0.recd || positions.length < 2) return;
   if (lost && !positions.slice(1).some(p => p.mover === humanColor)) return;   // resigned / timed out before playing a move
   L0.recd = 1; save();
   const me = lost ? (lost === humanColor ? -1 : 1) : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
@@ -2673,12 +2674,30 @@ function segSync() {
 segInit('#segMode', 'mode'); segInit('#segColor', 'color'); segInit('#segClock', 'clock');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
-function openNew() {
+function openNew(resume) {
   Object.assign(draft, settings);
   if (rated && settings.mode === 'ai') draft.mode = 'rated';
+  draft.resume = !!resume;
+  if (resume) { if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last;
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach;
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'] }); else ResumeNG.close(); }
   segSync(); bdPicker(); showOverlay('#newOverlay');
+}
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = humanColor, pc = settings.clock || 0;
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0 });
+  settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
+  settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
+  if (typeof stopPlay === 'function') stopPlay(); busyToken++; cancelAI(); wpPaused = false;
+  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? 1 : 2) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  if (reviewing) positions.length = cur + 1;
+  cur = positions.length - 1; reviewing = false;
+  if (pm !== settings.mode || pc !== settings.clock || ph !== humanColor) clockInit(); else clockReset();   // a changed clock / side starts fresh
+  hideOverlay('#resultOverlay');
+  update(null); save();
 }
 $('#btnNew').onclick = () => (lesson || puzzle || net) ? openNew() : rsOpen();
 $('#btnCancelNew').onclick = () => {
@@ -2712,6 +2731,7 @@ $('#btnStart').onclick = () => {
     settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
     hideOverlay('#newOverlay'); rtStart(); return;
   }
+  if (draft.resume) { hideOverlay('#newOverlay'); resumeWith(); return; }
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0 });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
@@ -4797,7 +4817,7 @@ function rsOpen() {
 }
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
-document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing && rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; } if (reviewing) { positions.length = cur + 1; reviewing = false; clockReset(); update(null); }; };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing && rtGame()) { reviewing = false; cur = positions.length - 1; update(null); return; } if (rtGame()) return; openNew(true); };   // the settings dialog in resume mode (rated games go on as they are)
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800); } else document.body.classList.add('no-online');
@@ -5365,7 +5385,8 @@ accRender();
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" defer></script>
-<script src="../shared/pickdrop.js?v=5"></script>
+<script src="../shared/pickdrop.js?v=6"></script>
 <script src="../shared/ngtabs.js?v=12"></script>
+<script src="../shared/resumeng.js?v=1"></script>
 </body>
 </html>
