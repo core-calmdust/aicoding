@@ -1428,10 +1428,12 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
-<script src="variants/search.js?v=20261028pv"></script>
+<script src="variants/search.js?v=20261030sv"></script>
+<script src="variants/vshogi.js?v=20261030sv"></script>
+<script src="variants/vtext.js?v=20261030sv"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261030gt1"></script>
+<script src="variants/variants.js?v=20261030sv"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=11"></script>
@@ -1494,7 +1496,7 @@ const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '' };
+const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '', heianB: '8' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -1642,7 +1644,7 @@ function westName(pos, m) {
   const from = E.mFrom(m), to = E.mTo(m), us = pos.side;
   if (pos.variant === 'hasami') return Variants.hasamiName(pos, m, false);
   if (E.isDrop(m)) return W_LETTER[E.dropType(m)] + '*' + wSq(to);
-  const p = pos.board[from], tp = E.typeOf(p), inZ = pos.variant ? Variants.inZone : E.inZone;
+  const p = pos.board[from], tp = E.typeOf(p), inZ = pos.variant ? Variants.zoneOf(pos) : E.inZone;
   const amb = pos.legalMoves(true).some(x => !E.isDrop(x) && E.mTo(x) === to && E.mFrom(x) !== from && pos.board[E.mFrom(x)] === p);
   let s = W_LETTER[tp] + (amb ? wSq(from) : '') + (pos.board[to] ? 'x' : '-') + wSq(to);
   if (E.mPromo(m)) s += '+';
@@ -1653,7 +1655,7 @@ function westName(pos, m) {
 function kifName(pos, m, prevTo, forFile, ja) {
   if (!forFile && !ja && LANG !== 'ja') return westName(pos, m);
   if (pos.variant === 'hasami') return Variants.hasamiName(pos, m, true);
-  const from = E.mFrom(m), to = E.mTo(m), us = pos.side, inZ = pos.variant ? Variants.inZone : E.inZone;
+  const from = E.mFrom(m), to = E.mTo(m), us = pos.side, inZ = pos.variant ? Variants.zoneOf(pos) : E.inZone;
   let dest = (prevTo === to) ? (forFile ? '同　' : '同') : sqZen(to);
   if (E.isDrop(m)) {
     const tp = E.dropType(m);
@@ -1733,16 +1735,16 @@ function preloadPieces(set) {
 window.preloadPieces = preloadPieces;
 function renderCoords() {
   let top = '', right = '';
-  const n = window.Variants ? Variants.geom(P).n : 9;   // 5五将棋: 5×5
-  for (let c = 0; c < n; c++) top += `<span>${ZEN[flip ? c + 1 : n - c]}</span>`;
-  for (let r = 0; r < n; r++) right += `<span>${KAN[flip ? n - r : r + 1]}</span>`;
+  const g = window.Variants ? Variants.geom(P) : { w: 9, h: 9 }, w = g.w || g.n, h = g.h || g.n;   // variants: W×H
+  for (let c = 0; c < w; c++) top += `<span>${ZEN[flip ? c + 1 : w - c]}</span>`;
+  for (let r = 0; r < h; r++) right += `<span>${KAN[flip ? h - r : r + 1]}</span>`;
   $('#coordTop').innerHTML = top; $('#coordRight').innerHTML = right;
 }
 function renderBoard(anim) {
   if (window.Variants && Variants.geom(P).changed) renderCoords();
   const lm = cur > 0 ? P.fromUsi(game.moves[cur - 1]) : 0;
   const lastTo = lm ? E.mTo(lm) : -1;
-  const chkSq = P.inCheck() ? P.king[P.side] : -1;
+  const chkSq = P.inCheck() ? (P.checkSq ? P.checkSq() : P.king[P.side]) : -1;   // (二玉将棋: the attacked king)
   const mine = canInteract() ? P.side : -1;
   for (let d = 0; d < 81; d++) {
     const s = dispToSq(d), c = sqEls[d];
@@ -1762,10 +1764,12 @@ function renderBoard(anim) {
           const fd = sqToDisp(fr), td = d;
           dx = ((fd % 9) - (td % 9)) * 100; dy = (((fd / 9) | 0) - ((td / 9) | 0)) * 100;
         } else dy = (E.colorOf(p) === 1) !== flip ? -60 : 60;
+        { const g = window.Variants ? Variants.geom(P) : null; if (g && (g.w !== 9 || g.h !== 9)) {   // variants: the piece is smaller than its cell
+          const cwp = boardEl.clientWidth / g.w, chp = boardEl.clientHeight / g.h, pw = Math.min(cwp, chp / 1.1) || 1; dx *= cwp / pw; dy *= chp / (pw * 1.1); } }
         el.style.setProperty('--dx', dx + '%'); el.style.setProperty('--dy', dy + '%');
         el.classList.add('mv');
         // promotion: the unpromoted face slides in on top, then the piece turns over to its promoted side
-        if (E.mPromo(lm) && !E.isDrop(lm) && E.typeOf(p) > OU && !REDUCED_MOTION.matches) {
+        if (E.mPromo(lm) && !E.isDrop(lm) && E.typeOf(p) > OU && !(P.cfg && P.cfg.flip) && !REDUCED_MOTION.matches) {
           const fe = pieceEl(p - 8);
           fe.style.setProperty('--dx', dx + '%'); fe.style.setProperty('--dy', dy + '%');
           fe.classList.add('mv', 'fl', 'fl-a'); el.classList.add('fl', 'fl-b');
@@ -1794,8 +1798,8 @@ function renderHands() {
     nm.querySelector('.hn-s').textContent = cname(col); nm.querySelector('.hn-n').textContent = playerName(col);
     el.classList.toggle('turn', !!game && !game.over && P.side === col);
     el.appendChild(nm);
-    for (const tp of [HI, KA, KI, GI, KE, KY, FU]) {
-      const n = P.hand[col * 8 + tp]; if (!n) continue;
+    for (const { tp, n } of (P.handList ? P.handList(col) : [HI, KA, KI, GI, KE, KY, FU].map(tp => ({ tp, n: P.hand[col * 8 + tp] })))) {   // (マイクロ将棋: both faces)
+      if (!n) continue;
       const slot = document.createElement('div'); slot.className = 'hslot'; slot.dataset.tp = tp; slot.dataset.col = col;
       if (sel && sel.hand === tp && P.side === col) slot.classList.add('sel');
       if (lesson && lesson.hintDrop && lesson.hintDrop.tp === tp && lesson.hintDrop.at === cur && P.side === col) slot.classList.add('hint');
@@ -1831,8 +1835,8 @@ let drag = null, suppressClick = 0;
 function sqFromPoint(x, y) {
   const r = boardEl.getBoundingClientRect();
   if (x < r.left || x >= r.right || y < r.top || y >= r.bottom) return -1;
-  const g = window.Variants ? Variants.geom(P) : { n: 9, c0: 0, r0: 0 };
-  const c = g.c0 + Math.floor((x - r.left) / r.width * g.n), rr = g.r0 + Math.floor((y - r.top) / r.height * g.n);
+  const g = window.Variants ? Variants.geom(P) : { w: 9, h: 9, c0: 0, r0: 0 };
+  const c = g.c0 + Math.floor((x - r.left) / r.width * g.w), rr = g.r0 + Math.floor((y - r.top) / r.height * g.h);
   return dispToSq(rr * 9 + c);
 }
 function startDrag(e, src) {
@@ -1898,11 +1902,11 @@ function askPromotion(s, cands) {
   const from = E.mFrom(promo), code = P.board[from];
   const box = document.createElement('div'); box.className = 'promo';
   const d = sqToDisp(s), r = boardEl.getBoundingClientRect(), fr = boardEl.parentElement.getBoundingClientRect();
-  const g = window.Variants ? Variants.geom(P) : { n: 9, c0: 0, r0: 0 };
-  box.style.left = (r.left - fr.left + ((d % 9) - g.c0 + 0.5) * r.width / g.n) + 'px';
-  box.style.top = (r.top - fr.top + (((d / 9) | 0) - g.r0 + 0.5) * r.height / g.n) + 'px';
+  const g = window.Variants ? Variants.geom(P) : { w: 9, h: 9, c0: 0, r0: 0 };
+  box.style.left = (r.left - fr.left + ((d % 9) - g.c0 + 0.5) * r.width / g.w) + 'px';
+  box.style.top = (r.top - fr.top + (((d / 9) | 0) - g.r0 + 0.5) * r.height / g.h) + 'px';
   const mk = (m, c, lbl) => { const b = document.createElement('button'); b.appendChild(pieceEl(c)); const l = document.createElement('span'); l.className = 'lbl'; l.textContent = lbl; b.appendChild(l); b.onclick = e => { e.stopPropagation(); box.remove(); promoPending = null; humanMove(m); }; return b; };
-  box.appendChild(mk(promo, code + 8, t('promote.yes')));
+  box.appendChild(mk(promo, P.PROM ? P.PROM[code] : code + 8, t('promote.yes')));
   box.appendChild(mk(plain, code, t('promote.no')));
   boardEl.parentElement.appendChild(box);
   promoPending = box;
@@ -1960,7 +1964,7 @@ function playerName(c) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; return (c === net.me ? t('you') + ' · ' : '') + (c === 0 ? g.bn : g.wn) + ' (' + (c === 0 ? g.br : g.wr) + ')'; }
   if (settings.mode === 'pvp') return cname(c);
   const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
-  const lvN = i => game && game.variant ? Variants.lvName(i) : t('lv')[i];
+  const lvN = i => game && game.variant && Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
   if (settings.mode === 'watch') return 'AI ' + lvN(c === 0 ? settings.level : settings.level2) + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : 'AI ' + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
   return c === game.human ? t('you') : 'AI ' + lvN(settings.level) + cs;
@@ -2087,7 +2091,7 @@ function newGame(rated) {
   exitLesson(true);
   if (rated && !rated.id) rated = null;
   const vr = window.Variants ? Variants.forGame(rated) : '';   // 5五将棋 / はさみ将棋: always even
-  const start = vr ? Variants.START[vr] : rated ? HANDI[0] : HANDI[settings.handicap] || HANDI[0];
+  const start = vr ? Variants.startOf(vr) : rated ? HANDI[0] : HANDI[settings.handicap] || HANDI[0];
   let human = 0;
   if (rated) human = Math.random() < 0.5 ? 0 : 1;      // rated: even game, random sente / gote
   else if (settings.mode === 'ai') {
@@ -2246,7 +2250,7 @@ async function schedule() {
       setStatus(side, t(bmLbl), false);
       return;
     }
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: game.variant ? Variants.levelOpts(levelOf(side), game.variant) : lv }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -2326,8 +2330,8 @@ function recordGame() {
   const o = game.over, h = game.human;
   if (o.ply < 2 && o.reason === 'resign') return;   // (resigned before playing: not a game)
   Object.defineProperty(game, 'recorded', { value: true, enumerable: true, writable: true, configurable: true });
-  const lvN = i => game.variant ? Variants.lvName(i) : t('lv')[i];
-  const vn = game.variant ? ' · ' + (game.variant === 'mini' ? (LANG === 'ja' ? '5五将棋' : 'Minishogi') : (LANG === 'ja' ? 'はさみ将棋' : 'Hasami Shogi')) : '';
+  const lvN = i => Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
+  const vn = game.variant ? ' · ' + Variants.vName(game.variant) : '';
   const opp = game.rated ? 'AI ' + rtLvName(game.rated.lv) : 'AI ' + lvN(settings.level) + vn;
   const why = o.reason === 'mate' ? t('res.mate', { n: o.ply }) : o.reason === 'resign' ? t('res.resign', { n: o.ply }) : t('res.' + o.reason);
   GameRecord.add({ mode: game.rated ? 'rated' : 'ai', res: o.winner < 0 ? 'd' : o.winner === h ? 'w' : 'l', side: h, opp, key: (game.rated ? 'rt:' + game.rated.lv : 'ai:' + settings.level) + (game.variant || ''), n: o.ply, why });
@@ -2937,7 +2941,7 @@ function thinkOnce(w, idx, time) {
     const id = ++jobId;
     w.onmessage = e => { const m = e.data; if (m.id === id && m.type === 'result') resolve(m); };
     w.onerror = () => resolve(null);
-    w.postMessage({ type: 'think', id, variant: game.variant, sfen: game.start, moves: game.moves.slice(0, idx), opts: { time } });
+    w.postMessage({ type: 'think', id, variant: Variants.eng(game.variant), sfen: game.start, moves: game.moves.slice(0, idx), opts: { time } });
   });
 }
 function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
@@ -2948,7 +2952,7 @@ async function runReview() {
   const n = game.moves.length, todo = [];
   for (let i = 0; i <= n; i++) todo.push(i);
   await weightsReady;
-  const vr = game.variant && window.Variants ? game.variant : '';   // 5五将棋 / はさみ将棋: the variants' search (variants/worker.js)
+  const vr = game.variant && window.Variants ? Variants.eng(game.variant) : '';   // the variants' search (variants/worker.js); ランダム将棋: the page's engine
   const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(vr ? Variants.newWorker() : makeWorker(() => {}));
   const run = rvRun = { ws, done: 0, total: todo.length, game };
   rvOpen = true; renderReview();
@@ -3092,7 +3096,7 @@ function rvbKill() { if (rvbW) { rvbW.terminate(); rvbW = null; } rvbJob = null;
 // continuous analysis (rvbox.js runs it): the worker searches depth 1, 2, 3, ... and posts the best 4 moves with their
 // lines after every depth; RVB stops it (terminate) on another position, the time limit or Stop
 function rvbCands(push, done) {
-  const sf = P.sfen(), key = rvbKey(), mv = game.moves.slice(0, cur), vr = game.variant && window.Variants ? game.variant : '';
+  const sf = P.sfen(), key = rvbKey(), mv = game.moves.slice(0, cur), vr = game.variant && window.Variants ? Variants.eng(game.variant) : '';
   const played = !inStudy() && cur < game.moves.length ? game.moves[cur] : '';
   const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 10)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
   const val = s => Math.abs(s) >= E.MATE - 200 ? fmtScore(s) : Math.round(winRate(s) * 100) + '%';
