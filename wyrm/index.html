@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 508; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 509; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1901,7 +1901,7 @@ function updateItems(dt) {
         if (got) { S.hp = Math.min(3, S.hp + 1); sfxHeal(); boom(it.obj.position.clone(), [0x6dffb0, 0xffffff], 18); S.banner = { t: 0, n: 'HP +1', m: '' }; }
         if (got || it.rz < -150) { disposeObj(it.obj); items.splice(i, 1); } }
 }
-function sfxHeal() { if (!audio()) return; const t = q16(AC.currentTime + 0.01), ch = chordAt(t); sfxClap(); ch.slice(1, 6).forEach((m, i) => { PANV = i % 2 ? 0.5 : -0.5; tone(t + i * S16 / 2, m + 24, 0.12, true); }); PANV = 0; }
+function sfxHeal() { if (!audio()) return; const t = q16(AC.currentTime + 0.01), ch = chordAt(t); sfxClap(); ch.slice(1, 6).forEach((m, i) => { PANV = i % 2 ? 0.5 : -0.5; tone(t + i * S16 / 2, m + 24, 0.2, true); /* ゲート通過・回復のフレーズは大きめに */ }); PANV = 0; }
 function damage() {
     if (S.inv > 0 || S.mode !== 'play') return;
     S.hp--; S.inv = 1.6; S.dmg = 1; S.glitch = 0.7; S.shake = 0.6; sfxDamage(); dragon.setAccent(0xff3050);
