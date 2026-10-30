@@ -2219,14 +2219,91 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!match || !match.games.some(gm => gm.actions.length)) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + encodeMatch() + (cur < latestIdx() ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Backgammon V2', url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return location.origin + location.pathname + '#k=' + encodeMatch() + (cur < latestIdx() ? '&n=' + cur : ''); }
+// 共有: GNU Backgammon / Jellyfish match text (.mat), URL, board diagram (shared/export.js)
+function bgMat() {
+  const nm = s => String(playerName(s) || pname(s)).replace(/[\s:]+/g, '_').slice(0, 20) || ('Player' + (s + 1));
+  const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  let txt = `; [Site "core-calmdust.github.io/aicoding/backgammon"]\n; [Player 1 "${nm(0)}"]\n; [Player 2 "${nm(1)}"]\n; [EventDate "${date}"]\n; [Variation "Backgammon"]\n${match.len ? '' : '; [Jacoby "Off"]\n'}\n ${match.len || 0} point match\n`;
+  match.games.forEach((gm, g) => {
+    txt += `\n Game ${g + 1}\n ${(nm(0) + ' : ' + gm.start[0]).padEnd(32)}${nm(1)} : ${gm.start[1]}\n`;
+    const p = BG.initial(), rows = []; let row = null, first = true;
+    gm.actions.forEach((a, i) => {
+      const s = actorOf(g, i); let x;
+      if (a.t === 'r') {
+        const mv = a.m.map(c => { const f = BG.mvFrom(c), to = BG.mvTo(c), code = BG.apply(p, s, f, to); return `${f}/${to}${BG.mvHit(code) ? '*' : ''}`; });
+        const dd = first && s === 1 ? `${a.d[1]}${a.d[0]}` : `${a.d[0]}${a.d[1]}`; first = false;
+        x = `${dd}: ${mv.join(' ')}`.trim();
+      } else if (a.t === 'd') x = ` Doubles => ${stateAt(g, i).cube * 2}`;
+      else if (a.t === 'k') x = ' Takes';
+      else if (a.t === 'p') x = ' Drops';
+      else return;
+      if (s === 0 || !row || row[1] != null) { row = [s === 0 ? x : null, s === 1 ? x : null]; rows.push(row); if (s === 1) return; }
+      else row[1] = x;
+    });
+    rows.forEach((r, k) => { txt += `${String(k + 1).padStart(3)}) ${(r[0] || '').padEnd(28)}${r[1] || ''}`.replace(/\s+$/, '') + '\n'; });
+    const st = stateAt(g, gm.actions.length);
+    if (st.over) { const sc = scoreAfter(g), won = match.len && sc[st.winner] >= match.len; txt += `${st.winner ? ' '.repeat(38) : '      '}Wins ${st.points} point${st.points > 1 ? 's' : ''}${won ? ' and the match' : ''}\n`; }
+  });
+  return txt;
+}
+async function bgDiagram() {
+  const RX = RecordExport, [g, ai] = curGA(), st = stateAt(g, ai), pos = st.pos, P = 40, R = P / 2 - 1.5, gm = match.games[g];
+  await RX.fonts();
+  const TW = P * 1.3, BW = P * 12 + P + TW * 2, BH = P * 11.4, ink = '#161616';
+  let cap = RX.tx('start');
+  if (ai) { const a = gm.actions[ai - 1], s = actorOf(g, ai - 1); cap = `${pname(s)} ` + (a.t === 'r' ? `${a.d[0]}${a.d[1]}: ${a.m.length ? BG.notation(a.m) : '—'}` : a.t === 'd' ? `Doubles => ${stateAt(g, ai - 1).cube * 2}` : a.t === 'k' ? 'Takes' : a.t === 'p' ? 'Drops' : ''); }
+  if (st.over) cap += `　${pname(st.winner)} +${st.points}`;
+  if (match.len) cap += `　${match.len}-pt · ${gm.start[0]}–${gm.start[1]}${match.games.length > 1 ? ` · Game ${g + 1}` : ''}`;
+  const col = s => s ? '#1d1d1d' : '#ffffff';
+  const pl = [0, 1].map(s => ({ name: `${pname(s)}${playerName(s) ? ' ' + playerName(s) : ''} · ${BG.pips(pos, s)} pips`, swatch: (gg, x, y, r) => RX.disc(gg, x, y, r, col(s), ink, 1.3) }));
+  return RX.sheet({ bw: BW + 4, bh: BH + 50, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Backgammon', caption: cap, players: pl, path: 'backgammon', titleFont: RX.SERIF, draw: (gg, x0, y0) => {
+    const ox = x0 + 2 + TW, oy = y0 + 22, half = P * 6, bar = P, H = BH;
+    const colX = c => ox + (c < 6 ? c * P : c * P + bar) + P / 2;
+    gg.fillStyle = '#fbfaf6'; gg.fillRect(ox - TW, oy, BW, H);
+    gg.strokeStyle = ink; gg.lineWidth = 2.4; gg.strokeRect(ox - TW, oy, BW, H);
+    gg.lineWidth = 1.2; gg.strokeRect(ox, oy, half * 2 + bar, H);
+    gg.fillStyle = '#ecebe5'; gg.fillRect(ox + half, oy, bar, H); gg.strokeRect(ox + half, oy, bar, H);
+    gg.strokeRect(ox + half * 2 + bar, oy, TW, H);
+    // points: column c (0..11 left to right); bottom = side 0's points 12..1, top = 13..24
+    for (let c = 0; c < 12; c++) for (const top of [true, false]) {
+      const x = colX(c) - P / 2, yb = top ? oy : oy + H, dir = top ? 1 : -1, pt = top ? 13 + c : 12 - c;
+      gg.beginPath(); gg.moveTo(x + 1, yb); gg.lineTo(x + P / 2, yb + dir * P * 4.6); gg.lineTo(x + P - 1, yb); gg.closePath();
+      gg.fillStyle = (c + (top ? 0 : 1)) & 1 ? '#bdbdb6' : '#fff'; gg.fill(); gg.lineWidth = 1; gg.strokeStyle = '#555'; gg.stroke();
+      gg.fillStyle = '#333'; gg.font = `600 12px ${RX.SANS}`; gg.textAlign = 'center'; gg.textBaseline = 'middle';
+      gg.fillText(String(pt), x + P / 2, top ? oy - 11 : oy + H + 12);
+    }
+    const stack = (x, n, top, s, ybase) => {
+      const shown = Math.min(n, 5);
+      for (let k = 0; k < shown; k++) { const y = top ? ybase + R + 1 + k * (2 * R + 1) : ybase - R - 1 - k * (2 * R + 1); RX.disc(gg, x, y, R, col(s), ink, 1.3); }
+      if (n > 5) { const y = top ? ybase + R + 1 + 4 * (2 * R + 1) : ybase - R - 1 - 4 * (2 * R + 1); gg.fillStyle = s ? '#fff' : ink; gg.font = `700 15px ${RX.SANS}`; gg.textAlign = 'center'; gg.textBaseline = 'middle'; gg.fillText(String(n), x, y + 0.5); }
+    };
+    for (let i = 1; i <= 24; i++) for (const s of [0, 1]) {
+      const n = pos[s * 26 + i]; if (!n) continue;
+      const q = s ? 25 - i : i, top = q >= 13, c = top ? q - 13 : 12 - q;
+      stack(colX(c), n, top, s, top ? oy : oy + H);
+    }
+    // bar: side 0 waits in the upper half, side 1 in the lower half; borne-off checkers as slabs in the right tray
+    for (const s of [0, 1]) { const n = pos[s * 26 + 25]; if (n) stack(ox + half + bar / 2, n, false, s, s ? oy + H - P * 0.6 : oy + H / 2 - 4); }
+    for (const s of [0, 1]) {
+      const n = pos[s * 26]; if (!n) continue; const tx = ox + half * 2 + bar + 5, w = TW - 10;
+      for (let k = 0; k < n; k++) { const y = s ? oy + 6 + k * 9 : oy + H - 14 - k * 9; gg.fillStyle = col(s); gg.strokeStyle = ink; gg.lineWidth = 1; gg.fillRect(tx, y, w, 7); gg.strokeRect(tx, y, w, 7); }
+    }
+    // cube: centred on the left when nobody owns it, else beside its owner
+    if (match.cube && match.len !== 1) { const cs = P * 0.82, cx = ox - TW / 2 - cs / 2, cy = st.owner < 0 ? oy + H / 2 - cs / 2 : st.owner === 0 ? oy + H - cs - 8 : oy + 8; gg.fillStyle = '#fff'; gg.strokeStyle = ink; gg.lineWidth = 1.6; gg.beginPath(); gg.roundRect(cx, cy, cs, cs, 5); gg.fill(); gg.stroke(); gg.fillStyle = ink; gg.font = `800 ${cs * 0.48}px ${RX.SANS}`; gg.textAlign = 'center'; gg.textBaseline = 'middle'; gg.fillText(String(st.cube === 1 ? 64 : st.cube), cx + cs / 2, cy + cs / 2 + 1); }
+    // dice of the last roll, on the mover's half
+    if (st.dice && st.lastSide >= 0 && !st.offered) {
+      const ds = P * 0.7, cx = st.lastSide === 0 ? ox + half + bar + half / 2 : ox + half / 2, cy = oy + H / 2;
+      st.dice.forEach((d, k) => { const x = cx + (k ? 4 : -ds - 4), y = cy - ds / 2; gg.fillStyle = col(st.lastSide); gg.strokeStyle = ink; gg.lineWidth = 1.4; gg.beginPath(); gg.roundRect(x, y, ds, ds, 5); gg.fill(); gg.stroke();
+        const pip = [[], [[.5, .5]], [[.25, .25], [.75, .75]], [[.25, .25], [.5, .5], [.75, .75]], [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], [[.25, .22], [.75, .22], [.25, .5], [.75, .5], [.25, .78], [.75, .78]]][d];
+        gg.fillStyle = st.lastSide ? '#fff' : ink; for (const [u, v] of pip) { gg.beginPath(); gg.arc(x + u * ds, y + v * ds, ds * 0.085, 0, 7); gg.fill(); } });
+    }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'backgammon', title: 'Backgammon', lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !match || !match.games.some(gm => gm.actions.length) || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'mat', label: 'MAT (GNU BG)', ext: 'mat', text: bgMat }],
+  url: shareUrl, image: { modes: ['board'], draw: bgDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

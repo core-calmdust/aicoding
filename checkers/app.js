@@ -2143,14 +2143,57 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle || startSpec) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: PDN (GameType 21, squares 1-32, jumps with x; English-checkers convention 1-0 = Black, the first player, won), FEN, URL, diagram
+function ckFen(pos) {
+  const L = (bb, kk) => { const o = []; for (let i = 0; i < 32; i++) if (bb & (1 << i)) o.push((kk & (1 << i) ? 'K' : '') + (i + 1)); return o.join(','); };
+  return `${pos.side ? 'W' : 'B'}:W${L(pos.w >>> 0, pos.k >>> 0)}:B${L(pos.b >>> 0, pos.k >>> 0)}`;
+}
+function ckPdn() {
+  const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
+  const pos = E.Pos.from(startSpec), tk = [];
+  moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(E.name(pos, m)); pos.play(m); });
+  tk.push(res);
+  const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/checkers"]\n[Date "${date}"]\n[Round "-"]\n[Black "${q(playerName(P1))}"]\n[White "${q(playerName(P2))}"]\n[Result "${res}"]\n[GameType "21"]\n${startSpec ? `[SetUp "1"]\n[FEN "${ckFen(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
+}
+async function ckDiagram(mode) {
+  const RX = RecordExport, S = 60, B = S * 8, pos = posAt(cur).pos;
+  await RX.fonts();
+  let cap = RX.tx('start');
+  if (cur) cap = `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${E.name(posAt(cur - 1).pos, moves[cur - 1])}`;
+  const st = statusAt(cur);
+  cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.side ? P2 : P1) }));
+  const lt = cur ? mTo(moves[cur - 1]) : -1, lf = cur ? mFrom(moves[cur - 1]) : -1;
+  const man = (g, x, y, r, black, king) => {
+    const f = black ? '#1a1a1a' : '#ffffff', ln = black ? '#fff' : '#1a1a1a';
+    if (king) { RX.disc(g, x, y + r * 0.16, r, f, '#111', 1.6); }
+    RX.disc(g, x, y - (king ? r * 0.12 : 0), r, f, '#111', 1.6);
+    g.beginPath(); g.arc(x, y - (king ? r * 0.12 : 0), r * 0.68, 0, 7); g.strokeStyle = black ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.45)'; g.lineWidth = 1; g.stroke();
+    if (king) { // crown
+      const cy = y - r * 0.12, w = r * 0.62; g.fillStyle = ln; g.beginPath(); g.moveTo(x - w, cy + w * 0.45); g.lineTo(x - w, cy - w * 0.35); g.lineTo(x - w * 0.5, cy + w * 0.05); g.lineTo(x, cy - w * 0.55); g.lineTo(x + w * 0.5, cy + w * 0.05); g.lineTo(x + w, cy - w * 0.35); g.lineTo(x + w, cy + w * 0.45); g.closePath(); g.fill();
+    }
+  };
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1a1a1a' : '#fff', '#111', 1.3) }));
+  return RX.sheet({ bw: B + 8, bh: B + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'checkers', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + 4, oy = y0 + 4;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const x = ox + c * S, y = oy + r * S, dark = (r + c) & 1;
+      g.fillStyle = dark ? '#9bb08a' : '#fbfaf5'; g.fillRect(x, y, S, S);
+      if (!dark) continue;
+      const i = r * 4 + (c >> 1);
+      if (i === lt || i === lf) { g.fillStyle = 'rgba(232,196,90,.5)'; g.fillRect(x, y, S, S); }
+      if (mode === 'num') { g.fillStyle = 'rgba(20,30,15,.75)'; g.font = `600 11px ${RX.SANS}`; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillText(String(i + 1), x + 3, y + 3); }
+      const bb = 1 << i;
+      if ((pos.b | pos.w) & bb) man(g, x + S / 2, y + S / 2 + 1, S * 0.37, !!(pos.b & bb), !!(pos.k & bb));
+    }
+    g.strokeStyle = '#111'; g.lineWidth = 2.4; g.strokeRect(ox - 1.2, oy - 1.2, B + 2.4, B + 2.4);
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'checkers', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'pdn', label: 'PDN', ext: 'pdn', text: ckPdn }, { id: 'fen', label: 'FEN', ext: 'txt', text: () => ckFen(posAt(cur).pos) + '\n' }],
+  url: shareUrl, image: { modes: ['board', 'num'], draw: ckDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

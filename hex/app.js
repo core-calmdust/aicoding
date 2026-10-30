@@ -2004,6 +2004,10 @@ function parseGameText(v) {
     const n = SIZES.includes(+q.get('s')) ? +q.get('s') : 11, sw = q.get('w') !== '0';
     const list = decMoves(q.get('k') || '', n, sw); if (!list) return null; return { list, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined, size: n, swap: sw };
   }
+  if (/\(\s*;/.test(v) && /GM\[11\]|SZ\[/.test(v)) {   // SGF (GM[11]): ;B[f6];W[swap-pieces] …
+    const sz = v.match(/SZ\[(\d+)/), mv = [...v.matchAll(/;\s*[BW]\[([^\]]*)\]/g)].map(x => /^swap/i.test(x[1]) ? 'swap' : x[1].toLowerCase());
+    v = (sz ? sz[1] + 'x' + sz[1] + ' ' : '') + mv.join(' ');
+  }
   v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ');
   let toks = v.split(/[\s,;]+/).filter(Boolean), n = 0, sw = true;
   toks = toks.filter(x => { const m = x.match(/^(\d{1,2})x\1$/i) || x.match(/^n=(\d{1,2})$/i) || x.match(/^size=?(\d{1,2})$/i); if (m) { n = +m[1]; return false; } if (/^noswap$/i.test(x)) { sw = false; return false; } return true; });
@@ -2042,14 +2046,55 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle || startSpec) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + encMoves(moves) + '&s=' + gN + '&w=' + (gSwap ? 1 : 0) + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + '&s=' + gN + '&w=' + (gSwap ? 1 : 0) + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: HexGui / Little Golem style move list (a1 = top left, "swap"), SGF (GM[11], Red = B joins top–bottom, W[swap-pieces]), URL, diagram
+function hxSgf() {
+  const st = statusAt(moves.length), pos = posAt(0).pos.clone(), e = v => String(v || '').replace(/[\]\\]/g, '\\$&');
+  const res = st.over && st.winner ? (st.winner === P1 ? 'B+' : 'W+') + (st.why === 'resign' ? 'R' : st.why === 'time' ? 'T' : '') : '';
+  let s2 = `(;FF[4]GM[11]CA[UTF-8]AP[World Board Game Atlas]SZ[${pos.n}]PB[${e(playerName(P1) || pname(P1))}]PW[${e(playerName(P2) || pname(P2))}]${res ? `RE[${res}]` : ''}DT[${new Date().toISOString().slice(0, 10)}]`;
+  if (startSpec) { const ab = [], aw = []; for (let i = 0; i < pos.b.length; i++) { if (pos.b[i] === P1) ab.push(i); else if (pos.b[i] === P2) aw.push(i); } if (ab.length) s2 += 'AB' + ab.map(i => `[${E.name(pos, i)}]`).join(''); if (aw.length) s2 += 'AW' + aw.map(i => `[${E.name(pos, i)}]`).join(''); s2 += `PL[${pos.side === P2 ? 'W' : 'B'}]`; }
+  moves.forEach(m => { const c = pos.side === P1 ? 'B' : 'W'; s2 += `;${c}[${m === SWAP ? 'swap-pieces' : E.name(pos, m)}]`; pos.play(m); });
+  return s2 + ')\n';
+}
+async function hxDiagram(mode) {
+  const RX = RecordExport, pos = posAt(cur).pos, n = pos.n, r = n >= 13 ? 19 : n >= 11 ? 22 : 28, w = Math.sqrt(3) * r, ink = '#141414';
+  await RX.fonts();
+  const RED = '#c8372d', BLUE = '#2f5fb3';
+  const nums = new Map(); { const q = posAt(0).pos.clone(); moves.slice(0, cur).forEach((m, k) => { q.play(m); nums.set(m === SWAP ? q.last : m, k + 1); }); }
+  for (const [i] of [...nums]) if (!pos.b[i]) nums.delete(i);
+  const BW = (n - 1) * w * 1.5 + w + 2 * 34 + w, BH = (n - 1) * r * 1.5 + 2 * r + 2 * 34;
+  let cap = cur ? `${cur}. ${pname(posAt(cur - 1).pos.side)} ${moves[cur - 1] === SWAP ? 'swap' : E.name(pos, moves[cur - 1])}` : RX.tx('start');
+  const st = statusAt(cur);
+  cap += '　' + (st.over && cur === moves.length ? `${pname(st.winner)} +` : RX.tx('toMove', { s: pname(pos.side) })) + `　${n}×${n}${gSwap ? ' · swap' : ''}`;
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, rr) => RX.disc(g, x, y, rr, p === P1 ? RED : BLUE, ink, 1.2) }));
+  const last = cur ? (moves[cur - 1] === SWAP ? pos.last : moves[cur - 1]) : -1;
+  return RX.sheet({ bw: BW, bh: BH, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Hex', caption: cap, players: pl, path: 'hex', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + 34 + w, oy = y0 + 34 + r;
+    const C = (c, rr) => [ox + c * w + rr * w / 2, oy + rr * r * 1.5];
+    const hexPath = (x, y, k) => { g.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; const px = x + k * Math.cos(a), py = y + k * Math.sin(a); if (i) g.lineTo(px, py); else g.moveTo(px, py); } g.closePath(); };
+    // edges: Red joins top and bottom, Blue joins left and right
+    const edge = (pts, col) => { g.strokeStyle = col; g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); };
+    const [tlx, tly] = C(0, 0), [trx, try_] = C(n - 1, 0), [blx, bly] = C(0, n - 1), [brx, bry] = C(n - 1, n - 1);
+    edge([[tlx - w / 2, tly - r * 1.25], [trx + w * 0.1, try_ - r * 1.25]], RED); edge([[blx - w * 0.1, bly + r * 1.25], [brx + w / 2, bry + r * 1.25]], RED);
+    edge([[tlx - w * 1.05, tly - r * 0.2], [blx - w * 1.05, bly + r * 0.2]], BLUE); edge([[trx + w * 1.05, try_ - r * 0.2], [brx + w * 1.05, bry + r * 0.2]], BLUE);
+    for (let rr = 0; rr < n; rr++) for (let c = 0; c < n; c++) {
+      const i = rr * n + c, [x, y] = C(c, rr), v = pos.b[i];
+      hexPath(x, y, r); g.fillStyle = '#fff'; g.fill(); g.strokeStyle = '#555'; g.lineWidth = 1; g.stroke();
+      if (!v) continue;
+      g.beginPath(); g.arc(x, y, r * 0.72, 0, 7); g.fillStyle = v === P1 ? RED : BLUE; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.3; g.stroke();
+      const k = nums.get(i);
+      if (mode === 'num' && k) { g.fillStyle = '#fff'; g.font = `700 ${r * (k >= 100 ? 0.62 : 0.78)}px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(k), x, y + 1); }
+      else if (i === last) { g.beginPath(); g.arc(x, y, r * 0.26, 0, 7); g.fillStyle = '#fff'; g.fill(); }
+    }
+    g.fillStyle = '#444'; g.font = `600 13px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let c = 0; c < n; c++) { const [x, y] = C(c, 0); g.fillText('abcdefghijklmnopqrs'[c], x, y - r * 1.9); }
+    for (let rr = 0; rr < n; rr++) { const [x, y] = C(0, rr); g.fillText(String(rr + 1), x - w * 1.55, y); }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'hex', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'moves', label: 'a1 swap …', ext: 'txt', text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: hxSgf }],
+  url: shareUrl, image: { modes: ['board', 'num'], draw: hxDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

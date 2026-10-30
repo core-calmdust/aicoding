@@ -2345,6 +2345,10 @@ function parseGameText(v) {
   v = (v || '').trim(); let n, r = null, s = null;
   const h = v.match(/#(.*)$/) || (/(^|&)k=/.test(v) ? [null, v] : null);
   if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; v = q.get('k') || ''; if (q.has('n')) n = parseInt(q.get('n'), 10); r = q.get('r'); s = q.get('s'); }
+  if (!h && /\[|^\s*\d+\.\s*[SN]\b/m.test(v)) {   // turn record (as exported): tags, "1. S 3 6" lines
+    const rm = v.match(/\[Variant\s+"(\w+)"\]/), sm = v.match(/\[Seeds\s+"(\d)"\]/); if (rm) r = rm[1]; if (sm) s = sm[1];
+    v = v.replace(/\[[^\]]*\]/g, ' ').replace(/^\s*;.*$/gm, ' ').replace(/^\s*\d+\.\s*[SN]\b/gm, ' ');
+  }
   if (!/^[\s1-6,.-]*$/.test(v)) return null;
   const moves = v.replace(/[^1-6]/g, '').split('').map(c => +c - 1);
   return { moves, n, rules: RULE_CODE[r] || 'kalah', seeds: s === '6' ? 6 : 4 };
@@ -2374,14 +2378,43 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!game.moves.length || game.setup) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + game.moves.map(k => k + 1).join('') + '&r=' + game.rules + '&s=' + game.seeds + (cur < game.moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Luxe Mancala', url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return game.setup ? '' : location.origin + location.pathname + '#k=' + game.moves.map(k => k + 1).join('') + '&r=' + game.rules + '&s=' + game.seeds + (cur < game.moves.length ? '&n=' + cur : ''); }
+// 共有: pit-number sequence (pits 1–6 counted in sowing order from the mover's left, as in Kalah literature), turn record with tags, URL, diagram
+function mcRecord() {
+  const lines = []; let ln = null;
+  game.moves.forEach((k, i) => { const sd = P[i].side; if (!ln || ln.s !== sd) { ln = { s: sd, p: [] }; lines.push(ln); } ln.p.push(k + 1); });
+  const last = P[game.moves.length], sc = [last.b[6], last.b[13]];
+  const res = last.over ? `${sc[0]}-${sc[1]}` : game.resigned != null ? (game.resigned ? '1-0' : '0-1') : '*';
+  const q = v => String(v || '?').replace(/["\\]/g, ''), d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/mancala"]\n[Date "${date}"]\n[Variant "${game.rules}"]\n[Seeds "${game.seeds}"]\n[South "${q(sideName(0))}"]\n[North "${q(sideName(1))}"]\n[Result "${res}"]\n; pits 1–6 in sowing order from the mover's left; S = South (first player), N = North\n\n` + lines.map((l, i) => `${i + 1}. ${l.s ? 'N' : 'S'} ${l.p.join(' ')}`).join('\n') + '\n';
+}
+async function mcDiagram() {
+  const RX = RecordExport, pos = P[cur], b = pos.b, S = 70, W = S * 8, H = S * 2.6, ink = '#151515';
+  await RX.fonts();
+  const mv = cur ? P[cur].mv || null : null;
+  let cap = cur ? `${cur}. ${pos.mv ? (pos.mv.side ? 'N' : 'S') : ''} ${game.moves[cur - 1] + 1}${pos.mv && pos.mv.extra ? ' +' : ''}${pos.mv && pos.mv.cap ? ' ×' + pos.mv.cap : ''}` : RX.tx('start');
+  cap += '　' + (pos.over ? `${b[6]} – ${b[13]}` : RX.tx('toMove', { s: pos.side ? 'N' : 'S' })) + '　' + t('rule.' + game.rules) + ' · ' + game.seeds;
+  const pl = [0, 1].map(s => ({ name: `${s ? 'N' : 'S'}: ${sideName(s)} · ${b[s ? 13 : 6]}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, s ? '#2a2a2a' : '#fff', ink, 1.3) }));
+  const lastPit = cur ? (pos.mv.side ? 7 : 0) + game.moves[cur - 1] : -1;
+  return RX.sheet({ bw: W + 40, bh: H + 56, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'mancala', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + 20, oy = y0 + 26;
+    g.fillStyle = '#fbfaf6'; g.strokeStyle = ink; g.lineWidth = 2.2; g.beginPath(); g.roundRect(ox, oy, W, H, 26); g.fill(); g.stroke();
+    const pit = (x, y, n, hi) => { g.beginPath(); g.arc(x, y, S * 0.38, 0, 7); g.fillStyle = hi ? '#f3e2b0' : '#fff'; g.fill(); g.lineWidth = 1.6; g.strokeStyle = ink; g.stroke(); g.fillStyle = ink; g.font = `700 ${S * 0.36}px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), x, y + 1); };
+    const store = (x, n) => { g.beginPath(); g.roundRect(x - S * 0.4, oy + S * 0.25, S * 0.8, H - S * 0.5, S * 0.4); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 1.8; g.strokeStyle = ink; g.stroke(); g.fillStyle = ink; g.font = `800 ${S * 0.42}px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), x, oy + H / 2 + 1); };
+    store(ox + S * 0.5, b[13]); store(ox + W - S * 0.5, b[6]);
+    for (let k = 0; k < 6; k++) {
+      const xs = ox + S * (1.5 + k), xn = ox + S * (6.5 - k);
+      pit(xs, oy + H - S * 0.68, b[k], lastPit === k); pit(xn, oy + S * 0.68, b[7 + k], lastPit === 7 + k);
+      g.fillStyle = '#666'; g.font = `600 13px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(String(k + 1), xs, oy + H + 13); g.fillText(String(k + 1), xn, oy - 13);
+    }
+    g.fillStyle = '#666'; g.font = `700 13px ${RX.SANS}`; g.textAlign = 'left'; g.fillText('N', ox - 16, oy + S * 0.68); g.fillText('S', ox - 16, oy + H - S * 0.68);
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'mancala', title: 'Luxe Mancala', lang: () => LANG, toast: m => toast(m, 1500), show: o => o.classList.add('show'), hide: o => o.classList.remove('show'),
+  empty: () => !game.moves.length || !!game.setup || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'pits', label: '3 6 2 …', ext: 'txt', text: () => game.moves.map(k => k + 1).join('') + '\n' }, { id: 'rec', label: 'S/N', ext: 'txt', text: mcRecord }],
+  url: shareUrl, image: { modes: ['board'], draw: mcDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; $('#pasteOverlay').classList.add('show'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => $('#pasteOverlay').classList.remove('show');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

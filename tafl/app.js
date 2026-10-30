@@ -2060,8 +2060,8 @@ function parseGameText(v) {
   const h = v.match(/#(.*)$/);
   if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const vr = RULE_ORDER.includes(q.get('v')) ? q.get('v') : 'copenhagen'; const list = decMoves(q.get('k') || '', null, vr); if (!list) return null; return { list, v: vr, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }
   let vr = 'copenhagen';
-  const tag = v.match(/\[\s*(copenhagen|brandubh|tablut)[^\]]*\]/i); if (tag) vr = tag[1].toLowerCase();
-  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ');
+  const tag = v.match(/\[\s*(copenhagen|brandubh|tablut)[^\]]*\]/i) || v.match(/\[Variant\s+"(copenhagen|brandubh|tablut)/i); if (tag) vr = tag[1].toLowerCase();
+  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ').replace(/\d+\.(\.\.)?/g, ' ');
   const toks = v.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
   const pos = E.Pos.from(null, vr), out = [];
@@ -2098,14 +2098,49 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle || startSpec) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== 'copenhagen' ? '&v=' + gv : '') + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== 'copenhagen' ? '&v=' + gv : '') + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: algebraic record (a1 at the bottom left, "d1-d4" moves, "x" captures, K = king; as on aagenielsen.dk / OpenTafl), own text, URL, diagram
+const TF_NAME = { copenhagen: 'Copenhagen Hnefatafl 11x11', brandubh: 'Brandubh 7x7', tablut: 'Tablut 9x9' };
+function tfRecord() {
+  const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*', pos = E.Pos.from(startSpec, gv), tk = [];
+  moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(mvIn(pos, m)); pos.play(m); });
+  tk.push(res);
+  const q = v => String(v || '?').replace(/["\\]/g, ''), d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/tafl"]\n[Date "${date}"]\n[Variant "${TF_NAME[gv]}"]\n[Attackers "${q(playerName(P1))}"]\n[Defenders "${q(playerName(P2))}"]\n[Result "${res}"]\n\n${RecordExport.lines(tk)}\n`;
+}
+async function tfDiagram() {
+  const RX = RecordExport, pos = posAt(cur).pos, n = pos.n, S = n >= 11 ? 50 : n >= 9 ? 58 : 70, B = S * n, M = 30, ink = '#141414';
+  await RX.fonts();
+  let cap = cur ? `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${mvIn(posAt(cur - 1).pos, moves[cur - 1])}` : RX.tx('start');
+  const st = statusAt(cur);
+  cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.turn) })) + '　' + TF_NAME[gv];
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1b1b1b' : '#fff', ink, 1.3) }));
+  const lf = cur ? mFrom(moves[cur - 1]) : -1, lt = cur ? mTo(moves[cur - 1]) : -1, th = (n >> 1) * n + (n >> 1);
+  const special = i => { const r = Math.floor(i / n), c = i % n; return i === th || ((r === 0 || r === n - 1) && (c === 0 || c === n - 1)); };
+  return RX.sheet({ bw: B + 2 * M, bh: B + M + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'tafl', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + M, oy = y0 + 4;
+    for (let i = 0; i < n * n; i++) {
+      const r = Math.floor(i / n), c = i % n, x = ox + c * S, y = oy + r * S;
+      g.fillStyle = special(i) ? '#d9d4c7' : '#fff'; g.fillRect(x, y, S, S);
+      if (special(i)) { g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 6, y + 6); g.lineTo(x + S - 6, y + S - 6); g.moveTo(x + S - 6, y + 6); g.lineTo(x + 6, y + S - 6); g.stroke(); }
+      if (i === lf || i === lt) { g.fillStyle = 'rgba(226,190,90,.42)'; g.fillRect(x, y, S, S); }
+    }
+    g.strokeStyle = '#555'; g.lineWidth = 0.9;
+    for (let k = 1; k < n; k++) { g.beginPath(); g.moveTo(ox + k * S, oy); g.lineTo(ox + k * S, oy + B); g.moveTo(ox, oy + k * S); g.lineTo(ox + B, oy + k * S); g.stroke(); }
+    g.strokeStyle = ink; g.lineWidth = 2.4; g.strokeRect(ox, oy, B, B);
+    for (let i = 0; i < n * n; i++) {
+      const v = pos.b[i]; if (!v) continue; const x = ox + (i % n) * S + S / 2, y = oy + Math.floor(i / n) * S + S / 2;
+      RX.disc(g, x, y, S * 0.36, v === 1 ? '#1b1b1b' : '#fff', ink, 1.6);
+      if (v === 3) { const k = S * 0.2; g.strokeStyle = ink; g.lineWidth = 2.6; g.beginPath(); g.moveTo(x - k, y); g.lineTo(x + k, y); g.moveTo(x, y - k); g.lineTo(x, y + k); g.stroke(); g.beginPath(); g.arc(x, y, S * 0.28, 0, 7); g.lineWidth = 1.2; g.stroke(); }
+    }
+    g.fillStyle = '#444'; g.font = `600 13px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let k = 0; k < n; k++) { g.fillText('abcdefghijk'[k], ox + k * S + S / 2, oy + B + 15); g.fillText(String(n - k), ox - 14, oy + k * S + S / 2); }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'tafl', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'alg', label: 'a4-d4xd5', ext: 'txt', text: tfRecord }, { id: 'own', label: '[' + VTAG[gv] + ']', ext: 'txt', text: () => recordText() + '\n' }],
+  url: shareUrl, image: { modes: ['board'], draw: tfDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };
