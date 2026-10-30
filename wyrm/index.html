@@ -1708,6 +1708,16 @@ function spawnHexGate() {
         const r = HEX_R * (1 + i * 0.55), z = i * 60, geo = oct(r, 12 + i * 4, 22 + i * 4, z), fg = new THREE.Group();
         fg.add(new THREE.Mesh(geo, white), new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edge)); fg.userData.sp = (i % 2 ? -1 : 1) * (0.5 + i * 0.35); g.add(fg); frames.push(fg);
     }
+    // 枠と枠のあいだを面でつなぐ（漏斗の内側の壁）。8面ずつ、2色を交互に。枠と一緒には回さない
+    {
+        const pos = [], cols = [], cA = new THREE.Color(0xd6dbe4), cB = new THREE.Color(0x9aa2b2), V = (r, a, z) => [Math.cos(a) * r, Math.sin(a) * r, z];
+        for (let i = 0; i < 4; i++) { const ra = HEX_R * (1 + i * 0.55) / Math.cos(Math.PI / 8), rb = HEX_R * (1 + (i + 1) * 0.55) / Math.cos(Math.PI / 8), za = i * 60, zb = (i + 1) * 60;
+            for (let k = 0; k < 8; k++) { const a0 = k / 8 * Math.PI * 2 + Math.PI / 8, a1 = a0 + Math.PI / 4, A = V(ra, a0, za), B = V(ra, a1, za), C = V(rb, a1, zb), D = V(rb, a0, zb), c = (i + k) % 2 ? cA : cB;
+                [A, B, C, A, C, D].forEach(v => { pos.push(...v); cols.push(c.r, c.g, c.b); }); } }
+        const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); fg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); fg.computeVertexNormals();
+        const faceM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, transparent: true, opacity: 0.82, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 }); enemyFog(faceM);
+        g.add(new THREE.Mesh(fg, faceM), new THREE.LineSegments(new THREE.EdgesGeometry(fg, 10), edge));
+    }
     // 支柱: 内側の枠の角から外側の枠の角へ、赤と黒の山形を交互に並べる
     const spokes = new THREE.Group(), r0 = HEX_R / Math.cos(Math.PI / 8) + 6, r1 = HEX_R * (1 + 4 * 0.55) / Math.cos(Math.PI / 8) + 20, z1 = 4 * 60;
     const segR = [], segB = [], base = [], N = 12, dr = r1 - r0, len = Math.hypot(dr, z1), th = Math.atan2(z1, dr), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
@@ -1730,8 +1740,8 @@ function updateHexGate(dt) {
     h.frames.forEach(f => { f.rotation.z = h.t * f.userData.sp; }); h.spokes.rotation.z = h.t * 0.3; h.inner.scale.setScalar(1 + beatPulse() * 0.06);
     if (!h.done && S.d >= h.d && S.mode === 'play') {
         h.done = true;
-        // 成功判定は竜の胴体の中心が穴の中に入っているかだけ（翼は関係ない）
-        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.9) { sfxHeal(); S.score += 1000; } // くぐれた
+        // 成功判定は竜の胴体の中心が穴の中に入っているかだけ（翼は関係ない）。見た目どおり通れるよう少し甘めに
+        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 1.15) { sfxHeal(); S.score += 1000; } // くぐれた
         else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
         evolve();
     }
