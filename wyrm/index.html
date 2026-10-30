@@ -1720,7 +1720,8 @@ function drawUI() {
     if (S.dmg > 0) { const gr = ug.createRadialGradient(uiC.width / 2, uiC.height / 2, uiC.height * 0.3, uiC.width / 2, uiC.height / 2, uiC.width * 0.62); gr.addColorStop(0, 'rgba(255,40,80,0)'); gr.addColorStop(1, `rgba(255,40,80,${0.55 * S.dmg})`); ug.fillStyle = gr; ug.fillRect(0, 0, uiC.width, uiC.height); }
     if (S.mode === 'play' || S.mode === 'evo') { drawHUD(); drawLocks(); if (S.mode === 'play') drawReticle(); }
     drawOverlay();
-    if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'MS' : 'N/A'}`, 20, VH - 46, 12, '#fff', '#fff', 'left', 0.9);
+    if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'MS' : 'N/A'}`, 20, VH - 64, 12, '#fff', '#fff', 'left', 0.9);
+    if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); }
     gameEl.classList.toggle('aim', S.mode === 'play');
 }
 
@@ -1732,7 +1733,7 @@ const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 const perf = { n: 0, late: 0, good: 0, half: false, skip: false, grace: 0, nat: 1 / 60, lastRaf: -1, natH: [] };
 // 画面サイズやフルスクリーンが変わった直後は描画が一時的に詰まるので、その間は判定しない。
 // 判定はやり直し（下げた解像度・半分の更新も元に戻して測り直す）
-function perfReset() { perf.n = perf.late = perf.good = 0; perf.half = false; perf.noRaise = false; perf.grace = 2.0; dtHist.length = 0; perf.natH.length = 0; last = -1; PR_CAP = 9; if (PR < PR_T) setPR(PR_T); }
+function perfReset() { perf.n = perf.late = perf.good = 0; perf.half = false; perf.noRaise = false; perf.grace = 2.0; perf.drops = 0; perf.spikes = 0; perf.l3 = []; dtHist.length = 0; perf.natH.length = 0; last = -1; PR_CAP = 9; if (PR < PR_T) setPR(PR_T); }
 addEventListener('resize', perfReset); document.addEventListener('fullscreenchange', perfReset); document.addEventListener('visibilitychange', perfReset);
 function setPR(v) { PR = v; renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false); composer.setPixelRatio(PR); composer.setSize(VW, VH); }
 // GPUの描画時間を測る（対応ブラウザのみ）。GPUが間に合わないと更新タイミングは正常なまま表示だけ飛ぶ
@@ -1761,7 +1762,10 @@ function adapt(raw, ref) {
     // GPUの描画時間（直近の中央値）。更新周期の85%超は重い（1回でも下げる）、65%未満なら上げてもよい
     const vs = (perf.vs || 1 / 60) * 1000; let gpuHeavy = false, gpuRoom = true;
     if (gpuT.hist.length >= 5) { const a = gpuT.hist.slice().sort((x, y) => x - y); gpuT.ms = a[a.length >> 1]; gpuHeavy = gpuT.ms > vs * 0.85; gpuRoom = gpuT.ms < vs * 0.65; gpuT.hist.length = 0; }
-    if (perf.late > 4 || gpuHeavy) { // 重い: 解像度を下げる（最低0.85）。上げた直後にまた重くなったら、その解像度には戻さない
+    (perf.l3 = perf.l3 || []).push(perf.late); if (perf.l3.length > 3) perf.l3.shift();
+    const lateSum = perf.l3.reduce((a, b) => a + b, 0);
+    perf.jsShow = [perf.jsMax || 0, perf.jsUpd || 0, perf.jsDraw || 0]; perf.jsMax = 0;
+    if (perf.late >= 2 || lateSum >= 4 || gpuHeavy) { perf.l3.length = 0; // たまに飛ぶだけでも重いとみなす // 重い: 解像度を下げる（最低0.85）。上げた直後にまた重くなったら、その解像度には戻さない
         perf.good = 0; if (perf.win - (perf.raisedAt ?? -99) <= 3) perf.noRaise = true;
         if (PR > 0.851) { PR_CAP = Math.max(0.85, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && (perf.vs || 1 / 60) < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
     else if (perf.late === 0 && gpuRoom && !perf.noRaise && ++perf.good >= 8 && PR < PR_T - 0.001) { perf.good = 0; perf.raisedAt = perf.win; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
@@ -1776,6 +1780,7 @@ function frame(now) {
     perf.lastRaf = now;
     if (perf.half && perf.natH.length > 20 && (perf.vs || 1 / 60) > 0.0125) { perf.half = false; dtHist.length = 0; }
     if (perf.half) { perf.skip = !perf.skip; if (perf.skip) return; }
+    const jsT0 = performance.now();
     const raw = last < 0 ? 1 / 60 : (now - last) / 1000; last = now;
     dtHist.push(raw); if (dtHist.length > 31) dtHist.shift();
     const ref = [...dtHist].sort((a, b) => a - b)[dtHist.length >> 1];
@@ -1845,8 +1850,11 @@ function frame(now) {
     dragon.root.visible = !(S.mode === 'dead' && S.deadT > 0.05);
     dragon.trails.forEach(t => t.visible = dragon.root.visible);
     S.flash = Math.max(0, S.flash - dt * 2.5); ui.flash.style.opacity = S.flash;
+    const jsT1 = performance.now();
     gpuPoll(); gpuBegin(); composer.render(); gpuEnd();
     drawUI();
+    // 1フレームのJavaScript処理時間（更新／描画の指示）。重い瞬間を探すための計測
+    { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
 window.__wyrm = { S, MUS, startGame, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
