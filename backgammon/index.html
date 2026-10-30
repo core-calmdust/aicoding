@@ -1129,7 +1129,6 @@ html.lnd #lndDrawer{display:flex;flex-direction:column;gap:6px;position:absolute
   transform:translateX(calc(100% + 76px));visibility:hidden;transition:transform .34s cubic-bezier(.2,1.25,.4,1),visibility 0s .34s}
 html.lnd body.lnd-open #lndDrawer{transform:translateX(0);visibility:visible;transition:transform .34s cubic-bezier(.2,1.25,.4,1),visibility 0s}
 html.lnd body.lnd-drag #lndDrawer{transition:none!important;visibility:visible}
-html.lnd:not(.rot) #lndDrawer{touch-action:pan-y}
 html.lnd #lndRail button span{white-space:pre;text-align:center;line-height:1.15;max-height:2.45em}
 /* the rail is one bar (like mancala): the tabs sit in it without their own frames */
 html.lnd #lndRail{justify-content:center;padding:4px 0;border-radius:12px;background:rgba(0,0,0,.35)!important;border:1px solid var(--line);box-shadow:none!important}
@@ -1511,7 +1510,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="app.js?v=20261030dr1"></script>
 <script src="op.js?v=20261021opan"></script>
 <script src="online-ui.js?v=20261030ck1"></script>
-<script src="land.js?v=5"></script>
+<script src="land.js?v=6"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
@@ -1529,7 +1528,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/atlas.js?v=20261029t" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
-<script src="../shared/infotabs.js?v=10" defer></script>
-<script src="../shared/pickdrop.js?v=2"></script>
+<script src="../shared/infotabs.js?v=11" defer></script>
+<script src="../shared/pickdrop.js?v=3"></script>
 </body>
 </html>

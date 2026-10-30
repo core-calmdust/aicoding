@@ -926,6 +926,10 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
     grid-template-areas:"brand ctrl icons icons" "fr fr fr rl"!important}
   body.lt-on.in-lesson .app, body.lt-on.in-puzzle .app{grid-template-columns:auto minmax(0,1fr) auto var(--ltw, 300px)!important;grid-template-areas:"brand ctrl ctrl icons" "fr fr fr pn"!important}
   body.lt-on .brand-r{justify-self:end}
+  body.lt-on .brand-r{display:flex;align-items:center;gap:4px}
+  body.lt-on .brand-r > :is(button, a){width:34px!important;height:32px!important;min-width:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;flex:none}
+  body.lt-on .brand-r > :is(button, a) svg{width:17px!important;height:17px!important}
+  body.lt-on .brand-r #langSel{width:74px!important;max-width:74px;height:32px!important;font-size:12px;padding:0 4px}
   body.lt-on .controls .btn span{display:none!important}
   body.lt-on .controls .btn{padding:0!important;flex:none!important;width:36px!important;height:32px!important;gap:0!important;border-radius:8px!important;justify-content:center}
   body.lt-on .controls .btn svg{width:17px!important;height:17px!important}
@@ -963,7 +967,6 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   body.lt-on #ltPanel.drag{transition:none}
   /* swipes belong to the drawer, not the page: no sideways page pan, and the closed drawer is out of the way (no overflow, no hits) */
   html:has(body.lt-on), body.lt-on{overscroll-behavior:none}
-  body.lt-on .app, body.lt-on #ltPanel, body.lt-on #ltRail{touch-action:pan-y}
   body.lt-on:not(.lt-open) #ltPanel:not(.drag){visibility:hidden;transition:transform .32s cubic-bezier(.2,1.25,.4,1),visibility 0s .32s}
   body.lt-on.in-lesson #ltPanel, body.lt-on.in-puzzle #ltPanel{visibility:visible!important}
   html body.lt-on:is(.in-lesson, .in-puzzle) #ltPanel > :is(#ltLearn, #coachCard, #reviewCard, #evalCard, .kifu-card){display:none!important}
@@ -1456,7 +1459,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=11"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=4"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=6"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=11"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=4"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=7"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->
@@ -1478,7 +1481,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
 <script src="../shared/atlas.js?v=20261029t" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac2" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
-<script src="../shared/infotabs.js?v=10" defer></script>
-<script src="../shared/pickdrop.js?v=2"></script>
+<script src="../shared/infotabs.js?v=11" defer></script>
+<script src="../shared/pickdrop.js?v=3"></script>
 </body>
 </html>

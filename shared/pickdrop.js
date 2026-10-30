@@ -67,18 +67,20 @@ function sync(o) {
   const items = [...o.group.children].filter(b => b.tagName === 'BUTTON' && (o.group.classList.contains('pd-sel') || visible(b)));
   o.items = items;
   const sig = items.map(b => (isSel(b) ? '1' : '0') + (b.disabled ? 'd' : '') + b.innerHTML + (b.title || '')).join('|');
-  if (o.sel) o.d.style.display = MQ.matches && !o.sel.disabled && getComputedStyle(o.sel.parentNode).display !== 'none' ? '' : 'none';
+  if (o.sel) { const disp = MQ.matches && !o.sel.disabled && getComputedStyle(o.sel.parentNode).display !== 'none' ? '' : 'none'; if (o.d.style.display !== disp) o.d.style.display = disp; }
   if (sig === o.sig) return; o.sig = sig;
   const cur = items.find(isSel);
   o.btn.querySelector('.pd-cur').innerHTML = cur ? content(cur) : '—';
   o.list.innerHTML = items.map((b, i) => `<button type="button" role="option" class="pd-opt${isSel(b) ? ' sel' : ''}${b.disabled ? ' dis' : ''}" data-i="${i}" aria-selected="${isSel(b)}"><span class="pd-lb">${content(b)}</span>${CK}</button>`).join('');
 }
-function closeAll() { all.forEach(o => { o.d.classList.remove('open'); o.btn.setAttribute('aria-expanded', 'false'); }); }
+// (only the open ones: touching the class of the others would wake the dialog's observer again and again)
+function closeAll() { all.forEach(o => { if (!o.d.classList.contains('open')) return; o.d.classList.remove('open'); o.btn.setAttribute('aria-expanded', 'false'); }); }
 function apply() {
   const on = MQ.matches;
   all.forEach(o => {
     const src = o.sel || o.group, shown = !o.sel || (o.sel.offsetParent !== null || o.sel.classList.contains('pd-on'));
-    src.classList.toggle('pd-on', on); o.d.style.display = on && shown ? '' : 'none';
+    if (src.classList.contains('pd-on') !== on) src.classList.toggle('pd-on', on);
+    const disp = on && shown ? '' : 'none'; if (o.d.style.display !== disp) o.d.style.display = disp;
   });
   if (!on) closeAll();
 }

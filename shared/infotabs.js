@@ -142,10 +142,11 @@ function init(tries) {
     { const max = sc.scrollHeight - H; if (sc.scrollTop > max) sc.scrollTop = Math.max(0, max); }
     // the game's own handler then runs mtab('game') (board view); bring the box into view
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const el = box[cur], y = el.getBoundingClientRect().top - top0;
-      if (again && y < H * .5) sc.scrollTo({ top: 0, behavior: 'smooth' });   // tap again: back to the board
-      else if (y > H * .85) sc.scrollTo({ top: Math.min(sc.scrollHeight - H, sc.scrollTop + y - H * .55), behavior: 'smooth' });
-      else if (y < 0) sc.scrollTo({ top: sc.scrollTop + y - 8, behavior: 'smooth' });
+      // like poker: a tab brings its box up (形勢: to the very end; the others: the box's top at the top of the screen);
+      // the same tab again goes back to the board — and again to the box, as often as wanted
+      const el = box[cur], y = el.getBoundingClientRect().top - top0, max = Math.max(0, sc.scrollHeight - H);
+      const target = cur === 'eval' ? max : Math.min(max, Math.max(0, sc.scrollTop + y - 8));
+      sc.scrollTo({ top: again && Math.abs(sc.scrollTop - target) < 24 ? 0 : target, behavior: 'smooth' });
       fix();
     }));
   }, true);

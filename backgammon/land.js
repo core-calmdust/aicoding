@@ -167,7 +167,12 @@ document.addEventListener('touchstart', e => {
 document.addEventListener('touchmove', e => {
   if (!sw) return;
   const [x, y] = P(e), dx = x - sw.x, dy = y - sw.y;
-  if (!sw.live) { if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.3) { if (Math.abs(dy) > 14) sw = null; return; } sw.live = true; body.classList.add('lnd-drag'); }
+  if (!sw.live) {   // decide once: a mostly-vertical move is the box's own scrolling (never taken over)
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (ay >= 6 && ay >= ax * .8) { sw = null; return; }
+    if (ax < 12 || ax < ay * 1.6) return;
+    sw.live = true; body.classList.add('lnd-drag');
+  }
   sw.dx = dx;
   const off = sw.open ? Math.max(0, dx) : Math.max(0, sw.w + 76 + Math.min(0, dx));
   drawer.style.transform = `translateX(${off}px)`;
