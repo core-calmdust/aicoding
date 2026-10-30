@@ -1328,7 +1328,7 @@ function step(h) {
     } else { // タイトル: 自動で漂う
         mx = Math.sin(S.t * 0.5) * 0.3 - S.x * 0.004; my = (cv.cy + Math.sin(S.t * 0.7) * 40 - S.y) * 0.01;
     }
-    const acc = S.mode === 'play' ? 4.4 : 9; // 軽く反応する S.vx += (mx * SPD - S.vx) * Math.min(1, h * acc); S.vy += (my * SPD - S.vy) * Math.min(1, h * acc);
+    const acc = S.mode === 'play' ? 4.4 : 9; /* 軽く反応する */ S.vx += (mx * SPD - S.vx) * Math.min(1, h * acc); S.vy += (my * SPD - S.vy) * Math.min(1, h * acc);
     S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
     const xl = cv.hw * 0.6; if (Math.abs(S.x) > xl) { S.x = Math.sign(S.x) * xl; S.vx = 0; }
     if (S.y < cv.fl + 26) { S.y = cv.fl + 26; S.vy = Math.max(0, S.vy); } if (S.y > cv.ce - 26) { S.y = cv.ce - 26; S.vy = Math.min(0, S.vy); }
