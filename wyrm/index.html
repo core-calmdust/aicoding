@@ -1082,7 +1082,7 @@ let best = 0; try { best = +localStorage.getItem('wyrmsphere-best') || 0; } catc
 const S = { mode: 'title', d: 0, x: 0, y: 0, vx: 0, vy: 0, speed: 300, score: 0, t: 0, deadT: 0, shake: 0, flash: 0,
     camX: 0, camVX: 0, camY: 60, camV: 0, lookX: 0, lookVX: 0, lookY: 0, lookV: 0, stage: 0, warpT: 9, evoUntil: 0,
     hp: 2, inv: 0, dmg: 0, kills: 0, reveal: 0.75, quota: 24, waveT: 0, rx: 640, ry: 300, lastFlap: 0, banner: null, newRec: false };
-const QUOTA = st => Math.min(60, 22 + st * 3), /* 8分音符ロックに合わせて短めに */ SPD = 450, HIT_R = 13;
+const QUOTA = st => Math.min(60, 22 + st * 3), /* 8分音符ロックに合わせて短めに */ SPD = 450, HIT_R = 5; /* 当たり判定は竜の中心の胴体だけ */
 const bgFrom = new THREE.Color(), bgTo = new THREE.Color(PAL.bg); let bgK = 1;
 function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); recolorEnemies(); }
 
@@ -1392,12 +1392,12 @@ function removeEnemy(e) { e.alive = false; scene.remove(e.obj); if (e.obj.userDa
 // ---------------- 敵の弾（ロックして撃ち落とせる）----------------
 const BN = 90, bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3a5a });
 enemyFog(bulletMat);
-const bulletMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(6, 0), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
+const bulletMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(15, 0), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
 const bullets = []; const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _bs = new THREE.Vector3(), _bp = new THREE.Vector3(), _be = new THREE.Euler();
 function fireBullet(e, off = 0) {
     if (bullets.length >= BN) return;
     const T = (e.rz) / 620, tx = S.x + S.vx * T * 0.5 + off, ty = S.y + S.vy * T * 0.5;
-    bullets.push({ x: e.x, y: e.y, rz: e.rz, vx: (tx - e.x) / T, vy: (ty - e.y) / T, vz: 620, locked: 0, alive: true, t: 0, r: 9 });
+    bullets.push({ x: e.x, y: e.y, rz: e.rz, vx: (tx - e.x) / T, vy: (ty - e.y) / T, vz: 620, locked: 0, alive: true, t: 0, r: 12 });
 }
 function updateBullets(dt) {
     for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rz -= b.vz * dt; if (b.rz < -80 || !b.alive) bullets.splice(i, 1); }
@@ -1627,7 +1627,7 @@ function step(h) {
 function collide() {
     if (S.mode !== 'play') return;
     for (const e of enemies) if (e.alive && Math.abs(e.rz) < 28 && Math.hypot(e.x - S.x, e.y - S.y) < e.r + HIT_R) { boom(epos(e), [PAL.gate[0], 0xffffff], 14); removeEnemy(e); damage(); }
-    for (const b of bullets) if (b.alive && Math.abs(b.rz) < 16 && Math.hypot(b.x - S.x, b.y - S.y) < b.r + HIT_R - 3) { b.alive = false; damage(); }
+    for (const b of bullets) if (b.alive && Math.abs(b.rz) < b.r + 4 && Math.hypot(b.x - S.x, b.y - S.y) < b.r + HIT_R) { b.alive = false; damage(); }
 }
 
 // ---------------- 画面の文字と照準（すべてポリゴン＋ワイヤーのフォント）----------------
