@@ -1373,7 +1373,7 @@ function frame(now) {
         S.stx = sx; S.sty = sy;
         // 照準は竜の前方に、スティックの向きへ先回りしてついてくる
         const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
-        S.rx += (tx - S.rx) * Math.min(1, dt * 9); S.ry += (ty - S.ry) * Math.min(1, dt * 9); S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
+        S.rx += (tx - S.rx) * Math.min(1, dt * 2.2); S.ry += (ty - S.ry) * Math.min(1, dt * 2.2); // 照準はもっさり重めについてくる S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
     if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < 16) { spawnWave(); S.waveT = Math.max(1.0, 2.3 - S.stage * 0.15) + Math.random() * 0.8; } }
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
