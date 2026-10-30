@@ -1583,7 +1583,7 @@ function toScreen(v) { _pv.copy(v).project(camera); return [(_pv.x + 1) / 2 * VW
 const RET_R = 56;
 function updateLock() {
     const held = IN.padLock || IN.mouseLock || !!IN.keys.Space;
-    if (held && !lockHeldPrev && S.mode === 'play') sfxClap(); // トリガーを押した瞬間にクラップ
+    if (held && !lockHeldPrev && (S.mode === 'play' || S.mode === 'evo')) sfxClap(); // トリガーを押した瞬間にクラップ（ステージ変化中も鳴らせる）
     if (held && S.mode === 'play') {
         const e8 = MUS.on && AC ? Math.floor((MUS.n + (AC.currentTime - MUS.t) / S16) / 2) : Math.floor(S.t / (S16 * 2)); // いまの8分音符の番号
         let can = e8 !== S.lock8; // ロックは8分音符ごとに1つだけ
@@ -1630,7 +1630,7 @@ function startGame() {
 const EVO_T = 1.5;
 function evolve() {
     S.stage++; setPal(S.stage); setSoundStage(S.stage);
-    S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve(); sfxClap(); S.itemDone = false; // ステージが変わる瞬間にもクラップ
+    S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve(); S.itemDone = false;
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
     enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
     for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.12; dying.push(c); } chunks.clear(); // 散り方は控えめに
