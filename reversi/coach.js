@@ -24,7 +24,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず打ちたい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で打つのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る', 'gap.d': '−{x}石',
   opH: '序盤の分かれ道 — 定石の選び方', opIntro: '序盤は評価値の小さな差より、定石どおりに打つことが大切です。まずは定番を覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種', 'op.same': 'どこでも同じ',
   'op.first.t': '中央の4か所のどこかに打つ', 'op.first.x': '最初に打てる4か所（d3・c4・f5・e6）は、盤を回転・裏返しすると全部同じ局面になります。このサイトの棋譜名や定石は、f5に打った形にそろえて表しています。',
@@ -118,7 +117,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse', 'gap.d': '−{x}',
   opH: 'Opening crossroads — choosing an opening', opIntro: 'In the opening, following the book matters more than small evaluation differences. Learn the standard choices first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual', 'op.same': 'all the same',
   'op.first.t': 'Play any of the four central squares', 'op.first.x': 'The four first moves (d3, c4, f5, e6) all give the same position once the board is rotated or mirrored. On this site, game records and openings are shown as if the first move was f5.',
@@ -353,7 +351,7 @@ function isBookMove(i) {   // positions[i] reached by a move that continues a na
 }
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, items: null };
+const S = { open: false, key: '', f: null, items: null };
 let card = null;
 function usable() {
   return !!(positions.length && !lesson && !puzzle && !net && !rtGame() && !rbS && (settings.mode === 'ai' || settings.mode === 'pvp'));
@@ -487,9 +485,9 @@ function render() {
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(b.score)), x: (b.score > 0 ? '+' : '') + fd(b.score) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    S.items = S.reveal ? cl.dirs.map((d, i) => ({ mv: [d.q], label: String(i + 1) })) : null;
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
-      items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(S.reveal ? ttl(d.k) : area(d.k)), text: gl(esc(tx('x.' + d.k.k))), gap: tx(g[0]) + (d.drop >= 0.5 ? ' ' + tx('gap.d', { x: fd(d.drop) }) : ''), gcls: g[1], move: String(d.q), mvName: nm(d.q) }; }) });
+    S.items = cl.dirs.map((d, i) => ({ mv: [d.q], label: String(i + 1) }));
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
+      items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(area(d.k)), text: gl(esc(tx('x.' + d.k.k))), gap: tx(g[0]) + (d.drop >= 0.5 ? ' ' + tx('gap.d', { x: fd(d.drop) }) : ''), gcls: g[1], move: String(d.q), mvName: nm(d.q) }; }) });
   } else h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, p, op || bk ? null : cl);
   h += CoachKit.tips({ head: tx('tipsH'), list: tl.map(x => ({ html: gl(esc(tx(x.k, x.v || {}))), hi: x.hi })), open: S.open, more: tx('more', { n: Math.max(0, tl.length - 3) }), less: tx('less') });
@@ -502,11 +500,10 @@ function put(h) {
   marks(null);
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); },
     onHover: u => marks(u),
   });
 }
-// candidate squares on the board (hover / tap on a revealed candidate)
+// candidate squares on the board (the hovered / tapped candidate only)
 function marks(u) {
   document.querySelectorAll('.ck-mk').forEach(e => e.remove());
   if (!u || !myTurn()) return;
@@ -520,7 +517,6 @@ function init() {
   try { const s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s); } catch (e) {}
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   ReversiCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

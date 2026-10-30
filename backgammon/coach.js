@@ -2,7 +2,7 @@
 // バックギャモン・コーチ (common spec: shared/COACH.md, model: shogi/coach.js) — shown while the player is to move against
 // the AI (and in local two-player games): the position at a glance (形勢・ピップ・局面・作戦（ゲームプラン）・陣形),
 // the recommended plan with its reason, the candidate plays of the roll classified into backgammon plans (ヒット・ポイント作り・
-// プライム・アンカー・ランニング・スプリット・スロット・ビルダー・安全策 …; moves revealed on demand, arrows on the board),
+// プライム・アンカー・ランニング・スプリット・スロット・ビルダー・安全策 …; moves shown on hover / tap, arrows on the board),
 // prioritized "how to think" tips read from the position, and the verdict on the previous play (◎○△✕).
 // The first two plays of a game are taught from the opening book (openings.json: rollouts of the 15 opening rolls and the
 // key replies, the same data as the 定跡 pages) instead of raw evaluations; book plays are never called mistakes.
@@ -31,7 +31,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で動かすのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   // opening book
   opH: '定跡 — 最初のロールの選び方', opIntro: '最初の数手は、評価値の細かな差より定跡（ロールアウトで確かめられた手）を覚えるのが近道です。定番の手を先に、変わり種を後に並べています。',
@@ -128,7 +127,6 @@ en: {
   recOnly: 'Every other play loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show plays', hide: 'Hide plays',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening book — playing the first roll', opIntro: 'For the first plays, learning the book (plays checked by rollouts) beats chasing small evaluation differences. Standard plays come first, the unusual ones after.',
   rpH: 'Opening book — the reply', rpIntro: "Your reply to the opponent's opening. With the same roll, the best play can change with the opponent's position.",
@@ -280,7 +278,7 @@ const ttl = k => tx('t.' + k.k, k);
 const catTxt = k => tx('x.' + k.k, k);
 
 // --------------------------------------------------------------------------------------------- state
-const S = { open: false, reveal: false, cands: new Map(), pend: new Set(), vd: null };
+const S = { open: false, cands: new Map(), pend: new Set(), vd: null };
 let card = null, arrow = null;
 function usable() {
   return !!(typeof match !== 'undefined' && match && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
@@ -551,7 +549,7 @@ function render() {
       h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
       S.rows = cl.dirs.map(d => ({ moves: d.c.moves }));
       h += CoachKit.branches({
-        head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+        head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
         items: cl.dirs.map((d, i) => { const gp = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(catTxt(d.k))), gap: tx(gp[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: gp[1], move: String(i), mvName: BG.notation(d.c.moves) }; }),
       });
     } else h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -566,7 +564,6 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); },
     onHover: i => setArrow(i == null ? null : +i),
   });
 }
@@ -581,7 +578,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   BGCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

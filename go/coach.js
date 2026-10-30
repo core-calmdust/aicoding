@@ -28,7 +28,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず打ちたい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の好きな方針で打つのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る', 'gap.pts': '−{x}目',
   // areas
   'a.tl': '左上の隅', 'a.tr': '右上の隅', 'a.bl': '左下の隅', 'a.br': '右下の隅', 'a.t': '上辺', 'a.b': '下辺', 'a.l': '左辺', 'a.r': '右辺', 'a.c': '中央',
@@ -140,7 +139,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse', 'gap.pts': '−{x} pts',
   'a.tl': 'the top-left corner', 'a.tr': 'the top-right corner', 'a.bl': 'the bottom-left corner', 'a.br': 'the bottom-right corner', 'a.t': 'the top side', 'a.b': 'the bottom side', 'a.l': 'the left side', 'a.r': 'the right side', 'a.c': 'the centre',
   black: 'Black', white: 'White', at: '{a} ({s})',
@@ -513,7 +511,7 @@ function tipsOf(f, wr, cl) {
 }
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, cls: null, marks: null, hov: null, fk: '', f: null };
+const S = { open: false, cls: null, marks: null, hov: null, fk: '', f: null };
 let card = null;
 function usable() {
   return !!((settings.mode === 'ai' || settings.mode === 'pvp') && !rgame && !lesson && !puzzle && !rbS);
@@ -587,8 +585,8 @@ function render() {
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(wr)), l: tx(lead >= 0 ? 'lead' : 'behind', { x: ptsS(lead) }) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    if (S.reveal) S.marks = cl.dirs.map((d, j) => ({ m: d.m, label: String(j + 1) }));
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+    S.marks = cl.dirs.map((d, j) => ({ m: d.m, label: String(j + 1) }));
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, j) => { const g = gapOf(d.drop, j, game.n); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (j && d.drop >= 0.1 ? ' ' + tx('gap.pts', { x: ptsS(d.drop) }) : ''), gcls: g[1], move: String(d.m), mvName: mvName(d.m) }; }) });
   } else if (!fm && !bk) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, wr, cl);
@@ -602,19 +600,18 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.dataset.mk = mk; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); renderFx(); },
     onHover: u => { S.hov = u == null ? null : +u; renderFx(); },
   });
   renderFx();
 }
-// numbered candidate points on the board (revealed moves only; the hovered one stands out)
+// the hovered / tapped candidate's point on the board (numbered)
 function marks() {
   if (!S.marks || !active() || !myTurn()) return;
   const gH = document.getElementById('gHints'); if (!gH) return;
   const pos = posAt(cur);
   for (const d of S.marks) {
     if (d.m == null || d.m < 0 || pos.b[d.m]) continue;
-    if (S.hov != null && S.hov !== d.m) continue;
+    if (S.hov !== d.m) continue;
     const [x, y] = xyOf(d.m), g = el('g', { class: 'hint ck-mk' }, gH);
     // common rule: green coach marks — translucent here (a ghost stone), so the board keeps its look
     const hv = S.hov === d.m;
@@ -634,7 +631,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   if (settings.coach === undefined) settings.coach = true;
-  S.reveal = !!settings.coachReveal;
   GoCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   render();

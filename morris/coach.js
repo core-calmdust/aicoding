@@ -1,13 +1,13 @@
 'use strict';
 // モリス・コーチ (common spec: shared/COACH.md, model: shogi/coach.js) — shown while the player is to move against the AI
 // (and in local two-player games): the position at a glance (形勢・駒数・段階・序盤の型・陣形), the recommended plan with its
-// reason, the candidate directions (分かれ道: each candidate's plan, which piece / which point; moves revealed on demand, marked on
+// reason, the candidate directions (分かれ道: each candidate's plan, which piece / which point; moves shown on hover / tap, marked on
 // the board on hover), prioritized "how to think" tips read from the position (ミル・相手のねらい・ダブルミル・動ける手・飛び …),
 // and the verdict on the previous move (◎○△✕ with the AI's first choice and a 💡 tip). Glossary terms are dotted.
 // The opening (first two placements) is taught from opening knowledge and the site's opening lines (openings.json), not raw values.
 // Texts: TX[lang] (en fallback); zh ko es fr pt de hi ar live in coach-i18n.js (MorrisCoach.merge).
 // index.html: MorrisCoach.render() after every refresh; MorrisCoach.cands(key, list) when the analysis (all moves with values) arrives;
-// MorrisCoach.fx(svg) at the end of renderFx (marks for the hovered / revealed candidates).
+// MorrisCoach.fx(svg) at the end of renderFx (marks for the hovered / tapped candidate).
 (() => {
 const TX = {
 ja: {
@@ -26,7 +26,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'tt.place': '{to}に置く', 'tt.move': '{from}の駒を{to}へ', 'tt.fly': '{from}の駒を{to}へ飛ばす', 'tt.take': '{a}・{r}を取る',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   // plans: tag / badge / explanation
@@ -114,7 +113,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'tt.place': 'Place on {to}', 'tt.move': 'Move the piece on {from} to {to}', 'tt.fly': 'Fly the piece on {from} to {to}', 'tt.take': '{a}, take {r}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   'c.mill': 'Mill', 'b.mill': 'Close a mill', 'x.mill': 'Close a mill and remove {r}. Good pieces to take: one of the opponent\'s pairs (threats) or a piece that moves freely. Pieces in a mill can only be taken when no other piece is available.',
@@ -322,7 +320,7 @@ function bookMovesAt(i) {
 }
 
 // --------------------------------------------------------------------------------------------- state
-const S = { open: false, reveal: false, hov: null, lists: new Map(), key: '', f: null, cls: null, marks: null };
+const S = { open: false, hov: null, lists: new Map(), key: '', f: null, cls: null, marks: null };
 let card = null;
 function usable() {
   return !!(card && !lesson && !puzzle && !rgame && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof rbCons === 'function' && rbCons()));
@@ -489,9 +487,9 @@ function render() {
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(wrOf(b.v))) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp')); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    if (S.reveal) S.marks = cl.dirs.map(d => d.m);
+    S.marks = cl.dirs.map(d => d.m);
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(xTxt(d.k))), gap: tx(g[0]), gcls: g[1], move: String(d.m), mvName: mvName(d.m) }; }),
     });
   } else if (!op && !bk) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -504,10 +502,9 @@ function put(h) {
   if (card.dataset.h === h) return;
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   if (S.hov != null && !card.querySelector(`.ck-bi[data-mv="${S.hov}"]`)) { S.hov = null; redraw(); }
-  if (S.hov != null) { const b = card.querySelector(`.ck-bi[data-mv="${S.hov}"]`); if (b) b.classList.add('hov'); }
+  if (S.hov != null) { const b = card.querySelector(`.ck-bi[data-mv="${S.hov}"]`); if (b) b.classList.add('ck-hov'); }
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); redraw(); },
     onHover: u => { S.hov = u == null ? null : +u; redraw(); },
   });
 }
@@ -532,7 +529,6 @@ function init() {
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   if (settings.coach === undefined) settings.coach = true;
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   MorrisCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

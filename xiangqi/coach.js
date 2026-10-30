@@ -1,14 +1,14 @@
 'use strict';
 // シャンチー（中国象棋）コーチ (common spec: shared/COACH.md, shared/coachkit.js; model: shogi/coach.js) — shown while the player
 // is to move against the AI (and in local two-player games): the position at a glance (形勢・布局・陣形・駒割り), the
-// recommended plan with its reason, the candidate directions (分かれ道: each candidate's plan explained, moves revealed on
-// demand with arrows on the board), prioritized "how to think" tips read from the position (王手・詰み・狙われている駒・
+// recommended plan with its reason, the candidate directions (分かれ道: each candidate's plan explained, moves shown on hover / tap,
+// with arrows on the board), prioritized "how to think" tips read from the position (王手・詰み・狙われている駒・
 // 空頭炮・窩心馬・車の出遅れ・格言 …), and the verdict on the previous move (◎○△✕). The first moves are taught from opening
 // theory (中炮・仙人指路・飛相局・起馬局 and Black's standard answers) and from the site's opening data (openings.json, the
 // named first moves of each opening), not from the evaluation. Glossary terms are dotted.
 // Texts: TX[lang] (en fallback); the other languages live in coach-i18n.js (XqCoach.merge).
 // app.js: XqCoach.render() from renderInfo(); candidates = the analysis worker's full list (anaCache, per position);
-// XqCoach.fx(svg) from renderFx() draws the revealed candidates' arrows.
+// XqCoach.fx(svg) from renderFx() draws the hovered / tapped candidate's arrow.
 (() => {
 const TX = {
 ja: {
@@ -26,7 +26,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'tt.move': '{f}の{p}を{d}', 'd.0': '前へ', 'd.1': '後ろへ', 'd.2': '横へ', 'd.3': '動かす', 'tt.pawn': '{f}の{p}を進める', 'tt.cross': '{f}の{p}で川を渡る', 'tt.cap': '{f}の{p}で{c}を取る', 'tt.king': '{p}を動かす',
   file: '{n}筋', front: '前の', rear: '後ろの',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
@@ -146,7 +145,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'tt.move': 'The {f} {p} {d}', 'd.0': 'goes forward', 'd.1': 'goes back', 'd.2': 'goes sideways', 'd.3': 'moves', 'tt.pawn': 'Push the {f} {p}', 'tt.cross': 'The {f} {p} crosses the river', 'tt.cap': 'The {f} {p} takes the {c}', 'tt.king': 'Move the {p}',
   file: 'file-{n}', front: 'front ', rear: 'rear ',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
@@ -411,7 +409,7 @@ function systemOf() {
 const sqOf = n => (9 - +n[1]) * 9 + 'abcdefghi'.indexOf(n[0]);
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null, hover: null, arrows: null };
+const S = { open: false, key: '', f: null, cls: null, hover: null, arrows: null };
 let card = null;
 function usable() {
   return !!(!lesson && !puzzle && !rgame && !(typeof inStudy === 'function' && inStudy()) && (settings.mode === 'ai' || settings.mode === 'pvp') && !(window.olLive && olLive()));
@@ -575,8 +573,8 @@ function render() {
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(winRate(b.v))), p: Math.round(winRate(b.v) * 100) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp')); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    if (S.reveal) S.arrows = cl.dirs.map(d => d.m);
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+    S.arrows = cl.dirs.map(d => d.m);
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]), gcls: g[1], move: String(d.m), mvName: d.nm }; }) });
   } else if (!shown) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, wr, cl);
@@ -589,7 +587,6 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hover = null; render(); renderFx(); },
     onHover: u => { S.hover = u == null ? null : +u; renderFx(); },
   });
 }
@@ -605,7 +602,6 @@ function init() {
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   if (settings.coach === undefined) settings.coach = true;
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   XqCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

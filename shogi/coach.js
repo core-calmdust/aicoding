@@ -1,7 +1,7 @@
 'use strict';
 // 将棋コーチ (common spec: the poker-style coach, shared/coachkit.js) — shown while the player is to move against the AI
 // (and in local two-player games): the position at a glance (形勢・駒割り・局面), the recommended plan with its reason,
-// the candidate directions of the position (分かれ道: each candidate's plan explained, moves revealed on demand with arrows on
+// the candidate directions of the position (分かれ道: each candidate's plan explained, moves shown on hover / tap with arrows on
 // the board), prioritized "how to think" tips read from the position (王手・詰めろ・取られそうな駒・居玉・囲い・持ち駒 …),
 // and the verdict on the previous move (◎○△✕ with the reason and the AI's first choice). Glossary terms are dotted.
 // Texts: TX[lang] (en fallback); the other languages live in coach-i18n.js (ShogiCoachI18n merges into TX).
@@ -22,7 +22,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'tt.move': '{sq}の{p}を動かす', 'tt.move0': '{p}を動かす', 'tt.pawn': '{f}筋の歩を突く', 'tt.clash': '{f}筋の歩をぶつける', 'tt.drop': '{p}を打つ', 'tt.cap': '{p}で{c}を取る', 'tt.promo': '{sq}の{p}を成る', 'tt.promo0': '{p}を成る',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   opH: '序盤の分かれ道 — 作戦の選び方', opIntro: '序盤の数手で戦型（作戦）が決まります。まずは定番の2つを覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種',
@@ -156,7 +155,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: "None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.",
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'tt.move': 'Move the {p} on {sq}', 'tt.move0': 'Move the {p}', 'tt.pawn': 'Push the {f}-file pawn', 'tt.clash': 'Push the {f}-file pawn into the enemy pawn', 'tt.drop': 'Drop a {p}', 'tt.cap': 'The {p} takes the {c}', 'tt.promo': 'Promote the {p} on {sq}', 'tt.promo0': 'Promote the {p}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening crossroads — choosing a plan', opIntro: 'The first few moves decide the type of game. Learn the two standard choices first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual',
@@ -416,7 +414,7 @@ function formOf(w) { return w >= .9 ? 'win' : w >= .75 ? 'big' : w >= .62 ? 'adv
 const pctS = x => Math.round(x * 100) + '%';
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null };
+const S = { open: false, key: '', f: null, cls: null };
 let card = null;
 function active() { return !!(settings.coach && usable()); }
 // the coach could be used here (it may still be switched off)
@@ -644,7 +642,7 @@ function render() {
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: d.u, mvName: d.nm }; }),
     });
   } else if (!op && !(bk && S.op)) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -658,11 +656,10 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} arrows(null); render(); },
     onHover: u => arrows(u),
   });
 }
-// candidate arrows on the board (revealed moves only)
+// candidate arrows on the board: the hovered / tapped row's move only
 function arrows(u) {
   if (S.op && myTurn()) {
     const list = u ? S.op.filter(d => d.u === u) : [];
@@ -670,9 +667,10 @@ function arrows(u) {
     hintMoves = { ply: cur, coach: 1, list: list.map(d => ({ move: d.u, label: d.key ? tx('op.' + d.kind) : String(S.op.indexOf(d) + 1) })) }; drawArrows(); return;
   }
   const info = game && game.info[cur], cl = info && S.cls;
-  if (!S.reveal || !cl || !myTurn()) { if (hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); } return; }
-  const list = u ? cl.dirs.filter(d => d.u === u) : cl.dirs;
-  hintMoves = { ply: cur, coach: 1, list: list.map((d, i) => ({ move: d.u, label: String(u ? cl.dirs.findIndex(x => x.u === u) + 1 : i + 1) })) };
+  if (!u || !cl || !myTurn()) { if (hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); } return; }
+  const list = cl.dirs.filter(d => d.u === u);
+  if (!list.length) { if (hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); } return; }
+  hintMoves = { ply: cur, coach: 1, list: list.map(d => ({ move: d.u, label: String(cl.dirs.indexOf(d) + 1) })) };
   drawArrows();
 }
 function init() {
@@ -680,7 +678,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   ShogiCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

@@ -2,7 +2,7 @@
 // マンカラ・コーチ (common spec: shared/COACH.md, model: shogi/coach.js) — shown while the player is to move against the AI
 // (and in local two-player games): the position at a glance (形勢・ストア差・局面・定跡／陣形), the recommended plan with its
 // reason, the candidate directions of the position (分かれ道: each candidate's plan, the pit named; where the last seed lands
-// is revealed on demand, with the sowing preview on the board), prioritized "how to think" tips read from the position
+// is shown on hover / tap, with the sowing preview on the board), prioritized "how to think" tips read from the position
 // (横取りの脅威・もう一回・終盤の数え・空き穴 …), and the verdict on the previous move. Glossary terms are dotted.
 // Opening guidance (Kalah 4 / 6 seeds from the standard start): the perfect-play results published by Mark Rawlings
 // (Mancala World, "Kalah research by Mark Rawlings"; also cited on Wikipedia "Kalah") instead of raw evaluation.
@@ -21,7 +21,6 @@ ja: {
   'sd.v': '{a}対{b}', 'st.v': '{a}対{b}',
   recWhy: 'この局面の第一候補は「{c}」の方針です。形勢は{f}。', recSharp: '2番目の候補との差が大きく（{x}粒）、ここは正確に指したい局面です。', recBranch: '候補どうしの差が小さい分かれ道です。下の候補から好きな方針を選べます。', recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。', recOne: '指せる穴はここだけです。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。', cdH: '候補手と方針', cdIntro: '上位の候補を方針ごとに解説します（差は最終的な粒差の読み）。',
-  show: '手を見る', hide: '手を隠す',
   pit: '穴{n}', 'mv.store': '穴{n} → ストア', 'mv.mine': '穴{n} → 穴{l}', 'mv.opp': '穴{n} → 相手の穴{l}', 'mv.gain': ' (+{g})',
   'tt.end': '穴{p}で終局させる', 'tt.extra': '穴{p}の{n}粒でストアへぴったり', 'tt.cap': '穴{p}から相手の{c}粒を横取り', 'tt.defend': '穴{p}をまいて横取りを防ぐ', 'tt.setup': '穴{p}をまいて横取りを仕込む', 'tt.keep': '穴{p}の{n}粒を自陣でまく', 'tt.sow': '穴{p}の{n}粒をまく',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る', 'gap.n': ' −{x}粒',
@@ -95,7 +94,6 @@ en: {
   'sd.v': '{a} vs {b}', 'st.v': '{a} vs {b}',
   recWhy: 'The first choice here is the "{c}" plan. Your position: {f}.', recSharp: 'The gap to the second choice is large ({x} seeds) — a moment to play precisely.', recBranch: 'The candidates are close: a branching position. Pick the plan you like from the list below.', recOnly: 'Every other move loses a lot here — play it without hesitating.', recOne: 'This is the only pit you can play.',
   brH: 'Branching point — plans to choose from', brIntro: "None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.", cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan (gaps are in final seeds).',
-  show: 'Show moves', hide: 'Hide moves',
   pit: 'pit {n}', 'mv.store': 'pit {n} → store', 'mv.mine': 'pit {n} → pit {l}', 'mv.opp': "pit {n} → opponent's pit {l}", 'mv.gain': ' (+{g})',
   'tt.end': 'End the game with pit {p}', 'tt.extra': 'Pit {p}: {n} seeds reach the store', 'tt.cap': "Pit {p} captures {c} seeds", 'tt.defend': 'Pit {p} stops a capture', 'tt.setup': 'Pit {p} sets up a capture', 'tt.keep': 'Pit {p}: sow {n} on your side', 'tt.sow': 'Sow the {n} seeds of pit {p}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse', 'gap.n': ' −{x}',
@@ -244,7 +242,7 @@ function classify(k, f) {
   else if (f.threat.n >= 2 && F.threatAfter && F.threatAfter.n < f.threat.n) c = 'defend';
   else if (F.myCapNext && F.myCapNext.n >= 3 && !(F.threatAfter && F.threatAfter.n >= F.myCapNext.n)) c = 'setup';
   else if (F.give === 0) c = 'keep';
-  // where the last seed lands (revealed on demand)
+  // where the last seed lands (shown on the hovered / tapped row)
   const land = F.land, ms = E.storeOf(p.side), mine = p.side ? land >= 7 && land <= 12 : land <= 5;
   const mv = land === ms ? tx('mv.store', { n: k + 1 }) : tx(mine ? 'mv.mine' : 'mv.opp', { n: k + 1, l: (land % 7) + 1 });
   return { k: c, pit: k, n, F, cap: F.cap, mv: mv + (F.gain > 0 ? tx('mv.gain', { g: F.gain }) : '') };
@@ -262,7 +260,7 @@ function ttl(d) {
 }
 
 // ------------------------------------------------------------------------------------------ state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null, op: null };
+const S = { open: false, key: '', f: null, cls: null, op: null };
 let card = null;
 function usable() {
   return !!(game && P.length && !lesson && !puzzle && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof inStudy === 'function' && inStudy()));
@@ -434,7 +432,7 @@ function render() {
     if (cl.one) why += ' ' + esc(tx('recOne')); else if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + best.k), gl(why), RCLS[best.k] || '');
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k), cls: CCLS[d.k] || '', title: esc(ttl(d)), text: gl(esc(tx('x.' + d.k, { c: d.cap }))), gap: tx(g[0]) + (d.drop >= 0.1 ? tx('gap.n', { x: r1(d.drop) }) : ''), gcls: g[1], move: String(d.pit), mvName: d.mv }; }),
     });
   } else h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -448,7 +446,6 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} hi(-1); render(); },
     onHover: u => hi(u == null ? -1 : +u),
   });
 }
@@ -470,7 +467,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   MancalaCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

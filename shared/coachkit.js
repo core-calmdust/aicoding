@@ -9,11 +9,12 @@
 //   CoachKit.sw({ mount, label, get, set })   → the top-bar switch (button.ck-sw); returns { el, sync() }
 //   CoachKit.summary([{ k, v, cls }])          → chip row (形勢・駒割り・局面 …)
 //   CoachKit.rec(badge, html, cls)             → recommendation badge + reason
-//   CoachKit.branches({ head, intro, items, reveal, show, hide }) → candidate directions; items: { tag, cls, title, text, gap, gcls, move }
+//   CoachKit.branches({ head, intro, items, reveal }) → candidate directions; items: { tag, cls, title, text, gap, gcls, move, mvName }
+//                                              (hover / tap a row → onHover(move); its name shows on that row only; reveal: always shown)
 //   CoachKit.tips({ head, list, open, more, less })  → tips list (first 3 + "more")
 //   CoachKit.verdict(g, title, html)           → previous-move verdict box (g: 0 best … 3 mistake)
 //   CoachKit.gloss(html, dict)                 → wraps glossary terms (dict: { key: { m: [surface forms], t: title, d: text } })
-//   CoachKit.bind(root, { onMore, onReveal, onHover(move|null) }) → wires the buttons inside a rendered card
+//   CoachKit.bind(root, { onMore, onHover(move|null) }) → wires the buttons inside a rendered card
 // Icons for the phones' bottom tab bar: CoachKit.ICON.coach / eval / kifu / online.
 (function () {
 'use strict';
@@ -65,6 +66,8 @@ const CSS = `
 .ck-bi{position:relative;padding:8px 10px 8px 12px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-inline-start:3px solid var(--ck-c,#d8b56a)}
 .ck-bi.c-atk{--ck-c:#f2a65a}.ck-bi.c-def{--ck-c:#7fb2ff}.ck-bi.c-mat{--ck-c:#8fe3b8}.ck-bi.c-mate{--ck-c:#ff7b6b}.ck-bi.c-dev{--ck-c:#c9b6ff}.ck-bi.c-calm{--ck-c:#b9b2a2}
 .ck-bi.ck-hov{background:rgba(255,255,255,.07)}
+.ck-bi[data-mv]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-brs:not(.ck-open) .ck-bi:not(.ck-hov) .mv{visibility:hidden}
 .ck-bt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
 /* row 1: the tags (plan · played % / gap); row 2: the title and the move, wrapping on their own line in any language */
 .ck-bt .tt{order:3;flex:1 0 100%;min-width:0;line-height:1.45;overflow-wrap:anywhere}
@@ -133,10 +136,12 @@ function sw(o) {
 const summary = chips => `<div class="ck-sum">${chips.filter(Boolean).map(c => `<span class="${c.cls || ''}">${esc(c.k)}<b>${c.v}</b></span>`).join('')}</div>`;
 const rec = (badge, html, cls) => `<div class="ck-rec"><span class="ck-rb ${cls || ''}">${esc(badge)}</span><p>${html}</p></div>`;
 function branches(o) {
+  // every row carries its move: hovering (PC) / tapping (phones) a row shows that one move on the board; the move's name is
+  // shown only on the hovered / tapped row (o.reveal: book / opening sections, whose names are always shown)
   if (!o.items || !o.items.length) return '';
-  return `<div class="ck-sec ck-brs"><div class="ck-sec-h"><span>${esc(o.head)}</span>${o.show ? `<button type="button" data-ck="reveal">${esc(o.reveal ? o.hide : o.show)}</button>` : ''}</div>` +
+  return `<div class="ck-sec ck-brs${o.reveal ? ' ck-open' : ''}"><div class="ck-sec-h"><span>${esc(o.head)}</span></div>` +
     (o.intro ? `<p class="ck-intro">${o.intro}</p>` : '') +
-    `<div class="ck-br">${o.items.map(b => `<div class="ck-bi ${b.cls || ''}"${b.move && o.reveal ? ` data-mv="${esc(b.move)}"` : ''}><div class="ck-bt"><span class="tg">${esc(b.tag)}</span><span class="tt"><b>${b.title}</b>${o.reveal && b.mvName ? ` <span class="mv">${esc(b.mvName)}</span>` : ''}</span>${b.gap ? `<span class="gp ${b.gcls || ''}">${esc(b.gap)}</span>` : ''}</div>${b.text ? `<p>${b.text}</p>` : ''}</div>`).join('')}</div></div>`;
+    `<div class="ck-br">${o.items.map(b => `<div class="ck-bi ${b.cls || ''}"${b.move != null && b.move !== '' ? ` data-mv="${esc(b.move)}"` : ''}><div class="ck-bt"><span class="tg">${esc(b.tag)}</span><span class="tt"><b>${b.title}</b>${b.mvName ? ` <span class="mv">${esc(b.mvName)}</span>` : ''}</span>${b.gap ? `<span class="gp ${b.gcls || ''}">${esc(b.gap)}</span>` : ''}</div>${b.text ? `<p>${b.text}</p>` : ''}</div>`).join('')}</div></div>`;
 }
 function tips(o) {
   if (!o.list || !o.list.length) return '';
@@ -197,7 +202,6 @@ function glossBind(getDict) {
 function bind(root, o) {
   if (!root) return;
   root.querySelectorAll('[data-ck=more]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onMore && o.onMore(); });
-  root.querySelectorAll('[data-ck=reveal]').forEach(b => b.onclick = e => { e.stopPropagation(); o.onReveal && o.onReveal(); });
   if (o.onHover) root.querySelectorAll('.ck-bi[data-mv]').forEach(b => {
     // mouse: hover shows the move; touch: a tap toggles it (the emulated mouseenter of a tap must not cancel the tap)
     b.onpointerenter = e => { if (e.pointerType !== 'mouse') return; b.classList.add('ck-hov'); o.onHover(b.dataset.mv); };

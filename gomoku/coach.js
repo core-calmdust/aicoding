@@ -2,7 +2,7 @@
 // 五目並べ・連珠コーチ (common spec: shared/COACH.md, model: shogi/coach.js) — shown while the player is to move against the AI
 // (and in local two-player games): the position at a glance (形勢・珠型・双方の形), the recommended plan with its reason,
 // the candidate directions (分かれ道: each candidate's plan explained — which line / stones it works on; the point itself is
-// revealed on demand and marked on the board), prioritized "how to think" tips read from the position (五・四・四三・三々・
+// shown on hover / tap and marked on the board), prioritized "how to think" tips read from the position (五・四・四三・三々・
 // 禁手・四追い …), and the verdict on the previous move (◎○△✕ with the AI's first choice and the reason).
 // Opening: the first three moves are taught from opening theory (天元 → 直接打ち／間接打ち → 珠型, evaluations as published
 // for the old RIF rule) and later moves from the opening study lines of openings.json (研究手順), not from raw evaluations.
@@ -24,7 +24,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず打ちたい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で打つのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   // opening
   opH: '序盤の分かれ道 — 打ち方の選び方', opIntro: '連珠の序盤は、最初の3手の形（珠型）で戦いの性格が決まります。まずは定番を覚え、慣れたら変わり種も試してみよう。', op3Intro: '黒の3手目で珠型（最初の3手の形、全26種）が決まります。研究で黒の必勝とされる珠型（旧RIF規定での評価）から選ぶのが定番です。', 'op.main': '定番', 'op.alt': '変わり種',
@@ -106,7 +105,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening crossroads — how to start', opIntro: 'In renju the shape of the first three stones (the opening pattern) sets the character of the game. Learn the standard choices first, then try the unusual ones.', op3Intro: "Black's third stone decides the opening pattern (26 in all). The standard choice is one of the patterns known from analysis to be a win for Black (evaluations under the old RIF rule).", 'op.main': 'Standard', 'op.alt': 'Unusual',
   'op.center.t': 'Play in the centre', 'op.center.x': 'The first stone normally goes in the centre of the board, where lines can grow in every direction (under renju rules Black\'s first move must be the centre).',
@@ -313,7 +311,7 @@ function openingOf() {
 }
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null, op: null, hov: -1 };
+const S = { open: false, key: '', f: null, cls: null, op: null, hov: -1 };
 let card = null;
 function usable() {
   return !!(!lesson && !puzzle && !net && !rgame && (settings.mode === 'ai' || settings.mode === 'pvp') && !(ken && kenOk()));
@@ -460,7 +458,7 @@ function render() {
     let why = esc(tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(wrOf(b.v))), p: Math.round(wrOf(b.v) * 100) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(tx('x.' + d.k.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: String(d.m), mvName: sqName(d.m) }; }) });
   } else if (!op && !bk) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, wr, cl);
@@ -473,19 +471,14 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); renderFx(); },
     onHover: u => { S.hov = u == null ? -1 : +u; renderFx(); },
   });
   if (S.hov >= 0 && !card.querySelector(`.ck-bi[data-mv="${S.hov}"]`)) { S.hov = -1; renderFx(); }
-  else if (S.reveal) renderFx();
 }
-// board marks (called at the end of renderFx): revealed candidates numbered, the hovered one as a ghost stone
+// board marks (called at the end of renderFx): the hovered / tapped candidate as a ghost stone
 function fx() {
   if (!card || !active() || !myTurn()) return;
   const pos = posAt(cur);
-  const shown = S.op ? [] : S.reveal && S.cls ? S.cls.dirs.map(d => d.m) : [];
-  const hinted = new Set([...fxEl.querySelectorAll('.hintlbl:not(.ck-mk)')].map(d => d.style.left + '|' + d.style.top));   // (a hint value already marks the point)
-  shown.forEach((m, i) => { if (m !== S.hov && !pos.at(m) && !hinted.has(((1 + m % 15 - .5) / 16 * 100) + '%|' + ((15 - Math.floor(m / 15) - .5) / 16 * 100) + '%')) { const d = document.createElement('div'); d.className = 'hintlbl ck-mk' + (i === 0 ? ' best' : ''); placeAt(d, m); d.innerHTML = `<b>${i + 1}</b>`; fxEl.appendChild(d); } });
   if (S.hov >= 0 && !pos.at(S.hov)) { ghost(S.hov, pos.side, 'ghost'); mk('ck', S.hov); }
 }
 function init() {
@@ -493,7 +486,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   GomokuCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

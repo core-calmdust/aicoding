@@ -2,7 +2,7 @@
 // ヘックス・コーチ (common spec shared/COACH.md, model: shogi/coach.js; look and behaviour: shared/coachkit.js) — shown while the
 // player is to move against the AI (and in local two-player games): the position at a glance (形勢・局面・開局の型・連結の状態 for
 // both sides), the recommended plan with its reason, the candidate directions (分かれ道: the AI's top cells classified into Hex plans —
-// connect / block / bridge / edge template / intrusion …, each explained, the cells revealed on demand and ringed on the board),
+// connect / block / bridge / edge template / intrusion …, each explained, the cells shown on hover / tap and ringed on the board),
 // prioritized "how to think" tips read from the position, and the verdict on the previous move (◎○△✕).
 // The first moves are taught from opening theory and the page's opening data (openings.json: the first-move map = Red's winrate after
 // every first move, and the studied lines), not from raw evaluation.
@@ -10,7 +10,7 @@
 // C. Sangwin "The game of Hex" (Edinburgh), BGA "Tips hex", HexWiki (ziggurat).
 // Texts: TX[lang] (en fallback); zh … ar live in coach-i18n.js (HexCoach.merge).
 // app.js: HexCoach.init() before the header bar; HexCoach.render() after every refresh (renderInfo) and when the analysis arrives;
-// HexCoach.fx() at the end of renderFx (rings on the revealed / hovered candidates).
+// HexCoach.fx() at the end of renderFx (a ring on the hovered / tapped candidate).
 (() => {
 const TX = {
 ja: {
@@ -27,7 +27,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず打ちたい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で打つのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   opH: '1手目の選び方 — 開局の考え方', opIntro: '1手目は評価値ではなく、開局の考え方で選びます。数字はこのページのAIが調べた「その1手目のあとの赤の勝率」（1手目マップ）です。', 'op.main': '定番', 'op.alt': '変わり種',
   'op.fairEdge.t': 'ふちで公平に始める', 'op.fairEdge.x': 'スワップありでは、1手目は「強すぎず弱すぎない」手がよい手です。強い手はスワップで相手のものになり、弱すぎる手は不利になるからです。ふちの手は弱めで、スワップされにくい開局として強い人がよく使います。',
@@ -118,7 +117,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Choosing the first move — opening ideas', opIntro: "Choose the first move by opening ideas, not by evaluation. The numbers are Red's winning chances after that first move, as measured by this page's AI (the first-move map).", 'op.main': 'Standard', 'op.alt': 'Unusual',
   'op.fairEdge.t': 'Start fair, on the border', 'op.fairEdge.x': 'With the swap rule the best first move is one that is neither too strong nor too weak: a strong move gets swapped, a very weak one leaves you behind. Border moves are on the weak side and are rarely swapped — strong players use them a lot.',
@@ -341,7 +339,7 @@ let F = null;   // the facts of the shown position (for ttl)
 function formOf(v) { if (v > WINT) return 'win'; if (v < -WINT) return 'lost'; const w = wrOf(v); return w >= .75 ? 'big' : w >= .62 ? 'adv' : w >= .54 ? 'sl' : w > .46 ? 'even' : w > .38 ? 'sld' : w > .25 ? 'dis' : 'bad'; }
 
 // --------------------------------------------------------------------------------------------- state
-const S = { open: false, reveal: false, key: '', f: null, cls: null, hov: null, items: null };
+const S = { open: false, key: '', f: null, cls: null, hov: null, items: null };
 let card = null;
 function usable() {
   return !!(!lesson && !puzzle && !rgame && !rbS && (settings.mode === 'ai' || settings.mode === 'pvp') && !document.body.classList.contains('in-online'));
@@ -548,8 +546,8 @@ function render() {
     let why = esc(b.v > WINT ? tx('recWin', { c: tx('c.' + b.k.k) }) : tx('recWhy', { c: tx('c.' + b.k.k), f: tx('f.' + formOf(b.v)), p: Math.round(wrOf(b.v) * 100) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    if (S.reveal) S.items = cl.dirs.map(d => ({ u: d.u }));
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+    S.items = cl.dirs.map(d => ({ u: d.u }));
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k, n)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: String(d.u), mvName: cn(d.u, n) }; }) });
   } else if (!done) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, wr, cl);
@@ -563,15 +561,14 @@ function put(h) {
   S.hov = null; drawFx();
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} render(); drawFx(); },
     onHover: u => { S.hov = u; drawFx(); },
   });
 }
-// rings on the board: the hovered candidate, or (revealed) all the candidates with their numbers
+// rings on the board: the hovered / tapped candidate only (with its number)
 function drawFx() { try { renderFx(); } catch (e) {} }
 function fx() {
   if (!active() || !S.items || !myTurn() || typeof fxDiv !== 'function' || !G) return;
-  const list = S.hov != null ? S.items.filter(d => String(d.u) === String(S.hov)) : (S.reveal ? S.items : []);
+  const list = S.hov != null ? S.items.filter(d => String(d.u) === String(S.hov)) : [];
   list.forEach(d => { if (d.u < 0 || d.u === SWAP) return; const k = S.items.indexOf(d) + 1, el = fxDiv('coach-mk' + (S.hov != null ? ' hov' : ''), d.u); el.textContent = k; });
 }
 function init() {
@@ -580,7 +577,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc) { rc.dataset.itc = 'coach'; if (window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); } }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   HexCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

@@ -26,7 +26,6 @@ ja: {
   recOnly: 'ほかの列はすべて結果が悪くなります（負け・引き分けに変わります）。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも結果は同じです。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補の手と方針', cdIntro: 'AI（完全読みのソルバー）の上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る', 'gap.res': '結果が変わる',
   'r.win': '勝ち', 'r.winN': '{n}手で勝ち', 'r.draw': '引き分け', 'r.loss': '負け', 'r.lossN': '{n}手で負け',
   opH: '序盤の分かれ道 — 理論で選ぶ', opIntro: 'コネクトフォーは1988年に完全に解析され、初手ごとの結果が分かっています。まずは定番の手を覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種',
@@ -110,7 +109,6 @@ en: {
   recOnly: 'Every other column gives a worse result (a draw or a loss) — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'These all give the same result. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: "The AI's (a perfect solver's) top candidates, explained plan by plan.",
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse', 'gap.res': 'changes the result',
   'r.win': 'win', 'r.winN': 'win in {n}', 'r.draw': 'draw', 'r.loss': 'loss', 'r.lossN': 'loss in {n}',
   opH: 'Opening crossroads — choose by theory', opIntro: 'Connect Four was solved in 1988, so the result of every first move is known. Learn the standard moves first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual',
@@ -317,7 +315,7 @@ function openingOf(key) {
 }
 
 // ------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, cls: null, op: null, hov: null };
+const S = { open: false, cls: null, op: null, hov: null };
 let card = null;
 function usable() {
   if (lesson || puzzle) return false;
@@ -410,9 +408,8 @@ function render() {
     let why = book ? esc(tx('bkWhy', { m: ltr(b.k.x), c: tx('c.' + b.k.k), r: b.res || '' })) : esc(tx('recWhy', { c: tx('c.' + b.k.k), f: evalText(ev) }));
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp')); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    const rv = book || S.reveal;
     h += CoachKit.branches({
-      head: tx(book ? 'bkH' : cl.branch ? 'brH' : 'cdH'), intro: esc(tx(book ? 'bkIntro' : cl.branch ? 'brIntro' : 'cdIntro')), reveal: rv, show: book ? '' : tx('show'), hide: tx('hide'),
+      head: tx(book ? 'bkH' : cl.branch ? 'brH' : 'cdH'), intro: esc(tx(book ? 'bkIntro' : cl.branch ? 'brIntro' : 'cdIntro')), reveal: book,
       items: cl.dirs.map((d, i) => { const gp = gapOf(d, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(catTxt(d.k, f))), gap: tx(gp[0]) + (d.res ? ' · ' + d.res : ''), gcls: gp[1], move: String(d.u), mvName: ltr(d.k.x) }; }),
     });
     if (book) S.op = cl.dirs.map(d => ({ u: d.u }));
@@ -451,7 +448,6 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hov = null; drawFx(); render(); },
     onHover: u => { S.hov = u == null ? null : +u; drawFx(); },
   });
   // touch (iPhone): a tap toggles the candidate on the board. The pointer type is taken from pointerdown, because a
@@ -472,7 +468,7 @@ function markRows() {
   card.querySelectorAll('.ck-bi[data-mv]').forEach(b => b.classList.toggle('ck-hov', S.hov != null && +b.dataset.mv === S.hov));
   if (S.hov != null) card.dataset.ckSel = String(S.hov); else delete card.dataset.ckSel;
 }
-// the candidate cells on the board (revealed moves only): a ring on the cell the disc would land in
+// the hovered / tapped candidate's cell on the board: a ring on the cell the disc would land in
 function clearFx() { if (typeof fxEl !== 'undefined' && fxEl) fxEl.querySelectorAll('.ck-mark').forEach(x => x.remove()); }
 function drawFx() {
   clearFx();
@@ -480,7 +476,7 @@ function drawFx() {
   const g = gridOfS(moves);
   let list = [];
   if (S.op) list = S.hov != null ? S.op.filter(d => d.u === S.hov) : [];
-  else if (S.cls && S.reveal) list = S.hov != null ? S.cls.dirs.filter(d => d.u === S.hov) : S.cls.dirs;
+  else if (S.cls) list = S.hov != null ? S.cls.dirs.filter(d => d.u === S.hov) : [];
   list.forEach((d, i) => {
     const c = d.u; if (g[c].length >= R) return;
     const el = document.createElement('div'); el.className = 'mark ok ck-mark'; discPos(el, c, g[c].length);
@@ -495,7 +491,6 @@ function init() {
   if (card) card.addEventListener('pointerdown', e => { S.pt = e.pointerType; }, true);
   { const rc = document.getElementById('reviewCard'); if (rc) { rc.dataset.itc = 'coach'; if (window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); } }
   if (settings.coach === undefined) settings.coach = true;
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   C4Coach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

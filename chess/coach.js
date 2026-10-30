@@ -31,7 +31,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: 'AIの上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   opH: '序盤の分かれ道 — 定跡で選ぶ', opIntro: '序盤は評価値の小さな差より、定跡（よく研究された手順）と序盤の原則で手を選ぶのが大切です。まずは定番を覚え、慣れたら変わり種も試してみよう。', 'op.main': '定番', 'op.alt': '変わり種',
   bkH: '定跡の候補 — 実戦でよく指される手', bkIntro: 'レーティング2200以上のLichessの対局（40万局）で、この局面で実際に指された手の割合です。定跡の範囲では、割合の多い手から覚えよう。', 'bk.share': '採用率 {x}',
@@ -136,7 +135,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: "The AI's top candidates, explained plan by plan.",
-  show: 'Show moves', hide: 'Hide moves',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening crossroads — choose by theory', opIntro: 'In the opening, well-studied lines and opening principles matter more than small evaluation differences. Learn the standard moves first, then try the unusual ones.', 'op.main': 'Standard', 'op.alt': 'Unusual',
   bkH: 'Book moves — what strong players choose here', bkIntro: 'How often each move was played in this position in 400,000 Lichess games between players rated 2200+. Within the book, learn the most played moves first.', 'bk.share': 'played {x}',
@@ -485,7 +483,7 @@ function openingName() {
 }
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null, op: null, hov: null, rvWas: false, rec: null };
+const S = { open: false, key: '', f: null, cls: null, op: null, hov: null, rvWas: false, rec: null };
 let card = null;
 function usable() {
   if (typeof settings === 'undefined') return false;
@@ -649,7 +647,7 @@ function render() {
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: d.u, mvName: ltr(d.nm) }; }),
     });
   } else if (!S.op) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -657,23 +655,22 @@ function render() {
   h += CoachKit.tips({ head: tx('tipsH'), list: tl.map(x => ({ html: gl(esc(tx(x.k, x.v || {}))), hi: x.hi })), open: S.open, more: tx('more', { n: Math.max(0, tl.length - 3) }), less: tx('less') });
   h += verdictHtml();
   put(h);
-  if (S.reveal && !S.op && cl) setArrows(cl.dirs.map(d => d.m)); else if (!S.hov) setArrows(null);
+  if (!S.hov) setArrows(null);
 }
 function put(h) {
   if (card.dataset.h === h) return;
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hov = null; render(); },
     onHover: u => hover(u),
   });
 }
-// arrows on the board: the revealed candidates, or the hovered row
+// arrows on the board: the hovered / tapped row's move only
 let ARW = null;
 function setArrows(list) { const k = list ? list.join(',') : ''; if ((ARW ? ARW.join(',') : '') === k) return; ARW = list && list.length ? list : null; try { renderFx(); } catch (e) {} }
 function hover(u) {
   S.hov = u;
-  if (!u || !myTurn()) { const cl = S.cls; setArrows(S.reveal && !S.op && cl ? cl.dirs.map(d => d.m) : null); return; }
+  if (!u || !myTurn()) { setArrows(null); return; }
   const m = posAt(cur).pos.fromUci(u); setArrows(m ? [m] : null);
 }
 function drawFx(svg) {
@@ -685,7 +682,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   ChessCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {
