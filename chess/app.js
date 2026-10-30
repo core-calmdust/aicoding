@@ -3228,8 +3228,8 @@ function dsgPiece(set, p, x, y, w, S, id) {
   const C = p & 8 ? S.b || DSG_PB : S.w || DSG_PW, k = p & 8 ? 'b' : 'w';
   return `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="0 0 100 100" style="fill:url(#${id}${k});stroke:${C[3]};stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;color:${C[3]}"><use href="#s${PT[p & 7]}"/></svg>`;
 }
-// kind 'pc': a strip of three squares with a white king, a black queen and a white knight, drawn exactly as on the board (the same symbols / images);
-// kind 'bd': the a1 corner of the board with its frame and coordinates
+// kind 'pc': a white king and a black knight on two big squares, drawn exactly as on the board (the same symbols / images);
+// kind 'bd': a square-ish a1 corner of the board with its frame, coordinates and a few pieces
 function dsgThumb(kind, set, skin) {
   const S = DSG_SKIN[skin] || DSG_SKIN.classic, id = 'cdsg' + (++dsgUid);
   const W = S.w || DSG_PW, B = S.b || DSG_PB;
@@ -3245,21 +3245,24 @@ function dsgThumb(kind, set, skin) {
     marble: ['turbulence', '.012 .021', '0 0 0 0 .3 0 0 0 0 .34 0 0 0 0 .33 -2.2 0 0 0 1', .55, '<feComponentTransfer><feFuncA type="gamma" amplitude="1" exponent="2.4" offset="0"/></feComponentTransfer>'] }[S.tex];
   if (tex) defs += `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="${tex[0]}" baseFrequency="${tex[1]}" numOctaves="4" seed="3"/><feColorMatrix values="${tex[2]}"/>${tex[4]}</filter>`;
   if (S.tex === 'brushed') defs += `<pattern id="${id}h" width="1.2" height="4" patternUnits="userSpaceOnUse"><rect width=".6" height="4" fill="rgba(255,255,255,.14)"/></pattern>`;
-  const bd = kind === 'bd', VW = bd ? 96 : 90, VH = bd ? 60 : 30, fr = bd ? 6 : 0, rows = bd ? 3 : 1, q = (VH - fr) / rows, cols = Math.ceil((VW - fr) / q);
+  // kind 'pc': 120×90, two big squares (and the edges of the rows above and below); kind 'bd': 120×100, the a1 corner, 4 files × 3⅓ ranks
+  const bd = kind === 'bd', VW = 120, VH = bd ? 100 : 90, fr = bd ? 8 : 0, q = bd ? 28 : 60, off = bd ? 0 : 15;
+  const sqY = r => VH - fr - off - (r + 1) * q;   // r: rank from the bottom (0 = the 1st rank; -1 / 3 = cut off by the edge)
   let s = `<svg viewBox="0 0 ${VW} ${VH}" aria-hidden="true" style="font-style:normal"><defs>${defs}</defs>`;
   if (fr) s += `<rect width="${VW}" height="${VH}" fill="url(#${id}f)"/>`;
-  // square (c, r): c = file from the left (0 = a), r = rank from the top; a1 (bottom-left) is dark
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) s += `<rect x="${fr + c * q}" y="${r * q}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(c + rows - 1 - r) % 2 ? 'l' : 'd'})"/>`;
+  const cols = bd ? 4 : 2, r0 = bd ? 0 : -1, r1 = bd ? 3 : 1;
+  // a1 (bottom-left) is dark
+  for (let r = r0; r <= r1; r++) for (let c = 0; c < cols; c++) s += `<rect x="${fr + c * q}" y="${sqY(r)}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(c + r) % 2 ? 'l' : 'd'})"/>`;
   if (tex) s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" filter="url(#${id}n)" opacity="${tex[3]}"/>`;
   if (S.tex === 'brushed') s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" fill="url(#${id}h)"/>`;
-  if (fr) s += `<path d="M${fr} 0V${VH - fr}H${VW}" fill="none" stroke="${S.ring}" stroke-width=".8"/>`;
-  const g = (p, c, r, k) => `<g filter="url(#${id}s)">${dsgPiece(set, p, fr + c * q + q * (1 - k) / 2, r * q + q * (1 - k) / 2, q * k, S, id)}</g>`;
+  if (fr) s += `<path d="M${fr} 0V${VH - fr}H${VW}" fill="none" stroke="${S.ring}" stroke-width="1"/>`;
+  const g = (p, c, r, k) => `<g filter="url(#${id}s)">${dsgPiece(set, p, fr + c * q + q * (1 - k) / 2, sqY(r) + q * (1 - k) / 2, q * k, S, id)}</g>`;
   if (bd) {
-    const tf = `font-family="'JetBrains Mono',monospace" font-weight="700" font-size="4" font-style="normal"`;
-    for (let c = 0; c < cols; c++) s += `<text x="${fr + (c + 1) * q - 1.2}" y="${VH - fr - 1.2}" text-anchor="end" ${tf} fill="${c % 2 ? S.cl : S.cd}">${'abcdefgh'[c]}</text>`;
-    ['3', '2', '1'].forEach((z, i) => { s += `<text x="${fr + 1.1}" y="${i * q + 4.6}" ${tf} fill="${(i + rows - 1) % 2 ? S.cl : S.cd}">${z}</text>`; });
-    s += g(4, 0, 2, .9) + g(1, 1, 1, .9) + g(2, 2, 2, .9) + g(10, 3, 0, .9) + g(9, 4, 0, .9);   // Ra1 Pb2 Nc1 / nd3 pe3
-  } else s += g(6, 0, 0, .94) + g(13, 1, 0, .94) + g(2, 2, 0, .94);   // white king, black queen, white knight
+    const tf = `font-family="'JetBrains Mono',monospace" font-weight="700" font-size="6" font-style="normal"`;
+    for (let c = 0; c < cols; c++) s += `<text x="${fr + (c + 1) * q - 1.5}" y="${VH - fr - 1.8}" text-anchor="end" ${tf} fill="${c % 2 ? S.cl : S.cd}">${'abcdefgh'[c]}</text>`;
+    for (let r = 0; r < 3; r++) s += `<text x="${fr + 1.5}" y="${sqY(r) + 6.6}" ${tf} fill="${r % 2 ? S.cl : S.cd}">${r + 1}</text>`;
+    s += g(4, 0, 0, .9) + g(1, 1, 1, .9) + g(2, 2, 0, .9) + g(10, 3, 2, .9);   // Ra1 Pb2 Nc1 / nd3
+  } else s += g(6, 0, 0, .96) + g(10, 1, 0, .96);   // white king, black knight
   return s + '</svg>';
 }
 function designThumbs() {
