@@ -27,6 +27,7 @@ body.mob #game{left:0;top:0;width:100%;height:100%;transform:none}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 #ui{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:5}
 #game.aim{cursor:none}
+html.nocur,html.nocur *{cursor:none!important} /* キーボード・コントローラで遊んでいる間はポインタを消す */
 .ui{position:absolute;pointer-events:none;z-index:5}
 #hud{top:max(14px,env(safe-area-inset-top));left:0;right:0;text-align:center;transition:opacity .3s}
 #score{font-weight:900;font-size:clamp(44px,7cqw,76px);letter-spacing:.04em;line-height:1;
@@ -1740,7 +1741,7 @@ function updateBooms(dt) {
 
 // ---------------- 入力: ゲームパッド（左スティック移動・右スティック照準・Rトリガーでロック）／キーボード＋マウス ----------------
 const IN = { keys: {}, mouseLock: false, mouseAt: -9, mx: 640, my: 300, padLock: false, padStart: false, ax: 0, ay: 0, rx: 0, ry: 0, padUsed: false };
-addEventListener('keydown', e => {
+addEventListener('keydown', e => { hideCursor(true);
     if (e.code === 'Space') e.preventDefault();
     if (e.repeat) return; IN.keys[e.code] = true;
     if (e.code === 'KeyF') toggleFS();
@@ -1749,7 +1750,9 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { IN.keys[e.code] = false; });
 const toLogical = e => { const r = gameEl.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * VW, (e.clientY - r.top) / r.height * VH]; };
-addEventListener('pointermove', e => { const [x, y] = toLogical(e); IN.mx = x; IN.my = y; IN.mouseAt = S.t; if (e.pointerType === 'mouse') IN.padUsed = false; });
+let lastPX = -1, lastPY = -1;
+const hideCursor = on => document.documentElement.classList.toggle('nocur', on);
+addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && (Math.abs(e.screenX - lastPX) + Math.abs(e.screenY - lastPY) > 2)) { if (lastPX >= 0) hideCursor(false); lastPX = e.screenX; lastPY = e.screenY; } const [x, y] = toLogical(e); IN.mx = x; IN.my = y; IN.mouseAt = S.t; if (e.pointerType === 'mouse') IN.padUsed = false; });
 addEventListener('pointerdown', e => { if (e.button > 0) return; audio(); { const [x, y] = toLogical(e); IN.mx = x; IN.my = y; IN.mouseAt = S.t; IN.touching = e.pointerType !== 'mouse'; if (IN.touching) IN.padUsed = false; } if (S.mode === 'play' || S.mode === 'evo') IN.mouseLock = true; else if (e.pointerType === 'touch') startGame(); }); // マウスのクリックでは始めない（タッチ画面だけタップで開始）
 addEventListener('pointerup', e => { if (e.button > 0) return; IN.mouseLock = false; IN.touching = false; });
 addEventListener('pointercancel', () => { IN.mouseLock = false; IN.touching = false; });
@@ -1762,7 +1765,7 @@ function pollPads() {
     for (const p of ps) { if (!p) continue; ax += dz(p.axes[0] || 0); ay += dz(p.axes[1] || 0); rx += dz(p.axes[2] || 0); ry += dz(p.axes[3] || 0);
         const rt = p.buttons[7]; if (rt && (rt.pressed || rt.value > 0.35)) lock = true;
         if ([9, 0, 8, 16].some(k => p.buttons[k] && (p.buttons[k].pressed || p.buttons[k].value > 0.5))) start = true; // スタート（と A／セレクト）
-        if (Math.abs(ax) + Math.abs(rx) + Math.abs(ay) + Math.abs(ry) > 0 || lock) IN.padUsed = true; }
+        if (Math.abs(ax) + Math.abs(rx) + Math.abs(ay) + Math.abs(ry) > 0 || lock || start) { IN.padUsed = true; hideCursor(true); } }
     IN.ax = ax; IN.ay = ay; IN.rx = rx; IN.ry = ry; IN.padLock = lock;
     if (start && !padStartPrev && S.mode !== 'play' && S.mode !== 'evo') S.startQ = true; // 押した瞬間を覚えておき、始められる状態になったら始める
     if (S.startQ && S.mode !== 'play' && S.mode !== 'evo' && !(S.mode === 'dead' && S.deadT < 0.8)) { S.startQ = false; startGame(); }
