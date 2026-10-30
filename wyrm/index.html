@@ -936,6 +936,16 @@ function beatPulse() { if (!MUS.on || !AC) return 0; const st = MUS.n + (AC.curr
 function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
     const div = [4, 2, 1][Math.floor(Math.random() * 3)], cnt = 8 / div;
     for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); const pp = Math.max(-1, Math.min(1, pan + (i % 2 ? -0.55 : 0.55) * Math.sign(pan || 1))); PANV = pp; tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); PANV = 0; hat808(ti, 0.32 * k, false, -pp); } }
+// 808系のクラップ: 帯域を絞ったノイズを短く3回はじいてから余韻。音楽の次の16分音符で鳴らす
+function sfxClap() {
+    if (!audio()) return; const t = MUS.on ? q16(AC.currentTime + 0.005) : AC.currentTime;
+    const n = noise(), bp = AC.createBiquadFilter(), hp = AC.createBiquadFilter(), g = AC.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 1150; bp.Q.value = 1.1; hp.type = 'highpass'; hp.frequency.value = 500;
+    g.gain.setValueAtTime(0.0001, t);
+    [0, 0.011, 0.022].forEach(o => { g.gain.setValueAtTime(0.0001, t + o); g.gain.exponentialRampToValueAtTime(0.5, t + o + 0.002); g.gain.exponentialRampToValueAtTime(0.06, t + o + 0.01); });
+    g.gain.setValueAtTime(0.4, t + 0.031); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    n.connect(bp).connect(hp).connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.25; g.connect(s2).connect(fx); n.start(t); n.stop(t + 0.25);
+}
 // 808系のハイハット: 金属的な比の矩形波6本を高域だけ通して短く切る
 const HAT_F = [205.3, 304.4, 369.6, 522.7, 540, 800];
 function hat808(t, gain, open = false, pan = 0) {
@@ -963,7 +973,7 @@ function sfxFire(n, t, total = 1) {
     if (!audio()) return; t = t || AC.currentTime;
     const ch = chordAt(t), up = ch.slice(1).map(m => m + 12).sort((x, y) => x - y) /* 高すぎると鳥の声のようになるのでロック音と同じ音域 */;
     let ix = firePat(n); const oc = Math.floor(ix / up.length); ix = ((ix % up.length) + up.length) % up.length; const m = up[ix] + 12 * Math.min(1, oc);
-    const f = mtof(m), k = 0.11 * (1 - n / Math.max(8, total * 1.6)); PANV = (n % 2 ? 0.6 : -0.6);
+    const f = mtof(m), k = 0.2 * (1 - n / Math.max(8, total * 1.6)); /* 発射音は大きめに */ PANV = (n % 2 ? 0.6 : -0.6);
     // 音程は揺らさない（すべり音は鳴き声っぽくなる）。ロック音と同じく短い楽音で、音色だけステージごとに変える
     switch (S.stage % 6) {
         case 0: bell(t, m, k * 1.1, 2, 0.8, 0.32, 0.6); break; // ガラスのベル
@@ -1567,6 +1577,7 @@ function toScreen(v) { _pv.copy(v).project(camera); return [(_pv.x + 1) / 2 * VW
 const RET_R = 56;
 function updateLock() {
     const held = IN.padLock || IN.mouseLock || !!IN.keys.Space;
+    if (held && !lockHeldPrev && S.mode === 'play') sfxClap(); // トリガーを押した瞬間にクラップ
     if (held && S.mode === 'play') {
         const e8 = MUS.on && AC ? Math.floor((MUS.n + (AC.currentTime - MUS.t) / S16) / 2) : Math.floor(S.t / (S16 * 2)); // いまの8分音符の番号
         let can = e8 !== S.lock8; // ロックは8分音符ごとに1つだけ
