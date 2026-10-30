@@ -16,7 +16,7 @@ const IC = {
 const CSS = `
 .ngt-bar{display:none}
 /* tabs, not buttons: a line across the dialog, the chosen tab lit with a bar on that line */
-.ngt-on .ngt-bar{display:flex;gap:0;position:sticky;bottom:0;z-index:3;margin:0!important;padding:0;background:inherit;border-top:1px solid var(--line,rgba(255,255,255,.14))}
+.ngt-on .ngt-bar{display:flex;gap:0;margin:0!important;padding:0;background:inherit;border-top:1px solid var(--line,rgba(255,255,255,.14))}
 .ngt-bar button{flex:1 1 0;position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:0 6px;border:0;border-radius:0;background:none;box-shadow:none;color:var(--muted,#aaa);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ngt-bar button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ngt-bar button.sel{color:var(--text,#eee)}
@@ -31,8 +31,10 @@ const CSS = `
 .modal.ngt-on h2{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
+.ngt-foot{display:contents}
+.modal.ngt-on .ngt-foot{display:block;position:sticky;bottom:-12px;z-index:4;margin:var(--ngt-g) -12px -12px;padding:0 12px 12px;background:inherit}
+.modal.ngt-on .ngt-foot .ngt-bar{position:static!important;margin:0!important}
 .modal.ngt-on .modal-actions{margin:var(--ngt-g) 0 0!important}
-.modal.ngt-on .ngt-bar{margin-top:var(--ngt-g)!important}
 `;
 const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
 function init() {
@@ -44,6 +46,10 @@ function init() {
   // the bar sits right above the action buttons (or at the end of the dialog)
   const acts = [...modal.querySelectorAll('.modal-actions')].pop();
   if (acts && acts.parentNode) acts.parentNode.insertBefore(bar, acts); else modal.appendChild(bar);
+  // the tabs, the buttons and any note under them form one footer that stays at the bottom of the dialog
+  const foot = document.createElement('div'); foot.className = 'ngt-foot';
+  bar.parentNode.insertBefore(foot, bar);
+  for (let n = bar; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; }
   let cur = 'rules';
   const keep = el => el === bar || el.tagName === 'H2' || el.classList.contains('modal-actions') || el.contains(bar) && false;
   function mark() {
@@ -59,7 +65,11 @@ function init() {
     });
     walk(modal);
   }
+  const acts2 = () => [...modal.querySelectorAll('.modal-actions')].pop();
+  const ah = () => { const a = acts2(); if (a) modal.style.setProperty('--ngt-ah', a.offsetHeight + 'px'); };
+  if (window.ResizeObserver && acts2()) new ResizeObserver(ah).observe(acts2());
   function sync() {
+    ah();
     const on = MQ.matches; modal.classList.toggle('ngt-on', on);
     const l = lang();
     bar.querySelectorAll('[data-ngt]').forEach(b => { const k = b.dataset.ngt, t = L[k][l] || L[k].en, s = b.querySelector('span'); if (s.textContent !== t) s.textContent = t; b.classList.toggle('sel', k === cur); b.setAttribute('aria-selected', k === cur ? 'true' : 'false'); });
