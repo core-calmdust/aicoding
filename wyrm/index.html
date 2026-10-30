@@ -111,13 +111,13 @@ const StdMat = IS_MOBILE ? LiteMat : THREE.MeshStandardMaterial;
 if (IS_MOBILE) document.body.classList.add('mob');
 // PC は 1280×720（16:9）固定で描き、ウィンドウやフルスクリーンには拡大して合わせる（描画の重さは画面サイズに左右されない）
 const BASE_W = 1280, BASE_H = 720;
-const prFor = s => IS_MOBILE ? Math.min(devicePixelRatio || 1, 2) * 0.6 : Math.min(1.6, Math.max(1, (devicePixelRatio || 1) * s)); // 線は画面の細かさで描く（重さはエフェクト側で抑える）
+const prFor = s => IS_MOBILE ? Math.min(devicePixelRatio || 1, 2) * 0.6 : Math.min(1.25, Math.max(1, (devicePixelRatio || 1) * s)); // 線は画面の細かさで描く（重さはエフェクト側で抑える）
 const gameEl = document.getElementById('game'), rootEl = document.getElementById('root');
 let VW = IS_MOBILE ? innerWidth : BASE_W, VH = IS_MOBILE ? innerHeight : BASE_H, PR = prFor(1);
 const canvas = document.getElementById('gl');
 let renderer;
 try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_MOBILE, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, stencil: false, depth: false, powerPreference: 'high-performance' });
 } catch (e) { document.getElementById('err').style.display = 'grid'; throw e; }
 renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false);
 
@@ -139,6 +139,21 @@ scene.add(new THREE.HemisphereLight(0xa8b8ff, 0x2a0c40, 0.9));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(-300, 700, 300); scene.add(sun); scene.add(sun.target);
 
 let baseFov = 62;
+// 進化中の高速移動の筋: カメラ前方の円筒上を後ろへ流れる線
+const WN = 140, warpP = new Float32Array(WN * 6), warpC = new Float32Array(WN * 6), warpD = [];
+for (let i = 0; i < WN; i++) { const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 110; warpD.push({ x: Math.cos(a) * r, y: Math.sin(a) * r, z: -40 - Math.random() * 900 }); }
+const warpG = new THREE.BufferGeometry(); warpG.setAttribute('position', new THREE.BufferAttribute(warpP, 3)); warpG.setAttribute('color', new THREE.BufferAttribute(warpC, 3));
+const warp = new THREE.LineSegments(warpG, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, fog: false }));
+warp.frustumCulled = false; warp.visible = false; camera.add(warp); scene.add(camera);
+function updateWarp(dt, w) {
+    warp.visible = w > 0.02; if (!warp.visible) return;
+    const len = 30 + w * 380, c = new THREE.Color(PAL.line ? PAL.line[0] : 0xffffff);
+    warpD.forEach((d, i) => { d.z += dt * (900 + w * 4200); if (d.z > -20) { d.z -= 940; const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 110; d.x = Math.cos(a) * r; d.y = Math.sin(a) * r; }
+        const o = i * 6, k = w * Math.min(1, (d.z + 940) / 300) * 0.55;
+        warpP[o] = d.x; warpP[o + 1] = d.y; warpP[o + 2] = d.z; warpP[o + 3] = d.x; warpP[o + 4] = d.y; warpP[o + 5] = d.z - len;
+        warpC[o] = c.r * k; warpC[o + 1] = c.g * k; warpC[o + 2] = c.b * k; warpC[o + 3] = warpC[o + 4] = warpC[o + 5] = 0; });
+    warpG.attributes.position.needsUpdate = true; warpG.attributes.color.needsUpdate = true;
+}
 let PR_T = 1, PR_CAP = 9; // 目標の解像度と、重いときに自動で下げた上限
 function resize() {
     let sc = 1;
@@ -783,25 +798,6 @@ const rings = [];
 function burstRing(pos, color, big = 1, flat = false, op = 0.9, grow = 5) {
     const m = dashRing(30 * big, 28, 6 * big, 1.2 * big, glass(color, op), 3); if (!flat) m.rotation.x = Math.PI / 2; m.userData.op = op; m.userData.grow = grow; m.position.copy(pos); scene.add(m); rings.push({ m, t: 0 });
 }
-// ステージ進化のワープ線
-const WN = IS_MOBILE ? 90 : 180, warpGeo = new THREE.BufferGeometry();
-warpGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(WN * 6), 3));
-warpGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(WN * 6), 3));
-const warp = new THREE.LineSegments(warpGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-warp.frustumCulled = false; warp.visible = false; scene.add(warp);
-const warpSt = Array.from({ length: WN }, () => ({ a: 0, r: 0, z: 0, l: 0 }));
-function warpInit() {
-    const col = warpGeo.attributes.color.array;
-    warpSt.forEach((w, i) => { w.a = Math.random() * Math.PI * 2; w.r = 60 + Math.random() * 260; w.z = -Math.random() * 1600; w.l = 60 + Math.random() * 220;
-        const c = lineCol(Math.random(), i); col.set([c.r * 1.6, c.g * 1.6, c.b * 1.6, 0, 0, 0], i * 6); });
-    warpGeo.attributes.color.needsUpdate = true; warp.visible = true;
-}
-function updateWarp(dt, cx, cy, cz, k) {
-    if (!warp.visible) return;
-    const p = warpGeo.attributes.position.array;
-    warpSt.forEach((w, i) => { w.z += dt * 2600; if (w.z > 60) w.z -= 1600; const x = cx + Math.cos(w.a) * w.r, y = cy + Math.sin(w.a) * w.r * 0.7; p.set([x, y, cz + w.z - 40, x, y, cz + w.z - 40 - w.l], i * 6); });
-    warpGeo.attributes.position.needsUpdate = true; warp.material.opacity = k; if (k <= 0) warp.visible = false;
-}
 // 墜落の破片
 const SH = 70, shardGeo = new THREE.BufferGeometry();
 shardGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SH * 6 * 3), 3));
@@ -854,13 +850,13 @@ const SOUNDS = [
     { bpm: 108, tone: 'glass', bass: 'x.....x...x.....', stab: '........x.......', arp: 'x..x..x..x..x.x.',   chords: [[50, 57, 60, 64, 65, 67, 72, 76], [52, 59, 62, 66, 67, 69, 74, 78], [53, 60, 64, 67, 69, 71, 76, 79], [45, 52, 55, 59, 60, 62, 67, 71]] }, // ドリアン: Dm11 Em11 Fmaj13#11 Am11
     { bpm: 132, tone: 'pluck', bass: 'x.xox.xox.xox.xo', stab: '..x...x...x...x.', arp: 'xxxxxxxxxxxxxxxx',   chords: [[52, 56, 59, 62, 65, 67, 71, 74], [53, 57, 60, 64, 67, 69, 72, 76], [55, 59, 62, 65, 70, 74, 77, 79], [45, 48, 52, 56, 59, 62, 64, 71]] }, // フリジアン・ドミナント: E7b9b13 Fmaj9 G7#9 Am(maj9)
     { bpm: 118, tone: 'marimba', bass: 'x..x..x...x..x..', stab: '....x..x....x...', arp: 'x.xx.x.xx.x.x.xx', chords: [[45, 50, 55, 60, 64, 69, 74, 79], [43, 48, 53, 57, 62, 67, 72, 76], [41, 46, 51, 56, 60, 65, 70, 75], [40, 45, 50, 55, 59, 64, 69, 74]] }, // 4度堆積（クォータル）
-    { bpm: 100, tone: 'shimmer', bass: 'x.......x...f...', stab: 'x...............', arp: 'x...x...x...x...', chords: [[48, 52, 56, 60, 62, 66, 70, 74], [50, 54, 58, 62, 64, 68, 72, 76], [52, 56, 60, 64, 66, 70, 74, 78], [46, 50, 54, 58, 60, 64, 68, 72]] }, // 全音音階: C+maj9 D+9 E+9 Bb+9
+    { bpm: 100, tone: 'soft', bass: 'x.......x...f...', stab: 'x.......x.......', arp: 'x...x...x...x.x.', chords: [[51, 55, 58, 62, 65, 67, 70, 74], [53, 58, 60, 65, 67, 70, 72, 77], [55, 58, 62, 65, 69, 72, 74, 77], [56, 60, 63, 67, 70, 74, 75, 79]] }, // Ebmaj9 Fsus4(9) Gm11 Abmaj9#11
     { bpm: 140, tone: 'saw', bass: '..xo..xo..xo..xo', stab: '..x..x..x..x..x.', arp: 'x.xxx.xxx.xxx.xx',     chords: [[48, 52, 55, 59, 62, 66, 69, 74], [44, 48, 51, 55, 58, 62, 65, 70], [40, 44, 47, 51, 54, 58, 61, 66], [46, 50, 53, 57, 60, 64, 67, 72]] }, // 遠隔調の13th: Cmaj13#11 Abmaj13#11 Emaj13#11 Bbmaj13#11
 ];
 let SND = SOUNDS[0], CHORDS = SND.chords;
 // テンポは100から始めてステージごとに少しずつ上げる。音楽が鳴っている間は次の小節の頭で切り替えて途切れさせない
 const bpmFor = i => Math.min(140, 100 + i * 4);
-function applySound(i) { SND = SOUNDS[i % SOUNDS.length]; CHORDS = SND.chords; BPM = bpmFor(i); S16 = 60 / BPM / 4; BAR = 60 / BPM * 4; if (dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, AC.currentTime, 0.2); }
+function applySound(i) { TIMBRE = Math.floor(i / 2); SND = SOUNDS[i % SOUNDS.length]; CHORDS = SND.chords; BPM = bpmFor(i); S16 = 60 / BPM / 4; BAR = 60 / BPM * 4; if (dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, AC.currentTime, 0.2); }
 function setSoundStage(i) { if (MUS.on) MUS.pending = i; else applySound(i); }
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const stepAt = t => MUS.on ? MUS.n + Math.round((t - MUS.t) / S16) : Math.round(t / S16); // 音楽の拍の何番目か
@@ -886,16 +882,15 @@ function pluck(t, m, gain, type = 'sawtooth', cut = 4200, dec = 0.35, det = [0])
     f.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.5; g.connect(s2).connect(fx);
 }
 // 音色ごとの一音
+// 効果音の音色: 2面ごとに少しずつ変わる（同じ面のあいだは同じ）。テンポが上がるほどエッジが効いていくが、
+// 倍音はいつも整数比にして音程（スケール）がはっきり聞こえるようにする
+let TIMBRE = 0;
 function tone(t, m, gain, short) {
-    const k = short ? 0.45 : 1;
-    switch (SND.tone) {
-        case 'glass': bell(t, m, gain, 2, 0.8, 1.8 * k, 0.9); voice(t, mtof(m + 12), 'sine', 0.01, 0.9 * k, gain * 0.25, 0.8); break;
-        case 'pluck': pluck(t, m, gain * 1.1, 'sawtooth', 5200, 0.32 * k, [0, 9]); break;
-        case 'marimba': voice(t, mtof(m), 'sine', 0.002, 0.42 * k, gain * 1.3, 0.35); voice(t, mtof(m) * 4, 'sine', 0.001, 0.07, gain * 0.35, 0.2); break;
-        case 'shimmer': bell(t, m, gain, 1.41, 3, 1.4 * k, 0.9); voice(t, mtof(m + 19), 'triangle', 0.02, 1.0 * k, gain * 0.2, 0.9); break;
-        case 'saw': pluck(t, m, gain * 0.9, 'sawtooth', 7000, 0.45 * k, [-14, 0, 14]); break;
-        default: bell(t, m, gain, 3.5, 2.2, 1.1 * k, 0.7);
-    }
+    const k = short ? 0.45 : 1, g = TIMBRE, e = Math.min(1, g / 4);
+    const bellAmt = Math.max(0.25, 1 - g * 0.18), plAmt = Math.min(0.9, g * 0.22);
+    bell(t, m, gain * bellAmt, g >= 2 ? 3 : 2, 0.9 + e * 1.1, (1.2 - e * 0.4) * k, 0.7);
+    if (g === 0) voice(t, mtof(m + 12), 'sine', 0.004, 0.5 * k, gain * 0.18, 0.6);
+    if (plAmt > 0) pluck(t, m, gain * plAmt, 'sawtooth', 2200 + e * 5200, (0.28 + e * 0.1) * k, g >= 3 ? [-9, 0, 9] : g >= 2 ? [0, 7] : [0]);
 }
 function sfxLock(n) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t); tone(t, ch[n % ch.length] + 12, 0.07, true); }
 function sfxFire(n) { if (!audio()) return; const t = AC.currentTime; const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3800, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18 + n * 0.02, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.22); }
@@ -903,7 +898,7 @@ function sfxFire(n) { if (!audio()) return; const t = AC.currentTime; const s = 
 function sfxHit(order, volley) {
     if (!audio()) return; const t = nextSlot(), ch = chordAt(t);
     const m = ch[order % ch.length] + 12 + 12 * Math.floor(order / ch.length);
-    tone(t, m, 0.13); if (SND.tone === 'bell') voice(t, mtof(m - 12), 'sawtooth', 0.003, 0.22, 0.035, 0.5, 7);
+    tone(t, m, 0.13); 
     if (order === 0) { voice(t, mtof(ch[0] - 12), 'sine', 0.005, 0.35, 0.28, 0); }
     if (order === volley - 1 && volley >= 4) { [0, 2, 4, 6].forEach((k, i) => tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true)); } // 大量撃破のきらめき
 }
@@ -1319,7 +1314,7 @@ function step(h) {
     const cv = cave(S.d);
     if (S.mode === 'evo') { // 進化中: 無敵。竜は変わりゆく世界の中を漂う
         S.evoT += h; const env = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
-        S.speed = S.evoSpd * (1 - 0.45 * env);
+        S.speed = S.evoSpd * (1 + 1.6 * env); // 世界が組み替わるあいだは一気に加速
         const tx = Math.sin(S.evoT * 2.1 + 0.7) * 120 * env, ty = cv.cy + Math.sin(S.evoT * 2.6) * 55 * env;
         S.vx = (tx - S.x) * 2.2; S.vy = (ty - S.y) * 2.2; S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.speed = S.evoSpd; S.waveT = 1.0; nextGateD = Math.max(nextGateD, S.d + 1800); }
@@ -1352,7 +1347,7 @@ function collide() {
 
 // ---------------- 画面の文字と照準（すべてポリゴン＋ワイヤーのフォント）----------------
 const uiC = $('ui'), ug = uiC.getContext('2d'); let UIS = 1;
-function uiResize() { const sc = IS_MOBILE ? 1 : Math.min(innerWidth / BASE_W, innerHeight / BASE_H); UIS = Math.min(2, (devicePixelRatio || 1) * sc); uiC.width = Math.round(VW * UIS); uiC.height = Math.round(VH * UIS); glyCache.clear(); }
+function uiResize() { const sc = IS_MOBILE ? 1 : Math.min(innerWidth / BASE_W, innerHeight / BASE_H); UIS = Math.min(1.5, (devicePixelRatio || 1) * sc); uiC.width = Math.round(VW * UIS); uiC.height = Math.round(VH * UIS); glyCache.clear(); }
 addEventListener('resize', uiResize); document.addEventListener('fullscreenchange', uiResize); uiResize();
 const T = (text, x, y, size, c1, c2, align, alpha, heavy, track = 0) => ptext(ug, text, x * UIS, y * UIS, Math.round(size * UIS), c1, c2, align, alpha, heavy, track * UIS);
 const hex = c => '#' + _c(c).getHexString();
@@ -1362,15 +1357,15 @@ function drawReticle() {
     if (!retHist.length || S.t - retHist[0].t > 0.045) { retHist.unshift({ x: S.rx, y: S.ry, t: S.t }); if (retHist.length > 6) retHist.pop(); }
     const c0 = PAL.line ? hex(PAL.line[0]) : '#ffffff';
     ug.save(); ug.lineWidth = 1.4 * UIS; ug.strokeStyle = c0;
-    retHist.forEach((h, i) => { if (!i) return; ug.globalAlpha = 0.22 * (1 - i / retHist.length); const a0 = (S.t - i * 0.05) * 0.8;
+    retHist.forEach((h, i) => { if (!i) return; ug.globalAlpha = 0.1 * (1 - i / retHist.length); const a0 = (S.t - i * 0.05) * 0.8;
         for (let k = 0; k < 3; k++) { const a = a0 + k * Math.PI * 2 / 3, R0 = RET_R + 6; poly([[h.x + Math.cos(a) * R0, h.y + Math.sin(a) * R0], [h.x + Math.cos(a + 0.55) * (R0 + 10), h.y + Math.sin(a + 0.55) * (R0 + 10)], [h.x + Math.cos(a + 1.1) * R0, h.y + Math.sin(a + 1.1) * R0]], false); ug.stroke(); } });
-    ug.restore(); ug.save(); ug.globalAlpha = 0.62; // 照準は半透明
+    ug.restore(); ug.save(); ug.globalAlpha = 0.34; // 照準はかなり薄く
     const x = S.rx, y = S.ry, held = IN.padLock || IN.mouseLock || !!IN.keys.Space, c1 = hex(PAL.line ? PAL.line[0] : 0xffffff), c2 = hex(PAL.wing), t = S.t;
-    ug.save(); ug.shadowColor = held ? '#ff5ad8' : c1; ug.shadowBlur = 10 * UIS; ug.lineWidth = 1.6 * UIS; ug.strokeStyle = held ? '#ff8ae6' : c1;
+    ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = held ? '#ff8ae6' : c1;
     // 外側: 回転する3つの刃
     for (let k = 0; k < 3; k++) { const a0 = t * 0.8 + k * Math.PI * 2 / 3, R0 = RET_R + 6;
         poly([[x + Math.cos(a0) * R0, y + Math.sin(a0) * R0], [x + Math.cos(a0 + 0.55) * (R0 + 10), y + Math.sin(a0 + 0.55) * (R0 + 10)], [x + Math.cos(a0 + 1.1) * R0, y + Math.sin(a0 + 1.1) * R0], [x + Math.cos(a0 + 0.55) * (R0 - 4), y + Math.sin(a0 + 0.55) * (R0 - 4)]]); ug.stroke();
-        ug.globalAlpha = 0.16; ug.fillStyle = held ? '#ff5ad8' : c1; ug.fill(); ug.globalAlpha = 0.62; }
+        ug.globalAlpha = 0.07; ug.fillStyle = held ? '#ff5ad8' : c1; ug.fill(); ug.globalAlpha = 0.34; }
     // 中: 逆回転の六角形（ロック中は縮む）
     const r2 = held ? 34 : 40; ug.strokeStyle = c2; ug.setLineDash([6 * UIS, 4 * UIS]);
     poly(Array.from({ length: 6 }, (_, i) => { const a = -t * 1.2 + i * Math.PI / 3; return [x + Math.cos(a) * r2, y + Math.sin(a) * r2]; })); ug.stroke(); ug.setLineDash([]);
@@ -1380,11 +1375,11 @@ function drawReticle() {
     // ロック数（8つの三角）
     for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + i * Math.PI / 4, r = RET_R + 22, s = 5;
         poly([[x + Math.cos(a) * (r + s), y + Math.sin(a) * (r + s)], [x + Math.cos(a + 0.09) * r, y + Math.sin(a + 0.09) * r], [x + Math.cos(a - 0.09) * r, y + Math.sin(a - 0.09) * r]]);
-        if (i < locks.length) { ug.fillStyle = '#ff8ae6'; ug.fill(); } else { ug.globalAlpha = 0.25; ug.stroke(); ug.globalAlpha = 0.62; } }
+        if (i < locks.length) { ug.fillStyle = '#ff8ae6'; ug.fill(); } else { ug.globalAlpha = 0.12; ug.stroke(); ug.globalAlpha = 0.34; } }
     ug.restore(); ug.restore();
 }
 function drawLocks() {
-    ug.save(); ug.globalAlpha = 0.7; ug.lineWidth = 1.5 * UIS; ug.shadowColor = '#ff5ad8'; ug.shadowBlur = 8 * UIS;
+    ug.save(); ug.globalAlpha = 0.45; ug.lineWidth = 1.5 * UIS;
     locks.forEach((tg, i) => { const wp = tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz)); const [x, y, z] = toScreen(wp); if (z > 1) return;
         const r = (tg.obj ? 22 : 14) + Math.sin(S.t * 6 + i) * 2, a = S.t * 2 + i;
         ug.strokeStyle = '#ff8ae6'; poly(Array.from({ length: 4 }, (_, k) => [x + Math.cos(a + k * Math.PI / 2) * r, y + Math.sin(a + k * Math.PI / 2) * r])); ug.stroke();
@@ -1402,7 +1397,7 @@ function drawHUD() {
     // 進化までの撃破数
     const k = Math.min(1, S.kills / S.quota), gx = VW - 170, gy = 40;
     ug.save(); ug.lineWidth = 3 * UIS; ug.strokeStyle = 'rgba(255,255,255,.15)'; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, Math.PI * 1.5); ug.stroke();
-    ug.strokeStyle = c2; ug.shadowColor = c2; ug.shadowBlur = 8 * UIS; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ug.stroke(); ug.restore();
+    ug.strokeStyle = c2; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ug.stroke(); ug.restore();
     T((S.stage + 1) + '', gx, gy, 14, '#ffffff', c2, 'center', 1);
     T(S.kills + '/' + S.quota, gx - 26, gy, 14, c1, c2, 'right', 0.9);
 }
@@ -1513,11 +1508,11 @@ function frame(now) {
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
     updateShards(dt);
     const wk = S.mode === 'evo' ? Math.sin(eu * Math.PI) : 0;
-    camera.fov = baseFov + wk * 6; camera.updateProjectionMatrix();
-    bloom.strength = 0.46 + S.reveal * 0.42 + wk * 0.12;
+    camera.fov = baseFov + Math.pow(wk, 0.7) * 22; camera.updateProjectionMatrix(); updateWarp(dt, wk);
+    { const sf = Math.max(0.55, 1 - S.stage * 0.09); bloom.strength = (0.42 + S.reveal * 0.32 + wk * 0.1) * sf; bloom.threshold = 0.42 + Math.min(0.2, S.stage * 0.04); } // 後半の面ほど光のにじみを抑える
     { // 暗闇の中から、撃破を重ねるほどステージの姿があらわになり、進化の直前で最高潮に
         const want = S.mode === 'title' ? 0.75 : S.mode === 'evo' ? 1 : Math.min(1, S.kills / S.quota); S.reveal += (want - S.reveal) * Math.min(1, dt * (S.mode === 'evo' ? 0.8 : 1.5));
-        const r = S.reveal; REVEAL.value = 0.16 + Math.pow(r, 1.2) * 1.2; scene.fog.near = 120 + r * 420; scene.fog.far = 900 + r * 1250; }
+        const r = S.reveal; REVEAL.value = (0.16 + Math.pow(r, 1.2) * 1.05) * Math.max(0.7, 1 - S.stage * 0.06); scene.fog.near = 120 + r * 420; scene.fog.far = 900 + r * 1250; }
     if (bgK < 1) { bgK = Math.min(1, bgK + dt / 1.6); scene.background.copy(bgFrom).lerp(bgTo, bgK); scene.fog.color.copy(scene.background); }
     dragon.root.visible = !(S.mode === 'dead' && S.deadT > 0.05);
     dragon.trails.forEach(t => t.visible = dragon.root.visible);
