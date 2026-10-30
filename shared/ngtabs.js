@@ -29,6 +29,8 @@ const CSS = `
 .modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
 /* the footer: buttons, then the tabs at the very bottom (stays put; the settings above scroll) */
+.modal.ngt-on > .ngt-note{order:8;margin:var(--ngt-g) 0 0!important}
+.modal.ngt-on > .ngt-foot{order:9}
 .modal.ngt-on .ngt-foot{display:block;position:sticky;bottom:0;z-index:4;margin:auto -12px 0;padding:0;background:inherit}
 .modal.ngt-on .ngt-foot > :not(.ngt-bar){margin-left:12px!important;margin-right:12px!important}
 .modal.ngt-on .modal-actions{margin-top:8px!important;margin-bottom:0!important}
@@ -65,7 +67,11 @@ function init() {
   // footer: the last action buttons and anything after them, then the tabs
   const acts = [...modal.querySelectorAll('.modal-actions')].pop();
   const foot = document.createElement('div'); foot.className = 'ngt-foot';
-  if (acts && acts.parentNode) { acts.parentNode.insertBefore(foot, acts); for (let n = acts; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; } }
+  if (acts && acts.parentNode === modal) {
+    // credits / notes under the buttons go to the bottom of the settings (above the buttons; CSS order), not into the fixed footer
+    for (let n = acts.nextElementSibling; n; n = n.nextElementSibling) n.classList.add('ngt-note');
+    modal.insertBefore(foot, acts); foot.appendChild(acts);
+  } else if (acts && acts.parentNode) { acts.parentNode.insertBefore(foot, acts); for (let n = acts; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; } }
   else modal.appendChild(foot);
   foot.appendChild(bar);
   const tabs = () => (hasGame() ? ['game'] : []).concat(['rules'].concat(modal.querySelector('[data-ng=design]') ? ['design'] : []));
@@ -84,7 +90,7 @@ function init() {
     // ゲーム / デザイン: only that tab's blocks (and the boxes that hold them), the title and the footer
     const sel = `[data-ng=${cur}]`;
     const walk = parent => [...parent.children].forEach(el => {
-      if (el.matches(sel) || el === foot || el.tagName === 'H2' || el.matches('script,style')) return;
+      if (el.matches(sel) || el === foot || el.classList.contains('ngt-note') || el.tagName === 'H2' || el.matches('script,style')) return;
       if (el.querySelector(sel)) { walk(el); return; }
       el.classList.add('ngt-hide');
     });
