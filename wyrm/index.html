@@ -916,7 +916,7 @@ function musicStart() {
 }
 function musicStop() { if (!MUS.on) return; MUS.on = false; clearInterval(MUS.timer); const b = MUS.bus; b.gain.setTargetAtTime(0.0001, AC.currentTime, 0.5); setTimeout(() => b.disconnect(), 3000); }
 function musTick() { if (!MUS.on) return; const ahead = AC.currentTime + 0.16;
-    while (MUS.t < ahead) { if (MUS.n % 128 === 0 && MUS.pending >= 0) { applySound(MUS.pending); MUS.pending = -1; MUS.n = 0; } musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
+    while (MUS.t < ahead) { if (MUS.n % 32 === 0 && MUS.pending >= 0) { applySound(MUS.pending); MUS.pending = -1; MUS.n = 0; } musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
 function kick(t) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(44, t + 0.11);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.6, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g).connect(MUS.bus); o.start(t); o.stop(t + 0.5);
@@ -1241,7 +1241,7 @@ function pollPads() {
 }
 
 // ---------------- ロックオン ----------------
-const locks = []; let lockHeldPrev = false;
+const locks = [], marked = []; let lockHeldPrev = false; // marked: 撃ったあと倒れるまで印を残す目標
 const _pv = new THREE.Vector3();
 function toScreen(v) { _pv.copy(v).project(camera); return [(_pv.x + 1) / 2 * VW, (1 - _pv.y) / 2 * VH, _pv.z]; }
 const RET_R = 56;
@@ -1256,8 +1256,9 @@ function updateLock() {
     if (!held && lockHeldPrev && S.mode === 'play') {
         if (locks.length) { const v = locks.slice(); v.forEach((t, i) => setTimeout(() => { if (S.mode === 'play' || S.mode === 'evo') launch(t, i, v.length); sfxFire(i); }, i * 55)); }
         else { const dir = aimDir(); launch(null, 0, 1, dir); sfxFire(0); }
-        locks.length = 0;
+        locks.forEach((t, i) => { t.lockN = i + 1; if (!marked.includes(t)) marked.push(t); }); locks.length = 0;
     }
+    for (let i = marked.length - 1; i >= 0; i--) { const t = marked[i]; if (!t.alive || !(enemies.includes(t) || bullets.includes(t))) marked.splice(i, 1); }
     for (let i = locks.length - 1; i >= 0; i--) if (!locks[i].alive) locks.splice(i, 1);
     lockHeldPrev = held;
 }
@@ -1267,7 +1268,7 @@ function aimDir() { _ray.set(S.rx / VW * 2 - 1, -(S.ry / VH * 2 - 1), 0.5).unpro
 // ---------------- 進行 ----------------
 function resetWorld() {
     clearWorld(); SEED = Math.random() * 1000;
-    enemies.forEach(e => scene.remove(e.obj)); enemies.length = 0; bullets.length = 0; while (shots.length) killShot(0); locks.length = 0;
+    enemies.forEach(e => scene.remove(e.obj)); enemies.length = 0; bullets.length = 0; while (shots.length) killShot(0); locks.length = 0; marked.length = 0;
     S.stage = 0; setPal(0); setSoundStage(0); applyPalInstant(); S.warpT = 9; warp.visible = false;
     S.d = 0; S.x = 0; S.y = cave(0).cy; S.vx = S.vy = 0; S.speed = 300; S.score = 0; S.deadT = 0; S.hp = 2; S.inv = 0; S.dmg = 0; S.kills = 0; S.quota = QUOTA(0); S.evoPending = 0;
     S.camX = 0; S.camVX = 0; S.camY = S.y + 30; S.camV = 0; S.lookY = S.y + 10; S.lookV = 0; S.lookX = 0; S.lookVX = 0;
@@ -1287,7 +1288,7 @@ function evolve() {
     S.stage++; setPal(S.stage); setSoundStage(S.stage);
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve();
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
-    enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0;
+    enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
     for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.4; dying.push(c); } chunks.clear(); // 散り方は控えめに
     S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
@@ -1305,7 +1306,7 @@ function damage() {
 }
 function gameOver() {
     musicStop();
-    S.mode = 'dead'; S.deadT = 0; S.shake = 1; S.flash = 0.6; sfxCrash(); S.hp = 0; locks.length = 0;
+    S.mode = 'dead'; S.deadT = 0; S.shake = 1; S.flash = 0.6; sfxCrash(); S.hp = 0; locks.length = 0; marked.length = 0;
     shatter(new THREE.Vector3(S.x, S.y, -S.d));
     S.newRec = S.score > best; if (S.newRec) { best = S.score; try { localStorage.setItem('wyrmsphere-best', best); } catch (e) {} }
 }
@@ -1383,7 +1384,7 @@ function drawReticle() {
 function drawLocks() {
     // ロックした目標: 半透明の「竜の瞳」— 菱形の枠、縦長の瞳孔、回る3つの爪痕
     ug.save(); ug.lineWidth = 1.3 * UIS; ug.strokeStyle = '#ff8ae6';
-    locks.forEach((tg, i) => { const wp = tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz)); const [x, y, z] = toScreen(wp); if (z > 1) return;
+    const all = marked.concat(locks); all.forEach((tg, j) => { const i = tg.lockN ? tg.lockN - 1 : locks.indexOf(tg); const wp = tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz)); const [x, y, z] = toScreen(wp); if (z > 1) return;
         const r = (tg.obj ? 22 : 14) + Math.sin(S.t * 6 + i) * 1.5, a = S.t * 1.6 + i;
         ug.globalAlpha = 0.32; poly([[x, y - r * 1.15], [x + r, y], [x, y + r * 1.15], [x - r, y]]); ug.stroke();
         ug.globalAlpha = 0.08; ug.fillStyle = '#ff5ad8'; ug.fill();
