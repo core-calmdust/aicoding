@@ -1680,9 +1680,9 @@ function spawnItem() {
 function updateItems(dt) {
     if (S.mode === 'play' && S.stage % 3 === 2 && !S.itemDone && S.kills >= S.quota * 0.4) { S.itemDone = true; spawnItem(); } // 3面・6面・9面…の途中で1個
     for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; it.t += dt; it.rz -= 300 * dt;
-        it.x += (S.x - it.x) * Math.min(1, dt * 0.25); it.y += (S.y - it.y) * Math.min(1, dt * 0.25); // ゆっくり近くへ寄ってくる
+        const mg = Math.min(1, dt * (it.rz < 700 ? 1.6 : 0.3)); it.x += (S.x - it.x) * mg; it.y += (S.y - it.y) * mg; // 近づくと自機へ吸い寄せられる
         it.obj.position.set(it.x, it.y + Math.sin(it.t * 3) * 6, -(S.d + it.rz)); it.core.rotation.set(it.t * 1.5, it.t * 2, 0); it.cross.rotation.z = it.t; it.obj.children[2].rotation.set(-it.t, it.t * 0.7, 0);
-        const got = S.mode === 'play' && Math.abs(it.rz) < 40 && Math.hypot(it.x - S.x, it.y - S.y) < 32 + HIT_R * 1.5; // 外周のフレーム（少し広め）が胴体の1.5倍の範囲に触れたら取得
+        const got = S.mode === 'play' && Math.abs(it.rz) < 60 && Math.hypot(it.x - S.x, it.y - S.y) < 75; // かなり広めに取れる // 外周のフレーム（少し広め）が胴体の1.5倍の範囲に触れたら取得
         if (got) { S.hp = Math.min(3, S.hp + 1); sfxHeal(); boom(it.obj.position.clone(), [0x6dffb0, 0xffffff], 18); S.banner = { t: 0, n: 'HP +1', m: '' }; }
         if (got || it.rz < -150) { disposeObj(it.obj); items.splice(i, 1); } }
 }
@@ -1698,7 +1698,7 @@ const HEX_R = 100; // 中央の穴の半径
 function spawnHexGate() {
     // Rez の門のように: 太い白い八角形の枠を奥へ向かってすぼまるように何重にも重ね、赤黒の山形模様の支柱8本でつなぐ
     const d = S.d + 1700, cv = cave(d), g = new THREE.Group();
-    const white = new THREE.MeshLambertMaterial({ color: 0xe6eaf0, emissive: 0x2a2e36, flatShading: true }), edge = new THREE.LineBasicMaterial({ color: 0x20242c });
+    const white = new THREE.MeshLambertMaterial({ color: 0xf2f4f8, emissive: 0x3c4048, flatShading: true }), edge = new THREE.LineBasicMaterial({ color: 0x20242c });
     const red = new THREE.MeshBasicMaterial({ color: 0xff2a4a }), blk = new THREE.MeshBasicMaterial({ color: 0x15161c });
     [white, edge, red, blk].forEach(enemyFog);
     const oct = (r, w, dep, z) => { const L = 2 * (r + w) * Math.tan(Math.PI / 8) + w * 0.3, parts = [];
@@ -1710,13 +1710,13 @@ function spawnHexGate() {
     }
     // 枠と枠のあいだを面でつなぐ（漏斗の内側の壁）。9割は不透明な壁、1割だけ半透明の窓。枠と一緒には回さない
     {
-        const P = [[], []], C = [[], []], cA = new THREE.Color(0xd6dbe4), cB = new THREE.Color(0x9aa2b2), V = (r, a, z) => [Math.cos(a) * r, Math.sin(a) * r, z];
+        const P = [[], []], C = [[], []], cW = new THREE.Color(0xe4e8ee), cG = new THREE.Color(0x868d9a), cR = new THREE.Color(0xe8203c), V = (r, a, z) => [Math.cos(a) * r, Math.sin(a) * r, z];
         for (let i = 0; i < 4; i++) { const ra = HEX_R * (1 + i * 0.55) / Math.cos(Math.PI / 8), rb = HEX_R * (1 + (i + 1) * 0.55) / Math.cos(Math.PI / 8), za = i * 60, zb = (i + 1) * 60;
-            for (let k = 0; k < 8; k++) { const a0 = k / 8 * Math.PI * 2 + Math.PI / 8, a1 = a0 + Math.PI / 4, A = V(ra, a0, za), B = V(ra, a1, za), C2 = V(rb, a1, zb), D = V(rb, a0, zb), c = (i + k) % 2 ? cA : cB;
+            for (let k = 0; k < 8; k++) { const a0 = k / 8 * Math.PI * 2 + Math.PI / 8, a1 = a0 + Math.PI / 4, A = V(ra, a0, za), B = V(ra, a1, za), C2 = V(rb, a1, zb), D = V(rb, a0, zb), q = (i * 3 + k) % 8, c = q === 5 ? cR : q % 3 === 1 ? cG : cW; // 白が主役、灰と赤は差し色
                 const w = (i * 8 + k) % 10 === 3 ? 1 : 0; // 32面のうち約1割を窓に
                 [A, B, C2, A, C2, D].forEach(v => { P[w].push(...v); C[w].push(c.r, c.g, c.b); }); } }
         const mk = w => { const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(P[w], 3)); fg.setAttribute('color', new THREE.Float32BufferAttribute(C[w], 3)); fg.computeVertexNormals(); return fg; };
-        const solidM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 });
+        const solidM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x24272d, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 });
         const glassM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: 0x1c2028, side: THREE.DoubleSide, transparent: true, opacity: 0.3, depthWrite: false });
         [solidM, glassM].forEach(enemyFog);
         const g0 = mk(0), g1 = mk(1);
