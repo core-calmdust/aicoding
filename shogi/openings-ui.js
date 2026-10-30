@@ -1,7 +1,7 @@
 /*
  * Shogi openings list: category tabs (beginner / intermediate / advanced / surprise / trending / castles / handicap),
  * category files loaded on demand (openings-<cat>.json) and appended to OPEN.sets, last tab remembered.
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function () {
 'use strict';

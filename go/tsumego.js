@@ -40,7 +40,7 @@
  * on the path, which transposition tables cannot see; the moves given to solve() are replayed with superko.
  * Search: exact boolean life & death search (DFS, transposition table, Benson pruning) + bounded "moves needed" search
  * with iterative deepening; the life & death search gates the player's moves so only real candidates are read.
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function (root) {
 'use strict';

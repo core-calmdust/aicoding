@@ -13,7 +13,6 @@ tags:
 探索エンジン `engine.js` と組み合わせて、ブラウザ上（Web Worker）で動作します。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/shogi/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE` を参照）
 - **作成**: core-calmdust（AIコーディングによる制作）
 - **バージョン**: v1（2026-10-18）
 
@@ -229,11 +228,6 @@ const raw = await new Response(new Blob([buf]).stream().pipeThrough(new Decompre
 // Web Worker に {type: 'weights', buffer: raw} を送ると engine.js が読み込みます
 ```
 
-## ライセンス
-
-Copyright 2026 core-calmdust
-
-この重みと `engine.js` は Apache License, Version 2.0 で公開しています。
 
 ## NNUE 評価関数（2026年10月〜、`nnue.bin.gz`）
 

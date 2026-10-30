@@ -13,7 +13,6 @@ tags:
 探索エンジン `engine.c`（WebAssembly にビルドした `engine.wasm`）と組み合わせて、ブラウザ上（Web Worker）で動作します。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/chess/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE` を参照）
 - **作成**: core-calmdust（AIコーディングによる制作）
 - **バージョン**: v1（2026-10-19）
 

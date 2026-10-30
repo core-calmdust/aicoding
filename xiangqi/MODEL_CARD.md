@@ -5,7 +5,6 @@
 （同じルール、浅い探索）に切り替わります。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/xiangqi/
-- **ライセンス**: Apache License 2.0（リポジトリの `LICENSE`）
 - **バージョン**: v1（2026-10-25）
 
 ## ルール（エンジンと画面で共通）

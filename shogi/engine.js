@@ -2,7 +2,7 @@
  * Shogi engine — rules, learned evaluation, search, mate solver.
  * Runs as a Web Worker (index.html) and as a CommonJS module (Node tools).
  *
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function (root) {
 'use strict';

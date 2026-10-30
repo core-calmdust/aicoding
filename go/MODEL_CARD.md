@@ -4,7 +4,6 @@
 推論と探索は C で書いて WebAssembly（SIMD）にビルドした `engine.c` → `engine_simd.wasm`（SIMD 非対応環境は `engine.wasm`）で、Web Worker（`engine.js`）の中で動きます。
 
 - **ゲーム**: https://core-calmdust.github.io/aicoding/go/
-- **コードのライセンス**: リポジトリの `LICENSE`
 - **ネットの重み**: CC BY 4.0（下記のクレジット参照）
 - **バージョン**: v1（2026-10-22）
 

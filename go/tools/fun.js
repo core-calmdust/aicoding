@@ -24,7 +24,7 @@
  *     { policy(spec, moves) -> [{m, p}], own(spec, moves) -> black-view ownership array } (see build-tsumego.mjs)
  *   -> { fun, sound, why, parts, info }
  *   node tools/fun.js [--net] [--list]   prints the distribution of go/puzzles.json (the worst / best puzzles)
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 'use strict';
 const path = require('path');

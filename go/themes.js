@@ -4,7 +4,7 @@
  *   boards: 本榧 kaya · 新榧 shinkaya · 桂 katsura · 黒漆 urushi (gold lines) · 竹 bamboo · 和紙 washi (sumi lines) ·
  *           夜桜蒔絵 yozakura · 藍染め ai (indigo cloth, white lines)
  *   stones: 蛤と那智黒 classic · 硝子 glass · 雲子 yunzi · 平石 flat
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust
  */
 (function (root) {
 'use strict';
