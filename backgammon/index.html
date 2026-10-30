@@ -1174,6 +1174,12 @@ html.lnd body:is(.in-lesson,.in-puzzle) #lndDrawer > #lndLearn{order:5!important
 html.lnd #lndLearn button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;white-space:nowrap;cursor:pointer;text-align:start}
 html.lnd #lndLearn button svg{width:24px;height:24px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 html.lnd #lndLearn button:active{background:rgba(226,194,117,.12)}
+/* ルール / レッスン / パズル: rounded square icon tiles, one above the other (2026-10-30) */
+html.lnd #lndLearn{align-items:center!important;gap:10px!important}
+html.lnd #lndLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:84px;height:84px;padding:6px 4px;box-sizing:border-box;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
+html.lnd #lndLearn button svg{width:28px!important;height:28px!important;margin:0!important}
+html.lnd #lndLearn button > span{display:block}
+html.lnd #lndLearn button small{display:none!important}
 /* the move navigation (rotated page: it lives in a fixed strip) sits at the bottom of the 形勢・棋譜 page */
 /* the move navigation: a compact box at the bottom centre over the board (left of the rail, or of the open drawer);
    land.js mirrors the game's #navBar into it (the original, in the 形勢 box or the phone strip, stays hidden here) */
