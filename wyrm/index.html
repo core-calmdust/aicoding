@@ -1091,7 +1091,7 @@ function loadVoice() {
 function playVoice(stage) { // 1面→1行目 … 15面→15行目、16面からはまた1行目へ
     if (!audio() || muted) return; const line = stage % 15 + 1, seg = VOICE_SEG[line];
     if (!voiceBuf) { voicePending = stage; loadVoice(); return; }
-    const t = AC.currentTime + 1.0 /* ステージが切り替わって1秒後 */, src = AC.createBufferSource(), g = AC.createGain(), dur = seg[1] - seg[0] + 0.12;
+    const t = AC.currentTime + 1.5 /* ステージが切り替わって1.5秒後 */, src = AC.createBufferSource(), g = AC.createGain(), dur = seg[1] - seg[0] + 0.12;
     src.buffer = voiceBuf; g.gain.value = 1.0; src.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.18; g.connect(s2).connect(fx);
     src.start(t, Math.max(0, seg[0] - 0.04), dur);
     if (MUS.bus) { MUS.bus.gain.setTargetAtTime(0.42, t - 0.2, 0.15); MUS.bus.gain.setTargetAtTime(0.62, t + dur, 0.6); } // 声の間は曲を少し下げる
