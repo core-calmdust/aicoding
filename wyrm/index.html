@@ -9,7 +9,7 @@
 <link rel="icon" href="../comet-plus/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
@@ -19,7 +19,7 @@
 <style>
 :root{--cy:#5ff2ff;--mg:#ff4fd8;--vi:#9b6bff;--gd:#ffc35a}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0b0220;color:#fff;font-family:'Orbitron','Noto Sans JP',sans-serif;
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0220;color:#fff;font-family:'Open Sans','Noto Sans JP',sans-serif;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;-webkit-tap-highlight-color:transparent}
 #root{position:fixed;inset:0;background:#000;overflow:hidden}
 #game{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%) scale(var(--s,1));overflow:hidden;background:#0b0220;container-type:size}
@@ -45,7 +45,7 @@ body.mob #game{left:0;top:0;width:100%;height:100%;transform:none}
 .sub{margin-top:18px;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:clamp(14px,2cqw,18px);letter-spacing:.2em;color:rgba(230,240,255,.85);text-shadow:0 0 12px rgba(95,242,255,.5)}
 .press{margin-top:clamp(40px,9cqh,90px);font-size:clamp(13px,1.8cqw,17px);letter-spacing:.24em;color:#fff;animation:blink 2.6s ease-in-out infinite;
   display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
-.press kbd,.press .pad{font-family:'Orbitron',sans-serif;font-size:.85em;padding:.35em .8em;border:1px solid rgba(95,242,255,.7);border-radius:6px;
+.press kbd,.press .pad{font-family:'Open Sans',sans-serif;font-size:.85em;padding:.35em .8em;border:1px solid rgba(95,242,255,.7);border-radius:6px;
   box-shadow:0 0 12px rgba(95,242,255,.45),inset 0 0 8px rgba(95,242,255,.25);background:rgba(10,20,40,.4)}
 .press .pad{border-color:rgba(255,79,216,.75);box-shadow:0 0 12px rgba(255,79,216,.45),inset 0 0 8px rgba(255,79,216,.25)}
 .press i{font-style:normal;opacity:.6}
@@ -999,63 +999,29 @@ sndBtn.addEventListener('click', e => { e.stopPropagation(); muted = !muted; snd
 document.getElementById('home').addEventListener('pointerdown', e => e.stopPropagation());
 
 // =====================================================================
-// 前衛的なフォント: 文字はすべてポリゴンの破片とワイヤーフレームで組み立てる
-// （4×6の格子の折れ線＋面の破片＋奥へ押し出したワイヤー＋節点）
+// 文字
 // =====================================================================
-const O_ = [[1, 0], [0, 1], [0, 5], [1, 6], [3, 6], [4, 5], [4, 1], [3, 0], [1, 0]], P_ = [[0, 0], [0, 6], [3, 6], [4, 5], [4, 4], [3, 3], [0, 3]];
-const GLY = {
-    A: [[[0, 0], [0, 4], [1.2, 6], [2.8, 6], [4, 4], [4, 0]], [[0, 2.6], [4, 2.6]]], B: [[[0, 0], [0, 6], [3, 6], [4, 5], [4, 4], [3, 3], [0, 3]], [[3, 3], [4, 2], [4, 1], [3, 0], [0, 0]]],
-    C: [[[4, 6], [1, 6], [0, 5], [0, 1], [1, 0], [4, 0]]], D: [[[0, 0], [0, 6], [2.6, 6], [4, 4.6], [4, 1.4], [2.6, 0], [0, 0]]], E: [[[4, 6], [0, 6], [0, 0], [4, 0]], [[0, 3], [3, 3]]],
-    F: [[[4, 6], [0, 6], [0, 0]], [[0, 3], [3, 3]]], G: [[[4, 6], [1, 6], [0, 5], [0, 1], [1, 0], [4, 0], [4, 3], [2, 3]]], H: [[[0, 0], [0, 6]], [[4, 0], [4, 6]], [[0, 3], [4, 3]]],
-    I: [[[1, 6], [3, 6]], [[2, 6], [2, 0]], [[1, 0], [3, 0]]], J: [[[4, 6], [4, 1], [3, 0], [1, 0], [0, 1]]], K: [[[0, 0], [0, 6]], [[4, 6], [1.2, 3], [0, 3]], [[1.2, 3], [4, 0]]],
-    L: [[[0, 6], [0, 0], [4, 0]]], M: [[[0, 0], [0, 6], [2, 3], [4, 6], [4, 0]]], N: [[[0, 0], [0, 6], [4, 0], [4, 6]]], O: [O_], P: [P_], Q: [O_, [[2.2, 1.8], [4, 0]]],
-    R: [P_, [[2, 3], [4, 0]]], S: [[[4, 6], [1, 6], [0, 5], [0, 4], [1, 3], [3, 3], [4, 2], [4, 1], [3, 0], [0, 0]]], T: [[[0, 6], [4, 6]], [[2, 6], [2, 0]]],
-    U: [[[0, 6], [0, 1], [1, 0], [3, 0], [4, 1], [4, 6]]], V: [[[0, 6], [2, 0], [4, 6]]], W: [[[0, 6], [1, 0], [2, 3.4], [3, 0], [4, 6]]], X: [[[0, 6], [4, 0]], [[4, 6], [0, 0]]],
-    Y: [[[0, 6], [2, 3], [4, 6]], [[2, 3], [2, 0]]], Z: [[[0, 6], [4, 6], [0, 0], [4, 0]]],
-    0: [O_, [[1, 1.2], [3, 4.8]]], 1: [[[1, 5], [2, 6], [2, 0]], [[1, 0], [3, 0]]], 2: [[[0, 5], [1, 6], [3, 6], [4, 5], [4, 4], [0, 0], [4, 0]]],
-    3: [[[0, 6], [4, 6], [2, 3.5], [3, 3.5], [4, 2.5], [4, 1], [3, 0], [0, 0]]], 4: [[[3, 0], [3, 6], [0, 2], [4, 2]]], 5: [[[4, 6], [0, 6], [0, 3.5], [3, 3.5], [4, 2.5], [4, 1], [3, 0], [0, 0]]],
-    6: [[[3, 6], [1, 6], [0, 5], [0, 1], [1, 0], [3, 0], [4, 1], [4, 2], [3, 3], [0, 3]]], 7: [[[0, 6], [4, 6], [1.2, 0]]],
-    8: [[[1, 3], [0, 4], [0, 5], [1, 6], [3, 6], [4, 5], [4, 4], [3, 3], [1, 3], [0, 2], [0, 1], [1, 0], [3, 0], [4, 1], [4, 2], [3, 3]]],
-    9: [[[4, 3], [1, 3], [0, 4], [0, 5], [1, 6], [3, 6], [4, 5], [4, 1], [3, 0], [1, 0]]],
-    '/': [[[0, 0], [4, 6]]], '-': [[[1, 3], [3, 3]]], '+': [[[2, 1.5], [2, 4.5]], [[0.5, 3], [3.5, 3]]], '.': [[[1.6, 0], [2.4, 0], [2.4, 0.8], [1.6, 0.8], [1.6, 0]]],
-    ':': [[[1.6, 1], [2.4, 1], [2.4, 1.8], [1.6, 1.8], [1.6, 1]], [[1.6, 4], [2.4, 4], [2.4, 4.8], [1.6, 4.8], [1.6, 4]]], 'x': [[[0.6, 0.4], [3.4, 3.6]], [[3.4, 0.4], [0.6, 3.6]]],
-};
-const glyCache = new Map();
-function glyph(ch, size, c1, c2, heavy) {
-    const key = ch + size + c1 + c2 + heavy; if (glyCache.has(key)) return glyCache.get(key);
-    const u = size / 6, pad = Math.ceil(u * 2.2), sk = 0.22, w = Math.ceil((4 + 6 * sk + 1.2) * u + pad * 2), h = Math.ceil(size + u * 1.2 + pad * 2);
-    const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d');
-    const P = ([x, y], ox = 0, oy = 0) => [pad + (x + y * sk) * u + ox, pad + size - y * u + oy];
-    const st = GLY[ch] || [], ex = u * (heavy ? 0.7 : 0.45), ey = u * (heavy ? 0.55 : 0.35);
-    g.lineJoin = 'miter'; g.lineCap = 'square';
-    // 奥へ押し出したワイヤーと、表と奥をつなぐ線
-    g.strokeStyle = c2; g.globalAlpha = 0.45; g.lineWidth = Math.max(0.8, u * 0.1);
-    st.forEach(l => { g.beginPath(); l.forEach((p, i) => { const q = P(p, ex, ey); i ? g.lineTo(...q) : g.moveTo(...q); }); g.stroke(); });
-    g.globalAlpha = 0.3; st.forEach(l => l.forEach(p => { const a = P(p), b = P(p, ex, ey); g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); }));
-    // 面の破片: 線分ごとに片側へ三角形
-    let si = 0; st.forEach(l => { for (let i = 0; i + 1 < l.length; i++, si++) { const a = P(l[i]), b = P(l[i + 1]); const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, sd = (si % 2 ? 1 : -1) * u * (heavy ? 0.95 : 0.7);
-        const m = [a[0] + dx * 0.35 - dy / L * sd, a[1] + dy * 0.35 + dx / L * sd];
-        const gr = g.createLinearGradient(a[0], a[1], m[0], m[1]); gr.addColorStop(0, c1); gr.addColorStop(1, 'rgba(0,0,0,0)');
-        g.globalAlpha = heavy ? 0.5 : 0.38; g.fillStyle = gr; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.lineTo(...m); g.closePath(); g.fill(); } });
-    // 表の線（光る）
-    g.globalAlpha = 1; g.shadowColor = c1; g.shadowBlur = u * (heavy ? 1.2 : 0.8);
-    const lg = g.createLinearGradient(0, pad, 0, pad + size); lg.addColorStop(0, '#ffffff'); lg.addColorStop(0.45, c1); lg.addColorStop(1, c2); g.strokeStyle = lg;
-    g.lineWidth = Math.max(1.3, u * (heavy ? 0.42 : 0.3));
-    st.forEach(l => { g.beginPath(); l.forEach((p, i) => { const q = P(p); i ? g.lineTo(...q) : g.moveTo(...q); }); g.stroke(); });
-    // 節点の小さな菱形
-    g.shadowBlur = 0; g.fillStyle = '#ffffff'; const r = Math.max(1, u * 0.2);
-    st.forEach(l => [l[0], l[l.length - 1]].forEach(p => { const [x, y] = P(p); g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r, y); g.lineTo(x, y + r); g.lineTo(x - r, y); g.closePath(); g.fill(); }));
-    const o = { cv, pad, adv: (ch === ' ' ? 3.6 : 5.6) * u, u };
-    glyCache.set(key, o); return o;
-}
-// 文字列を描く（cy は文字の縦中央）
+// 文字列を描く（cy は文字の縦中央）。すっきりしたヒューマニスト系サンセリフ（Open Sans）に淡い光をまとわせる
+// 文字列ごとに一度だけ描いてキャッシュするので、毎フレームの負荷はほぼない
+const txtCache = new Map(); let fontReady = false;
+if (document.fonts) document.fonts.load('400 40px "Open Sans"').then(() => { fontReady = true; txtCache.clear(); }).catch(() => {});
 function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'center', alpha = 1, heavy = false, track = 0) {
-    text = String(text).toUpperCase(); const gs = [...text].map(ch => glyph(ch, size, c1, c2, heavy));
-    const tw = gs.reduce((m, o) => m + o.adv + track, -track - gs[gs.length - 1]?.u * 1.6 || 0);
-    let px = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
-    g.globalAlpha = alpha;
-    gs.forEach(o => { g.drawImage(o.cv, px - o.pad, cy - size / 2 - o.pad); px += o.adv + track; });
-    g.globalAlpha = 1; return tw;
+    text = String(text).toUpperCase(); const key = text + '|' + size + c1 + c2 + heavy + track + fontReady;
+    let o = txtCache.get(key);
+    if (!o) {
+        if (txtCache.size > 240) txtCache.clear();
+        const font = (heavy ? 400 : size < 18 ? 600 : 400) + ' ' + size + 'px "Open Sans", "Noto Sans JP", sans-serif', sp = track + size * (heavy ? 0.02 : 0.06);
+        const mg = document.createElement('canvas').getContext('2d'); mg.font = font; if ('letterSpacing' in mg) mg.letterSpacing = sp + 'px';
+        const tw = Math.ceil(mg.measureText(text).width - ('letterSpacing' in mg ? sp : 0)), pad = Math.ceil(size * 0.5);
+        const cv = document.createElement('canvas'); cv.width = tw + pad * 2 + 4; cv.height = Math.ceil(size * 1.5 + pad * 2); const c = cv.getContext('2d');
+        c.font = font; if ('letterSpacing' in c) c.letterSpacing = sp + 'px'; c.textBaseline = 'middle'; const my = cv.height / 2;
+        const gr = c.createLinearGradient(0, my - size * 0.5, 0, my + size * 0.5); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.55, c1); gr.addColorStop(1, c2);
+        c.shadowColor = c1; c.shadowBlur = size * (heavy ? 0.28 : 0.35); c.globalAlpha = 0.55; c.fillStyle = c1; c.fillText(text, pad, my + size * 0.04);
+        c.shadowBlur = 0; c.globalAlpha = 1; c.fillStyle = gr; c.fillText(text, pad, my + size * 0.04);
+        o = { cv, pad, tw }; txtCache.set(key, o);
+    }
+    const px = align === 'center' ? x - o.tw / 2 : align === 'right' ? x - o.tw : x;
+    g.globalAlpha = alpha; g.drawImage(o.cv, Math.round(px - o.pad), Math.round(cy - o.cv.height / 2)); g.globalAlpha = 1; return o.tw;
 }
 
 // =====================================================================
@@ -1363,7 +1329,7 @@ function collide() {
 
 // ---------------- 画面の文字と照準（すべてポリゴン＋ワイヤーのフォント）----------------
 const uiC = $('ui'), ug = uiC.getContext('2d'); let UIS = 1;
-function uiResize() { const sc = IS_MOBILE ? 1 : Math.min(innerWidth / BASE_W, innerHeight / BASE_H); UIS = Math.min(1.5, (devicePixelRatio || 1) * sc); uiC.width = Math.round(VW * UIS); uiC.height = Math.round(VH * UIS); glyCache.clear(); }
+function uiResize() { const sc = IS_MOBILE ? 1 : Math.min(innerWidth / BASE_W, innerHeight / BASE_H); UIS = Math.min(1.5, (devicePixelRatio || 1) * sc); uiC.width = Math.round(VW * UIS); uiC.height = Math.round(VH * UIS); txtCache.clear(); }
 addEventListener('resize', uiResize); document.addEventListener('fullscreenchange', uiResize); uiResize();
 const T = (text, x, y, size, c1, c2, align, alpha, heavy, track = 0) => ptext(ug, text, x * UIS, y * UIS, Math.round(size * UIS), c1, c2, align, alpha, heavy, track * UIS);
 const hex = c => '#' + _c(c).getHexString();
