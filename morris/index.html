@@ -1039,6 +1039,11 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 #resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
 #resultOverlay .modal-actions .mbtn.hidden{display:none}
 </style>
+<style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
+.modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+.modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
+.modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
+</style>
 </head>
 <body>
 <div class="app">
