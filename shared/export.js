@@ -19,23 +19,57 @@
 (function () {
 'use strict';
 const TX = {
-  ja: { title: '棋譜・局面図', img: '局面図', board: '盤面', moves: '手順つき', num: '手順番号', download: 'ダウンロード', copy: 'コピー', share: '共有', copyUrl: 'URLをコピー', copied: 'コピーしました', saved: '保存しました', close: '閉じる', empty: '棋譜がありません', btnT: '棋譜を一般的な形式で書き出し・局面図を画像で共有', start: '開始局面', after: '{n}手目 {m} まで', toMove: '{s}の番', record: '棋譜', vs: '対' },
-  en: { title: 'Record & diagram', img: 'Diagram', board: 'Board', moves: 'With moves', num: 'Numbered', download: 'Download', copy: 'Copy', share: 'Share', copyUrl: 'Copy URL', copied: 'Copied', saved: 'Saved', close: 'Close', empty: 'No moves yet', btnT: 'Export the record in standard formats or share a diagram image', start: 'Starting position', after: 'After move {n}: {m}', toMove: '{s} to move', record: 'Moves', vs: 'vs' },
-  zh: { title: '棋谱・局面图', img: '局面图', board: '盘面', moves: '附棋谱', num: '手顺编号', download: '下载', copy: '复制', share: '分享', copyUrl: '复制链接', copied: '已复制', saved: '已保存', close: '关闭', empty: '还没有棋谱', btnT: '以通用格式导出棋谱，或以图片分享局面图', start: '初始局面', after: '第{n}手 {m} 之后', toMove: '{s}走', record: '棋谱', vs: '对' },
-  ko: { title: '기보・국면도', img: '국면도', board: '판면', moves: '수순 포함', num: '수순 번호', download: '다운로드', copy: '복사', share: '공유', copyUrl: 'URL 복사', copied: '복사했습니다', saved: '저장했습니다', close: '닫기', empty: '기보가 없습니다', btnT: '기보를 표준 형식으로 내보내거나 국면도를 이미지로 공유', start: '시작 국면', after: '{n}수째 {m} 까지', toMove: '{s} 차례', record: '기보', vs: '대' },
-  es: { title: 'Partida y diagrama', img: 'Diagrama', board: 'Tablero', moves: 'Con jugadas', num: 'Numerado', download: 'Descargar', copy: 'Copiar', share: 'Compartir', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Guardado', close: 'Cerrar', empty: 'Aún no hay jugadas', btnT: 'Exportar la partida en formatos estándar o compartir un diagrama', start: 'Posición inicial', after: 'Tras la jugada {n}: {m}', toMove: 'Juegan {s}', record: 'Jugadas', vs: 'vs' },
-  fr: { title: 'Partie et diagramme', img: 'Diagramme', board: 'Plateau', moves: 'Avec coups', num: 'Numéroté', download: 'Télécharger', copy: 'Copier', share: 'Partager', copyUrl: "Copier l'URL", copied: 'Copié', saved: 'Enregistré', close: 'Fermer', empty: 'Aucun coup pour le moment', btnT: 'Exporter la partie aux formats standard ou partager un diagramme', start: 'Position initiale', after: 'Après le coup {n} : {m}', toMove: 'Trait aux {s}', record: 'Coups', vs: 'contre' },
-  pt: { title: 'Partida e diagrama', img: 'Diagrama', board: 'Tabuleiro', moves: 'Com lances', num: 'Numerado', download: 'Baixar', copy: 'Copiar', share: 'Compartilhar', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Salvo', close: 'Fechar', empty: 'Ainda não há lances', btnT: 'Exportar a partida em formatos padrão ou compartilhar um diagrama', start: 'Posição inicial', after: 'Após o lance {n}: {m}', toMove: 'Vez das {s}', record: 'Lances', vs: 'x' },
-  de: { title: 'Partie & Diagramm', img: 'Diagramm', board: 'Brett', moves: 'Mit Zügen', num: 'Nummeriert', download: 'Herunterladen', copy: 'Kopieren', share: 'Teilen', copyUrl: 'URL kopieren', copied: 'Kopiert', saved: 'Gespeichert', close: 'Schließen', empty: 'Noch keine Züge', btnT: 'Partie in Standardformaten exportieren oder ein Diagramm teilen', start: 'Ausgangsstellung', after: 'Nach Zug {n}: {m}', toMove: '{s} am Zug', record: 'Züge', vs: 'gegen' },
-  hi: { title: 'रिकॉर्ड और आरेख', img: 'आरेख', board: 'बोर्ड', moves: 'चालों सहित', num: 'क्रमांकित', download: 'डाउनलोड', copy: 'कॉपी', share: 'शेयर', copyUrl: 'URL कॉपी करें', copied: 'कॉपी हो गया', saved: 'सहेजा गया', close: 'बंद करें', empty: 'अभी कोई चाल नहीं', btnT: 'रिकॉर्ड को मानक प्रारूपों में निर्यात करें या आरेख छवि साझा करें', start: 'आरंभिक स्थिति', after: 'चाल {n} के बाद: {m}', toMove: '{s} की बारी', record: 'चालें', vs: 'बनाम' },
-  ar: { title: 'السجل والمخطط', img: 'مخطط', board: 'اللوحة', moves: 'مع النقلات', num: 'مرقّم', download: 'تنزيل', copy: 'نسخ', share: 'مشاركة', copyUrl: 'نسخ الرابط', copied: 'تم النسخ', saved: 'تم الحفظ', close: 'إغلاق', empty: 'لا توجد نقلات بعد', btnT: 'تصدير السجل بصيغ قياسية أو مشاركة صورة المخطط', start: 'الوضع الابتدائي', after: 'بعد النقلة {n}: {m}', toMove: 'دور {s}', record: 'النقلات', vs: 'ضد' },
+  ja: { title: '棋譜・局面図', img: '局面図', board: '盤面', moves: '手順つき', num: '手順番号', download: 'ダウンロード', copy: 'コピー', share: '共有', copyUrl: 'URLをコピー', copied: 'コピーしました', saved: '保存しました', close: '閉じる', empty: '棋譜がありません', btnT: '棋譜を一般的な形式で書き出し・局面図を画像で共有', start: '開始局面', after: '{n}手目 {m} まで', toMove: '{s}の番', record: '棋譜', vs: '対', ttl: 'タイトル', date: '日付を入れる' },
+  en: { title: 'Record & diagram', img: 'Diagram', board: 'Board', moves: 'With moves', num: 'Numbered', download: 'Download', copy: 'Copy', share: 'Share', copyUrl: 'Copy URL', copied: 'Copied', saved: 'Saved', close: 'Close', empty: 'No moves yet', btnT: 'Export the record in standard formats or share a diagram image', start: 'Starting position', after: 'After move {n}: {m}', toMove: '{s} to move', record: 'Moves', vs: 'vs', ttl: 'Title', date: 'Include date' },
+  zh: { title: '棋谱・局面图', img: '局面图', board: '盘面', moves: '附棋谱', num: '手顺编号', download: '下载', copy: '复制', share: '分享', copyUrl: '复制链接', copied: '已复制', saved: '已保存', close: '关闭', empty: '还没有棋谱', btnT: '以通用格式导出棋谱，或以图片分享局面图', start: '初始局面', after: '第{n}手 {m} 之后', toMove: '{s}走', record: '棋谱', vs: '对', ttl: '标题', date: '加入日期' },
+  ko: { title: '기보・국면도', img: '국면도', board: '판면', moves: '수순 포함', num: '수순 번호', download: '다운로드', copy: '복사', share: '공유', copyUrl: 'URL 복사', copied: '복사했습니다', saved: '저장했습니다', close: '닫기', empty: '기보가 없습니다', btnT: '기보를 표준 형식으로 내보내거나 국면도를 이미지로 공유', start: '시작 국면', after: '{n}수째 {m} 까지', toMove: '{s} 차례', record: '기보', vs: '대', ttl: '제목', date: '날짜 넣기' },
+  es: { title: 'Partida y diagrama', img: 'Diagrama', board: 'Tablero', moves: 'Con jugadas', num: 'Numerado', download: 'Descargar', copy: 'Copiar', share: 'Compartir', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Guardado', close: 'Cerrar', empty: 'Aún no hay jugadas', btnT: 'Exportar la partida en formatos estándar o compartir un diagrama', start: 'Posición inicial', after: 'Tras la jugada {n}: {m}', toMove: 'Juegan {s}', record: 'Jugadas', vs: 'vs', ttl: 'Título', date: 'Incluir fecha' },
+  fr: { title: 'Partie et diagramme', img: 'Diagramme', board: 'Plateau', moves: 'Avec coups', num: 'Numéroté', download: 'Télécharger', copy: 'Copier', share: 'Partager', copyUrl: "Copier l'URL", copied: 'Copié', saved: 'Enregistré', close: 'Fermer', empty: 'Aucun coup pour le moment', btnT: 'Exporter la partie aux formats standard ou partager un diagramme', start: 'Position initiale', after: 'Après le coup {n} : {m}', toMove: 'Trait aux {s}', record: 'Coups', vs: 'contre', ttl: 'Titre', date: 'Inclure la date' },
+  pt: { title: 'Partida e diagrama', img: 'Diagrama', board: 'Tabuleiro', moves: 'Com lances', num: 'Numerado', download: 'Baixar', copy: 'Copiar', share: 'Compartilhar', copyUrl: 'Copiar URL', copied: 'Copiado', saved: 'Salvo', close: 'Fechar', empty: 'Ainda não há lances', btnT: 'Exportar a partida em formatos padrão ou compartilhar um diagrama', start: 'Posição inicial', after: 'Após o lance {n}: {m}', toMove: 'Vez das {s}', record: 'Lances', vs: 'x', ttl: 'Título', date: 'Incluir data' },
+  de: { title: 'Partie & Diagramm', img: 'Diagramm', board: 'Brett', moves: 'Mit Zügen', num: 'Nummeriert', download: 'Herunterladen', copy: 'Kopieren', share: 'Teilen', copyUrl: 'URL kopieren', copied: 'Kopiert', saved: 'Gespeichert', close: 'Schließen', empty: 'Noch keine Züge', btnT: 'Partie in Standardformaten exportieren oder ein Diagramm teilen', start: 'Ausgangsstellung', after: 'Nach Zug {n}: {m}', toMove: '{s} am Zug', record: 'Züge', vs: 'gegen', ttl: 'Titel', date: 'Datum einfügen' },
+  hi: { title: 'रिकॉर्ड और आरेख', img: 'आरेख', board: 'बोर्ड', moves: 'चालों सहित', num: 'क्रमांकित', download: 'डाउनलोड', copy: 'कॉपी', share: 'शेयर', copyUrl: 'URL कॉपी करें', copied: 'कॉपी हो गया', saved: 'सहेजा गया', close: 'बंद करें', empty: 'अभी कोई चाल नहीं', btnT: 'रिकॉर्ड को मानक प्रारूपों में निर्यात करें या आरेख छवि साझा करें', start: 'आरंभिक स्थिति', after: 'चाल {n} के बाद: {m}', toMove: '{s} की बारी', record: 'चालें', vs: 'बनाम', ttl: 'शीर्षक', date: 'तारीख शामिल करें' },
+  ar: { title: 'السجل والمخطط', img: 'مخطط', board: 'اللوحة', moves: 'مع النقلات', num: 'مرقّم', download: 'تنزيل', copy: 'نسخ', share: 'مشاركة', copyUrl: 'نسخ الرابط', copied: 'تم النسخ', saved: 'تم الحفظ', close: 'إغلاق', empty: 'لا توجد نقلات بعد', btnT: 'تصدير السجل بصيغ قياسية أو مشاركة صورة المخطط', start: 'الوضع الابتدائي', after: 'بعد النقلة {n}: {m}', toMove: 'دور {s}', record: 'النقلات', vs: 'ضد', ttl: 'العنوان', date: 'إدراج التاريخ' },
 };
 let O = null, ov = null, fmt = '', mode = '', blob = null, job = 0;
 const L = () => { const l = (O && O.lang && O.lang()) || 'ja'; return TX[l] ? l : 'en'; };
-function tx(k, v) { let x = TX[L()][k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = k; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; }
+function tx(k, v, lang) { const l = lang ? (TX[lang] ? lang : 'en') : L(); let x = TX[l][k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = k; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; }
 const pad2 = n => String(n).padStart(2, '0');
 const stamp = () => { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// ---- title / date settings (per game, remembered): RecordExport.meta(key) -> { title, date: bool, day: Date }
+function meta(key) {
+  key = key || (O && O.key) || ''; let title = '', date = true;
+  try { title = localStorage.getItem('rx-title-' + key) || ''; date = localStorage.getItem('rx-date-' + key) !== '0'; } catch (e) {}
+  return { title: title.trim(), date, day: new Date() };
+}
+function setMeta(key, m) { try { if (m.title != null) localStorage.setItem('rx-title-' + key, m.title); if (m.date != null) localStorage.setItem('rx-date-' + key, m.date ? '1' : '0'); } catch (e) {} }
+const LOC = { zh: 'zh-CN', hi: 'hi-IN', pt: 'pt-BR' };
+function dateText(d, lang) { lang = lang || L(); try { return new Intl.DateTimeFormat(LOC[lang] || lang, { year: 'numeric', month: 'long', day: 'numeric' }).format(d); } catch (e) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; } }
+// puts the title / date into a record text: PGN-style tag headers ([Event] / [Date], also "; [..]" .mat headers:
+// Event / EventDate) and SGF (GN[] / DT[]). Other formats are returned unchanged.
+function applyMeta(s, m) {
+  if (typeof s !== 'string' || !s) return s;
+  const d = m.day, ymd = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  if (/^\s*\(;/.test(s)) {
+    const e = v => v.replace(/[\]\\]/g, '\\$&'), prop = k => new RegExp(k + '\\[(?:\\\\.|[^\\]\\\\])*\\]');
+    s = s.replace(prop('GN'), '').replace(prop('DT'), '');
+    const ins = (m.title ? `GN[${e(m.title)}]` : '') + (m.date ? `DT[${ymd}]` : '');
+    let k = s.indexOf('(;') + 2, br = false;   // end of the root node: the next ';' / '(' / ')' outside a [value]
+    for (; k < s.length; k++) { const c = s[k]; if (br) { if (c === '\\') k++; else if (c === ']') br = false; } else if (c === '[') br = true; else if (c === ';' || c === '(' || c === ')') break; }
+    while (k > 0 && /\s/.test(s[k - 1])) k--;
+    return s.slice(0, k) + ins + s.slice(k);
+  }
+  const ls = s.split('\n'), re = /^(; )?\[(\w+(?: \w+)*) "((?:\\.|[^"\\])*)"\]\s*$/;
+  let n = 0; while (n < ls.length && re.test(ls[n])) n++;
+  if (!n) return s;
+  const pre = re.exec(ls[0])[1] || '', q = v => v.replace(/[\\"]/g, '\\$&');
+  const dot = ymd.replace(/-/g, '.'), hdr = ls.slice(0, n), idx = k => hdr.findIndex(x => re.exec(x)[2] === k);
+  if (m.title) { const i = idx('Event'), ln = `${pre}[Event "${q(m.title)}"]`; if (i >= 0) hdr[i] = ln; else hdr.splice(pre ? 0 : idx('Game') + 1, 0, ln); }
+  let i = idx('Date'); if (i >= 0) hdr[i] = `${pre}[Date "${m.date ? dot : '????.??.??'}"]`;
+  i = idx('EventDate'); if (i >= 0) { if (m.date) hdr[i] = `${pre}[EventDate "${dot}"]`; else hdr.splice(i, 1); }
+  return hdr.concat(ls.slice(n)).join('\n');
+}
+const cleanTitle = t => String(t || '').split(/\s[|｜—–-]\s|[|｜]/)[0].trim();
 function toast(m) { if (O && O.toast) O.toast(m); }
 function download(b, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800); }
 function show() { if (O.show) O.show(ov); else ov.classList.add('show'); }
@@ -44,6 +78,7 @@ function build() {
   if (ov) return;
   ov = document.createElement('div'); ov.className = 'overlay rx-ov'; ov.id = 'rxOverlay';
   ov.innerHTML = `<div class="modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
+<div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line,rgba(255,255,255,.18));background:rgba(0,0,0,.22);color:var(--text,#eee)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
 <div class="seg rx-fmt" style="margin-bottom:10px;flex-wrap:wrap"></div>
 <textarea class="rx-text" readonly spellcheck="false" style="width:100%;height:230px;background:rgba(0,0,0,.28);color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:10px;padding:10px;font:12px/1.55 'JetBrains Mono',ui-monospace,monospace;resize:vertical;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left"></textarea>
 <div class="rx-img" style="display:none;text-align:center"><div class="seg rx-mode" style="margin-bottom:8px"></div><img class="rx-prev" alt="" style="max-width:100%;max-height:min(52vh,560px);border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.14));background:#fff"></div>
@@ -52,6 +87,11 @@ function build() {
   const q = s => ov.querySelector(s);
   ov.addEventListener('click', e => { if (e.target === ov) hide(); });
   q('.rx-close').onclick = hide;
+  let tm = 0;
+  const ti = q('.rx-ttl');
+  ['keydown', 'keyup', 'keypress'].forEach(t => ti.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') ti.blur(); }));
+  ti.addEventListener('input', () => { setMeta(O.key, { title: ti.value }); clearTimeout(tm); tm = setTimeout(render, fmt === 'img' ? 220 : 0); });
+  q('.rx-date').onchange = e => { setMeta(O.key, { date: e.target.checked }); render(); };
   q('.rx-fmt').onclick = e => { const b = e.target.closest('button'); if (!b) return; fmt = b.dataset.v; try { localStorage.setItem('rx-fmt-' + O.key, fmt); } catch (er) {} render(); };
   q('.rx-mode').onclick = e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.v; try { localStorage.setItem('rx-mode-' + O.key, mode); } catch (er) {} render(); };
   q('.rx-dl').onclick = () => {
@@ -87,10 +127,14 @@ async function render() {
   q('.rx-h').textContent = tx('title');
   q('.rx-fmt').innerHTML = list.map(f => `<button data-v="${esc(f.id)}" class="${f.id === fmt ? 'sel' : ''}">${esc(f.label)}</button>`).join('') + (O.image ? `<button data-v="img" class="${fmt === 'img' ? 'sel' : ''}">${esc(tx('img'))}</button>` : '');
   q('.rx-close').textContent = tx('close'); q('.rx-dl').textContent = tx('download');
+  const m = meta(O.key);
+  q('.rx-tl').textContent = tx('ttl'); q('.rx-dt').textContent = tx('date'); q('.rx-date').checked = m.date;
+  const ti = q('.rx-ttl'); ti.placeholder = cleanTitle(O.title); if (document.activeElement !== ti) ti.value = m.title;
+  q('.rx-meta').style.display = fmt === 'url' ? 'none' : 'flex';
   const img = fmt === 'img';
   q('.rx-text').style.display = img ? 'none' : ''; q('.rx-img').style.display = img ? '' : 'none';
   q('.rx-copy').textContent = tx(img ? 'share' : fmt === 'url' ? 'copyUrl' : 'copy');
-  if (!img) { const f = list.find(x => x.id === fmt); let v = ''; try { v = f ? f.text() : ''; } catch (e) { console.error(e); v = String(e); } q('.rx-text').value = v; return; }
+  if (!img) { const f = list.find(x => x.id === fmt); let v = ''; try { v = f ? f.text() : ''; if (f && f.id !== 'url' && f.meta !== false) v = applyMeta(v, m); } catch (e) { console.error(e); v = String(e); } q('.rx-text').value = v; return; }
   const ms = modeList();
   q('.rx-mode').style.display = ms.length > 1 ? '' : 'none';
   q('.rx-mode').innerHTML = ms.map(m => `<button data-v="${m}" class="${m === mode ? 'sel' : ''}">${esc(tx(m))}</button>`).join('');
@@ -156,7 +200,13 @@ function sheet(o) {
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
   const ink = '#16130f';
   g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = ink;
-  g.font = `700 19px ${o.titleFont || font}`; g.fillText(o.title || '', M, 34);
+  const mt = O ? meta(O.key) : { title: '', date: false, day: new Date() }, ds = mt.date ? dateText(mt.day) : '';
+  let dw = 0; if (ds) { g.font = `14px ${font}`; dw = g.measureText(ds).width + 16; }
+  const ht = mt.title || o.title || '';
+  let fs = 19; g.font = `700 ${fs}px ${o.titleFont || font}`; while (fs > 13 && g.measureText(ht).width > cw - dw) { fs--; g.font = `700 ${fs}px ${o.titleFont || font}`; }
+  let ht2 = ht; while (ht2.length > 1 && g.measureText(ht2).width > cw - dw) ht2 = ht2.slice(0, -2) + '…';
+  g.fillText(ht2, M, 34);
+  if (ds) { g.font = `14px ${font}`; g.fillStyle = '#5c554a'; g.textAlign = 'right'; g.fillText(ds, W - M, 34); g.textAlign = 'left'; g.fillStyle = ink; }
   if (o.caption) { g.font = `15px ${font}`; g.fillStyle = '#3b352c'; g.fillText(o.caption, M, 60); }
   let y = topH;
   const bx = Math.round((W - o.bw) / 2);
@@ -208,5 +258,5 @@ function goBoard(g, x0, y0, o) {
   }
   return { w: L + 2 * m, h: L + 2 * m };
 }
-window.RecordExport = { goBoard, attach, open, tx, sheet, loadImg, fonts, disc, wrap, lines, SANS, SERIF, stamp };
+window.RecordExport = { meta, setMeta, applyMeta, dateText, goBoard, attach, open, tx, sheet, loadImg, fonts, disc, wrap, lines, SANS, SERIF, stamp };
 })();
