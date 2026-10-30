@@ -1727,7 +1727,8 @@ function updateHexGate(dt) {
     h.ring.rotation.z = h.t * 1.2; h.outer.rotation.z = -h.t * 1.6; h.layers.forEach(l => { l.rotation.z = h.t * l.userData.sp; }); const p = 1 + beatPulse() * 0.06; h.inner.scale.setScalar(p); h.face.material.opacity = 0.06 + beatPulse() * 0.08;
     if (!h.done && S.d >= h.d && S.mode === 'play') {
         h.done = true;
-        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.8) { // 中央のそこそこの範囲を胴体が通ればOK sfxHeal(); S.score += 1000; } // くぐれた
+        // 成功判定は穴の中央寄り（半径の6割）だけ。しっかり狙ってくぐる必要がある
+        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.6) { sfxHeal(); S.score += 1000; } // くぐれた
         else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
         evolve();
     }
