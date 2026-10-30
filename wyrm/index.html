@@ -1416,8 +1416,8 @@ function addEnemy(type, o) {
 const epos = (e, v = new THREE.Vector3()) => v.set(e.x, e.y, -(S.d + e.rz));
 function spawnWave() {
     const cv = cave(S.d + 1600), xl = cv.hw * 0.55, kind = Math.random(), n0 = enemies.length;
-    if (kind < 0.5) { // 奥から手前へ突っ込んでくる（当たると被弾）。いちばん多い
-        const n = Math.min(7, 4 + Math.floor(S.stage / 3)), ty = Math.random() < 0.5 ? 'shard' : (Math.random() < 0.5 ? 'lance' : 'invader');
+    if (kind < 0.42) { // 奥から手前へ突っ込んでくる（当たると被弾）。いちばん多い
+        const n = Math.min(5, 3 + Math.floor(S.stage / 4)), ty = Math.random() < 0.5 ? 'shard' : (Math.random() < 0.5 ? 'lance' : 'invader');
         for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, rr = 40 + Math.random() * 110;
             addEnemy(ty, { rz: 1900 + i * 170, x: S.x + Math.cos(a) * rr, y: Math.max(cv.fl + 40, Math.min(cv.ce - 40, S.y + Math.sin(a) * rr * 0.7)), vz: 520 + Math.min(220, S.stage * 20), path: 'rush' }); }
     } else if (kind < 0.62) { // 横切る列
