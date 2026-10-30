@@ -110,7 +110,7 @@ function init(tries) {
     const l = (document.documentElement.lang || 'ja').slice(0, 2), lab = labOf(ck) || CKL[l] || CKL.en;
     const h = `<h3 class="ck-h">${IC.coach}<span></span></h3><p class="ck-muted"></p>`;
     if (rest.dataset.h !== l + lab) { rest.dataset.h = l + lab; rest.innerHTML = h; rest.querySelector('span').textContent = lab; rest.querySelector('p').textContent = REST[l] || REST.en; }
-    const show = document.body.classList.contains('it-on') && !document.body.classList.contains('ck-tab') && !document.querySelector('[data-itc=coach].show:not(#itCoachRest)');
+    const show = matchMedia(MQ).matches && !document.body.classList.contains('ck-tab') && !document.querySelector('[data-itc=coach].show:not(#itCoachRest)');
     const d = show ? '' : 'none'; if (rest.style.display !== d) rest.style.display = d;
   };
   const avail = () => true;
