@@ -584,7 +584,7 @@ function buildDragon() {
             pose.ph = ((pose.ph || 0) + dt / per) % 1; th = pose.ph * Math.PI * 2;
             const tw = th + 0.42 * Math.sin(th); // 打ち下ろし（前半）を速く、振り上げ（後半）をゆっくりにゆがめる
             a = 0.08 + 0.92 * Math.cos(tw); // 1=上、-0.84=下
-            fold = Math.pow(Math.max(0, Math.sin(tw - Math.PI)), 1.3) * 0.95; // 振り上げの途中で一番たたむ
+            fold = Math.pow(Math.max(0, Math.sin(tw - Math.PI)), 1.3) * 0.6; // 振り上げの途中で少したたむ
             lagE = 0.34 * Math.sin(tw - 0.35); lagW = 0.3 * Math.sin(tw - 0.9); // 先ほど遅れてしなる
         }
         pose.lagE = lagE; pose.lagW = lagW; pose.th = th;
@@ -593,9 +593,9 @@ function buildDragon() {
         wings.forEach(w => {
             const s = w.s;
             if (!w.sized) { w.sized = true; w.sh.scale.setScalar(0.82); } // 翼は少し小さめ
-            w.sh.rotation.z = s * a; w.sh.rotation.y = s * (0.12 + fold * 0.45 - Math.sin(pose.th) * 0.08); // 打ち下ろしでわずかに前へかく
-            w.el.rotation.y = s * (-0.32 + fold * 1.0); w.el.rotation.z = s * (pose.lagE + pose.flex * 0.3 - a * 0.1);
-            w.wr.rotation.y = s * (0.18 + fold * 0.55); w.wr.rotation.z = s * (pose.lagW + pose.flex * 0.25);
+            w.sh.rotation.z = s * a; w.sh.rotation.y = s * (0.04 + a * 0.12 + fold * 0.08); // 斜めの面で上下: 下げると少し前、上げると少し後ろ（後ろへ流しすぎない）
+            w.el.rotation.y = s * (-0.32 + fold * 0.4); w.el.rotation.z = s * (pose.lagE + pose.flex * 0.3 - a * 0.1);
+            w.wr.rotation.y = s * (0.18 + fold * 0.25); w.wr.rotation.z = s * (pose.lagW + pose.flex * 0.25);
             w.fingers.forEach(f => { f.fg.rotation.y = s * f.a * (1 - fold * 0.5); });
         });
         // 体: 上昇で機首上げ、羽ばたきと逆に上下
