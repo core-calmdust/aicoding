@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/shogi.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#130d09; --bg2:#1b130d; --panel:#21170f; --panel2:#2b1f15; --line:#45321f;
@@ -3215,56 +3215,113 @@ function exportCSA() {
   return s;
 }
 function exportUSI() { return (game.start === HANDI[0] ? 'position startpos' : 'position sfen ' + game.start) + (game.moves.length ? ' moves ' + game.moves.join(' ') : '') + '\n'; }
-// 局面図 (diagram) image on a canvas: classic black-on-white diagram, gote pieces upside down, hands as text
+// 局面図 (diagram) image on a canvas, in the classic printed style (newspapers / shogi books): white paper, thin grid
+// with a heavier frame and star points, arabic file numbers above / kanji ranks to the right, one-character Mincho
+// pieces (promoted in red, gote upside down), last move shaded grey; ☗先手's hand down the right edge and ☖後手's hand
+// point-symmetric on the left (upside down). Adapts to the W×H boards of the variants (top-right of the 9×9 grid).
+const DIAG_FONT = "'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif";
+function diagramFontsReady() {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  const txt = '歩香桂銀角飛金玉王と杏圭全馬龍先手後手持駒なし一二三四五六七八九〇0123456789手目まで開始局面棋譜▲△同成不打右左上引寄直行';
+  return Promise.race([
+    Promise.all(['500', '600'].map(w => document.fonts.load(`${w} 40px 'Shippori Mincho B1'`, txt).catch(() => {}))),
+    new Promise(r => setTimeout(r, 2500)),
+  ]);
+}
 function diagramCanvas(withKifu) {
-  const p = posAt(cur), S = 64, M = 40, W = S * 9 + M * 2 + 220;
+  const p = posAt(cur), v = game.variant && window.Variants ? game.variant : '';
+  const d = v && Variants.dims ? Variants.dims(v) : [9, 9], BW = d[0], BH = d[1], c0 = 9 - BW;
+  const S = Math.max(56, Math.min(84, Math.round(504 / BH))), bw = S * BW, bh = S * BH;
   const names = [];
-  { const q = new E.Position(); q.setSfen(game.start); let pt = -1; for (const u of game.moves.slice(0, cur)) { const m = q.fromUsi(u); names.push((q.side ? '△' : '▲') + kifName(q, m, pt, false, true)); pt = E.mTo(m); q.doMove(m); q.sp = 0; } }
-  const rows = withKifu ? Math.ceil(names.length / 4) : 0, KH = withKifu ? 40 + rows * 26 + 20 : 0;
-  const H = S * 9 + M * 2 + 80 + KH;
-  const cv = document.createElement('canvas'); const dpr = 2; cv.width = W * dpr; cv.height = H * dpr;
+  { const q = posAt(0); let pt = -1; for (const u of game.moves.slice(0, cur)) { const m = q.fromUsi(u); names.push((q.side ? '△' : '▲') + kifName(q, m, pt, false, true)); pt = E.mTo(m); q.doMove(m); q.sp = 0; } }
+  const ink = '#111', red = '#c8161d', grey = '#8c8c8c', F = DIAG_FONT;
+  // horizontal: [pad | hand col | gap | (rank-number band, mirrored) | board | rank numbers | gap | hand col | pad]
+  const NUM = Math.round(S * 0.42), GAP = Math.round(S * 0.3), COL = Math.round(S * 0.9), PAD = Math.round(S * 0.45);
+  const side = PAD + COL + GAP + NUM, W = Math.max(bw + side * 2, 460);
+  const ox = (W - bw) / 2, TOPN = Math.round(S * 0.5), oy = PAD + TOPN;
+  const KC = 4, KW = Math.min(170, Math.max(140, (W - 60) / KC)), krows = withKifu ? Math.ceil(names.length / KC) : 0;
+  const capY = oy + bh + Math.round(S * 0.62), kifY = capY + 34, H = (withKifu ? kifY + 8 + krows * 25 + 12 : capY + 14) + 34;
+  const cv = document.createElement('canvas'); const dpr = 2; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  g.fillStyle = '#fbf8f0'; g.fillRect(0, 0, W, H);
-  const ox = 110, oy = M + 40, ink = '#1a140c', serif = "'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif";
-  g.fillStyle = ink; g.font = `700 20px ${serif}`; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.fillText(cur ? `${cur}手目 ${names[cur - 1]} まで` : '開始局面', ox, 34);
-  // board
-  g.strokeStyle = ink; g.lineWidth = 2.5; g.strokeRect(ox, oy, S * 9, S * 9); g.lineWidth = 1;
-  for (let i = 1; i < 9; i++) { g.beginPath(); g.moveTo(ox + i * S, oy); g.lineTo(ox + i * S, oy + S * 9); g.stroke(); g.beginPath(); g.moveTo(ox, oy + i * S); g.lineTo(ox + S * 9, oy + i * S); g.stroke(); }
-  for (const [a, b] of [[3, 3], [6, 3], [3, 6], [6, 6]]) { g.beginPath(); g.arc(ox + a * S, oy + b * S, 3, 0, 7); g.fill(); }
-  g.font = `16px ${serif}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  for (let c = 0; c < 9; c++) g.fillText('９８７６５４３２１'[c], ox + c * S + S / 2, oy - 14);
-  for (let r = 0; r < 9; r++) g.fillText(KAN[r + 1], ox + S * 9 + 16, oy + r * S + S / 2);
-  const lastTo = cur > 0 ? E.mTo(p.fromUsi(game.moves[cur - 1])) : -1;
-  for (let s = 0; s < 81; s++) {
-    const q = p.board[s]; const r = (s / 9) | 0, c = s % 9, x = ox + c * S + S / 2, y = oy + r * S + S / 2;
-    if (s === lastTo) { g.fillStyle = 'rgba(200,160,60,.28)'; g.fillRect(ox + c * S + 1, oy + r * S + 1, S - 2, S - 2); }
-    if (!q) continue;
-    const tp = E.typeOf(q), ch = tp === E.OU ? (E.colorOf(q) ? '王' : '玉') : KANJI[tp];
-    g.save(); g.translate(x, y); if (E.colorOf(q)) g.rotate(Math.PI);
-    g.fillStyle = tp > 8 ? '#a01810' : ink; g.font = `700 38px ${serif}`; g.fillText(ch, 0, 2); g.restore();
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  // last move
+  let lastTo = -1; try { if (cur > 0) lastTo = E.mTo(p.fromUsi(game.moves[cur - 1])); } catch (e) {}
+  if (lastTo >= 0) { const r = (lastTo / 9) | 0, c = lastTo % 9 - c0; g.fillStyle = '#d8d8d8'; g.fillRect(ox + c * S, oy + r * S, S, S); }
+  // grid, frame, star points
+  g.strokeStyle = ink; g.lineWidth = 1;
+  for (let i = 1; i < BW; i++) { const x = Math.round(ox + i * S) + .5; g.beginPath(); g.moveTo(x, oy); g.lineTo(x, oy + bh); g.stroke(); }
+  for (let i = 1; i < BH; i++) { const y = Math.round(oy + i * S) + .5; g.beginPath(); g.moveTo(ox, y); g.lineTo(ox + bw, y); g.stroke(); }
+  g.lineWidth = 2.2; g.strokeRect(ox, oy, bw, bh);
+  g.fillStyle = ink;
+  if (BW === 9 && BH === 9) for (const [a, b] of [[3, 3], [6, 3], [3, 6], [6, 6]]) { g.beginPath(); g.arc(Math.round(ox + a * S) + .5, Math.round(oy + b * S) + .5, Math.max(2.5, S * 0.05), 0, 7); g.fill(); }
+  // coordinates: arabic files above, kanji ranks to the right
+  g.font = `500 ${Math.round(S * 0.3)}px ${F}`;
+  for (let c = 0; c < BW; c++) g.fillText(String(BW - c), ox + c * S + S / 2, oy - TOPN * 0.5);
+  for (let r = 0; r < BH; r++) g.fillText(KAN[r + 1], ox + bw + NUM * 0.55, oy + r * S + S / 2);
+  // pieces
+  for (let r = 0; r < BH; r++) for (let c = 0; c < BW; c++) {
+    const q = p.board[r * 9 + c0 + c]; if (!q) continue;
+    const tp = E.typeOf(q), gote = E.colorOf(q) === 1, ch = tp === E.OU ? (gote ? '王' : '玉') : KANJI[tp];
+    g.save(); g.translate(ox + c * S + S / 2, oy + r * S + S / 2); if (gote) g.rotate(Math.PI);
+    g.fillStyle = tp > 8 && v !== 'hasami' ? red : ink; g.font = `500 ${Math.round(S * 0.7)}px ${F}`; g.fillText(ch, 0, S * 0.02); g.restore();
   }
-  // hands
-  const handTxt = c => { let s2 = ''; for (const tp of [6, 5, 7, 4, 3, 2, 1]) { const n = p.hand[c * 8 + tp]; if (n) s2 += KANJI[tp] + (n > 1 ? KAN[n] || n : ''); } return s2 || 'なし'; };
-  const vert = (txt, x, y0, rot) => { g.save(); g.font = `20px ${serif}`; g.fillStyle = ink; g.textAlign = 'center'; [...txt].forEach((ch, i) => { const y = y0 + i * 24; g.save(); g.translate(x, y); if (rot) g.rotate(Math.PI); g.fillText(ch, 0, 0); g.restore(); }); g.restore(); };
-  const pn = c => { const n = String(playerName(c) || ''); return n && n !== '先手' && n !== '後手' && n !== 'Sente' && n !== 'Gote' ? ' ' + n.slice(0, 8) : ''; };
-  vert('☗先手' + pn(0) + '　持駒 ' + handTxt(0), ox + S * 9 + 60, oy + 10, false);
-  vert('☖後手' + pn(1) + '　持駒 ' + handTxt(1), 50, oy + 10, false);
-  // kifu
-  if (withKifu) {
-    let y = oy + S * 9 + 60; g.fillStyle = ink; g.textAlign = 'left'; g.font = `700 18px ${serif}`; g.fillText('棋譜', ox, y); y += 30; g.font = `16px ${serif}`;
-    names.forEach((nm, i) => { const col = i % 4, row = (i / 4) | 0; g.fillText(`${i + 1} ${nm}`, ox - 60 + col * 175, y + row * 26); });
+  // hands: one column, drawn for 先手 at the right and, rotated 180° about the board centre, for 後手 at the left
+  const pn = c => { const n = String(playerName(c) || '').trim(); return n && !['先手', '後手', 'Sente', 'Gote'].includes(n) ? n : ''; };
+  const pieceIcon = (x, y, sz, black) => {   // ☗ / ☖ as a drawn pentagon (fonts differ wildly for those glyphs)
+    const w = sz * 0.78, h = sz;
+    g.beginPath(); g.moveTo(x, y - h / 2); g.lineTo(x + w / 2, y - h * 0.24); g.lineTo(x + w * 0.42, y + h / 2); g.lineTo(x - w * 0.42, y + h / 2); g.lineTo(x - w / 2, y - h * 0.24); g.closePath();
+    g.fillStyle = black ? ink : '#fff'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = ink; g.stroke();
+  };
+  const vtext = (txt, x, y, fs, lh) => {   // vertical text; runs of 1–3 ASCII chars sit upright in one cell (縦中横), longer runs turn 90°
+    for (const run of txt.match(/[\x21-\x7e]+|\s+|[^\x21-\x7e\s]/g) || []) {
+      if (/^\s+$/.test(run)) { y += lh * 0.5; continue; }
+      if (/^[\x21-\x7e]+$/.test(run)) {
+        if (run.length <= 3) { g.save(); g.font = `500 ${fs * (run.length > 1 ? 0.8 : 1)}px ${F}`; const s = Math.min(1, lh * 0.95 / g.measureText(run).width); g.translate(x, y + lh / 2); g.scale(s, 1); g.fillText(run, 0, 0); g.restore(); y += lh; continue; }
+        g.save(); g.font = `500 ${fs * 0.85}px ${F}`; const w = g.measureText(run).width; g.translate(x, y + w / 2 + lh * 0.1); g.rotate(Math.PI / 2); g.fillText(run, 0, 0); g.restore(); y += w + lh * 0.2; continue;
+      }
+      g.fillText(run, x, y + lh / 2); y += lh;
+    }
+    return y;
+  };
+  const handCol = (c, x, y0) => {
+    const fsL = Math.round(S * 0.4), fsN = Math.round(S * 0.27);
+    pieceIcon(x, y0 + fsL * 0.5, fsL * 0.92, c === 0); let y = y0 + fsL * 1.25;
+    g.fillStyle = ink; g.font = `600 ${fsL}px ${F}`; y = vtext(c ? '後手' : '先手', x, y, fsL, fsL * 1.08);
+    const nm = pn(c); if (nm) { g.fillStyle = '#555'; g.font = `500 ${fsN}px ${F}`; y = vtext([...nm].slice(0, 12).join(''), x, y + fsN * 0.3, fsN, fsN * 1.1); }
+    y += S * 0.22;
+    const hs = [8, 6, 5, 7, 4, 3, 2, 1].filter(tp => tp < 8 && p.hand[c * 8 + tp] > 0);
+    g.fillStyle = ink;
+    if (!hs.length) { g.font = `500 ${fsN * 1.15}px ${F}`; g.fillStyle = '#666'; vtext('なし', x, y, fsN * 1.15, fsN * 1.3); return; }
+    const step = Math.max(S * 0.4, Math.min(S * 0.82, (oy + bh - y) / hs.length)), fs = Math.round(Math.min(S * 0.62, step * 0.86));
+    for (const tp of hs) {
+      const n = p.hand[c * 8 + tp];
+      g.fillStyle = ink; g.font = `500 ${fs}px ${F}`; g.fillText(KANJI[tp], x, y + step / 2);
+      if (n > 1) { g.font = `500 ${Math.round(fs * 0.52)}px ${F}`; g.textAlign = 'left'; g.fillText(String(n), x + fs * 0.52, y + step / 2 + fs * 0.2); g.textAlign = 'center'; }
+      y += step;
+    }
+  };
+  const hx = ox + bw + NUM + GAP + COL * 0.4;
+  handCol(0, hx, oy);
+  g.save(); g.translate(ox + bw / 2, oy + bh / 2); g.rotate(Math.PI); g.translate(-(ox + bw / 2), -(oy + bh / 2)); handCol(1, hx, oy); g.restore();
+  // caption under the board, centred
+  g.fillStyle = ink; g.textAlign = 'center'; g.font = `500 ${Math.max(16, Math.round(S * 0.3))}px ${F}`;
+  g.fillText(cur ? `${cur}手目 ${names[cur - 1]} まで` : '開始局面', ox + bw / 2, capY);
+  if (withKifu && names.length) {
+    g.textAlign = 'left'; g.font = `500 15px ${F}`;
+    const x0 = (W - KW * KC) / 2 + 8;
+    names.forEach((nm, i) => { const col = i % KC, row = (i / KC) | 0, x = x0 + col * KW, y = kifY + row * 25 + 12; g.fillStyle = grey; g.fillText(String(i + 1), x, y); g.fillStyle = ink; g.fillText(nm, x + 30, y); });
   }
-  g.font = `12px sans-serif`; g.fillStyle = '#8a7a60'; g.textAlign = 'right'; g.fillText('core-calmdust.github.io/aicoding/shogi', W - 14, H - 14);
+  g.font = `11px ${F}`; g.fillStyle = '#b4b4b4'; g.textAlign = 'center'; g.fillText('core-calmdust.github.io/aicoding/shogi', W / 2, H - 16);
   return cv;
 }
-let exportFmt = 'kif', exportImgMode = 'board', exportBlob = null;
+let exportFmt = 'kif', exportImgMode = 'board', exportBlob = null, exportTok = 0;
 function exportRender() {
   segSel('segExport', exportFmt); segSel('segImg', exportImgMode);
   const img = exportFmt === 'img';
   $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
   $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');
-  if (img) { const cv = diagramCanvas(exportImgMode === 'both'); $('#exportPreview').src = cv.toDataURL('image/png'); cv.toBlob(b => { exportBlob = b; }); return; }
+  if (img) { const tk = ++exportTok; exportBlob = null; diagramFontsReady().then(() => { if (tk !== exportTok) return; const cv = diagramCanvas(exportImgMode === 'both'); $('#exportPreview').src = cv.toDataURL('image/png'); cv.toBlob(b => { if (tk === exportTok) exportBlob = b; }); }); return; }
   $('#exportText').value = exportFmt === 'kif' ? exportKIF() : exportFmt === 'ki2' ? exportKI2() : exportFmt === 'csa' ? exportCSA() : exportFmt === 'usi' ? exportUSI() : shareUrl();
 }
 $('#btnShare').onclick = () => {
