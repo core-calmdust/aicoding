@@ -23,7 +23,7 @@ const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Histo
 const LTAB = {ja: 'ルール\nレッスン', en: 'Rules\nLessons', zh: '规则\n课程', ko: '규칙\n레슨', es: 'Reglas\nLecciones', fr: 'Règles\nLeçons', pt: 'Regras\nLições', de: 'Regeln\nLektionen', hi: 'नियम\nपाठ', ar: 'القواعد\nالدروس' };
 const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
-let rail = null, panel = null, learn = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
+let rail = null, panel = null, learn = null, nbox = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
 try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
 const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
 const tt = (k, d) => (typeof t === 'function' ? t(k) : d);
@@ -65,7 +65,30 @@ function build() {
     cur = k; saved = true; try { localStorage.setItem(KEY, k); } catch (er) {}
     setOpen(true); panel.scrollTop = 0;
   });
+  // move navigation (|< < ▶ > >|): a compact box at the bottom centre of the screen that mirrors the game's own #navBar
+  nbox = document.createElement('div'); nbox.id = 'ltNav'; nbox.className = 'navbar';
+  const nav = $('#navBar'); if (nav) nbox.innerHTML = nav.innerHTML;
+  nbox.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  nbox.addEventListener('click', e => {
+    const b = e.target.closest('button[data-n]'), nv = $('#navBar'); if (!b || !nv) return;
+    const r = nv.querySelector(`button[data-n="${b.dataset.n}"]`); if (r && !r.disabled) r.click();
+  });
   relabel();
+}
+// shown while there are moves to step through (as the phone strip of infotabs.js: a filled move list, not on the online screen)
+function navSync() {
+  if (!nbox) return;
+  const nav = $('#navBar'), k = $('#kifu');
+  const has = !!k && k.children.length > 0 && !k.querySelector(':scope > .empty');
+  const show = on && !!nav && has && !onlineOn();
+  if (document.body.classList.contains('lt-nav') !== show) document.body.classList.toggle('lt-nav', show);
+  if (!nav) return;
+  nav.querySelectorAll('button[data-n]').forEach(b => {
+    const c = nbox.querySelector(`button[data-n="${b.dataset.n}"]`); if (!c) return;
+    if (c.disabled !== b.disabled) c.disabled = b.disabled;
+    const pl = b.classList.contains('playing'); if (c.classList.contains('playing') !== pl) c.classList.toggle('playing', pl);
+    if (b.title && c.title !== b.title) c.title = b.title;
+  });
 }
 function relabel() {
   if (!rail) return;
@@ -102,13 +125,14 @@ function sync() {
     if (k === 'online') b.hidden = document.body.classList.contains('no-online');
   });
   if (document.body.dataset.lt !== cur) document.body.dataset.lt = cur;
+  navSync();
 }
 function enter() {
   if (on) return; on = true;
   if (!rail) build();
   homes = boxes().map(([k, el]) => ({ el, parent: el.parentNode, next: el.nextSibling, k }));
   const app = $('.app');
-  app.appendChild(rail); app.appendChild(panel);
+  app.appendChild(rail); app.appendChild(panel); app.appendChild(nbox);
   for (const h of homes) { h.el.dataset.ltc = h.k; panel.appendChild(h.el); }
   document.body.classList.add('lt-on');
   if (!saved && coachOk()) cur = 'coach';
@@ -118,8 +142,8 @@ function leave() {
   if (!on) return; on = false; open = false;
   for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
   homes = [];
-  rail.remove(); panel.remove();
-  document.body.classList.remove('lt-on', 'lt-open'); delete document.body.dataset.lt;
+  rail.remove(); panel.remove(); nbox.remove();
+  document.body.classList.remove('lt-on', 'lt-open', 'lt-nav'); delete document.body.dataset.lt;
   refit();
 }
 function refit() {
@@ -175,6 +199,9 @@ new MutationObserver(() => {
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 { const rc = $('#reviewCard'); if (rc) new MutationObserver(() => { const rv = rc.classList.contains('show'); if (rv && !rvWas) cur = 'coach'; rvWas = rv; sync(); }).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
 new MutationObserver(() => { const ov = $('.grc-ov'); if (recOn() && (!ov || !ov.classList.contains('show'))) { document.body.classList.remove('lt-rec'); sync(); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+{ const k = $('#kifu'), nv = $('#navBar');
+  if (k) new MutationObserver(navSync).observe(k, { childList: true });
+  if (nv) new MutationObserver(navSync).observe(nv, { subtree: true, attributes: true, attributeFilter: ['disabled', 'class', 'title'] }); }
 new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 if (MQ.addEventListener) MQ.addEventListener('change', check); else MQ.addListener(check);
 addEventListener('resize', () => fit());

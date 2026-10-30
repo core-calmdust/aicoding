@@ -1156,9 +1156,15 @@ html.lnd #lndLearn button{display:flex;align-items:center;gap:12px;width:100%;pa
 html.lnd #lndLearn button svg{width:24px;height:24px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 html.lnd #lndLearn button:active{background:rgba(226,194,117,.12)}
 /* the move navigation (rotated page: it lives in a fixed strip) sits at the bottom of the 形勢・棋譜 page */
-html.lnd body.it-nav #itNav{display:none!important}
-html.lnd body.it-nav.lnd-open[data-lt=kifu]:not(.lnd-drag) #itNav{display:flex!important;position:fixed!important;left:var(--lnd-dl)!important;right:auto!important;top:auto!important;bottom:12px!important;width:var(--lnd-dw)!important;padding:0 8px!important;border:0!important;background:none!important;z-index:57}
-html.lnd body.it-nav[data-lt=kifu] #lndDrawer{padding-bottom:52px}
+/* the move navigation: a compact box at the bottom centre over the board (left of the rail, or of the open drawer);
+   land.js mirrors the game's #navBar into it (the original, in the 形勢 box or the phone strip, stays hidden here) */
+html.lnd #itNav, html.lnd #lndDrawer #navBar{display:none!important}
+#lndNav{display:none}
+html.lnd body.lnd-nav #lndNav{display:flex;position:absolute;z-index:57;bottom:6px;left:max(8px,env(safe-area-inset-left));right:calc(60px + 8px + max(8px,env(safe-area-inset-right)));
+  width:max-content;max-width:calc(100% - 16px);margin:0 auto;padding:5px 6px;gap:4px;flex-wrap:nowrap;white-space:nowrap;box-sizing:border-box;
+  background:rgba(8,14,12,.9);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px -4px rgba(0,0,0,.7);transition:right .34s cubic-bezier(.2,1.25,.4,1)}
+html.lnd body.lnd-nav:is(.lnd-open,.lnd-rec,.mtab-online) #lndNav{right:calc(60px + 16px + max(8px,env(safe-area-inset-right)) + min(400px,50%))}
+html.lnd #lndNav button{flex:none;width:40px;height:30px}
 /* online and the record: they fill the drawer's place */
 html.lnd body.mtab-online .dock{left:var(--lnd-dl)!important;right:auto!important;top:var(--lnd-dt)!important;bottom:6px!important;width:var(--lnd-dw)!important;border-radius:14px;border:1px solid var(--line);z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
 html.lnd body.mtab-online{overflow:hidden}
@@ -1502,7 +1508,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="app.js?v=20261030dr1"></script>
 <script src="op.js?v=20261021opan"></script>
 <script src="online-ui.js?v=20261030ck1"></script>
-<script src="land.js?v=4"></script>
+<script src="land.js?v=5"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
