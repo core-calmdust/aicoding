@@ -1500,6 +1500,7 @@ addEventListener('keydown', e => {
     if (e.code === 'Space') e.preventDefault();
     if (e.repeat) return; IN.keys[e.code] = true;
     if (e.code === 'KeyF') toggleFS();
+    if (e.code === 'KeyP') perf.show = !perf.show; // 描画の状態を表示（確認用）
     if ((e.code === 'Space' || e.code === 'Enter') && S.mode !== 'play' && S.mode !== 'evo') startGame();
 });
 addEventListener('keyup', e => { IN.keys[e.code] = false; });
@@ -1719,6 +1720,7 @@ function drawUI() {
     if (S.dmg > 0) { const gr = ug.createRadialGradient(uiC.width / 2, uiC.height / 2, uiC.height * 0.3, uiC.width / 2, uiC.height / 2, uiC.width * 0.62); gr.addColorStop(0, 'rgba(255,40,80,0)'); gr.addColorStop(1, `rgba(255,40,80,${0.55 * S.dmg})`); ug.fillStyle = gr; ug.fillRect(0, 0, uiC.width, uiC.height); }
     if (S.mode === 'play' || S.mode === 'evo') { drawHUD(); drawLocks(); if (S.mode === 'play') drawReticle(); }
     drawOverlay();
+    if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}`, 20, VH - 46, 12, '#fff', '#fff', 'left', 0.9);
     gameEl.classList.toggle('aim', S.mode === 'play');
 }
 
@@ -1730,25 +1732,30 @@ const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 const perf = { n: 0, late: 0, good: 0, half: false, skip: false, grace: 0, nat: 1 / 60, lastRaf: -1, natH: [] };
 // 画面サイズやフルスクリーンが変わった直後は描画が一時的に詰まるので、その間は判定しない。
 // 判定はやり直し（下げた解像度・半分の更新も元に戻して測り直す）
-function perfReset() { perf.n = perf.late = perf.good = 0; perf.half = false; perf.grace = 2.0; dtHist.length = 0; perf.natH.length = 0; last = -1; PR_CAP = 9; if (PR < PR_T) setPR(PR_T); }
+function perfReset() { perf.n = perf.late = perf.good = 0; perf.half = false; perf.noRaise = false; perf.grace = 2.0; dtHist.length = 0; perf.natH.length = 0; last = -1; PR_CAP = 9; if (PR < PR_T) setPR(PR_T); }
 addEventListener('resize', perfReset); document.addEventListener('fullscreenchange', perfReset); document.addEventListener('visibilitychange', perfReset);
 function setPR(v) { PR = v; renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false); composer.setPixelRatio(PR); composer.setSize(VW, VH); }
 function adapt(raw, ref) {
-    if (perf.grace > 0) { perf.grace -= raw; perf.n = perf.late = 0; return; }
-    perf.n++; if (raw > ref * 1.45) perf.late++;
+    if (perf.grace > 0) { perf.grace -= raw; perf.n = perf.late = 0; perf.sum = 0; return; }
+    // 遅れの判定は「画面の更新間隔」と比べる（以前は中央値と比べていたので、ずっと50fps台でも下げられなかった）
+    const tgt = (perf.vs || 1 / 60) * (perf.half ? 2 : 1);
+    perf.n++; if (raw > tgt * 1.3) perf.late++; perf.sum = (perf.sum || 0) + raw;
     if (perf.n < 90) return;
-    if (perf.late > 5) { perf.good = 0; if (PR > 1.001) { PR_CAP = Math.max(1, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && perf.nat < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
-    else if (perf.late === 0 && ++perf.good >= 5 && PR < PR_T - 0.001) { perf.good = 0; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
-    perf.n = 0; perf.late = 0;
+    perf.win = (perf.win || 0) + 1;
+    if (perf.late > 4) { // 重い: 解像度を下げる（最低0.85）。上げた直後にまた重くなったら、その解像度には戻さない
+        perf.good = 0; if (perf.win - (perf.raisedAt ?? -99) <= 3) perf.noRaise = true;
+        if (PR > 0.851) { PR_CAP = Math.max(0.85, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && (perf.vs || 1 / 60) < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
+    else if (perf.late === 0 && !perf.noRaise && ++perf.good >= 8 && PR < PR_T - 0.001) { perf.good = 0; perf.raisedAt = perf.win; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
+    perf.fps = perf.n / perf.sum; perf.sum = 0; perf.n = 0; perf.late = 0;
 }
 const damp = (x, v, to, w, dt) => { const k = Math.min(dt, 0.05), a = w * w * (to - x) - 2 * w * v; v += a * k; return [x + v * k, v]; };
 const sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 function frame(now) {
     requestAnimationFrame(frame);
     // 画面本来の更新間隔（間引く前）を測る。60Hzの画面で半分の更新（30fps）にはしない
-    if (perf.lastRaf >= 0) { const r = (now - perf.lastRaf) / 1000; if (r > 0 && r < 0.1) { perf.natH.push(r); if (perf.natH.length > 31) perf.natH.shift(); perf.nat = [...perf.natH].sort((a, b) => a - b)[perf.natH.length >> 1]; } }
+    if (perf.lastRaf >= 0) { const r = (now - perf.lastRaf) / 1000; if (r > 0 && r < 0.1) { perf.natH.push(r); if (perf.natH.length > 31) perf.natH.shift(); const so = [...perf.natH].sort((a, b) => a - b); perf.nat = so[so.length >> 1]; const lo = so[Math.floor(so.length * 0.15)]; perf.vs = lo < 0.0076 ? 1 / 144 : lo < 0.0098 ? 1 / 120 : 1 / 60; } }
     perf.lastRaf = now;
-    if (perf.half && perf.natH.length > 20 && perf.nat > 0.0125) { perf.half = false; dtHist.length = 0; }
+    if (perf.half && perf.natH.length > 20 && (perf.vs || 1 / 60) > 0.0125) { perf.half = false; dtHist.length = 0; }
     if (perf.half) { perf.skip = !perf.skip; if (perf.skip) return; }
     const raw = last < 0 ? 1 / 60 : (now - last) / 1000; last = now;
     dtHist.push(raw); if (dtHist.length > 31) dtHist.shift();
