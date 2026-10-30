@@ -1465,7 +1465,7 @@ function updateEnemy(e, dt) {
 function removeEnemy(e) { e.alive = false; scene.remove(e.obj); if (e.obj.userData.ck) (ckPool[e.obj.userData.ck] = ckPool[e.obj.userData.ck] || []).push(e.obj); }
 
 // ---------------- 敵の弾（ロックして撃ち落とせる）----------------
-const BN = 90, bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3a5a });
+const BN = 90, bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3a5a, transparent: true, opacity: 0.42, depthWrite: false }); // 敵弾は半透明
 enemyFog(bulletMat);
 const bulletMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(21, 14, 10), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
 const bullets = []; const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _bs = new THREE.Vector3(), _bp = new THREE.Vector3(), _be = new THREE.Euler();
@@ -1681,7 +1681,7 @@ function updateItems(dt) {
     for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; it.t += dt; it.rz -= 300 * dt;
         it.x += (S.x - it.x) * Math.min(1, dt * 0.25); it.y += (S.y - it.y) * Math.min(1, dt * 0.25); // ゆっくり近くへ寄ってくる
         it.obj.position.set(it.x, it.y + Math.sin(it.t * 3) * 6, -(S.d + it.rz)); it.core.rotation.set(it.t * 1.5, it.t * 2, 0); it.cross.rotation.z = it.t; it.obj.children[2].rotation.set(-it.t, it.t * 0.7, 0);
-        const got = S.mode === 'play' && Math.abs(it.rz) < 30 && Math.hypot(it.x - S.x, it.y - S.y) < 46;
+        const got = S.mode === 'play' && Math.abs(it.rz) < 24 && Math.hypot(it.x - S.x, it.y - S.y) < 20 + HIT_R * 1.5; // 胴体の1.5倍の範囲にアイテムが触れたら取得
         if (got) { S.hp = Math.min(3, S.hp + 1); sfxHeal(); boom(it.obj.position.clone(), [0x6dffb0, 0xffffff], 18); S.banner = { t: 0, n: 'HP +1', m: '' }; }
         if (got || it.rz < -150) { disposeObj(it.obj); items.splice(i, 1); } }
 }
