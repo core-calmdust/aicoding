@@ -1332,6 +1332,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="overlay" id="exportOverlay">
   <div class="modal" style="width:min(560px,100%)">
     <h2 data-i18n="ex2.title"></h2>
+    <div id="exportMeta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span id="exportTtlL" style="white-space:nowrap;opacity:.85"></span><input id="exportTtl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input id="exportDate" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span id="exportDateL"></span></label></div>
     <div class="seg" id="segExport" style="margin-bottom:10px"><button data-v="kif">KIF</button><button data-v="ki2">KI2</button><button data-v="csa">CSA</button><button data-v="usi">USI</button><button data-v="url">URL</button><button data-v="img" data-i18n="ex2.img"></button></div>
     <textarea id="exportText" readonly style="width:100%;height:220px;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:vertical"></textarea>
     <div id="exportImg" class="hidden" style="text-align:center">
@@ -1409,6 +1410,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
+<script src="../shared/export.js?v=2"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -3181,9 +3183,12 @@ function shareUrl() {
 // ---- export: KIF / KI2 / CSA / USI / URL / image (局面図)
 const CSA_PC = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY'];
 const pad2 = n => String(n).padStart(2, '0');
+// title / date chosen in the share dialog (shared/export.js keeps them per game): KIF / KI2 棋戦： + 開始日時：, CSA $EVENT / $START_TIME
+const exMeta = () => window.RecordExport ? RecordExport.meta('shogi') : { title: '', date: true, day: new Date() };
+const ymdSlash = d => `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`;
 function kifHeader() {
-  const d = new Date();
-  return `開始日時：${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}\n手合割：${t('handi')[HANDI.indexOf(game.start)] || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n`;
+  const m = exMeta();
+  return `${m.date ? `開始日時：${ymdSlash(m.day)}\n` : ''}${m.title ? `棋戦：${m.title.replace(/[\r\n]+/g, ' ')}\n` : ''}手合割：${t('handi')[HANDI.indexOf(game.start)] || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n`;
 }
 function endWord() { const o = game.over; if (!o) return ''; return o.reason === 'declare' ? '入玉勝ち' : o.reason === 'rep' || o.winner < 0 ? '千日手' : o.reason === 'time' ? '切れ負け' : '投了'; }
 function exportKIF() {
@@ -3202,7 +3207,8 @@ function exportKI2() {
 }
 function exportCSA() {
   const p = new E.Position(); p.setSfen(game.start);
-  let s = `V2.2\nN+${playerName(0)}\nN-${playerName(1)}\n`;
+  const mt = exMeta();
+  let s = `V2.2\nN+${playerName(0)}\nN-${playerName(1)}\n${mt.title ? `$EVENT:${mt.title.replace(/[\r\n]+/g, ' ')}\n` : ''}${mt.date ? `$START_TIME:${ymdSlash(mt.day)}\n` : ''}`;
   if (game.start === HANDI[0]) s += 'PI\n+\n';
   else {
     for (let r = 1; r <= 9; r++) { let line = 'P' + r; for (let f = 9; f >= 1; f--) { const q = p.board[E.makeSq(f, r)]; line += q ? (E.colorOf(q) ? '-' : '+') + CSA_PC[E.typeOf(q)] : ' * '; } s += line + '\n'; }
@@ -3243,12 +3249,18 @@ function diagramCanvas(withKifu) {
   // horizontal: [pad | hand col | gap | (rank-number band, mirrored) | board | rank numbers | gap | hand col | pad]
   const NUM = Math.round(S * 0.42), GAP = Math.round(S * 0.3), COL = Math.round(S * 0.9), PAD = Math.round(S * 0.45);
   const side = PAD + COL + GAP + NUM, W = Math.max(bw + side * 2, 460);
-  const ox = (W - bw) / 2, TOPN = Math.round(S * 0.5), oy = PAD + TOPN;
+  const mt = exMeta(), ds = mt.date && window.RecordExport ? RecordExport.dateText(mt.day, LANG) : '', HDR = mt.title || ds ? 44 : 0;
+  const ox = (W - bw) / 2, TOPN = Math.round(S * 0.5), oy = PAD + TOPN + HDR;
   const KC = 4, KW = Math.min(170, Math.max(140, (W - 60) / KC)), krows = withKifu ? Math.ceil(names.length / KC) : 0;
   const capY = oy + bh + Math.round(S * 0.62), kifY = capY + 34, H = (withKifu ? kifY + 8 + krows * 25 + 12 : capY + 14) + 34;
   const cv = document.createElement('canvas'); const dpr = 2; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  if (HDR) {   // heading: title (left) and date (right)
+    const HM = 22; g.textBaseline = 'alphabetic'; let dw = 0;
+    if (ds) { g.font = `500 15px ${F}`; dw = g.measureText(ds).width + 16; g.fillStyle = '#555'; g.textAlign = 'right'; g.fillText(ds, W - HM, 36); }
+    if (mt.title) { let fs = 22; g.font = `700 ${fs}px ${F}`; while (fs > 14 && g.measureText(mt.title).width > W - 2 * HM - dw) { fs--; g.font = `700 ${fs}px ${F}`; } let tt = mt.title; while (tt.length > 1 && g.measureText(tt).width > W - 2 * HM - dw) tt = tt.slice(0, -2) + '…'; g.fillStyle = ink; g.textAlign = 'left'; g.fillText(tt, HM, 36); }
+  }
   g.textAlign = 'center'; g.textBaseline = 'middle';
   // last move
   let lastTo = -1; try { if (cur > 0) lastTo = E.mTo(p.fromUsi(game.moves[cur - 1])); } catch (e) {}
@@ -3323,6 +3335,14 @@ function diagramCanvas(withKifu) {
 let exportFmt = 'kif', exportImgMode = 'board', exportBlob = null, exportTok = 0;
 function exportRender() {
   segSel('segExport', exportFmt); segSel('segImg', exportImgMode);
+  if (window.RecordExport) {
+    const m = exMeta(), ti = $('#exportTtl');
+    $('#exportTtlL').textContent = RecordExport.tx('ttl', null, LANG); $('#exportDateL').textContent = RecordExport.tx('date', null, LANG);
+    ti.placeholder = LANG === 'ja' ? '将棋' : LANG === 'zh' ? '日本将棋' : LANG === 'ko' ? '쇼기' : 'Shogi';
+    if (document.activeElement !== ti) ti.value = m.title;
+    $('#exportDate').checked = m.date;
+  }
+  $('#exportMeta').style.display = window.RecordExport && exportFmt !== 'url' && exportFmt !== 'usi' ? 'flex' : 'none';
   const img = exportFmt === 'img';
   $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
   $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');
@@ -3337,6 +3357,10 @@ $('#btnShare').onclick = () => {
 $('#segExport').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportFmt = b.dataset.v; try { localStorage.setItem('shogi-export-fmt', exportFmt); } catch (er) {} exportRender(); };
 $('#segImg').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportImgMode = b.dataset.v; exportRender(); };
 $('#exportClose').onclick = () => hideOverlay('#exportOverlay');
+{ let tm = 0; const ti = $('#exportTtl');
+  ['keydown', 'keyup', 'keypress'].forEach(tp => ti.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter') ti.blur(); }));
+  ti.addEventListener('input', () => { if (window.RecordExport) RecordExport.setMeta('shogi', { title: ti.value }); clearTimeout(tm); tm = setTimeout(exportRender, exportFmt === 'img' ? 220 : 0); });
+  $('#exportDate').onchange = e => { if (window.RecordExport) RecordExport.setMeta('shogi', { date: e.target.checked }); exportRender(); }; }
 $('#exportOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#exportOverlay'); });
 const stamp = () => { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; };
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
