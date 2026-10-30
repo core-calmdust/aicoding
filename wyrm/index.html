@@ -145,7 +145,7 @@ const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(Math.r
 composer.setPixelRatio(PR); composer.setSize(VW, VH);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.62, 0.4, 0.42);
-{ const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(Math.round(w * 0.3), Math.round(h * 0.3)); /* にじみは低い解像度で（見た目はほぼ同じで軽い） */ bloom.setSize(VW * PR, VH * PR); }
+{ const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(w, h); /* にじみは描画と同じ解像度で（低解像度だと細い線の光がちらつく） */ bloom.setSize(VW * PR, VH * PR); }
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
