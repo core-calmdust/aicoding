@@ -582,36 +582,37 @@ const MORPH_V = `
 	float r2 = fract(aR * 7.31);
 	float mk = clamp(uK * 2.2 - aR * 1.2, 0.0, 1.0); mk = mk * mk * (3.0 - 2.0 * mk); vK = mk;
 	vec3 loc = transformed - aC;
-	float tb = mk * (uT * (1.2 + r2 * 3.0) + aR * 6.2832), tc = cos(tb), ts = sin(tb);
-	loc = vec3(tc * loc.x - ts * loc.z, loc.y * mix(1.0, tc, mk), ts * loc.x + tc * loc.z) * mix(1.0, 0.6, mk) * (1.0 - uF);
+	float tb = mk * uA * (uT * (1.2 + r2 * 3.0) + aR * 6.2832), tc = cos(tb), ts = sin(tb);
+	loc = vec3(tc * loc.x - ts * loc.z, loc.y * mix(1.0, tc, mk), ts * loc.x + tc * loc.z) * mix(1.0, 0.6, mk * uA) * (1.0 - uF);
 	float an = mk * ((aR - 0.5) * 5.0 + uT * (0.5 + r2 * 0.9) * (aR < 0.5 ? -1.0 : 1.0));
 	vec2 dd = vec2(cos(an) * aD.x - sin(an) * aD.y, sin(an) * aD.x + cos(an) * aD.y);
-	vec3 wob = vec3(sin(uT * 1.7 + aR * 40.0), cos(uT * 1.3 + r2 * 40.0), sin(uT * 1.1 + aR * 17.0)) * 28.0 * mk;
-	transformed = aC + loc + vec3(dd, aD.z) * mk + wob;`;
-function morphMat(base, u, f) {
+	vec3 wob = vec3(sin(uT * 1.7 + aR * 40.0), cos(uT * 1.3 + r2 * 40.0), sin(uT * 1.1 + aR * 17.0)) * 28.0 * mk * uA;
+	transformed = aC + loc + vec3(dd, aD.z) * mk * uA + wob;`;
+const AMP1 = { value: 1 };
+function morphMat(base, u, f, amp = AMP1) {
     const m = base.clone(); m.userData = {};
     const add = base.blending === THREE.AdditiveBlending;
     m.onBeforeCompile = sh => {
-        sh.uniforms.uK = u; sh.uniforms.uF = f; sh.uniforms.uT = uTime;
-        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nuniform float uF;\nuniform float uT;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + MORPH_V);
+        sh.uniforms.uK = u; sh.uniforms.uF = f; sh.uniforms.uT = uTime; sh.uniforms.uA = amp;
+        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nuniform float uF;\nuniform float uT;\nuniform float uA;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + MORPH_V);
         sh.fragmentShader = 'varying float vK;\nuniform float uF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\t' + (add ? 'diffuseColor.rgb *= (1.0 - uF) * (1.0 - vK * 0.35);' : ''));
     };
     m.customProgramCacheKey = () => 'morph2-' + (add ? 'a' : 'o');
     return m;
 }
 function morphify(grp, cy) {
-    const u = { value: 1 }, f = { value: 0 }, mats = new Map();
+    const u = { value: 1 }, f = { value: 0 }, a = { value: 1 }, mats = new Map();
     grp.traverse(o => { if ((o.isMesh || o.isLineSegments) && o.material.userData.shared) {
         addMorph(o.geometry, o.isLineSegments ? 2 : 3, cy);
-        if (!mats.has(o.material)) mats.set(o.material, morphMat(o.material, u, f)); o.material = mats.get(o.material);
+        if (!mats.has(o.material)) mats.set(o.material, morphMat(o.material, u, f, a)); o.material = mats.get(o.material);
         o.geometry.computeBoundingSphere(); o.geometry.boundingSphere.radius += 330; } }); // 散った破片も映るよう判定を広げる
-    u.f = f; return u;
+    u.f = f; u.a = a; return u;
 }
 // 崩れるのは速く、混沌から組み上がるのはゆっくり（破片ごとに時間差があるので徐々にステージになる）
-const M_OUT = 2.4, M_IN = 0.62, M_FADE = 0.9;
+const M_OUT = 3.2, M_IN = 0.62, M_FADE = 0.55;
 function tickK(c, dt) {
     if (c.delay > 0) { c.delay -= dt; return; }
-    const sp = c.to > c.k ? M_OUT : M_IN; c.k += Math.max(-dt * sp, Math.min(dt * sp, c.to - c.k)); c.u.value = c.k;
+    const sp = c.to > c.k ? M_OUT : (c.spIn || M_IN); c.k += Math.max(-dt * sp, Math.min(dt * sp, c.to - c.k)); c.u.value = c.k;
     if (c.to === 1 && c.k >= 1) { c.fade = Math.min(1, (c.fade || 0) + dt / M_FADE); c.u.f.value = c.fade; } // 混沌のまま漂ってから消える
 }
 const dying = [];
@@ -693,7 +694,9 @@ function buildChunk(ci) {
     const cy = cave((ci + 0.5) * CH).cy, u = morphify(grp, cy);
     scene.add(grp);
     const mid = (ci + 0.5) * CH;
-    return { obj: grp, u, k: 1, to: 0, delay: S.t < S.evoUntil ? 0.2 + waveDelay(mid - S.d) * 0.4 : 0 }; // 崩れた破片の混沌の中から組み上がる
+    if (S.t < S.startUntil) { u.a.value = 0.3; return { obj: grp, u, k: 1, to: 0, delay: 0, spIn: 1 }; } // 開始時: 近くから軽く集まる（1秒）
+    if (S.t < S.evoUntil) return { obj: grp, u, k: 1, to: 0, delay: 0.1 + waveDelay(mid - S.d) * 0.25, spIn: 1 / 0.9 }; // 進化中: 混沌から組み上がる
+    return { obj: grp, u, k: 1, to: 0, delay: 0 };
 }
 function disposeObj(o) {
     scene.remove(o);
@@ -911,23 +914,23 @@ function resetWorld() {
     S.d = 0; S.y = cave(0).cy; S.vy = 0; S.speed = 320; S.score = 0; S.deadT = 0; S.camY = S.y + 34; S.camV = 0; S.lookY = S.y + 26; S.lookV = 0; S.yAvg = S.y;
     nextGateD = 1e9; gateIdx = 0; prevGc = 0;
     dragon.g.rotation.set(0, 0, 0); dragon.resetTrails(); S.evoUntil = 0;
-    updateChunks(S.d, 99);
+    S.startUntil = S.t + 0.05; updateChunks(S.d, 99);
 }
 function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); }
 // 10ゲートごとの進化: 竜は中空に浮かんで無敵。世界が分解して虚空になり、新しい形で組み上がってからゲーム再開
-const EVO_T = 2.0;
+const EVO_T = 1.5;
 function evolve() {
     S.stage++; setPal(S.stage);
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.evoY = S.y; S.lastAutoFlap = 0;
     S.warpT = 0; sfxEvolve();
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap();
     // 世界の分解と融合: 竜のまわりから波のように、いまの洞窟がポリゴンと線に分かれて散り、新しい形の洞窟が組み上がる
-    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.5; dying.push(c); } chunks.clear();
+    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; dying.push(c); } chunks.clear();
     S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
-        const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.5 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; if (gt.ring) gt.ring.visible = false; dying.push(old);
+        const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; if (gt.ring) gt.ring.visible = false; dying.push(old);
         if (gt.passed) { gates.splice(i, 1); continue; }
-        buildGate(gt); gt.delay = 0.35 + old.delay; }
+        buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }
     field.recolor();
     const p0 = new THREE.Vector3(0, S.y, -S.d); [PAL.cry[0], PAL.cry[1]].forEach((c, i) => setTimeout(() => burstRing(p0.clone().setZ(-S.d - 60), c, 1.6 + i * 0.5, false, 0.45, 3), i * 120));
     const el = document.getElementById('stage'); el.style.setProperty('--sc', '#' + _c(PAL.line ? PAL.line[0] : 0xffffff).getHexString());
