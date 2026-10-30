@@ -1715,18 +1715,18 @@ function spawnHexGate() {
     ].map(([r, n, k, sp, m, z]) => { const o = new THREE.LineSegments(star(r, n, k, z), m); o.userData.sp = sp; g.add(o); return o; });
     // 外側の八角形のベゼルと、ねじの頭
     const bez = new THREE.Mesh(new THREE.RingGeometry(HEX_R + 108, HEX_R + 116, 8, 1), ringMat); bez.rotation.z = Math.PI / 8; g.add(bez);
-    // ゲートの周り: 穴のあいた隔壁（半透明の壁＋格子）と、枠から壁へ伸びる支柱で「門」に見せる
+    // ゲートの周り: 穴のまわりを、凹凸のあるポリゴンの装甲板で埋めた隔壁にする（＋枠から伸びる支柱）
     {
-        const W = 520, H = 420, sh = new THREE.Shape([[-W, -H], [W, -H], [W, H], [-W, H]].map(([a, b]) => new THREE.Vector2(a, b)));
-        const hole = new THREE.Path(); for (let k = 0; k <= 6; k++) { const a = k / 6 * Math.PI * 2 + Math.PI / 6; k ? hole.lineTo(Math.cos(a) * (HEX_R + 116), Math.sin(a) * (HEX_R + 116)) : hole.moveTo(Math.cos(a) * (HEX_R + 116), Math.sin(a) * (HEX_R + 116)); } sh.holes.push(hole);
-        const wallMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); enemyFog(wallMat);
-        const wall = new THREE.Mesh(new THREE.ShapeGeometry(sh), wallMat); wall.position.z = -6; g.add(wall);
-        const gp = []; for (let v = -H; v <= H; v += 60) gp.push(-W, v, -6, W, v, -6); for (let u = -W; u <= W; u += 60) gp.push(u, -H, -6, u, H, -6);
-        const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
-        const gridMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false }); enemyFog(gridMat);
-        // 格子は穴の内側を描かないよう、穴の外側だけに切り抜く
-        gridMat.onBeforeCompile = sh2 => { sh2.vertexShader = sh2.vertexShader.replace('void main() {', 'varying vec2 vP;\nvoid main() { vP = position.xy;'); sh2.fragmentShader = sh2.fragmentShader.replace('void main() {', 'varying vec2 vP;\nvoid main() { vec2 q = abs(vP); if (max(q.x * 0.866 + q.y * 0.5, q.y) < ' + (HEX_R + 116).toFixed(1) + ') discard;'); };
-        g.add(new THREE.LineSegments(gg, gridMat));
+        const R0 = HEX_R + 116, R1 = 640, NA = 24, NR = 5, pos = [], colA = [], c1 = _steel.clone().lerp(col, 0.5).multiplyScalar(1.4), c2 = _steel.clone().lerp(col, 0.2).multiplyScalar(1.1);
+        const hexR = a => { const s6 = Math.PI / 3, t = ((a - Math.PI / 6) % s6 + s6) % s6 - s6 / 2; return R0 * 0.866 / Math.cos(t) / 0.866 * Math.cos(Math.PI / 6) ; };
+        const P = (i, j) => { const a = i / NA * Math.PI * 2, r0 = hexR(a), f = j / NR, r = r0 + (R1 - r0) * f * f, z = (j && j < NR ? (hash2(i, j + 50) - 0.5) * 26 : 0) - 8; return [Math.cos(a) * r, Math.sin(a) * r, z]; };
+        for (let i = 0; i < NA; i++) for (let j = 0; j < NR; j++) {
+            const A = P(i, j), B = P(i + 1, j), C = P(i + 1, j + 1), D = P(i, j + 1), cc = (i + j) % 2 ? c1 : c2;
+            [A, B, C, A, C, D].forEach(v => { pos.push(...v); colA.push(cc.r, cc.g, cc.b); });
+        }
+        const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.Float32BufferAttribute(colA, 3)); pg.computeVertexNormals();
+        const panelMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: col.clone().multiplyScalar(0.12), side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }); enemyFog(panelMat);
+        g.add(new THREE.Mesh(pg, panelMat), new THREE.LineSegments(new THREE.EdgesGeometry(pg, 8), lineMat));
         const struts = []; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, L = 360, b = new THREE.BoxGeometry(L, 10, 14); b.translate(HEX_R + 110 + L / 2, 0, 0); b.rotateZ(a); struts.push(b); }
         g.add(new THREE.Mesh(mergeGeometries(struts), ringMat));
     }
@@ -1735,7 +1735,6 @@ function spawnHexGate() {
     g.position.set(x, y, -d); scene.add(g);
     hexGate = { d, x, y, obj: g, ring, outer, inner, face, layers, t: 0, done: false };
     for (let i = gates.length - 1; i >= 0; i--) if (Math.abs(gates[i].d - d) < 520) { disposeObj(gates[i].obj); gates.splice(i, 1); } // 近くの壁は取り除く
-    S.banner = { t: 0, n: 'GATE', m: 'PASS THROUGH' };
 }
 function updateHexGate(dt) {
     const h = hexGate; if (!h) return; h.t += dt;
@@ -1962,7 +1961,7 @@ function frame(now) {
         const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
         S.rx += (tx - S.rx) * Math.min(1, dt * 2.2); S.ry += (ty - S.ry) * Math.min(1, dt * 2.2); /* 照準はもっさり重めについてくる */ S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
-    if (S.mode === 'play' && !hexGate) { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
+    if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     litEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
