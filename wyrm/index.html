@@ -1694,55 +1694,44 @@ function damage() {
 }
 // ---------------- 六角形のゲート: ノルマ達成後に出現し、くぐると次のステージへ（くぐれないとダメージを受けて次へ）----------------
 let hexGate = null;
-const HEX_R = 135; // 穴の見た目の半径（最初の版と大きい版の間）
+const HEX_R = 100; // 中央の穴の半径
 function spawnHexGate() {
-    const d = S.d + 1700, cv = cave(d), g = new THREE.Group(), col = _c(PAL.cry[0]).lerp(_c(0xffffff), 0.35);
-    const ringMat = new THREE.MeshBasicMaterial({ color: col }), lineMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
-    const faceMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-    [ringMat, lineMat, faceMat].forEach(enemyFog);
-    const hex = (r, th, dep) => { const parts = []; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + Math.PI / 6, L = r; const b = new THREE.BoxGeometry(L + th * 0.6, th, dep); b.rotateZ(a + Math.PI / 2); b.translate(Math.cos(a) * r * 0.866, Math.sin(a) * r * 0.866, 0); parts.push(b); } return mergeGeometries(parts); };
-    const ring = new THREE.Mesh(hex(HEX_R + 8, 7, 10), ringMat), outer = new THREE.LineSegments(new THREE.EdgesGeometry(hex(HEX_R + 26, 3, 3)), lineMat);
-    const inner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(HEX_R, 6)), lineMat), face = new THREE.Mesh(new THREE.CircleGeometry(HEX_R, 6), faceMat);
-    g.add(ring, outer, inner, face);
-    // 腕時計の文字盤のように、星形・多角形のフレームを何重にも重ね、それぞれ違う向き・速さで高速に回す
-    const silver = new THREE.LineBasicMaterial({ color: 0xe8eef8, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }); enemyFog(silver);
-    const star = (r, n, k, z = 0) => { const p = []; for (let i = 0; i < n; i++) { const a0 = i / n * Math.PI * 2, a1 = ((i + k) % n) / n * Math.PI * 2; p.push(Math.cos(a0) * r, Math.sin(a0) * r, z, Math.cos(a1) * r, Math.sin(a1) * r, z); }
-        const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); return gg; };
-    const layers = [ // [半径, 角数, 何個先へ結ぶか, 回転速度, 材質, 奥行き]
-        // 線が穴の内側に入らない組み合わせだけ（中がすっきり見えて通れる）
-        [HEX_R + 20, 8, 1, 3.2, lineMat, 4], [HEX_R + 30, 6, 1, -2.6, silver, -4], [HEX_R + 40, 12, 1, 1.9, silver, 8], [HEX_R + 50, 16, 3, -1.5, lineMat, -8],
-        [HEX_R + 60, 8, 2, 2.3, silver, 12], [HEX_R + 70, 4, 1, -3.4, lineMat, -12], [HEX_R + 72, 4, 1, 3.4, silver, 14], [HEX_R + 100, 10, 3, -0.9, silver, 0],
-    ].map(([r, n, k, sp, m, z]) => { const o = new THREE.LineSegments(star(r, n, k, z), m); o.userData.sp = sp; g.add(o); return o; });
-    // 外側の八角形のベゼルと、ねじの頭
-    const bez = new THREE.Mesh(new THREE.RingGeometry(HEX_R + 108, HEX_R + 116, 8, 1), ringMat); bez.rotation.z = Math.PI / 8; g.add(bez);
-    // ゲートの周り: 穴のまわりを、凹凸のあるポリゴンの装甲板で埋めた隔壁にする（＋枠から伸びる支柱）
-    {
-        const R0 = HEX_R + 116, R1 = 640, NA = 24, NR = 5, pos = [], colA = [], c1 = _steel.clone().lerp(col, 0.5).multiplyScalar(1.4), c2 = _steel.clone().lerp(col, 0.2).multiplyScalar(1.1);
-        const hexR = a => { const s6 = Math.PI / 3, t = ((a - Math.PI / 6) % s6 + s6) % s6 - s6 / 2; return R0 * 0.866 / Math.cos(t) / 0.866 * Math.cos(Math.PI / 6) ; };
-        const P = (i, j) => { const a = i / NA * Math.PI * 2, r0 = hexR(a), f = j / NR, r = r0 + (R1 - r0) * f * f, z = (j && j < NR ? (hash2(i, j + 50) - 0.5) * 26 : 0) - 8; return [Math.cos(a) * r, Math.sin(a) * r, z]; };
-        for (let i = 0; i < NA; i++) for (let j = 0; j < NR; j++) {
-            const A = P(i, j), B = P(i + 1, j), C = P(i + 1, j + 1), D = P(i, j + 1), cc = (i + j) % 2 ? c1 : c2;
-            [A, B, C, A, C, D].forEach(v => { pos.push(...v); colA.push(cc.r, cc.g, cc.b); });
-        }
-        const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.Float32BufferAttribute(colA, 3)); pg.computeVertexNormals();
-        const panelMat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: col.clone().multiplyScalar(0.12), side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }); enemyFog(panelMat);
-        g.add(new THREE.Mesh(pg, panelMat), new THREE.LineSegments(new THREE.EdgesGeometry(pg, 8), lineMat));
-        const struts = []; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, L = 360, b = new THREE.BoxGeometry(L, 10, 14); b.translate(HEX_R + 110 + L / 2, 0, 0); b.rotateZ(a); struts.push(b); }
-        g.add(new THREE.Mesh(mergeGeometries(struts), ringMat));
+    // Rez の門のように: 太い白い八角形の枠を奥へ向かってすぼまるように何重にも重ね、赤黒の山形模様の支柱8本でつなぐ
+    const d = S.d + 1700, cv = cave(d), g = new THREE.Group();
+    const white = new THREE.MeshLambertMaterial({ color: 0xe6eaf0, emissive: 0x2a2e36, flatShading: true }), edge = new THREE.LineBasicMaterial({ color: 0x20242c });
+    const red = new THREE.MeshBasicMaterial({ color: 0xff2a4a }), blk = new THREE.MeshBasicMaterial({ color: 0x15161c });
+    [white, edge, red, blk].forEach(enemyFog);
+    const oct = (r, w, dep, z) => { const L = 2 * (r + w) * Math.tan(Math.PI / 8) + w * 0.3, parts = [];
+        for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, b = new THREE.BoxGeometry(L, w, dep); b.translate(0, r + w / 2, z); b.rotateZ(a); parts.push(b); } return mergeGeometries(parts); };
+    const frames = [];
+    for (let i = 0; i < 5; i++) { // 内側（奥）から外側（手前）へ
+        const r = HEX_R * (1 + i * 0.55), z = i * 60, geo = oct(r, 12 + i * 4, 22 + i * 4, z), fg = new THREE.Group();
+        fg.add(new THREE.Mesh(geo, white), new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edge)); fg.userData.sp = (i % 2 ? -1 : 1) * (0.5 + i * 0.35); g.add(fg); frames.push(fg);
     }
-    const bolts = new THREE.Group(); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, b = new THREE.Mesh(new THREE.CircleGeometry(6, 6), ringMat); b.position.set(Math.cos(a) * (HEX_R + 112), Math.sin(a) * (HEX_R + 112), 1); bolts.add(b); } g.add(bolts);
+    // 支柱: 内側の枠の角から外側の枠の角へ、赤と黒の山形を交互に並べる
+    const spokes = new THREE.Group(), r0 = HEX_R / Math.cos(Math.PI / 8) + 6, r1 = HEX_R * (1 + 4 * 0.55) / Math.cos(Math.PI / 8) + 20, z1 = 4 * 60;
+    const segR = [], segB = [], base = [], N = 12, dr = r1 - r0, len = Math.hypot(dr, z1), th = Math.atan2(z1, dr), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + Math.PI / 8;
+        q.setFromEuler(new THREE.Euler(0, -th, a, 'ZYX'));
+        base.push(new THREE.BoxGeometry(len, 18, 6).applyMatrix4(m4.compose(new THREE.Vector3(Math.cos(a) * (r0 + dr / 2), Math.sin(a) * (r0 + dr / 2), z1 / 2), q, one)));
+        for (let j = 0; j < N; j++) { const f = (j + 0.5) / N, c = new THREE.BoxGeometry(len / N * 0.55, 22, 8); c.applyMatrix4(new THREE.Matrix4().makeShear(0, 0, 0.6, 0, 0, 0)); // 少し斜めにして山形っぽく
+            c.applyMatrix4(m4.compose(new THREE.Vector3(Math.cos(a) * (r0 + dr * f), Math.sin(a) * (r0 + dr * f), z1 * f + 2), q, one)); (j % 2 ? segB : segR).push(c); } }
+    spokes.add(new THREE.Mesh(mergeGeometries(base), white), new THREE.Mesh(mergeGeometries(segR), red), new THREE.Mesh(mergeGeometries(segB), blk)); g.add(spokes);
+    // 中央の穴の縁（拍で光る）
+    const glowMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }); enemyFog(glowMat);
+    const inner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(HEX_R, 8)), glowMat); inner.rotation.z = Math.PI / 8; g.add(inner);
     const x = (Math.random() - 0.5) * 180, y = cv.cy + (Math.random() - 0.5) * 90;
     g.position.set(x, y, -d); scene.add(g);
-    hexGate = { d, x, y, obj: g, ring, outer, inner, face, layers, t: 0, done: false };
+    hexGate = { d, x, y, obj: g, frames, spokes, inner, t: 0, done: false };
     for (let i = gates.length - 1; i >= 0; i--) if (Math.abs(gates[i].d - d) < 520) { disposeObj(gates[i].obj); gates.splice(i, 1); } // 近くの壁は取り除く
 }
 function updateHexGate(dt) {
     const h = hexGate; if (!h) return; h.t += dt;
-    h.ring.rotation.z = h.t * 1.2; h.outer.rotation.z = -h.t * 1.6; h.layers.forEach(l => { l.rotation.z = h.t * l.userData.sp; }); const p = 1 + beatPulse() * 0.06; h.inner.scale.setScalar(p); h.face.material.opacity = 0.06 + beatPulse() * 0.08;
+    h.frames.forEach(f => { f.rotation.z = h.t * f.userData.sp; }); h.spokes.rotation.z = h.t * 0.3; h.inner.scale.setScalar(1 + beatPulse() * 0.06);
     if (!h.done && S.d >= h.d && S.mode === 'play') {
         h.done = true;
-        // 成功判定は穴の中央寄り（半径の5割弱）だけ。しっかり狙ってくぐる必要がある
-        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.48) { sfxHeal(); S.score += 1000; } // くぐれた
+        // 成功判定は竜の胴体の中心が穴の中に入っているかだけ（翼は関係ない）
+        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.9) { sfxHeal(); S.score += 1000; } // くぐれた
         else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
         evolve();
     }
