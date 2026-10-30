@@ -149,7 +149,7 @@ function updateWarp(dt, w) {
     warp.visible = w > 0.02; if (!warp.visible) return;
     const len = 30 + w * 380, c = new THREE.Color(PAL.line ? PAL.line[0] : 0xffffff);
     warpD.forEach((d, i) => { d.z += dt * (900 + w * 4200); if (d.z > -20) { d.z -= 940; const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 110; d.x = Math.cos(a) * r; d.y = Math.sin(a) * r; }
-        const o = i * 6, k = w * Math.min(1, (d.z + 940) / 300) * 0.55;
+        const o = i * 6, k = w * Math.min(1, (d.z + 940) / 300) * 0.35;
         warpP[o] = d.x; warpP[o + 1] = d.y; warpP[o + 2] = d.z; warpP[o + 3] = d.x; warpP[o + 4] = d.y; warpP[o + 5] = d.z - len;
         warpC[o] = c.r * k; warpC[o + 1] = c.g * k; warpC[o + 2] = c.b * k; warpC[o + 3] = warpC[o + 4] = warpC[o + 5] = 0; });
     warpG.attributes.position.needsUpdate = true; warpG.attributes.color.needsUpdate = true;
@@ -549,6 +549,18 @@ const PALS = [
     { name: 'VERDANT VEIN',  bg: 0x02120a, line: [0xa6ff2e, 0x2aff9a, 0x2ad8ff], face: [0x15340c, 0x0a3022, 0x0a2a36], cry: [0xb4ff40, 0x40ffd0], gate: [0xb06bff, 0xe0c0ff, 0xff4fd8], wing: 0x2aff9a, rm: 6, pw: 1, jit: 0, rib: 2, decor: 'helix' },
     { name: 'CRYSTAL SPIRE', bg: 0x0a0e22, line: [0xdff4ff, 0x9ab4ff, 0xd8a8ff], face: [0x1e2c48, 0x22264e, 0x2e2450], cry: [0xe8f6ff, 0xc0a8ff], gate: [0xffc848, 0xfff0b0, 0xff8a2a], wing: 0xc0d8ff, rm: 16, pw: 0.3, jit: 0.06, rib: 5, decor: 'pillars' },
     { name: 'PRISM VOID',    bg: 0x030008, line: null, face: [0x14101e, 0x181026, 0x1e1022], cry: [0xffffff, 0xff70ff], gate: [0xf0f0ff, 0xffffff, 0xff3a5a], wing: 0xffffff, rm: 8, pw: 0.85, jit: 0, rib: 3, decor: 'cubes' },
+    { name: 'TIDAL GROTTO',  bg: 0x020a16, line: [0x40c8ff, 0x3a6aff, 0x7af0e0], face: [0x0a2a40, 0x0c1c44, 0x0a3036], cry: [0x60d8ff, 0x80fff0], gate: [0xffa040, 0xffe0a0, 0xff5a3a], wing: 0x40c8ff, rm: 12, pw: 0.8, jit: 0.1, rib: 6, decor: 'helix' },
+    { name: 'EMBER HALL',    bg: 0x140604, line: [0xff8a4a, 0xffc070, 0xff4a6a], face: [0x34140a, 0x30200e, 0x2a0c18], cry: [0xffb060, 0xff6080], gate: [0x40e0ff, 0xc0f8ff, 0x6a8aff], wing: 0xff8a4a, rm: 9, pw: 0.6, jit: 0.22, rib: 4, decor: 'pillars' },
+    { name: 'AURORA RIFT',   bg: 0x020814, line: [0x40ffb0, 0x60a0ff, 0xc070ff], face: [0x0a2e2a, 0x0e1e40, 0x1e1240], cry: [0x60ffc0, 0xb080ff], gate: [0xff6aa0, 0xffd0e0, 0xff3a6a], wing: 0x60ffc0, rm: 20, pw: 0.5, jit: 0.08, rib: 7, decor: 'crystal' },
+    { name: 'IRON LATTICE',  bg: 0x08090e, line: [0xb0c0d8, 0x7080a8, 0xffb060], face: [0x1c2230, 0x1a1c28, 0x2a2020], cry: [0xd0e0ff, 0xffb070], gate: [0x40ffb0, 0xc0ffe0, 0x20c890], wing: 0xb0c0d8, rm: 4, pw: 1, jit: 0, rib: 3, decor: 'ribs' },
+    { name: 'ROSE NEBULA',   bg: 0x12030e, line: [0xff70c0, 0xc060ff, 0xffa0a0], face: [0x341030, 0x241040, 0x381820], cry: [0xff90d0, 0xd090ff], gate: [0x60f0ff, 0xd0faff, 0x40a0ff], wing: 0xff70c0, rm: 14, pw: 0.65, jit: 0.14, rib: 5, decor: 'cubes' },
+    { name: 'SULFUR WELL',   bg: 0x0e0c02, line: [0xf0e040, 0xa0e030, 0xffa020], face: [0x2e2a08, 0x1e300a, 0x34200a], cry: [0xfff060, 0xc0ff40], gate: [0xa070ff, 0xe0d0ff, 0xff50c0], wing: 0xf0e040, rm: 7, pw: 0.75, jit: 0.28, rib: 9, decor: 'spikes' },
+    { name: 'GLACIER VAULT', bg: 0x041020, line: [0xa0e8ff, 0xe0f8ff, 0x70a0ff], face: [0x14304a, 0x1a2c48, 0x101e46], cry: [0xd0f4ff, 0x90c0ff], gate: [0xff7040, 0xffd0a0, 0xff3a50], wing: 0xa0e8ff, rm: 11, pw: 0.35, jit: 0.12, rib: 6, decor: 'crystal' },
+    { name: 'VIOLET ENGINE', bg: 0x07031a, line: [0x9060ff, 0x50a0ff, 0xff60e0], face: [0x1c1048, 0x10204a, 0x2c0c40], cry: [0xb090ff, 0x70c0ff], gate: [0xffd040, 0xfff4c0, 0xff9020], wing: 0x9060ff, rm: 5, pw: 1, jit: 0.02, rib: 2, decor: 'pillars' },
+    { name: 'CORAL MAZE',    bg: 0x0e0408, line: [0xff8070, 0xffc090, 0x40e0d0], face: [0x341414, 0x342410, 0x0e2c2c], cry: [0xffa080, 0x60f0e0], gate: [0x6a8aff, 0xd0d8ff, 0xa060ff], wing: 0xff8070, rm: 15, pw: 0.7, jit: 0.25, rib: 4, decor: 'helix' },
+    { name: 'STORM SPIRAL',  bg: 0x050a12, line: [0x80b0ff, 0xf0f0ff, 0x60ffe0], face: [0x182440, 0x20283a, 0x0c2a32], cry: [0xc0d8ff, 0x80fff0], gate: [0xff5a8a, 0xffc0d8, 0xff2a5a], wing: 0x80b0ff, rm: 13, pw: 0.45, jit: 0.18, rib: 3, decor: 'ribs' },
+    { name: 'GILDED DEEP',   bg: 0x0c0804, line: [0xffd070, 0xffa040, 0xfff0c0], face: [0x30240c, 0x302010, 0x2a2618], cry: [0xffe090, 0xffb060], gate: [0x40d0ff, 0xc0f0ff, 0x4070ff], wing: 0xffd070, rm: 8, pw: 0.9, jit: 0.05, rib: 5, decor: 'cubes' },
+    { name: 'ECLIPSE CROWN', bg: 0x020204, line: [0xffffff, 0xff4060, 0xa060ff], face: [0x1a1a22, 0x2a0c14, 0x1c1230], cry: [0xffffff, 0xff5070], gate: [0x60ffd0, 0xd0fff0, 0x30d0a0], wing: 0xff4060, rm: 22, pw: 0.4, jit: 0.1, rib: 6, decor: 'spikes' },
 ];
 let PAL = PALS[0], LC, FC;
 function setPal(i) { PAL = PALS[i % PALS.length]; FC = PAL.face.map(_c); LC = PAL.line ? PAL.line.map(_c) : null; }
@@ -612,7 +624,7 @@ function morphify(grp, cy, rv = REVEAL) {
     u.f = f; u.a = a; return u;
 }
 // 崩れるのは速く、混沌から組み上がるのはゆっくり（破片ごとに時間差があるので徐々にステージになる）
-const M_OUT = 2.6, M_IN = 0.62, M_FADE = 0.4;
+const M_OUT = 1.5, M_IN = 0.62, M_FADE = 0.7; // 崩れ方は控えめにゆっくり、次の世界と重なりながら移る
 function tickK(c, dt) {
     if (c.delay > 0) { c.delay -= dt; return; }
     const sp = c.to > c.k ? M_OUT : (c.spIn || M_IN); c.k += Math.max(-dt * sp, Math.min(dt * sp, c.to - c.k)); c.u.value = c.k;
@@ -698,7 +710,7 @@ function buildChunk(ci) {
     scene.add(grp);
     const mid = (ci + 0.5) * CH;
     if (S.t < S.startUntil) { u.a.value = 0.3; return { obj: grp, u, k: 1, to: 0, delay: 0, spIn: 1 }; } // 開始時: 近くから軽く集まる（1秒）
-    if (S.t < S.evoUntil) { u.a.value = 0.38; return { obj: grp, u, k: 1, to: 0, delay: 0.1 + waveDelay(mid - S.d) * 0.25, spIn: 1 / 0.9 }; } // 進化中: 混沌から組み上がる
+    if (S.t < S.evoUntil) { u.a.value = 0.22; return { obj: grp, u, k: 1, to: 0, delay: 0.1 + waveDelay(mid - S.d) * 0.25, spIn: 1 / 0.9 }; } // 進化中: 混沌から組み上がる
     return { obj: grp, u, k: 1, to: 0, delay: 0 };
 }
 function disposeObj(o) {
@@ -867,11 +879,13 @@ const PROGS = [
     ['Dm', 'G6', 'C', 'Am', 'F', 'Bm', 'E7', 'Am'],
     ['F', 'E7', 'Am', 'C', 'Dm', 'Gs', 'Em', 'A7'],
 ].map(p => p.map(k => CHD[k]));
-let CHORDS = PROGS[0], progWant = 0;
+const KEYS = [0, 2, 3, 5, -5]; // 4面ごとに調が少しずつ上がる（C→D→E♭→F→G）
+const progOf = i => PROGS[Math.floor(i / 2) % PROGS.length].map(c => c.map(m => m + KEYS[Math.floor(i / 4) % KEYS.length]));
+let CHORDS = PROGS[0], progWant = PROGS[0];
 // 曲の盛り上がり MUS.I（≒ステージ数＋そのステージのあらわれ具合）はゆっくりにじむように変わる。
 // テンポもパートの音量もこの値から連続的に決まるので、ステージが変わっても急に変わらない
 const bpmOf = I => Math.min(140, 100 + I * 4);
-function applySound(i) { TIMBRE = Math.floor(i / 2); progWant = Math.floor(i / 2) % PROGS.length; if (!MUS.on || i === 0) CHORDS = PROGS[progWant]; }
+function applySound(i) { TIMBRE = Math.floor(i / 2); progWant = progOf(i); if (!MUS.on || i === 0) CHORDS = progWant; }
 function setSoundStage(i) { applySound(i); if (i === 0) { MUS.I = 0; setTempo(bpmOf(0)); } }
 function setTempo(b) { BPM = b; S16 = 60 / BPM / 4; BAR = 60 / BPM * 4; }
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -939,7 +953,7 @@ function musTick() { if (!MUS.on) return; const ahead = AC.currentTime + 0.16;
         const want = S.mode === 'title' ? 0 : S.stage + (S.mode === 'evo' ? 1 : Math.min(1, S.reveal || 0));
         MUS.I += (want - MUS.I) * 0.006; // 約8小節かけてなじむ
         setTempo(bpmOf(MUS.I)); if (MUS.n % 16 === 0 && dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, MUS.t, 0.5);
-        if (MUS.n % 256 === 0) CHORDS = PROGS[progWant]; // 進行の入れ替えは16小節のひと回りの頭で
+        if (MUS.n % 256 === 0) CHORDS = progWant; // 進行の入れ替えは16小節のひと回りの頭で
         musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
 function kick(t, kg = 1) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(44, t + 0.11);
@@ -1047,7 +1061,7 @@ let best = 0; try { best = +localStorage.getItem('wyrmsphere-best') || 0; } catc
 const S = { mode: 'title', d: 0, x: 0, y: 0, vx: 0, vy: 0, speed: 300, score: 0, t: 0, deadT: 0, shake: 0, flash: 0,
     camX: 0, camVX: 0, camY: 60, camV: 0, lookX: 0, lookVX: 0, lookY: 0, lookV: 0, stage: 0, warpT: 9, evoUntil: 0,
     hp: 2, inv: 0, dmg: 0, kills: 0, reveal: 0.75, quota: 24, waveT: 0, rx: 640, ry: 300, lastFlap: 0, banner: null, newRec: false };
-const QUOTA = st => 40 + st * 10, SPD = 480, HIT_R = 13;
+const QUOTA = st => 40 + st * 10, SPD = 450, HIT_R = 13;
 const bgFrom = new THREE.Color(), bgTo = new THREE.Color(PAL.bg); let bgK = 1;
 function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); recolorEnemies(); }
 
@@ -1289,10 +1303,10 @@ function evolve() {
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve();
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
     enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
-    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.4; dying.push(c); } chunks.clear(); // 散り方は控えめに
+    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.22; dying.push(c); } chunks.clear(); // 散り方は控えめに
     S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
-        gt.u.a.value = 0.4; const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; dying.push(old);
+        gt.u.a.value = 0.22; const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; dying.push(old);
         if (gt.passed || gt.d < S.d + 200) { gates.splice(i, 1); continue; }
         buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }
     field.recolor();
@@ -1315,7 +1329,7 @@ function step(h) {
     const cv = cave(S.d);
     if (S.mode === 'evo') { // 進化中: 無敵。竜は変わりゆく世界の中を漂う
         S.evoT += h; const env = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
-        S.speed = S.evoSpd * (1 + 1.6 * env); // 世界が組み替わるあいだは一気に加速
+        S.speed = S.evoSpd * (1 + 0.8 * env); // 世界が組み替わるあいだは一気に加速
         const tx = Math.sin(S.evoT * 2.1 + 0.7) * 120 * env, ty = cv.cy + Math.sin(S.evoT * 2.6) * 55 * env;
         S.vx = (tx - S.x) * 2.2; S.vy = (ty - S.y) * 2.2; S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.speed = S.evoSpd; S.waveT = 1.0; nextGateD = Math.max(nextGateD, S.d + 1800); }
@@ -1328,7 +1342,7 @@ function step(h) {
     } else { // タイトル: 自動で漂う
         mx = Math.sin(S.t * 0.5) * 0.3 - S.x * 0.004; my = (cv.cy + Math.sin(S.t * 0.7) * 40 - S.y) * 0.01;
     }
-    const acc = S.mode === 'play' ? 4.4 : 9; /* 軽く反応する */ S.vx += (mx * SPD - S.vx) * Math.min(1, h * acc); S.vy += (my * SPD - S.vy) * Math.min(1, h * acc);
+    const acc = S.mode === 'play' ? 3.4 : 9; /* 少し重みのある反応 */ S.vx += (mx * SPD - S.vx) * Math.min(1, h * acc); S.vy += (my * SPD - S.vy) * Math.min(1, h * acc);
     S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
     const xl = cv.hw * 0.6; if (Math.abs(S.x) > xl) { S.x = Math.sign(S.x) * xl; S.vx = 0; }
     if (S.y < cv.fl + 26) { S.y = cv.fl + 26; S.vy = Math.max(0, S.vy); } if (S.y > cv.ce - 26) { S.y = cv.ce - 26; S.vy = Math.min(0, S.vy); }
@@ -1511,13 +1525,13 @@ function frame(now) {
     camera.position.copy(camPos);
     camLook.set(lerp(S.lookX, S.x, pull), lerp(S.lookY, S.y, pull), lerp(-(S.d + 400), -S.d, pull * 0.8));
     camera.lookAt(camLook);
-    camera.rotation.z += -S.bank * 0.14 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.1 : 0);
+    camera.rotation.z += -S.bank * 0.14 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.04 : 0);
     if (window.__cam) window.__cam(camera, S, dragon);
     sun.position.set(-300, S.y + 700, -S.d + 300); sun.target.position.set(0, S.y, -S.d);
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
     updateShards(dt);
     const wk = S.mode === 'evo' ? Math.sin(eu * Math.PI) : 0;
-    camera.fov = baseFov + Math.pow(wk, 0.7) * 22; camera.updateProjectionMatrix(); updateWarp(dt, wk);
+    camera.fov = baseFov + Math.pow(wk, 0.7) * 10; camera.updateProjectionMatrix(); updateWarp(dt, wk);
     { const sf = Math.max(0.55, 1 - S.stage * 0.09); bloom.strength = (0.42 + S.reveal * 0.32 + wk * 0.1) * sf; bloom.threshold = 0.42 + Math.min(0.2, S.stage * 0.04); } // 後半の面ほど光のにじみを抑える
     { // 暗闇の中から、撃破を重ねるほどステージの姿があらわになり、進化の直前で最高潮に
         const want = S.mode === 'title' ? 0.75 : S.mode === 'evo' ? 1 : Math.min(1, S.kills / S.quota); S.reveal += (want - S.reveal) * Math.min(1, dt * (S.mode === 'evo' ? 0.8 : 1.5));
