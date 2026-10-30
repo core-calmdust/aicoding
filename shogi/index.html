@@ -3304,6 +3304,8 @@ function diagramCanvas(withKifu) {
         if (run.length <= 3) { g.save(); g.font = `500 ${fs * (run.length > 1 ? 0.8 : 1)}px ${F}`; const s = Math.min(1, lh * 0.95 / g.measureText(run).width); g.translate(x, y + lh / 2); g.scale(s, 1); g.fillText(run, 0, 0); g.restore(); y += lh; continue; }
         g.save(); g.font = `500 ${fs * 0.85}px ${F}`; const w = g.measureText(run).width; g.translate(x, y + w / 2 + lh * 0.1); g.rotate(Math.PI / 2); g.fillText(run, 0, 0); g.restore(); y += w + lh * 0.2; continue;
       }
+      if (/[ー―‐－−–—〜～…‥（）()「」『』【】〈〉《》［］｛｝＝→←]/.test(run)) { g.save(); g.translate(x, y + lh / 2); g.rotate(Math.PI / 2); g.fillText(run, 0, 0); g.restore(); y += lh; continue; } // 縦書きでは長音・ダッシュ・括弧を90°回す
+      if (/[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ、。]/.test(run)) { g.fillText(run, x + fs * 0.14, y + lh / 2 - fs * 0.14); y += lh; continue; } // 小書き仮名・句読点は右上へ
       g.fillText(run, x, y + lh / 2); y += lh;
     }
     return y;
