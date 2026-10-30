@@ -240,7 +240,7 @@ scene.background = BG.clone();
 scene.fog = new THREE.Fog(BG.clone(), 480, 2050);
 const camera = new THREE.PerspectiveCamera(62, VW / VH, 1, 4200);
 
-const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(Math.round(VW * PR), Math.round(VH * PR), { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 && !IS_MOBILE ? 4 : 0 }));
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(Math.round(VW * PR), Math.round(VH * PR), { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 && !IS_MOBILE ? 2 : 0 /* 4→2: 画質はほぼ同じで軽い */ }));
 composer.setPixelRatio(PR); composer.setSize(VW, VH);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.62, 0.4, 0.42);
@@ -1539,6 +1539,8 @@ function ckTake(type) {
     w.traverse(n => { if (n.material && !n.material.userData.ckFog) { n.material.userData.ckFog = 1; enemyFog(n.material); n.material.needsUpdate = true; } });
     w.userData.body = body; w.userData.ck = type; return w;
 }
+// ゲートと爆発の閃光の描画準備（シェーダーの用意）を起動後に済ませておく
+setTimeout(() => { try { if (!GATE_T) GATE_T = buildGateTemplate(); const w = GATE_T.clone(true); w.position.set(0, -5000, 5000); scene.add(w); renderer.compile(scene, camera); scene.remove(w); } catch (e) {} }, 2200);
 // COMETの雑魚は最初に出るときに形を作ると重いので、起動後の空き時間に各種類4体ずつ先に作っておく
 { const todo = []; CK.types.forEach(t => { for (let i = 0; i < 4; i++) todo.push(t); });
   const step = () => { if (!todo.length) return; const t = todo.shift(), pl = ckPool[t] = ckPool[t] || [], saved = pl.splice(0), ob = ckTake(t); pl.push(...saved, ob); /* 空の状態で作らせて追加 */ (window.requestIdleCallback || (f => setTimeout(f, 30)))(step, { timeout: 1500 }); };
@@ -1583,6 +1585,7 @@ function spawnWave() {
         const n = Math.min(10, 6 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy('manta', { rz: 1700 + Math.floor(i / 8) * 160, cx, cy0, a0: i / Math.min(8, n) * Math.PI * 2, vz: 280, path: 'arc', x: cx, y: cy0 });
     } else if (kind < 0.9) { // COMETの雑魚の小隊
         const ty = CK.types[Math.floor(Math.random() * CK.types.length)];
+        if (enemies.filter(e => e.alive && !EG[e.type]).length > 5) return enemies.length - n0; // COMETの雑魚は描画が重いので同時に6体まで
         if (ty === 'weaver' || ty === 'lance') { const dir = Math.random() < 0.5 ? 1 : -1, y = cv.cy + (Math.random() - 0.5) * cv.hh * 0.8, n = Math.min(6, 3 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy(ty, { rz: 1500 + i * 90, x0: -dir * (xl + i * 70), vx: dir * 140, y0: y, vz: 220, path: 'line', x: 0, y }); }
         else if (ty === 'looper' || ty === 'ufo') { const cx = (Math.random() - 0.5) * xl, cy0 = cv.cy + (Math.random() - 0.5) * cv.hh * 0.5, n = Math.min(6, 3 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy(ty, { rz: 1700, cx, cy0, a0: i / n * Math.PI * 2, vz: 260, path: 'arc', x: cx, y: cy0 }); }
         else { const m = Math.min(3, 1 + Math.floor(S.stage / 3)); for (let i = 0; i < m; i++) addEnemy(ty, { rz: 1600, x: (i - (m - 1) / 2) * 180, y: cv.cy + (Math.random() - 0.5) * cv.hh * 0.5, vz: 650, path: 'hover', hold: 3.4, shooter: true }); }
@@ -1828,7 +1831,7 @@ function startGame() {
     if (S.mode === 'dead' && S.deadT < 0.8) return;
     if (S.mode === 'dead') resetWorld();
     S.itemDone = false; items.forEach(it => disposeObj(it.obj)); items.length = 0;
-    if (hexGate) { disposeObj(hexGate.obj); hexGate = null; }
+    if (hexGate) { scene.remove(hexGate.obj); hexGate = null; }
     S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name }; playVoice(S.stage);
 }
@@ -1876,9 +1879,10 @@ function damage() {
 // ---------------- 六角形のゲート: ノルマ達成後に出現し、くぐると次のステージへ（くぐれないとダメージを受けて次へ）----------------
 let hexGate = null;
 const HEX_R = 100; // 中央の穴の半径
-function spawnHexGate() {
-    // Rez の門のように: 太い白い八角形の枠を奥へ向かってすぼまるように何重にも重ね、赤黒の山形模様の支柱8本でつなぐ
-    const d = S.d + 1700, cv = cave(d), g = new THREE.Group();
+// ゲートの形は最初に1度だけ作り、出すたびに複製する（形と材質を共有。毎回作ると描画の準備で重くなる）
+let GATE_T = null;
+function buildGateTemplate() {
+    const g = new THREE.Group();
     const white = new THREE.MeshLambertMaterial({ color: 0xf8f9fc, emissive: 0x4c5058, flatShading: true }), edge = new THREE.LineBasicMaterial({ color: 0x20242c });
     const red = new THREE.MeshBasicMaterial({ color: 0xff2a4a }), blk = new THREE.MeshBasicMaterial({ color: 0x15161c });
     [white, edge, red, blk].forEach(enemyFog);
@@ -1887,7 +1891,7 @@ function spawnHexGate() {
     const frames = [];
     for (let i = 0; i < 5; i++) { // 内側（奥）から外側（手前）へ
         const r = HEX_R * (1 + i * 0.55), z = i * 60, geo = oct(r, 12 + i * 4, 22 + i * 4, z), fg = new THREE.Group();
-        fg.add(new THREE.Mesh(geo, white), new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edge)); fg.userData.sp = (i % 2 ? -1 : 1) * (0.5 + i * 0.35); g.add(fg); frames.push(fg);
+        fg.add(new THREE.Mesh(geo, white), new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edge)); fg.userData.sp = (i % 2 ? -1 : 1) * (0.5 + i * 0.35); fg.name = 'frame'; g.add(fg); frames.push(fg);
     }
     // 枠と枠のあいだを面でつなぐ（漏斗の内側の壁）。9割は不透明な壁、1割だけ半透明の窓。枠と一緒には回さない
     {
@@ -1911,10 +1915,17 @@ function spawnHexGate() {
         base.push(new THREE.BoxGeometry(len, 18, 6).applyMatrix4(m4.compose(new THREE.Vector3(Math.cos(a) * (r0 + dr / 2), Math.sin(a) * (r0 + dr / 2), z1 / 2), q, one)));
         for (let j = 0; j < N; j++) { const f = (j + 0.5) / N, c = new THREE.BoxGeometry(len / N * 0.55, 22, 8); c.applyMatrix4(new THREE.Matrix4().makeShear(0, 0, 0.6, 0, 0, 0)); // 少し斜めにして山形っぽく
             c.applyMatrix4(m4.compose(new THREE.Vector3(Math.cos(a) * (r0 + dr * f), Math.sin(a) * (r0 + dr * f), z1 * f + 2), q, one)); (j % 2 ? segB : segR).push(c); } }
-    spokes.add(new THREE.Mesh(mergeGeometries(base), white), new THREE.Mesh(mergeGeometries(segR), red), new THREE.Mesh(mergeGeometries(segB), blk)); g.add(spokes);
+    spokes.add(new THREE.Mesh(mergeGeometries(base), white), new THREE.Mesh(mergeGeometries(segR), red), new THREE.Mesh(mergeGeometries(segB), blk)); spokes.name = 'spokes'; g.add(spokes);
     // 中央の穴の縁（拍で光る）
     const glowMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }); enemyFog(glowMat);
-    const inner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(HEX_R, 8)), glowMat); inner.rotation.z = Math.PI / 8; g.add(inner);
+    const inner = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(HEX_R, 8)), glowMat); inner.rotation.z = Math.PI / 8; inner.name = 'inner'; g.add(inner);
+    g.traverse(n => { if (n.material) n.material.userData.shared = true; });
+    return g;
+}
+function spawnHexGate() {
+    const d = S.d + 1700, cv = cave(d);
+    if (!GATE_T) GATE_T = buildGateTemplate();
+    const g = GATE_T.clone(true), frames = g.children.filter(c => c.name === 'frame'), spokes = g.getObjectByName('spokes'), inner = g.getObjectByName('inner');
     const x = (Math.random() - 0.5) * 180, y = cv.cy + (Math.random() - 0.5) * 90;
     g.position.set(x, y, -d); scene.add(g);
     hexGate = { d, x, y, obj: g, frames, spokes, inner, t: 0, done: false };
@@ -1930,7 +1941,7 @@ function updateHexGate(dt) {
         else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
         evolve();
     }
-    if (h.done && S.d > h.d + 400) { disposeObj(h.obj); hexGate = null; }
+    if (h.done && S.d > h.d + 400) { scene.remove(h.obj); hexGate = null; } // 形は共有なので捨てない
 }
 function gameOver() {
     musicStop();
@@ -2091,10 +2102,13 @@ function drawUI() {
     drawOverlay();
     drawSub();
     if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'MS' : 'N/A'}`, 20, VH - 64, 12, '#fff', '#fff', 'left', 0.9);
-    if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); T(PFshow, 20, VH - 24, 11, '#fff', '#fff', 'left', 0.8); }
+    if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); T(PFshow + '  CALLS ' + (perf.calls || 0), 20, VH - 24, 11, '#fff', '#fff', 'left', 0.8); }
     gameEl.classList.toggle('aim', S.mode === 'play');
 }
 
+// 透明で両面の材質は、three.js が裏面と表面の2回に分けて描くので、1回で描くようにする（描画回数を減らす）
+function singlePassAll() { scene.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; ms.forEach(m => { if (m.transparent && m.side === THREE.DoubleSide && !m.forceSinglePass) m.forceSinglePass = true; }); }); }
+setInterval(singlePassAll, 1000);
 // ---------------- メインループ ----------------
 resetWorld();
 let last = -1; const dtHist = [];
@@ -2117,8 +2131,9 @@ function gpuBegin() {
     gpuT.q = gl.createQuery(); gl.beginQuery(gpuT.ext.TIME_ELAPSED_EXT, gpuT.q); gpuT.active = true;
 }
 function gpuEnd() { if (!gpuT.active) return; renderer.getContext().endQuery(gpuT.ext.TIME_ELAPSED_EXT); gpuT.active = false; }
+let gpuF = 0;
 function gpuPoll() {
-    if (!gpuT.q || gpuT.active) return; const gl = renderer.getContext();
+    if (!gpuT.q || gpuT.active || (++gpuF & 3)) return; const gl = renderer.getContext();
     if (!gl.getQueryParameter(gpuT.q, gl.QUERY_RESULT_AVAILABLE)) return;
     if (!gl.getParameter(gpuT.ext.GPU_DISJOINT_EXT)) { gpuT.hist.push(gl.getQueryParameter(gpuT.q, gl.QUERY_RESULT) / 1e6); if (gpuT.hist.length > 30) gpuT.hist.shift(); }
     gl.deleteQuery(gpuT.q); gpuT.q = null;
@@ -2226,13 +2241,13 @@ function frame(now) {
     dragon.trails.forEach(t => t.visible = dragon.root.visible);
     S.flash = Math.max(0, S.flash - dt * 2.5); ui.flash.style.opacity = S.flash;
     const jsT1 = performance.now();
-    pk('misc4'); gpuPoll(); gpuBegin(); composer.render(); gpuEnd(); pk('render');
+    pk('misc4'); renderer.info.autoReset = false; renderer.info.reset(); gpuPoll(); gpuBegin(); composer.render(); gpuEnd(); perf.calls = renderer.info.render.calls; pk('render');
     drawUI(); pk('ui');
     // 1フレームのJavaScript処理時間（更新／描画の指示）。重い瞬間を探すための計測
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, PF, pfs: () => PFshow, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, perf, rend: renderer, cam: camera, PF, pfs: () => PFshow, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
