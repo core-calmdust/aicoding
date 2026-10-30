@@ -869,10 +869,10 @@ function updateChunks(d, budget = 1) {
     want.sort((x, y) => Math.abs((x + 0.5) * CH - d) - Math.abs((y + 0.5) * CH - d)); // 近い所から
     for (let j = 0; j < Math.min(budget, want.length); j++) chunks.set(want[j], buildChunk(want[j]));
     // 次に必要になる1つ先の区画は、フレームの合間（ブラウザの空き時間）に先に作っておく（フレーム中の重い処理を減らす）
-    if (budget === 1 && !idleQ && !chunks.has(c1 + 1) && S.mode === 'play') { idleQ = true; (window.requestIdleCallback || (f => setTimeout(f, 0)))(idleBuild, { timeout: 400 }); }
+    if (budget <= 1 && !idleQ && (S.mode === 'play' || S.mode === 'evo')) { idleQ = true; (window.requestIdleCallback || (f => setTimeout(f, 0)))(idleBuild, { timeout: 400 }); }
 }
 let idleQ = false;
-function idleBuild() { idleQ = false; if (S.mode !== 'play') return; const c1 = Math.floor((S.d + VIEW) / CH) + 1; if (!chunks.has(c1)) chunks.set(c1, buildChunk(c1)); }
+function idleBuild() { idleQ = false; if (S.mode !== 'play' && S.mode !== 'evo') return; const c0 = Math.floor((S.d - 420) / CH), c1 = Math.floor((S.d + VIEW) / CH) + 1; for (let ci = c0; ci <= c1; ci++) if (!chunks.has(ci)) { chunks.set(ci, buildChunk(ci)); return; } } // 足りない区画を近い順に1つ
 function clearWorld() { for (const [, c] of chunks) disposeObj(c.obj); chunks.clear(); gates.forEach(gt => disposeObj(gt.obj)); gates.length = 0; dying.forEach(c => disposeObj(c.obj)); dying.length = 0; }
 
 // =====================================================================
@@ -1865,18 +1865,19 @@ function startGame() {
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name }; playVoice(S.stage);
 }
 const EVO_T = 1.5;
+const jobs = []; // 重い処理を1フレームに1つずつ分けて進める
 function evolve() {
     S.stage++; setPal(S.stage); setSoundStage(S.stage);
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.warpT = 0; sfxEvolve(); S.itemDone = false;
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap(); recolorEnemies();
     enemies.forEach(e => { if (e.alive) { boom(epos(e), [PAL.cry[0], PAL.cry[1]], 10); removeEnemy(e); } }); enemies.length = 0; bullets.length = 0; locks.length = 0; marked.length = 0;
     for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.25; c.u.a.value = 0.06; dying.push(c); } chunks.clear(); // 散り方は控えめに
-    S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
+    S.evoUntil = S.t + 0.6; S.evoFrame = true; // 新しい区画は次のフレームから1つずつ＋空き時間に作る（進化の瞬間に重い処理を重ねない）
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
         gt.u.a.value = 0.06; const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.25 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; dying.push(old);
         if (gt.passed || gt.d < S.d + 200) { gates.splice(i, 1); continue; }
-        buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }
-    field.recolor();
+        jobs.push(() => { buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }); } // 壁の作り直しは1フレームに1つずつ
+    jobs.push(() => field.recolor());
     S.kills = 0; S.quota = QUOTA(S.stage); S.speed = Math.min(420, 300 + S.stage * 20); S.evoSpd = S.speed;
     S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name + (S.stage >= PALS.length ? ' +' : '') }; playVoice(S.stage);
 }
@@ -2227,7 +2228,7 @@ function frame(now) {
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.7 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.7秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') { if (S.stage < 2) nextGateD = Math.max(nextGateD, S.d + VIEW); spawnGates(S.d); } // 壁のギミックは3面から
-    pk('misc2'); updateChunks(S.d, 1); pk('chunk');
+    pk('misc2'); let busy = S.evoFrame; S.evoFrame = false; if (!busy && jobs.length) { jobs.shift()(); busy = true; } updateChunks(S.d, busy ? 0 : 1); pk('chunk'); // 重い処理は1フレームに1つまで
     for (const [, c] of chunks) tickK(c, dt);
     for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].fade >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
