@@ -1694,7 +1694,7 @@ function damage() {
 }
 // ---------------- 六角形のゲート: ノルマ達成後に出現し、くぐると次のステージへ（くぐれないとダメージを受けて次へ）----------------
 let hexGate = null;
-const HEX_R = 190; // くぐれる穴の半径（翼を広げた竜ごと中を通れる大きさ）
+const HEX_R = 135; // 穴の見た目の半径（最初の版と大きい版の間）
 function spawnHexGate() {
     const d = S.d + 1700, cv = cave(d), g = new THREE.Group(), col = _c(PAL.cry[0]).lerp(_c(0xffffff), 0.35);
     const ringMat = new THREE.MeshBasicMaterial({ color: col }), lineMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -1716,7 +1716,7 @@ function spawnHexGate() {
     // 外側の八角形のベゼルと、ねじの頭
     const bez = new THREE.Mesh(new THREE.RingGeometry(HEX_R + 108, HEX_R + 116, 8, 1), ringMat); bez.rotation.z = Math.PI / 8; g.add(bez);
     const bolts = new THREE.Group(); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, b = new THREE.Mesh(new THREE.CircleGeometry(6, 6), ringMat); b.position.set(Math.cos(a) * (HEX_R + 112), Math.sin(a) * (HEX_R + 112), 1); bolts.add(b); } g.add(bolts);
-    const x = (Math.random() - 0.5) * 80, y = cv.cy + (Math.random() - 0.5) * 50;
+    const x = (Math.random() - 0.5) * 130, y = cv.cy + (Math.random() - 0.5) * 70;
     g.position.set(x, y, -d); scene.add(g);
     hexGate = { d, x, y, obj: g, ring, outer, inner, face, layers, t: 0, done: false };
     for (let i = gates.length - 1; i >= 0; i--) if (Math.abs(gates[i].d - d) < 520) { disposeObj(gates[i].obj); gates.splice(i, 1); } // 近くの壁は取り除く
@@ -1727,7 +1727,7 @@ function updateHexGate(dt) {
     h.ring.rotation.z = h.t * 1.2; h.outer.rotation.z = -h.t * 1.6; h.layers.forEach(l => { l.rotation.z = h.t * l.userData.sp; }); const p = 1 + beatPulse() * 0.06; h.inner.scale.setScalar(p); h.face.material.opacity = 0.06 + beatPulse() * 0.08;
     if (!h.done && S.d >= h.d && S.mode === 'play') {
         h.done = true;
-        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R - HIT_R) { sfxHeal(); S.score += 1000; } // くぐれた
+        if (Math.hypot(S.x - h.x, S.y - h.y) < HEX_R * 0.8) { // 中央のそこそこの範囲を胴体が通ればOK sfxHeal(); S.score += 1000; } // くぐれた
         else { S.inv = 0; damage(); if (S.mode !== 'play') return; } // くぐれなかった: ダメージを受けて次へ
         evolve();
     }
