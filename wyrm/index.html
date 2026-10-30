@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 509; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 510; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -2130,12 +2130,12 @@ function drawSub() { // 画面下の字幕（声に合わせて表示、前後�
 function drawUI() {
     ug.setTransform(1, 0, 0, 1, 0, 0); ug.clearRect(0, 0, uiC.width, uiC.height);
     if (S.dmg > 0) { const gr = ug.createRadialGradient(uiC.width / 2, uiC.height / 2, uiC.height * 0.3, uiC.width / 2, uiC.height / 2, uiC.width * 0.62); gr.addColorStop(0, 'rgba(255,40,80,0)'); gr.addColorStop(1, `rgba(255,40,80,${0.55 * S.dmg})`); ug.fillStyle = gr; ug.fillRect(0, 0, uiC.width, uiC.height); }
-    if (S.mode === 'play' || S.mode === 'evo') { drawHUD(); drawLocks(); if (S.mode === 'play') drawReticle(); }
+    if (S.mode === 'play' || S.mode === 'evo') { drawHUD(); drawLocks(); drawReticle(); } // 進化中も照準は出したまま
     drawOverlay();
     drawSub();
     if (perf.show) T(`B${BUILD}  ${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'MS' : 'N/A'}`, 20, VH - 64, 12, '#fff', '#fff', 'left', 0.9);
     if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); T(PFshow + '  CALLS ' + (perf.calls || 0), 20, VH - 24, 11, '#fff', '#fff', 'left', 0.8); }
-    gameEl.classList.toggle('aim', S.mode === 'play');
+    gameEl.classList.toggle('aim', S.mode === 'play' || S.mode === 'evo'); // 進化中もポインタは隠す
 }
 
 // 透明で両面の材質は、three.js が裏面と表面の2回に分けて描くので、1回で描くようにする（描画回数を減らす）
