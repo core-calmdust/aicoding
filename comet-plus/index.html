@@ -7257,8 +7257,8 @@ const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9, hold: 0 };
 // （これで画質が下がると上部のHUDが別キャンバス表示になり、3D画面とずれて見えていた）
 function resetQualityAfterResize() {
     perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; perf.good = 0; perf.lastRaise = -1e9; perf.late = 0; perf.drops = 0;
-    qCeil = Q_MAX; frameClock.reset(); // 切り替え中の空白で追いつき更新が連続しないよう、画面の周期と位相も測り直す
-    if (quality !== Q_MAX) { quality = Q_MAX; applyQuality(); }
+    qCeil = gpuT.init && !gpuT.ext && !IS_MOBILE ? Math.min(Q_MAX, 1.5) : Q_MAX; frameClock.reset(); // 切り替え中の空白で追いつき更新が連続しないよう、画面の周期と位相も測り直す
+    if (quality !== qCeil) { quality = qCeil; applyQuality(); }
 }
 document.addEventListener('fullscreenchange', resetQualityAfterResize);
 window.addEventListener('resize', () => { perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; frameClock.reset(); });
@@ -7269,13 +7269,30 @@ function applyQuality() {
     composer.setSize(VW, VH);
     glowMat.uniforms.uScale.value = GLOW_BASE * quality;
 }
+// GPUの描画時間を測る（対応ブラウザのみ）。GPUが間に合わないと、ブラウザの更新タイミングは正常なまま
+// 表示だけが1回飛ぶ（垂直同期が外れたように見える）ので、フレーム間隔では見つけられない
+const gpuT = { init: false, ext: null, q: null, active: false, hist: [], ms: 0 };
+function gpuBegin() {
+    const gl = renderer.getContext();
+    if (!gpuT.init) { gpuT.init = true; try { gpuT.ext = gl.getExtension('EXT_disjoint_timer_query_webgl2'); } catch (e) {} }
+    if (!gpuT.ext || gpuT.q) return;
+    gpuT.q = gl.createQuery(); gl.beginQuery(gpuT.ext.TIME_ELAPSED_EXT, gpuT.q); gpuT.active = true;
+}
+function gpuEnd() { if (!gpuT.active) return; renderer.getContext().endQuery(gpuT.ext.TIME_ELAPSED_EXT); gpuT.active = false; }
+function gpuPoll() {
+    if (!gpuT.q || gpuT.active) return; const gl = renderer.getContext();
+    if (!gl.getQueryParameter(gpuT.q, gl.QUERY_RESULT_AVAILABLE)) return;
+    if (!gl.getParameter(gpuT.ext.GPU_DISJOINT_EXT)) { gpuT.hist.push(gl.getQueryParameter(gpuT.q, gl.QUERY_RESULT) / 1e6); if (gpuT.hist.length > 20) gpuT.hist.shift(); }
+    gl.deleteQuery(gpuT.q); gpuT.q = null;
+}
 // 確認用の表示（Iキー）: FPS・描画解像度・画面のHz・直近1秒の遅れフレーム数・切り替えからの累計
 const perfEl = document.createElement('div');
 perfEl.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:99999;font:12px/1.4 monospace;color:#fff;background:rgba(0,0,0,.55);padding:4px 8px;border-radius:4px;pointer-events:none;display:none;white-space:pre';
 (document.getElementById('fullscreen-root') || document.body).appendChild(perfEl); // フルスクリーン中も見えるように
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat) { perfEl.style.display = perfEl.style.display === 'none' ? 'block' : 'none'; } });
 function adaptQuality(now) {
-    if (perfEl.style.display !== 'none') perfEl.textContent = `${(perf.fps || 0).toFixed(1)} FPS  Q ${quality.toFixed(2)}  ${Math.round(1000 / frameClock.period)}Hz  LATE ${perf.lateShow || 0}/s  TOTAL ${perf.drops || 0}`;
+    if (gpuT.init && !gpuT.ext && !gpuT.capped && !IS_MOBILE) { gpuT.capped = true; qCeil = Math.min(qCeil, 1.5); if (quality > 1.5) { quality = 1.5; applyQuality(); } } // GPUを測れない環境では上限を控えめに
+    if (perfEl.style.display !== 'none') perfEl.textContent = `${(perf.fps || 0).toFixed(1)} FPS  Q ${quality.toFixed(2)}  ${Math.round(1000 / frameClock.period)}Hz  LATE ${perf.lateShow || 0}/s  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'ms' : 'n/a'}`;
     if (now < perf.hold) { perf.t0 = 0; return; }
     if (!perf.t0) { perf.t0 = now; return; }
     if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; perf.late = 0; } // タブ復帰などの長い空白は無視
@@ -7287,16 +7304,19 @@ function adaptQuality(now) {
     const span = now - perf.t0;
     if (span < 1000) return;
     const fps = perf.frames * 1000 / span, late = perf.late || 0;
+    // GPUの描画時間（直近の中央値）。更新周期の85%を超えたら重い、65%未満なら余裕あり
+    let gpuHeavy = false, gpuRoom = true;
+    if (gpuT.hist.length >= 5) { const a = gpuT.hist.slice().sort((x, y) => x - y); gpuT.ms = a[a.length >> 1]; gpuHeavy = gpuT.ms > frameClock.period * 0.85; gpuRoom = gpuT.ms < frameClock.period * 0.65; gpuT.hist.length = 0; }
     perf.fps = fps; perf.lateShow = late;
     perf.t0 = now; perf.frames = 0; perf.late = 0;
-    perf.bad = fps < 54 || late >= 3 ? (perf.bad || 0) + 1 : 0;
+    perf.bad = fps < 54 || late >= 3 || gpuHeavy ? (perf.bad || 0) + 1 : 0;
     if (perf.bad >= 2 && quality > Q_MIN) {
         perf.bad = 0;
         if (now - perf.lastRaise < 20000) qCeil = Math.max(Q_MIN, quality - 0.05); // 上げてすぐ落ちたら上限を固定（行ったり来たりを防ぐ）
         quality = Math.max(Q_MIN, quality - 0.15);
         perf.good = 0;
         applyQuality();
-    } else if (fps >= 58 && late === 0) {
+    } else if (fps >= 58 && late === 0 && gpuRoom) {
         perf.good++;
         if (perf.good >= 12 && quality < Math.min(Q_MAX, qCeil) && gameState !== 'playing') { // プレイ中は画質を上げ直さない（切り替えの一瞬のカクつきを避ける）
             quality = Math.min(Q_MAX, qCeil, quality + 0.1);
@@ -7808,7 +7828,7 @@ function render3D() {
         hyperGrade.enabled = hyperK > 0 || grayK > 0;
         hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ
         hyperGrade.uniforms.t.value = rTime;
-        composer.render(dt);
+        gpuPoll(); gpuBegin(); composer.render(dt); gpuEnd();
     } else {
         renderer.render(scene, camera);
     }
