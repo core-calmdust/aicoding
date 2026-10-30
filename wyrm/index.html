@@ -1705,18 +1705,34 @@ function boom(pos, cols, n) {
     const geo = new THREE.BufferGeometry(), P = new Float32Array(n * 18), C = new Float32Array(n * 18);
     geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('color', new THREE.BufferAttribute(C, 3));
     const ps = []; for (let i = 0; i < n; i++) { const c = _c(cols[i % cols.length]).multiplyScalar(1.6); for (let j = 0; j < 6; j++) C.set([c.r, c.g, c.b], (i * 6 + j) * 3);
-        ps.push({ p: pos.clone(), v: new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize().multiplyScalar(120 + Math.random() * 380), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 16, s: 3 + Math.random() * 8 }); }
-    const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-    const o = new THREE.LineSegments(geo, mat); o.frustumCulled = false; scene.add(o); booms.push({ o, ps, t: 0 });
+        ps.push({ i, p: pos.clone(), v: new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize().multiplyScalar(120 + Math.random() * 380), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 16, s: 3 + Math.random() * 8 }); }
+    const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }); enemyFog(mat);
+    const o = new THREE.LineSegments(geo, mat); o.frustumCulled = false; scene.add(o);
+    // 面のある破片: 暗い場所でもそこだけ光が当たっているように、面ごとに明るさを変えて塗る（霧は薄く）
+    const fg = new THREE.BufferGeometry(), FP = new Float32Array(n * 9), FC = new Float32Array(n * 9);
+    for (let i = 0; i < n; i++) { const c = _steel.clone().lerp(_c(cols[i % cols.length]), 0.6).multiplyScalar(1.1 + Math.random() * 0.9); for (let j = 0; j < 3; j++) FC.set([c.r, c.g, c.b], (i * 3 + j) * 3); }
+    fg.setAttribute('position', new THREE.BufferAttribute(FP, 3)); fg.setAttribute('color', new THREE.BufferAttribute(FC, 3));
+    const fm = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, side: THREE.DoubleSide, depthWrite: false }); enemyFog(fm);
+    const f = new THREE.Mesh(fg, fm); f.frustumCulled = false; scene.add(f);
+    // 爆発の一瞬の光（そこだけ照らされる）
+    const fl = new THREE.Mesh(boomFlashGeo, new THREE.ShaderMaterial({ uniforms: { uO: { value: 0.55 }, uC: { value: _c(cols[0]).lerp(_c(0xffffff), 0.6) } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        vertexShader: 'varying float vF; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vF = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }',
+        fragmentShader: 'uniform float uO; uniform vec3 uC; varying float vF; void main() { gl_FragColor = vec4(uC * pow(vF, 2.5) * uO, 1.0); }' })); // 縁が溶けるやわらかな光
+    fl.position.copy(pos); scene.add(fl);
+    booms.push({ o, f, fl, ps, t: 0 });
 }
+const boomFlashGeo = new THREE.SphereGeometry(1, 12, 8);
 const _ba = new THREE.Vector3(), _bb = new THREE.Vector3(), _bc = new THREE.Vector3(), _bqq = new THREE.Quaternion();
 function updateBooms(dt) {
     for (let k = booms.length - 1; k >= 0; k--) { const B = booms[k]; B.t += dt; const P = B.o.geometry.attributes.position.array; let o = 0;
         B.ps.forEach(q => { q.v.multiplyScalar(1 - dt * 1.6); q.p.addScaledVector(q.v, dt); q.r.x += q.w * dt; q.r.y += q.w * 0.7 * dt; _bqq.setFromEuler(q.r);
             _ba.set(q.s, 0, 0).applyQuaternion(_bqq).add(q.p); _bb.set(-q.s * 0.5, q.s * 0.8, 0).applyQuaternion(_bqq).add(q.p); _bc.set(-q.s * 0.5, -q.s * 0.6, q.s * 0.5).applyQuaternion(_bqq).add(q.p);
-            for (const [A, Bv] of [[_ba, _bb], [_bb, _bc], [_bc, _ba]]) { P[o++] = A.x; P[o++] = A.y; P[o++] = A.z; P[o++] = Bv.x; P[o++] = Bv.y; P[o++] = Bv.z; } });
-        B.o.geometry.attributes.position.needsUpdate = true; B.o.material.opacity = Math.max(0, 1 - B.t / 0.9);
-        if (B.t > 0.9) { scene.remove(B.o); B.o.geometry.dispose(); B.o.material.dispose(); booms.splice(k, 1); } }
+            for (const [A, Bv] of [[_ba, _bb], [_bb, _bc], [_bc, _ba]]) { P[o++] = A.x; P[o++] = A.y; P[o++] = A.z; P[o++] = Bv.x; P[o++] = Bv.y; P[o++] = Bv.z; }
+            const FP = B.f.geometry.attributes.position.array, fo = q.i * 9; FP[fo] = _ba.x; FP[fo + 1] = _ba.y; FP[fo + 2] = _ba.z; FP[fo + 3] = _bb.x; FP[fo + 4] = _bb.y; FP[fo + 5] = _bb.z; FP[fo + 6] = _bc.x; FP[fo + 7] = _bc.y; FP[fo + 8] = _bc.z; });
+        B.o.geometry.attributes.position.needsUpdate = true; B.f.geometry.attributes.position.needsUpdate = true;
+        const fade = Math.max(0, 1 - B.t / 0.9); B.o.material.opacity = fade; B.f.material.opacity = Math.min(1, fade * 1.3);
+        const fk = Math.min(1, B.t / 0.3); B.fl.scale.setScalar(20 + fk * 70); B.fl.material.uniforms.uO.value = 0.55 * (1 - fk) * (1 - fk);
+        if (B.t > 0.9) { [B.o, B.f, B.fl].forEach(m => { scene.remove(m); if (m.geometry !== boomFlashGeo) m.geometry.dispose(); m.material.dispose(); }); booms.splice(k, 1); } }
 }
 
 // ---------------- 入力: ゲームパッド（左スティック移動・右スティック照準・Rトリガーでロック）／キーボード＋マウス ----------------
@@ -2181,7 +2197,7 @@ function frame(now) {
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
