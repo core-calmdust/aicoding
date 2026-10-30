@@ -915,7 +915,7 @@ const MUS = { on: false, n: 0, t: 0, bus: null, duck: null, timer: 0, lastChord:
 function musicStart() {
     if (!audio() || MUS.on) return; MUS.on = true;
     MUS.bus = AC.createGain(); MUS.bus.gain.value = 0.0001; MUS.bus.connect(master); MUS.bus.gain.setTargetAtTime(0.62, AC.currentTime, 0.6);
-    MUS.duck = AC.createGain(); MUS.duck.connect(MUS.bus); // キックに合わせて他の音を少し沈める
+    MUS.duck = AC.createGain(); { const up = AC.createGain(); up.gain.value = 1.78; MUS.duck.connect(up).connect(MUS.bus); } // キック以外の曲のパートを+5dB // キックに合わせて他の音を少し沈める
     MUS.n = 0; MUS.t = AC.currentTime + 0.12; MUS.lastChord = null;
     MUS.timer = setInterval(musTick, 25);
 }
@@ -972,8 +972,8 @@ function musStep(n, t) {
     const sg = ramp(I, 2.2, 2); if (sg > 0.03 && (k === 6 || k === 14 || (I > 4.5 && k === 11))) stab(t, ch.slice(2, 6).map(m => m + 12), S16 * 3, sg);
     // シーケンス: 8分音符で入り、さらに盛り上がると16分の合いの手が少しずつ加わる
     const a8 = ramp(I, 2.8, 2), a16 = ramp(I, 5, 2.5), up = ch.slice(1), oct = (Math.floor(n / 64) % 2) * 12;
-    if (k % 2 === 0 && a8 > 0.03) tone(t, up[(n >> 1) % up.length] + 12 + oct, 0.06 * a8, true);
-    else if (k % 2 === 1 && a16 > 0.03) tone(t, up[(n * 3 >> 1) % up.length] + 12 + oct, 0.04 * a16, true);
+    if (k % 2 === 0 && a8 > 0.03) tone(t, up[(n >> 1) % up.length] + 12 + oct, 0.107 * a8, true); // +5dB
+    else if (k % 2 === 1 && a16 > 0.03) tone(t, up[(n * 3 >> 1) % up.length] + 12 + oct, 0.071 * a16, true);
 }
 function sfxDamage() { if (!audio()) return; const t = AC.currentTime; [0, 1, 6].forEach(k => voice(t, mtof(40 + k), 'sawtooth', 0.005, 0.5, 0.12, 0.3)); const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 900; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.55); }
 function sfxCrash() {
