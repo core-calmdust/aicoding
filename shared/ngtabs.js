@@ -5,7 +5,9 @@
      デザイン (blocks marked data-ng="design": board / pieces / colours, picked from their icons)
    Shared card styles for the ゲーム tab: .ngt-gcards > button.ngt-gcard[.sel] > .gart + b + p (+ .gpick).
    The variant's name for the ルール tab comes from the chosen card's <b> (or the chosen button / option text).
-   <script src="../shared/ngtabs.js?v=7"></script> after the dialog; nothing else to call. */
+   A ゲーム block with class "hidden" (e.g. a mode that has no variants) drops the ゲーム tab until it is shown again.
+   On PC (no tabs) the cards sit in the dialog: style="--ngt-cols:3" on .ngt-gcards sets the columns there.
+   <script src="../shared/ngtabs.js?v=8"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
@@ -46,6 +48,11 @@ const CSS = `
 .ngt-gcard.sel{border-color:var(--accent,#d8b56a);background:color-mix(in srgb, var(--accent,#d8b56a) 12%, rgba(0,0,0,.22))}
 .ngt-gcard.sel .gpick{background:var(--accent,#d8b56a)}
 .ngt-gcard.sel .gpick::after{content:'✓'}
+.ngt-gcard .gart svg{width:64px;height:64px}
+.ngt-gcard .gtag{display:inline-block;margin-inline-end:5px;padding:0 6px;border-radius:999px;border:1px solid color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent);color:var(--accent,#d8b56a);font-size:10px;line-height:1.5;vertical-align:1px}
+.ngt-gcard:hover{border-color:color-mix(in srgb, var(--accent,#d8b56a) 60%, transparent)}
+@media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
+  .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
 `;
 const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
 const isSel = b => b.classList.contains('sel') || b.classList.contains('on') || b.classList.contains('active') || b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true';
@@ -53,7 +60,7 @@ function init() {
   const ov = document.getElementById('newOverlay'), modal = ov && ov.querySelector('.modal');
   if (!modal || !modal.querySelector('[data-ng=design], [data-ng=game]')) return;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
-  const hasGame = () => !!modal.querySelector('[data-ng=game]');
+  const hasGame = () => { const g = modal.querySelector('[data-ng=game]'); return !!g && !g.classList.contains('hidden'); };
   const bar = document.createElement('div'); bar.className = 'ngt-bar'; bar.setAttribute('role', 'tablist');
   // footer: the last action buttons and anything after them, then the tabs
   const acts = [...modal.querySelectorAll('.modal-actions')].pop();
@@ -100,7 +107,9 @@ function init() {
   // opens on the first tab; the variant's name follows the choice
   new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { cur = tabs()[0]; sync(); } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
   const g = modal.querySelector('[data-ng=game]');
-  if (g) new MutationObserver(() => { const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
+  // (the block shown / hidden → the tabs; otherwise only the name; sync() itself toggles .ngt-hide on the block, so compare first)
+  let tk = tabs().join();
+  if (g) new MutationObserver(() => { const k = tabs().join(); if (k !== tk) { tk = k; sync(); return; } const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
   sync();

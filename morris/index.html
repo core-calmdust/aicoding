@@ -1173,9 +1173,9 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
     </div>
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
-    <div class="field" id="fRules">
+    <div class="field" id="fRules" data-ng="game">
       <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
-      <div class="rulecards" id="ruleCards"></div>
+      <div class="ngt-gcards" id="ruleCards" style="--ngt-cols:3"></div>
     </div>
     <div class="ng-col ng-l">
     <div class="field" id="fColor">
@@ -2251,7 +2251,8 @@ function ruleIcon(r) {
   return s + '</svg>';
 }
 function renderRuleCards() {
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button class="rulecard ${draft.rule === r ? 'sel' : ''}" data-r="${r}">${ruleIcon(r)}<b>${t('rule.' + r)}</b><small>${t('rule.' + r + '.d')}${r === 'nine' ? ` <span class="std">${t('rule.std')}</span>` : ''}</small></button>`).join('');
+  // ゲーム tab (shared/ngtabs.js): art, name, how it differs
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleIcon(r)}</span><b>${t('rule.' + r)}</b><p>${r === 'nine' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
 }
 // ---------------------------------------------------------------- rules: hands-on tutorial (shared/ruletour.js)
 // Nine tab: the basics step by step (place, mill + remove, protected mills, move, fly, two ways to win, draws).
@@ -2427,7 +2428,7 @@ function openNewDialog() {
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
-$('#ruleCards').onclick = e => { const b = e.target.closest('.rulecard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
 $('#ngRulesHelp').onclick = () => openRules(draft.rule);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -3667,6 +3668,6 @@ window.addEventListener('resize', () => renderFx());
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=5"></script>
-<script src="../shared/ngtabs.js?v=7"></script>
+<script src="../shared/ngtabs.js?v=8"></script>
 </body>
 </html>

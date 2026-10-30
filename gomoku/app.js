@@ -928,15 +928,48 @@ $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay(
 // ---------------------------------------------------------------- new game dialog
 let draft = {};
 function levelLabelHTML(v) { return `${LV(v)}<small>${LVD(v)}</small>`; }
+// ゲーム tab (shared/ngtabs.js): one card per rule — art, name, how it differs
+const RULE_ORDER = ['renju', 'standard', 'free'];
+const RULE_D = {
+  ja: { renju: '黒だけに三三・四四・長連の禁手がある公式ルール。黒はちょうど5つ、白は5つ以上で勝ち。', standard: '禁手なし。ちょうど5つ並べたら勝ちで、6つ以上の長連は勝ちになりません。', free: '禁手なし。5つ以上並べれば勝ち。いちばん気軽ですが先手の黒がかなり有利です。' },
+  en: { renju: 'The official rules: only Black has forbidden moves (3-3, 4-4, overline). Black needs exactly five, White five or more.', standard: 'No forbidden moves. Exactly five in a row wins; six or more does not count.', free: 'No forbidden moves. Five or more in a row wins — the most casual rule, but Black has a big edge.' },
+  zh: { renju: '正式规则：只有黑棋有禁手（三三・四四・长连）。黑棋须正好五连，白棋五连及以上即胜。', standard: '无禁手。正好五连即胜，六连及以上不算胜。', free: '无禁手。五连及以上即胜。最轻松，但先手黑棋优势很大。' },
+  ko: { renju: '공식 규칙: 흑에만 금수(3-3·4-4·장목)가 있습니다. 흑은 정확히 5개, 백은 5개 이상이면 승리.', standard: '금수 없음. 정확히 5개를 이으면 승리하며, 6개 이상(장목)은 인정되지 않습니다.', free: '금수 없음. 5개 이상 이으면 승리. 가장 가볍지만 선수인 흑이 꽤 유리합니다.' },
+  es: { renju: 'Reglas oficiales: solo las negras tienen jugadas prohibidas (3-3, 4-4, más de cinco). Negras necesitan cinco exactas; blancas, cinco o más.', standard: 'Sin jugadas prohibidas. Gana exactamente cinco en línea; seis o más no cuentan.', free: 'Sin jugadas prohibidas. Gana cinco o más en línea: la regla más sencilla, pero las negras tienen mucha ventaja.' },
+  fr: { renju: 'Règles officielles : seuls les Noirs ont des coups interdits (3-3, 4-4, plus de cinq). Les Noirs doivent aligner exactement cinq, les Blancs cinq ou plus.', standard: 'Aucun coup interdit. Exactement cinq alignés gagnent ; six ou plus ne comptent pas.', free: 'Aucun coup interdit. Cinq alignés ou plus gagnent : la règle la plus simple, mais les Noirs sont très avantagés.' },
+  pt: { renju: 'Regras oficiais: só as pretas têm jogadas proibidas (3-3, 4-4, mais de cinco). Pretas precisam de exatamente cinco; brancas, cinco ou mais.', standard: 'Sem jogadas proibidas. Exatamente cinco em linha vence; seis ou mais não contam.', free: 'Sem jogadas proibidas. Cinco ou mais em linha vence — a regra mais simples, mas as pretas têm grande vantagem.' },
+  de: { renju: 'Die offiziellen Regeln: Nur Schwarz hat verbotene Züge (3-3, 4-4, Überlänge). Schwarz braucht genau fünf, Weiß fünf oder mehr.', standard: 'Keine verbotenen Züge. Genau fünf in einer Reihe gewinnen; sechs oder mehr zählen nicht.', free: 'Keine verbotenen Züge. Fünf oder mehr in einer Reihe gewinnen – am einfachsten, aber Schwarz ist stark im Vorteil.' },
+  hi: { renju: 'आधिकारिक नियम: केवल काले के लिए वर्जित चालें (3-3, 4-4, पाँच से अधिक) हैं। काले को ठीक पाँच, सफ़ेद को पाँच या अधिक चाहिए।', standard: 'कोई वर्जित चाल नहीं। ठीक पाँच की पंक्ति जीतती है; छह या अधिक नहीं गिने जाते।', free: 'कोई वर्जित चाल नहीं। पाँच या अधिक की पंक्ति जीतती है — सबसे आसान, पर पहले चलने वाले काले को बड़ा लाभ है।' },
+  ar: { renju: 'القواعد الرسمية: للأسود وحده نقلات محظورة (3-3 و4-4 وأكثر من خمسة). يحتاج الأسود خمسة بالضبط، والأبيض خمسة أو أكثر.', standard: 'لا نقلات محظورة. خمسة متتالية بالضبط تفوز؛ ستة أو أكثر لا تُحتسب.', free: 'لا نقلات محظورة. خمسة متتالية أو أكثر تفوز — أبسط القواعد، لكن الأسود صاحب البداية متفوق كثيرًا.' },
+};
+function ruleArt(r) {
+  const N = 9, u = 6.4, o = 3.2, P = i => o + i * u;
+  let s = `<svg viewBox="0 0 58 58" aria-hidden="true"><rect x="0" y="0" width="58" height="58" rx="6" fill="#d9b277"/>`;
+  for (let i = 0; i < N; i++) s += `<path d="M${P(i)} ${P(0)}V${P(N - 1)}M${P(0)} ${P(i)}H${P(N - 1)}" stroke="#5a3d1c" stroke-width=".5"/>`;
+  const st = (x, y, w) => `<circle cx="${P(x)}" cy="${P(y)}" r="2.8" fill="${w ? '#f3efe6' : '#1d1d1f'}" ${w ? 'stroke="#555" stroke-width=".4"' : ''}/>`;
+  const line = (x1, y1, x2, y2) => `<path d="M${P(x1)} ${P(y1)}L${P(x2)} ${P(y2)}" stroke="#e8b84a" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>`;
+  if (r === 'renju') {   // a 3-3: Black may not play at ×
+    s += st(4, 3) + st(4, 4) + st(2, 5) + st(3, 5) + st(6, 3, 1) + st(6, 6, 1) + st(1, 2, 1);
+    s += `<path d="M${P(4) - 2.6} ${P(5) - 2.6}l5.2 5.2m0 -5.2l-5.2 5.2" stroke="#d2412f" stroke-width="1.6" stroke-linecap="round"/>`;
+  } else if (r === 'standard') {   // exactly five
+    s += line(2, 4, 6, 4); for (let x = 2; x <= 6; x++) s += st(x, 4); s += st(1, 4, 1) + st(4, 6, 1) + st(5, 2, 1) + st(3, 6, 1);
+  } else {   // five or more: six still wins
+    s += line(1, 7, 6, 2); for (let k = 0; k < 6; k++) s += st(1 + k, 7 - k); s += st(2, 2, 1) + st(6, 6, 1) + st(4, 7, 1) + st(7, 3, 1) + st(3, 3, 1);
+  }
+  return s + '</svg>';
+}
+function renderRuleCards() {
+  const D = RULE_D[LANG] || RULE_D.en;
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gart">${ruleArt(r)}</span><b>${t('rule.' + r)}</b><p>${D[r]}</p><span class="gpick"></span></button>`).join('');
+}
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
   document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
-  document.querySelectorAll('#segRule button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.rule));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch', ol = m === 'online';
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRule').classList.toggle('hidden', !game);
-  $('#ruleNote').textContent = t('rule.' + draft.rule + '.note');
+  if (game) renderRuleCards();
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -956,7 +989,7 @@ function openNewDialog() {
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
-$('#segRule').onclick = e => { const b = e.target.closest('button'); if (b) { draft.rule = b.dataset.v; segSync(); } };
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
