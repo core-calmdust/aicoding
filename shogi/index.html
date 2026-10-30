@@ -150,7 +150,15 @@ body.skin-ink .pc{filter:drop-shadow(0 0 1px rgba(214,180,110,.7)) drop-shadow(0
 body.skin-ink .sq.last{background:rgba(214,180,110,.22)}
 
 @keyframes mv{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
-.board.no-anim .pc{animation:none!important}
+.board.no-anim .pc,.board.no-anim .pc .k{animation:none!important}
+/* promotion: the piece turns over (front face = unpromoted, back = promoted) after the slide */
+.pc.fl{perspective:calc(var(--cw)*3)}
+.pc.fl-a .k{animation:flOut .16s ease-in .2s both}
+.pc.fl-b .k{animation:flIn .19s ease-out .36s both}
+.pc.fl-b{z-index:3}
+@keyframes flOut{from{rotate:y 0deg;scale:1}to{rotate:y 90deg;scale:1.08}}
+@keyframes flIn{from{rotate:y -90deg;scale:1.08}to{rotate:y 0deg;scale:1}}
+@media (prefers-reduced-motion: reduce){.pc.fl-a{display:none}.pc.fl-b .k{animation:none}}
 .promo{position:absolute;z-index:30;display:flex;gap:6px;padding:6px;border-radius:12px;background:rgba(20,13,8,.92);border:1px solid rgba(201,169,97,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);transform:translate(-50%,-50%)}
 .promo button{position:relative;width:calc(var(--cw)*1.1);height:calc(var(--ch)*1.15);border-radius:8px;background:rgba(255,255,255,.06)}
 .promo button:hover{background:rgba(226,194,117,.25)}
@@ -1706,6 +1714,20 @@ function pieceEl(code, promoted) {
   el.appendChild(k);
   return el;
 }
+const REDUCED_MOTION = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+// keep every image of the current piece set (both sides, promoted and not) loaded and decoded, so a promotion
+// (or a drop / capture) shows its picture at once instead of fetching it the first time it appears
+const PRELOAD = {};
+function preloadPieces(set) {
+  if (!PIECE_SETS[set] || PRELOAD[set]) return;
+  PRELOAD[set] = [];
+  for (const side of [0, 1]) for (const code of PCODE.slice(1).concat('GY')) {
+    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=2`;
+    if (im.decode) im.decode().catch(() => {});
+    PRELOAD[set].push(im);
+  }
+}
+window.preloadPieces = preloadPieces;
 function renderCoords() {
   let top = '', right = '';
   const n = window.Variants ? Variants.geom(P).n : 9;   // 5五将棋: 5×5
@@ -1721,7 +1743,7 @@ function renderBoard(anim) {
   const mine = canInteract() ? P.side : -1;
   for (let d = 0; d < 81; d++) {
     const s = dispToSq(d), c = sqEls[d];
-    const old = c.querySelector('.pc'); if (old) old.remove();
+    c.querySelectorAll('.pc').forEach(x => x.remove());
     const p = P.board[s];
     c.classList.toggle('last', s === lastTo);
     c.classList.toggle('chk', s === chkSq);
@@ -1739,6 +1761,16 @@ function renderBoard(anim) {
         } else dy = (E.colorOf(p) === 1) !== flip ? -60 : 60;
         el.style.setProperty('--dx', dx + '%'); el.style.setProperty('--dy', dy + '%');
         el.classList.add('mv');
+        // promotion: the unpromoted face slides in on top, then the piece turns over to its promoted side
+        if (E.mPromo(lm) && !E.isDrop(lm) && E.typeOf(p) > OU && !REDUCED_MOTION.matches) {
+          const fe = pieceEl(p - 8);
+          fe.style.setProperty('--dx', dx + '%'); fe.style.setProperty('--dy', dy + '%');
+          fe.classList.add('mv', 'fl', 'fl-a'); el.classList.add('fl', 'fl-b');
+          const k = fe.querySelector('.k'), done = () => fe.remove();
+          if (k) k.addEventListener('animationend', done, { once: true });
+          setTimeout(done, 1500);
+          c.appendChild(fe);
+        }
       }
       c.appendChild(el);
     }
@@ -2608,6 +2640,7 @@ $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { d
 function applyLook() {
   if (settings.pieces === 'real') settings.pieces = 'orangain';
   if (settings.pieces === 'ryoko_1kanji') settings.pieces = '1kanji_3d';
+  preloadPieces(settings.pieces);
   $('#pcCredit').textContent = PIECE_SETS[settings.pieces] ? t('pc.credit', { a: PIECE_SETS[settings.pieces] }) : '';
   ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
   segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
@@ -5129,7 +5162,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=9'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=10'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
