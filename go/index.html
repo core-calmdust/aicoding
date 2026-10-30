@@ -649,6 +649,11 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:14px} html.atlas-skin #playbar{margin-top:-9px} }
 </style>
 <link rel="stylesheet" href="online.css?v=2">
+<style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
+.modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+.modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
+.modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
+</style>
 </head>
 <body>
 <div class="app">
