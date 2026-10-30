@@ -541,13 +541,22 @@ function mTabs() {
 }
 $('#mTabRec').onclick = () => window.GameRecord && GameRecord.open();   // 戦績: opens the record dialog (not a panel)
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
-  const sc = $('.stage'), same = $('#side').dataset.pt === b.dataset.pt;
-  if (same) { if (sc.scrollTop > 0) sc.scrollTo({ top: 0, behavior: 'smooth' }); return; }   // tap again: back to the table
-  set.mTab = b.dataset.pt; save(); mTabs();   // mTabs() keeps the view inside the (maybe shorter) content in the same frame — no jump
-  // only when the box is (almost) out of sight, bring its top up to just past the middle of the screen
-  const h = sc.clientHeight, y = $('#side').getBoundingClientRect().top - sc.getBoundingClientRect().top;
-  if (y > h * .85) sc.scrollTo({ top: Math.min(sc.scrollHeight - h, sc.scrollTop + y - h * .55), behavior: 'smooth' });
+  const sc = $('.stage'), pt = b.dataset.pt, same = $('#side').dataset.pt === pt;
+  // the same tab again while away from the table: back to the table (tap → box, tap → table, tap → box …)
+  if (same && sc.scrollTop > 8) { sc.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  if (!same) { set.mTab = pt; save(); mTabs(); }   // mTabs() keeps the view inside the (maybe shorter) content in the same frame — no jump
+  // 勝率: to the very bottom; the other boxes: their top just under the top of the scrolling area
+  // (a short box gets room below it, so it can still come all the way up; the room goes once back at the table)
+  sc.style.paddingBottom = '';
+  const h = sc.clientHeight, box = $(`#side [data-pt="${pt}"]`) || $('#side');
+  let max = sc.scrollHeight - h, top = max;
+  if (pt !== 'eq') {
+    top = sc.scrollTop + box.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8;
+    if (top > max) { sc.style.paddingBottom = `calc(${getComputedStyle(sc).paddingBottom} + ${Math.ceil(top - max)}px)`; max = top; }
+  }
+  sc.scrollTo({ top: Math.max(0, Math.min(max, top)), behavior: 'smooth' });
 });
+$('.stage').addEventListener('scroll', e => { const sc = e.currentTarget; if (sc.scrollTop < 1 && sc.style.paddingBottom) sc.style.paddingBottom = ''; }, { passive: true });
 /* phones: make the header labels fit (no "…") */
 function fitLabels() {
   $$('.controls .btn span').forEach(sp => { sp.style.fontSize = ''; if (!sp.offsetParent) return; let f = parseFloat(getComputedStyle(sp).fontSize); while (sp.scrollWidth > sp.clientWidth + .5 && f > 8) { f -= .5; sp.style.fontSize = f + 'px'; } });
