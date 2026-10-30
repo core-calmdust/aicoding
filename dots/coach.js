@@ -2,7 +2,7 @@
 // ドット＆ボックス コーチ (common spec shared/COACH.md, model: shogi/coach.js; look and behaviour: shared/coachkit.js)
 // Shown while the player is to move against the AI (and in local two-player games): the position at a glance (見込み・箱・
 // 局面・鎖の形「長い鎖◯本模様」・長鎖ルールのねらい for both sides), the recommended plan with its reason, the candidate
-// lines classified into plans (安全な線・犠牲・取る・2つ残し・鎖を渡す…; revealed on demand, drawn on the board on hover),
+// lines classified into plans (安全な線・犠牲・取る・2つ残し・鎖を渡す…; shown on hover / tap, drawn on the board on hover),
 // prioritized "how to think" tips read from the position, and the verdict on the previous move.
 // Openings: for 3×3 / 4×4 the solver-verified lines of openings.json (the site's 定跡, with their own names) are shown
 // instead of raw evaluation; 5×5 has no book. Theory: E. Berlekamp, The Dots-and-Boxes Game (long chain rule, double-dealing).
@@ -32,7 +32,6 @@ ja: {
   recForced: '取れる箱は取って損がありません（取ったあと、もう1本引けます）。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも結果は同じです。自分の得意な方針で引くのが上達の近道です。',
   cdH: '候補の線と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '線を見る', hide: '線を隠す',
   'gap.best': '最善', 'gap.eq': '同じ結果', 'gap.lt': '{x}箱損', 'gap.bad': '{x}箱損', 'gap.book': '定石表',
   // opening (openings.json: the site's solver-verified lines)
   opH: '序盤の分かれ道 — 定跡の手順', opIntro: '序盤は評価値より定跡で学ぼう。ここに出る手順は、当サイトのソルバーで最善と確かめたものです。まずは定番2つ、慣れたら変わり種も。',
@@ -133,7 +132,6 @@ en: {
   recForced: 'Taking the box costs nothing (after taking it you draw another line).',
   brH: 'Branching point — plans to choose from', brIntro: 'All of these give the same result. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidate lines and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show lines', hide: 'Hide lines',
   'gap.best': 'best', 'gap.eq': 'same result', 'gap.lt': '−{x} box', 'gap.bad': '−{x} boxes', 'gap.book': 'book',
   opH: 'Opening crossroads — book lines', opIntro: 'In the opening, learn the book lines rather than evaluations. These lines are checked as best by this site\'s solver. Learn the two standard choices first, then try the unusual ones.',
   'op.main': 'Standard', 'op.alt': 'Unusual', 'op.trap': 'Trap', 'op.best': 'best',
@@ -298,7 +296,7 @@ function catTxt(d, f) {
 }
 
 // --------------------------------------------------------------------------------------------- analysis (own worker)
-const S0 = { open: false, reveal: true, info: new Map(), job: null, w: null, hover: null, items: [] };
+const S0 = { open: false, info: new Map(), job: null, w: null, hover: null, items: [] };
 const keyAt = i => game.n + ':' + game.moves.slice(0, i).join(',');
 function ask(i) {
   const key = keyAt(i);
@@ -505,7 +503,7 @@ function render() {
     else if (cl.only) why += sp() + esc(tx('recOnly')); else if (cl.sharp) why += sp() + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += sp() + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: true,
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d, i, cl.exact), dup = cl.dirs.slice(0, i).some(x => x.k.k === d.k.k); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: ttl(d), text: gl(esc(dup ? (d.after ? tx('est', { k: d.after.mode, w: tx('you'), p: tx(f.even ? 'p.even' : 'p.odd') }) : '') : catTxt(d, f))), gap: g[0], gcls: g[1], move: String(d.u), mvName: edgeName(d.u) }; }),
     });
   } else if (!op) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
@@ -519,11 +517,10 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S0.open = !S0.open; render(); },
-    onReveal: () => { S0.reveal = !S0.reveal; try { settings.coachReveal = S0.reveal; save(); } catch (e) {} S0.hover = null; render(); drawNow(); },
     onHover: u => { S0.hover = u == null ? null : +u; drawNow(); },
   });
 }
-// candidate lines on the board: the hovered one (or, revealed, all of them numbered)
+// candidate lines on the board: the hovered / tapped one only
 function clearHover() { if (S0.hover !== null) { S0.hover = null; drawNow(); } }
 function drawNow() { if (typeof renderBoard === 'function' && S) renderBoard(false); }
 function draw() {

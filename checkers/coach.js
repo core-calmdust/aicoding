@@ -1,7 +1,7 @@
 'use strict';
 // チェッカーコーチ (common spec: shared/COACH.md, model: shogi/coach.js) — shown while the player is to move against the AI
 // (and in two-player games on one device): the position at a glance (形勢・駒・局面・定跡・守りの形), the recommended plan with its
-// reason, the candidate directions (分かれ道: each candidate's plan explained, moves revealed on demand with arrows on the board),
+// reason, the candidate directions (分かれ道: each candidate's plan explained, moves shown on hover / tap with arrows on the board),
 // prioritized "how to think" tips read from the position (強制取り・ショット・取られそうな駒・キング・後ろの段・中央…), and the verdict
 // on the previous move (◎○△✕). In the first moves the coach teaches opening theory instead of raw evaluation.
 // Sources of the opening / strategy texts (checked 2026-10): R. Pask "Checkers for the Novice" and "Checkers in a Nutshell"
@@ -28,7 +28,6 @@ ja: {
   recForced: '指せる手はこれだけです（取るのは義務）。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: '上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   man: 'マン', king: 'キング',
   'tt.move': '{sq}の{p}を進める', 'tt.cap': '{sq}の{p}で{n}枚取る', 'tt.crown': '{sq}のマンをキングにする', 'tt.king': '{sq}のキングを動かす',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
@@ -131,7 +130,6 @@ en: {
   recForced: 'This is the only legal move (captures are compulsory).',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: 'The top candidates, explained plan by plan.',
-  show: 'Show moves', hide: 'Hide moves',
   man: 'man', king: 'king',
   'tt.move': 'Advance the {p} on {sq}', 'tt.cap': 'The {p} on {sq} takes {n}', 'tt.crown': 'Crown the man on {sq}', 'tt.king': 'Move the king on {sq}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
@@ -339,7 +337,7 @@ function bookAt(i) {
 const isBook = (i, nm) => { const b = bookAt(i); return !!(b && b.some(x => x.u === nm)); };
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, lists: new Map(), hov: null, items: null };
+const S = { open: false, key: '', f: null, lists: new Map(), hov: null, items: null };
 let card = null;
 function usable() {
   return !!(!lesson && !puzzle && !rgame && !ken && (settings.mode === 'ai' || settings.mode === 'pvp') && !document.body.classList.contains('in-online'));
@@ -499,9 +497,8 @@ function render() {
     if (cl.forced) why = esc(tx('recForced'));
     else if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
-    S.items = S.reveal ? cl.dirs.map(d => d.u) : [];
     h += CoachKit.branches({
-      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+      head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: String(d.u), mvName: d.nm }; }),
     });
   } else { S.items = null; h += `<p class="ck-calc">${esc(tx('calc'))}</p>`; }
@@ -515,14 +512,13 @@ function put(h) {
   const keep = card.scrollTop; card.dataset.h = h; card.innerHTML = h; card.scrollTop = keep;
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hov = null; render(); renderFx(); },
     onHover: u => { const v = u == null ? null : +u; if (S.hov !== v) { S.hov = v; renderFx(); } },
   });
 }
-// candidate arrows on the board (called from renderFx): the hovered candidate, or every revealed one
+// candidate arrow on the board (called from renderFx): the hovered / tapped candidate only
 function fx(svg, pos) {
   if (!active() || !myTurn() || sel) return;
-  const L = S.hov != null ? [S.hov] : (S.items || []);
+  const L = S.hov != null ? [S.hov] : [];
   const legal = pos.moves();
   for (const m of L) if (legal.includes(m)) svgArrow(svg, E.path(pos, m), 'ck');
 }
@@ -534,7 +530,6 @@ function init() {
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   CheckersCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

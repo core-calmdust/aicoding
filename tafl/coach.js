@@ -2,7 +2,7 @@
 // ネファタフル コーチ (common spec: shared/coachkit.js, model: shogi/coach.js) — shown while the player is to move against the AI
 // (and in local two-player games): the position at a glance (形勢・取った駒・局面・序盤の型・隅の封鎖／王の状態), the recommended
 // plan with its reason, the candidate directions of the position (分かれ道: the engine's analysis list, classified into plans,
-// moves revealed on demand with an arrow on the board), prioritized "how to think" tips read from the position (脱出路・王の危険・
+// moves shown on hover / tap with an arrow on the board), prioritized "how to think" tips read from the position (脱出路・王の危険・
 // 取られそうな駒・角の隣 …) and the verdict on the previous move. In the first moves of Copenhagen the coach teaches the opening
 // lines of openings.json (the site's opening book) instead of raw evaluations; a book move is never called a mistake.
 // Texts: TX[lang] (en fallback); the other languages live in coach-i18n.js (TaflCoach.merge).
@@ -28,7 +28,6 @@ ja: {
   recOnly: 'ほかの手は大きく損をします。迷わず指したい局面です。',
   brH: '分かれ道 — 選べる方針', brIntro: 'どれを選んでも大差はありません。自分の得意な方針で指すのが上達の近道です。',
   cdH: '候補手と方針', cdIntro: 'AIの上位の候補を、方針ごとに解説します。',
-  show: '手を見る', hide: '手を隠す',
   'tt.move': '{sq}の{p}を動かす', 'tt.cap': '{sq}の{p}で{n}枚取る', 'tt.king': '王（{sq}）を動かす', 'tt.kingCap': '王（{sq}）で{n}枚取る',
   'gap.best': '最善', 'gap.eq': 'ほぼ同じ', 'gap.lt': '少し劣る', 'gap.bad': '劣る',
   opH: '序盤の分かれ道 — 作戦の選び方', opIntro: '最初の数手で序盤の型が決まります。まずは定番の2つを試し、慣れたら変わり種も。手順はこのサイトの定跡（レッスンの「定跡」）からです。', 'op.main': '定番', 'op.alt': '変わり種',
@@ -119,7 +118,6 @@ en: {
   recOnly: 'Every other move loses a lot here — play it without hesitating.',
   brH: 'Branching point — plans to choose from', brIntro: 'None of these is much worse than the others. Playing the plan that suits you is the fastest way to improve.',
   cdH: 'Candidates and their plans', cdIntro: "The AI's top candidates, explained plan by plan.",
-  show: 'Show moves', hide: 'Hide moves',
   'tt.move': 'Move the {p} on {sq}', 'tt.cap': 'The {p} on {sq} captures {n}', 'tt.king': 'Move the king ({sq})', 'tt.kingCap': 'The king ({sq}) captures {n}',
   'gap.best': 'best', 'gap.eq': 'about equal', 'gap.lt': 'a bit worse', 'gap.bad': 'worse',
   opH: 'Opening crossroads — choosing a plan', opIntro: "The first few moves decide the type of opening. Try the two standard choices first, then the unusual ones. The lines come from this site's opening book (Lessons → Openings).", 'op.main': 'Standard', 'op.alt': 'Unusual',
@@ -343,7 +341,7 @@ function ttl(k) {
 function gapOf(d, i) { return i === 0 ? ['gap.best', 'g0'] : d <= 0.05 ? ['gap.eq', 'g1'] : d <= 0.12 ? ['gap.lt', 'g2'] : ['gap.bad', 'g3']; }
 
 // --------------------------------------------------------------------------------------------- state / rendering
-const S = { open: false, reveal: false, key: '', f: null, cls: null, hov: null, items: null };
+const S = { open: false, key: '', f: null, cls: null, hov: null, items: null };
 let card = null;
 function usable() {
   return !!(!lesson && !puzzle && !rgame && (settings.mode === 'ai' || settings.mode === 'pvp') && !(typeof kenOk === 'function' && kenOk()));
@@ -505,7 +503,7 @@ function render() {
     if (cl.only) why += ' ' + esc(tx('recOnly')); else if (cl.sharp) why += ' ' + esc(tx('recSharp', { x: cl.sharp })); else if (cl.branch) why += ' ' + esc(tx('recBranch'));
     h += CoachKit.rec(tx('b.' + b.k.k), gl(why), RCLS[b.k.k] || '');
     S.items = cl.dirs.map(d => ({ m: d.m }));
-    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')), reveal: S.reveal, show: tx('show'), hide: tx('hide'),
+    h += CoachKit.branches({ head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d.k)), text: gl(esc(tx('x.' + d.k.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: String(d.m), mvName: d.nm }; }) });
   } else if (!shown) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, wr, cl);
@@ -519,11 +517,10 @@ function put(h) {
   if (S.hov != null) { S.hov = null; renderFx(); }
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
-    onReveal: () => { S.reveal = !S.reveal; try { settings.coachReveal = S.reveal; save(); } catch (e) {} S.hov = null; renderFx(); render(); },
     onHover: u => { const v = u == null ? null : +u; if (S.hov !== v) { S.hov = v; renderFx(); } },
   });
 }
-// the hovered / tapped candidate's arrow on the board (revealed moves only)
+// the hovered / tapped candidate's arrow on the board
 function fx(svg) {
   if (S.hov == null || !active() || !myTurn() || !S.items || !S.items.some(d => d.m === S.hov)) return;
   try { svgArrow(svg, [mFrom(S.hov), mTo(S.hov)], 'ok'); } catch (e) {}
@@ -534,7 +531,6 @@ function init() {
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   if (settings.coach === undefined) settings.coach = true;
-  try { S.reveal = !!settings.coachReveal; } catch (e) {}
   TaflCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {
