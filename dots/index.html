@@ -1158,6 +1158,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=4"></script>
+<script src="../shared/export.js?v=1"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script>
 'use strict';
@@ -2136,21 +2137,60 @@ function loadFromHash() {
   return true;
 }
 window.addEventListener('hashchange', loadFromHash);
-$('#btnShare').onclick = async () => {
-  if (!game.moves.length || game.setup) return;
-  const url = location.origin + location.pathname + '#k=' + encMoves(game.moves) + '&s=' + game.n + (viewPly !== null ? '&n=' + viewPly : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: 'Dots & Boxes', url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return game.setup ? '' : location.origin + location.pathname + '#k=' + encMoves(game.moves) + '&s=' + game.n + (viewPly !== null ? '&n=' + viewPly : ''); }
+// 共有: dot-pair notation (dots a1… from the bottom left, an edge = its two dots: "b2-c2"), one line per turn, URL, diagram
+const dbDot = (n, r, c) => 'abcdefgh'[c] + (n + 1 - r);
+const dbEdge = (G, n, e) => { const [r1, c1, r2, c2] = G.ed[e]; return dbDot(n, r1, c1) + '-' + dbDot(n, r2, c2); };
+function dbRecord() {
+  const S2 = compute(game), n = game.n, lines = []; let cur2 = null;
+  S2.log.forEach((x, i) => { if (!cur2 || cur2.pl !== x.pl || cur2.closed) { cur2 = { pl: x.pl, mv: [], closed: false }; lines.push(cur2); } cur2.mv.push(dbEdge(S2.G, n, x.e) + (x.k ? '*'.repeat(x.k) : '')); if (!x.k) cur2.closed = true; });
+  const q = v => String(v || '?').replace(/["\\]/g, ''), d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  const res = S2.over ? `${S2.scores[0]}-${S2.scores[1]}` : '*';
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/dots"]\n[Date "${date}"]\n[Size "${n}x${n}"]\n[A "${q(playerName(0))}"]\n[B "${q(playerName(1))}"]\n[Result "${res}"]\n; dots a1… (a = left, 1 = bottom); an edge joins two dots; * = box completed\n\n` + lines.map((l, i) => `${i + 1}. ${l.pl ? 'B' : 'A'} ${l.mv.join(' ')}`).join('\n') + '\n';
+}
+function dbParse(v) {   // dot-pair notation -> { ok, n, moves }
+  const sm = v.match(/\[Size\s+"(\d)x\d"\]/i), toks = [...v.replace(/^\s*;.*$/gm, '').replace(/\[[^\]]*\]/g, ' ').matchAll(/\b([a-h])([1-9])-([a-h])([1-9])\b/g)];
+  if (!toks.length) return null;
+  let n = sm ? +sm[1] : Math.max(...toks.flatMap(x => [+x[2], +x[4], 'abcdefgh'.indexOf(x[1]) + 1, 'abcdefgh'.indexOf(x[3]) + 1])) - 1;
+  if (![3, 4, 5].includes(n)) return { ok: false, at: 1 };
+  const G = E.geom(n, n), key = new Map(); for (let e = 0; e < G.E; e++) { key.set(dbEdge(G, n, e), e); const [x, y] = dbEdge(G, n, e).split('-'); key.set(y + '-' + x, e); }
+  const out = [];
+  for (let i = 0; i < toks.length; i++) { const e = key.get(toks[i][0]); if (e === undefined || out.includes(e)) return { ok: false, at: i + 1 }; out.push(e); }
+  return { ok: true, n, moves: out };
+}
+async function dbDiagram() {
+  const RX = RecordExport, n = game.n, upto = viewPly === null ? game.moves.length : viewPly, S2 = compute({ n, moves: game.moves.slice(0, upto), human: game.human, setup: game.setup, resigned: viewPly === null ? game.resigned : undefined });
+  await RX.fonts();
+  const C = n >= 5 ? 76 : 88, B = n * C, M = 36, ink = '#141414';
+  const last = S2.log.length ? S2.log[S2.log.length - 1] : null;
+  let cap = last ? `${upto}. ${last.pl ? 'B' : 'A'} ${dbEdge(S2.G, n, last.e)}${last.k ? ' (+' + last.k + ')' : ''}` : RX.tx('start');
+  cap += '　' + (S2.over ? `A ${S2.scores[0]} – ${S2.scores[1]} B` : RX.tx('toMove', { s: S2.turn ? 'B' : 'A' }));
+  const fill = ['rgba(40,90,200,.16)', 'rgba(210,60,50,.16)'], txt = ['#1d4fb8', '#b8322a'];
+  const pl = [0, 1].map(i => ({ name: `${i ? 'B' : 'A'}: ${playerName(i)} · ${S2.scores[i]}`, swatch: (g, x, y, r) => { g.fillStyle = fill[i]; g.strokeStyle = txt[i]; g.lineWidth = 1.4; g.fillRect(x - r, y - r, 2 * r, 2 * r); g.strokeRect(x - r, y - r, 2 * r, 2 * r); } }));
+  return RX.sheet({ bw: B + 2 * M, bh: B + 2 * M, title: 'Dots & Boxes', caption: cap, players: pl, path: 'dots', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + M, oy = y0 + M, G = S2.G;
+    for (let b = 0; b < G.B; b++) { const o = S2.owner[b]; if (o < 0 || o > 1) continue; const r = Math.floor(b / n), c = b % n; g.fillStyle = fill[o]; g.fillRect(ox + c * C, oy + r * C, C, C); g.fillStyle = txt[o]; g.font = `800 ${C * 0.42}px ${RX.SERIF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o ? 'B' : 'A', ox + c * C + C / 2, oy + r * C + C / 2 + 2); }
+    for (let e = 0; e < G.E; e++) {
+      if (!S2.p.drawn[e]) continue; const [r1, c1, r2, c2] = G.ed[e];
+      g.strokeStyle = last && last.e === e ? '#c0392b' : ink; g.lineWidth = last && last.e === e ? 5 : 3.6; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(ox + c1 * C, oy + r1 * C); g.lineTo(ox + c2 * C, oy + r2 * C); g.stroke();
+    }
+    for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) RX.disc(g, ox + c * C, oy + r * C, 5.5, ink);
+    g.fillStyle = '#555'; g.font = `600 14px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i <= n; i++) { g.fillText('abcdefgh'[i], ox + i * C, oy + B + M * 0.62); g.fillText(String(n + 1 - i), ox - M * 0.62, oy + i * C); }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'dots', title: 'Dots & Boxes', lang: () => LANG, toast: m => toast(m, 1500), show: o => o.classList.add('show'), hide: o => o.classList.remove('show'),
+  empty: () => !game.moves.length || !!game.setup || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'dots', label: 'a1-b1', ext: 'txt', text: dbRecord }],
+  url: shareUrl, image: { modes: ['board'], draw: dbDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; $('#pasteOverlay').classList.add('show'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => $('#pasteOverlay').classList.remove('show');
 $('#pasteOk').onclick = () => {
   let v = $('#pasteText').value.trim(), sz = null, ply;
   const m = v.match(/#(.*)$/) || (/(^|&)k=/.test(v) ? [null, v] : null);
   if (m) { const q = new URLSearchParams(m[1]); v = q.get('k') || ''; sz = q.get('s'); if (q.has('n')) ply = +q.get('n'); }
-  const d = decodeGame(v, sz);
+  const d = (!m && dbParse(v)) || decodeGame(v, sz);
   if (!d.ok || !d.moves.length) { toast(d.ok ? t('nokifu') : t('paste.bad', { n: d.at }), 2500); return; }
   openLoaded(d, ply);
 };

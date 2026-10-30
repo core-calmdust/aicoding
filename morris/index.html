@@ -1331,6 +1331,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=3"></script>
+<script src="../shared/export.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
@@ -3459,8 +3460,8 @@ function parseGameText(v) {
     if (!list) return null;
     return { rule, list, n };
   }
-  const rm = v.match(/\[(nine|twelve|six)\]/i); rule = rm ? rm[1].toLowerCase() : null;
-  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\d+\.\s*/g, ' ');
+  const rm = v.match(/\[(nine|twelve|six)\]/i) || v.match(/\[Variant\s+"(nine|twelve|six)\b/i); rule = rm ? rm[1].toLowerCase() : null;
+  v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\d+\.(\.\.)?\s*/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ');
   const toks = v.toLowerCase().split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
   const tryRule = r => {
@@ -3508,14 +3509,47 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#r=' + gv + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return location.origin + location.pathname + '#r=' + gv + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: standard notation (points a1–g7, a7-a4 for moves, x for the removed piece) with tags, the page's own text, URL, diagram
+const MR_NAME = { nine: "Nine Men's Morris", twelve: "Twelve Men's Morris", six: "Six Men's Morris" };
+const mrStd = m => mvName(m).replace('×', 'x');
+function mrRecord() {
+  const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*', tk = [];
+  moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(mrStd(m)); });
+  tk.push(res);
+  const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/morris"]\n[Date "${date}"]\n[Variant "${MR_NAME[gv]}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n\n${RecordExport.lines(tk)}\n`;
+}
+async function mrDiagram(mode) {
+  const RX = RecordExport, pos = posAt(cur).pos, n = G.size, S = n === 5 ? 92 : 70, B = (n - 1) * S, M = 40;
+  await RX.fonts();
+  let cap = cur ? `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${mrStd(moves[cur - 1])}` : RX.tx('start');
+  const st = statusAt(cur);
+  cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.side) })) + '　' + MR_NAME[gv];
+  const col = p => p === P1 ? '#fff' : '#1b1b1b';
+  const pl = [P1, P2].map(p => ({ name: `${pname(p)}${playerName(p) ? ' ' + playerName(p) : ''}${pos.hand[p] ? ' · ' + t('hand', { n: pos.hand[p] }) : ''}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, col(p), '#111', 1.3) }));
+  const lm = cur ? moves[cur - 1] : -1;
+  return RX.sheet({ bw: B + 2 * M, bh: B + 2 * M, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'morris', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+    const ox = x0 + M, oy = y0 + M, P = i => [ox + G.pts[i][0] * S, oy + G.pts[i][1] * S];
+    g.strokeStyle = '#111'; g.lineWidth = 2.2; g.lineCap = 'round';
+    const seg = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+    for (let a = 0; a < G.n; a++) for (const b of G.adj[a]) if (b > a) seg(a, b);
+    g.fillStyle = '#444'; g.font = `600 14px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < n; i++) { g.fillText('abcdefg'[i], ox + i * S, oy + B + M * 0.62); g.fillText(String(n - i), ox - M * 0.62, oy + i * S); }
+    const lt = lm >= 0 ? mTo(lm) : -1, lf = lm >= 0 ? mFrom(lm) : -1, lr = lm >= 0 ? mRm(lm) : -1;
+    for (let i = 0; i < G.n; i++) {
+      const [x, y] = P(i), v = pos.b[i];
+      if (!v) { RX.disc(g, x, y, 5.5, '#111'); if (i === lf || i === lr) { g.save(); g.setLineDash([3, 3]); g.beginPath(); g.arc(x, y, S * 0.26, 0, 7); g.strokeStyle = i === lr ? '#b3261e' : '#9a7a2a'; g.lineWidth = 1.6; g.stroke(); g.restore(); if (i === lr) { g.strokeStyle = '#b3261e'; g.lineWidth = 2; const d = S * 0.1; g.beginPath(); g.moveTo(x - d, y - d); g.lineTo(x + d, y + d); g.moveTo(x + d, y - d); g.lineTo(x - d, y + d); g.stroke(); } } continue; }
+      RX.disc(g, x, y, S * 0.27, col(v), '#111', 1.8);
+      g.beginPath(); g.arc(x, y, S * 0.17, 0, 7); g.lineWidth = 1; g.strokeStyle = v === P1 ? 'rgba(0,0,0,.4)' : 'rgba(255,255,255,.45)'; g.stroke();
+      if (i === lt) { g.beginPath(); g.arc(x, y, S * 0.07, 0, 7); g.fillStyle = v === P1 ? '#111' : '#fff'; g.fill(); }
+    }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'morris', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'std', label: 'a1-a4xd7', ext: 'txt', text: mrRecord }, { id: 'own', label: '[' + gv + ']', ext: 'txt', text: () => recordText() + '\n' }],
+  url: shareUrl, image: { modes: ['board'], draw: mrDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };
