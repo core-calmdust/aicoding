@@ -30,6 +30,9 @@ const CSS = `
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
 /* the footer: buttons, then the tabs at the very bottom (stays put; the settings above scroll) */
 .modal.ngt-on > .ngt-note{order:8;margin:var(--ngt-g) 0 0!important}
+/* the credits sit at the very bottom of the settings box, right above the buttons */
+.modal.ngt-on > .ngt-note:not(.ngt-hide):not(.ngt-note:not(.ngt-hide) ~ .ngt-note){margin-top:auto!important;padding-top:var(--ngt-g)}
+.modal.ngt-on:has(> .ngt-note:not(.ngt-hide)) > .ngt-foot{margin-top:0!important}
 .modal.ngt-on > .ngt-foot{order:9}
 .modal.ngt-on .ngt-foot{display:block;position:sticky;bottom:0;z-index:4;margin:auto -12px 0;padding:0;background:inherit}
 .modal.ngt-on .ngt-foot > :not(.ngt-bar){margin-left:12px!important;margin-right:12px!important}
@@ -90,14 +93,22 @@ function init() {
     // ゲーム / デザイン: only that tab's blocks (and the boxes that hold them), the title and the footer
     const sel = `[data-ng=${cur}]`;
     const walk = parent => [...parent.children].forEach(el => {
-      if (el.matches(sel) || el === foot || el.classList.contains('ngt-note') || el.tagName === 'H2' || el.matches('script,style')) return;
+      if (el.matches(sel) || el === foot || (el.classList.contains('ngt-note') && !el.matches('[data-ng]')) || el.tagName === 'H2' || el.matches('script,style')) return;
       if (el.querySelector(sel)) { walk(el); return; }
       el.classList.add('ngt-hide');
     });
     walk(modal);
   }
+  // a tab's own credit (data-ng-credit, e.g. the piece images' licence) joins the credits at the bottom of the box on phones
+  const credits = [...modal.querySelectorAll('[data-ng-credit]')].map(el => ({ el, home: el.parentNode, next: el.nextSibling }));
+  function placeCredits(on) {
+    credits.forEach(c => {
+      if (on) { if (c.el.parentNode !== modal) { c.el.classList.add('ngt-note'); modal.insertBefore(c.el, modal.querySelector(':scope > .ngt-note') || foot); } }
+      else if (c.el.parentNode === modal) { c.el.classList.remove('ngt-note'); c.home.insertBefore(c.el, c.next && c.next.parentNode === c.home ? c.next : null); }
+    });
+  }
   function sync() {
-    const on = MQ.matches; modal.classList.toggle('ngt-on', on);
+    const on = MQ.matches; modal.classList.toggle('ngt-on', on); placeCredits(on);
     const ks = tabs(); if (!ks.includes(cur)) cur = ks[0];
     const l = lang(), gn = gameName();
     const h = ks.map(k => `<button type="button" role="tab" data-ngt="${k}"><span></span>${k === 'rules' && ks.includes('game') ? '<small></small>' : ''}</button>`).join('');
