@@ -931,7 +931,16 @@ function beatPulse() { if (!MUS.on || !AC) return 0; const st = MUS.n + (AC.curr
 // ロック音: ロックのたびに4分・8分・16分音符のどれかでランダムに刻む（2拍ぶん、だんだん小さく）
 function sfxLock(n) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
     const div = [4, 2, 1][Math.floor(Math.random() * 3)], cnt = 8 / div;
-    for (let i = 0; i < cnt; i++) tone(t + i * div * S16, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * Math.pow(0.72, i), true); }
+    for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); hat808(ti, 0.16 * k); } }
+// 808系のハイハット: 金属的な比の矩形波6本を高域だけ通して短く切る
+const HAT_F = [205.3, 304.4, 369.6, 522.7, 540, 800];
+function hat808(t, gain, open = false) {
+    const bp = AC.createBiquadFilter(), hp = AC.createBiquadFilter(), g = AC.createGain(), d = open ? 0.28 : 0.055;
+    bp.type = 'bandpass'; bp.frequency.value = 10000; bp.Q.value = 0.8; hp.type = 'highpass'; hp.frequency.value = 7000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    HAT_F.forEach(f => { const o = AC.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(bp); o.start(t); o.stop(t + d + 0.02); });
+    bp.connect(hp).connect(g).connect(master);
+}
 function sfxFire(n) { if (!audio()) return; const t = AC.currentTime; const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3800, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18 + n * 0.02, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.22); }
 // 命中: 一斉射撃の何発目かで和音を上へたどる。最初の一発は根音の低いアタックも
 function sfxHit(order, volley) {
@@ -1509,8 +1518,10 @@ const RET_R = 56;
 function updateLock() {
     const held = IN.padLock || IN.mouseLock || !!IN.keys.Space;
     if (held && S.mode === 'play') {
-        const tryLock = (t, wp) => { if (locks.length >= 8 || t.locked || !t.alive || t.rz < 60) return; const [sx, sy, sz] = toScreen(wp); if (sz > 1) return;
-            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1); } };
+        const e8 = MUS.on && AC ? Math.floor((MUS.n + (AC.currentTime - MUS.t) / S16) / 2) : Math.floor(S.t / (S16 * 2)); // いまの8分音符の番号
+        let can = e8 !== S.lock8; // ロックは8分音符ごとに1つだけ
+        const tryLock = (t, wp) => { if (!can || locks.length >= 8 || t.locked || !t.alive || t.rz < 60) return; const [sx, sy, sz] = toScreen(wp); if (sz > 1) return;
+            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1); S.lock8 = e8; can = false; } };
         for (const e of enemies) tryLock(e, epos(e, _sp));
         for (const b of bullets) tryLock(b, _sp.set(b.x, b.y, -(S.d + b.rz)));
     }
