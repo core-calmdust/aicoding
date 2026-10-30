@@ -342,13 +342,13 @@ function vArt(v) {
   } else for (const [c, r] of a[2]) s += both(c, r);
   return s + '</svg>';
 }
-const CARDS = ['', 'heian', 'nigyoku', 'random', 'hasami'], MICRO = ['mini', 'judkins', 'goro', 'micro'], vKey = v => v || 'hon';
+const CARDS = ['', 'heian', 'nigyoku', 'random'], MICRO = ['mini', 'judkins', 'goro', 'micro'], ISHU = ['hasami'], vKey = v => v || 'hon';
 const fH = document.getElementById('fHandi'), fMode = document.getElementById('segMode') && document.getElementById('segMode').closest('.field');
 let segV = null, rulesLink = null, fVar = null, fHB = null;
 const card = v => `<button type="button" class="ngt-gcard" data-v="${v}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`;
 if (fH && fMode) {
   fVar = document.createElement('div'); fVar.className = 'field'; fVar.id = 'fVariant'; fVar.dataset.ng = 'game';
-  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${CARDS.map(card).join('')}<div class="vr-gh" id="vrGMicro"></div>${MICRO.map(card).join('')}</div>`;
+  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${CARDS.map(card).join('')}<div class="vr-gh" id="vrGMicro"></div>${MICRO.map(card).join('')}<div class="vr-gh" id="vrGIshu"></div>${ISHU.map(card).join('')}</div>`;
   fMode.after(fVar);
   segV = fVar.querySelector('#segVariant'); rulesLink = fVar.querySelector('#vrRulesLink');
   segV.onclick = e => { const b = e.target.closest('.ngt-gcard'); if (!b) return; dlg.variant = b.dataset.v; if (dlg.variant && !MODES.includes(dlg.mode)) dlg.mode = 'ai'; updDialog(); };
@@ -376,6 +376,7 @@ function dlgUpdate() {
     b.classList.toggle('sel', b.dataset.v === (START[gv] ? dlg.variant : ''));
   });
   const gh = segV.querySelector('#vrGMicro'); if (gh.textContent !== tx('gMicro')) gh.textContent = tx('gMicro');
+  const gi = segV.querySelector('#vrGIshu'); if (gi && gi.textContent !== tx('gIshu')) gi.textContent = tx('gIshu');
   if (fHB) {
     fHB.classList.toggle('hidden', !(v && dlg.variant === 'heian'));
     fHB.querySelector('#vrHBLbl').textContent = tx('heianB');
