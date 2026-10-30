@@ -993,6 +993,12 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   body.lt-on #ltLearn button{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-size:15px;font-weight:700;white-space:nowrap;text-align:start}
   body.lt-on #ltLearn button svg{width:24px;height:24px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   body.lt-on #ltLearn button small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:normal;margin-top:2px}
+  /* ルール / レッスン / パズル: rounded square icon tiles, one above the other (2026-10-30) */
+  body.lt-on #ltLearn{align-items:center!important;gap:10px!important}
+  body.lt-on #ltLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:84px;height:84px;padding:6px 4px;box-sizing:border-box;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
+  body.lt-on #ltLearn button svg{width:28px!important;height:28px!important;margin:0!important}
+  body.lt-on #ltLearn button > span{display:block}
+  body.lt-on #ltLearn button small{display:none!important}
   /* lessons / puzzles: their card stays open beside the board */
   body.lt-on.in-lesson #ltPanel > .lesson-card, body.lt-on.in-puzzle #ltPanel > .puzzle-card{display:flex!important;flex-direction:column;gap:8px;overflow-y:auto}
   body.lt-on #ltPanel > .lesson-card > *, body.lt-on #ltPanel > .puzzle-card > *{grid-column:auto!important;grid-row:auto!important}
