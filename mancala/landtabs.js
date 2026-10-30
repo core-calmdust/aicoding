@@ -174,7 +174,12 @@ document.addEventListener('touchstart', e => {
 document.addEventListener('touchmove', e => {
   if (!sw) return;
   const dx = e.touches[0].clientX - sw.x, dy = e.touches[0].clientY - sw.y;
-  if (!sw.go) { if (Math.abs(dx) < 10) return; if (Math.abs(dy) > Math.abs(dx)) { sw = null; return; } sw.go = true; panel.classList.add('drag'); }
+  if (!sw.go) {   // decide once: a mostly-vertical move is the box's own scrolling (never taken over)
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (ay >= 6 && ay >= ax * .8) { sw = null; return; }
+    if (ax < 12 || ax < ay * 1.6) return;
+    sw.go = true; panel.classList.add('drag');
+  }
   sw.dx = dx;
   const w = W(), off = sw.mode === 'open' ? Math.max(0, Math.min(w, w + dx)) : Math.max(0, Math.min(w, dx));
   panel.style.transform = `translateX(${off}px)`;
