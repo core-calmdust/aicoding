@@ -146,7 +146,10 @@ function init(tries) {
       // the same tab again goes back to the board — and again to the box, as often as wanted
       const el = box[cur], y = el.getBoundingClientRect().top - top0, max = Math.max(0, sc.scrollHeight - H);
       const target = cur === 'eval' ? max : Math.min(max, Math.max(0, sc.scrollTop + y - 8));
-      sc.scrollTo({ top: again && Math.abs(sc.scrollTop - target) < 24 ? 0 : target, behavior: 'smooth' });
+      // back to the board = the board in the middle of the screen
+      const bd = document.querySelector('.board-area'), br = bd && bd.getBoundingClientRect();
+      const home = br ? Math.min(max, Math.max(0, Math.round(sc.scrollTop + br.top - top0 + br.height / 2 - H / 2))) : 0;
+      sc.scrollTo({ top: again && Math.abs(sc.scrollTop - target) < 24 ? home : target, behavior: 'smooth' });
       fix();
     }));
   }, true);

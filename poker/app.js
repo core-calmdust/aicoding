@@ -543,7 +543,9 @@ $('#mTabRec').onclick = () => window.GameRecord && GameRecord.open();   // 戦�
 $$('#mTabs [data-pt]').forEach(b => b.onclick = () => {
   const sc = $('.stage'), pt = b.dataset.pt, same = $('#side').dataset.pt === pt;
   // the same tab again while away from the table: back to the table (tap → box, tap → table, tap → box …)
-  if (same && sc.scrollTop > 8) { sc.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  // back at the table = the table in the middle of the screen
+  const tableTop = () => { const t = $('.board-wrap') || $('#pkTable'); if (!t) return 0; const r = t.getBoundingClientRect(), y = sc.scrollTop + r.top - sc.getBoundingClientRect().top + r.height / 2 - sc.clientHeight / 2; return Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, Math.round(y))); };
+  if (same && Math.abs(sc.scrollTop - tableTop()) > 8) { const keep = sc.scrollTop; sc.style.paddingBottom = ''; sc.scrollTop = keep; sc.scrollTo({ top: tableTop(), behavior: 'smooth' }); return; }
   if (!same) { set.mTab = pt; save(); mTabs(); }   // mTabs() keeps the view inside the (maybe shorter) content in the same frame — no jump
   // 勝率: to the very bottom; the other boxes: their top just under the top of the scrolling area
   // (a short box gets room below it, so it can still come all the way up; the room goes once back at the table)
