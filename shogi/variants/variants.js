@@ -12,15 +12,27 @@ const START = { mini: MiniShogi.START, hasami: HasamiShogi.START, random: 'lnsgk
 for (const v in VS) START[v] = VS[v].start;
 // ランダム将棋: the 18 squares of the two back ranks hold king, rook, bishop, 2 golds, 2 silvers, 2 knights, 2 lances
 // (shuffled; gote point-symmetric) — 18!/(7!·2!·2!·2!·2!) = 79,394,515,200 setups (shogitter's 将棋79394515200)
-function randomStart() {
+// the setup comes from a seed (ルール tab; empty = a new random seed), shown during the game so it can be replayed
+let lastSeed = '';
+function rngOf(seed) {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) { h = Math.imul(h ^ seed.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  let a = h >>> 0;
+  return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function randomStart(seed) {
+  seed = String(seed == null ? '' : seed).trim().slice(0, 32);
+  if (!seed) seed = String(Math.floor(Math.random() * 1e9)).padStart(9, '0');
+  lastSeed = seed;
+  const rnd = rngOf(seed);
   const a = 'KRBGGSSNNLL'.split('').concat(Array(7).fill(''));
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; }
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; }
   const row = cells => { let o = '', e = 0; for (const c of cells) { if (!c) { e++; continue; } if (e) { o += e; e = 0; } o += c; } return o + (e || ''); };
   const r8 = a.slice(0, 9), r9 = a.slice(9);   // ranks 8 / 9, files 9 → 1
   const g1 = r9.slice().reverse().map(c => c.toLowerCase()), g2 = r8.slice().reverse().map(c => c.toLowerCase());
   return `${row(g1)}/${row(g2)}/ppppppppp/9/9/9/PPPPPPPPP/${row(r8)}/${row(r9)} b - 1`;
 }
-const startOf = v => v === 'random' ? randomStart() : START[v];
+const startOf = (v, seed) => v === 'random' ? randomStart(seed !== undefined ? seed : (typeof settings !== 'undefined' ? settings.rseed : '')) : START[v];
 // the variant's engine ('' = the page's own: 本将棋 and ランダム将棋)
 const eng = v => (v && v !== 'random' && START[v]) ? v : '';
 const MODES = ['ai', 'pvp', 'watch'];   // modes a variant can be played in
@@ -344,7 +356,7 @@ function vArt(v) {
 }
 const CARDS = ['', 'heian', 'nigyoku', 'random'], MICRO = ['mini', 'judkins', 'goro', 'micro'], ISHU = ['hasami'], vKey = v => v || 'hon';
 const fH = document.getElementById('fHandi'), fMode = document.getElementById('segMode') && document.getElementById('segMode').closest('.field');
-let segV = null, rulesLink = null, fVar = null, fHB = null;
+let segV = null, rulesLink = null, fVar = null, fHB = null, fSD = null;
 const card = v => `<button type="button" class="ngt-gcard" data-v="${v}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`;
 if (fH && fMode) {
   fVar = document.createElement('div'); fVar.className = 'field'; fVar.id = 'fVariant'; fVar.dataset.ng = 'game';
@@ -358,11 +370,16 @@ if (fH && fMode) {
   fHB.innerHTML = `<label id="vrHBLbl"></label><div class="seg" id="segHeianB"><button type="button" data-b="8"></button><button type="button" data-b="98"></button><button type="button" data-b="9"></button></div>`;
   fH.after(fHB);
   fHB.querySelector('#segHeianB').onclick = e => { const b = e.target.closest('button'); if (!b) return; dlg.heianB = b.dataset.b; updDialog(); };
+  // ランダム将棋: the seed (ルール tab)
+  fSD = document.createElement('div'); fSD.className = 'field hidden'; fSD.id = 'fRSeed';
+  fSD.innerHTML = `<label id="vrSdLbl" for="vrSeedIn"></label><input type="text" id="vrSeedIn" maxlength="32" autocomplete="off" inputmode="text" style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:15px">`;
+  fHB.after(fSD);
 }
 function dlgOpen() {
   const c = cardOf(settings.variant);
   dlg.variant = START[gameOf(c, settings.heianB)] ? c : '';
   dlg.heianB = { 8: '8', 98: '98', 9: '9' }[settings.heianB] || '8';
+  { const inp = document.getElementById('vrSeedIn'); if (inp) inp.value = settings.rseed || ''; }
   if (pendingUrl) { const u = pendingUrl; pendingUrl = null; if (u === 'hon') dlg.variant = ''; else { dlg.variant = cardOf(u); if (HB[u]) dlg.heianB = HB[u]; } }
 }
 function dlgUpdate() {
@@ -382,6 +399,11 @@ function dlgUpdate() {
     fHB.querySelector('#vrHBLbl').textContent = tx('heianB');
     fHB.querySelectorAll('button').forEach(b => { b.textContent = tx('heianB' + b.dataset.b); b.classList.toggle('sel', b.dataset.b === dlg.heianB); });
   }
+  if (fSD) {
+    fSD.classList.toggle('hidden', !(v && dlg.variant === 'random'));
+    fSD.querySelector('#vrSdLbl').textContent = tx('seed');
+    const inp = fSD.querySelector('#vrSeedIn'); if (inp.placeholder !== tx('seedPh')) inp.placeholder = tx('seedPh');
+  }
   rulesLink.textContent = tx('rules'); rulesLink.hidden = !v;
   const sh = document.getElementById('segHandi'), note = document.getElementById('handiNote');
   sh.classList.toggle('vr-lock', !!v);
@@ -398,6 +420,7 @@ function dlgUpdate() {
 }
 // the record's variant when the dialog starts a game
 function dlgRead() {
+  { const inp = document.getElementById('vrSeedIn'); if (inp) settings.rseed = inp.value.trim(); }
   if (dlg.heianB) settings.heianB = dlg.heianB;
   settings.variant = MODES.includes(dlg.mode) && START[gameOf(dlg.variant, dlg.heianB)] ? dlg.variant : (MODES.includes(dlg.mode) ? '' : settings.variant || '');
 }
@@ -452,5 +475,12 @@ function relabel() { const b = document.getElementById('btnVRules'); if (b) b.te
 document.getElementById('langSel').addEventListener('change', () => setTimeout(relabel, 0));
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', relabel); else setTimeout(relabel, 0);
 
-window.Variants = { START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
+function showSeed(g) {
+  let el = document.getElementById('vrSeedTag');
+  const on = !!(g && g.variant === 'random' && g.seed);
+  if (!el) { if (!on) return; el = document.createElement('div'); el.id = 'vrSeedTag'; el.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);letter-spacing:.04em;margin:2px 0 0;user-select:text;-webkit-user-select:text'; const ba = document.querySelector('.board-area'); if (!ba) return; ba.appendChild(el); }
+  el.hidden = !on; if (!on) return;
+  const t = tx('seedTag') + ' ' + g.seed; if (el.textContent !== t) el.textContent = t;
+}
+window.Variants = { seed: () => lastSeed, showSeed, START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
 })();

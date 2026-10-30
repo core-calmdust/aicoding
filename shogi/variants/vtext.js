@@ -5,7 +5,7 @@
 window.VTX = {
   ja: {
     heian: '平安将棋', nigyoku: '二玉将棋', random: 'ランダム将棋', judkins: 'ジャドケンス将棋', goro: 'ゴロゴロ将棋', micro: 'マイクロ将棋',
-    gMicro: 'マイクロ系', gIshu: '異種遊戯', heianB: '盤の大きさ（平安将棋）', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'マイクロ系', gIshu: '異種遊戯', seed: 'シード（ランダム将棋）', seedPh: '空欄ならランダム', seedTag: 'シード', heianB: '盤の大きさ（平安将棋）', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: '平安時代の将棋の復元。飛車・角がなく、取った駒は使えません。盤の大きさはルールで選択。',
     nigyokuD: '金と玉の位置を入れ替え、玉が2枚。どちらか一方を詰ませたら勝ち。',
     randomD: '歩より後ろの駒の配置が毎回ランダム（先後同型）。全793億9451万5200通り。',
@@ -24,7 +24,7 @@ window.VTX = {
   },
   en: {
     heian: 'Heian shogi', nigyoku: 'Two-king shogi', random: 'Random shogi', judkins: 'Judkins shogi', goro: 'Goro goro shogi', micro: 'Micro shogi',
-    gMicro: 'Micro games', gIshu: 'Other games', heianB: 'Board (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'Micro games', gIshu: 'Other games', seed: 'Seed (random shogi)', seedPh: 'Empty = random', seedTag: 'Seed', heianB: 'Board (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'A reconstruction of Heian-era shogi: no rook or bishop, no drops. Pick the board size under Rules.',
     nigyokuD: 'King and gold swap places: two kings each. Mate either one to win.',
     randomD: 'The pieces behind the pawns are shuffled every game (mirrored). 79,394,515,200 setups.',
@@ -43,7 +43,7 @@ window.VTX = {
   },
   zh: {
     heian: '平安将棋', nigyoku: '二玉将棋', random: '随机将棋', judkins: '贾德金斯将棋', goro: '咕噜咕噜将棋', micro: '微型将棋',
-    gMicro: '微型系列', gIshu: '异种玩法', heianB: '棋盘大小（平安将棋）', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: '微型系列', gIshu: '异种玩法', seed: '种子（随机将棋）', seedPh: '留空则随机', seedTag: '种子', heianB: '棋盘大小（平安将棋）', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: '平安时代将棋的复原：没有飞车和角行，吃掉的棋子不能再用。棋盘大小在“规则”中选择。',
     nigyokuD: '金与玉位置互换，每方两个玉。将死其中任意一个即获胜。',
     randomD: '步以外的棋子每局随机排列（先后同型）。共793亿9451万5200种。',
@@ -62,7 +62,7 @@ window.VTX = {
   },
   ko: {
     heian: '헤이안 쇼기', nigyoku: '이옥 쇼기', random: '랜덤 쇼기', judkins: '저드킨스 쇼기', goro: '고로고로 쇼기', micro: '마이크로 쇼기',
-    gMicro: '마이크로 계열', gIshu: '이색 게임', heianB: '판 크기 (헤이안 쇼기)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: '마이크로 계열', gIshu: '이색 게임', seed: '시드 (랜덤 쇼기)', seedPh: '비우면 랜덤', seedTag: '시드', heianB: '판 크기 (헤이안 쇼기)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: '헤이안 시대 쇼기의 복원. 비차·각행이 없고 잡은 말은 쓸 수 없습니다. 판 크기는 규칙에서 선택.',
     nigyokuD: '금장과 옥의 자리를 바꿔 옥이 2개. 어느 한쪽을 외통으로 몰면 승리.',
     randomD: '보 뒤의 말 배치가 매번 랜덤(선후 동형). 전부 793억 9451만 5200가지.',
@@ -81,7 +81,7 @@ window.VTX = {
   },
   es: {
     heian: 'Heian shogi', nigyoku: 'Shogi de dos reyes', random: 'Shogi aleatorio', judkins: 'Shogi Judkins', goro: 'Goro goro shogi', micro: 'Micro shogi',
-    gMicro: 'Juegos micro', gIshu: 'Otros juegos', heianB: 'Tablero (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'Juegos micro', gIshu: 'Otros juegos', seed: 'Semilla (shogi aleatorio)', seedPh: 'Vacío = aleatorio', seedTag: 'Semilla', heianB: 'Tablero (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'Reconstrucción del shogi de la era Heian: sin torre ni alfil, sin lanzamientos. El tamaño se elige en Reglas.',
     nigyokuD: 'Rey y oro cambian de sitio: dos reyes por bando. Gana quien dé mate a cualquiera de ellos.',
     randomD: 'Las piezas tras los peones se barajan en cada partida (simétricas). 79 394 515 200 posiciones.',
@@ -100,7 +100,7 @@ window.VTX = {
   },
   fr: {
     heian: 'Heian shogi', nigyoku: 'Shogi à deux rois', random: 'Shogi aléatoire', judkins: 'Shogi de Judkins', goro: 'Goro goro shogi', micro: 'Micro shogi',
-    gMicro: 'Jeux micro', gIshu: 'Autres jeux', heianB: 'Plateau (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'Jeux micro', gIshu: 'Autres jeux', seed: 'Graine (shogi aléatoire)', seedPh: 'Vide = aléatoire', seedTag: 'Graine', heianB: 'Plateau (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'Reconstitution du shogi de l’ère Heian : ni tour ni fou, pas de parachutage. Taille du plateau dans Règles.',
     nigyokuD: 'Roi et or échangent leur place : deux rois chacun. Mater l’un des deux suffit.',
     randomD: 'Les pièces derrière les pions sont mélangées à chaque partie (en miroir). 79 394 515 200 positions.',
@@ -119,7 +119,7 @@ window.VTX = {
   },
   pt: {
     heian: 'Heian shogi', nigyoku: 'Shogi de dois reis', random: 'Shogi aleatório', judkins: 'Shogi de Judkins', goro: 'Goro goro shogi', micro: 'Micro shogi',
-    gMicro: 'Jogos micro', gIshu: 'Outros jogos', heianB: 'Tabuleiro (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'Jogos micro', gIshu: 'Outros jogos', seed: 'Semente (shogi aleatório)', seedPh: 'Vazio = aleatório', seedTag: 'Semente', heianB: 'Tabuleiro (Heian shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'Reconstrução do shogi da era Heian: sem torre nem bispo, sem largar peças. O tamanho se escolhe em Regras.',
     nigyokuD: 'Rei e ouro trocam de lugar: dois reis para cada lado. Vence quem der mate em qualquer um.',
     randomD: 'As peças atrás dos peões são embaralhadas a cada partida (espelhadas). 79.394.515.200 posições.',
@@ -138,7 +138,7 @@ window.VTX = {
   },
   de: {
     heian: 'Heian-Shogi', nigyoku: 'Zwei-Königs-Shogi', random: 'Zufalls-Shogi', judkins: 'Judkins-Shogi', goro: 'Goro-goro-Shogi', micro: 'Micro-Shogi',
-    gMicro: 'Mini-Varianten', gIshu: 'Andere Spiele', heianB: 'Brett (Heian-Shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'Mini-Varianten', gIshu: 'Andere Spiele', seed: 'Seed (Zufalls-Shogi)', seedPh: 'Leer = zufällig', seedTag: 'Seed', heianB: 'Brett (Heian-Shogi)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'Rekonstruktion des Shogi der Heian-Zeit: kein Turm, kein Läufer, kein Einsetzen. Brettgröße unter Regeln.',
     nigyokuD: 'König und Gold tauschen die Plätze: je zwei Könige. Matt gegen einen davon gewinnt.',
     randomD: 'Die Steine hinter den Bauern werden jede Partie gemischt (gespiegelt). 79.394.515.200 Stellungen.',
@@ -157,7 +157,7 @@ window.VTX = {
   },
   hi: {
     heian: 'हेइआन शोगी', nigyoku: 'दो-राजा शोगी', random: 'रैंडम शोगी', judkins: 'जडकिन्स शोगी', goro: 'गोरो गोरो शोगी', micro: 'माइक्रो शोगी',
-    gMicro: 'माइक्रो खेल', gIshu: 'अन्य खेल', heianB: 'बोर्ड (हेइआन शोगी)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'माइक्रो खेल', gIshu: 'अन्य खेल', seed: 'सीड (रैंडम शोगी)', seedPh: 'खाली = यादृच्छिक', seedTag: 'सीड', heianB: 'बोर्ड (हेइआन शोगी)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'हेइआन काल की शोगी का पुनर्निर्माण: रथ-ऊँट नहीं, पकड़े मोहरे दोबारा नहीं रखे जाते। बोर्ड का आकार नियम में चुनें।',
     nigyokuD: 'राजा और सोने की जगह बदली: हर ओर दो राजा। किसी एक को मात देकर जीत।',
     randomD: 'प्यादों के पीछे के मोहरे हर बार यादृच्छिक (दोनों ओर समान)। कुल 79,394,515,200 तरीके।',
@@ -176,7 +176,7 @@ window.VTX = {
   },
   ar: {
     heian: 'شوغي هييان', nigyoku: 'شوغي الملكين', random: 'شوغي عشوائي', judkins: 'شوغي جدكنز', goro: 'شوغي غورو غورو', micro: 'مايكرو شوغي',
-    gMicro: 'ألعاب مصغّرة', gIshu: 'ألعاب أخرى', heianB: 'الرقعة (شوغي هييان)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
+    gMicro: 'ألعاب مصغّرة', gIshu: 'ألعاب أخرى', seed: 'البذرة (الشوغي العشوائي)', seedPh: 'فارغ = عشوائي', seedTag: 'البذرة', heianB: 'الرقعة (شوغي هييان)', heianB8: '8×8', heianB98: '9×8', heianB9: '9×9',
     heianD: 'إعادة بناء لشوغي عصر هييان: بلا رخ ولا فيل ولا إسقاط. اختر حجم الرقعة في القواعد.',
     nigyokuD: 'يتبادل الملك والذهب مكانيهما: ملكان لكل طرف. المات لأيٍّ منهما يكفي للفوز.',
     randomD: 'تُخلط القطع خلف البيادق في كل مباراة (متناظرة). 79,394,515,200 ترتيبًا.',
