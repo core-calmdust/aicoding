@@ -1046,7 +1046,12 @@ const EG = (() => {
 })();
 const EM = { mesh: new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }),
     line: new THREE.LineBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), core: new THREE.MeshBasicMaterial({ color: 0xffffff }) };
-function recolorEnemies() { const [O, Y, R] = PAL.gate; EM.mesh.color.copy(_steel).lerp(_c(O), 0.55).multiplyScalar(1.4); EM.line.color.set(Y).multiplyScalar(1.3); EM.core.color.set(R).multiplyScalar(2); bulletMat.color.set(R).multiplyScalar(2.2); }
+// 暗いステージでも敵だけは弱いライトが当たっているように: 霧を薄くかけ、暗いほど少し明るく
+const enemyFog = m => { m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', '#ifdef USE_FOG\n\tfloat fogFactor = smoothstep( fogNear, fogFar, vFogDepth ) * 0.35;\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif'); }; };
+[EM.mesh, EM.line, EM.core].forEach(enemyFog);
+const EM_BASE = { mesh: new THREE.Color(), line: new THREE.Color() };
+function litEnemies() { const k = 1 + (1 - Math.min(1, S.reveal || 0)) * 0.45; EM.mesh.color.copy(EM_BASE.mesh).multiplyScalar(k); EM.line.color.copy(EM_BASE.line).multiplyScalar(k); }
+function recolorEnemies() { const [O, Y, R] = PAL.gate; EM_BASE.mesh.copy(_steel).lerp(_c(O), 0.55).multiplyScalar(1.4); EM_BASE.line.set(Y).multiplyScalar(1.3); litEnemies(); EM.core.color.set(R).multiplyScalar(2); bulletMat.color.set(R).multiplyScalar(2.2); }
 const enemies = [];
 function addEnemy(type, o) {
     const grp = new THREE.Group(), k = EG[type];
@@ -1090,6 +1095,7 @@ function removeEnemy(e) { e.alive = false; scene.remove(e.obj); }
 
 // ---------------- 敵の弾（ロックして撃ち落とせる）----------------
 const BN = 90, bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3a5a });
+enemyFog(bulletMat);
 const bulletMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(6, 0), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
 const bullets = []; const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _bs = new THREE.Vector3(), _bp = new THREE.Vector3(), _be = new THREE.Euler();
 function fireBullet(e) {
@@ -1458,6 +1464,7 @@ function frame(now) {
     // 敵の出現
     if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(48, 16 + S.stage * 5)) { const waves = 1 + Math.floor(S.stage / 3); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.0, 2.5 - S.stage * 0.18) + Math.random() * 0.6; } } // ステージが進むほど敵が大幅に増える
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
+    litEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
     updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
