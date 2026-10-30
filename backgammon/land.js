@@ -40,11 +40,32 @@ learn.innerHTML = LEARN.map(([id]) => { const b = $(id), sv = b && b.querySelect
 learn.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (!b) return; const src = $(b.dataset.go); close(); if (src) src.click(); });
 const chips = [mk('div', 'lndPl0'), mk('div', 'lndPl1')], msg = mk('div', 'lndMsg');
 chips.forEach(c => { c.className = 'lnd-pl'; });
+// move navigation (|< < ▶ > >|): a compact box at the bottom centre of the board that mirrors the game's own #navBar
+const nbox = mk('div', 'lndNav'); nbox.className = 'navbar';
+{ const nv = $('#navBar'); if (nv) nbox.innerHTML = nv.innerHTML; nbox.querySelectorAll('[id]').forEach(el => el.removeAttribute('id')); }
+nbox.addEventListener('click', e => {
+  const b = e.target.closest('button[data-n]'), nv = $('#navBar'); if (!b || !nv) return;
+  const r = nv.querySelector(`button[data-n="${b.dataset.n}"]`); if (r && !r.disabled) r.click();
+});
+// shown while there are moves to step through (as the phone strip of infotabs.js: a filled move list, not on the online screen)
+function navSync() {
+  const nav = $('#navBar'), k = $('#kifu');
+  const has = !!k && k.children.length > 0 && !k.querySelector(':scope > .empty');
+  const show = active && !!nav && has && !body.classList.contains('mtab-online');
+  if (body.classList.contains('lnd-nav') !== show) body.classList.toggle('lnd-nav', show);
+  if (!nav) return;
+  nav.querySelectorAll('button[data-n]').forEach(b => {
+    const c = nbox.querySelector(`button[data-n="${b.dataset.n}"]`); if (!c) return;
+    if (c.disabled !== b.disabled) c.disabled = b.disabled;
+    const pl = b.classList.contains('playing'); if (c.classList.contains('playing') !== pl) c.classList.toggle('playing', pl);
+    if (b.title && c.title !== b.title) c.title = b.title;
+  });
+}
 const want = () => !!((ROT || landPhone()) && !html.classList.contains('atlas-skin') && !window.__EMBED);
 
 function enter() {
   const put = (el, host) => { if (!el) return; const ph = document.createComment('lnd'); el.parentNode.insertBefore(ph, el); moved.push([el, ph]); host.appendChild(el); };
-  app.append(top, rail, drawer);
+  app.append(top, rail, drawer, nbox);
   put($('.brand-l'), top); put($('.controls'), top); put($('.brand-r'), top);
   drawer.appendChild(learn);
   for (const s of ['#lessonCard', '#puzzleCard', '#hintCard', '#coachCard', '#reviewCard', '#evalCard', '.kifu-card']) put($(s), drawer);
@@ -57,12 +78,13 @@ function leave() {
   html.classList.remove('lnd');
   for (const [el, ph] of moved.reverse()) { ph.parentNode.insertBefore(el, ph); ph.remove(); }
   moved = [];
-  top.remove(); rail.remove(); drawer.remove(); learn.remove(); chips.forEach(c => c.remove()); msg.remove();
+  top.remove(); rail.remove(); drawer.remove(); nbox.remove(); body.classList.remove('lnd-nav'); learn.remove(); chips.forEach(c => c.remove()); msg.remove();
 }
 function sync() {
   const w = want();
   if (w !== active) { active = w; if (w) enter(); else leave(); }
   if (active) { relabel(); select(); requestAnimationFrame(place); }
+  navSync();
 }
 // the drawer's rectangle (in the page's own frame) for the boxes that are fixed elsewhere: online dock, record dialog, move navigation
 function place() {
@@ -170,6 +192,10 @@ new MutationObserver(() => {
   if (!ls && wasLesson && tab === 'learn') setOpen(false);
   wasLesson = ls; select();
 }).observe(body, { attributes: true, attributeFilter: ['class'] });
+{ const k = $('#kifu'), nv = $('#navBar');
+  if (k) new MutationObserver(navSync).observe(k, { childList: true });
+  if (nv) new MutationObserver(navSync).observe(nv, { subtree: true, attributes: true, attributeFilter: ['disabled', 'class', 'title'] }); }
+new MutationObserver(navSync).observe(body, { attributes: true, attributeFilter: ['class'] });
 new MutationObserver(() => { if (active) relabel(); }).observe(html, { attributes: true, attributeFilter: ['lang'] });
 addEventListener('resize', () => requestAnimationFrame(place));
 

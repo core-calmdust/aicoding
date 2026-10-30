@@ -991,6 +991,15 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   /* online: the dock slides in like the drawer */
   body.lt-on.mtab-online .dock{left:auto!important;right:calc(max(8px, env(safe-area-inset-right)) + 58px)!important;top:46px!important;bottom:6px!important;width:var(--ltw, 300px);border-radius:14px;border:1px solid rgba(207,173,104,.3);z-index:60!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
   @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
+  /* move navigation: a compact box at the bottom centre over the board (left of the rail, or of the open drawer) */
+  body.lt-on #ltPanel #navBar{display:none!important}
+  body.lt-on #ltNav{display:none}
+  body.lt-on.lt-nav #ltNav{display:flex;position:fixed;z-index:59;bottom:6px;left:max(10px, env(safe-area-inset-left));right:calc(max(8px, env(safe-area-inset-right)) + 66px);
+    width:max-content;max-width:calc(100% - 20px);margin:0 auto;padding:5px 6px;gap:4px;flex-wrap:nowrap;white-space:nowrap;box-sizing:border-box;
+    background:rgba(16,11,12,.92);border:1px solid rgba(207,173,104,.3);border-radius:12px;box-shadow:0 6px 18px -4px rgba(0,0,0,.7);transition:right .32s cubic-bezier(.2,1.25,.4,1)}
+  body.lt-on.lt-nav:is(.lt-open, .lt-rec, .mtab-online) #ltNav{right:calc(max(8px, env(safe-area-inset-right)) + 72px + var(--ltw, 300px))}
+  body.lt-on.lt-nav:is(.in-lesson, .in-puzzle) #ltNav{right:calc(max(8px, env(safe-area-inset-right)) + 8px + var(--ltw, 300px))}
+  body.lt-on #ltNav button{flex:none;width:40px;height:30px}
 }
 /* one-time tip: landscape mode */
 .rottip{width:min(400px,100%);text-align:center}
@@ -1447,7 +1456,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=10"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=4"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=5"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=10"><\/script><script src="../shared/record.js?v=1"><\/script><script src="coach.js?v=4"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="app.js?v=20261030dr1"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=6"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->
