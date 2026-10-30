@@ -7292,7 +7292,7 @@ perfEl.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:99999;font:
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat) { perfEl.style.display = perfEl.style.display === 'none' ? 'block' : 'none'; } });
 function adaptQuality(now) {
     if (gpuT.init && !gpuT.ext && !gpuT.capped && !IS_MOBILE) { gpuT.capped = true; qCeil = Math.min(qCeil, 1.5); if (quality > 1.5) { quality = 1.5; applyQuality(); } } // GPUを測れない環境では上限を控えめに
-    if (perfEl.style.display !== 'none') perfEl.textContent = `${(perf.fps || 0).toFixed(1)} FPS  Q ${quality.toFixed(2)}  ${Math.round(1000 / frameClock.period)}Hz  LATE ${perf.lateShow || 0}/s  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'ms' : 'n/a'}\nJS max ${(perf.jsShow || [0])[0].toFixed(1)}ms (update ${((perf.jsShow || [0, 0])[1]).toFixed(1)} / draw ${((perf.jsShow || [0, 0, 0])[2]).toFixed(1)})  SPIKES ${perf.spikes || 0}`;
+    if (perfEl.style.display !== 'none') perfEl.textContent = `${(perf.fps || 0).toFixed(1)} FPS  Q ${quality.toFixed(2)}  ${Math.round(1000 / frameClock.period)}Hz  LATE ${perf.lateShow || 0}/s  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'ms' : 'n/a'}\nJS max ${(perf.jsShow || [0])[0].toFixed(1)}ms (update ${((perf.jsShow || [0, 0])[1]).toFixed(1)} / draw ${((perf.jsShow || [0, 0, 0])[2]).toFixed(1)})  SPIKES ${perf.spikes || 0}\n${PFshow}  CALLS ${perf.calls || 0}`;
     if (now < perf.hold) { perf.t0 = 0; return; }
     if (!perf.t0) { perf.t0 = now; return; }
     if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; perf.late = 0; } // タブ復帰などの長い空白は無視
@@ -7312,6 +7312,7 @@ function adaptQuality(now) {
     (perf.l5 = perf.l5 || []).push(late); if (perf.l5.length > 5) perf.l5.shift();
     const late5 = perf.l5.reduce((a, b) => a + b, 0);
     perf.jsShow = [perf.jsMax || 0, perf.jsUpd || 0, perf.jsDraw || 0]; perf.jsMax = 0;
+    PFshow = Object.entries(PF).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => k.toUpperCase() + ' ' + v.toFixed(1)).join('  '); for (const k in PF) PF[k] = 0; // 直近1秒で重かった区間の上位
     // たまに飛ぶだけでも、5秒で4回以上なら1段下げる（カクつきは平均では見えない）
     perf.bad = fps < 54 || late >= 2 || gpuHeavy ? (perf.bad || 0) + 1 : 0;
     if (late5 >= 4 && perf.bad < 2) { perf.bad = 2; perf.l5.length = 0; }
@@ -7336,7 +7337,10 @@ function adaptQuality(now) {
 
 const _aliveSet = new Set();
 let frameTs = null; // このフレームの rAF 時刻（画面の更新タイミング）
+// 区間ごとの処理時間（Iキーの確認表示用）
+window.__cpf = () => PF; const PF = {}; let PFshow = '', pfT = 0; const pfMark = () => { pfT = performance.now(); }, pfAdd = k => { const t = performance.now(); PF[k] = Math.max(PF[k] || 0, t - pfT); pfT = t; };
 function render3D() {
+    pfMark();
     // 見た目の動きもゲームと同じフレームクロックで進める（rAFの時刻の揺らぎを持ち込まない。60Hzなら毎フレーム1/60秒ずつ）
     const now = frameTs !== null ? frameTs : performance.now(); // 実時刻は画質調整の計測だけに使う
     const dt = Math.max(0, Math.min(0.1, frameMs / 1000));
@@ -7833,7 +7837,7 @@ function render3D() {
         hyperGrade.enabled = hyperK > 0 || grayK > 0;
         hyperGrade.uniforms.amt.value = hyperK * (0.7 + 0.3 * hpLightK); // 明るいステージでは色調変化も控えめ
         hyperGrade.uniforms.t.value = rTime;
-        gpuPoll(); gpuBegin(); composer.render(dt); gpuEnd();
+        pfAdd('scene'); renderer.info.autoReset = false; renderer.info.reset(); gpuPoll(); gpuBegin(); composer.render(dt); gpuEnd(); perf.calls = renderer.info.render.calls; pfAdd('render');
     } else {
         renderer.render(scene, camera);
     }
@@ -7895,7 +7899,7 @@ function updateTitleDemo(dt, showHub) {
 // ▼▼▼ HUD（2Dオーバーレイ）▼▼▼
 // =================================================================================
 function draw() {
-    render3D();
+    render3D(); pfMark();
 
     const renderCtx = ctx;
     const theme = themes[currentThemeIndex];
@@ -8875,12 +8879,12 @@ function gameLoop(timestamp) {
     if (steps > 0) shakeR = [Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5];
     const jsT1 = performance.now();
     draw();
-    const jsT2 = performance.now();
+    const jsT2 = performance.now(); pfAdd('hud2d'); PF.update = Math.max(PF.update || 0, jsT1 - jsT0);
     if (HUD_IN_GL) {
         // 最高画質で動いている間だけHUDを3D画面に重ねる（解像度が下がったらHUDがぼやけないよう従来の2枚表示に戻す）
         const on = quality >= Q_MAX - 0.01;
         if (on !== hudInGlOn) { hudInGlOn = on; canvas.style.opacity = on ? '0' : '1'; }
-        if (on) renderHudOverlay();
+        if (on) { pfMark(); renderHudOverlay(); pfAdd('hudgl'); }
     }
     // 1フレームのJavaScript処理時間（更新／描画の指示）。重い瞬間を探すための計測
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = jsT2 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
