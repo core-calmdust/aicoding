@@ -7,7 +7,9 @@
    The variant's name for the ルール tab comes from the chosen card's <b> (or the chosen button / option text).
    A ゲーム block with class "hidden" (e.g. a mode that has no variants) drops the ゲーム tab until it is shown again.
    On PC (no tabs) the cards sit in the dialog: style="--ngt-cols:3" on .ngt-gcards sets the columns there.
-   <script src="../shared/ngtabs.js?v=8"></script> after the dialog; nothing else to call. */
+   Few cards (≤4) are shown big (.ngt-gcards.few); on PC the ルール tab puts the mode field (#segMode's .field) on top and the
+   rest of .ng-cols in two balanced columns.
+   <script src="../shared/ngtabs.js?v=15"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
@@ -72,6 +74,42 @@ const CSS = `
 .ngt-gcard .gart svg{width:64px;height:64px}
 .ngt-gcard .gtag{display:inline-block;margin-inline-end:5px;padding:0 6px;border-radius:999px;border:1px solid color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent);color:var(--accent,#d8b56a);font-size:10px;line-height:1.5;vertical-align:1px}
 .ngt-gcard:hover{border-color:color-mix(in srgb, var(--accent,#d8b56a) 60%, transparent)}
+/* few variants (≤4, e.g. tafl / morris / gomoku / mancala): big cards with large art, like poker */
+.ngt-gcards.few .gart{border-radius:10px;background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(0,0,0,.18));box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
+.ngt-gcards.few .gart svg,.ngt-gcards.few .gart img{width:auto!important;max-width:100%!important;max-height:none!important}
+.modal.ngt-pc .ngt-gcards.few{grid-template-columns:repeat(var(--ngt-n,3),minmax(0,1fr))!important;gap:14px!important;min-height:clamp(300px, calc(min(860px, 100vh - 40px) - 320px), 500px)}
+.modal.ngt-pc .ngt-gcards.few .ngt-gcard{gap:8px;padding:16px 16px 18px!important;border-radius:16px;transition:border-color .15s,transform .15s}
+.modal.ngt-pc .ngt-gcards.few .ngt-gcard:hover{transform:translateY(-2px)}
+.modal.ngt-pc .ngt-gcards.few .gart{flex:1 1 auto;min-height:170px;padding:18px 10px}
+.modal.ngt-pc .ngt-gcards.few .gart svg{height:clamp(110px, calc(min(860px, 100vh - 40px) - 560px), 160px)!important}
+.modal.ngt-pc .ngt-gcards.few b{font-size:21px;margin-top:4px}
+.modal.ngt-pc .ngt-gcards.few p{font-size:13px!important;line-height:1.7;min-height:5.1em}
+.modal.ngt-pc .ngt-gcards.few .gtag{font-size:11px}
+.modal.ngt-pc .ngt-gcards.few .gpick{top:12px;right:12px;width:26px;height:26px;font-size:14px;font-weight:700}
+.modal.ngt-on .ngt-gcards.few{grid-template-columns:1fr 1fr;gap:8px}
+.modal.ngt-on .ngt-gcards.few .ngt-gcard{gap:5px;padding:10px}
+.modal.ngt-on .ngt-gcards.few .gart{padding:12px 4px}
+.modal.ngt-on .ngt-gcards.few .gart svg{height:96px!important}
+.modal.ngt-on .ngt-gcards.few b{font-size:16px}
+.modal.ngt-on .ngt-gcards.few p{font-size:11.5px}
+.modal.ngt-on .ngt-gcards.few .gpick{width:22px;height:22px;font-size:12px}
+/* (three: one column of wide cards, the art on the left) */
+.modal.ngt-on .ngt-gcards.few.n3{grid-template-columns:1fr}
+.modal.ngt-on .ngt-gcards.few.n3 .ngt-gcard{display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:12px;row-gap:4px;align-items:start}
+.modal.ngt-on .ngt-gcards.few.n3 .gart{grid-row:1/3;align-self:stretch;padding:10px 4px}
+.modal.ngt-on .ngt-gcards.few.n3 b{align-self:end;padding-inline-end:24px}
+/* PC ルール tab: mode on top across the width, the other settings in two balanced columns (no empty half) */
+.modal.ngt-pc > :not(.ngt-note):not(.ngt-foot){order:0!important}
+.modal.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:18px!important}
+.modal.ngt-pc[data-ngt=rules] .ng-cols:not(.ngt-hide){display:block!important;columns:2;column-gap:36px;column-fill:balance}
+.modal.ngt-pc[data-ngt=rules] .ng-col:not(.ngt-hide){display:contents!important}
+.modal.ngt-pc[data-ngt=rules] .ng-cols > *, .modal.ngt-pc[data-ngt=rules] .ng-col > *{break-inside:avoid;margin-top:0!important}
+/* (a hidden field reserves no room here: the dialog has a fixed height anyway, and a gap would split a column) */
+#newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols .field.hidden{display:none!important}
+/* (the mode's explanation — rated / lesson / online … — runs across both columns; the mode buttons stay on one row) */
+.modal.ngt-pc[data-ngt=rules] .ng-cols :is(#fInfo,#fRatedInfo,#fLessonInfo,#fOnlineInfo,#fPuzzleInfo,.ng-info){column-span:all}
+.modal.ngt-pc[data-ngt=rules] .ngt-modef #segMode{display:flex!important;flex-wrap:nowrap!important}
+.modal.ngt-pc[data-ngt=rules] .ngt-modef #segMode > button{flex:1 1 0!important;min-width:0!important;grid-column:auto!important;line-height:1.25}
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
 `;
@@ -122,8 +160,28 @@ function init() {
       else if (c.el.parentNode === modal) { c.el.classList.remove('ngt-note'); c.home.insertBefore(c.el, c.next && c.next.parentNode === c.home ? c.next : null); }
     });
   }
+  // the mode field (対局の種類 / モード: holds #segMode): on PC it sits right under the tabs, across the width, even when the
+  // game keeps it inside the columns (reversi); back in its place on phones
+  const modeEl = (() => { const s = modal.querySelector('#segMode'); return s && s.closest('.field'); })();
+  const modeCols = modeEl && modeEl.closest('.ng-cols'), modeHome = modeCols && { p: modeEl.parentNode, n: modeEl.nextSibling };
+  if (modeEl) modeEl.classList.add('ngt-modef');
+  function placeMode(on) {
+    if (!modeCols) return;
+    if (!on) { if (modeEl.nextElementSibling !== modeCols) modeCols.before(modeEl); }
+    else if (modeEl.parentNode !== modeHome.p) modeHome.p.insertBefore(modeEl, modeHome.n && modeHome.n.parentNode === modeHome.p ? modeHome.n : null);
+  }
+  // ゲーム tab: few variants → big cards
+  function sizeCards() {
+    // (counted over the whole dialog: shogi's 9 variants come in several small groups and keep the compact cards)
+    const all = modal.querySelectorAll('.ngt-gcards > .ngt-gcard').length;
+    modal.querySelectorAll('.ngt-gcards').forEach(c => {
+      const n = c.querySelectorAll(':scope > .ngt-gcard').length, few = n > 0 && all <= 4;
+      c.classList.toggle('few', few); c.classList.toggle('n3', few && n === 3);
+      if (few) c.style.setProperty('--ngt-n', n); else c.style.removeProperty('--ngt-n');
+    });
+  }
   function sync() {
-    const on = MQ.matches; modal.classList.toggle('ngt-on', on); modal.classList.toggle('ngt-pc', !on); placeCredits(on);
+    const on = MQ.matches; placeMode(on); sizeCards(); modal.classList.toggle('ngt-on', on); modal.classList.toggle('ngt-pc', !on); placeCredits(on);
     // phones: the tabs at the very bottom; PC: under the title
     if (on) { if (bar.parentNode !== foot) foot.appendChild(bar); }
     else { const h2 = modal.querySelector(':scope > h2'); if (h2 && h2.nextElementSibling !== bar) h2.after(bar); else if (!h2 && bar.parentNode !== modal) modal.prepend(bar); }
@@ -147,7 +205,7 @@ function init() {
   const g = modal.querySelector('[data-ng=game]');
   // (the block shown / hidden → the tabs; otherwise only the name; sync() itself toggles .ngt-hide on the block, so compare first)
   let tk = tabs().join();
-  if (g) new MutationObserver(() => { const k = tabs().join(); if (k !== tk) { tk = k; sync(); return; } const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
+  if (g) new MutationObserver(() => { const k = tabs().join(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
   sync();

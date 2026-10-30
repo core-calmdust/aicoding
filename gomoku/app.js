@@ -3042,6 +3042,27 @@ if (olOn()) Online.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = n
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 // board & piece skin: applied immediately, kept with the settings
+// each skin's picture: a small board corner in its wood / grid / frame colours with a black and a white stone (palette = the body.skin-* CSS)
+const SKIN_ART = {
+  classic: { f: ['#1d1813', '#0c0a08'], w: ['#efc983', '#d9a95c', '#c99549'], g: 'rgba(46,30,12,.82)', rim: 'rgba(201,169,97,.45)', b: ['#7a7e86', '#33363c', '#030303'], wh: ['#ffffff', '#e3ded2', '#bdb6a6'] },
+  grain: { f: ['#3a2414', '#1f130a'], w: ['#d79c55', '#ae7032', '#86511f'], g: 'rgba(28,14,3,.86)', rim: 'rgba(201,169,97,.45)', b: ['#7a7e86', '#33363c', '#030303'], wh: ['#ffffff', '#e3ded2', '#bdb6a6'] },
+  metal: { f: ['#3b4248', '#1d2226'], w: ['#dfe3e7', '#c2c9d0', '#a3acb6'], g: 'rgba(28,34,42,.78)', rim: 'rgba(200,210,220,.4)', b: ['#7a7e86', '#33363c', '#030303'], wh: ['#ffffff', '#e3ded2', '#bdb6a6'] },
+  ink: { f: ['#141414', '#070707'], w: ['#2b2723', '#1a1815', '#0c0b0a'], g: 'rgba(212,175,85,.78)', rim: 'rgba(212,175,85,.6)', b: ['#8a8f98', '#3c4047', '#050505'], wh: ['#ffffff', '#e3ded2', '#bdb6a6'], bRing: 'rgba(212,175,85,.6)' },
+};
+function skinArt(k) {
+  const P = SKIN_ART[k] || SKIN_ART.classic, id = 'sk' + k;
+  let lines = ''; for (let i = 0; i < 5; i++) { const v = 13 + i * 11.5; lines += `<line x1="${v}" y1="13" x2="${v}" y2="59"/><line x1="13" y1="${v}" x2="59" y2="${v}"/>`; }
+  const stone = (cx, cy, c, ring) => `<circle cx="${cx}" cy="${cy + 1.2}" r="5.2" fill="rgba(0,0,0,.35)"/><circle cx="${cx}" cy="${cy}" r="5.2" fill="url(#${id}${c})"${ring ? ` stroke="${ring}" stroke-width=".6"` : ''}/>`;
+  return `<svg viewBox="0 0 72 72" aria-hidden="true"><defs>
+    <linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${P.f[0]}"/><stop offset=".55" stop-color="${P.f[1]}"/><stop offset="1" stop-color="${P.f[0]}"/></linearGradient>
+    <radialGradient id="${id}w" cx=".3" cy=".2" r="1"><stop offset="0" stop-color="${P.w[0]}"/><stop offset=".6" stop-color="${P.w[1]}"/><stop offset="1" stop-color="${P.w[2]}"/></radialGradient>
+    <radialGradient id="${id}b" cx=".34" cy=".28" r=".75"><stop offset="0" stop-color="${P.b[0]}"/><stop offset=".3" stop-color="${P.b[1]}"/><stop offset="1" stop-color="${P.b[2]}"/></radialGradient>
+    <radialGradient id="${id}s" cx=".34" cy=".28" r=".75"><stop offset="0" stop-color="${P.wh[0]}"/><stop offset=".6" stop-color="${P.wh[1]}"/><stop offset="1" stop-color="${P.wh[2]}"/></radialGradient></defs>
+    <rect width="72" height="72" rx="9" fill="url(#${id}f)"/><rect x="6" y="6" width="60" height="60" rx="3" fill="url(#${id}w)" stroke="${P.rim}" stroke-width=".8"/>
+    <g stroke="${P.g}" stroke-width=".9">${lines}</g><circle cx="36" cy="36" r="1.4" fill="${P.g}"/>
+    ${stone(24.5, 36, 'b', P.bRing)}${stone(36, 24.5, 's')}${stone(47.5, 47.5, 'b', P.bRing)}${stone(47.5, 36, 's')}</svg>`;
+}
+$('#segSkin').querySelectorAll('button').forEach(b => { const a = b.querySelector('.skart'); if (a) a.innerHTML = skinArt(b.dataset.v); });
 function applySkin() {
   ['grain', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, settings.skin === k));
   $('#segSkin').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === (settings.skin || 'classic')));
