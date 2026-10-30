@@ -51,6 +51,9 @@ html.hb-on .overlay{z-index:70;height:100vh;height:100dvh}
 html.rot{--vh:100vw;--vw:100vh}
 @supports (height:100dvh){html.rot{--vw:100dvh}}
 html.rot body{position:fixed;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:0 0;transform:rotate(90deg);overflow:hidden}
+/* the turned page is only 100vw tall: dialogs fit in it (and scroll inside) */
+html.rot .overlay{height:100vw!important;max-height:100vw}
+html.rot .modal{max-height:calc(100vw - 20px)!important}
 .snd.land{display:none}
 @media (pointer: coarse){.snd.land{display:inline-flex}}
 .snd.land.on{color:var(--accent);border-color:rgba(201,169,97,.6)}
@@ -1326,13 +1329,13 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
     <div class="field" id="fColor">
       <label data-i18n="ng.ck"></label>
       <div class="ckrows" id="ckRows">
-        <div class="ckrow" data-s="0"><span class="ckl" id="ckL0"></span><div class="cksw"></div></div>
-        <div class="ckrow" data-s="1"><span class="ckl" id="ckL1"></span><div class="cksw"></div></div>
+        <div class="ckrow" data-s="0"><span class="ckl" id="ckL0"></span><div class="cksw" data-pd></div></div>
+        <div class="ckrow" data-s="1"><span class="ckl" id="ckL1"></span><div class="cksw" data-pd></div></div>
       </div>
     </div>
     <div class="field" id="fSkin">
       <label data-i18n="ng.skin"></label>
-      <div class="skinrow" id="skinRow"></div>
+      <div class="skinrow" id="skinRow" data-pd></div>
     </div>
     </div><div class="ng-col">
     <div class="field" id="fLevel">
@@ -1495,7 +1498,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
-<script src="../shared/coachkit.js?v=10"></script>
+<script src="../shared/coachkit.js?v=11"></script>
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=2"></script>
@@ -1521,5 +1524,6 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=10" defer></script>
+<script src="../shared/pickdrop.js?v=2"></script>
 </body>
 </html>

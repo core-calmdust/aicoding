@@ -105,11 +105,8 @@ function sw(o) {
   el.addEventListener('click', () => {
     // keep the view where it is (the card's height changes)
     const sc = window.InfoTabs && InfoTabs.scroller ? InfoTabs.scroller() : (document.scrollingElement || document.documentElement), top = sc.scrollTop;
-    const cd = document.getElementById(o.card || 'coachCard'), phone = sc !== document.scrollingElement && sc !== document.documentElement;
-    const h = cd && phone && o.get() ? cd.offsetHeight : 0;
     o.set(!o.get()); sync();
-    // phones: switching off keeps the box as tall as it was, so the view (and the switch under the finger) stays put
-    if (cd) cd.style.minHeight = h && !o.get() ? h + 'px' : '';
+    // keep the view (the page may get shorter when the coach is switched off: then it ends at the box)
     sc.scrollTop = top; requestAnimationFrame(() => { sc.scrollTop = top; });
   });
   // the switch lives at the top right of the coach card (its heading h3.ck-h); the card re-renders, so re-attach it each time
