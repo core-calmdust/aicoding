@@ -142,7 +142,7 @@ const glitch = new ShaderPass({
     fragmentShader: `uniform sampler2D tDiffuse; uniform float uAmt, uT; varying vec2 vUv;
         float h(float n) { return fract(sin(n) * 43758.5453); }
         void main() {
-            vec2 uv = vUv; float tk = floor(uT * 24.0);
+            vec2 uv = vUv; float tk = floor(uT * 75.0); // ノイズ帯は高速に入れ替わる
             float band = floor(uv.y * 18.0 + h(tk) * 7.0), r = h(band + tk * 13.1);
             if (r < uAmt * 0.55) uv.x += (h(band * 3.7 + tk) - 0.5) * 0.12 * uAmt; // 帯ごとに横へずれる
             float fine = floor(uv.y * 160.0); uv.x += (h(fine + tk * 7.0) - 0.5) * 0.006 * uAmt;
@@ -1688,7 +1688,7 @@ function updateItems(dt) {
 function sfxHeal() { if (!audio()) return; const t = q16(AC.currentTime + 0.01), ch = chordAt(t); sfxClap(); ch.slice(1, 6).forEach((m, i) => { PANV = i % 2 ? 0.5 : -0.5; tone(t + i * S16 / 2, m + 24, 0.12, true); }); PANV = 0; }
 function damage() {
     if (S.inv > 0 || S.mode !== 'play') return;
-    S.hp--; S.inv = 1.6; S.dmg = 1; S.shake = 0.6; sfxDamage(); dragon.setAccent(0xff3050);
+    S.hp--; S.inv = 1.6; S.dmg = 1; S.glitch = 0.4; S.shake = 0.6; sfxDamage(); dragon.setAccent(0xff3050);
     if (S.hp <= 0) gameOver();
 }
 function gameOver() {
@@ -1910,7 +1910,7 @@ function frame(now) {
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
     updateItems(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
-    S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); glitch.enabled = S.dmg > 0.02; glitch.uniforms.uAmt.value = Math.min(1, S.dmg * 1.3); glitch.uniforms.uT.value = S.t; if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
+    S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.4 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.4秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') spawnGates(S.d);
     updateChunks(S.d, 1);
     for (const [, c] of chunks) tickK(c, dt);
