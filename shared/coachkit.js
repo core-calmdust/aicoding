@@ -65,11 +65,13 @@ const CSS = `
 .ck-bi{position:relative;padding:8px 10px 8px 12px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-inline-start:3px solid var(--ck-c,#d8b56a)}
 .ck-bi.c-atk{--ck-c:#f2a65a}.ck-bi.c-def{--ck-c:#7fb2ff}.ck-bi.c-mat{--ck-c:#8fe3b8}.ck-bi.c-mate{--ck-c:#ff7b6b}.ck-bi.c-dev{--ck-c:#c9b6ff}.ck-bi.c-calm{--ck-c:#b9b2a2}
 .ck-bi.ck-hov{background:rgba(255,255,255,.07)}
-.ck-bt{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ck-bt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+/* row 1: the tags (plan · played % / gap); row 2: the title and the move, wrapping on their own line in any language */
+.ck-bt .tt{order:3;flex:1 0 100%;min-width:0;line-height:1.45;overflow-wrap:anywhere}
 .ck-bt .tg{font-size:11px;font-weight:800;padding:1px 8px;border-radius:6px;background:color-mix(in srgb, var(--ck-c) 22%, transparent);color:var(--ck-c);letter-spacing:.04em;white-space:nowrap}
 .ck-bt b{font-size:13.5px;color:var(--text,#eee)}
 .ck-bt .mv{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--accent,#d8b56a);white-space:nowrap}
-.ck-bt .gp{margin-inline-start:auto;font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.14);color:var(--muted,#aaa);white-space:nowrap}
+.ck-bt .gp{font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.14);color:var(--muted,#aaa);white-space:nowrap}
 .ck-bt .gp.g0{color:#8fe3b8;border-color:rgba(143,227,184,.45)}.ck-bt .gp.g1{color:#bcd0ff;border-color:rgba(160,190,255,.4)}.ck-bt .gp.g2{color:#f2c060;border-color:rgba(242,192,96,.45)}.ck-bt .gp.g3{color:#ff8b7d;border-color:rgba(255,139,125,.5)}
 .ck-bi p{margin:4px 0 0;font-size:12.8px;line-height:1.7;color:var(--muted,#bbb)}
 .ck-tips ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
@@ -134,7 +136,7 @@ function branches(o) {
   if (!o.items || !o.items.length) return '';
   return `<div class="ck-sec ck-brs"><div class="ck-sec-h"><span>${esc(o.head)}</span>${o.show ? `<button type="button" data-ck="reveal">${esc(o.reveal ? o.hide : o.show)}</button>` : ''}</div>` +
     (o.intro ? `<p class="ck-intro">${o.intro}</p>` : '') +
-    `<div class="ck-br">${o.items.map(b => `<div class="ck-bi ${b.cls || ''}"${b.move && o.reveal ? ` data-mv="${esc(b.move)}"` : ''}><div class="ck-bt"><span class="tg">${esc(b.tag)}</span><b>${b.title}</b>${o.reveal && b.mvName ? `<span class="mv">${esc(b.mvName)}</span>` : ''}${b.gap ? `<span class="gp ${b.gcls || ''}">${esc(b.gap)}</span>` : ''}</div>${b.text ? `<p>${b.text}</p>` : ''}</div>`).join('')}</div></div>`;
+    `<div class="ck-br">${o.items.map(b => `<div class="ck-bi ${b.cls || ''}"${b.move && o.reveal ? ` data-mv="${esc(b.move)}"` : ''}><div class="ck-bt"><span class="tg">${esc(b.tag)}</span><span class="tt"><b>${b.title}</b>${o.reveal && b.mvName ? ` <span class="mv">${esc(b.mvName)}</span>` : ''}</span>${b.gap ? `<span class="gp ${b.gcls || ''}">${esc(b.gap)}</span>` : ''}</div>${b.text ? `<p>${b.text}</p>` : ''}</div>`).join('')}</div></div>`;
 }
 function tips(o) {
   if (!o.list || !o.list.length) return '';
