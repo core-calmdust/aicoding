@@ -1348,13 +1348,17 @@ function addEnemy(type, o) {
 const epos = (e, v = new THREE.Vector3()) => v.set(e.x, e.y, -(S.d + e.rz));
 function spawnWave() {
     const cv = cave(S.d + 1600), xl = cv.hw * 0.55, kind = Math.random(), n0 = enemies.length;
-    if (kind < 0.3) { // 横切る列
+    if (kind < 0.24) { // 奥から手前へ突っ込んでくる（当たると被弾）
+        const n = Math.min(6, 3 + Math.floor(S.stage / 3)), ty = Math.random() < 0.5 ? 'shard' : (Math.random() < 0.5 ? 'lance' : 'invader');
+        for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, rr = 40 + Math.random() * 110;
+            addEnemy(ty, { rz: 1700 + i * 160, x: S.x + Math.cos(a) * rr, y: Math.max(cv.fl + 40, Math.min(cv.ce - 40, S.y + Math.sin(a) * rr * 0.7)), vz: 520 + Math.min(220, S.stage * 20), path: 'rush' }); }
+    } else if (kind < 0.46) { // 横切る列
         const dir = Math.random() < 0.5 ? 1 : -1, y = cv.cy + (Math.random() - 0.5) * cv.hh * 0.9;
         const n = Math.min(9, 5 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy('shard', { rz: 1500 + i * 70, x0: -dir * (xl + i * 60), vx: dir * 150, y0: y, vz: 210, path: 'line', x: 0, y });
-    } else if (kind < 0.58) { // 輪になって広がる
+    } else if (kind < 0.64) { // 輪になって広がる
         const cx = (Math.random() - 0.5) * xl, cy0 = cv.cy + (Math.random() - 0.5) * cv.hh * 0.5;
         const n = Math.min(10, 6 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy('manta', { rz: 1700 + Math.floor(i / 8) * 160, cx, cy0, a0: i / Math.min(8, n) * Math.PI * 2, vz: 280, path: 'arc', x: cx, y: cy0 });
-    } else if (kind < 0.86) { // COMETの雑魚の小隊
+    } else if (kind < 0.88) { // COMETの雑魚の小隊
         const ty = CK.types[Math.floor(Math.random() * CK.types.length)];
         if (ty === 'weaver' || ty === 'lance') { const dir = Math.random() < 0.5 ? 1 : -1, y = cv.cy + (Math.random() - 0.5) * cv.hh * 0.8, n = Math.min(6, 3 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy(ty, { rz: 1500 + i * 90, x0: -dir * (xl + i * 70), vx: dir * 140, y0: y, vz: 220, path: 'line', x: 0, y }); }
         else if (ty === 'looper' || ty === 'ufo') { const cx = (Math.random() - 0.5) * xl, cy0 = cv.cy + (Math.random() - 0.5) * cv.hh * 0.5, n = Math.min(6, 3 + Math.floor(S.stage / 3)); for (let i = 0; i < n; i++) addEnemy(ty, { rz: 1700, cx, cy0, a0: i / n * Math.PI * 2, vz: 260, path: 'arc', x: cx, y: cy0 }); }
@@ -1369,6 +1373,9 @@ function updateEnemy(e, dt) {
     e.t += dt; const cv = cave(S.d + Math.max(0, e.rz));
     if (e.path === 'line') { e.x = e.x0 + e.vx * e.t; e.y = e.y0 + Math.sin(e.t * 2 + e.x0) * 30; e.rz -= e.vz * dt; }
     else if (e.path === 'arc') { const r = Math.min(150, e.t * 90), a = e.a0 + e.t * 0.9; e.x = e.cx + Math.cos(a) * r; e.y = e.cy0 + Math.sin(a) * r * 0.7; e.rz -= e.vz * dt; }
+    else if (e.path === 'rush') { // 遠いうちは自機の方へ少し寄ってきて、近づいたらまっすぐ突っ込む
+        if (e.rz > 450) { e.x += (S.x - e.x) * Math.min(1, dt * 0.6); e.y += (S.y - e.y) * Math.min(1, dt * 0.6); }
+        e.rz -= e.vz * dt; }
     else { // hover
         if (e.rz > 640 && !e.leaving) e.rz -= e.vz * dt; else { e.hold -= dt; e.x += Math.sin(e.t * 1.3) * 40 * dt; if (e.hold <= 0) { e.leaving = true; e.rz -= 520 * dt; e.y += 60 * dt; } }
     }
@@ -1392,12 +1399,12 @@ function removeEnemy(e) { e.alive = false; scene.remove(e.obj); if (e.obj.userDa
 // ---------------- 敵の弾（ロックして撃ち落とせる）----------------
 const BN = 90, bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3a5a });
 enemyFog(bulletMat);
-const bulletMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(15, 0), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
+const bulletMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(21, 14, 10), bulletMat, BN); bulletMesh.frustumCulled = false; scene.add(bulletMesh);
 const bullets = []; const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _bs = new THREE.Vector3(), _bp = new THREE.Vector3(), _be = new THREE.Euler();
 function fireBullet(e, off = 0) {
     if (bullets.length >= BN) return;
     const T = (e.rz) / 620, tx = S.x + S.vx * T * 0.5 + off, ty = S.y + S.vy * T * 0.5;
-    bullets.push({ x: e.x, y: e.y, rz: e.rz, vx: (tx - e.x) / T, vy: (ty - e.y) / T, vz: 620, locked: 0, alive: true, t: 0, r: 12 });
+    bullets.push({ x: e.x, y: e.y, rz: e.rz, vx: (tx - e.x) / T, vy: (ty - e.y) / T, vz: 620, locked: 0, alive: true, t: 0, r: 17 });
 }
 function updateBullets(dt) {
     for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rz -= b.vz * dt; if (b.rz < -80 || !b.alive) bullets.splice(i, 1); }
