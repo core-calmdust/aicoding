@@ -41,28 +41,28 @@ body.mob #game{left:0;top:0;width:100%;height:100%;transform:none}
   filter:drop-shadow(0 0 18px rgba(155,107,255,.55)) drop-shadow(0 0 3px rgba(95,242,255,.8))}
 .logo small{display:block;font-size:.26em;letter-spacing:.9em;margin:.5em -.9em 0 0;font-weight:700}
 .sub{margin-top:18px;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:clamp(14px,2cqw,18px);letter-spacing:.2em;color:rgba(230,240,255,.85);text-shadow:0 0 12px rgba(95,242,255,.5)}
-.press{margin-top:clamp(40px,9cqh,90px);font-size:clamp(13px,1.8cqw,17px);letter-spacing:.24em;color:#fff;animation:blink 1.3s ease-in-out infinite;
+.press{margin-top:clamp(40px,9cqh,90px);font-size:clamp(13px,1.8cqw,17px);letter-spacing:.24em;color:#fff;animation:blink 2.6s ease-in-out infinite;
   display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
 .press kbd,.press .pad{font-family:'Orbitron',sans-serif;font-size:.85em;padding:.35em .8em;border:1px solid rgba(95,242,255,.7);border-radius:6px;
   box-shadow:0 0 12px rgba(95,242,255,.45),inset 0 0 8px rgba(95,242,255,.25);background:rgba(10,20,40,.4)}
 .press .pad{border-color:rgba(255,79,216,.75);box-shadow:0 0 12px rgba(255,79,216,.45),inset 0 0 8px rgba(255,79,216,.25)}
 .press i{font-style:normal;opacity:.6}
-@keyframes blink{50%{opacity:.35}}
+@keyframes blink{50%{opacity:.55}}
 .ov.split{justify-content:space-between;padding:max(9cqh,60px) 24px max(7cqh,40px)}
 .ov.split .press{margin-top:0}
 #stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:6;pointer-events:none;opacity:0}
-#stage.show{animation:stg 2.6s cubic-bezier(.2,.8,.2,1) forwards}
+#stage.show{animation:stg 1.9s cubic-bezier(.2,.8,.2,1) forwards}
 #stage .n{font-weight:900;font-size:clamp(52px,9cqw,112px);letter-spacing:.12em;color:#fff;text-shadow:0 0 26px var(--sc,#5ff2ff),0 0 6px #fff}
 #stage .m{margin-top:10px;font-size:clamp(13px,1.8cqw,18px);letter-spacing:.7em;margin-right:-.7em;color:var(--sc,#5ff2ff);text-shadow:0 0 14px var(--sc,#5ff2ff)}
 #stage .l{width:min(70%,640px);height:2px;margin:16px 0 0;background:linear-gradient(90deg,transparent,var(--sc,#5ff2ff),transparent);box-shadow:0 0 14px var(--sc,#5ff2ff)}
-@keyframes stg{0%{opacity:0;transform:scale(1.9);filter:blur(12px)}12%{opacity:1;transform:scale(1);filter:blur(0)}16%{transform:translateX(-6px)}19%{transform:translateX(5px)}22%{transform:none}78%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.08);letter-spacing:.3em}}
+@keyframes stg{0%{opacity:0;transform:scale(1.9);filter:blur(12px)}14%{opacity:1;transform:scale(1);filter:blur(0)}70%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.08);letter-spacing:.3em}}
 .hint{margin-top:18px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:.12em;color:rgba(255,255,255,.6)}
 .over-t{font-weight:900;font-size:clamp(40px,8cqw,92px);letter-spacing:.1em;color:#fff;
   text-shadow:0 0 22px rgba(255,79,216,.9),0 0 4px #fff}
 .res{margin-top:22px;display:flex;gap:clamp(24px,6cqw,60px);justify-content:center}
 .res div{font-size:12px;letter-spacing:.3em;color:rgba(255,255,255,.6)}
 .res b{display:block;font-size:clamp(34px,6cqw,58px);letter-spacing:.04em;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(95,242,255,.7)}
-#newrec{margin-top:16px;font-size:15px;letter-spacing:.4em;color:var(--gd);text-shadow:0 0 14px rgba(255,195,90,.9);display:none;animation:blink .8s infinite}
+#newrec{margin-top:16px;font-size:15px;letter-spacing:.4em;color:var(--gd);text-shadow:0 0 14px rgba(255,195,90,.9);display:none;animation:blink 2.2s ease-in-out infinite}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;mix-blend-mode:screen}
 .btn{position:absolute;z-index:7;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;pointer-events:auto;cursor:pointer;
   background:rgba(12,10,36,.55);border:1px solid rgba(155,107,255,.45);color:#dfe9ff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -231,16 +231,26 @@ function bakeSkinned(top) {
         walk(t);
     });
     rm.forEach(c => { c.parent.remove(c); c.geometry.dispose(); });
-    const bones = nodes.map(() => new THREE.Matrix4()), uni = { value: bones }, NB = nodes.length;
+    const bones = nodes.map(() => new THREE.Matrix4()), uni = { value: bones }, NB = nodes.length, uT = { value: 0 };
+    // ポリゴンの面ごとに「実体⇄ワイヤーだけ」がゆっくり入れ替わる不安定な姿（面が重心へ縮んで線だけが残る）
+    for (const [mat, gs] of bins) if (!mat.isLineBasicMaterial) gs.forEach(g => {
+        const p = g.attributes.position.array, n = p.length / 3, C = new Float32Array(n * 3), Rr = new Float32Array(n);
+        for (let v = 0; v + 3 <= n; v += 3) { const r = Math.random(); for (let j = 0; j < 3; j++) { for (let c = 0; c < 3; c++) C[(v + j) * 3 + c] = (p[v * 3 + c] + p[(v + 1) * 3 + c] + p[(v + 2) * 3 + c]) / 3; Rr[v + j] = r; } }
+        g.setAttribute('aC', new THREE.BufferAttribute(C, 3)); g.setAttribute('aR', new THREE.BufferAttribute(Rr, 1));
+    });
     for (const [mat, gs] of bins) {
         const mm = mat.clone(); mm.userData = {};
-        mm.onBeforeCompile = sh => { sh.uniforms.uBones = uni; sh.vertexShader = 'attribute float aBone;\nuniform mat4 uBones[' + NB + '];\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\ttransformed = (uBones[int(aBone + 0.5)] * vec4(transformed, 1.0)).xyz;'); };
-        mm.customProgramCacheKey = () => 'skin' + NB;
+        const shr = !mat.isLineBasicMaterial;
+        mm.onBeforeCompile = sh => { sh.uniforms.uBones = uni; sh.uniforms.uT = uT;
+            sh.vertexShader = 'attribute float aBone;\nuniform mat4 uBones[' + NB + '];\nuniform float uT;\n' + (shr ? 'attribute vec3 aC;\nattribute float aR;\n' : '') + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' +
+                (shr ? '\tfloat sv = smoothstep(-0.35, 0.25, sin(uT * 0.8 + aR * 6.2832 + aC.z * 0.06 + aC.x * 0.04));\n\ttransformed = mix(aC, transformed, sv);\n' : '') +
+                '\ttransformed = (uBones[int(aBone + 0.5)] * vec4(transformed, 1.0)).xyz;'); };
+        mm.customProgramCacheKey = () => 'skin' + NB + (shr ? 's' : 'l');
         const mg = mergeGeometries(gs); gs.forEach(g => g.dispose());
         const o = mat.isLineBasicMaterial ? new THREE.LineSegments(mg, mm) : new THREE.Mesh(mg, mm); o.frustumCulled = false; top.add(o);
     }
     // 毎フレーム: 各節の「節→竜の体」行列を更新
-    return () => { const gi = m.copy(top.matrixWorld).invert(); nodes.forEach((t, i) => bones[i].multiplyMatrices(gi, t.matrixWorld)); };
+    return t => { uT.value = t; const gi = m.copy(top.matrixWorld).invert(); nodes.forEach((n, i) => bones[i].multiplyMatrices(gi, n.matrixWorld)); };
 }
 const armor = (c, e = 0x0c1420) => { const m = new StdMat({ color: c, emissive: e, emissiveIntensity: 0.6, flatShading: true, metalness: 0.55, roughness: 0.32 }); m.side = THREE.DoubleSide; return m; };
 const glowM = c => new THREE.MeshBasicMaterial({ color: c });
@@ -509,7 +519,7 @@ function buildDragon() {
 
         // ---- 翼膜・線を張り直す ----
         root.updateMatrixWorld(true);
-        skin();
+        skin(t);
         gInv.copy(g.matrixWorld).invert();
         const P = (o, v) => o.getWorldPosition(v).applyMatrix4(gInv);
         wings.forEach(w => {
@@ -601,8 +611,8 @@ function addMorph(geo, per, cy) {
     for (let v = 0; v + per <= n; v += per) {
         let x = 0, y = 0, z = 0; for (let j = 0; j < per; j++) { x += p[(v + j) * 3]; y += p[(v + j) * 3 + 1]; z += p[(v + j) * 3 + 2]; }
         x /= per; y /= per; z /= per;
-        const r = Math.random(), L = Math.hypot(x, y - cy) || 1, out = 50 + r * 190;
-        const dx = x / L * out + (Math.random() - 0.5) * 70, dy = (y - cy) / L * out + (Math.random() - 0.5) * 70, dz = (Math.random() - 0.5) * 260;
+        const r = Math.random(), L = Math.hypot(x, y - cy) || 1, out = 70 + r * 300;
+        const dx = x / L * out + (Math.random() - 0.5) * 70, dy = (y - cy) / L * out + (Math.random() - 0.5) * 70, dz = (Math.random() - 0.5) * 420;
         for (let j = 0; j < per; j++) { C.set([x, y, z], (v + j) * 3); D.set([dx, dy, dz], (v + j) * 3); Rr[v + j] = r; }
     }
     geo.setAttribute('aC', new THREE.BufferAttribute(C, 3)); geo.setAttribute('aD', new THREE.BufferAttribute(D, 3)); geo.setAttribute('aR', new THREE.BufferAttribute(Rr, 1));
@@ -612,8 +622,8 @@ function morphMat(base, u) {
     const add = base.blending === THREE.AdditiveBlending;
     m.onBeforeCompile = sh => {
         sh.uniforms.uK = u;
-        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tfloat mk = clamp(uK * 1.8 - aR * 0.8, 0.0, 1.0); mk = mk * mk * (3.0 - 2.0 * mk); vK = mk;\n\ttransformed = mix(transformed, aC, mk * 0.94) + aD * mk;');
-        sh.fragmentShader = 'varying float vK;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\t' + (add ? 'diffuseColor.rgb *= (1.0 + vK * (1.0 - vK) * 2.0) * (1.0 - vK * vK);' : 'diffuseColor.rgb *= 1.0 + vK * (1.0 - vK) * 2.0;'));
+        sh.vertexShader = 'attribute vec3 aC;\nattribute vec3 aD;\nattribute float aR;\nuniform float uK;\nvarying float vK;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tfloat mk = clamp(uK * 1.8 - aR * 0.8, 0.0, 1.0); mk = mk * mk * (3.0 - 2.0 * mk); vK = mk;\n\tfloat an = mk * (aR - 0.5) * 6.0; vec2 dd = vec2(cos(an) * aD.x - sin(an) * aD.y, sin(an) * aD.x + cos(an) * aD.y);\n\ttransformed = mix(transformed, aC, mk * 0.8) + vec3(dd, aD.z) * mk;');
+        sh.fragmentShader = 'varying float vK;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\t' + (add ? 'diffuseColor.rgb *= 1.0 - vK * vK;' : ''));
     };
     m.customProgramCacheKey = () => 'morph-' + (add ? 'a' : 'o');
     return m;
@@ -626,7 +636,7 @@ function morphify(grp, cy) {
         o.geometry.computeBoundingSphere(); o.geometry.boundingSphere.radius += 330; } }); // 散った破片も映るよう判定を広げる
     return u;
 }
-const MSPD = 1.15;
+const MSPD = 1.9;
 function tickK(c, dt) { if (c.delay > 0) { c.delay -= dt; return; } c.k += Math.max(-dt * MSPD, Math.min(dt * MSPD, c.to - c.k)); c.u.value = c.k; }
 const dying = [];
 const waveDelay = dd => Math.min(0.9, Math.abs(dd) * 0.00034); // 竜の位置から前後へ広がる波
@@ -707,7 +717,7 @@ function buildChunk(ci) {
     const cy = cave((ci + 0.5) * CH).cy, u = morphify(grp, cy);
     scene.add(grp);
     const mid = (ci + 0.5) * CH;
-    return { obj: grp, u, k: 1, to: 0, delay: S.t < S.evoUntil ? Math.max(0, S.evoUntil - S.t - 0.75) + waveDelay(mid - S.d) * 0.6 : 0 }; // 虚空のあとで組み上がる
+    return { obj: grp, u, k: 1, to: 0, delay: S.t < S.evoUntil ? 0.12 + waveDelay(mid - S.d) * 0.5 : 0 }; // 崩れる世界と同時に組み上がる
 }
 function disposeObj(o) {
     scene.remove(o);
@@ -782,22 +792,6 @@ const gateSpacing = () => Math.max(480, 690 - gateIdx * 5);
 // 粒子・演出
 // =====================================================================
 const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,255,255,.6)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t; })();
-const DUST = IS_MOBILE ? 160 : 320;
-const dust = (() => {
-    const geo = new THREE.BufferGeometry(), p = new Float32Array(DUST * 3), c = new Float32Array(DUST * 3);
-    for (let i = 0; i < DUST; i++) { p[i * 3] = (Math.random() - 0.5) * 460; p[i * 3 + 1] = (Math.random() - 0.5) * 360; p[i * 3 + 2] = -Math.random() * 1400; const k = lineCol(Math.random(), i); c[i * 3] = k.r; c[i * 3 + 1] = k.g; c[i * 3 + 2] = k.b; }
-    geo.setAttribute('position', new THREE.BufferAttribute(p, 3)); geo.setAttribute('color', new THREE.BufferAttribute(c, 3));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 5, map: dotTex, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true }));
-    pts.frustumCulled = false; scene.add(pts); return pts;
-})();
-function updateDust(camZ, camY) {
-    const p = dust.geometry.attributes.position.array;
-    for (let i = 0; i < DUST; i++) {
-        let z = p[i * 3 + 2]; if (z > camZ + 40) { z -= 1400; p[i * 3] = (Math.random() - 0.5) * 460; p[i * 3 + 1] = camY + (Math.random() - 0.5) * 360; } else if (z < camZ - 1400) z += 1400;
-        p[i * 3 + 2] = z;
-    }
-    dust.geometry.attributes.position.needsUpdate = true;
-}
 // 通過の光輪
 const rings = [];
 function burstRing(pos, color, big = 1, flat = false, op = 0.9, grow = 5) {
@@ -920,20 +914,19 @@ function resetWorld() {
 }
 function applyPalInstant() { bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); }
 // 10ゲートごとの進化: 竜は中空に浮かんで無敵。世界が分解して虚空になり、新しい形で組み上がってからゲーム再開
-const EVO_T = 3.0;
+const EVO_T = 1.5;
 function evolve() {
     S.stage++; setPal(S.stage);
     S.mode = 'evo'; S.evoT = 0; S.evoSpd = S.speed; S.evoY = S.y; S.lastAutoFlap = 0;
-    S.warpT = 0; S.flash = 0.15; warpInit(); sfxEvolve();
+    S.warpT = 0; sfxEvolve();
     bgFrom.copy(scene.background); bgTo.set(PAL.bg); bgK = 0; dragon.setAccent(PAL.wing); dragon.flap();
     // 世界の分解と融合: 竜のまわりから波のように、いまの洞窟がポリゴンと線に分かれて散り、新しい形の洞窟が組み上がる
-    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d); dying.push(c); } chunks.clear();
-    S.evoUntil = S.t + 2.0;
+    for (const [ci, c] of chunks) { c.to = 1; c.delay = waveDelay((ci + 0.5) * CH - S.d) * 0.5; dying.push(c); } chunks.clear();
+    S.evoUntil = S.t + 0.6; updateChunks(S.d, 4);
     for (let i = gates.length - 1; i >= 0; i--) { const gt = gates[i];
-        const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; if (gt.ring) gt.ring.visible = false; dying.push(old);
+        const old = { obj: gt.obj, u: gt.u, k: gt.k, to: 1, delay: waveDelay(gt.d - S.d) * 0.5 }; gt.bars.forEach(b => b.visible = false); gt.veil.visible = false; if (gt.ring) gt.ring.visible = false; dying.push(old);
         if (gt.passed) { gates.splice(i, 1); continue; }
-        buildGate(gt); gt.delay = 1.35 + old.delay * 0.6; }
-    const dc = dust.geometry.attributes.color.array; for (let i = 0; i < DUST; i++) { const k = lineCol(Math.random(), i); dc.set([k.r, k.g, k.b], i * 3); } dust.geometry.attributes.color.needsUpdate = true;
+        buildGate(gt); gt.delay = 0.25 + old.delay; }
     const p0 = new THREE.Vector3(0, S.y, -S.d); [PAL.cry[0], PAL.cry[1]].forEach((c, i) => setTimeout(() => burstRing(p0.clone().setZ(-S.d - 60), c, 1.6 + i * 0.5, false, 0.45, 3), i * 120));
     const el = document.getElementById('stage'); el.style.setProperty('--sc', '#' + _c(PAL.line ? PAL.line[0] : 0xffffff).getHexString());
     document.getElementById('stN').textContent = 'STAGE ' + (S.stage + 1); document.getElementById('stM').textContent = PAL.name + (S.stage >= PALS.length ? ' +' : '');
@@ -967,11 +960,11 @@ function step(h) {
         return;
     }
     if (S.mode === 'evo') { // 進化中: 減速して中空に浮かぶ（当たり判定なし）
-        S.evoT += h; const e = Math.min(1, S.evoT / 0.6), r = Math.max(0, Math.min(1, (S.evoT - (EVO_T - 0.5)) / 0.5));
-        S.speed = lerp(lerp(S.evoSpd, 110, e * e * (3 - 2 * e)), S.evoSpd, r);
+        S.evoT += h; const e = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
+        S.speed = S.evoSpd * (1 - 0.45 * e); // 一瞬ゆるめて、変わりゆく世界の中を進む
         const ty = cave(S.d + 500).cy; S.y += (ty - S.y) * Math.min(1, h * 1.6); S.vy = (ty - S.y) * 1.6;
         S.d += S.speed * h;
-        if (S.evoT - S.lastAutoFlap > 0.75 && S.evoT < EVO_T - 0.3) { S.lastAutoFlap = S.evoT; dragon.flap(); }
+        if (S.evoT - S.lastAutoFlap > 0.7 && S.evoT < EVO_T - 0.3) { S.lastAutoFlap = S.evoT; dragon.flap(); }
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.vy = 120; S.speed = S.evoSpd; }
         return;
     }
@@ -1022,7 +1015,7 @@ function frame(now) {
     for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].k >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
     // 古いゲートを片付ける
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
-    gates.forEach(gt => { tickK(gt, dt); const vis = gt.k < 0.35; gt.bars.forEach(b => b.visible = vis); gt.veil.visible = vis; if (gt.ring) gt.ring.visible = vis; if (gt.flash > 0) { gt.flash = Math.max(0, gt.flash - dt * 2); } const k = 1.6 + gt.flash * 3 + Math.sin(S.t * 6) * 0.25; gt.bars.forEach(b => b.material.color.setHex(gt.stage ? 0xffffff : gt.col).multiplyScalar(gt.stage ? k * 0.9 : k)); if (gt.ring) gt.ring.rotation.y = S.t * 0.8; gt.veil.material.opacity = 0.035 + gt.flash * 0.25; });
+    gates.forEach(gt => { tickK(gt, dt); const vis = gt.k < 0.35; gt.bars.forEach(b => b.visible = vis); gt.veil.visible = vis; if (gt.ring) gt.ring.visible = vis; if (gt.flash > 0) { gt.flash = Math.max(0, gt.flash - dt * 2); } const k = 1.6 + gt.flash * 3; gt.bars.forEach(b => b.material.color.setHex(gt.stage ? 0xffffff : gt.col).multiplyScalar(gt.stage ? k * 0.9 : k)); if (gt.ring) gt.ring.rotation.y = S.t * 0.8; gt.veil.material.opacity = 0.035 + gt.flash * 0.25; });
     // 竜
     dragon.root.position.set(0, S.y, -S.d);
     dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' });
@@ -1043,17 +1036,15 @@ function frame(now) {
     camera.position.copy(camPos);
     camLook.set(0, S.lookY, -S.d - 300);
     camera.lookAt(camLook);
-    camera.rotation.z += Math.sin(S.t * 0.7) * 0.01;
+    camera.rotation.z += Math.sin(S.t * 0.7) * 0.01 + (S.mode === 'evo' ? Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI * 2) * 0.22 : 0); // 進化中は世界ごとねじれるように傾く
     if (window.__cam) window.__cam(camera, S, dragon);
     sun.position.set(-300, S.y + 700, -S.d + 300); sun.target.position.set(0, S.y, -S.d);
-    updateDust(camera.position.z, S.camY);
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); r.m.position.z -= S.speed * dt * 0.3; if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
     updateShards(dt);
     { const ft = dragon.pose.ft; if (S.prevFt < 0.16 && ft >= 0.16 && S.mode !== 'dead') { burstRing(new THREE.Vector3(0, S.y - 24, -S.d - 30), PAL.wing, 1.4, true, 0.32, 2.4); S.kick = 1; } S.prevFt = ft; } // 打ち下ろしの風
     // ステージ進化: 画角が一瞬開き、光が強まり、ワープ線が流れる
-    S.warpT += dt; const wk = S.mode === 'evo' ? Math.min(1, S.evoT / 0.3) * Math.min(1, Math.max(0, (EVO_T - S.evoT) / 0.8)) * 0.85 : Math.max(0, 1 - S.warpT / 0.6) * 0.3;
-    updateWarp(dt, 0, S.camY, camera.position.z, wk);
-    camera.fov = baseFov + wk * 10; camera.updateProjectionMatrix();
+    S.warpT += dt; const wk = S.mode === 'evo' ? Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI) : 0;
+    camera.fov = baseFov + wk * 12; camera.updateProjectionMatrix();
     bloom.strength = 0.62 + wk * 0.35;
     if (bgK < 1) { bgK = Math.min(1, bgK + dt / 1.6); scene.background.copy(bgFrom).lerp(bgTo, bgK); scene.fog.color.copy(scene.background); }
     dragon.root.visible = !(S.mode === 'dead' && S.deadT > 0.05) || S.deadT < 0; // 墜落したら砕ける
