@@ -177,8 +177,8 @@ function toggleFS() {
 const NI = g => (g.index ? g.toNonIndexed() : g);
 // 共通マテリアル: 色は頂点に焼き込み、部位ごとにまとめて描く（描画回数を減らす）
 const SM = {
-    armor: new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide }),
-    flat: new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), // 光を焼き込んだ面（洞窟・ゲート）
+    armor: new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }),
+    flat: new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }), // 面は線とガラスの少し奥に（重なりのちらつき防止） // 光を焼き込んだ面（洞窟・ゲート）
     line: new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
     glass: new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
     glow: new THREE.MeshBasicMaterial({ vertexColors: true }),
@@ -243,7 +243,7 @@ function bakeSkinned(top) {
         const shr = !mat.isLineBasicMaterial;
         mm.onBeforeCompile = sh => { sh.uniforms.uBones = uni; sh.uniforms.uT = uT;
             sh.vertexShader = 'attribute float aBone;\nuniform mat4 uBones[' + NB + '];\nuniform float uT;\n' + (shr ? 'attribute vec3 aC;\nattribute float aR;\n' : '') + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' +
-                (shr ? '\tfloat sv = smoothstep(-0.35, 0.25, sin(uT * 0.8 + aR * 6.2832 + aC.z * 0.06 + aC.x * 0.04));\n\ttransformed = mix(aC, transformed, sv);\n' : '') +
+                (shr ? '\tfloat sv = 0.32 + 0.68 * smoothstep(-0.4, 0.3, sin(uT * 0.6 + aR * 6.2832 + aC.z * 0.05 + aC.x * 0.03));\n\ttransformed = mix(aC, transformed, sv);\n' : '') +
                 '\ttransformed = (uBones[int(aBone + 0.5)] * vec4(transformed, 1.0)).xyz;'); };
         mm.customProgramCacheKey = () => 'skin' + NB + (shr ? 's' : 'l');
         const mg = mergeGeometries(gs); gs.forEach(g => g.dispose());
@@ -377,7 +377,7 @@ function buildDragon() {
 
     // ---- 翼 ----
     const FING = [{ L: 100, a: 0.02 }, { L: 92, a: 0.5 }, { L: 80, a: 0.96 }, { L: 66, a: 1.4 }]; // 大きな翼
-    const memMat = new THREE.MeshLambertMaterial({ color: 0x2a1a58, emissive: 0x2a0c50, emissiveIntensity: 0.7, flatShading: true, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false });
+    const memMat = new THREE.MeshLambertMaterial({ polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2, color: 0x2a1a58, emissive: 0x2a0c50, emissiveIntensity: 0.7, flatShading: true, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false });
     const memGlass = glass(V, 0.16);
     const wings = [-1, 1].map(s => {
         const sh = new THREE.Group(); sh.userData.rigid = true; sh.rotation.order = 'ZYX'; sh.position.set(s * 12, 13, 13); g.add(sh);
@@ -1020,7 +1020,9 @@ function frame(now) {
     dragon.root.position.set(0, S.y, -S.d);
     dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' });
     // カメラ: 後ろ上から（洞窟からはみ出さない）
-    const cd = S.d - 215, cv = cave(cd);
+    const eu = S.mode === 'evo' ? Math.min(1, S.evoT / EVO_T) : 0, sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const pull = S.mode === 'evo' ? sst(0, 0.38, eu) * (1 - sst(0.5, 1, eu)) : 0; // 進化中: いったん大きく引いて、組み上がるにつれて戻る
+    const cd = S.d - 215 - pull * 330, cv = cave(S.d - 215);
     S.yAvg = (S.yAvg ?? S.y) + (S.y - (S.yAvg ?? S.y)) * Math.min(1, dt / 0.35); // 羽ばたきの上下をならした高さ
     const ty = Math.max(cv.fl + 30, Math.min(cv.ce - 26, S.yAvg + 34));
     // カメラはばね（臨界減衰）でなめらかに追う。羽ばたきごとの上下は吸収し、大きな高低差にだけついていく
@@ -1032,11 +1034,11 @@ function frame(now) {
     const ly = S.mode === 'dead' ? S.y + 20 : S.y * 0.65 + cave(S.d + 300).cy * 0.35 + 26 - S.kick * 3; // 視線は竜と前方の通路の中間へ
     [S.lookY, S.lookV] = damp(S.lookY, S.lookV, ly, 2.6);
     const shk = S.shake * 8; S.shake = Math.max(0, S.shake - dt * 2.2);
-    camPos.set((Math.random() - 0.5) * shk, S.camY + (Math.random() - 0.5) * shk, -cd);
+    camPos.set((Math.random() - 0.5) * shk, S.camY + pull * 120 + (Math.random() - 0.5) * shk, -cd);
     camera.position.copy(camPos);
-    camLook.set(0, S.lookY, -S.d - 300);
+    camLook.set(0, lerp(S.lookY, S.y + 10, pull), -S.d - 300 + pull * 200);
     camera.lookAt(camLook);
-    camera.rotation.z += Math.sin(S.t * 0.7) * 0.01 + (S.mode === 'evo' ? Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI * 2) * 0.22 : 0); // 進化中は世界ごとねじれるように傾く
+    camera.rotation.z += Math.sin(S.t * 0.7) * 0.01 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.12 : 0); // 進化中はゆるく傾く
     if (window.__cam) window.__cam(camera, S, dragon);
     sun.position.set(-300, S.y + 700, -S.d + 300); sun.target.position.set(0, S.y, -S.d);
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); r.m.position.z -= S.speed * dt * 0.3; if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
@@ -1044,7 +1046,7 @@ function frame(now) {
     { const ft = dragon.pose.ft; if (S.prevFt < 0.16 && ft >= 0.16 && S.mode !== 'dead') { burstRing(new THREE.Vector3(0, S.y - 24, -S.d - 30), PAL.wing, 1.4, true, 0.32, 2.4); S.kick = 1; } S.prevFt = ft; } // 打ち下ろしの風
     // ステージ進化: 画角が一瞬開き、光が強まり、ワープ線が流れる
     S.warpT += dt; const wk = S.mode === 'evo' ? Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI) : 0;
-    camera.fov = baseFov + wk * 12; camera.updateProjectionMatrix();
+    camera.fov = baseFov + wk * 6; camera.updateProjectionMatrix();
     bloom.strength = 0.62 + wk * 0.35;
     if (bgK < 1) { bgK = Math.min(1, bgK + dt / 1.6); scene.background.copy(bgFrom).lerp(bgTo, bgK); scene.fog.color.copy(scene.background); }
     dragon.root.visible = !(S.mode === 'dead' && S.deadT > 0.05) || S.deadT < 0; // 墜落したら砕ける
