@@ -1720,7 +1720,7 @@ function drawUI() {
     if (S.dmg > 0) { const gr = ug.createRadialGradient(uiC.width / 2, uiC.height / 2, uiC.height * 0.3, uiC.width / 2, uiC.height / 2, uiC.width * 0.62); gr.addColorStop(0, 'rgba(255,40,80,0)'); gr.addColorStop(1, `rgba(255,40,80,${0.55 * S.dmg})`); ug.fillStyle = gr; ug.fillRect(0, 0, uiC.width, uiC.height); }
     if (S.mode === 'play' || S.mode === 'evo') { drawHUD(); drawLocks(); if (S.mode === 'play') drawReticle(); }
     drawOverlay();
-    if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}`, 20, VH - 46, 12, '#fff', '#fff', 'left', 0.9);
+    if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}`, 20, VH - 46, 12, '#fff', '#fff', 'left', 0.9);
     gameEl.classList.toggle('aim', S.mode === 'play');
 }
 
@@ -1746,7 +1746,7 @@ function adapt(raw, ref) {
         perf.good = 0; if (perf.win - (perf.raisedAt ?? -99) <= 3) perf.noRaise = true;
         if (PR > 0.851) { PR_CAP = Math.max(0.85, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && (perf.vs || 1 / 60) < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
     else if (perf.late === 0 && !perf.noRaise && ++perf.good >= 8 && PR < PR_T - 0.001) { perf.good = 0; perf.raisedAt = perf.win; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
-    perf.fps = perf.n / perf.sum; perf.sum = 0; perf.n = 0; perf.late = 0;
+    perf.fps = perf.n / perf.sum; perf.lateShow = perf.late; perf.drops = (perf.drops || 0) + perf.late; perf.sum = 0; perf.n = 0; perf.late = 0;
 }
 const damp = (x, v, to, w, dt) => { const k = Math.min(dt, 0.05), a = w * w * (to - x) - 2 * w * v; v += a * k; return [x + v * k, v]; };
 const sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
