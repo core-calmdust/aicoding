@@ -2018,9 +2018,9 @@ function drawHUD() {
     const narrow = VW < 700;
     T(String(S.score).padStart(7, '0'), VW / 2, narrow ? 76 : 40, narrow ? 22 : 30, c1, c2, 'center', 1, false, 2);
     // 体力: 六角形2つ
-    for (let i = 0; i < Math.max(2, S.hp); i++) { const cx = 112 + i * 34, cy = 40; ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; ug.shadowColor = c1; ug.shadowBlur = i < S.hp ? 10 * UIS : 0;
+    for (let i = 0; i < Math.max(2, S.hp); i++) { const cx = 58 + i * 34, cy = 40; /* 左上に寄せる */ ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; ug.shadowColor = c1; ug.shadowBlur = i < S.hp ? 10 * UIS : 0;
         poly(Array.from({ length: 6 }, (_, k) => [cx + Math.cos(k * Math.PI / 3) * 13, cy + Math.sin(k * Math.PI / 3) * 13])); ug.stroke(); if (i < S.hp) { ug.globalAlpha = 0.5; ug.fillStyle = c1; ug.fill(); } ug.restore(); }
-    T('HP', 74, 40, 12, c1, c2, 'left', 0.8);
+    T('HP', 20, 40, 12, c1, c2, 'left', 0.8);
     // 進化までの撃破数
     const k = Math.min(1, S.kills / S.quota), gx = VW - (VW < 700 ? 40 : 170), gy = 40;
     ug.save(); ug.lineWidth = 3 * UIS; ug.strokeStyle = 'rgba(255,255,255,.15)'; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, Math.PI * 1.5); ug.stroke();
