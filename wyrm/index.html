@@ -947,9 +947,22 @@ function hat808(t, gain, open = false, pan = 0) {
 }
 // 発射音: ステージごとに違う音色の短い楽音で、いま鳴っている和音の音を高い方から順にたどる（ロック音とは別の、音楽的な発射音）
 // t は音楽の拍にそろえた時刻、n は一斉射撃の何発目か
+// 発射音のフレーズ: 一斉射撃ごとにランダムで選ぶ。和音の音（低い順 0..）を何番目に鳴らすかの並び
+const FIRE_PATS = [
+    n => 6 - n,                                  // 上から下る
+    n => n,                                      // 下から上る
+    n => [0, 2, 4, 6, 5, 3, 1, 0][n % 8],        // 上って下る
+    n => [6, 4, 5, 3, 4, 2, 3, 1][n % 8],        // 2つ戻りながら下る
+    n => (n % 2 ? 6 : 0) + (n % 2 ? -n >> 1 : n >> 1), // 上下を行き来
+    n => [0, 4, 0, 5, 0, 6, 0, 4][n % 8],        // 低い音を軸に跳ねる
+    n => [2, 2, 4, 4, 6, 6, 5, 5][n % 8],        // 2つずつ
+    n => [6, 2, 5, 1, 4, 0, 3, 6][n % 8],        // 飛び飛び
+];
+let firePat = FIRE_PATS[0];
 function sfxFire(n, t, total = 1) {
     if (!audio()) return; t = t || AC.currentTime;
-    const ch = chordAt(t), up = ch.slice(1).map(m => m + 12).sort((x, y) => y - x) /* 高すぎると鳥の声のようになるのでロック音と同じ音域 */, m = up[n % up.length] - 12 * Math.floor(n / up.length);
+    const ch = chordAt(t), up = ch.slice(1).map(m => m + 12).sort((x, y) => x - y) /* 高すぎると鳥の声のようになるのでロック音と同じ音域 */;
+    let ix = firePat(n); const oc = Math.floor(ix / up.length); ix = ((ix % up.length) + up.length) % up.length; const m = up[ix] + 12 * Math.min(1, oc);
     const f = mtof(m), k = 0.11 * (1 - n / Math.max(8, total * 1.6)); PANV = (n % 2 ? 0.6 : -0.6);
     // 音程は揺らさない（すべり音は鳴き声っぽくなる）。ロック音と同じく短い楽音で、音色だけステージごとに変える
     switch (S.stage % 6) {
@@ -1564,7 +1577,8 @@ function updateLock() {
     }
     if (!held && lockHeldPrev && S.mode === 'play') {
         // 発射は音楽の拍にそろえる: 次の16分音符の頭から、32分音符おきに1本ずつ
-        const t0 = AC && MUS.on ? q16(AC.currentTime + 0.01) : 0, gap = S16 / 2;
+        firePat = FIRE_PATS[Math.floor(Math.random() * FIRE_PATS.length)]; // フレーズと刻みは毎回ランダム
+        const t0 = AC && MUS.on ? q16(AC.currentTime + 0.01) : 0, gap = S16 * [0.5, 0.5, 1, 2 / 3][Math.floor(Math.random() * 4)];
         const at = i => AC && MUS.on ? Math.max(0, (t0 + i * gap - AC.currentTime) * 1000) : i * 55;
         if (locks.length) { const v = locks.slice(); v.forEach((t, i) => { if (t0) sfxFire(i, t0 + i * gap, v.length); setTimeout(() => { if (S.mode === 'play' || S.mode === 'evo') launch(t, i, v.length); if (!t0) sfxFire(i); }, at(i)); }); }
         else { const dir = aimDir(); if (t0) sfxFire(0, t0, 1); setTimeout(() => { if (S.mode === 'play') launch(null, 0, 1, dir); if (!t0) sfxFire(0); }, at(0)); }
