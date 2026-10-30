@@ -930,8 +930,8 @@ function kick(t) {
 }
 function hat(t, g0) { const n = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(g0, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); n.connect(f).connect(g).connect(MUS.duck); n.start(t); n.stop(t + 0.06); }
 function bassNote(t, m, len, long) {
-    if (long) { // のびるベース: 1オクターブ下のサイン波だけで、目立たず下で支える
-        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = mtof(m - 12);
+    if (long) { // のびるベース: サイン波だけで、目立たず下で支える
+        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = mtof(m);
         g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.5); g.gain.setValueAtTime(0.2, t + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
         o.connect(g).connect(MUS.duck); o.start(t); o.stop(t + len + 0.05); return;
     }
