@@ -1268,7 +1268,7 @@ document.getElementById('home').addEventListener('pointerdown', e => e.stopPropa
 // 文字列ごとに一度だけ描いてキャッシュするので、毎フレームの負荷はほぼない
 const txtCache = new Map(); let fontReady = false;
 if (document.fonts) document.fonts.load('400 40px "Open Sans"').then(() => { fontReady = true; txtCache.clear(); }).catch(() => {});
-function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'center', alpha = 1, heavy = false, track = 0) {
+function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'center', alpha = 1, heavy = false, track = 0, maxW = 1e9) {
     text = String(text).toUpperCase(); const key = text + '|' + size + heavy + track + fontReady;
     let o = txtCache.get(key);
     if (!o) {
@@ -1281,8 +1281,9 @@ function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'ce
         c.fillStyle = '#f4f5f7'; c.fillText(text, pad, my + size * 0.04); // モノトーン（企業ロゴのように色も光も付けない）
         o = { cv, pad, tw }; txtCache.set(key, o);
     }
-    const px = align === 'center' ? x - o.tw / 2 : align === 'right' ? x - o.tw : x;
-    g.globalAlpha = alpha; g.drawImage(o.cv, Math.round(px - o.pad), Math.round(cy - o.cv.height / 2)); g.globalAlpha = 1; return o.tw;
+    const f = Math.min(1, maxW / o.tw), tw = o.tw * f; // 画面に収まらないときは縮める
+    const px = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
+    g.globalAlpha = alpha; g.drawImage(o.cv, Math.round(px - o.pad * f), Math.round(cy - o.cv.height * f / 2), o.cv.width * f, o.cv.height * f); g.globalAlpha = 1; return tw;
 }
 
 // =====================================================================
@@ -1966,7 +1967,8 @@ function collide() {
 const uiC = $('ui'), ug = uiC.getContext('2d'); let UIS = 1;
 function uiResize() { const sc = IS_MOBILE ? 1 : Math.min(innerWidth / BASE_W, innerHeight / BASE_H); UIS = Math.min(1.5, (devicePixelRatio || 1) * sc); uiC.width = Math.round(VW * UIS); uiC.height = Math.round(VH * UIS); txtCache.clear(); }
 addEventListener('resize', uiResize); document.addEventListener('fullscreenchange', uiResize); uiResize();
-const T = (text, x, y, size, c1, c2, align, alpha, heavy, track = 0) => ptext(ug, text, x * UIS, y * UIS, Math.round(size * UIS), c1, c2, align, alpha, heavy, track * UIS);
+const HS = () => Math.max(0.6, Math.min(1, VH / 600)); // 横向きスマホなど背の低い画面では文字を小さく
+const T = (text, x, y, size, c1, c2, align, alpha, heavy, track = 0) => ptext(ug, text, x * UIS, y * UIS, Math.round(size * UIS * (size > 13 ? HS() : 1)), c1, c2, align, alpha, heavy, track * UIS, (align === 'center' ? VW - 24 : align === 'right' ? x - 12 : VW - x - 12) * UIS);
 const hex = c => '#' + _c(c).getHexString();
 function poly(pts, close = true) { ug.beginPath(); pts.forEach(([x, y], i) => i ? ug.lineTo(x * UIS, y * UIS) : ug.moveTo(x * UIS, y * UIS)); if (close) ug.closePath(); }
 const retHist = []; // 照準の残像（少し前の位置）
@@ -2046,14 +2048,15 @@ function drawOverlay() {
     }
     if (S.mode === 'dead' && S.deadT > 0.6) {
         const a = Math.min(1, (S.deadT - 0.6) / 0.5);
-        T('GAME OVER', VW / 2, 250, 84, '#ffffff', '#ff4fd8', 'center', a, true, 4);
-        T('SCORE ' + S.score, VW / 2, 360, 26, c1, c2, 'center', a, false, 3);
-        T('BEST ' + best, VW / 2, 404, 16, c1, c2, 'center', a * 0.75, false, 3);
-        if (S.newRec) T('NEW RECORD', VW / 2, 448, 16, '#ffd060', '#ff8a2a', 'center', a * br, false, 4);
-        if (S.deadT > 0.9) T('PRESS START', VW / 2, 540, 22, '#ffffff', '#ff5ad8', 'center', a * br, false, 3);
+        const yk = VH / 720, Y = y => VH / 2 + (y - 360) * Math.min(1, yk); // 画面の高さに合わせて詰める
+        T('GAME OVER', VW / 2, Y(250), 84, '#ffffff', '#ff4fd8', 'center', a, true, 4);
+        T('SCORE ' + S.score, VW / 2, Y(360), 26, c1, c2, 'center', a, false, 3);
+        T('BEST ' + best, VW / 2, Y(404), 16, c1, c2, 'center', a * 0.75, false, 3);
+        if (S.newRec) T('NEW RECORD', VW / 2, Y(448), 16, '#ffd060', '#ff8a2a', 'center', a * br, false, 4);
+        if (S.deadT > 0.9) T(IS_MOBILE ? 'TAP TO START' : 'PRESS START', VW / 2, Y(540), 22, '#ffffff', '#ff5ad8', 'center', a * br, false, 3);
     }
     if (S.banner) { const b = S.banner; const a = b.t < 0.25 ? b.t / 0.25 : Math.max(0, 1 - (b.t - 1.5) / 0.5); if (a <= 0 && b.t > 1) S.banner = null; else {
-        T(b.n, VW / 2, VH * 0.2, 64, '#ffffff', c1, 'center', a, true, 4 + (1 - a) * 10); T(b.m, VW / 2, VH * 0.2 + 58, 15, c1, c2, 'center', a * 0.9, false, 8); } }
+        const by = VH < 500 ? VH * 0.34 : VH * 0.2; T(b.n, VW / 2, by, 64, '#ffffff', c1, 'center', a, true, 4 + (1 - a) * 10); T(b.m, VW / 2, by + 58 * HS(), 15, c1, c2, 'center', a * 0.9, false, 8); } }
 }
 function drawSub() { // 画面下の字幕（声に合わせて表示、前後はふわっと）
     if (!voiceSub || !AC) return; const now = AC.currentTime, v = voiceSub;
@@ -2061,8 +2064,13 @@ function drawSub() { // 画面下の字幕（声に合わせて表示、前後�
     const a = Math.min(1, (now - v.t0 + 0.1) / 0.25, (v.t1 + 0.4 - now) / 0.4);
     ug.save(); ug.globalAlpha = a; ug.textAlign = 'center'; ug.textBaseline = 'middle'; ug.fillStyle = '#f4f5f7';
     ug.shadowColor = 'rgba(0,0,0,.85)'; ug.shadowBlur = 6 * UIS;
-    ug.font = `400 ${Math.round(17 * UIS)}px "Open Sans", sans-serif`; ug.fillText(v.en, VW / 2 * UIS, (VH - 92) * UIS);
-    ug.font = `500 ${Math.round(14 * UIS)}px "Noto Sans JP", sans-serif`; ug.globalAlpha = a * 0.85; ug.fillText(v.ja, VW / 2 * UIS, (VH - 66) * UIS);
+    const maxW = (VW - 32) * UIS, wrap = (t, byChar) => { const parts = byChar ? [...t] : t.split(' '), out = []; let cur = '';
+        for (const w of parts) { const nx = cur ? cur + (byChar ? '' : ' ') + w : w; if (ug.measureText(nx).width > maxW && cur) { out.push(cur); cur = w; } else cur = nx; } if (cur) out.push(cur); return out; };
+    ug.font = `500 ${Math.round(14 * UIS)}px "Noto Sans JP", sans-serif`; const ja = wrap(v.ja, true);
+    ug.font = `400 ${Math.round(17 * UIS)}px "Open Sans", sans-serif`; const en = wrap(v.en, false);
+    let y = VH - (VH < 500 ? 20 : 40) - ja.length * 20 - en.length * 24; // 下から積む（折り返しても画面内に収める）
+    en.forEach(l => { ug.fillText(l, VW / 2 * UIS, y * UIS); y += 24; });
+    ug.font = `500 ${Math.round(14 * UIS)}px "Noto Sans JP", sans-serif`; ug.globalAlpha = a * 0.85; y += 4; ja.forEach(l => { ug.fillText(l, VW / 2 * UIS, y * UIS); y += 20; });
     ug.restore();
 }
 function drawUI() {
