@@ -898,22 +898,25 @@ function nextSlot() { const t = Math.max(q16(AC.currentTime + 0.01), lastQ + S16
 // 命中音は16分音符に1つまで。先の拍まで詰まっているときは鳴らさずに間引く（大量撃破で音が割れないように）
 let hitQ = 0;
 function hitSlot() { const now = q16(AC.currentTime + 0.01), t = Math.max(now, hitQ + S16 * 0.999); if (t - now > S16 * 3.5) return -1; hitQ = t; return t; }
+// 定位: PANV を設定してから鳴らすと、その音を左右に振る（キック・ベースなど中央の音は使わない）
+let PANV = 0;
+function toOut(node, dest = master, pan = PANV) { if (!pan) { node.connect(dest); return; } const p = AC.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); node.connect(p).connect(dest); }
 function voice(t, f, type, a, d, gain, toFx = 0.6, det = 0) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.detune.value = det;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
-    o.connect(g); g.connect(master); if (toFx) { const s = AC.createGain(); s.gain.value = toFx; g.connect(s).connect(fx); } o.start(t); o.stop(t + a + d + 0.05);
+    o.connect(g); toOut(g); if (toFx) { const s = AC.createGain(); s.gain.value = toFx; g.connect(s).connect(fx); } o.start(t); o.stop(t + a + d + 0.05);
 }
 function bell(t, m, gain = 0.12, ratio = 3.5, idx = 2.2, dec = 1.1, send = 0.7) { // FM の鐘（比率・深さ・余韻で音色を変える）
     const f = mtof(m), c = AC.createOscillator(), mo = AC.createOscillator(), mg = AC.createGain(), g = AC.createGain();
     c.frequency.value = f; mo.frequency.value = f * ratio; mg.gain.setValueAtTime(f * idx, t); mg.gain.exponentialRampToValueAtTime(1, t + dec * 0.55);
     mo.connect(mg).connect(c.frequency); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dec);
-    c.connect(g); g.connect(master); const s = AC.createGain(); s.gain.value = send; g.connect(s).connect(fx); c.start(t); mo.start(t); c.stop(t + dec + 0.1); mo.stop(t + dec + 0.1);
+    c.connect(g); toOut(g); const s = AC.createGain(); s.gain.value = send; g.connect(s).connect(fx); c.start(t); mo.start(t); c.stop(t + dec + 0.1); mo.stop(t + dec + 0.1);
 }
 function pluck(t, m, gain, type = 'sawtooth', cut = 4200, dec = 0.35, det = [0]) { // フィルターが閉じていく撥弦
     const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.Q.value = 4; f.frequency.setValueAtTime(cut, t); f.frequency.exponentialRampToValueAtTime(220, t + dec);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dec + 0.05);
     det.forEach(d => { const o = AC.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = d; o.connect(f); o.start(t); o.stop(t + dec + 0.1); });
-    f.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.5; g.connect(s2).connect(fx);
+    f.connect(g); toOut(g); const s2 = AC.createGain(); s2.gain.value = 0.5; g.connect(s2).connect(fx);
 }
 // 音色ごとの一音
 // 効果音の音色: 2面ごとに少しずつ変わる（同じ面のあいだは同じ）。テンポが上がるほどエッジが効いていくが、
@@ -929,26 +932,26 @@ function tone(t, m, gain, short) {
 // 拍のパルス: 拍の頭で1、すぐに減衰（小節の頭は強め）。音楽が鳴っていなければ0
 function beatPulse() { if (!MUS.on || !AC) return 0; const st = MUS.n + (AC.currentTime - MUS.t) / S16; if (st < 0) return 0; const f = st % 4, bar = Math.floor(st / 4) % 4 === 0; return Math.exp(-f * 1.4) * (bar ? 1 : 0.6); }
 // ロック音: ロックのたびに4分・8分・16分音符のどれかでランダムに刻む（2拍ぶん、だんだん小さく）
-function sfxLock(n) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
+function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
     const div = [4, 2, 1][Math.floor(Math.random() * 3)], cnt = 8 / div;
-    for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); hat808(ti, 0.16 * k); } }
+    for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); const pp = Math.max(-0.9, Math.min(0.9, pan + (i % 2 ? -0.35 : 0.35) * Math.sign(pan || 1))); PANV = pp; tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); PANV = 0; hat808(ti, 0.32 * k, false, -pp * 0.8); } }
 // 808系のハイハット: 金属的な比の矩形波6本を高域だけ通して短く切る
 const HAT_F = [205.3, 304.4, 369.6, 522.7, 540, 800];
-function hat808(t, gain, open = false) {
+function hat808(t, gain, open = false, pan = 0) {
     const bp = AC.createBiquadFilter(), hp = AC.createBiquadFilter(), g = AC.createGain(), d = open ? 0.28 : 0.055;
     bp.type = 'bandpass'; bp.frequency.value = 10000; bp.Q.value = 0.8; hp.type = 'highpass'; hp.frequency.value = 7000;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     HAT_F.forEach(f => { const o = AC.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(bp); o.start(t); o.stop(t + d + 0.02); });
-    bp.connect(hp).connect(g).connect(master);
+    bp.connect(hp).connect(g); toOut(g, master, pan);
 }
 function sfxFire(n) { if (!audio()) return; const t = AC.currentTime; const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3800, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18 + n * 0.02, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.22); }
 // 命中: 一斉射撃の何発目かで和音を上へたどる。最初の一発は根音の低いアタックも
-function sfxHit(order, volley) {
+function sfxHit(order, volley, pan = 0) {
     if (!audio()) return; const t = hitSlot(); if (t < 0) return; const ch = chordAt(t);
     const m = ch[order % ch.length] + 12 + 12 * Math.floor(order / ch.length);
-    tone(t, m, 0.13); 
+    PANV = pan; tone(t, m, 0.13); PANV = 0; 
     if (order === 0) { voice(t, mtof(ch[0] - 12), 'sine', 0.005, 0.35, 0.28, 0); }
-    if (order === volley - 1 && volley >= 4 && t - AC.currentTime < S16 * 2) { [0, 2, 4, 6].forEach((k, i) => tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true)); } // 大量撃破のきらめき
+    if (order === volley - 1 && volley >= 4 && t - AC.currentTime < S16 * 2) { [0, 2, 4, 6].forEach((k, i) => { PANV = (i % 2 ? 0.6 : -0.6); tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true); PANV = 0; }); } // 大量撃破のきらめき
 }
 // =====================================================================
 // 音楽: 4つ打ちのキック・和音に合わせたベース・和音のヒット・シーケンス・やわらかなパッド
@@ -976,7 +979,7 @@ function kick(t, kg = 1) {
     const n = noise(), f = AC.createBiquadFilter(), ng = AC.createGain(); f.type = 'highpass'; f.frequency.value = 2500; ng.gain.setValueAtTime(0.12, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.012); n.connect(f).connect(ng).connect(MUS.bus); n.start(t); n.stop(t + 0.02);
     MUS.duck.gain.setValueAtTime(1 - 0.58 * kg, t); MUS.duck.gain.linearRampToValueAtTime(1, t + 0.2);
 }
-function hat(t, g0) { const n = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(g0, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); n.connect(f).connect(g).connect(MUS.duck); n.start(t); n.stop(t + 0.06); }
+function hat(t, g0, pan = 0) { const n = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(g0, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); n.connect(f).connect(g); toOut(g, MUS.duck, pan); n.start(t); n.stop(t + 0.06); }
 function bassNote(t, m, len, long, bg0 = 1) {
     if (long) { // のびるベース: サイン波だけで、目立たず下で支える
         const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = mtof(m);
@@ -989,17 +992,19 @@ function bassNote(t, m, len, long, bg0 = 1) {
     const a = AC.createOscillator(), b = AC.createOscillator(); a.type = 'sawtooth'; b.type = 'sine'; a.frequency.value = mtof(m); b.frequency.value = mtof(m - 12);
     const bg = AC.createGain(); bg.gain.value = 1.6; a.connect(f); b.connect(bg).connect(g); f.connect(g); g.connect(MUS.duck); a.start(t); b.start(t); a.stop(t + len + 0.05); b.stop(t + len + 0.05);
 }
-function stab(t, notes, len, sg = 1) { // 和音のヒット（ゆるく開くフィルター＋少しずらした2本のノコギリ波）
+function stab(t, notes, len, sg = 1, pan = 0) { // 和音のヒット（ゆるく開くフィルター＋少しずらした2本のノコギリ波）
     const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.Q.value = 1.5; f.frequency.setValueAtTime(3400, t); f.frequency.exponentialRampToValueAtTime(500, t + len);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.085 * sg + 0.0002, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
     notes.forEach(m => [-8, 8].forEach(d => { const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = d; o.connect(f); o.start(t); o.stop(t + len + 0.05); }));
-    f.connect(g); g.connect(MUS.duck); const s2 = AC.createGain(); s2.gain.value = 0.45; g.connect(s2).connect(fx);
+    f.connect(g); toOut(g, MUS.duck, pan); const s2 = AC.createGain(); s2.gain.value = 0.45; g.connect(s2).connect(fx);
 }
-function pad(t, notes, len) { // 和音が変わるたびのやわらかな面
-    const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 1400;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.055, t + len * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    notes.forEach((m, i) => { const o = AC.createOscillator(); o.type = i % 2 ? 'triangle' : 'sine'; o.frequency.value = mtof(m); o.detune.value = (i - 1.5) * 5; o.connect(f); o.start(t); o.stop(t + len + 0.05); });
-    f.connect(g); g.connect(MUS.duck); const s2 = AC.createGain(); s2.gain.value = 0.6; g.connect(s2).connect(fx);
+function pad(t, notes, len) { // 和音が変わるたびのやわらかな面（声部を左右に広げる）
+    [-0.6, 0.6].forEach((pan, side) => {
+        const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 1400;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.055, t + len * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        notes.forEach((m, i) => { if (i % 2 !== side) return; const o = AC.createOscillator(); o.type = i % 2 ? 'triangle' : 'sine'; o.frequency.value = mtof(m); o.detune.value = (i - 1.5) * 5; o.connect(f); o.start(t); o.stop(t + len + 0.05); });
+        f.connect(g); toOut(g, MUS.duck, pan); const s2 = AC.createGain(); s2.gain.value = 0.6; g.connect(s2).connect(fx);
+    });
 }
 // 曲の重なり: 最初はパッド・のびるベース・ハーフテンポのキックだけ。盛り上がり I に合わせて
 // 各パートが音量0から少しずつ入ってくる（急にパートが増えない）
@@ -1009,15 +1014,15 @@ function musStep(n, t) {
     // キック: 1・3拍は常に、2・4拍は I=0.9〜2.4 でだんだん入る
     if (k % 8 === 0) kick(t); else if (k % 4 === 0 && ramp(I, 0.9, 1.5) > 0.03) kick(t, ramp(I, 0.9, 1.5));
     const h1 = ramp(I, 1.4, 1.6), h2 = ramp(I, 3.2, 2);
-    if (k % 4 === 2 && h1 > 0.03) hat(t, 0.07 * h1); else if (k % 2 === 1 && h2 > 0.03) hat(t, 0.025 * h2);
+    if (k % 4 === 2 && h1 > 0.03) hat(t, 0.12 * h1, 0.3); else if (k % 2 === 1 && h2 > 0.03) hat(t, 0.045 * h2, k % 4 === 1 ? -0.6 : 0.6);
     const lb = 1 - ramp(I, 1.6, 2), pb = ramp(I, 1.2, 2); // のびるベース→刻むベースへゆっくり持ち替える
     if (ch !== MUS.lastChord) { MUS.lastChord = ch; pad(t, ch.slice(1, 5).map(m => m + 12), BAR * 2); if (lb > 0.03) bassNote(t, bassRoot, BAR * 2 * 0.98, true, lb); }
     if (pb > 0.03) { const pat = I < 3 ? 'x.......x.....x.' : I < 5 ? 'x.....x...x...x.' : 'x..x..x...x..xo.'; const b = pat[k]; if (b !== '.') bassNote(t, bassRoot + (b === 'o' ? 12 : 0), S16 * 1.7, false, pb); }
-    const sg = ramp(I, 2.2, 2); if (sg > 0.03 && (k === 6 || k === 14 || (I > 4.5 && k === 11))) stab(t, ch.slice(2, 6).map(m => m + 12), S16 * 3, sg);
+    const sg = ramp(I, 2.2, 2); if (sg > 0.03 && (k === 6 || k === 14 || (I > 4.5 && k === 11))) stab(t, ch.slice(2, 6).map(m => m + 12), S16 * 3, sg, k === 6 ? -0.45 : 0.45);
     // シーケンス: 8分音符で入り、さらに盛り上がると16分の合いの手が少しずつ加わる
     const a8 = ramp(I, 2.8, 2), a16 = ramp(I, 5, 2.5), up = ch.slice(1), oct = (Math.floor(n / 64) % 2) * 12;
-    if (k % 2 === 0 && a8 > 0.03) tone(t, up[(n >> 1) % up.length] + 12 + oct, 0.19 * a8, true); // +10dB
-    else if (k % 2 === 1 && a16 > 0.03) tone(t, up[(n * 3 >> 1) % up.length] + 12 + oct, 0.126 * a16, true);
+    if (k % 2 === 0 && a8 > 0.03) { PANV = (n >> 1) % 2 ? 0.55 : -0.55; tone(t, up[(n >> 1) % up.length] + 12 + oct, 0.19 * a8, true); PANV = 0; } // +10dB
+    else if (k % 2 === 1 && a16 > 0.03) { PANV = (n >> 1) % 2 ? -0.75 : 0.75; tone(t, up[(n * 3 >> 1) % up.length] + 12 + oct, 0.126 * a16, true); PANV = 0; }
 }
 function sfxDamage() { if (!audio()) return; const t = AC.currentTime; [0, 1, 6].forEach(k => voice(t, mtof(40 + k), 'sawtooth', 0.005, 0.5, 0.12, 0.3)); const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 900; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.55); }
 function sfxCrash() {
@@ -1462,7 +1467,7 @@ function updateShots(dt) {
 function killShot(i) { const s = shots[i]; [s.L.mesh, s.L.core].forEach(o => { scene.remove(o); o.geometry.dispose(); o.material.dispose(); }); shots.splice(i, 1); }
 function hitTarget(t, order, volley) {
     if (!t.alive) return;
-    t.alive = false; sfxHit(order, volley);
+    t.alive = false; sfxHit(order, volley, Math.max(-0.8, Math.min(0.8, (toScreen(t.obj ? epos(t, _sp) : _sp.set(t.x, t.y, -(S.d + t.rz)))[0] / VW * 2 - 1) * 0.8)));
     if (t.obj) { const p = epos(t); removeEnemy(t); boom(p, [PAL.gate[0], PAL.gate[1], 0xffffff], 22); burstRing(p, PAL.gate[1], 0.9, false, 0.7, 3.5);
         S.score += 100 * Math.max(1, volley); S.kills++; if (S.kills >= S.quota && S.mode === 'play') S.evoPending = 0.35; }
     else { const p = new THREE.Vector3(t.x, t.y, -(S.d + t.rz)); boom(p, [PAL.gate[2], 0xffffff], 8); S.score += 10; }
@@ -1526,7 +1531,7 @@ function updateLock() {
         const e8 = MUS.on && AC ? Math.floor((MUS.n + (AC.currentTime - MUS.t) / S16) / 2) : Math.floor(S.t / (S16 * 2)); // いまの8分音符の番号
         let can = e8 !== S.lock8; // ロックは8分音符ごとに1つだけ
         const tryLock = (t, wp) => { if (!can || locks.length >= 8 || t.locked || !t.alive || t.rz < 60) return; const [sx, sy, sz] = toScreen(wp); if (sz > 1) return;
-            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1); S.lock8 = e8; can = false; } };
+            if (Math.hypot(sx - S.rx, sy - S.ry) < RET_R) { t.locked = 1; locks.push(t); sfxLock(locks.length - 1, (sx / VW * 2 - 1) * 0.8); S.lock8 = e8; can = false; } };
         for (const e of enemies) tryLock(e, epos(e, _sp));
         for (const b of bullets) tryLock(b, _sp.set(b.x, b.y, -(S.d + b.rz)));
     }
