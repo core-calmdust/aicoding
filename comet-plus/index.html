@@ -7256,7 +7256,7 @@ const perf = { t0: 0, frames: 0, good: 0, lastRaise: -1e9, hold: 0 };
 // フルスクリーン切り替え・ウィンドウサイズ変更の直後は一時的にフレームが落ちるので、計測を止めて画質を戻す
 // （これで画質が下がると上部のHUDが別キャンバス表示になり、3D画面とずれて見えていた）
 function resetQualityAfterResize() {
-    perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; perf.good = 0; perf.lastRaise = -1e9;
+    perf.hold = performance.now() + 2500; perf.t0 = 0; perf.frames = 0; perf.bad = 0; perf.good = 0; perf.lastRaise = -1e9; perf.late = 0; perf.drops = 0;
     qCeil = Q_MAX; frameClock.reset(); // 切り替え中の空白で追いつき更新が連続しないよう、画面の周期と位相も測り直す
     if (quality !== Q_MAX) { quality = Q_MAX; applyQuality(); }
 }
@@ -7269,24 +7269,34 @@ function applyQuality() {
     composer.setSize(VW, VH);
     glowMat.uniforms.uScale.value = GLOW_BASE * quality;
 }
+// 確認用の表示（Iキー）: FPS・描画解像度・画面のHz・直近1秒の遅れフレーム数・切り替えからの累計
+const perfEl = document.createElement('div');
+perfEl.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:99999;font:12px/1.4 monospace;color:#fff;background:rgba(0,0,0,.55);padding:4px 8px;border-radius:4px;pointer-events:none;display:none;white-space:pre';
+(document.getElementById('fullscreen-root') || document.body).appendChild(perfEl); // フルスクリーン中も見えるように
+window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat) { perfEl.style.display = perfEl.style.display === 'none' ? 'block' : 'none'; } });
 function adaptQuality(now) {
+    if (perfEl.style.display !== 'none') perfEl.textContent = `${(perf.fps || 0).toFixed(1)} FPS  Q ${quality.toFixed(2)}  ${Math.round(1000 / frameClock.period)}Hz  LATE ${perf.lateShow || 0}/s  TOTAL ${perf.drops || 0}`;
     if (now < perf.hold) { perf.t0 = 0; return; }
     if (!perf.t0) { perf.t0 = now; return; }
-    if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; } // タブ復帰などの長い空白は無視
+    if (now - perf.lastFrame > 500) { perf.t0 = now; perf.frames = 0; perf.late = 0; } // タブ復帰などの長い空白は無視
+    // 1枚ずつの遅れも数える: 画面の更新周期の1.3倍を超えた間隔＝そのフレームは表示が1回飛んだ
+    // （平均fpsだけでは、たまに飛ぶ程度の55〜58fpsのカクつきを見逃していた）
+    if (perf.lastFrame && now - perf.lastFrame > frameClock.period * 1.3) { perf.late = (perf.late || 0) + 1; perf.drops = (perf.drops || 0) + 1; }
     perf.lastFrame = now;
     perf.frames++;
     const span = now - perf.t0;
     if (span < 1000) return;
-    const fps = perf.frames * 1000 / span;
-    perf.t0 = now; perf.frames = 0;
-    perf.bad = fps < 54 ? (perf.bad || 0) + 1 : 0;
-    if (perf.bad >= 3 && quality > Q_MIN) {
+    const fps = perf.frames * 1000 / span, late = perf.late || 0;
+    perf.fps = fps; perf.lateShow = late;
+    perf.t0 = now; perf.frames = 0; perf.late = 0;
+    perf.bad = fps < 54 || late >= 3 ? (perf.bad || 0) + 1 : 0;
+    if (perf.bad >= 2 && quality > Q_MIN) {
         perf.bad = 0;
         if (now - perf.lastRaise < 20000) qCeil = Math.max(Q_MIN, quality - 0.05); // 上げてすぐ落ちたら上限を固定（行ったり来たりを防ぐ）
         quality = Math.max(Q_MIN, quality - 0.15);
         perf.good = 0;
         applyQuality();
-    } else if (fps >= 58) {
+    } else if (fps >= 58 && late === 0) {
         perf.good++;
         if (perf.good >= 12 && quality < Math.min(Q_MAX, qCeil) && gameState !== 'playing') { // プレイ中は画質を上げ直さない（切り替えの一瞬のカクつきを避ける）
             quality = Math.min(Q_MAX, qCeil, quality + 0.1);
