@@ -1076,7 +1076,7 @@ let best = 0; try { best = +localStorage.getItem('wyrmsphere-best') || 0; } catc
 const S = { mode: 'title', d: 0, x: 0, y: 0, vx: 0, vy: 0, speed: 300, score: 0, t: 0, deadT: 0, shake: 0, flash: 0,
     camX: 0, camVX: 0, camY: 60, camV: 0, lookX: 0, lookVX: 0, lookY: 0, lookV: 0, stage: 0, warpT: 9, evoUntil: 0,
     hp: 2, inv: 0, dmg: 0, kills: 0, reveal: 0.75, quota: 24, waveT: 0, rx: 640, ry: 300, lastFlap: 0, banner: null, newRec: false };
-const QUOTA = st => 40 + st * 10, SPD = 450, HIT_R = 13;
+const QUOTA = st => Math.min(60, 22 + st * 3), /* 8分音符ロックに合わせて短めに */ SPD = 450, HIT_R = 13;
 const bgFrom = new THREE.Color(), bgTo = new THREE.Color(PAL.bg); let bgK = 1;
 function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); recolorEnemies(); }
 
