@@ -1336,7 +1336,8 @@ html[lang=ar] .pf-input{direction:rtl}
 
 <!-- paste kifu -->
 <div class="overlay" id="exportOverlay">
-  <div class="modal" style="width:min(560px,100%)">
+  <style>@media (hover: hover) and (pointer: fine) and (min-width: 1040px){ .rx-modal{width:min(980px, calc(100vw - 64px))!important} .rx-modal :is(.rx-stage,#exportStage){height:var(--rx-sh, min(calc(100vh - 300px), 640px))!important} }</style>
+  <div class="modal rx-modal" style="width:min(560px,100%)">
     <h2 data-i18n="ex2.title"></h2>
     <div id="exportMeta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:nowrap;margin-bottom:8px;font-size:13px"><label style="flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0"><span id="exportTtlL" style="white-space:nowrap;opacity:.85"></span><input id="exportTtl" type="text" maxlength="60" autocomplete="off" spellcheck="false"></label><label style="flex:none;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input id="exportDate" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span id="exportDateL"></span></label></div>
     <div id="exportNames" style="display:flex;gap:8px 12px;align-items:center;margin-bottom:10px;font-size:13px"><label><span id="exportNL0"></span><input id="exportN0" data-i="0" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label><label><span id="exportNL1"></span><input id="exportN1" data-i="1" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label></div>
@@ -1418,7 +1419,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=5"></script>
+<script src="../shared/export.js?v=6"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -3358,20 +3359,20 @@ $('#btnShare').onclick = () => {
 function exportFit() {
   const ov = $('#exportOverlay'); if (!ov.classList.contains('show')) return;
   const st = $('#exportStage'), md = ov.querySelector('.modal');
-  st.style.height = 'min(52vh,560px)';
+  st.style.height = 'min(52vh,560px)'; st.style.removeProperty('--rx-sh');
   const over = md.scrollHeight - md.clientHeight;
-  if (over > 1) st.style.height = Math.max(180, Math.floor(st.getBoundingClientRect().height - over)) + 'px';
+  if (over > 1) { const h = Math.max(180, Math.floor(st.getBoundingClientRect().height - over)) + 'px'; st.style.height = h; st.style.setProperty('--rx-sh', h); }
 }
 window.addEventListener('resize', () => { clearTimeout(exportFit.t); exportFit.t = setTimeout(exportFit, 120); });
 $('#segExport').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportFmt = b.dataset.v; try { localStorage.setItem('shogi-export-fmt', exportFmt); } catch (er) {} exportRender(); };
 $('#segImg').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportImgMode = b.dataset.v; exportRender(); };
 $('#exportClose').onclick = () => hideOverlay('#exportOverlay');
 { let tm = 0; const ti = $('#exportTtl');
-  ['keydown', 'keyup', 'keypress'].forEach(tp => ti.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter') ti.blur(); }));
+  ['keydown', 'keyup', 'keypress'].forEach(tp => ti.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) ti.blur(); }));
   ti.addEventListener('input', () => { if (window.RecordExport) RecordExport.setMeta('shogi', { title: ti.value }); clearTimeout(tm); tm = setTimeout(exportRender, exportFmt === 'img' ? 220 : 0); });
   $('#exportDate').onchange = e => { if (window.RecordExport) RecordExport.setMeta('shogi', { date: e.target.checked }); exportRender(); };
   [0, 1].forEach(c => { const ni = $('#exportN' + c);   // names: kept only when they differ from the game's own
-    ['keydown', 'keyup', 'keypress'].forEach(tp => ni.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter') ni.blur(); }));
+    ['keydown', 'keyup', 'keypress'].forEach(tp => ni.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) ni.blur(); }));
     ni.addEventListener('input', () => { if (!window.RecordExport) return; RecordExport.setName('shogi', c, ni.value.trim() === String(playerName(c) || '').trim() ? '' : ni.value); clearTimeout(tm); tm = setTimeout(exportRender, exportFmt === 'img' ? 220 : 0); });
     ni.addEventListener('blur', () => { if (!ni.value.trim()) exportRender(); }); }); }
 $('#exportOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#exportOverlay'); });
