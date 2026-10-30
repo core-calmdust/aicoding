@@ -1108,8 +1108,33 @@ $('#navBar').addEventListener('click', e => { const b = e.target.closest('button
 // ====================================================================== new game dialog
 let draft = {};
 function levelLabelHTML(v) { return `Lv.${v} ${LV(v)}<small>${LVD(v)}</small>`; }
+// the ゲーム tab's art: the board and what the rule is about — easy: sowing round to the store,
+// basic: taking the seeds across, kalah: taking them together with the last seed, sunka: relay sowing
+function ruleArt(r) {
+  const n = 6, W = 120, H = 56, x0 = 18, pw = (W - 36) / n, pr = Math.min(pw * .38, 6.2), y1 = 18, y2 = 38;
+  const px = i => x0 + pw * (i + .5);
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect x="1" y="4" width="${W - 2}" height="${H - 8}" rx="14" fill="#6b4524" stroke="#c9a961" stroke-opacity=".55"/>`
+    + `<ellipse cx="10" cy="${H / 2}" rx="5.5" ry="16" fill="#3a2412"/><ellipse cx="${W - 10}" cy="${H / 2}" rx="5.5" ry="16" fill="#3a2412"/>`;
+  const seeds = (cx, cy, k, col) => { let h = ''; for (let j = 0; j < k; j++) { const a = j * 2.4; h += `<circle cx="${(cx + Math.cos(a) * (j ? 2.6 : 0)).toFixed(1)}" cy="${(cy + Math.sin(a) * (j ? 2.6 : 0)).toFixed(1)}" r="1.5" fill="${col || '#efe2c4'}"/>`; } return h; };
+  for (let i = 0; i < n; i++) s += `<circle cx="${px(i)}" cy="${y1}" r="${pr}" fill="#3a2412"/><circle cx="${px(i)}" cy="${y2}" r="${pr}" fill="#3a2412"/>`;
+  const gold = '#e8c26a', red = '#f08a6a', arrow = (d, c) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (r === 'easy') {   // sow along the bottom row into the store: "one more turn"
+    for (let i = 0; i < n; i++) s += seeds(px(i), y1, 2) + (i < 3 ? seeds(px(i), y2, 2) : '');
+    s += seeds(W - 10, H / 2, 3, gold) + arrow(`M${px(3)} ${y2 + 9} Q${px(5) + 4} ${y2 + 12} ${W - 11} ${H / 2 + 8}`, gold) + arrow(`M${W - 15} ${H / 2 + 5} l4 3 l1 -5`, gold);
+  } else if (r === 'sunka') {   // relay: land on a full pit, pick it up, sow on
+    for (let i = 0; i < n; i++) s += seeds(px(i), y1, 3) + seeds(px(i), y2, i === 1 ? 0 : 3);
+    s += arrow(`M${px(1)} ${y2 - 7} Q${px(2)} ${y2 - 15} ${px(3)} ${y2 - 7}`, gold) + arrow(`M${px(3)} ${y2 - 7} Q${px(4)} ${y2 - 15} ${px(5)} ${y2 - 7}`, gold) + arrow(`M${px(5) - 4} ${y2 - 9} l4 2 l0 -4.5`, gold);
+  } else {   // capture across (kalah: with the last seed)
+    const c = 3;
+    for (let i = 0; i < n; i++) s += seeds(px(i), y1, i === c ? 4 : 1) + (i === c ? seeds(px(i), y2, 1, r === 'kalah' ? red : gold) : '');
+    s += seeds(W - 10, H / 2 - 4, r === 'kalah' ? 5 : 4, red) + arrow(`M${px(c) + pr + 1} ${y1 + 2} Q${W - 30} ${y1 + 2} ${W - 13} ${H / 2 - 6}`, red);
+    if (r === 'kalah') s += arrow(`M${px(c) + pr + 1} ${y2} Q${W - 30} ${y2 + 2} ${W - 13} ${H / 2 + 4}`, red);
+  }
+  return s + '</svg>';
+}
 function renderRuleCards() {
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button class="rulecard ${draft.rules === r ? 'sel' : ''}" data-r="${r}"><span class="lvl">${t('rule.' + r + '.lvl')}</span><b>${t('rule.' + r)}</b><small>${t('rule.' + r + '.d')}${r === 'kalah' ? ` <span class="std">${t('rule.std')}</span>` : ''}</small></button>`).join('');
+  // ゲーム tab (shared/ngtabs.js): art, name, level + how it differs
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rules === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleArt(r)}</span><b>${t('rule.' + r)}</b><p><span class="gtag">${t('rule.' + r + '.lvl')}</span>${r === 'kalah' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
 }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
@@ -1145,7 +1170,7 @@ $('#segSpeed').onclick = e => { const b = e.target.closest('button'); if (!b) re
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { draft.seeds = +b.dataset.v; segSync(); } };
-$('#ruleCards').onclick = e => { const b = e.target.closest('.rulecard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
 $('#ngRulesHelp').onclick = () => openRules(draft.rules);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });

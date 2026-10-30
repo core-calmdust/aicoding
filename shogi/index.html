@@ -1093,11 +1093,11 @@ html[lang=ar] .pf-input{direction:rtl}
 :root.side-col body:not(.has-clk):not(.in-online) .side .players .player > .status{grid-column:1 / -1;grid-row:2;max-width:none;margin:0;text-align:start}
 /* new-game dialog fits without scrolling: PC (wide, two columns) uses the full window height (the overlay covers the online dock), phones get a compact one-column layout */
 @media (min-width: 760px) and (min-height: 600px) and (hover: hover){
-  #newOverlay .modal,#newOverlay .modal:has(> .rules-offer:not(.hidden)){height:auto;max-height:calc(100dvh - 24px);overflow:hidden;padding:20px 30px 16px}
+  #newOverlay .modal,#newOverlay .modal:has(> .rules-offer:not(.hidden)){height:auto;max-height:calc(100dvh - 24px);overflow:hidden auto;padding:20px 30px 16px}
   #newOverlay h2{margin-bottom:12px}
   #newOverlay .rules-offer{margin:0 0 12px;padding:8px 12px}
   #newOverlay .field{margin-bottom:12px}
-  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{margin-bottom:6px}
+  #newOverlay .field > label{margin-bottom:6px}
   #newOverlay .modal-actions{padding-top:12px;margin-top:0}
   #newOverlay .credit{margin-top:8px}
   #newOverlay #lvNote{font-size:10.5px;line-height:1.5}
@@ -1109,18 +1109,14 @@ html[lang=ar] .pf-input{direction:rtl}
   #newOverlay .rules-offer{margin:0 0 8px;padding:6px 10px;font-size:11.5px;line-height:1.4}
   #newOverlay .rules-offer button{padding:6px 10px;font-size:11.5px}
   #newOverlay .field{margin-bottom:8px}
-  #newOverlay .field > label,#fHandi .vr-l > label,#fHandi .vr-r > label{font-size:11px;margin-bottom:4px;letter-spacing:.06em}
+  #newOverlay .field > label{font-size:11px;margin-bottom:4px;letter-spacing:.06em}
   #newOverlay .seg{padding:2px;gap:2px}
   #newOverlay .seg button{padding:6px 2px;font-size:12px;white-space:normal;line-height:1.2}
   #newOverlay #segMode{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
   #newOverlay #segHandi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-  #newOverlay #fHandi .vr-r{margin-top:6px}
   /* short choices: label on the left, buttons on the right */
   #fColor:not(.hidden),#fClock:not(.hidden){display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
   #fColor > label,#fClock > label{margin:0!important;letter-spacing:0}
-  #newOverlay #fHandi .vr-r{display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:0 8px}
-  #newOverlay #fHandi .vr-r > label{margin:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;letter-spacing:0}
-  #newOverlay #segVariant button{padding:6px 2px}
   #fOpts > label{display:none}
   #newOverlay .field{margin-bottom:6px}
   #newOverlay .rules-offer{font-size:11px;padding:5px 8px}
@@ -1428,7 +1424,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/search.js?v=20261028pv"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261028pv"></script>
+<script src="variants/variants.js?v=20261030gt1"></script>
 <script src="rvbox.js?v=20261028fs"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=11"></script>
@@ -5172,6 +5168,6 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" defer></script>
 <script src="../shared/pickdrop.js?v=5"></script>
-<script src="../shared/ngtabs.js?v=7"></script>
+<script src="../shared/ngtabs.js?v=8"></script>
 </body>
 </html>
