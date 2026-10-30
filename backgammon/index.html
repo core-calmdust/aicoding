@@ -834,6 +834,18 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
   html:not(.rot) .app:has(> .side > .side-in > #coachCard.ck-off:not(.hidden)){grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(0,1.1fr) minmax(0,1fr)}
   html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)):has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,.85fr) minmax(0,1.1fr) minmax(0,.8fr);grid-template-areas:"board board board board board" "pl ck ev rv kf"}
   #coachCard{grid-area:ck;overflow-y:auto;min-height:0;padding:12px 14px;scrollbar-width:thin}
+  /* one layout for play and review (2026-10-30): the wide left column is the coach (review: the review box), 対局者 above 形勢 in the middle,
+     振り返り / ヒント above 棋譜 on the right (棋譜 alone takes the whole height) — only the review box comes and goes */
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)), html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)):has(:is(.review-card,.hint-card).show){
+    grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) minmax(0,1fr);grid-template-rows:var(--fh) calc(var(--ich, 180px) * .5 - 6px) calc(var(--ich, 180px) * .5 - 6px);grid-template-areas:"board board board" "ck pl rv" "ck ev kf"}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)):not(:has(:is(.review-card,.hint-card).show)) .kifu-card{grid-row:2 / 4;grid-column:3}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) #coachCard{grid-row:2 / 4}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) #evalCard{padding:8px 12px}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) #evalCard .navbar{margin-top:4px}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) #evalCard .navbar button{height:26px}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) .players{gap:4px;padding:8px 10px}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) .players :is(.pl-info, .pl-head){display:none}
+  html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)) .players .player{padding:3px 10px!important}
   body:is(.in-lesson,.in-puzzle) .app{grid-template-columns:minmax(0,1fr) minmax(0,2.4fr)!important;grid-template-areas:"board board" "pl ls"!important}
   .board-area{grid-area:board;justify-self:center;align-self:center;position:relative;z-index:1}
   .side, .side-in{display:contents}
