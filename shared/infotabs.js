@@ -59,6 +59,19 @@ try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu' || v
 
 // tabs: coach (optional: #coachCard, shown while body.ck-tab — the game sets it), eval (#evalCard / #progCard), kifu (.kifu-card).
 // Other boxes that belong to a tab carry data-itc="<tab>" themselves (e.g. the review card under the coach tab).
+const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب' };
+const REST = {
+  ja: 'コーチはAIとの対局・二人対戦の間に使えます。AI同士・オンライン・レッスンなどの間はお休みです。終局後の振り返りは、このタブで見られます。',
+  en: 'The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.',
+  zh: '教练在与AI对局或双人对战时可用。AI对AI、在线对局、课程等期间暂停。终局后可在此标签查看复盘。',
+  ko: '코치는 AI 대국과 2인 대국 중에 사용할 수 있습니다. AI끼리 대국·온라인·레슨 등에서는 쉽니다. 대국이 끝나면 이 탭에서 복기를 볼 수 있습니다.',
+  es: 'El entrenador funciona cuando juegas contra la IA o contra un amigo en este dispositivo. Descansa en IA contra IA, partidas en línea, lecciones, etc. Al terminar, el repaso aparece en esta pestaña.',
+  fr: 'Le coach est disponible quand vous jouez contre l’IA ou à deux sur cet appareil. Il se repose pendant IA contre IA, les parties en ligne, les leçons, etc. Après la partie, l’analyse s’affiche dans cet onglet.',
+  pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
+  de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
+  hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+};
 function init(tries) {
   if (window.__ROTWRAP || window.__EMBED) return;   // the rotated (landscape) board and embedded copies keep their own layout
   const bar = document.getElementById('mtabs'), game = bar && bar.querySelector('[data-t=game]:not([data-it])');
@@ -80,14 +93,29 @@ function init(tries) {
   const sh = ol && document.createElement('b');
   if (sh) { sh.className = 'it-sh'; ol.querySelector('.it-lb').prepend(sh); }
   const shLab = () => { if (!sh) return; const l = (document.documentElement.lang || 'ja').slice(0, 2), v = ONL[l] || ONL.en; if (sh.textContent !== v) sh.textContent = v; };
-  shLab(); new MutationObserver(shLab).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  shLab(); new MutationObserver(() => { shLab(); try { relabel(); apply(); } catch (e) {} }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   // (in priority order: the kifu heading's own word, not the opening name shown beside it)
   const labOf = el => { for (const q of ['.ck-h > span', '.evalrow .label', '.progrow .label', '.kifu-head .label [data-i18n]', '.kifu-head .label']) { const l = el.querySelector(q); if (l) return l.textContent.trim(); } return ''; };
-  const relabel = () => order.forEach(k => { const a = labOf(box[k]), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
+  const relabel = () => order.forEach(k => { const a = labOf(box[k]) || (k === 'coach' ? CKL[(document.documentElement.lang || 'ja').slice(0, 2)] || CKL.en : ''), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
   relabel();
   order.forEach(k => new MutationObserver(relabel).observe(box[k], { subtree: true, childList: true, characterData: true }));
-  const avail = k => k !== 'coach' || document.body.classList.contains('ck-tab');
+  // the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated, lessons…) its box says so
+  let rest = null;
+  if (ck) {
+    rest = document.createElement('div'); rest.className = 'card ck-card it-rest'; rest.id = 'itCoachRest'; rest.dataset.itc = 'coach'; rest.style.display = 'none';
+    ck.after(rest);
+  }
+  const restSync = () => {
+    if (!rest) return;
+    const l = (document.documentElement.lang || 'ja').slice(0, 2), lab = labOf(ck) || CKL[l] || CKL.en;
+    const h = `<h3 class="ck-h">${IC.coach}<span></span></h3><p class="ck-muted"></p>`;
+    if (rest.dataset.h !== l + lab) { rest.dataset.h = l + lab; rest.innerHTML = h; rest.querySelector('span').textContent = lab; rest.querySelector('p').textContent = REST[l] || REST.en; }
+    const show = document.body.classList.contains('it-on') && !document.body.classList.contains('ck-tab') && !document.querySelector('[data-itc=coach].show:not(#itCoachRest)');
+    const d = show ? '' : 'none'; if (rest.style.display !== d) rest.style.display = d;
+  };
+  const avail = () => true;
   const apply = () => {
+    restSync();
     if (!avail(cur)) cur = 'eval';
     if (btn.coach) { const h = !avail('coach'); if (btn.coach.hidden !== h) btn.coach.hidden = h; }
     if (document.body.dataset.it !== cur) document.body.dataset.it = cur;
