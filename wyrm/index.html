@@ -864,11 +864,15 @@ function disposeObj(o) {
 }
 function updateChunks(d, budget = 1) {
     const c0 = Math.floor((d - 420) / CH), c1 = Math.floor((d + VIEW) / CH);
-    for (const [ci, c] of chunks) if (ci < c0 || ci > c1) { disposeObj(c.obj); chunks.delete(ci); }
+    for (const [ci, c] of chunks) if (ci < c0 || ci > c1 + 1) { disposeObj(c.obj); chunks.delete(ci); }
     const want = []; for (let ci = c0; ci <= c1; ci++) if (!chunks.has(ci)) want.push(ci);
     want.sort((x, y) => Math.abs((x + 0.5) * CH - d) - Math.abs((y + 0.5) * CH - d)); // 近い所から
     for (let j = 0; j < Math.min(budget, want.length); j++) chunks.set(want[j], buildChunk(want[j]));
+    // 次に必要になる1つ先の区画は、フレームの合間（ブラウザの空き時間）に先に作っておく（フレーム中の重い処理を減らす）
+    if (budget === 1 && !idleQ && !chunks.has(c1 + 1) && S.mode === 'play') { idleQ = true; (window.requestIdleCallback || (f => setTimeout(f, 0)))(idleBuild, { timeout: 400 }); }
 }
+let idleQ = false;
+function idleBuild() { idleQ = false; if (S.mode !== 'play') return; const c1 = Math.floor((S.d + VIEW) / CH) + 1; if (!chunks.has(c1)) chunks.set(c1, buildChunk(c1)); }
 function clearWorld() { for (const [, c] of chunks) disposeObj(c.obj); chunks.clear(); gates.forEach(gt => disposeObj(gt.obj)); gates.length = 0; dying.forEach(c => disposeObj(c.obj)); dying.length = 0; }
 
 // =====================================================================
@@ -1535,6 +1539,10 @@ function ckTake(type) {
     w.traverse(n => { if (n.material && !n.material.userData.ckFog) { n.material.userData.ckFog = 1; enemyFog(n.material); n.material.needsUpdate = true; } });
     w.userData.body = body; w.userData.ck = type; return w;
 }
+// COMETの雑魚は最初に出るときに形を作ると重いので、起動後の空き時間に各種類4体ずつ先に作っておく
+{ const todo = []; CK.types.forEach(t => { for (let i = 0; i < 4; i++) todo.push(t); });
+  const step = () => { if (!todo.length) return; const t = todo.shift(), pl = ckPool[t] = ckPool[t] || [], saved = pl.splice(0), ob = ckTake(t); pl.push(...saved, ob); /* 空の状態で作らせて追加 */ (window.requestIdleCallback || (f => setTimeout(f, 30)))(step, { timeout: 1500 }); };
+  setTimeout(step, 1500); }
 // ---------------- 敵 ----------------
 const EG = (() => {
     const mk = geo => { geo = NI(geo); for (const n of Object.keys(geo.attributes)) if (n !== 'position') geo.deleteAttribute(n); return { m: paintLit(geo, 0xffffff), e: new THREE.EdgesGeometry(geo, 10) }; };
@@ -2021,7 +2029,7 @@ function drawHUD() {
     const narrow = VW < 700;
     T(String(S.score).padStart(7, '0'), VW / 2, narrow ? 76 : 40, narrow ? 22 : 30, c1, c2, 'center', 1, false, 2);
     // 体力: 六角形2つ
-    for (let i = 0; i < Math.max(2, S.hp); i++) { const cx = 58 + i * 34, cy = 40; /* 左上に寄せる */ ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; ug.shadowColor = c1; ug.shadowBlur = i < S.hp ? 10 * UIS : 0;
+    for (let i = 0; i < Math.max(2, S.hp); i++) { const cx = 58 + i * 34, cy = 40; /* 左上に寄せる */ ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = i < S.hp ? c1 : 'rgba(255,255,255,.25)'; /* 影のぼかしは毎フレーム重いので使わない */
         poly(Array.from({ length: 6 }, (_, k) => [cx + Math.cos(k * Math.PI / 3) * 13, cy + Math.sin(k * Math.PI / 3) * 13])); ug.stroke(); if (i < S.hp) { ug.globalAlpha = 0.5; ug.fillStyle = c1; ug.fill(); } ug.restore(); }
     T('HP', 20, 40, 12, c1, c2, 'left', 0.8);
     // 進化までの撃破数
@@ -2083,7 +2091,7 @@ function drawUI() {
     drawOverlay();
     drawSub();
     if (perf.show) T(`${(perf.fps || 0).toFixed(1)} FPS  PR ${PR.toFixed(2)}  ${Math.round(1 / (perf.vs || 1 / 60))}HZ${perf.half ? '  HALF' : ''}  LATE ${perf.lateShow || 0}/90  TOTAL ${perf.drops || 0}  GPU ${gpuT.ext ? gpuT.ms.toFixed(1) + 'MS' : 'N/A'}`, 20, VH - 64, 12, '#fff', '#fff', 'left', 0.9);
-    if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); }
+    if (perf.show) { const j = perf.jsShow || [0, 0, 0]; T(`JS MAX ${j[0].toFixed(1)}MS (UPDATE ${j[1].toFixed(1)} / DRAW ${j[2].toFixed(1)})  SPIKES ${perf.spikes || 0}`, 20, VH - 44, 12, '#fff', '#fff', 'left', 0.9); T(PFshow, 20, VH - 24, 11, '#fff', '#fff', 'left', 0.8); }
     gameEl.classList.toggle('aim', S.mode === 'play');
 }
 
@@ -2092,6 +2100,7 @@ resetWorld();
 let last = -1; const dtHist = [];
 const H = 1 / 120;
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+const PF = {}; let PFshow = '';
 const perf = { n: 0, late: 0, good: 0, half: false, skip: false, grace: 0, nat: 1 / 60, lastRaf: -1, natH: [] };
 // 画面サイズやフルスクリーンが変わった直後は描画が一時的に詰まるので、その間は判定しない。
 // 判定はやり直し（下げた解像度・半分の更新も元に戻して測り直す）
@@ -2127,6 +2136,7 @@ function adapt(raw, ref) {
     (perf.l3 = perf.l3 || []).push(perf.late); if (perf.l3.length > 3) perf.l3.shift();
     const lateSum = perf.l3.reduce((a, b) => a + b, 0);
     perf.jsShow = [perf.jsMax || 0, perf.jsUpd || 0, perf.jsDraw || 0]; perf.jsMax = 0;
+    PFshow = Object.entries(PF).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => k.toUpperCase() + ' ' + v.toFixed(1)).join('  '); for (const k in PF) PF[k] = 0; // 重い区間の上位
     if (perf.late >= 2 || lateSum >= 4 || gpuHeavy) { perf.l3.length = 0; // たまに飛ぶだけでも重いとみなす // 重い: 解像度を下げる（最低0.85）。上げた直後にまた重くなったら、その解像度には戻さない
         perf.good = 0; if (perf.win - (perf.raisedAt ?? -99) <= 3) perf.noRaise = true;
         if (PR > 0.851) { PR_CAP = Math.max(0.85, PR - 0.15); setPR(PR_CAP); } else if (!perf.half && (perf.vs || 1 / 60) < 0.0125) perf.half = true; } // 120Hzの画面でだけ、重いときは60fpsに落とす
@@ -2150,7 +2160,8 @@ function frame(now) {
     if (dtHist.length > 20) adapt(raw, ref);
     pollPads();
     S.t += dt; uTime.value = S.t; if (S.mode === 'dead') S.deadT += dt;
-    { const n = Math.max(1, Math.ceil(dt / H - 1e-6)); for (let i = 0; i < n; i++) step(dt / n); }
+    let pt = performance.now(); const pk = k => { const t = performance.now(); PF[k] = Math.max(PF[k] || 0, t - pt); pt = t; }; // 区間ごとの処理時間（確認用）
+    { const n = Math.max(1, Math.ceil(dt / H - 1e-6)); for (let i = 0; i < n; i++) step(dt / n); } pk('step');
     // 照準（右スティックは速度で動かす）
     if (S.mode === 'play' || S.mode === 'evo') { const K = IN.keys;
         // 操作の向き: ゲームパッドの左スティック（右スティックでも可）／WASD／マウス（竜から見たマウスの向き）
@@ -2167,12 +2178,12 @@ function frame(now) {
     if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     litEnemies();
-    for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
-    updateItems(dt); updateHexGate(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
+    pk('misc'); for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); } pk('enemy');
+    updateItems(dt); updateHexGate(dt); updateBullets(dt); pk('bullet'); updateShots(dt); pk('laser'); updateBooms(dt); pk('boom'); updateLock(); collide(); pk('lock');
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.7 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.7秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') { if (S.stage < 2) nextGateD = Math.max(nextGateD, S.d + VIEW); spawnGates(S.d); } // 壁のギミックは3面から
-    updateChunks(S.d, 1);
+    pk('misc2'); updateChunks(S.d, 1); pk('chunk');
     for (const [, c] of chunks) tickK(c, dt);
     for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].fade >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
@@ -2183,7 +2194,7 @@ function frame(now) {
     dragon.root.position.set(S.x, S.y, -S.d); dragon.root.rotation.set(0, Math.PI + aimYaw - S.bank * 0.4, S.bank);
     if (S.mode !== 'dead' && (S.t - S.lastFlap > 1.1 || (S.vy > 160 && S.t - S.lastFlap > 0.45))) { S.lastFlap = S.t; dragon.flap(); }
     field.position.set(0, cave(S.d).cy, -S.d);
-    dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' });
+    pk('misc3'); dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' }); pk('dragon');
     // カメラ: 竜を追う（進化中もいったん引くだけで竜から目を離さない）
     const eu = S.mode === 'evo' ? Math.min(1, S.evoT / EVO_T) : 0, pull = S.mode === 'evo' ? sst(0, 0.38, eu) * (1 - sst(0.5, 1, eu)) : 0;
     const cvC = cave(S.d - 215);
@@ -2215,13 +2226,13 @@ function frame(now) {
     dragon.trails.forEach(t => t.visible = dragon.root.visible);
     S.flash = Math.max(0, S.flash - dt * 2.5); ui.flash.style.opacity = S.flash;
     const jsT1 = performance.now();
-    gpuPoll(); gpuBegin(); composer.render(); gpuEnd();
-    drawUI();
+    pk('misc4'); gpuPoll(); gpuBegin(); composer.render(); gpuEnd(); pk('render');
+    drawUI(); pk('ui');
     // 1フレームのJavaScript処理時間（更新／描画の指示）。重い瞬間を探すための計測
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, PF, pfs: () => PFshow, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
