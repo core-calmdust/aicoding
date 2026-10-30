@@ -458,7 +458,13 @@ html[lang=ar] #coachCard{direction:rtl;text-align:right}
   .side-in > #coachCard:not(.hidden){flex:none}
   .side-in > #coachCard:not(.hidden):not(.ck-off):not(.ck-over){flex:2.4 1 0;min-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .side-in:has(> #coachCard:not(.hidden):not(.ck-off):not(.ck-over)) > #evalCard{flex:none;min-height:0}
-  .side-in:has(> #coachCard:not(.hidden):not(.ck-off):not(.ck-over)) > #evalCard .graph{display:none}
+  /* 形勢 (with its line graph) above the coach */
+  .side-in > #evalCard{order:1}
+  .side-in > :is(#coachCard, #itCoachRest){order:2}
+  .side-in > :is(.review-card, .hint-card){order:3}
+  .side-in > .kifu-card{order:4}
+  .side-in > .info-line{order:5}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off):not(.ck-over)) > #evalCard .graph{display:block;height:64px;min-height:64px;flex:none}
   .side-in:has(> #coachCard:not(.hidden):not(.ck-off):not(.ck-over)) > .kifu-card{flex:.55 1 0;min-height:88px}
   #coachCard.ck-off{padding:8px 12px}
   #coachCard.ck-off .ck-h{margin-bottom:3px}
