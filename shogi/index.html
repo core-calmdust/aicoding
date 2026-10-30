@@ -2945,13 +2945,15 @@ function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun =
 async function runReview() {
   studyEnd();
   if (!game || lesson || game.moves.length < 2) return;
+  if (rvRun && rvRun.game === game && rvRun.n === game.moves.length) { rvOpen = true; renderReview(); return; }   // still running for this record: just show it
   rvCancel(); busyToken++; cancelAI(); cancelAna();
   const n = game.moves.length, todo = [];
-  for (let i = 0; i <= n; i++) todo.push(i);
+  for (let i = 0; i <= n; i++) if (!(game.info[i] && game.info[i].ra)) todo.push(i);   // positions analysed before (an earlier review of this record, kept in game.info / the save) are reused
+  if (!todo.length) { rvFinish(n); return; }
   await weightsReady;
   const vr = game.variant && window.Variants ? Variants.eng(game.variant) : '';   // the variants' search (variants/worker.js); ランダム将棋: the page's engine
   const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(vr ? Variants.newWorker() : makeWorker(() => {}));
-  const run = rvRun = { ws, done: 0, total: todo.length, game };
+  const run = rvRun = { ws, done: 0, total: todo.length, game, n };
   rvOpen = true; renderReview();
   let next = 0;
   const loop = async w => {
@@ -2971,9 +2973,12 @@ async function runReview() {
   if (rvRun !== run) return;
   ws.forEach(w => w.terminate()); rvRun = null;
   if (run.game !== game) return;
-  for (let i = 1; i <= n; i++) { const r = rvLoss(i); if (r) game.info[i].q = qOfDrop(r.drop); }
-  game.rv = 1; save(); renderInfo(); renderReview();
+  rvFinish(n);
   toast(t('rv.done2'), 1200);
+}
+function rvFinish(n) {
+  for (let i = 1; i <= n; i++) { const r = rvLoss(i); if (r) game.info[i].q = qOfDrop(r.drop); }
+  game.rv = 1; rvOpen = true; save(); renderInfo(); renderReview(); renderGraph();
 }
 // win-rate drop of the move that led to position i (mover = side at i-1)
 function rvLoss(i) {
