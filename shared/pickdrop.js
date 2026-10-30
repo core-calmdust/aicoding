@@ -103,9 +103,9 @@ function fromSelect(sel) {
 }
 function scan() {
   const ov = document.getElementById('newOverlay'); if (!ov) return;
-  ov.querySelectorAll('select').forEach(fromSelect);
+  ov.querySelectorAll('select').forEach(sel => { if (!sel.closest('[data-ng=design]')) fromSelect(sel); });
   ov.querySelectorAll('.seg, [data-pd]').forEach(g => {
-    if (g.__pd) return;
+    if (g.__pd || g.closest('[data-ng=design]')) return;   // the look (board, pieces…) is picked from its icons
     const n = [...g.children].filter(b => b.tagName === 'BUTTON').length;
     if (g.hasAttribute('data-pd') ? n >= 2 : n >= 4) make(g);
   });

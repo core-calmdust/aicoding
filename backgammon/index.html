@@ -1354,16 +1354,16 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
     </div>
     <div class="ng-cols"><div class="ng-col">
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
-    <div class="field" id="fColor">
+    <div class="field" id="fColor" data-ng="design">
       <label data-i18n="ng.ck"></label>
       <div class="ckrows" id="ckRows">
-        <div class="ckrow" data-s="0"><span class="ckl" id="ckL0"></span><div class="cksw" data-pd></div></div>
-        <div class="ckrow" data-s="1"><span class="ckl" id="ckL1"></span><div class="cksw" data-pd></div></div>
+        <div class="ckrow" data-s="0"><span class="ckl" id="ckL0"></span><div class="cksw"></div></div>
+        <div class="ckrow" data-s="1"><span class="ckl" id="ckL1"></span><div class="cksw"></div></div>
       </div>
     </div>
-    <div class="field" id="fSkin">
+    <div class="field" id="fSkin" data-ng="design">
       <label data-i18n="ng.skin"></label>
-      <div class="skinrow" id="skinRow" data-pd></div>
+      <div class="skinrow" id="skinRow"></div>
     </div>
     </div><div class="ng-col">
     <div class="field" id="fLevel">
@@ -1552,6 +1552,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" defer></script>
-<script src="../shared/pickdrop.js?v=3"></script>
+<script src="../shared/pickdrop.js?v=4"></script>
+<script src="../shared/ngtabs.js?v=1"></script>
 </body>
 </html>
