@@ -1362,16 +1362,16 @@ ar: { "ls.desc": "دليل للقواعد و15 خطوة من الدروس (5 م�
 // board skins (new-game dialog, 2026-10-28)
 (function () {
   const S = {
-    ja: { 'sk.title': '盤のデザイン', 'sk.orchid': 'オーキッド', 'sk.yumekawa': 'ゆめかわ', 'sk.notebook': '方眼ノート', 'sk.chalk': '黒板', 'sk.neon': 'ネオン', 'sk.candy': 'キャンディ', 'sk.sakura': 'さくら', 'sk.emerald': 'エメラルド' },
-    en: { 'sk.title': 'Board design', 'sk.orchid': 'Orchid', 'sk.yumekawa': 'Pastel Dream', 'sk.notebook': 'Graph Notebook', 'sk.chalk': 'Chalkboard', 'sk.neon': 'Neon', 'sk.candy': 'Candy', 'sk.sakura': 'Sakura', 'sk.emerald': 'Emerald' },
-    zh: { 'sk.title': '棋盘设计', 'sk.orchid': '兰紫', 'sk.yumekawa': '梦幻粉彩', 'sk.notebook': '方格笔记本', 'sk.chalk': '黑板', 'sk.neon': '霓虹', 'sk.candy': '糖果', 'sk.sakura': '樱花', 'sk.emerald': '翡翠绿' },
-    ko: { 'sk.title': '보드 디자인', 'sk.orchid': '오키드', 'sk.yumekawa': '파스텔 드림', 'sk.notebook': '모눈 노트', 'sk.chalk': '칠판', 'sk.neon': '네온', 'sk.candy': '캔디', 'sk.sakura': '벚꽃', 'sk.emerald': '에메랄드' },
-    es: { 'sk.title': 'Diseño del tablero', 'sk.orchid': 'Orquídea', 'sk.yumekawa': 'Sueño pastel', 'sk.notebook': 'Cuaderno', 'sk.chalk': 'Pizarra', 'sk.neon': 'Neón', 'sk.candy': 'Caramelo', 'sk.sakura': 'Sakura', 'sk.emerald': 'Esmeralda' },
-    fr: { 'sk.title': 'Style du plateau', 'sk.orchid': 'Orchidée', 'sk.yumekawa': 'Rêve pastel', 'sk.notebook': 'Cahier', 'sk.chalk': 'Tableau noir', 'sk.neon': 'Néon', 'sk.candy': 'Bonbon', 'sk.sakura': 'Sakura', 'sk.emerald': 'Émeraude' },
-    pt: { 'sk.title': 'Design do tabuleiro', 'sk.orchid': 'Orquídea', 'sk.yumekawa': 'Sonho pastel', 'sk.notebook': 'Caderno', 'sk.chalk': 'Quadro-negro', 'sk.neon': 'Neon', 'sk.candy': 'Doce', 'sk.sakura': 'Sakura', 'sk.emerald': 'Esmeralda' },
-    de: { 'sk.title': 'Brett-Design', 'sk.orchid': 'Orchidee', 'sk.yumekawa': 'Pastelltraum', 'sk.notebook': 'Karoheft', 'sk.chalk': 'Tafel', 'sk.neon': 'Neon', 'sk.candy': 'Bonbon', 'sk.sakura': 'Kirschblüte', 'sk.emerald': 'Smaragd' },
-    hi: { 'sk.title': 'बोर्ड डिज़ाइन', 'sk.orchid': 'ऑर्किड', 'sk.yumekawa': 'पेस्टल सपना', 'sk.notebook': 'ग्राफ़ नोटबुक', 'sk.chalk': 'ब्लैकबोर्ड', 'sk.neon': 'नियॉन', 'sk.candy': 'कैंडी', 'sk.sakura': 'साकुरा', 'sk.emerald': 'पन्ना' },
-    ar: { 'sk.title': 'تصميم اللوحة', 'sk.orchid': 'أوركيد', 'sk.yumekawa': 'حلم الباستيل', 'sk.notebook': 'دفتر مربعات', 'sk.chalk': 'سبورة', 'sk.neon': 'نيون', 'sk.candy': 'حلوى', 'sk.sakura': 'ساكورا', 'sk.emerald': 'زمرد' },
+    ja: { 'sk.title': '盤のデザイン', 'sk.lamp': '灯りのノート', 'sk.yumekawa': 'ゆめかわ', 'sk.notebook': '方眼ノート', 'sk.chalk': '黒板', 'sk.neon': 'ネオン', 'sk.candy': 'キャンディ', 'sk.sakura': 'さくら', 'sk.emerald': 'エメラルド' },
+    en: { 'sk.title': 'Board design', 'sk.lamp': 'Lamplit Notebook', 'sk.yumekawa': 'Pastel Dream', 'sk.notebook': 'Graph Notebook', 'sk.chalk': 'Chalkboard', 'sk.neon': 'Neon', 'sk.candy': 'Candy', 'sk.sakura': 'Sakura', 'sk.emerald': 'Emerald' },
+    zh: { 'sk.title': '棋盘设计', 'sk.lamp': '灯下笔记本', 'sk.yumekawa': '梦幻粉彩', 'sk.notebook': '方格笔记本', 'sk.chalk': '黑板', 'sk.neon': '霓虹', 'sk.candy': '糖果', 'sk.sakura': '樱花', 'sk.emerald': '翡翠绿' },
+    ko: { 'sk.title': '보드 디자인', 'sk.lamp': '등불 노트', 'sk.yumekawa': '파스텔 드림', 'sk.notebook': '모눈 노트', 'sk.chalk': '칠판', 'sk.neon': '네온', 'sk.candy': '캔디', 'sk.sakura': '벚꽃', 'sk.emerald': '에메랄드' },
+    es: { 'sk.title': 'Diseño del tablero', 'sk.lamp': 'Cuaderno nocturno', 'sk.yumekawa': 'Sueño pastel', 'sk.notebook': 'Cuaderno', 'sk.chalk': 'Pizarra', 'sk.neon': 'Neón', 'sk.candy': 'Caramelo', 'sk.sakura': 'Sakura', 'sk.emerald': 'Esmeralda' },
+    fr: { 'sk.title': 'Style du plateau', 'sk.lamp': 'Cahier du soir', 'sk.yumekawa': 'Rêve pastel', 'sk.notebook': 'Cahier', 'sk.chalk': 'Tableau noir', 'sk.neon': 'Néon', 'sk.candy': 'Bonbon', 'sk.sakura': 'Sakura', 'sk.emerald': 'Émeraude' },
+    pt: { 'sk.title': 'Design do tabuleiro', 'sk.lamp': 'Caderno noturno', 'sk.yumekawa': 'Sonho pastel', 'sk.notebook': 'Caderno', 'sk.chalk': 'Quadro-negro', 'sk.neon': 'Neon', 'sk.candy': 'Doce', 'sk.sakura': 'Sakura', 'sk.emerald': 'Esmeralda' },
+    de: { 'sk.title': 'Brett-Design', 'sk.lamp': 'Heft am Abend', 'sk.yumekawa': 'Pastelltraum', 'sk.notebook': 'Karoheft', 'sk.chalk': 'Tafel', 'sk.neon': 'Neon', 'sk.candy': 'Bonbon', 'sk.sakura': 'Kirschblüte', 'sk.emerald': 'Smaragd' },
+    hi: { 'sk.title': 'बोर्ड डिज़ाइन', 'sk.lamp': 'लैंप नोटबुक', 'sk.yumekawa': 'पेस्टल सपना', 'sk.notebook': 'ग्राफ़ नोटबुक', 'sk.chalk': 'ब्लैकबोर्ड', 'sk.neon': 'नियॉन', 'sk.candy': 'कैंडी', 'sk.sakura': 'साकुरा', 'sk.emerald': 'पन्ना' },
+    ar: { 'sk.title': 'تصميم اللوحة', 'sk.lamp': 'دفتر المصباح', 'sk.yumekawa': 'حلم الباستيل', 'sk.notebook': 'دفتر مربعات', 'sk.chalk': 'سبورة', 'sk.neon': 'نيون', 'sk.candy': 'حلوى', 'sk.sakura': 'ساكورا', 'sk.emerald': 'زمرد' },
   };
   for (const l in S) if (window.I18N && I18N[l]) Object.assign(I18N[l], S[l]);
 })();
