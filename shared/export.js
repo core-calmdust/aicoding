@@ -91,6 +91,7 @@ function build() {
   const nmL = i => `<label style="flex:1 1 0;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-nl${i}" style="white-space:nowrap;opacity:.85;max-width:40%;overflow:hidden;text-overflow:ellipsis"></span><input class="rx-nm${i}" data-i="${i}" type="text" maxlength="40" autocomplete="off" spellcheck="false" style="${IN}"></label>`;
   // one fixed size whatever the tab: the stage (image preview / record text) has a fixed height, text scrolls inside it,
   // and the rows above keep their place (visibility) even for formats that do not use them
+  { const st = document.createElement('style'); st.textContent = '@media (hover: hover) and (pointer: fine) and (min-width: 1040px){ .rx-modal{width:min(980px, calc(100vw - 64px))!important} .rx-modal :is(.rx-stage,#exportStage){height:var(--rx-sh, min(calc(100vh - 300px), 640px))!important} }'; document.head.appendChild(st); }
   ov.innerHTML = `<div class="modal rx-modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
 <div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:nowrap;margin-bottom:8px;font-size:13px"><label style="flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="${IN}"></label><label style="flex:none;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
 <div class="rx-names" style="display:flex;gap:8px 12px;align-items:center;margin-bottom:10px;font-size:13px">${nmL(0)}${nmL(1)}</div>
@@ -107,10 +108,10 @@ function build() {
   q('.rx-close').onclick = hide;
   let tm = 0;
   const ti = q('.rx-ttl');
-  ['keydown', 'keyup', 'keypress'].forEach(t => ti.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') ti.blur(); }));
+  ['keydown', 'keyup', 'keypress'].forEach(t => ti.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) ti.blur(); }));
   ti.addEventListener('input', () => { setMeta(O.key, { title: ti.value }); clearTimeout(tm); tm = setTimeout(render, fmt === 'img' ? 220 : 0); });
   [0, 1].forEach(i => { const ni = q('.rx-nm' + i);
-    ['keydown', 'keyup', 'keypress'].forEach(t => ni.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') ni.blur(); }));
+    ['keydown', 'keyup', 'keypress'].forEach(t => ni.addEventListener(t, e => { if (e.key !== 'Escape') e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) ni.blur(); }));
     ni.addEventListener('input', () => { const d = sideList()[i].name || ''; setName(O.key, i, ni.value.trim() === d.trim() ? '' : ni.value); clearTimeout(tm); tm = setTimeout(render, fmt === 'img' ? 220 : 0); });
     ni.addEventListener('blur', () => { if (!ni.value.trim()) render(); }); });
   q('.rx-date').onchange = e => { setMeta(O.key, { date: e.target.checked }); render(); };
