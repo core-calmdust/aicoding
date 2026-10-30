@@ -306,6 +306,8 @@ section{padding:56px 0}
   .gx-info{overflow-y:auto;scrollbar-width:thin}
   .gx-desc{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 }
+/* narrower PC / tablet widths: no clamp — the info column scrolls, so the whole text can always be read */
+@media (min-width: 761px) and (max-width: 1099px){ .gx-desc{display:block;-webkit-line-clamp:unset;overflow:visible} }
 @media (max-width: 760px){
   /* phone: compact panel (image, title, play; details on demand) + big wrapping icon grid right below */
   .gx-panel{grid-template-columns:1fr;border-radius:20px;scroll-margin-top:72px}
