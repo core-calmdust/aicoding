@@ -29,7 +29,7 @@ const CSS = `
 .modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
 .modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
 /* the footer: buttons, then the tabs at the very bottom (stays put; the settings above scroll) */
-.modal.ngt-on > .ngt-note{order:8;margin:var(--ngt-g) 0 0!important}
+.modal.ngt-on > .ngt-note{order:8;margin:var(--ngt-g) 0 0!important;text-align:center!important}
 /* the credits sit at the very bottom of the settings box, right above the buttons */
 .modal.ngt-on > .ngt-note:not(.ngt-hide):not(.ngt-note:not(.ngt-hide) ~ .ngt-note){margin-top:auto!important;padding-top:var(--ngt-g)}
 .modal.ngt-on:has(> .ngt-note:not(.ngt-hide)) > .ngt-foot{margin-top:0!important}
