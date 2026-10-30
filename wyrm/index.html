@@ -1001,12 +1001,12 @@ document.getElementById('home').addEventListener('pointerdown', e => e.stopPropa
 // =====================================================================
 // 文字
 // =====================================================================
-// 文字列を描く（cy は文字の縦中央）。すっきりしたヒューマニスト系サンセリフ（Open Sans）に淡い光をまとわせる
+// 文字列を描く（cy は文字の縦中央）。すっきりしたヒューマニスト系サンセリフ（Open Sans）を白一色で
 // 文字列ごとに一度だけ描いてキャッシュするので、毎フレームの負荷はほぼない
 const txtCache = new Map(); let fontReady = false;
 if (document.fonts) document.fonts.load('400 40px "Open Sans"').then(() => { fontReady = true; txtCache.clear(); }).catch(() => {});
 function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'center', alpha = 1, heavy = false, track = 0) {
-    text = String(text).toUpperCase(); const key = text + '|' + size + c1 + c2 + heavy + track + fontReady;
+    text = String(text).toUpperCase(); const key = text + '|' + size + heavy + track + fontReady;
     let o = txtCache.get(key);
     if (!o) {
         if (txtCache.size > 240) txtCache.clear();
@@ -1015,9 +1015,7 @@ function ptext(g, text, x, cy, size, c1 = '#7ff6ff', c2 = '#b06bff', align = 'ce
         const tw = Math.ceil(mg.measureText(text).width - ('letterSpacing' in mg ? sp : 0)), pad = Math.ceil(size * 0.5);
         const cv = document.createElement('canvas'); cv.width = tw + pad * 2 + 4; cv.height = Math.ceil(size * 1.5 + pad * 2); const c = cv.getContext('2d');
         c.font = font; if ('letterSpacing' in c) c.letterSpacing = sp + 'px'; c.textBaseline = 'middle'; const my = cv.height / 2;
-        const gr = c.createLinearGradient(0, my - size * 0.5, 0, my + size * 0.5); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.55, c1); gr.addColorStop(1, c2);
-        c.shadowColor = c1; c.shadowBlur = size * (heavy ? 0.28 : 0.35); c.globalAlpha = 0.55; c.fillStyle = c1; c.fillText(text, pad, my + size * 0.04);
-        c.shadowBlur = 0; c.globalAlpha = 1; c.fillStyle = gr; c.fillText(text, pad, my + size * 0.04);
+        c.fillStyle = '#f4f5f7'; c.fillText(text, pad, my + size * 0.04); // モノトーン（企業ロゴのように色も光も付けない）
         o = { cv, pad, tw }; txtCache.set(key, o);
     }
     const px = align === 'center' ? x - o.tw / 2 : align === 'right' ? x - o.tw : x;
