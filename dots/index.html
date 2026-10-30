@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ja" data-sk="orchid">
+<html lang="ja" data-sk="lamp">
 <head>
 <meta charset="UTF-8">
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#170b16">
+<meta name="theme-color" content="#16130f">
 <meta name="description" content="完全読みソルバーを備えたブラウザ版ドット・アンド・ボックス。レッスンと詰めドットで鎖・長鎖ルール・ダブルディールが学べます。">
 <title>ドット・アンド・ボックス</title>
-<script>/* board skin before the first paint */ try { const k = ((JSON.parse(localStorage.getItem('dots-emerald-v1') || '{}') || {}).settings || {}).skin; if (k && /^[a-z]+$/.test(k)) document.documentElement.dataset.sk = k; } catch (e) {}</script>
+<script>/* board skin before the first paint */ try { const k = ((JSON.parse(localStorage.getItem('dots-emerald-v1') || '{}') || {}).settings || {}).skin; if (k && /^[a-z]+$/.test(k)) document.documentElement.dataset.sk = k === 'orchid' ? 'lamp' : k; } catch (e) {}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d6b4c'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23ee7a5c'/%3E%3Cpath d='M16 16h32M16 32h16M16 16v32M32 16v16' stroke='%23efe6cc' stroke-width='4' stroke-linecap='round'/%3E%3Cg fill='%23c9a961'%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3Ccircle cx='32' cy='16' r='4'/%3E%3Ccircle cx='48' cy='16' r='4'/%3E%3Ccircle cx='16' cy='32' r='4'/%3E%3Ccircle cx='32' cy='32' r='4'/%3E%3Ccircle cx='48' cy='32' r='4'/%3E%3Ccircle cx='16' cy='48' r='4'/%3E%3Ccircle cx='32' cy='48' r='4'/%3E%3Ccircle cx='48' cy='48' r='4'/%3E%3C/g%3E%3C/svg%3E">
 <meta property="og:title" content="ドット・アンド・ボックス — 完全読みAIと学べる点と箱">
 <meta property="og:description" content="3×3〜5×5、10段階AI（上位は完全読み＋並列探索）。レッスンと詰めドットつき。登録不要でスマホでも遊べます。">
@@ -19,15 +19,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* base theme "Orchid & Turquoise" (2026-10-28): a palette no other game on the site uses
-     (others: green felt / wood brown / navy / slate blue / wine / indigo / pastel pink / primary pop / orange-steel, nearly all with brass gold) */
-  --bg:#150a14; --bg2:#1e0f1c; --panel:#241322; --panel2:#2f1a2c; --modal2:#1d0e1b; --line:#4a2c46;
-  --text:#f7ecf4; --muted:#c6a6bc; --dim:#8f6e86; --soft:#ead8e4;
-  --felt:#5a1f55; --felt2:#44173f; --felt3:#2a0d27;
-  --brass:#5ed6e0; --brass2:#2f8f9a;
-  --accent:#8be6ee; --red:#ff6b5b; --good:#7fd6a4;
-  --acc-rgb:94,214,224; --acc2-rgb:139,230,238; --ink-rgb:22,9,20;
-  --go1:#93ebf2; --go2:#3cb4c2; --go-ink:#06282c;
+  /* base theme "Lamplit Notebook" (2026-10-30): a notebook on a desk under a warm lamp — dim walnut desk, navy cloth cover,
+     cream ruled paper, blue-black ink accents; red pen × blue ink players (replaces the plum "Orchid" theme, which felt eerie) */
+  --bg:#16130f; --bg2:#1e1a15; --panel:#25211b; --panel2:#2f2a22; --modal2:#1f1b16; --line:#463e33;
+  --text:#f2ebdc; --muted:#c5b9a3; --dim:#8f846f; --soft:#e6dcc8;
+  --felt:#3a3226; --felt2:#2e2820; --felt3:#1d1914;
+  --brass:#9db7e0; --brass2:#5f80b5;
+  --accent:#adc5ea; --red:#ff6b5b; --good:#7fd6a4;
+  --acc-rgb:157,183,224; --acc2-rgb:173,197,234; --ink-rgb:20,17,13;
+  --go1:#b9cfee; --go2:#7d9ed2; --go-ink:#0f1c33;
   --vh: 100vh;
   --top: 58px;  /* room above the side panel for the title row (PC) */
   --pad: clamp(28px, 7vmin, 100px);
@@ -58,8 +58,8 @@ html.hb-on.ol-dock{--vh:calc(100vh - 108px - var(--hb-h))}
 html,body{height:100%;overflow:hidden}
 body{
   background:
-    radial-gradient(1200px 700px at 30% -10%, #321530 0%, transparent 60%),
-    radial-gradient(900px 600px at 110% 110%, #10292c 0%, transparent 60%),
+    radial-gradient(1200px 700px at 30% -10%, #3a2e1f 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #18202e 0%, transparent 60%),
     var(--bg);
   color:var(--text);
   font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
@@ -137,19 +137,26 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   --bd-sh:inset 0 0 40px rgba(0,0,0,.45);
   --bf0:url(#g0); --bf1:url(#g1); --efx0:none; --efx1:none; --bxs0:none; --bxs1:none; --hb0:transparent; --hb1:transparent;
   --bxn:rgba(233,226,200,.18); --bic0:rgba(255,255,255,.94); --bic1:rgba(255,255,255,.94);
+  --mbbg:var(--felt2); --mbdot:#e9dfc8; --mbn:#e6dcc8; --mbnb:rgba(230,220,200,.18);
 }
-/* orchid: the base theme — plum velvet, pearl-turquoise studs, apricot × periwinkle */
-[data-sk=orchid]{
-  --fr-bg:linear-gradient(145deg,#2e1530 0%,#140812 55%,#26112a 100%);
-  --fr-sh:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(94,214,224,.28),inset 0 1px 0 rgba(255,255,255,.07);
-  --fr-line:rgba(94,214,224,.5);
-  --bd-bg:radial-gradient(ellipse at 50% 38%, rgba(255,200,240,.09), transparent 62%),radial-gradient(ellipse at 50% 50%, #5c2157 0%, #44173f 70%, #2c0e29 100%);
-  --guide:rgba(0,0,0,.32); --coordc:rgba(139,230,238,.55);
-  --dot1:#f1fdff; --dot2:#93dfe6; --dot3:#3b7f88;
-  --p0:#ff8370; --p0d:#d4554a; --p1:#7ea8ff; --p1d:#4b6fd2; --glow0:rgba(255,131,112,.85); --glow1:rgba(126,168,255,.85);
-  --e0:#ffc4b8; --e1:#cbdaff; --en:#eedff0; --pv0:#ffad9e; --pv1:#a9c3ff;
-  --b0a:#ff9d88; --b0b:#cc4c3c; --b1a:#93b6ff; --b1b:#4a6bcc;
-  --hint:#ffd65c; --hint-glow:rgba(255,214,92,.9);
+/* lamp: the base theme — a notebook under a desk lamp: navy cloth cover, dimmed cream ruled paper with a red margin line,
+   graphite dots, red pen × blue ink lines, coloured-pencil hatching (paper kept muted so it doesn't glare on the dark page) */
+[data-sk=lamp]{
+  --fr-r:12px;
+  --fr-bg:linear-gradient(145deg,#35425c 0%,#232c3f 55%,#2d3a52 100%);
+  --fr-sh:0 40px 80px -30px rgba(0,0,0,.85),inset 0 0 0 1px rgba(255,255,255,.08),0 0 0 1px rgba(0,0,0,.55);
+  --fr-ls:dashed; --fr-line:rgba(232,218,190,.32);
+  --bd-bg:radial-gradient(ellipse 85% 75% at 36% 28%, rgba(255,228,175,.20), transparent 70%),radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(70,48,18,.20) 100%),linear-gradient(90deg, transparent 5.9%, rgba(190,80,78,.5) 5.9% calc(5.9% + 2px), transparent calc(5.9% + 2px)),linear-gradient(transparent calc(100% - 1px), rgba(72,104,156,.2) calc(100% - 1px)) 0 0/100% 4.3%,#d3c7ab;
+  --bd-sh:inset 0 0 34px rgba(70,48,18,.38);
+  --noise:.16; --noise-bl:multiply;
+  --guide:rgba(60,62,80,.34); --coordc:rgba(52,62,92,.75);
+  --dot1:#6c675d; --dot2:#3c3a35; --dot3:#1c1b18;
+  --p0:#dd3a3c; --p0d:#ad2c2f; --p1:#3a6fd8; --p1d:#2650a8; --glow0:rgba(221,58,60,.45); --glow1:rgba(58,111,216,.45);
+  --e0:#bb4943; --e1:#3a62aa; --en:#6e6a62; --pv0:#de8f8a; --pv1:#8aa5d8;
+  --b0a:#e7b3ab; --b0b:#cf8a82; --b1a:#b4c6e6; --b1b:#8ea8d6; --bf0:url(#h0); --bf1:url(#h1); --hb0:rgba(200,64,60,.12); --hb1:rgba(52,96,184,.12);
+  --bxn:rgba(110,106,98,.2); --bic0:#a62f2e; --bic1:#24509f;
+  --hint:#d99a00; --hint-glow:rgba(217,154,0,.5);
+  --mbbg:#d3c7ab; --mbdot:#3c3a35; --mbn:#6e6a62; --mbnb:rgba(110,106,98,.22);
 }
 /* emerald: the previous green felt & brass */
 [data-sk=emerald]{
@@ -453,7 +460,7 @@ body.viewing #svg{cursor:default}
 .daily .no{font-size:18px!important}
 
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(8,3,8,.64);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(8,6,4,.64);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(480px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,var(--panel2),var(--modal2));border:1px solid rgba(var(--acc-rgb),.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
@@ -712,13 +719,13 @@ body .rv-view button{font-size:13.5px}
 .rules-offer span{flex:1;min-width:0}
 .rules-offer button{flex:none;padding:7px 12px;border-radius:9px;background:linear-gradient(180deg,var(--go1),var(--go2));color:var(--go-ink);font-weight:700;font-size:12.5px}
 .mini-svg{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.mb-bg{fill:var(--felt2);stroke:rgba(var(--acc-rgb),.45);stroke-width:1}
+.mb-bg{fill:var(--mbbg);stroke:rgba(var(--acc-rgb),.45);stroke-width:1}
 .mb-guide{stroke:rgba(0,0,0,.3);stroke-width:1.3;stroke-dasharray:2 4;stroke-linecap:round}
 .mb-edge{stroke-width:4.2;stroke-linecap:round}
-.mb-edge.p0{stroke:var(--e0)}.mb-edge.p1{stroke:var(--e1)}.mb-edge.p2{stroke:#eedff0}
+.mb-edge.p0{stroke:var(--e0)}.mb-edge.p1{stroke:var(--e1)}.mb-edge.p2{stroke:var(--mbn)}
 .mb-edge.last.p0{stroke:var(--p0)}.mb-edge.last.p1{stroke:var(--p1)}
-.mb-dot{fill:#a6e7ec}
-.mb-box.o2{fill:rgba(238,223,240,.18)}
+.mb-dot{fill:var(--mbdot)}
+.mb-box.o2{fill:var(--mbnb)}
 .mb-box.o0,.mb-box.o1{fill:var(--p0d)}.mb-box.o1{fill:var(--p1d)}
 .mb-box.nb{animation:fadein .35s ease both}
 .mvn{font-family:'JetBrains Mono',monospace;font-size:.92em}
@@ -1125,7 +1132,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   </div>
 </div>
 
-<script src="i18n.js?v=20261028sk"></script>
+<script src="i18n.js?v=20261030lamp"></script>
 <script src="i18n-learn.js?v=20261021ru3"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
@@ -1698,9 +1705,9 @@ function segSync() {
   skinPicker();
 }
 // ---------------------------------------------------------------- board skins (applied at once, kept in settings.skin)
-const SKINS = ['orchid', 'yumekawa', 'notebook', 'chalk', 'neon', 'candy', 'sakura', 'emerald'];
-const SKIN_HATCH = { notebook: 1, chalk: 1 }, SKIN_CANDY = ['#ff6fa0', '#ffd23f', '#5cc8f2'];
-function skinApply(k) { settings.skin = SKINS.includes(k) ? k : 'orchid'; document.documentElement.dataset.sk = settings.skin; }
+const SKINS = ['lamp', 'yumekawa', 'notebook', 'chalk', 'neon', 'candy', 'sakura', 'emerald'];
+const SKIN_HATCH = { lamp: 1, notebook: 1, chalk: 1 }, SKIN_CANDY = ['#ff6fa0', '#ffd23f', '#5cc8f2'];
+function skinApply(k) { settings.skin = SKINS.includes(k) ? k : 'lamp'; document.documentElement.dataset.sk = settings.skin; }
 function skinSVG(k) {
   const m = 40, u = 90, P = i => m + i * u, id = s => s + '-' + k;
   const L = (r1, c1, r2, c2, cls) => `<line x1="${P(c1)}" y1="${P(r1)}" x2="${P(c2)}" y2="${P(r2)}" class="${cls}"/>`;
