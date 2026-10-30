@@ -916,7 +916,7 @@ function musicStart() {
 }
 function musicStop() { if (!MUS.on) return; MUS.on = false; clearInterval(MUS.timer); const b = MUS.bus; b.gain.setTargetAtTime(0.0001, AC.currentTime, 0.5); setTimeout(() => b.disconnect(), 3000); }
 function musTick() { if (!MUS.on) return; const ahead = AC.currentTime + 0.16;
-    while (MUS.t < ahead) { if (MUS.n % 16 === 0 && MUS.pending >= 0) { applySound(MUS.pending); MUS.pending = -1; MUS.n = 0; } musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
+    while (MUS.t < ahead) { if (MUS.n % 128 === 0 && MUS.pending >= 0) { applySound(MUS.pending); MUS.pending = -1; MUS.n = 0; } musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
 function kick(t) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(44, t + 0.11);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.6, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g).connect(MUS.bus); o.start(t); o.stop(t + 0.5);
@@ -1359,32 +1359,39 @@ function drawReticle() {
     ug.save(); ug.lineWidth = 1.4 * UIS; ug.strokeStyle = c0;
     retHist.forEach((h, i) => { if (!i) return; ug.globalAlpha = 0.1 * (1 - i / retHist.length); const a0 = (S.t - i * 0.05) * 0.8;
         for (let k = 0; k < 3; k++) { const a = a0 + k * Math.PI * 2 / 3, R0 = RET_R + 6; poly([[h.x + Math.cos(a) * R0, h.y + Math.sin(a) * R0], [h.x + Math.cos(a + 0.55) * (R0 + 10), h.y + Math.sin(a + 0.55) * (R0 + 10)], [h.x + Math.cos(a + 1.1) * R0, h.y + Math.sin(a + 1.1) * R0]], false); ug.stroke(); } });
-    ug.restore(); ug.save(); ug.globalAlpha = 0.34; // 照準はかなり薄く
+    ug.restore();
     const x = S.rx, y = S.ry, held = IN.padLock || IN.mouseLock || !!IN.keys.Space, c1 = hex(PAL.line ? PAL.line[0] : 0xffffff), c2 = hex(PAL.wing), t = S.t;
+    S.retM = (S.retM || 0) + ((held ? 1 : 0) - (S.retM || 0)) * Math.min(1, 0.016 * 9); // トリガー中は照準が少し実体化
+    const RA = 0.34 + S.retM * 0.3, FA = 0.07 + S.retM * 0.16; ug.save(); ug.globalAlpha = RA;
     ug.save(); ug.lineWidth = 1.6 * UIS; ug.strokeStyle = held ? '#ff8ae6' : c1;
     // 外側: 回転する3つの刃
     for (let k = 0; k < 3; k++) { const a0 = t * 0.8 + k * Math.PI * 2 / 3, R0 = RET_R + 6;
         poly([[x + Math.cos(a0) * R0, y + Math.sin(a0) * R0], [x + Math.cos(a0 + 0.55) * (R0 + 10), y + Math.sin(a0 + 0.55) * (R0 + 10)], [x + Math.cos(a0 + 1.1) * R0, y + Math.sin(a0 + 1.1) * R0], [x + Math.cos(a0 + 0.55) * (R0 - 4), y + Math.sin(a0 + 0.55) * (R0 - 4)]]); ug.stroke();
-        ug.globalAlpha = 0.07; ug.fillStyle = held ? '#ff5ad8' : c1; ug.fill(); ug.globalAlpha = 0.34; }
+        ug.globalAlpha = FA; ug.fillStyle = held ? '#ff5ad8' : c1; ug.fill(); ug.globalAlpha = RA; }
     // 中: 逆回転の六角形（ロック中は縮む）
     const r2 = held ? 34 : 40; ug.strokeStyle = c2; ug.setLineDash([6 * UIS, 4 * UIS]);
-    poly(Array.from({ length: 6 }, (_, i) => { const a = -t * 1.2 + i * Math.PI / 3; return [x + Math.cos(a) * r2, y + Math.sin(a) * r2]; })); ug.stroke(); ug.setLineDash([]);
+    poly(Array.from({ length: 6 }, (_, i) => { const a = -t * 1.2 + i * Math.PI / 3; return [x + Math.cos(a) * r2, y + Math.sin(a) * r2]; })); ug.stroke(); ug.setLineDash([]); if (S.retM > 0.02) { ug.globalAlpha = S.retM * 0.1; ug.fillStyle = c2; ug.fill(); ug.globalAlpha = RA; }
     // 中心の菱形と十字のすき間
     ug.strokeStyle = '#ffffff'; poly([[x, y - 7], [x + 5, y], [x, y + 7], [x - 5, y]]); ug.stroke();
     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { poly([[x + dx * 14, y + dy * 14], [x + dx * 24, y + dy * 24]], false); ug.stroke(); });
     // ロック数（8つの三角）
     for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + i * Math.PI / 4, r = RET_R + 22, s = 5;
         poly([[x + Math.cos(a) * (r + s), y + Math.sin(a) * (r + s)], [x + Math.cos(a + 0.09) * r, y + Math.sin(a + 0.09) * r], [x + Math.cos(a - 0.09) * r, y + Math.sin(a - 0.09) * r]]);
-        if (i < locks.length) { ug.fillStyle = '#ff8ae6'; ug.fill(); } else { ug.globalAlpha = 0.12; ug.stroke(); ug.globalAlpha = 0.34; } }
+        if (i < locks.length) { ug.fillStyle = '#ff8ae6'; ug.fill(); } else { ug.globalAlpha = 0.12; ug.stroke(); ug.globalAlpha = RA; } }
     ug.restore(); ug.restore();
 }
 function drawLocks() {
-    ug.save(); ug.globalAlpha = 0.45; ug.lineWidth = 1.5 * UIS;
+    // ロックした目標: 半透明の「竜の瞳」— 菱形の枠、縦長の瞳孔、回る3つの爪痕
+    ug.save(); ug.lineWidth = 1.3 * UIS; ug.strokeStyle = '#ff8ae6';
     locks.forEach((tg, i) => { const wp = tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz)); const [x, y, z] = toScreen(wp); if (z > 1) return;
-        const r = (tg.obj ? 22 : 14) + Math.sin(S.t * 6 + i) * 2, a = S.t * 2 + i;
-        ug.strokeStyle = '#ff8ae6'; poly(Array.from({ length: 4 }, (_, k) => [x + Math.cos(a + k * Math.PI / 2) * r, y + Math.sin(a + k * Math.PI / 2) * r])); ug.stroke();
-        ug.fillStyle = 'rgba(255,90,216,.25)'; ug.fill();
-        T(String(i + 1), x + r + 6, y - r, 12, '#ffd0f4', '#ff5ad8', 'left', 1); });
+        const r = (tg.obj ? 22 : 14) + Math.sin(S.t * 6 + i) * 1.5, a = S.t * 1.6 + i;
+        ug.globalAlpha = 0.32; poly([[x, y - r * 1.15], [x + r, y], [x, y + r * 1.15], [x - r, y]]); ug.stroke();
+        ug.globalAlpha = 0.08; ug.fillStyle = '#ff5ad8'; ug.fill();
+        const pw = r * (0.16 + 0.06 * Math.sin(S.t * 5 + i)); ug.globalAlpha = 0.35; ug.fillStyle = '#ffd0f4';
+        poly([[x, y - r * 0.62], [x + pw, y], [x, y + r * 0.62], [x - pw, y]]); ug.fill();
+        ug.globalAlpha = 0.26; for (let k = 0; k < 3; k++) { const b = a + k * Math.PI * 2 / 3, R0 = r + 7;
+            poly([[x + Math.cos(b - 0.32) * R0, y + Math.sin(b - 0.32) * R0], [x + Math.cos(b) * (R0 + 6), y + Math.sin(b) * (R0 + 6)], [x + Math.cos(b + 0.32) * R0, y + Math.sin(b + 0.32) * R0]], false); ug.stroke(); }
+        T(String(i + 1), x + r + 8, y - r, 11, '#ffd0f4', '#ff5ad8', 'left', 0.5); });
     ug.restore();
 }
 function drawHUD() {
