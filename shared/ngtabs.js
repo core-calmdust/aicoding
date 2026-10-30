@@ -42,6 +42,22 @@ const CSS = `
 .ngt-bar button small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;font-weight:400;letter-spacing:.02em;color:var(--muted,#aaa);opacity:.8}
 .ngt-bar button small:empty{display:none}
 .ngt-bar button.sel{color:var(--text,#eee);border-top-color:var(--accent,#d8b56a)}
+/* PC: the same tabs, at the top (like poker on PC); the dialog keeps one size whichever tab is open */
+.ngt-pc .ngt-hide, .modal.ngt-pc .ngt-hide, .modal.ngt-pc :is(.ng-cols,.ng-col).ngt-hide{display:none!important}
+#newOverlay > .modal.ngt-pc{--ngt-pb:18px;display:flex!important;flex-direction:column!important;height:min(860px, calc(100vh - 40px))!important;max-height:none!important;overflow-y:auto!important;padding-bottom:0!important}
+#newOverlay > .modal.ngt-pc > *{flex-shrink:0}
+.modal.ngt-pc .ngt-bar{display:flex;gap:4px;margin:0 -2px 14px!important;padding:0 2px;border-bottom:1px solid var(--line,rgba(255,255,255,.14))}
+.modal.ngt-pc .ngt-bar button{border-top:0;border-bottom:2px solid transparent;min-height:0;padding:9px 8px 10px;font-size:14px}
+.modal.ngt-pc .ngt-bar button.sel{border-bottom-color:var(--accent,#d8b56a)}
+.modal.ngt-pc .ngt-bar button:hover{color:var(--text,#eee)}
+.modal.ngt-pc > .ngt-note{order:8}
+.modal.ngt-pc > .ngt-note:not(.ngt-hide):not(.ngt-note:not(.ngt-hide) ~ .ngt-note){margin-top:auto!important;padding-top:10px}
+.modal.ngt-pc > .ngt-foot{order:9;display:block;position:sticky;bottom:0;z-index:4;margin-top:auto;padding:12px 0 var(--ngt-pb);background:inherit}
+.modal.ngt-pc:has(> .ngt-note:not(.ngt-hide)) > .ngt-foot{margin-top:0}
+.modal.ngt-pc .ngt-foot .modal-actions{margin:0!important}
+/* (ゲーム / デザイン: their blocks use the full width) */
+.modal.ngt-pc:is([data-ngt=design],[data-ngt=game]) :is(.ng-cols,.ng-col):not(.ngt-hide){display:block!important;column-gap:0!important;grid-template-columns:none!important}
+.modal.ngt-pc[data-ngt=design] .dsg{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))!important}
 /* ゲーム tab: variant cards (art, name, short description) */
 .ngt-gcards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ngt-gcard{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.22);color:var(--text,#eee);font:inherit;text-align:start;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
@@ -88,12 +104,11 @@ function init() {
   };
   function mark() {
     modal.querySelectorAll('.ngt-hide').forEach(e => e.classList.remove('ngt-hide'));
-    if (!MQ.matches) return;
     if (cur === 'rules') { modal.querySelectorAll('[data-ng=design], [data-ng=game]').forEach(e => e.classList.add('ngt-hide')); return; }
     // ゲーム / デザイン: only that tab's blocks (and the boxes that hold them), the title and the footer
     const sel = `[data-ng=${cur}]`;
     const walk = parent => [...parent.children].forEach(el => {
-      if (el.matches(sel) || el === foot || (el.classList.contains('ngt-note') && !el.matches('[data-ng]')) || el.tagName === 'H2' || el.matches('script,style')) return;
+      if (el.matches(sel) || el === foot || el === bar || (el.classList.contains('ngt-note') && !el.matches('[data-ng]')) || el.tagName === 'H2' || el.matches('script,style')) return;
       if (el.querySelector(sel)) { walk(el); return; }
       el.classList.add('ngt-hide');
     });
@@ -108,7 +123,10 @@ function init() {
     });
   }
   function sync() {
-    const on = MQ.matches; modal.classList.toggle('ngt-on', on); placeCredits(on);
+    const on = MQ.matches; modal.classList.toggle('ngt-on', on); modal.classList.toggle('ngt-pc', !on); placeCredits(on);
+    // phones: the tabs at the very bottom; PC: under the title
+    if (on) { if (bar.parentNode !== foot) foot.appendChild(bar); }
+    else { const h2 = modal.querySelector(':scope > h2'); if (h2 && h2.nextElementSibling !== bar) h2.after(bar); else if (!h2 && bar.parentNode !== modal) modal.prepend(bar); }
     const ks = tabs(); if (!ks.includes(cur)) cur = ks[0];
     const l = lang(), gn = gameName();
     const h = ks.map(k => `<button type="button" role="tab" data-ngt="${k}"><span></span>${k === 'rules' && ks.includes('game') ? '<small></small>' : ''}</button>`).join('');
@@ -118,6 +136,7 @@ function init() {
       if (s.textContent !== t) s.textContent = t; if (sm && sm.textContent !== gn) sm.textContent = gn;
       b.classList.toggle('sel', k === cur); b.setAttribute('aria-selected', k === cur ? 'true' : 'false');
     });
+    modal.dataset.ngt = cur;
     mark();
   }
   // each tab keeps its own scroll position while the dialog is open
