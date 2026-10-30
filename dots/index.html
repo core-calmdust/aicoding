@@ -1810,6 +1810,13 @@ function rvOnce(w, n, edges, played, ms) {
 }
 async function runReview(silent) {
   if (!canReview()) return;
+  if (rv && rv.key === game.moves.join(',') && rv.n === game.n) {   // this game was already analysed (or still is): reuse it
+    if (silent) return;
+    rvOpen = true;
+    renderInfo(); renderReview(); renderGraph();
+    if (viewPly !== null) renderBoard(false);
+    return;
+  }
   rvCancel(); busy++; cancelAI(); cancelAna();
   const moves = game.moves.slice(), n = game.n, G = E.geom(n, n), p = new E.Pos(G);
   const items = new Array(moves.length).fill(null), mover = [], sc = [], todo = [];
@@ -1938,7 +1945,7 @@ $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel()
 $('#rvPrev').onclick = () => { if (viewPly !== null) viewAt(viewPly - 1); };
 $('#rvNext').onclick = () => { if (viewPly !== null) viewAt(viewPly + 1); };
 $('#rvLive').onclick = () => viewAt(null);
-$('#btnAnalyze').onclick = () => { if (rv && !rv.running && rv.key === game.moves.join(',')) { rvOpen = true; viewAt(viewPly === null ? 0 : viewPly); return; } runReview(); };
+$('#btnAnalyze').onclick = () => runReview();
 
 // ====================================================================== review box (PC, rvbox.js): candidates + 検討
 let csLine = [];      // 検討: edges drawn from the reviewed position (not part of the record)

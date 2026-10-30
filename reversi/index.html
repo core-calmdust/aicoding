@@ -3995,12 +3995,14 @@ function anaOnce(w, cells, toMove, time) {
 function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
 async function runReview() {
   if (lesson || puzzle || positions.length < 2) return;
+  if (rvRun && rvRun.game === positions && rvRun.n === positions.length) { rvOpen = true; renderReview(); return; }   // still running for this game: just show it
+  if (!rvRun && positions[0].rv === 1) { rvOpen = true; renderReview(); renderGraph(); renderInfo(); return; }   // this game was already analysed (any new move clears .rv): reuse it
   rvCancel(); busyToken++; cancelAI(); cancelAna();
   const todo = [];
   for (let i = 0; i < positions.length - 1; i++) { const p = positions[i]; if (p.toMove && legalMoves(p.cells, p.toMove).length > 1) todo.push(i); else positions[i + 1].q = null; }
   await weightsReady;
   const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
-  const run = rvRun = { ws, done: 0, total: todo.length, game: positions };
+  const run = rvRun = { ws, done: 0, total: todo.length, game: positions, n: positions.length };
   rvOpen = true; positions[0].rv = 0; renderReview();
   let next = 0;
   const loop = async w => {
