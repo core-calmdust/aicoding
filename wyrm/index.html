@@ -153,11 +153,12 @@ scene.add(new THREE.HemisphereLight(0xa8b8ff, 0x2a0c40, 0.9));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(-300, 700, 300); scene.add(sun); scene.add(sun.target);
 
 let baseFov = 62;
+let PR_T = 1, PR_CAP = 9; // 目標の解像度と、重いときに自動で下げた上限
 function resize() {
     let sc = 1;
     if (IS_MOBILE) { VW = innerWidth; VH = innerHeight; }
     else { VW = BASE_W; VH = BASE_H; sc = Math.min(innerWidth / BASE_W, innerHeight / BASE_H); gameEl.style.setProperty('--s', sc); }
-    PR = prFor(sc);
+    PR_T = prFor(sc); PR = Math.min(PR_T, PR_CAP);
     renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false);
     composer.setPixelRatio(PR); composer.setSize(VW, VH);
     camera.aspect = VW / VH;
@@ -967,7 +968,9 @@ function step(h) {
     if (S.mode === 'evo') { // 進化中: 減速して中空に浮かぶ（当たり判定なし）
         S.evoT += h; const e = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
         S.speed = S.evoSpd * (1 - 0.45 * e); // 一瞬ゆるめて、変わりゆく世界の中を進む
-        const ty = cave(S.d + 500).cy; S.y += (ty - S.y) * Math.min(1, h * 1.6); S.vy = (ty - S.y) * 1.6;
+        const env = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI); // 竜は変わりゆく世界の中を漂う（左右・上下にゆらゆら）
+        const ty = cave(S.d + 500).cy + Math.sin(S.evoT * 2.6) * 60 * env; S.y += (ty - S.y) * Math.min(1, h * 2.2); S.vy = (ty - S.y) * 1.6;
+        S.x = Math.sin(S.evoT * 2.1 + 0.7) * 130 * env;
         S.d += S.speed * h;
         if (S.evoT - S.lastAutoFlap > 0.7 && S.evoT < EVO_T - 0.3) { S.lastAutoFlap = S.evoT; dragon.flap(); }
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.vy = 120; S.speed = S.evoSpd; }
@@ -1008,13 +1011,29 @@ resetWorld();
 let last = -1; const dtHist = [];
 const H = 1 / 120;
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+// 描画が間に合わないとき: まず解像度を少しずつ下げ、それでも間に合わない高リフレッシュの画面では
+// 2回に1回だけ描いて一定の60fpsにそろえる（間引きが不規則になるとカクつきに見えるため）
+const perf = { n: 0, late: 0, good: 0, half: false, skip: false };
+function setPR(v) { PR = v; renderer.setPixelRatio(PR); renderer.setSize(VW, VH, false); composer.setPixelRatio(PR); composer.setSize(VW, VH); }
+function adapt(raw, ref) {
+    perf.n++; if (raw > ref * 1.45) perf.late++;
+    if (perf.n < 90) return;
+    if (perf.late > 5) {
+        perf.good = 0;
+        if (PR > 1.001) { PR_CAP = Math.max(1, PR - 0.15); setPR(PR_CAP); }
+        else if (!perf.half && ref < 0.0125) perf.half = true;
+    } else if (perf.late === 0 && ++perf.good >= 5 && PR < PR_T - 0.001) { perf.good = 0; PR_CAP = Math.min(PR_T, PR + 0.1); setPR(PR_CAP); }
+    perf.n = 0; perf.late = 0;
+}
 function frame(now) {
     requestAnimationFrame(frame);
+    if (perf.half) { perf.skip = !perf.skip; if (perf.skip) return; }
     // フレーム間隔: 画面のリフレッシュ間隔（直近の中央値）にそろえて、時刻のゆらぎによるカクつきを消す
     const raw = last < 0 ? 1 / 60 : (now - last) / 1000; last = now;
     dtHist.push(raw); if (dtHist.length > 31) dtHist.shift();
     const ref = [...dtHist].sort((a, b) => a - b)[dtHist.length >> 1];
     const dt = Math.min(0.05, Math.abs(raw - ref) < ref * 0.35 ? ref : raw);
+    if (dtHist.length > 20) adapt(raw, ref);
     pollPads();
     S.t += dt; uTime.value = S.t; if (S.mode === 'dead') S.deadT += dt;
     { const n = Math.max(1, Math.ceil(dt / H - 1e-6)); for (let i = 0; i < n; i++) step(dt / n); } // 毎フレーム同じ量だけ進める（端数の持ち越しによるガタつきをなくす）
@@ -1026,7 +1045,9 @@ function frame(now) {
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
     gates.forEach(gt => { tickK(gt, dt); const vis = gt.k < 0.35; gt.bars.forEach(b => b.visible = vis); gt.veil.visible = vis; if (gt.ring) gt.ring.visible = vis; if (gt.flash > 0) { gt.flash = Math.max(0, gt.flash - dt * 2); } const k = 1.6 + gt.flash * 3; gt.bars.forEach(b => b.material.color.setHex(gt.stage ? 0xffffff : gt.col).multiplyScalar(gt.stage ? k * 0.9 : k)); if (gt.ring) gt.ring.rotation.y = S.t * 0.8; gt.veil.material.opacity = 0.035 + gt.flash * 0.25; });
     // 竜
-    dragon.root.position.set(0, S.y, -S.d);
+    if (S.mode !== 'evo') S.x = (S.x || 0) * Math.max(0, 1 - dt * 6);
+    { const vx = ((S.x || 0) - (S.px || 0)) / Math.max(dt, 1e-3); S.px = S.x || 0; S.bank = (S.bank || 0) + (Math.max(-0.6, Math.min(0.6, -vx * 0.004)) - (S.bank || 0)) * Math.min(1, dt * 6); }
+    dragon.root.position.set(S.x || 0, S.y, -S.d); dragon.root.rotation.set(0, Math.PI - S.bank * 0.5, S.bank);
     field.position.set(0, cave(S.d).cy, -S.d);
     dragon.update(dt, S.t, { vy: S.vy, dead: S.mode === 'dead' });
     // カメラ: 後ろ上から（洞窟からはみ出さない）
@@ -1044,9 +1065,9 @@ function frame(now) {
     const ly = S.mode === 'dead' ? S.y + 20 : S.y * 0.65 + cave(S.d + 300).cy * 0.35 + 26 - S.kick * 3; // 視線は竜と前方の通路の中間へ
     [S.lookY, S.lookV] = damp(S.lookY, S.lookV, ly, 2.6);
     const shk = S.shake * 8; S.shake = Math.max(0, S.shake - dt * 2.2);
-    camPos.set((Math.random() - 0.5) * shk, S.camY + pull * 120 + (Math.random() - 0.5) * shk, -cd);
+    camPos.set((Math.random() - 0.5) * shk - Math.sin(eu * Math.PI) * 60, S.camY + pull * 120 + (Math.random() - 0.5) * shk, -cd); // 進化中のカメラは竜を追わず、通路の先を見る
     camera.position.copy(camPos);
-    camLook.set(0, lerp(S.lookY, S.y + 10, pull), -S.d - 300 + pull * 200);
+    camLook.set(0, lerp(S.lookY, cave(S.d + 400).cy, pull), -S.d - 300 - pull * 250);
     camera.lookAt(camLook);
     camera.rotation.z += Math.sin(S.t * 0.7) * 0.01 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.12 : 0); // 進化中はゆるく傾く
     if (window.__cam) window.__cam(camera, S, dragon);
