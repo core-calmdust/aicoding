@@ -1122,7 +1122,7 @@ html.lnd #lndRail button.ic-only span{display:none}
 html.lnd #lndRail button.ic-only{min-height:42px}
 html.lnd #lndRail button.sel{color:var(--accent);border-color:rgba(226,194,117,.6);background:rgba(226,194,117,.1)}
 html.lnd #lndRail button.sel svg{stroke:var(--accent)}
-html.lnd body:is(.in-lesson,.in-puzzle) #lndRail button:is([data-lt=coach],[data-lt=kifu]){display:none}
+html.lnd body:is(.in-lesson,.in-puzzle) #lndRail button[data-lt=kifu]{display:none}
 /* the drawer: slides out from under the rail over the board ("ニュッ": a little overshoot); follows the finger while swiped */
 html.lnd #lndDrawer{display:flex;flex-direction:column;gap:6px;position:absolute;z-index:55;top:var(--lnd-dt,46px);bottom:6px;right:calc(60px + 8px + max(8px,env(safe-area-inset-right)));width:min(400px,50%);
   padding:8px;box-sizing:border-box;border-radius:14px;background:var(--panel,#121b17);border:1px solid var(--line);box-shadow:-14px 0 30px -6px rgba(0,0,0,.65);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
@@ -1138,7 +1138,7 @@ html.lnd #lndRail button.sel::before{content:'';position:absolute;left:0;top:22%
 html.lnd, html.lnd body{overscroll-behavior:none}
 html.lnd #lndDrawer > *{width:auto!important;max-width:none!important;margin:0!important;flex:none!important;order:0!important;grid-area:auto!important}
 html.lnd #lndDrawer > .card{padding:10px 12px;border-radius:12px}
-html.lnd #lndDrawer > #coachCard, html.lnd #lndDrawer > #reviewCard, html.lnd #lndDrawer > #evalCard, html.lnd #lndDrawer > .kifu-card, html.lnd #lndDrawer > #lndLearn{display:none!important}
+html.lnd #lndDrawer > #coachCard, html.lnd #lndDrawer > #lndCoachRest, html.lnd #lndDrawer > #reviewCard, html.lnd #lndDrawer > #evalCard, html.lnd #lndDrawer > .kifu-card, html.lnd #lndDrawer > #lndLearn{display:none!important}
 html.lnd body[data-lt=coach]:not(.in-lesson):not(.in-puzzle) #lndDrawer > #coachCard:not(.hidden),
 html.lnd body[data-lt=coach]:not(.in-lesson):not(.in-puzzle) #lndDrawer > #reviewCard.show,
 html.lnd body[data-lt=kifu]:not(.in-lesson):not(.in-puzzle) #lndDrawer > #evalCard:not(.hidden){display:block!important}
@@ -1147,6 +1147,11 @@ html.lnd body[data-lt=kifu]:not(.in-lesson):not(.in-puzzle) #lndDrawer > .kifu-c
 html.lnd #lndDrawer #evalCard .graph{height:38px!important;min-height:0!important;flex:none!important}
 html.lnd #lndDrawer .kifu{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto}
 html.lnd body[data-lt=learn] #lndDrawer > #lndLearn{display:flex!important}
+/* the coach can't work now (AI vs AI, online, lessons…): the コーチ tab stays and its box says so (land.js) */
+html.lnd body.lnd-ckrest[data-lt=coach] #lndDrawer > #lndCoachRest{display:block!important}
+html.lnd #itCoachRest{display:none!important}
+/* 戦績 in the drawer's place: closed by a swipe to the right, its tab again or a tap on the board (no 閉じる button) */
+html.lnd body.lnd-rec .grc-ft [data-act=close]{display:none!important}
 html.lnd body.in-lesson #lndDrawer > .lesson-card, html.lnd body.in-puzzle #lndDrawer > .puzzle-card{display:flex!important;flex-direction:column;gap:6px;max-height:none!important;overflow:visible!important;padding:10px 12px!important}
 html.lnd body:not([data-lt=learn]) #lndDrawer > :is(.lesson-card,.puzzle-card){display:none!important}
 html.lnd #lndDrawer :is(.lesson-card,.puzzle-card) .cb-bar{flex-wrap:wrap}
@@ -1168,7 +1173,7 @@ html.lnd body.lnd-nav #lndNav{display:flex;position:absolute;z-index:57;bottom:6
 html.lnd body.lnd-nav:is(.lnd-open,.lnd-rec,.mtab-online) #lndNav{right:calc(60px + 16px + max(8px,env(safe-area-inset-right)) + min(400px,50%))}
 html.lnd #lndNav button{flex:none;width:40px;height:30px}
 /* online and the record: they fill the drawer's place */
-html.lnd body.mtab-online .dock{left:var(--lnd-dl)!important;right:auto!important;top:var(--lnd-dt)!important;bottom:6px!important;width:var(--lnd-dw)!important;border-radius:14px;border:1px solid var(--line);z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
+html.lnd body.mtab-online .dock{left:var(--lnd-dl)!important;right:auto!important;top:var(--lnd-dt)!important;bottom:auto!important;height:var(--lnd-dh)!important;max-height:none!important;width:var(--lnd-dw)!important;border-radius:14px;border:1px solid var(--line);z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
 html.lnd body.mtab-online{overflow:hidden}
 html.lnd body.lnd-rec .grc-ov{inset:auto!important;left:var(--lnd-dl)!important;top:var(--lnd-dt)!important;width:var(--lnd-dw)!important;height:var(--lnd-dh)!important;padding:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:56!important;animation:lndIn .34s cubic-bezier(.2,1.25,.4,1)}
 @keyframes lndIn{from{transform:translateX(calc(100% + 76px))}to{transform:none}}
@@ -1505,12 +1510,12 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="themes.js?v=20261021cm"></script>
 <script src="../shared/coachkit.js?v=11"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=3"></script>
+<script src="coach.js?v=4"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script src="app.js?v=20261030dr1"></script>
 <script src="op.js?v=20261021opan"></script>
 <script src="online-ui.js?v=20261030ck1"></script>
-<script src="land.js?v=6"></script>
+<script src="land.js?v=7"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
