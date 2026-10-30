@@ -1168,6 +1168,9 @@ html[lang=ar] .pf-input{direction:rtl}
 .modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
 .modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
+#exportImg:not(.hidden){display:flex}
+#exportStage:has(#exportImg:not(.hidden) #segImg .sel[data-v=both]){height:auto!important}
+#exportStage:has(#exportImg:not(.hidden) #segImg .sel[data-v=both]) #exportPreview{max-height:min(76vh,900px)!important}
 </style>
 </head>
 <body>
@@ -1334,11 +1337,11 @@ html[lang=ar] .pf-input{direction:rtl}
     <h2 data-i18n="ex2.title"></h2>
     <div id="exportMeta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span id="exportTtlL" style="white-space:nowrap;opacity:.85"></span><input id="exportTtl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input id="exportDate" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span id="exportDateL"></span></label></div>
     <div class="seg" id="segExport" style="margin-bottom:10px"><button data-v="kif">KIF</button><button data-v="ki2">KI2</button><button data-v="csa">CSA</button><button data-v="usi">USI</button><button data-v="url">URL</button><button data-v="img" data-i18n="ex2.img"></button></div>
-    <textarea id="exportText" readonly style="width:100%;height:220px;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:vertical"></textarea>
-    <div id="exportImg" class="hidden" style="text-align:center">
-      <div class="seg" id="segImg" style="margin-bottom:8px"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
-      <img id="exportPreview" alt="" style="max-width:100%;max-height:46vh;border-radius:8px;border:1px solid var(--line)">
-    </div>
+    <div id="exportStage" style="height:min(56vh,600px);display:flex;flex-direction:column;min-height:0"><textarea id="exportText" readonly style="width:100%;flex:1 1 auto;min-height:0;height:auto;overflow:auto;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:none"></textarea>
+    <div id="exportImg" class="hidden" style="text-align:center;flex:1 1 auto;min-height:0;flex-direction:column;align-items:center">
+      <div class="seg" id="segImg" style="margin-bottom:8px;flex:none"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
+      <div style="flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center"><img id="exportPreview" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--line)"></div>
+    </div></div>
     <div class="modal-actions"><button class="mbtn" id="exportClose" data-i18n="close"></button><button class="mbtn" id="exportDl" data-i18n="ex2.download"></button><button class="mbtn go" id="exportCopy" data-i18n="copy"></button></div>
   </div>
 </div>
@@ -1410,7 +1413,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=2"></script>
+<script src="../shared/export.js?v=4"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -3342,7 +3345,7 @@ function exportRender() {
     if (document.activeElement !== ti) ti.value = m.title;
     $('#exportDate').checked = m.date;
   }
-  $('#exportMeta').style.display = window.RecordExport && exportFmt !== 'url' && exportFmt !== 'usi' ? 'flex' : 'none';
+  $('#exportMeta').style.display = window.RecordExport ? 'flex' : 'none'; $('#exportMeta').style.visibility = exportFmt !== 'url' && exportFmt !== 'usi' ? 'visible' : 'hidden';
   const img = exportFmt === 'img';
   $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
   $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');

@@ -80,8 +80,8 @@ function build() {
   ov.innerHTML = `<div class="modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
 <div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line,rgba(255,255,255,.18));background:rgba(0,0,0,.22);color:var(--text,#eee)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
 <div class="seg rx-fmt" style="margin-bottom:10px;flex-wrap:wrap"></div>
-<textarea class="rx-text" readonly spellcheck="false" style="width:100%;height:230px;background:rgba(0,0,0,.28);color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:10px;padding:10px;font:12px/1.55 'JetBrains Mono',ui-monospace,monospace;resize:vertical;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left"></textarea>
-<div class="rx-img" style="display:none;text-align:center"><div class="seg rx-mode" style="margin-bottom:8px"></div><img class="rx-prev" alt="" style="max-width:100%;max-height:min(52vh,560px);border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.14));background:#fff"></div>
+<div class="rx-stage" style="height:var(--rx-sh,min(56vh,600px));display:flex;flex-direction:column;min-height:0"><textarea class="rx-text" readonly spellcheck="false" style="width:100%;flex:1 1 auto;min-height:0;height:auto;overflow:auto;background:rgba(0,0,0,.28);color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:10px;padding:10px;font:12px/1.55 'JetBrains Mono',ui-monospace,monospace;resize:none;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left"></textarea>
+<div class="rx-img" style="display:none;flex:1 1 auto;min-height:0;flex-direction:column;align-items:center;text-align:center"><div class="seg rx-mode" style="margin-bottom:8px;flex:none"></div><div style="flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center"><img class="rx-prev" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--line,rgba(255,255,255,.14));background:#fff"></div></div></div>
 <div class="modal-actions"><button class="mbtn rx-close"></button><button class="mbtn rx-dl"></button><button class="mbtn go rx-copy"></button></div></div>`;
   document.body.appendChild(ov);
   const q = s => ov.querySelector(s);
@@ -130,13 +130,15 @@ async function render() {
   const m = meta(O.key);
   q('.rx-tl').textContent = tx('ttl'); q('.rx-dt').textContent = tx('date'); q('.rx-date').checked = m.date;
   const ti = q('.rx-ttl'); ti.placeholder = cleanTitle(O.title); if (document.activeElement !== ti) ti.value = m.title;
-  q('.rx-meta').style.display = fmt === 'url' ? 'none' : 'flex';
+  q('.rx-meta').style.visibility = fmt === 'url' ? 'hidden' : 'visible';
   const img = fmt === 'img';
-  q('.rx-text').style.display = img ? 'none' : ''; q('.rx-img').style.display = img ? '' : 'none';
+  q('.rx-text').style.display = img ? 'none' : ''; q('.rx-img').style.display = img ? 'flex' : 'none'; if (!img) { q('.rx-stage').style.height = 'min(56vh,600px)'; }
   q('.rx-copy').textContent = tx(img ? 'share' : fmt === 'url' ? 'copyUrl' : 'copy');
   if (!img) { const f = list.find(x => x.id === fmt); let v = ''; try { v = f ? f.text() : ''; if (f && f.id !== 'url' && f.meta !== false) v = applyMeta(v, m); } catch (e) { console.error(e); v = String(e); } q('.rx-text').value = v; return; }
   const ms = modeList();
-  q('.rx-mode').style.display = ms.length > 1 ? '' : 'none';
+  q('.rx-mode').style.visibility = ms.length > 1 ? 'visible' : 'hidden';
+  // the box keeps one size (the board image's); only 局面図＋棋譜 ('moves') may make it taller
+  const tall = mode === 'moves'; q('.rx-stage').style.height = tall ? 'auto' : 'min(56vh,600px)'; q('.rx-prev').style.maxHeight = tall ? 'min(76vh,900px)' : '100%';
   q('.rx-mode').innerHTML = ms.map(m => `<button data-v="${m}" class="${m === mode ? 'sel' : ''}">${esc(tx(m))}</button>`).join('');
   const my = ++job; blob = null;
   let cv; try { cv = await O.image.draw(mode); } catch (e) { console.error(e); return; }
