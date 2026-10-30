@@ -1168,6 +1168,12 @@ html[lang=ar] .pf-input{direction:rtl}
 .modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
 .modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
+#exportImg:not(.hidden){display:flex}
+#exportOverlay .modal-actions{display:flex;gap:8px}#exportOverlay .modal-actions .mbtn{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:6px;padding-right:6px;letter-spacing:.02em}
+@media (max-width:520px){#exportOverlay .modal-actions .mbtn{font-size:13px}}
+#exportNames label{flex:1 1 0;display:flex;align-items:center;gap:8px;min-width:0}
+#exportNames span{white-space:nowrap;opacity:.85;max-width:40%;overflow:hidden;text-overflow:ellipsis}
+#exportNames input,#exportTtl{flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text)}
 </style>
 </head>
 <body>
@@ -1332,13 +1338,15 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="overlay" id="exportOverlay">
   <div class="modal" style="width:min(560px,100%)">
     <h2 data-i18n="ex2.title"></h2>
-    <div id="exportMeta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px"><label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:0"><span id="exportTtlL" style="white-space:nowrap;opacity:.85"></span><input id="exportTtl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text)"></label><label style="display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input id="exportDate" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span id="exportDateL"></span></label></div>
+    <div id="exportMeta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:nowrap;margin-bottom:8px;font-size:13px"><label style="flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0"><span id="exportTtlL" style="white-space:nowrap;opacity:.85"></span><input id="exportTtl" type="text" maxlength="60" autocomplete="off" spellcheck="false"></label><label style="flex:none;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input id="exportDate" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span id="exportDateL"></span></label></div>
+    <div id="exportNames" style="display:flex;gap:8px 12px;align-items:center;margin-bottom:10px;font-size:13px"><label><span id="exportNL0"></span><input id="exportN0" data-i="0" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label><label><span id="exportNL1"></span><input id="exportN1" data-i="1" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label></div>
     <div class="seg" id="segExport" style="margin-bottom:10px"><button data-v="kif">KIF</button><button data-v="ki2">KI2</button><button data-v="csa">CSA</button><button data-v="usi">USI</button><button data-v="url">URL</button><button data-v="img" data-i18n="ex2.img"></button></div>
-    <textarea id="exportText" readonly style="width:100%;height:220px;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:vertical"></textarea>
-    <div id="exportImg" class="hidden" style="text-align:center">
-      <div class="seg" id="segImg" style="margin-bottom:8px"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
-      <img id="exportPreview" alt="" style="max-width:100%;max-height:46vh;border-radius:8px;border:1px solid var(--line)">
-    </div>
+    <!-- one fixed size whatever the tab: the stage keeps its height, text scrolls inside, the preview is fitted into it -->
+    <div id="exportStage" style="height:min(52vh,560px);display:flex;flex-direction:column;min-height:0;overflow:hidden"><textarea id="exportText" readonly style="width:100%;flex:1 1 0;min-height:0;height:auto;overflow:auto;background:rgba(0,0,0,.3);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px 'JetBrains Mono',monospace;resize:none;box-sizing:border-box;margin:0"></textarea>
+    <div id="exportImg" class="hidden" style="text-align:center;flex:1 1 0;min-height:0;flex-direction:column;align-items:center">
+      <div class="seg" id="segImg" style="margin-bottom:8px;flex:none"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
+      <div style="flex:1 1 0;min-height:0;width:100%;position:relative"><img id="exportPreview" alt="" style="position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--line);background:#fff;box-sizing:border-box"></div>
+    </div></div>
     <div class="modal-actions"><button class="mbtn" id="exportClose" data-i18n="close"></button><button class="mbtn" id="exportDl" data-i18n="ex2.download"></button><button class="mbtn go" id="exportCopy" data-i18n="copy"></button></div>
   </div>
 </div>
@@ -1410,7 +1418,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="i18n.js?v=20261024ls"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=2"></script>
+<script src="../shared/export.js?v=5"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="engine.js?v=20261028pv"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -3185,10 +3193,12 @@ const CSA_PC = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 
 const pad2 = n => String(n).padStart(2, '0');
 // title / date chosen in the share dialog (shared/export.js keeps them per game): KIF / KI2 棋戦： + 開始日時：, CSA $EVENT / $START_TIME
 const exMeta = () => window.RecordExport ? RecordExport.meta('shogi') : { title: '', date: true, day: new Date() };
+// player names: the ones typed in the share dialog (kept per game only when changed) or the game's own
+const exName = c => window.RecordExport ? RecordExport.name(c, playerName(c), 'shogi') : playerName(c);
 const ymdSlash = d => `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`;
 function kifHeader() {
   const m = exMeta();
-  return `${m.date ? `開始日時：${ymdSlash(m.day)}\n` : ''}${m.title ? `棋戦：${m.title.replace(/[\r\n]+/g, ' ')}\n` : ''}手合割：${t('handi')[HANDI.indexOf(game.start)] || '平手'}\n先手：${playerName(0)}\n後手：${playerName(1)}\n`;
+  return `${m.date ? `開始日時：${ymdSlash(m.day)}\n` : ''}${m.title ? `棋戦：${m.title.replace(/[\r\n]+/g, ' ')}\n` : ''}手合割：${t('handi')[HANDI.indexOf(game.start)] || '平手'}\n先手：${exName(0)}\n後手：${exName(1)}\n`;
 }
 function endWord() { const o = game.over; if (!o) return ''; return o.reason === 'declare' ? '入玉勝ち' : o.reason === 'rep' || o.winner < 0 ? '千日手' : o.reason === 'time' ? '切れ負け' : '投了'; }
 function exportKIF() {
@@ -3208,7 +3218,7 @@ function exportKI2() {
 function exportCSA() {
   const p = new E.Position(); p.setSfen(game.start);
   const mt = exMeta();
-  let s = `V2.2\nN+${playerName(0)}\nN-${playerName(1)}\n${mt.title ? `$EVENT:${mt.title.replace(/[\r\n]+/g, ' ')}\n` : ''}${mt.date ? `$START_TIME:${ymdSlash(mt.day)}\n` : ''}`;
+  let s = `V2.2\nN+${exName(0)}\nN-${exName(1)}\n${mt.title ? `$EVENT:${mt.title.replace(/[\r\n]+/g, ' ')}\n` : ''}${mt.date ? `$START_TIME:${ymdSlash(mt.day)}\n` : ''}`;
   if (game.start === HANDI[0]) s += 'PI\n+\n';
   else {
     for (let r = 1; r <= 9; r++) { let line = 'P' + r; for (let f = 9; f >= 1; f--) { const q = p.board[E.makeSq(f, r)]; line += q ? (E.colorOf(q) ? '-' : '+') + CSA_PC[E.typeOf(q)] : ' * '; } s += line + '\n'; }
@@ -3245,22 +3255,24 @@ function diagramCanvas(withKifu) {
   const S = Math.max(56, Math.min(84, Math.round(504 / BH))), bw = S * BW, bh = S * BH;
   const names = [];
   { const q = posAt(0); let pt = -1; for (const u of game.moves.slice(0, cur)) { const m = q.fromUsi(u); names.push((q.side ? '△' : '▲') + kifName(q, m, pt, false, true)); pt = E.mTo(m); q.doMove(m); q.sp = 0; } }
-  const ink = '#111', red = '#c8161d', grey = '#8c8c8c', F = DIAG_FONT;
-  // horizontal: [pad | hand col | gap | (rank-number band, mirrored) | board | rank numbers | gap | hand col | pad]
-  const NUM = Math.round(S * 0.42), GAP = Math.round(S * 0.3), COL = Math.round(S * 0.9), PAD = Math.round(S * 0.45);
-  const side = PAD + COL + GAP + NUM, W = Math.max(bw + side * 2, 460);
-  const mt = exMeta(), ds = mt.date && window.RecordExport ? RecordExport.dateText(mt.day, LANG) : '', HDR = mt.title || ds ? 44 : 0;
-  const ox = (W - bw) / 2, TOPN = Math.round(S * 0.5), oy = PAD + TOPN + HDR;
-  const KC = 4, KW = Math.min(170, Math.max(140, (W - 60) / KC)), krows = withKifu ? Math.ceil(names.length / KC) : 0;
-  const capY = oy + bh + Math.round(S * 0.62), kifY = capY + 34, H = (withKifu ? kifY + 8 + krows * 25 + 12 : capY + 14) + 34;
-  const cv = document.createElement('canvas'); const dpr = 2; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-  const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-  if (HDR) {   // heading: title (left) and date (right)
-    const HM = 22; g.textBaseline = 'alphabetic'; let dw = 0;
-    if (ds) { g.font = `500 15px ${F}`; dw = g.measureText(ds).width + 16; g.fillStyle = '#555'; g.textAlign = 'right'; g.fillText(ds, W - HM, 36); }
-    if (mt.title) { let fs = 22; g.font = `700 ${fs}px ${F}`; while (fs > 14 && g.measureText(mt.title).width > W - 2 * HM - dw) { fs--; g.font = `700 ${fs}px ${F}`; } let tt = mt.title; while (tt.length > 1 && g.measureText(tt).width > W - 2 * HM - dw) tt = tt.slice(0, -2) + '…'; g.fillStyle = ink; g.textAlign = 'left'; g.fillText(tt, HM, 36); }
-  }
+  const ink = '#111', red = '#c8161d', F = DIAG_FONT, RX = RecordExport;
+  // the xiangqi-style sheet (shared/export.js): title / date, caption, the board with both hands, the two players,
+  // a rule and the moves as one flowing paragraph, the site URL. Board block: [hand col | rank band | board | ranks | hand col]
+  const NUM = Math.round(S * 0.42), GAP = Math.round(S * 0.3), COL = Math.round(S * 0.9), PAD = Math.round(S * 0.3);
+  const side = PAD + COL + GAP + NUM, TOPN = Math.round(S * 0.5);
+  let cap = cur ? RX.tx('after', { n: cur, m: names[cur - 1] }, LANG) : RX.tx('start', null, LANG);
+  const ov = game.over && cur === game.moves.length ? game.over : null;
+  cap += '　' + (ov ? t(ov.winner === 0 ? 'res.bwin' : ov.winner === 1 ? 'res.wwin' : 'res.draw') : RX.tx('toMove', { s: cname(p.side) }, LANG));
+  const pieceIcon = (g, x, y, sz, black) => {   // ☗ / ☖ as a drawn pentagon (fonts differ wildly for those glyphs)
+    const w = sz * 0.78, h = sz;
+    g.beginPath(); g.moveTo(x, y - h / 2); g.lineTo(x + w / 2, y - h * 0.24); g.lineTo(x + w * 0.42, y + h / 2); g.lineTo(x - w * 0.42, y + h / 2); g.lineTo(x - w / 2, y - h * 0.24); g.closePath();
+    g.fillStyle = black ? ink : '#fff'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = ink; g.stroke();
+  };
+  const pn = c => { const n = String(exName(c) || '').trim(); return n && !['先手', '後手', 'Sente', 'Gote', cname(c)].includes(n) ? n : ''; };
+  const pl = [0, 1].map(c => ({ name: cname(c) + (pn(c) ? ' ' + pn(c) : ''), swatch: (g, x, y, r) => pieceIcon(g, x, y, r * 2.1, c === 0) }));
+  const title = LANG === 'ja' ? '将棋' : LANG === 'zh' ? '日本将棋' : LANG === 'ko' ? '쇼기' : 'Shogi';
+  return RX.sheet({ bw: bw + side * 2, bh: TOPN + bh + PAD, title, caption: cap, players: pl, moves: withKifu ? names.map((x, i) => `${i + 1}.${x}`) : null, path: 'shogi', font: F, titleFont: F, key: 'shogi', lang: LANG, draw: (g, x0, y0) => {
+  const ox = x0 + side, oy = y0 + TOPN;
   g.textAlign = 'center'; g.textBaseline = 'middle';
   // last move
   let lastTo = -1; try { if (cur > 0) lastTo = E.mTo(p.fromUsi(game.moves[cur - 1])); } catch (e) {}
@@ -3284,12 +3296,6 @@ function diagramCanvas(withKifu) {
     g.fillStyle = tp > 8 && v !== 'hasami' ? red : ink; g.font = `500 ${Math.round(S * 0.7)}px ${F}`; g.fillText(ch, 0, S * 0.02); g.restore();
   }
   // hands: one column, drawn for 先手 at the right and, rotated 180° about the board centre, for 後手 at the left
-  const pn = c => { const n = String(playerName(c) || '').trim(); return n && !['先手', '後手', 'Sente', 'Gote'].includes(n) ? n : ''; };
-  const pieceIcon = (x, y, sz, black) => {   // ☗ / ☖ as a drawn pentagon (fonts differ wildly for those glyphs)
-    const w = sz * 0.78, h = sz;
-    g.beginPath(); g.moveTo(x, y - h / 2); g.lineTo(x + w / 2, y - h * 0.24); g.lineTo(x + w * 0.42, y + h / 2); g.lineTo(x - w * 0.42, y + h / 2); g.lineTo(x - w / 2, y - h * 0.24); g.closePath();
-    g.fillStyle = black ? ink : '#fff'; g.fill(); g.lineWidth = 1.4; g.strokeStyle = ink; g.stroke();
-  };
   const vtext = (txt, x, y, fs, lh) => {   // vertical text; runs of 1–3 ASCII chars sit upright in one cell (縦中横), longer runs turn 90°
     for (const run of txt.match(/[\x21-\x7e]+|\s+|[^\x21-\x7e\s]/g) || []) {
       if (/^\s+$/.test(run)) { y += lh * 0.5; continue; }
@@ -3303,7 +3309,7 @@ function diagramCanvas(withKifu) {
   };
   const handCol = (c, x, y0) => {
     const fsL = Math.round(S * 0.4), fsN = Math.round(S * 0.27);
-    pieceIcon(x, y0 + fsL * 0.5, fsL * 0.92, c === 0); let y = y0 + fsL * 1.25;
+    pieceIcon(g, x, y0 + fsL * 0.5, fsL * 0.92, c === 0); let y = y0 + fsL * 1.25;
     g.fillStyle = ink; g.font = `600 ${fsL}px ${F}`; y = vtext(c ? '後手' : '先手', x, y, fsL, fsL * 1.08);
     const nm = pn(c); if (nm) { g.fillStyle = '#555'; g.font = `500 ${fsN}px ${F}`; y = vtext([...nm].slice(0, 12).join(''), x, y + fsN * 0.3, fsN, fsN * 1.1); }
     y += S * 0.22;
@@ -3321,16 +3327,7 @@ function diagramCanvas(withKifu) {
   const hx = ox + bw + NUM + GAP + COL * 0.4;
   handCol(0, hx, oy);
   g.save(); g.translate(ox + bw / 2, oy + bh / 2); g.rotate(Math.PI); g.translate(-(ox + bw / 2), -(oy + bh / 2)); handCol(1, hx, oy); g.restore();
-  // caption under the board, centred
-  g.fillStyle = ink; g.textAlign = 'center'; g.font = `500 ${Math.max(16, Math.round(S * 0.3))}px ${F}`;
-  g.fillText(cur ? `${cur}手目 ${names[cur - 1]} まで` : '開始局面', ox + bw / 2, capY);
-  if (withKifu && names.length) {
-    g.textAlign = 'left'; g.font = `500 15px ${F}`;
-    const x0 = (W - KW * KC) / 2 + 8;
-    names.forEach((nm, i) => { const col = i % KC, row = (i / KC) | 0, x = x0 + col * KW, y = kifY + row * 25 + 12; g.fillStyle = grey; g.fillText(String(i + 1), x, y); g.fillStyle = ink; g.fillText(nm, x + 30, y); });
-  }
-  g.font = `11px ${F}`; g.fillStyle = '#b4b4b4'; g.textAlign = 'center'; g.fillText('core-calmdust.github.io/aicoding/shogi', W / 2, H - 16);
-  return cv;
+  } });
 }
 let exportFmt = 'kif', exportImgMode = 'board', exportBlob = null, exportTok = 0;
 function exportRender() {
@@ -3342,7 +3339,10 @@ function exportRender() {
     if (document.activeElement !== ti) ti.value = m.title;
     $('#exportDate').checked = m.date;
   }
-  $('#exportMeta').style.display = window.RecordExport && exportFmt !== 'url' && exportFmt !== 'usi' ? 'flex' : 'none';
+  const uses = exportFmt !== 'url' && exportFmt !== 'usi';
+  $('#exportMeta').style.display = $('#exportNames').style.display = window.RecordExport ? 'flex' : 'none';
+  $('#exportMeta').style.visibility = $('#exportNames').style.visibility = uses ? 'visible' : 'hidden';
+  if (window.RecordExport) { const ovr = RecordExport.names('shogi'); [0, 1].forEach(c => { $('#exportNL' + c).textContent = cname(c); const ni = $('#exportN' + c); ni.placeholder = RecordExport.tx('nm', null, LANG); ni.title = cname(c); if (document.activeElement !== ni) ni.value = ovr[c] || playerName(c) || ''; }); }
   const img = exportFmt === 'img';
   $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
   $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');
@@ -3352,15 +3352,28 @@ function exportRender() {
 $('#btnShare').onclick = () => {
   if (!game || !game.moves.length) { toast(t('kifu.empty')); return; }
   try { exportFmt = localStorage.getItem('shogi-export-fmt') || 'kif'; } catch (e) {}
-  exportRender(); showOverlay('#exportOverlay');
+  exportRender(); showOverlay('#exportOverlay'); exportFit();
 };
+// the stage keeps one height for every tab; it only shrinks (per opening / resize) when the dialog would not fit the screen
+function exportFit() {
+  const ov = $('#exportOverlay'); if (!ov.classList.contains('show')) return;
+  const st = $('#exportStage'), md = ov.querySelector('.modal');
+  st.style.height = 'min(52vh,560px)';
+  const over = md.scrollHeight - md.clientHeight;
+  if (over > 1) st.style.height = Math.max(180, Math.floor(st.getBoundingClientRect().height - over)) + 'px';
+}
+window.addEventListener('resize', () => { clearTimeout(exportFit.t); exportFit.t = setTimeout(exportFit, 120); });
 $('#segExport').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportFmt = b.dataset.v; try { localStorage.setItem('shogi-export-fmt', exportFmt); } catch (er) {} exportRender(); };
 $('#segImg').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportImgMode = b.dataset.v; exportRender(); };
 $('#exportClose').onclick = () => hideOverlay('#exportOverlay');
 { let tm = 0; const ti = $('#exportTtl');
   ['keydown', 'keyup', 'keypress'].forEach(tp => ti.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter') ti.blur(); }));
   ti.addEventListener('input', () => { if (window.RecordExport) RecordExport.setMeta('shogi', { title: ti.value }); clearTimeout(tm); tm = setTimeout(exportRender, exportFmt === 'img' ? 220 : 0); });
-  $('#exportDate').onchange = e => { if (window.RecordExport) RecordExport.setMeta('shogi', { date: e.target.checked }); exportRender(); }; }
+  $('#exportDate').onchange = e => { if (window.RecordExport) RecordExport.setMeta('shogi', { date: e.target.checked }); exportRender(); };
+  [0, 1].forEach(c => { const ni = $('#exportN' + c);   // names: kept only when they differ from the game's own
+    ['keydown', 'keyup', 'keypress'].forEach(tp => ni.addEventListener(tp, e => { if (e.key !== 'Escape') e.stopPropagation(); if (tp === 'keydown' && e.key === 'Enter') ni.blur(); }));
+    ni.addEventListener('input', () => { if (!window.RecordExport) return; RecordExport.setName('shogi', c, ni.value.trim() === String(playerName(c) || '').trim() ? '' : ni.value); clearTimeout(tm); tm = setTimeout(exportRender, exportFmt === 'img' ? 220 : 0); });
+    ni.addEventListener('blur', () => { if (!ni.value.trim()) exportRender(); }); }); }
 $('#exportOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#exportOverlay'); });
 const stamp = () => { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; };
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }

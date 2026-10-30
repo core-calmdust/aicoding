@@ -2388,15 +2388,15 @@ function mcRecord() {
   const q = v => String(v || '?').replace(/["\\]/g, ''), d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/mancala"]\n[Date "${date}"]\n[Variant "${game.rules}"]\n[Seeds "${game.seeds}"]\n[South "${q(sideName(0))}"]\n[North "${q(sideName(1))}"]\n[Result "${res}"]\n; pits 1–6 in sowing order from the mover's left; S = South (first player), N = North\n\n` + lines.map((l, i) => `${i + 1}. ${l.s ? 'N' : 'S'} ${l.p.join(' ')}`).join('\n') + '\n';
 }
-async function mcDiagram() {
+async function mcDiagram(mode) {
   const RX = RecordExport, pos = P[cur], b = pos.b, S = 70, W = S * 8, H = S * 2.6, ink = '#151515';
   await RX.fonts();
   const mv = cur ? P[cur].mv || null : null;
   let cap = cur ? `${cur}. ${pos.mv ? (pos.mv.side ? 'N' : 'S') : ''} ${game.moves[cur - 1] + 1}${pos.mv && pos.mv.extra ? ' +' : ''}${pos.mv && pos.mv.cap ? ' ×' + pos.mv.cap : ''}` : RX.tx('start');
   cap += '　' + (pos.over ? `${b[6]} – ${b[13]}` : RX.tx('toMove', { s: pos.side ? 'N' : 'S' })) + '　' + t('rule.' + game.rules) + ' · ' + game.seeds;
-  const pl = [0, 1].map(s => ({ name: `${s ? 'N' : 'S'}: ${sideName(s)} · ${b[s ? 13 : 6]}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, s ? '#2a2a2a' : '#fff', ink, 1.3) }));
+  const pl = [0, 1].map(s => ({ name: `${s ? 'N' : 'S'}: ${RX.name(s, sideName(s))} · ${b[s ? 13 : 6]}`, swatch: (g, x, y, r) => RX.disc(g, x, y, r, s ? '#2a2a2a' : '#fff', ink, 1.3) }));
   const lastPit = cur ? (pos.mv.side ? 7 : 0) + game.moves[cur - 1] : -1;
-  return RX.sheet({ bw: W + 40, bh: H + 56, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'mancala', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+  return RX.sheet({ bw: W + 40, bh: H + 56, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: mode === 'moves' ? (() => { const ls = []; let ln = null; game.moves.slice(0, cur).forEach((k, i) => { const sd = P[i].side; if (!ln || ln.s !== sd) { ln = { s: sd, p: [] }; ls.push(ln); } ln.p.push(k + 1); }); return ls.map((l, i) => `${i + 1}. ${l.s ? 'N' : 'S'} ${l.p.join(' ')}`); })() : null, path: 'mancala', titleFont: RX.SERIF, draw: (g, x0, y0) => {
     const ox = x0 + 20, oy = y0 + 26;
     g.fillStyle = '#fbfaf6'; g.strokeStyle = ink; g.lineWidth = 2.2; g.beginPath(); g.roundRect(ox, oy, W, H, 26); g.fill(); g.stroke();
     const pit = (x, y, n, hi) => { g.beginPath(); g.arc(x, y, S * 0.38, 0, 7); g.fillStyle = hi ? '#f3e2b0' : '#fff'; g.fill(); g.lineWidth = 1.6; g.strokeStyle = ink; g.stroke(); g.fillStyle = ink; g.font = `700 ${S * 0.36}px ${RX.SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), x, y + 1); };
@@ -2413,8 +2413,9 @@ async function mcDiagram() {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'mancala', title: 'Luxe Mancala', lang: () => LANG, toast: m => toast(m, 1500), show: o => o.classList.add('show'), hide: o => o.classList.remove('show'),
   empty: () => !game.moves.length || !!game.setup || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'pits', label: '3 6 2 …', ext: 'txt', text: () => game.moves.map(k => k + 1).join('') + '\n' }, { id: 'rec', label: 'S/N', ext: 'txt', text: mcRecord }],
-  url: shareUrl, image: { modes: ['board'], draw: mcDiagram } });
+  formats: () => [{ id: 'pits', label: '3 6 2 …', ext: 'txt', meta: false, text: () => game.moves.map(k => k + 1).join('') + '\n' }, { id: 'rec', label: 'S/N', ext: 'txt', text: mcRecord }],
+  sides: () => [{ label: t('p0') + ' (S)', name: sideName(0), tag: 'South' }, { label: t('p1') + ' (N)', name: sideName(1), tag: 'North' }],
+  url: shareUrl, image: { modes: ['board', 'moves'], draw: mcDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; $('#pasteOverlay').classList.add('show'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => $('#pasteOverlay').classList.remove('show');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

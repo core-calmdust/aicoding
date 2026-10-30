@@ -982,9 +982,9 @@ body .info-line{font-size:12.5px}
 #resultOverlay .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr));gap:8px}
 #resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
 #resultOverlay .modal-actions .mbtn.hidden{display:none}
-#exportOverlay .modal-actions{gap:8px} #exportOverlay .mbtn{min-width:0;flex:1 1 0;padding-left:4px;padding-right:4px;letter-spacing:0;line-height:1.3;hyphens:auto}
-@media (max-width:520px){ #exportOverlay .mbtn{font-size:13px} #exportOverlay .seg button{font-size:12px;padding-left:2px;padding-right:2px} }
-#exportOverlay .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#rxOverlay .modal-actions{gap:8px} #rxOverlay .mbtn{min-width:0;flex:1 1 0;padding-left:4px;padding-right:4px;letter-spacing:0;line-height:1.3;hyphens:auto}
+@media (max-width:520px){ #rxOverlay .mbtn{font-size:13px} #rxOverlay .seg button{font-size:12px;padding-left:2px;padding-right:2px} }
+#rxOverlay .seg button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 
 @media (min-width: 760px){
   #onlineOverlay .modal{width:min(920px,94vw);padding:28px 32px}
@@ -1575,18 +1575,6 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 </div>
 
 <!-- paste kifu -->
-<div class="overlay" id="exportOverlay">
-  <div class="modal" style="width:min(600px,100%)">
-    <h2 data-i18n="ex2.title"></h2>
-    <div class="seg" id="segExport" style="margin-bottom:10px"><button data-v="txt" data-i18n="ex2.txt"></button><button data-v="num" data-i18n="ex2.num"></button><button data-v="ggf">GGF</button><button data-v="url">URL</button><button data-v="img" data-i18n="ex2.img"></button></div>
-    <textarea class="paste-ta" id="exportText" readonly spellcheck="false" style="height:200px"></textarea>
-    <div id="exportImg" class="hidden" style="text-align:center">
-      <div class="seg" id="segImg" style="margin-bottom:8px"><button data-v="board" data-i18n="ex2.board"></button><button data-v="both" data-i18n="ex2.both"></button></div>
-      <img id="exportPreview" alt="" style="max-width:100%;max-height:46vh;border-radius:8px;border:1px solid var(--line)">
-    </div>
-    <div class="modal-actions"><button class="mbtn" id="exportClose" data-i18n="close"></button><button class="mbtn" id="exportDl" data-i18n="ex2.download"></button><button class="mbtn go" id="exportCopy" data-i18n="copy"></button></div>
-  </div>
-</div>
 <div class="overlay" id="pasteOverlay">
   <div class="modal">
     <h2 data-i18n="paste.title"></h2>
@@ -1667,6 +1655,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/resign.js?v=1"></script>
+<script src="../shared/export.js?v=5"></script>
 <script src="../shared/ruletour.js?v=28"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
@@ -4216,8 +4205,8 @@ function exShareUrl() { return location.origin + location.pathname + '#k=' + mov
 function exCount(cells) { let b = 0, w = 0; for (const c of cells) { if (c === BLACK) b++; else if (c === WHITE) w++; } return [b, w]; }
 function exResult() { const P = positions[positions.length - 1], [b, w] = exCount(P.cells); return { b, w, over: !P.toMove }; }
 function exNumbered() {
-  const r = exResult(), who = c => cname(c) + (String(playerName(c)) !== cname(c) ? ': ' + playerName(c) : '');
-  const lines = [`# Reversi V4 — ${exDate()}`, `# ● ${who(BLACK)}`, `# ○ ${who(WHITE)}`].concat(r.over ? [`# ${t('ex2.result')}: ${r.b}-${r.w}`] : [], ['']);
+  const r = exResult(), xn = exName, who = c => cname(c) + (String(xn(c)) !== cname(c) ? ': ' + xn(c) : ''), mt = RecordExport.meta('reversi');
+  const lines = [`# ${mt.title || 'Reversi V4'}${mt.date ? ' — ' + exDate() : ''}`, `# ● ${who(BLACK)}`, `# ○ ${who(WHITE)}`].concat(r.over ? [`# ${t('ex2.result')}: ${r.b}-${r.w}`] : [], ['']);
   let row = [];
   for (let i = 1; i < positions.length; i++) {
     const P = positions[i], prev = positions[i - 1];
@@ -4231,38 +4220,37 @@ function exNumbered() {
 function exGGF() {
   const r = exResult();
   let bo = ''; const c0 = positions[0].cells; for (let i = 0; i < 64; i++) bo += c0[i] === BLACK ? '*' : c0[i] === WHITE ? 'O' : '-';
-  const nm = c => String(playerName(c)).replace(/[\[\]]/g, '');
+  const nm = c => String(exName(c)).replace(/[\[\]]/g, ''), mt = RecordExport.meta('reversi');
   let mv = '';
   for (let i = 1; i < positions.length; i++) {
     const P = positions[i], prev = positions[i - 1];
     if (prev.mover && prev.mover === P.mover) mv += (P.mover === BLACK ? 'W' : 'B') + '[PA]';
     mv += (P.mover === BLACK ? 'B' : 'W') + '[' + sqName(P.last).toUpperCase() + ']';
   }
-  return `(;GM[Othello]PC[aicoding Reversi V4]DT[${exDate()}]PB[${nm(BLACK)}]PW[${nm(WHITE)}]RE[${r.over ? (r.b - r.w > 0 ? '+' : '') + (r.b - r.w) : '?'}]TY[8]BO[8 ${bo} *]${mv};)`;
+  return `(;GM[Othello]PC[aicoding Reversi V4]${mt.date ? `DT[${exDate()}]` : ''}PB[${nm(BLACK)}]PW[${nm(WHITE)}]RE[${r.over ? (r.b - r.w > 0 ? '+' : '') + (r.b - r.w) : '?'}]TY[8]BO[8 ${bo} *]${mv};)`;
 }
-function exCanvas(withDiag) {
-  const P = positions[cur], S = 56, M = 34, B = S * 8, gap = 70;
-  const W = M * 2 + B + (withDiag ? gap + B : 0) + 20, H = 104 + B + M + 60;
-  const cv = document.createElement('canvas'), dpr = 2; cv.width = W * dpr; cv.height = H * dpr;
-  const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  const serif = "'Shippori Mincho B1','Noto Sans Arabic','Noto Sans Devanagari',serif", mono = "'JetBrains Mono',monospace", ink = '#1a140c';
-  g.fillStyle = '#fbf8f0'; g.fillRect(0, 0, W, H);
+// player name for the records: the one typed in the share dialog (shared/export.js) or the game's own
+const exName = c => RecordExport.name(c === BLACK ? 0 : 1, playerName(c));
+// 共有: printed diagram on a white sheet (shared/export.js): board / numbered discs / with the move list
+function exDiagram(mode) {
+  const RX = RecordExport, P = positions[cur], S = 56, M = 26, B = S * 8, ink = '#1a140c';
+  const serif = "'Shippori Mincho B1','Noto Sans Arabic','Noto Sans Devanagari',serif", mono = "'JetBrains Mono',monospace";
   const [b, w] = exCount(P.cells);
-  g.fillStyle = ink; g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.font = `700 20px ${serif}`;
-  g.fillText(cur ? t('ex2.after', { n: cur }) + ' ' + sqName(P.last) : t('ex2.start'), M + 20, 36);
-  g.font = `15px ${serif}`; g.fillStyle = '#5a4a30';
-  g.fillText(`● ${playerName(BLACK)} ${b}  —  ${w} ${playerName(WHITE)} ○`, M + 20, 64);
-  const board = (ox, oy, label, diag) => {
+  let cap = cur ? `${cur}. ${P.mover === BLACK ? '●' : '○'} ${sqName(P.last)}` : RX.tx('start');
+  cap += `　● ${b} – ${w} ○　` + (P.toMove ? RX.tx('toMove', { s: cname(P.toMove) }) : '');
+  const pl = [BLACK, WHITE].map(c => ({ name: cname(c) + (exName(c) && exName(c) !== cname(c) ? ' ' + exName(c) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, c === BLACK ? '#111' : '#f4f1ea', '#111', 1.3) }));
+  const tokens = mode === 'moves' ? positions.slice(1, cur + 1).map((Q, k) => `${k + 1}.${sqName(Q.last)}`) : null;
+  return RX.sheet({ bw: B + 2 * M, bh: B + 2 * M, title: 'Reversi', caption: cap, players: pl, moves: tokens, path: 'reversi', font: "'Zen Kaku Gothic New'," + serif, titleFont: serif, draw: (g, x0, y0) => {
+    const ox = x0 + M, oy = y0 + M;
     g.fillStyle = '#1f7a4f'; g.fillRect(ox, oy, B, B);
     g.strokeStyle = '#0d3b25'; g.lineWidth = 1;
     for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(ox + i * S, oy); g.lineTo(ox + i * S, oy + B); g.stroke(); g.beginPath(); g.moveTo(ox, oy + i * S); g.lineTo(ox + B, oy + i * S); g.stroke(); }
     g.lineWidth = 2.5; g.strokeStyle = ink; g.strokeRect(ox, oy, B, B);
     g.fillStyle = '#0d3b25'; for (const [a, c] of [[2, 2], [6, 2], [2, 6], [6, 6]]) { g.beginPath(); g.arc(ox + a * S, oy + c * S, 3.5, 0, 7); g.fill(); }
     g.fillStyle = '#5a4a30'; g.font = `14px ${mono}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (let i = 0; i < 8; i++) { g.fillText('abcdefgh'[i], ox + i * S + S / 2, oy - 12); g.fillText(String(i + 1), ox - 14, oy + i * S + S / 2); }
-    if (label) { g.font = `700 15px ${serif}`; g.fillStyle = ink; g.fillText(label, ox + B / 2, oy + B + 22); }
+    for (let i = 0; i < 8; i++) { g.fillText('abcdefgh'[i], ox + i * S + S / 2, oy - 13); g.fillText(String(i + 1), ox - 13, oy + i * S + S / 2); }
     const disc = (i, col) => { const x = ox + (i % 8) * S + S / 2, y = oy + ((i / 8) | 0) * S + S / 2; g.beginPath(); g.arc(x, y, S * 0.41, 0, 7); g.fillStyle = col === BLACK ? '#111' : '#f4f1ea'; g.fill(); g.lineWidth = 1.2; g.strokeStyle = col === BLACK ? '#000' : '#8a8578'; g.stroke(); return [x, y]; };
-    if (!diag) {
+    if (mode !== 'num') {
       for (let i = 0; i < 64; i++) if (P.cells[i]) disc(i, P.cells[i]);
       if (P.last >= 0) { const x = ox + (P.last % 8) * S + S / 2, y = oy + ((P.last / 8) | 0) * S + S / 2; g.beginPath(); g.arc(x, y, 5, 0, 7); g.fillStyle = '#e0443a'; g.fill(); }
     } else {
@@ -4272,48 +4260,13 @@ function exCanvas(withDiag) {
         g.fillStyle = Q.mover === BLACK ? '#fff' : '#111'; g.font = `700 ${k > 99 ? 15 : 19}px ${mono}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(k), x, y + 1);
       }
     }
-  };
-  const oy = 104;
-  board(M + 20, oy, withDiag ? t('ex2.board') : '', false);
-  if (withDiag) board(M + 20 + B + gap, oy, t('ex2.diag'), true);
-  g.font = `12px sans-serif`; g.fillStyle = '#8a7a60'; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText('core-calmdust.github.io/aicoding/reversi', W - 14, H - 14);
-  return cv;
+  } });
 }
-let exportFmt = 'txt', exportImgMode = 'both', exportBlob = null;
-const exSeg = (id, v) => $('#' + id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v));
-function exportRender() {
-  exSeg('segExport', exportFmt); exSeg('segImg', exportImgMode);
-  const img = exportFmt === 'img';
-  $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
-  $('#exportCopy').textContent = t(img ? 'ex2.share' : exportFmt === 'url' ? 'ex2.copyUrl' : 'copy');
-  if (img) { exportBlob = null; const cv = exCanvas(exportImgMode === 'both'); $('#exportPreview').src = cv.toDataURL('image/png'); cv.toBlob(b2 => { exportBlob = b2; }); return; }
-  $('#exportText').value = exportFmt === 'num' ? exNumbered() : exportFmt === 'ggf' ? exGGF() : exportFmt === 'url' ? exShareUrl() : movesStr();
-}
-$('#btnShare').onclick = () => {
-  if (positions.length < 2) { toast(t('nokifu'), 1600); return; }
-  try { exportFmt = localStorage.getItem('reversi-export-fmt') || 'txt'; } catch (e) {}
-  exportRender(); showOverlay('#exportOverlay');
-};
-$('#segExport').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportFmt = b.dataset.v; try { localStorage.setItem('reversi-export-fmt', exportFmt); } catch (er) {} exportRender(); };
-$('#segImg').onclick = e => { const b = e.target.closest('button'); if (!b) return; exportImgMode = b.dataset.v; exportRender(); };
-$('#exportClose').onclick = () => hideOverlay('#exportOverlay');
-function exDownload(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
-$('#exportDl').onclick = () => {
-  if (exportFmt === 'img') { if (exportBlob) exDownload(exportBlob, `reversi_${exStamp()}.png`); return; }
-  const ext = { txt: 'txt', num: 'txt', ggf: 'ggf', url: 'txt' }[exportFmt];
-  exDownload(new Blob([$('#exportText').value], { type: 'text/plain;charset=utf-8' }), `reversi_${exStamp()}.${ext}`);
-};
-$('#exportCopy').onclick = async () => {
-  if (exportFmt === 'img') {
-    const file = exportBlob && new File([exportBlob], `reversi_${exStamp()}.png`, { type: 'image/png' });
-    try { if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Reversi V4' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': exportBlob })]); toast(t('share.copied'), 1400); } catch (e) { if (exportBlob) exDownload(exportBlob, `reversi_${exStamp()}.png`); }
-    return;
-  }
-  const v = $('#exportText').value;
-  if (exportFmt === 'url' && navigator.share && matchMedia('(pointer: coarse)').matches) { try { await navigator.share({ title: 'Reversi V4', url: v }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-  navigator.clipboard.writeText(v).then(() => toast(t('share.copied'), 1400), () => { $('#exportText').select(); });
-};
+RecordExport.attach({ btn: '#btnShare', key: 'reversi', title: 'Reversi', lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => positions.length < 2, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'txt', label: t('ex2.txt'), ext: 'txt', meta: false, text: () => movesStr() + '\n' }, { id: 'num', label: t('ex2.num'), ext: 'txt', meta: 'self', text: () => exNumbered() + '\n' }, { id: 'ggf', label: 'GGF', ext: 'ggf', meta: 'self', text: () => exGGF() + '\n' }],
+  sides: () => [{ label: cname(BLACK), name: playerName(BLACK) }, { label: cname(WHITE), name: playerName(WHITE) }],
+  url: exShareUrl, image: { modes: ['board', 'num', 'moves'], draw: async m => { await RecordExport.fonts(); return exDiagram(m); } } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => {
@@ -4717,7 +4670,7 @@ async function finishOnline(g) {
 }
 // clicking the dimmed area outside a dialog does the same as its close button
 function dismissOverlay(o) {
-  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', exportOverlay: '#exportClose', onlineOverlay: '#olClose', profOverlay: '#pfLater', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
+  const OUTSIDE = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', pasteOverlay: '#pasteCancel', onlineOverlay: '#olClose', profOverlay: '#pfLater', puzzleOverlay: '#pzClose', rulesOverlay: '#rulesClose' };
   if (o.id === 'lessonOverlay') { const done = document.querySelector('#lessonDoneView'); if (done && !done.classList.contains('hidden')) document.querySelector('#btnLessonQuit2').click(); else document.querySelector('#btnLessonClose').click(); return; }
   const b = OUTSIDE[o.id] && document.querySelector(OUTSIDE[o.id]);
   if (b) b.click(); else o.classList.remove('show');

@@ -2222,7 +2222,7 @@ window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) 
 function shareUrl() { return location.origin + location.pathname + '#k=' + encodeMatch() + (cur < latestIdx() ? '&n=' + cur : ''); }
 // 共有: GNU Backgammon / Jellyfish match text (.mat), URL, board diagram (shared/export.js)
 function bgMat() {
-  const nm = s => String(playerName(s) || pname(s)).replace(/[\s:]+/g, '_').slice(0, 20) || ('Player' + (s + 1));
+  const nm = s => String(RecordExport.name(s, playerName(s)) || pname(s)).replace(/[\s:]+/g, '_').slice(0, 20) || ('Player' + (s + 1));
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   let txt = `; [Site "core-calmdust.github.io/aicoding/backgammon"]\n; [Player 1 "${nm(0)}"]\n; [Player 2 "${nm(1)}"]\n; [EventDate "${date}"]\n; [Variation "Backgammon"]\n${match.len ? '' : '; [Jacoby "Off"]\n'}\n ${match.len || 0} point match\n`;
   match.games.forEach((gm, g) => {
@@ -2247,7 +2247,18 @@ function bgMat() {
   });
   return txt;
 }
-async function bgDiagram() {
+// the moves of game g up to action ai for the diagram's move list: "1. 31: 8/5 6/5 42: 13/9 24/22", one row per pair of turns
+function bgTokens(g, ai) {
+  const gm = match.games[g], rows = []; let row = null;
+  gm.actions.slice(0, ai).forEach((a, i) => {
+    const s = actorOf(g, i), x = a.t === 'r' ? `${a.d[0]}${a.d[1]}: ${a.m.length ? BG.notation(a.m) : '—'}` : a.t === 'd' ? `Doubles ${stateAt(g, i).cube * 2}` : a.t === 'k' ? 'Takes' : a.t === 'p' ? 'Drops' : '';
+    if (!x) return;
+    if (s === 0 || !row || row[1] != null) { row = [s === 0 ? x : null, s === 1 ? x : null]; rows.push(row); } else row[1] = x;
+  });
+  const tk = []; rows.forEach((r, k) => { tk.push((k + 1) + '.', r[0] || '…'); if (r[1]) tk.push(r[1]); });
+  return tk;
+}
+async function bgDiagram(mode) {
   const RX = RecordExport, [g, ai] = curGA(), st = stateAt(g, ai), pos = st.pos, P = 40, R = P / 2 - 1.5, gm = match.games[g];
   await RX.fonts();
   const TW = P * 1.3, BW = P * 12 + P + TW * 2, BH = P * 11.4, ink = '#161616';
@@ -2256,8 +2267,8 @@ async function bgDiagram() {
   if (st.over) cap += `　${pname(st.winner)} +${st.points}`;
   if (match.len) cap += `　${match.len}-pt · ${gm.start[0]}–${gm.start[1]}${match.games.length > 1 ? ` · Game ${g + 1}` : ''}`;
   const col = s => s ? '#1d1d1d' : '#ffffff';
-  const pl = [0, 1].map(s => ({ name: `${pname(s)}${playerName(s) ? ' ' + playerName(s) : ''} · ${BG.pips(pos, s)} pips`, swatch: (gg, x, y, r) => RX.disc(gg, x, y, r, col(s), ink, 1.3) }));
-  return RX.sheet({ bw: BW + 4, bh: BH + 50, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Backgammon', caption: cap, players: pl, path: 'backgammon', titleFont: RX.SERIF, draw: (gg, x0, y0) => {
+  const pl = [0, 1].map(s => ({ name: `${pname(s)}${RX.name(s, playerName(s)) ? ' ' + RX.name(s, playerName(s)) : ''} · ${BG.pips(pos, s)} pips`, swatch: (gg, x, y, r) => RX.disc(gg, x, y, r, col(s), ink, 1.3) }));
+  return RX.sheet({ bw: BW + 4, bh: BH + 50, title: t('meta.title').split(/[|｜—–]/)[0].trim() || 'Backgammon', caption: cap, players: pl, moves: mode === 'moves' ? bgTokens(g, ai) : null, path: 'backgammon', titleFont: RX.SERIF, draw: (gg, x0, y0) => {
     const ox = x0 + 2 + TW, oy = y0 + 22, half = P * 6, bar = P, H = BH;
     const colX = c => ox + (c < 6 ? c * P : c * P + bar) + P / 2;
     gg.fillStyle = '#fbfaf6'; gg.fillRect(ox - TW, oy, BW, H);
@@ -2303,7 +2314,8 @@ async function bgDiagram() {
 RecordExport.attach({ btn: '#btnShare', key: 'backgammon', title: 'Backgammon', lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !match || !match.games.some(gm => gm.actions.length) || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
   formats: () => [{ id: 'mat', label: 'MAT (GNU BG)', ext: 'mat', text: bgMat }],
-  url: shareUrl, image: { modes: ['board'], draw: bgDiagram } });
+  sides: () => [{ label: pname(0), name: playerName(0) }, { label: pname(1), name: playerName(1) }],
+  url: shareUrl, image: { modes: ['board', 'moves'], draw: bgDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

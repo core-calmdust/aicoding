@@ -2108,16 +2108,16 @@ function tfRecord() {
   const q = v => String(v || '?').replace(/["\\]/g, ''), d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/tafl"]\n[Date "${date}"]\n[Variant "${TF_NAME[gv]}"]\n[Attackers "${q(playerName(P1))}"]\n[Defenders "${q(playerName(P2))}"]\n[Result "${res}"]\n\n${RecordExport.lines(tk)}\n`;
 }
-async function tfDiagram() {
+async function tfDiagram(mode) {
   const RX = RecordExport, pos = posAt(cur).pos, n = pos.n, S = n >= 11 ? 50 : n >= 9 ? 58 : 70, B = S * n, M = 30, ink = '#141414';
   await RX.fonts();
   let cap = cur ? `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${mvIn(posAt(cur - 1).pos, moves[cur - 1])}` : RX.tx('start');
   const st = statusAt(cur);
   cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.turn) })) + '　' + TF_NAME[gv];
-  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1b1b1b' : '#fff', ink, 1.3) }));
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#1b1b1b' : '#fff', ink, 1.3) }));
   const lf = cur ? mFrom(moves[cur - 1]) : -1, lt = cur ? mTo(moves[cur - 1]) : -1, th = (n >> 1) * n + (n >> 1);
   const special = i => { const r = Math.floor(i / n), c = i % n; return i === th || ((r === 0 || r === n - 1) && (c === 0 || c === n - 1)); };
-  return RX.sheet({ bw: B + 2 * M, bh: B + M + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, path: 'tafl', titleFont: RX.SERIF, draw: (g, x0, y0) => {
+  return RX.sheet({ bw: B + 2 * M, bh: B + M + 8, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: mode === 'moves' ? (() => { const q = E.Pos.from(startSpec, gv), tk = []; moves.slice(0, cur).forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(mvIn(q, m)); q.play(m); }); return tk; })() : null, path: 'tafl', titleFont: RX.SERIF, draw: (g, x0, y0) => {
     const ox = x0 + M, oy = y0 + 4;
     for (let i = 0; i < n * n; i++) {
       const r = Math.floor(i / n), c = i % n, x = ox + c * S, y = oy + r * S;
@@ -2139,8 +2139,9 @@ async function tfDiagram() {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'tafl', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'alg', label: 'a4-d4xd5', ext: 'txt', text: tfRecord }, { id: 'own', label: '[' + VTAG[gv] + ']', ext: 'txt', text: () => recordText() + '\n' }],
-  url: shareUrl, image: { modes: ['board'], draw: tfDiagram } });
+  formats: () => [{ id: 'alg', label: 'a4-d4xd5', ext: 'txt', text: tfRecord }, { id: 'own', label: '[' + VTAG[gv] + ']', ext: 'txt', meta: false, text: () => recordText() + '\n' }],
+  sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'Attackers' }, { label: pname(P2), name: playerName(P2), tag: 'Defenders' }],
+  url: shareUrl, image: { modes: ['board', 'moves'], draw: tfDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

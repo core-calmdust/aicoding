@@ -2300,7 +2300,7 @@ async function chessDiagram(mode) {
   const st = statusAt(cur), tm = pos.side ? t('p2') : t('p1');
   cap += '　' + (st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: tm }));
   const tokens = []; if (mode === 'moves') { const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side; for (let i = 0; i < cur; i++) { if (side === 0) tokens.push(full + '.'); else if (i === 0) tokens.push(full + '...'); tokens.push(sanOf(i)); if (side) full++; side ^= 1; } }
-  const pl = [P1, P2].map(p => ({ name: (p === P1 ? t('p1') : t('p2')) + (pgnName(p) ? ' ' + pgnName(p) : ''), swatch: (g, x, y, r) => { g.fillStyle = p === P1 ? '#fff' : '#111'; g.strokeStyle = '#111'; g.lineWidth = 1.4; g.fillRect(x - r, y - r, r * 2, r * 2); g.strokeRect(x - r, y - r, r * 2, r * 2); } }));
+  const pl = [P1, P2].map(p => ({ name: (p === P1 ? t('p1') : t('p2')) + (RX.name(p - 1, pgnName(p)) ? ' ' + RX.name(p - 1, pgnName(p)) : ''), swatch: (g, x, y, r) => { g.fillStyle = p === P1 ? '#fff' : '#111'; g.strokeStyle = '#111'; g.lineWidth = 1.4; g.fillRect(x - r, y - r, r * 2, r * 2); g.strokeRect(x - r, y - r, r * 2, r * 2); } }));
   const lastTo = cur ? mTo(moves[cur - 1]) : -1, lastFrom = cur ? mFrom(moves[cur - 1]) : -1;
   return RX.sheet({ bw: B + 60, bh: B + 34, title: t('meta.title').split(/[|｜—–-]/)[0].trim() || 'Chess', caption: cap, players: pl, moves: tokens, path: 'chess', font: "'Shippori Mincho B1','Zen Kaku Gothic New',serif", titleFont: "'Shippori Mincho B1',serif", draw: (g, x0, y0) => {
     const ox = x0 + 26, oy = y0 + 4;
@@ -2320,7 +2320,8 @@ async function chessDiagram(mode) {
 }
 RecordExport.attach({ btn: '#btnShare', key: 'chess', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500), show: o => o.classList.add('show'), hide: o => o.classList.remove('show'),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
-  formats: () => [{ id: 'pgn', label: 'PGN', ext: 'pgn', text: pgnText }, { id: 'fen', label: 'FEN', ext: 'fen', text: () => posAt(cur).pos.fen() + '\n' }],
+  formats: () => [{ id: 'pgn', label: 'PGN', ext: 'pgn', text: pgnText }, { id: 'fen', label: 'FEN', ext: 'fen', meta: false, text: () => posAt(cur).pos.fen() + '\n' }],
+  sides: () => [{ label: t('p1'), name: pgnName(P1), tag: 'White' }, { label: t('p2'), name: pgnName(P2), tag: 'Black' }],
   url: shareUrl, image: { modes: ['board', 'moves'], draw: chessDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
