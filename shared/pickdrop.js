@@ -19,8 +19,8 @@ const CSS = `
 .pd.open .pd-chev{transform:rotate(180deg)}
 .pd-list{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease;margin-top:0}
 .pd.open .pd-list{grid-template-rows:1fr;margin-top:6px}
-.pd-list > div{min-height:0;overflow:hidden;border-radius:11px;border:1px solid transparent;background:rgba(0,0,0,.32)}
-.pd.open .pd-list > div{border-color:var(--line,rgba(255,255,255,.14))}
+.pd-list > div{min-height:0;overflow:hidden;border-radius:11px;border:0 solid transparent;background:none}
+.pd.open .pd-list > div{border-width:1px;border-color:var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.32)}
 .pd-opt{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;box-sizing:border-box;padding:6px 12px;border:0;border-top:1px solid var(--line,rgba(255,255,255,.08));background:none;color:var(--text,#eee);font:inherit;font-size:14px;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pd-opt:first-child{border-top:0}
 .pd-opt .pd-lb{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

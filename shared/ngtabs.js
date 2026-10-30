@@ -15,12 +15,21 @@ const IC = {
 };
 const CSS = `
 .ngt-bar{display:none}
-.ngt-on .ngt-bar{display:flex;gap:6px;position:sticky;bottom:0;z-index:3;margin:10px -4px 0;padding:6px 4px;background:inherit;border-top:1px solid var(--line,rgba(255,255,255,.12))}
-.ngt-bar button{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;border-radius:11px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.25);color:var(--muted,#aaa);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* tabs, not buttons: a line across the dialog, the chosen tab lit with a bar on that line */
+.ngt-on .ngt-bar{display:flex;gap:0;position:sticky;bottom:0;z-index:3;margin:0!important;padding:0;background:inherit;border-top:1px solid var(--line,rgba(255,255,255,.14))}
+.ngt-bar button{flex:1 1 0;position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:0 6px;border:0;border-radius:0;background:none;box-shadow:none;color:var(--muted,#aaa);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ngt-bar button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ngt-bar button.sel{color:var(--text,#eee);border-color:color-mix(in srgb, var(--accent,#d8b56a) 60%, transparent);background:color-mix(in srgb, var(--accent,#d8b56a) 14%, rgba(0,0,0,.25))}
+.ngt-bar button.sel{color:var(--text,#eee)}
 .ngt-bar button.sel svg{stroke:var(--accent,#d8b56a)}
-.ngt-on .ngt-hide{display:none!important}
+.ngt-bar button.sel::before{content:'';position:absolute;top:-1px;left:18%;right:18%;height:3px;border-radius:0 0 3px 3px;background:var(--accent,#d8b56a)}
+.ngt-on .ngt-hide, .modal.ngt-on .ngt-hide, .modal.ngt-on :is(.ng-cols,.ng-col).ngt-hide{display:none!important}
+/* one spacing everywhere (the gap between two rows of settings): between the blocks, around the tabs and inside the frame */
+.modal.ngt-on{--ngt-g:6px;padding:12px!important}
+.modal.ngt-on h2{margin:0 0 var(--ngt-g)!important}
+.modal.ngt-on .field{margin:0 0 var(--ngt-g)!important}
+.modal.ngt-on :is(.ng-cols,.ng-col){display:block!important;margin:0!important;padding:0!important;gap:0!important}
+.modal.ngt-on .modal-actions{margin:var(--ngt-g) 0 0!important}
+.modal.ngt-on .ngt-bar{margin-top:var(--ngt-g)!important}
 `;
 const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
 function init() {
