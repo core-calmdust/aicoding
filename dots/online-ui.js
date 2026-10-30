@@ -59,7 +59,7 @@ function olSegSync() {
 }
 // the new-game dialog: "online" opens the online dialog
 $('#btnStart').addEventListener('click', e => { if (draft.mode !== 'online') return; e.stopImmediatePropagation(); hideOv('#newOverlay'); openOnline(); }, true);
-{ const _openNew = openNew; openNew = function () { _openNew(); if (settings.mode === 'online') { draft.mode = 'online'; segSync(); } olSegSync(); }; }
+{ const _openNew = openNew; openNew = function () { _openNew.apply(this, arguments); if (settings.mode === 'online') { draft.mode = 'online'; segSync(); } olSegSync(); }; }
 if (!olOn()) document.body.classList.add('no-online'); else document.documentElement.classList.add('ol-dock');
 applyI18n();
 

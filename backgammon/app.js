@@ -995,7 +995,7 @@ function onGameOver(g) {
 }
 // 勝敗記録 (shared/record.js): each finished game against the AI (online matches: online-ui.js finishOnline)
 function recordGame(g, st) {
-  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !match) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || !match) return;
   const acts = match.games[g].actions;
   if (st.resigned && !acts.some((a, i) => a.t === 'r' && actorOf(g, i) === humanSide)) return;   // resigned before playing a move
   const why = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
@@ -1016,7 +1016,7 @@ function nextGame() {
   save(); updateCommit(); afterAction();
 }
 function startNewMatch() {
-  restPose = null; wpPaused = false;
+  restPose = null; wpPaused = false; settings.rsNoRec = false;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1;
   if (settings.mode === 'ai') humanSide = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
   view = settings.mode === 'ai' ? humanSide : 0;
@@ -1664,6 +1664,8 @@ function segSync() {
   ckSync(); skinSync();
   document.querySelectorAll('#segMatch button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.matchLen));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
+  $('#fSide').classList.toggle('hidden', !(draft.resume && m === 'ai'));
+  if (draft.resume) { $('#sideLabel').textContent = window.ResumeNG ? ResumeNG.t('side') : ''; document.querySelectorAll('#segSide button').forEach(b => { const s = +b.dataset.v; b.textContent = t('ng.' + draft.ck[s]); b.classList.toggle('sel', s === draft.side); }); }
   $('#fColor').classList.toggle('hidden', !game);
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -1681,7 +1683,7 @@ function segSync() {
 // checker colours: one row per side (AI game: you / AI), four swatches each; the two sides always differ
 function ckSync() {
   const T = window.BGTheme; if (!T) return;
-  const m = draft.mode, lab = s => m === 'ai' ? (s === 0 ? t('you') : 'AI') : m === 'watch' ? 'AI ' + (s + 1) : t('ng.pl', { n: s + 1 });
+  const m = draft.mode, lab = s => m === 'ai' ? (s === (draft.resume ? draft.side : 0) ? t('you') : 'AI') : m === 'watch' ? 'AI ' + (s + 1) : t('ng.pl', { n: s + 1 });
   document.querySelectorAll('#ckRows .ckrow').forEach(row => {
     const s = +row.dataset.s;
     row.querySelector('.ckl').textContent = lab(s);
@@ -1702,12 +1704,35 @@ function skinSync() {
 $('#skinRow').onclick = e => { const b = e.target.closest('button[data-skin]'); if (!b) return; settings.skin = b.dataset.skin; save(); applySkinNow(); skinSync(); };
 function applySkinNow() { if (window.BGTheme) BGTheme.applySkin(settings.skin); drawBoardSvg(); try { render(); } catch (e) {} }
 function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(CKV || settings.ck); } }
-function openNewDialog() {
+function openNewDialog(resume) {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.side = humanSide; }   // 「ここから再開」: the same dialog, only what fits going on from this position (+ which side you take)
   $('#optCube').checked = settings.cube; $('#optEval').checked = settings.eval; $('#optForced').checked = settings.forced;
   $('#optRoll').checked = settings.autoRoll; $('#optCoach').checked = settings.coach; $('#optAnim').checked = settings.anim;
   $('#seedInput').value = '';
+  if (window.ResumeNG) { if (resume) { ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fMatch, #fSeed' }); $('#optCube').closest('label').classList.add('rsng-x'); } else ResumeNG.close(); }
   segSync(); showOverlay('#newOverlay');
+}
+$('#segSide').onclick = e => { const b = e.target.closest('button'); if (b) { draft.side = +b.dataset.v; segSync(); } };
+// 「ここから再開」 with the chosen settings: the match and the moves up to the shown position are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = humanSide;
+  Object.assign(settings, { mode: draft.mode, ck: draft.ck.slice(), level: draft.level, level2: draft.level2,
+    eval: $('#optEval').checked, forced: $('#optForced').checked, autoRoll: $('#optRoll').checked, coach: $('#optCoach').checked, anim: $('#optAnim').checked });
+  applyCk(); drawBoardSvg();
+  stopPlay(); restPose = null; wpPaused = false; busyToken++; cancelWorker('ai'); thinking = -1;
+  if (settings.mode === 'ai') { humanSide = draft.side | 0; settings.color = humanSide; }
+  view = settings.mode === 'ai' ? humanSide : 0;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanSide)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  if (reviewing) {
+    const [g, a] = curGA();
+    match.games = match.games.slice(0, g + 1);
+    match.games[g].actions = match.games[g].actions.slice(0, a);
+    gameOverShown = new Set([...gameOverShown].filter(k => +k.split(':')[0] < g));
+  }
+  turn = null; reviewing = false; cur = latestIdx();
+  hideOverlay('#resultOverlay');
+  save(); afterAction();
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segMatch').onclick = e => { const b = e.target.closest('button'); if (b) { draft.matchLen = +b.dataset.v; segSync(); } };
@@ -1718,6 +1743,7 @@ $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  if (draft.resume) { if (match) resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: 0, ck: draft.ck.slice(), level: draft.level, level2: draft.level2, matchLen: draft.matchLen,
     cube: $('#optCube').checked, eval: $('#optEval').checked, forced: $('#optForced').checked, autoRoll: $('#optRoll').checked, coach: $('#optCoach').checked, anim: $('#optAnim').checked });
@@ -2234,7 +2260,7 @@ function rsOpen() {
 }
 $('#rsCancel').onclick = () => hideOverlay('#resumeOverlay');
 $('#rsRestart').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(); };
-$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); if (reviewing) resumeHere(); };
+$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); if (settings.mode === 'online') { if (reviewing) resumeHere(); return; } openNewDialog(true); };   // the settings dialog in resume mode
 let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; $('#navPlay').classList.remove('playing'); }
 function navGo(what) {

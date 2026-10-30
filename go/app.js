@@ -541,7 +541,7 @@ function handicapSpec(n, k) { if (k < 2) return null; return { n, stones: R.hand
 const effRule = (n, rule) => n < 9 ? 'cn' : rule;
 function newGame(rated) {
   busyToken++; cancelWorker(); thinking = 0; wpPaused = false;
-  rgame = null; rtHold = false;
+  rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], byo: [0, 0], t: Date.now() });
   const n = rated ? RT_SIZE : settings.size, rule = effRule(n, settings.rule), ha = rated ? 0 : settings.ha;
   const komi = ha >= 2 ? 0.5 : settings.komi === 'auto' || rated ? R.defaultKomi(n, rule) : +settings.komi;
@@ -736,7 +736,7 @@ function onGameEnd(st) {
 }
 // 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
 function recordGame(st) {
-  if (!window.GameRecord || settings.mode !== 'ai' || !st || !st.over || st.rec || !moves.length) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || !st || !st.over || st.rec || !moves.length) return;
   st.rec = 1;
   const why = st.why === 'score' ? resultLine(st) : st.why ? t('why.' + st.why) : '';
   const lv = rgame ? rgame.lv : settings.level;
@@ -995,10 +995,22 @@ function segSync() {
   ks.disabled = draft.ha >= 2;
   $('#selTap').value = draft.tap;
 }
-function openNewDialog() {
+function openNewDialog(resume) {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, size: settings.size, rule: settings.rule, ha: settings.ha, komi: settings.komi, tap: settings.tap };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optCoord').checked = settings.coord; $('#optCoordAll').checked = settings.coordAll; $('#optCoordAll').disabled = !settings.coord; $('#optNum').checked = settings.num; $('#optAtari').checked = settings.atari;
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fSize, #fRule > .row2:first-child, #fRule > .row2:nth-child(2) > div:first-child' }); else ResumeNG.close(); }
   segSync(); designPickers(); showOverlay('#newOverlay');
+}
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = humanColor;
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  stopPlay(); busyToken++; cancelWorker(); thinking = 0; wpPaused = false;
+  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  hideOverlay('#resultOverlay');
+  if (reviewing) resumeHere(); else { gameOverShown = false; update(false); save(); afterPosition(); }
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
@@ -1019,6 +1031,7 @@ $('#btnStart').onclick = () => {
   Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, coord: $('#optCoord').checked, coordAll: $('#optCoordAll').checked, num: $('#optNum').checked, atari: $('#optAtari').checked, tap: draft.tap });
   drawnKey = '';
   if (draft.mode === 'rated') { rtStart(); return; }
+  if (draft.resume) { resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, size: draft.size, rule: draft.rule, ha: draft.ha, komi: draft.komi });
   newGame();

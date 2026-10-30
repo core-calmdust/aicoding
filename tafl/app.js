@@ -557,7 +557,7 @@ function commit(m) {
 // ====================================================================== flow
 function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
-  rgame = null; rtHold = false;
+  rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
   startSpec = null;
   setVariant(rated ? 'copenhagen' : settings.rule); drawLines();
@@ -692,7 +692,7 @@ function onGameEnd(st) {
 }
 // 勝敗記録 (shared/record.js): games against the AI (free / rated) the player took part in; online games: online-ui.js finishOnline()
 function recordGame(st) {
-  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle) return;
   if (!moves.some((m, i) => toMoveAt(i) === humanColor)) return;   // no move of the player: not recorded
   const lv = rgame ? rgame.lv : settings.level;
   GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + (gv !== 'copenhagen' ? ' · ' + t('rule.' + gv) : ''), key: (rgame ? 'rt:' : 'ai:') + lv + ':' + gv, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why) });
@@ -790,7 +790,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   if (b.dataset.v === 'open') { $('#puzzleOverlay').classList.remove('show'); openOpenings(); }
   setTimeout(() => inst(false), 150);
 }));
-$('#btnResume').onclick = resumeHere;
+$('#btnResume').onclick = () => { if (rgame || settings.mode === 'online' || lesson || puzzle || !reviewing) { resumeHere(); return; } openNewDialog(true); };
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
 $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame(); };
@@ -1014,10 +1014,22 @@ function segSync() {
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
-function openNewDialog() {
+function openNewDialog(resume) {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rule: settings.rule };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
   segSync(); designPickers(); showOverlay('#newOverlay');
+}
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = humanColor;
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked });
+  if (typeof stopPlay === 'function') stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; wpPaused = false; sel = null; 
+  if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  hideOverlay('#resultOverlay');
+  if (reviewing) resumeHere(); else { gameOverShown = false; update(false); save(); afterPosition(); }
 }
 $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
@@ -1035,6 +1047,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked });
   if (draft.mode === 'rated') { rtStart(); return; }
+  if (draft.resume) { resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, rule: draft.rule || settings.rule });
   newGame();
@@ -2198,7 +2211,7 @@ function rsOpen() {
 }
 document.querySelector('#rsCancel').onclick = () => document.querySelector('#resumeOverlay').classList.remove('show');
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNewDialog(); };
-document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
+document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if (rgame || settings.mode === 'online') { if (reviewing) resumeHere(); return; } openNewDialog(true); };   // the settings dialog in resume mode (rated games go on as they are)
 // record navigation (first / prev / play / next / last) under the evaluation graph, with ← → ↑ ↓ and Space
 let playTimer = 0;
 function stopPlay() { clearInterval(playTimer); playTimer = 0; const b = document.querySelector('#navPlay'); if (b) b.classList.remove('playing'); }

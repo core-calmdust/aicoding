@@ -35,7 +35,7 @@ const CSS = `
 const CHEV = '<svg class="pd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
 const CK = '<svg class="pd-ck" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const isSel = b => b.classList.contains('on') || b.classList.contains('sel') || b.classList.contains('active') || b.classList.contains('selected') || b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true';
-const visible = b => !b.hidden && b.style.display !== 'none' && !b.classList.contains('hidden');
+const visible = b => !b.hidden && b.style.display !== 'none' && !b.classList.contains('hidden') && !b.classList.contains('rsng-x');   // rsng-x: hidden by the resume mode (resumeng.js)
 // the content of a choice: its own markup (icons, swatches, text); a choice with no text gets its title / aria-label as the text
 function content(b) {
   const c = b.cloneNode(true);

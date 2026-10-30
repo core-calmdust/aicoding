@@ -2322,7 +2322,7 @@ function showResult() {
 }
 // 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in finishOnline()
 function recordGame() {
-  if (!window.GameRecord || !game || !game.over || game.recorded || (settings.mode !== 'ai')) return;
+  if (!window.GameRecord || !game || !game.over || game.recorded || game.noRec || (settings.mode !== 'ai')) return;
   const o = game.over, h = game.human;
   if (o.ply < 2 && o.reason === 'resign') return;   // (resigned before playing: not a game)
   Object.defineProperty(game, 'recorded', { value: true, enumerable: true, writable: true, configurable: true });
@@ -2356,7 +2356,7 @@ $('#btnNew').onclick = () => {
   }
   openNewDialog();
 };
-$('#btnPlayResume').onclick = () => { hideOverlay('#playOverlay'); $('#btnResume').click(); };
+$('#btnPlayResume').onclick = () => { hideOverlay('#playOverlay'); if (settings.mode === 'online' || net || (game && game.rated)) { $('#btnResume').click(); return; } openNewDialog(true); };   // the settings dialog in resume mode (rated games go on as they are)
 $('#btnPlayNew').onclick = () => { hideOverlay('#playOverlay'); openNewDialog(); };
 $('#btnPlayCancel').onclick = () => hideOverlay('#playOverlay');
 $('#playOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) hideOverlay('#playOverlay'); });
@@ -2440,6 +2440,7 @@ $('#btnConfirmNo').onclick = () => hideOverlay('#confirmOverlay');
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} renderInfo(); save(); };
 $('#btnResume').onclick = () => {
   if (settings.mode === 'online' || (game && game.rated)) { viewAt(game.moves.length); return; }   // rated: no taking back
+  if (reviewing && !lesson && !edit && !net) { openNewDialog(true); return; }   // the review bar's ここから再開: the settings dialog in resume mode
   // continue the game from the displayed position
   busyToken++; cancelAI(); cancelAna();
   game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; reviewing = false;
@@ -2595,14 +2596,17 @@ document.addEventListener('click', e => {
 // ---- new game dialog
 const dlg = { mode: 'ai', color: 0, handicap: 0, clock: 0 };
 function segSel(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('sel', b.dataset.v === String(v))); }
-function openNewDialog() {
+function openNewDialog(resume) {
   try { designThumbs(); } catch (e) {}
   Object.assign(dlg, { clock: settings.clock || 0, mode: settings.mode === 'lesson' ? 'ai' : settings.mode === 'ai' && game && game.rated ? 'rated' : settings.mode, color: settings.color, handicap: settings.handicap });
+  dlg.resume = !!(resume && game);
+  if (dlg.resume) { if (!['ai', 'pvp', 'watch'].includes(dlg.mode)) dlg.mode = 'ai'; dlg.color = game.human; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#segHandi').innerHTML = t('handi').map((h, i) => `<button data-v="${i}">${h}</button>`).join('');
   $('#rngLevel').value = settings.level; $('#rngLevel2').value = settings.level2;
   $('#optLegal').checked = settings.legal; $('#optLast').checked = settings.last; $('#optEval').checked = settings.eval; $('#optCoach').checked = settings.coach;
   if (window.CpuStyle) CpuStyle.dlgOpen();
   if (window.Variants) Variants.dlgOpen();
+  if (window.ResumeNG) { if (dlg.resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fHandi, #handiNote, #fVariant, #csWrap1, #csWrap2' }); else ResumeNG.close(); }
   updDialog();
   showOverlay('#newOverlay');
 }
@@ -2745,6 +2749,7 @@ $('#btnStart').onclick = () => {
   if (dlg.mode === 'online') { openOnline(); return; }
   if (dlg.mode === 'edit') { startEdit(false); return; }
   if (dlg.mode === 'lesson' || dlg.mode === 'tsume') { lsTab = dlg.mode; openLessons(); return; }
+  if (dlg.resume && game) { resumeWith(); return; }
   if (dlg.mode === 'rated') {
     Object.assign(settings, { mode: 'ai', legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
     rtStart(); return;
@@ -2756,6 +2761,21 @@ $('#btnStart').onclick = () => {
   newGame();
 };
 
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = game.human, pc = settings.clock || 0;
+  Object.assign(settings, { clock: dlg.clock, mode: dlg.mode, color: dlg.color, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,
+    legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
+  studyEnd(true); stopPlay(); busyToken++; cancelAI(); cancelAna(); wpPaused = false; sel = null; hintMoves = null;
+  if (settings.mode === 'ai') game.human = settings.color === 2 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== game.human)) game.noRec = true;   // taken over midway: not a game of the player's for the record
+  if (reviewing) { game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; }
+  cur = game.moves.length; reviewing = false;
+  if (pm !== settings.mode || pc !== (settings.clock || 0) || ph !== game.human) clockInit(); else if (game.clock) game.clock.t0 = Date.now();   // a changed clock / side starts fresh
+  flip = settings.mode === 'ai' && game.human === 1;
+  hideOverlay('#resultOverlay');
+  refresh(false);
+}
 // ====================================================================== game clock
 const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
 function clockInit() {
@@ -5174,7 +5194,8 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
 <script src="../shared/infotabs.js?v=14" defer></script>
-<script src="../shared/pickdrop.js?v=5"></script>
+<script src="../shared/pickdrop.js?v=6"></script>
 <script src="../shared/ngtabs.js?v=12"></script>
+<script src="../shared/resumeng.js?v=1"></script>
 </body>
 </html>

@@ -809,7 +809,7 @@ function update() {
 
 // ====================================================================== flow
 function newGame() {
-  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay(); wpPaused = false;
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; stopAnim(); stopPlay(); wpPaused = false; settings.rsNoRec = false;
   rvCancel(); rv = null; rvOpen = false;
   const human = settings.color === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
   game = { rules: settings.rules, seeds: settings.seeds, moves: [], human, setup: null, resigned: null };
@@ -933,7 +933,7 @@ function onGameEnd() {
 }
 // 勝敗記録 (shared/record.js): games against the AI (online games are recorded in online-ui.js finishOnline)
 function recordGame(res, why) {
-  if (!window.GameRecord || settings.mode !== 'ai' || lesson || puzzle || !game.moves.length || game.recorded) return;
+  if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || !game.moves.length || game.recorded) return;
   game.recorded = true;
   const h = game.human;
   try { GameRecord.add({ mode: 'ai', res, side: h, opp: `AI Lv.${settings.level} ${LV(settings.level)}`, key: 'ai:' + settings.level + ':' + game.rules, n: game.moves.length, why: [t('rule.' + game.rules), why].filter(Boolean).join(' · ') }); } catch (e) {}
@@ -1153,10 +1153,22 @@ function segSync() {
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
   renderRuleCards();
 }
-function openNewDialog() {
+function openNewDialog(resume) {
   draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rules: settings.rules, seeds: settings.seeds };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = game.human; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optAnim').checked = settings.anim; $('#optCoach').checked = settings.coach; $('#optPreview').checked = settings.preview;
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules, #fSeeds' }); else ResumeNG.close(); }
   segSync(); skinPicker(); speedSync(); $('#newOverlay').classList.add('show');
+}
+// 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
+function resumeWith() {
+  const pm = settings.mode, ph = game.human;
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, anim: $('#optAnim').checked, coach: $('#optCoach').checked, preview: $('#optPreview').checked });
+  busyToken++; cancelWorker('ai'); thinking = -1; stopAnim(); stopPlay(); wpPaused = false; fxMarks = [];
+  if (settings.mode === 'ai') game.human = settings.color === -1 ? (Math.random() < 0.5 ? 0 : 1) : settings.color;
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== game.human)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  $('#resultOverlay').classList.remove('show');
+  if (reviewing) resumeHere(); else { gameOverShown = false; cur = game.moves.length; layout(); update(); save(); afterPosition(); }
 }
 // design picker: a live mini board per design; a click switches the board at once (kept in the settings)
 function skinPicker() {
@@ -1180,6 +1192,7 @@ $('#btnStart').onclick = () => {
   $('#newOverlay').classList.remove('show'); ctx(); maybeRotTip();
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  if (draft.resume) { resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, rules: draft.rules, seeds: draft.seeds,
     eval: $('#optEval').checked, anim: $('#optAnim').checked, coach: $('#optCoach').checked, preview: $('#optPreview').checked });
@@ -2437,7 +2450,7 @@ function rsOpen() {
 }
 $('#rsCancel').onclick = () => $('#resumeOverlay').classList.remove('show');
 $('#rsRestart').onclick = () => { $('#resumeOverlay').classList.remove('show'); openNewDialog(); };
-$('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (reviewing) resumeHere(); };
+$('#rsResume').onclick = () => { $('#resumeOverlay').classList.remove('show'); if (settings.mode === 'online') { if (reviewing) resumeHere(); return; } openNewDialog(true); };   // the settings dialog in resume mode
 
 // ====================================================================== landscape option (phones)
 const ROT_KEY = 'aicoding-mancala-landscape';
