@@ -998,6 +998,7 @@ body.rotwrap > .app, body.rotwrap > .overlay{display:none!important}
   body.lt-on #ltPanel > .lesson-card > *, body.lt-on #ltPanel > .puzzle-card > *{grid-column:auto!important;grid-row:auto!important}
   /* online: the dock slides in like the drawer */
   body.lt-on.mtab-online .dock{left:auto!important;right:calc(max(8px, env(safe-area-inset-right)) + 58px)!important;top:46px!important;bottom:6px!important;width:var(--ltw, 300px);border-radius:14px;border:1px solid rgba(207,173,104,.3);z-index:60!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  body.lt-on.mtab-online .chat-list{overscroll-behavior-y:auto}   /* a drag on the chat goes on to the whole online box once the chat itself can't scroll */
   @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
   /* move navigation: a compact box at the bottom centre over the board (left of the rail, or of the open drawer) */
   body.lt-on #ltPanel #navBar{display:none!important}
