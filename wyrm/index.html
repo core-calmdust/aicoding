@@ -1079,6 +1079,23 @@ function beatPulse() { if (!MUS.on || !AC) return 0; const st = MUS.n + (AC.curr
 function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = chordAt(t), m = ch[n % ch.length] + 12;
     const div = [4, 2, 1][Math.floor(Math.random() * 3)], cnt = 8 / div;
     for (let i = 0; i < cnt; i++) { const ti = t + i * div * S16, k = Math.pow(0.72, i); const pp = Math.max(-1, Math.min(1, pan + (i % 2 ? -0.55 : 0.55) * Math.sign(pan || 1))); PANV = pp; tone(ti, m + (i % 2 && div === 1 ? 12 : 0), 0.13 * k, true); PANV = 0; hat808(ti, 0.32 * k, false, -pp); } }
+// ---------------- ステージ冒頭のナレーション（voice.mp3 を文ごとに切り出して再生）----------------
+// 録音は 8〜15 → 1〜7 の順に並んでいるので、行番号ごとの開始・終了（秒）を持つ
+const VOICE_SEG = { 8: [0.0, 2.58], 9: [3.38, 6.6], 10: [7.52, 11.04], 11: [11.2, 14.32], 12: [14.64, 17.98], 13: [18.46, 20.96], 14: [21.16, 23.92], 15: [24.66, 27.64],
+    1: [28.1, 31.56], 2: [31.72, 34.92], 3: [35.72, 38.9], 4: [39.12, 43.14], 5: [43.82, 47.14], 6: [47.66, 50.22], 7: [50.92, 54.1] };
+let voiceBuf = null, voiceLoading = false, voicePending = -1;
+function loadVoice() {
+    if (voiceBuf || voiceLoading || !AC) return; voiceLoading = true;
+    fetch('voice.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { voiceBuf = buf; if (voicePending >= 0) { const k = voicePending; voicePending = -1; playVoice(k); } }).catch(() => {});
+}
+function playVoice(stage) { // 1面→1行目 … 15面→15行目、16面からはまた1行目へ
+    if (!audio() || muted) return; const line = stage % 15 + 1, seg = VOICE_SEG[line];
+    if (!voiceBuf) { voicePending = stage; loadVoice(); return; }
+    const t = AC.currentTime + 0.35, src = AC.createBufferSource(), g = AC.createGain(), dur = seg[1] - seg[0] + 0.12;
+    src.buffer = voiceBuf; g.gain.value = 1.0; src.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.18; g.connect(s2).connect(fx);
+    src.start(t, Math.max(0, seg[0] - 0.04), dur);
+    if (MUS.bus) { MUS.bus.gain.setTargetAtTime(0.42, t - 0.2, 0.15); MUS.bus.gain.setTargetAtTime(0.62, t + dur, 0.6); } // 声の間は曲を少し下げる
+}
 // 808系のクラップ: 帯域を絞ったノイズを短く3回はじいてから余韻。音楽の次の16分音符で鳴らす
 function sfxClap() {
     if (!audio()) return; const t = MUS.on ? q16(AC.currentTime + 0.005) : AC.currentTime;
@@ -1778,7 +1795,7 @@ function startGame() {
     S.itemDone = false; items.forEach(it => disposeObj(it.obj)); items.length = 0;
     if (hexGate) { disposeObj(hexGate.obj); hexGate = null; }
     S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
-    nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name };
+    nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name }; playVoice(S.stage);
 }
 const EVO_T = 1.5;
 function evolve() {
@@ -1794,7 +1811,7 @@ function evolve() {
         buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }
     field.recolor();
     S.kills = 0; S.quota = QUOTA(S.stage); S.speed = Math.min(420, 300 + S.stage * 20); S.evoSpd = S.speed;
-    S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name + (S.stage >= PALS.length ? ' +' : '') };
+    S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name + (S.stage >= PALS.length ? ' +' : '') }; playVoice(S.stage);
 }
 // ---------------- 回復アイテム（3面ごとに1個、HP＋1。最大3）----------------
 const items = [];
