@@ -1041,30 +1041,64 @@ function updateBullets(dt) {
 }
 
 // ---------------- 自機の弾（ホーミング）----------------
-const shots = [], shotGeo = new THREE.OctahedronGeometry(4, 0), shotMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(2) });
+const shots = [];
+// ホーミングレーザー: 飛んだ道すじがそのまま光の帯として残る（頭が明るく、尾は細く消える）。命中後は尾から縮んで消える
+const LN_ = 40;
+function makeLaser(color) {
+    const geo = new THREE.BufferGeometry(), P = new Float32Array(LN_ * 2 * 3), C = new Float32Array(LN_ * 2 * 3), idx = [];
+    for (let i = 0; i < LN_ - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    geo.setIndex(idx); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('color', new THREE.BufferAttribute(C, 3));
+    const c = _c(color), w = new THREE.Color(0xffffff);
+    for (let i = 0; i < LN_; i++) { const u = i / (LN_ - 1), k = Math.pow(1 - u, 1.3) * 1.25, col = w.clone().lerp(c, Math.min(1, u * 3)).multiplyScalar(k); C.set([col.r, col.g, col.b, col.r, col.g, col.b], i * 6); }
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    mesh.frustumCulled = false;
+    const core = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(LN_ * 3), 3)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    core.frustumCulled = false; scene.add(mesh, core);
+    return { mesh, core, pts: [] };
+}
+const _lt = new THREE.Vector3(), _lv = new THREE.Vector3(), _ls = new THREE.Vector3();
+function drawLaser(L, alpha) {
+    const pts = L.pts, n = pts.length; if (n < 2) { L.mesh.visible = L.core.visible = false; return; }
+    L.mesh.visible = L.core.visible = true;
+    const P = L.mesh.geometry.attributes.position.array, Pc = L.core.geometry.attributes.position.array;
+    for (let i = 0; i < LN_; i++) {
+        const j = Math.min(i, n - 1), p = pts[j], q = pts[Math.min(j + 1, n - 1)], o = pts[Math.max(j - 1, 0)];
+        _lt.subVectors(o, q); if (_lt.lengthSq() < 1e-6) _lt.set(0, 0, 1); _lv.subVectors(camera.position, p);
+        _ls.crossVectors(_lt, _lv).normalize().multiplyScalar(3.4 * Math.pow(1 - i / (LN_ - 1), 0.8));
+        P.set([p.x + _ls.x, p.y + _ls.y, p.z + _ls.z, p.x - _ls.x, p.y - _ls.y, p.z - _ls.z], i * 6); Pc.set([p.x, p.y, p.z], i * 3);
+    }
+    L.mesh.geometry.attributes.position.needsUpdate = true; L.core.geometry.attributes.position.needsUpdate = true;
+    L.core.geometry.setDrawRange(0, Math.min(n, LN_)); L.mesh.geometry.setDrawRange(0, Math.max(0, Math.min(n, LN_) - 1) * 6);
+    L.mesh.material.opacity = alpha; L.core.material.opacity = alpha;
+}
 function launch(target, order, volley, dir) {
-    const m = new THREE.Mesh(shotGeo, shotMat); scene.add(m);
-    const tr = trail(10, PAL.wing, 0.9); scene.add(tr);
+    const L = makeLaser(PAL.wing);
     const p = new THREE.Vector3(S.x, S.y + 8, -S.d - 30);
-    const a = (order / Math.max(1, volley)) * Math.PI * 2 + Math.random() * 0.5, spread = target ? 520 : 0;
-    const v = dir ? dir.clone().multiplyScalar(1600) : new THREE.Vector3(Math.cos(a) * spread, Math.sin(a) * spread * 0.8 + 120, -900);
-    shots.push({ m, tr, p, v, target, order, volley, life: 0 });
+    // 一斉射撃は扇状に大きく広がってから、弧を描いて標的へ向かう
+    const a = (order / Math.max(1, volley)) * Math.PI * 2 + Math.random() * 0.6, spread = target ? 640 : 0;
+    const v = dir ? dir.clone().multiplyScalar(1700) : new THREE.Vector3(Math.cos(a) * spread, Math.sin(a) * spread * 0.85 + 160, -650);
+    L.pts.unshift(p.clone());
+    shots.push({ L, p, v, target, order, volley, life: 0, done: 0 });
 }
 const _sp = new THREE.Vector3(), _sd = new THREE.Vector3();
 function updateShots(dt) {
-    for (let i = shots.length - 1; i >= 0; i--) { const s = shots[i]; s.life += dt;
+    for (let i = shots.length - 1; i >= 0; i--) { const s = shots[i];
+        if (s.done) { s.done += dt; s.L.pts.splice(Math.max(1, s.L.pts.length - 4)); drawLaser(s.L, Math.max(0, 1 - s.done / 0.35)); if (s.done > 0.35) killShot(i); continue; } // 命中後は尾から縮む
+        s.life += dt;
         const tg = s.target && s.target.alive ? s.target : null;
-        if (tg) { (tg.rz !== undefined && tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz))); _sd.subVectors(_sp, s.p); const dist = _sd.length();
-            const want = _sd.normalize().multiplyScalar(1500 + s.life * 1200); s.v.lerp(want, Math.min(1, dt * (5 + s.life * 22)));
-            if (dist < 26) { hitTarget(tg, s.order, s.volley); killShot(i); continue; } }
+        if (tg) { (tg.obj ? epos(tg, _sp) : _sp.set(tg.x, tg.y, -(S.d + tg.rz))); _sd.subVectors(_sp, s.p); const dist = _sd.length();
+            const want = _sd.normalize().multiplyScalar(1300 + s.life * 1400); s.v.lerp(want, Math.min(1, dt * (3 + s.life * 16)));
+            if (dist < 26) { s.p.copy(_sp); s.L.pts.unshift(s.p.clone()); hitTarget(tg, s.order, s.volley); s.done = 0.001; drawLaser(s.L, 1); continue; } }
         else if (s.target) s.target = null; // 標的が先に消えたらそのまま直進
-        s.p.addScaledVector(s.v, dt); s.m.position.copy(s.p); s.tr.push(s.p);
-        if (!s.target) { for (const e of enemies) if (e.alive && epos(e, _sp).distanceTo(s.p) < e.r + 8) { hitTarget(e, s.order, 1); killShot(i); break; }
-            if (i < shots.length && shots[i] === s) for (const b of bullets) if (b.alive && _sp.set(b.x, b.y, -(S.d + b.rz)).distanceTo(s.p) < 14) { hitTarget(b, s.order, 1); killShot(i); break; } }
-        if (i < shots.length && shots[i] === s && s.life > 1.6) killShot(i);
+        s.p.addScaledVector(s.v, dt); s.L.pts.unshift(s.p.clone()); if (s.L.pts.length > LN_) s.L.pts.length = LN_;
+        if (!s.target) { let hit = null; for (const e of enemies) if (e.alive && epos(e, _sp).distanceTo(s.p) < e.r + 8) { hit = e; break; }
+            if (!hit) for (const b of bullets) if (b.alive && _sp.set(b.x, b.y, -(S.d + b.rz)).distanceTo(s.p) < 14) { hit = b; break; }
+            if (hit) { hitTarget(hit, s.order, 1); s.done = 0.001; } }
+        drawLaser(s.L, 1);
+        if (!s.done && s.life > 1.6) s.done = 0.001;
     }
 }
-function killShot(i) { const s = shots[i]; scene.remove(s.m); scene.remove(s.tr); s.tr.geometry.dispose(); s.tr.material.dispose(); shots.splice(i, 1); }
+function killShot(i) { const s = shots[i]; [s.L.mesh, s.L.core].forEach(o => { scene.remove(o); o.geometry.dispose(); o.material.dispose(); }); shots.splice(i, 1); }
 function hitTarget(t, order, volley) {
     if (!t.alive) return;
     t.alive = false; sfxHit(order, volley);
@@ -1094,7 +1128,7 @@ function updateBooms(dt) {
 }
 
 // ---------------- 入力: ゲームパッド（左スティック移動・右スティック照準・Rトリガーでロック）／キーボード＋マウス ----------------
-const IN = { keys: {}, mouseLock: false, mouseAt: -9, padLock: false, padStart: false, ax: 0, ay: 0, rx: 0, ry: 0, padUsed: false };
+const IN = { keys: {}, mouseLock: false, mouseAt: -9, mx: 640, my: 300, padLock: false, padStart: false, ax: 0, ay: 0, rx: 0, ry: 0, padUsed: false };
 addEventListener('keydown', e => {
     if (e.code === 'Space') e.preventDefault();
     if (e.repeat) return; IN.keys[e.code] = true;
@@ -1103,8 +1137,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { IN.keys[e.code] = false; });
 const toLogical = e => { const r = gameEl.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * VW, (e.clientY - r.top) / r.height * VH]; };
-addEventListener('pointermove', e => { const [x, y] = toLogical(e); if (S.mode === 'play' || S.mode === 'evo') { S.rx = x; S.ry = y; } IN.mouseAt = S.t; });
-addEventListener('pointerdown', e => { if (e.button > 0) return; if (S.mode === 'play' || S.mode === 'evo') { IN.mouseLock = true; const [x, y] = toLogical(e); S.rx = x; S.ry = y; } else startGame(); });
+addEventListener('pointermove', e => { const [x, y] = toLogical(e); IN.mx = x; IN.my = y; IN.mouseAt = S.t; if (e.pointerType === 'mouse') IN.padUsed = false; });
+addEventListener('pointerdown', e => { if (e.button > 0) return; if (S.mode === 'play' || S.mode === 'evo') IN.mouseLock = true; else startGame(); });
 addEventListener('pointerup', e => { if (e.button > 0) return; IN.mouseLock = false; });
 addEventListener('touchstart', e => { if (e.target.closest && e.target.closest('.btn')) return; e.preventDefault(); }, { passive: false });
 addEventListener('contextmenu', e => e.preventDefault());
@@ -1147,7 +1181,7 @@ function aimDir() { _ray.set(S.rx / VW * 2 - 1, -(S.ry / VH * 2 - 1), 0.5).unpro
 // ---------------- 進行 ----------------
 function resetWorld() {
     clearWorld(); SEED = Math.random() * 1000;
-    enemies.forEach(e => scene.remove(e.obj)); enemies.length = 0; bullets.length = 0; shots.forEach((s, i) => { scene.remove(s.m); scene.remove(s.tr); }); shots.length = 0; locks.length = 0;
+    enemies.forEach(e => scene.remove(e.obj)); enemies.length = 0; bullets.length = 0; while (shots.length) killShot(0); locks.length = 0;
     S.stage = 0; setPal(0); applyPalInstant(); S.warpT = 9; warp.visible = false;
     S.d = 0; S.x = 0; S.y = cave(0).cy; S.vx = S.vy = 0; S.speed = 300; S.score = 0; S.deadT = 0; S.hp = 2; S.inv = 0; S.dmg = 0; S.kills = 0; S.quota = QUOTA(0); S.evoPending = 0;
     S.camX = 0; S.camVX = 0; S.camY = S.y + 30; S.camV = 0; S.lookY = S.y + 10; S.lookV = 0; S.lookX = 0; S.lookVX = 0;
@@ -1159,7 +1193,7 @@ function startGame() {
     audio();
     if (S.mode === 'dead' && S.deadT < 0.8) return;
     if (S.mode === 'dead') resetWorld();
-    S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42;
+    S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name };
 }
 const EVO_T = 1.5;
@@ -1201,12 +1235,12 @@ function step(h) {
     }
     let mx = 0, my = 0;
     if (S.mode === 'play') {
-        const K = IN.keys; mx = IN.ax + ((K.KeyD || K.ArrowRight) ? 1 : 0) - ((K.KeyA || K.ArrowLeft) ? 1 : 0); my = -IN.ay + ((K.KeyW || K.ArrowUp) ? 1 : 0) - ((K.KeyS || K.ArrowDown) ? 1 : 0);
-        const L = Math.hypot(mx, my); if (L > 1) { mx /= L; my /= L; }
+        // 左スティックを倒し続けると、竜は重さを感じさせながら徐々にその方向へ曲がっていく
+        mx = S.stx; my = -S.sty;
     } else { // タイトル: 自動で漂う
         mx = Math.sin(S.t * 0.5) * 0.3 - S.x * 0.004; my = (cv.cy + Math.sin(S.t * 0.7) * 40 - S.y) * 0.01;
     }
-    S.vx += (mx * SPD - S.vx) * Math.min(1, h * 9); S.vy += (my * SPD - S.vy) * Math.min(1, h * 9);
+    const acc = S.mode === 'play' ? 1.7 : 9; S.vx += (mx * SPD - S.vx) * Math.min(1, h * acc); S.vy += (my * SPD - S.vy) * Math.min(1, h * acc);
     S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
     const xl = cv.hw * 0.6; if (Math.abs(S.x) > xl) { S.x = Math.sign(S.x) * xl; S.vx = 0; }
     if (S.y < cv.fl + 26) { S.y = cv.fl + 26; S.vy = Math.max(0, S.vy); } if (S.y > cv.ce - 26) { S.y = cv.ce - 26; S.vy = Math.min(0, S.vy); }
@@ -1279,8 +1313,8 @@ function drawOverlay() {
         T('WYRMSPHERE', VW / 2, 210, 92, '#8ff8ff', '#c070ff', 'center', 1, true, 4);
         T('DRAGON SPHERE SHOOTER', VW / 2, 292, 15, c1, c2, 'center', 0.85, false, 6);
         T('PRESS START', VW / 2, 520, 24, '#ffffff', '#ff5ad8', 'center', br, false, 3);
-        T('L-STICK MOVE   R-STICK AIM   HOLD RT LOCK X8   RELEASE FIRE', VW / 2, 590, 12, c1, c2, 'center', 0.8, false, 1);
-        T('KEYBOARD   WASD MOVE   MOUSE AIM   HOLD CLICK LOCK   F FULLSCREEN', VW / 2, 616, 11, c1, c2, 'center', 0.55, false, 1);
+        T('L-STICK STEER   HOLD RT LOCK X8   RELEASE FIRE', VW / 2, 590, 12, c1, c2, 'center', 0.8, false, 1);
+        T('KEYBOARD   WASD OR MOUSE STEER   HOLD SPACE OR CLICK LOCK   F FULLSCREEN', VW / 2, 616, 11, c1, c2, 'center', 0.55, false, 1);
         T('PRE-ALPHA', 22, VH - 22, 10, '#b8fff0', '#3fd6b5', 'left', 0.7, false, 2);
     }
     if (S.mode === 'dead' && S.deadT > 0.6) {
@@ -1330,7 +1364,16 @@ function frame(now) {
     S.t += dt; uTime.value = S.t; if (S.mode === 'dead') S.deadT += dt;
     { const n = Math.max(1, Math.ceil(dt / H - 1e-6)); for (let i = 0; i < n; i++) step(dt / n); }
     // 照準（右スティックは速度で動かす）
-    if (S.mode === 'play' || S.mode === 'evo') { const q = v => v * Math.abs(v); S.rx += q(IN.rx) * 1100 * dt; S.ry += q(IN.ry) * 1100 * dt; S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
+    if (S.mode === 'play' || S.mode === 'evo') { const K = IN.keys;
+        // 操作の向き: ゲームパッドの左スティック（右スティックでも可）／WASD／マウス（竜から見たマウスの向き）
+        let sx = IN.ax + IN.rx + ((K.KeyD || K.ArrowRight) ? 1 : 0) - ((K.KeyA || K.ArrowLeft) ? 1 : 0), sy = IN.ay + IN.ry + ((K.KeyS || K.ArrowDown) ? 1 : 0) - ((K.KeyW || K.ArrowUp) ? 1 : 0);
+        const [dx0, dy0] = toScreen(_sd.set(S.x, S.y, -S.d));
+        if (S.t - IN.mouseAt < 1.5 && !IN.padUsed) { sx = (IN.mx - dx0) / 260; sy = (IN.my - (dy0 - 170)) / 180; }
+        const L = Math.hypot(sx, sy); if (L > 1) { sx /= L; sy /= L; }
+        S.stx = sx; S.sty = sy;
+        // 照準は竜の前方に、スティックの向きへ先回りしてついてくる
+        const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
+        S.rx += (tx - S.rx) * Math.min(1, dt * 9); S.ry += (ty - S.ry) * Math.min(1, dt * 9); S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
     if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < 16) { spawnWave(); S.waveT = Math.max(1.0, 2.3 - S.stage * 0.15) + Math.random() * 0.8; } }
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
@@ -1345,8 +1388,8 @@ function frame(now) {
     for (let i = gates.length - 1; i >= 0; i--) if (gates[i].d < S.d - 500) { disposeObj(gates[i].obj); gates.splice(i, 1); }
     gates.forEach(gt => { tickK(gt, dt); const vis = gt.k < 0.35; gt.bars.forEach(b => b.visible = vis); gt.veil.visible = vis; gt.bars.forEach(b => b.material.color.setHex(gt.col).multiplyScalar(1.6)); });
     // 竜: 照準の方へ少し向き、動きに合わせて傾く。ときどき大きく羽ばたく
-    S.bank = (S.bank || 0) + (Math.max(-0.6, Math.min(0.6, -S.vx * 0.0018)) - (S.bank || 0)) * Math.min(1, dt * 6);
-    const aimYaw = S.mode === 'play' ? -(S.rx / VW - 0.5) * 0.5 : 0;
+    S.bank = (S.bank || 0) + (Math.max(-0.7, Math.min(0.7, -S.vx * 0.0026)) - (S.bank || 0)) * Math.min(1, dt * 4);
+    const aimYaw = S.mode === 'play' ? -S.vx * 0.0011 : 0;
     dragon.root.position.set(S.x, S.y, -S.d); dragon.root.rotation.set(0, Math.PI + aimYaw - S.bank * 0.4, S.bank);
     if (S.mode !== 'dead' && (S.t - S.lastFlap > 1.1 || (S.vy > 160 && S.t - S.lastFlap > 0.45))) { S.lastFlap = S.t; dragon.flap(); }
     field.position.set(0, cave(S.d).cy, -S.d);
@@ -1357,7 +1400,7 @@ function frame(now) {
     [S.camX, S.camVX] = damp(S.camX, S.camVX, S.x * 0.6, 4, dt);
     const ty = Math.max(cvC.fl + 30, Math.min(cvC.ce - 26, cvC.cy + (S.y - cvC.cy) * 0.6 + 30));
     [S.camY, S.camV] = damp(S.camY, S.camV, ty, 4, dt);
-    [S.lookX, S.lookVX] = damp(S.lookX, S.lookVX, S.x * 0.45, 4, dt);
+    [S.lookX, S.lookVX] = damp(S.lookX, S.lookVX, S.x * 0.45 + S.vx * 0.55, 2.5, dt); // 進む向きへ視線が流れ、曲がっていく感覚に
     const ly = S.mode === 'dead' ? S.y : cave(S.d + 400).cy + (S.y - cave(S.d + 400).cy) * 0.45 + 10;
     [S.lookY, S.lookV] = damp(S.lookY, S.lookV, ly, 3, dt);
     const shk = S.shake * 8; S.shake = Math.max(0, S.shake - dt * 2.2);
@@ -1365,7 +1408,7 @@ function frame(now) {
     camera.position.copy(camPos);
     camLook.set(lerp(S.lookX, S.x, pull), lerp(S.lookY, S.y, pull), lerp(-(S.d + 400), -S.d, pull * 0.8));
     camera.lookAt(camLook);
-    camera.rotation.z += -S.bank * 0.08 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.1 : 0);
+    camera.rotation.z += -S.bank * 0.14 + (S.mode === 'evo' ? Math.sin(eu * Math.PI) * 0.1 : 0);
     if (window.__cam) window.__cam(camera, S, dragon);
     sun.position.set(-300, S.y + 700, -S.d + 300); sun.target.position.set(0, S.y, -S.d);
     for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; r.m.scale.setScalar(1 + r.t * r.m.userData.grow); r.m.material.opacity = Math.max(0, r.m.userData.op * (1 - r.t / 0.6)); if (r.t > 0.6) { disposeObj(r.m); rings.splice(i, 1); } }
