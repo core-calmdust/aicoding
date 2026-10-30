@@ -1166,6 +1166,13 @@ html[lang=ar] .pf-input{direction:rtl}
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
 .modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
 </style>
+<style>/* phones: taller design icons (same width) — the picture zooms and keeps its centre (2026-10-30) */
+@media (pointer: coarse) and (max-width: 760px){
+  #newOverlay .dsg-bd .th{position:relative}
+  #newOverlay .dsg-bd .th{aspect-ratio:96/84!important}
+  #newOverlay .dsg-bd .th > svg, #newOverlay .dsg-bd .th > img{position:absolute;top:0;left:50%;height:100%!important;width:auto!important;max-width:none!important;transform:translateX(-50%)}
+}
+</style>
 </head>
 <body>
 <div class="app">
