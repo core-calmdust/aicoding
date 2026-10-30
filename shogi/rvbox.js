@@ -46,10 +46,10 @@ html.rvbox-on .app{grid-template-rows:auto var(--rvbh);grid-template-areas:"boar
 .rvbox .rvb-ex .rv-ex{border:0;background:none;padding:0;margin:0;font-size:inherit}
 .rvbox .rvb-ex .tip{color:var(--muted,#999);font-size:12.5px}
 .rvbox .rvb-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:3px;scrollbar-width:thin}
-.rvbox .rvb-row{display:grid;grid-template-columns:14px minmax(44px,auto) 52px minmax(0,1fr);align-items:baseline;gap:7px;width:100%;text-align:start;padding:3px 8px;border-radius:8px;border:1px solid transparent;background:rgba(0,0,0,.16);color:inherit;font:inherit;font-size:13px;cursor:pointer;line-height:1.45}
+.rvbox .rvb-row{display:grid;grid-template-columns:14px 6.4em 52px minmax(0,1fr);align-items:baseline;gap:7px;width:100%;text-align:start;padding:3px 8px;border-radius:8px;border:1px solid transparent;background:rgba(0,0,0,.16);color:inherit;font:inherit;font-size:13px;cursor:pointer;line-height:1.45}
 .rvbox .rvb-row:hover,.rvbox .rvb-row.rvb-hov{border-color:var(--accent,#e2c275);background:rgba(255,255,255,.07)}
 .rvbox .rvb-row .rk{color:var(--muted,#999);font-size:12px;text-align:center}
-.rvbox .rvb-row .mv{font-weight:700;white-space:nowrap}
+.rvbox .rvb-row .mv{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rvbox .rvb-row .ev{font-variant-numeric:tabular-nums;font-weight:600;text-align:end;white-space:nowrap}
 .rvbox .rvb-row .ev.pos{color:#8fe3b8}.rvbox .rvb-row .ev.neg{color:#ff9a8d}
 .rvbox .rvb-row .pv{color:var(--muted,#aaa);font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;overflow-wrap:anywhere}
@@ -84,7 +84,7 @@ html.rvb-study .rvb-boardring{outline:3px solid rgba(232,163,60,.75);outline-off
 .rvbox .rvb-mini{line-height:18px}
 .rvbox .rvb-ex{font-size:15.5px;line-height:1.65}
 .rvbox .rvb-ex .tip,.rvbox .rvb-ex p.rv-tip{font-size:14.5px}
-.rvbox .rvb-row{grid-template-columns:18px minmax(56px,auto) 62px minmax(0,1fr);align-items:center;gap:8px;padding:3px 10px;font-size:15px;line-height:1.4}
+.rvbox .rvb-row{grid-template-columns:18px 6.4em 62px minmax(0,1fr);align-items:center;gap:8px;padding:3px 10px;font-size:15px;line-height:1.4}
 .rvbox .rvb-row .rk{font-size:13px}
 .rvbox .rvb-row .pv{font-size:14px;display:block;white-space:nowrap;text-overflow:ellipsis;-webkit-line-clamp:unset}
 .rvbox .rvb-row .pl{font-size:12px}

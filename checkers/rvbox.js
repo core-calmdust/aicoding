@@ -46,7 +46,7 @@ html[lang=ar] .rvbox{direction:rtl}
 .rvb-btn.go{border-color:rgba(201,169,97,.6);color:var(--accent,#e2c275)}
 .rvb-btn.reset{background:linear-gradient(180deg,#f1d68e,#c9a24f);border-color:#c9a24f;color:#1b1408;box-shadow:0 0 0 2px rgba(226,194,117,.25)}
 .rvb-btn.reset:hover{filter:brightness(1.08)}
-.rvb-cols,.rvb-row{display:grid;grid-template-columns:20px minmax(58px,max-content) 66px minmax(0,1fr);align-items:center;column-gap:10px;padding:0 8px}
+.rvb-cols,.rvb-row{display:grid;grid-template-columns:20px 5.2em 66px minmax(0,1fr);align-items:center;column-gap:10px;padding:0 8px}
 .rvb-cols{font-size:10.5px;color:var(--dim,#888);letter-spacing:.04em;padding-bottom:2px}
 .rvb-cols span:nth-child(3){text-align:end}
 .rvb-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin;scrollbar-color:var(--line,#444) transparent}
@@ -77,7 +77,7 @@ html.rvb-on .frame.rvb-ken{box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 2p
 .rvb-st{font-size:12.5px}
 .rvb-btn{font-size:14px;padding:6px 13px}
 .rvb-btn svg{width:15px;height:15px}
-.rvb-cols,.rvb-row{grid-template-columns:22px minmax(64px,max-content) 74px minmax(0,1fr)}
+.rvb-cols,.rvb-row{grid-template-columns:22px 5.2em 74px minmax(0,1fr)}
 .rvb-cols{font-size:12px}
 .rvb-row{min-height:31px;font-size:15px}
 .rvb-row .rk{font-size:13px}
