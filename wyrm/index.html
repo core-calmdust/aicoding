@@ -849,15 +849,15 @@ let BPM = 124, S16 = 60 / BPM / 4, BAR = 60 / BPM * 4;
 // 和音の進行（MIDI）: Fmaj9#11 → Em11 → Dm11 → Cmaj13#11
 // ステージごとの音: 速さ・和音の進行（スケール）・音色がすべて変わる
 const SOUNDS = [
-    { bpm: 124, tone: 'bell',    chords: [[53, 57, 60, 64, 67, 71, 74, 76], [52, 55, 59, 62, 66, 69, 74, 79], [50, 53, 57, 60, 64, 67, 72, 77], [48, 52, 55, 59, 62, 66, 69, 71]] }, // リディアン: Fmaj9#11 Em11 Dm11 Cmaj13#11
-    { bpm: 108, tone: 'glass',   chords: [[50, 57, 60, 64, 65, 67, 72, 76], [52, 59, 62, 66, 67, 69, 74, 78], [53, 60, 64, 67, 69, 71, 76, 79], [45, 52, 55, 59, 60, 62, 67, 71]] }, // ドリアン: Dm11 Em11 Fmaj13#11 Am11
-    { bpm: 132, tone: 'pluck',   chords: [[52, 56, 59, 62, 65, 67, 71, 74], [53, 57, 60, 64, 67, 69, 72, 76], [55, 59, 62, 65, 70, 74, 77, 79], [45, 48, 52, 56, 59, 62, 64, 71]] }, // フリジアン・ドミナント: E7b9b13 Fmaj9 G7#9 Am(maj9)
-    { bpm: 118, tone: 'marimba', chords: [[45, 50, 55, 60, 64, 69, 74, 79], [43, 48, 53, 57, 62, 67, 72, 76], [41, 46, 51, 56, 60, 65, 70, 75], [40, 45, 50, 55, 59, 64, 69, 74]] }, // 4度堆積（クォータル）
-    { bpm: 100, tone: 'shimmer', chords: [[48, 52, 56, 60, 62, 66, 70, 74], [50, 54, 58, 62, 64, 68, 72, 76], [52, 56, 60, 64, 66, 70, 74, 78], [46, 50, 54, 58, 60, 64, 68, 72]] }, // 全音音階: C+maj9 D+9 E+9 Bb+9
-    { bpm: 140, tone: 'saw',     chords: [[48, 52, 55, 59, 62, 66, 69, 74], [44, 48, 51, 55, 58, 62, 65, 70], [40, 44, 47, 51, 54, 58, 61, 66], [46, 50, 53, 57, 60, 64, 67, 72]] }, // 遠隔調の13th: Cmaj13#11 Abmaj13#11 Emaj13#11 Bbmaj13#11
+    { bpm: 124, tone: 'bell', bass: '..x...x...x...x.', stab: '....x.......x...', arp: 'x.x.x.x.x.x.x.x.',    chords: [[53, 57, 60, 64, 67, 71, 74, 76], [52, 55, 59, 62, 66, 69, 74, 79], [50, 53, 57, 60, 64, 67, 72, 77], [48, 52, 55, 59, 62, 66, 69, 71]] }, // リディアン: Fmaj9#11 Em11 Dm11 Cmaj13#11
+    { bpm: 108, tone: 'glass', bass: 'x.....x...x.....', stab: '........x.......', arp: 'x..x..x..x..x.x.',   chords: [[50, 57, 60, 64, 65, 67, 72, 76], [52, 59, 62, 66, 67, 69, 74, 78], [53, 60, 64, 67, 69, 71, 76, 79], [45, 52, 55, 59, 60, 62, 67, 71]] }, // ドリアン: Dm11 Em11 Fmaj13#11 Am11
+    { bpm: 132, tone: 'pluck', bass: 'x.xox.xox.xox.xo', stab: '..x...x...x...x.', arp: 'xxxxxxxxxxxxxxxx',   chords: [[52, 56, 59, 62, 65, 67, 71, 74], [53, 57, 60, 64, 67, 69, 72, 76], [55, 59, 62, 65, 70, 74, 77, 79], [45, 48, 52, 56, 59, 62, 64, 71]] }, // フリジアン・ドミナント: E7b9b13 Fmaj9 G7#9 Am(maj9)
+    { bpm: 118, tone: 'marimba', bass: 'x..x..x...x..x..', stab: '....x..x....x...', arp: 'x.xx.x.xx.x.x.xx', chords: [[45, 50, 55, 60, 64, 69, 74, 79], [43, 48, 53, 57, 62, 67, 72, 76], [41, 46, 51, 56, 60, 65, 70, 75], [40, 45, 50, 55, 59, 64, 69, 74]] }, // 4度堆積（クォータル）
+    { bpm: 100, tone: 'shimmer', bass: 'x.......x...f...', stab: 'x...............', arp: 'x...x...x...x...', chords: [[48, 52, 56, 60, 62, 66, 70, 74], [50, 54, 58, 62, 64, 68, 72, 76], [52, 56, 60, 64, 66, 70, 74, 78], [46, 50, 54, 58, 60, 64, 68, 72]] }, // 全音音階: C+maj9 D+9 E+9 Bb+9
+    { bpm: 140, tone: 'saw', bass: '..xo..xo..xo..xo', stab: '..x..x..x..x..x.', arp: 'x.xxx.xxx.xxx.xx',     chords: [[48, 52, 55, 59, 62, 66, 69, 74], [44, 48, 51, 55, 58, 62, 65, 70], [40, 44, 47, 51, 54, 58, 61, 66], [46, 50, 53, 57, 60, 64, 67, 72]] }, // 遠隔調の13th: Cmaj13#11 Abmaj13#11 Emaj13#11 Bbmaj13#11
 ];
 let SND = SOUNDS[0], CHORDS = SND.chords;
-function setSoundStage(i) { SND = SOUNDS[i % SOUNDS.length]; CHORDS = SND.chords; BPM = SND.bpm + Math.floor(i / SOUNDS.length) * 6; S16 = 60 / BPM / 4; BAR = 60 / BPM * 4; if (dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, AC.currentTime, 0.1); }
+function setSoundStage(i) { SND = SOUNDS[i % SOUNDS.length]; CHORDS = SND.chords; BPM = SND.bpm + Math.floor(i / SOUNDS.length) * 6; S16 = 60 / BPM / 4; BAR = 60 / BPM * 4; if (MUS.on) MUS.next = Math.ceil(AC.currentTime / S16 + 1); if (dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, AC.currentTime, 0.1); }
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const chordAt = t => CHORDS[Math.floor(t / (BAR * 2)) % CHORDS.length];
 const q16 = t => Math.ceil(t / S16 - 0.001) * S16; // 次の16分音符の時刻
@@ -901,6 +901,54 @@ function sfxHit(order, volley) {
     tone(t, m, 0.13); if (SND.tone === 'bell') voice(t, mtof(m - 12), 'sawtooth', 0.003, 0.22, 0.035, 0.5, 7);
     if (order === 0) { voice(t, mtof(ch[0] - 12), 'sine', 0.005, 0.35, 0.28, 0); }
     if (order === volley - 1 && volley >= 4) { [0, 2, 4, 6].forEach((k, i) => tone(t + S16 * (i + 1), ch[k % ch.length] + 24, 0.06, true)); } // 大量撃破のきらめき
+}
+// =====================================================================
+// 音楽: 4つ打ちのキック・和音に合わせたベース・和音のヒット・シーケンス・やわらかなパッド
+// ステージごとに速さ・スケール・音色・リズムの型が変わる。命中音と同じ16分音符のグリッドで鳴る
+// =====================================================================
+const MUS = { on: false, next: 0, bus: null, duck: null, timer: 0, lastChord: null };
+function musicStart() {
+    if (!audio() || MUS.on) return; MUS.on = true;
+    MUS.bus = AC.createGain(); MUS.bus.gain.value = 0.0001; MUS.bus.connect(master); MUS.bus.gain.setTargetAtTime(0.62, AC.currentTime, 0.6);
+    MUS.duck = AC.createGain(); MUS.duck.connect(MUS.bus); // キックに合わせて他の音を少し沈める
+    MUS.next = Math.ceil(AC.currentTime / S16 + 2); MUS.lastChord = null;
+    MUS.timer = setInterval(musTick, 25);
+}
+function musicStop() { if (!MUS.on) return; MUS.on = false; clearInterval(MUS.timer); const b = MUS.bus; b.gain.setTargetAtTime(0.0001, AC.currentTime, 0.5); setTimeout(() => b.disconnect(), 3000); }
+function musTick() { if (!MUS.on) return; const ahead = AC.currentTime + 0.16; while (MUS.next * S16 < ahead) { musStep(MUS.next, MUS.next * S16); MUS.next++; } }
+function kick(t) {
+    const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(44, t + 0.11);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.85, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g).connect(MUS.bus); o.start(t); o.stop(t + 0.5);
+    const n = noise(), f = AC.createBiquadFilter(), ng = AC.createGain(); f.type = 'highpass'; f.frequency.value = 2500; ng.gain.setValueAtTime(0.12, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.012); n.connect(f).connect(ng).connect(MUS.bus); n.start(t); n.stop(t + 0.02);
+    MUS.duck.gain.setValueAtTime(0.42, t); MUS.duck.gain.linearRampToValueAtTime(1, t + 0.2);
+}
+function hat(t, g0) { const n = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(g0, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); n.connect(f).connect(g).connect(MUS.duck); n.start(t); n.stop(t + 0.06); }
+function bassNote(t, m, len) {
+    const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.Q.value = 6; f.frequency.setValueAtTime(1100, t); f.frequency.exponentialRampToValueAtTime(170, t + len * 0.9);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    const a = AC.createOscillator(), b = AC.createOscillator(); a.type = 'sawtooth'; b.type = 'sine'; a.frequency.value = mtof(m); b.frequency.value = mtof(m - 12);
+    const bg = AC.createGain(); bg.gain.value = 1.6; a.connect(f); b.connect(bg).connect(g); f.connect(g); g.connect(MUS.duck); a.start(t); b.start(t); a.stop(t + len + 0.05); b.stop(t + len + 0.05);
+}
+function stab(t, notes, len) { // 和音のヒット（ゆるく開くフィルター＋少しずらした2本のノコギリ波）
+    const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.Q.value = 1.5; f.frequency.setValueAtTime(3400, t); f.frequency.exponentialRampToValueAtTime(500, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    notes.forEach(m => [-8, 8].forEach(d => { const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = d; o.connect(f); o.start(t); o.stop(t + len + 0.05); }));
+    f.connect(g); g.connect(MUS.duck); const s2 = AC.createGain(); s2.gain.value = 0.45; g.connect(s2).connect(fx);
+}
+function pad(t, notes, len) { // 和音が変わるたびのやわらかな面
+    const f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 1400;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022, t + len * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    notes.forEach((m, i) => { const o = AC.createOscillator(); o.type = i % 2 ? 'triangle' : 'sine'; o.frequency.value = mtof(m); o.detune.value = (i - 1.5) * 5; o.connect(f); o.start(t); o.stop(t + len + 0.05); });
+    f.connect(g); g.connect(MUS.duck); const s2 = AC.createGain(); s2.gain.value = 0.6; g.connect(s2).connect(fx);
+}
+function musStep(n, t) {
+    const k = n % 16, ch = chordAt(t + 0.001), root = ch[0], bassRoot = 36 + ((root - 36) % 12 + 12) % 12;
+    if (k % 4 === 0) kick(t);
+    if (k % 4 === 2) hat(t, 0.05); else if (k % 2 === 1) hat(t, 0.018);
+    if (ch !== MUS.lastChord) { MUS.lastChord = ch; pad(t, ch.slice(1, 5).map(m => m + 12), BAR * 2); }
+    const b = SND.bass[k]; if (b !== '.') bassNote(t, bassRoot + (b === 'o' ? 12 : b === 'f' ? 7 : 0), S16 * 1.7);
+    if (SND.stab[k] === 'x') stab(t, ch.slice(2, 6).map(m => m + 12), S16 * 3);
+    if (SND.arp[k] === 'x') { const up = ch.slice(1), idx = (n >> (SND.arp.indexOf('.') < 0 ? 0 : 1)) % up.length; tone(t, up[idx] + 12 + (Math.floor(n / 32) % 2) * 12, 0.032, true); }
 }
 function sfxDamage() { if (!audio()) return; const t = AC.currentTime; [0, 1, 6].forEach(k => voice(t, mtof(40 + k), 'sawtooth', 0.005, 0.5, 0.12, 0.3)); const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 900; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.55); }
 function sfxCrash() {
@@ -995,7 +1043,7 @@ let best = 0; try { best = +localStorage.getItem('wyrmsphere-best') || 0; } catc
 const S = { mode: 'title', d: 0, x: 0, y: 0, vx: 0, vy: 0, speed: 300, score: 0, t: 0, deadT: 0, shake: 0, flash: 0,
     camX: 0, camVX: 0, camY: 60, camV: 0, lookX: 0, lookVX: 0, lookY: 0, lookV: 0, stage: 0, warpT: 9, evoUntil: 0,
     hp: 2, inv: 0, dmg: 0, kills: 0, quota: 24, waveT: 0, rx: 640, ry: 300, lastFlap: 0, banner: null, newRec: false };
-const QUOTA = st => 20 + st * 12, SPD = 330, HIT_R = 13;
+const QUOTA = st => 40 + st * 10, SPD = 330, HIT_R = 13;
 const bgFrom = new THREE.Color(), bgTo = new THREE.Color(PAL.bg); let bgK = 1;
 function applyPalInstant() { field.recolor(); bgTo.set(PAL.bg); bgK = 1; scene.background.copy(bgTo); scene.fog.color.copy(bgTo); dragon.setAccent(PAL.wing); recolorEnemies(); }
 
@@ -1024,12 +1072,12 @@ function spawnWave() {
     const cv = cave(S.d + 1600), xl = cv.hw * 0.55, kind = Math.random(), n0 = enemies.length;
     if (kind < 0.36) { // 横切る列
         const dir = Math.random() < 0.5 ? 1 : -1, y = cv.cy + (Math.random() - 0.5) * cv.hh * 0.9;
-        const n = Math.min(14, 5 + S.stage * 2); for (let i = 0; i < n; i++) addEnemy('shard', { rz: 1500 + i * 70, x0: -dir * (xl + i * 60), vx: dir * 150, y0: y, vz: 210, path: 'line', x: 0, y });
+        const n = Math.min(12, 5 + S.stage); for (let i = 0; i < n; i++) addEnemy('shard', { rz: 1500 + i * 70, x0: -dir * (xl + i * 60), vx: dir * 150, y0: y, vz: 210, path: 'line', x: 0, y });
     } else if (kind < 0.72) { // 輪になって広がる
         const cx = (Math.random() - 0.5) * xl, cy0 = cv.cy + (Math.random() - 0.5) * cv.hh * 0.5;
-        const n = Math.min(16, 6 + S.stage * 2); for (let i = 0; i < n; i++) addEnemy('manta', { rz: 1700 + Math.floor(i / 8) * 160, cx, cy0, a0: i / Math.min(8, n) * Math.PI * 2, vz: 280, path: 'arc', x: cx, y: cy0 });
+        const n = Math.min(14, 6 + S.stage); for (let i = 0; i < n; i++) addEnemy('manta', { rz: 1700 + Math.floor(i / 8) * 160, cx, cy0, a0: i / Math.min(8, n) * Math.PI * 2, vz: 280, path: 'arc', x: cx, y: cy0 });
     } else { // 前で止まって撃ってくる
-        const m = Math.min(5, 1 + Math.floor(S.stage * 0.7) + (Math.random() < 0.4 ? 1 : 0));
+        const m = Math.min(4, 1 + Math.floor(S.stage * 0.5) + (Math.random() < 0.3 ? 1 : 0));
         for (let i = 0; i < m; i++) addEnemy('ring', { rz: 1600, x: (i - (m - 1) / 2) * Math.min(160, 520 / m), y: cv.cy + (Math.random() - 0.5) * cv.hh * 0.6, vz: 700, path: 'hover', hold: 3.2, shooter: true });
     }
     return enemies.length - n0;
@@ -1218,7 +1266,7 @@ function resetWorld() {
     S.startUntil = S.t + 0.05; updateChunks(S.d, 99);
 }
 function startGame() {
-    audio();
+    audio(); musicStart();
     if (S.mode === 'dead' && S.deadT < 0.8) return;
     if (S.mode === 'dead') resetWorld();
     S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
@@ -1246,6 +1294,7 @@ function damage() {
     if (S.hp <= 0) gameOver();
 }
 function gameOver() {
+    musicStop();
     S.mode = 'dead'; S.deadT = 0; S.shake = 1; S.flash = 0.6; sfxCrash(); S.hp = 0; locks.length = 0;
     shatter(new THREE.Vector3(S.x, S.y, -S.d));
     S.newRec = S.score > best; if (S.newRec) { best = S.score; try { localStorage.setItem('wyrmsphere-best', best); } catch (e) {} }
@@ -1403,7 +1452,7 @@ function frame(now) {
         const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
         S.rx += (tx - S.rx) * Math.min(1, dt * 2.2); S.ry += (ty - S.ry) * Math.min(1, dt * 2.2); /* 照準はもっさり重めについてくる */ S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
-    if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(64, 16 + S.stage * 10)) { const waves = 1 + Math.floor(S.stage / 2); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(0.55, 2.3 - S.stage * 0.35) + Math.random() * 0.6; } } // ステージが進むほど敵が大幅に増える
+    if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(48, 16 + S.stage * 5)) { const waves = 1 + Math.floor(S.stage / 3); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.0, 2.5 - S.stage * 0.18) + Math.random() * 0.6; } } // ステージが進むほど敵が大幅に増える
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
     updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
