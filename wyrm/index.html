@@ -97,6 +97,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // =====================================================================
@@ -134,6 +135,25 @@ composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.62, 0.4, 0.42);
 { const ss = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => ss(w, h); /* にじみは描画と同じ解像度で（低解像度だと細い線の光がちらつく） */ bloom.setSize(VW * PR, VH * PR); }
 composer.addPass(bloom);
+// 被弾のグリッチ: 横に裂けるブロックのずれ・色ずれ・走査線のちらつき（被弾した直後だけ有効）
+const glitch = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uAmt: { value: 0 }, uT: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float uAmt, uT; varying vec2 vUv;
+        float h(float n) { return fract(sin(n) * 43758.5453); }
+        void main() {
+            vec2 uv = vUv; float tk = floor(uT * 24.0);
+            float band = floor(uv.y * 18.0 + h(tk) * 7.0), r = h(band + tk * 13.1);
+            if (r < uAmt * 0.55) uv.x += (h(band * 3.7 + tk) - 0.5) * 0.12 * uAmt; // 帯ごとに横へずれる
+            float fine = floor(uv.y * 160.0); uv.x += (h(fine + tk * 7.0) - 0.5) * 0.006 * uAmt;
+            float s = 0.012 * uAmt * (0.5 + h(tk * 3.3));
+            vec3 c = vec3(texture2D(tDiffuse, uv + vec2(s, 0.0)).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv - vec2(s, 0.0)).b);
+            c *= 1.0 - 0.18 * uAmt * step(0.5, fract(vUv.y * 240.0)); // 走査線
+            c += vec3(1.0, 0.15, 0.35) * 0.12 * uAmt * step(0.92, h(band + tk));
+            gl_FragColor = vec4(c, 1.0);
+        }`,
+});
+glitch.enabled = false; composer.addPass(glitch);
 composer.addPass(new OutputPass());
 
 scene.add(new THREE.HemisphereLight(0xa8b8ff, 0x2a0c40, 0.9));
@@ -1890,7 +1910,7 @@ function frame(now) {
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); }
     updateItems(dt); updateBullets(dt); updateShots(dt); updateBooms(dt); updateLock(); collide();
     if (S.banner) S.banner.t += dt;
-    S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
+    S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); glitch.enabled = S.dmg > 0.02; glitch.uniforms.uAmt.value = Math.min(1, S.dmg * 1.3); glitch.uniforms.uT.value = S.t; if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
     if (S.mode !== 'title') spawnGates(S.d);
     updateChunks(S.d, 1);
     for (const [, c] of chunks) tickK(c, dt);
