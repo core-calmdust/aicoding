@@ -12,7 +12,7 @@ class VSearch {
     this.p = pos; this.time = o.time || 1000; this.maxDepth = o.depth || 32; this.nodeCap = o.nodes || 0;
     this.nodes = 0; this.t0 = Date.now(); this.stop = false;
     this.tt = new Map(); this.killers = new Int32Array(MAXPLY * 2); this.hist = new Int32Array(1 << 15);
-    this.bufs = []; this.sc = []; for (let i = 0; i < MAXPLY + 8; i++) { this.bufs.push(new Int32Array(700)); this.sc.push(new Int32Array(700)); }
+    this.bufs = []; this.sc = []; for (let i = 0; i < MAXPLY + 8; i++) { this.bufs.push(new Int32Array(1200)); this.sc.push(new Int32Array(1200)); }
     this.rootHn = pos.hn;
   }
   key() { return (this.p.hl >>> 0) * 2097152 + (this.p.hh >>> 11); }
@@ -117,7 +117,7 @@ class VSearch {
     return best;
   }
   rootMoves() {
-    const p = this.p, buf = new Int32Array(700), n = p.gen(buf, false), out = [];
+    const p = this.p, buf = new Int32Array(1200), n = p.gen(buf, false), out = [];
     for (let i = 0; i < n; i++) { const m = buf[i]; p.doMove(m); const ok = !p.illegal(m); const r = ok ? p.result(1) : null; p.undoMove(); if (ok) out.push({ m, s: 0, r }); }
     return out;
   }

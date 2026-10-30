@@ -1,15 +1,16 @@
 'use strict';
-// Worker for the shogi variants: {type: 'think' | 'analyze', variant: 'mini' | 'hasami', sfen, moves, opts, id}
+// Worker for the shogi variants: {type: 'think' | 'analyze', variant: 'mini' | 'hasami' | a VShogi variant (vshogi.js), sfen, moves, opts, id}
 // → progress messages {type: 'progress', id, depth, score, list?} and the result {type: 'result', id, move, score, depth, pv, nodes, time, list?}
 // {type: 'mpvLoop', variant, sfen, moves, opts: {n, depth}, id}: the review box's continuous analysis — the best n moves
 // with their lines after every depth ({type: 'progress', id, depth, nodes, list}) until opts.depth or a settled mate;
 // the page terminates the worker to stop it sooner.
-importScripts('search.js?v=20261028pv', 'mini.js?v=20261021vb', 'hasami.js?v=20261021vb');
+importScripts('search.js?v=20261030sv', 'mini.js?v=20261021vb', 'hasami.js?v=20261021vb', 'vshogi.js?v=20261030sv');
+const mk = v => v === 'hasami' ? new HasamiShogi() : v === 'mini' ? new MiniShogi() : VShogi.make(v) || new MiniShogi();
 self.onmessage = e => {
   const m = e.data; if (!m || (m.type !== 'think' && m.type !== 'analyze' && m.type !== 'mpvLoop')) return;
   if (m.type === 'mpvLoop') { mpvLoop(m); return; }
   try {
-    const P = m.variant === 'hasami' ? new HasamiShogi() : new MiniShogi();
+    const P = mk(m.variant);
     P.setSfen(m.sfen);
     for (const u of m.moves || []) { P.doMove(P.fromUsi(u)); P.sp = 0; }
     const o = m.opts || {};
@@ -26,7 +27,7 @@ self.onmessage = e => {
 };
 function mpvLoop(m) {
   try {
-    const P = m.variant === 'hasami' ? new HasamiShogi() : new MiniShogi();
+    const P = mk(m.variant);
     P.setSfen(m.sfen);
     for (const u of m.moves || []) { P.doMove(P.fromUsi(u)); P.sp = 0; }
     const o = m.opts || {}, S = new VSearch(P, { time: 1e12, depth: 64 }), roots = S.rootMoves();

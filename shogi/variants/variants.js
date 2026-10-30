@@ -1,11 +1,28 @@
 'use strict';
-// Shogi variants (おまけ): 5五将棋 (minishogi) and はさみ将棋 (hasami shogi) on the same page and board.
-// index.html keeps only small hooks (window.Variants.*); the rules live in variants/mini.js and variants/hasami.js,
-// the AI (variants/search.js) runs in variants/worker.js. A game record carries game.variant ('mini' | 'hasami');
-// 本将棋 records have none, so everything else stays exactly as before.
+// Shogi variants (おまけ) on the same page and board: 5五将棋 / はさみ将棋 / 平安将棋 (8×8, 9×8, 9×9) / 二玉将棋 /
+// ランダム将棋 (将棋79394515200) / ジャドケンス将棋 / ゴロゴロ将棋 / マイクロ将棋.
+// index.html keeps only small hooks (window.Variants.*); the rules live in variants/mini.js, variants/hasami.js and
+// variants/vshogi.js (the others), the AI (variants/search.js) runs in variants/worker.js. ランダム将棋 is standard
+// shogi from a shuffled start, so it uses the page's own engine (eng() is '' for it). A game record carries
+// game.variant (the ids of START); 本将棋 records have none, so everything else stays exactly as before.
 (() => {
-const V = '20261028pv';
-const START = { mini: MiniShogi.START, hasami: HasamiShogi.START };
+const V = '20261030sv';
+const VS = window.VShogi ? VShogi.CFG : {};
+const START = { mini: MiniShogi.START, hasami: HasamiShogi.START, random: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1' };
+for (const v in VS) START[v] = VS[v].start;
+// ランダム将棋: the 18 squares of the two back ranks hold king, rook, bishop, 2 golds, 2 silvers, 2 knights, 2 lances
+// (shuffled; gote point-symmetric) — 18!/(7!·2!·2!·2!·2!) = 79,394,515,200 setups (shogitter's 将棋79394515200)
+function randomStart() {
+  const a = 'KRBGGSSNNLL'.split('').concat(Array(7).fill(''));
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; }
+  const row = cells => { let o = '', e = 0; for (const c of cells) { if (!c) { e++; continue; } if (e) { o += e; e = 0; } o += c; } return o + (e || ''); };
+  const r8 = a.slice(0, 9), r9 = a.slice(9);   // ranks 8 / 9, files 9 → 1
+  const g1 = r9.slice().reverse().map(c => c.toLowerCase()), g2 = r8.slice().reverse().map(c => c.toLowerCase());
+  return `${row(g1)}/${row(g2)}/ppppppppp/9/9/9/PPPPPPPPP/${row(r8)}/${row(r9)} b - 1`;
+}
+const startOf = v => v === 'random' ? randomStart() : START[v];
+// the variant's engine ('' = the page's own: 本将棋 and ランダム将棋)
+const eng = v => (v && v !== 'random' && START[v]) ? v : '';
 const MODES = ['ai', 'pvp', 'watch'];   // modes a variant can be played in
 
 // ---------------------------------------------------------------- texts (10 languages)
@@ -51,6 +68,7 @@ const TX = {
     miniT: 'قواعد ميني شوغي (5×5)', miniR: ['رقعة 5×5؛ لكل طرف ملك ورخ وفيل وذهب وفضة وبيدق، مرتبة كما في الشكل.', 'الحركة والإسقاط والكش والفوز بالمات كما في الشوغي.', 'منطقة الترقية هي الصف الأخير فقط: الدخول إليه أو الخروج منه أو التحرك فيه يسمح بالترقية، والبيدق يُرقّى فيه إلزامًا.', 'ممنوع: بيدقان في عمود، المات بإسقاط بيدق، إسقاط بيدق في الصف الأخير.', 'السينيتشيتي (الوضع نفسه 4 مرات) يخسر فيه سينتي؛ وإن كان بكش متواصل يخسر من يكش.'], miniH: 'ابتكرها شيغينوبو كوسوموتو نحو 1970. الرقعة صغيرة فيبدأ القتال فورًا.',
     hasamiT: 'قواعد هاسامي شوغي', hasamiR: ['يضع سينتي 9 بيادق (歩) وغوتي 9 توكين (と) في أقرب صف إليه. يبدأ سينتي، وقطعة واحدة في كل دور.', 'تتحرك كل القطع كالرخ: في خط مستقيم أي مسافة دون قفز.', 'احصر قطع الخصم في خط مستقيم بين القطعة التي حرّكتها وقطعة أخرى لك لتأسرها (ليس قطريًا).', 'القطعة في الزاوية تُؤسر باحتلال المربعين المجاورين لها.', 'الدخول بين قطعتين للخصم آمن.', 'تفوز إذا أسرت 5 قطع أكثر من خصمك، أو إذا لم يستطع التحرك.', 'تكرار الوضع 4 مرات تعادل. بعد 300 نقلة يفوز صاحب الأسرات الأكثر (التساوي تعادل).'], hasamiW: 'تختلف القواعد المحلية؛ هنا يحسم فارق 5 قطع حتى لا تطول المباراة.' },
 };
+if (window.VTX) for (const l in VTX) Object.assign(TX[l] || (TX[l] = {}), VTX[l]);
 for (const l in TX) {
   const d = I18N[l] || (I18N[l] = {});
   for (const k in TX[l]) d[k.startsWith('res.') ? k : 'vr.' + k] = TX[l][k];
@@ -70,40 +88,64 @@ const RV = {
 };
 for (const l in RV) { const d = I18N[l] || (I18N[l] = {}); for (const k in RV[l]) d['vr.rv.' + k] = RV[l][k]; }
 const tx = k => t('vr.' + k);
+// display name of a game variant id (平安将棋: with its board)
+const HB = { heian8: '8', heian98: '98', heian9: '9' };
+const vName = v => !v ? tx('hon') : HB[v] ? tx('heian') + ' ' + tx('heianB' + HB[v]) : tx(v);
 
 // ---------------------------------------------------------------- positions
-function pos(v) { return v === 'mini' ? new MiniShogi() : v === 'hasami' ? new HasamiShogi() : null; }
-// the variant of a position by its SFEN (5 ranks: 5五将棋; no kings: はさみ将棋), '' for 本将棋
-function sfenVariant(sfen) { const b = String(sfen || '').split(' ')[0]; return b.split('/').length === 5 ? 'mini' : b && !/k/i.test(b) ? 'hasami' : ''; }
-// win-rate scale of the evaluation (mini: piece values close to 本将棋; hasami: one capture = 100 and a 5-capture lead wins)
+function pos(v) { return v === 'mini' ? new MiniShogi() : v === 'hasami' ? new HasamiShogi() : (window.VShogi && VShogi.make(v)) || null; }
+// board size of a game variant
+function dims(v) { return v === 'mini' ? [5, 5] : VS[v] ? [VS[v].W, VS[v].H] : [9, 9]; }
+// the variant of a position by its SFEN ('' for 本将棋 / ランダム将棋): the current game's variant when the size fits
+// (平安将棋 9×9 looks like a handicap game), otherwise by the board size / kings
+function sfenVariant(sfen) {
+  const b = String(sfen || '').split(' ')[0]; if (!b) return '';
+  const rows = b.split('/'), H = rows.length, W = rows[0].replace(/\+/g, '').split('').reduce((n, c) => n + (c >= '1' && c <= '9' ? +c : 1), 0);
+  const gv = typeof game !== 'undefined' && game && game.variant;
+  if (gv && eng(gv)) { const d = dims(gv); if (d[0] === W && d[1] === H) return gv; }
+  if (H === 5) return W === 4 ? 'micro' : 'mini';
+  if (H === 6) return W === 5 ? 'goro' : 'judkins';
+  if (H === 8) return W === 8 ? 'heian8' : 'heian98';
+  if (!/k/i.test(b)) return 'hasami';
+  if ((b.match(/K/g) || []).length === 2 && (b.match(/k/g) || []).length === 2) return 'nigyoku';
+  return '';
+}
+// win-rate scale of the evaluation (piece values close to 本将棋; hasami: one capture = 100 and a 5-capture lead wins)
 const WR = { mini: 600, hasami: 160 };
-const forGame = rated => (!rated && MODES.includes(settings.mode) && START[settings.variant]) ? settings.variant : '';
+for (const v in VS) WR[v] = 600;
+// the variant a new game uses (settings.variant is the card: 'heian' + settings.heianB for the board)
+const cardOf = v => HB[v] ? 'heian' : v || '';
+const gameOf = (card, hb) => card === 'heian' ? 'heian' + ({ 8: '8', 98: '98', 9: '9' }[hb] || '8') : card;
+const forGame = rated => { if (rated || !MODES.includes(settings.mode)) return ''; const v = gameOf(settings.variant, settings.heianB); return START[v] ? v : ''; };
 
-// ---------------------------------------------------------------- board geometry (5×5 inside the 9×9 grid of cells)
+// ---------------------------------------------------------------- board geometry (W×H inside the 9×9 grid of cells)
 let gKey = '';
 function geom(p) {
-  const n = p && p.variant === 'mini' ? 5 : 9, fl = !!flip;
-  const c0 = n === 5 ? (fl ? 0 : 4) : 0, r0 = n === 5 ? (fl ? 4 : 0) : 0, key = n + ':' + fl;
+  const v = p && p.variant, d = v === 'mini' ? [5, 5] : VS[v] ? dims(v) : [9, 9], w = d[0], h = d[1], fl = !!flip;
+  const c0 = fl ? 0 : 9 - w, r0 = fl ? 9 - h : 0, key = w + 'x' + h + ':' + fl, full = w === 9 && h === 9;
   let changed = false;
   if (key !== gKey) {
     gKey = key; changed = true;
     const b = document.getElementById('board');
-    b.classList.toggle('v5', n === 5);
-    sqEls.forEach((c, d) => {
-      const r = (d / 9) | 0, col = d % 9, on = n === 9 || (r >= r0 && r < r0 + 5 && col >= c0 && col < c0 + 5);
+    b.classList.toggle('vg', !full); b.classList.remove('v5');
+    b.style.setProperty('--vw', w); b.style.setProperty('--vhh', h);
+    sqEls.forEach((c, i) => {
+      const r = (i / 9) | 0, col = i % 9, on = full || (r >= r0 && r < r0 + h && col >= c0 && col < c0 + w);
       c.classList.toggle('voff', !on);
-      c.classList.toggle('vr', n === 5 && col === c0 + 4);
-      c.classList.toggle('vb', n === 5 && r === r0 + 4);
+      c.classList.toggle('vr', !full && col === c0 + w - 1);
+      c.classList.toggle('vb', !full && r === r0 + h - 1);
     });
     const a = document.getElementById('arrows');
-    if (a) a.setAttribute('viewBox', n === 5 ? `${c0 * 100} ${r0 * 110} 500 550` : '0 0 900 990');
-    try { document.dispatchEvent(new CustomEvent('shogi-geom', { detail: { n } })); } catch (e) {}
+    if (a) a.setAttribute('viewBox', full ? '0 0 900 990' : `${c0 * 100} ${r0 * 110} ${w * 100} ${h * 110}`);
+    try { document.dispatchEvent(new CustomEvent('shogi-geom', { detail: { n: w, w, h } })); } catch (e) {}
   }
   const vg = !!(game && game.variant && !lesson && (typeof edit === 'undefined' || !edit));
   document.body.classList.toggle('variant', vg);
   document.body.classList.toggle('variant-hasami', vg && game.variant === 'hasami');
-  return { n, c0, r0, changed };
+  return { n: w, w, h, c0, r0, changed };
 }
+// promotion zone test of a position (kifu: 成 / 不成)
+const zoneOf = p => (p && p.inZone ? (c, s) => p.inZone(c, s) : MiniShogi.inZone);
 
 // ---------------------------------------------------------------- notation
 const W_SQ = s => (9 - (s % 9)) + 'abcdefghi'[(s / 9) | 0];
@@ -120,7 +162,8 @@ function checkEnd(g, p) {
     const r = p.result(0);
     if (r != null) { g.over = { winner: p.side ^ 1, reason: 'hasami5', ply: n }; return; }
   }
-  if (!p.legalMoves().length) { g.over = { winner: p.side ^ 1, reason: p.variant === 'hasami' ? 'nomove' : 'mate', ply: n }; return; }
+  if (p.cfg && p.cfg.kk && p.result() === 0) { g.over = { winner: -1, reason: 'kk', ply: n }; return; }   // 平安将棋: 玉対玉
+  if (!p.legalMoves().length) { g.over = { winner: p.side ^ 1, reason: p.variant === 'hasami' || !p.inCheck() ? 'nomove' : 'mate', ply: n }; return; }
   let reps = 0;
   for (let i = p.hn - 1; i >= 0; i -= 2) if (p.histL[i] === p.hl && p.histH[i] === p.hh) reps++;
   if (reps >= 4) {
@@ -132,7 +175,8 @@ function checkEnd(g, p) {
     for (let j = first + 1; j < p.hn; j += 2) if (!p.histChk[j]) themChecked = false;
     if (usChecked) g.over = { winner: p.side, reason: 'perpetual', ply: n };
     else if (themChecked) g.over = { winner: p.side ^ 1, reason: 'perpetual', ply: n };
-    else g.over = { winner: 1, reason: 'sennichiteMini', ply: n };   // 5五将棋: 千日手は先手の負け
+    else if (p.variant === 'mini') g.over = { winner: 1, reason: 'sennichiteMini', ply: n };   // 5五将棋: 千日手は先手の負け
+    else g.over = { winner: -1, reason: 'sennichite', ply: n };
     return;
   }
   if (p.variant === 'hasami' && n >= HasamiShogi.MAX_PLY) { const a = p.hand[1], b = p.hand[9]; g.over = { winner: a > b ? 0 : b > a ? 1 : -1, reason: 'hmax', ply: n }; return; }
@@ -144,9 +188,10 @@ function checkEnd(g, p) {
 const LV = {
   mini: { d: [1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10, 12], n: [450, 280, 300, 190, 120, 150, 90, 55, 70, 35, 22, 10, 0, 0, 0, 0, 0, 0, 0] },
   hasami: { d: [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7], n: [320, 220, 130, 200, 130, 90, 55, 60, 35, 20, 10, 0, 0, 0, 0, 0, 0, 0, 0] },
+  big: { d: [1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10], n: [450, 280, 300, 190, 120, 150, 90, 55, 70, 35, 22, 10, 0, 0, 0, 0, 0, 0, 0] },
 };
 const LV_TIME = [500, 500, 500, 600, 600, 700, 700, 800, 900, 1000, 1100, 1200, 1400, 1600, 1900, 2300, 2800, 3500, 4500];
-function levelOpts(i, v) { const L = LV[v] || LV.mini; i = Math.max(0, Math.min(18, i | 0)); return { depth: L.d[i], noise: L.n[i], time: LV_TIME[i] }; }
+function levelOpts(i, v) { const L = LV[v] || (VS[v] && VS[v].big ? LV.big : LV.mini); i = Math.max(0, Math.min(18, i | 0)); return { depth: L.d[i], noise: L.n[i], time: LV_TIME[i] }; }
 const lvName = i => 'Lv.' + ((i | 0) + 1);
 function lvDesc(i, v) { return tx('lvd').replace('{d}', levelOpts(i, v).depth); }
 
@@ -204,7 +249,7 @@ function rvFeat(sfen, u) {
 function kill(kind) { if (W[kind]) { const w = W[kind]; delete W[kind]; w.onmessage = null; w.terminate(); } }
 // aiCall / anaCall: returns the variant worker (and tags the message) when the current game is a variant
 function wk(msg, kind, onmsg, id) {
-  if (!game || !game.variant || (lesson && !game.lessonGame)) return null;   // (the review of a variant game's mistakes runs as a lesson)
+  if (!game || !eng(game.variant) || (lesson && !game.lessonGame)) return null;   // (the review of a variant game's mistakes runs as a lesson)
   msg.variant = game.variant;
   if (msg.opts && msg.opts.top) msg.opts = { ...msg.opts, time: Math.min(msg.opts.time || 1500, 1500) };
   wId[kind] = id;
@@ -212,7 +257,7 @@ function wk(msg, kind, onmsg, id) {
 }
 
 // ---------------------------------------------------------------- new-game dialog: 種目 next to 手合い
-let pendingUrl = (() => { try { const v = new URLSearchParams(location.search).get('variant'); return v === 'mini' || v === 'hasami' || v === 'hon' ? v : null; } catch (e) { return null; } })();
+let pendingUrl = (() => { try { const v = new URLSearchParams(location.search).get('variant'); return START[v] || v === 'hon' ? v : v === 'heian' ? 'heian8' : null; } catch (e) { return null; } })();
 const CSS = `
 .vr-rl{font-size:11.5px;letter-spacing:0;margin-inline-start:6px;color:var(--accent);text-decoration:underline;text-underline-offset:2px;padding:0}
 .vr-rl[hidden]{display:none}
@@ -227,15 +272,25 @@ const CSS = `
 #segHandi.vr-lock button{opacity:.35;pointer-events:none}
 #segHandi.vr-lock button.sel{opacity:.8}
 #segMode button.vr-off{opacity:.35;pointer-events:none}
-/* the 5×5 board: the same frame and size, 25 large cells (cells outside the board are taken out of the grid) */
-.board.v5{grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);--cw:calc(var(--bw) / 5);--ch:calc(var(--bh) / 5)}
+/* smaller / other boards (5×5, 4×5, 5×6, 6×6, 8×8, 9×8): the same frame and size, W×H larger cells (cells outside the
+   board are taken out of the grid); pieces keep the 1 : 1.1 shape of the largest box that fits a cell */
+.board.vg{grid-template-columns:repeat(var(--vw),1fr);grid-template-rows:repeat(var(--vhh),1fr);--cw:min(calc(var(--bw) / var(--vw)), calc(var(--bh) / var(--vhh) / 1.1));--ch:calc(var(--cw) * 1.1)}
+.board.vg .pc{inset:0;margin:auto;width:var(--cw);height:var(--ch)}
 .board .sq.voff{display:none}
-.board.v5 .star{display:none}
-.board.v5 .sq.vr{border-right:none}
-.board.v5 .sq.vb{border-bottom:none}
-.board.v5 .sq:not(.vr){border-right:1px solid rgba(40,22,5,.75)}
-body.skin-metal .board.v5 .sq:not(.vr){border-right-color:rgba(20,28,34,.7)}
-body.skin-ink .board.v5 .sq:not(.vr){border-right-color:rgba(214,180,110,.35)}
+.board.vg .star{display:none}
+.board.vg .sq.vr{border-right:none}
+.board.vg .sq.vb{border-bottom:none}
+.board.vg .sq:not(.vr){border-right:1px solid rgba(40,22,5,.75)}
+.board.vg .sq:not(.vb){border-bottom:1px solid rgba(40,22,5,.75)}
+body.skin-metal .board.vg .sq:not(.vr){border-right-color:rgba(20,28,34,.7)}
+body.skin-metal .board.vg .sq:not(.vb){border-bottom-color:rgba(20,28,34,.7)}
+body.skin-ink .board.vg .sq:not(.vr){border-right-color:rgba(214,180,110,.35)}
+body.skin-ink .board.vg .sq:not(.vb){border-bottom-color:rgba(214,180,110,.35)}
+/* the ゲーム tab: the マイクロ系 group heading */
+#segVariant .vr-gh{grid-column:1 / -1;font-size:12px;letter-spacing:.12em;color:var(--muted);margin:6px 2px 0;padding-top:6px;border-top:1px dashed var(--line,rgba(255,255,255,.14))}
+#vrOverlay .vr-tabs{flex-wrap:wrap}
+#vrOverlay .vr-tabs button{flex:1 1 auto;white-space:nowrap}
+#vrOverlay .vr-hb{margin-bottom:8px}#vrOverlay .vr-hb button{flex:1 1 0;padding:5px 6px;font-size:12px}
 body.variant #btnEdit,body.variant #btnShare,body.variant #btnCopy,body.variant #senkei{display:none!important}
 .rv-ex p.vrn{color:#e8c98a}
 #btnVRules{display:none}
@@ -263,87 +318,122 @@ html[lang=ar] #vrOverlay ol,html[lang=ar] #vrOverlay .vr-h{direction:rtl;text-al
 `;
 { const st = document.createElement('style'); st.id = 'variantCss'; st.textContent = CSS; document.head.appendChild(st); }
 
-// the ゲーム tab (shared/ngtabs.js; on PC a row of cards under the mode): 本将棋 / 5五将棋 / はさみ将棋 with art and a short description
+// the ゲーム tab (shared/ngtabs.js; on PC cards under the mode): 本将棋 / 平安将棋 / 二玉将棋 / ランダム将棋 / はさみ将棋,
+// then the マイクロ系 group (5五将棋 / ジャドケンス将棋 / ゴロゴロ将棋 / マイクロ将棋), each with a small original board
+// picture and a short description. 平安将棋's board (8×8 / 9×8 / 9×9) is a rule field (ルール tab) shown only for it.
+const ART_SETUP = {   // [files, ranks, pieces of the near side as [col, row] from the top-left, mirrored for the far side]
+  '': [9, 9, 'std'], heian: [9, 9, 'heian'], nigyoku: [9, 9, 'std', [[3, 8], [5, 8]]], random: [9, 9, 'rnd'], hasami: [9, 9, 'hasami'],
+  mini: [5, 5, [[0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [0, 3]]], judkins: [6, 6, [[0, 5], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [0, 4]]],
+  goro: [5, 6, [[0, 5], [1, 5], [2, 5], [3, 5], [4, 5], [1, 3], [2, 3], [3, 3]]], micro: [4, 5, [[0, 4], [1, 4], [2, 4], [3, 4], [3, 3]]],
+};
 function vArt(v) {
-  const n = v === 'mini' ? 5 : 9, u = 52 / n, o = 4;
-  let s = `<svg viewBox="0 0 60 60" aria-hidden="true"><rect x="1" y="1" width="58" height="58" rx="4" fill="#e2b66b" stroke="#2b1a0a" stroke-width="1.4"/>`;
-  for (let i = 0; i <= n; i++) s += `<path d="M${o + i * u} ${o}V${o + n * u}M${o} ${o + i * u}H${o + n * u}" stroke="#4a2e10" stroke-width="${i % n ? .45 : .9}"/>`;
-  const pc = (c, r, up, red) => { const x = o + (c + .5) * u, y = o + (r + .5) * u, w = u * .36, h = u * .42, d = up ? 1 : -1;
-    return `<path d="M${x} ${y - h * d}L${x + w * .8} ${y - h * .45 * d}L${x + w} ${y + h * d}L${x - w} ${y + h * d}L${x - w * .8} ${y - h * .45 * d}Z" fill="${red ? '#f7e1c2' : '#f4e3bd'}" stroke="${red ? '#b3261e' : '#5a3a14'}" stroke-width=".6"/>`; };
-  if (v === 'mini') { for (let c = 0; c < 5; c++) { s += pc(c, 0, false) + pc(c, 4, true); } s += pc(4, 1, false) + pc(0, 3, true); }
-  else if (v === 'hasami') { for (let c = 0; c < 9; c++) s += pc(c, 0, false, true) + pc(c, 8, true); }
-  else { for (let c = 0; c < 9; c++) s += pc(c, 0, false) + pc(c, 2, false) + pc(c, 6, true) + pc(c, 8, true); s += pc(1, 1, false) + pc(7, 1, false) + pc(1, 7, true) + pc(7, 7, true); }
+  const a = ART_SETUP[v] || ART_SETUP[''], W = a[0], H = a[1], u = 52 / Math.max(W, H * 1.05), bw = u * W, bh = u * H * 1.05, ox = (60 - bw) / 2, oy = (60 - bh) / 2, uy = bh / H;
+  let s = `<svg viewBox="0 0 60 60" aria-hidden="true"><rect x="${ox - 3}" y="${oy - 3}" width="${bw + 6}" height="${bh + 6}" rx="4" fill="#e2b66b" stroke="#2b1a0a" stroke-width="1.4"/>`;
+  for (let i = 0; i <= W; i++) s += `<path d="M${ox + i * u} ${oy}V${oy + bh}" stroke="#4a2e10" stroke-width="${i % W ? .45 : .9}"/>`;
+  for (let i = 0; i <= H; i++) s += `<path d="M${ox} ${oy + i * uy}H${ox + bw}" stroke="#4a2e10" stroke-width="${i % H ? .45 : .9}"/>`;
+  const pc = (c, r, up, red, gold) => { const x = ox + (c + .5) * u, y = oy + (r + .5) * uy, w = u * .36, h = uy * .42, d = up ? 1 : -1;
+    return `<path d="M${x} ${y - h * d}L${x + w * .8} ${y - h * .45 * d}L${x + w} ${y + h * d}L${x - w} ${y + h * d}L${x - w * .8} ${y - h * .45 * d}Z" fill="${gold ? '#ffd76a' : red ? '#f7e1c2' : '#f4e3bd'}" stroke="${red ? '#b3261e' : '#5a3a14'}" stroke-width=".6"/>`; };
+  const both = (c, r, red, gold) => pc(c, r, true, red, gold) + pc(W - 1 - c, H - 1 - r, false, red, gold);
+  if (a[2] === 'hasami') { for (let c = 0; c < 9; c++) s += pc(c, 0, false, true) + pc(c, 8, true); }
+  else if (a[2] === 'std' || a[2] === 'heian' || a[2] === 'rnd') {
+    for (let c = 0; c < 9; c++) s += both(c, 6);
+    if (a[2] === 'rnd') { for (const [c, r] of [[0, 8], [2, 7], [3, 8], [5, 8], [6, 7], [8, 8], [1, 7], [4, 7], [7, 8], [8, 7], [1, 8]]) s += both(c, r); }
+    else { for (let c = 0; c < 9; c++) s += both(c, 8, false, a[3] && a[3].some(x => x[0] === c)); if (a[2] === 'std') s += both(1, 7) + both(7, 7); }
+  } else for (const [c, r] of a[2]) s += both(c, r);
   return s + '</svg>';
 }
-const VARS = ['', 'mini', 'hasami'], vKey = v => v || 'hon';
+const CARDS = ['', 'heian', 'nigyoku', 'random', 'hasami'], MICRO = ['mini', 'judkins', 'goro', 'micro'], vKey = v => v || 'hon';
 const fH = document.getElementById('fHandi'), fMode = document.getElementById('segMode') && document.getElementById('segMode').closest('.field');
-let segV = null, rulesLink = null, fVar = null;
+let segV = null, rulesLink = null, fVar = null, fHB = null;
+const card = v => `<button type="button" class="ngt-gcard" data-v="${v}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`;
 if (fH && fMode) {
   fVar = document.createElement('div'); fVar.className = 'field'; fVar.id = 'fVariant'; fVar.dataset.ng = 'game';
-  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${VARS.map(v => `<button type="button" class="ngt-gcard" data-v="${v}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`).join('')}</div>`;
+  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${CARDS.map(card).join('')}<div class="vr-gh" id="vrGMicro"></div>${MICRO.map(card).join('')}</div>`;
   fMode.after(fVar);
   segV = fVar.querySelector('#segVariant'); rulesLink = fVar.querySelector('#vrRulesLink');
   segV.onclick = e => { const b = e.target.closest('.ngt-gcard'); if (!b) return; dlg.variant = b.dataset.v; if (dlg.variant && !MODES.includes(dlg.mode)) dlg.mode = 'ai'; updDialog(); };
-  rulesLink.onclick = e => { e.preventDefault(); openRules(dlg.variant || 'mini'); };
+  rulesLink.onclick = e => { e.preventDefault(); openRules(dlg.variant ? gameOf(dlg.variant, dlg.heianB) : 'mini'); };
+  // 平安将棋: the board size (ルール tab)
+  fHB = document.createElement('div'); fHB.className = 'field hidden'; fHB.id = 'fHeianB';
+  fHB.innerHTML = `<label id="vrHBLbl"></label><div class="seg" id="segHeianB"><button type="button" data-b="8"></button><button type="button" data-b="98"></button><button type="button" data-b="9"></button></div>`;
+  fH.after(fHB);
+  fHB.querySelector('#segHeianB').onclick = e => { const b = e.target.closest('button'); if (!b) return; dlg.heianB = b.dataset.b; updDialog(); };
 }
 function dlgOpen() {
-  dlg.variant = START[settings.variant] ? settings.variant : '';
-  if (pendingUrl) { dlg.variant = pendingUrl === 'hon' ? '' : pendingUrl; pendingUrl = null; }
+  const c = cardOf(settings.variant);
+  dlg.variant = START[gameOf(c, settings.heianB)] ? c : '';
+  dlg.heianB = { 8: '8', 98: '98', 9: '9' }[settings.heianB] || '8';
+  if (pendingUrl) { const u = pendingUrl; pendingUrl = null; if (u === 'hon') dlg.variant = ''; else { dlg.variant = cardOf(u); if (HB[u]) dlg.heianB = HB[u]; } }
 }
 function dlgUpdate() {
   if (!segV) return;
-  const v = MODES.includes(dlg.mode) && START[dlg.variant] ? dlg.variant : '';
+  const gv = gameOf(dlg.variant, dlg.heianB), v = MODES.includes(dlg.mode) && START[gv] ? gv : '';
   document.getElementById('vrLbl').textContent = tx('label');
   fVar.classList.toggle('hidden', !MODES.includes(dlg.mode));   // (variants: vs AI / two players / AI vs AI only)
   segV.querySelectorAll('.ngt-gcard').forEach(b => {
     const k = vKey(b.dataset.v), nm = b.querySelector('b'), p = b.querySelector('p');
     if (nm.textContent !== tx(k)) nm.textContent = tx(k); if (p.textContent !== tx(k + 'D')) p.textContent = tx(k + 'D');
-    b.classList.toggle('sel', b.dataset.v === (START[dlg.variant] ? dlg.variant : ''));
+    b.classList.toggle('sel', b.dataset.v === (START[gv] ? dlg.variant : ''));
   });
+  const gh = segV.querySelector('#vrGMicro'); if (gh.textContent !== tx('gMicro')) gh.textContent = tx('gMicro');
+  if (fHB) {
+    fHB.classList.toggle('hidden', !(v && dlg.variant === 'heian'));
+    fHB.querySelector('#vrHBLbl').textContent = tx('heianB');
+    fHB.querySelectorAll('button').forEach(b => { b.textContent = tx('heianB' + b.dataset.b); b.classList.toggle('sel', b.dataset.b === dlg.heianB); });
+  }
   rulesLink.textContent = tx('rules'); rulesLink.hidden = !v;
   const sh = document.getElementById('segHandi'), note = document.getElementById('handiNote');
   sh.classList.toggle('vr-lock', !!v);
   if (v) { sh.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === '0')); note.textContent = tx('noteS'); note.title = tx('note'); note.classList.remove('hidden'); }
   else { note.textContent = t('ng.handiNote'); note.title = ''; }
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('vr-off', !!v && !MODES.includes(b.dataset.v)));
-  if (v) {
+  if (v && eng(v)) {   // (ランダム将棋 keeps the page's AI levels and their names)
     document.querySelectorAll('#csWrap1, #csWrap2').forEach(w => w.classList.add('hidden'));
     const lv = +document.getElementById('rngLevel').value, lv2 = +document.getElementById('rngLevel2').value;
     document.getElementById('levelName').innerHTML = `${lvName(lv)}<small>${lvDesc(lv, v)}</small>`;
     document.getElementById('levelName2').innerHTML = `${lvName(lv2)}<small>${lvDesc(lv2, v)}</small>`;
     document.getElementById('lvNote').classList.add('hidden');
-  }
+  } else if (v) document.querySelectorAll('#csWrap1, #csWrap2').forEach(w => w.classList.add('hidden'));
 }
 // the record's variant when the dialog starts a game
-function dlgRead() { settings.variant = MODES.includes(dlg.mode) && START[dlg.variant] ? dlg.variant : (MODES.includes(dlg.mode) ? '' : settings.variant || ''); }
+function dlgRead() {
+  if (dlg.heianB) settings.heianB = dlg.heianB;
+  settings.variant = MODES.includes(dlg.mode) && START[gameOf(dlg.variant, dlg.heianB)] ? dlg.variant : (MODES.includes(dlg.mode) ? '' : settings.variant || '');
+}
 
 // ---------------------------------------------------------------- rules dialog
+const RTABS = ['heian', 'nigyoku', 'random', 'hasami', 'mini', 'judkins', 'goro', 'micro'];
 const ov = document.createElement('div'); ov.className = 'overlay'; ov.id = 'vrOverlay';
-ov.innerHTML = `<div class="modal"><div class="seg vr-tabs" id="vrTabs"><button data-v="mini"></button><button data-v="hasami"></button></div><h2 id="vrTitle"></h2><div class="vr-body"><div id="vrDia"></div><div><ol id="vrList"></ol><div class="vr-h" id="vrHist"></div></div></div><div class="modal-actions"><button class="mbtn" id="vrToHon"></button><button class="mbtn go" id="vrClose"></button></div></div>`;
+ov.innerHTML = `<div class="modal"><div class="seg vr-tabs" id="vrTabs">${RTABS.map(v => `<button data-v="${v}"></button>`).join('')}</div><h2 id="vrTitle"></h2><div class="vr-body"><div id="vrDia"></div><div><ol id="vrList"></ol><div class="vr-h" id="vrHist"></div></div></div><div class="modal-actions"><button class="mbtn" id="vrToHon"></button><button class="mbtn go" id="vrClose"></button></div></div>`;
 document.body.appendChild(ov);
-let rulesV = 'mini';
+let rulesV = 'mini', rulesHB = '8';
 function diagram(v) {
-  const p = pos(v); p.setStart();
-  const ph = innerWidth <= 560, n = v === 'mini' ? 5 : 9, cw = v === 'mini' ? (ph ? 26 : 44) : (ph ? 14 : 30), f0 = flip; let h = '';
+  const gv = v === 'heian' ? 'heian' + rulesHB : v, p = pos(gv) || new E.Position();
+  p.setSfen(startOf(gv));
+  const d = dims(gv), W = d[0], H = d[1], ph = innerWidth <= 560;
+  const cw = Math.round(Math.min(ph ? 130 : 270, ph ? 150 : 300) / Math.max(W, H * 1.1)), f0 = flip; let h = '';
   flip = false;
   try {
-    const sq = v === 'mini' ? MiniShogi.SQS : [...Array(81).keys()];
-    sq.forEach((s, i) => { const r = (i / n) | 0, c = i % n, code = p.board[s]; h += `<div class="${c === n - 1 ? 'r' : ''} ${r === n - 1 ? 'b' : ''}">${code ? pieceEl(code).outerHTML : ''}</div>`; });
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) { const s = r * 9 + 9 - W + c, code = p.board[s]; h += `<div class="${c === W - 1 ? 'r' : ''} ${r === H - 1 ? 'b' : ''}">${code ? pieceEl(code).outerHTML : ''}</div>`; }
   } finally { flip = f0; }
-  return `<div class="vr-dia" style="--n:${n};--cw:${cw}px;--ch:${Math.round(cw * 1.1)}px">${h}</div>`;
+  return `<div class="vr-dia" style="--n:${W};--cw:${cw}px;--ch:${Math.round(cw * 1.1)}px">${h}</div>`;
 }
 function paintRules() {
   const v = rulesV;
   ov.querySelectorAll('#vrTabs button').forEach(b => { b.textContent = tx(b.dataset.v); b.classList.toggle('sel', b.dataset.v === v); });
-  ov.querySelector('#vrTitle').textContent = tx(v + 'T');
-  ov.querySelector('#vrDia').innerHTML = diagram(v);
+  ov.querySelector('#vrTitle').textContent = tx(v + 'T') + (v === 'heian' ? ' · ' + tx('heianB' + rulesHB) : '');
+  ov.querySelector('#vrDia').innerHTML = (v === 'heian' ? `<div class="seg vr-hb">${['8', '98', '9'].map(b => `<button type="button" data-hb="${b}" class="${b === rulesHB ? 'sel' : ''}">${tx('heianB' + b)}</button>`).join('')}</div>` : '') + diagram(v);
   const list = t('vr.' + v + 'R');
   ov.querySelector('#vrList').innerHTML = (Array.isArray(list) ? list : []).map(x => `<li>${String(x).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</li>`).join('');
-  ov.querySelector('#vrHist').textContent = tx(v === 'mini' ? 'miniH' : 'hasamiW');
+  ov.querySelector('#vrHist').textContent = tx(v === 'hasami' ? 'hasamiW' : v + 'H');
   ov.querySelector('#vrToHon').textContent = tx('toHon');
   ov.querySelector('#vrClose').textContent = t('close');
 }
-function openRules(v) { rulesV = v === 'hasami' ? 'hasami' : 'mini'; paintRules(); ov.classList.add('show'); }
+function openRules(v) {
+  if (HB[v]) rulesHB = HB[v]; else if (v === 'heian') rulesHB = { 8: '8', 98: '98', 9: '9' }[settings.heianB] || '8';
+  v = cardOf(v); rulesV = RTABS.includes(v) ? v : 'mini'; paintRules(); ov.classList.add('show');
+}
+ov.querySelector('#vrDia').onclick = e => { const b = e.target.closest('[data-hb]'); if (b) { rulesHB = b.dataset.hb; paintRules(); } };
 ov.querySelector('#vrTabs').onclick = e => { const b = e.target.closest('button'); if (b) { rulesV = b.dataset.v; paintRules(); } };
 ov.querySelector('#vrClose').onclick = () => ov.classList.remove('show');
 ov.querySelector('#vrToHon').onclick = () => { ov.classList.remove('show'); try { if (document.getElementById('newOverlay').classList.contains('show')) document.getElementById('newOverlay').classList.remove('show'); lsTab = 'rules'; openLessons(); } catch (e) {} };
@@ -361,5 +451,5 @@ function relabel() { const b = document.getElementById('btnVRules'); if (b) b.te
 document.getElementById('langSel').addEventListener('change', () => setTimeout(relabel, 0));
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', relabel); else setTimeout(relabel, 0);
 
-window.Variants = { START, MODES, WR, pos, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
+window.Variants = { START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
 })();
