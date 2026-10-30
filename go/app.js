@@ -850,7 +850,7 @@ $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtSta
 function sgfText() {
   const st = statusAt(moves.length);
   const res = st.over ? (st.draw ? '0' : (st.winner === P1 ? 'B+' : 'W+') + (st.why === 'score' ? st.diff : st.why === 'time' ? 'T' : 'R')) : '';
-  const pb = settings.mode === 'ai' ? (humanColor === P1 ? t('you') : 'AI ' + LV(levelFor(P1))) : '', pw = settings.mode === 'ai' ? (humanColor === P2 ? t('you') : 'AI ' + LV(levelFor(P2))) : '';
+  const pb = settings.mode === 'ai' ? (humanColor === P1 ? t('you') : 'AI ' + LV(levelFor(P1))) : playerName(P1), pw = settings.mode === 'ai' ? (humanColor === P2 ? t('you') : 'AI ' + LV(levelFor(P2))) : playerName(P2);
   return R.sgfWrite({ n: game.n, komi: game.komi, rule: game.rule, ha: game.ha, start: startSpec, moves, result: res, pb, pw, date: new Date().toISOString().slice(0, 10) });
 }
 $('#btnCopy').onclick = async () => {
@@ -1491,14 +1491,31 @@ function loadFromHash() {
   return loadHashStr(h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]g=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle || (startSpec && !game.ha)) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#g=' + [game.n, Math.round(game.komi * 2), game.rule === 'cn' ? 'c' : 'j', game.ha || 0, encMoves(moves)].join('.') + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && COARSE) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() {
+  if (startSpec && !game.ha) return '';
+  return location.origin + location.pathname + '#g=' + [game.n, Math.round(game.komi * 2), game.rule === 'cn' ? 'c' : 'j', game.ha || 0, encMoves(moves)].join('.') + (cur < moves.length ? '&n=' + cur : '');
+}
+// 共有: SGF (FF[4]) / URL / printed go diagram (shared/export.js)
+async function goDiagram(mode) {
+  const RX = RecordExport, n = game.n, pos = posAt(cur), c = n >= 17 ? 30 : n >= 12 ? 38 : 48;
+  await RX.fonts();
+  const nums = new Map();
+  if (mode === 'num') moves.slice(0, cur).forEach((m, k) => { if (m !== PASS) nums.set(m, k + 1); });
+  for (const [i] of [...nums]) if (!pos.b[i]) nums.delete(i);
+  const last = cur ? moves[cur - 1] : -1;
+  let cap = cur ? `${cur}. ${pname(posAt(cur - 1).turn)} ${mvName(last)}` : RX.tx('start');
+  const st = statusAt(cur);
+  cap += '　' + (st.over && cur === moves.length ? (st.draw ? 'Jigo' : (st.winner === P1 ? 'B+' : 'W+') + (st.why === 'score' ? st.diff : st.why === 'time' ? 'T' : 'R')) : RX.tx('toMove', { s: pname(pos.turn) }));
+  const info = `${n}×${n} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}`;
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
+  const W = (n - 1) * c + 2 * c * 0.95;
+  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap + '　' + info, players: pl, path: 'go', titleFont: RX.SERIF,
+    draw: (g, x, y) => RX.goBoard(g, x, y, { n, cell: c, at: i => pos.b[i], stars: R.starPoints(n), last: mode === 'num' ? -1 : last, nums: mode === 'num' ? nums : null, cols: R.COLS }) });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'go', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'sgf', label: 'SGF', ext: 'sgf', mime: 'application/x-go-sgf', text: () => sgfText() + '\n' }],
+  url: shareUrl, image: { modes: ['board', 'num'], draw: goDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

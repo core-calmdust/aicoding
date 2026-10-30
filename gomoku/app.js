@@ -2100,6 +2100,11 @@ function parseGameText(v) {
     const n = q.has('n') ? parseInt(q.get('n'), 10) : undefined;
     const res = parseMoves(v, E.RULES.includes(r) ? r : 'renju'); if (res) res.n = n; return res;
   }
+  if (/\(\s*;/.test(v) && /\b(GM|SZ)\[/.test(v)) {   // SGF (GM[4]): ;B[hh];W[ig] … (row a = top)
+    const ru = v.match(/RU\[([^\]]*)\]/i); if (ru) r = /renju/i.test(ru[1]) ? 'renju' : /free/i.test(ru[1]) ? 'free' : 'standard';
+    const L = 'abcdefghijklmno', mv = [...v.matchAll(/;\s*[BW]\[([a-o])([a-o])\]/g)].map(x => x[1] + (N - L.indexOf(x[2])));
+    return mv.length ? parseMoves(mv.join(' '), r || 'renju') : null;
+  }
   const rm = v.match(/\[Rule\s+"(renju|standard|free)"\]/i); if (rm) r = rm[1].toLowerCase();
   v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ');
   return parseMoves(v, r || (E.RULES.includes(settings.rule) ? settings.rule : 'renju'));
@@ -2141,14 +2146,39 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#r=' + rule + '&k=' + moves.map(sqName).join('.') + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && coarse()) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return location.origin + location.pathname + '#r=' + rule + '&k=' + moves.map(sqName).join('.') + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: move list (h8 i9 …, as on RenjuNet / RIF records), numbered record with tags, SGF (GM[4]), URL, renju diagram
+function gmStones(upto) {   // [{ m, c: P1 | P2, k: move number or 0 for set-up stones }]
+  const out = [], p = basePos();
+  if (startPos) { for (const m of startPos.b) out.push({ m, c: P1, k: 0 }); for (const m of startPos.w) out.push({ m, c: P2, k: 0 }); }
+  moves.slice(0, upto).forEach((m, i) => { out.push({ m, c: p.side, k: i + 1 }); p.make(m); });
+  return out;
+}
+function gmSgf() {
+  const st = statusAt(moves.length), pt = m => 'abcdefghijklmno'[m % N] + 'abcdefghijklmno'[N - 1 - Math.floor(m / N)];
+  const res = st.over ? (st.winner === P1 ? 'B+' : st.winner === P2 ? 'W+' : '0') + (st.winner && st.why === 'resign' ? 'R' : st.winner && st.why === 'time' ? 'T' : '') : '';
+  const e = v => String(v || '').replace(/[\]\\]/g, '\\$&');
+  let s = `(;GM[4]FF[4]CA[UTF-8]AP[World Board Game Atlas]SZ[15]RU[${rule === 'renju' ? 'Renju' : rule === 'standard' ? 'Standard' : 'Freestyle'}]PB[${e(playerName(P1) || pname(P1))}]PW[${e(playerName(P2) || pname(P2))}]${res ? `RE[${res}]` : ''}DT[${new Date().toISOString().slice(0, 10)}]`;
+  if (startPos) { if (startPos.b.length) s += 'AB' + startPos.b.map(m => `[${pt(m)}]`).join(''); if (startPos.w.length) s += 'AW' + startPos.w.map(m => `[${pt(m)}]`).join(''); s += `PL[${startPos.side === P2 ? 'W' : 'B'}]`; }
+  for (const x of gmStones(moves.length)) if (x.k) s += `;${x.c === P1 ? 'B' : 'W'}[${pt(x.m)}]`;
+  return s + ')\n';
+}
+async function gmDiagram(mode) {
+  const RX = RecordExport, c = 36, W = 14 * c + 2 * c * 0.95;
+  await RX.fonts();
+  const at = new Map(), nums = new Map(), top = m => (N - 1 - Math.floor(m / N)) * N + m % N;
+  for (const x of gmStones(cur)) { at.set(top(x.m), x.c); if (x.k) nums.set(top(x.m), x.k); }
+  const st = statusAt(cur), tm = posAt(cur).side;
+  let cap = cur ? `${cur}. ${pname(at.get(top(moves[cur - 1])))} ${sanOf(cur - 1)}` : RX.tx('start');
+  cap += '　' + (st.over && cur === moves.length ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(tm) })) + '　' + t('rule.' + rule);
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, p === P1 ? '#111' : '#fff', '#111', 1.3) }));
+  return RX.sheet({ bw: W, bh: W, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap.replace(/rule\.\w+$/, ''), players: pl, path: 'gomoku', titleFont: RX.SERIF,
+    draw: (g, x, y) => RX.goBoard(g, x, y, { n: N, cell: c, at: i => at.get(i) || 0, stars: [3 * N + 3, 3 * N + 11, 7 * N + 7, 11 * N + 3, 11 * N + 11], last: cur ? top(moves[cur - 1]) : -1, nums: mode === 'num' ? nums : null, cols: 'ABCDEFGHIJKLMNO' }) });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'gomoku', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'moves', label: 'h8 i9 …', ext: 'txt', text: () => moves.map(sqName).join(' ') + '\n' }, { id: 'rec', label: '1.h8 2.i9 …', ext: 'txt', text: () => recordText() + '\n' }, { id: 'sgf', label: 'SGF', ext: 'sgf', text: gmSgf }],
+  url: () => startPos ? '' : shareUrl(), image: { modes: ['num', 'board'], draw: gmDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

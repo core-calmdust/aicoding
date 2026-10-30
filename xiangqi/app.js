@@ -2060,14 +2060,65 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle || startSpec) { toast(t('nokifu')); return; }
-  const url = location.origin + location.pathname + '#k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+function shareUrl() { return location.origin + location.pathname + '#k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+// 共有: Chinese Chess PGN (xqbase spec: Game / Red / Black / Format = WXF · ICCS · Chinese), FEN, URL and a printed diagram
+function xqPgn(fmt) {
+  const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
+  const pos = E.Pos.from(startSpec), tk = [], FW = d => String.fromCharCode(d.charCodeAt(0) + 0xFEE0);
+  moves.forEach((m, i) => {
+    if (i % 2 === 0) tk.push((i / 2 + 1) + '.');
+    let n;
+    if (fmt === 'ICCS') { const x = E.name(pos, m, 'iccs').toUpperCase(); n = x.slice(0, 2) + '-' + x.slice(2); }
+    else if (fmt === 'WXF') n = E.name(pos, m, 'wxf').replace('=', '.');
+    else { n = E.name(pos, m, 'zh'); if (colorOf(pos.b[mFrom(m)])) n = n.replace(/[1-9]/g, FW); }
+    tk.push(n); pos.play(m);
+  });
+  tk.push(res);
+  const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
+  return `[Game "Chinese Chess"]\n[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/xiangqi"]\n[Date "${date}"]\n[Round "-"]\n[Red "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[FEN "${xqFen(E.Pos.from(startSpec), 0)}"]\n` : ''}[Format "${fmt}"]\n\n${RecordExport.lines(tk)}\n`;
+}
+function xqFen(pos, ply) { return pos.fen() + ' - - 0 ' + (1 + (ply >> 1)); }
+async function xqDiagram(mode) {
+  const RX = RecordExport, S = 54, pos = posAt(cur).pos, BW = S * 8, BH = S * 9, ink = '#1b1712', red = '#b4231a';
+  await RX.fonts();
+  const serif = "'Shippori Mincho B1','Noto Serif SC','Songti SC',serif";
+  let cap = RX.tx('start');
+  if (cur) { const q = posAt(cur - 1).pos; cap = `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${E.name(q, moves[cur - 1], LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf')}`; }
+  const st = statusAt(cur);
+  cap += '　' + (st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.turn) }));
+  const tokens = []; if (mode === 'moves') { const q = E.Pos.from(startSpec); moves.slice(0, cur).forEach((m, i) => { tokens.push((i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + E.name(q, m, LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf')); q.play(m); }); }
+  const lt = cur ? mTo(moves[cur - 1]) : -1, lf = cur ? mFrom(moves[cur - 1]) : -1;
+  const pl = [P1, P2].map(p => ({ name: pname(p) + (playerName(p) ? ' ' + playerName(p) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, '#fbf6ea', p === P1 ? red : ink, 1.8) }));
+  return RX.sheet({ bw: BW + 2.3 * S, bh: BH + 2.3 * S, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: tokens, path: 'xiangqi', font: "'Zen Kaku Gothic New'," + serif, titleFont: serif, draw: (g, x0, y0) => {
+    const ox = x0 + 1.15 * S, oy = y0 + 1.15 * S, X = c => ox + c * S, Y = r => oy + r * S, F = S * 0.6;
+    g.strokeStyle = ink; g.lineWidth = 2.6; g.strokeRect(ox - F, oy - F, BW + 2 * F, BH + 2 * F);
+    g.lineWidth = 1.2; g.strokeRect(ox, oy, BW, BH);
+    for (let r = 1; r < 9; r++) { g.beginPath(); g.moveTo(X(0), Y(r)); g.lineTo(X(8), Y(r)); g.stroke(); }
+    for (let c = 1; c < 8; c++) { g.beginPath(); g.moveTo(X(c), Y(0)); g.lineTo(X(c), Y(4)); g.moveTo(X(c), Y(5)); g.lineTo(X(c), Y(9)); g.stroke(); }
+    for (const r0 of [0, 7]) { g.beginPath(); g.moveTo(X(3), Y(r0)); g.lineTo(X(5), Y(r0 + 2)); g.moveTo(X(5), Y(r0)); g.lineTo(X(3), Y(r0 + 2)); g.stroke(); }
+    // position marks (cannons / soldiers)
+    const mark = (c, r) => { const d = 5, l = 10; for (const sx of [-1, 1]) { if ((sx < 0 && c === 0) || (sx > 0 && c === 8)) continue; for (const sy of [-1, 1]) { const x = X(c) + sx * d, y = Y(r) + sy * d; g.beginPath(); g.moveTo(x + sx * l, y); g.lineTo(x, y); g.lineTo(x, y + sy * l); g.stroke(); } } };
+    for (const [c, r] of [[1, 2], [7, 2], [1, 7], [7, 7], [0, 3], [2, 3], [4, 3], [6, 3], [8, 3], [0, 6], [2, 6], [4, 6], [6, 6], [8, 6]]) mark(c, r);
+    g.fillStyle = ink; g.font = `700 ${S * 0.44}px ${serif}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    [['楚', 1.5], ['河', 2.5], ['漢', 5.5], ['界', 6.5]].forEach(([ch, c]) => g.fillText(ch, X(c), Y(4.5)));
+    g.font = `500 15px ${serif}`;
+    for (let c = 0; c < 9; c++) { g.fillText(String(c + 1), X(c), oy - S * 0.92); g.fillText('九八七六五四三二一'[c], X(c), oy + BH + S * 0.92); }
+    for (let s = 0; s < 90; s++) {
+      const r = Math.floor(s / 9), c = s % 9, x = X(c), y = Y(r);
+      if (s === lf) { g.save(); g.strokeStyle = 'rgba(190,140,40,.9)'; g.lineWidth = 1.6; g.setLineDash([4, 3]); g.beginPath(); g.arc(x, y, S * 0.42, 0, 7); g.stroke(); g.restore(); }
+      const pc = pos.b[s]; if (!pc) continue;
+      const col = colorOf(pc), cc = col ? ink : red;
+      if (s === lt) RX.disc(g, x, y, S * 0.49, 'rgba(214,170,70,.45)');
+      RX.disc(g, x, y, S * 0.44, '#fffaf0', cc, 2);
+      g.beginPath(); g.arc(x, y, S * 0.36, 0, 7); g.lineWidth = 1; g.strokeStyle = cc; g.stroke();
+      g.fillStyle = cc; g.font = `800 ${S * 0.46}px ${serif}`; g.fillText(GLYPH[col ? 'b' : 'r'][typeOf(pc)], x, y + 1.5);
+    }
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'xiangqi', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'wxf', label: 'PGN (WXF)', ext: 'pgn', text: () => xqPgn('WXF') }, { id: 'iccs', label: 'PGN (ICCS)', ext: 'pgn', text: () => xqPgn('ICCS') }, { id: 'zh', label: 'PGN (中文)', ext: 'pgn', text: () => xqPgn('Chinese') }, { id: 'fen', label: 'FEN', ext: 'fen', text: () => xqFen(posAt(cur).pos, cur) + '\n' }],
+  url: () => startSpec ? null : shareUrl(), image: { modes: ['board', 'moves'], draw: xqDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };

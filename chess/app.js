@@ -896,13 +896,18 @@ $('#btnAgain').onclick = () => {
   }
   hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame();
 };
-function pgnText() {
+function pgnText() {   // PGN export: Seven Tag Roster (+ SetUp / FEN for a set-up start), SAN movetext wrapped at 80 columns
   const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*';
-  const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side, s = '';
-  for (let i = 0; i < moves.length; i++) { if (side === 0) s += full + '. '; else if (i === 0) s += full + '... '; s += sanOf(i) + ' '; if (side === 1) full++; side ^= 1; }
+  const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side; const tk = [];
+  for (let i = 0; i < moves.length; i++) { if (side === 0) tk.push(full + '.'); else if (i === 0) tk.push(full + '...'); tk.push(sanOf(i)); if (side === 1) full++; side ^= 1; }
+  tk.push(res);
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  return `[Event "World Board Game Atlas"]\n[Date "${date}"]\n[White "${net && net.game ? String(net.game.wn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI Lv.' + settings.level) : 'White'}"]\n[Black "${net && net.game ? String(net.game.bn).replace(/"/g, '') : settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI Lv.' + settings.level) : 'Black'}"]\n[Result "${res}"]\n${startFen ? `[FEN "${startFen}"]\n` : ''}\n${s}${res}`;
+  const q = v => String(v == null ? '' : v).replace(/["\\]/g, '');
+  const wn = net && net.game ? net.game.wn : settings.mode === 'ai' ? (humanColor === P1 ? 'You' : 'AI Lv.' + settings.level) : (pgnName(P1) || '?');
+  const bn = net && net.game ? net.game.bn : settings.mode === 'ai' ? (humanColor === P2 ? 'You' : 'AI Lv.' + settings.level) : (pgnName(P2) || '?');
+  return `[Event "${net ? 'World Board Game Atlas online' : 'World Board Game Atlas'}"]\n[Site "core-calmdust.github.io/aicoding/chess"]\n[Date "${date}"]\n[Round "-"]\n[White "${q(wn)}"]\n[Black "${q(bn)}"]\n[Result "${res}"]\n${startFen ? `[SetUp "1"]\n[FEN "${startFen}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
 }
+function pgnName(p) { try { return playerName(p); } catch (e) { return ''; } }
 $('#btnCopy').onclick = async () => {
   if (!moves.length) { toast(t('nokifu')); return; }
   const txt = pgnText();
@@ -2281,15 +2286,42 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&](k|fen)=/.test(location.hash)) loadFromHash(); });
-$('#btnShare').onclick = async () => {
-  if (!moves.length || lesson || puzzle) { toast(t('nokifu')); return; }
+function shareUrl() {
   const p = E.Pos.fromFEN(startFen || E.START), us = []; for (const m of moves) { us.push(p.uci(m)); p.make(m); }
-  const url = location.origin + location.pathname + '#' + (startFen ? 'fen=' + encodeURIComponent(startFen) + '&' : '') + 'k=' + us.join('.') + (cur < moves.length ? '&n=' + cur : '');
-  try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) { await navigator.share({ title: t('meta.title'), url }); return; }
-    await navigator.clipboard.writeText(url); toast(t('share.copied'), 1400);
-  } catch (e) { if (e && e.name === 'AbortError') return; toast(url, 4000); }
-};
+  return location.origin + location.pathname + '#' + (startFen ? 'fen=' + encodeURIComponent(startFen) + '&' : '') + 'k=' + us.join('.') + (cur < moves.length ? '&n=' + cur : '');
+}
+// 共有: PGN / FEN / URL and a printed-style diagram (shared/export.js)
+async function chessDiagram(mode) {
+  const RX = RecordExport, S = 58, B = S * 8, pos = posAt(cur).pos;
+  await RX.fonts();
+  const img = {}; await Promise.all(['K', 'Q', 'R', 'B', 'N', 'P'].flatMap(k => ['w', 'b'].map(async c => { img[c + k] = await RX.loadImg(`pieces/cburnett/${c}${k}.svg?v=1`); })));
+  let cap = RX.tx('start');
+  if (cur) { const p0 = E.replay(startFen, []).pos, n = p0.full + ((cur - 1 + p0.side) >> 1), blk = ((cur - 1 + p0.side) & 1); cap = `${n}${blk ? '...' : '.'} ${sanOf(cur - 1)}`; }
+  const st = statusAt(cur), tm = pos.side ? t('p2') : t('p1');
+  cap += '　' + (st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: tm }));
+  const tokens = []; if (mode === 'moves') { const p0 = E.replay(startFen, []).pos; let full = p0.full, side = p0.side; for (let i = 0; i < cur; i++) { if (side === 0) tokens.push(full + '.'); else if (i === 0) tokens.push(full + '...'); tokens.push(sanOf(i)); if (side) full++; side ^= 1; } }
+  const pl = [P1, P2].map(p => ({ name: (p === P1 ? t('p1') : t('p2')) + (pgnName(p) ? ' ' + pgnName(p) : ''), swatch: (g, x, y, r) => { g.fillStyle = p === P1 ? '#fff' : '#111'; g.strokeStyle = '#111'; g.lineWidth = 1.4; g.fillRect(x - r, y - r, r * 2, r * 2); g.strokeRect(x - r, y - r, r * 2, r * 2); } }));
+  const lastTo = cur ? mTo(moves[cur - 1]) : -1, lastFrom = cur ? mFrom(moves[cur - 1]) : -1;
+  return RX.sheet({ bw: B + 60, bh: B + 34, title: t('meta.title').split(/[|｜—–-]/)[0].trim() || 'Chess', caption: cap, players: pl, moves: tokens, path: 'chess', font: "'Shippori Mincho B1','Zen Kaku Gothic New',serif", titleFont: "'Shippori Mincho B1',serif", draw: (g, x0, y0) => {
+    const ox = x0 + 26, oy = y0 + 4;
+    for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+      const s = r * 16 + f, x = ox + f * S, y = oy + (7 - r) * S;
+      g.fillStyle = (r + f) & 1 ? '#ffffff' : '#b7b7b7'; g.fillRect(x, y, S, S);
+      if (s === lastTo || s === lastFrom) { g.fillStyle = 'rgba(214,182,96,.38)'; g.fillRect(x, y, S, S); }
+      const pc = pos.b[s]; if (pc) g.drawImage(img[(pc & 8 ? 'b' : 'w') + PT[pc & 7]], x + 1, y + 1, S - 2, S - 2);
+    }
+    g.strokeStyle = '#111'; g.lineWidth = 2.4; g.strokeRect(ox - 1.2, oy - 1.2, B + 2.4, B + 2.4);
+    g.fillStyle = '#333'; g.font = `600 14px 'Shippori Mincho B1',Georgia,serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < 8; i++) { g.fillText('abcdefgh'[i], ox + i * S + S / 2, oy + B + 15); g.fillText(String(8 - i), ox - 13, oy + i * S + S / 2); }
+    // side to move: a small square beside the board (white below, black above), as in printed diagrams
+    const bx = ox + B + 10, by = pos.side ? oy + 2 : oy + B - 14;
+    g.fillStyle = pos.side ? '#111' : '#fff'; g.strokeStyle = '#111'; g.lineWidth = 1.3; g.fillRect(bx, by, 12, 12); g.strokeRect(bx, by, 12, 12);
+  } });
+}
+RecordExport.attach({ btn: '#btnShare', key: 'chess', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500), show: o => o.classList.add('show'), hide: o => o.classList.remove('show'),
+  empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
+  formats: () => [{ id: 'pgn', label: 'PGN', ext: 'pgn', text: pgnText }, { id: 'fen', label: 'FEN', ext: 'fen', text: () => posAt(cur).pos.fen() + '\n' }],
+  url: shareUrl, image: { modes: ['board', 'moves'], draw: chessDiagram } });
 $('#btnPaste').onclick = () => { $('#pasteText').value = ''; showOverlay('#pasteOverlay'); setTimeout(() => $('#pasteText').focus(), 50); };
 $('#pasteCancel').onclick = () => hideOverlay('#pasteOverlay');
 $('#pasteOk').onclick = () => { const v = $('#pasteText').value; if (!v.trim()) { toast(t('nokifu')); return; } loadText(v); };
