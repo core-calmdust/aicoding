@@ -1765,7 +1765,7 @@ const MOB_ITEM_FALL = IS_MOBILE ? 1.12 * 1.1 : 1; // スマホのアイテムの
 const EASY_N = 6; // やさしい導入の面数（7面＝以前の1面）
 const EASY_K = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; // 1〜6面の彗星の量（なだらかに増やす）
 let bossCalmK = 1, calm3 = false;
-const BOSS_CALM = { 3: 0.15, 6: 0.12, 9: 0.45, 12: 0.75 }; // ボス戦の彗星の量（3面はとても少なく、6面は3面よりちょっと多い程度（6面は元の量が多いので割合は小さく）、9面45%、12面75%、15面以降はそのまま）
+const BOSS_CALM = { 3: 0.15, 6: 0.12, 9: 0.45 * 0.7, 12: 0.75 * 0.7 }; // 3体目（9面）以降はさらに30%減らす // ボス戦の彗星の量（3面はとても少なく、6面は3面よりちょっと多い程度（6面は元の量が多いので割合は小さく）、9面45%、12面75%、15面以降はそのまま）
 const dStage = () => Math.max(1, stage - EASY_N); // 難しさの計算に使う面（7面＝以前の1面）
 const easeK = () => stage <= EASY_N ? EASY_K[stage - 1] : 1;
 const drainK = () => stage <= EASY_N ? [0.65, 0.7, 0.76, 0.82, 0.88, 0.94][stage - 1] : 1; // 1〜6面のエネルギーの減り
@@ -1965,7 +1965,7 @@ function setupNewStage() {
 
     // 3面ごとにボス
     if (stage % 3 === 0) bossSpawnFrame = frameCount + 150;
-    calm3 = BOSS_CALM[stage] || false; // ボス面（3・6・9面）は彗星を減らす
+    calm3 = BOSS_CALM[stage] || (stage >= 15 && stage % 3 === 0 ? 0.7 : false); // ボス面（3・6・9面）は彗星を減らす
 }
 
 async function startGame(mode) {
@@ -2971,8 +2971,13 @@ const CK = IS_MOBILE ? 1.35 : 1; // 中央メッセージの間隔（スマホ�
 const ES = IS_MOBILE ? 1 : 1.5; // PCは雑魚敵を1.5倍（見た目と当たり判定） // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
 
+// ボスの弾は全体で25%減らす（4発に1発を間引く。決まった順番で抜くので、模様の偏りが出にくい）
+let bossThin = 0;
+const bossKeep = () => tutorial || (bossThin = (bossThin + 1) % 4) !== 0;
+function bossPush(b) { if (bossKeep()) enemyBullets.push(b); }
 function bossShoot(x, y, angle, speed, radius = 4) {
     if (tutorial && Math.random() < 0.7) return; // チュートリアルのボスは弾を控えめに
+    if (!bossKeep()) return;
     enemyBullets.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius, isGlazed: false, fromBoss: true });
     if (hyperT > 0) { const a2 = angle + 0.09; enemyBullets.push({ x, y, vx: Math.cos(a2) * speed * 0.92, vy: Math.sin(a2) * speed * 0.92, radius, isGlazed: false, fromBoss: true }); } // ハイパー中は弾2倍
 }
@@ -3122,7 +3127,7 @@ const BOSS_DEFS = [
                 const n = 22, gap = Math.round((player.x + rand2(-120, 120)) / CW * (n - 1));
                 for (let k = 0; k < n; k++) {
                     if (Math.abs(k - gap) <= 1) continue;
-                    enemyBullets.push({ x: (k / (n - 1)) * CW, y: b.y + 20, vx: 0, vy: 165, radius: 5, isGlazed: false, fromBoss: true });
+                    bossPush({ x: (k / (n - 1)) * CW, y: b.y + 20, vx: 0, vy: 165, radius: 5, isGlazed: false, fromBoss: true });
                 }
             }
         },
@@ -3153,7 +3158,7 @@ const BOSS_DEFS = [
             b.phase = ph;
             if (ph === 0 && c % 6 === 0) { bossShoot(b.x, b.y, b.t * 0.06, 180); bossShoot(b.x, b.y, -b.t * 0.06 + Math.PI, 180); }
             if (ph === 1 && c % 35 === 0) fan(b.x, b.y, aimAt(b.x, b.y), 5, 0.5, 290, 5);
-            if (ph === 1 && c % 70 === 20) for (let k = 0; k < 6; k++) enemyBullets.push({ x: rand2(40, CW - 40), y: -10, vx: 0, vy: 240, radius: 5, isGlazed: false, fromBoss: true });
+            if (ph === 1 && c % 70 === 20) for (let k = 0; k < 6; k++) bossPush({ x: rand2(40, CW - 40), y: -10, vx: 0, vy: 240, radius: 5, isGlazed: false, fromBoss: true });
             if (ph === 2 && c % 50 === 0) ring(b.x, b.y, 20, 160, b.t * 0.1);
         },
     },
@@ -3184,7 +3189,7 @@ const BOSS_DEFS = [
             b.x = CW / 2 + Math.sin(b.t * 0.006) * 120 * FS; b.y = 150 + Math.sin(b.t * 0.02) * 30;
             if (b.t % 90 === 0) {
                 const gap = rand2(0.2, 0.8) * CW;
-                for (let x = 30; x < CW - 20; x += 46 * FS + 18) if (Math.abs(x - gap) > 70) enemyBullets.push({ x, y: b.y + 20, vx: 0, vy: 150, radius: 5, isGlazed: false, fromBoss: true });
+                for (let x = 30; x < CW - 20; x += 46 * FS + 18) if (Math.abs(x - gap) > 70) bossPush({ x, y: b.y + 20, vx: 0, vy: 150, radius: 5, isGlazed: false, fromBoss: true });
             }
             if (b.t % 90 === 45) fan(b.x, b.y, aimAt(b.x, b.y), 3, 0.25, 260);
         },
@@ -3309,7 +3314,7 @@ const BOSS_DEFS = [
             const CW = config.canvasWidth;
             const c = b.t % 160;
             if (c < 60) { b.x += (CW / 2 + b.dir * 300 * FS - b.x) * 0.05; b.y = 150; b.mode = 'aim'; }
-            else if (c < 110) { b.mode = 'dash'; b.x -= b.dir * 13 * FS; if (b.t % 3 === 0) enemyBullets.push({ x: b.x, y: b.y + 20, vx: 0, vy: 120 + Math.random() * 60, radius: 4, isGlazed: false, fromBoss: true }); }
+            else if (c < 110) { b.mode = 'dash'; b.x -= b.dir * 13 * FS; if (b.t % 3 === 0) bossPush({ x: b.x, y: b.y + 20, vx: 0, vy: 120 + Math.random() * 60, radius: 4, isGlazed: false, fromBoss: true }); }
             else { b.mode = 'aim'; if (c === 110) b.dir *= -1; if (c === 130) fan(b.x, b.y, aimAt(b.x, b.y), 5, 0.6, 250); }
             b.x = Math.max(60, Math.min(CW - 60, b.x));
         },
@@ -3366,7 +3371,7 @@ const BOSS_DEFS = [
             b.phase = ph;
             if (ph === 0 && c % 6 === 0) for (let k = 0; k < 3; k++) bossShoot(b.x, b.y, b.t * 0.05 + k * Math.PI * 2 / 3, 170);
             if (ph === 1 && c % 30 === 0) fan(b.x, b.y, aimAt(b.x, b.y), 5, 0.5, 290);
-            if (ph === 2 && c % 20 === 0) for (let k = 0; k < 4; k++) enemyBullets.push({ x: rand2(40, CW - 40), y: -10 - TOP_EXT, vx: 0, vy: 220, radius: 5, isGlazed: false, fromBoss: true });
+            if (ph === 2 && c % 20 === 0) for (let k = 0; k < 4; k++) bossPush({ x: rand2(40, CW - 40), y: -10 - TOP_EXT, vx: 0, vy: 220, radius: 5, isGlazed: false, fromBoss: true });
         },
     },
 ];
