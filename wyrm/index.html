@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 516; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 518; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -840,8 +840,8 @@ function buildChunk(ci) {
         }
         if (PAL.decor === 'helix') for (let h = 0; h < 2; h++) { // 壁をはう二重らせん
             const f = (i * 0.11 + h * 0.5) % 1 * n, f2 = ((i + 1) * 0.11 + h * 0.5) % 1 * n;
-            if (f2 < f) continue;
-            const at = (R, ff) => { const k = Math.floor(ff) % n; return R[k].clone().lerp(R[(k + 1) % n], ff - Math.floor(ff)).lerp(new THREE.Vector3(0, cv.cy, R[k].z), 0.05); };
+            if (f2 < f || !(f >= 0) || !(f2 >= 0)) continue;
+            const at = (R, ff) => { const k = ((Math.floor(ff) % n) + n) % n; return R[k].clone().lerp(R[(k + 1) % n], ff - Math.floor(ff)).lerp(new THREE.Vector3(0, cv.cy, R[k].z), 0.05); };
             const P = at(R0, f), Q = at(rings[a + 1], f2); LN.push(P.x, P.y, P.z, Q.x, Q.y, Q.z);
         }
         if (PAL.decor === 'pillars' && i % 6 === 0) [-1, 1].forEach(sd => { _m4.compose(new THREE.Vector3(sd * cv.hw * 0.84, cv.cy, -i * SL), _q4.identity(), _s4.set(10, cv.ce - cv.fl + 120, 10)); kitAdd(sd < 0 ? AF : AC2, KIT.hex, _m4); });
@@ -1635,7 +1635,7 @@ function updateEnemy(e, dt) {
     }
     e.y = Math.max(cv.fl + 24, Math.min(cv.ce - 24, e.y));
     if (S.mode === 'play' && e.rz > 260 && e.rz < 1400) { // 弾はステージが進むほど少しずつ増える
-        e.shootT -= dt; if (e.shootT <= 0) {
+        e.shootT -= dt; if (e.shootT <= 0 && !canShoot(e)) e.shootT = 0.25; /* 近すぎ・画面の外からは撃たない */ if (e.shootT <= 0) {
             const st = S.stage;
             e.shootT = e.shooter ? 1.3 - Math.min(0.4, st * 0.025) : Math.max(2.0, 3.6 - st * 0.08) + Math.random() * 2.5;
             if (e.shooter) { fireBullet(e); if (st >= 4 && Math.random() < Math.min(0.45, (st - 3) * 0.06)) { fireBullet(e, -38); fireBullet(e, 38); } } // 扇状の3連
@@ -1648,6 +1648,7 @@ function updateEnemy(e, dt) {
     if (e.type === 'manta') e.obj.rotation.set(Math.sin(e.t * 3) * 0.3, 0, Math.sin(e.t * 2) * 0.5);
     if (e.rz < -120) removeEnemy(e);
 }
+function canShoot(e) { if (e.rz < 560) return false; const [sx, sy, sz] = toScreen(epos(e, _sp)); const m = 60; return sz < 1 && sx > m && sx < VW - m && sy > m && sy < VH - m; }
 function removeEnemy(e) { e.alive = false; scene.remove(e.obj); if (e.obj.userData.ck) (ckPool[e.obj.userData.ck] = ckPool[e.obj.userData.ck] || []).push(e.obj); }
 
 // ---------------- 敵の弾（ロックして撃ち落とせる）----------------
@@ -1727,13 +1728,26 @@ function updateShots(dt) {
             const want = _sd.normalize().multiplyScalar(1300 + s.life * 1400); s.v.lerp(want, Math.min(1, dt * (3 + s.life * 16)));
             if (dist < 26) { s.p.copy(_sp); s.L.pts.unshift(s.p.clone()); hitTarget(tg, s.order, s.volley); s.done = 0.001; drawLaser(s.L, 1); continue; } }
         else if (s.target) s.target = null; // 標的が先に消えたらそのまま直進
-        s.p.addScaledVector(s.v, dt); s.L.pts.unshift(s.p.clone()); if (s.L.pts.length > LN_) s.L.pts.length = LN_;
+        _lp0.copy(s.p); s.p.addScaledVector(s.v, dt); s.L.pts.unshift(s.p.clone()); if (s.L.pts.length > LN_) s.L.pts.length = LN_;
+        if (laserBlocked(_lp0, s.p)) { boom(s.p.clone(), [0xffffff, PAL.gate[1]], 5); if (tg && tg.alive) { tg.locked = 0; const mi = marked.indexOf(tg); if (mi >= 0) marked.splice(mi, 1); } s.done = 0.001; drawLaser(s.L, 1); continue; } /* 障害物は透過しない */
         if (!s.target) { let hit = null; for (const e of enemies) if (e.alive && epos(e, _sp).distanceTo(s.p) < e.r + 8) { hit = e; break; }
             if (!hit) for (const b of bullets) if (b.alive && _sp.set(b.x, b.y, -(S.d + b.rz)).distanceTo(s.p) < 14) { hit = b; break; }
             if (hit) { hitTarget(hit, s.order, 1); s.done = 0.001; } }
         drawLaser(s.L, 1);
         if (!s.done && s.life > 1.6) s.done = 0.001;
     }
+}
+const _lp0 = new THREE.Vector3(), _lpx = new THREE.Vector3();
+function laserBlocked(a, b) { /* a→b の区間が壁・キューブ・ゲートの枠に当たるか */
+    const za = -a.z, zb = -b.z;
+    for (const gt of gates) { if (!gt.obj || (za - gt.d) * (zb - gt.d) > 0) continue;
+        const t = Math.abs(zb - za) < 1e-6 ? 0 : (gt.d - za) / (zb - za); _lpx.lerpVectors(a, b, t); const v = gt.axis === 'x' ? _lpx.x : _lpx.y;
+        if (v > gt.top || v < gt.bot) { b.copy(_lpx); return true; } }
+    for (const c of cubes) if (Math.abs(b.x - c.x) < c.s * 0.55 && Math.abs(b.y - c.y) < c.s * 0.55 && Math.abs(zb - c.d) < c.s * 0.55 + Math.abs(zb - za) * 0.5) return true;
+    const h = hexGate; if (h && !h.done) { const z = zb, r = Math.hypot(b.x - h.x, b.y - h.y);
+        if (z <= h.d + 4 && z >= h.d - 250 && r < HEX_R * 3.4 && r > HEX_R * (1 + Math.max(0, h.d - z) / 240 * 2.2)) return true;
+        if ((za - h.d) * (zb - h.d) <= 0) { const t = Math.abs(zb - za) < 1e-6 ? 0 : (h.d - za) / (zb - za); _lpx.lerpVectors(a, b, t); const rr = Math.hypot(_lpx.x - h.x, _lpx.y - h.y); if (rr > HEX_R && rr < HEX_R * 3.4) { b.copy(_lpx); return true; } } }
+    return false;
 }
 function killShot(i) { const s = shots[i]; scene.remove(s.L.mesh, s.L.core); laserPool.push(s.L); shots.splice(i, 1); } // 捨てずに使い回す
 function recolorLaser(L, color) { const C = L.mesh.geometry.attributes.color.array, c = _c(color), w = new THREE.Color(0xffffff); for (let i = 0; i < LN_; i++) { const u = i / (LN_ - 1), k = Math.pow(1 - u, 1.3) * 0.95, col = w.clone().lerp(c, Math.min(1, u * 3)).multiplyScalar(k); C.set([col.r, col.g, col.b, col.r, col.g, col.b], i * 6); } L.mesh.geometry.attributes.color.needsUpdate = true; }
@@ -1873,7 +1887,7 @@ function startGame() {
     if (S.mode === 'dead') resetWorld();
     S.itemDone = false; items.forEach(it => disposeObj(it.obj)); items.length = 0;
     if (hexGate) { scene.remove(hexGate.obj); hexGate = null; }
-    S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
+    clearCubes(false); S.rushT = 0; S.evoSpd0 = null; S.mode = 'play'; S.score = 0; S.hp = 2; S.kills = 0; S.quota = QUOTA(S.stage); S.waveT = 1.2; S.rx = VW / 2; S.ry = VH * 0.42; S.stx = 0; S.sty = 0;
     nextGateD = S.d + 2200; S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name }; playVoice(S.stage);
 }
 const EVO_T = 1.5;
@@ -1890,8 +1904,9 @@ function evolve() {
         if (gt.passed || gt.d < S.d + 200) { gates.splice(i, 1); continue; }
         jobs.push(() => { buildGate(gt); gt.delay = 0.2 + old.delay; gt.spIn = 1 / 0.9; }); } // 壁の作り直しは1フレームに1つずつ
     jobs.push(() => field.recolor());
-    S.kills = 0; S.quota = QUOTA(S.stage); S.speed = Math.min(420, 300 + S.stage * 20); S.evoSpd = S.speed;
-    S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: PAL.name + (S.stage >= PALS.length ? ' +' : '') }; playVoice(S.stage);
+    S.kills = 0; S.quota = QUOTA(S.stage); S.evoSpd0 = S.speed; S.speed = isRush(S.stage) ? rushSpd(S.stage) : Math.min(420, 300 + S.stage * 20); S.evoSpd = S.speed;
+    S.rushT = 0; clearCubes(true); cubeNextD = S.d + 1500; if (isRush(S.stage)) nextGateD = 1e9; else if (nextGateD > 1e8) nextGateD = S.d + 2600;
+    S.banner = { t: 0, n: 'STAGE ' + (S.stage + 1), m: isRush(S.stage) ? 'HIGH SPEED  ·  ' + PAL.name : PAL.name + (S.stage >= PALS.length ? ' +' : '') }; playVoice(S.stage);
 }
 // ---------------- 回復アイテム（3面ごとに1個、HP＋1。最大3）----------------
 const items = [];
@@ -1985,6 +2000,63 @@ function updateHexGate(dt) {
     }
     if (h.done && S.d > h.d + 400) { scene.remove(h.obj); hexGate = null; } // 形は共有なので捨てない
 }
+// ---------------- 高速スクロール面（5面ごと）: 敵は出ず、前から迫るキューブを避ける。一定時間でゲートが出る ----------------
+const RUSH_T = 40, isRush = st => st % 5 === 4, rushSpd = st => Math.min(420, 300 + st * 20) * 1.9;
+const CN = 140, cubeMat = new THREE.ShaderMaterial({
+    uniforms: { uC: { value: new THREE.Color() }, uE: { value: new THREE.Color() } }, transparent: true,
+    vertexShader: `varying vec2 vUv; varying float vZ; varying float vL;
+        void main() { vUv = uv; vec4 mv = modelViewMatrix * instanceMatrix * vec4(position, 1.0); vZ = -mv.z;
+            vec3 n = normalMatrix * mat3(instanceMatrix) * normal; float ln = length(n); n = ln > 1e-6 ? n / ln : vec3(0.0, 0.0, 1.0);
+            vL = 0.35 + 0.65 * clamp(n.y * 0.5 + n.z * 0.8 + 0.3, 0.0, 1.0); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform vec3 uC; uniform vec3 uE; varying vec2 vUv; varying float vZ; varying float vL;
+        void main() { vec2 q = min(vUv, 1.0 - vUv); float e = min(q.x, q.y), edge = 1.0 - smoothstep(0.025, 0.07, e);
+            float a = 1.0 - smoothstep(1700.0, 2500.0, vZ); /* 遠くから霧の中に現れる */
+            gl_FragColor = vec4(mix(uC * vL, uE * 1.5, edge), a * mix(0.9, 1.0, edge)); }`,
+});
+const cubeMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), cubeMat, CN); cubeMesh.count = 0; cubeMesh.frustumCulled = false; scene.add(cubeMesh);
+const cubes = []; let cubeNextD = 0; const _cm = new THREE.Matrix4(), _cq = new THREE.Quaternion(), _cs = new THREE.Vector3(), _cp = new THREE.Vector3(), _ce = new THREE.Euler();
+function addCube(d, x, y, sz, o = {}) { if (cubes.length < CN) cubes.push(Object.assign({ d, x, y, s: sz, rx: Math.random() * 6, ry: Math.random() * 6, w: (Math.random() - 0.5) * 2.4, vx: 0, vy: 0 }, o)); }
+function spawnCubes() { /* 自機の前方に1つの並びを置く */
+    const d = cubeNextD, cv = cave(d), xl = cv.hw * 0.6, y0 = cv.fl + 26, y1 = cv.ce - 26, k = Math.min(1, (S.rushT || 0) / RUSH_T), r = Math.random();
+    if (r < 0.22 + k * 0.1) { /* 壁: 格子のうち1〜2マスだけ空いている */
+        const nx = 4, ny = 3, cw = xl * 2 / nx, chh = (y1 - y0) / ny, gx = Math.floor(Math.random() * nx), gy = Math.floor(Math.random() * ny), g2 = Math.random() < 0.5 - k * 0.3 ? Math.floor(Math.random() * nx * ny) : -1;
+        for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) { if ((i === gx && j === gy) || i + j * nx === g2) continue;
+            addCube(d, -xl + cw * (i + 0.5), y0 + chh * (j + 0.5), Math.min(cw, chh) * 0.92, { w: 0, rx: 0, ry: 0 }); }
+        cubeNextD += 700 + Math.random() * 200;
+    } else if (r < 0.5) { /* 自機をねらう大きな1個＋まわり */
+        addCube(d, Math.max(-xl, Math.min(xl, S.x)), Math.max(y0, Math.min(y1, S.y)), 120 + Math.random() * 60);
+        for (let i = 0; i < 2 + Math.floor(k * 2); i++) addCube(d + (Math.random() - 0.5) * 200, (Math.random() * 2 - 1) * xl, y0 + Math.random() * (y1 - y0), 50 + Math.random() * 50);
+        cubeNextD += 380 + Math.random() * 200;
+    } else if (r < 0.75) { /* 散らばった群れ */
+        const n = 4 + Math.floor(Math.random() * 3 + k * 3);
+        for (let i = 0; i < n; i++) addCube(d + Math.random() * 300, (Math.random() * 2 - 1) * xl, y0 + Math.random() * (y1 - y0), 45 + Math.random() * 70);
+        cubeNextD += 450 + Math.random() * 250;
+    } else { /* 横に流れる列 */
+        const dir = Math.random() < 0.5 ? 1 : -1, n = 4 + Math.floor(k * 2), y = y0 + Math.random() * (y1 - y0);
+        for (let i = 0; i < n; i++) addCube(d + i * 140, -dir * (xl + 80 + i * 90), Math.max(y0, Math.min(y1, y + (Math.random() - 0.5) * 120)), 70 + Math.random() * 30, { vx: dir * (260 + k * 80) });
+        cubeNextD += 520 + Math.random() * 200;
+    }
+}
+function clearCubes(pop) { if (pop) cubes.filter(c => c.d > S.d - 50 && c.d < S.d + 1600).slice(0, 8).forEach(c => { boom(new THREE.Vector3(c.x, c.y, -c.d), [PAL.cry[0], 0xffffff], 4); }); cubes.length = 0; cubeMesh.count = 0; }
+function updateCubes(dt) {
+    if (S.mode === 'play' && isRush(S.stage)) {
+        S.rushT = (S.rushT || 0) + dt; S.kills = Math.min(S.quota, Math.floor(S.quota * S.rushT / RUSH_T)); /* 進み具合は時間で */
+        if (S.rushT >= RUSH_T && !hexGate) spawnHexGate();
+        if (!hexGate) { cubeNextD = Math.max(cubeNextD, S.d + 1500); while (cubeNextD < S.d + 2400) spawnCubes(); }
+    }
+    if (!cubes.length) { cubeMesh.count = 0; return; }
+    cubeMat.uniforms.uE.value.set(PAL.cry[0]); cubeMat.uniforms.uC.value.set(PAL.face[1]).multiplyScalar(1.6);
+    let n = 0;
+    for (let i = cubes.length - 1; i >= 0; i--) { const c = cubes[i];
+        c.x += c.vx * dt; c.rx += c.w * dt; c.ry += c.w * 0.7 * dt;
+        if (S.mode === 'play' && !c.hit && Math.abs(c.d - S.d) < c.s / 2 + HIT_R && Math.abs(c.x - S.x) < c.s / 2 + HIT_R + 6 && Math.abs(c.y - S.y) < c.s / 2 + HIT_R + 6 && S.inv <= 0) {
+            c.hit = true; boom(new THREE.Vector3(c.x, c.y, -c.d), [PAL.cry[0], 0xffffff], 14); S.shake = 0.7; damage(); cubes.splice(i, 1); continue; }
+        if (!c.passed && c.d < S.d - c.s) { c.passed = true; if (S.mode === 'play') S.score += 20; }
+        if (c.d < S.d - 400 || Math.abs(c.x) > 3000) { cubes.splice(i, 1); continue; }
+    }
+    for (const c of cubes) { _cq.setFromEuler(_ce.set(c.rx, c.ry, 0)); _cm.compose(_cp.set(c.x, c.y, -c.d), _cq, _cs.set(c.s, c.s, c.s)); cubeMesh.setMatrixAt(n++, _cm); }
+    cubeMesh.count = n; cubeMesh.instanceMatrix.needsUpdate = true;
+}
 function gameOver() {
     musicStop();
     S.mode = 'dead'; S.deadT = 0; S.shake = 1; S.flash = 0.6; sfxCrash(); S.hp = 0; locks.length = 0; marked.length = 0;
@@ -1996,7 +2068,7 @@ function step(h) {
     const cv = cave(S.d);
     if (S.mode === 'evo') { // 進化中: 無敵。竜は変わりゆく世界の中を漂う
         S.evoT += h; const env = Math.sin(Math.min(1, S.evoT / EVO_T) * Math.PI);
-        S.speed = S.evoSpd * (1 + 0.15 * env); // 世界が組み替わるあいだは一気に加速
+        const ek = Math.min(1, S.evoT / EVO_T), es = S.evoSpd0 == null ? S.evoSpd : S.evoSpd0 + (S.evoSpd - S.evoSpd0) * ek * ek * (3 - 2 * ek); S.speed = es * (1 + 0.15 * env); // 世界が組み替わるあいだは一気に加速
         const tx = Math.sin(S.evoT * 2.1 + 0.7) * 50 * env, ty = cv.cy + Math.sin(S.evoT * 2.6) * 25 * env;
         S.vx = (tx - S.x) * 2.2; S.vy = (ty - S.y) * 2.2; S.x += S.vx * h; S.y += S.vy * h; S.d += S.speed * h;
         if (S.evoT >= EVO_T) { S.mode = 'play'; S.speed = S.evoSpd; S.waveT = 1.0; nextGateD = Math.max(nextGateD, S.d + 1800); }
@@ -2090,7 +2162,7 @@ function drawHUD() {
     ug.save(); ug.lineWidth = 3 * UIS; ug.strokeStyle = 'rgba(255,255,255,.15)'; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, Math.PI * 1.5); ug.stroke();
     ug.strokeStyle = c2; ug.beginPath(); ug.arc(gx * UIS, gy * UIS, 16 * UIS, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ug.stroke(); ug.restore();
     T((S.stage + 1) + '', gx, gy, 14, '#ffffff', c2, 'center', 1);
-    T(S.kills + '/' + S.quota, gx - 26, gy, 14, c1, c2, 'right', 0.9);
+    T(isRush(S.stage) ? Math.floor(k * 100) + '%' : S.kills + '/' + S.quota, gx - 26, gy, 14, c1, c2, 'right', 0.9);
 }
 const startLabel = () => IS_MOBILE ? 'TAP TO START' : IN.padUsed ? 'PRESS START' : 'PRESS SPACE / ENTER'; /* 最後に触った入力に合わせる */
 function drawOverlay() {
@@ -2236,14 +2308,14 @@ function frame(now) {
         const tx = dx0 + sx * 320, ty = dy0 - 170 + sy * 190; // 竜の少し先（上）に置く
         S.rx += (tx - S.rx) * Math.min(1, dt * 2.2); S.ry += (ty - S.ry) * Math.min(1, dt * 2.2); /* 照準はもっさり重めについてくる */ S.rx = Math.max(40, Math.min(VW - 40, S.rx)); S.ry = Math.max(40, Math.min(VH - 40, S.ry)); }
     // 敵の出現
-    if (S.mode === 'play') { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
+    if (S.mode === 'play' && !isRush(S.stage)) { S.waveT -= dt; if (S.waveT <= 0 && enemies.length < Math.min(24, 14 + S.stage)) { const waves = 1 + (Math.random() < Math.min(0.3, S.stage * 0.03) ? 1 : 0); for (let w = 0; w < waves; w++) spawnWave(); S.waveT = Math.max(1.8, 2.6 - S.stage * 0.05) + Math.random() * 0.6; } } // 敵の数はあまり増やさず、そのぶん弾を増やす
     if (S.evoPending > 0) { S.evoPending -= dt; if (S.evoPending <= 0 && S.mode === 'play') evolve(); }
     litEnemies();
     pk('misc'); for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (e.alive) updateEnemy(e, dt); if (!e.alive) enemies.splice(i, 1); } pk('enemy');
-    updateItems(dt); updateHexGate(dt); updateBullets(dt); pk('bullet'); updateShots(dt); pk('laser'); updateBooms(dt); pk('boom'); updateLock(); collide(); pk('lock');
+    updateItems(dt); updateHexGate(dt); updateCubes(dt); updateBullets(dt); pk('bullet'); updateShots(dt); pk('laser'); updateBooms(dt); pk('boom'); updateLock(); collide(); pk('lock');
     if (S.banner) S.banner.t += dt;
     S.inv = Math.max(0, S.inv - dt); S.dmg = Math.max(0, S.dmg - dt * 1.4); S.glitch = Math.max(0, (S.glitch || 0) - dt); glitch.enabled = S.glitch > 0; glitch.uniforms.uAmt.value = Math.min(1, S.glitch / 0.7 * 1.4); glitch.uniforms.uT.value = S.t; /* グリッチは0.7秒 */ if (S.inv <= 0 && S.hp > 0 && S.mode === 'play') dragon.setAccent(PAL.wing);
-    if (S.mode !== 'title') { if (S.stage < 2) nextGateD = Math.max(nextGateD, S.d + VIEW); spawnGates(S.d); } // 壁のギミックは3面から
+    if (S.mode !== 'title') { if (S.stage < 2 || isRush(S.stage)) nextGateD = Math.max(nextGateD, S.d + VIEW); spawnGates(S.d); } // 壁のギミックは3面から
     pk('misc2'); let busy = S.evoFrame; S.evoFrame = false; if (!busy && jobs.length) { jobs.shift()(); busy = true; } updateChunks(S.d, busy ? 0 : 1); pk('chunk'); // 重い処理は1フレームに1つまで
     for (const [, c] of chunks) tickK(c, dt);
     for (let i = dying.length - 1; i >= 0; i--) { tickK(dying[i], dt); if (dying[i].fade >= 1) { disposeObj(dying[i].obj); dying.splice(i, 1); } }
@@ -2293,7 +2365,7 @@ function frame(now) {
     { const t3 = performance.now(), tot = t3 - jsT0; if (tot > (perf.jsMax || 0)) { perf.jsMax = tot; perf.jsUpd = jsT1 - jsT0; perf.jsDraw = t3 - jsT1; } if (tot > 10) perf.spikes = (perf.spikes || 0) + 1; }
 }
 requestAnimationFrame(frame);
-window.__wyrm = { S, MUS, perf, rend: renderer, cam: camera, PF, pfs: () => PFshow, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
+window.__wyrm = { S, MUS, perf, rend: renderer, cam: camera, PF, pfs: () => PFshow, boom, setSub: o => { voiceSub = o; }, VOICE_EN, VOICE_JA, AC: () => AC, fireBullet, spawnHexGate, hg: () => hexGate, cubes, startGame, spawnItem, items, addEnemy, CK, dragon, gates, cave, info: renderer.info, evolve, scene, chunks, enemies, IN, locks, toScreen, epos };
 </script>
 </body>
 </html>
