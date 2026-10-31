@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 514; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 515; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1793,7 +1793,7 @@ function updateBooms(dt) {
 
 // ---------------- 入力: ゲームパッド（左スティック移動・右スティック照準・Rトリガーでロック）／キーボード＋マウス ----------------
 const IN = { keys: {}, mouseLock: false, mouseAt: -9, mx: 640, my: 300, padLock: false, padStart: false, ax: 0, ay: 0, rx: 0, ry: 0, padUsed: false };
-addEventListener('keydown', e => { hideCursor(true);
+addEventListener('keydown', e => { hideCursor(true); IN.padUsed = false;
     if (e.code === 'Space') e.preventDefault();
     if (e.repeat) return; IN.keys[e.code] = true;
     if (e.code === 'KeyF') toggleFS();
@@ -2092,6 +2092,7 @@ function drawHUD() {
     T((S.stage + 1) + '', gx, gy, 14, '#ffffff', c2, 'center', 1);
     T(S.kills + '/' + S.quota, gx - 26, gy, 14, c1, c2, 'right', 0.9);
 }
+const startLabel = () => IS_MOBILE ? 'TAP TO START' : IN.padUsed ? 'PRESS START' : 'PRESS SPACE / ENTER'; /* 最後に触った入力に合わせる */
 function drawOverlay() {
     const c1 = hex(PAL.line ? PAL.line[0] : 0xffffff), c2 = hex(PAL.wing), br = 0.75 + 0.25 * Math.sin(S.t * 2.4);
     if (S.mode === 'title') {
@@ -2104,7 +2105,7 @@ function drawOverlay() {
             T('TOUCH & DRAG  STEER', VW / 2, 590 * yk, 12, c1, c2, 'center', 0.8, false, 1);
             T('HOLD  LOCK X8     RELEASE  FIRE', VW / 2, 590 * yk + 24, 12, c1, c2, 'center', 0.8, false, 1);
         } else {
-            T('PRESS START', VW / 2, 520, 24, '#ffffff', '#ff5ad8', 'center', br, false, 3);
+            T(startLabel(), VW / 2, 520, 24, '#ffffff', '#ff5ad8', 'center', br, false, 3);
             T('L-STICK STEER   HOLD RT LOCK X8   RELEASE FIRE', VW / 2, 590, 12, c1, c2, 'center', 0.8, false, 1);
             T('KEYBOARD   WASD OR MOUSE STEER   HOLD SPACE OR CLICK LOCK   F FULLSCREEN', VW / 2, 616, 11, c1, c2, 'center', 0.55, false, 1);
         }
@@ -2118,7 +2119,7 @@ function drawOverlay() {
         T('SCORE ' + S.score, VW / 2, Y(360), 26, c1, c2, 'center', a, false, 3);
         T('BEST ' + best, VW / 2, Y(404), 16, c1, c2, 'center', a * 0.75, false, 3);
         if (S.newRec) T('NEW RECORD', VW / 2, Y(448), 16, '#ffd060', '#ff8a2a', 'center', a * br, false, 4);
-        if (S.deadT > 0.9) T(IS_MOBILE ? 'TAP TO START' : 'PRESS START', VW / 2, Y(540), 22, '#ffffff', '#ff5ad8', 'center', a * br, false, 3);
+        if (S.deadT > 0.9) T(startLabel(), VW / 2, Y(540), 22, '#ffffff', '#ff5ad8', 'center', a * br, false, 3);
     }
     if (S.banner) { const b = S.banner; const a = b.t < 0.25 ? b.t / 0.25 : Math.max(0, 1 - (b.t - 1.5) / 0.5); if (a <= 0 && b.t > 1) S.banner = null; else {
         const by = VH < 500 ? VH * 0.34 : VH * 0.2; T(b.n, VW / 2, by, 64, '#ffffff', c1, 'center', a, true, 4 + (1 - a) * 10); T(b.m, VW / 2, by + 58 * HS(), 15, c1, c2, 'center', a * 0.9, false, 8); } }
