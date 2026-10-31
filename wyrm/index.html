@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 518; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 519; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -2003,15 +2003,15 @@ function updateHexGate(dt) {
 // ---------------- 高速スクロール面（5面ごと）: 敵は出ず、前から迫るキューブを避ける。一定時間でゲートが出る ----------------
 const RUSH_T = 40, isRush = st => st % 5 === 4, rushSpd = st => Math.min(420, 300 + st * 20) * 1.9;
 const CN = 140, cubeMat = new THREE.ShaderMaterial({
-    uniforms: { uC: { value: new THREE.Color() }, uE: { value: new THREE.Color() } }, transparent: true,
+    uniforms: { uC: { value: new THREE.Color() }, uE: { value: new THREE.Color() } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, /* 線だけのワイヤーフレーム */
     vertexShader: `varying vec2 vUv; varying float vZ; varying float vL;
         void main() { vUv = uv; vec4 mv = modelViewMatrix * instanceMatrix * vec4(position, 1.0); vZ = -mv.z;
             vec3 n = normalMatrix * mat3(instanceMatrix) * normal; float ln = length(n); n = ln > 1e-6 ? n / ln : vec3(0.0, 0.0, 1.0);
             vL = 0.35 + 0.65 * clamp(n.y * 0.5 + n.z * 0.8 + 0.3, 0.0, 1.0); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform vec3 uC; uniform vec3 uE; varying vec2 vUv; varying float vZ; varying float vL;
-        void main() { vec2 q = min(vUv, 1.0 - vUv); float e = min(q.x, q.y), edge = 1.0 - smoothstep(0.025, 0.07, e);
+        void main() { vec2 q = min(vUv, 1.0 - vUv); float e = min(q.x, q.y), edge = 1.0 - smoothstep(0.012, 0.03, e);
             float a = 1.0 - smoothstep(1700.0, 2500.0, vZ); /* 遠くから霧の中に現れる */
-            gl_FragColor = vec4(mix(uC * vL, uE * 1.5, edge), a * mix(0.9, 1.0, edge)); }`,
+            if (edge * a < 0.01) discard; gl_FragColor = vec4(uE * 1.4 * edge * a, 1.0); }`,
 });
 const cubeMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), cubeMat, CN); cubeMesh.count = 0; cubeMesh.frustumCulled = false; scene.add(cubeMesh);
 const cubes = []; let cubeNextD = 0; const _cm = new THREE.Matrix4(), _cq = new THREE.Quaternion(), _cs = new THREE.Vector3(), _cp = new THREE.Vector3(), _ce = new THREE.Euler();
@@ -2019,22 +2019,22 @@ function addCube(d, x, y, sz, o = {}) { if (cubes.length < CN) cubes.push(Object
 function spawnCubes() { /* 自機の前方に1つの並びを置く */
     const d = cubeNextD, cv = cave(d), xl = cv.hw * 0.6, y0 = cv.fl + 26, y1 = cv.ce - 26, k = Math.min(1, (S.rushT || 0) / RUSH_T), r = Math.random();
     if (r < 0.22 + k * 0.1) { /* 壁: 格子のうち1〜2マスだけ空いている */
-        const nx = 4, ny = 3, cw = xl * 2 / nx, chh = (y1 - y0) / ny, gx = Math.floor(Math.random() * nx), gy = Math.floor(Math.random() * ny), g2 = Math.random() < 0.5 - k * 0.3 ? Math.floor(Math.random() * nx * ny) : -1;
+        const nx = 3, ny = 2, cw = xl * 2 / nx, chh = (y1 - y0) / ny, gx = Math.floor(Math.random() * nx), gy = Math.floor(Math.random() * ny), g2 = Math.random() < 0.85 - k * 0.3 ? Math.floor(Math.random() * nx * ny) : -1;
         for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) { if ((i === gx && j === gy) || i + j * nx === g2) continue;
             addCube(d, -xl + cw * (i + 0.5), y0 + chh * (j + 0.5), Math.min(cw, chh) * 0.92, { w: 0, rx: 0, ry: 0 }); }
-        cubeNextD += 700 + Math.random() * 200;
+        cubeNextD += 1400 + Math.random() * 400;
     } else if (r < 0.5) { /* 自機をねらう大きな1個＋まわり */
         addCube(d, Math.max(-xl, Math.min(xl, S.x)), Math.max(y0, Math.min(y1, S.y)), 120 + Math.random() * 60);
-        for (let i = 0; i < 2 + Math.floor(k * 2); i++) addCube(d + (Math.random() - 0.5) * 200, (Math.random() * 2 - 1) * xl, y0 + Math.random() * (y1 - y0), 50 + Math.random() * 50);
-        cubeNextD += 380 + Math.random() * 200;
+        for (let i = 0; i < Math.floor(k * 1.5); i++) addCube(d + (Math.random() - 0.5) * 200, (Math.random() * 2 - 1) * xl, y0 + Math.random() * (y1 - y0), 50 + Math.random() * 50);
+        cubeNextD += 1000 + Math.random() * 400;
     } else if (r < 0.75) { /* 散らばった群れ */
-        const n = 4 + Math.floor(Math.random() * 3 + k * 3);
+        const n = 2 + Math.floor(Math.random() * 2 + k * 1.5);
         for (let i = 0; i < n; i++) addCube(d + Math.random() * 300, (Math.random() * 2 - 1) * xl, y0 + Math.random() * (y1 - y0), 45 + Math.random() * 70);
-        cubeNextD += 450 + Math.random() * 250;
+        cubeNextD += 1000 + Math.random() * 400;
     } else { /* 横に流れる列 */
-        const dir = Math.random() < 0.5 ? 1 : -1, n = 4 + Math.floor(k * 2), y = y0 + Math.random() * (y1 - y0);
+        const dir = Math.random() < 0.5 ? 1 : -1, n = 2 + Math.floor(k * 1.5), y = y0 + Math.random() * (y1 - y0);
         for (let i = 0; i < n; i++) addCube(d + i * 140, -dir * (xl + 80 + i * 90), Math.max(y0, Math.min(y1, y + (Math.random() - 0.5) * 120)), 70 + Math.random() * 30, { vx: dir * (260 + k * 80) });
-        cubeNextD += 520 + Math.random() * 200;
+        cubeNextD += 1100 + Math.random() * 400;
     }
 }
 function clearCubes(pop) { if (pop) cubes.filter(c => c.d > S.d - 50 && c.d < S.d + 1600).slice(0, 8).forEach(c => { boom(new THREE.Vector3(c.x, c.y, -c.d), [PAL.cry[0], 0xffffff], 4); }); cubes.length = 0; cubeMesh.count = 0; }
