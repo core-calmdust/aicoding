@@ -8603,9 +8603,9 @@ function draw() {
         if (!IS_MOBILE) { // ORIGIN版の切り替え案内（ゲーム画面の右下）
             renderCtx.save(); renderCtx.setTransform(1, 0, 0, 1, 0, 0);
             const cw = renderCtx.canvas.width, ch = renderCtx.canvas.height, k = cw / config.canvasWidth;
-            renderCtx.textAlign = 'right'; renderCtx.textBaseline = 'alphabetic'; renderCtx.font = `400 ${Math.round(12 * k)}px ${config.fontFamily}`;
+            renderCtx.textAlign = 'right'; renderCtx.textBaseline = 'alphabetic'; renderCtx.font = `500 ${Math.round(13 * k)}px ${config.fontFamily}`; if (hasLS) renderCtx.letterSpacing = `${(2 * k).toFixed(1)}px`; // RANKING / NAME と同じ字間
             renderCtx.fillStyle = originMode ? 'rgba(255,90,216,0.8)' : 'rgba(255,255,255,0.45)';
-            renderCtx.fillText(originMode ? 'O: NORMAL' : 'O: ORIGIN', cw - 14 * k, ch - 12 * k);
+            renderCtx.fillText(originMode ? 'O  NORMAL' : 'O  ORIGIN', cw - 14 * k, ch - 12 * k);
             renderCtx.restore();
         }
 
