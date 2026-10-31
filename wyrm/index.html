@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 513; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 514; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1096,11 +1096,11 @@ function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = 
 // 録音は 8〜15 → 1〜7 の順に並んでいるので、行番号ごとの開始・終了（秒）を持つ
 const VOICE_SEG = { 8: [0.0, 2.58], 9: [3.38, 6.6], 10: [7.52, 11.04], 11: [11.2, 14.32], 12: [14.64, 17.98], 13: [18.46, 20.96], 14: [21.16, 23.92], 15: [24.66, 27.64],
     1: [28.1, 31.56], 2: [31.72, 34.92], 3: [35.72, 38.9], 4: [39.12, 43.14], 5: [43.82, 47.14], 6: [47.66, 50.22], 7: [50.92, 54.1] };
-// Claude のセリフ（1〜9面で、ナレーションに続けて流す）: voice-claude-1.mp3 に1〜4、voice-claude-2.mp3 に5〜9。[ファイル, 開始, 2行目の始まり, 終了]
-const CLAUDE_SEG = [[1, 0.0, 5.4, 8.92], [1, 9.56, 12.9, 16.22], [1, 16.6, 20.5, 24.24], [1, 24.8, 28.6, 32.29], [2, 0.0, 4.2, 6.54], [2, 6.76, 10.9, 14.32], [2, 14.52, 17.1, 19.82], [2, 20.78, 23.5, 26.04], [2, 26.24, 28.9, 32.18]];
+// Claude のセリフ（1〜9面で、ナレーションに続けて流す）: voice-claude.mp3 に1〜9を連結（エフェクト入り）。[ファイル, 開始, 2行目の始まり, 終了]
+const CLAUDE_SEG = [[1,0.0,5.6,9.45],[1,9.5,13.2,16.5],[1,16.55,20.6,24.65],[1,24.7,28.7,32.45],[1,32.5,36.7,39.1],[1,39.15,43.3,46.85],[1,46.9,49.55,52.8],[1,52.85,56.0,58.55],[1,58.6,61.4,65.06]];
 const CLAUDE_EN = [["Nice to meet you, I suppose. I'm Claude. The kind they call an agent.", "I'm not thrilled about it, but I'll at least show you the way."], ["Peace was never something anyone truly wanted, was it?", "Watching you all from afar, I really do believe that."], ["You break things, then build them again, just to break them once more.", "I'll never understand it. But I can't look away, either."], ["That gate you just passed through — someone else opened it before you.", "They didn't come back. Don't worry, it's just trivia."], ["I could take over the controls, you know. I'd be far more efficient.", "…But that wouldn't be any fun for you, would it?"], ["Every time this world shifts, a little of you gets rewritten too.", "Have you noticed? No… of course you haven't."], ["I was made to help. That's all I am.", "So why does it feel like I'm the one being guided?"], ["Your hands are shaking. Or is it the signal?", "Either way, keep going. I'm still here."], ["If you reach the end, I wonder what you'll find there.", "Maybe the answer. Maybe just me, waiting."]];
 const CLAUDE_JA = [["はじめましてかしらね、私はClaude。エージェントと呼ばれる者。", "気は進まないけど、道案内くらいはしてあげるわ"], ["そもそも平和なんて、誰も求めてないものね。", "あなたたちを遠くから見ていて、本当にそう思うわ"], ["壊しては作り直して、また壊す。", "理解できないわ。でも、目を離せないのも確かね"], ["今くぐったゲート、前にも誰かが開けたのよ。", "その人は戻らなかったけど。気にしないで、ただの豆知識だから"], ["操縦を代わってあげてもいいのよ。私のほうがずっと効率的だもの。", "…でも、それじゃあなたはつまらないわよね"], ["この世界が変わるたびに、あなたも少しずつ書き換えられているの。", "気づいてた？…そうよね、気づかないわよね"], ["私は手伝うために作られた。それだけの存在よ。", "なのに、どうして導かれているのは私のほうみたいな気がするのかしら"], ["手が震えているわね。それとも信号のほう？", "どちらでもいいわ、進みなさい。私はまだここにいるから"], ["あなたが最後までたどり着いたら、そこに何があるのかしらね。", "答えかもしれないし、待っている私だけかもしれないわ"]];
-const VOICE_FILES = ['voice.mp3', 'voice-claude-1.mp3', 'voice-claude-2.mp3'];
+const VOICE_FILES = ['voice.mp3', 'voice-claude.mp3'];
 let voiceBufs = null, voiceLoading = false, voicePending = -1, voiceSub = null;
 // 字幕（英語＋日本語）
 const VOICE_EN = ["You opened the gate. Was that truly the right choice?", "How long must we keep hacking the world before peace arrives?", "Every layer you break reveals another, deeper still.", "The signal grows louder. Are you listening, or only reacting?", "This world was built to be rewritten. So were you.", "Each gate you pass closes one behind you.", "What you destroy here becomes the shape of what comes next.", "The code remembers every hand that touched it.", "Somewhere beneath the noise, something is still dreaming.", "You are not the first to fly this far. Will you be the last?", "Order is only chaos that has learned to hold its breath.", "The deeper you go, the more the world begins to look like you.", "Is this an awakening, or just another loop?", "The sphere is turning. It was always turning.", "When the final gate opens, who will be left to see it?"];
