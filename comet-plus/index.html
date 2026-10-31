@@ -2974,9 +2974,9 @@ const CK = IS_MOBILE ? 1.35 : 1; // 中央メッセージの間隔（スマホ�
 const ES = IS_MOBILE ? 1 : 1.5; // PCは雑魚敵を1.5倍（見た目と当たり判定） // スマホはキャラの見た目を大きめに（当たり判定は同じ） // ボスの大きさ倍率（見た目と当たり判定）
 const FS = config.canvasWidth / 1067; // ボスの横移動の幅をフィールド幅に合わせる
 
-// ボスの弾は全体で25%減らす（4発に1発を間引く。決まった順番で抜くので、模様の偏りが出にくい）
+// ボスの弾は全体で25%減らす（決まった割合で順に間引くので、模様の偏りが出にくい）。2体目のボスはさらに半分（37.5%だけ撃つ）
 let bossThin = 0;
-const bossKeep = () => tutorial || (bossThin = (bossThin + 1) % 4) !== 0;
+const bossKeep = () => { if (tutorial) return true; bossThin += boss && boss.nth === 1 ? 0.375 : 0.75; if (bossThin >= 1) { bossThin -= 1; return true; } return false; };
 function bossPush(b) { if (bossKeep()) enemyBullets.push(b); }
 function bossShoot(x, y, angle, speed, radius = 4) {
     if (tutorial && Math.random() < 0.7) return; // チュートリアルのボスは弾を控えめに
@@ -3397,7 +3397,7 @@ function spawnBoss() {
     const hp = bossHpFor(bossCount);
     bossCount++;
     const def = BOSS_DEFS[idx];
-    boss = { idx, def, x: config.canvasWidth / 2, y: -140, t: 0, enterT: 0, state: 'enter', hp, maxHp: hp, flash: 0, alpha: 1, invuln: false, contactCd: 0, r: def.r * BS };
+    boss = { idx, def, x: config.canvasWidth / 2, y: -140, t: 0, enterT: 0, state: 'enter', hp, maxHp: hp, flash: 0, alpha: 1, invuln: false, contactCd: 0, r: def.r * BS, nth: bossCount - 1 };
     if (def.init) def.init(boss);
     audioHandler.playSound('bossWarning');
 }
