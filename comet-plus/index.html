@@ -8548,7 +8548,11 @@ function draw() {
         if (hasLS) renderCtx.letterSpacing = '12px';
         renderCtx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         renderCtx.font = `400 12px ${config.fontFamily}`;
-        renderCtx.fillText('3d edition · beta 2', cx + 6, 290);
+        if (originMode) { // ORIGIN版は beta 2 の横にピンクで添える
+            const t1 = '3d edition · beta 2 · ', t2 = 'origin', w1 = renderCtx.measureText(t1).width, w2 = renderCtx.measureText(t2).width, al = renderCtx.textAlign;
+            renderCtx.textAlign = 'left'; const x0 = cx + 6 - (w1 + w2) / 2;
+            renderCtx.fillText(t1, x0, 290); renderCtx.fillStyle = '#ff5ad8'; renderCtx.fillText(t2, x0 + w1, 290); renderCtx.textAlign = al;
+        } else renderCtx.fillText('3d edition · beta 2', cx + 6, 290);
 
         // メニュー
         const menuY = 344, menuGap = 42;
@@ -8587,9 +8591,6 @@ function draw() {
         renderCtx.fillStyle = '#ffffff';
         renderCtx.fillText(titleBottomText, cx, 530, tMaxW);
         renderCtx.globalAlpha = 1;
-        // ORIGIN版の表示（PCはOキーで切り替え）
-        if (originMode) { renderCtx.font = `700 16px ${config.fontFamily}`; renderCtx.fillStyle = '#ff5ad8'; renderCtx.shadowColor = '#ff5ad8'; renderCtx.shadowBlur = 12; renderCtx.fillText('ORIGIN', cx, 500); renderCtx.shadowBlur = 0; }
-        if (!IS_MOBILE) { renderCtx.font = `400 11px ${config.fontFamily}`; renderCtx.fillStyle = 'rgba(255,255,255,0.45)'; renderCtx.fillText(originMode ? 'O: NORMAL' : 'O: ORIGIN', cx, 586); }
 
         const highScoreCycle = frameCount % 360;
         const hsDiff = '  ·  ' + diffLabel();
@@ -8599,6 +8600,14 @@ function draw() {
         if (!IS_MOBILE) renderCtx.fillText(hsText.toLowerCase(), cx, 566, tMaxW); // スマホはランキングのボタンと重なるので出さない
         if (hasLS) renderCtx.letterSpacing = '0px';
         renderCtx.restore();
+        if (!IS_MOBILE) { // ORIGIN版の切り替え案内（ゲーム画面の右下）
+            renderCtx.save(); renderCtx.setTransform(1, 0, 0, 1, 0, 0);
+            const cw = renderCtx.canvas.width, ch = renderCtx.canvas.height, k = cw / config.canvasWidth;
+            renderCtx.textAlign = 'right'; renderCtx.textBaseline = 'alphabetic'; renderCtx.font = `400 ${Math.round(12 * k)}px ${config.fontFamily}`;
+            renderCtx.fillStyle = originMode ? 'rgba(255,90,216,0.8)' : 'rgba(255,255,255,0.45)';
+            renderCtx.fillText(originMode ? 'O: NORMAL' : 'O: ORIGIN', cw - 14 * k, ch - 12 * k);
+            renderCtx.restore();
+        }
 
     } else if (gameState === 'ranking') {
         drawRanking(renderCtx);
