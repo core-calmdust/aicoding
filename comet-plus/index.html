@@ -1763,6 +1763,7 @@ const MOB_FALL = IS_MOBILE ? 1.12 * 0.8 : 1; // スマホの彗星の落下速�
 const MOB_ITEM_FALL = IS_MOBILE ? 1.12 * 1.1 : 1; // スマホのアイテムの落下速度
 // 序盤の難易度: 1〜3面はかなりやさしく、4面で以前の1面と同じ難しさ。以降も難しさは以前より3面ぶん後ろへずれる
 const EASY_K = [0.45, 0.62, 0.8]; // 1〜3面の彗星の量
+let bossCalmK = 1, calm3 = false;
 const dStage = () => Math.max(1, stage - 3); // 難しさの計算に使う面（4面＝以前の1面）
 const easeK = () => stage <= 3 ? EASY_K[stage - 1] : 1;
 const drainK = () => stage <= 3 ? [0.7, 0.8, 0.9][stage - 1] : 1; // 1〜3面のエネルギーの減り
@@ -1915,7 +1916,7 @@ function init() {
     looperSpawnFrame = -1;
     isShowingModeInGame = true; // ★ 追加: 開始時は必ずモード名を表示する
     boss = null;
-    bossSpawnFrame = -1;
+    bossSpawnFrame = -1; bossCalmK = 1; calm3 = false;
     bossCount = 0; lastBossIdx = -1; extraEnemy = [];
     tutorial = null;
 
@@ -1942,17 +1943,17 @@ function setupNewStage() {
 
     // Reset stage-specific flags and determine monster spawn counts for this new stage
     invadersSpawnedThisStage = 0;
-    invaderSpawnCountForStage = stage <= 3 ? [0, 1, 0][stage - 1] : Math.floor(dStage() / 2);
+    invaderSpawnCountForStage = stage <= 3 ? [0, 1, 0][stage - 1] : Math.max(1, Math.floor(dStage() / 2)); // 2面から少しだけ敵を出す
     hasUFOSpawnedThisStage = false;
     hasLooperSpawnedThisStage = false;
-    // 新しい雑魚: 4面からウィーバー・ランス、5面からセントリー。ボス面以外で0〜3体（種類も時間もばらばら）
-    { const pool = []; if (stage >= 4) pool.push('weaver', 'lance'); if (stage >= 5) pool.push('sentry');
+    // 新しい雑魚: 7面からウィーバー・ランス、8面からセントリー（以前の4面・5面を3面ぶん後ろへ）。ボス面以外で0〜3体（種類も時間もばらばら）
+    { const pool = []; if (dStage() >= 4) pool.push('weaver', 'lance'); if (dStage() >= 5) pool.push('sentry');
       extraEnemy = [];
       if (pool.length && stage % 3 !== 0) { const n = Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) { let ty = pool[Math.floor(Math.random() * pool.length)]; if (ty === 'weaver' && extraEnemy.filter(e => e.type === 'weaver').length >= 2) ty = pool.filter(t => t !== 'weaver')[Math.floor(Math.random() * (pool.length - 1))]; extraEnemy.push({ type: ty, frame: Math.floor(stageClearFrame - STAGE_LENGTH_IN_FRAMES * (0.15 + Math.random() * 0.65)) }); } } // WEAVERは1面に最大2体
       extraEnemy.sort((a, b) => a.frame - b.frame); }
     
     // Set Looper spawn frame for this stage
-    if (stage >= 4 && stage % 2 === 0) {
+    if (dStage() >= 4 && dStage() % 2 === 0) { // ルーパーも3面ぶん後ろへ
         const minSpawnFrame = stageClearFrame - STAGE_LENGTH_IN_FRAMES * 0.7;
         const maxSpawnFrame = stageClearFrame - STAGE_LENGTH_IN_FRAMES * 0.3;
         looperSpawnFrame = Math.floor(Math.random() * (maxSpawnFrame - minSpawnFrame) + minSpawnFrame);
@@ -1962,6 +1963,7 @@ function setupNewStage() {
 
     // 3面ごとにボス
     if (stage % 3 === 0) bossSpawnFrame = frameCount + 150;
+    if (stage === 3) calm3 = true;
 }
 
 async function startGame(mode) {
@@ -1981,7 +1983,7 @@ async function startGame(mode) {
         if (stage % 3 === 0) bossSpawnFrame = 150;
     }
     // Determine monster spawn counts for the first stage
-    invaderSpawnCountForStage = stage <= 3 ? [0, 1, 0][stage - 1] : Math.floor(dStage() / 2);
+    invaderSpawnCountForStage = stage <= 3 ? [0, 1, 0][stage - 1] : Math.max(1, Math.floor(dStage() / 2)); // 2面から少しだけ敵を出す
     invadersSpawnedThisStage = 0;
     hasUFOSpawnedThisStage = false;
     hasLooperSpawnedThisStage = false;
@@ -2490,9 +2492,12 @@ function updatePlayingState(dt_sec) {
         nextWayShotFrame = frameCount + randomInterval;
     }
 
+    // 3面のボス: 登場の前から倒すまで彗星をとても少なくし、倒したらなめらかに元へ戻す
+    if (calm3 && !boss && bossSpawnFrame === -1) calm3 = false; // 3面のボスがいなくなった（4面へ持ち越しても、倒すまでは少ないまま）
+    bossCalmK += ((calm3 ? 0.15 : 1) - bossCalmK) * Math.min(1, dt_sec * 1.5);
     const spawnInterval = Math.max(3, Math.floor(config.cometSpawnInterval / (1 + (dStage() - 1) * 0.2)));
     if (frameCount % spawnInterval === 0) {
-        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : easeK() * (DIFFS[difficultyIndex].cometMul || 1) * (IS_MOBILE ? 2 / 3 : 1)); // EASYは彗星2/3。スマホは全難易度をさらに2/3（ARCADEはSTANDARDと同じ密度）
+        cometSpawnCarry += config.cometSpawnAmount * (tutorial ? 1 : easeK() * bossCalmK * (DIFFS[difficultyIndex].cometMul || 1) * (IS_MOBILE ? 2 / 3 : 1)); // EASYは彗星2/3。スマホは全難易度をさらに2/3（ARCADEはSTANDARDと同じ密度）
         for (; cometSpawnCarry >= 1; cometSpawnCarry--) {
             comets.push({
                 x: Math.random() * config.canvasWidth,
@@ -2515,7 +2520,7 @@ function updatePlayingState(dt_sec) {
                 type: 'looper',
                 hp: 1,
                 angle: Math.random() * Math.PI * 2,
-                speed: (1.5 + (stage * 0.1)) * (4/9), 
+                speed: (1.5 + (dStage() * 0.1)) * (4/9), 
                 direction: Math.random() < 0.5 ? 1 : -1,
                 width: 14 * 4.2,
                 height: 14 * 4.2,
@@ -2533,7 +2538,7 @@ function updatePlayingState(dt_sec) {
         const spawnCheckInterval = 120;
         if (frameCount % spawnCheckInterval === 0) {
             // UFO Spawning
-            if (stage % 3 === 2 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && canSpawn() && Math.random() < 0.2) { // ボス面(3の倍数)と重なって出なくなっていたので、ボスの手前の面に
+            if (stage >= 5 && stage % 3 === 2 && !hasUFOSpawnedThisStage && !boss && bossSpawnFrame === -1 && canSpawn() && Math.random() < 0.2) { // ボス面(3の倍数)と重なって出なくなっていたので、ボスの手前の面に
                 hasUFOSpawnedThisStage = true;
                 const startX = Math.random() < 0.5 ? -30 : config.canvasWidth + 30;
                 const speedX = startX < 0 ? 250 : -250;
