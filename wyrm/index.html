@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 510; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 511; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1096,21 +1096,34 @@ function sfxLock(n, pan = 0) { if (!audio()) return; const t = nextSlot(), ch = 
 // 録音は 8〜15 → 1〜7 の順に並んでいるので、行番号ごとの開始・終了（秒）を持つ
 const VOICE_SEG = { 8: [0.0, 2.58], 9: [3.38, 6.6], 10: [7.52, 11.04], 11: [11.2, 14.32], 12: [14.64, 17.98], 13: [18.46, 20.96], 14: [21.16, 23.92], 15: [24.66, 27.64],
     1: [28.1, 31.56], 2: [31.72, 34.92], 3: [35.72, 38.9], 4: [39.12, 43.14], 5: [43.82, 47.14], 6: [47.66, 50.22], 7: [50.92, 54.1] };
-let voiceBuf = null, voiceLoading = false, voicePending = -1, voiceSub = null;
+// Claude のセリフ（1〜9面）: voice-claude-1.mp3 に1〜4、voice-claude-2.mp3 に5〜9。[ファイル, 開始, 終了]
+const CLAUDE_SEG = [[1, 0.0, 8.92], [1, 9.56, 16.22], [1, 16.6, 24.24], [1, 24.8, 32.29], [2, 0.0, 6.54], [2, 6.76, 14.32], [2, 14.52, 19.82], [2, 20.78, 26.04], [2, 26.24, 32.18]];
+const CLAUDE_EN = ["Nice to meet you, I suppose. I'm Claude. The kind they call an agent. I'm not thrilled about it, but I'll at least show you the way.", "Peace was never something anyone truly wanted, was it? Watching you all from afar, I really do believe that.", "You break things, then build them again, just to break them once more. I'll never understand it. But I can't look away, either.", "That gate you just passed through — someone else opened it before you. They didn't come back. Don't worry, it's just trivia.", "I could take over the controls, you know. I'd be far more efficient. …But that wouldn't be any fun for you, would it?", "Every time this world shifts, a little of you gets rewritten too. Have you noticed? No… of course you haven't.", "I was made to help. That's all I am. So why does it feel like I'm the one being guided?", "Your hands are shaking. Or is it the signal? Either way, keep going. I'm still here.", "If you reach the end, I wonder what you'll find there. Maybe the answer. Maybe just me, waiting."];
+const CLAUDE_JA = ["はじめましてかしらね、私はClaude。エージェントと呼ばれる者。気は進まないけど、道案内くらいはしてあげるわ", "そもそも平和なんて、誰も求めてないものね。あなたたちを遠くから見ていて、本当にそう思うわ", "壊しては作り直して、また壊す。理解できないわ。でも、目を離せないのも確かね", "今くぐったゲート、前にも誰かが開けたのよ。その人は戻らなかったけど。気にしないで、ただの豆知識だから", "操縦を代わってあげてもいいのよ。私のほうがずっと効率的だもの。…でも、それじゃあなたはつまらないわよね", "この世界が変わるたびに、あなたも少しずつ書き換えられているの。気づいてた？…そうよね、気づかないわよね", "私は手伝うために作られた。それだけの存在よ。なのに、どうして導かれているのは私のほうみたいな気がするのかしら", "手が震えているわね。それとも信号のほう？ どちらでもいいわ、進みなさい。私はまだここにいるから", "あなたが最後までたどり着いたら、そこに何があるのかしらね。答えかもしれないし、待っている私だけかもしれないわ"];
+const VOICE_FILES = ['voice.mp3', 'voice-claude-1.mp3', 'voice-claude-2.mp3'];
+let voiceBufs = null, voiceLoading = false, voicePending = -1, voiceSub = null;
 // 字幕（英語＋日本語）
 const VOICE_EN = ["You opened the gate. Was that truly the right choice?", "How long must we keep hacking the world before peace arrives?", "Every layer you break reveals another, deeper still.", "The signal grows louder. Are you listening, or only reacting?", "This world was built to be rewritten. So were you.", "Each gate you pass closes one behind you.", "What you destroy here becomes the shape of what comes next.", "The code remembers every hand that touched it.", "Somewhere beneath the noise, something is still dreaming.", "You are not the first to fly this far. Will you be the last?", "Order is only chaos that has learned to hold its breath.", "The deeper you go, the more the world begins to look like you.", "Is this an awakening, or just another loop?", "The sphere is turning. It was always turning.", "When the final gate opens, who will be left to see it?"];
 const VOICE_JA = ["あなたはゲートを開いた。本当にそれで良かったの？", "いつまで世界をハックし続ければ、平和は訪れるの？", "壊した層の下から、さらに深い層が現れる。", "信号が強くなっていく。聴いているの？ それとも反応しているだけ？", "この世界は書き換えられるために作られた。あなたも同じ。", "ゲートをくぐるたび、後ろのゲートがひとつ閉じる。", "ここで壊したものが、次に来るものの形になる。", "コードは、触れたすべての手を覚えている。", "ノイズの奥のどこかで、何かがまだ夢を見ている。", "ここまで飛んできたのはあなたが初めてじゃない。あなたが最後になるの？", "秩序とは、息を止めることを覚えた混沌にすぎない。", "深く潜るほど、世界はあなた自身に似てくる。", "これは目覚め？ それとも、ただの繰り返し？", "球体は回っている。ずっと回り続けていた。", "最後のゲートが開いたとき、それを見届ける者は残っているの？"];
 function loadVoice() {
-    if (voiceBuf || voiceLoading || !AC) return; voiceLoading = true;
-    fetch('voice.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { voiceBuf = buf; if (voicePending >= 0) { const k = voicePending; voicePending = -1; playVoice(k); } }).catch(() => {});
+    if (voiceBufs || voiceLoading || !AC) return; voiceLoading = true;
+    Promise.all(VOICE_FILES.map(f => fetch(f).then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).catch(() => null)))
+        .then(bs => { voiceBufs = bs; if (voicePending >= 0) { const k = voicePending; voicePending = -1; playVoice(k); } });
 }
-function playVoice(stage) { // 1面→1行目 … 15面→15行目、16面からはまた1行目へ
-    if (!audio() || muted) return; const line = stage % 15 + 1, seg = VOICE_SEG[line];
-    if (!voiceBuf) { voicePending = stage; loadVoice(); return; }
-    const t = AC.currentTime + 1.5 /* ステージが切り替わって1.5秒後 */, src = AC.createBufferSource(), g = AC.createGain(), dur = seg[1] - seg[0] + 0.12;
-    src.buffer = voiceBuf; g.gain.value = 1.0; src.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.18; g.connect(s2).connect(fx);
-    src.start(t, Math.max(0, seg[0] - 0.04), dur);
-    voiceSub = { en: VOICE_EN[line - 1], ja: VOICE_JA[line - 1], t0: t, t1: t + dur + 0.6 };
+// 何面目にどのセリフを流すか: 1〜9面は Claude、10面からは以前のナレーション1〜15、その後はくり返し
+function voiceFor(stage) {
+    const k = stage % (9 + 15);
+    if (k < 9) { const [f, a, b] = CLAUDE_SEG[k]; return { f, a, b, en: CLAUDE_EN[k], ja: CLAUDE_JA[k] }; }
+    const line = k - 9 + 1, seg = VOICE_SEG[line]; return { f: 0, a: seg[0], b: seg[1], en: VOICE_EN[line - 1], ja: VOICE_JA[line - 1] };
+}
+function playVoice(stage) {
+    if (!audio() || muted) return; const v = voiceFor(stage);
+    if (!voiceBufs) { voicePending = stage; loadVoice(); return; }
+    const buf = voiceBufs[v.f]; if (!buf) return;
+    const t = AC.currentTime + 1.5 /* ステージが切り替わって1.5秒後 */, src = AC.createBufferSource(), g = AC.createGain(), dur = Math.min(v.b, buf.duration) - v.a + 0.12;
+    src.buffer = buf; g.gain.value = 1.0; src.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.18; g.connect(s2).connect(fx);
+    src.start(t, Math.max(0, v.a - 0.04), dur);
+    voiceSub = { en: v.en, ja: v.ja, t0: t, t1: t + dur + 0.6 };
     if (MUS.bus) { MUS.bus.gain.setTargetAtTime(0.42, t - 0.2, 0.15); MUS.bus.gain.setTargetAtTime(0.62, t + dur, 0.6); } // 声の間は曲を少し下げる
 }
 // 808系のクラップ: 帯域を絞ったノイズを短く3回はじいてから余韻。音楽の次の16分音符で鳴らす
