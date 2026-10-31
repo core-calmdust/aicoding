@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 512; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 513; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1118,7 +1118,7 @@ function playVoice(stage) {
     let t = AC.currentTime + 1.5; /* ステージが切り替わって1.5秒後 */
     const play = (buf, a, b) => { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.connect(g); g.connect(master); const s2 = AC.createGain(); s2.gain.value = 0.18; g.connect(s2).connect(fx); src.start(t, Math.max(0, a - 0.04), Math.min(b, buf.duration) - a + 0.12); };
     const t0 = t;
-    if (voiceBufs[0]) { play(voiceBufs[0], seg[0], seg[1]); subs.push({ en: VOICE_EN[i], ja: VOICE_JA[i], t0: t, t1: t + seg[1] - seg[0] + 0.3 }); t += seg[1] - seg[0] + 0.5; }
+    if (voiceBufs[0]) { play(voiceBufs[0], seg[0], seg[1]); subs.push({ en: VOICE_EN[i], ja: VOICE_JA[i], t0: t, t1: t + seg[1] - seg[0] + 0.3 }); t += seg[1] - seg[0] + 1.0; /* 1秒あけて Claude のセリフへ */ }
     if (i < 9) { const [f, a, sp, b] = CLAUDE_SEG[i], buf = voiceBufs[f];
         if (buf) { play(buf, a, b); subs.push({ en: CLAUDE_EN[i][0], ja: CLAUDE_JA[i][0], t0: t, t1: t + sp - a }); subs.push({ en: CLAUDE_EN[i][1], ja: CLAUDE_JA[i][1], t0: t + sp - a, t1: t + b - a + 0.6 }); t += b - a; } }
     voiceSub = subs;
