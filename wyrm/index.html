@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 519; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 520; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -1189,7 +1189,7 @@ function sfxHit(order, volley, pan = 0) {
 // 音楽: 4つ打ちのキック・和音に合わせたベース・和音のヒット・シーケンス・やわらかなパッド
 // ステージごとに速さ・スケール・音色・リズムの型が変わる。命中音と同じ16分音符のグリッドで鳴る
 // =====================================================================
-const MUS = { on: false, n: 0, t: 0, bus: null, duck: null, timer: 0, lastChord: null, I: 0 };
+const MUS = { on: false, n: 0, t: 0, bus: null, duck: null, timer: 0, lastChord: null, I: 0, R: 0 };
 function musicStart() {
     if (!audio() || MUS.on) return; MUS.on = true;
     MUS.bus = AC.createGain(); MUS.bus.gain.value = 0.0001; MUS.bus.connect(master); MUS.bus.gain.setTargetAtTime(0.62, AC.currentTime, 0.6);
@@ -1202,6 +1202,7 @@ function musTick() { if (!MUS.on) return; const ahead = AC.currentTime + 0.16;
     while (MUS.t < ahead) {
         const want = S.mode === 'title' ? 0 : S.stage + (S.mode === 'evo' ? 1 : Math.min(1, S.reveal || 0));
         MUS.I += (want - MUS.I) * 0.006; // 約8小節かけてなじむ
+        MUS.R += ((isRush(S.stage) && (S.mode === 'play' || S.mode === 'evo') ? 1 : 0) - MUS.R) * 0.03; /* 高速面のシーケンスは2小節ほどで出入りする */
         setTempo(bpmOf(MUS.I)); if (MUS.n % 16 === 0 && dl) dl.delayTime.setTargetAtTime(60 / BPM * 0.75, MUS.t, 0.5);
         if (MUS.n % 256 === 0) { CHORDS = progWant; MUS.brk = MUS.I > 2.2 && Math.random() < 0.4; } // 進行の入れ替えは16小節のひと回りの頭で。ブレイクを入れるかもここで決める
         musStep(MUS.n, MUS.t); MUS.n++; MUS.t += S16; } }
@@ -1259,6 +1260,14 @@ function musStep(n, t) {
     const a8 = ramp(I, 2.8, 2) * (brk ? 0.5 : 1), a16 = ramp(I, 5, 2.5) * on, up = ch.slice(1), oct = (Math.floor(n / 64) % 2) * 12;
     if (k % 2 === 0 && a8 > 0.03) { PANV = (n >> 1) % 2 ? 0.55 : -0.55; tone(t, up[(n >> 1) % up.length] + 12 + oct, 0.19 * a8, true); PANV = 0; } // +10dB
     else if (k % 2 === 1 && a16 > 0.03) { PANV = (n >> 1) % 2 ? -0.75 : 0.75; tone(t, up[(n * 3 >> 1) % up.length] + 12 + oct, 0.126 * a16, true); PANV = 0; }
+    // 高速面: 敵弾の効果音がないぶん、走る16分のアルペジオ・16分のハット・裏のオクターブベースを足す
+    const rr = MUS.R; if (rr > 0.03) {
+        const AR = [0, 1, 2, 3, 4, 3, 2, 1, 0, 2, 4, 5, 4, 2, 3, 1], tn = up.concat(up.map(m => m + 12)), sw = 0.5 + 0.5 * Math.sin(n / 64 * Math.PI * 2);
+        PANV = (k >> 1) % 2 ? 0.4 : -0.4; pluck(t, tn[AR[k] % tn.length] + 12, 0.075 * rr * (k % 4 === 0 ? 1.15 : 0.85), 'sawtooth', 1400 + sw * 4200, 0.16, [-6, 6]); PANV = 0;
+        if (k % 2 === 1 && !(h2 > 0.03)) hat(t, 0.05 * rr, k % 4 === 1 ? -0.5 : 0.5);
+        if (k % 4 === 2) bassNote(t, bassRoot + 12, S16 * 1.4, false, 0.55 * rr);
+        if (k === 0 && n % 32 === 0) { PANV = 0.3; tone(t, up[0] + 24, 0.1 * rr, true); PANV = 0; }
+    }
 }
 function sfxDamage() { if (!audio()) return; const t = AC.currentTime; [0, 1, 6].forEach(k => voice(t, mtof(40 + k), 'sawtooth', 0.005, 0.5, 0.12, 0.3)); const s = noise(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = 'lowpass'; f.frequency.value = 900; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.55); }
 function sfxCrash() {
