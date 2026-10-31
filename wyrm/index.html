@@ -214,7 +214,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 520; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 521; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;
@@ -2010,7 +2010,7 @@ function updateHexGate(dt) {
     if (h.done && S.d > h.d + 400) { scene.remove(h.obj); hexGate = null; } // 形は共有なので捨てない
 }
 // ---------------- 高速スクロール面（5面ごと）: 敵は出ず、前から迫るキューブを避ける。一定時間でゲートが出る ----------------
-const RUSH_T = 40, isRush = st => st % 5 === 4, rushSpd = st => Math.min(420, 300 + st * 20) * 1.9;
+const RUSH_T = 20, isRush = st => st % 5 === 4, rushSpd = st => Math.min(420, 300 + st * 20) * 1.9;
 const CN = 140, cubeMat = new THREE.ShaderMaterial({
     uniforms: { uC: { value: new THREE.Color() }, uE: { value: new THREE.Color() } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, /* 線だけのワイヤーフレーム */
     vertexShader: `varying vec2 vUv; varying float vZ; varying float vL;
