@@ -368,5 +368,9 @@
 "bd.abstract": "Modern",
 "bd.lamba": "Lamba-Tuch",
 "pcs.flat": "Flach",
-"pcs.disc": "Scheiben"
+"pcs.disc": "Scheiben",
+"bd.dark": "Modern dunkel",
+"bd.lambared": "Lamba (rot)",
+"pcs.mono": "Mono (Elfenbein / Koralle)",
+"pcs.lacquer": "Lackscheiben"
 }

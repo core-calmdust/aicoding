@@ -938,11 +938,11 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 45 chars, side } ; o: { cls, marks: {pt: 'ring'|'ng'|'x'|'dash'}, arrows: [[points...]], flip, click, sel, dest: [], last }
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood', 'abstract', 'lamba'], PC_KEYS = ['wood', 'shell', 'stone', 'jade', 'flat', 'disc'];
+const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood', 'abstract', 'dark', 'lamba', 'lambared'], PC_KEYS = ['wood', 'shell', 'stone', 'jade', 'flat', 'mono', 'disc', 'lacquer'];
 // the board picture of a design (wood textures by tools/gen_wood.py, the lamba cloth by tools/gen_lamba.py; abstract: plain)
-const BD_IMG = k => k === 'abstract' ? '' : k === 'lamba' ? 'img/lamba-sivy.webp' : `img/wood-${k}.webp`;
+const BD_IMG = k => k === 'abstract' || k === 'dark' ? '' : k === 'lamba' || k === 'lambared' ? `img/${k}-sivy.webp` : `img/wood-${k}.webp`;
 // board: [light, dark, line]
-const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'] };
+const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], dark: ['#2a2c33', '#1d1e23', '#c2ae8f'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'], lambared: ['#a8282e', '#2c2c5c', '#fbf0dc'] };
 // pieces: [White: highlight, body, edge], [Black: …]
 const PC_PAL = {
   wood: [['#fbe6bf', '#dcb27b', '#8f6232'], ['#7a5340', '#2c1b12', '#0c0604']],
@@ -951,6 +951,8 @@ const PC_PAL = {
   jade: [['#fbfff6', '#dbe9d2', '#8ea686'], ['#4f8f6c', '#1f5138', '#08200f']],
   flat: [['#c9582f', '#c0532c', '#9c3f1f'], ['#41455a', '#393c4b', '#1c1d24']],
   disc: [['#ffd84f', '#f2c230', '#b88a12'], ['#d6f3e2', '#bfe8d0', '#7fb59a']],
+  mono: [['#fbf7ee', '#ece5d6', '#bdb29d'], ['#ee7a58', '#d9583b', '#a03c24']],
+  lacquer: [['#fff6e2', '#efe0c2', '#bfa476'], ['#d24a52', '#9e1f28', '#5e0f16']],
 };
 function designApply() {
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'acacia';
