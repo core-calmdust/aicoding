@@ -2245,3 +2245,6 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   .bc-table.mob .bc-mid .bc-banner{animation:bannerInM .35s ease}
 }
 @keyframes bannerInM{from{opacity:0;transform:translate(-50%,-30%)}}
+
+/* landscape phone: Close only as wide as its label, Start takes the rest (same as the other games) */
+@media (orientation:landscape) and (max-height:560px){#newOverlay .modal-actions #btnNewClose{flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}#newOverlay .modal-actions #btnStart{flex:1 1 0!important}}

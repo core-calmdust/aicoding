@@ -131,6 +131,9 @@ const CSS = `
 :is(html.ngt-land,html.rot) .modal.ngt-on .modal-actions{margin-top:6px!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions :is(.mbtn,button){padding-top:8px!important;padding-bottom:8px!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .ngt-bar{margin-top:6px!important}
+/* (landscape: Close only as wide as its label, the start button takes the rest) */
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):not(:last-child){flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):last-child{flex:1 1 0!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button{flex-direction:row;gap:6px;min-height:38px;padding:6px 6px 7px}
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
