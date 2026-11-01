@@ -83,6 +83,27 @@ def arabesque(d, rng, x0, y0, x1, y1, cols, n=140, size=(18, 34)):
         poly(d, leaf, fill=col)
 
 
+def herati(d, x0, y0, x1, y1, s, cols, lw=3):
+    """the herati repeat of Persian carpets: a lattice of small diamonds, a rosette in each, lancet leaves between.
+    cols = (lattice, rosette, centre, leaf)"""
+    lat, ros, cen, leaf = cols
+    def lancet(cx, cy, a, L, w):
+        ux, uy = math.cos(a), math.sin(a); px, py = -uy, ux
+        pts = [(cx + ux * L * t + px * w * math.sin(math.pi * t) * (1 if k == 0 else -1), cy + uy * L * t + py * w * math.sin(math.pi * t) * (1 if k == 0 else -1)) for k in (0, 1) for t in (np.linspace(0, 1, 9) if k == 0 else np.linspace(1, 0, 9))]
+        poly(d, pts, fill=leaf)
+    for j, y in enumerate(np.arange(y0 - s, y1 + s, s / 2)):
+        for x in np.arange(x0 - s + (s / 2 if j % 2 else 0), x1 + s, s):
+            d.line(sc([(x, y - s / 2), (x + s / 2, y), (x, y + s / 2), (x - s / 2, y), (x, y - s / 2)]), fill=lat, width=lw * SS)
+            for k in range(8):
+                a = k * math.pi / 4
+                px_, py_ = x + s * .09 * math.cos(a), y + s * .09 * math.sin(a)
+                d.ellipse([(px_ - s * .05) * SS, (py_ - s * .05) * SS, (px_ + s * .05) * SS, (py_ + s * .05) * SS], fill=ros)
+            d.ellipse([(x - s * .045) * SS, (y - s * .045) * SS, (x + s * .045) * SS, (y + s * .045) * SS], fill=cen)
+            for k in range(4):   # lancet leaves pointing out to the lattice corners
+                a = k * math.pi / 2 + math.pi / 4
+                lancet(x + math.cos(a) * s * .18, y + math.sin(a) * s * .18, a, s * .22, s * .05)
+
+
 def medallion(seed=1):
     rng = np.random.default_rng(seed)
     RED, DRED, PUR, GOLD, CREAM, TEAL, ORG, BRN = (150, 28, 26), (110, 18, 22), (78, 26, 66), (226, 178, 84), (240, 222, 170), (70, 140, 128), (196, 92, 38), (122, 52, 28)
@@ -91,17 +112,18 @@ def medallion(seed=1):
     border_band(d, 0, 0, W, H, S * .5, BRN, (GOLD, TEAL), (40, 14, 20), rng, 'rosette')
     d.rectangle([S * .5 * SS, S * .5 * SS, (W - S * .5) * SS, (H - S * .5) * SS], outline=PUR, width=int(S * .12) * SS)
     fx0, fy0, fx1, fy1 = S * .62, S * .62, W - S * .62, H - S * .62
-    arabesque(d, rng, fx0, fy0, fx1, fy1, [DRED, ORG, (170, 50, 36)], n=220)
+    herati(d, fx0, fy0, fx1, fy1, S * .62, ((128, 24, 26), (176, 58, 40), GOLD, (88, 30, 40)), lw=2)
     # corner spandrels: quarter stars
     for (cx, cy) in ((fx0, fy0), (fx1, fy0), (fx0, fy1), (fx1, fy1)):
         poly(d, star(cx, cy, S * 1.15, S * .8, 8, math.pi / 8), fill=PUR)
         poly(d, star(cx, cy, S * .8, S * .55, 8, math.pi / 8), fill=DRED)
-        arabesque(d, rng, cx - S * .6, cy - S * .6, cx + S * .6, cy + S * .6, [GOLD, ORG], n=10, size=(10, 18))
+        poly(d, star(cx, cy, S * .42, S * .2, 8, math.pi / 8), fill=GOLD); poly(d, star(cx, cy, S * .26, S * .12, 8, 0), fill=DRED)
     # the central medallion round point c3
     cx, cy = P(2, 2)
     poly(d, star(cx, cy, S * 2.15, S * 1.6, 8, math.pi / 8), fill=PUR)
     poly(d, star(cx, cy, S * 2.0, S * 1.48, 8, math.pi / 8), fill=BRN)
-    arabesque(d, rng, cx - S * 1.5, cy - S * 1.5, cx + S * 1.5, cy + S * 1.5, [TEAL, GOLD, ORG], n=60, size=(14, 26))
+    herati(d, cx - S * 1.6, cy - S * 1.6, cx + S * 1.6, cy + S * 1.6, S * .5, ((86, 40, 26), TEAL, GOLD, (150, 70, 34)), lw=2)
+    poly(d, star(cx, cy, S * 2.0, S * 1.48, 8, math.pi / 8), outline=GOLD, width=4 * SS)
     poly(d, star(cx, cy, S * 1.05, S * .78, 8, math.pi / 8), fill=RED)
     poly(d, star(cx, cy, S * .9, S * .66, 8, 0), outline=GOLD, width=4 * SS)
     for k in range(8):
@@ -274,6 +296,14 @@ def patch(seed=4):
 
 
 os.makedirs(OUT, exist_ok=True)
+def dim(img, k=.8, sat=.85):
+    a = np.asarray(img).astype(np.float64); g = a.mean(axis=2, keepdims=True)
+    a = (g + (a - g) * sat) * k
+    a = 255 * (a / 255) ** 1.12   # deeper shadows: wool, not paint
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+
+
+DIM = {'medallion': (.86, .9), 'berber': (.8, .78), 'kilim': (.8, .8), 'patch': (.8, .78)}
 for name, fn in (('medallion', medallion), ('berber', berber), ('kilim', kilim), ('patch', patch)):
-    fn().save(os.path.join(OUT, f'rug-{name}.webp'), quality=86, method=6)
+    dim(fn(), *DIM[name]).save(os.path.join(OUT, f'rug-{name}.webp'), quality=86, method=6)
     print(name)
