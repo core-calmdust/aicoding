@@ -1479,7 +1479,7 @@ const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;
 function hbInfo() {
   if (typeof HB === 'undefined' || !HB || !HB.on || !S) return;
   const tn = S.over ? t('hb.over') : shortName(S.turn) === t('you') ? t('yourTurn') : t('turn', { p: shortName(S.turn) });
-  let h = `<span class="hb-chip">${S.over ? '' : `<i class="hb-sw p${S.turn}"></i>`}<b>${escHb(tn)}</b></span>`;
+  let h = S.over ? `<span class="hb-chip"><b>${escHb(tn)}</b></span>` : '';   // (no turn chip in the bar)
   h += `<span class="hb-chip"><i class="hb-sw p0"></i><b>${S.scores[0]}</b> – <b>${S.scores[1]}</b><i class="hb-sw p1"></i></span>`;
   const ev = $('#evLine');
   if (ev && ev.textContent && !document.body.classList.contains('rated-live')) h += `<span class="hb-chip hb-ev">${ev.innerHTML}</span>`;

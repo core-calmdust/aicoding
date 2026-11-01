@@ -752,7 +752,7 @@ function renderInfo() {
 function hbInfo(p, ev) {
   if (!HB || !HB.on) return;
   const e = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  let h = `<span class="hb-chip hb-turn"><i class="pdisc p${p.over ? (p.b[6] >= p.b[13] ? 0 : 1) : p.side}"></i><b>${e($('#turnLbl').textContent)}</b></span>`;
+  let h = !p.over ? '' : `<span class="hb-chip hb-turn"><i class="pdisc p${p.over ? (p.b[6] >= p.b[13] ? 0 : 1) : p.side}"></i><b>${e($('#turnLbl').textContent)}</b></span>`;
   h += `<span class="hb-chip"><i class="pdisc p0"></i><b>${p.b[6]}</b> – <b>${p.b[13]}</b><i class="pdisc p1"></i></span>`;
   if (ev && !lesson && !puzzle) h += `<span class="hb-chip hb-ev" title="${e(t('eval'))}"><b>${e(evalText(ev))}</b></span>`;
   if (puzzle && puzzle.state === 'play' && puzzle.N > 1) h += `<span class="hb-chip"><b>${e(PZBook.t('movesLeft', { n: pzLeft(puzzle) }))}</b></span>`;
