@@ -1336,8 +1336,11 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .tools-modal .rc-eqs small{font-size:11.5px}.tools-modal .rc-eqs b{font-size:13.5px}
   .rc-eqs div{grid-template-columns:52px 1fr 56px;gap:8px;padding:5px 8px}
   /* 役と確率 */
-  .tools-modal .hr{grid-template-columns:22px minmax(0,1fr) auto;gap:8px;padding:6px 4px}
-  .tools-modal .hr>small,.tools-modal .hr>em{display:none}
+  /* phones: name + cards on the first row, the probability (and the short description) on the second */
+  .tools-modal .hr{grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"i n c" "i d p";gap:2px 8px;padding:7px 4px}
+  .tools-modal .hr>.hr-i{grid-area:i}.tools-modal .hr>b{grid-area:n}.tools-modal .hr>.mini,.tools-modal .hr>:nth-child(3){grid-area:c}
+  .tools-modal .hr>small{display:block;grid-area:d;font-size:11.5px;line-height:1.4;color:var(--muted);min-width:0}
+  .tools-modal .hr>em{display:block;grid-area:p;font:700 14px 'JetBrains Mono',monospace;font-style:normal;color:var(--text);text-align:right;align-self:start}
   .tools-modal .hr.sm{grid-template-columns:22px 1fr}
   .tools-modal .hr>b{font-size:14px}
   .tools-modal .hr .mc{width:26px;height:36px;font-size:12.5px}
