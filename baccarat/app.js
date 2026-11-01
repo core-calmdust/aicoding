@@ -435,7 +435,9 @@ function render() {
   // Elsewhere (the info below the table): the table is only as tall as it needs (no empty felt).
   const pcCol = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)').matches;
   if (pcCol && bw.style.maxHeight) bw.style.maxHeight = '';
-  const rail = (bw.offsetHeight - H) / 2, Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640) - 2 * rail;   // the height the table could have
+  const rail = (bw.offsetHeight - H) / 2, sc = $('.stage');
+  // the height the table could have: on phones / tablets the chips and the Deal button must stay on the screen without scrolling
+  const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - ($('#actbar').offsetHeight > 100 ? $('#actbar').offsetHeight : 140) - 22)) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   const lzh = (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
