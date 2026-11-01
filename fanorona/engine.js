@@ -18,15 +18,17 @@ const COLS = 'abcdefghi';
 const DR = [0, 1, 1, 1, 0, -1, -1, -1], DC = [1, 1, 0, -1, -1, -1, 0, 1];
 const NB = []; for (let d = 0; d < 8; d++) NB.push(new Int8Array(NP));
 const RC = []; for (let i = 0; i < NP; i++) RC.push([(i / 9) | 0, i % 9]);
-const RULES = { sivy: { w: 9, h: 5, pcs: 22 }, dimy: { w: 5, h: 5, pcs: 12 }, telo: { w: 3, h: 3, pcs: 3, place: true } };
-let RULE = 'sivy', GW = 9, GH = 5, TELO = false;
+// 'alq' = Alquerque (5x5, 12 each): a step forward or sideways along a line, or a jump over an adjacent enemy to the empty
+// point beyond (any direction); capturing is compulsory and a capturing piece must go on jumping while it can
+const RULES = { sivy: { w: 9, h: 5, pcs: 22 }, dimy: { w: 5, h: 5, pcs: 12 }, telo: { w: 3, h: 3, pcs: 3, place: true }, alq: { w: 5, h: 5, pcs: 12, jump: true } };
+let RULE = 'sivy', GW = 9, GH = 5, TELO = false, ALQ = false;
 const strong = i => ((((i / 9) | 0) + (i % 9)) & 1) === 0;
 const valid = i => i >= 0 && i < NP && ((i / 9) | 0) < GH && i % 9 < GW;
 const START = new Int8Array(NP);
 const LINES3 = [];   // Telo: the 8 lines of three
 function setRule(r) {
   if (!RULES[r]) r = 'sivy';
-  const R = RULES[r]; RULE = r; GW = R.w; GH = R.h; TELO = !!R.place;
+  const R = RULES[r]; RULE = r; GW = R.w; GH = R.h; TELO = !!R.place; ALQ = !!R.jump;
   for (let i = 0; i < NP; i++) {
     const r0 = (i / 9) | 0, c = i % 9;
     for (let d = 0; d < 8; d++) {
@@ -36,13 +38,16 @@ function setRule(r) {
   }
   START.fill(0);
   if (r === 'sivy') { for (let i = 0; i < 18; i++) START[i] = P1; for (let i = 27; i < 45; i++) START[i] = P2; [P2, P1, P2, P1, 0, P2, P1, P2, P1].forEach((v, c) => { START[18 + c] = v; }); }
+  else if (r === 'alq') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P2, 0, P1, P1][c]; }
   else if (r === 'dimy') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P1, 0, P2, P1][c]; }
   LINES3.length = 0;
   if (TELO) { for (let k = 0; k < 3; k++) { LINES3.push([k * 9, k * 9 + 1, k * 9 + 2]); LINES3.push([k, 9 + k, 18 + k]); } LINES3.push([0, 10, 20]); LINES3.push([2, 10, 18]); }
   return r;
 }
 setRule('sivy');
-const rule = () => RULE, dims = () => ({ w: GW, h: GH, telo: TELO, pcs: RULES[RULE].pcs });
+const rule = () => RULE, dims = () => ({ w: GW, h: GH, telo: TELO, alq: ALQ, pcs: RULES[RULE].pcs });
+// Alquerque: the directions a side may step in without capturing (forward and sideways; White moves up the board)
+const alqDir = (side, d) => side ? DR[d] <= 0 : DR[d] >= 0;
 const ptAt = (r, c) => r < 0 || r >= GH || c < 0 || c >= GW ? -1 : r * 9 + c;
 const pname = i => COLS[i % 9] + (((i / 9) | 0) + 1);
 const pparse = s => { const m = /^([a-i])([1-5])$/.exec(String(s || '').trim()); if (!m) return -1; const i = (m[2] - 1) * 9 + COLS.indexOf(m[1]); return valid(i) ? i : -1; };
@@ -76,6 +81,12 @@ class Pos {
   capSteps(st) {
     const me = this.turn, out = [];
     if (TELO) return out;
+    if (ALQ) {   // jumps: over an adjacent enemy to the empty point just beyond (the jumped piece goes at once)
+      const b = st ? st.b : this.b, opp = me === P1 ? P2 : P1;
+      const pts = st ? [st.cur] : [...Array(NP).keys()].filter(i => b[i] === me);
+      for (const f of pts) for (let d = 0; d < 8; d++) { const m = NB[d][f]; if (m < 0 || b[m] !== opp) continue; const t = NB[d][m]; if (t < 0 || b[t]) continue; out.push({ from: f, to: t, d, kind: 'J', cap: [m] }); }
+      return out;
+    }
     const b = st ? st.b : this.b;
     const pts = st ? [st.cur] : [...Array(NP).keys()].filter(i => b[i] === me);
     for (const f of pts) for (let d = 0; d < 8; d++) {
@@ -88,7 +99,7 @@ class Pos {
   paikaSteps() {
     const me = this.turn, out = [];
     if (TELO && this.count(me) < 3) { for (let t = 0; t < NP; t++) if (valid(t) && !this.b[t]) out.push({ from: -1, to: t, d: -1, kind: '', cap: [] }); return out; }
-    for (let f = 0; f < NP; f++) if (this.b[f] === me) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) out.push({ from: f, to: t, d, kind: '', cap: [] }); }
+    for (let f = 0; f < NP; f++) if (this.b[f] === me) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t] && (!ALQ || alqDir(this.side, d))) out.push({ from: f, to: t, d, kind: '', cap: [] }); }
     return out;
   }
   hasCaps() { return this.capSteps(null).length > 0; }
@@ -111,15 +122,17 @@ class Pos {
       const capAll = []; for (const x of s) capAll.push(...x.cap);
       const sig = s[0].from + ':' + last.to + ':' + capAll.sort((a, c) => a - c).join(',');
       const str = pname(s[0].from) + s.map(x => '-' + pname(x.to) + x.kind).join('');
+      const more = s.length < 13 ? this.capSteps(st) : [];
+      if (ALQ && more.length) { for (const nx of more) rec(Pos.after(this, st, nx)); return; }   // Alquerque: the chain must go on
       if (all || !seen.has(sig)) { seen.add(sig); out.push(str); }
-      if (s.length >= 13) return;
-      for (const nx of this.capSteps(st)) rec(Pos.after(this, st, nx));
+      for (const nx of more) rec(Pos.after(this, st, nx));
     };
     for (const s of first) rec(Pos.after(this, null, s));
     return out;
   }
   status() {
     if (TELO) { if (line3(this.b, this.turn === P1 ? P2 : P1)) return -1; if (this.count(this.turn) < 3) return 0; }
+    if (ALQ) return this.firstSteps().length ? 0 : -1;
     for (let f = 0; f < NP; f++) if (this.b[f] === this.turn) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) return 0; } return -1; }
   // decode a move string into steps (validated); null if illegal
   steps(m) {
@@ -129,19 +142,20 @@ class Pos {
     if (TELO && this.count(this.turn) < 3) return null;
     const f = pparse(parts[0]); if (f < 0 || this.b[f] !== this.turn) return null;
     const hasCap = this.hasCaps();
-    if (parts.length === 2 && !/[AW]$/.test(parts[1])) {
+    if (parts.length === 2 && !/[AWJ]$/.test(parts[1])) {
       if (hasCap) return null;
-      const t = pparse(parts[1]), d = dirOf(f, t); if (t < 0 || d < 0 || this.b[t]) return null;
+      const t = pparse(parts[1]), d = dirOf(f, t); if (t < 0 || d < 0 || this.b[t] || (ALQ && !alqDir(this.side, d))) return null;
       return [{ from: f, to: t, d, kind: '', cap: [] }];
     }
     let st = null, cur = f; const out = [];
     for (let i = 1; i < parts.length; i++) {
-      const mm = /^([a-i][1-5])([AW])$/.exec(parts[i]); if (!mm) return null;
-      const t = pparse(mm[1]), d = dirOf(cur, t); if (d < 0) return null;
+      const mm = /^([a-i][1-5])([AWJ])$/.exec(parts[i]); if (!mm) return null;
+      const t = pparse(mm[1]);
       const cand = this.capSteps(st).find(x => x.from === cur && x.to === t && x.kind === mm[2]);
       if (!cand) return null;
       out.push(cand); st = Pos.after(this, st, cand); cur = t;
     }
+    if (ALQ && st && this.capSteps(st).length) return null;   // an Alquerque capture chain must be complete
     return out;
   }
   play(m) {
@@ -154,16 +168,21 @@ class Pos {
   }
 }
 const mFrom = m => /-/.test(String(m)) ? pparse(String(m).split('-')[0]) : -1;
-const mTo = m => { const p = String(m).split('-'); return pparse(p[p.length - 1].replace(/[AW]$/, '')); };
-const isCap = m => /[AW]$/.test(String(m));
+const mTo = m => { const p = String(m).split('-'); return pparse(p[p.length - 1].replace(/[AWJ]$/, '')); };
+const isCap = m => /[AWJ]$/.test(String(m));
 // the points visited by the moving piece (for animation)
-const path = (pos, m) => String(m).split('-').map(x => pparse(x.replace(/[AW]$/, '')));
+const path = (pos, m) => String(m).split('-').map(x => pparse(x.replace(/[AWJ]$/, '')));
 // captured points per step: [[...], [...]] (empty arrays for a paika)
 function capsOf(pos, m) { const S = pos.steps(m); return S ? S.map(s => s.cap.slice()) : []; }
-const name = (pos, m) => String(m);
+// shown name: Alquerque jumps as b2×b4×d4 (the record keeps b2-b4J-d4J)
+const name = (pos, m) => /J$/.test(String(m)) ? String(m).replace(/J/g, '').split('-').join('×') : String(m);
 // same resulting position
 function same(pos, a, b) { if (a === b) return true; try { return pos.clone().play(a).key() === pos.clone().play(b).key(); } catch (e) { return false; } }
-function parse(pos, s) { s = String(s).trim().replace(/[x×:]/g, '-').replace(/a$/, 'A').replace(/w$/, 'W'); const S = pos.steps(s); return S ? s : null; }
+function parse(pos, s) {
+  s = String(s).trim();
+  if (ALQ && /[x×:]/.test(s)) s = s.split(/[x×:]/).map((p, i) => i ? p.replace(/J?$/, 'J') : p).join('-');
+  s = s.replace(/[x×:]/g, '-').replace(/a$/, 'A').replace(/w$/, 'W'); const S = pos.steps(s); return S ? s : null;
+}
 function replay(start, moves) {
   const pos = Pos.from(start), hashes = [pos.key()];
   for (const m of moves || []) { pos.play(m); hashes.push(pos.key()); }
@@ -182,7 +201,7 @@ function toWire(pos, m) {
   const S = pos.steps(m); if (!S) return null;
   const paika = S.length === 1 && !S[0].kind ? 1 : 0;
   let lo = S[0].from | (S.length << 6) | (paika << 10), hi = 0;
-  S.forEach((s, i) => { const v = s.d | ((s.kind === 'W' ? 1 : 0) << 3); if (i < 5) lo |= v << (11 + 4 * i); else hi |= v << (4 * (i - 5)); });
+  S.forEach((s, i) => { const v = s.d | ((s.kind === 'W' || s.kind === 'J' ? 1 : 0) << 3); if (i < 5) lo |= v << (11 + 4 * i); else hi |= v << (4 * (i - 5)); });
   return [lo | 0, hi | 0];
 }
 function fromWire(lo, hi) {
@@ -191,6 +210,7 @@ function fromWire(lo, hi) {
   let cur = f, s = pname(f);
   for (let i = 0; i < n; i++) {
     const v = i < 5 ? (lo >>> (11 + 4 * i)) & 15 : (hi >>> (4 * (i - 5))) & 15, d = v & 7;
+    if (ALQ && !paika) { cur = NB[d][NB[d][cur]]; s += '-' + pname(cur) + 'J'; continue; }
     cur = NB[d][cur]; s += '-' + pname(cur) + (paika ? '' : (v >> 3) ? 'W' : 'A');
   }
   return s;
@@ -285,6 +305,7 @@ function wSetup(start, moves) {
   let w0 = 0, w1 = 0, b0 = 0, b1 = 0;
   for (let i = 0; i < NP; i++) { const v = p.b[i]; if (!v) continue; if (i < 32) { if (v === P1) w0 |= 1 << i; else b0 |= 1 << i; } else { if (v === P1) w1 |= 1 << (i - 32); else b1 |= 1 << (i - 32); } }
   if (WX.set_rule) WX.set_rule(GW, GH);
+  if (WX.set_alq) WX.set_alq(ALQ ? 1 : 0);
   const a = [w0, w1, b0, b1, p.side, moves.length];
   for (const m of moves) { const w = toWire(p, m); if (!w) return 0; a.push(w[0], w[1]); p.play(m); }
   wIO().set(a); return WX.setup();
@@ -390,7 +411,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RU
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101e';
+  const V = 'v=20261101f';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

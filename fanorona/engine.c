@@ -50,7 +50,7 @@ EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 static const int DR[8] = { 0, 1, 1, 1, 0, -1, -1, -1 }, DC[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static i8 NB[8][NP];
 static u64 ZP[2][NP], ZSIDE;
-static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1;   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
+static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0;   // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
 static void buildNB(void) {
@@ -113,18 +113,36 @@ static void capDFS(int cur, int lastDir, u64 visited, u64 own, u64 opp, Move *m)
     }
   }
 }
+// Alquerque: jump over an adjacent enemy to the empty point beyond; the chain must go on while it can (only full chains)
+static void alqDFS(int cur, u64 own, u64 opp, Move *m) {
+  int any = 0;
+  if (m->n < MAXST) for (int d = 0; d < 8; d++) {
+    int mid = NB[d][cur]; if (mid < 0 || !(opp & BIT(mid))) continue;
+    int t = NB[d][mid]; if (t < 0 || ((own | opp) & BIT(t))) continue;
+    any = 1;
+    Move mm = *m; mm.st[mm.n++] = (u8)(d | (1 << 3)); mm.t = (u8)t; mm.cap |= BIT(mid); mm.ncap = (u8)pc(mm.cap);
+    alqDFS(t, (own & ~BIT(cur)) | BIT(t), opp & ~BIT(mid), &mm);
+  }
+  if (!any && m->n) addMove(m);
+}
+static inline int alqJumpFrom(int i, u64 occ, u64 opp) {
+  for (int d = 0; d < 8; d++) { int mid = NB[d][i]; if (mid < 0 || !(opp & BIT(mid))) continue; int t = NB[d][mid]; if (t >= 0 && !(occ & BIT(t))) return 1; }
+  return 0;
+}
+static inline int alqDirOk(int side, int d) { return side ? DR[d] <= 0 : DR[d] >= 0; }
 static int genCaps(const Pos *p, Move *L, int max) {
   GL = L; GN = 0; GMAX = max;
   u64 own = p->p[p->side], opp = p->p[p->side ^ 1], x = own;
   while (x) {
     int i = ctz(x); x &= x - 1;
     Move m; memset(&m, 0, sizeof m); m.f = (u8)i; m.t = (u8)i;
-    capDFS(i, -1, BIT(i), own, opp, &m);
+    if (ALQ) alqDFS(i, own, opp, &m); else capDFS(i, -1, BIT(i), own, opp, &m);
   }
   return GN;
 }
 static int hasCaps(const Pos *p) {
   u64 own = p->p[p->side], opp = p->p[p->side ^ 1], occ = own | opp, x = own;
+  if (ALQ) { while (x) { int i = ctz(x); x &= x - 1; if (alqJumpFrom(i, occ, opp)) return 1; } return 0; }
   while (x) {
     int i = ctz(x); x &= x - 1;
     for (int d = 0; d < 8; d++) { int t = NB[d][i]; if (t < 0 || (occ & BIT(t))) continue; if (lineCap(i, d, 0, opp) || lineCap(i, d, 1, opp)) return 1; }
@@ -137,6 +155,7 @@ static int genPaika(const Pos *p, Move *L, int max) {
     int i = ctz(x); x &= x - 1;
     for (int d = 0; d < 8; d++) {
       int t = NB[d][i]; if (t < 0 || (occ & BIT(t))) continue;
+      if (ALQ && !alqDirOk(p->side, d)) continue;
       if (n >= max) return n;
       Move *m = &L[n++]; memset(m, 0, sizeof *m); m->f = (u8)i; m->t = (u8)t; m->n = 1; m->paika = 1; m->st[0] = (u8)d;
     }
@@ -146,7 +165,8 @@ static int genPaika(const Pos *p, Move *L, int max) {
 static int gen(const Pos *p, Move *L) { int n = genCaps(p, L, MAXMV); return n ? n : genPaika(p, L, MAXMV); }
 static int anyMove(const Pos *p) {
   u64 own = p->p[p->side], occ = p->p[0] | p->p[1], x = own;
-  while (x) { int i = ctz(x); x &= x - 1; for (int d = 0; d < 8; d++) { int t = NB[d][i]; if (t >= 0 && !(occ & BIT(t))) return 1; } }
+  if (ALQ && hasCaps(p)) return 1;
+  while (x) { int i = ctz(x); x &= x - 1; for (int d = 0; d < 8; d++) { int t = NB[d][i]; if (t >= 0 && !(occ & BIT(t)) && (!ALQ || alqDirOk(p->side, d))) return 1; } }
   return 0;
 }
 static inline void doMove(Pos *p, const Move *m) {
@@ -211,6 +231,10 @@ static void initPST(void) {
 }
 static int vulnerable(u64 own, u64 opp) {   // own pieces that the opponent could take right now (rough: one step)
   u64 occ = own | opp, hit = 0, x = opp;
+  if (ALQ) {
+    while (x) { int i = ctz(x); x &= x - 1; for (int d = 0; d < 8; d++) { int mid = NB[d][i]; if (mid < 0 || !(own & BIT(mid))) continue; int t = NB[d][mid]; if (t >= 0 && !(occ & BIT(t))) hit |= BIT(mid); } }
+    return pc(hit);
+  }
   while (x) {
     int i = ctz(x); x &= x - 1;
     for (int d = 0; d < 8; d++) { int t = NB[d][i]; if (t < 0 || (occ & BIT(t))) continue; hit |= lineCap(i, d, 0, own) | lineCap(i, d, 1, own); }
@@ -402,7 +426,17 @@ static int readMove(const Pos *p, u32 lo, u32 hi, Move *out) {
   if (m.paika) {
     if (m.n != 1 || hasCaps(p)) return 0;
     int t = NB[m.st[0] & 7][cur]; if (t < 0 || ((own | opp) & BIT(t))) return 0;
+    if (ALQ && !alqDirOk(p->side, m.st[0] & 7)) return 0;
     m.t = (u8)t; *out = m; return 1;
+  }
+  if (ALQ) {
+    for (int i = 0; i < m.n; i++) {
+      int d = m.st[i] & 7, mid = NB[d][cur]; if (mid < 0 || !(opp & BIT(mid))) return 0;
+      int t = NB[d][mid]; if (t < 0 || ((own | opp) & BIT(t))) return 0;
+      m.cap |= BIT(mid); opp &= ~BIT(mid); own = (own & ~BIT(cur)) | BIT(t); cur = t;
+    }
+    if (alqJumpFrom(cur, own | opp, opp)) return 0;
+    m.t = (u8)cur; m.ncap = (u8)pc(m.cap); *out = m; return 1;
   }
   for (int i = 0; i < m.n; i++) {
     int d = m.st[i] & 7, k = m.st[i] >> 3, t = NB[d][cur];
@@ -604,6 +638,7 @@ EXPORT(puzzle) void puzzle(int n, int defend, int goal, int base, int budgetK) {
 EXPORT(set_net_use) void set_net_use(int on) { useNet = on; }
 static void initPST(void);
 // the board size (9, 5 = Fanoron-Tsivy; 5, 5 = Fanoron-Dimy). The endgame databases and the learned evaluation are for 9x5 only.
+EXPORT(set_alq) void set_alq(int on) { if (on != ALQ) { ALQ = on; new_game(); } }
 EXPORT(set_rule) void set_rule(int w, int h) {
   initGeo();
   if (w == GW && h == GH) return;

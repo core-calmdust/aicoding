@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja" data-bd="lambared" data-pcs="lacquer">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-fanorona') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'acacia'; document.documentElement.dataset.pcs = S.pcs || 'wood'; } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-fanorona') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'lambared'; document.documentElement.dataset.pcs = S.pcs || 'lacquer'; } catch (e) {}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#180c06">
@@ -40,7 +40,7 @@
   --S: 9;
   --bwc: 10; --bhc: 6; --fwc: calc(var(--bwc) + .5); --fhc: calc(var(--bhc) + 1);
 }
-html[data-rule=dimy]{--bwc:6;--bhc:6}
+html:is([data-rule=dimy],[data-rule=alq]){--bwc:6;--bhc:6}
 html[data-rule=telo]{--bwc:4;--bhc:4}
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
@@ -1162,33 +1162,33 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 }
 /* PC, square boards (5x5 Dimy / 3x3 Telo): the board on the left, the info column on the right (2026-11-01) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  html:is([data-rule=dimy],[data-rule=telo]), html:is([data-rule=dimy],[data-rule=telo]) body, html:is([data-rule=dimy],[data-rule=telo]).dock-fit body:not(.no-online){
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]), html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body, html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]).dock-fit body:not(.no-online){
     --sqw:360px !important;
     --cell:max(12px, min((var(--vh) - 96px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), var(--cmax))) !important;
     --cmax:150px;
   }
   html[data-rule=telo], html[data-rule=telo] body, html[data-rule=telo].dock-fit body:not(.no-online){--cmax:240px !important;
   }
-  html:is([data-rule=dimy],[data-rule=telo]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
     grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:var(--fh) auto!important;
     grid-template-areas:"board side" "bx bx"!important;justify-content:center!important;align-content:center!important;
     height:var(--vh)!important;min-height:0!important;gap:12px 28px!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .board-area{align-self:start!important;padding-bottom:0!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .side{display:flex!important;flex-direction:column;grid-area:side;min-height:0;height:var(--fh)!important;max-height:var(--fh)!important;align-self:start}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .side > .side-in{display:flex!important;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0;height:auto}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > *{grid-area:auto!important;grid-row:auto!important;grid-column:auto!important;flex:none}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #coachCard:not(.hidden){flex:1.8 1 0;min-height:140px;overflow-y:auto}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .review-card.show{flex:1 1 0;min-height:140px;overflow-y:auto}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .kifu-card{flex:.7 1 0;min-height:120px}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #evalCard{min-height:0;flex:none!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players{flex-direction:row!important;gap:8px!important;padding:8px!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player{flex:1 1 0;min-width:0;grid-template-columns:minmax(0,1fr) auto!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player > .status, html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player .count small{display:none!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player > .count{grid-column:2!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .kifu-card{flex:1 1 0!important;min-height:110px!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #evalCard .graph{flex:none;height:56px!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body.rvb-on .side-in > #coachCard{display:none!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .rvbox{grid-area:bx;height:auto;max-height:40vh}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .board-area{align-self:start!important;padding-bottom:0!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .side{display:flex!important;flex-direction:column;grid-area:side;min-height:0;height:var(--fh)!important;max-height:var(--fh)!important;align-self:start}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .side > .side-in{display:flex!important;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0;height:auto}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > *{grid-area:auto!important;grid-row:auto!important;grid-column:auto!important;flex:none}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > #coachCard:not(.hidden){flex:1.8 1 0;min-height:140px;overflow-y:auto}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > .review-card.show{flex:1 1 0;min-height:140px;overflow-y:auto}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > .kifu-card{flex:.7 1 0;min-height:120px}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > #evalCard{min-height:0;flex:none!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app .side-in > .players{flex-direction:row!important;gap:8px!important;padding:8px!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app .side-in > .players .player{flex:1 1 0;min-width:0;grid-template-columns:minmax(0,1fr) auto!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app .side-in > .players .player > .status, html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app .side-in > .players .player .count small{display:none!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app .side-in > .players .player > .count{grid-column:2!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > .kifu-card{flex:1 1 0!important;min-height:110px!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > #evalCard .graph{flex:none;height:56px!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body.rvb-on .side-in > #coachCard{display:none!important}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:auto;max-height:40vh}
 }
 /* larger coach / review text (PC, 2026-11-01) */
 @media not all and (pointer: coarse){
@@ -1523,7 +1523,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   </div>
 </div>
 
-<script src="i18n.js?v=fb1"></script>
+<script src="i18n.js?v=fb2"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1533,22 +1533,22 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=fb1"></script>
+<script src="engine.js?v=fb2"></script>
 <script src="firebase-config.js?v=fa2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=fb1"></script>
+<script src="online.js?v=fb2"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="rvbox.js?v=fb1"></script>
+<script src="rvbox.js?v=fb2"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=1"></script>
 <script src="coach.js?v=fb1"></script>
-<script src="coach-i18n.js?v=fb1"></script>
+<script src="coach-i18n.js?v=fb2"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fb1"></script>
-<script src="online-ui.js?v=fb1"></script>
-<script src="landtabs.js?v=fb1"></script>
+<script src="app.js?v=fb2"></script>
+<script src="online-ui.js?v=fb2"></script>
+<script src="landtabs.js?v=fb2"></script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101fn3" defer></script>
+<script src="../shared/atlas.js?v=20261101aq1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=15" data-strips defer></script>
