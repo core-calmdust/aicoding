@@ -9,7 +9,7 @@
    On PC (no tabs) the cards sit in the dialog: style="--ngt-cols:3" on .ngt-gcards sets the columns there.
    Few cards (≤4) are shown big (.ngt-gcards.few); on PC the ルール tab puts the mode field (#segMode's .field) on top and the
    rest of .ng-cols in two balanced columns.
-   <script src="../shared/ngtabs.js?v=15"></script> after the dialog; nothing else to call. */
+   <script src="../shared/ngtabs.js?v=16"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
@@ -110,6 +110,20 @@ const CSS = `
 .modal.ngt-pc[data-ngt=rules] .ng-cols :is(#fInfo,#fRatedInfo,#fLessonInfo,#fOnlineInfo,#fPuzzleInfo,.ng-info){column-span:all}
 .modal.ngt-pc[data-ngt=rules] .ngt-modef #segMode{display:flex!important;flex-wrap:nowrap!important}
 .modal.ngt-pc[data-ngt=rules] .ngt-modef #segMode > button{flex:1 1 0!important;min-width:0!important;grid-column:auto!important;line-height:1.25}
+/* phone landscape (held sideways, a turned iframe, or a page turned by CSS: html.rot): the sheet is short and wide, so the
+   ルール tab's settings run in two columns, the デザイン tab's icons in more columns, and the footer is slimmer */
+:is(html.ngt-land,html.rot) .modal.ngt-on{--ngt-g:5px;padding-top:8px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on h2{font-size:16px!important;margin-bottom:4px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=rules] .ng-cols:not(.ngt-hide){display:block!important;columns:2;column-gap:20px;column-fill:balance}
+:is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide){display:contents!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=rules] .ng-cols > *, :is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=rules] .ng-col > *{break-inside:avoid;margin-top:0!important}
+:is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-cols .field.hidden{display:none!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=rules] .ng-cols :is(#fInfo,#fRatedInfo,#fLessonInfo,#fOnlineInfo,#fPuzzleInfo,.ng-info){column-span:all}
+:is(html.ngt-land,html.rot) .modal.ngt-on[data-ngt=design] .dsg{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .modal-actions{margin-top:6px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions :is(.mbtn,button){padding-top:8px!important;padding-bottom:8px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .ngt-bar{margin-top:6px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button{flex-direction:row;gap:6px;min-height:38px;padding:6px 6px 7px}
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
 `;
@@ -208,6 +222,10 @@ function init() {
   if (g) new MutationObserver(() => { const k = tabs().join(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
+  // (phone landscape: html.ngt-land — the CSS above makes the sheet denser)
+  const MQL = matchMedia('(orientation: landscape) and (max-height: 560px)');
+  const land = () => document.documentElement.classList.toggle('ngt-land', MQL.matches);
+  land(); if (MQL.addEventListener) MQL.addEventListener('change', land); else MQL.addListener(land);
   sync();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

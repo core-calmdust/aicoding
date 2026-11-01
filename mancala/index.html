@@ -38,6 +38,8 @@
 html.hb-on{--vh:calc(100vh - var(--hb-h))}
 @supports (height:100lvh){html.hb-on{--vh:calc(100lvh - var(--hb-h))}}
 html,body{height:100%;overflow:hidden}
+/* no automatic text enlargement (iOS Safari in landscape, Android font boosting in the turned frame) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   background:
     radial-gradient(1100px 680px at 18% -12%, rgba(118,28,44,.42) 0%, transparent 62%),
@@ -1505,7 +1507,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=15" defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
-<script src="../shared/ngtabs.js?v=15"></script>
+<script src="../shared/ngtabs.js?v=16"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
