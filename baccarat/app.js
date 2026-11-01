@@ -147,7 +147,7 @@ let T = null;   // the table: { v, decks, tie, shoe, res, bank, bets, last, phas
 const G = { timer: 0, undo: [], seq: 0, odds: null, oddsKey: '', note: null };
 const mt = () => !set.anim ? 0 : set.speed === 'slow' ? 1.5 : set.speed === 'fast' ? .5 : 1;
 function rnd() { return Math.random(); }
-function freshShoe() { const s = B.newShoe(T.decks, rnd); T.shoe = s; T.res = []; G.odds = null; }
+function freshShoe() { const s = B.newShoe(T.decks, rnd); T.shoe = s; T.res = []; T.evHist = []; G.odds = null; }
 function newSession(v) {
   if (T && T.tut) restoreTut();
   recordSession();
@@ -264,6 +264,7 @@ function finish() {
   S.graph.push(S.net); if (S.graph.length > 400) S.graph = S.graph.filter((_, i) => i % 2 === 0);
   const res = { w: c.win, pp: B.RANK(c.p[0]) === B.RANK(c.p[1]) ? 1 : 0, bp: B.RANK(c.b[0]) === B.RANK(c.b[1]) ? 1 : 0, pt: c.pt, bt: c.bt, nat: c.natural ? 1 : 0, n3p: c.p.length, n3b: c.b.length };
   T.res.push(res); T.shoe.n++;
+  { const E = shoeOdds().E; (T.evHist || (T.evHist = [])).push({ B: E.B, P: E.P, T: E.T }); }   // the expectation of the shoe after each coup (研究)
   if (!T.tut) recordStats(c, r, tot, exp, res);
   T.result = r; T.phase = 'done'; T.bets = {};
   sfx(r.net > 0 ? (r.net >= 1000 ? 'bigchips' : 'win') : r.net < 0 ? 'lose' : 'chips');
@@ -508,6 +509,13 @@ function renderActbar() {
 const gl = h => h;
 function renderSide() {
   let h = '';
+  // the shoe (exact odds of the remaining cards)
+  const O = shoeOdds(), base = baseOdds(T.v, T.tie, T.decks), left = T.shoe.cards.length - T.shoe.pos;
+  const evRow = k => { const e = O.E[k], b = base.E[k], up = e - b; return `<div class="ev-r${e > 0 ? ' plus' : ''}"><span>${esc(t(SPOTS[k]))}</span><b>${(e * 100).toFixed(2)}%</b><small class="${up > .0005 ? 'up' : up < -.0005 ? 'dn' : ''}">${up >= 0 ? '+' : ''}${(up * 100).toFixed(2)}</small></div>`; };
+  h += `<div class="card shoe-card" data-pt="shoe" data-k="shoe"><h3>${esc(t('side.shoe'))}<span class="h3s">${esc(t('shoe.left', { n: left }))} · ${esc(t('shoe.coup', { n: T.shoe.n }))}</span></h3>` +
+    `<div class="pr3"><div class="pB"><small>${esc(t('rd.B'))}</small><b>${pct(O.R.B, 2)}</b></div><div class="pP"><small>${esc(t('rd.P'))}</small><b>${pct(O.R.P, 2)}</b></div><div class="pT"><small>${esc(t('rd.T'))}</small><b>${pct(O.R.T, 2)}</b></div></div>` +
+    `<div class="ev-h"><span>${esc(t('ev.bet'))}</span><span>${esc(t('ev.now'))}</span><span>${esc(t('ev.diff'))}</span></div>${VB().map(evRow).join('')}` +
+    `<p class="diff-desc">${esc(t('ev.help'))}</p></div>`;
   // roads
   const RB = RD.build(T.res), L = { B: t('rd.B'), P: t('rd.P'), T: t('rd.T') };
   const cntW = w => T.res.filter(r => r.w === w).length;
@@ -520,13 +528,6 @@ function renderSide() {
   // coach
   if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
   else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
-  // the shoe (exact odds of the remaining cards)
-  const O = shoeOdds(), base = baseOdds(T.v, T.tie, T.decks), left = T.shoe.cards.length - T.shoe.pos;
-  const evRow = k => { const e = O.E[k], b = base.E[k], up = e - b; return `<div class="ev-r${e > 0 ? ' plus' : ''}"><span>${esc(t(SPOTS[k]))}</span><b>${(e * 100).toFixed(2)}%</b><small class="${up > .0005 ? 'up' : up < -.0005 ? 'dn' : ''}">${up >= 0 ? '+' : ''}${(up * 100).toFixed(2)}</small></div>`; };
-  h += `<div class="card shoe-card" data-pt="shoe" data-k="shoe"><h3>${esc(t('side.shoe'))}<span class="h3s">${esc(t('shoe.left', { n: left }))} · ${esc(t('shoe.coup', { n: T.shoe.n }))}</span></h3>` +
-    `<div class="pr3"><div class="pB"><small>${esc(t('rd.B'))}</small><b>${pct(O.R.B, 2)}</b></div><div class="pP"><small>${esc(t('rd.P'))}</small><b>${pct(O.R.P, 2)}</b></div><div class="pT"><small>${esc(t('rd.T'))}</small><b>${pct(O.R.T, 2)}</b></div></div>` +
-    `<div class="ev-h"><span>${esc(t('ev.bet'))}</span><span>${esc(t('ev.now'))}</span><span>${esc(t('ev.diff'))}</span></div>${VB().map(evRow).join('')}` +
-    `<p class="diff-desc">${esc(t('ev.help'))}</p></div>`;
   // session
   const S = T.session;
   h += `<div class="card" data-pt="sess" data-k="sess"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))}</span></h3><div class="srow">` +
@@ -826,5 +827,5 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v]) {
   render();
 } else newSession(set.v);
 
-window.BacApp = { startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
+window.BacApp = { explainHtml, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
 })();
