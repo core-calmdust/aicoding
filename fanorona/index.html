@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja" data-bd="lambared" data-pcs="lacquer">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-fanorona') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'lambared'; document.documentElement.dataset.pcs = S.pcs || 'lacquer'; } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-fanorona') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'lambared'; document.documentElement.dataset.pcs = S.pcs || 'lacquer'; } catch (e) {}
+/* a wide window (16:10 or wider, as Backgammon's body.wide-side): the PC 9x5 board gets the column layout (CSS: html.sv-wide) */
+(function () { const m = matchMedia('(min-aspect-ratio: 8/5)'), f = () => document.documentElement.classList.toggle('sv-wide', m.matches); f(); if (m.addEventListener) m.addEventListener('change', f); else m.addListener(f); })();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#180c06">
@@ -1217,6 +1219,51 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body.rvb-on .side-in > #coachCard{display:none!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:var(--sqb)!important;max-height:none;overflow:hidden}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox > *{min-height:0;overflow-y:auto}
+}
+/* PC, the 9x5 board (Fanoron-Tsivy) in a wide window (16:10 or wider: html.sv-wide) or with the online dock open: the same
+   arrangement as Backgammon's (body.wide-side / body.dock-open) — the board on the left, a column on the right (対局者, 形勢,
+   コーチ / 振り返り, 棋譜: 棋譜 takes what is left and scrolls inside); the review box takes the lower 40% of that column.
+   The board's size comes from --vh, so the online dock (shared/headerbar.js) resizes it smoothly (2026-11-01) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){
+    /* (= Backgammon's --px / --rw: 310px under 1300px wide, 340px, 380px from 1700px; 330px with the dock open) */
+    --px:24px !important;--rw:340px !important;
+    --cell:max(12px, min((var(--vh) - 24px) / (var(--fhc) + .16), (100vw - var(--px) * 2 - 16px - var(--rw)) / var(--fwc), 150px)) !important;
+  }
+  @media (min-width: 1700px){ html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){--rw:380px !important} }
+  html[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)), html[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)) body, html[data-rule=sivy].dock-fit:has(> body.dock-open:not(.ol-soon)) body:not(.no-online){--rw:330px !important}
+  @media (max-width: 1299px){ html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){--px:16px !important;--rw:310px !important} }
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
+    width:auto!important;justify-content:center!important;align-content:start!important;align-items:stretch!important;column-gap:16px!important;row-gap:10px!important;
+    grid-template-columns:var(--fw) var(--rw)!important;grid-template-rows:var(--fh)!important;grid-template-areas:"board side"!important}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
+    grid-template-rows:calc(var(--fh) * .6 - 5px) calc(var(--fh) * .4 - 5px)!important;grid-template-areas:"board side" "board bx"!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .board-area{grid-row:1 / -1!important;align-self:start!important;padding-bottom:0!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .side{display:block!important;grid-area:side!important;height:0!important;min-height:100%!important;max-height:none!important;align-self:stretch!important;overflow-y:auto!important;scrollbar-width:thin}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .side > .side-in{display:flex!important;flex-direction:column;gap:10px;height:100%;min-height:0}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in > *{grid-area:auto!important;grid-row:auto!important;grid-column:auto!important;flex:none!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .review-card.show{max-height:150px!important;min-height:0!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .kifu-card{display:flex!important;flex:1 1 0!important;min-height:96px!important;max-height:none!important;overflow:hidden}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .kifu-card .kifu{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0!important;min-height:240px;overflow-y:auto}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in > #evalCard .graph{flex:none!important;height:clamp(40px, calc(var(--vh) * .08), 80px)!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:none!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){flex:1 1 auto!important;min-height:0;overflow-y:auto}
+  html[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)) body .players .player{padding:4px 12px!important}
+  /* (the dock's compact column (shared/headerbar.js) would hide 棋譜: here it stays, as in Backgammon) */
+  html.dock-compact[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side .kifu-card{display:flex!important}
+  /* with the review box: 対局者 → 形勢 → 棋譜 above it, the summary card and the coach step aside; the box is one column that scrolls */
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in > :is(.review-card, #coachCard){display:none!important}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .kifu-card{min-height:72px!important}
+  @media (max-height: 1199px){ html.rvb-on[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)) body .side-in > .players{display:none!important} }   /* short: 形勢 and 棋譜 first (the turn and the pieces are in the header bar) */
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in > #evalCard .graph{height:clamp(30px, calc(var(--vh) * .05), 60px)!important}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app.app > .rvbox{grid-area:bx!important;height:auto!important;min-height:0!important;align-self:stretch!important;
+    display:flex!important;flex-direction:column;overflow-y:auto;scrollbar-width:thin}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .rvbox > *{flex:none;overflow:visible;min-height:auto}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .rvbox > .rvb-l{border-inline-end:0;border-bottom:1px solid var(--line);padding:10px 12px}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .rvbox > .rvb-r{padding:8px 10px}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .rvbox .rvb-list{flex:none;overflow:visible}
+  html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app > .rvbox .rvb-rh{flex-wrap:wrap}
 }
 /* larger coach / review text (PC, 2026-11-01) */
 @media not all and (pointer: coarse){
