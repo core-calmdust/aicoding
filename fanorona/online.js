@@ -20,7 +20,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const INITIAL = 1500;
   const VARIANTS = window.OL_VARIANTS || ['sivy', 'dimy', 'telo'];   // alquerque/ sets ['alq']
   // Fischer clock per variant: base time per player + increment per move
-  const TC = { sivy: { main: 480000, inc: 5000 }, dimy: { main: 240000, inc: 3000 }, telo: { main: 120000, inc: 2000 }, alq: { main: 300000, inc: 5000 } };   // keep in sync with shared/tools/secrules.py
+  const TC = { sivy: { main: 480000, inc: 5000 }, dimy: { main: 240000, inc: 3000 }, telo: { main: 120000, inc: 2000 }, alq: { main: 300000, inc: 5000 }, alqf: { main: 300000, inc: 5000 } };   // keep in sync with shared/tools/secrules.py
   const DEF_V = VARIANTS[0];
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
