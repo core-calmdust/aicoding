@@ -1924,3 +1924,8 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .rz-h b{font-size:13px;color:var(--muted);font-weight:600}
 .rz-svg .rd-svg{display:block;width:100%;height:auto;background:#f7f4ec;border-radius:8px;margin-top:4px}
 @media (max-width:760px){.rz-grid{grid-template-columns:1fr}.road-modal{height:calc(100dvh - 16px);padding:12px}}
+/* one line colour for the whole felt print: the card boxes and the betting layout */
+.bc .board-wrap{--bc-line:rgba(236,232,222,.5)}
+.bc-hand{border-color:var(--bc-line)}
+.lz-rim,.lz-div{stroke:var(--bc-line)}
+.lz .lz-a,.pl-a{stroke:var(--bc-line)}
