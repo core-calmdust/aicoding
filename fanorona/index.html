@@ -865,10 +865,23 @@ html[data-pcs=disc]{--w1:#ffe07a;--w2:#f2c230;--w4:#b88a12;--b1:#e4f8ec;--b2:#bf
 html:is([data-pcs=flat],[data-pcs=disc]) :is(.pc,.rv)::before, html:is([data-pcs=flat],[data-pcs=disc]) :is(.pc,.rv)::after{display:none}
 html[data-pcs=flat] :is(.pc,.rv).p1{background:#c0532c;box-shadow:0 calc(var(--cell) * .04) calc(var(--cell) * .07) rgba(0,0,0,.35)}
 html[data-pcs=flat] :is(.pc,.rv).p2{background:#393c4b;box-shadow:inset 0 0 0 calc(var(--cell) * .03) #1e1f27,0 calc(var(--cell) * .04) calc(var(--cell) * .07) rgba(0,0,0,.4)}
-html[data-pcs=disc] :is(.pc,.rv).p1{background:radial-gradient(circle at 45% 40%,#ffd955 0%,#f2c230 62%,#e3b120 100%);
-  box-shadow:inset 0 0 0 calc(var(--cell) * .035) rgba(150,100,0,.18),0 calc(var(--cell) * .07) 0 #b88a12,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.45)}
-html[data-pcs=disc] :is(.pc,.rv).p2{background:radial-gradient(circle at 45% 40%,#d9f6e6 0%,#bfe8d0 62%,#aedcc1 100%);
-  box-shadow:inset 0 0 0 calc(var(--cell) * .035) rgba(40,110,80,.16),0 calc(var(--cell) * .07) 0 #7fb59a,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.45)}
+/* painted wooden discs (lamba): matte paint over wood grain, a rounded edge and a thick side, an emblem from Madagascar
+   burnt into the face — White: the baobab, Black: the ravinala (traveller's palm) */
+html[data-pcs=disc] :is(.pc,.rv).p1{--dk:#a87a10;--emb:url(img/emb-baobab.svg);--ink:#5a3610;
+  background:radial-gradient(circle at 42% 36%,#ffe27c 0%,#f6c93a 48%,#e9b524 78%,#d9a116 100%)}
+html[data-pcs=disc] :is(.pc,.rv).p2{--dk:#6fa588;--emb:url(img/emb-ravinala.svg);--ink:#1d4d3c;
+  background:radial-gradient(circle at 42% 36%,#e8fbf0 0%,#c9eedb 48%,#b5e1c9 78%,#9fd2b6 100%)}
+html[data-pcs=disc] .pc.p1, html[data-pcs=disc] .pc.p2{
+  box-shadow:inset 0 calc(var(--cell) * .012) 0 rgba(255,255,255,.55),inset 0 calc(var(--cell) * -.02) calc(var(--cell) * .03) rgba(0,0,0,.18),
+    inset 0 0 0 calc(var(--cell) * .022) rgba(0,0,0,.06),
+    0 calc(var(--cell) * .02) 0 color-mix(in srgb, var(--dk) 70%, #fff),0 calc(var(--cell) * .075) 0 var(--dk),
+    0 calc(var(--cell) * .078) 0 rgba(0,0,0,.35),0 calc(var(--cell) * .12) calc(var(--cell) * .1) rgba(0,0,0,.45)}
+/* the emblem, burnt in (dark, with a thin light edge below) */
+html[data-pcs=disc] .pc::before{display:block!important;content:"";position:absolute;inset:13%;border-radius:0;background:var(--ink);opacity:.82;
+  -webkit-mask:var(--emb) 50% 50% / contain no-repeat;mask:var(--emb) 50% 50% / contain no-repeat;filter:drop-shadow(0 1px 0 rgba(255,255,255,.45))}
+/* the wood under the paint */
+html[data-pcs=disc] .pc::after{display:block!important;content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:url(img/wood-maple.webp) 50% 50% / 420% 600%;mix-blend-mode:multiply;opacity:.22;filter:grayscale(1) contrast(1.4)}
 html[data-pcs=disc] .pc{margin-top:calc(var(--cell) * -.39)}
 html:is([data-pcs=flat],[data-pcs=disc]) .reserve .rv.p1, html:is([data-pcs=flat],[data-pcs=disc]) .reserve .rv.p2{box-shadow:0 calc(var(--cell) * .015) calc(var(--cell) * .03) rgba(0,0,0,.4)}
 html[data-pcs=disc] .pdisc.p1{background:#f2c230} html[data-pcs=disc] .pdisc.p2{background:#bfe8d0}
