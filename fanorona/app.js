@@ -2332,7 +2332,7 @@ if (window.FlipBtn) FlipBtn.init({ game: GID, lang: () => LANG, onChange: () => 
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 // 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
-if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
+if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: E.rule(), n: t('rule.' + E.rule()) }), variants: () => RULE_ORDER, variantName: k => t('rule.' + k), defVariant: BASE });
 if (window.FanoronaCoach) FanoronaCoach.init();
 openReady.then(() => { if (window.FanoronaCoach) FanoronaCoach.render(); });
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;

@@ -9,23 +9,26 @@
 //   GameRecord.init({ game: 'shogi', lang: () => LANG, sides: l => ['先手', '後手'] , menu: '.controls' })
 //   GameRecord.add({ mode: 'ai' | 'rated' | 'online' | 'pvp', res: 'w' | 'l' | 'd', side: 0 | 1, opp: 'AI 10級', key: 'ai:3', n: 87, why: '詰み' })
 //   GameRecord.open()
+// Games with several variants / board sizes pass  variant: () => ({ k: 'mini', n: '5五将棋' })  (current variant; stored on each
+// game), optionally variants: () => ['std', 'mini'] (order), variantName: (k, lang) => name, defVariant: 'std' (older records).
+// The dialog then shows a variant row (全ルール / each variant) above the mode tabs.
 (function () {
 'use strict';
 const TX = {
-  ja: { form: '最近の調子', title: '戦績', btn: '戦績', btnT: '勝敗の記録を見る', all: 'すべて', ai: 'AI', rated: 'レート戦', online: 'オンライン', pvp: '対人', w: '勝', l: '負', d: '分', games: '{n}局', rate: '勝率', streak: '連勝中', streakL: '連敗中', best: '最高連勝', bySide: '先後別', byOpp: '相手別', recent: '最近の対局', empty: 'まだ記録がありません。対局が終わると自動で記録されます。', moves: '{n}手', reset: '記録を消す', resetQ: 'この記録をすべて消しますか？ 元に戻せません。', yes: '消す', no: 'やめる', close: '閉じる', note: '記録はこのブラウザに保存されます。' },
-  en: { form: 'Recent form', title: 'Record', btn: 'Record', btnT: 'See your wins and losses', all: 'All', ai: 'AI', rated: 'Rated', online: 'Online', pvp: 'Local', w: 'W', l: 'L', d: 'D', games: '{n} games', rate: 'Win rate', streak: 'win streak', streakL: 'losing streak', best: 'Best streak', bySide: 'By side', byOpp: 'By opponent', recent: 'Recent games', empty: 'No games yet. Finished games are recorded automatically.', moves: '{n} moves', reset: 'Clear record', resetQ: 'Clear the whole record? This cannot be undone.', yes: 'Clear', no: 'Cancel', close: 'Close', note: 'The record is kept in this browser.' },
-  zh: { form: '最近状态', title: '战绩', btn: '战绩', btnT: '查看胜负记录', all: '全部', ai: 'AI', rated: '等级分赛', online: '在线', pvp: '对人', w: '胜', l: '负', d: '和', games: '{n}局', rate: '胜率', streak: '连胜中', streakL: '连败中', best: '最高连胜', bySide: '先后手', byOpp: '按对手', recent: '最近对局', empty: '还没有记录。对局结束后会自动记录。', moves: '{n}手', reset: '清除记录', resetQ: '要清除全部记录吗？无法恢复。', yes: '清除', no: '取消', close: '关闭', note: '记录保存在此浏览器中。' },
-  ko: { form: '최근 흐름', title: '전적', btn: '전적', btnT: '승패 기록 보기', all: '전체', ai: 'AI', rated: '레이팅전', online: '온라인', pvp: '대인', w: '승', l: '패', d: '무', games: '{n}국', rate: '승률', streak: '연승 중', streakL: '연패 중', best: '최고 연승', bySide: '선후수별', byOpp: '상대별', recent: '최근 대국', empty: '아직 기록이 없습니다. 대국이 끝나면 자동으로 기록됩니다.', moves: '{n}수', reset: '기록 지우기', resetQ: '기록을 모두 지울까요? 되돌릴 수 없습니다.', yes: '지우기', no: '취소', close: '닫기', note: '기록은 이 브라우저에 저장됩니다.' },
-  es: { form: 'Racha reciente', title: 'Historial', btn: 'Historial', btnT: 'Ver victorias y derrotas', all: 'Todas', ai: 'IA', rated: 'Puntuadas', online: 'En línea', pvp: 'Local', w: 'G', l: 'P', d: 'T', games: '{n} partidas', rate: 'Victorias', streak: 'racha ganadora', streakL: 'racha perdedora', best: 'Mejor racha', bySide: 'Por bando', byOpp: 'Por rival', recent: 'Últimas partidas', empty: 'Aún no hay partidas. Se registran solas al terminar.', moves: '{n} jugadas', reset: 'Borrar historial', resetQ: '¿Borrar todo el historial? No se puede deshacer.', yes: 'Borrar', no: 'Cancelar', close: 'Cerrar', note: 'El historial se guarda en este navegador.' },
-  fr: { form: 'Forme récente', title: 'Bilan', btn: 'Bilan', btnT: 'Voir victoires et défaites', all: 'Toutes', ai: 'IA', rated: 'Classées', online: 'En ligne', pvp: 'Local', w: 'V', l: 'D', d: 'N', games: '{n} parties', rate: 'Victoires', streak: 'victoires de suite', streakL: 'défaites de suite', best: 'Meilleure série', bySide: 'Par camp', byOpp: 'Par adversaire', recent: 'Dernières parties', empty: 'Aucune partie pour l’instant. Elles sont enregistrées automatiquement.', moves: '{n} coups', reset: 'Effacer le bilan', resetQ: 'Effacer tout le bilan ? C’est définitif.', yes: 'Effacer', no: 'Annuler', close: 'Fermer', note: 'Le bilan est gardé dans ce navigateur.' },
-  pt: { form: 'Forma recente', title: 'Histórico', btn: 'Histórico', btnT: 'Ver vitórias e derrotas', all: 'Todas', ai: 'IA', rated: 'Ranqueadas', online: 'Online', pvp: 'Local', w: 'V', l: 'D', d: 'E', games: '{n} partidas', rate: 'Vitórias', streak: 'vitórias seguidas', streakL: 'derrotas seguidas', best: 'Melhor sequência', bySide: 'Por lado', byOpp: 'Por adversário', recent: 'Partidas recentes', empty: 'Ainda não há partidas. Elas são registradas automaticamente.', moves: '{n} lances', reset: 'Apagar histórico', resetQ: 'Apagar todo o histórico? Não dá para desfazer.', yes: 'Apagar', no: 'Cancelar', close: 'Fechar', note: 'O histórico fica salvo neste navegador.' },
-  de: { form: 'Aktuelle Form', title: 'Bilanz', btn: 'Bilanz', btnT: 'Siege und Niederlagen ansehen', all: 'Alle', ai: 'KI', rated: 'Gewertet', online: 'Online', pvp: 'Lokal', w: 'S', l: 'N', d: 'R', games: '{n} Partien', rate: 'Siegquote', streak: 'Siege in Folge', streakL: 'Niederlagen in Folge', best: 'Beste Serie', bySide: 'Nach Seite', byOpp: 'Nach Gegner', recent: 'Letzte Partien', empty: 'Noch keine Partien. Beendete Partien werden automatisch gespeichert.', moves: '{n} Züge', reset: 'Bilanz löschen', resetQ: 'Die ganze Bilanz löschen? Das lässt sich nicht rückgängig machen.', yes: 'Löschen', no: 'Abbrechen', close: 'Schließen', note: 'Die Bilanz wird in diesem Browser gespeichert.' },
-  hi: { form: 'हाल का प्रदर्शन', title: 'रिकॉर्ड', btn: 'रिकॉर्ड', btnT: 'जीत-हार देखें', all: 'सभी', ai: 'AI', rated: 'रेटेड', online: 'ऑनलाइन', pvp: 'आमने-सामने', w: 'जी', l: 'हा', d: 'ड्रॉ', games: '{n} खेल', rate: 'जीत दर', streak: 'लगातार जीत', streakL: 'लगातार हार', best: 'सबसे लंबी जीत', bySide: 'पक्ष के अनुसार', byOpp: 'विरोधी के अनुसार', recent: 'हाल के खेल', empty: 'अभी कोई रिकॉर्ड नहीं। खेल खत्म होते ही अपने-आप दर्ज होगा।', moves: '{n} चालें', reset: 'रिकॉर्ड मिटाएँ', resetQ: 'पूरा रिकॉर्ड मिटाएँ? इसे वापस नहीं लाया जा सकता।', yes: 'मिटाएँ', no: 'रद्द करें', close: 'बंद करें', note: 'रिकॉर्ड इसी ब्राउज़र में रखा जाता है।' },
-  ar: { form: 'الأداء الأخير', title: 'السجل', btn: 'السجل', btnT: 'عرض الانتصارات والهزائم', all: 'الكل', ai: 'الذكاء الاصطناعي', rated: 'مصنّفة', online: 'أونلاين', pvp: 'محلي', w: 'ف', l: 'خ', d: 'ت', games: '{n} مباراة', rate: 'نسبة الفوز', streak: 'انتصارات متتالية', streakL: 'هزائم متتالية', best: 'أفضل سلسلة', bySide: 'حسب الجانب', byOpp: 'حسب الخصم', recent: 'آخر المباريات', empty: 'لا يوجد سجل بعد. تُسجَّل المباريات تلقائيًا عند انتهائها.', moves: '{n} نقلة', reset: 'مسح السجل', resetQ: 'مسح السجل كله؟ لا يمكن التراجع.', yes: 'مسح', no: 'إلغاء', close: 'إغلاق', note: 'يُحفظ السجل في هذا المتصفح.' },
+  ja: { allV: '全ルール', form: '最近の調子', title: '戦績', btn: '戦績', btnT: '勝敗の記録を見る', all: 'すべて', ai: 'AI', rated: 'レート戦', online: 'オンライン', pvp: '対人', w: '勝', l: '負', d: '分', games: '{n}局', rate: '勝率', streak: '連勝中', streakL: '連敗中', best: '最高連勝', bySide: '先後別', byOpp: '相手別', recent: '最近の対局', empty: 'まだ記録がありません。対局が終わると自動で記録されます。', moves: '{n}手', reset: '記録を消す', resetQ: 'この記録をすべて消しますか？ 元に戻せません。', yes: '消す', no: 'やめる', close: '閉じる', note: '記録はこのブラウザに保存されます。' },
+  en: { allV: 'All variants', form: 'Recent form', title: 'Record', btn: 'Record', btnT: 'See your wins and losses', all: 'All', ai: 'AI', rated: 'Rated', online: 'Online', pvp: 'Local', w: 'W', l: 'L', d: 'D', games: '{n} games', rate: 'Win rate', streak: 'win streak', streakL: 'losing streak', best: 'Best streak', bySide: 'By side', byOpp: 'By opponent', recent: 'Recent games', empty: 'No games yet. Finished games are recorded automatically.', moves: '{n} moves', reset: 'Clear record', resetQ: 'Clear the whole record? This cannot be undone.', yes: 'Clear', no: 'Cancel', close: 'Close', note: 'The record is kept in this browser.' },
+  zh: { allV: '全部规则', form: '最近状态', title: '战绩', btn: '战绩', btnT: '查看胜负记录', all: '全部', ai: 'AI', rated: '等级分赛', online: '在线', pvp: '对人', w: '胜', l: '负', d: '和', games: '{n}局', rate: '胜率', streak: '连胜中', streakL: '连败中', best: '最高连胜', bySide: '先后手', byOpp: '按对手', recent: '最近对局', empty: '还没有记录。对局结束后会自动记录。', moves: '{n}手', reset: '清除记录', resetQ: '要清除全部记录吗？无法恢复。', yes: '清除', no: '取消', close: '关闭', note: '记录保存在此浏览器中。' },
+  ko: { allV: '모든 규칙', form: '최근 흐름', title: '전적', btn: '전적', btnT: '승패 기록 보기', all: '전체', ai: 'AI', rated: '레이팅전', online: '온라인', pvp: '대인', w: '승', l: '패', d: '무', games: '{n}국', rate: '승률', streak: '연승 중', streakL: '연패 중', best: '최고 연승', bySide: '선후수별', byOpp: '상대별', recent: '최근 대국', empty: '아직 기록이 없습니다. 대국이 끝나면 자동으로 기록됩니다.', moves: '{n}수', reset: '기록 지우기', resetQ: '기록을 모두 지울까요? 되돌릴 수 없습니다.', yes: '지우기', no: '취소', close: '닫기', note: '기록은 이 브라우저에 저장됩니다.' },
+  es: { allV: 'Todas las variantes', form: 'Racha reciente', title: 'Historial', btn: 'Historial', btnT: 'Ver victorias y derrotas', all: 'Todas', ai: 'IA', rated: 'Puntuadas', online: 'En línea', pvp: 'Local', w: 'G', l: 'P', d: 'T', games: '{n} partidas', rate: 'Victorias', streak: 'racha ganadora', streakL: 'racha perdedora', best: 'Mejor racha', bySide: 'Por bando', byOpp: 'Por rival', recent: 'Últimas partidas', empty: 'Aún no hay partidas. Se registran solas al terminar.', moves: '{n} jugadas', reset: 'Borrar historial', resetQ: '¿Borrar todo el historial? No se puede deshacer.', yes: 'Borrar', no: 'Cancelar', close: 'Cerrar', note: 'El historial se guarda en este navegador.' },
+  fr: { allV: 'Toutes les variantes', form: 'Forme récente', title: 'Bilan', btn: 'Bilan', btnT: 'Voir victoires et défaites', all: 'Toutes', ai: 'IA', rated: 'Classées', online: 'En ligne', pvp: 'Local', w: 'V', l: 'D', d: 'N', games: '{n} parties', rate: 'Victoires', streak: 'victoires de suite', streakL: 'défaites de suite', best: 'Meilleure série', bySide: 'Par camp', byOpp: 'Par adversaire', recent: 'Dernières parties', empty: 'Aucune partie pour l’instant. Elles sont enregistrées automatiquement.', moves: '{n} coups', reset: 'Effacer le bilan', resetQ: 'Effacer tout le bilan ? C’est définitif.', yes: 'Effacer', no: 'Annuler', close: 'Fermer', note: 'Le bilan est gardé dans ce navigateur.' },
+  pt: { allV: 'Todas as variantes', form: 'Forma recente', title: 'Histórico', btn: 'Histórico', btnT: 'Ver vitórias e derrotas', all: 'Todas', ai: 'IA', rated: 'Ranqueadas', online: 'Online', pvp: 'Local', w: 'V', l: 'D', d: 'E', games: '{n} partidas', rate: 'Vitórias', streak: 'vitórias seguidas', streakL: 'derrotas seguidas', best: 'Melhor sequência', bySide: 'Por lado', byOpp: 'Por adversário', recent: 'Partidas recentes', empty: 'Ainda não há partidas. Elas são registradas automaticamente.', moves: '{n} lances', reset: 'Apagar histórico', resetQ: 'Apagar todo o histórico? Não dá para desfazer.', yes: 'Apagar', no: 'Cancelar', close: 'Fechar', note: 'O histórico fica salvo neste navegador.' },
+  de: { allV: 'Alle Varianten', form: 'Aktuelle Form', title: 'Bilanz', btn: 'Bilanz', btnT: 'Siege und Niederlagen ansehen', all: 'Alle', ai: 'KI', rated: 'Gewertet', online: 'Online', pvp: 'Lokal', w: 'S', l: 'N', d: 'R', games: '{n} Partien', rate: 'Siegquote', streak: 'Siege in Folge', streakL: 'Niederlagen in Folge', best: 'Beste Serie', bySide: 'Nach Seite', byOpp: 'Nach Gegner', recent: 'Letzte Partien', empty: 'Noch keine Partien. Beendete Partien werden automatisch gespeichert.', moves: '{n} Züge', reset: 'Bilanz löschen', resetQ: 'Die ganze Bilanz löschen? Das lässt sich nicht rückgängig machen.', yes: 'Löschen', no: 'Abbrechen', close: 'Schließen', note: 'Die Bilanz wird in diesem Browser gespeichert.' },
+  hi: { allV: 'सभी नियम', form: 'हाल का प्रदर्शन', title: 'रिकॉर्ड', btn: 'रिकॉर्ड', btnT: 'जीत-हार देखें', all: 'सभी', ai: 'AI', rated: 'रेटेड', online: 'ऑनलाइन', pvp: 'आमने-सामने', w: 'जी', l: 'हा', d: 'ड्रॉ', games: '{n} खेल', rate: 'जीत दर', streak: 'लगातार जीत', streakL: 'लगातार हार', best: 'सबसे लंबी जीत', bySide: 'पक्ष के अनुसार', byOpp: 'विरोधी के अनुसार', recent: 'हाल के खेल', empty: 'अभी कोई रिकॉर्ड नहीं। खेल खत्म होते ही अपने-आप दर्ज होगा।', moves: '{n} चालें', reset: 'रिकॉर्ड मिटाएँ', resetQ: 'पूरा रिकॉर्ड मिटाएँ? इसे वापस नहीं लाया जा सकता।', yes: 'मिटाएँ', no: 'रद्द करें', close: 'बंद करें', note: 'रिकॉर्ड इसी ब्राउज़र में रखा जाता है।' },
+  ar: { allV: 'كل الأنواع', form: 'الأداء الأخير', title: 'السجل', btn: 'السجل', btnT: 'عرض الانتصارات والهزائم', all: 'الكل', ai: 'الذكاء الاصطناعي', rated: 'مصنّفة', online: 'أونلاين', pvp: 'محلي', w: 'ف', l: 'خ', d: 'ت', games: '{n} مباراة', rate: 'نسبة الفوز', streak: 'انتصارات متتالية', streakL: 'هزائم متتالية', best: 'أفضل سلسلة', bySide: 'حسب الجانب', byOpp: 'حسب الخصم', recent: 'آخر المباريات', empty: 'لا يوجد سجل بعد. تُسجَّل المباريات تلقائيًا عند انتهائها.', moves: '{n} نقلة', reset: 'مسح السجل', resetQ: 'مسح السجل كله؟ لا يمكن التراجع.', yes: 'مسح', no: 'إلغاء', close: 'إغلاق', note: 'يُحفظ السجل في هذا المتصفح.' },
 };
 const ICON = '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let O = null, tab = 'all', ov = null, confirmOn = false;
+let O = null, vtab = 'all', tab = 'all', ov = null, confirmOn = false;
 const L = () => { const l = (O && O.lang && O.lang()) || 'ja'; return TX[l] ? l : 'en'; };
 const tx = (k, v) => { let x = TX[L()][k]; if (x === undefined) x = TX.en[k]; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; };
 const KEY = () => 'atlas-rec-' + O.game;
@@ -33,13 +36,15 @@ function load() { try { const a = JSON.parse(localStorage.getItem(KEY()) || '[]'
 function store(a) { try { localStorage.setItem(KEY(), JSON.stringify(a.slice(-500))); } catch (e) {} }
 function add(r) {
   if (!O || !r || !r.res) return;
-  const a = load(); a.push(Object.assign({ t: Date.now() }, r)); store(a);
+  const v = O.variant ? O.variant() : null, x = Object.assign({ t: Date.now() }, r);
+  if (v && x.v == null) { x.v = typeof v === 'string' ? v : v.k; if (v.n) x.vn = v.n; }
+  const a = load(); a.push(x); store(a);
   if (ov && ov.classList.contains('show')) render();
 }
 const CSS = `
 .grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .grc-ov.show{display:flex}
-.grc{--gw:#6fd4a4;--gl:#ff8f82;--gd:rgba(255,255,255,.42);--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
+.grc{--gw:#8aa58c;--gl:#b9786a;--gd:rgba(222,212,196,.32);--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
   width:min(720px,100%);max-height:min(880px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,color-mix(in srgb,var(--panel,#1d1712) 92%,#fff 8%),var(--panel,#1d1712) 140px);
   color:var(--gx);border:1px solid var(--gb);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;box-sizing:border-box;font-variant-numeric:tabular-nums}
 .grc *{box-sizing:border-box}
@@ -53,6 +58,9 @@ const CSS = `
 .grc-tabs{display:flex;flex:none;gap:2px;margin:0 22px 4px;padding:3px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--gb);width:max-content;max-width:calc(100% - 44px);overflow-x:auto;scrollbar-width:none}
 .grc-tabs button{font:inherit;font-size:13.5px;font-weight:600;padding:7px 16px;border-radius:9px;border:0;background:transparent;color:var(--gm);cursor:pointer;white-space:nowrap}
 .grc-tabs button.sel{background:var(--gc);color:var(--gx);box-shadow:inset 0 0 0 1px var(--gb),0 1px 3px rgba(0,0,0,.3)}
+.grc-vt{display:flex;flex:none;gap:6px;margin:0 22px 10px;overflow-x:auto;scrollbar-width:none}
+.grc-vt button{font:inherit;font-size:13px;font-weight:600;padding:6px 13px;border-radius:999px;border:1px solid var(--gb);background:transparent;color:var(--gm);cursor:pointer;white-space:nowrap;flex:none}
+.grc-vt button.sel{color:var(--ga);border-color:color-mix(in srgb,var(--ga) 50%,transparent);background:color-mix(in srgb,var(--ga) 10%,transparent)}
 .grc-bd{flex:1;min-height:0;overflow-y:auto;padding:16px 22px 20px;display:flex;flex-direction:column;gap:22px;scrollbar-width:thin}
 /* hero: the win-rate ring and the counts */
 .grc-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;padding:18px 20px;border-radius:16px;background:var(--gc);border:1px solid var(--gb)}
@@ -82,12 +90,12 @@ const CSS = `
 .grc-row .grc-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .grc-mini{display:flex;height:6px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.07)}
 .grc-mini i{display:block;height:100%}
-.grc-row .grc-sc{font-size:12.5px;color:var(--gm);white-space:nowrap}
+.grc-row .grc-sc{font-size:12.5px;color:var(--gm);white-space:nowrap;min-width:6.6em;text-align:end}
 .grc-row .grc-pc{font-weight:800;min-width:3.4em;text-align:end}
 .grc-g{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 14px;font-size:14px;background:var(--gc)}
 .grc-g + .grc-g{border-top:1px solid var(--gb)}
 .grc-g .grc-rs{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:800}
-.grc-g .grc-rs.grc-w{background:color-mix(in srgb,var(--gw) 18%,transparent);color:var(--gw)}.grc-g .grc-rs.grc-l{background:color-mix(in srgb,var(--gl) 16%,transparent);color:var(--gl)}.grc-g .grc-rs.grc-d{background:rgba(255,255,255,.08);color:#ddd}
+.grc-g .grc-rs.grc-w{background:color-mix(in srgb,var(--gw) 18%,transparent);color:var(--gw)}.grc-g .grc-rs.grc-l{background:color-mix(in srgb,var(--gl) 16%,transparent);color:var(--gl)}.grc-g .grc-rs.grc-d{background:rgba(255,255,255,.08);color:var(--gm)}
 .grc-g .grc-mid{min-width:0;display:flex;flex-direction:column;gap:1px}
 .grc-g .grc-mid b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .grc-g .grc-mid small{color:var(--gm);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -103,9 +111,9 @@ const CSS = `
 .grc-cf span{flex:1;min-width:200px}
 .grc-cf div{display:flex;gap:8px}
 .grc-cf button{font:inherit;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--gb);background:transparent;color:var(--gx);cursor:pointer}
-.grc-cf .grc-warn{background:#d0574a;border-color:transparent;color:#fff}
+.grc-cf .grc-warn{background:#9c5a4d;border-color:transparent;color:#fff}
 @media (max-width:560px){
-  .grc{border-radius:18px}.grc-hd{padding:16px 16px 10px}.grc-tabs{margin:0 16px 2px;max-width:calc(100% - 32px)}.grc-bd{padding:14px 16px 16px;gap:18px}.grc-ft{padding:10px 16px 14px}
+  .grc{border-radius:18px}.grc-hd{padding:16px 16px 10px}.grc-tabs{margin:0 16px 2px;max-width:calc(100% - 32px)}.grc-vt{margin:0 16px 8px}.grc-bd{padding:14px 16px 16px;gap:18px}.grc-ft{padding:10px 16px 14px}
   .grc-hero{grid-template-columns:1fr;justify-items:center;padding:16px}.grc-right{width:100%}.grc-ring{width:120px;height:120px}
   .grc-row{grid-template-columns:minmax(0,1fr) 60px auto;gap:10px}.grc-row .grc-sc{display:none}
 }
@@ -138,12 +146,18 @@ function ring(st) {
   let off = 0; const seg = (v, col) => { const len = v / n * C; const h = len > 0.5 ? `<circle r="${R}" cx="66" cy="66" stroke="${col}" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}" stroke-linecap="butt"/>` : ''; off += len; return h; };
   return `<div class="grc-ring"><svg viewBox="0 0 132 132"><circle r="${R}" cx="66" cy="66" stroke="rgba(255,255,255,.07)"/>${seg(st.w, 'var(--gw)')}${seg(st.d, 'var(--gd)')}${seg(st.l, 'var(--gl)')}</svg><div class="grc-ctr"><b>${pct(st.w, st.l, st.d)}</b><small>${esc(tx('rate'))}</small></div></div>`;
 }
+const vOf = g => g.v != null ? g.v : (O.defVariant || '');
+function vName(k, list) { const n = O.variantName ? O.variantName(k, L()) : null; if (n) return n; const g = list.find(x => vOf(x) === k && x.vn); return g ? g.vn : (k || '—'); }
 function render() {
-  const all = load(), modes = ['ai', 'rated', 'online', 'pvp'].filter(m => all.some(g => g.mode === m));
+  const every = load(), vs = [...new Set(every.map(vOf))];
+  if (O.variants) { const ord = O.variants(); vs.sort((a, b) => (ord.indexOf(a) + 1 || 99) - (ord.indexOf(b) + 1 || 99)); }
+  if (vtab !== 'all' && !vs.includes(vtab)) vtab = 'all';
+  const all = vtab === 'all' ? every : every.filter(g => vOf(g) === vtab), modes = ['ai', 'rated', 'online', 'pvp'].filter(m => all.some(g => g.mode === m));
   if (tab !== 'all' && !modes.includes(tab)) tab = 'all';
   const list = tab === 'all' ? all : all.filter(g => g.mode === tab);
   const st = stats(list), sides = O.sides ? O.sides(L()) : null;
   let h = `<div class="grc-hd"><span class="grc-ic">${ICON}</span><h2>${esc(tx('title'))}</h2><button type="button" class="grc-x" data-act="close" aria-label="${esc(tx('close'))}">×</button></div>`;
+  if (vs.length > 1) h += `<div class="grc-vt" role="tablist">${['all'].concat(vs).map(k => `<button type="button" role="tab" data-vt="${esc(k)}" class="${k === vtab ? 'sel' : ''}">${esc(k === 'all' ? tx('allV') : vName(k, every))}</button>`).join('')}</div>`;
   if (modes.length) h += `<div class="grc-tabs" role="tablist">${['all'].concat(modes).map(m => `<button type="button" role="tab" data-tab="${m}" class="${m === tab ? 'sel' : ''}">${esc(tx(m))}</button>`).join('')}</div>`;
   h += '<div class="grc-bd">';
   if (confirmOn) h += `<div class="grc-cf"><span>${esc(tx('resetQ'))}</span><div><button type="button" data-cf="no">${esc(tx('no'))}</button><button type="button" class="grc-warn" data-cf="yes">${esc(tx('yes'))}</button></div></div>`;
@@ -157,12 +171,12 @@ function render() {
     if (sides && list.some(g => g.side === 0 || g.side === 1)) h += `<section><h3>${esc(tx('bySide'))}</h3><div class="grc-tb">${[0, 1].map(i => { const x = st.side[i]; return `<div class="grc-row"><span class="grc-nm">${esc(sides[i])}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`; }).join('')}</div></section>`;
     const opps = Object.values(st.opp).sort((a, b) => b.last - a.last).slice(0, 12);
     if (opps.length) h += `<section><h3>${esc(tx('byOpp'))}</h3><div class="grc-tb">${opps.map(x => `<div class="grc-row"><span class="grc-nm">${esc(x.nm)}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`).join('')}</div></section>`;
-    h += `<section><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(g.opp || tx(g.mode))}</b><small>${esc([tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></section>`;
+    h += `<section><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(g.opp || tx(g.mode))}</b><small>${esc([vtab === 'all' && vs.length > 1 ? vName(vOf(g), every) : '', tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></section>`;
   }
-  h += `</div><div class="grc-ft"><small>${esc(tx('note'))}</small>${all.length ? `<button type="button" class="grc-warn" data-act="reset">${esc(tx('reset'))}</button>` : ''}<button type="button" class="grc-go" data-act="close">${esc(tx('close'))}</button></div>`;
+  h += `</div><div class="grc-ft"><small>${esc(tx('note'))}</small>${every.length ? `<button type="button" class="grc-warn" data-act="reset">${esc(tx('reset'))}</button>` : ''}<button type="button" class="grc-go" data-act="close">${esc(tx('close'))}</button></div>`;
   ov.firstChild.innerHTML = h;
 }
-function open() { if (!ov) return; confirmOn = false; render(); ov.classList.add('show'); }
+function open() { if (!ov) return; confirmOn = false; if (O.variant) { const v = O.variant(); const k = v == null ? null : typeof v === 'string' ? v : v.k; if (k != null && load().some(g => vOf(g) === k) && new Set(load().map(vOf)).size > 1) vtab = k; } render(); ov.classList.add('show'); }
 function close() { if (ov) ov.classList.remove('show'); }
 function init(o) {
   O = o;
@@ -171,7 +185,8 @@ function init(o) {
   ov.addEventListener('click', e => {
     if (e.target === ov) return close();
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.tab) { tab = b.dataset.tab; render(); }
+    if (b.dataset.vt) { vtab = b.dataset.vt; render(); }
+    else if (b.dataset.tab) { tab = b.dataset.tab; render(); }
     else if (b.dataset.act === 'close') close();
     else if (b.dataset.act === 'reset') { confirmOn = true; render(); ov.querySelector('.grc-bd').scrollTop = 0; }
     else if (b.dataset.cf === 'no') { confirmOn = false; render(); }
