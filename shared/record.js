@@ -44,7 +44,7 @@ function add(r) {
 const CSS = `
 .grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .grc-ov.show{display:flex}
-.grc{--gw:#8aa58c;--gl:#b9786a;--gd:rgba(222,212,196,.32);--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
+.grc{--gw:var(--accent,#d8b56a);--gl:#7f8894;--gd:#5b544b;--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
   width:min(720px,100%);max-height:min(880px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,color-mix(in srgb,var(--panel,#1d1712) 92%,#fff 8%),var(--panel,#1d1712) 140px);
   color:var(--gx);border:1px solid var(--gb);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;box-sizing:border-box;font-variant-numeric:tabular-nums}
 .grc *{box-sizing:border-box}
@@ -104,14 +104,14 @@ const CSS = `
 .grc-ft{display:flex;align-items:center;gap:12px;padding:12px 22px 16px;border-top:1px solid var(--gb)}
 .grc-ft small{flex:1;color:var(--gm);font-size:12px;min-width:0}
 .grc-ft button{font:inherit;font-size:13.5px;font-weight:600;padding:9px 16px;border-radius:10px;border:1px solid var(--gb);background:transparent;color:var(--gx);cursor:pointer;white-space:nowrap}
-.grc-ft .grc-warn{color:var(--gl);border-color:transparent;padding-inline:6px}
+.grc-ft .grc-warn{color:var(--gm);border-color:transparent;padding-inline:6px}
 .grc-ft .grc-warn:hover{text-decoration:underline}
 .grc-ft .grc-go{background:var(--ga);color:#1b150a;border-color:transparent;min-width:96px}
 .grc-cf{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gl) 50%,transparent);background:color-mix(in srgb,var(--gl) 8%,transparent);font-size:14px}
 .grc-cf span{flex:1;min-width:200px}
 .grc-cf div{display:flex;gap:8px}
 .grc-cf button{font:inherit;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--gb);background:transparent;color:var(--gx);cursor:pointer}
-.grc-cf .grc-warn{background:#9c5a4d;border-color:transparent;color:#fff}
+.grc-cf .grc-warn{background:#8a5a4e;border-color:transparent;color:#fff}
 @media (max-width:560px){
   .grc{border-radius:18px}.grc-hd{padding:16px 16px 10px}.grc-tabs{margin:0 16px 2px;max-width:calc(100% - 32px)}.grc-vt{margin:0 16px 8px}.grc-bd{padding:14px 16px 16px;gap:18px}.grc-ft{padding:10px 16px 14px}
   .grc-hero{grid-template-columns:1fr;justify-items:center;padding:16px}.grc-right{width:100%}.grc-ring{width:120px;height:120px}
