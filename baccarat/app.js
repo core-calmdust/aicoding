@@ -522,14 +522,14 @@ function render() {
   const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(220, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - (parseFloat(getComputedStyle(sc).paddingTop) || 0) - (parseFloat(getComputedStyle(sc).rowGap) || 10) - 14 - (G.fitAdj || 0))) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
-  if (G.mob) { setMobGeo(1000 / 1000); const lz0 = Math.min((W - 8) * mobGeo().h / 1000, Math.max(Hn * .6, Hn - 2.62 * W / 5.2)); setMobGeo((W - 8) / lz0); }   // the cards take what they need (their width is the limit), the betting arc the rest
-  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Math.max(Hn * .6, Hn - 2.62 * W / 5.2)) : Math.min(lzh, Hn * .6);
+  if (G.mob) { setMobGeo(1000 / 1000); const lz0 = Math.min((W - 8) * mobGeo().h / 1000, Math.max(Hn * .6, Hn - 2.05 * W / 5.2)); setMobGeo((W - 8) / lz0); }   // the cards take what they need (their width is the limit), the betting arc the rest
+  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Math.max(Hn * .6, Hn - 2.05 * W / 5.2)) : Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
-  const cwS = G.mob ? Math.min(W / 5.2, (Hn - lz) / 2.1) : Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
+  const cwS = G.mob ? Math.min(W / 5.2, (Hn - lz) / 1.72) : Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
   const stack = cwT > cwS * 1.12, cw = Math.max(34, Math.min(stack ? cwT : cwS, 124));
   bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   box.classList.toggle('ctr', pcCol); box.classList.toggle('mob', !!G.mob); box.classList.toggle('stk', stack); box.style.setProperty('--lzh', lz + 'px');
-  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : G.mob ? 1.5 : 2.12) + .38 + .62) + lz + 2 * rail + 8 + (G.mob ? 16 : 0));
+  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : G.mob ? 1.5 : 2.12) + .38 + (G.mob ? .08 : .62)) + lz + 2 * rail + 8 + (G.mob ? 16 : 0));
     const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2) bw.style.maxHeight = need + 'px'; }
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
