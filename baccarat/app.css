@@ -2206,3 +2206,9 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .seat-g.me .pl-b{fill:#efe8d8;font-family:'Cormorant Garamond',serif;font-weight:700;font-variant-numeric:lining-nums}
 .lz-svg:not(.mzs) .seat-g.me .pl-b{font-size:15px}
 @media (hover:hover) and (pointer:fine){.bc .actbar{gap:8px 10px}.bc .abtn{min-width:0;padding:9px 14px}.bc-rack{gap:4px}.bc-chip{width:42px;height:42px}}
+/* PC: the table column is exactly as tall as the info column — the table takes whatever the action bar and the session strip leave */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .bc .pk-left{height:calc(100vh - var(--hb-h, 56px) - 46px);min-height:0}
+  .bc .board-wrap{flex:1 1 auto;height:auto!important;max-height:none!important;min-height:300px}
+  .bc .actbar,.bc .sess-bar{flex:none}
+}
