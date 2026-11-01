@@ -1192,8 +1192,9 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 }
 /* ---- Alquerque: rug boards (tools/gen_rugs.py) with cream / gold lines; brass + lapis coins and felt balls */
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]){--edge:#2a1414;--wdl:#f6e6c0}
-html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp)}
-html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp)}
+html[data-bd=berber] .lines .num{fill:#2a1414;opacity:.75}
+html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=2)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp?v=2)}
+html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp?v=2)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp?v=2)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .frame{background:var(--wimg) 0 0 / 100% 100%;border-radius:calc(var(--cell) * .14);
   box-shadow:0 calc(var(--cell) * .05) 0 #3a1c18,0 40px 70px -26px rgba(0,0,0,.85),inset 0 0 calc(var(--cell) * .3) rgba(0,0,0,.25)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .lines{filter:drop-shadow(0 0 calc(var(--cell) * .025) rgba(0,0,0,.65))}
@@ -1562,7 +1563,7 @@ html[data-pcs=felt] .pdisc.p1{background:#efe6d6} html[data-pcs=felt] .pdisc.p2{
 window.GAME = { id: 'alquerque', name: 'Alquerque', base: 'alq', rules: ['alq'], store: 'aicoding-alquerque', img: '../images/atlas/alquerque.webp',
   engine: '../fanorona/engine.js?v=fb2', bd: 'medallion', pcs: 'brass',
   bds: ['medallion', 'berber', 'kilim', 'patch', 'abstract', 'dark'], pcss: ['brass', 'felt', 'flat', 'mono'],
-  bdImg: { medallion: 'img/rug-medallion.webp', berber: 'img/rug-berber.webp', kilim: 'img/rug-kilim.webp', patch: 'img/rug-patch.webp' },
+  bdImg: { medallion: 'img/rug-medallion.webp?v=2', berber: 'img/rug-berber.webp?v=2', kilim: 'img/rug-kilim.webp?v=2', patch: 'img/rug-patch.webp?v=2' },
   bdPal: { medallion: ['#962020', '#5a1c40', '#e2b254'], berber: ['#ee7616', '#b01e6e', '#1a1416'], kilim: ['#cc282e', '#ec6e22', '#f4e8d2'], patch: ['#7a3a5a', '#2a608c', '#f4ead6'] },
   pcPal: { brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#fffaf0', '#efe6d6', '#c8bba3'], ['#5a5458', '#35313a', '#16141a']] } };
 window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
