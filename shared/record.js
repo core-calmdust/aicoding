@@ -12,16 +12,16 @@
 (function () {
 'use strict';
 const TX = {
-  ja: { title: '戦績', btn: '戦績', btnT: '勝敗の記録を見る', all: 'すべて', ai: 'AI', rated: 'レート戦', online: 'オンライン', pvp: '対人', w: '勝', l: '負', d: '分', games: '{n}局', rate: '勝率', streak: '連勝中', streakL: '連敗中', best: '最高連勝', bySide: '先後別', byOpp: '相手別', recent: '最近の対局', empty: 'まだ記録がありません。対局が終わると自動で記録されます。', moves: '{n}手', reset: '記録を消す', resetQ: 'この記録をすべて消しますか？ 元に戻せません。', yes: '消す', no: 'やめる', close: '閉じる', note: '記録はこのブラウザに保存されます。' },
-  en: { title: 'Record', btn: 'Record', btnT: 'See your wins and losses', all: 'All', ai: 'AI', rated: 'Rated', online: 'Online', pvp: 'Local', w: 'W', l: 'L', d: 'D', games: '{n} games', rate: 'Win rate', streak: 'win streak', streakL: 'losing streak', best: 'Best streak', bySide: 'By side', byOpp: 'By opponent', recent: 'Recent games', empty: 'No games yet. Finished games are recorded automatically.', moves: '{n} moves', reset: 'Clear record', resetQ: 'Clear the whole record? This cannot be undone.', yes: 'Clear', no: 'Cancel', close: 'Close', note: 'The record is kept in this browser.' },
-  zh: { title: '战绩', btn: '战绩', btnT: '查看胜负记录', all: '全部', ai: 'AI', rated: '等级分赛', online: '在线', pvp: '对人', w: '胜', l: '负', d: '和', games: '{n}局', rate: '胜率', streak: '连胜中', streakL: '连败中', best: '最高连胜', bySide: '先后手', byOpp: '按对手', recent: '最近对局', empty: '还没有记录。对局结束后会自动记录。', moves: '{n}手', reset: '清除记录', resetQ: '要清除全部记录吗？无法恢复。', yes: '清除', no: '取消', close: '关闭', note: '记录保存在此浏览器中。' },
-  ko: { title: '전적', btn: '전적', btnT: '승패 기록 보기', all: '전체', ai: 'AI', rated: '레이팅전', online: '온라인', pvp: '대인', w: '승', l: '패', d: '무', games: '{n}국', rate: '승률', streak: '연승 중', streakL: '연패 중', best: '최고 연승', bySide: '선후수별', byOpp: '상대별', recent: '최근 대국', empty: '아직 기록이 없습니다. 대국이 끝나면 자동으로 기록됩니다.', moves: '{n}수', reset: '기록 지우기', resetQ: '기록을 모두 지울까요? 되돌릴 수 없습니다.', yes: '지우기', no: '취소', close: '닫기', note: '기록은 이 브라우저에 저장됩니다.' },
-  es: { title: 'Historial', btn: 'Historial', btnT: 'Ver victorias y derrotas', all: 'Todas', ai: 'IA', rated: 'Puntuadas', online: 'En línea', pvp: 'Local', w: 'G', l: 'P', d: 'T', games: '{n} partidas', rate: 'Victorias', streak: 'racha ganadora', streakL: 'racha perdedora', best: 'Mejor racha', bySide: 'Por bando', byOpp: 'Por rival', recent: 'Últimas partidas', empty: 'Aún no hay partidas. Se registran solas al terminar.', moves: '{n} jugadas', reset: 'Borrar historial', resetQ: '¿Borrar todo el historial? No se puede deshacer.', yes: 'Borrar', no: 'Cancelar', close: 'Cerrar', note: 'El historial se guarda en este navegador.' },
-  fr: { title: 'Bilan', btn: 'Bilan', btnT: 'Voir victoires et défaites', all: 'Toutes', ai: 'IA', rated: 'Classées', online: 'En ligne', pvp: 'Local', w: 'V', l: 'D', d: 'N', games: '{n} parties', rate: 'Victoires', streak: 'victoires de suite', streakL: 'défaites de suite', best: 'Meilleure série', bySide: 'Par camp', byOpp: 'Par adversaire', recent: 'Dernières parties', empty: 'Aucune partie pour l’instant. Elles sont enregistrées automatiquement.', moves: '{n} coups', reset: 'Effacer le bilan', resetQ: 'Effacer tout le bilan ? C’est définitif.', yes: 'Effacer', no: 'Annuler', close: 'Fermer', note: 'Le bilan est gardé dans ce navigateur.' },
-  pt: { title: 'Histórico', btn: 'Histórico', btnT: 'Ver vitórias e derrotas', all: 'Todas', ai: 'IA', rated: 'Ranqueadas', online: 'Online', pvp: 'Local', w: 'V', l: 'D', d: 'E', games: '{n} partidas', rate: 'Vitórias', streak: 'vitórias seguidas', streakL: 'derrotas seguidas', best: 'Melhor sequência', bySide: 'Por lado', byOpp: 'Por adversário', recent: 'Partidas recentes', empty: 'Ainda não há partidas. Elas são registradas automaticamente.', moves: '{n} lances', reset: 'Apagar histórico', resetQ: 'Apagar todo o histórico? Não dá para desfazer.', yes: 'Apagar', no: 'Cancelar', close: 'Fechar', note: 'O histórico fica salvo neste navegador.' },
-  de: { title: 'Bilanz', btn: 'Bilanz', btnT: 'Siege und Niederlagen ansehen', all: 'Alle', ai: 'KI', rated: 'Gewertet', online: 'Online', pvp: 'Lokal', w: 'S', l: 'N', d: 'R', games: '{n} Partien', rate: 'Siegquote', streak: 'Siege in Folge', streakL: 'Niederlagen in Folge', best: 'Beste Serie', bySide: 'Nach Seite', byOpp: 'Nach Gegner', recent: 'Letzte Partien', empty: 'Noch keine Partien. Beendete Partien werden automatisch gespeichert.', moves: '{n} Züge', reset: 'Bilanz löschen', resetQ: 'Die ganze Bilanz löschen? Das lässt sich nicht rückgängig machen.', yes: 'Löschen', no: 'Abbrechen', close: 'Schließen', note: 'Die Bilanz wird in diesem Browser gespeichert.' },
-  hi: { title: 'रिकॉर्ड', btn: 'रिकॉर्ड', btnT: 'जीत-हार देखें', all: 'सभी', ai: 'AI', rated: 'रेटेड', online: 'ऑनलाइन', pvp: 'आमने-सामने', w: 'जी', l: 'हा', d: 'ड्रॉ', games: '{n} खेल', rate: 'जीत दर', streak: 'लगातार जीत', streakL: 'लगातार हार', best: 'सबसे लंबी जीत', bySide: 'पक्ष के अनुसार', byOpp: 'विरोधी के अनुसार', recent: 'हाल के खेल', empty: 'अभी कोई रिकॉर्ड नहीं। खेल खत्म होते ही अपने-आप दर्ज होगा।', moves: '{n} चालें', reset: 'रिकॉर्ड मिटाएँ', resetQ: 'पूरा रिकॉर्ड मिटाएँ? इसे वापस नहीं लाया जा सकता।', yes: 'मिटाएँ', no: 'रद्द करें', close: 'बंद करें', note: 'रिकॉर्ड इसी ब्राउज़र में रखा जाता है।' },
-  ar: { title: 'السجل', btn: 'السجل', btnT: 'عرض الانتصارات والهزائم', all: 'الكل', ai: 'الذكاء الاصطناعي', rated: 'مصنّفة', online: 'أونلاين', pvp: 'محلي', w: 'ف', l: 'خ', d: 'ت', games: '{n} مباراة', rate: 'نسبة الفوز', streak: 'انتصارات متتالية', streakL: 'هزائم متتالية', best: 'أفضل سلسلة', bySide: 'حسب الجانب', byOpp: 'حسب الخصم', recent: 'آخر المباريات', empty: 'لا يوجد سجل بعد. تُسجَّل المباريات تلقائيًا عند انتهائها.', moves: '{n} نقلة', reset: 'مسح السجل', resetQ: 'مسح السجل كله؟ لا يمكن التراجع.', yes: 'مسح', no: 'إلغاء', close: 'إغلاق', note: 'يُحفظ السجل في هذا المتصفح.' },
+  ja: { form: '最近の調子', title: '戦績', btn: '戦績', btnT: '勝敗の記録を見る', all: 'すべて', ai: 'AI', rated: 'レート戦', online: 'オンライン', pvp: '対人', w: '勝', l: '負', d: '分', games: '{n}局', rate: '勝率', streak: '連勝中', streakL: '連敗中', best: '最高連勝', bySide: '先後別', byOpp: '相手別', recent: '最近の対局', empty: 'まだ記録がありません。対局が終わると自動で記録されます。', moves: '{n}手', reset: '記録を消す', resetQ: 'この記録をすべて消しますか？ 元に戻せません。', yes: '消す', no: 'やめる', close: '閉じる', note: '記録はこのブラウザに保存されます。' },
+  en: { form: 'Recent form', title: 'Record', btn: 'Record', btnT: 'See your wins and losses', all: 'All', ai: 'AI', rated: 'Rated', online: 'Online', pvp: 'Local', w: 'W', l: 'L', d: 'D', games: '{n} games', rate: 'Win rate', streak: 'win streak', streakL: 'losing streak', best: 'Best streak', bySide: 'By side', byOpp: 'By opponent', recent: 'Recent games', empty: 'No games yet. Finished games are recorded automatically.', moves: '{n} moves', reset: 'Clear record', resetQ: 'Clear the whole record? This cannot be undone.', yes: 'Clear', no: 'Cancel', close: 'Close', note: 'The record is kept in this browser.' },
+  zh: { form: '最近状态', title: '战绩', btn: '战绩', btnT: '查看胜负记录', all: '全部', ai: 'AI', rated: '等级分赛', online: '在线', pvp: '对人', w: '胜', l: '负', d: '和', games: '{n}局', rate: '胜率', streak: '连胜中', streakL: '连败中', best: '最高连胜', bySide: '先后手', byOpp: '按对手', recent: '最近对局', empty: '还没有记录。对局结束后会自动记录。', moves: '{n}手', reset: '清除记录', resetQ: '要清除全部记录吗？无法恢复。', yes: '清除', no: '取消', close: '关闭', note: '记录保存在此浏览器中。' },
+  ko: { form: '최근 흐름', title: '전적', btn: '전적', btnT: '승패 기록 보기', all: '전체', ai: 'AI', rated: '레이팅전', online: '온라인', pvp: '대인', w: '승', l: '패', d: '무', games: '{n}국', rate: '승률', streak: '연승 중', streakL: '연패 중', best: '최고 연승', bySide: '선후수별', byOpp: '상대별', recent: '최근 대국', empty: '아직 기록이 없습니다. 대국이 끝나면 자동으로 기록됩니다.', moves: '{n}수', reset: '기록 지우기', resetQ: '기록을 모두 지울까요? 되돌릴 수 없습니다.', yes: '지우기', no: '취소', close: '닫기', note: '기록은 이 브라우저에 저장됩니다.' },
+  es: { form: 'Racha reciente', title: 'Historial', btn: 'Historial', btnT: 'Ver victorias y derrotas', all: 'Todas', ai: 'IA', rated: 'Puntuadas', online: 'En línea', pvp: 'Local', w: 'G', l: 'P', d: 'T', games: '{n} partidas', rate: 'Victorias', streak: 'racha ganadora', streakL: 'racha perdedora', best: 'Mejor racha', bySide: 'Por bando', byOpp: 'Por rival', recent: 'Últimas partidas', empty: 'Aún no hay partidas. Se registran solas al terminar.', moves: '{n} jugadas', reset: 'Borrar historial', resetQ: '¿Borrar todo el historial? No se puede deshacer.', yes: 'Borrar', no: 'Cancelar', close: 'Cerrar', note: 'El historial se guarda en este navegador.' },
+  fr: { form: 'Forme récente', title: 'Bilan', btn: 'Bilan', btnT: 'Voir victoires et défaites', all: 'Toutes', ai: 'IA', rated: 'Classées', online: 'En ligne', pvp: 'Local', w: 'V', l: 'D', d: 'N', games: '{n} parties', rate: 'Victoires', streak: 'victoires de suite', streakL: 'défaites de suite', best: 'Meilleure série', bySide: 'Par camp', byOpp: 'Par adversaire', recent: 'Dernières parties', empty: 'Aucune partie pour l’instant. Elles sont enregistrées automatiquement.', moves: '{n} coups', reset: 'Effacer le bilan', resetQ: 'Effacer tout le bilan ? C’est définitif.', yes: 'Effacer', no: 'Annuler', close: 'Fermer', note: 'Le bilan est gardé dans ce navigateur.' },
+  pt: { form: 'Forma recente', title: 'Histórico', btn: 'Histórico', btnT: 'Ver vitórias e derrotas', all: 'Todas', ai: 'IA', rated: 'Ranqueadas', online: 'Online', pvp: 'Local', w: 'V', l: 'D', d: 'E', games: '{n} partidas', rate: 'Vitórias', streak: 'vitórias seguidas', streakL: 'derrotas seguidas', best: 'Melhor sequência', bySide: 'Por lado', byOpp: 'Por adversário', recent: 'Partidas recentes', empty: 'Ainda não há partidas. Elas são registradas automaticamente.', moves: '{n} lances', reset: 'Apagar histórico', resetQ: 'Apagar todo o histórico? Não dá para desfazer.', yes: 'Apagar', no: 'Cancelar', close: 'Fechar', note: 'O histórico fica salvo neste navegador.' },
+  de: { form: 'Aktuelle Form', title: 'Bilanz', btn: 'Bilanz', btnT: 'Siege und Niederlagen ansehen', all: 'Alle', ai: 'KI', rated: 'Gewertet', online: 'Online', pvp: 'Lokal', w: 'S', l: 'N', d: 'R', games: '{n} Partien', rate: 'Siegquote', streak: 'Siege in Folge', streakL: 'Niederlagen in Folge', best: 'Beste Serie', bySide: 'Nach Seite', byOpp: 'Nach Gegner', recent: 'Letzte Partien', empty: 'Noch keine Partien. Beendete Partien werden automatisch gespeichert.', moves: '{n} Züge', reset: 'Bilanz löschen', resetQ: 'Die ganze Bilanz löschen? Das lässt sich nicht rückgängig machen.', yes: 'Löschen', no: 'Abbrechen', close: 'Schließen', note: 'Die Bilanz wird in diesem Browser gespeichert.' },
+  hi: { form: 'हाल का प्रदर्शन', title: 'रिकॉर्ड', btn: 'रिकॉर्ड', btnT: 'जीत-हार देखें', all: 'सभी', ai: 'AI', rated: 'रेटेड', online: 'ऑनलाइन', pvp: 'आमने-सामने', w: 'जी', l: 'हा', d: 'ड्रॉ', games: '{n} खेल', rate: 'जीत दर', streak: 'लगातार जीत', streakL: 'लगातार हार', best: 'सबसे लंबी जीत', bySide: 'पक्ष के अनुसार', byOpp: 'विरोधी के अनुसार', recent: 'हाल के खेल', empty: 'अभी कोई रिकॉर्ड नहीं। खेल खत्म होते ही अपने-आप दर्ज होगा।', moves: '{n} चालें', reset: 'रिकॉर्ड मिटाएँ', resetQ: 'पूरा रिकॉर्ड मिटाएँ? इसे वापस नहीं लाया जा सकता।', yes: 'मिटाएँ', no: 'रद्द करें', close: 'बंद करें', note: 'रिकॉर्ड इसी ब्राउज़र में रखा जाता है।' },
+  ar: { form: 'الأداء الأخير', title: 'السجل', btn: 'السجل', btnT: 'عرض الانتصارات والهزائم', all: 'الكل', ai: 'الذكاء الاصطناعي', rated: 'مصنّفة', online: 'أونلاين', pvp: 'محلي', w: 'ف', l: 'خ', d: 'ت', games: '{n} مباراة', rate: 'نسبة الفوز', streak: 'انتصارات متتالية', streakL: 'هزائم متتالية', best: 'أفضل سلسلة', bySide: 'حسب الجانب', byOpp: 'حسب الخصم', recent: 'آخر المباريات', empty: 'لا يوجد سجل بعد. تُسجَّل المباريات تلقائيًا عند انتهائها.', moves: '{n} نقلة', reset: 'مسح السجل', resetQ: 'مسح السجل كله؟ لا يمكن التراجع.', yes: 'مسح', no: 'إلغاء', close: 'إغلاق', note: 'يُحفظ السجل في هذا المتصفح.' },
 };
 const ICON = '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -37,54 +37,78 @@ function add(r) {
   if (ov && ov.classList.contains('show')) render();
 }
 const CSS = `
-.grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .grc-ov.show{display:flex}
-.grc{width:min(760px,100%);max-height:min(900px,100%);display:flex;flex-direction:column;background:var(--panel,#1d1712);color:var(--text,#f1ead9);border:1px solid var(--line,rgba(255,255,255,.14));border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden;box-sizing:border-box}
-.grc-hd{display:flex;align-items:center;gap:10px;padding:18px 20px 10px}
-.grc-hd svg{width:26px;height:26px;fill:none;stroke:var(--accent,#d8b56a);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.grc-hd h2{margin:0;font-size:24px;letter-spacing:.06em}
-.grc-tabs{display:flex;gap:6px;padding:0 20px 12px;flex-wrap:wrap}
-.grc-tabs button{font:inherit;font-size:15px;font-weight:700;padding:8px 16px;border-radius:999px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.18);color:var(--muted,#bbb);cursor:pointer}
-.grc-tabs button.sel{background:var(--accent,#d8b56a);border-color:transparent;color:#1b150a}
-.grc-bd{flex:1;min-height:0;overflow-y:auto;padding:4px 20px 16px;display:flex;flex-direction:column;gap:18px}
-.grc-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.grc-sum div{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 6px;border-radius:14px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06)}
-.grc-sum b{font-size:44px;line-height:1.05;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace}
-.grc-sum span{font-size:16px;color:var(--muted,#bbb);font-weight:700}
-.grc-sum .grc-w b{color:#8fe3b8}.grc-sum .grc-l b{color:#ff9b90}
-.grc-rate{display:flex;flex-direction:column;gap:8px}
-.grc-rate .grc-rl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:17px;font-weight:700}
-.grc-rate .grc-rl b{font-size:30px;font-variant-numeric:tabular-nums}
-.grc-bar{position:relative;height:14px;border-radius:7px;overflow:hidden;background:rgba(255,139,125,.35);display:flex}
-.grc-bar i{display:block;height:100%}.grc-bar .grc-w{background:#5fcf9a}.grc-bar .grc-d{background:rgba(255,255,255,.35)}
-.grc-chips{display:flex;flex-wrap:wrap;gap:8px}
-.grc-chips span{font-size:15px;padding:6px 12px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--muted,#bbb)}
-.grc-chips b{color:var(--text,#eee);font-size:17px;margin-inline-start:6px}
-.grc h3{margin:0 0 8px;font-size:15px;letter-spacing:.08em;color:var(--accent,#d8b56a)}
-.grc-tb{display:flex;flex-direction:column;gap:6px}
-.grc-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.16);font-size:16px}
-.grc-row .grc-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
-.grc-row .grc-sc{font-variant-numeric:tabular-nums;white-space:nowrap}
-.grc-row .grc-pc{font-variant-numeric:tabular-nums;font-weight:800;min-width:3.6em;text-align:end}
-.grc-g{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.16);font-size:15.5px}
-.grc-g .grc-rs{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900}
-.grc-g .grc-rs.grc-w{background:rgba(95,207,154,.2);color:#8fe3b8}.grc-g .grc-rs.grc-l{background:rgba(255,139,125,.18);color:#ff9b90}.grc-g .grc-rs.grc-d{background:rgba(255,255,255,.1);color:#ddd}
-.grc-g .grc-mid{min-width:0;display:flex;flex-direction:column;gap:2px}
-.grc-g .grc-mid b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grc-g .grc-mid small{color:var(--muted,#bbb);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grc-g .grc-dt{color:var(--muted,#bbb);font-size:13.5px;text-align:end;white-space:nowrap}
-.grc-empty{font-size:17px;line-height:1.8;color:var(--muted,#bbb);text-align:center;padding:30px 10px}
-.grc-ft{display:flex;align-items:center;gap:10px;padding:12px 20px 18px;border-top:1px solid var(--line,rgba(255,255,255,.1));flex-wrap:wrap}
-.grc-ft small{flex:1 1 100%;color:var(--muted,#bbb);font-size:13px}
-.grc-ft button{font:inherit;font-size:15px;font-weight:700;padding:11px 20px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.2);color:var(--text,#eee);cursor:pointer}
-.grc-ft .grc-go{margin-inline-start:auto;background:var(--accent,#d8b56a);color:#1b150a;border-color:transparent;min-width:120px}
-.grc-ft .grc-warn{color:#ffb0a6}
-.grc-cf{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;border:1px solid rgba(255,139,125,.5);background:rgba(255,139,125,.08);font-size:16px}
-.grc-cf div{display:flex;gap:8px;justify-content:flex-end}
-.grc-cf button{font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.2);color:var(--text,#eee);cursor:pointer}
+.grc{--gw:#6fd4a4;--gl:#ff8f82;--gd:rgba(255,255,255,.42);--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
+  width:min(720px,100%);max-height:min(880px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,color-mix(in srgb,var(--panel,#1d1712) 92%,#fff 8%),var(--panel,#1d1712) 140px);
+  color:var(--gx);border:1px solid var(--gb);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;box-sizing:border-box;font-variant-numeric:tabular-nums}
+.grc *{box-sizing:border-box}
+.grc > :not(.grc-bd){flex:none}
+.grc-hd{display:flex;align-items:center;gap:12px;padding:20px 22px 14px}
+.grc-hd .grc-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--ga) 16%,transparent);flex:none}
+.grc-hd svg{width:21px;height:21px;fill:none;stroke:var(--ga);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.grc-hd h2{margin:0;font-size:20px;font-weight:700;letter-spacing:.04em;flex:1;min-width:0}
+.grc-x{width:36px;height:36px;border-radius:10px;border:1px solid var(--gb);background:transparent;color:var(--gm);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.grc-x:hover{color:var(--gx);background:var(--gc)}
+.grc-tabs{display:flex;flex:none;gap:2px;margin:0 22px 4px;padding:3px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--gb);width:max-content;max-width:calc(100% - 44px);overflow-x:auto;scrollbar-width:none}
+.grc-tabs button{font:inherit;font-size:13.5px;font-weight:600;padding:7px 16px;border-radius:9px;border:0;background:transparent;color:var(--gm);cursor:pointer;white-space:nowrap}
+.grc-tabs button.sel{background:var(--gc);color:var(--gx);box-shadow:inset 0 0 0 1px var(--gb),0 1px 3px rgba(0,0,0,.3)}
+.grc-bd{flex:1;min-height:0;overflow-y:auto;padding:16px 22px 20px;display:flex;flex-direction:column;gap:22px;scrollbar-width:thin}
+/* hero: the win-rate ring and the counts */
+.grc-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;padding:18px 20px;border-radius:16px;background:var(--gc);border:1px solid var(--gb)}
+.grc-ring{position:relative;width:132px;height:132px}
+.grc-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.grc-ring circle{fill:none;stroke-width:11}
+.grc-ring .grc-ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.grc-ring .grc-ctr b{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.grc-ring .grc-ctr small{font-size:11.5px;color:var(--gm);margin-top:5px;letter-spacing:.06em}
+.grc-cnt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grc-cnt div{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18)}
+.grc-cnt span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gm);font-weight:600}
+.grc-cnt span i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.grc-cnt b{font-size:28px;font-weight:800;line-height:1.05}
+.grc-meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--gm);border-top:1px solid var(--gb);padding-top:12px;margin-top:2px}
+.grc-meta b{color:var(--gx);font-weight:700;margin-inline-start:5px}
+.grc-right{display:flex;flex-direction:column;gap:12px;min-width:0}
+.grc-form{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.grc-form small{font-size:12px;color:var(--gm);margin-inline-end:6px}
+.grc-form i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.grc-w-bg{background:var(--gw)}.grc-l-bg{background:var(--gl)}.grc-d-bg{background:var(--gd)}
+/* sections */
+.grc h3{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gm)}
+.grc-tb{display:flex;flex-direction:column;border-radius:14px;border:1px solid var(--gb);overflow:hidden}
+.grc-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(70px,1fr) auto auto;align-items:center;gap:14px;padding:11px 14px;font-size:14.5px;background:var(--gc)}
+.grc-row + .grc-row{border-top:1px solid var(--gb)}
+.grc-row .grc-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.grc-mini{display:flex;height:6px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.07)}
+.grc-mini i{display:block;height:100%}
+.grc-row .grc-sc{font-size:12.5px;color:var(--gm);white-space:nowrap}
+.grc-row .grc-pc{font-weight:800;min-width:3.4em;text-align:end}
+.grc-g{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 14px;font-size:14px;background:var(--gc)}
+.grc-g + .grc-g{border-top:1px solid var(--gb)}
+.grc-g .grc-rs{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:800}
+.grc-g .grc-rs.grc-w{background:color-mix(in srgb,var(--gw) 18%,transparent);color:var(--gw)}.grc-g .grc-rs.grc-l{background:color-mix(in srgb,var(--gl) 16%,transparent);color:var(--gl)}.grc-g .grc-rs.grc-d{background:rgba(255,255,255,.08);color:#ddd}
+.grc-g .grc-mid{min-width:0;display:flex;flex-direction:column;gap:1px}
+.grc-g .grc-mid b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grc-g .grc-mid small{color:var(--gm);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grc-g .grc-dt{color:var(--gm);font-size:12px;text-align:end;white-space:nowrap}
+.grc-empty{font-size:15px;line-height:1.8;color:var(--gm);text-align:center;padding:40px 10px}
+.grc-ft{display:flex;align-items:center;gap:12px;padding:12px 22px 16px;border-top:1px solid var(--gb)}
+.grc-ft small{flex:1;color:var(--gm);font-size:12px;min-width:0}
+.grc-ft button{font:inherit;font-size:13.5px;font-weight:600;padding:9px 16px;border-radius:10px;border:1px solid var(--gb);background:transparent;color:var(--gx);cursor:pointer;white-space:nowrap}
+.grc-ft .grc-warn{color:var(--gl);border-color:transparent;padding-inline:6px}
+.grc-ft .grc-warn:hover{text-decoration:underline}
+.grc-ft .grc-go{background:var(--ga);color:#1b150a;border-color:transparent;min-width:96px}
+.grc-cf{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gl) 50%,transparent);background:color-mix(in srgb,var(--gl) 8%,transparent);font-size:14px}
+.grc-cf span{flex:1;min-width:200px}
+.grc-cf div{display:flex;gap:8px}
+.grc-cf button{font:inherit;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--gb);background:transparent;color:var(--gx);cursor:pointer}
 .grc-cf .grc-warn{background:#d0574a;border-color:transparent;color:#fff}
-@media (min-width:900px){.grc{width:min(860px,100%)}.grc-hd h2{font-size:28px}.grc-tabs button{font-size:17px;padding:9px 20px}.grc-sum b{font-size:56px}.grc-sum span{font-size:18px}.grc-rate .grc-rl{font-size:19px}.grc-rate .grc-rl b{font-size:36px}.grc-chips span{font-size:17px}.grc-chips b{font-size:19px}.grc h3{font-size:17px}.grc-row,.grc-g{font-size:18px;padding:12px 16px}.grc-g small,.grc-g .grc-dt{font-size:15px}.grc-ft small{font-size:14px}.grc-ft button{font-size:17px}}
-@media (max-width:560px){.grc{border-radius:16px}.grc-sum b{font-size:38px}.grc-hd h2{font-size:22px}}
+@media (max-width:560px){
+  .grc{border-radius:18px}.grc-hd{padding:16px 16px 10px}.grc-tabs{margin:0 16px 2px;max-width:calc(100% - 32px)}.grc-bd{padding:14px 16px 16px;gap:18px}.grc-ft{padding:10px 16px 14px}
+  .grc-hero{grid-template-columns:1fr;justify-items:center;padding:16px}.grc-right{width:100%}.grc-ring{width:120px;height:120px}
+  .grc-row{grid-template-columns:minmax(0,1fr) 60px auto;gap:10px}.grc-row .grc-sc{display:none}
+}
 html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
 .mtabs .grc-tab{display:none}
 @media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
@@ -107,24 +131,33 @@ function stats(list) {
 }
 const pct = (w, l, d) => { const n = w + l + d; return n ? Math.round((w + d / 2) / n * 100) + '%' : '—'; };
 function fmtDate(t) { try { return new Date(t).toLocaleDateString(L() === 'zh' ? 'zh-CN' : L(), { month: 'short', day: 'numeric' }) + ' ' + new Date(t).toLocaleTimeString(L() === 'zh' ? 'zh-CN' : L(), { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+const mini = x => { const n = x.w + x.l + x.d || 1; return `<span class="grc-mini"><i class="grc-w-bg" style="width:${x.w / n * 100}%"></i><i class="grc-d-bg" style="width:${x.d / n * 100}%"></i><i class="grc-l-bg" style="width:${x.l / n * 100}%"></i></span>`; };
+const score = x => `${x.w}${tx('w')} ${x.l}${tx('l')}${x.d ? ' ' + x.d + tx('d') : ''}`;
+function ring(st) {
+  const n = st.w + st.l + st.d || 1, R = 52, C = 2 * Math.PI * R;
+  let off = 0; const seg = (v, col) => { const len = v / n * C; const h = len > 0.5 ? `<circle r="${R}" cx="66" cy="66" stroke="${col}" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}" stroke-linecap="butt"/>` : ''; off += len; return h; };
+  return `<div class="grc-ring"><svg viewBox="0 0 132 132"><circle r="${R}" cx="66" cy="66" stroke="rgba(255,255,255,.07)"/>${seg(st.w, 'var(--gw)')}${seg(st.d, 'var(--gd)')}${seg(st.l, 'var(--gl)')}</svg><div class="grc-ctr"><b>${pct(st.w, st.l, st.d)}</b><small>${esc(tx('rate'))}</small></div></div>`;
+}
 function render() {
   const all = load(), modes = ['ai', 'rated', 'online', 'pvp'].filter(m => all.some(g => g.mode === m));
   if (tab !== 'all' && !modes.includes(tab)) tab = 'all';
   const list = tab === 'all' ? all : all.filter(g => g.mode === tab);
   const st = stats(list), sides = O.sides ? O.sides(L()) : null;
-  let h = `<div class="grc-hd">${ICON}<h2>${esc(tx('title'))}</h2></div>`;
-  h += `<div class="grc-tabs">${['all'].concat(modes).map(m => `<button type="button" data-tab="${m}" class="${m === tab ? 'sel' : ''}">${esc(tx(m))}</button>`).join('')}</div><div class="grc-bd">`;
-  if (confirmOn) h += `<div class="grc-cf">${esc(tx('resetQ'))}<div><button type="button" data-cf="no">${esc(tx('no'))}</button><button type="button" class="grc-warn" data-cf="yes">${esc(tx('yes'))}</button></div></div>`;
+  let h = `<div class="grc-hd"><span class="grc-ic">${ICON}</span><h2>${esc(tx('title'))}</h2><button type="button" class="grc-x" data-act="close" aria-label="${esc(tx('close'))}">×</button></div>`;
+  if (modes.length) h += `<div class="grc-tabs" role="tablist">${['all'].concat(modes).map(m => `<button type="button" role="tab" data-tab="${m}" class="${m === tab ? 'sel' : ''}">${esc(tx(m))}</button>`).join('')}</div>`;
+  h += '<div class="grc-bd">';
+  if (confirmOn) h += `<div class="grc-cf"><span>${esc(tx('resetQ'))}</span><div><button type="button" data-cf="no">${esc(tx('no'))}</button><button type="button" class="grc-warn" data-cf="yes">${esc(tx('yes'))}</button></div></div>`;
   if (!list.length) h += `<p class="grc-empty">${esc(tx('empty'))}</p>`;
   else {
-    const n = st.w + st.l + st.d;
-    h += `<div class="grc-sum"><div class="grc-w"><b>${st.w}</b><span>${esc(tx('w'))}</span></div><div class="grc-l"><b>${st.l}</b><span>${esc(tx('l'))}</span></div><div class="grc-d"><b>${st.d}</b><span>${esc(tx('d'))}</span></div></div>`;
-    h += `<div class="grc-rate"><div class="grc-rl"><span>${esc(tx('rate'))} · ${esc(tx('games', { n }))}</span><b>${pct(st.w, st.l, st.d)}</b></div><div class="grc-bar"><i class="grc-w" style="width:${st.w / n * 100}%"></i><i class="grc-d" style="width:${st.d / n * 100}%"></i></div></div>`;
-    h += `<div class="grc-chips">${st.cur ? `<span>${esc(tx('streak'))}<b>${st.cur}</b></span>` : ''}${st.curL ? `<span>${esc(tx('streakL'))}<b>${st.curL}</b></span>` : ''}<span>${esc(tx('best'))}<b>${st.best}</b></span></div>`;
-    if (sides && list.some(g => g.side === 0 || g.side === 1)) h += `<div><h3>${esc(tx('bySide'))}</h3><div class="grc-tb">${[0, 1].map(i => { const x = st.side[i]; return `<div class="grc-row"><span class="grc-nm">${esc(sides[i])}</span><span class="grc-sc">${x.w}${esc(tx('w'))} ${x.l}${esc(tx('l'))}${x.d ? ' ' + x.d + esc(tx('d')) : ''}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`; }).join('')}</div></div>`;
+    const n = st.w + st.l + st.d, form = list.slice(-20);
+    h += `<div class="grc-hero">${ring(st)}<div class="grc-right"><div class="grc-cnt">` +
+      [['w', st.w], ['l', st.l], ['d', st.d]].map(([k, v]) => `<div><span><i class="grc-${k}-bg"></i>${esc(tx(k))}</span><b>${v}</b></div>`).join('') + `</div>` +
+      `<div class="grc-form"><small>${esc(tx('form'))}</small>${form.map(g => `<i class="grc-${g.res}-bg" title="${esc(tx(g.res))}"></i>`).join('')}</div></div>` +
+      `<div class="grc-meta"><span>${esc(tx('games', { n }))}</span>${st.cur ? `<span>${esc(tx('streak'))}<b>${st.cur}</b></span>` : ''}${st.curL ? `<span>${esc(tx('streakL'))}<b>${st.curL}</b></span>` : ''}<span>${esc(tx('best'))}<b>${st.best}</b></span></div></div>`;
+    if (sides && list.some(g => g.side === 0 || g.side === 1)) h += `<section><h3>${esc(tx('bySide'))}</h3><div class="grc-tb">${[0, 1].map(i => { const x = st.side[i]; return `<div class="grc-row"><span class="grc-nm">${esc(sides[i])}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`; }).join('')}</div></section>`;
     const opps = Object.values(st.opp).sort((a, b) => b.last - a.last).slice(0, 12);
-    if (opps.length) h += `<div><h3>${esc(tx('byOpp'))}</h3><div class="grc-tb">${opps.map(x => `<div class="grc-row"><span class="grc-nm">${esc(x.nm)}</span><span class="grc-sc">${x.w}${esc(tx('w'))} ${x.l}${esc(tx('l'))}${x.d ? ' ' + x.d + esc(tx('d')) : ''}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`).join('')}</div></div>`;
-    h += `<div><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(g.opp || tx(g.mode))}</b><small>${esc([tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></div>`;
+    if (opps.length) h += `<section><h3>${esc(tx('byOpp'))}</h3><div class="grc-tb">${opps.map(x => `<div class="grc-row"><span class="grc-nm">${esc(x.nm)}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`).join('')}</div></section>`;
+    h += `<section><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(g.opp || tx(g.mode))}</b><small>${esc([tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></section>`;
   }
   h += `</div><div class="grc-ft"><small>${esc(tx('note'))}</small>${all.length ? `<button type="button" class="grc-warn" data-act="reset">${esc(tx('reset'))}</button>` : ''}<button type="button" class="grc-go" data-act="close">${esc(tx('close'))}</button></div>`;
   ov.firstChild.innerHTML = h;
