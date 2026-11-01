@@ -1,0 +1,324 @@
+// Fanorona (9x5) — rules (for the page) and the AI worker (WebAssembly search from engine.c).
+// Works as a Web Worker (postMessage API), as a plain <script> (window.FanoronaEngine) and as a Node module.
+//
+// Board: 45 points, index i = r * 9 + c; r = 0..4 is row 1..5 (row 1 at White's side, the bottom), c = 0..8 is a..i.
+// A point is strong (has diagonals) when r + c is even. White (P1) moves first.
+// Moves are strings in the usual notation: a paika (non-capturing step) "d3-e3"; a capture "d3-e3A" (approach) or
+// "f3-e3W" (withdrawal); a continued capture lists every landing point: "d3-e3A-e4W-f5A".
+// Draws: threefold repetition and 80 plies without a capture (also used by online play).
+(function () {
+'use strict';
+const P1 = 1, P2 = 2;
+const WIN = 30000, WINT = 29000, DRAW_PLIES = 80, NP = 45;
+const COLS = 'abcdefghi';
+// ---------------------------------------------------------------- geometry
+const DR = [0, 1, 1, 1, 0, -1, -1, -1], DC = [1, 1, 0, -1, -1, -1, 0, 1];
+const NB = []; for (let d = 0; d < 8; d++) NB.push(new Int8Array(NP));
+const RC = [];
+const strong = i => ((((i / 9) | 0) + (i % 9)) & 1) === 0;
+for (let i = 0; i < NP; i++) {
+  const r = (i / 9) | 0, c = i % 9; RC.push([r, c]);
+  for (let d = 0; d < 8; d++) {
+    const nr = r + DR[d], nc = c + DC[d];
+    NB[d][i] = ((d & 1) && !strong(i)) || nr < 0 || nr > 4 || nc < 0 || nc > 8 ? -1 : nr * 9 + nc;
+  }
+}
+const ptAt = (r, c) => r < 0 || r > 4 || c < 0 || c > 8 ? -1 : r * 9 + c;
+const pname = i => COLS[i % 9] + (((i / 9) | 0) + 1);
+const pparse = s => { const m = /^([a-i])([1-5])$/.exec(String(s || '').trim()); return m ? (m[2] - 1) * 9 + COLS.indexOf(m[1]) : -1; };
+const dirOf = (a, b) => { for (let d = 0; d < 8; d++) if (NB[d][a] === b) return d; return -1; };
+// the starting position: rows 1-2 White, rows 4-5 Black, row 3: B W B W . B W B W
+const START = (() => { const b = new Int8Array(NP); for (let i = 0; i < 18; i++) b[i] = P1; for (let i = 27; i < 45; i++) b[i] = P2; [P2, P1, P2, P1, 0, P2, P1, P2, P1].forEach((v, c) => { b[18 + c] = v; }); return b; })();
+
+class Pos {
+  constructor() { this.b = Int8Array.from(START); this.side = 0; this.quiet = 0; }
+  static from(spec) {   // spec: { b: 45 chars '.' 'w' 'b' (index order: a1..i1, a2..i2, ...), side: 1 | 2 } or null
+    const p = new Pos();
+    if (spec && spec.b) { for (let i = 0; i < NP; i++) { const ch = spec.b[i]; p.b[i] = ch === 'w' ? P1 : ch === 'b' ? P2 : 0; } p.side = spec.side === P2 ? 1 : 0; p.quiet = 0; }
+    return p;
+  }
+  clone() { const q = Object.create(Pos.prototype); q.b = Int8Array.from(this.b); q.side = this.side; q.quiet = this.quiet; return q; }
+  at(i) { return this.b[i]; }
+  get turn() { return this.side ? P2 : P1; }
+  count(p) { let n = 0; for (let i = 0; i < NP; i++) if (this.b[i] === p) n++; return n; }
+  key() { let s = ''; for (let i = 0; i < NP; i++) s += '.wb'[this.b[i]]; return s + this.side; }
+  spec() { let s = ''; for (let i = 0; i < NP; i++) s += '.wb'[this.b[i]]; return { b: s, side: this.side ? P2 : P1 }; }
+  // enemies removed by a step from `from` in direction d with kind 'A' / 'W' (b = board, me = mover)
+  static line(b, from, d, kind, me) {
+    const opp = me === P1 ? P2 : P1, out = [];
+    let s, dd;
+    if (kind === 'A') { const t = NB[d][from]; if (t < 0) return out; s = NB[d][t]; dd = d; } else { s = NB[d ^ 4][from]; dd = d ^ 4; }
+    while (s >= 0 && b[s] === opp) { out.push(s); s = NB[dd][s]; }
+    return out;
+  }
+  // capture steps from point `cur` (st = null at the start of a turn: any own piece; otherwise the chain state
+  // { cur, last, visited: Set, b: board after the steps so far })
+  capSteps(st) {
+    const me = this.turn, out = [];
+    const b = st ? st.b : this.b;
+    const pts = st ? [st.cur] : [...Array(NP).keys()].filter(i => b[i] === me);
+    for (const f of pts) for (let d = 0; d < 8; d++) {
+      if (st && d === st.last) continue;
+      const t = NB[d][f]; if (t < 0 || b[t] || (st && st.visited.has(t))) continue;
+      for (const k of ['A', 'W']) { const cap = Pos.line(b, f, d, k, me); if (cap.length) out.push({ from: f, to: t, d, kind: k, cap }); }
+    }
+    return out;
+  }
+  paikaSteps() {
+    const me = this.turn, out = [];
+    for (let f = 0; f < NP; f++) if (this.b[f] === me) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) out.push({ from: f, to: t, d, kind: '', cap: [] }); }
+    return out;
+  }
+  hasCaps() { return this.capSteps(null).length > 0; }
+  // the first steps of a turn the player can make now
+  firstSteps() { const c = this.capSteps(null); return c.length ? c : this.paikaSteps(); }
+  // chain state after a capture step (st = previous state or null)
+  static after(pos, st, step) {
+    const b = Int8Array.from(st ? st.b : pos.b);
+    b[step.to] = b[step.from]; b[step.from] = 0; for (const c of step.cap) b[c] = 0;
+    const visited = new Set(st ? st.visited : [step.from]); visited.add(step.to);
+    return { cur: step.to, last: step.d, visited, b, steps: (st ? st.steps : []).concat([step]) };
+  }
+  // every full turn as notation (one representative per resulting position unless all = true)
+  moves(all) {
+    const first = this.capSteps(null);
+    if (!first.length) return this.paikaSteps().map(s => pname(s.from) + '-' + pname(s.to));
+    const out = [], seen = new Set();
+    const rec = (st) => {
+      const s = st.steps, last = s[s.length - 1];
+      const capAll = []; for (const x of s) capAll.push(...x.cap);
+      const sig = s[0].from + ':' + last.to + ':' + capAll.sort((a, c) => a - c).join(',');
+      const str = pname(s[0].from) + s.map(x => '-' + pname(x.to) + x.kind).join('');
+      if (all || !seen.has(sig)) { seen.add(sig); out.push(str); }
+      if (s.length >= 13) return;
+      for (const nx of this.capSteps(st)) rec(Pos.after(this, st, nx));
+    };
+    for (const s of first) rec(Pos.after(this, null, s));
+    return out;
+  }
+  status() { for (let f = 0; f < NP; f++) if (this.b[f] === this.turn) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) return 0; } return -1; }
+  // decode a move string into steps (validated); null if illegal
+  steps(m) {
+    const parts = String(m).split('-'); if (parts.length < 2) return null;
+    const f = pparse(parts[0]); if (f < 0 || this.b[f] !== this.turn) return null;
+    const hasCap = this.hasCaps();
+    if (parts.length === 2 && !/[AW]$/.test(parts[1])) {
+      if (hasCap) return null;
+      const t = pparse(parts[1]), d = dirOf(f, t); if (t < 0 || d < 0 || this.b[t]) return null;
+      return [{ from: f, to: t, d, kind: '', cap: [] }];
+    }
+    let st = null, cur = f; const out = [];
+    for (let i = 1; i < parts.length; i++) {
+      const mm = /^([a-i][1-5])([AW])$/.exec(parts[i]); if (!mm) return null;
+      const t = pparse(mm[1]), d = dirOf(cur, t); if (d < 0) return null;
+      const cand = this.capSteps(st).find(x => x.from === cur && x.to === t && x.kind === mm[2]);
+      if (!cand) return null;
+      out.push(cand); st = Pos.after(this, st, cand); cur = t;
+    }
+    return out;
+  }
+  play(m) {
+    const S = typeof m === 'string' ? this.steps(m) : m;
+    if (!S) throw new Error('illegal move ' + m);
+    const me = this.turn; let caps = 0;
+    for (const s of S) { this.b[s.to] = me; this.b[s.from] = 0; for (const c of s.cap) { this.b[c] = 0; caps++; } }
+    this.side ^= 1; this.quiet = caps ? 0 : this.quiet + 1;
+    return this;
+  }
+}
+const mFrom = m => pparse(String(m).split('-')[0]);
+const mTo = m => { const p = String(m).split('-'); return pparse(p[p.length - 1].replace(/[AW]$/, '')); };
+const isCap = m => /[AW]$/.test(String(m));
+// the points visited by the moving piece (for animation)
+const path = (pos, m) => String(m).split('-').map(x => pparse(x.replace(/[AW]$/, '')));
+// captured points per step: [[...], [...]] (empty arrays for a paika)
+function capsOf(pos, m) { const S = pos.steps(m); return S ? S.map(s => s.cap.slice()) : []; }
+const name = (pos, m) => String(m);
+// same resulting position
+function same(pos, a, b) { if (a === b) return true; try { return pos.clone().play(a).key() === pos.clone().play(b).key(); } catch (e) { return false; } }
+function parse(pos, s) { s = String(s).trim().replace(/[x×:]/g, '-').replace(/a$/, 'A').replace(/w$/, 'W'); const S = pos.steps(s); return S ? s : null; }
+function replay(start, moves) {
+  const pos = Pos.from(start), hashes = [pos.key()];
+  for (const m of moves || []) { pos.play(m); hashes.push(pos.key()); }
+  return { pos, hashes };
+}
+// { over, winner (1/2/0), why: 'none' (no pieces) | 'block' (no moves) | 'rep' | 'quiet' }
+function judge(pos, hashes) {
+  if (pos.status() === -1) return { over: true, winner: pos.side ? P1 : P2, why: pos.count(pos.turn) ? 'block' : 'none' };
+  if (pos.quiet >= DRAW_PLIES) return { over: true, winner: 0, draw: true, why: 'quiet' };
+  const h = pos.key(); let c = 0; for (const x of hashes) if (x === h) c++;
+  if (c >= 3) return { over: true, winner: 0, draw: true, why: 'rep' };
+  return { over: false };
+}
+// wire encoding for the engine: (lo, hi) — see engine.c
+function toWire(pos, m) {
+  const S = pos.steps(m); if (!S) return null;
+  const paika = S.length === 1 && !S[0].kind ? 1 : 0;
+  let lo = S[0].from | (S.length << 6) | (paika << 10), hi = 0;
+  S.forEach((s, i) => { const v = s.d | ((s.kind === 'W' ? 1 : 0) << 3); if (i < 5) lo |= v << (11 + 4 * i); else hi |= v << (4 * (i - 5)); });
+  return [lo | 0, hi | 0];
+}
+function fromWire(lo, hi) {
+  lo >>>= 0; hi >>>= 0;
+  const f = lo & 63, n = (lo >> 6) & 15, paika = (lo >> 10) & 1;
+  let cur = f, s = pname(f);
+  for (let i = 0; i < n; i++) {
+    const v = i < 5 ? (lo >>> (11 + 4 * i)) & 15 : (hi >>> (4 * (i - 5))) & 15, d = v & 7;
+    cur = NB[d][cur]; s += '-' + pname(cur) + (paika ? '' : (v >> 3) ? 'W' : 'A');
+  }
+  return s;
+}
+
+// ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段)
+const LEVELS = [null,
+  { d: 1, noise: 300, blunder: 0.35 },   // 15級
+  { d: 1, noise: 220, blunder: 0.26 },   // 14級
+  { d: 2, noise: 170, blunder: 0.2 },    // 13級
+  { d: 2, noise: 130, blunder: 0.15 },   // 12級
+  { d: 3, noise: 100, blunder: 0.11 },   // 11級
+  { d: 3, noise: 75, blunder: 0.08 },    // 10級
+  { d: 4, noise: 55, blunder: 0.05 },    // 9級
+  { d: 4, noise: 40, blunder: 0.03 },    // 8級
+  { d: 5, noise: 28, blunder: 0.015 },   // 7級
+  { d: 5, noise: 18 },                   // 6級
+  { d: 6, noise: 10 },                   // 5級
+  { s: 1, d: 99, nk: 4 },                // 4級
+  { s: 1, d: 99, nk: 10 },               // 3級
+  { s: 1, d: 99, nk: 25 },               // 2級
+  { s: 1, d: 99, nk: 60 },               // 1級
+  { s: 1, d: 99, nk: 150, ms: 3000 },    // 初段
+  { s: 1, d: 99, nk: 400, ms: 3000 },    // 二段
+  { s: 1, d: 99, nk: 1000, ms: 3000 },   // 三段
+  { s: 1, d: 99, ms: 1200, book: 1 },    // 四段
+  { s: 1, d: 99, ms: 3000, book: 1 },    // 五段
+];
+function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+// ---------------------------------------------------------------- tiny JS search (fallback when WebAssembly is not available)
+function jsEval(p) { const me = p.turn, op = me === P1 ? P2 : P1; return 100 * (p.count(me) - p.count(op)); }
+function jsSearch(p, d, a, b, ply, tEnd) {
+  const L = p.moves();
+  if (!L.length) return -(WIN - ply);
+  if ((d <= 0 && !isCap(L[0])) || d < -3 || Date.now() > tEnd) return jsEval(p);
+  let best = -Infinity;
+  for (const m of L) { const v = -jsSearch(p.clone().play(m), d - 1, -b, -a, ply + 1, tEnd); if (v > best) { best = v; if (v > a) { a = v; if (a >= b) break; } } }
+  return best;
+}
+function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return p.moves().map(m => ({ m, v: -jsSearch(p.clone().play(m), depth - 1, -Infinity, Infinity, 1, tEnd) })).sort((a, b) => b.v - a.v); }
+
+// ---------------------------------------------------------------- WebAssembly side
+let WX = null;
+const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
+function wSetup(start, moves) {
+  const p = Pos.from(start);
+  let w0 = 0, w1 = 0, b0 = 0, b1 = 0;
+  for (let i = 0; i < NP; i++) { const v = p.b[i]; if (!v) continue; if (i < 32) { if (v === P1) w0 |= 1 << i; else b0 |= 1 << i; } else { if (v === P1) w1 |= 1 << (i - 32); else b1 |= 1 << (i - 32); } }
+  const a = [w0, w1, b0, b1, p.side, moves.length];
+  for (const m of moves) { const w = toWire(p, m); if (!w) return 0; a.push(w[0], w[1]); p.play(m); }
+  wIO().set(a); return WX.setup();
+}
+function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: fromWire(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
+const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
+
+function think(start, moves, level, rand) {
+  rand = rand || Math.random;
+  const L = LEVELS[level] || LEVELS[10];
+  const { pos } = replay(start, moves);
+  const all = pos.moves();
+  if (!all.length) return { move: null };
+  if (all.length === 1) return { move: all[0] };
+  if (!WX) {
+    const vals = jsValues(pos, Math.min(L.d || 4, 4), 1500);
+    if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
+    let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + gauss(rand) * (L.noise || 0); if (x > bv) { bv = x; best = e.m; } } return { move: best };
+  }
+  if (!wSetup(start, moves)) return { move: all[0] };
+  if (!L.s) {
+    WX.values(L.d, 0);
+    const vals = wList();
+    if (L.blunder && rand() < L.blunder) {
+      const ok = vals.filter(e => e.v > vals[0].v - 450); const pool = ok.length > 1 ? ok : vals;
+      return { move: pool[Math.floor(rand() * pool.length)].m, v: vals[0].v };
+    }
+    let best = vals[0].m, bv = -Infinity;
+    for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
+    return { move: best, v: vals[0].v };
+  }
+  if (L.book && moves.length < 6 && !start) {   // opening variety for the top levels
+    WX.analyze(Math.max(400, (L.ms || 500) * 0.8), 40);
+    const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 10);
+    return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
+  }
+  WX.best(L.d || 99, L.ms || 0, L.nk || 0);
+  const r = wIO();
+  if (r[0] < 0) return { move: all[0] };
+  return { move: fromWire(r[0], r[1]), v: r[2], depth: r[3] };
+}
+function analyze(start, moves, ms, onProgress) {
+  const { pos } = replay(start, moves);
+  if (!WX) { const L = jsValues(pos, 3, ms).map(e => ({ ...e, kind: kindOf(e.v) })); return { list: L, depth: 3 }; }
+  if (!wSetup(start, moves)) return { list: [], depth: 0 };
+  progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
+  WX.analyze(ms, 60); progressCb = null;
+  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
+}
+function cands(start, moves, ms, k, plies, onProgress) {
+  const r = analyze(start, moves, ms, onProgress);
+  const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
+  for (const e of list) {
+    e.pv = [];
+    if (!WX) continue;
+    const line = moves.concat([e.m]);
+    for (let d = 0; d < (plies || 7); d++) {
+      const { pos, hashes } = replay(start, line);
+      if (judge(pos, hashes).over) break;
+      if (!wSetup(start, line)) break;
+      WX.best(99, 30, 0);
+      const io = wIO(); if (io[0] < 0) break;
+      const m = fromWire(io[0], io[1]);
+      if (!pos.steps(m)) break;
+      line.push(m); e.pv.push(m);
+    }
+  }
+  return { list, depth: r.depth };
+}
+function puzzle(start, moves, n, defend, goal, base) {
+  if (!WX) return null;
+  if (!wSetup(start, moves)) return null;
+  WX.puzzle(n, defend ? 1 : 0, goal || 0, base || 0, 3000);
+  const r = wIO(), out = [];
+  for (let i = 0; i < r[0]; i++) out.push({ m: fromWire(r[1 + 3 * i], r[2 + 3 * i]), need: r[3 + 3 * i] });
+  return out;
+}
+let progressCb = null;
+function attachWasm(X) { WX = X; }
+
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+else if (typeof window !== 'undefined') window.FanoronaEngine = API;
+else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
+  const V = 'v=20261101a';
+  let readyP = null;
+  if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
+    const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
+    const url = new URL('engine.wasm?' + V, self.location.href);
+    readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+  }
+  let queue = Promise.resolve();
+  self.onmessage = e => {
+    const m = e.data;
+    queue = queue.then(() => readyP).catch(() => {}).then(() => {
+      try {
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        else if (m.type === 'analyze') {
+          const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
+          self.postMessage({ id: m.id, type: 'result', ...r });
+        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
+        else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.goal, m.base) });
+        else if (m.type === 'newgame') { if (WX) WX.new_game(); self.postMessage({ id: m.id, type: 'result' }); }
+      } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
+    });
+  };
+}
+})();
