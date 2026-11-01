@@ -544,7 +544,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .review-card{order:2}
   .kifu-card{order:4}
   body.rv-on #evalCard{padding:8px 12px}
-  body.rv-on #evalCard .graph{display:none}
+  body.rv-on:not(.it-on) #evalCard .graph{display:none}   /* (phone tabs: the 形勢 tab shows its box alone, so the graph stays) */
   body.rv-on #evalCard .navbar{margin-top:6px}
   .info-line{order:5}
   .player{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -1633,14 +1633,14 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="i18n.js?v=fb3"><\/script><script src="i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=fb3"><\/script><script src="coach-i18n.js?v=fb4"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=fb8"><\/script><script src="online-ui.js?v=fb2"><\/script><script src="landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=16"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="i18n.js?v=fb3"><\/script><script src="i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=fb3"><\/script><script src="coach-i18n.js?v=fb4"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=fb8"><\/script><script src="online-ui.js?v=fb2"><\/script><script src="landtabs.js?v=fb3"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=16"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261101bf" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
-<script src="../shared/infotabs.js?v=15" data-strips defer></script>
+<script src="../shared/infotabs.js?v=16" data-strips defer></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
 </html>

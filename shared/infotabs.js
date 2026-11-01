@@ -172,7 +172,8 @@ function init(tries) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       // like poker: a tab brings its box up (形勢: to the very end; the others: the box's top at the top of the screen);
       // the same tab again goes back to the board — and again to the box, as often as wanted
-      const el = box[cur], y = el.getBoundingClientRect().top - top0, max = Math.max(0, sc.scrollHeight - H);
+      // (the tab's visible box: e.g. after the review the coach box is hidden and the review card shows in its place)
+      const el = [box[cur], ...document.querySelectorAll(`[data-itc="${cur}"]`)].find(x => x && x.getClientRects().length) || box[cur], y = el.getBoundingClientRect().top - top0, max = Math.max(0, sc.scrollHeight - H);
       const target = cur === 'eval' ? max : Math.min(max, Math.max(0, sc.scrollTop + y - 8));
       // back to the board = the board in the middle of the screen
       const bd = document.querySelector('.board-area'), br = bd && bd.getBoundingClientRect();
