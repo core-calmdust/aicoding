@@ -2149,3 +2149,16 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .sy-hist rect.w{fill:var(--cT2)}.sy-hist rect.l{fill:#ff8b7d}
 .sy-note{border-color:rgba(212,165,74,.55);background:rgba(212,165,74,.07)}
 .ec-r.sel{background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+/* ===== totals & pair: a lacquered black token with a fine platinum rim, gilt numerals (winner: champagne glow), the pair as an engraved plaque ===== */
+.bc-tot{position:relative;background:radial-gradient(circle at 35% 28%,#3a3a40 0%,#16161a 55%,#0a0a0c 100%);color:#efe8d8;
+  font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-weight:700;font-size:calc(var(--cw)*.34);
+  box-shadow:0 0 0 1.5px rgba(236,232,222,.75),0 0 0 3px rgba(0,0,0,.55),0 0 0 4px rgba(236,232,222,.22),0 3px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18)}
+.bc-tot::before{content:'';position:absolute;inset:3px;border-radius:50%;border:1px solid rgba(236,232,222,.22);pointer-events:none}
+.bc-tot.win{background:radial-gradient(circle at 35% 28%,#3d3a33 0%,#1a1813 55%,#0b0a07 100%);color:#f6e7bf;
+  box-shadow:0 0 0 1.5px #ecd9a8,0 0 0 3px rgba(0,0,0,.55),0 0 0 4px rgba(236,217,168,.35),0 0 18px rgba(236,217,168,.45),inset 0 1px 0 rgba(255,255,255,.2);text-shadow:0 0 8px rgba(246,231,191,.5)}
+.bc-tot.nat::after{content:'N';font:700 calc(var(--cw)*.13) 'Cormorant Garamond',serif;background:#0b0b0d;color:#ecd9a8;border:1px solid #ecd9a8;border-radius:50%;width:1.5em;height:1.5em;display:grid;place-items:center;padding:0;transform:translate(78%,-78%);text-shadow:none}
+.bc-pair{font:700 calc(var(--cw)*.15) 'Cormorant Garamond','Shippori Mincho B1',serif;letter-spacing:.18em;color:#efe8d8;background:linear-gradient(180deg,rgba(20,20,24,.85),rgba(8,8,10,.85));
+  padding:3px 10px 3px 12px;border-radius:4px;box-shadow:0 0 0 1px rgba(236,232,222,.6),0 0 0 3px rgba(0,0,0,.4),0 0 0 4px rgba(236,232,222,.18);text-transform:uppercase}
+.bc-pair::before,.bc-pair::after{content:'◆';font-size:.6em;opacity:.6;margin:0 .4em 0 0;vertical-align:.15em}
+.bc-pair::after{margin:0 0 0 .2em}
+.bc-tot{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;line-height:1}

@@ -510,7 +510,7 @@ function render() {
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
   const tag = (side, tot) => tot == null ? '' : `<span class="bc-tot${done && win === side.toUpperCase() ? ' win' : ''}${c && c.natural && done && (side === 'p' ? c.pt : c.bt) >= 8 ? ' nat' : ''}">${tot}</span>`;
-  const pair = (side) => done && c && B.RANK(c[side][0]) === B.RANK(c[side][1]) ? `<em class="bc-pair">${esc(t('pair'))}</em>` : '';
+  const pair = (side) => done && c && B.RANK(c[side][0]) === B.RANK(c[side][1]) ? `<em class="bc-pair">PAIR</em>` : '';
   let banner = '';
   if (done) {
     const r = T.result, hadBet = betSum(T.last) > 0;
