@@ -373,5 +373,12 @@
 "bd.lambared": "Lamba (red)",
 "pcs.mono": "Mono (ivory / coral)",
 "pcs.lacquer": "Lacquer discs",
-"pick.jumpMust": "You can capture again: you must keep jumping"
+"pick.jumpMust": "You can capture again: you must keep jumping",
+"land.title": "Play in landscape (phone)",
+"land.on": "Landscape on",
+"land.off": "Landscape off",
+"land.tip": "You can also play in landscape!",
+"land.tipSub": "Use the button at the top right to switch to a bigger, sideways board.",
+"land.go": "Go landscape",
+"land.keep": "Keep as is"
 }

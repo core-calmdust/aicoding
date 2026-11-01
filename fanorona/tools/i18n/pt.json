@@ -373,5 +373,12 @@
 "bd.lambared": "Lamba (vermelho)",
 "pcs.mono": "Mono (marfim / coral)",
 "pcs.lacquer": "Discos lacados",
-"pick.jumpMust": "Ainda pode capturar: tem de continuar a saltar"
+"pick.jumpMust": "Ainda pode capturar: tem de continuar a saltar",
+"land.title": "Jogar na horizontal (celular)",
+"land.on": "Horizontal ativado",
+"land.off": "Horizontal desativado",
+"land.tip": "Você também pode jogar na horizontal!",
+"land.tipSub": "Use o botão no canto superior direito para ver um tabuleiro maior na horizontal.",
+"land.go": "Virar para horizontal",
+"land.keep": "Deixar assim"
 }
