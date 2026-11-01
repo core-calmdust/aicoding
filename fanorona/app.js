@@ -923,8 +923,9 @@ function miniSVG(spec, o) {
   const BP = BD_PAL[o.bd || settings.bd] || BD_PAL.acacia, PP = PC_PAL[o.pcs || settings.pcs] || PC_PAL.wood, id = 'fm' + (++MINI_UID);
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${H}"><defs>` +
     `<linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${BP[0]}"/><stop offset=".55" stop-color="${BP[1]}"/><stop offset="1" stop-color="${BP[0]}"/></linearGradient>` +
-    [0, 1].map(k => `<radialGradient id="${id}p${k}" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="${PP[k][0]}"/><stop offset=".55" stop-color="${PP[k][1]}"/><stop offset="1" stop-color="${PP[k][2]}"/></radialGradient>`).join('') + '</defs>';
-  s += `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="url(#${id}b)" stroke="rgba(0,0,0,.35)"/>`;
+    [0, 1].map(k => `<radialGradient id="${id}p${k}" cx=".4" cy=".33" r=".72"><stop offset="0" stop-color="${PP[k][0]}"/><stop offset=".55" stop-color="${PP[k][1]}"/><stop offset="1" stop-color="${PP[k][2]}"/></radialGradient>`).join('') + '</defs>';
+  s += `<clipPath id="${id}c"><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14"/></clipPath><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="url(#${id}b)"/>` +
+    `<image href="img/wood-${o.bd || settings.bd}.webp" x="1" y="1" width="${W - 2}" height="${H - 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="none" stroke="rgba(0,0,0,.35)"/>`;
   s += `<g transform="scale(${u})" stroke="${BP[2]}" stroke-width="${2.2 / u}" stroke-linecap="round" opacity=".85">${boardLinesSvg(null, 'x')}</g>`;
   if (o.last != null && o.last >= 0) s += `<circle cx="${X(o.last)}" cy="${Y(o.last)}" r="${u * 0.5}" fill="rgba(255,230,150,.45)"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="5" fill="rgba(255,244,190,.95)" stroke="rgba(90,50,10,.6)"/>`;
