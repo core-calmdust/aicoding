@@ -449,7 +449,12 @@ function chipsAt(amt, x, yb, w) {   // chip stacks (side view) standing on y = y
     return sv.replace('<svg class="chsv"', `<svg class="chsv" x="${(x0 + i * gap - w / 2).toFixed(1)}" y="${(yb - h).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"`); }).join('');
 }
 const resTxt = res => res > 0 ? '+' + fmt(res) : res === 0 ? t('res.push') : '−' + fmt(-res);
-function badge(x, y, txt, cls) { const huge = /mz-me/.test(cls), big = /mz-b|pc-me/.test(cls), w = (huge ? 48 : big ? 28 : 16) + String(txt).length * (huge ? 32 : big ? 22 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (huge ? 28 : big ? 21 : 13)).toFixed(1)}" width="${w}" height="${huge ? 54 : big ? 40 : 24}" rx="${huge ? 27 : big ? 20 : 12}"/>${big || huge ? `<rect class="lzb-in" x="${(x - w / 2 + 3).toFixed(1)}" y="${(y - (huge ? 28 : 21) + 3).toFixed(1)}" width="${w - 6}" height="${(huge ? 54 : 40) - 6}" rx="${huge ? 24 : 17}"/>` : ''}<text x="${x}" y="${(y + (huge ? 13 : big ? 9 : 4.5)).toFixed(1)}"${huge || big ? ` textLength="${(w - (huge ? 34 : 20)).toFixed(0)}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(txt)}</text></g>`; }
+function badge(x, y, txt, cls) {
+  const huge = /mz-me/.test(cls), pc = /pc-me/.test(cls), big = !pc && /mz-b/.test(cls);
+  const [cw, hh, pad] = huge ? [27, 54, 34] : big ? [22, 40, 28] : pc ? [12.5, 28, 26] : [11, 24, 16], w = pad + String(txt).length * cw, r = hh / 2;
+  const inner = huge || big || pc ? `<rect class="lzb-in" x="${(x - w / 2 + 3).toFixed(1)}" y="${(y - r + 3).toFixed(1)}" width="${w - 6}" height="${hh - 6}" rx="${r - 3}"/>` : '';
+  return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - r).toFixed(1)}" width="${w}" height="${hh}" rx="${r}"/>${inner}<text x="${x}" y="${(y + hh * .2).toFixed(1)}">${esc(txt)}</text></g>`;
+}
 function layHtml() {
   const vb = VB(), done = T.phase === 'done', narrow = !!G.deep;
   LW = narrow ? 1000 : 1180; SPAN = narrow ? 66 : 51; MEW = narrow ? 2 : 1.5; RING = narrow ? RING_N : RING_W; LCY = narrow ? -10 : -360; LH = narrow ? 540 : 420;
