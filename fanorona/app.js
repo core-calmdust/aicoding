@@ -190,7 +190,8 @@ const animOn = () => settings.anim && !reduceMotion;
 let NC = E.dims().w, NR = E.dims().h, BW = NC + 1, BH = NR + 1;   // the board picture: NC x NR points with half a step of margin + frame
 function geomSync() {
   const D = E.dims(); NC = D.w; NR = D.h; BW = NC + 1; BH = NR + 1;
-  document.documentElement.dataset.rule = gv;
+  document.documentElement.dataset.rule = gv === 'alqf' ? 'alq' : gv;   // (Alfonso's Alquerque: same 5x5 board, same layout and rug images)
+  document.documentElement.dataset.variant = gv;
 }
 geomSync();
 const dRC = i => { const [r, c] = E.RC[i]; return flip ? [r, NC - 1 - c] : [NR - 1 - r, c]; };
