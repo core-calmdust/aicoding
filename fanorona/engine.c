@@ -51,6 +51,7 @@ static const int DR[8] = { 0, 1, 1, 1, 0, -1, -1, -1 }, DC[8] = { 1, 1, 0, -1, -
 static i8 NB[8][NP];
 static u64 ZP[2][NP], ZSIDE;
 static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0;   // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
+static int AQV = 1;   // Alquerque evaluation / search version (0 = the 2026-10 one, kept for tools/alqmatch.c)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
 static void buildNB(void) {
@@ -210,6 +211,29 @@ static inline int egProbe(const Pos *p) {
   if (a + b > egMaxN || !a || !b || a > EGMAX || b > EGMAX || !EG[a][b]) return -1;
   return EG[a][b][egIndex(own, opp, a, b)];
 }
+// Alquerque (5x5, not colour-symmetric: the steps go forward): tables for White to move on the 25 points (k = r * 5 + c);
+// with Black to move the board is turned (row r -> 4 - r) and the colours swapped. Built by tools/alqegdb.c.
+static const u8 *AEG[EGMAX + 1][EGMAX + 1];
+static int aegMaxN = 0;
+static inline u32 aq25(u64 x, int flip) {
+  u32 m = 0; while (x) { int i = ctz(x); x &= x - 1; int r = i / 9, c = i % 9; m |= 1u << ((flip ? 4 - r : r) * 5 + c); }
+  return m;
+}
+static u32 aegIndex(u64 own, u64 opp, int a, int b, int flip) {
+  u32 o = aq25(own, flip), q = aq25(opp, flip), r1 = 0, r2 = 0; int j = 0;
+  while (o) { int i = __builtin_ctz(o); o &= o - 1; j++; r1 += CB[i][j]; }
+  u32 oo = aq25(own, flip); j = 0;
+  while (q) { int i = __builtin_ctz(q); q &= q - 1; j++; int ci = i - __builtin_popcount(oo & ((1u << i) - 1)); r2 += CB[ci][j]; }
+  return r1 * CB[25 - a][b] + r2;
+}
+EXPORT(aeg_size) u32 aeg_size(int a, int b) { initCB(); return CB[25][a] * CB[25 - a][b]; }
+EXPORT(aeg_add) void aeg_add(int a, int b, const u8 *data) { initCB(); if (a < 1 || b < 1 || a > EGMAX || b > EGMAX) return; AEG[a][b] = data; int n = a + b; int all = 1; for (int x = 1; x <= EGMAX; x++) for (int y = 1; y <= EGMAX; y++) if (x + y <= n && !AEG[x][y]) all = 0; if (all && n > aegMaxN) aegMaxN = n; }
+static inline int aegProbe(const Pos *p) {
+  u64 own = p->p[p->side], opp = p->p[p->side ^ 1];
+  int a = pc(own), b = pc(opp);
+  if (a + b > aegMaxN || !a || !b || a > EGMAX || b > EGMAX || !AEG[a][b]) return -1;
+  return AEG[a][b][aegIndex(own, opp, a, b, p->side)];
+}
 static inline int egValue(int e, int ply) { return e == 0 ? 0 : e < 128 ? WIN - ply - e : -(WIN - ply - (e - 128)); }
 EXPORT(heap_base) u8 *heap_base(void) {
 #ifdef NATIVE
@@ -241,7 +265,30 @@ static int vulnerable(u64 own, u64 opp) {   // own pieces that the opponent coul
   }
   return pc(hit);
 }
+// Alquerque (AQV >= 1): steps a side can still make (no backward steps: a side that runs out of moves loses, and spare
+// moves win the waiting battles of the ending), pieces the opponent can jump now, pieces whose jump landings are covered
+static int alqSteps(u64 own, u64 occ, int side) {
+  int n = 0; u64 x = own;
+  while (x) { int i = ctz(x); x &= x - 1; for (int d = 0; d < 8; d++) { int t = NB[d][i]; if (t >= 0 && !(occ & BIT(t)) && alqDirOk(side, d)) n++; } }
+  return n;
+}
+static int AW[8] = { 4, 28, 14, 3, 0, 0, 0, 0 };   // mobility, hanging (opponent to move later), 2nd hanging, center
+static int alqHand(const Pos *p) {
+  int s = p->side; u64 own = p->p[s], opp = p->p[s ^ 1], occ = own | opp;
+  int a = pc(own), b = pc(opp);
+  int v = 100 * (a - b);
+  if (a + b <= 12 && a != b) v += (a - b) * (12 - (a + b)) * 12;
+  u64 x = own; while (x) { int i = ctz(x); x &= x - 1; v += PST[i]; }
+  x = opp; while (x) { int i = ctz(x); x &= x - 1; v -= PST[i]; }
+  int mo = alqSteps(own, occ, s), mt = alqSteps(opp, occ, s ^ 1);
+  v += AW[0] * (mo - mt);
+  if (!mo) v -= 60;
+  int h = vulnerable(own, opp);   // the side to move has no capture (quiet leaf): the opponent may take these after our move
+  if (h) v -= AW[1] + (h - 1) * AW[2];
+  return v;
+}
 static int hand(const Pos *p) {
+  if (ALQ && (AQV & 1)) return alqHand(p);
   int s = p->side; u64 own = p->p[s], opp = p->p[s ^ 1];
   int a = pc(own), b = pc(opp);
   int v = 100 * (a - b);
@@ -283,10 +330,12 @@ static inline int evaluate(const Pos *p) { return (netOn && useNet && ruleStd) ?
 
 // ---------------------------------------------------------------- transposition table
 typedef struct { u64 key; u64 cap; i16 v; u8 f, t; i8 d; u8 flag; u8 age; u8 pad; } TTE;   // 32 bytes
+#ifndef TT_BITS
 #ifdef NATIVE
 #define TT_BITS 22
 #else
 #define TT_BITS 20
+#endif
 #endif
 static TTE TT[1 << TT_BITS];
 static u8 ttAge = 0;
@@ -326,9 +375,14 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   if (timeUp() && ply > 0) return 0;
   if (ply > 0 && egMaxN && ruleStd) { int e = egProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
+  if (ply > 0 && aegMaxN && ALQ && (AQV & 8)) { int e = aegProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
   if (ply >= MAXPLY - 2) return evaluate(p);
   int caps = hasCaps(p);
-  if (!caps && depth <= 0) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
+  if (!caps && depth <= 0) {
+    // Alquerque: a quiet leaf where the opponent threatens a jump is looked at one more ply (the threat is the position)
+    int ext = ALQ && (AQV & 4) && depth > -2 && ply < 60 && vulnerable(p->p[p->side], p->p[p->side ^ 1]);
+    if (!ext) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
+  }
   Move *L = MS[ply];
   int n = caps ? genCaps(p, L, MAXMV) : genPaika(p, L, MAXMV);
   if (!n) return -(WIN - ply);
@@ -338,9 +392,12 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   if (caps && depth <= 0) {   // capture quiescence (bounded): the mover must capture, so the static value is a lower bound
     qs = 1;
     int sp = evaluate(p);
-    if (depth < -5 || ply > 60) return sp;
-    if (sp >= beta) return sp;
-    if (sp > alpha) alpha = sp;
+    if (ALQ && (AQV & 2)) { if (depth < -14 || ply > 80) return sp; }   // Alquerque: the forced jumps are searched out (a forced capture can lose)
+    else {
+      if (depth < -5 || ply > 60) return sp;
+      if (sp >= beta) return sp;
+      if (sp > alpha) alpha = sp;
+    }
   }
   if (n == 1 && ply > 0 && !qs) depth++;
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];
@@ -645,7 +702,7 @@ EXPORT(set_rule) void set_rule(int w, int h) {
   GW = w; GH = h; ruleStd = w == 9 && h == 5;
   buildNB(); initPST(); new_game();
 }
-EXPORT(eg_root) int eg_root(void) { return ruleStd ? egProbe(&ROOT) : -1; }
+EXPORT(eg_root) int eg_root(void) { return ruleStd ? egProbe(&ROOT) : ALQ && GW == 5 ? aegProbe(&ROOT) : -1; }
 EXPORT(eval_root) int eval_root(void) { return evaluate(&ROOT); }
 EXPORT(perft) u32 perft_root(int depth);
 static u64 perftR(Pos *p, int d, int ply) { if (d == 0) return 1; Move *L = MS[ply]; int n = gen(p, L); if (d == 1) return n; u64 s = 0; for (int i = 0; i < n; i++) { Pos q = *p; doMove(&q, &L[i]); s += perftR(&q, d - 1, ply + 1); } return s; }
