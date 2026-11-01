@@ -1555,3 +1555,12 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 }
 .tools-modal .hd .mc{width:30px;height:42px;font-size:14px}
 @media (max-width:760px){.tools-modal .hd .mc{width:28px;height:38px;font-size:13px}}
+/* kind label never wraps (the info box keeps its height) */
+.rg-ih span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rg-ih span em{font-style:normal;font-weight:500;font-size:11.5px;color:var(--muted);margin-left:4px}
+/* PC: the box is as tall as the 役と確率 tab for every tab (--tl-h, tools.js), capped by the window */
+@media (min-width:761px){
+  .tools-modal{height:auto!important;max-height:calc(100dvh - 24px)!important}
+  .tools-modal .tl-body{flex:none!important;height:min(var(--tl-h,640px),calc(100dvh - 210px))!important;max-height:none!important}
+  .tools-modal{position:relative}
+}
