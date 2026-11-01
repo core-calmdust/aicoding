@@ -1929,3 +1929,46 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-hand{border-color:var(--bc-line)}
 .lz-rim,.lz-div{stroke:var(--bc-line)}
 .lz .lz-a,.pl-a{stroke:var(--bc-line)}
+/* ===== research (PC): use the whole box ===== */
+.tl-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.tl-box{padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.tl-box > .lab{display:block;margin-bottom:8px}
+.eor-t{width:100%;border-collapse:separate;border-spacing:2px;font:600 11.5px 'JetBrains Mono',monospace;text-align:center}
+.eor-t th{font-size:11px;color:var(--muted);font-weight:600;padding:3px 2px}
+.eor-t th:first-child{text-align:start;white-space:nowrap;font-family:'Zen Kaku Gothic New',sans-serif}
+.eor-t td{padding:6px 1px;border-radius:5px;font-size:10.5px}
+.ev-ch{display:block;width:100%;height:150px;background:rgba(0,0,0,.2);border-radius:8px}
+.ev-ch path{fill:none;stroke-width:2.2;vector-effect:non-scaling-stroke}.ev-ch .pB{stroke:#ec6b7d}.ev-ch .pP{stroke:#6aa3ee}
+.ev-lg{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-top:6px;font:600 13px 'JetBrains Mono',monospace}
+.ev-lg .lB{color:#ff9aa8}.ev-lg .lP{color:#9cc6ff}.ev-lg small{margin-inline-start:auto;font:500 11px 'Zen Kaku Gothic New',sans-serif;color:var(--muted)}
+.tl-last{margin-top:14px}
+.tl-hands{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+.tl-hands > div{display:flex;align-items:center;gap:8px}
+.tl-hands small{font:700 11px 'Cormorant Garamond',serif;letter-spacing:.1em;color:var(--muted)}
+.tl-hands b{font:700 18px 'JetBrains Mono',monospace}
+.tl-last .ck-ex{margin-top:6px}
+.edge2{margin-top:14px}
+.ec{display:flex;flex-direction:column;gap:10px}
+.ec-r{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:8px}
+.ec-r.sel{background:rgba(63,191,154,.08);box-shadow:inset 0 0 0 1px var(--hl-a)}
+.ec-r > b{font-size:12.5px}
+.ec-b{display:grid;grid-template-columns:5.5em 1fr 4.2em;align-items:center;gap:8px;font-size:11.5px}
+.ec-b small{color:var(--muted);font-size:11px}
+.ec-b i{display:block;height:8px;border-radius:99px;min-width:2px}
+.ec-b.eB i{background:#ec6b7d}.ec-b.eP i{background:#6aa3ee}.ec-b.eT i{background:#4fcf82}
+.ec-b em{font:600 12px 'JetBrains Mono',monospace;font-style:normal;text-align:end}
+.hr-l .kv{font-size:14px}
+@media (min-width:761px){
+  .tools-modal .tl2{gap:22px}
+  .tools-modal .sh-bar{height:190px}
+  .tools-modal .sh-b b{font-size:15px}
+  .tools-modal .tl-tbl{font-size:14.5px}.tools-modal .tl-tbl td{padding:7px 8px}
+  .tools-modal .pr3 b{font-size:24px}
+  .tools-modal .tb-grid{font-size:14px;border-spacing:3px}.tools-modal .tb-grid td{padding:9px 0}.tools-modal .tb-grid th{font-size:12px}
+  .tools-modal .pr-rule b{font-size:20px}.tools-modal .pr-rule span{padding:10px 0}
+  .tools-modal .tl-steps{font-size:14.5px;line-height:1.85}
+  .tools-modal .sy-hist{height:200px}
+  .tools-modal .eor-t td{font-size:11.5px;padding:8px 1px}
+}
+@media (max-width:760px){.edge2{grid-template-columns:1fr}.eor-t td{font-size:9px}.eor-t{border-spacing:1px}}
+.eor-t{table-layout:fixed}.eor-t th:first-child{width:5.2em}.eor-t td{font-size:10.5px!important;letter-spacing:-.03em;overflow:hidden}
