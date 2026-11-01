@@ -404,13 +404,22 @@ def wood_complex(rng, base, dark):
 def carve(a, m, depth=6.0, groove=(46, 28, 16)):
     """relief carving from a mask: the cut is sunk (height -depth), lit from the upper left — walls catch light on one side,
     shadow on the other, the floor is darker and rougher."""
-    h = -gaussian_filter(m, 1.4) * depth
+    h = -gaussian_filter(m, .75) * depth
     gy, gx = np.gradient(h)
-    lam = np.clip(1 + (-gx * -.6 + -gy * -.7) * .9, .35, 1.6)
-    floor = gaussian_filter(m, .6)
+    lam = np.clip(1 + (-gx * -.6 + -gy * -.7) * 1.1, .3, 1.75)
+    floor = gaussian_filter(m, .35)
     a = a * lam[..., None]
     a = a * (1 - .55 * floor[..., None]) + np.array(groove, float) * .55 * floor[..., None]
     return a
+
+
+def all_lines_old():
+    L = []
+    for r in range(5): L.append((P(0, r), P(4, r)))
+    for c in range(5): L.append((P(c, 0), P(c, 4)))
+    for (a, b) in (((0, 0), (4, 4)), ((0, 4), (4, 0)), ((0, 2), (2, 4)), ((2, 4), (4, 2)), ((4, 2), (2, 0)), ((2, 0), (0, 2))):
+        L.append((P(*a), P(*b)))
+    return L
 
 
 def carved(seed=5):
@@ -424,6 +433,12 @@ def carved(seed=5):
         for m in (m0, m0 + 7, m1 - 7, m1): dd.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=4 * SS)
         cx, cy = P(2, 2); r = S * .2
         dd.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=4 * SS)
+    def board(dd):   # the playing lines, cut as V-grooves
+        for (p0, p1) in all_lines_old():
+            dd.line(sc([p0, p1]), fill=255, width=6 * SS)
+        for c in range(5):
+            for r in range(5):
+                x, y = P(c, r); dd.ellipse([(x - 8) * SS, (y - 8) * SS, (x + 8) * SS, (y + 8) * SS], fill=255)
     def scrolls(dd):
         inner = bw - 22; c0 = m0 + bw / 2
         for horiz, L, fixeds in ((True, W, (c0, H - c0)), (False, H, (c0, W - c0))):
@@ -448,6 +463,12 @@ def carved(seed=5):
     a = carve(a, rec, 3.0, (120, 84, 52)) * 1.0
     a = carve(a, lmask(scrolls), 7.0)
     a = carve(a, lmask(rules), 5.0)
+    a = carve(a, lmask(board), 6.0)
+    wear = np.clip(fbm(rng, 60, 3) * .8 - .2, 0, 1) * np.clip(.5 + gaussian_filter(rng.standard_normal((H, W)), (1.2, 18)) * 1.2, 0, 1)
+    a = a * (1 - .6 * wear[..., None]) + np.array((220, 204, 178.)) * .6 * wear[..., None]   # white rubbed / dry patches
+    rough = gaussian_filter(rng.standard_normal((H, W)), .55); rough /= rough.std()
+    scr = np.clip(gaussian_filter(rng.standard_normal((H, W)), (.5, 6)) * 2.2 - 3.2, 0, 1)   # fine scratches along the grain
+    a *= (1 + .07 * rough + .2 * scr)[..., None]
     v = 1 - .3 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
     return Image.fromarray(np.clip(a * v[..., None], 0, 255).astype(np.uint8))
 
@@ -505,11 +526,11 @@ def damask(seed=6):
                     sg = rng.choice([-1, 1]); a0 = ang + sg * 1.4; tr = S * rng.uniform(.25, .4)
                     sp = [(x + math.cos(a0) * tr * .2 + tr * (1 - u * .85) * math.cos(a0 + sg * u * 9), y + math.sin(a0) * tr * .2 + tr * (1 - u * .85) * math.sin(a0 + sg * u * 9)) for u in np.linspace(0, 1, 50)]
                     dd.line(sc(sp), fill=255, width=3 * SS)
-                if i % 19 == 13:
-                    flower5(dd, x + math.cos(ang + 1.6) * S * .5, y + math.sin(ang + 1.6) * S * .5, S * rng.uniform(.4, .6), rng.uniform(0, 6))
+                if i % 9 == 5:
+                    flower5(dd, x + math.cos(ang + 1.6) * S * .5, y + math.sin(ang + 1.6) * S * .5, S * rng.uniform(.2, .3), rng.uniform(0, 6))
             dd.line(sc(pts), fill=255, width=9 * SS, joint='curve')
-        for _ in range(10):
-            flower5(dd, rng.uniform(0, W), rng.uniform(0, H), S * rng.uniform(.22, .34), rng.uniform(0, 6))
+        for _ in range(46):
+            flower5(dd, rng.uniform(0, W), rng.uniform(0, H), S * rng.uniform(.13, .22), rng.uniform(0, 6))
     m = gaussian_filter(lmask(art), .8)
     a = base * (1 - .3 * m[..., None]) + hi * .3 * m[..., None]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
