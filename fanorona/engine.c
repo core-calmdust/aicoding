@@ -50,7 +50,8 @@ EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 static const int DR[8] = { 0, 1, 1, 1, 0, -1, -1, -1 }, DC[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static i8 NB[8][NP];
 static u64 ZP[2][NP], ZSIDE;
-static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0;   // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
+static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0, ALQF = 0;   // ALQF: Alfonso's Alquerque (steps in any direction; set_alq(2))
+   // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
 static int AQV = 11;   // Alquerque evaluation / search (bits: 1 evaluation alqHand, 2 forced jumps searched out in the
                       // quiescence, 8 endgame databases; 0 = the 2026-10 engine, kept for tools/alqmatch.c)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
@@ -131,7 +132,7 @@ static inline int alqJumpFrom(int i, u64 occ, u64 opp) {
   for (int d = 0; d < 8; d++) { int mid = NB[d][i]; if (mid < 0 || !(opp & BIT(mid))) continue; int t = NB[d][mid]; if (t >= 0 && !(occ & BIT(t))) return 1; }
   return 0;
 }
-static inline int alqDirOk(int side, int d) { return side ? DR[d] <= 0 : DR[d] >= 0; }
+static inline int alqDirOk(int side, int d) { return ALQF || (side ? DR[d] <= 0 : DR[d] >= 0); }
 static int genCaps(const Pos *p, Move *L, int max) {
   GL = L; GN = 0; GMAX = max;
   u64 own = p->p[p->side], opp = p->p[p->side ^ 1], x = own;
@@ -376,7 +377,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   if (timeUp() && ply > 0) return 0;
   if (ply > 0 && egMaxN && ruleStd) { int e = egProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
-  if (ply > 0 && aegMaxN && ALQ && (AQV & 8)) { int e = aegProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
+  if (ply > 0 && aegMaxN && ALQ && !ALQF && (AQV & 8)) { int e = aegProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
   if (ply >= MAXPLY - 2) return evaluate(p);
   int caps = hasCaps(p);
   if (!caps && depth <= 0) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
@@ -692,14 +693,14 @@ EXPORT(puzzle) void puzzle(int n, int defend, int goal, int base, int budgetK) {
 EXPORT(set_net_use) void set_net_use(int on) { useNet = on; }
 static void initPST(void);
 // the board size (9, 5 = Fanoron-Tsivy; 5, 5 = Fanoron-Dimy). The endgame databases and the learned evaluation are for 9x5 only.
-EXPORT(set_alq) void set_alq(int on) { if (on != ALQ) { ALQ = on; new_game(); } }
+EXPORT(set_alq) void set_alq(int on) { int a = on ? 1 : 0, f = on == 2; if (a != ALQ || f != ALQF) { ALQ = a; ALQF = f; new_game(); } }   // 1 Bell's rules, 2 Alfonso's (no endgame tables)
 EXPORT(set_rule) void set_rule(int w, int h) {
   initGeo();
   if (w == GW && h == GH) return;
   GW = w; GH = h; ruleStd = w == 9 && h == 5;
   buildNB(); initPST(); new_game();
 }
-EXPORT(eg_root) int eg_root(void) { return ruleStd ? egProbe(&ROOT) : ALQ && GW == 5 ? aegProbe(&ROOT) : -1; }
+EXPORT(eg_root) int eg_root(void) { return ruleStd ? egProbe(&ROOT) : ALQ && !ALQF && GW == 5 ? aegProbe(&ROOT) : -1; }
 EXPORT(eval_root) int eval_root(void) { return evaluate(&ROOT); }
 EXPORT(perft) u32 perft_root(int depth);
 static u64 perftR(Pos *p, int d, int ply) { if (d == 0) return 1; Move *L = MS[ply]; int n = gen(p, L); if (d == 1) return n; u64 s = 0; for (int i = 0; i < n; i++) { Pos q = *p; doMove(&q, &L[i]); s += perftR(&q, d - 1, ply + 1); } return s; }

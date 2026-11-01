@@ -244,19 +244,34 @@ en: {
   },
 },
 };
-function mergeAlq(more) { for (const l in more) { const T = TX[l] = TX[l] || {}; for (const k in more[l]) { if (k === 'Agl') T.Agl = Object.assign({}, T.Agl || {}, more[l].Agl); else T['A.' + k] = more[l][k]; } } }
+// (F: the texts that differ again for Alfonso's rules 'alqf', where a piece may also step back; stored as 'F.<key>')
+function mergeAlq(more) { for (const l in more) { const T = TX[l] = TX[l] || {}; for (const k in more[l]) { if (k === 'Agl') T.Agl = Object.assign({}, T.Agl || {}, more[l].Agl); else if (k === 'F') { for (const f in more[l].F) T['F.' + f] = more[l].F[f]; } else T['A.' + k] = more[l][k]; } } }
 mergeAlq(AQ);
-const isAlq = () => typeof gv !== 'undefined' && gv === 'alq';
+mergeAlq({
+  ja: { F: {
+    'x.wait': '{sq}の駒を{to}へ動かし、形を崩さずに待ちます。相手に跳ぶ手を与えないことが最優先です。',
+    'tp.paika': '取る手がありません。相手に跳ぶ手を与えない点へ動かそう。駒は後ろへも動けるので、守りに引くのも手です。',
+    'tp.end1': '終盤は、相手の駒の逃げ道を少しずつ減らしていくのが基本です。動ける手がなくなった側が負けです。',
+    'tp.open2': '序盤は前へ出すぎず、味方どうしで駒の後ろの点をふさぎ合って、跳ばれない形を保とう。' } },
+  en: { F: {
+    'x.wait': 'Move the piece on {sq} to {to} and keep a solid shape while waiting. Giving the opponent no jump comes first.',
+    'tp.paika': 'Nothing to capture. Move to a point that gives the opponent no jump — pieces may also step back, so pulling back to defend is an option.',
+    'tp.end1': 'In the ending, take away the enemy pieces\' room step by step: a side with no move loses.',
+    'tp.open2': 'In the opening, do not rush forward: keep the points behind your pieces covered so they cannot be jumped.' } },
+});
+const isAlq = () => typeof gv !== 'undefined' && (gv === 'alq' || gv === 'alqf');
+const isAlqF = () => typeof gv !== 'undefined' && gv === 'alqf';
 const L = () => (typeof LANG !== 'undefined' && TX[LANG]) ? LANG : 'en';
 function tx(k, v) {
   const l = L(); let x;
-  if (isAlq()) { const a = 'A.' + k; x = TX[l][a]; if (x === undefined) x = TX.en[a]; if (x === undefined) x = TX.ja[a]; }
+  if (isAlqF()) x = TX[l]['F.' + k];
+  if (isAlq() && x === undefined) { const a = 'A.' + k; x = TX[l][a]; if (x === undefined) x = TX.en[a]; if (x === undefined) x = TX.ja[a]; }
   if (x === undefined) x = TX[l][k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k]; if (x === undefined) return k;
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
   return x;
 }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const glSet = () => { const T = TX[L()] || TX.en; return isAlq() ? (T.Agl || TX.en.Agl) : (T.gl || TX.en.gl); };
+const glSet = () => { const T = TX[L()] || TX.en; if (!isAlq()) return T.gl || TX.en.gl; const A = T.Agl || TX.en.Agl; if (!isAlqF()) return A; const { noback, ...rest } = A; return rest; };
 const gl = h => window.CoachKit ? CoachKit.gloss(h, glSet()) : h;
 const pctS = x => Math.round(x * 100) + '%';
 
@@ -285,7 +300,7 @@ function facts(pos, n) {
 // Alquerque: the non-capturing steps player p could make (forward / sideways along a line to an empty point)
 function alqSteps(pos, p) {
   let n = 0;
-  for (let i = 0; i < E.NP; i++) if (E.valid(i) && pos.at(i) === p) for (let d = 0; d < 8; d++) { const t = E.NB[d][i]; if (t >= 0 && !pos.at(t) && (p === P1 ? E.DR[d] >= 0 : E.DR[d] <= 0)) n++; }
+  for (let i = 0; i < E.NP; i++) if (E.valid(i) && pos.at(i) === p) for (let d = 0; d < 8; d++) { const t = E.NB[d][i]; if (t >= 0 && !pos.at(t) && (isAlqF() || (p === P1 ? E.DR[d] >= 0 : E.DR[d] <= 0))) n++; }
   return n;
 }
 // what a candidate move is about

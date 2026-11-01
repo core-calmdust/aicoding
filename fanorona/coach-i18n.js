@@ -1769,3 +1769,46 @@
 "Agl": { "force": { "m": ["الأسر إجباري"], "t": "الأسر الإجباري", "d": "إذا أمكن الأسر فلا تجوز نقلة بلا أسر. وإن تعددت طرق الأسر فاختر أيًّا منها." }, "jump": { "m": ["يُقفز فوق", "القفز فوق", "تقفز"], "t": "الأسر بالقفز", "d": "القفز فوق قطعة مجاورة للخصم على خط إلى النقطة الفارغة خلفها مباشرة؛ وتؤخذ القطعة المقفوز فوقها. عند الأسر يجوز القفز في أي اتجاه، حتى إلى الخلف." }, "chain": { "m": ["سلسلة قفزات", "سلسلة"], "t": "سلسلة القفز", "d": "إذا أمكن للقطعة القفز مجددًا من نقطة هبوطها فيجب أن تستمر في الدور نفسه، ولا يجوز التوقف في المنتصف." }, "strong": { "m": ["تتقاطع فيها الخطوط القطرية", "نقطة قطرية"], "t": "النقاط القطرية", "d": "النقاط التي تتقاطع فيها الخطوط القطرية (نصف نقاط اللوحة). القطعة هناك تتحرك وتقفز قطريًا أيضًا." }, "noback": { "m": ["لا ترجع"], "t": "لا رجوع", "d": "النقلة بلا أسر خطوة إلى الأمام أو إلى الجانب. وحدها قفزة الأسر يمكن أن تكون إلى الخلف." } }
 }
 }); })();
+// Alquerque, Alfonso's rules ('alqf'): the texts that differ again (a piece may also step back); ja / en in coach.js
+(() => { if (!window.FanoronaCoach || !FanoronaCoach.mergeAlq) return; FanoronaCoach.mergeAlq({
+"zh": { "F": {
+"x.wait": "把{sq}的棋子走到{to}，保持阵形等待。最重要的是不给对手跳吃的机会。",
+"tp.paika": "没有可吃的子。走到不给对手跳吃机会的点吧。棋子也能后退，退回防守也是一种选择。",
+"tp.end1": "残局的基本是一点点减少对方棋子的退路。无棋可走的一方判负。",
+"tp.open2": "开局不要冲得太前，让己方棋子互相挡住背后的点，保持不会被跳吃的阵形。" } },
+"ko": { "F": {
+"x.wait": "{sq}의 말을 {to}(으)로 옮겨 형태를 무너뜨리지 않고 기다립니다. 상대에게 뛰어넘을 수를 주지 않는 것이 최우선입니다.",
+"tp.paika": "잡을 수가 없습니다. 상대에게 뛰어넘을 수를 주지 않는 점으로 옮기세요. 말은 뒤로도 움직일 수 있으니 물러나 지키는 것도 방법입니다.",
+"tp.end1": "종반에는 상대 말의 도망길을 조금씩 줄여 나가는 것이 기본입니다. 움직일 수가 없는 쪽이 집니다.",
+"tp.open2": "초반에는 너무 앞으로 나가지 말고, 아군끼리 말 뒤의 점을 막아 주어 뛰어넘기지 않는 형태를 유지하세요." } },
+"es": { "F": {
+"x.wait": "Mueve la pieza de {sq} a {to} y mantén una forma sólida mientras esperas. Lo primero es no dar ningún salto al rival.",
+"tp.paika": "No hay capturas. Mueve a un punto que no dé ningún salto al rival; las piezas también pueden retroceder, así que replegarse para defender es una opción.",
+"tp.end1": "En el final, quita poco a poco espacio a las piezas rivales: el bando que no puede mover pierde.",
+"tp.open2": "En la apertura no avances demasiado: mantén cubiertos los puntos detrás de tus piezas para que no puedan saltarlas." } },
+"fr": { "F": {
+"x.wait": "Jouez la pièce de {sq} en {to} et gardez une forme solide en attendant. L'essentiel est de ne laisser aucun saut à l'adversaire.",
+"tp.paika": "Aucune prise. Allez sur un point qui ne laisse aucun saut à l'adversaire ; les pièces peuvent aussi reculer, se replier pour défendre est donc possible.",
+"tp.end1": "En finale, réduisez peu à peu l'espace des pièces adverses : le camp qui ne peut plus jouer perd.",
+"tp.open2": "En ouverture, n'avancez pas trop vite : gardez couverts les points derrière vos pièces pour qu'elles ne puissent pas être sautées." } },
+"pt": { "F": {
+"x.wait": "Mova a peça de {sq} para {to} e mantenha uma forma sólida enquanto espera. O mais importante é não dar nenhum salto ao adversário.",
+"tp.paika": "Nada para capturar. Vá para um ponto que não dê salto ao adversário; as peças também podem recuar, então recuar para defender é uma opção.",
+"tp.end1": "No final, tire aos poucos o espaço das peças adversárias: o lado que não pode mover perde.",
+"tp.open2": "Na abertura, não avance demais: mantenha cobertos os pontos atrás das suas peças para que não possam ser saltadas." } },
+"de": { "F": {
+"x.wait": "Zieh den Stein von {sq} nach {to} und halte beim Abwarten eine feste Form. Am wichtigsten: dem Gegner keinen Sprung lassen.",
+"tp.paika": "Nichts zu schlagen. Zieh auf einen Punkt, der dem Gegner keinen Sprung gibt – Steine dürfen auch zurückziehen, ein Rückzug zur Verteidigung ist also möglich.",
+"tp.end1": "Im Endspiel nimmst du den gegnerischen Steinen Schritt für Schritt den Raum: Wer nicht mehr ziehen kann, verliert.",
+"tp.open2": "In der Eröffnung nicht zu weit vorpreschen: Halte die Punkte hinter deinen Steinen besetzt, damit sie nicht übersprungen werden." } },
+"hi": { "F": {
+"x.wait": "{sq} की गोटी को {to} पर चलें और आकार बनाए रखकर प्रतीक्षा करें। सबसे ज़रूरी है विरोधी को कूदने का मौक़ा न देना।",
+"tp.paika": "लेने को कुछ नहीं। ऐसे बिंदु पर चलें जहाँ विरोधी को कूदने का मौक़ा न मिले; गोटियाँ पीछे भी चल सकती हैं, इसलिए बचाव के लिए पीछे हटना भी एक विकल्प है।",
+"tp.end1": "अंत में विरोधी गोटियों की जगह धीरे-धीरे कम करें: जो पक्ष चल न सके, वह हारता है।",
+"tp.open2": "शुरुआत में बहुत आगे न बढ़ें: अपनी गोटियों के पीछे के बिंदु ढके रखें ताकि उन पर से कूदा न जा सके।" } },
+"ar": { "F": {
+"x.wait": "حرّك القطعة من {sq} إلى {to} وحافظ على تشكيل متماسك وأنت تنتظر. الأهم ألا تترك للخصم أي قفزة.",
+"tp.paika": "لا يوجد أسر. انتقل إلى نقطة لا تمنح الخصم أي قفزة؛ ويمكن للقطع الرجوع أيضًا، فالتراجع للدفاع خيار متاح.",
+"tp.end1": "في النهاية ضيّق المساحة على قطع الخصم شيئًا فشيئًا: الطرف الذي لا يستطيع التحرك يخسر.",
+"tp.open2": "في الافتتاح لا تتقدّم كثيرًا: أبقِ النقاط خلف قطعك مغطاة حتى لا يُقفز فوقها." } }
+}); })();
