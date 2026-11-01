@@ -299,6 +299,8 @@ function renderReserves(pos) {
     const bottom = flip ? P2 : P1, el = $(3 - p === bottom ? '#res1' : '#res2');   // next to the player who captured them
     let s = ''; for (let k = 0; k < Math.min(lost, 12); k++) s += `<span class="rv p${p}"></span>`;
     if (lost) s += `<span class="lbl">×${lost}</span>`;
+    const own = 3 - p;   // the tray's player: their pieces left on the board (shown on phones held sideways, where the player chips are hidden)
+    s += `<span class="onb${pos.side === own && !(pos.over && pos.over()) ? ' on' : ''}"><i class="pdisc p${own}"></i><b>${pos.count(own)}</b></span>`;
     el.innerHTML = s;
     el.title = lost ? t('captured', { c: pname(p), n: lost }) : '';
     el.classList.remove('turn');
