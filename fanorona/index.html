@@ -841,6 +841,8 @@ html[data-pcs=wood] .pc.p2::after{background-image:url(img/wood-walnut.webp);opa
 .reserve .rv{width:calc(var(--cell) * .34);height:calc(var(--cell) * .34);margin-left:calc(var(--cell) * -.06);overflow:hidden}
 .reserve .lbl{font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell) * .2);color:rgba(255,240,215,.9);margin-inline-start:calc(var(--cell) * .14);text-shadow:0 1px 2px rgba(0,0,0,.7)}
 .reserve .rv:first-of-type{margin-left:0}
+.reserve .rv::before{inset:0;box-shadow:none}
+.reserve .rv.p1,.reserve .rv.p2{box-shadow:inset calc(var(--cell) * -.012) calc(var(--cell) * -.025) calc(var(--cell) * .04) rgba(0,0,0,.2),calc(var(--cell) * .02) calc(var(--cell) * .015) calc(var(--cell) * .03) rgba(25,8,0,.5)}
 .player .count small{white-space:nowrap}
 .hintlbl b{font-size:calc(var(--cell) * .24)}
 .hintlbl small{font-size:calc(var(--cell) * .15)}
@@ -909,12 +911,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   .app, html.rvb-on body .app.app{display:grid!important;height:auto!important;min-height:var(--vh)!important;width:calc(100vw - 2 * var(--px))!important;margin:0 auto!important;padding:12px 0!important;gap:12px 14px!important;
     justify-content:stretch!important;align-content:start!important;align-items:stretch!important;
     grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr)!important;grid-template-rows:var(--fhb) var(--ich)!important;grid-template-areas:"board board board" "pl ev kf"!important}
-  .app:has(> .side > .side-in > #coachCard:not(.hidden)), .app:has(> .side > .side-in > .review-card.show), html.rvb-on body .app.app{
+  .app:has(> .side > .side-in > #coachCard:not(.hidden)), .app:has(> .side > .side-in > .review-card.show), html.rvb-on body .app.app.app:not(#zz):not(#zy){
     grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:var(--fhb) calc(var(--ich) * .5 - 6px) calc(var(--ich) * .5 - 6px)!important;grid-template-areas:"board board board" "ck pl rv" "ck ev kf"!important}
-  html.rvb-on body .app.app{grid-template-areas:"board board board" "bx pl rv" "bx ev kf"!important}
+  html.rvb-on body .app.app.app:not(#zz):not(#zy){grid-template-areas:"board board board" "bx pl rv" "bx ev kf"!important}
   .app:not(:has(> .side > .side-in > .review-card.show)) .kifu-card{grid-row:2 / 4;grid-column:3}
   .app:not(:has(> .side > .side-in > #coachCard:not(.hidden))):not(:has(> .side > .side-in > .review-card.show)) .kifu-card{grid-row:auto;grid-column:auto}
   html.rvb-on body .app.app > .rvbox{grid-area:bx;height:auto;align-self:stretch}
+  html.rvb-on body .app #coachCard{display:none!important}
   body:is(.in-lesson,.in-puzzle) .app.app{grid-template-columns:minmax(0,1fr) minmax(0,2.4fr)!important;grid-template-rows:var(--fhb) var(--ich)!important;grid-template-areas:"board board" "pl ls"!important}
   .app > .board-area{grid-area:board!important;justify-self:center!important;align-self:start!important;padding-bottom:calc(var(--cell) * .16)}
   .app > .side, .app > .side > .side-in{display:contents!important}
@@ -930,11 +933,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   .app #coachCard{grid-area:ck;grid-row:2 / 4;overflow-y:auto;min-height:0;padding:12px 14px!important;scrollbar-width:thin}
   .app .review-card.show{grid-area:rv;display:flex;flex-direction:column;overflow-y:auto;padding:10px 14px!important;min-height:0}
   body.in-lesson .app .lesson-card, body.in-puzzle .app .puzzle-card{grid-area:ls;overflow-y:auto;min-height:0}
-  .app .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:0;padding:7px 12px!important;min-height:0}
+  .app .players .player{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;row-gap:0;padding:7px 12px!important;min-height:0}
   .app .players .player > .top{grid-column:1;grid-row:1;min-width:0}
-  .app .players .player > .count{grid-column:2;grid-row:1;margin:0!important;font-size:clamp(20px, 1.7vw, 26px)!important;line-height:1}
+  .app .players .player > .count{grid-column:3;grid-row:1;margin:0!important;font-size:clamp(20px, 1.7vw, 26px)!important;line-height:1}
   .app .players .player > .count small{display:inline!important;font-size:11px;margin-left:4px}
-  .app .players .player > .status{grid-column:1 / -1;grid-row:2;position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;height:auto!important;line-height:1.3!important}
+  .app .players .player .name{transform:none!important}
+  .app .players .player > .status{grid-column:2;grid-row:1;position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;height:auto!important;line-height:1.3!important}
   .app .players .player > .status:empty{display:none}
 }
 /* PC review box (rvbox.js): the coach text without its frame; hovered candidate on the board (arrow 1, then the line 2, 3, 4) */
@@ -1277,7 +1281,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=fa1"></script>
 <script src="coach-i18n.js?v=fa1"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fa2"></script>
+<script src="app.js?v=fa3"></script>
 <script src="online-ui.js?v=3sec1l9ck1"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261101fn2" defer></script>

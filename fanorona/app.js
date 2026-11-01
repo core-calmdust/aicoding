@@ -43,7 +43,7 @@ function canon(pos, m) { const L = pos.moves(); if (L.includes(m)) return m; for
 
 // ====================================================================== state
 const STORE = 'aicoding-fanorona';
-const settings = { mode: 'ai', rule: 'sivy', color: 1, level: 8, level2: 8, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'acacia', pcs: 'wood' };
+const settings = { mode: 'ai', rule: 'sivy', color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'acacia', pcs: 'wood' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
