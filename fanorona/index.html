@@ -1014,10 +1014,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
    a tab slides a drawer in from the right over the board (the tab again / a tap on the board / a swipe right closes it) */
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   html:has(body.lt-on), body.lt-on{height:100%!important;overflow:hidden!important}
+  :root:has(body.lt-on){--lvh:100vh}
+  @supports (height:100dvh){:root:has(body.lt-on){--lvh:100dvh}}
   body.lt-on{--ltw:300px}
-  :root:has(body.lt-on){--cell:min((100vh - 70px) / var(--fhc), (100vw - 96px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
-  :root:has(body.lt-on:is(.in-lesson,.in-puzzle)){--cell:min((100vh - 70px) / var(--fhc), (100vw - 340px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
-  body.lt-on .app{display:grid!important;height:100vh!important;min-height:0!important;box-sizing:border-box;overflow:hidden;
+  :root:has(body.lt-on){--cell:min((var(--lvh) - 70px) / var(--fhc), (100vw - 96px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
+  :root:has(body.lt-on:is(.in-lesson,.in-puzzle)){--cell:min((var(--lvh) - 70px) / var(--fhc), (100vw - 340px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
+  body.lt-on .app{display:grid!important;height:var(--lvh)!important;min-height:0!important;box-sizing:border-box;overflow:hidden;
     padding:6px max(8px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left))!important;gap:6px 8px!important;
     grid-template-columns:auto minmax(0,1fr) auto auto 58px!important;grid-template-rows:36px minmax(0,1fr)!important;
     grid-template-areas:"bl ct pl br br" "board board board board rl"!important}
