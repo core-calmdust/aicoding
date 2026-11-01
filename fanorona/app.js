@@ -57,7 +57,7 @@ function canon(pos, m) { const L = pos.moves(); if (L.includes(m)) return m; for
 
 // ====================================================================== state
 const STORE = 'aicoding-fanorona';
-const settings = { mode: 'ai', rule: 'sivy', color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'acacia', pcs: 'wood' };
+const settings = { mode: 'ai', rule: 'sivy', color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'lambared', pcs: 'lacquer' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -938,7 +938,7 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 45 chars, side } ; o: { cls, marks: {pt: 'ring'|'ng'|'x'|'dash'}, arrows: [[points...]], flip, click, sel, dest: [], last }
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood', 'abstract', 'dark', 'lamba', 'lambared'], PC_KEYS = ['wood', 'shell', 'stone', 'jade', 'flat', 'mono', 'disc', 'lacquer'];
+const BD_KEYS = ['lambared', 'lamba', 'acacia', 'maple', 'abstract', 'dark', 'walnut', 'rosewood'], PC_KEYS = ['lacquer', 'disc', 'wood', 'shell', 'flat', 'mono', 'stone', 'jade'];
 // the board picture of a design (wood textures by tools/gen_wood.py, the lamba cloth by tools/gen_lamba.py; abstract: plain)
 const BD_IMG = k => k === 'abstract' || k === 'dark' ? '' : k === 'lamba' || k === 'lambared' ? `img/${k}-sivy.webp` : `img/wood-${k}.webp`;
 // board: [light, dark, line]
@@ -955,8 +955,8 @@ const PC_PAL = {
   lacquer: [['#fff6e2', '#efe0c2', '#bfa476'], ['#d24a52', '#9e1f28', '#5e0f16']],
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'acacia';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'wood';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'lambared';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'lacquer';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 const DESIGN_SPEC = { b: 'wwwwwwwwwwwwwwwwwwbwbw.bwbwbbbbbbbbbbbbbbbbbb', side: 1 };
