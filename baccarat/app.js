@@ -420,7 +420,7 @@ function layMobHtml() {
     const me = sx.n === ME, b = who(sx.n), tb = b && T.bots ? T.bots[b.id] : null, [p1, p2] = R.plate, pid = 'mp' + sx.n;
     const net = me ? (done && T.result && betSum(T.last) ? T.result.net : null) : done && tb && tb.res ? tb.res.net : null;
     g += `<g class="seat-g${me ? ' me' : ''}"><path class="pl-a" d="${cell(p1, p2, sx.a0, sx.a1)}"/><path id="${pid}" d="${arc((p1 + p2) / 2 + 12, sx.a0, sx.a1)}" fill="none"/>` +
-      `<text class="pl-t mz-pl"><textPath href="#${pid}" startOffset="50%">${me ? `<tspan class="pl-n">3</tspan> YOU` : `<tspan class="pl-n">${sx.n}</tspan> ${esc(b.name)}`}${net ? ` <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : me ? '' : ` <tspan class="pl-b">${fmt(botState(b).bank)}</tspan>`}</textPath></text></g>`;
+      `<text class="pl-t mz-pl"><textPath href="#${pid}" startOffset="50%">${me ? `<tspan class="pl-n">3</tspan> YOU` : `<tspan class="pl-n">${sx.n}</tspan> ${esc(b.name)}`}${net ? ` <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : ` <tspan class="pl-b">${fmt(me ? T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0) : botState(b).bank)}</tspan>`}</textPath></text></g>`;
     if (i) { const [x1, y1] = P2(G0.rIn, sx.a0), [x2, y2] = P2(p2, sx.a0); lines += `<line class="lz-div mz-div" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
   });
   const rim = `<path class="lz-rim" d="${arc(R.plate[1], -span, span)}"/><path class="lz-rim" d="${arc(G0.rIn, -span, span)}"/>`;
@@ -485,7 +485,7 @@ function layHtml() {
     // the name plate on the rim
     const [p1, p2] = RING.plate, pid = `pl${n}`, net = me ? (done && T.result && betSum(T.last) ? T.result.net : null) : tb && tb.res ? tb.res.net : null;
     const name = me ? 'YOU' : bot ? bot.name : '';
-    const bank = me ? '' : bot ? fmt(botState(bot).bank) : '';
+    const bank = me ? fmt(T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0)) : bot ? fmt(botState(bot).bank) : '';
     g += `<path class="pl-a" d="${cellPath(p1, p2, a0, a1)}"/><path id="${pid}" d="${arcPath((p1 + p2) / 2 + 6, a0, a1)}" fill="none" stroke="none"/>` +
       `<text class="pl-t"><textPath href="#${pid}" startOffset="50%"><tspan class="pl-n">${n}</tspan>  ${esc(name)}${bank ? `  <tspan class="pl-b">${bank}</tspan>` : ''}${done && net ? `  <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : ''}</textPath></text></g>`;
     if (si) { const [x1, y1] = LP(inner, a0), [x2, y2] = LP(p2, a0); lines += `<line class="lz-div" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
@@ -532,13 +532,30 @@ function render() {
     `</div><div class="bc-mid" data-k="mid">${banner}</div>${lay}` +
     `<div class="bc-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: shoeLeft }))}"><span class="bc-shoe-box"><i style="height:${(shoePct * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small><i>SHOE</i>${shoeLeft}</small></div>`;
   patch(box, h);
-  box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); });
+  box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); el.onmouseenter = e => spotTip(el.dataset.spot, e); el.onmousemove = e => spotTip(el.dataset.spot, e); el.onmouseleave = () => spotTip(null); });
   box.querySelectorAll('[data-spot]').forEach(el => el.oncontextmenu = e => { e.preventDefault(); if (T.phase !== 'bet' || !T.bets[el.dataset.spot]) return; delete T.bets[el.dataset.spot]; G.undo = G.undo.filter(u => u[0] !== el.dataset.spot); render(); });
   wireSqueeze(box);
   renderActbar(); renderSide(); renderNums();
   // phones: the bar under the table changes height between betting and dealing — size the table again for the real one (once)
   if (G.abH && !G.reAb && Math.max(140, $('#actbar').offsetHeight) !== G.abH) { G.reAb = 1; render(); G.reAb = 0; }
 }
+/* hover (mouse): what a betting box means — the bet, when it wins, what it pays, its house edge */
+let tipEl = null;
+function spotTip(k, e) {
+  if (!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'sp-tip'; document.body.appendChild(tipEl); }
+  if (!k) { tipEl.classList.remove('show'); return; }
+  if (tipEl.dataset.k !== k + T.v) {
+    tipEl.dataset.k = k + T.v;
+    tipEl.innerHTML = `<b>${LAB[k]}</b><small>${esc(t(SPOTS[k]))}</small><p>${esc(t('sp.d.' + k + (k === 'B' ? '.' + T.v : '')))}</p>` +
+      `<div class="sp-tip-r"><span>${esc(t('tl.pay'))}<em>${esc(payTxt(k))}</em></span><span>${esc(t('tl.edge'))}<em>${pct(edge(k))}</em></span></div>`;
+  }
+  tipEl.classList.add('show');
+  const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  let x = e.clientX + 16, y = e.clientY + 18; if (x + w > innerWidth - 8) x = e.clientX - w - 16; if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+  tipEl.style.left = Math.max(8, x) + 'px'; tipEl.style.top = Math.max(8, y) + 'px';
+}
+
 /* squeeze: drag a face-down card (from any edge) to peel it; tap opens it at once */
 function wireSqueeze(box) {
   box.querySelectorAll('.cd.sqz').forEach(el => {
