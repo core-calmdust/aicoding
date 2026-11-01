@@ -5,10 +5,13 @@
 // ====================================================================== rules (shared with the engine)
 const E = window.FanoronaEngine, WIN = E.WIN, WINT = E.WINT;
 const P1 = 1, P2 = 2;                 // P1 = White (moves first), P2 = Black
-const RULE_ORDER = ['sivy', 'dimy', 'telo'];   // 9x5 Fanoron-Tsivy (standard), 5x5 Fanoron-Dimy, 3x3 Fanoron-Telo
+// the page's game (this script also runs Alquerque: alquerque/index.html sets window.GAME before loading it)
+const GM = window.GAME || {};
+const GID = GM.id || 'fanorona', BASE = GM.base || 'sivy';
+const RULE_ORDER = GM.rules || ['sivy', 'dimy', 'telo'];   // 9x5 Fanoron-Tsivy (standard), 5x5 Fanoron-Dimy, 3x3 Fanoron-Telo
 const mFrom = E.mFrom, mTo = E.mTo;
 const capsFlat = (pos, m) => E.capsOf(pos, m).flat();            // every point captured by a move
-let gv = 'sivy';
+let gv = BASE; E.setRule(BASE);
 let HB = null;                        // PC header bar (shared/headerbar.js)
 let startSpec = null;                 // lesson / puzzle start position (null = the normal starting position)
 let moves = [];                       // game record (move numbers, see engine.js)
@@ -16,9 +19,9 @@ let cur = 0;                          // number of moves shown
 let flip = false;                     // board seen from Black's side (Black at the bottom; White is at the bottom by default)
 // the board in use: lessons / puzzles / openings / rated games are 9x5; online games follow the game record; else the setting
 function wantRule() {
-  if (lesson || puzzle || rgame) return 'sivy';
+  if (lesson || puzzle || rgame) return BASE;
   if (settings.mode === 'online' && window.olRule) { const r = olRule(); if (r) return r; }
-  return RULE_ORDER.includes(settings.rule) ? settings.rule : 'sivy';
+  return RULE_ORDER.includes(settings.rule) ? settings.rule : BASE;
 }
 function setVariant(r) {
   r = r || wantRule();
@@ -56,8 +59,8 @@ const capCountIn = (pos, m) => capsFlat(pos, m).length;
 function canon(pos, m) { const L = pos.moves(); if (L.includes(m)) return m; for (const x of L) if (E.same(pos, x, m)) return x; return m; }
 
 // ====================================================================== state
-const STORE = 'aicoding-fanorona';
-const settings = { mode: 'ai', rule: 'sivy', color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: 'lambared', pcs: 'lacquer' };
+const STORE = GM.store || 'aicoding-fanorona';
+const settings = { mode: 'ai', rule: BASE, color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: GM.bd || 'lambared', pcs: GM.pcs || 'lacquer' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -100,9 +103,9 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     if (settings.mode === 'online') settings.mode = 'pvp';
-    if (!RULE_ORDER.includes(settings.rule)) settings.rule = 'sivy';
+    if (!RULE_ORDER.includes(settings.rule)) settings.rule = BASE;
     if (RULE_ORDER.includes(d.rule) && !(d.rated && d.rated.id)) settings.rule = d.rule;
-    gv = E.setRule(d.rated && d.rated.id ? 'sivy' : settings.rule); geomSync();
+    gv = E.setRule(d.rated && d.rated.id ? BASE : settings.rule); geomSync();
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 8;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 8;
     if (Array.isArray(d.moves)) {
@@ -124,7 +127,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=fb1';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -184,11 +187,12 @@ const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), linesEl =
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 // display row / column of a point: row 5 (Black's side) on top, column a on the left; flipped = turned round
-let NC = 9, NR = 5, BW = NC + 1, BH = NR + 1;   // the board picture: NC x NR points with half a step of margin + frame
+let NC = E.dims().w, NR = E.dims().h, BW = NC + 1, BH = NR + 1;   // the board picture: NC x NR points with half a step of margin + frame
 function geomSync() {
   const D = E.dims(); NC = D.w; NR = D.h; BW = NC + 1; BH = NR + 1;
   document.documentElement.dataset.rule = gv;
 }
+geomSync();
 const dRC = i => { const [r, c] = E.RC[i]; return flip ? [r, NC - 1 - c] : [NR - 1 - r, c]; };
 const ptX = i => (dRC(i)[1] + 1) / BW * 100, ptY = i => (dRC(i)[0] + 1) / BH * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
@@ -386,7 +390,7 @@ function renderFx() {
     } else {
       const L = selSteps(pos), seen = new Set();
       for (const x of L) if (!seen.has(x.to)) { seen.add(x.to); fxDiv('dest' + (x.kind ? ' cap' : ''), x.to); }
-      if (sel.st) fxDiv('mark stop', c);
+      if (sel.st && !E.dims().alq) fxDiv('mark stop', c);
     }
   }
   for (const k of lessonMarks) { if (k.arrow) svgArrow(svg, k.arrow, k.cls); else fxDiv('mark ' + k.cls, k.at); }
@@ -401,10 +405,10 @@ function renderPrompt() {
   if (canHumanPlay() && !lesson) {
     const { pos } = posAt(cur);
     if (sel && sel.choose) s = t('pick.choose');
-    else if (sel && sel.st) s = t('pick.jumpOn');
+    else if (sel && sel.st) s = t(E.dims().alq ? 'pick.jumpMust' : 'pick.jumpOn');
     else if (pos.hasCaps()) s = t('pick.mustJump');
   } else if (lesson && sel && sel.choose) s = t('pick.choose');
-  else if (lesson && sel && sel.st) s = t('pick.jumpOn');
+  else if (lesson && sel && sel.st) s = t(E.dims().alq ? 'pick.jumpMust' : 'pick.jumpOn');
   el.textContent = s; el.classList.toggle('show', !!s);
 }
 // value label for an engine value (mover's view)
@@ -595,7 +599,7 @@ boardEl.addEventListener('pointerleave', () => setHover(-1));
 boardEl.addEventListener('click', e => { const i = pointAt(e.clientX, e.clientY); setHover(-1); onSquare(i); });
 function cancelSel() {
   if (!sel) return;
-  if (sel.st) { finishChain(); return; }   // a capture already made: the turn ends here
+  if (sel.st) { if (E.dims().alq) return; finishChain(); return; }   // a capture already made: the turn ends here (Alquerque: it must go on)
   sel = null; renderFx();
 }
 // the notation of the steps entered so far
@@ -611,9 +615,9 @@ function onSquare(i) {
     if (!sel.st && pos.at(i) === me && i !== sel.from) { sel = null; onSquare(i); return; }
     toast(t('pick.choose'), 1800); return;
   }
-  if (sel && sel.st) {       // going on capturing (optional)
+  if (sel && sel.st) {       // going on capturing (optional; in Alquerque it must go on)
     const opts = pos.capSteps(sel.st).filter(x => x.to === i);
-    if (!opts.length) { finishChain(); return; }
+    if (!opts.length) { if (E.dims().alq) { toast(t('pick.jumpMust'), 1800); return; } finishChain(); return; }
     if (opts.length === 1) doStep(opts[0]); else { sel.choose = opts; renderFx(); }
     return;
   }
@@ -938,11 +942,11 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 45 chars, side } ; o: { cls, marks: {pt: 'ring'|'ng'|'x'|'dash'}, arrows: [[points...]], flip, click, sel, dest: [], last }
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['lambared', 'lamba', 'acacia', 'maple', 'abstract', 'dark', 'walnut', 'rosewood'], PC_KEYS = ['lacquer', 'disc', 'wood', 'shell', 'flat', 'mono', 'stone', 'jade'];
+const BD_KEYS = GM.bds || ['lambared', 'lamba', 'acacia', 'maple', 'abstract', 'dark', 'walnut', 'rosewood'], PC_KEYS = GM.pcss || ['lacquer', 'disc', 'wood', 'shell', 'flat', 'mono', 'stone', 'jade'];
 // the board picture of a design (wood textures by tools/gen_wood.py, the lamba cloth by tools/gen_lamba.py; abstract: plain)
-const BD_IMG = k => k === 'abstract' || k === 'dark' ? '' : k === 'lamba' || k === 'lambared' ? `img/${k}-sivy.webp` : `img/wood-${k}.webp`;
+const BD_IMG = k => GM.bdImg && k in GM.bdImg ? GM.bdImg[k] : k === 'abstract' || k === 'dark' ? '' : k === 'lamba' || k === 'lambared' ? `img/${k}-sivy.webp` : `img/wood-${k}.webp`;
 // board: [light, dark, line]
-const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], dark: ['#2a2c33', '#1d1e23', '#c2ae8f'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'], lambared: ['#a8282e', '#2c2c5c', '#fbf0dc'] };
+const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], dark: ['#2a2c33', '#1d1e23', '#c2ae8f'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'], lambared: ['#a8282e', '#2c2c5c', '#fbf0dc'], ...(GM.bdPal || {}) };
 // pieces: [White: highlight, body, edge], [Black: …]
 const PC_PAL = {
   wood: [['#fbe6bf', '#dcb27b', '#8f6232'], ['#7a5340', '#2c1b12', '#0c0604']],
@@ -953,13 +957,14 @@ const PC_PAL = {
   disc: [['#ffd84f', '#f2c230', '#b88a12'], ['#d6f3e2', '#bfe8d0', '#7fb59a']],
   mono: [['#fbf7ee', '#ece5d6', '#bdb29d'], ['#ee7a58', '#d9583b', '#a03c24']],
   lacquer: [['#fff6e2', '#efe0c2', '#bfa476'], ['#d24a52', '#9e1f28', '#5e0f16']],
+  ...(GM.pcPal || {}),
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'lambared';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'lacquer';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = BD_KEYS[0];
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = PC_KEYS[0];
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
-const DESIGN_SPEC = { b: 'wwwwwwwwwwwwwwwwwwbwbw.bwbwbbbbbbbbbbbbbbbbbb', side: 1 };
+const DESIGN_SPEC = BASE === 'sivy' ? { b: 'wwwwwwwwwwwwwwwwwwbwbw.bwbwbbbbbbbbbbbbbbbbbb', side: 1 } : (() => { const keep = E.rule(); E.setRule(BASE); const sp = new E.Pos().spec(); E.setRule(keep); return sp; })();
 function designPickers() {
   const r1 = $('#bdRow'), r2 = $('#pcRow'); if (!r1 || !r2) return;
   r1.innerHTML = BD_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === settings.bd ? 'sel' : ''}" aria-pressed="${k === settings.bd}">${miniSVG(DESIGN_SPEC, { cls: 'bdm', bd: k })}<span>${escHb(t('bd.' + k))}</span></button>`).join('');
@@ -968,7 +973,7 @@ function designPickers() {
 let MINI_UID = 0;
 // small board pictures are drawn for o.rule's board (default 9x5: lessons / puzzles / openings), whatever the game uses
 function miniSVG(spec, o) {
-  const keep = [NC, NR, BW, BH], D = E.RULES[(o && o.rule) || 'sivy'];
+  const keep = [NC, NR, BW, BH], D = E.RULES[(o && o.rule) || BASE];
   NC = D.w; NR = D.h; BW = NC + 1; BH = NR + 1;
   try { return miniSVG0(spec, o); } finally { [NC, NR, BW, BH] = keep; }
 }
@@ -1053,13 +1058,13 @@ function tourPage(id, spec, o) {
         if (!x.kind) { st.steps = [x]; sPlace(); finish(); return; }
         st.chain = E.Pos.after(pos, st.chain, x); st.steps.push(x); sHop(); sTake(90);
         if (!pos.capSteps(st.chain).length) { finish(); return; }
-        api.say(t('pick.jumpOn')); draw();
+        api.say(t(E.dims().alq ? 'pick.jumpMust' : 'pick.jumpOn')); draw();
       }
       function click(i) {
         if (st.ch) { const p = st.ch.find(x => x.cap.includes(i)); if (p) { api.say(''); step(p); } else api.say(t('pick.choose')); return; }
         if (st.chain) {
           const L = pos.capSteps(st.chain).filter(x => x.to === i);
-          if (!L.length) { api.say(''); finish(); return; }
+          if (!L.length) { if (E.dims().alq) { api.say(t('pick.jumpMust'), 'ng'); return; } api.say(''); finish(); return; }
           if (L.length === 1) step(L[0]); else { st.ch = L; api.say(t('pick.choose')); draw(); }
           return;
         }
@@ -1081,9 +1086,20 @@ function tourPage(id, spec, o) {
 }
 const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''), html });
 // page 1: what the game is (history / how to win / culture), read only — common spec
-const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/fanorona.webp', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
+const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: GM.img || '../images/atlas/fanorona.webp', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const nCap = steps => steps.reduce((a, x) => a + x.cap.length, 0);
-const TOUR_PAGES = [
+// Alquerque (alquerque/): its own hands-on pages on the 5x5 board
+const TOUR_ALQ = () => [
+  introPage(),
+  tourRead('aboard', () => `<div class="tour-pic">${miniSVG(E.Pos.from(null).spec(), { cls: '', marks: { 20: 'dash' } })}</div>`),
+  tourPage('amove', specOf({ w: ['c2', 'a1'], b: ['e5', 'a5'], side: P1 }), { check: m => !E.isCap(m) ? 'ok' : null }),
+  tourPage('ajump', specOf({ w: ['c2', 'a1'], b: ['c3', 'e5'], side: P1 }), { check: m => E.isCap(m) ? 'ok' : t('tr.ajump.ng') }),
+  tourPage('amust', specOf({ w: ['b2', 'e1'], b: ['c3', 'a5'], side: P1 }), { check: m => E.isCap(m) ? 'ok' : t('tr.amust.ng') }),
+  tourPage('achain', specOf({ w: ['a1', 'e1'], b: ['b2', 'c4', 'a5'], side: P1 }), { check: (m, a, steps) => steps.length >= 2 ? 'ok' : t('tr.achain.ng') }),
+  tourPage('awin', specOf({ w: ['c1', 'e1'], b: ['c2'], side: P1 }), { check: (m, a) => a.status() === -1 ? 'ok' : t('tr.awin.ng') }),
+  tourRead('adraw', () => `<div class="tour-pic">${miniSVG(specOf({ w: ['b5', 'd5'], b: ['b1'] }), { cls: '' })}</div>`),
+];
+const TOUR_PAGES = GID === 'alquerque' ? TOUR_ALQ() : [
   introPage(),
   tourRead('board', () => `<div class="tour-pic">${miniSVG(E.Pos.from(null).spec(), { cls: '', marks: { 22: 'dash' } })}</div>`),
   tourPage('move', specOf({ w: ['c2', 'g2'], b: ['c5', 'g5'], side: P1 }), { check: m => !E.isCap(m) ? 'ok' : null }),
@@ -1141,7 +1157,7 @@ function renderRuleCards() {
 }
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
 function openNewDialog(resume) {
-  draft = { rule: RULE_ORDER.includes(settings.rule) ? settings.rule : 'sivy', mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { rule: RULE_ORDER.includes(settings.rule) ? settings.rule : BASE, mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
   if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
@@ -1378,7 +1394,7 @@ $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(spec) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
-  startSpec = spec; setVariant('sivy');
+  startSpec = spec; setVariant(BASE);
   moves = []; cur = 0; reviewing = false; hintList = null; lessonMarks = []; labelList = null; evals = [];
 }
 function startLesson(step) {
@@ -2176,7 +2192,7 @@ function parseGameText(v) {
   try {
     if (h) {
       const q = new URLSearchParams(h[1]); if (!q.has('k')) return null;
-      const rule = RULE_ORDER.includes(q.get('r')) ? q.get('r') : 'sivy'; E.setRule(rule);
+      const rule = RULE_ORDER.includes(q.get('r')) ? q.get('r') : BASE; E.setRule(rule);
       const list = decMoves(q.get('k') || ''); if (!list) return null; return { list, rule, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined };
     }
     // a record names its board ([Variant "Dimy"]); otherwise the first board on which every move is legal
@@ -2203,7 +2219,7 @@ function openLoaded(list, n, rule) {
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0; animating = false;
   settings.mode = 'pvp'; rgame = null; startSpec = null;
-  settings.rule = rule || 'sivy'; setVariant();
+  settings.rule = rule || BASE; setVariant();
   moves = list; evals = []; hintList = null;
   cur = n === undefined || isNaN(n) ? moves.length : Math.max(0, Math.min(moves.length, n));
   reviewing = cur !== moves.length; gameOverShown = gameOver(moves.length);
@@ -2223,7 +2239,7 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== 'sivy' ? '&r=' + gv : '') + (cur < moves.length ? '&n=' + cur : ''); }
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== BASE ? '&r=' + gv : '') + (cur < moves.length ? '&n=' + cur : ''); }
 // 共有: the record in the usual notation (A = approach, W = withdrawal), the position, URL, diagram
 function faPosText(pos) {   // rows 5 → 1, W / B / . , then who is to move
   const rows = []; for (let r = NR - 1; r >= 0; r--) { let x = ''; for (let c = 0; c < NC; c++) x += '.WB'[pos.at(r * 9 + c)]; rows.push(x); }
@@ -2235,7 +2251,7 @@ function faRecord() {
   moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(E.name(pos, m)); pos.play(m); });
   tk.push(res);
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
-  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/fanorona"]\n[Game "Fanorona"]\n${gv !== 'sivy' ? `[Variant "${{ dimy: 'Dimy', telo: 'Telo' }[gv]}"]\n` : ''}[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/${GID}"]\n[Game "${GM.name || 'Fanorona'}"]\n${gv !== BASE ? `[Variant "${{ dimy: 'Dimy', telo: 'Telo' }[gv]}"]\n` : ''}[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
 }
 async function faDiagram(mode) {
   const RX = RecordExport, S = 64, BWp = S * BW, BHp = S * BH, pos = posAt(cur).pos;
@@ -2264,7 +2280,7 @@ async function faDiagram(mode) {
     }
   } });
 }
-RecordExport.attach({ btn: '#btnShare', key: 'fanorona', title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
+RecordExport.attach({ btn: '#btnShare', key: GID, title: t('meta.title'), lang: () => LANG, toast: m => toast(m, 1500),
   empty: () => !moves.length || !!lesson || !!puzzle, emptyMsg: () => t('nokifu'),
   formats: () => [{ id: 'txt', label: t('share.record'), ext: 'txt', text: faRecord }, { id: 'pos', label: t('share.pos'), ext: 'txt', meta: false, text: () => faPosText(posAt(cur).pos) + '\n' }],
   sides: () => [{ label: pname(P1), name: playerName(P1), tag: 'White' }, { label: pname(P2), name: playerName(P2), tag: 'Black' }],
@@ -2303,7 +2319,7 @@ function dailySolved(date, hinted) {
 }
 
 // ====================================================================== boot
-if (window.RulesOffer) RulesOffer.init({ game: 'fanorona', lang: () => LANG, open: () => openRules(null, 0), watch: '#rulesOverlay' });
+if (window.RulesOffer) RulesOffer.init({ game: GID, lang: () => LANG, open: () => openRules(null, 0), watch: '#rulesOverlay' });
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 designApply();
@@ -2314,7 +2330,7 @@ applyI18n();
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 // 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
-if (window.GameRecord) GameRecord.init({ game: 'fanorona', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
+if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
 if (window.FanoronaCoach) FanoronaCoach.init();
 openReady.then(() => { if (window.FanoronaCoach) FanoronaCoach.render(); });
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;

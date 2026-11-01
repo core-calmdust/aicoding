@@ -3,6 +3,7 @@
    Loaded after the main script; uses its globals (settings, moves, cur, gv, playMove, update, renderInfo, toast, t, …). Backend: online.js (FanoronaOnline). */
 'use strict';
 const ON = window.FanoronaOnline;
+const OLK = (window.GAME && window.GAME.id) || 'fanorona';   // local keys per game (alquerque/ runs these scripts too)
 const olOn = () => !!(ON && ON.available);
 const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const GLOGO = '<svg class="glogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
@@ -95,7 +96,7 @@ const authCancelled = e => e && /popup-closed-by-user|cancelled-popup-request|us
 
 // ====================================================================== online dialog
 let olView = 'menu', olRoomsList = [], olRoomsUnsub = null, olStatus = null;
-const OL_V_KEY = 'fanorona-online-v';
+const OL_V_KEY = OLK + '-online-v';
 function olV() { try { const v = localStorage.getItem(OL_V_KEY); if (ON.VARIANTS.includes(v)) return v; } catch (e) {} return ON.DEF_V; }
 function olSetV(v) { try { localStorage.setItem(OL_V_KEY, String(v)); } catch (e) {} }
 function olVarSeg(cls) {
@@ -194,7 +195,7 @@ function olRender(v) {
   }
 }
 const olRoomUrl = code => location.origin + location.pathname + '?room=' + code + (ON.mock ? '&mock=1' : '');
-const OL_RK = 'fanorona-online-rk';
+const OL_RK = OLK + '-online-rk';
 function olRk() { try { return localStorage.getItem(OL_RK) === 'key' ? 'key' : 'open'; } catch (e) { return 'open'; } }
 function olSetRk(v) { try { localStorage.setItem(OL_RK, v); } catch (e) {} }
 const rankRows = list => list.length ? list.map((p, i) => `<div class="${p.me ? 'me' : ''}"><span>${i + 1}. ${olEsc(p.name)}</span><b>${p.rating}</b></div>`).join('') : `<div class="ol-note small">${t('ol.noRank')}</div>`;
@@ -236,7 +237,7 @@ if (olOn()) ON.onRoom((ev, r) => {
 // ====================================================================== online game on the board
 // net = { gid, game, me (1 / 2; -1 spectator), spectate, unsub, wUnsub, done, pending, saved, result, watchers }
 let net = null;
-const OL_LIVE_P = 'fanorona-online-live:';           // + uid (one live game per player, also with several tabs)
+const OL_LIVE_P = OLK + '-online-live:';           // + uid (one live game per player, also with several tabs)
 const olLiveKey = () => OL_LIVE_P + (ON.uid || '');
 function olLive() { return !!(net && !net.spectate && !net.done && net.game && net.game.status === 'play'); }
 function olClearLive(gid) { try { const s = JSON.parse(localStorage.getItem(olLiveKey()) || 'null'); if (s && s.gid === gid) localStorage.removeItem(olLiveKey()); } catch (e) {} }
@@ -671,7 +672,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // Merge: progress keys are united (best / stars max, clear / pass or), daily days united and the streak recomputed,
 // rated: the record with the newest game, its history united by game id; settings / name: newest wins.
 const FanoronaSync = (() => {
-  const META = 'fanorona-sync-meta';
+  const META = OLK + '-sync-meta';
   const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'threat', 'num', 'hint', 'level', 'level2', 'color', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -791,7 +792,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) syncP
 if (olOn()) ON.onAuth(() => { dockRender(); });
 
 // ====================================================================== first visit: profile name + optional Google link
-const PF_KEY = 'fanorona-profile-asked';
+const PF_KEY = OLK + '-profile-asked';
 const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
 const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
 function pfOpen() {

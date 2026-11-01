@@ -18,10 +18,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
   const INITIAL = 1500;
-  const VARIANTS = ['sivy', 'dimy', 'telo'];
+  const VARIANTS = window.OL_VARIANTS || ['sivy', 'dimy', 'telo'];   // alquerque/ sets ['alq']
   // Fischer clock per variant: base time per player + increment per move
-  const TC = { sivy: { main: 480000, inc: 5000 }, dimy: { main: 240000, inc: 3000 }, telo: { main: 120000, inc: 2000 } };   // keep in sync with shared/tools/secrules.py
-  const DEF_V = 'sivy';
+  const TC = { sivy: { main: 480000, inc: 5000 }, dimy: { main: 240000, inc: 3000 }, telo: { main: 120000, inc: 2000 }, alq: { main: 300000, inc: 5000 } };   // keep in sync with shared/tools/secrules.py
+  const DEF_V = VARIANTS[0];
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
   const ROOM_TTL = 10 * 60000;           // a room nobody joins expires after 10 min
@@ -93,28 +93,31 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const disc = new Set(), recon = new Set(); let wasUp = false;
     f.ref('.info/connected').on('value', s => {
       const up = !!s.val();
-      if (up && wasUp === 'down') { disc.forEach(p => f.ref(p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
+      if (up && wasUp === 'down') { disc.forEach(p => f.ref((window.OL_DB_PREFIX || '') + p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
       wasUp = up ? true : (wasUp ? 'down' : false);
     });
+    // a page sharing this database with another game keeps all its data under its own node (window.OL_DB_PREFIX, e.g. 'alq/')
+    const PFX = window.OL_DB_PREFIX || '';
+    const ref = p => f.ref(PFX ? PFX + String(p).replace(/^\/+/, '') : p);
     return {
-      on(path, cb) { const r = f.ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
-      get: async p => (await f.ref(p).get()).val(),
-      set: (p, v) => f.ref(p).set(v),
-      update: (p, v) => f.ref(p).update(v),
-      remove: p => f.ref(p).remove(),
-      async txn(p, fn) { const r = await f.ref(p).transaction(fn); return { committed: r.committed, value: r.snapshot.val() }; },
-      onDisconnectRemove: p => { disc.add(p); return f.ref(p).onDisconnect().remove(); },
-      cancelDisconnect: p => { disc.delete(p); return f.ref(p).onDisconnect().cancel(); },
+      on(path, cb) { const r = ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
+      get: async p => (await ref(p).get()).val(),
+      set: (p, v) => ref(p).set(v),
+      update: (p, v) => ref(p).update(v),
+      remove: p => ref(p).remove(),
+      async txn(p, fn) { const r = await ref(p).transaction(fn); return { committed: r.committed, value: r.snapshot.val() }; },
+      onDisconnectRemove: p => { disc.add(p); return ref(p).onDisconnect().remove(); },
+      cancelDisconnect: p => { disc.delete(p); return ref(p).onDisconnect().cancel(); },
       onReconnect: cb => recon.add(cb),
       stamp: () => firebase.database.ServerValue.TIMESTAMP,
       now: () => Date.now() + offset,
-      push: p => f.ref(p).push().key,
+      push: p => ref(p).push().key,
     };
   }
 
   // in-browser mock with the same surface (tree in localStorage, sharded by the first two path segments, change events across tabs)
   function mockDB() {
-    const PFX = 'fanorona-mockdb:';
+    const PFX = 'fanorona-mockdb:' + (window.OL_DB_PREFIX || '');
     const parts = p => p.split('/').filter(Boolean);
     const shardOf = ks => PFX + ks.slice(0, 2).join('/');
     const readKey = k => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch (e) { return null; } };

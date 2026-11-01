@@ -83,6 +83,10 @@ GAMES = {
     'fanorona': dict(first='b', alt=True, tckey='tc', tcs={'sivy': (480000, 0, 5000), 'dimy': (240000, 0, 3000), 'telo': (120000, 0, 2000)},
                      legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                      variant=('v', ['sivy', 'dimy', 'telo'])),
+    # Alquerque: in the Fanorona project under the node alq/ (its own players / ratings / lobby / games; the page reuses the
+    # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
+    'alquerque': dict(host=('fanorona', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+                      draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['alq'])),
 }
 
 
@@ -471,14 +475,27 @@ def build(name, P):
     }}
 
 
+def nested(name, P, node):
+    # the rules of a game kept under root/<node> of another game's database: every root.child(x) becomes root.child(node).child(x)
+    txt = json.dumps(build(name, P)['rules'])
+    txt = txt.replace("root.child('", "root.child('" + node + "').child('")
+    return json.loads(txt)
+
+
 def main():
     check = '--check' in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith('--')]
     for name, P in GAMES.items():
+        if 'host' in P:
+            continue
         if only and name not in only:
             continue
         path = os.path.join(ROOT, name, 'database.rules.json')
-        txt = json.dumps(build(name, P), indent=2, ensure_ascii=False) + '\n'
+        R = build(name, P)
+        for gn, GP in GAMES.items():   # games that share this database under their own node
+            if GP.get('host', (None,))[0] == name:
+                R['rules'][GP['host'][1]] = nested(gn, GP, GP['host'][1])
+        txt = json.dumps(R, indent=2, ensure_ascii=False) + '\n'
         cur = open(path, encoding='utf-8').read() if os.path.exists(path) else ''
         if check:
             print(('same  ' if cur == txt else 'DIFF  ') + path)

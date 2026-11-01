@@ -372,5 +372,6 @@
 "bd.dark": "Modern dark",
 "bd.lambared": "Lamba (red)",
 "pcs.mono": "Mono (ivory / coral)",
-"pcs.lacquer": "Lacquer discs"
+"pcs.lacquer": "Lacquer discs",
+"pick.jumpMust": "You can capture again: you must keep jumping"
 }
