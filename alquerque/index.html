@@ -1213,8 +1213,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* ---- Alquerque: rug boards (tools/gen_rugs.py) with cream / gold lines; brass + lapis coins and felt balls */
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]){--edge:#2a1414;--wdl:#f6e6c0}
 html[data-bd=berber] .lines .num{fill:#2a1414;opacity:.75}
-html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=4)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp?v=4)}
-html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp?v=4)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp?v=4)}
+html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=5)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp?v=5)}
+html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp?v=5)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp?v=5)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .frame{background:var(--wimg) 0 0 / 100% 100%;border-radius:calc(var(--cell) * .14);
   box-shadow:0 calc(var(--cell) * .05) 0 #3a1c18,0 40px 70px -26px rgba(0,0,0,.85),inset 0 0 calc(var(--cell) * .3) rgba(0,0,0,.25)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .lines{filter:drop-shadow(0 0 calc(var(--cell) * .025) rgba(0,0,0,.65))}
@@ -1578,7 +1578,7 @@ html[data-pcs=felt] .pdisc.p1{background:#e6dcc4} html[data-pcs=felt] .pdisc.p2{
 window.GAME = { id: 'alquerque', name: 'Alquerque', base: 'alq', rules: ['alq'], store: 'aicoding-alquerque', img: '../images/atlas/alquerque.webp',
   engine: '../fanorona/engine.js?v=fb2', bd: 'medallion', pcs: 'brass',
   bds: ['medallion', 'berber', 'kilim', 'patch', 'abstract', 'dark'], pcss: ['brass', 'felt', 'flat', 'mono'],
-  bdImg: { medallion: 'img/rug-medallion.webp?v=4', berber: 'img/rug-berber.webp?v=4', kilim: 'img/rug-kilim.webp?v=4', patch: 'img/rug-patch.webp?v=4' },
+  bdImg: { medallion: 'img/rug-medallion.webp?v=5', berber: 'img/rug-berber.webp?v=5', kilim: 'img/rug-kilim.webp?v=5', patch: 'img/rug-patch.webp?v=5' },
   bdPal: { medallion: ['#962020', '#5a1c40', '#e2b254'], berber: ['#ee7616', '#b01e6e', '#1a1416'], kilim: ['#cc282e', '#ec6e22', '#f4e8d2'], patch: ['#7a3a5a', '#2a608c', '#f4ead6'] },
   pcPal: { brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#f6eedc', '#e6dcc4', '#a89a80'], ['#3a5cae', '#1e3a84', '#0e1c48']] } };
 window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
@@ -1617,7 +1617,7 @@ window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=1x"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/flipbtn.js?v=1"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb2"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=4"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb5"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=1x"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/flipbtn.js?v=1"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb2"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=5"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb5"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->

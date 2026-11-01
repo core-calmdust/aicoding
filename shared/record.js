@@ -44,7 +44,7 @@ function add(r) {
 const CSS = `
 .grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .grc-ov.show{display:flex}
-.grc{--gw:var(--accent,#d8b56a);--gl:#7f8894;--gd:#5b544b;--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
+.grc{--gw:#4f86c6;--gl:#c4524b;--gd:#6b665e;--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
   width:min(720px,100%);max-height:min(880px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,color-mix(in srgb,var(--panel,#1d1712) 92%,#fff 8%),var(--panel,#1d1712) 140px);
   color:var(--gx);border:1px solid var(--gb);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;box-sizing:border-box;font-variant-numeric:tabular-nums}
 .grc *{box-sizing:border-box}
