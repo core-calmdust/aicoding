@@ -375,6 +375,17 @@ function visTotal(side) {
    (one big target each), the five seats sit on the rim (6 5 YOU 2 1), and every player's chips lie on the bands at their seat.
    The pairs (and the EZ side bets) are round spots in the corners. */
 const MG = { cx: 500, cy: -1000, span: 20, R: { plate: [1365, 1440], P: [1225, 1365], B: [1085, 1225], T: [1005, 1085], S: [930, 1005] } };   // a flat, wide arc: big boxes for the thumb
+// fit the arc to the box: the band depths stay, the radius and the angle change so the arc spans the full width
+// (a wide, low box gets a flatter arc instead of a smaller one)
+const MG_OFF = { S: [0, 75], T: [75, 155], B: [155, 295], P: [295, 435], plate: [435, 510] };
+function setMobGeo(A) {
+  const ez = VB().includes('D7'), dIn = ez ? 0 : 75, H = 1000 / A, half = 480;
+  const hOf = s => { const r = s * Math.PI / 180, Ro = half / Math.sin(r), rIn = Ro - 510 + dIn; return (510 - dIn) + rIn * (1 - Math.cos(r)) + 82; };
+  let s = 20;
+  if (hOf(20) > H) { let lo = 4, hi = 20; for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (hOf(m) > H) hi = m; else lo = m; } s = Math.max(4, lo); }
+  const Ro = half / Math.sin(s * Math.PI / 180), base = Ro - 510;
+  MG.span = s; MG.cy = -base; MG.R = {}; for (const k in MG_OFF) MG.R[k] = MG_OFF[k].map(v => base + v);
+}
 function mobGeo() {
   const ez = VB().includes('D7'), rIn = ez ? MG.R.S[0] : MG.R.T[0];
   const top = Math.floor(MG.cy + rIn * Math.cos(MG.span * Math.PI / 180) - 14), bot = Math.ceil(MG.cy + MG.R.plate[1] + 8);
@@ -509,6 +520,7 @@ function render() {
   const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(220, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - (parseFloat(getComputedStyle(sc).paddingTop) || 0) - (parseFloat(getComputedStyle(sc).rowGap) || 10) - 14 - (G.fitAdj || 0))) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
+  if (G.mob) { setMobGeo(1000 / 1000); const lz0 = Math.min((W - 8) * mobGeo().h / 1000, Hn * .68); setMobGeo((W - 8) / lz0); }
   const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Hn * .68) : Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
   const cwS = G.mob ? Math.min(W / 5.2, (Hn - lz) / 2.1) : Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
