@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3，每方3子。轮流放子后沿线移动，连成三子即胜（无吃子）。",
 "pick.place": "请放在空点上",
 "pick.telo": "选择放子的点（连成三子获胜）",
-"res.why.line": "三子连成一线"
+"res.why.line": "三子连成一线",
+"bd.abstract": "现代",
+"bd.lamba": "兰巴布",
+"pcs.flat": "扁平",
+"pcs.disc": "圆片"
 }

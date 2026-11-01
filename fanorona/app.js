@@ -938,15 +938,19 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists)
 // spec: { b: 45 chars, side } ; o: { cls, marks: {pt: 'ring'|'ng'|'x'|'dash'}, arrows: [[points...]], flip, click, sel, dest: [], last }
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood'], PC_KEYS = ['wood', 'shell', 'stone', 'jade'];
+const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood', 'abstract', 'lamba'], PC_KEYS = ['wood', 'shell', 'stone', 'jade', 'flat', 'disc'];
+// the board picture of a design (wood textures by tools/gen_wood.py, the lamba cloth by tools/gen_lamba.py; abstract: plain)
+const BD_IMG = k => k === 'abstract' ? '' : k === 'lamba' ? 'img/lamba.webp' : `img/wood-${k}.webp`;
 // board: [light, dark, line]
-const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'] };
+const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'] };
 // pieces: [White: highlight, body, edge], [Black: …]
 const PC_PAL = {
   wood: [['#fbe6bf', '#dcb27b', '#8f6232'], ['#7a5340', '#2c1b12', '#0c0604']],
   shell: [['#ffffff', '#f0e7d8', '#a99b84'], ['#8b5a49', '#4a2a20', '#170a07']],
   stone: [['#ffffff', '#dddcd8', '#8d8c87'], ['#757b82', '#2e3238', '#0b0d0f']],
   jade: [['#fbfff6', '#dbe9d2', '#8ea686'], ['#4f8f6c', '#1f5138', '#08200f']],
+  flat: [['#c9582f', '#c0532c', '#9c3f1f'], ['#41455a', '#393c4b', '#1c1d24']],
+  disc: [['#ffd84f', '#f2c230', '#b88a12'], ['#d6f3e2', '#bfe8d0', '#7fb59a']],
 };
 function designApply() {
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'acacia';
@@ -975,7 +979,7 @@ function miniSVG0(spec, o) {
     `<linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${BP[0]}"/><stop offset=".55" stop-color="${BP[1]}"/><stop offset="1" stop-color="${BP[0]}"/></linearGradient>` +
     [0, 1].map(k => `<radialGradient id="${id}p${k}" cx=".4" cy=".33" r=".72"><stop offset="0" stop-color="${PP[k][0]}"/><stop offset=".55" stop-color="${PP[k][1]}"/><stop offset="1" stop-color="${PP[k][2]}"/></radialGradient>`).join('') + '</defs>';
   s += `<clipPath id="${id}c"><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14"/></clipPath><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="url(#${id}b)"/>` +
-    `<image href="img/wood-${o.bd || settings.bd}.webp" x="1" y="1" width="${W - 2}" height="${H - 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="none" stroke="rgba(0,0,0,.35)"/>`;
+    (BD_IMG(o.bd || settings.bd) ? `<image href="${BD_IMG(o.bd || settings.bd)}" x="1" y="1" width="${W - 2}" height="${H - 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/>` : '') + `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="14" fill="none" stroke="rgba(0,0,0,.35)"/>`;
   s += `<g transform="scale(${u})" stroke="${BP[2]}" stroke-width="${2.2 / u}" stroke-linecap="round" opacity=".85">${boardLinesSvg(null, 'x')}</g>`;
   if (o.last != null && o.last >= 0) s += `<circle cx="${X(o.last)}" cy="${Y(o.last)}" r="${u * 0.5}" fill="rgba(255,230,150,.45)"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="5" fill="rgba(255,244,190,.95)" stroke="rgba(90,50,10,.6)"/>`;

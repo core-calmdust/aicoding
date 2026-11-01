@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3, 3 pions chacun. On les pose à tour de rôle puis on les déplace le long des lignes : trois alignés gagnent (sans prise).",
 "pick.place": "Posez un pion sur un point libre",
 "pick.telo": "Choisissez où poser (trois alignés gagnent)",
-"res.why.line": "Trois alignés"
+"res.why.line": "Trois alignés",
+"bd.abstract": "Moderne",
+"bd.lamba": "Tissu lamba",
+"pcs.flat": "Plats",
+"pcs.disc": "Disques"
 }
