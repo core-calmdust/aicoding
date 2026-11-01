@@ -133,9 +133,10 @@ html[dir=rtl] .grc-vp,html[lang=ar] .grc-vp{right:auto;left:0}
 }
 html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
 .mtabs .grc-tab{display:none}
+.grc-ic svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
   body.it-on .mtabs .grc-tab{display:flex}
-  body.it-on .grc-menu{display:none!important}
+  body.it-on .grc-menu, body.it-on .grc-ic{display:none!important}
 }
 `;
 function stats(list) {
@@ -221,13 +222,17 @@ function init(o) {
   // PC (and every layout without the phones' tab bar): a menu button
   const menu = typeof o.menu === 'string' ? document.querySelector(o.menu) : o.menu;
   let mb = null;
-  if (menu) {
+  const snd = document.getElementById('btnSound');
+  if (snd && snd.parentNode && !o.btnClass) {   // an icon in the icon set: 盤面反転 → 戦績 → sound
+    mb = document.createElement('button'); mb.type = 'button'; mb.className = (snd.className || 'snd') + ' grc-ic'; mb.id = 'btnRecord';
+    mb.addEventListener('click', open); snd.parentNode.insertBefore(mb, snd);
+  } else if (menu) {
     mb = document.createElement('button'); mb.type = 'button'; mb.className = (o.btnClass || 'btn') + ' grc-menu'; mb.id = 'btnRecord';
     mb.addEventListener('click', open); menu.appendChild(mb);
   }
   let tb = null;
   const relabel = () => {
-    if (mb) { const h = ICON + `<span>${esc(tx('btn'))}</span>`; if (mb.innerHTML !== h) mb.innerHTML = h; mb.title = tx('btnT'); }
+    if (mb) { const h = mb.classList.contains('grc-ic') ? ICON : ICON + `<span>${esc(tx('btn'))}</span>`; if (mb.innerHTML !== h) mb.innerHTML = h; mb.title = tx('btnT'); mb.setAttribute('aria-label', tx('btn')); }
     if (tb) { const h = ICON.replace('<svg', '<svg class="it-ic"') + `<span class="it-lb">${esc(tx('btn'))}</span>`; if (tb.innerHTML !== h) tb.innerHTML = h; }
     if (ov && ov.classList.contains('show')) render();
   };
