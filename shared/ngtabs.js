@@ -78,6 +78,11 @@ const CSS = `
 .ngt-gcards.few .gart{border-radius:10px;background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(0,0,0,.18));box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
 .ngt-gcards.few .gart svg,.ngt-gcards.few .gart img{width:auto!important;max-width:100%!important;max-height:none!important}
 .modal.ngt-pc .ngt-gcards.few{grid-template-columns:repeat(var(--ngt-n,3),minmax(0,1fr))!important;gap:14px!important;min-height:clamp(300px, calc(min(860px, 100vh - 40px) - 320px), 500px)}
+.modal.ngt-pc .ngt-gcards.few:has(> .ngt-gcard:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))!important;min-height:0!important;align-content:start;flex:none!important}   /* four variants: a 2x2 grid */
+.modal.ngt-pc .ngt-gcards.few:has(> .ngt-gcard:nth-child(4):last-child) .gart{min-height:0;padding:10px;flex:none!important}
+.modal.ngt-pc .ngt-gcards.few:has(> .ngt-gcard:nth-child(4):last-child) .gpick{position:absolute}
+.modal.ngt-pc .ngt-gcards.few:has(> .ngt-gcard:nth-child(4):last-child) .ngt-gcard{padding:12px 14px 14px!important;gap:6px}
+.modal.ngt-pc .ngt-gcards.few:has(> .ngt-gcard:nth-child(4):last-child) .gart svg{height:clamp(70px, calc((min(860px, 100vh - 40px) - 560px) / 2), 110px)!important}
 .modal.ngt-pc .ngt-gcards.few .ngt-gcard{gap:8px;padding:16px 16px 18px!important;border-radius:16px;transition:border-color .15s,transform .15s}
 .modal.ngt-pc .ngt-gcards.few .ngt-gcard:hover{transform:translateY(-2px)}
 .modal.ngt-pc .ngt-gcards.few .gart{flex:1 1 auto;min-height:170px;padding:18px 10px}
