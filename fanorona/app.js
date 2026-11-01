@@ -721,7 +721,7 @@ function endManually(st) {
 }
 // the AI resigns when it is lost for sure (database / forced) or far behind with little left; not the weakest levels
 function aiResigns(p) {
-  const lv = levelFor(p), v = aiVals[cur]; if (lv < 6 || typeof v !== 'number') return false;
+  const lv = levelFor(p), v = aiVals[cur]; if (lv < 6 || typeof v !== 'number' || isTelo()) return false;   // Telo is short and solved: the AI plays it out
   const prev = aiVals.slice(0, cur).filter(x => typeof x === 'number').slice(-1)[0];
   const lost = v < -WINT_JS + 1000 || (v <= -450 && prev !== undefined && prev <= -450 && posAt(cur).pos.count(p) <= 6);
   if (!lost) return false;
