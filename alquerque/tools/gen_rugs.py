@@ -94,14 +94,8 @@ def herati(d, x0, y0, x1, y1, s, cols, lw=3):
     for j, y in enumerate(np.arange(y0 - s, y1 + s, s / 2)):
         for x in np.arange(x0 - s + (s / 2 if j % 2 else 0), x1 + s, s):
             d.line(sc([(x, y - s / 2), (x + s / 2, y), (x, y + s / 2), (x - s / 2, y), (x, y - s / 2)]), fill=lat, width=lw * SS)
-            for k in range(8):
-                a = k * math.pi / 4
-                px_, py_ = x + s * .09 * math.cos(a), y + s * .09 * math.sin(a)
-                d.ellipse([(px_ - s * .05) * SS, (py_ - s * .05) * SS, (px_ + s * .05) * SS, (py_ + s * .05) * SS], fill=ros)
-            d.ellipse([(x - s * .045) * SS, (y - s * .045) * SS, (x + s * .045) * SS, (y + s * .045) * SS], fill=cen)
-            for k in range(4):   # lancet leaves pointing out to the lattice corners
-                a = k * math.pi / 2 + math.pi / 4
-                lancet(x + math.cos(a) * s * .18, y + math.sin(a) * s * .18, a, s * .22, s * .05)
+            poly(d, star(x, y, s * .12, s * .045, 4, 0), fill=ros)
+            d.ellipse([(x - s * .03) * SS, (y - s * .03) * SS, (x + s * .03) * SS, (y + s * .03) * SS], fill=cen)
 
 
 def medallion(seed=1):
@@ -261,38 +255,54 @@ def patch(seed=4):
     rng = np.random.default_rng(seed)
     PAL = [(232, 160, 38), (214, 92, 40), (176, 40, 52), (120, 34, 90), (64, 50, 140), (40, 96, 150), (34, 120, 100), (90, 140, 60), (196, 186, 64), (150, 70, 40), (230, 120, 110), (70, 60, 80)]
     im, d = canvas((60, 40, 50))
-    # the squares of the board (and a ring outside) are the tufted blocks
+    # the squares of the board (and a ring outside) are cloth blocks, each its own weave: linen, twill, corduroy, check
     for c in range(-2, 6):
         for r in range(-2, 6):
             x0, y0 = P(c, r + 1); x1, y1 = P(c + 1, r)
             col = PAL[(c * 5 + r * 7 + int(rng.integers(0, 3))) % len(PAL)]
             d.rectangle([x0 * SS, y0 * SS, x1 * SS, y1 * SS], fill=col)
-            for _ in range(8):   # mottled tufts inside each block
-                rr = rng.uniform(10, 26); tx, ty = rng.uniform(x0 + rr + 4, x1 - rr - 4), rng.uniform(y0 + rr + 4, y1 - rr - 4)
-                k = rng.uniform(.85, 1.15); c2 = tuple(int(min(255, v * k)) for v in col)
-                d.ellipse([(tx - rr) * SS, (ty - rr) * SS, (tx + rr) * SS, (ty + rr) * SS], fill=c2)
-    d = ImageDraw.Draw(im)
-    # quilting: seams round every block (dark welt + running stitch) and stitched lines along the board's diagonals
-    def stitch(a, b, col, step=22, ln=11, w=3):
-        L = math.dist(a, b); ux, uy = (b[0] - a[0]) / L, (b[1] - a[1]) / L
-        for t in np.arange(0, L, step): d.line(sc([(a[0] + ux * t, a[1] + uy * t), (a[0] + ux * (t + ln), a[1] + uy * (t + ln))]), fill=col, width=w * SS)
-    for k in range(-2, 7):
-        x = P(k, 0)[0]; y = P(0, k)[1]
-        d.line(sc([(x, 0), (x, H)]), fill=(40, 26, 30), width=5 * SS); d.line(sc([(0, y), (W, y)]), fill=(40, 26, 30), width=5 * SS)
-        stitch((x + 9, 0), (x + 9, H), (236, 222, 190)); stitch((x - 9, 0), (x - 9, H), (236, 222, 190))
-        stitch((0, y + 9), (W, y + 9), (236, 222, 190)); stitch((0, y - 9), (W, y - 9), (236, 222, 190))
-    for (a, b) in ((P(0, 0), P(4, 4)), (P(0, 4), P(4, 0)), (P(0, 2), P(2, 4)), (P(2, 4), P(4, 2)), (P(4, 2), P(2, 0)), (P(2, 0), P(0, 2))):
-        for o in (-10, 10):
-            stitch((a[0] + o, a[1]), (b[0] + o, b[1]), (246, 232, 200), step=18, ln=9, w=2)
-    # a small embroidered cross in every block
+            kind = (c * 3 + r * 5) % 4; dk = tuple(int(v * .86) for v in col); lt = tuple(int(min(255, v * 1.1)) for v in col)
+            if kind == 1:   # twill
+                for t in np.arange(-S, S, 7): d.line(sc([(x0 + t, y1), (x0 + t + S, y0)]), fill=dk, width=2 * SS)
+            elif kind == 2:   # corduroy
+                for t in np.arange(x0 + 3, x1, 9): d.line(sc([(t, y0), (t, y1)]), fill=dk, width=3 * SS)
+            elif kind == 3:   # woven check
+                for t in np.arange(x0 + 10, x1, 26): d.line(sc([(t, y0), (t, y1)]), fill=lt, width=6 * SS)
+                for t in np.arange(y0 + 10, y1, 26): d.line(sc([(x0, t), (x1, t)]), fill=lt, width=6 * SS)
+    out = finish(im, rng, pile=0.1, knot=(3.0, 3.0), abrash=0.02, fuzz=.8)
+    a = np.asarray(out).astype(np.float64)
+    # quilted: every block puffs up between the seams (shadow into the seam, a soft highlight on the upper-left slope)
+    gx = np.array([P(k, 0)[0] for k in range(-2, 7)]); gy = np.array([P(0, k)[1] for k in range(-2, 7)])
+    xs_, ys_ = np.arange(W)[None, :], np.arange(H)[:, None]
+    dx = np.min(np.abs(xs_[..., None] - gx[None, None, :]), axis=2); dy = np.min(np.abs(ys_[..., None] - gy[None, None, :]), axis=2)
+    dist = np.minimum(np.broadcast_to(dx, (H, W)), np.broadcast_to(dy, (H, W)))
+    puff = 1 - .42 * np.exp(-dist / 9) + .06 * (1 - np.exp(-dist / 40))
+    a *= puff[..., None]
+    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(.4)).convert('RGBA')
+    # thread: running stitches either side of each seam, quilting along the board's diagonals, cross-stitches and knots
+    sh = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0)); th = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+    ds, dt = ImageDraw.Draw(sh), ImageDraw.Draw(th)
+    THR, HI = (238, 224, 192, 255), (255, 250, 236, 255)
+    def dash(p0, p1, w=4):
+        ds.line([((p0[0] + 1.6) * SS, (p0[1] + 2) * SS), ((p1[0] + 1.6) * SS, (p1[1] + 2) * SS)], fill=(20, 10, 14, 200), width=int((w + 1.5) * SS))
+        dt.line([(p0[0] * SS, p0[1] * SS), (p1[0] * SS, p1[1] * SS)], fill=THR, width=int(w * SS))
+        dt.line([((p0[0] - .8) * SS, (p0[1] - .8) * SS), ((p1[0] - .8) * SS, (p1[1] - .8) * SS)], fill=HI, width=max(1, int(w * .35 * SS)))
+    def run(a_, b_, step=20, ln=12, w=4):
+        L = math.dist(a_, b_); ux, uy = (b_[0] - a_[0]) / L, (b_[1] - a_[1]) / L
+        for t in np.arange(4, L, step): dash((a_[0] + ux * t, a_[1] + uy * t), (a_[0] + ux * (t + ln), a_[1] + uy * (t + ln)), w)
+    for x in gx:
+        run((x + 11, 0), (x + 11, H)); run((x - 11, 0), (x - 11, H))
+    for y in gy:
+        run((0, y + 11), (W, y + 11)); run((0, y - 11), (W, y - 11))
+    for (p0, p1) in ((P(0, 0), P(4, 4)), (P(0, 4), P(4, 0)), (P(0, 2), P(2, 4)), (P(2, 4), P(4, 2)), (P(4, 2), P(2, 0)), (P(2, 0), P(0, 2))):
+        for o in (-13, 13): run((p0[0] + o, p0[1]), (p1[0] + o, p1[1]), step=17, ln=10, w=3)
     for c in range(-2, 6):
         for r in range(-2, 6):
             x0, y0 = P(c, r + 1); x1, y1 = P(c + 1, r); mx, my = (x0 + x1) / 2, (y0 + y1) / 2
-            if (c + r) % 2: continue
-            for (dx, dy) in ((1, 1), (1, -1)):
-                d.line(sc([(mx - dx * 12, my - dy * 12), (mx + dx * 12, my + dy * 12)]), fill=(246, 232, 200), width=3 * SS)
-    out = finish(im, rng, pile=0.13, knot=False, abrash=0.02, fuzz=1.6)
-    return out.filter(ImageFilter.GaussianBlur(0.6))
+            if (c + r) % 2 == 0:
+                dash((mx - 11, my - 11), (mx + 11, my + 11), 4); dash((mx - 11, my + 11), (mx + 11, my - 11), 4)
+    th = Image.alpha_composite(sh.filter(ImageFilter.GaussianBlur(1.5 * SS)), th).resize((W, H), Image.LANCZOS)
+    return Image.alpha_composite(out, th).convert('RGB')
 
 
 os.makedirs(OUT, exist_ok=True)
@@ -303,7 +313,7 @@ def dim(img, k=.8, sat=.85):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
-DIM = {'medallion': (.86, .9), 'berber': (.8, .78), 'kilim': (.8, .8), 'patch': (.8, .78)}
+DIM = {'medallion': (.86, .9), 'berber': (.9, .86), 'kilim': (.9, .86), 'patch': (.92, .86)}
 for name, fn in (('medallion', medallion), ('berber', berber), ('kilim', kilim), ('patch', patch)):
     dim(fn(), *DIM[name]).save(os.path.join(OUT, f'rug-{name}.webp'), quality=86, method=6)
     print(name)
