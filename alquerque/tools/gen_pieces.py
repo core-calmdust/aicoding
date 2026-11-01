@@ -129,3 +129,45 @@ def ceramic(light):
 
 os.makedirs(OUT, exist_ok=True)
 brass(); lapis(); ceramic(True); ceramic(False)
+
+def woodpc(light):
+    """historical: a birch disc (light) / walnut-stained disc (dark), laser-engraved rosette / eight-petal knot, matte oil."""
+    c = N / 2
+    warp = gaussian_filter(rng.standard_normal((N, N)), 30); warp /= warp.std()
+    g = np.sin(xx / 2.6 + warp * 1.4); fig = noise(20, 1)
+    t = np.clip(.45 + .12 * g + .2 * fig + noise(.8, .05), 0, 1)
+    b0, b1 = ((206, 166, 112), (160, 118, 72)) if light else ((116, 76, 44), (70, 44, 24))
+    alb = np.array(b0, float) * (1 - t[..., None]) + np.array(b1, float) * t[..., None]
+    def emb(d, s):
+        d.ellipse([s(c - N * .37), s(c - N * .37), s(c + N * .37), s(c + N * .37)], outline=255, width=int(s(N * .018)))
+        d.ellipse([s(c - N * .33), s(c - N * .33), s(c + N * .33), s(c + N * .33)], outline=255, width=int(s(N * .008)))
+        n = 5 if light else 8
+        for k in range(n):   # petals (rose for the light, knot for the dark)
+            a = k * 2 * math.pi / n - math.pi / 2
+            px, py = c + N * .14 * math.cos(a), c + N * .14 * math.sin(a)
+            r = N * (.11 if light else .085)
+            d.ellipse([s(px - r), s(py - r), s(px + r), s(py + r)], outline=255, width=int(s(N * .016)))
+        d.ellipse([s(c - N * .05), s(c - N * .05), s(c + N * .05), s(c + N * .05)], fill=255)
+        if light:
+            for k in range(5):
+                a = k * 2 * math.pi / 5 - math.pi / 2 + math.pi / 5
+                d.polygon([(s(c + N * .27 * math.cos(a)), s(c + N * .27 * math.sin(a))), (s(c + N * .2 * math.cos(a - .18)), s(c + N * .2 * math.sin(a - .18))), (s(c + N * .2 * math.cos(a + .18)), s(c + N * .2 * math.sin(a + .18)))], fill=255)
+    m = mask(emb, .6)
+    halo = gaussian_filter(m, 2.5)
+    alb = alb * (1 - .25 * np.clip(halo * 1.5, 0, 1))[..., None]
+    alb = alb * (1 - .8 * m[..., None]) + np.array((40, 24, 12.)) * .8 * m[..., None]
+    h = (1 - rr ** 6) * 6 - m * 1.2 - np.clip((rr - .92) / .08, 0, 1) * 4
+    col = shade(gaussian_filter(h, .8), alb, metal=0, gloss=8, spec=.05, amb=.58)
+    save(col, f'pc-wood-{1 if light else 2}.webp', edge_dark=.35)
+
+
+def mattepc(light):
+    """modern: plain white / black matte-painted wooden discs (a little brush texture and a soft bevel)."""
+    alb = np.zeros((N, N, 3)); alb[:] = (236, 234, 228) if light else (30, 30, 32)
+    alb *= (1 + noise(.8, .008 if light else .04) + noise(12, .01))[..., None]
+    h = (1 - rr ** 8) * 7 - np.clip((rr - .9) / .1, 0, 1) * 3
+    col = shade(gaussian_filter(h, 1.2), alb, metal=0, gloss=10, spec=.06 if light else .1, amb=.72 if light else .62)
+    save(col, f'pc-matte-{1 if light else 2}.webp', edge_dark=.25 if light else .1)
+
+
+woodpc(True); woodpc(False); mattepc(True); mattepc(False)

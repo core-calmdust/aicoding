@@ -346,54 +346,119 @@ def scroll_band(d, x0, y0, x1, y1, horiz, w):
             d.line(sc(pts), fill=255, width=int(w * .1) * SS)
 
 
+def acanthus(d, x, y, R, a0, sgn, w, leaves=True, depth=2, lobe=.34):
+    """an acanthus scroll: a spiral stem (radius R, starting angle a0, turning sgn) with lobed leaves on its outer side,
+    a curl at the end and (depth>1) a smaller scroll budding off — the stuff of baroque damask and carved borders."""
+    pts = []
+    for t in np.linspace(0, 1, 70):
+        ang = a0 + sgn * t * 1.55 * 2 * math.pi; r = R * (1 - .82 * t)
+        pts.append((x + r * math.cos(ang), y + r * math.sin(ang)))
+    d.line(sc(pts), fill=255, width=max(1, int(w * SS)), joint='curve')
+    if leaves:
+        for k in range(4, 46, 6):   # lobed leaves along the outer side
+            (px, py), (qx, qy) = pts[k], pts[k + 2]
+            tx, ty = qx - px, qy - py; L = math.hypot(tx, ty) or 1; tx, ty = tx / L, ty / L
+            nx, ny = (-ty, tx) if sgn > 0 else (ty, -tx); nx, ny = -nx, -ny
+            sz = R * lobe * (1 - k / 80)
+            for j, (o, f) in enumerate(((0, 1), (-.5, .72), (.5, .72))):
+                bx, by = px + tx * sz * o * .8, py + ty * sz * o * .8
+                lf = []
+                for u in np.linspace(0, math.pi, 9):   # a rounded lobe
+                    lf.append((bx + tx * sz * .32 * math.cos(u) + nx * sz * .62 * f * math.sin(u), by + ty * sz * .32 * math.cos(u) + ny * sz * .62 * f * math.sin(u)))
+                d.polygon(sc(lf), fill=255)
+    if depth > 1:
+        k = 22; (px, py) = pts[k]; ang = a0 + sgn * k / 70 * 1.55 * 2 * math.pi
+        acanthus(d, px + R * .2 * math.cos(ang), py + R * .2 * math.sin(ang), R * .42, ang + math.pi, -sgn, w * .75, leaves, depth - 1, lobe)
+
+
 def carved(seed=5):
+    """birch plywood stained mid brown (fine straight grain, soft figure), laser-engraved: a recessed border band of running
+    acanthus scrolls between double rules, corner roundels with a rosette knot, a ring round c3."""
     rng = np.random.default_rng(seed)
-    a = wood_tex(rng, (150, 112, 74), (96, 64, 38))
-    bw = S * .62; m0, m1 = S * .16, S * .16 + bw
-    def frame_lines(d):
-        for m in (m0, m0 + 8, m1, m1 - 8): d.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=3 * SS)
-        for (cx, cy) in ((m0 + bw / 2, m0 + bw / 2), (W - m0 - bw / 2, m0 + bw / 2), (m0 + bw / 2, H - m0 - bw / 2), (W - m0 - bw / 2, H - m0 - bw / 2)):
-            d.rectangle([(cx - bw / 2) * SS, (cy - bw / 2) * SS, (cx + bw / 2) * SS, (cy + bw / 2) * SS], fill=0, outline=255, width=3 * SS)
-            d.ellipse([(cx - bw * .38) * SS, (cy - bw * .38) * SS, (cx + bw * .38) * SS, (cy + bw * .38) * SS], outline=255, width=3 * SS)
-            for k in range(8):
-                q = k * math.pi / 4
-                d.line(sc([(cx, cy), (cx + bw * .3 * math.cos(q), cy + bw * .3 * math.sin(q))]), fill=255, width=3 * SS)
-            d.ellipse([(cx - bw * .12) * SS, (cy - bw * .12) * SS, (cx + bw * .12) * SS, (cy + bw * .12) * SS], outline=255, width=3 * SS)
-        scroll_band(d, m1, m0 + 8, W - m1, m1 - 8, True, bw - 16); scroll_band(d, m1, H - m1 + 8, W - m1, H - m0 - 8, True, bw - 16)
-        scroll_band(d, m0 + 8, m1, m1 - 8, H - m1, False, bw - 16); scroll_band(d, W - m1 + 8, m1, W - m0 - 8, H - m1, False, bw - 16)
-        cx, cy = P(2, 2); r = S * .18
-        d.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=3 * SS)
-    a = engrave(a, lmask(frame_lines), .6)
-    # a darker stain toward the edges, oil sheen
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
-    a *= (1 - .22 * (((xx - W / 2) / (W / 2)) ** 4 + ((yy - H / 2) / (H / 2)) ** 4))[..., None]
-    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    warp = gaussian_filter(rng.standard_normal((H, W)), (120, 60)); warp /= warp.std()
+    fine = np.sin(xx / 2.2 + warp * 2.0 + gaussian_filter(rng.standard_normal((H, W)), (200, 2)) * 1.2)
+    fig = gaussian_filter(rng.standard_normal((H, W)), (90, 14)); fig /= fig.std()
+    pores = gaussian_filter(rng.standard_normal((H, W)), (3, .5)); pores /= pores.std()
+    t = np.clip(.45 + .1 * fine + .22 * fig + .06 * pores, 0, 1)
+    base, dark = np.array((156, 116, 78.)), np.array((92, 62, 38.))
+    a = base * (1 - t[..., None]) + dark * t[..., None]
+    bw = S * .58; m0 = S * .14; m1 = m0 + bw
+    def band(dd):
+        for m in (m0, m0 + 7, m1 - 7, m1): dd.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=3 * SS)
+    def scrolls(dd):
+        inner = bw - 22; c0 = m0 + bw / 2
+        for horiz, L, fixeds in ((True, W, (c0, H - c0)), (False, H, (c0, W - c0))):
+            n = int((L - 2 * m1) / (inner * 1.25)); step = (L - 2 * m1) / n
+            for f in fixeds:
+                for k in range(n):
+                    u = m1 + step * (k + .5); sg = 1 if k % 2 else -1
+                    x, y = (u, f) if horiz else (f, u)
+                    ox, oy = (step * .22, 0) if horiz else (0, step * .22)
+                    acanthus(dd, x - ox, y - oy, inner * .38, (math.pi / 2 if horiz else 0) * sg, sg, 3.2, True, 2)
+                    acanthus(dd, x + ox, y + oy, inner * .38, (-math.pi / 2 if horiz else math.pi) * sg, sg, 3.2, True, 2)
+        for (cx, cy) in ((c0, c0), (W - c0, c0), (c0, H - c0), (W - c0, H - c0)):
+            dd.rectangle([(cx - bw / 2) * SS, (cy - bw / 2) * SS, (cx + bw / 2) * SS, (cy + bw / 2) * SS], outline=255, width=3 * SS)
+            for r_ in (.4, .34): dd.ellipse([(cx - bw * r_) * SS, (cy - bw * r_) * SS, (cx + bw * r_) * SS, (cy + bw * r_) * SS], outline=255, width=3 * SS)
+            for k in range(8):   # interlaced knot rosette
+                q = k * math.pi / 4
+                pts = [(cx + bw * .3 * math.cos(q + t_) * (1 - abs(t_) * 1.2), cy + bw * .3 * math.sin(q + t_) * (1 - abs(t_) * 1.2)) for t_ in np.linspace(-.5, .5, 12)]
+                dd.line(sc(pts), fill=255, width=3 * SS)
+            dd.ellipse([(cx - bw * .07) * SS, (cy - bw * .07) * SS, (cx + bw * .07) * SS, (cy + bw * .07) * SS], outline=255, width=3 * SS)
+        cx, cy = P(2, 2); r = S * .2
+        dd.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=3 * SS)
+    # recessed band: slightly darker and smoother inside the rules
+    rec = lmask(lambda dd: (dd.rectangle([(m0 + 7) * SS, (m0 + 7) * SS, (W - m0 - 7) * SS, (H - m0 - 7) * SS], fill=255), dd.rectangle([(m1 - 7) * SS, (m1 - 7) * SS, (W - m1 + 7) * SS, (H - m1 + 7) * SS], fill=0)))
+    a *= (1 - .12 * gaussian_filter(rec, 1))[..., None]
+    m = np.clip(lmask(band) + lmask(scrolls), 0, 1)
+    halo = gaussian_filter(m, 2.2)   # laser char round the cut
+    a *= (1 - .35 * np.clip(halo * 1.6, 0, 1))[..., None]
+    a = a * (1 - .78 * m[..., None]) + np.array((38, 22, 12.)) * .78 * m[..., None]
+    lip = np.clip(np.roll(np.roll(m, -1, 0), -1, 1) - m, 0, 1)
+    a += (lip * 30)[..., None]
+    v = 1 - .28 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+    return Image.fromarray(np.clip(a * v[..., None], 0, 255).astype(np.uint8))
 
 
 def damask(seed=6):
+    """blue-grey microfibre cloth printed with a large baroque damask (mirrored acanthus scrolls round a palmette),
+    tone on tone, with a pinked edge."""
     rng = np.random.default_rng(seed)
-    base = np.array((58, 76, 96), float); hi = np.array((94, 112, 134), float)
-    def motif(d):
-        tw, th = S * 1.9, S * 2.3
+    base = np.array((70, 86, 108.)); hi = np.array((112, 128, 150.)); lo = np.array((56, 70, 90.))
+    tw, th = S * 2.2, S * 2.6
+    def motif(dd):
         for j in range(-1, int(H / th) + 2):
             for i in range(-1, int(W / tw) + 2):
-                cx = i * tw + (tw / 2 if j % 2 else 0); cy = j * th
-                for sgn in (1, -1):   # mirrored acanthus scrolls
-                    for (r0, a0, turns, w) in ((S * .5, -1.2, 1.5, 6), (S * .32, .6, 1.2, 5), (S * .22, 2.2, 1.0, 4)):
-                        pts = [(cx + sgn * (r0 * (1 - t * .75) * math.cos(a0 + t * turns * 2 * math.pi)) + sgn * S * .2, cy + r0 * (1 - t * .75) * math.sin(a0 + t * turns * 2 * math.pi)) for t in np.linspace(0, 1, 60)]
-                        d.line(sc(pts), fill=255, width=int(w * SS))
-                        ex, ey = pts[0]
-                        d.polygon(sc([(ex, ey), (ex + sgn * 18, ey - 30), (ex + sgn * 6, ey - 50), (ex - sgn * 8, ey - 26)]), fill=255)
-                d.polygon(sc([(cx, cy - S * .55), (cx + S * .12, cy - S * .25), (cx, cy), (cx - S * .12, cy - S * .25)]), fill=255)
-                d.ellipse([(cx - 10) * SS, (cy + S * .12 - 10) * SS, (cx + 10) * SS, (cy + S * .12 + 10) * SS], fill=255)
-    m = gaussian_filter(lmask(motif), 1.2) * .55
-    a = base * (1 - m[..., None]) + hi * m[..., None]
-    fab = gaussian_filter(rng.standard_normal((H, W)), .6); fab /= fab.std()
+                cx = i * tw + (tw / 2 if j % 2 else 0); cy = j * th + th * .1
+                for sg in (1, -1):
+                    acanthus(dd, cx + sg * S * .32, cy - S * .25, S * .46, math.pi if sg > 0 else 0, -sg, 7, True, 3, .62)
+                    acanthus(dd, cx + sg * S * .45, cy + S * .55, S * .32, -math.pi / 2, sg, 6, True, 2, .6)
+                    # long sweeping fronds
+                    pts = [(cx + sg * (S * .05 + S * .9 * t_), cy - S * .9 * t_ * t_ + S * .1) for t_ in np.linspace(0, 1, 30)]
+                    dd.line(sc(pts), fill=255, width=6 * SS)
+                    for k in range(3, 28, 4):
+                        px, py = pts[k]; rr_ = 16 * (1 - k / 40)
+                        dd.ellipse([(px + sg * 10 - rr_) * SS, (py - 14 - rr_ * .6) * SS, (px + sg * 10 + rr_) * SS, (py - 14 + rr_ * .6) * SS], fill=255)
+                # central palmette
+                pal = [(cx, cy - S * .95), (cx + S * .16, cy - S * .55), (cx + S * .1, cy - S * .2), (cx, cy - S * .05), (cx - S * .1, cy - S * .2), (cx - S * .16, cy - S * .55)]
+                dd.polygon(sc(pal), fill=255)
+                for k in range(5):
+                    yk = cy - S * .2 - k * S * .14
+                    dd.line(sc([(cx - S * .08, yk), (cx, yk - S * .05), (cx + S * .08, yk)]), fill=0, width=3 * SS)
+                dd.ellipse([(cx - 14) * SS, (cy + S * .1 - 14) * SS, (cx + 14) * SS, (cy + S * .1 + 14) * SS], fill=255)
+    def shadow_motif(dd):   # a smaller, darker counter-pattern between the motifs
+        for j in range(-1, int(H / th) + 2):
+            for i in range(-1, int(W / tw) + 2):
+                cx = i * tw + (0 if j % 2 else tw / 2); cy = j * th + th * .6
+                for sg in (1, -1): acanthus(dd, cx + sg * S * .18, cy, S * .24, 0 if sg > 0 else math.pi, sg, 5, True, 1, .6)
+    m = gaussian_filter(lmask(motif), .9); m2 = gaussian_filter(lmask(shadow_motif), .9)
+    a = base * (1 - .7 * m[..., None]) + hi * .7 * m[..., None]
+    a = a * (1 - .6 * m2[..., None]) + lo * .6 * m2[..., None]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
-    a *= (1 + .025 * fab + .02 * np.sin(xx * 2.1) * np.sin(yy * 2.1))[..., None]
-    # pinked (zig-zag) edge
-    out = np.clip(a, 0, 255).astype(np.uint8); img = Image.fromarray(out)
-    return img
+    fab = gaussian_filter(rng.standard_normal((H, W)), .5); fab /= fab.std()
+    sheen = gaussian_filter(rng.standard_normal((H, W)), 80); sheen /= sheen.std()
+    a *= (1 + .03 * fab + .035 * sheen + .015 * np.sin(xx * 1.7 + yy * 1.7))[..., None]
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
 def chalk(seed=7):

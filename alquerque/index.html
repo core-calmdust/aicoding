@@ -1211,8 +1211,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:auto;max-height:40vh}
 }
 /* ---- Alquerque: historical (carved wood), modern (damask cloth), chalk (slate) — tools/gen_rugs.py */
-html[data-bd=carved]{--wimg:url(img/rug-carved.webp?v=1);--edge:#3a2414;--wdl:#2b190c}
-html[data-bd=damask]{--wimg:url(img/rug-damask.webp?v=1);--edge:#26323f;--wdl:#eef2f6}
+html[data-bd=carved]{--wimg:url(img/rug-carved.webp?v=2);--edge:#3a2414;--wdl:#2b190c}
+html[data-bd=damask]{--wimg:url(img/rug-damask.webp?v=2);--edge:#26323f;--wdl:#eef2f6}
 html[data-bd=chalk]{--wimg:url(img/rug-chalk.webp?v=1);--edge:#1c1d1e;--wdl:#ecebe6}
 html:is([data-bd=carved],[data-bd=damask],[data-bd=chalk]) .frame{background:var(--wimg) 0 0 / 100% 100%;border-radius:calc(var(--cell) * .1);
   box-shadow:0 calc(var(--cell) * .05) 0 var(--edge),0 40px 70px -26px rgba(0,0,0,.85)}
@@ -1230,6 +1230,20 @@ html[data-bd=chalk] .lines .ln{stroke:#ecebe6;stroke-width:.05;opacity:.88;strok
 html[data-bd=chalk] .lines .pt{fill:#ecebe6;opacity:.85;r:.07} html[data-bd=chalk] .lines .pt.st{r:.09}
 html[data-bd=chalk] .lines .num{fill:#ecebe6;opacity:.7}
 html[data-bd=chalk] .reserve{background:rgba(0,0,0,.3);box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+html[data-pcs=wood]{--w1:#e0bc84;--w2:#c49a64;--w4:#7a5634;--b1:#7a5232;--b2:#5a3a20;--b4:#2a180a}
+html[data-pcs=matte]{--w1:#ffffff;--w2:#ecebe6;--w4:#bdbab2;--b1:#3a3a3c;--b2:#1e1e20;--b4:#0a0a0b}
+html:is([data-pcs=wood],[data-pcs=matte]) :is(.pc,.rv)::before, html:is([data-pcs=wood],[data-pcs=matte]) :is(.pc,.rv)::after{display:none}
+html[data-pcs=wood] :is(.pc,.rv).p1{background:url(img/pc-wood-1.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=wood] :is(.pc,.rv).p2{background:url(img/pc-wood-2.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=matte] :is(.pc,.rv).p1{background:url(img/pc-matte-1.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=matte] :is(.pc,.rv).p2{background:url(img/pc-matte-2.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=wood] .pc.p1{box-shadow:0 calc(var(--cell) * .035) 0 #9a7448,0 calc(var(--cell) * .05) 0 #5a3c1e,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.5)}
+html[data-pcs=wood] .pc.p2{box-shadow:0 calc(var(--cell) * .035) 0 #4a2e18,0 calc(var(--cell) * .05) 0 #2a180a,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.5)}
+html[data-pcs=matte] .pc.p1{box-shadow:0 calc(var(--cell) * .035) 0 #c9c6be,0 calc(var(--cell) * .05) 0 #9a978f,0 calc(var(--cell) * .09) calc(var(--cell) * .09) rgba(0,0,0,.45)}
+html[data-pcs=matte] .pc.p2{box-shadow:0 calc(var(--cell) * .035) 0 #111,0 calc(var(--cell) * .05) 0 #000,0 calc(var(--cell) * .09) calc(var(--cell) * .09) rgba(0,0,0,.5)}
+html:is([data-pcs=wood],[data-pcs=matte]) .reserve .rv.p1, html:is([data-pcs=wood],[data-pcs=matte]) .reserve .rv.p2{box-shadow:0 calc(var(--cell) * .015) calc(var(--cell) * .03) rgba(0,0,0,.45)}
+html[data-pcs=wood] .pdisc.p1{background:#c49a64} html[data-pcs=wood] .pdisc.p2{background:#5a3a20}
+html[data-pcs=matte] .pdisc.p1{background:#ecebe6} html[data-pcs=matte] .pdisc.p2{background:#1e1e20}
 /* ---- Alquerque: rug boards (tools/gen_rugs.py) with cream / gold lines; brass + lapis coins and felt balls */
 html:is([data-bd=medallion],[data-bd=kilim],[data-bd=patch]){--edge:#2a1414;--wdl:#f6e6c0}
 html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=7)}
@@ -1597,10 +1611,10 @@ html[data-pcs=felt] .pdisc.p1{background:#e6dcc4} html[data-pcs=felt] .pdisc.p2{
 // Alquerque runs on the Fanorona scripts (fanorona/app.js, engine.js, online*.js) with this game's settings
 window.GAME = { id: 'alquerque', name: 'Alquerque', base: 'alq', rules: ['alq'], store: 'aicoding-alquerque', img: '../images/atlas/alquerque.webp',
   engine: '../fanorona/engine.js?v=fb2', bd: 'medallion', pcs: 'brass',
-  bds: ['medallion', 'kilim', 'patch', 'carved', 'damask', 'chalk', 'abstract', 'dark'], pcss: ['brass', 'felt', 'flat', 'mono'],
-  bdImg: { carved: 'img/rug-carved.webp?v=1', damask: 'img/rug-damask.webp?v=1', chalk: 'img/rug-chalk.webp?v=1', medallion: 'img/rug-medallion.webp?v=7', kilim: 'img/rug-kilim.webp?v=6', patch: 'img/rug-patch.webp?v=6' },
+  bds: ['medallion', 'kilim', 'patch', 'chalk', 'carved', 'damask', 'abstract', 'dark'], pcss: ['brass', 'felt', 'wood', 'matte', 'flat', 'mono'],
+  bdImg: { carved: 'img/rug-carved.webp?v=2', damask: 'img/rug-damask.webp?v=2', chalk: 'img/rug-chalk.webp?v=1', medallion: 'img/rug-medallion.webp?v=7', kilim: 'img/rug-kilim.webp?v=6', patch: 'img/rug-patch.webp?v=6' },
   bdPal: { carved: ['#96704a', '#5e4026', '#2b190c'], damask: ['#3a4c60', '#26323f', '#eef2f6'], chalk: ['#2e3032', '#1c1d1e', '#ecebe6'], medallion: ['#962020', '#5a1c40', '#e2b254'], kilim: ['#cc282e', '#ec6e22', '#f4e8d2'], patch: ['#7a3a5a', '#2a608c', '#f4ead6'] },
-  pcPal: { brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#f6eedc', '#e6dcc4', '#a89a80'], ['#3a5cae', '#1e3a84', '#0e1c48']] } };
+  pcPal: { wood: [['#e0bc84', '#c49a64', '#7a5634'], ['#7a5232', '#5a3a20', '#2a180a']], matte: [['#ffffff', '#ecebe6', '#bdbab2'], ['#3a3a3c', '#1e1e20', '#0a0a0b']], brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#f6eedc', '#e6dcc4', '#a89a80'], ['#3a5cae', '#1e3a84', '#0e1c48']] } };
 window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
 </script>
 <!-- landscape tip (phones held upright) -->
@@ -1637,7 +1651,7 @@ window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=2"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/flipbtn.js?v=1"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb2"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=8"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb5"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=3"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/flipbtn.js?v=1"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb2"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=8"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb5"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
