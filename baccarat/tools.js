@@ -42,8 +42,8 @@ function shoeHtml() {
     return `<div class="sh-b"><span class="sh-bar"><i style="height:${Math.min(100, share / .35 * 100).toFixed(1)}%"></i><em style="bottom:${(norm / .35 * 100).toFixed(1)}%"></em></span><b>${i === 0 ? '0' : i === 1 ? 'A' : i}</b><small>${v[i]}</small><span class="sh-pm"><button type="button" data-cv="${i}" data-d="-1" aria-label="−">−</button><button type="button" data-cv="${i}" data-d="1" aria-label="+">＋</button></span><em class="${d > .004 ? 'up' : d < -.004 ? 'dn' : ''}">${d >= 0 ? '+' : ''}${(d * 100).toFixed(1)}</em></div>`; }).join('');
   const row = k => { const e = E[k], b = base[k]; return `<tr class="${e > 0 ? 'plus' : ''}"><td>${esc(t(A.SPOTS[k]))}</td><td>${pct(B.winP(R, k), 2)}</td><td><b>${(e * 100).toFixed(3)}%</b></td><td class="${e - b > .0002 ? 'up' : e - b < -.0002 ? 'dn' : ''}">${e - b >= 0 ? '+' : ''}${((e - b) * 100).toFixed(3)}</td></tr>`; };
   const eo = eorOf(rc, T.v, T.tie, E), mxA = Math.max(...eo.filter(Boolean).flatMap(o => ['P', 'B'].map(k => Math.abs(o[k]))), 1e-6);
-  const eoRow = k => `<tr><th>${esc(t('rd.' + k))}</th>${eo.map(o => { if (!o) return '<td>—</td>'; const d = o[k], a = Math.min(1, Math.abs(d) / (k === 'T' ? Math.max(...eo.filter(Boolean).map(z => Math.abs(z.T))) : mxA));
-    return `<td style="background:${d > 0 ? `rgba(143,227,184,${(a * .45).toFixed(2)})` : `rgba(255,139,125,${(a * .45).toFixed(2)})`}">${(d >= 0 ? '+' : '−') + Math.abs(d * 100).toFixed(3).replace(/^0/, '')}</td>`; }).join('')}</tr>`;
+  const eoRow = k => `<tr class="r${k}"><th>${esc(t('rd.' + k))}</th>${eo.map(o => { if (!o) return '<td>—</td>'; const d = o[k], a = Math.min(1, Math.abs(d) / (k === 'T' ? Math.max(...eo.filter(Boolean).map(z => Math.abs(z.T))) : mxA));
+    const fav = { B: '236,107,125', P: '106,163,238', T: '79,207,130' }[k]; return `<td class="${d > 0 ? 'f' : 'u'}" style="background:${d > 0 ? `rgba(${fav},${(a * .55).toFixed(2)})` : `rgba(232,140,70,${(a * .5).toFixed(2)})`}">${(d >= 0 ? '+' : '−') + Math.abs(d * 100).toFixed(3).replace(/^0/, '')}</td>`; }).join('')}</tr>`;
   return `<div class="tl2 shoe"><div class="tl-col"><div class="tl-box"><div class="tl-h"><span class="lab">${esc(t('tl.comp', { n: N }))}</span><span class="tl-btns"><button type="button" class="szb" id="cmpNow">${esc(t('tl.compNow'))}</button><button type="button" class="szb" id="cmpFull">${esc(t('tl.compFull', { n: T.decks }))}</button></span></div>` +
     `<div class="sh-bars">${bars}</div><p class="diff-desc">${esc(t('tl.compHelp'))}</p></div>` +
     `<div class="tl-box"><span class="lab">${esc(t('tl.eor'))}</span><table class="eor-t"><tr><th></th>${['A', 2, 3, 4, 5, 6, 7, 8, 9, 0].map(x => `<th>${x}</th>`).join('')}</tr>${eoRow('B')}${eoRow('P')}${eoRow('T')}</table><p class="diff-desc">${esc(t('tl.eorHelp'))}</p></div></div>` +
@@ -61,10 +61,10 @@ function ruleHtml() {
   const rows = [0, 1, 2, 3, 4, 5, 6, 7].map(bt => `<tr><th>${bt}</th>` + [null, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(p => {
     const d = B.bankerDraws(bt, p), last = c && !nat && b0 === bt && ((p == null && !pDrew) || (p != null && p === p3));
     return `<td class="${d ? 'dr' : 'st'}${p == null ? ' stood' : ''}${last ? ' last' : ''}">${[...t(d ? 'tl.draw' : 'tl.stand')][0]}</td>`; }).join('') + `</tr>`).join('');
-  return `<div class="tl2 rule"><div><span class="lab">${esc(t('tl.pRule'))}</span><div class="pr-rule">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<span class="${n <= 5 ? 'dr' : n <= 7 ? 'st' : 'nat'}"><b>${n}</b><small>${esc(n <= 5 ? t('tl.draw') : n <= 7 ? t('tl.stand') : t('natural'))}</small></span>`).join('')}</div>` +
-    `<ol class="tl-steps">${['tl.r1', 'tl.r2', 'tl.r3', 'tl.r4'].map(k => `<li>${esc(t(k))}</li>`).join('')}</ol>` +
+  return `<div class="tl2 rule"><div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.pRule'))}</span><div class="pr-rule">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<span class="${n <= 5 ? 'dr' : n <= 7 ? 'st' : 'nat'}"><b>${n}</b><small>${esc(n <= 5 ? t('tl.draw') : n <= 7 ? t('tl.stand') : t('natural'))}</small></span>`).join('')}</div>` +
+    `<ol class="tl-steps">${['tl.r1', 'tl.r2', 'tl.r3', 'tl.r4'].map(k => `<li>${esc(t(k))}</li>`).join('')}</ol></div>` +
     `<div class="tl-box tl-last"><span class="lab">${esc(t('tl.last'))}</span>${c ? `<div class="tl-hands">${['p', 'b'].map(sd => `<div><small>${sd === 'p' ? 'PLAYER' : 'BANKER'}</small><span class="mc-row">${c[sd].map(x => `<span class="mc s${B.SUIT(x)}">${B.RCH[B.RANK(x)]}<small>${'♠♥♦♣'[B.SUIT(x)]}</small></span>`).join('')}</span><b>${sd === 'p' ? c.pt : c.bt}</b></div>`).join('')}</div>${A.explainHtml(c)}` : `<p class="muted">${esc(t('tl.histNone'))}</p>`}</div></div>` +
-    `<div><span class="lab">${esc(t('tl.bRule'))}</span><table class="tb-grid">${head}${rows}</table><p class="diff-desc">${esc(t('tl.gridHelp'))}</p>${c ? `<p class="diff-desc">${esc(nat ? t('tl.lastNat') : t('tl.lastHl'))}</p>` : ''}</div></div>`;
+    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.bRule'))}</span><table class="tb-grid">${head}${rows}</table></div><p class="diff-desc">${esc(t('tl.gridHelp'))}</p>${c ? `<p class="diff-desc">${esc(nat ? t('tl.lastNat') : t('tl.lastHl'))}</p>` : ''}</div></div>`;
 }
 
 /* ---------- 期待値の表 ---------- */
@@ -75,10 +75,11 @@ function edgeHtml() {
   const rows = B.VARIANTS[W.ev].bets.map(k => { const e = -E[k]; return `<tr><td>${esc(t(A.SPOTS[k]))}</td><td>${esc(pay(k))}</td><td>${pct(B.winP(R, k))}</td><td><span class="eb"><i style="width:${Math.min(100, e / .15 * 100).toFixed(1)}%"></i></span><b>${pct(e, 2)}</b></td><td>−${fmt(Math.round(e * 10000))}</td></tr>`; }).join('');
   const segV = B.ORDER.map(v => `<button type="button" class="${v === W.ev ? 'sel' : ''}" data-ev="${v}">${esc(A.vName(v))}</button>`).join('');
   return `<div class="tl-edge"><div class="tl-ctl"><div class="seg">${segV}</div><div class="seg">${[8, 9].map(x => `<button type="button" class="${x === W.tie ? 'sel' : ''}" data-et="${x}">${esc(t('spot.T'))} ${x}:1</button>`).join('')}</div><div class="seg">${[8, 6].map(x => `<button type="button" class="${x === W.decks ? 'sel' : ''}" data-ed="${x}">${esc(t('o.deckN', { n: x }))}</button>`).join('')}</div></div>` +
-    `<table class="tl-tbl wide"><tr><th>${esc(t('ev.bet'))}</th><th>${esc(t('tl.pay'))}</th><th>${esc(t('tl.winp'))}</th><th>${esc(t('tl.edge'))}</th><th>${esc(t('tl.per10k'))}</th></tr>${rows}</table>` +
-    `<div class="pr3 lg"><div class="pB"><small>${esc(t('rd.B'))}</small><b>${pct(R.B)}</b></div><div class="pP"><small>${esc(t('rd.P'))}</small><b>${pct(R.P)}</b></div><div class="pT"><small>${esc(t('rd.T'))}</small><b>${pct(R.T)}</b></div></div>` +
-    `<div class="tl2 edge2"><div class="tl-box"><span class="lab">${esc(t('tl.cmp'))}</span>${edgeChart()}</div><div class="tl-box"><span class="lab">${esc(t('tl.hour'))}</span>${hourHtml(E)}</div></div>` +
-    `<p class="diff-desc">${esc(t('tl.edgeHelp.' + W.ev))}</p><p class="diff-desc">${esc(t('tl.edgeHelp'))}</p></div>`;
+    `<div class="tl2 edge-w"><div class="tl-col"><div class="tl-box"><table class="tl-tbl wide"><tr><th>${esc(t('ev.bet'))}</th><th>${esc(t('tl.pay'))}</th><th>${esc(t('tl.winp'))}</th><th>${esc(t('tl.edge'))}</th><th>${esc(t('tl.per10k'))}</th></tr>${rows}</table>` +
+    `<div class="pr3 lg"><div class="pB"><small>${esc(t('rd.B'))}</small><b>${pct(R.B)}</b></div><div class="pP"><small>${esc(t('rd.P'))}</small><b>${pct(R.P)}</b></div><div class="pT"><small>${esc(t('rd.T'))}</small><b>${pct(R.T)}</b></div></div></div>` +
+    `<div class="tl-box"><span class="lab">${esc(t('tl.hour'))}</span>${hourHtml(E)}</div>` +
+    `<p class="diff-desc">${esc(t('tl.edgeHelp.' + W.ev))}</p><p class="diff-desc">${esc(t('tl.edgeHelp'))}</p></div>` +
+    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.cmp'))}</span>${edgeChart()}</div></div></div></div>`;
 }
 
 // house edge of Player / Banker / Tie in the three rule sets (bars)

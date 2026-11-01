@@ -2110,3 +2110,42 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .mzs .mz-me rect{fill:rgba(8,8,9,.9);stroke:rgba(255,255,255,.55);stroke-width:2}
 .rsg-sub{white-space:pre-line}
 .mzs .lz-badge rect{height:40px}.mzs .mz-me rect{height:54px}.mzs .lz-badge text{font-size:30px}.mzs .mz-me text{font-size:40px!important}
+/* ===== research (PC): wider box, one palette (Banker red · Player blue · Tie green · cost = amber→coral, as in ハウスエッジ) ===== */
+:root{--cB2:#ec6b7d;--cP2:#6aa3ee;--cT2:#4fcf82;--cost:linear-gradient(90deg,#d4a54a,#ff8b7d)}
+@media (hover:hover) and (pointer:fine) and (min-width:761px){
+  .tools-modal{width:min(1320px,calc(100vw - 48px))!important}
+  .tools-modal .tl-body{padding:4px 2px}
+  .tools-modal .tl2{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+  .tools-modal .tl-col{gap:18px}
+  .tools-modal .tl-box{padding:16px 18px}
+  .tools-modal .sh-bar{height:clamp(170px,26vh,300px)}
+  .tools-modal .ev-ch{height:clamp(150px,24vh,280px)}
+  .tools-modal .eor-t td{padding:clamp(8px,1.6vh,16px) 1px;font-size:12.5px!important}
+  .tools-modal .tb-grid td{padding:clamp(8px,1.5vh,15px) 0;font-size:15px}
+  .tools-modal .pr-rule span{padding:clamp(10px,2vh,20px) 0}
+  .tools-modal .tl-tbl td{padding:clamp(7px,1.4vh,13px) 8px}
+  .tools-modal .ec{gap:clamp(10px,2vh,22px)}
+  .tools-modal .ec-b i{height:12px}
+  .tools-modal .ec-b{font-size:13px}.tools-modal .ec-b em{font-size:14px}
+  .tools-modal .rx-wrap{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tools-modal .sys .sy-hist{height:clamp(160px,28vh,300px)}
+}
+.edge-w{margin-top:4px}
+/* composition bars: neutral platinum (not a bet), the reference line amber */
+.sh-bar i{background:linear-gradient(180deg,#e9e5dc,#a9a59c)}
+.sh-bar em{background:#e8a24a;opacity:1;height:2px}
+.sh-b > em.up{color:var(--cT2)}.sh-b > em.dn{color:#ff8b7d}
+/* EoR rows coloured by their bet */
+.eor-t tr.rB th{color:var(--cB2)}.eor-t tr.rP th{color:var(--cP2)}.eor-t tr.rT th{color:var(--cT2)}
+.eor-t td.f{color:#fff}.eor-t td.u{color:#ffd9c2}
+/* expectation table: up / down like the edge tab */
+.tl-tbl td.up,.ev-r small.up{color:var(--cT2)}.tl-tbl td.dn,.ev-r small.dn{color:#ff8b7d}
+/* drawing rules: draw = amber (an action), stand = quiet, natural = green */
+.pr-rule .dr,.tb-grid td.dr{background:rgba(212,165,74,.2);color:#f3d79a}
+.pr-rule .st,.tb-grid td.st{background:rgba(255,255,255,.04);color:var(--muted)}
+.pr-rule .nat{background:rgba(79,207,130,.18);color:#bfeccf}
+.tb-grid td.last{outline-color:#ff8b7d;box-shadow:0 0 10px rgba(255,139,125,.55)}
+/* simulator: wins green, losses coral; the note amber */
+.sy-hist rect.w{fill:var(--cT2)}.sy-hist rect.l{fill:#ff8b7d}
+.sy-note{border-color:rgba(212,165,74,.55);background:rgba(212,165,74,.07)}
+.ec-r.sel{background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
