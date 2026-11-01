@@ -5,7 +5,7 @@
 'use strict';
 const A = window.PokerApp, P = window.PK, E = window.PKE, $ = s => document.querySelector(s);
 const t = (k, v) => A.t(k, v), esc = s => A.esc(s);
-let tab = 'calc';
+let tab = 'calc', lastTab = '';
 const C = { v: 'holdem', n: 2, hands: [[null, null], [null, null]], ranges: [null, null], board: [null, null, null, null, null], slot: { p: 0, k: 0 }, res: null, busy: false, pot: 100, call: 50 };
 const RANGES = [null, 0.05, 0.1, 0.2, 0.3, 0.5];
 const POS = { UTG: 0.15, HJ: 0.19, CO: 0.27, BTN: 0.45, SB: 0.38 };
@@ -21,31 +21,42 @@ function resize() {
   C.hands = C.hands.map(h => h.map(c => c != null && deck.has(c) ? c : null)); C.board = C.board.map(c => c != null && deck.has(c) ? c : null);
 }
 const used = () => new Set([].concat(...C.hands, C.board).filter(c => c != null));
-const card = (c, act, attr) => c == null ? `<button type="button" class="ts${act ? ' act' : ''}" ${attr}>＋</button>` : `<button type="button" class="ts f s${P.SUIT(c)}${act ? ' act' : ''}" ${attr}>${P.vch(P.V(c))}<small>${'♠♥♦♣'[P.SUIT(c)]}</small></button>`;
+const SUITS = '♠♥♦♣';
+const PCOL = ['#d8475c', '#4aa3df', '#e2b04a', '#5cc28a', '#a77ee0', '#e07a4a'];
+const card = (c, act, attr) => c == null ? `<button type="button" class="eq-s${act ? ' act' : ''}" ${attr}><i></i></button>` : `<button type="button" class="eq-s f s${P.SUIT(c)}${act ? ' act' : ''}" ${attr}><b>${P.vch(P.V(c))}</b><small>${SUITS[P.SUIT(c)]}</small></button>`;
+const tl = (k, ja, en, v) => { const x = t(k, v); return x === k ? (A.LANG === 'ja' ? ja : en).replace(/\{(\w+)\}/g, (_, y) => v && v[y] != null ? v[y] : '') : x; };
+function slotName() {
+  const s = C.slot; if (s.p >= 0) return tl('tl.selP', '{p} の {k}枚目', '{p} · card {k}', { p: t('tl.player', { n: s.p + 1 }), k: s.k + 1 });
+  const st = s.k < 3 ? t('st.flop') : s.k === 3 ? t('st.turn') : t('st.river');
+  return tl('tl.selB', 'ボード（{s}）', 'Board ({s})', { s: st });
+}
 function calcHtml() {
-  const V = P.VARIANTS[C.v], u = used();
-  const games = ['holdem', 'plo', 'shortdeck'].map(v => `<button type="button" class="${v === C.v ? 'sel' : ''}" data-cv="${v}">${esc(A.vName(v))}</button>`).join('');
+  const V = P.VARIANTS[C.v], u = used(), r = C.res;
+  const SHORT = { holdem: tl('tl.gHoldem', 'テキサス', "Hold'em"), plo: tl('tl.gPlo', 'オマハ', 'Omaha'), shortdeck: tl('tl.gShort', 'ショート', 'Short deck') };
+  const games = ['holdem', 'plo', 'shortdeck'].map(v => `<button type="button" class="${v === C.v ? 'sel' : ''}" data-cv="${v}"><span class="eq-gl">${esc(A.vName(v))}</span><span class="eq-gs">${esc(SHORT[v])}</span></button>`).join('');
+  const canRange = (C.v === 'holdem' || C.v === 'shortdeck') && V.hole === 2;
   const rows = C.hands.map((h, p) => {
-    const r = C.res, eq = r ? r.eq[p] : null;
-    const rangeSel = (C.v === 'holdem' || C.v === 'shortdeck') && V.hole === 2 ? `<select data-rg="${p}" aria-label="${esc(t('tl.range'))}">${RANGES.map(x => `<option value="${x == null ? '' : x}"${C.ranges[p] === x ? ' selected' : ''}>${esc(x == null ? t('tl.rangeAny') : t('tl.rangeTop', { n: Math.round(x * 100) }))}</option>`).join('')}</select>` : '';
+    const eq = r && r.eq ? r.eq[p] : null, empty = h.every(c => c == null);
     const name = r && C.board.every(c => c != null) && h.every(c => c != null) ? t('hand.' + P.catOf(V.omaha ? P.bestOmaha(h, C.board, V.short) : P.evalCards(h.concat(C.board), V.short), V.short)) : '';
-    return `<div class="tp"><span class="tp-n">${esc(t('tl.player', { n: p + 1 }))}</span><span class="tp-c">${h.map((c, k) => card(c, C.slot.p === p && C.slot.k === k, `data-sp="${p}" data-sk="${k}"`)).join('')}</span>${h.every(c => c == null) ? rangeSel : `<button type="button" class="szb" data-clr="${p}">✕</button>`}` +
-      `<span class="tp-r">${eq != null ? `<span class="eqbar"><i class="w" style="width:${r.win[p] * 100}%"></i><i class="t" style="width:${r.tie[p] * 100}%"></i></span><b>${(eq * 100).toFixed(1)}%</b><small>${esc(t('tl.wt', { w: (r.win[p] * 100).toFixed(1), t: (r.tie[p] * 100).toFixed(1) }))}${name ? ' · ' + esc(name) : ''}</small>` : ''}</span></div>`;
+    const best = r && r.eq && eq === Math.max(...r.eq);
+    const act = empty ? (canRange ? `<label class="eq-rg"><select data-rg="${p}" aria-label="${esc(t('tl.range'))}">${RANGES.map(x => `<option value="${x == null ? '' : x}"${C.ranges[p] === x ? ' selected' : ''}>${esc(x == null ? t('tl.rangeAny') : t('tl.rangeTop', { n: Math.round(x * 100) }))}</option>`).join('')}</select></label>` : `<span class="eq-rnd">${esc(t('tl.rangeAny'))}</span>`)
+      : `<button type="button" class="eq-x" data-clr="${p}" aria-label="${esc(t('tl.clear'))}">✕</button>`;
+    return `<div class="eq-p${C.slot.p === p ? ' on' : ''}${best ? ' best' : ''}" style="--pc:${PCOL[p]}"><span class="eq-pn">P${p + 1}</span><div class="eq-slots">${h.map((c, k) => card(c, C.slot.p === p && C.slot.k === k, `data-sp="${p}" data-sk="${k}"`)).join('')}</div>` +
+      `<div class="eq-res">${eq != null ? `<b>${(eq * 100).toFixed(1)}<i>%</i></b><span class="eq-bar"><i class="w" style="width:${r.win[p] * 100}%"></i><i class="t" style="width:${r.tie[p] * 100}%"></i></span><small>${esc(t('tl.wt', { w: (r.win[p] * 100).toFixed(1), t: (r.tie[p] * 100).toFixed(1) }))}${name ? ' · ' + esc(name) : ''}</small>` : `<span class="eq-bar"></span>`}</div>${act}</div>`;
   }).join('');
-  const board = C.board.map((c, k) => card(c, C.slot.p === -1 && C.slot.k === k, `data-sp="-1" data-sk="${k}"`)).join('');
+  const bs = k => card(C.board[k], C.slot.p === -1 && C.slot.k === k, `data-sp="-1" data-sk="${k}"`);
+  const board = `<div class="eq-board"><span class="eq-lab">${esc(t('tl.board'))}</span><span class="eq-g">${[0, 1, 2].map(bs).join('')}</span><span class="eq-g">${bs(3)}</span><span class="eq-g">${bs(4)}</span>${C.board.some(c => c != null) ? `<button type="button" class="eq-x" data-clr="b" aria-label="${esc(t('tl.clear'))}">✕</button>` : ''}</div>`;
   const deck = P.deckOf(V.short);
-  const picker = [0, 1, 2, 3].map(s => `<div class="pk-row">` + deck.filter(c => P.SUIT(c) === s).sort((a, b) => P.V(b) - P.V(a)).map(c => `<button type="button" class="pkc s${s}" data-pick="${c}"${u.has(c) ? ' disabled' : ''}>${P.vch(P.V(c))}<small>${'♠♥♦♣'[s]}</small></button>`).join('') + `</div>`).join('');
-  const eq0 = C.res ? C.res.eq[0] : null, need = C.call / (C.pot + C.call || 1);
-  return `<div class="tl-calc"><div class="tl-l"><div class="seg">${games}</div>` +
-    `<div class="tl-sec"><span class="lab">${esc(t('tl.players'))}</span><span class="tl-np">${[2, 3, 4, 5, 6].map(n => `<button type="button" class="szb${n === C.n ? ' sel' : ''}" data-np="${n}">${n}</button>`).join('')}</span></div>` +
-    `<div class="tps">${rows}</div><div class="tl-sec"><span class="lab">${esc(t('tl.board'))}</span><span class="tp-c">${board}</span><button type="button" class="szb" data-clr="b">✕</button></div>` +
-    `<div class="tl-go"><button class="mbtn" id="tlClear">${esc(t('tl.clear'))}</button><button class="mbtn go" id="tlRun">${C.busy ? '<span class="spin s"></span>' : ''}${esc(t('tl.run'))}</button></div>` +
-    (C.res ? `<p class="diff-desc">${esc(C.res.n > 50000 || C.res.exact ? t('tl.exact', { n: C.res.n.toLocaleString() }) : t('tl.mc', { n: C.res.n.toLocaleString() }))}</p>` : `<p class="diff-desc">${esc(t('tl.help'))}</p>`) +
-    `</div><div class="tl-r"><span class="lab">${esc(t('tl.pick'))}</span><div class="picker">${picker}</div>` +
-    `<div class="tl-odds"><span class="lab">${esc(t('tl.odds'))}</span><div class="od-in"><label>${esc(t('pot'))}<input type="number" id="odPot" min="0" value="${C.pot}"></label><label>${esc(t('tl.toCall'))}<input type="number" id="odCall" min="0" value="${C.call}"></label></div>` +
-    `<div class="kv"><span>${esc(t('hud.need'))}</span><b>${(need * 100).toFixed(1)}%</b></div>` +
+  const picker = [0, 1, 2, 3].map(s => `<div class="eq-row">` + deck.filter(c => P.SUIT(c) === s).sort((a, b) => P.V(b) - P.V(a)).map(c => `<button type="button" class="eq-k s${s}" data-pick="${c}"${u.has(c) ? ' disabled' : ''}><b>${P.vch(P.V(c))}</b><small>${SUITS[s]}</small></button>`).join('') + `</div>`).join('');
+  const eq0 = r && r.eq ? r.eq[0] : null, need = C.call / (C.pot + C.call || 1);
+  const note = C.busy ? `<span class="spin s"></span>${esc(t('hud.calc'))}` : C.err ? esc(C.err) : r ? esc(r.n > 50000 || r.exact ? t('tl.exact', { n: r.n.toLocaleString() }) : t('tl.mc', { n: r.n.toLocaleString() })) : esc(t('tl.help'));
+  const odds = `<details class="eq-odds"${C.oddsOpen ? ' open' : ''}><summary>${esc(t('tl.odds'))}<span>${esc(t('hud.need'))} <b>${(need * 100).toFixed(1)}%</b>${eq0 != null ? ` · EV <b class="${eq0 * (C.pot + C.call) - C.call >= 0 ? 'pos' : 'neg'}">${(eq0 * (C.pot + C.call) - C.call).toFixed(1)}</b>` : ''}</span></summary>` +
+    `<div class="eq-od"><label>${esc(t('pot'))}<input type="number" inputmode="numeric" id="odPot" min="0" value="${C.pot}"></label><label>${esc(t('tl.toCall'))}<input type="number" inputmode="numeric" id="odCall" min="0" value="${C.call}"></label></div>` +
     (eq0 != null ? `<div class="kv"><span>${esc(t('tl.evCall'))}</span><b class="${eq0 * (C.pot + C.call) - C.call >= 0 ? 'pos' : 'neg'}">${(eq0 * (C.pot + C.call) - C.call).toFixed(1)}</b></div><div class="kv"><span>${esc(t('tl.verdict'))}</span><b>${esc(eq0 >= need ? t('tl.callOk') : t('tl.callNo'))}</b></div>` : `<p class="muted">${esc(t('tl.oddsHelp'))}</p>`) +
-    `<p class="diff-desc">${esc(t('tl.rule24'))}</p></div></div></div>`;
+    `<p class="diff-desc">${esc(t('tl.rule24'))}</p></details>`;
+  return `<div class="eq"><div class="eq-main"><div class="eq-top"><div class="seg eq-games">${games}</div><div class="eq-np"><button type="button" data-np="-"${C.n <= 2 ? ' disabled' : ''} aria-label="−">−</button><b>${C.n}<small>${esc(t('tl.players'))}</small></b><button type="button" data-np="+"${C.n >= 6 ? ' disabled' : ''} aria-label="+">＋</button></div></div>` +
+    board + `<div class="eq-ps">${rows}</div><div class="eq-note">${note}</div>` + `<div class="eq-odds-pc">${odds}</div></div>` +
+    `<div class="eq-pick"><div class="eq-ph"><span>✎ ${esc(slotName())}</span><button type="button" class="eq-rand" data-rand>🎲 ${esc(tl('tl.randCard', 'ランダム', 'Random'))}</button><button type="button" class="eq-rand" id="tlClear">${esc(t('tl.clear'))}</button></div><div class="eq-grid">${picker}</div></div>` + `</div>`;
 }
 function rangeHtml() {
   const n = C.rn || 1, pos = C.pos || 'BTN', sel = C.cell || 'AKs';
@@ -75,20 +86,25 @@ function handsHtml() {
 }
 function render() {
   const tabs = ['calc', 'range', 'hands'].map(k => `<button type="button" class="${k === tab ? 'sel' : ''}" data-tt="${k}">${esc(t('tl.' + k))}</button>`).join('');
+  const sb = $('#toolsModal .tl-body'), keep = sb && tab === lastTab ? sb.scrollTop : 0; lastTab = tab;   // keep the scroll position (tapping a card re-renders)
   $('#toolsModal').innerHTML = `<h2>${esc(t('tl.h'))}</h2><div class="ng-tabs">${tabs}</div><div class="tl-body">${tab === 'calc' ? calcHtml() : tab === 'range' ? rangeHtml() : handsHtml()}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
   const M = $('#toolsModal');
+  if (keep) M.querySelector('.tl-body').scrollTop = keep;
   M.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { tab = b.dataset.tt; render(); });
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
   if (tab === 'calc') {
-    M.querySelectorAll('[data-cv]').forEach(b => b.onclick = () => { C.v = b.dataset.cv; C.res = null; resize(); render(); });
-    M.querySelectorAll('[data-np]').forEach(b => b.onclick = () => { C.n = +b.dataset.np; C.res = null; resize(); render(); });
-    M.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { C.slot = { p: +b.dataset.sp, k: +b.dataset.sk }; const p = C.slot.p; if (p >= 0 && C.hands[p][C.slot.k] != null) C.hands[p][C.slot.k] = null; else if (p < 0 && C.board[C.slot.k] != null) C.board[C.slot.k] = null; C.res = null; render(); });
-    M.querySelectorAll('[data-clr]').forEach(b => b.onclick = () => { const v = b.dataset.clr; if (v === 'b') C.board = C.board.map(() => null); else C.hands[+v] = C.hands[+v].map(() => null); C.res = null; render(); });
-    M.querySelectorAll('[data-rg]').forEach(s => s.onchange = () => { C.ranges[+s.dataset.rg] = s.value === '' ? null : +s.value; C.res = null; render(); });
+    M.querySelectorAll('[data-cv]').forEach(b => b.onclick = () => { C.v = b.dataset.cv; C.res = null; resize(); changed(); });
+    M.querySelectorAll('[data-np]').forEach(b => b.onclick = () => { C.n = Math.max(2, Math.min(6, C.n + (b.dataset.np === '+' ? 1 : -1))); if (C.slot.p >= C.n) C.slot = { p: 0, k: 0 }; resize(); changed(); });
+    M.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { const p = +b.dataset.sp, k = +b.dataset.sk, same = C.slot.p === p && C.slot.k === k; C.slot = { p, k };
+      if (same) { if (p >= 0) C.hands[p][k] = null; else C.board[k] = null; changed(); } else render(); });   // 1st tap: select the slot, 2nd tap: empty it
+    M.querySelectorAll('[data-clr]').forEach(b => b.onclick = () => { const v = b.dataset.clr; if (v === 'b') { C.board = C.board.map(() => null); C.slot = { p: -1, k: 0 }; } else { C.hands[+v] = C.hands[+v].map(() => null); C.slot = { p: +v, k: 0 }; } changed(); });
+    M.querySelectorAll('[data-rg]').forEach(s => s.onchange = () => { C.ranges[+s.dataset.rg] = s.value === '' ? null : +s.value; changed(); });
     M.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { place(+b.dataset.pick); });
-    $('#tlClear').onclick = () => { C.hands = C.hands.map(h => h.map(() => null)); C.board = C.board.map(() => null); C.res = null; C.slot = { p: 0, k: 0 }; render(); };
-    $('#tlRun').onclick = run;
-    const op = $('#odPot'), oc = $('#odCall'); op.onchange = () => { C.pot = Math.max(0, +op.value || 0); render(); }; oc.onchange = () => { C.call = Math.max(0, +oc.value || 0); render(); };
+    const rd = M.querySelector('[data-rand]'); if (rd) rd.onclick = () => { const u = used(), free = P.deckOf(P.VARIANTS[C.v].short).filter(c => !u.has(c)); if (free.length) place(free[Math.floor(Math.random() * free.length)]); };
+    $('#tlClear').onclick = () => { C.hands = C.hands.map(h => h.map(() => null)); C.board = C.board.map(() => null); C.slot = { p: 0, k: 0 }; changed(); };
+    M.querySelectorAll('.eq-odds').forEach(d => d.ontoggle = () => { C.oddsOpen = d.open; });
+    M.querySelectorAll('#odPot').forEach(op => op.onchange = () => { C.pot = Math.max(0, +op.value || 0); render(); });
+    M.querySelectorAll('#odCall').forEach(oc => oc.onchange = () => { C.call = Math.max(0, +oc.value || 0); render(); });
   } else if (tab === 'range') {
     M.querySelectorAll('[data-rn]').forEach(b => b.onclick = () => { C.rn = +b.dataset.rn; render(); });
     M.querySelectorAll('[data-pos]').forEach(b => b.onclick = () => { C.pos = b.dataset.pos; render(); });
@@ -103,17 +119,19 @@ function place(c) {
   const cur = order.findIndex(o => o.p === s.p && o.k === s.k);
   const nx = order.slice(cur + 1).concat(order.slice(0, cur)).find(o => (o.p >= 0 ? C.hands[o.p][o.k] : C.board[o.k]) == null);
   if (nx) C.slot = nx;
-  C.res = null; render();
+  changed();
 }
+// every change recalculates by itself (no button): stale answers are dropped
+let seq = 0, timer = 0;
+function changed() { C.res = null; C.err = ''; clearTimeout(timer); timer = setTimeout(run, 180); render(); }
 function run() {
   const V = P.VARIANTS[C.v], board = C.board.filter(c => c != null);
-  if ([1, 2].includes(board.length)) { A.toast(t('tl.boardErr')); return; }
   const hands = C.hands.map(h => h.every(c => c != null) ? h.slice() : h.some(c => c != null) ? 'part' : null);
-  if (hands.includes('part')) { A.toast(t('tl.partErr')); return; }
-  if (hands.every(h => h == null)) { A.toast(t('tl.needOne')); return; }
-  C.busy = true; render();
+  C.err = [1, 2].includes(board.length) ? t('tl.boardErr') : hands.includes('part') ? t('tl.partErr') : hands.every(h => h == null) ? t('tl.needOne') : '';
+  if (C.err) { C.busy = false; render(); return; }
+  const my = ++seq; C.busy = true; render();
   const spec = { v: C.v, hands, board, iters: V.omaha ? 6000 : 30000, ranges: C.ranges };
-  A.ask({ cmd: 'equity', spec }, r => { C.busy = false; if (r) { C.res = r; C.res.exact = hands.every(h => h) && 5 - board.length <= 2; } render(); }, () => E.equity(Object.assign(spec, { iters: 4000 })));
+  A.ask({ cmd: 'equity', spec }, r => { if (my !== seq) return; C.busy = false; if (r) { C.res = r; C.res.exact = hands.every(h => h) && 5 - board.length <= 2; } render(); }, () => E.equity(Object.assign(spec, { iters: 4000 })));
 }
 function open() { resize(); render(); A.openOv('#toolsOverlay'); }
 window.PokerTools = { open };
