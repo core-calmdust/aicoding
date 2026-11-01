@@ -1328,7 +1328,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="i18n_more.js?v=20261028sk"></script>
 <script src="i18n_coach.js?v=4"></script>
 <script src="../shared/coachkit.js?v=14"></script>
-<script src="../shared/record.js?v=2"></script>
+<script src="../shared/record.js?v=3"></script>
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=3"></script>
 <script src="../shared/export.js?v=6"></script>
@@ -1336,6 +1336,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/flipbtn.js?v=1"></script>
 <script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
@@ -1525,7 +1526,9 @@ const $ = s => document.querySelector(s);
 const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), linesEl = $('#lines');
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
-const ptX = i => (G.pts[i][0] + 0.5) / G.size * 100, ptY = i => (G.pts[i][1] + 0.5) / G.size * 100;
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());   // 盤面反転 (shared/flipbtn.js): the board turned round 180°
+const PX = i => flipOn() ? G.size - 1 - G.pts[i][0] : G.pts[i][0], PY = i => flipOn() ? G.size - 1 - G.pts[i][1] : G.pts[i][1];
+const ptX = i => (PX(i) + 0.5) / G.size * 100, ptY = i => (PY(i) + 0.5) / G.size * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
 // ---------------------------------------------------------------- board & piece skins (CSS: html[data-bd] / html[data-pcs]; previews: .skp)
 const BD_KEYS = ['royal', 'walnut', 'marble', 'slate', 'parchment', 'pastel'], PCS_KEYS = ['gold', 'coin', 'glass', 'gem', 'candy', 'pearl'];
@@ -1567,7 +1570,7 @@ function drawLines() {
   let s = skDefs('brassG', 'chalkF', S) + '<g class="lg">';
   const segs = [];
   G.adj.forEach((a, i) => a.forEach(j => { if (j > i) segs.push([i, j]); }));
-  const c = i => [G.pts[i][0] + 0.5, G.pts[i][1] + 0.5];
+  const c = i => [PX(i) + 0.5, PY(i) + 0.5];
   for (const [i, j] of segs) { const [x1, y1] = c(i), [x2, y2] = c(j); s += `<line class="sh" x1="${x1 + sw * .3}" y1="${y1 + sw * .4}" x2="${x2 + sw * .3}" y2="${y2 + sw * .4}" stroke-width="${sw * 1.6}" stroke-linecap="round"/>`; }
   for (const [i, j] of segs) { const [x1, y1] = c(i), [x2, y2] = c(j); s += `<line class="ln" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${sw}" stroke-linecap="round"/>`; }
   for (let i = 0; i < G.n; i++) { const [x, y] = c(i); s += `<circle class="pt" cx="${x}" cy="${y}" r="${r}" stroke-width="${sw * .8}"/>`; }
@@ -1576,8 +1579,8 @@ function drawLines() {
   linesEl.innerHTML = s;
   // coordinates outside the playing surface (letters below, numbers on the left)
   let cx = '', cy = '';
-  for (let x = 0; x < S; x++) if (G.pts.some(p => p[0] === x)) cx += `<span style="left:${(x + 0.5) / S * 100}%">${'abcdefg'[x]}</span>`;
-  for (let y = 0; y < S; y++) if (G.pts.some(p => p[1] === y)) cy += `<span style="top:${(y + 0.5) / S * 100}%">${S - y}</span>`;
+  for (let x = 0; x < S; x++) if (G.pts.some(p => p[0] === x)) cx += `<span style="left:${((flipOn() ? S - 1 - x : x) + 0.5) / S * 100}%">${'abcdefg'[x]}</span>`;
+  for (let y = 0; y < S; y++) if (G.pts.some(p => p[1] === y)) cy += `<span style="top:${((flipOn() ? S - 1 - y : y) + 0.5) / S * 100}%">${S - y}</span>`;
   $('#coordsX').innerHTML = cx; $('#coordsY').innerHTML = cy;
 }
 const pcEls = new Map();      // point -> element
@@ -1686,12 +1689,12 @@ const NS = 'http://www.w3.org/2000/svg';
 function fxDiv(cls, i) { const d = document.createElement('div'); d.className = cls; placeAt(d, i); fxEl.appendChild(d); return d; }
 function fxSvg() { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'fxsvg'); s.setAttribute('viewBox', `0 0 ${G.size} ${G.size}`); fxEl.appendChild(s); return s; }
 function svgLine(svg, i, j, cls, w) {
-  const L = document.createElementNS(NS, 'line'), c = k => [G.pts[k][0] + 0.5, G.pts[k][1] + 0.5];
+  const L = document.createElementNS(NS, 'line'), c = k => [PX(k) + 0.5, PY(k) + 0.5];
   const [x1, y1] = c(i), [x2, y2] = c(j); L.setAttribute('x1', x1); L.setAttribute('y1', y1); L.setAttribute('x2', x2); L.setAttribute('y2', y2);
   L.setAttribute('class', cls); L.setAttribute('stroke-width', w * G.size / 7); svg.appendChild(L); return L;
 }
 function svgArrow(svg, f, t, cls) {
-  const c = k => [G.pts[k][0] + 0.5, G.pts[k][1] + 0.5], [x1, y1] = c(f), [x2, y2] = c(t);
+  const c = k => [PX(k) + 0.5, PY(k) + 0.5], [x1, y1] = c(f), [x2, y2] = c(t);
   const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, k = G.size / 7;
   const sx = x1 + ux * 0.3 * k, sy = y1 + uy * 0.3 * k, ex = x2 - ux * 0.36 * k, ey = y2 - uy * 0.36 * k, h = 0.16 * k;
   const p = document.createElementNS(NS, 'path');
@@ -1909,7 +1912,7 @@ function pointAt(clientX, clientY) {
   const r = boardEl.getBoundingClientRect(), u = r.width / G.size;
   const x = (clientX - r.left) / u - 0.5, y = (clientY - r.top) / u - 0.5;
   let best = -1, bd = 0.5;
-  for (let i = 0; i < G.n; i++) { const d = Math.hypot(G.pts[i][0] - x, G.pts[i][1] - y); if (d < bd) { bd = d; best = i; } }
+  for (let i = 0; i < G.n; i++) { const d = Math.hypot(PX(i) - x, PY(i) - y); if (d < bd) { bd = d; best = i; } }
   return best;
 }
 let hoverEl = null;
@@ -3596,6 +3599,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'morris', lang: () => LANG, onChange: () => { drawLines(); update(); } });
 drawLines();
 if (window.GameRecord) GameRecord.init({ game: 'morris', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.MorrisCoach) MorrisCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
@@ -3709,7 +3713,7 @@ window.addEventListener('resize', () => renderFx());
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/morris.js?v=4')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/morris.js?v=4')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

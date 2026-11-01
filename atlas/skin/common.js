@@ -169,6 +169,7 @@
     const bar = document.createElement('header'); bar.className = 'atlas-top';
     bar.innerHTML = `<a class="atlas-brand" href="${BASE}"><img src="${BASE}logo.svg" alt="" width="44" height="44"><span><b class="wmT"></b><small>World Board Game Atlas</small></span></a><span class="sp"></span>
       <span class="atlas-coin"><i>¢</i><b class="coinN">0</b></span>
+      <button type="button" class="atlas-ic" id="atlasFlip" aria-label="Flip"></button>
       <button type="button" class="atlas-ic" id="atlasSnd" aria-label="Sound"></button>
       <button type="button" class="atlas-lbtn" id="atlasLang" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b class="lc">JA</b></button>
       <div class="atlas-lpop" id="atlasLangPop" hidden></div>
@@ -177,6 +178,9 @@
     // sound: reuse the game's own button
     const snd = document.getElementById('btnSound'), mySnd = bar.querySelector('#atlasSnd');
     if (snd) { mySnd.innerHTML = snd.innerHTML; mySnd.onclick = () => { snd.click(); mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); }; mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); } else mySnd.remove();
+    // board flip: mirror the game's 盤面反転 button (shared/flipbtn.js)
+    const flp = document.getElementById('btnFlip'), myFlp = bar.querySelector('#atlasFlip');
+    if (flp) { const sync = () => { myFlp.innerHTML = flp.innerHTML; myFlp.title = flp.title; myFlp.className = 'atlas-ic' + (flp.classList.contains('on') ? ' on' : ''); myFlp.style.color = flp.classList.contains('on') ? '#e2b65e' : ''; }; myFlp.onclick = () => { flp.click(); sync(); }; sync(); new MutationObserver(sync).observe(flp, { attributes: true }); } else myFlp.remove();
     const sel = document.getElementById('langSel'), pop = bar.querySelector('#atlasLangPop'), lbtn = bar.querySelector('#atlasLang');
     const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
     const paint = () => { bar.querySelector('.wmT').textContent = TITLE[lang()] || TITLE.en; bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; bar.querySelector('.lc').textContent = lang().toUpperCase(); };

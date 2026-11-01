@@ -224,7 +224,7 @@ const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), sqEl = $(
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 let flipped = false;
-function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!settings.flip; }
+function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!(window.FlipBtn && FlipBtn.on()); }   // + the 盤面反転 button (shared/flipbtn.js)
 const sqX = s => flipped ? 7 - (s & 7) : (s & 7), sqY = s => flipped ? (s >> 4) : 7 - (s >> 4);
 function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; }
 // image piece sets (pieces/README.md: lichess sets under MIT / Apache 2.0 / CC BY 4.0 / CC0); 'std' = the drawn set below, coloured by the board skin
@@ -430,7 +430,6 @@ function renderInfo() {
   wpRender();
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
-  $('#btnFlip').classList.toggle('on', !!settings.flip);
   renderReview(); rvbRender();
   if (window.ChessCoach) ChessCoach.render();
   $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
@@ -868,7 +867,7 @@ $('#btnHint').onclick = () => {
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
 };
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; try { localStorage.setItem('atlas-sfx', settings.sound ? '1' : '0'); } catch (e) {} save(); renderInfo(); if (settings.sound) playTick(); };
-$('#btnFlip').onclick = () => { settings.flip = !settings.flip; save(); orient(); drawSquares(); shownKey = ''; syncPieces(posAt(cur).pos.b); renderBoard(false); renderInfo(); };
+function flipRedraw() { orient(); drawSquares(); shownKey = ''; syncPieces(posAt(cur).pos.b); renderBoard(false); renderInfo(); }   // 盤面反転 (shared/flipbtn.js: button + F key)
 $('#btnLesson').onclick = () => openLessons();
 $('#btnPuzzle').onclick = () => openPuzzles();
 $('#btnRules').onclick = () => openRules('move');
@@ -918,7 +917,6 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && ![...document.querySelectorAll('.overlay.show')].some(o => o.id !== 'resultOverlay')) { e.preventDefault(); undo(); return; }
   if (document.querySelector('.overlay.show')) { if (e.key === 'Escape') document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show')); return; }
   if (e.key === 'Escape') { sel = null; closePromo(); renderFx(); return; }
-  if (e.key === 'f' || e.key === 'F') $('#btnFlip').click();
 });
 
 // ---------------------------------------------------------------- illustrated rules
@@ -2909,7 +2907,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('.dk-watch, #olWatchStop, #olWatchFlip'); if (!b) return;
   e.stopPropagation();
   if (b.id === 'olWatchStop') olWatchStop();
-  else if (b.id === 'olWatchFlip') $('#btnFlip').click();
+  else if (b.id === 'olWatchFlip') { if (window.FlipBtn) FlipBtn.toggle(); }
   else olWatchRoom(b.dataset.code, b);
 }, true);
 
@@ -3315,7 +3313,9 @@ applySkin();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
-applyI18n(); orient(); drawSquares();
+applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'chess', lang: () => LANG, onChange: flipRedraw });
+orient(); drawSquares();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 if (window.GameRecord) GameRecord.init({ game: 'chess', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
 if (window.ChessCoach) ChessCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it

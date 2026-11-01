@@ -214,7 +214,8 @@ function drawLines() {
   boardEl.classList.toggle('no-num', !settings.num);
 }
 function setFlip(f) { if (f === flip) return; flip = f; drawLines(); syncPieces(posAt(cur).pos, true); }
-function flipFor() {   // own pieces at the bottom: the human's colour in games vs the AI, the solver in lessons / puzzles
+const flipFor = () => flipAuto() !== !!(window.FlipBtn && FlipBtn.on());   // + the 盤面反転 button (shared/flipbtn.js)
+function flipAuto() {   // own pieces at the bottom: the human's colour in games vs the AI, the solver in lessons / puzzles
   if (puzzle) return puzzle.me === P2;
   if (lesson) return lesson.me === P2;
   if (settings.mode === 'online' && window.olMyColor) return olMyColor() === P2;
@@ -2162,6 +2163,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'xiangqi', lang: () => LANG, onChange: () => { renderBoard(); renderInfo(); } });
 flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 if (window.GameRecord) GameRecord.init({ game: 'xiangqi', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu

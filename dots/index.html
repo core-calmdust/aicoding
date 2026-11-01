@@ -1142,6 +1142,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=4"></script><!-- learn-ui -->
 <script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/flipbtn.js?v=1"></script>
 <script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
@@ -1150,13 +1151,13 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
 <script src="engine.js?v=20261028rb"></script>
 <script src="rvbox.js?v=20261028sk"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
-<script src="learn.js?v=20261024lsan"></script>
+<script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
 <script src="../shared/coachkit.js?v=14"></script>
-<script src="../shared/record.js?v=2"></script>
+<script src="../shared/record.js?v=3"></script>
 <script src="coach.js?v=4"></script>
 <script src="../shared/export.js?v=6"></script>
 <script src="coach-i18n.js?v=2"></script>
@@ -1340,9 +1341,13 @@ const svg = $('#svg'), gGuides = $('#gGuides'), gBoxes = $('#gBoxes'), gEdges = 
 const NS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs, parent) { const x = document.createElementNS(NS, tag); for (const k in attrs) x.setAttribute(k, attrs[k]); if (parent) parent.appendChild(x); return x; }
 let builtFor = '';
-function edgeXY(e) { const G = E.geom(game.n, game.n), [r1, c1, r2, c2] = G.ed[e]; return [M + c1 * U, M + r1 * U, M + c2 * U, M + r2 * U]; }
+// 盤面反転 (shared/flipbtn.js): the board turned round 180° — positions are mapped here, the labels stay upright
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());
+const FP = v => flipOn() ? game.n * U + 2 * M - v : v;   // svg coordinate -> screen svg coordinate (its own inverse)
+function edgeXY(e) { const G = E.geom(game.n, game.n), [r1, c1, r2, c2] = G.ed[e]; return [FP(M + c1 * U), FP(M + r1 * U), FP(M + c2 * U), FP(M + r2 * U)]; }
+function boxXY(b) { const n = game.n, r = Math.floor(b / n), c = b % n; return flipOn() ? [M + (n - 1 - c) * U, M + (n - 1 - r) * U] : [M + c * U, M + r * U]; }   // top-left corner of box b on the screen
 function buildBoard() {
-  const n = game.n, W = n * U + 2 * M, key = n + '';
+  const n = game.n, W = n * U + 2 * M, key = n + (flipOn() ? 'f' : '');
   if (builtFor === key) return;
   builtFor = key;
   svg.setAttribute('viewBox', `0 0 ${W} ${W}`);
@@ -1350,8 +1355,8 @@ function buildBoard() {
   const G = E.geom(n, n);
   for (let e = 0; e < G.E; e++) { const [x1, y1, x2, y2] = edgeXY(e); el('line', { x1, y1, x2, y2, class: 'guide', pathLength: 100 }, gGuides); }
   for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) el('circle', { cx: M + c * U, cy: M + r * U, r: 9, class: 'dot' }, gDots);
-  for (let c = 0; c <= n; c++) { const tx = el('text', { x: M + c * U, y: M - 36, class: 'coord' }, gGuides); tx.textContent = letters[c]; }
-  for (let r = 0; r <= n; r++) { const tx = el('text', { x: M - 38, y: M + r * U, class: 'coord' }, gGuides); tx.textContent = r + 1; }
+  for (let c = 0; c <= n; c++) { const tx = el('text', { x: FP(M + c * U), y: M - 36, class: 'coord' }, gGuides); tx.textContent = letters[c]; }
+  for (let r = 0; r <= n; r++) { const tx = el('text', { x: M - 38, y: FP(M + r * U), class: 'coord' }, gGuides); tx.textContent = r + 1; }
 }
 function renderBoard(anim) {
   buildBoard();
@@ -1368,13 +1373,13 @@ function renderBoard(anim) {
   const fs = 46;
   for (let b = 0; b < G.B; b++) {
     const o = S.owner[b]; if (o < 0) continue;
-    const r = Math.floor(b / game.n), c = b % game.n;
+    const [bx, by] = boxXY(b);
     const g = el('g', { class: 'box ' + (o === 2 ? 'pn' : 'p' + o) + (newBoxes.includes(b) ? ' new' : '') }, gBoxes);
-    el('rect', { x: M + c * U + 9, y: M + r * U + 9, width: U - 18, height: U - 18, rx: 8 }, g);
-    if (o !== 2) el('use', { href: '#ic' + playerKind(o), x: M + c * U + U / 2 - fs / 2, y: M + r * U + U / 2 - fs / 2, width: fs, height: fs, class: 'bic' }, g);
-    if (newBoxes.includes(b)) el('rect', { x: M + c * U + 9, y: M + r * U + 9, width: U - 18, height: U - 18, rx: 8, class: 'ripple p' + o }, gFx);
+    el('rect', { x: bx + 9, y: by + 9, width: U - 18, height: U - 18, rx: 8 }, g);
+    if (o !== 2) el('use', { href: '#ic' + playerKind(o), x: bx + U / 2 - fs / 2, y: by + U / 2 - fs / 2, width: fs, height: fs, class: 'bic' }, g);
+    if (newBoxes.includes(b)) el('rect', { x: bx + 9, y: by + 9, width: U - 18, height: U - 18, rx: 8, class: 'ripple p' + o }, gFx);
   }
-  if ((lesson || puzzle) && !S.over) for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const r = Math.floor(b / game.n), c = b % game.n; el('rect', { x: M + c * U + 14, y: M + r * U + 14, width: U - 28, height: U - 28, rx: 6, class: 'cap3' }, gFx); }
+  if ((lesson || puzzle) && !S.over) for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) { const [bx, by] = boxXY(b); el('rect', { x: bx + 14, y: by + 14, width: U - 28, height: U - 28, rx: 6, class: 'cap3' }, gFx); }
   if (hintEdge >= 0 && !p.drawn[hintEdge]) { const [x1, y1, x2, y2] = edgeXY(hintEdge); el('line', { x1, y1, x2, y2, class: 'hintline' }, gFx); }
   if (badEdge >= 0 && !p.drawn[badEdge]) { const [x1, y1, x2, y2] = edgeXY(badEdge); el('line', { x1, y1, x2, y2, class: 'badline' }, gFx); }
   if (lesson) drawAids();
@@ -1390,7 +1395,7 @@ function edgeAt(ev) {
   const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
   const ctm = svg.getScreenCTM(); if (!ctm) return -1;
   const q = pt.matrixTransform(ctm.inverse());
-  const n = game.n, u = (q.x - M) / U, v = (q.y - M) / U;
+  const n = game.n, u = (FP(q.x) - M) / U, v = (FP(q.y) - M) / U;   // (unturned)
   if (u < -0.55 || v < -0.55 || u > n + 0.55 || v > n + 0.55) return -1;
   const G = E.geom(n, n);
   // nearest horizontal edge
@@ -2228,6 +2233,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'dots', lang: () => LANG, onChange: () => { if (S) renderBoard(false); } });   // 盤面反転
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
@@ -2278,7 +2284,7 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/dots.js?v=3')).then(() => load('../atlas/skin/dots.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/dots.js?v=3')).then(() => load('../atlas/skin/dots.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

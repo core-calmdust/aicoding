@@ -173,7 +173,11 @@ function hexXY(i, n) { const r = Math.floor(i / n), c = i % n; return [c + r / 2
 // ROT: false = flat (rows run across, slanted to the right), true = transposed (rows run down), 2 = diamond (the flat board turned
 // 30° so its long diagonal runs across: the PC's wide layout, 2026-10-28)
 const C30 = SQ3 / 2, rot30 = (x, y) => [x * C30 + y / 2, y * C30 - x / 2];
-const tr = (x, y) => ROT === 2 ? rot30(x, y) : ROT ? [y, x] : [x, y];
+// 盤面反転 (shared/flipbtn.js): FL = the board turned round 180° about its centre (FN = the size it is drawn for); the hex board keeps its
+// shape, and the cells, coloured sides, coordinates and plate all go through tr, so they all turn with it (the text stays upright)
+let FL = false, FN = 0;
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());
+const tr = (x, y) => { if (FL) { x = (FN - 1) * 1.5 - x; y = (FN - 1) * SQ3 / 2 - y; } return ROT === 2 ? rot30(x, y) : ROT ? [y, x] : [x, y]; };
 // the diamond's view box: its plate and coordinates, with a little room round them
 // its plate: the rhombus with the two sharp (left / right) tips cut off a little outside the corner cells and their coordinates
 function diaPlate(n) {
@@ -188,13 +192,14 @@ function diaVB(n) {
   return [x0, y0, x1 - x0, y1 - y0];
 }
 function geom(n) {
+  FL = flipOn(); FN = n;
   const X = [], Y = [];
   for (let i = 0; i < n * n; i++) { const [x, y] = tr(...hexXY(i, n)); X.push(x); Y.push(y); }
   const mx = 1.35, my = 1.2;   // room for the edges and the coordinates
   let x0 = -.5 - mx, x1 = (n - 1) * 1.5 + .5 + mx, y0 = -HR - my, y1 = (n - 1) * SQ3 / 2 + HR + my;
-  if (ROT === 2) return { n, rot: ROT, vb: diaVB(n), X, Y };
+  if (ROT === 2) return { n, rot: ROT, fl: FL, vb: diaVB(n), X, Y };
   if (ROT) [x0, x1, y0, y1] = [y0, y1, x0, x1];
-  return { n, rot: ROT, vb: [x0, y0, x1 - x0, y1 - y0], X, Y };
+  return { n, rot: ROT, fl: FL, vb: [x0, y0, x1 - x0, y1 - y0], X, Y };
 }
 const ptX = i => (G.X[i] - G.vb[0]) / G.vb[2] * 100, ptY = i => (G.Y[i] - G.vb[1]) / G.vb[3] * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
@@ -274,7 +279,7 @@ function drawBoardSVG(n) {
 // PC layout (html.pc2 = PC_MQ, see index.html): the board is one wide band across the window with the info below it, so it is
 // always drawn as the diamond (long diagonal across, like Mancala / Backgammon's wide boards) (2026-10-28)
 function pcRot(n) { void n; return document.documentElement.classList.contains('pc2') ? 2 : false; }
-function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT) drawBoardSVG(n); document.documentElement.classList.toggle('bd-dia', ROT === 2); }
+function ensureBoard(n) { ROT = rotQ.matches || pcRot(n); if (!G || G.n !== n || G.rot !== ROT || G.fl !== flipOn()) drawBoardSVG(n); document.documentElement.classList.toggle('bd-dia', ROT === 2); }
 rotQ.addEventListener && rotQ.addEventListener('change', () => { ROT = rotQ.matches; G = null; update(false); });
 window.addEventListener('resize', () => { if (!G) return; const w = rotQ.matches || pcRot(G.n); if (w !== G.rot) update(false); });
 const stoneEls = new Map();      // cell → <g>
@@ -2141,6 +2146,7 @@ applyI18n();
 if (!hadSave) { setVariant(settings.n); gSwap = settings.swap; }
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 if (window.GameRecord) GameRecord.init({ game: 'hex', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.FlipBtn) FlipBtn.init({ game: 'hex', lang: () => LANG, onChange: () => { setHover(-1); renderBoard(false); } });   // 盤面反転 (shared/flipbtn.js)
 if (window.HexCoach) HexCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ media: '(hover: hover) and (pointer: fine) and (min-width: 900px)', order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });

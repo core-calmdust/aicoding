@@ -264,25 +264,30 @@ function offXY(s, k) {
 // checker position of the k-th checker (0 = bottom of the stack) of side s on its point p, with n checkers there
 function ckXY(s, p, k, n) { if (p === 25) return barXY(s, k, n); return slotXY(toV(s, p), k, n); }
 const U = v => `calc(var(--u) * ${+v.toFixed(4)})`;
+// 盤面反転 (shared/flipbtn.js): the main board turned round 180° on top of the automatic view (own side at the bottom).
+// Positions are worked out unturned (ckXY, slotX…) and mapped to the screen here; the mapping is its own inverse.
+const bgFlip = () => !!(window.FlipBtn && FlipBtn.on());
+const MX = x => bgFlip() ? G.W - x : x, MY = y => bgFlip() ? G.H - y : y, MP = a => [MX(a[0]), MY(a[1])];
 
 // static board drawing (SVG, 100 user units per board unit)
 const curSkin = () => (window.BGTheme ? BGTheme.skin(settings.skin) : { frame: ['#3a2416', '#24150c', '#3b2517'], grain: 'rgba(255,220,170,.05)', felt: ['#1d6a4b', '#145238', '#0b3424'], noise: .9, ptA: ['#efe5cc', '#c8b994'], ptB: ['#7a2a24', '#4a1612'], bar: ['#1f130a', '#3a2416', '#1f130a'], tray: ['#08251a', '#0d2f21', '#08251a'], inlay: ['#f0d68f', '#b8934e', '#e2c275'], hinge: true, mini: { frame: '#2b1a10', felt: '#17573f', a: '#e6dbc2', b: '#6b2420', tray: '#0d2f21' } });
 function drawBoardSvg() {
   const w = G.W * 100, h = G.H * 100;
   $('#boardSvg').setAttribute('viewBox', `0 0 ${w} ${h}`); $('#arrows').setAttribute('viewBox', `0 0 ${w} ${h}`);
-  $('#boardSvg').innerHTML = window.BGTheme ? BGTheme.boardMarkup(settings.skin, G, 'b') : `<rect width="${w}" height="${h}" rx="28" fill="#2b1a10"/>`;
+  const mk = window.BGTheme ? BGTheme.boardMarkup(settings.skin, G, 'b') : `<rect width="${w}" height="${h}" rx="28" fill="#2b1a10"/>`;
+  $('#boardSvg').innerHTML = bgFlip() ? `<g transform="rotate(180 ${w / 2} ${h / 2})">${mk}</g>` : mk;
 }
 function drawLabels() {
   let h = '';
   for (let vp = 1; vp <= 24; vp++) {
     const x = slotX(vp), y = vp >= 13 ? 0.24 : G.H - 0.24;
-    h += `<div class="lbl" style="left:${U(x)};top:${U(y)}">${vp}</div>`;
+    h += `<div class="lbl" style="left:${U(MX(x))};top:${U(MY(y))}">${vp}</div>`;
   }
   const st = shownState();
   const p = st.pos;
   const bx = G.BX + G.B / 2;
-  h += `<div class="lbl pip" style="left:${U(bx)};top:${U(G.H - 0.24)}">${BG.pips(p, view)}</div>`;
-  h += `<div class="lbl pip" style="left:${U(bx)};top:${U(0.24)}">${BG.pips(p, 1 - view)}</div>`;
+  h += `<div class="lbl pip" style="left:${U(MX(bx))};top:${U(MY(G.H - 0.24))}">${BG.pips(p, view)}</div>`;
+  h += `<div class="lbl pip" style="left:${U(MX(bx))};top:${U(MY(0.24))}">${BG.pips(p, 1 - view)}</div>`;
   lblLayer.innerHTML = h;
 }
 
@@ -311,7 +316,7 @@ function renderCheckers(p, opts) {
     for (let pt = 1; pt <= 25; pt++) {
       const n = p[m + pt];
       for (let k = 0; k < n; k++) {
-        const [x, y] = ckXY(s, pt, k, n);
+        const [x, y] = MP(ckXY(s, pt, k, n));
         const el = document.createElement('div');
         el.className = 'ck p' + s;
         el.dataset.s = s; el.dataset.p = pt; el.dataset.k = k;
@@ -326,7 +331,7 @@ function renderCheckers(p, opts) {
       }
     }
     for (let k = 0; k < p[m]; k++) {
-      const [x, y] = offXY(s, k);
+      const [x, y] = MP(offXY(s, k));
       const el = document.createElement('div'); el.className = 'slab p' + s; el.dataset.s = s; el.dataset.off = k;
       el.style.left = U(x); el.style.top = U(y);
       ckLayer.appendChild(el);
@@ -349,7 +354,7 @@ function renderCube(st, offeredBy) {
     if (CQ.cubeQ === 'take') { x = CQ.side === view ? G.LX + 3 : G.RX + 3; txt = '2'; cls += ' offer'; }
   }
   cubeEl.className = cls; cubeEl.textContent = txt;
-  cubeEl.style.left = U(x); cubeEl.style.top = U(y);
+  cubeEl.style.left = U(MX(x)); cubeEl.style.top = U(MY(y));
   cubeEl.style.display = (match && match.cube && !lesson && !puzzle) || CQ ? '' : 'none';
 }
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -357,7 +362,7 @@ function dieHTML(s, v, x, y, used, size, yaw) {
   const on = new Set(PIPS[v] || []);
   // yaw: the angle a thrown die came to rest at; the drop shadow is turned back so it still falls straight down
   const rot = yaw ? `transform:rotate(${yaw.toFixed(4)}rad);--sx:${(0.08 * Math.sin(yaw)).toFixed(4)};--sy:${(0.08 * Math.cos(yaw)).toFixed(4)};` : '';
-  let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(x)};top:${U(y)};${size ? `--ds:${size};` : ''}${rot}">`;
+  let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(MX(x))};top:${U(MY(y))};${size ? `--ds:${size};` : ''}${rot}">`;
   for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? 'on' : ''}"></i>`;
   return h + '</div>';
 }
@@ -401,7 +406,7 @@ async function rollAnim(s, dice, opening) {
   SFX.dice();
   restPose = null;
   if (!settings.anim || !window.Dice3D || !Dice3D.ready) return;      // animations switched off in the settings: instant
-  const half = side => side === view ? { hx0: G.RX, hx1: G.RE, dir: 1 } : { hx0: G.LX, hx1: G.BX, dir: -1 };
+  const F = bgFlip(), half = side => side === view ? (F ? { hx0: G.W - G.RE, hx1: G.W - G.RX, dir: -1 } : { hx0: G.RX, hx1: G.RE, dir: 1 }) : (F ? { hx0: G.W - G.BX, hx1: G.W - G.LX, dir: 1 } : { hx0: G.LX, hx1: G.BX, dir: -1 });   // (the throw is planned on the screen: turned round with 盤面反転)
   const specDice = opening ? [Object.assign({ v: dice[0], side: 0 }, half(0)), Object.assign({ v: dice[1], side: 1 }, half(1))]
     : [Object.assign({ v: dice[0], side: s }, half(s)), Object.assign({ v: dice[1], side: s }, half(s))];
   const plan = Dice3D.plan({ dice: specDice, yMid: G.MID, yMin: G.TOP, yMax: G.BOT, band: Math.max(0.7, G.MID - G.TOP - G.PL + 0.15) });
@@ -415,7 +420,7 @@ async function rollAnim(s, dice, opening) {
   rollAnimating = true; rollSkip = false;
   diceLayer.replaceChildren(cv);
   const t0 = performance.now();
-  const end = plan.dice.map(d => d.rest);
+  const end = plan.dice.map(d => F ? { x: G.W - d.rest.x, y: G.H - d.rest.y, yaw: d.rest.yaw } : d.rest);   // where they came to rest, unturned (dieHTML turns it back)
   try {
     for (;;) {
       const t = (performance.now() - t0) / 1000;
@@ -443,7 +448,7 @@ async function rollAnim(s, dice, opening) {
         if (rollSkip) break;
         els.forEach((el, i) => {
           const yaw = end[i].yaw + (yawT[i] - end[i].yaw) * e, sc = 1 + (0.74 / 0.82 - 1) * e;
-          el.style.left = U(end[i].x + (tgt(i) - end[i].x) * e); el.style.top = U(end[i].y + (G.MID - end[i].y) * e);
+          el.style.left = U(MX(end[i].x + (tgt(i) - end[i].x) * e)); el.style.top = U(MY(end[i].y + (G.MID - end[i].y) * e));
           el.style.transform = `rotate(${yaw.toFixed(4)}rad) scale(${sc.toFixed(4)})`;
         });
         if (q >= 1) break;
@@ -526,7 +531,7 @@ function renderDests() {
   for (const mk of marks) {
     const s = mk.side, p = mk.p, pos = shownState().pos, n = p === 0 ? 0 : pos[s * 26 + p];
     if (p === 0) continue;
-    const [x, y] = ckXY(s, p, Math.max(0, n - 1), Math.max(1, n));
+    const [x, y] = MP(ckXY(s, p, Math.max(0, n - 1), Math.max(1, n)));
     const d = document.createElement('div'); d.className = 'dst ' + (mk.cls || 'far'); d.style.left = U(x); d.style.top = U(y);
     if (mk.cls === 'blot') { d.style.borderColor = '#ff9b90'; d.style.boxShadow = '0 0 12px rgba(255,107,91,.6)'; d.style.animation = 'none'; }
     dstLayer.appendChild(d);
@@ -538,16 +543,17 @@ function renderDests() {
     if (to === 0) {
       const g = document.createElement('div'); g.className = 'trayglow';
       const top = s === view ? G.MID + 0.1 : G.TOP + 0.05, h = s === view ? G.BOT - G.MID - 0.15 : G.MID - G.TOP - 0.15;
-      g.style.left = U(G.TX + 0.05); g.style.top = U(top); g.style.width = U(G.TW - 0.1); g.style.height = U(h); g.dataset.p = 0;
+      g.style.left = U(bgFlip() ? G.W - G.TX - G.TW + 0.05 : G.TX + 0.05); g.style.top = U(bgFlip() ? G.H - top - h : top); g.style.width = U(G.TW - 0.1); g.style.height = U(h); g.dataset.p = 0;
       dstLayer.appendChild(g); continue;
     }
     const n = turn.pos[s * 26 + to], oppHere = turn.pos[(1 - s) * 26 + 25 - to];
-    const [x, y] = ckXY(s, to, n, n + 1);
+    const [x, y] = MP(ckXY(s, to, n, n + 1));
     const d = document.createElement('div'); d.className = 'dst' + (path.length > 1 ? ' far' : '') + (oppHere === 1 ? ' hitd' : '');
     d.style.left = U(x); d.style.top = U(y); d.dataset.p = to; dstLayer.appendChild(d);
     const vp = toV(s, to), gl = document.createElement('div'); gl.className = 'ptglow';
-    gl.style.left = U(slotX(vp) - 0.5); gl.style.top = U(vp >= 13 ? G.TOP : G.MID + 0.2); gl.style.height = U(G.MID - G.TOP - 0.2);
-    gl.style.setProperty('--dir', vp >= 13 ? '0deg' : '180deg');
+    const gtop = (vp >= 13) !== bgFlip();   // the point's triangle is at the top of the screen
+    gl.style.left = U(MX(slotX(vp)) - 0.5); gl.style.top = U(gtop ? G.TOP : G.MID + 0.2); gl.style.height = U(G.MID - G.TOP - 0.2);
+    gl.style.setProperty('--dir', gtop ? '0deg' : '180deg');
     glowLayer.appendChild(gl);
   }
 }
@@ -557,10 +563,11 @@ async function animStep(p, s, from, to) {
   const q = p.slice(); const code = BG.apply(q, s, from, to); const hit = BG.mvHit(code);
   if (!el || !anim()) { if (hit) SFX.hit(); else if (to === 0) SFX.off(); else SFX.clack(); return q; }
   const u = uPx();
-  const [x0, y0] = (() => { const n = p[s * 26 + from]; return ckXY(s, from, n - 1, n); })();
+  const [x0, y0] = MP((() => { const n = p[s * 26 + from]; return ckXY(s, from, n - 1, n); })());
   let x1, y1;
   if (to === 0) { [x1, y1] = offXY(s, q[s * 26]); y1 += 0.125; }
   else { const n = q[s * 26 + to]; [x1, y1] = ckXY(s, to, n - 1, n); }
+  [x1, y1] = MP([x1, y1]);
   el.classList.add('flying');
   const dx = (x1 - x0) * u, dy = (y1 - y0) * u, dist = Math.hypot(dx, dy);
   const dur = Math.min(420, 170 + dist * 0.55);
@@ -573,8 +580,8 @@ async function animStep(p, s, from, to) {
   if (hit) {
     const o = 1 - s, victim = topChecker(o, 25 - to);
     if (victim) {
-      const [bx, by] = barXY(o, q[o * 26 + 25] - 1, q[o * 26 + 25]);
-      const [vx, vy] = ckXY(o, 25 - to, 0, 1);
+      const [bx, by] = MP(barXY(o, q[o * 26 + 25] - 1, q[o * 26 + 25]));
+      const [vx, vy] = MP(ckXY(o, 25 - to, 0, 1));
       SFX.hit();
       await victim.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${(bx - vx) * u}px,${(by - vy) * u}px)` }], { duration: 300, easing: 'cubic-bezier(.3,.6,.3,1)', fill: 'forwards' }).finished.catch(() => {});
     }
@@ -671,7 +678,7 @@ function commitTurn() {
 let ROT = false;
 function lp(e) { return ROT ? [e.clientY, innerWidth - e.clientX] : [e.clientX, e.clientY]; }
 function lrect(el) { const r = el.getBoundingClientRect(); return ROT ? { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width } : r; }
-function unitXY(e) { const r = lrect(frameEl), [x, y] = lp(e); return [(x - r.left) / r.width * G.W, (y - r.top) / r.height * G.H]; }
+function unitXY(e) { const r = lrect(frameEl), [x, y] = lp(e); return MP([(x - r.left) / r.width * G.W, (y - r.top) / r.height * G.H]); }   // (unturned board units)
 function hitPoint(ux, uy) {
   // returns view point (1..24), 25 bar, 0 tray, or -1
   if (ux >= G.TX - 0.15 && ux <= G.TX + G.TW + 0.3) return 0;
@@ -774,7 +781,7 @@ function setButtons(list, side, own) {
   bbtns.style.display = '';
   const right = own ? side === view : side !== view;
   const x = right ? G.RX + 3 : G.LX + 3;
-  bbtns.style.left = U(x); bbtns.style.top = U(G.MID);
+  bbtns.style.left = U(MX(x)); bbtns.style.top = U(G.MID);
   for (const b of list) {
     const el = document.createElement('button'); el.className = 'bbtn ' + (b.cls || ''); el.textContent = b.label; el.id = 'bb-' + b.id;
     el.addEventListener('pointerdown', ev => ev.stopPropagation());
@@ -1440,11 +1447,12 @@ function playArrows(side, start, moves, color, dashed) {
   for (const c of moves) {
     const f = BG.mvFrom(c), to = BG.mvTo(c);
     const nf = q[side * 26 + f];
-    const [x0, y0] = ckXY(side, f, nf - 1, nf);
+    let [x0, y0] = ckXY(side, f, nf - 1, nf);
     BG.apply(q, side, f, to);
     let x1, y1;
     if (to === 0) { [x1, y1] = offXY(side, q[side * 26] - 1); y1 += 0.12; }
     else { const n = q[side * 26 + to]; [x1, y1] = ckXY(side, to, n - 1, n); }
+    [x0, y0] = MP([x0, y0]); [x1, y1] = MP([x1, y1]);
     const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(1.2, Math.abs(x1 - x0) * 0.18 + 0.2) * (y0 < G.MID && y1 < G.MID ? -1 : 1);
     const id = 'ah' + color.replace(/[^a-z0-9]/gi, '');
     h += `<path d="M${x0 * S} ${y0 * S} Q${mx * S} ${my * S} ${x1 * S} ${y1 * S}" stroke="#08120c" stroke-width="15" fill="none" opacity=".85" ${dashed ? 'stroke-dasharray="20 12" stroke-dashoffset="1"' : ''}/>`;
@@ -3229,6 +3237,7 @@ const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 applyCk();
 if (window.BGTheme) { settings.skin = BGTheme.skinId(settings.skin); BGTheme.applySkin(settings.skin); }
+if (window.FlipBtn) FlipBtn.init({ game: 'backgammon', lang: () => LANG, onChange: () => { drawBoardSvg(); try { render(); renderInfo(); } catch (e) {} } });   // 盤面反転
 drawBoardSvg();
 // a game that was already finished when the page was saved: don't show its result (win condition) again on every visit
 try { if (hadSave && match) match.games.forEach((gm, g) => { if (stateAt(g, gm.actions.length).over) gameOverShown.add(g + ':' + gm.actions.length); }); } catch (e) {}

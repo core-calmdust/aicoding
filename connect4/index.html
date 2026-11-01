@@ -1213,6 +1213,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/flipbtn.js?v=1"></script>
 <script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
@@ -1223,7 +1224,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
 <script src="../shared/coachkit.js?v=14"></script>
-<script src="../shared/record.js?v=2"></script>
+<script src="../shared/record.js?v=3"></script>
 <script src="coach.js?v=6"></script>
 <script src="coach-i18n.js?v=4"></script>
 <script src="../shared/export.js?v=6"></script>
@@ -1457,7 +1458,14 @@ for (let c = 0; c < COLS; c++) {
   hitsEl.appendChild(b);
 }
 let hoverCol = -1, ghostEl = null, previewEl = null;
-function discPos(el, c, r) { el.style.left = `calc(var(--cell) * ${c})`; el.style.top = `calc(var(--cell) * ${ROWS - 1 - r})`; }
+// 盤面反転 (shared/flipbtn.js): gravity stays downward, so the board is mirrored left-right (column labels follow)
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());
+const VC = c => flipOn() ? COLS - 1 - c : c;   // column -> screen column (its own inverse)
+function applyFlipCols() {
+  [...hitsEl.children].forEach((b, c) => { b.style.gridColumn = String(VC(c) + 1); b.style.gridRow = '1'; });
+  [...document.querySelectorAll('.coords span')].forEach((sp, c) => { sp.style.order = String(VC(c)); });
+}
+function discPos(el, c, r) { el.style.left = `calc(var(--cell) * ${VC(c)})`; el.style.top = `calc(var(--cell) * ${ROWS - 1 - r})`; }
 function setHover(c) {
   hoverCol = c;
   if (ghostEl) { ghostEl.remove(); ghostEl = null; }
@@ -1465,10 +1473,10 @@ function setHover(c) {
   const can = c >= 0 && canHumanPlay() && canDrop(shownMoves(), c);
   colhl.classList.toggle('show', can);
   if (!can) return;
-  colhl.style.left = `calc(var(--cell) * ${c})`;
+  colhl.style.left = `calc(var(--cell) * ${VC(c)})`;
   const shown = shownMoves(), p = toMoveOf(shown), r = gridOf(shown)[c].length;
   ghostEl = document.createElement('div'); ghostEl.className = `disc p${p} ghost`;
-  ghostEl.style.left = `calc(var(--cell) * ${c})`; ghostEl.style.top = `calc(var(--cell) * -1)`; ghostEl.style.opacity = '.85';
+  ghostEl.style.left = `calc(var(--cell) * ${VC(c)})`; ghostEl.style.top = `calc(var(--cell) * -1)`; ghostEl.style.opacity = '.85';
   discsEl.appendChild(ghostEl);
   previewEl = document.createElement('div'); previewEl.className = `disc p${p} ghost`; discPos(previewEl, c, r); previewEl.style.opacity = '.28';
   discsEl.appendChild(previewEl);
@@ -1531,7 +1539,7 @@ function renderFx() {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'winline');
     svg.setAttribute('viewBox', '0 0 700 600'); svg.setAttribute('preserveAspectRatio', 'none');
     const L = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    L.setAttribute('x1', a[0] * 100 + 50); L.setAttribute('y1', (5 - a[1]) * 100 + 50); L.setAttribute('x2', b[0] * 100 + 50); L.setAttribute('y2', (5 - b[1]) * 100 + 50);
+    L.setAttribute('x1', VC(a[0]) * 100 + 50); L.setAttribute('y1', (5 - a[1]) * 100 + 50); L.setAttribute('x2', VC(b[0]) * 100 + 50); L.setAttribute('y2', (5 - b[1]) * 100 + 50);
     L.setAttribute('vector-effect', 'non-scaling-stroke');
     svg.appendChild(L); fxEl.appendChild(svg);
   }
@@ -3119,6 +3127,8 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'connect4', lang: () => LANG, onChange: () => { applyFlipCols(); for (const [k, el] of discMap) { const [c, r] = k.split(',').map(Number); discPos(el, c, r); } renderBoard(); } });
+applyFlipCols();
 const rulesOffer = window.RulesOffer ? RulesOffer.init({ game: 'connect4', lang: () => LANG, open: () => openRules(0), watch: '#rulesOverlay' }) : null;
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 if (window.GameRecord) GameRecord.init({ game: 'connect4', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
@@ -3223,7 +3233,7 @@ document.addEventListener('keydown', e => {
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=9')).then(() => load('../atlas/models/connect4.js?v=3')).then(() => load('../atlas/games/connect4-tiles.js?v=1')).then(() => load('../atlas/skin/connect4.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/connect4.js?v=3')).then(() => load('../atlas/games/connect4-tiles.js?v=1')).then(() => load('../atlas/skin/connect4.js?v=1'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

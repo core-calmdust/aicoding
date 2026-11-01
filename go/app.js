@@ -174,7 +174,8 @@ let view = null;             // [x0, y0, x1, y1] zoomed part of the board (lesso
 let drawnKey = '';           // grid drawn for size / view / coords / design
 const stoneEls = new Map();  // point -> <image>
 let shownKey = '';
-const xyOf = i => [i % N(), Math.floor(i / N())];
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());   // 盤面反転 button (shared/flipbtn.js): the board turned round 180°
+const xyOf = i => { const n = N(), x = i % n, y = Math.floor(i / n); return flipOn() ? [n - 1 - x, n - 1 - y] : [x, y]; };   // board point -> drawn position
 function designApply() {
   if (!GoTheme.BOARDS[settings.bd]) settings.bd = 'kaya';
   if (!GoTheme.STONES[settings.st]) settings.st = 'classic';
@@ -193,7 +194,7 @@ function padFar() { return settings.coord && settings.coordAll ? 1.05 : 0.62; } 
 function vbox() {
   const n = N(), p = padOf(), q = padFar();
   if (!view) return [-p, -p, n - 1 + p + q, n - 1 + p + q];
-  let [x0, y0, x1, y1] = view; const w = x1 - x0, h = y1 - y0, s = Math.max(w, h);
+  let [x0, y0, x1, y1] = view; if (flipOn()) [x0, y0, x1, y1] = [n - 1 - x1, n - 1 - y1, n - 1 - x0, n - 1 - y0]; const w = x1 - x0, h = y1 - y0, s = Math.max(w, h);
   // square box (the frame is square): grow the short side, keep inside the board
   let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   x0 = cx - s / 2; x1 = cx + s / 2; y0 = cy - s / 2; y1 = cy + s / 2;
@@ -203,7 +204,7 @@ function vbox() {
   return [x0 - pl, y0 - pt, x1 - x0 + pl + pr, y1 - y0 + pt + pb];
 }
 function drawGrid() {
-  const n = N(), vb = vbox(), key = [n, vb.join(','), settings.coord, settings.coordAll, settings.bd].join('|');
+  const n = N(), vb = vbox(), F = flipOn(), key = [n, vb.join(','), settings.coord, settings.coordAll, settings.bd, F].join('|');
   if (key === drawnKey) return;
   drawnKey = key;
   svg.setAttribute('viewBox', vb.map(v => v.toFixed(3)).join(' '));
@@ -220,8 +221,8 @@ function drawGrid() {
   if (settings.coord) {
     const fs = 0.38, o = 0.72;
     const all = settings.coordAll || !!view;
-    for (let x = 0; x < n; x++) { const L = R.COLS[x]; s += `<text class="gco" x="${x}" y="${-o}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${x}" y="${n - 1 + o}" font-size="${fs}">${L}</text>` : ''); }
-    for (let y = 0; y < n; y++) { const L = n - y; s += `<text class="gco" x="${-o}" y="${y}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${n - 1 + o}" y="${y}" font-size="${fs}">${L}</text>` : ''); }
+    for (let x = 0; x < n; x++) { const L = R.COLS[F ? n - 1 - x : x]; s += `<text class="gco" x="${x}" y="${-o}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${x}" y="${n - 1 + o}" font-size="${fs}">${L}</text>` : ''); }
+    for (let y = 0; y < n; y++) { const L = F ? y + 1 : n - y; s += `<text class="gco" x="${-o}" y="${y}" font-size="${fs}">${L}</text>` + (all ? `<text class="gco" x="${n - 1 + o}" y="${y}" font-size="${fs}">${L}</text>` : ''); }
   }
   s += '</g><g id="gTerr"></g><g id="gStones"></g><g id="gMarks"></g><g id="gHints"></g><g id="gGhost"></g>';
   svg.innerHTML = s;
@@ -355,8 +356,10 @@ let ghost = null, pending = -1;
 function pointAt(e) {
   const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
   const m = svg.getScreenCTM(); if (!m) return -1;
-  const p = pt.matrixTransform(m.inverse()), x = Math.round(p.x), y = Math.round(p.y), n = N();
+  const p = pt.matrixTransform(m.inverse()), n = N();
+  let x = Math.round(p.x), y = Math.round(p.y);
   if (x < 0 || y < 0 || x >= n || y >= n || Math.hypot(p.x - x, p.y - y) > 0.62) return -1;
+  if (flipOn()) { x = n - 1 - x; y = n - 1 - y; }   // drawn position -> board point
   if (view && (x < view[0] - 0.5 || x > view[2] + 0.5 || y < view[1] - 0.5 || y > view[3] + 0.5)) { /* outside the zoom: still a board point */ }
   return y * n + x;
 }

@@ -744,6 +744,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
 if (window.GameRecord) GameRecord.init({ game: 'go', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.FlipBtn) FlipBtn.init({ game: 'go', lang: () => LANG, onChange: () => { pending = -1; hoverPt = -1; renderBoard(); } });   // 盤面反転 (shared/flipbtn.js)
 if (window.GoCoach) GoCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
