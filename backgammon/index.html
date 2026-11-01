@@ -54,10 +54,19 @@ html.rot body{position:fixed;top:0;left:100vw;width:100vh;width:100dvh;height:10
 /* the turned page is only 100vw tall: dialogs fit in it (and scroll inside) */
 html.rot .overlay{height:100vw!important;max-height:100vw}
 html.rot .modal{max-height:calc(100vw - 20px)!important}
+/* the new-game sheet (shared/ngtabs.js sizes it with 100vw x 100dvh): in the turned page it is the turned viewport, width var(--vw) x height 100vw */
+html.rot #newOverlay > .modal.ngt-on{width:100vh!important;width:var(--vw)!important;height:100vw!important;max-height:100vw!important}
+/* dialogs above the landscape tab rail (#lndRail, z-index 60) */
+html.lnd .overlay{z-index:70}
+/* phone held sideways: the online dock shortens --vh, but dialogs cover (and fit) the whole screen */
+html.lnd:not(.rot) .overlay{height:100vh!important;height:100dvh!important}
+html.lnd:not(.rot) .modal{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
 .snd.land{display:none}
 @media (pointer: coarse){.snd.land{display:inline-flex}}
 .snd.land.on{color:var(--accent);border-color:rgba(201,169,97,.6)}
 html,body{height:100%;overflow:hidden}
+/* no automatic text enlargement (iOS Safari in landscape, Android font boosting in the turned frame) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   background:
     radial-gradient(1200px 700px at 30% -10%, #1b2b26 0%, transparent 60%),
@@ -1564,7 +1573,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=15" defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
-<script src="../shared/ngtabs.js?v=15"></script>
+<script src="../shared/ngtabs.js?v=16"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
