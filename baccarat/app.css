@@ -2001,3 +2001,5 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .ng-chips-row .ng-rq{font-size:13px;font-weight:700}
 .ng-chips-row .sbtn{padding:7px 14px;font-size:13px}
 .ng-chips-row .sbtn:disabled{opacity:.4;cursor:default}
+.bc-table .bc-shoe-box{border-radius:calc(var(--cw)*.14);overflow:hidden}
+.bc-table .bc-shoe-box i{border-radius:0 0 calc(var(--cw)*.12) calc(var(--cw)*.12)}
