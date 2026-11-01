@@ -474,3 +474,15 @@ ar: {"cmode.h": "النمط", "cmode.simple": "بسيط", "cmode.real": "واق�
 });
 /* brown felt (replaces walnut) */
 (function (A) { for (const l in A) I18N[l]['felt.mocha'] = A[l]; })({"ja": "モカ", "en": "Mocha", "zh": "摩卡", "ko": "모카", "es": "Moca", "fr": "Moka", "pt": "Moca", "de": "Mokka", "hi": "मोका", "ar": "موكا"});
+
+/* the New button shows the short label ("新規") */
+if (I18N.ja) I18N.ja['btn.new.s'] = "新規";
+if (I18N.en) I18N.en['btn.new.s'] = "New";
+if (I18N.zh) I18N.zh['btn.new.s'] = "新游戏";
+if (I18N.ko) I18N.ko['btn.new.s'] = "새 게임";
+if (I18N.es) I18N.es['btn.new.s'] = "Nueva";
+if (I18N.fr) I18N.fr['btn.new.s'] = "Nouvelle";
+if (I18N.pt) I18N.pt['btn.new.s'] = "Novo";
+if (I18N.de) I18N.de['btn.new.s'] = "Neu";
+if (I18N.hi) I18N.hi['btn.new.s'] = "नया";
+if (I18N.ar) I18N.ar['btn.new.s'] = "جديد";
