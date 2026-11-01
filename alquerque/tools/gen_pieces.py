@@ -82,7 +82,7 @@ def brass():
     st_in = mask(lambda d, s: d.polygon([(s(x), s(y)) for x, y in star_pts(c, N * .2, N * .12, 8, math.pi / 8)], fill=255), 1.0)
     boss = mask(lambda d, s: d.ellipse([s(c - N * .055), s(c - N * .055), s(c + N * .055), s(c + N * .055)], fill=255), 1.0)
     h = rim_profile() + st * 5 + boss * 2 + noise(1.0, .04) + noise(20, .3)
-    albedo = np.zeros((N, N, 3)); albedo[:] = (204, 152, 74)
+    albedo = np.zeros((N, N, 3)); albedo[:] = (188, 140, 68)
     fld = (1 - st) * (rr < .76)
     albedo = albedo * (1 - fld[..., None] * .35) + np.array([120, 84, 40]) * fld[..., None] * .35
     save(shade(gaussian_filter(h, 1.0), albedo, metal=.08, gloss=16, spec=.12, amb=.5), 'pc-brass-1.webp')
@@ -96,12 +96,12 @@ def lapis():
     bezel = np.clip((rr - .84) / .02, 0, 1)
     gold = np.clip(st - st_in * .0 + bezel, 0, 1)
     cloud = noise(16, 1) * .7 + noise(5, 1) * .3
-    base = np.array([30, 48, 128]) * (1 + .12 * cloud[..., None])
+    base = np.array([40, 60, 146]) * (1 + .12 * cloud[..., None])
     fleck = gaussian_filter((gaussian_filter(rng.standard_normal((N, N)), .6) > 3.0).astype(float), .5)
     stone = base * (1 - fleck[..., None]) + np.array([220, 186, 110]) * fleck[..., None]
     h = (1 - rr ** 2) * 10 + st * 1.4 + bezel * 2.5 - np.clip((rr - .95) / .05, 0, 1) * 6
     ag = np.zeros((N, N, 3)); ag[:] = (220, 172, 82)
-    gs = shade(gaussian_filter(h, .9), ag * .82, metal=0, gloss=8, spec=.06, amb=.55)
+    gs = shade(gaussian_filter(h, .9), ag * .95, metal=.08, gloss=16, spec=.12, amb=.5)
     ss = shade(gaussian_filter(h, .9), stone, metal=0, gloss=8, spec=.05, amb=.55)
     gm = gold[..., None]
     save(ss * (1 - gm) + gs * gm, 'pc-brass-2.webp')

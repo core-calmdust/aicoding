@@ -303,6 +303,127 @@ def patch(seed=4):
     return Image.alpha_composite(out, th).convert('RGB')
 
 
+
+# ------------------------------------------------------------------------------------------------ historical / modern / chalk
+def wood_tex(rng, base, dark, ring=.12, scale=1.0):
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
+    warp = gaussian_filter(rng.standard_normal((H, W)), (80, 30)); warp /= warp.std()
+    g = np.sin((xx / (4.5 * scale) + warp * 1.1 + gaussian_filter(rng.standard_normal((H, W)), (90, 3)) * .9))
+    fib = gaussian_filter(rng.standard_normal((H, W)), (14, .7)); fib /= fib.std()
+    t = np.clip(.5 + .5 * g * ring * 4 + fib * .08, 0, 1)
+    base, dark = np.array(base, float), np.array(dark, float)
+    return base * (1 - t[..., None]) + dark * t[..., None]
+
+
+def engrave(a, m, depth=.55, light=(255, 230, 190)):
+    """burnt / carved line from a mask: dark groove with a thin highlight on the lower-right lip."""
+    m = gaussian_filter(m, .7)
+    sh = np.roll(np.roll(m, 2, 0), 2, 1)
+    a = a * (1 - depth * m[..., None])
+    a = a + (np.clip(sh - m, 0, 1) * .25)[..., None] * (np.array(light) - a)
+    return a
+
+
+def lmask(draw):
+    im = Image.new('L', (W * SS, H * SS), 0); draw(ImageDraw.Draw(im))
+    return np.asarray(im.resize((W, H), Image.LANCZOS)).astype(np.float64) / 255
+
+
+def scroll_band(d, x0, y0, x1, y1, horiz, w):
+    """a running scroll (S-curves with curled ends) along a border band, as carved on old game boards."""
+    L = (x1 - x0) if horiz else (y1 - y0); n = max(2, int(L / (w * 1.6))); step = L / n
+    for k in range(n):
+        for side in (1, -1):
+            pts = []
+            for t in np.linspace(0, 1, 40):
+                u = k * step + t * step; v = side * w * .22 * math.sin(t * math.pi) * (1 if k % 2 else -1)
+                pts.append((x0 + u, (y0 + y1) / 2 + v) if horiz else ((x0 + x1) / 2 + v, y0 + u))
+            d.line(sc(pts), fill=255, width=int(w * .12) * SS)
+        cx, cy = ((x0 + k * step + step / 2, (y0 + y1) / 2) if horiz else ((x0 + x1) / 2, y0 + k * step + step / 2))
+        for sgn in (1, -1):   # curls
+            ox = (sgn * step * .22, 0) if horiz else (0, sgn * step * .22)
+            pts = [(cx + ox[0] + w * .26 * (1 - t * .7) * math.cos(t * 5 + (0 if sgn > 0 else math.pi)), cy + ox[1] + w * .26 * (1 - t * .7) * math.sin(t * 5 + (0 if sgn > 0 else math.pi))) for t in np.linspace(0, 1, 24)]
+            d.line(sc(pts), fill=255, width=int(w * .1) * SS)
+
+
+def carved(seed=5):
+    rng = np.random.default_rng(seed)
+    a = wood_tex(rng, (150, 112, 74), (96, 64, 38))
+    bw = S * .62; m0, m1 = S * .16, S * .16 + bw
+    def frame_lines(d):
+        for m in (m0, m0 + 8, m1, m1 - 8): d.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=3 * SS)
+        for (cx, cy) in ((m0 + bw / 2, m0 + bw / 2), (W - m0 - bw / 2, m0 + bw / 2), (m0 + bw / 2, H - m0 - bw / 2), (W - m0 - bw / 2, H - m0 - bw / 2)):
+            d.rectangle([(cx - bw / 2) * SS, (cy - bw / 2) * SS, (cx + bw / 2) * SS, (cy + bw / 2) * SS], fill=0, outline=255, width=3 * SS)
+            d.ellipse([(cx - bw * .38) * SS, (cy - bw * .38) * SS, (cx + bw * .38) * SS, (cy + bw * .38) * SS], outline=255, width=3 * SS)
+            for k in range(8):
+                q = k * math.pi / 4
+                d.line(sc([(cx, cy), (cx + bw * .3 * math.cos(q), cy + bw * .3 * math.sin(q))]), fill=255, width=3 * SS)
+            d.ellipse([(cx - bw * .12) * SS, (cy - bw * .12) * SS, (cx + bw * .12) * SS, (cy + bw * .12) * SS], outline=255, width=3 * SS)
+        scroll_band(d, m1, m0 + 8, W - m1, m1 - 8, True, bw - 16); scroll_band(d, m1, H - m1 + 8, W - m1, H - m0 - 8, True, bw - 16)
+        scroll_band(d, m0 + 8, m1, m1 - 8, H - m1, False, bw - 16); scroll_band(d, W - m1 + 8, m1, W - m0 - 8, H - m1, False, bw - 16)
+        cx, cy = P(2, 2); r = S * .18
+        d.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=3 * SS)
+    a = engrave(a, lmask(frame_lines), .6)
+    # a darker stain toward the edges, oil sheen
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
+    a *= (1 - .22 * (((xx - W / 2) / (W / 2)) ** 4 + ((yy - H / 2) / (H / 2)) ** 4))[..., None]
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+
+
+def damask(seed=6):
+    rng = np.random.default_rng(seed)
+    base = np.array((58, 76, 96), float); hi = np.array((94, 112, 134), float)
+    def motif(d):
+        tw, th = S * 1.9, S * 2.3
+        for j in range(-1, int(H / th) + 2):
+            for i in range(-1, int(W / tw) + 2):
+                cx = i * tw + (tw / 2 if j % 2 else 0); cy = j * th
+                for sgn in (1, -1):   # mirrored acanthus scrolls
+                    for (r0, a0, turns, w) in ((S * .5, -1.2, 1.5, 6), (S * .32, .6, 1.2, 5), (S * .22, 2.2, 1.0, 4)):
+                        pts = [(cx + sgn * (r0 * (1 - t * .75) * math.cos(a0 + t * turns * 2 * math.pi)) + sgn * S * .2, cy + r0 * (1 - t * .75) * math.sin(a0 + t * turns * 2 * math.pi)) for t in np.linspace(0, 1, 60)]
+                        d.line(sc(pts), fill=255, width=int(w * SS))
+                        ex, ey = pts[0]
+                        d.polygon(sc([(ex, ey), (ex + sgn * 18, ey - 30), (ex + sgn * 6, ey - 50), (ex - sgn * 8, ey - 26)]), fill=255)
+                d.polygon(sc([(cx, cy - S * .55), (cx + S * .12, cy - S * .25), (cx, cy), (cx - S * .12, cy - S * .25)]), fill=255)
+                d.ellipse([(cx - 10) * SS, (cy + S * .12 - 10) * SS, (cx + 10) * SS, (cy + S * .12 + 10) * SS], fill=255)
+    m = gaussian_filter(lmask(motif), 1.2) * .55
+    a = base * (1 - m[..., None]) + hi * m[..., None]
+    fab = gaussian_filter(rng.standard_normal((H, W)), .6); fab /= fab.std()
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
+    a *= (1 + .025 * fab + .02 * np.sin(xx * 2.1) * np.sin(yy * 2.1))[..., None]
+    # pinked (zig-zag) edge
+    out = np.clip(a, 0, 255).astype(np.uint8); img = Image.fromarray(out)
+    return img
+
+
+def chalk(seed=7):
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
+    a = np.zeros((H, W, 3)); a[:] = (40, 42, 44)
+    sm = gaussian_filter(rng.standard_normal((H, W)), 40); sm /= sm.std()
+    a *= (1 + .06 * sm)[..., None]
+    a += (np.clip(gaussian_filter(rng.standard_normal((H, W)), (6, 60)), 0, None) * 18)[..., None]   # old wiped chalk
+    grain = gaussian_filter(rng.standard_normal((H, W)), .6); a *= (1 + .07 * grain / grain.std())[..., None]
+    # chalk drawing: the triangles at the head and foot of the board, as scratched on old slates
+    def tri(d):
+        for top in (True, False):
+            cx = P(2, 0)[0]; yb = P(2, 4)[1] if top else P(2, 0)[1]; ye = yb - S * 1.15 if top else yb + S * 1.15
+            hw = S * 1.0
+            pts = [(cx, yb), (cx - hw, ye), (cx + hw, ye), (cx, yb)]
+            q = []
+            for (p0, p1) in zip(pts, pts[1:]):
+                for t in np.linspace(0, 1, 18): q.append((p0[0] + (p1[0] - p0[0]) * t + rng.normal(0, 1.2), p0[1] + (p1[1] - p0[1]) * t + rng.normal(0, 1.2)))
+            d.line(sc(q), fill=255, width=7 * SS)
+            d.line(sc([(cx, yb), (cx, ye)]), fill=255, width=7 * SS)
+            ym = (yb + ye) / 2
+            d.line(sc([(cx - hw / 2, ym), (cx + hw / 2, ym)]), fill=255, width=7 * SS)
+    m = lmask(tri)
+    dust = np.clip(gaussian_filter(rng.random((H, W)), .5) * 1.6 - .3, 0, 1)
+    m = gaussian_filter(m, .8) * (.55 + .45 * dust)
+    a = a * (1 - m[..., None] * .85) + np.array((232, 230, 222)) * (m[..., None] * .85)
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+
+
 os.makedirs(OUT, exist_ok=True)
 def dim(img, k=.8, sat=.85):
     a = np.asarray(img).astype(np.float64); g = a.mean(axis=2, keepdims=True)
@@ -311,7 +432,9 @@ def dim(img, k=.8, sat=.85):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
-DIM = {'medallion': (.86, .9), 'berber': (.9, .86), 'kilim': (.9, .86), 'patch': (.92, .86)}
-for name, fn in (('medallion', medallion), ('berber', berber), ('kilim', kilim), ('patch', patch)):
+DIM = {'medallion': (.86, .9), 'berber': (.9, .86), 'kilim': (.9, .86), 'patch': (.92, .86), 'carved': (1, 1), 'damask': (1, 1), 'chalk': (1, 1)}
+import sys
+ALL = {'medallion': medallion, 'kilim': kilim, 'patch': patch, 'carved': carved, 'damask': damask, 'chalk': chalk}
+for name, fn in ((n, ALL[n]) for n in (sys.argv[1:] or ALL)):
     dim(fn(), *DIM[name]).save(os.path.join(OUT, f'rug-{name}.webp'), quality=86, method=6)
     print(name)
