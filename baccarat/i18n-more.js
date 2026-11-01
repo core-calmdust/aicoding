@@ -2258,3 +2258,11 @@ Object.assign(I18N.de, {"co.win": "Diese Sitzung ({n}) wird als Sieg gewertet. D
 Object.assign(I18N.hi, {"co.win": "इस सत्र ({n}) को जीत के रूप में दर्ज किया जाएगा। आपकी चिप्स बनी रहेंगी।", "co.lose": "इस सत्र ({n}) को हार के रूप में दर्ज किया जाएगा। आपकी चिप्स बनी रहेंगी।", "co.even": "न लाभ न हानि — ड्रॉ के रूप में दर्ज। आपकी चिप्स बनी रहेंगी।", "co.none": "अभी कुछ नहीं बँटा, इसलिए कुछ दर्ज नहीं होगा। आपकी चिप्स बनी रहेंगी।"});
 Object.assign(I18N.ar, {"co.win": "تُسجَّل هذه الجلسة ({n}) فوزًا. تبقى رقائقك معك.", "co.lose": "تُسجَّل هذه الجلسة ({n}) خسارة. تبقى رقائقك معك.", "co.even": "لا ربح ولا خسارة — تُسجَّل تعادلًا. تبقى رقائقك معك.", "co.none": "لم يُوزَّع شيء بعد، فلن يُسجَّل شيء. تبقى رقائقك معك."});
 ['zh','ko','es','fr','pt','de','hi','ar'].forEach(l => { I18N[l]['res.win'] = '+{n}'; });
+I18N.zh.cashoutQ = "要结算吗？";
+I18N.ko.cashoutQ = "정산할까요?";
+I18N.es.cashoutQ = "¿Cobrar?";
+I18N.fr.cashoutQ = "Encaisser ?";
+I18N.pt.cashoutQ = "Encerrar?";
+I18N.de.cashoutQ = "Auszahlen?";
+I18N.hi.cashoutQ = "कैश आउट करें?";
+I18N.ar.cashoutQ = "صرف الرصيد؟";
