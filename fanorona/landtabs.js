@@ -38,6 +38,7 @@ const REST = {
 };
 const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
+const ro = window.ResizeObserver ? new ResizeObserver(() => clampPanel(false)) : null;   // (the drawer's boxes: see clampPanel)
 let rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
 try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
 const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
@@ -135,6 +136,15 @@ function setOpen(v) {
   document.body.classList.toggle('lt-open', open);
   panel.style.transform = '';
   sync();
+  if (open) { clampPanel(true); requestAnimationFrame(() => clampPanel(true)); }
+}
+// the drawer's scroll never stays past its content: when the boxes get much shorter (e.g. the long coach box during the
+// game → the short "the game is over" box), a scroll position left from before would show an empty drawer (seen on phones).
+// (force: write it again even when it reads right — WebKit may report the clamped value but still paint the old offset)
+function clampPanel(force) {
+  if (!panel || !on) return;
+  const max = Math.max(0, panel.scrollHeight - panel.clientHeight), v = Math.min(panel.scrollTop, max);
+  if (panel.scrollTop > max || force) { panel.scrollTop = v ? v - 1 : 1; panel.scrollTop = v; }
 }
 function close() { if (open) setOpen(false); }
 function sync() {
@@ -156,13 +166,14 @@ function enter() {
   homes = boxes().map(([k, el]) => ({ el, parent: el.parentNode, next: el.nextSibling, k }));
   const app = $('.app');
   app.appendChild(rail); app.appendChild(panel); app.appendChild(nbox);
-  for (const h of homes) { h.el.dataset.ltc = h.k; panel.appendChild(h.el); }
+  for (const h of homes) { h.el.dataset.ltc = h.k; panel.appendChild(h.el); if (ro) ro.observe(h.el); }
   document.body.classList.add('lt-on');
   if (!saved && coachOk()) cur = 'coach';
   setOpen(false); refit();
 }
 function leave() {
   if (!on) return; on = false; open = false;
+  if (ro) ro.disconnect();
   for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
   homes = [];
   rail.remove(); panel.remove(); nbox.remove();
@@ -241,7 +252,7 @@ new MutationObserver(() => {
   const pin = pinned(); if (on && pin !== !!document.body.dataset.ltpin) { if (pin) document.body.dataset.ltpin = '1'; else delete document.body.dataset.ltpin; close(); refit(); }
   ckWas = a; sync();
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-{ const rc = $('#reviewCard'); if (rc) new MutationObserver(() => { const rv = rc.classList.contains('show'); if (rv && !rvWas) cur = 'coach'; rvWas = rv; sync(); }).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
+{ const rc = $('#reviewCard'); if (rc) new MutationObserver(() => { const rv = rc.classList.contains('show'); if (rv && !rvWas) cur = 'coach'; if (rv !== rvWas && panel) panel.scrollTop = 0; rvWas = rv; sync(); }).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
 new MutationObserver(() => { const ov = $('.grc-ov'); if (recOn() && (!ov || !ov.classList.contains('show'))) { document.body.classList.remove('lt-rec'); sync(); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 { const k = $('#kifu'), nv = $('#navBar');
   if (k) new MutationObserver(navSync).observe(k, { childList: true });
