@@ -528,13 +528,17 @@ function renderSide() {
   // coach
   if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
   else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
-  // session
-  const S = T.session;
-  h += `<div class="card" data-pt="sess" data-k="sess"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))}</span></h3><div class="srow">` +
-    `<div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
-    `<div><small>${esc(t('ss.wag'))}</small><b>${fmt(S.wag)}</b></div><div><small>${esc(t('ss.exp'))}</small><b class="neg">${sg(Math.round(S.exp))}</b></div></div>` +
-    `<p class="diff-desc">${esc(t('ss.luck', { n: sg(Math.round(S.net - S.exp)) }))}</p>` +
-    `<div class="deal-row"><button class="sbtn" id="sStats">${esc(t('btn.stats'))}</button><button class="sbtn" id="sTools">${esc(t('btn.tools'))}</button></div></div>`;
+  // session: on PC a strip under the table, elsewhere a card (tab) in the side panel
+  const S = T.session, pcCol = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)').matches;
+  const cells = `<div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
+    `<div><small>${esc(t('ss.wag'))}</small><b>${fmt(S.wag)}</b></div><div><small>${esc(t('ss.exp'))}</small><b class="neg">${sg(Math.round(S.exp))}</b></div>`;
+  const btns = `<button class="sbtn" id="sStats">${esc(t('btn.stats'))}</button><button class="sbtn" id="sTools">${esc(t('btn.tools'))}</button>`;
+  if (pcCol) patch($('#sessBar'), `<div class="sb-h"><b>${esc(t('side.session'))}</b><small>${esc(vName(T.v))}</small></div><div class="srow">${cells}<div><small>${esc(t('st.luck'))}</small><b class="${S.net - S.exp > 0 ? 'pos' : S.net - S.exp < 0 ? 'neg' : ''}">${sg(Math.round(S.net - S.exp))}</b></div></div><div class="sb-btns">${btns}</div>`);
+  else {
+    $('#sessBar').innerHTML = '';
+    h += `<div class="card" data-pt="sess" data-k="sess"><h3>${esc(t('side.session'))}<span class="h3s">${esc(vName(T.v))}</span></h3><div class="srow">${cells}</div>` +
+      `<p class="diff-desc">${esc(t('ss.luck', { n: sg(Math.round(S.net - S.exp)) }))}</p><div class="deal-row">${btns}</div></div>`;
+  }
   patch($('#side'), h);
   $('#sStats').onclick = openStats; $('#sTools').onclick = () => window.BacTools && BacTools.open();
   $('#rdHelp').onclick = () => window.BacTools && BacTools.open('roads');
