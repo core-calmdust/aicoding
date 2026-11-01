@@ -710,7 +710,7 @@ function toast(m) { const e = $('#toast'); e.textContent = m; e.classList.add('s
 
 /* new game */
 let NG = null, ngTab = 'game';
-function openNew() { const v = T ? T.v : set.v; NG = { v, p: JSON.parse(JSON.stringify(prefOf(v))) }; ngTab = 'game'; renderNew(); openOv('#newOverlay'); }
+function openNew() { NGR = 0; const v = T ? T.v : set.v; NG = { v, p: JSON.parse(JSON.stringify(prefOf(v))) }; ngTab = 'game'; renderNew(); openOv('#newOverlay'); }
 function seg(items, cur, attr) { return `<div class="seg">${items.map(([val, lab]) => `<button type="button" data-${attr}="${esc(val)}" class="${String(val) === String(cur) ? 'sel' : ''}">${esc(lab)}</button>`).join('')}</div>`; }
 const GART = {   // a few cards for each variant (new-game dialog): [card, x, y, rot]
   classic: [[47, 0, .15, -8], [30, .55, .05, 4], [12, 1.6, .2, -4], [4, 2.15, .1, 8]],      // K♣ 5♦ | K♠ 5♠ …
@@ -722,13 +722,12 @@ function renderNew() {
   const v = NG.v, p = NG.p;
   $('#ngTabs').innerHTML = ['game', 'rules', 'design'].map(k => `<button type="button" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(vName(v))}</small>` : ''}</button>`).join('');
   let h;
-  if (ngTab === 'game') h = `<div class="ng-games bc3">` + B.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>`;
+  if (ngTab === 'game') h = `<div class="bc-ngw"><div class="ng-games bc3">` + B.ORDER.map(id => `<button type="button" class="gcard${id === v ? ' sel' : ''}" data-g="${id}"><span class="gart">${gArt(id)}</span><b>${esc(vName(id))}</b><p>${esc(t('vg.' + id))}</p><span class="gpick">${id === v ? '✓' : ''}</span></button>`).join('') + `</div>` + chipsRow() + `</div>`;
   else if (ngTab === 'rules') {
     const row = (lab, help, html) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b><small>${esc(help)}</small></div>${html}</div>`;
     h = `<div class="rl-list">` +
       row(t('o.decks'), t('o.decks.h'), seg(DECKS.map(d => [d, t('o.deckN', { n: d })]), p.decks, 'dk')) +
       row(t('o.tie'), t('o.tie.h'), seg(TIES.map(x => [x, x + ' : 1']), p.tie, 'tie')) +
-      row(t('o.bank'), t('o.carry', { s: fmt(START) }), `<b class="ng-chips">${fmt(T ? T.bank : (D.chips || START))}</b>`) +
       row(t('o.squeeze'), t('o.squeeze.h'), seg([[0, t('off')], [1, t('on')]], set.squeeze ? 1 : 0, 'sq')) +
       `</div><p class="diff-desc">${esc(t('o.note'))}</p>`;
   } else h = designHtml();
@@ -740,6 +739,22 @@ function renderNew() {
   $$('#ngBody [data-sq]').forEach(b => b.onclick = () => { set.squeeze = +b.dataset.sq; save(); renderNew(); });
   if (ngTab === 'design') wireDesign(body);
 }
+// your chips (carried over between games) and a reset to the starting amount (two taps: ask, then do)
+let NGR = 0;
+function chipsRow() {
+  const cur = T && !T.tut ? T.bank : (typeof D.chips === 'number' ? D.chips : START);
+  return `<div class="ng-chips-row"><span class="lab">${esc(t('ng.chips'))}</span><b class="ng-chips">${fmt(cur)}</b><small>${esc(t('o.carry', { s: fmt(START) }))}</small>` +
+    (NGR ? `<span class="ng-rq">${esc(t('ng.resetQ', { n: fmt(START) }))}</span><button type="button" class="sbtn" id="ngRNo">${esc(t('no'))}</button><button type="button" class="sbtn go" id="ngRYes">${esc(t('yes'))}</button>`
+      : `<button type="button" class="sbtn" id="ngReset"${cur === START ? ' disabled' : ''}>↺ ${esc(t('ng.reset'))}</button>`) + `</div>`;
+}
+document.addEventListener('click', e => {
+  const id = e.target.closest && e.target.closest('#ngReset, #ngRNo, #ngRYes') ? e.target.closest('#ngReset, #ngRNo, #ngRYes').id : '';
+  if (!id) return;
+  if (id === 'ngReset') NGR = 1;
+  else if (id === 'ngRNo') NGR = 0;
+  else { NGR = 0; D.chips = START; if (T && !T.tut) { if (T.phase === 'bet') { T.bets = {}; G.undo = []; } T.bank = START; } save(); if (T) render(); sfx('chips'); toast(t('ng.resetDone', { n: fmt(START) })); }
+  renderNew();
+});
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
 $('#btnStart').onclick = () => { set.prefs[NG.v] = NG.p; save(); closeOv('#newOverlay'); clearTimeout(G.timer); newSession(NG.v); };
 

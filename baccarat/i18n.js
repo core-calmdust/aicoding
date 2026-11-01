@@ -96,6 +96,7 @@ ja: {
   'grc.hands': '{n}回',
   /* ---------- research ---------- */
    "tl.eor": "カード1枚の影響（その数字が1枚出たときの期待値の変化、%）", "tl.eorHelp": "緑は賭けた人に有利、赤は不利。たとえば小さい数字（4・5・6など）が出るとバンカーの期待値は下がり、プレイヤーは上がります。それでも1枚あたりの差はごくわずかです。", "tl.hist": "このシューの期待値の推移", "tl.histNone": "まだ配っていません。配るたびにここに記録されます。", "tl.histRange": "縦軸 {a}% 〜 {b}%", "tl.last": "直前の回", "tl.cmp": "ルール別のハウスエッジ", "tl.hour": "1時間遊ぶと（約70回）", "tl.hourHelp": "毎回 {s} ずつ {n} 回賭けたときの、平均の損です。",
+   "ng.chips": "持ち金", "ng.reset": "持ち金をリセット", "ng.resetQ": "{n} に戻しますか？", "ng.resetDone": "持ち金を {n} に戻しました",
   'tl.h': '研究', 'tl.shoe': 'シュー解析', 'tl.rule': '3枚目ルール', 'tl.edge': '期待値の表', 'tl.sys': '必勝法の検証', 'tl.roads': '罫線の読み方',
   'tl.comp': '残りのカード（{n}枚）', 'tl.compNow': '今のシュー', 'tl.compFull': '{n}デッキ全部',
   'tl.compHelp': '＋/−でカードを足し引きすると、期待値がどう変わるか試せます。棒の線は標準の割合、数字は標準との差（%）。',
@@ -374,6 +375,7 @@ en: {
   'st.help': 'Expected loss = each bet\'s house edge × the amount bet, added up. The gap to your net is luck. The winning shares move toward the theory (▼) as the coups add up.',
   'grc.hands': '{n} coups',
    "tl.eor": "Effect of one card (change in expectation when one card of that value is gone, %)", "tl.eorHelp": "Green helps the bettor, red hurts. Small cards (4, 5, 6…) leaving lower Banker's expectation and raise Player's — but each card moves it only a tiny bit.", "tl.hist": "Expectation over this shoe", "tl.histNone": "No coup dealt yet. Each coup will be recorded here.", "tl.histRange": "scale {a}% to {b}%", "tl.last": "The last coup", "tl.cmp": "House edge by rules", "tl.hour": "One hour of play (about 70 coups)", "tl.hourHelp": "The average loss when betting {s} every coup, {n} times.",
+   "ng.chips": "Your chips", "ng.reset": "Reset chips", "ng.resetQ": "Back to {n}?", "ng.resetDone": "Chips reset to {n}",
   'tl.h': 'Study', 'tl.shoe': 'Shoe analysis', 'tl.rule': 'Drawing rules', 'tl.edge': 'House edge', 'tl.sys': 'Betting systems', 'tl.roads': 'Reading the roads',
   'tl.comp': 'Cards left ({n})', 'tl.compNow': 'This shoe', 'tl.compFull': 'Full {n} decks',
   'tl.compHelp': 'Add or remove cards with +/− to see how the expectations move. The line in a bar is the normal share; the number is the difference (%).',
