@@ -317,6 +317,7 @@ function olOver() {
 }
 // own pieces at the bottom of the board in online games (spectators: White at the bottom)
 function olMyColor() { return net && !net.spectate && net.me > 0 ? net.me : 0; }
+function olRule() { return net && net.game && ON.VARIANTS.includes(net.game.v) ? net.game.v : null; }
 function olCanMove() {
   const g = net && net.game;
   return !!(g && !net.spectate && !net.done && !net.pending && g.status === 'play' && cur === moves.length && moves.length * 3 === String(g.moves || '').length && toMoveAt(cur) === net.me);

@@ -343,7 +343,7 @@
 "op.grp.w.sub": "Les cinq premiers coups et les échanges qui suivent.",
 "op.grp.b": "Réponses des Noirs",
 "op.grp.b.sub": "Les réponses des Noirs aux premiers coups classiques f2-e3A et d3-e3A.",
-"rule.sivy": "Règles standard (Fanoron-Tsivy 9×5)",
+"rule.sivy": "Tsivy (9×5)",
 "bd.acacia": "Acacia",
 "bd.maple": "Érable",
 "bd.rosewood": "Palissandre",
@@ -354,5 +354,15 @@
 "share.record": "Partie",
 "share.pos": "Position",
 "ls.toList": "Retour aux leçons",
-"ls.toOpen": "Retour aux ouvertures"
+"ls.toOpen": "Retour aux ouvertures",
+"ng.board": "Plateau",
+"rule.std": "Standard",
+"rule.dimy": "Dimy (5×5)",
+"rule.telo": "Telo (3×3)",
+"rule.sivy.d": "Le Fanorona complet, 22 pions chacun : capture de lignes entières par approche et retrait. Le jeu national de Madagascar.",
+"rule.dimy.d": "5×5, 12 pions chacun. Mêmes règles, parties plus courtes.",
+"rule.telo.d": "3×3, 3 pions chacun. On les pose à tour de rôle puis on les déplace le long des lignes : trois alignés gagnent (sans prise).",
+"pick.place": "Posez un pion sur un point libre",
+"pick.telo": "Choisissez où poser (trois alignés gagnent)",
+"res.why.line": "Trois alignés"
 }

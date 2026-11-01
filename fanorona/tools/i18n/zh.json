@@ -343,7 +343,7 @@
 "op.grp.w.sub": "先手的5种第一步，以及之后的互吃过程。",
 "op.grp.b": "黑方应着",
 "op.grp.b.sub": "黑方对常规第一步 f2-e3A、d3-e3A 的应着及之后的过程。",
-"rule.sivy": "标准规则（9×5法诺纳·齐维）",
+"rule.sivy": "齐维（9×5）",
 "bd.acacia": "金合欢木",
 "bd.maple": "枫木",
 "bd.rosewood": "玫瑰木",
@@ -354,5 +354,15 @@
 "share.record": "棋谱",
 "share.pos": "局面",
 "ls.toList": "返回课程",
-"ls.toOpen": "返回开局"
+"ls.toOpen": "返回开局",
+"ng.board": "棋盘",
+"rule.std": "标准",
+"rule.dimy": "迪米（5×5）",
+"rule.telo": "特罗（3×3）",
+"rule.sivy.d": "每方22子的正式法诺罗纳：以靠近与后撤整列吃子，马达加斯加的国民游戏。",
+"rule.dimy.d": "5×5，每方12子。规则相同，对局更短，适合入门。",
+"rule.telo.d": "3×3，每方3子。轮流放子后沿线移动，连成三子即胜（无吃子）。",
+"pick.place": "请放在空点上",
+"pick.telo": "选择放子的点（连成三子获胜）",
+"res.why.line": "三子连成一线"
 }

@@ -79,6 +79,10 @@ GAMES = {
     'hex': dict(first='b', alt=True, tckey='tc', tcs={'s9': (180000, 0, 3000), 's11': (300000, 0, 5000), 's13': (420000, 0, 5000)},
                 legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=400, bg=False,
                 variant=('v', ['s9', 's11', 's13'])),
+    # Fanorona: v = board ('sivy' 9x5 Fanoron-Tsivy, 'dimy' 5x5, 'telo' 3x3); b = White (moves first)
+    'fanorona': dict(first='b', alt=True, tckey='tc', tcs={'sivy': (480000, 0, 5000), 'dimy': (240000, 0, 3000), 'telo': (120000, 0, 2000)},
+                     legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
+                     variant=('v', ['sivy', 'dimy', 'telo'])),
 }
 
 

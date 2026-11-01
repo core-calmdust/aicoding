@@ -34,11 +34,14 @@
   --sidew: clamp(250px, 26vw, 440px);
   --padx: var(--pad);
   --padt: var(--pad);
-  --cell: min((var(--vh) - var(--padt) - var(--pad) - 8px - var(--ttop)) / 7, (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 10.5, 130px);
-  --fw: calc(var(--cell) * 10.5);
-  --fh: calc(var(--cell) * 7);
+  --cell: min((var(--vh) - var(--padt) - var(--pad) - 8px - var(--ttop)) / var(--fhc), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / var(--fwc), 130px);
+  --fw: calc(var(--cell) * var(--fwc));
+  --fh: calc(var(--cell) * var(--fhc));
   --S: 9;
+  --bwc: 10; --bhc: 6; --fwc: calc(var(--bwc) + .5); --fhc: calc(var(--bhc) + 1);
 }
+html[data-rule=dimy]{--bwc:6;--bhc:6}
+html[data-rule=telo]{--bwc:4;--bhc:4}
 *{box-sizing:border-box;margin:0;padding:0}
 @supports (height:100lvh){:root{--vh:100lvh}}
 /* PC header bar (shared/headerbar.js): title + menu + icons live in the top bar, the board area starts below it */
@@ -90,7 +93,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(217,163,90,.25),inset 0 1px 0 rgba(255,255,255,.06);
   user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
-.board{position:relative;width:calc(var(--cell) * 10);height:calc(var(--cell) * 6);border-radius:10px;cursor:default;
+.board{position:relative;width:calc(var(--cell) * var(--bwc));height:calc(var(--cell) * var(--bhc));border-radius:10px;cursor:default;
   background:
     radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.07), transparent 62%),
     radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt2) 68%, var(--felt3) 100%);
@@ -493,7 +496,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
   /* phone portrait */
-  :root{--cell:min((100vw - 20px) / 10.5, (var(--vh) - 250px) / 7, 100px)}
+  :root{--cell:min((100vw - 20px) / var(--fwc), (var(--vh) - 250px) / var(--fhc), 100px)}
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:10px 10px max(16px, env(safe-area-inset-bottom));height:auto;min-height:var(--vh)}
   :root{--ttop:0px}
@@ -547,7 +550,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 }}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
   /* phone landscape */
-  :root{--cell:min((var(--vh) - 20px) / 7, (100vw - 300px) / 10.5, 120px)}
+  :root{--cell:min((var(--vh) - 20px) / var(--fhc), (100vw - 300px) / var(--fwc), 120px)}
   .app{padding:10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));gap:18px;grid-template-columns:auto minmax(220px, 360px)}
   .side{max-height:calc(var(--vh) - 20px);height:calc(var(--vh) - 20px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
   .side::-webkit-scrollbar{display:none}
@@ -824,6 +827,8 @@ html[data-pcs=wood] .pc.p2::after{background-image:url(img/wood-walnut.webp);opa
 .hov{width:calc(var(--cell) * .7);height:calc(var(--cell) * .7);margin:calc(var(--cell) * -.35) 0 0 calc(var(--cell) * -.35)}
 .dest{width:calc(var(--cell) * .26);height:calc(var(--cell) * .26);margin:calc(var(--cell) * -.13) 0 0 calc(var(--cell) * -.13);background:rgba(255,246,210,.9);box-shadow:0 0 0 2px rgba(90,45,10,.45),0 0 12px rgba(255,236,170,.9)}
 .dest.cap{background:#ffd257;box-shadow:0 0 0 2px rgba(120,60,0,.55),0 0 14px rgba(255,210,90,.95)}
+.dest.tp{width:calc(var(--cell) * .16);height:calc(var(--cell) * .16);margin:calc(var(--cell) * -.08) 0 0 calc(var(--cell) * -.08);opacity:.75}
+.fxsvg .winline{stroke:#ffd257;stroke-width:.12;stroke-linecap:round;fill:none;filter:drop-shadow(0 0 .08px rgba(255,210,90,.9));opacity:.9}
 .mark.took{width:calc(var(--cell) * .38);height:calc(var(--cell) * .38);margin:calc(var(--cell) * -.19) 0 0 calc(var(--cell) * -.19)}
 .mark.took::before,.mark.took::after{background:rgba(200,40,20,.75)}
 .mark.pick{width:calc(var(--cell) * .9);height:calc(var(--cell) * .9);margin:calc(var(--cell) * -.45) 0 0 calc(var(--cell) * -.45);border:3px dashed;animation:pk 1s ease-in-out infinite;z-index:8}
@@ -903,10 +908,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
     --px:clamp(16px, 2vw, 28px) !important;
     --ich:clamp(190px, calc(var(--vh) * .31), 270px) !important;
     --ichmin:clamp(170px, calc(var(--vh) * .24), 240px) !important;
-    --cell:max(12px, min((var(--vh) - var(--ichmin) - 36px) / 7.16, (100vw - var(--px) * 2) / 10.5, 150px)) !important;
+    --cell:max(12px, min((var(--vh) - var(--ichmin) - 36px) / (var(--fhc) + .16), (100vw - var(--px) * 2) / var(--fwc), 150px)) !important;
     --fhb:calc(var(--fh) + var(--cell) * .16) !important;
     --ich:max(var(--ichmin), calc(var(--vh) - var(--fhb) - 36px)) !important;
-    --fw:calc(var(--cell) * 10.5) !important; --fh:calc(var(--cell) * 7) !important; --rbx:0px !important;
+    --fw:calc(var(--cell) * var(--fwc)) !important; --fh:calc(var(--cell) * var(--fhc)) !important; --rbx:0px !important;
   }
   .app, html.rvb-on body .app.app{display:grid!important;height:auto!important;min-height:var(--vh)!important;width:calc(100vw - 2 * var(--px))!important;margin:0 auto!important;padding:12px 0!important;gap:12px 14px!important;
     justify-content:stretch!important;align-content:start!important;align-items:stretch!important;
@@ -951,7 +956,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .rvb-n.first{background:#ffd666}
 /* PC mouse, but a narrow or tall window: the phone layout (above) with the online strip at the bottom */
 @media not all and (pointer: coarse){ @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  :root{--cell:min((100vw - 20px) / 10.5, (var(--vh) - 250px) / 7, 100px);--fw:calc(var(--cell) * 10.5);--fh:calc(var(--cell) * 7)}
+  :root{--cell:min((100vw - 20px) / var(--fwc), (var(--vh) - 250px) / var(--fhc), 100px);--fw:calc(var(--cell) * var(--fwc));--fh:calc(var(--cell) * var(--fhc))}
   body:not(.no-online) .app{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
 } }
 /* portal 3D skin on phones: the same distance from the 3D board to the boxes above / below as in reversi (~15px) */
@@ -962,7 +967,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
-  :root, body{--cell:min((100vw - 20px) / 10.5, 100px)!important}
+  :root, body{--cell:min((100vw - 20px) / var(--fwc), 100px)!important}
 }
 /* 振り返り and 棋譜 share the height half and half in every layout (2026-10-28): side by side or one above the other, both boxes
    are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
@@ -1112,9 +1117,9 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
     <div class="ng-cols"><div class="ng-col ng-set">
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
-    <div class="field" id="fRules">
-      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
-      <div class="rulecards" id="ruleCards"></div>
+    <div class="field" id="fRules" data-ng="game">
+      <label><span data-i18n="ng.board"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
+      <div class="ngt-gcards" id="ruleCards" style="--ngt-cols:3"></div>
     </div>
     <div class="field" id="fColor">
       <label data-i18n="ng.color"></label>
@@ -1260,7 +1265,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   </div>
 </div>
 
-<script src="i18n.js?v=fa1"></script>
+<script src="i18n.js?v=fa2"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1270,23 +1275,23 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=fa2"></script>
-<script src="firebase-config.js?v=fa1"></script>
+<script src="engine.js?v=fa3"></script>
+<script src="firebase-config.js?v=fa2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=stale2"></script>
+<script src="online.js?v=fa3"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="rvbox.js?v=2a"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=fa1"></script>
-<script src="coach-i18n.js?v=fa1"></script>
+<script src="coach.js?v=fa2"></script>
+<script src="coach-i18n.js?v=fa2"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fa3"></script>
-<script src="online-ui.js?v=3sec1l9ck1"></script>
+<script src="app.js?v=fa4"></script>
+<script src="online-ui.js?v=fa3"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261101fn2" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=fa1" defer></script>
-<script src="../shared/atlas-account.js?v=20261029jb1" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
+<script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=15" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
 <script src="../shared/ngtabs.js?v=15"></script>

@@ -50,18 +50,21 @@ EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 static const int DR[8] = { 0, 1, 1, 1, 0, -1, -1, -1 }, DC[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static i8 NB[8][NP];
 static u64 ZP[2][NP], ZSIDE;
-static int geoReady = 0;
+static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1;   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
-static void initGeo(void) {
-  if (geoReady) return;
+static void buildNB(void) {
   for (int i = 0; i < NP; i++) {
-    int r = i / 9, c = i % 9, strong = !((r + c) & 1);
+    int r = i / 9, c = i % 9, strong = !((r + c) & 1), ok = r < GH && c < GW;
     for (int d = 0; d < 8; d++) {
       int nr = r + DR[d], nc = c + DC[d];
-      NB[d][i] = ((d & 1) && !strong) || nr < 0 || nr > 4 || nc < 0 || nc > 8 ? -1 : (i8)(nr * 9 + nc);
+      NB[d][i] = !ok || ((d & 1) && !strong) || nr < 0 || nr >= GH || nc < 0 || nc >= GW ? -1 : (i8)(nr * 9 + nc);
     }
   }
+}
+static void initGeo(void) {
+  if (geoReady) return;
+  buildNB();
   for (int s = 0; s < 2; s++) for (int i = 0; i < NP; i++) ZP[s][i] = rnd64();
   ZSIDE = rnd64();
   geoReady = 1;
@@ -201,7 +204,8 @@ static int PST[NP];
 static void initPST(void) {
   for (int i = 0; i < NP; i++) {
     int r = i / 9, c = i % 9, strong = !((r + c) & 1);
-    int cr = r < 2 ? r : 4 - r, cc = c < 4 ? c : 8 - c;   // distance from the edge
+    if (r >= GH || c >= GW) { PST[i] = 0; continue; }
+    int cr = r < GH / 2 ? r : GH - 1 - r, cc = c < GW / 2 ? c : GW - 1 - c;   // distance from the edge
     PST[i] = strong * 3 + cr * 2 + (cc > 0 ? 1 : 0);
   }
 }
@@ -251,7 +255,7 @@ static int netEval(const Pos *p) {
   return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
 }
 static int useNet = 1;
-static inline int evaluate(const Pos *p) { return (netOn && useNet) ? netEval(p) : hand(p); }
+static inline int evaluate(const Pos *p) { return (netOn && useNet && ruleStd) ? netEval(p) : hand(p); }
 
 // ---------------------------------------------------------------- transposition table
 typedef struct { u64 key; u64 cap; i16 v; u8 f, t; i8 d; u8 flag; u8 age; u8 pad; } TTE;   // 32 bytes
@@ -297,7 +301,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
   }
   if (timeUp() && ply > 0) return 0;
-  if (ply > 0 && egMaxN) { int e = egProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
+  if (ply > 0 && egMaxN && ruleStd) { int e = egProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
   if (ply >= MAXPLY - 2) return evaluate(p);
   int caps = hasCaps(p);
   if (!caps && depth <= 0) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
@@ -575,7 +579,15 @@ EXPORT(puzzle) void puzzle(int n, int defend, int goal, int base, int budgetK) {
   }
 }
 EXPORT(set_net_use) void set_net_use(int on) { useNet = on; }
-EXPORT(eg_root) int eg_root(void) { return egProbe(&ROOT); }
+static void initPST(void);
+// the board size (9, 5 = Fanoron-Tsivy; 5, 5 = Fanoron-Dimy). The endgame databases and the learned evaluation are for 9x5 only.
+EXPORT(set_rule) void set_rule(int w, int h) {
+  initGeo();
+  if (w == GW && h == GH) return;
+  GW = w; GH = h; ruleStd = w == 9 && h == 5;
+  buildNB(); initPST(); new_game();
+}
+EXPORT(eg_root) int eg_root(void) { return ruleStd ? egProbe(&ROOT) : -1; }
 EXPORT(eval_root) int eval_root(void) { return evaluate(&ROOT); }
 EXPORT(perft) u32 perft_root(int depth);
 static u64 perftR(Pos *p, int d, int ply) { if (d == 0) return 1; Move *L = MS[ply]; int n = gen(p, L); if (d == 1) return n; u64 s = 0; for (int i = 0; i < n; i++) { Pos q = *p; doMove(&q, &L[i]); s += perftR(&q, d - 1, ply + 1); } return s; }

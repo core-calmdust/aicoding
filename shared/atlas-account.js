@@ -30,7 +30,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   let app = null, user = null, ready = null, syncing = false, last = 0, err = '';
   // games with their own Firebase project (online play / rated games, Google sign-in): signed in together with the
   // shared account through a hidden frame each (shared/atlas-auth-frame.html), so one sign-in covers every game.
-  const GAME_AUTH = ['shogi', 'chess', 'reversi', 'checkers', 'go', 'gomoku', 'dots', 'morris', 'backgammon', 'connect4', 'mancala', 'sudoku', 'jailbreak'];   // sudoku = also speed sudoku / SameGame POP!
+  const GAME_AUTH = ['shogi', 'chess', 'reversi', 'checkers', 'go', 'gomoku', 'dots', 'morris', 'backgammon', 'connect4', 'mancala', 'sudoku', 'jailbreak', 'fanorona'];   // sudoku = also speed sudoku / SameGame POP!
   const HERE = (document.currentScript && document.currentScript.src) || location.href;
   let games = { done: 0, fail: [] };
 
