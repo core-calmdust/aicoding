@@ -1164,24 +1164,28 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html:is([data-rule=dimy],[data-rule=telo]), html:is([data-rule=dimy],[data-rule=telo]) body, html:is([data-rule=dimy],[data-rule=telo]).dock-fit body:not(.no-online){
     --sqw:360px !important;
-    --cell:max(12px, min((var(--vh) - 36px) / (var(--fhc) + .16), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), 150px)) !important;
+    --cell:max(12px, min((var(--vh) - 96px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), 150px)) !important;
   }
   html:is([data-rule=dimy],[data-rule=telo]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
-    grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:minmax(0,1fr) auto!important;
-    grid-template-areas:"board side" "board bx"!important;justify-content:center!important;align-content:start!important;
+    grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:var(--fh) auto!important;
+    grid-template-areas:"board side" "bx bx"!important;justify-content:center!important;align-content:center!important;
     height:var(--vh)!important;min-height:0!important;gap:12px 28px!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .board-area{align-self:center!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .side{display:flex!important;flex-direction:column;grid-area:side;min-height:0;height:auto!important;max-height:none!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app > .board-area{align-self:start!important;padding-bottom:0!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app > .side{display:flex!important;flex-direction:column;grid-area:side;min-height:0;height:var(--fh)!important;max-height:var(--fh)!important;align-self:start}
   html:is([data-rule=dimy],[data-rule=telo]) body .app > .side > .side-in{display:flex!important;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0;height:auto}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > *{grid-area:auto!important;grid-row:auto!important;grid-column:auto!important;flex:none}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #coachCard:not(.hidden){flex:1.8 1 0;min-height:140px;overflow-y:auto}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .review-card.show{flex:1 1 0;min-height:140px;overflow-y:auto}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .kifu-card{flex:.7 1 0;min-height:120px}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #evalCard{min-height:0;flex:none!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players{flex-direction:row!important;gap:8px!important;padding:8px!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player{flex:1 1 0;min-width:0;grid-template-columns:minmax(0,1fr) auto!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player > .status, html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player .count small{display:none!important}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app .side-in > .players .player > .count{grid-column:2!important}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > .kifu-card{flex:1 1 0!important;min-height:110px!important}
   html:is([data-rule=dimy],[data-rule=telo]) body .side-in > #evalCard .graph{flex:none;height:56px!important}
   html:is([data-rule=dimy],[data-rule=telo]) body.rvb-on .side-in > #coachCard{display:none!important}
-  html:is([data-rule=dimy],[data-rule=telo]) body .app > .rvbox{grid-area:bx;height:auto;max-height:44vh}
+  html:is([data-rule=dimy],[data-rule=telo]) body .app > .rvbox{grid-area:bx;height:auto;max-height:40vh}
 }
 /* larger coach / review text (PC, 2026-11-01) */
 @media not all and (pointer: coarse){
