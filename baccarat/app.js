@@ -401,7 +401,7 @@ function layMobHtml() {
       `<path id="${id}p" d="${arc(rm + h * (half === undefined && k !== 'T' ? .36 : .38), a0, a1)}" fill="none"/><text class="mz-p"><textPath href="#${id}p" startOffset="50%">${esc(payTxt(k).replace(/ \(.*$/, '').replace(/（.*$/, ''))}</textPath></text>`;
     // everybody's chips on this band, at their seat
     seats.forEach(sx => { const amt = betsOf(sx.n)[k]; if (!amt) return; const a = half === undefined ? sx.am : am + (sx.am / span) * (a1 - a0) / 2 * .8, [x, y] = P2(rm, a), me = sx.n === ME;
-      const [xu, yu] = P2(r1 + h * .18, a); if (me) { const [xa, ya] = P2(rm, a - 6.5), [xb, yb] = P2(rm, a + 7); g += `<g class="lz-ch">${chipsAt(amt, xa, ya + h * .28, 96)}</g>` + badge(xb, yb, fmt(amt), 'amt mz-b mz-me'); } else g += `<g class="lz-ch">${chipsAt(amt, xu, yu + 6, 34)}</g>`; });
+      const [xu, yu] = P2(r1 + h * .18, a); if (me) { const [xa, ya] = P2(rm, a - 8), [xb, yb] = P2(rm, a + 9.5); g += `<g class="lz-ch">${chipsAt(amt, xa, ya + h * .28, 96)}</g>` + badge(xb, yb, fmt(amt), 'amt mz-b mz-me'); } else g += `<g class="lz-ch">${chipsAt(amt, xu, yu + 6, 34)}</g>`; });
     if (rr !== undefined && meBets[k]) { const [x, y] = P2(rm, half === undefined ? span * .55 : am + (a1 - a0) * .3); g += badge(x, y, rr > 0 ? '+' + fmt(rr) : rr === 0 ? t('res.push') : '−' + fmt(-rr), 'res mz-b'); }
     g += `</g>`;
   });
@@ -449,7 +449,7 @@ function chipsAt(amt, x, yb, w) {   // chip stacks (side view) standing on y = y
     return sv.replace('<svg class="chsv"', `<svg class="chsv" x="${(x0 + i * gap - w / 2).toFixed(1)}" y="${(yb - h).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"`); }).join('');
 }
 const resTxt = res => res > 0 ? '+' + fmt(res) : res === 0 ? t('res.push') : '−' + fmt(-res);
-function badge(x, y, txt, cls) { const huge = /mz-me/.test(cls), big = /mz-b/.test(cls), w = (huge ? 34 : big ? 24 : 16) + String(txt).length * (huge ? 27 : big ? 19 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (huge ? 28 : big ? 21 : 13)).toFixed(1)}" width="${w}" height="${huge ? 54 : big ? 40 : 24}" rx="${huge ? 27 : big ? 20 : 12}"/><text x="${x}" y="${(y + (huge ? 13 : big ? 9 : 4.5)).toFixed(1)}">${esc(txt)}</text></g>`; }
+function badge(x, y, txt, cls) { const huge = /mz-me/.test(cls), big = /mz-b/.test(cls), w = (huge ? 48 : big ? 28 : 16) + String(txt).length * (huge ? 32 : big ? 22 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (huge ? 28 : big ? 21 : 13)).toFixed(1)}" width="${w}" height="${huge ? 54 : big ? 40 : 24}" rx="${huge ? 27 : big ? 20 : 12}"/><text x="${x}" y="${(y + (huge ? 13 : big ? 9 : 4.5)).toFixed(1)}"${huge || big ? ` textLength="${(w - (huge ? 34 : 20)).toFixed(0)}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(txt)}</text></g>`; }
 function layHtml() {
   const vb = VB(), done = T.phase === 'done', narrow = !!G.deep;
   LW = narrow ? 1000 : 1180; SPAN = narrow ? 66 : 51; MEW = narrow ? 2 : 1.5; RING = narrow ? RING_N : RING_W; LCY = narrow ? -10 : -360; LH = narrow ? 540 : 420;
