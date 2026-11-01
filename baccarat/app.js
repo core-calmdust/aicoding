@@ -267,6 +267,7 @@ function finish() {
   { const E = shoeOdds().E; (T.evHist || (T.evHist = [])).push({ B: E.B, P: E.P, T: E.T }); }   // the expectation of the shoe after each coup (研究)
   if (!T.tut) recordStats(c, r, tot, exp, res);
   T.result = r; T.phase = 'done'; T.bets = {};
+  T.lastCoup = { tot, net: r.net, exp: -exp };
   sfx(r.net > 0 ? (r.net >= 1000 ? 'bigchips' : 'win') : r.net < 0 ? 'lose' : 'chips');
   settleBots(c);
   if (T.bank < MIN_BET) { T.bank = START; S.rebuys++; toast(t('toast.rebuy', { n: fmt(START) })); }
@@ -576,16 +577,36 @@ function coachHtml() {
     // 1. the bets on the table (or the recommendation)
     const bets = T.phase === 'bet' ? T.bets : T.last || {};
     const ks = Object.keys(bets).filter(k => bets[k]);
-    const best = bestMain();
-    h += `<div class="rec"><span class="rb">${esc(t('rec.' + best))}</span><p>${esc(t('why.best.' + T.v, { b: pct(edge('B')), p: pct(edge('P')) }))}</p></div>`;
+    // the cheapest main bet *in this shoe* (it can change late in a shoe), shown small: it is a fact, not the coaching
+    const bestNow = O.E.B >= O.E.P ? 'B' : 'P', flip = bestNow !== bestMain();
+    h += `<div class="kv ck-best${flip ? ' flip' : ''}"><span>${esc(t('ck.best'))}</span><b>${esc(t(SPOTS[bestNow]))} ${(O.E[bestNow] * 100).toFixed(2)}%</b></div>` + (flip ? `<p class="ck-flip">${esc(t('ck.flip', { w: t(SPOTS[bestNow]) }))}</p>` : '');
+    const S = T.session, lc = T.lastCoup;
     if (ks.length && T.phase === 'bet') {
-      const tot = betSum(bets), loss = ks.reduce((a, k) => a + bets[k] * edge(k), 0);
+      // grade the bet you are about to make: the bets themselves, the size, chasing
+      const tot = betSum(bets), loss = ks.reduce((a, k) => a + bets[k] * edge(k), 0), share = tot / Math.max(1, T.bank);
+      const notes = [];
+      const mainAmt = (bets.B || 0) + (bets.P || 0);
+      ks.forEach(k => { const e = edge(k); notes.push([e < .02 ? 'g' : e < .08 || bets[k] <= mainAmt ? 'm' : 'b', t(e < .02 ? 'gr.main' : 'gr.side', { k: t(SPOTS[k]), e: pct(e) })]); });
+      if (bets.P && bets.B) notes.push(['b', t('tip.both')]);
+      notes.push(share <= .05 ? ['g', t('gr.size.ok', { n: Math.round(share * 100) })] : share <= .15 ? ['m', t('gr.size.big', { n: Math.round(share * 100) })] : ['b', t('gr.size.huge', { n: Math.round(share * 100) })]);
+      if (lc && lc.net < 0 && tot >= lc.tot * 2) notes.push(['b', t('gr.chase', { a: fmt(lc.tot), b: fmt(tot) })]);
+      const worst = notes.some(n => n[0] === 'b') ? 'b' : notes.some(n => n[0] === 'm') ? 'm' : 'g';
+      h += `<div class="ck-grade g${worst}"><b>${esc(t('gr.h.' + worst))}</b><ul>${notes.map(([g, x]) => `<li class="g${g}">${esc(x)}</li>`).join('')}</ul></div>`;
       h += `<div class="ck-bets">${ks.map(k => `<div class="kv"><span>${esc(t(SPOTS[k]))} ${fmt(bets[k])}</span><b class="${edge(k) > .03 ? 'neg' : ''}">${esc(t('edge', { n: pct(edge(k)) }))}</b></div>`).join('')}` +
         `<div class="kv tot"><span>${esc(t('ck.avgLoss'))}</span><b>−${fmt(Math.round(loss * 100) / 100)}</b></div></div>`;
-      if (ks.some(k => edge(k) > .03)) tips.push(t('tip.highEdge', { n: ks.filter(k => edge(k) > .03).map(k => t(SPOTS[k])).join('・') }));
-      if (tot > T.session.buyin * .1) tips.push(t('tip.bigBet', { n: Math.round(tot / T.bank * 100) }));
-      if (bets.P && bets.B) tips.push(t('tip.both'));
+    } else if (T.phase === 'bet') {
+      // no bet yet: a money plan from your chips, and how likely it is to be ahead after many coups
+      const start = S.buyin, unit = Math.max(25, Math.round(T.bank * .02 / 25) * 25), stop = Math.round(start * .7 / 25) * 25, goal = Math.round(start * 1.2 / 25) * 25;
+      const pos = Math.max(0, Math.min(1, (T.bank - stop) / ((goal - stop) || 1)));
+      h += `<div class="ck-plan"><div class="tips-h">${esc(t('pl.h'))}</div>` +
+        `<div class="kv"><span>${esc(t('pl.unit'))}</span><b>${fmt(unit)}</b></div><div class="kv"><span>${esc(t('pl.stop'))}</span><b class="neg">${fmt(stop)}</b></div><div class="kv"><span>${esc(t('pl.goal'))}</span><b class="pos">${fmt(goal)}</b></div>` +
+        `<div class="pl-bar"><i style="left:${(pos * 100).toFixed(1)}%"></i></div>` +
+        (T.bank <= stop ? `<p class="ck-warn">${esc(t('pl.atStop'))}</p>` : T.bank >= goal ? `<p class="ck-good">${esc(t('pl.atGoal'))}</p>` : '') + `</div>`;
+      const pa = n => { const z = -.01058 * Math.sqrt(n) / .927; return 1 / (1 + Math.exp(-1.702 * z)); };   // normal cdf (logistic approx.)
+      h += `<div class="ck-long"><div class="tips-h">${esc(t('lg.h'))}</div><div class="lg-row">${[10, 100, 1000, 10000].map(n => `<div><small>${esc(t('lg.n', { n: fmt(n) }))}</small><b>${pct(pa(n), 0)}</b></div>`).join('')}</div><p class="diff-desc">${esc(t('lg.help'))}</p></div>`;
     }
+    // the last coup: did you play it well? (independent of whether it won)
+    if (T.phase === 'done' && lc && lc.tot) h += `<p class="ck-luck">${esc(t(lc.net > 0 ? 'ck.won' : lc.net < 0 ? 'ck.lost' : 'ck.push', { e: fmt(Math.round(lc.exp * 100) / 100) }))}</p>`;
     // 2. a +EV spot in this shoe (it happens to side bets late in a shoe)
     const plus = VB().filter(k => O.E[k] > 0);
     if (plus.length) h += `<div class="ck-plus">🔎 ${esc(t('ck.plus', { b: plus.map(k => t(SPOTS[k]) + ' ' + (O.E[k] > 0 ? '+' : '') + (O.E[k] * 100).toFixed(2) + '%').join(' / ') }))}</div>`;
