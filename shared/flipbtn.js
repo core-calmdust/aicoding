@@ -30,7 +30,8 @@ function init(o) {
   btn.className = (snd && snd.className ? snd.className : 'snd') + ' flip-btn';
   btn.innerHTML = ICON;
   btn.addEventListener('click', e => { e.preventDefault(); toggle(); });
-  if (snd && snd.parentNode) snd.parentNode.insertBefore(btn, snd);
+  const rec = document.getElementById('btnRecord'), anchor = rec && snd && rec.parentNode === snd.parentNode ? rec : snd;   // order: 盤面反転 → 戦績 → sound
+  if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(btn, anchor);
   else { const r = document.querySelector(o.mount || '.brand-r'); if (r) r.insertBefore(btn, r.firstChild); }
   document.addEventListener('keydown', e => {
     if (e.key !== 'f' && e.key !== 'F') return;
