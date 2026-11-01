@@ -1992,3 +1992,12 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-shoe small{font:700 calc(min(var(--cw)*.2,16px)) 'JetBrains Mono',monospace;color:#f3efe6}
 .bc-shoe small i{font-size:calc(min(var(--cw)*.12,10px));letter-spacing:.14em;opacity:.75}
 @media (max-width:760px){.bc-shoe{display:flex;right:calc(var(--cw)*.35);top:calc(var(--cw)*.25)}.bc-table:not(.stk) .bc-shoe{display:none}}
+/* new game → game tab: your chips and the reset under the game cards */
+.bc-ngw{display:flex;flex-direction:column;gap:12px;height:100%}
+.bc-ngw .ng-games{flex:1 1 auto;min-height:0;height:auto;margin:0}
+.ng-chips-row{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18)}
+.ng-chips-row .lab{margin:0}
+.ng-chips-row small{flex:1 1 220px;font-size:12px;color:var(--muted);line-height:1.5}
+.ng-chips-row .ng-rq{font-size:13px;font-weight:700}
+.ng-chips-row .sbtn{padding:7px 14px;font-size:13px}
+.ng-chips-row .sbtn:disabled{opacity:.4;cursor:default}
