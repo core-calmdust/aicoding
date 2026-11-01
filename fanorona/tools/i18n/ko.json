@@ -373,5 +373,12 @@
 "bd.lambared": "람바 (빨강)",
 "pcs.mono": "모노 (상아·산호)",
 "pcs.lacquer": "옻칠 원반",
-"pick.jumpMust": "더 잡을 수 있습니다: 계속 뛰어넘어야 합니다"
+"pick.jumpMust": "더 잡을 수 있습니다: 계속 뛰어넘어야 합니다",
+"land.title": "가로 화면으로 플레이 (휴대폰)",
+"land.on": "가로 화면 켬",
+"land.off": "가로 화면 끔",
+"land.tip": "가로 화면으로도 즐길 수 있어요!",
+"land.tipSub": "오른쪽 위 버튼으로 더 큰 가로 화면 보드로 바꿀 수 있습니다.",
+"land.go": "가로 화면으로",
+"land.keep": "이대로"
 }

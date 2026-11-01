@@ -373,5 +373,12 @@
 "bd.lambared": "Lamba (rouge)",
 "pcs.mono": "Mono (ivoire / corail)",
 "pcs.lacquer": "Disques laqués",
-"pick.jumpMust": "Vous pouvez encore prendre : il faut continuer à sauter"
+"pick.jumpMust": "Vous pouvez encore prendre : il faut continuer à sauter",
+"land.title": "Jouer en paysage (mobile)",
+"land.on": "Paysage activé",
+"land.off": "Paysage désactivé",
+"land.tip": "Vous pouvez aussi jouer en paysage !",
+"land.tipSub": "Le bouton en haut à droite affiche un plateau plus grand, à l’horizontale.",
+"land.go": "Passer en paysage",
+"land.keep": "Garder ainsi"
 }

@@ -2433,3 +2433,55 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 window.addEventListener('resize', () => renderFx());
+// ====================================================================== landscape option (phones, as backgammon)
+// The option turns the phone's screen even with the rotation locked: real fullscreen + orientation lock where the browser
+// allows it (Android), otherwise the page reloads into a wrapper (index.html) that shows the game in an iframe turned 90°,
+// so the game inside sees a real landscape viewport (the phone landscape layout of landtabs.js, hit testing and touches
+// stay correct with no coordinate mapping). window.__EMBED: this page is the turned copy inside the wrapper.
+const LAND_KEY = STORE + '-landscape', LAND_SKIP = STORE + '-landtip-skip';
+const landOn = () => { try { return localStorage.getItem(LAND_KEY) === '1'; } catch (e) { return false; } };
+const landCoarse = () => matchMedia('(pointer: coarse)').matches;
+function renderLandBtn() { const b = $('#btnLand'); if (b) b.classList.toggle('on', landOn()); }
+function landSkipNext() { try { sessionStorage.setItem(LAND_SKIP, '1'); } catch (e) {} }   // no tip right after the button reloaded the page
+async function setLand(want) {
+  try { localStorage.setItem(LAND_KEY, want ? '1' : '0'); } catch (e) {}
+  renderLandBtn(); landSkipNext();
+  toast(t(want ? 'land.on' : 'land.off'), 1100);
+  if (want) {
+    if (innerWidth > innerHeight) return;   // already held sideways (the wrapper takes over on the next visit)
+    let locked = false;
+    try {
+      if (document.documentElement.requestFullscreen && screen.orientation && screen.orientation.lock) {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+        await Promise.race([screen.orientation.lock('landscape'), sleep(1500).then(() => { throw new Error('lock timeout'); })]);
+        await sleep(700); locked = innerWidth > innerHeight;   // some browsers resolve the lock without turning: trust only a turned viewport
+      }
+    } catch (e) {}
+    if (!locked) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {} setTimeout(() => location.reload(), 350); }   // iOS etc.: the turned iframe
+  } else {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+    if (window.__EMBED && window.top !== window) setTimeout(() => window.top.location.reload(), 350);
+  }
+}
+$('#btnLand').onclick = () => setLand(!landOn());
+if (window.__EMBED) document.querySelectorAll('a.home, a.series').forEach(a => { a.target = '_top'; });
+renderLandBtn();
+// tip for phone users held upright: landscape play exists (every visit while the option is off; queued behind any dialog)
+{
+  const skip = (() => { try { const v = sessionStorage.getItem(LAND_SKIP) === '1'; sessionStorage.removeItem(LAND_SKIP); return v; } catch (e) { return false; } })();
+  const wanted = () => !skip && !window.__EMBED && !landOn() && landCoarse() && innerHeight > innerWidth;
+  const pulse = () => { const b = $('#btnLand'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 4500); };
+  const closeTip = on => { hideOverlay('#landTipOverlay'); if (on) setLand(true); else setTimeout(pulse, 250); };
+  $('#lpKeep').onclick = () => closeTip(false);
+  $('#lpOn').onclick = () => closeTip(true);
+  if (wanted()) {
+    const iv = setInterval(() => {
+      if (!wanted()) { clearInterval(iv); return; }
+      if (document.querySelector('.overlay.show') || lesson || puzzle || document.hidden) return;
+      clearInterval(iv);
+      document.body.classList.toggle('no-anim', !animOn());
+      showOverlay('#landTipOverlay');
+    }, 700);
+  }
+}

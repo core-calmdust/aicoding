@@ -373,5 +373,12 @@
 "bd.lambared": "兰巴（红）",
 "pcs.mono": "单色（象牙·珊瑚）",
 "pcs.lacquer": "漆圆片",
-"pick.jumpMust": "还能吃：必须继续跳"
+"pick.jumpMust": "还能吃：必须继续跳",
+"land.title": "横屏游玩（手机）",
+"land.on": "横屏 开",
+"land.off": "横屏 关",
+"land.tip": "也可以横屏玩！",
+"land.tipSub": "点击右上角按钮，即可切换为更大的横屏棋盘。",
+"land.go": "切换横屏",
+"land.keep": "保持现状"
 }

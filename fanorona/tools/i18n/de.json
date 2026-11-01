@@ -373,5 +373,12 @@
 "bd.lambared": "Lamba (rot)",
 "pcs.mono": "Mono (Elfenbein / Koralle)",
 "pcs.lacquer": "Lackscheiben",
-"pick.jumpMust": "Du kannst weiter schlagen: du musst weiterspringen"
+"pick.jumpMust": "Du kannst weiter schlagen: du musst weiterspringen",
+"land.title": "Im Querformat spielen (Handy)",
+"land.on": "Querformat an",
+"land.off": "Querformat aus",
+"land.tip": "Du kannst auch im Querformat spielen!",
+"land.tipSub": "Mit dem Knopf oben rechts wechselst du zu einem größeren Brett im Querformat.",
+"land.go": "Querformat",
+"land.keep": "So lassen"
 }
