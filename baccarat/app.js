@@ -24,7 +24,7 @@ D.stats = D.stats || {};
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });
 document.documentElement.dataset.face = 'classic';
-function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }   // (the tutorial table is never put in D.cur)
 function prefOf(v) {
   const p = set.prefs[v] || (set.prefs[v] = {});
   if (!DECKS.includes(p.decks)) p.decks = 8;
@@ -148,6 +148,7 @@ const mt = () => !set.anim ? 0 : set.speed === 'slow' ? 1.5 : set.speed === 'fas
 function rnd() { return Math.random(); }
 function freshShoe() { const s = B.newShoe(T.decks, rnd); T.shoe = s; T.res = []; G.odds = null; }
 function newSession(v) {
+  if (T && T.tut) restoreTut();
   recordSession();
   const p = prefOf(v); set.v = v;
   // your chips go with you from table to table; at zero you start again from START
@@ -158,9 +159,30 @@ function newSession(v) {
   freshShoe(); G.undo = []; G.note = { k: 'newShoe' };
   D.cur = T; save(); sfx('shuffle'); render();
 }
+/* the tutorial: one scripted coup on the real table (tutorial.js drives the steps); your chips, the bots and the saved table stay as they were */
+function startTutorial() {
+  clearTimeout(G.timer); if (T && T.tut) restoreTut(); recordSession();
+  G.tutPrev = { cur: D.cur, chips: D.chips, bots: JSON.parse(JSON.stringify(D.bots || {})), set: { coach: set.coach, squeeze: set.squeeze, autoNext: set.autoNext } };
+  set.coach = 1; set.autoNext = 0;
+  T = { v: 'classic', decks: 8, tie: 8, bank: START, bets: {}, last: null, phase: 'bet', coup: null, show: null, hand: 0, res: [], tut: true,
+    session: { hands: 0, net: 0, wag: 0, exp: 0, start: Date.now(), buyin: START, rebuys: 0, peak: START, graph: [0] } };
+  freshShoe(); botsNewTable(); if (window.BacTut) BacTut.setup(T);
+  G.undo = []; G.note = null; render();
+  if (window.BacTut) BacTut.ev('start');
+}
+function restoreTut() {
+  const p = G.tutPrev; G.tutPrev = null; if (window.BacTut) BacTut.hide();
+  if (p) { D.chips = p.chips; D.bots = p.bots; Object.assign(set, p.set); D.cur = p.cur; save(); }
+  T = null;
+}
+function endTutorial() {
+  clearTimeout(G.timer); restoreTut();
+  if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v]) { T = D.cur; if (!T.bots) botsNewTable(); if (T.phase === 'deal' || T.phase === 'squeeze') { T.phase = 'bet'; T.show = null; T.coup = null; } render(); }
+  else newSession(set.v);
+}
 /* 勝敗記録 (shared/record.js): one entry per session — the net decides win / loss */
 function recordSession() {
-  if (!window.GameRecord || !T || !T.session || !T.session.hands || T.session.recorded) return;
+  if (!window.GameRecord || !T || T.tut || !T.session || !T.session.hands || T.session.recorded) return;
   const S = T.session; S.recorded = true;
   try { GameRecord.add({ mode: 'ai', res: S.net > 0 ? 'w' : S.net < 0 ? 'l' : 'd', opp: vName(T.v), key: T.v, why: t('grc.hands', { n: S.hands }) + ' · ' + t('ss.net') + ' ' + sg(S.net) }); } catch (e) {}
 }
@@ -182,7 +204,9 @@ function placeBet(k) {
   if (T.phase === 'bet' && T.show) clearCoup();
   const d = set.chip, have = T.bank - betSum(T.bets);
   if (have < d) { toast(t('toast.noMoney')); sfx('bad'); return; }
+  if (T.tut && window.BacTut && !BacTut.allow({ a: 'bet', k })) return;
   T.bets[k] = (T.bets[k] || 0) + d; G.undo.push([k, d]); sfx('chip'); G.note = null; render();
+  if (T.tut && window.BacTut) BacTut.after('bet');
 }
 function unplace() { const u = G.undo.pop(); if (!u) return; const [k, d] = u; T.bets[k] -= d; if (T.bets[k] <= 0) delete T.bets[k]; sfx('chip'); render(); }
 function clearBets() { T.bets = {}; G.undo = []; render(); }
@@ -203,12 +227,13 @@ function deal() {
   const tot = betSum(T.bets);
   if (tot < MIN_BET) { toast(t('toast.minBet', { n: MIN_BET })); return; }
   if (tot > T.bank) { toast(t('toast.noMoney')); return; }
+  if (T.tut && window.BacTut && !BacTut.allow({ a: 'deal' })) return;
   if (T.shoe.pos + 6 > T.shoe.cards.length) freshShoe();
   T.bank -= tot; T.last = Object.assign({}, T.bets); G.undo = [];
   const c = B.coup(() => T.shoe.cards[T.shoe.pos++]);
   T.coup = c; T.hand++;
   // squeeze: the side of your biggest main bet is dealt face down — you turn its cards yourself
-  const sq = set.squeeze && (T.bets.P || T.bets.B) ? ((T.bets.P || 0) > (T.bets.B || 0) ? 'p' : 'b') : null;
+  const sq = set.squeeze && !T.tut && (T.bets.P || T.bets.B) ? ((T.bets.P || 0) > (T.bets.B || 0) ? 'p' : 'b') : null;
   T.show = { n: 0, sq, peel: {}, ev: events(c) };
   T.phase = 'deal'; G.note = null; render(); step();
 }
@@ -238,15 +263,16 @@ function finish() {
   S.graph.push(S.net); if (S.graph.length > 400) S.graph = S.graph.filter((_, i) => i % 2 === 0);
   const res = { w: c.win, pp: B.RANK(c.p[0]) === B.RANK(c.p[1]) ? 1 : 0, bp: B.RANK(c.b[0]) === B.RANK(c.b[1]) ? 1 : 0, pt: c.pt, bt: c.bt, nat: c.natural ? 1 : 0, n3p: c.p.length, n3b: c.b.length };
   T.res.push(res); T.shoe.n++;
-  recordStats(c, r, tot, exp, res);
+  if (!T.tut) recordStats(c, r, tot, exp, res);
   T.result = r; T.phase = 'done'; T.bets = {};
   sfx(r.net > 0 ? (r.net >= 1000 ? 'bigchips' : 'win') : r.net < 0 ? 'lose' : 'chips');
   settleBots(c);
   if (T.bank < MIN_BET) { T.bank = START; S.rebuys++; toast(t('toast.rebuy', { n: fmt(START) })); }
-  D.chips = T.bank;
+  if (!T.tut) D.chips = T.bank;
   const cutOut = T.shoe.pos >= T.shoe.cut;
   G.note = { k: 'result', cut: cutOut };
   save(); render();
+  if (T.tut && window.BacTut) { setTimeout(() => BacTut.ev('done'), Math.round(900 * (mt() || .5))); return; }
   if (set.autoNext) G.timer = setTimeout(nextCoup, Math.round(2600 * (mt() || .4)));
 }
 function nextCoup() {
@@ -403,8 +429,13 @@ function render() {
   if (!T) return;
   const box = $('#bcTable'), W = box.clientWidth, H = box.clientHeight;
   const narrow = W < 560;
-  const cw = Math.max(34, Math.min(W / (narrow ? 8.1 : 8.6), H / (narrow ? 4.8 : 6.6), 124));
+  // the layout print is as wide as the table; the cards take what is left above it
+  const lzh = (W - 24) * (narrow ? 540 / 1000 : 420 / 1180);
+  const cw = Math.max(34, Math.min(W / (narrow ? 8.1 : 8.6), (H - Math.min(lzh, H * .62)) / 3.25, 124));
   const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
+  // square / tall windows: no empty felt between the cards and the layout — the table is only as tall as it needs
+  { const rail = (bw.offsetHeight - H) / 2, need = Math.ceil(cw * (.38 + .54 + 1.4 + .2 + (narrow ? .95 : .62)) + lzh + 2 * rail + 10);
+    const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2 && (H + 2 * rail > need + 4 || mh)) bw.style.maxHeight = need + 'px'; }
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
   const tag = (side, tot) => tot == null ? '' : `<span class="bc-tot${done && win === side.toUpperCase() ? ' win' : ''}${c && c.natural && done && (side === 'p' ? c.pt : c.bt) >= 8 ? ' nat' : ''}">${tot}</span>`;
@@ -421,7 +452,7 @@ function render() {
     `<div class="bc-hand bh-p${win === 'P' ? ' win' : ''}" data-k="hp"><div class="bc-hh"><span>PLAYER</span>${tag('p', pt)}${pair('p')}</div>${handHtml('p')}</div>` +
     `<div class="bc-hand bh-b${win === 'B' ? ' win' : ''}" data-k="hb"><div class="bc-hh"><span>BANKER</span>${tag('b', bt)}${pair('b')}</div>${handHtml('b')}</div>` +
     `</div>${banner}${lay}` +
-    `<div class="bc-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: shoeLeft }))}"><span class="bc-shoe-box"><i style="height:${(shoePct * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small>${shoeLeft}</small></div>`;
+    `<div class="bc-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: shoeLeft }))}"><span class="bc-shoe-box"><i style="height:${(shoePct * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small><i>SHOE</i>${shoeLeft}</small></div>`;
   patch(box, h);
   box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); });
   box.querySelectorAll('[data-spot]').forEach(el => el.oncontextmenu = e => { e.preventDefault(); if (T.phase !== 'bet' || !T.bets[el.dataset.spot]) return; delete T.bets[el.dataset.spot]; G.undo = G.undo.filter(u => u[0] !== el.dataset.spot); render(); });
@@ -452,7 +483,7 @@ function renderActbar() {
   }
   if (T.phase === 'done') {
     patch(bar, `<div class="ab-btns main"><button class="abtn" id="abRe" data-k="re">${esc(t('btn.rebetDeal'))}<kbd>R</kbd></button><button class="abtn go" id="abNext" data-k="nx">${esc(t('next'))}<kbd>Space</kbd></button></div>`);
-    $('#abNext').onclick = nextCoup; $('#abRe').onclick = () => { nextCoup(); rebet(1); if (betSum(T.bets)) deal(); };
+    $('#abNext').onclick = () => T.tut && window.BacTut ? BacTut.finish() : nextCoup(); $('#abRe').onclick = () => { if (T.tut) { window.BacTut && BacTut.finish(); return; } nextCoup(); rebet(1); if (betSum(T.bets)) deal(); };
     return;
   }
   const tot = betSum(T.bets);
@@ -753,7 +784,7 @@ document.addEventListener('keydown', e => {
     else if (/^[1-5]$/.test(k)) { set.chip = DENOMS[+k - 1]; renderActbar(); }
     else if (k === 'h') $('#btnHint').click();
   } else if (T.phase === 'squeeze' && (k === ' ' || k === 'enter')) { e.preventDefault(); revealAll(); }
-  else if (T.phase === 'done') { if (k === ' ' || k === 'enter' || k === 'n') { e.preventDefault(); nextCoup(); } else if (k === 'r') $('#abRe').click(); }
+  else if (T.phase === 'done' && !T.tut) { if (k === ' ' || k === 'enter' || k === 'n') { e.preventDefault(); nextCoup(); } else if (k === 'r') $('#abRe').click(); }
 });
 
 /* ---------------- start ---------------- */
@@ -770,5 +801,5 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v]) {
   render();
 } else newSession(set.v);
 
-window.BacApp = { get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
+window.BacApp = { startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
 })();
