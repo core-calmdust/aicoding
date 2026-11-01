@@ -1295,6 +1295,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   .rvbox .rvb-foot{font-size:12.5px}
   .review-card{font-size:14.5px}
 }
+/* pieces left on the board, at the end of each player's groove: shown on phones held sideways instead of the player chips in the top bar (2026-11-02) */
+.reserve .onb{display:none}
+body.lt-on .players{display:none!important}
+body.lt-on .reserve .onb{display:inline-flex;align-items:center;gap:5px;position:absolute;right:calc(var(--cell) * .22);top:50%;transform:translateY(-50%);padding:2px 9px 2px 5px;border-radius:999px;
+  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);font:700 14px/1 'JetBrains Mono',monospace;color:var(--text);pointer-events:none}
+body.lt-on .reserve .onb .pdisc{width:13px;height:13px;border-radius:50%;display:inline-block}
+body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 </style>
 <link rel="stylesheet" href="online.css?v=3l9">
 <style>
@@ -1633,7 +1640,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="i18n.js?v=fb3"><\/script><script src="i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=fb3"><\/script><script src="coach-i18n.js?v=fb4"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=fb8"><\/script><script src="online-ui.js?v=fb2"><\/script><script src="landtabs.js?v=fb3"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=20"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="i18n.js?v=fb3"><\/script><script src="i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=fb3"><\/script><script src="coach-i18n.js?v=fb4"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=fb9"><\/script><script src="online-ui.js?v=fb2"><\/script><script src="landtabs.js?v=fb3"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=20"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
