@@ -1189,6 +1189,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   }
   html[data-rule=telo], html[data-rule=telo] body, html[data-rule=telo].dock-fit body:not(.no-online){--cmax:240px !important;
   }
+  /* the review box open below: the board shrinks so board + box fit the screen (as Reversi) */
+  html.rvb-on:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]), html.rvb-on:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body{
+    --cell:max(12px, min((var(--vh) - 220px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), var(--cmax))) !important;
+  }
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
     grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:var(--fh) auto!important;
     grid-template-areas:"board side" "bx bx"!important;justify-content:center!important;align-content:center!important;
