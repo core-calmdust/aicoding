@@ -19,9 +19,9 @@ const pct = (x, d) => (x * 100).toFixed(d == null ? 2 : d) + '%';
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'classic', prefs: {}, felt: 'wine', back: 'ornateBlack', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, squeeze: 0, autoNext: 0, chip: 100, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'classic', prefs: {}, felt: 'teal', back: 'ornateBlack', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, squeeze: 0, autoNext: 0, chip: 100, lang: '' }, D.set || {});
 D.stats = D.stats || {};
-if (!D.set.th2) { if (D.set.felt === 'green') D.set.felt = 'wine'; D.set.th2 = 1; }   // the wine-red table became the default
+if (!D.set.th3) { if (D.set.felt === 'green' || D.set.felt === 'wine') D.set.felt = 'teal'; D.set.th3 = 1; }   // default table: teal (as the poker)
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });
 document.documentElement.dataset.face = 'classic';
