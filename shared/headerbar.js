@@ -186,10 +186,12 @@ function dockCenter() {
   const app = document.querySelector('.app'), dock = document.getElementById('dock') || document.querySelector('.dock');
   if (!app || !dock) { if (!dockCenter.tried) { dockCenter.tried = 1; setTimeout(dockCenter, 1500); } return; }
   const root = document.documentElement, M = 10;   // M: breathing room above / below the content
+  // D: how long the board takes to move / resize — together with the dock (its panel's height: .25s ease) (2026-11-01)
+  const D = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 260;
   if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
   app.style.top = '0px';   // a length (not auto), so the change of top can transition
-  app.style.transition = 'top .45s cubic-bezier(.25,.8,.3,1)';
-  let raf = 0, cur = 0, own = 0, fitted = false, rt = 0, recheck = 0;
+  app.style.transition = D ? `top ${D}ms ease` : 'none';
+  let cur = 0, own = 0, fitted = false, rt = 0, anim = 0;
   const isOpen = () => { const ds = getComputedStyle(dock); return document.body.classList.contains('dock-open') && ds.display !== 'none' && ds.position === 'fixed'; };
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
@@ -204,10 +206,18 @@ function dockCenter() {
     const bar = [...document.querySelectorAll('header.hb, .atlas-top')].find(b => b.getClientRects().length), br = bar ? bar.getBoundingClientRect() : null;   // (fixed: no offsetParent; portal: the game's own bar is hidden, use the portal's)
     return [br && br.height ? br.bottom : 0, dock.getBoundingClientRect().top];
   };
+  // the dock's opening / closing animation, run to its end for a moment (within one task: nothing is painted), so the space it
+  // will leave is known right away and the board can move together with the dock instead of after it; returns the undo
+  const ffDock = () => {
+    const an = (dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).filter(a => { try { const e = a.effect && a.effect.getComputedTiming().endTime; return a.playState !== 'finished' && isFinite(e) && e > 0; } catch (e) { return false; } });
+    const was = an.map(a => a.currentTime);
+    an.forEach(a => { try { a.currentTime = a.effect.getComputedTiming().endTime - 0.01; } catch (e) {} });
+    return () => an.forEach((a, i) => { try { a.currentTime = was[i]; } catch (e) {} });
+  };
   const vhPx = () => { const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;visibility:hidden;height:var(--vh)'; app.appendChild(pr); const h = pr.getBoundingClientRect().height; pr.remove(); return h; };
   const relayout = () => { own++; window.dispatchEvent(new Event('resize')); setTimeout(() => own--, 0); };
   // the reduction R is applied as --vh (an !important rule on <html> and <body>: some games re-declare --vh on body or rewrite
-  // the inline value on resize) and as DockFit.extra for games that size the board in JS (backgammon: olDockH)
+  // the inline value on resize) and as DockFit.extra for games that size the board in JS
   let R = 0, base = 0, lastStep = 0;
   const css = document.createElement('style'); css.id = 'dockFitCss'; document.head.appendChild(css);
   const cmp = document.createElement('style'); cmp.id = 'dockCompactCss';
@@ -230,10 +240,12 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   // a review box (rvbox.js / rbox.js / the games' own) under the board and the info column
   const boxOn = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].some(b => b.getClientRects().length);
   window.DockFit = { extra: 0 };
-  const unfit = () => { const c = root.classList.contains('dock-compact') || root.classList.contains('dock-rvb'); root.classList.remove('dock-compact', 'dock-rvb'); if (!fitted) { if (c) relayout(); return; } fitted = false; R = 0; apply(); };
-  // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
-  // (games may redraw their board a moment after a resize, so each pass waits before measuring again)
-  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // back to the full layout at once (only inside a probe, or when nothing is shown in between)
+  const reset = () => { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); };
+  // (games may redraw their board a moment after a resize, so each pass of the refine waits before measuring again; the
+  // probe does not wait at all — it runs within one task, so none of its passes is ever painted)
+  let sync = false;
+  const wait = ms => sync ? null : new Promise(r => setTimeout(r, ms));
   // a step can overshoot (the review box gets lower too, the board snaps to whole sizes): give back what is left over
   const loosen = async my => {
     for (let k = 0; k < 4 && R > 0; k++) {
@@ -244,6 +256,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
       if (u2[1] - u2[0] > b2 - t2 - 2 * M + 1) { R = keep; apply(); await wait(180); return; }   // too far: back to the last size that fitted
     }
   };
+  // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
   const fit = async my => {
     let prev = Infinity, good = R, stall = 0;
     for (let k = 0; k < 10; k++) {
@@ -258,10 +271,8 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
       await wait(180);
     }
   };
-  let gen = 0;
-  const settle = async () => {
-    const my = ++gen;
-    if (!isOpen()) { cur = 0; app.style.top = '0px'; setTimeout(() => { if (!isOpen() && my === gen) unfit(); }, 460); return; }   // size back once it has scrolled back
+  // the whole fitting: the review box mode, the size, the compact info column
+  const layout = async my => {
     // with the review box, the info column takes the height of the board's row (and scrolls) instead of making the row taller
     if (boxOn() !== root.classList.contains('dock-rvb')) { root.classList.toggle('dock-rvb'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; }
     await fit(my); if (my !== gen || !isOpen()) return;
@@ -269,35 +280,66 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     // evaluation bar and the ◀ ▶ navigation stay), like the phone layout
     const sd = document.querySelector('.app .side');
     const ub = bounds(), rg = region(), still = ub && (ub[1] - ub[0]) > rg[1] - rg[0] - 2 * M + 2;   // still too tall after fitting
-    if (sd && !root.classList.contains('dock-compact') && (still || sd.scrollHeight > sd.clientHeight + 4 || [...(sd.querySelector('.side-in') || sd).children].some(c => c.getClientRects().length && c.getBoundingClientRect().bottom > sd.getBoundingClientRect().bottom + 4))) { root.classList.add('dock-compact'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; await fit(my); if (my !== gen || !isOpen()) return; }   // compact first, then fit again from the full size
-    const [top, bot] = region(), u = center(); if (!u) return;
-    // the dock may still have been moving when this started: look again, a moment later (and centre again if the game
-    // redrew its board a moment after the last resize)
-    if (recheck-- > 0) setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
-      if (Math.abs(b2 - bot) > 2 || Math.abs(t2 - top) > 2) settle(); else center(); }, 500);
+    if (sd && !root.classList.contains('dock-compact') && (still || sd.scrollHeight > sd.clientHeight + 4 || [...(sd.querySelector('.side-in') || sd).children].some(c => c.getClientRects().length && c.getBoundingClientRect().bottom > sd.getBoundingClientRect().bottom + 4))) { root.classList.add('dock-compact'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; await fit(my); }   // compact first, then fit again from the full size
   };
-  const center = () => {
+  // the shift that centres the content (as laid out now) between the header and the dock
+  const delta = () => {
     const [top, bot] = region(), u = bounds(); if (!u) return null;
     let d = Math.round((u[0] + u[1]) / 2 - (top + bot) / 2);   // (may be negative: a smaller layout is moved down to the middle)
     if (u[1] - u[0] > bot - top - 2 * M) d = Math.round(u[0] - top - M);   // still taller than the space: keep its top under the header
-    if (d !== cur) { cur = d; app.style.top = -d + 'px'; }
-    return u;
+    return d;
   };
-  // wait for the dock to finish opening / closing (its height animates), then settle
-  const follow = () => {
-    cancelAnimationFrame(raf); let last = null, still = 0, n = 0; recheck = 2;
-    const step = () => { const y = Math.round(dock.getBoundingClientRect().top); still = y === last ? still + 1 : 0; last = y; if (still >= 2 || ++n > 90) { settle(); return; } raf = requestAnimationFrame(step); };
-    if (!isOpen()) { settle(); return; }
-    raf = requestAnimationFrame(step);
+  const moveTo = d => { if (d != null && d !== cur) { cur = d; app.style.top = -d + 'px'; } };
+  // CSS 'ease' (cubic-bezier(.25,.1,.25,1)), the curve of the shift and of the dock
+  const ease = t => { let a = 0, b = 1, x = t; for (let i = 0; i < 24; i++) { x = (a + b) / 2; const px = 3 * .25 * x * (1 - x) * (1 - x) + 3 * .25 * x * x * (1 - x) + x * x * x; if (px < t) a = x; else b = x; } return 3 * .1 * x * (1 - x) * (1 - x) + 3 * x * x * (1 - x) + x * x * x; };
+  // the size from R0 to R1 in step with the shift (top transitions over the same time): --vh is written once per frame
+  const tween = (R0, R1, done) => {
+    cancelAnimationFrame(anim);
+    if (!D || Math.abs(R1 - R0) < 1) { R = R1; apply(); if (done) done(); return; }
+    const t0 = performance.now();
+    const step = now => { const k = Math.min(1, (now - t0) / D); R = R0 + (R1 - R0) * ease(k); if (k >= 1) R = R1; apply(); if (k < 1) anim = requestAnimationFrame(step); else { anim = 0; if (done) done(); } };
+    anim = requestAnimationFrame(step);
+  };
+  let gen = 0;
+  const settle = async () => {
+    const my = ++gen; cancelAnimationFrame(anim); anim = 0;
+    const R0 = R;
+    if (!isOpen()) {   // closed: back to the full size while it scrolls back
+      moveTo(0);
+      if (!fitted && !root.classList.contains('dock-compact') && !root.classList.contains('dock-rvb')) return;
+      root.classList.remove('dock-compact', 'dock-rvb');
+      tween(R0, 0, () => { if (my !== gen) return; fitted = false; R = 0; apply(); });
+      return;
+    }
+    // probe: the final layout for the dock's final place, worked out without painting (dock animation run to its end,
+    // every pass without waiting), then back to what is on screen now and over to it smoothly
+    const undo = ffDock(); let Rt = 0, d = null, rg = null, hp = 0;
+    sync = true;
+    try { reset(); await layout(my); Rt = R; d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
+    if (my !== gen) return;
+    // (the compact column comes or goes at once; the board size and the shift move)
+    R = R0; fitted = Rt > 0 || R0 > 0; apply();
+    moveTo(d);
+    tween(R0, Rt, async () => {
+      if (my !== gen || !isOpen()) return;
+      fitted = R > 0;
+      // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
+      await wait(60); if (my !== gen || !isOpen()) return;
+      const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
+      moveTo(delta());
+      // the dock (or the header) ended up elsewhere than expected: settle again
+      setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
+        if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 400);
+    });
   };
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again
-  const mo = () => { const o = isOpen(), b = o && boxOn(); if (o !== wasOpen) { wasOpen = o; wasBox = b; follow(); } else if (o && b !== wasBox) { wasBox = b; clearTimeout(rt); rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); } };
+  const mo = () => { if (sync) return; const o = isOpen(), b = o && boxOn(); if (o !== wasOpen) { wasOpen = o; wasBox = b; settle(); } else if (o && b !== wasBox) { wasBox = b; clearTimeout(rt); rt = setTimeout(() => { if (isOpen()) settle(); }, 150); } };
   new MutationObserver(mo).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   new MutationObserver(mo).observe(root, { attributes: true, attributeFilter: ['class'] });
   let ws = innerWidth + 'x' + innerHeight;
   window.addEventListener('resize', () => { const w = innerWidth + 'x' + innerHeight; if (own || w === ws) return; ws = w; clearTimeout(rt);   // only real window resizes (games also dispatch resize themselves)
-    rt = setTimeout(() => { if (isOpen()) { unfit(); follow(); } }, 150); });
+    rt = setTimeout(() => { if (isOpen()) settle(); }, 150); });
 }
 // a draw-offer button in the top menu (PC header / phone) leaves no room: the puzzle button is left out of the header then (common spec)
 function drawNoPuzzle() {

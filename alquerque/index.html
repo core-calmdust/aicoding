@@ -1183,21 +1183,23 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* PC, square boards (5x5 Dimy / 3x3 Telo): the board on the left, the info column on the right (2026-11-01) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]), html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body, html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]).dock-fit body:not(.no-online){
-    --sqw:360px !important;
-    --cell:max(12px, min((var(--vh) - 96px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), var(--cmax))) !important;
-    --cmax:150px;
+    /* the same margins as Reversi's PC layout (html.pc2): the frame takes the height less --sqp above and below, or the width
+       the 360px column leaves (2026-11-01) */
+    --sqw:360px !important;--sqp:clamp(14px, 2.6vmin, 30px);--sqx:clamp(16px, 2vw, 32px);--sqg:clamp(18px, 1.8vw, 30px);--sqb:188px;
+    --cell:max(12px, min((var(--vh) - var(--sqp) * 2) / var(--fhc), (100vw - var(--sqx) * 2 - var(--sqg) - var(--sqw)) / var(--fwc), var(--cmax))) !important;
+    --cmax:200px;
   }
   html[data-rule=telo], html[data-rule=telo] body, html[data-rule=telo].dock-fit body:not(.no-online){--cmax:240px !important;
   }
   /* the review box open below: the board shrinks so board + box fit the screen (as Reversi) */
   html.rvb-on:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){gap:22px 32px!important}
   html.rvb-on:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]), html.rvb-on:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body{
-    --cell:max(12px, min((var(--vh) - 250px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), var(--cmax))) !important;
+    --cell:max(12px, min((var(--vh) - var(--sqp) * 2 - var(--sqb) - 22px) / var(--fhc), (100vw - var(--sqx) * 2 - 32px - var(--sqw)) / var(--fwc), var(--cmax))) !important;
   }
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
     grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:var(--fh) auto!important;
     grid-template-areas:"board side" "bx bx"!important;justify-content:center!important;align-content:center!important;
-    height:var(--vh)!important;min-height:0!important;gap:12px 28px!important}
+    height:var(--vh)!important;min-height:0!important;gap:0 var(--sqg)!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .board-area{align-self:start!important;padding-bottom:0!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .side{display:flex!important;flex-direction:column;grid-area:side;min-height:0;height:var(--fh)!important;max-height:var(--fh)!important;align-self:start}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .side > .side-in{display:flex!important;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0;height:auto}
@@ -1213,7 +1215,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > .kifu-card{flex:1 1 0!important;min-height:110px!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > #evalCard .graph{flex:none;height:56px!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body.rvb-on .side-in > #coachCard{display:none!important}
-  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:188px!important;max-height:none;overflow:hidden}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:var(--sqb)!important;max-height:none;overflow:hidden}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox > *{min-height:0;overflow-y:auto}
 }
 /* ---- Alquerque: historical (carved wood), modern (damask cloth), chalk (slate) — tools/gen_rugs.py */
@@ -1657,7 +1659,7 @@ window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=3"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=29"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb3"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="../fanorona/coach.js?v=fb2"><\/script><script src="../fanorona/coach-i18n.js?v=fb3"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb6"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="../fanorona/i18n.js?v=fb3"><\/script><script src="i18n-alq.js?v=3"><\/script><script src="../fanorona/i18n-online.js?v=stale1"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=5"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../fanorona/engine.js?v=fb3"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="../fanorona/online.js?v=fb2"><\/script><script src="../shared/resign.js?v=1"><\/script><script src="../fanorona/rvbox.js?v=fb2"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="../fanorona/coach.js?v=fb2"><\/script><script src="../fanorona/coach-i18n.js?v=fb3"><\/script><script src="../shared/export.js?v=6"><\/script><script src="../fanorona/app.js?v=fb6"><\/script><script src="../fanorona/online-ui.js?v=fb2"><\/script><script src="../fanorona/landtabs.js?v=fb2"><\/script><script src="../shared/pickdrop.js?v=6"><\/script><script src="../shared/ngtabs.js?v=15"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
