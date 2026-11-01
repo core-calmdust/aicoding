@@ -2555,7 +2555,8 @@ $('#btnResign').innerHTML = Resign.icon + '<span></span>';
 applyI18n();
 if (window.PZBook) PZBook.setLang(LANG);
 // 勝敗記録 (shared/record.js) and the coach switch (coach.js) go into the menu / icon set before the header bar takes them
-if (window.GameRecord) GameRecord.init({ game: 'mancala', lang: () => LANG, menu: '.controls', sides: () => [t('p0'), t('p1')] });
+function recVarName(k) { const r = String(k).replace(/\d+$/, ''), n = +String(k).replace(/^\D+/, '') || 4; return t('rule.' + r) + ' · ' + t('ng.seedsN', { n }); }
+if (window.GameRecord) GameRecord.init({ game: 'mancala', lang: () => LANG, menu: '.controls', sides: () => [t('p0'), t('p1')], variant: () => ({ k: game.rules + game.seeds, n: recVarName(game.rules + game.seeds) }), variants: () => RULE_ORDER.flatMap(r => [r + 4, r + 6]), variantName: k => recVarName(k), defVariant: 'kalah4' });   // 戦績 by rule set × seeds (same keys as online g.v)
 if (window.MancalaCoach) MancalaCoach.init();
 if (window.FlipBtn) FlipBtn.init({ game: 'mancala', lang: () => LANG, onChange: () => { layout(); update(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between

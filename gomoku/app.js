@@ -3200,7 +3200,7 @@ window.addEventListener('resize', () => renderFx());
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'gomoku', lang: () => LANG, open: () => openRules('basic'), watch: '#rulesOverlay' });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-if (window.GameRecord) GameRecord.init({ game: 'gomoku', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録: menu button before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'gomoku', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: rule, n: t('rule.' + rule) }), variants: () => RULE_ORDER, variantName: k => t('rule.' + k), defVariant: 'renju' });   // 勝敗記録: menu button before the header bar takes the menu
 if (window.GomokuCoach) GomokuCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 

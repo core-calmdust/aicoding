@@ -1193,8 +1193,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* ---- Alquerque: rug boards (tools/gen_rugs.py) with cream / gold lines; brass + lapis coins and felt balls */
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]){--edge:#2a1414;--wdl:#f6e6c0}
 html[data-bd=berber] .lines .num{fill:#2a1414;opacity:.75}
-html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=2)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp?v=2)}
-html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp?v=2)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp?v=2)}
+html[data-bd=medallion]{--wimg:url(img/rug-medallion.webp?v=3)} html[data-bd=berber]{--wimg:url(img/rug-berber.webp?v=3)}
+html[data-bd=kilim]{--wimg:url(img/rug-kilim.webp?v=3)} html[data-bd=patch]{--wimg:url(img/rug-patch.webp?v=3)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .frame{background:var(--wimg) 0 0 / 100% 100%;border-radius:calc(var(--cell) * .14);
   box-shadow:0 calc(var(--cell) * .05) 0 #3a1c18,0 40px 70px -26px rgba(0,0,0,.85),inset 0 0 calc(var(--cell) * .3) rgba(0,0,0,.25)}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .lines{filter:drop-shadow(0 0 calc(var(--cell) * .025) rgba(0,0,0,.65))}
@@ -1204,25 +1204,20 @@ html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .l
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .lines .num{fill:#f6e6c0;opacity:.9}
 html:is([data-bd=medallion],[data-bd=berber],[data-bd=kilim],[data-bd=patch]) .reserve{background:rgba(20,6,6,.45);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.12)}
 html[data-pcs=brass]{--w1:#fff0b8;--w2:#d9ad4a;--w4:#8a6420;--b1:#4a6cc4;--b2:#1d3478;--b4:#0b1636}
-html[data-pcs=felt]{--w1:#fffaf0;--w2:#efe6d6;--w4:#c8bba3;--b1:#5a5458;--b2:#35313a;--b4:#16141a}
+html[data-pcs=felt]{--w1:#f6eedc;--w2:#e6dcc4;--w4:#a89a80;--b1:#3a5cae;--b2:#1e3a84;--b4:#0e1c48}
 html:is([data-pcs=brass],[data-pcs=felt]) :is(.pc,.rv)::before, html:is([data-pcs=brass],[data-pcs=felt]) :is(.pc,.rv)::after{display:none}
-html[data-pcs=brass] :is(.pc,.rv).p1{background:radial-gradient(circle at 38% 32%,#fff3c4 0%,#e8c262 30%,#c8952e 70%,#9a6c1c 100%)}
-html[data-pcs=brass] :is(.pc,.rv).p2{background:radial-gradient(circle at 38% 32%,#6f8fe0 0%,#2c4aa0 35%,#1b2f6e 75%,#0e1a44 100%)}
-html[data-pcs=brass] .pc.p1, html[data-pcs=brass] .pc.p2{box-shadow:inset 0 0 0 calc(var(--cell) * .03) rgba(255,230,160,.55),inset 0 calc(var(--cell) * -.03) calc(var(--cell) * .05) rgba(0,0,0,.35),
-  0 calc(var(--cell) * .045) 0 #5a3a10,0 calc(var(--cell) * .09) calc(var(--cell) * .09) rgba(0,0,0,.55)}
-html[data-pcs=brass] .pc.p2{box-shadow:inset 0 0 0 calc(var(--cell) * .03) #d9ad4a,inset 0 calc(var(--cell) * -.03) calc(var(--cell) * .05) rgba(0,0,0,.4),0 calc(var(--cell) * .045) 0 #0a1230,0 calc(var(--cell) * .09) calc(var(--cell) * .09) rgba(0,0,0,.55)}
-html[data-pcs=brass] .pc::before{display:block!important;content:"";position:absolute;inset:20%;border-radius:0;
-  -webkit-mask:url(img/emb-star.svg) 50% 50% / contain no-repeat;mask:url(img/emb-star.svg) 50% 50% / contain no-repeat}
-html[data-pcs=brass] .pc.p1::before{background:#7a5414;opacity:.75;filter:drop-shadow(0 1px 0 rgba(255,240,190,.6))}
-html[data-pcs=brass] .pc.p2::before{background:#e8c262;opacity:.95;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.5))}
-html[data-pcs=felt] :is(.pc,.rv).p1{background:radial-gradient(circle at 40% 34%,#fffdf6 0%,#f1e9da 55%,#d8ccb4 100%)}
-html[data-pcs=felt] :is(.pc,.rv).p2{background:radial-gradient(circle at 40% 34%,#6b656a 0%,#3c373f 55%,#1e1b22 100%)}
-html[data-pcs=felt] .pc.p1, html[data-pcs=felt] .pc.p2{box-shadow:inset 0 calc(var(--cell) * -.05) calc(var(--cell) * .08) rgba(0,0,0,.2),0 calc(var(--cell) * .05) calc(var(--cell) * .08) rgba(0,0,0,.5)}
-html[data-pcs=felt] .pc::after{display:block!important;content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* rendered faces (tools/gen_pieces.py): brass coin / lapis in a gold bezel; glazed ceramic (ivory painted cobalt / cobalt painted white) */
+html[data-pcs=brass] :is(.pc,.rv).p1{background:url(img/pc-brass-1.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=brass] :is(.pc,.rv).p2{background:url(img/pc-brass-2.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=felt] :is(.pc,.rv).p1{background:url(img/pc-felt-1.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=felt] :is(.pc,.rv).p2{background:url(img/pc-felt-2.webp?v=1) 50% 50% / 100% 100% no-repeat}
+html[data-pcs=brass] .pc.p1{box-shadow:0 calc(var(--cell) * .035) 0 #6a4614,0 calc(var(--cell) * .05) 0 #3e280a,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.55)}
+html[data-pcs=brass] .pc.p2{box-shadow:0 calc(var(--cell) * .035) 0 #8a6420,0 calc(var(--cell) * .05) 0 #4a3010,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.55)}
+html[data-pcs=felt] .pc.p1{box-shadow:0 calc(var(--cell) * .04) 0 #a0846a,0 calc(var(--cell) * .055) 0 #6a4a34,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.5)}
+html[data-pcs=felt] .pc.p2{box-shadow:0 calc(var(--cell) * .04) 0 #142a66,0 calc(var(--cell) * .055) 0 #6a4a34,0 calc(var(--cell) * .1) calc(var(--cell) * .1) rgba(0,0,0,.5)}
 html:is([data-pcs=brass],[data-pcs=felt]) .reserve .rv.p1, html:is([data-pcs=brass],[data-pcs=felt]) .reserve .rv.p2{box-shadow:0 calc(var(--cell) * .015) calc(var(--cell) * .03) rgba(0,0,0,.45)}
 html[data-pcs=brass] .pdisc.p1{background:#d9ad4a} html[data-pcs=brass] .pdisc.p2{background:#1d3478}
-html[data-pcs=felt] .pdisc.p1{background:#efe6d6} html[data-pcs=felt] .pdisc.p2{background:#35313a}
+html[data-pcs=felt] .pdisc.p1{background:#e6dcc4} html[data-pcs=felt] .pdisc.p2{background:#1e3a84}
 /* Alquerque has no lessons / puzzles / openings / daily puzzle yet */
 #btnLesson, #btnPuzzle, #segMode [data-v=lesson], #segMode [data-v=puzzle], .ls-tabs [data-v=lesson], .ls-tabs [data-v=puzzle], .ls-tabs [data-v=open], .hb [data-hb=lesson], .hb [data-hb=puzzle], #dailyCard, .daily{display:none!important}
 /* larger coach / review text (PC, 2026-11-01) */
@@ -1563,13 +1558,13 @@ html[data-pcs=felt] .pdisc.p1{background:#efe6d6} html[data-pcs=felt] .pdisc.p2{
 window.GAME = { id: 'alquerque', name: 'Alquerque', base: 'alq', rules: ['alq'], store: 'aicoding-alquerque', img: '../images/atlas/alquerque.webp',
   engine: '../fanorona/engine.js?v=fb2', bd: 'medallion', pcs: 'brass',
   bds: ['medallion', 'berber', 'kilim', 'patch', 'abstract', 'dark'], pcss: ['brass', 'felt', 'flat', 'mono'],
-  bdImg: { medallion: 'img/rug-medallion.webp?v=2', berber: 'img/rug-berber.webp?v=2', kilim: 'img/rug-kilim.webp?v=2', patch: 'img/rug-patch.webp?v=2' },
+  bdImg: { medallion: 'img/rug-medallion.webp?v=3', berber: 'img/rug-berber.webp?v=3', kilim: 'img/rug-kilim.webp?v=3', patch: 'img/rug-patch.webp?v=3' },
   bdPal: { medallion: ['#962020', '#5a1c40', '#e2b254'], berber: ['#ee7616', '#b01e6e', '#1a1416'], kilim: ['#cc282e', '#ec6e22', '#f4e8d2'], patch: ['#7a3a5a', '#2a608c', '#f4ead6'] },
-  pcPal: { brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#fffaf0', '#efe6d6', '#c8bba3'], ['#5a5458', '#35313a', '#16141a']] } };
+  pcPal: { brass: [['#fff0b8', '#d9ad4a', '#8a6420'], ['#3d5fb8', '#1d3478', '#0b1636']], felt: [['#f6eedc', '#e6dcc4', '#a89a80'], ['#3a5cae', '#1e3a84', '#0e1c48']] } };
 window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
 </script>
 <script src="../fanorona/i18n.js?v=fb2"></script>
-<script src="i18n-alq.js?v=1"></script>
+<script src="i18n-alq.js?v=1x"></script>
 <script src="../fanorona/i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>

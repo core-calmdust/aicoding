@@ -743,7 +743,7 @@ if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 applyI18n();
-if (window.GameRecord) GameRecord.init({ game: 'go', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'go', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: String(game.n), n: t('ol.size', { n: game.n }) }), variants: () => ['19', '13', '9', '7', '5', '18', '17', '16', '15', '14', '12', '11', '10', '8', '6'], variantName: k => t('ol.size', { n: k }), defVariant: '19' });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
 if (window.FlipBtn) FlipBtn.init({ game: 'go', lang: () => LANG, onChange: () => { pending = -1; hoverPt = -1; renderBoard(); } });   // 盤面反転 (shared/flipbtn.js)
 if (window.GoCoach) GoCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;

@@ -762,7 +762,7 @@ window.addEventListener('resize', () => { if (T) render(); });
 
 /* ---------------- start ---------------- */
 applyI18n();
-if (window.GameRecord) GameRecord.init({ game: 'poker', lang: () => LANG, menu: '.controls' });   // 勝敗記録: menu button before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'poker', lang: () => LANG, menu: '.controls', variant: () => { const v = T ? T.v : set.v; return { k: v, n: vName(v) }; }, variants: () => P.ORDER, variantName: k => vName(k), defVariant: 'holdem' });   // 戦績 by game (Hold'em, Omaha, …)   // 勝敗記録: menu button before the header bar takes the menu
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnTools', '#btnStats'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => setTimeout(() => { if (T) render(); }, 0));
 if (window.RulesOffer) RulesOffer.init({ game: 'poker', lang: () => LANG, open: () => window.PokerRules && PokerRules.open(NG ? NG.v : T && T.v), watch: '#rulesOverlay' });

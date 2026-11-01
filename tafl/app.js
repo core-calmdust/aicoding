@@ -2189,7 +2189,7 @@ applyI18n();
 if (window.FlipBtn) FlipBtn.init({ game: 'tafl', lang: () => LANG, onChange: () => { setHover(-1); drawLines(); renderBoard(false); } });   // 盤面反転 (shared/flipbtn.js): before the board is first drawn
 drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-if (window.GameRecord) GameRecord.init({ game: 'tafl', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'tafl', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: gv, n: t('rule.' + gv) }), variants: () => RULE_ORDER, variantName: k => t('rule.' + k), defVariant: 'copenhagen' });   // 勝敗記録 (shared/record.js): before the header bar takes the menu
 if (window.TaflCoach) TaflCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 

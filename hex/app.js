@@ -2145,7 +2145,8 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 if (!hadSave) { setVariant(settings.n); gSwap = settings.swap; }
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
-if (window.GameRecord) GameRecord.init({ game: 'hex', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+const hexSizeName = k => t('rule.s11').replace(/11/g, String(k).slice(1));   // '9路' / '9×9' (also 7, which has no rule.s7 string)
+if (window.GameRecord) GameRecord.init({ game: 'hex', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: 's' + gN, n: hexSizeName('s' + gN) }), variants: () => SIZES.map(n => 's' + n), variantName: k => hexSizeName(k), defVariant: 's11' });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.FlipBtn) FlipBtn.init({ game: 'hex', lang: () => LANG, onChange: () => { setHover(-1); renderBoard(false); } });   // 盤面反転 (shared/flipbtn.js)
 if (window.HexCoach) HexCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ media: '(hover: hover) and (pointer: fine) and (min-width: 900px)', order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
