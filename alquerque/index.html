@@ -1310,6 +1310,7 @@ html[data-pcs=felt] .pdisc.p1{background:#e6dcc4} html[data-pcs=felt] .pdisc.p2{
   .rvbox .rvb-foot{font-size:12.5px}
   .review-card{font-size:14.5px}
 }
+#btnLand, #landTipOverlay{display:none!important}   /* アルケルケ: 横画面オプションなし */
 </style>
 <link rel="stylesheet" href="../fanorona/online.css?v=3l9">
 <style>
@@ -1642,7 +1643,7 @@ window.OL_VARIANTS = ['alq']; window.OL_DB_PREFIX = 'alq/';
   window.__EMBED = embed;
   // the turned page: links that leave the game open in the whole tab, not in the turned frame
   if (embed) document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (!a || a.target) return; var u = new URL(a.href, location.href); if (u.pathname !== location.pathname) { e.preventDefault(); window.top.location.href = u.href; } }, true);
-  try { on = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  on = false;   // Alquerque: no landscape option (the square board fits a phone held upright)
   if (!embed && on && matchMedia('(pointer: coarse)').matches) {
     window.__ROTWRAP = true;
     document.body.classList.add('rotwrap');
