@@ -2003,3 +2003,16 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .ng-chips-row .sbtn:disabled{opacity:.4;cursor:default}
 .bc-table .bc-shoe-box{border-radius:calc(var(--cw)*.14);overflow:hidden}
 .bc-table .bc-shoe-box i{border-radius:0 0 calc(var(--cw)*.12) calc(var(--cw)*.12)}
+/* phones: a rounded table (the oval clipped the rail at the top and bottom once the table got shorter) */
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .bc .board-wrap{border-radius:44px}
+  .bc .board-wrap > .felt{border-radius:28px}
+}
+@media (max-width:760px){
+  .bc .board-wrap{border-radius:34px;--rail:16px}
+  .bc .board-wrap > .felt{border-radius:22px}
+}
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .bc .board-wrap::before{border-radius:40px}.bc .board-wrap::after{border-radius:36px}
+}
+@media (max-width:760px){.bc .board-wrap::before{border-radius:30px}.bc .board-wrap::after{border-radius:27px}}
