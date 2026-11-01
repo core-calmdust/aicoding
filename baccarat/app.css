@@ -2093,3 +2093,16 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .mzs .mz-b text{font-size:30px}
 .mzs .mz-pl{font-size:30px}.mzs .mz-pl .pl-n{font-size:34px}.mzs .mz-pl .pl-b,.mzs .mz-pl .pl-w,.mzs .mz-pl .pl-l{font-size:26px}
 .mzs .seat-g.me .mz-pl{font-size:36px}
+.mzs .mz-p{font:600 30px 'JetBrains Mono',monospace;fill:rgba(240,236,226,.62);text-anchor:middle;letter-spacing:2px}
+.mzs .lz-T .mz-p,.mzs .lz-P8 .mz-p,.mzs .lz-D7 .mz-p{font-size:24px}
+.mzs .lz.has .mz-p{opacity:.38}
+.mzs .lz-P8 .mz-p,.mzs .lz-D7 .mz-p{font-size:20px!important}
+/* phones: bigger cards, overlapped like a dealt hand (the third card lies across the second) */
+.bc-table.mob:not(.stk) .bc-hands{gap:calc(var(--cw)*.18)}
+.bc-table.mob:not(.stk) .bc-hand{min-width:0;padding:3px 6px 6px;flex:1 1 0;max-width:calc(var(--cw)*2.75)}
+.bc-table.mob:not(.stk) .bc-cards{min-width:0;gap:0;justify-content:center}
+.bc-table.mob:not(.stk) .bc-cards .cd.pc + .cd.pc{margin-left:calc(var(--cw)*-.42)}
+.bc-table.mob:not(.stk) .bc-cards .cd.pc.third{margin:0 0 0 calc(var(--cw)*-.25);transform:rotate(90deg) translateX(18%)}
+.bc-table.mob:not(.stk) .bc-hh{height:calc(var(--cw)*.42)}
+.bc-table.mob:not(.stk) .bc-hh > span:first-child{font-size:calc(var(--cw)*.2);padding:2px 8px}
+.bc-table.mob:not(.stk) .bc-tot{min-width:calc(var(--cw)*.42);height:calc(var(--cw)*.42);font-size:calc(var(--cw)*.26)}
