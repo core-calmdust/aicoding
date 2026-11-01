@@ -167,6 +167,29 @@
       g.add(at(knight(C(0xe6dece, { roughness: .32 }), 1.15), -.1, .5, .15, 0, -.95, 0));
       return g;
     },
+    alquerque() {   // a rug board fragment (crimson, gold lines with diagonals), brass and lapis coins, one brass coin mid-jump
+      const top = M({ map: X.canvasTex('icg-alq', 512, 512, (g, W) => {
+        g.fillStyle = '#9a1f22'; g.fillRect(0, 0, W, W);
+        g.strokeStyle = '#6a1418'; g.lineWidth = 26; g.strokeRect(13, 13, W - 26, W - 26);
+        g.strokeStyle = '#e2b254'; g.lineWidth = 6; g.strokeRect(34, 34, W - 68, W - 68);
+        for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, r1 = W * .2, r2 = W * .09; g.fillStyle = 'rgba(70,20,60,.55)'; g.beginPath(); g.moveTo(W / 2, W / 2); g.lineTo(W / 2 + Math.cos(a - .3) * r2, W / 2 + Math.sin(a - .3) * r2); g.lineTo(W / 2 + Math.cos(a) * r1, W / 2 + Math.sin(a) * r1); g.lineTo(W / 2 + Math.cos(a + .3) * r2, W / 2 + Math.sin(a + .3) * r2); g.fill(); }
+        const pad = W / 6, st = (W - 2 * pad) / 2, P = i => pad + i * st;
+        g.strokeStyle = '#f3dfae'; g.lineWidth = 12; g.lineCap = 'round';
+        for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(P(i), P(0)); g.lineTo(P(i), P(2)); g.stroke(); g.beginPath(); g.moveTo(P(0), P(i)); g.lineTo(P(2), P(i)); g.stroke(); }
+        g.beginPath(); g.moveTo(P(0), P(0)); g.lineTo(P(2), P(2)); g.moveTo(P(2), P(0)); g.lineTo(P(0), P(2)); g.stroke();
+        g.fillStyle = '#e9c46a'; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { g.beginPath(); g.arc(P(i), P(j), 14, 0, Math.PI * 2); g.fill(); }
+      }), roughness: .85 });
+      const g = boardChunk(3, 3.6, top, C(0x5e1416, { roughness: .7 }));
+      const coin = (lapis, s) => { const c = new T.Group(); c.add(puck(.6, .22, C(lapis ? 0xd2a24c : 0xd9a84e, { roughness: .45, metalness: .25 }), .4));
+        const face = mesh(new T.CircleGeometry(lapis ? .44 : .5, 40), lapis ? C(0x253c8e, { roughness: .5 }) : C(0xe6b85c, { roughness: .45, metalness: .25 })); face.rotation.x = -Math.PI / 2; face.position.y = .225; c.add(face);
+        const star = new T.Shape(); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, r = k % 2 ? .13 : .3; const x = Math.cos(a) * r, y = Math.sin(a) * r; k ? star.lineTo(x, y) : star.moveTo(x, y); }
+        const sm = mesh(new T.ShapeGeometry(star), C(lapis ? 0xf0c45a : 0xb07a26, { roughness: .4, metalness: .3 })); sm.rotation.x = -Math.PI / 2; sm.position.y = .23; c.add(sm);
+        c.scale.setScalar(s); return c; };
+      const S = 3.1 / 3 * 1.06, p = i => (i - 1) * S;
+      g.add(at(coin(true, .78), p(0), .5, p(0)), at(coin(false, .78), p(0), .5, p(2)), at(coin(false, .78), p(2), .5, p(2)), at(coin(true, .78), p(1), .5, p(1)));
+      g.add(at(coin(false, 1.25), .45, 2.05, -.3, .55, 0, .3));   // a brass coin jumping over the centre
+      return g;
+    },
     gomoku() {
       const g = boardChunk(4, 3.8, gridMat('gm', '#efc173', '#3a2410', 4, { points: true, lw: 9 }), M({ map: X.wood('icw2', '#e2ad5c', '#a87430') }), null, .7);
       const st = (3.8 - .3 - 3.5 / 4) / 3, p = i => -(st * 1.5) + st * i;
