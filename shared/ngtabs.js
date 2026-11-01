@@ -136,11 +136,10 @@ const CSS = `
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):last-child{flex:1 1 0!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button{flex-direction:row;gap:6px;min-height:38px;padding:6px 6px 7px}
 /* phone landscape, laid out like the game screen held sideways: the tabs are a rail down the right edge, 閉じる / 対局開始
-   sit at the top right (pinned), and few game cards go two by two with the picture on the left */
-:is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on{padding-right:calc(var(--ngt-rw) + 14px)!important;padding-bottom:12px!important;--ngt-rw:calc(68px + env(safe-area-inset-right))}
+   sit at the bottom right (pinned), and few game cards go two by two with the picture on the left */
+:is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on{padding-right:calc(var(--ngt-rw) + 14px)!important;padding-bottom:64px!important;--ngt-rw:calc(68px + env(safe-area-inset-right))}
 :is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on > .ngt-foot{display:contents!important;position:static!important}
-:is(html.ngt-land,html.rot) .modal.ngt-on > h2{display:flex;align-items:center;min-height:40px;margin:0 0 8px!important;padding-inline-end:var(--ngt-aw,300px)}
-:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions{position:fixed;z-index:6;top:8px;right:calc(var(--ngt-rw) + 14px);display:flex!important;gap:8px;margin:0!important;padding:0 0 0 8px;background:inherit;border-radius:0 0 0 12px}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions{position:fixed;z-index:6;bottom:0;right:calc(var(--ngt-rw) + 1px);display:flex!important;gap:8px;margin:0!important;padding:8px 13px 10px 10px;background:inherit;border-radius:12px 0 0 0}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button),:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):is(:last-child,:not(:last-child)){flex:0 0 auto!important;width:auto!important;min-width:0!important;height:40px;padding:0 18px!important;white-space:nowrap}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):last-child{padding:0 26px!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .ngt-bar{position:fixed;z-index:6;top:0;right:0;bottom:0;width:var(--ngt-rw);box-sizing:border-box;flex-direction:column;justify-content:center;gap:4px;margin:0!important;padding:8px env(safe-area-inset-right) 8px 0;border-top:0;border-left:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.28)}
@@ -174,8 +173,6 @@ function init() {
   } else if (acts && acts.parentNode) { acts.parentNode.insertBefore(foot, acts); for (let n = acts; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; } }
   else modal.appendChild(foot);
   foot.appendChild(bar);
-  // (landscape: the pinned 閉じる / 対局開始 sit beside the title → keep room for them: --ngt-aw)
-  if (acts && window.ResizeObserver) new ResizeObserver(() => { if (acts.offsetWidth) modal.style.setProperty('--ngt-aw', (acts.offsetWidth + 12) + 'px'); }).observe(acts);
   const tabs = () => (hasGame() ? ['game'] : []).concat(['rules'].concat(modal.querySelector('[data-ng=design]') ? ['design'] : []));
   let cur = hasGame() ? 'game' : 'rules';
   // the chosen variant's name (under ルール)
