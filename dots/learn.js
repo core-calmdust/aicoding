@@ -77,9 +77,9 @@ function drawAids() {
   for (const e of aids.trap || []) { if (S.p.drawn[e]) continue; const [x1, y1, x2, y2] = edgeXY(e); el('line', { x1, y1, x2, y2, class: 'trapline' }, gFx); }
   for (const e of aids.opt || []) { if (S.p.drawn[e]) continue; const [x1, y1, x2, y2] = edgeXY(e); el('line', { x1, y1, x2, y2, class: 'optline' }, gFx); }
   for (const b in aids.nums || {}) {
-    const r = Math.floor(b / n), c = b % n, g = el('g', { class: 'aidnum ' + ((aids.numc || {})[b] || '') }, gFx);
-    el('circle', { cx: M + c * U + U / 2, cy: M + r * U + U / 2, r: 22 }, g);
-    const tx = el('text', { x: M + c * U + U / 2, y: M + r * U + U / 2 + 1 }, g); tx.textContent = aids.nums[b];
+    const [bx, by] = boxXY(+b), g = el('g', { class: 'aidnum ' + ((aids.numc || {})[b] || '') }, gFx);   // (boxXY: 盤面反転 aware)
+    el('circle', { cx: bx + U / 2, cy: by + U / 2, r: 22 }, g);
+    const tx = el('text', { x: bx + U / 2, y: by + U / 2 + 1 }, g); tx.textContent = aids.nums[b];
   }
 }
 // components of a loony-ish position: label each box with the size of its chain (L for loops)
