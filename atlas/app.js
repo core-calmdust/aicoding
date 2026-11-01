@@ -295,8 +295,11 @@
   let gCat = 'all', gQ = '';
   try { gCat = localStorage.getItem('atlas-cat') || 'all'; } catch (e) {}
   // 'classic' is a tag chip (定番) next to the category chips: it filters by g.tags instead of g.cat
-  const inCat = (g, k) => k === 'all' || (k === 'classic' ? g.tags.includes('classic') : g.cat === k);
-  if (gCat !== 'all' && gCat !== 'classic' && !(A_.CATS || []).includes(gCat)) gCat = 'all';
+  // chips (same as the top page): すべて · ボード (the classic board games, card games excluded) · パズル · カード (tag) · then the board-game families
+  const CHIPS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race'];
+  const inCat = (g, k) => k === 'all' || (k === 'board' ? g.tags.includes('classic') && !g.tags.includes('card') : k === 'card' ? g.tags.includes('card') : g.cat === k);
+  if (gCat === 'classic') gCat = 'board';
+  if (!CHIPS.includes(gCat)) gCat = 'all';
   // lower-case, full-width → half-width, katakana → hiragana: 「りばーし」 finds リバーシ
   const norm = s => String(s).normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[\s・·\-_.]/g, '');
   const hay = g => norm([g.id, ...Object.values(g.name), ...g.tags, ...g.tags.map(k => t('tag.' + k)), ...g.tags.map(k => I.en['tag.' + k] || ''), t('cat.' + g.cat)].join('|'));
@@ -307,9 +310,9 @@
   const SRCH = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
   // the same chips + search on the home grid and on the games tab (they share one filter state)
   function renderFilter(ids = { chips: 'catChips', q: 'gSearch', ic: 'gSearchIc' }, onChange = renderGrid) {
-    const cats = ['all', 'classic', ...(A_.CATS || [])], C = $(ids.chips);
-    C.innerHTML = cats.map(k => { const n = A_.GAMES.filter(g => inCat(g, k)).length, T = k === 'classic' && A_.TAGS.classic;
-      return `<button type="button" class="chip cat${T ? ' tg' : ''}" data-k="${k}" aria-pressed="${gCat === k}"${T ? ` style="--c:${T.c}"` : ''}>${T ? `<svg viewBox="0 0 24 24"><path d="${T.i}"/></svg>` : ''}${esc(t(T ? 'tag.classic' : 'cat.' + k))} <em>${n}</em></button>`; }).join('');
+    const cats = CHIPS, C = $(ids.chips);
+    C.innerHTML = cats.map(k => { const n = A_.GAMES.filter(g => inCat(g, k)).length;
+      return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
     C.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
       C.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); onChange(); });
     const s = $(ids.q); s.placeholder = t('search.ph'); s.setAttribute('aria-label', t('search.ph')); s.value = gQ;
