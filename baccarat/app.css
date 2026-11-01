@@ -2217,3 +2217,10 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 
 /* phones: settings rows stack (label above the options) so long option sets never squeeze the label (2026-11-01) */
 @media (max-width:760px){.set-cols .rl{grid-template-columns:minmax(0,1fr)!important;gap:8px}.set-cols .rl:has(> .tgl){grid-template-columns:minmax(0,1fr) auto!important}.set-cols .rl .seg{min-width:0;width:100%;flex-wrap:wrap}.set-cols .rl .seg button{flex:1 1 auto}}
+/* phones (hands side by side): PLAYER / BANKER and the total sit on the box's top edge, so the cards get the height */
+.bc-table.mob:not(.stk) .bc-hand{position:relative;padding:calc(var(--cw)*.2) 5px 6px;max-width:calc(var(--cw)*2.6)}
+.bc-table.mob:not(.stk) .bc-hh{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);height:auto;z-index:3;gap:5px}
+.bc-table.mob:not(.stk) .bc-hh > span:first-child{background-color:#123a38;background-image:none}
+.bc-table.mob:not(.stk) .bh-p .bc-hh > span:first-child{background:#1d3e4f}
+.bc-table.mob:not(.stk) .bh-b .bc-hh > span:first-child{background:#3e2c33}
+.bc-table.mob:not(.stk) .bc-hands{margin-top:calc(var(--cw)*.16)}
