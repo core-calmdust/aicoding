@@ -135,6 +135,23 @@ const CSS = `
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):not(:last-child){flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):last-child{flex:1 1 0!important}
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button{flex-direction:row;gap:6px;min-height:38px;padding:6px 6px 7px}
+/* phone landscape, laid out like the game screen held sideways: the tabs are a rail down the right edge, 閉じる / 対局開始
+   sit at the bottom right (pinned), and few game cards go two by two with the picture on the left */
+:is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on{padding-right:calc(var(--ngt-rw) + 14px)!important;padding-bottom:64px!important;--ngt-rw:calc(68px + env(safe-area-inset-right))}
+:is(html.ngt-land,html.rot) #newOverlay > .modal.ngt-on > .ngt-foot{display:contents!important;position:static!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions{position:fixed;z-index:6;bottom:0;right:calc(var(--ngt-rw) + 1px);display:flex!important;gap:8px;margin:0!important;padding:8px 13px 10px 10px;background:inherit;border-radius:12px 0 0 0}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button),:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):is(:last-child,:not(:last-child)){flex:0 0 auto!important;width:auto!important;min-width:0!important;height:40px;padding:0 18px!important;white-space:nowrap}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .modal-actions > :is(.mbtn,button):last-child{padding:0 26px!important}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-foot .ngt-bar{position:fixed;z-index:6;top:0;right:0;bottom:0;width:var(--ngt-rw);box-sizing:border-box;flex-direction:column;justify-content:center;gap:4px;margin:0!important;padding:8px env(safe-area-inset-right) 8px 0;border-top:0;border-left:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.28)}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button{flex:0 0 auto;flex-direction:column;gap:2px;min-height:60px;padding:6px 4px;border-top:0;border-left:2px solid transparent;font-size:12px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button.sel{border-left-color:var(--accent,#d8b56a);background:color-mix(in srgb, var(--accent,#d8b56a) 10%, transparent)}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-bar button small{display:none}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3) .ngt-gcard{display:grid;grid-template-columns:116px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:12px;row-gap:5px;align-items:start;padding:10px 12px}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3) .gart{grid-row:1/3;align-self:center;padding:6px 4px}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3) b{align-self:end;padding-inline-end:26px}
+:is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3) p{font-size:12px;line-height:1.55}
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
 `;
