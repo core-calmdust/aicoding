@@ -371,25 +371,59 @@ def acanthus(d, x, y, R, a0, sgn, w, leaves=True, depth=2, lobe=.34):
         acanthus(d, px + R * .2 * math.cos(ang), py + R * .2 * math.sin(ang), R * .42, ang + math.pi, -sgn, w * .75, leaves, depth - 1, lobe)
 
 
+def fbm(rng, sig, octaves=4, h=H, w=W):
+    out = np.zeros((h, w)); amp = 1.0
+    for o in range(octaves):
+        n = gaussian_filter(rng.standard_normal((h, w)), sig / (2 ** o)); n /= n.std() + 1e-9
+        out += n * amp; amp *= .5
+    return out / out.std()
+
+
+def wood_complex(rng, base, dark):
+    """plywood-like figured grain: growth rings of a domain-warped distance field (cathedral arches, swirls)
+    with a few knots, latewood lines and pores."""
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
+    w1 = fbm(rng, 260, 4); w2 = fbm(rng, 120, 3)
+    # distance to a slanted "pith" line far below plus warps: arches and swirls
+    d = np.hypot((xx - W * .45) * .55, (yy - H * 1.6)) / S
+    d = d + w1 * .9 + w2 * .35
+    for (kx, ky) in ((W * .22, H * .3), (W * .78, H * .74)):   # knots
+        kr = .3 * S
+        r = np.hypot(xx - kx, (yy - ky) * 1.6)
+        infl = np.exp(-(r / (kr * 2.4)) ** 2)
+        d = d * (1 - infl) + (r / S * 1.1 + d * .6) * infl
+    ring = (d * 2.6) % 1.0
+    late = np.sin(np.clip((ring - .45) / .55, 0, 1) * math.pi) ** 1.2   # dark latewood band at the end of each ring
+    early = np.clip(ring / .78, 0, 1)
+    pores = fbm(rng, 1.2, 2); streak = gaussian_filter(rng.standard_normal((H, W)), (14, .8)); streak /= streak.std()
+    t = np.clip(.3 + .38 * gaussian_filter(late, 1.2) + .07 * pores + .1 * streak + .16 * fbm(rng, 90, 2), 0, 1)
+    base, dark = np.array(base, float), np.array(dark, float)
+    return base * (1 - t[..., None]) + dark * t[..., None]
+
+
+def carve(a, m, depth=6.0, groove=(46, 28, 16)):
+    """relief carving from a mask: the cut is sunk (height -depth), lit from the upper left — walls catch light on one side,
+    shadow on the other, the floor is darker and rougher."""
+    h = -gaussian_filter(m, 1.4) * depth
+    gy, gx = np.gradient(h)
+    lam = np.clip(1 + (-gx * -.6 + -gy * -.7) * .9, .35, 1.6)
+    floor = gaussian_filter(m, .6)
+    a = a * lam[..., None]
+    a = a * (1 - .55 * floor[..., None]) + np.array(groove, float) * .55 * floor[..., None]
+    return a
+
+
 def carved(seed=5):
-    """birch plywood stained mid brown (fine straight grain, soft figure), laser-engraved: a recessed border band of running
-    acanthus scrolls between double rules, corner roundels with a rosette knot, a ring round c3."""
+    """stained plywood with figured grain, a deeply carved border of acanthus scrolls between rules, rosette roundels in the
+    corners and a ring round c3."""
     rng = np.random.default_rng(seed)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
-    warp = gaussian_filter(rng.standard_normal((H, W)), (120, 60)); warp /= warp.std()
-    arch = ((xx - W * .52) / (W * .9)) ** 2 * 0 + np.abs(xx - W * .5) / S * 1.4 + (yy / H - .5) ** 2 * 0
-    cath = np.sqrt(np.maximum(0, ((xx - W * .5) / (S * .9)) ** 2 + ((yy - H * 1.25) / (S * 4.5)) ** 2)) * 6.5 + warp * 1.6
-    ring = np.sin(cath) ; ring = np.sign(ring) * np.abs(ring) ** .6
-    fine = np.sin(xx / 7.5 + warp * 3.0 + gaussian_filter(rng.standard_normal((H, W)), (240, 3)) * 2.2)
-    fig = gaussian_filter(rng.standard_normal((H, W)), (120, 20)); fig /= fig.std()
-    pores = gaussian_filter(rng.standard_normal((H, W)), (5, .6)); pores /= pores.std()
-    late = np.clip((fine - .82) / .18, 0, 1) + np.clip((np.sin(cath * 1.0) - .9) / .1, 0, 1)   # dark latewood lines
-    t = np.clip(.42 + .14 * ring + .08 * fine + .12 * fig + .12 * pores + .28 * gaussian_filter(late, (3, 1.2)), 0, 1)
-    base, dark = np.array((166, 124, 84.)), np.array((84, 54, 32.))
-    a = base * (1 - t[..., None]) + dark * t[..., None]
+    a = wood_complex(rng, (170, 128, 86), (96, 64, 38))
     bw = S * .58; m0 = S * .14; m1 = m0 + bw
-    def band(dd):
-        for m in (m0, m0 + 7, m1 - 7, m1): dd.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=3 * SS)
+    def rules(dd):
+        for m in (m0, m0 + 7, m1 - 7, m1): dd.rectangle([m * SS, m * SS, (W - m) * SS, (H - m) * SS], outline=255, width=4 * SS)
+        cx, cy = P(2, 2); r = S * .2
+        dd.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=4 * SS)
     def scrolls(dd):
         inner = bw - 22; c0 = m0 + bw / 2
         for horiz, L, fixeds in ((True, W, (c0, H - c0)), (False, H, (c0, W - c0))):
@@ -399,87 +433,89 @@ def carved(seed=5):
                     u = m1 + step * (k + .5); sg = 1 if k % 2 else -1
                     x, y = (u, f) if horiz else (f, u)
                     ox, oy = (step * .22, 0) if horiz else (0, step * .22)
-                    acanthus(dd, x - ox, y - oy, inner * .38, (math.pi / 2 if horiz else 0) * sg, sg, 3.2, True, 2)
-                    acanthus(dd, x + ox, y + oy, inner * .38, (-math.pi / 2 if horiz else math.pi) * sg, sg, 3.2, True, 2)
+                    acanthus(dd, x - ox, y - oy, inner * .4, (math.pi / 2 if horiz else 0) * sg, sg, 5, True, 2, .5)
+                    acanthus(dd, x + ox, y + oy, inner * .4, (-math.pi / 2 if horiz else math.pi) * sg, sg, 5, True, 2, .5)
         for (cx, cy) in ((c0, c0), (W - c0, c0), (c0, H - c0), (W - c0, H - c0)):
-            dd.rectangle([(cx - bw / 2) * SS, (cy - bw / 2) * SS, (cx + bw / 2) * SS, (cy + bw / 2) * SS], outline=255, width=3 * SS)
-            for r_ in (.4, .34): dd.ellipse([(cx - bw * r_) * SS, (cy - bw * r_) * SS, (cx + bw * r_) * SS, (cy + bw * r_) * SS], outline=255, width=3 * SS)
-            for k in range(8):   # interlaced knot rosette
+            dd.rectangle([(cx - bw / 2) * SS, (cy - bw / 2) * SS, (cx + bw / 2) * SS, (cy + bw / 2) * SS], outline=255, width=4 * SS)
+            dd.ellipse([(cx - bw * .4) * SS, (cy - bw * .4) * SS, (cx + bw * .4) * SS, (cy + bw * .4) * SS], outline=255, width=4 * SS)
+            for k in range(8):
                 q = k * math.pi / 4
-                pts = [(cx + bw * .3 * math.cos(q + t_) * (1 - abs(t_) * 1.2), cy + bw * .3 * math.sin(q + t_) * (1 - abs(t_) * 1.2)) for t_ in np.linspace(-.5, .5, 12)]
-                dd.line(sc(pts), fill=255, width=3 * SS)
-            dd.ellipse([(cx - bw * .07) * SS, (cy - bw * .07) * SS, (cx + bw * .07) * SS, (cy + bw * .07) * SS], outline=255, width=3 * SS)
-        cx, cy = P(2, 2); r = S * .2
-        dd.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], outline=255, width=3 * SS)
-    # recessed band: slightly darker and smoother inside the rules
+                px, py = cx + bw * .2 * math.cos(q), cy + bw * .2 * math.sin(q)
+                dd.ellipse([(px - bw * .1) * SS, (py - bw * .1) * SS, (px + bw * .1) * SS, (py + bw * .1) * SS], fill=255)
+            dd.ellipse([(cx - bw * .07) * SS, (cy - bw * .07) * SS, (cx + bw * .07) * SS, (cy + bw * .07) * SS], fill=0)
+    # the border band is sunk a little (a shallow recess), the motifs are carved into it
     rec = lmask(lambda dd: (dd.rectangle([(m0 + 7) * SS, (m0 + 7) * SS, (W - m0 - 7) * SS, (H - m0 - 7) * SS], fill=255), dd.rectangle([(m1 - 7) * SS, (m1 - 7) * SS, (W - m1 + 7) * SS, (H - m1 + 7) * SS], fill=0)))
-    a *= (1 - .12 * gaussian_filter(rec, 1))[..., None]
-    m = np.clip(lmask(band) + lmask(scrolls), 0, 1)
-    halo = gaussian_filter(m, 2.2)   # laser char round the cut
-    a *= (1 - .35 * np.clip(halo * 1.6, 0, 1))[..., None]
-    a = a * (1 - .78 * m[..., None]) + np.array((38, 22, 12.)) * .78 * m[..., None]
-    lip = np.clip(np.roll(np.roll(m, -1, 0), -1, 1) - m, 0, 1)
-    a += (lip * 30)[..., None]
-    v = 1 - .28 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+    a = carve(a, rec, 3.0, (120, 84, 52)) * 1.0
+    a = carve(a, lmask(scrolls), 7.0)
+    a = carve(a, lmask(rules), 5.0)
+    v = 1 - .3 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
     return Image.fromarray(np.clip(a * v[..., None], 0, 255).astype(np.uint8))
 
 
-def flower(dd, x, y, R):
-    """a classical damask flower head: two rings of rounded petals, a cupped centre and seeds."""
-    for ring_, n, rr_, off in ((1, 8, 1.0, 0), (2, 6, .62, math.pi / 6)):
-        for k in range(n):
-            a = k * 2 * math.pi / n + off
-            px, py = x + R * rr_ * .55 * math.cos(a), y + R * rr_ * .55 * math.sin(a)
-            pr = R * rr_ * .42
-            pts = [(px + pr * math.cos(u) * (1.0 if abs(math.cos(u - a)) > 0 else 1) , py + pr * math.sin(u)) for u in np.linspace(0, 2 * math.pi, 20)]
-            dd.polygon(sc(pts), fill=255 if ring_ == 1 else 0)
-            if ring_ == 1: dd.line(sc([(x + R * .25 * math.cos(a), y + R * .25 * math.sin(a)), (x + R * .8 * math.cos(a), y + R * .8 * math.sin(a))]), fill=0, width=2 * SS)
-    dd.ellipse([(x - R * .22) * SS, (y - R * .22) * SS, (x + R * .22) * SS, (y + R * .22) * SS], fill=255)
-    for k in range(7):
-        a = k * 2 * math.pi / 7; dd.ellipse([(x + R * .1 * math.cos(a) - 3) * SS, (y + R * .1 * math.sin(a) - 3) * SS, (x + R * .1 * math.cos(a) + 3) * SS, (y + R * .1 * math.sin(a) + 3) * SS], fill=0)
+def baroque_leaf(dd, x, y, ang, L, sgn, fill=255):
+    """a large curling acanthus leaf: a curved blade with deep serrated lobes, its tip rolling over."""
+    pts_out, pts_in = [], []
+    for t in np.linspace(0, 1, 40):
+        a = ang + sgn * t * 2.2 * t
+        cx, cy = x + L * t * math.cos(ang + sgn * t * .9), y + L * t * math.sin(ang + sgn * t * .9)
+        wdt = L * .22 * math.sin(math.pi * min(1, t * 1.1)) * (1 - .3 * t)
+        lob = 1 + .45 * max(0, math.sin(t * math.pi * 7))   # serrated lobes on the outer edge
+        nx, ny = -math.sin(ang + sgn * t * .9), math.cos(ang + sgn * t * .9)
+        pts_out.append((cx + nx * wdt * lob * sgn, cy + ny * wdt * lob * sgn)); pts_in.append((cx - nx * wdt * .45 * sgn, cy - ny * wdt * .45 * sgn))
+    dd.polygon(sc(pts_out + pts_in[::-1]), fill=fill)
+    # rolled tip
+    ex, ey = pts_out[-1]
+    pts = [(ex + L * .12 * (1 - u * .7) * math.cos(ang + sgn * (1.5 + u * 5)), ey + L * .12 * (1 - u * .7) * math.sin(ang + sgn * (1.5 + u * 5))) for u in np.linspace(0, 1, 20)]
+    dd.line(sc(pts), fill=fill, width=int(L * .05) * SS)
+    # vein (cut back into the leaf)
+    vein = [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for p, q in zip(pts_out[2:30], pts_in[2:30])]
+    dd.line(sc(vein), fill=0 if fill == 255 else 255, width=max(2, int(L * .015)) * SS)
+
+
+def flower5(dd, x, y, R, rot=0):
+    for k in range(5):
+        a = rot + k * 2 * math.pi / 5
+        px, py = x + R * .5 * math.cos(a), y + R * .5 * math.sin(a)
+        pts = [(px + R * .5 * math.cos(u) * (1 + .12 * math.cos(3 * u)), py + R * .5 * math.sin(u) * (1 + .12 * math.cos(3 * u))) for u in np.linspace(0, 2 * math.pi, 24)]
+        dd.polygon(sc(pts), fill=255)
+        dd.line(sc([(x + R * .3 * math.cos(a), y + R * .3 * math.sin(a)), (x + R * .85 * math.cos(a), y + R * .85 * math.sin(a))]), fill=0, width=2 * SS)
+    for k in range(5):
+        a = rot + (k + .5) * 2 * math.pi / 5
+        dd.line(sc([(x + R * .45 * math.cos(a), y + R * .45 * math.sin(a)), (x + R * .7 * math.cos(a), y + R * .7 * math.sin(a))]), fill=0, width=2 * SS)
+    dd.ellipse([(x - R * .2) * SS, (y - R * .2) * SS, (x + R * .2) * SS, (y + R * .2) * SS], fill=0)
+    dd.ellipse([(x - R * .12) * SS, (y - R * .12) * SS, (x + R * .12) * SS, (y + R * .12) * SS], fill=255)
 
 
 def damask(seed=6):
-    S = globals()['S'] * 1.5
-    """blue-grey microfibre cloth printed with a large baroque damask (mirrored acanthus scrolls round a palmette),
-    tone on tone, with a pinked edge."""
+    """blue-grey cloth with a large flowing baroque floral (sweeping vines, big curling acanthus leaves, five-petal flowers,
+    fine tendrils), printed faintly tone on tone."""
     rng = np.random.default_rng(seed)
-    base = np.array((70, 86, 108.)); hi = np.array((112, 128, 150.)); lo = np.array((56, 70, 90.))
-    tw, th = S * 2.2, S * 2.6
-    def motif(dd):
-        for j in range(-1, int(H / th) + 2):
-            for i in range(-1, int(W / tw) + 2):
-                cx = i * tw + (tw / 2 if j % 2 else 0); cy = j * th + th * .1
-                for sg in (1, -1):
-                    acanthus(dd, cx + sg * S * .32, cy - S * .25, S * .46, math.pi if sg > 0 else 0, -sg, 7, True, 3, .62)
-                    acanthus(dd, cx + sg * S * .45, cy + S * .55, S * .32, -math.pi / 2, sg, 6, True, 2, .6)
-                    # long sweeping fronds
-                    pts = [(cx + sg * (S * .05 + S * .9 * t_), cy - S * .9 * t_ * t_ + S * .1) for t_ in np.linspace(0, 1, 30)]
-                    dd.line(sc(pts), fill=255, width=6 * SS)
-                    for k in range(3, 28, 4):
-                        px, py = pts[k]; rr_ = 16 * (1 - k / 40)
-                        dd.ellipse([(px + sg * 10 - rr_) * SS, (py - 14 - rr_ * .6) * SS, (px + sg * 10 + rr_) * SS, (py - 14 + rr_ * .6) * SS], fill=255)
-                # central palmette
-                pal = [(cx, cy - S * .95), (cx + S * .16, cy - S * .55), (cx + S * .1, cy - S * .2), (cx, cy - S * .05), (cx - S * .1, cy - S * .2), (cx - S * .16, cy - S * .55)]
-                dd.polygon(sc(pal), fill=255)
-                for k in range(5):
-                    yk = cy - S * .2 - k * S * .14
-                    dd.line(sc([(cx - S * .08, yk), (cx, yk - S * .05), (cx + S * .08, yk)]), fill=0, width=3 * SS)
-                dd.ellipse([(cx - 14) * SS, (cy + S * .1 - 14) * SS, (cx + 14) * SS, (cy + S * .1 + 14) * SS], fill=255)
-                for (fx, fy, fr) in ((cx, cy - S * 1.3, S * .34), (cx - S * .95, cy - S * .95, S * .2), (cx + S * .95, cy - S * .95, S * .2), (cx, cy + S * .95, S * .26)):
-                    flower(dd, fx, fy, fr)
-    def shadow_motif(dd):   # a smaller, darker counter-pattern between the motifs
-        for j in range(-1, int(H / th) + 2):
-            for i in range(-1, int(W / tw) + 2):
-                cx = i * tw + (0 if j % 2 else tw / 2); cy = j * th + th * .6
-                for sg in (1, -1): acanthus(dd, cx + sg * S * .18, cy, S * .24, 0 if sg > 0 else math.pi, sg, 5, True, 1, .6)
-    m = gaussian_filter(lmask(motif), .9); m2 = gaussian_filter(lmask(shadow_motif), .9)
-    a = base * (1 - .42 * m[..., None]) + hi * .42 * m[..., None]
-    a = a * (1 - .35 * m2[..., None]) + lo * .35 * m2[..., None]
+    base = np.array((70, 86, 108.)); hi = np.array((120, 136, 158.))
+    def art(dd):
+        for v in range(13):   # long vines sweeping across the cloth
+            x, y = rng.uniform(-S, W + S), rng.uniform(-S, H + S); ang = rng.uniform(0, 2 * math.pi); curv = 0; pts = [(x, y)]
+            for i in range(46):
+                curv += rng.normal(0, .02); curv = max(-.06, min(.06, curv)); ang += curv
+                x += math.cos(ang) * 10; y += math.sin(ang) * 10; pts.append((x, y))
+                if i % 8 == 4:
+                    sg = 1 if (i // 8) % 2 else -1
+                    baroque_leaf(dd, x, y, ang + sg * .9, S * rng.uniform(1.0, 1.6), sg)
+                if i % 23 == 11:
+                    # a tendril spiral
+                    sg = rng.choice([-1, 1]); a0 = ang + sg * 1.4; tr = S * rng.uniform(.25, .4)
+                    sp = [(x + math.cos(a0) * tr * .2 + tr * (1 - u * .85) * math.cos(a0 + sg * u * 9), y + math.sin(a0) * tr * .2 + tr * (1 - u * .85) * math.sin(a0 + sg * u * 9)) for u in np.linspace(0, 1, 50)]
+                    dd.line(sc(sp), fill=255, width=3 * SS)
+                if i % 19 == 13:
+                    flower5(dd, x + math.cos(ang + 1.6) * S * .5, y + math.sin(ang + 1.6) * S * .5, S * rng.uniform(.4, .6), rng.uniform(0, 6))
+            dd.line(sc(pts), fill=255, width=9 * SS, joint='curve')
+        for _ in range(10):
+            flower5(dd, rng.uniform(0, W), rng.uniform(0, H), S * rng.uniform(.22, .34), rng.uniform(0, 6))
+    m = gaussian_filter(lmask(art), .8)
+    a = base * (1 - .3 * m[..., None]) + hi * .3 * m[..., None]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
     fab = gaussian_filter(rng.standard_normal((H, W)), .5); fab /= fab.std()
-    sheen = gaussian_filter(rng.standard_normal((H, W)), 80); sheen /= sheen.std()
-    a *= (1 + .03 * fab + .035 * sheen + .015 * np.sin(xx * 1.7 + yy * 1.7))[..., None]
+    sheen = gaussian_filter(rng.standard_normal((H, W)), 90); sheen /= sheen.std()
+    a *= (1 + .03 * fab + .035 * sheen + .012 * np.sin(xx * 1.7 + yy * 1.7))[..., None]
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
