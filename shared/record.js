@@ -58,6 +58,10 @@ const CSS = `
 .grc-tabs{display:flex;flex:none;gap:2px;margin:0 22px 4px;padding:3px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--gb);width:max-content;max-width:calc(100% - 44px);overflow-x:auto;scrollbar-width:none}
 .grc-tabs button{font:inherit;font-size:13.5px;font-weight:600;padding:7px 16px;border-radius:9px;border:0;background:transparent;color:var(--gm);cursor:pointer;white-space:nowrap}
 .grc-tabs button.sel{background:var(--gc);color:var(--gx);box-shadow:inset 0 0 0 1px var(--gb),0 1px 3px rgba(0,0,0,.3)}
+.grc-vs{position:relative;flex:none;min-width:0;max-width:52%}
+.grc-vs select{appearance:none;-webkit-appearance:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--gx);background:var(--gc);border:1px solid var(--gb);border-radius:10px;padding:8px 32px 8px 12px;max-width:100%;cursor:pointer;text-overflow:ellipsis}
+.grc-vs::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;border-right:2px solid var(--gm);border-bottom:2px solid var(--gm);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.grc-vs select option{background:var(--panel,#1d1712);color:var(--gx)}
 .grc-vt{display:flex;flex:none;gap:6px;margin:0 22px 10px;overflow-x:auto;scrollbar-width:none}
 .grc-vt button{font:inherit;font-size:13px;font-weight:600;padding:6px 13px;border-radius:999px;border:1px solid var(--gb);background:transparent;color:var(--gm);cursor:pointer;white-space:nowrap;flex:none}
 .grc-vt button.sel{color:var(--ga);border-color:color-mix(in srgb,var(--ga) 50%,transparent);background:color-mix(in srgb,var(--ga) 10%,transparent)}
@@ -88,6 +92,7 @@ const CSS = `
 .grc-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(70px,1fr) auto auto;align-items:center;gap:14px;padding:11px 14px;font-size:14.5px;background:var(--gc)}
 .grc-row + .grc-row{border-top:1px solid var(--gb)}
 .grc-row .grc-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.grc-tag{font-style:normal;font-size:11.5px;font-weight:600;color:var(--gm);margin-inline-start:8px;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.06)}
 .grc-mini{display:flex;height:6px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.07)}
 .grc-mini i{display:block;height:100%}
 .grc-row .grc-sc{font-size:12.5px;color:var(--gm);white-space:nowrap;min-width:6.6em;text-align:end}
@@ -130,7 +135,7 @@ function stats(list) {
   for (const g of list) {
     s[g.res]++;
     if (g.side === 0 || g.side === 1) s.side[g.side][g.res]++;
-    const k = g.key || g.opp || '?'; const o = s.opp[k] || (s.opp[k] = { nm: g.opp || k, w: 0, l: 0, d: 0, last: 0 }); o[g.res]++; o.nm = g.opp || o.nm; o.last = g.t;
+    const k = (g.key || g.opp || '?') + '|' + vOf(g); const nm = oppOf(g, list) || k; const o = s.opp[k] || (s.opp[k] = { nm, v: vOf(g), w: 0, l: 0, d: 0, last: 0 }); o[g.res]++; o.nm = nm; o.last = g.t;
     if (g.res === 'w') { run = run > 0 ? run + 1 : 1; } else if (g.res === 'l') { run = run < 0 ? run - 1 : -1; } else run = 0;
     if (run > s.best) s.best = run;
   }
@@ -146,7 +151,16 @@ function ring(st) {
   let off = 0; const seg = (v, col) => { const len = v / n * C; const h = len > 0.5 ? `<circle r="${R}" cx="66" cy="66" stroke="${col}" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}" stroke-linecap="butt"/>` : ''; off += len; return h; };
   return `<div class="grc-ring"><svg viewBox="0 0 132 132"><circle r="${R}" cx="66" cy="66" stroke="rgba(255,255,255,.07)"/>${seg(st.w, 'var(--gw)')}${seg(st.d, 'var(--gd)')}${seg(st.l, 'var(--gl)')}</svg><div class="grc-ctr"><b>${pct(st.w, st.l, st.d)}</b><small>${esc(tx('rate'))}</small></div></div>`;
 }
-const vOf = g => g.v != null ? g.v : (O.defVariant || '');
+// variant of a record: stamped (v), or for older records read from the opponent label ("AI 3級 · 5五将棋"), else the default
+function vOf(g) {
+  if (g.v != null) return g.v;
+  if (g._v != null) return g._v;
+  let k = O.defVariant || '';
+  if (O.variants && O.variantName && g.opp) for (const x of O.variants()) { const n = O.variantName(x, L()); if (n && x !== O.defVariant && g.opp.indexOf(' · ' + n) >= 0) { k = x; break; } }
+  try { Object.defineProperty(g, '_v', { value: k, enumerable: false }); } catch (e) {}
+  return k;
+}
+const oppOf = (g, list) => { const o = g.opp || ''; const n = vName(vOf(g), list); return n && o.indexOf(' · ' + n) >= 0 ? o.replace(' · ' + n, '') : o; };
 function vName(k, list) { const n = O.variantName ? O.variantName(k, L()) : null; if (n) return n; const g = list.find(x => vOf(x) === k && x.vn); return g ? g.vn : (k || '—'); }
 function render() {
   const every = load(), vs = [...new Set(every.map(vOf))];
@@ -156,8 +170,8 @@ function render() {
   if (tab !== 'all' && !modes.includes(tab)) tab = 'all';
   const list = tab === 'all' ? all : all.filter(g => g.mode === tab);
   const st = stats(list), sides = O.sides ? O.sides(L()) : null;
-  let h = `<div class="grc-hd"><span class="grc-ic">${ICON}</span><h2>${esc(tx('title'))}</h2><button type="button" class="grc-x" data-act="close" aria-label="${esc(tx('close'))}">×</button></div>`;
-  if (vs.length > 1) h += `<div class="grc-vt" role="tablist">${['all'].concat(vs).map(k => `<button type="button" role="tab" data-vt="${esc(k)}" class="${k === vtab ? 'sel' : ''}">${esc(k === 'all' ? tx('allV') : vName(k, every))}</button>`).join('')}</div>`;
+  let h = `<div class="grc-hd"><span class="grc-ic">${ICON}</span><h2>${esc(tx('title'))}</h2>${vs.length > 1 ? `<label class="grc-vs"><select aria-label="${esc(tx('allV'))}">${['all'].concat(vs).map(k => `<option value="${esc(k)}"${k === vtab ? ' selected' : ''}>${esc(k === 'all' ? tx('allV') : vName(k, every))}　${k === 'all' ? every.length : every.filter(g => vOf(g) === k).length}</option>`).join('')}</select></label>` : ''}<button type="button" class="grc-x" data-act="close" aria-label="${esc(tx('close'))}">×</button></div>`;
+
   if (modes.length) h += `<div class="grc-tabs" role="tablist">${['all'].concat(modes).map(m => `<button type="button" role="tab" data-tab="${m}" class="${m === tab ? 'sel' : ''}">${esc(tx(m))}</button>`).join('')}</div>`;
   h += '<div class="grc-bd">';
   if (confirmOn) h += `<div class="grc-cf"><span>${esc(tx('resetQ'))}</span><div><button type="button" data-cf="no">${esc(tx('no'))}</button><button type="button" class="grc-warn" data-cf="yes">${esc(tx('yes'))}</button></div></div>`;
@@ -170,8 +184,8 @@ function render() {
       `<div class="grc-meta"><span>${esc(tx('games', { n }))}</span>${st.cur ? `<span>${esc(tx('streak'))}<b>${st.cur}</b></span>` : ''}${st.curL ? `<span>${esc(tx('streakL'))}<b>${st.curL}</b></span>` : ''}<span>${esc(tx('best'))}<b>${st.best}</b></span></div></div>`;
     if (sides && list.some(g => g.side === 0 || g.side === 1)) h += `<section><h3>${esc(tx('bySide'))}</h3><div class="grc-tb">${[0, 1].map(i => { const x = st.side[i]; return `<div class="grc-row"><span class="grc-nm">${esc(sides[i])}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`; }).join('')}</div></section>`;
     const opps = Object.values(st.opp).sort((a, b) => b.last - a.last).slice(0, 12);
-    if (opps.length) h += `<section><h3>${esc(tx('byOpp'))}</h3><div class="grc-tb">${opps.map(x => `<div class="grc-row"><span class="grc-nm">${esc(x.nm)}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`).join('')}</div></section>`;
-    h += `<section><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(g.opp || tx(g.mode))}</b><small>${esc([vtab === 'all' && vs.length > 1 ? vName(vOf(g), every) : '', tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></section>`;
+    if (opps.length) h += `<section><h3>${esc(tx('byOpp'))}</h3><div class="grc-tb">${opps.map(x => `<div class="grc-row"><span class="grc-nm">${esc(x.nm)}${vtab === 'all' && vs.length > 1 ? `<i class="grc-tag">${esc(vName(x.v, every))}</i>` : ''}</span>${mini(x)}<span class="grc-sc">${esc(score(x))}</span><span class="grc-pc">${pct(x.w, x.l, x.d)}</span></div>`).join('')}</div></section>`;
+    h += `<section><h3>${esc(tx('recent'))}</h3><div class="grc-tb">${list.slice(-30).reverse().map(g => `<div class="grc-g"><span class="grc-rs grc-${g.res}">${esc(tx(g.res))}</span><span class="grc-mid"><b>${esc(oppOf(g, every) || tx(g.mode))}</b><small>${esc([vtab === 'all' && vs.length > 1 ? vName(vOf(g), every) : '', tx(g.mode), sides && (g.side === 0 || g.side === 1) ? sides[g.side] : '', g.n ? tx('moves', { n: g.n }) : '', g.why || ''].filter(Boolean).join(' · '))}</small></span><span class="grc-dt">${esc(fmtDate(g.t))}</span></div>`).join('')}</div></section>`;
   }
   h += `</div><div class="grc-ft"><small>${esc(tx('note'))}</small>${every.length ? `<button type="button" class="grc-warn" data-act="reset">${esc(tx('reset'))}</button>` : ''}<button type="button" class="grc-go" data-act="close">${esc(tx('close'))}</button></div>`;
   ov.firstChild.innerHTML = h;
@@ -192,6 +206,7 @@ function init(o) {
     else if (b.dataset.cf === 'no') { confirmOn = false; render(); }
     else if (b.dataset.cf === 'yes') { store([]); confirmOn = false; render(); }
   });
+  ov.addEventListener('change', e => { if (e.target.closest('.grc-vs')) { vtab = e.target.value; render(); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('show')) close(); });
   // PC (and every layout without the phones' tab bar): a menu button
   const menu = typeof o.menu === 'string' ? document.querySelector(o.menu) : o.menu;
