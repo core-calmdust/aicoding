@@ -369,6 +369,63 @@ function visTotal(side) {
   if (S.sq === side && cs.some(i => !S.peel[side + i])) return null;
   return B.total(cs.map(i => c[side][i]));
 }
+/* phones: still a baccarat table, but drawn for the thumb — the shared bands PLAYER / BANKER / TIE run across the whole width
+   (one big target each), the five seats sit on the rim (6 5 YOU 2 1), and every player's chips lie on the bands at their seat.
+   The pairs (and the EZ side bets) are round spots in the corners. */
+const MG = { cx: 500, cy: -250, span: 40, R: { plate: [700, 786], P: [565, 700], B: [430, 565], T: [345, 430], S: [265, 345] } };
+function mobGeo() {
+  const ez = VB().includes('D7'), rIn = ez ? MG.R.S[0] : MG.R.T[0];
+  const top = Math.floor(MG.cy + rIn * Math.cos(MG.span * Math.PI / 180) - 14), bot = Math.ceil(MG.cy + MG.R.plate[1] + 8);
+  return { ez, rIn, top: Math.min(top, -10), h: bot - Math.min(top, -10) };
+}
+function layMobHtml() {
+  const vb = VB(), done = T.phase === 'done', G0 = mobGeo(), { cx, cy, span, R } = MG;
+  const P2 = (r, a) => [cx + r * Math.sin(a * Math.PI / 180), cy + r * Math.cos(a * Math.PI / 180)].map(v => +v.toFixed(1));
+  const cell = (r1, r2, a0, a1) => { const [x1, y1] = P2(r2, a0), [x2, y2] = P2(r2, a1), [x3, y3] = P2(r1, a1), [x4, y4] = P2(r1, a0); return `M${x1} ${y1}A${r2} ${r2} 0 0 0 ${x2} ${y2}L${x3} ${y3}A${r1} ${r1} 0 0 1 ${x4} ${y4}Z`; };
+  const arc = (r, a0, a1) => { const [x1, y1] = P2(r, a0), [x2, y2] = P2(r, a1); return `M${x1} ${y1}A${r} ${r} 0 0 0 ${x2} ${y2}`; };
+  // seats on the rim (angles grow to the right): 6 5 | 3 YOU | 2 1
+  const W8 = [1, 1, 1.7, 1, 1], tot = W8.reduce((x, y) => x + y, 0); let acc = -span;
+  const seats = [6, 5, 3, 2, 1].map((n, i) => { const a0 = acc; acc += W8[i] / tot * 2 * span; return { n, a0, a1: acc, am: (a0 + acc) / 2 }; });
+  const meBets = T.phase === 'bet' ? T.bets : T.last || {}, meRes = done && T.result ? T.result.per : null;
+  const who = n => n === ME ? null : BOTS.find(b => b.seat === n);
+  const betsOf = n => n === ME ? meBets : ((T.bots && T.bots[who(n).id] && T.bots[who(n).id].bets) || {});
+  let g = '';
+  // the bands
+  const bands = [['P', R.P], ['B', R.B], ['T', R.T]].concat(G0.ez ? [['P8', [R.S[0], R.S[1]], 0], ['D7', [R.S[0], R.S[1]], 1]] : []);
+  bands.forEach(([k, [r1, r2], half]) => {
+    const a0 = half === undefined ? -span : half ? 0 : -span, a1 = half === undefined ? span : half ? span : 0, rm = (r1 + r2) / 2, h = r2 - r1;
+    const rr = meRes ? meRes[k] : undefined, st = rr === undefined ? '' : rr > 0 ? ' won' : rr < 0 ? ' lost' : ' push';
+    const id = 'mz' + k, am = (a0 + a1) / 2, lab = LAB[k], fs = k === 'T' || half !== undefined ? 44 : 70;
+    g += `<g class="lz mz lz-${k}${st}${meBets[k] ? ' has' : ''}" data-spot="${k}" data-k="${id}"><path class="lz-a" d="${cell(r1, r2, a0, a1)}"/>` +
+      `<path id="${id}" d="${arc(rm + h * .2, a0, a1)}" fill="none"/><text class="lz-n" style="font-size:${fs}px"><textPath href="#${id}" startOffset="50%">${lab}  <tspan class="mz-p">${esc(payTxt(k).replace(/ \(.*$/, '').replace(/（.*$/, ''))}</tspan></textPath></text>`;
+    // everybody's chips on this band, at their seat
+    seats.forEach(sx => { const amt = betsOf(sx.n)[k]; if (!amt) return; const a = half === undefined ? sx.am : am + (sx.am / span) * (a1 - a0) / 2 * .8, [x, y] = P2(rm, a), me = sx.n === ME;
+      const [xu, yu] = P2(r1 + h * .18, a); g += `<g class="lz-ch">${chipsAt(amt, xu, yu + 6, me ? 46 : 34)}</g>` + (me ? badge(xu + 62, yu - 8, fmt(amt), 'amt mz-b') : ''); });
+    if (rr !== undefined && meBets[k]) { const [x, y] = P2(rm, half === undefined ? span * .55 : am + (a1 - a0) * .3); g += badge(x, y, rr > 0 ? '+' + fmt(rr) : rr === 0 ? t('res.push') : '−' + fmt(-rr), 'res mz-b'); }
+    g += `</g>`;
+  });
+  // the pairs: round spots in the upper corners
+  [['PP', 92, 0], ['BP', 908, 1]].filter(([k]) => vb.includes(k)).forEach(([k, x]) => {
+    const y = G0.top + 92, rr = meRes ? meRes[k] : undefined, st = rr === undefined ? '' : rr > 0 ? ' won' : rr < 0 ? ' lost' : ' push';
+    const ws = seats.filter(sx => betsOf(sx.n)[k]);
+    g += `<g class="lz mz lz-s lz-${k}${st}${meBets[k] ? ' has' : ''}" data-spot="${k}" data-k="mz${k}"><circle class="lz-a" cx="${x}" cy="${y}" r="78"/><circle class="lz-ring" cx="${x}" cy="${y}" r="68"/>` +
+      `<text class="lz-sn mz-sn" x="${x}" y="${y - 4}">${LAB[k]}</text><text class="lz-sp mz-sp" x="${x}" y="${y + 30}">11 : 1</text>` +
+      ws.map((sx, i) => sx.n === ME ? `<g class="lz-ch">${chipsAt(betsOf(ME)[k], x, y + 72, 44)}</g>` + badge(x, y + 84, fmt(betsOf(ME)[k]), 'amt mz-b') : `<g class="mz-av"><circle cx="${x + (k === 'PP' ? 1 : -1) * (40 + i * 30)}" cy="${y - 64}" r="17"/><text x="${x + (k === 'PP' ? 1 : -1) * (40 + i * 30)}" y="${y - 57}">${who(sx.n).name[0]}</text></g>`).join('') +
+      (rr !== undefined && meBets[k] ? badge(x, y - 92, rr > 0 ? '+' + fmt(rr) : '−' + fmt(-rr), 'res mz-b') : '') + `</g>`;
+  });
+  // the seats (name plates on the rim)
+  let lines = '';
+  seats.forEach((sx, i) => {
+    const me = sx.n === ME, b = who(sx.n), tb = b && T.bots ? T.bots[b.id] : null, [p1, p2] = R.plate, pid = 'mp' + sx.n;
+    const net = me ? (done && T.result && betSum(T.last) ? T.result.net : null) : done && tb && tb.res ? tb.res.net : null;
+    g += `<g class="seat-g${me ? ' me' : ''}"><path class="pl-a" d="${cell(p1, p2, sx.a0, sx.a1)}"/><path id="${pid}" d="${arc((p1 + p2) / 2 + 12, sx.a0, sx.a1)}" fill="none"/>` +
+      `<text class="pl-t mz-pl"><textPath href="#${pid}" startOffset="50%">${me ? `<tspan class="pl-n">3</tspan> YOU` : `<tspan class="pl-n">${sx.n}</tspan> ${esc(b.name)}`}${net ? ` <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : me ? '' : ` <tspan class="pl-b">${fmt(botState(b).bank)}</tspan>`}</textPath></text></g>`;
+    if (i) { const [x1, y1] = P2(G0.rIn, sx.a0), [x2, y2] = P2(p2, sx.a0); lines += `<line class="lz-div mz-div" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+  });
+  const rim = `<path class="lz-rim" d="${arc(R.plate[1], -span, span)}"/><path class="lz-rim" d="${arc(G0.rIn, -span, span)}"/>`;
+  return `<div class="bc-lay" data-k="laym"><svg class="lz-svg mzs" viewBox="0 ${G0.top} 1000 ${G0.h}" preserveAspectRatio="xMidYMax meet">${g}${lines}${rim}</svg></div>`;
+}
+
 /* the layout: a baccarat-table print — five seats (1 2 3 5 6, no 4) along the curve, divided by lines.
    Each seat, from the rim inwards: name plate, PLAYER, BANKER, TIE, then the side bets. You sit in the middle (seat 3). */
 let LW = 1000, SPAN = 40, MEW = 1.6;
@@ -391,7 +448,7 @@ function chipsAt(amt, x, yb, w) {   // chip stacks (side view) standing on y = y
     return sv.replace('<svg class="chsv"', `<svg class="chsv" x="${(x0 + i * gap - w / 2).toFixed(1)}" y="${(yb - h).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"`); }).join('');
 }
 const resTxt = res => res > 0 ? '+' + fmt(res) : res === 0 ? t('res.push') : '−' + fmt(-res);
-function badge(x, y, txt, cls) { const w = 16 + String(txt).length * 11; return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - 13).toFixed(1)}" width="${w}" height="24" rx="12"/><text x="${x}" y="${(y + 4.5).toFixed(1)}">${esc(txt)}</text></g>`; }
+function badge(x, y, txt, cls) { const big = /mz-b/.test(cls), w = (big ? 24 : 16) + String(txt).length * (big ? 19 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (big ? 21 : 13)).toFixed(1)}" width="${w}" height="${big ? 40 : 24}" rx="${big ? 20 : 12}"/><text x="${x}" y="${(y + (big ? 9 : 4.5)).toFixed(1)}">${esc(txt)}</text></g>`; }
 function layHtml() {
   const vb = VB(), done = T.phase === 'done', narrow = !!G.deep;
   LW = narrow ? 1000 : 1180; SPAN = narrow ? 66 : 51; MEW = narrow ? 2 : 1.5; RING = narrow ? RING_N : RING_W; LCY = narrow ? -10 : -360; LH = narrow ? 540 : 420;
@@ -440,13 +497,14 @@ function render() {
   // the height the table could have: on phones / tablets the chips and the Deal button must stay on the screen without scrolling
   const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - ($('#actbar').offsetHeight > 100 ? $('#actbar').offsetHeight : 140) - 22)) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
-  const lzh = (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = Math.min(lzh, Hn * .6);
+  G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
+  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? lzh : Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
-  const cwS = Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
+  const cwS = Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / (G.mob ? 3.4 : 3.2)), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
   const stack = cwT > cwS * 1.12, cw = Math.max(34, Math.min(stack ? cwT : cwS, 124));
   bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
-  box.classList.toggle('ctr', pcCol); box.classList.toggle('stk', stack); box.style.setProperty('--lzh', lz + 'px');
-  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : 2.12) + .38 + .62) + lz + 2 * rail + 8);
+  box.classList.toggle('ctr', pcCol); box.classList.toggle('mob', !!G.mob); box.classList.toggle('stk', stack); box.style.setProperty('--lzh', lz + 'px');
+  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : 2.12) + .38 + .62) + lz + 2 * rail + 8 + (G.mob ? 16 : 0));
     const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2) bw.style.maxHeight = need + 'px'; }
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
@@ -458,7 +516,7 @@ function render() {
     const head = win === 'T' ? t('win.T', { n: c.pt }) : t('win.' + win, { a: win === 'P' ? c.pt : c.bt, b: win === 'P' ? c.bt : c.pt });
     banner = `<div class="bc-banner w${win}" data-k="banner${T.hand}"><b>${esc(head)}</b>${c.natural ? `<small>${esc(t('natural'))}</small>` : ''}${hadBet ? `<span class="${r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''}">${esc(r.net > 0 ? t('res.win', { n: fmt(r.net) }) : r.net < 0 ? t('res.lose', { n: fmt(-r.net) }) : t('res.even'))}</span>` : ''}</div>`;
   }
-  const lay = layHtml();
+  const lay = G.mob ? layMobHtml() : layHtml();
   const shoeLeft = T.shoe.cards.length - T.shoe.pos, shoePct = shoeLeft / T.shoe.cards.length;
   const h = `<div class="bc-hands" data-k="hands">` +
     `<div class="bc-hand bh-p${win === 'P' ? ' win' : ''}" data-k="hp"><div class="bc-hh"><span>PLAYER</span>${tag('p', pt)}${pair('p')}</div>${handHtml('p')}</div>` +
