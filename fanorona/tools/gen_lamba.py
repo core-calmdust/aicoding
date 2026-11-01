@@ -4,7 +4,7 @@ lattice — every triangle of the Fanorona grid is a painted patch (green / blue
 symmetrically), some 2x2 blocks are square woven panels, abstract leaves grow inside some patches, woven bands at the top
 and bottom carry the grooves, and the whole cloth has a fine cotton weave. One picture per board so the patches meet the
 points exactly (the frame is (NC + 1.5) x (NR + 2) cells; point (c, r) at x = 1.25 + c, y = 1.5 + (NR - 1 - r) cells).
-python3 tools/gen_lamba.py  → img/lamba-sivy.webp, img/lamba-dimy.webp, img/lamba-telo.webp"""
+python3 tools/gen_lamba.py  → img/lamba-<board>.webp, img/lambared-<board>.webp (sivy / dimy / telo)"""
 import os, math, numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from scipy.ndimage import gaussian_filter
@@ -17,9 +17,22 @@ PAL = {
     'v1': (84, 58, 140), 'v2': (110, 76, 160), 'y1': (238, 198, 58), 'y2': (224, 176, 40),
 }
 FAMILIES = [['g1', 'g2', 'g3'], ['b1', 'b2'], ['t1', 't2'], ['v1', 'v2']]
+# the red cloth: crimson / madder / terracotta / ochre with deep indigo and charcoal, the accent patches in ochre-gold
+PAL_RED = {
+    'g1': (150, 30, 36), 'g2': (178, 44, 44), 'g3': (196, 72, 52),
+    'b1': (40, 44, 92), 'b2': (58, 62, 118), 't1': (176, 86, 44), 't2': (204, 112, 58),
+    'v1': (92, 26, 40), 'v2': (118, 36, 52), 'y1': (232, 182, 72), 'y2': (214, 158, 52),
+}
+THEMES = {
+    'lamba': dict(pal=PAL, leaf=(200, 236, 190), weave=(214, 238, 206),
+                  bands=[(70, 46, 132), (44, 150, 116), (46, 72, 160)], gem=[(236, 196, 64), (46, 72, 160)]),
+    'lambared': dict(pal=PAL_RED, leaf=(250, 214, 170), weave=(246, 222, 186),
+                     bands=[(40, 30, 40), (214, 158, 52), (140, 28, 34)], gem=[(232, 182, 72), (40, 30, 40)]),
+}
 
 
-def render(rule, NC, NR, seed):
+def render(rule, NC, NR, seed, theme='lamba'):
+    TH = THEMES[theme]; PAL = TH['pal']
     rng = np.random.default_rng(seed)
     Wc, Hc = NC + 1.5, NR + 2
     W, H = int(Wc * S), int(Hc * S)
@@ -126,19 +139,19 @@ def render(rule, NC, NR, seed):
     base *= 1 + (0.035 + 0.06 * bm[..., None]) * streak[..., None] + 0.06 * wash[..., None]
     lm = np.asarray(leaf.filter(ImageFilter.GaussianBlur(1.2))).astype(np.float64) / 255
     lmd = np.asarray(leafD.filter(ImageFilter.GaussianBlur(1.2))).astype(np.float64) / 255
-    base = base * (1 - 0.3 * lm[..., None]) + np.array([200, 236, 190]) * 0.3 * lm[..., None]
+    base = base * (1 - 0.3 * lm[..., None]) + np.array(TH['leaf']) * 0.3 * lm[..., None]
     base = base * (1 - 0.32 * lmd[..., None])
     wm = np.asarray(weave.filter(ImageFilter.GaussianBlur(1))).astype(np.float64) / 255
-    base = base * (1 - 0.3 * wm[..., None]) + np.array([214, 238, 206]) * 0.3 * wm[..., None]
+    base = base * (1 - 0.3 * wm[..., None]) + np.array(TH['weave']) * 0.3 * wm[..., None]
     # woven bands at the top and bottom (under the grooves): stripes and a row of small lozenges
     band = int(0.62 * S)
     for y0 in (0, H - band):
         b = Image.new('RGB', (W, band)); bdr = ImageDraw.Draw(b)
-        stripes = [(0, .3, (70, 46, 132)), (.3, .38, (44, 150, 116)), (.38, .62, (46, 72, 160)), (.62, .7, (44, 150, 116)), (.7, 1, (70, 46, 132))]
+        B1, B2, B3 = TH['bands']; stripes = [(0, .3, B1), (.3, .38, B2), (.38, .62, B3), (.62, .7, B2), (.7, 1, B1)]
         for a0, a1, col in stripes: bdr.rectangle([0, a0 * band, W, a1 * band], fill=col)
         cy = band / 2
         for x in np.arange(S * .45, W, S * .62):
-            for R, col in ((band * .2, (236, 196, 64)), (band * .11, (46, 72, 160)), (band * .045, (236, 196, 64))):
+            for R, col in ((band * .2, TH['gem'][0]), (band * .11, TH['gem'][1]), (band * .045, TH['gem'][0])):
                 bdr.polygon([(x, cy - R), (x + R, cy), (x, cy + R), (x - R, cy)], fill=col)
         bb = np.asarray(b).astype(np.float64)
         base[y0:y0 + band] = bb * (1 + 0.04 * streak[y0:y0 + band, :, None])
@@ -157,10 +170,11 @@ def render(rule, NC, NR, seed):
     # cloth light: a soft sheen and gentle folds
     fold = rnd(160, 220)
     base *= (1 + 0.05 * fold[..., None])
-    Image.fromarray(np.clip(base, 0, 255).astype(np.uint8)).save(os.path.join(OUT, f'lamba-{rule}.webp'), quality=88, method=6)
+    Image.fromarray(np.clip(base, 0, 255).astype(np.uint8)).save(os.path.join(OUT, f'{theme}-{rule}.webp'), quality=88, method=6)
     print(rule, W, H)
 
 
 os.makedirs(OUT, exist_ok=True)
-for rule, nc, nr, seed in (('sivy', 9, 5, 11), ('dimy', 5, 5, 23), ('telo', 3, 3, 5)):
-    render(rule, nc, nr, seed)
+for theme, off in (('lamba', 0), ('lambared', 100)):
+    for rule, nc, nr, seed in (('sivy', 9, 5, 11), ('dimy', 5, 5, 23), ('telo', 3, 3, 5)):
+        render(rule, nc, nr, seed + off, theme)
