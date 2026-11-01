@@ -308,7 +308,7 @@ const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;
 function hbInfo(st, tm, ev) {
   if (!HB || !HB.on) return;
   const dot = c => `<span class="pdisc p${c}" style="width:12px;height:12px;flex:none"></span>`;
-  let h = st.over ? `<span class="hb-chip">${st.winner ? dot(st.winner) : ''}<b>${escHb(t('hb.over'))}</b></span>` : `<span class="hb-chip">${dot(tm)}<b>${escHb(t('hb.turn', { c: pname(tm) }))}</b></span>`;
+  let h = st.over ? `<span class="hb-chip">${st.winner ? dot(st.winner) : ''}<b>${escHb(t('hb.over'))}</b></span>` : '';   // (whose turn: shown by the player cards, not in the bar)
   if (cur || !st.over) h += `<span class="hb-chip">${escHb(t('hb.move', { n: cur + (st.over ? 0 : 1) }))}</span>`;
   if (puzzle) h += `<span class="hb-chip">${escHb(pzT('movesLeft', { n: Math.max(0, pzLeft(puzzle)) }))}</span>`;
   else if (!lesson && settings.eval && !rtLive() && settings.mode !== 'online' && ev) h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb(evalText(ev))}</b></span>`;

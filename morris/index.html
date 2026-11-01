@@ -1854,7 +1854,7 @@ const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;
 function hbInfo(pos, st) {
   if (!HB || !HB.on) return;
   const tm = pos.side;
-  let h = `<span class="hb-chip"><i class="pdisc p${st.over ? (st.winner || tm) : tm}"></i><b>${escHb(st.over ? (st.winner ? t('hb.won', { c: pname(st.winner) }) : t('res.draw')) : t('hb.turn', { c: pname(tm) }))}</b>${st.over ? '' : `<small>${escHb(phaseText(pos, tm))}</small>`}</span>`;
+  let h = !st.over ? '' : `<span class="hb-chip"><i class="pdisc p${st.over ? (st.winner || tm) : tm}"></i><b>${escHb(st.over ? (st.winner ? t('hb.won', { c: pname(st.winner) }) : t('res.draw')) : t('hb.turn', { c: pname(tm) }))}</b>${st.over ? '' : `<small>${escHb(phaseText(pos, tm))}</small>`}</span>`;
   for (const p of [P1, P2]) h += `<span class="hb-chip"><i class="pdisc p${p}"></i><b>${pos.cnt[p]}</b><small>${escHb(t('onboard'))}</small>${pos.hand[p] > 0 ? `<b>${pos.hand[p]}</b><small>${escHb(t('hb.inHand'))}</small>` : ''}</span>`;
   const evOn = settings.eval && !lesson && !puzzle && !rtLive() && !(window.olLive && olLive());
   if (evOn && $('#evalText').textContent && $('#evalText').textContent !== '—') h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb($('#evalText').textContent)}</b></span>`;
