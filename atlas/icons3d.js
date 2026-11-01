@@ -349,14 +349,14 @@
       g0.add(at(card(M({ map: faceTex('s', 'A', 0), roughness: .35 })), -.1, 1.75, -.35, 1.05, .35, -.18));
       return g0;
     },
-    baccarat() {   // a deep green baccarat felt with gold printed arcs: a natural 9 (9 + K) leaning on gold / red / black chip stacks
+    baccarat() {   // a wine-red baccarat felt with ivory printed arcs: a natural 9 (9 + K) leaning on gold / red / black chip stacks
       const g0 = new T.Group();
-      // felt print on top of the plinth: deep green baize, gold arcs (Tie / Banker / Player) and a fine gold border
+      // felt print on top of the plinth: wine-red baize, ivory arcs (Tie / Banker / Player) and a fine ivory border
       const feltTex = X.canvasTex('ic-bcf', 512, 512, (c, W) => {
         const r = 40; c.beginPath(); c.moveTo(r, 0); c.arcTo(W, 0, W, W, r); c.arcTo(W, W, 0, W, r); c.arcTo(0, W, 0, 0, r); c.arcTo(0, 0, W, 0, r); c.closePath();
-        const gr = c.createRadialGradient(W * .5, W * .4, 20, W * .5, W * .5, W * .75); gr.addColorStop(0, '#1f7a4e'); gr.addColorStop(1, '#0b3d26'); c.fillStyle = gr; c.fill();
-        c.strokeStyle = '#d9b55e'; c.lineWidth = 5; c.save(); c.translate(14, 14); c.scale((W - 28) / W, (W - 28) / W); c.stroke(); c.restore();
-        c.strokeStyle = '#e6c46e'; c.lineWidth = 10; [360, 410, 460].forEach(rr => { c.beginPath(); c.arc(0, W, rr, -.5 * Math.PI, 0); c.stroke(); });
+        const gr = c.createRadialGradient(W * .5, W * .4, 20, W * .5, W * .5, W * .75); gr.addColorStop(0, '#8a2a3c'); gr.addColorStop(1, '#3d0f1a'); c.fillStyle = gr; c.fill();
+        c.strokeStyle = '#efe3cf'; c.lineWidth = 5; c.save(); c.translate(14, 14); c.scale((W - 28) / W, (W - 28) / W); c.stroke(); c.restore();
+        c.strokeStyle = '#f3e8d6'; c.lineWidth = 10; [360, 410, 460].forEach(rr => { c.beginPath(); c.arc(0, W, rr, -.5 * Math.PI, 0); c.stroke(); });
       });
       const top = mesh(new T.PlaneGeometry(3.86, 3.86), M({ map: feltTex, transparent: true, roughness: .85 })); top.rotation.x = -Math.PI / 2; top.position.y = .006; top.receiveShadow = true; g0.add(top);
       const faceTex = (k, r, su) => X.canvasTex('ic-bc' + k, 256, 352, (c, W, H) => {
@@ -840,7 +840,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x123d2a, 3.9] };
+  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {

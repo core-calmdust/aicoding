@@ -19,8 +19,9 @@ const pct = (x, d) => (x * 100).toFixed(d == null ? 2 : d) + '%';
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ v: 'classic', prefs: {}, felt: 'green', back: 'ornateBlack', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, squeeze: 0, autoNext: 0, chip: 100, lang: '' }, D.set || {});
+D.set = Object.assign({ v: 'classic', prefs: {}, felt: 'wine', back: 'ornateBlack', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, squeeze: 0, autoNext: 0, chip: 100, lang: '' }, D.set || {});
 D.stats = D.stats || {};
+if (!D.set.th2) { if (D.set.felt === 'green') D.set.felt = 'wine'; D.set.th2 = 1; }   // the wine-red table became the default
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });
 document.documentElement.dataset.face = 'classic';
@@ -390,7 +391,7 @@ function chipsAt(amt, x, yb, w) {   // chip stacks (side view) standing on y = y
 const resTxt = res => res > 0 ? '+' + fmt(res) : res === 0 ? t('res.push') : '−' + fmt(-res);
 function badge(x, y, txt, cls) { const w = 16 + String(txt).length * 11; return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - 13).toFixed(1)}" width="${w}" height="24" rx="12"/><text x="${x}" y="${(y + 4.5).toFixed(1)}">${esc(txt)}</text></g>`; }
 function layHtml() {
-  const vb = VB(), done = T.phase === 'done', narrow = $('#bcTable').clientWidth < 560;
+  const vb = VB(), done = T.phase === 'done', narrow = !!G.deep;
   LW = narrow ? 1000 : 1180; SPAN = narrow ? 66 : 51; MEW = narrow ? 2 : 1.5; RING = narrow ? RING_N : RING_W; LCY = narrow ? -10 : -360; LH = narrow ? 540 : 420;
   const rings = [['P', ['P']], ['B', ['B']], ['T', ['T']], ['S1', ['PP', 'BP']]].concat(vb.includes('D7') ? [['S2', ['P8', 'D7']]] : []);
   const inner = RING[rings[rings.length - 1][0]][0];
@@ -428,14 +429,21 @@ function layHtml() {
 function render() {
   if (!T) return;
   const box = $('#bcTable'), W = box.clientWidth, H = box.clientHeight;
-  const narrow = W < 560;
-  // the layout print is as wide as the table; the cards take what is left above it
-  const lzh = (W - 24) * (narrow ? 540 / 1000 : 420 / 1180);
-  const cw = Math.max(34, Math.min(W / (narrow ? 8.1 : 8.6), (H - Math.min(lzh, H * .62)) / 3.25, 124));
-  const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
-  // square / tall windows: no empty felt between the cards and the layout — the table is only as tall as it needs
-  { const rail = (bw.offsetHeight - H) / 2, need = Math.ceil(cw * (.38 + .54 + 1.4 + .2 + (narrow ? .95 : .62)) + lzh + 2 * rail + 10);
-    const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2 && (H + 2 * rail > need + 4 || mh)) bw.style.maxHeight = need + 'px'; }
+  const narrow = W < 560, bw = $('#boardWrap');
+  // PC (table + right column): the table keeps the window's height and the content is centred.
+  // Elsewhere (the info below the table): the table is only as tall as it needs (no empty felt).
+  const pcCol = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)').matches;
+  if (pcCol && bw.style.maxHeight) bw.style.maxHeight = '';
+  const rail = (bw.offsetHeight - H) / 2, Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640) - 2 * rail;   // the height the table could have
+  G.deep = narrow || (pcCol && H > W * .7);
+  const lzh = (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = Math.min(lzh, Hn * .6);
+  // the two hands side by side, or (tall tables) one above the other with bigger cards
+  const cwS = Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
+  const stack = cwT > cwS * 1.12, cw = Math.max(34, Math.min(stack ? cwT : cwS, 124));
+  bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
+  box.classList.toggle('ctr', pcCol); box.classList.toggle('stk', stack); box.style.setProperty('--lzh', lz + 'px');
+  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : 2.12) + .38 + .62) + lz + 2 * rail + 8);
+    const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2) bw.style.maxHeight = need + 'px'; }
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
   const tag = (side, tot) => tot == null ? '' : `<span class="bc-tot${done && win === side.toUpperCase() ? ' win' : ''}${c && c.natural && done && (side === 'p' ? c.pt : c.bt) >= 8 ? ' nat' : ''}">${tot}</span>`;
@@ -451,7 +459,7 @@ function render() {
   const h = `<div class="bc-hands" data-k="hands">` +
     `<div class="bc-hand bh-p${win === 'P' ? ' win' : ''}" data-k="hp"><div class="bc-hh"><span>PLAYER</span>${tag('p', pt)}${pair('p')}</div>${handHtml('p')}</div>` +
     `<div class="bc-hand bh-b${win === 'B' ? ' win' : ''}" data-k="hb"><div class="bc-hh"><span>BANKER</span>${tag('b', bt)}${pair('b')}</div>${handHtml('b')}</div>` +
-    `</div>${banner}${lay}` +
+    `</div><div class="bc-mid" data-k="mid">${banner}</div>${lay}` +
     `<div class="bc-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: shoeLeft }))}"><span class="bc-shoe-box"><i style="height:${(shoePct * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small><i>SHOE</i>${shoeLeft}</small></div>`;
   patch(box, h);
   box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); });
