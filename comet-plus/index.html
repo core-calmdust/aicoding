@@ -1575,9 +1575,9 @@ function drawRanking(ctx) {
             if (isOriginEntry(e)) { // ORIGINの記録: 名前の横に小さなバッジ
                 const bx = x0 + pad + (IS_MOBILE ? 60 : 42) + ctx.measureText(e.n).width + (IS_MOBILE ? 8 : 6), fs = IS_MOBILE ? 11 : 8, bh = fs + 6;
                 ctx.save(); ctx.font = `700 ${fs}px ${config.fontFamily}`; const bw = ctx.measureText('ORIGIN').width + 8;
-                ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, y - bh / 2 - 1, bw, bh, 3); else ctx.rect(bx, y - bh / 2 - 1, bw, bh);
-                ctx.fillStyle = 'rgba(255,90,216,0.18)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,90,216,0.85)'; ctx.lineWidth = 1; ctx.stroke();
-                ctx.fillStyle = '#ff8ae4'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('ORIGIN', bx + 4, y - 1); ctx.restore();
+                ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, y - bh / 2 + 1, bw, bh, 3); else ctx.rect(bx, y - bh / 2 + 1, bw, bh);
+                ctx.globalAlpha = 0.6; ctx.fillStyle = 'rgba(255,90,216,0.12)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,90,216,0.7)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.fillStyle = '#ff8ae4'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('ORIGIN', bx + 4, y + 1.5); ctx.restore();
             }
             ctx.textAlign = 'right'; ctx.fillText(e ? e.s.toLocaleString('en') : '-', x0 + colW - pad, y);
         }
