@@ -67,10 +67,11 @@ function rangeHtml() {
     const inR = E.PCT[k] <= POS[pos], kind = k.length === 2 ? 'rk-p' : k[2] === 's' ? 'rk-s' : 'rk-o';
     return `<button type="button" class="rg-c ${kind}${inR ? ' in' : ''}${k === sel ? ' sel' : ''}" data-cell="${k}" style="--x:${x.toFixed(2)}"><b>${k}</b><small>${Math.round(eq * 100)}</small></button>`;
   }).join('');
-  const k = sel, kind = k.length === 2 ? tl('tl.kPair', 'ポケットペア', 'Pocket pair') : k[2] === 's' ? tl('tl.kSuited', 'スーテッド（同じマーク）', 'Suited') : tl('tl.kOff', 'オフスート（別のマーク）', 'Offsuit');
+  const k = sel, kind = k.length === 2 ? tl('tl.kPair2', 'ペア', 'Pair') : k[2] === 's' ? tl('tl.kSuited2', 'スーテッド', 'Suited') : tl('tl.kOff2', 'オフスート', 'Offsuit');
+  const kindSub = k.length === 2 ? tl('tl.kPairS', '同じ数字2枚', 'two of a rank') : k[2] === 's' ? tl('tl.kSuitedS', '同じマーク', 'same suit') : tl('tl.kOffS', '別のマーク', 'different suits');
   const from = Object.keys(POS).filter(p => E.PCT[k] <= POS[p]), inNow = E.PCT[k] <= POS[pos];
   const eqs = [1, 2, 3, 4, 5].map(j => eqOf(k, j));
-  const info = `<div class="rg-info"><div class="rg-ih"><b class="rg-k">${k}</b><div><span>${esc(kind)}</span><small>${esc(t('tl.combos', { n: E.COMBOS(k) }))} · ${esc(t('tl.top', { n: (E.PCT[k] * 100).toFixed(1) }))}</small></div>` +
+  const info = `<div class="rg-info"><div class="rg-ih"><b class="rg-k">${k}</b><div><span>${esc(kind)} <em>${esc(kindSub)}</em></span><small>${esc(t('tl.combos', { n: E.COMBOS(k) }))} · ${esc(t('tl.top', { n: (E.PCT[k] * 100).toFixed(1) }))}</small></div>` +
     `<em class="rg-v${inNow ? ' ok' : ''}">${inNow ? '✓' : '✕'} ${esc(pos)}</em></div>` +
     `<div class="rg-eqs">${eqs.map((e, j) => `<div class="${j + 1 === n ? 'on' : ''}"><small>${esc(t('tl.vsN', { n: j + 1 }))}</small><span class="rg-bar"><i style="width:${e * 100}%"></i></span><b>${(e * 100).toFixed(1)}%</b></div>`).join('')}</div>` +
     `<p class="rg-from">${esc(from.length ? t('tl.openFrom', { p: from.join(' · ') }) : t('tl.openNone'))}</p></div>`;
@@ -100,6 +101,7 @@ function render() {
   $('#toolsModal').innerHTML = `<h2>${esc(t('tl.h'))}</h2><div class="ng-tabs">${tabs}</div><div class="tl-body">${tab === 'calc' ? calcHtml() : tab === 'range' ? rangeHtml() : handsHtml()}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
   const M = $('#toolsModal');
   if (keep) M.querySelector('.tl-body').scrollTop = keep;
+  fitHeight(M);
   M.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { tab = b.dataset.tt; render(); });
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
   if (tab === 'calc') {
@@ -121,6 +123,20 @@ function render() {
     M.querySelectorAll('[data-cell]').forEach(b => b.onclick = () => { C.cell = b.dataset.cell; render(); });
   }
 }
+// PC: every tab uses the height of the tallest one (役と確率) so the box never changes size; phones keep the full-screen box
+let fitH = 0;
+function fitHeight(M) {
+  if (!matchMedia('(min-width:761px)').matches) { M.style.removeProperty('--tl-h'); return; }
+  if (!fitH) {
+    const body = M.querySelector('.tl-body'), probe = document.createElement('div');
+    probe.className = 'tl-body'; probe.style.cssText = 'position:absolute;visibility:hidden;left:0;right:0;top:0;height:auto;max-height:none;overflow:visible';
+    probe.innerHTML = handsHtml(); body.parentNode.appendChild(probe); const h = Math.ceil(probe.scrollHeight); probe.remove();
+    if (h < 200) return;   // not on screen yet (the box is opened right after the first render)
+    fitH = h + 4;
+  }
+  M.style.setProperty('--tl-h', fitH + 'px');
+}
+addEventListener('resize', () => { fitH = 0; const M = $('#toolsModal'); if (M && M.innerHTML) fitHeight(M); });
 function place(c) {
   const s = C.slot;
   if (s.p >= 0) C.hands[s.p][s.k] = c; else C.board[s.k] = c;
@@ -143,6 +159,6 @@ function run() {
   const spec = { v: C.v, hands, board, iters: V.omaha ? 6000 : 30000, ranges: C.ranges };
   A.ask({ cmd: 'equity', spec }, r => { if (my !== seq) return; C.busy = false; if (r) { C.res = r; C.res.exact = hands.every(h => h) && 5 - board.length <= 2; } render(); }, () => E.equity(Object.assign(spec, { iters: 4000 })));
 }
-function open() { resize(); render(); A.openOv('#toolsOverlay'); }
+function open() { resize(); render(); A.openOv('#toolsOverlay'); fitHeight($('#toolsModal')); }
 window.PokerTools = { open };
 })();
