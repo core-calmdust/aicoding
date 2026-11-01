@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3, 3 peças cada. Colocam-se alternadamente e depois movem-se pelas linhas: três em linha vence (sem capturas).",
 "pick.place": "Coloque uma peça num ponto vazio",
 "pick.telo": "Escolha onde colocar (três em linha vence)",
-"res.why.line": "Três em linha"
+"res.why.line": "Três em linha",
+"bd.abstract": "Moderno",
+"bd.lamba": "Tecido lamba",
+"pcs.flat": "Planas",
+"pcs.disc": "Discos"
 }

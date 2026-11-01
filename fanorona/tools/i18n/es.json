@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3, 3 piezas cada uno. Se colocan por turnos y luego se mueven por las líneas: tres en raya gana (sin capturas).",
 "pick.place": "Coloca una pieza en un punto vacío",
 "pick.telo": "Elige dónde colocar (tres en raya gana)",
-"res.why.line": "Tres en raya"
+"res.why.line": "Tres en raya",
+"bd.abstract": "Moderno",
+"bd.lamba": "Tela lamba",
+"pcs.flat": "Planas",
+"pcs.disc": "Discos"
 }

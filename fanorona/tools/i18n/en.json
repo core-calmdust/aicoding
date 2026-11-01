@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3, 3 pieces each. Place them in turn, then move them along the lines: three in a row wins (no captures).",
 "pick.place": "Place a piece on an empty point",
 "pick.telo": "Choose a point to place a piece (three in a row wins)",
-"res.why.line": "Three in a row"
+"res.why.line": "Three in a row",
+"bd.abstract": "Modern",
+"bd.lamba": "Lamba cloth",
+"pcs.flat": "Flat",
+"pcs.disc": "Discs"
 }

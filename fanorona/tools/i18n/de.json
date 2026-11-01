@@ -364,5 +364,9 @@
 "rule.telo.d": "3×3, je 3 Steine. Abwechselnd setzen, dann entlang der Linien ziehen: drei in einer Reihe gewinnt (ohne Schlagen).",
 "pick.place": "Setze einen Stein auf einen freien Punkt",
 "pick.telo": "Wähle einen Punkt zum Setzen (drei in einer Reihe gewinnt)",
-"res.why.line": "Drei in einer Reihe"
+"res.why.line": "Drei in einer Reihe",
+"bd.abstract": "Modern",
+"bd.lamba": "Lamba-Tuch",
+"pcs.flat": "Flach",
+"pcs.disc": "Scheiben"
 }
