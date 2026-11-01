@@ -850,8 +850,10 @@ html[data-bd=abstract] .lines .num{fill:#8a7462;opacity:.8}
 html[data-bd=abstract] .reserve{background:rgba(110,78,56,.07);box-shadow:inset 0 1px 3px rgba(60,40,20,.25)}
 html[data-bd=abstract] .reserve .lbl{color:#6e4e38;text-shadow:none}
 /* ---- lamba design: an original patchwork cloth after Malagasy lamba textiles (tools/gen_lamba.py), white lines and points */
-html[data-bd=lamba]{--wimg:url(img/lamba.webp);--edge:#3b2470;--wdl:#f6f3ea}
-html[data-bd=lamba] .frame{background:var(--wimg) 50% 50% / cover;box-shadow:0 0 0 calc(var(--cell) * .06) #4a2d8c,0 calc(var(--cell) * .1) 0 calc(var(--cell) * .06) #2c1a5c,0 40px 70px -26px rgba(0,0,0,.85)}
+html[data-bd=lamba]{--wimg:url(img/lamba-sivy.webp);--edge:#3b2470;--wdl:#f6f3ea}
+html[data-bd=lamba][data-rule=dimy]{--wimg:url(img/lamba-dimy.webp)}
+html[data-bd=lamba][data-rule=telo]{--wimg:url(img/lamba-telo.webp)}
+html[data-bd=lamba] .frame{background:var(--wimg) 0 0 / 100% 100%;box-shadow:0 0 0 calc(var(--cell) * .06) #4a2d8c,0 calc(var(--cell) * .1) 0 calc(var(--cell) * .06) #2c1a5c,0 40px 70px -26px rgba(0,0,0,.85)}
 html[data-bd=lamba] .lines{filter:drop-shadow(0 0 calc(var(--cell) * .02) rgba(0,0,0,.35))}
 html[data-bd=lamba] .lines .ln{stroke:#f6f3ea;stroke-width:.04;opacity:.95}
 html[data-bd=lamba] .lines .ln.dg{opacity:.9}
@@ -1464,7 +1466,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=fa2"></script>
 <script src="coach-i18n.js?v=fa3"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fa6"></script>
+<script src="app.js?v=fa7"></script>
 <script src="online-ui.js?v=fa3"></script>
 <script src="landtabs.js?v=1"></script>
 <!-- World Board Game Atlas: shared account sync -->

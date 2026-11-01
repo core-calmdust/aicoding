@@ -940,7 +940,7 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
 const BD_KEYS = ['acacia', 'maple', 'walnut', 'rosewood', 'abstract', 'lamba'], PC_KEYS = ['wood', 'shell', 'stone', 'jade', 'flat', 'disc'];
 // the board picture of a design (wood textures by tools/gen_wood.py, the lamba cloth by tools/gen_lamba.py; abstract: plain)
-const BD_IMG = k => k === 'abstract' ? '' : k === 'lamba' ? 'img/lamba.webp' : `img/wood-${k}.webp`;
+const BD_IMG = k => k === 'abstract' ? '' : k === 'lamba' ? 'img/lamba-sivy.webp' : `img/wood-${k}.webp`;
 // board: [light, dark, line]
 const BD_PAL = { acacia: ['#d29a5c', '#a86d38', '#5b3518'], maple: ['#ecd3a3', '#d2b077', '#7d5a2c'], walnut: ['#83593a', '#563621', '#22130a'], rosewood: ['#86422f', '#56241a', '#1f0a08'], abstract: ['#f1ede6', '#e9e3da', '#6e4e38'], lamba: ['#2e7a5a', '#3a5fa8', '#f6f3ea'] };
 // pieces: [White: highlight, body, edge], [Black: …]
