@@ -36,9 +36,9 @@
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
     { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
       name: N('だつごくスライダー！', 'Jailbreak Slider!', '越狱滑块！', '탈옥 슬라이더!', '¡Fuga Slider!', 'Évasion Slider !', 'Fuga Slider!', 'Ausbruch-Slider!', 'जेलब्रेक स्लाइडर!', 'الهروب سلايدر!') },
-    { id: 'poker', cat: 'puzzle', store: ['aicoding-poker'], href: 'poker/', color: '#b9b4aa', released: '2026-10-29', tags: ['classic', 'card', 'ai', 'lessons', 'variants', 'mobile'], total: { ls: 18 },
+    { id: 'poker', cat: 'card', store: ['aicoding-poker'], href: 'poker/', color: '#b9b4aa', released: '2026-10-29', tags: ['classic', 'card', 'ai', 'lessons', 'variants', 'mobile'], total: { ls: 18 },
       name: N('ポーカー', 'Poker', '扑克', '포커', 'Póker', 'Poker', 'Pôquer', 'Poker', 'पोकर', 'بوكر') },
-    { id: 'baccarat', cat: 'puzzle', store: ['aicoding-baccarat'], href: 'baccarat/', color: '#c9a44c', released: '2026-11-01', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 17 },
+    { id: 'baccarat', cat: 'card', store: ['aicoding-baccarat'], href: 'baccarat/', color: '#c9a44c', released: '2026-11-01', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 17 },
       name: N('バカラ', 'Baccarat', '百家乐', '바카라', 'Baccarat', 'Baccara', 'Bacará', 'Baccara', 'बैकारेट', 'باكارا') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير') },
@@ -71,7 +71,7 @@
   ];
   GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg'; });
   // cat: home-grid category chip — chess (shogi/chess-like) · line (line-up & territory) · race (dice race & sowing) · puzzle
-  const CATS = ['chess', 'line', 'race', 'puzzle'];
+  const CATS = ['chess', 'line', 'race', 'puzzle', 'card'];
   // sound effects on/off for every page of the series (localStorage 'atlas-sfx': '0' = off)
   const sfxOn = () => { try { return localStorage.getItem('atlas-sfx') !== '0'; } catch (e) { return true; } };
   // store: localStorage key prefixes that belong to the game. The shared account (shared/atlas-account.js)
