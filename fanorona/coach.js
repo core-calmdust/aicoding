@@ -163,14 +163,101 @@ en: {
   },
 },
 };
+// Alquerque (alquerque/ runs this coach with the rule 'alq'): the texts that differ — jumps instead of approach /
+// withdrawal, the chain must go on, no backward steps, the waiting battle of the ending. Stored as 'A.<key>' (gloss: Agl);
+// tx() takes them first while the rule is 'alq'. Other languages: coach-i18n.js (FanoronaCoach.mergeAlq).
+const AQ = {
+ja: {
+  oppTurn: '相手の手番です。相手が次にどの駒を跳び越えてくるか、予想してみよう。予想が当たるほど読みの力がつきます。',
+  'tt.cap': '{sq}の駒で跳び越して{n}枚取る', 'tt.chain': '{sq}の駒で{s}回続けて跳び、{n}枚取る',
+  'b.big': 'まとめて取る', 'x.big': '{sq}の駒で続けて跳び、一度に{n}枚取ります。最後の着地点で跳び返されないかも確かめよう。',
+  'x.chain': '{sq}の駒で{s}回続けて跳び、合計{n}枚を取ります。跳べる限り跳び続けるのが決まりです。最後の着地点で跳び返されないかも確かめよう。',
+  'x.cap': '{sq}の駒で跳び越して{n}枚取ります。取るのは義務なので、取り方が複数あるときは着地したあとに跳び返されないかをくらべて選びます。',
+  'x.safe': '{sq}の駒を{to}へ動かし、相手に跳ぶ手を与えない形にします。駒の向こう側の点がふさがっていれば跳ばれません。',
+  'x.save': 'ねらわれている{sq}の駒を{to}へ逃がします。逃げた先で、相手から見て向こう側の点が空いていないか（跳ばれないか）が大切です。',
+  'x.sac': '{sq}の駒を{to}へ動かし、わざと跳ばせる手。取りは義務なので相手の駒を誘い出せます。AIの読みでは、跳び返しなどで損が小さい（または得になる）手です。',
+  'c.strong': '斜めの点', 'b.strong': '斜めの点へ', 'x.strong': '{sq}の駒を斜めの線が通る点{to}へ。斜めにも動け、斜めにも跳べるので、攻めにも守りにも働く点です。',
+  'x.wait': '{sq}の駒を{to}へ動かし、形を崩さずに待ちます。駒は後ろへ戻れないので、むやみに前へ出ず、動ける手を残すことも大切です。',
+  strong: '斜めの点', mobK: '動ける手',
+  'lp.shot': '💡コツ：取り方が何通りもあるときは、取った数から「跳び返される数」を引いてくらべよう。',
+  'lp.hang': '💡コツ：駒を動かす前に、相手から見てその駒の向こう側の点が空いていないか（跳び越されないか）を確かめよう。',
+  'tp.chain': '続けて跳べる取りがあります。跳べる限り最後まで跳ぶのが決まりです。最後の着地点が安全かを確かめて選ぼう。',
+  'tp.big': '続けて跳んで、一度に{n}枚取れる手があります。最後の着地点で跳び返されないかも確かめよう。',
+  'tp.hang': '{sq}の駒が跳ばれそうです（相手の番なら取られます）。向こう側の点を味方でふさぐか、逃げるか、取られても跳び返せる形にしよう。',
+  'tp.oppBig': '相手は次に{n}枚続けて跳べる形です。着地点を味方の駒でふさぐか、先に取れないか考えよう。',
+  'tp.paika': '取る手がありません。駒は前か横にしか進めないので、相手に跳ぶ手を与えない点へ、戻れないことも考えて動かそう。',
+  'tp.behind': '駒損です。相手の駒の向こう側が空いているところをねらい、続けて跳べる形を作って取り返そう。',
+  'tp.losing': '劣勢です。わざと1枚跳ばせて相手の駒を誘い出し、まとめて跳び返す逆転の筋を探そう。',
+  'tp.strong': '相手のほうが斜めの線が通る点に多く駒を置いています。その点の駒は斜めにも動けて跳べるので、盤ににらみが利きます。',
+  'tp.strong2': '斜めの線が通る点を多く押さえています。斜めにも動ける・跳べる駒は、攻めにも守りにも強く働きます。',
+  'tp.end1': '終盤は「あと何手動けるか」の勝負です。駒は後ろへ戻れないので、動ける手がなくなった側が負け。手待ちの手を残し、相手の駒の逃げ道を減らそう。',
+  'tp.endDef': '駒が少ない側は、相手の駒と隣り合って向こう側が空いた形を作らないのが粘りのコツです。横に動ける余地を残しておこう。',
+  'tp.mob': '動ける手（取らない手）の数は あなた{a}・相手{b} です。動ける手がなくなると負けなので、手数を残している側が終盤で有利になります。',
+  'tp.open1': '序盤は中央 c3 のまわりで取り合いが始まります。取るのは義務なので、わざと跳ばせてから跳び返す「取らせて取る」筋に注意しよう。',
+  'tp.open2': '駒は後ろへは戻れません（取るときの跳び越しだけはどの向きにもできます）。前へ出すぎず、後ろの段の駒は守りに残しておこう。',
+  'tp.mid1': '跳び越しは、向こう側の点が空いているときだけできます。自分の駒のすぐ後ろを味方でふさぐと、その駒は取られません。',
+  'tp.mid2': '取る手を選ぶときは「取った数 − 跳び返される数」でくらべよう。',
+  Agl: {
+    force: { m: ['取るのは義務', '取りの義務'], t: '取りの義務', d: '取れる手があるときは、取らない手は指せません。取り方が複数あるときはどれを選んでもかまいません。' },
+    jump: { m: ['跳び越して', '跳び越え', '跳び越'], t: '跳び越して取る', d: '線の上で隣にいる相手の駒を跳び越え、すぐ向こうの空いた点に着地して、その駒を取ります。取るときはどの向き（後ろも）にも跳べます。' },
+    chain: { m: ['続けて跳び', '続けて跳ぶ', '続けて跳べ', '続けて跳ん'], t: '連続跳び', d: '着地した点からさらに跳べるときは、同じ手番で跳び続けなければなりません（途中で止められません）。' },
+    strong: { m: ['斜めの線が通る点', '斜めの点'], t: '斜めの線が通る点', d: '斜めの線が交わる点（盤の点の半分）。ここの駒は斜めにも動けて、斜めにも跳べます。' },
+    noback: { m: ['後ろへ戻れない', '後ろへは戻れません'], t: '後ろへは戻れない', d: '取らない手は、前か横への1歩だけ。後ろへ戻れるのは、跳び越して取るときだけです。' },
+  },
+},
+en: {
+  oppTurn: 'Your opponent is to move. Try to guess which piece it will jump next — guessing right is how reading improves.',
+  'tt.cap': 'Jump and take {n} with the piece on {sq}', 'tt.chain': 'Jump {s} times with the piece on {sq}, taking {n}',
+  'b.big': 'Take several', 'x.big': 'The piece on {sq} jumps on and on, taking {n} at once. Check that it cannot be jumped back where it finally lands.',
+  'x.chain': 'The piece on {sq} jumps {s} times in a row, {n} pieces in all. A chain must go on as long as it can. Check that it cannot be jumped back where it lands.',
+  'x.cap': 'The piece on {sq} jumps and takes {n}. Captures are compulsory, so when there are several, compare whether the piece can be jumped back after landing.',
+  'x.safe': 'Move the piece on {sq} to {to} and leave the opponent no jump. A piece whose far side is covered cannot be jumped.',
+  'x.save': 'The piece on {sq} is attacked; move it to {to}. What matters is that the point behind it (seen from the opponent) is not empty there.',
+  'x.sac': 'Move the piece on {sq} to {to}, letting it be jumped on purpose. Captures are compulsory, so this lures an enemy piece; by the AI\'s reading the loss is small (or it wins material back).',
+  'c.strong': 'Diagonal point', 'b.strong': 'To a diagonal point', 'x.strong': 'Move the piece on {sq} to {to}, a point where diagonals cross. It can step and jump diagonally there, in attack and defence.',
+  'x.wait': 'Move the piece on {sq} to {to} and keep a solid shape while waiting. Pieces cannot step back, so do not rush forward: keeping moves in hand matters.',
+  strong: 'Diagonal points', mobK: 'Moves left',
+  'lp.shot': '💡 Tip: when there are several captures, compare "pieces taken − pieces jumped back".',
+  'lp.hang': '💡 Tip: before a move, check the point behind each piece (seen from the opponent): if it is empty, the piece can be jumped.',
+  'tp.chain': 'A capture can go on with more jumps. A chain must go on as long as it can: check that the last landing point is safe.',
+  'tp.big': 'A chain of jumps takes {n} pieces at once. Check that the piece cannot be jumped back where it lands.',
+  'tp.hang': 'The piece(s) on {sq} could be jumped (if it were the opponent\'s turn). Cover the point behind with a piece of yours, move away, or make a jump back possible.',
+  'tp.oppBig': 'The opponent threatens a chain of {n} jumps next. Cover a landing point with one of your pieces, or capture first.',
+  'tp.paika': 'Nothing to capture. Pieces only step forward or sideways, so move to a point that gives the opponent no jump — remembering you cannot come back.',
+  'tp.behind': 'You are behind. Aim at enemy pieces with an empty point behind them, and build a chain of jumps to win material back.',
+  'tp.losing': 'You are losing. Look for a comeback: offer one piece to lure an enemy piece, then jump back several.',
+  'tp.strong': 'The opponent holds more points where diagonals cross. Pieces there can step and jump diagonally and watch more of the board.',
+  'tp.strong2': 'You hold more points where diagonals cross. Pieces that can step and jump diagonally are strong in attack and defence.',
+  'tp.end1': 'The ending is a battle of moves left: pieces cannot step back, and a side with no move loses. Keep waiting moves in hand and take away the enemy pieces\' room.',
+  'tp.endDef': 'With fewer pieces, avoid standing next to an enemy piece with an empty point behind you, and keep room to step sideways.',
+  'tp.mob': 'Non-capturing moves available: you {a}, opponent {b}. A side with no move loses, so the side with more moves in hand is better in the ending.',
+  'tp.open1': 'The opening fight starts around the centre c3. Captures are compulsory, so watch for "give one, take two": a piece offered to be jumped, then a jump back.',
+  'tp.open2': 'Pieces cannot step back (only a capturing jump may go in any direction). Do not rush forward; keep the back-row pieces for defence.',
+  'tp.mid1': 'A jump needs an empty point just beyond. Cover the point right behind a piece with a friendly piece and it cannot be taken.',
+  'tp.mid2': 'Choose between captures by "taken − jumped back".',
+  Agl: {
+    force: { m: ['capturing is compulsory', 'captures are compulsory', 'compulsory'], t: 'Compulsory capture', d: 'When a capture is possible, a non-capturing move is not allowed. With several captures you may choose any of them.' },
+    jump: { m: ['jumped back', 'jumps', 'jump'], t: 'Jump capture', d: 'Jump over an adjacent enemy piece along a line to the empty point just beyond; the jumped piece is taken. A capturing jump may go in any direction, backwards too.' },
+    chain: { m: ['chain of jumps', 'chain'], t: 'Jump chain', d: 'If the piece can jump again from where it lands, it must go on jumping in the same turn — it cannot stop halfway.' },
+    strong: { m: ['diagonals cross', 'diagonal point'], t: 'Diagonal points', d: 'The points where diagonal lines cross (half of the board). A piece there can also step and jump diagonally.' },
+    noback: { m: ['cannot step back', 'cannot come back'], t: 'No steps back', d: 'A non-capturing move is one step forward or sideways. Only a capturing jump may go backwards.' },
+  },
+},
+};
+function mergeAlq(more) { for (const l in more) { const T = TX[l] = TX[l] || {}; for (const k in more[l]) { if (k === 'Agl') T.Agl = Object.assign({}, T.Agl || {}, more[l].Agl); else T['A.' + k] = more[l][k]; } } }
+mergeAlq(AQ);
+const isAlq = () => typeof gv !== 'undefined' && gv === 'alq';
 const L = () => (typeof LANG !== 'undefined' && TX[LANG]) ? LANG : 'en';
 function tx(k, v) {
-  const l = L(); let x = TX[l][k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k]; if (x === undefined) return k;
+  const l = L(); let x;
+  if (isAlq()) { const a = 'A.' + k; x = TX[l][a]; if (x === undefined) x = TX.en[a]; if (x === undefined) x = TX.ja[a]; }
+  if (x === undefined) x = TX[l][k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k]; if (x === undefined) return k;
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
   return x;
 }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const gl = h => window.CoachKit ? CoachKit.gloss(h, (TX[L()] || TX.en).gl || TX.en.gl) : h;
+const glSet = () => { const T = TX[L()] || TX.en; return isAlq() ? (T.Agl || TX.en.Agl) : (T.gl || TX.en.gl); };
+const gl = h => window.CoachKit ? CoachKit.gloss(h, glSet()) : h;
 const pctS = x => Math.round(x * 100) + '%';
 
 // --------------------------------------------------------------------------------------------- position facts
@@ -192,7 +279,14 @@ function facts(pos, n) {
   const q = pos.clone(); q.side ^= 1;
   f.oppBig = bestCapture(q);
   f.strong = [0, 0]; for (let i = 0; i < E.NP; i++) if (E.strong(i)) { if (pos.at(i) === us) f.strong[0]++; else if (pos.at(i) === them) f.strong[1]++; }
+  if (isAlq()) { f.mob = [alqSteps(pos, us), alqSteps(pos, them)]; f.stage = tot <= 8 ? 'end' : (n < 6 && tot >= 20) ? 'open' : 'mid'; }
   return f;
+}
+// Alquerque: the non-capturing steps player p could make (forward / sideways along a line to an empty point)
+function alqSteps(pos, p) {
+  let n = 0;
+  for (let i = 0; i < E.NP; i++) if (E.valid(i) && pos.at(i) === p) for (let d = 0; d < 8; d++) { const t = E.NB[d][i]; if (t >= 0 && !pos.at(t) && (p === P1 ? E.DR[d] >= 0 : E.DR[d] <= 0)) n++; }
+  return n;
 }
 // what a candidate move is about
 function classify(pos, m, f, v) {
@@ -230,7 +324,7 @@ const opName = s => (s.title && (s.title[LANG] || s.title.en)) || s.id;
 function gameNames(i) { return moves.slice(0, i); }
 const SETS = () => (typeof OPEN !== 'undefined' && OPEN && OPEN.sets) ? OPEN.sets : [];
 function openingType(names) {
-  if (startSpec || !names.length) return null;
+  if (startSpec || !names.length || gv !== 'sivy') return null;
   let done = null; const live = [];
   for (const s of SETS()) {
     const L = s.moves.split(' ');
@@ -289,7 +383,7 @@ function tipsOf(f, w, cl) {
   const out = [], add = (k, pr, v, hi) => out.push({ k, pr, v, hi });
   if (f.capN) add(f.legal.length > 1 ? 'tp.forced' : 'tp.forced1', 100, { n: f.legal.length }, 1);
   if (f.big >= 3) add('tp.big', 92, { n: f.big }, 1);
-  if (f.both) add('tp.both', 86, null, 1);
+  if (f.both && !isAlq()) add('tp.both', 86, null, 1);
   if (f.chain) add('tp.chain', 84);
   if (f.hang.length && !f.capN) add('tp.hang', 88, { sq: f.hang.map(nm).join(tx('sep')) }, 1);
   if (f.oppBig >= 3 && !f.capN) add('tp.oppBig', 82, { n: f.oppBig }, 1);
@@ -300,6 +394,7 @@ function tipsOf(f, w, cl) {
   if (cl && cl.sharp) add('tp.sharp', 56, { x: cl.sharp });
   if (f.stage !== 'open') { if (f.strong[1] > f.strong[0] + 1) add('tp.strong', 44); else if (f.strong[0] > f.strong[1] + 1) add('tp.strong2', 20); }
   if (f.stage === 'end') add(f.mat < 0 ? 'tp.endDef' : 'tp.end1', 46);
+  if (f.mob && (f.stage === 'end' || f.mob[0] <= 3)) add('tp.mob', f.mob[0] < f.mob[1] ? 62 : 42, { a: f.mob[0], b: f.mob[1] }, f.mob[0] < f.mob[1] ? 1 : 0);
   if (f.stage === 'open') { add('tp.open1', 40); add('tp.open2', 30); }
   else if (f.stage === 'mid') { add('tp.mid1', 24); add('tp.mid2', 16); }
   return out.sort((a, b) => b.pr - a.pr);
@@ -366,8 +461,13 @@ function render() {
   chips.push({ k: tx('mat'), v: esc((f.mat === 0 ? tx('mat.even') : tx(f.mat > 0 ? 'mat.up' : 'mat.down', { x: Math.abs(f.mat) })) + tx('mat.n', { a: f.cnt[0], b: f.cnt[1] })), cls: f.mat > 0 ? 'pos' : f.mat < 0 ? 'neg' : '' });
   const ot = openingType(gameNames(cur));
   if (ot && cur < 20) chips.push({ k: tx('senkei'), v: esc(tx(ot.fixed ? 'fixed' : 'moyo', { n: ot.name })) });
-  chips.push({ k: tx('who', { k: tx('strong'), w: tx('meC') }), v: String(f.strong[0]), cls: f.strong[0] > f.strong[1] ? 'pos' : '' });
-  chips.push({ k: tx('who', { k: tx('strong'), w: tx('opC') }), v: String(f.strong[1]) });
+  if (f.mob && f.stage === 'end') {   // Alquerque ending: the moves left decide
+    chips.push({ k: tx('who', { k: tx('mobK'), w: tx('meC') }), v: String(f.mob[0]), cls: f.mob[0] > f.mob[1] ? 'pos' : f.mob[0] < f.mob[1] ? 'neg' : '' });
+    chips.push({ k: tx('who', { k: tx('mobK'), w: tx('opC') }), v: String(f.mob[1]) });
+  } else {
+    chips.push({ k: tx('who', { k: tx('strong'), w: tx('meC') }), v: String(f.strong[0]), cls: f.strong[0] > f.strong[1] ? 'pos' : '' });
+    chips.push({ k: tx('who', { k: tx('strong'), w: tx('opC') }), v: String(f.strong[1]) });
+  }
   h += CoachKit.summary(chips);
   const bk = f.legal.length > 1 ? bookAt(cur) : null;
   let opItems = null;
@@ -424,7 +524,7 @@ function cands(key, list) { if (list && list.length) { S.lists.set(key, list); i
 function init() {
   if (!window.CoachKit) return;
   if (settings.coach === undefined) settings.coach = true;
-  CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
+  CoachKit.css(); CoachKit.glossBind(glSet);
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
   FanoronaCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
@@ -437,5 +537,5 @@ function setOn(v) {
 }
 function relabel() { if (FanoronaCoach.sw) FanoronaCoach.sw.sync(); S.key = ''; render(); }
 function merge(more) { for (const l in more) TX[l] = Object.assign({}, TX[l] || {}, more[l], { gl: Object.assign({}, (TX[l] || {}).gl || {}, more[l].gl || {}) }); }
-window.FanoronaCoach = { init, render, relabel, merge, tx, TX, active, usable, cands, fx, isBook, openingType };
+window.FanoronaCoach = { init, render, relabel, merge, mergeAlq, tx, TX, active, usable, cands, fx, isBook, openingType };
 })();

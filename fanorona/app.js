@@ -127,7 +127,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = GM.engine || 'engine.js?v=fb2';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();

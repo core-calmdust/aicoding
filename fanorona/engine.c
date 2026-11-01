@@ -51,7 +51,8 @@ static const int DR[8] = { 0, 1, 1, 1, 0, -1, -1, -1 }, DC[8] = { 1, 1, 0, -1, -
 static i8 NB[8][NP];
 static u64 ZP[2][NP], ZSIDE;
 static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0;   // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
-static int AQV = 1;   // Alquerque evaluation / search version (0 = the 2026-10 one, kept for tools/alqmatch.c)
+static int AQV = 11;   // Alquerque evaluation / search (bits: 1 evaluation alqHand, 2 forced jumps searched out in the
+                      // quiescence, 8 endgame databases; 0 = the 2026-10 engine, kept for tools/alqmatch.c)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
 static void buildNB(void) {
@@ -378,11 +379,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   if (ply > 0 && aegMaxN && ALQ && (AQV & 8)) { int e = aegProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
   if (ply >= MAXPLY - 2) return evaluate(p);
   int caps = hasCaps(p);
-  if (!caps && depth <= 0) {
-    // Alquerque: a quiet leaf where the opponent threatens a jump is looked at one more ply (the threat is the position)
-    int ext = ALQ && (AQV & 4) && depth > -2 && ply < 60 && vulnerable(p->p[p->side], p->p[p->side ^ 1]);
-    if (!ext) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
-  }
+  if (!caps && depth <= 0) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
   Move *L = MS[ply];
   int n = caps ? genCaps(p, L, MAXMV) : genPaika(p, L, MAXMV);
   if (!n) return -(WIN - ply);
@@ -627,9 +624,9 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
 // fixed-depth values of all root moves (weak levels): IO like analyze
 EXPORT(values) void values(int depth, int noEval) {
   beginSearch(0); nodeLimit_on = 0;
-  int saved = useNet; if (noEval) useNet = 0;
+  int saved = useNet, savedQ = AQV; if (noEval) { useNet = 0; AQV = 0; }   // the weak levels keep the plain evaluation (Alquerque too)
   for (int d = 1; d <= depth; d++) rootSearch(d, 1, -INF, INF);
-  useNet = saved;
+  useNet = saved; AQV = savedQ;
   sortRoot();
   int nOut = rootN > 600 ? 600 : rootN;
   IO[0] = nOut; IO[1] = depth;
