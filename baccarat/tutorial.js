@@ -341,3 +341,8 @@ setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }
   const rep = { zh: ['发牌', '下注'], ko: ['딜', '베팅'], es: ['Repartir', 'Apostar'], fr: ['Distribuer', 'Miser'], pt: ['Distribuir', 'Apostar'], de: ['Geben', 'Setzen'], hi: ['बाँटें', 'दांव लगाएँ'], ar: ['وزّع', 'راهن'] };
   for (const l in rep) if (TX[l]) ['t.deal', 'b.deal', 'ng.deal'].forEach(k => { if (TX[l][k]) TX[l][k] = TX[l][k].split(rep[l][0]).join(rep[l][1]); });
 })();
+/* amounts are in dollars */
+(function () {
+  const TX = window.BacTut && window.BacTut.TX; if (!TX) return;
+  for (const l in TX) ['b.chips', 'b.bet', 'b.payout'].forEach(k => { if (TX[l][k]) TX[l][k] = TX[l][k].replace(/(^|[^\d$.,])(10[,. ]000|100|95)(?![\d%])/g, '$1$$$2'); });
+})();
