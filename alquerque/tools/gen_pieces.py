@@ -85,7 +85,7 @@ def brass():
     albedo = np.zeros((N, N, 3)); albedo[:] = (204, 152, 74)
     fld = (1 - st) * (rr < .76)
     albedo = albedo * (1 - fld[..., None] * .35) + np.array([120, 84, 40]) * fld[..., None] * .35
-    save(shade(gaussian_filter(h, 1.0), albedo, metal=.0, gloss=8, spec=.06, amb=.55), 'pc-brass-1.webp')
+    save(shade(gaussian_filter(h, 1.0), albedo, metal=.08, gloss=16, spec=.12, amb=.5), 'pc-brass-1.webp')
 
 
 def lapis():
