@@ -588,7 +588,7 @@ function renderActbar() {
   }
   const tot = betSum(T.bets);
   const rack = DENOMS.map(d => `<button type="button" class="bc-chip${set.chip === d ? ' sel' : ''}" data-d="${d}" data-k="ch${d}" title="${d}">${chipTop(d, set.chip === d)}</button>`).join('');
-  patch(bar, `<div class="bc-rack">${rack}</div><div class="bc-bal"><small>${esc(t('bank'))}</small><b>${fmt(T.bank - tot)}</b>${tot ? `<em>${esc(t('onTable', { n: fmt(tot) }))}</em>` : ''}</div>` +
+  patch(bar, `<div class="bc-rack">${rack}</div><div class="bc-bal"><small>${esc(t('bank'))}</small><b>${fmt(T.bank - tot)}</b><em${tot ? '' : ' class="off"'}>${esc(t('onTable', { n: fmt(tot) }))}</em></div>` +
     `<div class="ab-btns main"><button class="abtn" id="abUndo" data-k="un"${G.undo.length ? '' : ' disabled'}>${esc(t('btn.undo'))}<kbd>Z</kbd></button><button class="abtn" id="abClr" data-k="cl"${tot ? '' : ' disabled'}>${esc(t('btn.clear'))}</button>` +
     `<button class="abtn" id="abRebet" data-k="rb"${T.last && !tot ? '' : ' disabled'}>${esc(t('btn.rebet'))}<kbd>R</kbd></button><button class="abtn" id="abX2" data-k="x2"${tot || T.last ? '' : ' disabled'}>×2</button>` +
     `<button class="abtn go" id="abDeal" data-k="dl"${tot >= MIN_BET ? '' : ' disabled'}>${esc(t('btn.deal'))}<kbd>Space</kbd></button></div>`);

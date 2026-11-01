@@ -2235,3 +2235,4 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 @media (max-width:400px){.bc-banner small{display:none}}
 .bn-n{display:none;font-style:normal;font:700 10px 'Cormorant Garamond',serif;color:#ecd9a8;border:1px solid #ecd9a8;border-radius:50%;width:16px;height:16px;line-height:14px;text-align:center;margin-left:6px;vertical-align:3px}
 @media (max-width:400px){.bn-n{display:inline-block}}
+.bc-bal em.off{visibility:hidden}   /* keeps the line: the bar (and the table above it) never changes height */
