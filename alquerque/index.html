@@ -1208,7 +1208,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > .kifu-card{flex:1 1 0!important;min-height:110px!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .side-in > #evalCard .graph{flex:none;height:56px!important}
   html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body.rvb-on .side-in > #coachCard{display:none!important}
-  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:auto;max-height:40vh}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox{grid-area:bx;height:188px!important;max-height:none;overflow:hidden}
+  html:is([data-rule=dimy],[data-rule=telo],[data-rule=alq]) body .app > .rvbox > *{min-height:0;overflow-y:auto}
 }
 /* ---- Alquerque: historical (carved wood), modern (damask cloth), chalk (slate) — tools/gen_rugs.py */
 html[data-bd=carved]{--wimg:url(img/rug-carved.webp?v=7);--edge:#3a2414;--wdl:#2b190c}
