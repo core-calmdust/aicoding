@@ -578,3 +578,6 @@ html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 
 /* phones: settings rows stack (label above the options) so long option sets never squeeze the label (2026-11-01) */
 @media (max-width:760px){.set-cols .rl{grid-template-columns:minmax(0,1fr)!important;gap:8px}.set-cols .rl:has(> .tgl){grid-template-columns:minmax(0,1fr) auto!important}.set-cols .rl .seg{min-width:0;width:100%;flex-wrap:wrap}.set-cols .rl .seg button{flex:1 1 auto}}
+
+/* landscape phone: Close only as wide as its label, Start takes the rest (same as the other games) */
+@media (orientation:landscape) and (max-height:560px){#newOverlay .modal-actions #btnNewClose{flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}#newOverlay .modal-actions #btnStart{flex:1 1 0!important}}
