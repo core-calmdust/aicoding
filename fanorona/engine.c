@@ -446,6 +446,29 @@ static int rootSearch(int depth, int all, int alpha0, int beta0) {
   }
   return best;
 }
+// all root moves for the analysis: the best few exactly, the rest only as "at least MARGIN worse" (a null window under the
+// best value, re-searched when they come close) — much deeper than a full window for every move
+#define AN_MARGIN 160
+static int rootSearchMulti(int depth) {
+  int best = -INF;
+  for (int i = 0; i < rootN; i++) {
+    Move *m = &rootL[i]; Pos q = ROOT; doMove(&q, m);
+    u64 k2 = hashMove(rootKey, &ROOT, m);
+    int irr = !m->paika, saveIrr = hirr; hkeys[hn++] = rootKey; if (irr) hirr = hn;
+    int qp = irr ? 0 : rootPly + 1, v;
+    if (i == 0 || best <= -INF + 1000) v = -search(&q, depth - 1, -INF, INF, 1, k2, 1, qp);
+    else {
+      int lo = best - AN_MARGIN; if (lo < -INF + 1) lo = -INF + 1;
+      v = -search(&q, depth - 1, -lo - 1, -lo, 1, k2, 0, qp);
+      if (v > lo && !stopFlag) v = -search(&q, depth - 1, -INF, -lo, 1, k2, 1, qp);
+    }
+    hn--; hirr = saveIrr;
+    if (stopFlag) return best;
+    rootVal[i] = v;
+    if (v > best) best = v;
+  }
+  return best;
+}
 static void sortRoot(void) {
   for (int i = 1; i < rootN; i++) { Move m = rootL[i]; int v = rootVal[i], j = i - 1; while (j >= 0 && rootVal[j] < v) { rootL[j + 1] = rootL[j]; rootVal[j + 1] = rootVal[j]; j--; } rootL[j + 1] = m; rootVal[j + 1] = v; }
 }
@@ -493,7 +516,7 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
   for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = 0; }
   if (rootN) {
     for (int d = 1; d <= maxDepth && d < MAXPLY - 8; d++) {
-      rootSearch(d, 1, -INF, INF);
+      rootSearchMulti(d);
       if (stopFlag && d > 1) break;
       sortRoot();
       for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = rootVal[i]; }

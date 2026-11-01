@@ -124,7 +124,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=fa3';
+const ENGINE_URL = 'engine.js?v=fa4';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -775,16 +775,17 @@ async function analyzeCurrent(tok) {
   const coachOn = !!(window.FanoronaCoach && FanoronaCoach.active());
   if (!settings.eval && !settings.hint && !coachOn) return;
   const mover = toMoveAt(idx);
-  const apply = list => {
+  const apply = (list, depth) => {
     if (keyOf(idx) !== key || !list) return;
-    if (window.FanoronaCoach) FanoronaCoach.cands(key, list);
+    // the coach waits for a reasonably deep search (a shallow one recommends greedy captures that lose the recapture)
+    if (window.FanoronaCoach && (depth == null || depth >= 6 || isTelo())) FanoronaCoach.cands(key, list);
     const ev = evalFromList(list, mover);
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
   if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
   cancelWorker('ana');
-  const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1500 : 900 }, m => apply(m.list));
+  const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint || coachOn ? 1800 : 900 }, m => apply(m.list, m.depth));
   if (!res || res.error) return;
   anaCache.set(key, res.list);
   apply(res.list);
