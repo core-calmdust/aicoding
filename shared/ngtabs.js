@@ -98,6 +98,14 @@ const CSS = `
 .modal.ngt-on .ngt-gcards.few.n3 .ngt-gcard{display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:12px;row-gap:4px;align-items:start}
 .modal.ngt-on .ngt-gcards.few.n3 .gart{grid-row:1/3;align-self:stretch;padding:10px 4px}
 .modal.ngt-on .ngt-gcards.few.n3 b{align-self:end;padding-inline-end:24px}
+/* (phone held sideways — also the turned page of the landscape option: the cards side by side, art on top) */
+@media (orientation:landscape) and (max-height:560px){
+  .modal.ngt-on .ngt-gcards.few,.modal.ngt-on .ngt-gcards.few.n3{grid-template-columns:repeat(var(--ngt-n,3),minmax(0,1fr))!important}
+  .modal.ngt-on .ngt-gcards.few.n3 .ngt-gcard{display:flex;flex-direction:column}
+  .modal.ngt-on .ngt-gcards.few .gart{padding:6px 4px}
+  .modal.ngt-on .ngt-gcards.few .gart svg,.modal.ngt-on .ngt-gcards.few .gart img{height:72px!important}
+  .modal.ngt-on .ngt-gcards.few b{padding-inline-end:22px}
+}
 /* PC ルール tab: mode on top across the width, the other settings in two balanced columns (no empty half) */
 .modal.ngt-pc > :not(.ngt-note):not(.ngt-foot){order:0!important}
 .modal.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:18px!important}
