@@ -170,7 +170,8 @@ const boardEl = $('#board'), stonesEl = $('#stones'), fxEl = $('#fx'), gridEl = 
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 const cx = m => m % N, cy = m => Math.floor(m / N);
-const px = m => (1 + cx(m)), py = m => (15 - cy(m));            // board units (16 per side)
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());   // 盤面反転 button (shared/flipbtn.js): the board turned round 180°
+const px = m => flipOn() ? 15 - cx(m) : 1 + cx(m), py = m => flipOn() ? 1 + cy(m) : 15 - cy(m);            // board units (16 per side)
 function placeAt(el, m, size) { const s = size || 1; el.style.left = ((px(m) - s / 2) / 16 * 100) + '%'; el.style.top = ((py(m) - s / 2) / 16 * 100) + '%'; }
 const FILES = 'abcdefghijklmno';
 function drawGrid() {
@@ -180,7 +181,8 @@ function drawGrid() {
     s += `<line x1="1" y1="${k + 1}" x2="15" y2="${k + 1}"${e}/><line x1="${k + 1}" y1="1" x2="${k + 1}" y2="15"${e}/>`;
   }
   for (const [c, r] of [[7, 7], [3, 3], [11, 3], [3, 11], [11, 11]]) s += `<circle cx="${1 + c}" cy="${15 - r}" r="${c === 7 && r === 7 ? .13 : .11}"/>`;
-  for (let k = 0; k < N; k++) { s += `<text x="${k + 1}" y="15.68">${FILES[k]}</text><text x=".36" y="${15 - k}">${k + 1}</text>`; }
+  const F = flipOn();
+  for (let k = 0; k < N; k++) { s += `<text x="${F ? 15 - k : k + 1}" y="15.68">${FILES[k]}</text><text x=".36" y="${F ? k + 1 : 15 - k}">${k + 1}</text>`; }
   gridEl.innerHTML = s;
 }
 const stEls = new Map();      // cell -> element
@@ -396,7 +398,7 @@ function pointAt(x, y) {
   const fx = (x - r.left) / u - 1, fy = (y - r.top) / u - 1, c = Math.round(fx), rr = Math.round(fy);
   if (c < 0 || c > 14 || rr < 0 || rr > 14) return -1;
   if (Math.hypot(fx - c, fy - rr) > 0.62) return -1;
-  return (14 - rr) * N + c;
+  return flipOn() ? rr * N + (14 - c) : (14 - rr) * N + c;
 }
 boardEl.addEventListener('pointerdown', e => {
   ctx(); if (e.button > 0) return;
@@ -3103,7 +3105,10 @@ applySkin();
 if (settings.lang && SUPPORTED.includes(settings.lang)) LANG = settings.lang;
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
-applyI18n(); drawGrid();
+applyI18n();
+function flipRedraw() { drawGrid(); for (const [, el] of stEls) el.remove(); stEls.clear(); hover = -1; }
+if (window.FlipBtn) FlipBtn.init({ game: 'gomoku', lang: () => LANG, onChange: () => { flipRedraw(); renderBoard(false); } });   // 盤面反転 (shared/flipbtn.js): before the board is first drawn
+flipRedraw();
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}

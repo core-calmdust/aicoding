@@ -241,9 +241,10 @@ function info() {
     const c = chips[bot], nm = $('#name' + s + ' .ns'), pip = $('#pip' + s), sc = $('#score' + s), pl = $('#pl' + s);
     const h = `<i class="pdisc p${s}"></i><b>${pip ? pip.textContent : ''}</b><span>${nm ? esc(nm.textContent) : ''}</span>${sc && sc.textContent.trim() ? `<em>${esc(sc.textContent.trim())}</em>` : ''}`;
     if (c.dataset.h !== h) { c.dataset.h = h; c.innerHTML = h; }
-    c.classList.toggle('bot', !!bot); c.classList.toggle('on', !!(pl && pl.classList.contains('active'))); c.classList.toggle('won', !!(pl && pl.classList.contains('won')));
-    c.style.left = `calc(var(--u) * ${(G.TX + G.TW / 2).toFixed(3)})`;
-    c.style.top = `calc(var(--u) * ${(bot ? G.MID + 0.12 : G.MID - 0.12).toFixed(3)})`;
+    const fl = typeof bgFlip === 'function' && bgFlip(), b2 = !!bot !== fl;   // 盤面反転: the board turned round, the tray on the left
+    c.classList.toggle('bot', b2); c.classList.toggle('on', !!(pl && pl.classList.contains('active'))); c.classList.toggle('won', !!(pl && pl.classList.contains('won')));
+    c.style.left = `calc(var(--u) * ${(fl ? G.W - G.TX - G.TW / 2 : G.TX + G.TW / 2).toFixed(3)})`;
+    c.style.top = `calc(var(--u) * ${(b2 ? G.MID + 0.12 : G.MID - 0.12).toFixed(3)})`;
   });
 }
 // status messages: a small toast that fades in and out over the board

@@ -13,7 +13,7 @@ let HB = null;                        // PC header bar (shared/headerbar.js)
 let startSpec = null;                 // lesson / puzzle start position (null = the start position of gv)
 let moves = [];                       // game record (move numbers, see engine.js)
 let cur = 0;                          // number of moves shown
-const flip = false;                   // the board is symmetric: always shown the same way (a1 at the bottom left)
+const flipOn = () => !!(window.FlipBtn && FlipBtn.on());   // the board is symmetric: no automatic orientation (a1 at the bottom left), only the 盤面反転 button (shared/flipbtn.js) turns it round 180°
 function setVariant(v) {
   gv = RULE_ORDER.includes(v) ? v : 'copenhagen'; N = E.RULES[gv].n;
   document.documentElement.style.setProperty('--S', N);
@@ -168,7 +168,7 @@ const $ = s => document.querySelector(s);
 const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), linesEl = $('#lines');
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
-const dRC = i => [Math.floor(i / N), i % N];
+const dRC = i => flipOn() ? [N - 1 - Math.floor(i / N), N - 1 - i % N] : [Math.floor(i / N), i % N];   // square -> drawn row / column
 const ptX = i => (dRC(i)[1] + 0.5) / N * 100, ptY = i => (dRC(i)[0] + 0.5) / N * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
 // piece emblems: attackers an axe-head rune (ᛏ), defenders a ring, the king a crown
@@ -187,8 +187,9 @@ function drawLines() {
   for (let i = 0; i < N * N; i++) if (F[i] & 16) { const [r, c] = dRC(i); s += `<rect class="sp" x="${c + .04}" y="${r + .04}" width=".92" height=".92" rx=".08"/><path class="knot" d="${knotPath(c + .5, r + .5, 1)}"/>`; }
   let d = ''; for (let k = 0; k <= N; k++) d += `M${k},0V${N}M0,${k}H${N}`;
   s += `<path class="gl" d="${d}"/>`;
-  for (let c = 0; c < N; c++) s += `<text class="num" x="${c + .93}" y="${N - .07}" font-size=".2" text-anchor="end">${String.fromCharCode(97 + c)}</text>`;
-  for (let r = 0; r < N; r++) s += `<text class="num" x=".07" y="${r + .23}" font-size=".2">${N - r}</text>`;
+  const FB = flipOn();   // coordinates follow the board when it is turned round (still on the bottom / left edges, upright)
+  for (let c = 0; c < N; c++) s += `<text class="num" x="${c + .93}" y="${N - .07}" font-size=".2" text-anchor="end">${String.fromCharCode(97 + (FB ? N - 1 - c : c))}</text>`;
+  for (let r = 0; r < N; r++) s += `<text class="num" x=".07" y="${r + .23}" font-size=".2">${FB ? r + 1 : N - r}</text>`;
   linesEl.setAttribute('viewBox', `0 0 ${N} ${N}`);
   linesEl.innerHTML = s;
   boardEl.classList.toggle('no-num', !settings.num);
@@ -511,7 +512,7 @@ function squareAt(clientX, clientY) {
   const r = boardEl.getBoundingClientRect(), u = r.width / N;
   const c = Math.floor((clientX - r.left) / u), rr = Math.floor((clientY - r.top) / u);
   if (c < 0 || c >= N || rr < 0 || rr >= N) return -1;
-  return rr * N + c;
+  return flipOn() ? (N - 1 - rr) * N + (N - 1 - c) : rr * N + c;
 }
 let hoverEl = null;
 function setHover(i) {
@@ -2185,6 +2186,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) { LANG = q; try { localStorage.setItem('aicoding-lang', q); } catch (e) {} } }
 if (!hadSave) setVariant(settings.rule);
 applyI18n();
+if (window.FlipBtn) FlipBtn.init({ game: 'tafl', lang: () => LANG, onChange: () => { setHover(-1); drawLines(); renderBoard(false); } });   // 盤面反転 (shared/flipbtn.js): before the board is first drawn
 drawLines();
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 if (window.GameRecord) GameRecord.init({ game: 'tafl', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): before the header bar takes the menu

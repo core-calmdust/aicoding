@@ -1428,6 +1428,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/flipbtn.js?v=1"></script>
 <script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1706,7 +1707,9 @@ for (let d = 0; d < 81; d++) {
   boardEl.appendChild(c); sqEls.push(c);
 }
 [20, 23, 47, 50].forEach(d => { const s = document.createElement('div'); s.className = 'star'; sqEls[d].appendChild(s); });
-let flip = false;
+let flip = false;        // the board as shown: the automatic orientation (flipAuto) turned round by the 盤面反転 button
+let flipAuto = false;    // own side at the bottom (gote when playing gote vs the AI / online, the side to move in puzzles)
+const flipA = a => (flipAuto = !!a) !== !!(window.FlipBtn && FlipBtn.on());   // shared/flipbtn.js
 const dispToSq = d => flip ? 80 - d : d;
 const sqToDisp = s => flip ? 80 - s : s;
 function pieceEl(code, promoted) {
@@ -2113,7 +2116,7 @@ function newGame(rated) {
   else if (window.CpuStyle && !vr) CpuStyle.attach(game, settings);   // game.cs: the CPU's chosen strategy per side
   clockInit();
   cur = 0; reviewing = false; hintMoves = null; sel = null;
-  flip = settings.mode === 'ai' && human === 1;
+  flip = flipA(settings.mode === 'ai' && human === 1);
   hideOverlay('#resultOverlay');
   refresh(false);
 }
@@ -2784,7 +2787,7 @@ function resumeWith() {
   if (reviewing) { game.moves.length = cur; game.info.length = cur + 1; game.over = null; delete game.resultShown; }
   cur = game.moves.length; reviewing = false;
   if (pm !== settings.mode || pc !== (settings.clock || 0) || ph !== game.human) clockInit(); else if (game.clock) game.clock.t0 = Date.now();   // a changed clock / side starts fresh
-  flip = settings.mode === 'ai' && game.human === 1;
+  flip = flipA(settings.mode === 'ai' && game.human === 1);
   hideOverlay('#resultOverlay');
   refresh(false);
 }
@@ -2845,7 +2848,7 @@ function startEdit(fromCurrent) {
   if (fromCurrent && game) p.setSfen(posAt(cur).sfen()); else p.setSfen(HANDI[0]);
   edit = { b: Array.from(p.board), h: Array.from(p.hand), side: p.side, pick: FU, color: 0, saved: game && !game.lessonGame ? game : null };
   document.body.classList.add('in-edit');
-  flip = false; hideOverlay('#newOverlay');
+  flip = flipA(false); hideOverlay('#newOverlay');
   renderEdit();
 }
 function editSfen() { const p = new E.Position(); p.board.set(edit.b); p.hand.set(edit.h); p.side = edit.side; p.ply = 0; return p.sfen(); }
@@ -2918,14 +2921,14 @@ $('#edTsume').onclick = () => {
   edit.side = 0; renderEdit();
 };
 function endEdit() { edit = null; document.body.classList.remove('in-edit'); }
-$('#edQuit').onclick = () => { const sv = edit && edit.saved; endEdit(); if (sv) { game = sv; cur = game.moves.length; flip = settings.mode === 'ai' && game.human === 1; refresh(false); } else newGame(); };
+$('#edQuit').onclick = () => { const sv = edit && edit.saved; endEdit(); if (sv) { game = sv; cur = game.moves.length; flip = flipA(settings.mode === 'ai' && game.human === 1); refresh(false); } else newGame(); };
 $('#edStudy').onclick = () => {
   const sf = editSfen(); endEdit();
-  settings.mode = 'pvp'; game = newRecord(sf, 0); cur = 0; reviewing = false; flip = false; refresh(false);
+  settings.mode = 'pvp'; game = newRecord(sf, 0); cur = 0; reviewing = false; flip = flipA(false); refresh(false);
 };
 $('#edPlay').onclick = () => {
   const sf = editSfen(), side = edit.side; endEdit();
-  settings.mode = 'ai'; game = newRecord(sf, side); cur = 0; reviewing = false; flip = side === 1; refresh(false);
+  settings.mode = 'ai'; game = newRecord(sf, side); cur = 0; reviewing = false; flip = flipA(side === 1); refresh(false);
 };
 $('#edMate').onclick = async () => {
   $('#edMsg').innerHTML = t('ed.searching'); $('#edMate').disabled = true;
@@ -3494,7 +3497,7 @@ function openLoaded(r) {
   settings.mode = 'pvp';
   const hi = HANDI.indexOf(r.start); settings.handicap = hi > 0 ? hi : 0;
   game = newRecord(r.start, 0); game.moves = r.moves.slice(); game.info = r.moves.map(() => ({ ev: null })).concat([{ ev: null }]);
-  flip = false;
+  flip = flipA(false);
   const end = game.moves.length;
   cur = Math.max(0, Math.min(end, r.n === undefined || isNaN(r.n) ? end : r.n)); reviewing = cur !== end;
   P = posAt(end); checkEnd();
@@ -3845,7 +3848,7 @@ function startStudy(oi) {
 function showStudy() {
   const g = lesson.g, st = g.study, i = lesson.i, N = st.steps.length;
   lessonGame(st.start, st.steps.slice(0, i).map(s => s[0]));
-  if (flip) { flip = false; renderCoords(); renderBoard(i > 0); }
+  { const f0 = flip; flip = flipA(false); if (flip !== f0) { renderCoords(); renderBoard(i > 0); } }
   $('#lsDots').classList.remove('exam');
   $('#lsStep').textContent = `${t('op.study')} ・ ${i}/${N}`;
   $('#lsTitle').textContent = L(g.title);
@@ -3926,7 +3929,7 @@ $('#lsPlayHere').onclick = () => {
   game = newRecord(st.start, human); game.moves = mv; game.info = mv.map(() => ({})).concat([{}]);
   clockInit();
   cur = mv.length; reviewing = false; hintMoves = null; sel = null;
-  flip = human === 1;
+  flip = flipA(human === 1);
   refresh(false); save();
 };
 function openIntro(i) {
@@ -3945,6 +3948,8 @@ $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons
 // first-time banner in the new-game dialog → the rules tutorial (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > tsume > resign) + icons right, game info in between
+// 盤面反転 (shared/flipbtn.js): in the icon set before the header bar takes it; the shown board = flipAuto XOR the button
+if (window.FlipBtn) FlipBtn.init({ game: 'shogi', lang: () => LANG, onChange: () => { flip = flipA(flipAuto); renderCoords(); if (edit) renderEdit(); else if (game) { renderBoard(false); renderInfo(); } } });
 if (window.GameRecord) GameRecord.init({ game: 'shogi', lang: () => LANG, menu: '.controls', sides: () => [cname(0), cname(1)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.ShogiCoach) ShogiCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnTsume'], rules: () => { lsTab = 'rules'; openLessons(); }, lang: () => LANG }) : null;
@@ -4032,7 +4037,7 @@ function lessonGame(sfen, moves) {
   game = newRecord(sfen, 0); game.lessonGame = true; if (lesson && lesson.cur && lesson.cur.variant) game.variant = lesson.cur.variant; game.moves = moves.slice(); game.info = moves.map(() => ({})).concat([{}]);
   cur = moves.length; reviewing = false; hintMoves = null; sel = null;
   P = posAt(cur);
-  flip = sfen.split(' ')[1] === 'w';
+  flip = flipA(sfen.split(' ')[1] === 'w');
   renderCoords(); renderBoard(moves.length > 0);
 }
 const sumPts = () => lesson.pts.reduce((a, b) => a + (b || 0), 0);
@@ -4340,7 +4345,7 @@ function exitLesson(silent) {
   lesson = null; document.body.classList.remove('in-lesson'); stSync();
   if (silent) return;
   hideOverlay('#resultOverlay');
-  if (saved) { game = saved; if (game.over) game.resultShown = true; if (game.clock && !game.rated) { game.clock.hold = true; game.clock.t0 = Date.now(); } cur = game.moves.length; reviewing = false; flip = settings.mode === 'ai' && game.human === 1; refresh(false); }
+  if (saved) { game = saved; if (game.over) game.resultShown = true; if (game.clock && !game.rated) { game.clock.hold = true; game.clock.t0 = Date.now(); } cur = game.moves.length; reviewing = false; flip = flipA(settings.mode === 'ai' && game.human === 1); refresh(false); }
   else newGame();
 }
 
@@ -4559,7 +4564,7 @@ function startOnlineGame(gid, intro, spec) {
   if (net && net.gid === gid) return;
   rtForfeit();
   const saved = spec ? (net ? (net.spectate ? net.saved : null) : (lesson || edit ? null : { game, mode: settings.mode })) : null;
-  const keepFlip = !!(spec && net && net.spectate && flip);
+  const keepFlip = !!(spec && net && net.spectate && flipAuto);
   hideOverlay('#onlineOverlay'); hideOverlay('#resultOverlay'); hideOverlay('#newOverlay'); hideOverlay('#playOverlay');
   leaveOnlineGame();
   busyToken++; cancelAI(); cancelAna(); rvCancel(); stopPlay();
@@ -4567,7 +4572,7 @@ function startOnlineGame(gid, intro, spec) {
   exitLesson(true);
   settings.mode = 'online';
   game = newRecord(HANDI[0], 0); game.clock = null;       // online games are always even (平手)
-  cur = 0; reviewing = false; hintMoves = null; sel = null; flip = keepFlip;
+  cur = 0; reviewing = false; hintMoves = null; sel = null; flip = flipA(keepFlip);
   net = { gid, game: null, me: spec ? -1 : 0, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
   if (!spec) olLiveSave(gid);
   document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
@@ -4595,7 +4600,7 @@ function onNetGame(g) {
   const spec = net.spectate, me = spec ? -1 : g.b === Online.uid ? 0 : 1, first = net.first;
   net.first = false;
   net.me = me; net.opp = spec ? null : me === 0 ? g.w : g.b; game.human = spec ? 0 : me;
-  if (first) { if (!spec) flip = me === 1; olTcToast(g, spec ? net.intro || t('ol.watchStart') : (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: cname(me) })); }
+  if (first) { if (!spec) flip = flipA(me === 1); olTcToast(g, spec ? net.intro || t('ol.watchStart') : (net.intro ? net.intro + ' · ' : '') + t('ol.youAre', { c: cname(me) })); }
   const ms = String(g.moves || '').split(' ').filter(Boolean);
   let reset = false;
   for (let i = 0; i < Math.min(ms.length, game.moves.length); i++) if (ms[i] !== game.moves[i]) { reset = true; break; }
@@ -5016,8 +5021,8 @@ applyI18n();
   applyLook();
   if (location.hash.includes('k=')) { if (!had) game = newRecord(HANDI[0], 0); if (loadFromHash()) return; }
   if (had && game.clock && !(game.rated && !game.over)) { game.clock.t0 = Date.now(); game.clock.hold = true; }   // rated: the clock keeps running across a reload; otherwise it waits for the first move
-  if (had) { flip = settings.mode === 'ai' && game.human === 1; reviewing = false; refresh(false); }
-  else { game = newRecord(HANDI[0], 0); flip = false; refresh(false); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
+  if (had) { flip = flipA(settings.mode === 'ai' && game.human === 1); reviewing = false; refresh(false); }
+  else { game = newRecord(HANDI[0], 0); flip = flipA(false); refresh(false); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
   const q = new URLSearchParams(location.search);
   // ?room=CODE (or #room=CODE): join a friend's online room
   const room = (q.get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -5056,12 +5061,12 @@ function backToBoard() {
 })();
 function olBlack() { return 0; }
 var OL_CAN_FLIP = true;          // spectators may turn the board (sente at the bottom by default)
-function olFlipBoard() { flip = !flip; renderCoords(); renderBoard(false); renderInfo(); }
+function olFlipBoard() { if (window.FlipBtn) FlipBtn.toggle(); else { flip = !flip; renderCoords(); renderBoard(false); renderInfo(); } }
 // after watching: put back the local game that was on the board (or start a fresh one)
 function olRestoreLocal(sv) {
   if (!sv || !sv.game) { newGame(); return; }
   settings.mode = sv.mode; game = sv.game; cur = game.moves.length; reviewing = false; hintMoves = null; sel = null;
-  flip = settings.mode === 'ai' && game.human === 1;
+  flip = flipA(settings.mode === 'ai' && game.human === 1);
   if (game.clock) { game.clock.t0 = Date.now(); if (!game.rated) game.clock.hold = true; }
   refresh(false);
 }

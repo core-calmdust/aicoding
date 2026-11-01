@@ -156,7 +156,7 @@ let vert = false, U = 60;
 const isStore = i => i === 6 || i === 13;
 const ownerOf = i => i <= 6 ? 0 : 1;
 const pitIndex = (side, k) => (side ? 7 : 0) + k;
-function bottomSide() { return ((settings.mode === 'ai' || settings.mode === 'online') && !lesson && !puzzle) ? game.human : 0; }
+function bottomSide() { return (((settings.mode === 'ai' || settings.mode === 'online') && !lesson && !puzzle) ? game.human : 0) ^ (window.FlipBtn && FlipBtn.on() ? 1 : 0); }   // + the 盤面反転 button (shared/flipbtn.js): the other side's row and store at the bottom
 function slotUV(i) {
   const B = bottomSide(), own = ownerOf(i), bottom = own === B;
   if (isStore(i)) return { x: bottom ? 8.45 : 0.75, y: 1.85, bottom };
@@ -2557,6 +2557,7 @@ if (window.PZBook) PZBook.setLang(LANG);
 // 勝敗記録 (shared/record.js) and the coach switch (coach.js) go into the menu / icon set before the header bar takes them
 if (window.GameRecord) GameRecord.init({ game: 'mancala', lang: () => LANG, menu: '.controls', sides: () => [t('p0'), t('p1')] });
 if (window.MancalaCoach) MancalaCoach.init();
+if (window.FlipBtn) FlipBtn.init({ game: 'mancala', lang: () => LANG, onChange: () => { layout(); update(); } });
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { setTimeout(layout, 30); renderInfo(); });

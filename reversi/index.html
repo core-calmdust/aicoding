@@ -113,6 +113,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .cell:nth-child(8n){border-right:none}
 .cell:nth-child(n+57){border-bottom:none}
 .star{position:absolute;width:calc(var(--cell)*0.11);height:calc(var(--cell)*0.11);border-radius:50%;background:rgba(0,0,0,.55);z-index:1;pointer-events:none;transform:translate(50%,50%);right:0;bottom:0}
+/* 盤面反転 (shared/flipbtn.js): the cells are laid out in reverse order (CSS order), so the edge cells without a border and the star points'
+   corner swap, and the coordinates run backwards (:where keeps these weak, so the board designs' own .cell rules still win) */
+:where(.frame.flipped) .cell:nth-child(8n){border-right:1px solid var(--grid)}:where(.frame.flipped) .cell:nth-child(n+57){border-bottom:1px solid var(--grid)}
+:where(.frame.flipped) .cell:nth-child(8n+1){border-right:none}:where(.frame.flipped) .cell:nth-child(-n+8){border-bottom:none}
+.frame.flipped .star{right:auto;bottom:auto;left:0;top:0;transform:translate(-50%,-50%)}
+.frame.flipped .coords.top{flex-direction:row-reverse}.frame.flipped .coords.left{flex-direction:column-reverse}
 .cell.legal{cursor:pointer}
 .cell.legal::before{
   content:"";position:absolute;width:22%;height:22%;border-radius:50%;
@@ -1651,6 +1657,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/headerbar.js?v=29"></script>
+<script src="../shared/flipbtn.js?v=1"></script>
 <script src="../shared/cardbar.js?v=5"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -1980,6 +1987,13 @@ for (let s = 0; s < 64; s++) {
 }
 // star points (intersections at b2/b6/f2/f6 corners)
 [9, 13, 41, 45].forEach(s => { const d = document.createElement('div'); d.className = 'star'; cellEls[s].appendChild(d); });
+// 盤面反転 (shared/flipbtn.js): turn the board round 180° by laying the cells out in reverse order (CSS order; the DOM order stays a1..h8).
+// The discs, marks, hints and click handlers live in the cells, so they all follow.
+function applyFlip() {
+  const f = !!(window.FlipBtn && FlipBtn.on());
+  boardEl.closest('.frame').classList.toggle('flipped', f);
+  for (let k = 0; k < 64; k++) cellEls[k].style.order = f ? 63 - k : '';
+}
 
 function makeDisc(color) {
   const w = document.createElement('div'); w.className = 'disc-wrap';
@@ -4788,6 +4802,7 @@ else { try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.incl
 applyI18n();
 if (window.RulesOffer) RulesOffer.init({ game: 'reversi', lang: () => LANG, open: () => openRules(), watch: '#rulesOverlay' });
 if (window.GameRecord) GameRecord.init({ game: 'reversi', lang: () => LANG, menu: '.controls', sides: () => [cname(BLACK), cname(WHITE)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.FlipBtn) { FlipBtn.init({ game: 'reversi', lang: () => LANG, onChange: applyFlip }); applyFlip(); }   // 盤面反転 (shared/flipbtn.js)
 if (window.ReversiCoach) ReversiCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(), lang: () => LANG }) : null;
