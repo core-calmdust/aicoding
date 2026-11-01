@@ -2179,3 +2179,13 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-banner span{font:700 16px 'JetBrains Mono',monospace;padding-left:14px;border-left:1px solid rgba(236,232,222,.25)}
 .bc-banner span:not(.pos):not(.neg){color:#e9e4d8}
 @media (max-width:760px){.bc-banner::before,.bc-banner::after{display:none}.bc-banner{padding:6px 16px}.bc-banner b{font-size:17px}}
+/* bet amounts on the felt: serif lining figures on a black lacquer plaque with a platinum double rule (like the totals) */
+.lz-badge text{font-family:'Cormorant Garamond','Shippori Mincho B1',serif!important;font-weight:700!important;font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;letter-spacing:.06em;fill:#efe8d8}
+.lz-badge rect{fill:url(#none);fill:rgba(10,10,12,.92);stroke:rgba(236,232,222,.7);stroke-width:1.2}
+.lz-badge.pc-me rect,.mzs .mz-me rect{stroke:rgba(236,232,222,.8);stroke-width:1.6;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.lz-svg:not(.mzs) .pc-me text{font-size:27px}
+.mzs .mz-me text{font-size:44px!important}
+.won .lz-badge.res rect{fill:rgba(10,10,12,.92);stroke:#ecd9a8}.won .lz-badge.res text{fill:#f6e7bf}
+.bc-bal b,.sess-bar .srow b{font-family:'Cormorant Garamond',serif;font-variant-numeric:lining-nums;font-weight:700;letter-spacing:.03em}
+.bc-bal b{font-size:24px}
+.lz-badge rect.lzb-in{fill:none!important;stroke:rgba(236,232,222,.28)!important;stroke-width:1!important;filter:none!important}
