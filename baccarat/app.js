@@ -506,7 +506,7 @@ function render() {
   if (pcCol && bw.style.maxHeight) bw.style.maxHeight = '';
   const rail = (bw.offsetHeight - H) / 2, sc = $('.stage');
   // the height the table could have: on phones / tablets the chips and the Deal button must stay on the screen without scrolling
-  const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - 22)) - 2 * rail;
+  const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(220, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - (parseFloat(getComputedStyle(sc).paddingTop) || 0) - (parseFloat(getComputedStyle(sc).rowGap) || 10) - 14 - (G.fitAdj || 0))) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
   const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Hn * .68) : Math.min(lzh, Hn * .6);
@@ -541,6 +541,11 @@ function render() {
   renderActbar(); renderSide(); renderNums();
   // phones: the bar under the table changes height between betting and dealing — size the table again for the real one (once)
   if (G.abH && !G.reAb && Math.max(140, $('#actbar').offsetHeight) !== G.abH) { G.reAb = 1; render(); G.reAb = 0; }
+  // phones: the action bar must end above the screen bottom (no scrolling to bet) — measure and shrink the table once more if it does not
+  if (!G.reFit && T.phase === 'bet' && !matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)').matches) {
+    const sc = $('.stage'), ab = $('#actbar').getBoundingClientRect(), lim = sc.getBoundingClientRect().bottom - 6, over = ab.bottom + sc.scrollTop - lim;
+    if (sc.scrollTop < 2 && (over > 1 || (over < -10 && G.fitAdj > 0))) { G.fitAdj = Math.max(0, (G.fitAdj || 0) + Math.ceil(over) + (over < 0 ? 4 : 0)); G.reFit = 1; render(); G.reFit = 0; }
+  }
 }
 /* hover (mouse): what a betting box means — the bet, when it wins, what it pays, its house edge */
 let tipEl = null;
