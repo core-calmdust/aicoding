@@ -1908,3 +1908,19 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   .bc-table.stk{padding-top:calc(var(--cw)*.55)}
   .bc-banner b{font-size:15px}.bc-banner span{font-size:13px}.bc-banner small{font-size:10px}
 }
+/* roads: captions, a zoom button, and the large view */
+.rd-cap{display:block;font-size:10.5px;color:var(--muted);margin:0 0 2px 2px;letter-spacing:.04em}
+.rd-zoom{margin-inline-start:auto;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);border-radius:8px;padding:3px 9px;font:600 11.5px 'Zen Kaku Gothic New',sans-serif;cursor:pointer;letter-spacing:0}
+.rd-zoom:hover{border-color:var(--hl)}
+.road-card .rd-row{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
+.road-modal{width:min(1100px,calc(100vw - 24px));max-height:calc(100dvh - 24px);display:flex;flex-direction:column}
+.road-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.rz-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.rz-n{font:700 16px 'JetBrains Mono',monospace}
+.rz-top .rd-ask{margin:0}
+.rz-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px}
+.rz.wide{grid-column:1/-1}
+.rz-der{display:flex;flex-direction:column;gap:12px}
+.rz-h b{font-size:13px;color:var(--muted);font-weight:600}
+.rz-svg .rd-svg{display:block;width:100%;height:auto;background:#f7f4ec;border-radius:8px;margin-top:4px}
+@media (max-width:760px){.rz-grid{grid-template-columns:1fr}.road-modal{height:calc(100dvh - 16px);padding:12px}}

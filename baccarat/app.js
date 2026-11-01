@@ -512,9 +512,10 @@ function renderSide() {
   const RB = RD.build(T.res), L = { B: t('rd.B'), P: t('rd.P'), T: t('rd.T') };
   const cntW = w => T.res.filter(r => r.w === w).length;
   const ask = w => `<div class="ask a${w}"><b>${esc(L[w])}</b>${RD.askSvg(RB.ask[w])}</div>`;
-  h += `<div class="card road-card" data-pt="road" data-k="road"><h3>${esc(t('side.road'))}<span class="h3s">${esc(t('rd.count', { b: cntW('B'), p: cntW('P'), t: cntW('T'), n: T.res.length }))}</span></h3>` +
-    `<div class="rd-big">${RD.bigSvg(RB.big, 22, 'big', RB.lead)}</div>` +
-    `<div class="rd-row"><div class="rd-bead">${RD.beadSvg(T.res, 9, L)}</div><div class="rd-der"><div>${RD.bigSvg(RB.eye, 22, 'eye')}</div><div>${RD.bigSvg(RB.small, 22, 'small')}</div><div>${RD.bigSvg(RB.roach, 22, 'roach')}</div></div></div>` +
+  const cap = k => `<small class="rd-cap">${esc(String(t('rx.' + k)).replace(/（.*|\(.*/, ''))}</small>`;
+  h += `<div class="card road-card" data-pt="road" data-k="road"><h3>${esc(t('side.road'))}<span class="h3s">${esc(t('rd.count', { b: cntW('B'), p: cntW('P'), t: cntW('T'), n: T.res.length }))}</span><button type="button" class="rd-zoom" id="rdZoom">⤢ ${esc(t('rd.zoom'))}</button></h3>` +
+    `<div class="rd-big">${cap('big')}${RD.bigSvg(RB.big, 16, 'big', RB.lead)}</div>` +
+    `<div class="rd-row"><div class="rd-bead">${cap('bead')}${RD.beadSvg(T.res, 7, L)}</div><div class="rd-der"><div>${cap('eye')}${RD.bigSvg(RB.eye, 16, 'eye')}</div><div>${cap('small')}${RD.bigSvg(RB.small, 16, 'small')}</div><div>${cap('roach')}${RD.bigSvg(RB.roach, 16, 'roach')}</div></div></div>` +
     `<div class="rd-ask"><small>${esc(t('rd.ask'))}</small>${ask('B')}${ask('P')}<button type="button" class="rd-help" id="rdHelp" aria-label="?">?</button></div></div>`;
   // coach
   if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
@@ -536,9 +537,25 @@ function renderSide() {
   patch($('#side'), h);
   $('#sStats').onclick = openStats; $('#sTools').onclick = () => window.BacTools && BacTools.open();
   $('#rdHelp').onclick = () => window.BacTools && BacTools.open('roads');
+  $('#rdZoom').onclick = () => { renderRoadZoom(); openOv('#roadOverlay'); };
+  if ($('#roadOverlay').classList.contains('show')) renderRoadZoom();
   const tm = $('#tipsMore'); if (tm) tm.onclick = () => { set.tipsOpen = set.tipsOpen ? 0 : 1; save(); renderSide(); };
   mTabs();
 }
+
+/* the roads, large (a dialog; follows the shoe while it is open) */
+function renderRoadZoom() {
+  const RB = RD.build(T.res), L = { B: t('rd.B'), P: t('rd.P'), T: t('rd.T') }, cntW = w => T.res.filter(r => r.w === w).length;
+  const cols = matchMedia('(max-width:760px)').matches ? 18 : 34;
+  const box = (k, svg, wide) => `<div class="rz${wide ? ' wide' : ''}"><div class="rz-h"><b>${esc(t('rx.' + k))}</b></div><div class="rz-svg">${svg}</div></div>`;
+  const ask = w => `<div class="ask a${w}"><b>${esc(L[w])}</b>${RD.askSvg(RB.ask[w])}</div>`;
+  $('#roadBody').innerHTML = `<div class="rz-top"><span class="rz-n">${esc(t('rd.count', { b: cntW('B'), p: cntW('P'), t: cntW('T') }))}</span><div class="rd-ask"><small>${esc(t('rd.ask'))}</small>${ask('B')}${ask('P')}</div></div>` +
+    `<div class="rz-grid">` + box('big', RD.bigSvg(RB.big, cols, 'big', RB.lead), 1) + box('bead', RD.beadSvg(T.res, Math.round(cols / 2.2), L)) +
+    `<div class="rz-der">${box('eye', RD.bigSvg(RB.eye, cols, 'eye'))}${box('small', RD.bigSvg(RB.small, cols, 'small'))}${box('roach', RD.bigSvg(RB.roach, cols, 'roach'))}</div></div>` +
+    `<p class="diff-desc">${esc(t('rx.warn'))}</p>`;
+}
+$('#btnRoadClose').onclick = () => closeOv('#roadOverlay');
+$('#btnRoadHelp').onclick = () => window.BacTools && BacTools.open('roads');
 
 /* ---------------- coach ---------------- */
 // house edge (full shoe) of a bet for this table

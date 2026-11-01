@@ -2217,3 +2217,11 @@ Object.assign(I18N.pt, {"o.carry": "Suas fichas passam para o próximo jogo. Ao 
 Object.assign(I18N.de, {"o.carry": "Deine Chips nimmst du ins nächste Spiel mit. Bei null startest du neu mit {s}.", "tip.bot": "{n} verdoppelt nach jedem Verlust (jetzt {a}) – eine Martingale. Sieh dir unter Lernen → Wettsysteme an, wohin das führt.", "toast.rebuy": "Keine Chips mehr – Neustart mit {n}"});
 Object.assign(I18N.hi, {"o.carry": "आपकी चिप्स अगले खेल में साथ जाती हैं। शून्य होने पर {s} से फिर शुरू।", "tip.bot": "{n} हर हार के बाद दांव दोगुना करता है (अभी {a}) — यह मार्टिंगेल है। अध्ययन → बेटिंग सिस्टम में देखें इसका नतीजा क्या होता है।", "toast.rebuy": "चिप्स खत्म — {n} से फिर शुरू"});
 Object.assign(I18N.ar, {"o.carry": "تنتقل رقائقك إلى اللعبة التالية. عند الصفر تبدأ من جديد بـ {s}.", "tip.bot": "{n} يضاعف رهانه بعد كل خسارة (الآن {a}) — إنها المارتينجال. شاهد إلى أين تقود في الدراسة ← أنظمة الرهان.", "toast.rebuy": "نفدت الرقائق — البداية من جديد بـ {n}"});
+I18N.zh['rd.zoom'] = "放大";
+I18N.ko['rd.zoom'] = "크게 보기";
+I18N.es['rd.zoom'] = "Ampliar";
+I18N.fr['rd.zoom'] = "Agrandir";
+I18N.pt['rd.zoom'] = "Ampliar";
+I18N.de['rd.zoom'] = "Vergrößern";
+I18N.hi['rd.zoom'] = "बड़ा देखें";
+I18N.ar['rd.zoom'] = "تكبير";
