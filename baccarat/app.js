@@ -395,9 +395,10 @@ function layMobHtml() {
   bands.forEach(([k, [r1, r2], half]) => {
     const a0 = half === undefined ? -span : half ? 0 : -span, a1 = half === undefined ? span : half ? span : 0, rm = (r1 + r2) / 2, h = r2 - r1;
     const rr = meRes ? meRes[k] : undefined, st = rr === undefined ? '' : rr > 0 ? ' won' : rr < 0 ? ' lost' : ' push';
-    const id = 'mz' + k, am = (a0 + a1) / 2, lab = LAB[k], fs = k === 'T' || half !== undefined ? 44 : 70;
+    const id = 'mz' + k, am = (a0 + a1) / 2, lab = LAB[k], fs = half !== undefined ? 28 : k === 'T' ? 40 : 66;
     g += `<g class="lz mz lz-${k}${st}${meBets[k] ? ' has' : ''}" data-spot="${k}" data-k="${id}"><path class="lz-a" d="${cell(r1, r2, a0, a1)}"/>` +
-      `<path id="${id}" d="${arc(rm + h * .2, a0, a1)}" fill="none"/><text class="lz-n" style="font-size:${fs}px"><textPath href="#${id}" startOffset="50%">${lab}  <tspan class="mz-p">${esc(payTxt(k).replace(/ \(.*$/, '').replace(/（.*$/, ''))}</tspan></textPath></text>`;
+      `<path id="${id}" d="${arc(rm + h * (half === undefined && k !== 'T' ? .06 : .02), a0, a1)}" fill="none"/><text class="lz-n" style="font-size:${fs}px"><textPath href="#${id}" startOffset="50%">${lab}</textPath></text>` +
+      `<path id="${id}p" d="${arc(rm + h * (half === undefined && k !== 'T' ? .36 : .38), a0, a1)}" fill="none"/><text class="mz-p"><textPath href="#${id}p" startOffset="50%">${esc(payTxt(k).replace(/ \(.*$/, '').replace(/（.*$/, ''))}</textPath></text>`;
     // everybody's chips on this band, at their seat
     seats.forEach(sx => { const amt = betsOf(sx.n)[k]; if (!amt) return; const a = half === undefined ? sx.am : am + (sx.am / span) * (a1 - a0) / 2 * .8, [x, y] = P2(rm, a), me = sx.n === ME;
       const [xu, yu] = P2(r1 + h * .18, a); g += `<g class="lz-ch">${chipsAt(amt, xu, yu + 6, me ? 46 : 34)}</g>` + (me ? badge(xu + 62, yu - 8, fmt(amt), 'amt mz-b') : ''); });
@@ -495,16 +496,16 @@ function render() {
   if (pcCol && bw.style.maxHeight) bw.style.maxHeight = '';
   const rail = (bw.offsetHeight - H) / 2, sc = $('.stage');
   // the height the table could have: on phones / tablets the chips and the Deal button must stay on the screen without scrolling
-  const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - ($('#actbar').offsetHeight > 100 ? $('#actbar').offsetHeight : 140) - 22)) - 2 * rail;
+  const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - 22)) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
-  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? lzh : Math.min(lzh, Hn * .6);
+  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Hn * .5) : Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
-  const cwS = Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / (G.mob ? 3.4 : 3.2)), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
+  const cwS = G.mob ? Math.min(W / 5.5, (Hn - lz) / 2.55) : Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
   const stack = cwT > cwS * 1.12, cw = Math.max(34, Math.min(stack ? cwT : cwS, 124));
   bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   box.classList.toggle('ctr', pcCol); box.classList.toggle('mob', !!G.mob); box.classList.toggle('stk', stack); box.style.setProperty('--lzh', lz + 'px');
-  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : 2.12) + .38 + .62) + lz + 2 * rail + 8 + (G.mob ? 16 : 0));
+  if (!pcCol) { const need = Math.ceil(cw * ((stack ? 3.4 + .4 : G.mob ? 1.85 : 2.12) + .38 + .62) + lz + 2 * rail + 8 + (G.mob ? 16 : 0));
     const mh = parseFloat(bw.style.maxHeight) || 0; if (Math.abs(mh - need) > 2) bw.style.maxHeight = need + 'px'; }
   const c = T.coup, done = T.phase === 'done', win = done ? c.win : null;
   const pt = visTotal('p'), bt = visTotal('b');
@@ -528,6 +529,8 @@ function render() {
   box.querySelectorAll('[data-spot]').forEach(el => el.oncontextmenu = e => { e.preventDefault(); if (T.phase !== 'bet' || !T.bets[el.dataset.spot]) return; delete T.bets[el.dataset.spot]; G.undo = G.undo.filter(u => u[0] !== el.dataset.spot); render(); });
   wireSqueeze(box);
   renderActbar(); renderSide(); renderNums();
+  // phones: the bar under the table changes height between betting and dealing — size the table again for the real one (once)
+  if (G.abH && !G.reAb && Math.max(140, $('#actbar').offsetHeight) !== G.abH) { G.reAb = 1; render(); G.reAb = 0; }
 }
 /* squeeze: drag a face-down card (from any edge) to peel it; tap opens it at once */
 function wireSqueeze(box) {
