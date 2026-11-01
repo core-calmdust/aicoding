@@ -20,15 +20,16 @@ const NB = []; for (let d = 0; d < 8; d++) NB.push(new Int8Array(NP));
 const RC = []; for (let i = 0; i < NP; i++) RC.push([(i / 9) | 0, i % 9]);
 // 'alq' = Alquerque (5x5, 12 each): a step forward or sideways along a line, or a jump over an adjacent enemy to the empty
 // point beyond (any direction); capturing is compulsory and a capturing piece must go on jumping while it can
-const RULES = { sivy: { w: 9, h: 5, pcs: 22 }, dimy: { w: 5, h: 5, pcs: 12 }, telo: { w: 3, h: 3, pcs: 3, place: true }, alq: { w: 5, h: 5, pcs: 12, jump: true } };
-let RULE = 'sivy', GW = 9, GH = 5, TELO = false, ALQ = false;
+const RULES = { sivy: { w: 9, h: 5, pcs: 22 }, dimy: { w: 5, h: 5, pcs: 12 }, telo: { w: 3, h: 3, pcs: 3, place: true }, alq: { w: 5, h: 5, pcs: 12, jump: true }, alqf: { w: 5, h: 5, pcs: 12, jump: true, free: true } };
+// 'alqf' = Alquerque as in Alfonso X's Libro de los juegos (1283): the same, but a step may go in any direction (backwards too)
+let RULE = 'sivy', GW = 9, GH = 5, TELO = false, ALQ = false, ALQF = false;
 const strong = i => ((((i / 9) | 0) + (i % 9)) & 1) === 0;
 const valid = i => i >= 0 && i < NP && ((i / 9) | 0) < GH && i % 9 < GW;
 const START = new Int8Array(NP);
 const LINES3 = [];   // Telo: the 8 lines of three
 function setRule(r) {
   if (!RULES[r]) r = 'sivy';
-  const R = RULES[r]; RULE = r; GW = R.w; GH = R.h; TELO = !!R.place; ALQ = !!R.jump;
+  const R = RULES[r]; RULE = r; GW = R.w; GH = R.h; TELO = !!R.place; ALQ = !!R.jump; ALQF = !!R.free;
   for (let i = 0; i < NP; i++) {
     const r0 = (i / 9) | 0, c = i % 9;
     for (let d = 0; d < 8; d++) {
@@ -38,16 +39,16 @@ function setRule(r) {
   }
   START.fill(0);
   if (r === 'sivy') { for (let i = 0; i < 18; i++) START[i] = P1; for (let i = 27; i < 45; i++) START[i] = P2; [P2, P1, P2, P1, 0, P2, P1, P2, P1].forEach((v, c) => { START[18 + c] = v; }); }
-  else if (r === 'alq') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P2, 0, P1, P1][c]; }
+  else if (r === 'alq' || r === 'alqf') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P2, 0, P1, P1][c]; }
   else if (r === 'dimy') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P1, 0, P2, P1][c]; }
   LINES3.length = 0;
   if (TELO) { for (let k = 0; k < 3; k++) { LINES3.push([k * 9, k * 9 + 1, k * 9 + 2]); LINES3.push([k, 9 + k, 18 + k]); } LINES3.push([0, 10, 20]); LINES3.push([2, 10, 18]); }
   return r;
 }
 setRule('sivy');
-const rule = () => RULE, dims = () => ({ w: GW, h: GH, telo: TELO, alq: ALQ, pcs: RULES[RULE].pcs });
+const rule = () => RULE, dims = () => ({ w: GW, h: GH, telo: TELO, alq: ALQ, alqf: ALQF, pcs: RULES[RULE].pcs });
 // Alquerque: the directions a side may step in without capturing (forward and sideways; White moves up the board)
-const alqDir = (side, d) => side ? DR[d] <= 0 : DR[d] >= 0;
+const alqDir = (side, d) => ALQF || (side ? DR[d] <= 0 : DR[d] >= 0);
 const ptAt = (r, c) => r < 0 || r >= GH || c < 0 || c >= GW ? -1 : r * 9 + c;
 const pname = i => COLS[i % 9] + (((i / 9) | 0) + 1);
 const pparse = s => { const m = /^([a-i])([1-5])$/.exec(String(s || '').trim()); if (!m) return -1; const i = (m[2] - 1) * 9 + COLS.indexOf(m[1]); return valid(i) ? i : -1; };
@@ -305,7 +306,7 @@ function wSetup(start, moves) {
   let w0 = 0, w1 = 0, b0 = 0, b1 = 0;
   for (let i = 0; i < NP; i++) { const v = p.b[i]; if (!v) continue; if (i < 32) { if (v === P1) w0 |= 1 << i; else b0 |= 1 << i; } else { if (v === P1) w1 |= 1 << (i - 32); else b1 |= 1 << (i - 32); } }
   if (WX.set_rule) WX.set_rule(GW, GH);
-  if (WX.set_alq) WX.set_alq(ALQ ? 1 : 0);
+  if (WX.set_alq) WX.set_alq(ALQF ? 2 : ALQ ? 1 : 0);
   const a = [w0, w1, b0, b1, p.side, moves.length];
   for (const m of moves) { const w = toWire(p, m); if (!w) return 0; a.push(w[0], w[1]); p.play(m); }
   wIO().set(a); return WX.setup();
@@ -416,7 +417,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RU
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101g', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  const V = 'v=20261101h', GAMEQ = new URLSearchParams(self.location.search).get('g');
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

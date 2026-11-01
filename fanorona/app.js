@@ -127,7 +127,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = GM.engine || 'engine.js?v=fb3';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb4';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1154,7 +1154,7 @@ function segSync() {
 // ゲーム: the three boards, each card with the starting position (shared/ngtabs.js styles)
 function ruleStart(r) { if (r === 'telo') { const a = Array(E.NP).fill('.'); a[0] = a[10] = 'w'; a[2] = a[18] = a[19] = 'b'; return { b: a.join(''), side: P1 }; } const keep = E.rule(); E.setRule(r); const sp = new E.Pos().spec(); E.setRule(keep); return sp; }
 function renderRuleCards() {
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'sivy' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === BASE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
 }
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
 function openNewDialog(resume) {
@@ -2252,7 +2252,7 @@ function faRecord() {
   moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(E.name(pos, m)); pos.play(m); });
   tk.push(res);
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
-  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/${GID}"]\n[Game "${GM.name || 'Fanorona'}"]\n${gv !== BASE ? `[Variant "${{ dimy: 'Dimy', telo: 'Telo' }[gv]}"]\n` : ''}[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/${GID}"]\n[Game "${GM.name || 'Fanorona'}"]\n${gv !== BASE ? `[Variant "${{ dimy: 'Dimy', telo: 'Telo', alqf: 'Alqf' }[gv]}"]\n` : ''}[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
 }
 async function faDiagram(mode) {
   const RX = RecordExport, S = 64, BWp = S * BW, BHp = S * BH, pos = posAt(cur).pos;

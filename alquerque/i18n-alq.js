@@ -42,3 +42,28 @@ de: { 'meta.title': 'Alquerque — Brettspiel-Atlas', 'title': 'Alquerque', 'rul
 hi: { 'meta.title': 'अलकेरके — विश्व बोर्ड गेम एटलस', 'title': 'अलकेरके', 'rule.alq': 'अलकेरके (5×5)', 'intro.t': 'अलकेरके क्या है?', 'intro.origin': 'अरब दुनिया → स्पेन', 'bd.carved': 'ऐतिहासिक (नक्काशीदार लकड़ी)', 'bd.damask': 'आधुनिक (दमिश्क कपड़ा)', 'bd.chalk': 'चॉक (स्लेट)', 'pcs.wood': 'नक्काशीदार लकड़ी', 'pcs.matte': 'मैट काला-सफ़ेद', 'bd.medallion': 'मेडलियन कालीन', 'bd.berber': 'बर्बर गलीचा', 'bd.kilim': 'किलिम', 'bd.patch': 'पैचवर्क', 'pcs.brass': 'पीतल और लाजवर्द', 'pcs.felt': 'चमकीली सिरेमिक' },
 ar: { 'meta.title': 'القِرْقة — أطلس ألعاب الطاولة', 'title': 'القِرْقة (ألكيركي)', 'rule.alq': 'القِرْقة (5×5)', 'intro.t': 'ما هي القِرْقة؟', 'intro.origin': 'العالم العربي ← إسبانيا', 'bd.carved': 'تاريخي (خشب منحوت)', 'bd.damask': 'حديث (قماش دمشقي)', 'bd.chalk': 'طباشير (لوح أردواز)', 'pcs.wood': 'خشب محفور', 'pcs.matte': 'أبيض وأسود مطفي', 'bd.medallion': 'سجادة الميدالية', 'bd.berber': 'بساط أمازيغي', 'bd.kilim': 'كليم', 'bd.patch': 'رقع ملوّنة', 'pcs.brass': 'نحاس ولازورد', 'pcs.felt': 'خزف مزجج' },
 });
+// the two rule sets of the new-game dialog: 'alq' = R. C. Bell's rules (no steps back), 'alqf' = Alfonso X's Libro de los juegos (1283)
+(function (A) { for (const l in A) if (window.I18N && I18N[l]) { const T = I18N[l]; if (A[l].note && T['tr.adraw.b']) T['tr.adraw.b'] += '\n' + A[l].note; delete A[l].note; Object.assign(T, A[l]); } })({
+ja: { 'rule.alq': 'アルケルケ（ベル式）', 'rule.alq.d': '12枚ずつ。前か横へ1歩（後ろへは戻れない）。相手を跳び越えて取る。取りは義務で、取れる限り続けて跳ぶ。',
+  'rule.alqf': 'アルフォンソ式', 'rule.alqf.d': 'アルフォンソ10世『遊戯の書』（1283年）の元のルール。駒はどの向きにも1歩動ける（後ろへも）。取り方は同じ。',
+  note: '<b>アルフォンソ式</b>では、駒は後ろへも1歩動けます（それ以外は同じ）。' },
+en: { 'rule.alq': 'Alquerque (Bell)', 'rule.alq.d': '12 pieces each. Step forward or sideways (never back), capture by jumping over an enemy piece. Capturing is compulsory and you keep jumping while you can.',
+  'rule.alqf': 'Alfonso rules', 'rule.alqf.d': 'The original rules from Alfonso X\'s Book of Games (1283): a piece may step in any direction, backwards too. Captures are the same.',
+  note: 'With the <b>Alfonso rules</b> a piece may also step backwards (all else is the same).' },
+zh: { 'rule.alq': '阿尔凯尔凯（贝尔式）', 'rule.alq.d': '各12枚。向前或横走一步（不能后退），跳过对方棋子吃子。吃子是义务，能跳就必须继续跳。',
+  'rule.alqf': '阿方索式', 'rule.alqf.d': '阿方索十世《游戏之书》（1283年）的原始规则：棋子可向任何方向走一步（也可后退）。吃法相同。' },
+ko: { 'rule.alq': '알케르케 (벨식)', 'rule.alq.d': '각 12개. 앞이나 옆으로 한 걸음(뒤로는 못 감). 상대 말을 뛰어넘어 잡는다. 잡기는 의무이며 뛸 수 있는 한 계속 뛴다.',
+  'rule.alqf': '알폰소식', 'rule.alqf.d': '알폰소 10세 『놀이의 책』(1283년)의 원래 규칙. 말은 어느 방향으로든(뒤로도) 한 걸음 움직인다. 잡는 법은 같다.' },
+es: { 'rule.alq': 'Alquerque (Bell)', 'rule.alq.d': '12 piezas cada uno. Paso adelante o de lado (nunca atrás); se captura saltando una pieza rival. Capturar es obligatorio y se sigue saltando mientras se pueda.',
+  'rule.alqf': 'Reglas de Alfonso X', 'rule.alqf.d': 'Las reglas originales del Libro de los juegos de Alfonso X (1283): una pieza puede moverse en cualquier dirección, también hacia atrás. Las capturas son iguales.' },
+fr: { 'rule.alq': 'Alquerque (Bell)', 'rule.alq.d': '12 pièces chacun. Un pas en avant ou de côté (jamais en arrière) ; on prend en sautant une pièce adverse. La prise est obligatoire et on saute tant qu\'on peut.',
+  'rule.alqf': 'Règles d\'Alphonse X', 'rule.alqf.d': 'Les règles d\'origine du Livre des jeux d\'Alphonse X (1283) : une pièce peut avancer d\'un pas dans toutes les directions, en arrière aussi. Les prises sont les mêmes.' },
+pt: { 'rule.alq': 'Alquerque (Bell)', 'rule.alq.d': '12 peças cada. Um passo para a frente ou para o lado (nunca para trás); captura-se saltando uma peça adversária. Capturar é obrigatório e continua-se a saltar enquanto possível.',
+  'rule.alqf': 'Regras de Afonso X', 'rule.alqf.d': 'As regras originais do Livro dos Jogos de Afonso X (1283): uma peça pode mover-se em qualquer direção, também para trás. As capturas são iguais.' },
+de: { 'rule.alq': 'Alquerque (Bell)', 'rule.alq.d': 'Je 12 Steine. Ein Schritt vorwärts oder seitwärts (nie zurück); geschlagen wird durch Überspringen. Schlagen ist Pflicht, und man springt weiter, solange es geht.',
+  'rule.alqf': 'Alfons-Regeln', 'rule.alqf.d': 'Die ursprünglichen Regeln aus dem Buch der Spiele Alfons\' X. (1283): Ein Stein darf in jede Richtung ziehen, auch rückwärts. Geschlagen wird gleich.' },
+hi: { 'rule.alq': 'अलकेरके (बेल)', 'rule.alq.d': 'दोनों के 12 गोटियाँ। एक क़दम आगे या बग़ल में (पीछे नहीं); विरोधी गोटी के ऊपर से कूदकर लें। लेना अनिवार्य है और जब तक हो सके कूदते रहें।',
+  'rule.alqf': 'अल्फ़ोंसो नियम', 'rule.alqf.d': 'अल्फ़ोंसो दसवें की खेलों की पुस्तक (1283) के मूल नियम: गोटी किसी भी दिशा में (पीछे भी) एक क़दम चल सकती है। लेने का तरीका वही है।' },
+ar: { 'rule.alq': 'القِرْقة (بيل)', 'rule.alq.d': '12 قطعة لكل لاعب. خطوة إلى الأمام أو إلى الجانب (لا رجوع)، والأسر بالقفز فوق قطعة الخصم. الأسر إجباري ويستمر القفز ما دام ممكنًا.',
+  'rule.alqf': 'قواعد ألفونسو', 'rule.alqf.d': 'القواعد الأصلية من كتاب الألعاب لألفونسو العاشر (1283): يجوز للقطعة أن تتحرك خطوة في أي اتجاه، حتى إلى الخلف. والأسر كما هو.' },
+});
