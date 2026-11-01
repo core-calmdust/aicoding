@@ -2161,3 +2161,4 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   padding:3px 10px 3px 12px;border-radius:4px;box-shadow:0 0 0 1px rgba(236,232,222,.6),0 0 0 3px rgba(0,0,0,.4),0 0 0 4px rgba(236,232,222,.18);text-transform:uppercase}
 .bc-pair::before,.bc-pair::after{content:'◆';font-size:.6em;opacity:.6;margin:0 .4em 0 0;vertical-align:.15em}
 .bc-pair::after{margin:0 0 0 .2em}
+.bc-tot{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;line-height:1}
