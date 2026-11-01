@@ -159,6 +159,43 @@ static inline u64 hashMove(u64 h, const Pos *p, const Move *m) {
 }
 static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f && a->t == b->t && a->cap == b->cap; }
 
+// ---------------------------------------------------------------- endgame databases (side-to-move view, colour-symmetric rules)
+// table (a, b): a = pieces of the side to move, b = opponent's; one byte per position: 0 draw, 1..127 win in d plies,
+// 128 + d loss in d plies (d counted with this side to move). Index: rank of the own set among 45 points times C(45 - a, b)
+// plus the rank of the opponent set among the remaining points. Built by tools/egdb.c, loaded by the host (eg_add).
+#define EGMAX 4
+static u32 CB[46][EGMAX + 2];
+static const u8 *EG[EGMAX + 1][EGMAX + 1];
+static int egMaxN = 0;
+static void initCB(void) {
+  if (CB[1][1]) return;
+  for (int n = 0; n <= 45; n++) { CB[n][0] = 1; for (int k = 1; k <= EGMAX + 1; k++) CB[n][k] = n == 0 ? 0 : CB[n - 1][k - 1] + CB[n - 1][k]; }
+}
+static u32 egIndex(u64 own, u64 opp, int a, int b) {
+  u32 r1 = 0, r2 = 0; int j = 0; u64 x = own;
+  while (x) { int i = ctz(x); x &= x - 1; j++; r1 += CB[i][j]; }
+  j = 0; x = opp;
+  while (x) { int i = ctz(x); x &= x - 1; j++; int ci = i - pc(own & (BIT(i) - 1)); r2 += CB[ci][j]; }
+  return r1 * CB[45 - a][b] + r2;
+}
+EXPORT(eg_size) u32 eg_size(int a, int b) { initCB(); return CB[45][a] * CB[45 - a][b]; }
+EXPORT(eg_add) void eg_add(int a, int b, const u8 *data) { initCB(); if (a < 1 || b < 1 || a > EGMAX || b > EGMAX) return; EG[a][b] = data; int n = a + b; int all = 1; for (int x = 1; x <= EGMAX; x++) for (int y = 1; y <= EGMAX; y++) if (x + y <= n && !EG[x][y]) all = 0; if (all && n > egMaxN) egMaxN = n; }
+// -1 = not in the databases
+static inline int egProbe(const Pos *p) {
+  u64 own = p->p[p->side], opp = p->p[p->side ^ 1];
+  int a = pc(own), b = pc(opp);
+  if (a + b > egMaxN || !a || !b || a > EGMAX || b > EGMAX || !EG[a][b]) return -1;
+  return EG[a][b][egIndex(own, opp, a, b)];
+}
+static inline int egValue(int e, int ply) { return e == 0 ? 0 : e < 128 ? WIN - ply - e : -(WIN - ply - (e - 128)); }
+EXPORT(heap_base) u8 *heap_base(void) {
+#ifdef NATIVE
+  return 0;
+#else
+  extern unsigned char __heap_base; return &__heap_base;
+#endif
+}
+
 // ---------------------------------------------------------------- evaluation (side to move)
 static int PST[NP];
 static void initPST(void) {
@@ -187,8 +224,34 @@ static int hand(const Pos *p) {
   if (a + b <= 20) v -= 6 * vulnerable(own, opp) - 0;   // own pieces en prise when the opponent gets the move later
   return v;
 }
+// learned evaluation (tools/train.py): 90 inputs (own / opponent piece on each point, side-to-move view) → 64 → 32 → 1,
+// ReLU; the output times the scale is the value in hundredths of a piece. Weights in one block at net_ptr():
+// W1[90][64] B1[64] W2[64][32] B2[32] W3[32] B3[1]
+#define NIN 90
+#define NH 64
+#define NH2 32
+#define NNET (NIN * NH + NH + NH * NH2 + NH2 + NH2 + 1)
+static float NET[NNET]; static int netOn = 0; static float netScale = 300;
+EXPORT(net_ptr) float *net_ptr(void) { return NET; }
+EXPORT(net_set) void net_set(float scale) { netScale = scale; netOn = 1; }
+static int netEval(const Pos *p) {
+  const float *W1 = NET, *B1 = W1 + NIN * NH, *W2 = B1 + NH, *B2 = W2 + NH * NH2, *W3 = B2 + NH2, *B3 = W3 + NH2;
+  float h[NH], h2[NH2];
+  for (int j = 0; j < NH; j++) h[j] = B1[j];
+  for (int s = 0; s < 2; s++) {
+    u64 x = p->p[s == 0 ? p->side : p->side ^ 1];
+    while (x) { int i = ctz(x); x &= x - 1; const float *w = W1 + (s * 45 + i) * NH; for (int j = 0; j < NH; j++) h[j] += w[j]; }
+  }
+  for (int j = 0; j < NH; j++) if (h[j] < 0) h[j] = 0;
+  for (int k = 0; k < NH2; k++) h2[k] = B2[k];
+  for (int j = 0; j < NH; j++) { float a = h[j]; if (a == 0) continue; const float *w = W2 + j * NH2; for (int k = 0; k < NH2; k++) h2[k] += a * w[k]; }
+  float o = B3[0];
+  for (int k = 0; k < NH2; k++) if (h2[k] > 0) o += h2[k] * W3[k];
+  int v = (int)(o * netScale);
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
+}
 static int useNet = 1;
-static inline int evaluate(const Pos *p) { return hand(p); }
+static inline int evaluate(const Pos *p) { return (netOn && useNet) ? netEval(p) : hand(p); }
 
 // ---------------------------------------------------------------- transposition table
 typedef struct { u64 key; u64 cap; i16 v; u8 f, t; i8 d; u8 flag; u8 age; u8 pad; } TTE;   // 32 bytes
@@ -234,6 +297,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
   }
   if (timeUp() && ply > 0) return 0;
+  if (ply > 0 && egMaxN) { int e = egProbe(p); if (e >= 0) { nodes++; return egValue(e, ply); } }
   if (ply >= MAXPLY - 2) return evaluate(p);
   int caps = hasCaps(p);
   if (!caps && depth <= 0) { nodes++; if (!anyMove(p)) return -(WIN - ply); return evaluate(p); }
@@ -346,7 +410,7 @@ static int readMove(const Pos *p, u32 lo, u32 hi, Move *out) {
 }
 // setup: IO = [white lo, white hi, black lo, black hi, side, nmoves, (lo, hi) * nmoves]. Returns 1 if all moves were legal.
 EXPORT(setup) int setup(void) {
-  initGeo(); initPST();
+  initGeo(); initPST(); initCB();
   Pos p; p.p[0] = (u64)(u32)IO[0] | ((u64)(u32)IO[1] << 32); p.p[1] = (u64)(u32)IO[2] | ((u64)(u32)IO[3] << 32); p.side = IO[4];
   int nm = IO[5]; if (nm > 1100) nm = 1100;
   u64 key = hashOf(&p); hn = 0; hirr = 0; rootPly = 0;
@@ -444,9 +508,10 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
 }
 // fixed-depth values of all root moves (weak levels): IO like analyze
 EXPORT(values) void values(int depth, int noEval) {
-  (void)noEval;
   beginSearch(0); nodeLimit_on = 0;
+  int saved = useNet; if (noEval) useNet = 0;
   for (int d = 1; d <= depth; d++) rootSearch(d, 1, -INF, INF);
+  useNet = saved;
   sortRoot();
   int nOut = rootN > 600 ? 600 : rootN;
   IO[0] = nOut; IO[1] = depth;
@@ -510,6 +575,7 @@ EXPORT(puzzle) void puzzle(int n, int defend, int goal, int base, int budgetK) {
   }
 }
 EXPORT(set_net_use) void set_net_use(int on) { useNet = on; }
+EXPORT(eg_root) int eg_root(void) { return egProbe(&ROOT); }
 EXPORT(eval_root) int eval_root(void) { return evaluate(&ROOT); }
 EXPORT(perft) u32 perft_root(int depth);
 static u64 perftR(Pos *p, int d, int ply) { if (d == 0) return 1; Move *L = MS[ply]; int n = gen(p, L); if (d == 1) return n; u64 s = 0; for (int i = 0; i < n; i++) { Pos q = *p; doMove(&q, &L[i]); s += perftR(&q, d - 1, ply + 1); } return s; }

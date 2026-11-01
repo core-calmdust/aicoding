@@ -6,7 +6,10 @@ let X = null;
 async function init() {
   if (X) return E;
   const r = await WebAssembly.instantiate(fs.readFileSync(path.join(__dirname, '..', 'engine.wasm')), { env: { now: () => Date.now(), progress: () => {} } });
-  X = r.instance.exports; E.attachWasm(X);
+  X = r.instance.exports;
+  if (!process.env.NO_EG) { const zlib = require('zlib'); const b = zlib.gunzipSync(fs.readFileSync(path.join(__dirname, '..', 'egdb.bin.gz'))); E.loadEG(X, b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); }
+  if (!process.env.NO_NET && fs.existsSync(path.join(__dirname, '..', 'evalnet.bin.gz'))) { const zlib = require('zlib'); const b = zlib.gunzipSync(fs.readFileSync(path.join(__dirname, '..', 'evalnet.bin.gz'))); E.loadNet(X, b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); }
+  E.attachWasm(X);
   return E;
 }
 // deterministic random

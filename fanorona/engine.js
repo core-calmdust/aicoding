@@ -171,17 +171,17 @@ function fromWire(lo, hi) {
 
 // ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段)
 const LEVELS = [null,
-  { d: 1, noise: 300, blunder: 0.35 },   // 15級
-  { d: 1, noise: 220, blunder: 0.26 },   // 14級
-  { d: 2, noise: 170, blunder: 0.2 },    // 13級
-  { d: 2, noise: 130, blunder: 0.15 },   // 12級
-  { d: 3, noise: 100, blunder: 0.11 },   // 11級
-  { d: 3, noise: 75, blunder: 0.08 },    // 10級
-  { d: 4, noise: 55, blunder: 0.05 },    // 9級
-  { d: 4, noise: 40, blunder: 0.03 },    // 8級
-  { d: 5, noise: 28, blunder: 0.015 },   // 7級
-  { d: 5, noise: 18 },                   // 6級
-  { d: 6, noise: 10 },                   // 5級
+  { d: 1, noise: 300, blunder: 0.35 , hand: 1 },   // 15級
+  { d: 1, noise: 220, blunder: 0.26 , hand: 1 },   // 14級
+  { d: 2, noise: 170, blunder: 0.2 , hand: 1 },    // 13級
+  { d: 2, noise: 130, blunder: 0.15 , hand: 1 },   // 12級
+  { d: 3, noise: 100, blunder: 0.11 , hand: 1 },   // 11級
+  { d: 3, noise: 75, blunder: 0.08 , hand: 1 },    // 10級
+  { d: 4, noise: 55, blunder: 0.05 , hand: 1 },    // 9級
+  { d: 4, noise: 40, blunder: 0.03 , hand: 1 },    // 8級
+  { d: 5, noise: 28, blunder: 0.015 , hand: 1 },   // 7級
+  { d: 5, noise: 18 , hand: 1 },                   // 6級
+  { d: 6, noise: 10 , hand: 1 },                   // 5級
   { s: 1, d: 99, nk: 4 },                // 4級
   { s: 1, d: 99, nk: 10 },               // 3級
   { s: 1, d: 99, nk: 25 },               // 2級
@@ -234,7 +234,7 @@ function think(start, moves, level, rand) {
   }
   if (!wSetup(start, moves)) return { move: all[0] };
   if (!L.s) {
-    WX.values(L.d, 0);
+    WX.values(L.d, L.hand ? 1 : 0);
     const vals = wList();
     if (L.blunder && rand() < L.blunder) {
       const ok = vals.filter(e => e.v > vals[0].v - 450); const pool = ok.length > 1 ? ok : vals;
@@ -244,10 +244,9 @@ function think(start, moves, level, rand) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  if (L.book && moves.length < 6 && !start) {   // opening variety for the top levels
-    WX.analyze(Math.max(400, (L.ms || 500) * 0.8), 40);
-    const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 10);
-    return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
+  if (L.s && L.d >= 99 && level >= 15 && BOOK && !start) {   // the opening book (deep analysis of the first moves)
+    const bk = BOOK[pos.key()];
+    if (bk && bk.length) { const m = bk[Math.floor(rand() * bk.length)]; if (all.includes(m)) return { move: m, book: true }; }
   }
   WX.best(L.d || 99, L.ms || 0, L.nk || 0);
   const r = wIO();
@@ -292,18 +291,47 @@ function puzzle(start, moves, n, defend, goal, base) {
 }
 let progressCb = null;
 function attachWasm(X) { WX = X; }
+// endgame databases (egdb.bin: "FEG1", count, then per table a, b, 0, 0, length, bytes) copied above the wasm heap base
+// learned evaluation ("FNN1", scale, float32 weights; see engine.c netEval)
+function loadNet(X, b) {
+  const dv = new DataView(b); if (dv.getUint32(0, true) !== 0x314E4E46) return false;
+  const sc = dv.getFloat32(4, true), n = (b.byteLength - 8) / 4;
+  new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(b, 8, n)); X.net_set(sc); return true;
+}
+// opening book: { "<position key>": [moves...] } (tools/gen_book.js), used by the top levels
+let BOOK = null;
+function setBook(b) { BOOK = b; }
+function loadEG(X, b) {
+  const dv = new DataView(b); if (dv.getUint32(0, true) !== 0x31474546) return false;
+  const n = dv.getUint32(4, true), base = X.heap_base(), cur = X.memory.buffer.byteLength;
+  if (base + b.byteLength + 65536 > cur) X.memory.grow(Math.ceil((base + b.byteLength + 65536 - cur) / 65536));
+  new Uint8Array(X.memory.buffer, base, b.byteLength).set(new Uint8Array(b));
+  let o = 8;
+  for (let i = 0; i < n; i++) { const a = dv.getUint8(o), bb = dv.getUint8(o + 1), len = dv.getUint32(o + 4, true); X.eg_add(a, bb, base + o + 8); o += 8 + len; }
+  return true;
+}
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101a';
+  const V = 'v=20261101b';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const url = new URL('engine.wasm?' + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+      .then(async r => {
+        const X = r.instance.exports;
+        const gunzip = async u => { const res = await fetch(new URL(u + '?' + V, self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
+        try { const b = await gunzip('evalnet.bin.gz'); if (b) loadNet(X, b); } catch (e) {}
+        try { const b = await fetch(new URL('book.json?' + V, self.location.href)); if (b.ok) BOOK = await b.json(); } catch (e) {}
+        try {
+          const res = await fetch(new URL('egdb.bin.gz?' + V, self.location.href));
+          if (res.ok && typeof DecompressionStream === 'function') loadEG(X, await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+        } catch (e) {}
+        WX = X;
+      }).catch(() => { WX = null; });
   }
   let queue = Promise.resolve();
   self.onmessage = e => {
