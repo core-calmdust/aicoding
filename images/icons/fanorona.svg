@@ -1,17 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <defs>
-    <linearGradient id="fn-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a160b"/><stop offset="1" stop-color="#120804"/></linearGradient>
-    <linearGradient id="fn-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2ad6e"/><stop offset=".55" stop-color="#c3874b"/><stop offset="1" stop-color="#a86d38"/></linearGradient>
-    <radialGradient id="fn-w" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="#fff0d2"/><stop offset=".5" stop-color="#ddb17a"/><stop offset="1" stop-color="#8a5a28"/></radialGradient>
-    <radialGradient id="fn-b" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="#86604b"/><stop offset=".5" stop-color="#2e1a10"/><stop offset="1" stop-color="#0a0402"/></radialGradient>
+    <clipPath id="fn-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <radialGradient id="fn-w" cx=".42" cy=".36" r=".7"><stop offset="0" stop-color="#fff6e2"/><stop offset=".6" stop-color="#efe0c2"/><stop offset="1" stop-color="#d6be8f"/></radialGradient>
+    <radialGradient id="fn-r" cx=".42" cy=".34" r=".7"><stop offset="0" stop-color="#d84c55"/><stop offset=".6" stop-color="#a42430"/><stop offset="1" stop-color="#7a141d"/></radialGradient>
+    <symbol id="fn-bao" viewBox="0 0 100 100"><g fill="#7a1a20"><path d="M41 88c2-14 3-30 2-44-6-2-12-6-16-11l3-2c4 4 8 7 13 8-1-5-4-9-8-12l3-2c4 3 7 8 8 13 2-6 2-12 0-18h4c2 6 2 12 1 18 2-5 5-10 9-13l3 2c-4 3-7 7-8 12 5-1 9-4 13-8l3 2c-4 5-10 9-16 11-1 14 0 30 2 44z"/><ellipse cx="27" cy="31" rx="8" ry="4.5"/><ellipse cx="37" cy="22" rx="7" ry="4"/><ellipse cx="50" cy="17" rx="8" ry="4.5"/><ellipse cx="63" cy="22" rx="7" ry="4"/><ellipse cx="73" cy="31" rx="8" ry="4.5"/></g></symbol>
+    <symbol id="fn-rav" viewBox="0 0 100 100"><g fill="#e8b648"><path d="M47 92V58h6v34z"/><path id="fn-l" d="M50 58C47 44 47 28 50 12c3 16 3 32 0 46z"/><use href="#fn-l" transform="rotate(-20 50 58)"/><use href="#fn-l" transform="rotate(20 50 58)"/><use href="#fn-l" transform="rotate(-40 50 58)"/><use href="#fn-l" transform="rotate(40 50 58)"/><use href="#fn-l" transform="rotate(-62 50 58)"/><use href="#fn-l" transform="rotate(62 50 58)"/></g></symbol>
   </defs>
-  <rect width="96" height="96" rx="20" fill="url(#fn-bg)"/>
-  <rect x="12" y="22" width="72" height="52" rx="9" fill="url(#fn-wood)"/>
-  <g stroke="#5a2f10" stroke-width="2" stroke-linecap="round" opacity=".85">
-    <path d="M22 32h52M22 48h52M22 64h52M22 32v32M38 32v32M58 32v32M74 32v32M22 32l32 32M38 32l36 32M22 48l16 16M54 32l20 16M74 32 42 64M58 32 26 64M38 32 22 48M74 48 58 64"/>
+  <g clip-path="url(#fn-c)">
+    <rect width="96" height="96" fill="#9e1f28"/>
+    <!-- painted patches on the board's lattice (points every 24) -->
+    <path d="M0 0h24L0 24z" fill="#b22c2c"/><path d="M24 0h24L24 24z" fill="#2c2c5c"/><path d="M48 0h24v24z" fill="#cc6e3a"/><path d="M72 0h24L72 24z" fill="#5c1a28"/>
+    <path d="M0 24h24L0 48z" fill="#d79e34"/><path d="M24 24 48 48H24z" fill="#3a3e76"/><path d="M48 24h24L48 48z" fill="#c4482f"/><path d="M72 24h24v24z" fill="#2c2c5c"/>
+    <path d="M0 48h24L0 72z" fill="#5c1a28"/><path d="M24 48h24L24 72z" fill="#cc6e3a"/><path d="M48 48 72 72H48z" fill="#e2b04a"/><path d="M72 48h24L72 72z" fill="#b22c2c"/>
+    <path d="M0 72 24 96H0z" fill="#3a3e76"/><path d="M24 72h24L24 96z" fill="#9e1f28"/><path d="M48 72h24L48 96z" fill="#2c2c5c"/><path d="M72 72 96 96H72z" fill="#cc6e3a"/>
+    <!-- woven bands -->
+    <rect y="0" width="96" height="9" fill="#281c26"/><rect y="3.5" width="96" height="2" fill="#d79e34"/>
+    <rect y="87" width="96" height="9" fill="#281c26"/><rect y="90.5" width="96" height="2" fill="#d79e34"/>
+    <!-- white lines and points -->
+    <g stroke="#fbf0dc" stroke-width="2.2" stroke-linecap="round" opacity=".95">
+      <path d="M12 24h72M12 48h72M12 72h72M24 14v68M48 14v68M72 14v68M24 24l48 48M72 24 24 72M24 48l24-24M48 24l24 24M24 48l24 24M48 72l24-24"/>
+    </g>
+    <g fill="#fbf0dc"><circle cx="24" cy="24" r="3"/><circle cx="72" cy="72" r="3"/><circle cx="24" cy="72" r="3"/></g>
+    <!-- discs: cream with the baobab, red lacquer with the ravinala -->
+    <ellipse cx="38" cy="52" rx="17" ry="17" fill="#3a1418" opacity=".45"/>
+    <circle cx="36" cy="48" r="16" fill="#b0915e"/><circle cx="36" cy="46" r="16" fill="url(#fn-w)"/>
+    <use href="#fn-bao" x="25" y="35" width="22" height="22"/>
+    <ellipse cx="62" cy="54" rx="17" ry="17" fill="#2a080c" opacity=".45"/>
+    <circle cx="60" cy="50" r="16" fill="#5e0f16"/><circle cx="60" cy="48" r="16" fill="url(#fn-r)"/>
+    <use href="#fn-rav" x="49" y="37" width="22" height="22"/>
   </g>
-  <circle cx="38" cy="48" r="9" fill="url(#fn-w)"/>
-  <circle cx="58" cy="48" r="9" fill="url(#fn-b)"/>
-  <circle cx="58" cy="32" r="7" fill="url(#fn-b)"/>
-  <circle cx="22" cy="64" r="7" fill="url(#fn-w)"/>
 </svg>
