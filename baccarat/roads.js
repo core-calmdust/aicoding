@@ -81,7 +81,7 @@ function beadSvg(res, cols, letters) {
   let s = svgGrid(cols, ROWS, cell);
   show.forEach((r, i) => {
     const x = Math.floor(i / ROWS), y = i % ROWS, cx = x * cell + cell / 2, cy = y * cell + cell / 2;
-    s += `<circle cx="${cx}" cy="${cy}" r="8.2" fill="${COL[r.w]}"/><text x="${cx}" y="${cy + 3.6}" class="rd-t">${[...String(letters[r.w])][0]}</text>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="8.2" fill="${COL[r.w]}"/><text x="${cx}" y="${cy + 3.6}" class="rd-t">${r.w}</text>`;
     if (r.bp) s += `<circle cx="${cx - 6}" cy="${cy - 6}" r="2.4" fill="${COL.B}" stroke="#fff" stroke-width=".8"/>`;
     if (r.pp) s += `<circle cx="${cx + 6}" cy="${cy + 6}" r="2.4" fill="${COL.P}" stroke="#fff" stroke-width=".8"/>`;
   });
