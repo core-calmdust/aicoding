@@ -77,6 +77,8 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 .sdiv{width:1px;align-self:stretch;margin:8px 4px;background:var(--line)}
 .hb .hb-info{gap:16px!important;overflow:visible}
 .hb .hb-info .sg b{font-size:14.5px;color:var(--accent)}
+.hb .hb-info .sg{flex-direction:column;align-items:flex-start;gap:0;line-height:1.2}   /* two lines: the rules, then decks · tie */
+.hb .hb-info .sg em::before{content:none}
 .hb .hb-info .ss b{font-size:22px}
 .h3s{font-weight:400;color:var(--muted);letter-spacing:.02em;margin-inline-start:10px}
 .side{display:flex;flex-direction:column;gap:10px}
@@ -336,7 +338,7 @@ html[lang=ar] .tbl,html[lang=ar] .board-wrap{direction:ltr}
 
 .card .srow{margin-top:6px}
 .card .deal-row{flex-wrap:wrap}
-@media (max-width:1366px){.hb .hb-info{gap:10px!important}.hb .hb-info .ss b{font-size:18px}.hb .hb-info .ss small{font-size:10px}.hb .hb-info .sg em,.hb .hb-info .sx{display:none}.ss.tm b{min-width:2.9em}}
+@media (max-width:1366px){.hb .hb-info{gap:10px!important}.hb .hb-info .ss b{font-size:18px}.hb .hb-info .ss small{font-size:10px}.hb .hb-info .sx{display:none}.ss.tm b{min-width:2.9em}}
 @media (max-width:1180px){.hb .hb-info .sg{display:none}}
 html[data-court=antique] .fr.face .fc img{box-shadow:0 0 0 1px #222}
 .modal.wide .sec{margin-bottom:9px}
