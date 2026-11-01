@@ -32,7 +32,7 @@
 "ls.b_withdraw.sub": "离开，吃掉整列",
 "ls.b_withdraw.intro": "从相邻的对方棋子笔直离开，就能把它和其后排成一列的对方棋子吃掉（撤离）。<br>找出<b>吃得最多的着法</b>吧。",
 "ls.b_withdraw.goal": "请走出吃得最多的撤离着法。",
-"ls.b_withdraw.hint": "把金色圆圈里的棋子，朝远离相邻黑子那列的方向笔直走吧。",
+"ls.b_withdraw.hint": "把金色圆圈里的棋子，朝远离相邻对方那列的方向笔直走吧。",
 "ls.b_withdraw.why": "{m} 是吃得最多的着法。",
 "ls.b_withdraw.ng": "还有能吃更多的着法（正解：{m}）。",
 "ls.b_choose.title": "接近还是撤离",
