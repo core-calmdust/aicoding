@@ -2016,3 +2016,22 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   .bc .board-wrap::before{border-radius:40px}.bc .board-wrap::after{border-radius:36px}
 }
 @media (max-width:760px){.bc .board-wrap::before{border-radius:30px}.bc .board-wrap::after{border-radius:27px}}
+/* coach: grade of your bet, money plan, long run */
+.ck-best{border-top:0;font-size:12.5px}.ck-best b{font-size:12.5px}
+.ck-best.flip b{color:#8fe3b8}
+.ck-flip{margin:2px 0 6px;font-size:12px;color:#bff2d6;line-height:1.55}
+.ck-grade{margin-top:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}
+.ck-grade > b{font-size:14px}
+.ck-grade.gg{border-color:rgba(143,227,184,.6);background:rgba(143,227,184,.07)}.ck-grade.gg > b{color:#8fe3b8}
+.ck-grade.gm{border-color:rgba(242,192,96,.6);background:rgba(242,192,96,.06)}.ck-grade.gm > b{color:#f2c060}
+.ck-grade.gb{border-color:rgba(255,139,125,.7);background:rgba(255,139,125,.07)}.ck-grade.gb > b{color:#ff8b7d}
+.ck-grade ul{margin:4px 0 0;padding-inline-start:18px;font-size:12.5px;line-height:1.6}
+.ck-grade li.gg::marker{color:#8fe3b8}.ck-grade li.gm::marker{color:#f2c060}.ck-grade li.gb::marker{color:#ff8b7d}
+.ck-plan,.ck-long{margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.pl-bar{position:relative;height:8px;margin:8px 2px 4px;border-radius:99px;background:linear-gradient(90deg,rgba(255,139,125,.6),rgba(255,255,255,.12) 50%,rgba(143,227,184,.6))}
+.pl-bar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#f3efe6;transform:translateX(-2px);box-shadow:0 0 6px rgba(0,0,0,.5)}
+.ck-warn{margin:6px 0 0;font-size:12.5px;color:#ff9b90}.ck-good{margin:6px 0 0;font-size:12.5px;color:#8fe3b8}
+.lg-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;text-align:center}
+.lg-row div{display:flex;flex-direction:column;padding:6px 2px;border-radius:8px;background:rgba(0,0,0,.2)}
+.lg-row small{font-size:10.5px;color:var(--muted)}.lg-row b{font:700 16px 'JetBrains Mono',monospace}
+.ck-luck{margin:8px 0 0;font-size:12.5px;line-height:1.6;color:var(--text)}
