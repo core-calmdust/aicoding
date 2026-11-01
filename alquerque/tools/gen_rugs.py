@@ -401,7 +401,7 @@ def wood_complex(rng, base, dark):
     return base * (1 - t[..., None]) + dark * t[..., None]
 
 
-def carve(a, m, depth=6.0, groove=(46, 28, 16)):
+def carve(a, m, depth=6.0, groove=(46, 28, 16), dark=.55):
     """relief carving from a mask: the cut is sunk (height -depth), lit from the upper left — walls catch light on one side,
     shadow on the other, the floor is darker and rougher."""
     h = -gaussian_filter(m, .75) * depth
@@ -409,7 +409,7 @@ def carve(a, m, depth=6.0, groove=(46, 28, 16)):
     lam = np.clip(1 + (-gx * -.6 + -gy * -.7) * 1.1, .3, 1.75)
     floor = gaussian_filter(m, .35)
     a = a * lam[..., None]
-    a = a * (1 - .55 * floor[..., None]) + np.array(groove, float) * .55 * floor[..., None]
+    a = a * (1 - dark * floor[..., None]) + np.array(groove, float) * dark * floor[..., None]
     return a
 
 
@@ -461,11 +461,11 @@ def carved(seed=5):
     # the border band is sunk a little (a shallow recess), the motifs are carved into it
     rec = lmask(lambda dd: (dd.rectangle([(m0 + 7) * SS, (m0 + 7) * SS, (W - m0 - 7) * SS, (H - m0 - 7) * SS], fill=255), dd.rectangle([(m1 - 7) * SS, (m1 - 7) * SS, (W - m1 + 7) * SS, (H - m1 + 7) * SS], fill=0)))
     a = carve(a, rec, 3.0, (120, 84, 52)) * 1.0
-    a = carve(a, lmask(scrolls), 7.0)
-    a = carve(a, lmask(rules), 5.0)
+    a = carve(a, lmask(scrolls), 3.8, dark=.3)
+    a = carve(a, lmask(rules), 3.0, dark=.3)
     a = carve(a, lmask(board), 6.0)
     wear = np.clip(fbm(rng, 60, 3) * .8 - .2, 0, 1) * np.clip(.5 + gaussian_filter(rng.standard_normal((H, W)), (1.2, 18)) * 1.2, 0, 1)
-    a = a * (1 - .6 * wear[..., None]) + np.array((220, 204, 178.)) * .6 * wear[..., None]   # white rubbed / dry patches
+    a = a * (1 - .28 * wear[..., None]) + np.array((214, 196, 168.)) * .28 * wear[..., None]   # white rubbed / dry patches
     rough = gaussian_filter(rng.standard_normal((H, W)), .55); rough /= rough.std()
     scr = np.clip(gaussian_filter(rng.standard_normal((H, W)), (.5, 6)) * 2.2 - 3.2, 0, 1)   # fine scratches along the grain
     a *= (1 + .07 * rough + .2 * scr)[..., None]
