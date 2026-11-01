@@ -401,7 +401,7 @@ function layMobHtml() {
       `<path id="${id}p" d="${arc(rm + h * (half === undefined && k !== 'T' ? .36 : .38), a0, a1)}" fill="none"/><text class="mz-p"><textPath href="#${id}p" startOffset="50%">${esc(payTxt(k).replace(/ \(.*$/, '').replace(/（.*$/, ''))}</textPath></text>`;
     // everybody's chips on this band, at their seat
     seats.forEach(sx => { const amt = betsOf(sx.n)[k]; if (!amt) return; const a = half === undefined ? sx.am : am + (sx.am / span) * (a1 - a0) / 2 * .8, [x, y] = P2(rm, a), me = sx.n === ME;
-      const [xu, yu] = P2(r1 + h * .18, a); if (me) { const [xa, ya] = P2(rm, a - 8), [xb, yb] = P2(rm, a + 9.5); g += `<g class="lz-ch">${chipsAt(amt, xa, ya + h * .28, 96)}</g>` + badge(xb, yb, fmt(amt), 'amt mz-b mz-me'); } else g += `<g class="lz-ch">${chipsAt(amt, xu, yu + 6, 34)}</g>`; });
+      const [xu, yu] = P2(r1 + h * .18, a); if (me) { const [xa, ya] = P2(rm, a - 8), [xb, yb] = P2(rm, a + 9.5); g += `<g class="lz-ch">${chipsAt(amt, xa, ya + h * .28, 96)}</g>` + badge(xb, yb, fmt(amt), 'amt mz-b mz-me'); } else g += `<g class="lz-ch bot">${chipsAt(amt, xu, yu + 14, 58)}</g>`; });
     if (rr !== undefined && meBets[k]) { const [x, y] = P2(rm, half === undefined ? span * .55 : am + (a1 - a0) * .3); g += badge(x, y, rr > 0 ? '+' + fmt(rr) : rr === 0 ? t('res.push') : '−' + fmt(-rr), 'res mz-b'); }
     g += `</g>`;
   });
