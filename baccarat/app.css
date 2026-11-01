@@ -2189,3 +2189,7 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-bal b,.sess-bar .srow b{font-family:'Cormorant Garamond',serif;font-variant-numeric:lining-nums;font-weight:700;letter-spacing:.03em}
 .bc-bal b{font-size:24px}
 .lz-badge rect.lzb-in{fill:none!important;stroke:rgba(236,232,222,.28)!important;stroke-width:1!important;filter:none!important}
+.lz-svg:not(.mzs) .pc-me text{font-size:18px!important}
+.lz-svg:not(.mzs) .lz-badge text{font-size:15px}
+.bc-bal b{font-size:21px}
+.sess-bar .srow b{font-size:19px}
