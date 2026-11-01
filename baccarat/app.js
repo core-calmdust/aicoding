@@ -449,7 +449,7 @@ function chipsAt(amt, x, yb, w) {   // chip stacks (side view) standing on y = y
     return sv.replace('<svg class="chsv"', `<svg class="chsv" x="${(x0 + i * gap - w / 2).toFixed(1)}" y="${(yb - h).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"`); }).join('');
 }
 const resTxt = res => res > 0 ? '+' + fmt(res) : res === 0 ? t('res.push') : '−' + fmt(-res);
-function badge(x, y, txt, cls) { const huge = /mz-me/.test(cls), big = /mz-b/.test(cls), w = (huge ? 48 : big ? 28 : 16) + String(txt).length * (huge ? 32 : big ? 22 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (huge ? 28 : big ? 21 : 13)).toFixed(1)}" width="${w}" height="${huge ? 54 : big ? 40 : 24}" rx="${huge ? 27 : big ? 20 : 12}"/><text x="${x}" y="${(y + (huge ? 13 : big ? 9 : 4.5)).toFixed(1)}"${huge || big ? ` textLength="${(w - (huge ? 34 : 20)).toFixed(0)}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(txt)}</text></g>`; }
+function badge(x, y, txt, cls) { const huge = /mz-me/.test(cls), big = /mz-b|pc-me/.test(cls), w = (huge ? 48 : big ? 28 : 16) + String(txt).length * (huge ? 32 : big ? 22 : 11); return `<g class="lz-badge ${cls}"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - (huge ? 28 : big ? 21 : 13)).toFixed(1)}" width="${w}" height="${huge ? 54 : big ? 40 : 24}" rx="${huge ? 27 : big ? 20 : 12}"/><text x="${x}" y="${(y + (huge ? 13 : big ? 9 : 4.5)).toFixed(1)}"${huge || big ? ` textLength="${(w - (huge ? 34 : 20)).toFixed(0)}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(txt)}</text></g>`; }
 function layHtml() {
   const vb = VB(), done = T.phase === 'done', narrow = !!G.deep;
   LW = narrow ? 1000 : 1180; SPAN = narrow ? 66 : 51; MEW = narrow ? 2 : 1.5; RING = narrow ? RING_N : RING_W; LCY = narrow ? -10 : -360; LH = narrow ? 540 : 420;
@@ -471,7 +471,9 @@ function layHtml() {
         g += `<g class="lz lz-${k}${st}${amt ? ' has' : ''}${me ? '' : ' bot'}"${me ? ` data-spot="${k}"` : ''} data-k="${id}"><path class="lz-a" d="${cellPath(r1, r2, b0, b1)}"/>` +
           `<path id="${id}" d="${arcPath(rm + fs * .35 + (me && !small && rk !== 'T' ? 10 : 0), b0, b1)}" fill="none" stroke="none"/><text class="lz-n" style="font-size:${fs}px"><textPath href="#${id}" startOffset="50%">${me ? LAB[k] : LAB[k].replace(' 7', '').replace(' 8', '')}</textPath></text>`;
         if (me && !small) g += `<path id="${id}p" d="${arcPath(rm - h * .28 + (rk === 'T' ? 3 : 0), b0, b1)}" fill="none" stroke="none"/><text class="lz-p" style="font-size:${rk === 'T' ? 12 : 15}px"><textPath href="#${id}p" startOffset="50%">${esc(payTxt(k).replace(/ \(.*$/, ''))}</textPath></text>`;
-        if (amt) { const [x, y] = LP(rm, am), w = small || rk === 'T' ? 22 : me ? 34 : 26; g += `<g class="lz-ch">${chipsAt(amt, x, y + h * .32, w)}</g>` + (me ? badge(x, y + h * .32 + 6, fmt(amt), 'amt') : ''); }
+        if (amt) { const w = me ? (small ? 36 : rk === 'T' ? 38 : 54) : (small ? 28 : rk === 'T' ? 30 : 40);
+          if (me) { const [xa, ya] = LP(rm, am - (b1 - b0) * .17), [xb, yb] = LP(rm, am + (b1 - b0) * .24); g += `<g class="lz-ch">${chipsAt(amt, xa, ya + h * .34, w)}</g>` + badge(xb, yb + 2, fmt(amt), 'amt pc-me'); }
+          else { const [x, y] = LP(rm, am); g += `<g class="lz-ch">${chipsAt(amt, x, y + h * .34, w)}</g>`; } }
         g += `</g>`;
       });
     });

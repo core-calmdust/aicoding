@@ -2162,3 +2162,20 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-pair::before,.bc-pair::after{content:'◆';font-size:.6em;opacity:.6;margin:0 .4em 0 0;vertical-align:.15em}
 .bc-pair::after{margin:0 0 0 .2em}
 .bc-tot{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;line-height:1}
+/* PC: your amount */
+.lz-svg:not(.mzs) .pc-me text{font-size:24px;font-weight:800}
+.lz-svg:not(.mzs) .pc-me rect{fill:rgba(8,8,9,.9);stroke:rgba(255,255,255,.5);stroke-width:1.5}
+/* ===== result banner: a black lacquer plaque with a platinum double rule, serif lettering; the winner's colour as a fine accent ===== */
+.bc-banner{gap:14px;padding:9px 26px;border-radius:6px;background:linear-gradient(180deg,rgba(24,24,28,.94),rgba(8,8,10,.94));border:0;
+  box-shadow:0 0 0 1px rgba(236,232,222,.7),0 0 0 4px rgba(8,8,10,.92),0 0 0 5px rgba(236,232,222,.25),0 12px 30px rgba(0,0,0,.55)}
+.bc-banner::before,.bc-banner::after{content:'';position:absolute;top:50%;width:18px;height:1px;background:rgba(236,232,222,.55)}
+.bc-banner::before{left:-30px}.bc-banner::after{right:-30px}
+.bc-banner b{font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-weight:700;letter-spacing:.08em;font-size:calc(min(var(--cw)*.32,22px));font-variant-numeric:lining-nums}
+.bc-banner.wP b{color:#d3e3fa}.bc-banner.wB b{color:#f6d7dc}.bc-banner.wT b{color:#d3e9da}
+.bc-banner.wP{box-shadow:0 0 0 1px rgba(190,215,250,.75),0 0 0 4px rgba(8,8,10,.92),0 0 0 5px rgba(190,215,250,.3),0 12px 30px rgba(0,0,0,.55)}
+.bc-banner.wB{box-shadow:0 0 0 1px rgba(250,195,203,.75),0 0 0 4px rgba(8,8,10,.92),0 0 0 5px rgba(250,195,203,.3),0 12px 30px rgba(0,0,0,.55)}
+.bc-banner.wT{box-shadow:0 0 0 1px rgba(191,236,207,.75),0 0 0 4px rgba(8,8,10,.92),0 0 0 5px rgba(191,236,207,.3),0 12px 30px rgba(0,0,0,.55)}
+.bc-banner small{background:transparent;color:#ecd9a8;border:1px solid rgba(236,217,168,.7);border-radius:3px;font:700 11px 'Cormorant Garamond','Shippori Mincho B1',serif;letter-spacing:.2em;padding:2px 8px}
+.bc-banner span{font:700 16px 'JetBrains Mono',monospace;padding-left:14px;border-left:1px solid rgba(236,232,222,.25)}
+.bc-banner span:not(.pos):not(.neg){color:#e9e4d8}
+@media (max-width:760px){.bc-banner::before,.bc-banner::after{display:none}.bc-banner{padding:6px 16px}.bc-banner b{font-size:17px}}
