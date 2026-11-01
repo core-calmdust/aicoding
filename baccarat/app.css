@@ -2214,3 +2214,6 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   .bc .board-wrap{flex:1 1 auto;height:auto!important;max-height:none!important;min-height:300px}
   .bc .actbar,.bc .sess-bar{flex:none}
 }
+
+/* phones: settings rows stack (label above the options) so long option sets never squeeze the label (2026-11-01) */
+@media (max-width:760px){.set-cols .rl{grid-template-columns:minmax(0,1fr)!important;gap:8px}.set-cols .rl:has(> .tgl){grid-template-columns:minmax(0,1fr) auto!important}.set-cols .rl .seg{min-width:0;width:100%;flex-wrap:wrap}.set-cols .rl .seg button{flex:1 1 auto}}
