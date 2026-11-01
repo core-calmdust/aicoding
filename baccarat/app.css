@@ -2238,3 +2238,10 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-bal em.off{visibility:hidden}   /* keeps the line: the bar (and the table above it) never changes height */
 .bc-table.mob{padding-left:2px;padding-right:2px}   /* phones: the betting arc runs the full width of the felt */
 .bc-table.mob .bc-hands{padding:0 calc(var(--cw)*.24)}
+/* phones: the result line floats over the top of the layout (no row kept empty for it) */
+@media (max-width:760px){
+  .bc-table.mob .bc-mid{height:0!important;overflow:visible}
+  .bc-table.mob .bc-mid .bc-banner{position:absolute;top:0;left:50%;transform:translate(-50%,-6%);box-shadow:0 0 0 1px rgba(236,232,222,.7),0 0 0 4px rgba(8,8,10,.92),0 0 0 5px rgba(236,232,222,.25),0 10px 28px rgba(0,0,0,.7)}
+  .bc-table.mob .bc-mid .bc-banner{animation:bannerInM .35s ease}
+}
+@keyframes bannerInM{from{opacity:0;transform:translate(-50%,-30%)}}
