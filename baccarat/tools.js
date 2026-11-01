@@ -92,7 +92,7 @@ function edgeChart() {
 // one hour at a table (about 70 coups) betting 100 each time: the average loss of each bet
 function hourHtml(E) {
   const n = 70, st = 100;
-  return `<div class="hr-l">${B.VARIANTS[W.ev].bets.map(k => { const loss = -E[k] * n * st; return `<div class="kv"><span>${esc(t(A.SPOTS[k]))}</span><b class="${loss > 300 ? 'neg' : ''}">−${fmt(Math.round(loss))}</b></div>`; }).join('')}</div><p class="diff-desc">${esc(t('tl.hourHelp', { n, s: st }))}</p>`;
+  return `<div class="hr-l">${B.VARIANTS[W.ev].bets.map(k => { const loss = -E[k] * n * st; return `<div class="kv"><span>${esc(t(A.SPOTS[k]))}</span><b class="${loss > 300 ? 'neg' : ''}">−${fmt(Math.round(loss))}</b></div>`; }).join('')}</div><p class="diff-desc">${esc(t('tl.hourHelp', { n, s: fmt(st) }))}</p>`;
 }
 
 /* ---------- 必勝法の検証 (Monte Carlo) ---------- */
@@ -138,8 +138,8 @@ function sysHtml() {
       `<p class="sy-note">${esc(t('sy.verdict.' + S.s, { a: pct(r.ahead, 0), b: pct(r.bust, 1) }))}</p></div>`;
   }
   return `<div class="tl2 sys"><div><div class="rl-list">` + opt(t('sy.sys'), `<select id="sySel">${SYS.map(s => `<option value="${s}"${s === S.s ? ' selected' : ''}>${esc(t('sy.n.' + s))}</option>`).join('')}</select>`) +
-    opt(t('sy.side'), seg('sside', [['B', t('spot.B')], ['P', t('spot.P')]], S.side)) + opt(t('sy.base'), seg('sbase', [[25, '25'], [100, '100'], [500, '500']], S.base)) +
-    opt(t('sy.bank'), seg('sbank', [[5000, '5,000'], [10000, '10,000'], [50000, '50,000']], S.bank)) + opt(t('sy.hands'), seg('shands', [[50, '50'], [100, '100'], [300, '300']], S.hands)) + `</div>` +
+    opt(t('sy.side'), seg('sside', [['B', t('spot.B')], ['P', t('spot.P')]], S.side)) + opt(t('sy.base'), seg('sbase', [[25, '$25'], [100, '$100'], [500, '$500']], S.base)) +
+    opt(t('sy.bank'), seg('sbank', [[5000, '$5,000'], [10000, '$10,000'], [50000, '$50,000']], S.bank)) + opt(t('sy.hands'), seg('shands', [[50, '50'], [100, '100'], [300, '300']], S.hands)) + `</div>` +
     `<p class="sy-desc">${esc(t('sy.d.' + S.s))}</p><div class="tl-go"><button class="mbtn go" id="syRun">${esc(t('sy.run'))}</button></div></div><div>${res || `<p class="muted">${esc(t('sy.help'))}</p>`}<p class="diff-desc">${esc(t('sy.note'))}</p></div></div>`;
 }
 

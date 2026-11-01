@@ -12,7 +12,9 @@ const COURTS = ['gangsta', 'classic', 'antique', 'flat'];
 const DECKS = [8, 6], TIES = [8, 9], START = 10000;
 const DENOMS = [25, 100, 500, 1000, 5000], MIN_BET = 25;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmt = n => { const r = Math.round(n * 100) / 100; return (Number.isInteger(r) ? r : r.toFixed(2)).toLocaleString ? Number(r).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(r); };
+const num = n => { const r = Math.round(n * 100) / 100; return (Number.isInteger(r) ? r : r.toFixed(2)).toLocaleString ? Number(r).toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(r); };
+const fmt = n => (n < 0 ? '−$' : '$') + num(Math.abs(n));   // money: dollars
+const kfmt = n => Math.abs(n) >= 10000 ? '$' + (Math.round(n / 100) / 10) + 'K' : fmt(n);   // short (bots' plates on phones)
 const sg = n => (n > 0 ? '+' : n < 0 ? '−' : '±') + fmt(Math.abs(n));
 const pct = (x, d) => (x * 100).toFixed(d == null ? 2 : d) + '%';
 
@@ -420,7 +422,7 @@ function layMobHtml() {
     const me = sx.n === ME, b = who(sx.n), tb = b && T.bots ? T.bots[b.id] : null, [p1, p2] = R.plate, pid = 'mp' + sx.n;
     const net = me ? (done && T.result && betSum(T.last) ? T.result.net : null) : done && tb && tb.res ? tb.res.net : null;
     g += `<g class="seat-g${me ? ' me' : ''}"><path class="pl-a" d="${cell(p1, p2, sx.a0, sx.a1)}"/><path id="${pid}" d="${arc((p1 + p2) / 2 + 12, sx.a0, sx.a1)}" fill="none"/>` +
-      `<text class="pl-t mz-pl"><textPath href="#${pid}" startOffset="50%">${me ? `<tspan class="pl-n">3</tspan> YOU` : `<tspan class="pl-n">${sx.n}</tspan> ${esc(b.name)}`}${net ? ` <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : ` <tspan class="pl-b">${fmt(me ? T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0) : botState(b).bank)}</tspan>`}</textPath></text></g>`;
+      `<text class="pl-t mz-pl"><textPath href="#${pid}" startOffset="50%">${me ? `<tspan class="pl-n">3</tspan> YOU` : `<tspan class="pl-n">${sx.n}</tspan> ${esc(b.name)}`}${net ? ` <tspan class="${net > 0 ? 'pl-w' : 'pl-l'}">${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}</tspan>` : ` <tspan class="pl-b">${me ? fmt(T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0)) : kfmt(botState(b).bank)}</tspan>`}</textPath></text></g>`;
     if (i) { const [x1, y1] = P2(G0.rIn, sx.a0), [x2, y2] = P2(p2, sx.a0); lines += `<line class="lz-div mz-div" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
   });
   const rim = `<path class="lz-rim" d="${arc(R.plate[1], -span, span)}"/><path class="lz-rim" d="${arc(G0.rIn, -span, span)}"/>`;
@@ -688,7 +690,7 @@ function coachHtml() {
         `<div class="pl-bar"><i style="left:${(pos * 100).toFixed(1)}%"></i></div>` +
         (T.bank <= stop ? `<p class="ck-warn">${esc(t('pl.atStop'))}</p>` : T.bank >= goal ? `<p class="ck-good">${esc(t('pl.atGoal'))}</p>` : '') + `</div>`;
       const pa = n => { const z = -.01058 * Math.sqrt(n) / .927; return 1 / (1 + Math.exp(-1.702 * z)); };   // normal cdf (logistic approx.)
-      h += `<div class="ck-long"><div class="tips-h">${esc(t('lg.h'))}</div><div class="lg-row">${[10, 100, 1000, 10000].map(n => `<div><small>${esc(t('lg.n', { n: fmt(n) }))}</small><b>${pct(pa(n), 0)}</b></div>`).join('')}</div><p class="diff-desc">${esc(t('lg.help'))}</p></div>`;
+      h += `<div class="ck-long"><div class="tips-h">${esc(t('lg.h'))}</div><div class="lg-row">${[10, 100, 1000, 10000].map(n => `<div><small>${esc(t('lg.n', { n: num(n) }))}</small><b>${pct(pa(n), 0)}</b></div>`).join('')}</div><p class="diff-desc">${esc(t('lg.help'))}</p></div>`;
     }
     // the last coup: did you play it well? (independent of whether it won)
     if (T.phase === 'done' && lc && lc.tot) h += `<p class="ck-luck">${esc(t(lc.net > 0 ? 'ck.won' : lc.net < 0 ? 'ck.lost' : 'ck.push', { e: fmt(Math.round(lc.exp * 100) / 100) }))}</p>`;
@@ -956,5 +958,5 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v]) {
   render();
 } else newSession(set.v);
 
-window.BacApp = { explainHtml, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
+window.BacApp = { num, explainHtml, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
 })();

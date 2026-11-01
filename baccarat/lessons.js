@@ -57,7 +57,7 @@ const G = {
     const k = pick(['P', 'B', 'B', 'T', 'PP']), amt = pick([100, 200, 500, 1000]);
     const ret = k === 'P' ? amt * 2 : k === 'B' ? amt * 1.95 : k === 'T' ? amt * 9 : amt * 12;
     const opts = shuffle([...new Set([ret, amt * 2, amt * 1.95, amt * 9, amt * 12, amt * 1.5].filter(x => x !== ret).slice(0, 3).concat([ret]))]);
-    return { q: t('q.payout', { b: t('spot.' + k), n: amt }), vis: '', opts: opts.map(x => A.fmt(x)), ans: opts.indexOf(ret), exp: t('e.payout.' + k, { n: amt, r: A.fmt(ret) }) };
+    return { q: t('q.payout', { b: t('spot.' + k), n: A.fmt(amt) }), vis: '', opts: opts.map(x => A.fmt(x)), ans: opts.indexOf(ret), exp: t('e.payout.' + k, { n: A.fmt(amt), r: A.fmt(ret) }) };
   },
   edge() {
     if (Math.random() < .5) return fromPool('edge');
@@ -91,12 +91,12 @@ const G = {
     if (Math.random() < .4) return fromPool('system');
     const base = pick([25, 50, 100]), L = 1 + Math.floor(Math.random() * 5), ans = base * Math.pow(2, L);
     const opts = shuffle([...new Set([ans, base * (L + 1), ans / 2, ans * 2])]);
-    return { q: t('q.martin', { b: base, n: L }), vis: '', opts: opts.map(String), ans: opts.indexOf(ans), exp: t('e.martin', { b: base, n: L, a: ans, s: base * (Math.pow(2, L) - 1) }) };
+    return { q: t('q.martin', { b: A.fmt(base), n: L }), vis: '', opts: opts.map(x => A.fmt(x)), ans: opts.indexOf(ans), exp: t('e.martin', { b: A.fmt(base), n: L, a: A.fmt(ans), s: A.fmt(base * (Math.pow(2, L) - 1)) }) };
   },
   loss() {
     const k = pick(['B', 'P', 'T']), amt = pick([100, 200, 500]), n = pick([100, 200, 300]), e = -A.baseOdds('classic', 8, 8).E[k], ans = Math.round(amt * n * e);
     const opts = shuffle([...new Set([ans, Math.round(ans / 2), ans * 2, Math.round(amt * n * .05)])]).slice(0, 4); if (!opts.includes(ans)) opts[0] = ans;
-    return { q: t('q.loss', { b: t('spot.' + k), a: amt, n }), vis: '', opts: opts.map(x => A.fmt(x)), ans: opts.indexOf(ans), exp: t('e.loss', { w: A.fmt(amt * n), e: A.pct(e), r: A.fmt(ans) }) };
+    return { q: t('q.loss', { b: t('spot.' + k), a: A.fmt(amt), n }), vis: '', opts: opts.map(x => A.fmt(x)), ans: opts.indexOf(ans), exp: t('e.loss', { w: A.fmt(amt * n), e: A.pct(e), r: A.fmt(ans) }) };
   },
   bankroll() { return fromPool('bankroll'); },
 };
