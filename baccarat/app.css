@@ -1972,3 +1972,23 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 }
 @media (max-width:760px){.edge2{grid-template-columns:1fr}.eor-t td{font-size:9px}.eor-t{border-spacing:1px}}
 .eor-t{table-layout:fixed}.eor-t th:first-child{width:5.2em}.eor-t td{font-size:10.5px!important;letter-spacing:-.03em;overflow:hidden}
+/* PC: the session numbers in a strip under the table */
+.sess-bar:empty{display:none}
+.sess-bar{display:flex;align-items:center;gap:18px;padding:10px 18px;border-radius:16px;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line)}
+.sess-bar .sb-h{display:flex;flex-direction:column;gap:2px;min-width:6em}
+.sess-bar .sb-h b{font-size:12px;letter-spacing:.12em;color:var(--accent)}
+.sess-bar .sb-h b::before{content:'';display:inline-block;width:3px;height:.95em;border-radius:2px;background:var(--hl);vertical-align:-.12em;margin-inline-end:7px}
+.sess-bar .sb-h small{font-size:11px;color:var(--muted)}
+.sess-bar .srow{flex:1;grid-template-columns:repeat(5,1fr);margin:0}
+.sess-bar .srow b{font-size:20px}
+.sess-bar .sb-btns{display:flex;gap:6px}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .bc .board-wrap{height:calc(100vh - var(--hb-h, 56px) - 46px - 96px - 82px)}
+}
+/* the shoe on the table: bigger, clear of the rounded corner */
+.bc-shoe{right:calc(var(--cw)*.55);top:calc(var(--cw)*.3);gap:4px;opacity:1;z-index:2}
+.bc-shoe-box{width:calc(var(--cw)*.5);height:calc(var(--cw)*1.25);border-radius:6px;border:1.5px solid rgba(236,232,222,.5);background:rgba(0,0,0,.4);box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+.bc-shoe-box .cut{height:3px}
+.bc-shoe small{font:700 calc(min(var(--cw)*.2,16px)) 'JetBrains Mono',monospace;color:#f3efe6}
+.bc-shoe small i{font-size:calc(min(var(--cw)*.12,10px));letter-spacing:.14em;opacity:.75}
+@media (max-width:760px){.bc-shoe{display:flex;right:calc(var(--cw)*.35);top:calc(var(--cw)*.25)}.bc-table:not(.stk) .bc-shoe{display:none}}
