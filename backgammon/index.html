@@ -56,6 +56,11 @@ html.rot .overlay{height:100vw!important;max-height:100vw}
 html.rot .modal{max-height:calc(100vw - 20px)!important}
 /* the new-game sheet (shared/ngtabs.js sizes it with 100vw x 100dvh): in the turned page it is the turned viewport, width var(--vw) x height 100vw */
 html.rot #newOverlay > .modal.ngt-on{width:100vh!important;width:var(--vw)!important;height:100vw!important;max-height:100vw!important}
+/* …and its footer (閉じる / 対局開始 + the tabs) is pinned with position:fixed, not sticky: WebKit (iPhone) gets position:sticky wrong
+   inside the rotated body (the footer slid with the settings and sat off-screen until scrolled to the end); the settings
+   keep room for it at their bottom (--ngt-fh: the footer's height, kept by the script after ngtabs.js) */
+html.rot #newOverlay > .modal.ngt-on{padding-bottom:var(--ngt-fh,96px)!important}
+html.rot #newOverlay > .modal.ngt-on > .ngt-foot{position:fixed!important;left:0;right:0;bottom:0;margin:0!important}
 /* dialogs above the landscape tab rail (#lndRail, z-index 60) */
 html.lnd .overlay{z-index:70}
 /* phone held sideways: the online dock shortens --vh, but dialogs cover (and fit) the whole screen */
@@ -1574,6 +1579,11 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
 <script src="../shared/ngtabs.js?v=16"></script>
+<script>(function () {   // (the turned page: the new-game sheet's pinned footer height → --ngt-fh, see html.rot above)
+  const go = () => { const f = document.querySelector('#newOverlay .ngt-foot'); if (!f || !window.ResizeObserver) return;
+    new ResizeObserver(() => { if (f.offsetHeight) document.documentElement.style.setProperty('--ngt-fh', f.offsetHeight + 'px'); }).observe(f); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();</script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
