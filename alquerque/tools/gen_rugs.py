@@ -461,11 +461,13 @@ def carved(seed=5):
     # the border band is sunk a little (a shallow recess), the motifs are carved into it
     rec = lmask(lambda dd: (dd.rectangle([(m0 + 7) * SS, (m0 + 7) * SS, (W - m0 - 7) * SS, (H - m0 - 7) * SS], fill=255), dd.rectangle([(m1 - 7) * SS, (m1 - 7) * SS, (W - m1 + 7) * SS, (H - m1 + 7) * SS], fill=0)))
     a = carve(a, rec, 3.0, (120, 84, 52)) * 1.0
-    a = carve(a, lmask(scrolls), 3.8, dark=.3)
-    a = carve(a, lmask(rules), 3.0, dark=.3)
+    a = carve(a, lmask(scrolls), 7.0)
+    a = carve(a, lmask(rules), 5.0)
     a = carve(a, lmask(board), 6.0)
     wear = np.clip(fbm(rng, 60, 3) * .8 - .2, 0, 1) * np.clip(.5 + gaussian_filter(rng.standard_normal((H, W)), (1.2, 18)) * 1.2, 0, 1)
-    a = a * (1 - .28 * wear[..., None]) + np.array((214, 196, 168.)) * .28 * wear[..., None]   # white rubbed / dry patches
+    edge = np.zeros((H, W)); e0 = int(m1 + S * .1); edge[e0:H - e0, e0:W - e0] = 1; edge = gaussian_filter(edge, S * .15)
+    k = .6 * (.4 + .6 * edge)   # rubbed patches: as before on the field, a little less on the border
+    a = a * (1 - k[..., None] * wear[..., None]) + np.array((220, 204, 178.)) * (k * wear)[..., None]   # white rubbed / dry patches
     rough = gaussian_filter(rng.standard_normal((H, W)), .55); rough /= rough.std()
     scr = np.clip(gaussian_filter(rng.standard_normal((H, W)), (.5, 6)) * 2.2 - 3.2, 0, 1)   # fine scratches along the grain
     a *= (1 + .07 * rough + .2 * scr)[..., None]
