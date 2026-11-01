@@ -397,13 +397,18 @@ function loadNet(X, b) {
 // opening book: { "<position key>": [moves...] } (tools/gen_book.js), used by the top levels
 let BOOK = null;
 function setBook(b) { BOOK = b; }
+// (also the Alquerque tables alqeg.bin: "AEG1", same layout, tools/alqegdb.c); each file goes above the previous one
+let egTop = 0;
 function loadEG(X, b) {
-  const dv = new DataView(b); if (dv.getUint32(0, true) !== 0x31474546) return false;
-  const n = dv.getUint32(4, true), base = X.heap_base(), cur = X.memory.buffer.byteLength;
+  const dv = new DataView(b), mg = dv.getUint32(0, true), alq = mg === 0x31474541;
+  if (mg !== 0x31474546 && !alq) return false;
+  if (alq && !X.aeg_add) return false;
+  const n = dv.getUint32(4, true), base = (egTop || X.heap_base()), cur = X.memory.buffer.byteLength;
   if (base + b.byteLength + 65536 > cur) X.memory.grow(Math.ceil((base + b.byteLength + 65536 - cur) / 65536));
   new Uint8Array(X.memory.buffer, base, b.byteLength).set(new Uint8Array(b));
+  egTop = base + b.byteLength + 16;
   let o = 8;
-  for (let i = 0; i < n; i++) { const a = dv.getUint8(o), bb = dv.getUint8(o + 1), len = dv.getUint32(o + 4, true); X.eg_add(a, bb, base + o + 8); o += 8 + len; }
+  for (let i = 0; i < n; i++) { const a = dv.getUint8(o), bb = dv.getUint8(o + 1), len = dv.getUint32(o + 4, true); (alq ? X.aeg_add : X.eg_add)(a, bb, base + o + 8); o += 8 + len; }
   return true;
 }
 
@@ -411,7 +416,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RU
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101f';
+  const V = 'v=20261101g', GAMEQ = new URLSearchParams(self.location.search).get('g');
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -420,12 +425,16 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       .then(async r => {
         const X = r.instance.exports;
         const gunzip = async u => { const res = await fetch(new URL(u + '?' + V, self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
-        try { const b = await gunzip('evalnet.bin.gz'); if (b) loadNet(X, b); } catch (e) {}
-        try { const b = await fetch(new URL('book.json?' + V, self.location.href)); if (b.ok) BOOK = await b.json(); } catch (e) {}
-        try {
-          const res = await fetch(new URL('egdb.bin.gz?' + V, self.location.href));
-          if (res.ok && typeof DecompressionStream === 'function') loadEG(X, await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-        } catch (e) {}
+        if (GAMEQ === 'alq') {   // the Alquerque page (engine.js?…&g=alq): only its endgame tables
+          try { const b = await gunzip('alqeg.bin.gz'); if (b) loadEG(X, b); } catch (e) {}
+        } else {
+          try { const b = await gunzip('evalnet.bin.gz'); if (b) loadNet(X, b); } catch (e) {}
+          try { const b = await fetch(new URL('book.json?' + V, self.location.href)); if (b.ok) BOOK = await b.json(); } catch (e) {}
+          try {
+            const res = await fetch(new URL('egdb.bin.gz?' + V, self.location.href));
+            if (res.ok && typeof DecompressionStream === 'function') loadEG(X, await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+          } catch (e) {}
+        }
         WX = X;
       }).catch(() => { WX = null; });
   }
