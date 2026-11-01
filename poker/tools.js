@@ -55,34 +55,44 @@ function calcHtml() {
     (eq0 != null ? `<div class="kv"><span>${esc(t('tl.evCall'))}</span><b class="${eq0 * (C.pot + C.call) - C.call >= 0 ? 'pos' : 'neg'}">${(eq0 * (C.pot + C.call) - C.call).toFixed(1)}</b></div><div class="kv"><span>${esc(t('tl.verdict'))}</span><b>${esc(eq0 >= need ? t('tl.callOk') : t('tl.callNo'))}</b></div>` : `<p class="muted">${esc(t('tl.oddsHelp'))}</p>`) +
     `<p class="diff-desc">${esc(t('tl.rule24'))}</p></details>`;
   return `<div class="eq"><div class="eq-main"><div class="eq-top"><div class="seg eq-games">${games}</div><div class="eq-np"><button type="button" data-np="-"${C.n <= 2 ? ' disabled' : ''} aria-label="−">−</button><b>${C.n}<small>${esc(t('tl.players'))}</small></b><button type="button" data-np="+"${C.n >= 6 ? ' disabled' : ''} aria-label="+">＋</button></div></div>` +
-    board + `<div class="eq-ps">${rows}</div><div class="eq-note">${note}</div>` + `<div class="eq-odds-pc">${odds}</div></div>` +
-    `<div class="eq-pick"><div class="eq-ph"><span>✎ ${esc(slotName())}</span><button type="button" class="eq-rand" data-rand>🎲 ${esc(tl('tl.randCard', 'ランダム', 'Random'))}</button><button type="button" class="eq-rand" id="tlClear">${esc(t('tl.clear'))}</button></div><div class="eq-grid">${picker}</div></div>` + `</div>`;
+    board + `<div class="eq-ps">${rows}</div><div class="eq-note">${note}</div>` + `<div class="eq-odds-sp">${odds}</div></div>` +
+    `<div class="eq-side"><div class="eq-pick"><div class="eq-ph"><span>✎ ${esc(slotName())}</span><button type="button" class="eq-rand" data-rand>🎲 ${esc(tl('tl.randCard', 'ランダム', 'Random'))}</button><button type="button" class="eq-rand" id="tlClear">${esc(t('tl.clear'))}</button></div><div class="eq-grid">${picker}</div></div><div class="eq-odds-pc">${odds.replace('<details class="eq-odds"', '<details class="eq-odds" open')}</div></div></div>`;
 }
 function rangeHtml() {
   const n = C.rn || 1, pos = C.pos || 'BTN', sel = C.cell || 'AKs';
   const PRE = window.PK_PRE || {};
+  const eqOf = (k, j) => PRE[k] ? PRE[k][j - 1] / 1000 : E.preEq(k, j);
   const cells = E.ALLKEYS.map(k => {
-    const eq = PRE[k] ? PRE[k][n - 1] / 1000 : E.preEq(k, n), base = 1 / (n + 1), x = Math.max(0, Math.min(1, (eq - base * .6) / (1 - base * .6)));
-    const inR = E.PCT[k] <= POS[pos];
-    return `<button type="button" class="rc${inR ? ' in' : ''}${k === sel ? ' sel' : ''}" data-cell="${k}" style="--x:${x.toFixed(2)}"><b>${k}</b><small>${Math.round(eq * 100)}</small></button>`;
+    const eq = eqOf(k, n), base = 1 / (n + 1), x = Math.max(0, Math.min(1, (eq - base * .6) / (1 - base * .6)));
+    const inR = E.PCT[k] <= POS[pos], kind = k.length === 2 ? 'rk-p' : k[2] === 's' ? 'rk-s' : 'rk-o';
+    return `<button type="button" class="rg-c ${kind}${inR ? ' in' : ''}${k === sel ? ' sel' : ''}" data-cell="${k}" style="--x:${x.toFixed(2)}"><b>${k}</b><small>${Math.round(eq * 100)}</small></button>`;
   }).join('');
-  const k = sel, eqs = PRE[k] || [1, 2, 3, 4, 5].map(j => Math.round(E.preEq(k, j) * 1000));
-  const info = `<div class="rc-info"><b class="rc-k">${k}</b><span>${esc(t('tl.combos', { n: E.COMBOS(k) }))} · ${esc(t('tl.top', { n: (E.PCT[k] * 100).toFixed(1) }))}</span>` +
-    `<div class="rc-eqs">${eqs.map((e, j) => `<div><small>${esc(t('tl.vsN', { n: j + 1 }))}</small><span class="eqbar"><i class="w" style="width:${e / 10}%"></i></span><b>${(e / 10).toFixed(1)}%</b></div>`).join('')}</div>` +
-    `<p class="diff-desc">${esc(Object.keys(POS).filter(p => E.PCT[k] <= POS[p]).length ? t('tl.openFrom', { p: Object.keys(POS).filter(p => E.PCT[k] <= POS[p]).join(' · ') }) : t('tl.openNone'))}</p></div>`;
-  return `<div class="tl-range"><div class="rg-l"><div class="rg-ctl"><span class="lab">${esc(t('tl.vs'))}</span><span>${[1, 2, 3, 4, 5].map(j => `<button type="button" class="szb${j === n ? ' sel' : ''}" data-rn="${j}">${j}</button>`).join('')}</span>` +
-    `<span class="lab">${esc(t('tl.pos'))}</span><span>${Object.keys(POS).map(p => `<button type="button" class="szb${p === pos ? ' sel' : ''}" data-pos="${p}" title="${esc(t('tl.posName.' + p))}">${p}</button>`).join('')}</span></div>` +
-    `<div class="rgrid">${cells}</div><p class="diff-desc">${esc(t('tl.rangeHelp', { p: pos, n: Math.round(POS[pos] * 100) }))}</p></div><div class="rg-r">${info}<p class="diff-desc">${esc(t('tl.posHelp'))}</p></div></div>`;
+  const k = sel, kind = k.length === 2 ? tl('tl.kPair', 'ポケットペア', 'Pocket pair') : k[2] === 's' ? tl('tl.kSuited', 'スーテッド（同じマーク）', 'Suited') : tl('tl.kOff', 'オフスート（別のマーク）', 'Offsuit');
+  const from = Object.keys(POS).filter(p => E.PCT[k] <= POS[p]), inNow = E.PCT[k] <= POS[pos];
+  const eqs = [1, 2, 3, 4, 5].map(j => eqOf(k, j));
+  const info = `<div class="rg-info"><div class="rg-ih"><b class="rg-k">${k}</b><div><span>${esc(kind)}</span><small>${esc(t('tl.combos', { n: E.COMBOS(k) }))} · ${esc(t('tl.top', { n: (E.PCT[k] * 100).toFixed(1) }))}</small></div>` +
+    `<em class="rg-v${inNow ? ' ok' : ''}">${inNow ? '✓' : '✕'} ${esc(pos)}</em></div>` +
+    `<div class="rg-eqs">${eqs.map((e, j) => `<div class="${j + 1 === n ? 'on' : ''}"><small>${esc(t('tl.vsN', { n: j + 1 }))}</small><span class="rg-bar"><i style="width:${e * 100}%"></i></span><b>${(e * 100).toFixed(1)}%</b></div>`).join('')}</div>` +
+    `<p class="rg-from">${esc(from.length ? t('tl.openFrom', { p: from.join(' · ') }) : t('tl.openNone'))}</p></div>`;
+  const seg = (lab, items, cur, attr, title) => `<div class="rg-seg"><span>${esc(lab)}</span><div>${items.map(x => `<button type="button" class="${x == cur ? 'sel' : ''}" ${attr}="${x}"${title ? ` title="${esc(title(x))}"` : ''}>${x}</button>`).join('')}</div></div>`;
+  const legend = `<div class="rg-leg"><span><i class="in"></i>${esc(tl('tl.legIn', '{p} のレイズ範囲（上位{n}%）', '{p} opening range (top {n}%)', { p: pos, n: Math.round(POS[pos] * 100) }))}</span><span>${esc(tl('tl.legSu', '右上 = スーテッド　左下 = オフスート', 'upper right = suited · lower left = offsuit'))}</span></div>`;
+  return `<div class="rg"><div class="rg-l"><div class="rg-ctl">${seg(t('tl.vs'), [1, 2, 3, 4, 5], n, 'data-rn')}${seg(t('tl.pos'), Object.keys(POS), pos, 'data-pos', p => t('tl.posName.' + p))}</div>` +
+    `<div class="rg-info-sp">${info}</div><div class="rg-grid">${cells}</div>${legend}<p class="diff-desc rg-help">${esc(tl('tl.rangeNum', '数字は相手{n}人に対する勝率（%）', 'Numbers: equity (%) against {n} opponent(s)', { n }))}</p></div>` +
+    `<div class="rg-r"><div class="rg-info-pc">${info}</div><p class="diff-desc">${esc(t('tl.posHelp'))}</p></div></div>`;
 }
 const EX = { sf: '9H 8H 7H 6H 5H', quads: 'QS QH QD QC 3S', full: 'KS KH KD 7C 7D', flush: 'AD JD 8D 5D 2D', straight: 'TS 9D 8C 7H 6S', trips: '7S 7H 7D KC 2S', two: 'JS JD 4C 4H AS', pair: 'TS TH KC 6D 3S', high: 'AS JD 8C 5H 3S' };
 const PROB7 = { sf: 0.0311, quads: 0.168, full: 2.6, flush: 3.03, straight: 4.62, trips: 4.83, two: 23.5, pair: 43.8, high: 17.4 };
 function handsHtml() {
   const order = ['sf', 'quads', 'full', 'flush', 'straight', 'trips', 'two', 'pair', 'high'];
   const sdOrder = ['sf', 'quads', 'flush', 'full', 'trips', 'straight', 'two', 'pair', 'high'];
-  const row = (k, i) => `<div class="hr"><span class="hr-i">${i + 1}</span><b>${esc(t('hand.' + k))}</b>${window.PokerReview.mini(EX[k].split(' ').map(P.parse))}<small>${esc(t('hx.' + k))}</small><em>${PROB7[k]}%</em></div>`;
-  return `<div class="tl-hands"><div><span class="lab">${esc(t('tl.ranking'))}</span>${order.map(row).join('')}<p class="diff-desc">${esc(t('tl.prob'))}</p></div>` +
-    `<div><span class="lab">${esc(t('tl.sdRanking'))}</span><div class="sd-list">${sdOrder.map((k, i) => `<div class="hr sm${['flush', 'full', 'trips', 'straight'].includes(k) ? ' chg' : ''}"><span class="hr-i">${i + 1}</span><b>${esc(t('hand.' + k))}</b></div>`).join('')}</div><p class="diff-desc">${esc(t('tl.sdNote'))}</p>` +
-    `<span class="lab">${esc(t('tl.ties'))}</span><p class="diff-desc">${esc(t('tl.tiesNote'))}</p></div></div>`;
+  const bar = v => Math.max(3, Math.min(100, (Math.log10(v) + 2) / (Math.log10(50) + 2) * 100));   // log scale: 0.01%…50%
+  const row = (k, i) => `<div class="hd-r"><span class="hd-i">${i + 1}</span><div class="hd-m"><b>${esc(t('hand.' + k))}</b><small>${esc(t('hx.' + k))}</small></div>` +
+    `<div class="hd-c">${window.PokerReview.mini(EX[k].split(' ').map(P.parse))}</div><div class="hd-p"><b>${PROB7[k]}%</b><span class="hd-bar"><i style="width:${bar(PROB7[k]).toFixed(1)}%"></i></span><small>${esc(tl('tl.oneIn', '約{n}回に1回', '≈ 1 in {n}', { n: Math.round(100 / PROB7[k]).toLocaleString() }))}</small></div></div>`;
+  const moved = { flush: 1, full: 1, trips: 1, straight: 1 };
+  const sd = sdOrder.map((k, i) => `<div class="hd-sd${moved[k] ? ' chg' : ''}"><span>${i + 1}</span><b>${esc(t('hand.' + k))}</b>${moved[k] ? `<em>${order.indexOf(k) + 1} → ${i + 1}</em>` : ''}</div>`).join('');
+  return `<div class="hd"><div class="hd-l"><div class="hd-h">${esc(t('tl.ranking'))}</div>${order.map(row).join('')}<p class="diff-desc">${esc(t('tl.prob'))}</p></div>` +
+    `<div class="hd-side"><div class="hd-box"><div class="hd-h">${esc(t('tl.sdRanking'))}</div>${sd}<p class="diff-desc">${esc(t('tl.sdNote'))}</p></div>` +
+    `<div class="hd-box"><div class="hd-h">${esc(t('tl.ties'))}</div><p class="hd-t">${esc(t('tl.tiesNote'))}</p></div></div></div>`;
 }
 function render() {
   const tabs = ['calc', 'range', 'hands'].map(k => `<button type="button" class="${k === tab ? 'sel' : ''}" data-tt="${k}">${esc(t('tl.' + k))}</button>`).join('');
@@ -102,7 +112,7 @@ function render() {
     M.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { place(+b.dataset.pick); });
     const rd = M.querySelector('[data-rand]'); if (rd) rd.onclick = () => { const u = used(), free = P.deckOf(P.VARIANTS[C.v].short).filter(c => !u.has(c)); if (free.length) place(free[Math.floor(Math.random() * free.length)]); };
     $('#tlClear').onclick = () => { C.hands = C.hands.map(h => h.map(() => null)); C.board = C.board.map(() => null); C.slot = { p: 0, k: 0 }; changed(); };
-    M.querySelectorAll('.eq-odds').forEach(d => d.ontoggle = () => { C.oddsOpen = d.open; });
+    M.querySelectorAll('.eq-odds-sp .eq-odds').forEach(d => d.ontoggle = () => { C.oddsOpen = d.open; });
     M.querySelectorAll('#odPot').forEach(op => op.onchange = () => { C.pot = Math.max(0, +op.value || 0); render(); });
     M.querySelectorAll('#odCall').forEach(oc => oc.onchange = () => { C.call = Math.max(0, +oc.value || 0); render(); });
   } else if (tab === 'range') {
