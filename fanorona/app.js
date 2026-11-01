@@ -124,7 +124,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=fa5';
+const ENGINE_URL = 'engine.js?v=fb1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();

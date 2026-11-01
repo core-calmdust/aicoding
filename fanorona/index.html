@@ -1164,7 +1164,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html:is([data-rule=dimy],[data-rule=telo]), html:is([data-rule=dimy],[data-rule=telo]) body, html:is([data-rule=dimy],[data-rule=telo]).dock-fit body:not(.no-online){
     --sqw:360px !important;
-    --cell:max(12px, min((var(--vh) - 96px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), 150px)) !important;
+    --cell:max(12px, min((var(--vh) - 96px) / var(--fhc), (100vw - var(--px) * 2 - var(--sqw) - 28px) / var(--fwc), var(--cmax))) !important;
+    --cmax:150px;
+  }
+  html[data-rule=telo], html[data-rule=telo] body, html[data-rule=telo].dock-fit body:not(.no-online){--cmax:240px !important;
   }
   html:is([data-rule=dimy],[data-rule=telo]) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
     grid-template-columns:var(--fw) var(--sqw)!important;grid-template-rows:var(--fh) auto!important;
@@ -1520,7 +1523,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   </div>
 </div>
 
-<script src="i18n.js?v=fa4"></script>
+<script src="i18n.js?v=fb1"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1530,20 +1533,20 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=fa5"></script>
+<script src="engine.js?v=fb1"></script>
 <script src="firebase-config.js?v=fa2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=fa3"></script>
+<script src="online.js?v=fb1"></script>
 <script src="../shared/resign.js?v=1"></script>
-<script src="rvbox.js?v=2a"></script>
+<script src="rvbox.js?v=fb1"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=1"></script>
-<script src="coach.js?v=fa2"></script>
-<script src="coach-i18n.js?v=fa4"></script>
+<script src="coach.js?v=fb1"></script>
+<script src="coach-i18n.js?v=fb1"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fa8"></script>
-<script src="online-ui.js?v=fa3"></script>
-<script src="landtabs.js?v=1"></script>
+<script src="app.js?v=fb1"></script>
+<script src="online-ui.js?v=fb1"></script>
+<script src="landtabs.js?v=fb1"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261101fn3" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
