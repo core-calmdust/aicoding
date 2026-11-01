@@ -343,7 +343,7 @@
 "op.grp.w.sub": "Die fünf ersten Züge und die folgenden Schlagabtausche.",
 "op.grp.b": "Antworten von Schwarz",
 "op.grp.b.sub": "Die Antworten von Schwarz auf die Standard-Eröffnungszüge f2-e3A und d3-e3A.",
-"rule.sivy": "Standardregeln (9×5 Fanoron-Tsivy)",
+"rule.sivy": "Tsivy (9×5)",
 "bd.acacia": "Akazie",
 "bd.maple": "Ahorn",
 "bd.rosewood": "Palisander",
@@ -354,5 +354,15 @@
 "share.record": "Partie",
 "share.pos": "Stellung",
 "ls.toList": "Zurück zu den Lektionen",
-"ls.toOpen": "Zurück zu den Eröffnungen"
+"ls.toOpen": "Zurück zu den Eröffnungen",
+"ng.board": "Brett",
+"rule.std": "Standard",
+"rule.dimy": "Dimy (5×5)",
+"rule.telo": "Telo (3×3)",
+"rule.sivy.d": "Volles Fanorona mit je 22 Steinen: ganze Reihen schlagen durch Annähern und Zurückziehen. Madagaskars Nationalspiel.",
+"rule.dimy.d": "5×5 mit je 12 Steinen. Gleiche Regeln, kürzere Partien.",
+"rule.telo.d": "3×3, je 3 Steine. Abwechselnd setzen, dann entlang der Linien ziehen: drei in einer Reihe gewinnt (ohne Schlagen).",
+"pick.place": "Setze einen Stein auf einen freien Punkt",
+"pick.telo": "Wähle einen Punkt zum Setzen (drei in einer Reihe gewinnt)",
+"res.why.line": "Drei in einer Reihe"
 }

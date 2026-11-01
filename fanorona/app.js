@@ -5,7 +5,7 @@
 // ====================================================================== rules (shared with the engine)
 const E = window.FanoronaEngine, WIN = E.WIN, WINT = E.WINT;
 const P1 = 1, P2 = 2;                 // P1 = White (moves first), P2 = Black
-const RULE_ORDER = ['sivy'];
+const RULE_ORDER = ['sivy', 'dimy', 'telo'];   // 9x5 Fanoron-Tsivy (standard), 5x5 Fanoron-Dimy, 3x3 Fanoron-Telo
 const mFrom = E.mFrom, mTo = E.mTo;
 const capsFlat = (pos, m) => E.capsOf(pos, m).flat();            // every point captured by a move
 let gv = 'sivy';
@@ -14,8 +14,22 @@ let startSpec = null;                 // lesson / puzzle start position (null = 
 let moves = [];                       // game record (move numbers, see engine.js)
 let cur = 0;                          // number of moves shown
 let flip = false;                     // board seen from Black's side (Black at the bottom; White is at the bottom by default)
-function setVariant() { gv = 'sivy'; }
-const startKey = () => startSpec ? startSpec.b + '/' + startSpec.side : '';
+// the board in use: lessons / puzzles / openings / rated games are 9x5; online games follow the game record; else the setting
+function wantRule() {
+  if (lesson || puzzle || rgame) return 'sivy';
+  if (settings.mode === 'online' && window.olRule) { const r = olRule(); if (r) return r; }
+  return RULE_ORDER.includes(settings.rule) ? settings.rule : 'sivy';
+}
+function setVariant(r) {
+  r = r || wantRule();
+  if (r === gv && E.rule() === r) return false;
+  gv = E.setRule(r); geomSync();
+  posCache = { key: '' };
+  if (typeof drawLines === 'function' && linesEl) { drawLines(); pcEls.forEach(el => el.remove()); pcEls.clear(); shownKey = ''; }
+  return true;
+}
+const isTelo = () => gv === 'telo';
+const startKey = () => gv + ':' + (startSpec ? startSpec.b + '/' + startSpec.side : '');
 const keyOf = i => startKey() + '|' + moves.slice(0, i).join(',');
 let posCache = { key: '' };
 function posAt(i) {
@@ -86,6 +100,9 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     if (settings.mode === 'online') settings.mode = 'pvp';
+    if (!RULE_ORDER.includes(settings.rule)) settings.rule = 'sivy';
+    if (RULE_ORDER.includes(d.rule) && !(d.rated && d.rated.id)) settings.rule = d.rule;
+    gv = E.setRule(d.rated && d.rated.id ? 'sivy' : settings.rule); geomSync();
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 8;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 8;
     if (Array.isArray(d.moves)) {
@@ -107,7 +124,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=fa2';
+const ENGINE_URL = 'engine.js?v=fa3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -121,7 +138,7 @@ function makeWorker() {
 let aiW = makeWorker(), anaW = makeWorker();
 function request(which, msg, onProgress) {
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, ...msg, id }); });
 }
 function cancelWorker(which) {
   const w = which === 'ai' ? aiW : anaW;
@@ -167,7 +184,11 @@ const boardEl = $('#board'), piecesEl = $('#pieces'), fxEl = $('#fx'), linesEl =
 const reduceMotion = false /* site rule: animations are never skipped for the OS reduce-motion setting */;
 const animOn = () => settings.anim && !reduceMotion;
 // display row / column of a point: row 5 (Black's side) on top, column a on the left; flipped = turned round
-const NC = 9, NR = 5, BW = NC + 1, BH = NR + 1;   // the board picture: 9 x 5 points with half a step of margin + frame
+let NC = 9, NR = 5, BW = NC + 1, BH = NR + 1;   // the board picture: NC x NR points with half a step of margin + frame
+function geomSync() {
+  const D = E.dims(); NC = D.w; NR = D.h; BW = NC + 1; BH = NR + 1;
+  document.documentElement.dataset.rule = gv;
+}
 const dRC = i => { const [r, c] = E.RC[i]; return flip ? [r, NC - 1 - c] : [NR - 1 - r, c]; };
 const ptX = i => (dRC(i)[1] + 1) / BW * 100, ptY = i => (dRC(i)[0] + 1) / BH * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
@@ -186,7 +207,7 @@ function boardLinesSvg(P, cls) {
 function drawLines() {
   boardEl.style.setProperty('--S', NC);
   let s = boardLinesSvg();
-  for (let i = 0; i < E.NP; i++) { const [r, c] = dRC(i); s += `<circle class="pt${E.strong(i) ? ' st' : ''}" cx="${c + 1}" cy="${r + 1}" r="${E.strong(i) ? 0.075 : 0.055}"/>`; }
+  for (let i = 0; i < E.NP; i++) { if (!E.valid(i)) continue; const [r, c] = dRC(i); s += `<circle class="pt${E.strong(i) ? ' st' : ''}" cx="${c + 1}" cy="${r + 1}" r="${E.strong(i) ? 0.075 : 0.055}"/>`; }
   // coordinates: letters under the bottom row, numbers left of the first column
   for (let c = 0; c < NC; c++) { const i = flip ? (NC - 1 - c) : c; s += `<text class="num" x="${c + 1}" y="${NR + 0.62}" font-size="0.26" text-anchor="middle">${E.COLS[i]}</text>`; }
   for (let r = 0; r < NR; r++) s += `<text class="num" x="0.42" y="${r + 1.09}" font-size="0.26" text-anchor="middle">${flip ? r + 1 : NR - r}</text>`;
@@ -246,13 +267,27 @@ function animateStep(step, delay) {
 }
 // animate move m from position `before` (the pieces map shows `before`)
 function animateMove(m, before) {
-  const S = before.steps(m); if (!S || !pcEls.get(S[0].from)) return false;
+  const S = before.steps(m); if (!S) return false;
+  if (S[0].from < 0) {   // Telo: a piece is put on the board
+    const k = before.turn, el = newPiece(k); placeAt(el, S[0].to); piecesEl.appendChild(el); pcEls.set(S[0].to, el);
+    if (el.animate) el.animate([{ transform: 'translateY(-35%) scale(1.25)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)' });
+    sPlace(false, 200); return true;
+  }
+  if (!pcEls.get(S[0].from)) return false;
   S.forEach((st, k) => animateStep(st, k * STEP));
   return true;
 }
 function renderReserves(pos) {
   // captured pieces, shown on the capturer's side of the board (bottom row = the player at the bottom)
   const start = E.Pos.from(startSpec);
+  if (isTelo()) {   // Telo: the pieces still to be placed lie in the groove on their owner's side
+    for (const p of [P1, P2]) {
+      const left = Math.max(0, 3 - pos.count(p)), bottom = flip ? P2 : P1, el = $(p === bottom ? '#res1' : '#res2');
+      let s = ''; for (let k = 0; k < left; k++) s += `<span class="rv p${p}"></span>`;
+      el.innerHTML = s; el.title = ''; el.classList.remove('turn');
+    }
+    return;
+  }
   for (const p of [P1, P2]) {
     const lost = Math.max(0, start.count(p) - pos.count(p));
     const bottom = flip ? P2 : P1, el = $(3 - p === bottom ? '#res1' : '#res2');   // next to the player who captured them
@@ -331,13 +366,17 @@ function renderFx() {
   // last move: its path and the captured points
   if (m && !sel) {
     const before = posAt(cur - 1).pos, path = E.path(before, m);
-    fxDiv('sqfx lastf', path[0]); fxDiv('sqfx last', mTo(m));
+    if (mFrom(m) >= 0) fxDiv('sqfx lastf', path[0]); fxDiv('sqfx last', mTo(m));
     if (settings.last) { if (path.length > 2) svgArrow(svg, path, 'pl'); for (const i of capsFlat(before, m)) fxDiv('mark took', i); }
   }
   if (st.over && st.winner) for (const [i, el] of pcEls) if (pos.at(i) !== st.winner) el.classList.add('dim');
   if (settings.threat && !st.over && !lesson && !puzzle && !sel) for (const p of [P1, P2]) for (const i of threatened(pos, p)) { const el = pcEls.get(i); if (el) el.classList.add('threat'); }
   // compulsory capture: the pieces that can (must) capture pulse
   if (canHumanPlay() && !sel && !st.over && pos.hasCaps()) for (const f of new Set(pos.capSteps(null).map(x => x.from))) { const el = pcEls.get(f); if (el) el.classList.add('mustjump'); }
+  if (isTelo()) {
+    if (canHumanPlay() && !st.over && pos.count(pos.turn) < 3) for (let i = 0; i < E.NP; i++) if (E.valid(i) && !pos.at(i)) fxDiv('dest tp', i);
+    if (st.over && st.why === 'line') for (const L of E.LINES3) if (L.every(x => pos.at(x) === st.winner)) { const p = document.createElementNS(NS, 'path'), a = cXY(L[0]), b = cXY(L[2]); p.setAttribute('d', `M${a[0]},${a[1]}L${b[0]},${b[1]}`); p.setAttribute('class', 'winline'); svg.appendChild(p); }
+  }
   if (sel) {
     const c = selCur(), el = pcEls.get(c); if (el) el.classList.add('sel');
     if (sel.st) { for (const v of sel.st.visited) if (v !== c) fxDiv('sqfx trail', v); svgArrow(svg, [sel.from].concat(sel.st.steps.map(x => x.to)), 'pl'); }
@@ -579,6 +618,10 @@ function onSquare(i) {
     return;
   }
   if (i < 0) { cancelSel(); return; }
+  if (isTelo() && pos.count(me) < 3) {   // Telo: putting the pieces on the board first
+    if (!pos.at(i)) commit(E.pname(i)); else toast(t('pick.place'), 1600);
+    return;
+  }
   if (pos.at(i) === me) {
     if (sel && sel.from === i) { cancelSel(); return; }
     if (!pos.firstSteps().some(x => x.from === i)) { toast(pos.hasCaps() ? t('cant.mustJump') : t('cant.stuck'), 1800); return; }
@@ -619,7 +662,7 @@ function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
-  startSpec = null;
+  startSpec = null; setVariant();
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; manualEnd = null; aiVals = []; drawAsked = -99;
   hideOverlay('#resultOverlay');
@@ -916,7 +959,13 @@ function designPickers() {
   r2.innerHTML = PC_KEYS.map(k => `<button type="button" data-pcs="${k}" class="${k === settings.pcs ? 'sel' : ''}" aria-pressed="${k === settings.pcs}">${miniSVG(DESIGN_SPEC, { cls: 'bdm', pcs: k })}<span>${escHb(t('pcs.' + k))}</span></button>`).join('');
 }
 let MINI_UID = 0;
+// small board pictures are drawn for o.rule's board (default 9x5: lessons / puzzles / openings), whatever the game uses
 function miniSVG(spec, o) {
+  const keep = [NC, NR, BW, BH], D = E.RULES[(o && o.rule) || 'sivy'];
+  NC = D.w; NR = D.h; BW = NC + 1; BH = NR + 1;
+  try { return miniSVG0(spec, o); } finally { [NC, NR, BW, BH] = keep; }
+}
+function miniSVG0(spec, o) {
   o = o || {};
   const fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [r, NC - 1 - c] : [NR - 1 - r, c]; };
   const u = 30, W = BW * u, H = BH * u, X = i => (P(i)[1] + 1) * u, Y = i => (P(i)[0] + 1) * u;
@@ -1065,7 +1114,8 @@ function segSync() {
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
-  $('#fRules').classList.add('hidden');
+  $('#fRules').classList.toggle('hidden', !(game || m === 'online'));
+  renderRuleCards();
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -1077,8 +1127,14 @@ function segSync() {
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
+// ゲーム: the three boards, each card with the starting position (shared/ngtabs.js styles)
+function ruleStart(r) { if (r === 'telo') { const a = Array(E.NP).fill('.'); a[0] = a[10] = 'w'; a[2] = a[18] = a[19] = 'b'; return { b: a.join(''), side: P1 }; } const keep = E.rule(); E.setRule(r); const sp = new E.Pos().spec(); E.setRule(keep); return sp; }
+function renderRuleCards() {
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'sivy' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+}
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { rule: RULE_ORDER.includes(settings.rule) ? settings.rule : 'sivy', mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2 };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
   if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
@@ -1111,7 +1167,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, rule: draft.rule });
   newGame();
 };
 
@@ -1232,7 +1288,7 @@ function exitSpecial() {
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
   document.body.classList.remove('in-lesson', 'in-puzzle');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
-  startSpec = null;
+  startSpec = null; setVariant();
   if (savedGame) { moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
   else { moves = []; cur = 0; evals = []; }
   reviewing = cur !== moves.length; hintList = null;
@@ -1315,7 +1371,7 @@ $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(spec) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
-  startSpec = spec;
+  startSpec = spec; setVariant('sivy');
   moves = []; cur = 0; reviewing = false; hintList = null; lessonMarks = []; labelList = null; evals = [];
 }
 function startLesson(step) {
@@ -1573,7 +1629,7 @@ document.addEventListener('click', e => { if (stTimer && !e.target.closest('[dat
 $('#lsFb').addEventListener('click', e => {
   if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
   const mv = lesson.g.study.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
-  savedGame = null; exitSpecial();
+  savedGame = null; settings.rule = 'sivy'; exitSpecial();
   busyToken++; cancelWorker('ai'); cancelWorker('ana');
   Object.assign(settings, { mode: 'ai' }); humanColor = side; rgame = null;
   moves = mv; cur = mv.length; evals = []; reviewing = false; gameOverShown = false;
@@ -2109,23 +2165,38 @@ function decMoves(s, start) {
 function parseGameText(v) {
   v = (v || '').trim();
   const h = v.match(/#(.*)$/);
-  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const list = decMoves(q.get('k') || ''); if (!list) return null; return { list, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }
+  const keep = E.rule();
+  try {
+    if (h) {
+      const q = new URLSearchParams(h[1]); if (!q.has('k')) return null;
+      const rule = RULE_ORDER.includes(q.get('r')) ? q.get('r') : 'sivy'; E.setRule(rule);
+      const list = decMoves(q.get('k') || ''); if (!list) return null; return { list, rule, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined };
+    }
+    // a record names its board ([Variant "Dimy"]); otherwise the first board on which every move is legal
+    const vm = /\[Variant\s+"(\w+)"\]/i.exec(v), named = vm && RULE_ORDER.find(r => r === vm[1].toLowerCase() || ('t' + r) === vm[1].toLowerCase());
+    let first = null;
+    for (const rule of named ? [named] : RULE_ORDER) { E.setRule(rule); const r = parseMoves(v); if (r && r.list) return Object.assign(r, { rule }); if (!first) first = r; }
+    return first;
+  } finally { E.setRule(keep); }
+}
+function parseMoves(v) {
   v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ');
   const toks = v.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
   const pos = E.Pos.from(null), out = [];
   for (let k = 0; k < toks.length; k++) {
-    if (!/^[a-i][1-5]([-x×:][a-i][1-5][AaWw]?)+$/.test(toks[k])) return { bad: k + 1 };
+    if (!/^[a-i][1-5]([-x×:][a-i][1-5][AaWw]?)*$/.test(toks[k])) return { bad: k + 1 };
     const m0 = E.parse(pos, toks[k]); if (m0 == null) return { bad: k + 1 };
     const m = canon(pos, m0); pos.play(m); out.push(m);
   }
   return { list: out };
 }
-function openLoaded(list, n) {
+function openLoaded(list, n, rule) {
   ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0; animating = false;
   settings.mode = 'pvp'; rgame = null; startSpec = null;
+  settings.rule = rule || 'sivy'; setVariant();
   moves = list; evals = []; hintList = null;
   cur = n === undefined || isNaN(n) ? moves.length : Math.max(0, Math.min(moves.length, n));
   reviewing = cur !== moves.length; gameOverShown = gameOver(moves.length);
@@ -2135,7 +2206,7 @@ function loadText(v) {
   const r = parseGameText(v);
   if (!r) { toast(t('paste.invalid'), 2200); return false; }
   if (r.bad) { toast(t('paste.bad', { n: r.bad }), 2500); return false; }
-  openLoaded(r.list, r.n); toast(t('paste.loaded', { n: r.list.length }), 1800);
+  openLoaded(r.list, r.n, r.rule); toast(t('paste.loaded', { n: r.list.length }), 1800);
   return true;
 }
 function loadFromHash() {
@@ -2145,10 +2216,10 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== 'sivy' ? '&r=' + gv : '') + (cur < moves.length ? '&n=' + cur : ''); }
 // 共有: the record in the usual notation (A = approach, W = withdrawal), the position, URL, diagram
 function faPosText(pos) {   // rows 5 → 1, W / B / . , then who is to move
-  const rows = []; for (let r = 4; r >= 0; r--) { let x = ''; for (let c = 0; c < 9; c++) x += '.WB'[pos.at(r * 9 + c)]; rows.push(x); }
+  const rows = []; for (let r = NR - 1; r >= 0; r--) { let x = ''; for (let c = 0; c < NC; c++) x += '.WB'[pos.at(r * 9 + c)]; rows.push(x); }
   return rows.join('/') + ' ' + (pos.side ? 'B' : 'W');
 }
 function faRecord() {
@@ -2157,7 +2228,7 @@ function faRecord() {
   moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(E.name(pos, m)); pos.play(m); });
   tk.push(res);
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
-  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/fanorona"]\n[Game "Fanorona"]\n[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/fanorona"]\n[Game "Fanorona"]\n${gv !== 'sivy' ? `[Variant "${{ dimy: 'Dimy', telo: 'Telo' }[gv]}"]\n` : ''}[Date "${date}"]\n[White "${q(playerName(P1))}"]\n[Black "${q(playerName(P2))}"]\n[Result "${res}"]\n${startSpec ? `[SetUp "1"]\n[Position "${faPosText(E.Pos.from(startSpec))}"]\n` : ''}\n${RecordExport.lines(tk)}\n`;
 }
 async function faDiagram(mode) {
   const RX = RecordExport, S = 64, BWp = S * BW, BHp = S * BH, pos = posAt(cur).pos;

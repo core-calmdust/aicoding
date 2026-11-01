@@ -343,7 +343,7 @@
 "op.grp.w.sub": "The five first moves and the exchanges that follow.",
 "op.grp.b": "Black's replies",
 "op.grp.b.sub": "Black's replies to the standard first moves f2-e3A and d3-e3A.",
-"rule.sivy": "Standard rules (9×5 Fanoron-Tsivy)",
+"rule.sivy": "Tsivy (9×5)",
 "bd.acacia": "Acacia",
 "bd.maple": "Maple",
 "bd.rosewood": "Rosewood",
@@ -354,5 +354,15 @@
 "share.record": "Record",
 "share.pos": "Position",
 "ls.toList": "Back to the lessons",
-"ls.toOpen": "Back to the openings"
+"ls.toOpen": "Back to the openings",
+"ng.board": "Board",
+"rule.std": "Standard",
+"rule.dimy": "Dimy (5×5)",
+"rule.telo": "Telo (3×3)",
+"rule.sivy.d": "Full Fanorona with 22 pieces each: capture whole lines by approach and withdrawal. Madagascar's national game.",
+"rule.dimy.d": "5×5 with 12 pieces each. The same rules, a shorter game — a good start.",
+"rule.telo.d": "3×3, 3 pieces each. Place them in turn, then move them along the lines: three in a row wins (no captures).",
+"pick.place": "Place a piece on an empty point",
+"pick.telo": "Choose a point to place a piece (three in a row wins)",
+"res.why.line": "Three in a row"
 }

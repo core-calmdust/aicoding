@@ -243,7 +243,7 @@ function openingType(names) {
   return { name: opName(live[0]), fixed: false };
 }
 function bookAt(i) {
-  if (startSpec || i > 6) return null;
+  if (startSpec || i > 6 || gv !== 'sivy') return null;
   const names = gameNames(i), key = names.join(' ');
   if (THEORY[key]) return THEORY[key].map(([u, kind, k]) => ({ u, kind, key: k }));
   const nx = new Map();
@@ -259,7 +259,7 @@ const isBook = (i, m) => { const b = bookAt(i); return !!(b && b.some(x => x.u =
 const S = { open: false, key: '', f: null, lists: new Map(), hov: null, items: null };
 let card = null;
 function usable() {
-  return !!(!lesson && !puzzle && !rgame && !ken && (settings.mode === 'ai' || settings.mode === 'pvp') && !document.body.classList.contains('in-online'));
+  return !!(!lesson && !puzzle && !rgame && !ken && gv !== 'telo' && (settings.mode === 'ai' || settings.mode === 'pvp') && !document.body.classList.contains('in-online'));
 }
 function active() { return !!(settings.coach && usable()); }
 function myTurn() { return !gameOver(cur) && cur === moves.length && !reviewing && (settings.mode === 'pvp' || toMoveAt(cur) === humanColor); }

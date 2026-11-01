@@ -9,6 +9,14 @@
 //   5. Project settings → General → Your apps → Web (</>) → register an app and copy the firebaseConfig object.
 //   6. Replace `null` below with that object, then bump the ?v= of firebase-config.js in fanorona/index.html.
 // While this is null, online play shows "coming soon" (準備中) and Google sync is hidden (testing: add ?mock=1 to the URL).
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDCXYsAiPxPioHaFLX0ZOPVyl4xf3MBsrY",
+  authDomain: "fanorona-multi.firebaseapp.com",
+  databaseURL: "https://fanorona-multi-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "fanorona-multi",
+  storageBucket: "fanorona-multi.firebasestorage.app",
+  messagingSenderId: "337101062549",
+  appId: "1:337101062549:web:b0b65560accdc65805b69c"
+};
 // App Check (reCAPTCHA Enterprise site key, public by design). null = App Check is skipped.
-window.FIREBASE_APPCHECK_SITE_KEY = null;
+window.FIREBASE_APPCHECK_SITE_KEY = '6Le4UAouAAAAAFonDWwfqLPG_bZWhbu8tTwVj1kK';   // reCAPTCHA Enterprise site key

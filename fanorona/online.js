@@ -18,10 +18,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
   const INITIAL = 1500;
-  const VARIANTS = ['english'];
+  const VARIANTS = ['sivy', 'dimy', 'telo'];
   // Fischer clock per variant: base time per player + increment per move
-  const TC = { english: { main: 300000, inc: 5000 } };
-  const DEF_V = 'english';
+  const TC = { sivy: { main: 480000, inc: 5000 }, dimy: { main: 240000, inc: 3000 }, telo: { main: 120000, inc: 2000 } };   // keep in sync with shared/tools/secrules.py
+  const DEF_V = 'sivy';
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
   const ROOM_TTL = 10 * 60000;           // a room nobody joins expires after 10 min
@@ -41,29 +41,37 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
 
   // ---------------------------------------------------------------- rules (shared by both clients and spectators)
-  // a move as three K64 characters in the position it is played from
-  function enc(m, pos) {
-    const E = window.FanoronaEngine, f = E.mFrom(m), t = E.mTo(m);
-    const same = pos ? pos.moves().filter(x => E.mFrom(x) === f && E.mTo(x) === t) : [m];
-    return K64[f] + K64[t] + K64[Math.max(0, same.indexOf(m))];
+  // the board of a game record (v): the rules engine is switched to it for the replay and put back afterwards
+  function withRule(v, fn) { const E = window.FanoronaEngine, keep = E.rule(); E.setRule(varOk(v) ? v : DEF_V); try { return fn(E); } finally { E.setRule(keep); } }
+  // a move as three K64 characters in the position it is played from: from + 1 (0 = a Telo placement), to, index among the
+  // moves with the same from / to
+  function enc(m, pos, v) {
+    return withRule(v || (pos && pos.rule) || DEF_V, E => {
+      const f = E.mFrom(m), t = E.mTo(m);
+      const same = pos ? pos.moves().filter(x => E.mFrom(x) === f && E.mTo(x) === t) : [m];
+      return K64[f + 1] + K64[t] + K64[Math.max(0, same.indexOf(m))];
+    });
   }
   // replay a move string: { ok, moves[] (move numbers), turn (1 / 2 = player to move), over, win (1 / 2 / 0 draw), why, bad, pos }
   function replay(v, s) {
-    const E = window.FanoronaEngine, pos = E.Pos.from(null), hashes = [pos.h1 + ':' + pos.h2], moves = [];
-    s = String(s || '');
-    let res = null;
-    const judge = () => { const j = E.judge(pos, hashes); return j.over ? { over: true, win: j.winner, why: j.why } : null; };
-    const bad = i => Object.assign({ ok: false, bad: i, moves, turn: pos.turn, over: false, pos }, res || {});
-    if (s.length % 3) return bad(Math.floor(s.length / 3));
-    for (let i = 0; i < s.length; i += 3) {
-      const f = K64.indexOf(s[i]), t = K64.indexOf(s[i + 1]), k = K64.indexOf(s[i + 2]);
-      if (f < 0 || f > 31 || t < 0 || t > 31 || k < 0 || res) return bad(i / 3);
-      const same = pos.moves().filter(x => E.mFrom(x) === f && E.mTo(x) === t);
-      if (!same[k]) return bad(i / 3);
-      pos.play(same[k]); moves.push(same[k]); hashes.push(pos.h1 + ':' + pos.h2);
-      res = judge();
-    }
-    return Object.assign({ ok: true, moves, turn: pos.turn, over: false, win: undefined, why: '', pos }, res || {});
+    return withRule(v, E => {
+      const pos = E.Pos.from(null), hashes = [pos.key()], moves = [];
+      pos.rule = E.rule();
+      s = String(s || '');
+      let res = null;
+      const judge = () => { const j = E.judge(pos, hashes); return j.over ? { over: true, win: j.winner, why: j.why } : null; };
+      const bad = i => Object.assign({ ok: false, bad: i, moves, turn: pos.turn, over: false, pos }, res || {});
+      if (s.length % 3) return bad(Math.floor(s.length / 3));
+      for (let i = 0; i < s.length; i += 3) {
+        const f = K64.indexOf(s[i]) - 1, t = K64.indexOf(s[i + 1]), k = K64.indexOf(s[i + 2]);
+        if (f < -1 || f >= E.NP || t < 0 || t >= E.NP || k < 0 || res) return bad(i / 3);
+        const same = pos.moves().filter(x => E.mFrom(x) === f && E.mTo(x) === t);
+        if (!same[k]) return bad(i / 3);
+        pos.play(same[k]); moves.push(same[k]); hashes.push(pos.key());
+        res = judge();
+      }
+      return Object.assign({ ok: true, moves, turn: pos.turn, over: false, win: undefined, why: '', pos }, res || {});
+    });
   }
   const sideNo = (g, u) => (g.b === u ? 1 : g.w === u ? 2 : 0);
 
@@ -637,11 +645,11 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       const st = replay(g.v, g.moves);
       if (!st.ok || st.over) return;
       if (sideNo(g, uid) !== st.turn) return;                                 // not my turn
-      const after = replay(g.v, String(g.moves || '') + enc(m, st.pos));
+      const after = replay(g.v, String(g.moves || '') + enc(m, st.pos, g.v));
       if (!after.ok) return;                                                   // illegal move
       const side = sideOf(g, uid);
       if (!chargeClock(g, side)) return;
-      g.moves = String(g.moves || '') + enc(m, st.pos);
+      g.moves = String(g.moves || '') + enc(m, st.pos, g.v);
       g.t = db.stamp(), g.lm = uid;
       g.offer = null;                                                          // a move answers (declines) a pending draw offer
       if (after.over) { g.status = 'over'; g.win = after.win; g.why = after.why; }

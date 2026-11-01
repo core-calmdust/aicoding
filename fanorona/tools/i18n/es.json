@@ -343,7 +343,7 @@
 "op.grp.w.sub": "Las cinco primeras jugadas y los intercambios que siguen.",
 "op.grp.b": "Respuestas de Negras",
 "op.grp.b.sub": "Respuestas de Negras a las primeras jugadas habituales f2-e3A y d3-e3A.",
-"rule.sivy": "Reglas estándar (Fanoron-Tsivy de 9×5)",
+"rule.sivy": "Tsivy (9×5)",
 "bd.acacia": "Acacia",
 "bd.maple": "Arce",
 "bd.rosewood": "Palisandro",
@@ -354,5 +354,15 @@
 "share.record": "Partida",
 "share.pos": "Posición",
 "ls.toList": "Volver a las lecciones",
-"ls.toOpen": "Volver a las aperturas"
+"ls.toOpen": "Volver a las aperturas",
+"ng.board": "Tablero",
+"rule.std": "Estándar",
+"rule.dimy": "Dimy (5×5)",
+"rule.telo": "Telo (3×3)",
+"rule.sivy.d": "Fanorona completo, 22 piezas cada uno: captura filas enteras por aproximación y retirada. El juego nacional de Madagascar.",
+"rule.dimy.d": "5×5 con 12 piezas cada uno. Las mismas reglas, partidas más cortas.",
+"rule.telo.d": "3×3, 3 piezas cada uno. Se colocan por turnos y luego se mueven por las líneas: tres en raya gana (sin capturas).",
+"pick.place": "Coloca una pieza en un punto vacío",
+"pick.telo": "Elige dónde colocar (tres en raya gana)",
+"res.why.line": "Tres en raya"
 }

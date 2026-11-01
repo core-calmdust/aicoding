@@ -11,24 +11,44 @@
 const P1 = 1, P2 = 2;
 const WIN = 30000, WINT = 29000, DRAW_PLIES = 80, NP = 45;
 const COLS = 'abcdefghi';
-// ---------------------------------------------------------------- geometry
+// ---------------------------------------------------------------- geometry (rule variants share the index i = r * 9 + c;
+// a smaller board uses the points with r < GH, c < GW): 'sivy' 9x5 (Fanoron-Tsivy), 'dimy' 5x5 (Fanoron-Dimy, the same
+// rules with 12 pieces each), 'telo' 3x3 (Fanoron-Telo: 3 pieces each are placed, then moved one step along a line; three
+// in a row wins — no captures)
 const DR = [0, 1, 1, 1, 0, -1, -1, -1], DC = [1, 1, 0, -1, -1, -1, 0, 1];
 const NB = []; for (let d = 0; d < 8; d++) NB.push(new Int8Array(NP));
-const RC = [];
+const RC = []; for (let i = 0; i < NP; i++) RC.push([(i / 9) | 0, i % 9]);
+const RULES = { sivy: { w: 9, h: 5, pcs: 22 }, dimy: { w: 5, h: 5, pcs: 12 }, telo: { w: 3, h: 3, pcs: 3, place: true } };
+let RULE = 'sivy', GW = 9, GH = 5, TELO = false;
 const strong = i => ((((i / 9) | 0) + (i % 9)) & 1) === 0;
-for (let i = 0; i < NP; i++) {
-  const r = (i / 9) | 0, c = i % 9; RC.push([r, c]);
-  for (let d = 0; d < 8; d++) {
-    const nr = r + DR[d], nc = c + DC[d];
-    NB[d][i] = ((d & 1) && !strong(i)) || nr < 0 || nr > 4 || nc < 0 || nc > 8 ? -1 : nr * 9 + nc;
+const valid = i => i >= 0 && i < NP && ((i / 9) | 0) < GH && i % 9 < GW;
+const START = new Int8Array(NP);
+const LINES3 = [];   // Telo: the 8 lines of three
+function setRule(r) {
+  if (!RULES[r]) r = 'sivy';
+  const R = RULES[r]; RULE = r; GW = R.w; GH = R.h; TELO = !!R.place;
+  for (let i = 0; i < NP; i++) {
+    const r0 = (i / 9) | 0, c = i % 9;
+    for (let d = 0; d < 8; d++) {
+      const nr = r0 + DR[d], nc = c + DC[d];
+      NB[d][i] = !valid(i) || ((d & 1) && !strong(i)) || nr < 0 || nr >= GH || nc < 0 || nc >= GW ? -1 : nr * 9 + nc;
+    }
   }
+  START.fill(0);
+  if (r === 'sivy') { for (let i = 0; i < 18; i++) START[i] = P1; for (let i = 27; i < 45; i++) START[i] = P2; [P2, P1, P2, P1, 0, P2, P1, P2, P1].forEach((v, c) => { START[18 + c] = v; }); }
+  else if (r === 'dimy') { for (let rr = 0; rr < 5; rr++) for (let c = 0; c < 5; c++) START[rr * 9 + c] = rr < 2 ? P1 : rr > 2 ? P2 : [P2, P1, 0, P2, P1][c]; }
+  LINES3.length = 0;
+  if (TELO) { for (let k = 0; k < 3; k++) { LINES3.push([k * 9, k * 9 + 1, k * 9 + 2]); LINES3.push([k, 9 + k, 18 + k]); } LINES3.push([0, 10, 20]); LINES3.push([2, 10, 18]); }
+  return r;
 }
-const ptAt = (r, c) => r < 0 || r > 4 || c < 0 || c > 8 ? -1 : r * 9 + c;
+setRule('sivy');
+const rule = () => RULE, dims = () => ({ w: GW, h: GH, telo: TELO, pcs: RULES[RULE].pcs });
+const ptAt = (r, c) => r < 0 || r >= GH || c < 0 || c >= GW ? -1 : r * 9 + c;
 const pname = i => COLS[i % 9] + (((i / 9) | 0) + 1);
-const pparse = s => { const m = /^([a-i])([1-5])$/.exec(String(s || '').trim()); return m ? (m[2] - 1) * 9 + COLS.indexOf(m[1]) : -1; };
-const dirOf = (a, b) => { for (let d = 0; d < 8; d++) if (NB[d][a] === b) return d; return -1; };
-// the starting position: rows 1-2 White, rows 4-5 Black, row 3: B W B W . B W B W
-const START = (() => { const b = new Int8Array(NP); for (let i = 0; i < 18; i++) b[i] = P1; for (let i = 27; i < 45; i++) b[i] = P2; [P2, P1, P2, P1, 0, P2, P1, P2, P1].forEach((v, c) => { b[18 + c] = v; }); return b; })();
+const pparse = s => { const m = /^([a-i])([1-5])$/.exec(String(s || '').trim()); if (!m) return -1; const i = (m[2] - 1) * 9 + COLS.indexOf(m[1]); return valid(i) ? i : -1; };
+const dirOf = (a, b) => { if (a < 0) return -1; for (let d = 0; d < 8; d++) if (NB[d][a] === b) return d; return -1; };
+// Telo: does p have three in a row
+const line3 = (b, p) => LINES3.some(L => b[L[0]] === p && b[L[1]] === p && b[L[2]] === p);
 
 class Pos {
   constructor() { this.b = Int8Array.from(START); this.side = 0; this.quiet = 0; }
@@ -55,6 +75,7 @@ class Pos {
   // { cur, last, visited: Set, b: board after the steps so far })
   capSteps(st) {
     const me = this.turn, out = [];
+    if (TELO) return out;
     const b = st ? st.b : this.b;
     const pts = st ? [st.cur] : [...Array(NP).keys()].filter(i => b[i] === me);
     for (const f of pts) for (let d = 0; d < 8; d++) {
@@ -66,6 +87,7 @@ class Pos {
   }
   paikaSteps() {
     const me = this.turn, out = [];
+    if (TELO && this.count(me) < 3) { for (let t = 0; t < NP; t++) if (valid(t) && !this.b[t]) out.push({ from: -1, to: t, d: -1, kind: '', cap: [] }); return out; }
     for (let f = 0; f < NP; f++) if (this.b[f] === me) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) out.push({ from: f, to: t, d, kind: '', cap: [] }); }
     return out;
   }
@@ -82,7 +104,7 @@ class Pos {
   // every full turn as notation (one representative per resulting position unless all = true)
   moves(all) {
     const first = this.capSteps(null);
-    if (!first.length) return this.paikaSteps().map(s => pname(s.from) + '-' + pname(s.to));
+    if (!first.length) return this.paikaSteps().map(s => s.from < 0 ? pname(s.to) : pname(s.from) + '-' + pname(s.to));
     const out = [], seen = new Set();
     const rec = (st) => {
       const s = st.steps, last = s[s.length - 1];
@@ -96,10 +118,15 @@ class Pos {
     for (const s of first) rec(Pos.after(this, null, s));
     return out;
   }
-  status() { for (let f = 0; f < NP; f++) if (this.b[f] === this.turn) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) return 0; } return -1; }
+  status() {
+    if (TELO) { if (line3(this.b, this.turn === P1 ? P2 : P1)) return -1; if (this.count(this.turn) < 3) return 0; }
+    for (let f = 0; f < NP; f++) if (this.b[f] === this.turn) for (let d = 0; d < 8; d++) { const t = NB[d][f]; if (t >= 0 && !this.b[t]) return 0; } return -1; }
   // decode a move string into steps (validated); null if illegal
   steps(m) {
-    const parts = String(m).split('-'); if (parts.length < 2) return null;
+    const parts = String(m).split('-');
+    if (TELO && parts.length === 1) { const t = pparse(parts[0]); if (t < 0 || this.b[t] || this.count(this.turn) >= 3 || this.status() === -1) return null; return [{ from: -1, to: t, d: -1, kind: '', cap: [] }]; }
+    if (parts.length < 2) return null;
+    if (TELO && this.count(this.turn) < 3) return null;
     const f = pparse(parts[0]); if (f < 0 || this.b[f] !== this.turn) return null;
     const hasCap = this.hasCaps();
     if (parts.length === 2 && !/[AW]$/.test(parts[1])) {
@@ -121,12 +148,12 @@ class Pos {
     const S = typeof m === 'string' ? this.steps(m) : m;
     if (!S) throw new Error('illegal move ' + m);
     const me = this.turn; let caps = 0;
-    for (const s of S) { this.b[s.to] = me; this.b[s.from] = 0; for (const c of s.cap) { this.b[c] = 0; caps++; } }
+    for (const s of S) { if (s.from >= 0) this.b[s.from] = 0; this.b[s.to] = me; for (const c of s.cap) { this.b[c] = 0; caps++; } }
     this.side ^= 1; this.quiet = caps ? 0 : this.quiet + 1;
     return this;
   }
 }
-const mFrom = m => pparse(String(m).split('-')[0]);
+const mFrom = m => /-/.test(String(m)) ? pparse(String(m).split('-')[0]) : -1;
 const mTo = m => { const p = String(m).split('-'); return pparse(p[p.length - 1].replace(/[AW]$/, '')); };
 const isCap = m => /[AW]$/.test(String(m));
 // the points visited by the moving piece (for animation)
@@ -144,7 +171,7 @@ function replay(start, moves) {
 }
 // { over, winner (1/2/0), why: 'none' (no pieces) | 'block' (no moves) | 'rep' | 'quiet' }
 function judge(pos, hashes) {
-  if (pos.status() === -1) return { over: true, winner: pos.side ? P1 : P2, why: pos.count(pos.turn) ? 'block' : 'none' };
+  if (pos.status() === -1) return { over: true, winner: pos.side ? P1 : P2, why: TELO && line3(pos.b, pos.side ? P1 : P2) ? 'line' : pos.count(pos.turn) ? 'block' : 'none' };
   if (pos.quiet >= DRAW_PLIES) return { over: true, winner: 0, draw: true, why: 'quiet' };
   const h = pos.key(); let c = 0; for (const x of hashes) if (x === h) c++;
   if (c >= 3) return { over: true, winner: 0, draw: true, why: 'rep' };
@@ -206,6 +233,50 @@ function jsSearch(p, d, a, b, ply, tEnd) {
 }
 function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return p.moves().map(m => ({ m, v: -jsSearch(p.clone().play(m), depth - 1, -Infinity, Infinity, 1, tEnd) })).sort((a, b) => b.v - a.v); }
 
+
+// ---------------------------------------------------------------- Fanoron-Telo: solved completely (retrograde analysis over
+// every placement of up to 3 + 3 pieces, both sides to move); value WIN - d = win in d plies, 0 = draw
+let TS = null;
+const TK = [0, 1, 2, 9, 10, 11, 18, 19, 20];   // the 9 points
+function teloIdx(b, side) { let x = 0; for (let k = 8; k >= 0; k--) x = x * 3 + b[TK[k]]; return x * 2 + side; }
+function teloSolve() {
+  if (TS) return TS;
+  const save = RULE; setRule('telo');
+  const N = 19683 * 2, res = new Int8Array(N), dist = new Int16Array(N), kids = new Array(N);
+  const b = new Int8Array(NP);
+  for (let st = 0; st < N; st++) {
+    let x = st >> 1; const side = st & 1; b.fill(0);
+    let nw = 0, nb = 0;
+    for (let k = 0; k < 9; k++) { const v = x % 3; x = (x / 3) | 0; b[TK[k]] = v; if (v === 1) nw++; else if (v === 2) nb++; }
+    if (nw > 3 || nb > 3) { kids[st] = null; continue; }
+    const p = Object.create(Pos.prototype); p.b = Int8Array.from(b); p.side = side; p.quiet = 0;
+    if (p.status() === -1) { res[st] = -1; dist[st] = 0; kids[st] = []; continue; }
+    kids[st] = p.moves().map(m => teloIdx(p.clone().play(m).b, side ^ 1));
+  }
+  for (let pass = 1, ch = true; ch; pass++) {
+    ch = false; const snap = Int8Array.from(res);
+    for (let st = 0; st < N; st++) {
+      const K = kids[st]; if (!K || res[st]) continue;
+      let lossD = 1e9, allWin = true, winMax = 0;
+      for (const c of K) { if (snap[c] === -1) lossD = Math.min(lossD, dist[c]); if (snap[c] !== 1) allWin = false; else winMax = Math.max(winMax, dist[c]); }
+      if (lossD < 1e9) { res[st] = 1; dist[st] = lossD + 1; ch = true; } else if (allWin && K.length) { res[st] = -1; dist[st] = winMax + 1; ch = true; }
+    }
+  }
+  setRule(save);
+  TS = { res, dist };
+  return TS;
+}
+// value of the position for the side to move
+function teloVal(pos) { const T = teloSolve(), i = teloIdx(pos.b, pos.side); return T.res[i] === 1 ? WIN - T.dist[i] : T.res[i] === -1 ? -(WIN - T.dist[i]) : 0; }
+function teloList(pos) { return pos.moves().map(m => { const c = teloVal(pos.clone().play(m)); return { m, v: c > WINT ? -c + 1 : c < -WINT ? -c - 1 : 0, kind: 'exact' }; }).sort((a, b) => b.v - a.v); }
+function teloThink(pos, level, rand) {
+  const L = teloList(pos);
+  const pr = Math.max(0, 0.6 - 0.04 * (level - 1));   // 15級: often a random move … 1級 and above: perfect
+  if (rand() < pr) return { move: L[Math.floor(rand() * L.length)].m, v: L[0].v };
+  const top = L.filter(e => e.v === L[0].v);
+  return { move: top[Math.floor(rand() * top.length)].m, v: L[0].v };
+}
+
 // ---------------------------------------------------------------- WebAssembly side
 let WX = null;
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
@@ -213,6 +284,7 @@ function wSetup(start, moves) {
   const p = Pos.from(start);
   let w0 = 0, w1 = 0, b0 = 0, b1 = 0;
   for (let i = 0; i < NP; i++) { const v = p.b[i]; if (!v) continue; if (i < 32) { if (v === P1) w0 |= 1 << i; else b0 |= 1 << i; } else { if (v === P1) w1 |= 1 << (i - 32); else b1 |= 1 << (i - 32); } }
+  if (WX.set_rule) WX.set_rule(GW, GH);
   const a = [w0, w1, b0, b1, p.side, moves.length];
   for (const m of moves) { const w = toWire(p, m); if (!w) return 0; a.push(w[0], w[1]); p.play(m); }
   wIO().set(a); return WX.setup();
@@ -227,6 +299,7 @@ function think(start, moves, level, rand) {
   const all = pos.moves();
   if (!all.length) return { move: null };
   if (all.length === 1) return { move: all[0] };
+  if (TELO) return teloThink(pos, level, rand);
   if (!WX) {
     const vals = jsValues(pos, Math.min(L.d || 4, 4), 1500);
     if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
@@ -244,7 +317,7 @@ function think(start, moves, level, rand) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  if (L.s && L.d >= 99 && level >= 15 && BOOK && !start) {   // the opening book (deep analysis of the first moves)
+  if (L.s && L.d >= 99 && level >= 15 && BOOK && !start && RULE === 'sivy') {   // the opening book (deep analysis of the first moves)
     const bk = BOOK[pos.key()];
     if (bk && bk.length) { const m = bk[Math.floor(rand() * bk.length)]; if (all.includes(m)) return { move: m, book: true }; }
   }
@@ -255,6 +328,7 @@ function think(start, moves, level, rand) {
 }
 function analyze(start, moves, ms, onProgress) {
   const { pos } = replay(start, moves);
+  if (TELO) return { list: teloList(pos), depth: 9 };
   if (!WX) { const L = jsValues(pos, 3, ms).map(e => ({ ...e, kind: kindOf(e.v) })); return { list: L, depth: 3 }; }
   if (!wSetup(start, moves)) return { list: [], depth: 0 };
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
@@ -266,6 +340,7 @@ function cands(start, moves, ms, k, plies, onProgress) {
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
   for (const e of list) {
     e.pv = [];
+    if (TELO) { let p = replay(start, moves).pos.clone().play(e.m); for (let d = 0; d < (plies || 7) && p.status() !== -1; d++) { const b = teloList(p)[0]; if (!b) break; e.pv.push(b.m); p = p.clone().play(b.m); } continue; }
     if (!WX) continue;
     const line = moves.concat([e.m]);
     for (let d = 0; d < (plies || 7); d++) {
@@ -282,7 +357,7 @@ function cands(start, moves, ms, k, plies, onProgress) {
   return { list, depth: r.depth };
 }
 function puzzle(start, moves, n, defend, goal, base) {
-  if (!WX) return null;
+  if (!WX || TELO) return null;
   if (!wSetup(start, moves)) return null;
   WX.puzzle(n, defend ? 1 : 0, goal || 0, base || 0, 3000);
   const r = wIO(), out = [];
@@ -311,11 +386,11 @@ function loadEG(X, b) {
   return true;
 }
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RULES, setRule, rule, dims, valid, line3, LINES3, teloVal, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101b';
+  const V = 'v=20261101c';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -338,6 +413,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
+        setRule(m.rule || 'sivy');
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
