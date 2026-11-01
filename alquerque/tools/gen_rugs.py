@@ -529,8 +529,21 @@ def patch(seed=4):
     return out.filter(ImageFilter.GaussianBlur(0.4))
 
 
+def calm(img, fine=.45, sat=.8, dark=.92, pad=.55):
+    """quieten the playing field so the pieces and lines read: fine detail (above ~6 px) at `fine` of its contrast,
+    colours a little desaturated and darker; the border keeps its full detail. Soft edge round the field."""
+    a = np.asarray(img).astype(np.float64)
+    m = np.zeros((H, W)); x0, y0, x1, y1 = [int(v) for v in (FX0 - pad * S, FY0 - pad * S, FX1 + pad * S, FY1 + pad * S)]
+    m[max(0, y0):max(0, y1), max(0, x0):max(0, x1)] = 1; m = gaussian_filter(m, S * .12)[..., None]
+    b = np.dstack([gaussian_filter(a[..., k], 5) for k in range(3)])
+    q = b + (a - b) * fine
+    g = q.mean(axis=2, keepdims=True); q = (g + (q - g) * sat) * dark
+    return Image.fromarray(np.clip(a * (1 - m) + q * m, 0, 255).astype(np.uint8))
+
+
+CALM = {'medallion': dict(fine=.42, sat=.76), 'berber': dict(fine=.36, sat=.62, dark=.95), 'kilim': dict(fine=.42, sat=.64), 'patch': dict(fine=.38, sat=.55, dark=.86, pad=3)}
 os.makedirs(OUT, exist_ok=True)
 ALL = {'medallion': medallion, 'berber': berber, 'kilim': kilim, 'patch': patch}
 for name in (sys.argv[1:] or ALL):
-    ALL[name]().save(os.path.join(OUT, f'rug-{name}.webp'), quality=88, method=6)
+    calm(ALL[name](), **CALM[name]).save(os.path.join(OUT, f'rug-{name}.webp'), quality=88, method=6)
     print(name)

@@ -3265,7 +3265,9 @@ $('#langSel').onchange = e => {
 if (window.PZBook) PZBook.setLang(LANG);
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 // 勝敗記録 (shared/record.js) and the coach switch (coach.js): both go into the menu / icon set before the header bar takes them
-if (window.GameRecord) GameRecord.init({ game: 'backgammon', lang: () => LANG, menu: '.controls', sides: () => [pname(0), pname(1)] });
+const recFmt = () => { const n = match ? match.len : settings.matchLen; return n ? 'm' + n : 'g1'; };
+const recFmtName = k => k === 'g1' ? t('ng.single') : ['m3', 'm5', 'm7'].includes(k) ? t('ng.' + k) : t('info.match', { n: +String(k).slice(1) });
+if (window.GameRecord) GameRecord.init({ game: 'backgammon', lang: () => LANG, menu: '.controls', sides: () => [pname(0), pname(1)], variant: () => { const k = recFmt(); return { k, n: recFmtName(k) }; }, variants: () => ['g1', 'm3', 'm5', 'm7'], variantName: k => recFmtName(k), defVariant: 'g1' });   // 戦績 by format (single game / n-point match; same keys as online)
 if (window.BGCoach) BGCoach.init();
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => { try { updateGeom(); if (match) renderInfo(); } catch (e) {} });

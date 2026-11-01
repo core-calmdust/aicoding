@@ -2245,7 +2245,7 @@ $('#langSel').onchange = e => {
   learnLangChanged();
 };
 learnInit();
-if (window.GameRecord) GameRecord.init({ game: 'dots', lang: () => LANG, menu: '.controls', sides: () => [t('ng.first'), t('ng.second')] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'dots', lang: () => LANG, menu: '.controls', sides: () => [t('ng.first'), t('ng.second')], variant: () => ({ k: String(game.n), n: game.n + '×' + game.n }), variants: () => ['3', '4', '5'], variantName: k => k + '×' + k, defVariant: '4' });   // 戦績 by board size   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.DotsCoach) DotsCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], rules: () => openRules(0), lang: () => LANG }) : null;

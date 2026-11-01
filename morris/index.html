@@ -3601,7 +3601,7 @@ try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)
 applyI18n();
 if (window.FlipBtn) FlipBtn.init({ game: 'morris', lang: () => LANG, onChange: () => { drawLines(); update(); } });
 drawLines();
-if (window.GameRecord) GameRecord.init({ game: 'morris', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
+if (window.GameRecord) GameRecord.init({ game: 'morris', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)], variant: () => ({ k: gv, n: t('rule.' + gv) }), variants: () => RULE_ORDER, variantName: k => t('rule.' + k), defVariant: 'nine' });   // 勝敗記録 (shared/record.js): menu button before the header bar takes the menu
 if (window.MorrisCoach) MorrisCoach.init();   // coach (coach.js): the switch goes into the icon set before the header bar takes it
 // PC header bar: title left, menu (new > undo > hint > rules > lessons > puzzles) + icons right, game info in between
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
