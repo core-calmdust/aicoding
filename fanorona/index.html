@@ -961,6 +961,151 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 } }
 /* portal 3D skin on phones: the same distance from the 3D board to the boxes above / below as in reversi (~15px) */
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area > #frame{margin-top:calc(var(--board) * .045 - 7px)!important;margin-bottom:calc(var(--board) * .045 - 7px)!important} }
+
+/* phone landscape (landtabs.js, as backgammon / mancala): the header in one row, the board below it, a tab rail at the right edge;
+   a tab slides a drawer in from the right over the board (the tab again / a tap on the board / a swipe right closes it) */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  html:has(body.lt-on), body.lt-on{height:100%!important;overflow:hidden!important}
+  body.lt-on{--ltw:300px}
+  :root:has(body.lt-on){--cell:min((100vh - 70px) / var(--fhc), (100vw - 96px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
+  :root:has(body.lt-on:is(.in-lesson,.in-puzzle)){--cell:min((100vh - 70px) / var(--fhc), (100vw - 340px - env(safe-area-inset-left) - env(safe-area-inset-right)) / var(--fwc), 140px)!important}
+  body.lt-on .app{display:grid!important;height:100vh!important;min-height:0!important;box-sizing:border-box;overflow:hidden;
+    padding:6px max(8px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left))!important;gap:6px 8px!important;
+    grid-template-columns:auto minmax(0,1fr) auto auto 58px!important;grid-template-rows:36px minmax(0,1fr)!important;
+    grid-template-areas:"bl ct pl br br" "board board board board rl"!important}
+  body.lt-on.in-lesson .app, body.lt-on.in-puzzle .app{grid-template-columns:auto minmax(0,1fr) auto auto var(--ltw)!important;grid-template-areas:"bl ct pl br br" "board board board board pn"!important}
+  body.lt-on .app > .side, body.lt-on .side-in, body.lt-on .side > .brand{display:contents!important}
+  body.lt-on .brand-l{grid-area:bl;align-self:center;min-width:0}
+  body.lt-on .brand-l .series{display:none}
+  body.lt-on .brand-l h1{font-size:17px!important;margin:0;white-space:nowrap}
+  body.lt-on .brand-r{grid-area:br;justify-self:end;display:flex;align-items:center;gap:4px}
+  body.lt-on .brand-r > :is(button, a){width:34px!important;height:32px!important;min-width:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;flex:none}
+  body.lt-on .brand-r > :is(button, a) svg{width:17px!important;height:17px!important}
+  body.lt-on .brand-r #langSel{width:74px!important;max-width:74px;height:32px!important;font-size:12px;padding:0 4px}
+  body.lt-on .controls{grid-area:ct;display:flex!important;flex-direction:row;gap:4px!important;align-items:center;justify-content:flex-start;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-width:0;overflow:hidden}
+  body.lt-on .controls .btn span{display:none!important}
+  body.lt-on .controls .btn{padding:0!important;flex:none!important;width:36px!important;height:32px!important;gap:0!important;border-radius:8px!important;justify-content:center}
+  body.lt-on .controls .btn svg{width:17px!important;height:17px!important}
+  body.lt-on .controls :is(#btnLesson, #btnPuzzle, #btnRules){display:none!important}
+  body.lt-on .players{grid-area:pl;display:flex!important;flex-direction:row!important;gap:4px!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;align-self:center}
+  body.lt-on .players .player{display:flex!important;align-items:center;gap:6px;padding:3px 9px!important;border-radius:999px!important;min-height:0;height:30px;box-sizing:border-box}
+  body.lt-on .players .player .name, body.lt-on .players .player .status, body.lt-on .players .player .count small{display:none!important}
+  body.lt-on .players .player .count{font-size:16px!important;margin:0!important;line-height:1}
+  body.lt-on .board-area{grid-area:board;align-self:center;justify-self:center;min-height:0}
+  body.lt-on .info-line, body.lt-on .mtabs, body.lt-on .mt-strip, body.lt-on #itNav{display:none!important}
+  html body.lt-on.lt-on.lt-on:is(.in-lesson,.in-puzzle) #ltPanel > #ltCoachRest{display:none!important}
+  body.lt-on #ltPanel :is(.lesson-card,.puzzle-card) h3{font-size:18px}
+  /* the rail */
+  body.lt-on #ltRail{grid-area:rl;display:flex;flex-direction:column;justify-content:center;gap:4px;align-self:stretch;min-height:0;overflow-y:auto;scrollbar-width:none;
+    padding:4px 0;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--line);position:relative;z-index:61}
+  body.lt-on.in-lesson #ltRail, body.lt-on.in-puzzle #ltRail{display:none}
+  body.lt-on #ltRail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;padding:4px 2px;border-radius:9px;
+    color:var(--muted);font-size:9.5px;line-height:1.15;letter-spacing:0;white-space:nowrap;position:relative;-webkit-tap-highlight-color:transparent}
+  body.lt-on #ltRail button[hidden]{display:none}
+  body.lt-on #ltRail button span{display:block;max-width:100%;white-space:pre;text-align:center;line-height:1.15}
+  body.lt-on #ltRail svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  body.lt-on #ltRail button.sel{color:var(--accent);background:rgba(201,169,97,.14)}
+  body.lt-on #ltRail button.sel::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:2px;border-radius:2px;background:var(--accent)}
+  /* the drawer */
+  body.lt-on #ltPanel{position:fixed;top:46px;bottom:6px;right:calc(max(8px, env(safe-area-inset-right)) + 64px);width:var(--ltw, 300px);z-index:60;box-sizing:border-box;
+    display:flex;flex-direction:column;gap:8px;padding:8px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+    background:linear-gradient(180deg,rgba(40,24,14,.98),rgba(20,11,6,.98));border:1px solid rgba(207,173,104,.3);border-radius:14px;box-shadow:-18px 0 40px -10px rgba(0,0,0,.8);
+    transform:translateX(calc(100% + 80px));transition:transform .32s cubic-bezier(.2,1.25,.4,1);will-change:transform}
+  body.lt-on.lt-open #ltPanel{transform:translateX(0)}
+  /* 戦績: the record slides in at the drawer's place */
+  body.lt-on.lt-rec .grc-ov{inset:46px calc(max(8px, env(safe-area-inset-right)) + 64px) 6px auto!important;width:var(--ltw, 300px)!important;padding:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:60!important;align-items:stretch!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  body.lt-on.lt-rec .grc{width:100%!important;max-width:none!important;max-height:100%!important;border-radius:14px;box-shadow:-18px 0 40px -10px rgba(0,0,0,.8)}
+  body.lt-on.lt-rec .grc-hd{padding:10px 12px 6px} body.lt-on.lt-rec .grc-hd h2{font-size:17px}
+  body.lt-on.lt-rec .grc-tabs button{font-size:12px;padding:5px 10px;white-space:nowrap}
+  body.lt-on.lt-rec .grc-sum b{font-size:28px}
+  body.lt-on.lt-rec .grc-ft button{font-size:13px;padding:8px 14px;white-space:nowrap}
+  @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
+  body.lt-on #ltPanel.drag{transition:none}
+  /* swipes belong to the drawer, not the page: no sideways page pan, and the closed drawer is out of the way (no overflow, no hits) */
+  html:has(body.lt-on), body.lt-on{overscroll-behavior:none}
+  body.lt-on:not(.lt-open) #ltPanel:not(.drag){visibility:hidden;transition:transform .32s cubic-bezier(.2,1.25,.4,1),visibility 0s .32s}
+  body.lt-on.in-lesson #ltPanel, body.lt-on.in-puzzle #ltPanel{visibility:visible!important}
+  html body.lt-on:is(.in-lesson, .in-puzzle) #ltPanel > :is(#ltLearn, #coachCard, #reviewCard, #evalCard, .kifu-card, #ltCoachRest){display:none!important}
+  body.lt-on.in-lesson #ltPanel, body.lt-on.in-puzzle #ltPanel{position:static;grid-area:pn;align-self:stretch;transform:none;transition:none;box-shadow:none;width:auto;min-height:0;background:none;border:0;padding:0}
+  body.lt-on #ltPanel > *{flex:none;width:auto!important;margin:0!important;grid-area:auto!important}
+  body.lt-on #ltPanel > [data-ltc]:not([data-ltc=ls]){display:none!important}
+  body.lt-on #ltPanel > [data-ltc=ls]:not(.show){display:none}
+  body.lt-on[data-lt=coach] #ltPanel > #coachCard:not(.hidden), body.lt-on[data-lt=coach] #ltPanel > #reviewCard.show{display:block!important}
+  /* the coach can't work now (AI vs AI, online…): the コーチ tab stays and its box says so (landtabs.js) */
+  body.lt-on.lt-ckrest[data-lt=coach] #ltPanel > #ltCoachRest{display:block!important}
+  body.lt-on #itCoachRest{display:none!important}
+  /* 戦績 in the drawer's place: closed by a swipe to the right, its tab again or a tap on the board (no 閉じる button) */
+  body.lt-on.lt-rec .grc-ft [data-act=close]{display:none!important}
+  body.lt-on[data-lt=ek] #ltPanel > #evalCard{display:flex!important;flex-direction:column}
+  body.lt-on[data-lt=ek] #ltPanel > .kifu-card{display:flex!important;flex-direction:column;flex:1 1 auto!important;min-height:140px!important}
+  body.lt-on[data-lt=learn] #ltPanel > #ltLearn{display:flex!important}
+  body.lt-on #ltPanel #evalCard .graph{height:36px!important;min-height:0;margin-top:6px}
+  body.lt-on #ltPanel #evalCard{padding:8px 12px}
+  body.lt-on #ltPanel .kifu{grid-template-columns:repeat(6,1fr);max-height:none;overflow:visible}
+  body.lt-on #ltPanel .card{padding:10px 12px}
+  /* レッスン tab: rules / lessons / puzzles, stacked */
+  body.lt-on #ltLearn{flex-direction:column;gap:8px}
+  body.lt-on #ltLearn h3{margin:2px 4px 2px;font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+  body.lt-on #ltLearn button{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-size:15px;font-weight:700;white-space:nowrap;text-align:start}
+  body.lt-on #ltLearn button svg{width:24px;height:24px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  body.lt-on #ltLearn button small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:normal;margin-top:2px}
+  /* ルール / レッスン / パズル: rounded square icon tiles, one above the other (2026-10-30) */
+  body.lt-on #ltLearn{align-items:center!important;gap:10px!important}
+  /* the レッスン tab is a sub-menu: a small box beside its tab, just big enough for the three tiles */
+  body.lt-on[data-lt=learn]:not(.in-lesson):not(.in-puzzle) #ltPanel{width:auto!important;min-width:0;top:calc(50% - 104px)!important;bottom:auto!important;padding:8px!important}
+  body.lt-on[data-lt=learn] #ltLearn h3{display:none}
+  body.lt-on #ltLearn button{gap:4px!important;font-size:10.5px!important}
+  body.lt-on #ltLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:62px;height:58px;padding:4px 2px;box-sizing:border-box;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer!important}
+  body.lt-on #ltLearn button svg{width:22px!important;height:22px!important;margin:0!important}
+  body.lt-on #ltLearn button > span{display:block}
+  body.lt-on #ltLearn button small{display:none!important}
+  /* lessons / puzzles: their card stays open beside the board */
+  body.lt-on.in-lesson #ltPanel > .lesson-card, body.lt-on.in-puzzle #ltPanel > .puzzle-card{display:flex!important;flex-direction:column;gap:8px;overflow-y:auto}
+  body.lt-on #ltPanel > .lesson-card > *, body.lt-on #ltPanel > .puzzle-card > *{grid-column:auto!important;grid-row:auto!important}
+  /* online: the dock slides in like the drawer */
+  body.lt-on.mtab-online .dock{left:auto!important;right:calc(max(8px, env(safe-area-inset-right)) + 58px)!important;top:46px!important;bottom:6px!important;width:var(--ltw, 300px);border-radius:14px;border:1px solid rgba(207,173,104,.3);z-index:60!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  body.lt-on.mtab-online .chat-list{overscroll-behavior-y:auto}   /* a drag on the chat goes on to the whole online box once the chat itself can't scroll */
+  @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
+  /* move navigation: a compact box at the bottom centre over the board (left of the rail, or of the open drawer) */
+  body.lt-on #ltPanel #navBar{display:none!important}
+  body.lt-on #ltNav{display:none}
+  body.lt-on.lt-nav #ltNav{display:flex;position:fixed;z-index:59;bottom:6px;left:max(10px, env(safe-area-inset-left));right:calc(max(8px, env(safe-area-inset-right)) + 66px);
+    width:max-content;max-width:calc(100% - 20px);margin:0 auto;padding:5px 6px;gap:4px;flex-wrap:nowrap;white-space:nowrap;box-sizing:border-box;
+    background:rgba(20,11,6,.92);border:1px solid rgba(207,173,104,.3);border-radius:12px;box-shadow:0 6px 18px -4px rgba(0,0,0,.7);transition:right .32s cubic-bezier(.2,1.25,.4,1)}
+  body.lt-on.lt-nav:is(.lt-open, .lt-rec, .mtab-online) #ltNav{right:calc(max(8px, env(safe-area-inset-right)) + 72px + var(--ltw, 300px))}
+  body.lt-on.lt-nav:is(.in-lesson, .in-puzzle) #ltNav{right:calc(max(8px, env(safe-area-inset-right)) + 8px + var(--ltw, 300px))}
+  body.lt-on #ltNav button{flex:none;width:40px;height:30px}
+
+}
+/* larger coach / review text (PC, 2026-11-01) */
+@media not all and (pointer: coarse){
+  #coachCard.ck-card h3.ck-h{font-size:15px}
+  #coachCard.ck-card h3.ck-h small{font-size:12.5px}
+  #coachCard .ck-sum span{font-size:13.5px}
+  #coachCard .ck-rec .ck-rb{font-size:17px}
+  #coachCard .ck-rec p{font-size:15.5px;line-height:1.7}
+  #coachCard .ck-sec-h{font-size:14px}
+  #coachCard .ck-intro{font-size:14px}
+  #coachCard .ck-bt .tg{font-size:12px}
+  #coachCard .ck-bt b{font-size:15px}
+  #coachCard .ck-bt .mv{font-size:14px}
+  #coachCard .ck-bt .gp{font-size:12px}
+  #coachCard .ck-bi p{font-size:14.2px}
+  #coachCard .ck-tips li{font-size:14.6px}
+  #coachCard .ck-vd{font-size:14.4px}
+  #coachCard .ck-vd b{font-size:15.5px}
+  #coachCard :is(.ck-muted,.ck-calc){font-size:14.4px}
+  .rvbox .rvb-l .rvb-h{font-size:18px}
+  .rvbox .rvb-l p, .rvbox .cr-box p{font-size:15px}
+  .rvbox .rvb-l :is(.rvb-dim,.rvb-kl){font-size:14px}
+  .rvbox .rvb-row{font-size:15px;min-height:30px}
+  .rvbox .rvb-row .va{font-size:14.5px}
+  .rvbox .rvb-row .pv{font-size:14px}
+  .rvbox :is(.rvb-t,.rvb-btn,.rvb-msg){font-size:14px}
+  .rvbox .rvb-cols{font-size:12px}
+  .rvbox .rvb-foot{font-size:12.5px}
+  .review-card{font-size:14.5px}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=3l9">
 <style>
@@ -1275,7 +1420,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
-<script src="engine.js?v=fa3"></script>
+<script src="engine.js?v=fa4"></script>
 <script src="firebase-config.js?v=fa2"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=fa3"></script>
@@ -1286,8 +1431,9 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=fa2"></script>
 <script src="coach-i18n.js?v=fa2"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=fa4"></script>
+<script src="app.js?v=fa5"></script>
 <script src="online-ui.js?v=fa3"></script>
+<script src="landtabs.js?v=1"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261101fn2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
