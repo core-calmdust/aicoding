@@ -378,7 +378,7 @@ const MG = { cx: 500, cy: -1000, span: 20, R: { plate: [1365, 1440], P: [1225, 1
 function mobGeo() {
   const ez = VB().includes('D7'), rIn = ez ? MG.R.S[0] : MG.R.T[0];
   const top = Math.floor(MG.cy + rIn * Math.cos(MG.span * Math.PI / 180) - 14), bot = Math.ceil(MG.cy + MG.R.plate[1] + 8);
-  const tp = Math.min(top, -10) - 110;   // room above the arc for the pair spots
+  const tp = Math.min(top, -10) - 60;   // room above the arc for the pair spots
   return { ez, rIn, top: tp, h: bot - tp };
 }
 function layMobHtml() {
@@ -409,10 +409,10 @@ function layMobHtml() {
     g += `</g>`;
   });
   // the pairs: round spots in the upper corners
-  [['PP', 110, 0], ['BP', 890, 1]].filter(([k]) => vb.includes(k)).forEach(([k, x]) => {
-    const y = G0.top + 74, rr = meRes ? meRes[k] : undefined, st = rr === undefined ? '' : rr > 0 ? ' won' : rr < 0 ? ' lost' : ' push';
+  [['PP', 72, 0], ['BP', 928, 1]].filter(([k]) => vb.includes(k)).forEach(([k, x]) => {
+    const y = G0.top + 62, rr = meRes ? meRes[k] : undefined, st = rr === undefined ? '' : rr > 0 ? ' won' : rr < 0 ? ' lost' : ' push';
     const ws = seats.filter(sx => betsOf(sx.n)[k]);
-    g += `<g class="lz mz lz-s lz-${k}${st}${meBets[k] ? ' has' : ''}" data-spot="${k}" data-k="mz${k}"><circle class="lz-a" cx="${x}" cy="${y}" r="72"/><circle class="lz-ring" cx="${x}" cy="${y}" r="62"/>` +
+    g += `<g class="lz mz lz-s lz-${k}${st}${meBets[k] ? ' has' : ''}" data-spot="${k}" data-k="mz${k}"><circle class="lz-a" cx="${x}" cy="${y}" r="62"/><circle class="lz-ring" cx="${x}" cy="${y}" r="53"/>` +
       `<text class="lz-sn mz-sn" x="${x}" y="${y - 4}">${LAB[k]}</text><text class="lz-sp mz-sp" x="${x}" y="${y + 30}">11 : 1</text>` +
       ws.map((sx, i) => sx.n === ME ? `<g class="lz-ch">${chipsAt(betsOf(ME)[k], x, y + 74, 80)}</g>` + badge(x, y + 96, fmt(betsOf(ME)[k]), 'amt mz-b mz-me') : `<g class="mz-av"><circle cx="${x + (k === 'PP' ? 1 : -1) * (40 + i * 30)}" cy="${y - 64}" r="17"/><text x="${x + (k === 'PP' ? 1 : -1) * (40 + i * 30)}" y="${y - 57}">${who(sx.n).name[0]}</text></g>`).join('') +
       (rr !== undefined && meBets[k] ? badge(x, y - 92, rr > 0 ? '+' + fmt(rr) : '−' + fmt(-rr), 'res mz-b') : '') + `</g>`;
@@ -509,7 +509,7 @@ function render() {
   const Hn = pcCol ? H : Math.min(innerWidth * 1.35, 640, Math.max(260, (sc ? sc.clientHeight : innerHeight) - (G.abH = Math.max(140, $('#actbar').offsetHeight)) - 22)) - 2 * rail;
   G.deep = narrow || (pcCol && H > W * .7);
   G.mob = narrow;   // phones: a touch layout (the other players in a strip, big betting boxes) instead of the printed arcs
-  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Hn * .6) : Math.min(lzh, Hn * .6);
+  const lzh = G.mob ? (W - 8) * mobGeo().h / 1000 : (W - 24) * (G.deep ? 540 / 1000 : 420 / 1180), lz = G.mob ? Math.min(lzh, Hn * .68) : Math.min(lzh, Hn * .6);
   // the two hands side by side, or (tall tables) one above the other with bigger cards
   const cwS = G.mob ? Math.min(W / 5.5, (Hn - lz) / 2.55) : Math.min(W / (narrow ? 8.1 : 8.6), (Hn - lz) / 3.2), cwT = Math.min(W / (narrow ? 6.6 : 5.7), (Hn - lz) / 4.8);
   const stack = cwT > cwS * 1.12, cw = Math.max(34, Math.min(stack ? cwT : cwS, 124));
