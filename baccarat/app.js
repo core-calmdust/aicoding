@@ -836,7 +836,9 @@ $('#btnHint').onclick = () => {
 $('#btnResign').onclick = () => {
   if (!T) return;
   const go = () => { clearTimeout(G.timer); const S = T.session; toast(t('cashout', { n: sg(S.net), h: S.hands })); newSession(T.v); };
-  if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else confirmBox(t('cashoutQ'), go);
+  // cashing out is not a defeat: the session's net decides how it is recorded, and the chips are kept
+  const S = T.session, note = !S.hands || T.tut ? t('co.none') : t(S.net > 0 ? 'co.win' : S.net < 0 ? 'co.lose' : 'co.even', { n: sg(S.net) });
+  if (window.Resign) Resign.confirm({ lang: LANG, question: t('cashoutQ'), note }).then(ok => { if (ok) go(); }); else confirmBox(t('cashoutQ') + ' ' + note, go);
 };
 $('#btnStats').onclick = openStats;
 $('#btnTools').onclick = () => window.BacTools && BacTools.open();
