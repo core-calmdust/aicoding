@@ -1537,7 +1537,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="dice3d.js?v=20261021pz"></script>
 <script src="themes.js?v=20261021cm"></script>
 <script src="../shared/coachkit.js?v=14"></script>
-<script src="../shared/record.js?v=2"></script>
+<script src="../shared/record.js?v=3"></script>
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script src="../shared/export.js?v=6"></script>
@@ -1554,7 +1554,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=10')).then(() => load('../atlas/models/backgammon.js?v=5')).then(() => load('../atlas/skin/backgammon.js?v=4'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=68')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/backgammon.js?v=5')).then(() => load('../atlas/skin/backgammon.js?v=4'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
