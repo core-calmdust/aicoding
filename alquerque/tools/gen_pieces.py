@@ -82,10 +82,10 @@ def brass():
     st_in = mask(lambda d, s: d.polygon([(s(x), s(y)) for x, y in star_pts(c, N * .2, N * .12, 8, math.pi / 8)], fill=255), 1.0)
     boss = mask(lambda d, s: d.ellipse([s(c - N * .055), s(c - N * .055), s(c + N * .055), s(c + N * .055)], fill=255), 1.0)
     h = rim_profile() + st * 5 + boss * 2 + noise(1.0, .04) + noise(20, .3)
-    albedo = np.zeros((N, N, 3)); albedo[:] = (170, 122, 58)
+    albedo = np.zeros((N, N, 3)); albedo[:] = (204, 152, 74)
     fld = (1 - st) * (rr < .76)
     albedo = albedo * (1 - fld[..., None] * .35) + np.array([120, 84, 40]) * fld[..., None] * .35
-    save(shade(gaussian_filter(h, 1.0), albedo, metal=.4, gloss=30, spec=.4, amb=.45), 'pc-brass-1.webp')
+    save(shade(gaussian_filter(h, 1.0), albedo, metal=.0, gloss=8, spec=.06, amb=.55), 'pc-brass-1.webp')
 
 
 def lapis():
@@ -101,8 +101,8 @@ def lapis():
     stone = base * (1 - fleck[..., None]) + np.array([220, 186, 110]) * fleck[..., None]
     h = (1 - rr ** 2) * 10 + st * 1.4 + bezel * 2.5 - np.clip((rr - .95) / .05, 0, 1) * 6
     ag = np.zeros((N, N, 3)); ag[:] = (220, 172, 82)
-    gs = shade(gaussian_filter(h, .9), ag, metal=.75, gloss=40, spec=.7)
-    ss = shade(gaussian_filter(h, .9), stone, metal=0, gloss=100, spec=.7, amb=.42)
+    gs = shade(gaussian_filter(h, .9), ag * .82, metal=0, gloss=8, spec=.06, amb=.55)
+    ss = shade(gaussian_filter(h, .9), stone, metal=0, gloss=8, spec=.05, amb=.55)
     gm = gold[..., None]
     save(ss * (1 - gm) + gs * gm, 'pc-brass-2.webp')
 
@@ -122,9 +122,8 @@ def ceramic(light):
     albedo = albedo * (1 - thin[..., None]) + np.array((150, 96, 60)) * thin[..., None]
     h = (1 - rr ** 2.2) * 16 - np.clip((rr - .9) / .1, 0, 1) ** 2 * 6 + noise(8, .1)
     env = lambda nx, ny, nz: np.clip(.62 - .5 * ny - .2 * nx, 0, 1)
-    col = shade(gaussian_filter(h, .8), albedo, metal=0, gloss=70, spec=.8, amb=.45, env=env)
+    col = shade(gaussian_filter(h, .8), albedo, metal=0, gloss=8, spec=.06, amb=.55, env=env)
     win = np.clip(1 - ((xx - cx + R * .34) ** 2 / (R * .22) ** 2 + (yy - cy + R * .4) ** 2 / (R * .12) ** 2), 0, 1)
-    col += (gaussian_filter(win, 4) * 50)[..., None]
     save(col, f'pc-felt-{1 if light else 2}.webp', edge_dark=.2)
 
 

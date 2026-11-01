@@ -94,8 +94,7 @@ def herati(d, x0, y0, x1, y1, s, cols, lw=3):
     for j, y in enumerate(np.arange(y0 - s, y1 + s, s / 2)):
         for x in np.arange(x0 - s + (s / 2 if j % 2 else 0), x1 + s, s):
             d.line(sc([(x, y - s / 2), (x + s / 2, y), (x, y + s / 2), (x - s / 2, y), (x, y - s / 2)]), fill=lat, width=lw * SS)
-            poly(d, star(x, y, s * .12, s * .045, 4, 0), fill=ros)
-            d.ellipse([(x - s * .03) * SS, (y - s * .03) * SS, (x + s * .03) * SS, (y + s * .03) * SS], fill=cen)
+
 
 
 def medallion(seed=1):
@@ -106,7 +105,6 @@ def medallion(seed=1):
     border_band(d, 0, 0, W, H, S * .5, BRN, (GOLD, TEAL), (40, 14, 20), rng, 'rosette')
     d.rectangle([S * .5 * SS, S * .5 * SS, (W - S * .5) * SS, (H - S * .5) * SS], outline=PUR, width=int(S * .12) * SS)
     fx0, fy0, fx1, fy1 = S * .62, S * .62, W - S * .62, H - S * .62
-    herati(d, fx0, fy0, fx1, fy1, S * .62, ((128, 24, 26), (176, 58, 40), GOLD, (88, 30, 40)), lw=2)
     # corner spandrels: quarter stars
     for (cx, cy) in ((fx0, fy0), (fx1, fy0), (fx0, fy1), (fx1, fy1)):
         poly(d, star(cx, cy, S * 1.15, S * .8, 8, math.pi / 8), fill=PUR)
