@@ -377,11 +377,15 @@ def carved(seed=5):
     rng = np.random.default_rng(seed)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
     warp = gaussian_filter(rng.standard_normal((H, W)), (120, 60)); warp /= warp.std()
-    fine = np.sin(xx / 2.2 + warp * 2.0 + gaussian_filter(rng.standard_normal((H, W)), (200, 2)) * 1.2)
-    fig = gaussian_filter(rng.standard_normal((H, W)), (90, 14)); fig /= fig.std()
-    pores = gaussian_filter(rng.standard_normal((H, W)), (3, .5)); pores /= pores.std()
-    t = np.clip(.45 + .1 * fine + .22 * fig + .06 * pores, 0, 1)
-    base, dark = np.array((156, 116, 78.)), np.array((92, 62, 38.))
+    arch = ((xx - W * .52) / (W * .9)) ** 2 * 0 + np.abs(xx - W * .5) / S * 1.4 + (yy / H - .5) ** 2 * 0
+    cath = np.sqrt(np.maximum(0, ((xx - W * .5) / (S * .9)) ** 2 + ((yy - H * 1.25) / (S * 4.5)) ** 2)) * 6.5 + warp * 1.6
+    ring = np.sin(cath) ; ring = np.sign(ring) * np.abs(ring) ** .6
+    fine = np.sin(xx / 7.5 + warp * 3.0 + gaussian_filter(rng.standard_normal((H, W)), (240, 3)) * 2.2)
+    fig = gaussian_filter(rng.standard_normal((H, W)), (120, 20)); fig /= fig.std()
+    pores = gaussian_filter(rng.standard_normal((H, W)), (5, .6)); pores /= pores.std()
+    late = np.clip((fine - .82) / .18, 0, 1) + np.clip((np.sin(cath * 1.0) - .9) / .1, 0, 1)   # dark latewood lines
+    t = np.clip(.42 + .14 * ring + .08 * fine + .12 * fig + .12 * pores + .28 * gaussian_filter(late, (3, 1.2)), 0, 1)
+    base, dark = np.array((166, 124, 84.)), np.array((84, 54, 32.))
     a = base * (1 - t[..., None]) + dark * t[..., None]
     bw = S * .58; m0 = S * .14; m1 = m0 + bw
     def band(dd):
@@ -420,7 +424,23 @@ def carved(seed=5):
     return Image.fromarray(np.clip(a * v[..., None], 0, 255).astype(np.uint8))
 
 
+def flower(dd, x, y, R):
+    """a classical damask flower head: two rings of rounded petals, a cupped centre and seeds."""
+    for ring_, n, rr_, off in ((1, 8, 1.0, 0), (2, 6, .62, math.pi / 6)):
+        for k in range(n):
+            a = k * 2 * math.pi / n + off
+            px, py = x + R * rr_ * .55 * math.cos(a), y + R * rr_ * .55 * math.sin(a)
+            pr = R * rr_ * .42
+            pts = [(px + pr * math.cos(u) * (1.0 if abs(math.cos(u - a)) > 0 else 1) , py + pr * math.sin(u)) for u in np.linspace(0, 2 * math.pi, 20)]
+            dd.polygon(sc(pts), fill=255 if ring_ == 1 else 0)
+            if ring_ == 1: dd.line(sc([(x + R * .25 * math.cos(a), y + R * .25 * math.sin(a)), (x + R * .8 * math.cos(a), y + R * .8 * math.sin(a))]), fill=0, width=2 * SS)
+    dd.ellipse([(x - R * .22) * SS, (y - R * .22) * SS, (x + R * .22) * SS, (y + R * .22) * SS], fill=255)
+    for k in range(7):
+        a = k * 2 * math.pi / 7; dd.ellipse([(x + R * .1 * math.cos(a) - 3) * SS, (y + R * .1 * math.sin(a) - 3) * SS, (x + R * .1 * math.cos(a) + 3) * SS, (y + R * .1 * math.sin(a) + 3) * SS], fill=0)
+
+
 def damask(seed=6):
+    S = globals()['S'] * 1.5
     """blue-grey microfibre cloth printed with a large baroque damask (mirrored acanthus scrolls round a palmette),
     tone on tone, with a pinked edge."""
     rng = np.random.default_rng(seed)
@@ -446,14 +466,16 @@ def damask(seed=6):
                     yk = cy - S * .2 - k * S * .14
                     dd.line(sc([(cx - S * .08, yk), (cx, yk - S * .05), (cx + S * .08, yk)]), fill=0, width=3 * SS)
                 dd.ellipse([(cx - 14) * SS, (cy + S * .1 - 14) * SS, (cx + 14) * SS, (cy + S * .1 + 14) * SS], fill=255)
+                for (fx, fy, fr) in ((cx, cy - S * 1.3, S * .34), (cx - S * .95, cy - S * .95, S * .2), (cx + S * .95, cy - S * .95, S * .2), (cx, cy + S * .95, S * .26)):
+                    flower(dd, fx, fy, fr)
     def shadow_motif(dd):   # a smaller, darker counter-pattern between the motifs
         for j in range(-1, int(H / th) + 2):
             for i in range(-1, int(W / tw) + 2):
                 cx = i * tw + (0 if j % 2 else tw / 2); cy = j * th + th * .6
                 for sg in (1, -1): acanthus(dd, cx + sg * S * .18, cy, S * .24, 0 if sg > 0 else math.pi, sg, 5, True, 1, .6)
     m = gaussian_filter(lmask(motif), .9); m2 = gaussian_filter(lmask(shadow_motif), .9)
-    a = base * (1 - .7 * m[..., None]) + hi * .7 * m[..., None]
-    a = a * (1 - .6 * m2[..., None]) + lo * .6 * m2[..., None]
+    a = base * (1 - .42 * m[..., None]) + hi * .42 * m[..., None]
+    a = a * (1 - .35 * m2[..., None]) + lo * .35 * m2[..., None]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float64)
     fab = gaussian_filter(rng.standard_normal((H, W)), .5); fab /= fab.std()
     sheen = gaussian_filter(rng.standard_normal((H, W)), 80); sheen /= sheen.std()
