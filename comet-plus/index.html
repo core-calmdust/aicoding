@@ -1248,6 +1248,9 @@ const DIFFS = [
 let difficultyIndex = 1;
 // ORIGIN版: 序盤をやさしくする調整（2026-11）を入れる前の難しいバランス。タイトルでOキーで切り替え（ランキングは共通）
 let originMode = false; try { originMode = localStorage.getItem('cometPlusOrigin') === '1'; } catch (e) {}
+// ORIGINで遊んだ記録は、ランキングの「到達ステージ」に1000を足して保存する（データベースの項目は増やさない）。表示ではバッジを付ける
+const ORIGIN_ST = 1000;
+const isOriginEntry = e => !!e && (e.st | 0) >= ORIGIN_ST;
 const diffLabel = () => DIFFS[difficultyIndex].id + (originMode ? ' ORIGIN' : '');
 // スコア倍率（ARCADE=1, STANDARD=0.7, EASY=0.5）。アイテム出現の得点間隔も同じ倍率で縮むので出現頻度は変わらない
 // ハイパー: 10秒間、スコア3倍・自機1.1倍速。代わりに彗星と弾が1.25倍速、敵の弾が2倍
@@ -1569,6 +1572,13 @@ function drawRanking(ctx) {
             const pad = IS_MOBILE ? 8 : 22; // 列どうしの間隔
             ctx.textAlign = 'left'; ctx.fillText(String(n + 1).padStart(2, '0'), x0 + pad, y);
             ctx.fillText(e ? e.n : '--------', x0 + pad + (IS_MOBILE ? 60 : 42), y);
+            if (isOriginEntry(e)) { // ORIGINの記録: 名前の横に小さなバッジ
+                const bx = x0 + pad + (IS_MOBILE ? 60 : 42) + ctx.measureText(e.n).width + (IS_MOBILE ? 8 : 6), fs = IS_MOBILE ? 11 : 8, bh = fs + 6;
+                ctx.save(); ctx.font = `700 ${fs}px ${config.fontFamily}`; const bw = ctx.measureText('ORIGIN').width + 8;
+                ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, y - bh / 2 - 1, bw, bh, 3); else ctx.rect(bx, y - bh / 2 - 1, bw, bh);
+                ctx.fillStyle = 'rgba(255,90,216,0.18)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,90,216,0.85)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.fillStyle = '#ff8ae4'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('ORIGIN', bx + 4, y - 1); ctx.restore();
+            }
             ctx.textAlign = 'right'; ctx.fillText(e ? e.s.toLocaleString('en') : '-', x0 + colW - pad, y);
         }
         if (online) { // 自分の順位（100位より下でも表示）
@@ -2292,7 +2302,7 @@ function gameOver(reason) {
     rankResult = null; nameEntry = null; onlineResult = null;
     if (!hasUsedInvincibility) {
         const mi = RANK_MODES.findIndex(m => m[0] === gameMode);
-        if (mi >= 0) { const k = rankKey(mi, difficultyIndex); const en = { n: '', s: score, st: stage, t: Date.now() }; if (RankLocal.qualifies(k, score)) { if (lastName()) registerRank(k, en); else startNameEntry(k, en); } else if (lastName()) { en.n = lastName(); onlineSubmit(k, en); } } // 名前登録済みなら入力を省略
+        if (mi >= 0) { const k = rankKey(mi, difficultyIndex); const en = { n: '', s: score, st: stage + (originMode ? ORIGIN_ST : 0), t: Date.now() }; if (RankLocal.qualifies(k, score)) { if (lastName()) registerRank(k, en); else startNameEntry(k, en); } else if (lastName()) { en.n = lastName(); onlineSubmit(k, en); } } // 名前登録済みなら入力を省略
     }
 
 if (reason === 'collision') {
