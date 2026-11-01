@@ -127,8 +127,8 @@ ja: {
   't.bet': 'バンカーに賭けよう', 'b.bet': '自分の席の <b>BANKER</b> の枠をタップして、100を賭けてみましょう。',
   'ng.bet': 'ここでは自分の席（3番）の BANKER の枠をタップしてください',
   't.coach': 'コーチ', 'b.coach': 'コーチが賭けの<b>ハウスエッジ</b>（平均して失う割合）を教えてくれます。バンカーは約1.06%で、カジノの賭けの中でも最も損の小さい賭けの一つです。',
-  't.deal': '配ってみよう', 'b.deal': '賭けたら<b>配る</b>を押します。カードはプレイヤー→バンカー→プレイヤー→バンカーの順に配られます。',
-  'ng.deal': 'ここでは「配る」を押してください',
+  't.deal': '賭けてみよう', 'b.deal': 'チップを置いたら<b>賭ける</b>を押します。カードはプレイヤー→バンカー→プレイヤー→バンカーの順に配られます。',
+  'ng.deal': 'ここでは「賭ける」を押してください',
   't.result': '勝負の結果', 'b.result': 'カードは一の位だけを数えます（10・J・Q・Kは0）。プレイヤーは 2+3=<b>5</b> だったので3枚目を引き、9が来て 14 → <b>4</b>。バンカーは K+6=<b>6</b>。<b>6対4でバンカーの勝ち</b>です。',
   't.third': '3枚目のルール', 'b.third': 'プレイヤーは0〜5なら引き、6・7なら止まります。バンカーは自分の合計とプレイヤーの3枚目で決まり、今回は「バンカー6、3枚目が9 → 止まる」。コーチがこの手順を毎回説明してくれます。',
   't.payout': '配当', 'b.payout': 'バンカーの勝ちは<b>5%のコミッション</b>を引いて0.95倍。100賭けて <b>95</b> の勝ちです。プレイヤーなら1倍、タイなら8倍です。',
@@ -148,8 +148,8 @@ en: {
   't.bet': 'Bet on Banker', 'b.bet': 'Tap <b>BANKER</b> in your seat to bet 100.',
   'ng.bet': 'Tap BANKER in your own seat (seat 3)',
   't.coach': 'The coach', 'b.coach': 'The coach shows the <b>house edge</b> of your bets (the share you lose on average). Banker is about 1.06% — one of the cheapest bets in the casino.',
-  't.deal': 'Deal', 'b.deal': 'Now press <b>Deal</b>. The cards come Player → Banker → Player → Banker.',
-  'ng.deal': 'Press Deal here',
+  't.deal': 'Place your bet', 'b.deal': 'Now press <b>Place bet</b>. The cards come Player → Banker → Player → Banker.',
+  'ng.deal': 'Press Place bet here',
   't.result': 'The result', 'b.result': 'Only the last digit counts (10, J, Q, K are 0). Player had 2+3 = <b>5</b>, drew a 9: 14 → <b>4</b>. Banker had K+6 = <b>6</b>. <b>Banker wins 6 to 4.</b>',
   't.third': 'The third-card rules', 'b.third': 'Player draws on 0–5 and stands on 6–7. Banker\'s draw depends on its total and Player\'s third card — here "Banker 6, third card 9 → stand". The coach explains these steps every coup.',
   't.payout': 'The payout', 'b.payout': 'A Banker win pays 0.95 to 1 after a <b>5% commission</b>: bet 100, win <b>95</b>. Player pays 1 to 1, Tie 8 to 1.',
@@ -334,4 +334,10 @@ function L(k) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined
 window.BacTut = { setup, ev, allow, after, start, hide, finish, offer, L, TX };
 // first visit: the offer box (after the page has settled)
 setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);
+})();
+/* the button is now "Place bet" (not "Deal") */
+(function () {
+  const TX = window.BacTut && window.BacTut.TX; if (!TX) return;
+  const rep = { zh: ['发牌', '下注'], ko: ['딜', '베팅'], es: ['Repartir', 'Apostar'], fr: ['Distribuer', 'Miser'], pt: ['Distribuir', 'Apostar'], de: ['Geben', 'Setzen'], hi: ['बाँटें', 'दांव लगाएँ'], ar: ['وزّع', 'راهن'] };
+  for (const l in rep) if (TX[l]) ['t.deal', 'b.deal', 'ng.deal'].forEach(k => { if (TX[l][k]) TX[l][k] = TX[l][k].split(rep[l][0]).join(rep[l][1]); });
 })();
