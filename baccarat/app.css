@@ -2224,3 +2224,14 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 .bc-table.mob:not(.stk) .bh-p .bc-hh > span:first-child{background:#1d3e4f}
 .bc-table.mob:not(.stk) .bh-b .bc-hh > span:first-child{background:#3e2c33}
 .bc-table.mob:not(.stk) .bc-hands{margin-top:calc(var(--cw)*.16)}
+/* phones: the PAIR plaque below the hand (not on the header line), the result line fits the table */
+.bc-table.mob:not(.stk) .bc-pair{position:absolute;left:50%;top:calc(var(--chh) + var(--cw)*.2 + 2px);transform:translate(-50%,-30%);font-size:9px;padding:1px 7px;white-space:nowrap}
+@media (max-width:760px){
+  .bc-banner{max-width:calc(100% - 6px);gap:8px;padding:5px 12px}
+  .bc-banner b{font-size:15px;letter-spacing:.02em;white-space:nowrap}
+  .bc-banner small{font-size:9.5px;letter-spacing:.06em;padding:1px 5px;white-space:nowrap}
+  .bc-banner span{font-size:14px;padding-left:8px;white-space:nowrap}
+}
+@media (max-width:400px){.bc-banner small{display:none}}
+.bn-n{display:none;font-style:normal;font:700 10px 'Cormorant Garamond',serif;color:#ecd9a8;border:1px solid #ecd9a8;border-radius:50%;width:16px;height:16px;line-height:14px;text-align:center;margin-left:6px;vertical-align:3px}
+@media (max-width:400px){.bn-n{display:inline-block}}

@@ -525,7 +525,7 @@ function render() {
   if (done) {
     const r = T.result, hadBet = betSum(T.last) > 0;
     const head = win === 'T' ? t('win.T', { n: c.pt }) : t('win.' + win, { a: win === 'P' ? c.pt : c.bt, b: win === 'P' ? c.bt : c.pt });
-    banner = `<div class="bc-banner w${win}" data-k="banner${T.hand}"><b>${esc(head)}</b>${c.natural ? `<small>${esc(t('natural'))}</small>` : ''}${hadBet ? `<span class="${r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''}">${esc(r.net > 0 ? t('res.win', { n: fmt(r.net) }) : r.net < 0 ? t('res.lose', { n: fmt(-r.net) }) : t('res.even'))}</span>` : ''}</div>`;
+    banner = `<div class="bc-banner w${win}" data-k="banner${T.hand}"><b>${esc(head)}${c.natural ? '<i class="bn-n">N</i>' : ''}</b>${c.natural ? `<small>${esc(t('natural'))}</small>` : ''}${hadBet ? `<span class="${r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''}">${esc(r.net > 0 ? t('res.win', { n: fmt(r.net) }) : r.net < 0 ? t('res.lose', { n: fmt(-r.net) }) : t('res.even'))}</span>` : ''}</div>`;
   }
   const lay = G.mob ? layMobHtml() : layHtml();
   const shoeLeft = T.shoe.cards.length - T.shoe.pos, shoePct = shoeLeft / T.shoe.cards.length;
