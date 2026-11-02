@@ -302,10 +302,28 @@ function ask(i) {
   const key = keyAt(i);
   if (S0.info.has(key) || (S0.job && S0.job.key === key)) return;
   if (S0.job && S0.w) { S0.w.terminate(); S0.w = null; }
-  if (!S0.w) S0.w = makeWorker(ev => { const m = ev.data, j = S0.job; if (!j || m.id !== j.id) return; S0.job = null; if (m.type === 'analyze') { S0.info.set(j.key, { list: m.list || [], exact: !!m.exact }); render(); } });
+  if (!S0.w) S0.w = makeWorker(ev => {
+    const m = ev.data, j = S0.job; if (!j || m.id !== j.id) return; S0.job = null;
+    if (m.type === 'analyze') { S0.info.set(j.key, { list: m.list || [], exact: !!m.exact }); render(); if (!m.exact) deep(j); }
+    else if (m.type === 'move' && j.deep) {   // the deep search's move first, valued as the best
+      const info = S0.info.get(j.key); if (!info || !info.list.length || !(m.move >= 0)) return;
+      const L = info.list, i = L.findIndex(x => x.m === m.move), top = L[0];
+      if (i === 0) return;
+      S0.info.set(j.key, { list: [Object.assign({}, i >= 0 ? L[i] : top, { m: m.move, v: top.v })].concat(L.filter((x, k) => k !== i)), exact: false, deep: true });
+      render();
+    }
+  });
   const id = ++jobId, edges = game.moves.slice(0, i);
-  S0.job = { id, key };
+  S0.job = { id, key, i };
   S0.w.postMessage({ type: 'analyze', id, R: game.n, C: game.n, edges, ms: game.n === 3 ? 500 : game.n === 4 ? 900 : 1500 });
+}
+// a second, deeper pass when the analysis is not exact (5x5, early 4x4): its heuristic first choice lost every game to
+// the strong AI levels, so the coach then runs the Lv9 AI's own search (exact solver from much earlier) and puts that move first
+function deep(j) {
+  if (!S0.w || j.i !== game.moves.length || keyAt(j.i) !== j.key) return;
+  const id = ++jobId, me = SF.turn;
+  S0.job = { id, key: j.key, deep: true };
+  S0.w.postMessage({ type: 'move', id, R: game.n, C: game.n, edges: game.moves.slice(0, j.i), level: 9, lead: SF.scores[me] - SF.scores[1 - me], ponder: false });
 }
 function cancel() { if (S0.job && S0.w) { S0.w.terminate(); S0.w = null; } S0.job = null; }
 

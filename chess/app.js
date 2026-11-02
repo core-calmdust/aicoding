@@ -685,11 +685,30 @@ async function analyzeCurrent(tok) {
     const ev = evalFromList(list.filter(e => e.kind !== 'ub'), mover); if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
-  if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
+  if (anaCache.has(key)) { apply(anaCache.get(key)); coachDeep(idx, key, apply); return; }
   cancelWorker('ana');
   const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1800 : 1100 }, m => apply(m.list));
   if (!res || res.error) return;
   anaCache.set(key, res.list); apply(res.list); save();
+  coachDeep(idx, key, apply);
+}
+// coach: a second, deeper pass. The all-moves analysis above is quick but shallow (its first choice lost to the
+// stronger AI levels), so the coach then runs the strongest AI's own search and puts that move at the top.
+const COACH_DEEP = 19;   // engine LEVELS: about 1.5 s
+async function coachDeep(idx, key, apply) {
+  const list = anaCache.get(key);
+  if (!list || list.deep || !(window.ChessCoach && ChessCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
+  const r = await request('ana', { type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP });
+  if (!r || r.error || !r.move || r.book || keyOf(idx) !== key || anaCache.get(key) !== list) return;
+  const out = deepTop(list, r.move, e => e.v > MATET, r.v); out.deep = true;
+  anaCache.set(key, out); apply(out); save();
+}
+// the deep search's move first, valued as the best (or its own value when higher); a forced win in the list stays first
+function deepTop(list, m, won, v) {
+  let top = list[0]; for (const e of list) if (e.v > top.v) top = e;
+  if (won(top)) return list.slice();
+  const i = list.findIndex(e => e.m === m), e = Object.assign({}, i >= 0 ? list[i] : top, { m, v: typeof v === 'number' && v > top.v ? v : top.v }, top.kind !== undefined ? { kind: top.kind } : {});
+  return [e].concat(list.filter((x, k) => k !== i));
 }
 function onGameEnd(st) {
   recordGame(st);
