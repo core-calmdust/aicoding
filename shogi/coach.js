@@ -645,6 +645,7 @@ function render() {
       head: tx(cl.branch ? 'brH' : 'cdH'), intro: esc(tx(cl.branch ? 'brIntro' : 'cdIntro')),
       items: cl.dirs.map((d, i) => { const g = gapOf(d.drop, i); return { tag: tx('c.' + d.k.k), cls: CCLS[d.k.k] || '', title: esc(ttl(d)), text: gl(esc(catTxt(d.k))), gap: tx(g[0]) + (d.drop > 0.005 ? ' −' + pctS(d.drop) : ''), gcls: g[1], move: d.u, mvName: d.nm }; }),
     });
+    if (!info.cands.done) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;   // the alternatives are still being searched
   } else if (!op && !(bk && S.op)) h += `<p class="ck-calc">${esc(tx('calc'))}</p>`;
   const tl = tipsOf(f, { ev: evMe, wr }, cl);
   h += CoachKit.tips({ head: tx('tipsH'), list: tl.map(x => ({ html: gl(esc(tx(x.k, x.v || {}))), hi: x.hi })), open: S.open, more: tx('more', { n: Math.max(0, tl.length - 3) }), less: tx('less') });
@@ -686,7 +687,7 @@ function setOn(v) {
   CoachKit.flash(tx(v ? 'on' : 'off'));
   if (!v && hintMoves && hintMoves.coach) { hintMoves = null; drawArrows(); }
   render();
-  if (v && typeof schedule === 'function' && game && !game.over && myTurn() && !(game.info[cur] && game.info[cur].cands)) schedule();
+  if (v && typeof schedule === 'function' && game && !game.over && myTurn() && !(game.info[cur] && game.info[cur].cands && game.info[cur].cands.done)) schedule();
 }
 function relabel() { if (ShogiCoach.sw) ShogiCoach.sw.sync(); S.key = ''; render(); }
 function merge(more) { for (const l in more) TX[l] = Object.assign({}, TX[l] || {}, more[l], { gl: Object.assign({}, (TX[l] || {}).gl || {}, more[l].gl || {}) }); }

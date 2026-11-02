@@ -1421,7 +1421,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/export.js?v=6"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
-<script src="engine.js?v=20261028pv"></script>
+<script src="engine.js?v=20261102ck"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
@@ -1446,7 +1446,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=9"></script>
-<script src="coach.js?v=10"></script>
+<script src="coach.js?v=11"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script>
 'use strict';
@@ -1497,6 +1497,10 @@ const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },   // 入門: 2-ply so it see
   { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
   { nodes: 5000 }, { nodes: 10000 }, { nodes: 18000 }, { nodes: 35000 }, { nodes: 67000 }, { nodes: 130000 }, { nodes: 250000 }, { nodes: 470000 },
   { nodes: 900000, time: 12000 }, { nodes: 1700000, time: 15000 }];
+const COACH_MS = 2400, COACH_NODES = 1000000;          // coach card / hint: time cap and node budget (best move 75%, the alternatives the rest; a fast device stops at the nodes)
+// the coach / hint candidates: engine.js 'coach' (the full search of the strong levels); the variant worker only knows 'analyze'
+const coachMsg = (idx, n) => Variants.eng(game.variant) ? { type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: n } }
+  : { type: 'coach', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: COACH_MS, nodes: COACH_NODES, n } };
 const LV_DEFAULT = 7;                                    // 10級
 const LV_OLD = [0, 1, 2, 4, 6, 9, 13, 16, 17, 18];       // old Lv.1–10 (saved settings / rated history before the rank steps) → step
 const lvMig = v => typeof v === 'number' && v >= 0 ? LV_OLD[Math.min(9, Math.round(v))] : LV_DEFAULT;
@@ -1571,7 +1575,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261028pv');
+  const w = new Worker('engine.js?v=20261102ck');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -2302,18 +2306,31 @@ async function schedule() {
   } else {
     // human to move: background analysis for evaluation / coaching
     if ((settings.eval || settings.coach) && !rtLive()) {
+      const setBest = r => {
+        game.info[idx].best = r.score; game.info[idx].bm = r.move; game.info[idx].bpv = (r.pv || []).slice(0, 5);
+        if (game.info[idx].ev == null || settings.mode !== 'ai') game.info[idx].ev = side === 0 ? r.score : -r.score;
+        renderInfo(); save();
+      };
+      // coach (coach.js): the top candidates with their scores (the plans of a branching position), from the same full
+      // search as the strong AI levels — the best move first (~1.4 s, it also gives the evaluation), then the alternatives
+      const ci = game.info[idx].cands;
+      if (window.ShogiCoach && ShogiCoach.active() && !(ci && ci.done)) {
+        const setC = (list, done) => { const l = list.slice(0, 4); if (done) l.done = true; Object.defineProperty(game.info[idx], 'cands', { value: l, enumerable: false, writable: true, configurable: true }); ShogiCoach.render(); };
+        const ok = () => token === busyToken && cur === idx;
+        let got = false;
+        const r2 = await anaCall(coachMsg(idx, 4), m => {
+          if (!ok() || !m.list || !m.list.length) return;
+          if (m.main) { got = true; setBest(m.list[0]); }
+          setC(m.list, false);
+        });
+        if (!r2 || r2.error || !ok() || !r2.list || !r2.list.length) return;
+        if (!got) setBest(r2.list[0]);
+        setC(r2.list, true);
+        return;
+      }
       const res = await anaCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 900 } });
       if (!res || res.error || token !== busyToken || cur !== idx) return;
-      game.info[idx].best = res.score; game.info[idx].bm = res.move; game.info[idx].bpv = (res.pv || []).slice(0, 5);
-      if (game.info[idx].ev == null || settings.mode !== 'ai') game.info[idx].ev = side === 0 ? res.score : -res.score;
-      renderInfo(); save();
-      // coach (coach.js): the top candidates with their scores (the plans of a branching position)
-      if (window.ShogiCoach && ShogiCoach.active() && !game.info[idx].cands) {
-        const r2 = await anaCall({ type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1100, top: 4 } });
-        if (!r2 || r2.error || token !== busyToken || cur !== idx || !r2.list || !r2.list.length) return;
-        Object.defineProperty(game.info[idx], 'cands', { value: r2.list.slice(0, 4), enumerable: false, writable: true, configurable: true });
-        ShogiCoach.render();
-      }
+      setBest(res);
     }
   }
 }
@@ -2425,7 +2442,7 @@ $('#btnHint').onclick = async () => {
   if (hintBusy || (hintMoves && hintMoves.ply === cur)) { hintTok++; if (hintBusy) cancelAna(); hintBusy = false; hintMoves = null; drawArrows(); return; }
   const idx = cur, token = busyToken, ht = ++hintTok;
   hintBusy = true; $('#btnHint').classList.add('on');
-  const res = await anaCall({ type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: 3 } }, (m) => {
+  const res = await anaCall(coachMsg(idx, 3), (m) => {
     if (cur === idx && ht === hintTok && m.list) { hintMoves = { ply: idx, list: m.list.slice(0, 3) }; drawArrows(); }
   });
   if (ht !== hintTok) return;
