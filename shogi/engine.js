@@ -1318,6 +1318,45 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       self.postMessage({ type: 'analysis', id: d.id, list: res.slice(0, o.top || 99).map(r => ({ move: pos.toUsi(r.m), score: r.s, depth: r.d })) });
       return;
     }
+    if (d.type === 'coach') {
+      // coach card / hint: the candidates from the same full search as the strong AI levels (NNUE, aspiration + pruning),
+      // not from 'analyze' (a full-window score of every root move, which only reaches ~4 plies in a second).
+      // The best move gets most of the budget (posted first, main: true); the next n-1 moves come from shorter searches
+      // that leave out the moves already found, their scores capped at the best's (a short search is not more reliable).
+      const o = d.opts || {}, T = o.time || 2000, N = o.nodes || 0, n = Math.max(1, o.n || 4);   // time: the cap; nodes: the budget (a fast device stops sooner)
+      setup(d);
+      const nl = pos.legalMoves(false).length, out = [];
+      let depth0 = 0, nodes0 = 0;
+      for (let k = 0; k < Math.min(n, nl); k++) {
+        const share = o.main || 0.75, ms = k ? T * (1 - share) / (n - 1) : T * share;
+        const nb = N ? Math.round(k ? N * (1 - share) / (n - 1) : N * share) : 0;
+        let r;
+        if (useWasm()) {
+          nueUse(true); wsetup(d);
+          const ex = out.map(e => e.m);
+          if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+          X.set_exclude(ex.length);
+          const mv = X.root_search(ms, 0, nb);
+          if (!mv) break;
+          const rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+          r = { m: mv, score: X.res_score(), depth: rr[1], nodes: rr[2], pv: Array.from(rr.subarray(4, 4 + Math.min(64, rr[3]))) };
+        } else {
+          setup(d);
+          const res = se.rootSearch({ time: ms, nodes: nb, exclude: out.map(e => e.m) });
+          if (!res.move) break;
+          r = { m: res.move, score: res.score, depth: res.depth, nodes: res.nodes, pv: res.pv && res.pv.length ? res.pv : [res.move] };
+        }
+        if (r.pv[0] !== r.m) r.pv = [r.m];
+        if (k) r.score = Math.min(r.score, out[0].score);
+        else { depth0 = r.depth; nodes0 = r.nodes || 0; }
+        out.push(r);
+        const list = out.slice(0, 1).concat(out.slice(1).sort((a, b) => b.score - a.score)).map(e => ({ move: pos.toUsi(e.m), score: e.score, depth: e.depth, pv: e.pv.slice(0, 8).map(m => pos.toUsi(m)) }));
+        if (k < Math.min(n, nl) - 1) self.postMessage({ type: 'analysisProgress', id: d.id, main: !k, depth: depth0, list });
+        else { self.postMessage({ type: 'analysis', id: d.id, depth: depth0, nodes: nodes0, list }); return; }
+      }
+      self.postMessage({ type: 'analysis', id: d.id, depth: depth0, nodes: nodes0, list: out.slice(0, 1).concat(out.slice(1).sort((a, b) => b.score - a.score)).map(e => ({ move: pos.toUsi(e.m), score: e.score, depth: e.depth, pv: e.pv.slice(0, 8).map(m => pos.toUsi(m)) })) });
+      return;
+    }
     if (d.type === 'multipv') {
       // review box: the best few moves with their lines (each search leaves out the moves already found), best first
       setup(d);
