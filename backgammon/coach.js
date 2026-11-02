@@ -332,11 +332,17 @@ function bookVerdict(start, side, dice, nRolls, playedKey) {
 function wantCands(key, start, side, dice) {
   if (S.cands.has(key) || S.pend.has(key)) return;
   S.pend.add(key);
-  request('ana', { type: 'analyze', pos: Array.from(start), side, dice: dice.slice(), ply: 1, keep: 8, max: 6, time: 1500 }).then(r => {
+  const msg = { type: 'analyze', pos: Array.from(start), side, dice: dice.slice(), ply: 1, keep: 8, max: 6, time: 1500 };
+  request('ana', msg).then(r => {
     S.pend.delete(key);
     if (!r || !r.list) return;
     S.cands.set(key, r.list); if (S.cands.size > 60) S.cands.delete(S.cands.keys().next().value);
     render();
+    // then a deeper pass (2-ply, like the strongest AI level): the 1-ply first choice lost to the top AI level
+    if (r.list.length > 1) request('ana', Object.assign({}, msg, { ply: 2 })).then(r2 => {
+      if (!r2 || !r2.list || !r2.list.length || S.cands.get(key) !== r.list) return;
+      S.cands.set(key, r2.list); render();
+    });
   });
 }
 function candInfo(list, start, side) {

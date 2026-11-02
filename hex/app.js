@@ -664,13 +664,33 @@ async function analyzeCurrent(tok) {
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
     else if (window.HexCoach) HexCoach.render();   // (the coach's verdict on the previous move uses the earlier positions' lists too)
   };
-  if (anaCache.has(key)) { apply(anaCache.get(key)); return; }
+  if (anaCache.has(key)) { apply(anaCache.get(key)); coachDeep(idx, key, apply); return; }
   cancelWorker('ana');
   const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1500 : 800 });
   if (!res || res.error) return;
   anaCache.set(key, res.list);
   apply(res.list);
   save();
+  coachDeep(idx, key, apply);
+}
+// coach: a second, deeper pass. The candidate analysis above is a short search without the AI's tactical
+// checks (forced connections); following its first choice lost to the strong AI levels,
+// so the coach then runs the AI's own stronger search and puts that move at the top of the candidates.
+const COACH_DEEP = 19;   // engine LEVELS: 1.5 s, forced connections within 3 moves
+async function coachDeep(idx, key, apply) {
+  const list = anaCache.get(key);
+  if (!list || !list.length || list.deep || !(window.HexCoach && HexCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
+  const r = await request('ana', { type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP });
+  if (!r || r.error || r.book || r.move === undefined || r.move === null || r.move < 0 || keyOf(idx) !== key || anaCache.get(key) !== list) return;
+  const out = deepTop(list, r.move, e => e.v > WINT); out.deep = true;
+  anaCache.set(key, out); apply(out); save();
+}
+// the deep search's move first, valued as the best; a forced win already in the list stays first
+function deepTop(list, m, won) {
+  let top = list[0]; for (const e of list) if (e.v > top.v) top = e;
+  if (won(top)) return list.slice();
+  const i = list.findIndex(e => e.m === m), e = Object.assign({}, i >= 0 ? list[i] : top, { m, v: top.v }, top.kind !== undefined ? { kind: top.kind } : {}, top.n !== undefined ? { n: Math.max(...list.map(x => x.n || 0)) } : {});
+  return [e].concat(list.filter((x, k) => k !== i));
 }
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;

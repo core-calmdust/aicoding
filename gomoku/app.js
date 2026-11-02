@@ -535,11 +535,32 @@ async function analyzeCurrent(tok) {
     const ev = evalFromList(list, mover); if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
   };
-  if (anaCache.has(key)) { apply(anaCache.get(key)); coachResolve(idx, anaCache.get(key)); return; }
+  if (anaCache.has(key)) { apply(anaCache.get(key)); coachResolve(idx, anaCache.get(key)); coachDeep(idx, key, apply); return; }
   cancelWorker('ana');
   const res = await request('ana', { type: 'analyze', moves: moves.slice(0, idx), time: settings.hint ? 1600 : 900 }, m => apply(m.list));
   if (!res || res.error) return;
   anaCache.set(key, res.list); apply(res.list); coachResolve(idx, res.list); save();
+  coachDeep(idx, key, apply);
+}
+// coach: a second, deeper pass. The candidate analysis above has no threat search (VCF / VCT, defence against the
+// opponent's threats), so following its first choice lost even to the middle AI levels: the coach then runs the AI's own
+// search with threat solving and puts that move at the top.
+const COACH_DEEP = 14;   // engine LEVELS: 24,000 positions, VCT 7, defence 3 (about 1 s on a PC)
+async function coachDeep(idx, key, apply) {
+  const list = anaCache.get(key);
+  if (!list || list.deep || !(window.GomokuCoach && GomokuCoach.wants(idx))) return;
+  const r = await request('ana', { type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP });
+  if (!r || r.error || r.book || !(r.move >= 0) || keyOf(idx) !== key || anaCache.get(key) !== list) return;
+  if (r.v < -WINT || !E.replay(rule, moves.slice(0, idx), startPos).isLegal(r.move)) return;   // lost anyway (the search may then return a forbidden point)
+  const out = deepTop(list, r.move, e => e.v > WINT, r.v); out.deep = true;
+  anaCache.set(key, out); apply(out); save();
+}
+// the deep search's move first, valued as the best (or its own value when higher); a forced win in the list stays first
+function deepTop(list, m, won, v) {
+  let top = list[0]; for (const e of list) if (e.v > top.v) top = e;
+  if (won(top)) return list.slice();
+  const i = list.findIndex(e => e.m === m), e = Object.assign({}, i >= 0 ? list[i] : top, { m, v: typeof v === 'number' && v > top.v ? v : top.v }, top.kind !== undefined ? { kind: top.kind } : {});
+  return [e].concat(list.filter((x, k) => k !== i));
 }
 // the result dialog only when a game ends right now on the board (never for a lesson / puzzle, nor for a finished game that is restored)
 function onGameEnd(st) {

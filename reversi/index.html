@@ -1807,6 +1807,7 @@ function anaMsg(e) {
   if (!anaJob || m.id !== anaJob.id) return;
   if (m.type === 'analysisProgress') anaJob.onProgress(m.list, false);
   else if (m.type === 'analysis') { const j = anaJob; anaJob = null; j.onProgress(m.list, true); }
+  else if (m.type === 'result' && anaJob.resolve) { const j = anaJob; anaJob = null; j.resolve(m); }   // coachDeep's search
 }
 aiWorker = makeWorker(aiMsg);
 anaWorker = makeWorker(anaMsg);
@@ -2304,10 +2305,26 @@ async function schedule(animInfo) {
           positions[idx].evalB = p.toMove === BLACK ? best : -best;
           if (done) { renderInfo(); save(); } else if (window.ReversiCoach) ReversiCoach.render();
           showHints(list, done);
+          if (done && !list.some(x => x.exact)) coachDeep(idx, token, p);
         }
       });
     }
   }
+}
+// coach: a second, deeper pass. The all-moves analysis is quick but shallow (its first choice lost to the strong AI
+// levels), so the coach then runs the strong AI's own search (deeper, endgame solved from 18 empties) and puts that move first.
+const COACH_DEEP = 17;   // engine LEVELS: about 1.5 s
+function coachDeep(idx, token, p) {
+  if (!(window.ReversiCoach && ReversiCoach.active()) || anaJob) return;
+  anaJob = { id: ++jobId, onProgress: () => {}, resolve: m => {
+    if (token !== busyToken || cur !== idx || positions[idx] !== p || !p.ana || !p.ana.length || !(m.move >= 0) || m.book) return;
+    let top = p.ana[0]; for (const x of p.ana) if (x.score > top.score) top = x;
+    const i = p.ana.findIndex(x => x.move === m.move);
+    p.ana = [{ move: m.move, score: top.score }].concat(p.ana.filter((x, k) => k !== i)); p.ana.deep = true;
+    ReversiCoach.render();
+    if (settings.hint) showHints(p.ana, true);
+  } };
+  anaWorker.postMessage({ type: 'think', id: anaJob.id, cells: p.cells.slice(), toMove: p.toMove, opts: { level: COACH_DEEP } });
 }
 const fmt = v => (v > 0 ? '+' : '') + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
