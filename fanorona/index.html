@@ -1224,18 +1224,19 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* PC, the 9x5 board (Fanoron-Tsivy) in a wide window (16:10 or wider: html.sv-wide) or with the online dock open: the same
    arrangement as Backgammon's (body.wide-side / body.dock-open) — the board on the left, a column on the right (対局者, 形勢,
    コーチ / 振り返り, 棋譜: 棋譜 takes what is left and scrolls inside); the review box takes the lower 40% of that column.
-   The board's size comes from --vh, so the online dock (shared/headerbar.js) resizes it smoothly (2026-11-01) */
+   The board's size comes from --vh, so the online dock (shared/headerbar.js) resizes it smoothly (2026-11-01);
+   as Backgammon, the board takes the whole height (no size cap but 240px a cell) and board + column sit in the middle (2026-11-02) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){
     /* (= Backgammon's --px / --rw: 310px under 1300px wide, 340px, 380px from 1700px; 330px with the dock open) */
     --px:24px !important;--rw:340px !important;
-    --cell:max(12px, min((var(--vh) - 24px) / (var(--fhc) + .16), (100vw - var(--px) * 2 - 16px - var(--rw)) / var(--fwc), 150px)) !important;
+    --cell:max(12px, min((var(--vh) - 24px) / var(--fhc), (100vw - var(--px) * 2 - 16px - var(--rw)) / var(--fwc), 240px)) !important;
   }
   @media (min-width: 1700px){ html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy].sv-wide:not(:has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){--rw:380px !important} }
   html[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)), html[data-rule=sivy]:has(> body.dock-open:not(.ol-soon)) body, html[data-rule=sivy].dock-fit:has(> body.dock-open:not(.ol-soon)) body:not(.no-online){--rw:330px !important}
   @media (max-width: 1299px){ html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))), html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body, html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))).dock-fit body:not(.no-online){--px:16px !important;--rw:310px !important} }
   html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
-    width:auto!important;justify-content:center!important;align-content:start!important;align-items:stretch!important;column-gap:16px!important;row-gap:10px!important;
+    width:auto!important;justify-content:center!important;align-content:center!important;align-items:stretch!important;column-gap:16px!important;row-gap:10px!important;
     grid-template-columns:var(--fw) var(--rw)!important;grid-template-rows:var(--fh)!important;grid-template-areas:"board side"!important}
   html.rvb-on[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
     grid-template-rows:calc(var(--fh) * .6 - 5px) calc(var(--fh) * .4 - 5px)!important;grid-template-areas:"board side" "board bx"!important}
