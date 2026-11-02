@@ -1573,3 +1573,9 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 
 /* landscape phone: Close only as wide as its label, Start takes the rest (same as the other games) */
 @media (orientation:landscape) and (max-height:560px){#newOverlay .modal-actions #btnNewClose{flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}#newOverlay .modal-actions #btnStart{flex:1 1 0!important}}
+/* PC: the betting bar stays a comfortable width in the middle under the table, the raise slider never stretches across the screen (2026-11-02) */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .actbar{width:min(100%, 1120px);margin-inline:auto;justify-self:center;align-self:center;box-sizing:border-box}
+  .ab-size{flex:0 1 auto;min-width:0}
+  .ab-size input[type=range]{flex:1 1 260px!important;width:auto!important;max-width:300px;min-width:60px}
+}
