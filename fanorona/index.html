@@ -1303,6 +1303,10 @@ body.lt-on .reserve .onb{display:inline-flex;align-items:center;gap:5px;position
   background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);font:700 14px/1 'JetBrains Mono',monospace;color:var(--text);pointer-events:none}
 body.lt-on .reserve .onb .pdisc{width:13px;height:13px;border-radius:50%;display:inline-block}
 body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+/* PC, 9x5 board on top (narrower windows): the review and the moves share the right column in two grid rows — keep each in its row (no 120px minimum) so they never overlap (2026-11-02) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card):not(#zz){min-height:0!important;max-height:100%!important;height:auto!important;align-self:stretch}
+}
 </style>
 <link rel="stylesheet" href="online.css?v=3l9">
 <style>
