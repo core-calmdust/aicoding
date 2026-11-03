@@ -29,12 +29,13 @@ if [ ! -x gikou/release ]; then
 fi
 if [ ! -s gikou/params.bin ]; then
   echo "== Gikou evaluation files"
+  [ -s gikou.zip ] || {
   URL=$(curl -sSfL https://api.github.com/repos/gikou-official/Gikou/releases | grep -o '"browser_download_url": *"[^"]*\.zip"' | head -1 | sed 's/.*"\(http[^"]*\)"/\1/')
   [ -n "$URL" ] || { echo "release zip not found: download the latest zip from https://github.com/gikou-official/Gikou/releases and unzip its .bin files into $WORK/gikou"; exit 1; }
-  curl -fL --retry 5 -o gikou.zip "$URL"
-  rm -rf gikou-zip && mkdir gikou-zip && (cd gikou-zip && unzip -q ../gikou.zip)
-  find gikou-zip -name '*.bin' -exec cp {} gikou/ \;
-  [ -s gikou/params.bin ] || { echo "params.bin not found in the zip"; exit 1; }
+  curl -fL --retry 5 -o gikou.zip "$URL"; }
+  # only the engine's files (the zip also has strategy books in folders with Japanese names, which unzip cannot create here)
+  unzip -j -o -q gikou.zip '*params.bin' '*probability.bin' '*progress.bin' '*book.bin' -d gikou 2>/dev/null || true
+  [ -s gikou/params.bin ] || { echo "params.bin not found in the zip"; unzip -l gikou.zip | head -30; exit 1; }
 fi
 printf 'usi\nisready\nquit\n' | (cd gikou && ./release) 2>/dev/null | grep -q readyok || { echo "Gikou does not start"; exit 1; }
 echo "Gikou OK"
