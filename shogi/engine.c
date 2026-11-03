@@ -11,6 +11,14 @@ typedef short i16;
 typedef int i32;
 typedef unsigned int u32;
 
+#ifdef NATIVE   /* native build for the tools (tools/match/usimatch.c): libc + a wall clock */
+#include <string.h>
+#include <time.h>
+#define EXPORT(name)
+static double js_now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000.0 + t.tv_nsec / 1e6; }
+static void js_progress(i32 depth, double score, i32 nodes, i32 *pv, i32 pvlen) { (void)depth; (void)score; (void)nodes; (void)pv; (void)pvlen; }
+static void js_aprogress(i32 depth, i32 n, i32 *moves, double *scores) { (void)depth; (void)n; (void)moves; (void)scores; }
+#else
 #define EXPORT(name) __attribute__((export_name(#name)))
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
 
@@ -21,6 +29,7 @@ IMPORT(aprogress) void js_aprogress(i32 depth, i32 n, i32 *moves, double *scores
 void *memset(void *d, int c, unsigned long n) { u8 *p = d; while (n--) *p++ = (u8)c; return d; }
 void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; while (n--) *p++ = *q++; return d; }
 void *memmove(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; if (p < q) while (n--) *p++ = *q++; else { p += n; q += n; while (n--) *--p = *--q; } return d; }
+#endif
 
 /* ------------------------------------------------------------------ pieces */
 enum { FU = 1, KY, KE, GI, KA, HI, KI, OU, TO, NY, NK, NG, UM, RY };
