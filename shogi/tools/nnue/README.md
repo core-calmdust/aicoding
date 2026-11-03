@@ -46,6 +46,17 @@ COUNT=60 EPOCHS=12 bash shogi/tools/nnue/run.sh
 | `WORK` | `~/shogi-nnue-work` | 作業フォルダ |
 | `EXTRA` | なし | 学習器への追加オプション（例 `EXTRA="--init ~/old/nnue.bin --lr 0.0003"`） |
 
+## 追加学習を重ねる（2回目以降）
+
+前回の結果を出発点に、別のデータで続きを学習できます。`ROUND` を変えると、前回とは違うファイルを取りに行きます。
+
+```bash
+cd ~/shogi-nnue-work && mv nnue.bin prev.bin && rm -rf raw train.bin && cd -
+ROUND=2 EXTRA="--init $HOME/shogi-nnue-work/prev.bin --lr 0.0003" bash shogi/tools/nnue/run.sh
+```
+
+3回目は `ROUND=3`、以降も同様です（`COUNT=30` なら最大30回ぶん別のデータがあります）。
+
 ## 終わったら
 
 `train.log` の最後の行の `valid` / `eval only` の数字（小さいほど良い）と、`nnue.bin.gz` を Claude に渡してください。
