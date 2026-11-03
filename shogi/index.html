@@ -1421,7 +1421,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/export.js?v=6"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
-<script src="engine.js?v=20261104n7"></script>
+<script src="engine.js?v=20261104h5"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
@@ -1576,7 +1576,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261104n7');
+  const w = new Worker('engine.js?v=20261104h5');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
