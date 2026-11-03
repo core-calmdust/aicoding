@@ -57,6 +57,16 @@ static u64 perft(int d) {
 }
 static void mvName(char *o, Move m) { int f = MF(m), t = MT(m); sprintf(o, "%c%d%c%d", 'a' + f % 9, 9 - f / 9, 'a' + t % 9, 9 - t / 9); }
 
+
+// ---------------------------------------------------------------- NNUE (tools/nnue/): load a net, per-side switch for matches
+static int nnSide[2] = { -1, -1 };   // nmatch: 1 = NNUE, 0 = linear for that colour (-1: leave as is)
+static int loadNet(const char *path) {
+  FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
+  int hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != 0x5845554E || hd[1] != XQ_H || hd[2] != XQ_IN) { fprintf(stderr, "bad net %s\n", path); return 0; }
+  if (fread(xqW1, 2, XQ_IN * XQ_H, f) != XQ_IN * XQ_H || fread(xqB1, 4, XQ_H, f) != XQ_H || fread(xqW2, 2, 2 * XQ_H, f) != 2 * XQ_H || fread(&xqB2, 4, 1, f) != 1) { fprintf(stderr, "short net\n"); return 0; }
+  fclose(f); return 1;
+}
+
 // ---------------------------------------------------------------- levels (mirrors engine.js LEVELS)
 typedef struct { double d; int noise, blunder, nodesK, ms; } Level;   // d: search depth, a fraction = chance of one ply more
 static Level LV[21];
@@ -76,6 +86,7 @@ static double gauss(void) { double u = urand(), v = urand(); return sqrt(-2 * lo
 static double msScale = 1.0;   // tools: time-limited levels run with ms * msScale
 // pick a move for level lv in the current IO setup; returns the move and *val (side to move's view)
 static Move levelMove(int lv, int *val) {
+  if (lv < 0) { if (rootN == 1) { if (val) *val = 0; return rootL[0]; } best(99, -lv, 0); if (val) *val = IO[1]; return (Move)IO[0]; }   // lv < 0: -lv ms per move
   Level L = LV[lv];
   if (rootN == 1) { if (val) *val = 0; return rootL[0]; }
   if (L.d) {
@@ -132,6 +143,7 @@ static int playGame(const u8 *board0, int sd0, int la, int lb, int pre, int maxP
     else {
       int lv = side ? lb : la, v = 0;
       if (wswap) { initEval(); memcpy(W_, WSIDE[side], sizeof(W_)); memset(TT, 0, sizeof(TT)); }
+      if (nnSide[side] >= 0 && nnSide[0] != nnSide[1]) { xq_nnue(nnSide[side]); memset(TT, 0, sizeof(TT)); setupBoard(board, sd, GH, nh, 0, 0); }
       m = levelMove(lv, &v);
       // a move that would repeat the position for the third time with a loss (perpetual check) is avoided
       if (recordFeat && ply >= pre + 2 && !attackedKing(side) && (nh % featEvery) == 0) {
@@ -236,6 +248,38 @@ int main(int argc, char **argv) {
       if (ra > 0) { w++; sc += 1; } else if (ra < 0) l++; else { dr++; sc += .5; }
     }
     printf("lv %d vs lv %d: %d games  +%d -%d =%d  score %.3f\n", A, Bl, N, w, l, dr, sc / N);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "nncheck")) {   // nncheck net.bin: incremental NNUE == recomputed, and the scale vs the linear evaluation
+    if (!loadNet(argv[2])) return 1;
+    double sxy = 0, sxx = 0; int bad = 0, n = 0;
+    for (int g = 0; g < 200; g++) {
+      xq_nnue(1); setupBoard(sb, ss, 0, 0, 0, 0); loadRoot();
+      Move st[200]; u8 cs[200]; int d = 0;
+      for (int k = 0; k < 160; k++) {
+        Move L[MAXMV]; int m = genLegal(L); if (!m) break;
+        st[d] = L[rnd32() % m]; cs[d] = makeMove(st[d]); d++;
+        int inc = evaluate(); xqOk[xqTop < XQ_ST ? xqTop : 0] = 0; int full = evaluate();
+        if (inc != full) bad++;
+        if (!attackedKing(side) && k > 6) { xqOn = 0; int lin = evaluate(); xqOn = 1; if (abs(lin) < 1500) { double o = full / (double)XQ_K; sxy += o * lin; sxx += o * o; n++; } }
+        if (urand() < 0.3 && d > 0) { d--; unmakeMove(st[d], cs[d]); }
+      }
+    }
+    printf("mismatches %d   linear ~ %.0f x logit (%d positions; XQ_K = %d)\n", bad, sxy / sxx, n, XQ_K);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "nmatch")) {   // nmatch net.bin lvA lvB N seed [pre] [msScale]: A uses the NNUE, B the linear evaluation
+    if (!loadNet(argv[2])) return 1;
+    int A = atoi(argv[3]), Bl = atoi(argv[4]), N = atoi(argv[5]); rng ^= (u64)atoll(argv[6]) * 2654435761ull;
+    int pre = argc > 7 ? atoi(argv[7]) : 4; if (argc > 8) msScale = atof(argv[8]);
+    double sc = 0; int w = 0, l = 0, dr = 0;
+    for (int g = 0; g < N; g++) {
+      int aRed = (g & 1) == 0, pl; nnSide[0] = aRed; nnSide[1] = !aRed;
+      int r = aRed ? playGame(sb, ss, A, Bl, pre, 400, &pl, 0) : playGame(sb, ss, Bl, A, pre, 400, &pl, 0), ra = aRed ? r : -r;
+      if (ra > 0) { w++; sc += 1; } else if (ra < 0) l++; else { dr++; sc += .5; }
+      if ((g + 1) % 10 == 0) { fprintf(stderr, "%d: +%d -%d =%d\n", g + 1, w, l, dr); fflush(stderr); }
+    }
+    printf("NNUE lv %d vs linear lv %d: %d games  +%d -%d =%d  score %.3f\n", A, Bl, N, w, l, dr, sc / N);
     return 0;
   }
   if (argc > 1 && !strcmp(argv[1], "wmatch")) {

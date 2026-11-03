@@ -310,7 +310,9 @@ function jsSearch(p, d, a, b, ply, tEnd) {
 function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return p.moves().map(m => ({ m, v: -jsSearch(p.clone().play(m), depth - 1, -Infinity, Infinity, 1, tEnd) })).sort((a, b) => b.v - a.v); }
 
 // ---------------------------------------------------------------- WebAssembly side
-let WX = null;
+let WX = null, wNNReady = false, wNNCur = false;
+// NNUE (engine_simd.wasm + nnue.bin.gz): the search levels, analysis and the coach; the noisy fixed-depth levels keep the linear evaluation they were tuned with
+function wNN(on) { on = !!(on && wNNReady); if (on !== wNNCur && WX) { WX.xq_nnue(on ? 1 : 0); WX.new_game(); wNNCur = on; } }
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
 const toC = m => mFrom(m) | (mTo(m) << 7), fromC = x => mv(x & 127, (x >> 7) & 127);
 function wSetup(start, moves, excl) {
@@ -335,6 +337,7 @@ function think(start, moves, level, rand) {
     if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
     let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + gauss(rand) * (L.noise || 0); if (x > bv) { bv = x; best = e.m; } } return { move: best, v: vals[0].v };
   }
+  wNN(!!L.s);
   if (!wSetup(start, moves, excl)) return { move: all[0] };
   if (!L.s) {
     WX.values(Math.floor(L.d) + (rand() < L.d % 1 ? 1 : 0));
@@ -359,6 +362,7 @@ function think(start, moves, level, rand) {
   return { move: fromC(r[0]), v: r[1], depth: r[2] };
 }
 function analyze(start, moves, ms, onProgress) {
+  wNN(true);
   const { pos, hashes } = replay(start, moves);
   if (!WX) { const L = jsValues(pos, 3, ms).map(e => ({ ...e, kind: kindOf(e.v) })); return { list: L, depth: 3 }; }
   if (!wSetup(start, moves, [])) return { list: [], depth: 0 };
@@ -380,6 +384,7 @@ function puzzle(start, moves, n, defend, checks) {
 let progressCb = null;
 // review box: the best few moves (values from the all-moves analysis) and a line for each (short searches move by move)
 function multiPV(start, moves, n, ms, plies, onProgress) {
+  wNN(true);
   const top = analyze(start, moves, ms).list.slice().sort((a, b) => b.v - a.v).slice(0, n || 4).map(e => ({ m: e.m, v: e.v, pv: [e.m] }));
   if (onProgress) onProgress(top);
   if (!WX) return top;
@@ -403,6 +408,7 @@ function multiPV(start, moves, n, ms, plies, onProgress) {
 // at that depth; the line comes from the transposition table), reported after every depth (and after each line from
 // depth 7 on, partial). Ends at maxD or two depths after a win / loss shows up; the page terminates the worker to stop.
 function mpvLoop(start, moves, n, maxD, post) {
+  wNN(true);
   const { pos } = replay(start, moves), legal = pos.moves();
   n = Math.min(n || 4, legal.length);
   if (!WX || !n) { const l = n ? multiPV(start, moves, n, 800, 8) : []; post('result', { list: l, depth: l.length ? 1 : 0 }); return; }
@@ -438,9 +444,25 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
-    const url = new URL('engine.wasm?' + V, self.location.href);
+    const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
+    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+      .then(r => { WX = r.instance.exports; if (simd && WX.xq_nnue && typeof DecompressionStream !== 'undefined') return loadNet(); }).catch(() => { WX = null; });
+  }
+  async function loadNet() {
+    try {
+      const res = await fetch(new URL('nnue.bin.gz?' + V, self.location.href)); if (!res.ok) return;
+      let buf = new Uint8Array(await res.arrayBuffer());
+      if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      if (dv.getUint32(0, true) !== 0x5845554E || dv.getInt32(4, true) !== 256 || dv.getInt32(8, true) !== 1260) return;
+      const H = 256, IN = 1260, b = buf.buffer; let o = buf.byteOffset + 12;
+      new Int16Array(WX.memory.buffer, WX.xq_w1_ptr(), IN * H).set(new Int16Array(b.slice(o, o + IN * H * 2))); o += IN * H * 2;
+      new Int32Array(WX.memory.buffer, WX.xq_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
+      new Int16Array(WX.memory.buffer, WX.xq_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
+      WX.xq_set_b2(dv.getInt32(o - buf.byteOffset, true));
+      wNNReady = true;
+    } catch (e) { wNNReady = false; }
   }
   let queue = Promise.resolve();
   self.onmessage = e => {
