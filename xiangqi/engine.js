@@ -284,14 +284,14 @@ const LEVELS = [null,
   { d: 3.5, noise: 35, blunder: 0.015 },  // 6級
   { d: 4, noise: 30, blunder: 0.012 },    // 5級
   { d: 4, noise: 20 },                    // 4級
-  { s: 1, nk: 10 },                       // 3級  (about 10,000 positions per move)
-  { s: 1, nk: 25 },                       // 2級
-  { s: 1, nk: 60 },                       // 1級
-  { s: 1, nk: 150 },                      // 初段
-  { s: 1, nk: 400 },                      // 二段
-  { s: 1, nk: 1000 },                     // 三段
-  { s: 1, nk: 2500, book: 1 },            // 四段
-  { s: 1, nk: 6000, ms: 8000, book: 1 },  // 五段  (6 million positions, at most 8 s)
+  { s: 1, nk: 1.5 },                      // 3級  (NNUE: about 1,500 positions per move; the NNUE equals the old linear evaluation at ~1/7 of the nodes)
+  { s: 1, nk: 3.5 },                      // 2級
+  { s: 1, nk: 8.5 },                      // 1級
+  { s: 1, nk: 21 },                       // 初段
+  { s: 1, nk: 57 },                       // 二段
+  { s: 1, nk: 140 },                      // 三段
+  { s: 1, nk: 360, book: 1 },             // 四段
+  { s: 1, nk: 6000, ms: 8000, book: 1 },  // 五段  (the strongest: 6 million positions, at most 8 s)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
@@ -356,7 +356,7 @@ function think(start, moves, level, rand) {
     const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 12);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
-  WX.best(99, L.ms || 0, L.nk || 0);
+  WX.best(99, L.ms || 0, !L.nk ? 0 : L.nk < 10 ? -Math.round(L.nk * 10) : L.nk);   // (nk < 10: in hundreds of nodes, negative)
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
   return { move: fromC(r[0]), v: r[1], depth: r[2] };
@@ -440,7 +440,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261028pv';
+  const V = 'v=20261104nn';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

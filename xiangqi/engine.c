@@ -593,7 +593,7 @@ static void beginSearch(int ms) {
 }
 // best move: IO[0] = move, IO[1] = value, IO[2] = depth, IO[3] = nodes / 1000
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
-  beginSearch(ms); nodeLimitOn = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
+  beginSearch(ms); nodeLimitOn = nodeK != 0; nodeLimit = nodeK > 0 ? (u64)nodeK * 1000 : (u64)(-nodeK) * 100;   // nodeK < 0: hundreds
   if (rootN == 0) { IO[0] = -1; IO[1] = -WIN; IO[2] = 0; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;
   if (rootN == 1) { IO[0] = bm; IO[1] = 0; IO[2] = 0; IO[3] = 0; return; }
