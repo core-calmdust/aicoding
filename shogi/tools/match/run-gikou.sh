@@ -14,7 +14,7 @@ H=$(od -An -t d4 -j 4 -N 4 net.bin | tr -d ' ')
 echo "== build the site's engine (net: $NET, hidden $H)"
 cc -O3 -DNATIVE -DNUE_H=$H -w -o usimatch "$HERE/usimatch.c"
 
-if [ ! -x gikou/release ]; then
+if [ ! -x gikou/release ] || [ ! -f gikou/.build2 ]; then
   echo "== Gikou"
   [ -d gikou-src ] || git clone --depth 1 https://github.com/gikou-official/Gikou.git gikou-src
   # Gikou uses SSE4.2 (Intel): on Apple silicon it is built for x86_64 and runs under Rosetta
@@ -23,9 +23,9 @@ if [ ! -x gikou/release ]; then
     ARCH="-arch x86_64"
   fi
   mkdir -p shim; printf '#pragma once\nstatic inline int omp_get_thread_num(void){return 0;}\nstatic inline void omp_set_num_threads(int n){(void)n;}\n' > shim/omp.h
-  ( cd gikou-src && sed -e 's/ -fopenmp//' -e 's/^CXX *=.*/CXX = clang++ '"$ARCH"'/' -e 's/^INCLUDES *=.*/INCLUDES = -I..\/shim/' Makefile > Makefile.mac \
+  ( cd gikou-src && sed -e 's/ -fopenmp//' -e 's/^CXX *=.*/CXX = clang++ '"$ARCH"'/' -e 's/^INCLUDES *=.*/INCLUDES = -I..\/shim/' -e 's/-O3 -DNDEBUG$/-O2 -DNDEBUG -fno-strict-aliasing -fwrapv/' Makefile > Makefile.mac && rm -rf obj bin \
     && make -f Makefile.mac TARGET=release executable > ../gikou-build.log 2>&1 ) || { echo "Gikou build failed; last lines of $WORK/gikou-build.log:"; tail -30 gikou-build.log; exit 1; }
-  mkdir -p gikou && cp gikou-src/bin/release gikou/release
+  mkdir -p gikou && cp gikou-src/bin/release gikou/release && touch gikou/.build2
 fi
 if [ ! -s gikou/params.bin ]; then
   echo "== Gikou evaluation files"
@@ -41,6 +41,9 @@ printf 'usi\nisready\nquit\n' | (cd gikou && ./release) 2>/dev/null | grep -q re
 # sanity check: after 7g7f 3c3d (Black to move) Gikou must answer with a Black move
 R=$( (printf 'usi\nsetoption name OwnBook value false\nsetoption name Threads value 1\nsetoption name DepthLimit value 3\nisready\nusinewgame\nposition startpos moves 7g7f 3c3d\ngo btime 0 wtime 0 byoyomi 5000\n'; sleep 8; echo quit) | (cd gikou && ./release) 2>/dev/null | grep bestmove | head -1)
 echo "Gikou check (after 7g7f 3c3d): $R"
+# a short real match (our engine vs Gikou depth 2): every Gikou move must be legal
+./usimatch net.bin 3000 "$WORK/gikou/release" "$WORK/gikou" 4 --opt DepthLimit=2 --opt Threads=1 --opt OwnBook=false --opt USI_Ponder=false --openings "$HERE/openings.txt" --byoyomi 10000 > check.log 2>&1 || true
+if grep -q "illegal\|stopped" check.log || ! grep -q "game 4" check.log; then echo "Gikou plays wrong moves in a real game:"; cat check.log; exit 1; fi
 echo "Gikou OK"
 
 echo "== matches: our $NODES nodes per move vs Gikou depth $DEPTHS, $GAMES games each (running in parallel)"
