@@ -1,8 +1,8 @@
 /* Shared by datagen.c and train.c: the training record and the NNUE input features.
    Board layout = engine.c: sq = row * 9 + col (row 0 = Black's back rank), piece = type | colour << 3,
    types 1 King 2 Advisor 3 Elephant 4 Horse 5 Rook 6 Cannon 7 Pawn. */
-#ifndef XQ_H
-#define XQ_H
+#ifndef XQ_REC_H
+#define XQ_REC_H
 #include <stdint.h>
 
 #define REC_CHECK 1     /* side to move in check */
