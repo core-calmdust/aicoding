@@ -59,7 +59,7 @@ static void mvName(char *o, Move m) { int f = MF(m), t = MT(m); sprintf(o, "%c%d
 
 
 // ---------------------------------------------------------------- NNUE (tools/nnue/): load a net, per-side switch for matches
-static int nnSide[2] = { -1, -1 };   // nmatch: 1 = NNUE, 0 = linear for that colour (-1: leave as is)
+static int nnSide[2] = { -1, -1 }, nnByLevel = 0;   // nnByLevel: NNUE for levels 13+ (as engine.js)   // nmatch: 1 = NNUE, 0 = linear for that colour (-1: leave as is)
 static int loadNet(const char *path) {
   FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
   int hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != 0x5845554E || hd[1] != XQ_H || hd[2] != XQ_IN) { fprintf(stderr, "bad net %s\n", path); return 0; }
@@ -68,15 +68,15 @@ static int loadNet(const char *path) {
 }
 
 // ---------------------------------------------------------------- levels (mirrors engine.js LEVELS)
-typedef struct { double d; int noise, blunder, nodesK, ms; } Level;   // d: search depth, a fraction = chance of one ply more
+typedef struct { double d; int noise, blunder; double nodesK; int ms; } Level;   // nodesK: thousands of nodes (fractions allowed)   // d: search depth, a fraction = chance of one ply more
 static Level LV[21];
 static void initLevels(void) {
   // weak levels: fixed-depth values + noise (points) + blunder chance (per mille); strong levels: node / time limits
   const Level T[21] = { { 0 },
     { 1, 300, 380, 0, 0 }, { 1, 230, 280, 0, 0 }, { 1.3, 200, 220, 0, 0 }, { 1.7, 170, 160, 0, 0 }, { 2.1, 135, 110, 0, 0 },
     { 2.5, 100, 75, 0, 0 }, { 2.8, 80, 55, 0, 0 }, { 3, 60, 40, 0, 0 }, { 3, 42, 22, 0, 0 }, { 3.5, 35, 15, 0, 0 },
-    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 10, 0 }, { 0, 0, 0, 25, 0 }, { 0, 0, 0, 60, 0 },
-    { 0, 0, 0, 150, 0 }, { 0, 0, 0, 400, 0 }, { 0, 0, 0, 1000, 0 }, { 0, 0, 0, 2500, 0 }, { 0, 0, 0, 6000, 8000 } };
+    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 1.5, 0 }, { 0, 0, 0, 3.5, 0 }, { 0, 0, 0, 8.5, 0 },
+    { 0, 0, 0, 21, 0 }, { 0, 0, 0, 57, 0 }, { 0, 0, 0, 140, 0 }, { 0, 0, 0, 360, 0 }, { 0, 0, 0, 6000, 8000 } };   // 13+: NNUE when a net is loaded
   memcpy(LV, T, sizeof(T));
 }
 static u64 rng = 88172645463325252ull;
@@ -101,7 +101,7 @@ static Move levelMove(int lv, int *val) {
     for (int i = 0; i < n; i++) { double x = vs[i] + (abs(vs[i]) > WINT - 1000 ? 0 : gauss() * L.noise); if (x > bv) { bv = x; bi = i; } }
     return ms[bi];
   }
-  best(99, L.ms ? (int)(L.ms * msScale) : 0, L.nodesK);
+  best(99, L.ms ? (int)(L.ms * msScale) : 0, L.nodesK <= 0 ? 0 : L.nodesK < 10 ? -(int)(L.nodesK * 10 + .5) : (int)L.nodesK);
   if (val) *val = IO[1];
   return (Move)IO[0];
 }
@@ -143,6 +143,7 @@ static int playGame(const u8 *board0, int sd0, int la, int lb, int pre, int maxP
     else {
       int lv = side ? lb : la, v = 0;
       if (wswap) { initEval(); memcpy(W_, WSIDE[side], sizeof(W_)); memset(TT, 0, sizeof(TT)); }
+      if (nnByLevel && lv >= 0) { int want = lv >= 13; if (xqOn != want) { xq_nnue(want); memset(TT, 0, sizeof(TT)); setupBoard(board, sd, GH, nh, 0, 0); } }
       if (nnSide[side] >= 0 && nnSide[0] != nnSide[1]) { xq_nnue(nnSide[side]); memset(TT, 0, sizeof(TT)); setupBoard(board, sd, GH, nh, 0, 0); }
       m = levelMove(lv, &v);
       // a move that would repeat the position for the third time with a loss (perpetual check) is avoided
@@ -266,6 +267,20 @@ int main(int argc, char **argv) {
       }
     }
     printf("mismatches %d   linear ~ %.0f x logit (%d positions; XQ_K = %d)\n", bad, sxy / sxx, n, XQ_K);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "pair")) {   // pair net.bin A nkA B nkB N seed: level A (node budget nkA thousand) vs level B, NNUE for 13+; prints A's score
+    if (!loadNet(argv[2])) return 1; nnByLevel = 1;
+    int A = atoi(argv[3]), Bl = atoi(argv[5]), N = atoi(argv[7]); double nA = atof(argv[4]), nB = atof(argv[6]);
+    rng ^= (u64)atoll(argv[8]) * 2654435761ull;
+    if (nA > 0) LV[A].nodesK = nA; if (nB > 0) LV[Bl].nodesK = nB;
+    double sc = 0; int w = 0, l = 0, dr = 0;
+    for (int g = 0; g < N; g++) {
+      int aRed = (g & 1) == 0, pl;
+      int r = aRed ? playGame(sb, ss, A, Bl, 2, 400, &pl, 0) : playGame(sb, ss, Bl, A, 2, 400, &pl, 0), ra = aRed ? r : -r;
+      if (ra > 0) { w++; sc += 1; } else if (ra < 0) l++; else { dr++; sc += .5; }
+    }
+    printf("pair %d(%g) vs %d(%g): %d games  +%d -%d =%d  score %.3f\n", A, LV[A].nodesK, Bl, LV[Bl].nodesK, N, w, l, dr, sc / N); fflush(stdout);
     return 0;
   }
   if (argc > 1 && !strcmp(argv[1], "nmatch")) {   // nmatch net.bin lvA lvB N seed [pre] [msScale]: A uses the NNUE, B the linear evaluation
