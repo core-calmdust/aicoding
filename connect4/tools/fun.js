@@ -61,7 +61,7 @@ function mateLine(E, mv, ans, n) {
     if (U.immWins(g, 3 - d).length && U.isWinAfter(g, U.immWins(g, 3 - d)[0], 3 - d)) { /* attacker wins next */ }
     const dl = E.defendList(m, left);
     defCh.push(U.legal(g).filter(c => !U.obviousLoss(g, c, d)).length);
-    let best = null; for (const c of E.ORDER) { const e = dl.find(x => x.c === c); if (!e) continue; const v = e.need || 99; if (!best || v > best.v) best = { c, v }; }
+    const best = { c: E.pickDefence(dl) };   // the app's defender (engine.js)
     m += best.c + 1;
     const g2 = U.grid(m), a = U.toMove(m);
     if (U.immWins(g2, a).length) break;                      // final four: the choice of cell does not matter

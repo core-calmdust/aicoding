@@ -1338,7 +1338,7 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/headerbar.js?v=30"></script>
 <script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=5"></script>
+<script src="../shared/cardbar.js?v=6"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/tick.js?v=1"></script>
@@ -2593,7 +2593,7 @@ let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
 function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261019c`).then(r => r.json()).catch(() => null)); }
-function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261021f`).then(r => r.json()).catch(() => null)); }
+function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261104pzd`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
 function varTabs(sel, cur) { $(sel).innerHTML = RULE_ORDER.map(r => `<button data-r="${r}" class="${r === cur ? 'sel' : ''}">${t('rule.' + r)}</button>`).join(''); }
@@ -3076,6 +3076,15 @@ function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function mateReq(n, defend) { return request('ai', { type: puzzle && puzzle.goal === 'mill' ? 'mill' : 'mate', moves: moves.slice(0, cur), n, defend: !!defend }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
+// the defender's reply: the longest resistance; among replies that resist equally long, the one the engine values best
+// (the first one in generation order could be a needless blunder, e.g. giving up a piece for nothing — tools/audit_puzzles.js)
+async function pickDefenceBest(list) {
+  const sc = e => e.need ? e.need : 99, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return pickDefence(list);
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 400 });
+  const an = (r && r.list) || [], v = m => { const e = an.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (engine's best reply) answers and the
 // player may keep going until the puzzle's move count is used up; reaching the goal within it still counts.
@@ -3173,7 +3182,8 @@ async function puzzleMove(m) {
   await sleep(Math.max(0, moveDur(m) + 250));
   if (puzzle !== Pz) return;
   if (!dl.length) { puzzleSolved(); return; }
-  const r = pickDefence(dl);
+  const r = await pickDefenceBest(dl);
+  if (puzzle !== Pz || tok !== busyToken) return;
   playMove2(r);
   await sleep(moveDur(r));
   if (puzzle !== Pz) return;
@@ -3227,7 +3237,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
-    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : pickDefence(list); }
+    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : await pickDefenceBest(list); if (puzzle !== Pz) return; }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++;

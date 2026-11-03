@@ -1214,7 +1214,7 @@ body .info-line{font-size:12.5px}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/headerbar.js?v=30"></script>
 <script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=5"></script>
+<script src="../shared/cardbar.js?v=6"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/resign.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -1372,7 +1372,7 @@ let TREEBUF = null;
 const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028rb');
+  const w = new Worker('engine.js?v=20261104rs');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -2392,7 +2392,7 @@ $('#lsList').onclick = () => { if (lesson) openLessons(lsCourse(LESSONS.steps[le
 // The 45 original puzzles keep their level and index (old progress "L-j" becomes "w2:j" / "w3:j" / "w4:j").
 let PUZZLES = null;
 const esc = escHb;
-const puzzlesReady = fetch('puzzles.json?v=20261021fun').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261104w1').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const PZ_CATS = ['mate', 'theme', 'unique'], PZ_CAT_KEY = STORE + '-pzcat', PZ_LAST = STORE + '-pzlast';
 const PZ_OLD_IDS = ['w2', 'w3', 'w4'];
 function pzStore() {
@@ -2401,13 +2401,30 @@ function pzStore() {
     const out = { _v: 3 };
     for (const k in pr) { const m = /^(\d)-(\d+)$/.exec(k); if (m && pr[k] && PZ_OLD_IDS[+m[1]]) out[PZ_OLD_IDS[+m[1]] + ':' + m[2]] = 3; else if (k.includes(':')) out[k] = pr[k]; }
     try { localStorage.setItem(PZ_STORE, JSON.stringify(out)); } catch (e) {}
-    return out;
+    return pzDropCut(out);
   }
+  return pzDropCut(pr);
+}
+// records of puzzles cut from a theme (lv.was: the kept ones' old indices) are removed, so the totals (here and on the
+// portal page) only count puzzles that exist; a cloud merge may bring them back and they are removed again here
+function pzDropCut(pr) {
+  if (!PUZZLES) return pr;
+  let ch = false;
+  for (const lv of PUZZLES.levels) {
+    if (!lv.was) continue;
+    const keep = new Set(lv.was.map(j => lv.id + ':' + j));
+    for (const k in pr) if (k.startsWith(lv.id + ':') && !keep.has(k)) { delete pr[k]; ch = true; }
+  }
+  if (ch) { try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {} }
   return pr;
 }
 const starVal = x => x === true ? 3 : (+x || 0);
 const PT = o => (o && (o[LANG] || o.en || o.ja)) || '';
 const pzLv = li => PUZZLES.levels[li];
+// record key of puzzle j of a theme. 2026-11-04: 「1手で勝て」 was cut from 20 to its 10 hardest (by D); lv.was[j] = the
+// puzzle's index in the old 20, so stars (and PUZZLES.old / pzold slots) stay keyed "w1:<old index>" — existing records,
+// cloud copies and merges keep pointing at the same puzzle. Records of the 10 dropped ones are removed (pzDropCut).
+const pzKey = (lv, j) => lv.id + ':' + (lv.was ? lv.was[j] : j);
 // 2026-10-21 fun refresh (tools/fun.js, tools/refresh_fun.js): low-scoring puzzles were replaced; the previous one is in
 // PUZZLES.old["<id>:<j>"]. A player who had already played a slot (a record when this version first loads, or a solve
 // of the old puzzle later, e.g. a daily up to PUZZLES.cut) keeps the old puzzle there; dailies up to the cut stay old.
@@ -2424,11 +2441,11 @@ function pzOldKeys() {
 }
 function pzOldMark(k) { const s = pzOldKeys(); if (s.has(k)) return; s.add(k); try { localStorage.setItem(PZ_OLDK, JSON.stringify({ keys: [...s] })); } catch (e) {} }
 function pzGet(li, j, date) {
-  const lv = pzLv(li), k = lv.id + ':' + j, o = PUZZLES.old && PUZZLES.old[k];
+  const lv = pzLv(li), k = pzKey(lv, j), o = PUZZLES.old && PUZZLES.old[k];
   if (o && ((date && date <= PUZZLES.cut) || pzOldKeys().has(k))) return o;
   return lv.puzzles[j];
 }
-function pzRecs(li, pr) { pr = pr || pzStore(); const lv = pzLv(li); return lv.puzzles.map((_, j) => starVal(pr[lv.id + ':' + j])); }
+function pzRecs(li, pr) { pr = pr || pzStore(); const lv = pzLv(li); return lv.puzzles.map((_, j) => starVal(pr[pzKey(lv, j)])); }
 const pzKind = P => P.k === 'b' ? 'b' : P.k === 's' ? 's' : 'mate';
 const pzTurns = P => P.k === 's' ? P.steps.length : P.k === 'b' ? 1 : P.n;
 const pzSteps = P => P.k === 's' ? P.steps : [{ sc: P.sc, a: P.answer }];
@@ -2551,7 +2568,7 @@ function pzGoalText(Pz) {
 function renderPuzzleCard() {
   const Pz = puzzle, lv = pzLv(Pz.li);
   PZBook.setLang(LANG);
-  const best = starVal(pzStore()[lv.id + ':' + Pz.j]), df = pzDiff(Pz.P.D);
+  const best = starVal(pzStore()[pzKey(lv, Pz.j)]), df = pzDiff(Pz.P.D);
   $('#pzStep').textContent = (Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')} · ` : '') + `${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1} · ${'●'.repeat(df)}${'○'.repeat(5 - df)}` + (best ? '  ' + '★'.repeat(best) : '');
   $('#pzTitle').textContent = PT(lv.name);
   $('#pzGoal').innerHTML = `<span class="pdisc p${Pz.me}"></span><span>${pzGoalText(Pz)}</span>`;
@@ -2591,11 +2608,13 @@ function pzWhyHTML(Pz) {
   return `<span class="pz-ex">${ex} ${pzResText(v, P.moves.length)}</span>` + pzOthersHTML(st);
 }
 // short forced-win search (engine 'mate'): attacker list = own moves needed per column, defender list = attacker moves left after each reply
-function mateReq(m, n, defend) { return request('ai', { type: 'mate', moves: m, n, defend: !!defend }).then(r => r && r.list); }
+function mateReq(m, n, defend) { return request('ai', { type: 'mate', moves: m, n, defend: !!defend }).then(r => { if (r && r.list && defend) r.list.pick = r.pick; return r && r.list; }); }
 const PREF = [3, 2, 4, 1, 5, 0, 6];
 const byPref = list => list.slice().sort((a, b) => PREF.indexOf(a.c) - PREF.indexOf(b.c));
 function pickAttack(list, left) { let best = null; for (const e of byPref(list)) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.c; }
-function pickDefence(list) { let best = null; for (const e of byPref(list)) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { c: e.c, v }; } return best.c; }
+// the defender's reply is chosen in the worker (engine.js pickDefence: longest resistance, then the exact solver among
+// escapes, then a natural block of an open four / counter-threat); the fallback below only keeps the old rule
+function pickDefence(list) { if (list.pick !== undefined && list.pick >= 0) return list.pick; let best = null; for (const e of byPref(list)) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { c: e.c, v }; } return best.c; }
 function mateHints(list, m, left) { const k = m.length >> 1; return list.filter(e => e.need && e.need <= left).map(e => ({ c: e.c, kind: 'exact', v: 22 - e.need - k })); }
 // ---- puzzles v2 (common spec): a move off the solution does not fail at once — the defender answers with its best
 // defence and the player keeps going until the puzzle's move count is used up (then "not achieved within N moves").
@@ -2729,7 +2748,7 @@ function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
   PZBook.setLang(LANG);
-  const lv = pzLv(Pz.li), key = lv.id + ':' + Pz.j, stars = PZBook.starsFor(Pz), before = pzRecs(Pz.li);
+  const lv = pzLv(Pz.li), key = pzKey(lv, Pz.j), stars = PZBook.starsFor(Pz), before = pzRecs(Pz.li);
   const pr = pzStore(); pr[key] = Math.max(starVal(pr[key]), stars);
   if (PUZZLES.old && PUZZLES.old[key] === Pz.P) pzOldMark(key);   // solved the pre-refresh puzzle: keep it for this slot
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}

@@ -109,7 +109,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=rb1';
+const ENGINE_URL = 'engine.js?v=rs1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1402,10 +1402,8 @@ async function seqAnswer(P, s, m) {
   await sleep(dm + 250);
   if (lesson !== L || tok !== busyToken) return;
   if (!dl || !dl.length) { finish(true); $('#lsFb').innerHTML = `<span class="pts ok">+${t('u.pt', { n: 20 })}</span> <b class="ok">${t('fb.perfect')}</b> ` + t('ls.' + s.id + '.why', { m: names() }); return; }
-  // the most stubborn reply; among equally good ones the one that lands closest to the king (it looks like real defence)
-  const b3 = posAt(cur).pos, N0 = b3.n, kd = x => { const k = b3.king, q = mTo(x); return Math.abs(Math.floor(k / N0) - Math.floor(q / N0)) + Math.abs(k % N0 - q % N0); };
-  const sv = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...dl.map(sv));
-  const r = dl.filter(e => sv(e) === top).sort((a, b) => kd(a.m) - kd(b.m))[0].m;
+  // the most stubborn reply; among equally good ones a natural resistance (engine.js pickDefence)
+  const b3 = posAt(cur).pos, r = E.pickDefence(b3, dl);
   playMove2(r);
   await sleep(moveDur(r, b3));
   if (lesson !== L || tok !== busyToken) return;
@@ -1697,7 +1695,9 @@ function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 // defend = 1 (the opponent to move) → need = moves the solver still needs after each reply (0 = escaped)
 function mateReq(n, defend) { return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 99 : e.need < 0 ? 50 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
+// the defender's reply: the most stubborn one, then a natural resistance (engine.js pickDefence: fewest immediate wins left
+// to the solver, block one of the king's open roads, close to the king)
+function pickDefence(list) { return E.pickDefence(posAt(cur).pos, list); }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 const pzReached = (Pz, pos) => { const j = E.judge(pos, []); return j.over && j.winner === Pz.me; };
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The opponent (the engine's best reply) answers and the

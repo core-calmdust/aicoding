@@ -117,7 +117,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028rb'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261104fb'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -1689,6 +1689,15 @@ function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function solveReq(n, defend) { return request('ai', { type: 'solve', moves: moves.slice(0, cur), n, defend: !!defend, maxNodes: 3e6 }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 999 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best && best.m; }
+// the defender's reply: the longest resistance; among replies that resist equally long, the one the engine values best
+// (the first one in board order could be a pointless move next to a stronger block — tools/audit_puzzles.js "tie")
+async function pickDefenceBest(list) {
+  const sc = e => e.need === 0 ? 999 : e.need, top = list.length ? Math.max(...list.map(sc)) : 0, tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return pickDefence(list);
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 400 });
+  const an = (r && r.list) || [], v = m => { const e = an.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
 // ---- puzzle v2: a wrong (but sensible) move does not end the puzzle at once — the defender answers with its best reply and the
@@ -1763,8 +1772,9 @@ async function puzzleMove(m) {
   if (pzLeft(Pz) < 1) { await sleep(moveDur() + 350); if (puzzle === Pz) pzFailOut(Pz); return; }
   const dl = await solveReq(Math.max(1, left - 2), true);
   if (!dl || puzzle !== Pz || tok !== busyToken) return;
+  const r = await pickDefenceBest(dl);
+  if (puzzle !== Pz || tok !== busyToken) return;
   await sleep(moveDur() + 350); if (puzzle !== Pz) return;
-  const r = pickDefence(dl);
   if (r === null || r === undefined) { if (good) puzzleSolved(true); else pzFailOut(Pz); return; }
   playMove2(r);
   await sleep(moveDur()); if (puzzle !== Pz) return;
@@ -2106,7 +2116,7 @@ function rvbUpdate() {
   });
 }
 if (window.RvBox) BOX = RvBox.create({
-  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261028rb',
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261104fb',
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }

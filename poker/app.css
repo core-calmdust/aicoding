@@ -200,7 +200,7 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 .tbl.small .fc{left:26%;right:5%;top:22%;bottom:5%}
 .face-large .big,.tbl.tiny .big,.tbl.small .big{display:flex}
 .face-large .fr.face .big svg,.tbl.tiny .fr.face .big svg,.tbl.small .fr.face .big svg{opacity:.9}
-.face-large .fr.face,.tbl.tiny .fr.face,.tbl.small .fr.face{background:linear-gradient(160deg,#fffaf0,#f1e2bd)}
+/* simple (phone) cards: every face on the same white (no cream court cards) */
 /* states */
 .cd.lift{transition:none!important;box-shadow:none;cursor:grabbing}
 .cd.lift .fr{box-shadow:0 0 0 1px rgba(0,0,0,.3),0 10px 22px rgba(0,0,0,.45)}
@@ -1579,3 +1579,26 @@ img,svg{-webkit-user-drag:none;user-drag:none}
   .ab-size{flex:0 1 auto;min-width:0}
   .ab-size input[type=range]{flex:1 1 260px!important;width:auto!important;max-width:300px;min-width:60px}
 }
+/* tutorial on phones: a compact bubble docked to the top or the bottom; the table scrolls so the part the step is about
+   is in the free area (tutorial.js placePhone); the bubble can be folded down to its title */
+.tut-tr{display:flex;align-items:center;gap:4px}
+.tut-min{display:none;border:0;background:rgba(255,255,255,.08);color:var(--text);border-radius:8px;width:28px;height:24px;padding:0;cursor:pointer;align-items:center;justify-content:center}
+.tut-min svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+#tutLayer.dock .tut-min{display:inline-flex}
+#tutLayer.dock .tut-box{padding:9px 12px 9px;border-radius:14px;transition:top .25s;max-height:46vh;overflow:auto}
+#tutLayer.dock .tut-top{margin-bottom:3px}
+#tutLayer.dock .tut-box>b{font-size:14.5px;margin-bottom:2px}
+#tutLayer.dock .tut-box p{font-size:13px;line-height:1.6}
+#tutLayer.dock .tut-btns{margin-top:6px}
+#tutLayer.dock .tut-btns .mbtn{padding:7px 16px}
+#tutLayer.dock .tut-hole{transition:none;border-radius:12px}
+#tutLayer.dock.center .tut-hole{box-shadow:0 0 0 9999px rgba(5,5,6,.45)}
+#tutLayer.dock .tut-box.min p,#tutLayer.dock .tut-box.min .tut-btns .tut-do{display:none}
+#tutLayer.dock .tut-box.min .tut-min svg{transform:rotate(180deg)}
+#tutLayer.dock .tut-box.min .tut-btns{margin-top:4px}
+#tutLayer.dock .tut-box.min .tut-btns:empty,#tutLayer.dock .tut-box.min .tut-btns:not(:has(.mbtn)){display:none}
+.tut-do-s{display:none}
+#tutLayer.dock.act .tut-btns{display:none}
+#tutLayer.dock.act .tut-do-s{display:block;font-size:12px;font-weight:700;color:#8fe3b8;margin-top:1px}
+#tutLayer.dock.act .tut-do-s::before{content:'👉 '}
+@media (max-height:720px){#tutLayer.dock .tut-box p{font-size:12.5px;line-height:1.5}#tutLayer.dock .tut-box>b{font-size:14px}}

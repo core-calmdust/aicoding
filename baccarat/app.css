@@ -200,7 +200,7 @@ html[data-felt=linen]{--felt1:#efe6d2;--felt2:#d6c7a6;--felt-line:rgba(70,50,20,
 .tbl.small .fc{left:26%;right:5%;top:22%;bottom:5%}
 .face-large .big,.tbl.tiny .big,.tbl.small .big{display:flex}
 .face-large .fr.face .big svg,.tbl.tiny .fr.face .big svg,.tbl.small .fr.face .big svg{opacity:.9}
-.face-large .fr.face,.tbl.tiny .fr.face,.tbl.small .fr.face{background:linear-gradient(160deg,#fffaf0,#f1e2bd)}
+/* simple (phone) cards: every face on the same white (no cream court cards) */
 /* states */
 .cd.lift{transition:none!important;box-shadow:none;cursor:grabbing}
 .cd.lift .fr{box-shadow:0 0 0 1px rgba(0,0,0,.3),0 10px 22px rgba(0,0,0,.45)}

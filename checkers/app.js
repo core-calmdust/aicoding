@@ -1627,8 +1627,17 @@ function pzMigrate(pr) {
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); localStorage.setItem(PZ_STORE + '-v2', JSON.stringify(bak)); } catch (e) {}
   return pr;
 }
-const pzAt = (T, j) => T.puzzles[j];
-function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
+// puzzles replaced on 2026-11-04 (tools/audit_puzzles.js: the material won was lost right back): PUZZLES.old["id-j"] keeps
+// the previous puzzle of the slot (as chess/ since 2026-10-21). A player who already has a record for the slot keeps the
+// old puzzle; records of the new one go to "id-j~2". The daily puzzle keeps the old one for dates up to PUZZLES.cut.
+function pzSlot(T, j, pr, date) {
+  const k = pzKey(T.id, j), o = PUZZLES.old && PUZZLES.old[k];
+  if (!o) return { P: T.puzzles[j], rk: k };
+  pr = pr || pzProgress();
+  return pr[k] != null || (date && date <= PUZZLES.cut) ? { P: o, rk: k } : { P: T.puzzles[j], rk: k + '~2' };
+}
+const pzAt = (T, j, date, pr) => pzSlot(T, j, pr, date).P;
+function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzSlot(T, j, pr).rk])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.2))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 // collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs 勝ち / ショット / 終盤 → theme cards with the position
@@ -1688,10 +1697,10 @@ const leadOf = (pos, p) => pos.count(p) - pos.count(3 - p);
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const T = PUZZLES.themes[L], P = pzAt(T, j, daily);
+  const T = PUZZLES.themes[L], { P, rk } = pzSlot(T, j, null, daily);
   const g = P.g || T.g || 0;
   if (!daily) PZBook.lastSet(PZ_LAST, L);
-  puzzle = { L, j, P, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
+  puzzle = { L, j, P, rk, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.s);
   puzzle.base = leadOf(posAt(0).pos, puzzle.me);
@@ -1717,7 +1726,16 @@ function mateReq(n, defend) {
   return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend, goal, base: puzzle ? puzzle.base : 0 }).then(r => r && r.list);
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 99 : e.need < 0 ? 50 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
+// the defender's reply: the longest resistance (puzzle(defend)); when several replies resist equally long (e.g. every
+// reply loses the piece next move), the one the engine values best — not the first in move-generation order, which
+// gave odd replies (STAGE 1 No.9: 6-9 7-10?? instead of 14-18). tools/audit_puzzles.js checks the same rule.
+async function pzDefence(list) {
+  const sc = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return tied[0].m;
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 500 });
+  const L = (r && r.list) || [], v = m => { const e = L.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 const pzReached = (Pz, pos) => pos.status() === -1 || (Pz.goal === 'gain' && !pos.hasCaps() && leadOf(pos, Pz.me) - Pz.base >= Pz.g);
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (the engine's best reply) answers and the
@@ -1804,7 +1822,9 @@ async function puzzleMove(m) {
   await sleep(Math.max(0, dm + 250));
   if (puzzle !== Pz) return;
   if (!dl.length) { puzzleSolved(); return; }
-  const r = pickDefence(dl), b3 = posAt(cur).pos;
+  const r = await pzDefence(dl);
+  if (puzzle !== Pz || tok !== busyToken) return;
+  const b3 = posAt(cur).pos;
   playMove2(r);
   await sleep(moveDur(r, b3));
   if (puzzle !== Pz) return;
@@ -1817,7 +1837,7 @@ function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(), k = pzKey(Pz.T.id, Pz.j), stars = PZBook.starsFor(Pz);
+  const pr = pzProgress(), k = Pz.rk || pzKey(Pz.T.id, Pz.j), stars = PZBook.starsFor(Pz);
   const before = pzRecs(Pz.T, pr);
   pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
@@ -1857,7 +1877,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
-    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? pickDefence(list) : null); }
+    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? await pzDefence(list) : null); if (puzzle !== Pz) return; }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++;

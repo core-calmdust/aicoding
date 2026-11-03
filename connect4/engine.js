@@ -212,22 +212,83 @@ function mateList(str, n) {
   }
   return out;
 }
-// defender to move: for each reply, the attacker's remaining moves needed after it (0 = the reply escapes within n)
+// defender to move: for each reply, the attacker's remaining moves needed after it (0 = the reply escapes within n).
+// Tie-break data for pickDefence (equal need): blk = the reply blocks an attacker four that is playable right now,
+// thr = own new threat cells it makes (counter-play), h = the defender's heuristic value (fixed depth, deterministic).
 function defendList(str, n) {
   mateTT = new Map();
+  loadMoves(str);
+  const hv = new Map();
+  clearHTq(); deadline = Infinity; aborted = false;
+  for (const x of rootHeur(Math.min(6, SZ - nm)) || []) hv.set(x.c, x.s);
   loadMoves(str);
   const out = [];
   for (let c = 0; c < W; c++) {
     if (!canPlay(c)) continue;
-    if (isWinningMove(c)) { out.push({ c, need: 0 }); continue; }
+    const rk = resistInfo(c), h = hv.has(c) ? hv.get(c) : 0;
+    if (isWinningMove(c)) { out.push({ c, need: 0, win: 1, blk: rk.blk, thr: rk.thr, h }); continue; }
     const s0l = cl, s0h = ch, s0ml = ml, s0mh = mh;
     playCol(c);
     let need = 0;
     for (let d = 1; d <= n && !need; d++) if (canWin(d)) need = d;
     cl = s0l; ch = s0h; ml = s0ml; mh = s0mh; nm--;
-    out.push({ c, need });
+    out.push({ c, need, blk: rk.blk, thr: rk.thr, h });
+  }
+  // several replies escape the count (the attacker left the solution): rank them by the exact solver (the real best
+  // defence, not just "any escape"); kept only when every one of them is solved within the budget
+  const esc = out.filter(e => !e.win && !e.need);
+  if (esc.length > 1) {
+    deadline = Date.now() + 1500; aborted = false;
+    const sv = [];
+    for (const e of esc) { loadMoves(str); const v = solveMove(e.c, false); if (v === null) break; sv.push(v); }
+    deadline = Infinity; aborted = false;
+    if (sv.length === esc.length) esc.forEach((e, i) => { e.sv = sv[i]; });
   }
   return out;
+}
+// the puzzle defender's reply (page, answer replay and tools share it): own four first; else the reply that keeps the
+// attacker's four furthest away (need 0 = escapes: best); among equals the natural-looking one — block an attacker four
+// that is playable now, then counter-threats, then the engine's heuristic value, then centre first.
+function pickDefence(list) {
+  let best = null, bk = null;
+  for (const c of ORDER) {
+    const e = list.find(x => x.c === c); if (!e) continue;
+    const k = [e.win ? 1 : 0, e.need ? e.need : 99, e.sv !== undefined ? e.sv : 0, e.blk ? 1 : 0, e.thr || 0, e.h || 0];
+    let better = !bk;
+    if (bk) for (let i = 0; i < k.length; i++) { if (k[i] !== bk[i]) { better = k[i] > bk[i]; break; } }
+    if (better) { best = e; bk = k; }
+  }
+  return best ? best.c : -1;
+}
+// ---- lost positions: a natural-looking resistance (used when every move loses)
+// blk: the move takes a cell where the opponent would connect four right now; thr: own threat cells it adds
+function resistInfo(c) {
+  const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh, vl = moveBitsL(c), vh = moveBitsH(c);
+  const blk = ((owl & vl) | (owh & vh)) !== 0 ? 1 : 0;
+  const a = winPos(cl, ch, ml, mh), ah = _wh, before = popc(a) + popc(ah);
+  const b = winPos(cl | vl, ch | vh, ml | vl, mh | vh), bh = _wh;
+  return { blk, thr: Math.max(0, popc(b) + popc(bh) - before) };
+}
+// losing distance of a list entry (mover's view, Pons-like: higher = the loss comes later); null = not a proven loss
+function lossDist(e) {
+  if (e.kind === 'exact') return e.v < 0 ? e.v : null;
+  if (e.kind === 'weak') return e.v < 0 ? -11 : null;   // proven loss, distance unknown: counted as a middling one
+  const h = e.h !== undefined ? e.h : e.v;
+  if (h < -BIG / 2) { const stones = BIG - Math.abs(h); return -(22 - ((stones + 1) >> 1)); }
+  return null;
+}
+// every entry a proven loss: the slowest loss; among equals block a playable enemy four (one side of a double threat),
+// then counter-threats, then the heuristic value. Position loaded = the root. Returns the entry.
+function resistPick(list) {
+  let best = null, bk = null;
+  for (const e of list) {
+    const d = lossDist(e); if (d === null) return null;
+    const rk = resistInfo(e.c), k = [d, rk.blk, rk.thr, e.h !== undefined ? e.h : 0, -ORDER.indexOf(e.c)];
+    let better = !bk;
+    if (bk) for (let i = 0; i < k.length; i++) { if (k[i] !== bk[i]) { better = k[i] > bk[i]; break; } }
+    if (better) { best = e; bk = k; }
+  }
+  return best;
 }
 
 // ------------------------------------------------------------------ heuristic search
@@ -285,6 +346,7 @@ function evaluate() {
 }
 const HT_BITS = 20, HT_SIZE = 1 << HT_BITS;
 const htL = new Uint32Array(HT_SIZE), htH = new Uint32Array(HT_SIZE), htV = new Int32Array(HT_SIZE), htD = new Int8Array(HT_SIZE), htF = new Int8Array(HT_SIZE), htM = new Int8Array(HT_SIZE);
+function clearHTq() { htF.fill(0); }
 function searchH(depth, alpha, beta) {
   if (checkTime()) return 0;
   if (canWinNext()) return BIG - (nm + 1);
@@ -590,14 +652,16 @@ function thinkPerfect(str, cfg) {
     msProof = Date.now() - t0;
     // every move loses: delay the loss as long as possible (exact, within the normal budget)
     deadline = t0 + cfg.time; aborted = false;
-    let best = -99;
+    const done = [];
     for (const c of order) {
       const sv = solveMove(c, false);
       if (sv === null) break;
-      if (sv > best) { best = sv; move = c; }
+      done.push({ c, kind: 'exact', v: sv, h: -order.indexOf(c) });
     }
     aborted = false;
-    if (move >= 0) score = { kind: 'exact', v: best };
+    // the slowest loss; among equals a natural resistance (block one of the enemy's fours, counter-threats)
+    const rp = done.length ? resistPick(done) : null;
+    if (rp) { move = rp.c; score = { kind: 'exact', v: rp.v }; }
     else {   // out of time: any move that does not lose at once
       const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
       move = order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0];
@@ -640,8 +704,11 @@ function think(str, level) {
       }
     }
   }
-  // blunder: weak levels sometimes ignore the opponent's threat
-  if (cfg.blunder && rnd() < cfg.blunder) {
+  // blunder: weak levels sometimes ignore the opponent's threat — but not when two enemy fours are open at once
+  // (the game is visibly lost: a random move there looks like giving up; the search below picks a resistance)
+  let openFours = 0;
+  { const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh; openFours = popc(owl & ((ml + BOT_L) & BOARD_L)) + popc(owh & ((mh + BOT_H) & BOARD_H)); }
+  if (cfg.blunder && openFours < 2 && rnd() < cfg.blunder) {
     const c = legal[Math.floor(rnd() * legal.length)];
     return { move: c, how: 'random' };
   }
@@ -680,6 +747,12 @@ function think(str, level) {
       }
     }
   }
+  // every move a proven loss: no random pick — the slowest loss, then the natural-looking resistance
+  loadMoves(str);
+  if (list.length && list.every(e => lossDist(e) !== null)) {
+    const rp = resistPick(list);
+    if (rp) return { move: rp.c, how: 'search', depth: hr.depth, ms: Date.now() - t0, resist: true, score: rp.kind !== 'heur' ? { kind: rp.kind, v: rp.v } : { kind: 'heur', v: rp.h } };
+  }
   // choose: class (win 2 / draw-or-unknown 1 / loss 0), then speed of win / delay of loss / heuristic
   const cls = e => e.kind === 'heur' ? (e.h > BIG / 2 ? 2 : e.h < -BIG / 2 ? 0 : 1) : (e.v > 0 ? 2 : e.v < 0 ? 0 : 1);
   let best = null, bestV = -Infinity;
@@ -707,7 +780,7 @@ function pvLine(str, c, plies, ms) {
   }
   return line;
 }
-const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
+const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, pickDefence, resistPick, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
   state: () => ({ nm }), setDeadline: d => { deadline = d; aborted = false; }, nodes: () => nodes, evaluate, EP, rootHeur, setDeadline2: () => { deadline = Infinity; aborted = false; }, clearHT: () => { htF.fill(0); } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postMessage === 'function' && typeof module === 'undefined') {
@@ -732,7 +805,8 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postM
       }
       postMessage({ type: 'candsDone', id: m.id, list, lines });
     } else if (m.type === 'mate') {
-      postMessage({ type: 'mate', id: m.id, list: m.defend ? defendList(m.moves, m.n) : mateList(m.moves, m.n) });
+      const list = m.defend ? defendList(m.moves, m.n) : mateList(m.moves, m.n);
+      postMessage({ type: 'mate', id: m.id, list, pick: m.defend ? pickDefence(list) : undefined });
     }
   };
 }

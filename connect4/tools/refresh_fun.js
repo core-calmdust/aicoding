@@ -29,9 +29,9 @@ const PREF = [3, 2, 4, 1, 5, 0, 6];
 function matePV(mv, ans, n) {
   let m = mv + (ans + 1), pv = String(ans + 1), left = n - 1;
   while (left > 0) {
-    const dl = E.defendList(m, left);
-    let best = null; for (const c of PREF) { const e = dl.find(x => x.c === c); if (!e) continue; const v = e.need || 99; if (!best || v > best.v) best = { c, v }; }
-    if (!best || best.v === 99) return null;                      // the defender escapes: not a sound puzzle
+    const dl = E.defendList(m, left), bc = E.pickDefence(dl), be = dl.find(x => x.c === bc);   // the app's defender (engine.js)
+    const best = be && { c: bc, v: be.need || 99 };
+    if (!best || best.v === 99) return null;
     m += best.c + 1; pv += best.c + 1;
     const al = E.mateList(m, left);
     let a = null; for (const c of PREF) { const e = al.find(x => x.c === c); if (e && e.need && e.need <= left && (!a || e.need < a.need)) a = e; }

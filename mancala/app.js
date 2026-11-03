@@ -1418,7 +1418,7 @@ $('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); $('#rulesOverl
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
 const lessonsReady = fetch('lessons.json?v=20261021L3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-const puzzlesReady = fetch('puzzles.json?v=20261021fun').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261104pzd').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }

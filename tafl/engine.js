@@ -253,6 +253,56 @@ const wMove = x => (x & 255) + 256 * ((x >> 8) & 255);
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 2 * i]), v: r[3 + 2 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
+// ---------------------------------------------------------------- lost positions: a natural-looking resistance
+// squares of the king's open escape lines (the path to each escape square it can reach in one move)
+function lineSquares(pos) {
+  const n = pos.n, F = pos.G.F, b = pos.b, k = pos.king, out = new Set(); if (k < 0) return out;
+  const r = Math.floor(k / n), c = k % n;
+  for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    if (!pos.G.R.escEdge) { if (dc && !(r === 0 || r === n - 1)) continue; if (dr && !(c === 0 || c === n - 1)) continue; }
+    const path = []; let rr = r + dr, cc = c + dc, ok = false;
+    while (rr >= 0 && cc >= 0 && rr < n && cc < n && !b[rr * n + cc]) { path.push(rr * n + cc); if (F[rr * n + cc] & 8) { ok = true; break; } rr += dr; cc += dc; }
+    if (ok) for (const q of path) out.add(q);
+  }
+  return out;
+}
+// how natural a move of the side to move looks as resistance (higher is better, compared in order):
+// [the opponent's winning replies after it (fewer), blocks one of the king's open lines (attackers), closeness to the king]
+// e.g. two open lines and every move loses: block one of them rather than play anywhere
+function resistKey(pos, m, lines) {
+  const q = pos.clone().play(m);
+  if (q.res) return [q.res === pos.turn ? 1e6 : -1e6, 0, 0];
+  let wins = 0; for (const x of q.moves()) { const z = q.clone().play(x); if (z.res && z.res === q.turn) wins++; }
+  const n = pos.n, k = pos.king, t = mTo(m), f = mFrom(m);
+  const blk = pos.turn === P1 && (lines || lineSquares(pos)).has(t) ? 1 : 0;   // the attackers close one of the king's roads
+  const kd = k < 0 ? 0 : f === k ? 0 : Math.abs(Math.floor(k / n) - Math.floor(t / n)) + Math.abs(k % n - t % n);
+  return [-wins, blk, -kd];
+}
+const keyCmp = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1; return 0; };
+// best of the moves ms (ties broken by resistKey; the earlier one in ms wins a full tie)
+function resistBest(pos, ms) {
+  const lines = lineSquares(pos); let best = null, bk = null;
+  for (const m of ms) { const k = resistKey(pos, m, lines); if (!bk || keyCmp(k, bk) > 0) { best = m; bk = k; } }
+  return best;
+}
+// puzzle defender (page and answer replay): its own win first, else the reply that keeps the winner's goal furthest away
+// (need 0 = escapes, -1 = unknown in the budget), then the natural-looking resistance above
+function pickDefence(pos, list) {
+  const sv = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need;
+  if (!list || !list.length) return null;
+  const top = Math.max(...list.map(sv));
+  return resistBest(pos, list.filter(e => sv(e) === top).map(e => e.m));
+}
+// every move of the side to move loses (the engine's view): the slowest loss by a full-width analysis, and among those
+// the natural resistance. null = not every move is a proven loss there (the engine's own move is kept)
+function resist(start, moves, v, pos) {
+  if (!WX || !wSetup(start, moves, v)) return null;
+  WX.analyze(500, 40);
+  const L = wList(); if (!L.length || L.some(e => !(e.v < -WINT))) return null;
+  const top = Math.max(...L.map(e => e.v));
+  const m = resistBest(pos, L.filter(e => e.v === top).map(e => e.m));
+  return m == null ? null : { move: m, v: top };
+}
 function think(start, moves, level, v, seed) {
   const { pos } = replay(start, moves, v);
   const all = pos.moves();
@@ -266,7 +316,9 @@ function think(start, moves, level, v, seed) {
   WX.think(level, seed === undefined ? (Math.random() * 2147483647) | 0 : seed);
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  return { move: wMove(r[0]), v: r[2], depth: r[3] };
+  const out = { move: wMove(r[0]), v: r[2], depth: r[3] };
+  if (out.v < -WINT) { const rs = resist(start, moves, v, pos); if (rs) { out.move = rs.move; out.v = rs.v; out.resist = true; } }
+  return out;
 }
 function analyze(start, moves, ms, onProgress, v) {
   const { pos } = replay(start, moves, v);
@@ -309,11 +361,11 @@ function puzzle(start, moves, n, defend, v) {
 }
 let progressCb = null;
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, Pos, sqName, sqParse, mFrom, mTo, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, kindOf };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, Pos, sqName, sqParse, mFrom, mTo, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, kindOf, resistKey, resistBest, pickDefence, lineSquares };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261025a';
+  const V = 'v=20261025a';   // engine.wasm (unchanged)
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

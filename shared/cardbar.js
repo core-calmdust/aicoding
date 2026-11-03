@@ -2,7 +2,8 @@
 //
 // The cards used to show every action as a big text button in one or two loose rows (ヒント / やり直す / 答えを見る /
 // 次の問題 / 問題一覧 / やめる). This module rebuilds them, keeping the original buttons (ids, handlers, i18n) as they are:
-//   [ icon tools ……… ]  [ text actions / primary ]        × (やめる) in the top corner of the card
+//   [ icon tools ……… ]  [ text actions / primary ]
+//                               [ ⇠ 詰将棋をやめる ]   ← the quit button: a labelled text button on its own row, named after the mode
 //   puzzle: 💡 hint · ↺ retry · 👁 answer · ▦ list (· ‹ prev)   |  次の問題 ›  — gold once solved, the retry icon glows after a failure
 //   lesson: ▦ list · ▶ auto                                     |  ヒント (its label changes with the mode) · 次へ (primary)
 // Icon buttons carry their (translated) label as title + aria-label, kept in sync with the text the game writes into them.
@@ -15,6 +16,9 @@
 //   CardBar.autoNext({ ok: () => still-the-same-problem, ms: 1400, btn: 'lsNext', fire: () => …, since: CardBar.now() at the answer })
 //   (fire defaults to clicking btn; with since, a tap after that moment means no advance)
 //   CardBar.cancelAuto()
+// Quit label: 〈name〉をやめる / Quit 〈name〉 …, the name from the game's own i18n (t()): the puzzle collection (pz.title — 詰めチェス,
+// 詰め連珠 …), レッスン (tab.lesson), the openings (tab.open — 定跡 / 定石 / 序盤) or 復習 / テスト, chosen from the game's `lesson` state.
+// Falls back to パズルをやめる etc. The game's own i18n pass (data-i18n="ls.quit") is overridden on every change.
 // Portal skin (?skin=atlas): the same bar; atlas/skin/common.js puts it next to the guide character and skin.css gives it the portal look.
 (function () {
 'use strict';
@@ -25,13 +29,12 @@ const ICONS = {
   retry: SVG(P('M4 4v6h6') + P('M5.5 15a7 7 0 1 0 1.6-7.3L4 10')),
   answer: SVG(P('M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z') + `<circle cx='12' cy='12' r='3'/>`),
   list: SVG(`<rect x='4' y='4' width='6.5' height='6.5' rx='1.5'/><rect x='13.5' y='4' width='6.5' height='6.5' rx='1.5'/><rect x='4' y='13.5' width='6.5' height='6.5' rx='1.5'/><rect x='13.5' y='13.5' width='6.5' height='6.5' rx='1.5'/>`),
-  quit: SVG(P('M6 6l12 12M18 6 6 18')),
+  quit: SVG(P('M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4') + P('M9 8l-4 4 4 4') + P('M5 12h10')),
   prev: SVG(P('M15 6l-6 6 6 6')),
   next: SVG(P('M9 6l6 6-6 6')),
 };
 const CSS = `
 :where(.cb-card){position:relative}
-.cb-card > .lh{padding-inline-end:36px}
 .cb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;min-width:0}
 .cb-tools{display:flex;align-items:center;gap:6px;flex:none}
 .cb-main{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;flex:1 1 auto;min-width:0}
@@ -48,9 +51,18 @@ const CSS = `
 .cb-ic:focus-visible,.cb-t:focus-visible{outline:2px solid var(--accent,#c9a961);outline-offset:2px}
 .cb-ic.cb-go{color:var(--accent,#c9a961);border-color:var(--accent,#c9a961);background:color-mix(in srgb,var(--accent,#c9a961) 16%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#c9a961) 18%,transparent)}
 .cb-bar button:disabled{opacity:.3;cursor:default}
-.cb-x{position:absolute;top:8px;inset-inline-end:8px;z-index:1;width:30px;height:30px;border-radius:50%;border-color:transparent;background:transparent;color:var(--dim,var(--muted,#999))}
-.cb-x::before{width:16px!important;height:16px!important}
-.cb-x:hover{background:rgba(255,255,255,.07)}
+.cb-br{flex:1 0 100%;height:0;margin:-8px 0 0}
+.cb-br:has(+ .cb-q.hidden){display:none}
+.cb-bar .cb-q{flex:none;margin-inline-start:auto;max-width:100%;height:34px;padding:0 12px 0 10px;border-radius:10px;font-size:13px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line,rgba(255,255,255,.14));background:transparent;color:var(--muted,#aaa)}
+.cb-bar .cb-q::before{content:'';flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:${ICONS.quit} center/contain no-repeat;mask:${ICONS.quit} center/contain no-repeat}
+html[dir=rtl] .cb-bar .cb-q::before,html[lang=ar] .cb-bar .cb-q::before{transform:scaleX(-1)}
+.cb-bar .cb-q:hover{color:var(--text,#eee);border-color:color-mix(in srgb,var(--text,#eee) 35%,transparent);background:rgba(255,255,255,.05)}
+.cb-bar .cb-q:focus-visible{outline:2px solid var(--accent,#c9a961);outline-offset:2px}
+html.atlas-skin .cb-bar .cb-q{height:34px!important;background:transparent!important;border:2px solid #ead9b6!important;border-radius:99px!important;color:#4a5068!important;font-weight:900!important;box-shadow:none!important}
+html.atlas-skin .cb-bar .cb-q:hover{background:#f6efdd!important;color:#2b3044!important}
+html.atlas-skin .cb-card.cb-card > .lh{padding-inline-end:0}
+html.atlas-land .cb-bar .cb-q{height:30px!important}
 .cb-t{flex:1 0 auto;min-width:0;max-width:100%;height:40px;padding:0 12px;border-radius:11px;font-size:13px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line,rgba(255,255,255,.12));background:rgba(0,0,0,.18);color:var(--muted,#aaa)}
 .cb-t:hover:not(:disabled){color:var(--text,#eee)}
@@ -67,12 +79,49 @@ html[dir=rtl] .cb-nx::after,html[lang=ar] .cb-nx::after,html[dir=rtl] .cb-ic[dat
 .cb-bar .cb-ic::before{display:block;flex:none;margin:0!important}
 .cb-bar .cb-t{height:40px!important;min-height:0!important;padding-top:0!important;padding-bottom:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}
 .cb-bar,.cb-tools,.cb-main{align-items:center!important}
-@media (pointer:coarse){ .cb-bar .cb-ic,.cb-bar .cb-t{height:42px!important}.cb-bar .cb-ic{width:42px!important} }
+@media (pointer:coarse){ .cb-bar .cb-ic,.cb-bar .cb-t{height:42px!important}.cb-bar .cb-ic{width:42px!important}.cb-bar .cb-q{height:38px} }
 @media (max-width:360px){ .cb-bar{gap:6px}.cb-tools{gap:4px}.cb-bar .cb-ic{width:38px!important}.cb-bar .cb-t{padding:0 8px!important} }
 `;
 const st = document.createElement('style'); st.id = 'cardbar-css'; st.textContent = CSS; document.head.appendChild(st);
 
 const $ = id => document.getElementById(id);
+// ---- the quit button's label: 〈name〉をやめる in the page language, the name taken from the game's i18n
+const QT = { ja: '{x}をやめる', en: 'Quit {x}', zh: '退出{x}', ko: '{x} 그만하기', es: 'Salir de {x}', fr: 'Quitter les {x}', pt: 'Encerrar {x}', de: '{x} beenden', hi: '{x} छोड़ें', ar: 'إنهاء {x}' };
+const QN = {   // fallback names
+  pz: { ja: 'パズル', en: 'puzzles', zh: '谜题', ko: '퍼즐', es: 'problemas', fr: 'problèmes', pt: 'desafios', de: 'Rätsel', hi: 'पहेलियाँ', ar: 'الألغاز' },
+  ls: { ja: 'レッスン', en: 'lessons', zh: '课程', ko: '레슨', es: 'lecciones', fr: 'leçons', pt: 'lições', de: 'Lektionen', hi: 'पाठ', ar: 'الدروس' },
+  op: { ja: '定跡', en: 'openings', zh: '开局', ko: '정석', es: 'aperturas', fr: 'ouvertures', pt: 'aberturas', de: 'Eröffnungen', hi: 'ओपनिंग', ar: 'الافتتاحيات' },
+};
+const QF = {   // whole labels
+  rv: { ja: '復習をやめる', en: 'Quit review', zh: '退出复习', ko: '복습 그만하기', es: 'Salir del repaso', fr: 'Quitter la révision', pt: 'Encerrar revisão', de: 'Wiederholung beenden', hi: 'समीक्षा छोड़ें', ar: 'إنهاء المراجعة' },
+  ex: { ja: 'テストをやめる', en: 'Quit test', zh: '退出测试', ko: '테스트 그만하기', es: 'Salir del examen', fr: 'Quitter le test', pt: 'Encerrar teste', de: 'Test beenden', hi: 'टेस्ट छोड़ें', ar: 'إنهاء الاختبار' },
+};
+const GAME_ID = ((window.GAME && window.GAME.id) || (location.pathname.match(/\/([^/]+)\/(?:index\.html)?$/) || [])[1] || '').toLowerCase();
+// i18n key of each name, per game (default: pz.title / tab.lesson / tab.open); null = the fallback name
+const QK = { shogi: { pz: 'ts.title', ls: 'ls.tabLesson', op: 'ls.tabOpen' }, go: { pz: 'tab.puzzle' }, alquerque: { pz: null },
+  // chess: 詰めチェス or 戦術問題, after the collection the current problem is from
+  chess: { pz: () => { try { return PUZZLES.levels[puzzle.L].kind === 'line' ? 'pz.tacHead' : 'pz.mateHead'; } catch (e) { return 'pz.mateHead'; } } } };
+const pageLang = () => { const l = (document.documentElement.lang || 'ja').toLowerCase().split('-')[0]; return QT[l] ? l : 'en'; };
+function gameT(k) { try { if (k && typeof window.t === 'function') { const x = window.t(k); if (typeof x === 'string' && x && x !== k && !/[<{]/.test(x)) return x; } } catch (e) {} return ''; }
+function quitMode(card) {
+  if (card.id === 'puzzleCard') return 'pz';
+  let L = null; try { L = typeof lesson !== 'undefined' ? lesson : null; } catch (e) {}   // the game's global lesson state
+  if (!L) return 'ls';
+  if (L.endless) return 'pz';                                  // 詰将棋 runs in the lesson card
+  if (L.exam) return 'ex';
+  if (L.review || (L.virt && L.virt.id === 'mk')) return 'rv';  // review of the game's mistakes
+  if (L.study || L.op || L.opening || L.virt || (L.drill && !('step' in L))) return 'op';   // (chess: lesson.drill = a ★ drill of a lesson)
+  return 'ls';
+}
+function quitLabel(card) {
+  const m = quitMode(card), lang = pageLang();
+  if (QF[m]) return QF[m][lang];
+  const ov = QK[GAME_ID] || {}; let key = m in ov ? ov[m] : { pz: 'pz.title', ls: 'tab.lesson', op: 'tab.open' }[m]; if (typeof key === 'function') key = key();
+  let x = gameT(key).replace(/\s*[（(][^（()）]*[）)]\s*$/, '').trim() || QN[m][lang];
+  if (/^(en|es|fr|pt)$/.test(lang) && !/^(Hex|Fanorona|Tafl|Renju|Tsume|Tsumego|Joseki|Morris|Mancala|Go)\b/.test(x)) x = x.charAt(0).toLowerCase() + x.slice(1);
+  if (lang === 'fr' && !/^\S*[sx]\b/.test(x)) return `Quitter « ${x} »`;   // singular names (Tactique, Tsume)
+  return QT[lang].replace('{x}', x);
+}
 const label = b => (b.id === 'lsAuto' ? (b.title || (document.querySelector('[data-sn="auto"]') || {}).title || '') : b.textContent.replace(/\s+/g, ' ').trim());
 function icon(b, kind) {
   b.classList.add('cb-ic'); b.classList.remove('go'); b.dataset.cb = kind;
@@ -97,14 +146,15 @@ function build(card, spec) {
   rows.forEach(r => [...r.querySelectorAll('button')].forEach(b => { if (!used.has(b) && b.id !== spec.quit && b.id !== spec.next) rest.push(b); }));
   rest.forEach(b => { b.classList.add('cb-t'); main.appendChild(b); });
   const nx = $(spec.next); if (nx && card.contains(nx)) { nx.classList.add('cb-t'); if (spec.nextChev) nx.classList.add('cb-nx'); main.appendChild(nx); }
-  const q = $(spec.quit); if (q && card.contains(q)) { icon(q, 'quit'); q.classList.add('cb-x'); bar.appendChild(q); }
+  const q = $(spec.quit); if (q && card.contains(q)) { const br = document.createElement('div'); br.className = 'cb-br'; q.classList.add('cb-q'); q.classList.remove('go'); bar.append(br, q); }
   rows[rows.length - 1].after(bar); rows.forEach(r => r.remove());
   // labels of icon buttons → tooltip + accessible name; puzzle state → primary button
   const toolKind = new Map(spec.tools);
   const sync = () => {
     // buttons a game adds later (e.g. next to the quit button) join the bar the same way
-    [...bar.children].forEach(b => { if (b.tagName !== 'BUTTON' || b.classList.contains('cb-x')) return;
+    [...bar.children].forEach(b => { if (b.tagName !== 'BUTTON' || b.classList.contains('cb-q')) return;
       if (toolKind.has(b.id)) { icon(b, toolKind.get(b.id)); tools.appendChild(b); } else { b.classList.add('cb-t'); main.insertBefore(b, nx && main.contains(nx) ? nx : null); } });
+    if (q && bar.contains(q)) { const l = quitLabel(card); if (q.textContent !== l) q.textContent = l; if (q.getAttribute('aria-label') !== l) q.setAttribute('aria-label', l); if (q.title) q.removeAttribute('title'); }
     bar.querySelectorAll('.cb-ic').forEach(b => { const l = label(b); if (l && b.getAttribute('aria-label') !== l) { b.setAttribute('aria-label', l); b.title = l; } });
     if (spec.puzzle) {
       const sv = !!card.querySelector('.pz-status .pb-sv, #pzStatus .pb-sv'), h = $('pzHint'), r = $('pzRetry');
