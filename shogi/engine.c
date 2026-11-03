@@ -93,7 +93,9 @@ static int hn = 0;
 static float nnA[2 * NN_MAXH];
 static float nnSt[NST * 2 * 32];
 /* NNUE (chess-style): (2534 -> 256) x 2 perspectives -> 1, SCReLU; int16 weights (x QA), int32 accumulators */
-#define NUE_H 256
+#ifndef NUE_H
+#define NUE_H 256          /* hidden size; engine_simd512.wasm is built with -DNUE_H=512 */
+#endif
 #define NUE_IN 2534
 #define NUE_QA 127
 #define NUE_QB 64
@@ -1046,6 +1048,7 @@ EXPORT(nue_b1_ptr) i32 *nue_b1_ptr(void) { return nueB1; }
 EXPORT(nue_set_b2) void nue_set_b2(i32 b) { nueB2[0] = b; }
 EXPORT(nue_b2_ptr) i32 *nue_b2_ptr(void) { return nueB2; }
 EXPORT(nue_set_nb) void nue_set_nb(int n) { nueNB = n == NUE_NB ? NUE_NB : 1; }
+EXPORT(nue_h) int nue_h(void) { return NUE_H; }
 EXPORT(nue_enable) void nue_enable(int on) { nueOn = on; refreshEval(); }
 EXPORT(nn_w1_ptr) float *nn_w1_ptr(void) { return nnStore; }
 EXPORT(nn_b1_ptr) float *nn_b1_ptr(void) { return nnb1; }

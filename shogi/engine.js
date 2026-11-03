@@ -1185,15 +1185,21 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   let X = null, wProgress = null, wAProgress = null, nueReady = false, nueCur = false;
   // WebAssembly SIMD (needed for the NNUE evaluation to be fast): engine_simd.wasm + nnue.bin.gz, otherwise engine.wasm with the linear evaluation
   const simdOK = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
-  async function loadNNUE(x) {
-    if (typeof DecompressionStream === 'undefined') return;
+  // the net is fetched first: its hidden size picks the build (engine_simd.wasm: 256, engine_simd512.wasm: 512)
+  async function fetchNNUE() {
+    if (typeof DecompressionStream === 'undefined') return null;
     const res = await fetch(new URL('nnue.bin.gz' + (self.location.search || ''), self.location.href));
-    if (!res.ok) return;
+    if (!res.ok) return null;
     let buf = new Uint8Array(await res.arrayBuffer());
     if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    if (dv.getUint32(0, true) !== 0x5145554E) return;
+    return dv.getUint32(0, true) === 0x5145554E ? buf : null;
+  }
+  function loadNNUE(x, buf) {
+    if (!buf) return;
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
     const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer;
+    if (x.nue_h && x.nue_h() !== H) return;
     let o = buf.byteOffset + 12;
     new Int16Array(x.memory.buffer, x.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
     new Int32Array(x.memory.buffer, x.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
@@ -1205,10 +1211,13 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
   let wReady = Promise.resolve();   // the wasm engine (and its NNUE) loaded, or failed
   try {
-    const url = new URL((simdOK ? 'engine_simd.wasm' : 'engine.wasm') + (self.location.search || ''), self.location.href);
-    wReady = WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
-      .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) return loadNNUE(x).catch(() => { nueReady = false; }); })
-      .catch(() => { X = null; });
+    wReady = (simdOK ? fetchNNUE().catch(() => null) : Promise.resolve(null)).then(net => {
+      const H = net ? new DataView(net.buffer, net.byteOffset, net.byteLength).getInt32(4, true) : 256;
+      const file = !simdOK ? 'engine.wasm' : H === 512 ? 'engine_simd512.wasm' : 'engine_simd.wasm';
+      const url = new URL(file + (self.location.search || ''), self.location.href);
+      return WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
+        .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) { try { loadNNUE(x, net); } catch (e) { nueReady = false; } } });
+    }).catch(() => { X = null; });
   } catch (e) { X = null; }
   function wsetup(d) {
     const p = new Position(); p.setSfen(d.sfen);
