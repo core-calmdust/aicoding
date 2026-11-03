@@ -284,14 +284,14 @@ const LEVELS = [null,
   { d: 3.5, noise: 35, blunder: 0.015 },  // 6級
   { d: 4, noise: 30, blunder: 0.012 },    // 5級
   { d: 4, noise: 20 },                    // 4級
-  { s: 1, nk: 1.5 },                      // 3級  (NNUE: about 1,500 positions per move; the NNUE equals the old linear evaluation at ~1/7 of the nodes)
-  { s: 1, nk: 3.5 },                      // 2級
-  { s: 1, nk: 8.5 },                      // 1級
-  { s: 1, nk: 21 },                       // 初段
-  { s: 1, nk: 57 },                       // 二段
-  { s: 1, nk: 140 },                      // 三段
-  { s: 1, nk: 360, book: 1 },             // 四段
-  { s: 1, nk: 6000, ms: 8000, book: 1 },  // 五段  (the strongest: 6 million positions, at most 8 s)
+  { s: 1, nk: 3.4 },                      // 3級  (NNUE; node budgets re-measured with the NNUE so each step keeps the Elo gap of the
+  { s: 1, nk: 16.5 },                     // 2級   original ladder, see MODEL_CARD.md)
+  { s: 1, nk: 95 },                       // 1級
+  { s: 1, nk: 343 },                      // 初段
+  { s: 1, nk: 540 },                      // 二段
+  { s: 1, nk: 740 },                      // 三段
+  { s: 1, nk: 4300, ms: 10000, book: 1 }, // 四段
+  { s: 1, nk: 12000, ms: 12000, book: 1 }, // 五段  (the strongest: 12 million positions, at most 12 s)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
@@ -440,7 +440,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261104nn';
+  const V = 'v=20261104lad';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
