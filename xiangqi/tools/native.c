@@ -86,7 +86,7 @@ static double gauss(void) { double u = urand(), v = urand(); return sqrt(-2 * lo
 static double msScale = 1.0;   // tools: time-limited levels run with ms * msScale
 // pick a move for level lv in the current IO setup; returns the move and *val (side to move's view)
 static Move levelMove(int lv, int *val) {
-  if (lv < 0) { if (rootN == 1) { if (val) *val = 0; return rootL[0]; } best(99, -lv, 0); if (val) *val = IO[1]; return (Move)IO[0]; }   // lv < 0: -lv ms per move
+  if (lv < 0) { if (rootN == 1) { if (val) *val = 0; return rootL[0]; } if (lv <= -100000) best(99, 0, -lv - 100000); else best(99, -lv, 0); if (val) *val = IO[1]; return (Move)IO[0]; }   // lv < 0: -lv ms per move; lv <= -100000: (-lv - 100000) thousand nodes
   Level L = LV[lv];
   if (rootN == 1) { if (val) *val = 0; return rootL[0]; }
   if (L.d) {
