@@ -113,6 +113,9 @@ static void initGeo(void) {
 // ---------------------------------------------------------------- position (one global board, make / unmake)
 static u8 B[90];
 static int side;                      // 0 red, 1 black to move
+#define XQ_ST 400
+static int xqOn = 0, xqTop = 0;         // NNUE (see below): on, accumulator stack top
+static u8 xqOk[XQ_ST];
 static int KSQ[2];
 static u64 KEY;
 typedef u16 Move;                     // from | to << 7
@@ -122,7 +125,70 @@ typedef u16 Move;                     // from | to << 7
 static inline u8 mkp(int col, int t) { return (u8)(t | (col << 3)); }
 
 static u64 hashBoard(void) { u64 k = 0; for (int s = 0; s < 90; s++) if (B[s]) k ^= ZOB[B[s]][s]; if (side) k ^= ZSIDE; return k; }
-static void findKings(void) { KSQ[0] = KSQ[1] = -1; for (int s = 0; s < 90; s++) if (TYPE(B[s]) == KING) KSQ[COLOR(B[s])] = s; }
+static void findKings(void) { KSQ[0] = KSQ[1] = -1; for (int s = 0; s < 90; s++) if (TYPE(B[s]) == KING) KSQ[COLOR(B[s])] = s; xqTop = 0; xqOk[0] = 0; }
+// ---------------------------------------------------------------- NNUE evaluation (optional; tools/nnue/, MODEL_CARD.md)
+// (1260 -> 256) x 2 perspectives -> 1, SCReLU, int16 weights (x127), output x64. Inputs per perspective c: (own / opponent x 7
+// types) x 90 points, the board turned 180 degrees for Black. The output is the logit of the expected score (win 1, draw .5).
+// Accumulators are updated lazily: makeMove only records the move; evaluate() brings the newest accumulator up to date from the
+// nearest computed one below it (or recomputes it from the board).
+#define XQ_IN 1260
+#define XQ_H 256
+#define XQ_QA 127
+#define XQ_QB 64
+#define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
+static i16 xqW1[XQ_IN * XQ_H], xqW2[2 * XQ_H];
+static i32 xqB1[XQ_H], xqB2;
+static i16 xqAcc[XQ_ST + 1][2][XQ_H];   // (slot XQ_ST: scratch for positions deeper than the stack)
+static u8 xqMv[XQ_ST][4];              // from, to, piece, captured
+static inline int xqF(int c, int p, int s) { return ((COLOR(p) != c) * 7 + TYPE(p) - 1) * 90 + (c ? 89 - s : s); }
+static inline void xqAdd(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] += w[j]; }
+static inline void xqSub(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] -= w[j]; }
+static void xqRefresh(int k) {
+  for (int c = 0; c < 2; c++) {
+    i16 *a = xqAcc[k][c]; for (int j = 0; j < XQ_H; j++) a[j] = (i16)xqB1[j];
+    for (int s = 0; s < 90; s++) if (B[s]) xqAdd(a, xqF(c, B[s], s));
+  }
+  if (k < XQ_ST) xqOk[k] = 1;
+}
+static inline void xqPush(int f, int t, u8 p, u8 cap) {
+  xqTop++;
+  if (xqTop < XQ_ST) { xqOk[xqTop] = 0; xqMv[xqTop][0] = (u8)f; xqMv[xqTop][1] = (u8)t; xqMv[xqTop][2] = p; xqMv[xqTop][3] = cap; }
+}
+static int xqEval(void) {
+  int k = xqTop;
+  if (k >= XQ_ST) { k = XQ_ST; xqRefresh(k); }       // deeper than the stack: recompute in the scratch slot
+  else if (!xqOk[k]) {
+    int b = k; while (b > 0 && !xqOk[b]) b--;
+    if (!xqOk[b] || k - b > 6) xqRefresh(k);
+    else {
+      for (int i = b + 1; i <= k; i++) {
+        int f = xqMv[i][0], t = xqMv[i][1]; u8 p = xqMv[i][2], cap = xqMv[i][3];
+        for (int c = 0; c < 2; c++) {
+          i16 *a = xqAcc[i][c]; const i16 *o = xqAcc[i - 1][c]; for (int j = 0; j < XQ_H; j++) a[j] = o[j];
+          xqSub(a, xqF(c, p, f)); xqAdd(a, xqF(c, p, t)); if (cap) xqSub(a, xqF(c, cap, t));
+        }
+        xqOk[i] = 1;
+      }
+    }
+  }
+  const i16 *a = xqAcc[k][side], *b = xqAcc[k][side ^ 1];
+  i64 sum = 0;
+  for (int i0 = 0; i0 < XQ_H; i0 += 16) {
+    i32 part = 0;
+    for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > XQ_QA ? XQ_QA : a[i]; part += x * x * xqW2[i]; }
+    for (int i = i0; i < i0 + 16; i++) { i32 x = b[i] < 0 ? 0 : b[i] > XQ_QA ? XQ_QA : b[i]; part += x * x * xqW2[XQ_H + i]; }
+    sum += part;
+  }
+  i64 v = sum / XQ_QA + xqB2;
+  v = v * XQ_K / (XQ_QA * XQ_QB);
+  return (int)(v > 20000 ? 20000 : v < -20000 ? -20000 : v);
+}
+EXPORT(xq_w1_ptr) i16 *xq_w1_ptr(void) { return xqW1; }
+EXPORT(xq_w2_ptr) i16 *xq_w2_ptr(void) { return xqW2; }
+EXPORT(xq_b1_ptr) i32 *xq_b1_ptr(void) { return xqB1; }
+EXPORT(xq_set_b2) void xq_set_b2(i32 b) { xqB2 = b; }
+EXPORT(xq_nnue) void xq_nnue(int on) { xqOn = on; xqTop = 0; xqOk[0] = 0; }
+
 
 // is the king of colour c attacked (including the kings facing each other)?
 static int attackedKing(int c) {
@@ -149,6 +215,7 @@ static int attackedKing(int c) {
 static inline u8 makeMove(Move m) {
   int f = MF(m), t = MT(m); u8 p = B[f], cap = B[t];
   KEY ^= ZOB[p][f] ^ ZOB[p][t] ^ ZSIDE; if (cap) KEY ^= ZOB[cap][t];
+  if (xqOn) xqPush(f, t, p, cap);
   B[t] = p; B[f] = 0;
   if (TYPE(p) == KING) KSQ[COLOR(p)] = t;
   if (cap && TYPE(cap) == KING) KSQ[COLOR(cap)] = -1;
@@ -157,6 +224,7 @@ static inline u8 makeMove(Move m) {
 }
 static inline void unmakeMove(Move m, u8 cap) {
   int f = MF(m), t = MT(m); u8 p = B[t];
+  if (xqOn) xqTop--;
   side ^= 1;
   B[f] = p; B[t] = cap;
   if (TYPE(p) == KING) KSQ[COLOR(p)] = f;
@@ -279,6 +347,7 @@ static int evaluateRed(int *phOut) {
   return (mg * ph + eg * (16 - ph)) / 16;
 }
 static int evaluate(void) {
+  if (xqOn) return xqEval();
   int v = evaluateRed(0) / 8;   // weights are in 1/8 points
   v = side ? -v : v;
   return v + W_[NW - 1] / 8;    // tempo
@@ -524,7 +593,7 @@ static void beginSearch(int ms) {
 }
 // best move: IO[0] = move, IO[1] = value, IO[2] = depth, IO[3] = nodes / 1000
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
-  beginSearch(ms); nodeLimitOn = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
+  beginSearch(ms); nodeLimitOn = nodeK != 0; nodeLimit = nodeK > 0 ? (u64)nodeK * 1000 : (u64)(-nodeK) * 100;   // nodeK < 0: hundreds
   if (rootN == 0) { IO[0] = -1; IO[1] = -WIN; IO[2] = 0; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;
   if (rootN == 1) { IO[0] = bm; IO[1] = 0; IO[2] = 0; IO[3] = 0; return; }
