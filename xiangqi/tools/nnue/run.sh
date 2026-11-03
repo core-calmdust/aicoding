@@ -16,14 +16,16 @@ if [ ! -s pikafish.nnue ]; then
   curl -fL --retry 5 -o pikafish.nnue https://github.com/official-pikafish/Networks/releases/download/master-net/pikafish.nnue
 fi
 uciok() { printf 'uci\nquit\n' | "$1" 2>/dev/null | grep -q uciok; }
-if [ ! -x pikafish ] || ! uciok ./pikafish; then
+# (macOS file names ignore case: the source folder and the program must not be "Pikafish" / "pikafish" side by side)
+[ -d Pikafish ] && [ ! -d pikafish-src ] && mv Pikafish pikafish-src
+if [ ! -x teacher ] || ! uciok ./teacher; then
   echo "== Pikafish (GPL-3.0; used here only as the teacher, nothing of it goes into the site)"
-  [ -d Pikafish ] || git clone --depth 1 https://github.com/official-pikafish/Pikafish.git
-  cp pikafish.nnue Pikafish/src/pikafish.nnue
-  rm -f pikafish
-  ( cd Pikafish/src && { make -j build > ../../build.log 2>&1 || make -j build ARCH=apple-silicon >> ../../build.log 2>&1 || make -j build ARCH=native >> ../../build.log 2>&1; } ) || true
-  [ -x Pikafish/src/pikafish ] && cp Pikafish/src/pikafish ./pikafish
-  if [ ! -x pikafish ] || ! uciok ./pikafish; then
+  [ -d pikafish-src ] || git clone --depth 1 https://github.com/official-pikafish/Pikafish.git pikafish-src
+  cp pikafish.nnue pikafish-src/src/pikafish.nnue
+  rm -f teacher
+  ( cd pikafish-src/src && { make -j build > ../../build.log 2>&1 || make -j build ARCH=apple-silicon >> ../../build.log 2>&1 || make -j build ARCH=native >> ../../build.log 2>&1; } ) || true
+  [ -f pikafish-src/src/pikafish ] && cp pikafish-src/src/pikafish ./teacher
+  if [ ! -x teacher ] || ! uciok ./teacher; then
     echo "Pikafish could not be built or does not start. Last lines of $WORK/build.log:"; tail -30 build.log; exit 1
   fi
   echo "Pikafish OK"
@@ -33,7 +35,7 @@ DONE=$(cat games.done 2>/dev/null || echo 0)
 [ -s data.bin ] || DONE=0
 while [ "$DONE" -lt "$GAMES" ]; do
   N=$(( GAMES - DONE < BATCH ? GAMES - DONE : BATCH ))
-  ./datagen ./pikafish data.bin --games $N --nodes $NODES --evalfile "$WORK/pikafish.nnue" --seed $((DONE + 1)) || { echo "datagen failed"; exit 1; }
+  ./datagen ./teacher data.bin --games $N --nodes $NODES --evalfile "$WORK/pikafish.nnue" --seed $((DONE + 1)) || { echo "datagen failed"; exit 1; }
   DONE=$((DONE + N)); echo $DONE > games.done
   echo "  $DONE / $GAMES games, $(( $(wc -c < data.bin) / 56 )) positions"
 done
