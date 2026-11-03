@@ -1416,12 +1416,12 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261103n6"></script>
+<script src="i18n.js?v=20261104n7"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/export.js?v=6"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
-<script src="engine.js?v=20261103n6"></script>
+<script src="engine.js?v=20261104n7"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261021cs"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
@@ -1496,8 +1496,8 @@ const HANDI = [
 const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },   // 入門: 2-ply so it sees simple recaptures, but picks loosely among moves up to ~1 pawn worse
   { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
   { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
-  { nodes: 400 }, { nodes: 800 }, { nodes: 1500 }, { nodes: 3000 }, { nodes: 5600 }, { nodes: 11000 }, { nodes: 21000 }, { nodes: 39000 },
-  { nodes: 75000, time: 12000 }, { nodes: 140000, time: 15000 }, { nodes: 560000, time: 15000 }, { nodes: 2200000, time: 20000 }];
+  { nodes: 260 }, { nodes: 520 }, { nodes: 1000 }, { nodes: 2000 }, { nodes: 3600 }, { nodes: 7200 }, { nodes: 14000 }, { nodes: 25000 },
+  { nodes: 49000, time: 12000 }, { nodes: 91000, time: 15000 }, { nodes: 370000, time: 15000 }, { nodes: 2200000, time: 20000 }];
 const COACH_MS = 2400, COACH_NODES = 1000000;          // coach card / hint: time cap and node budget (best move 75%, the alternatives the rest; a fast device stops at the nodes)
 // the coach / hint candidates: engine.js 'coach' (the full search of the strong levels); the variant worker only knows 'analyze'
 const coachMsg = (idx, n) => Variants.eng(game.variant) ? { type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: n } }
@@ -1576,7 +1576,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261103n6');
+  const w = new Worker('engine.js?v=20261104n7');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
