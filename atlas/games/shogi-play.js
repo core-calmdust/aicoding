@@ -7,13 +7,13 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../shogi/', EV = '?v=20261021v2';   // the full game's engine version (shogi/index.html)
+  const BASE = '../shogi/', EV = '?v=20261103n6';   // the full game's engine version (shogi/index.html)
   // the full game's AI steps (shogi/index.html LEVELS), index = level - 1
   const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },
     { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
     { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
-    { nodes: 5000 }, { nodes: 10000 }, { nodes: 18000 }, { nodes: 35000 }, { nodes: 67000 }, { nodes: 130000 }, { nodes: 250000 }, { nodes: 470000 },
-    { nodes: 900000, time: 12000 }, { nodes: 1700000, time: 15000 }];
+    { nodes: 400 }, { nodes: 800 }, { nodes: 1500 }, { nodes: 3000 }, { nodes: 5600 }, { nodes: 11000 }, { nodes: 21000 }, { nodes: 39000 },
+    { nodes: 75000, time: 12000 }, { nodes: 140000, time: 15000 }, { nodes: 560000, time: 15000 }, { nodes: 2200000, time: 20000 }];
   const START = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
   const SC = .8;                                  // the legged board is life-size: a little smaller on the chabudai
   const HANDS = [6, 5, 7, 4, 3, 2, 1];            // 飛 角 金 銀 桂 香 歩 (stand order)
