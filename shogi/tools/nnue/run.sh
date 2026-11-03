@@ -11,9 +11,8 @@ mkdir -p "$WORK"
 echo "== build"
 cc -O3 -o "$WORK/prep" "$HERE/prep.c"
 cc -O3 -o "$WORK/train" "$HERE/train.c" -lpthread -lm
-echo "== download"
-bash "$HERE/fetch.sh"
 cd "$WORK"
+if [ ! -s train.bin ]; then echo "== download"; bash "$HERE/fetch.sh"; fi
 if [ ! -s train.bin ]; then
   echo "== prep"
   ./prep train.bin raw/*.bin
