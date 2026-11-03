@@ -38,11 +38,14 @@ if [ ! -s gikou/params.bin ]; then
   [ -s gikou/params.bin ] || { echo "params.bin not found in the zip"; unzip -l gikou.zip | head -30; exit 1; }
 fi
 printf 'usi\nisready\nquit\n' | (cd gikou && ./release) 2>/dev/null | grep -q readyok || { echo "Gikou does not start"; exit 1; }
+# sanity check: after 7g7f 3c3d (Black to move) Gikou must answer with a Black move
+R=$( (printf 'usi\nsetoption name OwnBook value false\nsetoption name Threads value 1\nsetoption name DepthLimit value 3\nisready\nusinewgame\nposition startpos moves 7g7f 3c3d\ngo btime 0 wtime 0 byoyomi 5000\n'; sleep 8; echo quit) | (cd gikou && ./release) 2>/dev/null | grep bestmove | head -1)
+echo "Gikou check (after 7g7f 3c3d): $R"
 echo "Gikou OK"
 
 echo "== matches: our $NODES nodes per move vs Gikou depth $DEPTHS, $GAMES games each (running in parallel)"
 for D in $DEPTHS; do
-  ./usimatch net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt DepthLimit=$D --opt Threads=1 --opt USI_Hash=256 \
+  ./usimatch net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt DepthLimit=$D --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
     --openings "$HERE/openings.txt" --byoyomi 30000 > "match-n$NODES-d$D.log" 2>&1 &
 done
 wait
