@@ -65,7 +65,9 @@ static void eStart(const char *path, const char *evalfile) {
   toE = fdopen(a[1], "w"); fromE = fdopen(b[0], "r");
   char line[4096];
   fprintf(toE, "uci\n"); fflush(toE);
-  while (fgets(line, sizeof line, fromE)) if (!strncmp(line, "uciok", 5)) break;
+  int ok = 0;
+  while (fgets(line, sizeof line, fromE)) if (!strncmp(line, "uciok", 5)) { ok = 1; break; }
+  if (!ok) { fprintf(stderr, "\nteacher engine did not start: %s\n", path); exit(2); }
   fprintf(toE, "setoption name Threads value 1\nsetoption name Hash value 16\nsetoption name UCI_ShowWDL value true\n");
   if (evalfile) fprintf(toE, "setoption name EvalFile value %s\n", evalfile);
   fprintf(toE, "isready\n"); fflush(toE);
@@ -151,6 +153,7 @@ int main(int argc, char **argv) {
   }
   if (workers < 1) workers = 1;
   initGeo(); initEval();
+  signal(SIGPIPE, SIG_IGN);
   fprintf(stderr, "datagen: %ld games, %d nodes per move, %d workers\n", games, nodes, workers);
   double t0 = now();
   for (int k = 0; k < workers; k++) {
@@ -171,7 +174,8 @@ int main(int argc, char **argv) {
       _exit(0);
     }
   }
-  for (int k = 0; k < workers; k++) wait(NULL);
+  int failed = 0;
+  for (int k = 0; k < workers; k++) { int st = 0; wait(&st); if (!WIFEXITED(st) || WEXITSTATUS(st)) failed++; }
   FILE *out = fopen(outp, "ab"); if (!out) { perror(outp); return 1; }
   long tot = 0; static Rec buf[4096];
   for (int k = 0; k < workers; k++) {
@@ -182,5 +186,6 @@ int main(int argc, char **argv) {
   }
   fclose(out);
   fprintf(stderr, "\ndone: %ld positions added to %s (%.0f s)\n", tot, outp, (now() - t0) / 1000);
+  if (failed || tot == 0) { fprintf(stderr, "datagen: %d worker(s) failed, %ld positions - stopping\n", failed, tot); return 1; }
   return 0;
 }

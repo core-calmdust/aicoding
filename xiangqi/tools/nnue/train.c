@@ -201,6 +201,7 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--init")) initp = argv[++a];
   }
   if (NTH > 256) NTH = 256; if (NTH < 1) NTH = 1;
+  struct stat st0; if (stat(data, &st0) || st0.st_size < (off_t)sizeof(Rec) * 1000) { fprintf(stderr, "%s: no training data\n", data); return 1; }
   long N; D = mapf(data, &N);
   long NV = N / 50, NA = N - NV;          /* validation: the last 2% (whole games) */
   const Rec *V = D + NA;
