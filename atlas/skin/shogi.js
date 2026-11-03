@@ -48,6 +48,28 @@
   document.addEventListener('shogi-geom', e => { try { setBoard(e.detail && e.detail.n === 5 ? 5 : 9); } catch (x) { console.warn(x); } });
   { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(5); }
 
+  /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood) ---------- */
+  try {
+    const W = 192, H = 512, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#ecc98e'); bg.addColorStop(.5, '#e2b877'); bg.addColorStop(1, '#d6a565');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    let s = 7; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    // straight grain along the stand's length: fine lines with a slow wave, a few darker late-wood bands
+    for (let i = 0; i < 70; i++) {
+      const x0 = rnd() * W, amp = 2 + rnd() * 5, f = .004 + rnd() * .01, ph = rnd() * 6.28, dark = rnd() < .22;
+      x.strokeStyle = dark ? `rgba(150,92,38,${.16 + rnd() * .14})` : `rgba(170,112,52,${.06 + rnd() * .1})`;
+      x.lineWidth = dark ? 1 + rnd() * 1.6 : .5 + rnd() * .8;
+      x.beginPath();
+      for (let y = 0; y <= H; y += 8) { const xx = x0 + Math.sin(y * f + ph) * amp; y ? x.lineTo(xx, y) : x.moveTo(xx, y); }
+      x.stroke();
+    }
+    // soft sheen across the top face + darker edges, like the lit board
+    const sh = x.createLinearGradient(0, 0, W, 0); sh.addColorStop(0, 'rgba(110,60,15,.18)'); sh.addColorStop(.18, 'rgba(255,240,210,.10)'); sh.addColorStop(.6, 'rgba(255,240,210,0)'); sh.addColorStop(1, 'rgba(110,60,15,.16)');
+    x.fillStyle = sh; x.fillRect(0, 0, W, H);
+    document.documentElement.style.setProperty('--kdwood', `url(${c.toDataURL('image/jpeg', .85)})`);
+  } catch (e) {}
+
   /* ---------- pieces: renders of the 3D pieces ---------- */
   document.documentElement.classList.add('atlas-shogi');
   const orig = window.pieceEl;

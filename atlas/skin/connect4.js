@@ -23,6 +23,7 @@
   const st = document.createElement('style');
   st.textContent = `
 html.atlas-c4{--top:1.25;--cv:min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 8.4, 150px);--sidew:clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--cv) * 10.5, 520px);--cell:min(var(--cv), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 10.5);--fw:calc(var(--cell) * 10.5);--fh:calc(var(--cell) * (7.1 + var(--top)))}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-c4{--sidew:360px}}   /* PC: the fixed 360px info column (common spec), like chess / checkers */
 @media (pointer: coarse) and (max-width: 900px) and (max-aspect-ratio: 1/1){html.atlas-c4,html.atlas-c4 body{--top:1.1;--cell:min((100vw - 12px) / 10.6, 70px)!important}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){html.atlas-c4{--top:1.1;--cell:min((var(--vh) - 20px) / 8.1, (100vw - 300px) / 10.5, 120px)}}
 html.atlas-c4 .frame{padding:calc(var(--cell) * var(--top)) calc(var(--cell) * 1.75) calc(var(--cell) * 1.1)!important;border:0!important;background:transparent!important;box-shadow:none!important}

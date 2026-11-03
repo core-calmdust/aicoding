@@ -141,7 +141,7 @@
   }
   function pieceGeo(lo) {
     const key = lo ? 'lo' : LO() ? 'mid' : 'hi'; if (geos[key]) return geos[key];
-    const TT = T(), g = new TT.LatheGeometry(profile(lo).map(([a, b]) => new TT.Vector2(a, b)), lo ? 14 : LO() ? 20 : 28);
+    const TT = T(), g = new TT.LatheGeometry(profile(lo).map(([a, b]) => new TT.Vector2(a, b)), lo ? 12 : LO() ? 20 : 24);   // (seen from straight above at ~1 cm: 24 steps keep the rim round; the mirror image is faint)
     if (X.share) X.share(g); return (geos[key] = g);
   }
   function crownGeo() {   // a small open crown: a band with five points (one lathe-free extrusion, bent round a circle)

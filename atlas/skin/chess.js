@@ -123,7 +123,7 @@
       const sh0 = `drop-shadow(0 ${cw * .05}px ${cw * .04}px rgba(0,0,0,.5))`, sh1 = `drop-shadow(0 ${cw * .05 + lift * .8}px ${cw * .1}px rgba(0,0,0,.3))`;
       if (im) im.animate([{ transform: 'none', filter: sh0 }, { transform: `translateY(${-lift}px) scale(1.04)`, filter: sh1, offset: .45 }, { transform: 'none', filter: sh0 }], { duration: T, easing: 'ease-in-out' });
       if (rf) rf.animate([{ opacity: .42 }, { opacity: 0, offset: .2 }, { opacity: 0, offset: .8 }, { opacity: .42 }], { duration: T });
-      T3.kick(T + 100);
+      // (no Table3D.kick: the pieces are DOM sprites, the 3D board under them doesn't change during a move → no frames drawn)
     } catch (e) {}
   };
 })();
