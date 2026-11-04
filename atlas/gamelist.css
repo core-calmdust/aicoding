@@ -89,12 +89,19 @@
 /* game names as headings (board sheet): gamelist.js fitTitle() shrinks them to one line, or two balanced lines — never "…" */
 .bvi h3.tfit{text-overflow:clip}
 .bvi h3.tf2{white-space:normal;overflow:visible;text-wrap:balance;line-height:1.2;overflow-wrap:anywhere}
-/* home: today's game card — a short history (3 lines) and a link into its Historia, above the tags / button row */
-.today .hs{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
-.today .hsb{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px 0 10px;border-radius:99px;font-size:13px;font-weight:900;white-space:nowrap;
-  color:color-mix(in srgb,var(--c) 70%,#2b1a05);background:color-mix(in srgb,var(--c) 12%,#fff);border:1.5px solid color-mix(in srgb,var(--c) 40%,#fff);box-shadow:0 2px 0 color-mix(in srgb,var(--c) 25%,#fff);cursor:pointer;transition:transform .1s}
-.today .hsb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* home: today's game card — the history fills the card; the bottom row is only ヒストリアを見る (secondary, start) and ちゃぶ台へ (primary, end).
+   Side by side with the profile (PC) the card takes the profile's height and the text fills what is left (gamelist.js clampFit adds the "…"
+   only when it truly runs out); stacked (narrow screens) the card simply grows to show the whole paragraph. */
+.today .hs{flex:1 1 0;min-height:4.95em;overflow:hidden}
+.today .hs.clamp{display:-webkit-box;-webkit-box-orient:vertical}
+.today .ft{justify-content:space-between;flex-wrap:nowrap}
+.today .ft .tags{display:none}
+.today .hsb{flex:0 1 auto;min-width:0;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 11px;border-radius:99px;font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:color-mix(in srgb,var(--c) 70%,#2b1a05);background:color-mix(in srgb,var(--c) 12%,#fff);border:1.5px solid color-mix(in srgb,var(--c) 40%,#fff);box-shadow:0 3px 0 color-mix(in srgb,var(--c) 28%,#fff);cursor:pointer;transition:transform .1s}
+.today .hsb svg{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .today .hsb:hover{background:color-mix(in srgb,var(--c) 20%,#fff)}
 .today .hsb:active{transform:translateY(2px);box-shadow:none}
 .today .hsb:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
-@media (max-width:600px){ .today .hsb{height:28px;font-size:12.5px} }
+@media (max-width:860px){ .today .hs{flex:none;min-height:0} }
+@media (max-width:600px){ .today .hsb{height:34px;font-size:13px} }
+@media (max-width:340px){ .today .hsb{padding:0 10px 0 8px;font-size:12px;gap:4px} .today .ft .btn.sm{padding-inline:12px} }
