@@ -50,7 +50,7 @@
       name: N("ファノロナ", "Fanorona", "法诺罗纳", "파노로나", "Fanorona", "Fanorona", "Fanorona", "Fanorona", "फ़ानोरोना", "فانورونا") },
     { id: 'alquerque', cat: 'chess', store: ['aicoding-alquerque'], href: 'alquerque/', color: '#9a2a24', released: '2026-11-01', tags: ['classic', 'ai', 'online', 'rated', 'mobile'], total: {},
       name: N("アルケルケ", "Alquerque", "阿尔凯尔凯", "알케르케", "Alquerque", "Alquerque", "Alquerque", "Alquerque", "अलकेरके", "القِرْقة") },
-    { id: 'ugolki', cat: 'chess', store: ['aicoding-ugolki'], href: 'ugolki/', color: '#1d3f9a', released: '2026-11-04', tags: ['classic', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 200, ls: 11 },
+    { id: 'ugolki', cat: 'chess', store: ['aicoding-ugolki'], href: 'ugolki/', color: '#1d3f9a', released: '2026-11-04', tags: ['classic', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 122, ls: 11 },
       name: N("ウゴルキ", "Ugolki", "角棋", "우골키", "Ugolki", "Ougolki", "Ugolki", "Ugolki", "उगोल्की", "أوغولكي") },
     { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 543, ls: 16 },
       name: N('シャンチー（中国象棋）', 'Xiangqi', '中国象棋', '샹치(중국 장기)', 'Xiangqi (ajedrez chino)', 'Xiangqi (échecs chinois)', 'Xiangqi (xadrez chinês)', 'Xiangqi (Chinesisches Schach)', 'शियांगची (चीनी शतरंज)', 'شيانغ تشي (الشطرنج الصيني)') },
