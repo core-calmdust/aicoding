@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <clipPath id="ug-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <radialGradient id="ug-bg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eef9"/></radialGradient>
+    <radialGradient id="ug-pc" cx=".4" cy=".34" r=".72"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f6f8fe"/><stop offset=".9" stop-color="#dfe6f4"/><stop offset="1" stop-color="#b9c5df"/></radialGradient>
+    <linearGradient id="ug-pt" gradientUnits="userSpaceOnUse" x1="41" y1="0" x2="55" y2="0"><stop offset="0" stop-color="#0f2f86"/><stop offset=".55" stop-color="#2152b5"/><stop offset="1" stop-color="#7f9fe0"/></linearGradient>
+    <filter id="ug-sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.6" stdDeviation="2.4" flood-color="#0b1d4d" flood-opacity=".28"/></filter>
+    <path id="ug-p" d="M48 45.5C41.5 41 40.5 33.5 48 26.5 55.5 33.5 54.5 41 48 45.5Z" fill="url(#ug-pt)"/>
+    <path id="ug-q" d="M48 46C45.6 42.8 45.4 38 48 33.6 50.6 38 50.4 42.8 48 46Z" fill="url(#ug-pt)"/>
+  </defs>
+  <g clip-path="url(#ug-c)">
+    <rect width="96" height="96" fill="url(#ug-bg)"/>
+    <!-- the piece's side (thickness) and face -->
+    <circle cx="48" cy="51.5" r="35" fill="#c3cde4" filter="url(#ug-sh)"/>
+    <circle cx="48" cy="48" r="35" fill="url(#ug-pc)"/>
+    <circle cx="48" cy="48" r="29" fill="none" stroke="#2152b5" stroke-width="2.4"/>
+    <g fill="#2152b5"><circle cx="80.3" cy="48.0" r="1"/><circle cx="79.2" cy="56.4" r="1"/><circle cx="76.0" cy="64.1" r="1"/><circle cx="70.8" cy="70.8" r="1"/><circle cx="64.2" cy="76.0" r="1"/><circle cx="56.4" cy="79.2" r="1"/><circle cx="48.0" cy="80.3" r="1"/><circle cx="39.6" cy="79.2" r="1"/><circle cx="31.9" cy="76.0" r="1"/><circle cx="25.2" cy="70.8" r="1"/><circle cx="20.0" cy="64.1" r="1"/><circle cx="16.8" cy="56.4" r="1"/><circle cx="15.7" cy="48.0" r="1"/><circle cx="16.8" cy="39.6" r="1"/><circle cx="20.0" cy="31.9" r="1"/><circle cx="25.2" cy="25.2" r="1"/><circle cx="31.8" cy="20.0" r="1"/><circle cx="39.6" cy="16.8" r="1"/><circle cx="48.0" cy="15.7" r="1"/><circle cx="56.4" cy="16.8" r="1"/><circle cx="64.2" cy="20.0" r="1"/><circle cx="70.8" cy="25.2" r="1"/><circle cx="76.0" cy="31.8" r="1"/><circle cx="79.2" cy="39.6" r="1"/></g>
+    <!-- Gzhel rose: eight shaded brush strokes, an inner ring of five, a cobalt centre -->
+    <g>
+      <use href="#ug-p"/><use href="#ug-p" transform="rotate(45 48 48)"/><use href="#ug-p" transform="rotate(90 48 48)"/><use href="#ug-p" transform="rotate(135 48 48)"/>
+      <use href="#ug-p" transform="rotate(180 48 48)"/><use href="#ug-p" transform="rotate(225 48 48)"/><use href="#ug-p" transform="rotate(270 48 48)"/><use href="#ug-p" transform="rotate(315 48 48)"/>
+    </g>
+    <circle cx="48" cy="48" r="8.6" fill="#f6f8fe"/>
+    <g>
+      <use href="#ug-q" transform="rotate(22 48 48)"/><use href="#ug-q" transform="rotate(94 48 48)"/><use href="#ug-q" transform="rotate(166 48 48)"/><use href="#ug-q" transform="rotate(238 48 48)"/><use href="#ug-q" transform="rotate(310 48 48)"/>
+    </g>
+    <circle cx="48" cy="48" r="2.6" fill="#0f2f86"/>
+    <!-- glaze highlight -->
+    <ellipse cx="36" cy="27" rx="11" ry="4.5" fill="#fff" opacity=".4" transform="rotate(-28 36 27)"/>
+  </g>
+</svg>
