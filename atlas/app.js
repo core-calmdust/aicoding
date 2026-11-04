@@ -103,8 +103,8 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7 })[g.id] || 5}` : `../${g.icon}`;
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon']);   // images/atlas/<id>.webp exists
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7, agon: 9 })[g.id] || 5}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -656,6 +656,7 @@
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
+    if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi')); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
