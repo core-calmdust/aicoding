@@ -369,8 +369,10 @@
     const cap = () => {
       if (!pg.isConnected) return;
       const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
-      const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
-      map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
+      // short pages (small phones, browser bars): the map gets slimmer (down to ~72 px, still cropped around the pins) rather than
+      // scrolling away — it only stops being pinned when even that would leave less than ~2 cards of text
+      const h = Math.round(Math.max(72, Math.min(nat, H * (phone() ? .33 : .4), H - card * 2.1)));
+      map.classList.toggle('stick', H - h >= card * 1.6);
       sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
       zmSet(map);
     };
