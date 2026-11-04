@@ -14,7 +14,8 @@
 //   CoachKit.tips({ head, list, open, more, less })  → tips list (first 3 + "more")
 //   CoachKit.verdict(g, title, html)           → previous-move verdict box (g: 0 best … 3 mistake)
 //   CoachKit.gloss(html, dict)                 → wraps glossary terms (dict: { key: { m: [surface forms], t: title, d: text } })
-//   CoachKit.bind(root, { onMore, onHover(move|null) }) → wires the buttons inside a rendered card
+//   CoachKit.bind(root, { onMore, onHover(move|null), onPlay(move) }) → wires the buttons inside a rendered card
+//                                              (onPlay: PC — a mouse click on a row plays that move; the game checks it is the player's turn)
 // Icons for the phones' bottom tab bar: CoachKit.ICON.coach / eval / kifu / online.
 (function () {
 'use strict';
@@ -209,7 +210,8 @@ function bind(root, o) {
     // iOS Safari reports pointerType 'mouse' (or nothing) on the click of a tap → take it from the pointerdown
     b.onpointerdown = e => { b._pt = e.pointerType; };
     b.onclick = e => {
-      const pt = b._pt || e.pointerType; b._pt = null; if (pt === 'mouse') return;
+      const pt = b._pt || e.pointerType; b._pt = null;
+      if (pt === 'mouse') { if (o.onPlay && !(e.target.closest && e.target.closest('.ck-gl'))) { b.classList.remove('ck-hov'); o.onHover(null); o.onPlay(b.dataset.mv); } return; }
       const mv = b.dataset.mv, on = !(root.dataset.ckSel === mv); delete root.dataset.ckSel;
       root.querySelectorAll('.ck-bi.ck-hov').forEach(x => x.classList.remove('ck-hov'));
       if (on) { root.dataset.ckSel = mv; b.classList.add('ck-hov'); }

@@ -679,6 +679,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => arrows(u),
+    // PC: clicking a candidate plays it (only on the player's own turn, when the board would take a move)
+    onPlay: u => { try { if (!myTurn() || (typeof canInteract === 'function' && !canInteract())) return; const m = legalCache().find(x => P.toUsi(x) === u); if (m) humanMove(m); } catch (e) {} },
   });
 }
 // candidate arrows on the board: the hovered / tapped row's move only
