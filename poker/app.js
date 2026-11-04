@@ -359,10 +359,12 @@ function chipStack(amt, maxStacks) {
 function render(o) {
   o = o || {};
   if (!T) return;
-  const V = P.VARIANTS[T.v], box = $('#pkTable'), W = box.clientWidth, H = box.clientHeight;
+  const V = P.VARIANTS[T.v], box = $('#pkTable'), bw = $('#boardWrap');
+  // the card size comes from the table's normal (CSS) size; the table itself is then squeezed so the action bar fits on screen
+  const R = fitBoard(bw, box), W = R.w, H = R.h;
   const narrow = W < 640, tall = H > W * (narrow ? .95 : 1.1);   // portrait boards have room for much bigger cards
   const cw = Math.max(26, Math.min(W / (V.stud ? (narrow || tall ? 10.5 : 13.5) : (narrow || tall ? 7.2 : 9.8)), H / (V.stud ? (tall || narrow ? 8 : 6.6) : (tall || narrow ? 8.2 : 5.7)), tall ? 170 : 130));
-  const bw = $('#boardWrap'); bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
+  bw.style.setProperty('--cw', cw + 'px'); bw.style.setProperty('--chh', cw * 1.4 + 'px');
   const done = T.phase === 'done', showAll = done && T.result && T.result.showdown;
   const winners = done ? new Set(T.result.pots.flatMap(p => p.winners || [])) : new Set();
   const heroBest = done && showAll ? null : null; void heroBest;
@@ -398,6 +400,7 @@ function render(o) {
   });
   box.classList.toggle('nb', narrow && !!V.board && (V.hole < 4 || W < 350));   // squeezed phone table: the pot goes under the board
   if (o.deal || !box.firstChild) box.innerHTML = h; else patch(box, h);
+  clampSeats(box);
   // dealing: cards fly in from the dealer (the centre)
   if (o.deal && set.anim) {
     const br = box.getBoundingClientRect(), cx = br.left + br.width / 2, cy = br.top + br.height * .42;
@@ -411,6 +414,36 @@ function render(o) {
   }
   box.querySelectorAll('.seat.me .cd').forEach((el, k) => { el.onclick = () => { if (T.phase === 'draw' && T.toAct === HERO) { const j = G.sel.indexOf(k); if (j >= 0) G.sel.splice(j, 1); else G.sel.push(k); render(); } }; });
   renderActbar(); renderSide(); renderNums();
+}
+
+/* the action bar is always on screen (2026-11-04): the board gets the height left above it (phones: above the bar pinned
+   over the tab bar; landscape phones: the bar is a column beside the board). Returns the board's normal inner size,
+   which sets the card size — so the cards stay as big as before and may overlap the rail of the squeezed table. */
+function fitBoard(bw, box) {
+  bw.style.height = ''; bw.style.minHeight = '';
+  const rail = bw.offsetHeight - box.clientHeight, refH = box.clientHeight;
+  const bar = $('#actbar'), sc = $('.stage'), wr = bw.getBoundingClientRect(), br = bar.getBoundingClientRect();
+  const beside = br.left >= wr.right - 1, cs = getComputedStyle(bar);
+  const refW = box.clientWidth + (beside ? br.width + (parseFloat(getComputedStyle(bar.parentNode).columnGap) || 0) : 0);
+  const abh = beside ? 0 : Math.max(bar.offsetHeight, parseFloat(cs.minHeight) || 0) + (parseFloat(cs.marginTop) || 0) + 10;
+  let room;
+  if (getComputedStyle(sc).overflowY === 'auto') {   // phones: the middle scrolls, the bar is pinned to its bottom
+    const top = sc.style.paddingTop ? 0 : wr.top - sc.getBoundingClientRect().top + sc.scrollTop;
+    room = sc.clientHeight - top - abh - (parseFloat(cs.bottom) || 0);
+  } else room = innerHeight - (wr.top + scrollY) - abh - 8;
+  const h = Math.round(Math.max(160, Math.min(bw.offsetHeight, room)));
+  if (h < bw.offsetHeight) { bw.style.minHeight = '0'; bw.style.height = h + 'px'; }
+  return { w: refW, h: refH };
+}
+/* a squeezed table: the seats stay inside the table (over its rail if need be) */
+function clampSeats(box) {
+  const H = box.clientHeight, rail = (box.parentNode.offsetHeight - H) / 2;
+  box.querySelectorAll('.seat').forEach(el => {
+    el.style.marginTop = '';
+    const y = el.offsetTop, h2 = el.offsetHeight / 2, lo = h2 - rail + 2, hi = H + rail - h2 - 2;
+    const ny = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, y));
+    if (Math.abs(ny - y) > .5) el.style.marginTop = (ny - y) + 'px';
+  });
 }
 
 /* ---------------- action bar ---------------- */
