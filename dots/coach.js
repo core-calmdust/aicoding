@@ -557,6 +557,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S0.open = !S0.open; render(); },
     onHover: u => { S0.hover = u == null ? null : +u; drawNow(); },
+    // PC: clicking a candidate plays it (only on the player's own turn, when the board would take a move)
+    onPlay: u => { try { const e = +u; if (!active() || !myTurn() || S !== SF || !canHumanMove() || !(e >= 0) || S.p.drawn[e]) return; if (typeof setPreview === 'function') setPreview(-1); humanMove(e); } catch (er) {} },
   });
 }
 // candidate lines on the board: the hovered / tapped one only
