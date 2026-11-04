@@ -51,7 +51,7 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), pass: t('p.pass'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const board = T3.MODELS.reversi(true); T3.show('reversi', board);
     const S = board.userData.S, Y = board.userData.top;
-    const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
+    const RM = T3.rvMats(), DH = T3.rvDisc.H / 2;   // flat, matte Othello discs (half thickness: the centre sits DH above the felt)
     const hintM = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .55 });
     const lastM = new THREE.MeshBasicMaterial({ color: 0xff5d5d });
     const pos = sq => [T3.cellPos(8, S, sq & 7), T3.cellPos(8, S, sq >> 3)];
@@ -70,22 +70,19 @@
     function hideHint() { hintSq = -1; if (hintRing.visible || hintGlow.visible) { hintRing.visible = hintGlow.visible = false; if (T3.kick) T3.kick(150); } hintJ++; }
 
     function makeDisc(sq, color) {
-      const g = new THREE.Group();
-      const top = T3.bevelDisc(.42, .1, W), bot = T3.bevelDisc(.42, .1, B);
-      bot.position.y = 0; top.position.y = .1; g.add(bot, top);   // white side up by default
-      const inner = new THREE.Group(); inner.add(g); g.position.y = -.1;
-      const outer = new THREE.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -.098; outer.add(ao);
-      const [x, z] = pos(sq); outer.position.set(x, Y + .1, z);
+      const inner = new THREE.Group(); inner.add(T3.rvDisc(RM));   // white side up by default
+      const outer = new THREE.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -DH + .002; outer.add(ao);
+      const [x, z] = pos(sq); outer.position.set(x, Y + DH, z);
       inner.rotation.x = color === 1 ? Math.PI : 0;
       board.add(outer); discs[sq] = { outer, inner, color };
       return discs[sq];
     }
     function anim(dur, f, done) { const t0 = performance.now(); (function s(n) { const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); }
-    function drop(sq, color) { const d = makeDisc(sq, color); anim(260, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * 2.2; }); }
+    function drop(sq, color) { const d = makeDisc(sq, color); anim(260, k => { d.outer.position.y = Y + DH + (1 - k) * (1 - k) * 2.2; }); }
     function flip(sq, color, delay) {
       const d = discs[sq]; d.color = color;
       const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
-      setTimeout(() => anim(380, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .7; }), delay);
+      setTimeout(() => anim(380, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + DH + Math.sin(k * Math.PI) * .7; }), delay);
     }
     for (let s = 0; s < 64; s++) if (cells[s]) makeDisc(s, cells[s]);
 
@@ -107,7 +104,7 @@
       drop(sq, color);
       const [x, z] = pos(sq);
       fl.sort((a, b) => Math.hypot((a & 7) - (sq & 7), (a >> 3) - (sq >> 3)) - Math.hypot((b & 7) - (sq & 7), (b >> 3) - (sq >> 3))).forEach((s, i) => flip(s, color, 200 + i * 70));
-      lastDot.position.set(x, Y + .32, z); lastDot.visible = false;
+      lastDot.position.set(x, Y + 2 * DH + .012, z); lastDot.visible = false;
       setTimeout(() => { lastDot.visible = true; }, 300);
       return 300 + fl.length * 70 + 380;
     }
@@ -172,7 +169,7 @@
     function rebuild() {   // the discs as `cells` says (after 待った)
       Object.keys(discs).forEach(k => { board.remove(discs[k].outer); delete discs[k]; });
       for (let s = 0; s < 64; s++) if (cells[s]) makeDisc(s, cells[s]);
-      if (last >= 0) { const [x, z] = pos(last); lastDot.position.set(x, Y + .32, z); lastDot.visible = true; } else lastDot.visible = false;
+      if (last >= 0) { const [x, z] = pos(last); lastDot.position.set(x, Y + 2 * DH + .012, z); lastDot.visible = true; } else lastDot.visible = false;
       if (T3.kick) T3.kick(300);
     }
     const myTurn = () => !over && !busy && (pvp || turn === human) && legal(cells, turn).length > 0;
