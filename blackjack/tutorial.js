@@ -1,0 +1,298 @@
+/* ブラックジャック — tutorial on the real table (blackjack/tutorial.js)
+   One scripted round at the Vegas Strip table: you get 6♠ 5♦ (11) against the dealer's 6♥, double down and get 9♦ (20);
+   the dealer turns K♣ (16), draws 8♣ and busts. The bots all stand. Boxes point at the parts of the screen (spotlight + bubble, the baccarat tutorial's code).
+   app.js calls: BJTut.setup(T) · ev('start' | 'turn' | 'done') · allow({a:'bet',k} | {a:'deal'} | {a:'move',m}) · after('bet').
+   First visit: a box offers the tutorial ("do not show again"). Keys: aicoding-blackjack-tut-hide / -done. */
+(function () {
+'use strict';
+const A = window.BJApp, B = window.BJ, $ = s => document.querySelector(s);
+const esc = s => A.esc(s);
+const HIDE = 'aicoding-blackjack-tut-hide', DONE = 'aicoding-blackjack-tut-done';
+const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+/* ---------- the scripted round: the next cards out of the shoe, in dealing order (seats 1–5, dealer, seats 1–5, hole), then your double, then the dealer's draw ---------- */
+const FIX = ['TS', 'KD', '6S', 'QC', 'JH', '6H', '9C', '8H', '5D', '7D', 'KS', 'KC', '9D', '8C'];
+function setup(T) {
+  const S = T.shoe, cs = S.cards;
+  FIX.map(B.parse).forEach((id, i) => { const at = S.pos + i, j = cs.findIndex((c, k) => k >= at && c === id); if (j > at) [cs[at], cs[j]] = [cs[j], cs[at]]; });
+}
+
+/* ---------- the steps ---------- */
+const SPOT = k => `#bjTable [data-spot="${k}"]`;
+const STEPS = {
+  start: [{ k: 'hello' }, { k: 'seat', at: ['.bj-seat.me', '.bj-pl.me'] }, { k: 'chips', at: ['.bc-rack', '.bc-bal'] },
+    { k: 'bet', at: SPOT('main'), need: 'bet:main', ctx: [['.bc-rack', '#abDeal'], ['.bc-rack']] }, { k: 'sides', at: [SPOT('pp'), SPOT('t3')] },
+    { k: 'deal', at: '#abDeal', need: 'deal', ctx: [[SPOT('main'), '.bc-rack']] }],
+  turn: [{ k: 'cards', at: ['.bj-tot.me', '.bj-tot.dl'] }, { k: 'dealer', at: '.bj-tot.dl' }, { k: 'moves', at: '#actbar .mvs' }, { k: 'coach', at: '#side .coach-card', tab: 'coach' },
+    { k: 'double', at: '#actbar [data-mv="D"]', need: 'move:D' }],
+  done: [{ k: 'result', at: ['.bj-tot.dl', '.bj-mid'] }, { k: 'chart', at: '#side .chart-card', tab: 'chart' }, { k: 'count', at: '#side .shoe-card', tab: 'shoe' },
+    { k: 'bots', at: '.bj-pl:not(.me)' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
+};
+let Q = null, cur = null, used = {}, n = 0, tab0 = null;
+const TOTAL = Object.values(STEPS).reduce((a, x) => a + x.length, 0);
+function ev(name) {
+  const T = A.T; if (!T || !T.tut || used[name] || !STEPS[name]) return;
+  used[name] = true; Q = STEPS[name].slice(); next();
+}
+function next() { cur = Q && Q.shift(); if (!cur) { hideBox(); return; } n++; show(cur); }
+function allow(m) {
+  const T = A.T; if (!T || !T.tut) return true;
+  if (!cur || !cur.need) { A.toast(L('wait')); return false; }
+  const want = m.a === 'bet' ? 'bet:' + m.k : m.a === 'move' ? 'move:' + m.m : m.a;
+  if (cur.need !== want) { A.sfx('bad'); A.toast(L('ng.' + cur.k)); shake(); return false; }
+  if (m.a === 'deal' || m.a === 'move') { cur = null; hideBox(); }
+  return true;
+}
+function after(a) { if (cur && cur.need && cur.need.startsWith(a)) { cur = null; hideBox(); setTimeout(next, 250); } }
+function watchDeal() {}
+
+/* ---------- spotlight + bubble ---------- */
+let layer = null, box = null, hole = null, mask = null, rings = null;
+function ensure() {
+  if (layer) return;
+  layer = document.createElement('div'); layer.id = 'tutLayer'; layer.innerHTML = '<svg class="tut-mask" aria-hidden="true"><path/></svg><div class="tut-rings"></div><div class="tut-hole"></div><div class="tut-box" role="dialog" aria-live="polite"></div>';
+  document.body.appendChild(layer); hole = layer.querySelector('.tut-hole'); box = layer.querySelector('.tut-box'); mask = layer.querySelector('.tut-mask'); rings = layer.querySelector('.tut-rings');
+  let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (cur && layer.classList.contains('show')) place(cur); }, 80); });   // (after the table has been drawn again)
+  // the player scrolls the table to look around: the spotlight follows its target
+  // a step that waits for a move: a tap on the table that is not a betting box of yours (a bot's box, the BANKER hand) says what to tap
+  document.addEventListener('pointerdown', e => {
+    if (!cur || !cur.need || !layer.classList.contains('show')) return;
+    const t = e.target; if (!t.closest || !t.closest('#bjTable') || t.closest('[data-spot]')) return;
+    A.sfx('bad'); A.toast(L('ng.' + cur.k)); shake();
+  }, true);
+  let raf = 0; document.addEventListener('scroll', () => { if (raf || !layer.classList.contains('show') || !lastSt || !lastSt.at) return; raf = requestAnimationFrame(() => { raf = 0; paint(lastSt, phone() ? 6 : 8); }); }, true);
+}
+function rectOf(at) {
+  let r = null;
+  [].concat(at || []).flat().forEach(s => document.querySelectorAll(s).forEach(el => {
+    const b = el.getBoundingClientRect(); if (!b.width && !b.height) return;
+    r = r ? { l: Math.min(r.l, b.left), t: Math.min(r.t, b.top), r: Math.max(r.r, b.right), b: Math.max(r.b, b.bottom) } : { l: b.left, t: b.top, r: b.right, b: b.bottom };
+  }));
+  return r;
+}
+function show(st) {
+  ensure();
+  const btns = st.end ? `<button type="button" class="mbtn" id="tutAgain">${esc(L('again'))}</button><button type="button" class="mbtn go" id="tutPlay">${esc(L('play'))}</button>`
+    : st.need ? `<span class="tut-do">👉 ${esc(L('do'))}</span>` : `<button type="button" class="mbtn go" id="tutNext">${esc(L('next'))}</button>`;
+  box.innerHTML = `<div class="tut-top"><em>${esc(L('title'))} ${Math.min(n, TOTAL)}/${TOTAL}</em><span class="tut-tr"><button type="button" class="tut-min" id="tutMin" aria-expanded="true" aria-label="${esc(L('fold'))}" title="${esc(L('fold'))}"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" class="tut-x" id="tutSkip">${esc(L('skip'))}</button></span></div>` +
+    `<b><span class="tut-h">${esc(L('t.' + st.k))}</span>${st.need ? `<span class="tut-do-s">${esc(L('do'))}</span>` : ''}</b><p>${L('b.' + st.k)}</p><div class="tut-btns${st.end ? ' end' : ''}">${btns}</div>`;
+  layer.classList.add('show'); layer.classList.toggle('center', !st.at); layer.classList.toggle('act', !!st.need); layer.classList.toggle('fin', !!st.end);
+  // the step's own setup: the chip it talks about (100) and no bet left over (a re-entered step)
+  const T = A.T;
+  if (st.need === 'bet:main' && T && T.phase === 'bet') { let ch = false; if (A.set.chip !== 100) { A.set.chip = 100; ch = true; } if (Object.keys(T.bets).length) { T.bets = {}; ch = true; } if (ch) A.render(); }
+  const el = st.at && document.querySelector([].concat(st.at).flat()[0]);
+  { const k = st.tab || (el && el.closest && (el.closest('#side [data-pt]') || {}).dataset || {}).pt; if (k && A.showTab) A.showTab(k); }   // phones: open that tab
+  if (!phone() && el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+  box.classList.remove('min');
+  const mn = $('#tutMin'); if (mn) mn.onclick = () => { box.classList.toggle('min'); mn.setAttribute('aria-expanded', box.classList.contains('min') ? 'false' : 'true'); place(st); };
+  place(st); requestAnimationFrame(() => { if (cur === st) { place(st); watch(st); } });
+  const nx = $('#tutNext'); if (nx) { nx.onclick = () => { A.sfx('flip'); next(); }; setTimeout(() => nx.focus({ preventScroll: true }), 30); }
+  $('#tutSkip').onclick = () => { if (st.end) finish(); else A.confirmBox(L('skipQ'), () => quit()); };
+  const pl = $('#tutPlay'); if (pl) pl.onclick = () => finish();
+  const ag = $('#tutAgain'); if (ag) ag.onclick = () => { hide(); start(); };
+}
+/* phones: the bubble is docked (top or bottom, full width, compact) and the table scrolls so the part it talks about
+   sits in the free area between the bubble and the edge — nothing the step is about is ever under the text */
+const phone = () => innerWidth <= 760;
+const stageEl = () => document.querySelector('.stage');
+let padAdded = 0, padTop = 0, lastSt = null, ro = null;
+function inStage(at) { const sc = stageEl(), e = at && document.querySelector([].concat(at).flat()[0]); return !!(sc && e && sc.contains(e)); }
+function holeAt(r, pad) { hole.style.cssText = r ? `left:${r.l - pad}px;top:${r.t - pad}px;width:${r.r - r.l + pad * 2}px;height:${r.b - r.t + pad * 2}px` : `left:${innerWidth / 2}px;top:${innerHeight / 2}px;width:0;height:0`; }
+// phones: the bottom tab bar is on screen (the side boxes are tabs)
+const tabBtn = st => { const tb = st && st.tab && document.querySelector(`#mTabs [data-pt="${st.tab}"]`); return tb && tb.offsetHeight && phone() ? tb : null; };
+// the spotlight: one hole, or (a tab too) a dark mask with a hole and a ring for the box and for its tab
+function paint(st, pad) {
+  if (!st) return;
+  const list = [], r0 = st.at ? rectOf(st.at) : null;
+  if (r0) list.push({ r: r0, hot: !!st.need });
+  const tb = tabBtn(st);
+  document.querySelectorAll('#mTabs .tut-tab').forEach(e => { if (e !== tb) e.classList.remove('tut-tab'); });
+  if (st.hot) document.querySelectorAll(st.hot).forEach(e => { const b = e.getBoundingClientRect(); if (b.width && b.bottom > 0 && b.top < innerHeight) list.push({ r: { l: b.left, t: b.top, r: b.right, b: b.bottom }, hot: true, tab: true, ring: true }); });
+  if (tb) { tb.classList.add('tut-tab'); const b = tb.getBoundingClientRect(); list.push({ r: { l: b.left + 4, t: b.top + 2, r: b.right - 4, b: b.bottom - 2 }, hot: true, tab: true }); }
+  const multi = list.length > 1;
+  layer.classList.toggle('multi', multi);
+  if (!multi) { rings.innerHTML = ''; mask.querySelector('path').setAttribute('d', ''); holeAt(list[0] ? list[0].r : null, pad); return; }
+  holeAt(null, 0);
+  const W = innerWidth, H = innerHeight;
+  let d = `M0 0H${W}V${H}H0Z`, h = '';
+  list.forEach(x => {
+    const p = x.tab ? 2 : pad, l = x.r.l - p, t = x.r.t - p, w = x.r.r - x.r.l + p * 2, ht = x.r.b - x.r.t + p * 2, rr = Math.min(12, w / 2, ht / 2);
+    if (!x.ring) d += `M${l + w - rr} ${t}H${l + rr}A${rr} ${rr} 0 0 0 ${l} ${t + rr}V${t + ht - rr}A${rr} ${rr} 0 0 0 ${l + rr} ${t + ht}H${l + w - rr}A${rr} ${rr} 0 0 0 ${l + w} ${t + ht - rr}V${t + rr}A${rr} ${rr} 0 0 0 ${l + w - rr} ${t}Z`;
+    h += `<div class="tut-ring${x.hot ? ' hot' : ''}" style="left:${l}px;top:${t}px;width:${w}px;height:${ht}px;border-radius:${rr}px"></div>`;
+  });
+  mask.setAttribute('viewBox', `0 0 ${W} ${H}`); mask.setAttribute('width', W); mask.setAttribute('height', H);
+  mask.querySelector('path').setAttribute('d', d);
+  rings.innerHTML = h;
+}
+function unpad() { const sc = stageEl(); if (sc && padAdded) { sc.style.paddingBottom = ''; padAdded = 0; } if (sc && padTop) { sc.style.paddingTop = ''; padTop = 0; } }
+// the target changes size after the step is shown (the coach box, the table drawn again): place again
+function watch(st) { if (ro) ro.disconnect(); ro = null; if (!st.at || !window.ResizeObserver) return; let tm = 0; ro = new ResizeObserver(() => { clearTimeout(tm); tm = setTimeout(() => { if (cur === st && layer.classList.contains('show')) place(st); }, 60); }); [].concat(st.at, '#bjTable').flat().forEach(q => document.querySelectorAll(q).forEach(e => ro.observe(e))); }
+function placePhone(st) {
+  unpad();
+  const W = innerWidth, H = innerHeight, sc = stageEl(), gap = 8;
+  layer.classList.add('dock'); box.style.left = gap + 'px'; box.style.width = (W - gap * 2) + 'px';
+  const bh = box.offsetHeight;
+  const sr = sc ? sc.getBoundingClientRect() : { top: 0, bottom: H };
+  let r = st.at ? rectOf(st.at) : null;
+  const scroll = r && inStage(st.at);
+  const zone = d => {
+    const t = d === 'top' ? bh + gap * 2 : 0, b = d === 'top' ? H : H - bh - gap * 2;
+    return scroll ? { t: Math.max(t, sr.top) + 6, b: Math.min(b, sr.bottom) - 6 } : { t: t + 4, b: b - 4 };
+  };
+  let dock, d = 0;
+  if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
+  else if (!scroll) dock = tabBtn(st) || r.t + r.b > H ? 'top' : 'bottom';  // a fixed target (header buttons): the other end
+  else {
+    // try both docks: the scroll that puts the target (with its context when it fits) in the free area — keep the one that fits best
+    const plan = dk => {
+      const z = zone(dk), room = z.b - z.t;
+      let u = null, fit = false, cx = null;
+      for (const c of st.ctx || []) { const q = rectOf(c); if (!q) continue; cx = q; u = { t: Math.min(q.t, r.t), b: Math.max(q.b, r.b) }; if (u.b - u.t <= room) { fit = true; break; } }
+      const tt = fit ? u.t : r.t, h = (fit ? u.b : r.b) - tt;
+      const want = h > room ? z.t : z.t + (room - h) / 2;
+      const dd = Math.round(tt - want), t = r.t - dd, b = r.b - dd;
+      return { dk, dd, miss: Math.max(0, z.t - t) + Math.max(0, b - z.b), room: room - (cx && !fit ? 1e4 : 0) };
+    };
+    const a = plan('top'), c = plan('bottom'), best = tabBtn(st) || a.miss < c.miss || (a.miss === c.miss && a.room >= c.room) ? a : c;   // a tab is ringed: the text stays at the top
+    dock = best.dk; d = best.dd;
+  }
+  if (d) {
+    const max = sc.scrollHeight - sc.clientHeight;
+    if (sc.scrollTop + d > max) { const extra = Math.ceil(sc.scrollTop + d - max); padAdded += extra; sc.style.paddingBottom = `calc(${getComputedStyle(sc).paddingBottom} + ${extra}px)`; }
+    if (sc.scrollTop + d < 0) { padTop = Math.ceil(-(sc.scrollTop + d)); sc.style.paddingTop = `calc(${getComputedStyle(sc).paddingTop} + ${padTop}px)`; d = -sc.scrollTop; }
+    sc.scrollTop += d;
+  }
+  box.style.top = (dock === 'top' ? gap : H - bh - gap) + 'px';
+  layer.dataset.dock = dock;
+  paint(st, 6);
+}
+// PC / tablets: next to the target — below, above, beside — the first place that covers neither the target nor its context
+function place(st) {
+  if (!layer) return;
+  lastSt = st;
+  if (phone()) { placePhone(st); return; }
+  unpad(); layer.classList.remove('dock'); box.style.width = '';
+  const W = innerWidth, H = innerHeight, r = st.at ? rectOf(st.at) : null, pad = 8, m = 12, g = pad + 14;
+  paint(st, pad);
+  const bw = box.offsetWidth, bh = box.offsetHeight;
+  if (!r) { box.style.left = Math.max(m, (W - bw) / 2) + 'px'; box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
+  const keep = [r]; (st.ctx || []).some(c => { const q = rectOf(c); if (q) keep.push(q); return q; });
+  const clampX = x => Math.max(m, Math.min(W - bw - m, x)), clampY = y => Math.max(m, Math.min(H - bh - m, y));
+  const cx = (r.l + r.r) / 2, cy = (r.t + r.b) / 2;
+  const cand = [];
+  if (r.l > W * 0.62 && W > 900) cand.push([r.l - bw - 24, clampY(cy - bh / 2)]);   // a target in the right column: box to its left
+  cand.push([clampX(cx - bw / 2), r.b + g], [clampX(cx - bw / 2), r.t - g - bh], [r.r + 24, clampY(cy - bh / 2)], [r.l - bw - 24, clampY(cy - bh / 2)]);
+  if (H - r.b < r.t) cand.splice(cand.length - 4, 2, cand[cand.length - 3], cand[cand.length - 4]);   // more room above: try above first
+  const over = ([x, y]) => keep.reduce((a, q) => a + Math.max(0, Math.min(x + bw, q.r + pad) - Math.max(x, q.l - pad)) * Math.max(0, Math.min(y + bh, q.b + pad) - Math.max(y, q.t - pad)), 0);
+  const inside = ([x, y]) => x >= m - .5 && y >= m - .5 && x + bw <= W - m + .5 && y + bh <= H - m + .5;
+  let best = cand.find(p => inside(p) && over(p) === 0);
+  if (!best) { // nothing is free: the place inside the window covering the least
+    best = cand.map(([x, y]) => [clampX(x), clampY(y)]).concat([[m, m], [W - bw - m, m], [m, H - bh - m], [W - bw - m, H - bh - m]]).sort((a, b) => over(a) - over(b))[0];
+  }
+  box.style.left = best[0] + 'px'; box.style.top = best[1] + 'px';
+}
+function shake() { if (!box) return; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+function hideBox() { if (layer) { layer.classList.remove('show', 'multi'); rings.innerHTML = ''; } document.querySelectorAll('#mTabs .tut-tab').forEach(e => e.classList.remove('tut-tab')); unpad(); if (ro) { ro.disconnect(); ro = null; } }
+function hide() { hideBox(); Q = null; cur = null; }
+function start() {
+  used = {}; n = 0; Q = null; cur = null; if (tab0 === null) tab0 = A.set.mTab || '';
+  ['#tutOfferOv', '#rulesOverlay', '#lessonOverlay', '#newOverlay'].forEach(s => { const o = $(s); if (o) o.classList.remove('show'); });
+  A.startTutorial();
+}
+function backTab() { if (tab0 !== null && A.showTab) A.showTab(tab0); tab0 = null; }
+function quit() { hide(); A.endTutorial(); backTab(); }
+function finish() {
+  put(DONE, '1'); hide(); A.endTutorial(); backTab(); A.toast(L('thanks'));
+  // "Tutorial complete! | Enjoy the game": two lines, each kept on one line
+  const tt = $('#toast'), m = /^(.*?[!！])\s*(.+)$/.exec(L('thanks'));
+  if (tt && m) tt.innerHTML = `<span class="tt-l">${esc(m[1])}</span><span class="tt-l">${esc(m[2])}</span>`;
+}
+
+/* ---------- the first-visit box ---------- */
+function offer(force) {
+  if (!force && (get(HIDE) || get(DONE))) return;
+  let ov = $('#tutOfferOv');
+  if (!ov) { ov = document.createElement('div'); ov.className = 'overlay'; ov.id = 'tutOfferOv'; ov.innerHTML = '<div class="modal tut-offer"></div>'; document.body.appendChild(ov); }
+  ov.querySelector('.modal').innerHTML = `<div class="to-art">${A.gArt('classic')}</div><h2>${esc(L('o.h'))}</h2><p>${esc(L('o.p'))}</p>` +
+    `<ul class="to-list">${L('o.list').split('|').map(x => `<li>${esc(x)}</li>`).join('')}</ul>` +
+    `<label class="to-chk"><input type="checkbox" id="toHide"${get(HIDE) ? ' checked' : ''}> ${esc(L('o.hide'))}</label>` +
+    `<div class="modal-actions"><button class="mbtn" id="toLater">${esc(L('o.later'))}</button><button class="mbtn go" id="toGo">${esc(L('o.go'))}</button></div>`;
+  const keep = () => { if ($('#toHide').checked) put(HIDE, '1'); else try { localStorage.removeItem(HIDE); } catch (e) {} };
+  $('#toLater').onclick = () => { keep(); A.closeOv('#tutOfferOv'); };
+  $('#toGo').onclick = () => { keep(); A.closeOv('#tutOfferOv'); start(); };
+  A.openOv('#tutOfferOv');
+}
+
+/* ---------- texts ---------- */
+const TX = {
+ja: {
+  fold: '折りたたむ', title: 'チュートリアル', next: '次へ', skip: 'やめる', do: '実際に操作してみましょう', skipQ: 'チュートリアルをやめますか？', wait: '説明を読んで「次へ」を押してください', play: '通常のゲームに戻る', again: 'もう一度', thanks: 'チュートリアル完了！ ゲームを楽しんでください',
+  't.hello': 'ようこそブラックジャックへ！', 'b.hello': '実際の卓で1回遊びながら、賭け方と打ち方を覚えましょう（約2分）。<br>ブラックジャックは、カードの合計を<b>21に近づけて</b>ディーラーに勝つゲームです。<b>21を超えたら負け</b>（バースト）。',
+  't.seat': 'あなたの席', 'b.seat': '真ん中の丸があなたの席です。左右の席にはBOTのプレイヤーが座っていて、みんなディーラーと1対1で勝負します。',
+  't.chips': 'チップと持ち金', 'b.chips': '置くチップの額をここで選びます（今は$100）。持ち金は次のゲームにも引き継がれ、0になったら$10,000から再スタートです。',
+  't.bet': '賭けよう', 'b.bet': '自分の席の<b>大きな丸</b>をタップして、$100を賭けてみましょう。',
+  'ng.bet': 'ここでは自分の席の大きな丸をタップしてください',
+  't.sides': 'サイドベット', 'b.sides': '小さな丸は<b>サイドベット</b>（パーフェクトペア・21+3）。最初の2枚の組み合わせに賭けるおまけの賭けで、損が大きいので今回は使いません。',
+  't.deal': '配ってもらおう', 'b.deal': '賭けたら<b>配る</b>を押します。全員に2枚ずつ、ディーラーは1枚を表、1枚を伏せて配られます。',
+  'ng.deal': 'ここでは「配る」を押してください',
+  't.cards': 'あなたの手', 'b.cards': 'あなたは 6＋5＝<b>11</b>。10・J・Q・Kは10、Aは1か11と数えます。11なら次の1枚で21になりやすい、とても良い手です。',
+  't.dealer': 'ディーラーのカード', 'b.dealer': 'ディーラーの表は<b>6</b>。ディーラーは16以下なら必ず引き、17以上で止まるルールなので、6のような小さいカードは<b>バーストしやすい</b>カードです。',
+  't.moves': 'あなたの選択', 'b.moves': '<b>ヒット</b>＝もう1枚、<b>スタンド</b>＝止まる、<b>ダブル</b>＝賭けを倍にして1枚だけ引く、<b>スプリット</b>＝同じ数字の2枚を分ける、<b>サレンダー</b>＝半分払って降りる。',
+  't.coach': 'コーチ', 'b.coach': 'コーチが今の手の<b>おすすめ</b>と理由、それぞれの手の期待値を教えてくれます。11対6は「ダブル」が一番得です。',
+  't.double': 'ダブルしよう', 'b.double': '<b>ダブル</b>を押して、賭けを$200にしてもう1枚もらいましょう。',
+  'ng.double': 'ここでは「ダブル」を押してください',
+  't.result': '勝負の結果', 'b.result': 'あなたは9をもらって<b>20</b>。ディーラーは伏せ札がKで16、もう1枚引いて8が来て<b>24でバースト</b>！ 倍にした$200が勝ちになりました。',
+  't.chart': '基本戦略表', 'b.chart': 'どの手でどう打つと一番得かをまとめた<b>基本戦略表</b>。自分の番では今の手のマスが光ります。表どおりに打つと、ハウスエッジは約0.5%まで下がります。',
+  't.count': 'シューとカウント', 'b.count': '残りのカードの偏りを<b>ハイロー</b>で数えたカウントです。プラスが大きいほど10とAが多く残っていて、プレイヤー有利。仕組みを学ぶための機能です。',
+  't.bots': 'BOTのプレイヤー', 'b.bots': 'BOTたちにも打ち方の癖があります。基本戦略どおりの Lin、マーチンゲールの Marco、絶対バーストしない Aiko、カードを数える Sam。長く遊ぶと差が見えてきます。',
+  't.menu': 'もっと知りたいときは', 'b.menu': '<b>ルール</b>：4種類のルールを操作しながら学ぶ／<b>レッスン</b>：基本戦略やカウントを問題で練習／<b>研究</b>：戦略表やハウスエッジ、打ち方の検証／<b>統計</b>：判断の正確さと運。',
+  't.end': 'チュートリアル完了！', 'b.end': 'これで基本はばっちりです。チュートリアルの勝ち負けは持ち金に影響しません。チュートリアルは「ルール」や「レッスン」からいつでももう一度できます。',
+  'o.h': 'はじめての方へ', 'o.p': '実際の卓で1回遊びながら、ブラックジャックの賭け方と打ち方を覚えるチュートリアルがあります（約2分）。', 'o.list': 'カードの数え方と勝ち方|チップの置き方と配り方|ヒット・スタンド・ダブルの選び方|基本戦略表とコーチ',
+  'o.hide': '次から表示しない', 'o.later': 'あとで', 'o.go': 'チュートリアルを始める', entry: '実戦チュートリアル', 'entry.d': '実際の卓で1回遊びながら賭け方と打ち方を覚える（約2分）',
+},
+en: {
+  fold: 'Collapse', title: 'Tutorial', next: 'Next', skip: 'Quit', do: 'Make the move yourself', skipQ: 'Quit the tutorial?', wait: 'Read the box and press Next', play: 'Back to the game', again: 'Again', thanks: 'Tutorial complete! Enjoy the game',
+  't.hello': 'Welcome to blackjack!', 'b.hello': 'Learn how to bet and play by playing one round at a real table (about 2 minutes).<br>In blackjack you beat the dealer by getting <b>closer to 21</b>. <b>Over 21 loses</b> (bust).',
+  't.seat': 'Your seat', 'b.seat': 'The circle in the middle is yours. Bot players sit on both sides — everyone plays one-on-one against the dealer.',
+  't.chips': 'Chips and bankroll', 'b.chips': 'Choose the chip to place here (now $100). Your chips carry over to the next game; at zero you start again with $10,000.',
+  't.bet': 'Place a bet', 'b.bet': 'Tap the <b>big circle</b> in your seat to bet $100.',
+  'ng.bet': 'Tap the big circle in your own seat',
+  't.sides': 'Side bets', 'b.sides': 'The small circles are <b>side bets</b> (Perfect Pairs, 21+3) on the first two cards — extras that cost a lot, so skip them this time.',
+  't.deal': 'Deal', 'b.deal': 'Now press <b>Deal</b>. Everyone gets two cards; the dealer gets one face up and one face down.',
+  'ng.deal': 'Press Deal here',
+  't.cards': 'Your hand', 'b.cards': 'You have 6 + 5 = <b>11</b>. 10, J, Q, K count 10; an ace 1 or 11. 11 often makes 21 with one card — a great hand.',
+  't.dealer': 'The dealer\'s card', 'b.dealer': 'The dealer shows a <b>6</b>. The dealer must hit 16 or less and stand on 17+, so a small card like 6 <b>busts often</b>.',
+  't.moves': 'Your choices', 'b.moves': '<b>Hit</b> = one more card, <b>Stand</b> = stop, <b>Double</b> = double the bet for exactly one card, <b>Split</b> = split two cards of the same rank, <b>Surrender</b> = give up half.',
+  't.coach': 'The coach', 'b.coach': 'The coach shows the <b>best move</b>, why, and the value of every move. With 11 against a 6, doubling is best.',
+  't.double': 'Double down', 'b.double': 'Press <b>Double</b>: your bet becomes $200 and you get one more card.',
+  'ng.double': 'Press Double here',
+  't.result': 'The result', 'b.result': 'You drew a 9 for <b>20</b>. The dealer turned a K (16), drew an 8 and <b>busted with 24</b>! Your doubled $200 wins.',
+  't.chart': 'Basic strategy', 'b.chart': 'The <b>basic strategy chart</b> shows the best move for every hand. On your turn the cell of your hand lights up. Playing by it brings the house edge down to about 0.5%.',
+  't.count': 'Shoe and count', 'b.count': 'The <b>Hi-Lo</b> count of the cards left. The higher it is, the more tens and aces remain — good for the player. It is here to learn how the game works.',
+  't.bots': 'The bot players', 'b.bots': 'The bots have habits too: Lin plays the basic strategy, Marco the Martingale, Aiko never busts, Sam counts cards. Over time the difference shows.',
+  't.menu': 'To learn more', 'b.menu': '<b>Rules</b>: the four variants hands-on · <b>Lessons</b>: practise the basic strategy and counting · <b>Study</b>: the chart, house edge, ways to play tested · <b>Stats</b>: decision accuracy and luck.',
+  't.end': 'Tutorial complete!', 'b.end': 'You know the basics. The tutorial round does not touch your chips. You can replay it any time from Rules or Lessons.',
+  'o.h': 'New to blackjack?', 'o.p': 'A tutorial teaches how to bet and play while you play one round at a real table (about 2 minutes).', 'o.list': 'Counting cards and how to win|Placing chips and dealing|Choosing hit, stand or double|The strategy chart and the coach',
+  'o.hide': 'Do not show again', 'o.later': 'Later', 'o.go': 'Start the tutorial', entry: 'Play-along tutorial', 'entry.d': 'Learn to bet and play by playing one round at a real table (about 2 min)',
+},
+zh: {"fold":"收起","title":"教程","next":"下一步","skip":"退出","do":"请亲自操作","skipQ":"退出教程吗？","wait":"请阅读说明后点击“下一步”","play":"返回游戏","again":"再来一次","thanks":"教程完成！祝你玩得开心","t.hello":"欢迎来到21点！","b.hello":"在真实牌桌上玩一局，学会下注和打法（约2分钟）。<br>21点的目标是让手牌点数<b>更接近21</b>来赢过庄家。<b>超过21就输</b>（爆牌）。","t.seat":"你的座位","b.seat":"中间的圆圈是你的座位。两侧坐着机器人玩家——每个人都与庄家一对一比牌。","t.chips":"筹码与资金","b.chips":"在这里选择要放的筹码（现在是$100）。你的筹码会带到下一局；归零时从$10,000重新开始。","t.bet":"下注","b.bet":"点击你座位上的<b>大圆圈</b>，下注$100。","ng.bet":"请点击你自己座位上的大圆圈","t.sides":"边注","b.sides":"小圆圈是<b>边注</b>（完美对子、21+3），押前两张牌的组合——额外的下注，损失较大，这次先不用。","t.deal":"发牌","b.deal":"现在点击<b>发牌</b>。每人发两张牌；庄家一张明牌、一张暗牌。","ng.deal":"请在这里点击“发牌”","t.cards":"你的手牌","b.cards":"你是 6 + 5 = <b>11</b>。10、J、Q、K算10点；A算1或11点。11点再来一张很容易凑成21——非常好的牌。","t.dealer":"庄家的牌","b.dealer":"庄家的明牌是<b>6</b>。庄家16点及以下必须要牌，17点以上停牌，所以像6这样的小牌<b>容易爆牌</b>。","t.moves":"你的选择","b.moves":"<b>要牌</b>＝再要一张，<b>停牌</b>＝不再要，<b>加倍</b>＝下注翻倍且只再要一张，<b>分牌</b>＝把两张同点数的牌分开，<b>投降</b>＝放弃一半下注。","t.coach":"教练","b.coach":"教练会显示<b>最佳打法</b>、理由以及每种打法的期望值。11点对庄家6，加倍最好。","t.double":"加倍","b.double":"点击<b>加倍</b>：你的下注变为$200，并再拿一张牌。","ng.double":"请在这里点击“加倍”","t.result":"结果","b.result":"你拿到9，共<b>20</b>点。庄家翻开K（16点），再要一张8，<b>24点爆牌</b>！你加倍的$200赢了。","t.chart":"基本策略","b.chart":"<b>基本策略表</b>列出了每手牌的最佳打法。轮到你时，你手牌对应的格子会亮起。照着打，庄家优势可降到约0.5%。","t.count":"牌靴与计数","b.count":"剩余牌的<b>Hi-Lo</b>计数。数值越高，剩下的10点牌和A越多——对玩家有利。这项功能用于了解游戏原理。","t.bots":"机器人玩家","b.bots":"机器人也有各自的习惯：Lin 按基本策略打，Marco 用马丁格尔，Aiko 从不爆牌，Sam 会算牌。玩久了差别就会显现。","t.menu":"想了解更多","b.menu":"<b>规则</b>：亲手体验四种规则 · <b>课程</b>：练习基本策略和算牌 · <b>研究</b>：策略表、庄家优势、各种打法的验证 · <b>统计</b>：决策准确率与运气。","t.end":"教程完成！","b.end":"你已掌握基础。教程中的输赢不影响你的筹码。随时可以从“规则”或“课程”重新开始教程。","o.h":"第一次玩21点？","o.p":"有一个教程，让你在真实牌桌上玩一局的同时学会下注和打法（约2分钟）。","o.list":"点数计算与输赢|放筹码与发牌|如何选择要牌、停牌或加倍|策略表与教练","o.hide":"不再显示","o.later":"稍后","o.go":"开始教程","entry":"实战教程","entry.d":"在真实牌桌上玩一局，学会下注和打法（约2分钟）"},
+ko: {"fold":"접기","title":"튜토리얼","next":"다음","skip":"그만두기","do":"직접 해 보세요","skipQ":"튜토리얼을 그만둘까요?","wait":"설명을 읽고 '다음'을 누르세요","play":"게임으로 돌아가기","again":"다시 하기","thanks":"튜토리얼 완료! 게임을 즐기세요","t.hello":"블랙잭에 오신 것을 환영합니다!","b.hello":"실제 테이블에서 한 판 플레이하며 베팅과 플레이 방법을 배워 봅시다(약 2분).<br>블랙잭은 카드 합계를 <b>21에 더 가깝게</b> 만들어 딜러를 이기는 게임입니다. <b>21을 넘으면 패배</b>(버스트).","t.seat":"당신의 자리","b.seat":"가운데 원이 당신의 자리입니다. 양옆에는 봇 플레이어가 앉아 있고, 모두 딜러와 1대1로 승부합니다.","t.chips":"칩과 보유금","b.chips":"여기서 놓을 칩을 고릅니다(지금은 $100). 칩은 다음 게임으로 이어지며, 0이 되면 $10,000으로 다시 시작합니다.","t.bet":"베팅하기","b.bet":"자리의 <b>큰 원</b>을 탭해서 $100을 베팅하세요.","ng.bet":"자기 자리의 큰 원을 탭하세요","t.sides":"사이드 베팅","b.sides":"작은 원은 처음 두 장에 거는 <b>사이드 베팅</b>(퍼펙트 페어, 21+3)입니다. 손실이 큰 추가 베팅이니 이번에는 건너뜁니다.","t.deal":"딜","b.deal":"이제 <b>딜</b>을 누르세요. 모두 두 장씩 받고, 딜러는 한 장은 앞면, 한 장은 뒷면으로 받습니다.","ng.deal":"여기서는 '딜'을 누르세요","t.cards":"당신의 패","b.cards":"당신은 6 + 5 = <b>11</b>. 10·J·Q·K는 10, 에이스는 1 또는 11로 셉니다. 11은 한 장만 더 받아도 21이 되기 쉬운 아주 좋은 패입니다.","t.dealer":"딜러의 카드","b.dealer":"딜러의 앞면 카드는 <b>6</b>. 딜러는 16 이하면 반드시 히트하고 17 이상이면 스탠드하므로, 6 같은 작은 카드는 <b>버스트하기 쉽습니다</b>.","t.moves":"당신의 선택","b.moves":"<b>히트</b> = 한 장 더, <b>스탠드</b> = 멈춤, <b>더블</b> = 베팅을 두 배로 하고 딱 한 장만 받기, <b>스플릿</b> = 같은 숫자 두 장을 나누기, <b>서렌더</b> = 절반을 내고 포기.","t.coach":"코치","b.coach":"코치가 <b>최선의 선택</b>과 그 이유, 각 선택의 기대값을 보여 줍니다. 11 대 6이면 더블이 가장 좋습니다.","t.double":"더블하기","b.double":"<b>더블</b>을 누르세요. 베팅이 $200이 되고 카드를 한 장 더 받습니다.","ng.double":"여기서는 '더블'을 누르세요","t.result":"결과","b.result":"9를 받아 <b>20</b>. 딜러는 뒷면 카드가 K(16)였고, 8을 받아 <b>24로 버스트</b>! 두 배로 건 $200이 이겼습니다.","t.chart":"기본 전략","b.chart":"<b>기본 전략표</b>는 모든 패의 최선의 선택을 보여 줍니다. 당신 차례에는 현재 패의 칸이 빛납니다. 표대로 하면 하우스 엣지가 약 0.5%까지 내려갑니다.","t.count":"슈와 카운트","b.count":"남은 카드의 <b>하이로</b> 카운트입니다. 높을수록 10과 에이스가 많이 남아 플레이어에게 유리합니다. 게임의 원리를 배우기 위한 기능입니다.","t.bots":"봇 플레이어","b.bots":"봇들에게도 습관이 있습니다. Lin은 기본 전략, Marco는 마틴게일, Aiko는 절대 버스트하지 않고, Sam은 카드를 셉니다. 오래 하면 차이가 보입니다.","t.menu":"더 알고 싶다면","b.menu":"<b>규칙</b>: 네 가지 규칙을 직접 체험 · <b>레슨</b>: 기본 전략과 카운팅 연습 · <b>연구</b>: 전략표, 하우스 엣지, 플레이 방식 검증 · <b>통계</b>: 판단 정확도와 운.","t.end":"튜토리얼 완료!","b.end":"이제 기본은 완벽합니다. 튜토리얼의 승패는 보유 칩에 영향을 주지 않습니다. '규칙'이나 '레슨'에서 언제든 다시 할 수 있습니다.","o.h":"블랙잭이 처음인가요?","o.p":"실제 테이블에서 한 판 플레이하며 베팅과 플레이 방법을 배우는 튜토리얼이 있습니다(약 2분).","o.list":"카드 계산과 이기는 법|칩 놓기와 딜|히트·스탠드·더블 고르기|전략표와 코치","o.hide":"다시 표시하지 않기","o.later":"나중에","o.go":"튜토리얼 시작","entry":"실전 튜토리얼","entry.d":"실제 테이블에서 한 판 플레이하며 베팅과 플레이 방법 익히기(약 2분)"},
+es: {"fold":"Plegar","title":"Tutorial","next":"Siguiente","skip":"Salir","do":"Haz tú la jugada","skipQ":"¿Salir del tutorial?","wait":"Lee el cuadro y pulsa Siguiente","play":"Volver al juego","again":"Otra vez","thanks":"¡Tutorial completado! Disfruta del juego","t.hello":"¡Bienvenido al blackjack!","b.hello":"Aprende a apostar y a jugar jugando una mano en una mesa real (unos 2 minutos).<br>En el blackjack le ganas al crupier acercándote <b>más a 21</b>. <b>Pasar de 21 pierde</b> (te pasas).","t.seat":"Tu asiento","b.seat":"El círculo del centro es el tuyo. A los lados se sientan jugadores bot; cada uno juega mano a mano contra el crupier.","t.chips":"Fichas y saldo","b.chips":"Elige aquí la ficha que vas a colocar (ahora $100). Tus fichas pasan a la siguiente partida; si llegas a cero, vuelves a empezar con $10,000.","t.bet":"Haz una apuesta","b.bet":"Toca el <b>círculo grande</b> de tu asiento para apostar $100.","ng.bet":"Toca el círculo grande de tu propio asiento","t.sides":"Apuestas laterales","b.sides":"Los círculos pequeños son <b>apuestas laterales</b> (Pareja perfecta, 21+3) sobre las dos primeras cartas: extras que cuestan mucho, así que esta vez no las usamos.","t.deal":"Repartir","b.deal":"Ahora pulsa <b>Repartir</b>. Todos reciben dos cartas; el crupier, una boca arriba y otra boca abajo.","ng.deal":"Pulsa Repartir aquí","t.cards":"Tu mano","b.cards":"Tienes 6 + 5 = <b>11</b>. El 10, la J, la Q y la K valen 10; el as, 1 u 11. Con 11 es fácil llegar a 21 con una carta: una gran mano.","t.dealer":"La carta del crupier","b.dealer":"El crupier muestra un <b>6</b>. Debe pedir con 16 o menos y plantarse con 17 o más, así que con una carta baja como el 6 <b>se pasa a menudo</b>.","t.moves":"Tus opciones","b.moves":"<b>Pedir</b> = una carta más, <b>Plantarse</b> = parar, <b>Doblar</b> = doblar la apuesta por una sola carta, <b>Dividir</b> = separar dos cartas del mismo valor, <b>Rendirse</b> = abandonar perdiendo la mitad.","t.coach":"El entrenador","b.coach":"El entrenador muestra la <b>mejor jugada</b>, por qué, y el valor de cada jugada. Con 11 contra un 6, lo mejor es doblar.","t.double":"Doblar","b.double":"Pulsa <b>Doblar</b>: tu apuesta pasa a $200 y recibes una carta más.","ng.double":"Pulsa Doblar aquí","t.result":"El resultado","b.result":"Sacaste un 9: <b>20</b>. El crupier destapó una K (16), sacó un 8 y <b>se pasó con 24</b>. ¡Tus $200 doblados ganan!","t.chart":"Estrategia básica","b.chart":"La <b>tabla de estrategia básica</b> muestra la mejor jugada para cada mano. En tu turno se ilumina la casilla de tu mano. Jugando según ella, la ventaja de la casa baja a cerca del 0.5%.","t.count":"Zapato y conteo","b.count":"El conteo <b>Hi-Lo</b> de las cartas que quedan. Cuanto más alto, más dieces y ases quedan: bueno para el jugador. Está aquí para aprender cómo funciona el juego.","t.bots":"Los jugadores bot","b.bots":"Los bots también tienen sus manías: Lin juega la estrategia básica, Marco la Martingala, Aiko nunca se pasa y Sam cuenta cartas. Con el tiempo se nota la diferencia.","t.menu":"Para saber más","b.menu":"<b>Reglas</b>: las cuatro variantes en la práctica · <b>Lecciones</b>: practica la estrategia básica y el conteo · <b>Estudio</b>: la tabla, la ventaja de la casa y formas de jugar puestas a prueba · <b>Estadísticas</b>: acierto en las decisiones y suerte.","t.end":"¡Tutorial completado!","b.end":"Ya conoces lo básico. La mano del tutorial no afecta a tus fichas. Puedes repetirlo cuando quieras desde Reglas o Lecciones.","o.h":"¿Nuevo en el blackjack?","o.p":"Un tutorial te enseña a apostar y a jugar mientras juegas una mano en una mesa real (unos 2 minutos).","o.list":"Cómo contar las cartas y cómo ganar|Colocar fichas y repartir|Elegir entre pedir, plantarse o doblar|La tabla de estrategia y el entrenador","o.hide":"No volver a mostrar","o.later":"Más tarde","o.go":"Empezar el tutorial","entry":"Tutorial jugando","entry.d":"Aprende a apostar y a jugar jugando una mano en una mesa real (unos 2 min)"},
+fr: {"fold":"Réduire","title":"Tutoriel","next":"Suivant","skip":"Quitter","do":"À vous de jouer","skipQ":"Quitter le tutoriel ?","wait":"Lisez l'encadré et appuyez sur Suivant","play":"Retour au jeu","again":"Recommencer","thanks":"Tutoriel terminé ! Bon jeu","t.hello":"Bienvenue au blackjack !","b.hello":"Apprenez à miser et à jouer en jouant une manche à une vraie table (environ 2 minutes).<br>Au blackjack, on bat le croupier en s'approchant <b>le plus près de 21</b>. <b>Au-delà de 21, on perd</b> (on saute).","t.seat":"Votre place","b.seat":"Le cercle du milieu est le vôtre. Des joueurs bots sont assis de chaque côté — chacun joue en tête-à-tête contre le croupier.","t.chips":"Jetons et capital","b.chips":"Choisissez ici le jeton à placer (pour l'instant $100). Vos jetons sont conservés pour la partie suivante ; à zéro, vous repartez avec $10,000.","t.bet":"Misez","b.bet":"Touchez le <b>grand cercle</b> de votre place pour miser $100.","ng.bet":"Touchez le grand cercle de votre propre place","t.sides":"Paris annexes","b.sides":"Les petits cercles sont des <b>paris annexes</b> (Paire parfaite, 21+3) sur les deux premières cartes — des extras qui coûtent cher, on les laisse de côté cette fois.","t.deal":"Donner","b.deal":"Appuyez maintenant sur <b>Donner</b>. Chacun reçoit deux cartes ; le croupier en reçoit une face visible et une face cachée.","ng.deal":"Appuyez ici sur Donner","t.cards":"Votre main","b.cards":"Vous avez 6 + 5 = <b>11</b>. Le 10, le valet, la dame et le roi valent 10 ; l'as 1 ou 11. Avec 11, une seule carte donne souvent 21 — une excellente main.","t.dealer":"La carte du croupier","b.dealer":"Le croupier montre un <b>6</b>. Il doit tirer jusqu'à 16 et rester à partir de 17, donc avec une petite carte comme le 6 il <b>saute souvent</b>.","t.moves":"Vos choix","b.moves":"<b>Tirer</b> = une carte de plus, <b>Rester</b> = s'arrêter, <b>Doubler</b> = doubler la mise pour une seule carte, <b>Séparer</b> = séparer deux cartes de même valeur, <b>Abandonner</b> = renoncer en perdant la moitié.","t.coach":"Le coach","b.coach":"Le coach indique le <b>meilleur coup</b>, pourquoi, et la valeur de chaque coup. Avec 11 contre un 6, doubler est le meilleur choix.","t.double":"Doubler","b.double":"Appuyez sur <b>Doubler</b> : votre mise passe à $200 et vous recevez une carte de plus.","ng.double":"Appuyez ici sur Doubler","t.result":"Le résultat","b.result":"Vous avez tiré un 9 : <b>20</b>. Le croupier a retourné un roi (16), tiré un 8 et <b>sauté avec 24</b> ! Vos $200 doublés gagnent.","t.chart":"Stratégie de base","b.chart":"La <b>table de stratégie de base</b> indique le meilleur coup pour chaque main. À votre tour, la case de votre main s'allume. En la suivant, l'avantage de la maison descend à environ 0.5%.","t.count":"Sabot et comptage","b.count":"Le comptage <b>Hi-Lo</b> des cartes restantes. Plus il est élevé, plus il reste de 10 et d'as — bon pour le joueur. Il est là pour comprendre comment fonctionne le jeu.","t.bots":"Les joueurs bots","b.bots":"Les bots ont aussi leurs habitudes : Lin suit la stratégie de base, Marco la martingale, Aiko ne saute jamais, Sam compte les cartes. Avec le temps, la différence se voit.","t.menu":"Pour en savoir plus","b.menu":"<b>Règles</b> : les quatre variantes en pratique · <b>Leçons</b> : s'entraîner à la stratégie de base et au comptage · <b>Étude</b> : la table, l'avantage de la maison, des façons de jouer testées · <b>Stats</b> : justesse des décisions et chance.","t.end":"Tutoriel terminé !","b.end":"Vous connaissez les bases. La manche du tutoriel ne touche pas à vos jetons. Vous pouvez la refaire à tout moment depuis Règles ou Leçons.","o.h":"Nouveau au blackjack ?","o.p":"Un tutoriel vous apprend à miser et à jouer pendant que vous jouez une manche à une vraie table (environ 2 minutes).","o.list":"Compter les points et gagner|Placer les jetons et donner|Choisir entre tirer, rester ou doubler|La table de stratégie et le coach","o.hide":"Ne plus afficher","o.later":"Plus tard","o.go":"Commencer le tutoriel","entry":"Tutoriel en jouant","entry.d":"Apprendre à miser et à jouer en jouant une manche à une vraie table (environ 2 min)"},
+pt: {"fold":"Recolher","title":"Tutorial","next":"Próximo","skip":"Sair","do":"Faça a jogada você mesmo","skipQ":"Sair do tutorial?","wait":"Leia o quadro e toque em Próximo","play":"Voltar ao jogo","again":"De novo","thanks":"Tutorial concluído! Divirta-se no jogo","t.hello":"Bem-vindo ao blackjack!","b.hello":"Aprenda a apostar e a jogar jogando uma rodada numa mesa de verdade (cerca de 2 minutos).<br>No blackjack você vence o dealer chegando <b>mais perto de 21</b>. <b>Passar de 21 perde</b> (estourar).","t.seat":"Seu lugar","b.seat":"O círculo do meio é o seu. Jogadores bots ficam dos dois lados — cada um joga um contra um com o dealer.","t.chips":"Fichas e saldo","b.chips":"Escolha aqui a ficha a colocar (agora $100). Suas fichas passam para o próximo jogo; ao chegar a zero, você recomeça com $10,000.","t.bet":"Faça uma aposta","b.bet":"Toque no <b>círculo grande</b> do seu lugar para apostar $100.","ng.bet":"Toque no círculo grande do seu próprio lugar","t.sides":"Apostas paralelas","b.sides":"Os círculos pequenos são <b>apostas paralelas</b> (Par perfeito, 21+3) nas duas primeiras cartas — extras que custam caro, então pule-as desta vez.","t.deal":"Dar cartas","b.deal":"Agora toque em <b>Dar cartas</b>. Todos recebem duas cartas; o dealer recebe uma virada para cima e outra para baixo.","ng.deal":"Toque em Dar cartas aqui","t.cards":"Sua mão","b.cards":"Você tem 6 + 5 = <b>11</b>. 10, J, Q e K valem 10; o ás vale 1 ou 11. Com 11, uma carta costuma fazer 21 — uma ótima mão.","t.dealer":"A carta do dealer","b.dealer":"O dealer mostra um <b>6</b>. Ele precisa pedir com 16 ou menos e parar com 17 ou mais, então com uma carta baixa como o 6 ele <b>estoura com frequência</b>.","t.moves":"Suas opções","b.moves":"<b>Pedir</b> = mais uma carta, <b>Parar</b> = não pedir mais, <b>Dobrar</b> = dobrar a aposta por exatamente uma carta, <b>Dividir</b> = separar duas cartas do mesmo valor, <b>Desistir</b> = abrir mão da metade.","t.coach":"O treinador","b.coach":"O treinador mostra a <b>melhor jogada</b>, o porquê e o valor de cada jogada. Com 11 contra um 6, dobrar é o melhor.","t.double":"Dobrar","b.double":"Toque em <b>Dobrar</b>: sua aposta vira $200 e você recebe mais uma carta.","ng.double":"Toque em Dobrar aqui","t.result":"O resultado","b.result":"Você tirou um 9 e fez <b>20</b>. O dealer virou um K (16), tirou um 8 e <b>estourou com 24</b>! Seus $200 dobrados ganham.","t.chart":"Estratégia básica","b.chart":"A <b>tabela de estratégia básica</b> mostra a melhor jogada para cada mão. Na sua vez, a casa da sua mão se acende. Jogando por ela, a vantagem da casa cai para cerca de 0.5%.","t.count":"Sapato e contagem","b.count":"A contagem <b>Hi-Lo</b> das cartas restantes. Quanto mais alta, mais dezes e ases restam — bom para o jogador. Ela está aqui para você entender como o jogo funciona.","t.bots":"Os jogadores bots","b.bots":"Os bots também têm seus hábitos: Lin joga a estratégia básica, Marco usa a Martingale, Aiko nunca estoura e Sam conta cartas. Com o tempo a diferença aparece.","t.menu":"Para saber mais","b.menu":"<b>Regras</b>: as quatro variantes na prática · <b>Lições</b>: pratique a estratégia básica e a contagem · <b>Estudo</b>: a tabela, a vantagem da casa e formas de jogar testadas · <b>Estatísticas</b>: precisão das decisões e sorte.","t.end":"Tutorial concluído!","b.end":"Você já sabe o básico. A rodada do tutorial não mexe nas suas fichas. Você pode repeti-lo quando quiser em Regras ou Lições.","o.h":"Novo no blackjack?","o.p":"Um tutorial ensina a apostar e a jogar enquanto você joga uma rodada numa mesa de verdade (cerca de 2 minutos).","o.list":"Contar as cartas e como ganhar|Colocar fichas e dar as cartas|Escolher entre pedir, parar ou dobrar|A tabela de estratégia e o treinador","o.hide":"Não mostrar de novo","o.later":"Depois","o.go":"Começar o tutorial","entry":"Tutorial jogando","entry.d":"Aprenda a apostar e a jogar jogando uma rodada numa mesa de verdade (cerca de 2 min)"},
+de: {"fold":"Einklappen","title":"Tutorial","next":"Weiter","skip":"Beenden","do":"Mach den Zug selbst","skipQ":"Tutorial beenden?","wait":"Lies den Text und drücke Weiter","play":"Zurück zum Spiel","again":"Nochmal","thanks":"Tutorial abgeschlossen! Viel Spaß beim Spielen","t.hello":"Willkommen beim Blackjack!","b.hello":"Lerne Setzen und Spielen, indem du eine Runde an einem echten Tisch spielst (etwa 2 Minuten).<br>Beim Blackjack schlägst du den Dealer, indem du <b>näher an 21</b> kommst. <b>Über 21 verliert</b> (Bust).","t.seat":"Dein Platz","b.seat":"Der Kreis in der Mitte ist deiner. Links und rechts sitzen Bot-Spieler — jeder spielt einzeln gegen den Dealer.","t.chips":"Chips und Guthaben","b.chips":"Wähle hier den Chip zum Setzen (jetzt $100). Deine Chips bleiben fürs nächste Spiel erhalten; bei null beginnst du wieder mit $10,000.","t.bet":"Setzen","b.bet":"Tippe auf den <b>großen Kreis</b> an deinem Platz, um $100 zu setzen.","ng.bet":"Tippe auf den großen Kreis an deinem eigenen Platz","t.sides":"Nebenwetten","b.sides":"Die kleinen Kreise sind <b>Nebenwetten</b> (Perfektes Paar, 21+3) auf die ersten beiden Karten — Extras, die viel kosten, darum lassen wir sie diesmal aus.","t.deal":"Geben","b.deal":"Drücke jetzt <b>Geben</b>. Jeder bekommt zwei Karten; der Dealer eine offen und eine verdeckt.","ng.deal":"Drücke hier Geben","t.cards":"Deine Hand","b.cards":"Du hast 6 + 5 = <b>11</b>. 10, B, D, K zählen 10; ein Ass 1 oder 11. Mit 11 ergibt eine Karte oft 21 — eine starke Hand.","t.dealer":"Die Karte des Dealers","b.dealer":"Der Dealer zeigt eine <b>6</b>. Er muss bis 16 ziehen und ab 17 stehen, deshalb <b>überkauft er sich oft</b> mit einer kleinen Karte wie der 6.","t.moves":"Deine Optionen","b.moves":"<b>Karte</b> = noch eine Karte, <b>Stehen</b> = aufhören, <b>Verdoppeln</b> = Einsatz verdoppeln für genau eine Karte, <b>Teilen</b> = zwei Karten gleichen Werts trennen, <b>Aufgeben</b> = die Hälfte abgeben.","t.coach":"Der Coach","b.coach":"Der Coach zeigt den <b>besten Zug</b>, warum, und den Wert jedes Zugs. Mit 11 gegen eine 6 ist Verdoppeln am besten.","t.double":"Verdoppeln","b.double":"Drücke <b>Verdoppeln</b>: Dein Einsatz wird $200 und du bekommst noch eine Karte.","ng.double":"Drücke hier Verdoppeln","t.result":"Das Ergebnis","b.result":"Du hast eine 9 gezogen: <b>20</b>. Der Dealer deckte einen K auf (16), zog eine 8 und <b>überkaufte sich mit 24</b>! Deine verdoppelten $200 gewinnen.","t.chart":"Grundstrategie","b.chart":"Die <b>Grundstrategie-Tabelle</b> zeigt den besten Zug für jede Hand. In deinem Zug leuchtet das Feld deiner Hand auf. Wer danach spielt, senkt den Hausvorteil auf etwa 0.5%.","t.count":"Schuh und Zählung","b.count":"Die <b>Hi-Lo</b>-Zählung der restlichen Karten. Je höher sie ist, desto mehr Zehner und Asse sind übrig — gut für den Spieler. Sie dient dazu, zu verstehen, wie das Spiel funktioniert.","t.bots":"Die Bot-Spieler","b.bots":"Auch die Bots haben ihre Gewohnheiten: Lin spielt die Grundstrategie, Marco die Martingale, Aiko überkauft sich nie, Sam zählt Karten. Mit der Zeit zeigt sich der Unterschied.","t.menu":"Mehr erfahren","b.menu":"<b>Regeln</b>: die vier Varianten zum Ausprobieren · <b>Lektionen</b>: Grundstrategie und Zählen üben · <b>Lernen</b>: die Tabelle, Hausvorteil, Spielweisen im Test · <b>Statistik</b>: Entscheidungsgenauigkeit und Glück.","t.end":"Tutorial abgeschlossen!","b.end":"Du kennst jetzt die Grundlagen. Die Tutorial-Runde berührt deine Chips nicht. Du kannst sie jederzeit über Regeln oder Lektionen wiederholen.","o.h":"Neu beim Blackjack?","o.p":"Ein Tutorial zeigt dir Setzen und Spielen, während du eine Runde an einem echten Tisch spielst (etwa 2 Minuten).","o.list":"Karten zählen und wie man gewinnt|Chips setzen und Karten geben|Karte, Stehen oder Verdoppeln wählen|Die Strategietabelle und der Coach","o.hide":"Nicht mehr anzeigen","o.later":"Später","o.go":"Tutorial starten","entry":"Tutorial zum Mitspielen","entry.d":"Setzen und Spielen lernen, indem du eine Runde an einem echten Tisch spielst (etwa 2 Min.)"},
+hi: {"fold":"छोटा करें","title":"ट्यूटोरियल","next":"आगे","skip":"छोड़ें","do":"अब खुद चाल चलें","skipQ":"ट्यूटोरियल छोड़ें?","wait":"बॉक्स पढ़ें और 'आगे' दबाएँ","play":"खेल पर लौटें","again":"फिर से","thanks":"ट्यूटोरियल पूरा! खेल का आनंद लें","t.hello":"ब्लैकजैक में आपका स्वागत है!","b.hello":"असली टेबल पर एक राउंड खेलते हुए दाँव लगाना और खेलना सीखें (लगभग 2 मिनट)।<br>ब्लैकजैक में आप <b>21 के ज़्यादा क़रीब</b> पहुँचकर डीलर को हराते हैं। <b>21 से ऊपर जाने पर हार</b> (बस्ट)।","t.seat":"आपकी सीट","b.seat":"बीच वाला गोला आपका है। दोनों ओर बॉट खिलाड़ी बैठे हैं — हर कोई डीलर से आमने-सामने खेलता है।","t.chips":"चिप्स और बैलेंस","b.chips":"यहाँ रखने के लिए चिप चुनें (अभी $100)। आपकी चिप्स अगले खेल में भी रहती हैं; शून्य होने पर आप $10,000 से फिर शुरू करते हैं।","t.bet":"दाँव लगाएँ","b.bet":"$100 का दाँव लगाने के लिए अपनी सीट के <b>बड़े गोले</b> पर टैप करें।","ng.bet":"अपनी ही सीट के बड़े गोले पर टैप करें","t.sides":"साइड बेट","b.sides":"छोटे गोले पहले दो पत्तों पर <b>साइड बेट</b> (परफ़ेक्ट पेयर, 21+3) हैं — अतिरिक्त दाँव जिनमें नुकसान ज़्यादा है, इसलिए इस बार इन्हें छोड़ दें।","t.deal":"डील","b.deal":"अब <b>डील</b> दबाएँ। सबको दो पत्ते मिलते हैं; डीलर को एक खुला और एक उल्टा।","ng.deal":"यहाँ 'डील' दबाएँ","t.cards":"आपका हाथ","b.cards":"आपके पास 6 + 5 = <b>11</b> है। 10, J, Q, K को 10 गिना जाता है; इक्का 1 या 11। 11 पर एक पत्ते से अक्सर 21 बन जाता है — बहुत अच्छा हाथ।","t.dealer":"डीलर का पत्ता","b.dealer":"डीलर का खुला पत्ता <b>6</b> है। डीलर को 16 या कम पर हिट करना और 17+ पर स्टैंड करना होता है, इसलिए 6 जैसे छोटे पत्ते के साथ वह <b>अक्सर बस्ट होता है</b>।","t.moves":"आपके विकल्प","b.moves":"<b>हिट</b> = एक और पत्ता, <b>स्टैंड</b> = रुकें, <b>डबल</b> = दाँव दोगुना करके ठीक एक पत्ता, <b>स्प्लिट</b> = एक ही अंक के दो पत्ते अलग करें, <b>सरेंडर</b> = आधा देकर हट जाएँ।","t.coach":"कोच","b.coach":"कोच <b>सबसे अच्छी चाल</b>, उसकी वजह और हर चाल का मूल्य दिखाता है। 6 के सामने 11 पर डबल सबसे अच्छा है।","t.double":"डबल करें","b.double":"<b>डबल</b> दबाएँ: आपका दाँव $200 हो जाता है और आपको एक और पत्ता मिलता है।","ng.double":"यहाँ 'डबल' दबाएँ","t.result":"नतीजा","b.result":"आपको 9 मिला और कुल <b>20</b> हुआ। डीलर ने K पलटा (16), 8 लिया और <b>24 पर बस्ट</b> हो गया! आपके दोगुने $200 जीत गए।","t.chart":"बेसिक स्ट्रैटेजी","b.chart":"<b>बेसिक स्ट्रैटेजी चार्ट</b> हर हाथ के लिए सबसे अच्छी चाल दिखाता है। आपकी बारी पर आपके हाथ का खाना चमकता है। इसके अनुसार खेलने से हाउस एज लगभग 0.5% तक घट जाता है।","t.count":"शू और काउंट","b.count":"बचे हुए पत्तों का <b>हाई-लो</b> काउंट। यह जितना ऊँचा, उतने ज़्यादा दहले और इक्के बचे हैं — खिलाड़ी के लिए अच्छा। यह खेल कैसे काम करता है, यह समझने के लिए है।","t.bots":"बॉट खिलाड़ी","b.bots":"बॉट्स की भी आदतें हैं: Lin बेसिक स्ट्रैटेजी से खेलता है, Marco मार्टिंगेल से, Aiko कभी बस्ट नहीं होती, Sam पत्ते गिनता है। समय के साथ फ़र्क़ दिखता है।","t.menu":"और जानने के लिए","b.menu":"<b>नियम</b>: चारों रूप खुद आज़माएँ · <b>पाठ</b>: बेसिक स्ट्रैटेजी और काउंटिंग का अभ्यास · <b>अध्ययन</b>: चार्ट, हाउस एज, खेलने के तरीक़ों की जाँच · <b>आँकड़े</b>: फ़ैसलों की सटीकता और क़िस्मत।","t.end":"ट्यूटोरियल पूरा!","b.end":"अब आप बुनियादी बातें जानते हैं। ट्यूटोरियल राउंड आपकी चिप्स पर असर नहीं डालता। आप इसे कभी भी 'नियम' या 'पाठ' से दोबारा खेल सकते हैं।","o.h":"ब्लैकजैक में नए हैं?","o.p":"एक ट्यूटोरियल है जो असली टेबल पर एक राउंड खेलते हुए दाँव लगाना और खेलना सिखाता है (लगभग 2 मिनट)।","o.list":"पत्तों की गिनती और जीतने का तरीक़ा|चिप्स रखना और डील|हिट, स्टैंड या डबल चुनना|स्ट्रैटेजी चार्ट और कोच","o.hide":"दोबारा न दिखाएँ","o.later":"बाद में","o.go":"ट्यूटोरियल शुरू करें","entry":"खेलते-खेलते ट्यूटोरियल","entry.d":"असली टेबल पर एक राउंड खेलते हुए दाँव लगाना और खेलना सीखें (लगभग 2 मिनट)"},
+ar: {"fold":"طيّ","title":"الدليل التعليمي","next":"التالي","skip":"إنهاء","do":"نفّذ الحركة بنفسك","skipQ":"إنهاء الدليل التعليمي؟","wait":"اقرأ المربع ثم اضغط التالي","play":"العودة إلى اللعبة","again":"مرة أخرى","thanks":"اكتمل الدليل التعليمي! استمتع باللعبة","t.hello":"مرحبًا بك في بلاك جاك!","b.hello":"تعلّم المراهنة واللعب بلعب جولة واحدة على طاولة حقيقية (نحو دقيقتين).<br>في بلاك جاك تهزم الموزّع بالوصول إلى مجموع <b>أقرب إلى 21</b>. <b>تجاوز 21 خسارة</b> (احتراق).","t.seat":"مقعدك","b.seat":"الدائرة في المنتصف هي مقعدك. يجلس لاعبون آليون على الجانبين — وكل لاعب يواجه الموزّع وجهًا لوجه.","t.chips":"الرقائق والرصيد","b.chips":"اختر من هنا الرقاقة التي تضعها (الآن $100). تنتقل رقائقك إلى اللعبة التالية؛ وعند الصفر تبدأ من جديد بـ $10,000.","t.bet":"ضع رهانًا","b.bet":"اضغط على <b>الدائرة الكبيرة</b> في مقعدك لتراهن بـ $100.","ng.bet":"اضغط على الدائرة الكبيرة في مقعدك أنت","t.sides":"الرهانات الجانبية","b.sides":"الدوائر الصغيرة هي <b>رهانات جانبية</b> (زوج مثالي، 21+3) على أول ورقتين — إضافات مكلفة، لذا تجاهلها هذه المرة.","t.deal":"وزّع","b.deal":"اضغط الآن <b>وزّع</b>. يحصل الجميع على ورقتين؛ ويحصل الموزّع على ورقة مكشوفة وأخرى مقلوبة.","ng.deal":"اضغط وزّع هنا","t.cards":"يدك","b.cards":"لديك 6 + 5 = <b>11</b>. الـ10 والولد والملكة والملك تُحسب 10؛ والآس 1 أو 11. مع 11 كثيرًا ما تصنع ورقة واحدة 21 — يد ممتازة.","t.dealer":"ورقة الموزّع","b.dealer":"يُظهر الموزّع <b>6</b>. على الموزّع السحب حتى 16 والوقوف عند 17 فأكثر، لذا مع ورقة صغيرة مثل 6 <b>يحترق كثيرًا</b>.","t.moves":"خياراتك","b.moves":"<b>سحب</b> = ورقة أخرى، <b>وقوف</b> = توقّف، <b>مضاعفة</b> = ضاعف الرهان مقابل ورقة واحدة فقط، <b>تقسيم</b> = افصل ورقتين من القيمة نفسها، <b>استسلام</b> = انسحب مقابل نصف الرهان.","t.coach":"المدرّب","b.coach":"يعرض المدرّب <b>أفضل حركة</b> وسببها وقيمة كل حركة. مع 11 أمام 6، المضاعفة هي الأفضل.","t.double":"المضاعفة","b.double":"اضغط <b>مضاعفة</b>: يصبح رهانك $200 وتحصل على ورقة أخرى.","ng.double":"اضغط مضاعفة هنا","t.result":"النتيجة","b.result":"سحبت 9 فصار مجموعك <b>20</b>. كشف الموزّع ملكًا (16)، وسحب 8 و<b>احترق بـ 24</b>! رهانك المضاعَف $200 يربح.","t.chart":"الاستراتيجية الأساسية","b.chart":"يعرض <b>جدول الاستراتيجية الأساسية</b> أفضل حركة لكل يد. في دورك تضيء خانة يدك. اللعب وفقه يخفض ميزة الكازينو إلى نحو 0.5%.","t.count":"الحذاء والعدّ","b.count":"عدّ <b>Hi-Lo</b> للأوراق المتبقية. كلما ارتفع زاد عدد العشرات والآسات المتبقية — وهذا في صالح اللاعب. وهو موجود لفهم كيف تعمل اللعبة.","t.bots":"اللاعبون الآليون","b.bots":"للاعبين الآليين عاداتهم أيضًا: Lin يلعب الاستراتيجية الأساسية، وMarco نظام المارتينغال، وAiko لا تحترق أبدًا، وSam يعدّ الأوراق. مع الوقت يظهر الفرق.","t.menu":"لمعرفة المزيد","b.menu":"<b>القواعد</b>: جرّب الأنواع الأربعة بنفسك · <b>الدروس</b>: تدرّب على الاستراتيجية الأساسية والعدّ · <b>دراسة</b>: الجدول وميزة الكازينو واختبار أساليب اللعب · <b>الإحصاءات</b>: دقة القرارات والحظ.","t.end":"اكتمل الدليل التعليمي!","b.end":"أصبحت تعرف الأساسيات. جولة الدليل التعليمي لا تؤثر في رقائقك. يمكنك إعادتها في أي وقت من القواعد أو الدروس.","o.h":"جديد على بلاك جاك؟","o.p":"دليل تعليمي يعلّمك المراهنة واللعب بينما تلعب جولة واحدة على طاولة حقيقية (نحو دقيقتين).","o.list":"حساب الأوراق وكيف تفوز|وضع الرقائق والتوزيع|الاختيار بين السحب والوقوف والمضاعفة|جدول الاستراتيجية والمدرّب","o.hide":"لا تعرض هذا مجددًا","o.later":"لاحقًا","o.go":"ابدأ الدليل التعليمي","entry":"دليل تعليمي باللعب","entry.d":"تعلّم المراهنة واللعب بلعب جولة واحدة على طاولة حقيقية (نحو دقيقتين)"},
+};
+function L(k) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k] || k; return x; }
+
+// Space / Enter: "Next" (and "Back to the game" on the last box); on a step waiting for a move the keys go to the game as usual
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (!layer || !layer.classList.contains('show') || document.querySelector('.overlay.show')) return;
+  const b = $('#tutNext') || $('#tutPlay'); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); b.click();
+}, true);
+window.BJTut = { setup, ev, allow, after, start, hide, finish, offer, L, TX };
+setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);
+})();

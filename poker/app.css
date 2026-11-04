@@ -1722,3 +1722,34 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 .pk-table.nocd .seat:not(.me):not(.folded) .plate::after{content:'';position:absolute;right:-5px;top:-6px;width:11px;height:15px;border-radius:2px;background:linear-gradient(135deg,#7a1020,#2a060b);box-shadow:3px 1px 0 -1px #f3ead6,3px 1px 0 0 #7a1020,0 1px 3px rgba(0,0,0,.6);border:1px solid #f3ead6}
 .pk-table.nocd .seat:not(.me) .ava{width:8px;height:8px;font-size:0;box-shadow:none;margin-left:3px}
 .pk-table.nocd .seat:not(.me) .plate{gap:4px;padding-right:9px}
+/* format (cash game / tournament) on the Game tab */
+.pk-ngw{display:flex;flex-direction:column;gap:12px;height:100%}
+.pk-ngw .ng-games{flex:1 1 auto;min-height:0;height:auto;margin:0}
+.pk-fmt{flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.pk-fmt > .lab{flex:none}
+.pk-fmts{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pk-fm{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);text-align:start;cursor:pointer;font:inherit}
+.pk-fm b{font-size:14px}.pk-fm small{font-size:11.5px;color:var(--muted);line-height:1.45}
+.pk-fm.sel{border-color:var(--hl);background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--hl-a)}
+@media (max-width:760px){.pk-fmt{flex-direction:column;align-items:stretch;gap:6px}.pk-fm small{display:none}.pk-ngw{height:auto}}
+/* tournament: busted players, the final place */
+.seat.out .plate{opacity:.4;filter:grayscale(1)}
+.seat.out .sc{visibility:hidden}
+.seat.out .plate .st{font-size:11px;letter-spacing:.12em;color:#ff9b90}
+.ab-msg.tour-end{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ab-msg.tour-end b{font:700 18px 'Shippori Mincho B1','Cormorant Garamond',serif;letter-spacing:.1em;color:var(--text)}
+.ab-msg.tour-end.win b{color:#ffe39a}
+.ab-msg.tour-end small{font-size:12px;color:#8fe3b8}
+.seat.out .plate .st::after{content:none!important}
+.st-tour{margin-top:12px}.st-tour .lab{display:block;margin-bottom:6px}
+
+/* coach on/off switch (top right of the coach card) */
+.side .coach-card h3,.pk .side .coach-card h3{display:flex;align-items:center;gap:8px}
+.ck-sw{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:999px;border:1px solid rgba(236,232,222,.22);background:rgba(0,0,0,.25);color:rgba(236,232,222,.55);font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-sw b{font:inherit}
+.ck-sw i{position:relative;width:26px;height:15px;border-radius:999px;background:rgba(236,232,222,.18);transition:background .2s}
+.ck-sw i::after{content:'';position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#cfc9bb;transition:transform .2s}
+.ck-sw.on{color:var(--hl2,#f6d48a);border-color:var(--hl-a,rgba(224,170,72,.5))}
+.ck-sw.on i{background:var(--hl,#e0aa48)}
+.ck-sw.on i::after{transform:translateX(11px);background:#1a1408}
+.ck-sw:focus-visible{outline:2px solid var(--hl,#e0aa48);outline-offset:2px}

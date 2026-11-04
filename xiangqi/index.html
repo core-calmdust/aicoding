@@ -679,7 +679,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
-  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .modal{padding:24px 24px 18px}   /* same as the lesson / opening dialogs, so the top tabs do not shift */
   #rulesOverlay .ls-tabs{margin-bottom:10px}
   #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -1073,7 +1073,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fRules">
-      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
+      <label><span data-i18n="ng.rules"></span></label>
       <div class="rulecards" id="ruleCards"></div>
     </div>
     <div class="field" id="fColor">
@@ -1224,14 +1224,14 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=9"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
 <script src="../shared/headerbar.js?v=31"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1n"></script>
 <script src="../shared/ruletour.js?v=28n"></script>
-<script src="engine.js?v=20261104sd"></script>
+<script src="engine.js?v=20261104x6"></script>
 <script src="firebase-config.js?v=3"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
@@ -1242,7 +1242,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="../shared/export.js?v=7"></script>
 <script src="coach.js?v=7"></script>
 <script src="coach-i18n.js?v=4"></script>
-<script src="app.js?v=20261104sd"></script>
+<script src="app.js?v=20261104x6rh"></script>
 <script src="online-ui.js?v=20261030ck1p"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -1258,7 +1258,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101bfn" defer></script>
+<script src="../shared/atlas.js?v=20261104ug4" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>

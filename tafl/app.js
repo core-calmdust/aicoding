@@ -1056,7 +1056,6 @@ $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-$('#ngRulesHelp').onclick = () => openRules();
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');

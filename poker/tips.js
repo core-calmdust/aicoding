@@ -33,7 +33,8 @@ function make(T, s, c) {
 
   /* ---------- pot odds / implied odds / SPR ---------- */
   if (toCall > 0) {
-    add('odds.calc', 52, { c: toCall, t: pot + toCall, need: pc(need), r: (pot / toCall).toFixed(1) });
+    const $m = n => (T.tour ? '' : '$') + Number(n).toLocaleString('en-US');
+    add('odds.calc', 52, { c: $m(toCall), t: $m(pot + toCall), need: pc(need), r: (pot / toCall).toFixed(1) });
     if (eq != null && eq < need && eq > need * 0.55 && eff > toCall * 8 && st < (Vr.board ? 3 : 9) && !Vr.draw) add('odds.implied', 58, { x: Math.round(eff / toCall) });
     if (toCall >= me.stack) add('odds.allin', 70, { need: pc(need) });
   } else if (st > 0 || !Vr.board) add('odds.free', 26);
