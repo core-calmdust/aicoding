@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 5;                       // data version (bump when historia/*.json change)
+  const V = 6;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
   const UI = {
@@ -157,6 +157,7 @@
     root.querySelector('.hs-pages').innerHTML = `<div class="hs-load"><i></i><i></i><i></i><span>${esc(u('load'))}</span></div>`;
     say('');
     root.classList.remove('out'); root.classList.add('on');
+    setTimeout(() => { if (on) document.documentElement.classList.add('hs-open'); }, 600);   // (once the overlay covers it: the page underneath stops painting)
     if (!solo) { const bv = $('bv'); if (bv) bv.classList.add('hist'); shift(); requestAnimationFrame(() => { fit(); }); gallery(true, g); }
     if (fromList && has3D) loading3d(g.id);
     paintMute(); bgmStart();
@@ -172,6 +173,7 @@
     if (!on) return; on = false; tok++;
     if (window.Table3D && Table3D.quiet) Table3D.quiet(false);
     root.classList.remove('on'); if (!swap) root.classList.add('out');
+    document.documentElement.classList.remove('hs-open');
     bgmStop(swap ? 200 : 1000);
     clearTimers();
     if (solo) { document.body.style.overflow = bodyOv; if (fromList && window.AtlasBoard) { fromList = false; setTimeout(() => AtlasBoard.close(), 0); } }
@@ -304,7 +306,7 @@
     // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
     const rd = !['hook', 'board', 'end'].includes(c.k);
     if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
-    if (window.Table3D && Table3D.quiet) Table3D.quiet(phone() && rd && !solo);
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(phone() && (rd || c.k === 'board') && !solo);   // (the top-down board view is still too: drawn when it moves)
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
   function kin(s, d0 = 0) {
@@ -369,8 +371,10 @@
     const cap = () => {
       if (!pg.isConnected) return;
       const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
-      const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
-      map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
+      // short pages (small phones, browser bars): the map gets slimmer (down to ~72 px, still cropped around the pins) rather than
+      // scrolling away — it only stops being pinned when even that would leave less than ~2 cards of text
+      const h = Math.round(Math.max(72, Math.min(nat, H * (phone() ? .33 : .4), H - card * 2.1)));
+      map.classList.toggle('stick', H - h >= card * 1.6);
       sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
       zmSet(map);
     };

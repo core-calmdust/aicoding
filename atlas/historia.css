@@ -346,3 +346,8 @@
 @keyframes hsPeek{30%{transform:rotateY(-18deg)}60%{transform:rotateY(8deg)}}
 @keyframes hsDot{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-8px);opacity:1}}
 @keyframes hsWig{30%{transform:rotate(-10deg)}60%{transform:rotate(8deg)}}
+
+/* while Historia covers the screen, the portal page underneath (its pulsing badges, rolling die, frosted buttons) is hidden:
+   it kept animating and repainting behind the overlay */
+html.hs-open body > main.wrap{visibility:hidden}
+html.hs-open body > main.wrap *{animation-play-state:paused!important}
