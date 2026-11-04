@@ -48,10 +48,15 @@ $$('.ls-tabs').forEach(g => g.addEventListener('click', async e => {
   const v = b.dataset.v, want = v === 'rules' ? '#rulesOverlay' : v === 'lesson' ? '#lessonOverlay' : '#puzzleOverlay';
   const was = LIST_OV.filter(s => s !== want && $(s).classList.contains('show'));
   LIST_OV.forEach(s => $(s).classList.add('instant'));
+  $(want).classList.add('ls-top'); was.forEach(s => $(s).classList.add('ls-under'));
   tabSwitch = true;
   try { if (v === 'rules') openRules(); else if (v === 'lesson') await openLessons(); else await openPuzzles(); } finally { tabSwitch = false; }
-  was.forEach(s => { if (s === '#rulesOverlay') closeRules(true); else hideOverlay(s); });
-  requestAnimationFrame(() => requestAnimationFrame(() => LIST_OV.forEach(s => $(s).classList.remove('instant'))));
+  // the old one goes once the new one has been painted
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    was.forEach(s => { if (s === '#rulesOverlay') closeRules(true); else hideOverlay(s); $(s).classList.remove('ls-under'); });
+    $(want).classList.remove('ls-top');
+    LIST_OV.forEach(s => $(s).classList.remove('instant'));
+  }));
 }));
 // the HTML of a list is written only when it changed (the same DOM stays: no reloaded pictures, no jump)
 function setHtml(el, html) { if (el.__h !== html) { el.__h = html; el.innerHTML = html; } }

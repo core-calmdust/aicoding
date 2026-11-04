@@ -19,7 +19,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const X = window.Table3D; if (!X) return;
+  const X = window.Table3D; if (!X || !window.UrDice3D) return;
   const T = () => window.THREE;
   const { makeNoise } = X;
   const SZ = v => Math.max(64, Math.round(v * (X.texScale ? X.texScale() : 1)));   // phones: half-size procedural textures
@@ -500,63 +500,10 @@
     g.userData = { side, design, h: PH, r: PR }; return g;
   }
 
-  /* ---------- dice: truncated tetrahedra, two tips inlaid (shell ring, lapis centre) ---------- */
-  const DR = .3, DT = .3;   // circumradius, how much of each edge the tips are cut
-  const TV = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].map(v => v.map(a => a * DR / Math.sqrt(3)));
-  const MARKED = [true, true, false, false];
-  const dieGeos = {};
-  function dieGeo(look) {
-    if (dieGeos[look]) return dieGeos[look];
-    // colours come from a small swatch strip (UVs point into it): vertex colours would be lost when the showcase merges meshes
-    const TT = T(), Pa = [], Ca = [];
-    const add = (a, b, c, col) => {   // col = [u, v] in the swatch strip   // a triangle, turned to face outwards
-      const n = [(b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]), (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])];
-      const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3];
-      if (n[0] * m[0] + n[1] * m[1] + n[2] * m[2] < 0) { const t = b; b = c; c = t; }
-      Pa.push(...a, ...b, ...c); for (let k = 0; k < 3; k++) Ca.push(col[0], col[1]);
-    };
-    const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-    const cut = (i, j) => lerp(TV[i], TV[j], DT);
-    seed = 77;
-    const shell = [.6875, .5], lap = [.9375, .5];
-    const jit = () => [.0625 + (rnd() * 3 | 0) * .125, .5];   // one of the body tones (columns 0..2 of 8)
-    // the four faces (hexagons), each opposite one vertex
-    for (let l = 0; l < 4; l++) {
-      const [i, j, k] = [0, 1, 2, 3].filter(x => x !== l), hx = [cut(i, j), cut(j, i), cut(j, k), cut(k, j), cut(k, i), cut(i, k)];
-      const cen = [0, 1, 2].map(a => (TV[i][a] + TV[j][a] + TV[k][a]) / 3), col = jit();
-      for (let s = 0; s < 6; s++) add(cen, hx[s], hx[(s + 1) % 6], col);
-    }
-    // the tips: plain, or a shell ring with a lapis centre
-    for (let i = 0; i < 4; i++) {
-      const o = [0, 1, 2, 3].filter(x => x !== i), tri = o.map(j => cut(i, j)), cen = [0, 1, 2].map(a => (tri[0][a] + tri[1][a] + tri[2][a]) / 3);
-      // pull the tip out a little: a rounded point instead of a flat cut
-      const tip = lerp(cen, TV[i], .82);   // nearly the full point: sharp tips
-      if (!MARKED[i]) { for (let s = 0; s < 3; s++) add(tip, tri[s], tri[(s + 1) % 3], jit()); continue; }
-      const inn = tri.map(p => lerp(tip, p, .5));
-      for (let s = 0; s < 3; s++) { const a = tri[s], b = tri[(s + 1) % 3], ia = inn[s], ib = inn[(s + 1) % 3]; add(a, b, ib, shell); add(a, ib, ia, shell); add(tip, ia, ib, lap); }
-    }
-    const g = new TT.BufferGeometry(); g.setAttribute('position', new TT.Float32BufferAttribute(Pa, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(Ca, 2));
-    g.computeVertexNormals();   // (non-indexed: flat faces) g.computeBoundingSphere();
-    if (X.share) X.share(g); return (dieGeos[look] = g);
-  }
-  const dieMats = {};
-  function die(o = {}) {
-    const TT = T(), look = o.look === 'stone' ? 'stone' : 'bone';   // bone / shell-like (default), or a darker stone
-    const mt = dieMats[look] || (dieMats[look] = (() => {
-      const c = canvas(8, 1), x = c.getContext('2d'), B = look === 'stone' ? ['#a89a84', '#9e8f78', '#b1a48f'] : ['#d6c7a6', '#ccbb98', '#ddd0b2'];
-      ['', '', '', '', '', '#fbf8f0', '#fbf8f0', '#1f3290'].forEach((col, i) => { x.fillStyle = col || B[i % 3]; x.fillRect(i, 0, 1, 1); });
-      const t = tex(c, true); t.magFilter = t.minFilter = TT.NearestFilter; t.generateMipmaps = false; t.anisotropy = 1;
-      return new TT.MeshStandardMaterial({ map: t, roughness: look === 'bone' ? .42 : .6, metalness: 0 }); })());
-    const g = new TT.Group(), m = new TT.Mesh(dieGeo(look), mt); m.castShadow = true; m.receiveShadow = true; g.add(m);
-    g.userData = { die: look, rest: DR / 3 }; return g;
-  }
-  // turn a die so that a marked (white) tip — or a plain one — points straight up, resting on the opposite face; yaw about the vertical
-  function dieUp(g, marked, yaw = 0) {
-    const TT = T(), v = new TT.Vector3(...TV[marked ? 0 : 2]).normalize();
-    const q = new TT.Quaternion().setFromUnitVectors(v, new TT.Vector3(0, 1, 0));
-    g.quaternion.copy(new TT.Quaternion().setFromAxisAngle(new TT.Vector3(0, 1, 0), yaw).multiply(q));
-    return g;
-  }
+  /* ---------- dice: truncated tetrahedra, two tips inlaid (shell ring, lapis centre) — atlas/models/ur-dice.js ---------- */
+  const UD = window.UrDice3D;
+  if (X.share) UD.share(X.share);
+  const DR = UD.DR, TV = UD.TV, MARKED = UD.MARKED, die = UD.die, dieUp = UD.dieUp;
 
   /* ---------- places off the board ---------- */
   const TOP = H + FR + .02;   // pieces rest here on the plaques
