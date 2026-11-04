@@ -102,10 +102,37 @@ html.bv .dice-dock .dice-host{transform:rotate(90deg)}
 html.bv .dice-dock .dice-cap{font-size:calc(var(--bw) * .05)}
 .dice-dock.can{animation:dkGlow 1.8s ease-in-out infinite}
 @keyframes dkGlow{0%,100%{box-shadow:0 0 0 0 rgba(230,197,115,0)}50%{box-shadow:0 0 0 3px rgba(230,197,115,.35),0 0 22px rgba(230,197,115,.25)}}
-body.no-anim .dice-dock.can{animation:none;box-shadow:0 0 0 2px rgba(230,197,115,.45)}
+body.no-anim .dice-dock.can{animation:none}
 .dice-dock.dim .dice-host{opacity:.42}
-.dice-dock .roll-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:5px 14px;border-radius:999px;background:linear-gradient(180deg,#f1d68e,#c9a24f);color:#1b1408;font-weight:800;font-size:calc(var(--bw) * .022);letter-spacing:.08em;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.45);pointer-events:none}
-html.bv .dice-dock .roll-pill{font-size:calc(var(--bw) * .042);padding:5px 10px}
+.dice-dock.rolling .dice-host{opacity:1}
+/* ready to roll: the plate alone in the notch (the old dice are cleared away); it breathes a soft gilt glow */
+.dice-dock.can:not(.rolling) .dice-host{opacity:0}
+.dice-dock.can:not(.rolling) .dice-cap{visibility:hidden}
+.dice-dock.can{animation:none!important;box-shadow:none!important}
+.dice-dock.can:not(.rolling) .roll-pill{animation:rpGlow 2.2s ease-in-out infinite}
+@keyframes rpGlow{0%,100%{filter:drop-shadow(0 5px 7px rgba(0,0,0,.55)) drop-shadow(0 0 0 rgba(240,200,110,0))}50%{filter:drop-shadow(0 5px 7px rgba(0,0,0,.55)) drop-shadow(0 0 9px rgba(240,200,110,.55))}}
+body.no-anim .dice-dock.can .roll-pill{animation:none}
+/* 3D dice (board2d.js): the dice fill the whole dock, the caption sits under them */
+.dice-dock.d3 .dice-host{position:absolute!important;inset:0;width:auto!important;height:auto!important;transform:none!important}
+.dice-dock.d3 .dice-cap{position:absolute;left:0;right:0;top:12%;text-align:center;pointer-events:none}
+/* the roll plate on the board: a black bitumen oval with a gold rim and a band of shell / carnelian diamonds, the word in gilt serif; it sinks when pressed */
+.dice-dock .roll-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  width:calc(var(--bw) * .152);height:calc(var(--bw) * .052);padding:0 calc(var(--bw) * .016);box-sizing:border-box;border-radius:999px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 96' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%232e2620'/%3E%3Cstop offset='.5' stop-color='%2316110d'/%3E%3Cstop offset='1' stop-color='%230c0907'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc98'/%3E%3Cstop offset='.45' stop-color='%23b98d3e'/%3E%3Cstop offset='.7' stop-color='%23f0d38a'/%3E%3Cstop offset='1' stop-color='%238f6a2a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M48.0 1.2H252.0A46.8 46.8 0 0 1 252.0 94.8H48.0A46.8 46.8 0 0 1 48.0 1.2Z' fill='url%28%23b%29' stroke='url%28%23g%29' stroke-width='2.4'/%3E%3Cpath d='M48.0 4.6H252.0A43.4 43.4 0 0 1 252.0 91.4H48.0A43.4 43.4 0 0 1 48.0 4.6Z' fill='none' stroke='%23c9a352' stroke-opacity='.55' stroke-width='.9'/%3E%3Cpath d='M52.1 9.5L48.0 12.5L43.9 9.5L48.0 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M68.3 9.5L64.2 12.5L60.1 9.5L64.2 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M84.6 9.5L80.5 12.5L76.4 9.5L80.5 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M100.8 9.5L96.7 12.5L92.6 9.5L96.7 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M117.1 9.5L113.0 12.5L108.9 9.5L113.0 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M133.3 9.5L129.2 12.5L125.1 9.5L129.2 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M149.6 9.5L145.5 12.5L141.4 9.5L145.5 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M165.8 9.5L161.7 12.5L157.6 9.5L161.7 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M182.1 9.5L178.0 12.5L173.9 9.5L178.0 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M198.3 9.5L194.2 12.5L190.1 9.5L194.2 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M214.6 9.5L210.5 12.5L206.4 9.5L210.5 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M230.8 9.5L226.7 12.5L222.6 9.5L226.7 6.5Z' fill='%237a2a1e'/%3E%3Cpath d='M247.1 9.5L243.0 12.5L238.9 9.5L243.0 6.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M263.2 10.9L258.6 13.1L255.1 9.4L259.7 7.2Z' fill='%237a2a1e'/%3E%3Cpath d='M277.4 18.8L272.3 18.9L270.7 14.1L275.8 14.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M287.1 31.7L282.5 29.8L282.9 24.7L287.6 26.7Z' fill='%237a2a1e'/%3E%3Cpath d='M290.7 47.6L287.3 43.8L289.8 39.4L293.2 43.1Z' fill='%23e9dcc0'/%3E%3Cpath d='M287.5 63.5L285.9 58.7L290.0 55.6L291.6 60.5Z' fill='%237a2a1e'/%3E%3Cpath d='M278.0 76.6L278.5 71.6L283.5 70.5L283.0 75.6Z' fill='%23e9dcc0'/%3E%3Cpath d='M264.0 84.8L266.5 80.4L271.5 81.4L269.0 85.9Z' fill='%237a2a1e'/%3E%3Cpath d='M247.9 86.5L252.0 83.5L256.1 86.5L252.0 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M231.7 86.5L235.8 83.5L239.9 86.5L235.8 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M215.4 86.5L219.5 83.5L223.6 86.5L219.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M199.2 86.5L203.3 83.5L207.4 86.5L203.3 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M182.9 86.5L187.0 83.5L191.1 86.5L187.0 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M166.7 86.5L170.8 83.5L174.9 86.5L170.8 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M150.4 86.5L154.5 83.5L158.6 86.5L154.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M134.2 86.5L138.3 83.5L142.4 86.5L138.3 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M117.9 86.5L122.0 83.5L126.1 86.5L122.0 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M101.7 86.5L105.8 83.5L109.9 86.5L105.8 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M85.4 86.5L89.5 83.5L93.6 86.5L89.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M69.2 86.5L73.3 83.5L77.4 86.5L73.3 89.5Z' fill='%237a2a1e'/%3E%3Cpath d='M52.9 86.5L57.0 83.5L61.1 86.5L57.0 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M36.8 85.1L41.4 82.9L44.9 86.6L40.3 88.8Z' fill='%237a2a1e'/%3E%3Cpath d='M22.6 77.2L27.7 77.1L29.3 81.9L24.2 82.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M12.9 64.3L17.5 66.2L17.1 71.3L12.4 69.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.3 48.4L12.7 52.2L10.2 56.6L6.8 52.9Z' fill='%23e9dcc0'/%3E%3Cpath d='M12.5 32.5L14.1 37.3L10.0 40.4L8.4 35.5Z' fill='%237a2a1e'/%3E%3Cpath d='M22.0 19.4L21.5 24.4L16.5 25.5L17.0 20.4Z' fill='%23e9dcc0'/%3E%3Cpath d='M36.0 11.2L33.5 15.6L28.5 14.6L31.0 10.1Z' fill='%237a2a1e'/%3E%3Cpath d='M48.0 14.6H252.0A33.4 33.4 0 0 1 252.0 81.4H48.0A33.4 33.4 0 0 1 48.0 14.6Z' fill='none' stroke='url%28%23g%29' stroke-width='1.3'/%3E%3Cpath d='M48.0 16H252.0' stroke='%23fff' stroke-opacity='.07' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  font-family:var(--serif);font-weight:700;font-size:calc(var(--bw) * .024);letter-spacing:.14em;text-indent:.14em;white-space:nowrap;line-height:1;
+  color:#f3d88f;background-clip:border-box;
+  text-shadow:0 1px 0 #5a3f12,0 -1px 0 rgba(255,246,214,.35),0 0 10px rgba(240,200,110,.35);
+  filter:drop-shadow(0 5px 7px rgba(0,0,0,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.6));
+  pointer-events:auto;cursor:pointer;transition:transform .09s ease,filter .09s ease}
+.dice-dock .roll-pill::before{content:'';position:absolute;inset:0;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(255,236,180,.06);pointer-events:none}
+.dice-dock .roll-pill:hover{filter:drop-shadow(0 5px 7px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(240,200,110,.45))}
+.dice-dock .roll-pill:active,.dice-dock.press .roll-pill{transform:translate(-50%,-50%) translateY(2px) scale(.97);filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)) brightness(.9)}
+.dice-dock .roll-pill:focus-visible{outline:2px solid #f3d88f;outline-offset:3px}
+html.bv .dice-dock .roll-pill{width:calc(var(--bw) * .118);height:calc(var(--bw) * .3);font-size:calc(var(--bw) * .044);writing-mode:vertical-rl;letter-spacing:.2em;text-indent:.2em;padding:calc(var(--bw) * .03) 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232e2620'/%3E%3Cstop offset='.5' stop-color='%2316110d'/%3E%3Cstop offset='1' stop-color='%230c0907'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc98'/%3E%3Cstop offset='.45' stop-color='%23b98d3e'/%3E%3Cstop offset='.7' stop-color='%23f0d38a'/%3E%3Cstop offset='1' stop-color='%238f6a2a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M94.8 48.0V252.0A46.8 46.8 0 0 1 1.2 252.0V48.0A46.8 46.8 0 0 1 94.8 48.0Z' fill='url%28%23b%29' stroke='url%28%23g%29' stroke-width='2.4'/%3E%3Cpath d='M91.4 48.0V252.0A43.4 43.4 0 0 1 4.6 252.0V48.0A43.4 43.4 0 0 1 91.4 48.0Z' fill='none' stroke='%23c9a352' stroke-opacity='.55' stroke-width='.9'/%3E%3Cpath d='M86.5 52.1L83.5 48.0L86.5 43.9L89.5 48.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 68.3L83.5 64.2L86.5 60.1L89.5 64.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 84.6L83.5 80.5L86.5 76.4L89.5 80.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 100.8L83.5 96.7L86.5 92.6L89.5 96.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 117.1L83.5 113.0L86.5 108.9L89.5 113.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 133.3L83.5 129.2L86.5 125.1L89.5 129.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 149.6L83.5 145.5L86.5 141.4L89.5 145.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 165.8L83.5 161.7L86.5 157.6L89.5 161.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 182.1L83.5 178.0L86.5 173.9L89.5 178.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 198.3L83.5 194.2L86.5 190.1L89.5 194.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 214.6L83.5 210.5L86.5 206.4L89.5 210.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 230.8L83.5 226.7L86.5 222.6L89.5 226.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 247.1L83.5 243.0L86.5 238.9L89.5 243.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M85.1 263.2L82.9 258.6L86.6 255.1L88.8 259.7Z' fill='%237a2a1e'/%3E%3Cpath d='M77.2 277.4L77.1 272.3L81.9 270.7L82.0 275.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M64.3 287.1L66.2 282.5L71.3 282.9L69.3 287.6Z' fill='%237a2a1e'/%3E%3Cpath d='M48.4 290.7L52.2 287.3L56.6 289.8L52.9 293.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M32.5 287.5L37.3 285.9L40.4 290.0L35.5 291.6Z' fill='%237a2a1e'/%3E%3Cpath d='M19.4 278.0L24.4 278.5L25.5 283.5L20.4 283.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M11.2 264.0L15.6 266.5L14.6 271.5L10.1 269.0Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 247.9L12.5 252.0L9.5 256.1L6.5 252.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 231.7L12.5 235.8L9.5 239.9L6.5 235.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 215.4L12.5 219.5L9.5 223.6L6.5 219.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 199.2L12.5 203.3L9.5 207.4L6.5 203.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 182.9L12.5 187.0L9.5 191.1L6.5 187.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 166.7L12.5 170.8L9.5 174.9L6.5 170.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 150.4L12.5 154.5L9.5 158.6L6.5 154.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 134.2L12.5 138.3L9.5 142.4L6.5 138.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 117.9L12.5 122.0L9.5 126.1L6.5 122.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 101.7L12.5 105.8L9.5 109.9L6.5 105.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 85.4L12.5 89.5L9.5 93.6L6.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 69.2L12.5 73.3L9.5 77.4L6.5 73.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 52.9L12.5 57.0L9.5 61.1L6.5 57.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M10.9 36.8L13.1 41.4L9.4 44.9L7.2 40.3Z' fill='%237a2a1e'/%3E%3Cpath d='M18.8 22.6L18.9 27.7L14.1 29.3L14.0 24.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M31.7 12.9L29.8 17.5L24.7 17.1L26.7 12.4Z' fill='%237a2a1e'/%3E%3Cpath d='M47.6 9.3L43.8 12.7L39.4 10.2L43.1 6.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M63.5 12.5L58.7 14.1L55.6 10.0L60.5 8.4Z' fill='%237a2a1e'/%3E%3Cpath d='M76.6 22.0L71.6 21.5L70.5 16.5L75.6 17.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M84.8 36.0L80.4 33.5L81.4 28.5L85.9 31.0Z' fill='%237a2a1e'/%3E%3Cpath d='M81.4 48.0V252.0A33.4 33.4 0 0 1 14.6 252.0V48.0A33.4 33.4 0 0 1 81.4 48.0Z' fill='none' stroke='url%28%23g%29' stroke-width='1.3'/%3E%3Cpath d='M31 48.0V252.0' stroke='%23fff' stroke-opacity='.06' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.bv[lang=ja] .dice-dock .roll-pill,html.bv[lang=zh] .dice-dock .roll-pill,html.bv[lang=ko] .dice-dock .roll-pill{text-orientation:upright;letter-spacing:.3em}
+html[lang=ja] .dice-dock .roll-pill,html[lang=zh] .dice-dock .roll-pill,html[lang=ko] .dice-dock .roll-pill{letter-spacing:.32em;text-indent:.32em;font-family:'Shippori Mincho B1',var(--serif);font-weight:800}
+/* while the dice roll the plate steps aside */
+.dice-dock.rolling .roll-pill{display:none}
 .dice-dock:not(.can) .roll-pill{display:none}
 /* move effects: soft, translucent, centred on the board */
 .fx-msg{position:absolute;left:50%;top:50%;z-index:8;transform:translate(-50%,-50%) scale(.96);pointer-events:none;opacity:0;text-align:center;white-space:nowrap;
@@ -121,9 +148,23 @@ html.bv .fx-msg{font-size:calc(var(--bw) * .07)}
 .fx-glow{position:absolute;inset:-2%;z-index:1;pointer-events:none;border-radius:3%;opacity:0;transition:opacity .45s ease;box-shadow:inset 0 0 calc(var(--bw) * .06) rgba(230,197,115,.38)}
 .fx-glow.cap{box-shadow:inset 0 0 calc(var(--bw) * .06) rgba(194,65,45,.38)}
 .fx-glow.show{opacity:1}
+.board-tip{position:absolute;z-index:7;left:50%;transform:translate(-50%,4px);max-width:64%;padding:6px 14px 7px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .35s ease,transform .35s ease;
+  background:rgba(10,16,48,.62);border:1px solid rgba(217,180,90,.32);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  color:rgba(239,232,214,.92);font-size:calc(var(--bw) * .0118 + 5px);line-height:1.45;letter-spacing:.03em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 18px -8px rgba(0,0,0,.7)}
+.board-tip small{color:rgba(239,232,214,.62);margin-inline-start:.6em;font-size:.86em}
+.board-tip.show{opacity:1;transform:translate(-50%,0)}
+.board-tip.s0{bottom:-2%}.board-tip.s1{top:-2%}
+html:not(.hb-on) .board-tip{display:none}
 .toast{position:absolute;left:50%;bottom:6%;z-index:9;transform:translateX(-50%);max-width:92%;padding:8px 16px;border-radius:10px;background:rgba(8,13,38,.9);border:1px solid rgba(217,180,90,.4);font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 .review-bar{display:none;gap:6px;align-items:center;flex-wrap:wrap}
+.pl-col > .review-bar{flex:none;justify-content:center;gap:4px 6px;padding:5px 8px;border-radius:12px;background:rgba(217,180,90,.08);border:1px solid rgba(217,180,90,.35)}
+.pl-col > .review-bar #reviewText{display:inline;font-size:12px;margin-right:2px}
+@media (max-height:820px){.pl-col > .review-bar #reviewText{display:none}
+  html.hb-on body.reviewing .pl-col .players{padding:4px 8px;gap:2px} html.hb-on body.reviewing .pl-col .player{padding:3px 10px} html.hb-on body.reviewing .pl-col > .review-bar{padding:3px 8px}
+  html.hb-on body.reviewing #evalCard .evalbar{display:none}}
+.pl-col > .review-bar button{padding:3px 9px}
+html.hb-on body.reviewing .board-tip{display:none}
 .review-bar #reviewText{display:none}
 body.reviewing .review-bar{display:flex}
 body.reviewing .sbox .rollbtn{display:none}
@@ -251,6 +292,10 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
 /* ---------------------------------------------------------------- dialogs */
 .overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px;height:100vh;height:100dvh}
 .overlay.show{opacity:1;pointer-events:auto}
+.overlay.instant,.overlay.instant .modal{transition:none!important}
+/* switching the tabs of the list dialogs: the new one appears on top of the old one at once (no fade, no backdrop flash) */
+.overlay.ls-top{z-index:71}
+.overlay.ls-under{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .modal{width:min(480px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;
   background:linear-gradient(180deg,#1a2560,#0e1640);border:1px solid rgba(217,180,90,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6),inset 0 0 0 4px rgba(217,180,90,.05);transform:translateY(10px);transition:transform .25s;position:relative}
 .overlay.show .modal{transform:none}
@@ -293,20 +338,19 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   #newOverlay .modal{width:min(900px,100%)}
   .ng-cols{grid-template-columns:1fr 1fr}
 }
-/* rule variants (ゲーム tab, shared/ngtabs.js cards) */
-.ngt-gcards{display:grid;grid-template-columns:repeat(var(--ngt-cols,3),minmax(0,1fr));gap:10px}
-.ngt-gcard{position:relative;display:flex;flex-direction:column;text-align:start;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);min-width:0}
-.ngt-gcard:hover{border-color:var(--brass2)}
-.ngt-gcard.sel{border-color:var(--accent);background:linear-gradient(180deg,rgba(217,180,90,.14),rgba(217,180,90,.04))}
-#ruleCards.ngt-gcards{min-height:0!important;align-content:start}
-#ruleCards .ngt-gcard .gart{min-height:0!important;flex:none!important;padding:4px!important;border-radius:10px}
-#ruleCards .ngt-gcard .gart svg{width:100%!important;height:auto!important;max-height:none!important;max-width:none!important;display:block}
-#ruleCards .ngt-gcard p{min-height:0!important}
-.modal.ngt-on #ruleCards.few.n3 .ngt-gcard{grid-template-columns:140px minmax(0,1fr)!important}
-.ngt-gcard b{display:block;font-family:var(--mincho);font-size:15px;letter-spacing:.04em;margin-top:6px}
-.ngt-gcard p{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:3px}
-.ngt-gcard .std{color:var(--accent);font-size:10.5px;margin-inline-start:4px}
-@media (max-width: 520px){.ngt-gcards{grid-template-columns:1fr}}
+/* rule variants (ゲーム tab): the shared cards of shared/ngtabs.js + shared/nglux.js; on PC the same big cards as shogi's
+   本将棋／5五将棋… (two columns, the board on the left in a framed cell, name and description beside it, ルール at the foot) */
+#ruleCards .gart svg{display:block}
+@media (min-width: 600px){
+  #newOverlay .modal:not(.ngt-on) #ruleCards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;min-height:0!important;align-content:start!important}
+  #newOverlay .modal:not(.ngt-on) #ruleCards .ngt-gcard{display:grid!important;grid-template-columns:150px minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;column-gap:18px!important;row-gap:6px!important;padding:18px 20px 44px!important;min-height:190px;border-radius:16px;transform:none}
+  #newOverlay .modal:not(.ngt-on) #ruleCards .gart{grid-column:1;grid-row:1 / 5!important;align-self:center;min-height:0!important;flex:none!important;border-radius:12px;padding:10px!important;background:color-mix(in srgb, var(--panel) 70%, transparent)!important;box-shadow:inset 0 0 0 1px var(--line)!important}
+  #newOverlay .modal:not(.ngt-on) #ruleCards .gart svg{width:100%!important;height:auto!important;max-height:none!important}
+  #newOverlay .modal:not(.ngt-on) #ruleCards b{grid-column:2;grid-row:2;font-size:20px!important;margin:0!important;font-family:var(--mincho)}
+  #newOverlay .modal:not(.ngt-on) #ruleCards p{grid-column:2;grid-row:3;font-size:14px!important;line-height:1.75!important;min-height:0!important}
+  #newOverlay .modal:not(.ngt-on) #ruleCards .gpick{top:12px;right:12px;width:24px;height:24px;font-size:13px}
+}
+.modal.ngt-on #ruleCards .gart{padding:6px!important}
 /* design tiles */
 .dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .dsg button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 7px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:11.5px;color:var(--muted);min-width:0}
@@ -322,7 +366,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{display:flex;flex-direction:column}
 @media (min-width: 900px) and (min-height: 561px){
-  #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{width:min(1000px,calc(100vw - 64px));height:min(880px,calc(100vh - 20px));height:min(880px,calc(100dvh - 20px))}
+  #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{width:min(1000px,calc(100vw - 64px));height:min(880px,calc(100vh - 32px))!important;height:min(880px,calc(100dvh - 32px))!important;max-height:none!important}
 }
 @media not all and (min-width: 900px) and (min-height: 561px){
   #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{width:100%;height:calc(100dvh - 20px)}
@@ -419,21 +463,27 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   @supports (height:100dvh){html.hb-on{--vh:calc(100dvh - var(--hb-h) - 40px)}}
   html.hb-on body{overflow:hidden}
   html.hb-on .app{height:var(--vh);display:grid;gap:12px;padding:12px clamp(16px, 2vw, 32px) 12px;
-    grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr) minmax(0,1.05fr);
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);
     grid-template-rows:minmax(0,1fr) var(--ih);
-    grid-template-areas:"board board board board" "pl ck ev kf"}
+    grid-template-areas:"board board board" "ck pl kf"}
   html.hb-on{--ih:clamp(220px, calc(var(--vh) * .34), 330px);--bw:min(calc(100vw - 64px), calc((var(--vh) - var(--ih) - 36px) * 1.674), 1500px)}
   html.hb-on .side, html.hb-on .side-in{display:contents}
   html.hb-on .board-area{grid-area:board;justify-content:center}
+  /* PC info row: コーチ 1/2 | 対局者（1人1行）＋形勢 1/4 | 棋譜 1/4. The status / roll box is not shown: the hints are the board's
+     small notes (#boardTip) and rolling is the board's roll button, the space bar or a tap on the dice */
   html.hb-on .pl-col{grid-area:pl;display:flex;flex-direction:column;gap:10px;min-height:0}
-  html.hb-on .pl-col .players{flex:none}
-  html.hb-on body:is(.in-lesson,.in-puzzle) .sbox{display:none}
-  html.hb-on .sbox{flex:1 1 auto;flex-direction:column;align-items:stretch;justify-content:space-between}
-  html.hb-on .sbox .rollbtn{justify-content:center;padding:11px 16px}
+  html.hb-on .pl-col .players{flex:none;padding:8px 10px;gap:4px}
+  html.hb-on .pl-col .player{grid-template-columns:auto minmax(0,1fr) auto auto;padding:6px 10px;column-gap:8px}
+  html.hb-on .pl-col .player .sub, html.hb-on .pl-col .player .status{display:none}
+  html.hb-on .pl-col .player .home{font-size:19px}
+  html.hb-on .pl-col .player .pdisc{width:18px;height:18px}
+  html.hb-on .pl-col #evalCard{flex:1 1 auto;min-height:0}
+  html.hb-on .sbox{display:none!important}
   html.hb-on #coachCard, html.hb-on #itCoachRest, html.hb-on .review-card, html.hb-on .lesson-card, html.hb-on .puzzle-card{grid-area:ck;min-height:0;overflow-y:auto}
   html.hb-on body:is(.in-lesson,.in-puzzle){--ih:clamp(250px, calc(var(--vh) * .4), 360px)}
-  html.hb-on #evalCard{grid-area:ev;min-height:0;display:flex;flex-direction:column}
-  html.hb-on #evalCard .graph{flex:1 1 auto;min-height:40px;height:auto}
+  html.hb-on #evalCard{min-height:0;display:flex;flex-direction:column;padding:10px 12px}
+  html.hb-on #evalCard .graph{flex:1 1 auto;min-height:0;height:auto}
+  html.hb-on #evalCard .navbar{flex:none}
   html.hb-on .kifu-card{grid-area:kf;min-height:0}
   html.hb-on .kifu{max-height:none}
   html.hb-on .info-line{display:none}
@@ -441,8 +491,8 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   html.hb-on body .review-card.show ~ #coachCard{display:none}
   html.hb-on body:has(.review-card.show) #coachCard{display:none!important}
   /* the PC review box (rvbox.js) */
-  html.hb-on.rvb-on .app{grid-template-areas:"board board board board" "ev bx bx kf"}
-  html.hb-on.rvb-on .pl-col, html.hb-on.rvb-on .review-card{display:none!important}
+  html.hb-on.rvb-on .app{grid-template-areas:"board board board" "bx pl kf"}
+  html.hb-on.rvb-on .review-card{display:none!important}
   html.hb-on .app > .rvbox{grid-area:bx}
   .hb .hb-info .hb-chip .pdisc{width:14px;height:14px}
 }
@@ -483,8 +533,9 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
     <div class="frame" id="frame">
       <div class="board-wrap" id="board"></div>
       <div class="fx-glow" id="fxGlow"></div>
-      <div class="dice-dock" id="diceDock" role="button" tabindex="0"><div class="dice-host" id="diceHost"></div><div class="dice-cap" id="diceCap"></div><span class="roll-pill" id="rollPill"></span></div>
+      <div class="dice-dock" id="diceDock" role="button" tabindex="0"><div class="dice-host" id="diceHost"></div><div class="dice-cap" id="diceCap"></div><button type="button" class="roll-pill" id="rollPill" tabindex="-1"></button></div>
       <div class="fx-msg" id="fxMsg"></div>
+      <div class="board-tip" id="boardTip" aria-live="polite"></div>
       <div class="toast" id="toast"></div>
       <div class="review-bar" id="reviewBar"><span id="reviewText"></span><button id="btnResume" data-i18n="review.resume"></button><button id="btnLatest" data-i18n="review.latest"></button></div>
     </div>
@@ -742,7 +793,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=31"></script>
+<script src="../shared/headerbar.js?v=36"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=2"></script>
@@ -761,7 +812,10 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="rvbox.js?v=1"></script>
 <script src="app-learn.js?v=1"></script>
 <script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=23"></script>
+<script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
+<script src="../shared/resumeng.js?v=1"></script>
+<script src="../shared/rulelink.js?v=1" data-btn="#btnRules"></script>
 <!-- World Board Game Atlas portal skin: ur/?skin=atlas — the British Museum board in 3D (atlas/models/ur.js + atlas/skin/ur.js), the DOM board stays on top for taps (see SKIN-HOOKS.md) -->
 <script>
 (function () {
@@ -771,7 +825,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/ur.js?v=2')).then(() => load('../atlas/skin/ur.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/ur-dice.js?v=1')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=3'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>
