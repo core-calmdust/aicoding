@@ -123,7 +123,8 @@ function listHtml() {
   const head = `<div class="lc-head"><span class="lc-ico lg">${c.ico}</span><div><b>${esc(t('cat.' + c.id))}</b><p>${esc(t('catd.' + c.id))}</p></div><div class="lc-prog"><small>${esc(t('lsn.passed', { n: done, m: c.items.length }))}</small><span class="bar"><i style="width:${done / c.items.length * 100}%"></i></span></div></div>`;
   const cards = c.items.map(id => { const pr = progress(id), n = ALL.findIndex(x => x.id === id) + 1;
     return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${id}"><span class="lc-pic bc-pic">${picHtml(id)}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${n}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? t('lsn.pass') : pr.best ? t('lsn.tried', { n: pr.best }) : t('lsn.new'))}</small></span><b>${esc(t('l.' + id))}</b><i>${esc(t('lp.' + id))}</i><span class="lc-d">${esc(t('ld.' + id))}</span><span class="bar"><i style="width:${(pr.best || 0) / 5 * 100}%"></i></span></span></button>`; }).join('');
-  return `<p class="lc-lead">${esc(t('lsn.lead'))}</p><div class="lc-tabs">${tabs}</div>${head}<div class="lc-grid">${cards}</div>`;
+  const tut = window.BJTut ? `<button type="button" class="lc-tut" id="lcTut"><span>▶</span><span><b>${esc(BJTut.L('entry'))}</b><small>${esc(BJTut.L('entry.d'))}</small></span><span class="go">›</span></button>` : '';
+  return `<p class="lc-lead">${esc(t('lsn.lead'))}</p>${tut}<div class="lc-tabs">${tabs}</div>${head}<div class="lc-grid">${cards}</div>`;
 }
 function open(o) { cur = null; if (o && o.cat) cat = o.cat; renderShell(); A.openOv('#lessonOverlay'); }
 function renderShell() {
@@ -135,6 +136,7 @@ function renderShell() {
   if (!cur) {
     M.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderShell(); });
     M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l));
+    const tb = $('#lcTut'); if (tb) tb.onclick = () => { A.closeOv('#lessonOverlay'); BJTut.start(); };
     $('#lcClose').onclick = () => A.closeOv('#lessonOverlay');
   } else wirePlay();
 }

@@ -80,7 +80,9 @@ function build(v) {
   tours[v] = tour; return tour;
 }
 function tabs() {
-  $('#rulesTabs').innerHTML = B.ORDER.map(v => `<button type="button" data-v="${v}" class="${v === cur ? 'sel' : ''}">${esc(A.vName(v))}</button>`).join('');
+  $('#rulesTabs').innerHTML = B.ORDER.map(v => `<button type="button" data-v="${v}" class="${v === cur ? 'sel' : ''}">${esc(A.vName(v))}</button>`).join('') +
+    (window.BJTut ? `<button type="button" class="rv-tab-lesson" data-tut="1">▶ ${esc(BJTut.L('entry'))}</button>` : '');
+  const tu = document.querySelector('#rulesTabs [data-tut]'); if (tu) tu.onclick = () => { if (cur && tours[cur]) tours[cur].stop(); A.closeOv('#rulesOverlay'); BJTut.start(); };
   document.querySelectorAll('#rulesTabs [data-v]').forEach(b => b.onclick = () => show(b.dataset.v, 0));
   $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>`;
   document.querySelector('#rulesTop [data-top="lessons"]').onclick = () => { if (cur && tours[cur]) tours[cur].stop(); window.BJLessons && BJLessons.open(); };
