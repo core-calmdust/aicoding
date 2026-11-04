@@ -103,5 +103,21 @@
       if (over(e) && PAREN.test(e.textContent)) { e.dataset.full = e.textContent; e.textContent = e.textContent.replace(PAREN, ''); e.style.fontSize = ''; if (over(e)) for (let f = base - .5; f >= Math.max(8, base * .78) && over(e); f -= .5) e.style.fontSize = f + 'px'; }
     });
   }
-  window.AtlasGameList = { render, fit, fitTitle, fitLabels, SHOTS };
+  /* a paragraph that fills the height its box is given (flex): all of it when it fits, otherwise as many whole lines as fit, then "…".
+     Refits when the box changes size (window, fonts, the card next to it). */
+  const CRO = window.ResizeObserver && new ResizeObserver(es => es.forEach(e => { const k = Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height); if (k !== e.target._ck) { e.target._ck = k; clampNow(e.target); } }));
+  let lastC = null;
+  function clampNow(el) {
+    if (!el || !el.isConnected) return;
+    el.style.webkitLineClamp = ''; el.classList.remove('clamp');
+    if (el.scrollHeight <= el.clientHeight + 1) return;
+    const lh = parseFloat(getComputedStyle(el).lineHeight) || 20, n = Math.max(1, Math.floor((el.clientHeight + 1) / lh));
+    el.classList.add('clamp'); el.style.webkitLineClamp = String(n);
+  }
+  function clampFit(el) {
+    if (!el) return; clampNow(el);
+    if (CRO) { if (lastC && lastC !== el) CRO.unobserve(lastC); lastC = el; el._ck = ''; CRO.observe(el); }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => clampNow(el));
+  }
+  window.AtlasGameList = { render, fit, fitTitle, fitLabels, clampFit, SHOTS };
 })();
