@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const SHOTS = new Set(['shogi', 'chess', 'checkers', 'ugolki', 'fanorona', 'alquerque', 'xiangqi', 'tafl', 'reversi', 'go', 'gomoku', 'dots', 'connect4', 'morris', 'hex',
-    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire']);
+    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur']);
   const SHOT_V = 3;                                   // bump after regenerating the thumbnails
   const FX = ['ai', 'online', 'lessons', 'puzzles'];  // the feature icons shown on a card (labels come from the tag.* strings)
 
@@ -21,7 +21,7 @@
     const about = c.about ? c.about(g) : '', tl = c.tl ? c.tl(g) : '';
     // ルール (the 3D rules tour, or the 2D game opened on its rules via ?rules=1) · ヒストリア (once window.Historia exists)
     const btn = (k, ic, lbl) => `<button type="button" class="glb" data-${k}="${g.id}">${ic}<span>${c.esc(lbl)}</span></button>`;
-    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia ? btn('hist', IC.hist, c.t('gl.historia')) : '');
+    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia && (!Historia.has || Historia.has(g.id)) ? btn('hist', IC.hist, c.t('gl.historia')) : '');
     return `<div class="glc" style="--c:${g.color}"><a class="glk" href="../${g.href}" data-open="${g.id}"${about ? ` title="${c.esc(about)}"` : ''}>
       <span class="sh${shot ? '' : ' noshot'}">${shot ? `<img class="ss" src="shots/${g.id}.webp?v=${SHOT_V}" width="520" height="390" alt="" loading="lazy" decoding="async">` : ''}
         <span class="g3m">${c.art(g)}</span>${b ? `<span class="bd">${b}</span>` : ''}${pct > 0 ? `<span class="pr"><i style="width:${pct}%"></i></span>` : ''}</span>
