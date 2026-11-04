@@ -440,23 +440,31 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261104sd';
+  const V = 'v=20261104x5';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
-    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);
-    readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; if (simd && WX.xq_nnue && typeof DecompressionStream !== 'undefined') return loadNet(); }).catch(() => { WX = null; });
+    // the net is fetched first: its hidden size picks the build (engine_simd.wasm: 256, engine_simd512.wasm: 512)
+    const netP = simd && typeof DecompressionStream !== 'undefined' ? fetchNet().catch(() => null) : Promise.resolve(null);
+    readyP = netP.then(net => {
+      const H = net ? new DataView(net.buffer, net.byteOffset, net.byteLength).getInt32(4, true) : 256;
+      const url = new URL((!simd ? 'engine.wasm?' : H === 512 ? 'engine_simd512.wasm?' : 'engine_simd.wasm?') + V, self.location.href);
+      return (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+        .then(r => { WX = r.instance.exports; if (net && WX.xq_nnue) loadNet(net); });
+    }).catch(() => { WX = null; });
   }
-  async function loadNet() {
+  async function fetchNet() {
+    const res = await fetch(new URL('nnue.bin.gz?' + V, self.location.href)); if (!res.ok) return null;
+    let buf = new Uint8Array(await res.arrayBuffer());
+    if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    return buf;
+  }
+  function loadNet(buf) {
     try {
-      const res = await fetch(new URL('nnue.bin.gz?' + V, self.location.href)); if (!res.ok) return;
-      let buf = new Uint8Array(await res.arrayBuffer());
-      if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-      if (dv.getUint32(0, true) !== 0x5845554E || dv.getInt32(4, true) !== 256 || dv.getInt32(8, true) !== 1260) return;
-      const H = 256, IN = 1260, b = buf.buffer; let o = buf.byteOffset + 12;
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), H = dv.getInt32(4, true);
+      if (dv.getUint32(0, true) !== 0x5845554E || dv.getInt32(8, true) !== 1260 || H !== (WX.xq_h ? WX.xq_h() : 256)) return;
+      const IN = 1260, b = buf.buffer; let o = buf.byteOffset + 12;
       new Int16Array(WX.memory.buffer, WX.xq_w1_ptr(), IN * H).set(new Int16Array(b.slice(o, o + IN * H * 2))); o += IN * H * 2;
       new Int32Array(WX.memory.buffer, WX.xq_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
       new Int16Array(WX.memory.buffer, WX.xq_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
