@@ -719,8 +719,8 @@ if (olOn()) ON.onAuth(() => { dockRender(); });
 
 // ====================================================================== first visit: profile name + optional Google link
 const PF_KEY = 'dots-profile-asked';
-const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
-const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+const pfAsked = () => { try { return !!(localStorage.getItem(PF_KEY) || localStorage.getItem('atlas-profile-asked')); } catch (e) { return true; } };   // (asked once for all the games of the site)
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); localStorage.setItem('atlas-profile-asked', String(Date.now())); } catch (e) {} };
 function pfOpen() {
   $('#pfName').value = ON.localName() || ON.defaultName();
   showOv('#profOverlay');
