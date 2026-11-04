@@ -286,7 +286,8 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
 .result-disc .pdisc{width:54px;height:54px}
 .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.7}
-.ng-credit{margin-top:14px;text-align:center;font-size:11px;line-height:1.6;color:var(--dim)}
+.modal:not(.ngt-on) > .ng-credit{margin-top:12px}
+.ng-credit{text-align:center;font-size:11px;line-height:1.6;color:var(--dim)}
 .ng-cols{display:grid;grid-template-columns:1fr;gap:0 26px}
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){
   #newOverlay .modal{width:min(900px,100%)}
@@ -636,11 +637,11 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
         <div class="dsg pcs" id="pcRow"></div>
       </div>
     </div></div>
-    <p class="ng-credit" data-i18n="ng.credit"></p>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
       <button class="mbtn go" id="btnStart" data-i18n="start"></button>
     </div>
+    <p class="ng-credit" data-i18n="ng.credit"></p>
   </div>
 </div>
 
