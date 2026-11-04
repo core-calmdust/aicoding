@@ -2678,9 +2678,12 @@ function openNewDialog(resume) {
 // 後手AI on the right, two players get the clock on the right, rated shows its rating card on the right; an empty panel is dropped
 function ngPlace(rt) {
   const cols = document.querySelectorAll('#newOverlay .ng-col'), c1 = cols[0], c2 = cols[1], m = dlg.mode;
-  if (m === 'watch') c1.append($('#fLevel'), $('#lvNote')); else c2.prepend($('#fLevel'), $('#lvNote'));
-  if (m === 'pvp') c2.prepend($('#fClock')); else $('#fColor').after($('#fClock'));
-  if (rt) c2.prepend($('#rtStats')); else $('#fRatedInfo').append($('#rtStats'));
+  // (moved only when the place changes: re-inserting the slider while it is dragged would drop the drag)
+  const put = (el, parent, fn) => { if (el.parentNode !== parent) fn(); };
+  const lv = $('#fLevel'), ln = $('#lvNote'), ck = $('#fClock'), rs = $('#rtStats');
+  if (m === 'watch') put(lv, c1, () => c1.append(lv, ln)); else put(lv, c2, () => c2.prepend(lv, ln));
+  if (m === 'pvp') put(ck, c2, () => c2.prepend(ck)); else put(ck, c1, () => $('#fColor').after(ck));
+  if (rt) put(rs, c2, () => c2.prepend(rs)); else put(rs, $('#fRatedInfo'), () => $('#fRatedInfo').append(rs));
   c1.classList.toggle('ng-spread', m === 'ai');
   for (const c of cols) c.classList.toggle('ng-empty', ![...c.children].some(e => !e.hasAttribute('data-ng') && !e.classList.contains('hidden') && !(e.id === 'rtStats' && !rt)));
 }
