@@ -291,16 +291,16 @@
       k.scale.setScalar(1.45); g.add(at(k, .3, 2.0, -.3, .45, 0, -.3));
       return g;
     },
-    ugolki() {   // a corner of a Khokhloma board (cinnabar / black lacquer, gold side band); a lacquered ivory piece hops over a black one into the house
-      const g = boardChunk(3, 3.6, gridMat('ug', '#c4432a', '#c4432a', 3, { check: '#1d1311' }), C(0x1a0f0c, { roughness: .28 }));
-      const band = rbox(3.66, .09, 3.66, .32, gloss(0xd9a441)); band.position.y = .16; g.add(band);
+    ugolki() {   // a corner of a Gzhel board (white porcelain / cobalt, cobalt side band); a white porcelain piece hops over a cobalt one into the house
+      const g = boardChunk(3, 3.6, gridMat('ugz2', '#f3f6fd', '#f3f6fd', 3, { check: '#163a94' }), C(0x1d3f9a, { roughness: .25 }));
+      const band = rbox(3.66, .09, 3.66, .32, gloss(0xf3f6fd)); band.position.y = .16; g.add(band);
       const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
-      const ivory = s => { const k = checker(0xf3e7cc, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0xc9962e)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
-      const black = s => { const k = checker(0x1d1513, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0xc2352a)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
-      g.add(at(ivory(.72), p(0), .5, p(2))); g.add(at(black(.72), p(1), .5, p(1))); g.add(at(ivory(.72), p(2), .5, p(0)));
-      // the big piece mid-jump over the black one, a dotted gold arc under it
-      g.add(at(ivory(1.35), p(1) - .15, 1.85, p(1) - .25, .35, 0, -.25));
-      for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0xf2c94c)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
+      const white = s => { const k = checker(0xf7f9ff, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0x2a56b8)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
+      const blue = s => { const k = checker(0x1f4aa8, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0xe9eefb)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
+      g.add(at(white(.72), p(0), .5, p(2))); g.add(at(blue(.72), p(1), .5, p(1))); g.add(at(white(.72), p(2), .5, p(0)));
+      // the big piece mid-jump over the cobalt one, a dotted cobalt arc under it
+      g.add(at(white(1.35), p(1) - .15, 1.85, p(1) - .25, .35, 0, -.25));
+      for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0x2a56b8)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
       return g;
     },
     tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
