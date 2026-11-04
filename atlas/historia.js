@@ -44,9 +44,12 @@
   }
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
+  // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
+  const IDS = new Set('alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki xiangqi'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
+    const ok = has(g.id); b.style.display = ok ? '' : 'none'; if (!ok) { const t = document.querySelector('#bvi .L .tags .hstag'); if (t) t.remove(); return; }
     b.innerHTML = `<span class="hb-ic">${BOOK}</span><span class="hb-tx"><b>${esc(u('btn'))}</b><small>${esc(u('sub'))}</small></span>`;
     b.setAttribute('aria-label', u('btn') + ' — ' + u('sub'));
     b.style.setProperty('--gc', g.color || '#c48a4a');
@@ -122,7 +125,7 @@
   function open(id) {
     if (on) { if (typeof id !== 'string' || (game && game.id === id)) return; close(true); }
     if (typeof id === 'string') {
-      const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G) return;
+      const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G || !has(id)) return;
       const bv = $('bv'), onBoard = bv && bv.classList.contains('on') && !bv.classList.contains('playing') && game && game.id === id;
       if (!onBoard) { let l = lang; try { l = localStorage.getItem('aicoding-lang') || (navigator.language || 'ja').slice(0, 2); } catch (e) {} lang = LANGS.includes(l) ? l : 'en'; game = G; }
       solo = !onBoard; fromList = false;
@@ -517,5 +520,5 @@
     return `<svg class="dg${bigOne ? ' big' : ''}" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" dir="ltr" aria-hidden="true" style="--ln:${line}"><defs><marker id="hsArr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1 9 5 0 9z" fill="#d8423a"/></marker></defs>${out.join('')}${body}</svg>`;
   }
 
-  window.Historia = { sync, open, close: () => close(), go, fit, get on() { return on; }, _diag: diag };
+  window.Historia = { sync, open, has, close: () => close(), go, fit, get on() { return on; }, _diag: diag };
 })();
