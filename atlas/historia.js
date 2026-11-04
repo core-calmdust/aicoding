@@ -176,13 +176,13 @@
     if (solo) { document.body.style.overflow = bodyOv; if (fromList && window.AtlasBoard) { fromList = false; setTimeout(() => AtlasBoard.close(), 0); } }
     else if (fromList) {   // opened from the game list: back to the list (the board view closes with Historia)
       fromList = false; gallery(false, null, true); const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      document.documentElement.style.setProperty('--hs-shift', '0px');
+      if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
       setTimeout(() => { if (!on && window.AtlasBoard) AtlasBoard.close(); }, 320);
     }
     else {
       gallery(false);
       const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      document.documentElement.style.setProperty('--hs-shift', '0px');
+      if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
       cam(false);
       if (ctx && ctx.fit) ctx.fit(); else if (window.Table3D && Table3D.setInset) Table3D.setInset(0);
       const b = $('bvHist'); if (b && !swap) try { b.focus({ preventScroll: true }); } catch (e) {}
@@ -218,7 +218,11 @@
     else Table3D.setInset(0);
   }
   // wide screens: the canvas slides away from the page so the board sits in the free part of the screen
-  function shift() { document.documentElement.style.setProperty('--hs-shift', phone() ? '0px' : rtl() ? 'calc(var(--hs-pw) / -2)' : 'calc(var(--hs-pw) / 2)'); }
+  function shift() {   // (a shift lens in Table3D: the canvas stays put and fills the screen, the picture moves into the free part)
+    if (!window.Table3D || !Table3D.setShift) return;
+    const pn = root && root.querySelector('.hs-panel'); if (phone() || !pn) { Table3D.setShift(0); return; }
+    const L = pn.offsetLeft, R = L + pn.offsetWidth; Table3D.setShift(rtl() ? -(innerWidth - L) / 2 : R / 2);   // (layout box: the panel's slide-in transform is ignored)
+  }
   addEventListener('resize', () => { if (on) { shift(); fit(); } });
   // the 3D camera per chapter: the showcase turntable, or straight down onto the board for the board chapter
   let camTop = false, has3D = true;

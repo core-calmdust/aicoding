@@ -1195,12 +1195,16 @@
   // the canvas always fills the screen (no seams); `inset` px at the bottom are covered by the info card,
   // so the camera frames the board inside the free area above it (view offset), easing when it changes
   let inset = 0, insetTo = 0, cw = 1, ch = 1;
+  // hshift px: the picture is moved sideways inside the canvas (a shift lens) — Historia keeps its board beside the page this way,
+  // so the canvas itself never moves and the room fills the whole screen
+  let hshift = 0, hshiftTo = 0;
   function frame() {
     const free = Math.max(120, ch - inset);
     cam.aspect = cw / free;
-    if (inset > .5) cam.setViewOffset(cw, free, 0, 0, cw, ch); else cam.clearViewOffset();
+    if (inset > .5 || Math.abs(hshift) > .5) cam.setViewOffset(cw, free, -hshift, 0, cw, ch); else cam.clearViewOffset();
     cam.updateProjectionMatrix();
   }
+  function setShift(px) { hshiftTo = px || 0; kick(900); }
   // glide: a timed ease-in-out of the camera (and the framing above the info card) instead of the soft exponential follow
   let glide = null;
   const ioC = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -1485,6 +1489,7 @@
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); }
+    if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); }
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
@@ -1549,5 +1554,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { museum, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { museum, setShift, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
