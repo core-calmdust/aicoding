@@ -1520,9 +1520,9 @@
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
-      glide.t += Math.min(dt, 50); const k = Math.min(1, glide.t / glide.dur), e = 1 - Math.pow(1 - k, 3);   // (a frame advances at most 50 ms: smooth steps, and a stall never makes it jump)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
-      camK = glide.k0 + (camTo - glide.k0) * e; inset += (insetTo - inset) * ez(.22); frame();   // the framing follows smoothly even if the card changes size meanwhile
-      if (k >= 1) { camK = camTo; glide = null; }
+      glide.t += Math.min(dt, 50); const k = Math.min(1, glide.t / glide.dur), e = ioC(k);   // one ease-in-out for everything that moves   // (a frame advances at most 50 ms: smooth steps, and a stall never makes it jump)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
+      camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();   // the framing reaches its end on the same curve   // the framing follows smoothly even if the card changes size meanwhile
+      if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; frame(); }
     } else camK += (camTo - camK) * ez(.07);
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
@@ -1572,7 +1572,7 @@
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
-    orthoBlend(orthoWant ? camK * camK * camK : 0);
+    orthoBlend(orthoWant ? camK : 0);   // (the projection flattens on the camera's own curve: it lands with it, no late zoom)
     if (museumOn) glare(camK);
     if (quietOn) {
       const e = cam.projectionMatrix.elements, kq = [cam.position.x, cam.position.y, cam.position.z, yaw, e[0], e[5], e[8], e[9], e[11], cw, ch].map(v => v.toFixed(4)).join();
