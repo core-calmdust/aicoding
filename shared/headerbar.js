@@ -187,11 +187,11 @@ function dockCenter() {
   if (!app || !dock) { if (!dockCenter.tried) { dockCenter.tried = 1; setTimeout(dockCenter, 1500); } return; }
   const root = document.documentElement, M = 10;   // M: breathing room above / below the content
   // D: how long the board takes to move / resize — together with the dock (its panel's height: .25s ease) (2026-11-01)
-  const D = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 260;
+  // (common spec: animations are not left out for prefers-reduced-motion)
+  const D = 260;
   if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
-  app.style.top = '0px';   // a length (not auto), so the change of top can transition
-  app.style.transition = D ? `top ${D}ms ease` : 'none';
-  let cur = 0, own = 0, fitted = false, rt = 0, anim = 0;
+  app.style.top = '0px';
+  let cur = 0, own = 0, fitted = false, rt = 0;
   const isOpen = () => { const ds = getComputedStyle(dock); return document.body.classList.contains('dock-open') && ds.display !== 'none' && ds.position === 'fixed'; };
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
@@ -215,14 +215,20 @@ function dockCenter() {
     return () => an.forEach((a, i) => { try { a.currentTime = was[i]; } catch (e) {} });
   };
   const vhPx = () => { const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;visibility:hidden;height:var(--vh)'; app.appendChild(pr); const h = pr.getBoundingClientRect().height; pr.remove(); return h; };
-  const relayout = () => { own++; window.dispatchEvent(new Event('resize')); setTimeout(() => own--, 0); };
+  // (dockrelayout: listeners that must follow at once, within the probe — the 3D skins' info column fitted to the board)
+  const relayout = () => { own++; window.dispatchEvent(new Event('resize')); window.dispatchEvent(new Event('dockrelayout')); setTimeout(() => own--, 0); };
   // the reduction R is applied as --vh (an !important rule on <html> and <body>: some games re-declare --vh on body or rewrite
   // the inline value on resize) and as DockFit.extra for games that size the board in JS
   let R = 0, base = 0, lastStep = 0;
   const css = document.createElement('style'); css.id = 'dockFitCss'; document.head.appendChild(css);
   const cmp = document.createElement('style'); cmp.id = 'dockCompactCss';
-  cmp.textContent = `html.dock-compact .side .kifu-card, html.dock-compact .side .info-line, html.dock-compact .side #graph, html.dock-compact .side .pl-info{display:none!important}
-html.dock-compact .side, html.dock-compact .side .side-in{height:auto!important;max-height:none!important}
+  // (the record is never hidden — common spec 2026-11-04: its box gets lower instead; the coach box gets lower too and scrolls)
+  cmp.textContent = `html.dock-compact .side .info-line, html.dock-compact .side #graph, html.dock-compact .side .pl-info{display:none!important}
+html.dock-compact:not(.side-col) .side, html.dock-compact:not(.side-col) .side .side-in{height:auto!important;max-height:none!important}
+html.dock-compact.side-col .side .side-in > .kifu-card{flex:1 1 0!important;min-height:72px!important}
+html.dock-compact.side-col .side .side-in > .kifu-card .kifu{min-height:0!important}
+html.dock-compact.side-col .side .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2 1 0!important;min-height:96px!important;overflow-y:auto!important}
+html.dock-compact.side-col .side .side-in > .review-card.show{flex:1.3 1 0!important;min-height:96px!important}
 html.dock-compact .side .card{padding-top:9px!important;padding-bottom:9px!important}
 html.dock-compact .side .players .player{padding-top:8px!important;padding-bottom:8px!important}
 html.dock-compact .side .players .count, html.dock-compact .side .players .count > span:first-child, html.dock-compact .side .players [id^=pip]{font-size:20px!important;line-height:1.1!important}
@@ -290,47 +296,51 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     return d;
   };
   const moveTo = d => { if (d != null && d !== cur) { cur = d; app.style.top = -d + 'px'; } };
-  // CSS 'ease' (cubic-bezier(.25,.1,.25,1)), the curve of the shift and of the dock
-  const ease = t => { let a = 0, b = 1, x = t; for (let i = 0; i < 24; i++) { x = (a + b) / 2; const px = 3 * .25 * x * (1 - x) * (1 - x) + 3 * .25 * x * x * (1 - x) + x * x * x; if (px < t) a = x; else b = x; } return 3 * .1 * x * (1 - x) * (1 - x) + 3 * x * x * (1 - x) + x * x * x; };
-  // the size from R0 to R1 in step with the shift (top transitions over the same time): --vh is written once per frame
-  const tween = (R0, R1, done) => {
-    cancelAnimationFrame(anim);
-    if (!D || Math.abs(R1 - R0) < 1) { R = R1; apply(); if (done) done(); return; }
-    const t0 = performance.now();
-    const step = now => { const k = Math.min(1, (now - t0) / D); R = R0 + (R1 - R0) * ease(k); if (k >= 1) R = R1; apply(); if (k < 1) anim = requestAnimationFrame(step); else { anim = 0; if (done) done(); } };
-    anim = requestAnimationFrame(step);
+  // the move / resize is shown with FLIP (2026-11-04): the final layout is set at once (one real resize: --vh, the 3D canvas,
+  // the info column), then each child of .app is drawn from where it was to where it is now with a compositor animation of
+  // translate + scale — no layout, no canvas resize and no 3D redraw per frame (writing --vh every frame made the 3D pages stutter).
+  // html.dock-anim is on meanwhile: the 3D table skips its redraws and the skins their re-measuring; one resize at the end.
+  const kids = () => [...app.children].filter(c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; });
+  const snap = () => kids().map(c => [c, c.getBoundingClientRect()]);   // (as seen: a running FLIP included, so a new one starts from there)
+  let flips = [], flipT = 0;
+  const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); };
+  const flip = before => {
+    stopFlips();
+    for (const [c, b] of before) {
+      if (!c.isConnected || !c.getClientRects().length) continue;
+      const a = c.getBoundingClientRect(); if (a.width < 2 || b.width < 2) continue;
+      const s = b.width / a.width, dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(s - 1) < .002) continue;
+      try { flips.push(c.animate([{ translate: `${dx}px ${dy}px`, scale: `${s}` }, { translate: '0px 0px', scale: '1' }], { duration: D, easing: 'ease' })); } catch (e) {}
+    }
+    if (!flips.length) return;
+    root.classList.add('dock-anim');
+    flipT = setTimeout(() => { flips = []; root.classList.remove('dock-anim'); relayout(); }, D + 20);   // the end: everything measures the final place once
   };
   let gen = 0;
   const settle = async () => {
-    const my = ++gen; cancelAnimationFrame(anim); anim = 0;
-    const R0 = R;
+    const my = ++gen;
+    const before = snap(); stopFlips(); root.classList.remove('dock-anim');
     if (!isOpen()) {   // closed: back to the full size while it scrolls back
-      moveTo(0);
-      if (!fitted && !root.classList.contains('dock-compact') && !root.classList.contains('dock-rvb')) return;
-      root.classList.remove('dock-compact', 'dock-rvb');
-      tween(R0, 0, () => { if (my !== gen) return; fitted = false; R = 0; apply(); });
+      if (fitted || root.classList.contains('dock-compact') || root.classList.contains('dock-rvb')) { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); }
+      moveTo(0); flip(before);
       return;
     }
     // probe: the final layout for the dock's final place, worked out without painting (dock animation run to its end,
-    // every pass without waiting), then back to what is on screen now and over to it smoothly
-    const undo = ffDock(); let Rt = 0, d = null, rg = null, hp = 0;
+    // every pass without waiting); it stays, and is shown with the FLIP from what was on screen
+    const undo = ffDock(); let d = null, rg = null, hp = 0;
     sync = true;
-    try { reset(); await layout(my); Rt = R; d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
+    try { reset(); await layout(my); d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
     if (my !== gen) return;
-    // (the compact column comes or goes at once; the board size and the shift move)
-    R = R0; fitted = Rt > 0 || R0 > 0; apply();
-    moveTo(d);
-    tween(R0, Rt, async () => {
-      if (my !== gen || !isOpen()) return;
-      fitted = R > 0;
-      // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
-      await wait(60); if (my !== gen || !isOpen()) return;
-      const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
-      moveTo(delta());
-      // the dock (or the header) ended up elsewhere than expected: settle again
-      setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
-        if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 400);
-    });
+    fitted = R > 0;
+    moveTo(d); flip(before);
+    // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
+    await new Promise(r => setTimeout(r, D + 80)); if (my !== gen || !isOpen()) return;
+    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
+    moveTo(delta());
+    // the dock (or the header) ended up elsewhere than expected: settle again
+    setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
+      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 400);
   };
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again

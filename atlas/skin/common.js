@@ -54,6 +54,7 @@
       o.units = units; placeHost();
       T3.align(() => { const b = box(); return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
       addEventListener('resize', () => requestAnimationFrame(placeHost));
+      addEventListener('dockrelayout', placeHost);   // the online dock (shared/headerbar.js): the canvas follows the new layout at once
       if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeHost)).observe(boardDom);
       setTimeout(placeHost, 300); setTimeout(placeHost, 1200);
     };
@@ -131,6 +132,7 @@
     if (kc && info) kc.appendChild(info);
     if (!side || !o.outer) return;
     const fit = () => {
+      if (document.documentElement.classList.contains('dock-anim')) return;   // the online dock's FLIP (shared/headerbar.js) moves it; fitted again at its end
       side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
       const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
       if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
@@ -138,6 +140,7 @@
       side.style.position = 'relative'; side.style.top = (B.top - s.top) + 'px'; side.style.height = B.height + 'px'; side.style.maxHeight = 'none';
     };
     addEventListener('resize', () => requestAnimationFrame(fit));
+    addEventListener('dockrelayout', fit);   // within the online dock's probe (shared/headerbar.js): the column is measured with the board
     if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(boardDom);
     fit(); setTimeout(fit, 120); setTimeout(fit, 600); setTimeout(fit, 1200); if (document.fonts) document.fonts.ready.then(fit);
   })();
