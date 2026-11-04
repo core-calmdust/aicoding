@@ -669,8 +669,8 @@ static i32 nodes; static int stopFlag; static double deadline; static i32 nodeLi
 static i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
-static int useMate1 = 1, rfpDepth = 3, rfpMargin = 120, nullAdapt = 0, histMalus = 0;
-static int P[32] = {[5] = 1, [7] = 1, [14] = 1, [16] = 100};
+static int useMate1 = 1, rfpDepth = 3, rfpMargin = 90, nullAdapt = 1, histMalus = 0;   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
+static int P[32] = {[5] = 1, [7] = 1, [12] = 4, [14] = 1, [16] = 100};
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
