@@ -9,17 +9,19 @@
 (function () {
   'use strict';
   const BASE = '../reversi/';
-  let weights = null, book = null;
-  const ready = (async () => {
+  let weights = null, book = null, readyP = null;
+  // the AI's weights (7.8 MB gzip) and book: loaded on the first game, not with the page; inflated in a worker on the portal
+  const gunzipHere = buf => new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  const ready = () => readyP || (readyP = (async () => {
     try {
       let buf = await fetch(BASE + 'weights.bin.gz').then(r => r.arrayBuffer());
       const u8 = new Uint8Array(buf, 0, 2);
-      if (u8[0] === 0x1f && u8[1] === 0x8b && 'DecompressionStream' in window) buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      if (u8[0] === 0x1f && u8[1] === 0x8b && 'DecompressionStream' in window) buf = await (window.AtlasTexGen ? AtlasTexGen.gunzip(buf.slice(0)).catch(() => gunzipHere(buf)) : gunzipHere(buf));
       const meta = await fetch(BASE + 'weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
       weights = { buffer: buf, nphase: meta.nphase };
     } catch (e) { weights = null; }
     book = await fetch(BASE + 'book.json').then(r => r.ok ? r.json() : null).catch(() => null);
-  })();
+  })());
 
   const DIRS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
   function flipsOf(cells, sq, color) {
@@ -44,6 +46,7 @@
   };
 
   function start(ctx) {
+    ready();   // start loading the AI now (it is needed from the first AI move)
     const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), pass: t('p.pass'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const board = T3.MODELS.reversi(true); T3.show('reversi', board);
@@ -120,7 +123,7 @@
     }
     async function aiMove() {
       busy = true;
-      await ready;
+      await ready();
       if (stopped) return;
       if (!worker) {
         worker = new Worker(BASE + 'engine.js');
@@ -194,7 +197,7 @@
       hint() {
         if (!myTurn()) return Promise.resolve(false);
         const j = ++hintJ, c0 = cells.slice(), me = turn;
-        return ready.then(() => new Promise(res => {
+        return ready().then(() => new Promise(res => {
           if (stopped || j !== hintJ) return res(true);
           if (!hintW) { hintW = new Worker(BASE + 'engine.js'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
           hintW.onmessage = e => {

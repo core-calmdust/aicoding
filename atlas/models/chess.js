@@ -27,41 +27,82 @@
   function burl(key, light, dark, seed, W = 768, sc = 1) {
     W = SZ(W);
     return canvas(key, W, W, (g) => {
-      const N = makeNoise(seed), A = hexRGB(light), B = hexRGB(dark), img = g.createImageData(W, W), d = img.data;
-      const TAU = Math.PI * 2;
-      for (let y = 0; y < W; y++) {
-        for (let x = 0; x < W; x++) {
-          const px = x / W * 4.2 * sc + 3, py = y / W * 4.2 * sc + 3;
-          const q = N(px * 1.4, py * 1.4, 3), r = N(px * 1.6 + q * 3.2 + 1.7, py * 1.6 + q * 3.2 + 9.2, 3);
-          const f = N(px * 2.6 + r * 4.2, py * 2.6 + r * 4.2, 4);
-          const band = Math.sin((f * 9 + r * 5) * TAU) * .5 + .5;              // the wavy figure
-          const fine = N(px * 22 + r * 6, py * 22 + r * 6, 2);
-          let t = .3 + Math.pow(band, 1.8) * .38 + (fine - .5) * .3 + (q - .5) * .4;
-          const eye = N(px * 30, py * 30, 1), cl = N(px * 3.3 + 7, py * 3.3 + 1, 2);  // clusters of tiny knots
-          if (cl > .58 && eye > .74) t += (eye - .74) * 3.2;
-          t = Math.max(0, Math.min(1, t));
-          const i = (y * W + x) * 4, w = (r - .5) * 14;
-          d[i] = A[0] + (B[0] - A[0]) * t + w; d[i + 1] = A[1] + (B[1] - A[1]) * t + w * .7; d[i + 2] = A[2] + (B[2] - A[2]) * t + w * .4; d[i + 3] = 255;
-        }
-      }
-      g.putImageData(img, 0, 0);
+      paint(g.canvas, 'burl', { seed, A: hexRGB(light), B: hexRGB(dark), sc });
     });
   }
   // cream maple: fine straight fibres with a soft curly (fiddleback) shimmer
   function maple(key, W = 512, tint = [246, 234, 206, 34, 42, 52]) {
     W = SZ(W);
     return canvas(key, W, W, (g) => {
-      const N = makeNoise(61), img = g.createImageData(W, W), d = img.data;
-      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / W;
-        const fib = N(u * 4, v * 140, 2), curl = Math.sin((u * 26 + N(u * 2, v * 3, 3) * 3) * Math.PI) * .5 + .5;
-        const t = .25 + (fib - .5) * .35 + Math.pow(curl, 3) * .18 + (N(u * 2, v * 2, 2) - .5) * .25, i = (y * W + x) * 4;
-        d[i] = tint[0] - t * tint[3]; d[i + 1] = tint[1] - t * tint[4]; d[i + 2] = tint[2] - t * tint[5]; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
+      paint(g.canvas, 'maple', { tint });
     });
   }
   const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    return {
+      burl(d, W, H, p) {
+          const N = makeNoise(p.seed), A = p.A, B = p.B, sc = p.sc;
+          const TAU = Math.PI * 2;
+          for (let y = 0; y < W; y++) {
+            for (let x = 0; x < W; x++) {
+              const px = x / W * 4.2 * sc + 3, py = y / W * 4.2 * sc + 3;
+              const q = N(px * 1.4, py * 1.4, 3), r = N(px * 1.6 + q * 3.2 + 1.7, py * 1.6 + q * 3.2 + 9.2, 3);
+              const f = N(px * 2.6 + r * 4.2, py * 2.6 + r * 4.2, 4);
+              const band = Math.sin((f * 9 + r * 5) * TAU) * .5 + .5;              // the wavy figure
+              const fine = N(px * 22 + r * 6, py * 22 + r * 6, 2);
+              let t = .3 + Math.pow(band, 1.8) * .38 + (fine - .5) * .3 + (q - .5) * .4;
+              const eye = N(px * 30, py * 30, 1), cl = N(px * 3.3 + 7, py * 3.3 + 1, 2);  // clusters of tiny knots
+              if (cl > .58 && eye > .74) t += (eye - .74) * 3.2;
+              t = Math.max(0, Math.min(1, t));
+              const i = (y * W + x) * 4, w = (r - .5) * 14;
+              d[i] = A[0] + (B[0] - A[0]) * t + w; d[i + 1] = A[1] + (B[1] - A[1]) * t + w * .7; d[i + 2] = A[2] + (B[2] - A[2]) * t + w * .4; d[i + 3] = 255;
+            }
+          }
+      },
+      maple(d, W, H, p) {
+          const N = makeNoise(61), tint = p.tint;
+          for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+            const u = x / W, v = y / W;
+            const fib = N(u * 4, v * 140, 2), curl = Math.sin((u * 26 + N(u * 2, v * 3, 3) * 3) * Math.PI) * .5 + .5;
+            const t = .25 + (fib - .5) * .35 + Math.pow(curl, 3) * .18 + (N(u * 2, v * 2, 2) - .5) * .25, i = (y * W + x) * 4;
+            d[i] = tint[0] - t * tint[3]; d[i + 1] = tint[1] - t * tint[4]; d[i + 2] = tint[2] - t * tint[5]; d[i + 3] = 255;
+          }
+      },
+      marble(d, W, H, p) {
+          const N = makeNoise(p.seed), A = p.A, B = p.B, TAU = Math.PI * 2;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            const a = x / W * TAU, px = Math.cos(a) * 1.2 + 4, py = Math.sin(a) * 1.2 + y / H * 3.2 + 4;
+            const w = N(px * 1.3, py * 1.3, 4);
+            const v1 = Math.pow(1 - Math.abs(Math.sin((py * 1.8 + px * .9 + w * 3.4) * Math.PI)), 14);
+            const v2 = Math.pow(1 - Math.abs(Math.sin((px * 3.1 - py * 1.2 + w * 5) * Math.PI)), 26) * .6;
+            const cloud = (N(px * 3, py * 3, 3) - .5) * .25;
+            const t = Math.max(0, Math.min(1, v1 * .75 + v2 + cloud + .05)), i = (y * W + x) * 4;
+            d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+          }
+      },
+      grain(d, W, H, p) {
+          const N = makeNoise(p.seed), A = p.A, B = p.B, C = p.C, TAU = Math.PI * 2;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            const a = x / W * TAU, cx = Math.cos(a) * 1.3 + 5, cz = Math.sin(a) * 1.3 + 5, v = y / H;
+            const ring = N(cx * .9, cz * .9 + v * .6, 3) * 7 + v * 1.5, band = Math.pow(Math.sin(ring * TAU) * .5 + .5, 2.2);
+            const fib = N(cx * 14, cz * 14 + v * 60, 2), fl = N(cx * 3, cz * 3 + v * 5, 2);
+            let t = band * .45 + (fib - .5) * .3 + (fl - .5) * .35; t = Math.max(-1, Math.min(1, t));
+            const i = (y * W + x) * 4, P = t >= 0 ? B : C, k = Math.abs(t) * (t >= 0 ? 1 : .8);
+            d[i] = A[0] + (P[0] - A[0]) * k; d[i + 1] = A[1] + (P[1] - A[1]) * k; d[i + 2] = A[2] + (P[2] - A[2]) * k; d[i + 3] = 255;
+          }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   // two sets: 'lux' = grey burl + silver/gold Staunton; 'wood' = amboyna/elm burl + boxwood/padauk
   const SETS = {
     lux: { frame: () => burl('chBurlF', '#c4bfb7', '#4a4642', 31, 1024, 2.4), sq: () => burl('chBurlS', '#97938c', '#33302d', 47), light: () => maple('chMaple'), inlay: 'cream', side: 0x23201c },
@@ -70,8 +111,9 @@
   const FRAME_BURL = (set = 'lux') => SETS[set].frame();
   // the whole lacquered top in one picture: burl frame, inlay, the 64 squares
   function boardTop(set = 'lux') {
-    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, SZ(2048), SZ(2048), (c, W) => {
-      const k = W / OW, ST = SETS[set], F = ST.frame(), SB = ST.sq(), MP = ST.light();
+    const ST = SETS[set], F = ST.frame(), SB = ST.sq(), MP = ST.light();
+    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, SZ(2048), SZ(2048), (c0) => later([F, SB, MP], c0.canvas, (c, W) => {
+      const k = W / OW;
       // frame: the burl sheet, drawn twice as large (its figure is bold on a real board)
       // frame: four mitred veneer strips cut from the burl sheet (each turned its own way)
       const o0 = MARGIN * k, E = [[0, 0], [W, 0], [W, W], [0, W]], I = [[o0, o0], [W - o0, o0], [W - o0, W - o0], [o0, W - o0]];
@@ -103,7 +145,7 @@
       // a soft darkening towards the outer edge of the frame (deep lacquer)
       const g = c.createRadialGradient(W / 2, W / 2, W * .42, W / 2, W / 2, W * .75); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,8,6,.28)');
       c.fillStyle = g; c.beginPath(); c.rect(0, 0, W, W); c.rect(o - .16 * k, o - .16 * k, S * k + .32 * k, S * k + .32 * k); c.fill('evenodd');
-    });
+    }));
   }
   function sideTex(set = 'lux') {
     const key = 'chessSide2' + set; if (raw[key + 't']) return raw[key + 't'];
@@ -112,34 +154,15 @@
   }
   // marbled resin of the piece bodies; x wraps round the lathe (seamless), y runs up the profile
   function marble(key, base, vein, seed) {
-    return canvasTex(key, SZ(512), SZ(512), (g, W, H) => {
-      const N = makeNoise(seed), A = hexRGB(base), B = hexRGB(vein), img = g.createImageData(W, H), d = img.data, TAU = Math.PI * 2;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const a = x / W * TAU, px = Math.cos(a) * 1.2 + 4, py = Math.sin(a) * 1.2 + y / H * 3.2 + 4;
-        const w = N(px * 1.3, py * 1.3, 4);
-        const v1 = Math.pow(1 - Math.abs(Math.sin((py * 1.8 + px * .9 + w * 3.4) * Math.PI)), 14);
-        const v2 = Math.pow(1 - Math.abs(Math.sin((px * 3.1 - py * 1.2 + w * 5) * Math.PI)), 26) * .6;
-        const cloud = (N(px * 3, py * 3, 3) - .5) * .25;
-        const t = Math.max(0, Math.min(1, v1 * .75 + v2 + cloud + .05)), i = (y * W + x) * 4;
-        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
+    return canvasTex(key, SZ(512), SZ(512), (g) => {
+      paint(g.canvas, 'marble', { seed, A: hexRGB(base), B: hexRGB(vein) });
     });
   }
 
   // turned wood: fibres run up the piece (y), with soft growth bands; x wraps round the lathe
   function grain(key, base, dark, hi, seed) {
-    return canvasTex(key, SZ(512), SZ(512), (g, W, H) => {
-      const N = makeNoise(seed), A = hexRGB(base), B = hexRGB(dark), C = hexRGB(hi), img = g.createImageData(W, H), d = img.data, TAU = Math.PI * 2;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const a = x / W * TAU, cx = Math.cos(a) * 1.3 + 5, cz = Math.sin(a) * 1.3 + 5, v = y / H;
-        const ring = N(cx * .9, cz * .9 + v * .6, 3) * 7 + v * 1.5, band = Math.pow(Math.sin(ring * TAU) * .5 + .5, 2.2);
-        const fib = N(cx * 14, cz * 14 + v * 60, 2), fl = N(cx * 3, cz * 3 + v * 5, 2);
-        let t = band * .45 + (fib - .5) * .3 + (fl - .5) * .35; t = Math.max(-1, Math.min(1, t));
-        const i = (y * W + x) * 4, P = t >= 0 ? B : C, k = Math.abs(t) * (t >= 0 ? 1 : .8);
-        d[i] = A[0] + (P[0] - A[0]) * k; d[i + 1] = A[1] + (P[1] - A[1]) * k; d[i + 2] = A[2] + (P[2] - A[2]) * k; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
+    return canvasTex(key, SZ(512), SZ(512), (g) => {
+      paint(g.canvas, 'grain', { seed, A: hexRGB(base), B: hexRGB(dark), C: hexRGB(hi) });
     });
   }
 
@@ -405,6 +428,11 @@
   function images(px = 256, set = 'lux') {
     if (imgCache[set]) return imgCache[set];
     return (imgCache[set] = new Promise(res => setTimeout(res, 0)).then(() => {
+      // portal: the textures are drawn in a worker — build the pieces once and wait for them (their materials are cached)
+      if (!window.AtlasTexGen) return;
+      for (const col of ['w', 'b']) for (const tp of 'KQRBNP') piece(tp, col, { set });
+      return AtlasTexGen.settle();
+    }).then(() => {
       const TT = T(), W = px, H = Math.round(px * SPR_H);
       const R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       R.setSize(W, H, false); R.setPixelRatio(1); R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = 1.0;

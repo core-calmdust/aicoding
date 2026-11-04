@@ -70,6 +70,27 @@
   /* ---------- textures ---------- */
   // top of the body (planar, the whole board): piano black with a faint depth, the gold inlay line round the edge and
   // a hairline with a small lozenge between the rows. Colour map + an ORM map (G roughness, B metalness: gold = metal)
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    return {
+      lacquer(d, w, h, p) {   // piano black with a faint depth
+        const N = makeNoise(5), s = p.s;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const v = 12 + (N(x / (90 * s), y / (90 * s), 3) - .5) * 5 + (Math.random() - .5) * 2, i = (y * w + x) * 4;
+          d[i] = v; d[i + 1] = v; d[i + 2] = v + 1.5; d[i + 3] = 255;
+        }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   function topTex() {
     const s = X.texScale(), w = Math.round(2048 * s), h = Math.round(w * D / W), k = w / W;
     const U = v => v * k, ux = x => (x + W / 2) * k, uz = z => (z + D / 2) * k;
@@ -83,15 +104,7 @@
       c.lineWidth = U(.014);
       for (const [cx, cy, a] of [[U(.2), U(.2), 0], [w - U(.2), U(.2), Math.PI / 2], [w - U(.2), h - U(.2), Math.PI], [U(.2), h - U(.2), -Math.PI / 2]]) { c.beginPath(); c.arc(cx, cy, U(.3), a, a + Math.PI / 2); c.stroke(); }
     };
-    const col = X.canvasTex('mcTop' + s, w, h, (c) => {
-      const N = makeNoise(5), img = c.createImageData(w, h), d = img.data;
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const v = 12 + (N(x / (90 * s), y / (90 * s), 3) - .5) * 5 + (Math.random() - .5) * 2, i = (y * w + x) * 4;
-        d[i] = v; d[i + 1] = v; d[i + 2] = v + 1.5; d[i + 3] = 255;
-      }
-      c.putImageData(img, 0, 0);
-      lines(c, '#d8b468');
-    });
+    const col = X.canvasTex('mcTop' + s, w, h, (c) => { paint(c.canvas, 'lacquer', { s }, (c) => lines(c, '#d8b468')); });
     const orm = X.canvasTex('mcOrm' + s, w, h, (c) => {
       c.fillStyle = 'rgb(255,30,0)'; c.fillRect(0, 0, w, h);   // lacquer: smooth, not metal
       lines(c, 'rgb(255,80,255)');                               // gold: a little rougher, metal
