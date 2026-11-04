@@ -19,6 +19,7 @@ function setup(T) {
 
 /* ---------- the steps ---------- */
 // at: selector(s) to point at (none = a box in the middle) · need: the move the step waits for
+// hot: a small control inside the box that gets its own pulsing ring (the roads' ? button)
 // ctx: also kept in view with the target when there is room (the chips / the Place bet button) · tab: phones — the bottom tab holding that box
 // (the betting boxes: '#bcTable [data-spot=..]' — only your own seat has them, in the printed arcs (PC) and in the touch layout (narrow tables) alike)
 const SPOT = k => `#bcTable [data-spot="${k}"]`;
@@ -27,7 +28,7 @@ const STEPS = {
     { k: 'bet', at: SPOT('B'), need: 'bet:B', ctx: [['.bc-rack', '#abDeal'], ['.bc-rack']] }, { k: 'coach', at: '#side .coach-card', tab: 'coach' },
     { k: 'deal', at: '#abDeal', need: 'deal', ctx: [[SPOT('B'), '.bc-rack']] }],
   done: [{ k: 'result', at: '.bc-hands' }, { k: 'third', at: '#side .ck-ex', tab: 'coach' }, { k: 'payout', at: [SPOT('B'), '.bc-banner'] },
-    { k: 'road', at: '#side .road-card', tab: 'road' }, { k: 'bots', at: '.lz-svg' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
+    { k: 'road', at: '#side .road-card', tab: 'road', hot: '#rdHelp' }, { k: 'bots', at: '.lz-svg' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
 };
 let Q = null, cur = null, used = {}, n = 0, tab0 = null;   // tab0: the phone tab before the tutorial (back to it after)
 const TOTAL = Object.values(STEPS).reduce((a, x) => a + x.length, 0);
@@ -41,11 +42,28 @@ function allow(m) {
   if (!cur || !cur.need) { A.toast(L('wait')); return false; }
   const want = m.a === 'bet' ? 'bet:' + m.k : m.a;
   if (cur.need !== want) { A.sfx('bad'); A.toast(L('ng.' + cur.k)); shake(); return false; }
-  if (m.a === 'deal') { cur = null; hideBox(); }   // the cards are dealt: the bubble goes until the result
+  if (m.a === 'deal') { cur = null; hideBox(); setTimeout(watchDeal, 0); }   // the cards are dealt: the bubble goes until the result, and the table slides to the hands
   return true;
 }
 // a step that waited for a move: go on once the move is made
 function after(a) { if (cur && cur.need && cur.need.startsWith(a)) { cur = null; hideBox(); setTimeout(next, 250); } }
+
+/* the deal: the table slides (smoothly) so both hands are on screen while the cards come out — third cards too */
+function watchDeal() {
+  const h = document.querySelector('.bc-hands'); if (!h) return;
+  const r = h.getBoundingClientRect(); if (!r.height) return;
+  const sc = stageEl(), inSc = phone() && sc && sc.contains(h) && sc.scrollHeight > sc.clientHeight;
+  const sr = inSc ? sc.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+  const tb = document.querySelector('#mTabs'), tbt = tb && tb.offsetHeight ? tb.getBoundingClientRect().top : innerHeight;
+  const top = Math.max(0, sr.top), bot = Math.min(sr.bottom, innerHeight, tbt);
+  const ban = document.querySelector('.bc-banner'), rb = ban && ban.getBoundingClientRect();
+  // the hands (and the result banner under them, when there is room) in the middle of what is visible; the hands grow by a third card: keep some room
+  const t0 = r.top - 10, b0 = Math.max(r.bottom, rb && rb.height && rb.top - r.bottom < 120 && rb.bottom - r.top < bot - top - 20 ? rb.bottom : 0) + 10;
+  if (t0 >= top && b0 <= bot) return;   // already in view
+  const d = Math.round(t0 - (top + Math.max(0, (bot - top - (b0 - t0)) / 2)));
+  if (inSc) sc.scrollTo({ top: sc.scrollTop + d, behavior: 'smooth' });
+  else scrollBy({ top: d, behavior: 'smooth' });
+}
 
 /* ---------- spotlight + bubble ---------- */
 let layer = null, box = null, hole = null, mask = null, rings = null;
@@ -108,6 +126,7 @@ function paint(st, pad) {
   if (r0) list.push({ r: r0, hot: !!st.need });
   const tb = tabBtn(st);
   document.querySelectorAll('#mTabs .tut-tab').forEach(e => { if (e !== tb) e.classList.remove('tut-tab'); });
+  if (st.hot) document.querySelectorAll(st.hot).forEach(e => { const b = e.getBoundingClientRect(); if (b.width && b.bottom > 0 && b.top < innerHeight) list.push({ r: { l: b.left, t: b.top, r: b.right, b: b.bottom }, hot: true, tab: true, ring: true }); });
   if (tb) { tb.classList.add('tut-tab'); const b = tb.getBoundingClientRect(); list.push({ r: { l: b.left + 4, t: b.top + 2, r: b.right - 4, b: b.bottom - 2 }, hot: true, tab: true }); }
   const multi = list.length > 1;
   layer.classList.toggle('multi', multi);
@@ -117,7 +136,7 @@ function paint(st, pad) {
   let d = `M0 0H${W}V${H}H0Z`, h = '';
   list.forEach(x => {
     const p = x.tab ? 2 : pad, l = x.r.l - p, t = x.r.t - p, w = x.r.r - x.r.l + p * 2, ht = x.r.b - x.r.t + p * 2, rr = Math.min(12, w / 2, ht / 2);
-    d += `M${l + w - rr} ${t}H${l + rr}A${rr} ${rr} 0 0 0 ${l} ${t + rr}V${t + ht - rr}A${rr} ${rr} 0 0 0 ${l + rr} ${t + ht}H${l + w - rr}A${rr} ${rr} 0 0 0 ${l + w} ${t + ht - rr}V${t + rr}A${rr} ${rr} 0 0 0 ${l + w - rr} ${t}Z`;
+    if (!x.ring) d += `M${l + w - rr} ${t}H${l + rr}A${rr} ${rr} 0 0 0 ${l} ${t + rr}V${t + ht - rr}A${rr} ${rr} 0 0 0 ${l + rr} ${t + ht}H${l + w - rr}A${rr} ${rr} 0 0 0 ${l + w} ${t + ht - rr}V${t + rr}A${rr} ${rr} 0 0 0 ${l + w - rr} ${t}Z`;
     h += `<div class="tut-ring${x.hot ? ' hot' : ''}" style="left:${l}px;top:${t}px;width:${w}px;height:${ht}px;border-radius:${rr}px"></div>`;
   });
   mask.setAttribute('viewBox', `0 0 ${W} ${H}`); mask.setAttribute('width', W); mask.setAttribute('height', H);
