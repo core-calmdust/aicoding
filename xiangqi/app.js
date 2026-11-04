@@ -113,7 +113,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261104x5';
+const ENGINE_URL = 'engine.js?v=20261104x6';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1100,7 +1100,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1905, 2015, 2140, 2230, 2265, 2290, 2415, 2480];
+const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1937, 2047, 2172, 2262, 2297, 2322, 2447, 2512];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
