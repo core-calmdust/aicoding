@@ -466,6 +466,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 /* PC: a wider lesson dialog (all tabs, so its size does not change between tabs) */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){ #lessonOverlay .modal{width:min(1000px, calc(100vw - 64px))} }
 #lessonOverlay .modal:has(> #lessonDoneView:not(.hidden)){height:auto}
+/* PC: every tab (ルール・レッスン・定跡・詰将棋) keeps the rules tab's size, so the box does not jump when switching */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 561px){ #lessonOverlay .modal:not(:has(> #lessonDoneView:not(.hidden))){width:min(1080px, calc(100vw - 64px));height:min(820px, calc(100dvh - 32px));max-height:calc(100dvh - 32px)} }
 #segLs button{font-size:15px;padding:10px 4px}
 #lessonOverlay h2{font-size:25px}
 .ls-desc{font-size:15px;color:var(--muted);line-height:1.75;margin:-8px 0 16px}
