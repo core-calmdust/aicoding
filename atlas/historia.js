@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 3;                       // data version (bump when historia/*.json change)
+  const V = 4;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
   const UI = {
@@ -98,7 +98,7 @@
   /* ---------- open / close ---------- */
   function build() {
     root = document.createElement('div'); root.className = 'hs'; root.id = 'hist'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
-    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span></div></div></div>
+    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span><i class="ghost" aria-hidden="true"></i></div></div></div>
       <div class="hs-top"><button type="button" class="hs-mute" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V6l11-2v11"/><circle cx="6.5" cy="17" r="2.5"/><circle cx="17.5" cy="15" r="2.5"/><path class="sl" d="M3 3l18 18"/></svg></button><button type="button" class="hs-x"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <section class="hs-panel"><header class="hs-hd"><span class="hs-gi"></span><span class="hs-gn"></span><span class="hs-no"></span></header><div class="hs-pages"></div>
       <nav class="hs-nav"><button type="button" class="hs-pv"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><div class="hs-dots"></div><button type="button" class="hs-nx"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></nav></section>`;
@@ -209,7 +209,12 @@
   // the board's framing while open: phones frame it in the stage above the page; wide screens keep it full height (the canvas is shifted right in CSS)
   function fit() {
     if (!on || solo || !root || !window.Table3D || !Table3D.setInset) return;
-    if (phone()) { const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(); Table3D.setInset(Math.max(0, innerHeight - r.bottom)); }
+    if (phone()) {
+      const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(), g = root.querySelector('.hs-guide');
+      // the top-down board view: the guide and its bubble sit in a strip at the bottom of the stage, and the board is framed above it
+      const keep = camTop && g ? Math.max(0, Math.min(r.height * .4, r.bottom - g.getBoundingClientRect().top + 4)) : 0;
+      Table3D.setInset(Math.max(0, innerHeight - r.bottom + keep));
+    }
     else Table3D.setInset(0);
   }
   // wide screens: the canvas slides away from the page so the board sits in the free part of the screen
@@ -222,6 +227,8 @@
     if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok())) return;
     if (solo) return;
     if (top === camTop) return; camTop = top;
+    if (root) root.classList.toggle('top', !!top);
+    fit();
     try { Table3D.play(!!top, { glide: 1100, ortho: true }); } catch (e) {}
   }
 
@@ -242,9 +249,11 @@
   /* ---------- the guide's speech bubble (typed in) ---------- */
   let sayT = 0;
   function say(s) {
-    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'); clearInterval(sayT);
+    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'), gh = b.querySelector('.ghost'); clearInterval(sayT);
+    gh.textContent = s || '';   // (an invisible copy of the whole line: the bubble takes its final size at once while the text types in)
     if (!s) { b.classList.remove('on'); sp.textContent = ''; return; }
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    if (camTop) requestAnimationFrame(fit);
     const g = root.querySelector('.hs-guide'); g.classList.remove('hop'); void g.offsetWidth; g.classList.add('hop');
     // scripts that join letters (Arabic, Devanagari) fade in whole; others are typed
     if (lang === 'ar' || lang === 'hi') { sp.textContent = s; sp.classList.remove('typing'); return; }

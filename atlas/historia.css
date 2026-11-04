@@ -78,6 +78,9 @@
 [dir=rtl] .hs-bub{transform-origin:100% 100%}
 .hs-bub::before{content:'';position:absolute;bottom:10px;inset-inline-start:-8px;width:12px;height:12px;background:#fffdf7;border-inline-start:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);border-bottom:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);transform:rotate(45deg)}
 [dir=rtl] .hs-bub::before{transform:rotate(-45deg)}
+/* phones, top-down board view: the bubble sits beside the guide (not above it), so the strip they need stays low */
+@media (max-width:819px){#hist.hs.top .hs-bub{margin-bottom:8px;max-width:min(260px,calc(100vw - 120px))}}
+.hs-bub{display:grid}.hs-bub>span,.hs-bub>.ghost{grid-area:1/1}.hs-bub>.ghost{visibility:hidden;font-style:normal}
 .hs-bub.on{animation:hsPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
 .hs-bub .typing::after{content:'';display:inline-block;width:2px;height:1em;margin-inline-start:2px;vertical-align:-2px;background:var(--gc);animation:hsBlink .5s steps(2) infinite}
 
