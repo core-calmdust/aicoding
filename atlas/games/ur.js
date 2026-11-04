@@ -273,7 +273,7 @@
       if (!pvp) ask(st, 2);   // warms the worker up while the board lands
       toast(X.first.replace('{p}', pname(first)));
       later(() => nextTurn(), 700);
-    }).catch(() => say('⚠'));
+    }).catch(e => { console.error('[ur table]', e); say('⚠'); });
 
     /* ---------- 待った · ヒント · 投了 · time-out ---------- */
     function finish(loser, why) {

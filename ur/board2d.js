@@ -351,7 +351,7 @@
   function reap() { for (let i = LIVE3D.length - 1; i >= 0; i--) if (!LIVE3D[i].wrap.isConnected) { try { LIVE3D[i].dispose(); } catch (e) {} LIVE3D.splice(i, 1); } }
 
   function make3D(wrap, n, span) {
-    const TT = window.THREE, UD = window.UrDice3D, DS = .8, REST = UD.DR / 3 * DS;
+    const TT = window.THREE, UD = window.UrDice3D, DS = .86, REST = UD.DR / 3 * DS;
     reap();
     const R = new TT.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
     R.setClearColor(0, 0); R.outputEncoding = TT.sRGBEncoding; R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap;
@@ -369,7 +369,7 @@
     const D = [];
     for (let i = 0; i < n; i++) {
       const g = new TT.Group(), d = UD.die(); d.scale.setScalar(DS); g.add(d); sc.add(g);
-      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xfff6dc, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.34, .34, 1); halo.renderOrder = 5; sc.add(halo);
+      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xfff6dc, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.42, .42, 1); halo.renderOrder = 5; sc.add(halo);
       D.push({ g, d, halo, x: 0, z: 0 });
     }
     // world units = board squares (the dice place is `span` squares long); x right, z down the screen; the line of
@@ -400,8 +400,8 @@
       return true;
     }
     const render = () => { if (fit()) R.render(sc, cam); };
-    const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.47, (L - .12) / n);
-      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
+    const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.5, (L - .16) / n);
+      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05) + (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
     function haloAt(o, on) {
       const v = new TT.Vector3(), w = new TT.Vector3();
       for (const t of [0, 1]) { const q = new TT.Vector3(...UD.TV[t]).multiplyScalar(DS).applyQuaternion(o.d.quaternion); if (!t || q.y > v.y) v.copy(q); }
@@ -411,12 +411,12 @@
       const P = fresh || !D[0].placed ? places() : null;
       D.forEach((o, i) => {
         if (P) { o.x = P[i][0]; o.z = P[i][1]; o.yaw = Math.random() * Math.PI * 2; o.placed = true; }
-        UD.dieUp(o.d, !!dv[i], o.yaw); o.g.position.set(o.x, REST, o.z); haloAt(o, dv[i] ? .85 : 0);
+        UD.dieUp(o.d, !!dv[i], o.yaw); o.g.position.set(o.x, REST, o.z); haloAt(o, dv[i] ? 1 : 0);
       });
       render();
     }
     const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-    function roll(dv, ms, fromBottom, onHit) {
+    function plan(dv, ms, fromBottom) {
       stop(); fit();
       const P = places();
       const items = D.map((o, i) => {
@@ -427,7 +427,10 @@
         const from = [o.x + ld[0] * dist + ld[1] * sw, o.z + ld[1] * dist + ld[0] * sw];
         return { g: o.g, d: o.d, from, to: [o.x, o.z], marked: !!dv[i], rest: REST };
       });
-      const TP = UD.throwPlan(items, { dur: ms, h0: .55 });
+      return UD.throwPlan(items, { dur: ms, h0: .55 });
+    }
+    function roll(dv, ms, fromBottom, onHit) {
+      const TP = plan(dv, ms, fromBottom);
       // the dice land / hop: tell the page (a soft click each)
       const hits = []; TP.plan.forEach((p, i) => { [.42, .66, .82].forEach((q, j) => hits.push({ t: p.delay + q * ms, i, s: [1, .55, .3][j] })); });
       hits.sort((a, b) => a.t - b.t);
@@ -440,7 +443,7 @@
             TP.end(); raf = 0;
             // the glow over the white tips fades in, then the canvas stays still
             const f0 = performance.now();
-            const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? .85 * k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
+            const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
             raf = requestAnimationFrame(fade); return;
           }
           TP.frame(tms); render(); raf = requestAnimationFrame(step);
@@ -451,6 +454,8 @@
     let ro = null; if (window.ResizeObserver) { ro = new ResizeObserver(() => { if (!raf) render(); }); ro.observe(wrap); }
     const api = {
       wrap, rest, roll, render,
+      // tests: a throw stepped by hand (no clock): .at(ms) poses the dice and renders
+      stepper(dv, ms, fromBottom) { const TP = plan(dv, ms, !!fromBottom); return { total: TP.total, at(t) { if (t >= TP.total) { TP.end(); D.forEach((o, i) => haloAt(o, dv[i] ? 1 : 0)); } else { D.forEach(o => { o.halo.material.opacity = 0; }); TP.frame(t); } render(); } }; },
       dispose() { stop(); if (ro) ro.disconnect(); try { R.dispose(); R.forceContextLoss(); } catch (e) {} cv.remove(); },
     };
     LIVE3D.push(api);
@@ -507,7 +512,7 @@
     // the 3D dice, when they can be had (the SVG stays as the fallback until then)
     if (opts.three !== false && want3D()) load3D().then(ok => {
       if (!ok || !wrap.isConnected || d3) return;
-      try { d3 = make3D(wrap, n, opts.span || 1.96); svg.style.visibility = 'hidden'; d3.rest(cur, true); }
+      try { d3 = make3D(wrap, n, opts.span || 1.96); svg.style.visibility = 'hidden'; if (opts.onReady) try { opts.onReady(); } catch (e) {} d3.rest(cur, true); }
       catch (e) { console.error(e); d3 = null; svg.style.visibility = ''; }
     });
     async function roll(dv, o2 = {}) {
@@ -516,7 +521,7 @@
       if (d3) {
         busy = true; cur = dv.slice();
         const fromBottom = o2.side != null ? o2.side === 0 : (opts.side != null ? opts.side === 0 : true);
-        try { await d3.roll(dv, (o2.ms || 980) / Math.max(.6, sp), fromBottom, o2.onHit || opts.onHit); } finally { busy = false; }
+        try { await d3.roll(dv, (o2.ms || 820) / Math.max(.6, sp), fromBottom, o2.onHit || opts.onHit); } finally { busy = false; }
         D.forEach((d, i) => { d.up = dv[i] ? 1 : 0; draw(d, d.up, d.rot); });
         return dv.reduce((a, b) => a + b, 0);
       }
@@ -536,7 +541,7 @@
       show(dv); return dv.reduce((a, b) => a + b, 0);
     }
     show(cur);
-    return { roll, show, el: svg, setStyle(s) { st = DSTYLE[s] || BONE; show(cur); }, is3D: () => !!d3 };
+    return { roll, show, el: svg, setStyle(s) { st = DSTYLE[s] || BONE; show(cur); }, is3D: () => !!d3, _3d: () => d3 };
   }
 
   window.UrBoard2D = { mount, mini, dice, BOARDS, PIECES, GREEN, cellXY, route, traySlots, VIEW, IMG };

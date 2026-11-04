@@ -196,7 +196,8 @@ function placeDice() {
   dock.style.left = ((cx - w / 2 - V[0]) * k) + 'px'; dock.style.top = ((cy - h / 2 - V[1]) * k) + 'px';
   dock.style.width = (w * k) + 'px'; dock.style.height = (h * k) + 'px';
   const host = $('#diceHost');
-  if (o === 'v') { host.style.position = 'absolute'; host.style.width = (h * k * .92) + 'px'; host.style.height = (w * k * .55) + 'px'; host.style.left = ((w * k - h * k * .92) / 2) + 'px'; host.style.top = ((h * k - w * k * .55) / 2) + 'px'; host.style.flex = 'none'; }
+  const d3 = !!(dice2d && dice2d.is3D && dice2d.is3D()); dock.classList.toggle('d3', d3);
+  if (o === 'v' && !d3) { host.style.position = 'absolute'; host.style.width = (h * k * .92) + 'px'; host.style.height = (w * k * .55) + 'px'; host.style.left = ((w * k - h * k * .92) / 2) + 'px'; host.style.top = ((h * k - w * k * .55) / 2) + 'px'; host.style.flex = 'none'; }
   else { host.style.position = ''; host.style.width = ''; host.style.height = ''; host.style.left = ''; host.style.top = ''; host.style.flex = ''; }
   $('#diceCap').style.display = o === 'v' ? 'none' : '';
 }
@@ -251,7 +252,7 @@ function renderBoard() {
 }
 function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
-  { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd }); dice2d.count = nd; } }
+  { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice() }); dice2d.count = nd; } }
   if (r) dice2d.show(r.d); else dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));
   dock.classList.toggle('d3', !!(dice2d.is3D && dice2d.is3D()));
   const canRoll = canRollNow();

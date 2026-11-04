@@ -22,7 +22,7 @@
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
   function make(T3, opts = {}) {
-    const TH = window.THREE, E = window.UrEngine;
+    const TH = window.THREE, E = new Proxy({}, { get: (_, k) => window.UrEngine[k] });   // (the engine may load after the board)
     const board = T3.MODELS.ur(true), U = board.userData, Y = U.top;
     const rule = opts.rule || 'finkel';
     T3.show('ur', board);
@@ -187,8 +187,8 @@
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) for (let k = 0; k < 7; k++) { const s = slot(side, kind, k), d = Math.hypot(s[0] - x, s[2] - z); if (d < bd) { bd = d; best = { tray: kind, side }; } }
       return best;
     }
-    function project(x, y, z) {   // board-local → screen
-      const v = new TH.Vector3(x, y, z); board.localToWorld(v);
+    function project(x, y, z) {   // board-local → screen (Table3D.project takes the shown group's local frame: the board's parent)
+      const v = new TH.Vector3(x, y, z); board.updateMatrix(); v.applyMatrix4(board.matrix);
       return T3.project(v.x, v.z, v.y);
     }
     const projCell = (r, c) => { const [x, z] = cellXZ(r, c); return project(x, Y, z); };
