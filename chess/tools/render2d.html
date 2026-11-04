@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Dev tool: the 3D board's top (atlas/models/chess.js boardTop: burl frame + inlaid squares) as a flat picture for the
+     2D page's "3D" board designs. Open via a local server: /chess/tools/render2d.html?set=lux|wood → window.SHOT = PNG data URL
+     (2048², the whole top: frame 0.85 + 8 squares + frame 0.85). tools/gen_3d2d.py cuts it into the 2D board and frame. -->
+<html><head><meta charset="utf-8"></head><body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../atlas/table3d.js"></script>
+<script src="../../atlas/models/chess.js"></script>
+<script>
+(function () {
+  const set = new URLSearchParams(location.search).get('set') || 'lux';
+  const g = Table3D.MODELS.chess(true);
+  if (set !== 'lux') g.userData.setSet(set);
+  let img = null;
+  g.traverse(o => { if (img || !o.isMesh || !Array.isArray(o.material)) return; const m = o.material[2]; if (m && m.map && m.map.image) img = m.map.image; });
+  window.SHOT = img && img.toDataURL ? img.toDataURL('image/png') : null;
+  // ?pieces=1 → the 3/4 piece renders (the same as the 3D page's DOM sprites, 1 × 1.6 squares) at 384 px
+  if (new URLSearchParams(location.search).get('pieces')) Table3D.chess.images(384, set).then(o => { window.PIECES = o; });
+})();
+</script>
+</body></html>
