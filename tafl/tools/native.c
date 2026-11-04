@@ -5,6 +5,10 @@
 //   match <variant> <games> <lvA> <lvB> [randomPlies]   level A vs level B, both sides (A plays attackers in half the games)
 //   ladder <variant> <games> <from> <to> [randomPlies]  adjacent levels (L vs L+1) for every L in [from, to)
 //   selfplay <variant> <games> <level> <out.txt> [seed]  positions of self-play games (one line per position: cells side ply)
+//   gendata <variant> <games> <nodesK> <out.txt> [seed] [maxRandomPlies]   training data for the learned evaluation (tools/nn/):
+//            one line per position: variant side ply score result src board f0..f15 (see tools/nn/README.md)
+//   nmatch <variant> <games> <nodesK> [seed]   the loaded net (NNUE=file) against the hand-made evaluation, both sides
+//   (env NNUE=file: load a net (tools/nn/train.py) for its rule set; gendata then plays with it)
 #include "../engine.c"
 #include <math.h>
 
@@ -46,6 +50,8 @@ static void printPos(const Pos *p) {
 static FILE *POSOUT = 0;
 static int *PW[2] = { 0, 0 }, TUNE_NK = 3;   // tuning: the weights of the attackers / defenders player
 static int plyCount;
+static int NNS[2] = { -1, -1 };   // nmatch / gendata: use the net for the attackers / defenders (search by nodes, TUNE_NK)
+static FILE *GENOUT = 0; static char *GENBUF = 0; static size_t GENLEN = 0;
 static int playGame(int v, int lvA, int lvD, int randomPlies) {
   Pos p; startPos(v, &p); GSTART = p; GN = 0;
   u64 keys[2100]; int nk = 0; keys[nk++] = p.h;
@@ -60,7 +66,19 @@ static int playGame(int v, int lvA, int lvD, int randomPlies) {
       if (!setupHist()) { fprintf(stderr, "bad setup\n"); exit(1); }
       ttSalt = p.side ? 0x5bd1e9955bd1e995ull : 0;
       if (PW[0]) { memcpy(EW, PW[p.side], sizeof(EW)); best(99, 0, TUNE_NK); }
+      else if (NNS[0] >= 0) { nnUse = NNS[p.side]; best(99, 0, TUNE_NK); }
       else think(p.side ? lvD : lvA, (int)rnd32());
+      if (GENOUT) {   // the position, its search value (defenders' view, raw evaluate() units) and the hand-made features
+        int sv = IO[2];
+        if (sv > -WINT && sv < WINT) sv += p.side ? D0[VAR] : -D0[VAR];   // undo rep(): raw value
+        if (!p.side) sv = -sv;
+        float f[NN_NF]; handFeat(&p, f);
+        char ln[512]; int L = snprintf(ln, sizeof ln, "%d %d %d %d R %d ", v, p.side, ply, sv > 30000 ? 30000 : sv < -30000 ? -30000 : sv, nnUse ? 1 : 0);
+        for (int i = 0; i < N * N; i++) ln[L++] = ".adk"[p.b[SQ(i / N, i % N)]];
+        for (int i = 0; i < NN_NF; i++) L += snprintf(ln + L, sizeof ln - L, " %g", f[i]);
+        ln[L++] = '\n'; ln[L] = 0;
+        GENBUF = realloc(GENBUF, GENLEN + L + 1); memcpy(GENBUF + GENLEN, ln, L + 1); GENLEN += L;
+      }
       int x = IO[0]; m.f = (u8)toPad(x & 255); m.t = (u8)toPad((x >> 8) & 255);
       if (POSOUT && ply >= randomPlies) {
         fprintf(POSOUT, "%d ", v);
@@ -78,6 +96,11 @@ static int playGame(int v, int lvA, int lvD, int randomPlies) {
     if (quiet >= DRAW_PLIES) { result = 0; break; }
   }
   plyCount = GN;
+  if (GENOUT && GENLEN) {   // result in place of R: 1 attackers won, 2 defenders won, 0 draw
+    char rc = result > 0 ? '1' : result < 0 ? '2' : '0';
+    for (size_t i = 0; i + 1 < GENLEN; i++) if (GENBUF[i] == 'R' && GENBUF[i + 1] == ' ' && i > 0 && GENBUF[i - 1] == ' ') GENBUF[i] = rc;
+    fwrite(GENBUF, 1, GENLEN, GENOUT); fflush(GENOUT); GENLEN = 0;
+  }
   if (getenv("SHOW")) { fprintf(stderr, "\nresult %d after %d plies\n", result, GN); printPos(&p); }
   return result;
 }
@@ -248,6 +271,17 @@ int main(int argc, char **argv) {
   if (argc < 3) { fprintf(stderr, "usage: see the header of tools/native.c\n"); return 1; }
   const char *cmd = argv[1]; int v = atoi(argv[2]);
   if (getenv("W")) loadW(v, getenv("W"));
+  int nnLoaded = 0;
+  if (getenv("NNUE")) {
+    FILE *f = fopen(getenv("NNUE"), "rb"); if (!f) { fprintf(stderr, "cannot open %s\n", getenv("NNUE")); return 1; }
+    int len = (int)fread(nnBuf, 1, sizeof nnBuf, f); fclose(f);
+    setVariant(v); evalInit();
+    if (!nn_load(len)) { fprintf(stderr, "bad net file %s\n", getenv("NNUE")); return 1; }
+    if (nnVar != v) { fprintf(stderr, "the net is for variant %d, not %d\n", nnVar, v); return 1; }
+    if (getenv("NNSCALE")) nnScale = (float)atof(getenv("NNSCALE"));
+    nnLoaded = 1; nnUse = 0;
+    fprintf(stderr, "net: variant %d, %dx%d, H=%d, scale %.0f\n", nnVar, nnN, nnN, nnH, nnScale);
+  }
   if (!strcmp(cmd, "pzgen")) return cmdPzgen(argc, argv);
   if (!strcmp(cmd, "tune")) return cmdTune(v, atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), argv[6]);
   if (!strcmp(cmd, "wmatch")) {   // wmatch v games nodesK fileA fileB : weights A vs weights B
@@ -293,6 +327,51 @@ int main(int argc, char **argv) {
       fflush(stdout);
     }
     return 0;
+  }
+  if (!strcmp(cmd, "gendata")) {
+    int G = atoi(argv[3]); TUNE_NK = atoi(argv[4]); GENOUT = fopen(argv[5], "a"); if (!GENOUT) return 1;
+    if (argc > 6) rng ^= (u64)atoll(argv[6]) * 0x9E3779B97F4A7C15ull;
+    int rpMax = argc > 7 ? atoi(argv[7]) : 8; if (rpMax < 2) rpMax = 2;
+    NNS[0] = NNS[1] = nnLoaded;
+    int aw = 0, dw = 0, dr = 0; long pl = 0;
+    for (int g = 0; g < G; g++) {
+      int r = playGame(v, 0, 0, 2 + rnd32() % (rpMax - 1)); pl += plyCount;
+      if (r > 0) aw++; else if (r < 0) dw++; else dr++;
+      fprintf(stderr, "\rgame %d  att %d def %d draw %d  avg %.0f plies   ", g + 1, aw, dw, dr, (double)pl / (g + 1));
+    }
+    fprintf(stderr, "\n"); fclose(GENOUT); return 0;
+  }
+  if (!strcmp(cmd, "nncheck")) {   // nncheck <variant> <data.txt> [count]: the net's value (defenders' view, logit) of records
+    if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
+    FILE *f = fopen(argv[3], "r"); if (!f) return 1; int cnt = argc > 4 ? atoi(argv[4]) : 10; char line[1024];
+    while (cnt-- > 0 && fgets(line, sizeof line, f)) {
+      int vv, sd, pl, sc, sr; char rr[8], bs[200];
+      if (sscanf(line, "%d %d %d %d %7s %d %199s", &vv, &sd, &pl, &sc, rr, &sr, bs) != 7 || vv != v) { cnt++; continue; }
+      Pos p; posInit(&p); for (int i = 0; i < N * N; i++) { char ch = bs[i]; p.b[SQ(i / N, i % N)] = ch == 'a' ? ATT : ch == 'd' ? DEF : ch == 'k' ? KNG : EMP; }
+      p.side = (u8)sd; posCount(&p);
+      printf("%.4f\n", nnValue(&p));
+    }
+    fclose(f); return 0;
+  }
+  if (!strcmp(cmd, "nmatch")) {
+    if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
+    int G = atoi(argv[3]); TUNE_NK = atoi(argv[4]);
+    if (argc > 5) rng ^= (u64)atoll(argv[5]) * 0x9E3779B97F4A7C15ull;
+    int sc = 0, n = 0, aw = 0, dw = 0, nw[2] = { 0, 0 }, nl[2] = { 0, 0 };
+    for (int g = 0; g < G; g++) {
+      u64 seed = rng; int rp = 2 + rnd32() % 4;
+      NNS[0] = 1; NNS[1] = 0; int r1 = playGame(v, 0, 0, rp);       // net = attackers
+      rng = seed; NNS[0] = 0; NNS[1] = 1; int r2 = playGame(v, 0, 0, rp);   // net = defenders
+      sc += r1 - r2; aw += (r1 > 0) + (r2 > 0); dw += (r1 < 0) + (r2 < 0); n += 2; rnd32();
+      if (r1 > 0) nw[0]++; else if (r1 < 0) nl[0]++;
+      if (r2 < 0) nw[1]++; else if (r2 > 0) nl[1]++;
+      double s2 = 0.5 + sc / (2.0 * n);
+      fprintf(stderr, "\r%d/%d  net score %.3f (Elo %+.0f)  net as attackers +%d -%d, as defenders +%d -%d   ", g + 1, G, s2, eloOf(s2), nw[0], nl[0], nw[1], nl[1]);
+    }
+    fprintf(stderr, "\n");
+    double s2 = 0.5 + sc / (2.0 * n);
+    printf("net vs hand: %d games, score %.3f (Elo %+.0f), net as attackers +%d -%d, as defenders +%d -%d\n", n, s2, eloOf(s2), nw[0], nl[0], nw[1], nl[1]);
+    NNS[0] = NNS[1] = -1; return 0;
   }
   if (!strcmp(cmd, "selfplay")) {
     int G = atoi(argv[3]), lv = atoi(argv[4]); POSOUT = fopen(argv[5], "a");
