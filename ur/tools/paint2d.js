@@ -22,7 +22,7 @@
   const CELLS = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) if (exists(r, c)) CELLS.push([r, c]);
   const pt = (r, c) => [c - 3.5, r - 1];
   // image rectangles in the SVG user space (must match board2d.js)
-  const IMG = { h: [-452, -202, 904, 426], v: [-202, -452, 404, 926] };
+  const IMG = { h: [-452, -202, 904, 426], v: [-202, -452, 404, 926] }; IMG.vf = IMG.v;
 
   /* ---------- deterministic randomness (pass-independent) ---------- */
   const hs = (a, b = 0, c = 0) => { const x = Math.sin(a * 127.1 + b * 311.7 + c * 74.7 + 1.3) * 43758.5453; return x - Math.floor(x); };
@@ -453,8 +453,10 @@
   /* ---------- the whole board image ---------- */
   function board(design, orient = 'h', upx = 2.4) {
     const R = IMG[orient], K = upx * 100, W = Math.round(R[2] * upx), H = Math.round(R[3] * upx), D = DESIGNS[design];
-    const setT = (g, dy = 0) => orient === 'h' ? g.setTransform(K, 0, 0, K, -R[0] * upx, -R[1] * upx + dy) : g.setTransform(0, K, K, 0, -R[0] * upx, -R[1] * upx + dy);   // v: screen (x, y) = board (y, x)
-    const toPx = orient === 'h' ? (x, y) => [(x * 100 - R[0]) * upx, (y * 100 - R[1]) * upx] : (x, y) => [(y * 100 - R[0]) * upx, (x * 100 - R[1]) * upx];
+    // v: screen (x, y) = board (y, x); vf (phones held upright, 2026-11-05): the board turned half round — screen (x, y) = board (−y, −x):
+    // the big block at the bottom (board2d swaps rows 0 / 2 for it, the outer rows carry the same motifs)
+    const setT = (g, dy = 0) => orient === 'h' ? g.setTransform(K, 0, 0, K, -R[0] * upx, -R[1] * upx + dy) : orient === 'vf' ? g.setTransform(0, -K, -K, 0, -R[0] * upx, -R[1] * upx + dy) : g.setTransform(0, K, K, 0, -R[0] * upx, -R[1] * upx + dy);
+    const toPx = orient === 'h' ? (x, y) => [(x * 100 - R[0]) * upx, (y * 100 - R[1]) * upx] : orient === 'vf' ? (x, y) => [(-y * 100 - R[0]) * upx, (-x * 100 - R[1]) * upx] : (x, y) => [(y * 100 - R[0]) * upx, (x * 100 - R[1]) * upx];
     const pass = p => { const c = cv(W, H), g = c.getContext('2d'); setT(g); if (p !== 'a') { g.fillStyle = '#000'; g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillRect(0, 0, W, H); g.restore(); } paintTop(g, pal(design, p, g)); return c; };
     const A = pass('a'), Hc = pass('h'), Sc = pass('s');
     const top = lightUp(A, Hc, Sc, { bump: D.bump, gloss: D.gloss, spec: D.spec, ao: D.ao, scale: upx / 2.4, amb: design === 'restored' ? .5 : .42 });
