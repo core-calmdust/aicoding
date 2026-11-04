@@ -177,24 +177,26 @@
     if (pass === 'r') { g.globalAlpha = .35; g.fillStyle = pat(g, GREYN(), 1 / 90); g.fillRect(minX, minZ, W, D); g.globalAlpha = 1; }
     // diamond bands
     seed = 99;
-    const t = .1;
+    // one diamond on every corner (centred on it), the rest spaced evenly along each edge between two corner diamonds;
+    // all diamonds the same square rhombus, so a corner one is the same shape seen from either edge; red joints between
+    const t = .1, DH = .072, RJ = .02;   // band half width, diamond half diagonal, red joint half length
+    const diamond = (x, z, q1, q2, q3, q4, q5) => {
+      g.beginPath(); g.moveTo(x - DH, z); g.lineTo(x, z - DH); g.lineTo(x + DH, z); g.lineTo(x, z + DH); g.closePath();
+      g.fillStyle = S.shell; g.fill();
+      if (pass === 'c') { g.fillStyle = q1 < .3 ? `rgba(120,85,40,${(.15 + q2 * .25).toFixed(2)})` : `rgba(255,248,230,${(q2 * .18).toFixed(2)})`; g.fill(); }   // each piece its own tone
+      if (q3 < .07) { g.fillStyle = S.bit; g.beginPath(); g.arc(x + (q4 - .5) * .05, z + (q5 - .5) * .05, .016 + q4 * .012, 0, TAU); g.fill(); }   // a small chip (the band itself stays complete)
+    };
+    const joint = (x, z, hor) => { g.beginPath(); if (hor) { g.moveTo(x - RJ, z); g.lineTo(x, z - t * .42); g.lineTo(x + RJ, z); g.lineTo(x, z + t * .42); } else { g.moveTo(x, z - RJ); g.lineTo(x + t * .42, z); g.lineTo(x, z + RJ); g.lineTo(x - t * .42, z); } g.closePath(); g.fillStyle = S.red; g.fill(); };
     for (const [x0, z0, x1, z1] of BANDS) {
-      const L = Math.hypot(x1 - x0, z1 - z0), ang = Math.atan2(z1 - z0, x1 - x0);
-      g.save(); g.translate(x0, z0); g.rotate(ang);
-      g.fillStyle = S.shellEdge; g.fillRect(-t - .012, -t - .012, L + 2 * (t + .012), .012); g.fillRect(-t - .012, t, L + 2 * (t + .012), .012);   // the fine shell lines run on into the corners
-      const n = Math.max(1, Math.round(L / .148)), p = L / n;
-      for (let i = 0; i < n; i++) {
-        const cx = (i + .5) * p, j = (rnd() - .5) * .008, q1 = rnd(), q2 = rnd(), q3 = rnd(), q4 = rnd(), q5 = rnd();
-        g.beginPath(); g.moveTo(cx - p * .44, j); g.lineTo(cx, -t * .82); g.lineTo(cx + p * .44, j); g.lineTo(cx, t * .82); g.closePath();
-        g.fillStyle = S.shell; g.fill();
-        if (pass === 'c') { g.fillStyle = q1 < .3 ? `rgba(120,85,40,${(.15 + q2 * .25).toFixed(2)})` : `rgba(255,248,230,${(q2 * .18).toFixed(2)})`; g.fill(); }   // each piece its own tone
-        for (const ex of [i * p, (i + 1) * p]) { g.beginPath(); g.moveTo(ex - p * .06, 0); g.lineTo(ex, -t * .5); g.lineTo(ex + p * .06, 0); g.lineTo(ex, t * .5); g.closePath(); g.fillStyle = S.red; g.fill(); }   // red between (and at the corners)
-        if (q3 < .07) { g.fillStyle = S.bit; g.beginPath(); g.arc(cx + (q4 - .5) * .06, (q5 - .5) * .08, .018 + q4 * .014, 0, TAU); g.fill(); }   // a small chip (the band itself stays complete)
-      }
-      g.restore();
-      // a shell square at each corner joins the band round the turn
-      g.save(); g.translate(x0, z0); g.rotate(Math.PI / 4); const cs = t * .55; g.fillStyle = S.shell; g.fillRect(-cs / 2, -cs / 2, cs, cs); g.restore();
+      const L = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / L, uz = (z1 - z0) / L, hor = Math.abs(uz) < .5;
+      const n = Math.max(1, Math.round(L / .156));   // intervals: n − 1 diamonds inside, the corner diamonds at both ends
+      for (let k = 0; k < n; k++) { const m = (k + .5) * L / n; joint(x0 + ux * m, z0 + uz * m, hor); }   // the joints first: the diamonds lie over their ends evenly
+      for (let k = 1; k < n; k++) { const a = k * L / n; diamond(x0 + ux * a, z0 + uz * a, rnd(), rnd(), rnd(), rnd(), rnd()); }
     }
+    BANDV.forEach(([x, z]) => diamond(x, z, rnd(), rnd(), 1, 0, 0));   // the corner diamonds (no chips)
+    // the fine shell lines either side of the band: two closed outlines, so they meet square at every corner
+    g.strokeStyle = S.shellEdge; g.lineWidth = .012; g.lineJoin = 'miter'; g.miterLimit = 4;
+    for (const d of [BM - t - .006, BM + t + .006]) { const V = inset(d); g.beginPath(); V.forEach(([x, z], i) => (i ? g.lineTo(x, z) : g.moveTo(x, z))); g.closePath(); g.stroke(); }
     // lapis fields: mottled ground, then the strips cut into small pieces with dark joints
     seed = 5;
     for (const [x0, z0, x1, z1] of FIELDS) {
@@ -255,11 +257,10 @@
   /* ---------- the sides of the box: red limestone and shell slips, eye plaques ---------- */
   // the outline (seen from above, x right, z down): clockwise
   const OUT = [[-X0, -Z0], [XB, -Z0], [XB, -ZB], [XS, -ZB], [XS, -Z0], [X0, -Z0], [X0, Z0], [XS, Z0], [XS, ZB], [XB, ZB], [XB, Z0], [-X0, Z0]];
-  const BANDS = (() => {   // OUT runs clockwise on screen (x right, z down): inward normal of an edge d = (−dz, dx)
-    const n = OUT.length, nrm = i => { const p = OUT[i], q = OUT[(i + 1) % n], L = Math.hypot(q[0] - p[0], q[1] - p[1]); return [-(q[1] - p[1]) / L, (q[0] - p[0]) / L]; };
-    const V = OUT.map((p, i) => { const a = nrm((i + n - 1) % n), b = nrm(i); return [p[0] + BM * (a[0] + b[0]), p[1] + BM * (a[1] + b[1])]; });
-    return V.map((p, i) => [p[0], p[1], V[(i + 1) % n][0], V[(i + 1) % n][1]]);
-  })();
+  // the outline pushed in by d (mitred corners: every corner is 90°, so a corner moves by d along both edge normals)
+  const inset = d => { const n = OUT.length, nrm = i => { const p = OUT[i], q = OUT[(i + 1) % n], L = Math.hypot(q[0] - p[0], q[1] - p[1]); return [-(q[1] - p[1]) / L, (q[0] - p[0]) / L]; };   // OUT runs clockwise on screen: inward normal (−dz, dx)
+    return OUT.map((p, i) => { const a = nrm((i + n - 1) % n), b = nrm(i); return [p[0] + d * (a[0] + b[0]), p[1] + d * (a[1] + b[1])]; }); };
+  const BANDV = inset(BM), BANDS = BANDV.map((p, i) => [p[0], p[1], BANDV[(i + 1) % BANDV.length][0], BANDV[(i + 1) % BANDV.length][1]]);
   // the sides, traversed so that u runs to the right as seen from outside (counter-clockwise from above)
   const SIDES = (() => { const L = [], n = OUT.length; let u = 0;
     for (let i = 0; i < n; i++) { const p = OUT[(n - i) % n], q = OUT[(n - i - 1 + n) % n], len = Math.hypot(q[0] - p[0], q[1] - p[1]);

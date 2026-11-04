@@ -55,7 +55,7 @@ function warCompression(N, tiles) {
 }
 
 function makeEncoder(rule) {
-  const rl = E.RULES[rule] || E.EXTRA_RULES[rule];
+  const rl = E.RULES[rule];
   // RoyalUr の盤：ix=0..2（列＝行 r に対応：light=side0 の自陣 r=2 → ix=0、中央 r=1 → ix=1、dark r=0 → ix=2）, iy=0..7（= c）
   const ixOfR = r => (r === 2 ? 0 : r === 1 ? 1 : 2);
   const bidx = (r, c) => ixOfR(r) + 3 * c;

@@ -75,12 +75,8 @@
     blitz: mkRule({ id: 'blitz', pieces: 5, dice: 4, rel: MASTERS, safeRosettes: false, rosetteExtra: true, captureExtra: true }),
     masters: mkRule({ id: 'masters', pieces: 7, dice: 3, rel: MASTERS, safeRosettes: false, rosetteExtra: true, captureExtra: false }),
   };
-  // 内部・検証用（UI には出さない）：RoyalUr の解析表と同じ「4個サイコロのマスターズ」
-  const EXTRA_RULES = {
-    masters4: mkRule({ id: 'masters4', pieces: 7, dice: 4, rel: MASTERS, safeRosettes: false, rosetteExtra: true, captureExtra: false }),
-  };
   const ROSETTES_RC = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
-  function R(rule) { return typeof rule === 'object' ? rule : (RULES[rule] || EXTRA_RULES[rule] || RULES.finkel); }
+  function R(rule) { return typeof rule === 'object' ? rule : (RULES[rule] || RULES.finkel); }
   function probs(rule) { return R(rule).probs.slice(); }
 
   function newGame(rule, first) {
@@ -227,7 +223,7 @@
   }
   function staticEval(s) {
     if (s.winner >= 0) return s.winner === s.turn ? 1 : 0;
-    const rl = R(s.rule), net = getNet(rl.id === 'masters4' ? 'masters' : rl.id);
+    const rl = R(s.rule), net = getNet(rl.id);
     return net ? netEval(net, rl, s) : handEval(rl, s);
   }
 
@@ -328,7 +324,7 @@
   }
 
   const API = {
-    RULES, EXTRA_RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
+    RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
     newGame, clone, coords, pathOf, isRosette, isSafe, rollDice, mulberry32,
     legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval,
     _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id),
