@@ -34,15 +34,16 @@ function botMove(T, s) {
 
 /* ---------- the steps ---------- */
 // at: selector(s) to point at (none = a box in the middle) · need: the moves accepted (the step waits for one of them)
+const CTX = [['.pk-board', '.seat.me .cd.pc'], ['.seat.me .cd.pc']];   // phones: also kept in view when there is room (what the move is about) — the first that fits
 const STEPS = {
   deal: [{ k: 'hello' }, { k: 'cards', at: '.seat.me' }, { k: 'blinds', at: ['.seat.me .dbtn', '.seat[data-seat="1"]', '.seat[data-seat="2"]'] }],
-  turn0: [{ k: 'folds', at: '#pkLog' }, { k: 'eq', at: '#side .card' }, { k: 'coach', at: '#side .coach-card' }, { k: 'raise', at: '#actbar', need: ['raise'] }],
+  turn0: [{ k: 'folds', at: '#pkLog' }, { k: 'eq', at: '#side .card' }, { k: 'coach', at: '#side .coach-card' }, { k: 'raise', at: '#actbar', need: ['raise'], ctx: CTX }],
   street1: [{ k: 'flop', at: '.pk-board' }],
-  turn1: [{ k: 'bet', at: '#actbar', need: ['raise'] }],
+  turn1: [{ k: 'bet', at: '#actbar', need: ['raise'], ctx: CTX }],
   street2: [{ k: 'turn', at: '.pk-board' }],
-  turn2: [{ k: 'odds', at: '#side .card' }, { k: 'call', at: '#actbar', need: ['call'] }],
+  turn2: [{ k: 'odds', at: '#side .card' }, { k: 'call', at: '#actbar', need: ['call'], ctx: CTX }],
   street3: [{ k: 'river', at: '.pk-board' }],
-  turn3: [{ k: 'last', at: '#actbar', need: ['check', 'raise'] }],
+  turn3: [{ k: 'last', at: '#actbar', need: ['check', 'raise'], ctx: CTX }],
   done: [{ k: 'show', at: ['#pkResult', '.seat.me', '.seat[data-seat="2"]'] }, { k: 'review', at: '#abReview' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
 };
 let Q = null, cur = null, resumeFn = null, used = {}, n = 0;
@@ -73,6 +74,8 @@ function ensure() {
   layer = document.createElement('div'); layer.id = 'tutLayer'; layer.innerHTML = '<div class="tut-hole"></div><div class="tut-box" role="dialog" aria-live="polite"></div>';
   document.body.appendChild(layer); hole = layer.querySelector('.tut-hole'); box = layer.querySelector('.tut-box');
   addEventListener('resize', () => { if (cur && layer.classList.contains('show')) place(cur); });
+  // the player scrolls the table to look around: the spotlight follows its target
+  let raf = 0; document.addEventListener('scroll', () => { if (raf || !layer.classList.contains('show') || !lastSt || !lastSt.at) return; raf = requestAnimationFrame(() => { raf = 0; holeAt(rectOf(lastSt.at), phone() ? 6 : 8); }); }, true);
 }
 function rectOf(at) {
   const sels = [].concat(at || []); let r = null;
@@ -88,20 +91,77 @@ function show(st) {
   const lg = T && T.phase === 'bet' ? P.legal(T) : null, vars = { pot: T ? P.potTotal(T) : 0, bet: lg ? lg.toCall || 0 : 0 };
   const btns = st.end ? `<button type="button" class="mbtn" id="tutReview">${esc(L('again'))}</button><button type="button" class="mbtn go" id="tutPlay">${esc(L('play'))}</button>`
     : st.need ? `<span class="tut-do">👉 ${esc(L('do'))}</span>` : `<button type="button" class="mbtn go" id="tutNext">${esc(L('next'))}</button>`;
-  box.innerHTML = `<div class="tut-top"><em>${esc(L('title'))} ${Math.min(n, TOTAL)}/${TOTAL}</em><button type="button" class="tut-x" id="tutSkip">${esc(L('skip'))}</button></div>` +
-    `<b>${esc(L('t.' + st.k))}</b><p>${L('b.' + st.k, vars)}</p><div class="tut-btns">${btns}</div>`;
+  box.innerHTML = `<div class="tut-top"><em>${esc(L('title'))} ${Math.min(n, TOTAL)}/${TOTAL}</em><span class="tut-tr"><button type="button" class="tut-min" id="tutMin" aria-expanded="true" aria-label="${esc(L('fold'))}" title="${esc(L('fold'))}"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" class="tut-x" id="tutSkip">${esc(L('skip'))}</button></span></div>` +
+    `<b>${esc(L('t.' + st.k))}${st.need ? `<span class="tut-do-s">${esc(L('do'))}</span>` : ''}</b><p>${L('b.' + st.k, vars)}</p><div class="tut-btns">${btns}</div>`;
   layer.classList.add('show'); layer.classList.toggle('center', !st.at); layer.classList.toggle('act', !!st.need);
   const el = st.at && document.querySelector([].concat(st.at)[0]);
   { const pt = el && el.closest && el.closest('#side [data-pt]'); if (pt && A.showTab) A.showTab(pt.dataset.pt); }   // phones: open that tab
-  if (el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
-  requestAnimationFrame(() => place(st));
+  if (!phone() && el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+  box.classList.remove('min');
+  const mn = $('#tutMin'); if (mn) mn.onclick = () => { box.classList.toggle('min'); mn.setAttribute('aria-expanded', box.classList.contains('min') ? 'false' : 'true'); place(st); };
+  requestAnimationFrame(() => { place(st); watch(st); });
   const nx = $('#tutNext'); if (nx) { nx.onclick = () => { A.sfx('flip'); next(); }; setTimeout(() => nx.focus({ preventScroll: true }), 30); }
   $('#tutSkip').onclick = () => { if (st.end) finish(); else A.confirmBox(L('skipQ'), () => quit()); };
   const pl = $('#tutPlay'); if (pl) pl.onclick = () => finish();
   const rv = $('#tutReview'); if (rv) rv.onclick = () => { hide(); start(); };
 }
+/* phones: the bubble is docked (top or bottom, full width, compact) and the table scrolls so the part it talks about
+   sits in the free area between the bubble and the edge — nothing the step is about is ever under the text */
+const phone = () => innerWidth <= 760;
+const stageEl = () => document.querySelector('.stage');
+let padAdded = 0, padTop = 0, lastSt = null, ro = null;
+function inStage(at) { const sc = stageEl(), e = at && document.querySelector([].concat(at)[0]); return !!(sc && e && sc.contains(e)); }
+function holeAt(r, pad) { hole.style.cssText = r ? `left:${r.l - pad}px;top:${r.t - pad}px;width:${r.r - r.l + pad * 2}px;height:${r.b - r.t + pad * 2}px` : `left:${innerWidth / 2}px;top:${innerHeight / 2}px;width:0;height:0`; }
+function unpad() { const sc = stageEl(); if (sc && padAdded) { sc.style.paddingBottom = ''; padAdded = 0; } if (sc && padTop) { sc.style.paddingTop = ''; padTop = 0; } }
+// the target changes size after the step is shown (the coach / equity box finishing its sums): place again
+function watch(st) { if (ro) ro.disconnect(); ro = null; if (!st.at || !window.ResizeObserver) return; let tm = 0; ro = new ResizeObserver(() => { clearTimeout(tm); tm = setTimeout(() => { if (cur === st && layer.classList.contains('show')) place(st); }, 60); }); [].concat(st.at).forEach(q => document.querySelectorAll(q).forEach(e => ro.observe(e))); }
+function placePhone(st) {
+  unpad();
+  const W = innerWidth, H = innerHeight, sc = stageEl(), gap = 8;
+  layer.classList.add('dock'); box.style.left = gap + 'px'; box.style.width = (W - gap * 2) + 'px';
+  const bh = box.offsetHeight;
+  const sr = sc ? sc.getBoundingClientRect() : { top: 0, bottom: H };
+  let r = st.at ? rectOf(st.at) : null;
+  const scroll = r && inStage(st.at);
+  // the free area left by each dock (inside the scrolling table area when the target scrolls with it)
+  const zone = d => {
+    const t = d === 'top' ? bh + gap * 2 : 0, b = d === 'top' ? H : H - bh - gap * 2;
+    return scroll ? { t: Math.max(t, sr.top) + 6, b: Math.min(b, sr.bottom) - 6 } : { t: t + 4, b: b - 4 };
+  };
+  let dock, d = 0;
+  if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
+  else if (!scroll) dock = r.t + r.b > H ? 'top' : 'bottom';  // a fixed target (header buttons, tab bar): the other end
+  else {
+    // try both docks: the scroll that puts the target in the free area (it can't scroll above the top) — keep the one that fits best
+    const plan = dk => {
+      const z = zone(dk), room = z.b - z.t;
+      // with its context (the board and your cards above the buttons) when it fits, else a smaller context, else the target alone
+      let u = null, fit = false, cx = null;
+      for (const c of st.ctx || []) { const q = rectOf(c); if (!q) continue; cx = q; u = { t: Math.min(q.t, r.t), b: Math.max(q.b, r.b) }; if (u.b - u.t <= room) { fit = true; break; } }
+      const tt = fit ? u.t : r.t, h = (fit ? u.b : r.b) - tt;
+      // an action step: the buttons go to the bottom of the free area, so the cards stay in view above them
+      const want = h > room ? z.t : st.need ? z.b - h : z.t + (room - h) / 2;
+      const dd = Math.round(tt - want), t = r.t - dd, b = r.b - dd;   // (above the top: room is made with padding)
+      return { dk, dd, miss: Math.max(0, z.t - t) + Math.max(0, b - z.b), room: room - (cx && !fit ? 1e4 : 0) };
+    };
+    const a = plan('top'), c = plan('bottom'), best = a.miss < c.miss || (a.miss === c.miss && a.room >= c.room) ? a : c;
+    dock = best.dk; d = best.dd;
+  }
+  if (d) {
+    const max = sc.scrollHeight - sc.clientHeight;
+    if (sc.scrollTop + d > max) { const extra = Math.ceil(sc.scrollTop + d - max); padAdded += extra; sc.style.paddingBottom = `calc(${getComputedStyle(sc).paddingBottom} + ${extra}px)`; }
+    if (sc.scrollTop + d < 0) { padTop = Math.ceil(-(sc.scrollTop + d)); sc.style.paddingTop = `calc(${getComputedStyle(sc).paddingTop} + ${padTop}px)`; d = -sc.scrollTop; }
+    sc.scrollTop += d; r = rectOf(st.at);
+  }
+  box.style.top = (dock === 'top' ? gap : H - bh - gap) + 'px';
+  layer.dataset.dock = dock;
+  holeAt(r, 6);
+}
 function place(st) {
   if (!layer) return;
+  lastSt = st;
+  if (phone()) { placePhone(st); return; }
+  layer.classList.remove('dock'); box.style.width = '';
   const W = innerWidth, H = innerHeight, r = st.at ? rectOf(st.at) : null, pad = 8;
   if (!r) { hole.style.cssText = `left:${W / 2}px;top:${H / 2}px;width:0;height:0`; box.style.left = Math.max(12, (W - box.offsetWidth) / 2) + 'px'; box.style.top = Math.max(12, (H - box.offsetHeight) / 2) + 'px'; return; }
   hole.style.cssText = `left:${r.l - pad}px;top:${r.t - pad}px;width:${r.r - r.l + pad * 2}px;height:${r.b - r.t + pad * 2}px`;
@@ -117,7 +177,7 @@ function place(st) {
   box.style.left = left + 'px'; box.style.top = top + 'px';
 }
 function shake() { if (!box) return; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
-function hideBox() { if (layer) layer.classList.remove('show'); }
+function hideBox() { if (layer) layer.classList.remove('show'); unpad(); if (ro) { ro.disconnect(); ro = null; } }
 function hide() { hideBox(); Q = null; cur = null; resumeFn = null; }
 function start() {
   used = {}; n = 0; Q = null; cur = null; resumeFn = null;
@@ -207,6 +267,8 @@ de: {"title": "Tutorial", "next": "Weiter", "skip": "Beenden", "do": "Jetzt bist
 hi: {"title": "ट्यूटोरियल", "next": "आगे", "skip": "बंद करें", "do": "अब खुद चाल चलें", "skipQ": "ट्यूटोरियल बंद करें?", "wait": "बॉक्स पढ़ें और \"आगे\" दबाएँ", "play": "असली गेम शुरू करें", "again": "फिर से", "thanks": "ट्यूटोरियल पूरा! खेल का आनंद लें", "t.hello": "पोकर में आपका स्वागत है!", "b.hello": "असली टेबल पर एक हैंड खेलते हुए कंट्रोल और नियम सीखें।<br>गेम है <b>टेक्सस होल्डम</b>। आप नीचे बैठे हैं; बाकी पाँच खिलाड़ी कंप्यूटर हैं।", "t.cards": "आपके होल कार्ड", "b.cards": "आपके दो कार्ड सिर्फ़ आप देख सकते हैं। इस बार: <b>A♥ K♥</b> — सबसे अच्छी शुरुआतों में से एक।<br>अंत में, आपके दो कार्ड और बोर्ड के पाँच कार्डों में से बने सबसे अच्छे पाँच कार्ड जीतते हैं।", "t.blinds": "बटन और ब्लाइंड्स", "b.blinds": "इस हैंड में <b>D</b> (डीलर बटन) आपकी सीट पर है। बटन हमेशा आख़िर में चाल चलता है — यह सबसे अच्छी सीट है।<br>उसके बाईं ओर के दो खिलाड़ियों ने <b>ब्लाइंड्स</b> (1 और 2 की अनिवार्य बेट) लगाई हैं।", "t.folds": "खिलाड़ी बारी-बारी से चलते हैं", "b.folds": "खिलाड़ी घड़ी की दिशा में एक-एक करके चाल चलते हैं। उनमें से तीन ने <b>फ़ोल्ड</b> किया (हैंड छोड़ दिया)। लॉग में दिखता है कि किसने क्या किया।", "t.eq": "आपकी इक्विटी", "b.eq": "आपकी बारी पर आपकी <b>इक्विटी</b> लाइव गिनी जाती है: अगर हैंड अंत तक जाए तो बचे हुए सभी खिलाड़ियों के ख़िलाफ़ आप कितनी बार जीतेंगे।", "t.coach": "कोच", "b.coach": "कोच एक चाल सुझाता है और उसकी वजह बताता है। आपकी हर चाल को ◎ ○ △ ✕ ग्रेड मिलता है।", "t.raise": "रेज़ करें", "b.raise": "आपका हाथ मज़बूत है, इसलिए <b>रेज़</b> करें (और ज़्यादा लगाएँ)। स्लाइडर और बटन से रकम बदलती है।<br>हरा \"रेज़\" बटन दबाएँ।", "ng.raise": "यहाँ रेज़ करके देखें (हरा बटन)", "t.flop": "फ़्लॉप", "b.flop": "सिर्फ़ बिग ब्लाइंड ने कॉल किया, और तीन कार्ड (<b>फ़्लॉप</b>) खुले बाँटे गए। बोर्ड के कार्ड सबके साझा होते हैं।<br>K♠ से आपके पास <b>किंग्स का जोड़ा</b> बन गया (टॉप पेयर, इक्का किकर)!", "t.bet": "बेट करें", "b.bet": "आपके विरोधी ने <b>चेक</b> किया (बिना बेट किए आगे बढ़ाया)। अब आप <b>बेट</b> करें।<br>\"½ पॉट\" दबाएँ, फिर हरा \"बेट\" बटन।", "ng.bet": "यहाँ बेट करके देखें (हरा बटन)", "t.turn": "टर्न", "b.turn": "चौथा कार्ड (<b>टर्न</b>) J♥ है: अब चार हार्ट हैं — एक और हार्ट आया तो आपका फ़्लश बन जाएगा।", "t.odds": "पॉट ऑड्स", "b.odds": "आपका विरोधी <b>{bet}</b> बेट करता है। आपकी इक्विटी के नीचे \"ज़रूरी इक्विटी\" वह न्यूनतम है जिस पर कॉल में नुकसान नहीं होता।<br><b>जब आपकी इक्विटी उससे ज़्यादा हो, तो लंबे समय में कॉल करना फ़ायदेमंद है।</b>", "t.call": "कॉल करें", "b.call": "आपकी इक्विटी काफ़ी है, इसलिए <b>कॉल</b> करें (उतनी ही बेट लगाएँ)। \"कॉल\" दबाएँ।", "ng.call": "यहाँ कॉल करके देखें", "t.river": "रिवर", "b.river": "पाँचवाँ और आख़िरी कार्ड (<b>रिवर</b>) 3♠ है। अब सारे कार्ड आ गए।", "t.last": "आपकी आख़िरी चाल", "b.last": "विरोधी चेक करता है। शोडाउन पर जाने के लिए <b>चेक</b> करें, या कुछ और चिप्स जीतने के लिए <b>बेट</b> करें — आपकी मर्ज़ी।", "ng.last": "चेक या बेट चुनें", "t.show": "शोडाउन", "b.show": "हाथ दिखाए गए। विरोधी के पास भी <b>किंग्स का जोड़ा</b> (K♣ T♦) था, लेकिन बाकी कार्डों की तुलना में आपका <b>इक्का</b> (<b>किकर</b>) भारी पड़ा — आप जीत गए!", "t.review": "रिव्यू", "b.review": "\"रिव्यू\" हैंड को चाल-दर-चाल आपकी इक्विटी और ग्रेड के साथ दोबारा चलाता है। यह दाईं ओर की हैंड हिस्ट्री में भी है।", "t.menu": "और जानने के लिए", "b.menu": "<b>नियम</b>: पाँचों पोकर के नियम खेलते हुए सीखें · <b>पाठ</b>: संभावना और रणनीति का अभ्यास · <b>अध्ययन</b>: इक्विटी व EV कैलकुलेटर और स्टार्टिंग-हैंड चार्ट · <b>आँकड़े</b>: आपके खेल का विश्लेषण।", "t.end": "ट्यूटोरियल पूरा!", "b.end": "आप बुनियादी बातें जान गए हैं। अब पाँच कंप्यूटर खिलाड़ियों के ख़िलाफ़ सामान्य गेम शुरू होता है। ट्यूटोरियल आप कभी भी \"नियम\" या \"पाठ\" से दोबारा खेल सकते हैं।", "o.h": "पोकर में नए हैं?", "o.p": "एक ट्यूटोरियल असली टेबल पर एक हैंड खेलते हुए आपको कंट्रोल और नियम सिखाता है (लगभग 3 मिनट)।", "o.list": "होल कार्ड, बटन और ब्लाइंड्स|चेक, बेट, कॉल और रेज़|इक्विटी, कोच और पॉट ऑड्स|शोडाउन और रिव्यू", "o.hide": "दोबारा न दिखाएँ", "o.later": "बाद में", "o.go": "ट्यूटोरियल शुरू करें", "entry": "खेलकर सीखें", "entry.d": "असली टेबल पर एक हैंड खेलते हुए कंट्रोल और नियम सीखें (लगभग 3 मिनट)"},
 ar: {"title": "الدرس التعليمي", "next": "التالي", "skip": "خروج", "do": "قم بالحركة بنفسك", "skipQ": "الخروج من الدرس التعليمي؟", "wait": "اقرأ المربع ثم اضغط «التالي»", "play": "ابدأ لعبة حقيقية", "again": "مرة أخرى", "thanks": "اكتمل الدرس! استمتع باللعب", "t.hello": "مرحبًا بك في البوكر!", "b.hello": "تعلّم أدوات التحكم والقواعد بلعب يد واحدة على طاولة حقيقية.<br>اللعبة هي <b>تكساس هولدم</b>. أنت تجلس في الأسفل، واللاعبون الخمسة الآخرون يتحكم بهم الكمبيوتر.", "t.cards": "أوراقك المخفية", "b.cards": "أنت وحدك ترى ورقتيك. هذه المرة: <b>A♥ K♥</b> — من أفضل البدايات.<br>في النهاية، تفوز أفضل خمس أوراق من ورقتيك والأوراق الخمس على الطاولة.", "t.blinds": "الزر والرهانات العمياء", "b.blinds": "<b>D</b> (زر الموزّع) عند مقعدك في هذه اليد. صاحب الزر يتصرف دائمًا أخيرًا — إنه أفضل مقعد.<br>اللاعبان على يساره دفعا <b>الرهانات العمياء</b> (رهانات إجبارية قدرها 1 و2).", "t.folds": "اللاعبون يتصرفون بالدور", "b.folds": "يتصرف اللاعبون واحدًا تلو الآخر في اتجاه عقارب الساعة. ثلاثة منهم <b>انسحبوا</b> (تخلّوا عن اليد). يُظهر السجل من فعل ماذا.", "t.eq": "نسبة فوزك", "b.eq": "في دورك تُحسب <b>نسبة فوزك</b> مباشرةً: كم مرة ستفوز على جميع اللاعبين المتبقين لو استمرت اليد حتى النهاية.", "t.coach": "المدرب", "b.coach": "يقترح المدرب حركة ويشرح السبب. تُقيَّم كل حركة من حركاتك بـ ◎ ○ △ ✕.", "t.raise": "قم بالرفع", "b.raise": "يدك قوية، لذا <b>ارفع</b> (ضع رهانًا أكبر). يغيّر شريط التمرير والأزرار المبلغ.<br>اضغط زر «رفع» الأخضر.", "ng.raise": "جرّب الرفع هنا (الزر الأخضر)", "t.flop": "الفلوب", "b.flop": "لم يجارِ إلا صاحب الرهان الأعمى الكبير، وكُشفت ثلاث أوراق (<b>الفلوب</b>). أوراق الطاولة مشتركة بين الجميع.<br>ورقة K♠ تمنحك <b>زوجًا من الملوك</b> (أعلى زوج مع الآس كيكر)!", "t.bet": "قم بالرهان", "b.bet": "خصمك <b>مرّر</b> (لم يراهن). الآن دورك لكي <b>تراهن</b>.<br>اضغط «½ الوعاء» ثم زر «رهان» الأخضر.", "ng.bet": "جرّب الرهان هنا (الزر الأخضر)", "t.turn": "الترن", "b.turn": "الورقة الرابعة (<b>الترن</b>) هي J♥: أصبحت لديك أربع قلوب — قلب واحد آخر ويكون لديك فلاش.", "t.odds": "احتمالات الوعاء", "b.odds": "خصمك يراهن بـ <b>{bet}</b>. تحت نسبة فوزك، «النسبة المطلوبة» هي الحد الأدنى كي لا تخسر بالمجاراة.<br><b>عندما تكون نسبة فوزك أعلى، تربح المجاراة على المدى الطويل.</b>", "t.call": "جارِ الرهان", "b.call": "نسبة فوزك كافية، لذا <b>جارِ</b> (ادفع مبلغ الرهان نفسه). اضغط «مجاراة».", "ng.call": "جرّب المجاراة هنا", "t.river": "الريفر", "b.river": "الورقة الخامسة والأخيرة (<b>الريفر</b>) هي 3♠. هذه كل الأوراق.", "t.last": "حركتك الأخيرة", "b.last": "خصمك يمرّر. <b>مرّر</b> للذهاب إلى كشف الأوراق، أو <b>راهن</b> لتربح بضع رقائق إضافية — القرار لك.", "ng.last": "اختر التمرير أو الرهان", "t.show": "كشف الأوراق", "b.show": "كُشفت الأيدي. كان لدى خصمك أيضًا <b>زوج من الملوك</b> (K♣ T♦)، لكن بمقارنة الأوراق الأخرى يحسم <b>الآس</b> الأمر لصالحك (<b>الكيكر</b>) — لقد فزت!", "t.review": "المراجعة", "b.review": "تعيد «المراجعة» عرض اليد حركةً بحركة مع نسبة فوزك وتقييماتك. وتجدها أيضًا في سجل الأيدي على اليمين.", "t.menu": "لمعرفة المزيد", "b.menu": "<b>القواعد</b>: قواعد أنواع البوكر الخمسة بالتجربة · <b>الدروس</b>: تدرّب على الاحتمالات والاستراتيجية · <b>الدراسة</b>: حاسبة نسبة الفوز والقيمة المتوقعة (EV) وجدول الأيدي الابتدائية · <b>الإحصاءات</b>: تحليل أسلوب لعبك.", "t.end": "اكتمل الدرس التعليمي!", "b.end": "أصبحت تعرف الأساسيات. تبدأ الآن لعبة عادية ضد خمسة لاعبين يتحكم بهم الكمبيوتر. يمكنك إعادة الدرس في أي وقت من «القواعد» أو «الدروس».", "o.h": "جديد على البوكر؟", "o.p": "يعلّمك درس تعليمي أدوات التحكم والقواعد أثناء لعب يد واحدة على طاولة حقيقية (حوالي 3 دقائق).", "o.list": "الأوراق المخفية والزر والرهانات العمياء|التمرير والرهان والمجاراة والرفع|نسبة الفوز والمدرب واحتمالات الوعاء|كشف الأوراق والمراجعة", "o.hide": "لا تعرض مرة أخرى", "o.later": "لاحقًا", "o.go": "ابدأ الدرس التعليمي", "entry": "درس تعليمي تطبيقي", "entry.d": "تعلّم أدوات التحكم والقواعد بلعب يد واحدة على طاولة حقيقية (حوالي 3 دقائق)"}
 };
+const FOLD = {"ja": "説明をたたむ／ひらく", "en": "Collapse / expand", "zh": "收起／展开说明", "ko": "설명 접기/펼치기", "es": "Plegar / desplegar", "fr": "Replier / déplier", "pt": "Recolher / expandir", "de": "Ein-/ausklappen", "hi": "छोटा / बड़ा करें", "ar": "طيّ / توسيع"};
+Object.keys(FOLD).forEach(k => { if (TX[k]) TX[k].fold = FOLD[k]; });
 function L(k, v) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k] || k; if (v) x = String(x).replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 
 window.PokerTut = { setup, botMove, ev, allow, start, hide, finish, offer, L, TX };

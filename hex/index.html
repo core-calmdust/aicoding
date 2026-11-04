@@ -120,7 +120,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .coach-mk.hov{border-style:solid;background:rgba(61,245,154,.22);box-shadow:0 0 0 1.5px #08120c,inset 0 0 0 1.5px #08120c,0 0 14px rgba(61,245,154,.75)}
 /* coach (coach.js, shared/coachkit.js) */
 #coachCard.hidden{display:none}
-body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
+body.in-online #coachCard{display:none!important}
 #coachCard.ck-off .ck-muted{font-size:12px}
 html.pc2 .side-in > #coachCard:not(.hidden):not(.ck-off){flex:1.7 1 0}
 html.pc2 .side-in > #coachCard.ck-off{flex:.7 1 0}
@@ -1157,7 +1158,7 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/headerbar.js?v=30"></script>
 <script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=5"></script>
+<script src="../shared/cardbar.js?v=6"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -1169,10 +1170,10 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
 <script src="rbox.js?v=3"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=9"></script>
-<script src="coach.js?v=6"></script>
-<script src="coach-i18n.js?v=3"></script>
+<script src="coach.js?v=7"></script>
+<script src="coach-i18n.js?v=4"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="app.js?v=11cd1"></script>
+<script src="app.js?v=11pzd"></script>
 <script src="online-ui.js?v=3"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other
@@ -1190,11 +1191,11 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=25'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/hex.js?v=1')).then(() => load('../atlas/skin/hex.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/hex.js?v=1')).then(() => load('../atlas/skin/hex.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -17,8 +17,8 @@ function only(sc, goal) {
 function pvOf(mv, ans, n) {
   let m = mv + (ans + 1), pv = String(ans + 1), left = n - 1;
   while (left > 0) {
-    const dl = E.defendList(m, left); let best = null;
-    for (const c of PREF) { const e = dl.find(x => x.c === c); if (!e) continue; const v = e.need || 99; if (!best || v > best.v) best = { c, v }; }
+    const dl = E.defendList(m, left), bc = E.pickDefence(dl), be = dl.find(x => x.c === bc);   // the app's defender (engine.js)
+    const best = be && { c: bc, v: be.need || 99 };
     if (!best || best.v === 99) return null;
     m += best.c + 1; pv += best.c + 1;
     const al = E.mateList(m, left); let a = null;
@@ -60,7 +60,7 @@ function check(P) {
 const all = process.argv.includes('--all');
 let ok = 0, bad = 0;
 PZ.levels.forEach(lv => lv.puzzles.forEach((P, j) => {
-  const k = lv.id + ':' + j;
+  const k = lv.id + ':' + (lv.was ? lv.was[j] : j);   // record / PZ.old key (w1 keeps its pre-cut indices)
   const list = all || (PZ.old && PZ.old[k]) ? [[k, P]].concat(PZ.old && PZ.old[k] ? [[k + ' (old)', PZ.old[k]]] : []) : [];
   for (const [name, Q] of list) { const r = check(Q); if (r) { bad++; console.log('NG', name, r); } else ok++; }
 }));

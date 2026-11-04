@@ -1087,7 +1087,9 @@ class Searcher {
 
 // ===================================================================== mate solver (attacker = side to move)
 // returns {mate: plies, pv:[...]} or null. Simple iterative-deepening AND/OR search with check-only attacker moves.
-function solveMate(pos, maxPly, nodeLimit = 2e6) {
+// tsume = true: tsume conventions — a defender drop on a square no defender piece guards (無駄合, futile interposition)
+// is not a defence (same rule as tools/tsume/solve.js); in games (tsume = false) every legal reply counts.
+function solveMate(pos, maxPly, nodeLimit = 2e6, tsume = false) {
   let nodes = 0;
   const bufs = []; for (let i = 0; i <= maxPly + 2; i++) bufs.push(new Int32Array(1000));
   const noMate = new Map();   // key -> max depth proven insufficient (OR nodes)
@@ -1117,6 +1119,7 @@ function solveMate(pos, maxPly, nodeLimit = 2e6) {
     let legal = 0, longest = null;
     const moves = Array.from(list.subarray(0, n));
     for (const m of moves) {
+      if (tsume && isDrop(m) && !pos.attacked(mTo(m), pos.side)) continue;   // futile interposition
       pos.doMove(m);
       if (!pos.lastMoveLegal(m)) { pos.undoMove(); continue; }
       legal++;
@@ -1151,7 +1154,7 @@ function tsumeReply(pos, remain, nodeLimit = 400000) {
   let best = null, bestLen = -1, bestDrop = true;
   for (const m of replies) {
     pos.doMove(m);
-    const r = solveMate(pos, Math.max(1, remain - 1), nodeLimit);
+    const r = solveMate(pos, Math.max(1, remain - 1), nodeLimit, true);
     pos.undoMove();
     if (!r) return null;                       // this reply escapes: the attacker's move was wrong
     const len = r.mate < 0 ? remain : r.mate;  // unknown (budget) -> assume long
@@ -1296,13 +1299,16 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       // d.remain plies is still forced (reply = the longest defence, drops last as in tsumeReply); false when some reply
       // escapes (reply = that escape, a non-drop if there is one)
       setup(d);
-      const replies = pos.legalMoves(true);
+      // futile interpositions (a drop on a square no defender piece guards) are not defences in tsume: never played,
+      // unless they are the only legal replies (then the position is mate by the tsume rules anyway)
+      const all = pos.legalMoves(true), real = all.filter(m => !isDrop(m) || pos.attacked(mTo(m), pos.side));
+      const replies = real.length ? real : all;
       let esc = null, best = null, bestLen = -1, bestDrop = true;
       for (const m of replies) {
         const drop = isDrop(m);
         if (esc && drop) continue;            // already escaping: only look for a non-drop escape
         pos.doMove(m);
-        const r = d.remain > 1 ? solveMate(pos, d.remain - 1, 400000) : null;
+        const r = d.remain > 1 ? solveMate(pos, d.remain - 1, 400000, true) : null;
         pos.undoMove();
         if (!r) { if (!esc || !drop) esc = m; if (!drop) break; continue; }
         if (esc) continue;

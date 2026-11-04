@@ -15,6 +15,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
+  rest: "レッスン・パズル・観戦などの間、コーチはお休みです。自分の力で考えてみよう。AIとの対局や二人対戦に戻ると、コーチが再開します。",
   offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補手の解説が表示されます。',
   oppTurn: '相手の手番です。相手が次にどこに打ってくるか、予想してみよう。予想が当たるほど読みの力がつきます。', overRv: '対局が終わりました。解析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
   calc: '候補手を考えています…', form: '形勢', stage: '局面',
@@ -105,6 +106,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
+  rest: "The coach is resting during lessons, puzzles, watching and the like — think it through on your own. It comes back when you play the AI or a friend again.",
   offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate moves explained.',
   oppTurn: "It's your opponent's turn. Try to guess where they will play next — the more often you guess right, the stronger your reading gets.", overRv: 'The game is over. Analyze it to see a move-by-move review here (best moves, mistakes and why).', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
   calc: 'Thinking about candidate moves…', form: 'Position', stage: 'Phase',
@@ -480,6 +482,16 @@ function verdictHtml() {
 }
 
 // --------------------------------------------------------------------------------------------- render
+// the coach is resting (not just hidden): a lesson / puzzle / opening practice / rated game / AI vs AI / study / editor is on
+function restNow(rv, can) {
+  if (can || !card) return false;
+  const b = document.body.classList, st = typeof settings !== 'undefined' ? settings : {};
+  if (b.contains('in-online') || st.mode === 'online') return false;
+  const ls = (typeof lesson !== 'undefined' && !!lesson) || (typeof puzzle !== 'undefined' && !!puzzle && typeof puzzle !== 'function') || b.contains('in-lesson') || b.contains('in-puzzle');
+  if (rv && !ls) return false;   // the review card has the coach tab
+  if (ls || b.contains('in-edit') || b.contains('in-study') || b.contains('rated-live') || st.mode === 'watch') return true;
+  return !usable();
+}
 function render() {
   if (!card) return;
   if (HexCoach.sw) HexCoach.sw.sync();
@@ -488,6 +500,15 @@ function render() {
   const rv = !!document.querySelector('#reviewCard.show');
   const over = gameOver(moves.length), playing = !over && cur === moves.length && !reviewing;
   const on = active(), can = usable() && (playing || (over && !rv && moves.length > 0));
+  // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
+  // the coach is resting, and computes / marks nothing (online games keep their own screen)
+  const resting = restNow(rv, can);
+  card.classList.toggle('ck-rest', resting);
+  if (resting) {
+    card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); S.rvWas = rv;
+    S.items = null;
+    return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`);
+  }
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on && !over);
   document.body.classList.toggle('ck-tab', can || rv);
@@ -576,6 +597,7 @@ function init() {
   if (settings.coach === undefined) settings.coach = true;
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
+  if (window.MutationObserver) { let k = ''; const mo = () => { const b = document.body.classList, n = ['in-lesson', 'in-puzzle', 'in-online', 'in-edit', 'in-study', 'rated-live', 'in-watch'].map(c => b.contains(c) ? 1 : 0).join(''); if (n !== k) { k = n; render(); } }; new MutationObserver(mo).observe(document.body, { attributes: true, attributeFilter: ['class'] }); }
   { const rc = document.getElementById('reviewCard'); if (rc) { rc.dataset.itc = 'coach'; if (window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); } }
   HexCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }

@@ -1226,7 +1226,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1330,7 +1330,68 @@ function startLesson(step) {
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step, i: 0, results: [], answered: false, hinted: false };
   document.body.classList.add('in-lesson');
+  const R = LESSONS.steps[step].ramp;
+  if (R && R.length) { lesson.ramp = R; lesson.ri = 0; loadRamp(); return; }
   loadLessonProblem();
+}
+// ---- warm-up ramp before a lesson's scored problems (lessons.json step.ramp, built by tools/ramps.js; not scored)
+//   explain: read-only position + the idea as arrows (seq) + marks + a short explanation (次へ)
+//   try: a guided position, any move in ok is right; hints go concept → where to look → the answer
+const RU = (k, v) => { let x = LL(LESSONS.rampUi && LESSONS.rampUi[k]) || ''; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
+const rampItem = () => lesson.ramp[lesson.ri];
+const rampByName = (pos, s) => pos.moves().find(m => E.name(pos, m) === s);
+function rampMarks(it) {
+  const out = [];
+  if (it.seq) { let p = E.Pos.from(it.s); it.seq.forEach((nm, k) => { const m = rampByName(p, nm); if (!m) return; out.push({ arrow: E.path(p, m), cls: k % 2 ? 'ng' : 'ok' }); p = p.clone().play(m); }); }
+  for (const [q, c] of it.marks || []) out.push({ at: q - 1, cls: c });
+  return out;
+}
+function loadRamp() {
+  const it = rampItem();
+  lesson.me = it.s.side;
+  enterSpecial(it.s);
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
+  lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
+}
+function renderRampCard() {
+  const it = rampItem(), n = lesson.ramp.length, last = lesson.ri + 1 >= n;
+  $('#lsStep').textContent = RU('step', { i: lesson.ri + 1, n });
+  $('#lsTitle').textContent = t('ls.' + curStep().id + '.title');
+  const skip = `<button type="button" class="ls-skip" style="margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0">${RU('skip')} »</button>`;
+  $('#lsPrompt').innerHTML = it.k === 'explain'
+    ? `<div class="ls-goal"><span>💡</span><span><b>${LL(it.t)}</b></span></div><div class="ls-explain">${LL(it.body)}</div>${skip}`
+    : `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${LL(it.g)}</span></div>${skip}`;
+  const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
+  $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
+  $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
+  $('#lsNext').textContent = last ? RU('main') : RU('next');
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
+}
+function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
+function rampHint() {
+  const it = rampItem(); if (it.k !== 'try' || lesson.answered) return;
+  lesson.rh = Math.min(3, lesson.rh + 1);
+  const pos = E.Pos.from(it.s), best = rampByName(pos, it.ok[0]);
+  if (lesson.rh === 1) { $('#lsFb').innerHTML = LL(it.h); lessonMarks = []; }
+  else if (lesson.rh === 2) { $('#lsFb').innerHTML = LL(it.h) + '<br>' + RU('look'); lessonMarks = (it.look || []).map(q => ({ at: q - 1, cls: 'ok' })); }
+  else { $('#lsFb').innerHTML = RU('ans', { m: it.ok[0] }); lessonMarks = []; markMove(pos, best, 'ok'); }
+  renderFx();
+}
+function rampMove(m) {
+  const L = lesson, it = rampItem(), ri = L.ri, pos0 = posAt(0).pos;
+  if (L.answered) return;
+  L.answered = true;
+  const good = it.ok.includes(E.name(pos0, m));
+  $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
+  L.rok = good; playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
+  if (good) return;
+  const tok = busyToken;
+  setTimeout(() => {
+    if (lesson !== L || !L.ramp || L.ri !== ri || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; L.answered = false; update(false); renderLessonCard();
+  }, moveDur(m, pos0) + 1100);
 }
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
@@ -1343,6 +1404,7 @@ function loadLessonProblem() {
   $('#lsFb').innerHTML = '';
 }
 function renderLessonCard() {
+  if (lesson && lesson.ramp) return renderRampCard();
   const s = curStep(), n = s.problems.length, P = lessonProblem();
   $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
@@ -1373,6 +1435,7 @@ function lsAuto(good, ms) {
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
 function lessonAnswer(m) {
+  if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
   lesson.answered = true;
   const pts = problemPoints(P, m);
@@ -1416,6 +1479,7 @@ function okAnswer(P, s, m, pts) {
   }, moveDur(m, pos0) + 700);
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.ramp) { rampHint(); return; }
   if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
@@ -1427,6 +1491,7 @@ $('#lsHint').onclick = () => {
   renderFx();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (lesson && lesson.study) { if (lesson.i < lesson.g.study.line.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep();
@@ -1599,7 +1664,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=20261104a').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -1627,8 +1692,17 @@ function pzMigrate(pr) {
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); localStorage.setItem(PZ_STORE + '-v2', JSON.stringify(bak)); } catch (e) {}
   return pr;
 }
-const pzAt = (T, j) => T.puzzles[j];
-function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
+// puzzles replaced on 2026-11-04 (tools/audit_puzzles.js: the material won was lost right back): PUZZLES.old["id-j"] keeps
+// the previous puzzle of the slot (as chess/ since 2026-10-21). A player who already has a record for the slot keeps the
+// old puzzle; records of the new one go to "id-j~2". The daily puzzle keeps the old one for dates up to PUZZLES.cut.
+function pzSlot(T, j, pr, date) {
+  const k = pzKey(T.id, j), o = PUZZLES.old && PUZZLES.old[k];
+  if (!o) return { P: T.puzzles[j], rk: k };
+  pr = pr || pzProgress();
+  return pr[k] != null || (date && date <= PUZZLES.cut) ? { P: o, rk: k } : { P: T.puzzles[j], rk: k + '~2' };
+}
+const pzAt = (T, j, date, pr) => pzSlot(T, j, pr, date).P;
+function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzSlot(T, j, pr).rk])); }
 function themeTier(T) { const n = T.puzzles.reduce((a, P) => a + (P.n || 1), 0) / Math.max(1, T.puzzles.length); return Math.max(0, Math.min(5, Math.round((n - 1) * 1.2))); }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 // collection home (the layout of 詰めオセロ, PZBook.home): hero → daily → tabs 勝ち / ショット / 終盤 → theme cards with the position
@@ -1688,10 +1762,10 @@ const leadOf = (pos, p) => pos.count(p) - pos.count(3 - p);
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
-  const T = PUZZLES.themes[L], P = pzAt(T, j, daily);
+  const T = PUZZLES.themes[L], { P, rk } = pzSlot(T, j, null, daily);
   const g = P.g || T.g || 0;
   if (!daily) PZBook.lastSet(PZ_LAST, L);
-  puzzle = { L, j, P, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
+  puzzle = { L, j, P, rk, T, goal: g ? 'gain' : 'win', g, me: P.s.side, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
   enterSpecial(P.s);
   puzzle.base = leadOf(posAt(0).pos, puzzle.me);
@@ -1717,7 +1791,16 @@ function mateReq(n, defend) {
   return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend, goal, base: puzzle ? puzzle.base : 0 }).then(r => r && r.list);
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 99 : e.need < 0 ? 50 : e.need; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
+// the defender's reply: the longest resistance (puzzle(defend)); when several replies resist equally long (e.g. every
+// reply loses the piece next move), the one the engine values best — not the first in move-generation order, which
+// gave odd replies (STAGE 1 No.9: 6-9 7-10?? instead of 14-18). tools/audit_puzzles.js checks the same rule.
+async function pzDefence(list) {
+  const sc = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return tied[0].m;
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 500 });
+  const L = (r && r.list) || [], v = m => { const e = L.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 const pzReached = (Pz, pos) => pos.status() === -1 || (Pz.goal === 'gain' && !pos.hasCaps() && leadOf(pos, Pz.me) - Pz.base >= Pz.g);
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (the engine's best reply) answers and the
@@ -1804,7 +1887,9 @@ async function puzzleMove(m) {
   await sleep(Math.max(0, dm + 250));
   if (puzzle !== Pz) return;
   if (!dl.length) { puzzleSolved(); return; }
-  const r = pickDefence(dl), b3 = posAt(cur).pos;
+  const r = await pzDefence(dl);
+  if (puzzle !== Pz || tok !== busyToken) return;
+  const b3 = posAt(cur).pos;
   playMove2(r);
   await sleep(moveDur(r, b3));
   if (puzzle !== Pz) return;
@@ -1817,7 +1902,7 @@ function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
-  const pr = pzProgress(), k = pzKey(Pz.T.id, Pz.j), stars = PZBook.starsFor(Pz);
+  const pr = pzProgress(), k = Pz.rk || pzKey(Pz.T.id, Pz.j), stars = PZBook.starsFor(Pz);
   const before = pzRecs(Pz.T, pr);
   pr[k] = Math.max(starVal(pr[k]), stars);
   try { localStorage.setItem(PZ_STORE, JSON.stringify(pr)); } catch (e) {}
@@ -1857,7 +1942,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
-    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? pickDefence(list) : null); }
+    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? await pzDefence(list) : null); if (puzzle !== Pz) return; }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++;

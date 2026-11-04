@@ -145,7 +145,8 @@ function order(list, prev) {
   return out;
 }
 
-(async () => {
+module.exports = { features, COURSES, similar, primaryTag, goalKey, MINFUN };
+if (require.main === module) (async () => {
   const K = await require('./wasm.js').load();
   const args = process.argv.slice(2);
   const cur = path.join(__dirname, '..', 'puzzles.json');

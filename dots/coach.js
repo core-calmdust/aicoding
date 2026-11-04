@@ -12,6 +12,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
+  rest: "レッスン・パズル・観戦などの間、コーチはお休みです。自分の力で考えてみよう。AIとの対局や二人対戦に戻ると、コーチが再開します。",
   offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補の線の解説が表示されます。',
   oppTurn: '相手の手番です。相手がどの線を引くか予想してみよう。安全な線が何本残っているか数えておくと、先が読みやすくなります。',
   aiTurn: 'AIが考えています。どの線を引いてくるか予想してみよう。',
@@ -112,6 +113,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
+  rest: "The coach is resting during lessons, puzzles, watching and the like — think it through on your own. It comes back when you play the AI or a friend again.",
   offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate lines explained.',
   oppTurn: "It's your opponent's turn. Try to guess which line they will draw — counting how many safe lines are left makes it easier to see ahead.",
   aiTurn: 'The AI is thinking. Try to guess which line it will draw.',
@@ -459,6 +461,16 @@ function verdictHtml() {
   }
   return CoachKit.verdict(g, tx('prev', { m, q: esc(t('q.' + q)) }), gl(body));
 }
+// the coach is resting (not just hidden): a lesson / puzzle / opening practice / rated game / AI vs AI / study / editor is on
+function restNow(rv, can) {
+  if (can || !card) return false;
+  const b = document.body.classList, st = typeof settings !== 'undefined' ? settings : {};
+  if (b.contains('in-online') || st.mode === 'online') return false;
+  const ls = (typeof lesson !== 'undefined' && !!lesson) || (typeof puzzle !== 'undefined' && !!puzzle && typeof puzzle !== 'function') || b.contains('in-lesson') || b.contains('in-puzzle');
+  if (rv && !ls) return false;   // the review card has the coach tab
+  if (ls || b.contains('in-edit') || b.contains('in-study') || b.contains('rated-live') || st.mode === 'watch') return true;
+  return !usable();
+}
 function render() {
   if (!card || !SF) return;
   if (DotsCoach.sw) DotsCoach.sw.sync();
@@ -467,6 +479,15 @@ function render() {
   const rvShow = !!document.querySelector('#reviewCard.show') && !lesson && !puzzle;
   const playing = !SF.over && viewPly === null && !rvShow;
   const on = active(), can = usable() && (playing || (SF.over && !rvShow));
+  // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
+  // the coach is resting, and computes / marks nothing (online games keep their own screen)
+  const resting = restNow(rvShow, can);
+  card.classList.toggle('ck-rest', resting);
+  if (resting) {
+    card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); S0.rvWas = rvShow;
+    cancel(); clearHover();
+    return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`);
+  }
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on && !SF.over);
   document.body.classList.toggle('ck-tab', can || rvShow);
@@ -557,6 +578,7 @@ function init() {
   if (settings.coach === undefined) settings.coach = true;
   CoachKit.css(); CoachKit.glossBind(() => (TX[L()] || TX.en).gl);
   card = document.getElementById('coachCard');
+  if (window.MutationObserver) { let k = ''; const mo = () => { const b = document.body.classList, n = ['in-lesson', 'in-puzzle', 'in-online', 'in-edit', 'in-study', 'rated-live', 'in-watch'].map(c => b.contains(c) ? 1 : 0).join(''); if (n !== k) { k = n; render(); } }; new MutationObserver(mo).observe(document.body, { attributes: true, attributeFilter: ['class'] }); }
   DotsCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
   // follow the game: wrap the main script's refresh / renderInfo / renderBoard (classic-script globals)
   const _refresh = refresh, _renderInfo = renderInfo, _renderBoard = renderBoard;

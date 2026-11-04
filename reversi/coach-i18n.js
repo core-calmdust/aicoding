@@ -3,6 +3,7 @@
 (() => { if (!window.ReversiCoach) return; ReversiCoach.merge({
 zh: {
   head: '教练', sw: '教练', swT: '开启／关闭教练（思路讲解）', on: '教练 ON', off: '教练 OFF',
+  rest: '课程、谜题、观战等期间，教练暂停。试着靠自己思考吧。回到与AI对局或双人对战时，教练会恢复。',
   offNote: '教练功能已关闭。打开右上角的开关，就会显示局面思路和候选着法的讲解。',
   oppTurn: '现在轮到对手。试着预测对手下一步会下在哪里——猜中得越多，计算能力就越强。', overRv: '对局结束。分析后，这里会显示逐手回顾（最佳着法、坏棋及原因）。', viewing: '正在查看过去的局面。回到最新局面后教练会继续。',
   calc: '正在思考候选着法…', form: '形势', discs: '子数', stage: '阶段', joseki: '定式', mob: '可下位置', stab: '稳定子', front: '外侧子', vs: '{a}（你）・{b}（对手）',
@@ -91,6 +92,7 @@ zh: {
 },
 ko: {
   head: '코치', sw: '코치', swT: '코치(생각하는 법 해설) 켜기／끄기', on: '코치 ON', off: '코치 OFF',
+  rest: '레슨·퍼즐·관전 등의 동안에는 코치가 쉽니다. 스스로 생각해 보세요. AI 대국이나 2인 대국으로 돌아가면 코치가 다시 시작됩니다.',
   offNote: '코치 기능이 꺼져 있습니다. 오른쪽 위의 스위치를 켜면 국면의 생각하는 법과 후보수 해설이 표시됩니다.',
   oppTurn: '상대 차례입니다. 상대가 다음에 어디에 둘지 예상해 보세요. 예상이 맞을수록 수읽기 실력이 늘어요.', overRv: '대국이 끝났습니다. 분석하면 이 칸에 한 수씩 돌아보기(최선수・악수와 그 이유)가 표시됩니다.', viewing: '지난 국면을 보고 있습니다. 최신 국면으로 돌아가면 코치가 다시 시작합니다.',
   calc: '후보수를 생각하는 중…', form: '형세', discs: '돌 수', stage: '국면', joseki: '정석', mob: '둘 수 있는 곳', stab: '확정석', front: '바깥 돌', vs: '{a}(나)・{b}(상대)',
@@ -178,6 +180,7 @@ ko: {
 },
 es: {
   head: 'Entrenador', sw: 'Entrenador', swT: 'Activar / desactivar el entrenador (cómo pensar)', on: 'Entrenador ON', off: 'Entrenador OFF',
+  rest: 'El entrenador descansa durante las lecciones, los puzles, el modo espectador y similares: piénsalo por tu cuenta. Vuelve cuando juegues de nuevo contra la IA o contra un amigo.',
   offNote: 'El entrenador está desactivado. Activa el interruptor de arriba a la derecha para ver cómo pensar la posición y las jugadas candidatas explicadas.',
   oppTurn: 'Le toca a tu rival. Intenta adivinar dónde jugará: cuanto más aciertes, mejor leerás las jugadas.', overRv: 'La partida ha terminado. Analízala para ver aquí un repaso jugada a jugada (mejores jugadas, errores y por qué).', viewing: 'Estás viendo una posición anterior. El entrenador vuelve en la posición actual.',
   calc: 'Pensando en las jugadas candidatas…', form: 'Posición', discs: 'Fichas', stage: 'Fase', joseki: 'Apertura', mob: 'Jugadas', stab: 'Estables', front: 'Frontera', vs: '{a} (tú) · {b} (rival)',
@@ -261,6 +264,7 @@ es: {
 },
 fr: {
   head: 'Coach', sw: 'Coach', swT: 'Activer / désactiver le coach (comment réfléchir)', on: 'Coach ON', off: 'Coach OFF',
+  rest: 'Le coach se repose pendant les leçons, les puzzles, le mode spectateur, etc. : réfléchissez par vous-même. Il revient dès que vous rejouez contre l’IA ou à deux.',
   offNote: 'Le coach est désactivé. Activez l’interrupteur en haut à droite pour voir comment réfléchir à la position et les coups candidats expliqués.',
   oppTurn: 'C’est au tour de votre adversaire. Essayez de deviner où il va jouer : plus vous devinez juste, plus votre lecture progresse.', overRv: 'La partie est terminée. Analysez-la pour voir ici une revue coup par coup (meilleurs coups, erreurs et pourquoi).', viewing: 'Vous regardez une position antérieure. Le coach reprend à la position actuelle.',
   calc: 'Réflexion sur les coups candidats…', form: 'Position', discs: 'Pions', stage: 'Phase', joseki: 'Ouverture', mob: 'Coups', stab: 'Stables', front: 'Frontière', vs: '{a} (vous) · {b} (adv.)',
@@ -343,6 +347,7 @@ fr: {
 },
 pt: {
   head: 'Treinador', sw: 'Treinador', swT: 'Ligar / desligar o treinador (como pensar)', on: 'Treinador ON', off: 'Treinador OFF',
+  rest: 'O treinador descansa durante lições, quebra-cabeças, modo espectador e afins: pense por conta própria. Ele volta quando você jogar de novo contra a IA ou contra um amigo.',
   offNote: 'O treinador está desligado. Ligue o interruptor no canto superior direito para ver como pensar a posição e as jogadas candidatas explicadas.',
   oppTurn: 'É a vez do adversário. Tente adivinhar onde ele vai jogar: quanto mais você acertar, melhor fica a sua leitura.', overRv: 'A partida terminou. Analise-a para ver aqui uma revisão lance a lance (melhores lances, erros e porquê).', viewing: 'Você está vendo uma posição anterior. O treinador volta na posição atual.',
   calc: 'Pensando nas jogadas candidatas…', form: 'Posição', discs: 'Peças', stage: 'Fase', joseki: 'Abertura', mob: 'Jogadas', stab: 'Estáveis', front: 'Fronteira', vs: '{a} (você) · {b} (adv.)',
@@ -425,6 +430,7 @@ pt: {
 },
 de: {
   head: 'Coach', sw: 'Coach', swT: 'Coach (Denkhilfen) ein / aus', on: 'Coach AN', off: 'Coach AUS',
+  rest: 'Während Lektionen, Rätseln, Zuschauen usw. macht der Coach Pause – denk selbst nach. Sobald du wieder gegen die KI oder zu zweit spielst, ist er zurück.',
   offNote: 'Der Coach ist ausgeschaltet. Schalte den Schalter oben rechts ein, um Denkhilfen zur Stellung und erklärte Kandidatenzüge zu sehen.',
   oppTurn: 'Dein Gegner ist am Zug. Versuche zu erraten, wohin er setzt – je öfter du richtig liegst, desto besser wird dein Lesen.', overRv: 'Die Partie ist vorbei. Analysiere sie, um hier einen Rückblick Zug für Zug zu sehen (beste Züge, Fehler und warum).', viewing: 'Du siehst eine frühere Stellung. Der Coach macht in der aktuellen Stellung weiter.',
   calc: 'Kandidatenzüge werden berechnet…', form: 'Stellung', discs: 'Steine', stage: 'Phase', joseki: 'Eröffnung', mob: 'Züge', stab: 'Stabil', front: 'Front', vs: '{a} (du) · {b} (Gegner)',
@@ -508,6 +514,7 @@ de: {
 },
 hi: {
   head: 'कोच', sw: 'कोच', swT: 'कोच (सोचने के तरीके) चालू / बंद', on: 'कोच चालू', off: 'कोच बंद',
+  rest: 'पाठ, पहेली, खेल देखने आदि के दौरान कोच आराम करता है — ख़ुद सोचकर देखें। AI से या किसी दोस्त के साथ फिर खेलने पर कोच लौट आता है।',
   offNote: 'कोच बंद है। स्थिति को समझने का तरीका और संभावित चालों की व्याख्या देखने के लिए ऊपर दाईं ओर का स्विच चालू करें।',
   oppTurn: 'अब विरोधी की बारी है। अंदाज़ा लगाइए कि वह कहाँ खेलेगा — जितनी बार सही अंदाज़ा होगा, आपकी गणना उतनी मज़बूत होगी।', overRv: 'खेल खत्म हो गया। विश्लेषण करें, तो यहाँ हर चाल की समीक्षा (सबसे अच्छी चालें, गलतियाँ और क्यों) दिखेगी।', viewing: 'आप पिछली स्थिति देख रहे हैं। नवीनतम स्थिति पर लौटने पर कोच फिर शुरू होगा।',
   calc: 'संभावित चालों पर सोच रहा है…', form: 'स्थिति', discs: 'गोटियाँ', stage: 'चरण', joseki: 'ओपनिंग', mob: 'चालें', stab: 'स्थिर', front: 'बाहरी', vs: '{a} (आप) · {b} (विरोधी)',
@@ -590,6 +597,7 @@ hi: {
 },
 ar: {
   head: 'المدرب', sw: 'المدرب', swT: 'تشغيل / إيقاف المدرب (طريقة التفكير)', on: 'المدرب يعمل', off: 'المدرب متوقف',
+  rest: 'يستريح المدرّب أثناء الدروس والألغاز والمشاهدة ونحوها — فكّر بنفسك. ويعود عندما تلعب مجددًا ضد الذكاء الاصطناعي أو مع صديق.',
   offNote: 'المدرب متوقف. شغّل المفتاح في أعلى هذه البطاقة لترى طريقة التفكير في الوضع وشرح النقلات المرشحة.',
   oppTurn: 'الدور على خصمك. حاول أن تخمّن أين سيلعب — كلما أصبت أكثر، قويت قراءتك.', overRv: 'انتهت المباراة. حلّلها لترى هنا مراجعة نقلة بنقلة (أفضل النقلات والأخطاء ولماذا).', viewing: 'أنت تشاهد وضعًا سابقًا. يعود المدرب عند الوضع الأحدث.',
   calc: 'جارٍ التفكير في النقلات المرشحة…', form: 'الوضع', discs: 'الأقراص', stage: 'المرحلة', joseki: 'الافتتاح', mob: 'النقلات', stab: 'ثابتة', front: 'حدودية', vs: '{a} (أنت) · {b} (الخصم)',

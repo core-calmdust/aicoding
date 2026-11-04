@@ -11,6 +11,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
+  rest: 'レッスン・パズル・観戦などの間、コーチはお休みです。自分の力で考えてみよう。AIとの対局や二人対戦に戻ると、コーチが再開します。',
   offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、局面の考え方や候補手の解説が表示されます。',
   oppTurn: '相手の手番です。相手が次にどこに打つか、予想してみよう。予想が当たるほど読みの力がつきます。', overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。', viewing: '過去の局面を表示中です。最新の局面に戻るとコーチが再開します。',
   calc: '候補手を考えています…', form: '形勢', discs: '石数', stage: '局面', joseki: '定石', mob: '打てる場所', stab: '確定石', front: '外側の石', vs: '{a}（あなた）・{b}（相手）',
@@ -104,6 +105,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Turn the coach (how-to-think tips) on / off', on: 'Coach ON', off: 'Coach OFF',
+  rest: 'The coach is resting during lessons, puzzles, watching and the like — think it through on your own. It comes back when you play the AI or a friend again.',
   offNote: 'The coach is switched off. Turn on the switch at the top right to see how to think about the position and the candidate moves explained.',
   oppTurn: "It's your opponent's turn. Try to guess where they will play next — the more often you guess right, the stronger your reading gets.", overRv: 'The game is over. Analyze it to see a move-by-move review here (best moves, mistakes and why).', viewing: 'You are looking at an earlier position. The coach resumes at the latest position.',
   calc: 'Thinking about candidate moves…', form: 'Position', discs: 'Discs', stage: 'Phase', joseki: 'Opening', mob: 'Moves', stab: 'Stable', front: 'Frontier', vs: '{a} (you) · {b} (opp.)',
@@ -441,6 +443,14 @@ function render() {
   const rv = !!document.querySelector('#reviewCard.show');
   const over = overNow(), playing = !over && cur === positions.length - 1 && !reviewing;
   const on = active(), can = usable() && (playing || (over && !rv && positions.length > 1));
+  // lessons, puzzles, opening study, rated games, AI vs AI, the review-box study: the box (and the phone tab) stays, says the
+  // coach is resting, and computes / marks nothing
+  const resting = !can && !(rv && usable()) && !net && !!(lesson || puzzle || rbS || rtGame() || settings.mode === 'watch');
+  card.classList.toggle('ck-rest', resting);
+  if (resting) {
+    card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); S.rvWas = rv; marks(null);
+    return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`);
+  }
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on);
   document.body.classList.toggle('ck-tab', can || (rv && usable()));
@@ -517,6 +527,8 @@ function init() {
   try { const s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s); } catch (e) {}
   card = document.getElementById('coachCard');
   { const rc = document.getElementById('reviewCard'); if (rc && window.MutationObserver) new MutationObserver(() => render()).observe(rc, { attributes: true, attributeFilter: ['class'] }); }
+  // entering / leaving a lesson or puzzle does not always go through renderInfo(): follow the body's mode classes
+  if (window.MutationObserver) { let k = ''; const mo = () => { const b = document.body.classList, n = ['in-lesson', 'in-puzzle', 'in-online', 'in-edit'].map(c => b.contains(c) ? 1 : 0).join(''); if (n !== k) { k = n; render(); } }; new MutationObserver(mo).observe(document.body, { attributes: true, attributeFilter: ['class'] }); }
   ReversiCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => setOn(v), label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function setOn(v) {

@@ -484,7 +484,8 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #resultOverlay .modal-actions .mbtn.hidden{display:none}
 /* coach (coach.js, shared/coachkit.js) */
 #coachCard.hidden{display:none}
-body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
+body.in-online #coachCard{display:none!important}
 #coachCard.ck-off .ck-muted{font-size:12px}
 #coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 
@@ -1226,7 +1227,7 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="../shared/headerbar.js?v=30"></script>
 <script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=5"></script>
+<script src="../shared/cardbar.js?v=6"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=1"></script>
 <script src="../shared/ruletour.js?v=28"></script>
@@ -1239,20 +1240,20 @@ html[data-pcs=lacquer]{--pf1:#5b4a40;--pf2:#2d241f;--pf3:#140f0c;--pfe:#c9a961;-
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=9"></script>
 <script src="../shared/export.js?v=6"></script>
-<script src="coach.js?v=5"></script>
-<script src="coach-i18n.js?v=3"></script>
-<script src="app.js?v=20261104lad"></script>
+<script src="coach.js?v=6"></script>
+<script src="coach-i18n.js?v=4"></script>
+<script src="app.js?v=20261104rp"></script>
 <script src="online-ui.js?v=20261030ck1"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=25'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=73')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/xiangqi.js?v=2')).then(() => load('../atlas/skin/xiangqi.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/xiangqi.js?v=3')).then(() => load('../atlas/skin/xiangqi.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

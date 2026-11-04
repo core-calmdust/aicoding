@@ -174,7 +174,7 @@
   const SRAD = .19, SFLAT = .62;
   let stoneG = null;
   function stoneGeo() {
-    if (!stoneG) { stoneG = new (T().SphereGeometry)(SRAD, X.coarse ? 10 : 16, X.coarse ? 6 : 10); stoneG.scale(1, SFLAT, 1); X.share(stoneG); }
+    if (!stoneG) { stoneG = new (T().SphereGeometry)(SRAD, X.coarse ? 10 : 12, X.coarse ? 6 : 8); stoneG.scale(1, SFLAT, 1); X.share(stoneG); }   // (48 small pebbles: 12 × 8 is smooth at their size)
     return stoneG;
   }
   function stone(ci) { const s = new (T().Mesh)(stoneGeo(), mats().gems[ci % GEMS.length]); s.castShadow = true; s.receiveShadow = true; return s; }

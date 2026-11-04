@@ -2112,6 +2112,154 @@
       "ar": "الأسود <bdi>D4</bdi> في أتاري. بفضل كاسر السلّم، الخروج عند <bdi>E4</bdi> هو الصحيح."
      }
     }
+   ],
+   "ramp": [
+    {
+     "k": "explain",
+     "s": {
+      "n": 9,
+      "stones": ".......................................b.......bw.........b......................",
+      "turn": 1
+     },
+     "seq": [
+      "E4",
+      "D3",
+      "D2",
+      "C3",
+      "B3",
+      "C2",
+      "B2"
+     ],
+     "marks": [],
+     "t": {
+      "ja": "シチョウ＝アタリを続けて追いかける",
+      "en": "A ladder: atari after atari",
+      "zh": "征子＝连续叫吃追下去",
+      "ko": "축 = 단수를 계속 이어 쫓기",
+      "es": "Escalera: atari tras atari",
+      "fr": "Shicho : atari après atari",
+      "pt": "Escada: atari após atari",
+      "de": "Leiter: Atari nach Atari",
+      "hi": "सीढ़ी: लगातार अटारी",
+      "ar": "السُّلَّم: أتاري بعد أتاري"
+     },
+     "body": {
+      "ja": "<p>白1子はダメが2つ。黒①でアタリすると、白②と逃げてもダメは2つのまま。黒③・⑤・⑦…と<b>逃げた石の正面からアタリ</b>を続けると、白はジグザグに左下へ進み、最後は盤端で取られます。</p><p class=\"note\">見分け方：アタリしたあと、逃げた石のダメがまた2つになるか。3つになる方向からのアタリは失敗です。</p>",
+      "en": "<p>The white stone has two liberties. Black ① gives atari; White ② runs, but still has only two liberties. Keep giving atari <b>in front of the runner</b> (③, ⑤, ⑦…) and White zigzags toward the lower left until it is captured at the edge.</p><p class=\"note\">How to tell: after each atari, does the runner end up with two liberties again? An atari that leaves it three is the wrong side.</p>",
+      "zh": "<p>白一子有两口气。黑①叫吃，白②逃出后仍只有两口气。黑③⑤⑦…<b>挡在逃子前方</b>连续叫吃，白子呈之字形向左下逃，最后在边上被吃。</p><p class=\"note\">判断方法：叫吃后，逃出的棋子是否又只剩两口气？让它变成三口气方向的叫吃就失败了。</p>",
+      "ko": "<p>백 한 점은 활로가 2개. 흑①로 단수치면 백②로 도망가도 활로는 2개 그대로. 흑③・⑤・⑦…로 <b>도망간 돌 앞쪽에서</b> 단수를 계속하면 백은 지그재그로 왼쪽 아래로 가다 결국 변에서 잡힙니다.</p><p class=\"note\">판별법: 단수 후 도망간 돌의 활로가 다시 2개가 되는가? 3개가 되는 쪽 단수는 실패입니다.</p>",
+      "es": "<p>La piedra blanca tiene dos libertades. Negro ① da atari; Blanco ② escapa pero sigue con dos. Si sigues dando atari <b>delante de la que huye</b> (③, ⑤, ⑦…), Blanco zigzaguea hacia abajo a la izquierda y cae en el borde.</p><p class=\"note\">Cómo saberlo: tras cada atari, ¿vuelve a tener dos libertades? Si le deja tres, era el lado equivocado.</p>",
+      "fr": "<p>La pierre blanche a deux libertés. Noir ① fait atari ; Blanc ② s’échappe mais n’a toujours que deux libertés. Continuez l’atari <b>devant la pierre qui fuit</b> (③, ⑤, ⑦…) : Blanc zigzague vers le bas à gauche et est pris au bord.</p><p class=\"note\">Le test : après chaque atari, la pierre retombe-t-elle à deux libertés ? Un atari qui lui en laisse trois est du mauvais côté.</p>",
+      "pt": "<p>A pedra branca tem duas liberdades. Preto ① dá atari; Branco ② foge, mas segue com duas. Continue o atari <b>na frente da pedra que foge</b> (③, ⑤, ⑦…) e Branco zigue-zagueia para baixo à esquerda até ser capturado na borda.</p><p class=\"note\">Como saber: após cada atari, ela volta a ter duas liberdades? Se ficar com três, foi o lado errado.</p>",
+      "de": "<p>Der weiße Stein hat zwei Freiheiten. Schwarz ① gibt Atari; Weiß ② läuft weg, hat aber weiter nur zwei. Gib immer wieder Atari <b>vor dem fliehenden Stein</b> (③, ⑤, ⑦…), und Weiß zickzackt nach links unten, bis er am Rand gefangen wird.</p><p class=\"note\">So erkennst du es: Hat der Stein nach jedem Atari wieder zwei Freiheiten? Bleiben ihm drei, war es die falsche Seite.</p>",
+      "hi": "<p>सफ़ेद पत्थर की दो साँसें हैं। काला ① अटारी देता है; सफ़ेद ② भागता है, पर साँसें दो ही रहती हैं। <b>भागते पत्थर के सामने से</b> अटारी देते रहें (③, ⑤, ⑦…) तो सफ़ेद टेढ़ा-मेढ़ा नीचे बाएँ जाता है और किनारे पर पकड़ा जाता है।</p><p class=\"note\">पहचान: हर अटारी के बाद क्या उसकी फिर दो साँसें बचती हैं? तीन बचें तो दिशा ग़लत थी।</p>",
+      "ar": "<p>للحجر الأبيض حريتان. يعطي الأسود ① أتاري؛ يهرب الأبيض ② لكن تبقى له حريتان. واصل الأتاري <b>أمام الحجر الهارب</b> (③، ⑤، ⑦…) فيتعرّج الأبيض نحو أسفل اليسار حتى يُؤسر عند الحافة.</p><p class=\"note\">كيف تعرف: بعد كل أتاري، هل تعود له حريتان؟ إن بقيت ثلاث فالجهة خاطئة.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "s": {
+      "n": 9,
+      "stones": ".........................................b........wb......b......................",
+      "turn": 1
+     },
+     "ok": [
+      "E4",
+      "F3"
+     ],
+     "look": [
+      "E4",
+      "F3"
+     ],
+     "g": {
+      "ja": "左右を反対にした形。シチョウで取る最初のアタリを。",
+      "en": "The mirror image: play the first atari of the ladder.",
+      "zh": "左右翻转的形：下出征子的第一手叫吃。",
+      "ko": "좌우를 뒤집은 모양. 축으로 잡는 첫 단수를.",
+      "es": "La imagen espejo: juega el primer atari de la escalera.",
+      "fr": "L’image miroir : jouez le premier atari du shicho.",
+      "pt": "A imagem espelhada: jogue o primeiro atari da escada.",
+      "de": "Das Spiegelbild: spiele das erste Atari der Leiter.",
+      "hi": "उलटी आकृति: सीढ़ी की पहली अटारी खेलिए।",
+      "ar": "الصورة المعكوسة: العب أول أتاري في السلّم."
+     },
+     "h": {
+      "ja": "白のダメは2つ。どちらからアタリしても、逃げた先のダメが2つのままか確かめよう。",
+      "en": "White has two liberties. From either side, check whether the runner still has only two liberties.",
+      "zh": "白有两口气。不论从哪边叫吃，都看看逃子是否仍只有两口气。",
+      "ko": "백의 활로는 2개. 어느 쪽에서 단수쳐도 도망간 돌의 활로가 2개 그대로인지 확인하세요.",
+      "es": "Blanco tiene dos libertades. Desde cualquier lado, comprueba si la que huye sigue con dos.",
+      "fr": "Blanc a deux libertés. De chaque côté, vérifiez si la pierre en fuite n’en garde que deux.",
+      "pt": "Branco tem duas liberdades. De qualquer lado, veja se a que foge segue com duas.",
+      "de": "Weiß hat zwei Freiheiten. Prüfe für beide Seiten, ob der Flüchtende bei zwei bleibt.",
+      "hi": "सफ़ेद की दो साँसें हैं। किसी भी तरफ़ से जाँचिए कि भागने पर भी दो ही बचती हैं या नहीं।",
+      "ar": "للأبيض حريتان. من أي جهة، تحقّق هل تبقى للهارب حريتان فقط."
+     },
+     "y": {
+      "ja": "正解！ここは周りに白の味方がいないので、どちらからアタリしてもシチョウで取れます。",
+      "en": "Right! No white stone stands in the way here, so the ladder works from either side.",
+      "zh": "正确！这里周围没有白的援兵，从哪边叫吃都能征死。",
+      "ko": "정답! 주변에 백의 지원군이 없어 어느 쪽에서 단수쳐도 축으로 잡힙니다.",
+      "es": "¡Bien! Aquí no hay piedras blancas en el camino: la escalera funciona desde ambos lados.",
+      "fr": "Bien ! Aucune pierre blanche sur le chemin : le shicho marche des deux côtés.",
+      "pt": "Certo! Nenhuma pedra branca no caminho: a escada funciona dos dois lados.",
+      "de": "Richtig! Keine weißen Steine im Weg – die Leiter klappt von beiden Seiten.",
+      "hi": "सही! रास्ते में कोई सफ़ेद पत्थर नहीं, इसलिए दोनों तरफ़ से सीढ़ी चलती है।",
+      "ar": "صحيح! لا حجر أبيض في الطريق، فيعمل السلّم من الجهتين."
+     }
+    },
+    {
+     "k": "try",
+     "s": {
+      "n": 9,
+      "stones": "...............w.......................b.......bw.........b......................",
+      "turn": 1
+     },
+     "ok": [
+      "E4"
+     ],
+     "look": [
+      "G8",
+      "E4",
+      "D3"
+     ],
+     "g": {
+      "ja": "右上に白石が1つ。今度はどちらからアタリする？",
+      "en": "A white stone sits at the upper right. Which side do you give atari from now?",
+      "zh": "右上有一颗白子。这次从哪边叫吃？",
+      "ko": "오른쪽 위에 백돌이 하나. 이번엔 어느 쪽에서 단수칠까요?",
+      "es": "Hay una piedra blanca arriba a la derecha. ¿Desde qué lado das atari ahora?",
+      "fr": "Une pierre blanche est en haut à droite. De quel côté faire atari maintenant ?",
+      "pt": "Há uma pedra branca no alto à direita. De que lado dar atari agora?",
+      "de": "Oben rechts steht ein weißer Stein. Von welcher Seite gibst du jetzt Atari?",
+      "hi": "ऊपर दाएँ एक सफ़ेद पत्थर है। अब किस तरफ़ से अटारी देंगे?",
+      "ar": "هناك حجر أبيض أعلى اليمين. من أي جهة تعطي الأتاري الآن؟"
+     },
+     "h": {
+      "ja": "白が右上へ逃げると、右上の白石につながってしまいます。左下へ逃がす向きからアタリしよう。",
+      "en": "If White runs toward the upper right it connects to that white stone. Give atari so that it has to run toward the lower left.",
+      "zh": "白若往右上逃，就会和右上的白子连上。从让它往左下逃的方向叫吃。",
+      "ko": "백이 오른쪽 위로 도망가면 그 백돌과 이어집니다. 왼쪽 아래로 도망가게 하는 방향에서 단수치세요.",
+      "es": "Si Blanco huye arriba a la derecha, se une a esa piedra. Da atari para que tenga que huir abajo a la izquierda.",
+      "fr": "Si Blanc fuit vers le haut à droite, il rejoint cette pierre. Faites atari pour qu’il doive fuir vers le bas à gauche.",
+      "pt": "Se Branco fugir para cima à direita, liga-se àquela pedra. Dê atari para que fuja para baixo à esquerda.",
+      "de": "Läuft Weiß nach rechts oben, verbindet er sich mit dem Stein dort. Gib Atari so, dass er nach links unten muss.",
+      "hi": "सफ़ेद ऊपर दाएँ भागे तो उस पत्थर से जुड़ जाएगा। ऐसी दिशा से अटारी दीजिए कि उसे नीचे बाएँ भागना पड़े।",
+      "ar": "إن هرب الأبيض نحو أعلى اليمين اتصل بذلك الحجر. أعطِ الأتاري بحيث يُجبر على الهرب نحو أسفل اليسار."
+     },
+     "y": {
+      "ja": "正解！E4 からなら白は左下へ逃げるしかなく、シチョウで取れます。D3 からだと右上の白石（シチョウアタリ）につながります。",
+      "en": "Right! From E4 White can only run to the lower left and the ladder works. From D3 it would reach the white ladder breaker at the upper right.",
+      "zh": "正确！从 E4 叫吃，白只能往左下逃，征子成立。从 D3 叫吃会逃向右上的白子（引征）。",
+      "ko": "정답! E4에서라면 백은 왼쪽 아래로만 도망가 축으로 잡힙니다. D3에서면 오른쪽 위 백돌(축머리)과 이어집니다.",
+      "es": "¡Bien! Desde E4 Blanco solo huye abajo a la izquierda y la escalera funciona. Desde D3 llegaría a la piedra que rompe la escalera.",
+      "fr": "Bien ! Depuis E4, Blanc ne peut fuir que vers le bas à gauche : le shicho marche. Depuis D3, il atteindrait la pierre casse-shicho.",
+      "pt": "Certo! De E4 Branco só foge para baixo à esquerda e a escada funciona. De D3 chegaria à pedra que quebra a escada.",
+      "de": "Richtig! Von E4 aus kann Weiß nur nach links unten – die Leiter klappt. Von D3 aus erreichte er den Leiterbrecher oben rechts.",
+      "hi": "सही! E4 से सफ़ेद सिर्फ़ नीचे बाएँ भाग सकता है और सीढ़ी चलती है। D3 से वह ऊपर दाएँ के सीढ़ी-तोड़ पत्थर तक पहुँच जाता।",
+      "ar": "صحيح! من E4 لا يهرب الأبيض إلا نحو أسفل اليسار فيعمل السلّم. ومن D3 كان سيصل إلى الحجر كاسر السلّم."
+     }
+    }
    ]
   },
   {
@@ -2402,6 +2550,104 @@
       "de": "Eine Leiter würde auf Weiß <bdi>D7</bdi> stoßen. Ein Netz funktioniert unabhängig von Leiterbrechern.",
       "hi": "सीढ़ी सफ़ेद <bdi>D7</bdi> से टकरा जाएगी। जाल सीढ़ी तोड़ने वाले पत्थरों के बावजूद काम करता है।",
       "ar": "السلّم سيصطدم بالأبيض <bdi>D7</bdi>. أما الشبكة فتنجح بغض النظر عن كواسر السلّم."
+     }
+    }
+   ],
+   "ramp": [
+    {
+     "k": "explain",
+     "s": {
+      "n": 9,
+      "stones": "..........................................w....b........bw........bb.............",
+      "turn": 1
+     },
+     "seq": [
+      "E4"
+     ],
+     "marks": [
+      [
+       "E3",
+       "x"
+      ],
+      [
+       "D4",
+       "x"
+      ]
+     ],
+     "t": {
+      "ja": "ゲタ＝アタリにせず、ふたをする",
+      "en": "A net: close the exits without atari",
+      "zh": "枷＝不叫吃，先盖住出口",
+      "ko": "장문 = 단수 대신 뚜껑 덮기",
+      "es": "Red: cierra las salidas sin dar atari",
+      "fr": "Filet : fermer les sorties sans atari",
+      "pt": "Rede: feche as saídas sem atari",
+      "de": "Netz: Ausgänge schließen ohne Atari",
+      "hi": "जाल: अटारी दिए बिना रास्ता बंद",
+      "ar": "الشبكة: أغلق المخارج بلا أتاري"
+     },
+     "body": {
+      "ja": "<p>白1子の逃げ道は ×印の2か所。黒①は、そのどちらにも隣接する点に打って<b>ふた</b>をします。アタリではありませんが、白がどちらへ出ても、黒がすぐアタリで押し戻して取れます。</p><p class=\"note\">右上の白石が邪魔でシチョウが成り立たないとき、ゲタの出番です。</p>",
+      "en": "<p>The white stone can get out through the two × points. Black ① plays the point next to both and <b>puts a lid on it</b>. It is not atari, but whichever way White pushes, Black answers with atari and captures.</p><p class=\"note\">Use a net when a ladder fails — here the white stone at the upper right would break the ladder.</p>",
+      "zh": "<p>白一子的出路是两个×处。黑①下在同时挨着这两处的点上<b>盖住</b>。虽然不是叫吃，但白不论从哪边冲出，黑都能马上叫吃把它挡回并吃掉。</p><p class=\"note\">右上的白子使征子不成立时，就轮到枷出场。</p>",
+      "ko": "<p>백 한 점의 출구는 × 두 곳. 흑①은 그 둘 모두에 붙은 점에 두어 <b>뚜껑</b>을 덮습니다. 단수는 아니지만 백이 어느 쪽으로 나와도 흑이 바로 단수로 막아 잡습니다.</p><p class=\"note\">오른쪽 위 백돌 때문에 축이 안 될 때 장문이 나섭니다.</p>",
+      "es": "<p>La piedra blanca puede salir por las dos ×. Negro ① juega en el punto junto a ambas y <b>pone la tapa</b>. No es atari, pero salga por donde salga, Negro responde con atari y captura.</p><p class=\"note\">Usa la red cuando falla la escalera: aquí la piedra blanca de arriba a la derecha la rompería.</p>",
+      "fr": "<p>La pierre blanche peut sortir par les deux ×. Noir ① joue au point voisin des deux et <b>met un couvercle</b>. Ce n’est pas un atari, mais quel que soit le côté où Blanc pousse, Noir répond par atari et capture.</p><p class=\"note\">Le filet sert quand le shicho échoue : ici la pierre blanche en haut à droite le casserait.</p>",
+      "pt": "<p>A pedra branca pode sair pelos dois ×. Preto ① joga no ponto vizinho aos dois e <b>põe a tampa</b>. Não é atari, mas para onde Branco empurrar, Preto responde com atari e captura.</p><p class=\"note\">Use a rede quando a escada falha: aqui a pedra branca no alto à direita a quebraria.</p>",
+      "de": "<p>Der weiße Stein kann über die beiden × entkommen. Schwarz ① setzt auf den Punkt neben beiden und <b>legt einen Deckel drauf</b>. Kein Atari – aber wohin Weiß auch drängt, Schwarz antwortet mit Atari und fängt.</p><p class=\"note\">Das Netz hilft, wenn die Leiter scheitert: hier bräche der weiße Stein oben rechts sie.</p>",
+      "hi": "<p>सफ़ेद पत्थर दो × बिंदुओं से निकल सकता है। काला ① दोनों के पास वाले बिंदु पर <b>ढक्कन</b> लगाता है। यह अटारी नहीं, पर सफ़ेद किधर भी निकले, काला तुरंत अटारी देकर पकड़ लेता है।</p><p class=\"note\">जब सीढ़ी न चले तब जाल काम आता है: यहाँ ऊपर दाएँ का सफ़ेद पत्थर सीढ़ी तोड़ देता।</p>",
+      "ar": "<p>يستطيع الحجر الأبيض الخروج من نقطتي ×. يلعب الأسود ① في النقطة المجاورة لكلتيهما <b>فيضع غطاءً</b>. ليس أتاري، لكن أينما دفع الأبيض يرد الأسود بأتاري ويأسر.</p><p class=\"note\">استخدم الشبكة حين يفشل السلّم: هنا يكسره الحجر الأبيض أعلى اليمين.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "s": {
+      "n": 9,
+      "stones": "......................................w............b.......wb......bb............",
+      "turn": 1
+     },
+     "ok": [
+      "E4"
+     ],
+     "look": [
+      "E3",
+      "F4"
+     ],
+     "g": {
+      "ja": "左右反対の形。ゲタで白を取ろう。",
+      "en": "The mirror image: capture White with a net.",
+      "zh": "左右翻转的形：用枷吃白。",
+      "ko": "좌우를 뒤집은 모양. 장문으로 백을 잡으세요.",
+      "es": "La imagen espejo: captura con una red.",
+      "fr": "L’image miroir : prenez Blanc avec un filet.",
+      "pt": "A imagem espelhada: capture com uma rede.",
+      "de": "Das Spiegelbild: fang Weiß mit einem Netz.",
+      "hi": "उलटी आकृति: जाल से सफ़ेद पकड़िए।",
+      "ar": "الصورة المعكوسة: أسر الأبيض بشبكة."
+     },
+     "h": {
+      "ja": "白の逃げ道は2か所。その両方に隣り合う点はどこ？",
+      "en": "White has two ways out. Which point touches both?",
+      "zh": "白有两个出口。同时挨着两处的点在哪里？",
+      "ko": "백의 출구는 두 곳. 둘 다에 붙은 점은?",
+      "es": "Blanco tiene dos salidas. ¿Qué punto toca ambas?",
+      "fr": "Blanc a deux sorties. Quel point touche les deux ?",
+      "pt": "Branco tem duas saídas. Que ponto toca ambas?",
+      "de": "Weiß hat zwei Ausgänge. Welcher Punkt berührt beide?",
+      "hi": "सफ़ेद के दो रास्ते हैं। कौन-सा बिंदु दोनों को छूता है?",
+      "ar": "للأبيض مخرجان. أي نقطة تلامس كليهما؟"
+     },
+     "y": {
+      "ja": "正解！E4 のふたで、白はどちらへ出てもアタリで取られます。",
+      "en": "Right! With the lid on E4, White is captured whichever way it comes out.",
+      "zh": "正确！E4 盖住后，白从哪边出来都会被叫吃吃掉。",
+      "ko": "정답! E4 뚜껑으로 백은 어디로 나와도 단수로 잡힙니다.",
+      "es": "¡Bien! Con la tapa en E4, Blanco cae salga por donde salga.",
+      "fr": "Bien ! Avec le couvercle en E4, Blanc est pris où qu’il sorte.",
+      "pt": "Certo! Com a tampa em E4, Branco cai por onde sair.",
+      "de": "Richtig! Mit dem Deckel auf E4 wird Weiß gefangen, wohin er auch will.",
+      "hi": "सही! E4 के ढक्कन से सफ़ेद किधर भी निकले, पकड़ा जाएगा।",
+      "ar": "صحيح! مع الغطاء في E4 يُؤسر الأبيض أينما خرج."
      }
     }
    ]
@@ -2714,6 +2960,97 @@
       "ar": "الأتاري عند <bdi>F1</bdi> يسمح للأبيض بالوصل عند <bdi>E1</bdi> بالأحجار على اليسار."
      }
     }
+   ],
+   "ramp": [
+    {
+     "k": "explain",
+     "s": {
+      "n": 9,
+      "stones": "................................................w.....bbbw.....wwbw.......ww.....",
+      "turn": 1
+     },
+     "seq": [
+      "B1",
+      "A1",
+      "B1"
+     ],
+     "marks": [],
+     "t": {
+      "ja": "ウッテガエシ＝わざと取らせて取り返す",
+      "en": "Snapback: let it be taken, then take back more",
+      "zh": "倒扑＝故意送吃再吃回",
+      "ko": "환격 = 일부러 잡히고 되잡기",
+      "es": "Snapback: deja que te capturen y recupera más",
+      "fr": "Snapback : se faire prendre pour reprendre plus",
+      "pt": "Snapback: deixe capturar e recupere mais",
+      "de": "Snapback: schlagen lassen, mehr zurückholen",
+      "hi": "स्नैपबैक: पकड़वाकर ज़्यादा वापस लो",
+      "ar": "الاسترداد: دعه يأسر ثم استرد أكثر"
+     },
+     "body": {
+      "ja": "<p>黒①は白のダメ（B1）に<b>わざと</b>飛び込む手。白②で取られますが、取った白石は A1 の1つだけでダメがなくなり、黒③（B1 にもう一度）で白3子をまとめて取れます。</p><p class=\"note\">探し方：相手のダメに打つと取られる。でも「取ったあとの形」がアタリのままなら、ウッテガエシ。</p>",
+      "en": "<p>Black ① throws in <b>on purpose</b> at White’s liberty B1. White ② captures it, but the capturing stones are left with no liberty except the one Black just retook: Black ③ (B1 again) captures three white stones.</p><p class=\"note\">How to spot it: playing on their liberty gets captured — but if the shape after the capture is still in atari, it is a snapback.</p>",
+      "zh": "<p>黑①<b>故意</b>扑进白的气（B1）。白②提掉，但提子后白棋只剩一口气，黑③（再下 B1）一次吃掉白三子。</p><p class=\"note\">找法：下在对方气上会被提。但若“提子后的形”仍是叫吃，就是倒扑。</p>",
+      "ko": "<p>흑①은 백의 활로(B1)에 <b>일부러</b> 뛰어드는 수. 백②로 잡히지만 잡은 뒤 백은 활로가 하나뿐이라, 흑③(다시 B1)으로 백 3점을 한꺼번에 잡습니다.</p><p class=\"note\">찾는 법: 상대 활로에 두면 잡힌다. 하지만 “잡은 뒤의 모양”이 그대로 단수면 환격입니다.</p>",
+      "es": "<p>Negro ① se mete <b>a propósito</b> en la libertad B1 de Blanco. Blanco ② la captura, pero tras capturar le queda una sola libertad: Negro ③ (B1 otra vez) captura tres piedras blancas.</p><p class=\"note\">Cómo verlo: jugar en su libertad te hace perder la piedra, pero si tras la captura su forma sigue en atari, es un snapback.</p>",
+      "fr": "<p>Noir ① se jette <b>exprès</b> sur la liberté B1 de Blanc. Blanc ② capture, mais il ne lui reste alors qu’une liberté : Noir ③ (B1 à nouveau) prend trois pierres blanches.</p><p class=\"note\">Pour le voir : jouer sur sa liberté se fait prendre — mais si la forme après la prise reste en atari, c’est un snapback.</p>",
+      "pt": "<p>Preto ① entra <b>de propósito</b> na liberdade B1 de Branco. Branco ② captura, mas depois fica com uma só liberdade: Preto ③ (B1 de novo) captura três pedras brancas.</p><p class=\"note\">Como ver: jogar na liberdade dele é ser capturado — mas se a forma após a captura segue em atari, é snapback.</p>",
+      "de": "<p>Schwarz ① setzt <b>absichtlich</b> auf Weiß’ Freiheit B1. Weiß ② schlägt, hat danach aber nur noch eine Freiheit: Schwarz ③ (wieder B1) fängt drei weiße Steine.</p><p class=\"note\">So erkennst du es: Auf ihre Freiheit gesetzt, wirst du geschlagen – steht die Form nach dem Schlagen aber weiter im Atari, ist es ein Snapback.</p>",
+      "hi": "<p>काला ① <b>जान-बूझकर</b> सफ़ेद की साँस B1 पर रखता है। सफ़ेद ② उसे पकड़ लेता है, पर उसके बाद उसकी एक ही साँस बचती है: काला ③ (फिर B1) तीन सफ़ेद पत्थर पकड़ता है।</p><p class=\"note\">पहचान: उनकी साँस पर रखने से पत्थर पकड़ा जाता है — पर पकड़ने के बाद भी आकार अटारी में रहे तो स्नैपबैक।</p>",
+      "ar": "<p>يرمي الأسود ① حجرًا <b>عمدًا</b> في حرية الأبيض B1. يأسره الأبيض ②، لكن لا تبقى له بعدها إلا حرية واحدة: الأسود ③ (B1 مجددًا) يأسر ثلاثة أحجار بيضاء.</p><p class=\"note\">كيف تراه: اللعب في حريته يُؤسر — لكن إن بقي شكله بعد الأسر في أتاري فهو استرداد.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "s": {
+      "n": 9,
+      "stones": "..................................................w........wbbb.....wbww.....ww..",
+      "turn": 1
+     },
+     "ok": [
+      "H1"
+     ],
+     "look": [
+      "H1",
+      "J1"
+     ],
+     "g": {
+      "ja": "左右反対の形。ウッテガエシで取ろう。",
+      "en": "The mirror image: capture with a snapback.",
+      "zh": "左右翻转的形：用倒扑吃子。",
+      "ko": "좌우를 뒤집은 모양. 환격으로 잡으세요.",
+      "es": "La imagen espejo: captura con snapback.",
+      "fr": "L’image miroir : prenez par snapback.",
+      "pt": "A imagem espelhada: capture com snapback.",
+      "de": "Das Spiegelbild: fang mit Snapback.",
+      "hi": "उलटी आकृति: स्नैपबैक से पकड़िए।",
+      "ar": "الصورة المعكوسة: أسر بالاسترداد."
+     },
+     "h": {
+      "ja": "白のダメはどこ？取られてもいいから、そこへ打ち込んでみよう。",
+      "en": "Where are White’s liberties? Play into one even though it will be captured.",
+      "zh": "白的气在哪里？即使会被提，也扑进去试试。",
+      "ko": "백의 활로는 어디? 잡혀도 좋으니 거기 뛰어들어 보세요.",
+      "es": "¿Dónde están las libertades de Blanco? Juega en una aunque te la capturen.",
+      "fr": "Où sont les libertés de Blanc ? Jouez dedans même si on vous prend.",
+      "pt": "Onde estão as liberdades de Branco? Jogue numa mesmo sendo capturado.",
+      "de": "Wo sind Weiß’ Freiheiten? Setz hinein, auch wenn du geschlagen wirst.",
+      "hi": "सफ़ेद की साँसें कहाँ हैं? पकड़े जाने पर भी वहाँ रखिए।",
+      "ar": "أين حريات الأبيض؟ العب في إحداها حتى لو أُسرت."
+     },
+     "y": {
+      "ja": "正解！H1 を取らせれば、取った白がアタリのまま。もう一度 H1 で取り返せます。",
+      "en": "Right! White captures H1 but stays in atari, and you retake at H1.",
+      "zh": "正确！让白提掉 H1 后它仍是叫吃，再下 H1 吃回。",
+      "ko": "정답! H1을 잡게 하면 백은 단수 그대로, 다시 H1로 되잡습니다.",
+      "es": "¡Bien! Blanco captura H1 pero sigue en atari, y recuperas en H1.",
+      "fr": "Bien ! Blanc prend H1 mais reste en atari : vous reprenez en H1.",
+      "pt": "Certo! Branco captura H1 mas segue em atari, e você recaptura em H1.",
+      "de": "Richtig! Weiß schlägt H1, bleibt aber im Atari – du holst in H1 zurück.",
+      "hi": "सही! सफ़ेद H1 पकड़ता है पर अटारी में रहता है, फिर H1 पर वापस पकड़िए।",
+      "ar": "صحيح! يأسر الأبيض H1 لكنه يبقى في أتاري، فتسترد في H1."
+     }
+    }
    ]
   },
   {
@@ -2998,6 +3335,104 @@
       "de": "Weiß <bdi>F6</bdi> und <bdi>G5</bdi> sind nur diagonal verbunden. Der Schneidepunkt <bdi>F5</bdi> ist vital.",
       "hi": "सफ़ेद <bdi>F6</bdi> और <bdi>G5</bdi> केवल तिरछे जुड़े हैं। काटने का बिंदु <bdi>F5</bdi> अहम है।",
       "ar": "الأبيض <bdi>F6</bdi> و<bdi>G5</bdi> مرتبطان قطريًا فقط. نقطة القطع <bdi>F5</bdi> حيوية."
+     }
+    }
+   ],
+   "ramp": [
+    {
+     "k": "explain",
+     "s": {
+      "n": 7,
+      "stones": "................b.b...bw.wb......................",
+      "turn": 1
+     },
+     "seq": [
+      "D4"
+     ],
+     "marks": [
+      [
+       "C3",
+       "x"
+      ],
+      [
+       "E3",
+       "x"
+      ]
+     ],
+     "t": {
+      "ja": "両アタリ＝2つを同時にアタリ",
+      "en": "Double atari: two ataris at once",
+      "zh": "双叫吃＝同时叫吃两块",
+      "ko": "양단수 = 둘을 동시에 단수",
+      "es": "Doble atari: dos ataris a la vez",
+      "fr": "Double atari : deux ataris à la fois",
+      "pt": "Atari duplo: dois ataris de uma vez",
+      "de": "Doppel-Atari: zwei Ataris zugleich",
+      "hi": "दोहरी अटारी: एक साथ दो अटारी",
+      "ar": "الأتاري المزدوج: أتاريان معًا"
+     },
+     "body": {
+      "ja": "<p>白2子はどちらもダメ2つで、<b>D4 が共通のダメ</b>。黒①を D4 に打つと、両方が同時にアタリ（残りのダメは ×印）。</p><p>白は片方しか逃げられないので、もう片方が取れます。</p><p class=\"note\">探し方：ダメの少ない相手の石が2つあったら、共通のダメを探す。</p>",
+      "en": "<p>Each white stone has two liberties, and <b>D4 is shared</b>. Black ① on D4 puts both in atari at once (their last liberties are the ×).</p><p>White can save only one, so you capture the other.</p><p class=\"note\">How to find it: when two enemy stones are short of liberties, look for a liberty they share.</p>",
+      "zh": "<p>白两子各有两口气，<b>D4 是共同的气</b>。黑①下 D4，两边同时被叫吃（剩下的气是×处）。</p><p>白只能救一边，另一边就被吃。</p><p class=\"note\">找法：对方有两块气少的棋，就找它们共同的气。</p>",
+      "ko": "<p>백 두 점은 각각 활로가 2개이고 <b>D4가 공통 활로</b>. 흑①을 D4에 두면 둘 다 동시에 단수(남은 활로는 × 표시).</p><p>백은 한쪽만 살릴 수 있으니 다른 쪽을 잡습니다.</p><p class=\"note\">찾는 법: 활로가 적은 상대 돌이 둘 있으면 공통 활로를 찾으세요.</p>",
+      "es": "<p>Cada piedra blanca tiene dos libertades y <b>D4 es común</b>. Negro ① en D4 pone ambas en atari (sus últimas libertades son las ×).</p><p>Blanco solo salva una, así que capturas la otra.</p><p class=\"note\">Cómo verlo: si dos piedras rivales andan cortas de libertades, busca una que compartan.</p>",
+      "fr": "<p>Chaque pierre blanche a deux libertés et <b>D4 est commune</b>. Noir ① en D4 met les deux en atari (leurs dernières libertés sont les ×).</p><p>Blanc n’en sauve qu’une : vous prenez l’autre.</p><p class=\"note\">Pour le voir : deux pierres adverses à court de libertés ? Cherchez une liberté commune.</p>",
+      "pt": "<p>Cada pedra branca tem duas liberdades e <b>D4 é comum</b>. Preto ① em D4 põe as duas em atari (as últimas liberdades são os ×).</p><p>Branco só salva uma, então você captura a outra.</p><p class=\"note\">Como ver: duas pedras adversárias com poucas liberdades? Procure uma liberdade comum.</p>",
+      "de": "<p>Jeder weiße Stein hat zwei Freiheiten, und <b>D4 ist gemeinsam</b>. Schwarz ① auf D4 setzt beide ins Atari (ihre letzten Freiheiten sind die ×).</p><p>Weiß kann nur einen retten – du fängst den anderen.</p><p class=\"note\">So findest du es: Zwei gegnerische Steine mit wenig Freiheiten? Suche eine gemeinsame.</p>",
+      "hi": "<p>हर सफ़ेद पत्थर की दो साँसें हैं और <b>D4 साझा</b> है। काला ① D4 पर दोनों को एक साथ अटारी देता है (आख़िरी साँसें × वाली)।</p><p>सफ़ेद एक ही बचा सकता है, दूसरा आप पकड़ लेते हैं।</p><p class=\"note\">पहचान: विरोधी के दो पत्थरों की साँसें कम हों तो उनकी साझा साँस खोजिए।</p>",
+      "ar": "<p>لكل حجر أبيض حريتان، و<b>D4 مشتركة</b>. الأسود ① في D4 يضع الحجرين في أتاري معًا (آخر حرياتهما علامات ×).</p><p>لا ينقذ الأبيض إلا واحدًا، فتأسر الآخر.</p><p class=\"note\">كيف تجده: حجران للخصم بحريات قليلة؟ ابحث عن حرية مشتركة.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "s": {
+      "n": 7,
+      "stones": ".......................b.b...bw.wb...............",
+      "turn": 1
+     },
+     "ok": [
+      "D3"
+     ],
+     "look": [
+      "C3",
+      "E3"
+     ],
+     "g": {
+      "ja": "白2子に両アタリをかけよう。",
+      "en": "Put both white stones in atari at once.",
+      "zh": "对白两子双叫吃。",
+      "ko": "백 두 점에 양단수를 거세요.",
+      "es": "Pon las dos piedras blancas en atari a la vez.",
+      "fr": "Mettez les deux pierres blanches en atari d’un coup.",
+      "pt": "Ponha as duas pedras brancas em atari de uma vez.",
+      "de": "Setz beide weißen Steine gleichzeitig ins Atari.",
+      "hi": "दोनों सफ़ेद पत्थरों को एक साथ अटारी दीजिए।",
+      "ar": "ضع الحجرين الأبيضين في أتاري معًا."
+     },
+     "h": {
+      "ja": "2つの白石に共通するダメはどこ？",
+      "en": "Which liberty do the two white stones share?",
+      "zh": "两颗白子共同的气在哪里？",
+      "ko": "두 백돌의 공통 활로는?",
+      "es": "¿Qué libertad comparten las dos piedras blancas?",
+      "fr": "Quelle liberté les deux pierres blanches partagent-elles ?",
+      "pt": "Que liberdade as duas pedras brancas compartilham?",
+      "de": "Welche Freiheit teilen die beiden weißen Steine?",
+      "hi": "दोनों सफ़ेद पत्थरों की साझा साँस कौन-सी है?",
+      "ar": "ما الحرية المشتركة بين الحجرين الأبيضين؟"
+     },
+     "y": {
+      "ja": "正解！D3 で両方がアタリ。白は片方しか助けられません。",
+      "en": "Right! D3 puts both in atari; White can save only one.",
+      "zh": "正确！D3 让两边都被叫吃，白只能救一边。",
+      "ko": "정답! D3로 둘 다 단수, 백은 한쪽만 살릴 수 있습니다.",
+      "es": "¡Bien! D3 pone ambas en atari; Blanco solo salva una.",
+      "fr": "Bien ! D3 met les deux en atari ; Blanc n’en sauve qu’une.",
+      "pt": "Certo! D3 põe as duas em atari; Branco só salva uma.",
+      "de": "Richtig! D3 setzt beide ins Atari – Weiß rettet nur einen.",
+      "hi": "सही! D3 से दोनों अटारी में, सफ़ेद एक ही बचा सकता है।",
+      "ar": "صحيح! D3 تضعهما في أتاري، ولا ينقذ الأبيض إلا واحدًا."
      }
     }
    ]
@@ -6192,5 +6627,103 @@
     }
    ]
   }
- ]
+ ],
+ "rampUi": {
+  "step": {
+   "ja": "準備 {i}/{n}",
+   "en": "Warm-up {i}/{n}",
+   "zh": "热身 {i}/{n}",
+   "ko": "준비 {i}/{n}",
+   "es": "Calentamiento {i}/{n}",
+   "fr": "Échauffement {i}/{n}",
+   "pt": "Aquecimento {i}/{n}",
+   "de": "Aufwärmen {i}/{n}",
+   "hi": "तैयारी {i}/{n}",
+   "ar": "تمهيد {i}/{n}"
+  },
+  "next": {
+   "ja": "次へ",
+   "en": "Next",
+   "zh": "下一步",
+   "ko": "다음",
+   "es": "Siguiente",
+   "fr": "Suivant",
+   "pt": "Próximo",
+   "de": "Weiter",
+   "hi": "आगे",
+   "ar": "التالي"
+  },
+  "main": {
+   "ja": "本番の問題へ",
+   "en": "To the problems",
+   "zh": "进入正式题目",
+   "ko": "본 문제로",
+   "es": "A los problemas",
+   "fr": "Aux problèmes",
+   "pt": "Aos problemas",
+   "de": "Zu den Aufgaben",
+   "hi": "असली सवालों पर",
+   "ar": "إلى المسائل"
+  },
+  "skip": {
+   "ja": "準備をとばす",
+   "en": "Skip warm-up",
+   "zh": "跳过热身",
+   "ko": "준비 건너뛰기",
+   "es": "Saltar calentamiento",
+   "fr": "Passer l’échauffement",
+   "pt": "Pular aquecimento",
+   "de": "Aufwärmen überspringen",
+   "hi": "तैयारी छोड़ें",
+   "ar": "تخطَّ التمهيد"
+  },
+  "note": {
+   "ja": "準備は点数に入りません。まちがえても何度でもやり直せます。",
+   "en": "Warm-ups are not scored. Try as often as you like.",
+   "zh": "热身不计分，错了可以反复尝试。",
+   "ko": "준비 단계는 점수에 들어가지 않습니다. 몇 번이든 다시 할 수 있어요.",
+   "es": "El calentamiento no puntúa. Inténtalo cuantas veces quieras.",
+   "fr": "L’échauffement n’est pas noté. Réessayez autant que vous voulez.",
+   "pt": "O aquecimento não vale pontos. Tente quantas vezes quiser.",
+   "de": "Das Aufwärmen zählt nicht. Probiere so oft du willst.",
+   "hi": "तैयारी के अंक नहीं गिने जाते। जितनी बार चाहें कोशिश करें।",
+   "ar": "التمهيد لا يُحتسب. حاول كما تشاء."
+  },
+  "ng": {
+   "ja": "おしい！もう一度考えてみよう。困ったら「ヒント」を押してね。",
+   "en": "Not quite! Think again — press Hint if you are stuck.",
+   "zh": "差一点！再想想，卡住了就按“提示”。",
+   "ko": "아깝다! 다시 생각해 보세요. 막히면 「힌트」를 누르세요.",
+   "es": "¡Casi! Piénsalo otra vez; pulsa Pista si te atascas.",
+   "fr": "Presque ! Réfléchissez encore — touchez Indice si besoin.",
+   "pt": "Quase! Pense de novo — toque em Dica se travar.",
+   "de": "Fast! Denk noch einmal nach – tippe auf Tipp, wenn du feststeckst.",
+   "hi": "लगभग! फिर सोचिए — अटकें तो संकेत दबाएँ।",
+   "ar": "قريب! فكّر مرة أخرى، واضغط تلميح إن احتجت."
+  },
+  "look": {
+   "ja": "点線の点に注目しよう。",
+   "en": "Look at the dashed points.",
+   "zh": "注意虚线圈出的点。",
+   "ko": "점선으로 표시된 점을 살펴보세요.",
+   "es": "Fíjate en los puntos con línea discontinua.",
+   "fr": "Regardez les points en pointillés.",
+   "pt": "Observe os pontos tracejados.",
+   "de": "Schau dir die gestrichelten Punkte an.",
+   "hi": "बिंदुदार घेरे वाले बिंदुओं को देखिए।",
+   "ar": "انظر إلى النقاط المنقّطة."
+  },
+  "ans": {
+   "ja": "答えは {m} です。",
+   "en": "The answer is {m}.",
+   "zh": "答案是 {m}。",
+   "ko": "정답은 {m}입니다.",
+   "es": "La respuesta es {m}.",
+   "fr": "La réponse est {m}.",
+   "pt": "A resposta é {m}.",
+   "de": "Die Lösung ist {m}.",
+   "hi": "उत्तर {m} है।",
+   "ar": "الجواب {m}."
+  }
+ }
 }

@@ -606,12 +606,14 @@ class Engine {
     const me = pos.side, op = 3 - me, km = pos.cls[me], ko = pos.cls[op], sm = pos.sc[me], so = pos.sc[op], b = pos.b;
     const list = [];
     const oppThreat = pos.cnt[op][C_F4] > 0;
+    for (let pass = 0; pass < 2 && !list.length; pass++)   // pass 1: the opponent's three can only be stopped on black's forbidden points -> any nearby move
     for (let m = 0; m < 225; m++) {
       const i = M2I[m];
       if (b[i] !== EMPTY || !pos.near[i]) continue;
       if (!pos.openingOk(i)) continue;
       const x = km[i], y = ko[i];
-      if (oppThreat && !(x >= C_B4 && x !== C_F33) && !(y >= C_B4 && y !== C_F33)) continue;
+      if (oppThreat && !pass && !(x >= C_B4 && x !== C_F33) && !(y >= C_B4 && y !== C_F33)) continue;
+      if (pass && !oppThreat) break;
       if (me === BLACK && pos.renju && pos.fb[i] && pos.forbidIdx(i)) continue;
       if (ply === 0 && this.rootOnly && !this.rootOnly.has(i)) continue;
       let s = sm[i] * 2 + so[i] + (i === ttMove ? 1e7 : 0) + this.hist[i * 3 + me];
@@ -631,10 +633,10 @@ class Engine {
     const mf = fiveCells(pos, me);
     if (mf.length) { if (ply === 0) this.rootBest = mf[0]; return WIN - ply - 1; }
     const of = fiveCells(pos, op);
-    if (of.length >= 2) { let ok = false; for (const q of of) if (legalFor(pos, q, me)) ok = true; if (ply === 0) this.rootBest = of[0]; return -(WIN - ply - 2); }
+    if (of.length >= 2) { if (ply === 0) { const q = of.find(q => legalFor(pos, q, me)); this.rootBest = q === undefined ? -1 : q; } return -(WIN - ply - 2); }   // lost: never a forbidden point (best() then picks the most resisting move)
     if (of.length === 1) {
       const q = of[0];
-      if (!legalFor(pos, q, me)) { if (ply === 0) this.rootBest = q; return -(WIN - ply - 2); }
+      if (!legalFor(pos, q, me)) { if (ply === 0) this.rootBest = -1; return -(WIN - ply - 2); }
       pos.make(I2M[q]);
       const v = -this.search(pos, depth, -beta, -alpha, ply + 1);
       pos.unmake();
@@ -752,7 +754,36 @@ class Engine {
       if (now() > this.deadline - (opt.ms || 1000) * 0.45 && d >= (opt.minDepth || 1)) break;
     }
     this.rootOnly = null;
+    if (bestI < 0 || !pos.legalIdx(bestI) || bestV < -WINT) { const r = this.resist(pos, bestI); if (r >= 0) bestI = r; }
     return { i: bestI, v: bestV, depth };
+  }
+  // lost (or no move found): the most stubborn legal move — never a forbidden point. Own five > a move after which the
+  // opponent has no VCF > the longest opponent VCF > own fours (delay) > the opponent's straight four > the opponent's five;
+  // ties go to the search's choice (keep), then to the move ordering (blocks the opponent's threat first). -1: no legal move.
+  resist(pos, keep) {
+    const me = pos.side, op = 3 - me, S = this.solver;
+    const mf = fiveCells(pos, me); if (mf.length) return mf[0];
+    let { list } = this.gen(pos, -1, 0);
+    list = list.filter(i => pos.legalIdx(i));
+    if (!list.length) for (let m = 0; m < 225; m++) if (pos.legalIdx(M2I[m])) list.push(M2I[m]);
+    if (!list.length) return -1;
+    const ro = this.rootOnly; this.rootOnly = null;
+    let best = -1, bs = -Infinity;
+    const cand = list.slice(0, 40); if (keep >= 0 && pos.legalIdx(keep) && !cand.includes(keep)) cand.unshift(keep);
+    for (const i of cand) {
+      pos.make(I2M[i]);
+      let s;
+      if (pos.lastFive()) s = 1e9;
+      else if (hasFive(pos, op)) s = 0;
+      else if (hasFive(pos, me)) { const q = fiveCells(pos, me)[0]; s = legalFor(pos, q, op) ? 50 : 1e9; }   // a four: the opponent must block (or cannot: forbidden)
+      else if (winCell(pos, op) >= 0) s = 10;
+      else { S.clear(); S.nodes = 0; S.limit = 6000; const pv = []; s = S.vcf(pos, 30, pv) >= 0 ? 100 + pv.length : 1000; }
+      pos.unmake();
+      if (i === keep) s += 0.5;
+      if (s > bs) { bs = s; best = i; }
+    }
+    this.rootOnly = ro;
+    return best;
   }
   // values of the best candidate root moves (for hints / analysis)
   rootList(pos, ms, onProgress, maxN) {
@@ -866,9 +897,17 @@ function think(rule, moves, level, start, rand) {
   const L = LEVELS[level] || LEVELS[5];
   const pos = replay(rule, moves, start);
   if (pos.status().over) return { move: -1 };
+  if (!pos.legal().length) return { move: -1, nomove: true };   // renju: black has only forbidden points left (lost by the rules)
   const om = openingMove(pos, level, rand);
-  if (om >= 0) return { move: om, book: true };
+  if (om >= 0 && pos.isLegal(om)) return { move: om, book: true };
   const E = eng();
+  const res = thinkRaw(E, pos, L, level, rand);
+  if (res.move === null || res.move === undefined || !pos.isLegal(res.move)) {   // safety net: never a forbidden / illegal point
+    const i = E.resist(pos, -1); return { move: i >= 0 ? I2M[i] : -1 };
+  }
+  return res;
+}
+function thinkRaw(E, pos, L, level, rand) {
   if (L.noise !== undefined) {
     const me = pos.side, op = 3 - me;
     // weak levels sometimes overlook the opponent's threats
@@ -881,6 +920,7 @@ function think(rule, moves, level, start, rand) {
     const vals = r.list.length ? r.list : pos.legal().map(m => ({ m, v: 0 }));
     let best = null, bv = -Infinity;
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
+    if (best === null || bv < -WINT) { const i = E.resist(pos, best === null ? -1 : M2I[best]); if (i >= 0) best = I2M[i]; }   // lost: resist, not a random / forbidden move
     return { move: best };
   }
   const r = E.best(pos, { ms: L.ms || 60000, nodes: L.nodes, depth: L.d, vct: L.vct, defend: L.defend, vctNodes: L.vctNodes });

@@ -1607,6 +1607,15 @@ function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function mateReq(n, defend) { return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n, defend: !!defend, budget: 4000 }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function pickDefence(list) { let best = null; for (const e of list) { const v = e.need === 0 ? 99 : e.need < 0 ? 50 : e.need; if (!best || v > best.v || (v === best.v && Math.random() < .3)) best = { m: e.m, v }; } return best.m; }
+// the defender's reply: the longest resistance; among replies that resist equally long (often dozens in Hex), the one the
+// engine values best — a random one could be a cell far from the fight (tools/audit_puzzles.js "tie")
+async function pickDefenceBest(list) {
+  const sc = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return pickDefence(list);
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 400, max: 400 });
+  const an = (r && r.list) || [], v = m => { const e = an.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 const pzReached = (Pz, pos) => pos.winner() === Pz.me;
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (the engine's best reply) answers and the
@@ -1677,7 +1686,8 @@ async function puzzleMove(m) {
   await sleep(Math.max(0, dm + 250));
   if (puzzle !== Pz) return;
   if (!dl.length) { puzzleSolved(); return; }
-  const r = pickDefence(dl);
+  const r = await pickDefenceBest(dl);
+  if (puzzle !== Pz || tok !== busyToken) return;
   playMove2(r);
   await sleep(dm);
   if (puzzle !== Pz) return;
@@ -1761,7 +1771,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
-    else { const list = await mateReq(Math.max(1, left), !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? pickDefence(list) : null); }
+    else { const list = await mateReq(Math.max(1, left), !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? await pickDefenceBest(list) : null); if (puzzle !== Pz) return; }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++;

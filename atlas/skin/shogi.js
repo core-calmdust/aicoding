@@ -48,6 +48,38 @@
   document.addEventListener('shogi-geom', e => { try { setBoard(e.detail && e.detail.n === 5 ? 5 : 9); } catch (x) { console.warn(x); } });
   { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(5); }
 
+  /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */
+  try {
+    const paint = (W, H, along) => {   // along: 'y' = grain runs down the stand (PC, upright stands), 'x' = across (phones, flat bars)
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d'), L = along === 'y' ? H : W, A = along === 'y' ? W : H;
+      const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#ecc98e'); bg.addColorStop(.5, '#e2b877'); bg.addColorStop(1, '#d6a565');
+      x.fillStyle = bg; x.fillRect(0, 0, W, H);
+      let s = 7; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+      // straight grain with a slow wave, a few darker late-wood lines
+      for (let i = 0; i < 70; i++) {
+        const a0 = rnd() * A, amp = 2 + rnd() * 5, f = .004 + rnd() * .01, ph = rnd() * 6.28, dark = rnd() < .22;
+        x.strokeStyle = dark ? `rgba(150,92,38,${.16 + rnd() * .14})` : `rgba(170,112,52,${.06 + rnd() * .1})`;
+        x.lineWidth = dark ? 1 + rnd() * 1.6 : .5 + rnd() * .8;
+        x.beginPath();
+        for (let t = 0; t <= L; t += 8) { const a = a0 + Math.sin(t * f + ph) * amp; const px = along === 'y' ? a : t, py = along === 'y' ? t : a; t ? x.lineTo(px, py) : x.moveTo(px, py); }
+        x.stroke();
+      }
+      // soft sheen + darker edges, like the lit board
+      const sh = along === 'y' ? x.createLinearGradient(0, 0, W, 0) : x.createLinearGradient(0, 0, 0, H);
+      sh.addColorStop(0, 'rgba(110,60,15,.18)'); sh.addColorStop(.18, 'rgba(255,240,210,.10)'); sh.addColorStop(.6, 'rgba(255,240,210,0)'); sh.addColorStop(1, 'rgba(110,60,15,.16)');
+      x.fillStyle = sh; x.fillRect(0, 0, W, H);
+      return `url(${c.toDataURL('image/jpeg', .85)})`;
+    };
+    const de = document.documentElement;
+    de.style.setProperty('--kdwood', paint(192, 512, 'y'));
+    de.style.setProperty('--kdwoodh', paint(640, 96, 'x'));
+    // a stand wider than tall (phone layouts) takes the horizontal grain
+    const fitKd = () => document.querySelectorAll('.hand').forEach(h => { const r = h.getBoundingClientRect(); h.classList.toggle('kd-wide', r.width > r.height); });
+    addEventListener('resize', () => requestAnimationFrame(fitKd)); setTimeout(fitKd, 0); setTimeout(fitKd, 800);
+    if (window.ResizeObserver) { const ro = new ResizeObserver(() => requestAnimationFrame(fitKd)); document.querySelectorAll('.hand').forEach(h => ro.observe(h)); }
+  } catch (e) {}
+
   /* ---------- pieces: renders of the 3D pieces ---------- */
   document.documentElement.classList.add('atlas-shogi');
   const orig = window.pieceEl;

@@ -183,7 +183,8 @@
   function contact(r, k = .55) {
     const TT = T(), tex = canvasTex('aoDisc', 128, 128, (c, W) => { const g = c.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(.55, 'rgba(0,0,0,.75)'); g.addColorStop(.78, 'rgba(0,0,0,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, W, W); });
     tex.encoding = TT.LinearEncoding;
-    const m = new TT.Mesh(new TT.PlaneGeometry(r * 2.5, r * 2.5), new TT.MeshBasicMaterial({ map: tex, transparent: true, opacity: k, depthWrite: false, color: 0x000000 }));
+    const gk = 'ao' + r.toFixed(4); let pg = discCache[gk]; if (!pg) { pg = discCache[gk] = new TT.PlaneGeometry(r * 2.5, r * 2.5); SHARED.add(pg); }   // one plane per size (shared: many pieces)
+    const m = new TT.Mesh(pg, new TT.MeshBasicMaterial({ map: tex, transparent: true, opacity: k, depthWrite: false, color: 0x000000 }));
     m.rotation.x = -Math.PI / 2; m.renderOrder = 1; m.userData.contact = true; return m;
   }
   const cellPos = (n, size, i) => -size / 2 + size / n * (i + .5);
@@ -922,7 +923,7 @@
     map.anisotropy = bump.anisotropy = 8;
     return (tatamiCache = { map, bump });
   }
-  let localFloor = false;
+  let localFloor = false, keyLight = null, shadowDirty = true;
   // the floor texture as an image + its size in world units, for a page background that matches the 3D floor
   function floorImage(kind) { return kind === 'tatami' ? { img: tatamiTex().map.image, w: TAT_W, h: TAT_L } : { img: woodTop('tblR5', '#c08446', '#6a3e1c').image, w: 40, h: 40 }; }
   function buildRoom(scene, plain) {
@@ -1009,8 +1010,9 @@
     rbCap = 9;
     // lights of the hour
     scene.add(new TT.HemisphereLight(L.hemi[0], L.hemi[1], L.hemi[2]));
-    const key = new TT.DirectionalLight(L.sun, L.sunI * (plain ? .7 : 1)); key.position.set(...L.sunPos); key.castShadow = true;
-    key.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
+    const key = new TT.DirectionalLight(L.sun, L.sunI * (plain ? .7 : 1)); key.position.set(...L.sunPos); key.castShadow = true; keyLight = key;
+    // skin pages (plain + local floor): the shadow camera is fitted to the board (fitShadow), so 1024² keeps the room's texel density at a quarter of the fill
+    key.shadow.mapSize.setScalar(LITE ? 512 : COARSE || (plain && localFloor) ? 1024 : 2048); Object.assign(key.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
     scene.add(key);
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = false;   // a point-light shadow is 6 extra shadow passes per frame scene.add(lamp);
@@ -1021,10 +1023,14 @@
   }
   function mount(container, opts = {}) {
     el = container;
-    R = new (T().WebGLRenderer)({ antialias: !LITE, alpha: true, powerPreference: 'high-performance' });
-    const coarse = COARSE;
-    pr = Math.min(LITE ? 1 : coarse ? 1.5 : 2, window.devicePixelRatio || 1); R.setPixelRatio(pr);   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    const coarse = COARSE, skinPage = !!opts.local;
+    pr = Math.min(LITE ? 1 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    // skin pages drawn at 2x: no MSAA on top (the 2x pixels already smooth the edges; MSAA would multiply the fill and memory again)
+    R = new (T().WebGLRenderer)({ antialias: !LITE && !(skinPage && pr >= 2), alpha: true, powerPreference: 'high-performance' });
+    R.setPixelRatio(pr);
     R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
+    // skin pages: a static shadow map, redrawn only while something moves (kick) or the board changes — not for a scroll / re-alignment
+    if (skinPage) R.shadowMap.autoUpdate = false;
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
@@ -1196,7 +1202,7 @@
       if (opts.hold) { revealFn = go; setTimeout(go, 1500); } else go();   // hold: wait for reveal() (the moment the icon vanishes)
       return g;
     }
-    if (opts.still) { root.add(c); return g; }   // no entrance animation (skin pages: the board is simply there)
+    if (opts.still) { root.add(c); dirty = shadowDirty = true; fitShadow(); return g; }   // no entrance animation (skin pages: the board is simply there)
     if (!opts.intro) { land(); return g; }
     // intro: the icon spins one turn while it grows and rises, then pops
     const ic = new (T().Group)(); ic.add(opts.intro); root.add(ic); spin = false; yaw = 0;
@@ -1239,10 +1245,82 @@
   addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; if (typeof kick === 'function') kick(300); });
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
-  let lastKey = '', kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
+  let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
   addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
-  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; }
+  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; }
+  /* ---------- auto-instancing (skin pages) ----------
+     The skins keep one Group per piece (they move, lift, flip and fade them one by one). Right before each frame, every visible
+     mesh that shares its geometry and material with others is drawn through one InstancedMesh per (geometry, material, mirrored)
+     instead: the originals are moved to layer 1 (not seen by the camera nor the shadow pass) and their world matrices copied in.
+     A board of 24 checkers + mirror images + contact shadows: ~80 draw calls → ~10. Nothing changes for the skins. */
+  let instSig = 0;
+  const INST = new Map(), instHidden = [], contactMats = new Map(), _m4 = { a: null, flip: null };
+  function contactMatFor(src) {   // contact shadows each own a material (their opacity is animated): those at the same opacity share one
+    const k = Math.round(src.opacity * 100); let m = contactMats.get(k);
+    if (!m) { m = src.clone(); m.opacity = k / 100; contactMats.set(k, m); }
+    return m;
+  }
+  function instBucket(geo, mat, neg) {
+    let byM = INST.get(geo); if (!byM) INST.set(geo, byM = new Map());
+    let pair = byM.get(mat); if (!pair) byM.set(mat, pair = [null, null]);
+    const i = neg ? 1 : 0; return pair[i] || (pair[i] = { geo, mat, neg, list: [], im: null, cast: false, recv: false, ro: 0 });
+  }
+  function instCollect(o, ctr) {
+    if (!o.visible) return;
+    if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.geometry && o.material && !Array.isArray(o.material) && !o.userData.noInst && !o.userData.merged) {
+      const ct = o.userData.contact && o.material.isMeshBasicMaterial;
+      const mat = ct ? contactMatFor(o.material) : o.material;
+      const b = instBucket(o.geometry, mat, o.matrixWorld.determinant() < 0);
+      if (!b.list.length) { b.cast = o.castShadow; b.recv = o.receiveShadow; b.ro = o.renderOrder; }
+      if (b.cast === o.castShadow && b.recv === o.receiveShadow && b.ro === o.renderOrder) b.list.push(o);
+    }
+    const ch = o.children; for (let i = 0; i < ch.length; i++) instCollect(ch[i], ctr);
+  }
+  function autoInstance(top) {
+    for (let i = 0; i < instHidden.length; i++) instHidden[i].layers.set(0);
+    instHidden.length = 0;
+    if (!top || !top.parent) return;
+    const TT = T(); top.updateMatrixWorld(true);
+    if (!_m4.a) { _m4.a = new TT.Matrix4(); _m4.flip = new TT.Matrix4().makeScale(1, -1, 1); }
+    instCollect(top); let sig = 0;
+    INST.forEach((byM, geo) => byM.forEach((pair, mat) => { for (let j = 0; j < 2; j++) {
+      const b = pair[j]; if (!b) continue;
+      const n = b.list.length;
+      if (n < 2) {   // a single one draws itself; an unused InstancedMesh is dropped
+        if (b.im && !n) { scene.remove(b.im); b.im.dispose(); b.im = null; }
+        if (b.im) b.im.visible = false;
+        if (!n && !b.im) { pair[j] = null; if (!pair[0] && !pair[1]) { byM.delete(mat); if (!byM.size) INST.delete(geo); } }
+        b.list.length = 0; continue;
+      }
+      if (!b.im || b.im.instanceMatrix.count < n) {
+        if (b.im) { scene.remove(b.im); b.im.dispose(); }
+        let cap = 8; while (cap < n) cap *= 2;
+        b.im = new TT.InstancedMesh(geo, mat, cap); b.im.frustumCulled = false; b.im.instanceMatrix.setUsage(TT.DynamicDrawUsage);
+        b.im.matrixAutoUpdate = false; if (b.neg) { b.im.matrix.copy(_m4.flip); } b.im.matrixWorld.copy(b.im.matrix); b.im.userData.noInst = true;
+        scene.add(b.im);
+      }
+      const im = b.im; im.visible = true; im.count = n; im.castShadow = b.cast; im.receiveShadow = b.recv; im.renderOrder = b.ro;
+      for (let i = 0; i < n; i++) {
+        const o = b.list[i];
+        if (b.neg) { _m4.a.multiplyMatrices(_m4.flip, o.matrixWorld); im.setMatrixAt(i, _m4.a); } else im.setMatrixAt(i, o.matrixWorld);   // a mirrored one: the InstancedMesh itself is flipped (so the renderer turns the winding), the flip undone per instance
+        o.layers.set(1); instHidden.push(o);
+      }
+      im.instanceMatrix.needsUpdate = true; b.list.length = 0; sig += n * 31 + im.id;
+    } }));
+    if (sig !== instSig) { instSig = sig; shadowDirty = true; }   // pieces added / removed without a kick: the static shadow map still follows
+    if (!INST.size) contactMats.forEach(m => m.dispose()), contactMats.clear();
+  }
+  // skin pages: fit the key light's shadow camera round the board (the room's ±12 box wasted 3/4 of the map on the empty floor)
+  const _box = { b: null, v: null };
+  function fitShadow() {
+    if (!keyLight || !alignFn || !cur) return;
+    const TT = T(); _box.b = _box.b || new TT.Box3(); _box.v = _box.v || new TT.Vector3();
+    cur.updateMatrixWorld(true); _box.b.setFromObject(cur); if (_box.b.isEmpty()) return;
+    const r = _box.b.getBoundingSphere(new TT.Sphere()), e = r.radius + r.center.length() + .6;   // light looks at the origin: centre offset + a little slack for lifted pieces
+    const c = keyLight.shadow.camera; if (Math.abs(c.right - e) < .05) return;
+    Object.assign(c, { left: -e, right: e, top: e, bottom: -e }); c.updateProjectionMatrix(); shadowDirty = true;
+  }
   // adaptive resolution: while something animates, watch the frame interval; if a phone can't keep up (median > 34 ms),
   // drop to 1× pixels at once and remember 'lite' for the next visit (half-size textures, small shadows)
   let pr = 1, slow = [], slowDone = false;
@@ -1292,10 +1370,13 @@
         const unit = r.h / ((alignSize || 8.4)), P = r.persp || r.h * 3, tl = (r.tilt || 0) * Math.PI / 180, D = P / unit, sh = r.shift || 0;
         cam.fov = 2 * Math.atan(H / 2 / P) * 180 / Math.PI; cam.aspect = W / H;
         cam.position.set(0, top + D * Math.cos(tl), D * Math.sin(tl) + sh); cam.up.set(0, Math.sin(tl), -Math.cos(tl)); cam.lookAt(0, top, sh);
-        const key = r.x.toFixed(1) + ',' + r.y.toFixed(1) + ',' + r.w.toFixed(1) + ',' + r.h.toFixed(1) + ',' + W + ',' + H;
-        if (key === lastKey && now > kickUntil && !dirty) return;
-        lastKey = key; if (now > kickUntil) dirty = false;
+        const LK = lastKey || (lastKey = [NaN, 0, 0, 0, 0, 0]), same = Math.abs(LK[0] - r.x) < .05 && Math.abs(LK[1] - r.y) < .05 && Math.abs(LK[2] - r.w) < .05 && Math.abs(LK[3] - r.h) < .05 && LK[4] === W && LK[5] === H;
+        if (same && now > kickUntil && !dirty) return;
+        LK[0] = r.x; LK[1] = r.y; LK[2] = r.w; LK[3] = r.h; LK[4] = W; LK[5] = H; if (now > kickUntil) dirty = false;
+
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2) - sh * unit, W, H); cam.updateProjectionMatrix();
+        autoInstance(cur);
+        if (!R.shadowMap.autoUpdate) { R.shadowMap.needsUpdate = shadowDirty || now <= kickUntil; shadowDirty = false; }
         R.render(scene, cam); lastDraw = now; return;
       }
     }
@@ -1309,7 +1390,7 @@
     R.render(scene, cam);
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
-  function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; }
+  function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }

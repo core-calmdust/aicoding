@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../connect4/', VER = '?v=20261028rb';   // same file / version as connect4/index.html → shared cache
+  const BASE = '../connect4/', VER = '?v=20261104rs';   // same file / version as connect4/index.html → shared cache
   const COLS = 7, ROWS = 6;
   let BOOK = null, TREE = null, dataP = null;
   const loadData = () => dataP || (dataP = Promise.all([

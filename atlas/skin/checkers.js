@@ -29,6 +29,7 @@
   const K = (OUT * S).toFixed(3), C = (v) => `calc(var(--cell) * ${v})`;
   st.textContent = `
 html.atlas-checkers,html.atlas-checkers body{--cell:min((var(--vh) - var(--padt) - var(--pad) - 8px - var(--ttop)) / ${K}, (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / ${K}, 128px)!important;--fw:${C(K)}!important;--fh:${C(K)}!important}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-checkers,html.atlas-checkers body{--cell:min((var(--vh) - var(--pad) * 2 - var(--rbx, 0px)) / ${K}, (100vw - var(--rw, 360px) - var(--gap) - var(--padx) * 2) / ${K}, 128px)!important}}   /* PC: sized for the fixed 360px column (a width-limited board never pushes it off the edge) */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
@@ -224,7 +225,7 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   };
   // selection / forced-capture marks come with renderFx; the selected piece lifts
   if (piecesDom) new MutationObserver(() => applySel()).observe(piecesDom, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  if (typeof window.renderFx === 'function') { const oFx = window.renderFx; window.renderFx = function () { const r = oFx.apply(this, arguments); T3.kick(200); return r; }; }
+  // (renderFx only redraws DOM marks: no 3D frames needed — piece changes kick from mirror() / the animations themselves)
   // the page may have drawn its pieces before we hooked in
   try { mirror(); } catch (e) {}
 
