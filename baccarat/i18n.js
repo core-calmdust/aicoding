@@ -2,7 +2,7 @@
    Also holds the texts of the rules tour (r.*), the lessons (cat/l/lp/ld/x/tip/q/e/lq.*) and the research tools (tl/sy/rx.*). */
 const I18N = {
 ja: {
-  series: '世界のボドゲ大全', 'meta.title': 'バカラ | 世界のボドゲ大全', title: 'バカラ', back: 'ホームへ',
+  series: '世界のボドゲ大百科', 'meta.title': 'バカラ | 世界のボドゲ大百科', title: 'バカラ', back: 'ホームへ',
   'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.s': '新規', 'btn.new.t': 'ルールの種類・デッキ数・持ち金・デザインを選んで始める',
   'btn.resign': '精算', 'btn.resign.t': 'このテーブルを精算して席を立つ（新しいシューで始め直す）',
   'btn.hint': 'ヒント', 'btn.hint.t': 'いま一番損の小さい賭け方（H）', 'btn.rules': 'ルール', 'btn.rules.t': 'ルール説明（チュートリアル）',

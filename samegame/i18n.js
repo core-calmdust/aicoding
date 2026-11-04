@@ -9,7 +9,7 @@ window.SAME_I18N.ja = {
   'skin.vintage': 'ヴィンテージ',
   'skin.riso': 'リソグラフ',
   'skin.night': 'ナイトPOP',
-  'title.doc': 'さめが〜め POP! — ポップアートのさめがめ', series: '世界のボドゲ大全', title: 'さめが〜め', home: 'ホーム', help: 'あそびかた',
+  'title.doc': 'さめが〜め POP! — ポップアートのさめがめ', series: '世界のボドゲ大百科', title: 'さめが〜め', home: 'ホーム', help: 'あそびかた',
   'ht.daily': 'デイリー', 'ht.stage': 'ステージ', 'ht.action': 'アクション', 'ht.me': 'マイページ', 'set.lang': '言語',
   'pf.edit': 'プロフィール', 'pf.guest': 'ゲスト', 'pf.streak': '日連続', 'pf.name': 'ニックネーム（ランキングに表示）', 'pf.ph': '12文字まで', 'pf.note': 'ニックネームを決めるとランキングに参加できます。', 'pf.icon': 'アイコン（ガチャで増えます）',
   'd.puzzle': 'デイリーパズル', 'd.puzzle.h': '今日の盤面でハイスコア', 'd.puzzle.d': '全員が同じ盤に挑戦。何度でも遊べて、いちばん良いスコアがランキングに残ります。',

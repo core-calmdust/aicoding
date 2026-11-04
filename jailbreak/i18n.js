@@ -1,7 +1,7 @@
 /* だつごく！スライド — texts (ja / en). Other languages: i18n-more.js */
 window.JB_I18N = window.JB_I18N || {};
 window.JB_I18N.ja = {
-  'title.doc': 'だつごく！スライド — ブロックをずらして脱獄するスライドパズル', series: '世界のボドゲ大全', title: 'だつごく！', home: 'ホーム', help: 'あそびかた',
+  'title.doc': 'だつごく！スライド — ブロックをずらして脱獄するスライドパズル', series: '世界のボドゲ大百科', title: 'だつごく！', home: 'ホーム', help: 'あそびかた',
   'ht.daily': 'デイリー', 'ht.course': 'コース', 'ht.modes': 'モード',
   'pf.edit': 'プロフィール', 'pf.guest': 'ゲスト', 'pf.streak': '日連続', 'pf.next': '次の称号「{t}」まで', 'pf.esc': '脱獄回数', 'pf.perfect': '最短クリア',
   'pf.name': 'ニックネーム（ランキングに表示）', 'pf.ph': '12文字まで', 'pf.note': 'ニックネームを決めるとランキングに参加できます。', 'pf.icon': 'アイコン（囚人）', 'pf.skin': '床のデザイン',

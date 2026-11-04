@@ -1,4 +1,4 @@
-// RecordExport — 棋譜の書き出し・局面図（画像）の共有ダイアログ for the 世界のボドゲ大全 board games (same idea as the
+// RecordExport — 棋譜の書き出し・局面図（画像）の共有ダイアログ for the 世界のボドゲ大百科 board games (same idea as the
 // shogi page's 共有 dialog: KIF / KI2 / CSA / USI / URL / 局面図).
 //
 // The dialog is built with the page's own .overlay / .modal / .seg / .mbtn classes, so it takes each game's theme.
