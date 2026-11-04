@@ -131,8 +131,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   .cell.legal:hover .ghost{opacity:.42;transform:scale(1)}
 }
 .ghost{position:absolute;width:80%;height:80%;border-radius:50%;opacity:0;transform:scale(.85);transition:opacity .15s,transform .15s;pointer-events:none}
-.board.turn-black .ghost{background:radial-gradient(circle at 35% 30%,#555,#0a0a0a 70%)}
-.board.turn-white .ghost{background:radial-gradient(circle at 35% 30%,#fff,#cfd3d0 75%)}
+.board.turn-black .ghost{background:linear-gradient(165deg,#2a2b2d,#151618)}
+.board.turn-white .ghost{background:linear-gradient(165deg,#f2f0e9,#dcd9cf)}
 .hint{
   position:absolute;z-index:4;pointer-events:none;
   font-family:'JetBrains Mono',monospace;font-size:calc(var(--cell)*0.24);font-weight:500;
@@ -143,6 +143,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .cell.hinted::before{opacity:0}
 
 /* discs */
+:root{--rv-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .18 -.06'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .disc-wrap{position:absolute;width:82%;height:82%;z-index:2;pointer-events:none}
 .disc{
   position:relative;width:100%;height:100%;
@@ -154,18 +155,18 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
   position:absolute;inset:0;border-radius:50%;
   backface-visibility:hidden;-webkit-backface-visibility:hidden;
 }
+/* default discs: a real Othello disc seen from above: flat matte face (a faint grain, no gloss), a crisp rim, and below
+   it the edge of the thin cylinder: this face's half, then the other colour's half (the black/white two-tone side) */
 .face.b{
-  background:
-    radial-gradient(circle at 32% 26%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 28%),
-    radial-gradient(circle at 50% 55%, #2a2d2c 0%, #0b0c0c 72%, #000 100%);
-  box-shadow: 0 3px 5px rgba(0,0,0,.55), inset 0 -3px 6px rgba(0,0,0,.6), inset 0 2px 2px rgba(255,255,255,.08);
+  background:var(--rv-grain),linear-gradient(165deg,#28292b 0%,#1b1c1e 50%,#141517 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,255,255,.035),inset 0 -1px 1px rgba(0,0,0,.45),
+    0 calc(var(--cell)*.02) 0 #0f1011,0 calc(var(--cell)*.044) 0 #c7c3b8,0 calc(var(--cell)*.05) 0 rgba(0,0,0,.35),0 calc(var(--cell)*.07) calc(var(--cell)*.06) rgba(0,0,0,.42);
 }
 .face.w{
   transform:rotateY(180deg);
-  background:
-    radial-gradient(circle at 32% 26%, #ffffff 0%, rgba(255,255,255,0) 35%),
-    radial-gradient(circle at 50% 55%, #f4f3ee 0%, #dcdcd4 70%, #b9bbb3 100%);
-  box-shadow: 0 3px 5px rgba(0,0,0,.45), inset 0 -3px 6px rgba(0,0,0,.18);
+  background:var(--rv-grain),linear-gradient(165deg,#f2f0e9 0%,#e7e4db 50%,#dcd9cf 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(0,0,0,.05),inset 0 -1px 1px rgba(0,0,0,.14),
+    0 calc(var(--cell)*.02) 0 #c9c6bc,0 calc(var(--cell)*.044) 0 #161718,0 calc(var(--cell)*.05) 0 rgba(0,0,0,.35),0 calc(var(--cell)*.07) calc(var(--cell)*.06) rgba(0,0,0,.4);
 }
 .disc-wrap.flip{animation:lift .48s ease}
 @keyframes lift{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
@@ -212,7 +213,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .brand-r{display:flex;align-items:center;gap:10px}
 .snd{width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
 .snd:hover{color:var(--text)}
-.hb-disc{display:inline-block;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#0a0a0a);box-shadow:0 0 0 1px rgba(255,255,255,.2)}.hb-disc.w{background:radial-gradient(circle at 35% 30%,#fff,#cfcfcf)}
+.hb-disc{display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(165deg,#2a2b2d,#151618);box-shadow:0 0 0 1px rgba(255,255,255,.2)}.hb-disc.w{background:linear-gradient(165deg,#f2f0e9,#d9d6cc)}
 a.snd.home{text-decoration:none}
 .snd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .snd .off-x{display:none}
@@ -231,8 +232,8 @@ a.snd.home{text-decoration:none}
 .player.active{border-color:rgba(201,169,97,.6);background:rgba(201,169,97,.07)}
 .player .top{display:flex;align-items:center;gap:8px}
 .pdisc{width:20px;height:20px;border-radius:50%;flex:none}
-.pdisc.b{background:radial-gradient(circle at 35% 30%,#555,#000 70%);box-shadow:0 0 0 1px #333}
-.pdisc.w{background:radial-gradient(circle at 35% 30%,#fff,#c9ccc6 75%)}
+.pdisc.b{background:linear-gradient(165deg,#2a2b2d,#141517);box-shadow:0 0 0 1px #333,0 1.5px 0 #c7c3b8}
+.pdisc.w{background:linear-gradient(165deg,#f2f0e9,#d9d6cc);box-shadow:0 1.5px 0 #161718}
 .player .name{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .count{font-family:'Shippori Mincho B1',serif;font-size:40px;font-weight:800;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
 .player .status{font-size:11px;color:var(--dim);height:15px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2900,7 +2901,7 @@ function rlSVG(cells, o) {
         const R = u * 0.33, ty = y - 2.2;
         s += `<circle cx="${x}" cy="${ty + 4.4}" r="${R}" fill="${P.band2}"/><circle cx="${x}" cy="${ty + 3.4}" r="${R}" fill="${P.band}"/><circle cx="${x}" cy="${ty + 1.8}" r="${R}" fill="${D[1]}"/><circle cx="${x}" cy="${ty}" r="${R}" fill="${D[0]}"/><circle cx="${x - 2.6}" cy="${ty - 2.8}" r="2.4" fill="rgba(255,255,255,${v === BLACK ? .22 : .85})"/>`;
       } else if (P.flat) s += `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${D[0]}" stroke="${D[1]}" stroke-width="1"/>`;
-      else s += `<circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${D[0]}" stroke="${D[1]}" stroke-width="1"/><circle cx="${x - 3}" cy="${y - 3.5}" r="3" fill="rgba(255,255,255,${v === BLACK ? .16 : .8})"/>`;
+      else s += `<circle cx="${x}" cy="${y + 1.4}" r="${u * 0.4}" fill="${v === BLACK ? '#cbc7bc' : '#141516'}"/><circle cx="${x}" cy="${y}" r="${u * 0.4}" fill="${D[0]}" stroke="${D[1]}" stroke-width=".8"/>`;   // flat matte disc: face + the other half's edge below
     }
     if (m === 'ring') s += `<circle cx="${x}" cy="${y}" r="${u * 0.3}" fill="rgba(226,194,117,.18)" stroke="#e2c275" stroke-width="2" stroke-dasharray="3.5 2.5"/>`;
     else if (m === 'new') s += `<circle cx="${x}" cy="${y}" r="${u * 0.46}" fill="none" stroke="#e2c275" stroke-width="2.4"/>`;
@@ -5516,7 +5517,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=79')).then(() => load('../atlas/skin/common.js?v=17')).then(() => load('../atlas/skin/reversi.js?v=22'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=80')).then(() => load('../atlas/skin/common.js?v=17')).then(() => load('../atlas/skin/reversi.js?v=23'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
