@@ -1,0 +1,21 @@
+/* ur/worker.js — runs the engine off the main thread (AI moves, the post-game review).
+   messages: { id, type:'think', state, n, level }          → { id, move }
+             { id, type:'review', list:[{ state, n }] }      → { id, type:'progress', i, res } … { id, done:true }
+               res = { ev:[{ from, to, wp }], wp0 }  (ev: every legal move, best first; wp0: the mover's win chance before rolling) */
+importScripts('engine.js?v=1');
+const E = self.UrEngine;
+self.onmessage = e => {
+  const d = e.data || {};
+  try {
+    if (d.type === 'think') {
+      const m = E.think(d.state, d.n, d.level, {});
+      postMessage({ id: d.id, move: m ? { from: m.from, to: m.to } : null });
+    } else if (d.type === 'review') {
+      d.list.forEach((q, i) => {
+        const ev = q.n ? E.evaluate(q.state, q.n, { depth: 2 }).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [];
+        postMessage({ id: d.id, type: 'progress', i, res: { ev, wp0: E.winProb(q.state, { depth: 1 }) } });
+      });
+      postMessage({ id: d.id, done: true });
+    }
+  } catch (err) { postMessage({ id: d.id, error: String(err) }); }
+};

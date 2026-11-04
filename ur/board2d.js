@@ -20,6 +20,7 @@
   const GREEN = '#3df59a', GREEN_EDGE = '#06331d';
   const IMG = { h: [-452, -202, 904, 426], v: [-202, -452, 404, 926] };
   const VIEW = { h: [-462, -272, 924, 552], v: [-272, -462, 544, 932] };
+  IMG.hr = IMG.h; IMG.vr = IMG.v; VIEW.hr = VIEW.h; VIEW.vr = VIEW.v;
   const PD = 76, TD = 54;   // piece diameter on the board / in the trays (user units)
   const exists = (r, c) => r >= 0 && r < 3 && c >= 0 && c < 8 && (r === 1 || c < 4 || c > 5);
   const ROSETTES = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
@@ -27,7 +28,10 @@
   let uid = 0;
 
   /* ---------- geometry ---------- */
-  const cellXY = (o, r, c) => o === 'v' ? [(r - 1) * 100, (c - 3.5) * 100] : [(c - 3.5) * 100, (r - 1) * 100];
+  // o: 'h' | 'v', or 'hr' | 'vr' = rows 0 and 2 swapped (Dark's lane nearest you: below on 'h', right on 'v'). The two outer
+  // rows carry the same motifs, so the board picture stays as it is (its light keeps coming from the top left)
+  const RT = o => o.length > 1, OB = o => o[0];
+  const cellXY = (o, r, c) => { if (RT(o)) r = 2 - r; return OB(o) === 'v' ? [(r - 1) * 100, (c - 3.5) * 100] : [(c - 3.5) * 100, (r - 1) * 100]; };
   // built-in routes (used when UrEngine is not loaded)
   function route(rule, side) {
     const E = window.UrEngine;
@@ -44,8 +48,8 @@
     for (let i = 0; i < n; i++) {
       // start: slot 0 is next to the entry square (col 3); goal: slot 0 next to the exit (col 6)
       const a = kind === 'start' ? -32 - i * 58 : 118 + i * 50;
-      const b = side ? (o === 'v' ? -238 : -232) : (o === 'v' ? 238 : 244);
-      out.push(o === 'v' ? [b, a] : [a, b]);
+      const b = (RT(o) ? !side : side) ? (OB(o) === 'v' ? -238 : -232) : (OB(o) === 'v' ? 238 : 244);
+      out.push(OB(o) === 'v' ? [b, a] : [a, b]);
     }
     return out;
   }
@@ -73,7 +77,8 @@
 <marker id="${p}ap" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffe27a" stroke="#3a2a00" stroke-width="1"/></marker>
 </defs>`;
   }
-  const boardHref = (design, o, small) => `${BASE}img/board-${BOARDS.includes(design) ? design : 'museum'}-${o}${small ? '-s' : ''}.webp`;
+  const boardHref = (design, o, small) => `${BASE}img/board-${BOARDS.includes(design) ? design : 'museum'}-${OB(o)}${small ? '-s' : ''}.webp`;
+  const imgAttr = (o, R) => ({ x: R[0], y: R[1], width: R[2], height: R[3] });
   const piecesKey = k => PIECES.includes(k) ? k : 'orig';
 
   /* ---------- piece positions for a state ---------- */
@@ -158,7 +163,7 @@
   /* ---------- mount ---------- */
   function mount(host, opts = {}) {
     const p = 'ur' + (++uid) + '_';
-    let o = opts.orient === 'v' ? 'v' : 'h', design = BOARDS.includes(opts.design) ? opts.design : 'museum', pcs = piecesKey(opts.pieces);
+    let o = (opts.orient === 'v' ? 'v' : 'h') + (opts.rot ? 'r' : ''), design = BOARDS.includes(opts.design) ? opts.design : 'museum', pcs = piecesKey(opts.pieces);
     const interactive = opts.interactive !== false;
     const H = {}; const on = (ev, fn) => { (H[ev] = H[ev] || []).push(fn); return view; }, emit = (ev, a) => (H[ev] || []).forEach(f => f(a));
     let svg, gImg, gHit, gTray, gUnder, gPieces, gOver, gTg, state = null, ropt = {}, pieceEls = new Map(), busy = 0;
@@ -167,7 +172,7 @@
       const V = VIEW[o];
       host.insertAdjacentHTML('beforeend', `<svg xmlns="${NS}" class="ur-board ur-${o}" viewBox="${V.join(' ')}" style="display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent">${defs(p, design, pcs)}<g class="ur-img"></g><g class="ur-tray"></g><g class="ur-under"></g><g class="ur-hit"></g><g class="ur-pieces"></g><g class="ur-tgs"></g><g class="ur-over" pointer-events="none"></g></svg>`);
       svg = host.lastChild; [gImg, gTray, gUnder, gHit, gPieces, gTg, gOver] = ['img', 'tray', 'under', 'hit', 'pieces', 'tgs', 'over'].map(k => svg.querySelector('.ur-' + k));
-      const R = IMG[o]; el('image', { href: boardHref(design, o), x: R[0], y: R[1], width: R[2], height: R[3], preserveAspectRatio: 'none' }, gImg);
+      const R = IMG[o]; el('image', Object.assign({ href: boardHref(design, o), preserveAspectRatio: 'none' }, imgAttr(o, R)), gImg);
       // trays: a faint recess with an empty socket for each piece
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
         const [x, y, w, h] = trayBox(o, side, kind), g = el('g', { class: `ur-trayb ur-${kind}`, 'data-side': side, 'data-kind': kind }, gTray);
@@ -277,8 +282,8 @@
       cellXY: (r, c) => cellXY(o, r, c),            // in SVG user units
       toClient(x, y) { const m = svg.getScreenCTM(), pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const q = pt.matrixTransform(m); return { x: q.x, y: q.y }; },
       setDesign(d, pc) { if (d && BOARDS.includes(d)) design = d; if (pc) pcs = piecesKey(pc); build(); return view; },
-      setOrient(v) { v = v === 'v' ? 'v' : 'h'; if (v !== o) { o = v; build(); } return view; },
-      orient: () => o, design: () => ({ board: design, pieces: pcs }), svg: () => svg,
+      setOrient(v, rot) { v = (v === 'v' ? 'v' : 'h') + ((rot === undefined ? RT(o) : rot) ? 'r' : ''); if (v !== o) { o = v; build(); } return view; },
+      orient: () => OB(o), rotated: () => RT(o), design: () => ({ board: design, pieces: pcs }), svg: () => svg,
       destroy() { host.innerHTML = ''; },
     };
     build(); view.el = svg;
@@ -287,7 +292,7 @@
 
   /* ---------- static mini board (string) ---------- */
   function mini(state, opt = {}) {
-    const p = 'urm' + (++uid) + '_', o = opt.orient === 'v' ? 'v' : 'h', design = BOARDS.includes(opt.design) ? opt.design : 'museum', pcs = piecesKey(opt.pieces);
+    const p = 'urm' + (++uid) + '_', o = (opt.orient === 'v' ? 'v' : 'h') + (opt.rot ? 'r' : ''), design = BOARDS.includes(opt.design) ? opt.design : 'museum', pcs = piecesKey(opt.pieces);
     let V = VIEW[o].slice();
     const cr = opt.crop;
     if (Array.isArray(cr) && cr.length === 4) V = cr;                       // [x, y, w, h] in user units
@@ -297,7 +302,7 @@
     } else if (cr === 'board') V = IMG[o].slice();
     const R = IMG[o], small = opt.small !== false;
     let s = `<svg xmlns="${NS}" class="ur-mini" viewBox="${V.join(' ')}"${opt.width ? ` width="${opt.width}"` : ''}${opt.height ? ` height="${opt.height}"` : ''} style="display:block${opt.width ? '' : ';width:100%;height:auto'}">${defs(p, design, pcs)}`;
-    s += `<image href="${boardHref(design, o, small)}" x="${R[0]}" y="${R[1]}" width="${R[2]}" height="${R[3]}" preserveAspectRatio="none"/>`;
+    { const A = imgAttr(o, R); s += `<image href="${boardHref(design, o, small)}" x="${A.x}" y="${A.y}" width="${A.width}" height="${A.height}"${A.transform ? ` transform="${A.transform}"` : ''} preserveAspectRatio="none"/>`; }
     if (opt.trays !== false) for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
       const [x, y, w, h] = trayBox(o, side, kind); s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 2}" fill="rgba(0,0,0,.16)" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>`;
       for (const [cx, cy] of traySlots(o, side, kind)) s += `<circle cx="${cx}" cy="${cy}" r="${TD / 2 - 2}" fill="rgba(0,0,0,.14)"/>`;
@@ -395,7 +400,7 @@
   window.UrBoard2D = { mount, mini, dice, BOARDS, PIECES, GREEN, cellXY, route, traySlots, VIEW, IMG };
 })();
 /* README
-mount(el, { orient:'h'|'v', design, pieces, interactive=true, speed=1 }) → view
+mount(el, { orient:'h'|'v', rot=false, design, pieces, interactive=true, speed=1 }) → view   (rot: rows 0 / 2 swapped — Dark's lane nearest)
 view.render(state, { sel, targets, last, hint, marks })
   sel      {r,c} | {side,piece} | {tray:'start',side}     selected piece (gold ring, lifted)
   targets  [{r,c, capture?} | {tray:'goal', side}]        candidate squares (#3df59a dot; ring if capture)
@@ -405,7 +410,7 @@ view.render(state, { sel, targets, last, hint, marks })
            {type:'path', side, from, to}  the route (path indices) as glowing arrows
            {type:'arrow', from, to, color}
 view.cellRect(r,c) → DOMRect; view.offRect(side,'start'|'goal') → DOMRect
-view.setDesign(design, pieces); view.setOrient('h'|'v')
+view.setDesign(design, pieces); view.setOrient('h'|'v', rot?); view.orient() → 'h'|'v'; view.rotated() → bool
 view.on('cell', ({r,c,piece?,side?}) => …); view.on('piece', ({side,piece,pos,r,c,where}) => …); view.on('tray', ({side,kind,piece?}) => …)
 view.animateMove(side, from, to, { capture, speed, ms }) → Promise   (path indices; then call render(newState))
 UrBoard2D.dice(el, { style, speed, count=4 }) → { roll(dice?) → Promise<n>, show(dice), setStyle(s) }

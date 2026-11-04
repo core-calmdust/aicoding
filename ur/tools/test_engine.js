@@ -145,8 +145,8 @@ function play(rule, La, Lb, games, seed) {
 }
 console.log('— 強さ（自己対局）');
 {
-  const G = QUICK ? 400 : 2000;
-  const pairs = QUICK ? [[20, 10], [10, 1], [5, 1]] : [[20, 10], [10, 1], [20, 15], [15, 10], [10, 5], [5, 1]];
+  const G = QUICK ? 400 : 1500;
+  const pairs = QUICK ? [[20, 10], [10, 1], [5, 1]] : [[20, 10], [18, 14], [14, 10], [10, 6], [6, 2], [2, 1], [10, 1]];
   for (const [a, b] of pairs) {
     const w = play('finkel', a, b, G, a * 100 + b); const se = Math.sqrt(0.25 / G);
     console.log(`  L${a} vs L${b}: ${(w * 100).toFixed(1)}% (${G}局)`);
@@ -154,12 +154,12 @@ console.log('— 強さ（自己対局）');
   }
 }
 console.log('— 速さ');
-{
-  const rng = E.mulberry32(9); let s = E.newGame('finkel'); let t = 0, n = 0, mx = 0;
-  for (let g = 0; g < 20; g++) { s = E.newGame('finkel', g & 1);
-    while (s.winner < 0) { const r = E.rollDice(rng).n; const t0 = process.hrtime.bigint(); const m = E.think(s, r, 20, { rng }); const dt = Number(process.hrtime.bigint() - t0) / 1e6; if (E.legalMoves(s, r).length > 1) { t += dt; n++; mx = Math.max(mx, dt); } s = E.apply(s, m).state; } }
-  console.log(`  L20 平均 ${(t / n).toFixed(2)}ms 最大 ${mx.toFixed(1)}ms (${n}手)`);
-  ok(t / n < 100 && mx < 500, 'L20 speed');
+for (const rule of Object.keys(E.RULES)) {
+  const rng = E.mulberry32(9); let t = 0, n = 0, mx = 0;
+  for (let g = 0; g < (QUICK ? 10 : 30); g++) { let s = E.newGame(rule, g & 1);
+    while (s.winner < 0) { const r = E.rollDice(rng, rule).n; const t0 = process.hrtime.bigint(); const m = E.think(s, r, 20, { rng }); const dt = Number(process.hrtime.bigint() - t0) / 1e6; if (E.legalMoves(s, r).length > 1) { t += dt; n++; mx = Math.max(mx, dt); } s = E.apply(s, m).state; } }
+  console.log(`  ${rule} L20 平均 ${(t / n).toFixed(2)}ms 最大 ${mx.toFixed(1)}ms (${n}手)`);
+  ok(t / n < 100 && mx < 500, rule + ' L20 speed');
 }
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
