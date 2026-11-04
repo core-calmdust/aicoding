@@ -583,6 +583,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hov = u; drawFx(); },
+    // PC: clicking a candidate plays it (only on the player's own turn, when the board would take a move)
+    onPlay: u => { try { const i = +u; if (!active() || !myTurn() || !canHumanPlay() || !(i >= 0) || posAt(cur).pos.at(i)) return; onCell(i); } catch (e) {} },
   });
 }
 // rings on the board: the hovered / tapped candidate only (with its number)

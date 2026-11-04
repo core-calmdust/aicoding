@@ -548,6 +548,14 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { const v = u == null || u === '' ? null : String(u); if (S.hov !== v) { S.hov = v; renderFx(); } },
+    // PC: clicking a candidate plays the whole move (capture chain included), as if it had been entered on the board —
+    // only on the player's own turn, when the board would take a move and no capture chain is half-entered
+    onPlay: u => { try {
+      if (!active() || !myTurn() || !canHumanPlay() || (sel && sel.st) || u == null || u === '') return;
+      const pos = posAt(cur).pos, m = canon(pos, String(u));
+      if (!pos.moves().includes(m)) return;
+      sel = null; commit(m);
+    } catch (e) {} },
   });
 }
 function fx(svg, pos) {

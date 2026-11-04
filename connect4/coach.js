@@ -470,12 +470,13 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hov = u == null ? null : +u; drawFx(); },
+    onPlay: u => playCand(u),
   });
   // touch (iPhone): a tap toggles the candidate on the board. The pointer type is taken from pointerdown, because a
   // tap's click is not a PointerEvent (or reports "mouse") on some WebKit versions
   card.querySelectorAll('.ck-bi[data-mv]').forEach(b => {
     b.onclick = e => {
-      if (S.pt === 'mouse') return;   // mouse: hover shows it
+      if (S.pt === 'mouse') { if (!(e.target.closest && e.target.closest('.ck-gl'))) { S.hov = null; drawFx(); markRows(); playCand(b.dataset.mv); } return; }   // mouse: hover shows it, a click plays it
       e.stopPropagation();
       const mv = +b.dataset.mv, on = S.hov !== mv;
       S.hov = on ? mv : null; drawFx(); markRows();
@@ -484,6 +485,8 @@ function put(h) {
   markRows();
   drawFx();
 }
+// PC: clicking a candidate plays it (only on the player's own turn, when the board would take a move)
+function playCand(u) { try { const c = +u; if (!active() || !myTurn() || !canHumanPlay() || !(c >= 0) || !canDrop(moves.slice(0, cur), c)) return; onColumn(c); } catch (e) {} }
 function markRows() {
   if (!card) return;
   card.querySelectorAll('.ck-bi[data-mv]').forEach(b => b.classList.toggle('ck-hov', S.hov != null && +b.dataset.mv === S.hov));
