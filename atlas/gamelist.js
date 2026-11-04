@@ -4,8 +4,8 @@
 (function () {
   'use strict';
   const SHOTS = new Set(['shogi', 'chess', 'checkers', 'ugolki', 'fanorona', 'alquerque', 'xiangqi', 'tafl', 'reversi', 'go', 'gomoku', 'dots', 'connect4', 'morris', 'hex',
-    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur']);
-  const SHOT_V = 3;                                   // bump after regenerating the thumbnails
+    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur', 'agon']);
+  const SHOT_V = 5;                                   // bump after regenerating the thumbnails
   const FX = ['ai', 'online', 'lessons', 'puzzles'];  // the feature icons shown on a card (labels come from the tag.* strings)
 
   const IC = {   // small line icons for the footer buttons
@@ -21,7 +21,7 @@
     const about = c.about ? c.about(g) : '', tl = c.tl ? c.tl(g) : '';
     // ルール (the 3D rules tour, or the 2D game opened on its rules via ?rules=1) · ヒストリア (once window.Historia exists)
     const btn = (k, ic, lbl) => `<button type="button" class="glb" data-${k}="${g.id}">${ic}<span>${c.esc(lbl)}</span></button>`;
-    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia ? btn('hist', IC.hist, c.t('gl.historia')) : '');
+    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia && (!Historia.has || Historia.has(g.id)) ? btn('hist', IC.hist, c.t('gl.historia')) : '');
     return `<div class="glc" style="--c:${g.color}"><a class="glk" href="../${g.href}" data-open="${g.id}"${about ? ` title="${c.esc(about)}"` : ''}>
       <span class="sh${shot ? '' : ' noshot'}">${shot ? `<img class="ss" src="shots/${g.id}.webp?v=${SHOT_V}" width="520" height="390" alt="" loading="lazy" decoding="async">` : ''}
         <span class="g3m">${c.art(g)}</span>${b ? `<span class="bd">${b}</span>` : ''}${pct > 0 ? `<span class="pr"><i style="width:${pct}%"></i></span>` : ''}</span>
@@ -46,7 +46,9 @@
   // Reads all, then writes all (two passes per step), so it costs a few layouts per render / resize, not one per card.
   const FIT = ['fit1', 'fit2', 'fit3', 'fit4'];
   const PAREN = /\s*[(（].*[)）]\s*$/;   // 「シャンチー（中国象棋）」→「シャンチー」 when even the smallest step does not fit
-  const cut = e => e.scrollWidth > e.clientWidth + 1;
+  // cut = the text is wider than its box (measured on the text itself: scrollWidth rounds away the sub-pixel overflow that still shows "…")
+  const RNG = document.createRange();
+  const cut = e => { if (e.scrollWidth > e.clientWidth + 1) return true; RNG.selectNodeContents(e); return RNG.getBoundingClientRect().width > e.clientWidth + .25; };
   function steps(over) {   // tighter → smaller, in batches
     for (const k of FIT) {
       if (!over.length) break;
@@ -56,7 +58,7 @@
     return over;
   }
   function fit(root) {
-    const els = [...root.querySelectorAll('.glc .n, .glc .tl')];
+    const els = [...root.querySelectorAll('.glc .n, .glc .tl, .glc .glb span')];
     els.forEach(e => { e.classList.remove(...FIT); if (e.dataset.full) { e.textContent = e.dataset.full; e.removeAttribute('title'); delete e.dataset.full; } });
     let over = steps(els.filter(cut));
     const sh = over.filter(e => PAREN.test(e.textContent));
@@ -119,5 +121,31 @@
     if (CRO) { if (lastC && lastC !== el) CRO.unobserve(lastC); lastC = el; el._ck = ''; CRO.observe(el); }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => clampNow(el));
   }
-  window.AtlasGameList = { render, fit, fitTitle, fitLabels, clampFit, SHOTS };
+  /* board sheet (PC): ヒストリア leaves the feature-tag row and sits under ルール + the progress ring, spanning that block,
+     so the two read as the actions next to the title; the tags become a quiet single line with "+N" (tap to show all). */
+  function sheetActions(bvi, t) {
+    if (!bvi) return;
+    const row = bvi.querySelector('.L .row'), hs = bvi.querySelector('.L .tags .hstag'), tags = bvi.querySelector('.L .tags');
+    if (row && hs && !row.querySelector('.bvact')) {
+      const act = document.createElement('div'), top = document.createElement('div'); act.className = 'bvact'; top.className = 'bvact-t';
+      const rules = row.querySelector('#bvRules'), ring = row.querySelector('.ring');
+      if (rules) top.appendChild(rules); if (ring) top.appendChild(ring);
+      act.append(top, hs); row.appendChild(act);
+    }
+    if (tags && !tags.dataset.one && matchMedia('(min-width: 820px)').matches) {
+      tags.dataset.one = '1'; tags.classList.add('one');
+      const all = [...tags.children], more = document.createElement('button'); more.type = 'button'; more.className = 'tgmore';
+      const lay = () => {
+        all.forEach(e => { e.hidden = false; }); more.remove(); tags.classList.remove('open');
+        if (tags.scrollWidth <= tags.clientWidth + 1) return;
+        tags.appendChild(more); let n = 0;
+        for (let i = all.length - 1; i > 0 && tags.scrollWidth > tags.clientWidth + 1; i--) { all[i].hidden = true; n++; more.textContent = '+' + n; }
+        more.setAttribute('aria-label', all.filter(e => e.hidden).map(e => e.textContent.trim()).join(', '));
+        more.title = more.getAttribute('aria-label');
+      };
+      more.onclick = e => { e.stopPropagation(); all.forEach(x => { x.hidden = false; }); more.remove(); tags.classList.add('open'); };
+      lay(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!tags.classList.contains('open')) lay(); });
+    }
+  }
+  window.AtlasGameList = { render, fit, fitTitle, fitLabels, clampFit, sheetActions, SHOTS };
 })();

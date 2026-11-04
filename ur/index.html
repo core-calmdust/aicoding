@@ -114,7 +114,7 @@ body.no-anim .dice-dock.can{animation:none}
 body.no-anim .dice-dock.can .roll-pill{animation:none}
 /* 3D dice (board2d.js): the dice fill the whole dock, the caption sits under them */
 .dice-dock.d3 .dice-host{position:absolute!important;inset:0;width:auto!important;height:auto!important;transform:none!important}
-.dice-dock.d3 .dice-cap{position:absolute;left:0;right:0;bottom:4%;text-align:center}
+.dice-dock.d3 .dice-cap{position:absolute;left:0;right:0;top:12%;text-align:center;pointer-events:none}
 /* the roll plate on the board: a black bitumen oval with a gold rim and a band of shell / carnelian diamonds, the word in gilt serif; it sinks when pressed */
 .dice-dock .roll-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
   width:calc(var(--bw) * .152);height:calc(var(--bw) * .052);padding:0 calc(var(--bw) * .016);box-sizing:border-box;border-radius:999px;
@@ -792,7 +792,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="i18n.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="../shared/rulesoffer.js?v=16"></script>
 <script src="../shared/headerbar.js?v=36"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -835,5 +835,6 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/langsel.js?v=1" defer></script>
+<script src="../shared/rulelink.js?v=1"></script>
 </body>
 </html>

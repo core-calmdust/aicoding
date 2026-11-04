@@ -19,6 +19,7 @@
     fanorona: ['マダガスカルの国民的遊戯', "Madagascar's national game", '马达加斯加国民棋', '마다가스카르 국민 게임', 'Juego nacional malgache', 'Jeu national malgache', 'Jogo nacional malgaxe', 'Madagaskars Nationalspiel', 'मेडागास्कर का खेल', 'لعبة مدغشقر الوطنية'],
     ur: ['4500年前の王家の盤', 'A 4,500-year-old royal board', '4500年前的王家棋盘', '4500년 전 왕가의 판', 'Tablero real de 4.500 años', 'Plateau royal vieux de 4 500 ans', 'Tabuleiro real de 4.500 anos', 'Königliches Brett, 4.500 Jahre alt', '4,500 साल पुराना शाही बोर्ड', 'لوحة ملكية عمرها 4500 عام'],
     alquerque: ['チェッカーの祖先', 'The ancestor of checkers', '跳棋的鼻祖', '체커의 조상', 'Antepasado de las damas', 'Ancêtre des dames', 'Ancestral das damas', 'Vorfahr des Damespiels', 'चेकर्स का पूर्वज', 'سلف الداما'],
+    agon: ['女王と近衛兵で王座を囲む', 'Ring the throne with your guards', '用卫兵围住王座', '호위병으로 왕좌를 둘러싸기', 'Rodea el trono con tus guardias', 'Entourez le trône de vos gardes', 'Cerque o trono com seus guardas', 'Umringe den Thron mit Wachen', 'रक्षकों से सिंहासन घेरो', 'أحط العرش بحراسك'],
     xiangqi: ['川をはさむ中国の象棋', 'Chinese chess by the river', '隔河对弈的中国象棋', '강을 둔 중국 장기', 'Ajedrez chino', 'Échecs chinois', 'Xadrez chinês', 'Chinesisches Schach', 'चीनी शतरंज', 'الشطرنج الصيني'],
     tafl: ['王を逃がすヴァイキング盤', 'Help the Viking king escape', '护王突围的维京棋', '왕을 탈출시키는 바이킹', 'Salva al rey vikingo', 'Sauvez le roi viking', 'Salve o rei viking', 'Rette den Wikingerkönig', 'वाइकिंग राजा को बचाओ', 'هرّب ملك الفايكنغ'],
     go: ['石で囲んで陣地を取る', 'Surround territory', '围出更大的地盘', '돌로 집을 둘러싸기', 'Rodea territorio', 'Encerclez le territoire', 'Cerque território', 'Gebiet umzingeln', 'इलाक़ा घेरो', 'طوّق الأراضي'],
@@ -28,6 +29,8 @@
     mancala: ['種をまくアフリカの遊び', 'Sow seeds, from Africa', '源自非洲的播子棋', '씨앗을 뿌리는 아프리카 놀이', 'Siembra africana', 'Semailles africaines', 'Semeadura africana', 'Säen – aus Afrika', 'बीज बोने का अफ़्रीकी खेल', 'زرع البذور من أفريقيا'],
     backgammon: ['最古級のサイコロ競走', 'An ancient dice race', '古老的骰子竞速棋', '가장 오래된 주사위 경주', 'Antigua carrera de dados', 'Antique course aux dés', 'Antiga corrida de dados', 'Uraltes Würfelrennen', 'प्राचीन पासा दौड़', 'سباق نرد عريق'],
     morris: ['3つ並べて駒を取る', 'Make mills to capture', '连成三子即吃子', '세 개 이어 잡기', 'Haz molinos y captura', 'Formez des moulins', 'Faça moinhos', 'Mühlen bilden', 'तीन जोड़ो, मोहरे मारो', 'كوّن ثلاثية لتأسر'],
+    agon: ['女王を盤の中心へ', 'Bring your queen to the center', '把女王送到中心', '여왕을 중앙으로', 'Lleva tu reina al centro', 'Menez votre reine au centre', 'Leve sua rainha ao centro', 'Bring die Königin zur Mitte', 'रानी को केंद्र तक ले जाओ', 'أوصل ملكتك إلى المركز'],
+    ur: ['古代メソポタミアの双六', 'A race from ancient Mesopotamia', '古美索不达米亚的竞速棋', '고대 메소포타미아의 경주', 'Carrera de la antigua Mesopotamia', 'Course de l’antique Mésopotamie', 'Corrida da antiga Mesopotâmia', 'Rennspiel aus Mesopotamien', 'प्राचीन मेसोपोटामिया की दौड़', 'سباق من بلاد الرافدين'],
     hex: ['向かいの辺をつなげ', 'Connect your two sides', '连通己方两边', '마주 보는 변 잇기', 'Une tus dos lados', 'Reliez vos deux bords', 'Ligue seus dois lados', 'Verbinde deine Seiten', 'दोनों किनारे जोड़ो', 'صِل ضلعيك'],
   };
   const HI = ['ヒストリア', 'Historia', '历史', '히스토리아', 'Historia', 'Historia', 'Historia', 'Historia', 'हिस्टोरिया', 'هيستوريا'];   // the Historia viewer's button (same names as atlas/historia.js)

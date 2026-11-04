@@ -40,7 +40,11 @@
 /* footer: feature icons · ルール / ヒストリア pills */
 .glc .ft{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:auto;padding:8px 12px 12px 13px}
 .glc .fxs{display:flex;gap:4px;min-height:23px}
-.glc .glbs{display:flex;gap:5px;width:100%}
+.glc .glbs{display:flex;justify-content:center;gap:8px;width:100%}
+/* ルール / ヒストリア: natural width, centred so the side margins match; the label stays on one line, never truncated (gamelist.js fit shrinks it) */
+.glc .glb{flex:0 1 auto;min-width:0;justify-content:center;gap:3px;padding:0 11px 0 9px;--fs:12px;font-size:var(--fs)}
+.glc .glb span{display:block;min-width:0;white-space:nowrap}
+.glc .glb svg{flex:none}
 .glb{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 8px;border-radius:99px;border:1.5px solid #e4cfa6;background:#fff8ea;color:#6b4a1f;
   font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 2px 0 #ecdcb8;transition:background .12s,transform .08s;-webkit-tap-highlight-color:transparent}
 .glb svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
@@ -69,13 +73,13 @@
   .glc .ft{gap:5px;padding:6px 8px 9px 9px}
   .glc .fxs{gap:3px}
   .glc .glbs{margin-inline-start:0;width:100%;gap:4px}
-  .glb{flex:1;justify-content:center;height:25px;padding:0 6px;font-size:11px;gap:3px;min-width:0}
-  .glb span{overflow:hidden;text-overflow:ellipsis}
+  .glc .glb{height:25px;padding:0 6px;gap:3px}
+  .glc .glb{--fs:11px}
   .glb svg{width:12px;height:12px;flex:none}
   .glc .fx{width:20px;height:20px}.glc .fx svg{width:11.5px;height:11.5px}
 }
-@media (max-width:400px){ .glbs .glb:not(:only-child) svg{display:none} .glb{padding:0 3px;letter-spacing:0} }
-@media (max-width:340px){ .glb{font-size:10px} .glc .n{--fs:12.5px} .glc .fx{width:18px;height:18px} .glc .fxs{gap:2px} }
+@media (max-width:400px){ .glbs .glb:not(:only-child) svg{display:none} .glc .glb{padding:0 3px;letter-spacing:0} }
+@media (max-width:340px){ .glc .glb{--fs:10px} .glc .n{--fs:12.5px} .glc .fx{width:18px;height:18px} .glc .fxs{gap:2px} }
 
 /* board sheet: the game's full description (phones: inside the drawer with the tags) */
 .bvi .bvab{margin:10px 0 0;font-size:13px;font-weight:700;line-height:1.65;color:#4a5068;background:#f7f0de;border-radius:12px;padding:8px 12px;max-height:9.4em;overflow:auto}
@@ -105,3 +109,19 @@
 @media (max-width:860px){ .today .hs{flex:none;min-height:0} }
 @media (max-width:600px){ .today .hsb{height:34px;font-size:13px} }
 @media (max-width:340px){ .today .hsb{padding:0 10px 0 8px;font-size:12px;gap:4px} .today .ft .btn.sm{padding-inline:12px} }
+/* board sheet, PC: ルール + ring with ヒストリア under them (gamelist.js sheetActions); the tags step back to one quiet line */
+@media (min-width:820px){
+  .bvi .bvact{flex:none;display:flex;flex-direction:column;align-items:stretch;gap:9px;margin-inline-start:auto}
+  .bvi .bvact-t{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+  .bvi .bvact .rulesb{margin:0!important}
+  .bvi .bvact .ring{margin:0!important}
+  .bvi .bvact .hstag{width:100%;justify-content:center;margin:0}
+  .bvi .bvact .hstag small{display:none}   /* (the aria-label keeps "the story of this game") */
+  .bvi .tags.one{flex-wrap:nowrap;overflow:hidden;gap:5px;margin-top:12px}
+  .bvi .tags.open{flex-wrap:wrap}
+  .bvi .tags .tag{flex:none;height:24px;font-size:12px;padding:0 9px 0 6px;opacity:.78;background:transparent}
+  .bvi .tags .tag svg{width:13px;height:13px}
+  .bvi .tags .tgmore{flex:none;height:24px;padding:0 9px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);font:800 12px var(--round,inherit);cursor:pointer}
+  .bvi .tags .tgmore:hover{color:var(--ink)}
+  .bvi .tags [hidden]{display:none!important}
+}

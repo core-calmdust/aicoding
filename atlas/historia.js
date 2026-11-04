@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 2;                       // data version (bump when historia/*.json change)
+  const V = 5;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
   const UI = {
@@ -23,7 +23,7 @@
   };
   // the guide who narrates each game: the game's own Atlas Mon where it has one, else a plush avatar that suits it
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
-    poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', fanorona: 'av/monkey-0',
+    poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
     backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
@@ -44,14 +44,28 @@
   }
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
+  // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki xiangqi'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
+    const ok = has(g.id); b.style.display = ok ? '' : 'none'; if (!ok) { const t = document.querySelector('#bvi .L .tags .hstag'); if (t) t.remove(); return; }
     b.innerHTML = `<span class="hb-ic">${BOOK}</span><span class="hb-tx"><b>${esc(u('btn'))}</b><small>${esc(u('sub'))}</small></span>`;
     b.setAttribute('aria-label', u('btn') + ' — ' + u('sub'));
     b.style.setProperty('--gc', g.color || '#c48a4a');
     b.onclick = () => open();   // (the board on the table is this game: Historia frames it)
+    // PC: the entry sits in the board card, leading the feature-tag row (the top-left pill is hidden there in CSS)
+    const tags = document.querySelector('#bvi .L .tags');
+    if (tags && matchMedia(PC_Q).matches && !tags.querySelector('.hstag')) {
+      const t = document.createElement('button'); t.type = 'button'; t.className = 'hstag';
+      t.style.setProperty('--gc', g.color || '#c48a4a');
+      t.innerHTML = `<span class="hb-ic">${BOOK}</span><b>${esc(u('btn'))}</b><small>${esc(u('sub'))}</small><i class="hs-arw" aria-hidden="true"></i>`;
+      t.setAttribute('aria-label', u('btn') + ' — ' + u('sub'));
+      t.onclick = () => open();
+      tags.prepend(t);
+    }
   }
+  const PC_Q = '(hover: hover) and (pointer: fine) and (min-width: 820px)';
 
   /* ---------- loading ---------- */
   const cache = {};
@@ -84,7 +98,7 @@
   /* ---------- open / close ---------- */
   function build() {
     root = document.createElement('div'); root.className = 'hs'; root.id = 'hist'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
-    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span></div></div></div>
+    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span><i class="ghost" aria-hidden="true"></i></div></div></div>
       <div class="hs-top"><button type="button" class="hs-mute" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V6l11-2v11"/><circle cx="6.5" cy="17" r="2.5"/><circle cx="17.5" cy="15" r="2.5"/><path class="sl" d="M3 3l18 18"/></svg></button><button type="button" class="hs-x"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <section class="hs-panel"><header class="hs-hd"><span class="hs-gi"></span><span class="hs-gn"></span><span class="hs-no"></span></header><div class="hs-pages"></div>
       <nav class="hs-nav"><button type="button" class="hs-pv"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><div class="hs-dots"></div><button type="button" class="hs-nx"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></nav></section>`;
@@ -107,15 +121,21 @@
   // on the table, Historia runs "solo" over its own backdrop with the game's icon on stage (no 3D needed)
   const artOf = g => ctx && ctx.art ? ctx.art(g) : '../images/atlas/' + g.id + '.webp';
   const nameOf = g => ctx && ctx.name && game === g ? ctx.name(g) : (g.name && (g.name[lang] || g.name.en)) || g.id;
-  let solo = false, bodyOv = '';
+  let solo = false, bodyOv = '', fromList = false, swapT = 0;
   function open(id) {
     if (on) { if (typeof id !== 'string' || (game && game.id === id)) return; close(true); }
     if (typeof id === 'string') {
-      const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G) return;
+      const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G || !has(id)) return;
       const bv = $('bv'), onBoard = bv && bv.classList.contains('on') && !bv.classList.contains('playing') && game && game.id === id;
       if (!onBoard) { let l = lang; try { l = localStorage.getItem('aicoding-lang') || (navigator.language || 'ja').slice(0, 2); } catch (e) {} lang = LANGS.includes(l) ? l : 'en'; game = G; }
-      solo = !onBoard;
-    } else solo = false;
+      solo = !onBoard; fromList = false;
+      // a game with a 3D board: open its board view first (the same path as tapping it), then Historia over it
+      if (!onBoard && window.AtlasBoard && window.Table3D && Table3D.MODELS && Table3D.MODELS[id]) {
+        try { AtlasBoard.open(id); } catch (e) {}
+        if (game && game.id === id && $('bv') && $('bv').classList.contains('on') && Table3D.ok && Table3D.ok()) { solo = false; fromList = true; }
+        else if ($('bv') && $('bv').classList.contains('on')) { fromList = true; }
+      }
+    } else { solo = false; fromList = false; }
     if (!game) return;
     if (!root) build();
     const g = game, my = ++tok; on = true; data = null; idx = 0;
@@ -137,7 +157,8 @@
     root.querySelector('.hs-pages').innerHTML = `<div class="hs-load"><i></i><i></i><i></i><span>${esc(u('load'))}</span></div>`;
     say('');
     root.classList.remove('out'); root.classList.add('on');
-    if (!solo) { const bv = $('bv'); if (bv) bv.classList.add('hist'); shift(); requestAnimationFrame(() => { fit(); }); }
+    if (!solo) { const bv = $('bv'); if (bv) bv.classList.add('hist'); shift(); requestAnimationFrame(() => { fit(); }); gallery(true, g); }
+    if (fromList && has3D) loading3d(g.id);
     paintMute(); bgmStart();
     Promise.all([getJSON(`historia/s/${g.id}.json`), loadText(g.id), loadMap()]).then(([s, t]) => {
       if (my !== tok || !on) return;
@@ -152,24 +173,64 @@
     root.classList.remove('on'); if (!swap) root.classList.add('out');
     bgmStop(swap ? 200 : 1000);
     clearTimers();
-    if (solo) { document.body.style.overflow = bodyOv; }
+    if (solo) { document.body.style.overflow = bodyOv; if (fromList && window.AtlasBoard) { fromList = false; setTimeout(() => AtlasBoard.close(), 0); } }
+    else if (fromList) {   // opened from the game list: the whole board view (museum and all) fades straight back to the list —
+      // the room is never shown; it is put back silently once the board view is gone, ready for the next board
+      fromList = false; const bv = $('bv'); clearTimeout(swapT);
+      if (bv) { bv.style.transition = 'opacity .32s ease'; bv.style.opacity = '0'; }
+      setTimeout(() => {
+        if (on) { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } return; }
+        if (window.AtlasBoard) AtlasBoard.close();
+        if (bv) bv.classList.remove('hist', 'hsdim');
+        if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
+        cam(false); gallery(false, null, true);
+        requestAnimationFrame(() => { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } });
+      }, 340);
+    }
     else {
+      gallery(false);
       const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      document.documentElement.style.setProperty('--hs-shift', '0px');
+      if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
       cam(false);
       if (ctx && ctx.fit) ctx.fit(); else if (window.Table3D && Table3D.setInset) Table3D.setInset(0);
       const b = $('bvHist'); if (b && !swap) try { b.focus({ preventScroll: true }); } catch (e) {}
     }
     setTimeout(() => { if (!on && root) { root.classList.remove('out'); root.querySelector('.hs-pages').innerHTML = ''; } }, 420);
   }
+  // the 3D room becomes a museum gallery while Historia is open (Table3D.museum), swapped behind a quick fade through dark
+  function gallery(onG, g, instant) {
+    if (!window.Table3D || !Table3D.museum || (Table3D.ok && !Table3D.ok())) return;
+    const bv = $('bv'); clearTimeout(swapT);
+    const t = { title: g ? nameOf(g) : '', sub: g ? (g.name && g.name.en && lang !== 'en' ? g.name.en.toUpperCase() : 'WORLD BOARD GAME ATLAS') : '' };
+    if (instant || !bv) { Table3D.museum(onG, t); if (bv) bv.classList.remove('hsdim'); return; }
+    bv.classList.add('hsdim');
+    swapT = setTimeout(() => { try { Table3D.museum(onG, t); } catch (e) {} requestAnimationFrame(() => bv.classList.remove('hsdim')); }, 260);
+  }
+  // opened from the game list: a shimmer on the stage while the board's textures are generated
+  function loading3d(id) {
+    const st = root.querySelector('.hs-stage'); st.classList.add('ld3d');
+    const done = () => st.classList.remove('ld3d');
+    const TG = window.AtlasTexGen; let p = null;
+    try { p = TG && TG.idle ? TG.idle([id]) : null; } catch (e) {}
+    Promise.race([p || new Promise(r => setTimeout(r, 1200)), new Promise(r => setTimeout(r, 5000))]).then(() => setTimeout(done, 450));
+  }
   // the board's framing while open: phones frame it in the stage above the page; wide screens keep it full height (the canvas is shifted right in CSS)
   function fit() {
     if (!on || solo || !root || !window.Table3D || !Table3D.setInset) return;
-    if (phone()) { const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(); Table3D.setInset(Math.max(0, innerHeight - r.bottom)); }
+    if (phone()) {
+      const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(), g = root.querySelector('.hs-guide');
+      // the top-down board view: the guide and its bubble sit in a strip at the bottom of the stage, and the board is framed above it
+      const keep = camTop && g ? Math.max(0, Math.min(r.height * .4, r.bottom - g.getBoundingClientRect().top + 4)) : 0;
+      Table3D.setInset(Math.max(0, innerHeight - r.bottom + keep));
+    }
     else Table3D.setInset(0);
   }
   // wide screens: the canvas slides away from the page so the board sits in the free part of the screen
-  function shift() { document.documentElement.style.setProperty('--hs-shift', phone() ? '0px' : rtl() ? 'calc(var(--hs-pw) / -2)' : 'calc(var(--hs-pw) / 2)'); }
+  function shift() {   // (a shift lens in Table3D: the canvas stays put and fills the screen, the picture moves into the free part)
+    if (!window.Table3D || !Table3D.setShift) return;
+    const pn = root && root.querySelector('.hs-panel'); if (phone() || !pn) { Table3D.setShift(0); return; }
+    const L = pn.offsetLeft, R = L + pn.offsetWidth; Table3D.setShift(rtl() ? -(innerWidth - L) / 2 : R / 2);   // (layout box: the panel's slide-in transform is ignored)
+  }
   addEventListener('resize', () => { if (on) { shift(); fit(); } });
   // the 3D camera per chapter: the showcase turntable, or straight down onto the board for the board chapter
   let camTop = false, has3D = true;
@@ -178,7 +239,9 @@
     if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok())) return;
     if (solo) return;
     if (top === camTop) return; camTop = top;
-    try { Table3D.play(!!top, { glide: 1100 }); } catch (e) {}
+    if (root) root.classList.toggle('top', !!top);
+    fit();
+    try { Table3D.play(!!top, { glide: 1100, ortho: true }); } catch (e) {}
   }
 
   /* ---------- keyboard ---------- */
@@ -198,9 +261,11 @@
   /* ---------- the guide's speech bubble (typed in) ---------- */
   let sayT = 0;
   function say(s) {
-    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'); clearInterval(sayT);
+    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'), gh = b.querySelector('.ghost'); clearInterval(sayT);
+    gh.textContent = s || '';   // (an invisible copy of the whole line: the bubble takes its final size at once while the text types in)
     if (!s) { b.classList.remove('on'); sp.textContent = ''; return; }
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    if (camTop) requestAnimationFrame(fit);
     const g = root.querySelector('.hs-guide'); g.classList.remove('hop'); void g.offsetWidth; g.classList.add('hop');
     // scripts that join letters (Arabic, Devanagari) fade in whole; others are typed
     if (lang === 'ar' || lang === 'hi') { sp.textContent = s; sp.classList.remove('typing'); return; }
@@ -233,6 +298,9 @@
     root.querySelector('.hs-pv').disabled = i === 0; root.querySelector('.hs-nx').disabled = i === n - 1;
     later(() => say(c.say || ''), 380);
     cam(c.k === 'board');
+    // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
+    const rd = !['hook', 'board', 'end'].includes(c.k);
+    if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
   function kin(s, d0 = 0) {
@@ -247,23 +315,84 @@
     switch (c.k) {
       case 'hook': return `<div class="hk-art rv" ${st(0, 0)}><img src="${esc(artOf(game))}" alt=""></div><h2 class="hs-h hk-h">${kin(c.title || nameOf(game), 100)}</h2>
         <div class="hk-num rv" ${st(0, 420)}>${c.pre ? `<span class="pre">${esc(c.pre)}</span>` : ''}<b class="cnt" data-n="${esc(c.n)}">0</b>${c.unit ? `<span class="unit">${esc(c.unit)}</span>` : ''}</div>
-        <p class="hk-line rv" ${st(0, 700)}>${esc(c.line || '')}</p>${(c.p || []).map((x, j) => `<p class="rv" ${st(j, 900)}>${esc(x)}</p>`).join('')}`;
-      case 'origin': return head + `<figure class="hs-map rv" ${st(0, 200)}>${mapSvg(data.s.map, c.pins || [])}</figure>` + P;
+        <p class="hk-line rv" ${st(0, 700)}>${esc(c.line || '')}</p>${(c.p || []).map((x, j) => `<p class="rv" ${st(j, 900)}>${esc(x)}</p>`).join('')}${hkFacts()}`;
+      case 'origin': { const S = c.st && data.s.map && data.s.map.st ? c.st : null;
+        return head + `<figure class="hs-map rv${S ? ' steps' : ''}" ${st(0, 200)}>${mapSvg(data.s.map, c.pins || [], !!S)}</figure>` + (S ? `<ol class="hs-st">${S.map((x, j) => `<li class="rv" data-i="${j}" ${st(j, 500, 110)}><button type="button"><b>${esc(x[0])}</b><small>${esc(x[1])}</small><span>${esc(x[2])}</span></button></li>`).join('')}</ol>` : P); }
       case 'tl': return head + `<ol class="hs-tl">${(c.tl || []).map((x, j) => `<li class="rv" ${st(j, 350, 170)}><b>${esc(x[0])}</b><span>${esc(x[1])}</span></li>`).join('')}</ol><p class="hs-note rv" ${st(0, 400 + (c.tl || []).length * 170)}>${esc(u('src'))}</p>`;
       case 'board': return head + `<figure class="hs-dg rv" ${st(0, 200)}>${diag(data.s.board, 1)}${c.cap ? `<figcaption>${esc(c.cap)}</figcaption>` : ''}</figure>` + P;
-      case 'vars': return head + P + `<div class="hs-cards">${(c.cards || []).map((x, j) => { const a = (data.s.vars || [])[j]; return `<div class="hs-card rv" ${st(j, 420, 130)}><div class="art">${a && a.t ? diag(a, 0) : `<span class="emb">${esc(a && a.e || '')}</span>`}</div><div class="tx"><b>${esc(x[0])}</b>${x[1] ? `<small>${esc(x[1])}</small>` : ''}<span>${esc(x[2] || '')}</span></div></div>`; }).join('')}</div>`;
-      case 'legend': return head + `<div class="hs-stats">${(c.stats || []).map((x, j) => `<div class="hs-stat rv" ${st(j, 300, 140)}><div class="v"><b class="cnt" data-n="${esc(x[0])}">0</b><span>${esc(x[1] || '')}</span></div><small>${esc(x[2] || '')}</small></div>`).join('')}</div>` + P +
+      case 'vars': return head + P + `<div class="hs-cards">${(c.cards || []).map((x0, j) => { let x = x0; const a = (x.length > 3 ? data.s.vars2 || [] : data.s.vars || [])[j], x4 = x.length > 3 ? [x[0], x[1] + (x[2] ? ' · ' + x[2] : ''), x[3]] : x; x = x4; return `<div class="hs-card rv" ${st(j, 420, 130)}><div class="art">${a && a.t ? diag(a, 0) : `<span class="emb">${esc(a && a.e || '')}</span>`}</div><div class="tx"><b>${esc(x[0])}</b>${x[1] ? `<small>${esc(x[1])}</small>` : ''}<span>${esc(x[2] || '')}</span></div></div>`; }).join('')}</div>`;
+      case 'legend': if (c.items) return head + P + `<div class="hs-lgs">${c.items.map((x, j) => `<div class="hs-lg rv" ${st(j, 300, 110)}><b class="yr">${esc(x[0])}</b><div class="tx"><b>${esc(x[1])}</b><span>${esc(x[2])}</span></div>${x[3] ? `<div class="v"><b class="cnt" data-n="${esc(x[3])}">0</b><small>${esc(x[4] || '')}</small></div>` : ''}</div>`).join('')}</div>`;
+        return head + `<div class="hs-stats">${(c.stats || []).map((x, j) => `<div class="hs-stat rv" ${st(j, 300, 140)}><div class="v"><b class="cnt" data-n="${esc(x[0])}">0</b><span>${esc(x[1] || '')}</span></div><small>${esc(x[2] || '')}</small></div>`).join('')}</div>` + P +
         `<div class="hs-cards ls">${(c.cards || []).map((x, j) => `<div class="hs-card nb rv" ${st(j, 600, 140)}><div class="tx"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div></div>`).join('')}</div>`;
       case 'trivia': return head + P + `<div class="hs-flips">${(c.cards || []).map((x, j) => `<button type="button" class="hs-flip rv" ${st(j, 350, 140)}><span class="f"><i>?</i><b>${esc(x[0])}</b><small>${esc(u('tap'))}</small></span><span class="b"><b>${esc(x[1])}</b></span></button>`).join('')}</div>`;
       case 'end': return `<div class="hs-end"><img class="rv" ${st(0, 0)} src="${guideSrc(game.id)}" alt=""><h2 class="hs-h">${kin(c.t || '')}</h2>${P}<div class="hs-acts rv" ${st(0, 700)}><button type="button" class="hs-btn pri" data-act="back">${esc(u('back'))}</button><button type="button" class="hs-btn" data-act="again">${esc(u('again'))}</button></div></div>`;
       default: return head + P;
     }
   }
+  // tall PC windows: three key dates from the timeline under the hook (first, middle, last)
+  function hkFacts() {
+    const tc = data && data.ch.find(c => c.k === 'tl'), T = tc && tc.tl || []; if (T.length < 3) return '';
+    const pick = [T[0], T[Math.floor((T.length - 1) / 2)], T[T.length - 1]];
+    return `<div class="hk-facts">${pick.map((x, j) => `<div class="rv" style="--d:${1100 + j * 140}ms"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`).join('')}</div>`;
+  }
   // per-page motion once it is on screen: count-ups, map routes, the timeline's line, pieces landing
   function run(pg, c) {
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
     const zm = pg.querySelector('.zm'); if (zm) later(() => { zm.style.transform = zm.dataset.z; }, 350);
+    if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
+    if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
+  }
+  // a page with a board diagram: on a short window the diagram gives up height so the text never ends up under the nav bar
+  function fitDg(pg) {
+    const sv = pg.querySelector('.hs-dg svg'); if (!sv || !pg.isConnected) return;
+    sv.style.maxWidth = '';
+    const over = pg.scrollHeight - pg.clientHeight; if (over <= 1) return;
+    const w = sv.getBoundingClientRect().width, h = sv.getBoundingClientRect().height; if (!h) return;
+    sv.style.maxWidth = Math.max(200, Math.floor(w * (h - over - 4) / h)) + 'px';
+  }
+  addEventListener('resize', () => { const pg = root && root.querySelector('.hs-pg.in'); if (on && pg && pg.querySelector('.hs-dg svg')) fitDg(pg); });
+  // origin chapter: the stages step through one by one (or on tap) — each lights its pin and draws the route that leads there
+  function stepper(pg) {
+    const L = [...pg.querySelectorAll('.hs-st li')], map = pg.querySelector('.hs-map'), pins = data.s.map.st || [], R = data.s.map.route || [];
+    const P = [...map.querySelectorAll('[data-p]')], RT = [...map.querySelectorAll('.rt')];
+    let k = -1, auto = true, hold = 0;
+    // the map stays pinned at the top of the page (sticky, capped at ~40% of the page height); the list scrolls under it,
+    // and each stage is brought up just below the map with a bit of the previous card still showing
+    // the map's height: ~1/3 of the page on phones (~40% on PC), cropped around the pins rather than squashed; it is pinned only
+    // when at least two or three stage cards still fit under it — otherwise it simply scrolls away with the page
+    const sv = map.querySelector('svg');
+    const cap = () => {
+      if (!pg.isConnected) return;
+      const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
+      const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
+      map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
+      sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
+    };
+    cap(); later(cap, 520); addEventListener('resize', cap);
+    const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
+    pg.addEventListener('scroll', stuck, { passive: true });
+    // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
+    const mine = () => { hold = performance.now() + 4000; };
+    ['wheel', 'touchmove'].forEach(e => pg.addEventListener(e, mine, { passive: true }));
+    pg.addEventListener('keydown', e => { if (/^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine(); });
+    const bring = (n, force) => {
+      if (!force && performance.now() < hold) return;
+      const li = L[n]; if (!li || pg.scrollHeight <= pg.clientHeight + 2) return;
+      const prev = L[n - 1], peek = prev ? Math.min(prev.offsetHeight * .45, 44) : 0;
+      const top = Math.max(0, li.offsetTop - (map.classList.contains('stick') ? map.offsetHeight : 0) - 12 - peek);
+      if (Math.abs(top - pg.scrollTop) > 2) pg.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    };
+    const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
+      const seen = new Set(pins.slice(0, n + 1)), cur = pins[n];
+      P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i));
+        if (i === cur) { p.classList.remove('ping'); void p.getBoundingClientRect(); p.classList.add('ping'); } });   // a ring pulses out of the stage's pin
+      map.querySelectorAll('[data-l]').forEach(l => l.classList.toggle('seen', seen.has(+l.dataset.l)));
+      RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); });
+      bring(n, force); };
+    const tick = () => { if (!auto || !on || !pg.isConnected) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
+    later(tick, 1500);
+    L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
   }
   function fmt(v) { try { return Math.round(v).toLocaleString(lang === 'ar' ? 'en' : lang); } catch (e) { return String(Math.round(v)); } }
   function countUp(el) {
@@ -277,6 +406,11 @@
   function tween(ms, f) { const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 4); f(k >= 1 ? 1 : e); if (k < 1 && on) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 
   /* ---------- world map (dots) with pins and routes ---------- */
+  let mctx = null;
+  function textW(str, fs) {   // label width in the page font (falls back to a per-character estimate)
+    try { if (!mctx) mctx = document.createElement('canvas').getContext('2d'); mctx.font = `900 ${fs}px 'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif`; const w = mctx.measureText(str).width; if (w > 0) return w; } catch (e) {}
+    return [...str].reduce((a, c) => a + (c.charCodeAt(0) > 0x2e80 ? fs : fs * .6), 0);
+  }
   let dotsD = null;
   function dotsPath() {
     if (dotsD !== null) return dotsD; const M = window.HISTORIA_MAP; if (!M) return dotsD = '';
@@ -284,7 +418,7 @@
     M.rows.split('|').forEach((r, y) => { let x = 0; r.split('.').forEach((v, i) => { const n = parseInt(v, 36); if (i & 1) for (let k = 0; k < n; k++) out.push(`M${((x + k) * s + s / 2).toFixed(2)} ${(y * s + s / 2).toFixed(2)}h0`); x += n; }); });
     return dotsD = out.join('');
   }
-  function mapSvg(m, labels) {
+  function mapSvg(m, labels, steps) {
     if (!m || !m.pts) return '';
     const M = window.HISTORIA_MAP || { step: 1.25, lat0: 72.5 }, lat0 = M.lat0;
     const P = m.pts.map(([lon, lat]) => [lon + 180, lat0 - lat]);
@@ -292,8 +426,11 @@
     let x0 = Math.min(...P.map(p => p[0])), x1 = Math.max(...P.map(p => p[0])), y0 = Math.min(...P.map(p => p[1])), y1 = Math.max(...P.map(p => p[1]));
     const W0 = 360, H0 = 128.5;   // full map 180°W–180°E × 72.5°N–56°S
     let w = Math.max(48, (x1 - x0) * 1.5 + 16), h = Math.max(30, (y1 - y0) * 1.5 + 14); if (w / h > 1.6) h = w / 1.6; else w = h * 1.6;
-    w = Math.min(w, W0); h = Math.min(h, H0);
-    let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; cx = Math.max(w / 2, Math.min(W0 - w / 2, cx)); cy = Math.max(h / 2, Math.min(H0 - h / 2, cy));
+    w = Math.min(w, W0); h = w / 1.6;   // the frame stays 16:10, even when it is taller than the map itself
+    let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; cx = Math.max(w / 2, Math.min(W0 - w / 2, cx));
+    if (h >= H0) cy = (cy + H0 / 2) / 2;   // taller than the map: lean towards the pins instead of leaving them at the edge
+    else cy = Math.max(h / 2, Math.min(H0 - h / 2, cy));
+    cy = Math.max(y1 + 16 - h / 2, Math.min(y0 - 16 + h / 2, cy));   // keep room for labels above/below the outermost pins
     const z = W0 / w;   // scale applied to the map group
     const tx = -(cx - w / 2) * z, ty = -(cy - h / 2) * z;
     const r = 2.4 / z, fs = 10.5 / z;
@@ -303,13 +440,45 @@
       return `<path class="rt" pathLength="1" style="--d:${900 + j * 520}ms;stroke-width:${(1.5 / z).toFixed(3)}" d="M${A[0].toFixed(2)} ${A[1].toFixed(2)}Q${qx.toFixed(2)} ${qy.toFixed(2)} ${B[0].toFixed(2)} ${B[1].toFixed(2)}" marker-end="url(#hsArr)"/>`;
     }).join('');
     const order = m.order || P.map((_, i) => i);
-    // labels: right of the pin (left near the right edge); a pin close to an earlier one puts its label on the other side, a line lower
-    const side = P.map(p => p[0] < cx + w * .18), dy = P.map(() => 0);
-    P.forEach((p, i) => { for (let j = 0; j < i; j++) if (Math.hypot(p[0] - P[j][0], p[1] - P[j][1]) < 14 / z * 2.2) { side[i] = !side[j]; dy[i] = dy[j] + (p[1] >= P[j][1] ? 1 : -1) * fs * .9; } });
-    const pins = P.map((p, i) => { const o = order.indexOf(i), d = 700 + Math.max(0, o) * 520, lb = labels[i] || '', right = side[i];
-      return `<g transform="translate(${p[0].toFixed(2)} ${p[1].toFixed(2)})"><g class="pin" style="--d:${d}ms"><circle class="pl" r="${(r * 2.6).toFixed(3)}"/><circle class="pd" r="${r.toFixed(3)}"/>${lb ? `<text x="${(right ? r * 1.9 : -r * 1.9).toFixed(3)}" y="${(fs * .36 + dy[i]).toFixed(3)}" font-size="${fs.toFixed(3)}" text-anchor="${right ? 'start' : 'end'}">${esc(lb)}</text>` : ''}</g></g>`; }).join('');
+    // label placement, worked out in the zoomed frame (360 × 225 units, what is finally on screen):
+    // every label tries spots around its pin (sides, above/below, diagonals, then farther out with a leader line)
+    // and takes the one that overlaps nothing — other labels, pins, the arcs, the frame edge
+    const ox = cx - w / 2, oy = cy - h / 2, FW = W0, FH = W0 / 1.6, Z = q => [(q[0] - ox) * z, (q[1] - oy) * z];
+    const PZ = P.map(Z), RZ = 2.4, FS = 10.5, PADX = 3.2, BH = FS * 1.32;
+    const arcs = []; (m.route || []).forEach(([a, b]) => { const A = P[a], B = P[b], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, k = .22 * L, Q = [mx - dy / L * k, my + dx / L * k - .1 * L];
+      for (let t = 0; t <= 1.0001; t += 1 / 28) { const u = 1 - t; arcs.push(Z([u * u * A[0] + 2 * u * t * Q[0] + t * t * B[0], u * u * A[1] + 2 * u * t * Q[1] + t * t * B[1]])); } });
+    const tw = s => textW(s, FS) + PADX * 2;
+    const ov = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+    const placed = [], L = [];
+    const prio = P.map((_, i) => i).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    prio.forEach(i => {
+      const lb = labels[i]; if (!lb) return;
+      const [px, py] = PZ[i], bw = tw(lb), g = RZ + 2.5;
+      let best = null;
+      [0, 1, 2].forEach(ring => {
+        const e = ring * 13;   // farther rings need a leader line
+        [[g + e, -BH / 2], [-g - e - bw, -BH / 2], [-bw / 2, -g - e - BH], [-bw / 2, g + e], [g * .7 + e * .7, -g * .7 - e * .7 - BH], [g * .7 + e * .7, g * .7 + e * .7], [-g * .7 - e * .7 - bw, -g * .7 - e * .7 - BH], [-g * .7 - e * .7 - bw, g * .7 + e * .7]].forEach(([dx, dy], k) => {
+          const b = { x: px + dx, y: py + dy, w: bw, h: BH };
+          let sc = ring * 40 + k * 1.5;
+          placed.forEach(o => { sc += ov(b, o) * 30; });
+          PZ.forEach(([qx, qy]) => { sc += ov(b, { x: qx - RZ * 2.2, y: qy - RZ * 2.2, w: RZ * 4.4, h: RZ * 4.4 }) * 25;   /* a pin grows 1.7× while its stage is on */ });
+          const inside = ov(b, { x: 2, y: 2, w: FW - 4, h: FH - 4 }); sc += (b.w * b.h - inside) * 40;
+          arcs.forEach(([ax, ay]) => { if (ax > b.x - 1 && ax < b.x + b.w + 1 && ay > b.y - 1 && ay < b.y + b.h + 1) sc += 12; });
+          if (!best || sc < best.sc) best = { sc, b, ring };
+        });
+      });
+      placed.push(best.b); L[i] = best;
+    });
+    const U = v => (v / z).toFixed(3);   // zoomed units → map units (inside the scaled group)
+    const pins = P.map((p, i) => { const o = order.indexOf(i), d = 700 + Math.max(0, o) * 520;
+      return `<g transform="translate(${p[0].toFixed(2)} ${p[1].toFixed(2)})"><g class="pin" data-p="${i}" style="--d:${steps ? 600 : d}ms"><circle class="pl" r="${(r * 2.6).toFixed(3)}"/><circle class="pd" r="${r.toFixed(3)}"/></g></g>`; }).join('');
+    const lbls = P.map((p, i) => { const B = L[i]; if (!B) return ''; const o = order.indexOf(i), d = 820 + Math.max(0, o) * 520, b = B.b;
+      const x = b.x / z + ox, y = b.y / z + oy;
+      let lead = '';
+      if (B.ring) { const [px, py] = PZ[i], qx = Math.max(b.x, Math.min(b.x + b.w, px)), qy = Math.max(b.y, Math.min(b.y + b.h, py)); lead = `<path class="ld" d="M${(px / z + ox).toFixed(2)} ${(py / z + oy).toFixed(2)}L${(qx / z + ox).toFixed(2)} ${(qy / z + oy).toFixed(2)}" style="stroke-width:${U(1)}"/>`; }
+      return `<g class="lbg" data-l="${i}" style="--d:${d}ms">${lead}<g class="lb"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${U(b.w)}" height="${U(b.h)}" rx="${U(BH / 2)}" style="stroke-width:${U(.8)}"/><text x="${(x + b.w / z / 2).toFixed(2)}" y="${(y + b.h / z / 2 + FS * .36 / z).toFixed(2)}" font-size="${U(FS)}" text-anchor="middle">${esc(labels[i])}</text></g></g>`; }).join('');
     return `<svg viewBox="0 0 ${W0} ${(W0 / 1.6).toFixed(1)}" dir="ltr" aria-hidden="true"><defs><marker id="hsArr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 9 5 0 9z" fill="var(--gc)"/></marker></defs>
-      <g class="zm" data-z="translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(3)})"><path class="dots" d="${dotsPath()}" style="stroke-width:${(M.step * .62).toFixed(3)}"/>${routes}${pins}</g></svg>`;
+      <g class="zm" data-z="translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(3)})"><path class="dots" d="${dotsPath()}" style="stroke-width:${(M.step * .62).toFixed(3)}"/>${routes}${pins}${lbls}</g></svg>`;
   }
 
   /* ---------- board diagrams (SVG, drawn from a small spec; pieces drop in one after another) ---------- */
@@ -374,6 +543,19 @@
       out.push(`<path class="gl" pathLength="1" style="--d:200ms;stroke:#d8423a;stroke-width:4" d="M${e1[0]} ${e1[1] - a * 1.2}L${e2[0]} ${e2[1] - a * 1.2}"/><path class="gl" pathLength="1" style="--d:200ms;stroke:#d8423a;stroke-width:4" d="M${e4[0]} ${e4[1] + a * 1.2}L${e3[0]} ${e3[1] + a * 1.2}"/>`);
       out.push(`<path class="gl" pathLength="1" style="--d:300ms;stroke:#3a78d8;stroke-width:4" d="M${e1[0] - a * 1.1} ${e1[1]}L${e4[0] - a * 1.1} ${e4[1]}"/><path class="gl" pathLength="1" style="--d:300ms;stroke:#3a78d8;stroke-width:4" d="M${e2[0] + a * 1.1} ${e2[1]}L${e3[0] + a * 1.1} ${e3[1]}"/>`);
       pcs(s.pcs).forEach(([i, j, c], k) => { const [x, y] = C(i, j); body += piece(x, y, c, null, a * .62, null, dd + k * step); });
+    } else if (T === 'agon') {
+      const n = s.n || 5, a = 13, sq3 = Math.sqrt(3), cx = PD + 12 + a * sq3 * n + a, cy = PD + 12 + a * 1.5 * n + a;
+      const C = (q, r) => [cx + a * sq3 * (q + r / 2), cy + a * 1.5 * r];
+      W = cx * 2; H = cy * 2;
+      const RO = a * (sq3 * n + 1.35);
+      out.push(`<path class="bd" d="${[0, 1, 2, 3, 4, 5].map(k => { const t = Math.PI / 3 * k; return (k ? 'L' : 'M') + (cx + RO * Math.cos(t)).toFixed(1) + ' ' + (cy + RO * Math.sin(t)).toFixed(1); }).join('')}z" fill="${wood}" stroke="${line}" stroke-width="2"/>`);
+      for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) {
+        const g = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)); if (g > n) continue;
+        const [x, y] = C(q, r), f = g === 0 ? (s.th || '#1e3a2c') : (g % 2 ? (s.ra || '#6c1a1c') : (s.rb || '#e7dcc0'));
+        out.push(`<path class="cl" style="--d:${(n - g) * 70}ms" d="${[0, 1, 2, 3, 4, 5].map(k => { const t = Math.PI / 3 * k + Math.PI / 6; return (k ? 'L' : 'M') + (x + a * Math.cos(t)).toFixed(1) + ' ' + (y + a * Math.sin(t)).toFixed(1); }).join('')}z" fill="${f}" stroke="${line}" stroke-width="1"/>`);
+      }
+      pcs(s.pcs).forEach(([q, r, c, g], k) => { const [x, y] = C(q, r); body += piece(x, y, c, g ? '♛' : null, a * .66, null, dd + k * step); });
+      (s.arrows || []).forEach(([q1, r1, q2, r2], k) => { const [x1, y1] = C(q1, r1), [x2, y2] = C(q2, r2); body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * step + 200 + k * 300}ms" d="M${x1} ${y1 + a * .7}L${x2} ${y2 - a * .2}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'mancala') {
       const n = s.pits || 6, rows = s.rows || 2, P = 34, st0 = s.stores === false ? 0 : 1;
       W = (n + st0 * 2) * P + PD * 2; H = rows * P + PD * 2 + 6;
@@ -413,5 +595,5 @@
     return `<svg class="dg${bigOne ? ' big' : ''}" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" dir="ltr" aria-hidden="true" style="--ln:${line}"><defs><marker id="hsArr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1 9 5 0 9z" fill="#d8423a"/></marker></defs>${out.join('')}${body}</svg>`;
   }
 
-  window.Historia = { sync, open, close: () => close(), go, fit, get on() { return on; }, _diag: diag };
+  window.Historia = { sync, open, has, close: () => close(), go, fit, get on() { return on; }, _diag: diag };
 })();

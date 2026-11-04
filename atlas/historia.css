@@ -1,5 +1,8 @@
 /* ヒストリア (Historia) — the animated encyclopedia over the board view (atlas/historia.js) */
-:root{--hs-pw:min(600px,46vw);--hs-shift:0px;--hs-st:clamp(212px,37vh,380px)}
+/* near-square and tall windows: a slimmer page and calmer type, so the board and the gallery get the room
+   (--hs-v stands in for vh in the PC sizes: on tall windows it follows the width instead of the towering height) */
+:root{--hs-v:min(1vh,.63vw);--hs-fs:clamp(17px,calc(9px + .45vw + .3vh),21px);--hs-pw:min(max(640px,calc(var(--hs-fs) * 38 + 64px)),52vw);--hs-shift:0px;--hs-st:clamp(212px,37vh,380px)}
+@media (min-width:820px) and (max-aspect-ratio:3/2){:root{--hs-fs:clamp(16px,calc(8px + .5vw),18px);--hs-pw:min(max(560px,36vw),640px)}}
 
 /* entry button: top-left of the 3D scene (mirrors the time-of-day pill and × on the right) */
 .bvhist{position:absolute;z-index:4;top:calc(12px + env(safe-area-inset-top));inset-inline-start:max(14px,env(safe-area-inset-left));height:40px;display:flex;align-items:center;gap:7px;padding:0 13px 0 5px;border-radius:20px;border:2px solid var(--line,#efe3c8);background:#fff;box-shadow:0 2px 0 var(--line,#efe3c8);color:var(--ink,#2b3044);font:800 13px var(--round,inherit);cursor:pointer;transition:opacity .25s,transform .15s}
@@ -16,20 +19,45 @@
   .bvhist .hb-tx small{display:block;font:700 11.5px var(--font,inherit);color:var(--ink2,#6a7088);margin-top:2px}
   .bvhist:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--line,#efe3c8),0 10px 20px -10px rgba(120,80,20,.4)}
   .bvhist:hover .hb-ic{animation:hsWig .6s}
+  /* PC: the entry moved into the board card (leading the tag row), so the top-left pill is not shown */
+  .bvhist{display:none!important}
+  .bvi .hstag{flex:none;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 4px;border-radius:99px;cursor:pointer;
+    border:0;color:#fff;font:800 14.5px var(--round,inherit);letter-spacing:.03em;white-space:nowrap;
+    background:linear-gradient(135deg,color-mix(in srgb,var(--gc) 78%,#3a2a10),color-mix(in srgb,var(--gc) 55%,#1e1408));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 0 color-mix(in srgb,var(--gc) 45%,#1e1408),0 6px 14px -8px rgba(60,30,0,.6);
+    transition:transform .15s,box-shadow .15s;margin-inline-end:4px}
+  .bvi .hstag .hb-ic{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff7e3;color:color-mix(in srgb,var(--gc) 80%,#2b1a08);box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+  .bvi .hstag .hb-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .bvi .hstag small{font:700 11.5px var(--font,inherit);opacity:.85;letter-spacing:0}
+  .bvi .hstag .hs-arw{width:7px;height:7px;border-top:2px solid currentColor;border-inline-end:2px solid currentColor;transform:rotate(45deg);opacity:.85;margin-inline-start:2px}
+  [dir=rtl] .bvi .hstag .hs-arw{transform:rotate(-45deg)}
+  .bvi .hstag:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 0 color-mix(in srgb,var(--gc) 45%,#1e1408),0 10px 18px -8px rgba(60,30,0,.6)}
+  .bvi .hstag:hover .hb-ic{animation:hsWig .6s}
+  .bvi .hstag:active{transform:translateY(2px)}
 }
 
 /* the board view while Historia is open: its own UI steps aside, the canvas slides right on wide screens */
 .bv.hist .bvi,.bv.hist .bvnav,.bv.hist .bvtod,.bv.hist .x,.bv.hist .bvhist,.bv.hist .quit{opacity:0!important;pointer-events:none!important;transition:opacity .25s}
 #gl{transition:transform .8s cubic-bezier(.6,0,.2,1)}
-.bv.hist #gl{transform:translateX(var(--hs-shift))}
+/* (the board moves beside the page with a shift lens in Table3D.setShift: the canvas itself stays full screen) */
 
 /* overlay */
 #hist.hs{position:fixed;inset:0;z-index:75;display:none;color:var(--ink,#2b3044);font-family:var(--font,system-ui)}
 #hist.hs.on,#hist.hs.out{display:block}
-/* solo (opened from the game list, no board on the table): a warm room backdrop of its own */
-#hist.hs.solo{background:radial-gradient(120% 80% at 70% 30%,#fbe3b8 0,#e8b980 45%,#b57a45 100%)}
-#hist.hs.solo::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.35;background:repeating-linear-gradient(90deg,rgba(120,70,20,.12) 0 2px,transparent 2px 64px),radial-gradient(60% 40% at 70% 85%,rgba(90,50,10,.35),transparent 70%)}
+/* solo (opened from the game list, a game without a 3D board): a painted museum gallery — red wall, wainscot, floor, a spotlight on the plinth */
+#hist.hs.solo{background:linear-gradient(180deg,#4a1f1b 0,#6e2c26 58%,#2c170c 58.4%,#3a2212 62.5%,#c9a25a 62.5%,#c9a25a 63%,#5a3418 63%,#6e4426 78%,#3b2010 100%)}
+#hist.hs.solo::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 26% 52% at var(--hs-sx,50%) 34%,rgba(255,226,170,.42),transparent 72%),radial-gradient(ellipse 60% 30% at var(--hs-sx,50%) 100%,rgba(0,0,0,.35),transparent 70%)}
+@media (min-width:820px){#hist.hs.solo{--hs-sx:calc(var(--hs-pw) + (100% - var(--hs-pw)) / 2)}[dir=rtl] #hist.hs.solo{--hs-sx:calc((100% - var(--hs-pw)) / 2)}}
+#hist.hs.solo .hs-hero{align-content:center}
+#hist.hs.solo .hs-hero::after{content:'';display:block;justify-self:center;width:min(42vw,250px);height:min(14vh,110px);margin-top:-18px;border-radius:4px;background:linear-gradient(180deg,#f6f1e7 0,#f6f1e7 12%,#d8cfbe 12%,#efe8db 30%,#cdc3b0 100%);box-shadow:0 26px 30px -16px rgba(0,0,0,.6)}
+/* the canvas dims while the room swaps to the gallery and back */
+#gl::after{content:'';position:absolute;inset:0;background:#120c08;opacity:0;pointer-events:none;transition:opacity .26s ease}
+.bv.hsdim #gl::after{opacity:1}
+/* opened from the game list: a shimmer on the stage while the board is being prepared */
+.hs-stage.ld3d::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 30% 22% at 50% 52%,rgba(255,236,200,.5),transparent 70%),linear-gradient(100deg,transparent 30%,rgba(255,245,225,.22) 50%,transparent 70%) 0 0/250% 100%;animation:hsShim 1.2s linear infinite}
+@keyframes hsShim{from{background-position:0 0,150% 0}to{background-position:0 0,-100% 0}}
 #hist.hs.solo.on{animation:hsFade .3s both}
+#hist.hs.solo.out{animation:hsFade .32s reverse both}
 #hist.hs.on .hs-panel{animation:hsPanIn .55s cubic-bezier(.2,1,.3,1) both}
 #hist.hs.out .hs-panel{animation:hsPanOut .35s ease-in both}
 #hist.hs.on .hs-guide,#hist.hs.on .hs-top{animation:hsFade .5s .15s both}
@@ -54,11 +82,16 @@
 [dir=rtl] .hs-bub{transform-origin:100% 100%}
 .hs-bub::before{content:'';position:absolute;bottom:10px;inset-inline-start:-8px;width:12px;height:12px;background:#fffdf7;border-inline-start:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);border-bottom:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);transform:rotate(45deg)}
 [dir=rtl] .hs-bub::before{transform:rotate(-45deg)}
+/* phones, reading chapters: the page takes ~62% of the screen; the stage (and the guide) shrink above it */
+@media (max-width:819px){#hist.hs.read{--hs-st:clamp(150px,30vh,250px)}#hist.hs.read .hs-guide img{width:66px;height:66px}#hist.hs.read .hs-bub{margin-bottom:26px;font-size:12px;padding:7px 11px}.hs-stage{transition:height .45s cubic-bezier(.3,.9,.3,1)}}
+/* phones, top-down board view: the bubble sits beside the guide (not above it), so the strip they need stays low */
+@media (max-width:819px){#hist.hs.top .hs-bub{margin-bottom:8px;max-width:min(260px,calc(100vw - 120px))}}
+.hs-bub{display:grid}.hs-bub>span,.hs-bub>.ghost{grid-area:1/1}.hs-bub>.ghost{visibility:hidden;font-style:normal}
 .hs-bub.on{animation:hsPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
 .hs-bub .typing::after{content:'';display:inline-block;width:2px;height:1em;margin-inline-start:2px;vertical-align:-2px;background:var(--gc);animation:hsBlink .5s steps(2) infinite}
 
 /* the page */
-.hs-panel{position:absolute;left:0;right:0;bottom:0;top:var(--hs-st);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
+.hs-panel{position:absolute;left:0;right:0;bottom:0;top:var(--hs-st);transition:top .45s cubic-bezier(.3,.9,.3,1);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
   background:radial-gradient(120% 60% at 50% 0,#fffdf7 0,#fff8ea 60%,#fbefd6 100%);box-shadow:0 -10px 30px -12px rgba(70,35,5,.45),inset 0 0 0 1px rgba(255,255,255,.7);padding-bottom:env(safe-area-inset-bottom)}
 .hs-panel::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(140,100,40,.07) 1px,transparent 1.2px);background-size:7px 7px}
 .hs-panel::after{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--gc),color-mix(in srgb,var(--gc) 50%,#ffd98a),var(--gc))}
@@ -73,6 +106,7 @@
 .hs-pg.in{transform:none;opacity:1}
 .hs-pg.leave{pointer-events:none;transition:transform .35s ease-in,opacity .3s}
 .hs-pg.leave.l{transform:translateX(calc(-60px * var(--s)));opacity:0}.hs-pg.leave.r{transform:translateX(calc(60px * var(--s)));opacity:0}
+.hk-facts{display:none}
 .rv{opacity:0}
 .in .rv{animation:hsRv .7s cubic-bezier(.2,.9,.3,1.15) var(--d,0ms) both}
 .hs-kick{display:flex;align-items:center;gap:10px;margin:8px 0 2px}
@@ -111,8 +145,45 @@
 .in .hs-map .pin{animation:hsPin .5s var(--d) cubic-bezier(.3,1.7,.5,1) both}
 .hs-map .pd{fill:var(--gc);stroke:#fff;stroke-width:.5}
 .hs-map .pl{fill:var(--gc);opacity:.25;transform-box:fill-box;transform-origin:center;animation:hsPulse 2s infinite}
-.hs-map text{font-family:var(--font,inherit);font-weight:900;fill:#3a2a1a;paint-order:stroke;stroke:#fffdf7;stroke-width:.35em;stroke-linejoin:round}
+.hs-map text{font-family:'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;font-weight:900;fill:#3a2a1a}
+.hs-map .lb rect{fill:rgba(255,253,247,.94);stroke:color-mix(in srgb,var(--gc) 40%,#e6d6b4)}
+.hs-map .ld{fill:none;stroke:color-mix(in srgb,var(--gc) 70%,#3a2a1a);stroke-linecap:round;opacity:.7}
+.hs-map .lbg{opacity:0}
+.in .hs-map .lbg{animation:hsFade .45s var(--d) both}
 
+/* origin stages: the map steps through them */
+.hs-map.steps.stick{position:sticky}
+.hs-map.steps{top:-8px;z-index:2;background:#e3f0ee;transition:box-shadow .3s}
+/* once stuck at the top: square top corners (no card shows through them) and a soft shadow over the list */
+.hs-map.steps.stuck{border-radius:0 0 18px 18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 12px 18px -10px rgba(60,40,10,.45)}
+.hs-map.steps svg{width:100%}
+.hs-map.steps .pin.ping .pl{animation:hsPing .9s ease-out}
+@keyframes hsPing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(3.2);opacity:0}}
+.hs-map.steps .pin{animation:none!important;opacity:.28;transition:opacity .4s,transform .4s}
+.hs-map.steps .pin.seen{opacity:1}
+.hs-map.steps .pin.hot{transform:scale(1.7)}
+.hs-map.steps .rt{animation:none!important;transition:stroke-dashoffset 1s cubic-bezier(.5,0,.3,1)}
+.hs-map.steps .rt.on{stroke-dashoffset:0}
+.hs-map.steps .lbg{animation:none!important;opacity:0;transition:opacity .4s}
+.hs-map.steps .lbg.seen{opacity:1}
+.hs-st{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:8px}
+.hs-st button{display:grid;grid-template-columns:auto 1fr;grid-template-areas:'w p' 't t';gap:2px 10px;align-items:baseline;width:100%;text-align:start;padding:9px 12px 10px;border-radius:14px;border:1.5px solid #f0e2c4;background:#fffdf7;cursor:pointer;font:inherit;color:inherit;transition:border-color .3s,background .3s,opacity .3s}
+.hs-st b{grid-area:w;font:800 13px var(--round,inherit);color:#fff;background:var(--gc);border-radius:7px;padding:2px 8px;white-space:nowrap}
+.hs-st small{grid-area:p;font:800 13px var(--font,inherit);color:color-mix(in srgb,var(--gc) 75%,#2b1a08)}
+.hs-st span{grid-area:t;font:600 14px/1.6 var(--font,inherit);color:#463a30}
+.hs-st li.on button{border-color:var(--gc);background:color-mix(in srgb,var(--gc) 9%,#fffdf7);box-shadow:0 4px 12px -8px color-mix(in srgb,var(--gc) 70%,#000)}
+.hs-st li:not(.on):not(.past) button{opacity:.6}
+/* legend items */
+.hs-lgs{display:grid;gap:10px;margin:6px 0 10px}
+.hs-lg{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:16px;background:#fffdf7;border:1.5px solid #f0e2c4;box-shadow:0 3px 0 #f0e2c4;border-inline-start:4px solid var(--gc)}
+.hs-lg .yr{font:800 12.5px var(--round,inherit);color:#fff;background:var(--gc);border-radius:7px;padding:3px 8px;white-space:nowrap;align-self:start}
+.hs-lg .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hs-lg .tx b{font:900 15px var(--font,inherit);color:#3a2a1a}
+.hs-lg .tx span{font:600 13px/1.6 var(--font,inherit);color:#5a4c40}
+.hs-lg .v{display:flex;flex-direction:column;align-items:center;color:var(--gc);min-width:64px}
+.hs-lg .v b{font:700 26px/1 'Fredoka',var(--font,inherit);filter:brightness(.85)}
+.hs-lg .v sup{font-size:.5em}
+.hs-lg .v small{font:800 11px var(--font,inherit);color:#5a4632;text-align:center}
 /* timeline */
 .hs-tl{list-style:none;margin:6px 0 4px;padding:0;padding-inline-start:30px;position:relative}
 .hs-tl::before{content:'';position:absolute;top:6px;bottom:10px;inset-inline-start:10px;width:3px;border-radius:2px;background:linear-gradient(var(--gc),color-mix(in srgb,var(--gc) 30%,#efe3c8));transform-origin:50% 0;transform:scaleY(0)}
@@ -201,23 +272,48 @@
   .hs-stage{top:0;bottom:0;height:auto;inset-inline-start:calc(var(--hs-pw) + 24px);inset-inline-end:0;left:auto;right:auto}
   [dir=ltr] .hs-stage{left:calc(var(--hs-pw) + 24px);right:0}
   [dir=rtl] .hs-stage{right:calc(var(--hs-pw) + 24px);left:0}
-  .hs-panel{top:16px;bottom:16px;width:var(--hs-pw);border-radius:28px;left:auto;right:auto}
+  /* the page never stretches past ~980px: centred beside the board on tall windows */
+  .hs-panel{top:max(16px,calc(50vh - 490px));bottom:max(16px,calc(50vh - 490px));width:var(--hs-pw);border-radius:28px;left:auto;right:auto}
   [dir=ltr] .hs-panel{left:16px}[dir=rtl] .hs-panel{right:16px}
   #hist.hs.on .hs-panel{animation-name:hsPanInX}#hist.hs.out .hs-panel{animation-name:hsPanOutX}
-  .hs-guide{bottom:20px;inset-inline-start:24px}
-  .hs-guide img{width:150px;height:150px}
-  .hs-bub{max-width:380px;font-size:16px;padding:13px 18px;margin-bottom:84px;border-radius:20px}
+  .hs-guide{bottom:max(20px,calc(50vh - 470px));inset-inline-start:24px}
+  .hs-guide img{width:clamp(130px,calc(15 * var(--hs-v)),190px);height:clamp(130px,calc(15 * var(--hs-v)),190px)}
+  .hs-bub{max-width:clamp(360px,28vw,520px);font-size:max(16px,calc(var(--hs-fs) * .95));line-height:1.6;padding:13px 18px;margin-bottom:clamp(76px,calc(9 * var(--hs-v)),110px);border-radius:20px}
   .hs-hd{padding:20px 28px 6px}
-  .hs-gi img{width:40px;height:40px}.hs-gn{font-size:16px}
-  .hs-pg{padding:8px 32px 30px}
-  .hs-h{font-size:30px}.hk-h{font-size:36px}
-  .hk-art{width:150px;height:150px;margin-top:22px}
-  .hk-num b{font-size:84px}
-  .hs-pg p{font-size:15.5px}
-  .hs-dg svg{max-width:400px}
-  .hs-cards{grid-template-columns:1fr}
-  .hs-flips{grid-template-columns:1fr}
+  .hs-gi img{width:44px;height:44px}.hs-gn{font-size:max(16px,calc(var(--hs-fs) * .95))}.hs-no{font-size:14px}
+  /* chapter content is centred in the page height (scrolls normally when taller) and scales with the window height */
+  .hs-pg{padding:8px 32px 30px;display:flex;flex-direction:column}
+  .hs-pg>*{flex-shrink:0}
+  .hs-pg>:first-child{margin-top:auto!important}.hs-pg>:last-child{margin-bottom:auto!important}
+  .hs-h{font-size:clamp(28px,calc(3.3 * var(--hs-v)),40px)}.hk-h{font-size:clamp(34px,calc(4.2 * var(--hs-v)),52px)}
+  .hk-art{width:clamp(140px,calc(17 * var(--hs-v)),240px);height:clamp(140px,calc(17 * var(--hs-v)),240px);margin-top:12px}
+  .hk-num b{font-size:clamp(80px,calc(10 * var(--hs-v)),136px)}
+  .hk-num .pre,.hk-num .unit{font-size:clamp(18px,calc(2.1 * var(--hs-v)),26px)}
+  .hk-line{font-size:calc(var(--hs-fs) * 1.15)!important;line-height:1.75}
+  .hs-pg p{font-size:var(--hs-fs);line-height:1.85}
+  [lang=en] .hs-pg p,[lang=es] .hs-pg p,[lang=fr] .hs-pg p,[lang=pt] .hs-pg p,[lang=de] .hs-pg p{line-height:1.65}
+  .hs-tl span{font-size:max(16px,calc(var(--hs-fs) * .94));line-height:1.65}.hs-tl b{font-size:max(14px,calc(var(--hs-fs) * .8))}.hs-tl li{margin-bottom:clamp(12px,calc(1.6 * var(--hs-v)),20px)}
+  .hs-dg svg{max-width:clamp(380px,calc(44 * var(--hs-v)),560px)}
+  .hs-dg figcaption{font-size:max(15px,calc(var(--hs-fs) * .85))}
+  .hs-card .tx b{font-size:max(16px,calc(var(--hs-fs) * 1.02))}.hs-card .tx small{font-size:max(13px,calc(var(--hs-fs) * .75))}.hs-card .tx span{font-size:max(15px,calc(var(--hs-fs) * .88));line-height:1.65}
+  .hs-card .art{width:clamp(84px,calc(9 * var(--hs-v)),112px);height:clamp(68px,calc(7.5 * var(--hs-v)),92px)}.hs-card .art svg{width:88%;height:88%}
+  .hs-stat .v b{font-size:clamp(36px,calc(4.4 * var(--hs-v)),56px)}.hs-stat .v span{font-size:max(15px,calc(var(--hs-fs) * .85))}.hs-stat small{font-size:max(15px,calc(var(--hs-fs) * .85))}
+  .hs-flip{min-height:clamp(104px,calc(12 * var(--hs-v)),140px)}.hs-flip .f b{font-size:max(16px,calc(var(--hs-fs) * .98))}.hs-flip .f small{font-size:13px}.hs-flip .b b{font-size:max(15px,calc(var(--hs-fs) * .92))}
+  .hs-end img{width:clamp(132px,calc(18 * var(--hs-v)),220px);height:clamp(132px,calc(18 * var(--hs-v)),220px)}
+  .hs-cards,.hs-flips{gap:clamp(10px,calc(1.3 * var(--hs-v)),16px)}
+  .hs-cards,.hs-flips{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .hs-lgs{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+  .hs-st span{font-size:max(15px,calc(var(--hs-fs) * .88))}.hs-st b,.hs-st small{font-size:max(13px,calc(var(--hs-fs) * .76))}
+  .hs-lg .tx b{font-size:max(16px,calc(var(--hs-fs) * .98))}.hs-lg .tx span{font-size:max(15px,calc(var(--hs-fs) * .86))}.hs-lg .yr{font-size:max(13px,calc(var(--hs-fs) * .74))}.hs-lg .v b{font-size:clamp(26px,calc(3.2 * var(--hs-v)),40px)}.hs-lg .v small{font-size:13px}
+  /* tall windows: the hook chapter adds a row of key dates */
+  .hk-facts{display:none}
   .hs-nav{padding:12px 24px 16px}
+}
+@media (min-width:820px) and (min-height:860px){
+  .hk-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:clamp(14px,calc(2.4 * var(--hs-v)),30px) 0 4px;text-align:start}
+  .hk-facts>div{padding:10px 12px;border-radius:14px;background:#fffdf7;border:1.5px solid #f0e2c4;box-shadow:0 3px 0 #f0e2c4;display:flex;flex-direction:column;gap:4px;min-width:0}
+  .hk-facts b{align-self:flex-start;font:800 12.5px var(--round,inherit);color:#fff;background:var(--gc);border-radius:7px;padding:2px 8px}
+  .hk-facts span{font:600 max(14px,calc(var(--hs-fs) * .8))/1.55 var(--font,inherit);color:#5a4c40}
 }
 @media (max-height:620px) and (max-width:819px){
   :root{--hs-st:clamp(170px,34vh,240px)}
