@@ -335,15 +335,34 @@
   function stepper(pg) {
     const L = [...pg.querySelectorAll('.hs-st li')], map = pg.querySelector('.hs-map'), pins = data.s.map.st || [], R = data.s.map.route || [];
     const P = [...map.querySelectorAll('[data-p]')], RT = [...map.querySelectorAll('.rt')];
-    let k = -1, auto = true;
-    const set = n => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
+    let k = -1, auto = true, hold = 0;
+    // the map stays pinned at the top of the page (sticky, capped at ~40% of the page height); the list scrolls under it,
+    // and each stage is brought up just below the map with a bit of the previous card still showing
+    const cap = () => { pg.style.setProperty('--hs-mapmax', Math.round(pg.clientHeight * .4) + 'px'); };
+    cap(); addEventListener('resize', cap);
+    const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
+    pg.addEventListener('scroll', stuck, { passive: true });
+    // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
+    const mine = () => { hold = performance.now() + 4000; };
+    ['wheel', 'touchmove'].forEach(e => pg.addEventListener(e, mine, { passive: true }));
+    pg.addEventListener('keydown', e => { if (/^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine(); });
+    const bring = (n, force) => {
+      if (!force && performance.now() < hold) return;
+      const li = L[n]; if (!li || pg.scrollHeight <= pg.clientHeight + 2) return;
+      const prev = L[n - 1], peek = prev ? Math.min(prev.offsetHeight * .45, 44) : 0;
+      const top = Math.max(0, li.offsetTop - map.offsetHeight - 12 - peek);
+      if (Math.abs(top - pg.scrollTop) > 2) pg.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    };
+    const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
       const seen = new Set(pins.slice(0, n + 1)), cur = pins[n];
-      P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i)); });
+      P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i));
+        if (i === cur) { p.classList.remove('ping'); void p.getBoundingClientRect(); p.classList.add('ping'); } });   // a ring pulses out of the stage's pin
       map.querySelectorAll('[data-l]').forEach(l => l.classList.toggle('seen', seen.has(+l.dataset.l)));
-      RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); }); };
-    const tick = () => { if (!auto || !on) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
+      RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); });
+      bring(n, force); };
+    const tick = () => { if (!auto || !on || !pg.isConnected) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
     later(tick, 1500);
-    L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j); });
+    L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
   }
   function fmt(v) { try { return Math.round(v).toLocaleString(lang === 'ar' ? 'en' : lang); } catch (e) { return String(Math.round(v)); } }
   function countUp(el) {
