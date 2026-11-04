@@ -3,6 +3,7 @@
    the chosen button, and choosing an entry clicks the original. Converted automatically inside #newOverlay:
    - every .seg with 4 or more buttons
    - any group marked data-pd (e.g. colour swatches, board skins), whatever its size
+   - every <select> not marked data-nopd
    The list opens in place (pushes the content down), so it also works in a turned (rotated) page.
    <script src="../shared/pickdrop.js?v=1"></script> after the dialog markup; nothing else to call. */
 (function () {
@@ -103,7 +104,7 @@ function fromSelect(sel) {
 }
 function scan() {
   const ov = document.getElementById('newOverlay'); if (!ov) return;
-  ov.querySelectorAll('select').forEach(sel => { if (!sel.closest('[data-ng=design]')) fromSelect(sel); });
+  ov.querySelectorAll('select').forEach(sel => { if (!sel.closest('[data-ng=design]') && !sel.hasAttribute('data-nopd')) fromSelect(sel); });   // (data-nopd: the page has its own picker)
   ov.querySelectorAll('.seg, [data-pd]').forEach(g => {
     if (g.__pd || g.closest('[data-ng=design]')) return;   // the look (board, pieces…) is picked from its icons
     const n = [...g.children].filter(b => b.tagName === 'BUTTON').length;
