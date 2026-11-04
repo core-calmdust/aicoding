@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- Dev tool: the 3D board and pieces (atlas/models/xiangqi.js) as pictures for the 2D page's "3D" designs.
+     Open via a local server: /xiangqi/tools/render2d.html → window.DONE, then
+       window.SHOT   PNG data URL of the whole painted top (black lacquer frame + vermilion field, W × D of the model)
+       window.PIECES { r1…r7, b1…b7: PNG data URLs } the discs seen from the front at ELEV (sprite: SPR_W × SPR_H px)
+       window.GEOM   the model's units (u, MG, FR, W, D …) for tools/gen_3d2d.py
+     The faces use the model's own engraved texture, drawn with the 2D page's serif (Noto Serif SC / Shippori Mincho B1). -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Shippori+Mincho+B1:wght@800&display=block" rel="stylesheet">
+</head><body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../atlas/table3d.js"></script>
+<script src="../../atlas/models/xiangqi.js"></script>
+<script>
+(async function () {
+  const CH = '帥仕相傌俥炮兵將士象馬車砲卒楚河漢界';
+  try { await Promise.all(['900 40px "Noto Serif SC"', '700 40px "Noto Serif SC"', '800 40px "Shippori Mincho B1"'].map(f => document.fonts.load(f, CH))); } catch (e) {}
+  await document.fonts.ready;
+  const X = Table3D, TT = THREE, XQ = X.xiangqi, u = XQ.u;
+  // the painted top
+  const g = XQ.board();
+  let img = null;
+  g.traverse(o => { if (img || !o.isMesh) return; for (const m of [].concat(o.material)) if (m && m.map && m.map.image && m.map.image.width >= 1024) { img = m.map.image; break; } });
+  window.SHOT = img && img.toDataURL ? img.toDataURL('image/png') : null;
+  window.GEOM = { u, MG: .45, FR: .72, W: XQ.W, D: XQ.D, PR: u * .43, PH: u * .27 };
+  // the discs, front 3/4 from high up (the face stays readable; the turned side shows below it)
+  const ELEV = +(new URLSearchParams(location.search).get('elev') || 66) * Math.PI / 180, PX = 320;
+  const PR = u * .43, PH = u * .27, M = 1.05;
+  const top = PR * Math.sin(ELEV) + PH * Math.cos(ELEV), bot = -PR * Math.sin(ELEV);   // screen y of the face's far edge / the base's near edge, about the base centre
+  const halfW = PR * M, y0 = bot - PR * (M - 1) - .015, y1 = top + PR * (M - 1);
+  const SW = PX, SH = Math.round(PX * (y1 - y0) / (2 * halfW));
+  const R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setSize(SW, SH, false); R.setPixelRatio(1); R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = 1.0;
+  R.setClearColor(0x000000, 0);
+  const scene = new TT.Scene();
+  try {   // a soft studio environment for the clear coat
+    const env = new TT.Scene();
+    const sky = new TT.Mesh(new TT.SphereGeometry(20, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
+    const col = [], P = sky.geometry.attributes.position, c = new TT.Color();
+    for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 20; const k = y > 0 ? .2 + y * .25 : .06 + (y + 1) * .07; c.setRGB(k, k * .97, k * .9); col.push(c.r, c.g, c.b); }
+    sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
+    [[-8, 12, 6, 10, 6, 2.2], [9, 7, 4, 6, 9, 1.2], [0, 16, -6, 14, 3, 1]].forEach(([x, y, z, w, h, k]) => { const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(k, k * .97, k * .92), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
+    const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .02).texture; pm.dispose();
+  } catch (e) {}
+  scene.add(new TT.HemisphereLight(0xfff6ea, 0x40382c, .45));
+  const key = new TT.DirectionalLight(0xffffff, .85); key.position.set(-3, 8, 5); scene.add(key);
+  const rim = new TT.DirectionalLight(0xffffff, .35); rim.position.set(4, 3, -5); scene.add(rim);
+  const cam = new TT.OrthographicCamera(-halfW, halfW, y1, y0, .1, 40);
+  cam.position.set(0, Math.sin(ELEV) * 10, Math.cos(ELEV) * 10); cam.up.set(0, 1, 0); cam.lookAt(0, 0, 0);
+  const out = {};
+  for (const blk of [0, 1]) for (let tp = 1; tp <= 7; tp++) {
+    const code = tp | (blk ? 8 : 0), p = XQ.piece(code);
+    scene.add(p); R.render(scene, cam); out[(blk ? 'b' : 'r') + tp] = R.domElement.toDataURL('image/png'); scene.remove(p);
+  }
+  window.PIECES = out;
+  // where the point (the base centre) sits in the sprite, as fractions of its height from the top
+  window.SPRITE = { w: SW, h: SH, cy: (y1 - 0) / (y1 - y0), face: (y1 - PH * Math.cos(ELEV)) / (y1 - y0), r: PR / halfW };
+  window.DONE = true;
+})();
+</script>
+</body></html>
