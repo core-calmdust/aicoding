@@ -453,7 +453,7 @@ function settle() {
   T.shoe.n++;
   const kinds = me.hands.map(H => H.res.kind);
   sfx(kinds.includes('bj') ? 'bj' : myNet > 0 ? (myNet >= 1000 ? 'bigchips' : 'win') : myNet < 0 ? 'lose' : 'chips');
-  if (T.bank < MIN_BET) { T.bank = START; S0.rebuys++; toast(t('toast.rebuy', { n: fmt(START) })); }
+  if (T.bank < MIN_BET) { T.bank = START; S0.rebuys++; S0.buyin = START; toast(t('toast.rebuy', { n: fmt(START) })); }
   if (!T.tut) D.chips = T.bank;
   save(); render();
   if (T.tut && window.BJTut) { setTimeout(() => BJTut.ev('done'), Math.round(900 * (mt() || .5))); return; }
@@ -700,6 +700,7 @@ function chartHtml(Rr, kind, hl, cls) {
   return `<table class="bj-chart${cls ? ' ' + cls : ''}"><tr><th></th>${CH_UP.map(u => `<th class="${hl && hl.up === u ? 'hl' : ''}">${u === 11 ? 'A' : u}</th>`).join('')}</tr>` +
     rows.map(x => `<tr><th class="${hl && hl.x === x ? 'hl' : ''}">${rowLab(kind, x)}</th>${CH_UP.map(u => { const c = B.chartCell(Rr, kind, x, u); return `<td class="${cellCls(c)}${hl && hl.x === x && hl.up === u ? ' on' : ''}">${cellTxt(c)}</td>`; }).join('')}</tr>`).join('') + `</table>`;
 }
+const coachSw = () => `<button type="button" class="ck-sw${set.coach ? ' on' : ''}" data-csw role="switch" aria-checked="${set.coach ? 'true' : 'false'}" title="${esc(t('set.coach'))}"><b>${set.coach ? 'ON' : 'OFF'}</b><i></i></button>`;
 function renderSide() {
   let h = '';
   const base = baseP(), left = T.shoe.cards.length - T.shoe.pos, tc = trueCount();
@@ -717,8 +718,8 @@ function renderSide() {
     `<div class="ch-tabs">${['h', 's', 'p'].map(k => `<button type="button" data-chk="${k}" class="${k === ck ? 'sel' : ''}">${esc(t('ch.' + k))}</button>`).join('')}</div>` +
     chartHtml(T.R, ck, cc && cc.k === ck ? cc : null) + `<div class="ch-leg">${['H', 'S', 'D', 'P', 'R'].filter(m => m !== 'R' || T.R.surr).map(m => `<span class="${cellCls(m)}"><i>${m}</i>${esc(mName(m))}</span>`).join('')}</div></div>`;
   // coach
-  if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
-  else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
+  if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3>${coachHtml()}</div>`;
+  else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
   // session
   const S = T.session, pcCol = matchMedia(PCQ).matches;
   const cells = `<div><small>${esc(t('bank'))}</small><b>${fmt(T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0))}</b></div><div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
@@ -758,12 +759,36 @@ function whyKey(cards, up, m) {
   if (V.t >= 12) return m === 'S' ? (weak ? 'why.stiffS' : 'why.stiffS2') : (weak ? 'why.stiffH2' : 'why.stiffH');
   return 'why.low';
 }
+// after a hit (or a split) the hand has changed: what the new card did and how to think about the new spot
+function flowHtml(H, up, p, evNow) {
+  const prev = T.dec.filter(d => d.k === 'move' && d.hand === T.cur.h).pop();
+  if (!prev || !(prev.m === 'H' || prev.m === 'P') || H.cards.length < 2) return '';
+  if (prev.m === 'H' && H.cards.length <= prev.cards.length) return '';
+  const c = H.cards[H.cards.length - 1], v = B.VAL(c), cl = v === 1 ? 'A' : String(v);
+  const A = B.hv(prev.cards), N = B.hv(H.cards), u = up === 1 ? 'A' : up, b = totTxt(H.cards);
+  const bust = V => V.soft ? 0 : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].reduce((a, k) => a + (V.t + k > 21 ? p[k] : 0), 0);
+  const lines = [];
+  lines.push(prev.m === 'H' ? t('fl.hit', { a: totTxt(prev.cards), c: cl, b }) : t('fl.split', { c: cl, b }));
+  let key;
+  if (N.t === 21) key = 'fl.21';
+  else if (N.soft) key = 'fl.soft';
+  else if (prev.m === 'H' && A.soft) key = 'fl.softHard';
+  else if (N.t >= 17) key = 'fl.h17';
+  else if (N.t >= 12) key = prev.m === 'H' && A.t >= 12 && !A.soft ? 'fl.stiff2' : 'fl.stiff';
+  else key = 'fl.low';
+  lines.push(t(key, { b: N.t, u, w: up >= 2 && up <= 6 ? t('fl.weak') : t('fl.strong') }));
+  const b0 = prev.m === 'H' ? bust(A) : null, b1 = bust(N);
+  const stats = `<div class="fl-st"><div><small>${esc(t('fl.bust'))}</small><b>${b0 != null ? pct(b0, 0) + ' → ' : ''}${pct(b1, 0)}</b></div>` +
+    `<div><small>${esc(t('fl.ev'))}</small><b>${spct(prev.ev[prev.m], 1)} → <span class="${evNow > prev.ev[prev.m] ? 'pos' : evNow < prev.ev[prev.m] ? 'neg' : ''}">${spct(evNow, 1)}</span></b></div></div>`;
+  return `<div class="ck-flow"><div class="tips-h">${esc(t('fl.h'))}</div><p class="fl-what">${esc(lines[0])}</p>${stats}<p class="fl-how">💡 ${esc(lines[1])}</p></div>`;
+}
 function coachHtml() {
   let h = '';
   const base = baseP(), S = T.session;
   if (T.phase === 'play' && myHand()) {
     const { S: St, H } = myHand(), up = B.VAL(T.dealer.cards[0]), ctx = ctxOf(St, H);
     const ev = B.moveEVs(H.cards, up, base.p, T.R, ctx), evN = B.moveEVs(H.cards, up, unseenP(), T.R, ctx), best = B.bestOf(ev), bestN = B.bestOf(evN);
+    h += flowHtml(H, up, base.p, ev[best]);
     h += `<div class="ck-rec"><span class="rb">${esc(t('ck.best', { m: mName(best) }))}</span><p>${esc(t(whyKey(H.cards, up, best), { u: up === 1 ? 'A' : up, t: B.hv(H.cards).t }))}</p></div>`;
     h += `<div class="tips-h">${esc(t('ck.evh'))}</div>` + evTable(ev, evN, best, bestN);
     if (bestN !== best) h += `<p class="ck-flip">🔎 ${esc(t('ck.dev', { m: mName(bestN), tc: trueCount().toFixed(1) }))}</p>`;
@@ -960,7 +985,7 @@ document.addEventListener('click', e => {
   const id = el.id;
   if (id === 'ngReset') NGR = 1;
   else if (id === 'ngRNo') NGR = 0;
-  else { NGR = 0; D.chips = START; if (T) { if (T.phase === 'bet') { T.bets = {}; G.undo = []; T.bank = START; } else T.bank = START; } save(); if (T) render(); sfx('chips'); toast(t('ng.resetDone', { n: fmt(START) })); }
+  else { NGR = 0; D.chips = START; if (T) { if (T.phase === 'bet') { T.bets = {}; G.undo = []; T.bank = START; } else T.bank = START; if (T.session) { T.session.buyin = START; T.session.peak = START; } } save(); if (T) render(); sfx('chips'); toast(t('ng.resetDone', { n: fmt(START) })); }
   renderNew();
 });
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
@@ -1062,4 +1087,5 @@ setInterval(() => { if (T && !T.tut && T.phase !== 'bet') { D.cur = T; save(); }
 addEventListener('pagehide', () => { if (T && !T.tut) { D.cur = T; save(); } });
 
 window.BJApp = { num, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, spct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, chartHtml, CH_ROWS, mName, totTxt, statOf, LAB };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); set.coach = set.coach ? 0 : 1; save(); render(); if (typeof sfx === 'function') try { sfx('tap'); } catch (x) {} });
 })();

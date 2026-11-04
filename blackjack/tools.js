@@ -17,11 +17,14 @@ function rulesBar() {
   const yn = [[true, t('on')], [false, t('off')]];
   const OV = { h17: [t('tl.g.h17'), [[false, 'S17'], [true, 'H17']]], surr: [t('m.R'), yn], bj: ['BJ', [[1.5, '3:2'], [1.2, '6:5']]], das: [t('tl.g.das'), yn] };
   const grp = (lab, html, cls) => `<div class="tl-g${cls ? ' ' + cls : ''}"><small>${esc(lab)}</small>${html}</div>`;
-  return `<div class="tl-rules">` + grp(t('tl.g.rule'), seg('tv', B.ORDER.map(v => [v, A.vName(v)]), W.v), 'wide') +
+  const mob = matchMedia('(max-width:760px)').matches, open = !mob || W.rOpen;
+  const sum = [A.vName(W.v), t('o.deckN', { n: p.decks })].concat(opts.filter(k => OV[k]).map(k => { const o = OV[k][1].find(([v]) => String(v) === String(p[k])); return k === 'surr' || k === 'das' ? (p[k] ? OV[k][0] : '') : o ? o[1] : ''; })).filter(Boolean).join(' · ');
+  return `<details class="tl-rd" id="tlRd"${open ? ' open' : ''}><summary><small>${esc(t('tl.g.rule'))}</small><b>${esc(sum)}</b></summary><div class="tl-rules">` + grp(t('tl.g.rule'), seg('tv', B.ORDER.map(v => [v, A.vName(v)]), W.v), 'wide') +
     `<div class="tl-opts">` + grp(t('o.decks'), seg('tdk', B.DECKS.map(d => [d, String(d)]), p.decks)) +
-    opts.filter(k => OV[k]).map(k => grp(OV[k][0], seg('to-' + k, OV[k][1].map(([v, l]) => [String(v), l]), String(p[k])))).join('') + `</div></div>`;
+    opts.filter(k => OV[k]).map(k => grp(OV[k][0], seg('to-' + k, OV[k][1].map(([v, l]) => [String(v), l]), String(p[k])))).join('') + `</div></div></details>`;
 }
 function wireRules(M) {
+  const rd = M.querySelector('#tlRd'); if (rd) rd.ontoggle = () => { if (matchMedia('(max-width:760px)').matches) W.rOpen = rd.open; };
   M.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { W.v = b.dataset.tv; W.p = JSON.parse(JSON.stringify(A.prefOf(W.v))); render(); });
   M.querySelectorAll('[data-tdk]').forEach(b => b.onclick = () => { W.p.decks = +b.dataset.tdk; render(); });
   ['h17', 'surr', 'bj', 'das'].forEach(k => M.querySelectorAll(`[data-to-${k}]`).forEach(b => b.onclick = () => { const raw = b.getAttribute('data-to-' + k); W.p[k] = k === 'bj' ? +raw : raw === 'true'; render(); }));
@@ -29,12 +32,13 @@ function wireRules(M) {
 
 /* ---------- 基本戦略表 ---------- */
 function chartTab() {
-  const R = curRules(), leg = ['H', 'S', 'D', 'Ds', 'P', 'R', 'Rs'].filter(c => R.surr || c[0] !== 'R');
-  return rulesBar() + `<div class="tl3 chart-w"><div class="tl-box"><span class="lab">${esc(t('ch.h'))}</span>${A.chartHtml(R, 'h')}</div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('ch.s'))}</span>${A.chartHtml(R, 's')}<span class="lab tl-gap">${esc(t('ch.p'))}</span>${A.chartHtml(R, 'p')}</div>` +
-    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.legend'))}</span><ul class="tl-leg">${leg.map(c => `<li><i class="cc-${c.toLowerCase()}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.edgeNow'))}</span><div class="tl-big">${pct(B.houseEdge(R))}</div><p class="diff-desc">${esc(t('tl.chartHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.keys'))}</span><ol class="tl-steps">${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol></div></div></div>`;
+  const R = curRules(), leg = ['H', 'S', 'D', 'Ds', 'P', 'R', 'Rs'].filter(c => R.surr || c[0] !== 'R'), ct = W.ct || 'h';
+  const box = k => `<div class="tl-box ctb ct-${k}"><span class="lab">${esc(t('ch.' + k))}</span>${A.chartHtml(R, k)}</div>`;
+  return rulesBar() +
+    `<div class="tl-legbar"><ul class="tl-leg row">${leg.map(c => `<li><i class="cc-${c.toLowerCase()}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><span class="tl-edge"><small>${esc(t('tl.edgeNow'))}</small><b>${pct(B.houseEdge(R))}</b></span></div>` +
+    `<div class="ct-seg">${seg('ct', ['h', 's', 'p'].map(k => [k, t('ch.' + k)]), ct)}</div>` +
+    `<div class="tl3c chart-w" data-ct="${ct}">${box('h')}${box('s')}${box('p')}</div>` +
+    `<details class="tl-more"><summary>${esc(t('tl.keys'))}</summary><ol class="tl-steps">${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol><p class="diff-desc">${esc(t('tl.chartHelp'))}</p></details>`;
 }
 
 /* ---------- ハウスエッジ ---------- */
@@ -51,11 +55,11 @@ function edgeTab() {
   const vars = B.ORDER.map(v => { const e = B.houseEdge(B.rulesOf(v, A.prefOf(v))); return `<div class="ec-r${v === W.v ? ' sel' : ''}"><b>${esc(A.vName(v))}</b><span class="ec-b"><i style="width:${Math.min(100, e / .025 * 100).toFixed(1)}%"></i><em>${pct(e)}</em></span></div>`; }).join('');
   const se = B.sideEdges(R), sides = B.SIDEBETS[W.v].map(k => `<div class="kv"><span>${esc(t('sp.' + k))}</span><b class="neg">${pct(se[k])}</b></div>`).join('');
   const hour = [['tl.h.basic', base], ['tl.h.gut', .025], ['tl.h.nobust', .05]].map(([k, e]) => `<div class="kv"><span>${esc(t(k))}</span><b class="neg">−${fmt(Math.round(e * 80 * 100))}</b></div>`).join('');
-  return rulesBar() + `<div class="tl2"><div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.edgeNow'))}</span><div class="tl-big">${pct(base)}</div><p class="diff-desc">${esc(t('tl.edgeHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.ruleFx'))}</span>${fl || `<p class="muted">—</p>`}<p class="diff-desc">${esc(t('tl.ruleFxHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.decks'))}</span><div class="ec">${decks.map(([d, e]) => `<div class="ec-r${d === W.p.decks ? ' sel' : ''}"><b>${esc(t('o.deckN', { n: d }))}</b><span class="ec-b"><i style="width:${(e / mx * 100).toFixed(1)}%"></i><em>${pct(e)}</em></span></div>`).join('')}</div></div></div>` +
-    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.vars'))}</span><div class="ec">${vars}</div><p class="diff-desc">${esc(t('tl.varsHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.sides'))}</span>${sides}<p class="diff-desc">${esc(t('tl.sidesHelp'))}</p></div>` +
+  return rulesBar() + `<div class="tl3e"><div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.edgeNow'))}</span><div class="tl-big">${pct(base)}</div><p class="diff-desc">${esc(t('tl.edgeHelp'))}</p></div>` +
+    `<div class="tl-box"><span class="lab">${esc(t('tl.ruleFx'))}</span>${fl || `<p class="muted">—</p>`}<p class="diff-desc">${esc(t('tl.ruleFxHelp'))}</p></div></div>` +
+    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.vars'))}</span><div class="ec ec1">${vars}</div><p class="diff-desc">${esc(t('tl.varsHelp'))}</p></div>` +
+    `<div class="tl-box"><span class="lab">${esc(t('tl.decks'))}</span><div class="ec ec1">${decks.map(([d, e]) => `<div class="ec-r${d === W.p.decks ? ' sel' : ''}"><b>${esc(t('o.deckN', { n: d }))}</b><span class="ec-b"><i style="width:${(e / mx * 100).toFixed(1)}%"></i><em>${pct(e)}</em></span></div>`).join('')}</div></div></div>` +
+    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.sides'))}</span>${sides}<p class="diff-desc">${esc(t('tl.sidesHelp'))}</p></div>` +
     `<div class="tl-box"><span class="lab">${esc(t('tl.hour'))}</span>${hour}<p class="diff-desc">${esc(t('tl.hourHelp'))}</p></div></div></div>`;
 }
 
@@ -116,6 +120,7 @@ function render() {
   M.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { tab = b.dataset.tt; render(); });
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
   wireRules(M);
+  M.querySelectorAll('[data-ct]').forEach(b => { if (b.tagName === 'BUTTON') b.onclick = () => { W.ct = b.dataset.ct; render(); }; });
   if (tab === 'sim') { M.querySelectorAll('[data-sn]').forEach(b => b.onclick = () => { W.sim.n = +b.dataset.sn; W.sim.res = null; render(); }); const r = $('#simRun'); if (r) r.onclick = runSim; }
 }
 function open(k) { if (k) tab = k; W.v = null; ensure(); render(); A.openOv('#toolsOverlay'); }

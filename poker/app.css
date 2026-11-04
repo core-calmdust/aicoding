@@ -1693,3 +1693,14 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 .ab-msg.tour-end small{font-size:12px;color:#8fe3b8}
 .seat.out .plate .st::after{content:none!important}
 .st-tour{margin-top:12px}.st-tour .lab{display:block;margin-bottom:6px}
+
+/* coach on/off switch (top right of the coach card) */
+.side .coach-card h3,.pk .side .coach-card h3{display:flex;align-items:center;gap:8px}
+.ck-sw{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:999px;border:1px solid rgba(236,232,222,.22);background:rgba(0,0,0,.25);color:rgba(236,232,222,.55);font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-sw b{font:inherit}
+.ck-sw i{position:relative;width:26px;height:15px;border-radius:999px;background:rgba(236,232,222,.18);transition:background .2s}
+.ck-sw i::after{content:'';position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#cfc9bb;transition:transform .2s}
+.ck-sw.on{color:var(--hl2,#f6d48a);border-color:var(--hl-a,rgba(224,170,72,.5))}
+.ck-sw.on i{background:var(--hl,#e0aa48)}
+.ck-sw.on i::after{transform:translateX(11px);background:#1a1408}
+.ck-sw:focus-visible{outline:2px solid var(--hl,#e0aa48);outline-offset:2px}

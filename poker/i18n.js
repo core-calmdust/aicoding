@@ -1,6 +1,7 @@
 /* ポーカー — texts (poker/i18n.js). ja / en here; the other languages are added below (Object.assign blocks). */
 const I18N = {
 ja: {
+  'coach.off': 'コーチはオフです。右上のスイッチでオンにすると、おすすめの行動とその理由、判断の採点を表示します。',
   series: '世界のボドゲ大百科', 'meta.title': 'ポーカー | 世界のボドゲ大百科', title: 'ポーカー', back: 'ホームへ',
   'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.s': '新規', 'btn.new.t': 'ゲームの種類・CPU・デザインを選んで始める',
   'btn.resign': '精算', 'btn.resign.t': 'このテーブルを精算して席を立つ（新しいテーブルで始め直す）',
@@ -67,6 +68,7 @@ ja: {
   'hx.sf': '同じマークで5枚連続（A〜10はロイヤル）', 'hx.quads': '同じ数字4枚', 'hx.full': 'スリーカード＋ワンペア', 'hx.flush': '同じマーク5枚', 'hx.straight': '連続した5枚（A-2-3-4-5も可）', 'hx.trips': '同じ数字3枚', 'hx.two': 'ペアが2組', 'hx.pair': '同じ数字2枚', 'hx.high': '役なし。一番高いカードで比べる',
 },
 en: {
+  'coach.off': 'The coach is off. Turn it on with the switch at the top right to see the suggested move, why, and grades for your decisions.',
   series: 'World Board Game Atlas', 'meta.title': 'Poker | World Board Game Atlas', title: 'Poker', back: 'Home',
   'btn.sound': 'Sound', 'btn.settings': 'Settings', 'btn.new': 'New game', 'btn.new.s': 'New', 'btn.new.t': 'Choose the game, the CPU players and the design',
   'btn.resign': 'Cash out', 'btn.resign.t': 'Cash out of this table and start a fresh one',
