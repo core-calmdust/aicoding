@@ -213,6 +213,13 @@ function chartCell(R, kind, x, upI) {
   else if (b === 'R') { const e2 = Object.assign({}, ev); delete e2.R; const f = bestOf(e2); code = f === 'S' ? 'Rs' : f === 'P' ? 'Rp' : 'R'; }
   CHART.set(key, code); return code;
 }
+// the values behind one chart cell (the research tab's inspector)
+function cellEVs(R, kind, x, upI) {
+  const up = upI === 11 ? 1 : upI, p = probs(fullCounts(R));
+  const cards = kind === 'p' ? [x === 1 ? 0 : x - 1, x === 1 ? 13 : x + 12] : kind === 's' ? [0, x - 1] : hardCards(x);
+  const ev = moveEVs(cards, up, p, R, { nHands: 1 }); if (kind !== 'p') delete ev.P;
+  return { cards, up, ev, code: chartCell(R, kind, x, upI) };
+}
 // the hard-total cards used for a chart row: two different cards that are not a pair and contain no ace
 function hardCards(x) { for (let a = 2; a <= 10; a++) { const b = x - a; if (b >= 2 && b <= 10 && b !== a) return [a - 1, b - 1 + 13]; } return [x - 1 - 1, 13 + 1 - 1]; }
 
@@ -374,5 +381,5 @@ function simulate(R, stratKey, n, seed) {
 
 G.BJ = { SIDEBETS, RANK, SUIT, VAL, RCH, cardStr, parse, hv, isBJ, isPair, HILO, mulberry, shuffle, BASE, VARIANTS, ORDER, DECKS, rulesOf, rkey,
   newShoe, vcounts, fullCounts, probs, dealerFn, solver, allowed, moveEVs, bestOf, bestMove, basicMove, chartCell, hardCards, roundEV, houseEdge, countComp,
-  perfectPairs, twentyOne3, sideEdges, spanishBonus, settleHand, dealerHits, STRATS, simRound, simulate };
+  cellEVs, perfectPairs, twentyOne3, sideEdges, spanishBonus, settleHand, dealerHits, STRATS, simRound, simulate };
 })(typeof self !== 'undefined' ? self : this);

@@ -31,14 +31,45 @@ function wireRules(M) {
 }
 
 /* ---------- 基本戦略表 ---------- */
+const KIND = { h: 'HARD TOTALS', s: 'SOFT TOTALS', p: 'PAIRS' };
+const upLab = u => u === 11 || u === 1 ? 'A' : String(u);
+function chartTable(R, k) {
+  const sel = W.sel && W.sel.k === k ? W.sel : null;
+  return `<table class="lx-ch" data-kind="${k}"><thead><tr><th class="cn">${esc(t('ch.' + k))}</th>${A.CH_UP.map(u => `<th>${upLab(u)}</th>`).join('')}</tr></thead><tbody>` +
+    A.CH_ROWS[k].map(x => `<tr><th>${esc(A.rowLab(k, x))}</th>${A.CH_UP.map(u => { const c = B.chartCell(R, k, x, u); return `<td class="${A.cellCls(c)}${sel && sel.x === x && sel.u === u ? ' sel' : ''}" data-x="${x}" data-u="${u}">${c}</td>`; }).join('')}</tr>`).join('') + `</tbody></table>`;
+}
+function inspHtml(k, x, u) {
+  const R = curRules(), c = B.cellEVs(R, k, x, u), ev = c.ev, ms = Object.keys(ev).sort((a, b) => ev[b] - ev[a]);
+  const best = ms[0], second = ms[1], up = c.up, tot = B.hv(c.cards).t;
+  const lo = Math.min(-1, ...ms.map(m => ev[m])), hi = Math.max(.6, ...ms.map(m => ev[m])), span = hi - lo, z = -lo / span * 100;
+  const bar = v => { const a = (Math.min(v, 0) - lo) / span * 100, b = (Math.max(v, 0) - lo) / span * 100; return `<span class="lx-ev"><i class="zero" style="left:${z.toFixed(1)}%"></i><i class="b ${v >= 0 ? 'p' : 'n'}" style="left:${a.toFixed(1)}%;width:${Math.max(.6, b - a).toFixed(1)}%"></i></span>`; };
+  const code = c.code, why = t(A.whyKey(c.cards, up, best), { u: upLab(u), t: tot });
+  return `<div class="lx-k">${esc(t('tl.insp.h'))}</div>` +
+    `<div class="lx-hand"><b>${esc(t('ch.' + k))} ${esc(A.rowLab(k, x))}</b><span>${esc(t('tl.insp.vs', { u: upLab(u) }))}</span></div>` +
+    `<div class="lx-best"><i class="${A.cellCls(code)}">${code}</i><div><small>${esc(t('tl.insp.best'))}</small><b>${esc(['H', 'S', 'D', 'Ds', 'P', 'R', 'Rs'].includes(code) ? t('tl.c.' + code) : A.mName(best))}</b></div></div>` +
+    `<div class="lx-evs">${ms.map(m => `<div class="lx-er${m === best ? ' top' : ''}"><span class="n">${esc(A.mName(m))}${m === best ? ' ◎' : ''}</span>${bar(ev[m])}<b class="${ev[m] > 0 ? 'pos' : ev[m] < 0 ? 'neg' : ''}">${A.spct(ev[m], 1)}</b></div>`).join('')}</div>` +
+    (second ? `<p class="lx-gap">${esc(t('tl.insp.gap', { m: A.mName(second), d: pct(ev[best] - ev[second], 2) }))}</p>` : '') +
+    `<p class="lx-why">${esc(why)}</p>`;
+}
 function chartTab() {
   const R = curRules(), leg = ['H', 'S', 'D', 'Ds', 'P', 'R', 'Rs'].filter(c => R.surr || c[0] !== 'R'), ct = W.ct || 'h';
-  const box = k => `<div class="tl-box ctb ct-${k}"><span class="lab">${esc(t('ch.' + k))}</span>${A.chartHtml(R, k)}</div>`;
-  return rulesBar() +
-    `<div class="tl-legbar"><ul class="tl-leg row">${leg.map(c => `<li><i class="cc-${c.toLowerCase()}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><span class="tl-edge"><small>${esc(t('tl.edgeNow'))}</small><b>${pct(B.houseEdge(R))}</b></span></div>` +
-    `<div class="ct-seg">${seg('ct', ['h', 's', 'p'].map(k => [k, t('ch.' + k)]), ct)}</div>` +
-    `<div class="tl3c chart-w" data-ct="${ct}">${box('h')}${box('s')}${box('p')}</div>` +
-    `<details class="tl-more"><summary>${esc(t('tl.keys'))}</summary><ol class="tl-steps">${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol><p class="diff-desc">${esc(t('tl.chartHelp'))}</p></details>`;
+  if (!W.sel || W.sel.k !== ct) W.sel = ct === 'h' ? { k: 'h', x: 16, u: 10 } : ct === 's' ? { k: 's', x: 7, u: 9 } : { k: 'p', x: 8, u: 10 };
+  return rulesBar() + `<div class="lx-chart">` +
+    `<section class="lx-p lx-main"><header class="lx-ph"><div class="lx-k">${KIND[ct]}</div><div class="lx-sub">${['h', 's', 'p'].map(k => `<button type="button" data-ct="${k}" class="${k === ct ? 'sel' : ''}">${esc(t('ch.' + k))}</button>`).join('')}</div></header>` +
+    `<div class="lx-tw"><div class="lx-dl">${esc(t('tl.dealerUp'))}</div>${chartTable(R, ct)}</div>` +
+    `<div class="lx-lf"><ul class="lx-leg">${leg.map(c => `<li><i class="${A.cellCls(c)}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><div class="lx-he"><small>HOUSE EDGE</small><b>${pct(B.houseEdge(R))}</b></div></div></section>` +
+    `<aside class="lx-side"><section class="lx-p lx-insp" id="lxInsp">${inspHtml(W.sel.k, W.sel.x, W.sel.u)}</section>` +
+    `<section class="lx-p lx-keys"><div class="lx-k">${esc(t('tl.keys'))}</div><ol>${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol></section></aside></div>`;
+}
+function wireChart(M) {
+  const tb = M.querySelector('.lx-ch'), box = M.querySelector('#lxInsp'); if (!tb || !box) return;
+  const mark = td => { tb.querySelectorAll('.hx').forEach(e => e.classList.remove('hx')); if (!td) return; const ci = td.cellIndex, tr = td.parentNode; tr.querySelectorAll('td,th').forEach(e => e.classList.add('hx')); tb.querySelectorAll('tr').forEach(r => { const e = r.children[ci]; if (e) e.classList.add('hx'); }); };
+  const show = td => { box.innerHTML = inspHtml(tb.dataset.kind, +td.dataset.x, +td.dataset.u); };
+  tb.querySelectorAll('td[data-x]').forEach(td => {
+    td.onpointerenter = e => { if (e.pointerType !== 'mouse') return; mark(td); show(td); };
+    td.onclick = () => { W.sel = { k: tb.dataset.kind, x: +td.dataset.x, u: +td.dataset.u }; tb.querySelectorAll('td.sel').forEach(e => e.classList.remove('sel')); td.classList.add('sel'); mark(td); show(td); if (matchMedia('(max-width:760px)').matches) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+  });
+  tb.onpointerleave = () => { mark(null); const s0 = W.sel; box.innerHTML = inspHtml(s0.k, s0.x, s0.u); };
 }
 
 /* ---------- ハウスエッジ ---------- */
@@ -55,12 +86,17 @@ function edgeTab() {
   const vars = B.ORDER.map(v => { const e = B.houseEdge(B.rulesOf(v, A.prefOf(v))); return `<div class="ec-r${v === W.v ? ' sel' : ''}"><b>${esc(A.vName(v))}</b><span class="ec-b"><i style="width:${Math.min(100, e / .025 * 100).toFixed(1)}%"></i><em>${pct(e)}</em></span></div>`; }).join('');
   const se = B.sideEdges(R), sides = B.SIDEBETS[W.v].map(k => `<div class="kv"><span>${esc(t('sp.' + k))}</span><b class="neg">${pct(se[k])}</b></div>`).join('');
   const hour = [['tl.h.basic', base], ['tl.h.gut', .025], ['tl.h.nobust', .05]].map(([k, e]) => `<div class="kv"><span>${esc(t(k))}</span><b class="neg">−${fmt(Math.round(e * 80 * 100))}</b></div>`).join('');
-  return rulesBar() + `<div class="tl3e"><div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.edgeNow'))}</span><div class="tl-big">${pct(base)}</div><p class="diff-desc">${esc(t('tl.edgeHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.ruleFx'))}</span>${fl || `<p class="muted">—</p>`}<p class="diff-desc">${esc(t('tl.ruleFxHelp'))}</p></div></div>` +
-    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.vars'))}</span><div class="ec ec1">${vars}</div><p class="diff-desc">${esc(t('tl.varsHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.decks'))}</span><div class="ec ec1">${decks.map(([d, e]) => `<div class="ec-r${d === W.p.decks ? ' sel' : ''}"><b>${esc(t('o.deckN', { n: d }))}</b><span class="ec-b"><i style="width:${(e / mx * 100).toFixed(1)}%"></i><em>${pct(e)}</em></span></div>`).join('')}</div></div></div>` +
-    `<div class="tl-col"><div class="tl-box"><span class="lab">${esc(t('tl.sides'))}</span>${sides}<p class="diff-desc">${esc(t('tl.sidesHelp'))}</p></div>` +
-    `<div class="tl-box"><span class="lab">${esc(t('tl.hour'))}</span>${hour}<p class="diff-desc">${esc(t('tl.hourHelp'))}</p></div></div></div>`;
+  const hr = Math.round(base * 80 * 100);
+  const fx = flips.length ? flips.map(f => { const w = Math.min(50, Math.abs(f.d) / .016 * 50); return `<div class="lx-fx"><span class="n">${esc(t(f.lab + '.' + (f.k === 'bj' ? (f.cur === 1.2 ? '65' : '32') : f.cur ? 'on' : 'off')))}</span><span class="lx-dv"><i class="${f.d > 0 ? 'n' : 'p'}" style="${f.d > 0 ? 'left:50%' : 'right:50%'};width:${w.toFixed(1)}%"></i></span><b class="${f.d > 0 ? 'neg' : 'pos'}">${f.d > 0 ? '+' : '−'}${Math.abs(f.d * 100).toFixed(2)}%</b></div>`; }).join('') : `<p class="muted">—</p>`;
+  const bars = (rows, mx) => `<div class="lx-bars">${rows.map(([lab, e, sel]) => `<div class="lx-br${sel ? ' sel' : ''}"><span class="n">${esc(lab)}</span><span class="lx-bt"><i style="width:${Math.max(1.5, e / mx * 100).toFixed(1)}%"></i></span><b>${pct(e)}</b></div>`).join('')}</div>`;
+  const vr = B.ORDER.map(v => [A.vName(v), B.houseEdge(B.rulesOf(v, A.prefOf(v))), v === W.v]);
+  return rulesBar() + `<div class="lx-edge">` +
+    `<section class="lx-p lx-hero"><div class="lx-k">HOUSE EDGE</div><div class="lx-hrow"><b class="lx-num xl">${pct(base)}</b><small>${esc(t('tl.edgeNow'))}</small></div>` +
+    `<div class="lx-hour"><div class="lx-k">${esc(t('tl.hour'))}</div>${[['tl.h.basic', base], ['tl.h.gut', .025], ['tl.h.nobust', .05]].map(([k, e]) => `<div><span>${esc(t(k))}</span><b>−${fmt(Math.round(e * 80 * 100))}</b></div>`).join('')}</div></section>` +
+    `<section class="lx-p lx-vars"><div class="lx-k">${esc(t('tl.vars'))}</div>${bars(vr, .025)}<p class="lx-note">${esc(t('tl.varsHelp'))}</p></section>` +
+    `<section class="lx-p lx-c2"><div class="lx-k">${esc(t('tl.ruleFx'))}</div>${fx}<p class="lx-note">${esc(t('tl.ruleFxHelp'))}</p></section>` +
+    `<section class="lx-p lx-c2"><div class="lx-k">${esc(t('tl.decks'))}</div>${bars(decks.map(([d, e]) => [t('o.deckN', { n: d }), e, d === W.p.decks]), mx)}</section>` +
+    `<section class="lx-p lx-c2"><div class="lx-k">${esc(t('tl.sides'))}</div>${B.SIDEBETS[W.v].length ? bars(B.SIDEBETS[W.v].map(k => [t('sp.' + k), se[k], false]), .08) : '<p class="muted">—</p>'}<p class="lx-note">${esc(t('tl.sidesHelp'))}</p></section></div>`;
 }
 
 /* ---------- カウンティング ---------- */
@@ -95,11 +131,11 @@ function simTab() {
       return `<div class="sim-row"><b>${esc(t('sim.' + k))}</b><span class="ec-b"><i style="width:${Math.min(100, Math.abs(r.mean) / mx * 100).toFixed(1)}%" class="${k === 'basic' ? 'best' : ''}"></i><em>${pct(e)} ±${(ci * 100).toFixed(2)}</em></span><small>${esc(t('sim.per', { n: fmt(Math.round(e * 100 * 100)) }))}</small></div>`; }).join('')}</div>` +
       `<p class="sy-note">${esc(t('sim.verdict', { a: pct(-S.res.basic.mean), b: pct(-S.res.mimic.mean), x: Math.max(1, Math.round(S.res.mimic.mean / (S.res.basic.mean || -.001))) }))}</p>`;
   }
-  return rulesBar() + `<div class="tl2 sys"><div><div class="rl-list">` +
+  return rulesBar() + `<div class="tl2 sys lx-sim"><section class="lx-p"><div class="lx-k">STRATEGIES</div><div class="rl-list">` +
     `<div class="rl"><div class="rl-t"><b>${esc(t('sim.n'))}</b></div>${seg('sn', [[5000, '5,000'], [20000, '20,000'], [100000, '100,000']], S.n)}</div></div>` +
     `<ul class="sim-d">${SIM.map(k => `<li><b>${esc(t('sim.' + k))}</b><span>${esc(t('sim.d.' + k))}</span></li>`).join('')}</ul>` +
-    `<div class="tl-go"><button class="mbtn go" id="simRun"${S.running ? ' disabled' : ''}>${esc(t(S.running ? 'sim.running' : 'sim.run'))}</button></div></div>` +
-    `<div>${res || `<p class="muted">${esc(t('sim.help'))}</p>`}<p class="diff-desc">${esc(t('sim.note', { e: pct(B.houseEdge(R)) }))}</p></div></div>`;
+    `<div class="tl-go"><button class="mbtn go" id="simRun"${S.running ? ' disabled' : ''}>${esc(t(S.running ? 'sim.running' : 'sim.run'))}</button></div></section>` +
+    `<section class="lx-p"><div class="lx-k">RESULTS</div>${res || `<p class="muted">${esc(t('sim.help'))}</p>`}<p class="diff-desc">${esc(t('sim.note', { e: pct(B.houseEdge(R)) }))}</p></section></div>`;
 }
 function runSim() {
   const S = W.sim, R = curRules(); if (S.running) return;
@@ -115,12 +151,13 @@ function render() {
   const M = $('#toolsModal'), sb = M.querySelector('.tl-body'), keep = sb && tab === lastTab ? sb.scrollTop : 0; lastTab = tab;
   const tabs = ['chart', 'edge', 'count', 'sim'].map(k => `<button type="button" class="${k === tab ? 'sel' : ''}" data-tt="${k}">${esc(t('tl.' + k))}</button>`).join('');
   const body = tab === 'chart' ? chartTab() : tab === 'edge' ? edgeTab() : tab === 'count' ? countTab() : simTab();
-  M.innerHTML = `<h2>${esc(t('tl.h'))}</h2><div class="ng-tabs bc-tt">${tabs}</div><div class="tl-body">${body}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
+  M.classList.add('bjx'); M.innerHTML = `<h2><small>RESEARCH</small>${esc(t('tl.h'))}</h2><div class="ng-tabs bc-tt">${tabs}</div><div class="tl-body">${body}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
   if (keep) M.querySelector('.tl-body').scrollTop = keep;
   M.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { tab = b.dataset.tt; render(); });
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
   wireRules(M);
-  M.querySelectorAll('[data-ct]').forEach(b => { if (b.tagName === 'BUTTON') b.onclick = () => { W.ct = b.dataset.ct; render(); }; });
+  M.querySelectorAll('button[data-ct]').forEach(b => b.onclick = () => { W.ct = b.dataset.ct; render(); });
+  if (tab === 'chart') wireChart(M);
   if (tab === 'sim') { M.querySelectorAll('[data-sn]').forEach(b => b.onclick = () => { W.sim.n = +b.dataset.sn; W.sim.res = null; render(); }); const r = $('#simRun'); if (r) r.onclick = runSim; }
 }
 function open(k) { if (k) tab = k; W.v = null; ensure(); render(); A.openOv('#toolsOverlay'); }
