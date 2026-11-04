@@ -45,6 +45,7 @@ static const i32 OPPD[8] = {7, 6, 5, 4, 3, 2, 1, 0};
 static i8 NB[81 * 8];
 static i8 KN_TO[2][81][2], KN_TO_N[2][81], KN_FROM[2][81][2], KN_FROM_N[2][81];
 static u8 STEP[32 * 8], SLIDE[32 * 8];
+static i8 LDIR[81 * 81]; static u8 LDIST[81 * 81];   /* [a * 81 + b]: the direction (NB index) from a along a line to b, -1 if none; the number of steps */
 /* per piece code: directions in increasing order, high bit = slide */
 static u8 DIRS[32][8], NDIRS[32];
 #define inZone(col, s) ((col) == 0 ? (s) < 27 : (s) >= 54)
@@ -400,13 +401,13 @@ static void doMove(int m) {
   i32 a0 = acc[0], a1 = acc[1];
   int nn = nnOn;
   if (nn) memcpy(nnSt + s0 * 2 * nnH, nnA, sizeof(float) * 2 * nnH);
-  int nue = nueOn, nk = 0;
+  int nue = nueOn, nk = 0, lin = !nn && !nue;   /* lin: the linear evaluation is in use (its accumulators are skipped otherwise) */
   if (nue) nueOk[s0 + 1] = 0;
   if (from > 80) {
     int t = from - 80, p = t + (us ? WF : 0), hi = us * 8 + t, n = hand[hi];
     l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
     if (nn) { nnHand(0, us, t, n, -1); nnHand(1, us, t, n, -1); nnPiece(0, p, to, 1); nnPiece(1, p, to, 1); }
-    else { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
+    else if (lin) { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
     if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (i16)nueHd(c, us, t, n); nueDA[s0][c][0] = (i16)nueB(c, p, to); } nk = 1; }
     hand[hi] = n - 1;
     board[to] = p; SETB(us, to); l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
@@ -426,7 +427,7 @@ static void doMove(int m) {
         if (nn) {
           if (!(isKing && us == 0)) { nnPiece(0, cap, to, -1); nnHand(0, us, ct, n, 1); }
           if (!(isKing && us == 1)) { nnPiece(1, cap, to, -1); nnHand(1, us, ct, n, 1); }
-        } else {
+        } else if (lin) {
           if (!(isKing && us == 0)) { a0 -= pv_(0, cap, to); a0 += hv_(0, us, ct, n); }
           if (!(isKing && us == 1)) { a1 -= pv_(1, cap, to); a1 += hv_(1, us, ct, n); }
         }
@@ -440,9 +441,10 @@ static void doMove(int m) {
       else { nnPiece(0, p, from, -1); nnPiece(0, np, to, 1); nnPiece(1, p, from, -1); nnPiece(1, np, to, 1); }
     } else if (isKing) {
       king[us] = to;
-      if (us == 0) { a0 = fullAcc(0); a1 += pv_(1, np, to) - pv_(1, p, from); }
+      if (!lin) {}
+      else if (us == 0) { a0 = fullAcc(0); a1 += pv_(1, np, to) - pv_(1, p, from); }
       else { a1 = fullAcc(1); a0 += pv_(0, np, to) - pv_(0, p, from); }
-    } else {
+    } else if (lin) {
       a0 += pv_(0, np, to) - pv_(0, p, from);
       a1 += pv_(1, np, to) - pv_(1, p, from);
     }
@@ -731,6 +733,19 @@ static inline int pick(i32 *moves, i32 *scores, int n, int i) {
   if (bi != i) { i32 tm = moves[i]; moves[i] = moves[bi]; moves[bi] = tm; i32 ts = scores[i]; scores[i] = scores[bi]; scores[bi] = ts; }
   return moves[i];
 }
+/* a quick superset test of "move m (side to move) gives check": the moved / dropped piece attacks the enemy king from its new
+   square (sliders: any line, blockers ignored), or the piece leaves a line through the enemy king (a discovered check);
+   false means it surely does not give check, so the quiet-check scan of qsearch skips making the move */
+static int mayCheck(int m) {
+  int us = side, ek = king[us ^ 1]; if (ek < 0) return 1;
+  int from = m & 127, to = (m >> 7) & 127, np;
+  if (from > 80) np = from - 80 + (us ? WF : 0);
+  else { int p = board[from]; np = (m >> 14) & 1 ? p + 8 : p; if (LDIR[from * 81 + ek] >= 0) return 1; }
+  int d = LDIR[to * 81 + ek];
+  if (d >= 0) { if (SLIDE[np * 8 + d] || (LDIST[to * 81 + ek] == 1 && STEP[np * 8 + d])) return 1; }
+  if (typeOf(np) == KE) for (int i = 0; i < KN_FROM_N[us][ek]; i++) if (KN_FROM[us][ek][i] == to) return 1;
+  return 0;
+}
 static double qsearch(double alpha, double beta, int ply, int qd) {
   nodes++;
   if (timeUp()) return 0;
@@ -769,7 +784,7 @@ static double qsearch(double alpha, double beta, int ply, int qd) {
     i32 *qm = quietBuf[ply];
     int nn = gen(qm, 0);
     for (int i = 0; i < nn; i++) {
-      int m = qm[i]; if (board[(m >> 7) & 127]) continue;
+      int m = qm[i]; if (board[(m >> 7) & 127] || !mayCheck(m)) continue;
       doMove(m);
       if (!inCheck() || !lastMoveLegal(m)) { undoMove(); continue; }
       if (seeAfterCheck(m) < 0) { undoMove(); continue; }
@@ -1128,6 +1143,8 @@ EXPORT(init) void init(void) {
   for (int s = 0; s < 81; s++) {
     int r = s / 9, c = s % 9;
     for (int d = 0; d < 8; d++) { int rr = r + DR[d], cc = c + DC[d]; if (rr >= 0 && rr < 9 && cc >= 0 && cc < 9) NB[s * 8 + d] = rr * 9 + cc; }
+    for (int t = 0; t < 81; t++) LDIR[s * 81 + t] = -1;
+    for (int d = 0; d < 8; d++) { int rr = r + DR[d], cc = c + DC[d], k = 1; while (rr >= 0 && rr < 9 && cc >= 0 && cc < 9) { LDIR[s * 81 + rr * 9 + cc] = (i8)d; LDIST[s * 81 + rr * 9 + cc] = (u8)k; rr += DR[d]; cc += DC[d]; k++; } }
     for (int col = 0; col < 2; col++) {
       int dr = col == 0 ? -2 : 2, nt = 0, nf = 0;
       for (int k = 0; k < 2; k++) {
