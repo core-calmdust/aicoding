@@ -45,7 +45,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki xiangqi'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
