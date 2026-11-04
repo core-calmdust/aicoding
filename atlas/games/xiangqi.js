@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../xiangqi/', VER = '?v=6';   // same file / version as xiangqi/index.html → shared cache
+  const BASE = '../xiangqi/', VER = '?v=7';   // same file / version as xiangqi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.XiangqiEngine) return Promise.resolve(window.XiangqiEngine);
@@ -337,7 +337,7 @@
     hi: { kyu: '{n} क्यू', dan: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], lvd: ['शुरुआती: कभी-कभी मोहरा दे देता है', 'नौसिखिया: कुछ चालें आगे देखता है', 'उन्नत: अदला-बदली और मात गिनता है', 'दान: गहरी खोज'] },
     ar: { kyu: '{n} كيو', dan: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], lvd: ['مبتدئ: يخسر قطعة أحيانًا', 'مبتدئ: يحسب بضع نقلات', 'متقدم: يحسب التبادلات والكش مات', 'دان: بحث عميق'] },
   };
-  const RATING = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1937, 2047, 2172, 2262, 2297, 2322, 2447, 2512];   // xiangqi RT_LV (rated games)
+  const RATING = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2487, 2552];   // xiangqi RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
