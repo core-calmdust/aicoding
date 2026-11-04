@@ -353,14 +353,19 @@ function morphKids(a, b) {
   old.forEach(n => { const k = keyOf(n); if (k && !keyed.has(k)) keyed.set(k, n); });
   const used = new Set(), nb = [...b.childNodes];
   let idx = 0;
-  nb.forEach((n, i) => {
+  const pairs = nb.map(n => {
     const k = keyOf(n); let m = null;
     if (k) { m = keyed.get(k); if (m && (used.has(m) || !same(m, n))) m = null; }
     else { while (idx < old.length && (keyOf(old[idx]) || used.has(old[idx]))) idx++; if (idx < old.length && same(old[idx], n)) m = old[idx++]; }
-    if (m) { used.add(m); morphNode(m, n); } else m = n;
+    if (m) used.add(m);
+    return [m, n];
+  });
+  // drop the nodes that go away first: moving a node that stays would restart its CSS animation
+  old.forEach(n => { if (!used.has(n)) n.remove(); });
+  pairs.forEach(([m, n], i) => {
+    if (m) morphNode(m, n); else m = n;
     const at = a.childNodes[i]; if (at !== m) a.insertBefore(m, at || null);
   });
-  [...a.childNodes].slice(nb.length).forEach(n => n.remove());
 }
 function patch(el, html) { const t = document.createElement(el.tagName); t.innerHTML = html; morphKids(el, t); }
 /* chips: amount → small stacks (white 1BB, red 5, green 25, black 100, purple 500) */
@@ -568,6 +573,7 @@ function tipsHtml(list) {
   return `<div class="tips" data-k="tips"><div class="tips-h">💡 ${esc(PokerTips.ui('head', LANG))}</div><ul>${show.map(x => `<li>${gl(esc(PokerTips.text(x, LANG)))}</li>`).join('')}</ul>` +
     (list.length > n ? `<button type="button" class="tips-more" id="tipsMore">${esc(open ? PokerTips.ui('less', LANG) : PokerTips.ui('more', LANG, { n: list.length - n }))}</button>` : '') + `</div>`;
 }
+const coachSw = () => `<button type="button" class="ck-sw${set.coach ? ' on' : ''}" data-csw role="switch" aria-checked="${set.coach ? 'true' : 'false'}" title="${esc(t('set.coach'))}"><b>${set.coach ? 'ON' : 'OFF'}</b><i></i></button>`;
 function renderSide() {
   if (!T) return;
   const V = P.VARIANTS[T.v], c = G.coach && G.coachKey === spotKey() ? G.coach : null, myTurn = T.toAct === HERO && T.phase === 'bet';
@@ -598,8 +604,8 @@ function renderSide() {
     else body = '';
     if (last) body += `<div class="verdict g${last.grade}"><b>${esc(t('grade.' + last.grade))}</b><span>${esc(t('verdict', { a: t('rec.' + last.a), rec: t('rec.' + last.rec) }))}</span></div>`;
     if (!body) body = `<p class="muted">${esc(t('coach.idle'))}</p>`;
-    h += `<div class="card coach-card" data-pt="coach"><h3>${esc(t('side.coach'))}</h3>${body}</div>`;
-  }
+    h += `<div class="card coach-card" data-pt="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3>${body}</div>`;
+  } else h += `<div class="card coach-card ck-off" data-pt="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
   // this hand (the "棋譜")
   const streets = V.streets;
   const lines = []; let cur = -1;
@@ -884,4 +890,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
 } else startSession(set.v);
 
 window.PokerApp = { M, SM, MH, num, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); set.coach = set.coach ? 0 : 1; save(); render(); if (set.coach || set.hud) requestCoach(); if (typeof sfx === 'function') try { sfx('tap'); } catch (x) {} });
 })();
