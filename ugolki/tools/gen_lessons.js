@@ -43,37 +43,35 @@ const okOf = (L, best) => ({ ok: L, best: best !== undefined ? best : L[0] });
 // ---------------------------------------------------------------- lesson problems
 const steps = [];
 const add = (id, course, problems, ramp) => { const st = { id, course, problems }; if (ramp) st.ramp = ramp; steps.push(st); console.error(id, problems.length); };
+const RAMP = require('./lesson_ramps.js').RAMPS;
 // 1 a step towards the far corner (no jump gains anything here)
 add('b_step', 'basics', pick(p => {
   const L = real(p); if (L.some(m => E.isJump(p, m) && gainOf(p, m) > 0)) return null;
   const ok = L.filter(m => !E.isJump(p, m) && gainOf(p, m) > 0); if (!ok.length || ok.length === L.length) return null;
   if (p.ply > 40) return null;
   return okOf(ok);
-}, 5, { white: true, id: 'b_step' }));
-// 2 a jump forward
-add('b_jump', 'basics', pick(p => {
-  const L = real(p), ok = L.filter(m => E.isJump(p, m) && gainOf(p, m) >= 2); if (!ok.length || ok.length > 4) return null;
-  if (L.filter(m => !E.isJump(p, m)).length < 4) return null;
+}, 5, { white: true, id: 'b_step' }), RAMP.b_step);
+// 2 jumps — a single hop first, then chains: the move that goes farthest (one or several hops)
+const farOk = (p, hops) => {
+  const L = real(p); let g = -99; for (const m of L) g = Math.max(g, gainOf(p, m)); if (g < 2) return null;
+  const ok = L.filter(m => gainOf(p, m) === g); if (ok.length > 2 || !ok.every(m => E.isJump(p, m))) return null;
+  const len = Math.max(...ok.map(m => E.path(p, m).length - 1));
+  if (hops === 1 ? len !== 1 || L.filter(m => !E.isJump(p, m)).length < 4 : len < 3) return null;
   return okOf(ok);
-}, 5, { white: true, id: 'b_jump' }));
-// 3 the longest chain of jumps (several hops)
-add('b_chain', 'basics', pick(p => {
-  const L = real(p); let g = -99; for (const m of L) g = Math.max(g, gainOf(p, m)); if (g < 4) return null;
-  const ok = L.filter(m => gainOf(p, m) === g); if (ok.length > 2 || !ok.every(m => E.path(p, m).length >= 4)) return null;
-  return okOf(ok);
-}, 5, { white: true, id: 'b_chain' }));
+};
+add('b_jump', 'basics', pick(p => farOk(p, 1), 2, { white: true, id: 'b_jump1' }).concat(pick(p => farOk(p, 3), 3, { white: true, id: 'b_jump3' })), RAMP.b_jump);
 // 4 bring a piece into the house
 add('b_enter', 'basics', pick(p => {
   const T = E.target(p.turn), L = real(p), ok = L.filter(m => !T[E.mFrom(m)] && T[E.mTo(m)]);
   if (!ok.length || ok.length > 3 || p.inTarget(p.turn) < 2) return null;
   return okOf(ok);
-}, 5, { white: true, id: 'b_enter' }));
+}, 5, { white: true, id: 'b_enter' }), RAMP.b_enter);
 // 5 finish: the move that completes the house
 add('b_finish', 'basics', pick(p => {
   if (p.inTarget(p.turn) !== 8) return null;
   const L = real(p), ok = L.filter(m => p.clone().play(m).done(p.turn)); if (!ok.length || ok.length === L.length) return null;
   return okOf(ok);
-}, 5, { white: true, id: 'b_finish' }));
+}, 5, { white: true, id: 'b_finish' }), RAMP.b_finish);
 // 6 the farthest move (a plan: look at every piece)
 add('s_far', 'strategy', pick(p => {
   const L = real(p); if (L.length < 12) return null;
@@ -81,7 +79,7 @@ add('s_far', 'strategy', pick(p => {
   const ok = L.filter(m => gainOf(p, m) === g); if (ok.length > 2) return null;
   // the farthest move is not the first piece one would look at: its piece is not the most advanced
   return okOf(ok);
-}, 5, { white: true, id: 's_far' }));
+}, 5, { white: true, id: 's_far' }), RAMP.s_far);
 // 7 build a road: the step that gives your pieces the longest jump next move (Black frozen)
 function roadScore(p, m) { const q = p.clone().play(m); q.side ^= 1; let g = -99; for (const x of real(q)) g = Math.max(g, gainOf(q, x)); return g; }
 add('s_road', 'strategy', pick(p => {
@@ -109,6 +107,15 @@ add('s_road', 'strategy', pick(p => {
     h: L10('跳び台は1マスおき。空いているマスに1歩出すと、列がつながります。', 'Stepping stones stand one square apart. One step into a gap joins the line.', '跳板要隔一格。走进空格一步，线就连起来了。', '발판은 한 칸 간격. 빈칸으로 한 걸음 나가면 줄이 이어집니다.', 'Los trampolines van cada dos casillas. Un paso al hueco une la fila.', 'Les tremplins sont espacés d’une case. Un pas dans le vide relie la ligne.', 'Os trampolins ficam a uma casa. Um passo no vazio liga a linha.', 'Sprungbretter stehen mit einem Feld Abstand. Ein Schritt in die Lücke verbindet die Reihe.', 'सीढ़ियाँ एक खाने के अंतर पर। खाली खाने में एक कदम से पंक्ति जुड़ती है।', 'نقاط الارتكاز يفصلها مربع. خطوة إلى الفراغ تصل الصف.'),
     y: L10('これで後ろの駒が次の手で長く跳べます。', 'Now a piece behind can make a long jump next move.', '这样后面的子下一步就能长跳了。', '이제 뒤의 말이 다음 수에 길게 뛸 수 있습니다.', 'Ahora una pieza de atrás puede saltar lejos.', 'Une pièce de derrière peut maintenant sauter loin.', 'Agora uma peça de trás pode saltar longe.', 'Jetzt kann ein Stein dahinter weit springen.', 'अब पीछे की गोटी अगली चाल में लंबी छलांग लगा सकती है।', 'الآن تستطيع قطعة خلفية القفز بعيدًا.') },
 ]);
+// 7b use the opponent's pieces: the farthest move rides over the opponent's pieces, and nothing without them comes close
+add('s_ladder', 'strategy', pick(p => {
+  const me = p.turn, opp = 3 - me, L = real(p);
+  const oo = m => { const pa = E.path(p, m); let n = 0; for (let i = 1; i < pa.length; i++) { const [r0, c0] = E.RC[pa[i - 1]], [r1, c1] = E.RC[pa[i]]; if (Math.max(Math.abs(r0 - r1), Math.abs(c0 - c1)) === 2 && p.owner(E.sqAt((r0 + r1) / 2, (c0 + c1) / 2)) === opp) n++; } return n; };
+  let g = -99; for (const m of L) g = Math.max(g, gainOf(p, m)); if (g < 4) return null;
+  const ok = L.filter(m => gainOf(p, m) === g); if (ok.length > 2 || !ok.every(m => oo(m) > 0)) return null;
+  const without = Math.max(-99, ...L.filter(m => !oo(m)).map(m => gainOf(p, m))); if (without > g - 2) return null;
+  return okOf(ok);
+}, 5, { id: 's_ladder' }), RAMP.s_ladder);
 // 8 block a road: the move after which the opponent's best jump is shortest (opponent to move)
 function blockScore(p, m) { const q = p.clone().play(m); let g = -99; for (const x of real(q)) g = Math.max(g, gainOf(q, x)); return g; }
 add('s_block', 'strategy', pick(p => {
@@ -138,7 +145,7 @@ add('s_leave', 'strategy', pick(p => {
   if (!home || left > 6 || left < home) return null;
   const L = real(p), ok = L.filter(m => H[E.mFrom(m)] && !H[E.mTo(m)]); if (!ok.length || ok.length === L.length) return null;
   return okOf(ok);
-}, 5, { id: 's_leave' }));
+}, 5, { id: 's_leave' }), RAMP.s_leave);
 // 10 fill the house: the fastest way to finish (exact, Black frozen)
 add('s_deep', 'strategy', pick(p => {
   if (p.inTarget(1) < 5 || p.inTarget(1) > 7) return null;
@@ -171,15 +178,18 @@ add('s_count', 'strategy', pick(p => {
   const L = r.list.slice().sort((a, b) => b.v - a.v);
   if (L.length < 6 || L[0].v - L[1].v < 25 || Math.abs(L[0].v) > 2000) return null;
   return { sc: L.map(e => [e.m, e.v]), best: L[0].m };
-}, 5, { id: 's_count' }));
-// fill the "try" ramp answers with the rule (road: the step with the longest next jump)
+}, 5, { id: 's_count' }), RAMP.s_count);
+// fill the "try" ramp answers with the rule (road: the step with the longest next jump; step: any move towards the corner;
+// far: the farthest moves)
 for (const st of steps) for (const it of st.ramp || []) if (it.k === 'try' && !it.ok) {
-  const p = E.Pos.from(it.s), L = real(p).filter(m => !E.isJump(p, m));
-  const sc = L.map(m => [m, roadScore(p, m)]), top = Math.max(...sc.map(x => x[1]));
-  it.ok = sc.filter(x => x[1] === top).map(x => E.name(p, x[0]));
-  console.error('ramp try', st.id, it.ok, top);
+  const p = E.Pos.from(it.s), rule = it.rule || 'road'; let ok;
+  if (rule === 'road') { const L = real(p).filter(m => !E.isJump(p, m)); const sc = L.map(m => [m, roadScore(p, m)]), top = Math.max(...sc.map(x => x[1])); ok = sc.filter(x => x[1] === top).map(x => x[0]); }
+  else if (rule === 'step') ok = real(p).filter(m => gainOf(p, m) > 0);
+  else { const L = real(p); const top = Math.max(...L.map(m => gainOf(p, m))); ok = L.filter(m => gainOf(p, m) === top); }
+  it.ok = ok.map(m => E.name(p, m)); delete it.rule;
+  console.error('ramp try', st.id, it.ok);
 }
-for (const st of steps) for (const it of st.ramp || []) for (const nm of it.seq || []) { const p = E.Pos.from(it.s); if (!real(p).some(m => E.name(p, m) === nm)) { console.error('bad ramp seq', st.id, nm); process.exit(1); } }
+for (const st of steps) for (const it of st.ramp || []) { let p = E.Pos.from(it.s); for (const nm of it.seq || []) { const m = real(p).find(x => E.name(p, x) === nm); if (m === undefined) { console.error('bad ramp seq', st.id, nm); process.exit(1); } p = p.clone().play(m); } }
 const rampUi = {
   step: L10('準備 {i}/{n}', 'Warm-up {i}/{n}', '热身 {i}/{n}', '준비 {i}/{n}', 'Calentamiento {i}/{n}', 'Échauffement {i}/{n}', 'Aquecimento {i}/{n}', 'Aufwärmen {i}/{n}', 'तैयारी {i}/{n}', 'تمهيد {i}/{n}'),
   next: L10('次へ', 'Next', '下一步', '다음', 'Siguiente', 'Suivant', 'Próximo', 'Weiter', 'आगे', 'التالي'),

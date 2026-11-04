@@ -106,7 +106,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1221,7 +1221,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1661,7 +1661,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=1').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -1755,17 +1755,20 @@ $('#pzGrid').onclick = e => {
 };
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
-// "build the house" puzzles: White fills the far corner in exactly N moves (Black stands still: each of its turns is a pass).
-// The engine solves them exactly (one player), so a move that can no longer finish in time is told at once (an obvious
-// mistake: the goal is out of reach) and taken back with the correct move shown.
+// "win in N" puzzles: the side to move forces a win within N of its moves, and the opponent defends (it replies with its
+// most stubborn move, worked out by the engine's exact solver — duelGood / duelReply in engine.js). Positions come from
+// real games (tools/gen_duel.js), with the 40 / 80-move rules and Black's last move in force; every puzzle has one (rarely
+// two) winning first moves, and the obvious move (the biggest step towards the corner) does not win.
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
   const T = PUZZLES.themes[L], { P, rk } = pzSlot(T, j, null, daily);
   if (!daily) PZBook.lastSet(PZ_LAST, L);
-  puzzle = { L, j, P, rk, T, goal: 'home', g: 0, me: P1, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
+  PZBook.setLang(LANG);
+  const me = P.s.side === P2 ? P2 : P1;
+  puzzle = { L, j, P, rk, T, goal: 'win', g: 0, me, n: P.n, state: 'play', busy: false, used: 0, daily: daily || null, hinted: false, failed: false, answered: false };
   document.body.classList.add('in-puzzle');
-  enterSpecial(Object.assign({ free: true }, P.s));
+  enterSpecial(Object.assign({}, P.s));
   update(false); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
 function renderPuzzleCard() {
@@ -1779,11 +1782,24 @@ function renderPuzzleCard() {
   renderInfo();
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
-// the White moves that still finish within n moves from the shown position
-function mateReq(n) { return request('ai', { type: 'puzzle', moves: moves.slice(0, cur), n }).then(r => r && r.list ? r.list.map(e => e.m) : null); }
+// the moves of the puzzle side that still force a win within n of its moves from the shown position
+function mateReq(n) { return request('ai', { type: 'duel', moves: moves.slice(0, cur), n }).then(r => r && r.list ? r.list.map(e => e.m) : null); }
+function replyReq(n) { return request('ai', { type: 'duelReply', moves: moves.slice(0, cur), n }).then(r => r && r.move != null ? r.move : null); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const pzReached = (Pz, pos) => pos.done(P1);
-function playPair(m) { moves = moves.slice(0, cur); moves.push(m, E.PASS); cur = moves.length; hintList = null; update(true); }
+const pzWon = Pz => { const st = statusAt(cur); return st.over && st.winner === Pz.me; };
+function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
+// the opponent answers (its most stubborn reply); true when the puzzle is solved by then
+async function pzOpponent(Pz, tok) {
+  if (pzWon(Pz)) return true;
+  const st = statusAt(cur); if (st.over) return false;
+  const r = await replyReq(Pz.n - Pz.used);
+  if (r == null || puzzle !== Pz || tok !== busyToken) return false;
+  const before = posAt(cur).pos.clone();
+  await sleep(380); if (puzzle !== Pz || tok !== busyToken) return false;
+  playMove2(r); Pz.lastReply = mvIn(before, r);
+  await sleep(moveDur(r, before) + 120);
+  return pzWon(Pz);
+}
 async function puzzleMove(m) {
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const left = Pz.n - Pz.used, tok = busyToken;
@@ -1791,25 +1807,25 @@ async function puzzleMove(m) {
   const good = await mateReq(left);
   if (!good || puzzle !== Pz || tok !== busyToken) return;
   const before = posAt(cur).pos.clone(), dm = moveDur(m, before);
-  playPair(m); Pz.used++; renderPuzzleCard();
-  if (pzReached(Pz, posAt(cur).pos)) { setTimeout(() => puzzleSolved(), dm + 200); return; }
+  playMove2(m); Pz.used++; renderPuzzleCard();
   if (!good.includes(m)) {
     Pz.state = 'fail'; Pz.failed = true;
     await sleep(dm + 350);
     if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 2); cur = moves.length; Pz.used--;
+    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
     const p0 = posAt(cur).pos;
     if (good[0] !== undefined) markMove(p0, good[0], 'ok'); markMove(p0, m, 'ng');
-    Pz.busy = false; update(false); playChime(false); renderPuzzleCard();
-    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) })}${good.length ? ' ' + t('pz.best', { b: mvIn(before, good[0]) }) : ''}`);
+    Pz.busy = false; Pz.state = 'play'; update(false); playChime(false); renderPuzzleCard();
+    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) })} ${t('pz.retry')}`);
     return;
   }
-  await sleep(dm);
-  if (puzzle !== Pz) return;
+  await sleep(dm + 60);
+  if (puzzle !== Pz || tok !== busyToken) return;
+  if (pzWon(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
+  if (puzzle !== Pz || tok !== busyToken) return;
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.yourMove', { n: Pz.n - Pz.used }));
+  pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
 }
-function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
   Pz.state = 'solved'; Pz.busy = false;
@@ -1847,15 +1863,17 @@ $('#pzAnswer').onclick = async () => {
   Pz.busy = true; Pz.state = 'answer'; Pz.hinted = true; Pz.answered = true; lessonMarks = []; hintList = null;
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard();
   pzStatus(t('pz.showing'));
-  for (let step = 0; step < 16; step++) {
+  const tok = busyToken;
+  for (let step = 0; step < 8; step++) {
     if (puzzle !== Pz) return;
     const pos = posAt(cur).pos;
-    if (pzReached(Pz, pos)) break;
     const good = await mateReq(Pz.n - Pz.used); if (puzzle !== Pz || !good || !good.length) break;
     await sleep(650); if (puzzle !== Pz) return;
-    playPair(good[0]); Pz.used++;
+    playMove2(good[0]); Pz.used++;
     renderPuzzleCard();
     await sleep(moveDur(good[0], pos));
+    if (pzWon(Pz) || await pzOpponent(Pz, tok)) break;
+    if (puzzle !== Pz || statusAt(cur).over) break;
   }
   Pz.busy = false; renderPuzzleCard(); pzStatus(t('pz.answerDone'));
 };

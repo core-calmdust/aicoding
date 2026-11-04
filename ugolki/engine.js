@@ -109,6 +109,7 @@ class Pos {
   dist(p) { const D = DIST[p]; let s = 0; for (let i = 0; i < 64; i++) if (this.sq[i] === p) s += D[i]; return s - BASE[p]; }
   // the squares a piece on f can reach: steps, then every square of a jump chain (breadth first; parent links for the path)
   reach(f, out) {
+    if (stampN > 2e9) { stamp.fill(0); stampN = 1; }
     const sq = this.sq, st = ++stampN; stamp[f] = st;
     const nb = NBR[f];
     for (let k = 0; k < nb.length; k++) { const t = nb[k]; if (!sq[t] && stamp[t] !== st) { stamp[t] = st; parent[t] = -1; out.push(t); } }
@@ -434,10 +435,103 @@ function soloMin(spec, max, rule, budget) {
   soloBudget = Infinity;
   return -1;
 }
+// ---------------------------------------------------------------- two-player puzzles ("win in N": the opponent moves too)
+// duelWin(pos, k): the side to move forces a win (judge: winner = that side) within its next k moves, whatever the opponent
+// replies (the game is decided after Black's move, so White's finishing move is followed by Black's last reply).
+// A move can bring at most one piece into the target corner: pieces still outside > moves left → impossible (the main cut).
+let duelNodes = 0, duelBudget = Infinity;
+const DTT = new Map();
+const outside = (pos, p) => HOMEL[p].length - pos.inTarget(p);
+function duelW(pos, k, me) {
+  if (outside(pos, me) > k) return false;
+  if (--duelBudget < 0) return false;
+  const key = pos.h1 + ':' + pos.h2 + ':' + pos.ply + ':' + k + 'w';
+  const c = DTT.get(key); if (c !== undefined) return c;
+  duelNodes++;
+  let res = false;
+  const ms = pos.moves(), T = target(me);
+  // moves into the corner first
+  ms.sort((a, b) => (T[mTo(b)] ? 1 : 0) - (T[mTo(a)] ? 1 : 0));
+  for (const m of ms) {
+    if (m === PASS) continue;
+    const q = pos.clone().play(m);
+    if (outside(q, me) > k - 1) continue;
+    const r = judge(q);
+    if (r.over) { if (r.winner === me) { res = true; break; } continue; }
+    if (duelB(q, k - 1, me)) { res = true; break; }
+    if (duelBudget < 0) break;
+  }
+  if (duelBudget >= 0) DTT.set(key, res);
+  return res;
+}
+// the opponent to move: every reply must still lose (within k more moves of `me`)
+function duelB(pos, k, me) {
+  if (--duelBudget < 0) return false;
+  const key = pos.h1 + ':' + pos.h2 + ':' + pos.ply + ':' + k + 'b';
+  const c = DTT.get(key); if (c !== undefined) return c;
+  duelNodes++;
+  const ms = pos.moves(), opp = 3 - me, T = target(opp), MT = target(me);
+  if (!ms.length) { const r = judge(pos); return r.over && r.winner === me; }
+  // likely refutations first: the opponent's own entries, then squares in my corner (blocking)
+  ms.sort((a, b) => ((T[mTo(b)] ? 2 : 0) + (MT[mTo(b)] ? 1 : 0)) - ((T[mTo(a)] ? 2 : 0) + (MT[mTo(a)] ? 1 : 0)));
+  let res = true;
+  for (const m of ms) {
+    const q = pos.clone().play(m);
+    const r = judge(q);
+    if (r.over) { if (r.winner === me) continue; res = false; break; }
+    if (k <= 0 || !duelW(q, k, me)) { res = false; break; }
+    if (duelBudget < 0) { res = false; break; }
+  }
+  if (duelBudget >= 0) DTT.set(key, res);
+  return res;
+}
+// the moves of the side to move that win within n of its moves (budget: nodes; null = gave up)
+function duelGood(start, moves, n, rule, budget) {
+  if (rule) setRule(rule);
+  const { pos } = replay(start, moves), me = pos.turn, out = [];
+  DTT.clear(); duelNodes = 0; duelBudget = budget || 4e6;
+  for (const m of pos.moves()) {
+    if (m === PASS) continue;
+    const q = pos.clone().play(m);
+    if (outside(q, me) > n - 1) continue;
+    const r = judge(q);
+    if (r.over ? r.winner === me : duelB(q, n - 1, me)) out.push(m);
+    if (duelBudget < 0) { duelBudget = Infinity; return null; }
+  }
+  duelBudget = Infinity;
+  return out;
+}
+// the smallest n (≤ max) in which the side to move forces a win, or -1
+function duelMin(start, moves, max, rule, budget) {
+  if (rule) setRule(rule);
+  const { pos } = replay(start, moves), me = pos.turn;
+  DTT.clear(); duelBudget = budget || 4e6;
+  for (let n = Math.max(1, outside(pos, me)); n <= (max || 5); n++) { if (duelW(pos, n, me)) { duelBudget = Infinity; return n; } if (duelBudget < 0) break; }
+  duelBudget = Infinity;
+  return -1;
+}
+// the opponent's most stubborn reply: the one after which the winner needs the most moves (ties: a reply into the winner's
+// corner or the opponent's own entry — the moves that look like a defence)
+function duelReply(start, moves, n, rule) {
+  if (rule) setRule(rule);
+  const { pos } = replay(start, moves), opp = pos.turn, me = 3 - opp, MT = target(me), OT = target(opp);
+  let best = null, bk = -1, bt = -1;
+  DTT.clear(); duelBudget = 4e6;
+  for (const m of pos.moves()) {
+    const q = pos.clone().play(m), r = judge(q);
+    let k;
+    if (r.over) k = r.winner === me ? 0 : 99;
+    else { k = 99; for (let j = 1; j <= n; j++) if (duelW(q, j, me)) { k = j; break; } }
+    const tie = (OT[mTo(m)] ? 2 : 0) + (MT[mTo(m)] ? 1 : 0);
+    if (k > bk || (k === bk && tie > bt)) { bk = k; bt = tie; best = m; }
+  }
+  duelBudget = Infinity;
+  return { move: best, need: bk };
+}
 function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(start, moves, n, rule).map(m => ({ m, need: n })); }
 
 setRule('c33');
-const API = { P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, soloGood, soloMin, soloNeed, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+const API = { P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -452,6 +546,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
           self.postMessage({ id: m.id, type: 'result', ...r });
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n) });
+        else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
+        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
