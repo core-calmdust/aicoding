@@ -678,7 +678,7 @@ function navGo(what) {
 $('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
 $('#statusBox').appendChild($('#reviewBar'));
 $('#btnLatest').onclick = () => viewAt(game.plies.length);
-$('#btnResume').onclick = () => resumeHere();
+$('#btnResume').onclick = () => { if (rgame || special) { resumeHere(); return; } openNewDialog(true); };   // 「ここから再開」: the settings dialog in resume mode
 function resumeHere() {
   if (!reviewing || special || !game) return;
   if (rgame) { viewAt(game.plies.length); return; }
@@ -752,7 +752,13 @@ const RULE_ART = {
   masters: '<svg viewBox="0 0 120 64"><rect x="4" y="8" width="112" height="48" rx="6" fill="#0d1438" stroke="#d9b45a" stroke-opacity=".5"/>' + cells([[0, 0], [0, 1], [0, 2], [0, 3], [0, 6], [0, 7], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [2, 0], [2, 1], [2, 2], [2, 3], [2, 6], [2, 7]]) + path('M45 48H9V32H96V16H111V48H81', '#f4ecd6') + '<g transform="translate(60 18)" fill="#d9b45a" stroke="#1b1408" stroke-width=".6"><path d="M0-7 6 4H-6z"/><path d="M-9 0-3 9h-12z" transform="translate(-2 -2)"/><path d="M9 0l6 9H3z" transform="translate(2 -2)"/></g></svg>',
 };
 // the variant's art: the real board with the track of Light as glowing arrows (and the number of pieces / dice)
+const artCache = new Map();   // (the cards are redrawn on every change: the board pictures are made once per design)
 function ruleArt(r) {
+  const k = r + '|' + (draft.design || settings.design) + '|' + (draft.pieces || settings.pieces);
+  if (!artCache.has(k)) artCache.set(k, ruleArt0(r));
+  return artCache.get(k);
+}
+function ruleArt0(r) {
   const n = E.RULES[r].pieces, st = { rule: r, pos: [new Array(n).fill(0), new Array(n).fill(0)], turn: 0, winner: -1 };
   return B2.mini(st, { design: draft.design || settings.design, pieces: draft.pieces || settings.pieces, crop: 'board', trays: false, marks: [{ type: 'path', side: 0, from: 1, to: E.RULES[r].pathLen, color: '#ffe27a' }] });
 }
@@ -775,7 +781,10 @@ function segSync() {
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
-  $('#ruleCards').innerHTML = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gpick"></span><span class="gart">${ruleArt(r)}</span><b>${esc(t('rule.' + r))}${r === 'finkel' ? `<span class="std">${esc(t('rule.std'))}</span>` : ''}</b><p>${esc(t('rule.' + r + '.d'))}</p></button>`).join('');
+  // the variant cards in the shared form (shared/ngtabs.js: art, name, the standard tag + description, the pick mark, ルール)
+  const rc = $('#ruleCards'), html = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gart">${ruleArt(r)}</span><b>${esc(t('rule.' + r))}</b><p>${r === 'finkel' ? `<span class="gtag">${esc(t('rule.std'))}</span>` : ''}${esc(t('rule.' + r + '.d'))}</p><span class="gpick"></span></button>`).join('');
+  if (rc.__h !== html) { rc.__h = html; rc.innerHTML = html; }   // (unchanged: the cards stay as they are — no flicker)
+  $('#fRules').classList.toggle('hidden', rated || !!draft.resume);
   $('#optAutoRoll').checked = !!draft.autoRoll; $('#optAutoPick').checked = !!draft.autoPick; $('#optEval').checked = !!draft.eval; $('#optLast').checked = !!draft.last; $('#optDanger').checked = !!draft.danger;
   $('#btnStart').textContent = t('start');
 }
@@ -784,10 +793,17 @@ function designPickers() {
   $('#bdRow').innerHTML = B2.BOARDS.map(d => `<button type="button" data-v="${d}" class="${draft.design === d ? 'sel' : ''}">${B2.mini(st, { design: d, pieces: draft.pieces, crop: 'board', trays: false })}<span>${esc(t('bd.' + d))}</span></button>`).join('');
   $('#pcRow').innerHTML = B2.PIECES.map(p => `<button type="button" data-v="${p}" class="${draft.pieces === p ? 'sel' : ''}"><span class="pp"><i style="background-image:url(img/pieces-${p}.webp);background-position:0 0"></i><i style="background-image:url(img/pieces-${p}.webp);background-position:100% 0"></i></span><span>${esc(t('pcs.' + p))}</span></button>`).join('');
 }
-function openNewDialog() {
-  draft = { mode: rgame ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2, clock: settings.clock, speed: settings.speed, autoRoll: settings.autoRoll, autoPick: settings.autoPick, eval: settings.eval, last: settings.last, danger: settings.danger, design: settings.design, pieces: settings.pieces };
-  segSync(); designPickers(); showOverlay('#newOverlay');
+function openNewDialog(resume) {
+  draft = { resume: !!resume, mode: rgame ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2, clock: settings.clock, speed: settings.speed, autoRoll: settings.autoRoll, autoPick: settings.autoPick, eval: settings.eval, last: settings.last, danger: settings.danger, design: settings.design, pieces: settings.pieces };
+  if (resume && !['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai';
+  if (resume) { draft.color = String(game.human || 0); if (rgame) draft.mode = 'ai'; }
+  segSync(); designPickers();
+  // 「この局面から再開」: the same dialog, only what fits going on from this position (shared/resumeng.js)
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], seg: '#segMode', hide: '#fRules' }); else ResumeNG.close(); }
+  showOverlay('#newOverlay');
 }
+// the ルール button on each variant card (shared/ngtabs.js): the rules tutorial from its first page
+$('#ruleCards').ngtRules = () => { if (window.UrLearn) UrLearn.openRules(0); };
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.mode = b.dataset.v; segSync(); };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.color = b.dataset.v; segSync(); };
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.clock = +b.dataset.v; segSync(); };
@@ -805,6 +821,7 @@ $('#btnStart').onclick = () => {
   for (const k of ['rule', 'color', 'level', 'level2', 'clock', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger']) settings[k] = draft[k];
   if (!rated) settings.mode = draft.mode;
   setDesign(draft.design, draft.pieces);
+  if (draft.resume) { resumeWith(); return; }
   if (rated) rtStart(); else newGame();
 };
 function setDesign(d, p) {
@@ -821,7 +838,14 @@ $('#btnNew').onclick = () => {
 };
 $('#rsCancel').onclick = () => hideOverlay('#resumeOverlay');
 $('#rsRestart').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(); };
-$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); if (reviewing) resumeHere(); };
+$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(true); };   // the settings dialog in resume mode
+// going on from the shown (or latest) position with the mode / side / strength chosen in the resume dialog
+function resumeWith() {
+  busyToken++; thinking = 0; animating = false; wpPaused = false;
+  if (settings.mode === 'ai' && settings.color !== 'r') game.human = settings.color === '1' ? 1 : 0;
+  hideOverlay('#resultOverlay');
+  if (reviewing) resumeHere(); else { gameOverShown = false; save(); relayout(); update(); afterPosition(); }
+}
 
 // ====================================================================== online (準備中)
 function mtab(v) {

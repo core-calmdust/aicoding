@@ -293,20 +293,8 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   #newOverlay .modal{width:min(900px,100%)}
   .ng-cols{grid-template-columns:1fr 1fr}
 }
-/* rule variants (ゲーム tab, shared/ngtabs.js cards) */
-.ngt-gcards{display:grid;grid-template-columns:repeat(var(--ngt-cols,3),minmax(0,1fr));gap:10px}
-.ngt-gcard{position:relative;display:flex;flex-direction:column;text-align:start;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22);min-width:0}
-.ngt-gcard:hover{border-color:var(--brass2)}
-.ngt-gcard.sel{border-color:var(--accent);background:linear-gradient(180deg,rgba(217,180,90,.14),rgba(217,180,90,.04))}
-#ruleCards.ngt-gcards{min-height:0!important;align-content:start}
-#ruleCards .ngt-gcard .gart{min-height:0!important;flex:none!important;padding:4px!important;border-radius:10px}
-#ruleCards .ngt-gcard .gart svg{width:100%!important;height:auto!important;max-height:none!important;max-width:none!important;display:block}
-#ruleCards .ngt-gcard p{min-height:0!important}
-.modal.ngt-on #ruleCards.few.n3 .ngt-gcard{grid-template-columns:140px minmax(0,1fr)!important}
-.ngt-gcard b{display:block;font-family:var(--mincho);font-size:15px;letter-spacing:.04em;margin-top:6px}
-.ngt-gcard p{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:3px}
-.ngt-gcard .std{color:var(--accent);font-size:10.5px;margin-inline-start:4px}
-@media (max-width: 520px){.ngt-gcards{grid-template-columns:1fr}}
+/* rule variants (ゲーム tab): the shared cards of shared/ngtabs.js + shared/nglux.js (as fanorona / tafl); the art is the real board */
+#ruleCards .gart svg{display:block}
 /* design tiles */
 .dsg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .dsg button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 7px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:11.5px;color:var(--muted);min-width:0}
@@ -741,8 +729,8 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="i18n.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=10"></script>
-<script src="../shared/headerbar.js?v=31"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="../shared/headerbar.js?v=36"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=2"></script>
@@ -761,7 +749,10 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="rvbox.js?v=1"></script>
 <script src="app-learn.js?v=1"></script>
 <script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=23"></script>
+<script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
+<script src="../shared/resumeng.js?v=1"></script>
+<script src="../shared/rulelink.js?v=1" data-btn="#btnRules"></script>
 <!-- World Board Game Atlas portal skin: ur/?skin=atlas — the British Museum board in 3D (atlas/models/ur.js + atlas/skin/ur.js), the DOM board stays on top for taps (see SKIN-HOOKS.md) -->
 <script>
 (function () {
