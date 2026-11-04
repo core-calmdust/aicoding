@@ -298,6 +298,9 @@
     root.querySelector('.hs-pv').disabled = i === 0; root.querySelector('.hs-nx').disabled = i === n - 1;
     later(() => say(c.say || ''), 380);
     cam(c.k === 'board');
+    // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
+    const rd = !['hook', 'board', 'end'].includes(c.k);
+    if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
   function kin(s, d0 = 0) {
@@ -356,9 +359,18 @@
     let k = -1, auto = true, hold = 0;
     // the map stays pinned at the top of the page (sticky, capped at ~40% of the page height); the list scrolls under it,
     // and each stage is brought up just below the map with a bit of the previous card still showing
-    const cap = () => { pg.style.setProperty('--hs-mapmax', Math.round(pg.clientHeight * .4) + 'px'); };
-    cap(); addEventListener('resize', cap);
-    const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
+    // the map's height: ~1/3 of the page on phones (~40% on PC), cropped around the pins rather than squashed; it is pinned only
+    // when at least two or three stage cards still fit under it — otherwise it simply scrolls away with the page
+    const sv = map.querySelector('svg');
+    const cap = () => {
+      if (!pg.isConnected) return;
+      const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
+      const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
+      map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
+      sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
+    };
+    cap(); later(cap, 520); addEventListener('resize', cap);
+    const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
     pg.addEventListener('scroll', stuck, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
     const mine = () => { hold = performance.now() + 4000; };
@@ -368,7 +380,7 @@
       if (!force && performance.now() < hold) return;
       const li = L[n]; if (!li || pg.scrollHeight <= pg.clientHeight + 2) return;
       const prev = L[n - 1], peek = prev ? Math.min(prev.offsetHeight * .45, 44) : 0;
-      const top = Math.max(0, li.offsetTop - map.offsetHeight - 12 - peek);
+      const top = Math.max(0, li.offsetTop - (map.classList.contains('stick') ? map.offsetHeight : 0) - 12 - peek);
       if (Math.abs(top - pg.scrollTop) > 2) pg.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     };
     const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });

@@ -82,6 +82,8 @@
 [dir=rtl] .hs-bub{transform-origin:100% 100%}
 .hs-bub::before{content:'';position:absolute;bottom:10px;inset-inline-start:-8px;width:12px;height:12px;background:#fffdf7;border-inline-start:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);border-bottom:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);transform:rotate(45deg)}
 [dir=rtl] .hs-bub::before{transform:rotate(-45deg)}
+/* phones, reading chapters: the page takes ~62% of the screen; the stage (and the guide) shrink above it */
+@media (max-width:819px){#hist.hs.read{--hs-st:clamp(150px,30vh,250px)}#hist.hs.read .hs-guide img{width:66px;height:66px}#hist.hs.read .hs-bub{margin-bottom:26px;font-size:12px;padding:7px 11px}.hs-stage{transition:height .45s cubic-bezier(.3,.9,.3,1)}}
 /* phones, top-down board view: the bubble sits beside the guide (not above it), so the strip they need stays low */
 @media (max-width:819px){#hist.hs.top .hs-bub{margin-bottom:8px;max-width:min(260px,calc(100vw - 120px))}}
 .hs-bub{display:grid}.hs-bub>span,.hs-bub>.ghost{grid-area:1/1}.hs-bub>.ghost{visibility:hidden;font-style:normal}
@@ -89,7 +91,7 @@
 .hs-bub .typing::after{content:'';display:inline-block;width:2px;height:1em;margin-inline-start:2px;vertical-align:-2px;background:var(--gc);animation:hsBlink .5s steps(2) infinite}
 
 /* the page */
-.hs-panel{position:absolute;left:0;right:0;bottom:0;top:var(--hs-st);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
+.hs-panel{position:absolute;left:0;right:0;bottom:0;top:var(--hs-st);transition:top .45s cubic-bezier(.3,.9,.3,1);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
   background:radial-gradient(120% 60% at 50% 0,#fffdf7 0,#fff8ea 60%,#fbefd6 100%);box-shadow:0 -10px 30px -12px rgba(70,35,5,.45),inset 0 0 0 1px rgba(255,255,255,.7);padding-bottom:env(safe-area-inset-bottom)}
 .hs-panel::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(140,100,40,.07) 1px,transparent 1.2px);background-size:7px 7px}
 .hs-panel::after{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--gc),color-mix(in srgb,var(--gc) 50%,#ffd98a),var(--gc))}
@@ -150,10 +152,11 @@
 .in .hs-map .lbg{animation:hsFade .45s var(--d) both}
 
 /* origin stages: the map steps through them */
-.hs-map.steps{position:sticky;top:-8px;z-index:2;background:#e3f0ee;transition:box-shadow .3s}
+.hs-map.steps.stick{position:sticky}
+.hs-map.steps{top:-8px;z-index:2;background:#e3f0ee;transition:box-shadow .3s}
 /* once stuck at the top: square top corners (no card shows through them) and a soft shadow over the list */
 .hs-map.steps.stuck{border-radius:0 0 18px 18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 12px 18px -10px rgba(60,40,10,.45)}
-.hs-map.steps svg{max-height:var(--hs-mapmax,none);width:100%;height:auto}
+.hs-map.steps svg{width:100%}
 .hs-map.steps .pin.ping .pl{animation:hsPing .9s ease-out}
 @keyframes hsPing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(3.2);opacity:0}}
 .hs-map.steps .pin{animation:none!important;opacity:.28;transition:opacity .4s,transform .4s}
