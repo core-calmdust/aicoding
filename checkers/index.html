@@ -675,7 +675,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
-  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .modal{padding:24px 24px 18px}   /* same as the lesson / opening dialogs, so the top tabs do not shift */
   #rulesOverlay .ls-tabs{margin-bottom:10px}
   #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -1271,7 +1271,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261104ug3" defer></script>
+<script src="../shared/atlas.js?v=20261104ug4" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>
