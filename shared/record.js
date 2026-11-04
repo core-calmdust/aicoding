@@ -1,4 +1,4 @@
-// GameRecord — 勝敗記録（戦績） for the 世界のボドゲ大全 games (common spec, template for every board game).
+// GameRecord — 勝敗記録（戦績） for the 世界のボドゲ大百科 games (common spec, template for every board game).
 //
 // Each finished game the player took part in is kept in this browser (localStorage `atlas-rec-<game>`, last 500 games).
 // The record dialog shows big, easy-to-read numbers: wins / losses / draws, win rate, streaks, by side, by opponent,

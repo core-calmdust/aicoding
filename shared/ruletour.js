@@ -1,4 +1,4 @@
-// RuleTour — step-by-step, hands-on rules tutorial for the 世界のボドゲ大全 games (common spec).
+// RuleTour — step-by-step, hands-on rules tutorial for the 世界のボドゲ大百科 games (common spec).
 // Same look and flow as the Dots & Boxes rules: numbered steps on top, a heading and a short explanation,
 // a small board where the player actually places / moves pieces to clear a task ("👉 …"), a ✓ / ✗ message,
 // "try again", Prev / Close / Next, and a last page with "Play a game" / "Go to lessons".

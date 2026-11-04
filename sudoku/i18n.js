@@ -1,7 +1,7 @@
 // UI strings for まいにち数独 — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
 ja: {
-  'series': '世界のボドゲ大全', 'title': 'まいにち数独', 'meta.sub': '毎日3問のデイリー数独',
+  'series': '世界のボドゲ大百科', 'title': 'まいにち数独', 'meta.sub': '毎日3問のデイリー数独',
   'kb.help': '<kbd>1</kbd>〜<kbd>9</kbd> 入力 ／ <kbd>Shift</kbd>+数字 メモ ／ <kbd>N</kbd> メモ切替 ／ <kbd>0</kbd> 消す ／ 矢印で移動 ／ <kbd>Ctrl</kbd>+<kbd>Z</kbd> もどす ／ <kbd>H</kbd> ヒント ／ <kbd>P</kbd> 一時停止<br>マスを長押し・フリックでも数字を入れられます',
   'today': '今日の数独', 'streak': '{n}日連続', 'streak0': '今日からはじめよう',
   'cal.note': 'メダル：初級＝銅・中級＝銀・上級＝金。過去の日もあとから遊べます（うすいメダル）が、連続記録と月の実績はその日のうちにクリアした分だけ数えます。',

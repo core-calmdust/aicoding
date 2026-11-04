@@ -1,6 +1,6 @@
 // UI strings for Nine Men's Morris — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
-ja: { "ls.list": "一覧へ戻る", 'brand.back': '盤面に戻る', 'series': '世界のボドゲ大全', 'nav.first': '最初へ (↓)', 'nav.prev': '1手戻る (←)', 'nav.play': '再生／停止 (Space)', 'nav.next': '1手進む (→)', 'nav.last': '最新へ (↑)',
+ja: { "ls.list": "一覧へ戻る", 'brand.back': '盤面に戻る', 'series': '世界のボドゲ大百科', 'nav.first': '最初へ (↓)', 'nav.prev': '1手戻る (←)', 'nav.play': '再生／停止 (Space)', 'nav.next': '1手進む (→)', 'nav.last': '最新へ (↑)',
   'rs.title': '対局', 'rs.playing': '対局の途中です（{n}手目）。続きから指すか、新しく始めるか選んでください。', 'rs.viewing': '{n}手目の局面を表示しています。ここから指し直すか、新しく始めるか選んでください。', 'rs.resume': 'ここから再開', 'rs.restart': '最初から', 'tab.lesson': 'レッスン', 'tab.puzzle': 'パズル',
   'rv.title': '振り返り', 'rv.btn': '分析', 'rv.btn.title': '対局を振り返り分析（悪手・疑問手を表示）', 'rv.running': '全手を分析中… {a}/{b}', 'rv.done': '分析が終わりました',
   'rv.acc': '最善一致率', 'rv.clean': '悪手・疑問手はありませんでした。', 'rv.win': '勝ち', 'rv.loss': '負け', 'rv.even': '勝負', 'rv.eval': '評価 −{l}',

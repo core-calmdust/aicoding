@@ -2,7 +2,7 @@
    New game type <id>: add v.<id>, vd.<id>, dd.<id>.<easy|normal|hard|expert>, o.<option>, ov.<option>.<value>, os.<option>.<value>. */
 const I18N = {
 ja: {
-  'meta.title': 'ソリティア | 世界のボドゲ大全', series: '世界のボドゲ大全', title: 'ソリティア', back: 'ホームへ',
+  'meta.title': 'ソリティア | 世界のボドゲ大百科', series: '世界のボドゲ大百科', title: 'ソリティア', back: 'ホームへ',
   'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.t': 'ゲームの種類・難易度を選んで配る', 'btn.undo': '元に戻す', 'btn.undo.t': '1手戻す（Z）', 'btn.hint': 'ヒント', 'btn.hint.t': '次の一手を光らせる（H）', 'btn.rules': 'ルール', 'btn.rules.t': '動かしながら覚えるルール', 'btn.stats': '統計', 'btn.stats.t': 'ゲームごとの成績',
   auto: '自動で完成', stuck: '動かせるカードがありません。', restart: '最初から', 'new.h': '新しいゲーム', close: '閉じる', start: 'ゲーム開始', 'set.h': '設定', 'st.h': '統計', 'st.reset': '記録を消す',
   'res.win': 'クリア！', 'res.again': '同じ配りでもう一度', 'res.next': '次のゲーム', 'res.new': '新記録', no: 'いいえ', yes: 'はい',

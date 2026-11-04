@@ -1,6 +1,6 @@
 /* Backgammon — online play UI (lobby dialog, PC dock / phone tab, online matches on the board with commit–reveal dice, cube,
    resignation offers, result & rematch, spectating), first-visit profile dialog, Google link and cloud sync of local progress.
-   Same design as the other 世界のボドゲ大全 games (Nine Men's Morris / Checkers). Loaded after app.js / op.js and uses their globals
+   Same design as the other 世界のボドゲ大百科 games (Nine Men's Morris / Checkers). Loaded after app.js / op.js and uses their globals
    (match, cur, turn, view, settings, render, renderInfo, startTurn, rollAnim, animStep, toast, t, …). Backend: online.js (BgOnline). */
 'use strict';
 const ON = window.BgOnline;

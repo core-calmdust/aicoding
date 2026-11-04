@@ -1,7 +1,7 @@
 // Alquerque: the texts that differ from Fanorona (the page reuses fanorona/i18n.js and these override it)
 (function (A) { for (const l in A) if (window.I18N && I18N[l]) Object.assign(I18N[l], A[l]); })({
 ja: {
-  'meta.title': 'アルケルケ — 世界のボドゲ大全', 'title': 'アルケルケ',
+  'meta.title': 'アルケルケ — 世界のボドゲ大百科', 'title': 'アルケルケ',
   'rule.alq': 'アルケルケ（5×5）', 'rule.alq.d': '12枚ずつ。前か横へ1歩、相手を跳び越えて取る。取りは義務で、取れる限り続けて跳ぶ。',
   'intro.t': 'アルケルケってどんなゲーム？', 'intro.origin': 'アラブ世界 → スペイン', 'intro.players': '2人', 'intro.time': '10〜20分',
   'intro.hist': 'アラビア語で「キルカット」と呼ばれた古いゲームで、10世紀の書物にも名前が残ります。ムーア人によってスペインへ伝わり、13世紀のアルフォンソ10世『遊戯の書』にも描かれました。盤上の駒を跳び越えて取る遊び方は、のちのチェッカー（ドラフツ）の祖先と考えられています。',

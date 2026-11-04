@@ -1,4 +1,4 @@
-// PZBook — shared puzzle-collection UI for the 世界のボドゲ大全 games (spec v1).
+// PZBook — shared puzzle-collection UI for the 世界のボドゲ大百科 games (spec v1).
 //
 // Every game with puzzles uses the same structure so the experience feels the same everywhere:
 //  - Puzzles are grouped in themes; each theme is split into stages of 10 (STAGE 1 入門 → … → 名人).

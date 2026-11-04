@@ -1,7 +1,7 @@
 // Xiangqi-specific UI strings (10 languages). tools/build_i18n.js merges them with the game-independent strings shared with
 // Checkers (../checkers/i18n.js) into i18n.js. Format: key: [ja, en, zh, ko, es, fr, pt, de, hi, ar]
 module.exports = {
-  'meta.title': ['シャンチー（中国象棋） — 世界のボドゲ大全', 'Xiangqi (Chinese Chess) — World Board Game Atlas', '中国象棋 — World Board Game Atlas', '샹치(중국 장기) — World Board Game Atlas', 'Xiangqi (ajedrez chino) — World Board Game Atlas', 'Xiangqi (échecs chinois) — World Board Game Atlas', 'Xiangqi (xadrez chinês) — World Board Game Atlas', 'Xiangqi (Chinesisches Schach) — World Board Game Atlas', 'शियांगची (चीनी शतरंज) — World Board Game Atlas', 'شيانغ تشي (الشطرنج الصيني) — World Board Game Atlas'],
+  'meta.title': ['シャンチー（中国象棋） — 世界のボドゲ大百科', 'Xiangqi (Chinese Chess) — World Board Game Atlas', '中国象棋 — World Board Game Atlas', '샹치(중국 장기) — World Board Game Atlas', 'Xiangqi (ajedrez chino) — World Board Game Atlas', 'Xiangqi (échecs chinois) — World Board Game Atlas', 'Xiangqi (xadrez chinês) — World Board Game Atlas', 'Xiangqi (Chinesisches Schach) — World Board Game Atlas', 'शियांगची (चीनी शतरंज) — World Board Game Atlas', 'شيانغ تشي (الشطرنج الصيني) — World Board Game Atlas'],
   'title': ['シャンチー', 'Xiangqi', '中国象棋', '샹치', 'Xiangqi', 'Xiangqi', 'Xiangqi', 'Xiangqi', 'शियांगची', 'شيانغ تشي'],
   'sub': ['中国象棋', 'Chinese chess', '', '중국 장기', 'ajedrez chino', 'échecs chinois', 'xadrez chinês', 'Chinesisches Schach', 'चीनी शतरंज', 'الشطرنج الصيني'],
   'p1': ['赤', 'Red', '红方', '홍', 'Rojo', 'Rouge', 'Vermelho', 'Rot', 'लाल', 'الأحمر'],
