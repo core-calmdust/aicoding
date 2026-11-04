@@ -1369,6 +1369,16 @@
   addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   const dockAnim = () => document.documentElement.classList.contains('dock-anim');
+  // the FLIP's end (shared/headerbar.js 'dockrelayout' with detail.final, in the task that takes the transform off): the new buffer
+  // and the new picture right away, so the same frame shows the board crisp at its place — no snap afterwards
+  addEventListener('dockrelayout', e => {
+    if (!e.detail || !e.detail.final) return;
+    queueMicrotask(() => {   // (after the skins' own listeners have placed the canvas box for the final layout; still before the paint)
+      if (!R || !alignFn || dockAnim() || document.hidden) return;
+      if (el.clientWidth !== cw || el.clientHeight !== ch || sizeLate) { sizeLate = false; resize(); return; }
+      kick(300); cancelAnimationFrame(rafId); lastT = 0; loop(performance.now());
+    });
+  });
   function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; }
   /* ---------- auto-instancing (skin pages) ----------
      The skins keep one Group per piece (they move, lift, flip and fade them one by one). Right before each frame, every visible
@@ -1479,7 +1489,11 @@
     }
     root.rotation.y = yaw;
     if (roomTicks.length && !alignFn) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
-    if (alignFn && sizeLate) { if (dockAnim()) return; resize(); return; }   // (resize() draws the new size itself)
+    // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
+    // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
+    // the board at a wrong size until the end; the crisp one is drawn at once when the transform is taken off (dockFinal)
+    if (alignFn && dockAnim()) return;
+    if (alignFn && sizeLate) { resize(); return; }   // (resize() draws the new size itself)
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
       // idle (nothing moved for 1 s): only re-measure the DOM board ~10×/s; a resize or kick() wakes it at once
       if (now > kickUntil && !dirty && now - lastDraw > 1000 && (idleTick++ % 6)) return;
@@ -1495,7 +1509,7 @@
         const LK = lastKey || (lastKey = [NaN, 0, 0, 0, 0, 0]), same = Math.abs(LK[0] - r.x) < .05 && Math.abs(LK[1] - r.y) < .05 && Math.abs(LK[2] - r.w) < .05 && Math.abs(LK[3] - r.h) < .05 && LK[4] === W && LK[5] === H;
         // (the online dock's move / resize, shared/headerbar.js html.dock-anim: the page slides the board with a CSS transform —
         // the picture is right as long as the board's place in the canvas is the same: the kicks of the resize are not redrawn)
-        if (same && ((now > kickUntil && !dirty) || dockAnim())) return;
+        if (same && now > kickUntil && !dirty) return;
         LK[0] = r.x; LK[1] = r.y; LK[2] = r.w; LK[3] = r.h; LK[4] = W; LK[5] = H; if (now > kickUntil) dirty = false;
 
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2) - sh * unit, W, H); cam.updateProjectionMatrix();

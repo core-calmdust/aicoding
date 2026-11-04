@@ -38,9 +38,18 @@
       paintFloor();
     };
     let floorURL = null;
+    // the floor stays put while the online dock is open (or opening / closing): the board moves and shrinks over it, the
+    // table does not (its grain followed the board's place and size before) — repainted again only for a new window size
+    // (and once the dock has been opened, also after it is closed again: the closed layout may come back a few px different)
+    let floorVP = '', floorHeld = false;
     function paintFloor() {
       try {
+        const vp = innerWidth + 'x' + innerHeight, cl = document.documentElement.classList;
+        if (vp !== floorVP) floorHeld = false;
+        if (floorVP && (document.body.classList.contains('dock-open') || cl.contains('dock-anim'))) floorHeld = true;
+        if (floorVP && floorHeld && vp === floorVP) return;
         const F = T3.floorImage(o.floor === 'tatami' ? 'tatami' : 'wood'); if (!F) return;
+        floorVP = vp;
         if (!floorURL) floorURL = F.img.toDataURL('image/jpeg', .86);
         const de = document.documentElement.style;
         de.setProperty('background-image', `linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL}")`);

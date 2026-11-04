@@ -68,6 +68,7 @@ const CSS = `
 .modal.ngt-pc:is([data-ngt=design],[data-ngt=game]) :is(.ng-cols,.ng-col):not(.ngt-hide){display:block!important;column-gap:0!important;grid-template-columns:none!important}
 .modal.ngt-pc[data-ngt=design] .dsg{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))!important}
 /* ゲーム tab: variant cards (art, name, short description) */
+.modal[data-ngt=game] [data-ng=game] > label:first-child{display:none!important}
 .ngt-gcards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ngt-gcard{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.22);color:var(--text,#eee);font:inherit;text-align:start;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
 .ngt-gcard .gart{display:flex;align-items:center;justify-content:center;min-height:64px;padding:4px 0}

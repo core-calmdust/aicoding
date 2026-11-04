@@ -39,30 +39,30 @@
 .bv.hist #gl{transform:translateX(var(--hs-shift))}
 
 /* overlay */
-.hs{position:fixed;inset:0;z-index:75;display:none;color:var(--ink,#2b3044);font-family:var(--font,system-ui)}
-.hs.on,.hs.out{display:block}
+#hist.hs{position:fixed;inset:0;z-index:75;display:none;color:var(--ink,#2b3044);font-family:var(--font,system-ui)}
+#hist.hs.on,#hist.hs.out{display:block}
 /* solo (opened from the game list, a game without a 3D board): a painted museum gallery — red wall, wainscot, floor, a spotlight on the plinth */
-.hs.solo{background:linear-gradient(180deg,#4a1f1b 0,#6e2c26 58%,#2c170c 58.4%,#3a2212 62.5%,#c9a25a 62.5%,#c9a25a 63%,#5a3418 63%,#6e4426 78%,#3b2010 100%)}
-.hs.solo::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 26% 52% at var(--hs-sx,50%) 34%,rgba(255,226,170,.42),transparent 72%),radial-gradient(ellipse 60% 30% at var(--hs-sx,50%) 100%,rgba(0,0,0,.35),transparent 70%)}
-@media (min-width:820px){.hs.solo{--hs-sx:calc(var(--hs-pw) + (100% - var(--hs-pw)) / 2)}[dir=rtl] .hs.solo{--hs-sx:calc((100% - var(--hs-pw)) / 2)}}
-.hs.solo .hs-hero{align-content:center}
-.hs.solo .hs-hero::after{content:'';display:block;justify-self:center;width:min(42vw,250px);height:min(14vh,110px);margin-top:-18px;border-radius:4px;background:linear-gradient(180deg,#f6f1e7 0,#f6f1e7 12%,#d8cfbe 12%,#efe8db 30%,#cdc3b0 100%);box-shadow:0 26px 30px -16px rgba(0,0,0,.6)}
+#hist.hs.solo{background:linear-gradient(180deg,#4a1f1b 0,#6e2c26 58%,#2c170c 58.4%,#3a2212 62.5%,#c9a25a 62.5%,#c9a25a 63%,#5a3418 63%,#6e4426 78%,#3b2010 100%)}
+#hist.hs.solo::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 26% 52% at var(--hs-sx,50%) 34%,rgba(255,226,170,.42),transparent 72%),radial-gradient(ellipse 60% 30% at var(--hs-sx,50%) 100%,rgba(0,0,0,.35),transparent 70%)}
+@media (min-width:820px){#hist.hs.solo{--hs-sx:calc(var(--hs-pw) + (100% - var(--hs-pw)) / 2)}[dir=rtl] #hist.hs.solo{--hs-sx:calc((100% - var(--hs-pw)) / 2)}}
+#hist.hs.solo .hs-hero{align-content:center}
+#hist.hs.solo .hs-hero::after{content:'';display:block;justify-self:center;width:min(42vw,250px);height:min(14vh,110px);margin-top:-18px;border-radius:4px;background:linear-gradient(180deg,#f6f1e7 0,#f6f1e7 12%,#d8cfbe 12%,#efe8db 30%,#cdc3b0 100%);box-shadow:0 26px 30px -16px rgba(0,0,0,.6)}
 /* the canvas dims while the room swaps to the gallery and back */
 #gl::after{content:'';position:absolute;inset:0;background:#120c08;opacity:0;pointer-events:none;transition:opacity .26s ease}
 .bv.hsdim #gl::after{opacity:1}
 /* opened from the game list: a shimmer on the stage while the board is being prepared */
 .hs-stage.ld3d::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 30% 22% at 50% 52%,rgba(255,236,200,.5),transparent 70%),linear-gradient(100deg,transparent 30%,rgba(255,245,225,.22) 50%,transparent 70%) 0 0/250% 100%;animation:hsShim 1.2s linear infinite}
 @keyframes hsShim{from{background-position:0 0,150% 0}to{background-position:0 0,-100% 0}}
-.hs.solo.on{animation:hsFade .3s both}
-.hs.on .hs-panel{animation:hsPanIn .55s cubic-bezier(.2,1,.3,1) both}
-.hs.out .hs-panel{animation:hsPanOut .35s ease-in both}
-.hs.on .hs-guide,.hs.on .hs-top{animation:hsFade .5s .15s both}
-.hs.out .hs-guide,.hs.out .hs-top{animation:hsFade .25s reverse both}
+#hist.hs.solo.on{animation:hsFade .3s both}
+#hist.hs.on .hs-panel{animation:hsPanIn .55s cubic-bezier(.2,1,.3,1) both}
+#hist.hs.out .hs-panel{animation:hsPanOut .35s ease-in both}
+#hist.hs.on .hs-guide,#hist.hs.on .hs-top{animation:hsFade .5s .15s both}
+#hist.hs.out .hs-guide,#hist.hs.out .hs-top{animation:hsFade .25s reverse both}
 .hs-stage{position:absolute;left:0;right:0;top:0;height:var(--hs-st);pointer-events:none}
 .hs-hero{position:absolute;inset:0;display:none;place-items:center}
-.hs.no3d .hs-hero{display:grid}
+#hist.hs.no3d .hs-hero{display:grid}
 .hs-hero img{width:min(46vw,240px);max-height:70%;object-fit:contain;filter:drop-shadow(0 18px 14px rgba(60,30,0,.35));animation:hsBob 3.6s ease-in-out infinite}
-.hs.on.no3d .hs-hero{animation:hsFade .6s .2s both}
+#hist.hs.on.no3d .hs-hero{animation:hsFade .6s .2s both}
 .hs-top{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;display:flex;gap:8px}
 .hs-top button{width:40px;height:40px;border-radius:50%;border:2px solid var(--line,#efe3c8);background:#fff;box-shadow:0 2px 0 var(--line,#efe3c8);display:grid;place-items:center;color:var(--ink,#2b3044);cursor:pointer}
 .hs-top svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -260,7 +260,7 @@
   /* the page never stretches past ~980px: centred beside the board on tall windows */
   .hs-panel{top:max(16px,calc(50vh - 490px));bottom:max(16px,calc(50vh - 490px));width:var(--hs-pw);border-radius:28px;left:auto;right:auto}
   [dir=ltr] .hs-panel{left:16px}[dir=rtl] .hs-panel{right:16px}
-  .hs.on .hs-panel{animation-name:hsPanInX}.hs.out .hs-panel{animation-name:hsPanOutX}
+  #hist.hs.on .hs-panel{animation-name:hsPanInX}#hist.hs.out .hs-panel{animation-name:hsPanOutX}
   .hs-guide{bottom:max(20px,calc(50vh - 470px));inset-inline-start:24px}
   .hs-guide img{width:clamp(130px,15vh,190px);height:clamp(130px,15vh,190px)}
   .hs-bub{max-width:clamp(360px,28vw,520px);font-size:max(16px,calc(var(--hs-fs) * .95));line-height:1.6;padding:13px 18px;margin-bottom:clamp(76px,9vh,110px);border-radius:20px}

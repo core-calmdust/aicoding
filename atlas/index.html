@@ -10,7 +10,7 @@
 <meta http-equiv="Cache-Control" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="gamelist.css?v=1">
+<link rel="stylesheet" href="gamelist.css?v=2">
 <style>
 :root{
   --cream:#fff6e2; --paper:#fffdf7; --ink:#2b3044; --ink2:#6a7088; --line:#efe3c8;
@@ -674,6 +674,30 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .foot a{color:inherit}
 
 /* ---- character-guided rules (atlas/rules/*.js): the guide sits at the bottom, speaking in a bubble; one nav row ---- */
+
+/* table play: bigger, easier-to-read HUD, action bar and やめる (2026-11-04) */
+.hud{gap:10px;padding:7px}
+.hud .hs{font-size:17px;padding:7px 15px;gap:8px}
+.hud .hs b{font-size:25px;min-width:30px}
+.hud .hm{font-size:16px;min-width:70px}
+.hud .dk,.hud .bgk{width:22px!important;height:22px!important}
+.bv.playing .quit{font-size:16px;padding:10px 18px}
+.tbar{gap:7px;padding:6px}.tbar .tbtns{gap:6px}
+.tbar button{min-width:76px;height:58px;padding:0 12px;font-size:14.5px;border-radius:29px;gap:3px}
+.tbar button svg{width:24px;height:24px}
+.tbar .tclk{min-width:68px;height:48px;font-size:22px}.tbar .tclk small{font-size:11px}
+.bgbub{font-size:16px!important}
+@media (max-width:560px){
+  .hud .hs{font-size:15px;padding:6px 11px}.hud .hs b{font-size:21px}.hud .hm{font-size:14px;min-width:0}
+  .hud .dk,.hud .bgk{width:19px!important;height:19px!important}
+  .tbar button{min-width:58px;height:52px;padding:0 8px;font-size:12.5px;border-radius:26px}.tbar button svg{width:21px;height:21px}
+  .tbar .tclk{min-width:56px;height:42px;font-size:18px}
+  .bv.playing .quit{font-size:15px;padding:9px 15px}
+  .bgbub{font-size:14.5px!important}
+}
+.tbar.col button{width:60px;height:56px;font-size:12px}
+.hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
+.bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
 .rgd{position:absolute;z-index:4;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));width:min(760px,calc(100% - 24px));transform:translate(-50%,130%);opacity:0;transition:transform .5s cubic-bezier(.3,1.3,.5,1),opacity .3s;display:grid;gap:10px}
 .rgd.on{transform:translate(-50%,0);opacity:1}
@@ -996,7 +1020,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=40"></script>
-<script src="table3d.js?v=79"></script>
+<script src="gamelist-i18n.js?v=1"></script>
+<script src="table3d.js?v=80"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
 <script src="models/backgammon.js?v=15"></script>
@@ -1010,7 +1035,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="models/dots.js?v=4"></script>
 <script src="icons3d.js?v=18"></script>
 <script src="games/reversi.js?v=12"></script>
-<script src="games/shogi-play.js?v=10"></script>
+<script src="games/shogi-play.js?v=11"></script>
 <script src="games/shogi.js?v=12"></script>
 <script src="games/chess.js?v=4"></script>
 <script src="games/backgammon.js?v=15"></script>
@@ -1035,14 +1060,14 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="rules/hex.js?v=1"></script>
 <script src="rules/tafl.js?v=2"></script>
 <script src="rules/xiangqi.js?v=1"></script>
-<link rel="stylesheet" href="historia.css?v=2">
-<script src="historia.js?v=2"></script>
+<link rel="stylesheet" href="historia.css?v=3">
+<script src="historia.js?v=3"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=2"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=1"></script>
-<script src="app.js?v=140"></script>
+<script src="gamelist.js?v=3"></script>
+<script src="app.js?v=141"></script>
 </body>
 </html>
