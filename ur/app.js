@@ -263,6 +263,21 @@ function canRollNow() {
 }
 
 // ====================================================================== effects (soft, translucent)
+// PC: the status as a small translucent note at the edge of the board on the side to move (it replaces the status box):
+// shown when it changes, gone after a few seconds or as soon as something is played; the race count joins it at a new turn
+let tipKey = '', tipT = 0;
+function boardTip(msg, sub, side) {
+  const el = $('#boardTip'); if (!el || !HB || !HB.on) return;
+  const k = msg + '|' + side; if (k === tipKey) return; tipKey = k;
+  clearTimeout(tipT);
+  if (!msg) { el.classList.remove('show'); return; }
+  let extra = sub || '';
+  if (!special && game && !overNow() && atLatest()) { const rc = E.raceCount(curState()); extra = t('tip.race', { a: rc.pips[side], b: rc.pips[1 - side] }); }
+  el.className = 'board-tip s' + side; el.innerHTML = esc(msg) + (extra ? `<small>${esc(extra)}</small>` : '');
+  void el.offsetWidth; el.classList.add('show');
+  tipT = setTimeout(() => el.classList.remove('show'), 3600);
+}
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { clearTimeout(tipT); tipT = setTimeout(() => { const el = $('#boardTip'); if (el) el.classList.remove('show'); }, 900); }, true));
 let fxT = 0;
 function fxMsg(text, sub, cls, ms) {
   const el = $('#fxMsg'), gl = $('#fxGlow');
@@ -327,6 +342,7 @@ function renderInfo() {
   else if (!r.n) { msg = t('st.zero'); }
   else { const ms = E.legalMoves(st, r.n); msg = ms.length ? t('st.move', { n: r.n }) : t('st.noMove', { n: r.n }); sub = ms.length ? t('st.moveSub') : ''; }
   $('#stText').innerHTML = esc(msg) + (sub ? `<small>${esc(sub)}</small>` : '');
+  boardTip(special ? '' : msg, sub, st.turn);
   const pass = r && (!r.n || !E.legalMoves(st, r.n).length) && myTurnHuman() && !animating;
   bt.classList.toggle('pass', !!pass);
   bt.querySelector('span').textContent = pass ? t('pass') : t('roll');
@@ -867,8 +883,10 @@ function relayout(force) {
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
   const me = game ? (settings.mode === 'ai' ? game.human : 0) : 0;
-  if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } }
+  const ev = $('#evalCard');
+  if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } if (ev.parentElement !== col) col.appendChild(ev); }
   else {
+    if (ev.parentElement === col) $('#coachCard').parentElement.insertBefore(ev, $('.kifu-card'));
     ba.insertBefore($('#pl' + (1 - me)), fr); fr.after($('#pl' + me)); $('#pl' + me).after(sb);
   }
   pl.classList.toggle('hidden', !pc);

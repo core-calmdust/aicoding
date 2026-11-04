@@ -121,6 +121,13 @@ html.bv .fx-msg{font-size:calc(var(--bw) * .07)}
 .fx-glow{position:absolute;inset:-2%;z-index:1;pointer-events:none;border-radius:3%;opacity:0;transition:opacity .45s ease;box-shadow:inset 0 0 calc(var(--bw) * .06) rgba(230,197,115,.38)}
 .fx-glow.cap{box-shadow:inset 0 0 calc(var(--bw) * .06) rgba(194,65,45,.38)}
 .fx-glow.show{opacity:1}
+.board-tip{position:absolute;z-index:7;left:50%;transform:translate(-50%,4px);max-width:70%;padding:6px 14px 7px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .35s ease,transform .35s ease;
+  background:rgba(10,16,48,.62);border:1px solid rgba(217,180,90,.32);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  color:rgba(239,232,214,.92);font-size:calc(var(--bw) * .0118 + 5px);line-height:1.45;letter-spacing:.03em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 18px -8px rgba(0,0,0,.7)}
+.board-tip small{color:rgba(239,232,214,.62);margin-inline-start:.6em;font-size:.86em}
+.board-tip.show{opacity:1;transform:translate(-50%,0)}
+.board-tip.s0{bottom:-1.5%}.board-tip.s1{top:-1.5%}
+html:not(.hb-on) .board-tip{display:none}
 .toast{position:absolute;left:50%;bottom:6%;z-index:9;transform:translateX(-50%);max-width:92%;padding:8px 16px;border-radius:10px;background:rgba(8,13,38,.9);border:1px solid rgba(217,180,90,.4);font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 .review-bar{display:none;gap:6px;align-items:center;flex-wrap:wrap}
@@ -407,20 +414,25 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   @supports (height:100dvh){html.hb-on{--vh:calc(100dvh - var(--hb-h) - 40px)}}
   html.hb-on body{overflow:hidden}
   html.hb-on .app{height:var(--vh);display:grid;gap:12px;padding:12px clamp(16px, 2vw, 32px) 12px;
-    grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr) minmax(0,1.05fr);
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);
     grid-template-rows:minmax(0,1fr) var(--ih);
-    grid-template-areas:"board board board board" "pl ck ev kf"}
+    grid-template-areas:"board board board" "ck pl kf"}
   html.hb-on{--ih:clamp(220px, calc(var(--vh) * .34), 330px);--bw:min(calc(100vw - 64px), calc((var(--vh) - var(--ih) - 36px) * 1.674), 1500px)}
   html.hb-on .side, html.hb-on .side-in{display:contents}
   html.hb-on .board-area{grid-area:board;justify-content:center}
+  /* PC info row: コーチ 1/2 | 対局者（1人1行）＋形勢 1/4 | 棋譜 1/4. The status / roll box is not shown: the hints are the board's
+     small notes (#boardTip) and rolling is the board's roll button, the space bar or a tap on the dice */
   html.hb-on .pl-col{grid-area:pl;display:flex;flex-direction:column;gap:10px;min-height:0}
-  html.hb-on .pl-col .players{flex:none}
-  html.hb-on body:is(.in-lesson,.in-puzzle) .sbox{display:none}
-  html.hb-on .sbox{flex:1 1 auto;flex-direction:column;align-items:stretch;justify-content:space-between}
-  html.hb-on .sbox .rollbtn{justify-content:center;padding:11px 16px}
+  html.hb-on .pl-col .players{flex:none;padding:8px 10px;gap:4px}
+  html.hb-on .pl-col .player{grid-template-columns:auto minmax(0,1fr) auto auto;padding:6px 10px;column-gap:8px}
+  html.hb-on .pl-col .player .sub, html.hb-on .pl-col .player .status{display:none}
+  html.hb-on .pl-col .player .home{font-size:19px}
+  html.hb-on .pl-col .player .pdisc{width:18px;height:18px}
+  html.hb-on .pl-col #evalCard{flex:1 1 auto;min-height:0}
+  html.hb-on .sbox{display:none!important}
   html.hb-on #coachCard, html.hb-on #itCoachRest, html.hb-on .review-card, html.hb-on .lesson-card, html.hb-on .puzzle-card{grid-area:ck;min-height:0;overflow-y:auto}
   html.hb-on body:is(.in-lesson,.in-puzzle){--ih:clamp(250px, calc(var(--vh) * .4), 360px)}
-  html.hb-on #evalCard{grid-area:ev;min-height:0;display:flex;flex-direction:column}
+  html.hb-on #evalCard{min-height:0;display:flex;flex-direction:column;padding:10px 12px}
   html.hb-on #evalCard .graph{flex:1 1 auto;min-height:40px;height:auto}
   html.hb-on .kifu-card{grid-area:kf;min-height:0}
   html.hb-on .kifu{max-height:none}
@@ -429,8 +441,8 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   html.hb-on body .review-card.show ~ #coachCard{display:none}
   html.hb-on body:has(.review-card.show) #coachCard{display:none!important}
   /* the PC review box (rvbox.js) */
-  html.hb-on.rvb-on .app{grid-template-areas:"board board board board" "ev bx bx kf"}
-  html.hb-on.rvb-on .pl-col, html.hb-on.rvb-on .review-card{display:none!important}
+  html.hb-on.rvb-on .app{grid-template-areas:"board board board" "bx pl kf"}
+  html.hb-on.rvb-on .review-card{display:none!important}
   html.hb-on .app > .rvbox{grid-area:bx}
   .hb .hb-info .hb-chip .pdisc{width:14px;height:14px}
 }
@@ -473,6 +485,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
       <div class="fx-glow" id="fxGlow"></div>
       <div class="dice-dock" id="diceDock" role="button" tabindex="0"><div class="dice-host" id="diceHost"></div><div class="dice-cap" id="diceCap"></div><span class="roll-pill" id="rollPill"></span></div>
       <div class="fx-msg" id="fxMsg"></div>
+      <div class="board-tip" id="boardTip" aria-live="polite"></div>
       <div class="toast" id="toast"></div>
       <div class="review-bar" id="reviewBar"><span id="reviewText"></span><button id="btnResume" data-i18n="review.resume"></button><button id="btnLatest" data-i18n="review.latest"></button></div>
     </div>
