@@ -2526,3 +2526,10 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 /* wins: black base with gold (not a gold plate) */
 .bj-res.r-win,.bj-res.r-bj{color:#ffe39a;background:linear-gradient(180deg,#1f1a10,#070604);border-color:#e9c56f;box-shadow:inset 0 0 0 2px #070604,inset 0 0 0 3px rgba(241,205,122,.55),0 4px 14px rgba(0,0,0,.55),0 0 14px rgba(241,205,122,.28)}
 .bj-tot.bj{color:#ffe39a;background:linear-gradient(180deg,#1f1a10,#070604);box-shadow:0 0 0 1px #e9c56f,inset 0 0 0 2px #070604,inset 0 0 0 3px rgba(241,205,122,.45),0 3px 8px rgba(0,0,0,.45)}
+
+/* the other players: their result shows on the total (no label over the cards) */
+.bj-tot.rk-w{color:#ffe39a;background:linear-gradient(180deg,#1f1a10,#070604);box-shadow:0 0 0 1px #e9c56f,0 3px 8px rgba(0,0,0,.45)}
+.bj-tot.rk-l{opacity:.6}
+.bj-res.me.sm{font-size:calc(min(var(--u)*.13,12px));padding:2px 9px 2px 10px;letter-spacing:.08em}
+.sess-bar .srow{grid-template-columns:repeat(6,1fr)}
+.bj .side .card[data-pt=sess] .srow{grid-template-columns:repeat(3,1fr);row-gap:10px}
