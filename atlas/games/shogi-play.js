@@ -13,7 +13,7 @@
     { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
     { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
     { nodes: 260 }, { nodes: 520 }, { nodes: 1000 }, { nodes: 2000 }, { nodes: 3600 }, { nodes: 7200 }, { nodes: 14000 }, { nodes: 25000 },
-    { nodes: 49000, time: 12000 }, { nodes: 91000, time: 15000 }, { nodes: 370000, time: 15000 }, { nodes: 2200000, time: 20000 }];
+    { nodes: 49000, time: 12000 }, { nodes: 91000, time: 15000 }, { nodes: 180000, time: 15000 }, { nodes: 370000, time: 15000 }, { nodes: 900000, time: 20000 }, { nodes: 2200000, time: 20000 }];
   const START = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
   const SC = .8;                                  // the legged board is life-size: a little smaller on the chabudai
   const HANDS = [6, 5, 7, 4, 3, 2, 1];            // 飛 角 金 銀 桂 香 歩 (stand order)
