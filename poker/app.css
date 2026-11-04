@@ -1602,3 +1602,37 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 #tutLayer.dock.act .tut-do-s{display:block;font-size:12px;font-weight:700;color:#8fe3b8;margin-top:1px}
 #tutLayer.dock.act .tut-do-s::before{content:'👉 '}
 @media (max-height:720px){#tutLayer.dock .tut-box p{font-size:12.5px;line-height:1.5}#tutLayer.dock .tut-box>b{font-size:14px}}
+/* tutorial: several targets — a dark mask with a hole per target and a ring on each (tutorial.js paint) */
+.tut-mask{position:fixed;left:0;top:0;display:none;pointer-events:none}
+.tut-mask path{fill:rgba(5,5,6,.58);fill-rule:evenodd}
+#tutLayer.multi .tut-mask{display:block}
+#tutLayer.multi .tut-hole{display:none}
+.tut-rings{position:fixed;inset:0;pointer-events:none}
+.tut-ring{position:fixed;box-shadow:0 0 0 2px #e7e3db,0 0 14px 3px rgba(230,226,218,.45)}
+.tut-ring.hot{box-shadow:0 0 0 3px #8fe3b8,0 0 18px 5px rgba(143,227,184,.55);animation:tutRing 1.2s ease-in-out infinite}
+.tut-ring.hot.round{box-shadow:0 0 0 3px #ffd76a,0 0 18px 6px rgba(255,215,106,.7)}
+@keyframes tutRing{50%{transform:scale(1.12)}}
+.tut-ring:not(.round).hot{animation-name:tutRingS}
+@keyframes tutRingS{50%{box-shadow:0 0 0 4px #8fe3b8,0 0 28px 9px rgba(143,227,184,.7)}}
+.tut-tag{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;padding:2px 8px;border-radius:999px;background:#f2eee6;color:#141416;font:800 11.5px/1.5 'Zen Kaku Gothic New',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.tut-tag.below{bottom:auto;top:calc(100% + 6px)}
+.tut-ring.hot.round .tut-tag{background:#ffd76a}
+.tut-ring.round.hot{animation-name:tutRingD}
+@keyframes tutRingD{50%{box-shadow:0 0 0 5px #ffd76a,0 0 26px 10px rgba(255,215,106,.85)}}
+@media (min-width:900px){.tut-tag{font-size:13px}}
+/* phones: the bottom tab that holds the box the step is about */
+.m-tabs button.tut-tab{color:#f6f2ea;z-index:4600}
+.m-tabs button.tut-tab svg{stroke:#8fe3b8}
+/* titles and button labels never wrap; the last box: buttons share a row, or stack full width when they don't fit */
+.tut-box>b .tut-h{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tut-btns .mbtn{white-space:nowrap}
+.tut-btns.end{flex-wrap:wrap;justify-content:stretch}
+.tut-btns.end .mbtn{flex:1 1 auto;min-width:max-content}
+#tutLayer.fin .tut-box>b{text-align:center;font-size:18px;margin:2px 0 6px}
+#tutLayer.fin .tut-box p{text-align:start}
+#tutLayer.fin .tut-btns{margin-top:12px}
+#tutLayer.dock.fin .tut-btns .mbtn{padding:9px 12px}
+.toast .tt-l{display:block;white-space:nowrap}
+.toast .tt-l+.tt-l{font-size:12.5px;color:var(--muted);margin-top:1px}
+@media (max-width:760px){.toast{bottom:calc(78px + env(safe-area-inset-bottom))}}
+.tut-tag.in{bottom:auto;top:6px}
