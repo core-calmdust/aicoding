@@ -27,6 +27,10 @@
   IMG.vn = IMG.vrn = IMG.v; VIEW.vn = VIEW.vrn = [-186, -434, 372, 896];   // (the picture's visible board: x −176 … 182, y −426 … 456)
   // 'hn' / 'hrn' (phones held sideways, or a short phone): the same, the board lying across (the 'vn' picture turned: x ↔ y)
   IMG.hn = IMG.hrn = IMG.h; VIEW.hn = VIEW.hrn = [-434, -186, 896, 372];
+  // 'vf…' (phones held upright, 2026-11-05): the board turned half round — the big block at the bottom, your lane (Light, row 2) on the
+  // right: the picture board-*-vf (turned 180°) with rows 0 / 2 swapped in the cells (the outer rows carry the same motifs), i.e. a cell
+  // (r, c) at ((r−1)·100, (3.5−c)·100). Keys: 'vf', 'vrf', 'vfn', 'vrfn'
+  for (const k of ['vf', 'vrf']) { IMG[k] = IMG[k + 'n'] = IMG.v; VIEW[k] = VIEW.v; VIEW[k + 'n'] = VIEW.vn; }
   const PD = 76, TD = 54, ND = 58;   // piece diameter on the board / in the trays / in the notch stacks (user units)
   const exists = (r, c) => r >= 0 && r < 3 && c >= 0 && c < 8 && (r === 1 || c < 4 || c > 5);
   const ROSETTES = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
@@ -36,11 +40,11 @@
   /* ---------- geometry ---------- */
   // o: 'h' | 'v', or 'hr' | 'vr' = rows 0 and 2 swapped (Dark's lane nearest you: below on 'h', right on 'v'). The two outer
   // rows carry the same motifs, so the board picture stays as it is (its light keeps coming from the top left)
-  const RT = o => o.indexOf('r') > 0, OB = o => o[0], NT = o => o.indexOf('n') > 0;
+  const RT = o => o.indexOf('r') > 0, OB = o => o[0], NT = o => o.indexOf('n') > 0, FL = o => o[0] === 'v' && o.indexOf('f') > 0;
   // the notch stacks (side 0 on the right of 'vn'): centre of the stack, and the shift of each piece above the one below
   const NX = 126, NY = { start: 84, goal: 150 };
   const nside = (o, side) => (RT(o) ? !side : side) ? -1 : 1;
-  const cellXY = (o, r, c) => { if (RT(o)) r = 2 - r; return OB(o) === 'v' ? [(r - 1) * 100, (c - 3.5) * 100] : [(c - 3.5) * 100, (r - 1) * 100]; };
+  const cellXY = (o, r, c) => { if (RT(o)) r = 2 - r; return OB(o) === 'v' ? [(r - 1) * 100, (FL(o) ? 3.5 - c : c - 3.5) * 100] : [(c - 3.5) * 100, (r - 1) * 100]; };
   // built-in routes (used when UrEngine is not loaded)
   function route(rule, side) {
     const E = window.UrEngine;
@@ -54,17 +58,17 @@
   // tray slots: side 1 (dark, row 0) above / left, side 0 (light, row 2) below / right
   function traySlots(o, side, kind, n = 7) {
     const out = [];
-    if (NT(o)) { const sx = nside(o, side), V = OB(o) === 'v'; for (let i = 0; i < n; i++) out.push(V ? [sx * (NX + i * 1.4), NY[kind] - i * 3.4] : [NY[kind] + i * 1.4, sx * NX - i * 3.4]); return out; }
+    if (NT(o)) { const sx = nside(o, side), V = OB(o) === 'v', fy = FL(o) ? -1 : 1; for (let i = 0; i < n; i++) out.push(V ? [sx * (NX + i * 1.4), fy * NY[kind] - i * 3.4] : [NY[kind] + i * 1.4, sx * NX - i * 3.4]); return out; }
     for (let i = 0; i < n; i++) {
       // start: slot 0 is next to the entry square (col 3); goal: slot 0 next to the exit (col 6)
       const a = kind === 'start' ? -32 - i * 58 : 118 + i * 50;
       const b = (RT(o) ? !side : side) ? (OB(o) === 'v' ? -238 : -232) : (OB(o) === 'v' ? 238 : 244);
-      out.push(OB(o) === 'v' ? [b, a] : [a, b]);
+      out.push(OB(o) === 'v' ? [b, FL(o) ? -a : a] : [a, b]);
     }
     return out;
   }
   function trayBox(o, side, kind) {
-    if (NT(o)) { const sx = nside(o, side), x0 = sx > 0 ? 70 : -206, b = kind === 'start' ? [x0, 30, 136, 87] : [x0, 117, 136, 70]; return OB(o) === 'v' ? b : [b[1], b[0], b[3], b[2]]; }
+    if (NT(o)) { const sx = nside(o, side), x0 = sx > 0 ? 70 : -206, b = kind === 'start' ? [x0, 30, 136, 87] : [x0, 117, 136, 70]; if (FL(o)) b[1] = -b[1] - b[3]; return OB(o) === 'v' ? b : [b[1], b[0], b[3], b[2]]; }
     const s = traySlots(o, side, kind), xs = s.map(p => p[0]), ys = s.map(p => p[1]), m = TD / 2 + 8;
     const x0 = Math.min(...xs) - m, x1 = Math.max(...xs) + m, y0 = Math.min(...ys) - m, y1 = Math.max(...ys) + m;
     return [x0, y0, x1 - x0, y1 - y0];
@@ -88,7 +92,7 @@
 <marker id="${p}ap" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffe27a" stroke="#3a2a00" stroke-width="1"/></marker>
 </defs>`;
   }
-  const boardHref = (design, o, small) => `${BASE}img/board-${BOARDS.includes(design) ? design : 'museum'}-${OB(o)}${small ? '-s' : ''}.webp`;
+  const boardHref = (design, o, small) => `${BASE}img/board-${BOARDS.includes(design) ? design : 'museum'}-${OB(o)}${FL(o) ? 'f' : ''}${small ? '-s' : ''}.webp`;
   const imgAttr = (o, R) => ({ x: R[0], y: R[1], width: R[2], height: R[3] });
   const piecesKey = k => PIECES.includes(k) ? k : 'orig';
 
@@ -163,7 +167,7 @@
     let s = '';
     for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
       const n = L.pieces.filter(q => q.side === side && q.where === kind).length; if (!n) continue;
-      const sx = nside(o, side), a = sx * (NX + 40), b2 = NY[kind] + 22, x = OB(o) === 'v' ? a : b2, y = OB(o) === 'v' ? b2 : a;
+      const sx = nside(o, side), a = sx * (NX + 40), b2 = (FL(o) ? -NY[kind] : NY[kind]) + 22, x = OB(o) === 'v' ? a : b2, y = OB(o) === 'v' ? b2 : a;
       s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
     }
     return s;
@@ -185,8 +189,8 @@
   /* ---------- mount ---------- */
   function mount(host, opts = {}) {
     const p = 'ur' + (++uid) + '_';
-    let notch = !!opts.notch;
-    const okey = (b, r) => b + (r ? 'r' : '') + (notch ? 'n' : '');
+    let notch = !!opts.notch, flip = !!opts.flip;
+    const okey = (b, r) => b + (r ? 'r' : '') + (b === 'v' && flip ? 'f' : '') + (notch ? 'n' : '');
     let o = okey(opts.orient === 'v' ? 'v' : 'h', opts.rot), design = BOARDS.includes(opts.design) ? opts.design : 'museum', pcs = piecesKey(opts.pieces);
     const interactive = opts.interactive !== false;
     const H = {}; const on = (ev, fn) => { (H[ev] = H[ev] || []).push(fn); return view; }, emit = (ev, a) => (H[ev] || []).forEach(f => f(a));
@@ -323,7 +327,7 @@
 
   /* ---------- static mini board (string) ---------- */
   function mini(state, opt = {}) {
-    const p = 'urm' + (++uid) + '_', o = (opt.orient === 'v' ? 'v' : 'h') + (opt.rot ? 'r' : ''), design = BOARDS.includes(opt.design) ? opt.design : 'museum', pcs = piecesKey(opt.pieces);
+    const p = 'urm' + (++uid) + '_', o = (opt.orient === 'v' ? 'v' : 'h') + (opt.rot ? 'r' : '') + (opt.orient === 'v' && opt.flip ? 'f' : ''), design = BOARDS.includes(opt.design) ? opt.design : 'museum', pcs = piecesKey(opt.pieces);
     let V = VIEW[o].slice();
     const cr = opt.crop;
     if (Array.isArray(cr) && cr.length === 4) V = cr;                       // [x, y, w, h] in user units
@@ -579,7 +583,7 @@
   window.UrBoard2D = { mount, mini, dice, BOARDS, PIECES, GREEN, cellXY, route, traySlots, VIEW, IMG };
 })();
 /* README
-mount(el, { orient:'h'|'v', rot=false, notch=false, design, pieces, interactive=true, speed=1 }) → view   (rot: rows 0 / 2 swapped — Dark's lane nearest;
+mount(el, { orient:'h'|'v', rot=false, notch=false, flip=false, design, pieces, interactive=true, speed=1 }) → view   (rot: rows 0 / 2 swapped — Dark's lane nearest;
   notch: the pieces off the board stand in the notch as two stacks with a count, the view is the board alone — VIEW.vn / VIEW.hn)
 view.render(state, { sel, targets, last, hint, marks })
   sel      {r,c} | {side,piece} | {tray:'start',side}     selected piece (gold ring, lifted)

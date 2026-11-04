@@ -155,8 +155,10 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   function orientTo(o) {
     O = String(o)[0] === 'v' ? 'v' : 'h';
     { const V = VB(); CZ = (V[1] + V[3] / 2) / 100; CX = (V[0] + V[2] / 2) / 100; }
-    U.orient && U.orient(O);
-    board.rotation.y = O === 'v' ? U.rot.v : 0;
+    // (phones held upright, 'vf…': the board turned the other way — the big block at the bottom, row 2 (Light) on the right)
+    const fl = O === 'v' && String(o).indexOf('f') > 0;
+    U.orient && U.orient(fl ? 'vccw' : O);
+    board.rotation.y = O === 'v' ? (fl ? U.rot.vccw : U.rot.v) : 0;
     inner.position.set(-CX, 0, -CZ);   // (the vertical viewBox, −272 … 272 across and −462 … 470 down, has its centre at (0, 4) too)
     skin.alignTo(units(), Y);
   }

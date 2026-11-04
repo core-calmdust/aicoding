@@ -2,7 +2,7 @@
 """Bake the 2D board / piece images for ur/board2d.js.
 
 Runs ur/tools/paint2d.js in headless Chrome (Playwright) and writes WebP files to ur/img/:
-  board-<design>-<h|v>.webp   (board top + sides + shadow; 904x426 / 404x926 user units at UPX px/unit)
+  board-<design>-<h|v|vf>.webp   (board top + sides + shadow; 904x426 / 404x926 user units at UPX px/unit)
   board-<design>-<h|v>-s.webp (small version for mini() / phones)
   pieces-<design>.webp        (sprite: [light, dark] side by side, N px each)
 Usage: python3 ur/tools/bake2d.py [design ...]
@@ -34,7 +34,7 @@ def main():
         pg.add_script_tag(path=os.path.join(HERE, 'paint2d.js'))
         for d in DESIGNS:
             if d not in want: continue
-            for o in 'hv':
+            for o in ('h', 'v', 'vf'):
                 for upx, suf, q in ((UPX, '', 84), (UPX_S, '-s', 80)):
                     url = pg.evaluate('([d,o,u]) => UrPaint2D.board(d,o,u).toDataURL("image/png")', [d, o, upx])
                     save(url, os.path.join(OUT, f'board-{d}-{o}{suf}.webp'), q)
