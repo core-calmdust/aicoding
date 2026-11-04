@@ -53,13 +53,14 @@
   let boardSet = mine || 'lux';   // the 3D board's wood follows the last 3D piece set picked (also while 2D pieces are shown)
   try { const v = localStorage.getItem(PCK + '-bd'); if (v === 'wood' || v === 'lux') boardSet = mine || v; } catch (e) {}
   const skinNow = () => { try { return settings.skin || 'classic'; } catch (e) { return 'classic'; } };
+  let V = null; const is3 = () => !V || V.is3d();   // the 3D board, or the game's own 2D board (AtlasSkin.view)
   function look() {
-    const mineBtn = mine && BTN[mine];
-    if (seg) seg.querySelectorAll('button').forEach(x => { if (x.dataset.set) x.classList.toggle('sel', x.dataset.v === mineBtn); else if (mine) x.classList.remove('sel'); });
+    const mine3 = is3() ? mine : '', mineBtn = mine3 && BTN[mine3];
+    if (seg) seg.querySelectorAll('button').forEach(x => { if (x.dataset.set) x.classList.toggle('sel', x.dataset.v === mineBtn); else if (mine3) x.classList.remove('sel'); });
     if (board.userData.setSet) board.userData.setSet(boardSet);
-    if (board.userData.setTone) board.userData.setTone(skinNow());
-    IMG = mine ? IMGS[mine] || null : null; if (mine && !IMGS[mine]) loadSet(mine);
-    document.documentElement.classList.toggle('atlas-svgpc', !mine);
+    if (board.userData.setTone) board.userData.setTone('classic');   // (the 2D boards are picked as 2D boards now: the lacquer keeps its own colour)
+    IMG = mine3 ? IMGS[mine3] || null : null; if (mine3 && !IMGS[mine3]) loadSet(mine3);
+    document.documentElement.classList.toggle('atlas-svgpc', !mine3);
     try { designNow(); } catch (e) {}
     T3.kick(400);
   }
@@ -77,16 +78,20 @@
     paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
     seg.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
+      if (t.dataset.set && !is3() && V) V.set(true);   // 3D pieces stand on the 3D board
       mine = t.dataset.set || ''; try { localStorage.setItem(PCK, mine === 'wood' ? 'wood' : mine ? '1' : '0'); } catch (x) {}
       if (mine) { boardSet = mine; try { localStorage.setItem(PCK + '-bd', mine); } catch (x) {} e.stopImmediatePropagation(); }
       setTimeout(() => { look(); redraw(); }, 0);   // a 2D set: the game's own handler applies it first
     }, true);
   }
+  // the board row: "3D board" first, then the game's own 2D boards (a 2D board shows the plain 2D page in the portal's frame)
+  V = skin.view({ key: 'atlas-chess-view', row: document.getElementById('segSkin'), img: '../images/atlas/chess.webp', cls: ['atlas-chess'],
+    on() { setTimeout(() => { try { look(); } catch (e) {} redraw(); }, 0); } });
   if (typeof window.applySkin === 'function') { const oa = window.applySkin; window.applySkin = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
   setTimeout(look, 0);
   const orig = window.pieceSVG;
   window.pieceSVG = function (p) {
-    if (!IMG || !mine) return orig(p);
+    if (!IMG || !mine || !is3()) return orig(p);
     const src = IMG[(p & 8 ? 'b' : 'w') + ' PNBRQK'[p & 7]];
     return src ? `<img class="a3d rf" src="${src}" alt="" draggable="false"><img class="a3d" src="${src}" alt="" draggable="false">` : orig(p);   // + its reflection in the lacquer
   };

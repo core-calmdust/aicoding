@@ -27,7 +27,7 @@ ${P}[data-ngt=rules] .ng-cols:not(.ngt-hide){display:grid!important;columns:auto
 ${P}.ngt-pc[data-ngt=rules] .ng-cols:not(.ngt-hide){flex:1 0 auto!important;margin:0 0 4px!important;overflow:visible!important;max-height:none!important}
 ${P}[data-ngt=rules] .ng-cols.ngl-one{grid-template-columns:minmax(0,1fr)!important;align-items:start!important}
 ${P}[data-ngt=rules] .ng-col.ngl-empty{display:none!important}
-${P}[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){display:flex!important;flex-direction:column;justify-content:flex-start;gap:20px;min-width:0;margin:0!important;padding:18px 20px 20px!important;border-radius:16px;
+${P}[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){display:flex!important;flex-direction:column;justify-content:flex-start;gap:20px!important;min-width:0;margin:0!important;padding:18px 20px 20px!important;border-radius:16px;
   border:1px solid var(--ngl-pbd);background:var(--ngl-pbg);box-shadow:var(--ngl-psh)}
 ${P}[data-ngt=rules] .ng-col > *{margin:0!important}
 ${P}[data-ngt=rules] .ng-col > .field{align-self:stretch;width:auto}
@@ -41,6 +41,16 @@ ${P} .ng-col .checks label{margin:0;padding:8px 11px;border-radius:10px;backgrou
 ${P} .ng-col :is(select:not([data-nopd]),.pd-btn){border-radius:10px}
 ${P} .ng-col .pd-btn{background:rgba(0,0,0,.3)}
 ${P} .ng-col :is(.ng-info,[id$=Info]) p{line-height:1.75}
+/* a field whose label sat beside its control (phones) now stacks: the label with its hairline on top */
+${P}[data-ngt=rules] .ng-col > .field:not(.hidden):not(.ngt-hide):not([data-ng]){display:block!important}
+${P}[data-ngt=rules] .ng-col > .field > label:first-child{width:auto!important;max-width:none!important;white-space:normal}
+/* PC: the display options sit at the foot of their panel (as shogi's) */
+${P}.ngt-pc[data-ngt=rules] .ng-col > :is(#fDisplay,#fOpts,#fOptions){margin-top:auto!important}
+/* the chosen design's name (phones show only pictures): at the end of the label's hairline */
+${P} [data-ng=design]:has(> .dsg-now){display:flex;flex-wrap:wrap;align-items:center}
+${P} [data-ng=design]:has(> .dsg-now) > *{flex:1 0 100%;min-width:0}
+${P} [data-ng=design]:has(> .dsg-now) > label:first-child{flex:1 1 0}
+${P} [data-ng=design] > .dsg-now{flex:none;order:0;margin:0 0 10px 10px!important;font-size:12.5px;color:var(--ngl-hi)}
 /* the mode row (outside the panels): a little more air */
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:16px!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef > label{letter-spacing:.18em}
@@ -61,7 +71,7 @@ ${P}.ngt-pc .ngt-gcard p{font-size:14px!important;line-height:1.75!important;col
 ${P}.ngt-on .ngt-gcard p{font-size:12.5px!important;line-height:1.6}
 /* phones: the panels a little tighter, one under the other */
 ${P}.ngt-on[data-ngt=rules] .ng-cols:not(.ngt-hide){display:flex!important;flex-direction:column;gap:10px!important;margin:0 0 6px!important}
-${P}.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){gap:20px;padding:16px 14px 18px!important;border-radius:14px}
+${P}.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){gap:22px!important;padding:16px 14px 18px!important;border-radius:14px}
 ${P}.ngt-on :is(.ng-col,[data-ng=design]) > .field > label:first-child,${P}.ngt-on [data-ng=design] > label:first-child{font-size:11px;letter-spacing:.2em;margin-bottom:8px}
 ${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:6px!important}

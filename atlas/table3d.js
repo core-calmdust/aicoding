@@ -1093,9 +1093,14 @@
   let glide = null;
   const ioC = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
   function setInset(px) { insetTo = Math.max(0, px || 0); if (glide) glide.i1 = insetTo; }
+  let sizeLate = false;
   function resize() {
     if (!R) return;
     const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+    // the online dock's FLIP (shared/headerbar.js, html.dock-anim): the canvas is stretched with its box meanwhile (the board in it
+    // scales uniformly, so the old picture still fits) — the new drawing buffer is made once, at its end (see loop)
+    if (alignFn && dockAnim() && R.domElement.width) { sizeLate = w !== cw || h !== ch; return; }
+    sizeLate = false;
     if (w === cw && h === ch && R.domElement.width) { kick(300); return; }   // (the same size again: no new buffer)
     cw = w; ch = h; R.setSize(w, h, false); frame(); kick(300);
     // setSize clears the canvas: draw the new size right away, in this frame (a resize observer runs after the animation frame callbacks)
@@ -1362,6 +1367,7 @@
     }
     root.rotation.y = yaw;
     if (roomTicks.length && !alignFn) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
+    if (alignFn && sizeLate) { if (dockAnim()) return; resize(); return; }   // (resize() draws the new size itself)
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
       // idle (nothing moved for 1 s): only re-measure the DOM board ~10×/s; a resize or kick() wakes it at once
       if (now > kickUntil && !dirty && now - lastDraw > 1000 && (idleTick++ % 6)) return;

@@ -191,7 +191,19 @@
        puts a "3D" tile first in the board row (row); picking any of the game's 2D boards there shows the plain 2D board in the
        portal's frame (html.atlas-2d: the 3D canvas hidden, the skin's 3D-only classes off), the 3D tile brings the 3D board back.
        The choice is kept (localStorage key). Returns { is3d(), set(is3d) }. */
+    const V3L = { ja: '3D盤', en: '3D board', zh: '3D棋盘', ko: '3D 보드', es: 'Tablero 3D', fr: 'Plateau 3D', pt: 'Tabuleiro 3D', de: '3D-Brett', hi: '3D बोर्ड', ar: 'لوحة ثلاثية الأبعاد' };
     function view(v) {
+      if (!document.getElementById('a3vCss')) {
+        const st = document.createElement('style'); st.id = 'a3vCss';
+        st.textContent = `button.a3v{position:relative}
+button.a3v .a3vpic{display:grid!important;place-items:center;width:100%;aspect-ratio:var(--a3v-ar,6/5);border-radius:8px;overflow:hidden;background:radial-gradient(85% 85% at 50% 38%,#fff9ea,#f1dfba 70%,#e3c98f)!important;box-shadow:inset 0 0 0 1px rgba(170,120,40,.25)!important}
+button.a3v .a3vpic img{display:block;width:86%!important;height:86%!important;object-fit:contain;filter:drop-shadow(0 4px 5px rgba(90,50,10,.3))}
+button.a3v::after{content:'3D';position:absolute;top:8px;inset-inline-start:8px;padding:1px 7px;border-radius:99px;background:linear-gradient(180deg,#ffcf5c,#e09a00);color:#fff;font:900 10.5px/1.5 'Fredoka',system-ui,sans-serif;letter-spacing:.06em;box-shadow:0 2px 0 #b97a00;pointer-events:none}
+html.atlas-2d #atlasGL{display:none!important}`;
+        document.head.appendChild(st);
+      }
+      if (!v.html) v.html = l => `<span class="th a3vpic"><img src="${v.img}" alt="" draggable="false"></span><span class="nm"></span>`.replace('<span class="nm"></span>', `<span class="nm">${l}</span>`);
+      if (!v.label) v.label = V3L;
       let is3 = true; try { const s = localStorage.getItem(v.key); if (s === '2d') is3 = false; } catch (e) {}
       const vlang = () => (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja';
       const row = v.row; let tile = null;
@@ -217,7 +229,7 @@
         row.addEventListener('click', e => {
           const b = e.target.closest('button'); if (!b || b.disabled || !row.contains(b)) return;
           if (b === tile) { e.stopImmediatePropagation(); set(true); return; }
-          setTimeout(() => set(false), 0);   // a 2D board: the game's own handler applies it first
+          set(false);   // a 2D board (the game's own handler then picks it as usual)
         }, true);
         new MutationObserver(fix).observe(row, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed'] });
       }
