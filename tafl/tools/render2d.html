@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Dev tool: renders the 3D viking oak board and turned pieces (atlas/table3d.js MODELS.tafl) straight from above, for the
+     2D page's "carved" board / "turned" piece set. Open via a local server: /tafl/tools/render2d.html?n=11 (board) or
+     ?piece=1|2|3 → window.SHOT holds a PNG data URL (transparent background for pieces). tools/gen_viking.py post-processes. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../atlas/table3d.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), n = +(q.get('n') || 11), pk = +(q.get('piece') || 0), S = +(q.get('px') || 2048);
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
+  document.body.appendChild(R.domElement);
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xfff4e2, 0x6a4a30, .62));
+  // light from the upper left of the screen (−x, towards −z = the top edge), fairly high so the board reads evenly
+  const key = new THREE.DirectionalLight(0xfff1dc, 1.05); key.position.set(-6, 14, -7); key.castShadow = true;
+  key.shadow.mapSize.set(4096, 4096); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.radius = 3;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xdfe8ff, .25); fill.position.set(6, 8, 6); scene.add(fill);
+  const g = Table3D.MODELS.tafl(true, { n }); const U = g.userData;
+  let half;
+  if (pk) {
+    // one piece alone, centred; the camera frames exactly one cell so pieces keep the board's scale
+    scene.remove(key); const k2 = new THREE.DirectionalLight(0xfff1dc, 1.1); k2.position.set(-5, 14, -6); scene.add(k2);
+    // the same turned profile as table3d.js, with a smooth lathe (the 3D one uses 16 sides for speed)
+    const MAT = U.mats, r0 = Math.min(.42, U.cs * .4);
+    const prof = (h, k) => { const pts = [[0, 0], [k, 0], [k * 1.02, h * .08], [k * .9, h * .2], [k * .62, h * .42], [k * .5, h * .62], [k * .6, h * .74], [k * .48, h * .86], [k * .26, h * .97], [0, h]];
+      return new THREE.LatheGeometry(pts.map(([a, b]) => new THREE.Vector2(Math.max(.001, a), b)), 128); };
+    const p = new THREE.Group(), h = pk === 3 ? r0 * 2.9 : r0 * 2.0;
+    p.add(new THREE.Mesh(pk === 3 ? prof(h, r0 * 1.1) : prof(h, r0), MAT[pk === 1 ? 1 : 2]));
+    if (pk === 3) {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(r0 * .44, r0 * .5, r0 * .3, 64, 1, true), MAT.gold); band.position.y = h * .86; band.material.side = THREE.DoubleSide; p.add(band);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = new THREE.Mesh(new THREE.ConeGeometry(r0 * .1, r0 * .32, 24), MAT.gold); c.position.set(Math.cos(a) * r0 * .44, h * .86 + r0 * .26, Math.sin(a) * r0 * .44); p.add(c); }
+    }
+    scene.add(p); half = U.cs / 2;
+  } else { scene.add(g); half = (U.S + 1.1) / 2; }
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const cam = new THREE.OrthographicCamera(-half, half, half, -half, .1, 100);
+  cam.position.set(0, 30, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
+  R.render(scene, cam);
+  window.SHOT = R.domElement.toDataURL('image/png');
+  window.INFO = { S: U.S, FW: U.S + 1.1, n, cs: U.cs };
+})();
+</script>
+</body></html>

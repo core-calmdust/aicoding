@@ -367,5 +367,12 @@
 "dr.accepted": "AIが引き分けに同意しました",
 "dr.declined": "AIは引き分けを断りました（まだ勝負を続けたいようです）",
 "dr.aiResigned": "AIが投了しました",
-"ls.seqGood": "いい手です！"
+"ls.seqGood": "いい手です！",
+"bd.carved": "彫刻オーク（3D版）",
+"bd.ballinderry": "バリンデリー",
+"bd.runestone2": "ルーン石碑",
+"bd.longship": "ロングシップ",
+"pcs.turned": "ろくろ挽き（3D版）",
+"pcs.birka": "ビルカのガラス",
+"bd.modern": "モダン"
 }

@@ -82,12 +82,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Novice : laisse des pièces et rate les fuites du roi",
-"Débutant : voit prises et fuites à un ou deux coups",
-"Intermédiaire à avancé : doubles menaces de fuite et encerclements",
-"Dan : calcul profond, coriace des deux côtés"
-],
+"lvd": ["Novice : laisse des pièces et rate les fuites du roi", "Débutant : voit prises et fuites à un ou deux coups", "Intermédiaire à avancé : doubles menaces de fuite et encerclements", "Dan : calcul profond, coriace des deux côtés"],
 "res.review": "Voir le plateau",
 "res.again": "Rejouer",
 "res.draw": "Nulle",
@@ -372,5 +367,12 @@
 "dr.accepted": "L’IA a accepté la nulle",
 "dr.declined": "L'IA a refusé la nulle (elle veut continuer)",
 "dr.aiResigned": "L'IA a abandonné",
-"ls.seqGood": "Bon coup !"
+"ls.seqGood": "Bon coup !",
+"bd.carved": "Chêne sculpté (3D)",
+"bd.ballinderry": "Ballinderry",
+"bd.runestone2": "Pierre runique",
+"bd.longship": "Drakkar",
+"pcs.turned": "Bois tourné (3D)",
+"pcs.birka": "Verre de Birka",
+"bd.modern": "Moderne"
 }

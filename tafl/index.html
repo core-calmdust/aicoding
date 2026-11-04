@@ -827,7 +827,8 @@ html[data-pcs=mono]{--at1:#5c5c5c;--at2:#262626;--at3:#121212;--at4:#000;--df1:#
 }
 /* board / piece design pickers (live mini boards) */
 .bdrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-.bdrow.pcrow{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bdrow.pcrow{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width: 640px){ .bdrow.pcrow{grid-template-columns:repeat(3,minmax(0,1fr))} }
 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
 .bdrow button svg{display:block;width:100%;height:auto;border-radius:5px}
 .bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;letter-spacing:0}
@@ -930,6 +931,41 @@ body.in-online #coachCard{display:none!important}
   .app > .side > .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{height:40px;flex:none;min-height:0}
   .app > .side > .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard{flex:none;min-height:0}
 }
+/* ================================================================ historical Viking designs (tools/gen_viking.py; "carved" / "turned" = the 3D
+   board and pieces rendered from above): the playing surface, the frame and the piece faces are pictures; the modern designs stay as they are */
+.bdrow .bdimg{display:block;width:100%;aspect-ratio:1;border-radius:5px;overflow:hidden;box-shadow:0 0 0 1px rgba(201,169,97,.35)}
+.bdrow .bdimg img{width:100%;height:100%;object-fit:cover;display:block}
+.bdrow .pcimg{display:flex;width:100%;aspect-ratio:1;align-items:center;justify-content:center;border-radius:5px;background:radial-gradient(circle at 50% 40%,#3a2a1c,#120c08)}
+.bdrow .pcimg img{width:32%;margin:0 -2%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.bdrow .pcimg img:nth-child(2){width:38%;position:relative;z-index:1}
+html:is([data-bd=carved],[data-bd=ballinderry],[data-bd=runestone],[data-bd=longship]) .board{background:var(--bdImg) center/100% 100% no-repeat}
+html:is([data-bd=carved],[data-bd=ballinderry],[data-bd=runestone],[data-bd=longship]) .board::after{display:none}
+html:is([data-bd=carved],[data-bd=ballinderry],[data-bd=runestone],[data-bd=longship]) .lines :is(.wd,.gl,.sp,.sp2,.knot){display:none}
+html[data-bd=carved] .board[data-n="11"]{--bdImg:url(img/bd-carved-11.webp)} html[data-bd=carved] .board[data-n="9"]{--bdImg:url(img/bd-carved-9.webp)} html[data-bd=carved] .board[data-n="7"]{--bdImg:url(img/bd-carved-7.webp)}
+html[data-bd=ballinderry] .board[data-n="11"]{--bdImg:url(img/bd-ballinderry-11.webp)} html[data-bd=ballinderry] .board[data-n="9"]{--bdImg:url(img/bd-ballinderry-9.webp)} html[data-bd=ballinderry] .board[data-n="7"]{--bdImg:url(img/bd-ballinderry-7.webp)}
+html[data-bd=runestone] .board[data-n="11"]{--bdImg:url(img/bd-runestone-11.webp)} html[data-bd=runestone] .board[data-n="9"]{--bdImg:url(img/bd-runestone-9.webp)} html[data-bd=runestone] .board[data-n="7"]{--bdImg:url(img/bd-runestone-7.webp)}
+html[data-bd=longship] .board[data-n="11"]{--bdImg:url(img/bd-longship-11.webp)} html[data-bd=longship] .board[data-n="9"]{--bdImg:url(img/bd-longship-9.webp)} html[data-bd=longship] .board[data-n="7"]{--bdImg:url(img/bd-longship-7.webp)}
+/* frames: carved = the rune band of the 3D frame (border-image), the others a seamless tile of their own */
+html[data-bd=carved] .frame{background:#3a2414}
+html[data-bd=carved] .frame::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:calc(var(--cell) * .26) solid transparent;border-image:url(img/fr-carved.webp) 64 round}
+html[data-bd=ballinderry] .frame{background:url(img/fr-ballinderry.webp) 0 0/220px 220px,#4a2412}
+html[data-bd=runestone] .frame{background:url(img/fr-runestone.webp) 0 calc(var(--cell) * .37 - 128px)/256px 256px,#8d8f8c}
+html[data-bd=longship] .frame{background:url(img/fr-longship.webp) 0 0/240px 240px,#2a1c12}
+html:is([data-bd=carved],[data-bd=ballinderry],[data-bd=runestone],[data-bd=longship]) .board{box-shadow:0 0 0 2px rgba(20,12,6,.75),0 6px 18px rgba(0,0,0,.55)}
+html:is([data-bd=runestone]) .lines .num{fill:rgba(30,30,28,.7)}
+html:is([data-bd=carved]) .lines .num{fill:rgba(60,32,12,.7)}
+html:is([data-bd=ballinderry],[data-bd=longship]) .lines .num{fill:rgba(255,226,180,.55)}
+html:is([data-bd=carved],[data-bd=ballinderry],[data-bd=runestone],[data-bd=longship]) .reserve .lbl{color:rgba(255,236,200,.75);text-shadow:0 1px 2px rgba(0,0,0,.8)}
+/* rendered pieces: the picture is the piece; only a soft shadow (and the usual selection ring) around it */
+html:is([data-pcs=turned],[data-pcs=birka]) :is(.pc,.rv){background:var(--pcImg) center/100% 100% no-repeat!important;box-shadow:0 calc(var(--cell) * .05) calc(var(--cell) * .08) rgba(0,0,0,.55)!important}
+html:is([data-pcs=turned],[data-pcs=birka]) .pc::before{box-shadow:none}
+html:is([data-pcs=turned],[data-pcs=birka]) .pc .em{display:none}
+html:is([data-pcs=turned],[data-pcs=birka]) .pc.sel{box-shadow:0 0 0 3px rgba(255,236,170,.95),0 0 22px rgba(226,194,117,.85),0 10px 18px -6px rgba(0,0,0,.8)!important}
+html:is([data-pcs=turned],[data-pcs=birka]) .pc.threat::before{box-shadow:0 0 0 calc(var(--cell) * .06) rgba(255,107,91,.75)}
+html[data-pcs=turned] :is(.pc,.rv).p1{--pcImg:url(img/pc-turned-a.webp)} html[data-pcs=turned] :is(.pc,.rv).p2{--pcImg:url(img/pc-turned-d.webp)} html[data-pcs=turned] .pc.k{--pcImg:url(img/pc-turned-k.webp)}
+html[data-pcs=birka] :is(.pc,.rv).p1{--pcImg:url(img/pc-birka-a.webp)} html[data-pcs=birka] :is(.pc,.rv).p2{--pcImg:url(img/pc-birka-d.webp)} html[data-pcs=birka] .pc.k{--pcImg:url(img/pc-birka-k.webp)}
+html[data-pcs=turned] .pdisc.p1{background:radial-gradient(circle at 35% 30%,#7a4a2c,#2a140a 70%)} html[data-pcs=turned] .pdisc.p2{background:radial-gradient(circle at 35% 30%,#fff8e8,#d8c79c 80%)}
+html[data-pcs=birka] .pdisc.p1{background:radial-gradient(circle at 35% 30%,#6a86c8,#1a2a5a 70%)} html[data-pcs=birka] .pdisc.p2{background:radial-gradient(circle at 35% 30%,#fff,#d8d4c8 80%)}
 </style>
 <link rel="stylesheet" href="online.css?v=1l9">
 <style>
@@ -1234,7 +1270,7 @@ body.in-online #coachCard{display:none!important}
   </div>
 </div>
 
-<script src="i18n.js?v=3"></script>
+<script src="i18n.js?v=4"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1256,7 +1292,7 @@ body.in-online #coachCard{display:none!important}
 <script src="coach.js?v=6"></script>
 <script src="coach-i18n.js?v=3"></script>
 <script src="../shared/export.js?v=7"></script>
-<script src="app.js?v=mk1-20261104rh"></script>
+<script src="app.js?v=mk1-20261104vk"></script>
 <script src="online-ui.js?v=1l9c1p"></script>
 <!-- World Board Game Atlas portal skin: tafl/?skin=atlas — 3D viking oak board with carved walnut / bone pieces, guide speech bubbles, portal look (all features kept) -->
 <script>
