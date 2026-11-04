@@ -242,7 +242,7 @@
     if (top === camTop) return; camTop = top;
     if (root) root.classList.toggle('top', !!top);
     fit();
-    try { Table3D.play(!!top, { glide: 1100, ortho: true }); } catch (e) {}
+    try { Table3D.play(!!top, { glide: 700, ortho: true }); } catch (e) {}
   }
 
   /* ---------- keyboard ---------- */
