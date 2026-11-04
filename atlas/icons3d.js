@@ -506,6 +506,44 @@
       g0.add(at(db, 1.2, .08, -.8, 0, .3, 0));
       return g0;
     },
+    ur() {   // a corner of the Ur board: shell plaques (a rosette, eyes, five circles) on a lapis grid in a black frame with a
+      // shell diamond band; a shale piece on the rosette, a shell piece hopping in, a tetrahedral die with its white tip up
+      const top = M({ map: X.canvasTex('icur', 512, 512, (g, W) => {
+        g.fillStyle = '#141110'; g.fillRect(0, 0, W, W);
+        // the diamond band round the edge
+        g.strokeStyle = '#e8dcc0'; g.lineWidth = 3; g.strokeRect(14, 14, W - 28, W - 28); g.strokeRect(46, 46, W - 92, W - 92);
+        const n = 9, st = (W - 60) / n;
+        for (let side = 0; side < 4; side++) for (let i = 0; i <= n; i++) {
+          const t = 30 + i * st, [x, y] = [[t, 30], [W - 30, t], [W - t, W - 30], [30, W - t]][side];
+          g.fillStyle = '#efe5cf'; g.beginPath(); g.moveTo(x - 13, y); g.lineTo(x, y - 13); g.lineTo(x + 13, y); g.lineTo(x, y + 13); g.closePath(); g.fill();
+        }
+        // the lapis ground and three shell plaques + one more (2 × 2)
+        g.fillStyle = '#1d2d8f'; g.fillRect(58, 58, W - 116, W - 116);
+        const P = (W - 116 - 18) / 2, o = [64, 64 + P + 6];
+        const plaque = (x, y, f) => { g.fillStyle = '#efe6d0'; g.fillRect(x, y, P, P); g.save(); g.translate(x + P / 2, y + P / 2); g.strokeStyle = '#2a1c12'; g.lineWidth = 6; f(); g.restore(); };
+        const ros = () => { for (let k = 0; k < 8; k++) { g.save(); g.rotate(k * Math.PI / 4); g.beginPath(); g.moveTo(10, 0); g.quadraticCurveTo(40, -22, 78, 0); g.quadraticCurveTo(40, 22, 10, 0); g.fillStyle = k % 2 ? '#2a3fa8' : '#a63a26'; g.fill(); g.stroke(); g.restore(); } g.beginPath(); g.arc(0, 0, 13, 0, 7); g.fillStyle = '#a63a26'; g.fill(); g.stroke(); };
+        const five = () => [[0, 0], [-48, -48], [48, -48], [-48, 48], [48, 48]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 20, 0, 7); g.stroke(); g.beginPath(); g.arc(x, y, 11, 0, 7); g.fillStyle = '#2a3fa8'; g.fill(); });
+        const eyes = () => { g.beginPath(); g.moveTo(-14, -80); g.lineTo(-14, 80); g.moveTo(14, -80); g.lineTo(14, 80); g.moveTo(-80, 0); g.lineTo(80, 0); for (const y of [-60, -40, 40, 60]) { g.moveTo(-14, y); g.lineTo(14, y); } g.stroke();
+          for (const sx of [-1, 1]) for (const sy of [-1, 1]) { g.save(); g.translate(sx * 48, sy * 40); g.beginPath(); g.moveTo(-26, 0); g.quadraticCurveTo(0, -24, 26, 0); g.quadraticCurveTo(0, 24, -26, 0); g.stroke(); g.beginPath(); g.arc(0, 0, 6, 0, 7); g.fillStyle = '#2a1c12'; g.fill(); g.restore(); } };
+        plaque(o[0], o[0], ros); plaque(o[1], o[0], eyes); plaque(o[0], o[1], five); plaque(o[1], o[1], five);
+      }), roughness: .55 });
+      const g = boardChunk(2, 3.6, top, C(0x2e2420, { roughness: .45 }));
+      const p = i => (i - .5) * 1.47;
+      const piece = (shell, s) => { const c = new T.Group(); c.add(puck(.62, .26, C(shell ? 0xeee4cc : 0x3c4046, { roughness: .45 }), .5));
+        const dm = C(shell ? 0x2a3fa8 : 0xf1e8d2, { roughness: .4 }); [[0, 0], [-.27, -.27], [.27, -.27], [-.27, .27], [.27, .27]].forEach(([x, z]) => { const d = mesh(new T.CylinderGeometry(.08, .08, .04, 16), dm); d.position.set(x, .26, z); c.add(d); });
+        c.scale.setScalar(s); return c; };
+      g.add(at(piece(false, .82), p(1), .5, p(0)));   // shale piece on the eyes
+      g.add(at(piece(true, .82), p(0), .5, p(1)));    // shell piece on the five circles
+      // the tetrahedral die: bone body, a shell-and-lapis tip pointing up
+      const dg = new T.Group(), body = C(0xd9cba8, { roughness: .45 }), V = [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].map(v => new T.Vector3(...v).multiplyScalar(.62));
+      const tet = new T.BufferGeometry().setFromPoints([V[1], V[2], V[3], V[0], V[2], V[1], V[0], V[3], V[2], V[0], V[1], V[3]]); tet.computeVertexNormals();
+      dg.add(mesh(tet, body)); const tip = mesh(new T.SphereGeometry(.13, 16, 10), C(0xf6f0e2, { roughness: .3 })); tip.position.copy(V[0]).multiplyScalar(.92); dg.add(tip);
+      const lap = mesh(new T.SphereGeometry(.07, 12, 8), C(0x2a3fa8, { roughness: .3 })); lap.position.copy(V[0]).multiplyScalar(1.02); dg.add(lap);
+      dg.scale.setScalar(1.25); g.add(at(dg, p(1), .5 + .26, p(1), 0, .9, 0));   // the die on the near plaque, white tip up
+      // the big shell piece hopping onto the rosette (far corner, so the rosette shows below it)
+      g.add(at(piece(true, 1.35), p(0) - .15, 2.15, p(0) - .2, .55, 0, -.35));
+      return g;
+    },
     jailbreak() {   // a 3×3 patch of concrete cell floor: crates, the orange inmate slipping through the bars, a gold key
       const g0 = new T.Group();
       const tile = C(0xd8d2c4, { roughness: .7 });

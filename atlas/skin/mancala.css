@@ -77,6 +77,10 @@ html.atlas-mancala #bgfx{display:none!important}
   html.atlas-mancala body{--uw:calc((100vw - 2 * var(--px)) / 9.32);--uh:calc((var(--vh) - 24px - 2 * var(--plate) - 16px - 12px - var(--C)) / 3.82)}
   html.atlas-mancala .board-area{width:calc(var(--u) * 9.32)!important}
   html.atlas-mancala .app{width:min(calc(100vw - 2 * var(--px)), max(calc(var(--u) * 9.32), 1180px))}   /* (the info row as wide as the board group) */
+}
+/* online dock open — wide windows: the info column beside the board, as in the 2D page; near-square windows keep the info row under
+   the board (2D: the same) and shared/headerbar.js fits the board and the row above the dock */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 7/5){
   html.atlas-mancala body.dock-open:not(.ol-soon){--uw:calc((100vw - 2 * var(--px) - var(--rw) - 16px) / 9.32);
     --u:min(var(--uw), (var(--vh) + 61px - min(46vh, 380px) - 20px - 2 * var(--plate) - 16px) / 3.82, 150px);--CH:calc(var(--u) * 3.82 + 2 * var(--plate) + 16px)}
   html.atlas-mancala body.dock-open:not(.ol-soon) .app{grid-template-columns:calc(var(--u) * 9.32) var(--rw)!important}

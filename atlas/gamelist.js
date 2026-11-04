@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const SHOTS = new Set(['shogi', 'chess', 'checkers', 'ugolki', 'fanorona', 'alquerque', 'xiangqi', 'tafl', 'reversi', 'go', 'gomoku', 'dots', 'connect4', 'morris', 'hex',
-    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire']);
+    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur']);
   const SHOT_V = 3;                                   // bump after regenerating the thumbnails
   const FX = ['ai', 'online', 'lessons', 'puzzles'];  // the feature icons shown on a card (labels come from the tag.* strings)
 
@@ -13,7 +13,7 @@
     hist: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>',
   };
   /* c: { t, esc, gname, about(g) → the long description (hover tooltip), tl(g) → one-line tagline, art(g), badge(g) → html, pct(g) → 0..100,
-          tags (A_.TAGS), cats (category order), group (bool), hasRules(g), onRules(id), onHistoria(id) } */
+          tags (A_.TAGS), cats (category order), group (false = no headings), hasRules(g), onRules(id), onHistoria(id) } */
   function card(g, c) {
     const fx = FX.filter(k => g.tags.includes(k) && c.tags[k]).map(k => { const T = c.tags[k], l = c.esc(c.t('tag.' + k));
       return `<i class="fx" style="--c:${T.c}" role="img" aria-label="${l}" title="${l}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${T.i}"/></svg></i>`; }).join('');
@@ -33,7 +33,8 @@
     const grp = g => g.tags.includes('card') ? 'card' : g.cat;   // solitaire sits with the card games here
     const cats = [...c.cats, ...new Set(list.map(grp).filter(k => !c.cats.includes(k)))];
     const groups = cats.map(k => [k, list.filter(g => grp(g) === k)]).filter(([, a]) => a.length);
-    const head = c.group && groups.length > 1;
+    // a category heading over every group, whatever the chip or search (counts are of the shown games); group: false turns them off
+    const head = c.group !== false && groups.length > 0;
     root.innerHTML = groups.map(([k, a]) => `<section class="glg">${head ? `<h3 class="glh"><span>${c.esc(c.t('cat.' + k))}</span><em>${a.length}</em></h3>` : ''}
       <div class="glgrid">${a.map(g => card(g, c)).join('')}</div></section>`).join('');
     // the footer buttons act on their own (the card's link is a sibling, so they never open it)
@@ -102,5 +103,21 @@
       if (over(e) && PAREN.test(e.textContent)) { e.dataset.full = e.textContent; e.textContent = e.textContent.replace(PAREN, ''); e.style.fontSize = ''; if (over(e)) for (let f = base - .5; f >= Math.max(8, base * .78) && over(e); f -= .5) e.style.fontSize = f + 'px'; }
     });
   }
-  window.AtlasGameList = { render, fit, fitTitle, fitLabels, SHOTS };
+  /* a paragraph that fills the height its box is given (flex): all of it when it fits, otherwise as many whole lines as fit, then "…".
+     Refits when the box changes size (window, fonts, the card next to it). */
+  const CRO = window.ResizeObserver && new ResizeObserver(es => es.forEach(e => { const k = Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height); if (k !== e.target._ck) { e.target._ck = k; clampNow(e.target); } }));
+  let lastC = null;
+  function clampNow(el) {
+    if (!el || !el.isConnected) return;
+    el.style.webkitLineClamp = ''; el.classList.remove('clamp');
+    if (el.scrollHeight <= el.clientHeight + 1) return;
+    const lh = parseFloat(getComputedStyle(el).lineHeight) || 20, n = Math.max(1, Math.floor((el.clientHeight + 1) / lh));
+    el.classList.add('clamp'); el.style.webkitLineClamp = String(n);
+  }
+  function clampFit(el) {
+    if (!el) return; clampNow(el);
+    if (CRO) { if (lastC && lastC !== el) CRO.unobserve(lastC); lastC = el; el._ck = ''; CRO.observe(el); }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => clampNow(el));
+  }
+  window.AtlasGameList = { render, fit, fitTitle, fitLabels, clampFit, SHOTS };
 })();

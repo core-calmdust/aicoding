@@ -111,6 +111,18 @@
     }
     c.globalAlpha = .8; c.fillStyle = col; c.beginPath(); c.arc(Uu(st.x1), Uu(st.z1), Uu(st.w) * .62, 0, 7); c.fill(); c.globalAlpha = 1;
   }
+  /* handwriting: the marker hand of the Latin marks, then handwritten webfonts for every other script
+     (Kalam: Latin + Devanagari, Yomogi: kana/kanji, Gaegu: Hangul, Long Cang: hanzi, Aref Ruqaa: Arabic),
+     so 「あ」「山」「나」「आ」「أ」 are scribbled like "AI" instead of falling back to a bold UI font */
+  const HAND = '"Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE","Kalam","Yomogi","Gaegu","Long Cang","Aref Ruqaa",cursive';
+  const LATIN = /^[\x20-\x7e -ɏ]*$/;
+  const handFont = (txt, px) => LATIN.test(txt) ? `italic 700 ${px}px ${HAND}` : `700 ${px}px ${HAND}`;   // (no synthetic italic on CJK etc.: the mark is tilted instead)
+  const fontWait = new Set();
+  function needFont(f, txt) {   // a webfont not loaded yet: load it, then repaint once
+    try { if (!document.fonts || document.fonts.check(f, txt)) return; } catch (e) { return; }
+    const k = f + '|' + txt; if (fontWait.has(k)) return; fontWait.add(k);
+    document.fonts.load(f, txt).then(() => { lastKey = ''; try { paint(); } catch (e) {} }, () => {});
+  }
   function boxInk(c, gm, bx, o) {
     const r = Math.floor(bx / gm.n), cc = bx % gm.n, [px, pz] = gm.dot(r, cc), x0 = Uu(px), y0 = Uu(pz), sz = Uu(gm.sp), col = o === 2 ? NEUTRAL : INK[o];
     let q = 131 * (bx + 3); const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -121,8 +133,11 @@
     c.restore();
     if (o === 2) return;
     let ch = 'RB'[o]; try { ch = initial(o) || ch; } catch (e) {}
-    c.save(); c.translate(x0 + sz / 2, y0 + sz / 2 + Uu(.04)); c.rotate((rr() - .5) * .3); c.globalAlpha = .9; c.fillStyle = col;
-    c.font = `italic 700 ${Uu(Math.min(.95, gm.sp * (ch.length > 1 ? .36 : .5)))}px "Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    const lat = LATIN.test(ch), hang = /[ᄀ-ᇿ가-힯]/.test(ch), wide = !lat && /[⺀-鿿豈-﫿＀-￯]/.test(ch);   // kana / kanji fill the em: a little smaller (Gaegu draws Hangul small: larger)
+    c.save(); c.translate(x0 + sz / 2, y0 + sz / 2 + Uu(.04)); c.rotate((rr() - .5) * .3 + (lat ? 0 : -.1)); c.globalAlpha = lat ? .9 : 1; c.fillStyle = col;   // (stroke + fill: opaque, or the overlap shows a darker rim)
+    const f = handFont(ch, Uu(Math.min(.95, gm.sp * (ch.length > 1 ? .36 : hang ? .6 : wide ? .42 : .5)))); needFont(f, ch);
+    c.font = f; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (!lat) { c.strokeStyle = col; c.lineJoin = c.lineCap = 'round'; c.lineWidth = Uu(gm.sp) * .022; c.strokeText(ch, 0, 0); }   // single-weight brush fonts: a touch more marker ink
     c.fillText(ch, 0, 0); c.restore();
   }
   function paint(skipE) {
@@ -132,7 +147,7 @@
     for (let b = 0; b < S.G.B; b++) if (S.owner[b] >= 0 && !(skipE >= 0 && S.log.length && S.log[S.log.length - 1].boxes.includes(b))) boxInk(c, gm, b, S.owner[b]);
     for (let e = 0; e < S.G.E; e++) if (S.p.drawn[e] && e !== skipE) inkStroke(c, strokeOf(gm, e), S.by[e] === 2 ? NEUTRAL : INK[S.by[e]]);
     const tally = k => k > 0 ? '  ' + 'I'.repeat(k).replace(/(IIIII)/g, '$1 ') : '';
-    c.font = `italic 700 ${Uu(.32)}px "Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive`; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    c.font = handFont('R', Uu(.32)); needFont(c.font, 'RBI'); c.textAlign = 'left'; c.textBaseline = 'alphabetic';
     const ty = Math.min(1.62, BZ0 - .12);
     c.fillStyle = INK[0]; c.fillText('R' + tally(S.scores[0]), Uu(1.1), Uu(ty)); c.fillStyle = INK[1]; c.fillText('B' + tally(S.scores[1]), Uu(4.1), Uu(ty));
     tex.needsUpdate = true; T3.kick(200);
@@ -171,7 +186,8 @@
   window.renderBoard = function (anim) {
     const r = oRender.apply(this, arguments);
     try {
-      const key = S ? game.n + ':' + S.p.drawn.join('') + ':' + Array.from(S.by).join(',') + ':' + Array.from(S.owner).join(',') : '';
+      let ini = ''; try { ini = initial(0) + '|' + initial(1); } catch (e) {}   // (the initials too: a language switch rewrites them)
+      const key = S ? ini + ':' + game.n + ':' + S.p.drawn.join('') + ':' + Array.from(S.by).join(',') + ':' + Array.from(S.owner).join(',') : '';
       if (anim && S && S.log.length && settings.anim) { lastKey = key; animateLast(); }
       else if (key !== lastKey) { lastKey = key; anTok++; ribbon.visible = false; paint(); }
     } catch (e) {}
