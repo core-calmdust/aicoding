@@ -894,6 +894,8 @@ document.addEventListener('click', e => {
   renderNew();
 });
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
+// the ルール button on each game card (shared/ngtabs.js): that game's rules tutorial
+$('#ngBody').ngtRules = id => window.BacRules && BacRules.open(id);
 $('#btnStart').onclick = () => { set.prefs[NG.v] = NG.p; save(); closeOv('#newOverlay'); clearTimeout(G.timer); newSession(NG.v); };
 
 /* design (shared with the solitaire / poker) */

@@ -1060,7 +1060,7 @@ function segSync() {
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'rated' || m === 'online'));
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'c33' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span><span class="gc-rl" role="button" tabindex="0" data-rl="${r}">${t('btn.rules')}</span></button>`).join('');
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'c33' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -1092,10 +1092,9 @@ function resumeWith() {
 $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
-// the rules button in the bottom-right of every card (same as Shogi): the tutorial, or the variants page for 3×4 / 4×4 / diagonal
-const cardRules = r => { hideOverlay('#newOverlay'); openRules(null, r === 'c33' ? 0 : TOUR_VARS); };
-$('#ruleCards').onclick = e => { const rl = e.target.closest('.gc-rl'); if (rl) { e.stopPropagation(); cardRules(rl.dataset.rl); return; } const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-$('#ruleCards').onkeydown = e => { const rl = e.target.closest('.gc-rl'); if (rl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); cardRules(rl.dataset.rl); } };
+// the ルール button on every card (shared/ngtabs.js): the tutorial, or the variants page for 3×4 / 4×4 / diagonal
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
+$('#ruleCards').ngtRules = r => openRules(null, r === 'c33' ? 0 : TOUR_VARS);
 function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from(null).spec(); E.setRule(keep); return sp; }
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
