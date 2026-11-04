@@ -107,6 +107,26 @@
     const top = mesh(new T.CircleGeometry(.52, 44), face); top.rotation.set(-Math.PI / 2, 0, turn); top.position.y = .342; top.castShadow = false; g.add(top);
     g.scale.setScalar(s); return g;
   }
+  // a Gzhel porcelain piece (ugolki): glazed puck, the face painted with a cobalt (or white) eight-stroke rose, a band and a dot ring
+  function gzhelPiece(white, s = 1) {
+    const g = new T.Group(), body = white ? 0xf3f6fd : 0x1d47a6;
+    g.add(puck(.62, .3, C(body, { roughness: .16 }), .38));
+    const face = M({ map: X.canvasTex('ic-gz' + (white ? 'w' : 'b'), 256, 256, (c, W) => {
+      const r = W / 2, ink = white ? ['#0f2f86', '#2152b5', '#86a3e2'] : ['#ffffff', '#e8eefb', '#9fb6e6'];
+      const gr = c.createRadialGradient(r * .8, r * .7, 8, r, r, r); gr.addColorStop(0, white ? '#ffffff' : '#3561c4'); gr.addColorStop(1, white ? '#e6ecf8' : '#173c96');
+      c.fillStyle = gr; c.fillRect(0, 0, W, W);
+      c.strokeStyle = ink[1]; c.lineWidth = 9; c.beginPath(); c.arc(r, r, r * .8, 0, 7); c.stroke();
+      c.fillStyle = ink[1]; for (let k = 0; k < 24; k++) { const a = k * Math.PI / 12; c.beginPath(); c.arc(r + Math.cos(a) * r * .9, r + Math.sin(a) * r * .9, 3.2, 0, 7); c.fill(); }
+      const petal = (len, wid, rot) => { c.save(); c.translate(r, r); c.rotate(rot); const lg = c.createLinearGradient(-wid, 0, wid, 0); lg.addColorStop(0, ink[0]); lg.addColorStop(.55, ink[1]); lg.addColorStop(1, ink[2]); c.fillStyle = lg;
+        c.beginPath(); c.moveTo(0, -6); c.bezierCurveTo(-wid * 1.3, -len * .3, -wid, -len * .8, 0, -len); c.bezierCurveTo(wid, -len * .8, wid * 1.3, -len * .3, 0, -6); c.fill(); c.restore(); };
+      for (let k = 0; k < 8; k++) petal(r * .66, r * .2, k * Math.PI / 4);
+      c.fillStyle = white ? '#f6f8fe' : '#2a56b8'; c.beginPath(); c.arc(r, r, r * .22, 0, 7); c.fill();
+      for (let k = 0; k < 5; k++) petal(r * .3, r * .09, k * 2 * Math.PI / 5 + .4);
+      c.fillStyle = ink[0]; c.beginPath(); c.arc(r, r, r * .07, 0, 7); c.fill();
+    }), roughness: .15 });
+    const top = mesh(new T.CircleGeometry(.5, 48), face); top.rotation.x = -Math.PI / 2; top.position.y = .302; top.castShadow = false; g.add(top);
+    g.scale.setScalar(s); return g;
+  }
   function pin(hex, s = 1) { const g = new T.Group(); g.add(at(ball(.3, gloss(hex)), 0, .3, 0)); g.scale.setScalar(s); return g; }
 
   const PIECES = {
@@ -295,8 +315,8 @@
       const g = boardChunk(3, 3.6, gridMat('ugz2', '#f3f6fd', '#f3f6fd', 3, { check: '#163a94' }), C(0x1d3f9a, { roughness: .25 }));
       const band = rbox(3.66, .09, 3.66, .32, gloss(0xf3f6fd)); band.position.y = .16; g.add(band);
       const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
-      const white = s => { const k = checker(0xf7f9ff, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0x2a56b8)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
-      const blue = s => { const k = checker(0x1f4aa8, s); const r = mesh(new T.TorusGeometry(.38 * s, .05 * s, 10, 40), gloss(0xe9eefb)); r.rotation.x = Math.PI / 2; r.position.y = .275 * s; k.add(r); return k; };
+      const white = s => gzhelPiece(true, s);
+      const blue = s => gzhelPiece(false, s);
       g.add(at(white(.72), p(0), .5, p(2))); g.add(at(blue(.72), p(1), .5, p(1))); g.add(at(white(.72), p(2), .5, p(0)));
       // the big piece mid-jump over the cobalt one, a dotted cobalt arc under it
       g.add(at(white(1.35), p(1) - .15, 1.85, p(1) - .25, .35, 0, -.25));
