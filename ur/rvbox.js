@@ -90,7 +90,7 @@ body.in-ken .review-bar{display:none!important}`;
 document.head.appendChild(css);
 const badge = document.createElement('div'); badge.className = 'rvb-badge'; $('#frame').appendChild(badge);
 const L = box.querySelector('.rvb-l'), RT = box.querySelector('.rvb-t'), CTL = box.querySelector('.rvb-ctl'), LIST = box.querySelector('.rvb-list'), FOOT = box.querySelector('.rvb-foot');
-let rows = [];
+let rows = [], boxCtx = { st: null, src: -1 };
 const boxWanted = () => open && !!R && mqPC.matches && !special && !rtLive();
 function paintBox() {
   const on = boxWanted();
@@ -100,31 +100,37 @@ function paintBox() {
   badge.textContent = ken ? tr('kenOn') : '';
   const i = cur - 1;
   L.innerHTML = ken ? `<p>${esc(tr('kenHelp'))}</p>` : (i >= 0 ? explain(i) : esc(tr('start')));
-  // candidates: the roll of the move played from the shown position (or the explore roll)
-  const st = curState(); let n = null, played = null;
-  if (ken) n = ken.roll ? ken.roll.n : null; else if (cur < game.plies.length) { n = game.plies[cur].n; played = game.plies[cur].m; }
-  RT.textContent = n != null ? tr('cands', { n }) : tr('title');
+  // candidates: the move being explained (ply cur−1: its position, its side, its roll) — or the explore position and roll
+  let st = null, n = null, played = null, src = -1;
+  if (ken) { st = curState(); n = ken.roll ? ken.roll.n : null; }
+  else if (i >= 0 && game.plies[i].m) { src = i; st = posAt(i); n = game.plies[i].n; played = game.plies[i].m; }
+  boxCtx = { st, src };
+  RT.textContent = n != null ? tr('cands', { n }) + (st ? ' · ' + sideName(st.turn) : '') : tr('title');
   CTL.innerHTML = ken ? `<button data-a="back"${ken.plies.length ? '' : ' disabled'}>◀ ${esc(tr('back'))}</button><button class="reset" data-a="reset">${esc(tr('reset'))}</button>` : `<button class="go" data-a="ken">${esc(tr('ken'))}</button>`;
   rows = [];
-  if (n && st.winner < 0) {
-    const ev = (!ken && R.res[cur]) ? R.res[cur].ev.map(e => ({ move: fullMove(st, e), wp: e.wp })) : E.evaluate(st, n);
+  if (st && n && st.winner < 0) {
+    const ev = (!ken && R.res[src]) ? R.res[src].ev.map(e => ({ move: fullMove(st, e), wp: e.wp })).filter(e => e.move) : E.evaluate(st, n);
     rows = ev.slice(0, 6);
-    LIST.innerHTML = rows.map((e, k) => `<div class="rvb-row" data-k="${k}"><span class="rk">${k + 1}</span><span>${esc(plyText(st, { s: st.turn, n, m: e.move }, false))}${played && e.move.from === played.from ? `<span class="pl">${esc(t('k.played') === 'k.played' ? '✓' : t('k.played'))}</span>` : ''}</span><span class="va">${Math.round(e.wp * 100)}%</span></div>`).join('');
+    LIST.innerHTML = rows.map((e, k) => `<div class="rvb-row" data-k="${k}"><span class="rk">${k + 1}</span><span>${esc(plyText(st, { s: st.turn, n, m: e.move }, false))}${played && e.move.from === played.from ? `<span class="pl">✓</span>` : ''}</span><span class="va">${Math.round(e.wp * 100)}%</span></div>`).join('');
   } else LIST.innerHTML = `<div class="rv-note">${esc(tr('candsNo'))}</div>`;
   FOOT.textContent = rows.length ? tr('hover') : '';
 }
 LIST.addEventListener('mouseover', e => { const r = e.target.closest('.rvb-row'); const x = r ? rows[+r.dataset.k] : null; const m = x ? x.move : null; if ((m && m.from) !== (coachHover && coachHover.from)) { coachHover = m; hintFrom(); } });
 LIST.addEventListener('mouseleave', () => { coachHover = null; renderBoard(); });
-function hintFrom() {   // a candidate of the shown position, while not exploring: draw it as a hint arrow on the board
-  if (!coachHover) { renderBoard(); return; }
-  const st = curState(), mm = moveMarks(st, st.turn, coachHover);
-  view.render(st, { last: lastMarks(), hint: { from: mm.from, to: mm.to } }); placeDice();
+function hintFrom() {   // hovering a candidate: the position it was played from, with the candidate as an arrow
+  if (!coachHover || !boxCtx.st) { renderBoard(); return; }
+  const st = boxCtx.st, mm = moveMarks(st, st.turn, coachHover);
+  view.render(st, { hint: { from: mm.from, to: mm.to } }); placeDice();
 }
-LIST.addEventListener('click', e => { const r = e.target.closest('.rvb-row'); if (!r) return; const x = rows[+r.dataset.k]; if (!x) return; if (!ken) kenStart(true); const st = curState(); if (!ken.roll) { const n = x.move.to - x.move.from; ken.roll = { d: [0, 0, 0, 0].map((_, i) => i < n ? 1 : 0), n }; } coachHover = null; commit(x.move).then(() => paintBox()); });
+LIST.addEventListener('click', e => {
+  const r = e.target.closest('.rvb-row'); if (!r) return; const x = rows[+r.dataset.k]; if (!x) return;
+  if (!ken) { if (boxCtx.src < 0) return; kenStart(boxCtx.src); }
+  coachHover = null; commit(x.move).then(() => paintBox());
+});
 CTL.addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if (!b || b.disabled) return; const a = b.dataset.a; if (a === 'ken') kenStart(); else if (a === 'back') kenBack(); else kenReset(); });
-function kenStart(withRoll) {
+function kenStart(at) {   // explore from the position before the explained move (with its roll), or from the shown position
   if (!boxWanted()) return;
-  const base = cur, p = game.plies[cur];
+  const base = at != null ? at : Math.max(0, cur - 1), p = game.plies[base];
   ken = { base, plies: [], roll: p ? { d: p.d, n: p.n } : null };
   cur = base; update(); paintBox();
 }

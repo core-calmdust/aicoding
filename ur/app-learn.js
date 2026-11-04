@@ -60,21 +60,58 @@ function closeRules(quiet) { if (window.UrTour) try { UrTour.stop(); } catch (e)
 $('#btnRules').onclick = () => openRules();
 
 // ---------------------------------------------------------------- lessons
-function thumb(s, marks) { return B2.mini(Object.assign({ winner: -1 }, s), { design: settings.design, pieces: settings.pieces, marks: marks || [], crop: 'board', trays: true }); }
-async function openLessons() {
+// mini boards for list cards: the part that matters, cut out and enlarged (common spec "ミニ盤は注目部分を切り出して拡大").
+// The board is 3 rows high, so the cut is by columns: the pieces on the board and the marks (never a puzzle's answer square)
+// + one column of margin, at least 4 columns wide (3 rows × 4 = nearly square); one column from an edge → out to the edge;
+// 7 columns or more (or nothing on the board) → the whole board. The cut sides fade out (CSS .cut-l / .cut-r).
+function cropCols(s, marks) {
+  // the focus: the marked squares (lesson diagrams: highlighted squares) and the pieces next to them; without marks, all the pieces
+  const E2 = E, rl = E2.RULES[s.rule || 'finkel'], pcs = [];
+  for (const side of [0, 1]) for (const p of s.pos[side]) if (p >= 1 && p < rl.goal) pcs.push(E2.coords(s.rule || 'finkel', side, p)[1]);
+  const mk = (marks || []).filter(m => m && m.c != null && m.type !== 'glow').map(m => m.c);
+  const cols = mk.length ? mk.concat(pcs.filter(c => mk.some(x => Math.abs(x - c) <= 2))) : pcs;
+  if (!cols.length) return null;
+  let c0 = Math.min(...cols) - 1, c1 = Math.max(...cols) + 1;
+  while (c1 - c0 + 1 < 4) { if (c0 > 0) c0--; if (c1 - c0 + 1 < 4 && c1 < 7) c1++; }
+  if (c0 <= 1) c0 = 0; if (c1 >= 6) c1 = 7;
+  c0 = Math.max(0, c0); c1 = Math.min(7, c1);
+  if (c1 - c0 + 1 >= 8) return null;
+  return [c0, c1];
+}
+function thumb(s, marks, o) {
+  o = o || {}; s = Object.assign({ winner: -1 }, s);
+  const cc = cropCols(s, o.cropMarks !== undefined ? o.cropMarks : marks);
+  const crop = cc ? { r0: 0, c0: cc[0], r1: 2, c1: cc[1], pad: 58 } : 'board';
+  const svg = B2.mini(s, { design: settings.design, pieces: settings.pieces, marks: marks || [], crop, trays: !cc });
+  return `<span class="mb${cc ? ' cut' : ''}${cc && cc[0] > 0 ? ' cut-l' : ''}${cc && cc[1] < 7 ? ' cut-r' : ''}">${svg}</span>`;
+}
+const LS_IC = {   // category icons (small SVGs)
+  basic: '<svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 9l-4.3 3.9L17 19l-5-3-5 3 1.3-6.1L4 9l5.8-.8z"/></svg>',
+  tactics: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+  end: '<svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
+  vari: '<svg viewBox="0 0 24 24"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg>',
+};
+const lxBar = (p, ok) => `<span class="lx-bar${ok ? ' ok' : ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+const plain = h => String(h || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+async function openLessons(cat0) {
   const d = await lessonsReady; selTab('lesson');
   if (!d) { toast(t('ls.fail')); return; }
-  let cat = ''; try { cat = localStorage.getItem(LS_CAT) || ''; } catch (e) {}
+  let cat = cat0 || ''; if (!cat) try { cat = localStorage.getItem(LS_CAT) || ''; } catch (e) {}
   if (!d.cats.some(c => c.id === cat)) cat = d.cats[0].id;
-  const pr = prog(LS_STORE);
-  $('#lsCats').innerHTML = d.cats.map(c => { const n = c.steps.filter(id => pr[id] && pr[id].pass).length; return `<button data-c="${c.id}" class="${c.id === cat ? 'sel' : ''}">${esc(LL(c.name))} <small>${n}/${c.steps.length}</small></button>`; }).join('');
-  const C = d.cats.find(c => c.id === cat);
-  $('#lessonList').innerHTML = C.steps.map(id => { const s = d.steps.find(x => x.id === id); if (!s) return ''; const r = pr[id];
-    return `<button class="ls-item" data-id="${id}"><span class="th">${s.diagram ? thumb(s.diagram.s, s.diagram.marks) : ''}</span><span><b>${esc(LL(s.title))}</b><small>${esc(LL(s.tip))}</small><span class="st ${r && r.pass ? 'ok' : r ? 'part' : ''}">${r ? (r.pass ? '✓ ' : '') + esc(UI(d, 'score', { n: r.best })) : esc(t('ls.new'))}</span></span></button>`; }).join('');
+  const pr = prog(LS_STORE), stat = c => ({ n: c.steps.length, ok: c.steps.filter(id => pr[id] && pr[id].pass).length });
+  $('#lsCats').innerHTML = d.cats.map(c => { const z = stat(c); return `<button data-c="${c.id}" class="${c.id === cat ? 'sel' : ''}"><span class="ic">${LS_IC[c.id] || LS_IC.basic}</span><span class="nm">${esc(LL(c.name))}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('');
+  const C = d.cats.find(c => c.id === cat), q = stat(C);
+  const banner = `<div class="lx-banner"><span class="ic">${LS_IC[cat] || LS_IC.basic}</span><span class="tx"><b>${esc(LL(C.name))}</b><small>${esc(t('lsc.' + cat))}</small></span><span class="pg">${esc(t('ls.passed', { a: q.ok, b: q.n }))}${lxBar(q.ok / q.n, true)}</span></div>`;
+  const cards = C.steps.map((id, k) => { const s = d.steps.find(x => x.id === id); if (!s) return ''; const r = pr[id];
+    const st = r ? (r.pass ? `<span class="lx-st ok">✓ ${esc(UI(d, 'pass'))}</span>` : `<span class="lx-st">${esc(UI(d, 'score', { n: r.best }))}</span>`) : `<span class="lx-st new">${esc(t('ls.new'))}</span>`;
+    return `<button class="lx-card${r && r.pass ? ' clear' : ''}" data-id="${id}"><span class="lx-th">${s.diagram ? thumb(s.diagram.s, s.diagram.marks) : ''}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${k + 1}</span>${st}</span><b class="lx-t">${esc(LL(s.title))}</b><small class="lx-sub">${esc(LL(s.tip))}</small>` +
+      `<span class="lx-desc">${esc(plain(LL(s.body)))}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass)}</span></button>`; }).join('');
+  $('#lessonList').innerHTML = banner + `<div class="lx-grid">${cards}</div>`;
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 $('#lsCats').onclick = e => { const b = e.target.closest('button[data-c]'); if (!b) return; try { localStorage.setItem(LS_CAT, b.dataset.c); } catch (x) {} openLessons(); };
-$('#lessonList').onclick = e => { const b = e.target.closest('.ls-item'); if (b) openIntro(b.dataset.id); };
+$('#lessonList').onclick = e => { const b = e.target.closest('.lx-card'); if (b) openIntro(b.dataset.id); };
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 let introId = null;
 function openIntro(id) {
@@ -198,10 +235,11 @@ function finishLesson() {
   snd(pass ? 'win' : 'ng');
   showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
 }
-$('#btnLessonQuit2').onclick = () => { hideOverlay('#lessonOverlay'); exitSpecial(); openLessons(); };
+const catOf = id => { const c = LESSONS && LESSONS.cats.find(x => x.steps.includes(id)); return c ? c.id : null; };
+$('#btnLessonQuit2').onclick = () => { const id = lesson && lesson.id; hideOverlay('#lessonOverlay'); exitSpecial(); openLessons(catOf(id)).then(() => { const el = id && $('#lessonList').querySelector(`[data-id="${id}"]`); if (el) el.scrollIntoView({ block: 'center' }); }); };
 $('#btnLessonRetry').onclick = () => { const id = lesson && lesson.id; hideOverlay('#lessonOverlay'); if (id) startLesson(id); };
 $('#btnLessonNextStep').onclick = () => { const nx = lesson && lesson.next; hideOverlay('#lessonOverlay'); if (nx) openIntro(nx); };
-$('#lsList').onclick = () => { exitSpecial(); openLessons(); };
+$('#lsList').onclick = () => { const id = lesson && lesson.id; exitSpecial(); openLessons(catOf(id)).then(() => { const el = id && $('#lessonList').querySelector(`[data-id="${id}"]`); if (el) el.scrollIntoView({ block: 'center' }); }); };
 $('#lsQuit').onclick = () => exitSpecial();
 
 // ---------------------------------------------------------------- puzzles (PZBook)
@@ -224,7 +262,7 @@ async function openPuzzles() {
   let cur = ''; try { cur = localStorage.getItem(PZ_TAB) || ''; } catch (e) {} if (!cats.includes(cur)) cur = cats[0];
   const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].cat })), PZ_LAST);
   const dl = dailyPick(), dd = prog(STORE + '-daily');
-  const th = (T, j) => { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P ? thumb(P.s) : ''; };
+  const th = (T, j) => { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P ? thumb(P.s, [], { cropMarks: [] }) : ''; };
   $('#pzLevels').innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: LL(Ts[+cont.key].name) },

@@ -121,7 +121,7 @@ const SND = {
   win() { [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, 0, .6, .06, 'triangle', i * .11)); },
   lose() { [392, 311.1, 261.6].forEach((f, i) => tone(f, 0, .5, .05, 'sine', i * .14)); },
 };
-const snd = k => { try { SND[k] && SND[k](); } catch (e) {} };
+const snd = k => { if (document.hidden) return; try { SND[k] && SND[k](); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (actx) { if (document.hidden) actx.suspend().catch(() => {}); else if (settings.sound) actx.resume().catch(() => {}); } });
 
 // ====================================================================== AI worker
@@ -376,7 +376,7 @@ function renderEval() {
 }
 function renderGraph() {
   const svg = $('#graph'); if (special) { svg.innerHTML = ''; return; }
-  const N = lineLen(), W = 300, H = 74; if (!settings.eval || rtLive()) { svg.innerHTML = ''; return; }
+  const N = ken ? ken.base : lineLen(), W = 300, H = 74;   // (explore moves are not drawn) if (!settings.eval || rtLive()) { svg.innerHTML = ''; return; }
   const pts = []; for (let i = 0; i <= N; i++) pts.push(lightWp(i));
   const x = i => N ? i / N * W : 0, y = v => (H - 4 - v * (H - 8)).toFixed(1);
   let d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v)}`).join('');
@@ -384,7 +384,7 @@ function renderGraph() {
   svg.innerHTML = `<defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4ecd6" stop-opacity=".35"/><stop offset="1" stop-color="#f4ecd6" stop-opacity=".02"/></linearGradient></defs>` +
     `<line class="zero" x1="0" x2="${W}" y1="${y(.5)}" y2="${y(.5)}" vector-effect="non-scaling-stroke"/>` +
     `<path d="${area}" fill="url(#gg)"/><path d="${d}" fill="none" stroke="#e6c573" stroke-width="1.6" vector-effect="non-scaling-stroke"/>` +
-    `<line class="cur" x1="${x(cur)}" x2="${x(cur)}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
+    `<line class="cur" x1="${x(Math.min(cur, N))}" x2="${x(Math.min(cur, N))}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
 }
 function plyText(st, p, html) {
   const sn = sideName(p.s);
@@ -399,7 +399,7 @@ function plyText(st, p, html) {
 let kifuKey = '';
 function renderKifu() {
   const el = $('#kifu'); if (special) { if (kifuKey !== 'sp') { kifuKey = 'sp'; el.innerHTML = `<div class="empty">${esc(t('kifu.special'))}</div>`; } return; }
-  const L = line(), q = window.UrRv ? UrRv.quality : () => '';
+  const L = ken ? game.plies.slice(0, ken.base) : line(), q = window.UrRv ? UrRv.quality : () => '';   // (explore moves are not recorded)
   const k = LANG + '|' + L.length + '|' + cur + '|' + (ken ? 'k' : '') + '|' + (window.UrRv ? UrRv.ver() : 0);
   if (k === kifuKey) return; kifuKey = k;
   if (!L.length) { el.innerHTML = `<div class="empty">${esc(t('kifu.empty'))}</div>`; return; }
@@ -417,7 +417,7 @@ function recordText() {
 }
 
 // ====================================================================== clock (1手30秒)
-let clockStart = 0, clockKey = '';
+let clockStart = 0, clockKey = '', clockHold = true;   // (a game restored on page load: the clock waits for the first move)
 const clockSec = () => rgame ? 30 : settings.clock;
 function clockOn() { return !special && !ken && clockSec() > 0 && settings.mode !== 'watch' && !overNow() && atLatest() && !reviewing && !isAI(curState().turn); }
 function renderClock() {
@@ -425,13 +425,14 @@ function renderClock() {
   if (!clockOn()) { document.body.classList.remove('has-clk'); return; }
   document.body.classList.add('has-clk');
   const st = curState(), k = game.id + ':' + game.plies.length;
-  if (clockKey !== k) { clockKey = k; clockStart = Date.now(); if (window.CountTick) CountTick.reset('mv'); }
+  if (clockKey !== k) { if (clockKey) clockHold = false; clockKey = k; clockStart = Date.now(); if (window.CountTick) CountTick.reset('mv'); }
+  if (clockHold) clockStart = Date.now();
   const left = Math.max(0, clockSec() * 1000 - (Date.now() - clockStart)), el = $('#clk' + st.turn);
   el.textContent = '0:' + String(Math.ceil(left / 1000)).padStart(2, '0'); el.classList.toggle('low', left <= 10000);
 }
 setInterval(() => {
   if (!game || !clockOn() || animating) return;
-  if (document.hidden) { clockStart += 250; return; }
+  if (document.hidden || clockHold) { clockStart = clockHold ? Date.now() : clockStart + 250; return; }
   const st = curState(), left = clockSec() * 1000 - (Date.now() - clockStart);
   renderClock();
   if (window.CountTick) CountTick.feed(Math.max(0, left), 'mv');
@@ -570,7 +571,7 @@ function newGame(rated) {
   const first = settings.color === 'r' ? (Math.random() < .5 ? 0 : 1) : settings.mode === 'ai' && settings.color === '1' ? 1 : 0;
   rgame = rated || null;
   game = newGameObj(rgame ? 'finkel' : settings.rule, rgame ? (Math.random() < .5 ? 0 : 1) : first, 0);
-  cur = 0; reviewing = false; gameOverShown = false; evalCache.clear();
+  cur = 0; reviewing = false; gameOverShown = false; evalCache.clear(); clockHold = false; clockKey = '';
   if (window.UrRv) UrRv.reset();
   hideOverlay('#resultOverlay');
   save(); relayout(); update(); afterPosition();
@@ -749,6 +750,11 @@ const RULE_ART = {
   blitz: '<svg viewBox="0 0 120 64"><rect x="4" y="8" width="112" height="48" rx="6" fill="#0d1438" stroke="#d9b45a" stroke-opacity=".5"/>' + cells([[0, 0], [0, 1], [0, 2], [0, 3], [0, 6], [0, 7], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [2, 0], [2, 1], [2, 2], [2, 3], [2, 6], [2, 7]]) + path('M45 48H9V32H96V16H111V48H81', '#f4ecd6') + '<path d="M62 14l-6 10h5l-3 9 9-12h-5l3-7z" fill="#c2412d" stroke="#fff3cf" stroke-width=".8"/></svg>',
   masters: '<svg viewBox="0 0 120 64"><rect x="4" y="8" width="112" height="48" rx="6" fill="#0d1438" stroke="#d9b45a" stroke-opacity=".5"/>' + cells([[0, 0], [0, 1], [0, 2], [0, 3], [0, 6], [0, 7], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [2, 0], [2, 1], [2, 2], [2, 3], [2, 6], [2, 7]]) + path('M45 48H9V32H96V16H111V48H81', '#f4ecd6') + '<g transform="translate(60 18)" fill="#d9b45a" stroke="#1b1408" stroke-width=".6"><path d="M0-7 6 4H-6z"/><path d="M-9 0-3 9h-12z" transform="translate(-2 -2)"/><path d="M9 0l6 9H3z" transform="translate(2 -2)"/></g></svg>',
 };
+// the variant's art: the real board with the track of Light as glowing arrows (and the number of pieces / dice)
+function ruleArt(r) {
+  const n = E.RULES[r].pieces, st = { rule: r, pos: [new Array(n).fill(0), new Array(n).fill(0)], turn: 0, winner: -1 };
+  return B2.mini(st, { design: draft.design || settings.design, pieces: draft.pieces || settings.pieces, crop: 'board', trays: false, marks: [{ type: 'path', side: 0, from: 1, to: E.RULES[r].pathLen, color: '#ffe27a' }] });
+}
 function cells(list) { return list.map(([r, c]) => { const x = 8 + c * 13.2, y = 12 + r * 14, ros = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]].some(([a, b]) => a === r && b === c); return `<rect x="${x}" y="${y}" width="11.5" height="12" rx="1.5" fill="${ros ? '#c2412d' : '#efe3c6'}" opacity="${ros ? .9 : .82}"/>`; }).join(''); }
 function path(d, c) { return `<path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="3 2.5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`; }
 function levelLabelHTML(v) { return `${esc(LV(v))}<small>${esc(LVD(v))}</small>`; }
@@ -768,7 +774,7 @@ function segSync() {
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
-  $('#ruleCards').innerHTML = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gpick"></span><span class="gart">${RULE_ART[r]}</span><b>${esc(t('rule.' + r))}${r === 'finkel' ? `<span class="std">${esc(t('rule.std'))}</span>` : ''}</b><p>${esc(t('rule.' + r + '.d'))}</p></button>`).join('');
+  $('#ruleCards').innerHTML = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gpick"></span><span class="gart">${ruleArt(r)}</span><b>${esc(t('rule.' + r))}${r === 'finkel' ? `<span class="std">${esc(t('rule.std'))}</span>` : ''}</b><p>${esc(t('rule.' + r + '.d'))}</p></button>`).join('');
   $('#optAutoRoll').checked = !!draft.autoRoll; $('#optAutoPick').checked = !!draft.autoPick; $('#optEval').checked = !!draft.eval; $('#optLast').checked = !!draft.last; $('#optDanger').checked = !!draft.danger;
   $('#btnStart').textContent = t('start');
 }
@@ -814,6 +820,7 @@ $('#btnNew').onclick = () => {
 };
 $('#rsCancel').onclick = () => hideOverlay('#resumeOverlay');
 $('#rsRestart').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(); };
+$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); if (reviewing) resumeHere(); };
 
 // ====================================================================== online (準備中)
 function mtab(v) {
