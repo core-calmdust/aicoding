@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../xiangqi/', VER = '?v=3';   // same file / version as xiangqi/index.html → shared cache
+  const BASE = '../xiangqi/', VER = '?v=4';   // same file / version as xiangqi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.XiangqiEngine) return Promise.resolve(window.XiangqiEngine);
