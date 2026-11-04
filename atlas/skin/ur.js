@@ -40,6 +40,37 @@ html.atlas-ur .frame > .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:
    the portal bar is taller than the page's brand row: the board leaves it room (--oh) */
 html.atlas-ur.ur-band .pdk{background:rgba(120,80,30,.1)!important;border-color:rgba(150,110,50,.28)!important;box-shadow:inset 0 1px 3px rgba(90,60,20,.25)!important}
 html.atlas-ur{--oh:380px!important}
+/* phones held sideways (the page's landtabs.js → html.ur-land): the portal bar is a slim pill in the page's top row (logo · name ·
+   icons), the menu icons as cream pills beside it, the rail / drawer / cards in the cream portal look on the wood */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  html.atlas-ur.ur-land .app{padding-top:6px!important}
+  html.atlas-ur.ur-land body.lt-on .app{grid-template-columns:auto minmax(0,1fr) 58px!important;grid-template-areas:"bl ct ct" "board board rl"!important}
+  html.atlas-ur.ur-land .app > .atlas-top{position:relative;z-index:6;grid-area:bl;top:auto;left:auto;right:auto;height:32px;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);align-self:center;justify-self:start}
+  html.atlas-ur.ur-land .atlas-top .sp{flex:0 0 4px;min-width:0}
+  html.atlas-ur.ur-land .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}
+  html.atlas-ur.ur-land .atlas-brand img{width:26px;height:26px}
+  html.atlas-ur.ur-land .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap}
+  html.atlas-ur.ur-land .atlas-brand b{font-size:12.5px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  html.atlas-ur.ur-land .atlas-brand small{display:none}
+  html.atlas-ur.ur-land .atlas-coin{display:none}
+  html.atlas-ur.ur-land :is(.atlas-ic,.atlas-lbtn){height:26px;min-width:30px;width:30px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
+  html.atlas-ur.ur-land :is(.atlas-ic,.atlas-lbtn) svg{width:15px;height:15px}
+  html.atlas-ur.ur-land .atlas-lbtn b{display:none}
+  html.atlas-ur.ur-land .atlas-lpop{top:34px;right:0;z-index:90}
+  html.atlas-ur.ur-land body.lt-on .controls .btn{width:38px!important;height:30px!important;border-radius:99px!important;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+  html.atlas-ur.ur-land body.lt-on .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
+  html.atlas-ur.ur-land body.lt-on .board-area > .player{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important}
+  html.atlas-ur.ur-land body.lt-on .board-area > .player.active{border-color:#ffc928!important}
+  html.atlas-ur.ur-land body.lt-on .board-area > .player .home small{color:#7a7f94!important}
+  html.atlas-ur.ur-land body.lt-on #ltRail{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)}
+  html.atlas-ur.ur-land body.lt-on #ltRail button{color:#6a7088!important}
+  html.atlas-ur.ur-land body.lt-on #ltRail button.sel{color:#d93c3c!important;background:#fff3d8!important}
+  html.atlas-ur.ur-land body.lt-on #ltRail button.sel::before{background:#d93c3c!important}
+  html.atlas-ur.ur-land body.lt-on #ltPanel{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important}
+  html.atlas-ur.ur-land body.lt-on #ltLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important}
+  html.atlas-ur.ur-land body.lt-on #ltLearn button svg{stroke:#d93c3c!important}
+  html.atlas-ur.ur-land body.lt-on.lt-nav #ltNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}
+}
 html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:460px!important}
 html.atlas-ur #bdRow{display:none!important}
 /* phones / narrow: the menu buttons are round chips (skin.css): their labels stay on one line, small, never cut mid-glyph */
@@ -97,21 +128,21 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   const board = T3.MODELS.ur(true), U = board.userData, Y = U.top; inner.add(board);
   // the frame's centre is SVG (0, 4) (viewBox −272 … 280 down the frame): world = SVG / 100 with that centre at the origin
   // (phones held upright, 'vn': the frame is the board alone, −434 … 462 down → centre (0, 14))
-  let CZ = .04;
+  let CZ = .04, CX = 0;   // (phones sideways, 'hn': the board alone, −434 … 462 across → centre (0.14, 0))
   let O = 'h';
   const vkey = () => { const v = UrApp.view; return v && v.key ? v.key() : O; };
   const VB = () => B2.VIEW[vkey()] || (O === 'v' ? B2.VIEW.v : B2.VIEW.h);
   const units = () => VB()[3] / 100;
   function orientTo(o) {
-    O = o === 'v' ? 'v' : 'h';
-    { const V = VB(); CZ = (V[1] + V[3] / 2) / 100; }
+    O = String(o)[0] === 'v' ? 'v' : 'h';
+    { const V = VB(); CZ = (V[1] + V[3] / 2) / 100; CX = (V[0] + V[2] / 2) / 100; }
     U.orient && U.orient(O);
     board.rotation.y = O === 'v' ? U.rot.v : 0;
-    inner.position.set(0, 0, -CZ);   // (the vertical viewBox, −272 … 272 across and −462 … 470 down, has its centre at (0, 4) too)
+    inner.position.set(-CX, 0, -CZ);   // (the vertical viewBox, −272 … 272 across and −462 … 470 down, has its centre at (0, 4) too)
     skin.alignTo(units(), Y);
   }
   T3.show('ur', root, { still: true });
-  orientTo(UrApp.orient());
+  orientTo(vkey());
   T3.kick(800);
   { let last = ''; const app = document.querySelector('.app') || document.body;   // the header bar / info row can move the board without resizing it
     const chk = () => { const r = frameEl.getBoundingClientRect(), k = Math.round(r.left) + ',' + Math.round(r.top + scrollY) + ',' + Math.round(r.width) + ',' + Math.round(r.height); if (k !== last) { last = k; dispatchEvent(new Event('resize')); } };
@@ -157,7 +188,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   // SVG user units → the board group's (x, z); a piece standing lower than the playing surface (on the table) is pushed out a
   // little so that, seen from the camera, it still covers its DOM place (the camera stands PERSP × the frame height above the field)
   const camD = () => 2.6 * units();
-  const at = (xy, y = Y) => { const f = 1 + (Y - y) / camD(); return [xy[0] / 100 * f, (xy[1] / 100 - CZ) * f + CZ]; };
+  const at = (xy, y = Y) => { const f = 1 + (Y - y) / camD(); return [(xy[0] / 100 - CX) * f + CX, (xy[1] / 100 - CZ) * f + CZ]; };
   const vw = () => UrApp.view;
   const cellXY = (r, c) => vw().cellXY(r, c);
   const oKey = () => { const v = vw(); return v ? (v.key ? v.key() : v.orient() + (v.rotated && v.rotated() ? 'r' : '')) : 'h'; };
@@ -326,7 +357,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
 
   /* ---------- the hooks the page calls (ur/SKIN-HOOKS.md) ---------- */
   let lastO = null;
-  function checkOrient() { const o = UrApp.orient(); if (o !== lastO) { lastO = o; orientTo(o); return true; } return false; }
+  function checkOrient() { const o = vkey(); if (o !== lastO) { lastO = o; orientTo(o); return true; } return false; }
   window.UrSkin3D = {
     sync(s) {
       const ch = checkOrient();
@@ -341,7 +372,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     },
     async animateRoll(d) { checkOrient(); await roll(d || []); },
   };
-  lastO = UrApp.orient();
+  lastO = vkey();
   try { UrApp.render(); } catch (e) { try { window.UrSkin3D.sync(UrApp.state()); } catch (x) {} }
   // the design tab: the piece look changes the 3D pieces (the page re-renders after setDesign)
   new MutationObserver(() => { const s = lastState || UrApp.state(); if (s) { mirror(s); } }).observe(de, { attributes: true, attributeFilter: ['data-pcs'] });
