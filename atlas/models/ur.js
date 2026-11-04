@@ -72,10 +72,10 @@
   const BIT = () => { const N = makeNoise(5), f1 = tileN(N, 6, 4), f2 = tileN(N, 40, 1);
     return swatch('urBit', 256, (u, v) => { const t = (f1(u, v) - .5) * 26 + (f2(u, v) - .5) * 12; return [cl(14 + t * .6), cl(12 + t * .55), cl(11 + t * .5)]; }); };
   const RED = () => { const N = makeNoise(31), f1 = tileN(N, 7, 4), f2 = tileN(N, 30, 2);
-    return swatch('urRed', 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 20; return [cl(140 + t), cl(54 + t * .6), cl(36 + t * .4)]; }); };
+    return swatch('urRed', 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 20; return [cl(130 + t), cl(50 + t * .6), cl(34 + t * .4)]; }); };
   // the darker red of the band's joints: a dull, deep red-brown carnelian
   const REDD = () => { const N = makeNoise(37), f1 = tileN(N, 7, 4), f2 = tileN(N, 30, 2);
-    return swatch('urRedD', 256, (u, v) => { const t = (f1(u, v) - .5) * 30 + (f2(u, v) - .5) * 14; return [cl(104 + t), cl(36 + t * .5), cl(26 + t * .35)]; }); };
+    return swatch('urRedD', 256, (u, v) => { const t = (f1(u, v) - .5) * 30 + (f2(u, v) - .5) * 14; return [cl(86 + t), cl(34 + t * .5), cl(26 + t * .35)]; }); };
   const GREYN = () => { const N = makeNoise(47), f1 = tileN(N, 8, 3), f2 = tileN(N, 40, 1);
     return swatch('urGreyN', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 120 + (f2(u, v) - .5) * 60; return [cl(t), cl(t), cl(t)]; }); };
   // shell growth lines: fine, slightly wavy bands with broader layers (seamless: whole periods across the tile)
