@@ -72,7 +72,10 @@
   const BIT = () => { const N = makeNoise(5), f1 = tileN(N, 6, 4), f2 = tileN(N, 40, 1);
     return swatch('urBit', 256, (u, v) => { const t = (f1(u, v) - .5) * 26 + (f2(u, v) - .5) * 12; return [cl(14 + t * .6), cl(12 + t * .55), cl(11 + t * .5)]; }); };
   const RED = () => { const N = makeNoise(31), f1 = tileN(N, 7, 4), f2 = tileN(N, 30, 2);
-    return swatch('urRed', 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 20; return [cl(150 + t), cl(58 + t * .6), cl(38 + t * .4)]; }); };
+    return swatch('urRed', 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 20; return [cl(140 + t), cl(54 + t * .6), cl(36 + t * .4)]; }); };
+  // the darker red of the band's joints: a dull, deep red-brown carnelian
+  const REDD = () => { const N = makeNoise(37), f1 = tileN(N, 7, 4), f2 = tileN(N, 30, 2);
+    return swatch('urRedD', 256, (u, v) => { const t = (f1(u, v) - .5) * 30 + (f2(u, v) - .5) * 14; return [cl(104 + t), cl(36 + t * .5), cl(26 + t * .35)]; }); };
   const GREYN = () => { const N = makeNoise(47), f1 = tileN(N, 8, 3), f2 = tileN(N, 40, 1);
     return swatch('urGreyN', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 120 + (f2(u, v) - .5) * 60; return [cl(t), cl(t), cl(t)]; }); };
   // shell growth lines: fine, slightly wavy bands with broader layers (seamless: whole periods across the tile)
@@ -88,7 +91,7 @@
   /* ---------- palettes per pass: c = colour, h = height (grey), r = roughness (grey) ---------- */
   function palette(pass, g) {
     if (pass === 'c') return { pass, bit: pat(g, BIT(), 1 / 260), lap: pat(g, LAPIS(), 1 / 330), shell: pat(g, SHELL(), 1 / 300), red: pat(g, RED(), 1 / 330),
-      line: 'rgba(34,22,14,.93)', dot: pat(g, LAPIS(), 1 / 600, .3, .2), joint: 'rgba(8,12,40,.75)', shellEdge: '#ded0ae' };
+      redDark: pat(g, REDD(), 1 / 330), line: 'rgba(34,22,14,.93)', dot: pat(g, LAPIS(), 1 / 600, .3, .2), joint: 'rgba(8,12,40,.75)', shellEdge: '#ded0ae' };
     if (pass === 'h') return { pass, bit: '#3a3a3a', lap: '#8c8c8c', shell: '#c8c8c8', red: '#b4b4b4', line: '#5c5c5c', dot: '#a8a8a8', joint: '#4e4e4e', shellEdge: '#a8a8a8', noise: pat(g, GREYN(), 1 / 260) };
     if (pass === 'm') return { pass, bit: '#000', lap: '#000', shell: '#fff', red: '#000', line: '#000', dot: '#000', joint: '#000', shellEdge: '#c8c8c8' };   // shell mask (nacre strength)
     return { pass, bit: '#909090', lap: '#606060', shell: '#707070', red: '#dadada', line: '#d8d8d8', dot: '#606060', joint: '#c8c8c8', shellEdge: '#7a7a7a' };   // roughness ≈ grey / 255: matte red stone, smoother shell
@@ -204,7 +207,7 @@
       if (pass === 'c') { g.fillStyle = q1 < .3 ? `rgba(120,85,40,${(.15 + q2 * .25).toFixed(2)})` : `rgba(255,248,230,${(q2 * .18).toFixed(2)})`; g.fill(); }   // each piece its own tone
       if (q3 < .07) { g.fillStyle = S.bit; g.beginPath(); g.arc(x + (q4 - .5) * .05, z + (q5 - .5) * .05, .016 + q4 * .012, 0, TAU); g.fill(); }   // a small chip (the band itself stays complete)
     };
-    const joint = (x, z, hor) => { g.beginPath(); if (hor) { g.moveTo(x - RJ, z); g.lineTo(x, z - t * .42); g.lineTo(x + RJ, z); g.lineTo(x, z + t * .42); } else { g.moveTo(x, z - RJ); g.lineTo(x + t * .42, z); g.lineTo(x, z + RJ); g.lineTo(x - t * .42, z); } g.closePath(); g.fillStyle = S.red; g.fill(); };
+    const joint = (x, z, hor) => { g.beginPath(); if (hor) { g.moveTo(x - RJ, z); g.lineTo(x, z - t * .42); g.lineTo(x + RJ, z); g.lineTo(x, z + t * .42); } else { g.moveTo(x, z - RJ); g.lineTo(x + t * .42, z); g.lineTo(x, z + RJ); g.lineTo(x - t * .42, z); } g.closePath(); g.fillStyle = S.redDark || S.red; g.fill(); };
     for (const [x0, z0, x1, z1] of BANDS) {
       const L = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / L, uz = (z1 - z0) / L, hor = Math.abs(uz) < .5;
       const n = Math.max(1, Math.round(L / .156));   // intervals: n − 1 diamonds inside, the corner diamonds at both ends

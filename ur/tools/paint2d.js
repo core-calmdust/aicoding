@@ -75,6 +75,8 @@
     iri: () => { const N = makeNoise(91), f1 = tileN(N, 4, 3), f2 = tileN(N, 8, 2);   // nacre: a faint play of pink / green / blue
       return swatch('iri', 256, (u, v) => { const h = (f1(u, v) * 2.2 + f2(u, v) * .8 + v * 2) * TAU;
         const k = 34 * (.4 + f2(u, v) * .9); return [cl(128 + Math.cos(h) * k), cl(128 + Math.cos(h - 2.1) * k), cl(128 + Math.cos(h + 2.1) * k)]; }); },
+    bandred: (vivid) => { const N = makeNoise(vivid ? 34 : 33), f1 = tileN(N, 8, 4), f2 = tileN(N, 32, 2);   // the band's red pieces: dull deep red-brown (dark carnelian)
+      return swatch('bandred' + vivid, 256, (u, v) => { const t = (f1(u, v) - .5) * 34 + (f2(u, v) - .5) * 16; return vivid ? [cl(128 + t), cl(40 + t * .5), cl(30 + t * .4)] : [cl(98 + t), cl(42 + t * .5), cl(32 + t * .4)]; }); },
     grey: () => { const N = makeNoise(47), f1 = tileN(N, 8, 3), f2 = tileN(N, 64, 1);
       return swatch('grey', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 130 + (f2(u, v) - .5) * 70; return [cl(t), cl(t), cl(t)]; }); },
     ply: (light) => { const N = makeNoise(light ? 67 : 68), f = tileN(N, 2, 3), f2 = tileN(N, 64, 1);   // birch plywood (laser-cut kit)
@@ -98,7 +100,7 @@
     museum: {
       aged: true, gloss: 16, spec: .5, bump: 4.2, ao: 1.5, round: .025, nacre: .55,
       a: { bit: g => pat(g, SWT.bit(0), 1 / 240), lap: g => pat(g, SWT.lapis(0), 1 / 420), shell: null, red: g => pat(g, SWT.red(0), 1 / 400), petalB: g => pat(g, SWT.lapis(0), 1 / 520, .2, .1),
-        line: 'rgba(32,21,12,.94)', dot: g => pat(g, SWT.dlapis(0), 1 / 300), joint: 'rgba(8,12,40,.8)', band: g => pat(g, SWT.shell(0), 1 / 300, .4, .7), bred: g => pat(g, SWT.red(0), 1 / 300, .3, .1) },
+        line: 'rgba(32,21,12,.94)', dot: g => pat(g, SWT.dlapis(0), 1 / 300), joint: 'rgba(8,12,40,.8)', band: g => pat(g, SWT.shell(0), 1 / 300, .4, .7), bred: g => pat(g, SWT.bandred(0), 1 / 300, .3, .1) },
       h: { bit: .3, lap: .56, shell: .8, red: .72, petalB: .72, line: .6, dot: .7, joint: .46, band: .56, bred: .5 },
       s: { bit: .42, lap: .5, shell: .3, red: .04, petalB: .5, line: .04, dot: .4, joint: .1, band: .32, bred: .04 },
       side: 'museum',
@@ -106,7 +108,7 @@
     restored: {
       aged: false, gloss: 34, spec: .7, bump: 5, ao: 1.1, round: .02, nacre: .55,
       a: { bit: g => pat(g, SWT.bit(1), 1 / 240), lap: g => pat(g, SWT.lapis(1), 1 / 420), shell: null, red: g => pat(g, SWT.red(1), 1 / 400), petalB: g => pat(g, SWT.lapis(1), 1 / 520, .2, .1),
-        line: 'rgba(22,14,8,.96)', dot: g => pat(g, SWT.dlapis(1), 1 / 300), joint: 'rgba(10,18,70,.7)', band: g => pat(g, SWT.shell(1), 1 / 300, .4, .7), bred: g => pat(g, SWT.red(1), 1 / 300, .3, .1) },
+        line: 'rgba(22,14,8,.96)', dot: g => pat(g, SWT.dlapis(1), 1 / 300), joint: 'rgba(10,18,70,.7)', band: g => pat(g, SWT.shell(1), 1 / 300, .4, .7), bred: g => pat(g, SWT.bandred(1), 1 / 300, .3, .1) },
       h: { bit: .3, lap: .6, shell: .8, red: .76, petalB: .76, line: .62, dot: .74, joint: .5, band: .58, bred: .52 },
       s: { bit: .75, lap: .62, shell: .42, red: .06, petalB: .62, line: .05, dot: .55, joint: .1, band: .42, bred: .06 },
       side: 'restored',
@@ -257,14 +259,14 @@
     const dia = (x, y, h) => { g.beginPath(); g.moveTo(x - h, y); g.lineTo(x, y - h); g.lineTo(x + h, y); g.lineTo(x, y + h); g.closePath(); };
     mids.forEach(([x, y], i) => {
       dia(x, y, .066); g.fillStyle = S.bred; g.fill();
-      if (a && D.aged) { const q = hs(i, 41); g.fillStyle = q < .3 ? 'rgba(20,10,5,.35)' : q > .8 ? 'rgba(230,200,170,.15)' : 'rgba(0,0,0,0)'; g.fill(); }
+      if (a && D.aged) { const q = hs(i, 41); g.fillStyle = q < .3 ? 'rgba(20,10,5,.35)' : q > .85 ? 'rgba(200,150,120,.07)' : 'rgba(0,0,0,0)'; g.fill(); }
     });
     pos.forEach(([x, y], i) => {
       const q1 = hs(i, 7), q2 = hs(i, 8), q3 = hs(i, 9), jx = D.aged ? (q2 - .5) * .008 : 0, jy = D.aged ? (q3 - .5) * .008 : 0;
       dia(x + jx, y + jy, .07); g.fillStyle = S.band; g.fill();
       if (a) {
         if (D.nacre) { g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = D.nacre * .8; g.fillStyle = pat(g, SWT.iri(), 1 / 200, q2, q3); g.fill(); g.restore(); }
-        if (D.aged) { g.fillStyle = q1 < .25 ? 'rgba(150,70,40,.32)' : q1 < .5 ? 'rgba(110,80,40,.25)' : q1 < .7 ? 'rgba(60,50,40,.2)' : 'rgba(255,248,230,.12)'; g.fill(); }
+        if (D.aged) { g.fillStyle = q1 < .25 ? 'rgba(130,100,60,.2)' : q1 < .5 ? 'rgba(110,80,40,.22)' : q1 < .7 ? 'rgba(60,50,40,.2)' : 'rgba(255,248,230,.12)'; g.fill(); }
         g.strokeStyle = D === DESIGNS.wood || D === DESIGNS.clay ? S.line : 'rgba(20,14,10,.55)'; g.lineWidth = .006; g.stroke();
       } else if (S.pass === 'h') { g.strokeStyle = g255(.4); g.lineWidth = .006; g.stroke(); }
       if (D.aged && q1 > .965) { g.beginPath(); g.moveTo(x + .07, y); g.lineTo(x + (q2 - .5) * .03, y + (q3 < .5 ? -.07 : .07)); g.lineTo(x - .02 + q3 * .04, y + (q2 - .5) * .04); g.closePath(); g.fillStyle = S.bit; g.fill(); }   // a broken corner
