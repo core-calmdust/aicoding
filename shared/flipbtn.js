@@ -1,4 +1,4 @@
-// FlipBtn — 盤面反転 (turn the board round) for the 世界のボドゲ大全 board games (common spec).
+// FlipBtn — 盤面反転 (turn the board round) for the 世界のボドゲ大百科 board games (common spec).
 //
 // A button in the icon set, left of the sound button (#btnSound; it moves with the icon set into the PC header bar).
 // The game keeps its own automatic orientation (e.g. your own pieces at the bottom); the button turns the board round on

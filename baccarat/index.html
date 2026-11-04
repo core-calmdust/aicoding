@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-baccarat') || '{}') || {}).set || {}; const d = document.documentElement.dataset; d.felt = S.felt || 'teal'; d.back = S.back || 'ornateBlack'; d.court = S.court || 'classic'; d.cmode = S.cmode || 'simple'; d.face = 'classic'; } catch (e) {}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>バカラ | 世界のボドゲ大全</title>
+<title>バカラ | 世界のボドゲ大百科</title>
 <meta name="description" content="初心者がやさしく学べるバカラ。プント・バンコ、コミッションなし（スーパー6）、EZバカラ。8デッキのシューで遊び、罫線（大路・珠盤路・大眼仔・小路・曱甴路）、残りカードからの正確な期待値、3枚目ルールの解説、コーチ、必勝法の検証、ルールとレッスンつき。">
 <meta name="theme-color" content="#0b0d10">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230e3b2a'/%3E%3Crect x='12' y='14' width='22' height='32' rx='3' fill='%23f7f1e3' transform='rotate(-10 23 30)'/%3E%3Crect x='30' y='16' width='22' height='32' rx='3' fill='%23f7f1e3' transform='rotate(8 41 32)'/%3E%3Ctext x='41' y='38' font-size='16' font-family='Georgia' fill='%23c8102e' text-anchor='middle'%3E9%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=46">
+<link rel="stylesheet" href="app.css?v=48">
 <style>#btnSound{display:none!important}   /* 効果音は設定の中 */</style>
 </head>
 <body class="pk bc">
@@ -29,7 +29,7 @@
 </svg>
 <div class="app" id="app">
   <div class="brand">
-    <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1><span id="brandTitle">バカラ</span><small id="brandSub">Baccarat</small></h1><div class="m-game" id="mGame"></div></div>
+    <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大百科</a><h1><span id="brandTitle">バカラ</span><small id="brandSub">Baccarat</small></h1><div class="m-game" id="mGame"></div></div>
     <span class="brand-r">
       <button id="btnSound" class="snd" data-i18n-title="btn.sound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
       <button id="btnSettings" class="snd" data-i18n-title="btn.settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -124,22 +124,22 @@
 </div></div>
 <div class="toast" id="toast"></div>
 
-<script src="i18n.js?v=13"></script>
+<script src="i18n.js?v=14"></script>
 <script src="i18n-more.js?v=12"></script>
 <script src="engine.js?v=1"></script>
 <script src="roads.js?v=3"></script>
 <script src="cards.js?v=5"></script>
 <script src="../shared/rulesoffer.js?v=12"></script>
-<script src="../shared/headerbar.js?v=30"></script>
-<script src="../shared/ruletour.js?v=28"></script>
-<script src="../shared/resign.js?v=1"></script>
-<script src="../shared/record.js?v=8"></script>
-<script src="app.js?v=52"></script>
+<script src="../shared/headerbar.js?v=31"></script>
+<script src="../shared/ruletour.js?v=29"></script>
+<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/record.js?v=9"></script>
+<script src="app.js?v=54"></script>
 <script src="tools.js?v=6"></script>
 <script src="lessons.js?v=3"></script>
 <script src="rules.js?v=2"></script>
-<script src="tutorial.js?v=3"></script>
-<script src="../shared/atlas.js?v=20261101bf" defer></script>
+<script src="tutorial.js?v=5"></script>
+<script src="../shared/atlas.js?v=20261101bfn" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/langsel.js?v=1" defer></script>

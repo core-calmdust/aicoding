@@ -1,7 +1,7 @@
 // UI strings for Dots & Boxes — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
 ja: { "ls.desc": "ルール説明と15ステップのレッスン（各5問・75点で合格）、3×3と4×4の定跡で、勝ち方の考え方を学びます。答えはすべて完全読みソルバーで確認済み。", "tab.rules": "ルール", "tab.open": "定跡", "ru.offer": "はじめての方へ：線の引き方から勝ち負けまで、実際に線を引きながら2分でルールを覚えられます。", "ru.offerBtn": "ルールを見る", "pz.desc2": "終盤の局面で、最も多くの箱を取れる手を見つけて最後まで打ち切ろう。相手は完全読みで最善を返します。テーマ別に約450問、正解はすべてソルバーで確認済み。", "brand.back": "盤面に戻る", "nav.first": "最初へ (↓)", "nav.prev": "1手戻る (←)", "nav.play": "再生／停止 (Space)", "nav.next": "1手進む (→)", "nav.last": "最新へ (↑)",  'rs.title': "対局", 'rs.playing': "対局の途中です（{n}手目）。続きから打つか、新しく始めるか選んでください。", 'rs.viewing': "{n}手目の局面を表示しています。ここから打ち直すか、新しく始めるか選んでください。", 'rs.resume': "ここから再開", 'rs.restart': "最初から", 'tab.lesson': 'レッスン', 'tab.puzzle': '詰めドット',
-  'title': 'ドット・アンド・ボックス', 'sub': 'ドット・アンド・ボックス', 'series': '世界のボドゲ大全', 'lang.name': '日本語',
+  'title': 'ドット・アンド・ボックス', 'sub': 'ドット・アンド・ボックス', 'series': '世界のボドゲ大百科', 'lang.name': '日本語',
   'back': 'ゲーム一覧', 'you': 'あなた', 'ai': 'AI', 'pA': 'プレイヤーA', 'pB': 'プレイヤーB', 'aiA': 'AI・A', 'aiB': 'AI・B',
   'init.you': 'あ', 'init.ai': 'AI', 'init.a': 'A', 'init.b': 'B',
   'boxes': '箱', 'kifu': '手順', 'kifu.empty': 'まだ線が引かれていません',

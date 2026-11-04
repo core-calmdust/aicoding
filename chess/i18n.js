@@ -1,7 +1,7 @@
 // UI strings for Chess — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar
 window.I18N = {
 ja: { "op.auto": "自動再生／停止（スペース）", "ls.list": "一覧へ戻る", "rv.ex.same": "最善手を指しました。", "rv.ex.alt": "良い手です。AIの第一候補は {m}", "rv.ex.best": "最善手は {m}", "brand.back": "盤面に戻る",
-  "series": "世界のボドゲ大全",
+  "series": "世界のボドゲ大百科",
   "nav.first": "最初へ (↓)",
   "nav.prev": "1手戻る (←)",
   "nav.play": "再生／停止 (Space)",

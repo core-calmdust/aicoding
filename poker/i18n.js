@@ -1,7 +1,7 @@
 /* ポーカー — texts (poker/i18n.js). ja / en here; the other languages are added below (Object.assign blocks). */
 const I18N = {
 ja: {
-  series: '世界のボドゲ大全', 'meta.title': 'ポーカー | 世界のボドゲ大全', title: 'ポーカー', back: 'ホームへ',
+  series: '世界のボドゲ大百科', 'meta.title': 'ポーカー | 世界のボドゲ大百科', title: 'ポーカー', back: 'ホームへ',
   'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.s': '新規', 'btn.new.t': 'ゲームの種類・CPU・デザインを選んで始める',
   'btn.resign': '精算', 'btn.resign.t': 'このテーブルを精算して席を立つ（新しいテーブルで始め直す）',
   'btn.hint': 'ヒント', 'btn.hint.t': 'コーチのおすすめを見る（H）', 'btn.rules': 'ルール', 'btn.rules.t': 'ルール説明（チュートリアル）',

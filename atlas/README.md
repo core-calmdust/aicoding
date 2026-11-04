@@ -1,4 +1,4 @@
-# 世界のボドゲ大全 ポータル (atlas/)
+# 世界のボドゲ大百科 ポータル (atlas/)
 
 `https://core-calmdust.github.io/aicoding/atlas/`
 
