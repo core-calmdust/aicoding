@@ -7715,3 +7715,12 @@ I18N.ar = {
  "sim.note": "ميزة الكازينو المحسوبة {e}. مع جولات قليلة يظهر الحظ كثيرًا (± = نطاق 95%).",
  "sim.verdict": "الاستراتيجية الأساسية تخسر {a}، وتقليد الموزّع {b} — نحو {x} أضعاف، فقط بسبب أسلوب اللعب."
 };
+
+Object.assign(I18N.zh, {"tl.g.rule": "规则", "tl.g.h17": "软17", "tl.g.das": "分牌后加倍"});
+Object.assign(I18N.ko, {"tl.g.rule": "규칙", "tl.g.h17": "소프트 17", "tl.g.das": "스플릿 후 더블"});
+Object.assign(I18N.es, {"tl.g.rule": "Reglas", "tl.g.h17": "17 blando", "tl.g.das": "Doblar tras dividir"});
+Object.assign(I18N.fr, {"tl.g.rule": "Règles", "tl.g.h17": "17 souple", "tl.g.das": "Doubler après séparation"});
+Object.assign(I18N.pt, {"tl.g.rule": "Regras", "tl.g.h17": "17 suave", "tl.g.das": "Dobrar após dividir"});
+Object.assign(I18N.de, {"tl.g.rule": "Regeln", "tl.g.h17": "Soft 17", "tl.g.das": "Verdoppeln nach Teilen"});
+Object.assign(I18N.hi, {"tl.g.rule": "नियम", "tl.g.h17": "सॉफ्ट 17", "tl.g.das": "स्प्लिट के बाद डबल"});
+Object.assign(I18N.ar, {"tl.g.rule": "القواعد", "tl.g.h17": "17 الناعم", "tl.g.das": "المضاعفة بعد التقسيم"});

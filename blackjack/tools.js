@@ -14,9 +14,12 @@ function ensure() { if (!W.v) { W.v = A.T.v; W.p = JSON.parse(JSON.stringify(A.p
 const seg = (attr, items, cur) => `<div class="seg">${items.map(([v, l]) => `<button type="button" class="${String(v) === String(cur) ? 'sel' : ''}" data-${attr}="${esc(v)}">${esc(l)}</button>`).join('')}</div>`;
 function rulesBar() {
   const p = W.p, opts = B.VARIANTS[W.v].opts;
-  const OV = { h17: [[false, 'S17'], [true, 'H17']], surr: [[true, t('m.R') + ' ' + t('on')], [false, t('m.R') + ' ' + t('off')]], bj: [[1.5, 'BJ 3:2'], [1.2, 'BJ 6:5']], das: [[true, 'DAS ' + t('on')], [false, 'DAS ' + t('off')]] };
-  return `<div class="tl-ctl">${seg('tv', B.ORDER.map(v => [v, A.vName(v)]), W.v)}${seg('tdk', B.DECKS.map(d => [d, t('o.deckN', { n: d })]), p.decks)}` +
-    opts.filter(k => OV[k]).map(k => seg('to-' + k, OV[k].map(([v, l]) => [String(v), l]), String(p[k]))).join('') + `</div>`;
+  const yn = [[true, t('on')], [false, t('off')]];
+  const OV = { h17: [t('tl.g.h17'), [[false, 'S17'], [true, 'H17']]], surr: [t('m.R'), yn], bj: ['BJ', [[1.5, '3:2'], [1.2, '6:5']]], das: [t('tl.g.das'), yn] };
+  const grp = (lab, html, cls) => `<div class="tl-g${cls ? ' ' + cls : ''}"><small>${esc(lab)}</small>${html}</div>`;
+  return `<div class="tl-rules">` + grp(t('tl.g.rule'), seg('tv', B.ORDER.map(v => [v, A.vName(v)]), W.v), 'wide') +
+    `<div class="tl-opts">` + grp(t('o.decks'), seg('tdk', B.DECKS.map(d => [d, String(d)]), p.decks)) +
+    opts.filter(k => OV[k]).map(k => grp(OV[k][0], seg('to-' + k, OV[k][1].map(([v, l]) => [String(v), l]), String(p[k])))).join('') + `</div></div>`;
 }
 function wireRules(M) {
   M.querySelectorAll('[data-tv]').forEach(b => b.onclick = () => { W.v = b.dataset.tv; W.p = JSON.parse(JSON.stringify(A.prefOf(W.v))); render(); });

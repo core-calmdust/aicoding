@@ -286,6 +286,13 @@ ar: {"fold":"طيّ","title":"الدليل التعليمي","next":"التال�
 };
 function L(k) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k] || k; return x; }
 
+// Space / Enter: "Next" (and "Back to the game" on the last box); on a step waiting for a move the keys go to the game as usual
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (!layer || !layer.classList.contains('show') || document.querySelector('.overlay.show')) return;
+  const b = $('#tutNext') || $('#tutPlay'); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); b.click();
+}, true);
 window.BJTut = { setup, ev, allow, after, start, hide, finish, offer, L, TX };
 setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);
 })();
