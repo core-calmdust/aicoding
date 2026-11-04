@@ -3485,10 +3485,10 @@ function updateBoss(isPlayerInvincible) {
     }
 
     b.def.fight(b);
-    if (tutorial && IS_MOBILE) { // スマホのチュートリアルは、ボスの上端が説明パネルの下に来るよう下げる（画面の位置から逆算）
+    if (tutorial) { // チュートリアルは、ボスの上端が説明パネルの下に来るよう下げる（画面の位置から逆算。PC・スマホ共通）
         const target = tutPanelBottom + 16; let lo = -400, hi = config.canvasHeight;
         for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (project(config.canvasWidth / 2, m, 50).y < target) lo = m; else hi = m; }
-        b.y = Math.max(b.y, hi + b.def.r * BS * 1.4);
+        b.y = Math.max(b.y, hi + b.def.r * BS * 1.6);
     }
     b.t++;
     if (b.t > 60 * 30) { b.state = 'leave'; b.invuln = true; } // 30秒で撤退
@@ -8125,12 +8125,12 @@ function draw() {
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = '#ff3355';
                 renderCtx.font = `600 40px ${config.fontFamily}`;
-                renderCtx.fillText('WARNING', HUD_W / 2, HUD_H / 2 - 115 * CK); // 中央のMUTEKIより上
+                renderCtx.fillText('WARNING', HUD_W / 2, tutorial ? Math.max(HUD_H / 2 - 115 * CK, tutPanelBottom + 90) : HUD_H / 2 - 115 * CK); // チュートリアルは説明パネルとボスの体力バーの下 // 中央のMUTEKIより上
             }, '#ff3355');
             renderCtx.globalAlpha = 1;
             renderCtx.fillStyle = theme.ui;
             renderCtx.font = `600 14px ${config.fontFamily}`;
-            renderCtx.fillText(T('hud.approach', { name: boss.def.name }), HUD_W / 2, HUD_H / 2 - 82 * CK);
+            renderCtx.fillText(T('hud.approach', { name: boss.def.name }), HUD_W / 2, tutorial ? Math.max(HUD_H / 2 - 82 * CK, tutPanelBottom + 123) : HUD_H / 2 - 82 * CK);
         }
         const bw = 360, bh = 8, bx = HUD_W / 2 - bw / 2, by = tutorial ? tutPanelBottom + 28 : (IS_MOBILE ? 226 : 64); // スマホはMUTEKI・コンボ表示の下
         renderCtx.font = `600 ${IS_MOBILE ? 15 : 10}px ${config.fontFamily}`;
