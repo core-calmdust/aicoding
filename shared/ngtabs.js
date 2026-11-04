@@ -58,6 +58,10 @@ const CSS = `
 .modal.ngt-pc > .ngt-note:not(.ngt-hide):not(.ngt-note:not(.ngt-hide) ~ .ngt-note){margin-top:auto!important;padding-top:10px}
 .modal.ngt-pc > .ngt-foot{order:9;display:block;position:sticky;bottom:0;z-index:4;margin-top:auto;padding:12px 0 var(--ngt-pb);background:inherit}
 .modal.ngt-pc:has(> .ngt-note:not(.ngt-hide)) > .ngt-foot{margin-top:0}
+/* (the footer repeats the dialog's background; a gradient is sized to the whole dialog and pinned to the bottom so the band under the
+   settings is the same shade as the dialog there, not the gradient's top colour) */
+.modal.ngt-pc > .ngt-foot{background-size:100% min(860px, calc(100vh - 40px));background-position:bottom}
+.modal.ngt-on .ngt-foot{background-size:100% 100dvh;background-position:bottom}
 .modal.ngt-pc .ngt-foot .modal-actions{margin:0!important}
 /* (ゲーム / デザイン: their blocks use the full width) */
 .modal.ngt-pc:is([data-ngt=design],[data-ngt=game]) :is(.ng-cols,.ng-col):not(.ngt-hide){display:block!important;column-gap:0!important;grid-template-columns:none!important}

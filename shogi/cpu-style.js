@@ -204,9 +204,38 @@ function dlgUpdate(dlg, settings, t) {
     sel.innerHTML = STYLES.map(s => `<option value="${s}">${t('cs.s.' + s)}</option>`).join('');
     sel.value = v; sel.dataset.ready = '1';
     w.querySelector('span').textContent = t('cs.label');
+    pick(w, sel, t);
     w.classList.toggle('hidden', !even || (dlg.mode !== 'ai' && dlg.mode !== 'watch'));
   });
 }
+// the strategy picker: a button with the chosen strategy and a panel of all strategies (the <select> stays, hidden, as the value)
+let pickDoc = false;
+function pick(w, sel, t) {
+  let pk = w.querySelector('.csp');
+  if (!pk) {
+    sel.classList.add('csp-native');
+    pk = document.createElement('div'); pk.className = 'csp';
+    pk.innerHTML = '<button type="button" class="csp-btn" aria-haspopup="listbox" aria-expanded="false"><span class="csp-cur"></span><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4"/></svg></button><div class="csp-pop" role="listbox"></div>';
+    w.appendChild(pk);
+    const btn = pk.querySelector('.csp-btn'), pop = pk.querySelector('.csp-pop');
+    w.addEventListener('click', e => { if (e.target.closest('.csp')) e.preventDefault(); });   // (the label would forward clicks to the hidden select)
+    btn.addEventListener('click', e => { e.stopPropagation(); const open = !pk.classList.contains('open'); closeAll(); pk.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); });
+    pop.addEventListener('click', e => {
+      const o = e.target.closest('[data-v]'); if (!o) return; e.stopPropagation();
+      sel.value = o.dataset.v; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      closeAll(); paint(pk, sel);
+    });
+    if (!pickDoc) { pickDoc = true; document.addEventListener('click', closeAll); document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); }); }
+  }
+  const pop = pk.querySelector('.csp-pop');
+  pop.innerHTML = STYLES.map(s => `<button type="button" role="option" data-v="${s}"${s === 'auto' ? ' class="all"' : ''}>${t('cs.s.' + s)}</button>`).join('');
+  paint(pk, sel);
+}
+function paint(pk, sel) {
+  const o = sel.selectedOptions[0]; pk.querySelector('.csp-cur').textContent = o ? o.text : '';
+  pk.querySelectorAll('.csp-pop [data-v]').forEach(b => { const on = b.dataset.v === sel.value; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); });
+}
+function closeAll() { document.querySelectorAll('.csp.open').forEach(p => { p.classList.remove('open'); p.querySelector('.csp-btn').setAttribute('aria-expanded', 'false'); }); }
 function dlgOpen() { document.querySelectorAll('#csWrap1 select, #csWrap2 select').forEach(s => { delete s.dataset.ready; }); }
 function dlgRead(settings) {
   const a = document.querySelector('#csWrap1 select'), b = document.querySelector('#csWrap2 select');

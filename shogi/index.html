@@ -60,10 +60,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hand.bottom{align-self:end;flex-direction:column-reverse}
 /* portal 3D skin: the 3D board's rim is symmetric around the squares, but the DOM frame is wider on the right (rank numbers) — pull the sente komadai in so both komadai sit at the same distance from the board */
 @media (min-aspect-ratio: 1/1){ html.atlas-skin .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*0.16 - var(--fp))} }
-/* 2D: the frame is wider on the rank-number side (right on PC, top on phones) — set the sente komadai at the same distance from the squares as the gote one */
+/* 2D: the frame is a little wider on the rank-number side; both komadai keep the same gap to the frame's edge */
 html:not(.atlas-skin) .frame{padding-right:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .coords.right{width:calc(var(--cw)*0.3)}
-html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*-0.14)}
+html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 @media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   html:not(.atlas-skin) .frame{padding-right:var(--fp)}
   html:not(.atlas-skin) .coords.right{width:var(--fp)}
@@ -310,6 +310,22 @@ body.in-lesson .review-card{display:none!important}
 .cs-sel:hover,.cs-sel:focus{border-color:rgba(201,169,97,.55);outline:none}
 .cs-sel option{background:var(--panel2,#2a2118);color:var(--text)}
 [dir=rtl] .cs-sel{background-position:left 10px center;padding:0 11px 0 28px}
+/* (the strategy picker: cpu-style.js turns the <select> into a button + a panel of chips) */
+.cs-sel.csp-native{display:none}
+.csp{position:relative;min-width:0;flex:1 1 auto}
+.csp-btn{display:flex;align-items:center;gap:10px;width:100%;min-width:9em;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:13px;letter-spacing:0;cursor:pointer;text-align:start}
+.csp-btn:hover,.csp.open .csp-btn{border-color:rgba(201,169,97,.6)}
+.csp-cur{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csp-btn svg{flex:none;width:10px;height:6px;fill:none;stroke:var(--brass);stroke-width:1.4;transition:transform .2s}
+.csp.open .csp-btn svg{transform:rotate(180deg)}
+.csp-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:40;width:min(340px, 86vw);display:none;grid-template-columns:1fr 1fr;gap:4px;padding:8px;border-radius:14px;
+  border:1px solid color-mix(in srgb, var(--brass) 40%, var(--line));background:linear-gradient(180deg,#2e2117,#1d140d);box-shadow:0 18px 40px -10px rgba(0,0,0,.85)}
+[dir=rtl] .csp-pop{right:auto;left:0}
+.csp.open .csp-pop{display:grid}
+.csp-pop button{padding:8px 10px;border-radius:8px;border:1px solid transparent;background:none;color:var(--muted);font:inherit;font-size:12.5px;letter-spacing:0;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.csp-pop button.all{grid-column:1 / -1}
+.csp-pop button:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.csp-pop button.sel{color:var(--text);background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));border-color:rgba(226,194,117,.5)}
 .level-name small{display:block;font-weight:400;font-size:11px;line-height:1.45;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
@@ -871,6 +887,8 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
     background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > *{margin:0!important}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field{align-self:stretch!important;width:auto}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols{overflow:visible!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child{display:flex;align-items:center;gap:10px;font-size:11.5px;letter-spacing:.22em;color:var(--brass);margin-bottom:10px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass) 40%, transparent), transparent)}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] #lvNote{margin-top:-10px!important;padding:8px 11px;font-size:10.5px;line-height:1.55;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04)}
@@ -1306,9 +1324,9 @@ html[lang=ar] .pf-input{direction:rtl}
     </div>
     <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button><button data-v="4" data-i18n="clk.fis5"></button></div></div>
     </div><div class="ng-col">
-    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel"></select></label></div></div></div>
+    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
-    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel"></select></label></div></div></div>
+    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
         <label><input type="checkbox" id="optLegal"><span data-i18n="ng.legal"></span></label>
@@ -1454,7 +1472,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/rulesoffer.js?v=9"></script>
 <script src="engine.js?v=20261104tz"></script>
 <script src="strategy.js?v=20261018ol"></script>
-<script src="cpu-style.js?v=20261021cs"></script>
+<script src="cpu-style.js?v=20261104cp"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=4"></script>
@@ -1472,7 +1490,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/vtext.js?v=20261030sv4"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261030sv3"></script>
+<script src="variants/variants.js?v=20261104gt"></script>
 <script src="rvbox.js?v=20261028fsa"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=14"></script>
@@ -2684,7 +2702,14 @@ function ngPlace(rt) {
   // (moved only when the place changes: re-inserting the slider while it is dragged would drop the drag)
   const put = (el, parent, fn) => { if (el.parentNode !== parent) fn(); };
   const lv = $('#fLevel'), ln = $('#lvNote'), ck = $('#fClock'), rs = $('#rtStats');
-  if (m === 'watch') put(lv, c1, () => c1.append(lv, ln)); else put(lv, c2, () => c2.prepend(lv, ln));
+  // AI vs AI on PC: 先手AI / 後手AI at the top of the two panels, level with each other (手合い under 先手AI, 表示 under 後手AI)
+  const pc = !!c1.closest('.ngt-pc'), l2 = $('#fLevel2');
+  if (m === 'watch' && pc) { if (c1.firstElementChild !== lv) c1.prepend(lv, ln); if (c2.firstElementChild !== l2) c2.prepend(l2); }
+  else {
+    if (m === 'watch') { if (c1.lastElementChild !== ln) c1.append(lv, ln); }
+    else if (c2.firstElementChild !== lv) c2.prepend(lv, ln);
+    if (l2.previousElementSibling !== ln) ln.after(l2);
+  }
   if (m === 'pvp') put(ck, c2, () => c2.prepend(ck)); else put(ck, c1, () => $('#fColor').after(ck));
   if (rt) put(rs, c2, () => c2.prepend(rs)); else put(rs, $('#fRatedInfo'), () => $('#fRatedInfo').append(rs));
   c1.classList.toggle('ng-spread', m === 'ai');
@@ -5466,8 +5491,8 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" defer></script>
-<script src="../shared/pickdrop.js?v=6"></script>
-<script src="../shared/ngtabs.js?v=22"></script>
+<script src="../shared/pickdrop.js?v=7"></script>
+<script src="../shared/ngtabs.js?v=23"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
