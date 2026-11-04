@@ -165,7 +165,9 @@ function placePhone(st) {
     return scroll ? { t: Math.max(t, sr.top) + 6, b: Math.min(b, sr.bottom) - 6 } : { t: t + 4, b: b - 4 };
   };
   let dock, d = 0;
-  if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
+  const el0 = st.at && document.querySelector([].concat(st.at).flat()[0]), pinned = scroll && el0 && getComputedStyle(el0).position === 'sticky';
+  if (pinned) { dock = 'top'; d = -sc.scrollTop; }           // the action bar pinned over the tab bar: the table back at the top, above it
+  else if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
   else if (!scroll) dock = tabBtn(st) || r.t + r.b > H ? 'top' : 'bottom';  // a fixed target (header buttons, tab bar): the other end
   else {
     // try both docks: the scroll that puts the target in the free area (it can't scroll above the top) — keep the one that fits best
