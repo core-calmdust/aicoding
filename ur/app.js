@@ -154,6 +154,9 @@ function reviewJob(list, onProg) {
 // ====================================================================== board / dice view
 const mqPC = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
 const mqV = matchMedia('(pointer: coarse) and (max-width: 760px) and (orientation: portrait)');
+// phones held sideways (the landscape layout of landtabs.js: the same query)
+const mqL = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
+const phone = () => mqV.matches || mqL.matches;
 // phones held upright: the board turned ('v', the bigger squares on a tall screen) — but on a short one (e.g. 375×667) the board
 // lying across the screen gets the bigger squares: 'v' when its squares (the height left from 100lvh ÷ 8.96) are at least those of 'h'
 // (the width ÷ 9.24). Either way the dice are thrown in the players' strips (band())
@@ -163,7 +166,7 @@ const orient = () => !mqV.matches ? 'h' : (lvhPx() - ohPx()) / 8.96 >= (innerWid
 const animOn = () => settings.speed > 0;
 const SPD = () => [3, .7, 1, 1.8][settings.speed] || 1;
 function buildView() {
-  view = B2.mount($('#board'), { orient: orient(), notch: true, design: settings.design, pieces: settings.pieces, speed: SPD() });
+  view = B2.mount($('#board'), { orient: orient(), notch: phone(), flip: true, design: settings.design, pieces: settings.pieces, speed: SPD() });
   view.on('cell', e => onCell(e)).on('tray', e => onTray(e));
   bindHover();
   dice2d = null;
@@ -190,7 +193,7 @@ function hoverAt(g) {
 }
 // phones held upright (the board turned, 'vn'): the dice leave the board — they are thrown in a strip in the card of the
 // player to roll (the opponent's above the board, yours below), with the roll plate there; the notch holds the waiting pieces
-const band = () => !!view && mqV.matches;
+const band = () => !!view && phone();
 // the dice sit in the notch (columns 4–5) on the side of the player to roll
 function placeDice() {
   const fr = $('#frame'), dock = $('#diceDock'); if (!fr || !view) return;
@@ -349,7 +352,7 @@ function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].fi
 function playerName(s) {
   if (settings.mode === 'pvp') return sideName(s);
   if (settings.mode === 'watch') return 'AI ' + LV(levelFor(s));
-  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !mqV.matches ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
+  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
 }
 function renderInfo() {
   const st = curState(), rl = E.RULES[st.rule], rc = E.raceCount(st), sta = special ? { over: false } : statusAt(cur);
@@ -912,7 +915,7 @@ let lastO = '', lastPC = null;
 function relayout(force) {
   const o = orient(), pc = mqPC.matches;
   document.documentElement.classList.toggle('bv', o === 'v');
-  if (view && (o !== view.orient() || force)) { view.setOrient(o); bindHover(); }
+  if (view && (o !== view.orient() || phone() !== view.notch() || force)) { view.setOrient(o, undefined, phone()); bindHover(); }
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
   const me = game ? (settings.mode === 'ai' ? game.human : 0) : 0;
@@ -925,7 +928,7 @@ function relayout(force) {
   }
   // (phones held upright: in your card, in place of the dice strip — the dice are not needed while looking back)
   if (pc) { if (rb.previousElementSibling !== pl) pl.after(rb); }
-  else if (mqV.matches) { const hm = $('#pl' + me); if (rb.parentElement !== hm) hm.appendChild(rb); }
+  else if (phone()) { const hm = $('#pl' + me); if (rb.parentElement !== hm) hm.appendChild(rb); }
   else if (rb.parentElement !== sb) sb.appendChild(rb);
   pl.classList.toggle('hidden', !pc);
   lastO = o; lastPC = pc;
@@ -933,6 +936,7 @@ function relayout(force) {
 }
 mqPC.addEventListener ? mqPC.addEventListener('change', () => relayout()) : mqPC.addListener(() => relayout());
 mqV.addEventListener ? mqV.addEventListener('change', () => relayout()) : mqV.addListener(() => relayout());
+mqL.addEventListener ? mqL.addEventListener('change', () => relayout()) : mqL.addListener(() => relayout());
 addEventListener('resize', () => { if (orient() !== lastO) relayout(); else placeDice(); });
 if (window.ResizeObserver) new ResizeObserver(() => placeDice()).observe($('#frame'));
 
