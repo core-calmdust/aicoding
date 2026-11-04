@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-agon') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'folk'; document.documentElement.dataset.pcs = S.pcs || 'bone'; } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-agon') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.dv2 ? (S.bd || 'victorian') : 'victorian'; document.documentElement.dataset.pcs = S.pcs || 'bone'; } catch (e) {}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0c0f08">
+<meta name="theme-color" content="#0e0907">
 <meta name="description" content="1842年ロンドン生まれ、六角形のマスを使った世界最古のボードゲーム「アゴン（Queen’s Guard）」。女王を中央の王座に座らせ、6枚のガードで囲めば勝ち。一直線にはさんで捕獲、捕まった駒は外周へ置き直し。20段階AI、レーティング戦、実際の盤で覚えるルール、レッスン・序盤・勝ち切りパズル。19世紀の民芸盤・ヴィクトリア朝の盤と、モダンな盤。">
 <title>アゴン — 世界のボドゲ大百科</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b2313'/%3E%3Cpath fill='%23a32a22' d='M32 8l20.8 12v24L32 56 11.2 44V20z'/%3E%3Cpath fill='%23e6dcc4' d='M32 18l12.1 7v14L32 46l-12.1-7V25z'/%3E%3Cpath fill='%23232a1c' d='M32 26l5.2 3v6L32 38l-5.2-3v-6z'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232f1f15'/%3E%3Cpath fill='%236c1a1c' d='M32 8l20.8 12v24L32 56 11.2 44V20z'/%3E%3Cpath fill='%23e7dcc0' d='M32 18l12.1 7v14L32 46l-12.1-7V25z'/%3E%3Cpath fill='%231e3a2c' d='M32 26l5.2 3v6L32 38l-5.2-3v-6z'/%3E%3C/svg%3E">
 <meta property="og:title" content="アゴン — 六角形の盤の世界最古のゲーム（1842）">
 <meta property="og:description" content="女王と6枚の近衛兵で王座を目指す、1842年ロンドンのヘックスボードゲーム。20段階AI、レーティング戦、実際の盤で覚えるルール、レッスン・勝ち切りパズル。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
@@ -18,11 +18,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0c0f08; --bg2:#151b0f; --panel:#1b2313; --panel2:#26311a; --line:#46532d;
-  --text:#f4f0e2; --muted:#c9c2a4; --dim:#948d70;
-  --felt:#4a5a2c; --felt2:#36431f; --felt3:#1e2612;
-  --brass:#d9bb72; --brass2:#9a7d3c;
-  --accent:#e6cf8f; --red:#ff6b5b; --good:#9fd98a;
+  --bg:#0e0907; --bg2:#1a110c; --panel:#231610; --panel2:#2f1f15; --line:#5a4129;
+  --text:#f6efdf; --muted:#d2c3a3; --dim:#9c8b6c;
+  --felt:#5e2418; --felt2:#451a11; --felt3:#250e09;
+  --brass:#d4b062; --brass2:#9a7a36;
+  --accent:#ebd59c; --red:#ff6b5b; --good:#9fd98a;
   --gold1:#fff6dc; --gold2:#ecdcae; --gold3:#c9a95e; --gold4:#5d4a1f;
   --plat1:#ffffff; --plat2:#dfd5d8; --plat3:#8f97a3; --plat4:#3c424b;
   --vh: 100vh;
@@ -54,8 +54,8 @@ html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
 html,body{height:100%;overflow:hidden}
 body{
   background:
-    radial-gradient(1200px 700px at 28% -10%, #2a3518 0%, transparent 60%),
-    radial-gradient(900px 600px at 110% 110%, #1d2611 0%, transparent 60%),
+    radial-gradient(1200px 700px at 28% -10%, #3a1d12 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #24120b 0%, transparent 60%),
     var(--bg);
   color:var(--text);
   font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
@@ -282,9 +282,9 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace}
 
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(12,4,6,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(10,5,3,.64);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#26311a,#121809);border:1px solid rgba(214,186,114,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#2f1f15,#140c08);border:1px solid rgba(214,186,114,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
 .overlay.instant,.overlay.instant .modal{transition:none!important}
 .overlay{height:100vh;height:100dvh;bottom:auto}
@@ -779,9 +779,10 @@ body .info-line{font-size:12.5px}
 :root{--hx:calc(var(--cell) * .625);--num:rgba(255,248,226,.78)}
 .board{background:var(--bdImg) center/100% 100% no-repeat,#1b2d2a;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 18px 40px -18px rgba(0,0,0,.9)}
 .board::after{display:none}
-.frame{background:radial-gradient(ellipse at 50% 30%,#232c18 0%,#141a0d 60%,#0b0e07 100%)}
+.frame{background:radial-gradient(ellipse at 50% 30%,#2e1b12 0%,#1a0f0a 60%,#0d0705 100%)}
 .frame::before{display:none}
 html[data-bd=folk]{--bdImg:url(img/bd-folk.webp)}
+html[data-bd=folk] .frame{background:radial-gradient(ellipse at 50% 30%,#1f2f2b 0%,#121c1a 70%,#080c0b 100%)}
 html[data-bd=victorian]{--bdImg:url(img/bd-victorian.webp)}
 html[data-bd=walnut]{--bdImg:url(img/bd-walnut.webp)}
 html[data-bd=slate]{--bdImg:url(img/bd-slate.webp)}
@@ -1005,7 +1006,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .sqfx.last{background:rgba(236,214,150,.28);box-shadow:inset 0 0 0 2px rgba(255,255,255,.8)}
 .sqfx.lastf{background:rgba(236,214,150,.16)}
 </style>
-<link rel="stylesheet" href="online.css?v=2">
+<link rel="stylesheet" href="online.css?v=3">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1309,8 +1310,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 </div>
 
 <script src="../checkers/i18n.js?v=20261104tln"></script>
-<script src="i18n-ag.js?v=1"></script>
-<script src="i18n-ag-more.js?v=1"></script>
+<script src="i18n-ag.js?v=2"></script>
+<script src="i18n-ag-more.js?v=2"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1332,7 +1333,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=7"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 <script src="online-ui.js?v=3sec1l9ck1p"></script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261104ag1" defer></script>
@@ -1341,6 +1342,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 <script src="../shared/rulelink.js?v=1"></script>

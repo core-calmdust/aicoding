@@ -1,6 +1,6 @@
 // Agon: the texts in zh ko es fr pt de hi ar (same keys as the 'en' object in i18n-ag.js).
 (function (A) { for (const l in A) if (window.I18N && I18N[l]) Object.assign(I18N[l], A[l]); })({
-zh: {
+zh: { 'ng.first': '先手（白）', 'ng.second': '后手（黑）',
   'meta.title': '阿贡棋 — 世界桌游大百科',
   'title': '阿贡棋',
   'sub': '女王卫队 · 1842',
@@ -257,7 +257,7 @@ zh: {
   'pz.th.b5': '黑先 · 5步',
   'pz.th.b5.sub': '困难',
 },
-ko: {
+ko: { 'ng.first': '선수(백)', 'ng.second': '후수(흑)',
   'meta.title': '아곤 — 세계 보드게임 대백과',
   'title': '아곤',
   'sub': '여왕의 호위병 · 1842',
@@ -514,7 +514,7 @@ ko: {
   'pz.th.b5': '흑 차례 · 5수',
   'pz.th.b5.sub': '어려움',
 },
-es: {
+es: { 'ng.first': 'Primero (blancas)', 'ng.second': 'Segundo (negras)',
   'meta.title': 'Agon — Atlas mundial de juegos de mesa',
   'title': 'Agon',
   'sub': 'Queen’s Guard · 1842',
@@ -771,7 +771,7 @@ es: {
   'pz.th.b5': 'Negras · 5 jugadas',
   'pz.th.b5.sub': 'Difícil',
 },
-fr: {
+fr: { 'ng.first': 'En premier (Blancs)', 'ng.second': 'En second (Noirs)',
   'meta.title': 'Agon — Atlas mondial des jeux de société',
   'title': 'Agon',
   'sub': 'Queen’s Guard · 1842',
@@ -1028,7 +1028,7 @@ fr: {
   'pz.th.b5': 'Noirs · 5 coups',
   'pz.th.b5.sub': 'Difficile',
 },
-pt: {
+pt: { 'ng.first': 'Primeiro (brancas)', 'ng.second': 'Segundo (pretas)',
   'meta.title': 'Agon — Atlas mundial de jogos de tabuleiro',
   'title': 'Agon',
   'sub': 'Queen’s Guard · 1842',
@@ -1285,7 +1285,7 @@ pt: {
   'pz.th.b5': 'Pretas · 5 lances',
   'pz.th.b5.sub': 'Difícil',
 },
-de: {
+de: { 'ng.first': 'Anziehend (Weiß)', 'ng.second': 'Nachziehend (Schwarz)',
   'meta.title': 'Agon — Weltatlas der Brettspiele',
   'title': 'Agon',
   'sub': 'Queen’s Guard · 1842',
@@ -1542,7 +1542,7 @@ de: {
   'pz.th.b5': 'Schwarz · 5 Züge',
   'pz.th.b5.sub': 'Schwer',
 },
-hi: {
+hi: { 'ng.first': 'पहले (सफ़ेद)', 'ng.second': 'बाद में (काला)',
   'meta.title': 'अगोन — विश्व बोर्ड गेम एटलस',
   'title': 'अगोन',
   'sub': 'Queen’s Guard · 1842',
@@ -1799,7 +1799,7 @@ hi: {
   'pz.th.b5': 'काला · 5 चालें',
   'pz.th.b5.sub': 'कठिन',
 },
-ar: {
+ar: { 'ng.first': 'الأول (الأبيض)', 'ng.second': 'الثاني (الأسود)',
   'meta.title': 'أغون — أطلس ألعاب الطاولة العالمي',
   'title': 'أغون',
   'sub': 'Queen’s Guard · 1842',

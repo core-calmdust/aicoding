@@ -41,7 +41,7 @@ const isPass = m => m === E.PASS;
 
 // ====================================================================== state
 const STORE = 'aicoding-agon';
-const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: false, coach: true, lang: '', bd: 'folk', pcs: 'bone' };
+const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: false, coach: true, lang: '', bd: 'victorian', pcs: 'bone', dv2: true };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -83,6 +83,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (!(d.settings || {}).dv2) { settings.bd = 'victorian'; settings.pcs = 'bone'; settings.dv2 = true; }   // 2026-11-04: the Victorian board with bone & ebony became the default
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
@@ -879,7 +880,7 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs])
 // historical: the 19th-century American painted folk board (crackled paint) and the Victorian (Jaques of London) board;
 // modern: oiled walnut with brass, honed slate. Pieces: Victorian bone & ebony, painted folk wood, matte ceramic, brass & steel.
-const BD_KEYS = ['folk', 'victorian', 'walnut', 'slate'], PC_KEYS = ['bone', 'folk', 'ceramic', 'brass'];   // the folk board first: the default
+const BD_KEYS = ['victorian', 'folk', 'walnut', 'slate'], PC_KEYS = ['bone', 'folk', 'ceramic', 'brass'];   // Victorian board + bone & ebony: the default (2026-11-04)
 const BD_HIST = { folk: 1, victorian: 1 };
 const BD_DEFS = '';
 // fallback colours (the board pictures are img/bd-<key>.webp): [ring tone A, ring tone B, throne, frame, line]
@@ -898,7 +899,7 @@ const PC_PAL = {
 };
 const pcImg = (k, side, q) => `img/pc-${k}-${side}-${q ? 'q' : 'g'}.webp`;
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'folk';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'victorian';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'bone';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
@@ -911,7 +912,7 @@ function designPickers() {
 }
 // a piece-set tile: a queen and a guard of each side on a corner of the current board
 function pcSwatch(k) {
-  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'folk';
+  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'victorian';
   return `<svg class="bdm" viewBox="292 292 440 440"><image href="img/bd-${bd}.webp" x="0" y="0" width="1024" height="1024"/>` +
     [[E.at(-1, 0), 1, 1], [E.at(0, 0), 1, 0], [E.at(1, -1), 2, 1], [E.at(1, 0), 2, 0], [E.at(0, 1), 1, 0], [E.at(-1, 1), 2, 0]].map(([i, sd, q]) => pieceSVG(512 + E.XC[i] * 80, 512 + E.YC[i] * 80, 37, k, sd, q)).join('') + '</svg>';
 }
@@ -928,7 +929,7 @@ function pieceSVG(x, y, r, k, side, q, capd) {
 function miniSVG(spec, o) {
   o = o || {};
   const fl = !!o.flip, X = i => 512 + (fl ? -E.XC[i] : E.XC[i]) * 80, Y = i => 512 + (fl ? -E.YC[i] : E.YC[i]) * 80;
-  const bdk = BD_KEYS.includes(o.bd || settings.bd) ? (o.bd || settings.bd) : 'folk', pk = PC_KEYS.includes(o.pcs || settings.pcs) ? (o.pcs || settings.pcs) : 'bone', BP = BD_PAL[bdk];
+  const bdk = BD_KEYS.includes(o.bd || settings.bd) ? (o.bd || settings.bd) : 'victorian', pk = PC_KEYS.includes(o.pcs || settings.pcs) ? (o.pcs || settings.pcs) : 'bone', BP = BD_PAL[bdk];
   const vb = o.crop || (o.cls === 'lxb' || o.cls === 'gmini' ? '64 112 896 800' : '0 0 1024 1024');
   let s = `<svg class="${o.cls || 'mini'}" viewBox="${vb}">`;
   // fallback drawing under the picture (rings in two tones), then the board picture itself

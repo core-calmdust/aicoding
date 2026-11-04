@@ -1,17 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <defs>
     <clipPath id="ag-c"><rect width="96" height="96" rx="20"/></clipPath>
-    <radialGradient id="ag-bg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#8a946d"/><stop offset="1" stop-color="#5d6745"/></radialGradient>
+    <linearGradient id="ag-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a3220"/><stop offset=".55" stop-color="#5a2316"/><stop offset="1" stop-color="#3a150c"/></linearGradient>
     <radialGradient id="ag-q" cx=".4" cy=".32" r=".75"><stop offset="0" stop-color="#fffaf0"/><stop offset=".65" stop-color="#ece1c6"/><stop offset="1" stop-color="#b9a983"/></radialGradient>
-    <filter id="ag-sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.4" stdDeviation="2.2" flood-color="#141a0c" flood-opacity=".45"/></filter>
+    <radialGradient id="ag-iv" cx=".45" cy=".35" r=".8"><stop offset="0" stop-color="#f6eed8"/><stop offset="1" stop-color="#ddcfab"/></radialGradient>
+    <filter id="ag-sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.4" stdDeviation="2.2" flood-color="#1a0805" flood-opacity=".55"/></filter>
   </defs>
   <g clip-path="url(#ag-c)">
     <rect width="96" height="96" fill="url(#ag-bg)"/>
-    <g stroke="#1d2014" stroke-width="1.4">
-      <path d="M48 3l14 8v16l-14 8-14-8V11z" fill="#a32a22"/><path d="M76 19l14 8v16l-14 8-14-8V27z" fill="#1d1b17"/>
-      <path d="M76 51l14 8v16l-14 8-14-8V59z" fill="#a32a22"/><path d="M48 67l14 8v16l-14 8-14-8V75z" fill="#1d1b17"/>
-      <path d="M20 51l14 8v16l-14 8-14-8V59z" fill="#a32a22"/><path d="M20 19l14 8v16l-14 8-14-8V27z" fill="#1d1b17"/>
-      <path d="M48 35l14 8v16l-14 8-14-8V43z" fill="#232a1c"/>
+    <rect x="4" y="4" width="88" height="88" rx="16" fill="none" stroke="#c9a14e" stroke-width="1" stroke-opacity=".7"/>
+    <g stroke="#c9a14e" stroke-width="1.3">
+      <path d="M48 3l14 8v16l-14 8-14-8V11z" fill="#6c1a1c"/><path d="M76 19l14 8v16l-14 8-14-8V27z" fill="url(#ag-iv)"/>
+      <path d="M76 51l14 8v16l-14 8-14-8V59z" fill="#6c1a1c"/><path d="M48 67l14 8v16l-14 8-14-8V75z" fill="url(#ag-iv)"/>
+      <path d="M20 51l14 8v16l-14 8-14-8V59z" fill="#6c1a1c"/><path d="M20 19l14 8v16l-14 8-14-8V27z" fill="url(#ag-iv)"/>
+      <path d="M48 35l14 8v16l-14 8-14-8V43z" fill="#1e3a2c"/>
     </g>
     <g filter="url(#ag-sh)">
       <path d="M48 31.5l16.5 9.5v19L48 69.5 31.5 60V41z" fill="#9f8f6c"/>
