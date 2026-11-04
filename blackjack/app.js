@@ -563,10 +563,13 @@ function render() {
       `<b>${me ? 'YOU' : esc(b.name)}</b>${net != null && net !== 0 ? `<em class="${net > 0 ? 'pos' : 'neg'}">${sg(net)}</em>` : `<small>${bank}</small>`}</div>`;
     // cards: a cascade above the circle; split hands side by side
     if (St) {
-      const cw = me ? u * (St.hands.length > 2 ? .6 : St.hands.length > 1 ? (g.mob ? .66 : .72) : (g.mob ? 1 : .86)) : u * (g.mob ? .52 : .56);
-      const dx = cw * (me ? .36 : .3), dy = cw * 1.4 * (me ? .1 : .14);
-      const widths = St.hands.map(H => cw + Math.max(0, H.cards.length - 1) * dx), gap = u * .14;
-      const totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1);
+      // split hands side by side; they shrink so that all of them fit in the seat (no hand over another or over the next seat)
+      let cw = me ? u * (St.hands.length > 2 ? .6 : St.hands.length > 1 ? (g.mob ? .66 : .72) : (g.mob ? 1 : .86)) : u * (g.mob ? .52 : .56);
+      let dx = cw * (me ? .36 : .3), dy = cw * 1.4 * (me ? .1 : .14), gap = St.hands.length > 1 ? Math.max(6, u * .16) : 0;
+      let widths = St.hands.map(H => cw + Math.max(0, H.cards.length - 1) * dx);
+      let totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1);
+      const maxW = me ? s.w * (St.hands.length > 1 ? 1.25 : 1.1) : s.w - 8;
+      if (totalW > maxW) { const f = Math.max(me ? .55 : .62, (maxW - gap * (St.hands.length - 1)) / (totalW - gap * (St.hands.length - 1))); cw *= f; dx *= f; dy *= f; widths = widths.map(w => w * f); totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1); }
       let hx = Math.max(2, Math.min(W - totalW - 2, s.x - totalW / 2));
       St.hands.forEach((H, hi) => {
         const nC = H.cards.length, baseY = s.y - s.r - (SIDES().length ? s.r * .9 : 0) - u * (g.mob ? .12 : .14) - cw * 1.4;
@@ -578,8 +581,9 @@ function render() {
         if (nC) {
           const tx = hx + (nC - 1) * dx + cw * .5, ty = baseY - (nC - 1) * dy - (g.mob ? 12 : 14);
           const V = B.hv(H.cards), bust = V.t > 21, bj = nC === 2 && !H.split && V.t === 21;
-          html += `<span class="bj-tot${bust ? ' bust' : bj ? ' bj' : ''}${isCur ? ' cur' : ''}${me ? ' me' : ''}" data-k="t${n}-${hi}" style="left:${tx.toFixed(1)}px;top:${ty.toFixed(1)}px">${bj ? 'BJ' : bust ? 'BUST' : totTxt(H.cards)}${H.dbl ? '<i>×2</i>' : ''}${H.free ? '<i class="fr">FREE</i>' : ''}</span>`;
-          if (H.res) html += `<span class="bj-res r-${H.res.kind}${me ? ' me' : ''}" data-k="r${n}-${hi}" style="left:${(hx + (nC - 1) * dx / 2 + cw / 2).toFixed(1)}px;top:${(baseY + cw * 1.4 * .55).toFixed(1)}px">${esc(resLab(H.res))}</span>`;
+          const rk = !me && H.res ? ' rk-' + (H.res.net > 0 ? 'w' : H.res.net < 0 ? 'l' : 'p') : '';
+          html += `<span class="bj-tot${bust ? ' bust' : bj ? ' bj' : ''}${isCur ? ' cur' : ''}${me ? ' me' : ''}${rk}" data-k="t${n}-${hi}" style="left:${tx.toFixed(1)}px;top:${ty.toFixed(1)}px">${bj ? 'BJ' : bust ? 'BUST' : totTxt(H.cards)}${H.dbl ? '<i>×2</i>' : ''}${H.free ? '<i class="fr">FREE</i>' : ''}</span>`;
+          if (H.res && me) html += `<span class="bj-res r-${H.res.kind} me${St.hands.length > 1 ? ' sm' : ''}" data-k="r${n}-${hi}" style="left:${(hx + (nC - 1) * dx / 2 + cw / 2).toFixed(1)}px;top:${(baseY + cw * 1.4 * .55).toFixed(1)}px">${esc(resLab(H.res))}</span>`;
         }
         hx += widths[hi] + gap;
       });
@@ -707,7 +711,7 @@ function renderSide() {
   else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
   // session
   const S = T.session, pcCol = matchMedia(PCQ).matches;
-  const cells = `<div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
+  const cells = `<div><small>${esc(t('bank'))}</small><b>${fmt(T.bank - (T.phase === 'bet' ? betSum(T.bets) : 0))}</b></div><div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
     `<div><small>${esc(t('ss.wag'))}</small><b>${fmt(S.wag)}</b></div><div><small>${esc(t('ss.exp'))}</small><b class="neg">${sg(Math.round(S.exp))}</b></div>`;
   const btns = `<button class="sbtn" id="sStats">${esc(t('btn.stats'))}</button><button class="sbtn" id="sTools">${esc(t('btn.tools'))}</button>`;
   if (pcCol) patch($('#sessBar'), `<div class="sb-h"><b>${esc(t('side.session'))}</b><small>${esc(vName(T.v))}</small></div><div class="srow">${cells}<div><small>${esc(t('st.mis'))}</small><b class="${S.mis > 0 ? 'neg' : ''}">${sg(-Math.round(S.mis))}</b></div></div><div class="sb-btns">${btns}</div>`);
