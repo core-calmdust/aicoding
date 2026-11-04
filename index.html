@@ -789,6 +789,7 @@ for (const l in I18N) if (!I18N[l]["sub.card"]) I18N[l]["sub.card"] = I18N[l]["t
      thumb   board screenshot shown in the detail panel
      icon    square icon shown in the grid
      cat     'ai' | 'classic' | 'old'   (filter chips; labels: sub.<cat>)
+     also    (optional) extra category chips the game also appears under, e.g. ['race']
      kind    small English eyebrow, e.g. 'BOARD GAME' or 'PUZZLE'
      key     i18n key prefix → <key>.title / <key>.desc / <key>.play
      name    (optional) literal title when there is no <key>.title key
@@ -827,7 +828,7 @@ const GAMES = [
   { id:'connect4',   href:'./connect4/',      thumb:'images/connect4_v2.webp', icon:'images/icons/connect4.svg',    cat:'line',      kind:'BOARD GAME', key:'c4v2', isNew:true,  tags:['classic','ai','online','rated','daily','lessons','puzzles','mobile'], facts:{ ai:8, lessons:23, puzzles:306, players:'1–2' } },
   { id:'mancala',    href:'./mancala/',       thumb:'images/mancala.webp',     icon:'images/icons/mancala.svg',     cat:'race',      kind:'BOARD GAME', key:'mc',   isNew:true,  tags:['classic','ai','online','rated','daily','lessons','puzzles','variants','mobile'], facts:{ ai:10, lessons:29, puzzles:500, players:'1–2' } },
   { id:'backgammon', href:'./backgammon/',     thumb:'images/backgammon_v2.webp', icon:'images/icons/backgammon.svg', cat:'race', kind:'BOARD GAME', key:'bg2', isNew:true, tags:['classic','ai','online','rated','daily','lessons','puzzles','openings','mobile'], facts:{ ai:10, lessons:23, puzzles:500, players:'1–2' } },
-  { id:'ur',         href:'./ur/',            thumb:'images/ur.webp',          icon:'images/icons/ur.svg',          cat:'hist',      kind:'BOARD GAME', key:'ur',   isNew:true,  tags:['classic','ai','rated','lessons','puzzles','variants','mobile'], facts:{ ai:20, players:'1–2' } },
+  { id:'ur',         href:'./ur/',            thumb:'images/ur.webp',          icon:'images/icons/ur.svg',          cat:'hist', also:['race'], kind:'BOARD GAME', key:'ur',   isNew:true,  tags:['classic','ai','rated','lessons','puzzles','variants','mobile'], facts:{ ai:20, players:'1–2' } },
   { id:'reversi-v3', href:'./reversi_v3.html',thumb:'images/reversi_v3.webp',  icon:'images/icons/reversi-v3.svg?v=3',  cat:'old',     kind:'BOARD GAME', key:'rv3',  tags:['mobile'], facts:{ players:'1–2' } },
 ];
 const GX_CATS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race', 'hist', 'old'];   // 'classic' and 'card' are tag chips (filter on g.tags)   // same categories as the portal (atlas) + previous versions
@@ -866,7 +867,7 @@ function makeGallery(C) {
   const norm = s => plain(s).normalize('NFKC').toLowerCase();
   // 'classic' (定番) is a tag chip: it filters on g.tags, the other chips on g.cat
   const TAG_CHIPS = ['classic', 'card'];
-  const inCat = (g, c) => c === 'all' || (c === 'board' ? g.tags.includes('classic') && !g.tags.includes('card') : TAG_CHIPS.includes(c) ? g.tags.includes(c) : g.cat === c);   // ボード = the classic board games (card games excluded)
+  const inCat = (g, c) => c === 'all' || (c === 'board' ? g.tags.includes('classic') && !g.tags.includes('card') : TAG_CHIPS.includes(c) ? g.tags.includes(c) : g.cat === c || (g.also || []).includes(c));   // also: extra categories (ur = hist + race) · ボード = the classic board games (card games excluded)
 
   /* ---- build once: chips + icon tiles ---- */
   const chips = (C.cats || []).map(c => {

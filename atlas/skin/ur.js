@@ -20,7 +20,7 @@
 (function () {
   'use strict';
   const THREE = window.THREE, T3 = window.Table3D, E = window.UrEngine, B2 = window.UrBoard2D;
-  if (!THREE || !T3 || !T3.ur || !E || !B2 || !window.AtlasSkin || !window.UrApp) return;
+  if (!THREE || !T3 || !T3.ur || !E || !B2 || !window.AtlasSkin || !window.UrApp || !window.UrDice3D) return;
   const de = document.documentElement, frameEl = document.getElementById('frame');
   if (!frameEl) return;
   de.classList.add('atlas-ur');
@@ -290,31 +290,17 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     const s = UrApp.state() || lastState, side = s ? s.turn : 0, n = d.length;
     ensureDice(n); rolling = true; const my = ++tok;
     const P = dicePlaces(side, n), sgn = (O === 'v' ? 1 : 1) * (side === 0 ? 1 : -1);
-    const qt = new THREE.Quaternion(), tmp = new THREE.Object3D();
-    const plan = DICE.slice(0, n).map((g, i) => {
-      U.dieUp(tmp, !!d[i], Math.random() * Math.PI * 2); const qf = tmp.quaternion.clone();
-      const ax = new THREE.Vector3(Math.random() - .5, Math.random() * .4, Math.random() - .5).normalize(), spin = (2.5 + Math.random() * 2) * Math.PI;
+    // thrown in from outside the board on the player's side (atlas/models/ur-dice.js: the shared throw)
+    const items = DICE.slice(0, n).map((g, i) => {
       const [x1, z1] = at(P[i], REST());
-      // thrown in from outside the board on the player's side
       const out = O === 'v' ? [x1 + sgn * (1.6 + Math.random() * .6), z1 + (Math.random() - .5) * 1.2] : [x1 + (Math.random() - .5) * 1.2, z1 + sgn * (1.6 + Math.random() * .6)];
-      return { g, qf, ax, spin, x0: out[0], z0: out[1], x1, z1, h0: 1.4 + Math.random() * .5, delay: i * 45 + Math.random() * 40 };
+      return { g, d: g.userData.d, sh: g.userData.sh, from: out, to: [x1, z1], marked: !!d[i], rest: REST() };
     });
     const dur = (animOk() ? 980 : 0) / Math.max(.6, spd());
     if (dur < 50) { restDice(side, d); rolling = false; return; }
-    const total = dur + 220;
-    // bounces: fall (0 … .42), hop .22 (… .66), hop .07 (… .82), settle
-    const hAt = q => q < .42 ? 1 - (q / .42) * (q / .42) : q < .66 ? .22 * Math.sin((q - .42) / .24 * Math.PI) / 1 * 1 : q < .82 ? .07 * Math.sin((q - .66) / .16 * Math.PI) : 0;
-    await anim(total, k => {
-      const tms = k * total;
-      for (const p of plan) {
-        const q = Math.min(1, Math.max(0, (tms - p.delay) / dur)), e = 1 - Math.pow(1 - q, 2.2);
-        const hh = q < .42 ? p.h0 * hAt(q) : hAt(q) * p.h0 * .45;
-        p.g.position.set(p.x0 + (p.x1 - p.x0) * e, REST() + hh, p.z0 + (p.z1 - p.z0) * e);
-        qt.setFromAxisAngle(p.ax, p.spin * Math.pow(1 - q, 1.6)); p.g.userData.d.quaternion.copy(qt).multiply(p.qf);
-        p.g.userData.sh.position.y = .002 - (REST() + hh); const s2 = 1 + hh * .5; p.g.userData.sh.scale.set(s2, s2, s2); p.g.userData.sh.material.opacity = .45 / (1 + hh * 1.5);
-      }
-    }, my);
-    if (my === tok) { plan.forEach(p => { p.g.userData.d.quaternion.copy(p.qf); p.g.position.set(p.x1, REST(), p.z1); p.g.userData.sh.position.y = .002 - REST(); p.g.userData.sh.scale.set(1, 1, 1); p.g.userData.sh.material.opacity = .45; }); }
+    const TP = window.UrDice3D.throwPlan(items, { dur });
+    await anim(TP.total, k => TP.frame(k * TP.total), my);
+    if (my === tok) TP.end();
     diceSide = side; shown = d.slice(); rolling = false; T3.kick(200);
     await sleep(120 / Math.max(.6, spd()));
   }

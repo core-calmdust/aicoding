@@ -110,7 +110,8 @@ function ac() { if (!settings.sound) return null; if (!actx) { try { actx = new 
 function tone(f0, f1, dur, vol, type, delay) { const a = ac(); if (!a) return; const t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .008); g.gain.exponentialRampToValueAtTime(.0005, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .02); }
 function noise(dur, vol, freq, delay) { const a = ac(); if (!a) return; const t0 = a.currentTime + (delay || 0), n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2); const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.4; const g = a.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(a.destination); s.start(t0); }
 const SND = {
-  roll() { for (let i = 0; i < 6; i++) noise(.05, .16, 2600 + Math.random() * 1600, i * .07 + Math.random() * .02); },
+  roll() { if (dice2d && dice2d.is3D && dice2d.is3D() && !window.UrSkin3D) { noise(.08, .05, 900 + Math.random() * 300); return; } for (let i = 0; i < 6; i++) noise(.05, .16, 2600 + Math.random() * 1600, i * .07 + Math.random() * .02); },
+  dieHit(k = 1) { noise(.035, .13 * k, 2300 + Math.random() * 1500); if (k > .8) tone(1500 + Math.random() * 500, 0, .03, .012 * k, 'triangle'); },
   place() { noise(.06, .22, 1500); tone(420, 260, .08, .05, 'triangle'); },
   cap() { noise(.12, .28, 700); tone(220, 90, .22, .09, 'sine'); },
   rosette() { [659.3, 987.8].forEach((f, i) => tone(f, 0, .5, .045, 'sine', i * .09)); },
@@ -122,6 +123,7 @@ const SND = {
   lose() { [392, 311.1, 261.6].forEach((f, i) => tone(f, 0, .5, .05, 'sine', i * .14)); },
 };
 const snd = k => { if (document.hidden) return; try { SND[k] && SND[k](); } catch (e) {} };
+const snd2 = (k, a) => { if (document.hidden) return; try { SND[k] && SND[k](a); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (actx) { if (document.hidden) actx.suspend().catch(() => {}); else if (settings.sound) actx.resume().catch(() => {}); } });
 
 // ====================================================================== AI worker
@@ -187,12 +189,15 @@ function placeDice() {
   const o = view.orient(), V = B2.VIEW[o], W = fr.clientWidth, H = fr.clientHeight, k = W / V[2];
   const st = curState(), side = st ? st.turn : 0, row = side === 0 ? 2 : 0;
   const c = view.cellXY(row, 4), c2 = view.cellXY(row, 5);
-  const cx = (c[0] + c2[0]) / 2, cy = (c[1] + c2[1]) / 2;
-  let w, h; if (o === 'v') { w = 92; h = 196; } else { w = 196; h = 92; }
+  let cx = (c[0] + c2[0]) / 2, cy = (c[1] + c2[1]) / 2;
+  // the open floor of the notch lies outside the bridge (h: below its visible side face) — the dice rest there
+  const out = o === 'v' ? Math.sign(cx) : Math.sign(cy);
+  let w, h; if (o === 'v') { w = 74; h = 196; cx += out * 13; } else { w = 196; h = 80; cy += out * (out > 0 ? 37 : 26); }
   dock.style.left = ((cx - w / 2 - V[0]) * k) + 'px'; dock.style.top = ((cy - h / 2 - V[1]) * k) + 'px';
   dock.style.width = (w * k) + 'px'; dock.style.height = (h * k) + 'px';
   const host = $('#diceHost');
-  if (o === 'v') { host.style.position = 'absolute'; host.style.width = (h * k * .92) + 'px'; host.style.height = (w * k * .55) + 'px'; host.style.left = ((w * k - h * k * .92) / 2) + 'px'; host.style.top = ((h * k - w * k * .55) / 2) + 'px'; host.style.flex = 'none'; }
+  const d3 = !!(dice2d && dice2d.is3D && dice2d.is3D()); dock.classList.toggle('d3', d3);
+  if (o === 'v' && !d3) { host.style.position = 'absolute'; host.style.width = (h * k * .92) + 'px'; host.style.height = (w * k * .55) + 'px'; host.style.left = ((w * k - h * k * .92) / 2) + 'px'; host.style.top = ((h * k - w * k * .55) / 2) + 'px'; host.style.flex = 'none'; }
   else { host.style.position = ''; host.style.width = ''; host.style.height = ''; host.style.left = ''; host.style.top = ''; host.style.flex = ''; }
   $('#diceCap').style.display = o === 'v' ? 'none' : '';
 }
@@ -247,8 +252,9 @@ function renderBoard() {
 }
 function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
-  { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd }); dice2d.count = nd; } }
+  { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice() }); dice2d.count = nd; } }
   if (r) dice2d.show(r.d); else dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));
+  dock.classList.toggle('d3', !!(dice2d.is3D && dice2d.is3D()));
   const canRoll = canRollNow();
   dock.classList.toggle('can', canRoll);
   dock.classList.toggle('dim', !r && !canRoll);
@@ -263,6 +269,21 @@ function canRollNow() {
 }
 
 // ====================================================================== effects (soft, translucent)
+// PC: the status as a small translucent note at the edge of the board on the side to move (it replaces the status box):
+// shown when it changes, gone after a few seconds or as soon as something is played; the race count joins it at a new turn
+let tipKey = '', tipT = 0;
+function boardTip(msg, sub, side) {
+  const el = $('#boardTip'); if (!el || !HB || !HB.on) return;
+  const k = msg + '|' + side; if (k === tipKey) return; tipKey = k;
+  clearTimeout(tipT);
+  if (!msg) { el.classList.remove('show'); return; }
+  let extra = sub || '';
+  if (!special && game && !overNow() && atLatest()) { const rc = E.raceCount(curState()); extra = t('tip.race', { a: rc.pips[side], b: rc.pips[1 - side] }); }
+  el.className = 'board-tip s' + side; el.innerHTML = esc(msg) + (extra ? `<small>${esc(extra)}</small>` : '');
+  void el.offsetWidth; el.classList.add('show');
+  tipT = setTimeout(() => el.classList.remove('show'), 3600);
+}
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { clearTimeout(tipT); tipT = setTimeout(() => { const el = $('#boardTip'); if (el) el.classList.remove('show'); }, 900); }, true));
 let fxT = 0;
 function fxMsg(text, sub, cls, ms) {
   const el = $('#fxMsg'), gl = $('#fxGlow');
@@ -287,7 +308,11 @@ window.UrSkinHooks = {
   async animateRoll(d) {
     const S = window.UrSkin3D;
     if (S && S.animateRoll) { try { await S.animateRoll(d); dice2d.show(d); return; } catch (e) { console.error(e); } }
-    if (animOn()) await dice2d.roll(d, { speed: SPD() }); else dice2d.show(d);
+    if (!animOn()) { dice2d.show(d); return; }
+    const dock = $('#diceDock'), fr = $('#frame'); dock.classList.add('rolling');
+    // thrown in from outside the board, on the roller's side of the notch (below / right of the middle row → from below / the right)
+    const dr = dock.getBoundingClientRect(), fb = fr.getBoundingClientRect(), outer = view.orient() === 'v' ? dr.left + dr.width / 2 > fb.left + fb.width / 2 : dr.top + dr.height / 2 > fb.top + fb.height / 2;
+    try { await dice2d.roll(d, { speed: SPD(), side: outer ? 0 : 1, onHit: (i, k) => snd2('dieHit', k) }); } finally { dock.classList.remove('rolling'); }
   },
   orient: () => view ? view.orient() : 'h',
 };
@@ -327,6 +352,7 @@ function renderInfo() {
   else if (!r.n) { msg = t('st.zero'); }
   else { const ms = E.legalMoves(st, r.n); msg = ms.length ? t('st.move', { n: r.n }) : t('st.noMove', { n: r.n }); sub = ms.length ? t('st.moveSub') : ''; }
   $('#stText').innerHTML = esc(msg) + (sub ? `<small>${esc(sub)}</small>` : '');
+  boardTip(special ? '' : msg, sub, st.turn);
   const pass = r && (!r.n || !E.legalMoves(st, r.n).length) && myTurnHuman() && !animating;
   bt.classList.toggle('pass', !!pass);
   bt.querySelector('span').textContent = pass ? t('pass') : t('roll');
@@ -678,7 +704,7 @@ function navGo(what) {
 $('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
 $('#statusBox').appendChild($('#reviewBar'));
 $('#btnLatest').onclick = () => viewAt(game.plies.length);
-$('#btnResume').onclick = () => resumeHere();
+$('#btnResume').onclick = () => { if (rgame || special) { resumeHere(); return; } openNewDialog(true); };   // 「ここから再開」: the settings dialog in resume mode
 function resumeHere() {
   if (!reviewing || special || !game) return;
   if (rgame) { viewAt(game.plies.length); return; }
@@ -752,7 +778,13 @@ const RULE_ART = {
   masters: '<svg viewBox="0 0 120 64"><rect x="4" y="8" width="112" height="48" rx="6" fill="#0d1438" stroke="#d9b45a" stroke-opacity=".5"/>' + cells([[0, 0], [0, 1], [0, 2], [0, 3], [0, 6], [0, 7], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [2, 0], [2, 1], [2, 2], [2, 3], [2, 6], [2, 7]]) + path('M45 48H9V32H96V16H111V48H81', '#f4ecd6') + '<g transform="translate(60 18)" fill="#d9b45a" stroke="#1b1408" stroke-width=".6"><path d="M0-7 6 4H-6z"/><path d="M-9 0-3 9h-12z" transform="translate(-2 -2)"/><path d="M9 0l6 9H3z" transform="translate(2 -2)"/></g></svg>',
 };
 // the variant's art: the real board with the track of Light as glowing arrows (and the number of pieces / dice)
+const artCache = new Map();   // (the cards are redrawn on every change: the board pictures are made once per design)
 function ruleArt(r) {
+  const k = r + '|' + (draft.design || settings.design) + '|' + (draft.pieces || settings.pieces);
+  if (!artCache.has(k)) artCache.set(k, ruleArt0(r));
+  return artCache.get(k);
+}
+function ruleArt0(r) {
   const n = E.RULES[r].pieces, st = { rule: r, pos: [new Array(n).fill(0), new Array(n).fill(0)], turn: 0, winner: -1 };
   return B2.mini(st, { design: draft.design || settings.design, pieces: draft.pieces || settings.pieces, crop: 'board', trays: false, marks: [{ type: 'path', side: 0, from: 1, to: E.RULES[r].pathLen, color: '#ffe27a' }] });
 }
@@ -775,7 +807,10 @@ function segSync() {
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
-  $('#ruleCards').innerHTML = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gpick"></span><span class="gart">${ruleArt(r)}</span><b>${esc(t('rule.' + r))}${r === 'finkel' ? `<span class="std">${esc(t('rule.std'))}</span>` : ''}</b><p>${esc(t('rule.' + r + '.d'))}</p></button>`).join('');
+  // the variant cards in the shared form (shared/ngtabs.js: art, name, the standard tag + description, the pick mark, ルール)
+  const rc = $('#ruleCards'), html = RULES.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gart">${ruleArt(r)}</span><b>${esc(t('rule.' + r))}</b><p>${r === 'finkel' ? `<span class="gtag">${esc(t('rule.std'))}</span>` : ''}${esc(t('rule.' + r + '.d'))}</p><span class="gpick"></span></button>`).join('');
+  if (rc.__h !== html) { rc.__h = html; rc.innerHTML = html; }   // (unchanged: the cards stay as they are — no flicker)
+  $('#fRules').classList.toggle('hidden', rated || !!draft.resume);
   $('#optAutoRoll').checked = !!draft.autoRoll; $('#optAutoPick').checked = !!draft.autoPick; $('#optEval').checked = !!draft.eval; $('#optLast').checked = !!draft.last; $('#optDanger').checked = !!draft.danger;
   $('#btnStart').textContent = t('start');
 }
@@ -784,10 +819,17 @@ function designPickers() {
   $('#bdRow').innerHTML = B2.BOARDS.map(d => `<button type="button" data-v="${d}" class="${draft.design === d ? 'sel' : ''}">${B2.mini(st, { design: d, pieces: draft.pieces, crop: 'board', trays: false })}<span>${esc(t('bd.' + d))}</span></button>`).join('');
   $('#pcRow').innerHTML = B2.PIECES.map(p => `<button type="button" data-v="${p}" class="${draft.pieces === p ? 'sel' : ''}"><span class="pp"><i style="background-image:url(img/pieces-${p}.webp);background-position:0 0"></i><i style="background-image:url(img/pieces-${p}.webp);background-position:100% 0"></i></span><span>${esc(t('pcs.' + p))}</span></button>`).join('');
 }
-function openNewDialog() {
-  draft = { mode: rgame ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2, clock: settings.clock, speed: settings.speed, autoRoll: settings.autoRoll, autoPick: settings.autoPick, eval: settings.eval, last: settings.last, danger: settings.danger, design: settings.design, pieces: settings.pieces };
-  segSync(); designPickers(); showOverlay('#newOverlay');
+function openNewDialog(resume) {
+  draft = { resume: !!resume, mode: rgame ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2, clock: settings.clock, speed: settings.speed, autoRoll: settings.autoRoll, autoPick: settings.autoPick, eval: settings.eval, last: settings.last, danger: settings.danger, design: settings.design, pieces: settings.pieces };
+  if (resume && !['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai';
+  if (resume) { draft.color = String(game.human || 0); if (rgame) draft.mode = 'ai'; }
+  segSync(); designPickers();
+  // 「この局面から再開」: the same dialog, only what fits going on from this position (shared/resumeng.js)
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], seg: '#segMode', hide: '#fRules' }); else ResumeNG.close(); }
+  showOverlay('#newOverlay');
 }
+// the ルール button on each variant card (shared/ngtabs.js): the rules tutorial from its first page
+$('#ruleCards').ngtRules = () => { if (window.UrLearn) UrLearn.openRules(0); };
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.mode = b.dataset.v; segSync(); };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.color = b.dataset.v; segSync(); };
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.clock = +b.dataset.v; segSync(); };
@@ -805,6 +847,7 @@ $('#btnStart').onclick = () => {
   for (const k of ['rule', 'color', 'level', 'level2', 'clock', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger']) settings[k] = draft[k];
   if (!rated) settings.mode = draft.mode;
   setDesign(draft.design, draft.pieces);
+  if (draft.resume) { resumeWith(); return; }
   if (rated) rtStart(); else newGame();
 };
 function setDesign(d, p) {
@@ -821,7 +864,14 @@ $('#btnNew').onclick = () => {
 };
 $('#rsCancel').onclick = () => hideOverlay('#resumeOverlay');
 $('#rsRestart').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(); };
-$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); if (reviewing) resumeHere(); };
+$('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(true); };   // the settings dialog in resume mode
+// going on from the shown (or latest) position with the mode / side / strength chosen in the resume dialog
+function resumeWith() {
+  busyToken++; thinking = 0; animating = false; wpPaused = false;
+  if (settings.mode === 'ai' && settings.color !== 'r') game.human = settings.color === '1' ? 1 : 0;
+  hideOverlay('#resultOverlay');
+  if (reviewing) resumeHere(); else { gameOverShown = false; save(); relayout(); update(); afterPosition(); }
+}
 
 // ====================================================================== online (準備中)
 function mtab(v) {
@@ -843,10 +893,14 @@ function relayout(force) {
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
   const me = game ? (settings.mode === 'ai' ? game.human : 0) : 0;
-  if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } }
+  const ev = $('#evalCard'), rb = $('#reviewBar');
+  // the review bar (ここから再開 / 最新の局面へ): PC — under the player cards (the status box is not shown there); else in the status box
+  if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } if (ev.parentElement !== col) col.appendChild(ev); }
   else {
+    if (ev.parentElement === col) $('#coachCard').parentElement.insertBefore(ev, $('.kifu-card'));
     ba.insertBefore($('#pl' + (1 - me)), fr); fr.after($('#pl' + me)); $('#pl' + me).after(sb);
   }
+  if (pc) { if (rb.previousElementSibling !== pl) pl.after(rb); } else if (rb.parentElement !== sb) sb.appendChild(rb);
   pl.classList.toggle('hidden', !pc);
   lastO = o; lastPC = pc;
   requestAnimationFrame(() => { placeDice(); renderBoard(); });
