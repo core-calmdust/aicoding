@@ -622,6 +622,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hov = u == null ? null : +u; renderFx(); },
+    // a board point only (a pass is not offered as a click); same path as a confirmed board click
+    onPlay: u => { try { if (u == null || !myTurn() || !canHumanPlay()) return; const i = +u, pos = posAt(cur); if (!(i >= 0 && i < pos.b.length) || pos.b[i] || !pos.legal(i)) return; S.hov = null; pending = -1; showTip(''); commit(i); } catch (e) {} },
   });
   renderFx();
 }

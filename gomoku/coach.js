@@ -493,6 +493,7 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hov = u == null ? -1 : +u; renderFx(); },
+    onPlay: u => { try { if (u == null || !myTurn() || (ken && kenOk()) || !canHumanPlay()) return; const m = +u, pos = posAt(cur); if (!(m >= 0) || pos.at(m) || !pos.isLegal(m)) return; S.hov = -1; commit(m); } catch (e) {} },
   });
   if (S.hov >= 0 && !card.querySelector(`.ck-bi[data-mv="${S.hov}"]`)) { S.hov = -1; renderFx(); }
 }

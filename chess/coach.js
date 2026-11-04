@@ -684,6 +684,7 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => hover(u),
+    onPlay: u => { try { if (!u || !myTurn() || !canHumanPlay()) return; const m = posAt(cur).pos.fromUci(u); if (m) { hover(null); commit(m, false); } } catch (e) {} },
   });
 }
 // arrows on the board: the hovered / tapped row's move only
