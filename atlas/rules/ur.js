@@ -66,6 +66,7 @@
     const css = document.createElement('style');
     css.textContent = '.rgd .urq{display:flex;gap:8px;flex-wrap:wrap}.rgd .urq button{min-width:44px;padding:7px 12px;border-radius:12px;border:2px solid #eadfc6;background:#fff;font:900 17px var(--round,inherit);color:#2b3044;cursor:pointer;box-shadow:0 3px 0 #e2d6b8}.rgd .urq button:active{transform:translateY(2px);box-shadow:none}'
       + '.rgd .urp{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:99px;border:0;background:#5f78d6;color:#fff;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 3px 0 #3c52a8}'
+      + '@media (max-width:600px){.rgd .urh{font-size:12.5px!important;line-height:1.5!important;gap:4px!important;max-height:38vh;overflow-y:auto}.rgd .urh .tg span{font-size:11.5px!important}}'
       + '.rgd .urn{font:900 20px var(--round,inherit);color:#c9a13d;margin-inline-start:4px}.rgd .urh{display:grid;gap:6px;font-size:14px;line-height:1.6;color:#4a4f66}.rgd .urh b{color:#2b3044}.rgd .urh .tg{display:flex;gap:6px;flex-wrap:wrap}.rgd .urh .tg span{padding:2px 10px;border-radius:99px;background:#f8f0e0;border:1.5px solid #ead9b6;font-size:12.5px;font-weight:700;color:#6a5a3a}';
     document.head.appendChild(css);
     let typeT = 0;

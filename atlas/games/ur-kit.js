@@ -28,10 +28,12 @@
     T3.show('ur', board); if (T3.play) T3.play(true);   // the play camera (the rules tour needs it; table play sets it too)
     // framing: the whole board with the trays, from the player's side; an upright phone: the board turned, the camera rolled
     const tall = innerHeight > innerWidth * 1.15;
-    const ROT = tall ? -Math.PI / 2 : 0;
-    board.rotation.y = ROT;
+    const ROT = 0;   // (an upright phone: the camera is rolled instead — screen up = world −x, the long board runs up the screen)
+    // upright phone: as the 2D page, your lane on the right and the big block on top. The camera's quarter turn alone puts Light's
+    // lane on the left, so rows 0 and 2 change places (the two outer rows carry the same motifs: the board looks the same)
+    const FL = tall, rowOf = r => FL ? 2 - r : r, sideOf = s => FL ? 1 - s : s;
     const W = U.W + 1.6, D = U.D + 2.4;   // the trays and dice beside the long sides
-    if (T3.fit) T3.fit(tall ? { w: D, d: W, y: Y, pitch: 1.45, roll: true } : { w: W, d: D + .4, y: Y, pitch: 1.12 });
+    if (T3.fit) T3.fit(tall ? { w: U.W + .5, d: U.D + 1.5, y: Y, pitch: 1.5, roll: true } : { w: W, d: D + .4, y: Y, pitch: 1.12 });
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -40,9 +42,9 @@
     /* ---------- where things stand ---------- */
     const route = side => E.pathOf(rule, side);
     const goalN = () => E.RULES[rule].goal;
-    const cellXZ = (r, c) => U.pt(r, c);
+    const cellXZ = (r, c) => U.pt(rowOf(r), c);
     // slots off the board (k = 0..6): start beside the big block, goal stacked in the notch beside the bridge
-    function slot(side, kind, k) { if (kind === 'start') { const [x, z] = U.start(side, k); return [x, 0, z]; } const g = U.goal(side, k); return [g[0], g[1], g[2]]; }
+    function slot(side, kind, k) { if (kind === 'start') { const [x, z] = U.start(sideOf(side), k); return [x, 0, z]; } const g = U.goal(sideOf(side), k); return [g[0], g[1], g[2]]; }
 
     /* ---------- pieces ---------- */
     const P = [[], []];   // P[side][k] = { g, pos, h }
@@ -127,7 +129,7 @@
       while (DICE.length < n) { const g = new TH.Group(), d = U.die(); d.scale.setScalar(DS); g.add(d); const sh = T3.contact(U.dieR * DS * 1.05, .45); sh.position.y = .002; g.add(sh); g.userData = { d, sh }; board.add(g); DICE.push(g); }
       DICE.forEach((g, i) => { g.visible = i < n; });
     }
-    function places(side, n) { const out = []; for (let i = 0; i < n; i++) { const [x, z] = U.diceAt(side, i); out.push([x + (i % 2) * .04, z + (i % 2 ? .1 : -.06)]); } return out; }
+    function places(side, n) { const out = []; for (let i = 0; i < n; i++) { const [x, z] = U.diceAt(sideOf(side), i); out.push([x + (i % 2) * .04, z + (i % 2 ? .1 : -.06)]); } return out; }
     function restDice(side, d, n = 4) {
       n = d ? d.length : n; ensureDice(n);
       const Pl = places(side, n);
@@ -136,7 +138,7 @@
     }
     async function roll(side, d) {   // the throw of the 3D skin (UrDice3D.throwPlan): in from outside the board on the roller's side
       const n = d.length; ensureDice(n);
-      const Pl = places(side, n), sg = side === 0 ? 1 : -1;
+      const Pl = places(side, n), sg = sideOf(side) === 0 ? 1 : -1;
       const items = DICE.slice(0, n).map((g, i) => ({ g, d: g.userData.d, sh: g.userData.sh, marked: !!d[i], rest: REST(),
         from: [Pl[i][0] + (Math.random() - .5) * 1.4, Pl[i][1] + sg * (1.7 + Math.random() * .6)], to: [Pl[i][0], Pl[i][1]] }));
       const TP = window.UrDice3D.throwPlan(items, { dur: 980 / spd() });
@@ -180,8 +182,8 @@
     function hit(ev) {
       const p = T3.pick(ev, Y); if (!p) return null;
       const c0 = Math.cos(-ROT), s0 = Math.sin(-ROT), x = p.x * c0 + p.z * s0, z = -p.x * s0 + p.z * c0;   // undo the board's turn
-      const c = Math.round(x / U.U + 3.5), r = Math.round(z / U.U + 1);
-      if (Math.abs(x / U.U + 3.5 - c) < .5 && Math.abs(z / U.U + 1 - r) < .5 && r >= 0 && r <= 2 && c >= 0 && c <= 7 && U.exists(r, c)) return { r, c };
+      const c = Math.round(x / U.U + 3.5), r0 = Math.round(z / U.U + 1), r = rowOf(r0);
+      if (Math.abs(x / U.U + 3.5 - c) < .5 && Math.abs(z / U.U + 1 - r0) < .5 && r0 >= 0 && r0 <= 2 && c >= 0 && c <= 7 && U.exists(r0, c)) return { r, c };
       // the trays: nearest slot within reach
       let best = null, bd = .55;
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) for (let k = 0; k < 7; k++) { const s = slot(side, kind, k), d = Math.hypot(s[0] - x, s[2] - z); if (d < bd) { bd = d; best = { tray: kind, side }; } }
