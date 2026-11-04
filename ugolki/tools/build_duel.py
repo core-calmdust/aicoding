@@ -4,7 +4,7 @@ Themes = side to move × N (w2 … b5); up to PER puzzles each, unique first mov
 python3 tools/build_duel.py out1.jsonl [out2.jsonl …] > puzzles.json"""
 import json, sys
 PER = 24
-ORDER = [('w2', 'Step'), ('b2', 'Step'), ('w3', 'Step'), ('b3', 'Step'), ('w4', 'Tac'), ('b4', 'Tac'), ('w5', 'End'), ('b5', 'End')]
+ORDER = [('x2', 'Step'), ('w3', 'Step'), ('b3', 'Step'), ('w4', 'Tac'), ('b4', 'Tac'), ('w5', 'End'), ('b5', 'End')]
 seen, by = set(), {k: [] for k, _ in ORDER}
 for f in sys.argv[1:]:
     for line in open(f):
@@ -13,7 +13,7 @@ for f in sys.argv[1:]:
         x = json.loads(line); k = x['s']['b'] + str(x['s']['side'])
         if k in seen: continue
         seen.add(k)
-        tid = ('w' if x['s']['side'] == 1 else 'b') + str(x['n'])
+        tid = 'x2' if x['n'] == 2 else ('w' if x['s']['side'] == 1 else 'b') + str(x['n'])   # 2 moves: one theme, both sides (few distinct ideas)
         if tid in by: by[tid].append(x)
 SQ = lambda i: 'abcdefgh'[i % 64 % 8] + str(8 - (i % 64) // 8)
 def sig(x):
@@ -28,7 +28,7 @@ for tid, grp in ORDER:
     pool = sorted(by[tid], key=lambda x: (x.get('alt', 1), x['legal']))
     L, mv_n, seen_sig = [], {}, set()
     for x in pool:       # variety: one puzzle per (move, empty squares), at most 2 with the same solution move
-        mv, holes = sig(x)
+        mv, holes = sig(x); mv = mv + str(x['s']['side'])
         if (mv, holes) in seen_sig or mv_n.get(mv, 0) >= 2: continue
         seen_sig.add((mv, holes)); mv_n[mv] = mv_n.get(mv, 0) + 1; L.append(x)
         if len(L) >= PER: break
@@ -36,7 +36,7 @@ for tid, grp in ORDER:
     # never two puzzles with the same solution move one after the other
     out = []
     while L:
-        k = next((i for i, x in enumerate(L) if not out or sig(x)[0] != sig(out[-1])[0]), 0)
+        k = next((i for i, x in enumerate(L) if not out or (sig(x)[0], x['s']['side']) != (sig(out[-1])[0], out[-1]['s']['side'])), 0)
         out.append(L.pop(k))
     themes.append({'id': tid, 'grp': grp, 'puzzles': [{'s': x['s'], 'n': x['n'], 'a': x['a']} for x in out]})
     print(tid, len(out), len(by[tid]), file=sys.stderr)
