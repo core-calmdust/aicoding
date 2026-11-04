@@ -78,6 +78,7 @@ html.atlas-hex .frame::before,html.atlas-hex .frame::after{display:none!importan
 html.atlas-hex.pc2{--vh:calc(100vh - 64px)!important}
 html.atlas-hex.pc2.ol-dock{--vh:calc(100vh - 64px - 108px)!important}
 html.atlas-hex.pc2 .board{left:calc(50% - var(--fw) / 2)!important;transform:none!important}
+html.atlas-hex.pc2.hb-atlas.bd-dia:not(.rb-on) .side-in > .players{top:calc(var(--pad) + 64px + 10px)!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.atlas-hx3db .bd .plate,html.atlas-hx3db .bd .cell,html.atlas-hx3db .bd .rim,html.atlas-hx3db .bd .rimsh{display:none}
 html.atlas-hx3db .bd .co{fill:#fff4dc!important;stroke:rgba(40,18,4,.75);stroke-width:.07px;paint-order:stroke;opacity:1}
 html.atlas-hx3dp .bd .st:not(.ghost) .body,html.atlas-hx3dp .bd .st:not(.ghost) .sh,html.atlas-hx3dp .bd .st:not(.ghost) .hi{display:none}

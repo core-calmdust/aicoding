@@ -267,7 +267,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     let prev = Infinity, good = R, stall = 0;
     for (let k = 0; k < 10; k++) {
       const [top, bot] = region(), room = bot - top - 2 * M, u = bounds(); if (!u || my !== gen) return;
-      const h = u[1] - u[0], over = h - room; if (over <= 4) { if (k) await loosen(my); return; }   // (a few px into the margin M is fine)
+      const h = u[1] - u[0], over = h - room; if (window.__dbgDock) console.log('DBG fit', k, 'h', Math.round(h), 'room', Math.round(room), 'R', R, 'base', base, 'stall', stall, root.className.match(/dock-\w+/g)); if (over <= 4) { if (k) await loosen(my); return; }   // (a few px into the margin M is fine)
       // a step that did not make it smaller (the board is limited by the width, or the layout is at its minimum): try a
       // larger one; after three in a row, go back to the last size that helped and stop
       if (h < prev - 1) { good = R; stall = 0; prev = h; } else if (++stall >= 3) { R = good; apply(); await wait(120); return; }
@@ -285,6 +285,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     // the info column too short for its cards: compact it (players smaller, graph / record / info line hidden — the
     // evaluation bar and the ◀ ▶ navigation stay), like the phone layout
     const sd = document.querySelector('.app .side');
+    if (window.__dbgDock) console.log('DBG compactchk', JSON.stringify(bounds()), JSON.stringify(region()), sd && sd.scrollHeight, sd && sd.clientHeight, isOpen(), my, gen);
     const ub = bounds(), rg = region(), still = ub && (ub[1] - ub[0]) > rg[1] - rg[0] - 2 * M + 2;   // still too tall after fitting
     if (sd && !root.classList.contains('dock-compact') && (still || sd.scrollHeight > sd.clientHeight + 4 || [...(sd.querySelector('.side-in') || sd).children].some(c => c.getClientRects().length && c.getBoundingClientRect().bottom > sd.getBoundingClientRect().bottom + 4))) { root.classList.add('dock-compact'); R = 0; apply(); await wait(150); if (my !== gen || !isOpen()) return; await fit(my); }   // compact first, then fit again from the full size
   };
@@ -303,7 +304,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   const kids = () => [...app.children].filter(c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; });
   const snap = () => kids().map(c => [c, c.getBoundingClientRect()]);   // (as seen: a running FLIP included, so a new one starts from there)
   let flips = [], flipT = 0;
-  const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); };
+  const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); root.classList.remove('dock-anim'); };
   const flip = before => {
     stopFlips();
     for (const [c, b] of before) {
@@ -320,7 +321,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   let gen = 0;
   const settle = async () => {
     const my = ++gen;
-    const before = snap(); stopFlips(); root.classList.remove('dock-anim');
+    const before = snap(); stopFlips();
     if (!isOpen()) {   // closed: back to the full size while it scrolls back
       if (fitted || root.classList.contains('dock-compact') || root.classList.contains('dock-rvb')) { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); }
       moveTo(0); flip(before);
@@ -333,6 +334,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     try { reset(); await layout(my); d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
     if (my !== gen) return;
     fitted = R > 0;
+    if (window.__dbgDock) console.log('DBG probe', R, d, JSON.stringify(rg), hp, root.className);
     moveTo(d); flip(before);
     // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
     await new Promise(r => setTimeout(r, D + 80)); if (my !== gen || !isOpen()) return;
