@@ -1967,7 +1967,6 @@ function renderPuzzleCard() {
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function mateReq(n, defend) { return request('ai', { type: 'mate', moves: moves.slice(0, cur), n, defend: !!defend, maxNodes: 3e7 }).then(r => r && r.list); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function pickDefence(list) { let best = null; for (const e of list) { const v = e.need ? e.need : 99; if (!best || v > best.v) best = { m: e.m, v }; } return best.m; }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 // mate puzzles: is the move an obvious mistake? (see the rules above) -> reason html, or '' to play on
 async function pzMateBlunder(Pz, ms) {
@@ -1980,9 +1979,19 @@ async function pzMateBlunder(Pz, ms) {
   return mm ? t('pz2.mateThreat', { m: ms, r: posAt(cur).pos.san(mm.m) }) : '';
 }
 // the defender's reply: longest resistance; if the proof search gives up (big trees after a stray move), the engine's move
+// among replies that resist equally long, the one the engine values best (not the first in move order, which could drop
+// material for nothing — the same fix as checkers/, 2026-11-04; tools/audit_puzzles.js)
+async function pzTieBreak(list) {
+  if (!list.length) return 0;
+  const sc = e => e.need ? e.need : 99, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
+  if (tied.length < 2) return tied[0].m;
+  const r = await request('ai', { type: 'analyze', moves: moves.slice(0, cur), time: 500 });
+  const L = (r && r.list) || [], v = m => { const e = L.find(x => x.m === m); return e ? e.v : -1e9; };
+  return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
+}
 async function pzDefend(left) {
   const dl = await mateReq(left, true);
-  if (dl && dl.length) return pickDefence(dl);
+  if (dl && dl.length) return pzTieBreak(dl);
   if (dl && !dl.length) return 0;
   const r = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 16 });
   return r && r.move || 0;
@@ -2072,7 +2081,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = posAt(0).pos.fromUci(Pz.P.answer);
-    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : pickDefence(list); }
+    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : ((await pzTieBreak(list)) || null); if (puzzle !== Pz) return; }
     if (!m) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++; renderPuzzleCard(); await sleep(moveDur());

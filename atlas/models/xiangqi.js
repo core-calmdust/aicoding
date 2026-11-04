@@ -232,12 +232,12 @@
     pts.push(new TT.Vector2(PR + .006, PH * .5));   // a slight barrel
     for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e)); }
     pts.push(new TT.Vector2(FACE + .02, PH), new TT.Vector2(FACE + .008, PH - .012), new TT.Vector2(FACE, PH - .004), new TT.Vector2(0, PH - .004));   // a fine groove round the face
-    const g = new TT.LatheGeometry(pts, LO() ? 20 : 30); if (X.share) X.share(g);
+    const g = new TT.LatheGeometry(pts, LO() ? 18 : 24); if (X.share) X.share(g);   // (32 discs seen from above: 24 steps are round to < 1 px)
     return (geos[key] = g);
   }
   function faceGeo() {
     if (geos.face) return geos.face;
-    const g = new (T().CircleGeometry)(FACE, LO() ? 20 : 30); if (X.share) X.share(g); return (geos.face = g);
+    const g = new (T().CircleGeometry)(FACE, LO() ? 18 : 24); if (X.share) X.share(g); return (geos.face = g);
   }
   function faceTex(code) {
     const black = code >= 8, ch = GL[black ? 'b' : 'r'][code & 7];

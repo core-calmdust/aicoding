@@ -183,6 +183,7 @@ html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}
 }
 /* komadai wood grain (atlas/skin/shogi.js paints --kdwood: a light procedural kaya texture, grain along the stand) */
 html.atlas-shogi .hand{background:var(--kdwood, linear-gradient(160deg,#e9c58a,#d4a565)) center/100% 100%!important}
+html.atlas-shogi .hand.kd-wide{background:var(--kdwoodh, linear-gradient(160deg,#e9c58a,#d4a565)) center/100% 100%!important}
 html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
 html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
 html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}

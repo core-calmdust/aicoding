@@ -1,0 +1,1130 @@
+{
+ "lessons": {
+  "corner": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "corner",
+     "mv": "c4c3d3c5b4f3f4g3d2b3g4f5b5a3e2d1e3c2c6h5b6c7d6f2a4e6a2d7c1b1f1a6g1b2e1",
+     "marks": {
+      "h1": "focus"
+     },
+     "arrows": [
+      [
+       "h1",
+       "e1"
+      ]
+     ]
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "corner",
+     "mv": "c4c3d3c5b4f3f4g3d2b3g4f5b5a3e2d1e3c2c6h5b6c7d6f2a4e6a2d7c1b1f1a6g1b2e1",
+     "ans": "h1"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "corner",
+     "mv": "c4c3d3c5b5a5d6e2b4c6b3e6e3f2f3b2c2g3d2f4f1d1f7e7a2a3a4",
+     "ans": "a1"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "corner",
+     "mv": "f5f6e6d6c5e3d7f4g5c6f7g4c4h5e7g6d3c8c7f8h6c3h3h4e8h2h1",
+     "ans": "d8"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "<b>隅</b>（角のマス）に置いた石は、もう二度と返されません。印を付けた h1 に白が打つと、矢印のように上辺の g1〜e1 も白になり、隅から続く<b>返されない石（確定石）</b>が生まれます。いっぽう、<b>X</b>（隅の斜め隣）や <b>C</b>（隅の隣）に打つと、相手に隅への通り道を作ってしまうことがあります。赤い点線は「打つと相手が隅を取れるようになる手」です。",
+     "g": "まずは隅を取ってみましょう。白が打てる隅はひとつだけです。",
+     "gok": "h1 の隅を取りました。隅の石と、そこから続く上辺の石は、もう返されません。赤い点線の g2 は X なので、打つと相手に h1 を渡すところでした。",
+     "p1ok": "a1 の隅が正解。ほかの2手（g7・g8）は開放度が大きく、相手に打てる場所を多く与えます。",
+     "p2ok": "d8 が正解。h7（C）と g8 は相手に h8 の隅を渡します。g7 は隅を渡しませんが、外側の石を大きく増やします。",
+     "h0": "隅は二度と返されない特別なマス。逆に X・C に打つと、相手に隅を渡すことがあります。",
+     "look": "盤の「隅」の印と、赤い点線のマス（打つと相手が隅を取れるようになる手）を見てください。取れる隅があれば取り、なければ赤い点線を避けます。"
+    },
+    "en": {
+     "c1": "A disc on a <b>corner</b> can never be flipped again. If White plays the marked h1, the top-edge discs g1–e1 turn white as the arrow shows, and White gets <b>discs that can never be flipped (stable discs)</b> growing from the corner. On the other hand, playing an <b>X</b> (diagonally next to a corner) or a <b>C</b> (next to a corner on the edge) can open a path to the corner for your opponent. Red dashed squares are moves that would let your opponent take a corner.",
+     "g": "First, take a corner. White can take exactly one.",
+     "gok": "You took the h1 corner. The corner and the top-edge discs connected to it can never be flipped. g2, marked red, is an X square: it would have handed h1 to your opponent.",
+     "p1ok": "The a1 corner is right. The other two moves (g7, g8) have high openness and give your opponent more places to play.",
+     "p2ok": "d8 is right. h7 (a C square) and g8 hand over the h8 corner. g7 does not, but it adds many outer discs.",
+     "h0": "A corner can never be flipped. Playing an X or C square, though, can give your opponent a corner.",
+     "look": "Look at the corner labels and the red dashed squares (moves that let your opponent take a corner). Take a corner if you can; if not, avoid the red squares."
+    },
+    "zh": {
+     "c1": "下在<b>角</b>（四个角落的格子）上的棋子再也不会被翻转。白棋下在标记的 h1 后，上边的 g1～e1 会像箭头所示变成白子，从角出发形成<b>不会被翻转的棋子（稳定子）</b>。相反，下在 <b>X</b>（角的斜邻）或 <b>C</b>（边上紧邻角的格子）上，可能会给对手打开通往角的路。红色虚线表示“下了之后对手就能占角”的着法。",
+     "g": "先来占角吧。白棋能占的角只有一个。",
+     "gok": "你占下了 h1 的角。角上的棋子和与它相连的上边棋子都不会再被翻转。红色虚线的 g2 是 X，下在那里会把 h1 让给对手。",
+     "p1ok": "占 a1 的角是正确答案。另外两手（g7、g8）开放度大，会给对手更多落子的地方。",
+     "p2ok": "d8 是正确答案。h7（C）和 g8 会把 h8 的角让给对手。g7 虽然不让角，却会大量增加外侧子。",
+     "h0": "角是永远不会被翻转的特殊格子。反过来，下在 X、C 上可能会把角让给对手。",
+     "look": "看棋盘上“角”的标记和红色虚线格（下了之后对手就能占角）。能占角就占，不能就避开红色虚线。"
+    },
+    "ko": {
+     "c1": "<b>귀</b>(네 모서리 칸)에 둔 돌은 다시는 뒤집히지 않습니다. 백이 표시한 h1에 두면 화살표처럼 윗변의 g1~e1도 백이 되어, 귀에서 이어지는 <b>뒤집히지 않는 돌(확정석)</b>이 생깁니다. 반대로 <b>X</b>(귀의 대각선 옆)나 <b>C</b>(변에서 귀 바로 옆)에 두면 상대에게 귀로 가는 길을 열어 줄 수 있습니다. 빨간 점선은 \"두면 상대가 귀를 잡을 수 있게 되는 수\"입니다.",
+     "g": "먼저 귀를 잡아 봅시다. 백이 잡을 수 있는 귀는 하나뿐입니다.",
+     "gok": "h1 귀를 잡았습니다. 귀의 돌과 거기서 이어지는 윗변의 돌은 더 이상 뒤집히지 않습니다. 빨간 점선의 g2는 X라서, 두면 상대에게 h1을 내줄 뻔했습니다.",
+     "p1ok": "a1 귀가 정답. 나머지 두 수(g7·g8)는 개방도가 커서 상대에게 둘 곳을 많이 줍니다.",
+     "p2ok": "d8이 정답. h7(C)과 g8은 상대에게 h8 귀를 내줍니다. g7은 귀를 내주지 않지만 바깥쪽 돌을 크게 늘립니다.",
+     "h0": "귀는 절대 뒤집히지 않는 특별한 칸. 반대로 X·C에 두면 상대에게 귀를 내줄 수 있습니다.",
+     "look": "판의 \"귀\" 표시와 빨간 점선 칸(두면 상대가 귀를 잡게 되는 수)을 보세요. 잡을 수 있는 귀가 있으면 잡고, 없으면 빨간 점선을 피합니다."
+    },
+    "es": {
+     "c1": "Una ficha en una <b>esquina</b> ya nunca puede voltearse. Si las blancas juegan en la h1 marcada, las fichas g1–e1 del borde superior pasan a blancas, como indica la flecha, y nacen <b>fichas que ya no se pueden voltear (fichas estables)</b> a partir de la esquina. En cambio, jugar en una casilla <b>X</b> (en diagonal junto a una esquina) o <b>C</b> (junto a la esquina en el borde) puede abrir al rival el camino hacia la esquina. Las casillas con línea roja discontinua son jugadas que permitirían al rival tomar una esquina.",
+     "g": "Primero, toma una esquina. Las blancas solo pueden tomar una.",
+     "gok": "Has tomado la esquina h1. La esquina y las fichas del borde superior unidas a ella ya no pueden voltearse. g2, marcada en rojo, es una casilla X: habría regalado h1 al rival.",
+     "p1ok": "La esquina a1 es la correcta. Las otras dos jugadas (g7, g8) tienen una apertura alta y dan al rival más sitios donde jugar.",
+     "p2ok": "d8 es la correcta. h7 (casilla C) y g8 regalan la esquina h8. g7 no la regala, pero añade muchas fichas exteriores.",
+     "h0": "Una esquina nunca se puede voltear. En cambio, jugar en X o C puede regalar una esquina al rival.",
+     "look": "Mira las etiquetas de esquina y las casillas con línea roja discontinua (jugadas que dejan al rival tomar una esquina). Si puedes tomar una esquina, tómala; si no, evita las rojas."
+    },
+    "fr": {
+     "c1": "Un pion posé dans un <b>coin</b> ne peut plus jamais être retourné. Si les Blancs jouent en h1 (marqué), les pions g1–e1 du bord supérieur deviennent blancs, comme le montre la flèche, et des <b>pions qui ne peuvent plus être retournés (pions définitifs)</b> naissent à partir du coin. À l’inverse, jouer sur une case <b>X</b> (en diagonale d’un coin) ou <b>C</b> (à côté du coin sur le bord) peut ouvrir à l’adversaire le chemin du coin. Les cases en pointillé rouge sont des coups qui permettraient à l’adversaire de prendre un coin.",
+     "g": "Commencez par prendre un coin. Les Blancs ne peuvent en prendre qu’un seul.",
+     "gok": "Vous avez pris le coin h1. Le coin et les pions du bord supérieur qui s’y rattachent ne peuvent plus être retournés. g2, en rouge, est une case X : elle aurait offert h1 à l’adversaire.",
+     "p1ok": "Le coin a1 est la bonne réponse. Les deux autres coups (g7, g8) ont une ouverture élevée et donnent davantage de cases à l’adversaire.",
+     "p2ok": "d8 est la bonne réponse. h7 (case C) et g8 offrent le coin h8. g7 ne l’offre pas, mais ajoute beaucoup de pions extérieurs.",
+     "h0": "Un coin ne peut jamais être retourné. Jouer en X ou en C, en revanche, peut offrir un coin à l’adversaire.",
+     "look": "Regardez les étiquettes de coin et les cases en pointillé rouge (coups qui laissent l’adversaire prendre un coin). Prenez un coin si vous le pouvez ; sinon, évitez les cases rouges."
+    },
+    "pt": {
+     "c1": "Uma peça num <b>canto</b> nunca mais pode ser virada. Se as brancas jogarem em h1 (marcada), as peças g1–e1 da borda superior ficam brancas, como mostra a seta, e surgem <b>peças que não podem mais ser viradas (peças estáveis)</b> a partir do canto. Por outro lado, jogar numa casa <b>X</b> (na diagonal do canto) ou <b>C</b> (ao lado do canto, na borda) pode abrir ao adversário o caminho para o canto. As casas com tracejado vermelho são jogadas que deixariam o adversário tomar um canto.",
+     "g": "Primeiro, tome um canto. As brancas só podem tomar um.",
+     "gok": "Você tomou o canto h1. O canto e as peças da borda superior ligadas a ele não podem mais ser viradas. g2, em vermelho, é uma casa X: teria entregado h1 ao adversário.",
+     "p1ok": "O canto a1 é o certo. As outras duas jogadas (g7, g8) têm abertura alta e dão ao adversário mais lugares para jogar.",
+     "p2ok": "d8 é o certo. h7 (casa C) e g8 entregam o canto h8. g7 não entrega, mas acrescenta muitas peças externas.",
+     "h0": "Um canto nunca pode ser virado. Já jogar em X ou C pode entregar um canto ao adversário.",
+     "look": "Veja as marcas de canto e as casas com tracejado vermelho (jogadas que deixam o adversário tomar um canto). Se puder tomar um canto, tome; se não, evite as vermelhas."
+    },
+    "de": {
+     "c1": "Ein Stein in einer <b>Ecke</b> kann nie wieder umgedreht werden. Setzt Weiß auf das markierte h1, werden die Steine g1–e1 am oberen Rand weiß, wie der Pfeil zeigt, und von der Ecke aus entstehen <b>Steine, die nicht mehr umgedreht werden können (stabile Steine)</b>. Ein Zug auf ein <b>X-Feld</b> (diagonal neben einer Ecke) oder ein <b>C-Feld</b> (am Rand neben der Ecke) kann dagegen dem Gegner den Weg in die Ecke öffnen. Rot gestrichelte Felder sind Züge, nach denen der Gegner eine Ecke nehmen könnte.",
+     "g": "Nimm zuerst eine Ecke. Weiß kann genau eine nehmen.",
+     "gok": "Du hast die Ecke h1 genommen. Die Ecke und die damit verbundenen Steine am oberen Rand können nicht mehr umgedreht werden. g2, rot markiert, ist ein X-Feld: Es hätte dem Gegner h1 geschenkt.",
+     "p1ok": "Die Ecke a1 ist richtig. Die beiden anderen Züge (g7, g8) haben eine hohe Offenheit und geben dem Gegner mehr Zugmöglichkeiten.",
+     "p2ok": "d8 ist richtig. h7 (C-Feld) und g8 verschenken die Ecke h8. g7 verschenkt sie nicht, schafft aber viele Randsteine.",
+     "h0": "Eine Ecke kann nie umgedreht werden. Ein Zug auf X oder C kann dem Gegner dagegen eine Ecke schenken.",
+     "look": "Achte auf die Eck-Markierungen und die rot gestrichelten Felder (Züge, nach denen der Gegner eine Ecke nehmen kann). Nimm eine Ecke, wenn du kannst; sonst meide die roten Felder."
+    },
+    "hi": {
+     "c1": "<b>कोने</b> पर रखी गोटी फिर कभी नहीं पलटती। अगर सफ़ेद चिह्नित h1 पर चले, तो तीर की तरह ऊपरी किनारे की g1–e1 गोटियाँ भी सफ़ेद हो जाती हैं, और कोने से जुड़ी <b>कभी न पलटने वाली गोटियाँ (स्थिर गोटियाँ)</b> बनती हैं। दूसरी ओर, <b>X</b> (कोने के तिरछे बगल) या <b>C</b> (किनारे पर कोने के ठीक बगल) पर चलने से विरोधी के लिए कोने तक रास्ता खुल सकता है। लाल डैश वाले खाने वे चालें हैं जिनके बाद विरोधी कोना ले सकता है।",
+     "g": "पहले कोना लीजिए। सफ़ेद सिर्फ़ एक ही कोना ले सकता है।",
+     "gok": "आपने h1 का कोना ले लिया। कोने की गोटी और उससे जुड़ी ऊपरी किनारे की गोटियाँ अब नहीं पलटेंगी। लाल निशान वाला g2 एक X खाना है — वहाँ चलने से h1 विरोधी को मिल जाता।",
+     "p1ok": "a1 का कोना सही है। बाकी दो चालें (g7, g8) का खुलापन ज़्यादा है और वे विरोधी को चलने की ज़्यादा जगहें देती हैं।",
+     "p2ok": "d8 सही है। h7 (C खाना) और g8 विरोधी को h8 का कोना दे देते हैं। g7 कोना नहीं देता, पर बहुत सारी बाहरी गोटियाँ बढ़ा देता है।",
+     "h0": "कोना कभी नहीं पलटता। लेकिन X या C पर चलने से विरोधी को कोना मिल सकता है।",
+     "look": "कोने के निशान और लाल डैश वाले खाने (जिनके बाद विरोधी कोना ले सकता है) देखिए। कोना ले सकें तो लीजिए, नहीं तो लाल खानों से बचिए।"
+    },
+    "ar": {
+     "c1": "القطعة الموضوعة في <b>الزاوية</b> لا يمكن قلبها أبدًا. إذا لعب الأبيض في <span dir=\"ltr\">h1</span> المُعلَّمة، تصبح قطع الحافة العليا <span dir=\"ltr\">g1–e1</span> بيضاء كما يشير السهم، وتنشأ من الزاوية <b>قطع لا يمكن قلبها (قطع ثابتة)</b>. في المقابل، اللعب في خانة <b>X</b> (قطريًا بجوار الزاوية) أو <b>C</b> (بجوار الزاوية على الحافة) قد يفتح للخصم طريقًا إلى الزاوية. الخانات ذات الخط الأحمر المتقطع نقلات تسمح للخصم بأخذ زاوية.",
+     "g": "خذ زاوية أولًا. يستطيع الأبيض أخذ زاوية واحدة فقط.",
+     "gok": "أخذت زاوية <span dir=\"ltr\">h1</span>. الزاوية وقطع الحافة العليا المتصلة بها لم تعد تُقلب. <span dir=\"ltr\">g2</span> المُعلَّمة بالأحمر خانة X، وكانت ستهدي <span dir=\"ltr\">h1</span> للخصم.",
+     "p1ok": "زاوية <span dir=\"ltr\">a1</span> هي الصحيحة. النقلتان الأخريان (<span dir=\"ltr\">g7</span> و<span dir=\"ltr\">g8</span>) انفتاحهما كبير وتمنحان الخصم أماكن أكثر للعب.",
+     "p2ok": "<span dir=\"ltr\">d8</span> هي الصحيحة. <span dir=\"ltr\">h7</span> (خانة C) و<span dir=\"ltr\">g8</span> تهديان زاوية <span dir=\"ltr\">h8</span>. أما <span dir=\"ltr\">g7</span> فلا تهديها، لكنها تزيد القطع الخارجية كثيرًا.",
+     "h0": "الزاوية لا تُقلب أبدًا. أما اللعب في X أو C فقد يهدي الخصم زاوية.",
+     "look": "انظر إلى علامات الزوايا والخانات ذات الخط الأحمر المتقطع (نقلات تسمح للخصم بأخذ زاوية). خذ زاوية إن استطعت، وإلا فتجنّب الخانات الحمراء."
+    }
+   }
+  },
+  "mobility": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "odots",
+     "mv": "c4e3f4c5d6f3e6c6d3c3b5a6b6g5a5e7a7",
+     "marks": {
+      "d7": "focus",
+      "b7": "danger"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "mob",
+     "mv": "c4e3f4c5d6f3e6c6d3c3b5a6b6g5a5e7a7",
+     "ans": "d7"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "mob",
+     "mv": "c4e3f4c3d3c5f3d2c2c1b5b4b1a1f5b2",
+     "ans": "a4"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "mob",
+     "mv": "f5f4e3f6d3c2e6f3g7f7e2d1e7d7g4h8f2g3e1g8c1g5d2d6h4g6c5d8c8c4c6g2e8",
+     "ans": "c3"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "赤い点は、いま<b>相手が打てる場所</b>です（14か所）。オセロでは、相手の打てる場所が少ないほど、相手は打ちたくないマスに追い込まれます。白が印の d7 に打つと、相手の打てる場所は <b>8か所</b>に減ります。赤い点線の b7 だと <b>15か所</b>に増えてしまいます。<b>「打った後に相手が何か所に打てるか」</b>を比べるのが、この考え方の中心です。",
+     "g": "数字は「その手を打った後に、相手が打てる場所の数」です。いちばん小さい手に打ってみましょう。",
+     "gok": "d7 で、相手の打てる場所は14→8か所に。返したのはほとんど内側の石なので、相手に新しい打ち場所をほぼ与えませんでした。",
+     "p1ok": "a4 が正解。打った後の相手の打てる場所は7か所で、ほかの手（10〜14か所）よりずっと少なくなります。",
+     "p2ok": "c3 が正解。相手の打てる場所は12か所。外側の石を返す b5・b6 などは15〜16か所に増やします。",
+     "h0": "大事なのは石の数ではなく、打った後に相手が何か所に打てるかです。",
+     "look": "数字は、それぞれの手を打った後の相手の打てる場所の数です。いちばん小さい数字の手を探しましょう。"
+    },
+    "en": {
+     "c1": "The red dots are where <b>your opponent can play now</b> (14 squares). The fewer places your opponent has, the sooner they are forced onto squares they do not want. If White plays the marked d7, Black's options drop to <b>8</b>; b7, marked red, would raise them to <b>15</b>. Comparing <b>how many moves your opponent has after your move</b> is the heart of this idea.",
+     "g": "Each number is how many moves your opponent will have after that move. Play the move with the smallest number.",
+     "gok": "With d7, your opponent's moves went from 14 to 8. You flipped almost only inner discs, so hardly any new squares opened up for them.",
+     "p1ok": "a4 is right. Afterwards your opponent has 7 moves, far fewer than after the other moves (10–14).",
+     "p2ok": "c3 is right: your opponent is left with 12 moves. b5, b6 and others flip outer discs and give them 15–16.",
+     "h0": "What matters is not your disc count but how many moves your opponent has after your move.",
+     "look": "Each number is your opponent's move count after that move. Find the smallest one."
+    },
+    "zh": {
+     "c1": "红点是对手<b>现在能下的位置</b>（14处）。对手能下的位置越少，就越容易被逼到不想下的格子。白棋下在标记的 d7 后，对手的可下位置减少到 <b>8处</b>；下在红色虚线的 b7 则会增加到 <b>15处</b>。比较<b>“下完之后对手有几处可下”</b>，就是这种思路的核心。",
+     "g": "数字表示“下了这一手之后，对手能下的位置数”。请下在数字最小的地方。",
+     "gok": "下 d7 后，对手的可下位置从14处减到8处。翻转的几乎都是内侧的子，没有给对手打开新的落子点。",
+     "p1ok": "a4 是正确答案。下完后对手只有7处可下，比其他着法（10～14处）少得多。",
+     "p2ok": "c3 是正确答案，对手只剩12处可下。翻转外侧子的 b5、b6 等会让对手增加到15～16处。",
+     "h0": "重要的不是子数，而是下完之后对手有几处可下。",
+     "look": "数字是每一手下完后对手的可下位置数。找出最小的那一个。"
+    },
+    "ko": {
+     "c1": "빨간 점은 <b>상대가 지금 둘 수 있는 곳</b>입니다(14곳). 상대가 둘 곳이 적을수록 상대는 두기 싫은 칸으로 몰립니다. 백이 표시한 d7에 두면 상대가 둘 곳은 <b>8곳</b>으로 줄고, 빨간 점선의 b7이면 <b>15곳</b>으로 늘어납니다. <b>\"두고 난 뒤 상대가 몇 곳에 둘 수 있는가\"</b>를 비교하는 것이 이 생각의 핵심입니다.",
+     "g": "숫자는 \"그 수를 둔 뒤 상대가 둘 수 있는 곳의 수\"입니다. 가장 작은 수에 두어 봅시다.",
+     "gok": "d7로 상대가 둘 곳이 14→8곳이 되었습니다. 거의 안쪽 돌만 뒤집었기 때문에 상대에게 새로운 둘 곳을 거의 주지 않았습니다.",
+     "p1ok": "a4가 정답. 둔 뒤 상대가 둘 곳은 7곳으로, 다른 수(10~14곳)보다 훨씬 적습니다.",
+     "p2ok": "c3가 정답. 상대가 둘 곳은 12곳. 바깥쪽 돌을 뒤집는 b5·b6 등은 15~16곳으로 늘립니다.",
+     "h0": "중요한 것은 돌의 개수가 아니라, 둔 뒤 상대가 몇 곳에 둘 수 있느냐입니다.",
+     "look": "숫자는 각 수를 둔 뒤 상대가 둘 수 있는 곳의 수입니다. 가장 작은 수를 찾으세요."
+    },
+    "es": {
+     "c1": "Los puntos rojos son los sitios donde <b>el rival puede jugar ahora</b> (14). Cuantos menos sitios tenga, antes se verá obligado a jugar donde no quiere. Si las blancas juegan en la d7 marcada, las opciones del rival bajan a <b>8</b>; con b7, marcada en rojo, suben a <b>15</b>. Comparar <b>cuántas jugadas tendrá el rival después de tu jugada</b> es el centro de esta idea.",
+     "g": "Cada número indica cuántas jugadas tendrá el rival tras esa jugada. Juega la del número más pequeño.",
+     "gok": "Con d7, las jugadas del rival pasan de 14 a 8. Volteaste casi solo fichas interiores, así que apenas le abriste casillas nuevas.",
+     "p1ok": "a4 es la correcta. Después, el rival tiene 7 jugadas, muchas menos que con las demás (10–14).",
+     "p2ok": "c3 es la correcta: al rival le quedan 12 jugadas. b5, b6 y otras voltean fichas exteriores y le dan 15–16.",
+     "h0": "Lo que importa no es tu número de fichas, sino cuántas jugadas tendrá el rival después de tu jugada.",
+     "look": "Cada número es la cantidad de jugadas del rival tras esa jugada. Busca el más pequeño."
+    },
+    "fr": {
+     "c1": "Les points rouges sont les cases où <b>l’adversaire peut jouer maintenant</b> (14). Moins il en a, plus vite il sera contraint de jouer là où il ne veut pas. Si les Blancs jouent en d7 (marqué), les options de l’adversaire tombent à <b>8</b> ; avec b7, en rouge, elles montent à <b>15</b>. Comparer <b>le nombre de coups de l’adversaire après votre coup</b>, voilà le cœur de cette idée.",
+     "g": "Chaque nombre indique combien de coups aura l’adversaire après ce coup. Jouez celui dont le nombre est le plus petit.",
+     "gok": "Avec d7, les coups de l’adversaire passent de 14 à 8. Vous n’avez presque retourné que des pions intérieurs, sans lui ouvrir de nouvelles cases.",
+     "p1ok": "a4 est la bonne réponse. Ensuite l’adversaire n’a que 7 coups, bien moins qu’après les autres (10 à 14).",
+     "p2ok": "c3 est la bonne réponse : il reste 12 coups à l’adversaire. b5, b6 et d’autres retournent des pions extérieurs et lui en donnent 15 ou 16.",
+     "h0": "Ce qui compte n’est pas votre nombre de pions, mais le nombre de coups de l’adversaire après votre coup.",
+     "look": "Chaque nombre est le nombre de coups de l’adversaire après ce coup. Cherchez le plus petit."
+    },
+    "pt": {
+     "c1": "Os pontos vermelhos são onde <b>o adversário pode jogar agora</b> (14). Quanto menos lugares ele tiver, mais cedo será forçado a jogar onde não quer. Se as brancas jogarem em d7 (marcada), as opções do adversário caem para <b>8</b>; com b7, em vermelho, sobem para <b>15</b>. Comparar <b>quantas jogadas o adversário terá depois da sua</b> é o centro desta ideia.",
+     "g": "Cada número mostra quantas jogadas o adversário terá depois daquela jogada. Jogue a de menor número.",
+     "gok": "Com d7, as jogadas do adversário caíram de 14 para 8. Você virou quase só peças internas e quase não abriu casas novas para ele.",
+     "p1ok": "a4 é o certo. Depois, o adversário tem 7 jogadas, bem menos do que após as outras (10 a 14).",
+     "p2ok": "c3 é o certo: sobram 12 jogadas ao adversário. b5, b6 e outras viram peças externas e lhe dão 15 ou 16.",
+     "h0": "O que importa não é o seu número de peças, e sim quantas jogadas o adversário terá depois da sua.",
+     "look": "Cada número é a quantidade de jogadas do adversário depois daquela jogada. Procure o menor."
+    },
+    "de": {
+     "c1": "Die roten Punkte zeigen, wo <b>der Gegner jetzt setzen kann</b> (14 Felder). Je weniger Möglichkeiten er hat, desto eher muss er Felder spielen, die er nicht will. Setzt Weiß auf das markierte d7, sinken die Möglichkeiten des Gegners auf <b>8</b>; mit b7 (rot) steigen sie auf <b>15</b>. <b>Wie viele Züge der Gegner nach deinem Zug hat</b> – das ist der Kern dieser Idee.",
+     "g": "Jede Zahl gibt an, wie viele Züge der Gegner nach diesem Zug hat. Spiele den Zug mit der kleinsten Zahl.",
+     "gok": "Mit d7 sinken die Züge des Gegners von 14 auf 8. Du hast fast nur innere Steine umgedreht und ihm kaum neue Felder geöffnet.",
+     "p1ok": "a4 ist richtig. Danach hat der Gegner nur 7 Züge, weit weniger als nach den anderen Zügen (10–14).",
+     "p2ok": "c3 ist richtig: Dem Gegner bleiben 12 Züge. b5, b6 und andere drehen Randsteine um und geben ihm 15–16.",
+     "h0": "Entscheidend ist nicht deine Steinzahl, sondern wie viele Züge der Gegner nach deinem Zug hat.",
+     "look": "Jede Zahl ist die Zugzahl des Gegners nach diesem Zug. Suche die kleinste."
+    },
+    "hi": {
+     "c1": "लाल बिंदु वे जगहें हैं जहाँ <b>विरोधी अभी चल सकता है</b> (14)। विरोधी के पास जितनी कम जगहें होंगी, उतनी जल्दी वह न चाहने वाले खानों पर चलने को मजबूर होगा। सफ़ेद चिह्नित d7 पर चले तो विरोधी की चालें घटकर <b>8</b> रह जाती हैं; लाल निशान वाले b7 पर चलने से वे बढ़कर <b>15</b> हो जाती हैं। <b>“आपकी चाल के बाद विरोधी के पास कितनी चालें होंगी”</b> — यही तुलना इस विचार का केंद्र है।",
+     "g": "हर संख्या बताती है कि उस चाल के बाद विरोधी के पास कितनी चालें होंगी। सबसे छोटी संख्या वाली चाल चलिए।",
+     "gok": "d7 से विरोधी की चालें 14 से घटकर 8 हो गईं। आपने लगभग सिर्फ़ अंदर की गोटियाँ पलटीं, इसलिए विरोधी के लिए शायद ही कोई नई जगह खुली।",
+     "p1ok": "a4 सही है। इसके बाद विरोधी के पास सिर्फ़ 7 चालें हैं, बाकी चालों (10–14) से कहीं कम।",
+     "p2ok": "c3 सही है: विरोधी के पास 12 चालें बचती हैं। b5, b6 आदि बाहरी गोटियाँ पलटकर उसे 15–16 चालें दे देते हैं।",
+     "h0": "ज़रूरी आपकी गोटियों की गिनती नहीं, बल्कि यह है कि आपकी चाल के बाद विरोधी के पास कितनी चालें होंगी।",
+     "look": "हर संख्या उस चाल के बाद विरोधी की चालों की गिनती है। सबसे छोटी संख्या खोजिए।"
+    },
+    "ar": {
+     "c1": "النقاط الحمراء هي الأماكن التي <b>يستطيع الخصم اللعب فيها الآن</b> (14). كلما قلّت أماكنه، اضطر أسرع إلى اللعب حيث لا يريد. إذا لعب الأبيض في <span dir=\"ltr\">d7</span> المُعلَّمة، تنخفض خيارات الخصم إلى <b>8</b>؛ ومع <span dir=\"ltr\">b7</span> المُعلَّمة بالأحمر ترتفع إلى <b>15</b>. مقارنة <b>عدد نقلات الخصم بعد نقلتك</b> هي جوهر هذه الفكرة.",
+     "g": "كل رقم يبيّن عدد نقلات الخصم بعد تلك النقلة. العب النقلة صاحبة أصغر رقم.",
+     "gok": "مع <span dir=\"ltr\">d7</span> انخفضت نقلات الخصم من 14 إلى 8. قلبت قطعًا داخلية تقريبًا فقط، فلم تفتح له خانات جديدة تُذكر.",
+     "p1ok": "<span dir=\"ltr\">a4</span> هي الصحيحة. بعدها يبقى للخصم 7 نقلات، أقل بكثير من النقلات الأخرى (10–14).",
+     "p2ok": "<span dir=\"ltr\">c3</span> هي الصحيحة: يبقى للخصم 12 نقلة. أما <span dir=\"ltr\">b5</span> و<span dir=\"ltr\">b6</span> وغيرهما فتقلب قطعًا خارجية وتمنحه 15–16.",
+     "h0": "المهم ليس عدد قطعك، بل عدد النقلات التي ستبقى للخصم بعد نقلتك.",
+     "look": "كل رقم هو عدد نقلات الخصم بعد تلك النقلة. ابحث عن أصغر رقم."
+    }
+   }
+  },
+  "quiet": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "none",
+     "mv": "e6f6f5f4g5e7f7h6e3d2g4g3d3c3h3",
+     "marks": {
+      "g6": "focus",
+      "f5": "flip",
+      "e4": "flip",
+      "g7": "danger"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "open",
+     "mv": "e6f6f5f4g5e7f7h6e3d2g4g3d3c3h3",
+     "ans": "g6"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "open",
+     "mv": "d3c5d6c3c4e3b5b4f5c6b6a5f3a7a6b7c2f4e2d7d8c7a8f6b3a4e6e7g3h2g4f7a3b8f8e8",
+     "ans": "c8"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "open",
+     "mv": "d3e3f2c5f5d2c2g5c4f3c1c3b4a4g3e2d1b3f4g4g6f6a3h3b5a2h5h6",
+     "ans": "h7"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "<b>開放度</b>は、返す石のまわりにある空きマスの数です。印の g6 に白が打つと、返るのは f5・e4 の2枚（点線）。この2枚のまわりの空きは1マスだけなので、開放度は <b>1</b>。赤い点線の g7 は外側の石を返して開放度 <b>7</b>。開放度が小さい手は、相手に新しい打ち場所をほとんど与えない<b>「静かな手」</b>です。",
+     "g": "数字はそれぞれの手の開放度です。いちばん静かな手（数字が最小）に打ってみましょう。",
+     "gok": "g6 は開放度1の静かな手。返した石がまわりを石に囲まれているので、相手はそこを足がかりに打てません。",
+     "p1ok": "c8 が正解。開放度0、空きに接しない内側の石だけを返す「中割り」です。",
+     "p2ok": "h7 が正解。開放度2で、ほかの手（4・5）より静か。g7 は相手に h8 の隅も渡します。",
+     "h0": "返す石のまわりに空きマスが少ない手ほど、相手に打ち場所を与えません。",
+     "look": "数字は開放度（返す石のまわりの空きマスの数）です。いちばん小さい手を探しましょう。"
+    },
+    "en": {
+     "c1": "<b>Openness</b> is the number of empty squares around the discs you flip. If White plays the marked g6, it flips f5 and e4 (outlined). Only one empty square touches them, so the openness is <b>1</b>. g7, marked red, flips outer discs: openness <b>7</b>. A move with low openness is a <b>quiet move</b> that gives your opponent almost no new places to play.",
+     "g": "Each number is that move's openness. Play the quietest move (the smallest number).",
+     "gok": "g6 is a quiet move with openness 1. The flipped discs are surrounded by discs, so your opponent cannot use them as a foothold.",
+     "p1ok": "c8 is right: openness 0. It flips only inner discs that touch no empty square — a true quiet move.",
+     "p2ok": "h7 is right: openness 2, quieter than the others (4 and 5). g7 would also hand over the h8 corner.",
+     "h0": "The fewer empty squares around the discs you flip, the fewer places you give your opponent.",
+     "look": "Each number is the openness (empty squares around the flipped discs). Find the smallest."
+    },
+    "zh": {
+     "c1": "<b>开放度</b>是指被翻转的棋子周围的空格数。白棋下在标记的 g6，会翻转 f5、e4 两枚（虚线圈出）。它们周围只有1个空格，所以开放度是 <b>1</b>。红色虚线的 g7 会翻转外侧的子，开放度为 <b>7</b>。开放度小的手几乎不给对手新的落子点，是<b>“安静的一手”</b>。",
+     "g": "数字是每一手的开放度。请下在最安静的一手（数字最小）。",
+     "gok": "g6 是开放度为1的安静着法。被翻转的子四周都被棋子包围，对手无法以此为据点落子。",
+     "p1ok": "c8 是正确答案：开放度为0，只翻转不接触空格的内侧子，是典型的“中割”。",
+     "p2ok": "h7 是正确答案：开放度2，比其他着法（4、5）更安静。g7 还会把 h8 的角让给对手。",
+     "h0": "被翻转的棋子周围空格越少，给对手的落子点就越少。",
+     "look": "数字是开放度（被翻转棋子周围的空格数）。找出最小的那一个。"
+    },
+    "ko": {
+     "c1": "<b>개방도</b>는 뒤집는 돌 주위의 빈칸 수입니다. 백이 표시한 g6에 두면 f5·e4 두 개(점선)가 뒤집힙니다. 이 두 돌 주위의 빈칸은 1칸뿐이라 개방도는 <b>1</b>. 빨간 점선의 g7은 바깥쪽 돌을 뒤집어 개방도 <b>7</b>. 개방도가 작은 수는 상대에게 새로운 둘 곳을 거의 주지 않는 <b>\"조용한 수\"</b>입니다.",
+     "g": "숫자는 각 수의 개방도입니다. 가장 조용한 수(가장 작은 숫자)에 두어 봅시다.",
+     "gok": "g6은 개방도 1의 조용한 수. 뒤집힌 돌이 돌로 둘러싸여 있어서 상대가 발판으로 쓸 수 없습니다.",
+     "p1ok": "c8이 정답. 개방도 0으로, 빈칸에 닿지 않는 안쪽 돌만 뒤집는 \"중할(中割り)\"입니다.",
+     "p2ok": "h7이 정답. 개방도 2로 다른 수(4·5)보다 조용합니다. g7은 상대에게 h8 귀까지 내줍니다.",
+     "h0": "뒤집는 돌 주위에 빈칸이 적을수록 상대에게 둘 곳을 주지 않습니다.",
+     "look": "숫자는 개방도(뒤집는 돌 주위의 빈칸 수)입니다. 가장 작은 수를 찾으세요."
+    },
+    "es": {
+     "c1": "La <b>apertura</b> es el número de casillas vacías alrededor de las fichas que volteas. Si las blancas juegan en la g6 marcada, voltean f5 y e4 (resaltadas). Solo una casilla vacía las toca, así que la apertura es <b>1</b>. g7, marcada en rojo, voltea fichas exteriores: apertura <b>7</b>. Una jugada de apertura baja es una <b>jugada tranquila</b> que casi no da al rival sitios nuevos.",
+     "g": "Cada número es la apertura de esa jugada. Juega la más tranquila (el número más pequeño).",
+     "gok": "g6 es una jugada tranquila de apertura 1. Las fichas volteadas están rodeadas de fichas, así que el rival no puede apoyarse en ellas.",
+     "p1ok": "c8 es la correcta: apertura 0. Solo voltea fichas interiores que no tocan ninguna casilla vacía.",
+     "p2ok": "h7 es la correcta: apertura 2, más tranquila que las otras (4 y 5). g7 además regalaría la esquina h8.",
+     "h0": "Cuantas menos casillas vacías haya alrededor de las fichas que volteas, menos sitios das al rival.",
+     "look": "Cada número es la apertura (casillas vacías alrededor de las fichas volteadas). Busca la más pequeña."
+    },
+    "fr": {
+     "c1": "L’<b>ouverture</b> est le nombre de cases vides autour des pions retournés. Si les Blancs jouent en g6 (marqué), ils retournent f5 et e4 (surlignés). Une seule case vide les touche : l’ouverture vaut <b>1</b>. g7, en rouge, retourne des pions extérieurs : ouverture <b>7</b>. Un coup de faible ouverture est un <b>coup calme</b> qui ne donne presque aucune nouvelle case à l’adversaire.",
+     "g": "Chaque nombre est l’ouverture du coup. Jouez le coup le plus calme (le plus petit nombre).",
+     "gok": "g6 est un coup calme d’ouverture 1. Les pions retournés sont entourés de pions : l’adversaire ne peut pas s’en servir comme appui.",
+     "p1ok": "c8 est la bonne réponse : ouverture 0. Il ne retourne que des pions intérieurs qui ne touchent aucune case vide.",
+     "p2ok": "h7 est la bonne réponse : ouverture 2, plus calme que les autres (4 et 5). g7 offrirait en plus le coin h8.",
+     "h0": "Moins il y a de cases vides autour des pions retournés, moins vous offrez de cases à l’adversaire.",
+     "look": "Chaque nombre est l’ouverture (cases vides autour des pions retournés). Cherchez la plus petite."
+    },
+    "pt": {
+     "c1": "A <b>abertura</b> é o número de casas vazias ao redor das peças que você vira. Se as brancas jogarem em g6 (marcada), viram f5 e e4 (destacadas). Só uma casa vazia toca nelas, então a abertura é <b>1</b>. g7, em vermelho, vira peças externas: abertura <b>7</b>. Uma jogada de abertura baixa é uma <b>jogada silenciosa</b>, que quase não dá ao adversário lugares novos.",
+     "g": "Cada número é a abertura da jogada. Jogue a mais silenciosa (o menor número).",
+     "gok": "g6 é uma jogada silenciosa de abertura 1. As peças viradas estão cercadas por peças, então o adversário não consegue usá-las como apoio.",
+     "p1ok": "c8 é o certo: abertura 0. Vira só peças internas que não tocam nenhuma casa vazia.",
+     "p2ok": "h7 é o certo: abertura 2, mais silenciosa que as outras (4 e 5). g7 ainda entregaria o canto h8.",
+     "h0": "Quanto menos casas vazias ao redor das peças viradas, menos lugares você dá ao adversário.",
+     "look": "Cada número é a abertura (casas vazias ao redor das peças viradas). Procure a menor."
+    },
+    "de": {
+     "c1": "Die <b>Offenheit</b> ist die Zahl der leeren Felder rund um die umgedrehten Steine. Setzt Weiß auf das markierte g6, werden f5 und e4 umgedreht (umrandet). Nur ein leeres Feld grenzt an sie, die Offenheit ist also <b>1</b>. g7 (rot) dreht Randsteine um: Offenheit <b>7</b>. Ein Zug mit geringer Offenheit ist ein <b>ruhiger Zug</b>, der dem Gegner kaum neue Felder gibt.",
+     "g": "Jede Zahl ist die Offenheit des Zuges. Spiele den ruhigsten Zug (die kleinste Zahl).",
+     "gok": "g6 ist ein ruhiger Zug mit Offenheit 1. Die umgedrehten Steine sind von Steinen umgeben – der Gegner kann sie nicht als Ansatzpunkt nutzen.",
+     "p1ok": "c8 ist richtig: Offenheit 0. Er dreht nur innere Steine um, die kein leeres Feld berühren.",
+     "p2ok": "h7 ist richtig: Offenheit 2, ruhiger als die anderen (4 und 5). g7 würde zudem die Ecke h8 verschenken.",
+     "h0": "Je weniger leere Felder um die umgedrehten Steine liegen, desto weniger Felder gibst du dem Gegner.",
+     "look": "Jede Zahl ist die Offenheit (leere Felder um die umgedrehten Steine). Suche die kleinste."
+    },
+    "hi": {
+     "c1": "<b>खुलापन</b> उन ख़ाली खानों की संख्या है जो पलटी गई गोटियों के आसपास हैं। सफ़ेद चिह्नित g6 पर चले तो f5 और e4 पलटती हैं (डैश घेरे में)। इन्हें सिर्फ़ एक ख़ाली खाना छूता है, इसलिए खुलापन <b>1</b> है। लाल निशान वाला g7 बाहरी गोटियाँ पलटता है: खुलापन <b>7</b>। कम खुलेपन वाली चाल एक <b>शांत चाल</b> है, जो विरोधी को लगभग कोई नई जगह नहीं देती।",
+     "g": "हर संख्या उस चाल का खुलापन है। सबसे शांत चाल (सबसे छोटी संख्या) चलिए।",
+     "gok": "g6 खुलापन 1 वाली शांत चाल है। पलटी गोटियाँ चारों ओर गोटियों से घिरी हैं, इसलिए विरोधी उन्हें सहारा नहीं बना सकता।",
+     "p1ok": "c8 सही है: खुलापन 0। यह सिर्फ़ अंदर की वे गोटियाँ पलटती है जो किसी ख़ाली खाने को नहीं छूतीं।",
+     "p2ok": "h7 सही है: खुलापन 2, बाकी चालों (4 और 5) से शांत। g7 तो h8 का कोना भी दे देता।",
+     "h0": "पलटी गोटियों के आसपास जितने कम ख़ाली खाने होंगे, विरोधी को उतनी कम जगहें मिलेंगी।",
+     "look": "हर संख्या खुलापन है (पलटी गोटियों के आसपास के ख़ाली खाने)। सबसे छोटी खोजिए।"
+    },
+    "ar": {
+     "c1": "<b>الانفتاح</b> هو عدد الخانات الفارغة حول القطع التي تقلبها. إذا لعب الأبيض في <span dir=\"ltr\">g6</span> المُعلَّمة، يقلب <span dir=\"ltr\">f5</span> و<span dir=\"ltr\">e4</span> (المحاطتين بخط). لا تلامسهما إلا خانة فارغة واحدة، فالانفتاح <b>1</b>. أما <span dir=\"ltr\">g7</span> المُعلَّمة بالأحمر فتقلب قطعًا خارجية: انفتاح <b>7</b>. النقلة قليلة الانفتاح <b>نقلة هادئة</b> لا تكاد تمنح الخصم أماكن جديدة.",
+     "g": "كل رقم هو انفتاح تلك النقلة. العب أهدأ نقلة (أصغر رقم).",
+     "gok": "<span dir=\"ltr\">g6</span> نقلة هادئة انفتاحها 1. القطع المقلوبة محاطة بالقطع، فلا يستطيع الخصم الاستناد إليها.",
+     "p1ok": "<span dir=\"ltr\">c8</span> هي الصحيحة: انفتاح 0. تقلب قطعًا داخلية فقط لا تلامس أي خانة فارغة.",
+     "p2ok": "<span dir=\"ltr\">h7</span> هي الصحيحة: انفتاح 2، أهدأ من غيرها (4 و5). و<span dir=\"ltr\">g7</span> كانت ستهدي زاوية <span dir=\"ltr\">h8</span> أيضًا.",
+     "h0": "كلما قلّت الخانات الفارغة حول القطع التي تقلبها، قلّت الأماكن التي تمنحها للخصم.",
+     "look": "كل رقم هو الانفتاح (الخانات الفارغة حول القطع المقلوبة). ابحث عن الأصغر."
+    }
+   }
+  },
+  "wall": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "wallc",
+     "mv": "c4c5b6c3c6d6f5f6d3f4e7e3f3b4c2b2f2b1e6d2g4d8e8d7b3f7c7f8e1a4a1a2a3b5a6a5b8c8a7a8",
+     "marks": {
+      "b7": "focus",
+      "g8": "danger"
+     },
+     "arrows": [
+      [
+       "g8",
+       "d5"
+      ]
+     ]
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "front",
+     "mv": "c4c5b6c3c6d6f5f6d3f4e7e3f3b4c2b2f2b1e6d2g4d8e8d7b3f7c7f8e1a4a1a2a3b5a6a5b8c8a7a8",
+     "ans": "b7"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "front",
+     "mv": "d3c5d6e3f4f5f3g3c6e2b5d7e6c2c4f2e1b6b4f1c3d1a6a4a3f7b1f6a5c7e7c1g1",
+     "ans": "d2"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "front",
+     "mv": "f5d6c5f4e3c4d3e6f3c3c6b4f6d2b6b5d1e2c2b3e1f1g1g4a4f2g2g3b2g6a5c1h3h4g5h6",
+     "ans": "h5"
+    },
+    {
+     "t": "concept",
+     "k": "c2",
+     "aid": "reserve",
+     "mv": "e6d6c5f6c4b3b4e3f5f4f3c3d3g3g4c6b6h3g5b5e2f1h4a6a5h5f2a4d1e1h2h1d2g2c2g6a7b2a3",
+     "marks": {
+      "c1": "focus"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g2",
+     "aid": "reserve",
+     "mv": "e6d6c5f6c4b3b4e3f5f4f3c3d3g3g4c6b6h3g5b5e2f1h4a6a5h5f2a4d1e1h2h1d2g2c2g6a7b2a3",
+     "ans": "c1"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "点線の石は、空きマスに接している<b>黒の外側の石</b>です。外側の石が一列に並ぶと<b>壁</b>になり、壁の外側には白だけが打てるようになります。印の b7 は内側の石を返すので外側の石が減りますが、たとえば g8 は矢印の向きに石を返して外側の石を増やし、壁を厚くします。",
+     "g": "数字は「打った後の、あなたの外側の石の数」です。いちばん少なくなる手に打ってみましょう。",
+     "gok": "b7 なら外側の石は9個。ほかの手（12個）より少なく、壁を作りません。壁を作らない手は、自分の打てる場所を守ります。",
+     "p1ok": "d2 が正解。外側の石が12個にまで減る、内側の静かな手です。",
+     "p2ok": "h5 が正解。外側の石が15個に減り、さらに辺の白石2つの間に割り込む手です。g7・h7 は外へ壁を広げます。",
+     "c2": "もうひとつの考え方が<b>余裕手</b>です。「余」は<b>白だけが打てて、黒は打てない場所</b>（a2）。黒に消される心配がないので、急いで使わず「貯金」として残しておけます。赤い点は黒の打てる場所です。印の c1 は黒も打てる場所なので、先に使っておく価値があります。",
+     "g2": "余裕手の a2 は取っておき、ほかの安全な手を打ちましょう。赤い点線は相手に隅を渡す手です。",
+     "g2ok": "c1 が正解。a2 の余裕手は残したまま。b7 は相手に a8 の隅を渡すところでした。",
+     "h0": "外側の石が一列に並ぶと壁になり、自分の打てる場所が減ります。内側の石を返す手を選びましょう。",
+     "look": "数字は、打った後のあなたの外側の石（空きマスに接する石）の数です。いちばん小さい手を探しましょう。"
+    },
+    "en": {
+     "c1": "The outlined discs are <b>Black's outer discs</b>, touching empty squares. When outer discs line up they form a <b>wall</b>, and only White can play on the far side of it. The marked b7 flips inner discs, so Black's outer discs decrease; a move like g8 flips along the arrow, adds outer discs and thickens the wall.",
+     "g": "Each number is how many outer discs you will have after that move. Play the move that leaves the fewest.",
+     "gok": "After b7 you have 9 outer discs, fewer than after any other move (12). Moves that do not build walls keep your own options open.",
+     "p1ok": "d2 is right: a quiet inner move that brings your outer discs down to 12.",
+     "p2ok": "h5 is right: it cuts your outer discs to 15 and wedges between two white discs on the edge. g7 and h7 extend the wall outward.",
+     "c2": "The second idea is the <b>spare move</b>. The square marked \"S\" (a2) is one <b>only White can play — Black cannot</b>. Black can never take it away, so you can save it for later. The red dots are Black's moves. The marked c1 is a square Black can also play, so it is worth using first.",
+     "g2": "Save the spare move on a2 and play another safe move. The red dashed square would give your opponent a corner.",
+     "g2ok": "c1 is right, and the spare move on a2 is still in the bank. b7 would have handed over the a8 corner.",
+     "h0": "Outer discs in a line form a wall and cost you moves. Choose moves that flip inner discs.",
+     "look": "Each number is how many outer discs (discs touching an empty square) you will have afterwards. Find the smallest."
+    },
+    "zh": {
+     "c1": "虚线圈出的是接触空格的<b>黑棋外侧子</b>。外侧子连成一排就形成<b>墙</b>，墙外只有白棋能下。标记的 b7 翻转内侧的子，外侧子会减少；而像 g8 这样沿箭头方向翻子，会增加外侧子，让墙更厚。",
+     "g": "数字表示“下了之后你的外侧子数量”。请下在剩下最少的那一手。",
+     "gok": "下 b7 后外侧子只有9个，比其他着法（12个）都少，不会筑墙。不筑墙的着法能保住自己的落子点。",
+     "p1ok": "d2 是正确答案：一步安静的内侧着法，让外侧子减少到12个。",
+     "p2ok": "h5 是正确答案：外侧子减少到15个，而且是插进边上两枚白子之间的一手。g7、h7 会把墙向外扩展。",
+     "c2": "另一个思路是<b>余裕手</b>。标“余”的格子（a2）<b>只有白棋能下，黑棋不能下</b>。黑棋无法把它抢走，所以不必急着用，可以当作“存款”留着。红点是黑棋能下的位置。标记的 c1 黑棋也能下，所以值得先用掉。",
+     "g2": "把余裕手 a2 留着，下另一步安全的棋。红色虚线是会把角让给对手的着法。",
+     "g2ok": "c1 是正确答案，a2 的余裕手还留着。b7 会把 a8 的角让给对手。",
+     "h0": "外侧子连成一排就成了墙，会减少自己的落子点。请选择翻转内侧子的着法。",
+     "look": "数字是下完后你的外侧子（接触空格的子）数量。找出最小的那一个。"
+    },
+    "ko": {
+     "c1": "점선 돌은 빈칸에 닿아 있는 <b>흑의 바깥쪽 돌</b>입니다. 바깥쪽 돌이 한 줄로 늘어서면 <b>벽</b>이 되고, 벽 바깥에는 백만 둘 수 있게 됩니다. 표시한 b7은 안쪽 돌을 뒤집어 바깥쪽 돌이 줄지만, 예를 들어 g8은 화살표 방향으로 돌을 뒤집어 바깥쪽 돌을 늘리고 벽을 두껍게 만듭니다.",
+     "g": "숫자는 \"둔 뒤 당신의 바깥쪽 돌의 수\"입니다. 가장 적게 남는 수에 두어 봅시다.",
+     "gok": "b7이면 바깥쪽 돌은 9개로, 다른 수(12개)보다 적어 벽을 만들지 않습니다. 벽을 만들지 않는 수가 자신의 둘 곳을 지킵니다.",
+     "p1ok": "d2가 정답. 바깥쪽 돌을 12개까지 줄이는 안쪽의 조용한 수입니다.",
+     "p2ok": "h5가 정답. 바깥쪽 돌이 15개로 줄고, 변의 백돌 두 개 사이에 끼어드는 수이기도 합니다. g7·h7은 벽을 바깥으로 넓힙니다.",
+     "c2": "또 하나의 생각이 <b>여유수</b>입니다. \"여\" 표시(a2)는 <b>백만 둘 수 있고 흑은 둘 수 없는 곳</b>. 흑이 빼앗을 수 없으니 서둘러 쓰지 않고 \"저금\"으로 남겨 둘 수 있습니다. 빨간 점은 흑이 둘 수 있는 곳입니다. 표시한 c1은 흑도 둘 수 있는 곳이라 먼저 써 둘 가치가 있습니다.",
+     "g2": "여유수 a2는 남겨 두고, 다른 안전한 수를 둡시다. 빨간 점선은 상대에게 귀를 내주는 수입니다.",
+     "g2ok": "c1이 정답. a2의 여유수는 그대로 남아 있습니다. b7은 상대에게 a8 귀를 내줄 뻔했습니다.",
+     "h0": "바깥쪽 돌이 한 줄로 늘어서면 벽이 되어 자신의 둘 곳이 줄어듭니다. 안쪽 돌을 뒤집는 수를 고릅시다.",
+     "look": "숫자는 둔 뒤 당신의 바깥쪽 돌(빈칸에 닿은 돌)의 수입니다. 가장 작은 수를 찾으세요."
+    },
+    "es": {
+     "c1": "Las fichas resaltadas son las <b>fichas exteriores de las negras</b>, las que tocan casillas vacías. Cuando se alinean forman un <b>muro</b>, y al otro lado solo pueden jugar las blancas. La b7 marcada voltea fichas interiores, así que las exteriores disminuyen; una jugada como g8 voltea en la dirección de la flecha, añade fichas exteriores y engrosa el muro.",
+     "g": "Cada número indica cuántas fichas exteriores tendrás tras esa jugada. Juega la que deje menos.",
+     "gok": "Con b7 te quedan 9 fichas exteriores, menos que con cualquier otra jugada (12). Las jugadas que no construyen muros conservan tus opciones.",
+     "p1ok": "d2 es la correcta: una jugada interior y tranquila que reduce tus fichas exteriores a 12.",
+     "p2ok": "h5 es la correcta: reduce tus fichas exteriores a 15 y además se mete entre dos fichas blancas del borde. g7 y h7 extienden el muro hacia fuera.",
+     "c2": "La segunda idea es la <b>jugada de reserva</b>. La casilla marcada (a2) es una donde <b>solo pueden jugar las blancas, no las negras</b>. Las negras nunca podrán quitártela, así que puedes guardarla para más adelante. Los puntos rojos son las jugadas de las negras. La c1 marcada también la pueden jugar las negras, así que conviene usarla primero.",
+     "g2": "Guarda la jugada de reserva a2 y haz otra jugada segura. La casilla roja discontinua regalaría una esquina.",
+     "g2ok": "c1 es la correcta, y la reserva a2 sigue guardada. b7 habría regalado la esquina a8.",
+     "h0": "Las fichas exteriores alineadas forman un muro y te quitan jugadas. Elige jugadas que volteen fichas interiores.",
+     "look": "Cada número indica cuántas fichas exteriores (que tocan una casilla vacía) tendrás después. Busca el más pequeño."
+    },
+    "fr": {
+     "c1": "Les pions surlignés sont les <b>pions extérieurs des Noirs</b>, ceux qui touchent une case vide. Alignés, ils forment un <b>mur</b>, et de l’autre côté seuls les Blancs peuvent jouer. Le coup b7 (marqué) retourne des pions intérieurs, donc les pions extérieurs diminuent ; un coup comme g8 retourne dans le sens de la flèche, ajoute des pions extérieurs et épaissit le mur.",
+     "g": "Chaque nombre indique combien de pions extérieurs vous aurez après ce coup. Jouez celui qui en laisse le moins.",
+     "gok": "Après b7, il vous reste 9 pions extérieurs, moins qu’après tout autre coup (12). Les coups qui ne bâtissent pas de mur préservent vos options.",
+     "p1ok": "d2 est la bonne réponse : un coup intérieur et calme qui ramène vos pions extérieurs à 12.",
+     "p2ok": "h5 est la bonne réponse : il réduit vos pions extérieurs à 15 et s’insère entre deux pions blancs du bord. g7 et h7 prolongent le mur vers l’extérieur.",
+     "c2": "La deuxième idée est le <b>coup de réserve</b>. La case marquée (a2) est une case où <b>seuls les Blancs peuvent jouer, pas les Noirs</b>. Les Noirs ne pourront jamais vous la prendre : vous pouvez la garder pour plus tard. Les points rouges sont les coups des Noirs. Le coup c1 (marqué) est aussi jouable par les Noirs : il vaut mieux l’utiliser d’abord.",
+     "g2": "Gardez le coup de réserve a2 et jouez un autre coup sûr. La case en pointillé rouge offrirait un coin.",
+     "g2ok": "c1 est la bonne réponse, et la réserve a2 est toujours de côté. b7 aurait offert le coin a8.",
+     "h0": "Des pions extérieurs alignés forment un mur et vous privent de coups. Choisissez des coups qui retournent des pions intérieurs.",
+     "look": "Chaque nombre indique combien de pions extérieurs (touchant une case vide) vous aurez ensuite. Cherchez le plus petit."
+    },
+    "pt": {
+     "c1": "As peças destacadas são as <b>peças externas das pretas</b>, que tocam casas vazias. Quando ficam em fila, formam uma <b>parede</b>, e do outro lado só as brancas podem jogar. A jogada b7 (marcada) vira peças internas, então as peças externas diminuem; já uma jogada como g8 vira na direção da seta, acrescenta peças externas e engrossa a parede.",
+     "g": "Cada número mostra quantas peças externas você terá depois daquela jogada. Jogue a que deixar menos.",
+     "gok": "Depois de b7 você fica com 9 peças externas, menos do que com qualquer outra jogada (12). Jogadas que não constroem paredes preservam suas opções.",
+     "p1ok": "d2 é o certo: uma jogada interna e silenciosa que reduz suas peças externas a 12.",
+     "p2ok": "h5 é o certo: reduz suas peças externas a 15 e ainda se encaixa entre duas peças brancas da borda. g7 e h7 estendem a parede para fora.",
+     "c2": "A segunda ideia é a <b>jogada de reserva</b>. A casa marcada (a2) é uma onde <b>só as brancas podem jogar, as pretas não</b>. As pretas nunca poderão tirá-la de você, então dá para guardá-la para depois. Os pontos vermelhos são as jogadas das pretas. A c1 marcada também pode ser jogada pelas pretas, então vale a pena usá-la primeiro.",
+     "g2": "Guarde a jogada de reserva a2 e faça outra jogada segura. A casa com tracejado vermelho entregaria um canto.",
+     "g2ok": "c1 é o certo, e a reserva a2 continua guardada. b7 teria entregado o canto a8.",
+     "h0": "Peças externas em fila formam uma parede e tiram suas jogadas. Escolha jogadas que virem peças internas.",
+     "look": "Cada número mostra quantas peças externas (que tocam uma casa vazia) você terá depois. Procure o menor."
+    },
+    "de": {
+     "c1": "Die umrandeten Steine sind die <b>Randsteine von Schwarz</b>, die an leere Felder grenzen. Stehen sie in einer Reihe, bilden sie eine <b>Mauer</b>, und dahinter kann nur Weiß setzen. Das markierte b7 dreht innere Steine um, die Randsteine werden weniger; ein Zug wie g8 dreht in Pfeilrichtung um, schafft neue Randsteine und macht die Mauer dicker.",
+     "g": "Jede Zahl gibt an, wie viele Randsteine du nach diesem Zug hast. Spiele den Zug, der am wenigsten übrig lässt.",
+     "gok": "Nach b7 hast du 9 Randsteine, weniger als nach jedem anderen Zug (12). Züge, die keine Mauer bauen, halten deine eigenen Möglichkeiten offen.",
+     "p1ok": "d2 ist richtig: ein ruhiger innerer Zug, der deine Randsteine auf 12 senkt.",
+     "p2ok": "h5 ist richtig: Er senkt deine Randsteine auf 15 und schiebt sich zwischen zwei weiße Steine am Rand. g7 und h7 bauen die Mauer nach außen aus.",
+     "c2": "Die zweite Idee ist der <b>Reservezug</b>. Das markierte Feld (a2) kann <b>nur Weiß spielen, Schwarz nicht</b>. Schwarz kann es dir nie wegnehmen, also kannst du es für später aufheben. Die roten Punkte sind die Züge von Schwarz. Das markierte c1 kann auch Schwarz spielen – es lohnt sich, es zuerst zu nutzen.",
+     "g2": "Heb dir den Reservezug a2 auf und spiele einen anderen sicheren Zug. Das rot gestrichelte Feld würde eine Ecke verschenken.",
+     "g2ok": "c1 ist richtig, und die Reserve a2 bleibt erhalten. b7 hätte die Ecke a8 verschenkt.",
+     "h0": "Randsteine in einer Reihe bilden eine Mauer und kosten dich Züge. Wähle Züge, die innere Steine umdrehen.",
+     "look": "Jede Zahl gibt an, wie viele Randsteine (Steine an einem leeren Feld) du danach hast. Suche die kleinste."
+    },
+    "hi": {
+     "c1": "डैश घेरे वाली गोटियाँ <b>काले की बाहरी गोटियाँ</b> हैं, जो ख़ाली खानों को छूती हैं। ये एक कतार में आ जाएँ तो <b>दीवार</b> बन जाती है, और दीवार के उस पार सिर्फ़ सफ़ेद चल सकता है। चिह्नित b7 अंदर की गोटियाँ पलटता है, इसलिए बाहरी गोटियाँ घटती हैं; जबकि g8 जैसी चाल तीर की दिशा में गोटियाँ पलटकर बाहरी गोटियाँ बढ़ाती है और दीवार मोटी करती है।",
+     "g": "हर संख्या बताती है कि उस चाल के बाद आपकी कितनी बाहरी गोटियाँ होंगी। जो सबसे कम छोड़े, वह चाल चलिए।",
+     "gok": "b7 के बाद आपकी 9 बाहरी गोटियाँ हैं, किसी भी दूसरी चाल (12) से कम। दीवार न बनाने वाली चालें आपकी अपनी चालें बचाती हैं।",
+     "p1ok": "d2 सही है: अंदर की एक शांत चाल, जो आपकी बाहरी गोटियाँ घटाकर 12 कर देती है।",
+     "p2ok": "h5 सही है: यह बाहरी गोटियाँ घटाकर 15 करती है और किनारे की दो सफ़ेद गोटियों के बीच घुस जाती है। g7 और h7 दीवार को बाहर की ओर बढ़ाते हैं।",
+     "c2": "दूसरा विचार है <b>बचत की चाल</b>। चिह्नित खाना (a2) ऐसा है जहाँ <b>सिर्फ़ सफ़ेद चल सकता है, काला नहीं</b>। काला इसे कभी छीन नहीं सकता, इसलिए इसे बाद के लिए बचाकर रखा जा सकता है। लाल बिंदु काले की चालें हैं। चिह्नित c1 पर काला भी चल सकता है, इसलिए पहले इसे इस्तेमाल करना फ़ायदेमंद है।",
+     "g2": "बचत की चाल a2 को रख लीजिए और कोई दूसरी सुरक्षित चाल चलिए। लाल डैश वाला खाना विरोधी को कोना दे देता है।",
+     "g2ok": "c1 सही है, और a2 की बचत की चाल अब भी बची है। b7 से a8 का कोना विरोधी को मिल जाता।",
+     "h0": "कतार में लगी बाहरी गोटियाँ दीवार बनाती हैं और आपकी चालें कम करती हैं। अंदर की गोटियाँ पलटने वाली चालें चुनिए।",
+     "look": "हर संख्या बताती है कि बाद में आपकी कितनी बाहरी गोटियाँ (ख़ाली खाने को छूने वाली) होंगी। सबसे छोटी खोजिए।"
+    },
+    "ar": {
+     "c1": "القطع المحاطة بخط هي <b>القطع الخارجية للأسود</b>، أي الملامسة لخانات فارغة. إذا اصطفت شكّلت <b>جدارًا</b>، ولا يستطيع اللعب خلفه إلا الأبيض. النقلة <span dir=\"ltr\">b7</span> المُعلَّمة تقلب قطعًا داخلية فتقل القطع الخارجية؛ أما نقلة مثل <span dir=\"ltr\">g8</span> فتقلب باتجاه السهم وتزيد القطع الخارجية وتجعل الجدار أسمك.",
+     "g": "كل رقم يبيّن عدد قطعك الخارجية بعد تلك النقلة. العب النقلة التي تترك أقل عدد.",
+     "gok": "بعد <span dir=\"ltr\">b7</span> تبقى لك 9 قطع خارجية، أقل من أي نقلة أخرى (12). النقلات التي لا تبني جدارًا تحفظ خياراتك.",
+     "p1ok": "<span dir=\"ltr\">d2</span> هي الصحيحة: نقلة داخلية هادئة تخفض قطعك الخارجية إلى 12.",
+     "p2ok": "<span dir=\"ltr\">h5</span> هي الصحيحة: تخفض قطعك الخارجية إلى 15 وتدخل بين قطعتين بيضاوين على الحافة. أما <span dir=\"ltr\">g7</span> و<span dir=\"ltr\">h7</span> فتمدّان الجدار إلى الخارج.",
+     "c2": "الفكرة الثانية هي <b>نقلة الاحتياط</b>. الخانة المُعلَّمة (<span dir=\"ltr\">a2</span>) <b>يستطيع الأبيض وحده اللعب فيها، لا الأسود</b>. لن يستطيع الأسود انتزاعها منك أبدًا، فيمكنك ادخارها لوقت لاحق. النقاط الحمراء هي نقلات الأسود. أما <span dir=\"ltr\">c1</span> المُعلَّمة فيستطيع الأسود اللعب فيها أيضًا، لذا يستحق استخدامها أولًا.",
+     "g2": "احتفظ بنقلة الاحتياط <span dir=\"ltr\">a2</span> والعب نقلة آمنة أخرى. الخانة ذات الخط الأحمر المتقطع تهدي الخصم زاوية.",
+     "g2ok": "<span dir=\"ltr\">c1</span> هي الصحيحة، ونقلة الاحتياط <span dir=\"ltr\">a2</span> ما زالت مدّخرة. <span dir=\"ltr\">b7</span> كانت ستهدي زاوية <span dir=\"ltr\">a8</span>.",
+     "h0": "القطع الخارجية المصطفة تشكّل جدارًا وتقلل نقلاتك. اختر نقلات تقلب قطعًا داخلية.",
+     "look": "كل رقم يبيّن عدد قطعك الخارجية (الملامسة لخانة فارغة) بعد النقلة. ابحث عن الأصغر."
+    }
+   }
+  },
+  "edge": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "edge",
+     "mv": "f5d6c7f4g3f6f7g6c3e6h6e7c4f8g5h4d3h5h3c6g8h8c5g7e8d7h7e3f2h2f3d8g4e1f1g1g2c2d2c1",
+     "marks": {
+      "d1": "focus",
+      "c1": "front",
+      "e1": "front"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "wedge",
+     "mv": "f5d6c7f4g3f6f7g6c3e6h6e7c4f8g5h4d3h5h3c6g8h8c5g7e8d7h7e3f2h2f3d8g4e1f1g1g2c2d2c1",
+     "ans": "d1"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "wedge",
+     "mv": "e6d6c5f6c4b3b4e3f5f4f3c3d3g3g4c6b6h3g5b5e2f1h4a6a5h5f2a4d1e1h2h1d2g2c2g6a7b2a3c1a1",
+     "ans": "a2"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "wedge",
+     "mv": "f5d6c3f4g4g5f6e7h5f3e3g3g6c4b4d3e6f7c7h7d2h3f8c2f2b8e2d7h6h4c5f1g1h1b1e1",
+     "ans": "h2"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "明るい帯が4本の<b>辺</b>です。上辺を見ると、c1 と e1 に白石（点線）があり、その間の d1 が空いています。相手の石2つにはさまれた辺の空きに打つ手を<b>付け手（くさび）</b>と呼びます。黒が d1 に打つと、白の辺の形が分断され、d1 の黒は両側を白にはさまれているので横から返されることもありません。",
+     "g": "上辺の、白石2つにはさまれた空きマス（印）に打ってみましょう。",
+     "gok": "d1 の付け手で、白の上辺を分断しました。b1 は相手に a1 の隅を渡すところでした。",
+     "p1ok": "a2 が正解。a1 と a3 の黒石の間に割り込む付け手です。しかも a2 は白だけが打てる場所でした。",
+     "p2ok": "h2 が正解。h1 と h3 の白石の間に割り込む付け手です。",
+     "h0": "辺で、相手の石2つにはさまれた空きマスに打つと、相手の辺の形を崩せます。",
+     "look": "4本の辺（明るい帯）を順に見て、相手の石2つにはさまれた空きマスを探しましょう。光る枠が付け手の候補です。"
+    },
+    "en": {
+     "c1": "The bright bands are the four <b>edges</b>. On the top edge there are white discs on c1 and e1 (outlined) with d1 empty between them. Playing into a gap between two of your opponent's discs on an edge is called a <b>wedge</b>. If Black plays d1, White's edge is split, and the black disc on d1 cannot be flipped along the edge because white discs sit on both sides of it.",
+     "g": "Play the empty top-edge square between two white discs (marked).",
+     "gok": "The wedge on d1 splits White's top edge. b1 would have handed over the a1 corner.",
+     "p1ok": "a2 is right: a wedge between the black discs on a1 and a3. On top of that, a2 was a square only White could play.",
+     "p2ok": "h2 is right: a wedge between the white discs on h1 and h3.",
+     "h0": "On an edge, playing into a gap between two opposing discs breaks up your opponent's edge.",
+     "look": "Scan the four edges (bright bands) for an empty square between two opposing discs. The glowing frame shows the wedge candidate."
+    },
+    "zh": {
+     "c1": "亮起的4条带是<b>边</b>。看上边：c1 和 e1 上有白子（虚线），中间的 d1 是空的。在边上下进被两枚对手棋子夹住的空格，叫做<b>“楔入”</b>。黑棋下在 d1 后，白棋的边被切断，而且 d1 的黑子两侧都是白子，不会沿着边被翻转。",
+     "g": "请下在上边被两枚白子夹住的空格（已标记）。",
+     "gok": "d1 的楔入切断了白棋的上边。b1 会把 a1 的角让给对手。",
+     "p1ok": "a2 是正确答案：插入 a1 与 a3 两枚黑子之间的楔入。而且 a2 本来就是只有白棋能下的位置。",
+     "p2ok": "h2 是正确答案：插入 h1 与 h3 两枚白子之间的楔入。",
+     "h0": "在边上下进被两枚对手棋子夹住的空格，可以破坏对手的边。",
+     "look": "依次查看4条边（亮带），寻找被两枚对手棋子夹住的空格。发光的框就是楔入的候选。"
+    },
+    "ko": {
+     "c1": "밝은 띠 4개가 <b>변</b>입니다. 윗변을 보면 c1과 e1에 백돌(점선)이 있고, 그 사이 d1이 비어 있습니다. 변에서 상대 돌 두 개 사이의 빈칸에 두는 수를 <b>쐐기(붙이는 수)</b>라고 합니다. 흑이 d1에 두면 백의 변 모양이 끊기고, d1의 흑돌은 양쪽이 백이라 변을 따라 뒤집히지도 않습니다.",
+     "g": "윗변에서 백돌 두 개 사이의 빈칸(표시)에 두어 봅시다.",
+     "gok": "d1의 쐐기로 백의 윗변을 끊었습니다. b1은 상대에게 a1 귀를 내줄 뻔했습니다.",
+     "p1ok": "a2가 정답. a1과 a3의 흑돌 사이에 끼어드는 쐐기입니다. 게다가 a2는 백만 둘 수 있는 곳이었습니다.",
+     "p2ok": "h2가 정답. h1과 h3의 백돌 사이에 끼어드는 쐐기입니다.",
+     "h0": "변에서 상대 돌 두 개 사이의 빈칸에 두면 상대의 변 모양을 무너뜨릴 수 있습니다.",
+     "look": "변 4개(밝은 띠)를 차례로 보며 상대 돌 두 개 사이의 빈칸을 찾으세요. 빛나는 테두리가 쐐기 후보입니다."
+    },
+    "es": {
+     "c1": "Las franjas iluminadas son los cuatro <b>bordes</b>. En el borde superior hay fichas blancas en c1 y e1 (resaltadas) con d1 vacía entre ellas. Jugar en un hueco entre dos fichas rivales de un borde se llama <b>cuña</b>. Si las negras juegan en d1, el borde blanco queda partido, y la ficha negra de d1 no puede voltearse a lo largo del borde porque tiene fichas blancas a ambos lados.",
+     "g": "Juega en la casilla vacía del borde superior entre dos fichas blancas (marcada).",
+     "gok": "La cuña en d1 parte el borde superior de las blancas. b1 habría regalado la esquina a1.",
+     "p1ok": "a2 es la correcta: una cuña entre las fichas negras de a1 y a3. Además, a2 era una casilla donde solo podían jugar las blancas.",
+     "p2ok": "h2 es la correcta: una cuña entre las fichas blancas de h1 y h3.",
+     "h0": "En un borde, jugar en un hueco entre dos fichas rivales rompe la estructura del rival.",
+     "look": "Recorre los cuatro bordes (franjas iluminadas) buscando una casilla vacía entre dos fichas rivales. El marco brillante señala la candidata a cuña."
+    },
+    "fr": {
+     "c1": "Les bandes éclairées sont les quatre <b>bords</b>. Sur le bord supérieur, il y a des pions blancs en c1 et e1 (surlignés) avec d1 vide entre eux. Jouer dans un trou entre deux pions adverses sur un bord s’appelle un <b>coin de bord (wedge)</b>. Si les Noirs jouent en d1, le bord blanc est coupé, et le pion noir en d1 ne peut pas être retourné le long du bord puisqu’il a des pions blancs des deux côtés.",
+     "g": "Jouez sur la case vide du bord supérieur, entre deux pions blancs (marquée).",
+     "gok": "Le wedge en d1 coupe le bord supérieur des Blancs. b1 aurait offert le coin a1.",
+     "p1ok": "a2 est la bonne réponse : un wedge entre les pions noirs de a1 et a3. De plus, a2 était une case que seuls les Blancs pouvaient jouer.",
+     "p2ok": "h2 est la bonne réponse : un wedge entre les pions blancs de h1 et h3.",
+     "h0": "Sur un bord, jouer dans un trou entre deux pions adverses brise la structure de l’adversaire.",
+     "look": "Parcourez les quatre bords (bandes éclairées) à la recherche d’une case vide entre deux pions adverses. Le cadre lumineux montre le candidat."
+    },
+    "pt": {
+     "c1": "As faixas iluminadas são as quatro <b>bordas</b>. Na borda superior há peças brancas em c1 e e1 (destacadas), com d1 vazia entre elas. Jogar num vão entre duas peças adversárias numa borda se chama <b>cunha</b>. Se as pretas jogarem em d1, a borda branca fica dividida, e a peça preta em d1 não pode ser virada ao longo da borda, porque tem peças brancas dos dois lados.",
+     "g": "Jogue na casa vazia da borda superior entre duas peças brancas (marcada).",
+     "gok": "A cunha em d1 divide a borda superior das brancas. b1 teria entregado o canto a1.",
+     "p1ok": "a2 é o certo: uma cunha entre as peças pretas de a1 e a3. Além disso, a2 era uma casa onde só as brancas podiam jogar.",
+     "p2ok": "h2 é o certo: uma cunha entre as peças brancas de h1 e h3.",
+     "h0": "Numa borda, jogar num vão entre duas peças adversárias desmonta a estrutura do adversário.",
+     "look": "Percorra as quatro bordas (faixas iluminadas) procurando uma casa vazia entre duas peças adversárias. A moldura brilhante indica a candidata."
+    },
+    "de": {
+     "c1": "Die hellen Streifen sind die vier <b>Ränder</b>. Am oberen Rand stehen weiße Steine auf c1 und e1 (umrandet), dazwischen ist d1 frei. Ein Zug in eine Lücke zwischen zwei gegnerischen Steinen am Rand heißt <b>Keil</b>. Setzt Schwarz auf d1, ist der weiße Rand geteilt, und der schwarze Stein auf d1 kann entlang des Randes nicht umgedreht werden, weil auf beiden Seiten weiße Steine stehen.",
+     "g": "Setze auf das leere Feld am oberen Rand zwischen zwei weißen Steinen (markiert).",
+     "gok": "Der Keil auf d1 teilt den oberen Rand von Weiß. b1 hätte die Ecke a1 verschenkt.",
+     "p1ok": "a2 ist richtig: ein Keil zwischen den schwarzen Steinen auf a1 und a3. Außerdem konnte nur Weiß a2 spielen.",
+     "p2ok": "h2 ist richtig: ein Keil zwischen den weißen Steinen auf h1 und h3.",
+     "h0": "Am Rand zerstört ein Zug in eine Lücke zwischen zwei gegnerischen Steinen die Randstellung des Gegners.",
+     "look": "Suche an den vier Rändern (helle Streifen) ein leeres Feld zwischen zwei gegnerischen Steinen. Der leuchtende Rahmen zeigt den Keil-Kandidaten."
+    },
+    "hi": {
+     "c1": "चमकीली पट्टियाँ चार <b>किनारे</b> हैं। ऊपरी किनारे पर c1 और e1 पर सफ़ेद गोटियाँ हैं (डैश घेरे में) और बीच में d1 ख़ाली है। किनारे पर विरोधी की दो गोटियों के बीच की ख़ाली जगह में चलना <b>फाँस (वेज)</b> कहलाता है। काला d1 पर चले तो सफ़ेद का किनारा टूट जाता है, और d1 की काली गोटी किनारे के साथ नहीं पलट सकती, क्योंकि उसके दोनों ओर सफ़ेद गोटियाँ हैं।",
+     "g": "ऊपरी किनारे पर दो सफ़ेद गोटियों के बीच के ख़ाली खाने (चिह्नित) पर चलिए।",
+     "gok": "d1 की फाँस ने सफ़ेद का ऊपरी किनारा तोड़ दिया। b1 से a1 का कोना विरोधी को मिल जाता।",
+     "p1ok": "a2 सही है: a1 और a3 की काली गोटियों के बीच फाँस। साथ ही, a2 पर सिर्फ़ सफ़ेद ही चल सकता था।",
+     "p2ok": "h2 सही है: h1 और h3 की सफ़ेद गोटियों के बीच फाँस।",
+     "h0": "किनारे पर विरोधी की दो गोटियों के बीच की ख़ाली जगह में चलने से विरोधी का किनारा बिखर जाता है।",
+     "look": "चारों किनारों (चमकीली पट्टियाँ) पर विरोधी की दो गोटियों के बीच ख़ाली खाना ढूँढिए। चमकता फ़्रेम फाँस का उम्मीदवार दिखाता है।"
+    },
+    "ar": {
+     "c1": "الأشرطة المضيئة هي <b>الحواف</b> الأربع. على الحافة العليا قطعتان بيضاوان في <span dir=\"ltr\">c1</span> و<span dir=\"ltr\">e1</span> (محاطتان بخط) وبينهما <span dir=\"ltr\">d1</span> فارغة. اللعب في فجوة بين قطعتين للخصم على الحافة يسمّى <b>الإسفين</b>. إذا لعب الأسود في <span dir=\"ltr\">d1</span> انقسمت حافة الأبيض، ولا يمكن قلب القطعة السوداء في <span dir=\"ltr\">d1</span> على طول الحافة لأن على جانبيها قطعًا بيضاء.",
+     "g": "العب في الخانة الفارغة على الحافة العليا بين قطعتين بيضاوين (المُعلَّمة).",
+     "gok": "الإسفين في <span dir=\"ltr\">d1</span> قسم الحافة العليا للأبيض. <span dir=\"ltr\">b1</span> كانت ستهدي زاوية <span dir=\"ltr\">a1</span>.",
+     "p1ok": "<span dir=\"ltr\">a2</span> هي الصحيحة: إسفين بين القطعتين السوداوين في <span dir=\"ltr\">a1</span> و<span dir=\"ltr\">a3</span>. كما أن <span dir=\"ltr\">a2</span> كانت خانة لا يلعب فيها إلا الأبيض.",
+     "p2ok": "<span dir=\"ltr\">h2</span> هي الصحيحة: إسفين بين القطعتين البيضاوين في <span dir=\"ltr\">h1</span> و<span dir=\"ltr\">h3</span>.",
+     "h0": "على الحافة، اللعب في فجوة بين قطعتين للخصم يفكّك بنية حافته.",
+     "look": "تفقّد الحواف الأربع (الأشرطة المضيئة) بحثًا عن خانة فارغة بين قطعتين للخصم. الإطار المضيء يشير إلى الإسفين المرشّح."
+    }
+   }
+  },
+  "exception": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "cwait",
+     "mv": "c4c5d6c3e6d7c6c7b4f5c8b3d8f4d3f6a3b5g7e3e7a4g5g6g4b6f7h5e2f3h6h7h4h8g3g8f8h3a6b7e8b8",
+     "marks": {
+      "a5": "focus"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "cwait",
+     "mv": "c4c5d6c3e6d7c6c7b4f5c8b3d8f4d3f6a3b5g7e3e7a4g5g6g4b6f7h5e2f3h6h7h4h8g3g8f8h3a6b7e8b8",
+     "ans": "a5"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "cwait",
+     "mv": "e6d6c5f6e3c4c6d3c3f3d7c7c8c2d2b4b5b6c1f2a6a4a5d8a3b8f5d1e1g6f4e2g3b1g7f1h6h4g2g4e8h7h8f8e7b7g5h5h3g8",
+     "ans": "f7"
+    },
+    {
+     "t": "concept",
+     "k": "c2",
+     "aid": "corner",
+     "mv": "f5f4g3e6f7e7f3d6d7e3c7f6g5g4d2h5h4h3c6g6c3f8h7c8",
+     "marks": {
+      "g7": "focus",
+      "h8": "danger"
+     },
+     "arrows": [
+      [
+       "g7",
+       "c3"
+      ]
+     ]
+    },
+    {
+     "t": "guided",
+     "k": "g2",
+     "aid": "corner",
+     "mv": "f5f4g3e6f7e7f3d6d7e3c7f6g5g4d2h5h4h3c6g6c3f8h7c8",
+     "ans": "g7"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "corner",
+     "mv": "c4e3f4c3d3c5f3d2b4g5f5b5e2e1f2a3c1c2a5b6b3a4f1a6d1g3g4h4h6c6d6d7h5h7h3h2e6f7e7f8b1g6b7c7d8b8e8f6c8",
+     "ans": "b2"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "「隅は必ず取れ」には例外があります。この局面の a8 の隅は、白には取れません（赤い点が白の打てる場所）。<b>相手が取れない隅は逃げない</b>ので、急がず後回しにできます。印の a5 は外側の石を増やさず、白の打てる場所も10→9か所に減らす手。隅はあとで取ればよいのです。",
+     "g": "a8 の隅はあとで取れます。今は相手の打てる場所を減らす手（印）を選びましょう。",
+     "gok": "a5 が正解。白は a8 を取れないので、隅は残ったまま。a7（C）は白に a8 を取らせてしまいます。",
+     "p1ok": "f7 が正解。a8 の隅は白には取れないので急ぐ必要はありません。f7 は静かに相手の打てる場所を減らします。",
+     "c2": "X 打ちが正しい場面もあります。矢印の対角線を見ると、黒が g7（X）に打った後は g7〜c3 がすべて黒石になり、その先の b2 は空きです。白には h8 から黒石をはさむ石がないので、h8 を取れません。<b>「XやCは危険」は格言であって絶対ではありません。打った後に相手が隅を取れるかを確かめましょう。</b>",
+     "g2": "g7 の X 打ちは安全です。赤い点線（隅を渡す手）を避けて、g7 に打ってみましょう。",
+     "g2ok": "g7 が正解。白は h8 を取れません。h6 や g8 に打つと、白が h8 を取れるようになっていました。",
+     "p2ok": "b2 が正解。X ですが、白はこの後 a1 を取れません。g1（C）は h1 の隅を渡してしまいます。",
+     "h0": "隅やX・Cの格言には例外があります。「打った後に相手が何をできるか」で判断しましょう。",
+     "look": "赤い点線は、打つと相手が隅を取れるようになる手です。それ以外で、相手が隅を取れない手を探しましょう。"
+    },
+    "en": {
+     "c1": "\"Always take the corner\" has exceptions. Here White cannot take the a8 corner (red dots are White's moves). <b>A corner your opponent cannot take will not run away</b>, so you can leave it for later. The marked a5 adds no outer discs and cuts White's moves from 10 to 9. You can take the corner afterwards.",
+     "g": "The a8 corner can wait. For now, choose the move that reduces your opponent's options (marked).",
+     "gok": "a5 is right. White cannot take a8, so the corner is still yours to take later. a7 (a C square) would let White take a8.",
+     "p1ok": "f7 is right. White cannot take the a8 corner, so there is no hurry. f7 quietly reduces your opponent's moves.",
+     "c2": "Sometimes an X move is correct. Follow the diagonal (arrow): after Black plays g7 (an X square), every disc from g7 to c3 is black and b2 beyond them is empty. White has no disc to sandwich them from h8, so White cannot take the corner. <b>\"X and C squares are dangerous\" is a proverb, not a law. Check whether your opponent can take the corner afterwards.</b>",
+     "g2": "The X move g7 is safe. Avoid the red dashed squares (they give away a corner) and play g7.",
+     "g2ok": "g7 is right: White cannot take h8. After h6 or g8, White could have taken it.",
+     "p2ok": "b2 is right. It is an X square, but White cannot take a1 afterwards. g1 (a C square) gives away the h1 corner.",
+     "h0": "The corner and X/C proverbs have exceptions. Judge by what your opponent can do after your move.",
+     "look": "Red dashed squares are moves that let your opponent take a corner. Look for a move that does not."
+    },
+    "zh": {
+     "c1": "“角一定要占”也有例外。这个局面中白棋无法占 a8 的角（红点是白棋能下的位置）。<b>对手占不到的角不会跑掉</b>，可以放到以后再占。标记的 a5 不增加外侧子，还让白棋的可下位置从10处减到9处。角以后再占就行。",
+     "g": "a8 的角以后还能占。现在请选择减少对手可下位置的着法（已标记）。",
+     "gok": "a5 是正确答案。白棋占不到 a8，角还留着。下 a7（C）会让白棋占到 a8。",
+     "p1ok": "f7 是正确答案。白棋占不到 a8 的角，不必着急。f7 安静地减少了对手的可下位置。",
+     "c2": "有时下 X 才是正确的。沿箭头的对角线看：黑棋下 g7（X）之后，g7 到 c3 全是黑子，再往前的 b2 是空格。白棋没有能从 h8 夹住它们的子，所以占不到这个角。<b>“X、C 很危险”只是格言，不是铁律。下之前要确认对手之后能不能占角。</b>",
+     "g2": "g7 的 X 着法是安全的。避开红色虚线（会让出角的着法），下在 g7。",
+     "g2ok": "g7 是正确答案，白棋占不到 h8。若下 h6 或 g8，白棋就能占 h8 了。",
+     "p2ok": "b2 是正确答案。虽然是 X，但之后白棋占不到 a1。g1（C）会把 h1 的角让给对手。",
+     "h0": "关于角和 X、C 的格言都有例外。要根据“下完之后对手能做什么”来判断。",
+     "look": "红色虚线是下了之后会让对手占角的着法。请找一个不会让对手占角的着法。"
+    },
+    "ko": {
+     "c1": "\"귀는 반드시 잡아라\"에는 예외가 있습니다. 이 국면에서 백은 a8 귀를 잡을 수 없습니다(빨간 점이 백이 둘 수 있는 곳). <b>상대가 잡을 수 없는 귀는 도망가지 않으므로</b> 서두르지 않고 나중으로 미룰 수 있습니다. 표시한 a5는 바깥쪽 돌을 늘리지 않고, 백이 둘 곳도 10→9곳으로 줄이는 수. 귀는 나중에 잡으면 됩니다.",
+     "g": "a8 귀는 나중에 잡을 수 있습니다. 지금은 상대가 둘 곳을 줄이는 수(표시)를 고릅시다.",
+     "gok": "a5가 정답. 백은 a8을 잡을 수 없으니 귀는 그대로 남습니다. a7(C)은 백에게 a8을 내주게 됩니다.",
+     "p1ok": "f7이 정답. 백은 a8 귀를 잡을 수 없으니 서두를 필요가 없습니다. f7은 조용히 상대가 둘 곳을 줄입니다.",
+     "c2": "X에 두는 것이 옳은 장면도 있습니다. 화살표의 대각선을 보면, 흑이 g7(X)에 둔 뒤 g7~c3이 모두 흑돌이 되고 그 너머의 b2는 비어 있습니다. 백에게는 h8에서 흑돌을 끼울 돌이 없어 h8을 잡을 수 없습니다. <b>\"X·C는 위험\"은 격언일 뿐 절대적이지 않습니다. 둔 뒤 상대가 귀를 잡을 수 있는지 확인합시다.</b>",
+     "g2": "g7의 X 수는 안전합니다. 빨간 점선(귀를 내주는 수)을 피해 g7에 두어 봅시다.",
+     "g2ok": "g7이 정답. 백은 h8을 잡을 수 없습니다. h6이나 g8에 두면 백이 h8을 잡을 수 있게 됩니다.",
+     "p2ok": "b2가 정답. X이지만 이후 백은 a1을 잡을 수 없습니다. g1(C)은 h1 귀를 내주고 맙니다.",
+     "h0": "귀나 X·C에 관한 격언에는 예외가 있습니다. \"둔 뒤 상대가 무엇을 할 수 있는가\"로 판단합시다.",
+     "look": "빨간 점선은 두면 상대가 귀를 잡게 되는 수입니다. 그렇지 않은 수를 찾으세요."
+    },
+    "es": {
+     "c1": "«Toma siempre la esquina» tiene excepciones. Aquí las blancas no pueden tomar la esquina a8 (los puntos rojos son sus jugadas). <b>Una esquina que el rival no puede tomar no se va a escapar</b>, así que puedes dejarla para después. La a5 marcada no añade fichas exteriores y reduce las jugadas blancas de 10 a 9. La esquina puedes tomarla más tarde.",
+     "g": "La esquina a8 puede esperar. Por ahora, elige la jugada que reduce las opciones del rival (marcada).",
+     "gok": "a5 es la correcta. Las blancas no pueden tomar a8, así que la esquina sigue ahí. a7 (casilla C) dejaría a las blancas tomar a8.",
+     "p1ok": "f7 es la correcta. Las blancas no pueden tomar la esquina a8, así que no hay prisa. f7 reduce con calma las jugadas del rival.",
+     "c2": "A veces jugar en X es lo correcto. Sigue la diagonal de la flecha: tras jugar las negras en g7 (casilla X), todas las fichas de g7 a c3 son negras y la b2 que hay detrás está vacía. Las blancas no tienen ninguna ficha para encerrarlas desde h8, así que no pueden tomar la esquina. <b>«Las casillas X y C son peligrosas» es un refrán, no una ley. Comprueba si el rival puede tomar la esquina después.</b>",
+     "g2": "La jugada X g7 es segura. Evita las casillas rojas discontinuas (regalan una esquina) y juega g7.",
+     "g2ok": "g7 es la correcta: las blancas no pueden tomar h8. Tras h6 o g8, sí habrían podido.",
+     "p2ok": "b2 es la correcta. Es una casilla X, pero después las blancas no pueden tomar a1. g1 (casilla C) regala la esquina h1.",
+     "h0": "Los refranes sobre esquinas y casillas X/C tienen excepciones. Juzga por lo que el rival puede hacer después de tu jugada.",
+     "look": "Las casillas rojas discontinuas son jugadas que dejan al rival tomar una esquina. Busca una que no lo haga."
+    },
+    "fr": {
+     "c1": "« Prenez toujours le coin » a des exceptions. Ici, les Blancs ne peuvent pas prendre le coin a8 (les points rouges sont leurs coups). <b>Un coin que l’adversaire ne peut pas prendre ne s’envolera pas</b> : vous pouvez le garder pour plus tard. Le coup a5 (marqué) n’ajoute aucun pion extérieur et fait passer les coups blancs de 10 à 9. Le coin, vous le prendrez ensuite.",
+     "g": "Le coin a8 peut attendre. Pour l’instant, choisissez le coup qui réduit les options de l’adversaire (marqué).",
+     "gok": "a5 est la bonne réponse. Les Blancs ne peuvent pas prendre a8 : le coin reste disponible. a7 (case C) permettrait aux Blancs de prendre a8.",
+     "p1ok": "f7 est la bonne réponse. Les Blancs ne peuvent pas prendre le coin a8 : rien ne presse. f7 réduit calmement les coups de l’adversaire.",
+     "c2": "Parfois, jouer en X est juste. Suivez la diagonale (flèche) : après que les Noirs ont joué g7 (case X), tous les pions de g7 à c3 sont noirs et la case b2 au-delà est vide. Les Blancs n’ont aucun pion pour les encadrer depuis h8 : ils ne peuvent pas prendre le coin. <b>« Les cases X et C sont dangereuses » est un adage, pas une loi. Vérifiez si l’adversaire peut prendre le coin après votre coup.</b>",
+     "g2": "Le coup X en g7 est sûr. Évitez les cases en pointillé rouge (elles offrent un coin) et jouez g7.",
+     "g2ok": "g7 est la bonne réponse : les Blancs ne peuvent pas prendre h8. Après h6 ou g8, ils l’auraient pu.",
+     "p2ok": "b2 est la bonne réponse. C’est une case X, mais les Blancs ne peuvent pas prendre a1 ensuite. g1 (case C) offre le coin h1.",
+     "h0": "Les adages sur les coins et les cases X/C ont des exceptions. Jugez d’après ce que l’adversaire peut faire après votre coup.",
+     "look": "Les cases en pointillé rouge sont des coups qui laissent l’adversaire prendre un coin. Cherchez un coup qui ne le fait pas."
+    },
+    "pt": {
+     "c1": "\"Sempre tome o canto\" tem exceções. Aqui as brancas não podem tomar o canto a8 (os pontos vermelhos são as jogadas delas). <b>Um canto que o adversário não pode tomar não vai fugir</b>, então você pode deixá-lo para depois. A jogada a5 (marcada) não acrescenta peças externas e reduz as jogadas das brancas de 10 para 9. O canto você toma mais tarde.",
+     "g": "O canto a8 pode esperar. Por enquanto, escolha a jogada que reduz as opções do adversário (marcada).",
+     "gok": "a5 é o certo. As brancas não podem tomar a8, então o canto continua lá. a7 (casa C) deixaria as brancas tomarem a8.",
+     "p1ok": "f7 é o certo. As brancas não podem tomar o canto a8, então não há pressa. f7 reduz com calma as jogadas do adversário.",
+     "c2": "Às vezes jogar em X é o certo. Siga a diagonal da seta: depois que as pretas jogam g7 (casa X), todas as peças de g7 a c3 ficam pretas e a b2, logo depois, está vazia. As brancas não têm peça para cercá-las a partir de h8, então não podem tomar o canto. <b>\"As casas X e C são perigosas\" é um provérbio, não uma lei. Verifique se o adversário pode tomar o canto depois.</b>",
+     "g2": "A jogada X em g7 é segura. Evite as casas com tracejado vermelho (entregam um canto) e jogue g7.",
+     "g2ok": "g7 é o certo: as brancas não podem tomar h8. Depois de h6 ou g8, elas poderiam.",
+     "p2ok": "b2 é o certo. É uma casa X, mas depois as brancas não podem tomar a1. g1 (casa C) entrega o canto h1.",
+     "h0": "Os provérbios sobre cantos e casas X/C têm exceções. Julgue pelo que o adversário pode fazer depois da sua jogada.",
+     "look": "As casas com tracejado vermelho são jogadas que deixam o adversário tomar um canto. Procure uma que não faça isso."
+    },
+    "de": {
+     "c1": "„Nimm immer die Ecke“ hat Ausnahmen. Hier kann Weiß die Ecke a8 nicht nehmen (die roten Punkte sind seine Züge). <b>Eine Ecke, die der Gegner nicht nehmen kann, läuft nicht weg</b> – du kannst sie dir aufheben. Das markierte a5 schafft keine Randsteine und senkt die weißen Züge von 10 auf 9. Die Ecke nimmst du später.",
+     "g": "Die Ecke a8 kann warten. Wähle jetzt den Zug, der die Möglichkeiten des Gegners verringert (markiert).",
+     "gok": "a5 ist richtig. Weiß kann a8 nicht nehmen, die Ecke bleibt dir. a7 (C-Feld) würde Weiß a8 nehmen lassen.",
+     "p1ok": "f7 ist richtig. Weiß kann die Ecke a8 nicht nehmen, also keine Eile. f7 verringert ruhig die Züge des Gegners.",
+     "c2": "Manchmal ist ein X-Zug richtig. Folge der Diagonale (Pfeil): Nachdem Schwarz g7 (X-Feld) gespielt hat, sind alle Steine von g7 bis c3 schwarz, und b2 dahinter ist leer. Weiß hat keinen Stein, um sie von h8 aus einzuschließen, und kann die Ecke nicht nehmen. <b>„X- und C-Felder sind gefährlich“ ist eine Faustregel, kein Gesetz. Prüfe, ob der Gegner danach die Ecke nehmen kann.</b>",
+     "g2": "Der X-Zug g7 ist sicher. Meide die rot gestrichelten Felder (sie verschenken eine Ecke) und spiele g7.",
+     "g2ok": "g7 ist richtig: Weiß kann h8 nicht nehmen. Nach h6 oder g8 hätte Weiß es gekonnt.",
+     "p2ok": "b2 ist richtig. Es ist ein X-Feld, aber Weiß kann danach a1 nicht nehmen. g1 (C-Feld) verschenkt die Ecke h1.",
+     "h0": "Die Faustregeln zu Ecken und X/C-Feldern haben Ausnahmen. Urteile danach, was der Gegner nach deinem Zug tun kann.",
+     "look": "Rot gestrichelte Felder sind Züge, nach denen der Gegner eine Ecke nehmen kann. Suche einen Zug, bei dem das nicht passiert."
+    },
+    "hi": {
+     "c1": "“कोना हमेशा लो” के अपवाद हैं। यहाँ सफ़ेद a8 का कोना नहीं ले सकता (लाल बिंदु सफ़ेद की चालें हैं)। <b>जो कोना विरोधी नहीं ले सकता, वह कहीं भागेगा नहीं</b>, इसलिए उसे बाद के लिए छोड़ा जा सकता है। चिह्नित a5 कोई बाहरी गोटी नहीं बढ़ाता और सफ़ेद की चालें 10 से 9 कर देता है। कोना बाद में ले लीजिए।",
+     "g": "a8 का कोना इंतज़ार कर सकता है। अभी वह चाल चुनिए जो विरोधी के विकल्प घटाए (चिह्नित)।",
+     "gok": "a5 सही है। सफ़ेद a8 नहीं ले सकता, इसलिए कोना बचा रहता है। a7 (C खाना) सफ़ेद को a8 लेने देता।",
+     "p1ok": "f7 सही है। सफ़ेद a8 का कोना नहीं ले सकता, इसलिए जल्दी नहीं। f7 शांति से विरोधी की चालें घटाता है।",
+     "c2": "कभी-कभी X पर चलना सही होता है। तीर वाला विकर्ण देखिए: काले के g7 (X खाना) पर चलने के बाद g7 से c3 तक सब काली गोटियाँ हैं और उसके आगे b2 ख़ाली है। सफ़ेद के पास h8 से उन्हें घेरने के लिए कोई गोटी नहीं, इसलिए वह कोना नहीं ले सकता। <b>“X और C ख़तरनाक हैं” एक कहावत है, अटल नियम नहीं। चलने के बाद जाँचिए कि विरोधी कोना ले सकता है या नहीं।</b>",
+     "g2": "g7 की X चाल सुरक्षित है। लाल डैश वाले खानों (जो कोना दे देते हैं) से बचकर g7 पर चलिए।",
+     "g2ok": "g7 सही है: सफ़ेद h8 नहीं ले सकता। h6 या g8 के बाद वह ले सकता था।",
+     "p2ok": "b2 सही है। यह X खाना है, पर इसके बाद सफ़ेद a1 नहीं ले सकता। g1 (C खाना) h1 का कोना दे देता है।",
+     "h0": "कोने और X/C की कहावतों के अपवाद हैं। फ़ैसला इस पर कीजिए कि आपकी चाल के बाद विरोधी क्या कर सकता है।",
+     "look": "लाल डैश वाले खाने वे चालें हैं जिनके बाद विरोधी कोना ले सकता है। ऐसी चाल खोजिए जो ऐसा न करे।"
+    },
+    "ar": {
+     "c1": "لقاعدة «خذ الزاوية دائمًا» استثناءات. هنا لا يستطيع الأبيض أخذ زاوية <span dir=\"ltr\">a8</span> (النقاط الحمراء هي نقلاته). <b>الزاوية التي لا يستطيع الخصم أخذها لن تهرب</b>، فيمكنك تأجيلها. النقلة <span dir=\"ltr\">a5</span> المُعلَّمة لا تزيد القطع الخارجية وتخفض نقلات الأبيض من 10 إلى 9. والزاوية تأخذها لاحقًا.",
+     "g": "زاوية <span dir=\"ltr\">a8</span> يمكنها الانتظار. اختر الآن النقلة التي تقلل خيارات الخصم (المُعلَّمة).",
+     "gok": "<span dir=\"ltr\">a5</span> هي الصحيحة. لا يستطيع الأبيض أخذ <span dir=\"ltr\">a8</span>، فالزاوية باقية. أما <span dir=\"ltr\">a7</span> (خانة C) فكانت ستسمح للأبيض بأخذ <span dir=\"ltr\">a8</span>.",
+     "p1ok": "<span dir=\"ltr\">f7</span> هي الصحيحة. لا يستطيع الأبيض أخذ زاوية <span dir=\"ltr\">a8</span>، فلا داعي للعجلة. <span dir=\"ltr\">f7</span> تقلل نقلات الخصم بهدوء.",
+     "c2": "أحيانًا يكون اللعب في X صحيحًا. تتبّع القطر (السهم): بعد أن يلعب الأسود <span dir=\"ltr\">g7</span> (خانة X) تصبح كل القطع من <span dir=\"ltr\">g7</span> إلى <span dir=\"ltr\">c3</span> سوداء، و<span dir=\"ltr\">b2</span> بعدها فارغة. ليس لدى الأبيض قطعة يحاصرها بها من <span dir=\"ltr\">h8</span>، فلا يستطيع أخذ الزاوية. <b>«خانات X وC خطيرة» مَثَل وليست قانونًا. تحقّق إن كان الخصم يستطيع أخذ الزاوية بعد نقلتك.</b>",
+     "g2": "نقلة X في <span dir=\"ltr\">g7</span> آمنة. تجنّب الخانات ذات الخط الأحمر المتقطع (تهدي زاوية) والعب <span dir=\"ltr\">g7</span>.",
+     "g2ok": "<span dir=\"ltr\">g7</span> هي الصحيحة: لا يستطيع الأبيض أخذ <span dir=\"ltr\">h8</span>. بعد <span dir=\"ltr\">h6</span> أو <span dir=\"ltr\">g8</span> كان سيستطيع.",
+     "p2ok": "<span dir=\"ltr\">b2</span> هي الصحيحة. إنها خانة X، لكن الأبيض لا يستطيع بعدها أخذ <span dir=\"ltr\">a1</span>. أما <span dir=\"ltr\">g1</span> (خانة C) فتهدي زاوية <span dir=\"ltr\">h1</span>.",
+     "h0": "أمثال الزوايا وخانات X/C لها استثناءات. احكم بما يستطيع الخصم فعله بعد نقلتك.",
+     "look": "الخانات ذات الخط الأحمر المتقطع نقلات تسمح للخصم بأخذ زاوية. ابحث عن نقلة لا تفعل ذلك."
+    }
+   }
+  },
+  "parity": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "region",
+     "mv": "e6f4g3e7d6f6f5g6f3e3g5c4h6c5e8g4h5f2c3h2d3h4c7e2d2d7e1b8h3h7f1d8g7g2c6f7h8b6h1g1g8f8b7d1c2b5a5a4c1b4a6a8a7",
+     "marks": {
+      "c8": "focus"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "region",
+     "mv": "e6f4g3e7d6f6f5g6f3e3g5c4h6c5e8g4h5f2c3h2d3h4c7e2d2d7e1b8h3h7f1d8g7g2c6f7h8b6h1g1g8f8b7d1c2b5a5a4c1b4a6a8a7",
+     "ans": "c8"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "region",
+     "mv": "f5f4e3f6e6c5c6d3f3d2g6g5h4d6e2g3b5f7c3c4e1c1g4h3h5c2f2h6e7d1g2e8f1b3b4a4a5a6b6a3c7h1h2g1g7c8d8d7f8g8h8",
+     "ans": "h7"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "region",
+     "mv": "c4c5d6c7d7e7f5c3b4d3e6g6d8c6b7b5f6a8a4a3g5a5h6c8b3f8e8f4e3f7b8a2a7a6b6c2c1h4b2h5h3d1e1f2e2f1g7h8g8f3g1",
+     "ans": "d2"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "終盤の空きマスは、いくつかの<b>塊</b>に分かれます。数字は、そのマスが属する塊の大きさです。ここには6マスの塊と、1マスだけの塊（c8）があります。<b>奇数の塊に自分から入る</b>と、その塊の最後の1手を自分が打てます。1マスの c8 に白が打てば、黒はそこに何も返せません。",
+     "g": "数字は空きの塊の大きさです。奇数の塊（オレンジ）の空きに打ってみましょう。",
+     "gok": "c8 が正解。1マスの塊を白が埋めたので、黒は返し返しができません。b2 は相手に a1 の隅も渡します。",
+     "p1ok": "h7 が正解。h7 は1マスの塊。ほかの手は4マスの塊（偶数）に入ってしまいます。",
+     "p2ok": "d2 が正解。1マスの塊を先に埋めます。a1・b1 は2マスの塊（偶数）に入る手です。",
+     "h0": "空きの塊ごとにマス数を数え、奇数の塊から打つのが偶数理論の基本です。",
+     "look": "盤の数字は空きの塊の大きさです。オレンジ（奇数）の塊にある打てる場所を探しましょう。"
+    },
+    "en": {
+     "c1": "In the endgame the empty squares split into <b>regions</b>. Each number is the size of the region that square belongs to. Here there is a 6-square region and a 1-square region (c8). <b>If you move first into an odd region</b>, you get the last move in it. If White fills the single square c8, Black cannot flip anything back there.",
+     "g": "The numbers are region sizes. Play into an odd region (orange).",
+     "gok": "c8 is right. White filled the 1-square region, so Black cannot flip back. b2 would also hand over the a1 corner.",
+     "p1ok": "h7 is right: it is a 1-square region. The other moves go into the 4-square (even) region.",
+     "p2ok": "d2 is right: fill the 1-square region first. a1 and b1 go into a 2-square (even) region.",
+     "h0": "Count the empty squares region by region and play into an odd region first — the basic parity rule.",
+     "look": "The numbers on the board are region sizes. Find a legal move inside an orange (odd) region."
+    },
+    "zh": {
+     "c1": "终盘的空格会分成几个<b>块</b>。数字表示该格所属空块的大小。这里有一个6格的块和一个只有1格的块（c8）。<b>先进入奇数块</b>，就能下到该块的最后一手。白棋把只有1格的 c8 填上，黑棋在那里就无法再翻回来。",
+     "g": "数字是空块的大小。请下在奇数块（橙色）的空格里。",
+     "gok": "c8 是正确答案。白棋填满了1格的块，黑棋无法翻回。b2 还会把 a1 的角让给对手。",
+     "p1ok": "h7 是正确答案：h7 是1格的块。其他着法都会进入4格（偶数）的块。",
+     "p2ok": "d2 是正确答案：先填满1格的块。a1、b1 都是进入2格（偶数）块的着法。",
+     "h0": "按块数出空格数，先从奇数块下起，这是奇偶理论的基本。",
+     "look": "盘上的数字是空块的大小。在橙色（奇数）的块里找能下的位置。"
+    },
+    "ko": {
+     "c1": "종반의 빈칸은 몇 개의 <b>덩어리</b>로 나뉩니다. 숫자는 그 칸이 속한 덩어리의 크기입니다. 여기에는 6칸 덩어리와 1칸뿐인 덩어리(c8)가 있습니다. <b>홀수 덩어리에 먼저 들어가면</b> 그 덩어리의 마지막 한 수를 내가 둘 수 있습니다. 1칸인 c8을 백이 채우면 흑은 거기서 아무것도 되뒤집을 수 없습니다.",
+     "g": "숫자는 빈칸 덩어리의 크기입니다. 홀수 덩어리(주황)의 빈칸에 두어 봅시다.",
+     "gok": "c8이 정답. 1칸 덩어리를 백이 채웠으니 흑은 되뒤집을 수 없습니다. b2는 상대에게 a1 귀까지 내줍니다.",
+     "p1ok": "h7이 정답. h7은 1칸 덩어리입니다. 다른 수는 4칸(짝수) 덩어리에 들어갑니다.",
+     "p2ok": "d2가 정답. 1칸 덩어리를 먼저 채웁니다. a1·b1은 2칸(짝수) 덩어리에 들어가는 수입니다.",
+     "h0": "빈칸 덩어리마다 칸 수를 세고, 홀수 덩어리부터 두는 것이 짝수 이론의 기본입니다.",
+     "look": "판의 숫자는 빈칸 덩어리의 크기입니다. 주황(홀수) 덩어리 안에서 둘 수 있는 곳을 찾으세요."
+    },
+    "es": {
+     "c1": "En el final, las casillas vacías se dividen en <b>regiones</b>. Cada número es el tamaño de la región a la que pertenece esa casilla. Aquí hay una región de 6 casillas y otra de una sola (c8). <b>Si entras primero en una región impar</b>, tendrás la última jugada en ella. Si las blancas llenan la casilla única c8, las negras no pueden voltear nada ahí.",
+     "g": "Los números son tamaños de región. Juega en una región impar (naranja).",
+     "gok": "c8 es la correcta. Las blancas llenaron la región de 1 casilla y las negras no pueden voltear de vuelta. b2 además regalaría la esquina a1.",
+     "p1ok": "h7 es la correcta: es una región de 1 casilla. Las otras jugadas entran en la región de 4 (par).",
+     "p2ok": "d2 es la correcta: llena primero la región de 1 casilla. a1 y b1 entran en una región de 2 (par).",
+     "h0": "Cuenta las casillas vacías de cada región y juega primero en una región impar: es la regla básica de la paridad.",
+     "look": "Los números del tablero son tamaños de región. Busca una jugada legal dentro de una región naranja (impar)."
+    },
+    "fr": {
+     "c1": "En fin de partie, les cases vides se répartissent en <b>régions</b>. Chaque nombre indique la taille de la région de cette case. Ici, il y a une région de 6 cases et une région d’une seule case (c8). <b>Si vous entrez le premier dans une région impaire</b>, vous y jouerez le dernier coup. Si les Blancs remplissent la case unique c8, les Noirs ne peuvent plus rien y retourner.",
+     "g": "Les nombres sont des tailles de région. Jouez dans une région impaire (orange).",
+     "gok": "c8 est la bonne réponse. Les Blancs ont rempli la région d’une case, et les Noirs ne peuvent pas reprendre. b2 offrirait en plus le coin a1.",
+     "p1ok": "h7 est la bonne réponse : c’est une région d’une case. Les autres coups entrent dans la région de 4 (paire).",
+     "p2ok": "d2 est la bonne réponse : remplissez d’abord la région d’une case. a1 et b1 entrent dans une région de 2 (paire).",
+     "h0": "Comptez les cases vides région par région et jouez d’abord dans une région impaire : c’est la règle de base de la parité.",
+     "look": "Les nombres sur le plateau sont des tailles de région. Cherchez un coup légal dans une région orange (impaire)."
+    },
+    "pt": {
+     "c1": "No final, as casas vazias se dividem em <b>regiões</b>. Cada número é o tamanho da região a que aquela casa pertence. Aqui há uma região de 6 casas e outra de uma só (c8). <b>Se você entrar primeiro numa região ímpar</b>, fará a última jogada nela. Se as brancas preencherem a casa única c8, as pretas não conseguem virar nada ali.",
+     "g": "Os números são tamanhos de região. Jogue numa região ímpar (laranja).",
+     "gok": "c8 é o certo. As brancas preencheram a região de 1 casa e as pretas não conseguem revirar. b2 ainda entregaria o canto a1.",
+     "p1ok": "h7 é o certo: é uma região de 1 casa. As outras jogadas entram na região de 4 (par).",
+     "p2ok": "d2 é o certo: preencha primeiro a região de 1 casa. a1 e b1 entram numa região de 2 (par).",
+     "h0": "Conte as casas vazias de cada região e jogue primeiro numa região ímpar: é a regra básica da paridade.",
+     "look": "Os números no tabuleiro são tamanhos de região. Procure uma jogada válida dentro de uma região laranja (ímpar)."
+    },
+    "de": {
+     "c1": "Im Endspiel zerfallen die leeren Felder in <b>Regionen</b>. Jede Zahl ist die Größe der Region, zu der das Feld gehört. Hier gibt es eine Region mit 6 Feldern und eine mit nur einem Feld (c8). <b>Wer zuerst in eine ungerade Region zieht</b>, macht dort den letzten Zug. Füllt Weiß das einzelne Feld c8, kann Schwarz dort nichts zurückdrehen.",
+     "g": "Die Zahlen sind Regionsgrößen. Setze in eine ungerade Region (orange).",
+     "gok": "c8 ist richtig. Weiß hat die Ein-Feld-Region gefüllt, Schwarz kann nicht zurückdrehen. b2 würde zudem die Ecke a1 verschenken.",
+     "p1ok": "h7 ist richtig: eine Region mit 1 Feld. Die anderen Züge gehen in die Region mit 4 Feldern (gerade).",
+     "p2ok": "d2 ist richtig: Fülle zuerst die Ein-Feld-Region. a1 und b1 gehen in eine Region mit 2 Feldern (gerade).",
+     "h0": "Zähle die leeren Felder jeder Region und ziehe zuerst in eine ungerade Region – die Grundregel der Parität.",
+     "look": "Die Zahlen auf dem Brett sind Regionsgrößen. Suche einen gültigen Zug in einer orangen (ungeraden) Region."
+    },
+    "hi": {
+     "c1": "अंत के खेल में ख़ाली खाने कई <b>क्षेत्रों</b> में बँट जाते हैं। हर संख्या उस क्षेत्र का आकार है जिसमें वह खाना है। यहाँ 6 खानों का एक क्षेत्र है और सिर्फ़ 1 खाने का एक क्षेत्र (c8)। <b>विषम क्षेत्र में पहले घुसने पर</b> उस क्षेत्र की आख़िरी चाल आपकी होती है। सफ़ेद अकेला खाना c8 भर दे, तो काला वहाँ कुछ वापस नहीं पलट सकता।",
+     "g": "संख्याएँ क्षेत्रों के आकार हैं। किसी विषम क्षेत्र (नारंगी) में चलिए।",
+     "gok": "c8 सही है। सफ़ेद ने 1 खाने वाला क्षेत्र भर दिया, काला वापस नहीं पलट सकता। b2 तो a1 का कोना भी दे देता।",
+     "p1ok": "h7 सही है: यह 1 खाने का क्षेत्र है। बाकी चालें 4 खानों (सम) वाले क्षेत्र में जाती हैं।",
+     "p2ok": "d2 सही है: पहले 1 खाने वाला क्षेत्र भरिए। a1 और b1 2 खानों (सम) वाले क्षेत्र में जाते हैं।",
+     "h0": "हर क्षेत्र के ख़ाली खाने गिनिए और पहले विषम क्षेत्र में चलिए — यही सम-विषम सिद्धांत का मूल नियम है।",
+     "look": "बोर्ड की संख्याएँ क्षेत्रों के आकार हैं। नारंगी (विषम) क्षेत्र के अंदर कोई वैध चाल खोजिए।"
+    },
+    "ar": {
+     "c1": "في نهاية اللعبة تنقسم الخانات الفارغة إلى <b>مناطق</b>. كل رقم هو حجم المنطقة التي تنتمي إليها الخانة. هنا منطقة من 6 خانات ومنطقة من خانة واحدة (<span dir=\"ltr\">c8</span>). <b>إذا دخلت أولًا منطقة فردية</b> فستكون النقلة الأخيرة فيها لك. إذا ملأ الأبيض الخانة الوحيدة <span dir=\"ltr\">c8</span> فلن يستطيع الأسود قلب شيء هناك.",
+     "g": "الأرقام أحجام المناطق. العب في منطقة فردية (برتقالية).",
+     "gok": "<span dir=\"ltr\">c8</span> هي الصحيحة. ملأ الأبيض منطقة الخانة الواحدة، فلا يستطيع الأسود القلب عكسيًا. و<span dir=\"ltr\">b2</span> كانت ستهدي زاوية <span dir=\"ltr\">a1</span> أيضًا.",
+     "p1ok": "<span dir=\"ltr\">h7</span> هي الصحيحة: إنها منطقة من خانة واحدة. النقلات الأخرى تدخل منطقة الخانات الأربع (زوجية).",
+     "p2ok": "<span dir=\"ltr\">d2</span> هي الصحيحة: املأ منطقة الخانة الواحدة أولًا. <span dir=\"ltr\">a1</span> و<span dir=\"ltr\">b1</span> تدخلان منطقة من خانتين (زوجية).",
+     "h0": "عدّ الخانات الفارغة في كل منطقة والعب أولًا في منطقة فردية: هذه القاعدة الأساسية لنظرية الزوجية.",
+     "look": "الأرقام على اللوحة أحجام المناطق. ابحث عن نقلة مسموحة داخل منطقة برتقالية (فردية)."
+    }
+   }
+  },
+  "finish": {
+   "steps": [
+    {
+     "t": "concept",
+     "k": "c1",
+     "aid": "odots",
+     "mv": "e6f4e3d6c5c4c6f2f5f6d3e7c3c7d7b5b6c8a6d2d1b4f3c2b3e2g4g5e1h3g2a4b7h1a5a8a3g1f7f8g6a7b8h5f1g3e8d8h2a2h4b2a1b1",
+     "marks": {
+      "c1": "focus"
+     }
+    },
+    {
+     "t": "guided",
+     "k": "g",
+     "aid": "pass",
+     "mv": "e6f4e3d6c5c4c6f2f5f6d3e7c3c7d7b5b6c8a6d2d1b4f3c2b3e2g4g5e1h3g2a4b7h1a5a8a3g1f7f8g6a7b8h5f1g3e8d8h2a2h4b2a1b1",
+     "ans": "c1"
+    },
+    {
+     "t": "practice",
+     "k": "p1",
+     "aid": "pass",
+     "mv": "f5d6c5f4e3f6f3f2e6d7g4c6e7c3d3e2d2c7g3e1c1b4b5c4d1f1a4h3b2b1b6c2c8a1b8a3g7a7a6a5g5d8b3h4e8g6f7g8h8a2f8h7h5b7",
+     "ans": "h6"
+    },
+    {
+     "t": "practice",
+     "k": "p2",
+     "aid": "pass",
+     "mv": "c4e3f4g3e6d6f6b4c6d7c5b6h2f5d2f7e7d3c3f3c8e1d1d8c7c2f1e2f2b7e8f8b5b8a4g2a8a5h1g4h5b3g1h4g5h3g8a3a7a6g7h8h6g6",
+     "ans": "h7"
+    }
+   ],
+   "text": {
+    "ja": {
+     "c1": "赤い点は、いま<b>相手が打てる場所</b>です。白が打てるのは c1 の1か所だけ。黒が先に印の c1 に打つと、白は打つ場所がなくなって<b>パス</b>になり、黒が続けて打てます。終盤では、相手をパスさせる手がしばしば勝負を決めます。",
+     "g": "数字は打った後の相手の打てる場所の数です。0になる手（パスさせる手）に打ってみましょう。",
+     "gok": "c1 で白はパス。黒はもう一度打てます。この手だけが勝ちで、ほかの手はすべて負けでした。",
+     "p1ok": "h6 が正解。白の唯一の打てる場所を先に埋めて、白をパスさせます。",
+     "p2ok": "h7 が正解。白が打てるのは h7 だけでした。そこを埋めると白はパスになり、黒が続けて打てます。",
+     "h0": "相手の打てる場所をなくす手（パスさせる手）がないか探しましょう。",
+     "look": "数字は、打った後の相手の打てる場所の数です。0の手が相手をパスさせる手です。"
+    },
+    "en": {
+     "c1": "The red dots show where <b>your opponent can play now</b>: White has only c1. If Black takes the marked c1 first, White has nowhere to play and must <b>pass</b>, and Black moves again. In the endgame, a move that forces a pass often decides the game.",
+     "g": "Each number is your opponent's move count after that move. Play the move that leaves 0 (it forces a pass).",
+     "gok": "After c1, White must pass and Black moves again. This was the only winning move; every other move loses.",
+     "p1ok": "h6 is right: you fill White's only move, so White has to pass.",
+     "p2ok": "h7 is right. It was White's only move; once you fill it, White passes and Black moves again.",
+     "h0": "Look for a move that leaves your opponent with no moves at all (a pass).",
+     "look": "Each number is your opponent's move count after that move. A 0 means your opponent must pass."
+    },
+    "zh": {
+     "c1": "红点表示<b>对手现在能下的位置</b>：白棋只有 c1 一处。黑棋抢先下在标记的 c1，白棋就无处可下，只能<b>跳过（pass）</b>，黑棋可以接着再下。在终盘，逼对手跳过的一手往往能决定胜负。",
+     "g": "数字是下完后对手的可下位置数。请下在使它变成0（让对手跳过）的那一手。",
+     "gok": "下 c1 后白棋只能跳过，黑棋再下一手。这是唯一的胜着，其他着法全都会输。",
+     "p1ok": "h6 是正确答案：抢先填掉白棋唯一的落子点，让白棋跳过。",
+     "p2ok": "h7 是正确答案。白棋唯一能下的就是 h7；填掉它，白棋就只能跳过，黑棋接着再下。",
+     "h0": "找一找有没有让对手无处可下（跳过）的着法。",
+     "look": "数字是下完后对手的可下位置数。为0的着法就是让对手跳过的着法。"
+    },
+    "ko": {
+     "c1": "빨간 점은 <b>상대가 지금 둘 수 있는 곳</b>입니다. 백이 둘 수 있는 곳은 c1 한 곳뿐. 흑이 먼저 표시한 c1에 두면 백은 둘 곳이 없어 <b>패스</b>하고, 흑이 이어서 둡니다. 종반에는 상대를 패스시키는 수가 승부를 가르는 일이 많습니다.",
+     "g": "숫자는 둔 뒤 상대가 둘 수 있는 곳의 수입니다. 0이 되는 수(패스시키는 수)에 두어 봅시다.",
+     "gok": "c1로 백은 패스. 흑이 한 번 더 둡니다. 이 수만 이기는 수이고, 다른 수는 모두 집니다.",
+     "p1ok": "h6이 정답. 백이 둘 수 있는 유일한 곳을 먼저 채워 백을 패스시킵니다.",
+     "p2ok": "h7이 정답. 백이 둘 수 있는 곳은 h7뿐이었습니다. 그곳을 채우면 백은 패스하고 흑이 이어서 둡니다.",
+     "h0": "상대가 둘 곳을 없애는 수(패스시키는 수)가 없는지 찾아봅시다.",
+     "look": "숫자는 둔 뒤 상대가 둘 수 있는 곳의 수입니다. 0인 수가 상대를 패스시키는 수입니다."
+    },
+    "es": {
+     "c1": "Los puntos rojos muestran dónde <b>puede jugar ahora el rival</b>: las blancas solo tienen c1. Si las negras ocupan antes la c1 marcada, las blancas no tienen dónde jugar y deben <b>pasar</b>, y las negras vuelven a jugar. En el final, una jugada que obliga a pasar suele decidir la partida.",
+     "g": "Cada número es la cantidad de jugadas del rival tras esa jugada. Juega la que deje 0 (obliga a pasar).",
+     "gok": "Tras c1, las blancas deben pasar y las negras juegan otra vez. Era la única jugada ganadora; todas las demás pierden.",
+     "p1ok": "h6 es la correcta: ocupas la única jugada blanca y las blancas tienen que pasar.",
+     "p2ok": "h7 es la correcta. Era la única jugada de las blancas; al ocuparla, las blancas pasan y las negras vuelven a jugar.",
+     "h0": "Busca una jugada que deje al rival sin ninguna jugada (que lo obligue a pasar).",
+     "look": "Cada número es la cantidad de jugadas del rival tras esa jugada. Un 0 significa que el rival tendrá que pasar."
+    },
+    "fr": {
+     "c1": "Les points rouges montrent où <b>l’adversaire peut jouer maintenant</b> : les Blancs n’ont que c1. Si les Noirs prennent d’abord c1 (marqué), les Blancs n’ont plus de coup et doivent <b>passer</b>, et les Noirs rejouent. En fin de partie, un coup qui force l’adversaire à passer décide souvent de la partie.",
+     "g": "Chaque nombre est le nombre de coups de l’adversaire après ce coup. Jouez celui qui en laisse 0 (il force à passer).",
+     "gok": "Après c1, les Blancs doivent passer et les Noirs rejouent. C’était le seul coup gagnant ; tous les autres perdent.",
+     "p1ok": "h6 est la bonne réponse : vous occupez le seul coup des Blancs, qui doivent passer.",
+     "p2ok": "h7 est la bonne réponse. C’était le seul coup des Blancs ; une fois occupé, ils passent et les Noirs rejouent.",
+     "h0": "Cherchez un coup qui ne laisse aucun coup à l’adversaire (qui le force à passer).",
+     "look": "Chaque nombre est le nombre de coups de l’adversaire après ce coup. Un 0 signifie qu’il devra passer."
+    },
+    "pt": {
+     "c1": "Os pontos vermelhos mostram onde <b>o adversário pode jogar agora</b>: as brancas só têm c1. Se as pretas ocuparem antes a c1 marcada, as brancas ficam sem jogada e precisam <b>passar</b>, e as pretas jogam de novo. No final, uma jogada que força o adversário a passar costuma decidir a partida.",
+     "g": "Cada número é a quantidade de jogadas do adversário depois daquela jogada. Jogue a que deixar 0 (força a passar).",
+     "gok": "Depois de c1, as brancas precisam passar e as pretas jogam de novo. Era a única jogada vencedora; todas as outras perdem.",
+     "p1ok": "h6 é o certo: você ocupa a única jogada das brancas, que precisam passar.",
+     "p2ok": "h7 é o certo. Era a única jogada das brancas; ao ocupá-la, as brancas passam e as pretas jogam de novo.",
+     "h0": "Procure uma jogada que deixe o adversário sem nenhuma jogada (que o force a passar).",
+     "look": "Cada número é a quantidade de jogadas do adversário depois daquela jogada. Um 0 significa que ele terá de passar."
+    },
+    "de": {
+     "c1": "Die roten Punkte zeigen, wo <b>der Gegner jetzt setzen kann</b>: Weiß hat nur c1. Setzt Schwarz zuerst auf das markierte c1, hat Weiß keinen Zug mehr und muss <b>passen</b> – Schwarz ist erneut am Zug. Im Endspiel entscheidet ein Zug, der den Gegner zum Passen zwingt, oft die Partie.",
+     "g": "Jede Zahl ist die Zugzahl des Gegners nach diesem Zug. Spiele den Zug mit 0 (er zwingt zum Passen).",
+     "gok": "Nach c1 muss Weiß passen, und Schwarz zieht noch einmal. Das war der einzige Gewinnzug; alle anderen verlieren.",
+     "p1ok": "h6 ist richtig: Du besetzt den einzigen Zug von Weiß, und Weiß muss passen.",
+     "p2ok": "h7 ist richtig. Es war der einzige Zug von Weiß; danach muss Weiß passen und Schwarz zieht erneut.",
+     "h0": "Suche einen Zug, nach dem der Gegner gar keinen Zug mehr hat (passen muss).",
+     "look": "Jede Zahl ist die Zugzahl des Gegners nach diesem Zug. Eine 0 bedeutet: Der Gegner muss passen."
+    },
+    "hi": {
+     "c1": "लाल बिंदु दिखाते हैं कि <b>विरोधी अभी कहाँ चल सकता है</b>: सफ़ेद के पास सिर्फ़ c1 है। अगर काला पहले चिह्नित c1 पर चल दे, तो सफ़ेद के पास कोई चाल नहीं बचती और उसे <b>पास</b> करना पड़ता है, और काला फिर से चलता है। अंत के खेल में विरोधी को पास करवाने वाली चाल अक्सर बाज़ी तय कर देती है।",
+     "g": "हर संख्या उस चाल के बाद विरोधी की चालों की गिनती है। 0 वाली चाल (जो पास करवाए) चलिए।",
+     "gok": "c1 के बाद सफ़ेद को पास करना पड़ता है और काला फिर चलता है। सिर्फ़ यही जीतने वाली चाल थी; बाकी सब हारती हैं।",
+     "p1ok": "h6 सही है: आपने सफ़ेद की इकलौती चाल पहले भर दी, अब सफ़ेद को पास करना होगा।",
+     "p2ok": "h7 सही है। सफ़ेद की इकलौती चाल h7 थी; उसे भरते ही सफ़ेद पास करता है और काला फिर चलता है।",
+     "h0": "ऐसी चाल खोजिए जिसके बाद विरोधी के पास कोई चाल न बचे (उसे पास करना पड़े)।",
+     "look": "हर संख्या उस चाल के बाद विरोधी की चालों की गिनती है। 0 का मतलब है कि विरोधी को पास करना होगा।"
+    },
+    "ar": {
+     "c1": "النقاط الحمراء تبيّن أين <b>يستطيع الخصم اللعب الآن</b>: ليس للأبيض إلا <span dir=\"ltr\">c1</span>. إذا سبقه الأسود إلى <span dir=\"ltr\">c1</span> المُعلَّمة، لا يبقى للأبيض مكان فيضطر إلى <b>التمرير</b>، ويلعب الأسود مرة أخرى. في نهاية اللعبة، كثيرًا ما تحسم المباراةَ نقلةٌ تُجبر الخصم على التمرير.",
+     "g": "كل رقم هو عدد نقلات الخصم بعد تلك النقلة. العب النقلة التي تترك 0 (تُجبره على التمرير).",
+     "gok": "بعد <span dir=\"ltr\">c1</span> يضطر الأبيض إلى التمرير ويلعب الأسود مرة أخرى. كانت هذه النقلة الرابحة الوحيدة؛ كل النقلات الأخرى تخسر.",
+     "p1ok": "<span dir=\"ltr\">h6</span> هي الصحيحة: تشغل النقلة الوحيدة للأبيض، فيضطر إلى التمرير.",
+     "p2ok": "<span dir=\"ltr\">h7</span> هي الصحيحة. كانت النقلة الوحيدة للأبيض؛ بعد شغلها يمرّر الأبيض ويلعب الأسود مرة أخرى.",
+     "h0": "ابحث عن نقلة لا تترك للخصم أي نقلة (تُجبره على التمرير).",
+     "look": "كل رقم هو عدد نقلات الخصم بعد تلك النقلة. الرقم 0 يعني أن الخصم سيضطر إلى التمرير."
+    }
+   }
+  }
+ }
+}

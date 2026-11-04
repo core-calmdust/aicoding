@@ -621,6 +621,18 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .edgeband{position:absolute;inset:0;background:rgba(226,194,117,.24);pointer-events:none;z-index:0}
 .sqlbl.n{color:#d8e6ff;border-color:rgba(180,200,255,.5)}
 .mark.danger{border:2px dashed rgba(255,107,91,.8);inset:14%}
+.mark.focus{border:3px solid #5fe0ff;inset:5%;box-shadow:0 0 0 2px rgba(8,12,10,.85),0 0 12px rgba(95,224,255,.6);animation:wuPulse 1.6s ease-in-out infinite}
+@keyframes wuPulse{50%{box-shadow:0 0 0 2px rgba(8,12,10,.85),0 0 20px rgba(95,224,255,.9)}}
+.wu-arw{position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
+.dots i.wu{border-radius:2px;width:12px}
+.wu-tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;padding:1px 8px;margin-right:4px;border-radius:999px;border:1px solid rgba(95,224,255,.5);color:#9be9ff;vertical-align:1px}
+.wu-txt{color:var(--text)}
+.wu-txt b{color:var(--accent)}
+.wu-free{font-size:13px;color:var(--dim)}
+.wu-done{margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(201,169,97,.1);border-left:3px solid var(--brass);color:var(--text)}
+.ls-skip{display:block;margin:8px 0 0 auto;padding:4px 2px;border:0;background:none;color:var(--dim);font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.ls-skip:hover{color:var(--text)}
+html[lang=ar] .ls-skip{margin:8px auto 0 0}
 .lesson-card{display:none}
 body.in-lesson .lesson-card{display:block}
 .puzzle-card{display:none}
@@ -1373,6 +1385,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
         <button id="lsList" data-i18n="ls.list"></button>
         <button id="lsQuit" data-i18n="ls.quit"></button>
       </div>
+      <button type="button" class="ls-skip" id="lsSkip" hidden></button>
     </div>
     <div class="card puzzle-card" id="puzzleCard">
       <div class="lh"><span class="lt" id="pzStep"></span></div>
@@ -1652,7 +1665,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261024lo"></script>
+<script src="i18n.js?v=20261104wu"></script>
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
@@ -2334,7 +2347,7 @@ function onCellClick(sq) {
   if (rbS) { RBox.play(sq); return; }
   if (lesson && !lesson.drill && !lesson.study && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
   if (lesson && lesson.study) return;
-  if (lesson) { lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
+  if (lesson) { lesson.w ? warmAnswer(sq) : lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
   if (reviewing) { rsOpen(); return; }
@@ -2788,7 +2801,7 @@ try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); }
 const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
 async function loadLessons() {
   if (lessonData) return lessonData;
-  try { lessonData = await fetch('lessons.json').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  try { lessonData = await fetch('lessons.json?v=20261104w').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
   return lessonData;
 }
 const LT = l => l.text ? Object.assign({}, l.text.ja, l.text.en, l.text[LANG]) : l;  // per-field fallback: LANG → en → ja
@@ -3143,19 +3156,19 @@ function openIntro(i) {
       + `<div class="oh-chips">${l.lines.map((n, li) => `<span>${li + 1}. ${PT(n.name)}</span>`).join('')}</div>`
       + `<details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details></div></div>`
       + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><span class="ob-th">${thumb(n.moves)}</span><div class="ob-c"><div class="ob-h"><span class="ob-no">${li + 1}</span><span class="nm">${PT(n.name)}</span></div><div class="mv">${(n.moves.match(/../g) || []).map((m, i) => `<i>${i + 1}</i>${i < k0 ? m : `<b>${m}</b>`}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div></div>`).join('')}</div>`;
-  } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '');
+  } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '') + (l.warm && l.warm.length ? `<p class="note">📘 ${t('wu.intro', { n: l.warm.length })}</p>` : '');
   showLessonView('intro');
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
 $('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? openOpenings() : openLessons());
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
-$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
+$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx, true); };   // a retry goes straight to the scored problems
 $('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
 $('#btnLesson').onclick = openLessons;
 
 let savedGame = null;
-function startLesson(i) {
+function startLesson(i, noWarm) {
   if (net && net.spectate) olWatchStop();
   const l = curSets()[i];
   busyToken++; cancelAI(); cancelAna();
@@ -3174,6 +3187,7 @@ function startLesson(i) {
   lesson = { idx: i, l, probs, i: 0, results: [], answered: false, hintShown: false };
   document.body.classList.add('in-lesson');
   hideOverlay('#resultOverlay');
+  if (!noWarm && l.warm && l.warm.length) { lesson.w = l.warm; lesson.wi = 0; loadWarm(); return; }
   loadProblem();
 }
 function loadProblem() {
@@ -3263,7 +3277,7 @@ function renderLessonCard() {
   $('#lsNext').disabled = !L.answered; $('#lsNext').style.opacity = L.answered ? 1 : .4;
   $('#lsHint').disabled = L.answered; $('#lsHint').style.opacity = L.answered ? .4 : 1;
 }
-function clearMarks() { boardEl.querySelectorAll('.mark, .sqlbl, .odot, .edgeband').forEach(e => e.remove()); }
+function clearMarks() { boardEl.querySelectorAll('.mark, .sqlbl, .odot, .edgeband, .wu-arw').forEach(e => e.remove()); }
 // label empty corners and the X / C squares next to them (tutorial aid)
 function showSquareLabels(cells) {
   const CN = [0, 7, 56, 63], X = { 0: [9], 7: [14], 56: [49], 63: [54] }, C = { 0: [1, 8], 7: [6, 15], 56: [48, 57], 63: [55, 62] };
@@ -3278,6 +3292,142 @@ function lsAuto(good, ms) {
   const i = L.i; if (i + 1 >= L.probs.length) return;
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
+
+// ---- warm-up steps (lessons.json l.warm, built and checked by tools/lesson-warm.js): before the 5 scored problems a hard
+// idea is taught step by step — 考え方 (the idea shown on the board, read only) → 例題 (an obvious example with the board aid
+// switched on) → 練習 (easier positions; the hint goes concept → what to look at (board aid) → the answer). Nothing here is
+// scored: a wrong move can be played again, and lesson.results / probs / progress only start with the problems.
+// step: { t: 'concept'|'guided'|'practice', k: text key, aid, cells, toMove, ans, marks: {sq: cls}, arrows: [[from, to]] }
+function warmFacts(cells, me) {
+  const op = 3 - me, CN = [0, 7, 56, 63], opL = new Set(legalMoves(cells, op)), out = {};
+  const nbr = q => { const r = q >> 3, c = q & 7, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8) o.push(rr * 8 + cc); } return o; };
+  const front = (c, s) => { let n = 0; for (let q = 0; q < 64; q++) if (c[q] === s && nbr(q).some(y => !c[y])) n++; return n; };
+  for (const m of legalMoves(cells, me)) {
+    const f = flipsOf(cells, m, me), nc = cells.slice(); nc[m] = me; f.forEach(q => nc[q] = me);
+    const seen = new Set(); for (const q of f) for (const y of nbr(q)) if (!nc[y]) seen.add(y);
+    const ol = legalMoves(nc, op), r = m >> 3, c = m & 7;
+    const ed = r === 0 || r === 7 ? [m - 1, m + 1] : c === 0 || c === 7 ? [m - 8, m + 8] : null;
+    out[m] = { open: seen.size, oM: ol.length, give: ol.filter(q => CN.includes(q) && !opL.has(q)), front: front(nc, me), reserve: !opL.has(m), wedge: !CN.includes(m) && !!ed && ed.every(x => cells[x] === op) };
+  }
+  return out;
+}
+function warmArrows(list) {
+  if (!list || !list.length) return;
+  const fl = !!boardEl.closest('.frame.flipped'), P = q => { let r = q >> 3, c = q & 7; if (fl) { r = 7 - r; c = 7 - c; } return [c + .5, r + .5]; };
+  let h = '<svg class="wu-arw" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="wuHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path d="M0,0L10,5L0,10z" fill="#5fe0ff"/></marker></defs>';
+  for (const [a, b] of list) { const [x1, y1] = P(a), [x2, y2] = P(b); h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5fe0ff" stroke-width=".09" stroke-linecap="round" marker-end="url(#wuHead)"/>`; }
+  boardEl.insertAdjacentHTML('beforeend', h + '</svg>');
+}
+// the board aid of a step: what the player is told to look at
+function warmAids(st, cells) {
+  const me = st.toMove, op = 3 - me, F = warmFacts(cells, me), legal = Object.keys(F).map(Number);
+  const lab = (q, cls, txt) => { const d = document.createElement('div'); d.className = 'sqlbl ' + cls; d.textContent = txt; cellEls[q].appendChild(d); };
+  const odots = () => legalMoves(cells, op).forEach(q => { const d = document.createElement('div'); d.className = 'odot'; cellEls[q].appendChild(d); });
+  const danger = () => legal.forEach(q => { if (F[q].give.length) addMark(q, 'danger'); });
+  switch (st.aid) {
+    case 'corner': showSquareLabels(cells); danger(); break;
+    case 'cwait': showSquareLabels(cells); danger(); odots(); break;
+    case 'odots': odots(); break;
+    case 'mob': case 'pass': legal.forEach(q => lab(q, F[q].oM ? 'n' : 'c', String(F[q].oM))); break;
+    case 'open': legal.forEach(q => lab(q, 'n', String(F[q].open))); break;
+    case 'wallc': for (let q = 0; q < 64; q++) if (cells[q] === me && [-9, -8, -7, -1, 1, 7, 8, 9].some(d => { const y = q + d, r = q >> 3, c = q & 7, ry = y >> 3, cy = y & 7; return y >= 0 && y < 64 && Math.abs(ry - r) <= 1 && Math.abs(cy - c) <= 1 && !cells[y]; })) addMark(q, 'front'); break;
+    case 'front': legal.forEach(q => lab(q, 'n', String(F[q].front))); break;
+    case 'reserve': legal.forEach(q => { if (F[q].reserve) lab(q, 'c0', t('lbl.reserve')); }); odots(); danger(); break;
+    case 'edge': case 'wedge':
+      for (let q = 0; q < 64; q++) { const r = q >> 3, c = q & 7; if (r === 0 || r === 7 || c === 0 || c === 7) { const d = document.createElement('div'); d.className = 'edgeband'; cellEls[q].appendChild(d); } }
+      if (st.aid === 'wedge') legal.forEach(q => { if (F[q].wedge) addMark(q, 'focus'); });
+      break;
+    case 'region': showAids('parity', {}, cells, me); break;
+  }
+  return F;
+}
+function warmBoard() {
+  const L = lesson, st = L.w[L.wi], cells = positions[positions.length - 1].cells;
+  clearMarks(); clearHints();
+  if (st.t === 'concept') {
+    warmAids(st, cells);
+    for (const q in st.marks || {}) addMark(+q, st.marks[q]);
+    warmArrows(st.arrows);
+  } else {
+    if (st.t === 'guided' || L.wh >= 2 || L.wOk) warmAids(st, cells);
+    if (L.wh >= 3 || L.wOk) addMark(st.ans, 'best');
+    if (L.wOk) addMark(st.ans, 'ok');
+    else if (L.wBad >= 0) addMark(L.wBad, 'ng');
+  }
+}
+function loadWarm() {
+  const L = lesson, st = L.w[L.wi];
+  positions = [{ cells: st.cells.split('').map(Number), toMove: st.toMove, last: -1, mover: 0, evalB: null }];
+  cur = 0; reviewing = false;
+  L.wh = st.t === 'guided' ? 2 : 0; L.wOk = false; L.wBad = -1; L.answered = st.t === 'concept'; L.hintShown = false; L.animating = false;
+  $('#reviewBar').classList.remove('show'); $('#toast').classList.remove('show');
+  renderBoard(null);
+  if (L.answered) cellEls.forEach(c => c.classList.remove('legal'));
+  warmRender();
+}
+const WK = () => LT(lesson.l).warm || {};
+function warmRender(keepBoard) {
+  const L = lesson, st = L.w[L.wi], W = WK(), x = LT(L.l), last = L.wi === L.w.length - 1;
+  $('#lsStep').textContent = `STEP ${L.idx + 1}  ·  ${t('wu.step', { i: L.wi + 1, n: L.w.length })}  ·  ${t('wu.t.' + st.t)}`;
+  $('#lsTitle').textContent = x.title;
+  $('#lsDots').innerHTML = L.w.map((s, k) => `<i class="wu${k < L.wi ? ' ok' : k === L.wi ? ' cur' : ''}"></i>`).join('');
+  const turn = t('ls.turn', { c: `<b>${cname(st.toMove)}</b>` });
+  let pr = '', fb = '';
+  if (st.t === 'concept') { pr = `<span class="wu-tag">💡 ${t('wu.t.concept')}</span> ` + turn; fb = `<div class="wu-txt">${W[st.k] || ''}</div>`; }
+  else {
+    pr = `<span class="wu-tag">${st.t === 'guided' ? '✏️' : '🎯'} ${t('wu.t.' + st.t)}</span> ` + turn + (st.t === 'guided' ? (W[st.k] || '') : t('wu.pp'));
+    if (L.wOk) fb = `<b class="ok">${t('wu.ok')}</b> ${W[st.k + 'ok'] || ''}`;
+    else {
+      const lines = [];
+      if (L.wBad >= 0) lines.push(`<b class="ng">${t('wu.ng', { m: sqName(L.wBad) })}</b> ${warmWhy(L.wBad)} ${t('wu.retry')}`);
+      if (st.t === 'practice' && L.wh >= 1) lines.push(`💡 ${W.h0 || ''}`);
+      if (st.t === 'practice' && L.wh >= 2) lines.push(`🔍 ${W.look || ''}`);
+      if (L.wh >= 3) lines.push(`✅ ${t('wu.reveal', { m: sqName(st.ans) })} ${W[st.k + 'ok'] || ''}`);
+      if (!lines.length) lines.push(`<span class="wu-free">${t('wu.free')}</span>`);
+      fb = lines.join('<br>');
+    }
+  }
+  if (last && (st.t === 'concept' || L.wOk)) fb += `<div class="wu-done">🎓 ${t('wu.done')}</div>`;
+  $('#lsPrompt').innerHTML = pr; $('#lsFb').innerHTML = fb;
+  const canNext = st.t === 'concept' || L.wOk;
+  $('#lsNext').textContent = t(last ? 'wu.toProbs' : 'wu.next');
+  $('#lsNext').disabled = !canNext; $('#lsNext').style.opacity = canNext ? 1 : .4;
+  const canHint = st.t !== 'concept' && !L.wOk && L.wh < 3;
+  $('#lsHint').disabled = !canHint; $('#lsHint').style.opacity = canHint ? 1 : .4;
+  $('#lsHint').textContent = st.t === 'concept' ? t('ls.hint') : `${t('ls.hint')} ${Math.min(3, L.wh + 1)}/3`;
+  const sk = $('#lsSkip'); sk.hidden = false; sk.textContent = t('wu.skip') + ' ›';
+  warmBoard();
+}
+function warmWhy(sq) {
+  const L = lesson, st = L.w[L.wi], F = warmFacts(positions[positions.length - 1].cells, st.toMove)[sq]; if (!F) return '';
+  if (F.give.length) return t('wu.why.give', { m: sqName(sq) });
+  switch (st.aid) {
+    case 'mob': case 'pass': case 'odots': return t('wu.why.mob', { m: sqName(sq), n: F.oM });
+    case 'open': return t('wu.why.open', { m: sqName(sq), n: F.open });
+    case 'front': case 'wallc': return t('wu.why.front', { m: sqName(sq), n: F.front });
+    default: return '';
+  }
+}
+function warmAnswer(sq) {
+  const L = lesson, st = L.w[L.wi]; if (L.answered || L.wOk) return;
+  const p = positions[positions.length - 1]; if (!flipsOf(p.cells, sq, p.toMove).length) return;
+  if (sq === st.ans) {
+    L.wOk = true; L.answered = true;
+    const a = applyMove(sq); playPlace(a.flips.length); renderBoard(a); sfxCorrect();
+    cellEls.forEach(c => c.classList.remove('legal'));
+  } else {
+    L.wBad = sq; sfxWrong(); if (L.wh < 3) L.wh++;   // each miss opens the next hint level
+  }
+  warmRender();
+}
+function warmHint() { const L = lesson, st = L.w[L.wi]; if (st.t === 'concept' || L.wOk || L.wh >= 3) return; L.wh++; warmRender(); }
+function warmNext() {
+  const L = lesson, st = L.w[L.wi]; if (!(st.t === 'concept' || L.wOk)) return;
+  if (L.wi < L.w.length - 1) { L.wi++; loadWarm(); return; }
+  warmEnd();
+}
+function warmEnd() { const L = lesson; if (!L || !L.w) return; L.w = null; $('#lsSkip').hidden = true; $('#lsHint').textContent = t('ls.hint'); loadProblem(); }
+$('#lsSkip').onclick = () => { if (lesson && lesson.w) warmEnd(); };
 function lessonAnswer(sq) {
   const L = lesson; if (L.answered) return;
   const pr = L.probs[L.i], p = positions[positions.length - 1];
@@ -3468,6 +3618,7 @@ function lessonReason(kind, pr, F, sq, bm, ok, p) {
 $('#lsHint').onclick = () => {
   if (lesson && lesson.study) { studyBack(); return; }
   if (lesson && lesson.drill) { drillHint(); return; }
+  if (lesson && lesson.w) { warmHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hintShown = true;
   const pr = lesson.probs[lesson.i];
@@ -3481,6 +3632,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (lesson && lesson.drill) { if (lesson.done) startDrill(lesson.si, lesson.li, lesson.color); return; }
+  if (lesson && lesson.w) { warmNext(); return; }
   if (!lesson || !lesson.answered) return;
   if (lesson.i < lesson.probs.length - 1) { lesson.i++; loadProblem(); return; }
   const n = lesson.results.reduce((a, b) => a + b, 0), id = lesson.l.id, pass = n >= 75;
@@ -3640,7 +3792,7 @@ function endLesson() {
   if (!lesson) return;
   if (lesson.timer) clearInterval(lesson.timer);
   sfxStop();
-  $('#lsNext').style.display = ''; $('#lsHint').textContent = t('ls.hint');
+  $('#lsNext').style.display = ''; $('#lsHint').textContent = t('ls.hint'); $('#lsSkip').hidden = true;
   lesson = null;
   document.body.classList.remove('in-lesson');
   clearMarks(); clearHints();
@@ -4833,6 +4985,7 @@ $('#langSel').onchange = e => {
   renderInfo(); segSync && Object.keys(draft).length && segSync();
   if (lesson && lesson.study) studyRender();
   else if (lesson && lesson.drill) drillRender();
+  else if (lesson && lesson.w) warmRender(true);
   else if (lesson) {
     renderLessonCard();
     $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
@@ -5359,7 +5512,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=23'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=24'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

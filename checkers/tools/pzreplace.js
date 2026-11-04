@@ -32,6 +32,7 @@ const file = path.join(__dirname, '..', 'puzzles.json');
   D.old = D.old || {}; D.cut = CUT;
   const log = [];
   for (const r of bad) {
+    if (D.old && D.old[r.id]) { console.error(r.id, 'already replaced once: left as is'); continue; }   // the slot keeps one old puzzle only
     const [tid, js] = r.id.split('-'), j = +js, T = D.themes.find(t => t.id === tid), C = COURSES.find(c => c.id === tid), P0 = T.puzzles[j];
     const f0 = features(A, P0, P0.g || 0);
     const others = T.puzzles.filter((_, k) => k !== j).map(P => ({ P }));
