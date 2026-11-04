@@ -258,7 +258,7 @@ function renderReserves(pos) {
     const inT = pos.inTarget(p), home = pos.inHome(p), mv = pos.movesOf(p), lim = E.R.limit;
     let s = `<span class="rsv-l"><i class="pdisc p${p}"></i><b>${inT}</b>/${n}</span><span class="rsv-bar"><i style="width:${Math.round(inT / n * 100)}%"></i></span>`;
     if (home && !startSpec) s += `<span class="rsv-w${mv >= lim - 8 ? ' hot' : ''}" title="${escHb(t('lim.title', { n: lim }))}">${t('lim.home', { k: home, n: Math.max(0, lim - mv) })}</span>`;
-    el.innerHTML = s;
+    el.innerHTML = `<span class="rsv-plate">${s}</span>`;
     el.title = t('rsv.title', { c: pname(p), a: inT, b: n });
     el.classList.remove('turn');
   }
@@ -1029,7 +1029,10 @@ const TOUR_PAGES = [
   tourPage('goal', specOf({ w: rect(5, 7, 6, 8).filter(x => x !== 'f6').concat(['e6']), b: ['a1', 'b1', 'c1', 'a2', 'b2', 'c2', 'a3', 'b3', 'd4'] }), { marks: ['f6'], check: (m, pos) => pos.done(P1) ? 'ok' : t('tr.goal.ng') }),
   tourRead('last', () => tourPic(specOf({ w: B_HOME, b: W_HOME.filter(x => x !== 'c3').concat(['d3']) }), { arrows: [[sqIdx('d3'), sqIdx('c3')]] })),
   tourRead('limit', () => tourPic(specOf({ w: ['a1', 'c4', 'd5', 'e4', 'f5', 'd6', 'e7', 'g6', 'h7'], b: ['f8', 'g8', 'h8', 'e5', 'c6', 'b5', 'c3', 'a4', 'b2'] }), { marks: { [sqIdx('a1')]: 'ng' } })),
+  // the other games of the new-game dialog (3×4 / 4×4 / diagonal): their starting positions side by side
+  tourRead('vars', () => `<div class="tour-pic tour-vars">${['c34', 'c44', 'diag'].map(r => { const keep = E.rule; E.setRule(r); const h = miniSVG(E.Pos.from(null).spec(), { cls: '', rule: r }); E.setRule(keep); return `<figure>${h}<figcaption>${t('rule.' + r)}</figcaption></figure>`; }).join('')}</div>`),
 ];
+const TOUR_VARS = TOUR_PAGES.findIndex(p => p.id === 'vars');
 let TOUR = null;
 function tourFor() {
   if (TOUR) return TOUR;
@@ -1057,7 +1060,7 @@ function segSync() {
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'rated' || m === 'online'));
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'c33' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleStart(r), { cls: 'gmini', rule: r })}</span><b>${t('rule.' + r)}</b><p>${r === 'c33' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span><span class="gc-rl" role="button" tabindex="0" data-rl="${r}">${t('btn.rules')}</span></button>`).join('');
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -1089,7 +1092,10 @@ function resumeWith() {
 $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
-$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
+// the rules button in the bottom-right of every card (same as Shogi): the tutorial, or the variants page for 3×4 / 4×4 / diagonal
+const cardRules = r => { hideOverlay('#newOverlay'); openRules(null, r === 'c33' ? 0 : TOUR_VARS); };
+$('#ruleCards').onclick = e => { const rl = e.target.closest('.gc-rl'); if (rl) { e.stopPropagation(); cardRules(rl.dataset.rl); return; } const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
+$('#ruleCards').onkeydown = e => { const rl = e.target.closest('.gc-rl'); if (rl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); cardRules(rl.dataset.rl); } };
 function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from(null).spec(); E.setRule(keep); return sp; }
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
