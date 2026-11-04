@@ -160,7 +160,7 @@
       g.beginPath(); for (const sg of [-1, 1]) { const m = sg * (.014 + s); g.moveTo(m, -e); g.lineTo(m, e); g.moveTo(-e, m); g.lineTo(e, m); } g.stroke();
       for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const a of [0, 1]) for (const b of [0, 1]) {
         const x = sx * (.014 + s * (a + .5)), y = sy * (.014 + s * (b + .5));
-        g.strokeRect(x - .045, y - .045, .09, .09); dot(g, x, y, .02, S.line, S, lw * .4);
+        g.strokeStyle = S.line; g.lineWidth = lw * .4; g.strokeRect(x - .045, y - .045, .09, .09); dot(g, x, y, .02, S.line, S, lw * .4);   // (the width set every time: dot() changes it)
       }
     },
   };
