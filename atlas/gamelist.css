@@ -40,10 +40,10 @@
 /* footer: feature icons · ルール / ヒストリア pills */
 .glc .ft{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:auto;padding:8px 12px 12px 13px}
 .glc .fxs{display:flex;gap:4px;min-height:23px}
-.glc .glbs{display:flex;gap:6px;width:100%}
-/* ルール / ヒストリア: equal halves of the footer (one alone takes it all); the label stays on one line (gamelist.js fit shrinks it) */
-.glc .glb{flex:1 1 0;min-width:0;justify-content:center;gap:3px;padding:0 7px 0 6px;--fs:12px;font-size:var(--fs)}
-.glc .glb span{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.glc .glbs{display:flex;justify-content:center;gap:8px;width:100%}
+/* ルール / ヒストリア: natural width, centred so the side margins match; the label stays on one line, never truncated (gamelist.js fit shrinks it) */
+.glc .glb{flex:0 1 auto;min-width:0;justify-content:center;gap:3px;padding:0 11px 0 9px;--fs:12px;font-size:var(--fs)}
+.glc .glb span{display:block;min-width:0;white-space:nowrap}
 .glc .glb svg{flex:none}
 .glb{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 8px;border-radius:99px;border:1.5px solid #e4cfa6;background:#fff8ea;color:#6b4a1f;
   font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 2px 0 #ecdcb8;transition:background .12s,transform .08s;-webkit-tap-highlight-color:transparent}
