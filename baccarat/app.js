@@ -633,10 +633,10 @@ function renderSide() {
   const cntW = w => T.res.filter(r => r.w === w).length;
   const ask = w => `<div class="ask a${w}"><b>${esc(L[w])}</b>${RD.askSvg(RB.ask[w])}</div>`;
   const cap = k => `<small class="rd-cap">${esc(String(t('rx.' + k)).replace(/（.*|\(.*/, ''))}</small>`;
-  h += `<div class="card road-card" data-pt="road" data-k="road"><h3>${esc(t('side.road'))}<span class="h3s">${esc(t('rd.count', { b: cntW('B'), p: cntW('P'), t: cntW('T'), n: T.res.length }))}</span><button type="button" class="rd-zoom" id="rdZoom">⤢ ${esc(t('rd.zoom'))}</button></h3>` +
+  h += `<div class="card road-card" data-pt="road" data-k="road"><h3>${esc(t('side.road'))}<span class="h3s">${esc(t('rd.count', { b: cntW('B'), p: cntW('P'), t: cntW('T'), n: T.res.length }))}</span><span class="rd-hb"><button type="button" class="rd-zoom" id="rdZoom">⤢ ${esc(t('rd.zoom'))}</button><button type="button" class="rd-help" id="rdHelp" aria-label="?" title="?">?</button></span></h3>` +
     `<div class="rd-big">${cap('big')}${RD.bigSvg(RB.big, 16, 'big', RB.lead)}</div>` +
     `<div class="rd-row"><div class="rd-bead">${cap('bead')}${RD.beadSvg(T.res, 7, L)}</div><div class="rd-der"><div>${cap('eye')}${RD.bigSvg(RB.eye, 16, 'eye')}</div><div>${cap('small')}${RD.bigSvg(RB.small, 16, 'small')}</div><div>${cap('roach')}${RD.bigSvg(RB.roach, 16, 'roach')}</div></div></div>` +
-    `<div class="rd-ask"><small>${esc(t('rd.ask'))}</small>${ask('B')}${ask('P')}<button type="button" class="rd-help" id="rdHelp" aria-label="?">?</button></div></div>`;
+    `<div class="rd-ask"><small>${esc(t('rd.ask'))}</small>${ask('B')}${ask('P')}</div></div>`;
   // coach
   if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
   else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
