@@ -205,12 +205,13 @@
   }
   // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
   let tfReady = false;
-  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(); }).catch(() => {});
-  function renderHero() {
+  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
+  function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt=""></span>`).join('');
+    if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -262,7 +263,7 @@
     if (!glOK && fxBusy()) return setTimeout(boot, 700);
     if (!glOK) initGL(); if (!glOK) return;
     const q = A_.byUpdate().map(g => g.id);
-    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} if (TG) TG.idle([id]).then(next); else next(); }); };
     setTimeout(next, 400);
   });
   boot();
@@ -381,14 +382,20 @@
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
+  // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
+  // and a board is only shown once its pictures are done (texReady)
+  const TG = window.AtlasTexGen;
+  const tagged = (name, fn) => TG ? TG.group(name, fn) : fn();
+  const texBusy = id => !!TG && TG.busy([id, 'room']);
+  const texReady = id => { if (!TG) return Promise.resolve(); TG.prioritize([id, 'room']); return TG.idle([id, 'room']); };
   function initGL() {
     if (glOK || !window.THREE) return glOK;
-    try { Table3D.mount($('gl')); glOK = true; } catch (e) { glOK = false; }
+    try { tagged('room', () => Table3D.mount($('gl'))); glOK = true; } catch (e) { glOK = false; }
     return glOK;
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) Table3D.prepare(id); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
+  function warm(id) { if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
@@ -434,11 +441,13 @@
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
       fly.animate([{ transform: 'rotateY(720deg) translateY(0)' }, { transform: 'rotateY(740deg) translateY(-6px)' }, { transform: 'rotateY(700deg) translateY(0)' }], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
-      requestAnimationFrame(() => setTimeout(() => {
+      const go = () => requestAnimationFrame(() => setTimeout(() => {
         openBoard(id, true, true);
         requestAnimationFrame(() => requestAnimationFrame(finish));
         setTimeout(finish, 900);
       }, 0));
+      try { warm(id); } catch (e) {}
+      if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
     }, T1);
   }
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
@@ -484,6 +493,7 @@
     ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(2.2)' }], { duration: 600, delay: shift + 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1300);
   }
+  let show3dTok = 0, pend3d = null;   // a board waiting for its textures (see openBoard)
   let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
@@ -499,8 +509,15 @@
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
       // back from a game on the table: the board drops in again and the camera snaps back quickly (ease-out) to the showcase view
-      if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
-      else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      const show3d = () => {
+        if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
+        else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      };
+      if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
+      if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
+        const tok = ++show3dTok, gl = $('gl'); gl.style.visibility = 'hidden';
+        pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
+      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
@@ -672,6 +689,7 @@
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
+    if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
@@ -831,6 +849,7 @@
   });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   function startRules() {
+    if (pend3d) { pend3d.then(startRules); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),

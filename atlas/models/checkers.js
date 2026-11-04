@@ -31,34 +31,51 @@
 
   /* ---------- textures ---------- */
   const raw = {};
-  function pix(key, Wd, Ht, f) {   // a plain canvas filled pixel by pixel: f(u, v) → [r, g, b]
+  // the pixel loops (self-contained, see paint below): f(u, v) → [r, g, b] for each texel
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+    const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
+    const pix = (d, Wd, Ht, f) => { for (let y = 0; y < Ht; y++) for (let x = 0; x < Wd; x++) { const v = f(x / Wd, y / Ht), i = (y * Wd + x) * 4; d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = 255; } };
+    return {
+      // grey-black burl: domain-warped noise, swirling figure, clusters of tiny dark knots
+      burl(d, W) {
+        const N = makeNoise(29), A = hexRGB('#626265'), B = hexRGB('#18181b'), TAU = Math.PI * 2;
+        pix(d, W, W, (x, y) => {
+          const px = x * 7 + 3, py = y * 7 + 3;
+          const q = N(px * 1.4, py * 1.4, 3), r = N(px * 1.6 + q * 3.2 + 1.7, py * 1.6 + q * 3.2 + 9.2, 3);
+          const f = N(px * 2.6 + r * 4.2, py * 2.6 + r * 4.2, 4);
+          const band = Math.sin((f * 9 + r * 5) * TAU) * .5 + .5, fine = N(px * 22 + r * 6, py * 22 + r * 6, 2);
+          let t = .5 + Math.pow(band, 1.8) * .2 + (fine - .5) * .34 + (q - .5) * .3;
+          const eye = N(px * 30, py * 30, 1), cl = N(px * 3.3 + 7, py * 3.3 + 1, 2); if (cl > .58 && eye > .74) t += (eye - .74) * 3;
+          return mix(A, B, Math.max(0, Math.min(1, t)));
+        });
+      },
+      // ivory: a warm white with very fine straight fibres and a soft cloud
+      ivory(d, W) {
+        const N = makeNoise(53);
+        pix(d, W, W, (x, y) => { const t = (N(x * 3, y * 160, 2) - .5) * .5 + (N(x * 2.5, y * 2.5, 3) - .5) * .6; return [228 - t * 14, 221 - t * 16, 203 - t * 22]; });
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
+  function pix(key, Wd, Ht, name) {   // a plain canvas filled pixel by pixel (cached)
     if (raw[key]) return raw[key];
-    const c = document.createElement('canvas'); c.width = Wd; c.height = Ht; const g = c.getContext('2d'), img = g.createImageData(Wd, Ht), d = img.data;
-    for (let y = 0; y < Ht; y++) for (let x = 0; x < Wd; x++) { const v = f(x / Wd, y / Ht), i = (y * Wd + x) * 4; d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = 255; }
-    g.putImageData(img, 0, 0); return (raw[key] = c);
+    const c = document.createElement('canvas'); c.width = Wd; c.height = Ht; paint(c, name); return (raw[key] = c);
   }
-  const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
-  // grey-black burl: domain-warped noise, swirling figure, clusters of tiny dark knots
-  function burl(W) {
-    const N = makeNoise(29), A = hexRGB('#626265'), B = hexRGB('#18181b'), TAU = Math.PI * 2;
-    return pix('ckBurl', W, W, (x, y) => {
-      const px = x * 7 + 3, py = y * 7 + 3;
-      const q = N(px * 1.4, py * 1.4, 3), r = N(px * 1.6 + q * 3.2 + 1.7, py * 1.6 + q * 3.2 + 9.2, 3);
-      const f = N(px * 2.6 + r * 4.2, py * 2.6 + r * 4.2, 4);
-      const band = Math.sin((f * 9 + r * 5) * TAU) * .5 + .5, fine = N(px * 22 + r * 6, py * 22 + r * 6, 2);
-      let t = .5 + Math.pow(band, 1.8) * .2 + (fine - .5) * .34 + (q - .5) * .3;
-      const eye = N(px * 30, py * 30, 1), cl = N(px * 3.3 + 7, py * 3.3 + 1, 2); if (cl > .58 && eye > .74) t += (eye - .74) * 3;
-      return mix(A, B, Math.max(0, Math.min(1, t)));
-    });
-  }
-  // ivory: a warm white with very fine straight fibres and a soft cloud
-  function ivory(W) {
-    const N = makeNoise(53);
-    return pix('ckIvory', W, W, (x, y) => { const t = (N(x * 3, y * 160, 2) - .5) * .5 + (N(x * 2.5, y * 2.5, 3) - .5) * .6; return [228 - t * 14, 221 - t * 16, 203 - t * 22]; });
-  }
+  const burl = W => pix('ckBurl', W, W, 'burl'), ivory = W => pix('ckIvory', W, W, 'ivory');
   function fieldTex() {
-    return canvasTex('ckField1', SZ(2048), SZ(2048), (c, Wd) => {
-      const k = Wd / IN, BU = burl(SZ(768)), IV = ivory(SZ(512)), rnd = makeNoise(5);
+    const BU = burl(SZ(768)), IV = ivory(SZ(512));
+    return canvasTex('ckField1', SZ(2048), SZ(2048), (c0) => later([BU, IV], c0.canvas, (c, Wd) => {
+      const k = Wd / IN, rnd = makeNoise(5);
       c.drawImage(BU, 0, 0, BU.width * .8, BU.width * .8, 0, 0, Wd, Wd);   // the border and the dark squares: one burl sheet
       const o = MG * k, s = k;
       for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
@@ -72,7 +89,7 @@
       for (let i = 0; i <= 8; i++) { c.beginPath(); c.moveTo(o + i * s, o); c.lineTo(o + i * s, o + 8 * s); c.moveTo(o, o + i * s); c.lineTo(o + 8 * s, o + i * s); c.stroke(); }
       c.strokeStyle = 'rgba(232,226,210,.55)'; c.lineWidth = k * .02; c.strokeRect(o - k * .07, o - k * .07, 8 * s + k * .14, 8 * s + k * .14);   // a fine pale inlay line
       const g = c.createRadialGradient(Wd / 2, Wd / 2, Wd * .3, Wd / 2, Wd / 2, Wd * .72); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.25)'); c.fillStyle = g; c.fillRect(0, 0, Wd, Wd);
-    });
+    }));
   }
 
   /* ---------- the frame: a profile swept round the square (mitred corners) ---------- */
