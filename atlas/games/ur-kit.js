@@ -33,7 +33,7 @@
     // lane on the left, so rows 0 and 2 change places (the two outer rows carry the same motifs: the board looks the same)
     const FL = tall, rowOf = r => FL ? 2 - r : r, sideOf = s => FL ? 1 - s : s;
     const W = U.W + 1.6, D = U.D + 2.4;   // the trays and dice beside the long sides
-    if (T3.fit) T3.fit(tall ? { w: U.W + .5, d: U.D + 1.5, y: Y, pitch: 1.5, roll: true } : { w: W, d: D + .4, y: Y, pitch: 1.12 });
+    if (T3.fit) T3.fit(tall ? { w: U.W + .5, d: U.D + 1.5, y: Y, pitch: 1.5, roll: true } : { w: U.W + .5, d: U.D + 1.9, y: Y, pitch: 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
