@@ -98,14 +98,19 @@ function morphKids(a, b) {
   old.forEach(n => { const k = keyOf(n); if (k && !keyed.has(k)) keyed.set(k, n); });
   const used = new Set(), nb = [...b.childNodes];
   let idx = 0;
-  nb.forEach((n, i) => {
+  const pairs = nb.map(n => {
     const k = keyOf(n); let m = null;
     if (k) { m = keyed.get(k); if (m && (used.has(m) || !same(m, n))) m = null; }
     else { while (idx < old.length && (keyOf(old[idx]) || used.has(old[idx]))) idx++; if (idx < old.length && same(old[idx], n)) m = old[idx++]; }
-    if (m) { used.add(m); morphNode(m, n); } else m = n;
+    if (m) used.add(m);
+    return [m, n];
+  });
+  // drop the nodes that go away first: moving a node that stays would restart its CSS animation (cards flying in again)
+  old.forEach(n => { if (!used.has(n)) n.remove(); });
+  pairs.forEach(([m, n], i) => {
+    if (m) morphNode(m, n); else m = n;
     const at = a.childNodes[i]; if (at !== m) a.insertBefore(m, at || null);
   });
-  [...a.childNodes].slice(nb.length).forEach(n => n.remove());
 }
 function patch(el, html) { const tm = document.createElement(el.tagName); tm.innerHTML = html; morphKids(el, tm); }
 
@@ -491,7 +496,7 @@ function geom(W, H) {
   const plateH = mob ? 38 : Math.max(38, u * .4), r = mob ? Math.min(u * .4, 30) : u * .42, ybot = H - plateH - r - (mob ? 6 : u * .1) - extra * .3;
   const curve = (mob ? u * .45 : u * .85) + extra * .07;
   seats.forEach(s => { const f = (s.x - W / 2) / (W / 2); s.y = ybot - curve * f * f; s.r = s.n === ME ? r : r * (mob ? .78 : .8); });
-  const dealerY = (mob ? u * .14 : u * .18) + extra * .22, dcw = u * (mob ? .82 : .78);
+  const dealerY = (mob ? u * .14 : u * .18) + extra * .22, dcw = u * (mob ? .66 : .78);
   return { mob, u, seats, r, plateH, dealerY, dcw, dealerBot: dealerY + dcw * 1.4, W, H };
 }
 function cardEl(c, x, y, w, k, o) {
@@ -543,12 +548,13 @@ function render() {
     const act = T.cur && T.cur.s === n && T.phase === 'play';
     const net = done && St ? St.net : null, st = net == null ? '' : net > 0 ? ' won' : net < 0 ? ' lost' : ' push';
     svg += `<g class="bj-seat${me ? ' me' : ''}${act ? ' act' : ''}${st}" data-k="seat${n}">`;
+    // side spots: two small circles in front of the main one (+ a larger invisible tap target under the main circle)
+    const sdPos = SIDES().map((k, i) => { const one = SIDES().length === 1; return { k, x: s.x + (one ? s.r * 1.25 : (i === 0 ? -1 : 1) * s.r * (g.mob ? 1.06 : 1.25)), y: s.y - s.r * (g.mob ? 1.2 : 1.05), rr: s.r * (g.mob ? .46 : .4) }; });
+    if (me) sdPos.forEach(p => { svg += `<circle class="bj-hit" data-spot="${p.k}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${Math.max(p.rr * 1.6, 24).toFixed(1)}"/>`; });
     svg += `<circle class="bj-c" cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${s.r.toFixed(1)}"${me ? ' data-spot="main"' : ''}/>`;
     if (me && T.phase === 'bet' && !bets.main) svg += `<text class="bj-ct" x="${s.x.toFixed(1)}" y="${(s.y + s.r * .14).toFixed(1)}" style="font-size:${(s.r * .34).toFixed(1)}px">BET</text>`;
     if (bets.main) svg += `<g class="bj-ch">${chipsAt(bets.main, s.x, s.y + s.r * .5, s.r * (me ? 1.05 : .95))}</g>`;
-    // side spots: two small circles in front of the main one
-    SIDES().forEach((k, i) => {
-      const sx = s.x + (i === 0 && SIDES().length > 1 ? -1 : 1) * s.r * (g.mob ? .95 : 1.25) * (SIDES().length > 1 ? 1 : 0) + (SIDES().length === 1 ? s.r * 1.25 : 0), sy = s.y - s.r * (g.mob ? 1.08 : 1.05), rr = s.r * (g.mob ? .36 : .4);
+    sdPos.forEach(({ k, x: sx, y: sy, rr }) => {
       const sr = done && St && St.sres && St.sres[k] ? St.sres[k] : null;
       svg += `<g class="bj-sd sd-${k}${sr ? (sr.net > 0 ? ' won' : ' lost') : ''}"${me ? ` data-spot="${k}"` : ''}><circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${rr.toFixed(1)}"/>` +
         (me && !bets[k] && !g.mob ? `<text x="${sx.toFixed(1)}" y="${(sy + rr * .14).toFixed(1)}" style="font-size:${(rr * .42).toFixed(1)}px">${k === 'pp' ? 'PP' : '21+3'}</text>` : me && !bets[k] ? `<text x="${sx.toFixed(1)}" y="${(sy + rr * .16).toFixed(1)}" style="font-size:${(rr * .5).toFixed(1)}px">${k === 'pp' ? 'PP' : '21+3'}</text>` : '') +
@@ -570,9 +576,13 @@ function render() {
       let totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1);
       const maxW = me ? s.w * (St.hands.length > 1 ? 1.25 : 1.1) : s.w - 8;
       if (totalW > maxW) { const f = Math.max(me ? .55 : .62, (maxW - gap * (St.hands.length - 1)) / (totalW - gap * (St.hands.length - 1))); cw *= f; dx *= f; dy *= f; widths = widths.map(w => w * f); totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1); }
+      // never up into the dealer's cards: shrink until the tallest cascade fits between the dealer and the circle
+      const nMax = Math.max(1, ...St.hands.map(H => H.cards.length)), botY = s.y - s.r - (SIDES().length ? s.r * (g.mob ? 1.15 : .9) : 0) - u * (g.mob ? .1 : .14);
+      const room = botY - (g.dealerBot + (g.mob ? 40 : u * .3)), need = cw * 1.4 + (nMax - 1) * dy;
+      if (room > 0 && need > room) { const f = Math.max(.45, room / need); cw *= f; dx *= f; dy *= f; widths = widths.map(w => w * f); totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1); }
       let hx = Math.max(2, Math.min(W - totalW - 2, s.x - totalW / 2));
       St.hands.forEach((H, hi) => {
-        const nC = H.cards.length, baseY = s.y - s.r - (SIDES().length ? s.r * .9 : 0) - u * (g.mob ? .12 : .14) - cw * 1.4;
+        const nC = H.cards.length, baseY = botY - cw * 1.4;
         const isCur = act && T.cur.h === hi;
         H.cards.forEach((c, k) => {
           const x = hx + k * dx, y = baseY - k * dy;
