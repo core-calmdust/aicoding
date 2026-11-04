@@ -21,7 +21,7 @@ function face(c) {
     mid = `<div class="fc"><img src="${IMG}${dir}${'JQK'[r - 11]}${'shdc'[s]}.webp" alt="" draggable="false" decoding="async"></div>`;
   } else if (r === 1) mid = `<div class="ace">${suitSvg(s)}</div>`;
   else mid = `<div class="pp">${PIPS[r].map(([x, y]) => `<i style="left:${x * 100}%;top:${y * 100}%"${y > .5 ? ' class="rv"' : ''}>${suitSvg(s)}</i>`).join('')}</div>`;
-  const deck = document.documentElement.dataset.court, full = FULL_DECKS.includes(deck) ? `<img class="fimg" src="${IMG}${deck}/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp?v=3" alt="" draggable="false" decoding="async">` : '';
+  const deck = document.documentElement.dataset.court, full = FULL_DECKS.includes(deck) ? `<img class="fimg" src="${IMG}${deck}/${'A23456789TJQK'[r - 1]}${'shdc'[s]}.webp?v=4" alt="" draggable="false" decoding="async">` : '';
   return `<div class="fr s${s}${r > 10 ? ' face' : ''}">${corner}${mid}<div class="big">${suitSvg(s)}</div>${full}</div><div class="bk"></div>`;
 }
 // a card element (HTML): c = card id or null (face down / unknown)
