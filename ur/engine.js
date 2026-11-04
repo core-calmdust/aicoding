@@ -23,11 +23,13 @@
  * moveText(move, side, lang='ja') → string  例「明 3：入場→3」「暗 2：7→9 ×取り」
  * winProb(state, opts) → 手番側（これから振る側）の勝率 0..1（opts.depth 既定1）
  * evaluate(state, n, opts) → [{ move, wp }]  良い順。wp=指した後の自分の勝率（opts.depth 既定2）
- * think(state, n, level=20, opts) → move|null  opts.rng（既定 Math.random）
+ * think(state, n, level=20, opts) → move|null  opts.rng（既定 Math.random）、opts.timeLimit（ms、既定80。L20 の深さ2探索の打ち切り）
  * hitRisk(state, side) → [prob per piece]   次の相手の1回の手番（ロゼットの追加手番は含まない）で各駒が取られる確率
  * raceCount(state) → { pips:[s0,s1], diff }   各側のゴールまでの残り歩数（diff = s1 − s0）
- * LEVELS                      各レベルの設定（depth, temp）
+ * LEVELS[1..20]              各レベルの設定 { depth, temp, noise, capPref }
  * staticEval(state) → 0..1    探索なしの評価（手番側の勝率）
+ * loadNet(rule, url) → Promise<bool>  評価ネットの差し替え（任意。内蔵ネットが既定）
+ * 評価ネット（各ルール約32KB、int16）は本ファイルに内蔵。gz 後の本ファイル全体 約80KB（base64のため）
  * ─────────────────────────────────────────────────────
  * ルールの出典は ur/tools/RULES-RESEARCH.md（RoyalUr.net / RoyalUr-Java）。
  */
@@ -233,9 +235,13 @@
 
   // ---------- 探索（expectiminimax） ----------
   // V(s, d) = 手番側がこれから振る時点の勝率。d=チャンス層の深さ（0 で静的評価）
+  // 時間制限：deadline を過ぎたら ABORT を投げて浅い結果に戻す
+  const now = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now();
+  let deadline = Infinity, tick = 0; const ABORT = { abort: true };
   function valueToRoll(s, d) {
     if (s.winner >= 0) return s.winner === s.turn ? 1 : 0;
     if (d <= 0) return staticEval(s);
+    if (((++tick) & 63) === 0 && now() > deadline) throw ABORT;
     const pr = R(s.rule).probs; let v = 0;
     for (let n = 0; n <= 4; n++) { if (pr[n] > 0) v += pr[n] * bestAfterRoll(s, n, d); }
     return v;
@@ -258,9 +264,10 @@
   (function () {
     // temp: 勝率差（0..1）に対するソフトマックス温度。depth: 手の後に読むチャンス層の数。noise: 完全ランダム（取りを半分優先）にする確率
     // 完全解析表に対する 1手あたりの平均勝率損失がほぼ等比に並ぶよう調整（ur/tools/RULES-RESEARCH.md）
-    const T = [0, 0.15, 0.13, 0.11, 0.09, 0.07, 0.055, 0.045, 0.036, 0.028, 0.022, 0.017, 0.013, 0.01, 0.007, 0.005, 0.003, 0.0018, 0, 0];
-    const NZ = [1, 0.6, 0.15], CP = [0.1, 0.5, 0.5];
-    for (let L = 1; L <= 20; L++) LEVELS[L] = { depth: L >= 20 ? 2 : L >= 15 ? 1 : 0, temp: T[L - 1], noise: NZ[L - 1] || 0, capPref: CP[L - 1] || 0 };
+    // 目標の平均損失（%/手）: L1≈2.4(ほぼランダム) … L10≈0.66 … L18≈0.06, L19≈0.03, L20≈0.01
+    const T = [0, 0.15, 0.11, 0.085, 0.07, 0.06, 0.047, 0.04, 0.033, 0.027, 0.023, 0.018, 0.014, 0.0115, 0.009, 0.0065, 0.0045, 0.0033, 0.002, 0];
+    const NZ = [1, 0.75], CP = [0.1, 0.5];
+    for (let L = 1; L <= 20; L++) LEVELS[L] = { depth: L >= 20 ? 2 : L >= 19 ? 1 : 0, temp: T[L - 1], noise: NZ[L - 1] || 0, capPref: CP[L - 1] || 0 };
   })();
 
   function hitRisk(s, side) { // 次の相手の手番（1回の振り）で各駒が取られる確率
@@ -306,7 +313,13 @@
     const ms = legalMoves(s, n); if (!ms.length) return null; if (ms.length === 1) return ms[0];
     level = Math.max(1, Math.min(20, Math.round(level || 20)));
     const cfg = LEVELS[level];
-    let sc = ms.map(m => ({ m, wp: wpAfter(s, m, cfg.depth) }));
+    // 反復深化：浅い結果を先に得て、深い探索は opts.timeLimit（ms、既定 80）を超えたら打ち切る
+    let sc = ms.map(m => ({ m, wp: wpAfter(s, m, Math.min(cfg.depth, 1)) }));
+    if (cfg.depth >= 2) {
+      deadline = now() + (opts.timeLimit != null ? opts.timeLimit : 80);
+      try { sc = ms.map(m => ({ m, wp: wpAfter(s, m, cfg.depth) })); } catch (e) { if (e !== ABORT) throw e; }
+      deadline = Infinity;
+    }
     if (cfg.noise) { // 入門：ほぼランダム。ただし取れる駒は取ることもある
       if (rng() < cfg.noise) {
         const caps = ms.filter(m => m.capture);
@@ -335,10 +348,19 @@
     return bm;
   }
 
+  // 任意：別の評価ネット（ur/tools/net-<rule>.json と同形式）を非同期で差し替える。失敗しても内蔵ネットで動く
+  function loadNet(rule, url) {
+    if (typeof fetch !== 'function') return Promise.resolve(false);
+    return fetch(url).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.shape || !d.w) return false;
+      NETS[rule] = d; delete NETCACHE[rule]; return !!getNet(rule);
+    }).catch(() => false);
+  }
+
   const API = {
     RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
     newGame, clone, coords, pathOf, isRosette, isSafe, rollDice, mulberry32,
-    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval,
+    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet,
     _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id),
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

@@ -327,21 +327,26 @@
   }
 
   /* ---------- canvases → textures (colour, normal from a height pass, roughness) ---------- */
+  const RF = { willReadFrequently: true };   // passes read back pixel by pixel (normal / roughness maps): kept in CPU memory
   function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-  function normalFrom(hc, strength) {
-    const w = hc.width, h = hc.height, src = hc.getContext('2d').getImageData(0, 0, w, h).data, out = canvas(w, h), og = out.getContext('2d'), img = og.createImageData(w, h), d = img.data;
-    const Hh = (x, y) => src[((Math.min(h - 1, Math.max(0, y))) * w + Math.min(w - 1, Math.max(0, x))) * 4] / 255;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const dx = (Hh(x + 1, y - 1) + 2 * Hh(x + 1, y) + Hh(x + 1, y + 1)) - (Hh(x - 1, y - 1) + 2 * Hh(x - 1, y) + Hh(x - 1, y + 1));
-      const dy = (Hh(x - 1, y + 1) + 2 * Hh(x, y + 1) + Hh(x + 1, y + 1)) - (Hh(x - 1, y - 1) + 2 * Hh(x, y - 1) + Hh(x + 1, y - 1));
-      let nx = -dx * strength, ny = dy * strength, nz = 1; const L = Math.hypot(nx, ny, nz); nx /= L; ny /= L; nz /= L;
-      const i = (y * w + x) * 4; d[i] = (nx * .5 + .5) * 255; d[i + 1] = (ny * .5 + .5) * 255; d[i + 2] = (nz * .5 + .5) * 255; d[i + 3] = 255;
+  function normalFrom(hc, strength) {   // Sobel on the red channel (edges clamped), one pass over a Float32 copy
+    const w = hc.width, h = hc.height, src = hc.getContext('2d', RF).getImageData(0, 0, w, h).data, out = canvas(w, h), og = out.getContext('2d'), img = og.createImageData(w, h), d = img.data;
+    const H = new Float32Array(w * h); for (let i = 0; i < w * h; i++) H[i] = src[i * 4] / 255;
+    for (let y = 0; y < h; y++) {
+      const ym = (y ? y - 1 : 0) * w, y0 = y * w, yp = (y < h - 1 ? y + 1 : y) * w;
+      for (let x = 0; x < w; x++) {
+        const xm = x ? x - 1 : 0, xp = x < w - 1 ? x + 1 : x;
+        const dx = (H[ym + xp] + 2 * H[y0 + xp] + H[yp + xp]) - (H[ym + xm] + 2 * H[y0 + xm] + H[yp + xm]);
+        const dy = (H[yp + xm] + 2 * H[yp + x] + H[yp + xp]) - (H[ym + xm] + 2 * H[ym + x] + H[ym + xp]);
+        const nx = -dx * strength, ny = dy * strength, L = 1 / Math.sqrt(nx * nx + ny * ny + 1), i = (y0 + x) * 4;
+        d[i] = (nx * L * .5 + .5) * 255; d[i + 1] = (ny * L * .5 + .5) * 255; d[i + 2] = (L * .5 + .5) * 255; d[i + 3] = 255;
+      }
     }
     og.putImageData(img, 0, 0); return out;
   }
   // roughness (G, as three.js reads it) and the nacre mask (R: clearcoatMap and the pearl shader read it) in one texture
   function packRM(rc, mc) {
-    const w = rc.width, h = rc.height, g = rc.getContext('2d'), a = g.getImageData(0, 0, w, h), b = mc.getContext('2d').getImageData(0, 0, w, h).data, d = a.data;
+    const w = rc.width, h = rc.height, g = rc.getContext('2d', RF), a = g.getImageData(0, 0, w, h), b = mc.getContext('2d', RF).getImageData(0, 0, w, h).data, d = a.data;
     for (let i = 0; i < d.length; i += 4) { d[i] = b[i]; d[i + 2] = 0; }
     g.putImageData(a, 0, 0); return rc;
   }
@@ -376,18 +381,18 @@
     if (TOPT) return TOPT;
     const cw = SZ(3072), ch = Math.round(cw * D / W), nw = SZ(2048), nh = Math.round(nw * D / W), rw = SZ(1024), rh = Math.round(rw * D / W);
     const c = canvas(cw, ch); paintTop(c.getContext('2d'), cw, 'c');
-    const hc = canvas(nw, nh); paintTop(hc.getContext('2d'), nw, 'h');
-    const rc = canvas(nw, nh); paintTop(rc.getContext('2d'), nw, 'r');
-    const mc = canvas(nw, nh); paintTop(mc.getContext('2d'), nw, 'm');
+    const hc = canvas(nw, nh); paintTop(hc.getContext('2d', RF), nw, 'h');
+    const rc = canvas(nw, nh); paintTop(rc.getContext('2d', RF), nw, 'r');
+    const mc = canvas(nw, nh); paintTop(mc.getContext('2d', RF), nw, 'm');
     return (TOPT = { map: tex(c, true), normal: tex(normalFrom(hc, 1.1 * nw / 2048), false), rough: tex(packRM(rc, mc), false) });
   }
   function sideTextures() {
     if (SIDET) return SIDET;
     const cw = SZ(6144), ch = SZ(192), nw = SZ(4096), nh = SZ(128);
     const c = canvas(cw, ch); paintSide(c.getContext('2d'), cw, ch, 'c');
-    const hc = canvas(nw, nh); paintSide(hc.getContext('2d'), nw, nh, 'h');
-    const rc = canvas(nw, nh); paintSide(rc.getContext('2d'), nw, nh, 'r');
-    const mc = canvas(nw, nh); paintSide(mc.getContext('2d'), nw, nh, 'm');
+    const hc = canvas(nw, nh); paintSide(hc.getContext('2d', RF), nw, nh, 'h');
+    const rc = canvas(nw, nh); paintSide(rc.getContext('2d', RF), nw, nh, 'r');
+    const mc = canvas(nw, nh); paintSide(mc.getContext('2d', RF), nw, nh, 'm');
     return (SIDET = { map: tex(c, true), normal: tex(normalFrom(hc, .9), false), rough: tex(packRM(rc, mc), false) });
   }
 
@@ -483,7 +488,7 @@
     g.fillStyle = g.createPattern(body, 'repeat'); g.fillRect(0, 0, n, n);
     const gr = g.createRadialGradient(Dn * .9, Dn * .85, Dn * .1, Dn, Dn, Dn); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.85, 'rgba(0,0,0,.05)'); gr.addColorStop(1, 'rgba(0,0,0,.25)'); g.fillStyle = gr; g.fillRect(0, 0, n, n);
     const dp = g.createPattern(dotC, 'repeat'); dots(g, () => { g.fillStyle = dp; g.fill(); g.strokeStyle = 'rgba(20,14,10,.55)'; g.lineWidth = n / 160; g.stroke(); });
-    const hc = canvas(n, n), h = hc.getContext('2d'); h.fillStyle = '#b0b0b0'; h.fillRect(0, 0, n, n); dots(h, () => { h.fillStyle = '#a4a4a4'; h.fill(); h.strokeStyle = '#606060'; h.lineWidth = n / 110; h.stroke(); });
+    const hc = canvas(n, n), h = hc.getContext('2d', RF); h.fillStyle = '#b0b0b0'; h.fillRect(0, 0, n, n); dots(h, () => { h.fillStyle = '#a4a4a4'; h.fill(); h.strokeStyle = '#606060'; h.lineWidth = n / 110; h.stroke(); });
     const o = { map: tex(c, true), normalMap: tex(normalFrom(hc, 1.6), false), roughness: L.rough, metalness: 0 };
     if (L.metal) { const mc = canvas(n, n), mg = mc.getContext('2d'); mg.fillStyle = '#ffffff'; mg.fillRect(0, 0, n, n); dots(mg, () => { mg.fillStyle = '#000'; mg.fill(); }); o.metalness = 1; o.metalnessMap = tex(mc, false); o.roughness = .3; }
     return (pieceMats[key] = new TT.MeshStandardMaterial(o));
