@@ -37,6 +37,20 @@ html.atlas-ur .dice-dock.can{animation:urDk 1.8s ease-in-out infinite!important}
 @keyframes urDk{0%,100%{box-shadow:0 0 0 2px rgba(255,214,120,.35),0 0 10px rgba(255,214,120,.2)}50%{box-shadow:0 0 0 3px rgba(255,214,120,.75),0 0 22px rgba(255,214,120,.5)}}
 html.atlas-ur .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important}
 html.atlas-ur #bdRow{display:none!important}
+/* phones / narrow: the menu buttons are round chips (skin.css): their labels stay on one line, small, never cut mid-glyph */
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html.atlas-ur .controls{gap:5px!important}
+  html.atlas-ur .controls .btn{padding:7px 1px!important;min-width:0}
+  html.atlas-ur .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:9.5px!important;letter-spacing:-.04em}
+  html.atlas-ur .controls .btn[data-short] > span{font-size:0!important}
+  html.atlas-ur .controls .btn[data-short] > span::after{content:attr(data-s);font-size:9.5px;letter-spacing:-.04em}
+  /* the players above / below the board: the same cream cards as the other 3D games (readable over the wood) */
+  html.atlas-ur .board-area > .player{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important}
+  html.atlas-ur .board-area > .player.active{border-color:#ffc928!important}
+  html.atlas-ur .board-area > .player .sub{color:#6a7088!important}
+  html.atlas-ur .board-area > .player .sub b{color:#2b3044!important}
+  html.atlas-ur .board-area > .player .home small{color:#7a7f94!important}
+}
 html.atlas-ur .ur3dnote{margin:0;padding:12px 14px;border-radius:14px;background:#f8f0e0;border:2px solid #ead9b6;font-size:13px;line-height:1.6;color:#4a4f66}
 html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bottom:2px}
 `;
@@ -50,7 +64,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
       if (r.cssRules && r.conditionText !== undefined) { walk(r.cssRules, t => wrap((r.type === 4 ? '@media ' : '@supports ') + r.conditionText + '{' + t + '}')); continue; }
       if (r.selectorText && /\b(html|body)\.hb-on\b/.test(r.selectorText)) css.push(wrap(conv(r.selectorText) + '{' + r.style.cssText + '}'));
     } };
-    for (const sh of document.styleSheets) { if (sh.href) continue; let R; try { R = sh.cssRules; } catch (e) { continue; } walk(R, t => t); }
+    for (const sh of document.styleSheets) { const n = sh.ownerNode; if (sh.href || (n && n.id === 'hbCss')) continue; let R; try { R = sh.cssRules; } catch (e) { continue; } walk(R, t => t); }   // (not the header bar's own sheet: its 2D bar must stay hidden)
     const s2 = document.createElement('style'); s2.textContent = css.join('\n'); document.head.appendChild(s2);
   })();
 
@@ -108,6 +122,14 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     hi: ['3D: ब्रिटिश म्यूज़ियम का बोर्ड', 'उर की शाही कब्रों से मिला बोर्ड (सीप, लाजवर्द और लाल चूना पत्थर की जड़ाई) 3D में। गोटियों का रूप नीचे चुनें।'],
     ar: ['ثلاثي الأبعاد: رقعة المتحف البريطاني', 'رقعة المقابر الملكية في أور (تطعيم بالصدف واللازورد والحجر الجيري الأحمر) بالأبعاد الثلاثة. اختر شكل القطع أدناه.'],
   };
+  // phones: a shorter label where the page's one does not fit a round menu chip (like checkers' "Game")
+  const SHORT = { btnNew: { en: 'Game', es: 'Partida', pt: 'Partida', fr: 'Partie', de: 'Partie' }, btnResign: { fr: 'Abandon', de: 'Aufgabe', es: 'Rendir', hi: 'हार' }, btnLesson: { es: 'Lección', de: 'Lektion' }, btnPuzzle: { es: 'Problema', fr: 'Problème', de: 'Aufgabe' } };
+  function shortLabels() {
+    const l = (document.getElementById('langSel') || {}).value || 'ja';
+    for (const id in SHORT) { const b = document.getElementById(id), sp = b && b.querySelector('span'); if (!sp) continue; const v = SHORT[id][l];
+      if (v) { b.dataset.short = '1'; sp.dataset.s = v; } else { delete b.dataset.short; delete sp.dataset.s; } }
+  }
+  shortLabels(); { const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(shortLabels, 40)); }
   const fd = document.getElementById('fDesign');
   if (fd) {
     const p = document.createElement('p'); p.className = 'ur3dnote'; fd.appendChild(p);
