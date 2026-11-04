@@ -28,6 +28,8 @@
     hi: { name: 'डाइसपप', next: 'आगे', back: 'पीछे', start: 'खेलें', again: 'फिर से', roll: 'बोर्ड छूकर पासे फेंकें', done: 'बहुत अच्छे!', hist: 'इतिहास', winH: 'जीतने का तरीका', cult: 'संस्कृति', pass: 'पास', choose: 'कितनी सफ़ेद नोकें?', wrong: 'लगभग! फिर कोशिश करें', tapIt: 'चमकती जगह छुएँ' },
     ar: { name: 'دايس باب', next: 'التالي', back: 'رجوع', start: 'لنلعب', again: 'مرة أخرى', roll: 'المس اللوحة للرمي', done: 'أحسنت!', hist: 'التاريخ', winH: 'طريقة الفوز', cult: 'الثقافة', pass: 'تمرير', choose: 'كم رأسًا أبيض؟', wrong: 'قريب! حاول مرة أخرى', tapIt: 'المس المكان المضيء' },
   };
+  // the first page: a short greeting as in the other tours (the full history is in the portal's Historia)
+  const HELLO = {"ja": "ワン！ ぼくは<b>ダイスン</b>。<b>ウル王朝のゲーム</b>は約4500年前のメソポタミアの盤ゲームで、大英博物館に本物の盤があるんだ。4個のサイコロで進み、<b>7枚すべてを先にゴールさせたら勝ち</b>。いっしょに覚えよう！", "en": "Woof! I'm <b>Dicepup</b>. <b>The Royal Game of Ur</b> was played in Mesopotamia some 4,500 years ago — a real board is in the British Museum. Roll four dice and be the first to bring <b>all seven pieces home</b>. Let's learn it!", "zh": "汪！我是<b>骰子汪</b>。<b>乌尔王族局戏</b>是约4500年前美索不达米亚的棋盘游戏，真正的棋盘藏于大英博物馆。掷4枚骰子前进，<b>先让7枚棋子全部到达终点</b>就赢。一起学吧！", "ko": "멍! 나는 <b>다이슨</b>. <b>우르 왕실 게임</b>은 약 4500년 전 메소포타미아의 보드게임으로, 진짜 판이 대영박물관에 있어. 주사위 4개로 나아가 <b>말 7개를 먼저 모두 골인시키면 승리</b>. 함께 배우자!", "es": "¡Guau! Soy <b>Dicepup</b>. <b>El Juego Real de Ur</b> se jugaba en Mesopotamia hace unos 4500 años; un tablero real está en el Museo Británico. Tira cuatro dados y lleva primero <b>tus siete fichas a casa</b>. ¡Aprendamos!", "fr": "Ouaf ! Je suis <b>Dicepup</b>. <b>Le Jeu royal d’Ur</b> se jouait en Mésopotamie il y a environ 4 500 ans ; un vrai plateau est au British Museum. Lance quatre dés et amène le premier <b>tes sept pions à l’arrivée</b>. Apprenons-le !", "pt": "Au! Eu sou o <b>Dicepup</b>. <b>O Jogo Real de Ur</b> era jogado na Mesopotâmia há uns 4.500 anos — um tabuleiro de verdade está no Museu Britânico. Lance quatro dados e leve primeiro <b>as sete peças para casa</b>. Vamos aprender!", "de": "Wuff! Ich bin <b>Dicepup</b>. <b>Das Königliche Spiel von Ur</b> wurde vor rund 4500 Jahren in Mesopotamien gespielt — ein echtes Brett liegt im British Museum. Würfle mit vier Würfeln und bring als Erster <b>alle sieben Steine ins Ziel</b>. Lernen wir es!", "hi": "भौं! मैं <b>डाइसपप</b> हूँ। <b>उर का शाही खेल</b> लगभग 4500 साल पहले मेसोपोटामिया में खेला जाता था — एक असली बोर्ड ब्रिटिश म्यूज़ियम में है। चार पासे फेंककर <b>सातों मोहरे सबसे पहले घर पहुँचाएँ</b>। चलो सीखें!", "ar": "هاو! أنا <b>دايس باب</b>. <b>اللعبة الملكية في أور</b> كانت تُلعب في بلاد الرافدين قبل نحو 4500 عام، ورقعة حقيقية منها في المتحف البريطاني. ارمِ أربعة نرود وكن أول من يُوصل <b>قطعه السبع إلى النهاية</b>. لنتعلّمها!"};
   const PAT = { 0: [0, 0, 0, 0], 1: [0, 0, 1, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [1, 1, 1, 1] };
   const full = a => { const r = a.slice(); while (r.length < 7) r.push(0); return r; };
   const ST = (p0, p1) => ({ rule: 'finkel', pos: [full(p0), full(p1)], turn: 0, winner: -1 });
@@ -66,7 +68,7 @@
     const css = document.createElement('style');
     css.textContent = '.rgd .urq{display:flex;gap:8px;flex-wrap:wrap}.rgd .urq button{min-width:44px;padding:7px 12px;border-radius:12px;border:2px solid #eadfc6;background:#fff;font:900 17px var(--round,inherit);color:#2b3044;cursor:pointer;box-shadow:0 3px 0 #e2d6b8}.rgd .urq button:active{transform:translateY(2px);box-shadow:none}'
       + '.rgd .urp{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:99px;border:0;background:#5f78d6;color:#fff;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 3px 0 #3c52a8}'
-      + '@media (max-width:600px){.rgd .urh{font-size:12.5px!important;line-height:1.5!important;gap:4px!important;max-height:38vh;overflow-y:auto}.rgd .urh .tg span{font-size:11.5px!important}}'
+      + '@media (max-width:600px){.rgd .urh .tg span{font-size:11.5px!important}}'
       + '.rgd .urn{font:900 20px var(--round,inherit);color:#c9a13d;margin-inline-start:4px}.rgd .urh{display:grid;gap:6px;font-size:14px;line-height:1.6;color:#4a4f66}.rgd .urh b{color:#2b3044}.rgd .urh .tg{display:flex;gap:6px;flex-wrap:wrap}.rgd .urh .tg span{padding:2px 10px;border-radius:99px;background:#f8f0e0;border:1.5px solid #ead9b6;font-size:12.5px;font-weight:700;color:#6a5a3a}';
     document.head.appendChild(css);
     let typeT = 0;
@@ -119,8 +121,8 @@
       timers.forEach(clearTimeout); timers = [];
       const pg = P(); cnt('');
       if (pg.id === 'intro') {
-        say(`<b>${T('intro.t')}</b>`);
-        cnt(`<div class="urh"><div class="tg"><span>📍 ${T('intro.origin')}</span><span>👥 ${T('intro.players')}</span><span>⏱ ${T('intro.time')}</span></div><div><b>${L.hist}</b>　${T('intro.hist')}</div><div><b>${L.winH}</b>　${T('intro.win')}</div><div><b>${L.cult}</b>　${T('intro.cult')}</div></div>`);
+        say(HELLO[ctx.lang] || HELLO.en);
+        cnt(`<div class="urh"><div class="tg"><span>📍 ${T('intro.origin')}</span><span>👥 ${T('intro.players')}</span><span>⏱ ${T('intro.time')}</span></div></div>`);
         if (kit) { st = E.newGame('finkel', 0); kit.sync(st); kit.restDice(0, null); kit.marks.clear(); }
         buttons(); return;
       }
