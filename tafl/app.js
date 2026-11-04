@@ -43,7 +43,7 @@ function mvIn(pos, m) { return E.name(pos, m); }
 
 // ====================================================================== state
 const STORE = 'aicoding-tafl';
-const settings = { mode: 'ai', rule: 'copenhagen', color: 2, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'birch', pcs: 'bone' };
+const settings = { mode: 'ai', rule: 'copenhagen', color: 2, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'carved', pcs: 'bone' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -837,13 +837,13 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- small board pictures (rules, lesson / puzzle lists, design pickers)
 // spec: { v, b: N*N chars '.adk', side } ; o: { cls, marks: {sq: 'ring'|'ng'|'x'|'dash'}, arrows: [[from, to]], esc: [squares],
 //   click, sel, dest: [], last, crop: [r0, r1, c0, c1], bd, pcs }
-const BD_KEYS = ['birch', 'oak', 'stone', 'fjord', 'leather', 'carved', 'ballinderry', 'runestone', 'longship'], PC_KEYS = ['bone', 'amber', 'red', 'mono', 'turned', 'birka'];
+const BD_KEYS = ['carved', 'ballinderry', 'runestone', 'longship', 'birch', 'oak', 'stone', 'fjord', 'leather'], PC_KEYS = ['bone', 'amber', 'red', 'mono', 'turned', 'birka'];
 // rendered designs (tools/gen_viking.py; carved / turned are the 3D board and pieces seen from above): pictures in the pickers
 const RASTER_BD = { carved: 1, ballinderry: 1, runestone: 1, longship: 1 }, RASTER_PC = { turned: 1, birka: 1 };
 const BD_PAL = { carved: ['#c39762', '#9a6e40', 'rgba(42,22,8,.85)', '#5a3418', 'rgba(236,206,150,.85)'], ballinderry: ['#7c4024', '#56270f', 'rgba(40,16,6,.55)', '#3a1a0c', 'rgba(255,200,150,.5)'], runestone: ['#a3a5a0', '#7f817d', 'rgba(40,40,38,.6)', '#8e8f8a', 'rgba(160,42,28,.9)'], longship: ['#3e2b1d', '#221710', 'rgba(201,163,94,.55)', '#2a1c12', 'rgba(214,166,64,.9)'], birch: ['#e1c697', '#c9a56d', 'rgba(70,42,16,.5)', '#a8792f', 'rgba(70,40,10,.7)'], oak: ['#8a5a33', '#5e3a1e', 'rgba(255,226,170,.3)', '#3a2210', 'rgba(255,214,140,.6)'], stone: ['#a7aaa6', '#7d817d', 'rgba(30,34,36,.45)', '#5a3c2a', 'rgba(150,40,30,.75)'], fjord: ['#5d7f94', '#3b5b6b', 'rgba(220,240,255,.3)', '#1d3644', 'rgba(226,194,117,.75)'], leather: ['#9a4a32', '#6a2b1d', 'rgba(255,215,160,.3)', '#3c1610', 'rgba(242,207,122,.8)'] };
 const PC_PAL = { turned: [['#3a2014', '#120804'], ['#efe3c6', '#9c8a5c']], birka: [['#2a3f73', '#0d1530'], ['#e9e6dc', '#9c978a']], bone: [['#2c2e34', '#050506'], ['#ece1c8', '#7a6a48']], amber: [['#2c2e34', '#050506'], ['#f0b44a', '#6b3d08']], red: [['#c8392d', '#3d0806'], ['#ece1c8', '#7a6a48']], mono: [['#262626', '#000'], ['#f6f6f4', '#86867f']] };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'birch';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'carved';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'bone';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
@@ -1060,6 +1060,8 @@ $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
+// the ルール button on each card (shared/ngtabs.js): Copenhagen from the start, Brandubh / Tablut at the variants page
+$('#ruleCards').ngtRules = r => openRules(r, r === 'copenhagen' ? 0 : Math.max(0, TOUR_PAGES.findIndex(p => p.id === 'variants')));
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
