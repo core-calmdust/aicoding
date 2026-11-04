@@ -62,7 +62,7 @@
   const cl = v => Math.max(0, Math.min(255, v));
   const SHELL = () => { const N = makeNoise(11), f1 = tileN(N, 5, 4), f2 = tileN(N, 22, 2), f3 = tileN(N, 3, 2);
     return swatch('urShell', 256, (u, v) => { const m = f1(u, v) - .5, fine = f2(u, v) - .5, band = Math.sin((v * 9 + f3(u, v) * 3) * Math.PI * 2) * .5 + .5;
-      const t = m * 46 + fine * 16 + band * 9; return [cl(222 + t), cl(204 + t * .95), cl(162 + t * .8 - band * 6)]; }); };
+      const t = m * 22 + fine * 10 + band * 2; return [cl(230 + t), cl(222 + t * .97), cl(198 + t * .9)]; }); };
   const LAPIS = () => { const N = makeNoise(23), f1 = tileN(N, 6, 4), f2 = tileN(N, 30, 2), f3 = tileN(N, 14, 1);
     return swatch('urLapis', 256, (u, v) => { const m = f1(u, v) - .5, fine = f2(u, v) - .5, fl = f3(u, v);
       let rgb = [cl(28 + m * 34 + fine * 18), cl(40 + m * 44 + fine * 22), cl(116 + m * 66 + fine * 30)];
@@ -77,8 +77,8 @@
     return swatch('urGreyN', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 120 + (f2(u, v) - .5) * 60; return [cl(t), cl(t), cl(t)]; }); };
   // shell growth lines: fine, slightly wavy bands with broader layers (seamless: whole periods across the tile)
   const GROW = () => { const N = makeNoise(83), w1 = tileN(N, 3, 3), w2 = tileN(N, 9, 2);
-    return swatch('urGrow', 256, (u, v) => { const w = w1(u, v) * 1.6 + w2(u, v) * .35, f = Math.sin((v * 22 + w * 2) * TAU) * .5 + .5, b = Math.sin((v * 4 + w) * TAU) * .5 + .5;
-      const t = 255 - Math.pow(f, 3) * 70 - b * 45; return [cl(t), cl(t), cl(t)]; }); };
+    return swatch('urGrow', 256, (u, v) => { const w = (w1(u, v) - .5) * .12 + (w2(u, v) - .5) * .05, f = Math.sin((v * 48 + w) * TAU) * .5 + .5, f2 = Math.sin((v * 96 + w * 2 + .3) * TAU) * .5 + .5;
+      const t = 255 - Math.pow(f, 4) * 38 - Math.pow(f2, 6) * 18; return [cl(t), cl(t), cl(t)]; }); };
   function pat(g, cv, unitsPerPx, ox = 0, oy = 0, rot = 0) {
     const p = g.createPattern(cv, 'repeat');
     try { let m = new DOMMatrix(); m = m.translate(ox, oy); if (rot) m = m.rotate(rot); p.setTransform(m.scale(unitsPerPx)); } catch (e) {}
@@ -98,10 +98,10 @@
   function fillShell(g, S, rot = 0, ox = 0, oy = 0, k = 1) {
     if (S.pass === 'c') {
       g.fillStyle = pat(g, SHELL(), 1 / 300, ox, oy, rot); g.fill();
-      g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = .22; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
-      g.save(); g.globalAlpha = .07; g.fillStyle = 'rgba(255,236,190,1)'; g.fill(); g.restore();   // a faint warm, translucent glow
+      g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = .28; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
+      g.save(); g.globalAlpha = .06; g.fillStyle = 'rgba(255,250,240,1)'; g.fill(); g.restore();   // a faint milky, translucent glow
     } else if (S.pass === 'h') {
-      g.fillStyle = S.shell; g.fill(); g.save(); g.globalAlpha = .35; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
+      g.fillStyle = S.shell; g.fill(); g.save(); g.globalAlpha = .18; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
     } else if (S.pass === 'm') {
       g.fillStyle = '#000'; g.fill(); g.save(); g.globalAlpha = k; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
     } else { g.fillStyle = S.shell; g.fill(); }
@@ -230,7 +230,7 @@
           const rx = hor ? a + s : a, rz = hor ? b : b + s, rw = hor ? len : BAND, rh = hor ? BAND : len;
           if (pass === 'c') { g.fillStyle = wv < .1 ? 'rgba(120,130,170,.3)' : wv < .6 ? `rgba(6,10,45,${(w2 * .45).toFixed(2)})` : `rgba(60,80,180,${(w2 * .16).toFixed(2)})`; g.fillRect(rx, rz, rw, rh); }
           else if (pass === 'h') { const v = 120 + w2 * 50 | 0; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(rx, rz, rw, rh); }
-          else { const v = 70 + w2 * 60 | 0; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(rx, rz, rw, rh); }
+          else if (pass === 'r') { const v = 70 + w2 * 60 | 0; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(rx, rz, rw, rh); }   // (mask pass: lapis stays black = no nacre)
           g.strokeStyle = S.joint; g.lineWidth = .006; g.beginPath();
           if (hor) { g.moveTo(rx, rz + (j1 - .5) * .02); g.lineTo(rx + (j2 - .5) * .02, rz + rh); } else { g.moveTo(rx + (j1 - .5) * .02, rz); g.lineTo(rx + rw, rz + (j2 - .5) * .02); }
           g.stroke(); s += len;
@@ -246,7 +246,7 @@
       g.beginPath(); g.rect(-h, -h, P, P); fillShell(g, S, v.tint * 360, v.ox * 3, v.oy * 3, .38 + v.tint2 * .14);   // the plaques: a gentler nacre
       if (pass === 'c') {
         // age: each plaque its own yellowing / greying, darker towards the worn edges
-        g.fillStyle = v.tint < .35 ? `rgba(170,120,40,${(.08 + v.tint2 * .14).toFixed(2)})` : v.tint < .7 ? `rgba(120,95,60,${(.05 + v.tint2 * .12).toFixed(2)})` : `rgba(255,250,235,${(.05 + v.tint2 * .12).toFixed(2)})`;
+        g.fillStyle = v.tint < .35 ? `rgba(170,130,60,${(.04 + v.tint2 * .07).toFixed(2)})` : v.tint < .7 ? `rgba(120,100,75,${(.03 + v.tint2 * .07).toFixed(2)})` : `rgba(255,252,245,${(.05 + v.tint2 * .1).toFixed(2)})`;
         g.fillRect(-h, -h, P, P);
         const gr = g.createRadialGradient(0, 0, P * .25, 0, 0, P * .75); gr.addColorStop(0, 'rgba(90,60,25,0)'); gr.addColorStop(1, `rgba(90,60,25,${(.18 + v.tint2 * .14).toFixed(2)})`); g.fillStyle = gr; g.fillRect(-h, -h, P, P);
       } else if (S.noise) { g.globalAlpha = .12; g.fillStyle = S.noise; g.fillRect(-h, -h, P, P); g.globalAlpha = 1; }
@@ -304,17 +304,17 @@
         while (x < s.len - .04) {
           if (x > nextEye && x < s.len - .55) {
             const w = .4 + rnd() * .06, q = rnd(); g.beginPath(); g.rect(x, top, w, bot - top); fillShell(g, S, 80 + q * 20, q * 3, x, .7);
-            if (pass === 'c') { g.fillStyle = `rgba(150,110,50,${(q * .25).toFixed(2)})`; g.fillRect(x, top, w, bot - top); }
+            if (pass === 'c') { g.fillStyle = `rgba(150,120,80,${(q * .12).toFixed(2)})`; g.fillRect(x, top, w, bot - top); }
             eye(x, w); x += w + .012; nextEye = x + .9 + rnd() * .7; continue;
           }
           const red = rnd() < .5, w = red ? .04 + rnd() * .035 : .05 + rnd() * .045, q = rnd();
           const ww = Math.min(w, s.len - .04 - x); g.beginPath(); g.rect(x, top, ww, bot - top);
           if (red) { g.fillStyle = S.red; g.fill(); } else fillShell(g, S, 60 + q * 60, q * 5, x, .8 + q * .2);   // each slip its own grain direction
-          if (pass === 'c') { g.fillStyle = `rgba(${red ? '50,20,10' : '130,95,50'},${(q * .38).toFixed(2)})`; g.fillRect(x, top, Math.min(w, s.len - .04 - x), bot - top); }
+          if (pass === 'c') { g.fillStyle = `rgba(${red ? '50,20,10' : '130,110,80'},${(q * (red ? .38 : .16)).toFixed(2)})`; g.fillRect(x, top, Math.min(w, s.len - .04 - x), bot - top); }
           x += w + .01;
         }
         g.beginPath(); g.rect(0, 0, s.len, H * .055); fillShell(g, S, 0, 0, 0, .8);   // the shell slip round the top edge
-        if (pass === 'c') { g.fillStyle = 'rgba(120,90,50,.25)'; g.fillRect(0, 0, s.len, H * .055); }
+        if (pass === 'c') { g.fillStyle = 'rgba(120,100,70,.12)'; g.fillRect(0, 0, s.len, H * .055); }
       } else {
         g.fillStyle = S.shellEdge; g.fillRect(0, 0, s.len, H * .045);
       }
