@@ -196,7 +196,9 @@ function dockCenter() {
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
     let t = Infinity, b = -Infinity;
-    for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
+    const walk = list => { for (const c of list) { const cs = getComputedStyle(c); if (cs.display === 'contents') { walk(c.children); continue; }   // (mancala PC: .side / .side-in are display:contents — their cards are the info row)
+      if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); } };
+    walk(app.children);
     if (t === Infinity) return null;
     // a review box fixed right under the board and the info column (connect4 / dots / morris rvbox.js: placed 16px below them)
     const fb = document.querySelector('body > .rbox'); if (fb && fb.getClientRects().length && getComputedStyle(fb).position === 'fixed') b += 16 + fb.offsetHeight;
