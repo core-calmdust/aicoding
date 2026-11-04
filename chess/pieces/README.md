@@ -12,3 +12,5 @@ The image piece sets in this folder come from [lichess](https://github.com/liche
 | `rhosgfx/` | [RhosGFX](https://rhosgfx.itch.io/) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 File names: `w` / `b` = white / black, then `K Q R B N P`.
+
+- `lux3d/`, `wood3d/` — this site's own 3D Staunton sets (atlas/models/chess.js), rendered 3/4 from the front with `chess/tools/render2d.html` + `tools/gen_3d2d.py` (sprites 1 × 1.6 squares).
