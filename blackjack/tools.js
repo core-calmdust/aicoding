@@ -55,9 +55,9 @@ function chartTab() {
   const R = curRules(), leg = ['H', 'S', 'D', 'Ds', 'P', 'R', 'Rs'].filter(c => R.surr || c[0] !== 'R'), ct = W.ct || 'h';
   if (!W.sel || W.sel.k !== ct) W.sel = ct === 'h' ? { k: 'h', x: 16, u: 10 } : ct === 's' ? { k: 's', x: 7, u: 9 } : { k: 'p', x: 8, u: 10 };
   return rulesBar() + `<div class="lx-chart">` +
-    `<section class="lx-p lx-main"><header class="lx-ph"><div class="lx-k">${KIND[ct]}</div><div class="lx-sub">${['h', 's', 'p'].map(k => `<button type="button" data-ct="${k}" class="${k === ct ? 'sel' : ''}">${esc(t('ch.' + k))}</button>`).join('')}</div></header>` +
+    `<section class="lx-p lx-main"><header class="lx-ph"><div class="lx-sub">${['h', 's', 'p'].map(k => `<button type="button" data-ct="${k}" class="${k === ct ? 'sel' : ''}">${esc(t('ch.' + k))}</button>`).join('')}</div></header>` +
     `<div class="lx-tw"><div class="lx-dl">${esc(t('tl.dealerUp'))}</div>${chartTable(R, ct)}</div>` +
-    `<div class="lx-lf"><ul class="lx-leg">${leg.map(c => `<li><i class="${A.cellCls(c)}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><div class="lx-he"><small>HOUSE EDGE</small><b>${pct(B.houseEdge(R))}</b></div></div></section>` +
+    `<div class="lx-lf"><ul class="lx-leg">${leg.map(c => `<li><i class="${A.cellCls(c)}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><div class="lx-he"><small>${esc(t('tl.edge'))}</small><b>${pct(B.houseEdge(R))}</b></div></div></section>` +
     `<aside class="lx-side"><section class="lx-p lx-insp" id="lxInsp">${inspHtml(W.sel.k, W.sel.x, W.sel.u)}</section>` +
     `<section class="lx-p lx-keys"><div class="lx-k">${esc(t('tl.keys'))}</div><ol>${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol></section></aside></div>`;
 }
@@ -91,7 +91,7 @@ function edgeTab() {
   const bars = (rows, mx) => `<div class="lx-bars">${rows.map(([lab, e, sel]) => `<div class="lx-br${sel ? ' sel' : ''}"><span class="n">${esc(lab)}</span><span class="lx-bt"><i style="width:${Math.max(1.5, e / mx * 100).toFixed(1)}%"></i></span><b>${pct(e)}</b></div>`).join('')}</div>`;
   const vr = B.ORDER.map(v => [A.vName(v), B.houseEdge(B.rulesOf(v, A.prefOf(v))), v === W.v]);
   return rulesBar() + `<div class="lx-edge">` +
-    `<section class="lx-p lx-hero"><div class="lx-k">HOUSE EDGE</div><div class="lx-hrow"><b class="lx-num xl">${pct(base)}</b><small>${esc(t('tl.edgeNow'))}</small></div>` +
+    `<section class="lx-p lx-hero"><div class="lx-k">${esc(t('tl.edge'))}</div><div class="lx-hrow"><b class="lx-num xl">${pct(base)}</b><small>${esc(t('tl.edgeNow'))}</small></div>` +
     `<div class="lx-hour"><div class="lx-k">${esc(t('tl.hour'))}</div>${[['tl.h.basic', base], ['tl.h.gut', .025], ['tl.h.nobust', .05]].map(([k, e]) => `<div><span>${esc(t(k))}</span><b>−${fmt(Math.round(e * 80 * 100))}</b></div>`).join('')}</div></section>` +
     `<section class="lx-p lx-vars"><div class="lx-k">${esc(t('tl.vars'))}</div>${bars(vr, .025)}<p class="lx-note">${esc(t('tl.varsHelp'))}</p></section>` +
     `<section class="lx-p lx-c2"><div class="lx-k">${esc(t('tl.ruleFx'))}</div>${fx}<p class="lx-note">${esc(t('tl.ruleFxHelp'))}</p></section>` +
@@ -131,11 +131,11 @@ function simTab() {
       return `<div class="sim-row"><b>${esc(t('sim.' + k))}</b><span class="ec-b"><i style="width:${Math.min(100, Math.abs(r.mean) / mx * 100).toFixed(1)}%" class="${k === 'basic' ? 'best' : ''}"></i><em>${pct(e)} ±${(ci * 100).toFixed(2)}</em></span><small>${esc(t('sim.per', { n: fmt(Math.round(e * 100 * 100)) }))}</small></div>`; }).join('')}</div>` +
       `<p class="sy-note">${esc(t('sim.verdict', { a: pct(-S.res.basic.mean), b: pct(-S.res.mimic.mean), x: Math.max(1, Math.round(S.res.mimic.mean / (S.res.basic.mean || -.001))) }))}</p>`;
   }
-  return rulesBar() + `<div class="tl2 sys lx-sim"><section class="lx-p"><div class="lx-k">STRATEGIES</div><div class="rl-list">` +
+  return rulesBar() + `<div class="tl2 sys lx-sim"><section class="lx-p"><div class="rl-list">` +
     `<div class="rl"><div class="rl-t"><b>${esc(t('sim.n'))}</b></div>${seg('sn', [[5000, '5,000'], [20000, '20,000'], [100000, '100,000']], S.n)}</div></div>` +
     `<ul class="sim-d">${SIM.map(k => `<li><b>${esc(t('sim.' + k))}</b><span>${esc(t('sim.d.' + k))}</span></li>`).join('')}</ul>` +
     `<div class="tl-go"><button class="mbtn go" id="simRun"${S.running ? ' disabled' : ''}>${esc(t(S.running ? 'sim.running' : 'sim.run'))}</button></div></section>` +
-    `<section class="lx-p"><div class="lx-k">RESULTS</div>${res || `<p class="muted">${esc(t('sim.help'))}</p>`}<p class="diff-desc">${esc(t('sim.note', { e: pct(B.houseEdge(R)) }))}</p></section></div>`;
+    `<section class="lx-p">${res || `<p class="muted">${esc(t('sim.help'))}</p>`}<p class="diff-desc">${esc(t('sim.note', { e: pct(B.houseEdge(R)) }))}</p></section></div>`;
 }
 function runSim() {
   const S = W.sim, R = curRules(); if (S.running) return;
@@ -151,7 +151,7 @@ function render() {
   const M = $('#toolsModal'), sb = M.querySelector('.tl-body'), keep = sb && tab === lastTab ? sb.scrollTop : 0; lastTab = tab;
   const tabs = ['chart', 'edge', 'count', 'sim'].map(k => `<button type="button" class="${k === tab ? 'sel' : ''}" data-tt="${k}">${esc(t('tl.' + k))}</button>`).join('');
   const body = tab === 'chart' ? chartTab() : tab === 'edge' ? edgeTab() : tab === 'count' ? countTab() : simTab();
-  M.classList.add('bjx'); M.innerHTML = `<h2><small>RESEARCH</small>${esc(t('tl.h'))}</h2><div class="ng-tabs bc-tt">${tabs}</div><div class="tl-body">${body}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
+  M.classList.add('bjx'); M.innerHTML = `<h2>${esc(t('tl.h'))}</h2><div class="ng-tabs bc-tt">${tabs}</div><div class="tl-body">${body}</div><div class="modal-actions"><button class="mbtn go" id="tlClose">${esc(t('close'))}</button></div>`;
   if (keep) M.querySelector('.tl-body').scrollTop = keep;
   M.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { tab = b.dataset.tt; render(); });
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
