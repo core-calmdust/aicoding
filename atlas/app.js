@@ -646,10 +646,12 @@
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
+    if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
     if (!glOK) return;
+    if (window.Historia && Historia.on) return Historia.fit();   // ヒストリア open: it frames the board itself
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
     if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
