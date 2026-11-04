@@ -39,7 +39,24 @@ html.atlas-ur .frame > .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:
 /* phones held upright (html.ur-band): the page's own dice in the players' strips (off the 3D board) — a soft tray in the cream card;
    the portal bar is taller than the page's brand row: the board leaves it room (--oh) */
 html.atlas-ur.ur-band .pdk{background:rgba(120,80,30,.1)!important;border-color:rgba(150,110,50,.28)!important;box-shadow:inset 0 1px 3px rgba(90,60,20,.25)!important}
-html.atlas-ur{--oh:380px!important}
+/* (2026-11-05) the same board size as the 2D page on a phone held upright: a slimmer portal bar (40px; the page's own brand row +
+   gaps take 34px), no extra margin around the board, the same 8px gaps → the page's --oh + 6px − the face strip below (16px) */
+html.atlas-ur{--oh:330px!important}
+html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
+@media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
+  html.atlas-skin.atlas-ur .app{padding-top:48px!important}
+  html.atlas-ur .atlas-top{height:40px;gap:6px}
+  html.atlas-ur .atlas-brand img{width:28px;height:28px}
+  html.atlas-ur .atlas-brand b{font-size:15px}
+  html.atlas-ur .atlas-brand small{font-size:8.5px}
+  html.atlas-ur :is(.atlas-ic,.atlas-lbtn){height:32px;min-width:32px;width:32px}
+  html.atlas-ur :is(.atlas-ic,.atlas-lbtn) svg{width:17px;height:17px}
+  html.atlas-ur .atlas-lpop{top:40px}
+  html.atlas-ur.ur-band .board-area > #frame{margin:0!important}
+  /* (the 3D board has no side-face strip under it as the 2D picture: its bottom edge is ~33 units higher — your card comes up by that) */
+  html.atlas-ur.ur-band.bv .board-area > #frame{margin-bottom:calc(var(--bw) * -.0887)!important}
+  html.atlas-ur.ur-band .controls .btn{padding:5px 1px!important}
+}
 /* phones held sideways (the page's landtabs.js → html.ur-land): the portal bar is a slim pill in the page's top row (logo · name ·
    icons), the menu icons as cream pills beside it, the rail / drawer / cards in the cream portal look on the wood */
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
@@ -69,9 +86,11 @@ html.atlas-ur{--oh:380px!important}
   html.atlas-ur.ur-land body.lt-on #ltPanel{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important}
   html.atlas-ur.ur-land body.lt-on #ltLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important}
   html.atlas-ur.ur-land body.lt-on #ltLearn button svg{stroke:#d93c3c!important}
+  html.atlas-ur.ur-land body.lt-on.mtab-online .ol-pane{background:#fffaf0!important;border:2px solid #fff!important;color:var(--text)}
+  html.atlas-ur.ur-land body.lt-on.mtab-online .ol-pane h3{color:#2b3044!important}
+  html.atlas-ur.ur-land body.lt-on.mtab-online .ol-pane p{color:#5a6078!important}
   html.atlas-ur.ur-land body.lt-on.lt-nav #ltNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}
 }
-html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:460px!important}
 html.atlas-ur #bdRow{display:none!important}
 /* phones / narrow: the menu buttons are round chips (skin.css): their labels stay on one line, small, never cut mid-glyph */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){

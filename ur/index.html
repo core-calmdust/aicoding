@@ -676,6 +676,9 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   html.ur-land body.lt-on.lt-rec .grc-ft [data-act=close]{display:none!important}
   @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
   /* online: the dock slides in like the drawer */
+  html.ur-land body.lt-on.mtab-online .ol-pane{left:auto!important;right:calc(max(8px, var(--sr)) + 64px)!important;top:calc(var(--tp) + 12px)!important;bottom:6px!important;width:var(--ltw);z-index:60!important;padding:18px!important;gap:10px;border-radius:14px;border:1px solid rgba(217,180,90,.3);box-shadow:-18px 0 40px -10px rgba(0,0,0,.8);animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  html.ur-land body.lt-on.mtab-online .ol-pane .ol-ic{width:44px;height:44px}
+  html.ur-land body.lt-on.mtab-online .ol-pane p{font-size:12.5px;line-height:1.7}
   html.ur-land body.lt-on.mtab-online .dock{left:auto!important;right:calc(max(8px, var(--sr)) + 64px)!important;top:calc(var(--tp) + 12px)!important;bottom:6px!important;width:var(--ltw);border-radius:14px;border:1px solid rgba(217,180,90,.3);z-index:60!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
   /* move navigation: a compact box at the bottom centre over the board */
   html.ur-land body.lt-on #ltPanel #navBar{display:none!important}

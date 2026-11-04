@@ -199,6 +199,7 @@ function refit() {
 function check() { if (MQ.matches && !window.__EMBED) enter(); else leave(); }
 // a tap on the board closes the drawer (and does not play a move; in a lesson the next tap plays)
 document.addEventListener('click', e => {
+  if (on && onlineOn() && e.target.closest && e.target.closest('.frame') && typeof mtab === 'function') { e.stopPropagation(); e.preventDefault(); mtab('game'); sync(); return; }
   if (on && recOn() && e.target.closest && e.target.closest('.frame') && window.GameRecord) { e.stopPropagation(); e.preventDefault(); GameRecord.close(); document.body.classList.remove('lt-rec'); sync(); return; }
   if (!on || !open || pinned()) return;
   if (e.target.closest && (e.target.closest('#ltPanel') || e.target.closest('#ltRail') || e.target.closest('.overlay') || e.target.closest('.ck-pop'))) return;
@@ -221,7 +222,7 @@ document.addEventListener('touchstart', e => {
   sw = null;
   if (!on || pinned() || e.touches.length !== 1) return;
   const x = e.touches[0].clientX, y = e.touches[0].clientY, tg = e.target.closest ? e.target : null;
-  const side = tg && (recOn() ? tg.closest('.grc-ov') : onlineOn() ? tg.closest('.dock') : null);
+  const side = tg && (recOn() ? tg.closest('.grc-ov') : onlineOn() ? tg.closest('.dock, .ol-pane') : null);
   if (side) { sw = { x, y, mode: 'close', dx: 0, el: side, side: true }; return; }
   if (document.querySelector('.overlay.show')) return;
   if (open && tg && tg.closest('#ltPanel')) sw = { x, y, mode: 'close', dx: 0, el: panel };
