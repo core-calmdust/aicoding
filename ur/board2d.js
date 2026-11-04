@@ -383,7 +383,7 @@
      When three.js can be had (loaded in the background after the page, never in the 3D skin) the dice are the 3D
      dice of atlas/models/ur-dice.js, thrown on a small transparent WebGL canvas over the dice place (rendered only
      while they move). Otherwise (no WebGL, offline, not loaded yet) the flat SVG dice below. */
-  const BONE = { f: ['#efe5cd', '#d8c9a8', '#b3a27f'], e: '#6e5d40', m: ['#fbf8f0', '#1f3290'], base: '#cdbd9b' };
+  const BONE = { f: ['#efe5cd', '#d8c9a8', '#b3a27f'], e: '#6e5d40', m: ['#2a43b0', '#9fbaff'], base: '#cdbd9b' };   // marks: lapis blue (as the 3D dice), a pale glint in the middle
   const DSTYLE = { orig: BONE, ivory: BONE, wood: BONE, gold: BONE };
   const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   let threeP = null;
@@ -420,13 +420,14 @@
     const key = new TT.DirectionalLight(0xffffff, .95); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -.0006; key.shadow.normalBias = .01; key.shadow.radius = 3; sc.add(key); sc.add(key.target);
     const fill = new TT.DirectionalLight(0xfff0d8, .22); sc.add(fill);
     const ground = new TT.Mesh(new TT.PlaneGeometry(1, 1), new TT.ShadowMaterial({ opacity: .42 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; sc.add(ground);
-    // a soft glow over a white tip that points up (after the dice stop): the count can be read at a glance
-    const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const g = gc.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,250,228,1)'); gr.addColorStop(.35, 'rgba(255,240,200,.55)'); gr.addColorStop(1, 'rgba(255,230,170,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+    // a soft blue ring of light around each blue-marked tip that points up (after the dice stop): the count can be read at a glance,
+    // and the lapis mark itself stays visible in the clear middle
+    const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const g = gc.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(90,140,255,0)'); gr.addColorStop(.22, 'rgba(90,140,255,.15)'); gr.addColorStop(.42, 'rgba(110,160,255,.75)'); gr.addColorStop(.62, 'rgba(90,140,255,.32)'); gr.addColorStop(1, 'rgba(70,120,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
     const gtex = new TT.CanvasTexture(gc);
     const D = [];
     for (let i = 0; i < n; i++) {
       const g = new TT.Group(), d = UD.die(); d.scale.setScalar(DS); g.add(d); sc.add(g);
-      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xfff6dc, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.42, .42, 1); halo.renderOrder = 5; sc.add(halo);
+      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xffffff, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.42, .42, 1); halo.renderOrder = 5; sc.add(halo);
       D.push({ g, d, halo, x: 0, z: 0 });
     }
     // world units = board squares (the dice place is `span` squares long); x right, z down the screen; the line of
@@ -499,7 +500,7 @@
           while (hk < hits.length && hits[hk].t <= tms) { if (onHit) try { onHit(hits[hk].i, hits[hk].s); } catch (e) {} hk++; }
           if (tms >= TP.total) {
             TP.end(); raf = 0;
-            // the glow over the white tips fades in, then the canvas stays still
+            // the glow around the blue tips fades in, then the canvas stays still
             const f0 = performance.now();
             const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
             raf = requestAnimationFrame(fade); return;
