@@ -339,13 +339,17 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     if (my !== gen) return;
     fitted = R > 0;
     moveTo(d); await flip(before);
-    // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
+    // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it —
+    // measured against the dock's final place too (on a slow machine it may still be sliding)
     await new Promise(r => setTimeout(r, 80)); if (my !== gen || !isOpen()) return;
-    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
-    moveTo(delta());
-    // the dock (or the header) ended up elsewhere than expected: settle again
+    { const un = ffDock(); sync = true; let d2 = null;
+      try { const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) await fit(my); d2 = delta(); } finally { sync = false; un(); }
+      if (my !== gen || !isOpen()) return; moveTo(d2); }
+    // the dock (or the header) ended up elsewhere than expected: settle again (once the dock's own animation is over)
+    const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
+    await Promise.race([dockDone(), new Promise(r => setTimeout(r, 2000))]);
     setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
-      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 400);
+      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 100);
   };
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again

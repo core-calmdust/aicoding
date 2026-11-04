@@ -45,13 +45,17 @@ ${P} .ng-col :is(.ng-info,[id$=Info]) p{line-height:1.75}
 ${P}[data-ngt=rules] .ng-col > .field:not(.hidden):not(.ngt-hide):not([data-ng]){display:block!important}
 ${P}[data-ngt=rules] .ng-col > .field > label:first-child{width:auto!important;max-width:none!important;white-space:normal}
 /* PC: the display options sit at the foot of their panel (as shogi's) */
-${P}.ngt-pc[data-ngt=rules] .ng-col > :is(#fDisplay,#fOpts,#fOptions){margin-top:auto!important}
+${P}.ngt-pc[data-ngt=rules] .ng-col > .ngl-foot{margin-top:auto!important}
 /* the chosen design's name (phones show only pictures): at the end of the label's hairline */
-${P} [data-ng=design]:has(> .dsg-now){display:flex;flex-wrap:wrap;align-items:center}
-${P} [data-ng=design]:has(> .dsg-now) > *{flex:1 0 100%;min-width:0}
-${P} [data-ng=design]:has(> .dsg-now) > label:first-child{flex:1 1 0}
-${P} [data-ng=design] > .dsg-now{flex:none;order:0;margin:0 0 10px 10px!important;font-size:12.5px;color:var(--ngl-hi)}
+${P} [data-ng=design]:has(> .dsg-now){display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+${P} [data-ng=design]:has(> .dsg-now) > *{grid-column:1 / -1;min-width:0}
+${P} [data-ng=design]:has(> .dsg-now) > label:first-child{grid-column:1}
+${P} [data-ng=design] > .dsg-now{grid-column:2;margin:0 0 10px 10px!important;font-size:12.5px;color:var(--ngl-hi)}
+/* the footer band: 閉じる / 対局開始 share the full width (as shogi) */
+${P}.ngt-pc .ngt-foot .modal-actions{display:flex!important;gap:10px!important;justify-content:stretch!important}
+${P}.ngt-pc .ngt-foot .modal-actions > :is(.mbtn,button){flex:1 1 0!important;width:auto!important;max-width:none!important;padding-top:13px!important;padding-bottom:13px!important}
 /* the mode row (outside the panels): a little more air */
+${P} > :is(.ngt-modef,.ng-cols){order:0!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:16px!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef > label{letter-spacing:.18em}
 /* デザイン tab: each design row in a panel, big picture tiles */
@@ -96,11 +100,24 @@ function init() {
   const st = document.createElement('style'); st.id = 'nglCss'; st.textContent = CSS; document.head.appendChild(st);
   // the title's serif for the level name
   try { const h2 = modal.querySelector('h2'); if (h2) modal.style.setProperty('--ngl-serif', getComputedStyle(h2).fontFamily); modal.style.setProperty('--ngl-sans', getComputedStyle(modal).fontFamily); } catch (e) {}
+  if (!modal.querySelector('.ng-cols, .ng-col')) {   // a dialog without columns (dots): its settings after the mode row go into two
+    const sm = modal.querySelector('#segMode'), mf = sm && sm.closest('.field'), acts = modal.querySelector('.modal-actions');
+    if (mf && mf.parentNode === modal) {
+      const list = []; for (let n = mf.nextElementSibling; n && n !== acts && !n.classList.contains('ngt-foot') && !n.classList.contains('modal-actions'); n = n.nextElementSibling) if (n.classList.contains('field') && !n.hasAttribute('data-ng')) list.push(n);
+      if (list.length) { const w = document.createElement('div'); w.className = 'ng-cols'; const a = document.createElement('div'), b = document.createElement('div'); a.className = b.className = 'ng-col'; w.append(a, b); mf.after(w); list.forEach(e => a.appendChild(e)); }
+    }
+  }
+  { const cs = [...modal.querySelectorAll('.ng-col')];   // two columns straight in the dialog (morris): give them the wrapper
+    if (cs.length === 2 && cs[0].parentNode === modal && cs[1].parentNode === modal) { const w = document.createElement('div'); w.className = 'ng-cols'; cs[0].before(w); w.append(cs[0], cs[1]); } }
   const cols = [...modal.querySelectorAll('.ng-col')];
   if (cols.length !== 2 || cols[0].parentNode !== cols[1].parentNode) return;
   const [c1, c2] = cols, wrap = c1.parentNode;
   const own = e => !e.hasAttribute('data-ng') && !e.matches('script,style,template');
+  // the mode row goes above the panels (some games keep it after the columns)
+  const mf = (() => { const sm = modal.querySelector('#segMode'); return sm && sm.closest('.field'); })();
+  if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
   const items = [...c1.children, ...c2.children].filter(own);   // the settings in their original order
+  const side = items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
   const shown = e => !e.classList.contains('hidden') && !e.hidden && getComputedStyle(e).display !== 'none' && e.offsetHeight > 0;
   function place(col, list) {
     const want = list.concat([...col.children].filter(e => !own(e)));
@@ -118,6 +135,7 @@ function init() {
       const cut = k < vis.length ? items.indexOf(vis[k]) : items.length;
       place(c1, items.slice(0, cut)); place(c2, items.slice(cut));
       const e1 = !items.slice(0, cut).some(shown) && ![...c1.children].some(e => !own(e) && shown(e)), e2 = !items.slice(cut).some(shown);
+      [c1, c2].forEach(c => { const v = [...c.children].filter(e => own(e) && shown(e)); v.forEach((e, i) => e.classList.toggle('ngl-foot', i > 0 && i === v.length - 1 && /^(fDisplay|fOpts|fOptions)$/.test(e.id))); });   // display options at the foot of a panel that has more
       c1.classList.toggle('ngl-empty', e1); c2.classList.toggle('ngl-empty', e2);
       wrap.classList.toggle('ngl-one', e1 || e2);
     } finally { busy = false; }
