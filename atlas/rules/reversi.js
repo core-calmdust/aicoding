@@ -113,7 +113,7 @@
     const T3 = ctx.Table3D, TH = window.THREE, L = TXT[ctx.lang] || TXT.en;
     const board = T3.MODELS.reversi(true); T3.show('reversi', board); T3.play(true);
     const S = board.userData.S, Y = board.userData.top, cs = S / 8;
-    const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
+    const RM = T3.rvMats(), DH = T3.rvDisc.H / 2;
     const P = q => [T3.cellPos(8, S, q & 7), T3.cellPos(8, S, q >> 3)];
     const marks = new TH.Group(); board.add(marks);
     let discs = {}, cells = [], step = 0, stopped = false, busy = false, played = false, timers = [];
@@ -121,16 +121,14 @@
     const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
 
     function makeDisc(q, color) {
-      const g = new TH.Group(), top = T3.bevelDisc(.42, .1, W), bot = T3.bevelDisc(.42, .1, B);
-      top.position.y = .1; g.add(bot, top); g.position.y = -.1;
-      const inner = new TH.Group(); inner.add(g); const outer = new TH.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -.098; outer.add(ao);
-      const [x, z] = P(q); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0;
+      const inner = new TH.Group(); inner.add(T3.rvDisc(RM)); const outer = new TH.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -DH + .002; outer.add(ao);
+      const [x, z] = P(q); outer.position.set(x, Y + DH, z); inner.rotation.x = color === 1 ? Math.PI : 0;
       board.add(outer); return (discs[q] = { outer, inner, color });
     }
-    function drop(q, color, delay = 0, h = 2.2, snd = false) { const d = makeDisc(q, color); d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + .1 + (1 - k) * (1 - k) * h; }, () => { if (snd) SFX.tok(1, 1); }); }, delay); }
+    function drop(q, color, delay = 0, h = 2.2, snd = false) { const d = makeDisc(q, color); d.outer.visible = false; later(() => { d.outer.visible = true; anim(280, k => { d.outer.position.y = Y + DH + (1 - k) * (1 - k) * h; }, () => { if (snd) SFX.tok(1, 1); }); }, delay); }
     function flip(q, color, delay) {
       const d = discs[q]; d.color = color; const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
-      later(() => anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .8; }, () => SFX.tok(.45, 1.35 + Math.random() * .15)), delay);
+      later(() => anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + DH + Math.sin(k * Math.PI) * .8; }, () => SFX.tok(.45, 1.35 + Math.random() * .15)), delay);
     }
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); }
     function tile(q, color, op = .5, h = .02) { const m = new TH.Mesh(new TH.BoxGeometry(cs * .92, h, cs * .92), new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false })); const [x, z] = P(q); m.position.set(x, Y + .012, z); marks.add(m); return m; }

@@ -203,6 +203,36 @@
     }
     return mesh(g, mat);
   }
+  /* a real Othello disc: a thin flat cylinder (35 mm × ~5 mm), crisp straight side, a tiny rounded edge on each face,
+     white half over black half; centred on its origin (white face up), so it flips round its diameter */
+  const RV_R = .42, RV_H = .12, RV_B = .022;
+  function rvHalf(up) {
+    const key = 'rv' + (up ? 'u' : 'd'); let g = discCache[key];
+    if (!g) {
+      const TT = T(), r = RV_R, h = RV_H / 2, b = RV_B, s = 3, pts = [];   // (profile bottom → top, as the lathe wants it)
+      if (up) { pts.push(new TT.Vector2(r, 0)); for (let i = 0; i <= s; i++) { const a = Math.PI / 2 * i / s; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, h - b + Math.sin(a) * b)); } pts.push(new TT.Vector2(.001, h)); }
+      else { pts.push(new TT.Vector2(.001, -h)); for (let i = 0; i <= s; i++) { const a = -Math.PI / 2 + Math.PI / 2 * i / s; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, -h + b + Math.sin(a) * b)); } pts.push(new TT.Vector2(r, 0)); }
+      g = new TT.LatheGeometry(pts, 28);
+      const P = g.attributes.position, UV = g.attributes.uv;   // planar UVs from above: the matte grain lies flat on the face
+      for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / (2 * r) + .5, P.getZ(i) / (2 * r) + .5);
+      g.computeVertexNormals(); discCache[key] = g; SHARED.add(g);
+    }
+    return g;
+  }
+  function rvMats() {   // matte, slightly grainy (no lacquer, no clear coat): soft diffuse light with a very broad, faint sheen
+    const grain = canvasTex('rvGrain', 128, 128, (c, W) => { const N = makeNoise(53), img = c.createImageData(W, W), d = img.data;
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const v = 128 + (Math.random() - .5) * 70 + (N(x / 9, y / 9, 2) - .5) * 40, i = (y * W + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+      c.putImageData(img, 0, 0); });
+    grain.encoding = T().LinearEncoding;
+    const W = M({ color: 0xf2efe7, roughness: .78, metalness: 0, envMapIntensity: .55, bumpMap: grain, bumpScale: .0012 }),
+      B = M({ color: 0x1b1c1f, roughness: .72, metalness: 0, envMapIntensity: .6, bumpMap: grain, bumpScale: .0012 });
+    return { W, B };
+  }
+  function rvDisc(mats) {   // → Group, white face up (+y), centred; rotate .x by π for black
+    const g = new (T().Group)(), w = mesh(rvHalf(true), mats.W), b = mesh(rvHalf(false), mats.B);
+    g.add(w, b); return g;
+  }
+  rvDisc.R = RV_R; rvDisc.H = RV_H;
   function stone(r, mat) { const m = mesh(new (T().SphereGeometry)(r, 32, 16), mat); m.scale.y = .42; return m; }
   // soft contact shadow (ambient occlusion) under a piece, so it sits on the surface instead of floating
   function contact(r, k = .55) {
@@ -215,7 +245,6 @@
   const cellPos = (n, size, i) => -size / 2 + size / n * (i + .5);
 
   /* ---------- board builders ---------- */
-  const WHITE = () => M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), BLACK = () => M({ color: 0x16171b, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
   const MODELS = {
     reversi(live) {
       const g = new (T().Group)(), S = 8.4, TT = T();
@@ -238,13 +267,12 @@
       g.userData.S = S; g.userData.top = .43;
       if (live) return g;
       const pos = { 27: 0, 28: 1, 35: 1, 36: 0, 19: 1, 26: 1, 37: 0, 44: 1, 20: 0, 29: 1 };
-      const W = WHITE(), B = BLACK();
+      const RM = rvMats();
       for (const k in pos) {
         const i = +k, x = cellPos(8, S, i % 8), z = cellPos(8, S, i / 8 | 0);
-        const d = new (T().Group)();
-        const a = bevelDisc(.44, .1, pos[k] ? B : W), b = bevelDisc(.44, .1, pos[k] ? W : B);
-        b.position.y = .1; d.add(a, b); d.position.set(x, .425, z); g.add(d);   // resting on the felt
-        const sh = contact(.44); sh.position.set(x, .424, z); g.add(sh);
+        const d = rvDisc(RM); if (!pos[k]) d.rotation.x = Math.PI;
+        d.position.set(x, .425 + RV_H / 2, z); g.add(d);   // resting on the felt
+        const sh = contact(RV_R); sh.position.set(x, .424, z); g.add(sh);
       }
       return g;
     },
@@ -1549,5 +1577,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { museum, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { museum, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

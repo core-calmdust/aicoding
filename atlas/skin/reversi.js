@@ -38,25 +38,23 @@
   if (skin.view) skin.view({ key: 'atlas-reversi-view', row: document.getElementById('bdRow'), img: '../images/atlas/reversi.webp' });
 
   /* ---------- 3D discs mirrored from the page's setDisc() ---------- */
-  const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });
+  const RM = T3.rvMats(), DH = T3.rvDisc.H / 2;   // flat, matte Othello discs (centre DH above the felt)
   const pos = sq => [T3.cellPos(8, S, sq & 7), T3.cellPos(8, S, sq >> 3)];
   const discs = {};
   const anim = (dur, f, done) => { T3.kick(dur + 200); const t0 = performance.now(); (function s(n) { const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) { T3.kick(150); requestAnimationFrame(s); } else { T3.kick(150); if (done) done(); } })(t0); };
   function make(sq, color) {
-    const g = new THREE.Group(), bot = T3.bevelDisc(.42, .1, B), top = T3.bevelDisc(.42, .1, W);
-    top.position.y = .1; g.add(bot, top); g.position.y = -.1;
-    const inner = new THREE.Group(); inner.add(g); const outer = new THREE.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -.098; outer.add(ao);
-    const [x, z] = pos(sq); outer.position.set(x, Y + .1, z); inner.rotation.x = color === 1 ? Math.PI : 0;
+    const inner = new THREE.Group(); inner.add(T3.rvDisc(RM)); const outer = new THREE.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -DH + .002; outer.add(ao);
+    const [x, z] = pos(sq); outer.position.set(x, Y + DH, z); inner.rotation.x = color === 1 ? Math.PI : 0;
     board.add(outer); return (discs[sq] = { outer, inner, color });
   }
   function mirror(s, color, a) {
     const d = discs[s];
     if (!color) { if (d) { board.remove(d.outer); delete discs[s]; T3.kick(200); } return; }
-    if (!d) { T3.kick(400); const n = make(s, color); if (a === 'drop') anim(260, k => { n.outer.position.y = Y + .1 + (1 - k) * (1 - k) * 2.2; }); return; }
+    if (!d) { T3.kick(400); const n = make(s, color); if (a === 'drop') anim(260, k => { n.outer.position.y = Y + DH + (1 - k) * (1 - k) * 2.2; }); return; }
     if (d.color === color) return;
     d.color = color;
     const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
-    if (typeof a === 'number' && a >= 0) setTimeout(() => anim(380, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + .1 + Math.sin(k * Math.PI) * .7; }), a);
+    if (typeof a === 'number' && a >= 0) setTimeout(() => anim(380, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + DH + Math.sin(k * Math.PI) * .7; }), a);
     else d.inner.rotation.x = to;
     T3.kick(300);
   }
