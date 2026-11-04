@@ -178,8 +178,11 @@
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
         const n = L.pieces.filter(q => q.side === side && q.where === kind).length, [x, y, w, h] = sideBox(o, side, kind), cx = x + w / 2;
         const t = (lab && lab(kind)) || (kind === 'goal' ? 'Home' : 'Start');
-        s += `<rect class="ur-sb ur-sb-${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="none" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-opacity=".55" stroke-width="2.5"/>` +
-          `<text class="ur-sl ur-sl-${kind}" x="${cx}" y="${y + 22}" text-anchor="middle" font-size="16.5" font-weight="700" fill="${kind === 'goal' ? '#a8ecc6' : '#f1d58c'}" font-family="'Zen Kaku Gothic New',system-ui,sans-serif">${t}</text>` +
+        // colours: 手持ち = gold on bitumen, ゴール = lapis lazuli (lightened for the night-blue page); a small label plate on top
+        const G = kind === 'goal', fc = G ? '#6f8ff0' : '#d9b45a';
+        s += `<rect class="ur-sb ur-sb-${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="none" stroke="${fc}" stroke-opacity=".7" stroke-width="2.5"/>` +
+          `<rect class="ur-slb ur-slb-${kind}" x="${x + 7}" y="${y + 5}" width="${w - 14}" height="45" rx="11" fill="${G ? 'rgba(36,64,154,.42)' : 'rgba(60,40,12,.45)'}" stroke="${fc}" stroke-opacity=".6" stroke-width="1.5"/>` +
+          `<text class="ur-sl ur-sl-${kind}" x="${cx}" y="${y + 22}" text-anchor="middle" font-size="16.5" font-weight="700" fill="${G ? '#c4d2ff' : '#f1d58c'}" font-family="'Zen Kaku Gothic New',system-ui,sans-serif">${t}</text>` +
           `<text class="ur-sn ur-sn-${kind}" x="${cx}" y="${y + 42}" text-anchor="middle" font-size="17" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text>`;
       }
       return s;
@@ -187,7 +190,7 @@
     for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
       const n = L.pieces.filter(q => q.side === side && q.where === kind).length; if (!n) continue;
       const sx = nside(o, side), a = sx * (NX + 40), b2 = (FL(o) ? -NY[kind] : NY[kind]) + 22, x = OB(o) === 'v' ? a : b2, y = OB(o) === 'v' ? b2 : a;
-      s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
+      s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#6f8ff0' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
     }
     return s;
   }
