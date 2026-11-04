@@ -23,6 +23,7 @@
   const st = document.createElement('style');
   st.textContent = `
 html.atlas-morris{--cv:min((var(--vh) - var(--pad) * 2 - 8px - var(--ttop)) / 8.9, 150px);--sidew:clamp(260px, 100vw - var(--padx) * 2 - var(--gap) - var(--cv) * 10.2, 520px);--cell:min(var(--cv), (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 10.2);--fw:calc(var(--cell) * 10.2);--fh:calc(var(--cell) * 8.9)}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-morris{--sidew:360px}}   /* PC: the fixed 360px info column (common spec) */
 @media (pointer: coarse) and (max-width: 900px) and (max-aspect-ratio: 1/1){html.atlas-morris,html.atlas-morris body{--cell:min((100vw - 12px) / 10, 64px)!important}}
 @media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){html.atlas-morris{--cell:min((var(--vh) - 20px) / 8.9, (100vw - 300px) / 10.2, 120px)}}
 html.atlas-morris .frame{padding:calc(var(--cell) * .95) calc(var(--cell) * 1.6)!important;border:0!important}

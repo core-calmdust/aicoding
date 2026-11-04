@@ -149,6 +149,12 @@ html.atlas-land .cb-bar .cb-ic:not(.cb-x){width:34px!important}
 html.atlas-skin .kifu-card .info-line{display:block!important;order:9;margin-top:8px;padding-top:8px;border-top:2px dashed #efe3c8;color:#6a7088;font-size:12px}
 html.atlas-skin .side{overflow:visible}
 html.atlas-skin .side-in{height:100%}
+/* PC: the info column is fitted to the 3D board's height (common.js sideFit) — its cards scroll inside it instead of spilling
+   below the board under the online dock (reversi / go had overflow:visible there) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html.atlas-skin.side-col .side > .side-in{overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin}
+  html.atlas-skin.side-col .side > .side-in > *{flex-shrink:0}
+}
 
 /* reversi / shogi with the portal bar as their PC header (html.hb-atlas): sized like the 2D page under its header bar
    (--hb-h = the bar, the page starts below it), so the board and the side column never slip under the bar */
