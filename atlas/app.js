@@ -296,7 +296,7 @@
   try { gCat = localStorage.getItem('atlas-cat') || 'all'; } catch (e) {}
   // 'classic' is a tag chip (定番) next to the category chips: it filters by g.tags instead of g.cat
   // chips (same as the top page): すべて · ボード (the classic board games, card games excluded) · パズル · カード (tag) · then the board-game families
-  const CHIPS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race'];
+  const CHIPS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race', 'hist'];
   const inCat = (g, k) => k === 'all' || (k === 'board' ? g.tags.includes('classic') && !g.tags.includes('card') : k === 'card' ? g.tags.includes('card') : g.cat === k);
   if (gCat === 'classic') gCat = 'board';
   if (!CHIPS.includes(gCat)) gCat = 'all';
