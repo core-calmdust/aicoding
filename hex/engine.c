@@ -209,6 +209,55 @@ static int playout(int side, int last) {
   return connected(PB, RED) ? RED : BLUE;
 }
 
+// ---------------------------------------------------------------- learned move prior (features; weights in prior_w.h, tools/train_prior.c)
+// The features of an empty cell c for the player p to move, seen from p (the board is mirrored for Blue so that p's edges are
+// always the same pair): the ring of 6 neighbours (empty / own / opponent / own edge / opponent edge / corner, the two 180°
+// rotations folded together), the 6 bridge triples (the two cells between c and the cell across, and that cell), relations to
+// the last move, and the distances to p's and the opponent's edges. The prior of c = softmax of the summed weights.
+#define PF_RING 46656
+#define PF_TRI (PF_RING)
+#define PF_LAST (PF_TRI + 216)
+#define PF_EDGE (PF_LAST + 3)
+#define PF_N (PF_EDGE + 36)
+#define PF_MAX 12
+static inline int pfSt(const u8 *b, int v, int p) {
+  if (v >= 0) return b[v] == 0 ? 0 : b[v] == p ? 1 : 2;
+  if (v == -3) return 5;
+  return (v == -1) == (p == RED) ? 3 : 4;
+}
+static int pfeat(const u8 *b, int c, int p, int last, int *out) {
+  int k = 0, s[6];
+  for (int d = 0; d < 6; d++) s[d] = pfSt(b, NBR[c][p == RED ? d : 5 - d], p);
+  int i1 = 0, i2 = 0;
+  for (int d = 5; d >= 0; d--) { i1 = i1 * 6 + s[d]; i2 = i2 * 6 + s[(d + 3) % 6]; }
+  out[k++] = i1 < i2 ? i1 : i2;
+  for (int i = 0; i < 6; i++) {
+    int a = NBR[c][i], d = NBR[c][(i + 1) % 6], x;
+    if (a >= 0) x = NBR[a][(i + 1) % 6]; else if (d >= 0) x = NBR[d][i]; else continue;
+    int sa = pfSt(b, a, p), sd = pfSt(b, d, p), sx = pfSt(b, x, p);
+    int lo = sa < sd ? sa : sd, hi = sa < sd ? sd : sa;
+    out[k++] = PF_TRI + (lo * 6 + hi) * 6 + sx;
+  }
+  if (last >= 0) {
+    for (int i = 0; i < 6; i++) {
+      if (NBR[last][i] == c) out[k++] = PF_LAST;
+      int a = NBR[last][i], d = NBR[last][(i + 1) % 6];
+      if (a >= 0 && d >= 0 && NBR[a][(i + 1) % 6] == c && !b[a] && !b[d]) out[k++] = PF_LAST + 1;
+      // c and the last move are the two cells of a bridge of p: the opponent intruded, c saves it
+      if (NBR[last][i] == c) { int e1 = NBR[last][(i + 5) % 6], e2 = NBR[last][(i + 1) % 6]; if (ownAt(b, e1, p) && ownAt(b, e2, p) && !(e1 < 0 && e2 < 0)) out[k++] = PF_LAST + 2; }
+    }
+  }
+  int r = c / N, cc = c % N, dr = r < N - 1 - r ? r : N - 1 - r, dc = cc < N - 1 - cc ? cc : N - 1 - cc;
+  int dOwn = p == RED ? dr : dc, dOpp = p == RED ? dc : dr; if (dOwn > 5) dOwn = 5; if (dOpp > 5) dOpp = 5;
+  out[k++] = PF_EDGE + dOwn * 6 + dOpp;
+  return k;
+}
+#ifdef PRIOR_W
+#include PRIOR_W
+#else
+#include "prior_w.h"
+#endif
+
 // ---------------------------------------------------------------- MCTS (UCT + RAVE, MCTS-solver for immediate wins)
 typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 exp; } Node;
 // proof: +1 = the player who moved into this node wins from here, -1 = loses
@@ -217,7 +266,8 @@ typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 
 #endif
 static Node T[NODES];
 static int nNodes;
-static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 8.0f;
+static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 8.0f, LP_A = .1f, LP_B = .5f;
+static int LP_ON = 1;   // the learned prior (prior_w.h) instead of the hand-made one
 static int EXPAND_T = 1, expT = 1;   // expT: the threshold in use (raised during a long search so the node pool lasts)
 static double tStop; static int maxPO, totalPO;
 static int wc[MAXC];
@@ -255,11 +305,18 @@ static void expand(int ni, Pos *p) {
   int nw = winCells(p->b, me, wc, MAXC);
   int myWin = nw ? wc[0] : -1;
   int ow[4]; int no = winCells(p->b, op, ow, 4);
+  static float lp[MAXC];
+  if (PW_ON && LP_ON) {   // learned prior: softmax over the empty cells, then pv = 0.5 + A·tanh(B·log(prob × cells))
+    int fs[PF_MAX], m = 0; float mx = -1e30f, z = 0;
+    for (int c = 0; c < NC; c++) { if (p->b[c]) continue; int kk = pfeat(p->b, c, me, p->last, fs); int s = 0; for (int j = 0; j < kk; j++) s += PW[fs[j]]; lp[c] = s / PW_SCALE; if (lp[c] > mx) mx = lp[c]; m++; }
+    for (int c = 0; c < NC; c++) if (!p->b[c]) { lp[c] = fexp(lp[c] - mx); z += lp[c]; }
+    for (int c = 0; c < NC; c++) if (!p->b[c]) { float x = LP_B * flog(lp[c] / z * m + 1e-9f), e = fexp(-2 * (x > 20 ? 20 : x < -20 ? -20 : x)); lp[c] = .5f + LP_A * (1 - e) / (1 + e); }
+  }
   for (int c = 0; c < NC; c++) {
     if (p->b[c]) continue;
     Node *ch = &T[f + k++];
     ch->first = 0; ch->nch = 0; ch->mv = c; ch->n = 0; ch->w = 0; ch->exp = 0; ch->proof = 0;
-    float pv = prior(p->b, c, me);
+    float pv = (PW_ON && LP_ON) ? lp[c] : prior(p->b, c, me);
     ch->rn = PRIOR_N; ch->rw = PRIOR_N * pv;
     if (myWin >= 0) { if (c == myWin) ch->proof = 1; }
     else if (no >= 2) ch->proof = -1;
@@ -630,6 +687,7 @@ EXPORT(pv) void pv(int move, int maxLen) {
 }
 EXPORT(set_param) void set_param(int k, int v) {
   if (k == 0) RAVE_B = v / 1e6f; else if (k == 1) UCT_C = v / 1000.f; else if (k == 2) PRIOR_N = (float)v; else if (k == 3) EXPAND_T = v;
+  else if (k == 4) LP_A = v / 1000.f; else if (k == 5) LP_B = v / 1000.f; else if (k == 6) LP_ON = v;
 }
 EXPORT(new_game) void new_game(void) {}
 EXPORT(winner_of) int winner_of(void) { return winner(ROOT.b); }
