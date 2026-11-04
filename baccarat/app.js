@@ -149,7 +149,7 @@ let T = null;   // the table: { v, decks, tie, shoe, res, bank, bets, last, phas
 const G = { timer: 0, undo: [], seq: 0, odds: null, oddsKey: '', note: null };
 const mt = () => !set.anim ? 0 : set.speed === 'slow' ? 1.5 : set.speed === 'fast' ? .5 : 1;
 function rnd() { return Math.random(); }
-function freshShoe() { const s = B.newShoe(T.decks, rnd); T.shoe = s; T.res = []; T.evHist = []; G.odds = null; }
+function freshShoe() { const s = B.newShoe(T.decks, rnd); T.shoe = s; T.res = []; T.evHist = []; G.odds = null; G.oddsKey = ''; }   // (the key too: a new shoe can start at the same position → shoeOdds() returned null)
 function newSession(v) {
   if (T && T.tut) restoreTut();
   recordSession();
@@ -165,8 +165,8 @@ function newSession(v) {
 /* the tutorial: one scripted coup on the real table (tutorial.js drives the steps); your chips, the bots and the saved table stay as they were */
 function startTutorial() {
   clearTimeout(G.timer); if (T && T.tut) restoreTut(); recordSession();
-  G.tutPrev = { cur: D.cur, chips: D.chips, bots: JSON.parse(JSON.stringify(D.bots || {})), set: { coach: set.coach, squeeze: set.squeeze, autoNext: set.autoNext } };
-  set.coach = 1; set.autoNext = 0;
+  G.tutPrev = { cur: D.cur, chips: D.chips, bots: JSON.parse(JSON.stringify(D.bots || {})), set: { coach: set.coach, squeeze: set.squeeze, autoNext: set.autoNext, chip: set.chip } };
+  set.coach = 1; set.autoNext = 0; set.chip = 100;   // the steps say "bet 100"
   T = { v: 'classic', decks: 8, tie: 8, bank: START, bets: {}, last: null, phase: 'bet', coup: null, show: null, hand: 0, res: [], tut: true,
     session: { hands: 0, net: 0, wag: 0, exp: 0, start: Date.now(), buyin: START, rebuys: 0, peak: START, graph: [0] } };
   freshShoe(); botsNewTable(); if (window.BacTut) BacTut.setup(T);
@@ -211,9 +211,11 @@ function placeBet(k) {
   T.bets[k] = (T.bets[k] || 0) + d; G.undo.push([k, d]); sfx('chip'); G.note = null; render();
   if (T.tut && window.BacTut) BacTut.after('bet');
 }
-function unplace() { const u = G.undo.pop(); if (!u) return; const [k, d] = u; T.bets[k] -= d; if (T.bets[k] <= 0) delete T.bets[k]; sfx('chip'); render(); }
-function clearBets() { T.bets = {}; G.undo = []; render(); }
+const tutNo = () => T && T.tut && window.BacTut && !BacTut.allow({ a: 'other' });   // the tutorial: only the move the step asks for
+function unplace() { if (tutNo()) return; const u = G.undo.pop(); if (!u) return; const [k, d] = u; T.bets[k] -= d; if (T.bets[k] <= 0) delete T.bets[k]; sfx('chip'); render(); }
+function clearBets() { if (tutNo()) return; T.bets = {}; G.undo = []; render(); }
 function rebet(mult) {
+  if (tutNo()) return;
   const src = mult === 2 && betSum(T.bets) ? Object.assign({}, T.bets) : T.last; if (!src) return;
   const nb = {}; for (const k in src) if (VB().includes(k)) nb[k] = src[k] * (mult || 1);
   if (betSum(nb) > T.bank) { toast(t('toast.noMoney')); sfx('bad'); return; }
@@ -550,7 +552,7 @@ function render() {
     `<div class="bc-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: shoeLeft }))}"><span class="bc-shoe-box"><i style="height:${(shoePct * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small><i>SHOE</i>${shoeLeft}</small></div>`;
   patch(box, h);
   box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); el.onmouseenter = e => spotTip(el.dataset.spot, e); el.onmousemove = e => spotTip(el.dataset.spot, e); el.onmouseleave = () => spotTip(null); });
-  box.querySelectorAll('[data-spot]').forEach(el => el.oncontextmenu = e => { e.preventDefault(); if (T.phase !== 'bet' || !T.bets[el.dataset.spot]) return; delete T.bets[el.dataset.spot]; G.undo = G.undo.filter(u => u[0] !== el.dataset.spot); render(); });
+  box.querySelectorAll('[data-spot]').forEach(el => el.oncontextmenu = e => { e.preventDefault(); if (T.phase !== 'bet' || !T.bets[el.dataset.spot] || tutNo()) return; delete T.bets[el.dataset.spot]; G.undo = G.undo.filter(u => u[0] !== el.dataset.spot); render(); });
   wireSqueeze(box);
   renderActbar(); renderSide(); renderNums();
   // phones: the bar under the table changes height between betting and dealing — size the table again for the real one (once)
@@ -611,7 +613,7 @@ function renderActbar() {
     `<div class="ab-btns main"><button class="abtn" id="abUndo" data-k="un"${G.undo.length ? '' : ' disabled'}>${esc(t('btn.undo'))}<kbd>Z</kbd></button><button class="abtn" id="abClr" data-k="cl"${tot ? '' : ' disabled'}>${esc(t('btn.clear'))}</button>` +
     `<button class="abtn" id="abRebet" data-k="rb"${T.last && !tot ? '' : ' disabled'}>${esc(t('btn.rebet'))}<kbd>R</kbd></button><button class="abtn" id="abX2" data-k="x2"${tot || T.last ? '' : ' disabled'}>×2</button>` +
     `<button class="abtn go" id="abDeal" data-k="dl"${tot >= MIN_BET ? '' : ' disabled'}>${esc(t('btn.deal'))}<kbd>Space</kbd></button></div>`);
-  bar.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { set.chip = +b.dataset.d; save(); sfx('chip'); renderActbar(); });
+  bar.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (tutNo()) return; set.chip = +b.dataset.d; save(); sfx('chip'); renderActbar(); });
   $('#abUndo').onclick = unplace; $('#abClr').onclick = clearBets; $('#abRebet').onclick = () => rebet(1); $('#abX2').onclick = () => rebet(2); $('#abDeal').onclick = deal;
 }
 
@@ -958,7 +960,7 @@ document.addEventListener('keydown', e => {
     if (k === ' ' || k === 'enter') { e.preventDefault(); deal(); }
     else if (k === 'p') placeBet('P'); else if (k === 'b') placeBet('B'); else if (k === 't') placeBet('T');
     else if (k === 'z') unplace(); else if (k === 'r') rebet(1);
-    else if (/^[1-5]$/.test(k)) { set.chip = DENOMS[+k - 1]; renderActbar(); }
+    else if (/^[1-5]$/.test(k)) { if (tutNo()) return; set.chip = DENOMS[+k - 1]; renderActbar(); }
     else if (k === 'h') $('#btnHint').click();
   } else if (T.phase === 'squeeze' && (k === ' ' || k === 'enter')) { e.preventDefault(); revealAll(); }
   else if (T.phase === 'done' && !T.tut) { if (k === ' ' || k === 'enter' || k === 'n') { e.preventDefault(); nextCoup(); } else if (k === 'r') $('#abRe').click(); }
