@@ -83,6 +83,10 @@ GAMES = {
     'fanorona': dict(first='b', alt=True, tckey='tc', tcs={'sivy': (480000, 0, 5000), 'dimy': (240000, 0, 3000), 'telo': (120000, 0, 2000)},
                      legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                      variant=('v', ['sivy', 'dimy', 'telo'])),
+    # Ugolki: own project "ugolki-multiplay"; v = tc = 'c33' / 'c34' / 'c44' / 'diag'; b = the first player (White); moves are 3 K64 chars each
+    'ugolki': dict(first='b', alt=True, tckey='tc', tcs={'c33': (300000, 0, 5000), 'c34': (300000, 0, 5000), 'c44': (420000, 0, 5000), 'diag': (300000, 0, 5000)},
+                   legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
+                   variant=('v', ['c33', 'c34', 'c44', 'diag'])),
     # Alquerque: in the Fanorona project under the node alq/ (its own players / ratings / lobby / games; the page reuses the
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
     'alquerque': dict(host=('fanorona', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
