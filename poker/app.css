@@ -1673,3 +1673,52 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 @media (hover:hover) and (pointer:fine) and (min-width:1040px){
   .pk .actbar{min-height:78px}
 }
+/* table layout from app.js layoutTable(): speech bubbles flip when the seat is at the edge; the result / HUD follow the board */
+.seat.bdn .bub{top:auto;bottom:-6px;transform:translate(-50%,100%)}
+.seat.me.bup .bub{top:-6px;bottom:auto;transform:translate(-50%,-100%)}
+.pk-result{top:calc(var(--bbot, calc(var(--rail) + 44% + var(--chh, 78px) * .5)) + 6px)}
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .m-hud[data-pos=mid]{top:calc(var(--bbot, calc(var(--rail) + (100% - 2 * var(--rail)) * .44 + var(--chh) * .5)) + 10px)}
+}
+.seat,.pk-pot,.pk-bet{width:max-content}
+.seat.bin .bub{top:0;transform:translate(-50%,-10%)}
+/* no room anywhere: a small bubble on the plate's top edge (the name stays readable) */
+.seat.bpl .bub{top:auto;bottom:calc(100% - 9px);transform:translate(-50%,0);z-index:6;font-size:10px;padding:1px 7px;border-radius:7px}
+.seat.me.bpl .bub{bottom:calc(100% - 9px);transform:translate(-50%,0)}
+.seat .plate{position:relative;z-index:1}
+.pk-table.tuck .seat:not(.me) .sc{margin-bottom:calc(var(--chh)*-.28)}
+.pk-table.tight .pk-board{gap:calc(var(--cw)*.03)}
+.pk-table.side .seat:not(.me){flex-direction:row;gap:3px}
+.pk-table.side .seat.cr:not(.me){flex-direction:row-reverse}
+.pk-table.side .seat:not(.me) .sc{margin-bottom:0}
+.pk-table.cbet .pk-bet .chsv + .chsv,.pk-table.cbet .pk-pot .chsv + .chsv{display:none}
+.pk-table.cbet .pk-bet{padding:1px 7px 1px 3px;gap:3px;font-size:12px}
+.pk-table.cbet .pk-bet .chsv{width:18px}
+.pk-table.cbet .pk-pot{padding:2px 9px 2px 6px;gap:4px}
+.pk-table.cbet .pk-pot .chsv{width:20px}
+.pk-table.cbet .pk-pot b{font-size:14px}.pk-table.cbet .pk-pot small{font-size:10px}
+.pk-table.mini .plate{padding:2px 7px 2px 2px;gap:4px}
+.pk-table.mini .ava{width:20px;height:20px;font-size:11px}
+.pk-table.mini .pn b{font-size:10.5px;max-width:48px}
+.pk-table.mini .plate .st{font-size:11px}
+.pk-table.mini .seat:not(.me) .cd.pc{width:calc(var(--cw)*.5);height:calc(var(--chh)*.5)}
+.pk-table.mini .seat:not(.me) .sc{min-height:calc(var(--chh)*.5)}
+.pk-table.mini .dbtn{width:18px;height:18px;font-size:10px;line-height:18px;right:-10px}
+/* stable seat sizes (the layout is solved once per size): room for the most cards of the game, a fixed-width stack,
+   the hand name over the bottom of the cards instead of under the plate */
+.seat .sc{--w:.6;--o:.26;min-width:calc(var(--cw) * (var(--w) + (var(--n) - 1) * (var(--w) - var(--o))))}
+.seat.many .sc{--o:.4}.seat.stud .sc{--o:.36}
+.seat.me .sc{--w:1.12;--o:.18}.seat.me.many .sc{--o:.42}.seat.me.stud .sc{--o:.5}
+.pk-table.mini .seat:not(.me) .sc{--w:.5}
+.pk-table.side .seat:not(.me) .sc{min-width:0}
+.plate .st{min-width:5ch;text-align:right}
+.plate .hinfo{position:absolute;left:50%;bottom:100%;transform:translate(-50%,35%);white-space:nowrap;z-index:3;pointer-events:none}
+.seat.me{z-index:3}
+.pk-table.mside .seat.me{flex-direction:row;gap:6px}
+.pk-table.mside .seat.me .dbtn{right:-12px;bottom:-4px}
+/* smallest tables: no face-down cards in front of the opponents, a small mark on the plate instead */
+.pk-table.nocd .seat:not(.me):not(.shown) .sc{display:none}
+.pk-table.nocd .seat.shown:not(.me) .sc{position:absolute;left:50%;bottom:calc(100% - 6px);transform:translateX(-50%);z-index:4;min-width:0}
+.pk-table.nocd .seat:not(.me):not(.folded) .plate::after{content:'';position:absolute;right:-5px;top:-6px;width:11px;height:15px;border-radius:2px;background:linear-gradient(135deg,#7a1020,#2a060b);box-shadow:3px 1px 0 -1px #f3ead6,3px 1px 0 0 #7a1020,0 1px 3px rgba(0,0,0,.6);border:1px solid #f3ead6}
+.pk-table.nocd .seat:not(.me) .ava{width:8px;height:8px;font-size:0;box-shadow:none;margin-left:3px}
+.pk-table.nocd .seat:not(.me) .plate{gap:4px;padding-right:9px}
