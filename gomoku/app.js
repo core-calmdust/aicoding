@@ -1336,7 +1336,7 @@ function loadRamp() {
   const it = rampItem();
   lesson.me = it.side || P1; lesson.pick = false; lesson.noForbidMarks = false;
   enterSpecial(spOf(it), it.rule || 'renju');
-  lesson.rh = 0; lesson.answered = it.k === 'explain';
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
   if (it.k === 'explain' && it.seq) { moves = it.seq.map(sqOf); cur = moves.length; }
   lesson.num = it.k === 'explain' && !!it.seq;   // numbered stones (the sequence of the example)
   lessonMarks = rampMarks(it);
@@ -1355,7 +1355,7 @@ function renderRampCard() {
   $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
   $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
   $('#lsNext').textContent = last ? RU('main') : RU('next');
-  $('#lsNext').disabled = !lesson.answered;
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
 }
 function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.num = false; lesson.i = 0; lesson.results = []; labelList = null; loadLessonProblem(); }
 function rampHint() {
@@ -1373,7 +1373,7 @@ function rampMove(m) {
   L.answered = true;
   const good = it.ok.map(sqOf).includes(m);
   $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
-  playChime(good); moves = [m]; cur = 1; lessonMarks = good ? [] : [{ at: m, cls: 'ng' }]; update(true); renderLessonCard();
+  L.rok = good; playChime(good); moves = [m]; cur = 1; lessonMarks = good ? [] : [{ at: m, cls: 'ng' }]; update(true); renderLessonCard();
   if (good) return;
   const tok = busyToken;
   setTimeout(() => {
@@ -1471,7 +1471,7 @@ $('#lsHint').onclick = () => {
   renderFx();
 };
 $('#lsNext').onclick = () => {
-  if (lesson && lesson.ramp) { if (!lesson.answered) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (lesson && lesson.study) { if (lesson.i < lesson.line.length - 3) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep(), total = s.problems.length;

@@ -1350,7 +1350,7 @@ function loadRamp() {
   const it = rampItem();
   lesson.me = it.s.side;
   enterSpecial(it.s);
-  lesson.rh = 0; lesson.answered = it.k === 'explain';
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
   lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
   update(false); renderLessonCard();
   $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
@@ -1367,7 +1367,7 @@ function renderRampCard() {
   $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
   $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
   $('#lsNext').textContent = last ? RU('main') : RU('next');
-  $('#lsNext').disabled = !lesson.answered;
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
 }
 function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
 function rampHint() {
@@ -1385,7 +1385,7 @@ function rampMove(m) {
   L.answered = true;
   const good = it.ok.includes(E.name(pos0, m));
   $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
-  playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
+  L.rok = good; playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
   if (good) return;
   const tok = busyToken;
   setTimeout(() => {
@@ -1491,7 +1491,7 @@ $('#lsHint').onclick = () => {
   renderFx();
 };
 $('#lsNext').onclick = () => {
-  if (lesson && lesson.ramp) { if (!lesson.answered) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (lesson && lesson.study) { if (lesson.i < lesson.g.study.line.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep();

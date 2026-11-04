@@ -1394,7 +1394,7 @@ function loadRamp() {
   const it = rampItem();
   lesson.me = it.fen.split(' ')[1] === 'b' ? P2 : P1;
   enterSpecial(it.fen);
-  lesson.rh = 0; lesson.answered = it.k === 'explain';
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
   lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
   update(false); renderLessonCard();
   $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
@@ -1411,7 +1411,7 @@ function renderRampCard() {
   $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
   $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
   $('#lsNext').textContent = last ? RU('main') : RU('next');
-  $('#lsNext').disabled = !lesson.answered;
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
 }
 function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
 function rampHint() {
@@ -1427,6 +1427,7 @@ function rampMove(m) {
   const L = lesson, it = rampItem(), ri = L.ri, { pos } = posAt(0), u = pos.uci(m);
   L.answered = true;
   if (it.ok.includes(u)) {
+    L.rok = true;
     $('#lsFb').innerHTML = `<b class="ok">✓</b> ${LL(it.y)}`;
     playChime(true); playMove2(m); lessonMarks = []; renderLessonCard();
     return;
@@ -1556,7 +1557,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (lesson && lesson.study) { if (lesson.i < lesson.g.study.steps.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
-  if (lesson && lesson.ramp) { if (!lesson.answered) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep(), total = s.kind === 'drill' ? s.stages.length : s.problems.length;
   if (lesson.i + 1 < total) { lesson.i++; loadLessonProblem(); return; }
