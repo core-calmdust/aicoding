@@ -91,15 +91,15 @@ a.snd{text-decoration:none}
 /* ---------------------------------------------------------------- board */
 .board-area{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0}
 .frame{position:relative;width:var(--bw);aspect-ratio:924/552;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-html.bv .frame{aspect-ratio:544/932}
+html.bv .frame{aspect-ratio:372/896}
 .board-wrap{position:absolute;inset:0}
 .board-wrap svg.ur-board{filter:drop-shadow(0 24px 28px rgba(0,0,0,.55))}
 /* the dice in the notch of the side to move */
 .dice-dock{position:absolute;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:auto;cursor:pointer;border-radius:12px;transition:opacity .25s}
 .dice-dock .dice-host{width:100%;flex:1 1 auto;min-height:0}
-html.bv .dice-dock .dice-host{transform:rotate(90deg)}
+html.bv .frame > .dice-dock .dice-host{transform:rotate(90deg)}
 .dice-dock .dice-cap{font-family:var(--serif);font-weight:700;font-size:calc(var(--bw) * .026);line-height:1;color:var(--accent);letter-spacing:.06em;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8);min-height:1em}
-html.bv .dice-dock .dice-cap{font-size:calc(var(--bw) * .05)}
+html.bv .frame > .dice-dock .dice-cap{font-size:calc(var(--bw) * .05)}
 .dice-dock.can{animation:dkGlow 1.8s ease-in-out infinite}
 @keyframes dkGlow{0%,100%{box-shadow:0 0 0 0 rgba(230,197,115,0)}50%{box-shadow:0 0 0 3px rgba(230,197,115,.35),0 0 22px rgba(230,197,115,.25)}}
 body.no-anim .dice-dock.can{animation:none}
@@ -128,8 +128,8 @@ body.no-anim .dice-dock.can .roll-pill{animation:none}
 .dice-dock .roll-pill:hover{filter:drop-shadow(0 5px 7px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(240,200,110,.45))}
 .dice-dock .roll-pill:active,.dice-dock.press .roll-pill{transform:translate(-50%,-50%) translateY(2px) scale(.97);filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)) brightness(.9)}
 .dice-dock .roll-pill:focus-visible{outline:2px solid #f3d88f;outline-offset:3px}
-html.bv .dice-dock .roll-pill{width:calc(var(--bw) * .118);height:calc(var(--bw) * .3);font-size:calc(var(--bw) * .044);writing-mode:vertical-rl;letter-spacing:.2em;text-indent:.2em;padding:calc(var(--bw) * .03) 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232e2620'/%3E%3Cstop offset='.5' stop-color='%2316110d'/%3E%3Cstop offset='1' stop-color='%230c0907'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc98'/%3E%3Cstop offset='.45' stop-color='%23b98d3e'/%3E%3Cstop offset='.7' stop-color='%23f0d38a'/%3E%3Cstop offset='1' stop-color='%238f6a2a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M94.8 48.0V252.0A46.8 46.8 0 0 1 1.2 252.0V48.0A46.8 46.8 0 0 1 94.8 48.0Z' fill='url%28%23b%29' stroke='url%28%23g%29' stroke-width='2.4'/%3E%3Cpath d='M91.4 48.0V252.0A43.4 43.4 0 0 1 4.6 252.0V48.0A43.4 43.4 0 0 1 91.4 48.0Z' fill='none' stroke='%23c9a352' stroke-opacity='.55' stroke-width='.9'/%3E%3Cpath d='M86.5 52.1L83.5 48.0L86.5 43.9L89.5 48.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 68.3L83.5 64.2L86.5 60.1L89.5 64.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 84.6L83.5 80.5L86.5 76.4L89.5 80.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 100.8L83.5 96.7L86.5 92.6L89.5 96.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 117.1L83.5 113.0L86.5 108.9L89.5 113.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 133.3L83.5 129.2L86.5 125.1L89.5 129.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 149.6L83.5 145.5L86.5 141.4L89.5 145.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 165.8L83.5 161.7L86.5 157.6L89.5 161.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 182.1L83.5 178.0L86.5 173.9L89.5 178.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 198.3L83.5 194.2L86.5 190.1L89.5 194.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 214.6L83.5 210.5L86.5 206.4L89.5 210.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 230.8L83.5 226.7L86.5 222.6L89.5 226.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 247.1L83.5 243.0L86.5 238.9L89.5 243.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M85.1 263.2L82.9 258.6L86.6 255.1L88.8 259.7Z' fill='%237a2a1e'/%3E%3Cpath d='M77.2 277.4L77.1 272.3L81.9 270.7L82.0 275.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M64.3 287.1L66.2 282.5L71.3 282.9L69.3 287.6Z' fill='%237a2a1e'/%3E%3Cpath d='M48.4 290.7L52.2 287.3L56.6 289.8L52.9 293.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M32.5 287.5L37.3 285.9L40.4 290.0L35.5 291.6Z' fill='%237a2a1e'/%3E%3Cpath d='M19.4 278.0L24.4 278.5L25.5 283.5L20.4 283.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M11.2 264.0L15.6 266.5L14.6 271.5L10.1 269.0Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 247.9L12.5 252.0L9.5 256.1L6.5 252.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 231.7L12.5 235.8L9.5 239.9L6.5 235.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 215.4L12.5 219.5L9.5 223.6L6.5 219.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 199.2L12.5 203.3L9.5 207.4L6.5 203.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 182.9L12.5 187.0L9.5 191.1L6.5 187.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 166.7L12.5 170.8L9.5 174.9L6.5 170.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 150.4L12.5 154.5L9.5 158.6L6.5 154.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 134.2L12.5 138.3L9.5 142.4L6.5 138.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 117.9L12.5 122.0L9.5 126.1L6.5 122.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 101.7L12.5 105.8L9.5 109.9L6.5 105.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 85.4L12.5 89.5L9.5 93.6L6.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 69.2L12.5 73.3L9.5 77.4L6.5 73.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 52.9L12.5 57.0L9.5 61.1L6.5 57.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M10.9 36.8L13.1 41.4L9.4 44.9L7.2 40.3Z' fill='%237a2a1e'/%3E%3Cpath d='M18.8 22.6L18.9 27.7L14.1 29.3L14.0 24.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M31.7 12.9L29.8 17.5L24.7 17.1L26.7 12.4Z' fill='%237a2a1e'/%3E%3Cpath d='M47.6 9.3L43.8 12.7L39.4 10.2L43.1 6.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M63.5 12.5L58.7 14.1L55.6 10.0L60.5 8.4Z' fill='%237a2a1e'/%3E%3Cpath d='M76.6 22.0L71.6 21.5L70.5 16.5L75.6 17.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M84.8 36.0L80.4 33.5L81.4 28.5L85.9 31.0Z' fill='%237a2a1e'/%3E%3Cpath d='M81.4 48.0V252.0A33.4 33.4 0 0 1 14.6 252.0V48.0A33.4 33.4 0 0 1 81.4 48.0Z' fill='none' stroke='url%28%23g%29' stroke-width='1.3'/%3E%3Cpath d='M31 48.0V252.0' stroke='%23fff' stroke-opacity='.06' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E")}
-html.bv[lang=ja] .dice-dock .roll-pill,html.bv[lang=zh] .dice-dock .roll-pill,html.bv[lang=ko] .dice-dock .roll-pill{text-orientation:upright;letter-spacing:.3em}
+html.bv .frame > .dice-dock .roll-pill{width:calc(var(--bw) * .118);height:calc(var(--bw) * .3);font-size:calc(var(--bw) * .044);writing-mode:vertical-rl;letter-spacing:.2em;text-indent:.2em;padding:calc(var(--bw) * .03) 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232e2620'/%3E%3Cstop offset='.5' stop-color='%2316110d'/%3E%3Cstop offset='1' stop-color='%230c0907'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc98'/%3E%3Cstop offset='.45' stop-color='%23b98d3e'/%3E%3Cstop offset='.7' stop-color='%23f0d38a'/%3E%3Cstop offset='1' stop-color='%238f6a2a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M94.8 48.0V252.0A46.8 46.8 0 0 1 1.2 252.0V48.0A46.8 46.8 0 0 1 94.8 48.0Z' fill='url%28%23b%29' stroke='url%28%23g%29' stroke-width='2.4'/%3E%3Cpath d='M91.4 48.0V252.0A43.4 43.4 0 0 1 4.6 252.0V48.0A43.4 43.4 0 0 1 91.4 48.0Z' fill='none' stroke='%23c9a352' stroke-opacity='.55' stroke-width='.9'/%3E%3Cpath d='M86.5 52.1L83.5 48.0L86.5 43.9L89.5 48.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 68.3L83.5 64.2L86.5 60.1L89.5 64.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 84.6L83.5 80.5L86.5 76.4L89.5 80.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 100.8L83.5 96.7L86.5 92.6L89.5 96.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 117.1L83.5 113.0L86.5 108.9L89.5 113.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 133.3L83.5 129.2L86.5 125.1L89.5 129.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 149.6L83.5 145.5L86.5 141.4L89.5 145.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 165.8L83.5 161.7L86.5 157.6L89.5 161.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 182.1L83.5 178.0L86.5 173.9L89.5 178.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 198.3L83.5 194.2L86.5 190.1L89.5 194.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 214.6L83.5 210.5L86.5 206.4L89.5 210.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 230.8L83.5 226.7L86.5 222.6L89.5 226.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 247.1L83.5 243.0L86.5 238.9L89.5 243.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M85.1 263.2L82.9 258.6L86.6 255.1L88.8 259.7Z' fill='%237a2a1e'/%3E%3Cpath d='M77.2 277.4L77.1 272.3L81.9 270.7L82.0 275.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M64.3 287.1L66.2 282.5L71.3 282.9L69.3 287.6Z' fill='%237a2a1e'/%3E%3Cpath d='M48.4 290.7L52.2 287.3L56.6 289.8L52.9 293.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M32.5 287.5L37.3 285.9L40.4 290.0L35.5 291.6Z' fill='%237a2a1e'/%3E%3Cpath d='M19.4 278.0L24.4 278.5L25.5 283.5L20.4 283.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M11.2 264.0L15.6 266.5L14.6 271.5L10.1 269.0Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 247.9L12.5 252.0L9.5 256.1L6.5 252.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 231.7L12.5 235.8L9.5 239.9L6.5 235.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 215.4L12.5 219.5L9.5 223.6L6.5 219.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 199.2L12.5 203.3L9.5 207.4L6.5 203.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 182.9L12.5 187.0L9.5 191.1L6.5 187.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 166.7L12.5 170.8L9.5 174.9L6.5 170.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 150.4L12.5 154.5L9.5 158.6L6.5 154.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 134.2L12.5 138.3L9.5 142.4L6.5 138.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 117.9L12.5 122.0L9.5 126.1L6.5 122.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 101.7L12.5 105.8L9.5 109.9L6.5 105.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 85.4L12.5 89.5L9.5 93.6L6.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 69.2L12.5 73.3L9.5 77.4L6.5 73.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 52.9L12.5 57.0L9.5 61.1L6.5 57.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M10.9 36.8L13.1 41.4L9.4 44.9L7.2 40.3Z' fill='%237a2a1e'/%3E%3Cpath d='M18.8 22.6L18.9 27.7L14.1 29.3L14.0 24.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M31.7 12.9L29.8 17.5L24.7 17.1L26.7 12.4Z' fill='%237a2a1e'/%3E%3Cpath d='M47.6 9.3L43.8 12.7L39.4 10.2L43.1 6.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M63.5 12.5L58.7 14.1L55.6 10.0L60.5 8.4Z' fill='%237a2a1e'/%3E%3Cpath d='M76.6 22.0L71.6 21.5L70.5 16.5L75.6 17.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M84.8 36.0L80.4 33.5L81.4 28.5L85.9 31.0Z' fill='%237a2a1e'/%3E%3Cpath d='M81.4 48.0V252.0A33.4 33.4 0 0 1 14.6 252.0V48.0A33.4 33.4 0 0 1 81.4 48.0Z' fill='none' stroke='url%28%23g%29' stroke-width='1.3'/%3E%3Cpath d='M31 48.0V252.0' stroke='%23fff' stroke-opacity='.06' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.bv[lang=ja] .frame > .dice-dock .roll-pill,html.bv[lang=zh] .frame > .dice-dock .roll-pill,html.bv[lang=ko] .frame > .dice-dock .roll-pill{text-orientation:upright;letter-spacing:.3em}
 html[lang=ja] .dice-dock .roll-pill,html[lang=zh] .dice-dock .roll-pill,html[lang=ko] .dice-dock .roll-pill{letter-spacing:.32em;text-indent:.32em;font-family:'Shippori Mincho B1',var(--serif);font-weight:800}
 /* while the dice roll the plate steps aside */
 .dice-dock.rolling .roll-pill{display:none}
@@ -187,6 +187,7 @@ body.reviewing .sbox .rollbtn{display:none}
 .player .home small{font-family:'Zen Kaku Gothic New',sans-serif;font-size:10.5px;color:var(--dim);font-weight:500;letter-spacing:.04em}
 .player .status{grid-column:2 / 4;font-size:11.5px;color:var(--accent);min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player .status:empty{display:none}
+.pdk{display:none}
 .player.thinking .pdisc{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 5px rgba(230,197,115,.25)}}
 .pdisc{width:22px;height:22px;border-radius:50%;flex:none;display:inline-block;background-size:200% 100%;background-repeat:no-repeat;box-shadow:0 2px 4px rgba(0,0,0,.5)}
@@ -500,10 +501,10 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .app{display:flex;flex-direction:column;gap:8px;padding:max(8px, env(safe-area-inset-top)) 10px 16px;max-width:900px;margin:0 auto}
   :root{--bw:min(calc(100vw - 20px), 860px, calc((var(--vh) - 230px) * 1.674))}
-  html.bv{--bw:min(calc(100vw - 20px), 440px, calc((var(--vh) - 260px) * .584))}
+  html.bv{--bw:min(calc(100vw - 20px), 440px, calc((var(--lvh) - var(--oh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4152))}
   .board-area > .player{padding:6px 12px}
   .board-area > .player .home{font-size:20px}
-  html.bv body:is(.in-lesson,.in-puzzle){--bw:min(calc(100vw - 20px), 440px, calc((var(--vh) - 330px) * .584))}
+  html.bv body:is(.in-lesson,.in-puzzle){--oh:420px;--bw:min(calc(100vw - 20px), 440px, calc((var(--lvh) - var(--oh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4152))}
   body:is(.in-lesson,.in-puzzle) .board-area > .sbox{display:none}
   body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){order:-1}
   .side{display:contents}
@@ -524,6 +525,51 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   .controls .btn{font-size:10.5px;padding:7px 0}
   .controls .btn svg{width:18px;height:18px}
   .brand h1{font-size:19px}
+}
+/* phones held upright (html.ur-band; html.bv: the board turned): like the other games' phones — one slim brand row, one row of menu chips,
+   the board as large as fits between the menu and the bottom tabs (from 100lvh; 8px apart). The pieces off the board wait in
+   the notch (board2d 'vn'); the dice are thrown in a strip in the card of the player to roll — the opponent's above the board,
+   yours below — with the roll plate there; each card one line: disc · name · 0 /7 ゴール · dice */
+:root{--lvh:100vh;--oh:340px}
+@supports (height:100lvh){:root{--lvh:100lvh}}
+@media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
+  /* (a short phone: the board lies across the screen, html.ur-band without html.bv — the dice strips all the same) */
+  html.ur-band:not(.bv){--bw:min(calc(100vw - 20px), 860px, calc((var(--lvh) - var(--oh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 1.674))}
+  html.ur-band:not(.bv) body:is(.in-lesson,.in-puzzle){--oh:420px;--bw:min(calc(100vw - 20px), 860px, calc((var(--lvh) - var(--oh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 1.674))}
+  html.ur-band .app{gap:8px;padding-left:10px;padding-right:10px}
+  html.ur-band .brand{height:28px}
+  html.ur-band .brand a.series{display:none}
+  html.ur-band .brand h1{font-size:clamp(15px, calc((100vw - 190px) / 7.4), 19px);letter-spacing:.05em}
+  html.ur-band .snd{width:28px;height:26px}
+  html.ur-band .controls{padding:6px;gap:5px}
+  html.ur-band .controls::before{inset:2px}
+  html.ur-band .controls .btn{padding:6px 1px;gap:2px;border-radius:9px}
+  html.ur-band .controls .btn svg{width:17px;height:17px}
+  html.ur-band .controls .btn span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:9.5px;letter-spacing:-.04em}
+  html.ur-band .board-area{gap:8px}
+  html.ur-band .board-area > .player{width:100%;display:flex;align-items:center;gap:8px;height:52px;padding:4px 6px 4px 10px;border-color:var(--line)}
+  html.ur-band .board-area > .player.active{border-color:rgba(217,180,90,.6)}
+  html.ur-band .board-area > .player > div{flex:1 1 auto;min-width:0}
+  html.ur-band .board-area > .player .sub, html.ur-band .board-area > .player .status{display:none}
+  html.ur-band .board-area > .player .name{font-size:13.5px}
+  html.ur-band .board-area > .player .home{flex:none;font-size:21px}
+  html.ur-band .board-area > .player .home small{font-size:10px}
+  html.ur-band .board-area > .player .clk{flex:none;font-size:12.5px;padding:1px 5px}
+  html.ur-band .board-area > .player .pdisc{width:20px;height:20px}
+  html.ur-band .board-area > .sbox{display:none}
+  /* looking back: ここから再開 / 最新の局面へ in your card, in place of the dice strip */
+  html.ur-band .board-area > .player > .review-bar{flex:none;flex-wrap:nowrap;gap:5px}
+  html.ur-band .board-area > .player > .review-bar button{padding:6px 9px;font-size:11.5px;white-space:nowrap}
+  html.ur-band body.reviewing .board-area > .player:has(> .review-bar) > .pdk{display:none}
+  /* the dice strip (the dice dock moved here by app.js) */
+  html.ur-band .pdk{display:block;flex:none;position:relative;width:176px;height:44px;border-radius:10px;background:rgba(0,0,0,.24);box-shadow:inset 0 1px 3px rgba(0,0,0,.45);border:1px solid rgba(217,180,90,.14)}
+  html.ur-band .pdk > .dice-dock{position:absolute!important;inset:0;border-radius:10px}
+  html.ur-band .pdk > .dice-dock .dice-host{transform:none}
+  html.ur-band .pdk > .dice-dock.dim:not(.rolling) .dice-host{opacity:.28}
+  html.ur-band .pdk > .dice-dock .dice-cap{position:absolute;right:-5px;top:-7px;left:auto;min-width:22px;height:22px;padding:0 5px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;font-weight:800;color:#1b1406;background:linear-gradient(180deg,#f3d88f,#c9a352);text-shadow:none;letter-spacing:0;box-shadow:0 2px 5px rgba(0,0,0,.5);z-index:3}
+  html.ur-band .pdk > .dice-dock .dice-cap:empty, html.ur-band .pdk > .dice-dock.rolling .dice-cap{display:none}
+  html.ur-band .pdk > .dice-dock .roll-pill{width:132px;height:42px;font-size:18px;padding:0 14px}
 }
 </style>
 </head>
@@ -558,8 +604,8 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
     <div class="side-in">
       <div class="pl-col" id="plCol">
         <div class="card players" id="players">
-          <div class="player" id="pl0"><span class="pdisc p0"></span><div><div class="name" id="name0"></div><div class="sub" id="sub0"></div></div><span class="home" id="home0"></span><span class="clk" id="clk0"></span><div class="status" id="status0"></div></div>
-          <div class="player" id="pl1"><span class="pdisc p1"></span><div><div class="name" id="name1"></div><div class="sub" id="sub1"></div></div><span class="home" id="home1"></span><span class="clk" id="clk1"></span><div class="status" id="status1"></div></div>
+          <div class="player" id="pl0"><span class="pdisc p0"></span><div><div class="name" id="name0"></div><div class="sub" id="sub0"></div></div><span class="home" id="home0"></span><span class="clk" id="clk0"></span><div class="status" id="status0"></div><span class="pdk" id="pdk0"></span></div>
+          <div class="player" id="pl1"><span class="pdisc p1"></span><div><div class="name" id="name1"></div><div class="sub" id="sub1"></div></div><span class="home" id="home1"></span><span class="clk" id="clk1"></span><div class="status" id="status1"></div><span class="pdk" id="pdk1"></span></div>
         </div>
         <div class="sbox" id="statusBox"><div class="st" id="stText"></div><button class="rollbtn" id="btnRoll"><svg viewBox="0 0 24 24"><path d="M12 3 3 19h18z"/><path d="M12 3v16M3 19l9-6 9 6"/></svg><span></span><kbd>Space</kbd></button></div>
       </div>
@@ -799,7 +845,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="../shared/tick.js?v=2"></script>
 <script src="../shared/ruletour.js?v=29"></script>
 <script src="engine.js?v=2"></script>
-<script src="board2d.js?v=1"></script>
+<script src="board2d.js?v=2"></script>
 <script src="tour.js?v=1" onerror="window.__noTour=1"></script>
 <script src="../shared/resign.js?v=2"></script>
 <script src="../shared/coachkit.js?v=16"></script>
@@ -807,7 +853,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="../shared/export.js?v=7"></script>
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 <script src="rv-i18n.js?v=1"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="app-learn.js?v=1"></script>
@@ -825,7 +871,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/ur-dice.js?v=1')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=3'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/ur-dice.js?v=1')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=4'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>

@@ -31,11 +31,16 @@
 html.atlas-ur .board-wrap svg.ur-board{filter:none!important}
 html.atlas-ur .ur-img,html.atlas-ur .ur-tray rect,html.atlas-ur .ur-tray circle{opacity:0!important}
 html.atlas-ur .ur-pieces .ur-pc{opacity:0!important}
-html.atlas-ur .dice-dock .dice-host{opacity:0!important}
+html.atlas-ur .frame > .dice-dock .dice-host{opacity:0!important}
 html.atlas-ur .dice-dock{background:none!important}
-html.atlas-ur .dice-dock.can{animation:urDk 1.8s ease-in-out infinite!important}
+html.atlas-ur .frame > .dice-dock.can{animation:urDk 1.8s ease-in-out infinite!important}
 @keyframes urDk{0%,100%{box-shadow:0 0 0 2px rgba(255,214,120,.35),0 0 10px rgba(255,214,120,.2)}50%{box-shadow:0 0 0 3px rgba(255,214,120,.75),0 0 22px rgba(255,214,120,.5)}}
-html.atlas-ur .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important}
+html.atlas-ur .frame > .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important}
+/* phones held upright (html.ur-band): the page's own dice in the players' strips (off the 3D board) — a soft tray in the cream card;
+   the portal bar is taller than the page's brand row: the board leaves it room (--oh) */
+html.atlas-ur.ur-band .pdk{background:rgba(120,80,30,.1)!important;border-color:rgba(150,110,50,.28)!important;box-shadow:inset 0 1px 3px rgba(90,60,20,.25)!important}
+html.atlas-ur{--oh:380px!important}
+html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:460px!important}
 html.atlas-ur #bdRow{display:none!important}
 /* phones / narrow: the menu buttons are round chips (skin.css): their labels stay on one line, small, never cut mid-glyph */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
@@ -91,11 +96,15 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   const root = new THREE.Group(), inner = new THREE.Group(); root.add(inner);
   const board = T3.MODELS.ur(true), U = board.userData, Y = U.top; inner.add(board);
   // the frame's centre is SVG (0, 4) (viewBox −272 … 280 down the frame): world = SVG / 100 with that centre at the origin
-  const CZ = .04;
+  // (phones held upright, 'vn': the frame is the board alone, −434 … 462 down → centre (0, 14))
+  let CZ = .04;
   let O = 'h';
-  const units = () => (O === 'v' ? B2.VIEW.v[3] : B2.VIEW.h[3]) / 100;
+  const vkey = () => { const v = UrApp.view; return v && v.key ? v.key() : O; };
+  const VB = () => B2.VIEW[vkey()] || (O === 'v' ? B2.VIEW.v : B2.VIEW.h);
+  const units = () => VB()[3] / 100;
   function orientTo(o) {
     O = o === 'v' ? 'v' : 'h';
+    { const V = VB(); CZ = (V[1] + V[3] / 2) / 100; }
     U.orient && U.orient(O);
     board.rotation.y = O === 'v' ? U.rot.v : 0;
     inner.position.set(0, 0, -CZ);   // (the vertical viewBox, −272 … 272 across and −462 … 470 down, has its centre at (0, 4) too)
@@ -151,7 +160,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   const at = (xy, y = Y) => { const f = 1 + (Y - y) / camD(); return [xy[0] / 100 * f, (xy[1] / 100 - CZ) * f + CZ]; };
   const vw = () => UrApp.view;
   const cellXY = (r, c) => vw().cellXY(r, c);
-  const oKey = () => { const v = vw(); return v ? v.orient() + (v.rotated && v.rotated() ? 'r' : '') : 'h'; };
+  const oKey = () => { const v = vw(); return v ? (v.key ? v.key() : v.orient() + (v.rotated && v.rotated() ? 'r' : '')) : 'h'; };
   const design = () => de.dataset.pcs || 'orig';
   const goalOf = s => (E.RULES[s.rule] || E.RULES.finkel).goal;
 
@@ -304,7 +313,10 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     diceSide = side; shown = d.slice(); rolling = false; T3.kick(200);
     await sleep(120 / Math.max(.6, spd()));
   }
+  // phones held upright (html.ur-band): the page throws its own dice in the players' strips, off the board — none here
+  const offBoard = () => de.classList.contains('ur-band');
   function syncDice(s) {
+    if (offBoard()) { if (DICE.some(g => g.visible)) { DICE.forEach(g => { g.visible = false; }); diceSide = -1; T3.kick(100); } return; }
     if (rolling || !s) return;
     const r = UrApp.roll(), n = diceN(s);
     const d = r && r.d && r.d.length === n ? r.d : null;
