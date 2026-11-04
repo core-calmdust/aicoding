@@ -861,6 +861,35 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay .ng-info{grid-row:1 / 4;align-self:start}
   #newOverlay #fRatedInfo{grid-row:1 / 6}
 }
+/* PC ルール tab (shogi): two framed panels — 対局条件 (handicap / colour / clock) and AI・表示 (strength, options) — filling the dialog */
+@media (min-width: 760px){
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols:not(.ngt-hide){display:grid!important;columns:auto!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;flex:1 0 auto;align-items:stretch;margin-bottom:4px}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #handiNote.hidden{display:none!important}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col:not(.ngt-hide){display:flex!important;flex-direction:column;gap:18px;min-width:0;padding:18px 20px 20px;border-radius:16px;
+    border:1px solid color-mix(in srgb, var(--brass) 26%, var(--line));
+    background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > *{margin:0!important}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child{display:flex;align-items:center;gap:10px;font-size:11.5px;letter-spacing:.22em;color:var(--brass);margin-bottom:10px}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass) 40%, transparent), transparent)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #lvNote{margin-top:-10px!important;padding:8px 11px;font-size:10.5px;line-height:1.55;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #fOpts{margin-top:auto!important}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col.ng-empty{display:none!important}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols:has(> .ng-col.ng-empty){grid-template-columns:minmax(0,1fr);align-items:start}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #rtStats > .rt-card{margin-top:0}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col.ng-spread{justify-content:space-between}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .level-name{font-family:'Shippori Mincho B1',serif;font-size:24px;color:var(--accent);letter-spacing:.06em}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .level-name small{font-family:'Zen Kaku Gothic New',sans-serif;letter-spacing:0;margin-top:2px}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg{padding:4px;gap:4px;border-radius:12px;background:rgba(0,0,0,.3)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button{padding:9px 4px;border-radius:9px;font-size:13.5px}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button:not(.sel):hover{color:var(--text);background:rgba(255,255,255,.035)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button.sel{background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));color:var(--text);box-shadow:0 0 0 1px rgba(226,194,117,.55), 0 4px 12px -6px rgba(0,0,0,.8)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #segHandi{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #segClock{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #segClock button[data-v="0"]{grid-column:1}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks label{margin:0;padding:8px 11px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.05)}
+}
 /* rated games vs the AI: rating card in the new-game dialog; evaluation hidden while the game is going */
 .rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
 .rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
@@ -1273,11 +1302,11 @@ html[lang=ar] .pf-input{direction:rtl}
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
       <div class="seg" id="segColor"><button data-v="0" data-i18n="ng.black"></button><button data-v="1" data-i18n="ng.white"></button><button data-v="2" data-i18n="ng.random"></button></div>
     </div>
-    <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div></div>
+    <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button><button data-v="4" data-i18n="clk.fis5"></button></div></div>
+    </div><div class="ng-col">
     <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel"></select></label></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
     <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel"></select></label></div></div></div>
-    </div><div class="ng-col">
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
         <label><input type="checkbox" id="optLegal"><span data-i18n="ng.legal"></span></label>
@@ -1416,7 +1445,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261104n7"></script>
+<script src="i18n.js?v=20261104n8"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/export.js?v=6"></script>
@@ -2644,6 +2673,16 @@ function openNewDialog(resume) {
   updDialog();
   showOverlay('#newOverlay');
 }
+// the two setting panels (PC: side by side; phones: one after the other, same order): AI vs AI puts 先手AI under 手合い and
+// 後手AI on the right, two players get the clock on the right, rated shows its rating card on the right; an empty panel is dropped
+function ngPlace(rt) {
+  const cols = document.querySelectorAll('#newOverlay .ng-col'), c1 = cols[0], c2 = cols[1], m = dlg.mode;
+  if (m === 'watch') c1.append($('#fLevel'), $('#lvNote')); else c2.prepend($('#fLevel'), $('#lvNote'));
+  if (m === 'pvp') c2.prepend($('#fClock')); else $('#fColor').after($('#fClock'));
+  if (rt) c2.prepend($('#rtStats')); else $('#fRatedInfo').append($('#rtStats'));
+  c1.classList.toggle('ng-spread', m === 'ai');
+  for (const c of cols) c.classList.toggle('ng-empty', ![...c.children].some(e => !e.hasAttribute('data-ng') && !e.classList.contains('hidden') && !(e.id === 'rtStats' && !rt)));
+}
 function updDialog() {
   applyLook(); segSel('segMode', dlg.mode); segSel('segColor', dlg.color); segSel('segHandi', dlg.handicap); segSel('segClock', dlg.clock);
   const ls = dlg.mode === 'lesson' || dlg.mode === 'tsume' || dlg.mode === 'edit';
@@ -2673,6 +2712,7 @@ function updDialog() {
   $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
   if (window.CpuStyle) CpuStyle.dlgUpdate(dlg, settings, t);   // CPU strategy dropdowns (even games, vs AI / AI vs AI)
   if (window.Variants) Variants.dlgUpdate();   // 種目 (本将棋 / 5五将棋 / はさみ将棋) beside 手合い
+  ngPlace(rt);
   $('#btnStart').textContent = t(rt ? 'rt.start' : ol ? 'ng.toOnline' : dlg.mode === 'lesson' ? 'ng.goLesson' : dlg.mode === 'tsume' ? 'ng.goTsume' : dlg.mode === 'edit' ? 'ng.goEdit' : 'start');
 }
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.mode = b.dataset.v; updDialog(); } };
@@ -2810,10 +2850,11 @@ function resumeWith() {
   refresh(false);
 }
 // ====================================================================== game clock
-const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
+// inc: Fischer — the seconds added after each move of one's own (no byoyomi); 4 = 5 min + 10 s/move, as on floodgate
+const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }, { main: 300, byo: 0, inc: 10 }];
 function clockInit() {
   const c = CLOCKS[game.rated ? RT_CLOCK : settings.clock || 0];
-  game.clock = c && settings.mode !== 'watch' ? { main: [c.main, c.main], byo: c.byo, left: [c.main, c.main], byoLeft: c.byo, t0: Date.now(), ply: 0 } : null;
+  game.clock = c && settings.mode !== 'watch' ? { main: [c.main, c.main], byo: c.byo, inc: c.inc || 0, left: [c.main, c.main], byoLeft: c.byo, t0: Date.now(), ply: 0 } : null;
 }
 // clock.hold: a game restored when the page opens (or brought back after a lesson) was not started by the player just now —
 // its clock stays still (and silent) until the next move is played, then counts normally (cleared in clockOnMove)
@@ -2824,6 +2865,7 @@ function clockOnMove(side) {
   if (clockActive(side)) {
     let el = (Date.now() - c.t0) / 1000;
     if (c.left[side] > 0) { const use = Math.min(el, c.left[side]); c.left[side] -= use; el -= use; }
+    if (c.inc) c.left[side] += c.inc;
   }
   c.byoLeft = c.byo; c.t0 = Date.now();
 }
@@ -2843,6 +2885,12 @@ function clockTick() {
         game.over = { winner: side ^ 1, reason: 'time', ply: game.moves.length };
         busyToken++; cancelAI(); cancelAna(); renderInfo(); save(); showResult(); return;
       }
+    }
+    if (c.inc) {   // Fischer: one running clock, no byoyomi
+      el.textContent = `${fmtClock(main)}  (+${c.inc}s)`;
+      el.classList.toggle('low', main <= 10);
+      if (P && P.side === side && clockActive(side)) CountTick.feed(main * 1000, 'loc' + side); else CountTick.reset('loc' + side);
+      continue;
     }
     el.textContent = main > 0 ? `${fmtClock(main)}  +${c.byo}s` : `${t('clk.byoLbl')} ${Math.max(0, Math.ceil(byo))}s`;
     el.classList.toggle('low', main <= 0 && byo <= 10);
@@ -5321,7 +5369,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/pickdrop.js?v=6"></script>
-<script src="../shared/ngtabs.js?v=21"></script>
+<script src="../shared/ngtabs.js?v=22"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>

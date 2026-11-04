@@ -5,7 +5,8 @@
      デザイン (blocks marked data-ng="design": board / pieces / colours, picked from their icons)
    Shared card styles for the ゲーム tab: .ngt-gcards > button.ngt-gcard[.sel] > .gart + b + p (+ .gpick).
    The variant's name for the ルール tab comes from the chosen card's <b> (or the chosen button / option text).
-   A ゲーム block with class "hidden" (e.g. a mode that has no variants) drops the ゲーム tab until it is shown again.
+   A ゲーム block with class "hidden" (e.g. a mode that has no variants) greys out the ゲーム tab until it is shown again
+   (the tab stays in place so the bar does not jump between modes).
    On PC (no tabs) the cards sit in the dialog: style="--ngt-cols:3" on .ngt-gcards sets the columns there.
    Few cards (≤4) are shown big (.ngt-gcards.few); on PC the ルール tab puts the mode field (#segMode's .field) on top and the
    rest of .ng-cols in two balanced columns.
@@ -43,6 +44,7 @@ const CSS = `
 .ngt-bar button{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:9px 6px 10px;border:0;border-top:2px solid transparent;border-radius:0;background:none;box-shadow:none;color:var(--muted,#aaa);font:inherit;font-size:13.5px;font-weight:600;letter-spacing:.08em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ngt-bar button small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;font-weight:400;letter-spacing:.02em;color:var(--muted,#aaa);opacity:.8}
 .ngt-bar button small:empty{display:none}
+.ngt-bar button:disabled{opacity:.32;cursor:default}
 .ngt-bar button.sel{color:var(--text,#eee);border-top-color:var(--accent,#d8b56a)}
 /* PC: the same tabs, at the top (like poker on PC); the dialog keeps one size whichever tab is open */
 .ngt-pc .ngt-hide, .modal.ngt-pc .ngt-hide, .modal.ngt-pc :is(.ng-cols,.ng-col).ngt-hide{display:none!important}
@@ -178,7 +180,8 @@ function init() {
   } else if (acts && acts.parentNode) { acts.parentNode.insertBefore(foot, acts); for (let n = acts; n; ) { const nx = n.nextSibling; foot.appendChild(n); n = nx; } }
   else modal.appendChild(foot);
   foot.appendChild(bar);
-  const tabs = () => (hasGame() ? ['game'] : []).concat(['rules'].concat(modal.querySelector('[data-ng=design]') ? ['design'] : []));
+  const gameBlock = () => !!modal.querySelector('[data-ng=game]');
+  const tabs = () => (gameBlock() ? ['game'] : []).concat(['rules'].concat(modal.querySelector('[data-ng=design]') ? ['design'] : []));
   let cur = hasGame() ? 'game' : 'rules';
   // the chosen variant's name (under ルール)
   const gameName = () => {
@@ -232,27 +235,29 @@ function init() {
     // phones: the tabs at the very bottom; PC: under the title
     if (on) { if (bar.parentNode !== foot) foot.appendChild(bar); }
     else { const h2 = modal.querySelector(':scope > h2'); if (h2 && h2.nextElementSibling !== bar) h2.after(bar); else if (!h2 && bar.parentNode !== modal) modal.prepend(bar); }
-    const ks = tabs(); if (!ks.includes(cur)) cur = ks[0];
-    const l = lang(), gn = gameName();
+    const ks = tabs(), gOn = hasGame(); if (!ks.includes(cur) || (cur === 'game' && !gOn)) cur = 'rules';
+    const l = lang(), gn = gOn ? gameName() : '';
     const h = ks.map(k => `<button type="button" role="tab" data-ngt="${k}"><span></span>${k === 'rules' && ks.includes('game') ? '<small></small>' : ''}</button>`).join('');
     if (bar.dataset.h !== h) { bar.dataset.h = h; bar.innerHTML = h; }
     bar.querySelectorAll('[data-ngt]').forEach(b => {
       const k = b.dataset.ngt, t = L[k][l] || L[k].en, s = b.querySelector('span'), sm = b.querySelector('small');
       if (s.textContent !== t) s.textContent = t; if (sm && sm.textContent !== gn) sm.textContent = gn;
       b.classList.toggle('sel', k === cur); b.setAttribute('aria-selected', k === cur ? 'true' : 'false');
+      if (k === 'game') b.disabled = !gOn;
     });
     modal.dataset.ngt = cur;
     mark();
   }
   // each tab keeps its own scroll position while the dialog is open
   let tabTop = {};
-  bar.addEventListener('click', e => { const b = e.target.closest('[data-ngt]'); if (!b || b.dataset.ngt === cur) return; tabTop[cur] = modal.scrollTop; cur = b.dataset.ngt; sync(); modal.scrollTop = tabTop[cur] || 0; });
+  bar.addEventListener('click', e => { const b = e.target.closest('[data-ngt]'); if (!b || b.disabled || b.dataset.ngt === cur) return; tabTop[cur] = modal.scrollTop; cur = b.dataset.ngt; sync(); modal.scrollTop = tabTop[cur] || 0; });
   // opens on the first tab; the variant's name follows the choice
-  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { tabTop = {}; cur = tabs()[0]; sync(); modal.scrollTop = 0; } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => { const show = ov.classList.contains('show'); if (show && !ov.__ngtShown) { tabTop = {}; cur = hasGame() ? 'game' : 'rules'; sync(); modal.scrollTop = 0; } ov.__ngtShown = show; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
   const g = modal.querySelector('[data-ng=game]');
   // (the block shown / hidden → the tabs; otherwise only the name; sync() itself toggles .ngt-hide on the block, so compare first)
-  let tk = tabs().join();
-  if (g) new MutationObserver(() => { const k = tabs().join(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
+  const tkey = () => tabs().join() + hasGame();
+  let tk = tkey();
+  if (g) new MutationObserver(() => { const k = tkey(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
   // (phone landscape: html.ngt-land — the CSS above makes the sheet denser)
