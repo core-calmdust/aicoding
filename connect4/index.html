@@ -149,6 +149,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .mark.ng{border-color:#ff5a48;box-shadow:0 0 0 2px rgba(8,10,14,.85),inset 0 0 0 2px rgba(8,10,14,.85)}
 .mark.threat{border:2.5px dashed #fff;filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 2px rgba(0,0,0,.9));width:calc(var(--cell)*0.6);height:calc(var(--cell)*0.6);margin:calc(var(--cell)*0.2)}
 .mark.threat.op{border-color:rgba(214,220,228,.9)}
+.mark > b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 calc(var(--cell)*0.3)/1 'JetBrains Mono',monospace;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000}
+.mark.num{border:0;box-shadow:none}
+.ls-explain{margin-top:6px}.ls-explain p{margin:0 0 8px}.ls-explain p.note{font-size:.92em;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
+html[lang=ar] .ls-explain p.note{border-left:0;border-right:2px solid var(--brass2);padding-left:0;padding-right:10px}
+.ls-skip{margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0}
 .winring{position:absolute;width:calc(var(--cell)*0.8);height:calc(var(--cell)*0.8);margin:calc(var(--cell)*0.1);border-radius:50%;border:3px solid #fff3cf;box-shadow:0 0 0 3px rgba(20,14,4,.9),inset 0 0 0 2px rgba(20,14,4,.6),0 0 18px rgba(255,236,170,.85),inset 0 0 12px rgba(255,236,170,.6);pointer-events:none;z-index:8;animation:winp 1.1s ease-in-out infinite}
 @keyframes winp{50%{transform:scale(1.08);box-shadow:0 0 28px rgba(255,236,170,1),inset 0 0 18px rgba(255,236,170,.8)}}
 .winline{position:absolute;inset:0;z-index:9;pointer-events:none;overflow:visible}
@@ -1551,7 +1556,7 @@ function renderFx() {
       discPos(d, c, r); fxEl.appendChild(d);
     }
   }
-  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; if (m.p) d.style.borderColor = m.p === P1 ? 'var(--gold2)' : 'var(--ruby2)'; discPos(d, m.c, m.r); fxEl.appendChild(d); }
+  for (const m of lessonMarks) { const d = document.createElement('div'); d.className = 'mark ' + m.cls; if (m.p) d.style.borderColor = m.p === P1 ? 'var(--gold2)' : 'var(--ruby2)'; if (m.lbl) { const b = document.createElement('b'); b.textContent = m.lbl; d.appendChild(b); } discPos(d, m.c, m.r); fxEl.appendChild(d); }
   if (!drawReviewFx(g) && hintList && !st.winner && !rbCons()) drawHints(hintList, g, shown.length);
   rbDrawHover(g, shown);
   if (window.C4Coach) C4Coach.drawFx();
@@ -2126,7 +2131,7 @@ $('#btnStart').onclick = () => {
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261028sk').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles2';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -2300,7 +2305,69 @@ function startLesson(step) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0;
   lesson = { step, i: 0, results: [], answered: false };
   document.body.classList.add('in-lesson');
+  const R = LESSONS.steps[step].ramp;
+  if (R && R.length) { lesson.ramp = R; lesson.ri = 0; loadRamp(); return; }
   loadLessonProblem();
+}
+// ---- warm-up ramp before a lesson's scored problems (lessons.json step.ramp, built by tools/ramps.js; not scored)
+//   explain: read-only position (+ seq played out with numbered discs) + marks + a short explanation (次へ)
+//   try: a guided position, any column in ok is right; hints go concept → cells to look at → the answer
+const LLr = o => o ? (o[LANG] || o.en || o.ja || '').replace(/%P([12])%/g, (_, n) => t('p' + n)) : '';
+const RU = (k, v) => { let x = LLr(LESSONS.rampUi && LESSONS.rampUi[k]); if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
+const rampItem = () => lesson.ramp[lesson.ri];
+function rampMarks(it) {
+  const out = [];
+  if (it.seq) { const g = gridOf(it.moves); [...it.seq].forEach((ch, k) => { const c = +ch - 1; out.push({ c, r: g[c].length, cls: 'num', lbl: String(k + 1) }); g[c].push(1); }); }
+  for (const [c, r, cls, lbl] of it.marks || []) out.push({ c, r, cls: cls === 'threat' ? 'threat' : cls, lbl });
+  return out;
+}
+function loadRamp() {
+  const it = rampItem();
+  busyToken++;
+  moves = it.moves + (it.k === 'explain' && it.seq ? it.seq : ''); cur = moves.length; reviewing = false; hintList = null;
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
+  lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
+}
+function renderRampCard() {
+  const it = rampItem(), n = lesson.ramp.length, last = lesson.ri + 1 >= n, s = LESSONS.steps[lesson.step];
+  $('#lsStep').textContent = t('lx.course.' + lsCourse(s)) + ' · ' + RU('step', { i: lesson.ri + 1, n });
+  $('#lsTitle').textContent = t('ls.' + s.id + '.title');
+  const skip = `<button type="button" class="ls-skip">${RU('skip')} »</button>`, me = toMoveOf(it.moves);
+  $('#lsPrompt').innerHTML = it.k === 'explain'
+    ? `<div class="ls-goal"><span>💡</span><span><b>${LLr(it.t)}</b></span></div><div class="ls-explain">${LLr(it.body)}</div>${skip}`
+    : `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${LLr(it.g)}</span></div>${skip}`;
+  const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
+  $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
+  $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
+  $('#lsNext').textContent = last ? RU('main') : RU('next');
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
+}
+function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
+function rampHint() {
+  const it = rampItem(); if (it.k !== 'try' || lesson.answered) return;
+  lesson.rh = Math.min(3, lesson.rh + 1);
+  const g = gridOf(it.moves);
+  if (lesson.rh === 1) { $('#lsFb').innerHTML = LLr(it.h); lessonMarks = []; }
+  else if (lesson.rh === 2) { $('#lsFb').innerHTML = LLr(it.h) + '<br>' + RU('look'); lessonMarks = (it.look || []).map(([c, r]) => ({ c, r, cls: 'ok' })); }
+  else { $('#lsFb').innerHTML = RU('ans', { m: it.ok.map(colName).join(' / ') }); lessonMarks = it.ok.map(c => ({ c, r: g[c].length, cls: 'ok' })); }
+  renderFx();
+}
+function rampMove(c) {
+  const L = lesson, it = rampItem(), ri = L.ri;
+  if (L.answered) return;
+  L.answered = true;
+  const good = it.ok.includes(c);
+  $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LLr(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
+  L.rok = good; playChime(good); lessonMarks = [];
+  moves = it.moves + (c + 1); cur = moves.length; update(true); renderLessonCard();
+  if (good) return;
+  const tok = busyToken;
+  setTimeout(() => {
+    if (lesson !== L || !L.ramp || L.ri !== ri || tok !== busyToken) return;
+    moves = it.moves; cur = moves.length; L.answered = false; update(false); renderLessonCard();
+  }, 1500);
 }
 function lessonProblem() { return LESSONS.steps[lesson.step].problems[lesson.i]; }
 function loadLessonProblem() {
@@ -2310,6 +2377,7 @@ function loadLessonProblem() {
   $('#lsFb').innerHTML = '';
 }
 function renderLessonCard() {
+  if (lesson.ramp) return renderRampCard();
   const s = LESSONS.steps[lesson.step], n = s.problems.length;
   $('#lsStep').textContent = t('lx.course.' + lsCourse(s)) + ' · ' + t('ls.stepq', { s: lsNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = t('ls.' + s.id + '.title');
@@ -2329,6 +2397,7 @@ function lsAuto(good, ms) {
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
 function lessonAnswer(c) {
+  if (lesson.ramp) return rampMove(c);
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
   lesson.answered = true;
   const ok = P.answer.includes(c);
@@ -2356,6 +2425,7 @@ function lessonAnswer(c) {
   renderLessonCard();
 }
 $('#lsHint').onclick = () => {
+  if (lesson && lesson.ramp) { rampHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const P = lessonProblem(), s = LESSONS.steps[lesson.step];
@@ -2369,6 +2439,7 @@ $('#lsHint').onclick = () => {
   renderFx();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (!lesson || !lesson.answered) return;
   const s = LESSONS.steps[lesson.step];
   if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
