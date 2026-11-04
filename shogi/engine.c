@@ -102,6 +102,9 @@ static int hn = 0;
 static float nnA[2 * NN_MAXH];
 static float nnSt[NST * 2 * 32];
 /* NNUE (chess-style): (2534 -> 256) x 2 perspectives -> 1, SCReLU; int16 weights (x QA), int32 accumulators */
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #ifndef NUE_H
 #define NUE_H 256          /* hidden size; engine_simd512.wasm is built with -DNUE_H=512 */
 #endif
@@ -115,12 +118,37 @@ static i16 nueW1[NUE_IN * NUE_H], nueW2[NUE_NB * 2 * NUE_H];
 static i32 nueB1[NUE_H], nueB2[NUE_NB];
 /* output bucket: number of pieces in hand (both sides) */
 static inline int nueBucket(void) { if (nueNB == 1) return 0; int t = 0; for (int i = 1; i < 8; i++) t += hand[i] + hand[8 + i]; return t < 1 ? 0 : t < 3 ? 1 : t < 5 ? 2 : t < 7 ? 3 : t < 9 ? 4 : t < 12 ? 5 : t < 16 ? 6 : 7; }
-static i16 nueA[2][NUE_H];
-static i16 nueSt[NST][2][NUE_H];
+/* accumulators, one per search-stack level (nueAc[sp]), updated lazily: doMove only records which features change
+   (nueD*), and evaluate() brings the nearest computed ancestor up to the current level, child = parent - removed + added
+   in one pass. Undo costs nothing (sp--), and moves whose position is never evaluated cost no accumulator work. */
+static i16 nueAc[NST + 1][2][NUE_H];
+static u8 nueOk[NST + 1];
+static i16 nueDA[NST][2][2], nueDR[NST][2][2];   /* [level][persp][k]: features added / removed by the move at that level (-1: none) */
+static u8 nueDN[NST];                           /* number of (add, remove) pairs: 0 (null move), 1, 2 (capture) */
+static i16 nueZero[NUE_H];
+#define nueA (nueAc[sp])
 static inline int nueB(int persp, int p, int s) { return ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
 static inline int nueHd(int persp, int hc, int t, int n) { return n > 19 ? -1 : 2268 + ((hc != persp) * 7 + t - 1) * 19 + n - 1; }
 static inline void nueAdd(int persp, int f) { if (f < 0) return; i16 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
-static inline void nueSub(int persp, int f) { if (f < 0) return; i16 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] -= w[j]; }
+static inline const i16 *nueRow(int f) { return f < 0 ? nueZero : nueW1 + f * NUE_H; }
+/* level i -> i + 1 */
+static void nueStep(int i) {
+  const int n = nueDN[i];
+  for (int c = 0; c < 2; c++) {
+    const i16 *src = nueAc[i][c]; i16 *dst = nueAc[i + 1][c];
+    if (n == 0) { memcpy(dst, src, sizeof(i16) * NUE_H); continue; }
+    const i16 *a1 = nueRow(nueDA[i][c][0]), *r1 = nueRow(nueDR[i][c][0]);
+    if (n == 1) { for (int j = 0; j < NUE_H; j++) dst[j] = (i16)(src[j] + a1[j] - r1[j]); continue; }
+    const i16 *a2 = nueRow(nueDA[i][c][1]), *r2 = nueRow(nueDR[i][c][1]);
+    for (int j = 0; j < NUE_H; j++) dst[j] = (i16)(src[j] + a1[j] - r1[j] + a2[j] - r2[j]);
+  }
+  nueOk[i + 1] = 1;
+}
+static inline void nueSync(void) {
+  if (nueOk[sp]) return;
+  int k = sp - 1; while (k > 0 && !nueOk[k]) k--;
+  for (int i = k; i < sp; i++) nueStep(i);
+}
 
 static void setKingCache(int c) {
   int k = king[c];
@@ -183,6 +211,7 @@ static double nnEval(void) {
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (double)(i32)v;
 }
 static void nueRefresh(void) {
+  nueOk[sp] = 1;
   for (int c = 0; c < 2; c++) {
     for (int j = 0; j < NUE_H; j++) nueA[c][j] = (i16)nueB1[j];
     for (int s = 0; s < 81; s++) if (board[s]) nueAdd(c, nueB(c, board[s], s));
@@ -190,9 +219,28 @@ static void nueRefresh(void) {
   }
 }
 static double nueEval(void) {
+  nueSync();
   const i16 *a = nueA[side], *b = nueA[side ^ 1];
   const int bk = nueBucket(); const i16 *w2 = nueW2 + bk * 2 * NUE_H;
   long long sum = 0;
+#ifdef __wasm_simd128__
+  /* the same sums as below (blocks of 16 per side in int32, then int64), 8 lanes at a time: x = clamp(acc, 0, QA),
+     x*x fits int16 (QA^2 = 16129), and i32x4_dot_i16x8 multiplies by the weights and adds neighbouring pairs */
+  {
+    const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(NUE_QA);
+    v128_t s64 = wasm_i64x2_splat(0);
+    for (int i0 = 0; i0 < NUE_H; i0 += 16) {
+      v128_t xa0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0), lo), hi), xa1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0 + 8), lo), hi);
+      v128_t xb0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0), lo), hi), xb1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0 + 8), lo), hi);
+      v128_t pa = wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa0, xa0), wasm_v128_load(w2 + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa1, xa1), wasm_v128_load(w2 + i0 + 8)));
+      v128_t pb = wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb0, xb0), wasm_v128_load(w2 + NUE_H + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb1, xb1), wasm_v128_load(w2 + NUE_H + i0 + 8)));
+      s64 = wasm_i64x2_add(s64, wasm_i64x2_add(wasm_i64x2_extend_low_i32x4(pa), wasm_i64x2_extend_high_i32x4(pa)));
+      s64 = wasm_i64x2_add(s64, wasm_i64x2_add(wasm_i64x2_extend_low_i32x4(pb), wasm_i64x2_extend_high_i32x4(pb)));
+    }
+    sum = wasm_i64x2_extract_lane(s64, 0) + wasm_i64x2_extract_lane(s64, 1);
+  }
+  if (0)
+#endif
   for (int i0 = 0; i0 < NUE_H; i0 += 16) {
     i32 part = 0;
     for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; part += x * x * w2[i]; }
@@ -352,14 +400,14 @@ static void doMove(int m) {
   i32 a0 = acc[0], a1 = acc[1];
   int nn = nnOn;
   if (nn) memcpy(nnSt + s0 * 2 * nnH, nnA, sizeof(float) * 2 * nnH);
-  int nue = nueOn;
-  if (nue) memcpy(nueSt[s0], nueA, sizeof nueA);
+  int nue = nueOn, nk = 0;
+  if (nue) nueOk[s0 + 1] = 0;
   if (from > 80) {
     int t = from - 80, p = t + (us ? WF : 0), hi = us * 8 + t, n = hand[hi];
     l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
     if (nn) { nnHand(0, us, t, n, -1); nnHand(1, us, t, n, -1); nnPiece(0, p, to, 1); nnPiece(1, p, to, 1); }
     else { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
-    if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueHd(c, us, t, n)); nueAdd(c, nueB(c, p, to)); }
+    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (i16)nueHd(c, us, t, n); nueDA[s0][c][0] = (i16)nueB(c, p, to); } nk = 1; }
     hand[hi] = n - 1;
     board[to] = p; SETB(us, to); l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
     stCap[s0] = 0;
@@ -373,7 +421,7 @@ static void doMove(int m) {
       int ct = UNPROMOTE[typeOf(cap)], hi = us * 8 + ct, n = hand[hi] + 1;
       hand[hi] = n;
       l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
-      if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueB(c, cap, to)); nueAdd(c, nueHd(c, us, ct, n)); }
+      if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][1] = (i16)nueB(c, cap, to); nueDA[s0][c][1] = (i16)nueHd(c, us, ct, n); } nk = 2; }
       if (typeOf(cap) != OU) {
         if (nn) {
           if (!(isKing && us == 0)) { nnPiece(0, cap, to, -1); nnHand(0, us, ct, n, 1); }
@@ -386,7 +434,7 @@ static void doMove(int m) {
     }
     l ^= ZB_L[from * 32 + p] ^ ZB_L[to * 32 + np]; h ^= ZB_H[from * 32 + p] ^ ZB_H[to * 32 + np];
     board[from] = 0; board[to] = np; CLRB(us, from); SETB(us, to); if (cap) CLRB(them, to);
-    if (nue) for (int c = 0; c < 2; c++) { nueSub(c, nueB(c, p, from)); nueAdd(c, nueB(c, np, to)); }
+    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (i16)nueB(c, p, from); nueDA[s0][c][0] = (i16)nueB(c, np, to); } if (!nk) nk = 1; }
     if (nn) {
       if (isKing) { king[us] = to; nnRefresh(us); nnPiece(them, p, from, -1); nnPiece(them, np, to, 1); }
       else { nnPiece(0, p, from, -1); nnPiece(0, np, to, 1); nnPiece(1, p, from, -1); nnPiece(1, np, to, 1); }
@@ -400,6 +448,7 @@ static void doMove(int m) {
     }
   }
   acc[0] = a0; acc[1] = a1; hl = l; hh = h;
+  nueDN[s0] = (u8)nk;
   side = them; sp = s0 + 1;
   histL[hn] = l; histH[hn] = h; histChk[hn] = 0; hn++;
 }
@@ -418,11 +467,11 @@ static void undoMove(void) {
   }
   hl = stHL[s0]; hh = stHH[s0]; acc[0] = stA0[s0]; acc[1] = stA1[s0];
   if (nnOn) memcpy(nnA, nnSt + s0 * 2 * nnH, sizeof(float) * 2 * nnH);
-  if (nueOn) memcpy(nueA, nueSt[s0], sizeof nueA);
 }
 static void doNull(void) {
   int s0 = sp;
   stMove[s0] = 0; stHL[s0] = hl; stHH[s0] = hh; stA0[s0] = acc[0]; stA1[s0] = acc[1];
+  nueDN[s0] = 0; nueOk[s0 + 1] = 0;
   hl ^= ZSIDE_L; hh ^= ZSIDE_H; side ^= 1; sp++;
   histL[hn] = 0x7fffffff; histH[hn] = 0; histChk[hn] = 0; hn++;
 }
@@ -1042,11 +1091,15 @@ EXPORT(set_position) void set_position(void) {
   king[0] = king[1] = -1;
   for (int s = 0; s < 81; s++) { int p = board[s]; if (typeOf(p) == OU) king[colorOf(p)] = s; }
   memset(pmask, 0, sizeof pmask); for (int s = 0; s < 81; s++) if (board[s]) SETB(colorOf(board[s]), s);
-  computeHash(); refreshEval();
   sp = 0; hn = 0;
+  computeHash(); refreshEval();
   histL[hn] = hl; histH[hn] = hh; histChk[hn] = inCheck() ? 1 : 0; hn++;
 }
-EXPORT(play_move) void play_move(int m) { doMove(m); histChk[hn - 1] = inCheck() ? 1 : 0; sp = 0; }
+EXPORT(play_move) void play_move(int m) {
+  doMove(m); histChk[hn - 1] = inCheck() ? 1 : 0;
+  if (nueOn) { nueSync(); memcpy(nueAc[0], nueAc[sp], sizeof nueAc[0]); nueOk[0] = 1; }
+  sp = 0;
+}
 EXPORT(get_hash) i32 get_hash(int hi) { return hi ? hh : hl; }
 EXPORT(get_eval) double get_eval(void) { return evaluate(); }
 
