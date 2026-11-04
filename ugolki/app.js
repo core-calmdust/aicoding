@@ -41,7 +41,7 @@ const isPass = m => m === E.PASS;
 
 // ====================================================================== state
 const STORE = 'aicoding-ugolki';
-const settings = { mode: 'ai', rule: 'c33', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'khokhloma', pcs: 'lacquer' };
+const settings = { mode: 'ai', rule: 'c33', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'gzhel', pcs: 'porcelain' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -862,7 +862,7 @@ document.addEventListener('keydown', e => {
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
 // Russian folk crafts: Khokhloma (black lacquer, cinnabar and gold), Gzhel (white porcelain, cobalt), Palekh (black lacquer
 // miniature with gold leaf), birch bark (beresta). Pieces: lacquered wood, Gzhel porcelain, Baltic amber, painted folk wood.
-const BD_KEYS = ['khokhloma', 'gzhel', 'palekh', 'birch'], PC_KEYS = ['lacquer', 'porcelain', 'amber', 'folk'];
+const BD_KEYS = ['gzhel', 'khokhloma', 'palekh', 'birch'], PC_KEYS = ['porcelain', 'lacquer', 'amber', 'folk'];   // Gzhel first: the default
 const BD_DEFS = '';
 // [dark square, light square, frame, frame line, White's house tint, Black's house tint]
 const BD_PAL = {
@@ -879,8 +879,8 @@ const PC_PAL = {
   folk: [['#f6e3b8', '#c0392b'], ['#22301f', '#e0b84a']],
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'khokhloma';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'lacquer';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'gzhel';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'porcelain';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 function designSpec() { const p = E.Pos.from(null); return p.spec(); }
@@ -892,7 +892,7 @@ function designPickers() {
 }
 // a piece-set tile: two big pieces on a strip of the current board
 function pcSwatch(k) {
-  const BP = BD_PAL[settings.bd] || BD_PAL.khokhloma, PP = PC_PAL[k];
+  const BP = BD_PAL[settings.bd] || BD_PAL.gzhel, PP = PC_PAL[k];
   let s = `<svg class="bdm" viewBox="0 0 120 120"><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[2]}" stroke="${BP[3]}" stroke-opacity=".6"/>`;
   for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) s += `<rect x="${15 + c * 30}" y="${15 + r * 30}" width="30" height="30" fill="${(r + c) & 1 ? BP[0] : BP[1]}"/>`;
   s += pieceSVG(45, 60, 19, PP[0], k, 0) + pieceSVG(75, 60, 19, PP[1], k, 1);
@@ -911,7 +911,7 @@ function miniSVG(spec, o) {
   o = o || {};
   const fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [7 - r, 7 - c] : [r, c]; };
   const u = 30, pad = 6, W = 8 * u + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
-  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.khokhloma, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.lacquer;
+  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.gzhel, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.porcelain;
   const keep = E.rule; if (o.rule && o.rule !== keep) E.setRule(o.rule);
   const H = E.HOME(), HL = E.HOMEL();
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
