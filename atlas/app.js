@@ -920,7 +920,7 @@
       hasRules: () => true,
       // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
       onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
-      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS, group: gCat === 'all' || gCat === 'board' });
+      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }
