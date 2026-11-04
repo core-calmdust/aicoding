@@ -323,6 +323,26 @@
       for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0x2a56b8)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
       return g;
     },
+    agon() {   // a fragment of the painted folk Agon board (sage ground, red / black / mustard / cream hexes round the dark throne); the hexagonal queen with a gold crown steps onto the throne past a guard
+      const top = M({ map: X.canvasTex('icag', 512, 512, (c, W) => {
+        c.fillStyle = '#87916b'; c.fillRect(0, 0, W, W);
+        const R = W / 6.2, hex = (x, y, col) => { c.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; c[k ? 'lineTo' : 'moveTo'](x + R * .94 * Math.cos(a), y + R * .94 * Math.sin(a)); } c.closePath(); c.fillStyle = col; c.fill(); c.strokeStyle = '#141412'; c.lineWidth = 5; c.stroke(); };
+        const cx = W / 2, cy = W / 2, dx = R * Math.sqrt(3), dy = R * 1.5;
+        const cells = [[0, 0, '#232a1c'], [1, 0, '#a32a22'], [-1, 0, '#1d1b17'], [.5, -1, '#1d1b17'], [-.5, -1, '#a32a22'], [.5, 1, '#a32a22'], [-.5, 1, '#1d1b17'],
+          [2, 0, '#cc9426'], [-2, 0, '#e6dcc4'], [1.5, -1, '#e6dcc4'], [-1.5, -1, '#cc9426'], [1.5, 1, '#cc9426'], [-1.5, 1, '#e6dcc4'], [1, -2, '#cc9426'], [0, -2, '#e6dcc4'], [-1, -2, '#cc9426'], [1, 2, '#e6dcc4'], [0, 2, '#cc9426'], [-1, 2, '#e6dcc4']];
+        cells.forEach(([q, r, col]) => hex(cx + q * dx, cy + r * dy, col));
+      }), roughness: .62 });
+      const g = boardChunk(3, 3.6, top, C(0x1b2d2a, { roughness: .6 }));
+      const hexPc = (col, rim, s) => { const p = new T.Group(); const body = mesh(new T.CylinderGeometry(.62, .66, .32, 6, 1), C(col, { roughness: .35 })); body.rotation.y = Math.PI / 6; body.position.y = .16; p.add(body);
+        const lip = mesh(new T.CylinderGeometry(.5, .6, .08, 6, 1), C(rim, { roughness: .35 })); lip.rotation.y = Math.PI / 6; lip.position.y = .36; p.add(lip); p.scale.setScalar(s); return p; };
+      const guard = (col, ring, s) => { const p = new T.Group(); p.add(puck(.6, .28, C(col, { roughness: .35 }), .45)); const r = mesh(new T.TorusGeometry(.38, .05, 10, 40), C(ring, { roughness: .35 })); r.rotation.x = Math.PI / 2; r.position.y = .29; p.add(r); p.scale.setScalar(s); return p; };
+      g.add(at(guard(0xefe6d2, 0xa32a22, .62), .95, .5, -.55)); g.add(at(guard(0x231a15, 0xc8952e, .62), -.95, .5, .55)); g.add(at(guard(0xefe6d2, 0xa32a22, .62), -.95, .5, -.55));
+      // the big queen mid-step onto the throne: an ivory hexagon with a gold crown
+      const qn = hexPc(0xf2ead6, 0xc9b892, 1);
+      const cr = crown(gloss(0xf2c94c), gloss(0xc0392b), .78); cr.position.y = .4; qn.add(cr);
+      qn.scale.setScalar(1.5); g.add(at(qn, .15, 1.85, .05, .32, 0, -.22));
+      return g;
+    },
     tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
       const top = M({ map: X.canvasTex('ictf', 512, 512, (c, W) => {
         c.drawImage(X.wood('ictfw', '#d4a66a', '#8a5e34').image, 0, 0, W, W); const s = W / 3;
