@@ -369,7 +369,7 @@
       map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
       sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
     };
-    cap(); later(cap, 520); addEventListener('resize', cap);
+    cap(); later(cap, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); });
     const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
     pg.addEventListener('scroll', stuck, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
@@ -389,7 +389,41 @@
         if (i === cur) { p.classList.remove('ping'); void p.getBoundingClientRect(); p.classList.add('ping'); } });   // a ring pulses out of the stage's pin
       map.querySelectorAll('[data-l]').forEach(l => l.classList.toggle('seen', seen.has(+l.dataset.l)));
       RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); });
-      bring(n, force); };
+      bring(n, force); follow(n); };
+    // the map follows the stages: when it is cropped (phones, short pages) it pans/zooms so the active pin — and the previous
+    // one, when both fit — sit in the visible part; uncropped, the whole route stays in view. A drag or pinch on the map wins
+    // until the next stage.
+    const zm = map.querySelector('.zm'), zb = (zm.dataset.z.match(/-?[\d.]+/g) || [0, 0, 1]).map(Number);   // [tx, ty, z] of the route framing
+    const PM = []; P.forEach(p => { const m = (p.parentNode.getAttribute('transform') || '').match(/-?[\d.]+/g); if (m) PM[+p.dataset.p] = [+m[0], +m[1]]; });
+    let view = null;
+    const vis = () => {   // the part of the 360×225 viewBox that is on screen
+      const W = sv.clientWidth, H = sv.clientHeight; if (!W || !H) return { x: 0, y: 0, w: 360, h: 225, crop: false };
+      const sl = sv.getAttribute('preserveAspectRatio') === 'xMidYMid slice', sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
+      const w = Math.min(360, W / sc), h = Math.min(225, H / sc); return { x: (360 - w) / 2, y: (225 - h) / 2, w, h, crop: sl };
+    };
+    const apply = (v, ms) => { view = v; zm.style.transition = `transform ${ms}ms cubic-bezier(.4,0,.2,1)`; zm.style.transform = `translate(${v[0].toFixed(2)}px,${v[1].toFixed(2)}px) scale(${v[2].toFixed(4)})`; };
+    const follow = n => {
+      const V = vis(), z0 = zb[2]; if (!V.crop) { apply([zb[0], zb[1], z0], 600); return; }
+      const ids = [pins[n], pins[n - 1]].filter(i => PM[i]);
+      if (!ids.length) return;
+      const fitIn = list => { const xs = list.map(i => PM[i][0]), ys = list.map(i => PM[i][1]);
+        const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+        const z = Math.min(V.w * .5 / Math.max(1, x1 - x0), V.h * .55 / Math.max(1, y1 - y0));   /* room left for the labels beside the pins */ return { z, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; };
+      let f = fitIn(ids); if (ids.length > 1 && f.z < z0 * .6) f = fitIn(ids.slice(0, 1));   // too far apart: just the active pin
+      const z = Math.max(z0 * .6, Math.min(z0 * 1.35, f.z));
+      apply([V.x + V.w / 2 - f.cx * z, V.y + V.h / 2 - f.cy * z, z], 520);
+    };
+    // drag / pinch on the map (horizontal drags only: vertical swipes still scroll the page)
+    { const pts = new Map(); let st = null;
+      map.addEventListener('pointerdown', e => { if (!view) return; pts.set(e.pointerId, [e.clientX, e.clientY]); const a = [...pts.values()];
+        st = { v: view.slice(), a: a.map(x => x.slice()), d: a.length > 1 ? Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) : 0 }; });
+      map.addEventListener('pointermove', e => { if (!st || !pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
+        const a = [...pts.values()], k2 = 360 / Math.max(1, sv.clientWidth) * (vis().w / 360);
+        if (a.length > 1 && st.d) { const d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]), r = Math.max(.5, Math.min(2.5, d / st.d)), z = st.v[2] * r;
+          const V = vis(), cx = V.x + V.w / 2, cy = V.y + V.h / 2; apply([cx - (cx - st.v[0]) * r, cy - (cy - st.v[1]) * r, z], 0); }
+        else { const dx = (a[0][0] - st.a[0][0]) * k2, dy = (a[0][1] - st.a[0][1]) * k2; if (Math.abs(dx) > 3 || Math.abs(dy) > 3) apply([st.v[0] + dx, st.v[1] + dy, st.v[2]], 0); } });
+      const up = e => { pts.delete(e.pointerId); if (!pts.size) st = null; else { const a = [...pts.values()]; st = { v: view.slice(), a, d: 0 }; } };
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => map.addEventListener(t, up)); }
     const tick = () => { if (!auto || !on || !pg.isConnected) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
     later(tick, 1500);
     L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
