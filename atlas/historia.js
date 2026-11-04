@@ -218,12 +218,22 @@
     Promise.race([p || new Promise(r => setTimeout(r, 1200)), new Promise(r => setTimeout(r, 5000))]).then(() => setTimeout(done, 450));
   }
   // the board's framing while open: phones frame it in the stage above the page; wide screens keep it full height (the canvas is shifted right in CSS)
-  function fit() {
+  // the stage's final geometry for the layout the chapter is going to (phones): measured with transitions off, then the layout
+  // goes back and animates there as usual — so the camera can head for its final framing from the first frame
+  function finalRects(rd, top) {
+    const st = root.querySelector('.hs-stage'), g = root.querySelector('.hs-guide'), was = [root.classList.contains('read'), root.classList.contains('top')];
+    root.classList.add('snap'); root.classList.toggle('read', rd); root.classList.toggle('top', top);
+    const r = st.getBoundingClientRect(), gt = g ? g.getBoundingClientRect().top : r.bottom;
+    root.classList.toggle('read', was[0]); root.classList.toggle('top', was[1]); void root.offsetHeight; root.classList.remove('snap'); void root.offsetHeight;
+    root.classList.toggle('read', rd); root.classList.toggle('top', top);
+    return { r, gt };
+  }
+  function fit(pre) {
     if (!on || solo || !root || !window.Table3D || !Table3D.setInset) return;
     if (phone()) {
-      const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(), g = root.querySelector('.hs-guide');
+      const st = root.querySelector('.hs-stage'), g = root.querySelector('.hs-guide'), r = pre ? pre.r : st.getBoundingClientRect(), gt = pre ? pre.gt : g ? g.getBoundingClientRect().top : r.bottom;
       // the top-down board view: the guide and its bubble sit in a strip at the bottom of the stage, and the board is framed above it
-      const keep = camTop && g ? Math.max(0, Math.min(r.height * .4, r.bottom - g.getBoundingClientRect().top + 4)) : 0;
+      const keep = camTop && g ? Math.max(0, Math.min(r.height * .4, r.bottom - gt + 4)) : 0;
       Table3D.setInset(Math.max(0, innerHeight - r.bottom + keep));
     }
     else Table3D.setInset(0);
@@ -237,13 +247,17 @@
   addEventListener('resize', () => { if (on) { shift(); fit(); } });
   // the 3D camera per chapter: the showcase turntable, or straight down onto the board for the board chapter
   let camTop = false, has3D = true;
-  function cam(top) {
+  // the camera move: the final layout (stage size, the guide's strip) is settled first and the framing computed from it, so the
+  // camera goes in one move straight to where it ends — nothing is re-fitted after it lands
+  function cam(top, rd) {
     if (!has3D) top = false;
-    if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok())) return;
-    if (solo) return;
-    if (top === camTop) return; camTop = top;
+    const lay = root && rd !== undefined && phone() ? finalRects(rd, !!top) : null;
+    if (!lay && root && rd !== undefined) root.classList.toggle('read', rd);
+    if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok()) || solo) { if (root) root.classList.toggle('top', !!top); return; }
+    if (top === camTop) { if (lay) fit(lay); return; }
+    camTop = top;
     if (root) root.classList.toggle('top', !!top);
-    fit();
+    fit(lay);
     try { Table3D.play(!!top, { glide: 800, ortho: true }); } catch (e) {}
   }
 
@@ -268,7 +282,6 @@
     gh.textContent = s || '';   // (an invisible copy of the whole line: the bubble takes its final size at once while the text types in)
     if (!s) { b.classList.remove('on'); sp.textContent = ''; return; }
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
-    if (camTop) requestAnimationFrame(fit);
     const g = root.querySelector('.hs-guide'); g.classList.remove('hop'); void g.offsetWidth; g.classList.add('hop');
     // scripts that join letters (Arabic, Devanagari) fade in whole; others are typed
     if (lang === 'ar' || lang === 'hi') { sp.textContent = s; sp.classList.remove('typing'); return; }
@@ -302,10 +315,11 @@
     root.querySelector('.hs-no').textContent = String(i + 1).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
     root.querySelector('.hs-pv').disabled = i === 0; root.querySelector('.hs-nx').disabled = i === n - 1;
     later(() => say(c.say || ''), 380);
-    cam(c.k === 'board');
+    // the bubble takes the size of its coming line now (an invisible copy), so the layout below is already the final one
+    { const gh = root.querySelector('.hs-bub .ghost'); if (gh) gh.textContent = c.say || ''; }
     // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
     const rd = !['hook', 'board', 'end'].includes(c.k);
-    if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
+    cam(c.k === 'board', rd);
     if (window.Table3D && Table3D.quiet) Table3D.quiet(phone() && (rd || c.k === 'board') && !solo);   // (the top-down board view is still too: drawn when it moves)
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another

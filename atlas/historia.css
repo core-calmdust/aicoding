@@ -351,3 +351,6 @@
    it kept animating and repainting behind the overlay */
 html.hs-open body > main.wrap{visibility:hidden}
 html.hs-open body > main.wrap *{animation-play-state:paused!important}
+
+/* (measuring the final layout of a chapter: no transitions for that instant) */
+#hist.snap,#hist.snap *{transition:none!important}
