@@ -165,6 +165,7 @@ const botOf = n => BOTS.find(b => b.seat === n);
 function botState(b) { D.bots = D.bots || {}; const s = D.bots[b.id] || (D.bots[b.id] = { bank: BOT_START[b.id], unit: 1 }); if (s.bank < MIN_BET) { s.bank = BOT_START[b.id]; s.unit = 1; } return s; }
 function freshShoe() { T.shoe = B.newShoe(T.R, Math.random); T.rc = 0; T.disc = 0; G.evKey = ''; }
 function newSession(v) {
+  if (T && T.tut) restoreTut();
   recordSession();
   const p = prefOf(v); set.v = v;
   let bank = typeof D.chips === 'number' ? D.chips : START; if (bank < MIN_BET) bank = START;
@@ -173,8 +174,31 @@ function newSession(v) {
   freshShoe(); G.undo = []; botsBet();
   D.cur = T; save(); sfx('shuffle'); render();
 }
+/* the tutorial: one scripted round on the real table (tutorial.js drives the steps); your chips, the bots and the saved table stay as they were */
+function startTutorial() {
+  clearTimeout(G.timer); if (T && T.tut) restoreTut(); recordSession();
+  G.tutPrev = { cur: D.cur, chips: D.chips, bots: JSON.parse(JSON.stringify(D.bots || {})), set: { coach: set.coach, autoNext: set.autoNext, chip: set.chip } };
+  set.coach = 1; set.autoNext = 0; set.chip = 100;
+  D.bots = {};   // fresh bots for the script (restored afterwards)
+  T = { v: 'classic', R: B.rulesOf('classic', {}), bank: START, bets: {}, last: null, phase: 'bet', seats: {}, dealer: null, cur: null, round: 0, dec: [], res: null, tut: true,
+    session: { hands: 0, net: 0, wag: 0, exp: 0, mis: 0, start: Date.now(), buyin: START, rebuys: 0, peak: START, graph: [0] } };
+  freshShoe(); botsBet(); BOTS.forEach(b => { T.botBets[b.id] = { main: 100 }; });
+  if (window.BJTut) BJTut.setup(T);
+  G.undo = []; render();
+  if (window.BJTut) BJTut.ev('start');
+}
+function restoreTut() {
+  const p = G.tutPrev; G.tutPrev = null; if (window.BJTut) BJTut.hide();
+  if (p) { D.chips = p.chips; D.bots = p.bots; Object.assign(set, p.set); D.cur = p.cur; save(); }
+  T = null;
+}
+function endTutorial() {
+  clearTimeout(G.timer); restoreTut();
+  if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v] && D.cur.R) { T = D.cur; T.R = B.rulesOf(T.v, prefOf(T.v)); if (!T.botBets) botsBet(); render(); if (T.phase === 'deal' || T.phase === 'dealer' || (T.phase === 'play' && !myHand())) schedule(400); }
+  else newSession(set.v);
+}
 function recordSession() {
-  if (!window.GameRecord || !T || !T.session || !T.session.hands || T.session.recorded) return;
+  if (!window.GameRecord || !T || T.tut || !T.session || !T.session.hands || T.session.recorded) return;
   const S = T.session; S.recorded = true;
   try { GameRecord.add({ mode: 'ai', res: S.net > 0 ? 'w' : S.net < 0 ? 'l' : 'd', opp: vName(T.v), key: T.v, why: t('grc.hands', { n: S.hands }) + ' · ' + t('ss.net') + ' ' + sg(S.net) }); } catch (e) {}
 }
@@ -202,13 +226,19 @@ function placeBet(k) {
   const d = set.chip, have = T.bank - betSum(T.bets);
   if (have < d) { toast(t('toast.noMoney')); sfx('bad'); return; }
   if (k !== 'main' && !SIDES().includes(k)) return;
+  if (T.tut && window.BJTut && !BJTut.allow({ a: 'bet', k })) return;
   if (k === 'main' && (T.bets.main || 0) + d > MAX_BET) { toast(t('toast.max', { n: fmt(MAX_BET) })); return; }
   if (k !== 'main' && (T.bets[k] || 0) + d > 1000) { toast(t('toast.maxSide', { n: fmt(1000) })); return; }
   T.bets[k] = (T.bets[k] || 0) + d; G.undo.push([k, d]); sfx('chip'); render();
+  if (T.tut && window.BJTut) BJTut.after('bet');
 }
-function unplace() { const u = G.undo.pop(); if (!u) return; const [k, d] = u; T.bets[k] -= d; if (T.bets[k] <= 0) delete T.bets[k]; sfx('chip'); render(); }
-function clearBets() { T.bets = {}; G.undo = []; render(); }
+const tutNo = () => T && T.tut && window.BJTut && !BJTut.allow({ a: 'other' });
+function unplace() { if (tutNo()) return;
+  return unplace0(); }
+function unplace0() { const u = G.undo.pop(); if (!u) return; const [k, d] = u; T.bets[k] -= d; if (T.bets[k] <= 0) delete T.bets[k]; sfx('chip'); render(); }
+function clearBets() { if (tutNo()) return; T.bets = {}; G.undo = []; render(); }
 function rebet(mult) {
+  if (tutNo()) return;
   const src = mult === 2 && betSum(T.bets) ? Object.assign({}, T.bets) : T.last; if (!src) return;
   const nb = {}; for (const k in src) if (k === 'main' || SIDES().includes(k)) nb[k] = Math.min(k === 'main' ? MAX_BET : 1000, src[k] * (mult || 1));
   if (betSum(nb) > T.bank) { toast(t('toast.noMoney')); sfx('bad'); return; }
@@ -240,6 +270,7 @@ function deal() {
   const main = T.bets.main || 0, tot = betSum(T.bets);
   if (main < MIN_BET) { toast(t('toast.minBet', { n: fmt(MIN_BET) })); return; }
   if (tot > T.bank) { toast(t('toast.noMoney')); return; }
+  if (T.tut && window.BJTut && !BJTut.allow({ a: 'deal' })) return;
   if (T.res) clearRound();
   if (T.shoe.pos + 40 > T.shoe.cards.length) { freshShoe(); toast(t('toast.newShoe')); }
   T.bank -= tot; T.last = Object.assign({}, T.bets); G.undo = [];
@@ -322,7 +353,7 @@ function nextHand() {
       if (H.cards.length === 2 && !H.split && B.isBJ(H.cards)) { H.done = true; continue; }
       T.cur = { s: n, h };
       if (H.cards.length === 1) { const c = draw(); H.cards.push(c); see(c); sfx('deal'); if (H.sa && !T.R.hsa) H.done = true; if (B.hv(H.cards).t >= 21) H.done = true; render(); if (H.done) { schedule(380); return; } }
-      if (S.me) { T.phase = 'play'; render(); return; }
+      if (S.me) { T.phase = 'play'; render(); if (T.tut && window.BJTut) BJTut.ev('turn'); return; }
       render(); schedule(560); return;
     }
   }
@@ -373,12 +404,13 @@ function myMove(m) {
   const S = T.seats[T.cur.s]; if (!S || !S.me) return;
   const H = S.hands[T.cur.h], ctx = ctxOf(S, H), A = B.allowed(H.cards, T.R, ctx);
   if (!A[m]) return;
+  if (T.tut && window.BJTut && !BJTut.allow({ a: 'move', m })) return;
   const up = B.VAL(T.dealer.cards[0]);
   const evB = B.moveEVs(H.cards, up, baseP().p, T.R, ctx), evN = B.moveEVs(H.cards, up, unseenP(), T.R, ctx);
   const best = B.bestOf(evB), bestN = B.bestOf(evN), loss = Math.max(0, evB[best] - evB[m]);
   const unit = H.bet || H.free || T.seats[ME].hands[0].bet;
   T.dec.push({ k: 'move', cards: H.cards.slice(), up, m, best, bestN, loss, ev: evB, evN, hand: T.cur.h, unit });
-  T.session.mis += loss * unit;
+  if (!T.tut) T.session.mis += loss * unit;
   act(S, H, m, false);
   if (!H.done) render();
 }
@@ -410,15 +442,16 @@ function settle() {
   const exp = -(me.hands[0] ? T.last.main * base.edge : 0) - (T.last.pp || 0) * base.side.pp - (T.last.t3 || 0) * base.side.t3 - T.dec.reduce((a, x) => a + x.loss * (x.unit || T.last.main), 0);
   S0.hands++; S0.net = Math.round((S0.net + myNet) * 100) / 100; S0.wag += betSum(T.last) + myStake - T.last.main; S0.exp += exp; S0.peak = Math.max(S0.peak, T.bank);
   S0.graph.push(S0.net); if (S0.graph.length > 400) S0.graph = S0.graph.filter((_, i) => i % 2 === 0);
-  recordStats(me, myNet, exp);
+  if (!T.tut) recordStats(me, myNet, exp);
   T.res = { net: myNet, exp, dbj }; T.lastRound = { tot: betSum(T.last), net: myNet };
   T.phase = 'done'; T.bets = {};
   T.shoe.n++;
   const kinds = me.hands.map(H => H.res.kind);
   sfx(kinds.includes('bj') ? 'bj' : myNet > 0 ? (myNet >= 1000 ? 'bigchips' : 'win') : myNet < 0 ? 'lose' : 'chips');
   if (T.bank < MIN_BET) { T.bank = START; S0.rebuys++; toast(t('toast.rebuy', { n: fmt(START) })); }
-  D.chips = T.bank;
+  if (!T.tut) D.chips = T.bank;
   save(); render();
+  if (T.tut && window.BJTut) { setTimeout(() => BJTut.ev('done'), Math.round(900 * (mt() || .5))); return; }
   if (set.autoNext) G.timer = setTimeout(nextRound, Math.round(3000 * (mt() || .4)));
 }
 function nextRound() {
@@ -619,7 +652,7 @@ function renderActbar() {
   }
   if (T.phase === 'done') {
     patch(bar, `<div class="ab-btns main"><button class="abtn" id="abRe" data-k="re">${esc(t('btn.rebetDeal'))}<kbd>R</kbd></button><button class="abtn go" id="abNext" data-k="nx">${esc(t('next'))}<kbd>Space</kbd></button></div>`);
-    $('#abNext').onclick = nextRound; $('#abRe').onclick = () => { nextRound(); rebet(1); if (betSum(T.bets)) deal(); };
+    $('#abNext').onclick = () => T.tut && window.BJTut ? BJTut.finish() : nextRound(); $('#abRe').onclick = () => { if (T.tut) { window.BJTut && BJTut.finish(); return; } nextRound(); rebet(1); if (betSum(T.bets)) deal(); };
     return;
   }
   const tot = betSum(T.bets);
@@ -628,7 +661,7 @@ function renderActbar() {
     `<div class="ab-btns main"><button class="abtn" id="abUndo" data-k="un"${G.undo.length ? '' : ' disabled'}>${esc(t('btn.undo'))}<kbd>Z</kbd></button><button class="abtn" id="abClr" data-k="cl"${tot ? '' : ' disabled'}>${esc(t('btn.clear'))}</button>` +
     `<button class="abtn" id="abRebet" data-k="rb"${T.last && !tot ? '' : ' disabled'}>${esc(t('btn.rebet'))}<kbd>R</kbd></button><button class="abtn" id="abX2" data-k="x2"${tot || T.last ? '' : ' disabled'}>×2</button>` +
     `<button class="abtn go" id="abDeal" data-k="dl"${(T.bets.main || 0) >= MIN_BET ? '' : ' disabled'}>${esc(t('btn.deal'))}<kbd>Space</kbd></button></div>`);
-  bar.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { set.chip = +b.dataset.d; save(); sfx('chip'); renderActbar(); });
+  bar.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (tutNo()) return; set.chip = +b.dataset.d; save(); sfx('chip'); renderActbar(); });
   $('#abUndo').onclick = unplace; $('#abClr').onclick = clearBets; $('#abRebet').onclick = () => rebet(1); $('#abX2').onclick = () => rebet(2); $('#abDeal').onclick = deal;
 }
 
@@ -992,7 +1025,7 @@ document.addEventListener('keydown', e => {
     else if (/^[1-5]$/.test(k)) { set.chip = DENOMS[+k - 1]; renderActbar(); }
   } else if (T.phase === 'ins') { if (k === 'y') takeIns(true); else if (k === 'n' || k === ' ') { e.preventDefault(); takeIns(false); } }
   else if (T.phase === 'play' && myHand()) { const m = { h: 'H', s: 'S', d: 'D', p: 'P', r: 'R' }[k]; if (m) { e.preventDefault(); myMove(m); } else if (k === ' ') { e.preventDefault(); myMove('S'); } }
-  else if (T.phase === 'done') { if (k === ' ' || k === 'enter' || k === 'n') { e.preventDefault(); nextRound(); } else if (k === 'r') $('#abRe').click(); }
+  else if (T.phase === 'done' && !T.tut) { if (k === ' ' || k === 'enter' || k === 'n') { e.preventDefault(); nextRound(); } else if (k === 'r') $('#abRe').click(); }
   if (k === '?' ) $('#btnHint').click();
 });
 
@@ -1009,8 +1042,8 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v] && D.cur.R) {
   if (T.phase === 'deal' || T.phase === 'dealer' || (T.phase === 'play' && !myHand())) schedule(400);
 } else newSession(set.v);
 // keep the table saved during a round too
-setInterval(() => { if (T && T.phase !== 'bet') { D.cur = T; save(); } }, 4000);
-addEventListener('pagehide', () => { if (T) { D.cur = T; save(); } });
+setInterval(() => { if (T && !T.tut && T.phase !== 'bet') { D.cur = T; save(); } }, 4000);
+addEventListener('pagehide', () => { if (T && !T.tut) { D.cur = T; save(); } });
 
-window.BJApp = { num, startTutorial: null, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, spct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, chartHtml, CH_ROWS, mName, totTxt, statOf, LAB };
+window.BJApp = { num, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, spct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, chartHtml, CH_ROWS, mName, totTxt, statOf, LAB };
 })();

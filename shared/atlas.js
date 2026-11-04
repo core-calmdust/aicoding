@@ -40,7 +40,7 @@
       name: N('ポーカー', 'Poker', '扑克', '포커', 'Póker', 'Poker', 'Pôquer', 'Poker', 'पोकर', 'بوكر') },
     { id: 'baccarat', cat: 'card', store: ['aicoding-baccarat'], href: 'baccarat/', color: '#c9a44c', released: '2026-11-01', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 17 },
       name: N('バカラ', 'Baccarat', '百家乐', '바카라', 'Baccarat', 'Baccara', 'Bacará', 'Baccara', 'बैकारेट', 'باكارا') },
-    { id: 'blackjack', cat: 'card', store: ['aicoding-blackjack'], href: 'blackjack/', color: '#2fae8a', released: '2026-11-04', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 16 },
+    { id: 'blackjack', cat: 'card', store: ['aicoding-blackjack'], href: 'blackjack/', color: '#d4a54a', released: '2026-11-04', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 16 },
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير') },
