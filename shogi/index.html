@@ -1483,7 +1483,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261104n8"></script>
+<script src="i18n.js?v=20261104fg"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/export.js?v=6"></script>
@@ -1556,7 +1556,7 @@ const HANDI = [
   '1nsgkgsn1/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1',
   '2sgkgs2/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1',
 ];
-// AI strength steps, labelled by Shogi Club 24 rank (入門, 初心, 15級 … 1級, 初段 … 四段; measured against Gikou, see MODEL_CARD.md;
+// AI strength steps, labelled by Floodgate-equivalent rating (R550 … R3000; anchored by matches against Gikou 2, steps from RT_LV; see MODEL_CARD.md;
 // the NNUE steps were rescaled for the v4 net, which equals the old net at about 1/12 of the nodes; 三段・四段 are extrapolated):
 // shallow search with randomness for the weakest, then a node budget (linear eval for 12–9級, NNUE from 8級), so the strength
 // does not depend on the device; the top steps also stop at a time cap
@@ -2625,7 +2625,7 @@ function rtRank(r) {
   return t('rt.rank', { r: k });
 }
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
-const rtLvName = lv => t('lv')[lv] || '?';
+const rtLvName = lv => 'Lv.' + (lv + 1);   // (rated games: the level number; the names are Floodgate-equivalent ratings on another scale)
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
 function rtPick(r, rnd = Math.random) {
   { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x])); }
