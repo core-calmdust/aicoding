@@ -78,6 +78,7 @@ html.atlas-hex .frame::before,html.atlas-hex .frame::after{display:none!importan
 html.atlas-hex.pc2{--vh:calc(100vh - 64px)!important}
 html.atlas-hex.pc2.ol-dock{--vh:calc(100vh - 64px - 108px)!important}
 html.atlas-hex.pc2 .board{left:calc(50% - var(--fw) / 2)!important;transform:none!important}
+html.atlas-hex.pc2.hb-atlas.bd-dia:not(.rb-on) .side-in > .players{top:calc(var(--pad) + 64px + 10px)!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.atlas-hx3db .bd .plate,html.atlas-hx3db .bd .cell,html.atlas-hx3db .bd .rim,html.atlas-hx3db .bd .rimsh{display:none}
 html.atlas-hx3db .bd .co{fill:#fff4dc!important;stroke:rgba(40,18,4,.75);stroke-width:.07px;paint-order:stroke;opacity:1}
 html.atlas-hx3dp .bd .st:not(.ghost) .body,html.atlas-hx3dp .bd .st:not(.ghost) .sh,html.atlas-hx3dp .bd .st:not(.ghost) .hi{display:none}
@@ -204,7 +205,9 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     });
   }
   let lastBd = bd3;
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), the 3D board = the 3D table
   function look(quiet) {
+    if (V) V.set(bd3);
     if (root) root.visible = bd3;
     group.visible = bd3 && pc3;
     de.classList.toggle('atlas-hx3db', bd3); de.classList.toggle('atlas-hx3dp', bd3 && pc3);
@@ -225,6 +228,7 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
   if (r2) r2.addEventListener('click', onRow('pc'), true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRows(); } catch (e) {} return r; }; }
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRows, 30));
+  if (skin.view) V = skin.view({ key: 'atlas-hex-view', init: bd3, cls: ['atlas-hex'], on() { setTimeout(() => { try { G = null; update(false); } catch (e) {} dispatchEvent(new Event('resize')); }, 0); } });
   look(true); paintRows();
 
   // test hooks (Playwright)

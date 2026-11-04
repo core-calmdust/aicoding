@@ -18,6 +18,22 @@
   const skin = AtlasSkin.init({
     margin: 0.2,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit). The komadai stand against the 3D board's frame with
+    // the 2D page's gap (.22 cell — the gote side of the 2D board), both sides the same: gote's top level with the frame's top,
+    // sente's bottom level with its bottom
+    pc: { vars: ['--cw'], extras: '.board-area > .hand',
+      place(F) {
+        const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
+        const G = top.offsetWidth / 1.25 * .22;
+        const put = (h, x, y) => {   // move the box by (x, y) from where it is now (position: relative)
+          const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+          if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important');
+          if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important');
+        };
+        let r = top.getBoundingClientRect(); put(top, F.l - G - r.right, F.t - r.top);
+        r = bot.getBoundingClientRect(); put(bot, F.r + G - r.left, F.b - r.bottom);
+      },
+      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); } }); } },
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/shogi.webp',
     bubbles: [['lsPrompt', 'lsFb']], floor: 'tatami',

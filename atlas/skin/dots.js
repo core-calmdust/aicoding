@@ -28,6 +28,7 @@
 
   const skin = AtlasSkin.init({
     board: boardEl,
+    pc: { vars: ['--board'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const k = r.height / SQ; return { top: r.top - (BZ0 + .2) * k, height: (PD + .2) * k }; },   // the whole notebook
     guide: '../images/atlas/g-dot.webp', guideFallback: '../images/atlas/dots.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -177,4 +178,6 @@
     return r;
   };
   try { paint(); } catch (e) {}
+  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
+  if (skin.view) skin.view({ key: 'atlas-dots-view', row: document.getElementById('skRow'), img: '../images/atlas/dots.webp', cls: ['atlas-dots'] });
 })();

@@ -16,15 +16,15 @@ html.atlas-skin body{background:transparent!important;color:var(--text);font-fam
 html.atlas-skin .app{position:relative;z-index:1}
 
 /* the DOM board stays (clicks, hints, lesson marks) but is see-through: the 3D board shows below */
-html.atlas-skin .frame{background:transparent!important;box-shadow:none!important}
-html.atlas-skin .frame::before{display:none}
-html.atlas-skin .coords{color:rgba(255,246,226,.75);text-shadow:0 1px 2px rgba(0,0,0,.45)}
-html.atlas-skin .board{background:transparent!important;box-shadow:none!important}
-html.atlas-skin .board::after{display:none}
-html.atlas-skin .cell{border-color:transparent!important}
-html.atlas-skin .star{display:none}
-html.atlas-skin .disc-wrap{opacity:0!important}
-html.atlas-skin .cell.legal::before{background:rgba(255,226,122,.55)!important;box-shadow:0 0 10px rgba(255,226,122,.6)}
+html.atlas-skin:not(.atlas-2d) .frame{background:transparent!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) .frame::before{display:none}
+html.atlas-skin:not(.atlas-2d) .coords{color:rgba(255,246,226,.75);text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html.atlas-skin:not(.atlas-2d) .board{background:transparent!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) .board::after{display:none}
+html.atlas-skin:not(.atlas-2d) .cell{border-color:transparent!important}
+html.atlas-skin:not(.atlas-2d) .star{display:none}
+html.atlas-skin:not(.atlas-2d) .disc-wrap{opacity:0!important}
+html.atlas-skin:not(.atlas-2d) .cell.legal::before{background:rgba(255,226,122,.55)!important;box-shadow:0 0 10px rgba(255,226,122,.6)}
 html.atlas-skin .last-mark{background:#ff5d5d;box-shadow:0 0 8px rgba(255,93,93,.9)}
 
 /* panels → portal cards */
@@ -162,6 +162,11 @@ html.atlas-reversi.hb-atlas,html.atlas-shogi.hb-atlas{--vh:calc(100vh - 64px)}
 html.atlas-reversi.hb-atlas,html.atlas-reversi.hb-atlas body,html.atlas-shogi.hb-atlas,html.atlas-shogi.hb-atlas body{--hb-h:64px;--top:0px}
 html.atlas-reversi.hb-atlas body,html.atlas-shogi.hb-atlas body{padding-top:64px}
 html.atlas-reversi.hb-atlas .app,html.atlas-shogi.hb-atlas .app{padding-top:var(--pad)!important}
+/* the game's own 2D board in the portal frame (html.atlas-2d, AtlasSkin.view): laid out like the 2D page under its header bar */
+html.atlas-2d.hb-atlas{--ttop:0px;--vh:calc(100vh - 64px)}
+html.atlas-2d.hb-atlas,html.atlas-2d.hb-atlas body{--hb-h:64px}
+html.atlas-2d.hb-atlas body{padding-top:64px}
+html.atlas-2d.hb-atlas .app{padding-top:var(--pad)!important}
 
 /* ===== shogi skin ===== */
 html.atlas-shogi .board{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
@@ -260,11 +265,12 @@ html.atlas-skin .modal .pb-stage{background:linear-gradient(180deg,color-mix(in 
 html.atlas-skin .modal .pb-tile:not(.done){background:#f8f0e0!important}
 
 /* ===== backgammon skin: the museum-piece 3D board — the DOM frame is the 3D case's outer edge (15.85 × H board units) ===== */
-html.atlas-backgammon .frame{background:transparent!important;box-shadow:none!important;border-radius:0!important}
+html.atlas-backgammon:not(.atlas-2d) .frame{background:transparent!important;box-shadow:none!important;border-radius:0!important}
 /* PC (board across the top, info below — or beside the board while the online dock is open, like the 2D page):
    the page's own sizing (app.js pcFit) counts a 56px header + 12px gaps, so the app starts right under the portal bar */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-backgammon:not(.rot):not(.atlas-land) .app{padding-top:68px!important}
+  html.atlas-backgammon.atlas-2d.hb-atlas:not(.rot):not(.atlas-land) .app{padding-top:4px!important}   /* the 2D board: under the 64px portal bar as the 2D page is under its 56px bar (+12px) */
 }
 html.atlas-bg3d #boardSvg{visibility:hidden}
 html.atlas-bg3d .lbl{color:rgba(250,236,200,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.75)!important}

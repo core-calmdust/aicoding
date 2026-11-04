@@ -96,7 +96,9 @@
     });
     st.setProperty('--bgcube', `url("${SPR.cube}")`);
   }
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
   function look() {
+    if (V) V.set(!!mine);
     build();
     de.classList.toggle('atlas-bg3d', !!mine && !!SPR);
     dieColours(!!mine);
@@ -189,6 +191,7 @@
     }, true);
     try { skinSync(); } catch (e) {}
   }
+  if (skin.view) V = skin.view({ key: 'atlas-bg-view', init: !!mine, on() { setTimeout(() => { try { render(); } catch (e) {} }, 0); } });
   look();
 
   /* ---------- phone landscape (a landscape phone, or the page rotated on a portrait phone) ----------
