@@ -341,7 +341,10 @@ static void evalInit(void) {
   }
 }
 static const int MOBT[24] = { -60, -30, -10, 0, 10, 18, 25, 30, 35, 39, 43, 46, 49, 52, 54, 56, 58, 60, 62, 63, 64, 65, 66, 67 };
+static int nnEvaluate(const Pos *p);
+static int nnUse = 0, nnVar = -1;   // the learned evaluation (loaded net for rule set nnVar) instead of the hand-made one
 static int evaluate(const Pos *p) {
+  if (nnUse && nnVar == VAR) return nnEvaluate(p);
   int k = p->king, kr = RR(k), kc = CC(k);
   int v = EW[1] * p->nd - EW[0] * p->na;     // defenders' view
   // king mobility and two-move escape threats (squares the king can reach that give an escape line)
@@ -392,6 +395,104 @@ static int evaluate(const Pos *p) {
   v -= EW[15];
   v = s ? v : -v;
   v += EW[9];
+  if (noiseAmp) { u64 z = p->h ^ noiseSeed; z ^= z >> 33; z *= 0xff51afd7ed558ccdull; z ^= z >> 33; v += (int)(z % (u64)(2 * noiseAmp + 1)) - noiseAmp; }
+  return v > 9000 ? 9000 : v < -9000 ? -9000 : v;
+}
+
+// ---------------------------------------------------------------- learned evaluation (tools/nn/train.py)
+// value (defenders' view, in units of a win-probability logit) = Σ w2[side]·clamp(acc, 0, 1)² + Σ u[side]·f + b2[side],
+// acc = b1 + the first-layer columns of the pieces (attacker / defender / king planes of N×N squares), f = the hand-made
+// features below (the same quantities as evaluate() uses, before its weights). side = the side to move (output bucket).
+// File (little endian): "TFN1", int32 variant, N, H, NF, float32 scale, then float32 W1[3·N·N][H], b1[H], w2[2][H], u[2][NF], b2[2].
+// The first layer is kept in int16 (×NN_QA), the rest in float. evaluate() = value × scale (side to move's view).
+#define NN_NF 16
+#define NN_HMAX 256
+#define NN_INMAX (3 * 11 * 11)
+#define NN_QA 127
+static int nnN = 0, nnH = 0; static float nnScale = 400;
+static i16 nnW1[NN_INMAX * NN_HMAX], nnB1[NN_HMAX];
+static float nnW2[2][NN_HMAX], nnU[2][NN_NF], nnB2[2];
+static u8 nnBuf[4 * (5 + NN_INMAX * NN_HMAX + NN_HMAX + 2 * NN_HMAX + 2 * NN_NF + 2) + 16];
+EXPORT(nn_buf) u8 *nn_buf(void) { return nnBuf; }
+EXPORT(nn_buf_size) int nn_buf_size(void) { return (int)sizeof nnBuf; }
+static float rdF(const u8 *q) { union { u32 i; float f; } u; u.i = (u32)q[0] | (u32)q[1] << 8 | (u32)q[2] << 16 | (u32)q[3] << 24; return u.f; }
+static int rdI(const u8 *q) { return (int)((u32)q[0] | (u32)q[1] << 8 | (u32)q[2] << 16 | (u32)q[3] << 24); }
+// parse nnBuf (len bytes) → 1 ok (the net is then used for its rule set), 0 bad file
+EXPORT(nn_load) int nn_load(int len) {
+  const u8 *q = nnBuf;
+  if (len < 24 || q[0] != 'T' || q[1] != 'F' || q[2] != 'N' || q[3] != '1') return 0;
+  int v = rdI(q + 4), n = rdI(q + 8), h = rdI(q + 12), nf = rdI(q + 16); float sc = rdF(q + 20);
+  if (v < 0 || v > 2 || n < 7 || n > 11 || h < 8 || h > NN_HMAX || (h & 7) || nf != NN_NF) return 0;
+  int nin = 3 * n * n;
+  if (len != 24 + 4 * (nin * h + h + 2 * h + 2 * nf + 2)) return 0;
+  q += 24;
+  for (int i = 0; i < nin * h; i++, q += 4) { float x = rdF(q) * NN_QA; nnW1[i] = (i16)(x < 0 ? x - .5f : x + .5f); }
+  for (int i = 0; i < h; i++, q += 4) { float x = rdF(q) * NN_QA; nnB1[i] = (i16)(x < 0 ? x - .5f : x + .5f); }
+  for (int b = 0; b < 2; b++) for (int i = 0; i < h; i++, q += 4) nnW2[b][i] = rdF(q) / (NN_QA * NN_QA);
+  for (int b = 0; b < 2; b++) for (int i = 0; i < nf; i++, q += 4) nnU[b][i] = rdF(q);
+  for (int b = 0; b < 2; b++, q += 4) nnB2[b] = rdF(q);
+  nnVar = v; nnN = n; nnH = h; nnScale = sc; nnUse = 1;
+  return 1;
+}
+EXPORT(nn_enable) void nn_enable(int on) { nnUse = on; }
+// the hand-made features, defenders' view (f[15]: the attackers capture the king next move, only with the defenders to move)
+static void handFeat(const Pos *p, float *f) {
+  int k = p->king, kr = RR(k), kc = CC(k);
+  int mob = 0, thr = 0, thr2 = 0;
+  for (int d = 0; d < 4; d++) {
+    int dd = DIRS[d];
+    for (int q = k + dd; p->b[q] == EMP; q += dd) {
+      mob++;
+      if (!(FL[q] & F_RESTR) || (FL[q] & F_THRONE)) { int e = escapeFrom(p, q); if (e) { thr++; if (e >= 2) thr2++; } }
+    }
+  }
+  int adjA = 0, adjD = 0;
+  for (int d = 0; d < 4; d++) { int x = p->b[k + DIRS[d]]; if (x == ATT) adjA++; else if (x == DEF) adjD++; }
+  int near2 = 0;
+  for (int r = kr - 2; r <= kr + 2; r++) for (int c = kc - 2; c <= kc + 2; c++) if (r >= 0 && c >= 0 && r < N && c < N && p->b[SQ(r, c)] == ATT) near2++;
+  int dr = kr < N - 1 - kr ? kr : N - 1 - kr, dc = kc < N - 1 - kc ? kc : N - 1 - kc;
+  int blk = 0, nearA = 0, guard = 0; float cd = 0, dist;
+  if (!R.escEdge) {
+    for (int c = 0; c < 4; c++) { for (int j = 0; j < 3; j++) if (p->b[blockSq[c][j]] == ATT) blk++; for (int j = 0; j < 2; j++) if (p->b[nearSq[c][j]] == ATT) nearA++; }
+    for (int c = 0; c < 4; c++) {
+      int open = 3, cr = RR(CORNERS[c]), cc = CC(CORNERS[c]);
+      for (int j = 0; j < 3; j++) if (p->b[blockSq[c][j]] == ATT) open--;
+      int dr2 = kr > cr ? kr - cr : cr - kr, dc2 = kc > cc ? kc - cc : cc - kc, kd = dr2 > dc2 ? dr2 : dc2;
+      if (kd < 8) cd += open * (8 - kd) / 8.f;
+      for (int r = 0; r < 3; r++) for (int q = 0; q < 3; q++) { int rr = cr ? cr - r : r, qq = cc ? cc - q : q; if ((r || q) && p->b[SQ(rr, qq)] == ATT) guard++; }
+    }
+    dist = (float)(dr + dc);
+  } else dist = (float)(dr < dc ? dr : dc);
+  int chain = 0, edgeD = 0;
+  for (int i = W; i < NSQ - W; i++) {
+    int x = p->b[i];
+    if (x == ATT) { if (p->b[i + W + 1] == ATT) chain++; if (p->b[i + W - 1] == ATT) chain++; }
+    else if (x == DEF && (FL[i] & F_EDGE)) edgeD++;
+  }
+  int kd = 0; if (p->side == 1) { Pos q = *p; q.side = 0; kd = kingCapNow(&q); }
+  f[0] = p->na; f[1] = p->nd; f[2] = MOBT[mob > 23 ? 23 : mob] / 60.f; f[3] = thr > 3 ? 3 : thr; f[4] = thr2 > 2 ? 2 : thr2;
+  f[5] = adjA * adjA / 2.f; f[6] = adjD; f[7] = near2; f[8] = blk; f[9] = nearA; f[10] = cd; f[11] = guard; f[12] = dist;
+  f[13] = chain; f[14] = edgeD; f[15] = kd;
+}
+static float nnValue(const Pos *p) {   // defenders' view, logit units
+  i16 acc[NN_HMAX] __attribute__((aligned(16)));
+  int H = nnH; for (int j = 0; j < H; j++) acc[j] = nnB1[j];
+  int NN2 = nnN * nnN;
+  for (int r = 0; r < nnN; r++) for (int c = 0; c < nnN; c++) {
+    int x = p->b[SQ(r, c)]; if (x != ATT && x != DEF && x != KNG) continue;
+    const i16 *w = nnW1 + ((x == ATT ? 0 : x == DEF ? 1 : 2) * NN2 + r * nnN + c) * H;
+    for (int j = 0; j < H; j++) acc[j] += w[j];
+  }
+  int s = p->side; float o = nnB2[s]; const float *w2 = nnW2[s];
+  for (int j = 0; j < H; j++) { int x = acc[j] < 0 ? 0 : acc[j] > NN_QA ? NN_QA : acc[j]; o += (float)(x * x) * w2[j]; }
+  float f[NN_NF]; handFeat(p, f);
+  for (int i = 0; i < NN_NF; i++) o += nnU[s][i] * f[i];
+  return o;
+}
+static int nnEvaluate(const Pos *p) {
+  float o = nnValue(p) * nnScale;
+  int v = (int)(o < 0 ? o - .5f : o + .5f);
+  v = p->side ? v : -v;
   if (noiseAmp) { u64 z = p->h ^ noiseSeed; z ^= z >> 33; z *= 0xff51afd7ed558ccdull; z ^= z >> 33; v += (int)(z % (u64)(2 * noiseAmp + 1)) - noiseAmp; }
   return v > 9000 ? 9000 : v < -9000 ? -9000 : v;
 }
