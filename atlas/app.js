@@ -513,6 +513,7 @@
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
+      <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
@@ -554,7 +555,7 @@
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
-      [...L.querySelectorAll(':scope > .tags, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
+      [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
       { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
         if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); } }
       // the level hint folds away with them (wrapped so its height can animate)
@@ -908,7 +909,8 @@
   function renderGamesList() {
     const list = visibleGames();
     // screenshot cards grouped by category (atlas/gamelist.js); the long description is in the board sheet a tap opens
-    AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+    AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
+      hasRules: g => !!(window.AtlasRules && AtlasRules[g.id]), onRules: id => { openBoard(id); if (glOK && window.AtlasRules && AtlasRules[id]) startRules(); }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
       pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS, group: gCat === 'all' || gCat === 'board' });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
