@@ -60,10 +60,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hand.bottom{align-self:end;flex-direction:column-reverse}
 /* portal 3D skin: the 3D board's rim is symmetric around the squares, but the DOM frame is wider on the right (rank numbers) — pull the sente komadai in so both komadai sit at the same distance from the board */
 @media (min-aspect-ratio: 1/1){ html.atlas-skin .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*0.16 - var(--fp))} }
-/* 2D: the frame is wider on the rank-number side (right on PC, top on phones) — set the sente komadai at the same distance from the squares as the gote one */
+/* 2D: the frame is a little wider on the rank-number side; both komadai keep the same gap to the frame's edge */
 html:not(.atlas-skin) .frame{padding-right:calc(var(--cw)*0.3)}
 html:not(.atlas-skin) .coords.right{width:calc(var(--cw)*0.3)}
-html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:calc(var(--cw)*-0.14)}
+html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 @media (pointer: coarse) and (max-aspect-ratio: 1/1), (pointer: coarse) and (min-height: 561px), (pointer: fine) and (max-width: 1039.98px), (pointer: fine) and (max-aspect-ratio: 7499/10000), (hover: none) and (pointer: fine), (pointer: none){
   html:not(.atlas-skin) .frame{padding-right:var(--fp)}
   html:not(.atlas-skin) .coords.right{width:var(--fp)}
@@ -1489,7 +1489,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/vtext.js?v=20261030sv4"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261030sv3"></script>
+<script src="variants/variants.js?v=20261104gt"></script>
 <script src="rvbox.js?v=20261028fsa"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=14"></script>

@@ -299,6 +299,23 @@ body.skin-metal .board.vg .sq:not(.vb){border-bottom-color:rgba(20,28,34,.7)}
 body.skin-ink .board.vg .sq:not(.vr){border-right-color:rgba(214,180,110,.35)}
 body.skin-ink .board.vg .sq:not(.vb){border-bottom-color:rgba(214,180,110,.35)}
 /* the ゲーム tab: the マイクロ系 group heading */
+#segVariant .vr-gh{display:none!important}
+/* group tabs: only the chosen group's cards; on PC they are big (art on the left, name and description beside it) */
+.vr-gtabs{margin:0 0 12px}
+.vr-gtabs button.has:not(.sel)::after{content:'';display:inline-block;width:6px;height:6px;margin-inline-start:7px;vertical-align:2px;border-radius:50%;background:var(--accent,#d8b56a)}
+#segVariant[data-g="0"] .ngt-gcard:not([data-g="0"]),#segVariant[data-g="1"] .ngt-gcard:not([data-g="1"]),#segVariant[data-g="2"] .ngt-gcard:not([data-g="2"]){display:none!important}
+@media (min-width: 600px){
+  .modal:not(.ngt-on) #segVariant{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+  .modal:not(.ngt-on) #segVariant[data-n="1"]{grid-template-columns:minmax(0,1fr)!important}
+  .modal:not(.ngt-on) #segVariant .ngt-gcard{grid-template-columns:150px minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;column-gap:20px!important;row-gap:6px!important;padding:20px 22px!important;min-height:210px;border-radius:16px}
+  .modal:not(.ngt-on) #segVariant b{grid-column:2;grid-row:2}
+  .modal:not(.ngt-on) #segVariant p{grid-column:2;grid-row:3}
+  .modal:not(.ngt-on) #segVariant .gart{grid-row:1 / 5!important;align-self:center;border-radius:12px;padding:10px!important;background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(0,0,0,.18));box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
+  .modal:not(.ngt-on) #segVariant .gart svg{width:128px!important;height:128px!important;max-height:none!important}
+  .modal:not(.ngt-on) #segVariant b{font-size:20px!important}
+  .modal:not(.ngt-on) #segVariant p{font-size:13px!important;line-height:1.75!important}
+  .modal:not(.ngt-on) #segVariant .gpick{top:12px;right:12px;width:24px;height:24px;font-size:13px}
+}
 #segVariant .vr-gh{grid-column:1 / -1;font-size:12px;letter-spacing:.12em;color:var(--muted);margin:6px 2px 0;padding-top:6px;border-top:1px dashed var(--line,rgba(255,255,255,.14))}
 #vrOverlay .vr-tabs{flex-wrap:wrap}
 #vrOverlay .vr-tabs button{flex:1 1 auto;white-space:nowrap}
@@ -357,12 +374,18 @@ function vArt(v) {
 const CARDS = ['', 'heian', 'nigyoku', 'random'], MICRO = ['mini', 'judkins', 'goro', 'micro'], ISHU = ['hasami'], vKey = v => v || 'hon';
 const fH = document.getElementById('fHandi'), fMode = document.getElementById('segMode') && document.getElementById('segMode').closest('.field');
 let segV = null, rulesLink = null, fVar = null, fHB = null, fSD = null;
-const card = v => `<button type="button" class="ngt-gcard" data-v="${v}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`;
+const GRP = v => CARDS.includes(v) ? 0 : MICRO.includes(v) ? 1 : 2;
+let gTab = 0;
+const GSTD = { ja: '本将棋系', en: 'Standard', zh: '本将棋系列', ko: '본쇼기 계열', es: 'Estándar', fr: 'Standard', pt: 'Padrão', de: 'Standard', hi: 'मानक', ar: 'القياسي' };
+const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
+const card = v => `<button type="button" class="ngt-gcard" data-v="${v}" data-g="${GRP(v)}"><span class="gart">${vArt(v)}</span><b></b><p></p><span class="gpick"></span></button>`;
 if (fH && fMode) {
   fVar = document.createElement('div'); fVar.className = 'field'; fVar.id = 'fVariant'; fVar.dataset.ng = 'game';
-  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${CARDS.map(card).join('')}<div class="vr-gh" id="vrGMicro"></div>${MICRO.map(card).join('')}<div class="vr-gh" id="vrGIshu"></div>${ISHU.map(card).join('')}</div>`;
+  fVar.innerHTML = `<label><span id="vrLbl"></span> <button type="button" class="vr-rl" id="vrRulesLink"></button></label><div class="seg vr-gtabs" id="vrGTabs"><button type="button" data-g="0"></button><button type="button" data-g="1"></button><button type="button" data-g="2"></button></div><div class="ngt-gcards" id="segVariant" style="--ngt-cols:3">${CARDS.map(card).join('')}<div class="vr-gh" id="vrGMicro"></div>${MICRO.map(card).join('')}<div class="vr-gh" id="vrGIshu"></div>${ISHU.map(card).join('')}</div>`;
   fMode.after(fVar);
   segV = fVar.querySelector('#segVariant'); rulesLink = fVar.querySelector('#vrRulesLink');
+  // the three groups (種目 / マイクロ系 / 異種遊戯) are tabs: one group of big cards at a time
+  fVar.querySelector('#vrGTabs').onclick = e => { const b = e.target.closest('[data-g]'); if (!b) return; gTab = +b.dataset.g; updDialog(); };
   segV.onclick = e => { const b = e.target.closest('.ngt-gcard'); if (!b) return; dlg.variant = b.dataset.v; if (dlg.variant && !MODES.includes(dlg.mode)) dlg.mode = 'ai'; updDialog(); };
   rulesLink.onclick = e => { e.preventDefault(); openRules(dlg.variant ? gameOf(dlg.variant, dlg.heianB) : 'mini'); };
   // 平安将棋: the board size (ルール tab)
@@ -379,8 +402,9 @@ function dlgOpen() {
   const c = cardOf(settings.variant);
   dlg.variant = START[gameOf(c, settings.heianB)] ? c : '';
   dlg.heianB = { 8: '8', 98: '98', 9: '9' }[settings.heianB] || '8';
+  gTab = GRP(dlg.variant);
   { const inp = document.getElementById('vrSeedIn'); if (inp) inp.value = settings.rseed || ''; }
-  if (pendingUrl) { const u = pendingUrl; pendingUrl = null; if (u === 'hon') dlg.variant = ''; else { dlg.variant = cardOf(u); if (HB[u]) dlg.heianB = HB[u]; } }
+  if (pendingUrl) { const u = pendingUrl; pendingUrl = null; if (u === 'hon') dlg.variant = ''; else { dlg.variant = cardOf(u); if (HB[u]) dlg.heianB = HB[u]; } gTab = GRP(dlg.variant); }
 }
 function dlgUpdate() {
   if (!segV) return;
@@ -392,6 +416,8 @@ function dlgUpdate() {
     if (nm.textContent !== tx(k)) nm.textContent = tx(k); if (p.textContent !== tx(k + 'D')) p.textContent = tx(k + 'D');
     b.classList.toggle('sel', b.dataset.v === (START[gv] ? dlg.variant : ''));
   });
+    segV.dataset.g = gTab; segV.dataset.n = segV.querySelectorAll(`.ngt-gcard[data-g="${gTab}"]`).length;
+  fVar.querySelectorAll('#vrGTabs [data-g]').forEach(b => { const k = ['gStd', 'gMicro', 'gIshu'][b.dataset.g], tt = k === 'gStd' ? (GSTD[lang()] || GSTD.en) : tx(k); if (b.textContent !== tt) b.textContent = tt; b.classList.toggle('sel', +b.dataset.g === gTab); b.classList.toggle('has', segV.querySelector(`.ngt-gcard.sel[data-g="${b.dataset.g}"]`) !== null); });
   const gh = segV.querySelector('#vrGMicro'); if (gh.textContent !== tx('gMicro')) gh.textContent = tx('gMicro');
   const gi = segV.querySelector('#vrGIshu'); if (gi && gi.textContent !== tx('gIshu')) gi.textContent = tx('gIshu');
   if (fHB) {
