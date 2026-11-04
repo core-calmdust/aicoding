@@ -1012,7 +1012,7 @@ function tourPage(id, spec, o) {
 const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''), html });
 const tourPic = (spec, o) => { const keep = E.rule; E.setRule('c33'); const h = `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '', rule: 'c33' }, o || {}))}</div>`; E.setRule(keep); return h; };
 // page 1: what the game is (history / how to win / culture), read only — common spec
-const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/ugolki.webp?v=2', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
+const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/ugolki.webp?v=3', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const W_HOME = rect(0, 2, 1, 3), B_HOME = rect(5, 7, 6, 8);
 const TOUR_PAGES = [
   introPage(),
