@@ -166,7 +166,7 @@ const orient = () => !mqV.matches ? 'h' : (lvhPx() - ohPx()) / 8.96 >= (innerWid
 const animOn = () => settings.speed > 0;
 const SPD = () => [3, .7, 1, 1.8][settings.speed] || 1;
 function buildView() {
-  view = B2.mount($('#board'), { orient: orient(), notch: phone(), flip: true, design: settings.design, pieces: settings.pieces, speed: SPD() });
+  view = B2.mount($('#board'), { orient: orient(), notch: phone(), flip: true, trayLabel: k => t('tray.' + k), design: settings.design, pieces: settings.pieces, speed: SPD() });
   view.on('cell', e => onCell(e)).on('tray', e => onTray(e));
   bindHover();
   dice2d = null;

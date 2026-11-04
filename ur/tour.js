@@ -10,7 +10,9 @@
   const BASE = (() => { const s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^/]*$/, '') : 'ur/'; })();
   const E = () => window.UrEngine, B = () => window.UrBoard2D;
   const mqV = matchMedia('(pointer: coarse) and (max-width: 760px) and (orientation: portrait)');
-  const vert = () => mqV.matches;
+  // like the game (ur/app.js orient()): stand the board up only when its squares come out at least as big as lying across —
+  // on a short phone (e.g. 375×667) the board lies across. ~438 px of the height go to the tabs, steps, text, task, dice and buttons
+  const vert = () => mqV.matches && (innerHeight - 438) / 8.96 >= (innerWidth - 40) / 9.24;
 
   /* ---------------- texts (10 languages) ---------------- */
   const TX = {

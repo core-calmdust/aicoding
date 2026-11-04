@@ -30,6 +30,9 @@
   // 'vf…' (phones held upright, 2026-11-05): the board turned half round — the big block at the bottom, your lane (Light, row 2) on the
   // right: the picture board-*-vf (turned 180°) with rows 0 / 2 swapped in the cells (the outer rows carry the same motifs), i.e. a cell
   // (r, c) at ((r−1)·100, (3.5−c)·100). Keys: 'vf', 'vrf', 'vfn', 'vrfn'
+  // On 'v…n' (2026-11-05) the pieces off the board are not in the notch but in two framed columns beside the board, one per player
+  // (Dark left, Light right on 'vfn'): 手持ち (waiting, next to the entry) and ゴール (home, next to the exit), one piece under the other
+  VIEW.vn = VIEW.vrn = [-290, -434, 580, 896];
   for (const k of ['vf', 'vrf']) { IMG[k] = IMG[k + 'n'] = IMG.v; VIEW[k] = VIEW.v; VIEW[k + 'n'] = VIEW.vn; }
   const PD = 76, TD = 54, ND = 58;   // piece diameter on the board / in the trays / in the notch stacks (user units)
   const exists = (r, c) => r >= 0 && r < 3 && c >= 0 && c < 8 && (r === 1 || c < 4 || c > 5);
@@ -41,6 +44,10 @@
   // o: 'h' | 'v', or 'hr' | 'vr' = rows 0 and 2 swapped (Dark's lane nearest you: below on 'h', right on 'v'). The two outer
   // rows carry the same motifs, so the board picture stays as it is (its light keeps coming from the top left)
   const RT = o => o.indexOf('r') > 0, OB = o => o[0], NT = o => o.indexOf('n') > 0, FL = o => o[0] === 'v' && o.indexOf('f') > 0;
+  const SD = o => NT(o) && o[0] === 'v';   // the side columns (see VIEW.vn)
+  const SX = 240, SW = 88, SLD = 56, SP = 52;   // column centre, width, piece diameter, pitch (user units)
+  // a column box [x, y, w, h]: 'vfn' start y 16 … 432 (below the notch, by the entry square), goal y −432 … −16 (by the exit); 'vn' mirrored
+  const sideBox = (o, side, kind) => { const sx = nside(o, side), up = (kind === 'goal') === FL(o); return [sx * SX - SW / 2, up ? -432 : 16, SW, 416]; };
   // the notch stacks (side 0 on the right of 'vn'): centre of the stack, and the shift of each piece above the one below
   const NX = 126, NY = { start: 84, goal: 150 };
   const nside = (o, side) => (RT(o) ? !side : side) ? -1 : 1;
@@ -58,6 +65,7 @@
   // tray slots: side 1 (dark, row 0) above / left, side 0 (light, row 2) below / right
   function traySlots(o, side, kind, n = 7) {
     const out = [];
+    if (SD(o)) { const b = sideBox(o, side, kind), cx = b[0] + SW / 2; for (let i = 0; i < n; i++) out.push([cx, b[1] + 76 + i * SP]); return out; }   // (under the column's label)
     if (NT(o)) { const sx = nside(o, side), V = OB(o) === 'v', fy = FL(o) ? -1 : 1; for (let i = 0; i < n; i++) out.push(V ? [sx * (NX + i * 1.4), fy * NY[kind] - i * 3.4] : [NY[kind] + i * 1.4, sx * NX - i * 3.4]); return out; }
     for (let i = 0; i < n; i++) {
       // start: slot 0 is next to the entry square (col 3); goal: slot 0 next to the exit (col 6)
@@ -68,6 +76,7 @@
     return out;
   }
   function trayBox(o, side, kind) {
+    if (SD(o)) return sideBox(o, side, kind);
     if (NT(o)) { const sx = nside(o, side), x0 = sx > 0 ? 70 : -206, b = kind === 'start' ? [x0, 30, 136, 87] : [x0, 117, 136, 70]; if (FL(o)) b[1] = -b[1] - b[3]; return OB(o) === 'v' ? b : [b[1], b[0], b[3], b[2]]; }
     const s = traySlots(o, side, kind), xs = s.map(p => p[0]), ys = s.map(p => p[1]), m = TD / 2 + 8;
     const x0 = Math.min(...xs) - m, x1 = Math.max(...xs) + m, y0 = Math.min(...ys) - m, y1 = Math.max(...ys) + m;
@@ -106,8 +115,8 @@
       ps.forEach((p, k) => (p <= 0 ? st : p >= goal ? gl : null)?.push(k));
       const S = traySlots(o, side, 'start', n), G = traySlots(o, side, 'goal', n);
       ps.forEach((p, k) => {
-        if (p <= 0) { const j = st.indexOf(k); res.push({ side, k, pos: p, where: 'start', xy: S[j], d: NT(o) ? ND : TD }); }
-        else if (p >= goal) { const j = gl.indexOf(k); res.push({ side, k, pos: p, where: 'goal', xy: G[j], d: NT(o) ? ND : TD }); }
+        if (p <= 0) { const j = st.indexOf(k); res.push({ side, k, pos: p, where: 'start', xy: S[j], d: SD(o) ? SLD : NT(o) ? ND : TD }); }
+        else if (p >= goal) { const j = gl.indexOf(k); res.push({ side, k, pos: p, where: 'goal', xy: G[j], d: SD(o) ? SLD : NT(o) ? ND : TD }); }
         else { const [r, c] = R[p - 1]; res.push({ side, k, pos: p, where: 'board', r, c, xy: cellXY(o, r, c), d: PD }); }
       });
     }
@@ -162,9 +171,19 @@
     return s;
   }
   // the notch stacks: how many pieces each holds (a small dark disc with the number, at the stack's lower outer side)
-  function countsSVG(o, L) {
+  function countsSVG(o, L, lab) {
     if (!NT(o)) return '';
     let s = '';
+    if (SD(o)) {   // the side columns: a frame and its label with the count (手持ち 5 / ゴール 2)
+      for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
+        const n = L.pieces.filter(q => q.side === side && q.where === kind).length, [x, y, w, h] = sideBox(o, side, kind), cx = x + w / 2;
+        const t = (lab && lab(kind)) || (kind === 'goal' ? 'Home' : 'Start');
+        s += `<rect class="ur-sb ur-sb-${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="none" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-opacity=".55" stroke-width="2.5"/>` +
+          `<text class="ur-sl ur-sl-${kind}" x="${cx}" y="${y + 22}" text-anchor="middle" font-size="16.5" font-weight="700" fill="${kind === 'goal' ? '#a8ecc6' : '#f1d58c'}" font-family="'Zen Kaku Gothic New',system-ui,sans-serif">${t}</text>` +
+          `<text class="ur-sn ur-sn-${kind}" x="${cx}" y="${y + 42}" text-anchor="middle" font-size="17" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text>`;
+      }
+      return s;
+    }
     for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
       const n = L.pieces.filter(q => q.side === side && q.where === kind).length; if (!n) continue;
       const sx = nside(o, side), a = sx * (NX + 40), b2 = (FL(o) ? -NY[kind] : NY[kind]) + 22, x = OB(o) === 'v' ? a : b2, y = OB(o) === 'v' ? b2 : a;
@@ -204,7 +223,10 @@
       // trays: a faint recess with an empty socket for each piece
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
         const [x, y, w, h] = trayBox(o, side, kind), g = el('g', { class: `ur-trayb ur-${kind}`, 'data-side': side, 'data-kind': kind }, gTray);
-        if (NT(o)) {   // the notch: an invisible tap area with one socket where the stack stands
+        if (SD(o)) {   // a side column: a dark recess with an empty socket for each piece (the frame and the label: countsSVG)
+          el('rect', { x, y, width: w, height: h, rx: 16, fill: 'rgba(0,0,0,.2)' }, g);
+          for (const [cx, cy] of traySlots(o, side, kind)) el('circle', { cx, cy, r: SLD / 2 - 1, fill: 'rgba(0,0,0,.16)', stroke: 'rgba(255,255,255,.08)', 'stroke-width': 1.5 }, g);
+        } else if (NT(o)) {   // the notch: an invisible tap area with one socket where the stack stands
           el('rect', { x, y, width: w, height: h, fill: 'transparent' }, g);
           const [cx, cy] = traySlots(o, side, kind, 1)[0]; el('circle', { cx, cy, r: ND / 2 + 1, fill: 'rgba(0,0,0,.22)', stroke: kind === 'goal' ? 'rgba(127,214,164,.28)' : 'rgba(217,180,90,.28)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, g);
         } else {
@@ -253,16 +275,16 @@
       // board pieces above tray pieces, the selected one on top
       [...pieceEls.values()].sort((a, b) => (a.__q.where === 'board') - (b.__q.where === 'board') || (a.children[1].getAttribute('opacity') - b.children[1].getAttribute('opacity'))).forEach(g => gPieces.appendChild(g));
       gUnder.innerHTML = marksSVG(p, o, state, { last: opt.last }, L);
-      gOver.innerHTML = countsSVG(o, L) + marksSVG(p, o, state, { marks: opt.marks, hint: opt.hint }, L);
+      gOver.innerHTML = countsSVG(o, L, opts.trayLabel) + marksSVG(p, o, state, { marks: opt.marks, hint: opt.hint }, L);
       gTg.innerHTML = targetsSVG(o, opt.targets);
       return view;
     }
     function findEl(side, pos) {
       // the element of `side` at path index pos (0: the one next to the entry)
       let best = null;
-      // (the notch stack: the top piece, the highest one)
+      // (the notch stack: the top piece, the highest one; a side column: the last one, so the others stay where they are)
       for (const g of pieceEls.values()) { const q = g.__q; if (q.side !== side || q.pos !== pos) continue;
-        if (!best || (pos <= 0 && q.xy && (NT(o) ? q.xy[1] < best.__q.xy[1] : dist(q.xy, traySlots(o, side, 'start')[0]) < dist(best.__q.xy, traySlots(o, side, 'start')[0])))) best = g; }
+        if (!best || (pos <= 0 && q.xy && (SD(o) ? q.xy[1] > best.__q.xy[1] : NT(o) ? q.xy[1] < best.__q.xy[1] : dist(q.xy, traySlots(o, side, 'start')[0]) < dist(best.__q.xy, traySlots(o, side, 'start')[0])))) best = g; }
       return best;
     }
     const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -285,7 +307,7 @@
       if (to >= goal) pts.push(dest.xy);
       const s0 = g.__s, s1 = dest.d / PD;
       gPieces.appendChild(g); g.children[1].setAttribute('opacity', 0);
-      gTg.innerHTML = ''; gOver.innerHTML = countsSVG(o, L);
+      gTg.innerHTML = ''; gOver.innerHTML = countsSVG(o, L, opts.trayLabel);
       // lift
       await tween(110 / sp, t => place(g, pts[0][0], pts[0][1], s0, easeOut(t)));
       // slide (constant speed along the polyline, eased overall)

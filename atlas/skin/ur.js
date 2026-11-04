@@ -42,6 +42,16 @@ html.atlas-ur.ur-band .pdk{background:rgba(120,80,30,.1)!important;border-color:
 /* (2026-11-05) the same board size as the 2D page on a phone held upright: a slimmer portal bar (40px; the page's own brand row +
    gaps take 34px), no extra margin around the board, the same 8px gaps → the page's --oh + 6px − the face strip below (16px) */
 html.atlas-ur{--oh:330px!important}
+/* phones held upright: the side columns (手持ち / ゴール, board2d 'vfn') — framed on the wood with dark labels */
+html.atlas-ur .ur-vfn .ur-tray .ur-trayb > circle{opacity:1!important;fill:none!important;stroke:rgba(90,55,15,.28)!important;stroke-dasharray:4 4}   /* (the DOM board lies over the 3D pieces: outlines only) */
+html.atlas-ur .ur-vfn .ur-sb{fill:rgba(255,248,230,.0)!important;stroke-width:3!important}
+html.atlas-ur .ur-vfn .ur-sb-start{stroke:#c9a352!important;stroke-opacity:.9!important}
+html.atlas-ur .ur-vfn .ur-sb-goal{stroke:#3f9b6c!important;stroke-opacity:.9!important}
+html.atlas-ur .ur-vfn .ur-sl-start{fill:#8a5d12!important}
+html.atlas-ur .ur-vfn .ur-sl-goal{fill:#25734b!important}
+html.atlas-ur .ur-vfn .ur-sn{fill:#2b3044!important}
+html.atlas-ur .ur-vfn :is(.ur-sl,.ur-sn){stroke:#fff8ea;stroke-width:5px;paint-order:stroke;stroke-linejoin:round}
+html.atlas-ur .ur-vfn .ur-sl{font-weight:800!important}
 html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
 @media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
   html.atlas-skin.atlas-ur .app{padding-top:48px!important}
@@ -54,7 +64,7 @@ html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
   html.atlas-ur .atlas-lpop{top:40px}
   html.atlas-ur.ur-band .board-area > #frame{margin:0!important}
   /* (the 3D board has no side-face strip under it as the 2D picture: its bottom edge is ~33 units higher — your card comes up by that) */
-  html.atlas-ur.ur-band.bv .board-area > #frame{margin-bottom:calc(var(--bw) * -.0887)!important}
+  html.atlas-ur.ur-band.bv .board-area > #frame{margin-bottom:calc(var(--bw) * -.0569)!important}
   html.atlas-ur.ur-band .controls .btn{padding:5px 1px!important}
 }
 /* phones held sideways (the page's landtabs.js → html.ur-land): the portal bar is a slim pill in the page's top row (logo · name ·
