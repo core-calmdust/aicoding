@@ -1092,7 +1092,8 @@ html[lang=ar] .pf-input{direction:rtl}
     --cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 12.6), 120px);
     --ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--top)) var(--padx) var(--pad)}
-  .side{grid-area:side;width:var(--rw);height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + 4px);max-height:none}
+  .side{grid-area:side;width:var(--rw);height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16);max-height:none}
+  .side-in > .info-line:empty{display:none}   /* (the record card ends level with the board frame and the komadai) */
   .board-area{align-self:center}
   html.dock-compact .side{align-self:center}
   .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
