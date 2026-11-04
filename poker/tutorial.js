@@ -132,15 +132,17 @@ function paint(st, pad) {
   if (!multi) { rings.innerHTML = ''; mask.querySelector('path').setAttribute('d', ''); holeAt(list[0] ? list[0].r : null, pad); return; }
   holeAt(null, 0);
   const W = innerWidth, H = innerHeight;
+  const ob = layer.classList.contains('dock') && layer.dataset.dock === 'top' ? box.getBoundingClientRect().bottom : 0;   // a label never goes under the docked text
   let d = `M0 0H${W}V${H}H0Z`, h = '';
   list.forEach(x => {
     const p = x.tab ? 2 : pad, l = x.r.l - p, t = x.r.t - p, w = x.r.r - x.r.l + p * 2, ht = x.r.b - x.r.t + p * 2;
     const round = w < 54 && ht < 54, rr = round ? Math.min(w, ht) / 2 : Math.min(12, w / 2, ht / 2);
     // counter-clockwise inside the clockwise frame: a hole (overlapping holes stay open)
     d += `M${l + w - rr} ${t}H${l + rr}A${rr} ${rr} 0 0 0 ${l} ${t + rr}V${t + ht - rr}A${rr} ${rr} 0 0 0 ${l + rr} ${t + ht}H${l + w - rr}A${rr} ${rr} 0 0 0 ${l + w} ${t + ht - rr}V${t + rr}A${rr} ${rr} 0 0 0 ${l + w - rr} ${t}Z`;
-    const below = t < 34;   // no room above: the label goes under the ring
+    // no room above: the label goes under the ring (top of the screen) or inside it (under the docked text)
+    const pos = t - 30 >= Math.max(4, ob) ? '' : t - 30 < 4 && !ob ? ' below' : ' in';
     h += `<div class="tut-ring${x.hot ? ' hot' : ''}${round ? ' round' : ''}" style="left:${l}px;top:${t}px;width:${w}px;height:${ht}px;border-radius:${rr}px">` +
-      (x.tag ? `<span class="tut-tag${below ? ' below' : ''}">${esc(L(x.tag))}</span>` : '') + `</div>`;
+      (x.tag ? `<span class="tut-tag${pos}">${esc(L(x.tag))}</span>` : '') + `</div>`;
   });
   mask.setAttribute('viewBox', `0 0 ${W} ${H}`); mask.setAttribute('width', W); mask.setAttribute('height', H);
   mask.querySelector('path').setAttribute('d', d);
@@ -175,7 +177,11 @@ function placePhone(st) {
       const tt = fit ? u.t : r.t, h = (fit ? u.b : r.b) - tt;
       // an action step: the buttons go to the bottom of the free area, so the cards stay in view above them
       const want = h > room ? z.t : st.need ? z.b - h : z.t + (room - h) / 2;
-      const dd = Math.round(tt - want), t = r.t - dd, b = r.b - dd;   // (above the top: room is made with padding)
+      let dd = Math.round(tt - want);
+      // too tall for the free area: at least the part that pulses (the D chip) stays in view
+      const hr = h > room && st.each && st.hot ? rectOf(st.at[st.hot[0]]) : null;
+      if (hr) { if (hr.b - dd > z.b) dd = Math.ceil(hr.b - z.b); if (hr.t - dd < z.t) dd = Math.floor(hr.t - z.t); }
+      const t = r.t - dd, b = r.b - dd;   // (above the top: room is made with padding)
       return { dk, dd, miss: Math.max(0, z.t - t) + Math.max(0, b - z.b), room: room - (cx && !fit ? 1e4 : 0) };
     };
     const a = plan('top'), c = plan('bottom'), best = tabBtn(st) || a.miss < c.miss || (a.miss === c.miss && a.room >= c.room) ? a : c;   // a tab is ringed: the text stays at the top
