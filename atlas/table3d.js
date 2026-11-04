@@ -698,6 +698,7 @@
   /* ---------- museum gallery (ヒストリア): a second room the scene swaps to while Historia is open ----------
      built lazily on the first call and cached; the board on the table becomes the exhibit on a plinth.
      museum(on, {title, sub}) swaps at once (Historia fades the canvas through dark around it). */
+  const PAINT_GLOW = .1;
   let museumObjs = null, museumOn = false, roomExp = 0, placard = null, museumSpot = null, glareW = -1;
   function buildMuseum() {
     const TT = T(), g = new TT.Group(), FLOOR = -3.4, before = new Set(scene.children); rbCap = 1;
@@ -724,9 +725,9 @@
     // framed paintings: the series' own game illustrations
     const loader = new TT.TextureLoader(), pic = (wg, id, x, y, w, h) => {
       wg.add(mesh(RB(w + .9, h + .9, .3), gold, x, y, .2));
-      wg.add(mesh(new TT.PlaneGeometry(w, h), M({ color: 0xf3e9d2, roughness: .9 }), x, y, .37));
+      wg.add(mesh(new TT.PlaneGeometry(w, h), M({ color: 0xf3e9d2, roughness: .9, emissive: 0x7a6040 }), x, y, .37));
       const t = loader.load('../images/atlas/' + id + '.webp'); t.encoding = TT.sRGBEncoding;
-      wg.add(mesh(new TT.PlaneGeometry(w * .86, h * .86), new TT.MeshStandardMaterial({ map: t, transparent: true, roughness: .8 }), x, y, .39));
+      wg.add(mesh(new TT.PlaneGeometry(w * .86, h * .86), new TT.MeshStandardMaterial({ map: t, transparent: true, roughness: .8, emissive: 0xffe2b8, emissiveMap: t, emissiveIntensity: PAINT_GLOW }), x, y, .39));   // (the glow stands in for the picture lamps)
     };
     pic(back, 'chess', -13, 8.6, 5.5, 5.5); pic(back, 'go', 13, 8.6, 5.5, 5.5);
     pic(left, 'backgammon', 6, 8.6, 5, 5); pic(left, 'mancala', -6, 8.6, 5, 5); pic(right, 'xiangqi', -6, 8.6, 5, 5); pic(right, 'morris', 6, 8.6, 5, 5);
@@ -757,7 +758,8 @@
     spot.castShadow = true; spot.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); spot.shadow.camera.near = 8; spot.shadow.camera.far = 50; spot.shadow.bias = -.0004; spot.shadow.normalBias = .02;
     scene.add(spot); scene.add(spot.target);
     const wash = new TT.DirectionalLight(0xffd9a8, .38); wash.position.set(0, 12, 14); scene.add(wash);
-    if (!LITE) { [-13, 13].forEach(x => { const s2 = new TT.SpotLight(0xffd8a0, .9, 40, .3, .7, 1); s2.position.set(x * .7, 16, 0); s2.target.position.set(x, 5.2, -17); scene.add(s2); scene.add(s2.target); }); }
+    // (two more spotlights used to aim at the back-wall paintings: they changed the picture by ~1% of pixels but every pixel of the
+    // whole scene paid for them in its lighting loop — ~20% of a frame — so they are gone)
     const objs = scene.children.filter(o => !before.has(o));
     objs.forEach(o => { o.visible = false; });
     return objs;
@@ -777,7 +779,7 @@
     museumOn = on; glareW = -1;
     roomObjs.forEach(x => { x.visible = !on; });
     (museumObjs || []).forEach(x => { x.visible = on; });
-    if (on) setTimeout(() => { if (museumOn && !glide) warmLow(); }, 1200);
+    if (on) setTimeout(() => { if (museumOn) warmMuseum(); }, 1200);
     if (on) { drawPlacard(o); roomExp = R.toneMappingExposure; R.toneMappingExposure = .92; scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); }
     else { R.toneMappingExposure = roomExp || R.toneMappingExposure; scene.background = new (T().Color)(LOOK[roomMode] ? LOOK[roomMode].sky[1] : '#f6e3c4').convertSRGBToLinear(); }
     if (lampShade && on) lampShade.visible = false;
@@ -1171,7 +1173,7 @@
     R.setPixelRatio(pr);
     R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
     // skin pages: a static shadow map, redrawn only while something moves (kick) or the board changes — not for a scroll / re-alignment
-    if (skinPage) R.shadowMap.autoUpdate = false; skinShadow = skinPage;
+    if (skinPage) R.shadowMap.autoUpdate = false;
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
@@ -1381,7 +1383,7 @@
   let orthoWant = false, orthoW = 0, camLook = 0;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
     if (on) orthoWant = !!(o && o.ortho);
-    if (o && o.glide) { glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo }; moveLo(true); }
+    if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -1398,36 +1400,9 @@
   const FRAME_MS = 1000 / 60; let lastT = 0;
   // pause completely while the tab is hidden or the window isn't focused
   let rafId = 0, blurred = false;
-  // while the camera glides (Historia's top-down view and back) every frame has to be cheap, or the move stutters:
-  //  · the shadow map is kept as it is (one pass when the move starts) and redrawn fresh for the frame it lands on
-  //  · the picture is drawn at ~55% resolution into a render target allocated once (half-float, so the tone mapping is the same),
-  //    then stretched onto the screen with one quad — the drawing buffer is never reallocated; the landing frame is full resolution
-  // (measured on a 4×-throttled phone profile: full frame 623 ms → 148 ms)
-  let lo = false, skinShadow = false, moveRT = null, blit = null;
-  const MOVE_SCALE = .55;
-  // drawing into the render target needs its own shader variants (linear output): compile them ahead, off screen, once the
-  // gallery is up — otherwise the first move stalls on shader compiles
-  let lowWarm = false;
-  function warmLow() { if (lowWarm || !R || !scene || !cam) return; lowWarm = true; try { drawLow(true); R.compile(blit.s, blit.c); } catch (e) {} }
-  function moveLo(on) {
-    if (!R || on === lo) return; lo = on;
-    R.shadowMap.autoUpdate = on ? false : !skinShadow; R.shadowMap.needsUpdate = true; kick(300);
-  }
-  function drawLow(warmOnly) {
-    const TT = T(), w = Math.max(2, Math.round(cw * pr * MOVE_SCALE)), h = Math.max(2, Math.round(ch * pr * MOVE_SCALE));
-    if (!moveRT) {
-      const gl2 = R.capabilities.isWebGL2 && R.extensions.get('EXT_color_buffer_float');
-      moveRT = new TT.WebGLRenderTarget(w, h, { type: gl2 ? TT.HalfFloatType : TT.UnsignedByteType, depthBuffer: true });
-      const q = new TT.Mesh(new TT.PlaneGeometry(2, 2), new TT.MeshBasicMaterial({ map: moveRT.texture, depthTest: false, depthWrite: false }));
-      blit = { s: new TT.Scene(), c: new TT.OrthographicCamera(-1, 1, 1, -1, 0, 1), q }; blit.s.add(q);
-      blit.hdr = !!gl2;
-    } else if (moveRT.width !== w || moveRT.height !== h) moveRT.setSize(w, h);
-    R.setRenderTarget(moveRT); R.render(scene, cam); R.setRenderTarget(null);
-    if (warmOnly) return;
-    // half-float: the scene was drawn linear (no tone mapping) — the quad applies tone mapping and sRGB like a normal frame;
-    // 8-bit fallback: highlights clamp a little during the move only
-    const am = R.autoClear; R.autoClear = false; R.clear(); R.render(blit.s, blit.c); R.autoClear = am;
-  }
+  // the gallery's shaders are compiled ahead, off screen, once it is up — the first camera move then never stalls on compiles
+  let museumWarm = false;
+  function warmMuseum() { if (museumWarm || !R || !scene || !cam) return; museumWarm = true; try { R.compile(scene, cam); } catch (e) {} }
   // quiet(true) (Historia on phones while a page is read): the turntable holds still and a frame is drawn only when something
   // actually moved (the camera, the framing, a kick) — the showcase otherwise redraws the whole gallery every frame
   let quietOn = false, quietKey = '';
@@ -1547,7 +1522,7 @@
     if (glide) {
       glide.t += Math.min(dt, 50); const k = Math.min(1, glide.t / glide.dur), e = 1 - Math.pow(1 - k, 3);   // (a frame advances at most 50 ms: smooth steps, and a stall never makes it jump)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
       camK = glide.k0 + (camTo - glide.k0) * e; inset += (insetTo - inset) * ez(.22); frame();   // the framing follows smoothly even if the card changes size meanwhile
-      if (k >= 1) { camK = camTo; glide = null; moveLo(false); }
+      if (k >= 1) { camK = camTo; glide = null; }
     } else camK += (camTo - camK) * ez(.07);
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
@@ -1604,7 +1579,6 @@
       if (kq === quietKey && now > kickUntil && !dirty) return;
       quietKey = kq; dirty = false;
     }
-    if (lo && glide) { drawLow(); return; }
     R.render(scene, cam);
   }
   // perspective → orthographic: the ortho frustum is matched to the perspective one on the plane the camera looks at
