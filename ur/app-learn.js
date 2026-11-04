@@ -39,14 +39,28 @@ function quitSpecial() { exitSpecial(); }
 
 // ---------------------------------------------------------------- tabs of the list dialogs
 function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
-$$('.ls-tabs').forEach(g => g.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const v = b.dataset.v;
-  ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'].forEach(s => $(s).classList.add('instant'));
-  closeRules(true); hideOverlay('#lessonOverlay'); hideOverlay('#puzzleOverlay');
-  if (v === 'rules') openRules(); else if (v === 'lesson') openLessons(); else openPuzzles();
-  setTimeout(() => ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'].forEach(s => $(s).classList.remove('instant')), 60);
+// switching tabs: the new dialog is shown at once (no fade) on top of the old one, then the old one is hidden — so the dialog
+// never closes and opens again; the lists keep their DOM when nothing changed (setHtml) and the board pictures are preloaded
+const LIST_OV = ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'];
+let tabSwitch = false;
+$$('.ls-tabs').forEach(g => g.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
+  const v = b.dataset.v, want = v === 'rules' ? '#rulesOverlay' : v === 'lesson' ? '#lessonOverlay' : '#puzzleOverlay';
+  const was = LIST_OV.filter(s => s !== want && $(s).classList.contains('show'));
+  LIST_OV.forEach(s => $(s).classList.add('instant'));
+  tabSwitch = true;
+  try { if (v === 'rules') openRules(); else if (v === 'lesson') await openLessons(); else await openPuzzles(); } finally { tabSwitch = false; }
+  was.forEach(s => { if (s === '#rulesOverlay') closeRules(true); else hideOverlay(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => LIST_OV.forEach(s => $(s).classList.remove('instant'))));
 }));
+// the HTML of a list is written only when it changed (the same DOM stays: no reloaded pictures, no jump)
+function setHtml(el, html) { if (el.__h !== html) { el.__h = html; el.innerHTML = html; } }
+// the small board pictures used by the mini boards: decoded once, up front
+(function preload() {
+  const imgs = B2.BOARDS.map(d => `img/board-${d}-h-s.webp`).concat(B2.PIECES.map(pc => `img/pieces-${pc}.webp`));
+  const go = () => imgs.forEach(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); });
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 1500 }); else setTimeout(go, 400);
+})();
 
 // ---------------------------------------------------------------- rules (UrTour)
 function openRules(page) {
@@ -99,7 +113,7 @@ async function openLessons(cat0) {
   let cat = cat0 || ''; if (!cat) try { cat = localStorage.getItem(LS_CAT) || ''; } catch (e) {}
   if (!d.cats.some(c => c.id === cat)) cat = d.cats[0].id;
   const pr = prog(LS_STORE), stat = c => ({ n: c.steps.length, ok: c.steps.filter(id => pr[id] && pr[id].pass).length });
-  $('#lsCats').innerHTML = d.cats.map(c => { const z = stat(c); return `<button data-c="${c.id}" class="${c.id === cat ? 'sel' : ''}"><span class="ic">${LS_IC[c.id] || LS_IC.basic}</span><span class="nm">${esc(LL(c.name))}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('');
+  setHtml($('#lsCats'), d.cats.map(c => { const z = stat(c); return `<button data-c="${c.id}" class="${c.id === cat ? 'sel' : ''}"><span class="ic">${LS_IC[c.id] || LS_IC.basic}</span><span class="nm">${esc(LL(c.name))}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join(''));
   const C = d.cats.find(c => c.id === cat), q = stat(C);
   const banner = `<div class="lx-banner"><span class="ic">${LS_IC[cat] || LS_IC.basic}</span><span class="tx"><b>${esc(LL(C.name))}</b><small>${esc(t('lsc.' + cat))}</small></span><span class="pg">${esc(t('ls.passed', { a: q.ok, b: q.n }))}${lxBar(q.ok / q.n, true)}</span></div>`;
   const cards = C.steps.map((id, k) => { const s = d.steps.find(x => x.id === id); if (!s) return ''; const r = pr[id];
@@ -107,7 +121,7 @@ async function openLessons(cat0) {
     return `<button class="lx-card${r && r.pass ? ' clear' : ''}" data-id="${id}"><span class="lx-th">${s.diagram ? thumb(s.diagram.s, s.diagram.marks) : ''}</span><span class="lx-tx">` +
       `<span class="lx-top"><span class="lx-no">STEP ${k + 1}</span>${st}</span><b class="lx-t">${esc(LL(s.title))}</b><small class="lx-sub">${esc(LL(s.tip))}</small>` +
       `<span class="lx-desc">${esc(plain(LL(s.body)))}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass)}</span></button>`; }).join('');
-  $('#lessonList').innerHTML = banner + `<div class="lx-grid">${cards}</div>`;
+  setHtml($('#lessonList'), banner + `<div class="lx-grid">${cards}</div>`);
   showLessonView('lessonListView'); showOverlay('#lessonOverlay');
 }
 $('#lsCats').onclick = e => { const b = e.target.closest('button[data-c]'); if (!b) return; try { localStorage.setItem(LS_CAT, b.dataset.c); } catch (x) {} openLessons(); };
@@ -263,14 +277,14 @@ async function openPuzzles() {
   const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].cat })), PZ_LAST);
   const dl = dailyPick(), dd = prog(STORE + '-daily');
   const th = (T, j) => { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P ? thumb(P.s, [], { cropMarks: [] }) : ''; };
-  $('#pzLevels').innerHTML = PZBook.home({
+  setHtml($('#pzLevels'), PZBook.home({
     title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: LL(Ts[+cont.key].name) },
     daily: dl ? [{ key: '1', board: th(Ts[dl.L], dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: !!dd[dl.date], go: t('daily.go'), sub: LL(Ts[dl.L].name) }] : [],
     cats: d.cats.map(c => { const r = idx.filter(i => Ts[i].cat === c.id).map(i => pzRecs(Ts[i], pr)).flat(); return { key: c.id, icon: PZBook.icon(PZ_IC[c.id] || 'theme'), name: LL(c.name), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur,
     cards: idx.filter(i => Ts[i].cat === cur).map(i => { const T = Ts[i], r = pzRecs(T, pr); return { key: i, badge: '', name: LL(T.name), desc: LL(T.desc), recs: r, tier: themeTier(i), board: th(T, PZBook.nextIndex(r)) }; }),
-  });
+  }));
   PZBook.bindHome($('#pzLevels'), {
     cat: k => { try { localStorage.setItem(PZ_TAB, k); } catch (e) {} openPuzzles(); },
     cont: x => { const [i, j] = x.split(':'); startPuzzle(+i, +j); },
