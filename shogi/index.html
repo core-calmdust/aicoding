@@ -909,6 +909,24 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks label{margin:0;padding:8px 11px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.05)}
 }
+/* phones (ngtabs sheet), ルール tab: the same framed panels as on PC, one under the other */
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col.ng-empty{display:none!important}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide){display:flex!important;flex-direction:column;gap:12px;margin:0 0 10px!important;padding:13px 14px 14px!important;border-radius:14px;
+  border:1px solid color-mix(in srgb, var(--brass) 26%, var(--line));
+  background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px -16px rgba(0,0,0,.8)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col > *{margin:0!important}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col > .field > label:first-child{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.2em;color:var(--brass);margin-bottom:7px}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col > .field > label:first-child::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass) 40%, transparent), transparent)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .level-name{font-family:'Shippori Mincho B1',serif;font-size:22px;color:var(--accent);letter-spacing:.05em}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .level-name small{font-family:'Zen Kaku Gothic New',sans-serif;letter-spacing:0}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .seg button.sel{background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));color:var(--text);box-shadow:0 0 0 1px rgba(226,194,117,.55)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .checks label{margin:0;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.05)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .pd-btn{background:rgba(0,0,0,.3)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] :is(#fColor,#fClock):not(.hidden){display:block!important}
+#newOverlay > .modal.ngt-on[data-ngt=rules] :is(#fColor,#fClock) > label{margin:0 0 7px!important;letter-spacing:.2em!important}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col{gap:16px!important}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .level-name{height:auto!important;line-height:1.25}
 /* rated games vs the AI: rating card in the new-game dialog; evaluation hidden while the game is going */
 .rt-card{margin-top:10px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
 .rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
