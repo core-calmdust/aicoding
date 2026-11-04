@@ -59,7 +59,7 @@ function chartTab() {
     `<div class="lx-tw"><div class="lx-dl">${esc(t('tl.dealerUp'))}</div>${chartTable(R, ct)}</div>` +
     `<div class="lx-lf"><ul class="lx-leg">${leg.map(c => `<li><i class="${A.cellCls(c)}">${c}</i>${esc(t('tl.c.' + c))}</li>`).join('')}</ul><div class="lx-he"><small>${esc(t('tl.edge'))}</small><b>${pct(B.houseEdge(R))}</b></div></div></section>` +
     `<aside class="lx-side"><section class="lx-p lx-insp" id="lxInsp">${inspHtml(W.sel.k, W.sel.x, W.sel.u)}</section>` +
-    `<section class="lx-p lx-keys"><div class="lx-k">${esc(t('tl.keys'))}</div><ol>${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol></section></aside></div>`;
+    `<details class="lx-p lx-keys"${W.keysOpen ? ' open' : ''}><summary class="lx-k">${esc(t('tl.keys'))}</summary><ol>${[1, 2, 3, 4, 5, 6].map(i => `<li>${esc(t('tl.key' + i))}</li>`).join('')}</ol></details></aside></div>`;
 }
 function wireChart(M) {
   const tb = M.querySelector('.lx-ch'), box = M.querySelector('#lxInsp'); if (!tb || !box) return;
@@ -157,9 +157,15 @@ function render() {
   $('#tlClose').onclick = () => A.closeOv('#toolsOverlay');
   wireRules(M);
   M.querySelectorAll('button[data-ct]').forEach(b => b.onclick = () => { W.ct = b.dataset.ct; render(); });
-  if (tab === 'chart') wireChart(M);
+  if (tab === 'chart') { wireChart(M); const kd = M.querySelector('.lx-keys'); if (kd) kd.ontoggle = () => { W.keysOpen = kd.open; }; }
+  // PC: every tab gets the box height of the basic strategy chart (no jumping between tabs, no inner scrolling)
+  if (matchMedia('(min-width:761px)').matches) {
+    const bd = M.querySelector('.tl-body');
+    if (tab === 'chart' && bd.scrollHeight) W.bh = Math.max(W.bh || 0, bd.scrollHeight);
+    if (W.bh) M.style.setProperty('--tl-h', W.bh + 'px');
+  }
   if (tab === 'sim') { M.querySelectorAll('[data-sn]').forEach(b => b.onclick = () => { W.sim.n = +b.dataset.sn; W.sim.res = null; render(); }); const r = $('#simRun'); if (r) r.onclick = runSim; }
 }
-function open(k) { if (k) tab = k; W.v = null; ensure(); render(); A.openOv('#toolsOverlay'); }
+function open(k) { if (k) tab = k; W.v = null; ensure(); A.openOv('#toolsOverlay'); if (!W.bh && tab !== 'chart' && matchMedia('(min-width:761px)').matches) { const t0 = tab; tab = 'chart'; render(); tab = t0; } render(); }
 window.BJTools = { open };
 })();

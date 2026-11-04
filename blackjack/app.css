@@ -2843,3 +2843,29 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
   .tools-modal.bjx .ng-tabs{flex-wrap:nowrap}
   .tools-modal.bjx .ng-tabs button{font-size:12.5px;letter-spacing:0;padding:7px 2px 8px;flex:1 1 0;min-width:0}
 }
+/* research: the close button at a sensible width */
+.tools-modal.bjx .modal-actions{justify-content:center}
+.tools-modal.bjx .modal-actions .mbtn{flex:0 0 auto;width:auto;min-width:200px;padding-left:40px;padding-right:40px}
+@media (max-width:760px){.tools-modal.bjx .modal-actions .mbtn{min-width:160px}}
+/* research (PC): the box is as tall as the basic strategy chart needs; all tabs share that height */
+@media (min-width:761px){
+  .tools-modal.bjx{height:auto;max-height:calc(100dvh - 32px)}
+  .bjx .tl-body{overflow:auto}
+  .lx-ch td,.lx-ch tbody th{height:30px}
+  .lx-chart > .lx-side{height:auto;min-height:0;overflow:visible}
+  .lx-keys{overflow:visible;flex:1 1 auto}
+}
+@media (min-width:761px) and (max-height:960px){.lx-ch td{height:30px}}
+@media (min-width:761px){.lx-ch td{height:clamp(19px,calc((100dvh - 606px) / 14),30px)}}
+@media (min-width:761px){
+  .lx-chart > .lx-side{height:0;min-height:100%;overflow:hidden}
+  .lx-keys{flex:0 1 auto;min-height:0;overflow:auto}
+  .lx-keys[open]{flex:1 1 auto}
+}
+.lx-keys > summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;margin:0}
+.lx-keys > summary::-webkit-details-marker{display:none}
+.lx-keys > summary::after{content:'▾';color:var(--muted);transition:transform .2s}
+.lx-keys[open] > summary::after{transform:rotate(180deg)}
+.lx-keys[open] > summary{margin-bottom:10px}
+@media (min-width:761px){.lx-ch tbody th{height:auto}}
+.bjx .lx-keys > summary.lx-k{display:flex}
