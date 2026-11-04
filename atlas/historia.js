@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 3;                       // data version (bump when historia/*.json change)
+  const V = 4;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
   const UI = {
@@ -23,7 +23,7 @@
   };
   // the guide who narrates each game: the game's own Atlas Mon where it has one, else a plush avatar that suits it
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
-    poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', fanorona: 'av/monkey-0',
+    poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
     backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
@@ -45,7 +45,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki xiangqi'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki xiangqi'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -481,6 +481,19 @@
       out.push(`<path class="gl" pathLength="1" style="--d:200ms;stroke:#d8423a;stroke-width:4" d="M${e1[0]} ${e1[1] - a * 1.2}L${e2[0]} ${e2[1] - a * 1.2}"/><path class="gl" pathLength="1" style="--d:200ms;stroke:#d8423a;stroke-width:4" d="M${e4[0]} ${e4[1] + a * 1.2}L${e3[0]} ${e3[1] + a * 1.2}"/>`);
       out.push(`<path class="gl" pathLength="1" style="--d:300ms;stroke:#3a78d8;stroke-width:4" d="M${e1[0] - a * 1.1} ${e1[1]}L${e4[0] - a * 1.1} ${e4[1]}"/><path class="gl" pathLength="1" style="--d:300ms;stroke:#3a78d8;stroke-width:4" d="M${e2[0] + a * 1.1} ${e2[1]}L${e3[0] + a * 1.1} ${e3[1]}"/>`);
       pcs(s.pcs).forEach(([i, j, c], k) => { const [x, y] = C(i, j); body += piece(x, y, c, null, a * .62, null, dd + k * step); });
+    } else if (T === 'agon') {
+      const n = s.n || 5, a = 13, sq3 = Math.sqrt(3), cx = PD + 12 + a * sq3 * n + a, cy = PD + 12 + a * 1.5 * n + a;
+      const C = (q, r) => [cx + a * sq3 * (q + r / 2), cy + a * 1.5 * r];
+      W = cx * 2; H = cy * 2;
+      const RO = a * (sq3 * n + 1.35);
+      out.push(`<path class="bd" d="${[0, 1, 2, 3, 4, 5].map(k => { const t = Math.PI / 3 * k; return (k ? 'L' : 'M') + (cx + RO * Math.cos(t)).toFixed(1) + ' ' + (cy + RO * Math.sin(t)).toFixed(1); }).join('')}z" fill="${wood}" stroke="${line}" stroke-width="2"/>`);
+      for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) {
+        const g = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)); if (g > n) continue;
+        const [x, y] = C(q, r), f = g === 0 ? (s.th || '#1e3a2c') : (g % 2 ? (s.ra || '#6c1a1c') : (s.rb || '#e7dcc0'));
+        out.push(`<path class="cl" style="--d:${(n - g) * 70}ms" d="${[0, 1, 2, 3, 4, 5].map(k => { const t = Math.PI / 3 * k + Math.PI / 6; return (k ? 'L' : 'M') + (x + a * Math.cos(t)).toFixed(1) + ' ' + (y + a * Math.sin(t)).toFixed(1); }).join('')}z" fill="${f}" stroke="${line}" stroke-width="1"/>`);
+      }
+      pcs(s.pcs).forEach(([q, r, c, g], k) => { const [x, y] = C(q, r); body += piece(x, y, c, g ? '♛' : null, a * .66, null, dd + k * step); });
+      (s.arrows || []).forEach(([q1, r1, q2, r2], k) => { const [x1, y1] = C(q1, r1), [x2, y2] = C(q2, r2); body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * step + 200 + k * 300}ms" d="M${x1} ${y1 + a * .7}L${x2} ${y2 - a * .2}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'mancala') {
       const n = s.pits || 6, rows = s.rows || 2, P = 34, st0 = s.stores === false ? 0 : 1;
       W = (n + st0 * 2) * P + PD * 2; H = rows * P + PD * 2 + 6;
