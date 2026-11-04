@@ -195,8 +195,8 @@
   }
   // a piece: rounded rim, an engraved V-ring, a gently domed centre with a small boss (base at y = 0)
   const PIECE = [[0, 0], [.33, 0], [.37, .012], [.393, .04], [.4, .08], [.398, .125], [.386, .16], [.362, .182], [.33, .193], [.3, .192], [.282, .176], [.264, .19], [.22, .198], [.15, .203], [.085, .208], [.07, .222], [.045, .232], [0, .235]];
-  function piece(color, m) {
-    const p = mesh(lathe('nmPiece', PIECE, X.coarse ? 28 : 40), color === 'plat' ? m.plat : m.gold, !X.lite);
+  function piece(color, m) {   // (28 steps round: the pieces are ~1 cm on screen; 40 cost 41% more triangles for no visible change)
+    const p = mesh(lathe('nmPiece', PIECE, X.coarse ? 20 : 28), color === 'plat' ? m.plat : m.gold, !X.lite);
     p.rotation.y = Math.random() * 6.28; return p;
   }
   // a point: a small gold rosette, nearly flush with the marble (base at y = 0)

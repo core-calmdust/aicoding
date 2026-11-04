@@ -215,7 +215,7 @@ a.snd.home{text-decoration:none}
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ---------------------------------------------------------------- coach (shared/coachkit.js, coach.js) */
 #coachCard.hidden{display:none}
-body.in-lesson #coachCard,body.in-puzzle #coachCard{display:none!important}
+body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
 #coachCard.ck-off{padding:10px 14px}
 #coachCard.ck-off .ck-h{margin-bottom:4px}
 #coachCard.ck-off .ck-muted{font-size:12px;line-height:1.6}
@@ -1483,7 +1483,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=6"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=6"><\/script><script src="coach-i18n.js?v=2"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=20261104pzd"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=9"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=9"><\/script><script src="../shared/headerbar.js?v=30"><\/script><script src="../shared/flipbtn.js?v=2"><\/script><script src="../shared/cardbar.js?v=6"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=28"><\/script><script src="../shared/pzbook.js?v=4"><\/script><script src="rvcoach.js?v=20261021b"><\/script><script src="../shared/coachkit.js?v=14"><\/script><script src="../shared/record.js?v=9"><\/script><script src="coach.js?v=7"><\/script><script src="coach-i18n.js?v=3"><\/script><script src="../shared/tick.js?v=1"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="../shared/export.js?v=6"><\/script><script src="app.js?v=20261104pzd"><\/script><script src="online-ui.js?v=20261030ck1"><\/script><script src="landtabs.js?v=9"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->

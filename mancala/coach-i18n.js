@@ -1766,3 +1766,12 @@
 }
 }
 ); })();
+// the "coach is resting" note (lessons, puzzles, watching…)
+(() => { if (!window.MancalaCoach) return; MancalaCoach.merge({"zh":{"rest":"课程、谜题、观战等期间，教练暂停。试着靠自己思考吧。回到与AI对局或双人对战时，教练会恢复。"},
+  "ko":{"rest":"레슨·퍼즐·관전 등의 동안에는 코치가 쉽니다. 스스로 생각해 보세요. AI 대국이나 2인 대국으로 돌아가면 코치가 다시 시작됩니다."},
+  "es":{"rest":"El entrenador descansa durante las lecciones, los puzles, el modo espectador y similares: piénsalo por tu cuenta. Vuelve cuando juegues de nuevo contra la IA o contra un amigo."},
+  "fr":{"rest":"Le coach se repose pendant les leçons, les puzzles, le mode spectateur, etc. : réfléchissez par vous-même. Il revient dès que vous rejouez contre l’IA ou à deux."},
+  "pt":{"rest":"O treinador descansa durante lições, quebra-cabeças, modo espectador e afins: pense por conta própria. Ele volta quando você jogar de novo contra a IA ou contra um amigo."},
+  "de":{"rest":"Während Lektionen, Rätseln, Zuschauen usw. macht der Coach Pause – denk selbst nach. Sobald du wieder gegen die KI oder zu zweit spielst, ist er zurück."},
+  "hi":{"rest":"पाठ, पहेली, खेल देखने आदि के दौरान कोच आराम करता है — ख़ुद सोचकर देखें। AI से या किसी दोस्त के साथ फिर खेलने पर कोच लौट आता है।"},
+  "ar":{"rest":"يستريح المدرّب أثناء الدروس والألغاز والمشاهدة ونحوها — فكّر بنفسك. ويعود عندما تلعب مجددًا ضد الذكاء الاصطناعي أو مع صديق."}}); })();

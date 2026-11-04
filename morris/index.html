@@ -1022,7 +1022,8 @@ body .info-line{font-size:12.5px}
 }
 /* coach (coach.js, shared/coachkit.js): next to the evaluation; hidden in lessons, puzzles, online games and live rated games */
 #coachCard.hidden{display:none}
-body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,body.rated-live #coachCard{display:none!important}
+body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
+body.in-online #coachCard{display:none!important}
 #coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 #coachCard.ck-off{padding:8px 12px}
 #coachCard.ck-off .ck-h{margin-bottom:4px}
@@ -1330,8 +1331,8 @@ body.in-lesson #coachCard,body.in-puzzle #coachCard,body.in-online #coachCard,bo
 <script src="i18n_coach.js?v=4"></script>
 <script src="../shared/coachkit.js?v=14"></script>
 <script src="../shared/record.js?v=9"></script>
-<script src="coach.js?v=5"></script>
-<script src="coach-i18n.js?v=3"></script>
+<script src="coach.js?v=6"></script>
+<script src="coach-i18n.js?v=4"></script>
 <script src="../shared/export.js?v=6"></script>
 <script src="../shared/pzbook.js?v=4"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -3743,7 +3744,7 @@ window.addEventListener('resize', () => renderFx());
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/morris.js?v=4')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=3'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=11')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=3'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
