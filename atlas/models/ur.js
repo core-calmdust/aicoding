@@ -39,13 +39,9 @@
   const CELLS = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) if (exists(r, c)) CELLS.push([r, c]);
   // the three inlay fields (lapis ground + plaques): [x0, z0, x1, z1]
   const FIELDS = [[-3.92, -1.42, -.08, 1.42], [-.08, -.42, 2.08, .42], [2.08, -1.42, 3.92, 1.42]];
-  // bands of shell / red diamonds in the bitumen margin: [x0, z0, x1, z1] (centred in the margin, as restored on the original)
-  const BM = MG / 2, BANDS = [
-    [-.08, -.42 - BM, 2.08, -.42 - BM], [-.08, .42 + BM, 2.08, .42 + BM],       // round the bridge
-    [-1.92, -1.42 - BM, -.08 + MG * .5, -1.42 - BM], [-2.92, 1.42 + BM, -.08 + MG * .5, 1.42 + BM],   // big block, far / near edge
-    [-.08 + BM, -1.42, -.08 + BM, -.42 - MG * .5],                               // big block, by the notch
-    [2.08 - BM, -1.42, 2.08 - BM, -.42 - MG * .5], [2.08 - MG * .5, 1.42 + BM, 3.92, 1.42 + BM],      // small block
-    [3.92 + BM, -1.42, 3.92 + BM, 1.42]];                                        // the small block's end
+  // bands of shell / red diamonds in the bitumen margin: one unbroken ring round every edge of the frame (the outline pushed in
+  // to the middle of the margin — the blocks' outer sides, both sides of the bridge, the steps of the notches). Built from OUT below.
+  const BM = MG / 2;
   let seed = 7; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
   // per-plaque hand-made variation (fixed: the same board every time)
   const VAR = {}; seed = 41;
@@ -181,20 +177,23 @@
     if (pass === 'r') { g.globalAlpha = .35; g.fillStyle = pat(g, GREYN(), 1 / 90); g.fillRect(minX, minZ, W, D); g.globalAlpha = 1; }
     // diamond bands
     seed = 99;
+    const t = .1;
     for (const [x0, z0, x1, z1] of BANDS) {
-      const hor = Math.abs(z1 - z0) < 1e-6, L = hor ? x1 - x0 : z1 - z0, t = .1;
-      g.save(); g.translate(x0, z0); if (!hor) g.rotate(Math.PI / 2);
-      g.fillStyle = S.shellEdge; g.fillRect(0, -t - .012, L, .012); g.fillRect(0, t, L, .012);
-      const n = Math.max(2, Math.round(L / .148)), p = L / n;
+      const L = Math.hypot(x1 - x0, z1 - z0), ang = Math.atan2(z1 - z0, x1 - x0);
+      g.save(); g.translate(x0, z0); g.rotate(ang);
+      g.fillStyle = S.shellEdge; g.fillRect(-t - .012, -t - .012, L + 2 * (t + .012), .012); g.fillRect(-t - .012, t, L + 2 * (t + .012), .012);   // the fine shell lines run on into the corners
+      const n = Math.max(1, Math.round(L / .148)), p = L / n;
       for (let i = 0; i < n; i++) {
         const cx = (i + .5) * p, j = (rnd() - .5) * .008, q1 = rnd(), q2 = rnd(), q3 = rnd(), q4 = rnd(), q5 = rnd();
         g.beginPath(); g.moveTo(cx - p * .44, j); g.lineTo(cx, -t * .82); g.lineTo(cx + p * .44, j); g.lineTo(cx, t * .82); g.closePath();
-        g.fillStyle = q1 < .08 ? S.red : S.shell; g.fill();
-        if (pass === 'c') { g.fillStyle = `rgba(110,80,40,${(q2 * .3).toFixed(2)})`; g.fill(); }
-        if (i < n - 1) { const ex = (i + 1) * p; g.beginPath(); g.moveTo(ex - p * .06, 0); g.lineTo(ex, -t * .5); g.lineTo(ex + p * .06, 0); g.lineTo(ex, t * .5); g.closePath(); g.fillStyle = S.red; g.fill(); }
-        if (q3 < .06) { g.fillStyle = S.bit; g.beginPath(); g.arc(cx + (q4 - .5) * .05, (q5 - .5) * .1, .03, 0, TAU); g.fill(); }   // a lost piece
+        g.fillStyle = S.shell; g.fill();
+        if (pass === 'c') { g.fillStyle = q1 < .3 ? `rgba(120,85,40,${(.15 + q2 * .25).toFixed(2)})` : `rgba(255,248,230,${(q2 * .18).toFixed(2)})`; g.fill(); }   // each piece its own tone
+        for (const ex of [i * p, (i + 1) * p]) { g.beginPath(); g.moveTo(ex - p * .06, 0); g.lineTo(ex, -t * .5); g.lineTo(ex + p * .06, 0); g.lineTo(ex, t * .5); g.closePath(); g.fillStyle = S.red; g.fill(); }   // red between (and at the corners)
+        if (q3 < .07) { g.fillStyle = S.bit; g.beginPath(); g.arc(cx + (q4 - .5) * .06, (q5 - .5) * .08, .018 + q4 * .014, 0, TAU); g.fill(); }   // a small chip (the band itself stays complete)
       }
       g.restore();
+      // a shell square at each corner joins the band round the turn
+      g.save(); g.translate(x0, z0); g.rotate(Math.PI / 4); const cs = t * .55; g.fillStyle = S.shell; g.fillRect(-cs / 2, -cs / 2, cs, cs); g.restore();
     }
     // lapis fields: mottled ground, then the strips cut into small pieces with dark joints
     seed = 5;
@@ -256,6 +255,11 @@
   /* ---------- the sides of the box: red limestone and shell slips, eye plaques ---------- */
   // the outline (seen from above, x right, z down): clockwise
   const OUT = [[-X0, -Z0], [XB, -Z0], [XB, -ZB], [XS, -ZB], [XS, -Z0], [X0, -Z0], [X0, Z0], [XS, Z0], [XS, ZB], [XB, ZB], [XB, Z0], [-X0, Z0]];
+  const BANDS = (() => {   // OUT runs clockwise on screen (x right, z down): inward normal of an edge d = (−dz, dx)
+    const n = OUT.length, nrm = i => { const p = OUT[i], q = OUT[(i + 1) % n], L = Math.hypot(q[0] - p[0], q[1] - p[1]); return [-(q[1] - p[1]) / L, (q[0] - p[0]) / L]; };
+    const V = OUT.map((p, i) => { const a = nrm((i + n - 1) % n), b = nrm(i); return [p[0] + BM * (a[0] + b[0]), p[1] + BM * (a[1] + b[1])]; });
+    return V.map((p, i) => [p[0], p[1], V[(i + 1) % n][0], V[(i + 1) % n][1]]);
+  })();
   // the sides, traversed so that u runs to the right as seen from outside (counter-clockwise from above)
   const SIDES = (() => { const L = [], n = OUT.length; let u = 0;
     for (let i = 0; i < n; i++) { const p = OUT[(n - i) % n], q = OUT[(n - i - 1 + n) % n], len = Math.hypot(q[0] - p[0], q[1] - p[1]);
@@ -436,7 +440,7 @@
   }
 
   /* ---------- dice: truncated tetrahedra, two tips inlaid (shell ring, lapis centre) ---------- */
-  const DR = .3, DT = .27;   // circumradius, how much of each edge the tips are cut
+  const DR = .3, DT = .3;   // circumradius, how much of each edge the tips are cut
   const TV = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].map(v => v.map(a => a * DR / Math.sqrt(3)));
   const MARKED = [true, true, false, false];
   const dieGeos = {};
@@ -465,9 +469,9 @@
     for (let i = 0; i < 4; i++) {
       const o = [0, 1, 2, 3].filter(x => x !== i), tri = o.map(j => cut(i, j)), cen = [0, 1, 2].map(a => (tri[0][a] + tri[1][a] + tri[2][a]) / 3);
       // pull the tip out a little: a rounded point instead of a flat cut
-      const tip = lerp(cen, TV[i], .35);
+      const tip = lerp(cen, TV[i], .82);   // nearly the full point: sharp tips
       if (!MARKED[i]) { for (let s = 0; s < 3; s++) add(tip, tri[s], tri[(s + 1) % 3], jit()); continue; }
-      const inn = tri.map(p => lerp(tip, p, .42));
+      const inn = tri.map(p => lerp(tip, p, .5));
       for (let s = 0; s < 3; s++) { const a = tri[s], b = tri[(s + 1) % 3], ia = inn[s], ib = inn[(s + 1) % 3]; add(a, b, ib, shell); add(a, ib, ia, shell); add(tip, ia, ib, lap); }
     }
     const g = new TT.BufferGeometry(); g.setAttribute('position', new TT.Float32BufferAttribute(Pa, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(Ca, 2));
@@ -476,12 +480,12 @@
   }
   const dieMats = {};
   function die(o = {}) {
-    const TT = T(), look = o.look === 'bone' ? 'bone' : 'stone';
+    const TT = T(), look = o.look === 'stone' ? 'stone' : 'bone';   // bone / shell-like (default), or a darker stone
     const mt = dieMats[look] || (dieMats[look] = (() => {
-      const c = canvas(8, 1), x = c.getContext('2d'), B = look === 'bone' ? ['#c8b591', '#bfa985', '#cdbb98'] : ['#8a7c6c', '#7e705f', '#958674'];
-      ['', '', '', '', '', '#ece3cf', '#ece3cf', '#26357e'].forEach((col, i) => { x.fillStyle = col || B[i % 3]; x.fillRect(i, 0, 1, 1); });
+      const c = canvas(8, 1), x = c.getContext('2d'), B = look === 'stone' ? ['#a89a84', '#9e8f78', '#b1a48f'] : ['#d6c7a6', '#ccbb98', '#ddd0b2'];
+      ['', '', '', '', '', '#fbf8f0', '#fbf8f0', '#1f3290'].forEach((col, i) => { x.fillStyle = col || B[i % 3]; x.fillRect(i, 0, 1, 1); });
       const t = tex(c, true); t.magFilter = t.minFilter = TT.NearestFilter; t.generateMipmaps = false; t.anisotropy = 1;
-      return new TT.MeshStandardMaterial({ map: t, roughness: look === 'bone' ? .5 : .62, metalness: 0 }); })());
+      return new TT.MeshStandardMaterial({ map: t, roughness: look === 'bone' ? .42 : .6, metalness: 0 }); })());
     const g = new TT.Group(), m = new TT.Mesh(dieGeo(look), mt); m.castShadow = true; m.receiveShadow = true; g.add(m);
     g.userData = { die: look, rest: DR / 3 }; return g;
   }
