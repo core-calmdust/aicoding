@@ -592,7 +592,27 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: i => setArrow(i == null ? null : +i),
+    onPlay: i => playRow(+i),
   });
+}
+// click a candidate row (PC): play the whole candidate play (every die) from the start of the turn, then end the turn —
+// the same as moving the checkers on the board and confirming
+async function playRow(i) {
+  try {
+    const r = S.rows && S.rows[i];
+    if (!r || !active() || typeof turn === 'undefined' || !turn || turn.ai || turn.study || !canInteract() || !S.cur) return;
+    if (BG.key(S.cur.start) !== BG.key(turn.start) || S.cur.side !== turn.side) return;
+    if (!r.moves || !r.moves.length || turn.plays.length <= 1) return;   // commitTurn() still checks the result is a legal play
+    const my = turn;
+    if (turn.steps.length) { turn.steps = []; turn.pos = turn.start.slice(); turn.left = turn.dice[0] === turn.dice[1] ? [turn.dice[0], turn.dice[0], turn.dice[0], turn.dice[0]] : turn.dice.slice(); }
+    if (typeof selected !== 'undefined') selected = null;
+    setArrow(null);
+    turn.locked = true;
+    await playMovesAnimated(r.moves);
+    if (turn !== my) return;
+    turn.locked = false;
+    commitTurn();
+  } catch (e) {}
 }
 // candidate arrows on the board (hovered / tapped row)
 function setArrow(i) {

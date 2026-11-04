@@ -468,6 +468,14 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => hi(u == null ? -1 : +u),
+    // click a candidate row (PC): sow that pit as if it were clicked on the board
+    onPlay: u => { try {
+      if (!active() || !myTurn() || !canHumanPlay()) return;
+      const k = +u, p = shownPos(); if (!(k >= 0 && k < 6) || !p.b[pitIndex(p.side, k)]) return;
+      hi(-1); armedPit = -1; setHover(-1);
+      const q = settings.coach && settings.mode !== 'watch' ? judgeCoach(cur, k) : null;
+      playMove(k).then(() => { if (q) coach(q.text, 'q-' + q.cls); });
+    } catch (e) {} },
   });
 }
 // a hovered candidate: ring the pit and show the sowing preview (landing pit, captures) on the board

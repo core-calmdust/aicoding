@@ -103,8 +103,8 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'fanorona', 'alquerque']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'alquerque' ? 6 : 5}` : `../${g.icon}`;
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ugolki']);   // images/atlas/<id>.webp exists
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7 })[g.id] || 5}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -176,13 +176,13 @@
   // title emblem: a compass seal (the "atlas") with ring lettering and a swallow-tail ribbon
   const TF = 'RocknRoll One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
   function emblem(main, pre, n) {
-    const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大全 ✦ ';
+    const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大百科 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大百科 ✦ ';
     const big = main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)));
     const pts = (len, w) => [0, 90, 180, 270].map(a => `<path d="M320 ${200 - len}L${320 + w} 200H${320 - w}z" transform="rotate(${a} 320 200)"/>`).join('');
     return `<svg viewBox="0 0 640 400" role="img" aria-hidden="true">
       <defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
       <circle cx="320" cy="200" r="176" fill="#111"/>
-      <g><animateTransform attributeName="transform" type="rotate" from="0 320 200" to="360 320 200" dur="20s" repeatCount="indefinite"/><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP">${ring}</textPath></text></g>
+      <g><animateTransform attributeName="transform" type="rotate" from="0 320 200" to="360 320 200" dur="20s" repeatCount="indefinite"/><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP" textLength="955" lengthAdjust="spacing">${ring}</textPath></text></g>
       <circle cx="320" cy="200" r="136" fill="#fff"/>
       <circle cx="320" cy="200" r="128" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 5"/>
       <g fill="#111" opacity=".16">${pts(118, 22)}</g>
@@ -205,12 +205,13 @@
   }
   // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
   let tfReady = false;
-  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大全世界の').then(() => { tfReady = true; if (page === 'home') renderHero(); }).catch(() => {});
-  function renderHero() {
+  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
+  function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
-    $('ttl').innerHTML = emblem(ja ? 'ボドゲ大全' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
+    $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt=""></span>`).join('');
+    if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -262,7 +263,7 @@
     if (!glOK && fxBusy()) return setTimeout(boot, 700);
     if (!glOK) initGL(); if (!glOK) return;
     const q = A_.byUpdate().map(g => g.id);
-    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} if (TG) TG.idle([id]).then(next); else next(); }); };
     setTimeout(next, 400);
   });
   boot();
@@ -381,14 +382,20 @@
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
+  // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
+  // and a board is only shown once its pictures are done (texReady)
+  const TG = window.AtlasTexGen;
+  const tagged = (name, fn) => TG ? TG.group(name, fn) : fn();
+  const texBusy = id => !!TG && TG.busy([id, 'room']);
+  const texReady = id => { if (!TG) return Promise.resolve(); TG.prioritize([id, 'room']); return TG.idle([id, 'room']); };
   function initGL() {
     if (glOK || !window.THREE) return glOK;
-    try { Table3D.mount($('gl')); glOK = true; } catch (e) { glOK = false; }
+    try { tagged('room', () => Table3D.mount($('gl'))); glOK = true; } catch (e) { glOK = false; }
     return glOK;
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) Table3D.prepare(id); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
+  function warm(id) { if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
@@ -434,11 +441,13 @@
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
       fly.animate([{ transform: 'rotateY(720deg) translateY(0)' }, { transform: 'rotateY(740deg) translateY(-6px)' }, { transform: 'rotateY(700deg) translateY(0)' }], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
-      requestAnimationFrame(() => setTimeout(() => {
+      const go = () => requestAnimationFrame(() => setTimeout(() => {
         openBoard(id, true, true);
         requestAnimationFrame(() => requestAnimationFrame(finish));
         setTimeout(finish, 900);
       }, 0));
+      try { warm(id); } catch (e) {}
+      if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
     }, T1);
   }
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
@@ -484,6 +493,7 @@
     ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(2.2)' }], { duration: 600, delay: shift + 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1300);
   }
+  let show3dTok = 0, pend3d = null;   // a board waiting for its textures (see openBoard)
   let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
@@ -499,8 +509,15 @@
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
       // back from a game on the table: the board drops in again and the camera snaps back quickly (ease-out) to the showcase view
-      if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
-      else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      const show3d = () => {
+        if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
+        else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      };
+      if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
+      if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
+        const tok = ++show3dTok, gl = $('gl'); gl.style.visibility = 'hidden';
+        pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
+      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
@@ -672,6 +689,7 @@
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
+    if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
@@ -831,6 +849,7 @@
   });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   function startRules() {
+    if (pend3d) { pend3d.then(startRules); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
@@ -1224,7 +1243,7 @@
     $('wm').innerHTML = lang === 'en' || /[^\x00-\x7f]/.test(title) === false ? [...title].map(c => `<span>${esc(c)}</span>`).join('') : esc(title);
     if (lang === 'ja') $('wm').innerHTML = [...title].map(c => `<span>${esc(c)}</span>`).join('');
     $('wmSub').textContent = t('sub');
-    document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大全' : 'World Board Game Atlas');
+    document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
     $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('back')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });

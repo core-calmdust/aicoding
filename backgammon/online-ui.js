@@ -1,6 +1,6 @@
 /* Backgammon — online play UI (lobby dialog, PC dock / phone tab, online matches on the board with commit–reveal dice, cube,
    resignation offers, result & rematch, spectating), first-visit profile dialog, Google link and cloud sync of local progress.
-   Same design as the other 世界のボドゲ大全 games (Nine Men's Morris / Checkers). Loaded after app.js / op.js and uses their globals
+   Same design as the other 世界のボドゲ大百科 games (Nine Men's Morris / Checkers). Loaded after app.js / op.js and uses their globals
    (match, cur, turn, view, settings, render, renderInfo, startTurn, rollAnim, animStep, toast, t, …). Backend: online.js (BgOnline). */
 'use strict';
 const ON = window.BgOnline;
@@ -1061,8 +1061,8 @@ if (olOn()) ON.onAuth(() => { dockRender(); });
 
 // ====================================================================== first visit: profile name + optional Google link
 const PF_KEY = 'backgammon-profile-asked';
-const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
-const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+const pfAsked = () => { try { return !!(localStorage.getItem(PF_KEY) || localStorage.getItem('atlas-profile-asked')); } catch (e) { return true; } };   // (asked once for all the games of the site)
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); localStorage.setItem('atlas-profile-asked', String(Date.now())); } catch (e) {} };
 function pfOpen() { $('#pfName').value = ON.localName() || ON.defaultName(); showOv('#profOverlay'); }
 async function pfSaveName() {
   const n = ON.cleanName($('#pfName').value);

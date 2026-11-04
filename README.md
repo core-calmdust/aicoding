@@ -18,7 +18,7 @@ The feel of '80s arcades, rebuilt with neon and modern game design.
 | #2 | [DANMAKU INVADER XTREME+](https://core-calmdust.github.io/aicoding/danmaku-inv.html) | Bullet hell (gamepad) |
 | #1 | [CYBER PONG XTREME+](https://core-calmdust.github.io/aicoding/pong.html) | Versus action (phones, gamepad) |
 
-## World Board Game Atlas — 世界のボドゲ大全
+## World Board Game Atlas — 世界のボドゲ大百科
 
 Classic board games and puzzles from around the world, each with a serious AI, step-by-step lessons and large puzzle collections (about 50 titles planned).
 

@@ -21,6 +21,9 @@
 // Build (wasm): see tools/build.sh. Host protocol: everything goes through the i32 buffer at io_ptr() (EXPORTs at the end).
 #include <stdint.h>
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64; typedef int64_t i64;
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #ifdef NATIVE
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,7 +135,9 @@ static void findKings(void) { KSQ[0] = KSQ[1] = -1; for (int s = 0; s < 90; s++)
 // Accumulators are updated lazily: makeMove only records the move; evaluate() brings the newest accumulator up to date from the
 // nearest computed one below it (or recomputes it from the board).
 #define XQ_IN 1260
-#define XQ_H 256
+#ifndef XQ_H
+#define XQ_H 256   /* hidden size; engine_simd512.wasm is built with -DXQ_H=512 */
+#endif
 #define XQ_QA 127
 #define XQ_QB 64
 #define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
@@ -164,8 +169,11 @@ static int xqEval(void) {
       for (int i = b + 1; i <= k; i++) {
         int f = xqMv[i][0], t = xqMv[i][1]; u8 p = xqMv[i][2], cap = xqMv[i][3];
         for (int c = 0; c < 2; c++) {
-          i16 *a = xqAcc[i][c]; const i16 *o = xqAcc[i - 1][c]; for (int j = 0; j < XQ_H; j++) a[j] = o[j];
-          xqSub(a, xqF(c, p, f)); xqAdd(a, xqF(c, p, t)); if (cap) xqSub(a, xqF(c, cap, t));
+          /* child = parent - from + to (- captured), one pass */
+          i16 *a = xqAcc[i][c]; const i16 *o = xqAcc[i - 1][c];
+          const i16 *wf = xqW1 + xqF(c, p, f) * XQ_H, *wt = xqW1 + xqF(c, p, t) * XQ_H;
+          if (cap) { const i16 *wc = xqW1 + xqF(c, cap, t) * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] = (i16)(o[j] - wf[j] + wt[j] - wc[j]); }
+          else for (int j = 0; j < XQ_H; j++) a[j] = (i16)(o[j] - wf[j] + wt[j]);
         }
         xqOk[i] = 1;
       }
@@ -173,6 +181,20 @@ static int xqEval(void) {
   }
   const i16 *a = xqAcc[k][side], *b = xqAcc[k][side ^ 1];
   i64 sum = 0;
+#ifdef __wasm_simd128__
+  /* the same sums (32 products per block in int32, wrapping alike), 8 lanes at a time */
+  {
+    const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(XQ_QA);
+    for (int i0 = 0; i0 < XQ_H; i0 += 16) {
+      v128_t xa0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0), lo), hi), xa1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0 + 8), lo), hi);
+      v128_t xb0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0), lo), hi), xb1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0 + 8), lo), hi);
+      v128_t v = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa0, xa0), wasm_v128_load(xqW2 + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa1, xa1), wasm_v128_load(xqW2 + i0 + 8))),
+                                 wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb0, xb0), wasm_v128_load(xqW2 + XQ_H + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb1, xb1), wasm_v128_load(xqW2 + XQ_H + i0 + 8))));
+      sum += (i32)((u32)wasm_i32x4_extract_lane(v, 0) + (u32)wasm_i32x4_extract_lane(v, 1) + (u32)wasm_i32x4_extract_lane(v, 2) + (u32)wasm_i32x4_extract_lane(v, 3));
+    }
+  }
+  if (0)
+#endif
   for (int i0 = 0; i0 < XQ_H; i0 += 16) {
     i32 part = 0;
     for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > XQ_QA ? XQ_QA : a[i]; part += x * x * xqW2[i]; }
@@ -184,6 +206,7 @@ static int xqEval(void) {
   return (int)(v > 20000 ? 20000 : v < -20000 ? -20000 : v);
 }
 EXPORT(xq_w1_ptr) i16 *xq_w1_ptr(void) { return xqW1; }
+EXPORT(xq_h) int xq_h(void) { return XQ_H; }
 EXPORT(xq_w2_ptr) i16 *xq_w2_ptr(void) { return xqW2; }
 EXPORT(xq_b1_ptr) i32 *xq_b1_ptr(void) { return xqB1; }
 EXPORT(xq_set_b2) void xq_set_b2(i32 b) { xqB2 = b; }

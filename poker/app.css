@@ -1636,3 +1636,120 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 .toast .tt-l+.tt-l{font-size:12.5px;color:var(--muted);margin-top:1px}
 @media (max-width:760px){.toast{bottom:calc(78px + env(safe-area-inset-bottom))}}
 .tut-tag.in{bottom:auto;top:6px}
+/* the action bar is always on screen (2026-11-04): the table is squeezed to the height left above it (app.js fitBoard);
+   the cards keep their size and may overlap the rail. Phones: the bar is pinned over the tab bar, with a fixed height
+   (no jump between your turn and the others'); the info boxes scroll under it. Landscape phones: the bar is a column beside the table. */
+@media (max-width:760px){
+  .pk .pk-left{display:contents}
+  .pk .pk-left > *{flex:none}
+  .pk .actbar{order:50;position:sticky;bottom:0;z-index:40;box-sizing:border-box;min-height:124px;padding:8px;gap:6px;margin-top:-2px;
+    background:linear-gradient(180deg,#1d1d20,#0f0f11);box-shadow:0 -8px 18px rgba(0,0,0,.5)}
+  .pk .stage{padding-bottom:0}
+  .pk .side{padding-bottom:4px}
+  .pk .abtn{padding:9px 6px;font-size:15px;border-radius:11px}
+  .pk .ab-btns.main,.pk .ab-btns:not(.main){gap:7px}
+  .pk .ab-size{gap:5px}
+  .pk .ab-size input[type=range]{height:22px}
+  .pk .szb{padding:6px 2px;font-size:12px;border-radius:9px}
+  .pk .ab-msg{padding:2px 0;font-size:13.5px}
+}
+@media (min-width:761px) and (max-height:500px){
+  .pk .pk-left{display:grid;grid-template-columns:minmax(0,1fr) 196px;column-gap:8px;align-items:stretch}
+  .pk .actbar{min-height:0;width:auto;margin:0;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:center;gap:7px;padding:8px}
+  .pk .ab-btns{display:grid;grid-auto-flow:row;gap:6px;width:100%;flex-wrap:nowrap}
+  .pk .ab-btns.main{flex:none}
+  .pk .abtn{min-width:0;width:100%;box-sizing:border-box;padding:8px 6px;font-size:15px;border-radius:11px;justify-content:center;white-space:nowrap}
+  .pk .ab-size{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%;flex:none}
+  .pk .ab-size input[type=range]{grid-column:1/-1;width:100%!important;max-width:none;height:22px;margin:0}
+  .pk .szb{padding:5px 2px;font-size:11.5px;white-space:nowrap;text-align:center;min-width:0}
+  .pk .ab-size .szb:nth-last-child(-n+2){grid-column:span 1}
+  .pk .abtn kbd,.pk .szb kbd{display:none}
+  .pk .ab-msg{font-size:13px}
+}
+/* tablets: the bar is as tall on the others' turns as on yours (the sizing wraps to a second row) → nothing below it jumps */
+@media (min-width:761px) and (max-width:1000px) and (min-height:501px){
+  .pk .actbar{min-height:96px;box-sizing:border-box}
+}
+@media (hover:hover) and (pointer:fine) and (min-width:1040px){
+  .pk .actbar{min-height:78px}
+}
+/* table layout from app.js layoutTable(): speech bubbles flip when the seat is at the edge; the result / HUD follow the board */
+.seat.bdn .bub{top:auto;bottom:-6px;transform:translate(-50%,100%)}
+.seat.me.bup .bub{top:-6px;bottom:auto;transform:translate(-50%,-100%)}
+.pk-result{top:calc(var(--bbot, calc(var(--rail) + 44% + var(--chh, 78px) * .5)) + 6px)}
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .m-hud[data-pos=mid]{top:calc(var(--bbot, calc(var(--rail) + (100% - 2 * var(--rail)) * .44 + var(--chh) * .5)) + 10px)}
+}
+.seat,.pk-pot,.pk-bet{width:max-content}
+.seat.bin .bub{top:0;transform:translate(-50%,-10%)}
+/* no room anywhere: a small bubble on the plate's top edge (the name stays readable) */
+.seat.bpl .bub{top:auto;bottom:calc(100% - 9px);transform:translate(-50%,0);z-index:6;font-size:10px;padding:1px 7px;border-radius:7px}
+.seat.me.bpl .bub{bottom:calc(100% - 9px);transform:translate(-50%,0)}
+.seat .plate{position:relative;z-index:1}
+.pk-table.tuck .seat:not(.me) .sc{margin-bottom:calc(var(--chh)*-.28)}
+.pk-table.tight .pk-board{gap:calc(var(--cw)*.03)}
+.pk-table.side .seat:not(.me){flex-direction:row;gap:3px}
+.pk-table.side .seat.cr:not(.me){flex-direction:row-reverse}
+.pk-table.side .seat:not(.me) .sc{margin-bottom:0}
+.pk-table.cbet .pk-bet .chsv + .chsv,.pk-table.cbet .pk-pot .chsv + .chsv{display:none}
+.pk-table.cbet .pk-bet{padding:1px 7px 1px 3px;gap:3px;font-size:12px}
+.pk-table.cbet .pk-bet .chsv{width:18px}
+.pk-table.cbet .pk-pot{padding:2px 9px 2px 6px;gap:4px}
+.pk-table.cbet .pk-pot .chsv{width:20px}
+.pk-table.cbet .pk-pot b{font-size:14px}.pk-table.cbet .pk-pot small{font-size:10px}
+.pk-table.mini .plate{padding:2px 7px 2px 2px;gap:4px}
+.pk-table.mini .ava{width:20px;height:20px;font-size:11px}
+.pk-table.mini .pn b{font-size:10.5px;max-width:48px}
+.pk-table.mini .plate .st{font-size:11px}
+.pk-table.mini .seat:not(.me) .cd.pc{width:calc(var(--cw)*.5);height:calc(var(--chh)*.5)}
+.pk-table.mini .seat:not(.me) .sc{min-height:calc(var(--chh)*.5)}
+.pk-table.mini .dbtn{width:18px;height:18px;font-size:10px;line-height:18px;right:-10px}
+/* stable seat sizes (the layout is solved once per size): room for the most cards of the game, a fixed-width stack,
+   the hand name over the bottom of the cards instead of under the plate */
+.seat .sc{--w:.6;--o:.26;min-width:calc(var(--cw) * (var(--w) + (var(--n) - 1) * (var(--w) - var(--o))))}
+.seat.many .sc{--o:.4}.seat.stud .sc{--o:.36}
+.seat.me .sc{--w:1.12;--o:.18}.seat.me.many .sc{--o:.42}.seat.me.stud .sc{--o:.5}
+.pk-table.mini .seat:not(.me) .sc{--w:.5}
+.pk-table.side .seat:not(.me) .sc{min-width:0}
+.plate .st{min-width:5ch;text-align:right}
+.plate .hinfo{position:absolute;left:50%;bottom:100%;transform:translate(-50%,35%);white-space:nowrap;z-index:3;pointer-events:none}
+.seat.me{z-index:3}
+.pk-table.mside .seat.me{flex-direction:row;gap:6px}
+.pk-table.mside .seat.me .dbtn{right:-12px;bottom:-4px}
+/* smallest tables: no face-down cards in front of the opponents, a small mark on the plate instead */
+.pk-table.nocd .seat:not(.me):not(.shown) .sc{display:none}
+.pk-table.nocd .seat.shown:not(.me) .sc{position:absolute;left:50%;bottom:calc(100% - 6px);transform:translateX(-50%);z-index:4;min-width:0}
+.pk-table.nocd .seat:not(.me):not(.folded) .plate::after{content:'';position:absolute;right:-5px;top:-6px;width:11px;height:15px;border-radius:2px;background:linear-gradient(135deg,#7a1020,#2a060b);box-shadow:3px 1px 0 -1px #f3ead6,3px 1px 0 0 #7a1020,0 1px 3px rgba(0,0,0,.6);border:1px solid #f3ead6}
+.pk-table.nocd .seat:not(.me) .ava{width:8px;height:8px;font-size:0;box-shadow:none;margin-left:3px}
+.pk-table.nocd .seat:not(.me) .plate{gap:4px;padding-right:9px}
+/* format (cash game / tournament) on the Game tab */
+.pk-ngw{display:flex;flex-direction:column;gap:12px;height:100%}
+.pk-ngw .ng-games{flex:1 1 auto;min-height:0;height:auto;margin:0}
+.pk-fmt{flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.pk-fmt > .lab{flex:none}
+.pk-fmts{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pk-fm{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);text-align:start;cursor:pointer;font:inherit}
+.pk-fm b{font-size:14px}.pk-fm small{font-size:11.5px;color:var(--muted);line-height:1.45}
+.pk-fm.sel{border-color:var(--hl);background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--hl-a)}
+@media (max-width:760px){.pk-fmt{flex-direction:column;align-items:stretch;gap:6px}.pk-fm small{display:none}.pk-ngw{height:auto}}
+/* tournament: busted players, the final place */
+.seat.out .plate{opacity:.4;filter:grayscale(1)}
+.seat.out .sc{visibility:hidden}
+.seat.out .plate .st{font-size:11px;letter-spacing:.12em;color:#ff9b90}
+.ab-msg.tour-end{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ab-msg.tour-end b{font:700 18px 'Shippori Mincho B1','Cormorant Garamond',serif;letter-spacing:.1em;color:var(--text)}
+.ab-msg.tour-end.win b{color:#ffe39a}
+.ab-msg.tour-end small{font-size:12px;color:#8fe3b8}
+.seat.out .plate .st::after{content:none!important}
+.st-tour{margin-top:12px}.st-tour .lab{display:block;margin-bottom:6px}
+
+/* coach on/off switch (top right of the coach card) */
+.side .coach-card h3,.pk .side .coach-card h3{display:flex;align-items:center;gap:8px}
+.ck-sw{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:999px;border:1px solid rgba(236,232,222,.22);background:rgba(0,0,0,.25);color:rgba(236,232,222,.55);font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-sw b{font:inherit}
+.ck-sw i{position:relative;width:26px;height:15px;border-radius:999px;background:rgba(236,232,222,.18);transition:background .2s}
+.ck-sw i::after{content:'';position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#cfc9bb;transition:transform .2s}
+.ck-sw.on{color:var(--hl2,#f6d48a);border-color:var(--hl-a,rgba(224,170,72,.5))}
+.ck-sw.on i{background:var(--hl,#e0aa48)}
+.ck-sw.on i::after{transform:translateX(11px);background:#1a1408}
+.ck-sw:focus-visible{outline:2px solid var(--hl,#e0aa48);outline-offset:2px}

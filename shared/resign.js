@@ -1,4 +1,4 @@
-// Resign — common "投了しますか？" confirmation for every 世界のボドゲ大全 versus game (common spec).
+// Resign — common "投了しますか？" confirmation for every 世界のボドゲ大百科 versus game (common spec).
 // The 投了 (resign) button sits right after 対局 and 待った in the menu; pressing it asks
 // "投了しますか？" with はい / いいえ, and only はい ends the game as a loss.
 //

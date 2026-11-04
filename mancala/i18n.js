@@ -3,7 +3,7 @@ var I18N = window.I18N = {};
 I18N.ja = { 'rotTip.title': '横画面でも遊べます！', 'rotTip.text': '盤が大きく表示されます。右上のボタンでいつでも切り替えられます。', 'rotTip.yes': '横画面にする', 'rotTip.no': 'このまま', 'rot.title': '横画面で遊ぶ', 'brand.back': '盤面に戻る',
   'ls.toList': 'レッスン一覧', 'pz.toList': 'パズル一覧',
   'tap.again': 'もう一度タップで決定',
-  'series': '世界のボドゲ大全',
+  'series': '世界のボドゲ大百科',
   'meta.title': 'Luxe Mancala — マンカラ', 'sub': 'マンカラ', 'back': 'ゲーム一覧', 'you': 'あなた', 'opp': '相手', 'defender': '守り手（完全読み）', 'p0': '先手', 'p1': '後手',
   'eval': '形勢', 'kifu': '棋譜', 'kifu.empty': 'まだ手がありません', 'nokifu': '棋譜がありません', 'emptyPit': '空の穴は選べません', 'saved': '前回の対局を再開しました', 'thinking': '考え中…',
   'btn.new': '対局', 'btn.new.title': '新しい対局', 'btn.undo': '待った', 'btn.undo.title': '待った (Ctrl+Z)', 'btn.hint': 'ヒント', 'btn.hint.title': 'ヒント（各穴の評価）', 'btn.rules': 'ルール', 'btn.rules.title': 'ルールを覚える',

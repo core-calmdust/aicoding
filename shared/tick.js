@@ -1,4 +1,4 @@
-// CountTick — time-signal beeps for byoyomi / clocks (世界のボドゲ大全 common spec).
+// CountTick — time-signal beeps for byoyomi / clocks (世界のボドゲ大百科 common spec).
 // When a clock reaches its last 5 seconds it beeps once per second: 5, 4, 3, 2, 1 ("ピッ、ピッ").
 //
 // Usage (call from the game's clock update, as often as you like — each second beeps only once):

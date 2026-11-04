@@ -20,10 +20,11 @@
   const LITE = (() => { try { if (localStorage.getItem('atlas-lite') === '1') return true; } catch (e) {}
     return COARSE && (navigator.deviceMemory || 8) <= 3; })();   // (core counts are unreliable on iOS: the frame-time check below decides there)
   const texScale = () => (LITE ? .5 : COARSE ? .5 : 1);   // phones never need 2048² procedural textures
+  let texNest = 0;   // > 1 while one procedural canvas is drawn inside another (a composite: its sources are drawn at once)
   function canvasTex(key, w, h, draw, rep) {
     if (texCache[key]) return texCache[key];
     const c = document.createElement('canvas'); c.width = w; c.height = h;
-    draw(c.getContext('2d'), w, h);
+    texNest++; try { draw(c.getContext('2d'), w, h); } finally { texNest--; }
     const t = new (T().CanvasTexture)(c);
     t.anisotropy = 4; t.encoding = T().sRGBEncoding;
     if (rep) { t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(rep, rep); }
@@ -41,24 +42,48 @@
     return (x, y, oct = 4) => { let s = 0, a = .5, fr = 1; for (let o = 0; o < oct; o++) { s += a * n(x * fr, y * fr); a *= .5; fr *= 2.03; } return s / (1 - Math.pow(.5, oct)); };
   }
   const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  /* the pixel loops of the room's textures, self-contained: on the portal they run in a worker (atlas/texgen.js) */
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    return {
+      // realistic wood: long fibres, growth rings, pores, gentle colour drift
+      wood(d, W, H, p) {
+        const N = makeNoise(p.seed), A = p.A, B = p.B, ringF = p.ringF;
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const u = x / W, v = y / H;
+          const warp = N(u * 2.2, v * 6, 4) * 1.6;                                   // fibres run along x
+          const ring = Math.sin((v * ringF + warp * 2.4 + N(u * 1.2, v * 1.2, 2) * 2) * Math.PI * 2) * .5 + .5;
+          const fibre = N(u * 40, v * 260, 2);
+          let t = Math.pow(ring, 2.6) * .55 + fibre * .3 + N(u * 3, v * 3, 3) * .25;
+          if (N(u * 90, v * 600, 1) > .82) t += .25;                                 // pores
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * W + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      },
+      tatami(d, W, H) {
+        const N = makeNoise(9);
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const weave = (y % 6 < 3 ? 8 : -6) + (N(x / 3, y / 40, 2) - .5) * 26 + (N(x / 80, y / 80, 2) - .5) * 14, i = (y * W + x) * 4;
+          d[i] = 196 + weave; d[i + 1] = 190 + weave; d[i + 2] = 132 + weave * .6; d[i + 3] = 255;
+        }
+      },
+      plaster(d, W) { const N = makeNoise(4); for (let i = 0; i < W * W; i++) { const x = i % W, y = i / W | 0, k = (N(x / 18, y / 18, 3) - .5) * 16; d[i * 4] = 246 + k; d[i * 4 + 1] = 236 + k; d[i * 4 + 2] = 214 + k; d[i * 4 + 3] = 255; } },
+    };
+  }
+  // fill a canvas with one of the loops above (portal: in a worker, the canvas fills a moment later; else right here)
+  function paintPx(c, name, p, after) {
+    const TG = window.AtlasTexGen;
+    if (TG && texNest <= 1) return TG.paint(c, KL, name, p, after);
+    const g = c.getContext('2d'), img = g.createImageData(c.width, c.height);
+    (KL.L || (KL.L = KL({ makeNoise })))[name](img.data, c.width, c.height, p); g.putImageData(img, 0, 0);
+    if (after) after(g, c.width, c.height); return c;
+  }
+  // draw fn once the source canvases are filled (composites of the textures above)
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   // realistic wood: long fibres, growth rings, pores, gentle colour drift
   function wood(key, base, dark, w = 512, h = 512, grain = 1) {
-    return canvasTex(key, w, h, (g, W, H) => {
-      const N = makeNoise(key.length * 31 + key.charCodeAt(0)), A = hex(base), B = hex(dark), img = g.createImageData(W, H), d = img.data;
-      const ringF = 9 * grain;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / H;
-        const warp = N(u * 2.2, v * 6, 4) * 1.6;                                   // fibres run along x
-        const ring = Math.sin((v * ringF + warp * 2.4 + N(u * 1.2, v * 1.2, 2) * 2) * Math.PI * 2) * .5 + .5;
-        const fibre = N(u * 40, v * 260, 2);
-        let t = Math.pow(ring, 2.6) * .55 + fibre * .3 + N(u * 3, v * 3, 3) * .25;
-        if (N(u * 90, v * 600, 1) > .82) t += .25;                                 // pores
-        t = Math.max(0, Math.min(1, t));
-        const i = (y * W + x) * 4;
-        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
-    });
+    return canvasTex(key, w, h, (g) => { paintPx(g.canvas, 'wood', { seed: key.length * 31 + key.charCodeAt(0), A: hex(base), B: hex(dark), ringF: 9 * grain }); });
   }
   // flat-sawn tabletop: a log cut by a plane gives cathedral arches; sharp latewood lines, fibre streaks, pores
   function woodTop(key, base, dark, W = 2048, H = 2048) {
@@ -509,8 +534,9 @@
         c.beginPath(); c.arc(x, y, r * .42, 0, 7); c.stroke();
         for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; c.beginPath(); c.moveTo(x + Math.cos(a) * r * .42, y + Math.sin(a) * r * .42); c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); c.stroke(); }
       };
-      const top = M({ map: canvasTex('tf' + n, 1024, 1024, (c, W) => {
-        c.drawImage(wood('tfw', '#c39762', '#7a5230', 512, 512, 1.3).image, 0, 0, W, W);
+      const tw = wood('tfw', '#c39762', '#7a5230', 512, 512, 1.3).image;
+      const top = M({ map: canvasTex('tf' + n, 1024, 1024, (c0) => { later([tw], c0.canvas, (c, W) => {
+        c.drawImage(tw, 0, 0, W, W);
         const s = W / n, home = new Set();
         if (n === 11) [[0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 5]].forEach(([a, b]) => [[a, b], [b, a], [n - 1 - a, b], [b, n - 1 - a]].forEach(([x, y]) => home.add(y * n + x)));
         else for (let k = 0; k < n; k++) if ((k >= mid - (n === 9 ? 1 : 0) && k <= mid + (n === 9 ? 1 : 0)) || k === mid) [[k, 0], [0, k], [k, n - 1], [n - 1, k]].forEach(([x, y]) => home.add(y * n + x));
@@ -521,10 +547,11 @@
         });
         c.strokeStyle = 'rgba(42,22,8,.9)'; c.lineWidth = n > 9 ? 4 : 5;
         for (let i = 0; i <= n; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.stroke(); c.beginPath(); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
-      }), roughness: .52, bumpScale: .01 });
+      }); }), roughness: .52, bumpScale: .01 });
       const FW = S + 1.1, runes = 'ᚺᚾᛖᚠᛏᚨᚠᛚ ᚲᛁᚾᚷ ';
-      const frameTop = M({ map: canvasTex('tfr', 1024, 1024, (c, W) => {
-        c.drawImage(wood('tfrw', '#5a3a22', '#2a180c', 512, 512, 1.1).image, 0, 0, W, W);
+      const fw = wood('tfrw', '#5a3a22', '#2a180c', 512, 512, 1.1).image;
+      const frameTop = M({ map: canvasTex('tfr', 1024, 1024, (c0) => { later([fw], c0.canvas, (c, W) => {
+        c.drawImage(fw, 0, 0, W, W);
         const b = W * .55 / FW / 2, m = W * .5 / FW / 2;   // the band's half-width and centre offset from the edge
         c.fillStyle = 'rgba(232,196,128,.78)'; c.font = `700 ${Math.round(b * .95)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
         for (let side = 0; side < 4; side++) {
@@ -533,7 +560,7 @@
           c.restore();
         }
         c.strokeStyle = 'rgba(232,196,128,.45)'; c.lineWidth = 3; c.strokeRect(4, 4, W - 8, W - 8); c.strokeRect(2 * m - 4, 2 * m - 4, W - 4 * m + 8, W - 4 * m + 8);
-      }), roughness: .45, bumpScale: .008 });
+      }); }), roughness: .45, bumpScale: .008 });
       const frameSide = M({ map: wood('tfrs', '#5a3a22', '#2a180c'), roughness: .5 });
       g.add(slab(FW, .5, FW, frameTop, frameSide));
       const inner = slab(S, .06, S, top, frameSide); inner.position.y = .5; g.add(inner);
@@ -942,22 +969,16 @@
       const t = new TT.Mesh(new TT.PlaneGeometry(40, 40), tm); t.rotation.x = -Math.PI / 2; t.receiveShadow = true; g.add(t);
     } else {
     // tatami
-    const tatami = canvasTex('tatami', 512, 1024, (c, W, H) => {
-      const N = makeNoise(9), img = c.createImageData(W, H), d = img.data;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const weave = (y % 6 < 3 ? 8 : -6) + (N(x / 3, y / 40, 2) - .5) * 26 + (N(x / 80, y / 80, 2) - .5) * 14, i = (y * W + x) * 4;
-        d[i] = 196 + weave; d[i + 1] = 190 + weave; d[i + 2] = 132 + weave * .6; d[i + 3] = 255;
-      }
-      c.putImageData(img, 0, 0);
+    const tatami = canvasTex('tatami', 512, 1024, (c0) => paintPx(c0.canvas, 'tatami', {}, (c, W, H) => {
       c.fillStyle = '#5a6a44'; c.fillRect(0, 0, 14, H); c.fillRect(W - 14, 0, 14, H);              // heri (cloth borders)
       c.fillStyle = 'rgba(255,255,255,.12)'; for (let y = 0; y < H; y += 14) c.fillRect(0, y, 14, 2), c.fillRect(W - 14, y, 14, 2);
       c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, W, 3); c.fillRect(0, H - 3, W, 3);
-    });
+    }));
     tatami.wrapS = tatami.wrapT = TT.RepeatWrapping; tatami.repeat.set(6, 3);
     const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), M({ map: tatami, roughness: .85, bumpScale: .01 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; g.add(floor);
     // walls: warm plaster above a wooden wainscot
-    const plaster = canvasTex('plaster', 512, 512, (c, W) => { const N = makeNoise(4), img = c.createImageData(W, W), d = img.data; for (let i = 0; i < W * W; i++) { const x = i % W, y = i / W | 0, k = (N(x / 18, y / 18, 3) - .5) * 16; d[i * 4] = 246 + k; d[i * 4 + 1] = 236 + k; d[i * 4 + 2] = 214 + k; d[i * 4 + 3] = 255; } c.putImageData(img, 0, 0); });
+    const plaster = canvasTex('plaster', 512, 512, (c) => paintPx(c.canvas, 'plaster'));
     plaster.wrapS = plaster.wrapT = TT.RepeatWrapping; plaster.repeat.set(3, 2);
     const wallM = M({ map: plaster, roughness: .95, bumpScale: .004 }), wain = M({ map: wood('wain', '#b9814a', '#7a4a22', 512, 512, 1.4), roughness: .6, bumpScale: .004 });
     const wall = (w, x, z, ry) => {

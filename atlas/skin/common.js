@@ -312,7 +312,7 @@
   })();
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
     const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
-    const TITLE = { ja: '世界のボドゲ大全', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };
+    const TITLE = { ja: '世界のボドゲ大百科', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };
     const bar = document.createElement('header'); bar.className = 'atlas-top';
     bar.innerHTML = `<a class="atlas-brand" href="${BASE}"><img src="${BASE}logo.svg" alt="" width="44" height="44"><span><b class="wmT"></b><small>World Board Game Atlas</small></span></a><span class="sp"></span>
       <span class="atlas-coin"><i>¢</i><b class="coinN">0</b></span>

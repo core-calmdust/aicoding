@@ -539,6 +539,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { const v = u == null ? null : +u; if (S.hov !== v) { S.hov = v; renderFx(); } },
+    // click a candidate row (PC): play that move as if made on the board
+    onPlay: u => { try { if (!active() || !myTurn() || !canHumanPlay()) return; const m = +u; if (!posAt(cur).pos.moves().includes(m)) return; S.hov = null; commit(m); } catch (e) {} },
   });
 }
 // the hovered / tapped candidate's arrow on the board

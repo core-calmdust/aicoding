@@ -92,20 +92,38 @@
     g.putImageData(img, 0, 0); return tex('c4Suede' + k, c, { wrap: true, rep: [.5, .5] });
   }
   // walnut: warm brown with darker streaks, fibres along x, seamless
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+    return {
+      // walnut: warm brown with darker streaks, fibres along x, seamless
+      walnut(d, k) {
+        const N = makeNoise(17), A = hexRGB('#8a5a34'), B = hexRGB('#3a2112');
+        const val = (u, v) => {
+          const warp = N(u * 1.5 + 3, v * 3 + 3, 3) * 2.4, ring = Math.sin((v * 5 + warp) * Math.PI * 2) * .5 + .5, fib = N(u * 5 + 3, v * 140 + 3, 2);
+          return .2 + Math.pow(ring, 3) * .45 + (fib - .5) * .45 + (N(u * 80, v * 420, 1) > .84 ? .14 : 0);
+        };
+        for (let y = 0; y < k; y++) for (let x = 0; x < k; x++) {
+          const u = x / k, v = y / k, t = Math.max(0, Math.min(1, val(u, v) * (1 - u) + val(u - 1, v) * u)), i = (y * k + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   function walnut(key, rep) {
     const k = SZ(512), name = 'c4Wal' + key + k; if (TX[name]) return TX[name];
     const base = 'c4WalC' + k;
     if (!TX[base + 'c']) {
-      const c = cv(k, k), g = c.getContext('2d'), img = g.createImageData(k, k), d = img.data, N = makeNoise(17), A = hexRGB('#8a5a34'), B = hexRGB('#3a2112');
-      const val = (u, v) => {
-        const warp = N(u * 1.5 + 3, v * 3 + 3, 3) * 2.4, ring = Math.sin((v * 5 + warp) * Math.PI * 2) * .5 + .5, fib = N(u * 5 + 3, v * 140 + 3, 2);
-        return .2 + Math.pow(ring, 3) * .45 + (fib - .5) * .45 + (N(u * 80, v * 420, 1) > .84 ? .14 : 0);
-      };
-      for (let y = 0; y < k; y++) for (let x = 0; x < k; x++) {
-        const u = x / k, v = y / k, t = Math.max(0, Math.min(1, val(u, v) * (1 - u) + val(u - 1, v) * u)), i = (y * k + x) * 4;
-        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0); TX[base + 'c'] = c;
+      const c = cv(k, k); paint(c, 'walnut'); TX[base + 'c'] = c;
     }
     return tex(name, TX[base + 'c'], { wrap: true, rep });
   }

@@ -1,4 +1,4 @@
-// CoachKit — shared building blocks for the "coach" (コーチ) of the 世界のボドゲ大全 games (common spec, model: poker).
+// CoachKit — shared building blocks for the "coach" (コーチ) of the 世界のボドゲ大百科 games (common spec, model: poker).
 //
 // The coach is an educational panel shown while the player is to move: a recommendation with its reason, the candidate
 // directions of a branching position (each explained), prioritized "how to think" tips (3 shown, the rest on demand), the

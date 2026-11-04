@@ -3291,8 +3291,8 @@ if (olOn()) {
 
 // ====================================================================== first visit: online name + optional Google link (only while online play is available)
 const PF_KEY = 'chess-profile-asked';
-const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
-const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+const pfAsked = () => { try { return !!(localStorage.getItem(PF_KEY) || localStorage.getItem('atlas-profile-asked')); } catch (e) { return true; } };   // (asked once for all the games of the site)
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); localStorage.setItem('atlas-profile-asked', String(Date.now())); } catch (e) {} };
 function pfOpen() { $('#pfName').value = Online.localName() || Online.defaultName(); showOverlay('#profOverlay'); }
 async function pfSaveName() {
   const n = Online.cleanName($('#pfName').value);

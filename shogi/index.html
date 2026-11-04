@@ -313,18 +313,18 @@ body.in-lesson .review-card{display:none!important}
 /* (the strategy picker: cpu-style.js turns the <select> into a button + a panel of chips) */
 .cs-sel.csp-native{display:none}
 .csp{position:relative;min-width:0;flex:1 1 auto}
-.csp-btn{display:flex;align-items:center;gap:10px;width:100%;min-width:9em;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:13px;letter-spacing:0;cursor:pointer;text-align:start}
+.csp-btn{display:flex;align-items:center;gap:10px;width:100%;min-width:9em;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:color-mix(in srgb, var(--panel) 80%, transparent);color:var(--text);font:inherit;font-size:13px;letter-spacing:0;cursor:pointer;text-align:start}
 .csp-btn:hover,.csp.open .csp-btn{border-color:rgba(201,169,97,.6)}
 .csp-cur{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .csp-btn svg{flex:none;width:10px;height:6px;fill:none;stroke:var(--brass);stroke-width:1.4;transition:transform .2s}
 .csp.open .csp-btn svg{transform:rotate(180deg)}
 .csp-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:40;width:min(340px, 86vw);display:none;grid-template-columns:1fr 1fr;gap:4px;padding:8px;border-radius:14px;
-  border:1px solid color-mix(in srgb, var(--brass) 40%, var(--line));background:linear-gradient(180deg,#2e2117,#1d140d);box-shadow:0 18px 40px -10px rgba(0,0,0,.85)}
+  border:1px solid color-mix(in srgb, var(--brass) 40%, var(--line));background:linear-gradient(180deg, var(--panel2), var(--panel));box-shadow:0 18px 40px -12px rgba(0,0,0,.5)}
 [dir=rtl] .csp-pop{right:auto;left:0}
 .csp.open .csp-pop{display:grid}
 .csp-pop button{padding:8px 10px;border-radius:8px;border:1px solid transparent;background:none;color:var(--muted);font:inherit;font-size:12.5px;letter-spacing:0;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .csp-pop button.all{grid-column:1 / -1}
-.csp-pop button:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.csp-pop button:hover{background:color-mix(in srgb, var(--accent) 10%, transparent);color:var(--text)}
 .csp-pop button.sel{color:var(--text);background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));border-color:rgba(226,194,117,.5)}
 .level-name small{display:block;font-weight:400;font-size:11px;line-height:1.45;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
@@ -466,6 +466,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 /* PC: a wider lesson dialog (all tabs, so its size does not change between tabs) */
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){ #lessonOverlay .modal{width:min(1000px, calc(100vw - 64px))} }
 #lessonOverlay .modal:has(> #lessonDoneView:not(.hidden)){height:auto}
+/* PC: every tab (ルール・レッスン・定跡・詰将棋) keeps the rules tab's size, so the box does not jump when switching */
+@media (hover: hover) and (pointer: fine) and (min-width: 820px) and (min-height: 561px){ #lessonOverlay .modal:not(:has(> #lessonDoneView:not(.hidden))){width:min(1080px, calc(100vw - 64px));height:min(820px, calc(100dvh - 32px));max-height:calc(100dvh - 32px)} }
 #segLs button{font-size:15px;padding:10px 4px}
 #lessonOverlay h2{font-size:25px}
 .ls-desc{font-size:15px;color:var(--muted);line-height:1.75;margin:-8px 0 16px}
@@ -884,14 +886,14 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] #handiNote.hidden{display:none!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col:not(.ngt-hide){display:flex!important;flex-direction:column;gap:18px;min-width:0;padding:18px 20px 20px;border-radius:16px;
     border:1px solid color-mix(in srgb, var(--brass) 26%, var(--line));
-    background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));
+    background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--panel2)), var(--panel) 70%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > *{margin:0!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field{align-self:stretch!important;width:auto}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols{overflow:visible!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child{display:flex;align-items:center;gap:10px;font-size:11.5px;letter-spacing:.22em;color:var(--brass);margin-bottom:10px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col > .field > label:first-child::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass) 40%, transparent), transparent)}
-  #newOverlay > .modal.ngt-pc[data-ngt=rules] #lvNote{margin-top:-10px!important;padding:8px 11px;font-size:10.5px;line-height:1.55;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] #lvNote{margin-top:-10px!important;padding:8px 11px;font-size:10.5px;line-height:1.55;border-radius:10px;background:color-mix(in srgb, var(--panel) 75%, transparent);border:1px solid color-mix(in srgb, var(--line) 50%, transparent)}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] #fOpts{margin-top:auto!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col.ng-empty{display:none!important}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-cols:has(> .ng-col.ng-empty){grid-template-columns:minmax(0,1fr);align-items:start}
@@ -899,7 +901,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .ng-col.ng-spread{justify-content:space-between}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .level-name{font-family:'Shippori Mincho B1',serif;font-size:24px;color:var(--accent);letter-spacing:.06em}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .level-name small{font-family:'Zen Kaku Gothic New',sans-serif;letter-spacing:0;margin-top:2px}
-  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg{padding:4px;gap:4px;border-radius:12px;background:rgba(0,0,0,.3)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg{padding:4px;gap:4px;border-radius:12px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button{padding:9px 4px;border-radius:9px;font-size:13.5px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button:not(.sel):hover{color:var(--text);background:rgba(255,255,255,.035)}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .seg button.sel{background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));color:var(--text);box-shadow:0 0 0 1px rgba(226,194,117,.55), 0 4px 12px -6px rgba(0,0,0,.8)}
@@ -907,13 +909,15 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] #segClock{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] #segClock button[data-v="0"]{grid-column:1}
   #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
-  #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks label{margin:0;padding:8px 11px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.05)}
+  #newOverlay > .modal.ngt-pc[data-ngt=rules] .checks label{margin:0;padding:8px 11px;border-radius:10px;background:color-mix(in srgb, var(--panel) 75%, transparent);border:1px solid color-mix(in srgb, var(--line) 60%, transparent)}
 }
+/* デザイン / ゲーム tabs: the hidden setting fields (some now live in the second column) take no room */
+#newOverlay > .modal:is([data-ngt=design],[data-ngt=game]) .ng-col > .field.hidden{display:none!important}
 /* phones (ngtabs sheet), ルール tab: the same framed panels as on PC, one under the other */
 #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col.ng-empty{display:none!important}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide){display:flex!important;flex-direction:column;gap:12px;margin:0 0 10px!important;padding:13px 14px 14px!important;border-radius:14px;
   border:1px solid color-mix(in srgb, var(--brass) 26%, var(--line));
-  background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--panel2)), var(--panel) 70%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px -16px rgba(0,0,0,.8)}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col > *{margin:0!important}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col > .field > label:first-child{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.2em;color:var(--brass);margin-bottom:7px}
@@ -921,8 +925,7 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .level-name{font-family:'Shippori Mincho B1',serif;font-size:22px;color:var(--accent);letter-spacing:.05em}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .level-name small{font-family:'Zen Kaku Gothic New',sans-serif;letter-spacing:0}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .seg button.sel{background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 22%, var(--panel2)), var(--panel2));color:var(--text);box-shadow:0 0 0 1px rgba(226,194,117,.55)}
-#newOverlay > .modal.ngt-on[data-ngt=rules] .checks label{margin:0;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.05)}
-#newOverlay > .modal.ngt-on[data-ngt=rules] .pd-btn{background:rgba(0,0,0,.3)}
+#newOverlay > .modal.ngt-on[data-ngt=rules] .checks label{margin:0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb, var(--panel) 75%, transparent);border:1px solid color-mix(in srgb, var(--line) 60%, transparent)}
 #newOverlay > .modal.ngt-on[data-ngt=rules] :is(#fColor,#fClock):not(.hidden){display:block!important}
 #newOverlay > .modal.ngt-on[data-ngt=rules] :is(#fColor,#fClock) > label{margin:0 0 7px!important;letter-spacing:.2em!important}
 #newOverlay > .modal.ngt-on[data-ngt=rules] .ng-col{gap:22px!important;padding:16px 14px 18px!important}
@@ -1130,7 +1133,7 @@ html[lang=ar] .pf-input{direction:rtl}
     --ch:calc(var(--cw) * 1.1);--bw:calc(var(--cw) * 9);--bh:calc(var(--ch) * 9);--fp:calc(var(--cw) * 0.45)}
   .app{grid-template-columns:auto var(--rw);grid-template-areas:"board side";align-items:center;align-content:center;justify-content:center;padding:calc(var(--pad) + var(--top)) var(--padx) var(--pad)}
   .side{grid-area:side;width:var(--rw);height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16);max-height:none}
-  .side-in > .info-line{position:absolute;left:0;right:0;top:calc(100% + 6px)}   /* (the search speed hangs under the column, so the record card stays level with the board) */   /* (the record card ends level with the board frame and the komadai) */
+  .side-in > .info-line{display:none}   /* (no search-speed line here: the record card stays level with the board, and nothing sticks out of the column — the online dock's fitting reads that as overflow) */   /* (the record card ends level with the board frame and the komadai) */
   .board-area{align-self:center}
   html.dock-compact .side{align-self:center}
   .side-in{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
@@ -1261,7 +1264,7 @@ html[lang=ar] .pf-input{direction:rtl}
 
   <aside class="side">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back">将棋<small data-i18n="title.sub"></small></h1></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大百科</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back">将棋<small data-i18n="title.sub"></small></h1></div>
       <div class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
     </div>
     <div class="side-in">
@@ -1342,9 +1345,9 @@ html[lang=ar] .pf-input{direction:rtl}
     </div>
     <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button><button data-v="4" data-i18n="clk.fis5"></button></div></div>
     </div><div class="ng-col">
-    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
+    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="22" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
-    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="20" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
+    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="22" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
         <label><input type="checkbox" id="optLegal"><span data-i18n="ng.legal"></span></label>
@@ -1483,23 +1486,23 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261104n8"></script>
+<script src="i18n.js?v=20261104fg4n"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=6"></script>
-<script src="../shared/rulesoffer.js?v=9"></script>
-<script src="engine.js?v=20261104tz"></script>
+<script src="../shared/export.js?v=7"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="engine.js?v=20261104n512"></script>
 <script src="strategy.js?v=20261018ol"></script>
 <script src="cpu-style.js?v=20261104cp"></script>
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
-<script src="../shared/pzbook.js?v=4"></script>
-<script src="../shared/headerbar.js?v=31"></script>
-<script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=6"></script>
+<script src="../shared/pzbook.js?v=5"></script>
+<script src="../shared/headerbar.js?v=33"></script>
+<script src="../shared/flipbtn.js?v=3"></script>
+<script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=28"></script>
+<script src="../shared/tick.js?v=2"></script>
+<script src="../shared/ruletour.js?v=29"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale2"></script>
@@ -1508,11 +1511,11 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/vtext.js?v=20261030sv4"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261104rl"></script>
+<script src="variants/variants.js?v=20261104th"></script>
 <script src="rvbox.js?v=20261028fsa"></script>
 <script src="rvtip.js?v=1"></script>
-<script src="../shared/coachkit.js?v=15"></script>
-<script src="../shared/record.js?v=9"></script>
+<script src="../shared/coachkit.js?v=16"></script>
+<script src="../shared/record.js?v=10"></script>
 <script src="coach.js?v=13"></script>
 <script src="coach-i18n.js?v=7"></script>
 <script>
@@ -1556,7 +1559,7 @@ const HANDI = [
   '1nsgkgsn1/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1',
   '2sgkgs2/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1',
 ];
-// AI strength steps, labelled by Shogi Club 24 rank (入門, 初心, 15級 … 1級, 初段 … 四段; measured against Gikou, see MODEL_CARD.md;
+// AI strength steps, labelled by Shogi Club 24 rank (入門 … 四段) with a Floodgate-equivalent rating (R550 … R3000, anchored by matches against Gikou 2; see MODEL_CARD.md;
 // the NNUE steps were rescaled for the v4 net, which equals the old net at about 1/12 of the nodes; 三段・四段 are extrapolated):
 // shallow search with randomness for the weakest, then a node budget (linear eval for 12–9級, NNUE from 8級), so the strength
 // does not depend on the device; the top steps also stop at a time cap
@@ -1564,7 +1567,7 @@ const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },   // 入門: 2-ply so it see
   { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
   { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
   { nodes: 260 }, { nodes: 520 }, { nodes: 1000 }, { nodes: 2000 }, { nodes: 3600 }, { nodes: 7200 }, { nodes: 14000 }, { nodes: 25000 },
-  { nodes: 49000, time: 12000 }, { nodes: 91000, time: 15000 }, { nodes: 370000, time: 15000 }, { nodes: 2200000, time: 20000 }];
+  { nodes: 49000, time: 12000 }, { nodes: 91000, time: 15000 }, { nodes: 180000, time: 15000 }, { nodes: 370000, time: 15000 }, { nodes: 900000, time: 20000 }, { nodes: 2200000, time: 20000 }];
 const COACH_MS = 2400, COACH_NODES = 1000000;          // coach card / hint: time cap and node budget (best move 75%, the alternatives the rest; a fast device stops at the nodes)
 // the coach / hint candidates: engine.js 'coach' (the full search of the strong levels); the variant worker only knows 'analyze'
 const coachMsg = (idx, n) => Variants.eng(game.variant) ? { type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: n } }
@@ -1576,7 +1579,7 @@ const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 2, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '', heianB: '8' };
+const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 3, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '', heianB: '8' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -1617,9 +1620,13 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     // settings saved before the rank steps (10 levels): map the level indices once
-    if (d.settings && d.settings.lvv !== 2) { settings.level = lvMig(d.settings.level); settings.level2 = lvMig(d.settings.level2); settings.lvv = 2; }
+    if (d.settings && d.settings.lvv !== 2 && d.settings.lvv !== 3) { settings.level = lvMig(d.settings.level); settings.level2 = lvMig(d.settings.level2); settings.lvv = 2; }
     settings.level = lvClamp(settings.level); settings.level2 = lvClamp(settings.level2);
-    if (d.game && d.game.rated && d.game.rated.k !== 2) { d.game.rated.lv = lvMig(d.game.rated.lv); d.game.rated.k = 2; }
+    if (d.game && d.game.rated && d.game.rated.k !== 2 && d.game.rated.k !== 3) { d.game.rated.lv = lvMig(d.game.rated.lv); d.game.rated.k = 2; }
+    // 21 → 23 steps (三段・五段 added): the old 三段 (19) and 四段 (20) keep their strength (now 四段 20 and the strongest 22)
+    { const m3 = v => v === 19 ? 20 : v === 20 ? 22 : v;
+      if (settings.lvv !== 3) { settings.level = m3(settings.level); settings.level2 = m3(settings.level2); settings.lvv = 3; }
+      if (d.game && d.game.rated && d.game.rated.k !== 3) { d.game.rated.lv = m3(d.game.rated.lv); d.game.rated.k = 3; } }
     if (d.game && d.game.start) { game = d.game; cur = game.moves.length; return true; }
   } catch (e) {}
   return false;
@@ -1643,7 +1650,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261104tz');
+  const w = new Worker('engine.js?v=20261104n512');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -2610,7 +2617,7 @@ document.addEventListener('click', e => { if (sel && !e.target.closest('.board')
 // Each AI level has a fixed rating on a Shogi Club 24-like scale (100 points per kyu, see MODEL_CARD.md); the opponent is picked
 // around the player's rating (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'shogi-rated-v1', RT_START = 900, RT_CLOCK = 2;      // RT_CLOCK: 10 min + 30 s byoyomi (CLOCKS[2])
-const RT_LV = [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600];   // per step (入門 … 四段)
+const RT_LV = [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600];   // per step (入門 … 六段以上)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
@@ -2669,7 +2676,7 @@ function rtStart() {
   if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const st = rtLoad(), pk = rtPick(st.r);
   settings.mode = 'ai';
-  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, k: 2, or: pk.or, my: st.r, tag: pk.tag });
+  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, k: 3, or: pk.or, my: st.r, tag: pk.tag });
   toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
 }
 function rtStatsHtml() {
@@ -5190,8 +5197,8 @@ if (olOn()) {
 
 // ---- first visit: profile name + optional Google link (once, only while nothing else is on screen)
 const PF_KEY = 'shogi-profile-asked';
-const pfAsked = () => { try { return !!localStorage.getItem(PF_KEY); } catch (e) { return true; } };
-const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); } catch (e) {} };
+const pfAsked = () => { try { return !!(localStorage.getItem(PF_KEY) || localStorage.getItem('atlas-profile-asked')); } catch (e) { return true; } };   // (asked once for all the games of the site)
+const pfDone = () => { try { localStorage.setItem(PF_KEY, String(Date.now())); localStorage.setItem('atlas-profile-asked', String(Date.now())); } catch (e) {} };
 function pfOpen() { $('#pfName').value = Online.localName() || (Online.profile && Online.profile.name) || Online.defaultName(); showOverlay('#profOverlay'); }
 async function pfSaveName() {
   const n = Online.cleanName($('#pfName').value);
@@ -5500,16 +5507,16 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=76')).then(() => load('../atlas/skin/common.js?v=15')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=13'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=78')).then(() => load('../atlas/skin/common.js?v=16')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=13'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101bf" defer></script>
+<script src="../shared/atlas.js?v=20261104ug6" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" defer></script>
-<script src="../shared/pickdrop.js?v=7"></script>
+<script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=23"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>

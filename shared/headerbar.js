@@ -1,4 +1,4 @@
-// HeaderBar — PC header bar for the 世界のボドゲ大全 games (common spec).
+// HeaderBar — PC header bar for the 世界のボドゲ大百科 games (common spec).
 //
 // On a PC browser the title, the menu buttons and the icon set move into one bar at the very top of the page:
 //   [ title ]  [ info (analysis, turn, …) ················ ]  [ menu: 対局 待った ヒント ルール レッスン パズル ]  [ icons ]

@@ -901,7 +901,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
-  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .modal{padding:24px 24px 18px}   /* same as the lesson / opening dialogs, so the top tabs do not shift */
   #rulesOverlay .ls-tabs{margin-bottom:10px}
   #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -1077,7 +1077,7 @@ body.in-online #coachCard{display:none!important}
 
   <aside class="side">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大全</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back"><span id="brandTitle">Nine Men's Morris</span><small id="brandSub"></small></h1></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series">世界のボドゲ大百科</a><h1 class="to-board" role="button" tabindex="0" data-i18n-title="brand.back"><span id="brandTitle">Nine Men's Morris</span><small id="brandSub"></small></h1></div>
       <span class="brand-r"><button id="btnSound" class="snd" data-i18n-title="btn.sound.title" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" data-i18n-title="back" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
     <div class="side-in">
@@ -1179,7 +1179,7 @@ body.in-online #coachCard{display:none!important}
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fRules" data-ng="game">
-      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
+      <label><span data-i18n="ng.rules"></span></label>
       <div class="ngt-gcards" id="ruleCards" style="--ngt-cols:3"></div>
     </div>
     <div class="ng-col ng-l">
@@ -1326,24 +1326,24 @@ body.in-online #coachCard{display:none!important}
   </div>
 </div>
 
-<script src="i18n.js?v=20261024ls"></script>
+<script src="i18n.js?v=20261024lsn"></script>
 <script src="i18n_more.js?v=20261028sk"></script>
 <script src="i18n_coach.js?v=4"></script>
-<script src="../shared/coachkit.js?v=15"></script>
-<script src="../shared/record.js?v=9"></script>
-<script src="coach.js?v=6"></script>
+<script src="../shared/coachkit.js?v=16"></script>
+<script src="../shared/record.js?v=10"></script>
+<script src="coach.js?v=7"></script>
 <script src="coach-i18n.js?v=4"></script>
-<script src="../shared/export.js?v=6"></script>
-<script src="../shared/pzbook.js?v=4"></script>
+<script src="../shared/export.js?v=7"></script>
+<script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=9"></script>
-<script src="../shared/headerbar.js?v=31"></script>
-<script src="../shared/flipbtn.js?v=2"></script>
-<script src="../shared/cardbar.js?v=6"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="../shared/headerbar.js?v=33"></script>
+<script src="../shared/flipbtn.js?v=3"></script>
+<script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/resign.js?v=1"></script>
-<script src="../shared/tick.js?v=1"></script>
-<script src="../shared/ruletour.js?v=28"></script>
+<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/tick.js?v=2"></script>
+<script src="../shared/ruletour.js?v=29"></script>
 <script src="engine.js?v=20261028rb"></script>
 <script src="rvbox.js?v=20261028fs"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=stale1"></script>
@@ -2469,7 +2469,6 @@ function resumeWith() {
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-$('#ngRulesHelp').onclick = () => openRules(draft.rule);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -3734,7 +3733,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261030ck"></script>
+<script src="online-ui.js?v=20261030ckp"></script>
 <!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
@@ -3744,16 +3743,16 @@ window.addEventListener('resize', () => renderFx());
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=76')).then(() => load('../atlas/skin/common.js?v=15')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=78')).then(() => load('../atlas/skin/common.js?v=16')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=6'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101bf" defer></script>
+<script src="../shared/atlas.js?v=20261104ug6" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>
-<script src="../shared/pickdrop.js?v=7"></script>
+<script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=23"></script>
 <script src="../shared/nglux.js?v=11"></script>
 <script src="../shared/resumeng.js?v=1"></script>

@@ -5,7 +5,7 @@ I18N.ja = {
   'land.info': '情報', 'land.board': '盤面',
   'land.tip': '横画面でも遊べます！', 'land.tipSub': '右上のボタンで、スマホを横にした大きな盤面に切り替えられます。', 'land.go': '横画面にする', 'land.keep': 'このまま',
   'land.title': '横画面で遊ぶ（スマホ）', 'land.on': '横画面 ON', 'land.off': '横画面 OFF',
-  'series': '世界のボドゲ大全',
+  'series': '世界のボドゲ大百科',
   'tag.noshots': '残るブロットに相手の当たり目はありません。',
   'meta.title': 'バックギャモン V2', 'title': 'バックギャモン', 'back': 'ゲーム一覧', 'p0': '金', 'p1': '黒', 'you': 'あなた', 'pips': 'ピップ', 'pt': '点',
   'eval': '形勢（勝率）', 'kifu': '棋譜', 'copy': 'コピー', 'copy.title': '棋譜をテキストでコピー', 'copied': '棋譜をコピーしました', 'copyFail': 'コピーできませんでした', 'nokifu': '棋譜なし', 'kifu.empty': 'まだ手がありません',

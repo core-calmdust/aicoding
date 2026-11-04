@@ -2309,3 +2309,18 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 #tutLayer .tut-mask,#tutLayer .tut-hole,#tutLayer .tut-rings{pointer-events:none}
 #tutLayer.dock .tut-box{max-height:40vh}
 @media (max-height:700px){#tutLayer.dock .tut-box{max-height:36vh}#tutLayer.dock .tut-box p{font-size:12px;line-height:1.45}}
+/* roads: the help button (how to read them) sits next to the zoom button in the box title */
+.rd-hb{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;float:inline-end;margin-top:-3px}
+.rd-hb .rd-zoom{margin-inline-start:0}
+.rd-hb .rd-help{margin-inline-start:0;width:26px;height:24px;padding:0;border-radius:8px;font:700 12.5px/1 'Zen Kaku Gothic New',sans-serif;letter-spacing:0;display:inline-grid;place-items:center}
+
+/* coach on/off switch (top right of the coach card) */
+.side .coach-card h3,.pk .side .coach-card h3{display:flex;align-items:center;gap:8px}
+.ck-sw{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:999px;border:1px solid rgba(236,232,222,.22);background:rgba(0,0,0,.25);color:rgba(236,232,222,.55);font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-sw b{font:inherit}
+.ck-sw i{position:relative;width:26px;height:15px;border-radius:999px;background:rgba(236,232,222,.18);transition:background .2s}
+.ck-sw i::after{content:'';position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#cfc9bb;transition:transform .2s}
+.ck-sw.on{color:var(--hl2,#f6d48a);border-color:var(--hl-a,rgba(224,170,72,.5))}
+.ck-sw.on i{background:var(--hl,#e0aa48)}
+.ck-sw.on i::after{transform:translateX(11px);background:#1a1408}
+.ck-sw:focus-visible{outline:2px solid var(--hl,#e0aa48);outline-offset:2px}

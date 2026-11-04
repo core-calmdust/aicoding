@@ -609,6 +609,7 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hover = u == null ? null : +u; renderFx(); },
+    onPlay: u => { try { if (u == null || !myTurn() || !canHumanPlay()) return; const m = +u; if (!posAt(cur).pos.moves().includes(m)) return; S.hover = null; commit(m); } catch (e) {} },
   });
 }
 // arrows on the board for the hovered candidate (opening / book moves: only the hovered one)

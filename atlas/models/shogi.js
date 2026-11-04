@@ -53,34 +53,86 @@
   const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.png?v=1'; } })();
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
   const glyphsReady = new Promise(res => {
-    const im = new Image();
-    im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); GLYPHS[k] = c; }); res(); };
-    im.onerror = () => Promise.all([...Array(14).keys()].map(i => loadGlyph(i + 1, false)).concat([loadGlyph(8, true)])).then(res);   // fall back to the SVGs
-    im.src = SHEET;
+    const slice = im => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); GLYPHS[k] = c; }); res(); };
+    const svgs = () => Promise.all([...Array(14).keys()].map(i => loadGlyph(i + 1, false)).concat([loadGlyph(8, true)])).then(res);   // fall back to the SVGs
+    const viaImg = () => { const im = new Image(); im.onload = () => slice(im); im.onerror = svgs; im.src = SHEET; };
+    // decoded off the main thread where possible (a big PNG decoded on first draw stalls the page for a moment)
+    if (typeof createImageBitmap === 'function' && typeof fetch === 'function') fetch(SHEET).then(r => { if (!r.ok) throw 0; return r.blob(); }).then(b => createImageBitmap(b)).then(bm => { slice(bm); bm.close && bm.close(); }).catch(viaImg);
+    else viaImg();
   });
   /* ---------- textures ---------- */
   // boxwood (柘植) face of a piece: pale honey with very fine straight grain and a few silky flecks
-  function tsuge(c, W, H, seed) {
-    const N = makeNoise(seed), img = c.createImageData(W, H), d = img.data;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const u = x / W, v = y / H;
-      const g = N(u * 60, v * 3, 2) * .5 + N(u * 9 + N(v * 2, u, 2) * 2, v * .8, 3) * .5;
-      const fleck = N(u * 30, v * 90, 1) > .8 ? .06 : 0;
-      const t = .18 + g * .32 - fleck, i = (y * W + x) * 4;
-      d[i] = 236 - t * 60; d[i + 1] = 204 - t * 70; d[i + 2] = 140 - t * 80; d[i + 3] = 255;
-    }
-    c.putImageData(img, 0, 0);
+  function tsuge(c, W, H, seed, after) { paint(c.canvas, 'tsuge', { seed }, after); }
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    const tsuge = (d, W, H, seed) => {
+      const N = makeNoise(seed);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const u = x / W, v = y / H;
+        const g = N(u * 60, v * 3, 2) * .5 + N(u * 9 + N(v * 2, u, 2) * 2, v * .8, 3) * .5;
+        const fleck = N(u * 30, v * 90, 1) > .8 ? .06 : 0;
+        const t = .18 + g * .32 - fleck, i = (y * W + x) * 4;
+        d[i] = 236 - t * 60; d[i + 1] = 204 - t * 70; d[i + 2] = 140 - t * 80; d[i + 3] = 255;
+      }
+    };
+    return {
+      tsuge(d, W, H, p) { tsuge(d, W, H, p.seed); },
+      // a face from the inscription sheet: gd = the glyph's RGBA (alpha = lacquer, the grey layers = its height)
+      glyphFace(d, W, H, p) {
+        const gd = p.gd, type = p.type, kind = p.kind, red = type > 8;
+        if (kind === 'map') tsuge(d, W, H, 11 + type); else for (let i = 3; i < d.length; i += 4) d[i] = 255;   // (else: opaque black)
+        // a soft shadow under the raised lacquer (map only)
+        if (kind === 'map') for (let y = H - 1; y >= 3; y--) for (let x = W - 1; x >= 2; x--) { const j = ((y - 3) * W + (x - 2)) * 4 + 3, a = gd[j] / 255 * .28, i = (y * W + x) * 4; if (a) { d[i] *= 1 - a; d[i + 1] *= 1 - a; d[i + 2] *= 1 - a; } }
+        for (let i = 0; i < W * H; i++) {
+          const a = gd[i * 4 + 3] / 255; if (!a) { if (kind === 'rough') { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 150; } continue; }
+          const hgt = 1 - (red ? gd[i * 4 + 1] : gd[i * 4]) / 255;    // dark layer = top of the stroke
+          if (kind === 'map') { const L = red ? [150, 22, 14] : [16, 9, 5], hi = Math.pow(hgt, 3) * 26; for (let k = 0; k < 3; k++) d[i * 4 + k] = d[i * 4 + k] * (1 - a) + (L[k] + hi) * a; }
+          else if (kind === 'rough') { const v = 150 * (1 - a) + 28 * a; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
+          else { const v = 255 * a * (.35 + .65 * hgt); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
+        }
+      },
+      // board top: straight-grained kaya
+      top(d, W, H) {
+        const N = makeNoise(5);
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const u = x / W, v = y / H;
+          const r = (u * 34 + N(u * 1.5, v * 2.2, 3) * 1.8 + N(u * 12, v * 30, 2) * .05) % 1;
+          const late = Math.exp(-Math.pow((r - .85) / .05, 2)) * .55 + Math.exp(-Math.pow((r - .85) / .18, 2)) * .25;
+          const t = .16 + late * .45 + (N(u * 3, v * 260, 1) - .5) * .12 + (N(u * 2, v * 2, 2) - .5) * .18, i = (y * W + x) * 4;
+          d[i] = 208 - t * 66; d[i + 1] = 150 - t * 62; d[i + 2] = 78 - t * 46; d[i + 3] = 255;
+        }
+      },
+      endGrain(d, W, H, p) {
+        const N = makeNoise(p.seed), cx = p.cx, cy = p.cy, k = p.k;
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const u = x / W, v = y / H, dx = (u - cx) * k, dy = (v - cy);
+          const r = Math.sqrt(dx * dx + dy * dy) * 60 + N(u * 4, v * 4, 3) * 3 + N(u * 40, v * 40, 1) * .2;
+          const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2));
+          const t = .2 + late * .35 + (N(u * 2, v * 2, 2) - .5) * .2, i = (y * W + x) * 4;
+          d[i] = 212 - t * 70; d[i + 1] = 158 - t * 70; d[i + 2] = 82 - t * 55; d[i + 3] = 255;
+        }
+      },
+    };
   }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
+
   const FRONT = ['', '歩兵', '香車', '桂馬', '銀将', '角行', '飛車', '金将', '玉将', 'と金', '成香', '成桂', '成銀', '龍馬', '龍王'];
   // face: wood + lacquer characters; rough: glossy where lacquered; bump: raised, rounded strokes
   function faceTex(type, kingOu, kind) {
     const G = GLYPHS['k' + type + (kingOu ? 'o' : '')];
     const key = `shf-${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
-    if (G) return canvasTex(key, 256, 296, (c, W, H) => glyphFace(c, W, H, G, type, kind));
-    return canvasTex(key, 256, 296, (c, W, H) => {
+    if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind }); });   // (read once per glyph)
+    return canvasTex(key, 256, 296, (c0, W, H) => {
       const txt = type === 8 && kingOu ? '王将' : FRONT[type], red = type > 8;
-      if (kind === 'map') tsuge(c, W, H, 11 + type);
-      else { c.fillStyle = kind === 'rough' ? '#888' : '#000'; c.fillRect(0, 0, W, H); }
+      const ink = c => {
       c.textAlign = 'center'; c.textBaseline = 'middle';
       const fs = W * (txt.length > 1 ? .4 : .62);
       c.font = `${fontOK ? '' : '700 '}${fs}px ${FONT}`;
@@ -96,38 +148,17 @@
       }
       if (kind === 'rough') draw('#1a1a1a', 2);
       if (kind === 'bump') { draw('#606060', 8, .03); draw('#c0c0c0', 4); draw('#ffffff', 1, -.02); }
+      };
+      if (kind === 'map') tsuge(c0, W, H, 11 + type, ink);
+      else { c0.fillStyle = kind === 'rough' ? '#888' : '#000'; c0.fillRect(0, 0, W, H); ink(c0); }
     });
-  }
-  function glyphFace(c, W, H, G, type, kind) {
-    const gd = G.getContext('2d').getImageData(0, 0, W, H).data, red = type > 8;
-    if (kind === 'map') tsuge(c, W, H, 11 + type); else { c.fillStyle = '#000'; c.fillRect(0, 0, W, H); }
-    const img = c.getImageData(0, 0, W, H), d = img.data;
-    // a soft shadow under the raised lacquer (map only)
-    if (kind === 'map') for (let y = H - 1; y >= 3; y--) for (let x = W - 1; x >= 2; x--) { const j = ((y - 3) * W + (x - 2)) * 4 + 3, a = gd[j] / 255 * .28, i = (y * W + x) * 4; if (a) { d[i] *= 1 - a; d[i + 1] *= 1 - a; d[i + 2] *= 1 - a; } }
-    for (let i = 0; i < W * H; i++) {
-      const a = gd[i * 4 + 3] / 255; if (!a) { if (kind === 'rough') { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 150; } continue; }
-      const hgt = 1 - (red ? gd[i * 4 + 1] : gd[i * 4]) / 255;    // dark layer = top of the stroke
-      if (kind === 'map') { const L = red ? [150, 22, 14] : [16, 9, 5], hi = Math.pow(hgt, 3) * 26; for (let k = 0; k < 3; k++) d[i * 4 + k] = d[i * 4 + k] * (1 - a) + (L[k] + hi) * a; }
-      else if (kind === 'rough') { const v = 150 * (1 - a) + 28 * a; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
-      else { const v = 255 * a * (.35 + .65 * hgt); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
-    }
-    c.putImageData(img, 0, 0);
   }
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
   // n: squares per side (9; 5 for 5五将棋 — no stars)
   function boardTop(n = 9) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
     const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
-    return canvasTex(n === 9 ? 'shogiTop3' : 'shogiTop3-' + n, BW * PX | 0, BD * PX | 0, (c, W, H) => {
-      const N = makeNoise(5), img = c.createImageData(W, H), d = img.data;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / H;
-        const r = (u * 34 + N(u * 1.5, v * 2.2, 3) * 1.8 + N(u * 12, v * 30, 2) * .05) % 1;
-        const late = Math.exp(-Math.pow((r - .85) / .05, 2)) * .55 + Math.exp(-Math.pow((r - .85) / .18, 2)) * .25;
-        const t = .16 + late * .45 + (N(u * 3, v * 260, 1) - .5) * .12 + (N(u * 2, v * 2, 2) - .5) * .18, i = (y * W + x) * 4;
-        d[i] = 208 - t * 66; d[i + 1] = 150 - t * 62; d[i + 2] = 78 - t * 46; d[i + 3] = 255;
-      }
-      c.putImageData(img, 0, 0);
+    return canvasTex(n === 9 ? 'shogiTop3' : 'shogiTop3-' + n, BW * PX | 0, BD * PX | 0, (c0) => paint(c0.canvas, 'top', {}, (c) => {
       const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = 'rgba(20,10,4,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
@@ -137,7 +168,7 @@
       }
       c.fillStyle = 'rgba(20,10,4,.95)';
       if (n === 9) [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
-    });
+    }));
   }
   // the lines are raised lacquer too: a bump map with the grid
   function boardBump(n = 9) {
@@ -152,17 +183,7 @@
   }
   // the sides of the block show end grain: tight growth rings arching across the face (like the photo of a real 榧 board)
   function endGrain(key, w, h, cx, cy, k) {
-    return canvasTex(key, w, h, (c, W, H) => {
-      const N = makeNoise(key.length * 7), img = c.createImageData(W, H), d = img.data;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / H, dx = (u - cx) * k, dy = (v - cy);
-        const r = Math.sqrt(dx * dx + dy * dy) * 60 + N(u * 4, v * 4, 3) * 3 + N(u * 40, v * 40, 1) * .2;
-        const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2));
-        const t = .2 + late * .35 + (N(u * 2, v * 2, 2) - .5) * .2, i = (y * W + x) * 4;
-        d[i] = 212 - t * 70; d[i + 1] = 158 - t * 70; d[i + 2] = 82 - t * 55; d[i + 3] = 255;
-      }
-      c.putImageData(img, 0, 0);
-    });
+    return canvasTex(key, w, h, (c) => { paint(c.canvas, 'endGrain', { seed: key.length * 7, cx, cy, k }); });
   }
 
   /* ---------- a piece ---------- */
@@ -285,6 +306,11 @@
   function images(px = 220) {
     if (imgCache) return imgCache;
     return (imgCache = Promise.all([Promise.race([fontReady, new Promise(r => setTimeout(r, 1500))]), glyphsReady]).then(() => {
+      // portal: the faces are drawn in a worker — build them first and wait (they are cached for the renders below)
+      if (!window.AtlasTexGen) return;
+      for (let type = 1; type <= 14; type++) for (const ou of type === 8 ? [false, true] : [false]) pieceMats(type, ou);
+      return AtlasTexGen.settle();
+    }).then(() => {
       const TT = T(), W = px, H = Math.round(px * CH / CW);
       const R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       R.setSize(W, H, false); R.setPixelRatio(1); R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .95;

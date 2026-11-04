@@ -2,7 +2,7 @@
    Also holds the texts of the rules tour (r.*), the lessons (cat/l/lp/ld/x/tip/q/e/lq.*) and the research tools (tl/sy/rx.*). */
 const I18N = {
 ja: {
-  series: '世界のボドゲ大全', 'meta.title': 'バカラ | 世界のボドゲ大全', title: 'バカラ', back: 'ホームへ',
+  series: '世界のボドゲ大百科', 'meta.title': 'バカラ | 世界のボドゲ大百科', title: 'バカラ', back: 'ホームへ',
   'btn.sound': '効果音', 'btn.settings': '設定', 'btn.new': '新しいゲーム', 'btn.new.s': '新規', 'btn.new.t': 'ルールの種類・デッキ数・持ち金・デザインを選んで始める',
   'btn.resign': '精算', 'btn.resign.t': 'このテーブルを精算して席を立つ（新しいシューで始め直す）',
   'btn.hint': 'ヒント', 'btn.hint.t': 'いま一番損の小さい賭け方（H）', 'btn.rules': 'ルール', 'btn.rules.t': 'ルール説明（チュートリアル）',
@@ -39,7 +39,7 @@ ja: {
   'toast.noMoney': '持ち金が足りません', 'toast.minBet': '最小ベットは {n} です', 'toast.rebuy': 'チップがなくなったので {n} から再スタート', 'toast.newShoe': 'カットカードが出たので、新しいシューに交換しました',
   cashout: '精算しました（{h}回・収支 {n}）。新しいシューです', cashoutQ: '精算しますか？',
   'hint.best': 'いちばん損が小さいのは {w}（ハウスエッジ {e}）。', 'hint.plus': 'このシューの残りでは {b} がプラスの期待値です！',
-  'coach.off': 'コーチ機能はオフです。設定でオンにすると、賭けの損得や3枚目の判断を解説します。', 'coach.deal': '配っています。カードの合計と3枚目のルールを予想してみよう。', 'coach.sq': '伏せたカードの数字を予想しながらめくろう。結果は配った瞬間に決まっているので、めくり方で変わることはありません。',
+  'coach.off': 'コーチ機能はオフです。右上のスイッチでオンにすると、賭けの損得や3枚目の判断を解説します。', 'coach.deal': '配っています。カードの合計と3枚目のルールを予想してみよう。', 'coach.sq': '伏せたカードの数字を予想しながらめくろう。結果は配った瞬間に決まっているので、めくり方で変わることはありません。',
   'rec.B': 'おすすめ：バンカー', 'rec.P': 'おすすめ：プレイヤー',
   'why.best.classic': 'バンカーのハウスエッジは {b}、プレイヤーは {p}。コミッションを払ってもバンカーのほうが少しだけ損が小さい賭けです。',
   'why.best.nocomm': 'このルールではバンカーが {b}、プレイヤーが {p}。「6勝ちは半分」の分だけバンカーが不利になり、プレイヤーのほうが損が小さくなります。',
@@ -322,7 +322,7 @@ en: {
   'toast.noMoney': 'Not enough money', 'toast.minBet': 'The minimum bet is {n}', 'toast.rebuy': 'Out of chips — starting again with {n}', 'toast.newShoe': 'The cut card came out — new shoe',
   cashout: 'Cashed out ({h} coups, {n}). New shoe.', cashoutQ: 'Cash out?',
   'hint.best': 'The cheapest bet is {w} (house edge {e}).', 'hint.plus': 'With the cards left in this shoe, {b} has a positive expectation!',
-  'coach.off': 'The coach is off. Turn it on in the settings to see the cost of your bets and the drawing decisions explained.', 'coach.deal': 'Dealing. Guess the totals and the third-card decisions.', 'coach.sq': 'Peel and guess the number. The result was fixed when the card was dealt — peeling cannot change it.',
+  'coach.off': 'The coach is off. Turn it on with the switch at the top right to see the cost of your bets and the drawing decisions explained.', 'coach.deal': 'Dealing. Guess the totals and the third-card decisions.', 'coach.sq': 'Peel and guess the number. The result was fixed when the card was dealt — peeling cannot change it.',
   'rec.B': 'Best: Banker', 'rec.P': 'Best: Player',
   'why.best.classic': 'Banker\'s house edge is {b}, Player\'s {p}. Even after the commission, Banker is slightly the cheaper bet.',
   'why.best.nocomm': 'Here Banker\'s edge is {b} and Player\'s {p}: paying half on a win with 6 makes Banker worse, so Player is the cheaper bet.',

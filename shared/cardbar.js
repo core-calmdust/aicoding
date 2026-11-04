@@ -1,4 +1,4 @@
-// CardBar — compact action bar for the lesson / puzzle cards of the 世界のボドゲ大全 games (common spec).
+// CardBar — compact action bar for the lesson / puzzle cards of the 世界のボドゲ大百科 games (common spec).
 //
 // The cards used to show every action as a big text button in one or two loose rows (ヒント / やり直す / 答えを見る /
 // 次の問題 / 問題一覧 / やめる). This module rebuilds them, keeping the original buttons (ids, handlers, i18n) as they are:
@@ -7,7 +7,7 @@
 //   puzzle: 💡 hint · ↺ retry · 👁 answer · ▦ list (· ‹ prev)   |  次の問題 ›  — gold once solved, the retry icon glows after a failure
 //   lesson: ▦ list · ▶ auto                                     |  ヒント (its label changes with the mode) · 次へ (primary)
 // Icon buttons carry their (translated) label as title + aria-label, kept in sync with the text the game writes into them.
-// Usage: include after the card markup — <script src="../shared/cardbar.js?v=N"></script>.
+// Usage: include after the card markup — <script src="../shared/cardbar.js?v=Nn"></script>.
 // Text buttons keep their whole label: when they don't fit beside the icon tools, the text buttons move to a second row
 // (and wrap among themselves on very narrow cards) instead of being cut off.
 // Auto-advance (CardBar.autoNext): once a lesson / opening-drill problem is solved, the game asks for the next problem to come by
