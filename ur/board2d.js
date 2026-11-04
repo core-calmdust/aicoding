@@ -21,7 +21,11 @@
   const IMG = { h: [-452, -202, 904, 426], v: [-202, -452, 404, 926] };
   const VIEW = { h: [-462, -272, 924, 552], v: [-272, -462, 544, 932] };
   IMG.hr = IMG.h; IMG.vr = IMG.v; VIEW.hr = VIEW.h; VIEW.vr = VIEW.v;
-  const PD = 76, TD = 54;   // piece diameter on the board / in the trays (user units)
+  // 'vn' / 'vrn' (phones held upright): no trays beside the board — the pieces off the board wait in the notch (the open
+  // floor left / right of the bridge, columns 4–5) as two small stacks with a count: start (next to the entry), goal (next to the exit).
+  // The view is the board alone (its centre is (0, 14), not (0, 4) as 'h' / 'v')
+  IMG.vn = IMG.vrn = IMG.v; VIEW.vn = VIEW.vrn = [-186, -434, 372, 896];   // (the picture's visible board: x −176 … 182, y −426 … 456)
+  const PD = 76, TD = 54, ND = 58;   // piece diameter on the board / in the trays / in the notch stacks (user units)
   const exists = (r, c) => r >= 0 && r < 3 && c >= 0 && c < 8 && (r === 1 || c < 4 || c > 5);
   const ROSETTES = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
   const isRos = (r, c) => ROSETTES.some(([a, b]) => a === r && b === c);
@@ -30,7 +34,10 @@
   /* ---------- geometry ---------- */
   // o: 'h' | 'v', or 'hr' | 'vr' = rows 0 and 2 swapped (Dark's lane nearest you: below on 'h', right on 'v'). The two outer
   // rows carry the same motifs, so the board picture stays as it is (its light keeps coming from the top left)
-  const RT = o => o.length > 1, OB = o => o[0];
+  const RT = o => o.indexOf('r') > 0, OB = o => o[0], NT = o => o[0] === 'v' && o.indexOf('n') > 0;
+  // the notch stacks (side 0 on the right of 'vn'): centre of the stack, and the shift of each piece above the one below
+  const NX = 126, NY = { start: 84, goal: 150 };
+  const nside = (o, side) => (RT(o) ? !side : side) ? -1 : 1;
   const cellXY = (o, r, c) => { if (RT(o)) r = 2 - r; return OB(o) === 'v' ? [(r - 1) * 100, (c - 3.5) * 100] : [(c - 3.5) * 100, (r - 1) * 100]; };
   // built-in routes (used when UrEngine is not loaded)
   function route(rule, side) {
@@ -45,6 +52,7 @@
   // tray slots: side 1 (dark, row 0) above / left, side 0 (light, row 2) below / right
   function traySlots(o, side, kind, n = 7) {
     const out = [];
+    if (NT(o)) { const sx = nside(o, side); for (let i = 0; i < n; i++) out.push([sx * (NX + i * 1.4), NY[kind] - i * 3.4]); return out; }
     for (let i = 0; i < n; i++) {
       // start: slot 0 is next to the entry square (col 3); goal: slot 0 next to the exit (col 6)
       const a = kind === 'start' ? -32 - i * 58 : 118 + i * 50;
@@ -54,6 +62,7 @@
     return out;
   }
   function trayBox(o, side, kind) {
+    if (NT(o)) { const sx = nside(o, side), x0 = sx > 0 ? 70 : -206; return kind === 'start' ? [x0, 30, 136, 87] : [x0, 117, 136, 70]; }
     const s = traySlots(o, side, kind), xs = s.map(p => p[0]), ys = s.map(p => p[1]), m = TD / 2 + 8;
     const x0 = Math.min(...xs) - m, x1 = Math.max(...xs) + m, y0 = Math.min(...ys) - m, y1 = Math.max(...ys) + m;
     return [x0, y0, x1 - x0, y1 - y0];
@@ -91,8 +100,8 @@
       ps.forEach((p, k) => (p <= 0 ? st : p >= goal ? gl : null)?.push(k));
       const S = traySlots(o, side, 'start', n), G = traySlots(o, side, 'goal', n);
       ps.forEach((p, k) => {
-        if (p <= 0) { const j = st.indexOf(k); res.push({ side, k, pos: p, where: 'start', xy: S[j], d: TD }); }
-        else if (p >= goal) { const j = gl.indexOf(k); res.push({ side, k, pos: p, where: 'goal', xy: G[j], d: TD }); }
+        if (p <= 0) { const j = st.indexOf(k); res.push({ side, k, pos: p, where: 'start', xy: S[j], d: NT(o) ? ND : TD }); }
+        else if (p >= goal) { const j = gl.indexOf(k); res.push({ side, k, pos: p, where: 'goal', xy: G[j], d: NT(o) ? ND : TD }); }
         else { const [r, c] = R[p - 1]; res.push({ side, k, pos: p, where: 'board', r, c, xy: cellXY(o, r, c), d: PD }); }
       });
     }
@@ -146,6 +155,17 @@
     }
     return s;
   }
+  // the notch stacks: how many pieces each holds (a small dark disc with the number, at the stack's lower outer side)
+  function countsSVG(o, L) {
+    if (!NT(o)) return '';
+    let s = '';
+    for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
+      const n = L.pieces.filter(q => q.side === side && q.where === kind).length; if (!n) continue;
+      const sx = nside(o, side), x = sx * (NX + 40), y = NY[kind] + 22;
+      s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
+    }
+    return s;
+  }
   function targetsSVG(o, targets) {
     let s = '';
     for (let t of targets || []) {
@@ -163,7 +183,8 @@
   /* ---------- mount ---------- */
   function mount(host, opts = {}) {
     const p = 'ur' + (++uid) + '_';
-    let o = (opts.orient === 'v' ? 'v' : 'h') + (opts.rot ? 'r' : ''), design = BOARDS.includes(opts.design) ? opts.design : 'museum', pcs = piecesKey(opts.pieces);
+    const okey = (b, r) => b + (r ? 'r' : '') + (b === 'v' && opts.notch ? 'n' : '');
+    let o = okey(opts.orient === 'v' ? 'v' : 'h', opts.rot), design = BOARDS.includes(opts.design) ? opts.design : 'museum', pcs = piecesKey(opts.pieces);
     const interactive = opts.interactive !== false;
     const H = {}; const on = (ev, fn) => { (H[ev] = H[ev] || []).push(fn); return view; }, emit = (ev, a) => (H[ev] || []).forEach(f => f(a));
     let svg, gImg, gHit, gTray, gUnder, gPieces, gOver, gTg, state = null, ropt = {}, pieceEls = new Map(), busy = 0;
@@ -176,8 +197,13 @@
       // trays: a faint recess with an empty socket for each piece
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
         const [x, y, w, h] = trayBox(o, side, kind), g = el('g', { class: `ur-trayb ur-${kind}`, 'data-side': side, 'data-kind': kind }, gTray);
-        el('rect', { x, y, width: w, height: h, rx: h < w ? h / 2 : w / 2, fill: 'rgba(0,0,0,.16)', stroke: 'rgba(255,255,255,.12)', 'stroke-width': 1.5 }, g);
-        for (const [cx, cy] of traySlots(o, side, kind)) el('circle', { cx, cy, r: TD / 2 - 2, fill: 'rgba(0,0,0,.14)', stroke: 'rgba(0,0,0,.18)', 'stroke-width': 1.5 }, g);
+        if (NT(o)) {   // the notch: an invisible tap area with one socket where the stack stands
+          el('rect', { x, y, width: w, height: h, fill: 'transparent' }, g);
+          const [cx, cy] = traySlots(o, side, kind, 1)[0]; el('circle', { cx, cy, r: ND / 2 + 1, fill: 'rgba(0,0,0,.22)', stroke: kind === 'goal' ? 'rgba(127,214,164,.28)' : 'rgba(217,180,90,.28)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, g);
+        } else {
+          el('rect', { x, y, width: w, height: h, rx: h < w ? h / 2 : w / 2, fill: 'rgba(0,0,0,.16)', stroke: 'rgba(255,255,255,.12)', 'stroke-width': 1.5 }, g);
+          for (const [cx, cy] of traySlots(o, side, kind)) el('circle', { cx, cy, r: TD / 2 - 2, fill: 'rgba(0,0,0,.14)', stroke: 'rgba(0,0,0,.18)', 'stroke-width': 1.5 }, g);
+        }
         if (kind === 'goal') { const s0 = traySlots(o, side, kind), [ex, ey] = s0[s0.length - 1]; }
         if (interactive) { g.style.cursor = 'pointer'; g.addEventListener('click', e => { e.stopPropagation(); emit('tray', { side, kind }); }); }
       }
@@ -220,14 +246,16 @@
       // board pieces above tray pieces, the selected one on top
       [...pieceEls.values()].sort((a, b) => (a.__q.where === 'board') - (b.__q.where === 'board') || (a.children[1].getAttribute('opacity') - b.children[1].getAttribute('opacity'))).forEach(g => gPieces.appendChild(g));
       gUnder.innerHTML = marksSVG(p, o, state, { last: opt.last }, L);
-      gOver.innerHTML = marksSVG(p, o, state, { marks: opt.marks, hint: opt.hint }, L);
+      gOver.innerHTML = countsSVG(o, L) + marksSVG(p, o, state, { marks: opt.marks, hint: opt.hint }, L);
       gTg.innerHTML = targetsSVG(o, opt.targets);
       return view;
     }
     function findEl(side, pos) {
       // the element of `side` at path index pos (0: the one next to the entry)
       let best = null;
-      for (const g of pieceEls.values()) { const q = g.__q; if (q.side !== side || q.pos !== pos) continue; if (!best || (pos <= 0 && q.xy && dist(q.xy, traySlots(o, side, 'start')[0]) < dist(best.__q.xy, traySlots(o, side, 'start')[0]))) best = g; }
+      // (the notch stack: the top piece, the highest one)
+      for (const g of pieceEls.values()) { const q = g.__q; if (q.side !== side || q.pos !== pos) continue;
+        if (!best || (pos <= 0 && q.xy && (NT(o) ? q.xy[1] < best.__q.xy[1] : dist(q.xy, traySlots(o, side, 'start')[0]) < dist(best.__q.xy, traySlots(o, side, 'start')[0])))) best = g; }
       return best;
     }
     const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -250,7 +278,7 @@
       if (to >= goal) pts.push(dest.xy);
       const s0 = g.__s, s1 = dest.d / PD;
       gPieces.appendChild(g); g.children[1].setAttribute('opacity', 0);
-      gTg.innerHTML = ''; gOver.innerHTML = '';
+      gTg.innerHTML = ''; gOver.innerHTML = countsSVG(o, L);
       // lift
       await tween(110 / sp, t => place(g, pts[0][0], pts[0][1], s0, easeOut(t)));
       // slide (constant speed along the polyline, eased overall)
@@ -282,8 +310,8 @@
       cellXY: (r, c) => cellXY(o, r, c),            // in SVG user units
       toClient(x, y) { const m = svg.getScreenCTM(), pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const q = pt.matrixTransform(m); return { x: q.x, y: q.y }; },
       setDesign(d, pc) { if (d && BOARDS.includes(d)) design = d; if (pc) pcs = piecesKey(pc); build(); return view; },
-      setOrient(v, rot) { v = (v === 'v' ? 'v' : 'h') + ((rot === undefined ? RT(o) : rot) ? 'r' : ''); if (v !== o) { o = v; build(); } return view; },
-      orient: () => OB(o), rotated: () => RT(o), design: () => ({ board: design, pieces: pcs }), svg: () => svg,
+      setOrient(v, rot) { v = okey(v === 'v' ? 'v' : 'h', rot === undefined ? RT(o) : rot); if (v !== o) { o = v; build(); } return view; },
+      orient: () => OB(o), rotated: () => RT(o), key: () => o, notch: () => NT(o), design: () => ({ board: design, pieces: pcs }), svg: () => svg,
       destroy() { host.innerHTML = ''; },
     };
     build(); view.el = svg;
@@ -331,8 +359,8 @@
   const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   let threeP = null;
   const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
-  function want3D() {
-    if (document.documentElement.classList.contains('atlas-skin')) return false;   // the 3D skin throws its own dice
+  function want3D(inSkin) {
+    if (!inSkin && document.documentElement.classList.contains('atlas-skin')) return false;   // the 3D skin throws its own dice (but not off the board: inSkin)
     try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); } catch (e) { return false; }
   }
   function load3D() {
@@ -416,21 +444,22 @@
       render();
     }
     const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-    function plan(dv, ms, fromBottom) {
+    function plan(dv, ms, fromBottom, fromRight) {
       stop(); fit();
       const P = places();
       const items = D.map((o, i) => {
         o.x = P[i][0]; o.z = P[i][1]; o.halo.material.opacity = 0;
         // thrown in from the player's side of the dice place (h: side 0 from below, side 1 from above; v: side 0 from the right)
-        const sg = fromBottom ? 1 : -1, ld = tall ? [sg, 0] : [0, sg];
-        const dist = .8 + Math.random() * .3, sw = (Math.random() - .5) * .45;
+        // (fromRight: a strip off the board, phones — the dice come in from its right end, along the strip)
+        const sg = fromBottom ? 1 : -1, ld = fromRight ? [1, 0] : tall ? [sg, 0] : [0, sg];
+        const dist = fromRight ? 1.3 + Math.random() * .5 : .8 + Math.random() * .3, sw = (Math.random() - .5) * (fromRight ? .2 : .45);
         const from = [o.x + ld[0] * dist + ld[1] * sw, o.z + ld[1] * dist + ld[0] * sw];
         return { g: o.g, d: o.d, from, to: [o.x, o.z], marked: !!dv[i], rest: REST };
       });
       return UD.throwPlan(items, { dur: ms, h0: .55 });
     }
-    function roll(dv, ms, fromBottom, onHit) {
-      const TP = plan(dv, ms, fromBottom);
+    function roll(dv, ms, fromBottom, onHit, fromRight) {
+      const TP = plan(dv, ms, fromBottom, fromRight);
       // the dice land / hop: tell the page (a soft click each)
       const hits = []; TP.plan.forEach((p, i) => { [.42, .66, .82].forEach((q, j) => hits.push({ t: p.delay + q * ms, i, s: [1, .55, .3][j] })); });
       hits.sort((a, b) => a.t - b.t);
@@ -455,7 +484,7 @@
     const api = {
       wrap, rest, roll, render,
       // tests: a throw stepped by hand (no clock): .at(ms) poses the dice and renders
-      stepper(dv, ms, fromBottom) { const TP = plan(dv, ms, !!fromBottom); return { total: TP.total, at(t) { if (t >= TP.total) { TP.end(); D.forEach((o, i) => haloAt(o, dv[i] ? 1 : 0)); } else { D.forEach(o => { o.halo.material.opacity = 0; }); TP.frame(t); } render(); } }; },
+      stepper(dv, ms, fromBottom, fromRight) { const TP = plan(dv, ms, !!fromBottom, !!fromRight); return { total: TP.total, at(t) { if (t >= TP.total) { TP.end(); D.forEach((o, i) => haloAt(o, dv[i] ? 1 : 0)); } else { D.forEach(o => { o.halo.material.opacity = 0; }); TP.frame(t); } render(); } }; },
       dispose() { stop(); if (ro) ro.disconnect(); try { R.dispose(); R.forceContextLoss(); } catch (e) {} cv.remove(); },
     };
     LIVE3D.push(api);
@@ -510,7 +539,7 @@
       if (d3 && !busy) d3.rest(cur, false);
     }
     // the 3D dice, when they can be had (the SVG stays as the fallback until then)
-    if (opts.three !== false && want3D()) load3D().then(ok => {
+    if (opts.three !== false && want3D(opts.three === 'skin')) load3D().then(ok => {
       if (!ok || !wrap.isConnected || d3) return;
       try { d3 = make3D(wrap, n, opts.span || 1.96); svg.style.visibility = 'hidden'; if (opts.onReady) try { opts.onReady(); } catch (e) {} d3.rest(cur, true); }
       catch (e) { console.error(e); d3 = null; svg.style.visibility = ''; }
@@ -521,7 +550,7 @@
       if (d3) {
         busy = true; cur = dv.slice();
         const fromBottom = o2.side != null ? o2.side === 0 : (opts.side != null ? opts.side === 0 : true);
-        try { await d3.roll(dv, (o2.ms || 820) / Math.max(.6, sp), fromBottom, o2.onHit || opts.onHit); } finally { busy = false; }
+        try { await d3.roll(dv, (o2.ms || 820) / Math.max(.6, sp), fromBottom, o2.onHit || opts.onHit, !!(o2.fromRight || opts.fromRight)); } finally { busy = false; }
         D.forEach((d, i) => { d.up = dv[i] ? 1 : 0; draw(d, d.up, d.rot); });
         return dv.reduce((a, b) => a + b, 0);
       }
@@ -547,7 +576,8 @@
   window.UrBoard2D = { mount, mini, dice, BOARDS, PIECES, GREEN, cellXY, route, traySlots, VIEW, IMG };
 })();
 /* README
-mount(el, { orient:'h'|'v', rot=false, design, pieces, interactive=true, speed=1 }) → view   (rot: rows 0 / 2 swapped — Dark's lane nearest)
+mount(el, { orient:'h'|'v', rot=false, notch=false, design, pieces, interactive=true, speed=1 }) → view   (rot: rows 0 / 2 swapped — Dark's lane nearest;
+  notch: on 'v' the pieces off the board stand in the notch as two stacks with a count, the view is the board alone — VIEW.vn)
 view.render(state, { sel, targets, last, hint, marks })
   sel      {r,c} | {side,piece} | {tray:'start',side}     selected piece (gold ring, lifted)
   targets  [{r,c, capture?} | {tray:'goal', side}]        candidate squares (#3df59a dot; ring if capture)
@@ -557,10 +587,10 @@ view.render(state, { sel, targets, last, hint, marks })
            {type:'path', side, from, to}  the route (path indices) as glowing arrows
            {type:'arrow', from, to, color}
 view.cellRect(r,c) → DOMRect; view.offRect(side,'start'|'goal') → DOMRect
-view.setDesign(design, pieces); view.setOrient('h'|'v', rot?); view.orient() → 'h'|'v'; view.rotated() → bool
+view.setDesign(design, pieces); view.setOrient('h'|'v', rot?); view.orient() → 'h'|'v'; view.rotated() → bool; view.key() → 'h'|'v'|'vn'|'hr'|'vr'|'vrn' (VIEW / traySlots key)
 view.on('cell', ({r,c,piece?,side?}) => …); view.on('piece', ({side,piece,pos,r,c,where}) => …); view.on('tray', ({side,kind,piece?}) => …)
 view.animateMove(side, from, to, { capture, speed, ms }) → Promise   (path indices; then call render(newState))
-UrBoard2D.dice(el, { style, speed, count=4, side, onHit, three=true, span=1.96 }) → { roll(dice?, { speed, ms, side, onHit }) → Promise<n>, show(dice), setStyle(s), is3D() }
+UrBoard2D.dice(el, { style, speed, count=4, side, onHit, three=true|false|'skin', span=1.96 }) → { roll(dice?, { speed, ms, side, onHit }) → Promise<n>, show(dice), setStyle(s), is3D() }
   3D dice (three.js r128 + atlas/models/ur-dice.js, loaded in the background) when WebGL works, else SVG; side: thrown from that player's side; onHit(i, strength) at each landing / hop
 UrBoard2D.mini(state, { design, pieces, orient, marks, targets, last, hint, sel, crop, trays, width, height, small }) → SVG string
   crop: [x,y,w,h] user units | {r0,c0,r1,c1,pad} squares | 'board'

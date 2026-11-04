@@ -154,11 +154,16 @@ function reviewJob(list, onProg) {
 // ====================================================================== board / dice view
 const mqPC = matchMedia(window.HeaderBar ? HeaderBar.MEDIA : '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
 const mqV = matchMedia('(pointer: coarse) and (max-width: 760px) and (orientation: portrait)');
-const orient = () => mqV.matches ? 'v' : 'h';
+// phones held upright: the board turned ('v', the bigger squares on a tall screen) — but on a short one (e.g. 375×667) the board
+// lying across the screen gets the bigger squares: 'v' when its squares (the height left from 100lvh ÷ 8.96) are at least those of 'h'
+// (the width ÷ 9.24). Either way the dice are thrown in the players' strips (band())
+const lvhPx = (() => { let el = null; return () => { if (!el) { el = document.createElement('div'); el.style.cssText = 'position:fixed;left:-9px;top:0;width:1px;height:100vh;height:100lvh;visibility:hidden;pointer-events:none'; document.documentElement.appendChild(el); } return el.offsetHeight || innerHeight; }; })();
+const ohPx = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--oh')) || 340;   // (the room the page keeps for the menu, cards and tabs: index.html --oh)
+const orient = () => !mqV.matches ? 'h' : (lvhPx() - ohPx()) / 8.96 >= (innerWidth - 20) / 9.24 ? 'v' : 'h';
 const animOn = () => settings.speed > 0;
 const SPD = () => [3, .7, 1, 1.8][settings.speed] || 1;
 function buildView() {
-  view = B2.mount($('#board'), { orient: orient(), design: settings.design, pieces: settings.pieces, speed: SPD() });
+  view = B2.mount($('#board'), { orient: orient(), notch: true, design: settings.design, pieces: settings.pieces, speed: SPD() });
   view.on('cell', e => onCell(e)).on('tray', e => onTray(e));
   bindHover();
   dice2d = null;
@@ -183,11 +188,26 @@ function hoverAt(g) {
   }
   if ((mv && mv.from) !== (hoverMove && hoverMove.from)) { hoverMove = mv; renderBoard(); }
 }
+// phones held upright (the board turned, 'vn'): the dice leave the board — they are thrown in a strip in the card of the
+// player to roll (the opponent's above the board, yours below), with the roll plate there; the notch holds the waiting pieces
+const band = () => !!view && mqV.matches;
 // the dice sit in the notch (columns 4–5) on the side of the player to roll
 function placeDice() {
   const fr = $('#frame'), dock = $('#diceDock'); if (!fr || !view) return;
-  const o = view.orient(), V = B2.VIEW[o], W = fr.clientWidth, H = fr.clientHeight, k = W / V[2];
-  const st = curState(), side = st ? st.turn : 0, row = side === 0 ? 2 : 0;
+  const st = curState(), side = st ? st.turn : 0;
+  document.documentElement.classList.toggle('ur-band', band());
+  if (band()) {
+    const slot = $('#pdk' + side);
+    if (dock.parentElement !== slot) slot.appendChild(dock);
+    ['left', 'top', 'width', 'height'].forEach(k => { dock.style[k] = ''; });
+    const host = $('#diceHost'); ['position', 'width', 'height', 'left', 'top', 'flex'].forEach(k => { host.style[k] = ''; });
+    dock.classList.toggle('d3', !!(dice2d && dice2d.is3D && dice2d.is3D()));
+    $('#diceCap').style.display = '';
+    return;
+  }
+  if (dock.parentElement !== fr) fr.insertBefore(dock, $('#fxMsg'));
+  const o = view.orient(), V = B2.VIEW[view.key ? view.key() : o], W = fr.clientWidth, H = fr.clientHeight, k = W / V[2];
+  const row = side === 0 ? 2 : 0;
   const c = view.cellXY(row, 4), c2 = view.cellXY(row, 5);
   let cx = (c[0] + c2[0]) / 2, cy = (c[1] + c2[1]) / 2;
   // the open floor of the notch lies outside the bridge (h: below its visible side face) — the dice rest there
@@ -252,13 +272,15 @@ function renderBoard() {
 }
 function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
-  { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice() }); dice2d.count = nd; } }
+  { const nd = E.RULES[st.rule].dice, bd = band();
+    // (the strip on phones: one square = 92 px, the dice about 40 px; the 3D dice also in the 3D skin, as its own are on the board)
+    if (!dice2d || dice2d.count !== nd || dice2d.band !== bd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice(), span: bd ? 176 / 92 : 1.96, three: bd ? 'skin' : true, fromRight: bd }); dice2d.count = nd; dice2d.band = bd; } }
   if (r) dice2d.show(r.d); else dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));
   dock.classList.toggle('d3', !!(dice2d.is3D && dice2d.is3D()));
   const canRoll = canRollNow();
   dock.classList.toggle('can', canRoll);
   dock.classList.toggle('dim', !r && !canRoll);
-  $('#diceCap').textContent = r ? (r.n ? t('dice.n', { n: r.n }) : t('dice.zero')) : '';
+  $('#diceCap').textContent = r ? (band() ? String(r.n) : r.n ? t('dice.n', { n: r.n }) : t('dice.zero')) : '';   // (phones: the count alone, a small gilt badge on the strip)
 }
 function canRollNow() {
   if (animating || thinking) return false;
@@ -307,11 +329,12 @@ window.UrSkinHooks = {
   },
   async animateRoll(d) {
     const S = window.UrSkin3D;
-    if (S && S.animateRoll) { try { await S.animateRoll(d); dice2d.show(d); return; } catch (e) { console.error(e); } }
+    if (S && S.animateRoll && !band()) { try { await S.animateRoll(d); dice2d.show(d); return; } catch (e) { console.error(e); } }
     if (!animOn()) { dice2d.show(d); return; }
     const dock = $('#diceDock'), fr = $('#frame'); dock.classList.add('rolling');
-    // thrown in from outside the board, on the roller's side of the notch (below / right of the middle row → from below / the right)
-    const dr = dock.getBoundingClientRect(), fb = fr.getBoundingClientRect(), outer = view.orient() === 'v' ? dr.left + dr.width / 2 > fb.left + fb.width / 2 : dr.top + dr.height / 2 > fb.top + fb.height / 2;
+    // thrown in from outside the board, on the roller's side of the notch (below / right of the middle row → from below / the right);
+    // phones: from the screen's edge on the roller's side (your strip below the board: from below)
+    const dr = dock.getBoundingClientRect(), fb = fr.getBoundingClientRect(), outer = view.orient() === 'v' && !band() ? dr.left + dr.width / 2 > fb.left + fb.width / 2 : dr.top + dr.height / 2 > fb.top + fb.height / 2;
     try { await dice2d.roll(d, { speed: SPD(), side: outer ? 0 : 1, onHit: (i, k) => snd2('dieHit', k) }); } finally { dock.classList.remove('rolling'); }
   },
   orient: () => view ? view.orient() : 'h',
@@ -326,7 +349,7 @@ function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].fi
 function playerName(s) {
   if (settings.mode === 'pvp') return sideName(s);
   if (settings.mode === 'watch') return 'AI ' + LV(levelFor(s));
-  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame ? ` (R${rgame.or})` : '');
+  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !mqV.matches ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
 }
 function renderInfo() {
   const st = curState(), rl = E.RULES[st.rule], rc = E.raceCount(st), sta = special ? { over: false } : statusAt(cur);
@@ -900,14 +923,17 @@ function relayout(force) {
     if (ev.parentElement === col) $('#coachCard').parentElement.insertBefore(ev, $('.kifu-card'));
     ba.insertBefore($('#pl' + (1 - me)), fr); fr.after($('#pl' + me)); $('#pl' + me).after(sb);
   }
-  if (pc) { if (rb.previousElementSibling !== pl) pl.after(rb); } else if (rb.parentElement !== sb) sb.appendChild(rb);
+  // (phones held upright: in your card, in place of the dice strip — the dice are not needed while looking back)
+  if (pc) { if (rb.previousElementSibling !== pl) pl.after(rb); }
+  else if (mqV.matches) { const hm = $('#pl' + me); if (rb.parentElement !== hm) hm.appendChild(rb); }
+  else if (rb.parentElement !== sb) sb.appendChild(rb);
   pl.classList.toggle('hidden', !pc);
   lastO = o; lastPC = pc;
   requestAnimationFrame(() => { placeDice(); renderBoard(); });
 }
 mqPC.addEventListener ? mqPC.addEventListener('change', () => relayout()) : mqPC.addListener(() => relayout());
 mqV.addEventListener ? mqV.addEventListener('change', () => relayout()) : mqV.addListener(() => relayout());
-addEventListener('resize', () => placeDice());
+addEventListener('resize', () => { if (orient() !== lastO) relayout(); else placeDice(); });
 if (window.ResizeObserver) new ResizeObserver(() => placeDice()).observe($('#frame'));
 
 // ====================================================================== dialogs: outside click, title, tabs
