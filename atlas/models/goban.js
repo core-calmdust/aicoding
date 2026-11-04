@@ -551,6 +551,35 @@
     const inner = M({ map: tex('gbBowlS', sideGrainCanvas('gbBowlS', 21), true, true), color: 0xc9a07a, bumpScale: .002, roughness: .6 });
     return (mats.bowl = { side, top, inner });
   }
+  // the heap under the loose top stones: a tile of packed stone tops (light crowns, dark seams) used as colour × bump,
+  // so the gaps between the loose stones show more stones (white / black), not the wood of the empty bowl
+  // white: the shell is bright all over, so the tile stays near white (pale crowns, thin soft creases), never a grey plate
+  function heapCanvas(white) {
+    return canvas(white ? 'gbHeapW' : 'gbHeap', SZ(256), SZ(256), (g, W) => {
+      const rr = rnd(97), n = 6, s = W / n;
+      g.fillStyle = white ? '#b8b5ae' : '#6f6f6f'; g.fillRect(0, 0, W, W);
+      const stops = white ? [[0, '#fff'], [.6, '#fbfaf7'], [.86, '#e6e3dc'], [1, 'rgba(184,181,174,0)']] : [[0, '#fff'], [.55, '#f2f2f2'], [.85, '#c4c4c4'], [1, 'rgba(110,110,110,0)']];
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = (i + .5 + (j % 2) * .5 + (rr() - .5) * .3) * s, y = (j + .5 + (rr() - .5) * .3) * s, r = s * ((white ? .52 : .47) + rr() * .06), q = .72 + rr() * .5;
+        for (const dx of [-W, 0, W]) for (const dy of [-W, 0, W]) {   // wrap at the tile edges
+          const cx = x + dx, cy = y + dy; if (cx < -r || cx > W + r || cy < -r || cy > W + r) continue;
+          const gr = g.createRadialGradient(cx - r * .2, cy - r * .25, 0, cx, cy, r);
+          stops.forEach(([o, c]) => gr.addColorStop(o, c));
+          g.save(); g.translate(cx, cy); g.scale(1, q); g.translate(-cx, -cy); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill(); g.restore();
+        }
+      }
+    });
+  }
+  const heapMats = {};
+  function heapMat(color) {   // the stones' own finish (same roughness / clearcoat), tinted by the packed-tops tile
+    if (heapMats[color]) return heapMats[color];
+    const TT = T(), t = tex(color === 1 ? 'gbHeap' : 'gbHeapW', heapCanvas(color !== 1), true, true);
+    const m = color === 1
+      ? M({ map: t, color: 0x222226, bumpScale: .006, roughness: .4, clearcoat: .3, clearcoatRoughness: .45, sheen: new TT.Color(0x2a2a2e) })
+      : M({ map: t, color: 0xffffff, bumpScale: .004, roughness: .26, clearcoat: .55, clearcoatRoughness: .18 });
+    if (color !== 1) { m.emissive.set(0x4a4740); m.emissiveMap = t; }   // a small lift (creases stay darker): the heap sits in the bowl's own shade, the loose stones on top do not
+    return (heapMats[color] = m);
+  }
   function lathe(key, prof, seg = 64) {
     if (geos[key]) return geos[key];
     const TT = T(), g = new TT.LatheGeometry(prof.map(([r, y]) => new TT.Vector2(Math.max(.0004, r), y)), seg);
@@ -568,6 +597,20 @@
     // stones heaped inside: a gentle dome reaching up towards the lip
     const count = o.stones ?? 26, r0 = cell * .47, sg = stoneGeo(r0, true), sm = stoneMat(color === 1 ? 1 : 2), rr = rnd(color * 13 + 7);
     const lim = R * .7, put = [];
+    // the heap itself: a domed fill in the stones' colour, just under the loose top stones, out to the inner wall
+    {
+      const heapY = rad => H * (.86 - .2 * Math.pow(rad / lim, 2)) - r0 * SH * .15;   // close under the loose stones: only narrow gaps show
+      const wallR = y => {   // inner radius of the bowl at height y (the IN profile)
+        const f = y / H; for (let i = 0; i < IN.length - 1; i++) { const [ra, ya] = IN[i], [rb, yb] = IN[i + 1]; if (f <= ya && f >= yb) return R * (ra + (rb - ra) * (f - ya) / (yb - ya)); }
+        return R * .9;
+      };
+      let rE = 0; while (rE < R && rE < wallR(heapY(rE)) * .985) rE += R * .01;
+      const P = [[rE, heapY(rE) - H * .05]];
+      for (let i = 8; i >= 0; i--) { const rad = rE * i / 8; P.push([rad, heapY(rad)]); }   // edge → centre (like IN: the face looks up)
+      const fg = lathe('heap' + k + r0.toFixed(3), P, X.coarse ? 28 : 36);
+      if (!fg.userData.uvFix) { fg.userData.uvFix = 1; const p = fg.attributes.position, uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, .5 + p.getX(i) / (12 * r0), .5 + p.getZ(i) / (12 * r0)); }   // planar from the top: one tile ≈ 6 stones across
+      const fill = new TT.Mesh(fg, heapMat(color === 1 ? 1 : 2)); fill.receiveShadow = color === 1; fill.castShadow = false; g.add(fill);   // white: no bowl shadow on it (it fell to a flat grey)
+    }
     for (let tries = 0; put.length < count && tries < 900; tries++) {
       const rad = Math.sqrt(rr()) * lim, a = rr() * TAU, x = Math.cos(a) * rad, z = Math.sin(a) * rad;
       if (put.some(([px, pz]) => Math.hypot(px - x, pz - z) < r0 * 1.55)) continue;

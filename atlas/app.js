@@ -103,7 +103,7 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ugolki']);   // images/atlas/<id>.webp exists
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki']);   // images/atlas/<id>.webp exists
   const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7 })[g.id] || 5}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
@@ -279,7 +279,7 @@
   try { gCat = localStorage.getItem('atlas-cat') || 'all'; } catch (e) {}
   // 'classic' is a tag chip (定番) next to the category chips: it filters by g.tags instead of g.cat
   // chips (same as the top page): すべて · ボード (the classic board games, card games excluded) · パズル · カード (tag) · then the board-game families
-  const CHIPS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race'];
+  const CHIPS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race', 'hist'];
   const inCat = (g, k) => k === 'all' || (k === 'board' ? g.tags.includes('classic') && !g.tags.includes('card') : k === 'card' ? g.tags.includes('card') : g.cat === k);
   if (gCat === 'classic') gCat = 'board';
   if (!CHIPS.includes(gCat)) gCat = 'all';
@@ -326,6 +326,7 @@
     $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
     $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
+    if (window.AtlasGameList && AtlasGameList.fitLabels) AtlasGameList.fitLabels($('iconGrid').querySelectorAll('.ic span.n'));   // long names shrink rather than end in "…"
   }
   // random: the die hops, a quick roulette of the visible games' icons, then the picked one flies to the board
   let rolling = false;
@@ -352,13 +353,19 @@
   function todayGame() { const d = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), n = A_.GAMES.length; return A_.GAMES[((d * 3) % n + n) % n]; }
   function renderToday() {
     const g = todayGame(), el = $('today');
+    const hk = 'hist.' + g.id, hs = t(hk) !== hk ? t(hk) : t('about.' + g.id);   // a short history (the description if a language has none)
     el.style.setProperty('--c', g.color);
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
-        <b>${esc(gname(g))}</b><span class="hs">${esc(t('hist.' + g.id))}</span>
-        <span class="ft"><span class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 3).map(tagHtml).join('')}</span><span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
+        <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
+        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}<span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
+    // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
+    if (window.AtlasGameList && AtlasGameList.clampFit) AtlasGameList.clampFit(el.querySelector('.hs'));
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
-    el.onclick = () => flyOpen(g.id, el.querySelector('.pan img'));
+    el.onclick = e => { if (e.target.closest('[data-hist]')) return; flyOpen(g.id, el.querySelector('.pan img')); };
+    const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
+    if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
   }
 
   /* ---------- 3D board viewer ---------- */
@@ -522,6 +529,7 @@
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
+    if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
     if ($('bvStart')) $('bvStart').onclick = () => startPlay();
     if ($('bvTable')) $('bvTable').onclick = () => startPlay('table');
@@ -663,7 +671,7 @@
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true, ur: true };
   let lastKind;
   function startPlay(kind) {
     const g = bvGame, ad = Atlas3D[g.id];
@@ -833,18 +841,21 @@
     if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
   });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
-  function startRules() {
-    if (pend3d) { pend3d.then(startRules); return; }   // the board isn't on the table yet
+  let rulesFromList = false;
+  function startRules(fromList) {
+    rulesFromList = fromList === true;
+    if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
       onStart: () => { stopSession(); startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },
-      onExit: () => openBoard(g.id) });   // back on the last page: to the chabudai (settings card)
+      onExit: () => { if (rulesFromList) { rulesFromList = false; closeBoard(); } else openBoard(g.id); } });   // back: to the game list when started from there, else to the chabudai (settings card)
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
   }
   function closeBoard() { stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
+  window.AtlasBoard = { open: id => openBoard(id), close: closeBoard };   // ヒストリア (opened from the game list) puts that game's board on the table first
   // the room's time of day (auto = by the clock)
   const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'] };
   function renderTod() {
@@ -859,7 +870,7 @@
     if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
   }
   renderTod();
-  $('bvQuit').onclick = () => openBoard(bvGame.id);
+  $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
   function stepBoard(d) {
@@ -910,8 +921,10 @@
     const list = visibleGames();
     // screenshot cards grouped by category (atlas/gamelist.js); the long description is in the board sheet a tap opens
     AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
-      hasRules: g => !!(window.AtlasRules && AtlasRules[g.id]), onRules: id => { openBoard(id); if (glOK && window.AtlasRules && AtlasRules[id]) startRules(); }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
-      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS, group: gCat === 'all' || gCat === 'board' });
+      hasRules: () => true,
+      // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
+      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(true); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }

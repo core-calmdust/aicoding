@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ur 2D board demo</title>
+<style>
+  html,body{margin:0;background:#1b2350;color:#e8e4d8;font:14px system-ui,sans-serif}
+  body.bg-dark{background:#111}
+  #bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;align-items:center}
+  #bar select,#bar button{font:inherit;padding:4px 8px}
+  #wrap{display:flex;gap:16px;padding:8px;align-items:flex-start;flex-wrap:wrap}
+  #board{width:min(1100px,96vw);aspect-ratio:924/552}
+  body.o-v #board{width:min(420px,96vw);aspect-ratio:544/932}
+  #dice{width:300px;height:80px}
+  #minis{display:flex;gap:10px;flex-wrap:wrap;padding:8px}
+  #minis>div{width:260px;background:rgba(0,0,0,.2);border-radius:8px;padding:6px}
+  #log{font:12px monospace;padding:4px 8px;min-height:1.5em}
+</style></head>
+<body>
+<div id="bar">
+  <select id="design"><option>museum</option><option>restored</option><option>wood</option><option>clay</option></select>
+  <select id="pieces"><option>orig</option><option>ivory</option><option>wood</option><option>gold</option></select>
+  <select id="orient"><option>h</option><option>v</option></select>
+  <button id="roll">振る</button><button id="anim">動かす</button><button id="cap">取る</button><button id="reset">初期</button>
+  <span id="n"></span>
+</div>
+<div id="log"></div>
+<div id="wrap"><div id="board"></div><div><div id="dice"></div></div></div>
+<div id="minis"></div>
+<script src="../engine.js"></script>
+<script src="../board2d.js"></script>
+<script>
+/* query: ?design=museum&pieces=orig&orient=h&scene=mid|start|marks|mini|dice&bg=dark */
+const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+const B = window.UrBoard2D, E = window.UrEngine;
+const design = q.get('design') || 'museum', pieces = q.get('pieces') || 'orig', orient = q.get('orient') || 'h', scene = q.get('scene') || 'mid';
+$('design').value = design; $('pieces').value = pieces; $('orient').value = orient;
+document.body.classList.toggle('o-v', orient === 'v'); if (q.get('bg') === 'dark') document.body.classList.add('bg-dark');
+const go = () => { const u = new URLSearchParams(location.search); u.set('design', $('design').value); u.set('pieces', $('pieces').value); u.set('orient', $('orient').value); location.search = u; };
+['design', 'pieces', 'orient'].forEach(k => $(k).onchange = go);
+
+const mid = () => ({ rule: 'finkel', pos: [[0, 0, 3, 6, 8, 15, 15], [0, 0, 0, 4, 7, 10, 15]], turn: 0, winner: -1 });
+let st = scene === 'start' ? E.newGame('finkel') : mid();
+const v = B.mount($('board'), { orient, design, pieces });
+const dc = B.dice($('dice'), { style: pieces });
+let n = 2;
+function opts() {
+  if (scene === 'marks' || scene === 'mid') {
+    const ms = E.legalMoves(st, n), tg = ms.map(m => m.finish ? { tray: 'goal', side: 0 } : Object.assign({ r: E.coords(st.rule, 0, m.to)[0], c: E.coords(st.rule, 0, m.to)[1] }, { capture: m.capture }));
+    const risk = E.hitRisk ? E.hitRisk(st, 0) : [];
+    const marks = [];
+    st.pos[0].forEach((p, k) => { if (p > 0 && p < 15 && risk[k] > .2) { const [r, c] = E.coords(st.rule, 0, p); marks.push({ r, c, type: 'danger', text: Math.round(risk[k] * 100) + '%' }); } });
+    if (scene === 'marks') marks.push({ type: 'path', side: 1, from: 0, to: 14, color: '#ffe27a' }, { r: 1, c: 3, type: 'safe' });
+    return { sel: { r: 2, c: 1 }, targets: tg, last: { from: [0, 1], to: [1, 2] }, hint: scene === 'marks' ? { from: { r: 2, c: 1 }, to: { r: 1, c: 0 } } : null, marks };
+  }
+  return {};
+}
+v.render(st, opts());
+dc.show([1, 0, 1, 0]);
+v.on('cell', e => $('log').textContent = 'cell ' + JSON.stringify(e)).on('piece', e => $('log').textContent = 'piece ' + JSON.stringify(e)).on('tray', e => $('log').textContent = 'tray ' + JSON.stringify(e));
+$('roll').onclick = async () => { const r = E.rollDice(); n = await dc.roll(r.dice); $('n').textContent = '出目 ' + n; v.render(st, opts()); };
+$('anim').onclick = async () => { const ms = E.legalMoves(st, Math.max(1, n)); if (!ms.length) return; const m = ms[0]; await v.animateMove(st.turn, m.from, m.to, { capture: m.capture }); st = E.apply(st, m).state; st.turn = 0; v.render(st, opts()); };
+$('cap').onclick = async () => { st = { rule: 'finkel', pos: [[0, 0, 0, 0, 0, 0, 6], [0, 0, 0, 0, 0, 3, 7]], turn: 1, winner: -1 }; v.render(st, {}); await new Promise(r => setTimeout(r, 300)); await v.animateMove(1, 3, 6, { capture: true }); st = { rule: 'finkel', pos: [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 6, 7]], turn: 0, winner: -1 }; v.render(st, {}); };
+$('reset').onclick = () => { st = E.newGame('finkel'); v.render(st, {}); };
+window.__view = v; window.__dice = dc; window.__setState = (s, o) => { st = s; v.render(s, o || {}); };
+
+// minis: the four designs and a crop
+if (scene === 'mini' || scene === 'mid') {
+  const box = $('minis');
+  B.BOARDS.forEach((d, i) => { const div = document.createElement('div'); div.innerHTML = B.mini(mid(), { design: d, pieces: B.PIECES[i], orient: 'h', marks: [{ r: 1, c: 3, type: 'glow' }] }) + `<div>${d} / ${B.PIECES[i]}</div>`; box.appendChild(div); });
+  const div = document.createElement('div'); div.innerHTML = B.mini(mid(), { design, crop: { r0: 0, c0: 0, r1: 2, c1: 3 }, targets: [{ r: 2, c: 0 }] }) + '<div>crop 0..3</div>'; box.appendChild(div);
+}
+Promise.all([...document.images].map(i => i.decode && i.decode().catch(() => {}))).then(() => setTimeout(() => window.__ready = true, 400));
+</script>
+</body></html>

@@ -7,6 +7,8 @@
      --live   captures the game page itself in headless Chrome instead (one browser, one game at a time):
               first-visit dialogs are skipped, the board is found and cropped 4:3 (recipes in GAMES below);
               serves the repo with `python3 -m http.server` unless something already listens on --port
+     --check  only reports thumbnails older than their source screenshot (git commit time, else file time) — run it after
+              a game's top-page image is retaken, then regenerate those ids and bump SHOT_V in atlas/gamelist.js
      --probe  (with --live) also saves the full screen to atlas/shots/_probe/<id>.png (don't commit it)
    needs Python Pillow; --live also puppeteer-core + Chrome (env PUPPETEER / CHROME override the paths).
    Adding a game: add an entry to GAMES (img = its images/ file, or a live recipe), run
@@ -33,7 +35,7 @@ const clickBoard = async (page, sel, n, wait = 700) => {     // random taps on t
   }
 };
 const GAMES = {
-  shogi: {}, chess: { zoom: .84 }, checkers: { zoom: .84 }, ugolki: {}, fanorona: {}, alquerque: { zoom: .84 }, xiangqi: {}, tafl: { zoom: .86 },
+  shogi: {}, chess: {}, checkers: { zoom: .84 }, ugolki: {}, fanorona: {}, alquerque: { zoom: .84 }, xiangqi: {}, tafl: {},
   reversi: { img: 'reversi_v4.webp', zoom: .84 }, go: {}, gomoku: {}, dots: { zoom: .84 }, connect4: { img: 'connect4_v2.webp', zoom: .84 }, morris: { zoom: .84 },
   hex: {}, mancala: { zoom: .8 }, backgammon: { img: 'backgammon_v2.webp' },
   sudoku: { path: 'sudoku/' }, speedsudoku: { img: 'speed-sudoku.webp', path: 'speed-sudoku/' }, samegame: { fx: .62 }, jailbreak: {},
@@ -96,6 +98,12 @@ function toWebp(png, out) {
   const port = +(opt('--port') || 8943), probe = args.includes('--probe'), live = args.includes('--live');
   let ids = (args.find(a => !a.startsWith('--') && a !== opt('--port')) || Object.keys(GAMES).join(',')).split(',');
   fs.mkdirSync(OUT, { recursive: true });
+  // a thumbnail older than the screenshot it was cut from is out of date (warned on every run; --check stops there)
+  const when = f => { try { const t = +execFileSync('git', ['log', '-1', '--format=%ct', '--', f], { cwd: ROOT }).toString().trim(); if (t) return t * 1000; } catch (e) {} try { return fs.statSync(f).mtimeMs; } catch (e) { return 0; } };
+  const stale = Object.keys(GAMES).filter(id => { const src = path.join(ROOT, 'images', GAMES[id].img || id + '.webp'), out = path.join(OUT, id + '.webp');
+    return fs.existsSync(src) && (!fs.existsSync(out) || when(src) > when(out)); });
+  if (stale.length) console.log('⚠ out of date (source image is newer):', stale.join(', '));
+  if (args.includes('--check')) { if (!stale.length) console.log('all thumbnails are up to date'); return; }
   if (!live) {      // from the existing screenshots; games without one fall through to a live capture
     ids = ids.filter(id => { const G = GAMES[id]; const o = G && fromImage(id, G); if (o) console.log(id.padEnd(12), (fs.statSync(o).size / 1024).toFixed(1) + ' KB', 'images/' + (G.img || id + '.webp')); return G && !o; });
     if (!ids.length) return;

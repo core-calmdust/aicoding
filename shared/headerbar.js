@@ -196,7 +196,9 @@ function dockCenter() {
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
     let t = Infinity, b = -Infinity;
-    for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
+    const walk = list => { for (const c of list) { const cs = getComputedStyle(c); if (cs.display === 'contents') { walk(c.children); continue; }   // (mancala PC: .side / .side-in are display:contents — their cards are the info row)
+      if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); } };
+    walk(app.children);
     if (t === Infinity) return null;
     // a review box fixed right under the board and the info column (connect4 / dots / morris rvbox.js: placed 16px below them)
     const fb = document.querySelector('body > .rbox'); if (fb && fb.getClientRects().length && getComputedStyle(fb).position === 'fixed') b += 16 + fb.offsetHeight;
@@ -304,22 +306,43 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   // the info column), then each child of .app is drawn from where it was to where it is now with a compositor animation of
   // translate + scale — no layout, no canvas resize and no 3D redraw per frame (writing --vh every frame made the 3D pages stutter).
   // html.dock-anim is on meanwhile: the 3D table skips its redraws and the skins their re-measuring; one resize at the end.
-  const kids = () => [...app.children].filter(c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; });
+  // the boxes that move: the children of .app — through display:contents (mancala PC: .side / .side-in are contents, their
+  // cards are the boxes; they jumped before, as nothing animated them)
+  const shown = c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; };
+  const kids = () => { const out = []; const walk = list => { for (const c of list) { if (getComputedStyle(c).display === 'contents') { walk(c.children); continue; } if (shown(c)) out.push(c); } }; walk(app.children); return out; };
   // each child with the part that has to stay exact: the 3D canvas (#atlasGL) in the board's column — parts beside the board
   // that do not scale with it (labels, komadai) would otherwise put the board itself a little off while it moves
   const keyOf = c => { const g = c.querySelector('#atlasGL'); return g && g.getClientRects().length ? g : c; };
-  const snap = () => kids().map(c => { const k = keyOf(c); return [c, k.getBoundingClientRect(), k]; });   // (as seen: a running FLIP included, so a new one starts from there)
+  // where each box is (as seen: a running FLIP included, so a new one starts from there) — and its children and grandchildren
+  // too, so a box that becomes one of the moving ones only now (the layout switched: a column becomes display:contents, or
+  // the reverse) still has its place before the change
+  const snap = () => {
+    const m = new Map();
+    for (const c of kids()) { const k = keyOf(c); m.set(c, { r: k.getBoundingClientRect(), k });
+      for (const d of c.children) { if (shown(d) && !m.has(d)) m.set(d, { r: d.getBoundingClientRect(), k: d }); for (const e of d.children) if (shown(e) && !m.has(e)) m.set(e, { r: e.getBoundingClientRect(), k: e }); } }
+    return m;
+  };
   let flips = [], flipT = 0, watch = null;
   const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
   const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); root.classList.remove('dock-anim'); };
   const flip = (before, dur = D) => {
     stopFlips();
-    for (const [c, b, k] of before) {
-      if (!c.isConnected || !c.getClientRects().length || !k.isConnected || !k.getClientRects().length) continue;
+    // (a box that was not one before — a column that was display:contents and now holds its cards — moves as its cards:
+    // each of them from where it was)
+    const targets = [];
+    for (const c of kids()) {
+      if (before.has(c)) { targets.push(c); continue; }
+      for (const d of c.children) { if (!shown(d)) continue; if (before.has(d)) { targets.push(d); continue; } for (const e of d.children) if (shown(e) && before.has(e)) targets.push(e); }
+    }
+    for (const c of targets) {
+      const e = before.get(c); if (!e) continue;
+      let { r: b, k } = e; if (!k.isConnected || !k.getClientRects().length || !c.contains(k)) k = c;
       const a = k.getBoundingClientRect(), cr = c.getBoundingClientRect(); if (a.width < 2 || b.width < 2) continue;
       // translate + scale about the child's centre, so that its key part lands on where it was
       const s = b.width / a.width, cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
-      const dx = (b.left + b.width / 2) - cx - s * (a.left + a.width / 2 - cx), dy = (b.top + b.height / 2) - cy - s * (a.top + a.height / 2 - cy);
+      // (the board — keyed on its 3D canvas — by its centre; any other box by its top edge: a column that gets taller or
+      // shorter (the compact info column, cards that change from a row to a column) keeps its top cards where they were)
+      const dx = (b.left + b.width / 2) - cx - s * (a.left + a.width / 2 - cx), dy = k !== c ? (b.top + b.height / 2) - cy - s * (a.top + a.height / 2 - cy) : b.top - cy - s * (a.top - cy);
       if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(s - 1) < .002) continue;
       try { flips.push(c.animate([{ translate: `${dx}px ${dy}px`, scale: `${s}` }, { translate: '0px 0px', scale: '1' }], { duration: dur, easing: 'ease' })); } catch (e) {}
     }
@@ -338,7 +361,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   // shown as a short move too, not as a jump (checked every frame before it is painted, for 1.2 s)
   const after = last => {
     if (watch) watch(); const t0 = performance.now(); let raf = 0, stop = false;
-    const moved = now => now.some(([c, r]) => { const o = last.find(x => x[0] === c); return o && (Math.abs(o[1].width - r.width) > 1 || Math.abs(o[1].top - r.top) > 1 || Math.abs(o[1].left - r.left) > 1); });
+    const moved = now => kids().some(c => { const o = last.get(c), n = now.get(c); return o && n && (Math.abs(o.r.width - n.r.width) > 1 || Math.abs(o.r.top - n.r.top) > 1 || Math.abs(o.r.left - n.r.left) > 1); });
     const tick = () => {
       if (stop) return;
       if (performance.now() - t0 > 1200) { watch = null; return; }
@@ -348,11 +371,16 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     watch = () => { stop = true; cancelAnimationFrame(raf); watch = null; };
     tick();   // (at once too: the final layout pass has just run)
   };
+  // the place of everything right before the dock is opened / closed: a page that switches its layout with the dock's class
+  // (mancala: the info cards from under the board to a column beside it) has already done so when settle runs — so the
+  // boxes are measured when the click on the dock arrives, before its own handler changes the class
+  let pre = null;
+  document.addEventListener('click', e => { if (dock.contains(e.target) && !flips.length) pre = { t: performance.now(), m: snap() }; }, true);
   let gen = 0;
   const settle = async () => {
     const my = ++gen;
     if (watch) watch();
-    const before = snap(); stopFlips();
+    const before = pre && performance.now() - pre.t < 400 ? pre.m : snap(); pre = null; stopFlips();
     if (!isOpen()) {   // closed: back to the full size while it scrolls back
       // (laid out for the dock's final place, like the probe: the dock animation run to its end for a moment)
       const undo = ffDock(); sync = true;

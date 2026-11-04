@@ -694,6 +694,96 @@
     },
   };
 
+
+  /* ---------- museum gallery (ヒストリア): a second room the scene swaps to while Historia is open ----------
+     built lazily on the first call and cached; the board on the table becomes the exhibit on a plinth.
+     museum(on, {title, sub}) swaps at once (Historia fades the canvas through dark around it). */
+  let museumObjs = null, museumOn = false, roomExp = 0, placard = null;
+  function buildMuseum() {
+    const TT = T(), g = new TT.Group(), FLOOR = -3.4, before = new Set(scene.children); rbCap = 1;
+    const floorT = wood('musFloor', '#7a4a28', '#3e2210', 1024, 1024, 1.6); floorT.wrapS = floorT.wrapT = TT.RepeatWrapping; floorT.repeat.set(5, 5);
+    const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), M({ map: floorT, roughness: .32, clearcoat: .5, clearcoatRoughness: .3 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; g.add(floor);
+    const plaster = canvasTex('plaster', 512, 512, (c) => paintPx(c.canvas, 'plaster'));
+    const wallM = M({ map: plaster, color: 0x8a3a34, roughness: .9 }), dark = M({ map: wood('musWain', '#5a3418', '#2e1808', 512, 512, 1.4), roughness: .45 });
+    const gold = M({ color: 0xd9ad5b, roughness: .32, metalness: .85 }), marble = M({ color: 0xefe8db, roughness: .22, clearcoat: .6, clearcoatRoughness: .2 });
+    const wall = (w, x, z, ry) => {
+      const wg = new TT.Group(); wg.position.set(x, FLOOR, z); wg.rotation.y = ry; g.add(wg);
+      const p = new TT.Mesh(new TT.PlaneGeometry(w, 22), wallM); p.position.y = 11; p.receiveShadow = true; wg.add(p);
+      wg.add(mesh(RB(w, 3.6, .35), dark, 0, 1.8, .17)); wg.add(mesh(RB(w, .22, .5), gold, 0, 3.7, .22)); wg.add(mesh(RB(w, .6, .6), dark, 0, 14.6, .25));
+      return wg;
+    };
+    const back = wall(44, 0, -17, 0), left = wall(44, -20, 0, Math.PI / 2), right = wall(44, 20, 0, -Math.PI / 2);
+    // an arched doorway on the back wall, flanked by two columns
+    back.add(mesh(new TT.PlaneGeometry(7, 9.5), M({ color: 0x1b120c, roughness: 1 }), 0, 4.75, .03));
+    const arch = new TT.Mesh(new TT.TorusGeometry(3.7, .35, 8, 28, Math.PI), marble); arch.position.set(0, 9.5, .3); back.add(arch);
+    [-3.7, 3.7].forEach(x => back.add(mesh(RB(.7, 9.5, .7), marble, x, 4.75, .3)));
+    const col = (x, z) => { const c = new TT.Group(); c.position.set(x, FLOOR, z); g.add(c);
+      c.add(mesh(new TT.CylinderGeometry(.85, .85, 12.4, 18), marble, 0, 6.6, 0)); c.add(mesh(RB(2.2, .5, 2.2), marble, 0, .25, 0)); c.add(mesh(RB(2.2, .55, 2.2), marble, 0, 13.1, 0)); };
+    col(-7.5, -15.6); col(7.5, -15.6);
+    // framed paintings: the series' own game illustrations
+    const loader = new TT.TextureLoader(), pic = (wg, id, x, y, w, h) => {
+      wg.add(mesh(RB(w + .9, h + .9, .3), gold, x, y, .2));
+      wg.add(mesh(new TT.PlaneGeometry(w, h), M({ color: 0xf3e9d2, roughness: .9 }), x, y, .37));
+      const t = loader.load('../images/atlas/' + id + '.webp'); t.encoding = TT.sRGBEncoding;
+      wg.add(mesh(new TT.PlaneGeometry(w * .86, h * .86), new TT.MeshStandardMaterial({ map: t, transparent: true, roughness: .8 }), x, y, .39));
+    };
+    pic(back, 'chess', -13, 8.6, 5.5, 5.5); pic(back, 'go', 13, 8.6, 5.5, 5.5);
+    pic(left, 'backgammon', 6, 8.6, 5, 5); pic(left, 'mancala', -6, 8.6, 5, 5); pic(right, 'xiangqi', -6, 8.6, 5, 5); pic(right, 'morris', 6, 8.6, 5, 5);
+    // the plinth (its top is y = 0, where the board stands) with a placard on its front
+    g.add(mesh(RB(16.4, .5, 16.4), dark, 0, FLOOR + .25, 0));
+    const body = mesh(RB(15.4, -FLOOR - .9, 15.4), marble, 0, (FLOOR + .5 - .4) / 2, 0); body.castShadow = body.receiveShadow = true; g.add(body);
+    const topS = mesh(RB(16.2, .4, 16.2), marble, 0, -.2, 0); topS.receiveShadow = true; g.add(topS);
+    const pc = document.createElement('canvas'); pc.width = 640; pc.height = 200; placard = new TT.CanvasTexture(pc); placard.encoding = TT.sRGBEncoding; placard.anisotropy = 4;
+    g.add(mesh(new TT.PlaneGeometry(6.4, 2), M({ map: placard, roughness: .5, metalness: .2 }), 0, -1.7, 7.72));
+    // brass stanchions with velvet ropes (front and sides)
+    const brass = M({ color: 0xc9a25a, roughness: .3, metalness: .9 }), velvet = M({ color: 0x8e1b2a, roughness: .7, sheen: new TT.Color(0x551018) });
+    const posts = [[-11, 11], [11, 11], [11, -9], [-11, -9]];
+    posts.forEach(([x, z]) => { g.add(mesh(new TT.CylinderGeometry(.16, .16, 3.4, 10), brass, x, FLOOR + 1.7, z)); g.add(mesh(new TT.SphereGeometry(.3, 12, 8), brass, x, FLOOR + 3.5, z)); g.add(mesh(new TT.CylinderGeometry(.7, .8, .2, 16), brass, x, FLOOR + .1, z)); });
+    [[0, 1], [1, 2], [3, 0]].forEach(([a, b]) => { const A = posts[a], B = posts[b], y = FLOOR + 3.2;
+      const cv = new TT.QuadraticBezierCurve3(new TT.Vector3(A[0], y, A[1]), new TT.Vector3((A[0] + B[0]) / 2, y - 1.1, (A[1] + B[1]) / 2), new TT.Vector3(B[0], y, B[1]));
+      g.add(new TT.Mesh(new TT.TubeGeometry(cv, 20, .1, 6), velvet)); });
+    // two display cases in the back corners
+    const glass = new TT.MeshStandardMaterial({ color: 0xdfeef0, roughness: .08, metalness: 0, transparent: true, opacity: .16, depthWrite: false });
+    [[-15, -11], [15, -11]].forEach(([x, z], i) => { g.add(mesh(RB(3.4, 4.2, 3.4), dark, x, FLOOR + 2.1, z)); g.add(mesh(RB(3.2, 2.8, 3.2), glass, x, FLOOR + 5.6, z));
+      g.add(mesh(i ? new TT.IcosahedronGeometry(.7, 0) : new TT.TorusKnotGeometry(.45, .15, 48, 8), gold, x, FLOOR + 5.2, z)); });
+    g.traverse(o => { if (o.isMesh && o !== floor) o.castShadow = o.castShadow || false; });
+    try { mergeStatic(g); } catch (e) {}
+    rbCap = 9;
+    // lights: dim warm ambient, a spotlight on the exhibit (the only shadow), soft wash on the paintings
+    scene.add(g);
+    scene.add(new TT.HemisphereLight(0xffeedd, 0x2a1810, .42));
+    const spot = new TT.SpotLight(0xffe0b0, 2.1, 70, .42, .55, 1); spot.position.set(0, 24, 9); spot.target.position.set(0, 0, 0);
+    spot.castShadow = true; spot.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); spot.shadow.camera.near = 8; spot.shadow.camera.far = 50; spot.shadow.bias = -.0004; spot.shadow.normalBias = .02;
+    scene.add(spot); scene.add(spot.target);
+    const wash = new TT.DirectionalLight(0xffd9a8, .38); wash.position.set(0, 12, 14); scene.add(wash);
+    if (!LITE) { [-13, 13].forEach(x => { const s2 = new TT.SpotLight(0xffd8a0, .9, 40, .3, .7, 1); s2.position.set(x * .7, 16, 0); s2.target.position.set(x, 5.2, -17); scene.add(s2); scene.add(s2.target); }); }
+    const objs = scene.children.filter(o => !before.has(o));
+    objs.forEach(o => { o.visible = false; });
+    return objs;
+  }
+  function drawPlacard(o) {
+    if (!placard) return; const c = placard.image, x = c.getContext('2d'), W = c.width, H = c.height;
+    const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#d9b46a'); gr.addColorStop(1, '#a9803e'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#2a1a0c'; x.fillRect(10, 10, W - 20, H - 20); x.strokeStyle = '#d9b46a'; x.lineWidth = 3; x.strokeRect(22, 22, W - 44, H - 44);
+    x.textAlign = 'center'; x.fillStyle = '#f3dfae'; x.font = "900 60px 'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',serif"; x.fillText(o.title || '', W / 2, 104, W - 80);
+    x.font = "700 24px Fredoka,'Zen Maru Gothic',sans-serif"; x.fillStyle = '#d9b46a'; x.fillText(o.sub || 'WORLD BOARD GAME ATLAS', W / 2, 152, W - 80);
+    placard.needsUpdate = true;
+  }
+  function museum(on, o = {}) {
+    if (!R || !scene || mountOpts.plain) return false;
+    on = !!on; if (on === museumOn) { if (on) drawPlacard(o); return true; }
+    if (on && !museumObjs) museumObjs = buildMuseum();
+    museumOn = on;
+    roomObjs.forEach(x => { x.visible = !on; });
+    (museumObjs || []).forEach(x => { x.visible = on; });
+    if (on) { drawPlacard(o); roomExp = R.toneMappingExposure; R.toneMappingExposure = .92; scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); }
+    else { R.toneMappingExposure = roomExp || R.toneMappingExposure; scene.background = new (T().Color)(LOOK[roomMode] ? LOOK[roomMode].sky[1] : '#f6e3c4').convertSRGBToLinear(); }
+    if (lampShade && on) lampShade.visible = false;
+    zoomTo = on ? 1.32 : 1;   // the gallery: step back a little so the plinth and the room show
+    dirty = shadowDirty = true; kick(400);
+    return true;
+  }
   /* ---------- scene ---------- */
   let mountOpts = {}, envBuild = null, roomObjs = [];
   function setTimeOfDay(v) {   // rebuild the room's lights, sky and decor for another time of day
@@ -702,6 +792,7 @@
     roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); });
     const before = new Set(scene.children); buildRoom(scene, false); roomObjs = scene.children.filter(o => !before.has(o));
     try { envBuild && envBuild(); } catch (e) {}
+    if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
     kick(600);
   }
   let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
@@ -1161,8 +1252,8 @@
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
     const needW = (k ? fw : 6.5) / (th * a), needH = (k ? fd : 6.8) / th;
-    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k));   // zoom applies to the showcase view only
-    const pitch = .52 + k * ((fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
+    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
+    const pitch = .52 + k * ((orthoWant ? 1.5703 : fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
@@ -1280,7 +1371,11 @@
   let revealFn = null;
   function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
   let lampShade = null;
+  // play(on, {ortho:true}) (Historia's 「盤」 chapter): the top view becomes a true orthographic plan — no perspective, nothing leans.
+  // The projection blends from perspective to ortho with the camera move (and back on the way down), see orthoBlend
+  let orthoWant = false, orthoW = 0, camLook = 0;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
+    if (on) orthoWant = !!(o && o.ortho);
     if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
@@ -1418,7 +1513,7 @@
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); }
-    if (lampShade) lampShade.visible = mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
+    if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
     if (mode === 'play') {   // in a game the board stays still, squared to the player
@@ -1461,15 +1556,26 @@
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
-      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+    orthoBlend(orthoWant ? camK * camK * camK : 0);
     R.render(scene, cam);
+  }
+  // perspective → orthographic: the ortho frustum is matched to the perspective one on the plane the camera looks at
+  // (same size and the same view offset there), so blending the two matrices element by element is seamless
+  function orthoBlend(w) {
+    if (w < .001 && orthoW < .001) return;
+    cam.updateProjectionMatrix(); orthoW = w; if (w < .001) return;
+    const P = cam.projectionMatrix.elements, dd = Math.max(.5, Math.hypot(cam.position.x, cam.position.y - camLook, cam.position.z));   // distance to the look-at point (the board top)
+    const n = cam.near, f = cam.far, O = [P[0] / dd, 0, 0, 0, 0, P[5] / dd, 0, 0, 0, 0, -2 / (f - n), 0, -P[8], -P[9], -(f + n) / (f - n), 1];
+    for (let i = 0; i < 16; i++) P[i] += (O[i] - P[i]) * w;
+    cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
-  const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
+  const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { museum, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
