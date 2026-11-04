@@ -123,8 +123,10 @@ html.bv .fx-msg{font-size:calc(var(--bw) * .07)}
 .fx-glow.show{opacity:1}
 .toast{position:absolute;left:50%;bottom:6%;z-index:9;transform:translateX(-50%);max-width:92%;padding:8px 16px;border-radius:10px;background:rgba(8,13,38,.9);border:1px solid rgba(217,180,90,.4);font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
-.review-bar{display:none;position:absolute;left:50%;top:1.5%;transform:translateX(-50%);z-index:9;gap:8px;align-items:center;padding:5px 8px 5px 14px;border-radius:999px;background:rgba(8,13,38,.88);border:1px solid rgba(217,180,90,.35);font-size:12.5px;white-space:nowrap}
+.review-bar{display:none;gap:6px;align-items:center;flex-wrap:wrap}
+.review-bar #reviewText{display:none}
 body.reviewing .review-bar{display:flex}
+body.reviewing .sbox .rollbtn{display:none}
 .review-bar button{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text)}
 .review-bar button:hover{border-color:var(--brass2)}
 
@@ -382,6 +384,9 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   html.hb-on .board-area{grid-area:board;justify-content:center}
   html.hb-on .pl-col{grid-area:pl;display:flex;flex-direction:column;gap:10px;min-height:0}
   html.hb-on .pl-col .players{flex:none}
+  html.hb-on body:is(.in-lesson,.in-puzzle) .sbox{display:none}
+  html.hb-on .sbox{flex:1 1 auto;flex-direction:column;align-items:stretch;justify-content:space-between}
+  html.hb-on .sbox .rollbtn{justify-content:center;padding:11px 16px}
   html.hb-on #coachCard, html.hb-on #itCoachRest, html.hb-on .review-card, html.hb-on .lesson-card, html.hb-on .puzzle-card{grid-area:ck;min-height:0;overflow-y:auto}
   html.hb-on #evalCard{grid-area:ev;min-height:0;display:flex;flex-direction:column}
   html.hb-on #evalCard .graph{flex:1 1 auto;min-height:40px;height:auto}
@@ -401,7 +406,12 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .app{display:flex;flex-direction:column;gap:8px;padding:max(8px, env(safe-area-inset-top)) 10px 16px;max-width:900px;margin:0 auto}
   :root{--bw:min(calc(100vw - 20px), 860px, calc((var(--vh) - 230px) * 1.674))}
-  html.bv{--bw:min(calc(100vw - 20px), 440px)}
+  html.bv{--bw:min(calc(100vw - 20px), 440px, calc((var(--vh) - 260px) * .584))}
+  .board-area > .player{padding:6px 12px}
+  .board-area > .player .home{font-size:20px}
+  html.bv body:is(.in-lesson,.in-puzzle){--bw:min(calc(100vw - 20px), 440px, calc((var(--vh) - 330px) * .584))}
+  body:is(.in-lesson,.in-puzzle) .board-area > .sbox{display:none}
+  body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){order:-1}
   .side{display:contents}
   .side-in{display:flex;flex-direction:column;gap:8px;order:5}
   .brand{order:0}
@@ -698,10 +708,12 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
 <script src="../shared/coachkit.js?v=16"></script>
 <script src="../shared/record.js?v=10"></script>
 <script src="../shared/export.js?v=7"></script>
-<script src="rvbox.js?v=1"></script>
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="app.js?v=1"></script>
+<script src="rv-i18n.js?v=1"></script>
+<script src="rvbox.js?v=1"></script>
+<script src="app-learn.js?v=1"></script>
 <script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=23"></script>
 <!-- World Board Game Atlas portal skin: ur/?skin=atlas — the British Museum board in 3D (atlas/models/ur.js + atlas/skin/ur.js), the DOM board stays on top for taps (see SKIN-HOOKS.md) -->
@@ -714,7 +726,7 @@ body.mtab-online .ol-pane{display:flex;flex-direction:column;align-items:center;
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
   load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/ur.js?v=1')).then(() => load('../atlas/skin/ur.js?v=1'))
-    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); if (window.UrApp) UrApp.relayout(); });
+    .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
