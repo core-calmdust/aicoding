@@ -670,7 +670,7 @@
   /* ---------- museum gallery (ヒストリア): a second room the scene swaps to while Historia is open ----------
      built lazily on the first call and cached; the board on the table becomes the exhibit on a plinth.
      museum(on, {title, sub}) swaps at once (Historia fades the canvas through dark around it). */
-  let museumObjs = null, museumOn = false, roomExp = 0, placard = null;
+  let museumObjs = null, museumOn = false, roomExp = 0, placard = null, museumSpot = null, glareW = -1;
   function buildMuseum() {
     const TT = T(), g = new TT.Group(), FLOOR = -3.4, before = new Set(scene.children); rbCap = 1;
     const floorT = wood('musFloor', '#7a4a28', '#3e2210', 1024, 1024, 1.6); floorT.wrapS = floorT.wrapT = TT.RepeatWrapping; floorT.repeat.set(5, 5);
@@ -725,7 +725,7 @@
     // lights: dim warm ambient, a spotlight on the exhibit (the only shadow), soft wash on the paintings
     scene.add(g);
     scene.add(new TT.HemisphereLight(0xffeedd, 0x2a1810, .42));
-    const spot = new TT.SpotLight(0xffe0b0, 2.1, 70, .42, .55, 1); spot.position.set(0, 24, 9); spot.target.position.set(0, 0, 0);
+    const spot = new TT.SpotLight(0xffe0b0, 2.1, 70, .42, .55, 1); spot.position.set(0, 24, 9); spot.target.position.set(0, 0, 0); museumSpot = spot;
     spot.castShadow = true; spot.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); spot.shadow.camera.near = 8; spot.shadow.camera.far = 50; spot.shadow.bias = -.0004; spot.shadow.normalBias = .02;
     scene.add(spot); scene.add(spot.target);
     const wash = new TT.DirectionalLight(0xffd9a8, .38); wash.position.set(0, 12, 14); scene.add(wash);
@@ -746,7 +746,7 @@
     if (!R || !scene || mountOpts.plain) return false;
     on = !!on; if (on === museumOn) { if (on) drawPlacard(o); return true; }
     if (on && !museumObjs) museumObjs = buildMuseum();
-    museumOn = on;
+    museumOn = on; glareW = -1;
     roomObjs.forEach(x => { x.visible = !on; });
     (museumObjs || []).forEach(x => { x.visible = on; });
     if (on) { drawPlacard(o); roomExp = R.toneMappingExposure; R.toneMappingExposure = .92; scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); }
@@ -1535,6 +1535,7 @@
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     orthoBlend(orthoWant ? camK * camK * camK : 0);
+    if (museumOn) glare(camK);
     R.render(scene, cam);
   }
   // perspective → orthographic: the ortho frustum is matched to the perspective one on the plane the camera looks at
@@ -1546,6 +1547,14 @@
     const n = cam.near, f = cam.far, O = [P[0] / dd, 0, 0, 0, 0, P[5] / dd, 0, 0, 0, 0, -2 / (f - n), 0, -P[8], -P[9], -(f + n) / (f - n), 1];
     for (let i = 0; i < 16; i++) P[i] += (O[i] - P[i]) * w;
     cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+  }
+  // the gallery seen straight from above: the spotlight would bounce off lacquer / marble / glossy boards right into the camera
+  // (a blown-out hotspot), so while the camera rises it swings off-axis towards the viewer's lower left, dims a little, and the
+  // exposure comes down a touch
+  function glare(w) {
+    if (!museumSpot || Math.abs(w - glareW) < .002) return; glareW = w;
+    museumSpot.position.set(-9 * w, 24 - 5 * w, 9 + 8 * w); museumSpot.intensity = 2.1 * (1 - .3 * w);
+    R.toneMappingExposure = .92 * (1 - .14 * w); shadowDirty = true;
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }

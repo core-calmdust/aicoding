@@ -174,10 +174,18 @@
     bgmStop(swap ? 200 : 1000);
     clearTimers();
     if (solo) { document.body.style.overflow = bodyOv; if (fromList && window.AtlasBoard) { fromList = false; setTimeout(() => AtlasBoard.close(), 0); } }
-    else if (fromList) {   // opened from the game list: back to the list (the board view closes with Historia)
-      fromList = false; gallery(false, null, true); const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
-      setTimeout(() => { if (!on && window.AtlasBoard) AtlasBoard.close(); }, 320);
+    else if (fromList) {   // opened from the game list: the whole board view (museum and all) fades straight back to the list —
+      // the room is never shown; it is put back silently once the board view is gone, ready for the next board
+      fromList = false; const bv = $('bv'); clearTimeout(swapT);
+      if (bv) { bv.style.transition = 'opacity .32s ease'; bv.style.opacity = '0'; }
+      setTimeout(() => {
+        if (on) { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } return; }
+        if (window.AtlasBoard) AtlasBoard.close();
+        if (bv) bv.classList.remove('hist', 'hsdim');
+        if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
+        cam(false); gallery(false, null, true);
+        requestAnimationFrame(() => { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } });
+      }, 340);
     }
     else {
       gallery(false);
@@ -329,8 +337,18 @@
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
     const zm = pg.querySelector('.zm'); if (zm) later(() => { zm.style.transform = zm.dataset.z; }, 350);
     if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
+    if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
   }
+  // a page with a board diagram: on a short window the diagram gives up height so the text never ends up under the nav bar
+  function fitDg(pg) {
+    const sv = pg.querySelector('.hs-dg svg'); if (!sv || !pg.isConnected) return;
+    sv.style.maxWidth = '';
+    const over = pg.scrollHeight - pg.clientHeight; if (over <= 1) return;
+    const w = sv.getBoundingClientRect().width, h = sv.getBoundingClientRect().height; if (!h) return;
+    sv.style.maxWidth = Math.max(200, Math.floor(w * (h - over - 4) / h)) + 'px';
+  }
+  addEventListener('resize', () => { const pg = root && root.querySelector('.hs-pg.in'); if (on && pg && pg.querySelector('.hs-dg svg')) fitDg(pg); });
   // origin chapter: the stages step through one by one (or on tap) — each lights its pin and draws the route that leads there
   function stepper(pg) {
     const L = [...pg.querySelectorAll('.hs-st li')], map = pg.querySelector('.hs-map'), pins = data.s.map.st || [], R = data.s.map.route || [];

@@ -57,6 +57,7 @@
 .hs-stage.ld3d::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 30% 22% at 50% 52%,rgba(255,236,200,.5),transparent 70%),linear-gradient(100deg,transparent 30%,rgba(255,245,225,.22) 50%,transparent 70%) 0 0/250% 100%;animation:hsShim 1.2s linear infinite}
 @keyframes hsShim{from{background-position:0 0,150% 0}to{background-position:0 0,-100% 0}}
 #hist.hs.solo.on{animation:hsFade .3s both}
+#hist.hs.solo.out{animation:hsFade .32s reverse both}
 #hist.hs.on .hs-panel{animation:hsPanIn .55s cubic-bezier(.2,1,.3,1) both}
 #hist.hs.out .hs-panel{animation:hsPanOut .35s ease-in both}
 #hist.hs.on .hs-guide,#hist.hs.on .hs-top{animation:hsFade .5s .15s both}
