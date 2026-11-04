@@ -115,7 +115,7 @@
         if (pg.id === 'intro') return;
         const t = `<b>${T(pg.id + '.t')}</b>　${T(pg.id + '.b')}`;
         [tag(`🎲 ${L.rollK}`), tag(`👆 ${T(pg.id + '.k')}`), tag(`🎲 <span class="urn">= 4</span>　👆 ${T(pg.id + '.k')}`), tag(`✓ ${T(pg.id + '.ok', { n: 4 })}`), tag(`🌸 ${T('again')} 🎲 ${L.rollK}`),
-          `<div style="display:grid;gap:6px"><b>${T('dice.k2')}</b><div class="urq"><button>0</button></div></div>`, `<div style="display:grid;gap:6px"><span>${T('pass.k2')}</span><div><button type="button" class="urp">${L.pass}</button></div></div>`]
+          `<div style="display:grid;gap:6px;width:100%"><b>${T('dice.k2')}</b><div class="urq"><button>0</button></div></div>`, `<div style="display:grid;gap:6px"><span>${T('pass.k2')}</span><div><button type="button" class="urp">${L.pass}</button></div></div>`]
           .forEach(c => meas(t, c));
       });
       tx.innerHTML = keep[0]; cn.innerHTML = keep[1]; bub.style.minHeight = mx + 'px';
@@ -169,7 +169,7 @@
       n = v; busy = false;
       if (pg.kind === 'count') {   // how many blue tips? (a choice)
         phase = 'count'; marks();
-        cnt(`<div style="display:grid;gap:6px"><b>${T('dice.k2')}</b><div class="urq">${[0, 1, 2, 3, 4].map(x => `<button type="button" data-urn="${x}">${x}</button>`).join('')}</div></div>`);
+        cnt(`<div style="display:grid;gap:6px;width:100%"><b>${T('dice.k2')}</b><div class="urq">${[0, 1, 2, 3, 4].map(x => `<button type="button" data-urn="${x}">${x}</button>`).join('')}</div></div>`);
         $('.cnt').onclick = e => { const b = e.target.closest('[data-urn]'); if (!b || phase !== 'count') return; if (+b.dataset.urn === n) { $('.cnt').onclick = null; ok('dice.ok', { n }); } else ng('dice.ng'); };
         buttons(); return;
       }

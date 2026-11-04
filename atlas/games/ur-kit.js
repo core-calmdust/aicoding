@@ -130,15 +130,29 @@
     /* opts.stage (the rules tour): the dice are rolled large where they can be counted — on a phone over the middle of the board
        (then they step aside, small, to the free corner beside the small block), on a PC beside the small block (they stay there) */
     const STG = !opts.stage ? null : tall
-      ? { big: { s: 2.3, y: Y, at: i => [.62 + (i < 2 ? .74 : -.74), i % 2 ? .78 : -.78] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
-      : { big: { s: 1.25, y: 0, at: i => [U.W / 2 + 1.0 + (i & 1) * .78, (i >> 1) ? .45 : -.45] } };
+      ? { big: { s: 2.3, y: Y, tilt: .75, at: i => [.62 + (i < 2 ? .74 : -.74), i % 2 ? .78 : -.78] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
+      : { big: { s: 1.25, y: 0, tilt: .75, at: i => [U.W / 2 + 1.0 + (i & 1) * .78, (i >> 1) ? .45 : -.45] } };
     if (STG && !STG.small) STG.small = STG.big;
     let ST = STG ? STG.small : null, DS = ST ? ST.s : .8;
-    const BASE = () => ST ? ST.y : 0, REST = () => BASE() + U.dieRest * DS, DICE = [];
+    // tilt: the large dice lean their top towards the top of the screen, as if seen from the player's side (straight down, an
+    // up-pointing tip sits in the middle of the die and reads no differently from the marked tips at its foot)
+    let TL = ST && ST.tilt || 0;
+    const TAX = tall ? new TH.Vector3(0, 0, 1) : new TH.Vector3(1, 0, 0);   // screen-horizontal (phone upright: screen up = +x; PC: screen up = −z)
+    const BASE = () => ST ? ST.y : 0, REST = () => BASE() + U.dieRest * DS + U.dieR * DS * .55 * Math.sin(TL), DICE = [];
+    let DOTG = null, DOTM = null;
+    const showDots = d => DICE.forEach((g, i) => { if (g.userData.dot) g.userData.dot.visible = !!(d && d[i]); });
+    const setTilt = g => g.userData.t.quaternion.setFromAxisAngle(TAX, -TL);
     function ensureDice(n) {
-      while (DICE.length < n) { const g = new TH.Group(), d = U.die(); g.add(d); g.userData = { d, sh: null, s: 0 }; board.add(g); DICE.push(g); }
+      while (DICE.length < n) {
+        const g = new TH.Group(), t = new TH.Group(), d = U.die(); t.add(d); g.add(t); g.userData = { d, t, sh: null, s: 0, dot: null };
+        if (STG) {   // the tour: a clear lapis bead on the marked tip once it has come up (the inlay alone is a few pixels on a phone)
+          const v = U.dieVerts[0], dot = new TH.Mesh(DOTG || (DOTG = new TH.SphereGeometry(.075, 16, 12)), DOTM || (DOTM = new TH.MeshBasicMaterial({ color: 0x2f5bff, toneMapped: false })));
+          dot.position.set(v[0] * .93, v[1] * .93, v[2] * .93); dot.visible = false; d.add(dot); g.userData.dot = dot;
+        }
+        board.add(g); DICE.push(g);
+      }
       DICE.forEach((g, i) => {
-        g.visible = i < n;
+        g.visible = i < n; setTilt(g);
         if (g.userData.s !== DS) { g.userData.s = DS; g.userData.d.scale.setScalar(DS); if (g.userData.sh) g.remove(g.userData.sh); const sh = T3.contact(U.dieR * DS * 1.05, .45); sh.position.y = .002; g.add(sh); g.userData.sh = sh; }
       });
     }
@@ -150,29 +164,30 @@
     // diceBig(on, ms): the stage's large place / the small one, the dice gliding over (as they lie)
     function diceBig(on, ms = 420) {
       if (!STG) return Promise.resolve(); const to = on ? STG.big : STG.small; if (to === ST) return Promise.resolve();
-      const from = DICE.filter(g => g.visible).map(g => [g.position.x, g.position.y, g.position.z]), s0 = DS; ST = to;
+      const from = DICE.filter(g => g.visible).map(g => [g.position.x, g.position.y, g.position.z]), s0 = DS, t0 = TL, t1 = to.tilt || 0; ST = to;
       const Pl = places(0, from.length);
-      if (!ms) { DS = to.s; ensureDice(from.length); DICE.forEach((g, i) => { if (i < from.length) { g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); } }); T3.kick(200); return Promise.resolve(); }
+      if (!ms) { DS = to.s; TL = t1; ensureDice(from.length); DICE.forEach((g, i) => { if (i < from.length) { g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); } }); T3.kick(200); return Promise.resolve(); }
       return anim(ms, q => {
-        const e = io(q); DS = s0 + (to.s - s0) * e;
-        DICE.forEach((g, i) => { if (i >= from.length) return; g.userData.d.scale.setScalar(DS); const y1 = REST(); g.position.set(from[i][0] + (Pl[i][0] - from[i][0]) * e, from[i][1] + (y1 - from[i][1]) * e + Math.sin(q * Math.PI) * .5, from[i][2] + (Pl[i][1] - from[i][2]) * e); if (g.userData.sh) g.userData.sh.visible = q > .95; });
-      }).then(() => { DS = to.s; ensureDice(from.length); DICE.forEach((g, i) => { if (i < from.length) { g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.visible = true; } }); T3.kick(200); });
+        const e = io(q); DS = s0 + (to.s - s0) * e; TL = t0 + (t1 - t0) * e;
+        DICE.forEach((g, i) => { if (i >= from.length) return; g.userData.d.scale.setScalar(DS); setTilt(g); const y1 = REST(); g.position.set(from[i][0] + (Pl[i][0] - from[i][0]) * e, from[i][1] + (y1 - from[i][1]) * e + Math.sin(q * Math.PI) * .5, from[i][2] + (Pl[i][1] - from[i][2]) * e); if (g.userData.sh) g.userData.sh.visible = q > .95; });
+      }).then(() => { DS = to.s; TL = t1; ensureDice(from.length); DICE.forEach((g, i) => { if (i < from.length) { g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.visible = true; } }); T3.kick(200); });
     }
     function restDice(side, d, n = 4) {
       n = d ? d.length : n; ensureDice(n);
       const Pl = places(side, n);
+      showDots(d);
       for (let i = 0; i < n; i++) { const g = DICE[i]; U.dieUp(g.userData.d, !!(d && d[i]), i * 1.9 + side * .7 + .3); g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.scale.set(1, 1, 1); g.userData.sh.material.opacity = .45; }
       T3.kick(200);
     }
     async function roll(side, d) {   // the throw of the 3D skin (UrDice3D.throwPlan): in from outside the board on the roller's side
-      const n = d.length; ensureDice(n);
+      const n = d.length; ensureDice(n); showDots(null);
       const Pl = places(side, n), sg = sideOf(side) === 0 ? 1 : -1;
       const items = DICE.slice(0, n).map((g, i) => ({ g, d: g.userData.d, sh: g.userData.sh, marked: !!d[i], rest: REST(), h0: 1.4 * Math.max(1, DS),
         from: [Pl[i][0] + (Math.random() - .5) * 1.4, Pl[i][1] + sg * (1.7 + Math.random() * .6)], to: [Pl[i][0], Pl[i][1]] }));
       const TP = window.UrDice3D.throwPlan(items, { dur: 980 / spd() });
       if (opts.sfx) opts.sfx('roll');
       await anim(TP.total / 1, k => TP.frame(k * TP.total));
-      TP.end();
+      TP.end(); showDots(d);
       if (opts.sfx) opts.sfx('dieStop');
       T3.kick(200);
     }
