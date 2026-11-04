@@ -241,7 +241,7 @@
   function valueToRoll(s, d) {
     if (s.winner >= 0) return s.winner === s.turn ? 1 : 0;
     if (d <= 0) return staticEval(s);
-    if (((++tick) & 63) === 0 && now() > deadline) throw ABORT;
+    if (((++tick) & 7) === 0 && now() > deadline) throw ABORT;
     const pr = R(s.rule).probs; let v = 0;
     for (let n = 0; n <= 4; n++) { if (pr[n] > 0) v += pr[n] * bestAfterRoll(s, n, d); }
     return v;
