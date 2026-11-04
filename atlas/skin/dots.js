@@ -112,16 +112,34 @@
     c.globalAlpha = .8; c.fillStyle = col; c.beginPath(); c.arc(Uu(st.x1), Uu(st.z1), Uu(st.w) * .62, 0, 7); c.fill(); c.globalAlpha = 1;
   }
   /* handwriting: the marker hand of the Latin marks, then handwritten webfonts for every other script
-     (Kalam: Latin + Devanagari, Yomogi: kana/kanji, Gaegu: Hangul, Long Cang: hanzi, Aref Ruqaa: Arabic),
+     (Kalam: Latin + Devanagari, Zen Kurenaido: kana/kanji, Nanum Pen Script: Hangul, Long Cang: hanzi, Aref Ruqaa: Arabic),
      so 「あ」「山」「나」「आ」「أ」 are scribbled like "AI" instead of falling back to a bold UI font */
-  const HAND = '"Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE","Kalam","Yomogi","Gaegu","Long Cang","Aref Ruqaa",cursive';
+  const HAND = '"Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE","Kalam","Zen Kurenaido","Nanum Pen Script","Long Cang","Aref Ruqaa",cursive';
   const LATIN = /^[\x20-\x7e -ɏ]*$/;
-  const handFont = (txt, px) => LATIN.test(txt) ? `italic 700 ${px}px ${HAND}` : `700 ${px}px ${HAND}`;   // (no synthetic italic on CJK etc.: the mark is tilted instead)
+  const handFont = (txt, px) => LATIN.test(txt) ? `italic 700 ${px}px ${HAND}` : `400 ${px}px ${HAND}`;
   const fontWait = new Set();
   function needFont(f, txt) {   // a webfont not loaded yet: load it, then repaint once
     try { if (!document.fonts || document.fonts.check(f, txt)) return; } catch (e) { return; }
     const k = f + '|' + txt; if (fontWait.has(k)) return; fontWait.add(k);
     document.fonts.load(f, txt).then(() => { lastKey = ''; try { paint(); } catch (e) {} }, () => {});
+  }
+  // a non-Latin initial as a quick marker scrawl, like the "AI" marks: a round marker line dragged a little
+  // along a chisel angle (uneven weight), an italic-like slant, a squash or stretch, uneven ink;
+  // drawn on its own small canvas, then dropped into the box with a little turn / shift / size change (all seeded by the box)
+  function scribble(c, ch, px, col, rr) {
+    const S = Math.ceil(px * 2.4), o = document.createElement('canvas'); o.width = o.height = S; const g = o.getContext('2d');
+    const sx = .88 + rr() * .22, sk = -.16 - rr() * .1, tip = px * (.018 + rr() * .012), ang = -.8 + (rr() - .5) * .5;
+    g.translate(S / 2, S / 2); g.transform(sx, 0, sk, 1, 0, 0);
+    const f = handFont(ch, px); needFont(f, ch);
+    g.font = f; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = g.strokeStyle = col; g.lineJoin = g.lineCap = 'round'; g.lineWidth = px * .06;
+    const dx = Math.cos(ang) * tip, dy = Math.sin(ang) * tip;
+    for (let i = -2; i <= 2; i++) { const k = i / 2; g.strokeText(ch, dx * k, dy * k); g.fillText(ch, dx * k, dy * k); }
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in';   // ink: soft uneven density (about the .9 of the Latin marks)
+    const n = 8, m = document.createElement('canvas'); m.width = m.height = n; const mg = m.getContext('2d'), id = mg.createImageData(n, n);
+    for (let i = 0; i < n * n; i++) id.data[i * 4 + 3] = 255 * (.86 + rr() * .14);
+    mg.putImageData(id, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(m, 0, 0, S, S);
+    c.globalAlpha = 1; c.translate((rr() - .5) * px * .12, (rr() - .5) * px * .1); c.rotate((rr() - .5) * .3);
+    const sc = .93 + rr() * .14; c.scale(sc, sc); c.drawImage(o, -S / 2, -S / 2);
   }
   function boxInk(c, gm, bx, o) {
     const r = Math.floor(bx / gm.n), cc = bx % gm.n, [px, pz] = gm.dot(r, cc), x0 = Uu(px), y0 = Uu(pz), sz = Uu(gm.sp), col = o === 2 ? NEUTRAL : INK[o];
@@ -133,11 +151,12 @@
     c.restore();
     if (o === 2) return;
     let ch = 'RB'[o]; try { ch = initial(o) || ch; } catch (e) {}
-    const lat = LATIN.test(ch), hang = /[ᄀ-ᇿ가-힯]/.test(ch), wide = !lat && /[⺀-鿿豈-﫿＀-￯]/.test(ch);   // kana / kanji fill the em: a little smaller (Gaegu draws Hangul small: larger)
-    c.save(); c.translate(x0 + sz / 2, y0 + sz / 2 + Uu(.04)); c.rotate((rr() - .5) * .3 + (lat ? 0 : -.1)); c.globalAlpha = lat ? .9 : 1; c.fillStyle = col;   // (stroke + fill: opaque, or the overlap shows a darker rim)
-    const f = handFont(ch, Uu(Math.min(.95, gm.sp * (ch.length > 1 ? .36 : hang ? .6 : wide ? .42 : .5)))); needFont(f, ch);
-    c.font = f; c.textAlign = 'center'; c.textBaseline = 'middle';
-    if (!lat) { c.strokeStyle = col; c.lineJoin = c.lineCap = 'round'; c.lineWidth = Uu(gm.sp) * .022; c.strokeText(ch, 0, 0); }   // single-weight brush fonts: a touch more marker ink
+    const lat = LATIN.test(ch), hang = /[\u1100-\u11ff\uac00-\ud7af]/.test(ch), wide = !lat && /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/.test(ch);   // kana / kanji fill the em: a little smaller (the pen Hangul is drawn small: larger)
+    c.save(); c.translate(x0 + sz / 2, y0 + sz / 2 + Uu(.04));
+    const fpx = Uu(Math.min(.95, gm.sp * (ch.length > 1 ? .36 : hang ? .62 : wide ? .46 : /[\u0900-\u097f]/.test(ch) ? .42 : .5)));
+    if (!lat) { scribble(c, ch, fpx, col, rr); c.restore(); return; }
+    c.rotate((rr() - .5) * .3); c.globalAlpha = .9; c.fillStyle = col;
+    const f = handFont(ch, fpx); needFont(f, ch); c.font = f; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(ch, 0, 0); c.restore();
   }
   function paint(skipE) {
