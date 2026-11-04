@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 4;                       // data version (bump when historia/*.json change)
+  const V = 5;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
   const UI = {
@@ -98,7 +98,7 @@
   /* ---------- open / close ---------- */
   function build() {
     root = document.createElement('div'); root.className = 'hs'; root.id = 'hist'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
-    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span></div></div></div>
+    root.innerHTML = `<div class="hs-stage"><div class="hs-hero" aria-hidden="true"><img alt=""></div><div class="hs-guide"><img alt="" decoding="async"><div class="hs-bub" aria-live="polite"><span></span><i class="ghost" aria-hidden="true"></i></div></div></div>
       <div class="hs-top"><button type="button" class="hs-mute" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V6l11-2v11"/><circle cx="6.5" cy="17" r="2.5"/><circle cx="17.5" cy="15" r="2.5"/><path class="sl" d="M3 3l18 18"/></svg></button><button type="button" class="hs-x"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <section class="hs-panel"><header class="hs-hd"><span class="hs-gi"></span><span class="hs-gn"></span><span class="hs-no"></span></header><div class="hs-pages"></div>
       <nav class="hs-nav"><button type="button" class="hs-pv"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><div class="hs-dots"></div><button type="button" class="hs-nx"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></nav></section>`;
@@ -174,15 +174,23 @@
     bgmStop(swap ? 200 : 1000);
     clearTimers();
     if (solo) { document.body.style.overflow = bodyOv; if (fromList && window.AtlasBoard) { fromList = false; setTimeout(() => AtlasBoard.close(), 0); } }
-    else if (fromList) {   // opened from the game list: back to the list (the board view closes with Historia)
-      fromList = false; gallery(false, null, true); const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      document.documentElement.style.setProperty('--hs-shift', '0px');
-      setTimeout(() => { if (!on && window.AtlasBoard) AtlasBoard.close(); }, 320);
+    else if (fromList) {   // opened from the game list: the whole board view (museum and all) fades straight back to the list —
+      // the room is never shown; it is put back silently once the board view is gone, ready for the next board
+      fromList = false; const bv = $('bv'); clearTimeout(swapT);
+      if (bv) { bv.style.transition = 'opacity .32s ease'; bv.style.opacity = '0'; }
+      setTimeout(() => {
+        if (on) { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } return; }
+        if (window.AtlasBoard) AtlasBoard.close();
+        if (bv) bv.classList.remove('hist', 'hsdim');
+        if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
+        cam(false); gallery(false, null, true);
+        requestAnimationFrame(() => { if (bv) { bv.style.opacity = ''; bv.style.transition = ''; } });
+      }, 340);
     }
     else {
       gallery(false);
       const bv = $('bv'); if (bv) bv.classList.remove('hist');
-      document.documentElement.style.setProperty('--hs-shift', '0px');
+      if (window.Table3D && Table3D.setShift) Table3D.setShift(0);
       cam(false);
       if (ctx && ctx.fit) ctx.fit(); else if (window.Table3D && Table3D.setInset) Table3D.setInset(0);
       const b = $('bvHist'); if (b && !swap) try { b.focus({ preventScroll: true }); } catch (e) {}
@@ -209,11 +217,20 @@
   // the board's framing while open: phones frame it in the stage above the page; wide screens keep it full height (the canvas is shifted right in CSS)
   function fit() {
     if (!on || solo || !root || !window.Table3D || !Table3D.setInset) return;
-    if (phone()) { const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(); Table3D.setInset(Math.max(0, innerHeight - r.bottom)); }
+    if (phone()) {
+      const st = root.querySelector('.hs-stage'), r = st.getBoundingClientRect(), g = root.querySelector('.hs-guide');
+      // the top-down board view: the guide and its bubble sit in a strip at the bottom of the stage, and the board is framed above it
+      const keep = camTop && g ? Math.max(0, Math.min(r.height * .4, r.bottom - g.getBoundingClientRect().top + 4)) : 0;
+      Table3D.setInset(Math.max(0, innerHeight - r.bottom + keep));
+    }
     else Table3D.setInset(0);
   }
   // wide screens: the canvas slides away from the page so the board sits in the free part of the screen
-  function shift() { document.documentElement.style.setProperty('--hs-shift', phone() ? '0px' : rtl() ? 'calc(var(--hs-pw) / -2)' : 'calc(var(--hs-pw) / 2)'); }
+  function shift() {   // (a shift lens in Table3D: the canvas stays put and fills the screen, the picture moves into the free part)
+    if (!window.Table3D || !Table3D.setShift) return;
+    const pn = root && root.querySelector('.hs-panel'); if (phone() || !pn) { Table3D.setShift(0); return; }
+    const L = pn.offsetLeft, R = L + pn.offsetWidth; Table3D.setShift(rtl() ? -(innerWidth - L) / 2 : R / 2);   // (layout box: the panel's slide-in transform is ignored)
+  }
   addEventListener('resize', () => { if (on) { shift(); fit(); } });
   // the 3D camera per chapter: the showcase turntable, or straight down onto the board for the board chapter
   let camTop = false, has3D = true;
@@ -222,6 +239,8 @@
     if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok())) return;
     if (solo) return;
     if (top === camTop) return; camTop = top;
+    if (root) root.classList.toggle('top', !!top);
+    fit();
     try { Table3D.play(!!top, { glide: 1100, ortho: true }); } catch (e) {}
   }
 
@@ -242,9 +261,11 @@
   /* ---------- the guide's speech bubble (typed in) ---------- */
   let sayT = 0;
   function say(s) {
-    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'); clearInterval(sayT);
+    const b = root.querySelector('.hs-bub'), sp = b.querySelector('span'), gh = b.querySelector('.ghost'); clearInterval(sayT);
+    gh.textContent = s || '';   // (an invisible copy of the whole line: the bubble takes its final size at once while the text types in)
     if (!s) { b.classList.remove('on'); sp.textContent = ''; return; }
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    if (camTop) requestAnimationFrame(fit);
     const g = root.querySelector('.hs-guide'); g.classList.remove('hop'); void g.offsetWidth; g.classList.add('hop');
     // scripts that join letters (Arabic, Devanagari) fade in whole; others are typed
     if (lang === 'ar' || lang === 'hi') { sp.textContent = s; sp.classList.remove('typing'); return; }
@@ -277,6 +298,9 @@
     root.querySelector('.hs-pv').disabled = i === 0; root.querySelector('.hs-nx').disabled = i === n - 1;
     later(() => say(c.say || ''), 380);
     cam(c.k === 'board');
+    // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
+    const rd = !['hook', 'board', 'end'].includes(c.k);
+    if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
   function kin(s, d0 = 0) {
@@ -316,21 +340,59 @@
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
     const zm = pg.querySelector('.zm'); if (zm) later(() => { zm.style.transform = zm.dataset.z; }, 350);
     if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
+    if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
   }
+  // a page with a board diagram: on a short window the diagram gives up height so the text never ends up under the nav bar
+  function fitDg(pg) {
+    const sv = pg.querySelector('.hs-dg svg'); if (!sv || !pg.isConnected) return;
+    sv.style.maxWidth = '';
+    const over = pg.scrollHeight - pg.clientHeight; if (over <= 1) return;
+    const w = sv.getBoundingClientRect().width, h = sv.getBoundingClientRect().height; if (!h) return;
+    sv.style.maxWidth = Math.max(200, Math.floor(w * (h - over - 4) / h)) + 'px';
+  }
+  addEventListener('resize', () => { const pg = root && root.querySelector('.hs-pg.in'); if (on && pg && pg.querySelector('.hs-dg svg')) fitDg(pg); });
   // origin chapter: the stages step through one by one (or on tap) — each lights its pin and draws the route that leads there
   function stepper(pg) {
     const L = [...pg.querySelectorAll('.hs-st li')], map = pg.querySelector('.hs-map'), pins = data.s.map.st || [], R = data.s.map.route || [];
     const P = [...map.querySelectorAll('[data-p]')], RT = [...map.querySelectorAll('.rt')];
-    let k = -1, auto = true;
-    const set = n => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
+    let k = -1, auto = true, hold = 0;
+    // the map stays pinned at the top of the page (sticky, capped at ~40% of the page height); the list scrolls under it,
+    // and each stage is brought up just below the map with a bit of the previous card still showing
+    // the map's height: ~1/3 of the page on phones (~40% on PC), cropped around the pins rather than squashed; it is pinned only
+    // when at least two or three stage cards still fit under it — otherwise it simply scrolls away with the page
+    const sv = map.querySelector('svg');
+    const cap = () => {
+      if (!pg.isConnected) return;
+      const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
+      const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
+      map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
+      sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
+    };
+    cap(); later(cap, 520); addEventListener('resize', cap);
+    const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
+    pg.addEventListener('scroll', stuck, { passive: true });
+    // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
+    const mine = () => { hold = performance.now() + 4000; };
+    ['wheel', 'touchmove'].forEach(e => pg.addEventListener(e, mine, { passive: true }));
+    pg.addEventListener('keydown', e => { if (/^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine(); });
+    const bring = (n, force) => {
+      if (!force && performance.now() < hold) return;
+      const li = L[n]; if (!li || pg.scrollHeight <= pg.clientHeight + 2) return;
+      const prev = L[n - 1], peek = prev ? Math.min(prev.offsetHeight * .45, 44) : 0;
+      const top = Math.max(0, li.offsetTop - (map.classList.contains('stick') ? map.offsetHeight : 0) - 12 - peek);
+      if (Math.abs(top - pg.scrollTop) > 2) pg.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    };
+    const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
       const seen = new Set(pins.slice(0, n + 1)), cur = pins[n];
-      P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i)); });
+      P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i));
+        if (i === cur) { p.classList.remove('ping'); void p.getBoundingClientRect(); p.classList.add('ping'); } });   // a ring pulses out of the stage's pin
       map.querySelectorAll('[data-l]').forEach(l => l.classList.toggle('seen', seen.has(+l.dataset.l)));
-      RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); }); };
-    const tick = () => { if (!auto || !on) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
+      RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); });
+      bring(n, force); };
+    const tick = () => { if (!auto || !on || !pg.isConnected) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
     later(tick, 1500);
-    L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j); });
+    L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
   }
   function fmt(v) { try { return Math.round(v).toLocaleString(lang === 'ar' ? 'en' : lang); } catch (e) { return String(Math.round(v)); } }
   function countUp(el) {
