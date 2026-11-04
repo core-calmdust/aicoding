@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ur 3D model demo</title>
+<style>html,body{margin:0;height:100%;background:#20283a;overflow:hidden}#v{position:relative;width:100vw;height:100vh}#info{position:fixed;left:8px;bottom:8px;color:#fff;font:12px monospace;background:rgba(0,0,0,.5);padding:4px 8px}</style>
+</head><body><div id="v"></div><div id="info"></div>
+<!-- three r128: a local copy (npm three@0.128.0 → ur/tools/lib/), cdnjs as a fallback -->
+<script src="lib/three.min.js"></script>
+<script>window.THREE || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+<script src="../../atlas/table3d.js"></script>
+<script src="../../atlas/models/ur.js"></script>
+<script>
+/* modes (query):
+   ?mode=room            the portal showcase (Table3D in the toy room, the board turning on the chabudai)
+   ?mode=own&cam=x,y,z&look=x,y,z&live=1&o=v   own scene with a free camera (detail shots)
+*/
+(function () {
+  const q = new URLSearchParams(location.search), mode = q.get('mode') || 'own', el = document.getElementById('v'), info = document.getElementById('info');
+  const T3 = window.Table3D;
+  if (mode === 'room') {
+    T3.mount(el, {}); T3.show('ur');
+    setTimeout(() => { const R = T3.renderer(); window.__tri = R.info.render.triangles; window.__calls = R.info.render.calls; info.textContent = `room tris ${window.__tri} calls ${window.__calls}`; window.__ready = true; }, 3500);
+    return;
+  }
+  const TT = THREE, R = new TT.WebGLRenderer({ antialias: true }); R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight);
+  R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = +(q.get('exp') || .85); R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap; el.appendChild(R.domElement);
+  const sc = new TT.Scene(); sc.background = new TT.Color(q.get('bg') || '#2b3a8a').convertSRGBToLinear();
+  // the same studio environment as table3d.js
+  { const env = new TT.Scene(), sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true })), col = [], pos = sky.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = .06 + .3 * y; col.push(k, k, k); } sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
+    [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => { const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: new TT.Color(k, k, k), side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
+    const pm = new TT.PMREMGenerator(R); sc.environment = pm.fromScene(env, .03).texture; }
+  sc.add(new TT.HemisphereLight(0xf4f8ff, 0x6a5038, .46));
+  const key = new TT.DirectionalLight(0xffffff, .75); key.position.set(-8, 18, -6); key.castShadow = true; key.shadow.mapSize.setScalar(2048); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 60 }); key.shadow.bias = -.0004; key.shadow.normalBias = .02; sc.add(key);
+  const fill = new TT.DirectionalLight(0xfff0d8, .35); fill.position.set(6, 14, 10); sc.add(fill);
+  const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), new TT.MeshStandardMaterial({ color: new TT.Color(q.get('floor') || '#28348a').convertSRGBToLinear(), roughness: .95 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; sc.add(floor);
+  const g = T3.MODELS.ur(q.get('live') === '1'); sc.add(g);
+  if (q.get('o')) g.userData.orient(q.get('o'));
+  if (q.get('extra') === 'pieces') {   // all piece looks and dice in a row
+    const ud = g.userData; ['orig', 'ivory', 'wood', 'gold'].forEach((d, i) => [0, 1].forEach(s => { const p = ud.piece(s, d); p.position.set(-1.6 + i * .8, 0, 2.6 + s * .75); sc.add(p); }));
+    [true, false, true, true].forEach((m, k) => { const d = ud.die(); ud.dieUp(d, m, k); d.position.set(1.8 + k * .6, ud.dieRest, 2.9); sc.add(d); });
+  }
+  const cam = new TT.PerspectiveCamera(+(q.get('fov') || 30), innerWidth / innerHeight, .05, 200);
+  const cp = (q.get('cam') || '0,11,9').split(',').map(Number), lk = (q.get('look') || '0,0.4,0').split(',').map(Number);
+  cam.position.set(...cp); cam.lookAt(...lk);
+  R.render(sc, cam);
+  window.__tri = R.info.render.triangles; window.__calls = R.info.render.calls;
+  info.textContent = `tris ${window.__tri} calls ${window.__calls}`;
+  window.__ready = true;
+})();
+</script>
+</body></html>
