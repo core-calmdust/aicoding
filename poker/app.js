@@ -890,5 +890,5 @@ if (D.cur && D.cur.seats && P.VARIANTS[D.cur.v] && !D.cur.tut) {
 } else startSession(set.v);
 
 window.PokerApp = { M, SM, MH, num, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, startSession, startTutorial, endTutorial, render, chipStackDemo: (a, m) => chipStack(a, m), ask, gArt, HERO, statOf };
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); set.coach = set.coach ? 0 : 1; save(); render(); if (set.coach || set.hud) requestCoach(); if (typeof sfx === 'function') try { sfx('tap'); } catch (x) {} });
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); const sy = window.scrollY, sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); if (set.coach || set.hud) requestCoach(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (sc) sc.scrollTop = st; window.scrollTo(0, sy); });
 })();
