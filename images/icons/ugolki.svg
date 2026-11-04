@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <clipPath id="ug-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <radialGradient id="ug-w" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fffaf0"/><stop offset=".4" stop-color="#f3e7cc"/><stop offset=".85" stop-color="#d8c39a"/><stop offset="1" stop-color="#8f7a4e"/></radialGradient>
+    <radialGradient id="ug-k" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#5a4a44"/><stop offset=".4" stop-color="#1d1513"/><stop offset="1" stop-color="#000"/></radialGradient>
+  </defs>
+  <g clip-path="url(#ug-c)">
+    <rect width="96" height="96" fill="#130c0b"/>
+    <g fill="#c4432a"><rect x="0" y="0" width="24" height="24"/><rect x="48" y="0" width="24" height="24"/><rect x="24" y="24" width="24" height="24"/><rect x="72" y="24" width="24" height="24"/><rect x="0" y="48" width="24" height="24"/><rect x="48" y="48" width="24" height="24"/><rect x="24" y="72" width="24" height="24"/><rect x="72" y="72" width="24" height="24"/></g>
+    <rect x="2" y="46" width="48" height="48" rx="4" fill="none" stroke="#f0c46a" stroke-width="2.2" stroke-dasharray="5 3"/>
+    <rect x="46" y="2" width="48" height="48" rx="4" fill="none" stroke="#f0c46a" stroke-width="2.2" stroke-dasharray="5 3"/>
+    <circle cx="60" cy="36" r="9" fill="url(#ug-k)" stroke="#c2352a" stroke-width="2.4"/>
+    <circle cx="36" cy="60" r="9" fill="url(#ug-w)" stroke="#a37b2c" stroke-width="2.4"/>
+    <path d="M30 76 C 34 52, 52 40, 74 22" fill="none" stroke="#ffe9a8" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 6"/>
+    <circle cx="78" cy="18" r="10.5" fill="url(#ug-w)" stroke="#a37b2c" stroke-width="2.6"/>
+    <circle cx="78" cy="18" r="3" fill="#a37b2c"/>
+  </g>
+</svg>
