@@ -483,13 +483,15 @@ const mName = m => t('m.' + m);
 // table geometry (px of the table box): seats along a curve near the bottom, the dealer at the top
 function geom(W, H) {
   const mob = W < 560;
-  const u = Math.max(34, Math.min(mob ? 92 : 132, H / (mob ? 4.6 : 5.0), W / (mob ? 5.1 : 6.4)));
+  const u = Math.max(34, Math.min(mob ? 92 : 150, H / (mob ? 4.6 : 5.0), W / (mob ? 5.1 : 5.6)));
+  // a tall table (more height than the cards need): the dealer comes down, the seats come up and curve more
+  const extra = Math.max(0, H - u * (mob ? 4.6 : 5.0));
   const share = SEATS.map(n => n === ME ? (mob ? 1.7 : 1.55) : 1), tot = share.reduce((a, b) => a + b, 0), pad = mob ? 4 : u * .5;
   let x = pad; const seats = SEATS.map((n, i) => { const w = share[i] / tot * (W - 2 * pad), cx = x + w / 2; x += w; return { n, x: cx, w }; });
-  const plateH = mob ? 38 : Math.max(38, u * .4), r = mob ? Math.min(u * .4, 30) : u * .42, ybot = H - plateH - r - (mob ? 6 : u * .1);
-  const curve = mob ? u * .45 : u * .85;
+  const plateH = mob ? 38 : Math.max(38, u * .4), r = mob ? Math.min(u * .4, 30) : u * .42, ybot = H - plateH - r - (mob ? 6 : u * .1) - extra * .3;
+  const curve = (mob ? u * .45 : u * .85) + extra * .07;
   seats.forEach(s => { const f = (s.x - W / 2) / (W / 2); s.y = ybot - curve * f * f; s.r = s.n === ME ? r : r * (mob ? .78 : .8); });
-  const dealerY = mob ? u * .14 : u * .18, dcw = u * (mob ? .82 : .78);
+  const dealerY = (mob ? u * .14 : u * .18) + extra * .22, dcw = u * (mob ? .82 : .78);
   return { mob, u, seats, r, plateH, dealerY, dcw, dealerBot: dealerY + dcw * 1.4, W, H };
 }
 function cardEl(c, x, y, w, k, o) {
@@ -602,7 +604,7 @@ function render() {
     mid = `<div class="bj-msg res${r.net > 0 ? ' pos' : r.net < 0 ? ' neg' : ''}" data-k="msg${T.round}"><b>${esc(k === 'bj' ? t('rs.bj') : r.dbj ? t('rs.dbj') : r.net > 0 ? t('rs.win') : r.net < 0 ? t('rs.lose') : t('rs.push'))}</b><span>${esc(r.net ? sg(r.net) : t('res.even'))}</span></div>`;
   }
   const left = T.shoe.cards.length - T.shoe.pos, pctL = left / T.shoe.cards.length;
-  html += `<div class="bj-mid" data-k="mid" style="top:${(g.dealerBot + u * .42).toFixed(1)}px">${mid}</div>`;
+  html += `<div class="bj-mid" data-k="mid" style="top:${(g.dealerBot + u * .3).toFixed(1)}px">${mid}</div>`;
   html += `<div class="bc-shoe bj-shoe" data-k="shoe" title="${esc(t('shoe.left', { n: left }))}"><span class="bc-shoe-box"><i style="height:${(pctL * 100).toFixed(1)}%"></i><em class="cut" style="bottom:${((T.shoe.cards.length - T.shoe.cut) / T.shoe.cards.length * 100).toFixed(1)}%"></em></span><small><i>SHOE</i>${left}</small></div>`;
   patch(box, `<svg class="bj-svg" data-k="svg" viewBox="0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}" width="${W.toFixed(0)}" height="${Hh.toFixed(0)}">${svg}</svg>` + html);
   box.querySelectorAll('[data-spot]').forEach(el => { el.onclick = () => placeBet(el.dataset.spot); el.onmouseenter = e => spotTip(el.dataset.spot, e); el.onmousemove = e => spotTip(el.dataset.spot, e); el.onmouseleave = () => spotTip(null);
@@ -854,7 +856,7 @@ function renderNums() {
   const stats = stat(t('bank'), fmt(T.bank)) + stat(t('ss.net'), sg(T.session.net)) + (set.count ? stat(t('cnt.tc'), (trueCount() > 0 ? '+' : '') + trueCount().toFixed(1)) : stat(t('ss.round'), '#' + (T.shoe.n + (T.phase === 'bet' ? 1 : 0))));
   $('#infobar').innerHTML = game + stats;
   const mg = `<b>${esc(vName(T.v))}</b><em>${esc(ruleShort())}</em>`; if ($('#mGame').innerHTML !== mg) $('#mGame').innerHTML = mg;
-  if (HB && HB.on) HB.setInfo(game + `<span class="sdiv"></span>` + stat(t('bank'), fmt(T.bank)));
+  if (HB && HB.on) HB.setInfo(game);
 }
 
 /* ---------------- statistics dialog ---------------- */

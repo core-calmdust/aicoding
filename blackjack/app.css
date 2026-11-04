@@ -2490,3 +2490,27 @@ body.pk.bc{background:radial-gradient(1100px 700px at 25% -10%,#26191d 0%,transp
 /* blackjack accent: amber gold (poker = ruby, baccarat = teal) */
 :root{--hl:#e0aa48;--hl2:#f6d48a;--hl-a:rgba(224,170,72,.5)}
 .bj .ng-tabs button.sel,.bj .rv-tabs button.sel{border-color:var(--hl)}
+
+/* ===== luxury labels (results, totals, speech, the message in the middle) ===== */
+.bj-res{font:700 calc(min(var(--u)*.15,13px))/1.3 'Shippori Mincho B1','Cormorant Garamond',serif;letter-spacing:.14em;padding:3px 12px 3px 13px;color:#eadfc6;
+  background:linear-gradient(180deg,#1d1912,#0a0806);border:1px solid rgba(241,205,122,.55);box-shadow:inset 0 0 0 2px #0a0806,inset 0 0 0 3px rgba(241,205,122,.22),0 4px 12px rgba(0,0,0,.5)}
+.bj-res.me{font-size:calc(min(var(--u)*.17,15px));padding:4px 16px 4px 17px}
+.bj-res.r-win,.bj-res.r-bj{color:#1b1406;background:linear-gradient(180deg,#fbe7a9 0%,#e2bd68 48%,#b98c3a 100%);border-color:#fff1c4;box-shadow:inset 0 0 0 2px rgba(255,248,222,.0),inset 0 1px 0 rgba(255,255,255,.6),0 0 0 1px rgba(122,90,18,.6),0 4px 14px rgba(0,0,0,.5),0 0 18px rgba(241,205,122,.35)}
+.bj-res.r-lose,.bj-res.r-bust,.bj-res.r-dbj{color:#e9a59c}
+.bj-res.r-surr{color:#e8cf95}
+.bj-res.r-push,.bj-res.r-push22{color:#d8d2c4}
+.bj-tot{font:700 calc(min(var(--u)*.16,14px))/1.2 'Cormorant Garamond','JetBrains Mono',serif;font-variant-numeric:lining-nums;letter-spacing:.04em;padding:2px 10px;color:#1b1406;
+  background:linear-gradient(180deg,#fbf6ea,#e6dcc6);box-shadow:0 0 0 1px rgba(122,90,18,.55),inset 0 0 0 2px rgba(255,255,255,.7),0 3px 8px rgba(0,0,0,.45)}
+.bj-tot.me,.bj-tot.dl{font-size:calc(min(var(--u)*.22,20px));padding:2px 13px}
+.bj-tot.bj{background:linear-gradient(180deg,#fbe7a9,#e2bd68 48%,#b98c3a);letter-spacing:.14em}
+.bj-tot.bust{background:linear-gradient(180deg,#3a1418,#1e0a0c);color:#f0b0a8;letter-spacing:.14em;box-shadow:0 0 0 1px rgba(240,176,168,.45),0 3px 8px rgba(0,0,0,.45)}
+.bj-say{font:700 12px 'Shippori Mincho B1',serif;letter-spacing:.1em;color:#f1cd7a;background:linear-gradient(180deg,#1d1912,#0a0806);border:1px solid rgba(241,205,122,.6);box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.bj-msg{padding:8px 22px;background:linear-gradient(180deg,rgba(29,25,18,.95),rgba(10,8,6,.95));border:1px solid rgba(241,205,122,.7);box-shadow:inset 0 0 0 3px rgba(10,8,6,.95),inset 0 0 0 4px rgba(241,205,122,.28),0 10px 26px rgba(0,0,0,.55)}
+.bj-msg b{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;letter-spacing:.16em}
+.bj-msg span{font-family:'Cormorant Garamond',serif;font-variant-numeric:lining-nums;letter-spacing:.04em}
+.bj-pl b{font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-size:14px;letter-spacing:.08em}
+.bj-pl small,.bj-pl em{font-family:'Cormorant Garamond',serif;font-variant-numeric:lining-nums;font-size:13px;font-weight:700}
+.bj-pl.me b{font-size:15px;letter-spacing:.2em}.bj-pl.me small,.bj-pl.me em{font-size:14.5px}
+.bj-pl{background:linear-gradient(180deg,rgba(29,25,18,.82),rgba(10,8,6,.82));border-color:rgba(241,205,122,.28)}
+.bj-table.mob .bj-pl b{font-size:12px}.bj-table.mob .bj-pl small,.bj-table.mob .bj-pl em{font-size:11.5px}
+.bj .abtn.mv b,.bj .abtn.mv{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;letter-spacing:.12em}
