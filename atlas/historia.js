@@ -219,7 +219,7 @@
     if (!window.Table3D || !Table3D.play || (Table3D.ok && !Table3D.ok())) return;
     if (solo) return;
     if (top === camTop) return; camTop = top;
-    try { Table3D.play(!!top, { glide: 1100 }); } catch (e) {}
+    try { Table3D.play(!!top, { glide: 1100, ortho: true }); } catch (e) {}
   }
 
   /* ---------- keyboard ---------- */

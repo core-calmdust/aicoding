@@ -1224,8 +1224,8 @@
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
     const needW = (k ? fw : 6.5) / (th * a), needH = (k ? fd : 6.8) / th;
-    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k));   // zoom applies to the showcase view only
-    const pitch = .52 + k * ((fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
+    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
+    const pitch = .52 + k * ((orthoWant ? 1.5703 : fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
@@ -1343,7 +1343,11 @@
   let revealFn = null;
   function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
   let lampShade = null;
+  // play(on, {ortho:true}) (Historia's 「盤」 chapter): the top view becomes a true orthographic plan — no perspective, nothing leans.
+  // The projection blends from perspective to ortho with the camera move (and back on the way down), see orthoBlend
+  let orthoWant = false, orthoW = 0, camLook = 0;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
+    if (on) orthoWant = !!(o && o.ortho);
     if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
@@ -1524,15 +1528,26 @@
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
-      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+    orthoBlend(orthoWant ? camK * camK * camK : 0);
     R.render(scene, cam);
+  }
+  // perspective → orthographic: the ortho frustum is matched to the perspective one on the plane the camera looks at
+  // (same size and the same view offset there), so blending the two matrices element by element is seamless
+  function orthoBlend(w) {
+    if (w < .001 && orthoW < .001) return;
+    cam.updateProjectionMatrix(); orthoW = w; if (w < .001) return;
+    const P = cam.projectionMatrix.elements, dd = Math.max(.5, Math.hypot(cam.position.x, cam.position.y - camLook, cam.position.z));   // distance to the look-at point (the board top)
+    const n = cam.near, f = cam.far, O = [P[0] / dd, 0, 0, 0, 0, P[5] / dd, 0, 0, 0, 0, -2 / (f - n), 0, -P[8], -P[9], -(f + n) / (f - n), 1];
+    for (let i = 0; i < 16; i++) P[i] += (O[i] - P[i]) * w;
+    cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
-  const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, aspect: cam && cam.aspect });
+  const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, aspect: cam && cam.aspect });
   const _scene = () => scene;
   window.Table3D = { museum, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
