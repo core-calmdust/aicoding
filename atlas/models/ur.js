@@ -75,6 +75,10 @@
     return swatch('urRed', 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 20; return [cl(150 + t), cl(58 + t * .6), cl(38 + t * .4)]; }); };
   const GREYN = () => { const N = makeNoise(47), f1 = tileN(N, 8, 3), f2 = tileN(N, 40, 1);
     return swatch('urGreyN', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 120 + (f2(u, v) - .5) * 60; return [cl(t), cl(t), cl(t)]; }); };
+  // shell growth lines: fine, slightly wavy bands with broader layers (seamless: whole periods across the tile)
+  const GROW = () => { const N = makeNoise(83), w1 = tileN(N, 3, 3), w2 = tileN(N, 9, 2);
+    return swatch('urGrow', 256, (u, v) => { const w = w1(u, v) * 1.6 + w2(u, v) * .35, f = Math.sin((v * 22 + w * 2) * TAU) * .5 + .5, b = Math.sin((v * 4 + w) * TAU) * .5 + .5;
+      const t = 255 - Math.pow(f, 3) * 70 - b * 45; return [cl(t), cl(t), cl(t)]; }); };
   function pat(g, cv, unitsPerPx, ox = 0, oy = 0, rot = 0) {
     const p = g.createPattern(cv, 'repeat');
     try { let m = new DOMMatrix(); m = m.translate(ox, oy); if (rot) m = m.rotate(rot); p.setTransform(m.scale(unitsPerPx)); } catch (e) {}
@@ -86,7 +90,21 @@
     if (pass === 'c') return { pass, bit: pat(g, BIT(), 1 / 260), lap: pat(g, LAPIS(), 1 / 330), shell: pat(g, SHELL(), 1 / 300), red: pat(g, RED(), 1 / 330),
       line: 'rgba(34,22,14,.93)', dot: pat(g, LAPIS(), 1 / 600, .3, .2), joint: 'rgba(8,12,40,.75)', shellEdge: '#ded0ae' };
     if (pass === 'h') return { pass, bit: '#3a3a3a', lap: '#8c8c8c', shell: '#c8c8c8', red: '#b4b4b4', line: '#5c5c5c', dot: '#a8a8a8', joint: '#4e4e4e', shellEdge: '#a8a8a8', noise: pat(g, GREYN(), 1 / 260) };
-    return { pass, bit: '#909090', lap: '#606060', shell: '#a4a4a4', red: '#8a8a8a', line: '#d8d8d8', dot: '#606060', joint: '#c8c8c8', shellEdge: '#a0a0a0' };   // roughness ≈ grey / 255
+    if (pass === 'm') return { pass, bit: '#000', lap: '#000', shell: '#fff', red: '#000', line: '#000', dot: '#000', joint: '#000', shellEdge: '#c8c8c8' };   // shell mask (nacre strength)
+    return { pass, bit: '#909090', lap: '#606060', shell: '#707070', red: '#dadada', line: '#d8d8d8', dot: '#606060', joint: '#c8c8c8', shellEdge: '#7a7a7a' };   // roughness ≈ grey / 255: matte red stone, smoother shell
+  }
+
+  // fill the current path with shell: its own orientation of the layers (rot, degrees) and offset; k = nacre strength (mask pass)
+  function fillShell(g, S, rot = 0, ox = 0, oy = 0, k = 1) {
+    if (S.pass === 'c') {
+      g.fillStyle = pat(g, SHELL(), 1 / 300, ox, oy, rot); g.fill();
+      g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = .22; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
+      g.save(); g.globalAlpha = .07; g.fillStyle = 'rgba(255,236,190,1)'; g.fill(); g.restore();   // a faint warm, translucent glow
+    } else if (S.pass === 'h') {
+      g.fillStyle = S.shell; g.fill(); g.save(); g.globalAlpha = .35; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
+    } else if (S.pass === 'm') {
+      g.fillStyle = '#000'; g.fill(); g.save(); g.globalAlpha = k; g.fillStyle = pat(g, GROW(), 1 / 520, ox, oy, rot); g.fill(); g.restore();
+    } else { g.fillStyle = S.shell; g.fill(); }
   }
 
   /* ---------- the engraved motifs (plaque-local units, plaque side P, centred) ---------- */
@@ -182,7 +200,7 @@
     const t = .1, DH = .072, RJ = .02;   // band half width, diamond half diagonal, red joint half length
     const diamond = (x, z, q1, q2, q3, q4, q5) => {
       g.beginPath(); g.moveTo(x - DH, z); g.lineTo(x, z - DH); g.lineTo(x + DH, z); g.lineTo(x, z + DH); g.closePath();
-      g.fillStyle = S.shell; g.fill();
+      fillShell(g, S, q4 * 360, q5 * 3, q2 * 3, .8 + q2 * .2);
       if (pass === 'c') { g.fillStyle = q1 < .3 ? `rgba(120,85,40,${(.15 + q2 * .25).toFixed(2)})` : `rgba(255,248,230,${(q2 * .18).toFixed(2)})`; g.fill(); }   // each piece its own tone
       if (q3 < .07) { g.fillStyle = S.bit; g.beginPath(); g.arc(x + (q4 - .5) * .05, z + (q5 - .5) * .05, .016 + q4 * .012, 0, TAU); g.fill(); }   // a small chip (the band itself stays complete)
     };
@@ -225,30 +243,30 @@
       const [cx, cz] = pt(r, c), v = VAR[r * 8 + c], h = P / 2;
       g.save(); g.translate(cx, cz);
       g.save(); g.beginPath(); g.rect(-h, -h, P, P); g.clip();
+      g.beginPath(); g.rect(-h, -h, P, P); fillShell(g, S, v.tint * 360, v.ox * 3, v.oy * 3, .38 + v.tint2 * .14);   // the plaques: a gentler nacre
       if (pass === 'c') {
-        g.fillStyle = pat(g, SHELL(), 1 / 300, v.ox * 3, v.oy * 3, v.tint * 90); g.fillRect(-h, -h, P, P);
         // age: each plaque its own yellowing / greying, darker towards the worn edges
         g.fillStyle = v.tint < .35 ? `rgba(170,120,40,${(.08 + v.tint2 * .14).toFixed(2)})` : v.tint < .7 ? `rgba(120,95,60,${(.05 + v.tint2 * .12).toFixed(2)})` : `rgba(255,250,235,${(.05 + v.tint2 * .12).toFixed(2)})`;
         g.fillRect(-h, -h, P, P);
         const gr = g.createRadialGradient(0, 0, P * .25, 0, 0, P * .75); gr.addColorStop(0, 'rgba(90,60,25,0)'); gr.addColorStop(1, `rgba(90,60,25,${(.18 + v.tint2 * .14).toFixed(2)})`); g.fillStyle = gr; g.fillRect(-h, -h, P, P);
-      } else { g.fillStyle = S.shell; g.fillRect(-h, -h, P, P); if (S.noise) { g.globalAlpha = .12; g.fillStyle = S.noise; g.fillRect(-h, -h, P, P); g.globalAlpha = 1; } }
-      const m = motif(r, c); if (m) MOTIF[m](g, S, lw);
+      } else if (S.noise) { g.globalAlpha = .12; g.fillStyle = S.noise; g.fillRect(-h, -h, P, P); g.globalAlpha = 1; }
+      const m = motif(r, c); if (m) { const sh = S.shell; if (pass === 'm') S.shell = 'rgba(80,80,80,1)'; MOTIF[m](g, S, lw); S.shell = sh; }
       // hairline cracks (dirt in them)
       seed = v.cs;
       for (let i = 0; i < v.cracks; i++) {
         let x = (rnd() - .5) * P, y = -h; const vert = rnd() < .5; if (!vert) { y = x; x = -h; }
         g.beginPath(); g.moveTo(x, y);
         for (let s = 0; s < 6; s++) { if (vert) { x += (rnd() - .5) * .06; y += P / 6; } else { y += (rnd() - .5) * .06; x += P / 6; } g.lineTo(x, y); }
-        g.strokeStyle = pass === 'c' ? 'rgba(60,40,20,.45)' : pass === 'h' ? '#8a8a8a' : '#c0c0c0'; g.lineWidth = .005; g.stroke();
+        g.strokeStyle = pass === 'c' ? 'rgba(60,40,20,.45)' : pass === 'h' ? '#8a8a8a' : pass === 'm' ? '#000' : '#c0c0c0'; g.lineWidth = .005; g.stroke();
       }
       // chipped corners / edges: the bitumen bed shows through
       for (const [corner, sz] of v.chips) {
         const sx = corner & 1 ? 1 : -1, sy = corner & 2 ? 1 : -1, a = .05 + sz * .06;
         g.beginPath(); g.moveTo(sx * h, sy * (h - a)); g.lineTo(sx * (h - a * .4), sy * (h - a * .8)); g.lineTo(sx * (h - a * .7), sy * (h - a * .3)); g.lineTo(sx * (h - a), sy * h); g.lineTo(sx * h, sy * h); g.closePath();
-        g.fillStyle = pass === 'c' ? 'rgba(40,30,22,1)' : pass === 'h' ? '#505050' : '#a0a0a0'; g.fill();
+        g.fillStyle = pass === 'c' ? 'rgba(40,30,22,1)' : pass === 'h' ? '#505050' : pass === 'm' ? '#000' : '#a0a0a0'; g.fill();
       }
       g.restore();
-      g.strokeStyle = pass === 'c' ? 'rgba(30,22,16,.55)' : pass === 'h' ? '#707070' : '#c8c8c8'; g.lineWidth = .007; g.strokeRect(-h, -h, P, P);   // the joint round the plaque
+      g.strokeStyle = pass === 'c' ? 'rgba(30,22,16,.55)' : pass === 'h' ? '#707070' : pass === 'm' ? '#000' : '#c8c8c8'; g.lineWidth = .007; g.strokeRect(-h, -h, P, P);   // the joint round the plaque
       g.restore();
     }
     g.setTransform(1, 0, 0, 1, 0, 0);
@@ -285,16 +303,17 @@
         let nextEye = .35 + rnd() * .5;
         while (x < s.len - .04) {
           if (x > nextEye && x < s.len - .55) {
-            const w = .4 + rnd() * .06, q = rnd(); g.fillStyle = S.shell; g.fillRect(x, top, w, bot - top);
+            const w = .4 + rnd() * .06, q = rnd(); g.beginPath(); g.rect(x, top, w, bot - top); fillShell(g, S, 80 + q * 20, q * 3, x, .7);
             if (pass === 'c') { g.fillStyle = `rgba(150,110,50,${(q * .25).toFixed(2)})`; g.fillRect(x, top, w, bot - top); }
             eye(x, w); x += w + .012; nextEye = x + .9 + rnd() * .7; continue;
           }
           const red = rnd() < .5, w = red ? .04 + rnd() * .035 : .05 + rnd() * .045, q = rnd();
-          g.fillStyle = red ? S.red : S.shell; g.fillRect(x, top, Math.min(w, s.len - .04 - x), bot - top);
+          const ww = Math.min(w, s.len - .04 - x); g.beginPath(); g.rect(x, top, ww, bot - top);
+          if (red) { g.fillStyle = S.red; g.fill(); } else fillShell(g, S, 60 + q * 60, q * 5, x, .8 + q * .2);   // each slip its own grain direction
           if (pass === 'c') { g.fillStyle = `rgba(${red ? '50,20,10' : '130,95,50'},${(q * .38).toFixed(2)})`; g.fillRect(x, top, Math.min(w, s.len - .04 - x), bot - top); }
           x += w + .01;
         }
-        g.fillStyle = S.shell; g.fillRect(0, 0, s.len, H * .055);   // the shell slip round the top edge
+        g.beginPath(); g.rect(0, 0, s.len, H * .055); fillShell(g, S, 0, 0, 0, .8);   // the shell slip round the top edge
         if (pass === 'c') { g.fillStyle = 'rgba(120,90,50,.25)'; g.fillRect(0, 0, s.len, H * .055); }
       } else {
         g.fillStyle = S.shellEdge; g.fillRect(0, 0, s.len, H * .045);
@@ -317,23 +336,56 @@
     }
     og.putImageData(img, 0, 0); return out;
   }
+  // roughness (G, as three.js reads it) and the nacre mask (R: clearcoatMap and the pearl shader read it) in one texture
+  function packRM(rc, mc) {
+    const w = rc.width, h = rc.height, g = rc.getContext('2d'), a = g.getImageData(0, 0, w, h), b = mc.getContext('2d').getImageData(0, 0, w, h).data, d = a.data;
+    for (let i = 0; i < d.length; i += 4) { d[i] = b[i]; d[i + 2] = 0; }
+    g.putImageData(a, 0, 0); return rc;
+  }
   function tex(c, srgb) { const TT = T(), t = new TT.CanvasTexture(c); t.encoding = srgb ? TT.sRGBEncoding : TT.LinearEncoding; t.anisotropy = 8; return t; }
+  // nacre: a thin-film shimmer on the shell (mask in the roughness map's R): the hue turns with the viewing angle and the growth
+  // layers; it tints the reflections and, faintly, the lit colour. PC: a clearcoat over the shell only (clearcoatMap = the same texture);
+  // phones / lite: the standard shader with the same cheap tint (no clearcoat)
+  function pearl(m, amt) {
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', `
+        {
+          float shM = texture2D( roughnessMap, vUv ).r;
+          float ndv = clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 );
+          float ph = shM * 7.0 + ( 1.0 - ndv ) * 7.5 + vUv.x * 40.0 + vUv.y * 23.0;
+          vec3 iri = 0.5 + 0.5 * cos( ph + vec3( 0.0, 2.2, 4.3 ) );
+          vec3 spec = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+          float lum = dot( outgoingLight, vec3( .3, .59, .11 ) );
+          outgoingLight += shM * ( ( iri - 0.4 ) * spec * ${(amt * 2.6).toFixed(2)} + ( iri - 0.5 ) * lum * ${(amt * .3).toFixed(2)} * ( 0.4 + 0.6 * ( 1.0 - ndv ) ) );
+        }
+        gl_FragColor = vec4( outgoingLight, diffuseColor.a );`);
+    };
+    m.customProgramCacheKey = () => 'urPearl' + amt;
+    return m;
+  }
+  function inlayMat(t, env) {
+    const TT = T(), o = { map: t.map, normalMap: t.normal, roughnessMap: t.rough, roughness: 1, metalness: 0, envMapIntensity: env };
+    if (LO()) return pearl(new TT.MeshStandardMaterial(o), .8);
+    return pearl(new TT.MeshPhysicalMaterial(Object.assign(o, { clearcoat: .55, clearcoatRoughness: .22, clearcoatMap: t.rough })), 1);
+  }
   let TOPT = null, SIDET = null;
   function topTextures() {
     if (TOPT) return TOPT;
     const cw = SZ(3072), ch = Math.round(cw * D / W), nw = SZ(2048), nh = Math.round(nw * D / W), rw = SZ(1024), rh = Math.round(rw * D / W);
     const c = canvas(cw, ch); paintTop(c.getContext('2d'), cw, 'c');
     const hc = canvas(nw, nh); paintTop(hc.getContext('2d'), nw, 'h');
-    const rc = canvas(rw, rh); paintTop(rc.getContext('2d'), rw, 'r');
-    return (TOPT = { map: tex(c, true), normal: tex(normalFrom(hc, 1.1 * nw / 2048), false), rough: tex(rc, false) });
+    const rc = canvas(nw, nh); paintTop(rc.getContext('2d'), nw, 'r');
+    const mc = canvas(nw, nh); paintTop(mc.getContext('2d'), nw, 'm');
+    return (TOPT = { map: tex(c, true), normal: tex(normalFrom(hc, 1.1 * nw / 2048), false), rough: tex(packRM(rc, mc), false) });
   }
   function sideTextures() {
     if (SIDET) return SIDET;
     const cw = SZ(6144), ch = SZ(192), nw = SZ(4096), nh = SZ(128);
     const c = canvas(cw, ch); paintSide(c.getContext('2d'), cw, ch, 'c');
     const hc = canvas(nw, nh); paintSide(hc.getContext('2d'), nw, nh, 'h');
-    const rc = canvas(nw / 2, nh / 2); paintSide(rc.getContext('2d'), nw / 2, nh / 2, 'r');
-    return (SIDET = { map: tex(c, true), normal: tex(normalFrom(hc, .9), false), rough: tex(rc, false) });
+    const rc = canvas(nw, nh); paintSide(rc.getContext('2d'), nw, nh, 'r');
+    const mc = canvas(nw, nh); paintSide(mc.getContext('2d'), nw, nh, 'm');
+    return (SIDET = { map: tex(c, true), normal: tex(normalFrom(hc, .9), false), rough: tex(packRM(rc, mc), false) });
   }
 
   /* ---------- geometry ---------- */
@@ -353,8 +405,8 @@
   const mats = {};
   function board() {
     const TT = T(), g = new TT.Group(), tt = topTextures(), st = sideTextures();
-    const topM = mats.top || (mats.top = new TT.MeshStandardMaterial({ map: tt.map, normalMap: tt.normal, normalScale: new TT.Vector2(1, 1), roughnessMap: tt.rough, roughness: 1, metalness: 0, envMapIntensity: .9 }));
-    const sideM = mats.side || (mats.side = new TT.MeshStandardMaterial({ map: st.map, normalMap: st.normal, roughnessMap: st.rough, roughness: 1, metalness: 0, envMapIntensity: .8 }));
+    const topM = mats.top || (mats.top = inlayMat(tt, .9));
+    const sideM = mats.side || (mats.side = inlayMat(st, .8));
     // bitumen top (with the diamond bands) and the bottom
     const shp = new TT.Shape(); OUT.forEach(([x, z], i) => (i ? shp.lineTo(x, -z) : shp.moveTo(x, -z))); shp.closePath();
     const top = new TT.ShapeGeometry(shp); top.rotateX(-Math.PI / 2); top.translate(0, H, 0); planarUV(top);
