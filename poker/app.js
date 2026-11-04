@@ -1046,6 +1046,8 @@ function renderNew() {
   if (ngTab === 'design') wireDesign(body);
 }
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
+// the ルール button on each game card (shared/ngtabs.js): that game's rules tutorial
+$('#ngBody').ngtRules = id => window.PokerRules && PokerRules.open(id);
 $('#btnStart').onclick = () => { set.prefs[NG.v] = NG.p; set.fmt = NG.fmt; save(); closeOv('#newOverlay'); if (NG.fmt === 'tour') startTournament(NG.v); else startSession(NG.v); };
 
 /* design (shared with the solitaire: card backs, card designs, tables) */

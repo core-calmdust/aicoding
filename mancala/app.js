@@ -1183,6 +1183,8 @@ $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dr
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { draft.seeds = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
+// the ルール button on each card (shared/ngtabs.js): the rules at that variant's page
+$('#ruleCards').ngtRules = r => openRules(r);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };

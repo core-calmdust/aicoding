@@ -638,6 +638,8 @@ function backCss(b) {   // read the rule for html[data-back=b] .bk from the styl
   return '';
 }
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
+// the ルール button on each game card (shared/ngtabs.js): that game's rules tutorial
+$('#ngBody').ngtRules = id => window.SolRules && SolRules.open(id);
 $('#btnStart').onclick = () => {
   const v = NG.v, p = NG.p; const no = $('#ngNo'); if (no) p.no = +no.value;
   if (p.deal === 'daily') p.deal = 'random';

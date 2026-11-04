@@ -1569,7 +1569,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 
 /* phones: settings rows stack (label above the options) so long option sets never squeeze the label (2026-11-01) */
 @media (max-width:760px){.set-cols .rl{grid-template-columns:minmax(0,1fr)!important;gap:8px}.set-cols .rl:has(> .tgl){grid-template-columns:minmax(0,1fr) auto!important}.set-cols .rl .seg{min-width:0;width:100%;flex-wrap:wrap}.set-cols .rl .seg button{flex:1 1 auto}}
-@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){.ng-games.pk5 .gcard .gart{flex:none;height:clamp(64px,11vh,96px);min-height:0}.ng-games.pk5 .gcard{justify-content:flex-start}}   /* all six cards: the same art height */
+@media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){.ng-games.pk5 .gcard .gart{flex:none;height:clamp(64px,11vh,96px);min-height:0}.ng-games.pk5 .gcard{justify-content:flex-start}.ng-games.pk5 .gcard.ngt-hasrl .gart{height:clamp(46px,calc(11vh - 34px),96px)}}   /* all six cards: the same art height */
 
 /* landscape phone: Close only as wide as its label, Start takes the rest (same as the other games) */
 @media (orientation:landscape) and (max-height:560px){#newOverlay .modal-actions #btnNewClose{flex:0 0 auto!important;width:auto!important;min-width:min(30%,128px)!important;padding-left:22px!important;padding-right:22px!important}#newOverlay .modal-actions #btnStart{flex:1 1 0!important}}

@@ -400,6 +400,8 @@ if (fH && fMode) {
   // (the rules link sits inside the chosen card, so the layout does not move when it shows)
   rulesLink.onclick = e => { e.preventDefault(); e.stopPropagation(); openRules(dlg.variant ? gameOf(dlg.variant, dlg.heianB) : 'mini'); };
   rulesLink.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') rulesLink.onclick(e); };
+  // the ルール button on every card (shared/ngtabs.js, always shown): 本将棋 → the shogi rules tutorial, a variant → its rules page
+  segV.ngtRules = v => { if (v) openRules(gameOf(v, dlg.heianB)); else { try { lsTab = 'rules'; openLessons(); } catch (e) {} } };
   // 平安将棋: the board size (ルール tab)
   fHB = document.createElement('div'); fHB.className = 'field hidden'; fHB.id = 'fHeianB';
   fHB.innerHTML = `<label id="vrHBLbl"></label><div class="seg" id="segHeianB"><button type="button" data-b="8"></button><button type="button" data-b="98"></button><button type="button" data-b="9"></button></div>`;
@@ -442,8 +444,8 @@ function dlgUpdate() {
     fSD.querySelector('#vrSdLbl').textContent = tx('seed');
     const inp = fSD.querySelector('#vrSeedIn'); if (inp.placeholder !== tx('seedPh')) inp.placeholder = tx('seedPh');
   }
-  rulesLink.textContent = tx('rules'); rulesLink.hidden = !v;
-  { const sc = v && segV.querySelector('.ngt-gcard.sel'); if (sc) { if (rulesLink.parentNode !== sc) sc.appendChild(rulesLink); } else if (rulesLink.parentNode !== fVar) fVar.appendChild(rulesLink); }
+  // (the old link inside the chosen card is replaced by the shared ルール button on every card: segV.ngtRules below)
+  rulesLink.textContent = tx('rules'); rulesLink.hidden = true;
   const sh = document.getElementById('segHandi'), note = document.getElementById('handiNote');
   sh.classList.toggle('vr-lock', !!v);
   if (v) { sh.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === '0')); note.textContent = tx('noteS'); note.title = tx('note'); note.classList.remove('hidden'); }
