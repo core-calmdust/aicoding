@@ -5,7 +5,7 @@
   'use strict';
   const SHOTS = new Set(['shogi', 'chess', 'checkers', 'ugolki', 'fanorona', 'alquerque', 'xiangqi', 'tafl', 'reversi', 'go', 'gomoku', 'dots', 'connect4', 'morris', 'hex',
     'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire']);
-  const SHOT_V = 1;                                   // bump after regenerating the thumbnails
+  const SHOT_V = 2;                                   // bump after regenerating the thumbnails
   const FX = ['ai', 'online', 'lessons', 'puzzles'];  // the feature icons shown on a card (labels come from the tag.* strings)
 
   const IC = {   // small line icons for the footer buttons
