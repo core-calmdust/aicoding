@@ -338,7 +338,8 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     moveTo(d); flip(before);
     // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
     await new Promise(r => setTimeout(r, D + 80)); if (my !== gen || !isOpen()) return;
-    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
+    const u = bounds(); if (window.__dbgDock) console.log('DBG refine', JSON.stringify(u), hp, root.className, kids().map(c => c.className + ':' + JSON.stringify(c.getBoundingClientRect()) + ':' + (c.getAnimations ? c.getAnimations().map(a => a.playState + a.currentTime) : '')).join(' || '));
+    if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
     moveTo(delta());
     // the dock (or the header) ended up elsewhere than expected: settle again
     setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();

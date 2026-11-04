@@ -136,6 +136,7 @@
       side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
       const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
       if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
+      if (document.documentElement.classList.contains('atlas-2d')) return;   // the game's own 2D board: the page's own layout
       const B = o.outer(r);
       side.style.position = 'relative'; side.style.top = (B.top - s.top) + 'px'; side.style.height = B.height + 'px'; side.style.maxHeight = 'none';
     };
@@ -185,6 +186,45 @@
     const flp = document.getElementById('btnFlip'), myFlp = bar.querySelector('#atlasFlip');
     if (flp) { const sync = () => { myFlp.innerHTML = flp.innerHTML; myFlp.title = flp.title; myFlp.className = 'atlas-ic' + (flp.classList.contains('on') ? ' on' : ''); myFlp.style.color = flp.classList.contains('on') ? '#e2b65e' : ''; }; myFlp.onclick = () => { flp.click(); sync(); }; sync(); new MutationObserver(sync).observe(flp, { attributes: true }); } else myFlp.remove();
     const sel = document.getElementById('langSel'), pop = bar.querySelector('#atlasLangPop'), lbtn = bar.querySelector('#atlasLang');
+    /* ---------- 3D board or the game's own 2D board (picked in the new-game dialog's デザイン tab) ----------
+       view({ key, row, html(label) → the 3D tile's inner HTML, label: {ja, en, …}, cls: [classes only for the 3D look], on(is3d) })
+       puts a "3D" tile first in the board row (row); picking any of the game's 2D boards there shows the plain 2D board in the
+       portal's frame (html.atlas-2d: the 3D canvas hidden, the skin's 3D-only classes off), the 3D tile brings the 3D board back.
+       The choice is kept (localStorage key). Returns { is3d(), set(is3d) }. */
+    function view(v) {
+      let is3 = true; try { const s = localStorage.getItem(v.key); if (s === '2d') is3 = false; } catch (e) {}
+      const vlang = () => (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja';
+      const row = v.row; let tile = null;
+      if (row) { tile = document.createElement('button'); tile.type = 'button'; tile.className = 'a3v'; tile.dataset.a3view = '1'; row.prepend(tile); }
+      const paint = () => { if (!tile) return; const L = v.label || {}; tile.innerHTML = v.html(L[vlang().slice(0, 2)] || L.en || '3D'); fix(); };
+      function fix() {   // 3D: the tile is the choice (the game's own buttons are not); 2D: the game's own choice
+        if (!tile) return;
+        if (tile.classList.contains('sel') !== is3) tile.classList.toggle('sel', is3);
+        if (tile.getAttribute('aria-pressed') !== String(is3)) tile.setAttribute('aria-pressed', String(is3));
+        if (is3) row.querySelectorAll('button:not([data-a3view])').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
+      }
+      function apply() {
+        const de = document.documentElement;
+        de.classList.toggle('atlas-2d', !is3); (v.cls || []).forEach(c => de.classList.toggle(c, is3));
+        host.style.display = is3 ? '' : 'none';
+        try { if (v.on) v.on(is3); } catch (e) {}
+        fix();
+        if (is3) { placeHost(); T3.kick(800); }
+        [0, 150, 600].forEach(ms => setTimeout(() => dispatchEvent(new Event('resize')), ms));   // the side column / board size follow
+      }
+      function set(t) { t = !!t; if (t === is3) { fix(); return; } is3 = t; try { localStorage.setItem(v.key, is3 ? '3d' : '2d'); } catch (e) {} apply(); }
+      if (row) {
+        row.addEventListener('click', e => {
+          const b = e.target.closest('button'); if (!b || b.disabled || !row.contains(b)) return;
+          if (b === tile) { e.stopImmediatePropagation(); set(true); return; }
+          setTimeout(() => set(false), 0);   // a 2D board: the game's own handler applies it first
+        }, true);
+        new MutationObserver(fix).observe(row, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed'] });
+      }
+      paint(); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
+      apply();
+      return { is3d: () => is3, set };
+    }
     const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
     const paint = () => { bar.querySelector('.wmT').textContent = TITLE[lang()] || TITLE.en; bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; bar.querySelector('.lc').textContent = lang().toUpperCase(); };
     lbtn.onclick = e => { e.stopPropagation(); if (!pop.hidden) { pop.hidden = true; return; }
@@ -198,7 +238,7 @@
     const coins = () => { try { const A = window.Atlas; if (!A) return; const W = A.load(); bar.querySelector('.coinN').textContent = A.coins(W, A.achievements(A.allProgress(), W)).balance.toLocaleString(); } catch (e) {} };
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });
     document.querySelectorAll('a.snd.home, .brand a.series').forEach(a => { a.href = BASE; });
-    return { T3, ready, alignTo };
+    return { T3, ready, alignTo, view };
   }
   window.AtlasSkin = { init };
 })();
