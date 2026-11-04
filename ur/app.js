@@ -110,7 +110,8 @@ function ac() { if (!settings.sound) return null; if (!actx) { try { actx = new 
 function tone(f0, f1, dur, vol, type, delay) { const a = ac(); if (!a) return; const t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .008); g.gain.exponentialRampToValueAtTime(.0005, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .02); }
 function noise(dur, vol, freq, delay) { const a = ac(); if (!a) return; const t0 = a.currentTime + (delay || 0), n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2); const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.4; const g = a.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(a.destination); s.start(t0); }
 const SND = {
-  roll() { for (let i = 0; i < 6; i++) noise(.05, .16, 2600 + Math.random() * 1600, i * .07 + Math.random() * .02); },
+  roll() { if (dice2d && dice2d.is3D && dice2d.is3D() && !window.UrSkin3D) { noise(.08, .05, 900 + Math.random() * 300); return; } for (let i = 0; i < 6; i++) noise(.05, .16, 2600 + Math.random() * 1600, i * .07 + Math.random() * .02); },
+  dieHit(k = 1) { noise(.035, .13 * k, 2300 + Math.random() * 1500); if (k > .8) tone(1500 + Math.random() * 500, 0, .03, .012 * k, 'triangle'); },
   place() { noise(.06, .22, 1500); tone(420, 260, .08, .05, 'triangle'); },
   cap() { noise(.12, .28, 700); tone(220, 90, .22, .09, 'sine'); },
   rosette() { [659.3, 987.8].forEach((f, i) => tone(f, 0, .5, .045, 'sine', i * .09)); },
@@ -122,6 +123,7 @@ const SND = {
   lose() { [392, 311.1, 261.6].forEach((f, i) => tone(f, 0, .5, .05, 'sine', i * .14)); },
 };
 const snd = k => { if (document.hidden) return; try { SND[k] && SND[k](); } catch (e) {} };
+const snd2 = (k, a) => { if (document.hidden) return; try { SND[k] && SND[k](a); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (actx) { if (document.hidden) actx.suspend().catch(() => {}); else if (settings.sound) actx.resume().catch(() => {}); } });
 
 // ====================================================================== AI worker
@@ -187,8 +189,10 @@ function placeDice() {
   const o = view.orient(), V = B2.VIEW[o], W = fr.clientWidth, H = fr.clientHeight, k = W / V[2];
   const st = curState(), side = st ? st.turn : 0, row = side === 0 ? 2 : 0;
   const c = view.cellXY(row, 4), c2 = view.cellXY(row, 5);
-  const cx = (c[0] + c2[0]) / 2, cy = (c[1] + c2[1]) / 2;
-  let w, h; if (o === 'v') { w = 92; h = 196; } else { w = 196; h = 92; }
+  let cx = (c[0] + c2[0]) / 2, cy = (c[1] + c2[1]) / 2;
+  // the open floor of the notch lies outside the bridge (h: below its visible side face) — the dice rest there
+  const out = o === 'v' ? Math.sign(cx) : Math.sign(cy);
+  let w, h; if (o === 'v') { w = 74; h = 196; cx += out * 13; } else { w = 196; h = 80; cy += out * (out > 0 ? 37 : 26); }
   dock.style.left = ((cx - w / 2 - V[0]) * k) + 'px'; dock.style.top = ((cy - h / 2 - V[1]) * k) + 'px';
   dock.style.width = (w * k) + 'px'; dock.style.height = (h * k) + 'px';
   const host = $('#diceHost');
@@ -249,6 +253,7 @@ function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
   { const nd = E.RULES[st.rule].dice; if (!dice2d || dice2d.count !== nd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd }); dice2d.count = nd; } }
   if (r) dice2d.show(r.d); else dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));
+  dock.classList.toggle('d3', !!(dice2d.is3D && dice2d.is3D()));
   const canRoll = canRollNow();
   dock.classList.toggle('can', canRoll);
   dock.classList.toggle('dim', !r && !canRoll);
@@ -302,7 +307,11 @@ window.UrSkinHooks = {
   async animateRoll(d) {
     const S = window.UrSkin3D;
     if (S && S.animateRoll) { try { await S.animateRoll(d); dice2d.show(d); return; } catch (e) { console.error(e); } }
-    if (animOn()) await dice2d.roll(d, { speed: SPD() }); else dice2d.show(d);
+    if (!animOn()) { dice2d.show(d); return; }
+    const dock = $('#diceDock'), fr = $('#frame'); dock.classList.add('rolling');
+    // thrown in from outside the board, on the roller's side of the notch (below / right of the middle row → from below / the right)
+    const dr = dock.getBoundingClientRect(), fb = fr.getBoundingClientRect(), outer = view.orient() === 'v' ? dr.left + dr.width / 2 > fb.left + fb.width / 2 : dr.top + dr.height / 2 > fb.top + fb.height / 2;
+    try { await dice2d.roll(d, { speed: SPD(), side: outer ? 0 : 1, onHit: (i, k) => snd2('dieHit', k) }); } finally { dock.classList.remove('rolling'); }
   },
   orient: () => view ? view.orient() : 'h',
 };
@@ -883,12 +892,14 @@ function relayout(force) {
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
   const me = game ? (settings.mode === 'ai' ? game.human : 0) : 0;
-  const ev = $('#evalCard');
+  const ev = $('#evalCard'), rb = $('#reviewBar');
+  // the review bar (ここから再開 / 最新の局面へ): PC — under the player cards (the status box is not shown there); else in the status box
   if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } if (ev.parentElement !== col) col.appendChild(ev); }
   else {
     if (ev.parentElement === col) $('#coachCard').parentElement.insertBefore(ev, $('.kifu-card'));
     ba.insertBefore($('#pl' + (1 - me)), fr); fr.after($('#pl' + me)); $('#pl' + me).after(sb);
   }
+  if (pc) { if (rb.previousElementSibling !== pl) pl.after(rb); } else if (rb.parentElement !== sb) sb.appendChild(rb);
   pl.classList.toggle('hidden', !pc);
   lastO = o; lastPC = pc;
   requestAnimationFrame(() => { placeDice(); renderBoard(); });

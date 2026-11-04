@@ -1,0 +1,205 @@
+/* =====================================================================
+   The Royal Game of Ur — the 3D toolkit shared by the portal's table play
+   (atlas/games/ur.js) and the rules tour (atlas/rules/ur.js), on the
+   British Museum board (atlas/models/ur.js).
+     UrKit.make(ctx.Table3D, opts) → kit
+       kit.board / U / Y              the board group, its userData, the playing surface height
+       kit.sync(state)                pieces exactly as the engine state says (placed, no animation)
+       kit.move(side, from, to, cap)  → Promise: lift, hop square by square along the route, set down; a hit piece goes home
+       kit.roll(side, dice)           → Promise: four tetrahedra thrown in beside the side's block, settling as rolled
+       kit.restDice(side, dice|null)  dice at rest (null: plain tips up)
+       kit.lift(side, k, on)          the selected piece lifted / set down
+       kit.marks.{ clear(), cell(r,c,color,op), ring(r,c,color), tray(side, kind, color), arrow(pts) }
+       kit.hit(event) → { r, c } | { tray: 'start'|'goal', side } | null   (a tap on the table → square / tray)
+       kit.project(r, c) → screen point (tests, the tour's pointer)
+       kit.stop()
+   Board coordinates: the model's own (horizontal; row 0 = Dark's lane far, row 2 = Light's lane near).
+   On a phone held upright the board turns (rot.v) and the camera keeps the long side up the screen.
+   Rendering is on demand (Table3D.kick while anything moves).
+   ===================================================================== */
+(function () {
+  'use strict';
+  const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+
+  function make(T3, opts = {}) {
+    const TH = window.THREE, E = window.UrEngine;
+    const board = T3.MODELS.ur(true), U = board.userData, Y = U.top;
+    const rule = opts.rule || 'finkel';
+    T3.show('ur', board);
+    // framing: the whole board with the trays, from the player's side; an upright phone: the board turned, the camera rolled
+    const tall = innerHeight > innerWidth * 1.15;
+    const ROT = tall ? -Math.PI / 2 : 0;
+    board.rotation.y = ROT;
+    const W = U.W + 1.6, D = U.D + 2.4;   // the trays and dice beside the long sides
+    if (T3.fit) T3.fit(tall ? { w: D, d: W, y: Y, pitch: 1.45, roll: true } : { w: W, d: D + .4, y: Y, pitch: 1.12 });
+    let stopped = false;
+    const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const spd = () => Math.max(.4, opts.speed ? opts.speed() : 1);
+
+    /* ---------- where things stand ---------- */
+    const route = side => E.pathOf(rule, side);
+    const goalN = () => E.RULES[rule].goal;
+    const cellXZ = (r, c) => U.pt(r, c);
+    // slots off the board (k = 0..6): start beside the big block, goal stacked in the notch beside the bridge
+    function slot(side, kind, k) { if (kind === 'start') { const [x, z] = U.start(side, k); return [x, 0, z]; } const g = U.goal(side, k); return [g[0], g[1], g[2]]; }
+
+    /* ---------- pieces ---------- */
+    const P = [[], []];   // P[side][k] = { g, pos, h }
+    let design = opts.design || 'orig';
+    function mkPiece(side) {
+      const g = new TH.Group(), p = U.piece(side, design); g.add(p);
+      const sh = T3.contact(U.PR * .95, .5); sh.position.y = .002; g.add(sh);
+      g.userData = { p, sh }; board.add(g); return g;
+    }
+    function setH(o, h) { o.h = h; o.g.userData.p.position.y = h; const sh = o.g.userData.sh, s = 1 + h * .6; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 2); }
+    function where(state, side, k) {   // [x, y, z] of piece k of `side` in `state`
+      const ps = state.pos[side], p = ps[k], goal = goalN();
+      if (p <= 0) { const j = ps.slice(0, k).filter(q => q <= 0).length; return slot(side, 'start', j); }
+      if (p >= goal) { const j = ps.slice(0, k).filter(q => q >= goal).length; return slot(side, 'goal', j); }
+      const [r, c] = route(side)[p - 1], [x, z] = cellXZ(r, c); return [x, Y, z];
+    }
+    let last = null;
+    function sync(state) {
+      last = { rule: state.rule, pos: [state.pos[0].slice(), state.pos[1].slice()] };
+      for (const side of [0, 1]) {
+        const n = state.pos[side].length;
+        while (P[side].length > n) { const o = P[side].pop(); board.remove(o.g); }
+        while (P[side].length < n) P[side].push({ g: mkPiece(side), pos: 0, h: 0 });
+        P[side].forEach((o, k) => { const [x, y, z] = where(state, side, k); o.g.position.set(x, y, z); o.g.rotation.set(0, (k * 1.7 + side) % 6.28, 0); o.pos = state.pos[side][k]; setH(o, 0); });
+      }
+      T3.kick(300);
+    }
+    function setDesign(d) {
+      if (!d || d === design) return; design = d;
+      for (const side of [0, 1]) P[side].forEach(o => { o.g.remove(o.g.userData.p); const p = U.piece(side, design); o.g.add(p); o.g.userData.p = p; });
+      T3.kick(200);
+    }
+    function lift(side, k, on) {
+      const o = P[side][k]; if (!o) return; const h0 = o.h, h1 = on ? .24 : 0;
+      if (Math.abs(h0 - h1) < .001) return;
+      anim(on ? 140 : 110, q => setH(o, h0 + (h1 - h0) * io(q)));
+    }
+    // a move: lift, hop square by square along the route (each square a small dip), set down; the hit piece flies home
+    async function move(side, from, to, opt = {}) {
+      if (!last) return;
+      const k = last.pos[side].findIndex(p => p === from); if (k < 0) return;
+      const o = P[side][k], R = route(side), goal = goalN(), sp = spd(), fast = opt.fast;
+      const pts = [o.g.position.clone()];
+      for (let i = Math.max(1, from + 1); i <= Math.min(to, goal - 1); i++) { const [r, c] = R[i - 1], [x, z] = cellXZ(r, c); pts.push(new TH.Vector3(x, Y, z)); }
+      if (to >= goal) { const j = last.pos[side].filter(p => p >= goal).length, s = slot(side, 'goal', j); pts.push(new TH.Vector3(s[0], s[1], s[2])); }
+      // the rival piece on the square reached
+      let vic = null;
+      if (opt.capture && to < goal) {
+        const [r, c] = R[to - 1], op = 1 - side, Ro = route(op);
+        const vk = last.pos[op].findIndex(p => p > 0 && p < goal && Ro[p - 1][0] === r && Ro[p - 1][1] === c);
+        if (vk >= 0) vic = { o: P[op][vk], side: op, k: vk };
+      }
+      const H = .34, h0 = o.h;
+      if (opt.onLift) opt.onLift();
+      await anim(140 / sp, q => setH(o, h0 + (H - h0) * io(q)));
+      const leg = (fast ? 110 : 170) / sp;
+      for (let i = 0; i < pts.length - 1 && !stopped; i++) {
+        const a = pts[i], b = pts[i + 1];
+        await anim(leg, q => { const e = io(q); o.g.position.set(a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e, a.z + (b.z - a.z) * e); setH(o, H + Math.sin(q * Math.PI) * .07); });
+        if (opt.onStep) opt.onStep(i + 1, pts.length - 1);
+      }
+      let vp = null;
+      if (vic && vic.o) {   // knocked off: up, over and down into its start tray
+        const ns = { pos: [last.pos[0].slice(), last.pos[1].slice()] }; ns.pos[side][k] = to; ns.pos[vic.side][vic.k] = 0;
+        const [tx, ty, tz] = where(ns, vic.side, vic.k), vo = vic.o, s0 = vo.g.position.clone();
+        if (opt.onHit) opt.onHit();
+        vp = anim(560 / sp, q => { const e = io(q); vo.g.position.set(s0.x + (tx - s0.x) * e, s0.y + (ty - s0.y) * e, s0.z + (tz - s0.z) * e); setH(vo, Math.sin(q * Math.PI) * 1.0); vo.g.rotation.z = Math.sin(q * Math.PI) * 1.2; })
+          .then(() => { vo.g.rotation.z = 0; setH(vo, 0); vo.pos = 0; });
+        last.pos[vic.side][vic.k] = 0;
+      }
+      await anim(140 / sp, q => setH(o, H * (1 - io(q))));
+      o.pos = to; last.pos[side][k] = to;
+      if (opt.onLand) opt.onLand();
+      await anim(110 / sp, q => { const s = 1 + Math.sin(q * Math.PI) * .06; o.g.userData.p.scale.set(s, 1 / s, s); });
+      o.g.userData.p.scale.set(1, 1, 1);
+      if (vp) await vp;
+    }
+
+    /* ---------- dice: four tetrahedra beside the roller's small block ---------- */
+    const DS = .8, REST = () => U.dieRest * DS, DICE = [];
+    function ensureDice(n) {
+      while (DICE.length < n) { const g = new TH.Group(), d = U.die(); d.scale.setScalar(DS); g.add(d); const sh = T3.contact(U.dieR * DS * 1.05, .45); sh.position.y = .002; g.add(sh); g.userData = { d, sh }; board.add(g); DICE.push(g); }
+      DICE.forEach((g, i) => { g.visible = i < n; });
+    }
+    function places(side, n) { const out = []; for (let i = 0; i < n; i++) { const [x, z] = U.diceAt(side, i); out.push([x + (i % 2) * .04, z + (i % 2 ? .1 : -.06)]); } return out; }
+    function restDice(side, d, n = 4) {
+      n = d ? d.length : n; ensureDice(n);
+      const Pl = places(side, n);
+      for (let i = 0; i < n; i++) { const g = DICE[i]; U.dieUp(g.userData.d, !!(d && d[i]), i * 1.9 + side * .7 + .3); g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.scale.set(1, 1, 1); g.userData.sh.material.opacity = .45; }
+      T3.kick(200);
+    }
+    async function roll(side, d) {   // the throw of the 3D skin (UrDice3D.throwPlan): in from outside the board on the roller's side
+      const n = d.length; ensureDice(n);
+      const Pl = places(side, n), sg = side === 0 ? 1 : -1;
+      const items = DICE.slice(0, n).map((g, i) => ({ g, d: g.userData.d, sh: g.userData.sh, marked: !!d[i], rest: REST(),
+        from: [Pl[i][0] + (Math.random() - .5) * 1.4, Pl[i][1] + sg * (1.7 + Math.random() * .6)], to: [Pl[i][0], Pl[i][1]] }));
+      const TP = window.UrDice3D.throwPlan(items, { dur: 980 / spd() });
+      if (opts.sfx) opts.sfx('roll');
+      await anim(TP.total / 1, k => TP.frame(k * TP.total));
+      TP.end();
+      if (opts.sfx) opts.sfx('dieStop');
+      T3.kick(200);
+    }
+    // glow rings round the dice whose white tip is up (how many count)
+    const marksG = new TH.Group(); board.add(marksG);
+    const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
+    const GEO = { sq: new TH.PlaneGeometry(U.P * 1.02, U.P * 1.02), ring: new TH.TorusGeometry(U.PR * 1.18, .035, 8, 44), dot: new TH.CircleGeometry(.12, 24), slot: new TH.CircleGeometry(U.PR * 1.1, 32) };
+    GEO.sq.rotateX(-Math.PI / 2); GEO.ring.rotateX(Math.PI / 2); GEO.dot.rotateX(-Math.PI / 2); GEO.slot.rotateX(-Math.PI / 2);
+    const MATC = {};
+    const mat = (c, op) => MATC[c + ':' + op] || (MATC[c + ':' + op] = basic(c, op));
+    const marks = {
+      clear() { while (marksG.children.length) marksG.remove(marksG.children[0]); T3.kick(120); },
+      cell(r, c, color = 0x3df59a, op = .4, y = .006) { const m = new TH.Mesh(GEO.sq, mat(color, op)), [x, z] = cellXZ(r, c); m.position.set(x, Y + y, z); m.renderOrder = 2; marksG.add(m); T3.kick(120); return m; },
+      ring(r, c, color = 0x3df59a, h = .02) { const m = new TH.Mesh(GEO.ring, mat(color, .95)), [x, z] = cellXZ(r, c); m.position.set(x, Y + h, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
+      dot(r, c, color = 0x3df59a) { const m = new TH.Mesh(GEO.dot, mat(color, .95)), [x, z] = cellXZ(r, c); m.position.set(x, Y + .012, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
+      tray(side, kind, color = 0x3df59a, k = 0) { const [x, y, z] = slot(side, kind, k), m = new TH.Mesh(GEO.slot, mat(color, .5)); m.position.set(x, y + .004, z); m.renderOrder = 2; marksG.add(m); T3.kick(120); return m; },
+      ringAt(x, y, z, color = 0x3df59a) { const m = new TH.Mesh(GEO.ring, mat(color, .95)); m.position.set(x, y + .02, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
+      dice(d, side, color = 0xffd65a) { DICE.forEach((g, i) => { if (!g.visible || !d[i]) return; const m = new TH.Mesh(new TH.TorusGeometry(.2, .025, 8, 32), mat(color, .95)); m.rotation.x = Math.PI / 2; m.position.set(g.position.x, .01, g.position.z); marksG.add(m); }); T3.kick(120); },
+      // the route of `side` from path index a to b: a chain of dots
+      path(side, a, b, color = 0xffe27a) { const R = route(side); for (let i = Math.max(1, a); i <= Math.min(b, R.length); i++) { const m = marks.dot(R[i - 1][0], R[i - 1][1], color); m.scale.setScalar(i === b ? 1.6 : 1); } },
+      group: marksG,
+    };
+    // pulse every mark gently while marks are shown (on demand: only while there are marks)
+    let pulseOn = false;
+    function pulse() {
+      if (stopped || !marksG.children.length) { pulseOn = false; return; }
+      const k = .5 + .5 * Math.sin(performance.now() / 260);
+      marksG.children.forEach(m => { if (m.geometry === GEO.ring) m.scale.setScalar(.92 + k * .14); });
+      T3.kick(60); requestAnimationFrame(pulse);
+    }
+    const _add = marksG.add.bind(marksG);
+    marksG.add = (...a) => { const r = _add(...a); if (!pulseOn) { pulseOn = true; requestAnimationFrame(pulse); } return r; };
+
+    /* ---------- taps ---------- */
+    function hit(ev) {
+      const p = T3.pick(ev, Y); if (!p) return null;
+      const c0 = Math.cos(-ROT), s0 = Math.sin(-ROT), x = p.x * c0 + p.z * s0, z = -p.x * s0 + p.z * c0;   // undo the board's turn
+      const c = Math.round(x / U.U + 3.5), r = Math.round(z / U.U + 1);
+      if (Math.abs(x / U.U + 3.5 - c) < .5 && Math.abs(z / U.U + 1 - r) < .5 && r >= 0 && r <= 2 && c >= 0 && c <= 7 && U.exists(r, c)) return { r, c };
+      // the trays: nearest slot within reach
+      let best = null, bd = .55;
+      for (const side of [0, 1]) for (const kind of ['start', 'goal']) for (let k = 0; k < 7; k++) { const s = slot(side, kind, k), d = Math.hypot(s[0] - x, s[2] - z); if (d < bd) { bd = d; best = { tray: kind, side }; } }
+      return best;
+    }
+    function project(x, y, z) {   // board-local → screen
+      const v = new TH.Vector3(x, y, z); board.localToWorld(v);
+      return T3.project(v.x, v.z, v.y);
+    }
+    const projCell = (r, c) => { const [x, z] = cellXZ(r, c); return project(x, Y, z); };
+    const projPiece = (side, k) => { const o = P[side][k]; return o ? project(o.g.position.x, o.g.position.y, o.g.position.z) : null; };
+    const projSlot = (side, kind, k = 0) => { const s = slot(side, kind, k); return project(s[0], s[1], s[2]); };
+
+    return {
+      board, U, Y, tall, sync, move, roll, restDice, lift, setDesign, marks, hit, project, projCell, projPiece, projSlot, sleep, anim,
+      pieces: P, dice: DICE, route, cellXZ,
+      stop() { stopped = true; },
+    };
+  }
+  window.UrKit = { make };
+})();

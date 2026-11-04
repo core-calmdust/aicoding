@@ -322,21 +322,149 @@
     return s + '</svg>';
   }
 
-  /* ---------- dice: four tetrahedra seen from above ---------- */
-  const DSTYLE = {   // faces [lit, mid, dark], edge, tip mark [ring, centre]
-    orig:  { f: ['#8d8378', '#6c635a', '#4a433d'], e: '#2b2622', m: ['#f4ead4', '#1f3a9a'], base: '#5a524a' },
-    ivory: { f: ['#f6efdf', '#ddd2bb', '#b7aa90'], e: '#6b5d44', m: ['#1d1713', '#f6efdf'], base: '#cfc3a9' },
-    wood:  { f: ['#e9c99a', '#c99d68', '#9a6f42'], e: '#5a3a1c', m: ['#4a2a12', '#f2dfbe'], base: '#b88a58' },
-    gold:  { f: ['#ffe39a', '#e0ae48', '#a87a22'], e: '#5a3d06', m: ['#1f3a9a', '#fff3cf'], base: '#c79738' },
-  };
+  /* ---------- dice: four tetrahedra (bone / shell colour, as in 3D) ----------
+     When three.js can be had (loaded in the background after the page, never in the 3D skin) the dice are the 3D
+     dice of atlas/models/ur-dice.js, thrown on a small transparent WebGL canvas over the dice place (rendered only
+     while they move). Otherwise (no WebGL, offline, not loaded yet) the flat SVG dice below. */
+  const BONE = { f: ['#efe5cd', '#d8c9a8', '#b3a27f'], e: '#6e5d40', m: ['#fbf8f0', '#1f3290'], base: '#cdbd9b' };
+  const DSTYLE = { orig: BONE, ivory: BONE, wood: BONE, gold: BONE };
+  const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  let threeP = null;
+  const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  function want3D() {
+    if (document.documentElement.classList.contains('atlas-skin')) return false;   // the 3D skin throws its own dice
+    try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); } catch (e) { return false; }
+  }
+  function load3D() {
+    if (threeP) return threeP;
+    threeP = new Promise(res => {
+      const go = () => {
+        const t = window.THREE ? Promise.resolve() : loadScript(THREE_URL);
+        t.then(() => window.UrDice3D ? null : loadScript(BASE + '../atlas/models/ur-dice.js?v=1')).then(() => res(!!(window.THREE && window.UrDice3D && THREE.WebGLRenderer))).catch(() => res(false));
+      };
+      const idle = () => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200));
+      if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
+    });
+    return threeP;
+  }
+  const LIVE3D = [];   // WebGL contexts are scarce: drop the ones whose dice left the page
+  function reap() { for (let i = LIVE3D.length - 1; i >= 0; i--) if (!LIVE3D[i].wrap.isConnected) { try { LIVE3D[i].dispose(); } catch (e) {} LIVE3D.splice(i, 1); } }
+
+  function make3D(wrap, n, span) {
+    const TT = window.THREE, UD = window.UrDice3D, DS = .8, REST = UD.DR / 3 * DS;
+    reap();
+    const R = new TT.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
+    R.setClearColor(0, 0); R.outputEncoding = TT.sRGBEncoding; R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap;
+    const cv = R.domElement; cv.className = 'ur-dice3d';
+    cv.style.cssText = 'position:absolute;pointer-events:none;z-index:2;display:block';
+    wrap.appendChild(cv);
+    const sc = new TT.Scene(), cam = new TT.PerspectiveCamera(26, 1, .1, 60);
+    sc.add(new TT.HemisphereLight(0xfff7ea, 0x5a4c3c, .78));
+    const key = new TT.DirectionalLight(0xffffff, .95); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -.0006; key.shadow.normalBias = .01; key.shadow.radius = 3; sc.add(key); sc.add(key.target);
+    const fill = new TT.DirectionalLight(0xfff0d8, .22); sc.add(fill);
+    const ground = new TT.Mesh(new TT.PlaneGeometry(1, 1), new TT.ShadowMaterial({ opacity: .42 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; sc.add(ground);
+    // a soft glow over a white tip that points up (after the dice stop): the count can be read at a glance
+    const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const g = gc.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,250,228,1)'); gr.addColorStop(.35, 'rgba(255,240,200,.55)'); gr.addColorStop(1, 'rgba(255,230,170,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+    const gtex = new TT.CanvasTexture(gc);
+    const D = [];
+    for (let i = 0; i < n; i++) {
+      const g = new TT.Group(), d = UD.die(); d.scale.setScalar(DS); g.add(d); sc.add(g);
+      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xfff6dc, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.34, .34, 1); halo.renderOrder = 5; sc.add(halo);
+      D.push({ g, d, halo, x: 0, z: 0 });
+    }
+    // world units = board squares (the dice place is `span` squares long); x right, z down the screen; the line of
+    // dice runs along the long side of the place (h: across, v: down). The canvas reaches beyond the place: the
+    // dice are thrown in from over the board.
+    let W = 0, H = 0, raf = 0, tall = false, Lx = span, Lz = .9;
+    const M = 2.1;
+    function fit() {
+      const w = wrap.offsetWidth, h = wrap.offsetHeight;
+      if (!w || !h) return false;
+      tall = h > w * 1.2;
+      const k = (tall ? h : w) / span; Lx = w / k; Lz = h / k;
+      const Wc = Lx + 2 * M, Hc = Lz + 2 * M, pw = Math.round(Wc * k), ph = Math.round(Hc * k);
+      if (pw !== W || ph !== H) {
+        W = pw; H = ph;
+        const pr = Math.min(window.devicePixelRatio || 1, matchMedia('(pointer: coarse)').matches ? 1.5 : 2);
+        R.setPixelRatio(pr); R.setSize(W, H, false);
+        Object.assign(cv.style, { width: W + 'px', height: H + 'px', left: (-M * k) + 'px', top: (-M * k) + 'px' });
+        ground.scale.set(Wc + 2, Hc + 2, 1);
+        // seen from nearly straight above (a little from the front), lit from the top left like the board picture
+        const fov = 40, dist = (Hc / 2) / Math.tan(fov / 2 * Math.PI / 180), tilt = .12;   // a fairly wide lens: a die in the air grows, its shadow slides off
+        cam.fov = fov; cam.aspect = Wc / Hc; cam.position.set(0, dist, dist * tilt); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
+        cam.near = dist * .5; cam.far = dist * 1.6; cam.updateProjectionMatrix();
+        key.position.set(-3.2, 7.2, -4); key.target.position.set(0, 0, 0);
+        const sh = key.shadow.camera, e = Math.max(Wc, Hc) / 2 + .5; Object.assign(sh, { left: -e, right: e, top: e, bottom: -e, near: 1, far: 20 }); sh.updateProjectionMatrix();
+        fill.position.set(3, 4, 2);
+      }
+      return true;
+    }
+    const render = () => { if (fit()) R.render(sc, cam); };
+    const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.47, (L - .12) / n);
+      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
+    function haloAt(o, on) {
+      const v = new TT.Vector3(), w = new TT.Vector3();
+      for (const t of [0, 1]) { const q = new TT.Vector3(...UD.TV[t]).multiplyScalar(DS).applyQuaternion(o.d.quaternion); if (!t || q.y > v.y) v.copy(q); }
+      w.copy(v).add(o.g.position); o.halo.position.copy(w).add(new TT.Vector3(0, .02, 0)); o.halo.material.opacity = on;
+    }
+    function rest(dv, fresh) {
+      const P = fresh || !D[0].placed ? places() : null;
+      D.forEach((o, i) => {
+        if (P) { o.x = P[i][0]; o.z = P[i][1]; o.yaw = Math.random() * Math.PI * 2; o.placed = true; }
+        UD.dieUp(o.d, !!dv[i], o.yaw); o.g.position.set(o.x, REST, o.z); haloAt(o, dv[i] ? .85 : 0);
+      });
+      render();
+    }
+    const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+    function roll(dv, ms, fromBottom, onHit) {
+      stop(); fit();
+      const P = places();
+      const items = D.map((o, i) => {
+        o.x = P[i][0]; o.z = P[i][1]; o.halo.material.opacity = 0;
+        // thrown in from the player's side of the dice place (h: side 0 from below, side 1 from above; v: side 0 from the right)
+        const sg = fromBottom ? 1 : -1, ld = tall ? [sg, 0] : [0, sg];
+        const dist = .8 + Math.random() * .3, sw = (Math.random() - .5) * .45;
+        const from = [o.x + ld[0] * dist + ld[1] * sw, o.z + ld[1] * dist + ld[0] * sw];
+        return { g: o.g, d: o.d, from, to: [o.x, o.z], marked: !!dv[i], rest: REST };
+      });
+      const TP = UD.throwPlan(items, { dur: ms, h0: .55 });
+      // the dice land / hop: tell the page (a soft click each)
+      const hits = []; TP.plan.forEach((p, i) => { [.42, .66, .82].forEach((q, j) => hits.push({ t: p.delay + q * ms, i, s: [1, .55, .3][j] })); });
+      hits.sort((a, b) => a.t - b.t);
+      return new Promise(res => {
+        const t0 = performance.now(); let hk = 0;
+        const step = now => {
+          const tms = now - t0;
+          while (hk < hits.length && hits[hk].t <= tms) { if (onHit) try { onHit(hits[hk].i, hits[hk].s); } catch (e) {} hk++; }
+          if (tms >= TP.total) {
+            TP.end(); raf = 0;
+            // the glow over the white tips fades in, then the canvas stays still
+            const f0 = performance.now();
+            const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? .85 * k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
+            raf = requestAnimationFrame(fade); return;
+          }
+          TP.frame(tms); render(); raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+      });
+    }
+    let ro = null; if (window.ResizeObserver) { ro = new ResizeObserver(() => { if (!raf) render(); }); ro.observe(wrap); }
+    const api = {
+      wrap, rest, roll, render,
+      dispose() { stop(); if (ro) ro.disconnect(); try { R.dispose(); R.forceContextLoss(); } catch (e) {} cv.remove(); },
+    };
+    LIVE3D.push(api);
+    return api;
+  }
+
   function dice(host, opts = {}) {
     const p = 'urd' + (++uid) + '_';
-    let st = DSTYLE[opts.style] || DSTYLE[{ museum: 'orig', restored: 'orig', clay: 'wood' }[opts.style]] || DSTYLE.orig;
+    let st = DSTYLE[opts.style] || BONE;
     const n = opts.count || 4, W = n * 110 + 10;
-    host.innerHTML = `<svg xmlns="${NS}" class="ur-dice" viewBox="0 0 ${W} 120" style="display:block;width:100%;height:100%;overflow:visible">
+    host.innerHTML = `<div class="ur-dicew" style="position:relative;width:100%;height:100%"><svg xmlns="${NS}" class="ur-dice" viewBox="0 0 ${W} 120" style="display:block;width:100%;height:100%;overflow:visible">
 <defs><radialGradient id="${p}s"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
-<radialGradient id="${p}gw"><stop offset=".3" stop-color="#fff6c8" stop-opacity=".95"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></radialGradient></defs></svg>`;
-    const svg = host.firstChild, D = [];
+<radialGradient id="${p}gw"><stop offset=".3" stop-color="#fff6c8" stop-opacity=".95"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></radialGradient></defs></svg></div>`;
+    const wrap = host.firstChild, svg = wrap.firstChild, D = [];
     const RT = 46;   // circumradius of the base triangle
     for (let i = 0; i < n; i++) {
       const g = el('g', {}, svg);
@@ -344,8 +472,8 @@
       const body = el('g', {}, g);
       const faces = [0, 1, 2].map(() => el('path', { stroke: st.e, 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, body));
       const tips = [0, 1, 2].map(() => el('circle', { r: 6.5, 'stroke-width': 1.5 }, body));
-      const glow = el('circle', { r: 20, fill: `url(#${p}gw)` }, body);
-      const top = el('g', {}, body); el('circle', { r: 11, stroke: '#000', 'stroke-opacity': .5, 'stroke-width': 2 }, top); el('circle', { r: 4.6 }, top);
+      const glow = el('circle', { r: 22, fill: `url(#${p}gw)` }, body);
+      const top = el('g', {}, body); el('circle', { r: 11, stroke: '#6e5d40', 'stroke-width': 2 }, top); el('circle', { r: 4.6 }, top);
       const apex = el('circle', { r: 3, fill: st.e }, body);
       D.push({ g, sh, body, faces, tips, glow, top, apex, up: 0, rot: (i * 47 + 13) % 120, x: 60 + i * 110, y: 60 });
     }
@@ -353,19 +481,16 @@
       d.g.setAttribute('transform', `translate(${(d.x + dx).toFixed(1)} ${(d.y + dy).toFixed(1)})`);
       d.body.setAttribute('transform', `scale(${sc.toFixed(3)})`);
       const V = [0, 1, 2].map(k => { const a = (rot + k * 120 - 90) * Math.PI / 180; return [Math.cos(a) * RT, Math.sin(a) * RT]; });
-      const ap = [0, 0];
       for (let k = 0; k < 3; k++) {
         const A = V[k], B = V[(k + 1) % 3];
-        d.faces[k].setAttribute('d', `M${ap[0]} ${ap[1]}L${A[0].toFixed(1)} ${A[1].toFixed(1)}L${B[0].toFixed(1)} ${B[1].toFixed(1)}Z`);
-        // light from the top left: the face whose outward direction points up-left is brightest
+        d.faces[k].setAttribute('d', `M0 0L${A[0].toFixed(1)} ${A[1].toFixed(1)}L${B[0].toFixed(1)} ${B[1].toFixed(1)}Z`);
         const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, lit = (-mx * .6 - my * .8) / (RT * .5);
         const idx = lit > .45 ? 0 : lit > -.45 ? 1 : 2;
-        d.faces[k].setAttribute('fill', st.f[(idx + light) % 3]);
+        d.faces[k].setAttribute('fill', st.f[(idx + light) % 3]); d.faces[k].setAttribute('stroke', st.e);
       }
-      // the base corners: with the marked tip on top one corner is marked, else two
       const marked = up ? [0] : [0, 1];
       for (let k = 0; k < 3; k++) {
-        const t = d.tips[k], m = marked.includes(k); const q = V[k];
+        const t = d.tips[k], m = marked.includes(k), q = V[k];
         t.setAttribute('cx', (q[0] * .86).toFixed(1)); t.setAttribute('cy', (q[1] * .86).toFixed(1));
         t.setAttribute('fill', m ? st.m[0] : 'none'); t.setAttribute('stroke', m ? st.e : 'none');
       }
@@ -373,12 +498,30 @@
       d.top.children[0].setAttribute('fill', st.m[0]); d.top.children[1].setAttribute('fill', st.m[1]);
       d.sh.setAttribute('cx', 5 + dy * -.1); d.sh.setAttribute('cy', 10 - dy * .2);
     }
-    let cur = new Array(n).fill(0);
-    function show(dv) { cur = (dv || cur).slice(0, n); D.forEach((d, i) => { d.up = cur[i] ? 1 : 0; draw(d, d.up, d.rot); }); }
+    let cur = new Array(n).fill(0), d3 = null, busy = false;
+    function show(dv) {
+      cur = (dv || cur).slice(0, n);
+      D.forEach((d, i) => { d.up = cur[i] ? 1 : 0; draw(d, d.up, d.rot); });
+      if (d3 && !busy) d3.rest(cur, false);
+    }
+    // the 3D dice, when they can be had (the SVG stays as the fallback until then)
+    if (opts.three !== false && want3D()) load3D().then(ok => {
+      if (!ok || !wrap.isConnected || d3) return;
+      try { d3 = make3D(wrap, n, opts.span || 1.96); svg.style.visibility = 'hidden'; d3.rest(cur, true); }
+      catch (e) { console.error(e); d3 = null; svg.style.visibility = ''; }
+    });
     async function roll(dv, o2 = {}) {
-      dv = dv || D.map(() => Math.random() < .5 ? 1 : 0);
-      const ms = (o2.ms || 900) / (o2.speed || opts.speed || 1), seeds = D.map(() => [Math.random(), Math.random(), Math.random()]);
-      let lastFlip = D.map(() => 0);
+      dv = (dv || D.map(() => Math.random() < .5 ? 1 : 0)).slice(0, n);
+      const sp = o2.speed || opts.speed || 1;
+      if (d3) {
+        busy = true; cur = dv.slice();
+        const fromBottom = o2.side != null ? o2.side === 0 : (opts.side != null ? opts.side === 0 : true);
+        try { await d3.roll(dv, (o2.ms || 980) / Math.max(.6, sp), fromBottom, o2.onHit || opts.onHit); } finally { busy = false; }
+        D.forEach((d, i) => { d.up = dv[i] ? 1 : 0; draw(d, d.up, d.rot); });
+        return dv.reduce((a, b) => a + b, 0);
+      }
+      const ms = (o2.ms || 900) / sp, seeds = D.map(() => [Math.random(), Math.random(), Math.random()]);
+      const lastFlip = D.map(() => 0);
       await tween(ms, t => {
         D.forEach((d, i) => {
           const [a, b, c] = seeds[i], k = Math.pow(1 - t, 1.6), ph = t * (9 + a * 5);
@@ -389,12 +532,11 @@
           draw(d, d.up, d.rot, dx, dy, 1 + .14 * Math.abs(Math.sin(ph * 1.7 + b * 7)) * k, (t < .82 ? Math.floor(ph) % 3 : 0));
         });
       });
-      // settle: a little bounce
-      await tween(160 / (o2.speed || opts.speed || 1), t => D.forEach((d, i) => draw(d, dv[i] ? 1 : 0, d.rot, 0, 0, 1 + Math.sin(Math.PI * t) * .05)));
+      await tween(160 / sp, t => D.forEach((d, i) => draw(d, dv[i] ? 1 : 0, d.rot, 0, 0, 1 + Math.sin(Math.PI * t) * .05)));
       show(dv); return dv.reduce((a, b) => a + b, 0);
     }
     show(cur);
-    return { roll, show, el: svg, setStyle(s) { st = DSTYLE[s] || DSTYLE.orig; show(cur); } };
+    return { roll, show, el: svg, setStyle(s) { st = DSTYLE[s] || BONE; show(cur); }, is3D: () => !!d3 };
   }
 
   window.UrBoard2D = { mount, mini, dice, BOARDS, PIECES, GREEN, cellXY, route, traySlots, VIEW, IMG };
@@ -413,7 +555,8 @@ view.cellRect(r,c) → DOMRect; view.offRect(side,'start'|'goal') → DOMRect
 view.setDesign(design, pieces); view.setOrient('h'|'v', rot?); view.orient() → 'h'|'v'; view.rotated() → bool
 view.on('cell', ({r,c,piece?,side?}) => …); view.on('piece', ({side,piece,pos,r,c,where}) => …); view.on('tray', ({side,kind,piece?}) => …)
 view.animateMove(side, from, to, { capture, speed, ms }) → Promise   (path indices; then call render(newState))
-UrBoard2D.dice(el, { style, speed, count=4 }) → { roll(dice?) → Promise<n>, show(dice), setStyle(s) }
+UrBoard2D.dice(el, { style, speed, count=4, side, onHit, three=true, span=1.96 }) → { roll(dice?, { speed, ms, side, onHit }) → Promise<n>, show(dice), setStyle(s), is3D() }
+  3D dice (three.js r128 + atlas/models/ur-dice.js, loaded in the background) when WebGL works, else SVG; side: thrown from that player's side; onHit(i, strength) at each landing / hop
 UrBoard2D.mini(state, { design, pieces, orient, marks, targets, last, hint, sel, crop, trays, width, height, small }) → SVG string
   crop: [x,y,w,h] user units | {r0,c0,r1,c1,pad} squares | 'board'
 */
