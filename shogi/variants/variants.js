@@ -318,12 +318,12 @@ body.skin-ink .board.vg .sq:not(.vb){border-bottom-color:rgba(214,180,110,.35)}
   .modal:not(.ngt-on) #segVariant .ngt-gcard{grid-template-columns:150px minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;column-gap:20px!important;row-gap:6px!important;padding:20px 22px 40px!important;min-height:210px;border-radius:16px}
   .modal:not(.ngt-on) #segVariant b{grid-column:2;grid-row:2}
   .modal:not(.ngt-on) #segVariant p{grid-column:2;grid-row:3}
-  .modal:not(.ngt-on) #segVariant .gart{grid-row:1 / 5!important;align-self:center;border-radius:12px;padding:10px!important;background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(0,0,0,.18));box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
+  .modal:not(.ngt-on) #segVariant .gart{grid-row:1 / 5!important;align-self:center;border-radius:12px;padding:10px!important;background:color-mix(in srgb, var(--panel,#21170f) 70%, transparent);box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
   .modal:not(.ngt-on) #segVariant .gart svg{width:128px!important;height:128px!important;max-height:none!important}
   .modal:not(.ngt-on) #segVariant b{font-size:20px!important}
   .modal:not(.ngt-on) #segVariant p{font-size:15px!important;line-height:1.75!important;color:color-mix(in srgb, var(--text,#eee) 78%, transparent)}
-  .modal:not(.ngt-on) #segVariant .ngt-gcard{border-color:color-mix(in srgb, var(--brass,#c9a961) 26%, var(--line,#45321f));background:linear-gradient(180deg, rgba(226,194,117,.055), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
-  .modal:not(.ngt-on) #segVariant .ngt-gcard.sel{border-color:var(--accent,#d8b56a);background:linear-gradient(180deg, rgba(226,194,117,.16), rgba(226,194,117,.05) 55%, rgba(0,0,0,.18))}
+  .modal:not(.ngt-on) #segVariant .ngt-gcard{border-color:color-mix(in srgb, var(--brass,#c9a961) 26%, var(--line,#45321f));background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--panel2)), var(--panel) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
+  .modal:not(.ngt-on) #segVariant .ngt-gcard.sel{border-color:var(--accent,#d8b56a);background:linear-gradient(180deg, color-mix(in srgb, var(--accent,#d8b56a) 18%, var(--panel2,#2b1f15)), color-mix(in srgb, var(--accent,#d8b56a) 6%, var(--panel,#21170f)) 70%)}
   .modal:not(.ngt-on) #segVariant .gpick{top:12px;right:12px;width:24px;height:24px;font-size:13px}
 }
 #segVariant .vr-gh{grid-column:1 / -1;font-size:12px;letter-spacing:.12em;color:var(--muted);margin:6px 2px 0;padding-top:6px;border-top:1px dashed var(--line,rgba(255,255,255,.14))}
