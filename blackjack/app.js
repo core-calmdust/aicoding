@@ -549,15 +549,23 @@ function render() {
     const net = done && St ? St.net : null, st = net == null ? '' : net > 0 ? ' won' : net < 0 ? ' lost' : ' push';
     svg += `<g class="bj-seat${me ? ' me' : ''}${act ? ' act' : ''}${st}" data-k="seat${n}">`;
     // side spots: two small circles in front of the main one (+ a larger invisible tap target under the main circle)
-    const sdPos = SIDES().map((k, i) => { const one = SIDES().length === 1; return { k, x: s.x + (one ? s.r * 1.25 : (i === 0 ? -1 : 1) * s.r * (g.mob ? 1.06 : 1.25)), y: s.y - s.r * (g.mob ? 1.2 : 1.05), rr: s.r * (g.mob ? .46 : .4) }; });
-    if (me) sdPos.forEach(p => { svg += `<circle class="bj-hit" data-spot="${p.k}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${Math.max(p.rr * 1.6, 24).toFixed(1)}"/>`; });
+    const sdPos = SIDES().map((k, i) => {
+      const one = SIDES().length === 1;
+      if (me) {   // yours: as big as a button, on a diagonal in front of the main circle
+        const rr = g.mob ? Math.max(20, s.r * .7) : Math.max(22, s.r * .52), d = s.r + rr + (g.mob ? 4 : 6), a = one ? .9 : g.mob ? 1.0 : .87;
+        return { k, x: s.x + (one ? 1 : i === 0 ? -1 : 1) * d * Math.sin(a), y: s.y - d * Math.cos(a), rr };
+      }
+      return { k, x: s.x + (one ? s.r * 1.25 : (i === 0 ? -1 : 1) * s.r * (g.mob ? 1.06 : 1.25)), y: s.y - s.r * (g.mob ? 1.2 : 1.05), rr: s.r * (g.mob ? .46 : .4) };
+    });
+    if (me) sdPos.forEach(p => { svg += `<circle class="bj-hit" data-spot="${p.k}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(p.rr + 6).toFixed(1)}"/>`; });
     svg += `<circle class="bj-c" cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${s.r.toFixed(1)}"${me ? ' data-spot="main"' : ''}/>`;
     if (me && T.phase === 'bet' && !bets.main) svg += `<text class="bj-ct" x="${s.x.toFixed(1)}" y="${(s.y + s.r * .14).toFixed(1)}" style="font-size:${(s.r * .34).toFixed(1)}px">BET</text>`;
     if (bets.main) svg += `<g class="bj-ch">${chipsAt(bets.main, s.x, s.y + s.r * .5, s.r * (me ? 1.05 : .95))}</g>`;
     sdPos.forEach(({ k, x: sx, y: sy, rr }) => {
+      if (!me && g.mob && !bets[k]) return;   // phones: the other players' empty side spots are left out (room for yours)
       const sr = done && St && St.sres && St.sres[k] ? St.sres[k] : null;
       svg += `<g class="bj-sd sd-${k}${sr ? (sr.net > 0 ? ' won' : ' lost') : ''}"${me ? ` data-spot="${k}"` : ''}><circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${rr.toFixed(1)}"/>` +
-        (me && !bets[k] && !g.mob ? `<text x="${sx.toFixed(1)}" y="${(sy + rr * .14).toFixed(1)}" style="font-size:${(rr * .42).toFixed(1)}px">${k === 'pp' ? 'PP' : '21+3'}</text>` : me && !bets[k] ? `<text x="${sx.toFixed(1)}" y="${(sy + rr * .16).toFixed(1)}" style="font-size:${(rr * .5).toFixed(1)}px">${k === 'pp' ? 'PP' : '21+3'}</text>` : '') +
+        (me && !bets[k] ? `<text x="${sx.toFixed(1)}" y="${(sy + rr * .17).toFixed(1)}" style="font-size:${(rr * (k === 'pp' ? .5 : .42)).toFixed(1)}px">${k === 'pp' ? 'PP' : '21+3'}</text>` : '') +
         (bets[k] ? chipsAt(bets[k], sx, sy + rr * .5, rr * 1.5) : '') + `</g>`;
     });
     // insurance chips on the band
@@ -577,7 +585,7 @@ function render() {
       const maxW = me ? s.w * (St.hands.length > 1 ? 1.25 : 1.1) : s.w - 8;
       if (totalW > maxW) { const f = Math.max(me ? .55 : .62, (maxW - gap * (St.hands.length - 1)) / (totalW - gap * (St.hands.length - 1))); cw *= f; dx *= f; dy *= f; widths = widths.map(w => w * f); totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1); }
       // never up into the dealer's cards: shrink until the tallest cascade fits between the dealer and the circle
-      const nMax = Math.max(1, ...St.hands.map(H => H.cards.length)), botY = s.y - s.r - (SIDES().length ? s.r * (g.mob ? 1.15 : .9) : 0) - u * (g.mob ? .1 : .14);
+      const nMax = Math.max(1, ...St.hands.map(H => H.cards.length)), botY = Math.min(s.y - s.r, ...sdPos.map(q => q.y - q.rr)) - (me || !SIDES().length ? 0 : s.r * (g.mob ? .5 : .45)) - u * (g.mob ? .1 : .14);
       const room = botY - (g.dealerBot + (g.mob ? 40 : u * .3)), need = cw * 1.4 + (nMax - 1) * dy;
       if (room > 0 && need > room) { const f = Math.max(.45, room / need); cw *= f; dx *= f; dy *= f; widths = widths.map(w => w * f); totalW = widths.reduce((a, b) => a + b, 0) + gap * (St.hands.length - 1); }
       let hx = Math.max(2, Math.min(W - totalW - 2, s.x - totalW / 2));
