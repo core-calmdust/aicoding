@@ -303,6 +303,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   const kids = () => [...app.children].filter(c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; });
   const snap = () => kids().map(c => [c, c.getBoundingClientRect()]);   // (as seen: a running FLIP included, so a new one starts from there)
   let flips = [], flipT = 0;
+  const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
   const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); root.classList.remove('dock-anim'); };
   const flip = before => {
     stopFlips();
@@ -318,8 +319,9 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     const mine = flips;
     // the end (all finished, or at the latest 1.5 s — a busy page may start them late): everything measures the final place once
     return new Promise(res => {
-      const end = () => { if (flips !== mine) return res(); clearTimeout(flipT); flips = []; root.classList.remove('dock-anim'); relayout(); res(); };
-      Promise.all(mine.map(a => a.finished)).then(end, end); flipT = setTimeout(end, 1500);
+      const end = () => { if (flips !== mine) return res(); clearTimeout(flipT); mine.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; root.classList.remove('dock-anim'); relayout(); res(); };
+      // (and the dock's own animation: whatever measures the space above it then sees its final place)
+      Promise.all(mine.map(a => a.finished).concat(dockDone())).then(end, end); flipT = setTimeout(end, 1500);
     });
   };
   let gen = 0;
@@ -327,7 +329,10 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     const my = ++gen;
     const before = snap(); stopFlips();
     if (!isOpen()) {   // closed: back to the full size while it scrolls back
-      if (fitted || root.classList.contains('dock-compact') || root.classList.contains('dock-rvb')) { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); }
+      // (laid out for the dock's final place, like the probe: the dock animation run to its end for a moment)
+      const undo = ffDock(); sync = true;
+      try { if (fitted || root.classList.contains('dock-compact') || root.classList.contains('dock-rvb')) { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); } else relayout(); }
+      finally { sync = false; undo(); }
       moveTo(0); flip(before);
       return;
     }
@@ -340,16 +345,14 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     fitted = R > 0;
     moveTo(d); await flip(before);
     // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it —
-    // measured against the dock's final place too (on a slow machine it may still be sliding)
-    await new Promise(r => setTimeout(r, 80)); if (my !== gen || !isOpen()) return;
-    { const un = ffDock(); sync = true; let d2 = null;
-      try { const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) await fit(my); d2 = delta(); } finally { sync = false; un(); }
-      if (my !== gen || !isOpen()) return; moveTo(d2); }
-    // the dock (or the header) ended up elsewhere than expected: settle again (once the dock's own animation is over)
-    const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
+    // once the dock's own animation is over too (on a slow machine it may still be sliding), so the space is the final one
     await Promise.race([dockDone(), new Promise(r => setTimeout(r, 2000))]);
+    await new Promise(r => setTimeout(r, 80)); if (my !== gen || !isOpen()) return;
+    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
+    moveTo(delta());
+    // the dock (or the header) ended up elsewhere than expected: settle again
     setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
-      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 100);
+      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 300);
   };
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again

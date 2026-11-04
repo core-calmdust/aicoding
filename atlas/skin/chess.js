@@ -20,6 +20,7 @@
   const skin = AtlasSkin.init({
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-knight.webp', guideFallback: '../images/atlas/chess.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],

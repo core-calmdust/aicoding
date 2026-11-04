@@ -69,7 +69,9 @@
   })();
 
   /* ---------- the page's cups on the carved hollows ---------- */
+  const oSlotUV = window.slotUV, oInside = window.inside, is2d = () => de.classList.contains('atlas-2d');   // (the plain 2D board: the page's own geometry)
   window.slotUV = function (i) {
+    if (is2d()) return oSlotUV.apply(this, arguments);
     const B = bottomSide(), own = ownerOf(i), bottom = own === B, cx = BWU / 2, cy = BHU / 2;
     if (isStore(i)) return { x: cx + (bottom ? 1 : -1) * G.SX * S, y: cy, bottom };
     const k = own ? i - 7 : i, px = (-2.5 + k) * G.PX * S;
@@ -78,12 +80,14 @@
   // where a gem may rest in a cup (offsets from its centre, page units): a round pit, or the stadium of a store
   const PRu = G.PR * S - .13, SRu = G.SR * S - .12, SLu = G.SL * S;
   window.inside = function (i, x, y) {
+    if (is2d() && oInside) return oInside.apply(this, arguments);
     if (isStore(i)) { x = Math.max(-SRu, Math.min(SRu, x)); const ym = SLu + Math.sqrt(Math.max(0, SRu * SRu - x * x)); return [x, Math.max(-ym, Math.min(ym, y))]; }
     const r = Math.hypot(x, y); return r > PRu ? [x / r * PRu, y / r * PRu] : [x, y];
   };
   const oLayout = window.layout;
   window.layout = function () {
     const r = oLayout.apply(this, arguments);
+    if (is2d()) return r;
     try {
       const v = isVert(), sw = 2 * G.SR * S * U, sh = 2 * (G.SL + G.SR) * S * U, pw = 2 * G.PR * S * U;
       for (let i = 0; i < 14; i++) {
@@ -114,6 +118,9 @@
   skin.alignTo(BHU / S, board.userData.top);
   orient();
   try { layout(); } catch (e) {}
+  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
+  if (skin.view) skin.view({ key: 'atlas-mancala-view', row: document.getElementById('skRow'), img: '../images/atlas/mancala.webp', cls: ['atlas-mancala'],
+    on() { setTimeout(() => { try { layout(); if (typeof update === 'function') update(); } catch (e) {} }, 30); } });
   new MutationObserver(() => { orient(); }).observe(document.getElementById('frame'), { attributes: true, attributeFilter: ['class'] });
   // the board's size changes after the skin CSS arrives / on rotation: the still scene must be drawn again
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(() => T3.kick(600))).observe(boardEl);

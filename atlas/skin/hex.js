@@ -205,7 +205,9 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     });
   }
   let lastBd = bd3;
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), the 3D board = the 3D table
   function look(quiet) {
+    if (V) V.set(bd3);
     if (root) root.visible = bd3;
     group.visible = bd3 && pc3;
     de.classList.toggle('atlas-hx3db', bd3); de.classList.toggle('atlas-hx3dp', bd3 && pc3);
@@ -226,6 +228,7 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
   if (r2) r2.addEventListener('click', onRow('pc'), true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRows(); } catch (e) {} return r; }; }
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRows, 30));
+  if (skin.view) V = skin.view({ key: 'atlas-hex-view', init: bd3, cls: ['atlas-hex'], on() { setTimeout(() => { try { G = null; update(false); } catch (e) {} dispatchEvent(new Event('resize')); }, 0); } });
   look(true); paintRows();
 
   // test hooks (Playwright)

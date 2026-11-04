@@ -126,13 +126,154 @@
     }
   })();
 
+  /* ---------- PC (o.pc = { vars: the page's board-size custom properties, extras: selector of other parts of the board group }):
+     board + the fixed 360px info column, laid out from the 3D board's VISIBLE frame (its projected meshes), not the DOM box:
+     the board as large as fits between the portal bar and the online dock, the column's top / bottom = the frame's top / bottom,
+     GAP px between them, the whole group centred — the same in every game, at every window size (resize, full screen, zoom) ===== */
+  let pcActive = false, sideFitFn = null;
+  (function pcFit() {
+    const P = o.pc, THREE = window.THREE; if (!P || !THREE || !T3.project) return;
+    const MQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
+    const de = document.documentElement, body = document.body, app = document.querySelector('.app'), side = app && app.querySelector(':scope > .side');
+    if (!side) return;
+    const GAP = 24, MY = 16, MX = 20, VARS = P.vars || ['--cell'];
+    let K = null, model = null, busy = false, on = false, reT = 0;
+    // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
+    const show0 = T3.show;
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; remeasure(); } return g; };
+    const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
+    T3.align = function () { const r = align0.apply(this, arguments); remeasure(); return r; };
+    const grp = () => { let g = boardDom; while (g && g.parentElement !== app) g = g.parentElement; return g; };
+    const visible = x => { for (let e = x; e; e = e.parent) if (!e.visible) return false; return true; };
+    // the 3D board's visible extent beyond the DOM board, in DOM board heights (the camera is aligned to the DOM board, so this
+    // does not change with the size or the place of the board)
+    function measure() {
+      if (!model || !model.parent || !visible(model)) return null;
+      const r = boardDom.getBoundingClientRect(), h = r.height; if (h < 40) return null;
+      const cur = model.parent, v = new THREE.Vector3(), L = []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, n = 0;
+      cur.updateMatrixWorld(true);
+      model.traverse(m => {
+        if (!m.isMesh || !m.geometry || !visible(m) || m.userData.contact) return;
+        const mt = Array.isArray(m.material) ? m.material[0] : m.material;
+        if (!mt || mt.visible === false || mt.colorWrite === false || mt.isShadowMaterial || (mt.transparent && mt.opacity < .99)) return;
+        if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+        const bx = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld); if (isFinite(bx.min.x)) L.push(bx);
+      });
+      // the board itself: the large parts (frame, field, base) — not the pieces, a bowl beside it or the legs under it
+      const area = b => (b.max.x - b.min.x) * (b.max.z - b.min.z), big = Math.max(0, ...L.map(area));
+      L.forEach(bx => {
+        if (!P.all && area(bx) < big * .3) return;   // (P.all: every part counts — connect4's thin rails are its top)
+        for (let i = 0; i < 8; i++) {
+          v.set(i & 1 ? bx.max.x : bx.min.x, i & 2 ? bx.max.y : bx.min.y, i & 4 ? bx.max.z : bx.min.z); cur.worldToLocal(v);
+          const p = T3.project(v.x, v.z, v.y); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+        }
+        n++;
+      });
+      if (!n || !isFinite(x0)) return null;
+      return { l: (r.left - x0) / h, r: (x1 - r.right) / h, t: (r.top - y0) / h, b: (y1 - r.bottom) / h };
+    }
+    // measured a few frames after the camera has followed the board (twice the same → settled)
+    let mq = 0;
+    function remeasure() {
+      const my = ++mq; T3.kick(400);
+      const step = (k, prev) => setTimeout(() => {   // (timers, not frames: frames stop in a background tab)
+        if (my !== mq) return;
+        if (de.classList.contains('dock-anim')) return setTimeout(() => step(k, prev), 300);
+        const m = measure();
+        const same = m && prev && ['l', 'r', 't', 'b'].every(s => Math.abs(m[s] - prev[s]) < .0004);
+        if (!same && k < 12) return setTimeout(() => step(k + 1, m), 90);
+        if (!m) return k < 40 ? setTimeout(() => step(k + 1, null), 250) : undefined;
+        if (!K || ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - K[s]) > .0008)) { K = m; fit(); }
+      }, 40);
+      setTimeout(() => step(0, null), 60);
+    }
+    const reviewBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].some(b => b.getClientRects().length);
+    const want = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !reviewBox() && visible(model);
+    const setVar = v => VARS.forEach(k => { if (v == null) { de.style.removeProperty(k); body.style.removeProperty(k); } else { de.style.setProperty(k, v + 'px', 'important'); body.style.setProperty(k, v + 'px', 'important'); } });
+    const frame = () => { const r = boardDom.getBoundingClientRect(), h = r.height; return { l: r.left - K.l * h, t: r.top - K.t * h, r: r.right + K.r * h, b: r.bottom + K.b * h }; };
+    const extent = F => {
+      if (P.place) P.place(F);   // the game's own parts beside the board (shogi: the komadai) placed against the 3D frame first
+      const E = { ...F };
+      if (P.extras) app.querySelectorAll(P.extras).forEach(e => {
+        if (!e.getClientRects().length || getComputedStyle(e).visibility === 'hidden') return;
+        const q = e.getBoundingClientRect(); if (q.width < 1 || q.height < 1) return;
+        E.l = Math.min(E.l, q.left); E.t = Math.min(E.t, q.top); E.r = Math.max(E.r, q.right); E.b = Math.max(E.b, q.bottom);
+      });
+      return E;
+    };
+    const unplace = () => { const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); if (P.unplace) P.unplace(); };
+    let fitKey = '';
+    function fit() {
+      if (busy) return;
+      if (de.classList.contains('dock-anim')) { setTimeout(later, 150); return; }   // the dock's move first (headerbar.js), then the layout
+      const key = innerWidth + 'x' + innerHeight; if (key !== fitKey) { fitKey = key; setTimeout(later, 350); setTimeout(later, 1200); }   // a new window size: once more when everything has settled
+      if (!want()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); if (sideFitFn) sideFitFn(); } return; }
+      const g = grp(); if (!g) return;
+      busy = true;
+      try {
+        on = true; pcActive = true; unplace();
+        // the free area: under the portal bar, above the online dock (its bar, or the opened dock)
+        const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
+        const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
+        const dk = document.getElementById('dock') || document.querySelector('.dock');
+        let bot = innerHeight; if (dk && dk.getClientRects().length && getComputedStyle(dk).position === 'fixed') bot = Math.min(bot, dk.getBoundingClientRect().top);
+        bot -= MY;
+        const SW = side.offsetWidth || 360, availH = bot - top, availW = innerWidth - 2 * MX - GAP - SW;
+        // the size: as large as fits both ways (a few passes: not every part of the group scales with the board)
+        setVar(null);
+        const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
+        const s0 = pr.offsetWidth; pr.remove();
+        let s = s0 || 40;
+        for (let i = 0; i < 6; i++) {
+          setVar(s); const E = extent(frame()), k = Math.min(availH / (E.b - E.t), availW / (E.r - E.l));
+          if (Math.abs(k - 1) < .0015) break;
+          s = Math.max(8, s * k);
+        }
+        { const E = extent(frame()); if ((E.b - E.t) > availH + .5 || (E.r - E.l) > availW + .5) { s *= Math.min(availH / (E.b - E.t), availW / (E.r - E.l)); setVar(s); } }
+        // the place: the group (board + column) centred; the column level with the frame, GAP px to the right of the board
+        if (getComputedStyle(g).position === 'static') g.style.position = 'relative';
+        if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
+        side.style.setProperty('max-height', 'none', 'important');
+        const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0, appShift = -(parseFloat(getComputedStyle(app).top) || 0);
+        for (let i = 0; i < 4; i++) {
+          const F = frame(), E = extent(F), W = (E.r - E.l) + GAP + SW;
+          const dx = (innerWidth - W) / 2 - E.l, dy = top + (availH - (E.b - E.t)) / 2 - (E.t + appShift);   // (centred as if the online dock's shift of .app were not there: headerbar.js then leaves it at 0)
+          if (Math.abs(dx) > .3) g.style.left = (px(g, 'left') + dx) + 'px';
+          if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
+          const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect();
+          const fh = F2.b - F2.t, sx = E2.r + GAP - sr.left, sy = F2.t - sr.top;
+          if (Math.abs(sr.height - fh) > .3) { side.style.setProperty('height', fh + 'px', 'important'); side.style.setProperty('min-height', '0px', 'important'); }
+          if (Math.abs(sx) > .3) side.style.left = (px(side, 'left') + sx) + 'px';
+          if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
+          if (Math.abs(dx) <= .3 && Math.abs(dy) <= .3 && Math.abs(sx) <= .3 && Math.abs(sy) <= .3 && Math.abs(sr.height - fh) <= .3) break;
+        }
+        placeHost();
+        clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
+      } finally { busy = false; }
+    }
+    let q = 0; const later = () => { if (q) return; q = 1; const go = () => { if (!q) return; q = 0; fit(); }; requestAnimationFrame(go); setTimeout(go, 120); };   // (a timer too: frames wait while the window is hidden or occluded)
+    addEventListener('resize', later);
+    addEventListener('dockrelayout', fit);   // the online dock's probe (shared/headerbar.js): laid out at once, for its final place
+    addEventListener('fullscreenchange', () => { later(); setTimeout(later, 250); });
+    if (window.visualViewport) visualViewport.addEventListener('resize', later);
+    MQ.addEventListener ? MQ.addEventListener('change', later) : MQ.addListener(later);
+    if (window.ResizeObserver) { const ro = new ResizeObserver(later); ro.observe(de); ro.observe(boardDom); }
+    new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(later).observe(body, { attributes: true, attributeFilter: ['class'] });
+    if (document.fonts) document.fonts.ready.then(later);
+    [800, 2000, 4500].forEach(ms => setTimeout(remeasure, ms));
+    setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) later(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
+    window.__atlasPcFit = { fit, remeasure, measure, K: () => K, on: () => on, model: () => model };   // (test hook)
+  })();
+
   /* ---------- side column = exactly the height of the 3D board; info line inside the kifu card ---------- */
   (function sideFit() {
     const side = document.querySelector('.side'), kc = document.querySelector('.kifu-card'), info = document.getElementById('infoLine');
     if (kc && info) kc.appendChild(info);
     if (!side || !o.outer) return;
-    const fit = () => {
+    const fit = sideFitFn = () => {
       if (document.documentElement.classList.contains('dock-anim')) return;   // the online dock's FLIP (shared/headerbar.js) moves it; fitted again at its end
+      if (pcActive) return;   // PC: pcFit below places the column (and sizes the board)
       side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
       const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
       if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
@@ -199,18 +340,21 @@
 button.a3v .a3vpic{display:grid!important;place-items:center;width:100%;aspect-ratio:var(--a3v-ar,6/5);border-radius:8px;overflow:hidden;background:radial-gradient(85% 85% at 50% 38%,#fff9ea,#f1dfba 70%,#e3c98f)!important;box-shadow:inset 0 0 0 1px rgba(170,120,40,.25)!important}
 button.a3v .a3vpic img{display:block;width:86%!important;height:86%!important;object-fit:contain;filter:drop-shadow(0 4px 5px rgba(90,50,10,.3))}
 button.a3v::after{content:'3D';position:absolute;top:8px;inset-inline-start:8px;padding:1px 7px;border-radius:99px;background:linear-gradient(180deg,#ffcf5c,#e09a00);color:#fff;font:900 10.5px/1.5 'Fredoka',system-ui,sans-serif;letter-spacing:.06em;box-shadow:0 2px 0 #b97a00;pointer-events:none}
-html.atlas-2d #atlasGL{display:none!important}`;
+html.atlas-2d #atlasGL{display:none!important}
+html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{display:none!important}`;
         document.head.appendChild(st);
       }
       if (!v.html) v.html = l => `<span class="th a3vpic"><img src="${v.img}" alt="" draggable="false"></span><span class="nm"></span>`.replace('<span class="nm"></span>', `<span class="nm">${l}</span>`);
       if (!v.label) v.label = V3L;
       let is3 = true; try { const s = localStorage.getItem(v.key); if (s === '2d') is3 = false; } catch (e) {}
+      if (typeof v.init === 'boolean') is3 = v.init;   // (a skin with its own 3D / 2D tiles keeps its own saved look: no tile here, it calls set())
       const vlang = () => (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja';
       const row = v.row; let tile = null;
       if (row) { tile = document.createElement('button'); tile.type = 'button'; tile.className = 'a3v'; tile.dataset.a3view = '1'; row.prepend(tile); }
       const paint = () => { if (!tile) return; const L = v.label || {}; tile.innerHTML = v.html(L[vlang().slice(0, 2)] || L.en || '3D'); fix(); };
       function fix() {   // 3D: the tile is the choice (the game's own buttons are not); 2D: the game's own choice
         if (!tile) return;
+        if (row.firstElementChild !== tile) row.prepend(tile);   // the game redrew its row (innerHTML): the 3D tile goes back first
         if (tile.classList.contains('sel') !== is3) tile.classList.toggle('sel', is3);
         if (tile.getAttribute('aria-pressed') !== String(is3)) tile.setAttribute('aria-pressed', String(is3));
         if (is3) row.querySelectorAll('button:not([data-a3view])').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
@@ -231,7 +375,8 @@ html.atlas-2d #atlasGL{display:none!important}`;
           if (b === tile) { e.stopImmediatePropagation(); set(true); return; }
           set(false);   // a 2D board (the game's own handler then picks it as usual)
         }, true);
-        new MutationObserver(fix).observe(row, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-pressed'] });
+        new MutationObserver(fix).observe(row, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed'] });
+        row.classList.add('a3v-row');
       }
       paint(); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
       apply();

@@ -52,7 +52,7 @@ ${P} [data-ng=design]:has(> .dsg-now) > *{grid-column:1 / -1;min-width:0}
 ${P} [data-ng=design]:has(> .dsg-now) > label:first-child{grid-column:1}
 ${P} [data-ng=design] > .dsg-now{grid-column:2;margin:0 0 10px 10px!important;font-size:12.5px;color:var(--ngl-hi)}
 /* the footer band: 閉じる / 対局開始 share the full width (as shogi) */
-${P}.ngt-pc .ngt-foot .modal-actions{display:flex!important;gap:10px!important;justify-content:stretch!important}
+${P}.ngt-pc .ngt-foot .modal-actions{display:flex!important;gap:10px!important;justify-content:stretch!important;width:auto!important;max-width:none!important;margin-left:0!important;margin-right:0!important}
 ${P}.ngt-pc .ngt-foot .modal-actions > :is(.mbtn,button){flex:1 1 0!important;width:auto!important;max-width:none!important;padding-top:13px!important;padding-bottom:13px!important}
 /* the mode row (outside the panels): a little more air */
 ${P} > :is(.ngt-modef,.ng-cols){order:0!important}
@@ -116,7 +116,7 @@ function init() {
   // the mode row goes above the panels (some games keep it after the columns)
   const mf = (() => { const sm = modal.querySelector('#segMode'); return sm && sm.closest('.field'); })();
   if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
-  const items = [...c1.children, ...c2.children].filter(own);   // the settings in their original order
+  const items = [...c1.children, ...c2.children].filter(e => own(e) && e !== mf);   // the settings in their original order
   const side = items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
   const shown = e => !e.classList.contains('hidden') && !e.hidden && getComputedStyle(e).display !== 'none' && e.offsetHeight > 0;
   function place(col, list) {
@@ -128,6 +128,7 @@ function init() {
     if (busy || !ov.classList.contains('show') || (modal.dataset.ngt && modal.dataset.ngt !== 'rules')) return;
     busy = true;
     try {
+      if (mf && wrap.contains(mf)) wrap.before(mf);   // the mode row always above the panels (reversi keeps it in a column)
       const vis = items.filter(shown); if (!vis.length && items.length) return;
       const h = vis.map(e => e.offsetHeight + 20), tot = h.reduce((a, b) => a + b, 0);
       let k = vis.length, best = Infinity, acc = 0;

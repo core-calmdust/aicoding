@@ -1222,44 +1222,44 @@ html.atlas-skin .bd-note{display:block}
 
 /* ---------------------------------------------------------------- 2D board designs (html[data-bd]); the 3D portal skin keeps its own look */
 /* b. deep blue: sapphire board with depth and a vignette, fine light grid */
-html:not(.atlas-skin)[data-bd=navy]{--felt:#1c4790;--felt2:#13336f;--felt3:#0a1d48;--grid:rgba(186,212,255,.2)}
-html:not(.atlas-skin)[data-bd=navy] .frame{background:linear-gradient(145deg,#15213d 0%,#0a1124 55%,#141f3b 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(140,175,235,.28),inset 0 1px 0 rgba(255,255,255,.07)}
-html:not(.atlas-skin)[data-bd=navy] .frame::before{border-color:rgba(150,185,240,.42)}
-html:not(.atlas-skin)[data-bd=navy] .board{background:radial-gradient(ellipse at 50% 32%,rgba(130,180,255,.2),transparent 62%),radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 62%,var(--felt3) 100%);box-shadow:inset 0 0 60px rgba(0,6,24,.75),inset 0 0 0 1px rgba(160,195,255,.15)}
-html:not(.atlas-skin)[data-bd=navy] .board::after{opacity:.12}
-html:not(.atlas-skin)[data-bd=navy] .coords{color:rgba(170,198,250,.62)}
-html:not(.atlas-skin)[data-bd=navy] .star{background:rgba(196,218,255,.5)}
-html:not(.atlas-skin)[data-bd=navy] .cell.legal::before{background:rgba(2,8,26,.5)}
-html:not(.atlas-skin)[data-bd=navy] .board.turn-white .cell.legal::before{background:rgba(235,242,255,.42)}
-html:not(.atlas-skin)[data-bd=navy] .last-mark{background:#ffb648;box-shadow:0 0 7px rgba(255,182,72,.9)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy]{--felt:#1c4790;--felt2:#13336f;--felt3:#0a1d48;--grid:rgba(186,212,255,.2)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .frame{background:linear-gradient(145deg,#15213d 0%,#0a1124 55%,#141f3b 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(140,175,235,.28),inset 0 1px 0 rgba(255,255,255,.07)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .frame::before{border-color:rgba(150,185,240,.42)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .board{background:radial-gradient(ellipse at 50% 32%,rgba(130,180,255,.2),transparent 62%),radial-gradient(ellipse at 50% 50%,var(--felt) 0%,var(--felt2) 62%,var(--felt3) 100%);box-shadow:inset 0 0 60px rgba(0,6,24,.75),inset 0 0 0 1px rgba(160,195,255,.15)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .board::after{opacity:.12}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .coords{color:rgba(170,198,250,.62)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .star{background:rgba(196,218,255,.5)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .cell.legal::before{background:rgba(2,8,26,.5)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .board.turn-white .cell.legal::before{background:rgba(235,242,255,.42)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=navy] .last-mark{background:#ffb648;box-shadow:0 0 7px rgba(255,182,72,.9)}
 
 /* c. electro: matte charcoal board, thin grid, a faint glow ring, flat teal vs off-white discs that glow */
-html:not(.atlas-skin)[data-bd=neon]{--grid:rgba(0,0,0,.62)}
-html:not(.atlas-skin)[data-bd=neon] .frame{border-radius:22px;background:radial-gradient(130% 130% at 50% 50%,#26292c 0%,#17191b 60%,#101113 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06),0 0 0 3px #0c0d0e,0 0 0 5px rgba(46,230,170,.22),0 0 26px rgba(46,230,170,.2)}
-html:not(.atlas-skin)[data-bd=neon] .frame::before{border:1px solid transparent;border-radius:10px;background:conic-gradient(from 200deg,rgba(46,230,170,0) 0deg,rgba(46,230,170,.75) 70deg,rgba(46,230,170,.15) 160deg,rgba(46,230,170,0) 220deg) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(46,230,170,.7))}
-html:not(.atlas-skin)[data-bd=neon] .board{background:radial-gradient(circle at 50% 50%,transparent 0 40%,rgba(46,230,170,.09) 41%,rgba(46,230,170,.02) 44%,transparent 46%),linear-gradient(160deg,#35383b 0%,#2b2e31 50%,#25272a 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.35)}
-html:not(.atlas-skin)[data-bd=neon] .board::after{opacity:.1}
-html:not(.atlas-skin)[data-bd=neon] .coords{color:rgba(150,235,206,.55)}
-html:not(.atlas-skin)[data-bd=neon] .star{background:#0d0e0f}
-html:not(.atlas-skin)[data-bd=neon] .face.b{background:radial-gradient(circle at 50% 42%,#4be6bb 0%,#28c495 62%,#1fa47d 100%);box-shadow:0 0 12px rgba(46,230,170,.5),inset 0 -2px 4px rgba(0,60,40,.35),inset 0 2px 2px rgba(255,255,255,.25)}
-html:not(.atlas-skin)[data-bd=neon] .face.w{background:radial-gradient(circle at 50% 42%,#f6f6f2 0%,#dfe0db 70%,#c9cac5 100%);box-shadow:0 0 10px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.18)}
-html:not(.atlas-skin)[data-bd=neon] .board.turn-black .ghost{background:radial-gradient(circle,#4be6bb,#1fa47d)}
-html:not(.atlas-skin)[data-bd=neon] .board.turn-white .ghost{background:radial-gradient(circle,#f6f6f2,#c9cac5)}
-html:not(.atlas-skin)[data-bd=neon] .cell.legal::before{width:30%;height:30%;background:rgba(46,230,170,.18);border:2px solid rgba(70,240,190,.85);box-shadow:0 0 9px rgba(46,230,170,.75)}
-html:not(.atlas-skin)[data-bd=neon] .board.turn-white .cell.legal::before{background:rgba(255,255,255,.12);border-color:rgba(245,245,240,.85);box-shadow:0 0 9px rgba(255,255,255,.55)}
-html:not(.atlas-skin)[data-bd=neon] .last-mark{width:58%;height:58%;background:transparent;border:2px solid rgba(255,255,255,.95);box-shadow:0 0 10px rgba(46,230,170,.95),inset 0 0 6px rgba(46,230,170,.8)}
-html:not(.atlas-skin)[data-bd=neon] .pdisc.b, html:not(.atlas-skin)[data-bd=neon] .hb-disc:not(.w){background:radial-gradient(circle at 50% 42%,#4be6bb,#1fa47d);box-shadow:0 0 6px rgba(46,230,170,.6)}
-html:not(.atlas-skin)[data-bd=neon] .pdisc.w, html:not(.atlas-skin)[data-bd=neon] .hb-disc.w{background:radial-gradient(circle at 50% 42%,#f6f6f2,#c9cac5)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon]{--grid:rgba(0,0,0,.62)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .frame{border-radius:22px;background:radial-gradient(130% 130% at 50% 50%,#26292c 0%,#17191b 60%,#101113 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06),0 0 0 3px #0c0d0e,0 0 0 5px rgba(46,230,170,.22),0 0 26px rgba(46,230,170,.2)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .frame::before{border:1px solid transparent;border-radius:10px;background:conic-gradient(from 200deg,rgba(46,230,170,0) 0deg,rgba(46,230,170,.75) 70deg,rgba(46,230,170,.15) 160deg,rgba(46,230,170,0) 220deg) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(46,230,170,.7))}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .board{background:radial-gradient(circle at 50% 50%,transparent 0 40%,rgba(46,230,170,.09) 41%,rgba(46,230,170,.02) 44%,transparent 46%),linear-gradient(160deg,#35383b 0%,#2b2e31 50%,#25272a 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.35)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .board::after{opacity:.1}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .coords{color:rgba(150,235,206,.55)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .star{background:#0d0e0f}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .face.b{background:radial-gradient(circle at 50% 42%,#4be6bb 0%,#28c495 62%,#1fa47d 100%);box-shadow:0 0 12px rgba(46,230,170,.5),inset 0 -2px 4px rgba(0,60,40,.35),inset 0 2px 2px rgba(255,255,255,.25)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .face.w{background:radial-gradient(circle at 50% 42%,#f6f6f2 0%,#dfe0db 70%,#c9cac5 100%);box-shadow:0 0 10px rgba(255,255,255,.22),inset 0 -2px 4px rgba(0,0,0,.18)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .board.turn-black .ghost{background:radial-gradient(circle,#4be6bb,#1fa47d)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .board.turn-white .ghost{background:radial-gradient(circle,#f6f6f2,#c9cac5)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .cell.legal::before{width:30%;height:30%;background:rgba(46,230,170,.18);border:2px solid rgba(70,240,190,.85);box-shadow:0 0 9px rgba(46,230,170,.75)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .board.turn-white .cell.legal::before{background:rgba(255,255,255,.12);border-color:rgba(245,245,240,.85);box-shadow:0 0 9px rgba(255,255,255,.55)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .last-mark{width:58%;height:58%;background:transparent;border:2px solid rgba(255,255,255,.95);box-shadow:0 0 10px rgba(46,230,170,.95),inset 0 0 6px rgba(46,230,170,.8)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .pdisc.b, html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .hb-disc:not(.w){background:radial-gradient(circle at 50% 42%,#4be6bb,#1fa47d);box-shadow:0 0 6px rgba(46,230,170,.6)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .pdisc.w, html:not(.atlas-skin:not(.atlas-2d))[data-bd=neon] .hb-disc.w{background:radial-gradient(circle at 50% 42%,#f6f6f2,#c9cac5)}
 
 /* d / e. leather boards: grained leather, round recessed holes instead of a grid, thick cylinder discs with a gold band */
-html:not(.atlas-skin)[data-bd=ivory]{--lea:#ece5d3;--lea2:#e0d7c1;--pipe:#2e2822;--hole-rim:rgba(255,255,255,.55);--crd:rgba(70,58,44,.6)}
-html:not(.atlas-skin)[data-bd=noir]{--lea:#232323;--lea2:#171717;--pipe:#4a4a4a;--hole-rim:rgba(255,255,255,.1);--crd:rgba(222,210,186,.5)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=ivory]{--lea:#ece5d3;--lea2:#e0d7c1;--pipe:#2e2822;--hole-rim:rgba(255,255,255,.55);--crd:rgba(70,58,44,.6)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=noir]{--lea:#232323;--lea2:#171717;--pipe:#4a4a4a;--hole-rim:rgba(255,255,255,.1);--crd:rgba(222,210,186,.5)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame{border-radius:8px;background:radial-gradient(ellipse at 40% 30%,var(--lea) 0%,var(--lea2) 100%);box-shadow:0 34px 70px -28px rgba(0,0,0,.85),0 0 0 2px var(--pipe),0 6px 0 -1px var(--pipe),inset 0 1px 0 rgba(255,255,255,.18)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame::before{inset:5px;border-radius:5px;border:1px dashed rgba(0,0,0,.22)}
-html:not(.atlas-skin)[data-bd=noir] .frame::before{border-color:rgba(255,255,255,.13)}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=noir] .frame::before{border-color:rgba(255,255,255,.13)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .frame::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .4 0 0 0 -1.6 1.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
-html:not(.atlas-skin)[data-bd=noir] .frame::after{mix-blend-mode:screen;opacity:.16}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=noir] .frame::after{mix-blend-mode:screen;opacity:.16}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .board{overflow:visible;background:transparent;box-shadow:none;z-index:1}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .board::after{display:none}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .cell{border:0}
@@ -1277,7 +1277,7 @@ html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .face.w{background:radi
   box-shadow:0 calc(var(--cell)*.04) 0 #ddd4bf,0 calc(var(--cell)*.075) 0 #c9bea4,0 calc(var(--cell)*.09) 0 #f0d58a,0 calc(var(--cell)*.125) 0 #c99f42,0 calc(var(--cell)*.145) 0 #7d5d1c,0 calc(var(--cell)*.17) calc(var(--cell)*.06) rgba(0,0,0,.45),inset 0 1px 1px rgba(255,255,255,.9)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .last-mark{width:16%;height:16%;margin-top:calc(var(--cell)*-.1);background:#d8362a;box-shadow:0 0 0 1.5px rgba(255,255,255,.7),0 0 6px rgba(216,54,42,.8)}
 html:not(.atlas-skin):is([data-bd=ivory],[data-bd=noir]) .hint{margin-top:calc(var(--cell)*-.1)}
-html:not(.atlas-skin)[data-bd=ivory] .hint{color:#fff}
+html:not(.atlas-skin:not(.atlas-2d))[data-bd=ivory] .hint{color:#fff}
 /* ---------------------------------------------------------------- PC (html.pc2 = the PC media of shared/headerbar.js; set by the
    layout script at the end of the page): two columns — the board, and a fixed-width info column on its right (online watch /
    lesson / puzzle card, players, evaluation bar / graph / ◀ ▶, review, kifu, info line). The board takes the smaller of the
@@ -1669,7 +1669,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=2"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=9"></script>
-<script src="../shared/headerbar.js?v=30"></script>
+<script src="../shared/headerbar.js?v=31"></script>
 <script src="../shared/flipbtn.js?v=2"></script>
 <script src="../shared/cardbar.js?v=6"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -5512,11 +5512,11 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=26'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=29'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/skin/reversi.js?v=20'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=76')).then(() => load('../atlas/skin/common.js?v=15')).then(() => load('../atlas/skin/reversi.js?v=22'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -5527,7 +5527,7 @@ accRender();
 <script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/pickdrop.js?v=7"></script>
 <script src="../shared/ngtabs.js?v=23"></script>
-<script src="../shared/nglux.js?v=9"></script>
+<script src="../shared/nglux.js?v=11"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>

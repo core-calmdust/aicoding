@@ -48,6 +48,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
   const skin = AtlasSkin.init({
     margin: .28,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
+    pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const k = r.height / S; return { top: r.top + r.height / 2 - HALF_D * k, height: (2 * HALF_D + .35) * k }; },
     guide: '../images/atlas/g-owl.webp', guideFallback: '../images/atlas/morris.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -85,7 +86,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
     try { G_ = G; pos = posAt(cur).pos; els = pcEls; s = sel; tent = tentEl; shownMv = lastShown(); n = G_.n; } catch (e) { return; }
     // the 3D board is the nine men's lattice: the other variants show the game's 2D board
     const v = G_.name || (n === 24 && G_.diag ? 'twelve' : n === 24 ? 'nine' : 'six');
-    if (v !== variant) { variant = v; const on = v === 'nine'; root.visible = on; de.classList.toggle('atlas-mm3d', on); T3.kick(300); }
+    if (v !== variant) { variant = v; const on = v === 'nine'; root.visible = on; de.classList.toggle('atlas-mm3d', on && !de.classList.contains('atlas-2d')); T3.kick(300); }
     if (v !== 'nine') return;
     const b = new Array(24).fill(0);
     for (const [i, el] of els) b[i] = el.classList.contains('p2') ? 2 : 1;
@@ -118,4 +119,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
 
   // test hooks (Playwright)
   window.__mmSkin = { dump: () => set._dump(), pieces: () => set.count(), at: i => { const [x, z] = set.xz(i); return T3.project(x, z, Y); }, variant: () => variant };
+  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
+  if (skin.view) skin.view({ key: 'atlas-morris-view', row: document.getElementById('bdRow'), img: '../images/atlas/morris.webp', cls: ['atlas-morris'],
+    on(is3) { variant = ''; try { mirror(); } catch (e) {} if (!is3) de.classList.remove('atlas-mm3d'); } });
 })();
