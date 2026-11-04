@@ -170,6 +170,7 @@
   }
   function close(swap) {
     if (!on) return; on = false; tok++;
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(false);
     root.classList.remove('on'); if (!swap) root.classList.add('out');
     bgmStop(swap ? 200 : 1000);
     clearTimers();
@@ -280,6 +281,7 @@
     return L;
   }
   const timers = [];
+  let pageAC = null;
   function later(f, ms) { timers.push(setTimeout(f, ms)); }
   function clearTimers() { while (timers.length) clearTimeout(timers.pop()); }
   function go(i, first) {
@@ -287,6 +289,7 @@
     const n = data.ch.length; i = Math.max(0, Math.min(n - 1, i));
     if (i === idx && !first) return;
     const dir = first ? 1 : i > idx ? 1 : -1; idx = i; clearTimers();
+    if (pageAC) pageAC.abort(); pageAC = new AbortController();   // (the outgoing page's window listeners go with it)
     const P = root.querySelector('.hs-pages'), old = P.querySelector('.hs-pg:not(.leave)');
     if (old) { old.classList.add('leave', dir > 0 ? 'l' : 'r'); setTimeout(() => old.remove(), 420); }
     const c = data.ch[i], pg = document.createElement('article'); pg.className = 'hs-pg k-' + c.k + (dir > 0 ? ' fr' : ' fl');
@@ -301,6 +304,7 @@
     // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
     const rd = !['hook', 'board', 'end'].includes(c.k);
     if (root.classList.contains('read') !== rd) { root.classList.toggle('read', rd); if (phone()) later(fit, 480); }
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(phone() && rd && !solo);
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
   function kin(s, d0 = 0) {
@@ -338,7 +342,7 @@
   // per-page motion once it is on screen: count-ups, map routes, the timeline's line, pieces landing
   function run(pg, c) {
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
-    const zm = pg.querySelector('.zm'); if (zm) later(() => { zm.style.transform = zm.dataset.z; }, 350);
+    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); paintDots(mp); zmSet(mp); later(() => zmSet(mp, zm.dataset.z), 350); addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
     if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
     if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
@@ -368,10 +372,11 @@
       const h = Math.round(Math.min(nat, H * (phone() ? .33 : .4)));
       map.classList.toggle('stick', h >= 90 && H - h >= card * 2.3);
       sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
+      zmSet(map);
     };
-    cap(); later(cap, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); });
+    cap(); later(cap, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); }, { signal: pageAC.signal });
     const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
-    pg.addEventListener('scroll', stuck, { passive: true });
+    let sq = 0; pg.addEventListener('scroll', () => { if (!sq) sq = requestAnimationFrame(() => { sq = 0; stuck(); }); }, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
     const mine = () => { hold = performance.now() + 4000; };
     ['wheel', 'touchmove'].forEach(e => pg.addEventListener(e, mine, { passive: true }));
@@ -401,7 +406,7 @@
       const sl = sv.getAttribute('preserveAspectRatio') === 'xMidYMid slice', sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
       const w = Math.min(360, W / sc), h = Math.min(225, H / sc); return { x: (360 - w) / 2, y: (225 - h) / 2, w, h, crop: sl };
     };
-    const apply = (v, ms) => { view = v; zm.style.transition = `transform ${ms}ms cubic-bezier(.4,0,.2,1)`; zm.style.transform = `translate(${v[0].toFixed(2)}px,${v[1].toFixed(2)}px) scale(${v[2].toFixed(4)})`; };
+    const apply = (v, ms) => { view = v; zmSet(map, `translate(${v[0].toFixed(2)}px,${v[1].toFixed(2)}px) scale(${v[2].toFixed(4)})`, `transform ${ms}ms cubic-bezier(.4,0,.2,1)`); };
     const follow = n => {
       const V = vis(), z0 = zb[2]; if (!V.crop) { apply([zb[0], zb[1], z0], 600); return; }
       const ids = [pins[n], pins[n - 1]].filter(i => PM[i]);
@@ -445,12 +450,42 @@
     try { if (!mctx) mctx = document.createElement('canvas').getContext('2d'); mctx.font = `900 ${fs}px 'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif`; const w = mctx.measureText(str).width; if (w > 0) return w; } catch (e) {}
     return [...str].reduce((a, c) => a + (c.charCodeAt(0) > 0x2e80 ? fs : fs * .6), 0);
   }
-  let dotsD = null;
-  function dotsPath() {
-    if (dotsD !== null) return dotsD; const M = window.HISTORIA_MAP; if (!M) return dotsD = '';
-    const s = M.step, out = [];
-    M.rows.split('|').forEach((r, y) => { let x = 0; r.split('.').forEach((v, i) => { const n = parseInt(v, 36); if (i & 1) for (let k = 0; k < n; k++) out.push(`M${((x + k) * s + s / 2).toFixed(2)} ${(y * s + s / 2).toFixed(2)}h0`); x += n; }); });
-    return dotsD = out.join('');
+    // the dot map as a bitmap: thousands of dots in an SVG path made every pan, zoom and pin pulse repaint the whole map. They are
+  // painted once into a <canvas> under the SVG (sharp at the zoom it is shown at, with room for the stage-follow panning); the
+  // canvas copies the map group's transform, so it moves with the pins and routes as one picture
+  let dotsP = null;
+  function dotsPath2D(M) {
+    if (dotsP) return dotsP; dotsP = new Path2D(); const s = M.step, r = s * .31;
+    M.rows.split('|').forEach((row, y) => { const cy = y * s + s / 2; let x = 0;
+      row.split('.').forEach((v, i) => { const n = parseInt(v, 36); if (i & 1) for (let q = 0; q < n; q++) { const cx = (x + q) * s + s / 2; dotsP.moveTo(cx + r, cy); dotsP.arc(cx, cy, r, 0, 6.2832); } x += n; }); });
+    return dotsP;
+  }
+  function dotsCanvas(ox, oy, w, h, z) {
+    const M = window.HISTORIA_MAP; if (!M) return '';
+    const H0 = M.rows.split('|').length * M.step;
+    const x0 = Math.max(0, ox - w * .6), y0 = Math.max(0, oy - h * .6), x1 = Math.min(360, ox + w * 1.6), y1 = Math.min(H0, oy + h * 1.6);
+    const css = Math.min(innerWidth, 760) / 360, dpr = Math.min(1.75, window.devicePixelRatio || 1);
+    const k = Math.min(z * 1.15 * css * dpr, 2048 / (x1 - x0), 2048 / (y1 - y0));
+    return `<canvas class="dots" aria-hidden="true" data-r="${[x0, y0, x1 - x0, y1 - y0, k].map(v => v.toFixed(3)).join()}"></canvas>`;
+  }
+  function paintDots(map) {
+    const cv = map.querySelector('canvas.dots'); if (!cv || cv.dataset.done || !window.HISTORIA_MAP) return; cv.dataset.done = '1';
+    const [x0, y0, w, h, k] = cv.dataset.r.split(',').map(Number);
+    cv.width = Math.ceil(w * k); cv.height = Math.ceil(h * k); cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    const g = cv.getContext('2d'); g.fillStyle = 'rgba(201,180,138,.9)'; g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k); g.fill(dotsPath2D(window.HISTORIA_MAP));
+  }
+  // the map group's transform (translate(tx,ty) scale(z) in viewBox units) → the canvas's CSS transform, through the viewBox fit
+  function zmSet(map, tr, tn) {
+    const zm = map.querySelector('.zm'), cv = map.querySelector('canvas.dots'), sv = map.querySelector('svg');
+    if (tr != null) { if (tn != null) zm.style.transition = tn; zm.style.transform = tr; }
+    if (!cv) return;
+    const v = ((zm.style.transform || 'translate(0px,0px) scale(1)').match(/-?[\d.]+/g) || [0, 0, 1]).map(Number), [tx, ty, z] = [v[0] || 0, v[1] || 0, v[2] || 1];
+    const rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = rs.width, H = rs.height, sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice');
+    if (!W || !H) return;
+    const sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225), oX = (W - 360 * sc) / 2 + rs.left - rm.left, oY = (H - 225 * sc) / 2 + rs.top - rm.top;
+    const [x0, y0] = cv.dataset.r.split(',').map(Number);
+    cv.style.transition = tn != null ? tn : (zm.style.transition || '');
+    cv.style.transform = `translate(${(oX + sc * (tx + z * x0)).toFixed(2)}px,${(oY + sc * (ty + z * y0)).toFixed(2)}px) scale(${(sc * z).toFixed(4)})`;
   }
   function mapSvg(m, labels, steps) {
     if (!m || !m.pts) return '';
@@ -511,8 +546,8 @@
       let lead = '';
       if (B.ring) { const [px, py] = PZ[i], qx = Math.max(b.x, Math.min(b.x + b.w, px)), qy = Math.max(b.y, Math.min(b.y + b.h, py)); lead = `<path class="ld" d="M${(px / z + ox).toFixed(2)} ${(py / z + oy).toFixed(2)}L${(qx / z + ox).toFixed(2)} ${(qy / z + oy).toFixed(2)}" style="stroke-width:${U(1)}"/>`; }
       return `<g class="lbg" data-l="${i}" style="--d:${d}ms">${lead}<g class="lb"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${U(b.w)}" height="${U(b.h)}" rx="${U(BH / 2)}" style="stroke-width:${U(.8)}"/><text x="${(x + b.w / z / 2).toFixed(2)}" y="${(y + b.h / z / 2 + FS * .36 / z).toFixed(2)}" font-size="${U(FS)}" text-anchor="middle">${esc(labels[i])}</text></g></g>`; }).join('');
-    return `<svg viewBox="0 0 ${W0} ${(W0 / 1.6).toFixed(1)}" dir="ltr" aria-hidden="true"><defs><marker id="hsArr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 9 5 0 9z" fill="var(--gc)"/></marker></defs>
-      <g class="zm" data-z="translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(3)})"><path class="dots" d="${dotsPath()}" style="stroke-width:${(M.step * .62).toFixed(3)}"/>${routes}${pins}${lbls}</g></svg>`;
+    return dotsCanvas(ox, oy, w, h, z) + `<svg viewBox="0 0 ${W0} ${(W0 / 1.6).toFixed(1)}" dir="ltr" aria-hidden="true"><defs><marker id="hsArr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 9 5 0 9z" fill="var(--gc)"/></marker></defs>
+      <g class="zm" data-z="translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(3)})">${routes}${pins}${lbls}</g></svg>`;
   }
 
   /* ---------- board diagrams (SVG, drawn from a small spec; pieces drop in one after another) ---------- */

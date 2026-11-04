@@ -138,7 +138,8 @@
 .hs-map svg{display:block;width:100%;height:auto}
 .hs-map .zm{transform-box:view-box;transform-origin:0 0}
 .hs-map .zm{transition:transform 1.7s cubic-bezier(.65,0,.25,1)}
-.hs-map .dots{fill:none;stroke:#c9b48a;stroke-linecap:round;opacity:.9}
+.hs-map canvas.dots{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;transition:transform 1.7s cubic-bezier(.65,0,.25,1)}
+.hs-map svg{position:relative}
 .hs-map .rt{fill:none;stroke:var(--gc);stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 .6px rgba(0,0,0,.35))}
 .in .hs-map .rt{animation:hsDraw 1s var(--d) cubic-bezier(.5,0,.3,1) forwards}
 .hs-map .pin{opacity:0;transform-box:fill-box;transform-origin:center}
