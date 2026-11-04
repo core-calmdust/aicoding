@@ -19,13 +19,17 @@ function setup(T) {
 
 /* ---------- the steps ---------- */
 // at: selector(s) to point at (none = a box in the middle) · need: the move the step waits for
+// ctx: also kept in view with the target when there is room (the chips / the Place bet button) · tab: phones — the bottom tab holding that box
+// (the betting boxes: '#bcTable [data-spot=..]' — only your own seat has them, in the printed arcs (PC) and in the touch layout (narrow tables) alike)
+const SPOT = k => `#bcTable [data-spot="${k}"]`;
 const STEPS = {
-  start: [{ k: 'hello' }, { k: 'hands', at: '.bc-hands' }, { k: 'seat', at: '.seat-g.me' }, { k: 'chips', at: ['.bc-rack', '.bc-bal'] },
-    { k: 'bet', at: '.seat-g.me .lz-B', need: 'bet:B' }, { k: 'coach', at: '#side .coach-card' }, { k: 'deal', at: '#abDeal', need: 'deal' }],
-  done: [{ k: 'result', at: '.bc-hands' }, { k: 'third', at: '#side .ck-ex' }, { k: 'payout', at: ['.seat-g.me .lz-B', '.bc-banner'] },
-    { k: 'road', at: '#side .road-card' }, { k: 'bots', at: '.lz-svg' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
+  start: [{ k: 'hello' }, { k: 'hands', at: '.bc-hands' }, { k: 'seat', at: ['.seat-g.me', '#bcTable [data-spot]'] }, { k: 'chips', at: ['.bc-rack', '.bc-bal'] },
+    { k: 'bet', at: SPOT('B'), need: 'bet:B', ctx: [['.bc-rack', '#abDeal'], ['.bc-rack']] }, { k: 'coach', at: '#side .coach-card', tab: 'coach' },
+    { k: 'deal', at: '#abDeal', need: 'deal', ctx: [[SPOT('B'), '.bc-rack']] }],
+  done: [{ k: 'result', at: '.bc-hands' }, { k: 'third', at: '#side .ck-ex', tab: 'coach' }, { k: 'payout', at: [SPOT('B'), '.bc-banner'] },
+    { k: 'road', at: '#side .road-card', tab: 'road' }, { k: 'bots', at: '.lz-svg' }, { k: 'menu', at: ['#btnRules', '#btnLesson', '#btnTools', '#btnStats'] }, { k: 'end', end: true }],
 };
-let Q = null, cur = null, used = {}, n = 0;
+let Q = null, cur = null, used = {}, n = 0, tab0 = null;   // tab0: the phone tab before the tutorial (back to it after)
 const TOTAL = Object.values(STEPS).reduce((a, x) => a + x.length, 0);
 function ev(name) {
   const T = A.T; if (!T || !T.tut || used[name] || !STEPS[name]) return;
@@ -34,25 +38,34 @@ function ev(name) {
 function next() { cur = Q && Q.shift(); if (!cur) { hideBox(); return; } n++; show(cur); }
 function allow(m) {
   const T = A.T; if (!T || !T.tut) return true;
-  const want = m.a === 'bet' ? 'bet:' + m.k : 'deal';
   if (!cur || !cur.need) { A.toast(L('wait')); return false; }
+  const want = m.a === 'bet' ? 'bet:' + m.k : m.a;
   if (cur.need !== want) { A.sfx('bad'); A.toast(L('ng.' + cur.k)); shake(); return false; }
+  if (m.a === 'deal') { cur = null; hideBox(); }   // the cards are dealt: the bubble goes until the result
   return true;
 }
 // a step that waited for a move: go on once the move is made
-function after(a) { if (cur && cur.need && cur.need.startsWith(a)) { cur = null; setTimeout(next, 250); } }
+function after(a) { if (cur && cur.need && cur.need.startsWith(a)) { cur = null; hideBox(); setTimeout(next, 250); } }
 
 /* ---------- spotlight + bubble ---------- */
-let layer = null, box = null, hole = null;
+let layer = null, box = null, hole = null, mask = null, rings = null;
 function ensure() {
   if (layer) return;
-  layer = document.createElement('div'); layer.id = 'tutLayer'; layer.innerHTML = '<div class="tut-hole"></div><div class="tut-box" role="dialog" aria-live="polite"></div>';
-  document.body.appendChild(layer); hole = layer.querySelector('.tut-hole'); box = layer.querySelector('.tut-box');
-  addEventListener('resize', () => { if (cur && layer.classList.contains('show')) place(cur); });
+  layer = document.createElement('div'); layer.id = 'tutLayer'; layer.innerHTML = '<svg class="tut-mask" aria-hidden="true"><path/></svg><div class="tut-rings"></div><div class="tut-hole"></div><div class="tut-box" role="dialog" aria-live="polite"></div>';
+  document.body.appendChild(layer); hole = layer.querySelector('.tut-hole'); box = layer.querySelector('.tut-box'); mask = layer.querySelector('.tut-mask'); rings = layer.querySelector('.tut-rings');
+  let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (cur && layer.classList.contains('show')) place(cur); }, 80); });   // (after the table has been drawn again)
+  // the player scrolls the table to look around: the spotlight follows its target
+  // a step that waits for a move: a tap on the table that is not a betting box of yours (a bot's box, the BANKER hand) says what to tap
+  document.addEventListener('pointerdown', e => {
+    if (!cur || !cur.need || !layer.classList.contains('show')) return;
+    const t = e.target; if (!t.closest || !t.closest('#bcTable') || t.closest('[data-spot]')) return;
+    A.sfx('bad'); A.toast(L('ng.' + cur.k)); shake();
+  }, true);
+  let raf = 0; document.addEventListener('scroll', () => { if (raf || !layer.classList.contains('show') || !lastSt || !lastSt.at) return; raf = requestAnimationFrame(() => { raf = 0; paint(lastSt, phone() ? 6 : 8); }); }, true);
 }
 function rectOf(at) {
   let r = null;
-  [].concat(at || []).forEach(s => document.querySelectorAll(s).forEach(el => {
+  [].concat(at || []).flat().forEach(s => document.querySelectorAll(s).forEach(el => {
     const b = el.getBoundingClientRect(); if (!b.width && !b.height) return;
     r = r ? { l: Math.min(r.l, b.left), t: Math.min(r.t, b.top), r: Math.max(r.r, b.right), b: Math.max(r.b, b.bottom) } : { l: b.left, t: b.top, r: b.right, b: b.bottom };
   }));
@@ -62,44 +75,138 @@ function show(st) {
   ensure();
   const btns = st.end ? `<button type="button" class="mbtn" id="tutAgain">${esc(L('again'))}</button><button type="button" class="mbtn go" id="tutPlay">${esc(L('play'))}</button>`
     : st.need ? `<span class="tut-do">👉 ${esc(L('do'))}</span>` : `<button type="button" class="mbtn go" id="tutNext">${esc(L('next'))}</button>`;
-  box.innerHTML = `<div class="tut-top"><em>${esc(L('title'))} ${Math.min(n, TOTAL)}/${TOTAL}</em><button type="button" class="tut-x" id="tutSkip">${esc(L('skip'))}</button></div>` +
-    `<b>${esc(L('t.' + st.k))}</b><p>${L('b.' + st.k)}</p><div class="tut-btns">${btns}</div>`;
-  layer.classList.add('show'); layer.classList.toggle('center', !st.at); layer.classList.toggle('act', !!st.need);
-  const el = st.at && document.querySelector([].concat(st.at)[0]);
-  { const pt = el && el.closest && el.closest('#side [data-pt]'); if (pt && A.showTab) A.showTab(pt.dataset.pt); }   // phones: open that tab
-  if (el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
-  requestAnimationFrame(() => place(st));
+  box.innerHTML = `<div class="tut-top"><em>${esc(L('title'))} ${Math.min(n, TOTAL)}/${TOTAL}</em><span class="tut-tr"><button type="button" class="tut-min" id="tutMin" aria-expanded="true" aria-label="${esc(L('fold'))}" title="${esc(L('fold'))}"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" class="tut-x" id="tutSkip">${esc(L('skip'))}</button></span></div>` +
+    `<b><span class="tut-h">${esc(L('t.' + st.k))}</span>${st.need ? `<span class="tut-do-s">${esc(L('do'))}</span>` : ''}</b><p>${L('b.' + st.k)}</p><div class="tut-btns${st.end ? ' end' : ''}">${btns}</div>`;
+  layer.classList.add('show'); layer.classList.toggle('center', !st.at); layer.classList.toggle('act', !!st.need); layer.classList.toggle('fin', !!st.end);
+  // the step's own setup: the chip it talks about (100) and no bet left over (a re-entered step)
+  const T = A.T;
+  if (st.need === 'bet:B' && T && T.phase === 'bet') { let ch = false; if (A.set.chip !== 100) { A.set.chip = 100; ch = true; } if (Object.keys(T.bets).length) { T.bets = {}; ch = true; } if (ch) A.render(); }
+  const el = st.at && document.querySelector([].concat(st.at).flat()[0]);
+  { const k = st.tab || (el && el.closest && (el.closest('#side [data-pt]') || {}).dataset || {}).pt; if (k && A.showTab) A.showTab(k); }   // phones: open that tab
+  if (!phone() && el && el.scrollIntoView) { const b = el.getBoundingClientRect(); if (b.top < 0 || b.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+  box.classList.remove('min');
+  const mn = $('#tutMin'); if (mn) mn.onclick = () => { box.classList.toggle('min'); mn.setAttribute('aria-expanded', box.classList.contains('min') ? 'false' : 'true'); place(st); };
+  place(st); requestAnimationFrame(() => { if (cur === st) { place(st); watch(st); } });
   const nx = $('#tutNext'); if (nx) { nx.onclick = () => { A.sfx('flip'); next(); }; setTimeout(() => nx.focus({ preventScroll: true }), 30); }
   $('#tutSkip').onclick = () => { if (st.end) finish(); else A.confirmBox(L('skipQ'), () => quit()); };
   const pl = $('#tutPlay'); if (pl) pl.onclick = () => finish();
   const ag = $('#tutAgain'); if (ag) ag.onclick = () => { hide(); start(); };
 }
+/* phones: the bubble is docked (top or bottom, full width, compact) and the table scrolls so the part it talks about
+   sits in the free area between the bubble and the edge — nothing the step is about is ever under the text */
+const phone = () => innerWidth <= 760;
+const stageEl = () => document.querySelector('.stage');
+let padAdded = 0, padTop = 0, lastSt = null, ro = null;
+function inStage(at) { const sc = stageEl(), e = at && document.querySelector([].concat(at).flat()[0]); return !!(sc && e && sc.contains(e)); }
+function holeAt(r, pad) { hole.style.cssText = r ? `left:${r.l - pad}px;top:${r.t - pad}px;width:${r.r - r.l + pad * 2}px;height:${r.b - r.t + pad * 2}px` : `left:${innerWidth / 2}px;top:${innerHeight / 2}px;width:0;height:0`; }
+// phones: the bottom tab bar is on screen (the side boxes are tabs)
+const tabBtn = st => { const tb = st && st.tab && document.querySelector(`#mTabs [data-pt="${st.tab}"]`); return tb && tb.offsetHeight && phone() ? tb : null; };
+// the spotlight: one hole, or (a tab too) a dark mask with a hole and a ring for the box and for its tab
+function paint(st, pad) {
+  if (!st) return;
+  const list = [], r0 = st.at ? rectOf(st.at) : null;
+  if (r0) list.push({ r: r0, hot: !!st.need });
+  const tb = tabBtn(st);
+  document.querySelectorAll('#mTabs .tut-tab').forEach(e => { if (e !== tb) e.classList.remove('tut-tab'); });
+  if (tb) { tb.classList.add('tut-tab'); const b = tb.getBoundingClientRect(); list.push({ r: { l: b.left + 4, t: b.top + 2, r: b.right - 4, b: b.bottom - 2 }, hot: true, tab: true }); }
+  const multi = list.length > 1;
+  layer.classList.toggle('multi', multi);
+  if (!multi) { rings.innerHTML = ''; mask.querySelector('path').setAttribute('d', ''); holeAt(list[0] ? list[0].r : null, pad); return; }
+  holeAt(null, 0);
+  const W = innerWidth, H = innerHeight;
+  let d = `M0 0H${W}V${H}H0Z`, h = '';
+  list.forEach(x => {
+    const p = x.tab ? 2 : pad, l = x.r.l - p, t = x.r.t - p, w = x.r.r - x.r.l + p * 2, ht = x.r.b - x.r.t + p * 2, rr = Math.min(12, w / 2, ht / 2);
+    d += `M${l + w - rr} ${t}H${l + rr}A${rr} ${rr} 0 0 0 ${l} ${t + rr}V${t + ht - rr}A${rr} ${rr} 0 0 0 ${l + rr} ${t + ht}H${l + w - rr}A${rr} ${rr} 0 0 0 ${l + w} ${t + ht - rr}V${t + rr}A${rr} ${rr} 0 0 0 ${l + w - rr} ${t}Z`;
+    h += `<div class="tut-ring${x.hot ? ' hot' : ''}" style="left:${l}px;top:${t}px;width:${w}px;height:${ht}px;border-radius:${rr}px"></div>`;
+  });
+  mask.setAttribute('viewBox', `0 0 ${W} ${H}`); mask.setAttribute('width', W); mask.setAttribute('height', H);
+  mask.querySelector('path').setAttribute('d', d);
+  rings.innerHTML = h;
+}
+function unpad() { const sc = stageEl(); if (sc && padAdded) { sc.style.paddingBottom = ''; padAdded = 0; } if (sc && padTop) { sc.style.paddingTop = ''; padTop = 0; } }
+// the target changes size after the step is shown (the coach box, the table drawn again): place again
+function watch(st) { if (ro) ro.disconnect(); ro = null; if (!st.at || !window.ResizeObserver) return; let tm = 0; ro = new ResizeObserver(() => { clearTimeout(tm); tm = setTimeout(() => { if (cur === st && layer.classList.contains('show')) place(st); }, 60); }); [].concat(st.at, '#bcTable').flat().forEach(q => document.querySelectorAll(q).forEach(e => ro.observe(e))); }
+function placePhone(st) {
+  unpad();
+  const W = innerWidth, H = innerHeight, sc = stageEl(), gap = 8;
+  layer.classList.add('dock'); box.style.left = gap + 'px'; box.style.width = (W - gap * 2) + 'px';
+  const bh = box.offsetHeight;
+  const sr = sc ? sc.getBoundingClientRect() : { top: 0, bottom: H };
+  let r = st.at ? rectOf(st.at) : null;
+  const scroll = r && inStage(st.at);
+  const zone = d => {
+    const t = d === 'top' ? bh + gap * 2 : 0, b = d === 'top' ? H : H - bh - gap * 2;
+    return scroll ? { t: Math.max(t, sr.top) + 6, b: Math.min(b, sr.bottom) - 6 } : { t: t + 4, b: b - 4 };
+  };
+  let dock, d = 0;
+  if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
+  else if (!scroll) dock = tabBtn(st) || r.t + r.b > H ? 'top' : 'bottom';  // a fixed target (header buttons): the other end
+  else {
+    // try both docks: the scroll that puts the target (with its context when it fits) in the free area — keep the one that fits best
+    const plan = dk => {
+      const z = zone(dk), room = z.b - z.t;
+      let u = null, fit = false, cx = null;
+      for (const c of st.ctx || []) { const q = rectOf(c); if (!q) continue; cx = q; u = { t: Math.min(q.t, r.t), b: Math.max(q.b, r.b) }; if (u.b - u.t <= room) { fit = true; break; } }
+      const tt = fit ? u.t : r.t, h = (fit ? u.b : r.b) - tt;
+      const want = h > room ? z.t : z.t + (room - h) / 2;
+      const dd = Math.round(tt - want), t = r.t - dd, b = r.b - dd;
+      return { dk, dd, miss: Math.max(0, z.t - t) + Math.max(0, b - z.b), room: room - (cx && !fit ? 1e4 : 0) };
+    };
+    const a = plan('top'), c = plan('bottom'), best = tabBtn(st) || a.miss < c.miss || (a.miss === c.miss && a.room >= c.room) ? a : c;   // a tab is ringed: the text stays at the top
+    dock = best.dk; d = best.dd;
+  }
+  if (d) {
+    const max = sc.scrollHeight - sc.clientHeight;
+    if (sc.scrollTop + d > max) { const extra = Math.ceil(sc.scrollTop + d - max); padAdded += extra; sc.style.paddingBottom = `calc(${getComputedStyle(sc).paddingBottom} + ${extra}px)`; }
+    if (sc.scrollTop + d < 0) { padTop = Math.ceil(-(sc.scrollTop + d)); sc.style.paddingTop = `calc(${getComputedStyle(sc).paddingTop} + ${padTop}px)`; d = -sc.scrollTop; }
+    sc.scrollTop += d;
+  }
+  box.style.top = (dock === 'top' ? gap : H - bh - gap) + 'px';
+  layer.dataset.dock = dock;
+  paint(st, 6);
+}
+// PC / tablets: next to the target — below, above, beside — the first place that covers neither the target nor its context
 function place(st) {
   if (!layer) return;
-  const W = innerWidth, H = innerHeight, r = st.at ? rectOf(st.at) : null, pad = 8;
-  if (!r) { hole.style.cssText = `left:${W / 2}px;top:${H / 2}px;width:0;height:0`; box.style.left = Math.max(12, (W - box.offsetWidth) / 2) + 'px'; box.style.top = Math.max(12, (H - box.offsetHeight) / 2) + 'px'; return; }
-  hole.style.cssText = `left:${r.l - pad}px;top:${r.t - pad}px;width:${r.r - r.l + pad * 2}px;height:${r.b - r.t + pad * 2}px`;
-  const bw = box.offsetWidth, bh = box.offsetHeight, cx = (r.l + r.r) / 2;
-  let top, left;
-  if (r.l > W * 0.62 && r.l - bw - 24 > 0 && W > 900) { left = r.l - bw - 24; top = Math.min(H - bh - 12, Math.max(12, (r.t + r.b) / 2 - bh / 2)); }   // a target in the right column: box to its left
-  else {
-    const below = H - r.b, above = r.t;
-    top = below >= bh + 24 || below > above ? r.b + pad + 14 : r.t - pad - 14 - bh;
-    top = Math.max(12, Math.min(H - bh - 12, top));
-    left = Math.max(12, Math.min(W - bw - 12, cx - bw / 2));
+  lastSt = st;
+  if (phone()) { placePhone(st); return; }
+  unpad(); layer.classList.remove('dock'); box.style.width = '';
+  const W = innerWidth, H = innerHeight, r = st.at ? rectOf(st.at) : null, pad = 8, m = 12, g = pad + 14;
+  paint(st, pad);
+  const bw = box.offsetWidth, bh = box.offsetHeight;
+  if (!r) { box.style.left = Math.max(m, (W - bw) / 2) + 'px'; box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
+  const keep = [r]; (st.ctx || []).some(c => { const q = rectOf(c); if (q) keep.push(q); return q; });
+  const clampX = x => Math.max(m, Math.min(W - bw - m, x)), clampY = y => Math.max(m, Math.min(H - bh - m, y));
+  const cx = (r.l + r.r) / 2, cy = (r.t + r.b) / 2;
+  const cand = [];
+  if (r.l > W * 0.62 && W > 900) cand.push([r.l - bw - 24, clampY(cy - bh / 2)]);   // a target in the right column: box to its left
+  cand.push([clampX(cx - bw / 2), r.b + g], [clampX(cx - bw / 2), r.t - g - bh], [r.r + 24, clampY(cy - bh / 2)], [r.l - bw - 24, clampY(cy - bh / 2)]);
+  if (H - r.b < r.t) cand.splice(cand.length - 4, 2, cand[cand.length - 3], cand[cand.length - 4]);   // more room above: try above first
+  const over = ([x, y]) => keep.reduce((a, q) => a + Math.max(0, Math.min(x + bw, q.r + pad) - Math.max(x, q.l - pad)) * Math.max(0, Math.min(y + bh, q.b + pad) - Math.max(y, q.t - pad)), 0);
+  const inside = ([x, y]) => x >= m - .5 && y >= m - .5 && x + bw <= W - m + .5 && y + bh <= H - m + .5;
+  let best = cand.find(p => inside(p) && over(p) === 0);
+  if (!best) { // nothing is free: the place inside the window covering the least
+    best = cand.map(([x, y]) => [clampX(x), clampY(y)]).concat([[m, m], [W - bw - m, m], [m, H - bh - m], [W - bw - m, H - bh - m]]).sort((a, b) => over(a) - over(b))[0];
   }
-  box.style.left = left + 'px'; box.style.top = top + 'px';
+  box.style.left = best[0] + 'px'; box.style.top = best[1] + 'px';
 }
 function shake() { if (!box) return; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
-function hideBox() { if (layer) layer.classList.remove('show'); }
+function hideBox() { if (layer) { layer.classList.remove('show', 'multi'); rings.innerHTML = ''; } document.querySelectorAll('#mTabs .tut-tab').forEach(e => e.classList.remove('tut-tab')); unpad(); if (ro) { ro.disconnect(); ro = null; } }
 function hide() { hideBox(); Q = null; cur = null; }
 function start() {
-  used = {}; n = 0; Q = null; cur = null;
+  used = {}; n = 0; Q = null; cur = null; if (tab0 === null) tab0 = A.set.mTab || '';
   ['#tutOfferOv', '#rulesOverlay', '#lessonOverlay', '#newOverlay'].forEach(s => { const o = $(s); if (o) o.classList.remove('show'); });
   A.startTutorial();
 }
-function quit() { hide(); A.endTutorial(); }
-function finish() { put(DONE, '1'); hide(); A.endTutorial(); A.toast(L('thanks')); }
+function backTab() { if (tab0 !== null && A.showTab) A.showTab(tab0); tab0 = null; }
+function quit() { hide(); A.endTutorial(); backTab(); }
+function finish() {
+  put(DONE, '1'); hide(); A.endTutorial(); backTab(); A.toast(L('thanks'));
+  // "Tutorial complete! | Enjoy the game": two lines, each kept on one line
+  const tt = $('#toast'), m = /^(.*?[!！])\s*(.+)$/.exec(L('thanks'));
+  if (tt && m) tt.innerHTML = `<span class="tt-l">${esc(m[1])}</span><span class="tt-l">${esc(m[2])}</span>`;
+}
 
 /* ---------- the first-visit box ---------- */
 function offer(force) {
@@ -119,7 +226,7 @@ function offer(force) {
 /* ---------- texts ---------- */
 const TX = {
 ja: {
-  title: 'チュートリアル', next: '次へ', skip: 'やめる', do: '実際に操作してみましょう', skipQ: 'チュートリアルをやめますか？', wait: '説明を読んで「次へ」を押してください', play: '通常のゲームに戻る', again: 'もう一度', thanks: 'チュートリアル完了！ 本番を楽しんでください',
+  fold: '折りたたむ', title: 'チュートリアル', next: '次へ', skip: 'やめる', do: '実際に操作してみましょう', skipQ: 'チュートリアルをやめますか？', wait: '説明を読んで「次へ」を押してください', play: '通常のゲームに戻る', again: 'もう一度', thanks: 'チュートリアル完了！ 本番を楽しんでください',
   't.hello': 'ようこそバカラへ！', 'b.hello': '実際の卓で1回遊びながら、賭け方とルールを覚えましょう（約2分）。<br>バカラは<b>プレイヤー</b>と<b>バンカー</b>、どちらの手が<b>9に近くなるか</b>を当てるゲームです。',
   't.hands': 'カードの置き場', 'b.hands': 'ここに PLAYER と BANKER の2つの手が配られます。どちらも人ではなく<b>手の名前</b>。あなたはどちらが勝つかに賭けるだけで、カードを引くかどうかもルールで自動に決まります。',
   't.seat': 'あなたの席', 'b.seat': '真ん中の <b>3番席</b>があなたの席です。PLAYER・BANKER・TIE（引き分け）・ペアの枠に、チップを置いて賭けます。ほかの席にはBOTのプレイヤーが座っています。',
@@ -140,7 +247,7 @@ ja: {
   'o.hide': '次から表示しない', 'o.later': 'あとで', 'o.go': 'チュートリアルを始める', entry: '実戦チュートリアル', 'entry.d': '実際の卓で1回遊びながら賭け方とルールを覚える（約2分）',
 },
 en: {
-  title: 'Tutorial', next: 'Next', skip: 'Quit', do: 'Make the move yourself', skipQ: 'Quit the tutorial?', wait: 'Read the box and press Next', play: 'Back to the game', again: 'Again', thanks: 'Tutorial complete! Enjoy the game',
+  fold: 'Collapse', title: 'Tutorial', next: 'Next', skip: 'Quit', do: 'Make the move yourself', skipQ: 'Quit the tutorial?', wait: 'Read the box and press Next', play: 'Back to the game', again: 'Again', thanks: 'Tutorial complete! Enjoy the game',
   't.hello': 'Welcome to baccarat!', 'b.hello': 'Learn how to bet and the rules by playing one coup at a real table (about 2 minutes).<br>In baccarat you guess which hand, <b>Player</b> or <b>Banker</b>, ends <b>closer to 9</b>.',
   't.hands': 'Where the cards go', 'b.hands': 'The two hands, PLAYER and BANKER, are dealt here. Neither is a person — they are just <b>the names of the hands</b>. You only bet on which one wins; the rules decide every draw.',
   't.seat': 'Your seat', 'b.seat': '<b>Seat 3</b> in the middle is yours. Put chips on PLAYER, BANKER, TIE or the pairs to bet. Bot players sit in the other seats.',
@@ -161,7 +268,7 @@ en: {
   'o.hide': 'Do not show again', 'o.later': 'Later', 'o.go': 'Start the tutorial', entry: 'Play-along tutorial', 'entry.d': 'Learn to bet and the rules by playing one coup at a real table (about 2 min)',
 },
 zh: {
-  title: '教程', next: '下一步', skip: '退出', do: '请亲自操作', skipQ: '要退出教程吗？', wait: '阅读说明后点击“下一步”', play: '返回游戏', again: '再来一次', thanks: '教程完成！祝你玩得开心',
+  fold: '收起', title: '教程', next: '下一步', skip: '退出', do: '请亲自操作', skipQ: '要退出教程吗？', wait: '阅读说明后点击“下一步”', play: '返回游戏', again: '再来一次', thanks: '教程完成！祝你玩得开心',
   't.hello': '欢迎来到百家乐！', 'b.hello': '在真实牌桌上玩一局，学习下注方法和规则（约2分钟）。<br>百家乐就是猜<b>闲</b>和<b>庄</b>哪一手牌<b>更接近9点</b>。',
   't.hands': '牌放在哪里', 'b.hands': 'PLAYER 和 BANKER 两手牌发在这里。两者都不是人——只是<b>两手牌的名字</b>。你只需押哪一方赢；是否补牌全由规则决定。',
   't.seat': '你的座位', 'b.seat': '中间的<b>3号座位</b>是你的。把筹码放在 PLAYER、BANKER、TIE 或对子上即可下注。其他座位上坐着机器人玩家。',
@@ -182,7 +289,7 @@ zh: {
   'o.hide': '不再显示', 'o.later': '稍后', 'o.go': '开始教程', entry: '实战教程', 'entry.d': '在真实牌桌上玩一局，学习下注方法和规则（约2分钟）',
 },
 ko: {
-  title: '튜토리얼', next: '다음', skip: '그만하기', do: '직접 해 보세요', skipQ: '튜토리얼을 그만할까요?', wait: '설명을 읽고 \'다음\'을 누르세요', play: '게임으로 돌아가기', again: '다시 하기', thanks: '튜토리얼 완료! 게임을 즐기세요',
+  fold: '접기', title: '튜토리얼', next: '다음', skip: '그만하기', do: '직접 해 보세요', skipQ: '튜토리얼을 그만할까요?', wait: '설명을 읽고 \'다음\'을 누르세요', play: '게임으로 돌아가기', again: '다시 하기', thanks: '튜토리얼 완료! 게임을 즐기세요',
   't.hello': '바카라에 오신 것을 환영합니다!', 'b.hello': '실제 테이블에서 한 게임을 하며 베팅 방법과 규칙을 배워 봅시다(약 2분).<br>바카라는 <b>플레이어</b>와 <b>뱅커</b> 중 어느 쪽 패가 <b>9에 더 가까운지</b> 맞히는 게임입니다.',
   't.hands': '카드가 놓이는 곳', 'b.hands': 'PLAYER와 BANKER, 두 패가 여기에 딜됩니다. 둘 다 사람이 아니라 그냥 <b>패의 이름</b>입니다. 어느 쪽이 이길지에만 걸면 되고, 카드를 더 받을지는 모두 규칙이 정합니다.',
   't.seat': '내 자리', 'b.seat': '가운데 <b>3번 자리</b>가 내 자리입니다. PLAYER, BANKER, TIE 또는 페어에 칩을 놓아 베팅합니다. 다른 자리에는 봇 플레이어가 앉아 있습니다.',
@@ -203,7 +310,7 @@ ko: {
   'o.hide': '다시 표시하지 않기', 'o.later': '나중에', 'o.go': '튜토리얼 시작', entry: '실전 튜토리얼', 'entry.d': '실제 테이블에서 한 게임을 하며 베팅 방법과 규칙 배우기(약 2분)',
 },
 es: {
-  title: 'Tutorial', next: 'Siguiente', skip: 'Salir', do: 'Haz tú la jugada', skipQ: '¿Salir del tutorial?', wait: 'Lee el recuadro y pulsa Siguiente', play: 'Volver al juego', again: 'Otra vez', thanks: '¡Tutorial completado! Disfruta del juego',
+  fold: 'Plegar', title: 'Tutorial', next: 'Siguiente', skip: 'Salir', do: 'Haz tú la jugada', skipQ: '¿Salir del tutorial?', wait: 'Lee el recuadro y pulsa Siguiente', play: 'Volver al juego', again: 'Otra vez', thanks: '¡Tutorial completado! Disfruta del juego',
   't.hello': '¡Bienvenido al bacará!', 'b.hello': 'Aprende a apostar y las reglas jugando una mano en una mesa real (unos 2 minutos).<br>En el bacará adivinas qué mano, <b>Jugador</b> o <b>Banca</b>, termina <b>más cerca de 9</b>.',
   't.hands': 'Dónde van las cartas', 'b.hands': 'Aquí se reparten las dos manos, PLAYER y BANKER. Ninguna es una persona: son solo <b>los nombres de las manos</b>. Tú solo apuestas a cuál gana; las reglas deciden cada robo.',
   't.seat': 'Tu asiento', 'b.seat': 'El <b>asiento 3</b>, en el centro, es el tuyo. Pon fichas en PLAYER, BANKER, TIE o en las parejas para apostar. En los demás asientos hay jugadores bot.',
@@ -224,7 +331,7 @@ es: {
   'o.hide': 'No volver a mostrar', 'o.later': 'Más tarde', 'o.go': 'Empezar el tutorial', entry: 'Tutorial práctico', 'entry.d': 'Aprende a apostar y las reglas jugando una mano en una mesa real (unos 2 min)',
 },
 fr: {
-  title: 'Tutoriel', next: 'Suivant', skip: 'Quitter', do: 'À vous de jouer', skipQ: 'Quitter le tutoriel ?', wait: 'Lisez l\'encadré puis appuyez sur Suivant', play: 'Retour au jeu', again: 'Rejouer', thanks: 'Tutoriel terminé ! Bon jeu',
+  fold: 'Replier', title: 'Tutoriel', next: 'Suivant', skip: 'Quitter', do: 'À vous de jouer', skipQ: 'Quitter le tutoriel ?', wait: 'Lisez l\'encadré puis appuyez sur Suivant', play: 'Retour au jeu', again: 'Rejouer', thanks: 'Tutoriel terminé ! Bon jeu',
   't.hello': 'Bienvenue au baccara !', 'b.hello': 'Apprenez à miser et les règles en jouant un coup à une vraie table (environ 2 minutes).<br>Au baccara, vous devinez quelle main, <b>Joueur</b> ou <b>Banque</b>, finit <b>le plus près de 9</b>.',
   't.hands': 'Où vont les cartes', 'b.hands': 'Les deux mains, PLAYER et BANKER, sont distribuées ici. Aucune n\'est une personne : ce sont simplement <b>les noms des mains</b>. Vous misez seulement sur celle qui gagne ; les règles décident de chaque tirage.',
   't.seat': 'Votre place', 'b.seat': 'La <b>place 3</b>, au milieu, est la vôtre. Posez des jetons sur PLAYER, BANKER, TIE ou les paires pour miser. Des joueurs bots occupent les autres places.',
@@ -245,7 +352,7 @@ fr: {
   'o.hide': 'Ne plus afficher', 'o.later': 'Plus tard', 'o.go': 'Lancer le tutoriel', entry: 'Tutoriel en jeu', 'entry.d': 'Apprenez à miser et les règles en jouant un coup à une vraie table (environ 2 min)',
 },
 pt: {
-  title: 'Tutorial', next: 'Próximo', skip: 'Sair', do: 'Faça a jogada você mesmo', skipQ: 'Sair do tutorial?', wait: 'Leia o quadro e pressione Próximo', play: 'Voltar ao jogo', again: 'De novo', thanks: 'Tutorial concluído! Divirta-se',
+  fold: 'Recolher', title: 'Tutorial', next: 'Próximo', skip: 'Sair', do: 'Faça a jogada você mesmo', skipQ: 'Sair do tutorial?', wait: 'Leia o quadro e pressione Próximo', play: 'Voltar ao jogo', again: 'De novo', thanks: 'Tutorial concluído! Divirta-se',
   't.hello': 'Bem-vindo ao bacará!', 'b.hello': 'Aprenda a apostar e as regras jogando uma rodada numa mesa de verdade (cerca de 2 minutos).<br>No bacará você adivinha qual mão, <b>Jogador</b> ou <b>Banca</b>, termina <b>mais perto de 9</b>.',
   't.hands': 'Onde ficam as cartas', 'b.hands': 'As duas mãos, PLAYER e BANKER, são distribuídas aqui. Nenhuma é uma pessoa — são só <b>os nomes das mãos</b>. Você só aposta em qual vence; as regras decidem cada compra.',
   't.seat': 'Seu lugar', 'b.seat': 'O <b>lugar 3</b>, no meio, é o seu. Coloque fichas em PLAYER, BANKER, TIE ou nos pares para apostar. Jogadores bots ocupam os outros lugares.',
@@ -266,7 +373,7 @@ pt: {
   'o.hide': 'Não mostrar novamente', 'o.later': 'Depois', 'o.go': 'Começar o tutorial', entry: 'Tutorial na prática', 'entry.d': 'Aprenda a apostar e as regras jogando uma rodada numa mesa de verdade (cerca de 2 min)',
 },
 de: {
-  title: 'Tutorial', next: 'Weiter', skip: 'Beenden', do: 'Jetzt bist du dran', skipQ: 'Tutorial beenden?', wait: 'Lies den Hinweis und drücke auf Weiter', play: 'Zurück zum Spiel', again: 'Nochmal', thanks: 'Tutorial abgeschlossen! Viel Spaß beim Spielen',
+  fold: 'Einklappen', title: 'Tutorial', next: 'Weiter', skip: 'Beenden', do: 'Jetzt bist du dran', skipQ: 'Tutorial beenden?', wait: 'Lies den Hinweis und drücke auf Weiter', play: 'Zurück zum Spiel', again: 'Nochmal', thanks: 'Tutorial abgeschlossen! Viel Spaß beim Spielen',
   't.hello': 'Willkommen beim Baccara!', 'b.hello': 'Lerne Setzen und Regeln, indem du eine Runde an einem echten Tisch spielst (ca. 2 Minuten).<br>Beim Baccara tippst du, welche Hand, <b>Spieler</b> oder <b>Bank</b>, <b>näher an 9</b> landet.',
   't.hands': 'Wo die Karten liegen', 'b.hands': 'Hier werden die beiden Hände PLAYER und BANKER gegeben. Keine davon ist eine Person — es sind nur <b>die Namen der Hände</b>. Du setzt nur darauf, welche gewinnt; jede gezogene Karte bestimmen die Regeln.',
   't.seat': 'Dein Platz', 'b.seat': '<b>Platz 3</b> in der Mitte ist deiner. Leg Chips auf PLAYER, BANKER, TIE oder die Paare, um zu setzen. Auf den anderen Plätzen sitzen Bot-Spieler.',
@@ -287,7 +394,7 @@ de: {
   'o.hide': 'Nicht mehr anzeigen', 'o.later': 'Später', 'o.go': 'Tutorial starten', entry: 'Praxis-Tutorial', 'entry.d': 'Lerne Setzen und Regeln, indem du eine Runde an einem echten Tisch spielst (ca. 2 Min.)',
 },
 hi: {
-  title: 'ट्यूटोरियल', next: 'आगे', skip: 'बंद करें', do: 'अब खुद चाल चलें', skipQ: 'ट्यूटोरियल बंद करें?', wait: 'बॉक्स पढ़ें और "आगे" दबाएँ', play: 'गेम पर लौटें', again: 'फिर से', thanks: 'ट्यूटोरियल पूरा! खेल का आनंद लें',
+  fold: 'समेटें', title: 'ट्यूटोरियल', next: 'आगे', skip: 'बंद करें', do: 'अब खुद चाल चलें', skipQ: 'ट्यूटोरियल बंद करें?', wait: 'बॉक्स पढ़ें और "आगे" दबाएँ', play: 'गेम पर लौटें', again: 'फिर से', thanks: 'ट्यूटोरियल पूरा! खेल का आनंद लें',
   't.hello': 'बैकारेट में आपका स्वागत है!', 'b.hello': 'असली टेबल पर एक राउंड खेलते हुए दांव लगाना और नियम सीखें (लगभग 2 मिनट)।<br>बैकारेट में आप अंदाज़ा लगाते हैं कि कौन-सा हैंड, <b>प्लेयर</b> या <b>बैंकर</b>, <b>9 के ज़्यादा करीब</b> रहेगा।',
   't.hands': 'कार्ड कहाँ आते हैं', 'b.hands': 'दोनों हैंड, PLAYER और BANKER, यहाँ बाँटे जाते हैं। इनमें से कोई भी व्यक्ति नहीं है — ये बस <b>हैंड के नाम</b> हैं। आप सिर्फ़ इस पर दांव लगाते हैं कि कौन जीतेगा; हर कार्ड खींचने का फ़ैसला नियम करते हैं।',
   't.seat': 'आपकी सीट', 'b.seat': 'बीच वाली <b>सीट 3</b> आपकी है। दांव लगाने के लिए PLAYER, BANKER, TIE या पेयर पर चिप्स रखें। बाकी सीटों पर बॉट खिलाड़ी बैठे हैं।',
@@ -308,7 +415,7 @@ hi: {
   'o.hide': 'दोबारा न दिखाएँ', 'o.later': 'बाद में', 'o.go': 'ट्यूटोरियल शुरू करें', entry: 'खेलकर सीखें', 'entry.d': 'असली टेबल पर एक राउंड खेलते हुए दांव लगाना और नियम सीखें (लगभग 2 मिनट)',
 },
 ar: {
-  title: 'الدرس التعليمي', next: 'التالي', skip: 'خروج', do: 'قم بالحركة بنفسك', skipQ: 'الخروج من الدرس التعليمي؟', wait: 'اقرأ المربع ثم اضغط «التالي»', play: 'العودة إلى اللعبة', again: 'مرة أخرى', thanks: 'اكتمل الدرس! استمتع باللعب',
+  fold: 'طيّ', title: 'الدرس التعليمي', next: 'التالي', skip: 'خروج', do: 'قم بالحركة بنفسك', skipQ: 'الخروج من الدرس التعليمي؟', wait: 'اقرأ المربع ثم اضغط «التالي»', play: 'العودة إلى اللعبة', again: 'مرة أخرى', thanks: 'اكتمل الدرس! استمتع باللعب',
   't.hello': 'مرحبًا بك في الباكارا!', 'b.hello': 'تعلّم طريقة الرهان والقواعد بلعب جولة واحدة على طاولة حقيقية (حوالي دقيقتين).<br>في الباكارا تخمّن أي يد، <b>اللاعب</b> أم <b>المصرف</b>، تنتهي <b>أقرب إلى 9</b>.',
   't.hands': 'أين توضع الأوراق', 'b.hands': 'هنا تُوزَّع اليدان PLAYER وBANKER. ليست أيٌّ منهما شخصًا — إنهما مجرد <b>اسمين لليدين</b>. أنت تراهن فقط على أيهما يفوز؛ والقواعد تقرر كل سحب.',
   't.seat': 'مقعدك', 'b.seat': '<b>المقعد 3</b> في الوسط هو مقعدك. ضع الرقائق على PLAYER أو BANKER أو TIE أو الأزواج لتراهن. يجلس لاعبون آليون في المقاعد الأخرى.',
