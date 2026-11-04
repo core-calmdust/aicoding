@@ -3485,7 +3485,11 @@ function updateBoss(isPlayerInvincible) {
     }
 
     b.def.fight(b);
-    if (tutorial && IS_MOBILE) b.y += 150; // スマホのチュートリアルは説明パネルに隠れないよう下げる
+    if (tutorial && IS_MOBILE) { // スマホのチュートリアルは、ボスの上端が説明パネルの下に来るよう下げる（画面の位置から逆算）
+        const target = tutPanelBottom + 16; let lo = -400, hi = config.canvasHeight;
+        for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (project(config.canvasWidth / 2, m, 50).y < target) lo = m; else hi = m; }
+        b.y = Math.max(b.y, hi + b.def.r * BS * 1.4);
+    }
     b.t++;
     if (b.t > 60 * 30) { b.state = 'leave'; b.invuln = true; } // 30秒で撤退
 
@@ -3560,7 +3564,7 @@ const TUTORIAL_STEPS = [
 
 function startTutorial() {
     startGame('STANDARD MODE');
-    tutorial = { step: 0, clearT: 0, hitFlash: 0, movedL: 0, movedR: 0, slowFrames: 0, survive: 0, glazes: 0, kills: 0, items: 0, smash: 0, bossDone: false, afterBoss: 0, doneT: 0, lastX: config.canvasWidth / 2, spawnT: 0 };
+    tutorial = { stepF: frameCount, step: 0, clearT: 0, hitFlash: 0, movedL: 0, movedR: 0, slowFrames: 0, survive: 0, glazes: 0, kills: 0, items: 0, smash: 0, bossDone: false, afterBoss: 0, doneT: 0, lastX: config.canvasWidth / 2, spawnT: 0 };
     energy = config.energyTotal;
 }
 
@@ -3580,7 +3584,7 @@ function tutorialHit() {
 const TUT_SHIELD = 6, TUT_INV = 7, TUT_BOSS = 8, TUT_HYPER = 9; // チュートリアルのステップ番号
 function tutorialStepStart(i) {
     const t = tutorial;
-    t.spawnT = 0;
+    t.spawnT = 0; t.stepF = frameCount;
     comets = []; enemyBullets = [];
     // 前のステップで溜まった回数を持ち越さない（グレイズ等が即クリアになるのを防ぐ）
     t.glazes = 0; t.kills = 0; t.items = 0; t.smash = 0;
@@ -3708,17 +3712,27 @@ function drawTutorialPanel(ctx2) {
     const t = tutorial;
     if (!t) return;
     const st0 = t.step < TUTORIAL_STEPS.length ? TUTORIAL_STEPS[t.step] : null;
-    const S = IS_MOBILE ? 1.45 : 1; // スマホはパネルごと拡大して読みやすく
+    const S = IS_MOBILE ? 1.35 : 1; // スマホはパネルごと拡大して読みやすく
     const w = Math.min(720, (HUD_W - 24) / S);
     ctx2.font = `600 17px ${config.fontFamily}`;
-    const hlFlags = [];
-    const lines = st0 ? wrapLines(ctx2, typeof st0.text === 'function' ? st0.text() : st0.text, w - 30, hlFlags) : [''];
+    let hlFlags = [], lines = [''], paraA = 1, nPara = 1, curPara = 0;
+    if (st0) {
+        const raw = typeof st0.text === 'function' ? st0.text() : st0.text;
+        if (IS_MOBILE) { // スマホは説明を1段落ずつ順番に見せる（一度に読む量を減らす）。枠の高さは一番長い段落に合わせて固定
+            const paras = raw.split('\n').filter(x => x.trim()), age = (frameCount - (t.stepF || 0)) / 60, per = 3.4;
+            nPara = paras.length; curPara = Math.floor(age / per) % nPara;
+            const ph = (age % per) / per; paraA = nPara > 1 ? Math.min(1, ph / 0.08, (1 - ph) / 0.08) : 1;
+            let maxN = 1; paras.forEach(pp => { maxN = Math.max(maxN, wrapLines(ctx2, pp, w - 30).length); });
+            lines = wrapLines(ctx2, paras[curPara], w - 30, hlFlags);
+            const padN = maxN - lines.length; for (let k = 0; k < padN; k++) { lines.push(''); hlFlags.push(false); }
+        } else lines = wrapLines(ctx2, raw, w - 30, hlFlags);
+    }
     const extra = (lines.length - 1) * 24;
     const cx = HUD_W / 2, y0 = IS_MOBILE ? 120 : 56, h = 80 + extra;
     tutPanelBottom = y0 + (h + 14) * S;
     ctx2.save();
     if (S !== 1) { ctx2.translate(cx, y0); ctx2.scale(S, S); ctx2.translate(-cx, -y0); }
-    ctx2.fillStyle = 'rgba(6, 2, 20, 0.5)';
+    ctx2.fillStyle = IS_MOBILE ? 'rgba(6, 2, 20, 0.72)' : 'rgba(6, 2, 20, 0.5)'; // スマホは後ろの彗星で文字が読みにくくならないよう濃く
     ctx2.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx2.lineWidth = 1;
     if (ctx2.roundRect) { ctx2.beginPath(); ctx2.roundRect(cx - w / 2, y0, w, h, 10); ctx2.fill(); ctx2.stroke(); }
@@ -3740,10 +3754,15 @@ function drawTutorialPanel(ctx2) {
     ctx2.fillText(`${T('tut.label')}  ${t.step + 1 - (IS_MOBILE && t.step > 1 ? 1 : 0)} / ${TUTORIAL_STEPS.length - (IS_MOBILE ? 1 : 0)}　${st.title()}`, cx, y0 + 19);
     ctx2.fillStyle = '#ffffff';
     ctx2.font = `600 17px ${config.fontFamily}`;
+    if (IS_MOBILE && nPara > 1) { // 段落の切り替わりを示す小さな点（右上）
+        for (let k = 0; k < nPara; k++) { ctx2.beginPath(); ctx2.arc(cx + w / 2 - 14 - (nPara - 1 - k) * 9, y0 + 15, 2.6, 0, Math.PI * 2); ctx2.fillStyle = k === curPara ? '#ffffff' : 'rgba(255,255,255,0.28)'; ctx2.fill(); }
+    }
+    ctx2.globalAlpha = paraA;
     lines.forEach((ln, k) => {
         ctx2.fillStyle = hlFlags[k] ? `hsl(${45 + Math.sin(frameCount * 0.12) * 8}, 100%, ${66 + Math.sin(frameCount * 0.2) * 8}%)` : '#ffffff'; // 強調行は金色で明滅
         ctx2.fillText(ln, cx, y0 + 44 + k * 24);
     });
+    ctx2.globalAlpha = 1;
     if (t.clearT > 0) {
         ctx2.fillStyle = `hsl(${(frameCount * 8) % 360}, 100%, 70%)`;
         ctx2.font = `800 20px ${config.fontFamily}`;
