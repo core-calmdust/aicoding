@@ -25,7 +25,7 @@
     const TH = window.THREE, E = new Proxy({}, { get: (_, k) => window.UrEngine[k] });   // (the engine may load after the board)
     const board = T3.MODELS.ur(true), U = board.userData, Y = U.top;
     const rule = opts.rule || 'finkel';
-    T3.show('ur', board);
+    T3.show('ur', board); if (T3.play) T3.play(true);   // the play camera (the rules tour needs it; table play sets it too)
     // framing: the whole board with the trays, from the player's side; an upright phone: the board turned, the camera rolled
     const tall = innerHeight > innerWidth * 1.15;
     const ROT = tall ? -Math.PI / 2 : 0;

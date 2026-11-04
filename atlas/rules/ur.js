@@ -217,12 +217,14 @@
       kit = window.UrKit.make(T3, { sfx: x => SND[x] && SND[x]() });
       later(() => go(0), 250);
     }).catch(() => say('⚠'));
-    return {
+    const sess = {
       stop() { stopped = true; if (kit) kit.stop(); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('keydown', onKey, true); el.remove(); css.remove(); },
       panel: el,
       _debug: { step: () => step, phase: () => phase, played: () => played, n: () => n, sel: () => sel, legal: () => E && st ? legal() : [], st: () => st && st.pos.map(a => a.slice()),
         cell: (r, c) => kit && kit.projCell(r, c), slot: (side, kind, kk) => kit && kit.projSlot(side, kind, kk), rc: i => E && rcOf(0, i), go },
     };
+    window.__rulesSess = sess;   // (tests)
+    return sess;
   }
   window.AtlasRules = window.AtlasRules || {};
   window.AtlasRules.ur = { start };
