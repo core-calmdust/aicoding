@@ -14,7 +14,7 @@
        kit.project(r, c) → screen point (tests, the tour's pointer)
        kit.stop()
    Board coordinates: the model's own (horizontal; row 0 = Dark's lane far, row 2 = Light's lane near).
-   On a phone held upright the board turns (rot.v) and the camera keeps the long side up the screen.
+   On a phone held upright the camera is rolled so the long side runs up the screen: big block at the bottom, Light's lane on the right.
    Rendering is on demand (Table3D.kick while anything moves).
    ===================================================================== */
 (function () {
@@ -28,12 +28,13 @@
     T3.show('ur', board); if (T3.play) T3.play(true);   // the play camera (the rules tour needs it; table play sets it too)
     // framing: the whole board with the trays, from the player's side; an upright phone: the board turned, the camera rolled
     const tall = innerHeight > innerWidth * 1.15;
-    const ROT = 0;   // (an upright phone: the camera is rolled instead — screen up = world −x, the long board runs up the screen)
-    // upright phone: as the 2D page, your lane on the right and the big block on top. The camera's quarter turn alone puts Light's
-    // lane on the left, so rows 0 and 2 change places (the two outer rows carry the same motifs: the board looks the same)
-    const FL = tall, rowOf = r => FL ? 2 - r : r, sideOf = s => FL ? 1 - s : s;
+    const ROT = 0;   // (an upright phone: the camera is rolled instead — the long board runs up the screen)
+    // upright phone (2026-11-05, as the 2D game's 'vf' board): the board turned half round — the big block at the bottom, your lane
+    // (Light) on the right. The camera is rolled the other way (roll: -1, screen up = world +x), which keeps Light's lane on the
+    // right by itself, so the rows stay as they are
+    const FL = false, rowOf = r => FL ? 2 - r : r, sideOf = s => FL ? 1 - s : s;
     const W = U.W + 1.6, D = U.D + 2.4;   // the trays and dice beside the long sides
-    if (T3.fit) T3.fit(tall ? { w: U.W + .5, d: U.D + 1.5, y: Y, pitch: 1.5, roll: true } : { w: U.W + .5, d: U.D + 1.9, y: Y, pitch: 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
+    if (T3.fit) T3.fit(tall ? { w: U.W + .5, d: U.D + 1.5, y: Y, pitch: 1.5, roll: -1 } : { w: U.W + .5, d: U.D + 1.9, y: Y, pitch: 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));

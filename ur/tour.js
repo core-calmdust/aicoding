@@ -9,6 +9,10 @@
   'use strict';
   const BASE = (() => { const s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^/]*$/, '') : 'ur/'; })();
   const E = () => window.UrEngine, B = () => window.UrBoard2D;
+  const mqV = matchMedia('(pointer: coarse) and (max-width: 760px) and (orientation: portrait)');
+  // like the game (ur/app.js orient()): stand the board up only when its squares come out at least as big as lying across —
+  // on a short phone (e.g. 375×667) the board lies across. ~438 px of the height go to the tabs, steps, text, task, dice and buttons
+  const vert = () => mqV.matches && (innerHeight - 438) / 8.96 >= (innerWidth - 40) / 9.24;
 
   /* ---------------- texts (10 languages) ---------------- */
   const TX = {
@@ -204,10 +208,23 @@
     },
   };
 
+  // upright phones: the board stands with your lane (Light) on the right — the texts that say where things are
+  const TXV = {
+    ja: { 'board.b': 'あなたの駒は右の列から入り、光る矢印の順に14マス進んでゴールします。中央の列は相手と共有です。', 'enter.ok': '入りました！右の列を進んでいきます', 'goal.ok': 'ゴール！盤の外の右上に並びます', notMine: 'あなたの駒は右の列の駒です' },
+    en: { 'board.b': 'Your pieces enter on the right-hand column and follow the glowing arrows for 14 squares, then go home. The middle column is shared with your rival.', 'enter.ok': 'It is in! It runs up your right-hand column first', 'goal.ok': 'Home! It waits at the top right, off the board', notMine: 'Your pieces are the ones in the right-hand column' },
+    zh: { 'board.b': '你的棋子从右边一列进入，按发光箭头走14格后到达终点。中间一列与对手共用。', 'enter.ok': '入场了！先沿右边一列前进', 'goal.ok': '到达终点！排在盘外右上方', notMine: '你的棋子在右边一列' },
+    ko: { 'board.b': '내 말은 오른쪽 줄에서 들어와 빛나는 화살표를 따라 14칸을 간 뒤 골인합니다. 가운데 줄은 상대와 함께 씁니다.', 'enter.ok': '들어왔어요! 먼저 오른쪽 줄을 나아갑니다', 'goal.ok': '골인! 판 밖 오른쪽 위에 놓입니다', notMine: '내 말은 오른쪽 줄의 말이에요' },
+    es: { 'board.b': 'Tus fichas entran por la columna derecha y siguen las flechas 14 casillas hasta la meta. La columna central se comparte con el rival.', 'enter.ok': '¡Dentro! Primero recorre tu columna derecha', 'goal.ok': '¡Meta! Se coloca arriba a la derecha, fuera del tablero', notMine: 'Tus fichas son las de la columna derecha' },
+    fr: { 'board.b': 'Vos pions entrent par la colonne de droite et suivent les flèches sur 14 cases jusqu’à l’arrivée. La colonne du milieu est partagée avec l’adversaire.', 'enter.ok': 'Il est entré ! Il parcourt d’abord votre colonne de droite', 'goal.ok': 'Arrivé ! Il se range en haut à droite, hors du plateau', notMine: 'Vos pions sont ceux de la colonne de droite' },
+    pt: { 'board.b': 'Suas peças entram pela coluna da direita e seguem as setas por 14 casas até a chegada. A coluna do meio é compartilhada com o rival.', 'enter.ok': 'Entrou! Primeiro ela percorre sua coluna da direita', 'goal.ok': 'Chegou! Ela fica no alto à direita, fora do tabuleiro', notMine: 'Suas peças são as da coluna da direita' },
+    de: { 'board.b': 'Deine Steine ziehen in der rechten Spalte ein und folgen den leuchtenden Pfeilen 14 Felder bis ins Ziel. Die mittlere Spalte teilst du mit dem Gegner.', 'enter.ok': 'Drin! Er läuft zuerst durch deine rechte Spalte', 'goal.ok': 'Im Ziel! Er wartet oben rechts neben dem Brett', notMine: 'Deine Steine sind die in der rechten Spalte' },
+    hi: { 'board.b': 'आपके मोहरे दाईं कतार से आते हैं और चमकते तीरों के क्रम में 14 खाने चलकर घर पहुँचते हैं। बीच की कतार विरोधी के साथ साझा है।', 'enter.ok': 'अंदर आ गया! पहले यह दाईं कतार में चलेगा', 'goal.ok': 'घर! यह बोर्ड के बाहर ऊपर दाईं ओर लगता है', notMine: 'आपके मोहरे दाईं कतार के हैं' },
+    ar: { 'board.b': 'تدخل قطعك من العمود الأيمن وتتبع الأسهم المضيئة 14 مربعًا ثم تصل إلى النهاية. العمود الأوسط مشترك مع الخصم.', 'enter.ok': 'دخلت! تسير أولاً في عمودك الأيمن', 'goal.ok': 'وصلت! تصطف أعلى اليمين خارج اللوحة', notMine: 'قطعك هي التي في العمود الأيمن' },
+  };
   /* ---------------- state ---------------- */
   const O = { lang: 'ja', design: 'museum', pieces: 'orig', speed: 1 };
   const lang = () => { const l = typeof O.lang === 'function' ? O.lang() : O.lang; return TX[l] ? l : 'en'; };
-  const T = (k, v) => { let s = TX[lang()][k]; if (s == null) s = TX.en[k]; if (s == null) s = k; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
+  const T = (k, v) => { let s = (vert() && TXV[lang()] && TXV[lang()][k]) || TX[lang()][k]; if (s == null) s = TX.en[k]; if (s == null) s = k; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
   const snd = k => { try { O.sound && O.sound(k); } catch (e) {} };
   let tour = null, mountEl = null;
   const PH = {};   // page-local phase (task text) — reset in setup
@@ -218,6 +235,9 @@
   const rcOf = (side, i) => { const q = E().coords('finkel', side, i); return q ? { r: q[0], c: q[1] } : null; };
   const idxAt = (side, r, c) => { const P = E().pathOf('finkel', side); for (let i = 0; i < P.length; i++) if (P[i][0] === r && P[i][1] === c) return i + 1; return -1; };
 
+  // phones held upright: the board stands up, turned half round like the game (big block at the bottom, your lane on the right;
+  // ur/app.js mqV + orient()); otherwise it lies across as on PC
+  const ASPECT = () => vert() ? 0.56 : 924 / 690;
   /* ---------------- CSS ---------------- */
   const CSS = `
 .rt-intro-hero img[src*="img/board-"]{width:min(240px,42vw);height:auto;aspect-ratio:904/426}
@@ -234,6 +254,10 @@
 .rt-row .urt-choice{justify-content:flex-start}
 .urt-choice button{min-width:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.2));background:rgba(255,255,255,.06);color:var(--text,#eee);font:700 16px/1.2 inherit;cursor:pointer}
 .urt-choice button:hover{background:rgba(255,255,255,.12)}
+/* upright phones: the tall board fills the box above a slim dice row */
+.urt.urt-v{gap:6px}
+.urt.urt-v .urt-dr{flex:0 0 52px;gap:8px}
+.urt.urt-v .urt-d{height:100%;max-width:62%}
 @media (hover: hover) and (pointer: fine) and (min-width: 820px){.urt-btn{font-size:16px;padding:9px 22px}.urt-n{font-size:28px}}
 @media (max-width: 520px){
 .rt .rt-intro{gap:6px}.rt .rt-intro-hero{gap:10px}.rt .rt-intro-hero img[src*="img/board-"]{width:34vw}
@@ -249,8 +273,9 @@
   // cfg: { s, rolls:[n,...] (the dice that will come up, in order), marks(s, ctl) → marks, noDice, onMove(m, again, ctl) , onPass(ctl) }
   function game(api, cfg) {
     const host = api.board;
-    host.innerHTML = `<div class="urt" dir="ltr"><div class="urt-b"></div><div class="urt-dr"${cfg.noDice ? ' style="visibility:hidden"' : ''}><div class="urt-d"></div><span class="urt-n"></span><button type="button" class="urt-btn">${T('roll')}</button></div></div>`;
-    const view = B().mount(host.querySelector('.urt-b'), { orient: 'h', design: O.design, pieces: O.pieces, speed: O.speed });
+    const V = vert();
+    host.innerHTML = `<div class="urt${V ? ' urt-v' : ''}" dir="ltr"><div class="urt-b"></div><div class="urt-dr"${cfg.noDice ? ' style="visibility:hidden"' : ''}><div class="urt-d"></div><span class="urt-n"></span><button type="button" class="urt-btn">${T('roll')}</button></div></div>`;
+    const view = B().mount(host.querySelector('.urt-b'), V ? { orient: 'v', flip: true, notch: true, design: O.design, pieces: O.pieces, speed: O.speed } : { orient: 'h', design: O.design, pieces: O.pieces, speed: O.speed });
     const dc = B().dice(host.querySelector('.urt-d'), { style: O.pieces });
     const btn = host.querySelector('.urt-btn'), nEl = host.querySelector('.urt-n');
     const ctl = { s: E().clone(cfg.s), n: null, phase: cfg.noDice ? 'none' : 'roll', k: 0, busy: false, view, extra: [] };
@@ -445,7 +470,7 @@
     if (tour && el === mountEl) return tour;
     injectCss(); mountEl = el;
     tour = RuleTour.create({
-      mount: el, store: 'aicoding-ur-rules', lang, pages: ALL, aspect: 924 / 690,
+      mount: el, store: 'aicoding-ur-rules', lang, pages: ALL, aspect: ASPECT,
       close: () => { teardown(); O.onClose && O.onClose(); },
       play: O.onPlay ? () => { teardown(); O.onPlay(); } : null,
       lessons: O.onLessons ? () => { teardown(); O.onLessons(); } : null,
@@ -453,6 +478,10 @@
     });
     return tour;
   }
+  // turning the phone: build the page again with the board the other way round
+  let lastV = vert();
+  const reorient = () => { const v = vert(); if (v === lastV) return; lastV = v; if (tour && tour.visible()) { teardown(); tour.open(tour.page); } };
+  if (mqV.addEventListener) mqV.addEventListener('change', reorient); addEventListener('resize', reorient);
   let opened = false;
   const UrTour = {
     open(o = {}) {

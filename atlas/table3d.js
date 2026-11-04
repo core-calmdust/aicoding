@@ -1264,7 +1264,7 @@
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
-  //   o.roll: the camera is rolled 90° (screen up = world −x): o.w then runs along the screen height, o.d along its width
+  //   o.roll: the camera is rolled 90° (screen up = world −x; roll: -1 the other way, screen up = world +x): o.w then runs along the screen height, o.d along its width
   let fitTo = null;
   function fit(o) { fitTo = o || null; }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
@@ -1571,7 +1571,7 @@
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
-      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     orthoBlend(orthoWant ? camK : 0);   // (the projection flattens on the camera's own curve: it lands with it, no late zoom)
     if (museumOn) glare(camK);
     if (quietOn) {
