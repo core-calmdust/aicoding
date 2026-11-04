@@ -29,6 +29,8 @@
     mancala: ['種をまくアフリカの遊び', 'Sow seeds, from Africa', '源自非洲的播子棋', '씨앗을 뿌리는 아프리카 놀이', 'Siembra africana', 'Semailles africaines', 'Semeadura africana', 'Säen – aus Afrika', 'बीज बोने का अफ़्रीकी खेल', 'زرع البذور من أفريقيا'],
     backgammon: ['最古級のサイコロ競走', 'An ancient dice race', '古老的骰子竞速棋', '가장 오래된 주사위 경주', 'Antigua carrera de dados', 'Antique course aux dés', 'Antiga corrida de dados', 'Uraltes Würfelrennen', 'प्राचीन पासा दौड़', 'سباق نرد عريق'],
     morris: ['3つ並べて駒を取る', 'Make mills to capture', '连成三子即吃子', '세 개 이어 잡기', 'Haz molinos y captura', 'Formez des moulins', 'Faça moinhos', 'Mühlen bilden', 'तीन जोड़ो, मोहरे मारो', 'كوّن ثلاثية لتأسر'],
+    agon: ['女王を盤の中心へ', 'Bring your queen to the center', '把女王送到中心', '여왕을 중앙으로', 'Lleva tu reina al centro', 'Menez votre reine au centre', 'Leve sua rainha ao centro', 'Bring die Königin zur Mitte', 'रानी को केंद्र तक ले जाओ', 'أوصل ملكتك إلى المركز'],
+    ur: ['古代メソポタミアの双六', 'A race from ancient Mesopotamia', '古美索不达米亚的竞速棋', '고대 메소포타미아의 경주', 'Carrera de la antigua Mesopotamia', 'Course de l’antique Mésopotamie', 'Corrida da antiga Mesopotâmia', 'Rennspiel aus Mesopotamien', 'प्राचीन मेसोपोटामिया की दौड़', 'سباق من بلاد الرافدين'],
     hex: ['向かいの辺をつなげ', 'Connect your two sides', '连通己方两边', '마주 보는 변 잇기', 'Une tus dos lados', 'Reliez vos deux bords', 'Ligue seus dois lados', 'Verbinde deine Seiten', 'दोनों किनारे जोड़ो', 'صِل ضلعيك'],
   };
   const HI = ['ヒストリア', 'Historia', '历史', '히스토리아', 'Historia', 'Historia', 'Historia', 'Historia', 'हिस्टोरिया', 'هيستوريا'];   // the Historia viewer's button (same names as atlas/historia.js)
