@@ -37,13 +37,14 @@ function stateAt(h, k) {   // board, pot, stacks, last actions after the first k
   all.forEach(e => { if (e.amt && e.a !== 'return') { pot += e.amt; stacks[e.s] -= e.amt; } if (e.a === 'return') { pot -= e.amt; stacks[e.s] += e.amt; } if (e.a === 'fold') folded[e.s] = true; last[e.s] = e; });
   return { street, board: h.board.slice(0, nb), pot, stacks, folded, last, cur, end: k >= st.length };
 }
-function label(e) {
+function label(e, h) {
+  const m$ = n => A.MH(h || R.h, n);
   if (!e) return '';
   const m = { fold: t('act.fold'), check: t('act.check'), sb: t('act.sb'), bb: t('act.bb'), bring: t('act.bring') };
-  if (m[e.a]) return m[e.a] + (e.amt && (e.a === 'sb' || e.a === 'bb' || e.a === 'bring') ? ' ' + e.amt : '');
-  if (e.a === 'call') return t('act.call') + ' ' + e.amt;
-  if (e.a === 'bet') return t('act.bet') + ' ' + e.to;
-  if (e.a === 'raise') return t('act.raise') + ' ' + e.to;
+  if (m[e.a]) return m[e.a] + (e.amt && (e.a === 'sb' || e.a === 'bb' || e.a === 'bring') ? ' ' + m$(e.amt) : '');
+  if (e.a === 'call') return t('act.call') + ' ' + m$(e.amt);
+  if (e.a === 'bet') return t('act.bet') + ' ' + m$(e.to);
+  if (e.a === 'raise') return t('act.raise') + ' ' + m$(e.to);
   if (e.a === 'draw') return t('act.drawN', { n: e.n });
   return e.a;
 }
@@ -74,10 +75,10 @@ function draw() {
   } else if (note && note.a === 'draw') coachBox = `<div class="verdict g${note.grade}"><b>${esc(t('grade.' + note.grade))}</b><span>${esc(t('rv.draw', { n: note.drew.length, m: note.plan.length }))}</span></div>`;
   else if (S.end) {
     const notes = h.notes || [], bad = notes.filter(n => n.grade >= 2).length, good = notes.filter(n => n.grade === 0).length;
-    coachBox = `<div class="rv-sum"><b>${esc(h.net[me] > 0 ? t('res.won', { n: h.net[me] }) : h.net[me] < 0 ? t('res.lost', { n: -h.net[me] }) : t('res.even'))}</b><span>${esc(t('rv.sum', { n: notes.length, g: good, b: bad }))}</span></div>`;
+    coachBox = `<div class="rv-sum"><b>${esc(h.net[me] > 0 ? t('res.won', { n: A.MH(h, h.net[me]) }) : h.net[me] < 0 ? t('res.lost', { n: A.MH(h, -h.net[me]) }) : t('res.even'))}</b><span>${esc(t('rv.sum', { n: notes.length, g: good, b: bad }))}</span></div>`;
   } else coachBox = `<p class="muted">${esc(t('rv.pick'))}</p>`;
-  $('#reviewModal').innerHTML = `<h2>${esc(t('rv.h', { n: h.hand || '' }))} <small>${esc(A.vName(h.v))} · ${esc(t('lim.' + h.limit))} · ${h.sb}/${h.bb}</small></h2>` +
-    `<div class="rv-grid"><div class="rv-left"><div class="rv-board">${V.board ? mini(S.board.concat(Array(5 - S.board.length).fill(null)).map((c, k) => k < S.board.length ? c : undefined).filter(c => c !== undefined)) : ''}<span class="rv-pot">${esc(t('pot'))} <b>${S.pot}</b></span></div><div class="rv-seats">${seats}</div>` +
+  $('#reviewModal').innerHTML = `<h2>${esc(t('rv.h', { n: h.hand || '' }))} <small>${esc(A.vName(h.v))} · ${esc(t('lim.' + h.limit))} · ${A.MH(h, h.sb)}/${A.MH(h, h.bb)}</small></h2>` +
+    `<div class="rv-grid"><div class="rv-left"><div class="rv-board">${V.board ? mini(S.board.concat(Array(5 - S.board.length).fill(null)).map((c, k) => k < S.board.length ? c : undefined).filter(c => c !== undefined)) : ''}<span class="rv-pot">${esc(t('pot'))} <b>${A.MH(h, S.pot)}</b></span></div><div class="rv-seats">${seats}</div>` +
     `<div class="rv-nav"><button class="szb" data-go="0">⏮</button><button class="szb" data-go="-1">◀</button><span>${R.k} / ${st.length}</span><button class="szb" data-go="1">▶</button><button class="szb" data-go="9999">⏭</button></div>${coachBox}</div>` +
     `<div class="rv-right"><div class="rv-acts">${acts.join('')}</div></div></div>` +
     `<div class="modal-actions">${R.i >= 0 ? `<button class="mbtn" id="rvBack">${esc(t('rv.back'))}</button>` : ''}<button class="mbtn go" id="rvClose">${esc(t('close'))}</button></div>`;
