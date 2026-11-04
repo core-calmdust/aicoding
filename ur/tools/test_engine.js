@@ -106,7 +106,7 @@ console.log('— 手の生成');
 
 console.log('— 評価と AI');
 { const s = E.newGame('finkel'); const w = E.winProb(s); ok(w > 0.45 && w < 0.6, 'start winProb ' + w.toFixed(3));
-  const ev = E.evaluate(st('finkel', [7], [9]), 2); ok(ev.length && ev[0].move.capture, 'evaluate prefers capture'); ok(ev.every((x, i) => i === 0 || x.wp <= ev[i - 1].wp), 'evaluate sorted');
+  const ev = E.evaluate(st('finkel', [10], [12, 15, 15, 15]), 2); ok(ev.length && ev[0].move.capture, 'evaluate prefers capture'); ok(ev.every((x, i) => i === 0 || x.wp <= ev[i - 1].wp), 'evaluate sorted');
   ok(ev.every(x => x.wp >= 0 && x.wp <= 1), 'wp in 0..1');
   const s2 = st('finkel', [14, 15, 15, 15, 15, 15, 15], [], 0); ok(E.winProb(s2) > 0.25, 'near-win winProb');
   const ev2 = E.evaluate(s2, 1); ok(ev2[0].wp === 1, 'winning move wp=1'); }
