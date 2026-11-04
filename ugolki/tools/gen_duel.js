@@ -35,7 +35,7 @@ function features(pos, m) {
 }
 let made = 0;
 for (let g = 0; g < GAMES; g++) {
-  const lv = [6 + Math.floor(rand() * 6), 6 + Math.floor(rand() * 6)];
+  const lv = [4 + Math.floor(rand() * 9), 4 + Math.floor(rand() * 9)];
   const moves = [];
   let pos = E.Pos.from(null);
   for (let ply = 0; ply < 170; ply++) {
@@ -63,7 +63,9 @@ for (let g = 0; g < GAMES; g++) {
         }
       }
     }
-    const r = E.think(null, moves, lv[ply & 1], rand, 'c33');
+    // variety: now and then a random move in the middlegame (different endgame structures, not only the AI's favourite ones)
+    let r = E.think(null, moves, lv[ply & 1], rand, 'c33');
+    if (ply >= 16 && ply <= 70 && rand() < 0.12) { const L = pos.moves(); r = { move: L[Math.floor(rand() * L.length)] }; }
     if (r.move < 0 || r.move === undefined) break;
     moves.push(r.move); pos.play(r.move);
   }
