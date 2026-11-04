@@ -181,22 +181,24 @@ function init(o) {
 // smoothly so that it sits centred between the header bar and the top of the opened dock; closing scrolls it back.
 // If it is taller than that space, the game is laid out smaller first (its --vh, which every game sizes the board and the
 // info column from) so nothing hides under the header or the dock. position:relative + top (not transform), so the board's
-// pointer maths and fixed dialogs keep working.
+// pointer maths and fixed dialogs keep working (a translate / scale only for the 260 ms of the move itself, see flip).
 function dockCenter() {
   const app = document.querySelector('.app'), dock = document.getElementById('dock') || document.querySelector('.dock');
   if (!app || !dock) { if (!dockCenter.tried) { dockCenter.tried = 1; setTimeout(dockCenter, 1500); } return; }
   const root = document.documentElement, M = 10;   // M: breathing room above / below the content
   // D: how long the board takes to move / resize — together with the dock (its panel's height: .25s ease) (2026-11-01)
-  const D = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 260;
+  // (common spec: animations are not left out for prefers-reduced-motion)
+  const D = 260;
   if (getComputedStyle(app).position === 'static') app.style.position = 'relative';
-  app.style.top = '0px';   // a length (not auto), so the change of top can transition
-  app.style.transition = D ? `top ${D}ms ease` : 'none';
-  let cur = 0, own = 0, fitted = false, rt = 0, anim = 0;
+  app.style.top = '0px';
+  let cur = 0, own = 0, fitted = false, rt = 0;
   const isOpen = () => { const ds = getComputedStyle(dock); return document.body.classList.contains('dock-open') && ds.display !== 'none' && ds.position === 'fixed'; };
   const shift = () => -(parseFloat(getComputedStyle(app).top) || 0);   // the shift right now (mid-transition too)
   const bounds = () => {   // the visible content of .app (its children), as if not shifted
     let t = Infinity, b = -Infinity;
-    for (const c of app.children) { const cs = getComputedStyle(c); if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); }
+    const walk = list => { for (const c of list) { const cs = getComputedStyle(c); if (cs.display === 'contents') { walk(c.children); continue; }   // (mancala PC: .side / .side-in are display:contents — their cards are the info row)
+      if (cs.display === 'none' || cs.position === 'fixed' || cs.visibility === 'hidden') continue; const r = c.getBoundingClientRect(); if (r.height < 2) continue; t = Math.min(t, r.top); b = Math.max(b, r.bottom); } };
+    walk(app.children);
     if (t === Infinity) return null;
     // a review box fixed right under the board and the info column (connect4 / dots / morris rvbox.js: placed 16px below them)
     const fb = document.querySelector('body > .rbox'); if (fb && fb.getClientRects().length && getComputedStyle(fb).position === 'fixed') b += 16 + fb.offsetHeight;
@@ -215,14 +217,21 @@ function dockCenter() {
     return () => an.forEach((a, i) => { try { a.currentTime = was[i]; } catch (e) {} });
   };
   const vhPx = () => { const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;visibility:hidden;height:var(--vh)'; app.appendChild(pr); const h = pr.getBoundingClientRect().height; pr.remove(); return h; };
-  const relayout = () => { own++; window.dispatchEvent(new Event('resize')); setTimeout(() => own--, 0); };
+  // (dockrelayout: listeners that must follow at once, within the probe — the 3D skins' info column fitted to the board)
+  // (final: the FLIP's end — the 3D table draws its crisp picture in that same task)
+  const relayout = final => { own++; window.dispatchEvent(new Event('resize')); window.dispatchEvent(new CustomEvent('dockrelayout', { detail: { final: final === true } })); setTimeout(() => own--, 0); };
   // the reduction R is applied as --vh (an !important rule on <html> and <body>: some games re-declare --vh on body or rewrite
   // the inline value on resize) and as DockFit.extra for games that size the board in JS
   let R = 0, base = 0, lastStep = 0;
   const css = document.createElement('style'); css.id = 'dockFitCss'; document.head.appendChild(css);
   const cmp = document.createElement('style'); cmp.id = 'dockCompactCss';
-  cmp.textContent = `html.dock-compact .side .kifu-card, html.dock-compact .side .info-line, html.dock-compact .side #graph, html.dock-compact .side .pl-info{display:none!important}
-html.dock-compact .side, html.dock-compact .side .side-in{height:auto!important;max-height:none!important}
+  // (the record is never hidden — common spec 2026-11-04: its box gets lower instead; the coach box gets lower too and scrolls)
+  cmp.textContent = `html.dock-compact .side .info-line, html.dock-compact .side #graph, html.dock-compact .side .pl-info{display:none!important}
+html.dock-compact:not(.side-col) .side, html.dock-compact:not(.side-col) .side .side-in{height:auto!important;max-height:none!important}
+html.dock-compact.side-col .side .side-in > .kifu-card{flex:1 1 0!important;min-height:72px!important}
+html.dock-compact.side-col .side .side-in > .kifu-card .kifu{min-height:0!important}
+html.dock-compact.side-col .side .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2 1 0!important;min-height:96px!important;overflow-y:auto!important}
+html.dock-compact.side-col .side .side-in > .review-card.show{flex:1.3 1 0!important;min-height:96px!important}
 html.dock-compact .side .card{padding-top:9px!important;padding-bottom:9px!important}
 html.dock-compact .side .players .player{padding-top:8px!important;padding-bottom:8px!important}
 html.dock-compact .side .players .count, html.dock-compact .side .players .count > span:first-child, html.dock-compact .side .players [id^=pip]{font-size:20px!important;line-height:1.1!important}
@@ -289,48 +298,115 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     if (u[1] - u[0] > bot - top - 2 * M) d = Math.round(u[0] - top - M);   // still taller than the space: keep its top under the header
     return d;
   };
-  const moveTo = d => { if (d != null && d !== cur) { cur = d; app.style.top = -d + 'px'; } };
-  // CSS 'ease' (cubic-bezier(.25,.1,.25,1)), the curve of the shift and of the dock
-  const ease = t => { let a = 0, b = 1, x = t; for (let i = 0; i < 24; i++) { x = (a + b) / 2; const px = 3 * .25 * x * (1 - x) * (1 - x) + 3 * .25 * x * x * (1 - x) + x * x * x; if (px < t) a = x; else b = x; } return 3 * .1 * x * (1 - x) * (1 - x) + 3 * x * x * (1 - x) + x * x * x; };
-  // the size from R0 to R1 in step with the shift (top transitions over the same time): --vh is written once per frame
-  const tween = (R0, R1, done) => {
-    cancelAnimationFrame(anim);
-    if (!D || Math.abs(R1 - R0) < 1) { R = R1; apply(); if (done) done(); return; }
-    const t0 = performance.now();
-    const step = now => { const k = Math.min(1, (now - t0) / D); R = R0 + (R1 - R0) * ease(k); if (k >= 1) R = R1; apply(); if (k < 1) anim = requestAnimationFrame(step); else { anim = 0; if (done) done(); } };
-    anim = requestAnimationFrame(step);
+  // (the 3D pages that place the board group themselves between the bar and the dock — atlas/skin/common.js pcFit — are not
+  // shifted on top of that: two centrings corrected each other once the move was over)
+  const selfPlaced = () => { try { return !!(window.__atlasPcFit && window.__atlasPcFit.on()); } catch (e) { return false; } };
+  const moveTo = d => { if (d != null && selfPlaced()) d = 0; if (d != null && d !== cur) { cur = d; app.style.top = -d + 'px'; } };
+  // the move / resize is shown with FLIP (2026-11-04): the final layout is set at once (one real resize: --vh, the 3D canvas,
+  // the info column), then each child of .app is drawn from where it was to where it is now with a compositor animation of
+  // translate + scale — no layout, no canvas resize and no 3D redraw per frame (writing --vh every frame made the 3D pages stutter).
+  // html.dock-anim is on meanwhile: the 3D table skips its redraws and the skins their re-measuring; one resize at the end.
+  // the boxes that move: the children of .app — through display:contents (mancala PC: .side / .side-in are contents, their
+  // cards are the boxes; they jumped before, as nothing animated them)
+  const shown = c => { if (!c.getClientRects().length) return false; const cs = getComputedStyle(c); return cs.display !== 'none' && cs.position !== 'fixed'; };
+  const kids = () => { const out = []; const walk = list => { for (const c of list) { if (getComputedStyle(c).display === 'contents') { walk(c.children); continue; } if (shown(c)) out.push(c); } }; walk(app.children); return out; };
+  // each child with the part that has to stay exact: the 3D canvas (#atlasGL) in the board's column — parts beside the board
+  // that do not scale with it (labels, komadai) would otherwise put the board itself a little off while it moves
+  const keyOf = c => { const g = c.querySelector('#atlasGL'); return g && g.getClientRects().length ? g : c; };
+  // where each box is (as seen: a running FLIP included, so a new one starts from there) — and its children and grandchildren
+  // too, so a box that becomes one of the moving ones only now (the layout switched: a column becomes display:contents, or
+  // the reverse) still has its place before the change
+  const snap = () => {
+    const m = new Map();
+    for (const c of kids()) { const k = keyOf(c); m.set(c, { r: k.getBoundingClientRect(), k });
+      for (const d of c.children) { if (shown(d) && !m.has(d)) m.set(d, { r: d.getBoundingClientRect(), k: d }); for (const e of d.children) if (shown(e) && !m.has(e)) m.set(e, { r: e.getBoundingClientRect(), k: e }); } }
+    return m;
   };
+  let flips = [], flipT = 0, watch = null;
+  const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
+  const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); root.classList.remove('dock-anim'); };
+  const flip = (before, dur = D) => {
+    stopFlips();
+    // (a box that was not one before — a column that was display:contents and now holds its cards — moves as its cards:
+    // each of them from where it was)
+    const targets = [];
+    for (const c of kids()) {
+      if (before.has(c)) { targets.push(c); continue; }
+      for (const d of c.children) { if (!shown(d)) continue; if (before.has(d)) { targets.push(d); continue; } for (const e of d.children) if (shown(e) && before.has(e)) targets.push(e); }
+    }
+    for (const c of targets) {
+      const e = before.get(c); if (!e) continue;
+      let { r: b, k } = e; if (!k.isConnected || !k.getClientRects().length || !c.contains(k)) k = c;
+      const a = k.getBoundingClientRect(), cr = c.getBoundingClientRect(); if (a.width < 2 || b.width < 2) continue;
+      // translate + scale about the child's centre, so that its key part lands on where it was
+      const s = b.width / a.width, cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
+      // (the board — keyed on its 3D canvas — by its centre; any other box by its top edge: a column that gets taller or
+      // shorter (the compact info column, cards that change from a row to a column) keeps its top cards where they were)
+      const dx = (b.left + b.width / 2) - cx - s * (a.left + a.width / 2 - cx), dy = k !== c ? (b.top + b.height / 2) - cy - s * (a.top + a.height / 2 - cy) : b.top - cy - s * (a.top - cy);
+      if (Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(s - 1) < .002) continue;
+      try { flips.push(c.animate([{ translate: `${dx}px ${dy}px`, scale: `${s}` }, { translate: '0px 0px', scale: '1' }], { duration: dur, easing: 'ease' })); } catch (e) {}
+    }
+    if (!flips.length) return Promise.resolve();
+    root.classList.add('dock-anim');
+    const mine = flips;
+    // the end (all finished, or at the latest 4 s — a busy page may start them late, a hidden tab never runs them): everything measures the final place once
+    return new Promise(res => {
+      const end = () => { if (flips !== mine) return res(); clearTimeout(flipT); mine.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; let last = snap(); root.classList.remove('dock-anim'); relayout(true); res(); after(last); };
+      // (and the dock's own animation: whatever measures the space above it then sees its final place)
+      Promise.all(mine.map(a => a.finished).concat(dockDone())).then(end, end); flipT = setTimeout(end, 4000);
+    });
+  };
+  // for a moment after the end: the final layout pass (and a game that lays its board out again a little later — go redraws
+  // after a resize; the 3D pages re-centre the board group) can still move or resize the board a few px — each such change is
+  // shown as a short move too, not as a jump (checked every frame before it is painted, for 1.2 s)
+  const after = last => {
+    if (watch) watch(); const t0 = performance.now(); let raf = 0, stop = false;
+    const moved = now => kids().some(c => { const o = last.get(c), n = now.get(c); return o && n && (Math.abs(o.r.width - n.r.width) > 1 || Math.abs(o.r.top - n.r.top) > 1 || Math.abs(o.r.left - n.r.left) > 1); });
+    const tick = () => {
+      if (stop) return;
+      if (performance.now() - t0 > 1200) { watch = null; return; }
+      if (!flips.length) { const now = snap(); if (moved(now)) { const b = last; last = now; flip(b, 180); } }
+      raf = requestAnimationFrame(tick);
+    };
+    watch = () => { stop = true; cancelAnimationFrame(raf); watch = null; };
+    tick();   // (at once too: the final layout pass has just run)
+  };
+  // the place of everything right before the dock is opened / closed: a page that switches its layout with the dock's class
+  // (mancala: the info cards from under the board to a column beside it) has already done so when settle runs — so the
+  // boxes are measured when the click on the dock arrives, before its own handler changes the class
+  let pre = null;
+  document.addEventListener('click', e => { if (dock.contains(e.target) && !flips.length) pre = { t: performance.now(), m: snap() }; }, true);
   let gen = 0;
   const settle = async () => {
-    const my = ++gen; cancelAnimationFrame(anim); anim = 0;
-    const R0 = R;
+    const my = ++gen;
+    if (watch) watch();
+    const before = pre && performance.now() - pre.t < 400 ? pre.m : snap(); pre = null; stopFlips();
     if (!isOpen()) {   // closed: back to the full size while it scrolls back
-      moveTo(0);
-      if (!fitted && !root.classList.contains('dock-compact') && !root.classList.contains('dock-rvb')) return;
-      root.classList.remove('dock-compact', 'dock-rvb');
-      tween(R0, 0, () => { if (my !== gen) return; fitted = false; R = 0; apply(); });
+      // (laid out for the dock's final place, like the probe: the dock animation run to its end for a moment)
+      const undo = ffDock(); sync = true;
+      try { if (fitted || root.classList.contains('dock-compact') || root.classList.contains('dock-rvb')) { root.classList.remove('dock-compact', 'dock-rvb'); fitted = false; R = 0; apply(); } else relayout(); }
+      finally { sync = false; undo(); }
+      moveTo(0); flip(before);
       return;
     }
     // probe: the final layout for the dock's final place, worked out without painting (dock animation run to its end,
-    // every pass without waiting), then back to what is on screen now and over to it smoothly
-    const undo = ffDock(); let Rt = 0, d = null, rg = null, hp = 0;
+    // every pass without waiting); it stays, and is shown with the FLIP from what was on screen
+    const undo = ffDock(); let d = null, rg = null, hp = 0;
     sync = true;
-    try { reset(); await layout(my); Rt = R; d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
+    try { reset(); await layout(my); d = delta(); rg = region(); const u = bounds(); hp = u ? u[1] - u[0] : 0; } finally { sync = false; undo(); }
     if (my !== gen) return;
-    // (the compact column comes or goes at once; the board size and the shift move)
-    R = R0; fitted = Rt > 0 || R0 > 0; apply();
-    moveTo(d);
-    tween(R0, Rt, async () => {
-      if (my !== gen || !isOpen()) return;
-      fitted = R > 0;
-      // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it
-      await wait(60); if (my !== gen || !isOpen()) return;
-      const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }
-      moveTo(delta());
-      // the dock (or the header) ended up elsewhere than expected: settle again
-      setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
-        if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 400);
-    });
+    fitted = R > 0;
+    moveTo(d); await flip(before);
+    // refine (boards a game redraws a moment after a resize): only when the content did not come out as the probe found it —
+    // once the dock's own animation is over too (on a slow machine it may still be sliding), so the space is the final one
+    await Promise.race([dockDone(), new Promise(r => setTimeout(r, 2000))]);
+    await new Promise(r => setTimeout(r, 80)); if (my !== gen || !isOpen()) return;
+    const b0 = snap();   // (what the refine changes is shown as a short move too)
+    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { sync = true; try { await fit(my); } finally { sync = false; } if (my !== gen || !isOpen()) return; }
+    moveTo(delta()); flip(b0, 180);
+    // the dock (or the header) ended up elsewhere than expected: settle again
+    setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
+      if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 300);
   };
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again

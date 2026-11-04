@@ -113,7 +113,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261104sd';
+const ENGINE_URL = 'engine.js?v=20261104x6';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -226,7 +226,7 @@ const pcEls = new Map();      // point -> element
 let shownKey = '';
 function newPiece(code) {
   const el = document.createElement('div'); el.className = 'pc p' + (colorOf(code) ? 2 : 1);
-  el.innerHTML = `<span class="ch">${glyph(code)}</span><i class="ic">${iconSvg(typeOf(code))}</i>`; el.dataset.k = code; return el;
+  el.innerHTML = `<span class="ch">${glyph(code)}</span><i class="ic">${iconSvg(typeOf(code))}</i><i class="a3d"></i>`; el.dataset.k = code; return el;
 }
 function syncPieces(pos, force) {
   for (const [i, el] of pcEls) if (force || pos.at(i) !== +el.dataset.k) { el.remove(); pcEls.delete(i); }
@@ -268,7 +268,7 @@ function renderReserves(pos) {
     const c = p - 1, list = cap[c].slice().sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
     const bottom = flip ? P2 : P1, el = $(3 - p === bottom ? '#res1' : '#res2');   // next to the player who captured them
     const west = settings.pcs === 'west';
-    let s = ''; for (const tp of list) s += `<span class="rv p${p}">${west ? iconSvg(tp) : glyph(tp | (c << 3))}</span>`;
+    let s = ''; for (const tp of list) s += `<span class="rv p${p}" data-k="${tp | (c << 3)}">${west ? iconSvg(tp) : glyph(tp | (c << 3))}</span>`;
     el.innerHTML = s;
     el.title = list.length ? t('captured', { c: pname(p), n: list.length }) : '';
     el.classList.remove('turn');
@@ -862,9 +862,11 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D board designs and piece sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-const BD_KEYS = ['wood', 'paper', 'lacquer', 'jade', 'slate'], PC_KEYS = ['wood', 'ivory', 'lacquer', 'west'];
-const BD_PAL = { wood: ['#e9c07a', '#4b2b10', '#2a170a'], paper: ['#f2e7cf', '#8a2a1c', '#3a1a12'], lacquer: ['#2d160f', '#d9b467', '#0d0604'], jade: ['#8cb898', '#173b26', '#0f2618'], slate: ['#68717a', '#f1ece0', '#1f2327'] };
-const PC_PAL = { wood: ['#f3d9a6', '#7a5326', '#b8231b', '#211b17'], ivory: ['#f8f4ea', '#8f8166', '#b8231b', '#211b17'], lacquer: ['#3a2e28', '#c9a961', '#ff6b55', '#f0e3c6'], west: ['#f3d9a6', '#7a5326', '#b8231b', '#211b17'] };
+// 'lacq3d' / 'box3d': the 3D page's board and discs as pictures (tools/render2d.html + tools/gen_3d2d.py: img/, pieces/box3d/)
+const BD_KEYS = ['lacq3d', 'wood', 'paper', 'lacquer', 'jade', 'slate'], PC_KEYS = ['box3d', 'wood', 'ivory', 'lacquer', 'west'];
+const BD3D_IMG = 'img/bd-lacq3d.webp?v=1', pc3dImg = p => `pieces/box3d/${colorOf(p) ? 'b' : 'r'}${typeOf(p)}.webp?v=1`;
+const BD_PAL = { lacq3d: ['#c22a17', '#e2b955', '#16110e'], wood: ['#e9c07a', '#4b2b10', '#2a170a'], paper: ['#f2e7cf', '#8a2a1c', '#3a1a12'], lacquer: ['#2d160f', '#d9b467', '#0d0604'], jade: ['#8cb898', '#173b26', '#0f2618'], slate: ['#68717a', '#f1ece0', '#1f2327'] };
+const PC_PAL = { box3d: ['#f3e2bd', '#b89a6a', '#b5221a', '#1d1916'], wood: ['#f3d9a6', '#7a5326', '#b8231b', '#211b17'], ivory: ['#f8f4ea', '#8f8166', '#b8231b', '#211b17'], lacquer: ['#3a2e28', '#c9a961', '#ff6b55', '#f0e3c6'], west: ['#f3d9a6', '#7a5326', '#b8231b', '#211b17'] };
 function designApply() {
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'wood';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'wood';
@@ -886,13 +888,15 @@ function miniSVG(spec, o) {
   const BP = BD_PAL[o.bd || settings.bd] || BD_PAL.wood, PP = PC_PAL[o.pcs || settings.pcs] || PC_PAL.wood, west = (o.pcs || settings.pcs) === 'west';
   const cr = Array.isArray(o.crop) ? o.crop : null;
   let s = cr ? '' : `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${H}">`;
-  s += `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="8" fill="${BP[0]}" stroke="${BP[2]}" stroke-width="2"/>`;
+  const bd3 = (o.bd || settings.bd) === 'lacq3d', pc3 = (o.pcs || settings.pcs) === 'box3d';
+  s += `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="${bd3 ? 3 : 8}" fill="${bd3 ? BP[2] : BP[0]}" stroke="${BP[2]}" stroke-width="2"/>`;
+  if (bd3) s += `<image href="${BD3D_IMG}" x="${pad}" y="${pad}" width="${9 * u}" height="${10 * u}" preserveAspectRatio="none"/><rect x="${pad}" y="${pad}" width="${9 * u}" height="${10 * u}" fill="none" stroke="#c89a48" stroke-width="1.6"/>`;
   const x0 = pad + u / 2, y0 = pad + u / 2, ln = (a, b, c, d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`;
   let g = `<g stroke="${BP[1]}" stroke-width="1.2" fill="none">`;
   for (let r = 0; r < 10; r++) g += ln(x0, y0 + r * u, x0 + 8 * u, y0 + r * u);
   for (let c = 0; c < 9; c++) { if (c === 0 || c === 8) g += ln(x0 + c * u, y0, x0 + c * u, y0 + 9 * u); else { g += ln(x0 + c * u, y0, x0 + c * u, y0 + 4 * u); g += ln(x0 + c * u, y0 + 5 * u, x0 + c * u, y0 + 9 * u); } }
   g += ln(x0 + 3 * u, y0, x0 + 5 * u, y0 + 2 * u) + ln(x0 + 5 * u, y0, x0 + 3 * u, y0 + 2 * u) + ln(x0 + 3 * u, y0 + 7 * u, x0 + 5 * u, y0 + 9 * u) + ln(x0 + 5 * u, y0 + 7 * u, x0 + 3 * u, y0 + 9 * u);
-  s += g + '</g>';
+  if (!bd3) s += g + '</g>';
   if (Array.isArray(o.last)) for (const i of o.last) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.47}" fill="none" stroke="rgba(40,130,220,.8)" stroke-width="2"/>`;
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="4.5" fill="rgba(30,140,230,.9)"/>`;
   let pos = null; try { pos = E.Pos.from(spec); } catch (e) {}
@@ -900,6 +904,7 @@ function miniSVG(spec, o) {
     const p = pos.at(i); if (!p) continue;
     if (cr) { const [r, c] = [Math.floor(i / 9), i % 9]; if (r < cr[0] || r > cr[1] || c < cr[2] || c > cr[3]) continue; }
     const x = X(i), y = Y(i), r = u * 0.44, col = colorOf(p) ? PP[3] : PP[2];
+    if (pc3) { const w = u * .9; s += `<image href="${pc3dImg(p)}" x="${x - w / 2}" y="${y - w * .558}" width="${w}" height="${w * 1.057}"/>`; continue; }
     s += `<circle cx="${x}" cy="${y}" r="${r}" fill="${PP[0]}" stroke="${PP[1]}" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="${r * 0.8}" fill="none" stroke="${col}" stroke-opacity=".55" stroke-width="1"/>`;
     if (west) s += `<g transform="translate(${x - r * 0.62},${y - r * 0.62}) scale(${r * 1.24 / 24})" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICON[typeOf(p)].replace(/class="f"/g, `fill="${col}" stroke="none"`)}</g>`;
     else s += `<text x="${x}" y="${y + 1}" font-size="${u * 0.52}" text-anchor="middle" dominant-baseline="central" fill="${col}" font-family="Shippori Mincho B1,Noto Serif SC,serif" font-weight="800">${glyph(p)}</text>`;
@@ -1081,7 +1086,6 @@ $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); renderReserves(posAt(cur).pos); });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
-$('#ngRulesHelp').onclick = () => openRules();
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -1101,7 +1105,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1905, 2015, 2140, 2230, 2265, 2290, 2415, 2480];
+const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1937, 2047, 2172, 2262, 2297, 2322, 2447, 2512];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

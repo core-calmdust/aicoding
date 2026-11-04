@@ -64,6 +64,7 @@ html.atlas-xiangqi .side{align-self:start!important}
   const skin = AtlasSkin.init({
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    pc: { vars: ['--cell'], extras: '.frame > .fnum, .frame > .reserve' },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit); the file numbers / captured pieces outside it stay clear of the bar and the dock
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/xiangqi.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -191,7 +192,9 @@ html.atlas-xiangqi .side{align-self:start!important}
       if (on) row.querySelectorAll('button:not([data-a3])').forEach(x => { x.classList.remove('sel'); x.setAttribute('aria-pressed', 'false'); });
     });
   }
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), the 3D board = the 3D table
   function look() {
+    if (V) V.set(bd3);
     root.children[0].visible = bd3; group.visible = bd3 && pc3;
     de.classList.toggle('atlas-xq3db', bd3); de.classList.toggle('atlas-xq3dp', bd3 && pc3);
     try { localStorage.setItem(LK, !bd3 ? '2d' : pc3 ? '3d' : '3d2'); } catch (e) {}
@@ -208,6 +211,7 @@ html.atlas-xiangqi .side{align-self:start!important}
   if (r2) r2.addEventListener('click', onRow('pc'), true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRows(); } catch (e) {} return r; }; }
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRows, 30));
+  if (skin.view) V = skin.view({ key: 'atlas-xiangqi-view', init: bd3, cls: ['atlas-xiangqi'], on() { setTimeout(() => {  dispatchEvent(new Event('resize')); }, 0); } });
   look();
 
   // test hooks (Playwright)

@@ -10,6 +10,7 @@
    On PC (no tabs) the cards sit in the dialog: style="--ngt-cols:3" on .ngt-gcards sets the columns there.
    Few cards (≤4) are shown big (.ngt-gcards.few); on PC the ルール tab puts the mode field (#segMode's .field) on top and the
    rest of .ng-cols in two balanced columns.
+   Rules button on the cards: set $('.ngt-gcards').ngtRules = (key, card) => openRules(…) — see the end of this file.
    <script src="../shared/ngtabs.js?v=16"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
@@ -67,6 +68,7 @@ const CSS = `
 .modal.ngt-pc:is([data-ngt=design],[data-ngt=game]) :is(.ng-cols,.ng-col):not(.ngt-hide){display:block!important;column-gap:0!important;grid-template-columns:none!important}
 .modal.ngt-pc[data-ngt=design] .dsg{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))!important}
 /* ゲーム tab: variant cards (art, name, short description) */
+.modal[data-ngt=game] [data-ng=game] > label:first-child{display:none!important}
 .ngt-gcards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ngt-gcard{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.22);color:var(--text,#eee);font:inherit;text-align:start;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
 .ngt-gcard .gart{display:flex;align-items:center;justify-content:center;min-height:64px;padding:4px 0}
@@ -271,4 +273,47 @@ function init() {
   sync();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+// ---------------------------------------------------------------- the ルール button on the game cards
+// A game sets box.ngtRules = (key, card) => openRules(…) on the cards' box (or any ancestor inside #newOverlay); every card in it
+// (.ngt-gcard, or solitaire's .gcard) gets a ルール pill in its bottom-right corner (bottom-left in RTL), always shown.
+// key = the card's data-r / data-v / data-g. Click / Enter / Space on it never picks the card: the dialog closes and ngtRules runs.
+// (Independent of the tabs above, so a dialog without them — solitaire — only loads this file for it.)
+const RL_CSS = `
+#newOverlay .modal .ngt-hasrl.ngt-hasrl.ngt-hasrl{padding-bottom:44px!important}
+#newOverlay .ngt-rl{position:absolute;right:12px;bottom:10px;left:auto;top:auto;z-index:1;display:inline-block;margin:0;padding:4px 14px;border-radius:999px;border:1px solid color-mix(in srgb, var(--accent,#d8b56a) 55%, transparent);background:rgba(0,0,0,.25);color:var(--accent,#d8b56a);font-size:12px;font-weight:600;letter-spacing:.04em;line-height:1.5;white-space:nowrap;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#newOverlay .ngt-rl:hover,#newOverlay .ngt-rl:focus-visible{background:color-mix(in srgb, var(--accent,#d8b56a) 18%, transparent);outline:none}
+#newOverlay .ngt-rl:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent,#d8b56a) 60%, transparent)}
+:is([dir=rtl],html[lang|=ar]) #newOverlay .ngt-rl{right:auto;left:12px}
+html.atlas-skin #newOverlay .ngt-rl{background:rgba(255,255,255,.7)}
+`;
+function rlInit() {
+  const ov = document.getElementById('newOverlay'); if (!ov) return;
+  const st = document.createElement('style'); st.textContent = RL_CSS; document.head.appendChild(st);
+  const box = card => { for (let n = card.parentElement; n && n !== ov; n = n.parentElement) if (typeof n.ngtRules === 'function') return n; return null; };
+  const paint = () => {
+    const lb = L.rules[lang()] || L.rules.en;
+    ov.querySelectorAll('.ngt-gcard, .gcard').forEach(card => {
+      if (!box(card)) return;
+      let b = card.querySelector(':scope > .ngt-rl');
+      if (!b) { b = document.createElement('span'); b.className = 'ngt-rl'; b.setAttribute('role', 'button'); b.tabIndex = 0; card.appendChild(b); }
+      if (b.textContent !== lb) b.textContent = lb;
+      if (!card.classList.contains('ngt-hasrl')) card.classList.add('ngt-hasrl');   // (guarded: a no-op add still records a mutation)
+    });
+  };
+  const go = (e, b) => {
+    e.preventDefault(); e.stopPropagation();
+    const card = b.closest('.ngt-gcard, .gcard'), c = card && box(card); if (!c) return;
+    const d = card.dataset, key = d.r != null ? d.r : d.v != null ? d.v : d.g;
+    ov.classList.remove('show');
+    c.ngtRules(key, card);
+  };
+  // (capture: before the game's own click handler on the cards)
+  ov.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.ngt-rl'); if (b) go(e, b); }, true);
+  ov.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const b = e.target.closest && e.target.closest('.ngt-rl'); if (b) go(e, b); }, true);
+  new MutationObserver(paint).observe(ov, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  paint();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rlInit); else rlInit();
 })();

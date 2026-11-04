@@ -36,6 +36,7 @@
   const skin = AtlasSkin.init({
     margin: 0.18,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
+    pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const u = r.height / 16; return { top: r.top - RIM * u, height: (16 + 2 * RIM + below) * u }; },
     guide: '../images/atlas/g-stone.webp', guideFallback: '../images/atlas/gomoku.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -115,8 +116,11 @@
   };
   const BTN = { lacquer: 'atlaslacq', kaya: 'atlaskaya' };
   const seg = document.getElementById('segSkin');
+  { const st2 = document.createElement('style'); st2.textContent = '#segSkin .a3gm{display:grid;place-items:center;aspect-ratio:1;border-radius:8px;background:radial-gradient(85% 85% at 50% 38%,#fff9ea,#f1dfba 70%,#e3c98f)}#segSkin .a3gm img{width:84%;height:84%;object-fit:contain}'; document.head.appendChild(st2); }
   const skinNow = () => { try { return settings.skin || 'classic'; } catch (e) { return 'classic'; } };
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
   function look() {
+    if (V) V.set(!!mine);
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === BTN[mine]); else if (x.dataset.set) x.classList.remove('sel'); });
     U.setLook(mine || 'kaya'); U.setTone(mine ? 'classic' : skinNow());
     group.visible = !!mine; de.classList.toggle('atlas-gm3d', !!mine);
@@ -125,7 +129,7 @@
   }
   if (seg) {
     const bs = ['kaya', 'lacquer'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k; seg.prepend(b); return b; });
-    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.textContent = L[l] || L.en; }); };
+    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.innerHTML = '<i class="skart a3gm"><img src="../images/atlas/gomoku.webp" alt="" draggable="false"></i><span></span>'; b.querySelector('span').textContent = L[l] || L.en; }); };
     paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
     seg.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
@@ -135,6 +139,7 @@
     }, true);
   }
   if (typeof window.applySkin === 'function') { const oa = window.applySkin; window.applySkin = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
+  if (skin.view) V = skin.view({ key: 'atlas-gomoku-view', init: !!mine, cls: ['atlas-gomoku'], on() { setTimeout(() => { try { if (typeof window.applySkin === 'function') window.applySkin(); } catch (e) {} }, 0); } });
   setTimeout(look, 0);
 
   // test hooks (Playwright)

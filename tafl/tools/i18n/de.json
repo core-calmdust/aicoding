@@ -82,12 +82,7 @@
 "lv.dan3": "3 Dan",
 "lv.dan4": "4 Dan",
 "lv.dan5": "5 Dan",
-"lvd": [
-"Neuling: verschenkt Figuren und übersieht Fluchtwege des Königs",
-"Anfänger: sieht Schlagen und Flucht ein bis zwei Züge voraus",
-"Mittel bis Fortgeschritten: doppelte Fluchtdrohungen und Einkreisung",
-"Dan: tiefe Suche, auf beiden Seiten zäh"
-],
+"lvd": ["Neuling: verschenkt Figuren und übersieht Fluchtwege des Königs", "Anfänger: sieht Schlagen und Flucht ein bis zwei Züge voraus", "Mittel bis Fortgeschritten: doppelte Fluchtdrohungen und Einkreisung", "Dan: tiefe Suche, auf beiden Seiten zäh"],
 "res.review": "Brett ansehen",
 "res.again": "Noch eine",
 "res.draw": "Remis",
@@ -372,5 +367,12 @@
 "dr.accepted": "Die KI hat das Remis angenommen",
 "dr.declined": "Die KI hat das Remis abgelehnt (sie will weiterspielen)",
 "dr.aiResigned": "Die KI hat aufgegeben",
-"ls.seqGood": "Guter Zug!"
+"ls.seqGood": "Guter Zug!",
+"bd.carved": "Geschnitzte Eiche (3D)",
+"bd.ballinderry": "Ballinderry",
+"bd.runestone2": "Runenstein",
+"bd.longship": "Langschiff",
+"pcs.turned": "Gedrechseltes Holz (3D)",
+"pcs.birka": "Birka-Glas",
+"bd.modern": "Modern"
 }

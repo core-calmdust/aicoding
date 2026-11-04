@@ -226,11 +226,14 @@ const animOn = () => settings.anim && !reduceMotion;
 let flipped = false;
 function orient() { const base = puzzle ? puzzle.me === P2 : lesson ? lesson.me === P2 : settings.mode === 'online' ? !!(net && net.me === P2) : settings.mode === 'ai' ? humanColor === P2 : false; flipped = base !== !!(window.FlipBtn && FlipBtn.on()); }   // + the 盤面反転 button (shared/flipbtn.js)
 const sqX = s => flipped ? 7 - (s & 7) : (s & 7), sqY = s => flipped ? (s >> 4) : 7 - (s >> 4);
-function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; }
+function placeAt(el, s) { el.style.left = sqX(s) * 12.5 + '%'; el.style.top = sqY(s) * 12.5 + '%'; if (el.classList && el.classList.contains('pc')) el.style.zIndex = IS3D(settings.pcs) ? 1 + sqY(s) : ''; }   // 3D sprites: nearer rows over the ones behind
 // image piece sets (pieces/README.md: lichess sets under MIT / Apache 2.0 / CC BY 4.0 / CC0); 'std' = the drawn set below, coloured by the board skin
-const PIECE_SETS = { celtic: 'Maurizio Monge (MIT)', fantasy: 'Maurizio Monge (MIT)', chessnut: 'Alexis Luengas (Apache 2.0)', papercut: 'Nikolay Anzarov (CC BY 4.0)', rhosgfx: 'RhosGFX (CC0)' };
-const pieceImg = (set, p) => `pieces/${set}/${p & 8 ? 'b' : 'w'}${PT[p & 7]}.svg?v=1`;
+const PIECE_SETS = { lux3d: 'World Board Game Atlas 3D', wood3d: 'World Board Game Atlas 3D', celtic: 'Maurizio Monge (MIT)', fantasy: 'Maurizio Monge (MIT)', chessnut: 'Alexis Luengas (Apache 2.0)', papercut: 'Nikolay Anzarov (CC BY 4.0)', rhosgfx: 'RhosGFX (CC0)' };
+// 3D sets (tools/gen_3d2d.py: the 3D page's pieces, rendered 3/4 from the front): sprites 1 × 1.6 squares standing up out of the square
+const IS3D = set => set === 'lux3d' || set === 'wood3d';
+const pieceImg = (set, p) => `pieces/${set}/${p & 8 ? 'b' : 'w'}${PT[p & 7]}.${IS3D(set) ? 'webp' : 'svg'}?v=1`;
 function pieceSVG(p) {
+  if (IS3D(settings.pcs)) return `<img class="a3d" src="${pieceImg(settings.pcs, p)}" alt="" draggable="false">`;
   if (PIECE_SETS[settings.pcs]) return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'} pimg"><image href="${pieceImg(settings.pcs, p)}" x="5" y="5" width="90" height="90"/></svg>`;
   return `<svg viewBox="0 0 100 100" class="${p & 8 ? 'pb' : 'pw'}"><use href="#s${PT[p & 7]}"/></svg>`;
 }
@@ -3317,7 +3320,7 @@ if (olOn()) { accRender(); setTimeout(() => { dockStart().then(() => { if (signe
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 // board & piece skin: applied immediately, kept with the settings
-const SKINS = ['classic', 'grain', 'metal', 'ink', 'marble', 'tourney', 'ocean', 'rosewood'];
+const SKINS = ['lux3d', 'wood3d', 'classic', 'grain', 'metal', 'ink', 'marble', 'tourney', 'ocean', 'rosewood'];
 let pcsShown = 'std';
 function applySkin() {
   if (!SKINS.includes(settings.skin)) settings.skin = 'classic';
@@ -3329,12 +3332,14 @@ function applySkin() {
   designThumbs();
   if (pcsShown !== settings.pcs) {   // redraw the pieces on the board, the captured pieces and the promotion picker
     pcsShown = settings.pcs;
-    try { for (const [, el] of pcEls) el.innerHTML = pieceSVG(+el.dataset.p); } catch (e) {}
+    try { for (const [sq, el] of pcEls) { el.innerHTML = pieceSVG(+el.dataset.p); placeAt(el, sq); } } catch (e) {}
     try { renderReserves(posAt(cur).pos); } catch (e) {}
   }
 }
 // ---- design pickers: a few squares of each board with the current pieces, and each piece set on the current board
 const DSG_SKIN = {
+  lux3d: { l: ['#efe3c4', '#e2d3ae'], d: ['#6b6c6a', '#4a4b49'], fr: ['#8d8e8b', '#5e5f5c'], ring: 'rgba(240,228,200,.8)', cl: '#4a4b49', cd: '#efe3c4', img: 'img/bd-lux3d.webp' },
+  wood3d: { l: ['#f4ebd6', '#e8dcc0'], d: ['#9a5a26', '#6e3a12'], fr: ['#b0703a', '#5a2a0c'], ring: 'rgba(40,20,8,.8)', cl: '#6e3a12', cd: '#f4ebd6', img: 'img/bd-wood3d.webp' },
   classic: { l: ['#ead8b3', '#d9c194'], d: ['#a77c50', '#8a6440'], fr: ['#1d1813', '#0c0a08'], ring: 'rgba(201,169,97,.45)', cl: '#8a6440', cd: '#ecdcbc', tex: 'fine' },
   grain: { l: ['#f3d7a0', '#dfb977'], d: ['#8e5a2a', '#6c401b'], fr: ['#3a2414', '#1f130a'], ring: 'rgba(201,169,97,.45)', cl: '#7a4a20', cd: '#f3d7a0', tex: 'grain' },
   metal: { l: ['#dfe4e8', '#b9c1c8'], d: ['#77828c', '#545e67'], fr: ['#3b4248', '#1d2226'], ring: 'rgba(200,210,220,.4)', cl: '#545e67', cd: '#e6eaed', tex: 'brushed',
@@ -3349,6 +3354,7 @@ const DSG_SKIN = {
 const DSG_PW = ['#fff8e4', '#ecd7a0', '#b8954d', '#6b5126'], DSG_PB = ['#5d636d', '#2a2e35', '#0f1114', '#b9c1cc'];
 let dsgUid = 0;
 function dsgPiece(set, p, x, y, w, S, id) {
+  if (IS3D(set)) return `<image href="${pieceImg(set, p)}" x="${x + w * .08}" y="${y - w * .4}" width="${w * .84}" height="${w * 1.344}"/>`;
   if (PIECE_SETS[set]) return `<image href="${pieceImg(set, p)}" x="${x + w * .02}" y="${y + w * .02}" width="${w * .96}" height="${w * .96}"/>`;
   const C = p & 8 ? S.b || DSG_PB : S.w || DSG_PW, k = p & 8 ? 'b' : 'w';
   return `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="0 0 100 100" style="fill:url(#${id}${k});stroke:${C[3]};stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;color:${C[3]}"><use href="#s${PT[p & 7]}"/></svg>`;
@@ -3379,6 +3385,7 @@ function dsgThumb(kind, set, skin) {
   // a1 (bottom-left) is dark
   for (let r = r0; r <= r1; r++) for (let c = 0; c < cols; c++) s += `<rect x="${fr + c * q}" y="${sqY(r)}" width="${q + .05}" height="${q + .05}" fill="url(#${id}${(c + r) % 2 ? 'l' : 'd'})"/>`;
   if (tex) s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" filter="url(#${id}n)" opacity="${tex[3]}"/>`;
+  if (S.img) s += `<image href="${S.img}" x="${fr}" y="${VH - fr - off - 8 * q}" width="${8 * q}" height="${8 * q}"/>`;   // the 3D board's real squares (a1 at the bottom left)
   if (S.tex === 'brushed') s += `<rect x="${fr}" y="0" width="${VW - fr}" height="${VH - fr}" fill="url(#${id}h)"/>`;
   if (fr) s += `<path d="M${fr} 0V${VH - fr}H${VW}" fill="none" stroke="${S.ring}" stroke-width="1"/>`;
   const g = (p, c, r, k) => `<g filter="url(#${id}s)">${dsgPiece(set, p, fr + c * q + q * (1 - k) / 2, sqY(r) + q * (1 - k) / 2, q * k, S, id)}</g>`;

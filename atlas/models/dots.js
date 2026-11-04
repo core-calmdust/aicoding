@@ -26,13 +26,29 @@
   const EXTRA = [['h', 2, 2, 1], ['v', 1, 2, 0], ['h', 1, 3, 0], ['v', 3, 1, 1], ['h', 5, 2, 0], ['v', 0, 3, 1], ['h', 0, 3, 1], ['v', 2, 2, 1], ['h', 3, 1, 0], ['v', 4, 2, 0], ['h', 2, 0, 1], ['v', 2, 0, 0], ['h', 1, 2, 1]];
 
   /* ---------- the page ---------- */
-  function paperBase(c, w, h, k, seed) {
-    const Nz = makeNoise(seed), img = c.createImageData(w, h), d = img.data;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const v = (Nz(x / 3, y / 3, 2) - .5) * 9 + (Nz(x / 70, y / 70, 3) - .5) * 8 + (Math.random() - .5) * 4, i = (y * w + x) * 4;
-      d[i] = 251 + v; d[i + 1] = 247 + v; d[i + 2] = 236 + v * .9; d[i + 3] = 255;
-    }
-    c.putImageData(img, 0, 0);
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    return {
+      paper(d, w, h, p) {
+        const Nz = makeNoise(p.seed);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const v = (Nz(x / 3, y / 3, 2) - .5) * 9 + (Nz(x / 70, y / 70, 3) - .5) * 8 + (Math.random() - .5) * 4, i = (y * w + x) * 4;
+          d[i] = 251 + v; d[i + 1] = 247 + v; d[i + 2] = 236 + v * .9; d[i + 3] = 255;
+        }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
+  // the paper (pixel noise, then the printed ruling); then(c) draws on top once it is there
+  function paperBase(c0, w, h, k, seed, then) { paint(c0.canvas, 'paper', { seed }, (c) => {
     const U = v => v * k;
     // faint blue ruling every half dot-spacing, a red margin, a printed header line, punched holes along the top
     c.strokeStyle = 'rgba(80,130,200,.32)'; c.lineWidth = Math.max(1, U(.014));
@@ -43,7 +59,8 @@
     c.fillText('No.', U(4.3), U(.98)); c.fillText('Date', U(5.6), U(.98));
     c.strokeStyle = 'rgba(70,110,170,.5)'; c.lineWidth = U(.01); c.beginPath(); c.moveTo(U(4.62), U(1)); c.lineTo(U(5.45), U(1)); c.moveTo(U(6.05), U(1)); c.lineTo(U(7.2), U(1)); c.stroke();
     for (let i = 0; i < HOLES; i++) { const x = holeX(i) + PW / 2; c.beginPath(); c.arc(U(x), U(HZ), U(.1), 0, 7); c.fillStyle = '#25272d'; c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = U(.012); c.stroke(); }
-  }
+    if (then) then(c);
+  }); }
   const HZ = .32, HOLES = 19, holeX = i => -PW / 2 + .35 + i * (PW - .7) / (HOLES - 1);
   // a ballpoint stroke: a slightly bowed line drawn twice (pressure varies), with a small ink blob where the pen started
   function inkLine(c, x1, y1, x2, y2, col, w, rnd) {
@@ -59,8 +76,7 @@
   function pageTex(game) {
     const s = X.texScale(), w = Math.round(2048 * s), h = Math.round(w * PD / PW), k = w / PW;
     return X.canvasTex('dtPage' + (game ? 'G' : '') + s, w, h, (c) => {
-      paperBase(c, w, h, k, game ? 3 : 9);
-      if (!game) return;
+      paperBase(c, w, h, k, game ? 3 : 9, game && (c => {
       const U = v => v * k, X0 = PW / 2 - (N - 1) * SP / 2, Z0 = PD / 2 + GZ - (N - 1) * SP / 2;
       const px = i => U(X0 + i * SP), pz = j => U(Z0 + j * SP);
       let q = 77; const rnd = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -95,6 +111,7 @@
       c.font = `italic 700 ${U(.34)}px "Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive`; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
       const sr = BOXES.filter(b => !b[2]).length, sb = BOXES.length - sr;
       c.fillStyle = RED; c.fillText('R  ' + 'I'.repeat(sr), U(1.1), U(1.6)); c.fillStyle = BLUE; c.fillText('B  ' + 'I'.repeat(sb), U(3.6), U(1.6));
+    }));
     });
   }
   // the edges of the page block: many sheets, fine grey lines

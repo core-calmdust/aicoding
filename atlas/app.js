@@ -103,8 +103,8 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'fanorona', 'alquerque', 'ur']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'alquerque' ? 6 : 5}` : `../${g.icon}`;
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki']);   // images/atlas/<id>.webp exists
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7 })[g.id] || 5}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -113,24 +113,6 @@
   function ring(pct, col) {
     const r = 22, c = 2 * Math.PI * r;
     return `<span class="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/></svg>${pct}%</span>`;
-  }
-  function gameCard(g) {
-    const r = P[g.id];
-    const rows = [];
-    if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
-    if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
-    const extra = [];
-    if (r.dl && r.dl.days) extra.push(`${t('pg.dl')} ${t('pg.days', { n: r.dl.days })}`);
-    if (r.rt && r.rt.n) extra.push(`${t('pg.rt')} ${r.rt.r}`);
-    if (r.op) extra.push(`${t('pg.op')} ${r.op}`);
-    return `<a class="card gc" href="../${g.href}" data-open="${g.id}">
-      <div class="top">${g3(g)}
-        <div style="min-width:0"><h4>${esc(gname(g))}</h4><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${ring(r.pct, g.color)}</div>
-      ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      <p class="about">${esc(t('about.' + g.id))}</p>
-      <div class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 4).map(tagHtml).join('')}</div>
-      <div class="ft"><small style="font-weight:700;color:var(--ink2);font-size:12px">${extra.join(' · ') || (r.touched ? '' : t('pg.none'))}</small><span class="btn sm">${t('play')}</span></div>
-    </a>`;
   }
   function medalSvg(tier) {
     const c = [['#e8a46a', '#b8703a'], ['#e3e8f0', '#9aa6b8'], ['#ffd84d', '#d79a1c'], ['#c9f1ff', '#7f8cff']][tier];
@@ -205,12 +187,13 @@
   }
   // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
   let tfReady = false;
-  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(); }).catch(() => {});
-  function renderHero() {
+  if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
+  function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt=""></span>`).join('');
+    if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -262,7 +245,7 @@
     if (!glOK && fxBusy()) return setTimeout(boot, 700);
     if (!glOK) initGL(); if (!glOK) return;
     const q = A_.byUpdate().map(g => g.id);
-    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} next(); }); };
+    const next = () => { if (!q.length) return; idle(() => { const id = q.shift(); if ($('bv').classList.contains('on') || flying || fxBusy()) { q.unshift(id); return setTimeout(next, 600); } try { warm(id); } catch (e) {} if (TG) TG.idle([id]).then(next); else next(); }); };
     setTimeout(next, 400);
   });
   boot();
@@ -343,6 +326,7 @@
     $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
     $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
+    if (window.AtlasGameList && AtlasGameList.fitLabels) AtlasGameList.fitLabels($('iconGrid').querySelectorAll('.ic span.n'));   // long names shrink rather than end in "…"
   }
   // random: the die hops, a quick roulette of the visible games' icons, then the picked one flies to the board
   let rolling = false;
@@ -369,26 +353,38 @@
   function todayGame() { const d = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), n = A_.GAMES.length; return A_.GAMES[((d * 3) % n + n) % n]; }
   function renderToday() {
     const g = todayGame(), el = $('today');
+    const hk = 'hist.' + g.id, hs = t(hk) !== hk ? t(hk) : t('about.' + g.id);   // a short history (the description if a language has none)
     el.style.setProperty('--c', g.color);
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
-        <b>${esc(gname(g))}</b><span class="hs">${esc(t('hist.' + g.id))}</span>
-        <span class="ft"><span class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 3).map(tagHtml).join('')}</span><span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
+        <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
+        <span class="ft">${window.Historia ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}<span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
+    // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
+    if (window.AtlasGameList && AtlasGameList.clampFit) AtlasGameList.clampFit(el.querySelector('.hs'));
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
-    el.onclick = () => flyOpen(g.id, el.querySelector('.pan img'));
+    el.onclick = e => { if (e.target.closest('[data-hist]')) return; flyOpen(g.id, el.querySelector('.pan img')); };
+    const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
+    if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
   }
 
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
+  // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
+  // and a board is only shown once its pictures are done (texReady)
+  const TG = window.AtlasTexGen;
+  const tagged = (name, fn) => TG ? TG.group(name, fn) : fn();
+  const texBusy = id => !!TG && TG.busy([id, 'room']);
+  const texReady = id => { if (!TG) return Promise.resolve(); TG.prioritize([id, 'room']); return TG.idle([id, 'room']); };
   function initGL() {
     if (glOK || !window.THREE) return glOK;
-    try { Table3D.mount($('gl')); glOK = true; } catch (e) { glOK = false; }
+    try { tagged('room', () => Table3D.mount($('gl'))); glOK = true; } catch (e) { glOK = false; }
     return glOK;
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) Table3D.prepare(id); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
+  function warm(id) { if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
@@ -434,11 +430,13 @@
     setTimeout(() => {
       // keep it alive (wobble) while the board is being built, so a slow phone never shows a frozen icon
       fly.animate([{ transform: 'rotateY(720deg) translateY(0)' }, { transform: 'rotateY(740deg) translateY(-6px)' }, { transform: 'rotateY(700deg) translateY(0)' }], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
-      requestAnimationFrame(() => setTimeout(() => {
+      const go = () => requestAnimationFrame(() => setTimeout(() => {
         openBoard(id, true, true);
         requestAnimationFrame(() => requestAnimationFrame(finish));
         setTimeout(finish, 900);
       }, 0));
+      try { warm(id); } catch (e) {}
+      if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
     }, T1);
   }
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
@@ -484,6 +482,7 @@
     ring.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(2.2)' }], { duration: 600, delay: shift + 140, easing: 'ease-out', fill: 'both' });
     setTimeout(() => box.remove(), 1300);
   }
+  let show3dTok = 0, pend3d = null;   // a board waiting for its textures (see openBoard)
   let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
   function openBoard(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
@@ -499,8 +498,15 @@
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
       // back from a game on the table: the board drops in again and the camera snaps back quickly (ease-out) to the showcase view
-      if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
-      else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      const show3d = () => {
+        if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
+        else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+      };
+      if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
+      if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
+        const tok = ++show3dTok, gl = $('gl'); gl.style.visibility = 'hidden';
+        pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
+      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
@@ -514,6 +520,7 @@
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
+      <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
       </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo ? ' ' + esc(ad.levelInfo(i + 1, lang).name) : ''}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
@@ -522,6 +529,7 @@
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
+    if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
     if ($('bvStart')) $('bvStart').onclick = () => startPlay();
     if ($('bvTable')) $('bvTable').onclick = () => startPlay('table');
@@ -555,7 +563,7 @@
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
-      [...L.querySelectorAll(':scope > .tags, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
+      [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
       { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
         if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); } }
       // the level hint folds away with them (wrapped so its height can animate)
@@ -647,10 +655,12 @@
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
+    if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   function fitStage() {   // the board is framed above the info card (the canvas itself stays full-screen: no seams)
     if (!glOK) return;
+    if (window.Historia && Historia.on) return Historia.fit();   // ヒストリア open: it frames the board itself
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
     if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
@@ -672,6 +682,7 @@
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
+    if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
     const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
@@ -830,12 +841,15 @@
     if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
   });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
-  function startRules() {
+  let rulesFromList = false;
+  function startRules(fromList) {
+    rulesFromList = fromList === true;
+    if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
       onStart: () => { stopSession(); startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },
-      onExit: () => openBoard(g.id) });   // back on the last page: to the chabudai (settings card)
+      onExit: () => { if (rulesFromList) { rulesFromList = false; closeBoard(); } else openBoard(g.id); } });   // back: to the game list when started from there, else to the chabudai (settings card)
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
   }
@@ -855,7 +869,7 @@
     if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
   }
   renderTod();
-  $('bvQuit').onclick = () => openBoard(bvGame.id);
+  $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
   function stepBoard(d) {
@@ -904,7 +918,12 @@
   }
   function renderGamesList() {
     const list = visibleGames();
-    $('allGames').innerHTML = list.map(g => gameCard(g)).join('');
+    // screenshot cards grouped by category (atlas/gamelist.js); the long description is in the board sheet a tap opens
+    AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
+      hasRules: () => true,
+      // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
+      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(true); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }

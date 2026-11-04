@@ -117,6 +117,7 @@ html.atlas-tafl #newOverlay .modal-actions .mbtn{padding-top:10px!important;padd
   const skin = AtlasSkin.init({
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-puffin.webp', guideFallback: '../images/atlas/tafl.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -259,7 +260,9 @@ html.atlas-tafl #newOverlay .modal-actions .mbtn{padding-top:10px!important;padd
       if (on) row.querySelectorAll('button:not([data-a3])').forEach(x => { x.classList.remove('sel'); x.setAttribute('aria-pressed', 'false'); });
     });
   }
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), the 3D board = the 3D table
   function look(quiet) {
+    if (V) V.set(bd3);
     if (root) { root.children.forEach(c => { if (c !== group) c.visible = bd3; }); }
     group.visible = bd3 && pc3;
     de.classList.toggle('atlas-tf3db', bd3); de.classList.toggle('atlas-tf3dp', bd3 && pc3);
@@ -278,6 +281,7 @@ html.atlas-tafl #newOverlay .modal-actions .mbtn{padding-top:10px!important;padd
   if (r2) r2.addEventListener('click', onRow('pc'), true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRows(); } catch (e) {} return r; }; }
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRows, 30));
+  if (skin.view) V = skin.view({ key: 'atlas-tafl-view', init: bd3, cls: ['atlas-tafl'], on() { setTimeout(() => { try { drawLines(); } catch (e) {} dispatchEvent(new Event('resize')); }, 0); } });
   look();
 
   // test hooks (Playwright)

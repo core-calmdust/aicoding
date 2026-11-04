@@ -28,7 +28,8 @@
   const NN = () => { try { return N(); } catch (e) { return 19; } };
 
   // the DOM board: always the whole board, a 1-cell margin on every side (coordinates fit in it) → n + 1 cells across
-  window.vbox = function () { const n = NN(); return [-1, -1, n + 1, n + 1]; };
+  const oVbox = window.vbox;   // (the game's own 2D board: its own view box)
+  window.vbox = function () { if (oVbox && de.classList.contains('atlas-2d')) return oVbox.apply(this, arguments); const n = NN(); return [-1, -1, n + 1, n + 1]; };
   try { drawnKey = ''; } catch (e) {}
 
   /* ---------- look: 'kaya' | 'lacquer' | '' (the game's own 2D stones on the kaya board) ---------- */
@@ -61,6 +62,16 @@
   const skin = AtlasSkin.init({
     margin: 0.22,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
+    // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit); the turn / pass bar under the board is as wide as
+    // the goban's block (not wider: it would run under the column)
+    pc: { vars: ['--bs'], extras: '.board-area > .playbar',
+      place(F) {
+        const pb = document.querySelector('.board-area > .playbar'); if (!pb || !pb.getClientRects().length) return;
+        const w = F.r - F.l; if (Math.abs(pb.getBoundingClientRect().width - w) > .3) { pb.style.setProperty('max-width', 'none', 'important'); pb.style.setProperty('width', w + 'px', 'important'); }
+        const r = pb.getBoundingClientRect(), dx = F.l - r.left;
+        if (Math.abs(dx) > .3) pb.style.setProperty('left', ((parseFloat(getComputedStyle(pb).left) || 0) + dx) + 'px', 'important');
+      },
+      unplace() { const pb = document.querySelector('.board-area > .playbar'); if (pb) { pb.style.removeProperty('width'); pb.style.removeProperty('max-width'); pb.style.removeProperty('left'); } } },
     outer: r => outerFn(r),
     guide: '../images/atlas/g-stone.webp', guideFallback: '../images/atlas/go.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -188,7 +199,9 @@ html.atlas-go .playbar .pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4
     if (k !== 'lacquer') return s; const W = +(s.match(/viewBox="0 0 ([\d.]+)/) || [0, 74])[1];
     return s.replace('</svg>', `<rect x="0" y="${W * .8}" width="${W}" height="${W * .2}" fill="#120d0a"/><path d="M${W * .08} ${W * .9}H${W * .92}" stroke="#efcd72" stroke-width="${W * .02}"/></svg>`); };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
+  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
   function look(quiet) {
+    if (V) V.set(!!mine);
     U.setLook(mine || 'kaya');
     group.visible = !!mine; if (lastMesh) lastMesh.visible = !!mine;
     de.classList.toggle('atlas-go3d', !!mine);
@@ -211,6 +224,7 @@ html.atlas-go .playbar .pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4
   }, true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRow(); } catch (e) {} return r; }; }
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRow, 30));
+  if (skin.view) V = skin.view({ key: 'atlas-go-view', init: !!mine, cls: ['atlas-go'], on() { try { drawnKey = ''; update(false); } catch (e) {} } });
   look(true);
 
   // test hooks (Playwright)

@@ -32,8 +32,8 @@ html.atlas-c4 .back,html.atlas-c4 .plate,html.atlas-c4 .rings,html.atlas-c4 .gra
 html.atlas-c4 .disc{opacity:0!important}
 html.atlas-c4 .winring,html.atlas-c4 .winline{display:none!important}
 html.atlas-c4 .coords{left:calc(var(--cell) * 1.75)!important;height:calc(var(--cell) * .42)!important;bottom:calc(var(--cell) * .02)!important;color:rgba(255,246,226,.85)!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(255,226,122,.16) 22%,rgba(255,226,122,.08))!important}
-html.atlas-c4 #fDesign{display:none!important}`;
+html.atlas-skin.atlas-2d{--top:1}   /* the plain 2D board: the game's own (unitless) rail height — the portal's --top is a length */
+html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(255,226,122,.16) 22%,rgba(255,226,122,.08))!important}`;
   document.head.appendChild(st);
 
   const root = T3.MODELS.connect4(true), U = root.userData, g = root.children[0], SC = g.scale.x;
@@ -46,6 +46,7 @@ html.atlas-c4 #fDesign{display:none!important}`;
 
   const skin = AtlasSkin.init({
     board: boardDom, persp: PERSP,
+    pc: { vars: ['--cell'], all: true },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const u = r.height / 6; return { top: r.top - u * 1.2, height: u * 8.3 }; },   // rail tops to tray
     guide: '../images/atlas/g-plop.webp', guideFallback: '../images/atlas/connect4.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -63,6 +64,7 @@ html.atlas-c4 #fDesign{display:none!important}`;
   if (!skin) return;
   T3.show('connect4', root, { still: true });
   skin.alignTo(S, Y);
+  if (skin.view) skin.view({ key: 'atlas-c4-view', row: document.getElementById('bdRow'), img: '../images/atlas/connect4.webp', cls: ['atlas-c4'] });
   // a front view: the camera stands level with the board's centre, looking at the tower (tilt 90°); the DOM board stays flat
   const host = document.getElementById('atlasGL'), holder = boardDom.parentElement;
   const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x - host.offsetLeft, y: y - host.offsetTop, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };

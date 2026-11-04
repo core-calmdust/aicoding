@@ -933,10 +933,10 @@ function rulesTourGet() {
   });
   return rulesTour;
 }
-// tab (old entry points): 'renju' opens the forbidden-move pages, 'open' the renju opening, anything else the first page
+// tab (old entry points): 'renju' opens the forbidden-move pages, 'open' the renju opening, 'overline' the 6-in-a-row page, anything else the first page
 function openRules(tab) {
   const T = rulesTourGet(); if (!T) return;
-  const i = tab === 'renju' ? RU_PAGES.findIndex(p => p.id === 'f33') : tab === 'open' ? RU_PAGES.findIndex(p => p.id === 'open') : 0;
+  const i = tab === 'renju' ? RU_PAGES.findIndex(p => p.id === 'f33') : tab === 'open' || tab === 'overline' ? RU_PAGES.findIndex(p => p.id === tab) : 0;
   selTab('rules');
   // the rules are the first tab of the lessons dialog: replace whichever tab is showing
   const swap = ['#lessonOverlay', '#puzzleOverlay'].some(x => $(x).classList.contains('show'));
@@ -1027,6 +1027,8 @@ function resumeWith() {
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.v; segSync(); } };
+// the ルール button on each card (shared/ngtabs.js): renju at the forbidden moves, standard / free at the overline page
+$('#ruleCards').ngtRules = r => openRules(r === 'renju' ? 'renju' : 'overline');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');

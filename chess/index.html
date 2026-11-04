@@ -730,7 +730,7 @@ body .info-line{font-size:12.5px}
   .side-in > .review-card.show{flex:1.6 1 0;min-height:180px}
   .side-in > #coachCard:not(.hidden){flex:none}
   .side-in > #coachCard:not(.hidden):not(.ck-off){flex:2.4 1 0;min-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:none}
+  .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph{display:block;flex:none;height:44px;min-height:0;margin-top:6px}   /* with the coach open the graph stays, just shorter (as in the other games) */
   .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .navbar{margin-top:8px}
   .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > .kifu-card{flex:.6 1 0;min-height:96px}
   #coachCard.ck-off{padding:8px 12px}
@@ -1108,6 +1108,21 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .pw{fill:url(#wFill);stroke:#6b5126;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
 .pb{fill:url(#bFill);stroke:#b9c1cc;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
 .pw .eye{fill:#6b5126;stroke:none}.pb .eye{fill:#cfd5de;stroke:none}
+/* 3D editions (tools/gen_3d2d.py): the 3D page's lacquered burl boards and Staunton pieces, as pictures */
+body:is(.skin-lux3d,.skin-wood3d) .squares .l,body:is(.skin-lux3d,.skin-wood3d) .squares .d{fill:transparent}
+body:is(.skin-lux3d,.skin-wood3d) .board::after{display:none}
+body.skin-lux3d .board{background:url(img/bd-lux3d.webp) center/100% 100%;box-shadow:0 0 0 2px #f1e6c8,0 0 0 3px #6f706c,0 0 0 calc(var(--cell) * .06) #4e4f4c,0 12px 30px rgba(0,0,0,.55)}
+body.skin-wood3d .board{background:url(img/bd-wood3d.webp) center/100% 100%;box-shadow:0 0 0 2px #2a1306,0 0 0 calc(var(--cell) * .05) #7a3f15,0 12px 30px rgba(0,0,0,.55)}
+body.skin-lux3d .frame{background:url(img/fr-lux3d.webp) 0 0/calc(var(--cell) * 3) auto,#7d7e7a}
+body.skin-wood3d .frame{background:url(img/fr-wood3d.webp) 0 0/calc(var(--cell) * 3) auto,#8a4c1e}
+body.skin-lux3d .squares text.on-l{fill:#5d5e5b}body.skin-lux3d .squares text.on-d{fill:#efe3c4}
+body.skin-wood3d .squares text.on-l{fill:#7a3f15}body.skin-wood3d .squares text.on-d{fill:#f4ebd6}
+body:is(.skin-lux3d,.skin-wood3d) .reserve{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.reserve .cp,.promo button{position:relative}
+.pc img.a3d{position:absolute;left:0;bottom:0;width:100%;height:160%;display:block;pointer-events:none;filter:drop-shadow(0 calc(var(--cell) * .05) calc(var(--cell) * .04) rgba(0,0,0,.5))}
+.pc.drag img.a3d{filter:drop-shadow(0 calc(var(--cell) * .16) calc(var(--cell) * .1) rgba(0,0,0,.45))}
+.reserve .cp img.a3d{position:absolute;left:0;bottom:0;width:100%;height:160%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.promo button img.a3d{position:absolute;left:19%;bottom:3%;width:62%;height:99%}
 /* skins (board & pieces) */
 body.skin-grain #sqLight stop:nth-child(1){stop-color:#f3d7a0}body.skin-grain #sqLight stop:nth-child(2){stop-color:#dfb977}
 body.skin-grain #sqDark stop:nth-child(1){stop-color:#8e5a2a}body.skin-grain #sqDark stop:nth-child(2){stop-color:#6c401b}
@@ -1330,8 +1345,8 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
       </div>
     </div>
     </div><div class="ng-col">
-    <div class="field dsg-field" id="fPcs" data-ng="design"><label data-i18n="ng.pcs"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPcs"><button type="button" data-v="std"><span class="th cpth"></span><span class="nm" data-i18n="pcs.std"></span></button><button type="button" data-v="celtic"><span class="th cpth"></span><span class="nm" data-i18n="pcs.celtic"></span></button><button type="button" data-v="fantasy"><span class="th cpth"></span><span class="nm" data-i18n="pcs.fantasy"></span></button><button type="button" data-v="chessnut"><span class="th cpth"></span><span class="nm" data-i18n="pcs.chessnut"></span></button><button type="button" data-v="papercut"><span class="th cpth"></span><span class="nm" data-i18n="pcs.papercut"></span></button><button type="button" data-v="rhosgfx"><span class="th cpth"></span><span class="nm" data-i18n="pcs.rhosgfx"></span></button></div><div class="pc-credit" id="pcCredit"></div></div>
-    <div class="field dsg-field" id="fBoard" data-ng="design"><label data-i18n="ng.board"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button><button type="button" data-v="marble"><span class="th"></span><span class="nm" data-i18n="sk.marble"></span></button><button type="button" data-v="tourney"><span class="th"></span><span class="nm" data-i18n="sk.tourney"></span></button><button type="button" data-v="ocean"><span class="th"></span><span class="nm" data-i18n="sk.ocean"></span></button><button type="button" data-v="rosewood"><span class="th"></span><span class="nm" data-i18n="sk.rosewood"></span></button></div></div>
+    <div class="field dsg-field" id="fPcs" data-ng="design"><label data-i18n="ng.pcs"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPcs"><button type="button" data-v="lux3d"><span class="th cpth"></span><span class="nm" data-i18n="pcs.lux3d"></span></button><button type="button" data-v="wood3d"><span class="th cpth"></span><span class="nm" data-i18n="pcs.wood3d"></span></button><button type="button" data-v="std"><span class="th cpth"></span><span class="nm" data-i18n="pcs.std"></span></button><button type="button" data-v="celtic"><span class="th cpth"></span><span class="nm" data-i18n="pcs.celtic"></span></button><button type="button" data-v="fantasy"><span class="th cpth"></span><span class="nm" data-i18n="pcs.fantasy"></span></button><button type="button" data-v="chessnut"><span class="th cpth"></span><span class="nm" data-i18n="pcs.chessnut"></span></button><button type="button" data-v="papercut"><span class="th cpth"></span><span class="nm" data-i18n="pcs.papercut"></span></button><button type="button" data-v="rhosgfx"><span class="th cpth"></span><span class="nm" data-i18n="pcs.rhosgfx"></span></button></div><div class="pc-credit" id="pcCredit"></div></div>
+    <div class="field dsg-field" id="fBoard" data-ng="design"><label data-i18n="ng.board"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="lux3d"><span class="th"></span><span class="nm" data-i18n="sk.lux3d"></span></button><button type="button" data-v="wood3d"><span class="th"></span><span class="nm" data-i18n="sk.wood3d"></span></button><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button><button type="button" data-v="marble"><span class="th"></span><span class="nm" data-i18n="sk.marble"></span></button><button type="button" data-v="tourney"><span class="th"></span><span class="nm" data-i18n="sk.tourney"></span></button><button type="button" data-v="ocean"><span class="th"></span><span class="nm" data-i18n="sk.ocean"></span></button><button type="button" data-v="rosewood"><span class="th"></span><span class="nm" data-i18n="sk.rosewood"></span></button></div></div>
     </div></div>
     <div class="modal-actions">
       <button class="mbtn" id="btnCancelNew" data-i18n="close"></button>
@@ -1496,14 +1511,14 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=stale1od1"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=9"></script>
-<script src="../shared/headerbar.js?v=31"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="../shared/headerbar.js?v=36"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
 <script src="../shared/tick.js?v=2"></script>
 <script src="../shared/ruletour.js?v=29"></script>
-<script src="i18n_v2.js?v=20261028dsg"></script>
+<script src="i18n_v2.js?v=20261104d3"></script>
 <script src="i18n_lists.js?v=20261021a"></script>
 <script src="../shared/resign.js?v=2"></script>
 <script src="rvbox.js?v=20261028fsa"></script>
@@ -1513,28 +1528,29 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/export.js?v=7"></script>
 <script src="coach.js?v=6"></script>
 <script src="coach-i18n.js?v=3"></script>
-<script src="app.js?v=20261104rpp"></script>
+<script src="app.js?v=20261104d4"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=25'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=29'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/chess.js?v=8')).then(() => load('../atlas/skin/chess.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=79')).then(() => load('../atlas/skin/common.js?v=17')).then(() => load('../atlas/models/chess.js?v=8')).then(() => load('../atlas/skin/chess.js?v=8'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101bfn" defer></script>
+<script src="../shared/atlas.js?v=20261104ug7" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=23"></script>
+<script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>

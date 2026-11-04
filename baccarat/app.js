@@ -95,14 +95,19 @@ function morphKids(a, b) {
   old.forEach(n => { const k = keyOf(n); if (k && !keyed.has(k)) keyed.set(k, n); });
   const used = new Set(), nb = [...b.childNodes];
   let idx = 0;
-  nb.forEach((n, i) => {
+  const pairs = nb.map(n => {
     const k = keyOf(n); let m = null;
     if (k) { m = keyed.get(k); if (m && (used.has(m) || !same(m, n))) m = null; }
     else { while (idx < old.length && (keyOf(old[idx]) || used.has(old[idx]))) idx++; if (idx < old.length && same(old[idx], n)) m = old[idx++]; }
-    if (m) { used.add(m); morphNode(m, n); } else m = n;
+    if (m) used.add(m);
+    return [m, n];
+  });
+  // drop the nodes that go away first: moving a node that stays would restart its CSS animation
+  old.forEach(n => { if (!used.has(n)) n.remove(); });
+  pairs.forEach(([m, n], i) => {
+    if (m) morphNode(m, n); else m = n;
     const at = a.childNodes[i]; if (at !== m) a.insertBefore(m, at || null);
   });
-  [...a.childNodes].slice(nb.length).forEach(n => n.remove());
 }
 function patch(el, html) { const tm = document.createElement(el.tagName); tm.innerHTML = html; morphKids(el, tm); }
 
@@ -274,7 +279,7 @@ function finish() {
   T.lastCoup = { tot, net: r.net, exp: -exp };
   sfx(r.net > 0 ? (r.net >= 1000 ? 'bigchips' : 'win') : r.net < 0 ? 'lose' : 'chips');
   settleBots(c);
-  if (T.bank < MIN_BET) { T.bank = START; S.rebuys++; toast(t('toast.rebuy', { n: fmt(START) })); }
+  if (T.bank < MIN_BET) { T.bank = START; S.rebuys++; S.buyin = START; toast(t('toast.rebuy', { n: fmt(START) })); }
   if (!T.tut) D.chips = T.bank;
   const cutOut = T.shoe.pos >= T.shoe.cut;
   G.note = { k: 'result', cut: cutOut };
@@ -619,6 +624,7 @@ function renderActbar() {
 
 /* ---------------- side panel ---------------- */
 const gl = h => h;
+const coachSw = () => `<button type="button" class="ck-sw${set.coach ? ' on' : ''}" data-csw role="switch" aria-checked="${set.coach ? 'true' : 'false'}" title="${esc(t('set.coach'))}"><b>${set.coach ? 'ON' : 'OFF'}</b><i></i></button>`;
 function renderSide() {
   let h = '';
   // the shoe (exact odds of the remaining cards)
@@ -638,8 +644,8 @@ function renderSide() {
     `<div class="rd-row"><div class="rd-bead">${cap('bead')}${RD.beadSvg(T.res, 7, L)}</div><div class="rd-der"><div>${cap('eye')}${RD.bigSvg(RB.eye, 16, 'eye')}</div><div>${cap('small')}${RD.bigSvg(RB.small, 16, 'small')}</div><div>${cap('roach')}${RD.bigSvg(RB.roach, 16, 'roach')}</div></div></div>` +
     `<div class="rd-ask"><small>${esc(t('rd.ask'))}</small>${ask('B')}${ask('P')}</div></div>`;
   // coach
-  if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3>${coachHtml()}</div>`;
-  else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
+  if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3>${coachHtml()}</div>`;
+  else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
   // session: on PC a strip under the table, elsewhere a card (tab) in the side panel
   const S = T.session, pcCol = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)').matches;
   const cells = `<div><small>${esc(t('ss.hands'))}</small><b>${S.hands}</b></div><div><small>${esc(t('ss.net'))}</small><b class="${S.net > 0 ? 'pos' : S.net < 0 ? 'neg' : ''}">${sg(S.net)}</b></div>` +
@@ -884,10 +890,12 @@ document.addEventListener('click', e => {
   if (!id) return;
   if (id === 'ngReset') NGR = 1;
   else if (id === 'ngRNo') NGR = 0;
-  else { NGR = 0; D.chips = START; if (T && !T.tut) { if (T.phase === 'bet') { T.bets = {}; G.undo = []; } T.bank = START; } save(); if (T) render(); sfx('chips'); toast(t('ng.resetDone', { n: fmt(START) })); }
+  else { NGR = 0; D.chips = START; if (T && !T.tut) { if (T.phase === 'bet') { T.bets = {}; G.undo = []; } T.bank = START; if (T.session) { T.session.buyin = START; T.session.peak = START; } } save(); if (T) render(); sfx('chips'); toast(t('ng.resetDone', { n: fmt(START) })); }
   renderNew();
 });
 $('#btnNewClose').onclick = () => closeOv('#newOverlay');
+// the ルール button on each game card (shared/ngtabs.js): that game's rules tutorial
+$('#ngBody').ngtRules = id => window.BacRules && BacRules.open(id);
 $('#btnStart').onclick = () => { set.prefs[NG.v] = NG.p; save(); closeOv('#newOverlay'); clearTimeout(G.timer); newSession(NG.v); };
 
 /* design (shared with the solitaire / poker) */
@@ -981,4 +989,5 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v]) {
 } else newSession(set.v);
 
 window.BacApp = { num, explainHtml, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, baseOdds, shoeOdds, SPOTS, chipTop, statOf };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); const sy = window.scrollY, sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (sc) sc.scrollTop = st; window.scrollTo(0, sy); });
 })();

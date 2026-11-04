@@ -135,7 +135,9 @@ static void findKings(void) { KSQ[0] = KSQ[1] = -1; for (int s = 0; s < 90; s++)
 // Accumulators are updated lazily: makeMove only records the move; evaluate() brings the newest accumulator up to date from the
 // nearest computed one below it (or recomputes it from the board).
 #define XQ_IN 1260
-#define XQ_H 256
+#ifndef XQ_H
+#define XQ_H 256   /* hidden size; engine_simd512.wasm is built with -DXQ_H=512 */
+#endif
 #define XQ_QA 127
 #define XQ_QB 64
 #define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
@@ -204,6 +206,7 @@ static int xqEval(void) {
   return (int)(v > 20000 ? 20000 : v < -20000 ? -20000 : v);
 }
 EXPORT(xq_w1_ptr) i16 *xq_w1_ptr(void) { return xqW1; }
+EXPORT(xq_h) int xq_h(void) { return XQ_H; }
 EXPORT(xq_w2_ptr) i16 *xq_w2_ptr(void) { return xqW2; }
 EXPORT(xq_b1_ptr) i32 *xq_b1_ptr(void) { return xqB1; }
 EXPORT(xq_set_b2) void xq_set_b2(i32 b) { xqB2 = b; }

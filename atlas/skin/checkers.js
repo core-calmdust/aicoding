@@ -29,7 +29,10 @@
   const K = (OUT * S).toFixed(3), C = (v) => `calc(var(--cell) * ${v})`;
   st.textContent = `
 html.atlas-checkers,html.atlas-checkers body{--cell:min((var(--vh) - var(--padt) - var(--pad) - 8px - var(--ttop)) / ${K}, (100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / ${K}, 128px)!important;--fw:${C(K)}!important;--fh:${C(K)}!important}
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-checkers,html.atlas-checkers body{--cell:min((var(--vh) - var(--pad) * 2 - var(--rbx, 0px)) / ${K}, (100vw - var(--rw, 360px) - var(--gap) - var(--padx) * 2) / ${K}, 128px)!important}}   /* PC: sized for the fixed 360px column (a width-limited board never pushes it off the edge) */
+/* (the page's PC rule html.dock-fit body:not(.no-online) — the online dock open — is more specific and makes the frame 8.5 × 9.5:
+   the square 3D board then ran under the info column; the board stays square here too) */
+html.atlas-checkers:not(#_),html.atlas-checkers:not(#_) body{--fw:${C(K)}!important;--fh:${C(K)}!important}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-checkers:not(#_),html.atlas-checkers:not(#_) body{--cell:min((var(--vh) - var(--pad) * 2 - var(--rbx, 0px)) / ${K}, (100vw - var(--rw, 360px) - var(--gap) - var(--padx) * 2) / ${K}, 128px)!important}}   /* PC: sized for the fixed 360px column (a width-limited board never pushes it off the edge) */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-height: 560px){
 @media not all and (pointer: coarse) and (min-aspect-ratio: 1/1) and (max-width: 900px){
@@ -68,8 +71,9 @@ html.atlas-checkers .sqfx.lastf{background:rgba(255,206,90,.16)!important}
 html.atlas-checkers .dest{background:rgba(60,214,130,.9)!important;box-shadow:0 0 10px rgba(60,214,130,.8)!important}
 html.atlas-checkers .dest.mid{background:rgba(60,214,130,.55)!important}
 html.atlas-checkers .sqfx.trail{background:rgba(60,214,130,.18)!important}
-html.atlas-checkers #bdRow,html.atlas-checkers #fPieces{display:none!important}
+html.atlas-checkers #fPieces{display:none!important}
 html.atlas-checkers .ck3dnote{margin:0;padding:12px 14px;border-radius:14px;background:#f8f0e0;border:2px solid #ead9b6;font-size:13px;line-height:1.6;color:#4a4f66}
+html.atlas-2d .ck3dnote{display:none!important}
 html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margin-bottom:2px}
 @media (max-width: 760px){html.atlas-checkers .frame{margin-top:${C(.1)}!important}}
 `;
@@ -78,6 +82,7 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   const skin = AtlasSkin.init({
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // frame edge to frame edge
     guide: '../images/atlas/g-crab.webp', guideFallback: '../images/atlas/checkers.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -95,6 +100,8 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   if (!skin) return;
   T3.show('checkers', root, { still: true });
   skin.alignTo(S, Y);
+  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
+  if (skin.view) skin.view({ key: 'atlas-checkers-view', row: document.getElementById('bdRow'), img: '../images/atlas/checkers.webp', cls: ['atlas-checkers'] });
   T3.kick(800);
   { let last = ''; const app = document.querySelector('.app');   // the online dock / header bar can move the board without resizing it
     const chk = () => { const r = boardDom.getBoundingClientRect(), k = Math.round(r.left) + ',' + Math.round(r.top + scrollY) + ',' + Math.round(r.width); if (k !== last) { last = k; dispatchEvent(new Event('resize')); } };

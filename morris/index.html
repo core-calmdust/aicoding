@@ -901,7 +901,7 @@ html[lang=ar] .lx-banner .pg{text-align:left}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzGridView:not(.hidden)){width:min(1000px, calc(100vw - 64px))}
   #rulesOverlay .modal, #lessonOverlay .modal:has(> #lessonListView:not(.hidden)), #puzzleOverlay .modal:has(> #pzListView:not(.hidden)){height:min(880px, calc(100vh - 20px));height:min(880px, calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
   #rulesOverlay, #lessonOverlay, #puzzleOverlay{padding:10px 16px}
-  #rulesOverlay .modal{padding:16px 28px 18px}
+  #rulesOverlay .modal{padding:24px 24px 18px}   /* same as the lesson / opening dialogs, so the top tabs do not shift */
   #rulesOverlay .ls-tabs{margin-bottom:10px}
   #rulesOverlay #rulesBody{margin-top:10px!important;display:flex;flex-direction:column}
   #rulesOverlay #rulesBody > div:not(.hidden){max-width:none;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -1179,7 +1179,7 @@ body.in-online #coachCard{display:none!important}
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fRules" data-ng="game">
-      <label><span data-i18n="ng.rules"></span> <button id="ngRulesHelp" style="font-size:11px;color:var(--accent);margin-left:6px;text-decoration:underline" data-i18n="ng.rulesHelp"></button></label>
+      <label><span data-i18n="ng.rules"></span></label>
       <div class="ngt-gcards" id="ruleCards" style="--ngt-cols:3"></div>
     </div>
     <div class="ng-col ng-l">
@@ -1336,8 +1336,8 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/export.js?v=7"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=9"></script>
-<script src="../shared/headerbar.js?v=31"></script>
+<script src="../shared/rulesoffer.js?v=14"></script>
+<script src="../shared/headerbar.js?v=36"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -2469,7 +2469,8 @@ function resumeWith() {
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-$('#ngRulesHelp').onclick = () => openRules(draft.rule);
+// the ルール button on each card (shared/ngtabs.js): that variant's rules tab (12 / 6 men: past the shared intro, at their own first page)
+$('#ruleCards').ngtRules = r => openRules(r, r === 'nine' ? 0 : 1);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -3740,22 +3741,24 @@ window.addEventListener('resize', () => renderFx());
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=25'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=29'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=75')).then(() => load('../atlas/skin/common.js?v=12')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=3'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=79')).then(() => load('../atlas/skin/common.js?v=17')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=1')).then(() => load('../atlas/skin/morris.js?v=6'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261101bfn" defer></script>
+<script src="../shared/atlas.js?v=20261104ug7" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=23"></script>
+<script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
+<script src="../shared/rulelink.js?v=1"></script>
 </body>
 </html>

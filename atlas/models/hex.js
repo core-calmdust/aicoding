@@ -37,55 +37,70 @@
   // light veneer, fibres along x, growth rings and a fiddleback shimmer across the grain (tinted per wood by vertex colour)
   function veneerTex() {
     const W = SZ(1024);
-    return tex('hxVen', W, W, (g) => {
-      const N = makeNoise(41), img = g.createImageData(W, W), d = img.data, A = [250, 238, 214], B = [196, 160, 112];
-      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / W;
-        // tileable: blend the pattern at u and u − 1, v and v − 1
-        const f = (uu, vv) => {
-          const warp = N(uu * 2 + 3, vv * 5 + 3, 3);
-          const ring = Math.sin((vv * 7 + warp * 2.2) * TAU) * .5 + .5;
-          const fib = N(uu * 9 + 3, vv * 220 + 3, 2);
-          const fiddle = Math.sin((uu * 26 + N(uu * 3, vv * 3, 2) * 3) * TAU) * .5 + .5;   // curl across the fibres
-          return Math.pow(ring, 3) * .3 + (fib - .5) * .42 + fiddle * .16 + (N(uu * 2.5, vv * 2.5, 3) - .5) * .2;
-        };
-        const bu = u < .5 ? 0 : (u - .5) * 2, bv = v < .5 ? 0 : (v - .5) * 2;
-        let t = .22 + (f(u, v) * (1 - bu) + f(u - 1, v) * bu) * (1 - bv) + (f(u, v - 1) * (1 - bu) + f(u - 1, v - 1) * bu) * bv;
-        t = Math.max(0, Math.min(1, t));
-        const i = (y * W + x) * 4;
-        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
-    });
+    return tex('hxVen', W, W, (g) => { paint(g.canvas, 'veneer'); });
   }
   // roiro lacquer: near-black with a deep red-brown undertone in soft clouds
   function lacquerTex() {
     const W = SZ(512);
-    return tex('hxLaq', W, W, (g) => {
-      const N = makeNoise(9), img = g.createImageData(W, W), d = img.data;
-      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
-        const k = N(x / W * 3, y / W * 3, 4), i = (y * W + x) * 4;
-        d[i] = 14 + k * 16; d[i + 1] = 9 + k * 7; d[i + 2] = 8 + k * 5; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
-    });
+    return tex('hxLaq', W, W, (g) => { paint(g.canvas, 'lacquer'); });
   }
   // guilloché under translucent enamel: fine engine-turned waves, brighter where the enamel is thin
   function enamelTex(key, base, light) {
     const W = SZ(512);
-    return tex(key, W, W, (g) => {
-      const A = hexRGB(base), B = hexRGB(light), img = g.createImageData(W, W), d = img.data, N = makeNoise(5);
-      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
-        const u = x / W, v = y / W;
-        const w1 = Math.sin((v * 18 + Math.sin(u * TAU * 3) * .35) * TAU), w2 = Math.sin((u * 18 + Math.sin(v * TAU * 3) * .35) * TAU);
-        let t = Math.pow(Math.abs(w1 * w2), .6) * .55 + (N(u * 6, v * 6, 2) - .5) * .2 + .15;
-        t = Math.max(0, Math.min(1, t));
-        const i = (y * W + x) * 4;
-        d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
-    });
+    return tex(key, W, W, (g) => { paint(g.canvas, 'enamel', { A: hexRGB(base), B: hexRGB(light) }); });
   }
+  function KL(X) {
+    const makeNoise = X.makeNoise, TAU = Math.PI * 2;
+    return {
+      // light veneer, fibres along x, growth rings and a fiddleback shimmer across the grain (tinted per wood by vertex colour)
+      veneer(d, W) {
+        const N = makeNoise(41), A = [250, 238, 214], B = [196, 160, 112];
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+          const u = x / W, v = y / W;
+          // tileable: blend the pattern at u and u − 1, v and v − 1
+          const f = (uu, vv) => {
+            const warp = N(uu * 2 + 3, vv * 5 + 3, 3);
+            const ring = Math.sin((vv * 7 + warp * 2.2) * TAU) * .5 + .5;
+            const fib = N(uu * 9 + 3, vv * 220 + 3, 2);
+            const fiddle = Math.sin((uu * 26 + N(uu * 3, vv * 3, 2) * 3) * TAU) * .5 + .5;   // curl across the fibres
+            return Math.pow(ring, 3) * .3 + (fib - .5) * .42 + fiddle * .16 + (N(uu * 2.5, vv * 2.5, 3) - .5) * .2;
+          };
+          const bu = u < .5 ? 0 : (u - .5) * 2, bv = v < .5 ? 0 : (v - .5) * 2;
+          let t = .22 + (f(u, v) * (1 - bu) + f(u - 1, v) * bu) * (1 - bv) + (f(u, v - 1) * (1 - bu) + f(u - 1, v - 1) * bu) * bv;
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * W + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      },
+      lacquer(d, W) {
+        const N = makeNoise(9);
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+          const k = N(x / W * 3, y / W * 3, 4), i = (y * W + x) * 4;
+          d[i] = 14 + k * 16; d[i + 1] = 9 + k * 7; d[i + 2] = 8 + k * 5; d[i + 3] = 255;
+        }
+      },
+      enamel(d, W, H, p) {
+        const A = p.A, B = p.B, N = makeNoise(5);
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+          const u = x / W, v = y / W;
+          const w1 = Math.sin((v * 18 + Math.sin(u * TAU * 3) * .35) * TAU), w2 = Math.sin((u * 18 + Math.sin(v * TAU * 3) * .35) * TAU);
+          let t = Math.pow(Math.abs(w1 * w2), .6) * .55 + (N(u * 6, v * 6, 2) - .5) * .2 + .15;
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * W + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   // glass lens: lathe v runs from the foot (0) to the crown (1) → dark at the rim, light gathering in the dome
   function glassTex(key, deep, mid, glow) {
     return tex(key, 8, 128, (g, W, H) => {

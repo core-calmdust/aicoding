@@ -29,59 +29,78 @@
   /* ---------- small procedural swatches (canvases, cached) ---------- */
   const SW = {};
   // a veneer leaf: fibres along x; o.curl = fiddleback shimmer across, o.stripe = macassar streaks, o.ring = growth-ring frequency
+  function KL(X) {
+    const makeNoise = X.makeNoise;
+    return {
+      veneer(d, N0, H, p) {
+        const o = p.o, N = makeNoise(p.seed), A = p.A, B = p.B;
+        const val = (u, v) => {
+          const warp = N(u * 1.6 + 7, v * 3 + 7, 3);
+          const ring = Math.sin((v * (o.ring || 5) + warp * 2.2) * Math.PI * 2) * .5 + .5;
+          const fib = N(u * 6 + 7, v * 120 + 7, 2);
+          let t = .15 + Math.pow(ring, 3) * .35 + (fib - .5) * .45 + (N(u * 2 + 7, v * 2 + 7, 2) - .5) * .25;
+          if (o.curl) t += Math.pow(Math.sin((u * 34 + N(u * 3 + 7, v * 2 + 7, 2) * 4) * Math.PI) * .5 + .5, 4) * o.curl;
+          if (o.stripe) t += Math.pow(Math.sin((v * 6 + warp * 3.4) * Math.PI) * .5 + .5, 10) * o.stripe;
+          if (N(u * 90 + 7, v * 400 + 7, 1) > .84) t += .12;   // pores
+          return t;
+        };
+        // seamless: each texel blends the pattern with its copies one tile to the left / above
+        for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
+          const u = x / N0, v = y / N0;
+          let t = val(u, v) * (1 - u) * (1 - v) + val(u - 1, v) * u * (1 - v) + val(u, v - 1) * (1 - u) * v + val(u - 1, v - 1) * u * v;
+          t = Math.max(0, Math.min(1, t));
+          const i = (y * N0 + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+        }
+      },
+      leather(d, N0, H, p) {
+        const seed = p.seed, GN = 44, N = makeNoise(seed);
+        let r = seed * 7919 + 17; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+        const P = new Float32Array(GN * GN * 2); for (let i = 0; i < GN * GN; i++) { P[i * 2] = .15 + rnd() * .7; P[i * 2 + 1] = .15 + rnd() * .7; }
+        for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
+          const gx = x / N0 * GN, gy = y / N0 * GN, cx = Math.floor(gx), cy = Math.floor(gy);
+          let f1 = 9, f2 = 9;
+          for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+            const X0 = cx + i, Y0 = cy + j, ci = ((Y0 % GN + GN) % GN) * GN + ((X0 % GN + GN) % GN);
+            const dx = X0 + P[ci * 2] - gx, dy = Y0 + P[ci * 2 + 1] - gy, dd = dx * dx + dy * dy;
+            if (dd < f1) { f2 = f1; f1 = dd; } else if (dd < f2) f2 = dd;
+          }
+          const e = Math.sqrt(f2) - Math.sqrt(f1), dome = 1 - Math.min(1, Math.sqrt(f1) * 1.3);
+          let h = 120 + dome * 46 + (N(x / 40, y / 40, 2) - .5) * 30;
+          if (e < .12) h -= (1 - e / .12) * 80;
+          if (N(x * .9, y * .9, 1) > .86) h -= 18;
+          const i = (y * N0 + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, h)); d[i + 3] = 255;
+        }
+      },
+      suede(d, N0, H, p) {
+        const N = makeNoise(41), A = p.A;
+        for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) { const k = (Math.random() - .5) * 18 + (N(x / 2, y / 2, 2) - .5) * 16 + (N(x / 30, y / 30, 2) - .5) * 14, i = (y * N0 + x) * 4; d[i] = A[0] + k; d[i + 1] = A[1] + k; d[i + 2] = A[2] + k; d[i + 3] = 255; }
+      },
+    };
+  }
+  // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
+  // canvas fills a moment later; on the game pages (no texgen) right here, as before
+  function paint(c, name, p, after, c2) {
+    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
+    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height), b = c2 ? c2.getContext('2d').createImageData(c2.width, c2.height) : null;
+    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {}, b && b.data, (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k.getContext('2d'); });
+    g.putImageData(a, 0, 0); if (b) c2.getContext('2d').putImageData(b, 0, 0); if (after) after(g, c.width, c.height); return c;
+  }
+  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   function veneer(key, base, dark, o = {}) {
     if (SW[key]) return SW[key];
-    const N0 = 256, c = cv(N0, N0), g = c.getContext('2d'), img = g.createImageData(N0, N0), d = img.data;
-    const N = makeNoise(o.seed || key.length * 13 + 7), A = hexRGB(base), B = hexRGB(dark);
-    const val = (u, v) => {
-      const warp = N(u * 1.6 + 7, v * 3 + 7, 3);
-      const ring = Math.sin((v * (o.ring || 5) + warp * 2.2) * Math.PI * 2) * .5 + .5;
-      const fib = N(u * 6 + 7, v * 120 + 7, 2);
-      let t = .15 + Math.pow(ring, 3) * .35 + (fib - .5) * .45 + (N(u * 2 + 7, v * 2 + 7, 2) - .5) * .25;
-      if (o.curl) t += Math.pow(Math.sin((u * 34 + N(u * 3 + 7, v * 2 + 7, 2) * 4) * Math.PI) * .5 + .5, 4) * o.curl;
-      if (o.stripe) t += Math.pow(Math.sin((v * 6 + warp * 3.4) * Math.PI) * .5 + .5, 10) * o.stripe;
-      if (N(u * 90 + 7, v * 400 + 7, 1) > .84) t += .12;   // pores
-      return t;
-    };
-    // seamless: each texel blends the pattern with its copies one tile to the left / above
-    for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
-      const u = x / N0, v = y / N0;
-      let t = val(u, v) * (1 - u) * (1 - v) + val(u - 1, v) * u * (1 - v) + val(u, v - 1) * (1 - u) * v + val(u - 1, v - 1) * u * v;
-      t = Math.max(0, Math.min(1, t));
-      const i = (y * N0 + x) * 4;
-      d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0); return (SW[key] = c);
+    return (SW[key] = paint(cv(256, 256), 'veneer', { o, seed: o.seed || key.length * 13 + 7, A: hexRGB(base), B: hexRGB(dark) }));
   }
   // leather: a grey height tile (128 = flat) — pebbles with creases between, fine pores; drawn in 'overlay' over a colour
   function leatherTile(key = 'lth', seed = 3) {
     if (SW[key]) return SW[key];
     // pebble grain: cellular noise on a wrapping grid (seamless) — domed pebbles, fine creases between them, tiny pores
-    const N0 = 512, GN = 44, c = cv(N0, N0), g = c.getContext('2d'), img = g.createImageData(N0, N0), d = img.data, N = makeNoise(seed);
-    let r = seed * 7919 + 17; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-    const P = new Float32Array(GN * GN * 2); for (let i = 0; i < GN * GN; i++) { P[i * 2] = .15 + rnd() * .7; P[i * 2 + 1] = .15 + rnd() * .7; }
-    for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
-      const gx = x / N0 * GN, gy = y / N0 * GN, cx = Math.floor(gx), cy = Math.floor(gy);
-      let f1 = 9, f2 = 9;
-      for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
-        const X0 = cx + i, Y0 = cy + j, ci = ((Y0 % GN + GN) % GN) * GN + ((X0 % GN + GN) % GN);
-        const dx = X0 + P[ci * 2] - gx, dy = Y0 + P[ci * 2 + 1] - gy, dd = dx * dx + dy * dy;
-        if (dd < f1) { f2 = f1; f1 = dd; } else if (dd < f2) f2 = dd;
-      }
-      const e = Math.sqrt(f2) - Math.sqrt(f1), dome = 1 - Math.min(1, Math.sqrt(f1) * 1.3);
-      let h = 120 + dome * 46 + (N(x / 40, y / 40, 2) - .5) * 30;
-      if (e < .12) h -= (1 - e / .12) * 80;
-      if (N(x * .9, y * .9, 1) > .86) h -= 18;
-      const i = (y * N0 + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, h)); d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0); return (SW[key] = c);
+    return (SW[key] = paint(cv(512, 512), 'leather', { seed }));
   }
   // suede / felt lining of the bear-off trays
   function suede(key, base) {
     if (SW[key]) return SW[key];
-    const N0 = 256, c = cv(N0, N0), g = c.getContext('2d'), img = g.createImageData(N0, N0), d = img.data, N = makeNoise(41), A = hexRGB(base);
-    for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) { const k = (Math.random() - .5) * 18 + (N(x / 2, y / 2, 2) - .5) * 16 + (N(x / 30, y / 30, 2) - .5) * 14, i = (y * N0 + x) * 4; d[i] = A[0] + k; d[i + 1] = A[1] + k; d[i + 2] = A[2] + k; d[i + 3] = 255; }
-    g.putImageData(img, 0, 0); return (SW[key] = c);
+    return (SW[key] = paint(cv(256, 256), 'suede', { A: hexRGB(base) }));
   }
   const W_ = {   // the veneers of the marquetry
     pointL: () => veneer('vMapP', '#f0dfb6', '#c8a676', { curl: .3, ring: 2, seed: 31 }),
@@ -113,7 +132,11 @@
   /* ---------- the top of the case (field level): fields, points, trays ---------- */
   const PX = () => matchMedia('(pointer: coarse)').matches ? 2048 : 2560;
   function fieldCanvas(look, g) {
-    const k = PX() / g.W, Wc = Math.round(g.W * k), Hc = Math.round(g.H * k), c = cv(Wc, Hc), x = c.getContext('2d');
+    const k = PX() / g.W, Wc = Math.round(g.W * k), Hc = Math.round(g.H * k), c = cv(Wc, Hc);
+    // (drawn once its veneers / leather are there — on the portal they are made in a worker)
+    const deps = look === 'scarlet' ? [leatherTile(), suede('sdBlk', '#141416')]
+      : ['walnut', 'walnutR', 'dCream', 'holly', 'pointL', 'dBrown', 'dRed', 'dGold', 'dCyan', 'dNavy', 'dGreen', 'dBlack', 'dBlue', 'dOrange'].map(n => W_[n]()).concat([suede('sdTray', '#16120f')]);
+    return later(deps, c, (x) => {
     const U = v => v * k;
     const fields = [g.LX, g.RX];
     const triN = (x0, i, top) => { const cx = U(x0 + i + .5), y0 = U(top ? g.TOP : g.BOT), y1 = U(top ? g.TOP + g.PL : g.BOT - g.PL), hw = U(.31); x.beginPath(); x.moveTo(cx - hw, y0); x.lineTo(cx + hw, y0); x.lineTo(cx, y1); x.closePath(); };   // the marquetry board's slimmer points
@@ -197,11 +220,12 @@
       x.strokeRect(U(x0) - s / 2, U(y0) - s / 2, U(w) + s, U(h) + s); x.restore();
     };
     ao(g.LX, g.TOP, 6, g.H - 1); ao(g.RX, g.TOP, 6, g.H - 1); ao(g.TX, g.TOP, g.TW, g.H - 1);
-    return c;
+    });
   }
   /* ---------- the rails (frame, bar, tray divider), seen from above ---------- */
   function frameCanvas(look, g) {
-    const k = 2048 / g.W, Wc = 2048, Hc = Math.round(g.H * k), c = cv(Wc, Hc), x = c.getContext('2d'), U = v => v * k;
+    const k = 2048 / g.W, Wc = 2048, Hc = Math.round(g.H * k), c = cv(Wc, Hc), U = v => v * k;
+    return later(look === 'scarlet' ? [leatherTile()] : [W_.walnutR(), W_.walnut()], c, (x) => {
     const IN = [[g.LX, g.TOP], [g.W - .5, g.TOP], [g.W - .5, g.BOT], [g.LX, g.BOT]], OUT = [[0, 0], [g.W, 0], [g.W, g.H], [0, g.H]];
     const strip = (draw) => { for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; x.save(); x.beginPath(); x.moveTo(U(OUT[i][0]), U(OUT[i][1])); x.lineTo(U(OUT[j][0]), U(OUT[j][1])); x.lineTo(U(IN[j][0]), U(IN[j][1])); x.lineTo(U(IN[i][0]), U(IN[i][1])); x.closePath(); x.clip(); draw(i % 2 === 0); x.restore(); } };
     const lay = (sw, vert, sc) => { const p = x.createPattern(sw, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().rotate(vert ? 90 : 0).scale(sc)); x.fillStyle = p; x.fillRect(0, 0, Wc, Hc); };
@@ -227,7 +251,7 @@
       x.strokeStyle = 'rgba(240,226,196,.75)'; x.lineWidth = U(.018); x.strokeRect(U(.2), U(.2), U(g.W - .4), U(g.H - .4));
       x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
     }
-    return c;
+    });
   }
 
   /* ---------- materials ---------- */
@@ -374,12 +398,14 @@
     const TT = T(), [rim, face] = CKL[id] || CKL.gold, [col, rough] = RIM[rim];
     const metal = new TT.MeshPhysicalMaterial({ color: new TT.Color(col).convertSRGBToLinear(), metalness: 1, roughness: rough, clearcoat: .4, clearcoatRoughness: .2, envMapIntensity: 1.2 });
     // the inset face: leather grain, a slightly darker edge where it meets the ring
-    const c = cv(256, 256), x = c.getContext('2d');
+    const c = cv(256, 256);
+    later([leatherTile()], c, (x) => {
     x.fillStyle = FACE[face]; x.fillRect(0, 0, 256, 256);
     x.globalCompositeOperation = 'overlay'; x.globalAlpha = face === 'black' ? 1 : face === 'white' ? .12 : .7; const p = x.createPattern(leatherTile(), 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.45)); x.fillStyle = p; x.fillRect(0, 0, 256, 256);
     if (face === 'black') { x.globalCompositeOperation = 'screen'; x.globalAlpha = .05; x.fillRect(0, 0, 256, 256); }
     x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
     const gr = x.createRadialGradient(128, 128, 90, 128, 128, 128); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, face === 'black' ? 'rgba(0,0,0,.5)' : 'rgba(60,40,10,.28)'); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+    });
     const ft = tex(c, 4);
     const en = face === 'white';   // white = glossy enamel, the others leather
     const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: en ? .0012 : .006, roughness: en ? .18 : face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : en ? 0x000000 : 0x6a6050), clearcoat: en ? 1 : .1, clearcoatRoughness: en ? .05 : .5 });
@@ -453,11 +479,13 @@
   function cube(v = 64, size = .86) {
     const TT = T(), key = String(v);
     if (!cubeTex[key]) {
-      const c = cv(256, 256), x = c.getContext('2d');
+      const c = cv(256, 256);
+      later([W_.rosewood()], c, (x) => {
       x.fillStyle = '#2a1a12'; x.fillRect(0, 0, 256, 256);
       x.globalAlpha = .35; x.drawImage(W_.rosewood(), 0, 0, 256, 256); x.globalAlpha = 1;
       x.strokeStyle = '#d9b468'; x.lineWidth = 7; x.beginPath(); x.arc(128, 128, 92, 0, TAU); x.stroke();
       x.fillStyle = '#ecd39a'; x.font = '700 96px Georgia, "Times New Roman", serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(key, 128, 136);
+      });
       cubeTex[key] = tex(c, 4);
     }
     const side = new TT.MeshPhysicalMaterial({ color: new TT.Color(0x2a1a12).convertSRGBToLinear(), map: cubeTex.side || (cubeTex.side = tex(W_.rosewood(), 4)), roughness: .3, clearcoat: .8, clearcoatRoughness: .1 });
@@ -510,6 +538,11 @@
   function sprites(px = 192) {
     if (spriteP) return spriteP;
     return (spriteP = new Promise(res => setTimeout(res, 0)).then(() => {
+      // portal: the swatches are drawn in a worker — build the parts once and wait for them (their materials are cached)
+      if (!window.AtlasTexGen) return;
+      for (const id of Object.keys(CKL)) { checker(id); dieG(id, .82); }
+      cube(' ', .86); return AtlasTexGen.settle();
+    }).then(() => {
       const TT = T(), R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       R.setPixelRatio(1); R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = 1.0; R.setClearColor(0, 0);
       const scene = new TT.Scene(); try { scene.environment = studio(R); } catch (e) {}

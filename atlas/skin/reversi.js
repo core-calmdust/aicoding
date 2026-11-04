@@ -18,6 +18,7 @@
   const skin = AtlasSkin.init({
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
+    pc: { vars: ['--board'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const H = r.height * (S + 1.1) / S; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // bezel to bezel
     guide: '../images/atlas/g-disc.webp', guideFallback: '../images/atlas/reversi.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
@@ -33,6 +34,8 @@
   if (!skin) return;
   T3.show('reversi', board, { still: true });
   skin.alignTo(S, Y);
+  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
+  if (skin.view) skin.view({ key: 'atlas-reversi-view', row: document.getElementById('bdRow'), img: '../images/atlas/reversi.webp' });
 
   /* ---------- 3D discs mirrored from the page's setDisc() ---------- */
   const W = T3.M({ color: 0xf3f0e6, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 }), B = T3.M({ color: 0x111215, roughness: .3, clearcoat: .7, clearcoatRoughness: .2 });

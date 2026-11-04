@@ -165,7 +165,9 @@ function placePhone(st) {
     return scroll ? { t: Math.max(t, sr.top) + 6, b: Math.min(b, sr.bottom) - 6 } : { t: t + 4, b: b - 4 };
   };
   let dock, d = 0;
-  if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
+  const el0 = st.at && document.querySelector([].concat(st.at).flat()[0]), pinned = scroll && el0 && getComputedStyle(el0).position === 'sticky';
+  if (pinned) { dock = 'top'; d = -sc.scrollTop; }           // the action bar pinned over the tab bar: the table back at the top, above it
+  else if (!r) dock = 'bottom';                                   // hello / end: the table stays visible above the bubble
   else if (!scroll) dock = tabBtn(st) || r.t + r.b > H ? 'top' : 'bottom';  // a fixed target (header buttons, tab bar): the other end
   else {
     // try both docks: the scroll that puts the target in the free area (it can't scroll above the top) — keep the one that fits best
@@ -327,6 +329,13 @@ const FOLD = {"ja": "説明をたたむ／ひらく", "en": "Collapse / expand",
 Object.keys(FOLD).forEach(k => { if (TX[k]) TX[k].fold = FOLD[k]; });
 function L(k, v) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k] || k; if (v) x = String(x).replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 
+// Space / Enter: "Next" (and "Back to the game" on the last box); on a step waiting for a move the keys go to the game as usual
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (!layer || !layer.classList.contains('show') || document.querySelector('.overlay.show')) return;
+  const b = $('#tutNext') || $('#tutPlay'); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); b.click();
+}, true);
 window.PokerTut = { setup, botMove, ev, allow, start, hide, finish, offer, L, TX };
 // first visit: the offer box (after the page has settled)
 setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);

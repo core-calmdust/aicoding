@@ -1,7 +1,7 @@
 /* ===== dots skin (dots/?skin=atlas): the spiral notebook under the see-through DOM board =====
    the frame (1.07 × the board) is the lower square of the notebook page; the spiral and the page head stand above it
    (--dtband × the board), so the frame keeps that room free and the PC board is a little smaller */
-html.atlas-skin.atlas-dots .frame{background:transparent!important;box-shadow:none!important;border:0!important;margin-top:calc(var(--board) * var(--dtband, .29))!important}
+html.atlas-skin.atlas-dots:not(.atlas-2d) .frame{background:transparent!important;box-shadow:none!important;border:0!important;margin-top:calc(var(--board) * var(--dtband, .29))!important}
 html.atlas-dots .frame::before,html.atlas-dots .frame::after,html.atlas-dots .board::after{display:none!important}
 html.atlas-dots .board{background:transparent!important;box-shadow:none!important;overflow:visible!important}
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
