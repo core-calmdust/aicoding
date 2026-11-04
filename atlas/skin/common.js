@@ -201,7 +201,7 @@
       });
       return E;
     };
-    const unplace = () => { const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); if (P.unplace) P.unplace(); };
+    const unplace = () => { const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
     let fitKey = '';
     function fit() {
       if (busy) return;
@@ -234,6 +234,7 @@
         if (getComputedStyle(g).position === 'static') g.style.position = 'relative';
         if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
         side.style.setProperty('max-height', 'none', 'important');
+        { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }   // (the cards scroll inside the column, also in the dock's compact mode)
         const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0, appShift = -(parseFloat(getComputedStyle(app).top) || 0);
         for (let i = 0; i < 4; i++) {
           const F = frame(), E = extent(F), W = (E.r - E.l) + GAP + SW;
@@ -259,7 +260,8 @@
     MQ.addEventListener ? MQ.addEventListener('change', later) : MQ.addListener(later);
     if (window.ResizeObserver) { const ro = new ResizeObserver(later); ro.observe(de); ro.observe(boardDom); }
     new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
-    new MutationObserver(later).observe(body, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => { later(); setTimeout(later, 320); setTimeout(later, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
+    { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', later); }
     if (document.fonts) document.fonts.ready.then(later);
     [800, 2000, 4500].forEach(ms => setTimeout(remeasure, ms));
     setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) later(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
