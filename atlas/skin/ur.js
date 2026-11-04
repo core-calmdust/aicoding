@@ -123,7 +123,8 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     ar: ['ثلاثي الأبعاد: رقعة المتحف البريطاني', 'رقعة المقابر الملكية في أور (تطعيم بالصدف واللازورد والحجر الجيري الأحمر) بالأبعاد الثلاثة. اختر شكل القطع أدناه.'],
   };
   // phones: a shorter label where the page's one does not fit a round menu chip (like checkers' "Game")
-  const SHORT = { btnNew: { en: 'Game', es: 'Partida', pt: 'Partida', fr: 'Partie', de: 'Partie' }, btnResign: { fr: 'Abandon', de: 'Aufgabe', es: 'Rendir', hi: 'हार' }, btnLesson: { es: 'Lección', de: 'Lektion' }, btnPuzzle: { es: 'Problema', fr: 'Problème', de: 'Aufgabe' } };
+  const SHORT = { btnNew: { en: 'Game', es: 'Partida', pt: 'Partida', fr: 'Partie', de: 'Partie' }, btnUndo: { es: 'Atrás', pt: 'Voltar' }, btnResign: { fr: 'Abandon', de: 'Aufgabe', es: 'Rendir', hi: 'हार' },
+    btnLesson: { es: 'Lección', de: 'Lektion' }, btnPuzzle: { es: 'Retos', pt: 'Retos', fr: 'Défis', de: 'Rätsel' } };
   function shortLabels() {
     const l = (document.getElementById('langSel') || {}).value || 'ja';
     for (const id in SHORT) { const b = document.getElementById(id), sp = b && b.querySelector('span'); if (!sp) continue; const v = SHORT[id][l];

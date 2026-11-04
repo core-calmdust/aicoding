@@ -113,8 +113,9 @@ function classify(st, m, before) {
   const r = rl(st), me = st.turn, after = E.apply(st, m).state;
   const rAfter = E.hitRisk(after, me), rBefore = E.hitRisk(st, me);
   const k = m.piece != null ? m.piece : st.pos[me].indexOf(m.from);
-  const isCenter = m.to < r.goal && r.rosIdx[m.to] && r.shared[me][m.to];
-  const fromCenter = m.from > 0 && r.rosIdx[m.from] && r.shared[me][m.from];
+  // the middle rosette is a safe square only where rosettes are safe (Finkel); in Blitz / Masters it is just a rosette
+  const isCenter = r.safeRosettes && m.to < r.goal && r.rosIdx[m.to] && r.shared[me][m.to];
+  const fromCenter = r.safeRosettes && m.from > 0 && r.rosIdx[m.from] && r.shared[me][m.from];
   const cAfter = rAfter.reduce((a, b) => a + b, 0), r0 = k >= 0 ? rBefore[k] : 0, r1 = k >= 0 ? rAfter[k] : 0;
   let kind;
   if (m.finish) kind = 'home';
@@ -123,7 +124,7 @@ function classify(st, m, before) {
   else if (m.rosette) kind = 'ros';
   else if (r0 > .15 && r1 < r0 - .1) kind = 'escape';
   else if (m.enter) kind = 'enter';
-  else if (centerOf(st) === me && !fromCenter && st.pos[me].some(p => p > 0 && r.rosIdx[p] && r.shared[me][p])) kind = 'hold';
+  else if (r.safeRosettes && centerOf(st) === me && !fromCenter && st.pos[me].some(p => p > 0 && r.rosIdx[p] && r.shared[me][p])) kind = 'hold';
   else if (cAfter < .1) kind = 'safe';
   else kind = 'adv';
   const opBack = m.capture ? m.to : 0;
@@ -169,7 +170,7 @@ function tipsOf(st, cl, d) {
   const out = list.slice(0, 2).map(x => ({ html: esc(tx(x.k, { p: x.p, r: Math.round(x.v * 100) })), hi: x.v >= .3 }));
   if (!list.length && st.pos[me].some(p => p > 0 && p < r.goal)) out.push({ html: esc(tx('tp.safe')) });
   if (st.rule === 'blitz') out.push({ html: esc(tx('tp.blitz')) }); else if (st.rule === 'masters') out.push({ html: esc(tx('tp.masters')) });
-  if (stg === 'open') { out.push({ html: esc(tx('tp.open')), hi: true }); out.push({ html: esc(tx('tp.open2')) }); }
+  if (stg === 'open') { out.push({ html: esc(tx('tp.open')), hi: true }); if (st.rule === 'finkel') out.push({ html: esc(tx('tp.open2')) }); }
   const c8 = centerOf(st);
   if (st.rule === 'finkel') out.push({ html: esc(tx(c8 >= 0 && c8 !== me ? 'tp.centerOp' : 'tp.center')) });
   if (stg === 'end') out.push({ html: esc(tx('tp.race')), hi: true });

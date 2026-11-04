@@ -129,7 +129,7 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=1'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=2'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
 function think(st, n, level) {
@@ -690,8 +690,9 @@ function resumeHere() {
 
 // ====================================================================== rated games (solo, placement)
 const RT_STORE = STORE + '-rated', RT_START = 1000;
-// rating of each AI level: measured with ur/tools/bench.js (adjacent levels, 400 games each), dice luck keeps the steps small
-const RT_LV = [0, 600, 660, 715, 725, 735, 800, 865, 930, 990, 1070, 1155, 1240, 1325, 1375, 1430, 1485, 1535, 1550, 1570, 1610];
+// rating of each AI level: Elo from the final engine's self-play (ur/tools/RULES-RESEARCH.md, adjacent levels, 4000 games each,
+// L1 anchored at 500). The dice luck keeps the steps small; L18–L20 are within the noise of each other (L20 ≈ perfect play)
+const RT_LV = [0, 500, 635, 665, 715, 760, 810, 890, 940, 1000, 1060, 1105, 1175, 1235, 1275, 1320, 1365, 1400, 1410, 1418, 1425];
 function rtLoad() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 function rtRank(r) { let k = 0; for (let i = 1; i <= LV_MAX; i++) if (r >= RT_LV[i] - 25) k = i; return k ? LV(k) : t('rt.below'); }
