@@ -2589,7 +2589,7 @@ let rotTipDone = false;
 const rotTipSkip = (() => { try { const v = sessionStorage.getItem('mancala-rottip-skip') === '1'; sessionStorage.removeItem('mancala-rottip-skip'); return v; } catch (e) { return false; } })();
 const rotTipSeen = () => rotTipSkip;
 function rotTipSeenSet() { try { sessionStorage.setItem('mancala-rottip-skip', '1'); } catch (e) {} }
-function rotTipEligible() { return !rotTipSeen() && !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
+function rotTipEligible() { return !rotTipSeen() && !window.ATLAS_RULELINK_VISIT && !window.__EMBED && !window.__ROTWRAP && !rotOn() && matchMedia('(pointer: coarse)').matches; }
 function maybeRotTip() { /* kept for the dialog handlers; the queue below does the work */ }
 function startRotTip() {
   if (!rotTipEligible()) return;
