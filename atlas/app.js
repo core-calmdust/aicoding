@@ -840,13 +840,15 @@
     if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
   });
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
-  function startRules() {
-    if (pend3d) { pend3d.then(startRules); return; }   // the board isn't on the table yet
+  let rulesFromList = false;
+  function startRules(fromList) {
+    rulesFromList = fromList === true;
+    if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
       onStart: () => { stopSession(); startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },
-      onExit: () => openBoard(g.id) });   // back on the last page: to the chabudai (settings card)
+      onExit: () => { if (rulesFromList) { rulesFromList = false; closeBoard(); } else openBoard(g.id); } });   // back: to the game list when started from there, else to the chabudai (settings card)
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
   }
@@ -866,7 +868,7 @@
     if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
   }
   renderTod();
-  $('bvQuit').onclick = () => openBoard(bvGame.id);
+  $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
   function stepBoard(d) {
@@ -919,7 +921,7 @@
     AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
       hasRules: () => true,
       // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
-      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(true); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
       pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
