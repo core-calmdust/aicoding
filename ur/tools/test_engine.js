@@ -113,11 +113,26 @@ console.log('— 評価と AI');
 { // think 返り値は合法手
   const rng = E.mulberry32(5); for (let L = 1; L <= 20; L++) { const s = st('finkel', [3, 6], [7]); const m = E.think(s, 2, L, { rng }); ok(E.legalMoves(s, 2).some(x => x.from === m.from), 'think legal L' + L); }
   ok(E.think(E.newGame('finkel'), 0, 20) === null, 'think pass null'); }
-{ // 粘り：大差の負けでも危険なマスに出さない
-  const s = st('finkel', [0, 0, 0, 0, 0, 0, 5], [14, 15, 15, 15, 15, 15, 15], 0); // 相手はあと1歩
-  s.pos[1] = [14, 13, 15, 15, 15, 15, 15];
-  const m = E.think(s, 3, 20); ok(m, 'resist move exists'); }
-
+{ // 粘り：負けが確定的な局面（全手の勝率ほぼ0）でも、取られる確率の合計が最小の手を選ぶ
+  const rng = E.mulberry32(11); let tested = 0, good = 0;
+  for (let g = 0; g < 400 && tested < 60; g++) {
+    let s = E.newGame('finkel', g & 1);
+    while (s.winner < 0) {
+      const n = E.rollDice(rng).n, ms = E.legalMoves(s, n);
+      if (ms.length > 1) {
+        const ev = E.evaluate(s, n, { depth: 2 });
+        if (ev[0].wp < 0.03) {
+          const me = s.turn, cand = ev.filter(x => x.wp >= ev[0].wp - 0.02);
+          const risk = m => E.hitRisk(E.apply(s, m).state, me).reduce((a, b) => a + b, 0);
+          const minR = Math.min(...cand.map(x => risk(x.move)));
+          const m = E.think(s, n, 20); tested++; if (risk(m) <= minR + 0.13) good++;
+        }
+      }
+      s = E.apply(s, E.think(s, n, s.turn ? 20 : 2, { rng })).state;
+    }
+  }
+  ok(tested >= 20 && good / tested > 0.9, `resist: ${good}/${tested} lowest-risk`);
+}
 // 自己対局（強さの単調性）
 function play(rule, La, Lb, games, seed) {
   const rng = E.mulberry32(seed); let wa = 0;

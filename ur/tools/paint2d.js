@@ -54,14 +54,17 @@
 
   /* ---------- material swatches (rgb) ---------- */
   const SWT = {
-    shell: (vivid) => { const N = makeNoise(vivid ? 12 : 11), f1 = tileN(N, 4, 4), f2 = tileN(N, 32, 2), f3 = tileN(N, 2, 2);
-      return swatch('shell' + vivid, 384, (u, v) => { const m = f1(u, v) - .5, fine = f2(u, v) - .5, band = Math.sin((v * 7 + f3(u, v) * 3) * TAU) * .5 + .5, t = m * (vivid ? 22 : 40) + fine * 14 + band * 8;
-        return vivid ? [cl(244 + t * .6), cl(237 + t * .6), cl(220 + t * .55)] : [cl(226 + t), cl(211 + t * .95), cl(172 + t * .85 - band * 7)]; }); },
+    shell: (vivid) => { const N = makeNoise(vivid ? 12 : 11), f1 = tileN(N, 4, 4), f2 = tileN(N, 32, 2), f3 = tileN(N, 2, 2), f4 = tileN(N, 8, 2);
+      return swatch('shell' + vivid, 384, (u, v) => { const m = f1(u, v) - .5, fine = f2(u, v) - .5, w = f3(u, v), band = Math.sin((v * 6 + w * 3) * TAU) * .5 + .5;
+        // the growth lines of the shell: fine, slightly wavy stripes, bunched in places
+        const gl = Math.sin((v * 46 + w * 9 + f4(u, v) * 2.5) * TAU), gl2 = Math.sin((v * 110 + w * 20) * TAU), lines = (gl > .55 ? (gl - .55) * 2.2 : 0) + (gl2 > .7 ? (gl2 - .7) * 1.2 : 0);
+        const t = m * (vivid ? 20 : 36) + fine * 12 + band * 8 - lines * (vivid ? 9 : 16);
+        return vivid ? [cl(244 + t * .6), cl(236 + t * .62), cl(218 + t * .6)] : [cl(230 + t), cl(219 + t * .97), cl(188 + t * .92 - band * 8)]; }); },
     lapis: (vivid) => { const N = makeNoise(vivid ? 24 : 23), f1 = tileN(N, 4, 4), f2 = tileN(N, 64, 1), f3 = tileN(N, 16, 2);
       return swatch('lapis' + vivid, 256, (u, v) => { const m = f1(u, v) - .5, fine = f2(u, v) - .5, fl = f3(u, v);
-        let rgb = vivid ? [cl(30 + m * 26 + fine * 30), cl(56 + m * 36 + fine * 40), cl(178 + m * 50 + fine * 50)] : [cl(34 + m * 40 + fine * 34), cl(50 + m * 50 + fine * 40), cl(132 + m * 70 + fine * 60)];
+        let rgb = vivid ? [cl(30 + m * 26 + fine * 30), cl(56 + m * 36 + fine * 40), cl(178 + m * 50 + fine * 50)] : [cl(36 + m * 40 + fine * 30), cl(48 + m * 50 + fine * 36), cl(118 + m * 76 + fine * 52)];
         if (fl > .74) { const k = Math.min(1, (fl - .74) * (vivid ? 2 : 4)); rgb = [rgb[0] + (175 - rgb[0]) * k * .7, rgb[1] + (182 - rgb[1]) * k * .7, rgb[2] + (205 - rgb[2]) * k * .6]; }   // calcite
-        if (fine > .4) rgb = vivid ? [236, 200, 96] : [196, 170, 100];   // pyrite specks
+        if (fine > .46) rgb = vivid ? [236, 200, 96] : [196, 170, 100];   // pyrite specks
         return rgb; }); },
     dlapis: (vivid) => { const N = makeNoise(29), f1 = tileN(N, 4, 3), f2 = tileN(N, 64, 1);   // the deep lapis of dots / pupils
       return swatch('dlapis' + vivid, 128, (u, v) => { const t = (f1(u, v) - .5) * 40 + (f2(u, v) - .5) * 30; return vivid ? [cl(26 + t * .5), cl(40 + t * .7), cl(150 + t)] : [cl(22 + t * .5), cl(28 + t * .6), cl(78 + t)]; }); },
@@ -69,6 +72,9 @@
       return swatch('bit' + vivid, 256, (u, v) => { const t = (f1(u, v) - .5) * (vivid ? 12 : 30) + (f2(u, v) - .5) * 14; return [cl(20 + t * .65), cl(17 + t * .6), cl(15 + t * .55)]; }); },
     red: (vivid) => { const N = makeNoise(31), f1 = tileN(N, 8, 4), f2 = tileN(N, 32, 2);
       return swatch('red' + vivid, 256, (u, v) => { const t = (f1(u, v) - .5) * 50 + (f2(u, v) - .5) * 22; return vivid ? [cl(196 + t * .6), cl(62 + t * .4), cl(34 + t * .3)] : [cl(150 + t), cl(64 + t * .6), cl(44 + t * .4)]; }); },
+    iri: () => { const N = makeNoise(91), f1 = tileN(N, 4, 3), f2 = tileN(N, 8, 2);   // nacre: a faint play of pink / green / blue
+      return swatch('iri', 256, (u, v) => { const h = (f1(u, v) * 2.2 + f2(u, v) * .8 + v * 2) * TAU;
+        const k = 34 * (.4 + f2(u, v) * .9); return [cl(128 + Math.cos(h) * k), cl(128 + Math.cos(h - 2.1) * k), cl(128 + Math.cos(h + 2.1) * k)]; }); },
     grey: () => { const N = makeNoise(47), f1 = tileN(N, 8, 3), f2 = tileN(N, 64, 1);
       return swatch('grey', 256, (u, v) => { const t = 128 + (f1(u, v) - .5) * 130 + (f2(u, v) - .5) * 70; return [cl(t), cl(t), cl(t)]; }); },
     ply: (light) => { const N = makeNoise(light ? 67 : 68), f = tileN(N, 2, 3), f2 = tileN(N, 64, 1);   // birch plywood (laser-cut kit)
@@ -90,19 +96,19 @@
   }
   const DESIGNS = {
     museum: {
-      aged: true, gloss: 16, spec: .5, bump: 6, ao: 1.4, round: .025,
+      aged: true, gloss: 16, spec: .5, bump: 4.2, ao: 1.5, round: .025, nacre: .55,
       a: { bit: g => pat(g, SWT.bit(0), 1 / 240), lap: g => pat(g, SWT.lapis(0), 1 / 420), shell: null, red: g => pat(g, SWT.red(0), 1 / 400), petalB: g => pat(g, SWT.lapis(0), 1 / 520, .2, .1),
         line: 'rgba(32,21,12,.94)', dot: g => pat(g, SWT.dlapis(0), 1 / 300), joint: 'rgba(8,12,40,.8)', band: g => pat(g, SWT.shell(0), 1 / 300, .4, .7), bred: g => pat(g, SWT.red(0), 1 / 300, .3, .1) },
       h: { bit: .3, lap: .56, shell: .8, red: .72, petalB: .72, line: .6, dot: .7, joint: .46, band: .56, bred: .5 },
-      s: { bit: .42, lap: .36, shell: .16, red: .3, petalB: .36, line: .04, dot: .4, joint: .1, band: .2, bred: .22 },
+      s: { bit: .42, lap: .5, shell: .3, red: .04, petalB: .5, line: .04, dot: .4, joint: .1, band: .32, bred: .04 },
       side: 'museum',
     },
     restored: {
-      aged: false, gloss: 34, spec: .7, bump: 5, ao: 1.1, round: .02,
+      aged: false, gloss: 34, spec: .7, bump: 5, ao: 1.1, round: .02, nacre: .55,
       a: { bit: g => pat(g, SWT.bit(1), 1 / 240), lap: g => pat(g, SWT.lapis(1), 1 / 420), shell: null, red: g => pat(g, SWT.red(1), 1 / 400), petalB: g => pat(g, SWT.lapis(1), 1 / 520, .2, .1),
         line: 'rgba(22,14,8,.96)', dot: g => pat(g, SWT.dlapis(1), 1 / 300), joint: 'rgba(10,18,70,.7)', band: g => pat(g, SWT.shell(1), 1 / 300, .4, .7), bred: g => pat(g, SWT.red(1), 1 / 300, .3, .1) },
       h: { bit: .3, lap: .6, shell: .8, red: .76, petalB: .76, line: .62, dot: .74, joint: .5, band: .58, bred: .52 },
-      s: { bit: .75, lap: .55, shell: .32, red: .45, petalB: .55, line: .05, dot: .55, joint: .1, band: .32, bred: .4 },
+      s: { bit: .75, lap: .62, shell: .42, red: .06, petalB: .62, line: .05, dot: .55, joint: .1, band: .42, bred: .06 },
       side: 'restored',
     },
     wood: {
@@ -156,11 +162,13 @@
   /* ---------- the engraved motifs (plaque-local, side P, centred) ---------- */
   const MOTIF = {
     rosette(g, S, lw) {
+      g.beginPath();
+      for (let k = 0; k < 16; k++) { const ang = k * TAU / 16 - Math.PI / 2, rr = k % 2 ? .405 : .3; g.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr); }
+      g.closePath(); g.strokeStyle = S.line; g.lineWidth = lw; g.lineJoin = 'miter'; g.stroke();
       for (let k = 0; k < 8; k++) {
         g.save(); g.rotate(k * TAU / 8 - Math.PI / 2);
         petal(g, .05, .405, .102); g.fillStyle = S.shellHere; g.fill(); g.strokeStyle = S.line; g.lineWidth = lw; g.stroke();
         petal(g, .095, .36, .058); g.fillStyle = k % 2 ? S.petalB : S.red; g.fill(); g.lineWidth = lw * .8; g.stroke();
-        g.rotate(TAU / 16); petal(g, .27, .41, .032); g.lineWidth = lw * .75; g.stroke();   // the little leaves between the petals
         g.restore();
       }
       dot(g, 0, 0, .07, S.red, S, lw); dot(g, 0, 0, .026, S.dot, S, lw * .5);
@@ -176,8 +184,8 @@
       for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
         g.save(); g.translate(sx * (m + e) / 2, sy * e / 2);
         const w = e - m - .03;
-        lens(g, w, .19); g.stroke(); lens(g, w * .68, .11); g.stroke();
-        g.beginPath(); g.ellipse(0, 0, .036, .028, 0, 0, TAU); g.fillStyle = S.dot; g.fill(); g.lineWidth = lw * .6; g.stroke(); g.lineWidth = lw;
+        lens(g, w * 1.04, .25); g.stroke(); lens(g, w * .72, .15); g.stroke();
+        g.beginPath(); g.ellipse(0, 0, .045, .032, 0, 0, TAU); g.fillStyle = S.dot; g.fill(); g.lineWidth = lw * .6; g.stroke(); g.lineWidth = lw;
         g.restore();
       }
     },
@@ -219,15 +227,12 @@
 
   /* ---------- the top: frame, diamond band, lapis fields, plaques ---------- */
   function paintTop(g, S) {
-    const D = S.d, lw = .0125, a = S.pass === 'a';
+    const D = S.d, lw = D === DESIGNS.wood ? .01 : .0125, a = S.pass === 'a';
     // frame
     roundPoly(g, OUT, D.round); g.fillStyle = S.bit; g.fill();
     if (a && D.aged) { g.save(); g.clip(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = .22; g.fillStyle = pat(g, SWT.grey(), 1 / 70); g.fillRect(-5, -3, 10, 6); g.restore(); }
     if (S.pass === 's' && D !== DESIGNS.wood && D !== DESIGNS.clay) { g.save(); roundPoly(g, OUT, D.round); g.clip(); g.globalAlpha = .45; g.fillStyle = pat(g, SWT.grey(), 1 / 110); g.fillRect(-5, -3, 10, 6); g.restore(); }
     if (S.pass === 'h') { g.save(); roundPoly(g, OUT, D.round); g.clip(); g.globalAlpha = D === DESIGNS.clay ? .25 : .12; g.fillStyle = pat(g, SWT.grey(), 1 / 200); g.fillRect(-5, -3, 10, 6); g.restore(); }
-    if (D === DESIGNS.wood && a) {   // the frame is glued up from boards: faint joints
-      g.strokeStyle = 'rgba(120,86,50,.5)'; g.lineWidth = .008; g.beginPath(); for (const [x0, y0, x1, y1] of [[-X0, -1.42 - .08, X0, -1.42 - .08], [-X0, 1.5, X0, 1.5]]) { g.moveTo(x0, y0); g.lineTo(x1, y1); } g.stroke();
-    }
     // the band of diamonds all round the outline (a diamond on every corner)
     paintBand(g, S);
     // lapis fields
@@ -258,10 +263,11 @@
       const q1 = hs(i, 7), q2 = hs(i, 8), q3 = hs(i, 9), jx = D.aged ? (q2 - .5) * .008 : 0, jy = D.aged ? (q3 - .5) * .008 : 0;
       dia(x + jx, y + jy, .07); g.fillStyle = S.band; g.fill();
       if (a) {
+        if (D.nacre) { g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = D.nacre * .8; g.fillStyle = pat(g, SWT.iri(), 1 / 200, q2, q3); g.fill(); g.restore(); }
         if (D.aged) { g.fillStyle = q1 < .25 ? 'rgba(150,70,40,.32)' : q1 < .5 ? 'rgba(110,80,40,.25)' : q1 < .7 ? 'rgba(60,50,40,.2)' : 'rgba(255,248,230,.12)'; g.fill(); }
         g.strokeStyle = D === DESIGNS.wood || D === DESIGNS.clay ? S.line : 'rgba(20,14,10,.55)'; g.lineWidth = .006; g.stroke();
       } else if (S.pass === 'h') { g.strokeStyle = g255(.4); g.lineWidth = .006; g.stroke(); }
-      if (D.aged && q1 > .9) { g.beginPath(); g.arc(x + (q2 - .5) * .07, y + (q3 - .5) * .07, .028, 0, TAU); g.fillStyle = S.bit; g.fill(); }   // a small chip
+      if (D.aged && q1 > .965) { g.beginPath(); g.moveTo(x + .07, y); g.lineTo(x + (q2 - .5) * .03, y + (q3 < .5 ? -.07 : .07)); g.lineTo(x - .02 + q3 * .04, y + (q2 - .5) * .04); g.closePath(); g.fillStyle = S.bit; g.fill(); }   // a broken corner
     });
   }
 
@@ -278,7 +284,7 @@
         const len = Math.min(L - s, .07 + hs(si, k, 1) * .15), w2 = hs(si, k, 2), wv = hs(si, k, 3);
         const rx = hor ? x + s : x, ry = hor ? y : y + s, rw = hor ? len : W, rh = hor ? W : len;
         if (a) {
-          if (D === DESIGNS.museum || D === DESIGNS.restored) { g.fillStyle = wv < .12 ? 'rgba(150,160,200,.28)' : wv < .6 ? `rgba(6,10,45,${(w2 * .42).toFixed(2)})` : `rgba(70,95,200,${(w2 * .2).toFixed(2)})`; g.fillRect(rx, ry, rw, rh); }
+          if (D === DESIGNS.museum || D === DESIGNS.restored) { g.fillStyle = wv < .14 ? `rgba(150,165,215,${(.2 + w2 * .2).toFixed(2)})` : wv < .62 ? `rgba(4,8,40,${(.1 + w2 * .5).toFixed(2)})` : `rgba(70,100,210,${(.08 + w2 * .26).toFixed(2)})`; g.fillRect(rx, ry, rw, rh); }
           else { g.fillStyle = `rgba(40,20,8,${(w2 * .18).toFixed(2)})`; g.fillRect(rx, ry, rw, rh); }
         } else if (S.pass === 'h') { const base = D === DESIGNS.wood ? .2 : D === DESIGNS.clay ? .32 : .5; g.fillStyle = g255(base + w2 * .1); g.fillRect(rx, ry, rw, rh); }
         else { g.fillStyle = g255((D === DESIGNS.wood || D === DESIGNS.clay ? .02 : .25) + w2 * .2); g.fillRect(rx, ry, rw, rh); }
@@ -294,10 +300,10 @@
     // the grain of the lapis: specks of lighter blue, calcite and pyrite
     if ((D === DESIGNS.museum || D === DESIGNS.restored) && a) {
       strips.forEach(([x, y, L, hor], si) => {
-        const n = Math.round(L * 260);
+        const n = Math.round(L * 200);
         for (let i = 0; i < n; i++) {
           const u = hs(si, i, 11) * L, v = hs(si, i, 12) * W, q = hs(si, i, 13), px = hor ? x + u : x + v, py = hor ? y + v : y + u;
-          g.fillStyle = q < .5 ? 'rgba(90,120,230,.5)' : q < .8 ? 'rgba(10,14,50,.55)' : q < .96 ? 'rgba(200,210,235,.5)' : (D.aged ? 'rgba(200,175,105,.8)' : 'rgba(245,210,110,.95)');
+          g.fillStyle = q < .5 ? 'rgba(80,110,220,.45)' : q < .88 ? 'rgba(10,14,50,.55)' : q < .97 ? 'rgba(190,200,230,.35)' : (D.aged ? 'rgba(200,175,105,.8)' : 'rgba(245,210,110,.95)');
           g.fillRect(px, py, .006 + q * .004, .006 + q * .004);
         }
       });
@@ -315,7 +321,7 @@
     if (a) {
       if (D.aged && D === DESIGNS.museum) {
         const t = hs(k, 4), t2 = hs(k, 5);
-        g.fillStyle = t < .35 ? `rgba(175,125,45,${(.1 + t2 * .16).toFixed(2)})` : t < .7 ? `rgba(120,95,60,${(.06 + t2 * .14).toFixed(2)})` : `rgba(255,250,236,${(.08 + t2 * .14).toFixed(2)})`;
+        g.fillStyle = t < .35 ? `rgba(160,120,60,${(.1 + t2 * .14).toFixed(2)})` : t < .7 ? `rgba(120,100,75,${(.08 + t2 * .12).toFixed(2)})` : `rgba(255,250,238,${(.08 + t2 * .14).toFixed(2)})`;
         g.fillRect(-h, -h, P, P);
         // a mottled stain or two
         for (let i = 0; i < 3; i++) { const sx = (hs(k, i, 21) - .5) * P, sy = (hs(k, i, 22) - .5) * P, sr = .08 + hs(k, i, 23) * .2, gr = g.createRadialGradient(sx, sy, 0, sx, sy, sr);
@@ -334,6 +340,9 @@
       if (dh) { g.fillStyle = dh > 0 ? `rgba(255,255,255,${dh * 2})` : `rgba(0,0,0,${-dh * 2})`; g.fillRect(-h, -h, P, P); }
       if (D === DESIGNS.clay || D === DESIGNS.museum) { g.globalAlpha = .16; g.fillStyle = pat(g, SWT.grey(), 1 / 260, hs(k, 1), hs(k, 2)); g.fillRect(-h, -h, P, P); g.globalAlpha = 1; }
     }
+    if (a && D.nacre) { g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = D.nacre; g.fillStyle = pat(g, SWT.iri(), 1 / 260, hs(k, 8) * 2, hs(k, 9) * 2, hs(k, 10) * 360); g.fillRect(-h, -h, P, P); g.restore();
+      // translucency: the edge of the plaque a touch lighter and cooler where it is thin
+      g.save(); g.strokeStyle = 'rgba(255,252,240,.16)'; g.lineWidth = .03; g.strokeRect(-h + .015, -h + .015, P - .03, P - .03); g.restore(); }
     const m = motif(r, c); if (m) { g.save(); MOTIF[m](g, S, lw); g.restore(); }
     // hairline cracks and craquelure (dirt in them)
     if (D.aged) {
@@ -404,10 +413,11 @@
       // vertical slips of red limestone and shell, across the whole width (masked to the faces later)
       let x = 0, k = 0;
       while (x < W) {
-        const red = hs(k, 61) < .48, w = (red ? .04 + hs(k, 62) * .04 : .045 + hs(k, 63) * .05) * K, q = hs(k, 64);
+        const red = hs(k, 61) < .5, w = (red ? .07 + hs(k, 62) * .05 : .075 + hs(k, 63) * .06) * K, q = hs(k, 64);
         g.fillStyle = red ? (vivid ? `rgb(${190 - q * 30 | 0},${70 - q * 15 | 0},${44 - q * 10 | 0})` : `rgb(${142 - q * 40 | 0},${70 - q * 25 | 0},${50 - q * 18 | 0})`)
           : (vivid ? `rgb(${240 - q * 14 | 0},${230 - q * 14 | 0},${210 - q * 14 | 0})` : `rgb(${214 - q * 40 | 0},${194 - q * 40 | 0},${156 - q * 36 | 0})`);
         g.fillRect(x, 0, w - Math.max(1, K * .008), H);
+        if (!red && !vivid) { g.fillStyle = `rgba(255,240,215,${(.1 + q * .12).toFixed(2)})`; g.fillRect(x + w * .15, 0, w * .25, H); }   // a sheen on the shell slip
         x += w; k++;
       }
       // eye plaques and the shell slip round the top edge, per face
@@ -441,8 +451,8 @@
   /* ---------- the whole board image ---------- */
   function board(design, orient = 'h', upx = 2.4) {
     const R = IMG[orient], K = upx * 100, W = Math.round(R[2] * upx), H = Math.round(R[3] * upx), D = DESIGNS[design];
-    const setT = (g, dy = 0) => orient === 'h' ? g.setTransform(K, 0, 0, K, -R[0] * upx, -R[1] * upx + dy) : g.setTransform(0, -K, K, 0, -R[0] * upx, -R[1] * upx + dy);
-    const toPx = orient === 'h' ? (x, y) => [(x * 100 - R[0]) * upx, (y * 100 - R[1]) * upx] : (x, y) => [(y * 100 - R[0]) * upx, (-x * 100 - R[1]) * upx];
+    const setT = (g, dy = 0) => orient === 'h' ? g.setTransform(K, 0, 0, K, -R[0] * upx, -R[1] * upx + dy) : g.setTransform(0, K, K, 0, -R[0] * upx, -R[1] * upx + dy);   // v: screen (x, y) = board (y, x)
+    const toPx = orient === 'h' ? (x, y) => [(x * 100 - R[0]) * upx, (y * 100 - R[1]) * upx] : (x, y) => [(y * 100 - R[0]) * upx, (x * 100 - R[1]) * upx];
     const pass = p => { const c = cv(W, H), g = c.getContext('2d'); setT(g); if (p !== 'a') { g.fillStyle = '#000'; g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillRect(0, 0, W, H); g.restore(); } paintTop(g, pal(design, p, g)); return c; };
     const A = pass('a'), Hc = pass('h'), Sc = pass('s');
     const top = lightUp(A, Hc, Sc, { bump: D.bump, gloss: D.gloss, spec: D.spec, ao: D.ao, scale: upx / 2.4, amb: design === 'restored' ? .5 : .42 });
