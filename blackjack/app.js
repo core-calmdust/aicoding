@@ -1094,6 +1094,6 @@ if (D.cur && D.cur.shoe && B.VARIANTS[D.cur.v] && D.cur.R) {
 setInterval(() => { if (T && !T.tut && T.phase !== 'bet') { D.cur = T; save(); } }, 4000);
 addEventListener('pagehide', () => { if (T && !T.tut) { D.cur = T; save(); } });
 
-window.BJApp = { num, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, spct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, chartHtml, CH_ROWS, mName, totTxt, statOf, LAB };
+window.BJApp = { whyKey, cellCls, rowLab, CH_UP, num, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); }, get T() { return T; }, get LANG() { return LANG; }, t, vName, sfx, esc, fmt, pct, spct, openOv, closeOv, toast, confirmBox, set, D, save, prefOf, newSession, render, gArt, chartHtml, CH_ROWS, mName, totTxt, statOf, LAB };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !T) return; e.preventDefault(); const sy = window.scrollY, sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (sc) sc.scrollTop = st; window.scrollTo(0, sy); });
 })();
