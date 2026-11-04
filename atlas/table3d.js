@@ -1170,7 +1170,7 @@
     R.setPixelRatio(pr);
     R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
     // skin pages: a static shadow map, redrawn only while something moves (kick) or the board changes — not for a scroll / re-alignment
-    if (skinPage) R.shadowMap.autoUpdate = false;
+    if (skinPage) R.shadowMap.autoUpdate = false; skinShadow = skinPage;
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = .78;
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
@@ -1380,7 +1380,7 @@
   let orthoWant = false, orthoW = 0, camLook = 0;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
     if (on) orthoWant = !!(o && o.ortho);
-    if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
+    if (o && o.glide) { glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo }; moveLo(true); }
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -1397,6 +1397,14 @@
   const FRAME_MS = 1000 / 60; let lastT = 0;
   // pause completely while the tab is hidden or the window isn't focused
   let rafId = 0, blurred = false;
+  // while the camera glides (Historia's top-down view and back): the shadow map is refreshed only every third frame, and a fresh
+  // one is drawn for the frame it lands on (lowering the pixel ratio meanwhile was tried: reallocating the drawing buffer twice
+  // per move cost more than it saved)
+  let lo = false, loN = 0, skinShadow = false;
+  function moveLo(on) {
+    if (!R || on === lo) return; lo = on;
+    R.shadowMap.autoUpdate = on ? false : !skinShadow; R.shadowMap.needsUpdate = true; loN = 0; kick(300);
+  }
   // quiet(true) (Historia on phones while a page is read): the turntable holds still and a frame is drawn only when something
   // actually moved (the camera, the framing, a kick) — the showcase otherwise redraws the whole gallery every frame
   let quietOn = false, quietKey = '';
@@ -1514,9 +1522,9 @@
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
-      glide.t += Math.min(dt, 34); const k = Math.min(1, glide.t / glide.dur), e = 1 - Math.pow(1 - k, 3);   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
+      glide.t += Math.min(dt, 100); const k = Math.min(1, glide.t / glide.dur), e = 1 - Math.pow(1 - k, 3);   // (a slow frame advances at most 100 ms: a stall never makes it jump, and a slow device doesn't drag it out over dozens of frames)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
       camK = glide.k0 + (camTo - glide.k0) * e; inset += (insetTo - inset) * ez(.22); frame();   // the framing follows smoothly even if the card changes size meanwhile
-      if (k >= 1) { camK = camTo; glide = null; }
+      if (k >= 1) { camK = camTo; glide = null; moveLo(false); }
     } else camK += (camTo - camK) * ez(.07);
     zoom += (zoomTo - zoom) * ez(.18);
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
@@ -1568,6 +1576,7 @@
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0; cam.up.set(-rl, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     orthoBlend(orthoWant ? camK * camK * camK : 0);
     if (museumOn) glare(camK);
+    if (lo && !(loN++ % 3)) R.shadowMap.needsUpdate = true;
     if (quietOn) {
       const e = cam.projectionMatrix.elements, kq = [cam.position.x, cam.position.y, cam.position.z, yaw, e[0], e[5], e[8], e[9], e[11], cw, ch].map(v => v.toFixed(4)).join();
       if (kq === quietKey && now > kickUntil && !dirty) return;
