@@ -204,18 +204,21 @@ function judge(pos, hashes) {
   return { over: false };
 }
 // ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段)
+// weak levels (15級〜5級) always head for the corner — they are weaker because they look at fewer pieces (`look`: how many of
+// the pieces that can move forward they consider; a beginner misses the long jump of a piece at the back), plan less deep
+// and add a little noise. They never wander backwards while a forward move exists.
 const LEVELS = [null,
-  { d: 1, noise: 120, blunder: 0.35 },   // 15級
-  { d: 1, noise: 90, blunder: 0.26 },    // 14級
-  { d: 2, noise: 75, blunder: 0.2 },     // 13級
-  { d: 2, noise: 60, blunder: 0.15 },    // 12級
-  { d: 2, noise: 45, blunder: 0.11 },    // 11級
-  { d: 3, noise: 36, blunder: 0.08 },    // 10級
-  { d: 3, noise: 28, blunder: 0.05 },    // 9級
-  { d: 3, noise: 20, blunder: 0.03 },    // 8級
-  { d: 4, noise: 15, blunder: 0.015 },   // 7級
-  { d: 4, noise: 10 },                   // 6級
-  { d: 4, noise: 6 },                    // 5級
+  { d: 1, look: 2, noise: 14 },          // 15級
+  { d: 1, look: 3, noise: 12 },          // 14級
+  { d: 1, look: 4, noise: 10 },          // 13級
+  { d: 2, look: 4, noise: 10 },          // 12級
+  { d: 2, look: 5, noise: 8 },           // 11級
+  { d: 2, look: 7, noise: 8 },           // 10級
+  { d: 2, noise: 8 },                    // 9級
+  { d: 3, noise: 8 },                    // 8級
+  { d: 3, noise: 4 },                    // 7級
+  { d: 4, noise: 4 },                    // 6級
+  { d: 4, noise: 2 },                    // 5級
   { s: 1, nk: 3 },                       // 4級  (about 3,000 positions per move)
   { s: 1, nk: 7 },                       // 3級
   { s: 1, nk: 15 },                      // 2級
@@ -343,6 +346,19 @@ function think(start, moves, level, rand, rule) {
   if (!L.s) {
     nodes = 0; stop = false; tEnd = Date.now() + 2500; nodeLimit = Infinity;
     let vals = rootValues(pos, L.d, hist);
+    // always forward: only moves that bring the piece nearer the far corner (when there are any) …
+    { const D = DIST[pos.turn], fwd = vals.filter(e => e.m !== PASS && (D[mFrom(e.m)] > D[mTo(e.m)] || e.v > WINT));
+      if (fwd.length) vals = fwd;
+      else { vals = rootValues(pos, Math.max(L.d, 4), hist); return { move: vals[0].m, v: vals[0].v }; }   // stuck (the corner is jammed): even a beginner then thinks it through
+      // … and of only a few pieces (the ones a beginner happens to look at)
+      if (L.look) { const fr = [...new Set(vals.map(e => mFrom(e.m)))]; if (fr.length > L.look) {
+        for (let i = fr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [fr[i], fr[j]] = [fr[j], fr[i]]; }
+        const keep = new Set(fr.slice(0, L.look));
+        { const H = HOME[pos.turn]; if (pos.inHome(pos.turn) && R.limit - pos.movesOf(pos.turn) <= 10) fr.forEach(f => { if (H[f]) keep.add(f); }); }   // the 40-move rule is never forgotten
+        const v2 = vals.filter(e => keep.has(mFrom(e.m))); if (v2.length) vals = v2; } }
+      vals.sort((x, y) => y.v - x.v);
+      // no going round in circles: a move back to a position already seen only when nothing else is left
+      { const seen = new Set(hist.concat([pos.h1 + ':' + pos.h2])); const fresh = vals.filter(e => { const q = pos.clone().play(e.m); return !seen.has(q.h1 + ':' + q.h2); }); if (fresh.length) vals = fresh; } }
     // even the weakest levels do not forget the 40-move rule: near the limit only moves that take a piece out of home
     { const me = pos.turn, H = HOME[me], left = R.limit - pos.movesOf(me);
       if (!pos.free && pos.inHome(me) && left <= 6) { const out = vals.filter(e => H[mFrom(e.m)] && !H[mTo(e.m)]); if (out.length) vals = out; } }
