@@ -329,6 +329,13 @@ const FOLD = {"ja": "説明をたたむ／ひらく", "en": "Collapse / expand",
 Object.keys(FOLD).forEach(k => { if (TX[k]) TX[k].fold = FOLD[k]; });
 function L(k, v) { const T = TX[A.LANG] || TX.en; let x = T[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k] || k; if (v) x = String(x).replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 
+// Space / Enter: "Next" (and "Back to the game" on the last box); on a step waiting for a move the keys go to the game as usual
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (!layer || !layer.classList.contains('show') || document.querySelector('.overlay.show')) return;
+  const b = $('#tutNext') || $('#tutPlay'); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); b.click();
+}, true);
 window.PokerTut = { setup, botMove, ev, allow, start, hide, finish, offer, L, TX };
 // first visit: the offer box (after the page has settled)
 setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);

@@ -563,3 +563,5 @@ Object.assign(I18N.en, {
   'sim.run': 'Run the simulation', 'sim.running': 'Computing…', 'sim.help': 'Play the same number of rounds four ways and compare the average loss.', 'sim.per': 'avg loss {n} per 100 × $100',
   'sim.note': 'The computed house edge is {e}. With few rounds luck shows a lot (± = 95% range).', 'sim.verdict': 'The basic strategy loses {a}, mimicking the dealer {b} — about {x} times as much, just from the way of play.',
 });
+Object.assign(I18N.ja, {"tl.g.rule": "ルール", "tl.g.h17": "ソフト17", "tl.g.das": "スプリット後ダブル"});
+Object.assign(I18N.en, {"tl.g.rule": "Rules", "tl.g.h17": "Soft 17", "tl.g.das": "Double after split"});
