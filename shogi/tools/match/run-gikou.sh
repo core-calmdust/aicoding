@@ -14,7 +14,7 @@ H=$(od -An -t d4 -j 4 -N 4 net.bin | tr -d ' ')
 echo "== build the site's engine (net: $NET, hidden $H)"
 cc -O3 -DNATIVE -DNUE_H=$H -w -o usimatch "$HERE/usimatch.c"
 
-if [ ! -x gikou/release ] || [ ! -f gikou/.build2 ]; then
+if [ ! -x gikou/release ] || [ ! -f gikou/.build3 ]; then
   echo "== Gikou"
   [ -d gikou-src ] || git clone --depth 1 https://github.com/gikou-official/Gikou.git gikou-src
   # Gikou uses SSE4.2 (Intel): on Apple silicon it is built for x86_64 and runs under Rosetta
@@ -23,9 +23,11 @@ if [ ! -x gikou/release ] || [ ! -f gikou/.build2 ]; then
     ARCH="-arch x86_64"
   fi
   mkdir -p shim; printf '#pragma once\nstatic inline int omp_get_thread_num(void){return 0;}\nstatic inline void omp_set_num_threads(int n){(void)n;}\n' > shim/omp.h
+  # crash fixes (positions with no legal move / a cache-key collision made Gikou read past an array and die mid-game)
+  ( cd gikou-src && git checkout -q -- src/move_probability.cc 2>/dev/null; perl -0pi -e 's/(std::valarray<double> temp = std::exp\(x - x\.max\(\)\);)/if (x.size() == 0) return std::valarray<double>();\n    $1/g; s/if \(entry != nullptr\) \{/if (entry != nullptr && entry->data.size() == legal_moves.size()) {/' src/move_probability.cc )
   ( cd gikou-src && sed -e 's/ -fopenmp//' -e 's/^CXX *=.*/CXX = clang++ '"$ARCH"'/' -e 's/^INCLUDES *=.*/INCLUDES = -I..\/shim/' -e 's/-O3 -DNDEBUG$/-O2 -DNDEBUG -fno-strict-aliasing -fwrapv/' Makefile > Makefile.mac && rm -rf obj bin \
     && make -f Makefile.mac TARGET=release executable > ../gikou-build.log 2>&1 ) || { echo "Gikou build failed; last lines of $WORK/gikou-build.log:"; tail -30 gikou-build.log; exit 1; }
-  mkdir -p gikou && cp gikou-src/bin/release gikou/release && touch gikou/.build2
+  mkdir -p gikou && cp gikou-src/bin/release gikou/release && touch gikou/.build3
 fi
 if [ ! -s gikou/params.bin ]; then
   echo "== Gikou evaluation files"
