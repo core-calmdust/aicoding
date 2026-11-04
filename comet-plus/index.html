@@ -1650,7 +1650,7 @@ function gainShield() {
         shields++;
         effects = effects.filter(e => e.type !== 'shieldMsg');
         effects.push({ type: 'shieldMsg', text: '+1 SHIELD', color: '#7dffd0', life: 90, maxLife: 90 });
-        if (tutorial) tutorial.shieldPhase = 2;
+        if (tutorial) { tutorial.shieldPhase = 2; tutorial.shFx = { f: frameCount, up: true }; }
         return;
     }
     // EASYのみ: 満タンでさらにSPを5個取るとシールド2
@@ -3485,6 +3485,7 @@ function updateBoss(isPlayerInvincible) {
     }
 
     b.def.fight(b);
+    if (tutorial && IS_MOBILE) b.y += 150; // スマホのチュートリアルは説明パネルに隠れないよう下げる
     b.t++;
     if (b.t > 60 * 30) { b.state = 'leave'; b.invuln = true; } // 30秒で撤退
 
@@ -3667,7 +3668,7 @@ function updateTutorial(dt) {
         if (t.line) { // 横一列の光のライン: 自機の高さを通過したら必ずシールドが1減る
             const prev = t.line.y; t.line.y += 300 * dt;
             if (t.shieldPhase === 0 && prev < player.y && t.line.y >= player.y) {
-                shields = 0; hurtTimer = 120; t.shieldPhase = 1;
+                shields = 0; hurtTimer = 120; t.shieldPhase = 1; t.shFx = { f: frameCount, up: false };
                 audioHandler.playSound('explosion'); audioHandler.playSound('bossHit');
                 screenShake = { intensity: 12, duration: 16 };
                 effects.push({ type: 'shockwave', x: player.x, y: player.y, life: 26, maxLife: 26, radius: 20 });
@@ -3751,6 +3752,18 @@ function drawTutorialPanel(ctx2) {
         ctx2.fillStyle = '#ff5577';
         ctx2.font = `700 15px ${config.fontFamily}`;
         ctx2.fillText(T('tut.hit'), cx, y0 + 69 + extra);
+    } else if (t.step === TUT_SHIELD) {
+        // シールドの数を大きなアイコンで見せる（減った・回復したがひと目で分かるように）
+        const on = shields > 0, age = t.shFx ? frameCount - t.shFx.f : 999, fx = Math.max(0, 1 - age / 45);
+        const msg = st.progress(t), col = on ? '#7dffd0' : '#ff5577';
+        ctx2.font = `700 16px ${config.fontFamily}`;
+        const tw = ctx2.measureText(msg).width, R0 = 9, gap = 10, gx = cx - (tw + R0 * 2 + gap) / 2 + R0, gy = y0 + 64 + extra;
+        const Rr = R0 * (1 + fx * 0.7);
+        ctx2.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6; ctx2.lineTo(gx + Math.cos(a) * Rr, gy + Math.sin(a) * Rr); } ctx2.closePath();
+        ctx2.lineWidth = 2; ctx2.strokeStyle = col; ctx2.shadowColor = col; ctx2.shadowBlur = 8 + fx * 16;
+        if (on) { ctx2.fillStyle = col; ctx2.fill(); } ctx2.stroke();
+        ctx2.fillStyle = col; ctx2.textAlign = 'left'; ctx2.fillText(msg, gx + R0 + gap, gy + 6); ctx2.textAlign = 'center'; ctx2.shadowBlur = 0;
+        if (fx > 0 && t.shFx.up) { ctx2.globalAlpha = fx; ctx2.font = `800 18px ${config.fontFamily}`; ctx2.fillStyle = '#7dffd0'; ctx2.textAlign = 'left'; ctx2.fillText('+1', gx + R0 + gap + tw + 8 + (1 - fx) * 6, gy + 6); ctx2.textAlign = 'center'; ctx2.globalAlpha = 1; } // +1 は文字の右に出す（上の行と重ねない）
     } else {
         ctx2.fillStyle = '#b8c4ff';
         ctx2.font = `600 15px ${config.fontFamily}`;
@@ -4086,7 +4099,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     renderCtx.fillStyle = gradient;
 
     drawWithGlow(renderCtx, () => {
-        renderCtx.fillText(textToDraw, 20, IS_MOBILE ? 190 : 70);
+        renderCtx.fillText(textToDraw, 20, IS_MOBILE ? (tutorial ? tutPanelBottom + (boss ? 62 : 30) : 190) : 70); // スマホのチュートリアルは説明パネルの下へ
     }, '#ffffcc', true);
 
     renderCtx.restore();
@@ -7971,7 +7984,7 @@ function draw() {
     // （アイテム上のHYPERの文字は表示しない）
     if (hyperT > 0 && (gameState === 'playing' || gameState === 'paused')) {
         const ratio = hyperT / HYPER_TIME, col = frameCount % 10 < 5 ? '#ffd400' : '#ff2d55';
-        const tx = IS_MOBILE ? HUD_W - 20 : HUD_W / 2, ty = IS_MOBILE ? 156 : HUD_H - 50, bw = IS_MOBILE ? 150 : 180;
+        const tx = IS_MOBILE ? HUD_W - 20 : HUD_W / 2, ty = IS_MOBILE ? (tutorial ? tutPanelBottom + 30 : 156) : HUD_H - 50, bw = IS_MOBILE ? 150 : 180; // スマホのチュートリアルは説明パネルの下
         renderCtx.save();
         renderCtx.textAlign = IS_MOBILE ? 'right' : 'center';
         renderCtx.font = `800 ${IS_MOBILE ? 22 : 16}px ${config.fontFamily}`;
@@ -8329,7 +8342,7 @@ function draw() {
             renderCtx.font = `700 ${IS_MOBILE ? 28 : 22}px ${config.fontFamily}`;
             drawWithGlow(renderCtx, () => {
                 renderCtx.fillStyle = e.color;
-                renderCtx.fillText(e.text, HUD_W / 2, HUD_H / 2 + (IS_MOBILE ? 112 : 90), HUD_W - 24); // 中央のMUTEKIより下
+                renderCtx.fillText(e.text, HUD_W / 2, tutorial && IS_MOBILE ? tutPanelBottom + 44 : HUD_H / 2 + (IS_MOBILE ? 112 : 90), HUD_W - 24); // 中央のMUTEKIより下（スマホのチュートリアルは説明パネルのすぐ下）
             }, e.color);
             renderCtx.restore();
         } else if (e.type === 'comboFadeOut' && isEffectsEnabled) {
