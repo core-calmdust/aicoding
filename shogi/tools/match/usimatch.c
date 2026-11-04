@@ -27,7 +27,9 @@ static const i8 START[81] = {
   2 + WF, 3 + WF, 4 + WF, 7 + WF, 8 + WF, 7 + WF, 4 + WF, 3 + WF, 2 + WF,
   0, 6 + WF, 0, 0, 0, 0, 0, 5 + WF, 0,
   1 + WF, 1 + WF, 1 + WF, 1 + WF, 1 + WF, 1 + WF, 1 + WF, 1 + WF, 1 + WF,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0,
   1, 1, 1, 1, 1, 1, 1, 1, 1,
   0, 5, 0, 0, 0, 0, 0, 6, 0,
   2, 3, 4, 7, 8, 7, 4, 3, 2 };
@@ -97,7 +99,7 @@ int main(int argc, char **argv) {
     nh = 0; tt_clear(); reset_search();
     if (nops) {   /* the opening moves of this pair */
       setStart(); char *p = ops[(g / 2) % nops], tok[16]; int k;
-      while (sscanf(p, " %15s%n", tok, &k) == 1) { p += k; int m = fromUsi(tok); if (!m) break; hist[nh++] = m; play_move(m); }
+      while (sscanf(p, " %15s%n", tok, &k) == 1) { p += k; int m = fromUsi(tok); if (!m) { fprintf(stderr, "opening move %s not legal\n", tok); exit(3); } hist[nh++] = m; play_move(m); }
     }
     fprintf(toE, "usinewgame\n"); fflush(toE);
     i32 keysL[400], keysH[400]; int nh0 = nh;
