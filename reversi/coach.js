@@ -511,6 +511,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => marks(u),
+    // several squares (equivalent first moves): play the first legal one
+    onPlay: u => { try { if (!u || !myTurn()) return; const p = positions[cur]; if (!p.toMove || !isHumanTurn()) return; const q = String(u).split(',').map(Number).find(s => flipsOf(p.cells, s, p.toMove).length); if (q == null) return; marks(null); onCellClick(q); } catch (e) {} },
   });
 }
 // candidate squares on the board (the hovered / tapped candidate only)
