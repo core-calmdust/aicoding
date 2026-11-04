@@ -527,6 +527,8 @@ function put(h) {
   CoachKit.bind(card, {
     onMore: () => { S.open = !S.open; render(); },
     onHover: u => { S.hov = u == null ? null : +u; redraw(); },
+    // click a candidate row (PC): play that move (placement / move plus the mill removal it includes) as if made on the board
+    onPlay: u => { try { if (!active() || !myTurn() || !canHumanPlay()) return; const m = +u; if (!posAt(cur).pos.moves().includes(m)) return; S.hov = null; commit(m); } catch (e) {} },
   });
 }
 function redraw() { try { renderFx(); } catch (e) {} }
