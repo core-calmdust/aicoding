@@ -367,5 +367,12 @@
 "dr.accepted": "The AI accepted the draw",
 "dr.declined": "The AI declined the draw (it wants to play on)",
 "dr.aiResigned": "The AI resigned",
-"ls.seqGood": "Good move!"
+"ls.seqGood": "Good move!",
+"bd.carved": "Carved oak (3D)",
+"bd.ballinderry": "Ballinderry",
+"bd.runestone2": "Rune stone",
+"bd.longship": "Longship",
+"pcs.turned": "Turned wood (3D)",
+"pcs.birka": "Birka glass",
+"bd.modern": "Modern"
 }

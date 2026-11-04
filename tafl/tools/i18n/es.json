@@ -82,12 +82,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Novato: regala piezas y no ve las salidas del rey",
-"Principiante: ve capturas y salidas a una o dos jugadas",
-"Intermedio a avanzado: dobles amenazas de salida y cercos",
-"Dan: cálculo profundo, duro con cualquier bando"
-],
+"lvd": ["Novato: regala piezas y no ve las salidas del rey", "Principiante: ve capturas y salidas a una o dos jugadas", "Intermedio a avanzado: dobles amenazas de salida y cercos", "Dan: cálculo profundo, duro con cualquier bando"],
 "res.review": "Ver el tablero",
 "res.again": "Otra partida",
 "res.draw": "Tablas",
@@ -372,5 +367,12 @@
 "dr.accepted": "La IA aceptó las tablas",
 "dr.declined": "La IA rechazó las tablas (quiere seguir)",
 "dr.aiResigned": "La IA abandonó",
-"ls.seqGood": "¡Buena jugada!"
+"ls.seqGood": "¡Buena jugada!",
+"bd.carved": "Roble tallado (3D)",
+"bd.ballinderry": "Ballinderry",
+"bd.runestone2": "Piedra rúnica",
+"bd.longship": "Drakkar",
+"pcs.turned": "Madera torneada (3D)",
+"pcs.birka": "Vidrio de Birka",
+"bd.modern": "Moderno"
 }

@@ -82,12 +82,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Novato: entrega peças e não vê as fugas do rei",
-"Iniciante: vê capturas e fugas a um ou dois lances",
-"Intermediário a avançado: duplas ameaças de fuga e cercos",
-"Dan: cálculo profundo, duro com qualquer lado"
-],
+"lvd": ["Novato: entrega peças e não vê as fugas do rei", "Iniciante: vê capturas e fugas a um ou dois lances", "Intermediário a avançado: duplas ameaças de fuga e cercos", "Dan: cálculo profundo, duro com qualquer lado"],
 "res.review": "Ver o tabuleiro",
 "res.again": "Jogar de novo",
 "res.draw": "Empate",
@@ -372,5 +367,12 @@
 "dr.accepted": "A IA aceitou o empate",
 "dr.declined": "A IA recusou o empate (quer continuar)",
 "dr.aiResigned": "A IA desistiu",
-"ls.seqGood": "Bom lance!"
+"ls.seqGood": "Bom lance!",
+"bd.carved": "Carvalho entalhado (3D)",
+"bd.ballinderry": "Ballinderry",
+"bd.runestone2": "Pedra rúnica",
+"bd.longship": "Drakkar",
+"pcs.turned": "Madeira torneada (3D)",
+"pcs.birka": "Vidro de Birka",
+"bd.modern": "Moderno"
 }
