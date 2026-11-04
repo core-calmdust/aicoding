@@ -1176,6 +1176,7 @@ html.lnd #lndDrawer .kifu{flex:1 1 auto;min-height:0;max-height:none;overflow-y:
 html.lnd body[data-lt=learn] #lndDrawer > #lndLearn{display:flex!important}
 /* the coach can't work now (AI vs AI, online, lessons…): the コーチ tab stays and its box says so (land.js) */
 html.lnd body.lnd-ckrest[data-lt=coach] #lndDrawer > #lndCoachRest{display:block!important}
+html.lnd body[data-lt=coach] #lndDrawer > #coachCard.ck-rest{display:block!important}   /* coach.js: the coach box says it is resting (lessons, puzzles…) */
 html.lnd #itCoachRest{display:none!important}
 /* 戦績 in the drawer's place: closed by a swipe to the right, its tab again or a tap on the board (no 閉じる button) */
 html.lnd body.lnd-rec .grc-ft [data-act=close]{display:none!important}
