@@ -326,6 +326,7 @@
     $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
     $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
+    if (window.AtlasGameList && AtlasGameList.fitLabels) AtlasGameList.fitLabels($('iconGrid').querySelectorAll('.ic span.n'));   // long names shrink rather than end in "…"
   }
   // random: the die hops, a quick roulette of the visible games' icons, then the picked one flies to the board
   let rolling = false;
@@ -352,13 +353,18 @@
   function todayGame() { const d = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), n = A_.GAMES.length; return A_.GAMES[((d * 3) % n + n) % n]; }
   function renderToday() {
     const g = todayGame(), el = $('today');
+    const hk = 'hist.' + g.id, hs = t(hk) !== hk ? t(hk) : t('about.' + g.id);   // a short history (the description if a language has none)
     el.style.setProperty('--c', g.color);
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
-        <b>${esc(gname(g))}</b><span class="hs">${esc(t('hist.' + g.id))}</span>
+        <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
+        ${window.Historia ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}
         <span class="ft"><span class="tags">${g.tags.filter(k => k !== 'mobile').slice(0, 3).map(tagHtml).join('')}</span><span class="btn sm">${esc(t('today.go'))} ▶</span></span></span>`;
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
-    el.onclick = () => flyOpen(g.id, el.querySelector('.pan img'));
+    el.onclick = e => { if (e.target.closest('[data-hist]')) return; flyOpen(g.id, el.querySelector('.pan img')); };
+    const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
+    if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
   }
 
   /* ---------- 3D board viewer ---------- */
@@ -522,6 +528,7 @@
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
+    if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
     if ($('bvStart')) $('bvStart').onclick = () => startPlay();
     if ($('bvTable')) $('bvTable').onclick = () => startPlay('table');
@@ -911,7 +918,9 @@
     const list = visibleGames();
     // screenshot cards grouped by category (atlas/gamelist.js); the long description is in the board sheet a tap opens
     AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
-      hasRules: g => !!(window.AtlasRules && AtlasRules[g.id]), onRules: id => { openBoard(id); if (glOK && window.AtlasRules && AtlasRules[id]) startRules(); }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      hasRules: () => true,
+      // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
+      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
       pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS, group: gCat === 'all' || gCat === 'board' });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
