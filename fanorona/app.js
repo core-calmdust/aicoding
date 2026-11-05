@@ -68,7 +68,7 @@ function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = 
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
 const LV_MAX = 20;
-const LV = i => i <= 15 ? t('lv.kyu', { n: 16 - i }) : t('lv.dan' + (i - 15));
+const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
 const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;

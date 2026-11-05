@@ -407,10 +407,10 @@
 
   /* ---------- the board card ---------- */
   const LVN = {
-    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：ときどき駒をただで渡してしまう', '初級〜中級：数手先まで読む', '上級：連続取りのショットを読み切る', '有段：深読み・終盤データベース'] },
+    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：ときどき駒をただで渡してしまう', '初級〜中級：数手先まで読む', '上級：連続取りのショットを読み切る', '最上級：深読み・終盤データベース'] },
     en: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Novice: sometimes gives pieces away', 'Beginner to club: reads a few moves ahead', 'Advanced: sees multi-jump shots', 'Expert: deep search with endgame databases'] },
-    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：偶尔会白送棋子', '初级～中级：能算几步', '高级：能算清连跳的弃子战术', '有段：深度计算・残局数据库'] },
-    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 가끔 말을 공짜로 내준다', '초급~중급: 몇 수 앞까지 읽는다', '상급: 연속 잡기 샷을 읽어 낸다', '유단자: 깊은 수읽기・엔드게임 데이터베이스'] },
+    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：偶尔会白送棋子', '初级～中级：能算几步', '高级：能算清连跳的弃子战术', '最上級：深度计算・残局数据库'] },
+    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 가끔 말을 공짜로 내준다', '초급~중급: 몇 수 앞까지 읽는다', '상급: 연속 잡기 샷을 읽어 낸다', '最上級: 깊은 수읽기・엔드게임 데이터베이스'] },
     es: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Novato: a veces regala piezas', 'Principiante a aficionado: calcula unas jugadas por delante', 'Avanzado: ve los golpes con saltos múltiples', 'Experto: búsqueda profunda con bases de datos de finales'] },
     fr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Novice : donne parfois des pièces', 'Débutant à club : calcule quelques coups à l\'avance', 'Avancé : voit les coups à rafle', 'Expert : calcul profond avec bases de finales'] },
     pt: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Novato: às vezes entrega peças', 'Iniciante a intermediário: calcula alguns lances à frente', 'Avançado: enxerga golpes com captura múltipla', 'Especialista: busca profunda com bases de dados de finais'] },
@@ -434,7 +434,7 @@
   };
   function levelInfo(n, lang) {   // n = 1..20 (the game's level: 15 kyu … 5 dan)
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
-    const name = n <= 15 ? L.kyu.replace('{n}', 16 - n) : L.dan[n - 16];
+    const name = 'Lv.' + n;
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
