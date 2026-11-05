@@ -98,13 +98,19 @@
   // the music fades out and pauses where it is; it comes back from there when the page does, if Historia is still open
   let away = false;
   function bgmAway(hidden) {
-    if (!bgm || bgm.paused || away) return; away = true; const a = bgm;
-    if (hidden) { cancelAnimationFrame(bgmFade); try { a.volume = 0; a.pause(); } catch (e) {} return; }   // (hidden: no animation frames to fade with)
+    if (!bgm) return;
+    if (hidden || document.hidden) {   // hidden: no animation frames to fade with, so stop at once (even if a blur fade had begun: tab switches fire blur first)
+      if (bgm.paused && !away) return;
+      away = true; cancelAnimationFrame(bgmFade); try { bgm.volume = 0; bgm.pause(); } catch (e) {} return;
+    }
+    if (bgm.paused || away) return; away = true; const a = bgm;
     fadeTo(0, 300, () => { if (away) try { a.pause(); } catch (e) {} });
   }
   function bgmBack() {
-    if (!away) return; away = false;
-    if (!on || !bgm || muted() || !soundOn() || document.hidden || !document.hasFocus()) { if (bgm && !on) try { bgm.pause(); } catch (e) {} return; }
+    if (!away) return;
+    if (!on || !bgm || muted() || !soundOn()) { away = false; if (bgm) { cancelAnimationFrame(bgmFade); try { bgm.pause(); } catch (e) {} } return; }
+    if (document.hidden || !document.hasFocus()) return;   // not back yet (visible again but focus still elsewhere): stay away, the focus event resumes
+    away = false; cancelAnimationFrame(bgmFade);
     try { const p = bgm.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
     fadeTo(BGM_VOL, 500);
   }
