@@ -512,7 +512,9 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     }
     const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
     function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
-    const fitB = () => fitWM(bar.querySelector('.wmT'), bar.querySelector('.atlas-brand small'));
+    // the title never gets cut off: if it doesn't fit beside the buttons, its font steps down (to 12px at least)
+    function fitT(b) { if (!b) return; b.style.fontSize = ''; if (document.documentElement.classList.contains('atlas-land')) return; const cw = b.clientWidth, sw = b.scrollWidth; if (cw > 0 && sw > cw + .5) b.style.fontSize = Math.max(12, parseFloat(getComputedStyle(b).fontSize) * cw / sw * .99) + 'px'; }
+    const fitB = () => { fitT(bar.querySelector('.wmT')); fitWM(bar.querySelector('.wmT'), bar.querySelector('.atlas-brand small')); };
     if (document.fonts) document.fonts.ready.then(fitB); addEventListener('resize', fitB);
     const paint = () => { { const w = bar.querySelector('.wmT'), KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"]}[lang()]; if (KW) { w.textContent = ''; const k = document.createElement('i'); k.className = 'wk'; k.textContent = KW[0]; w.append(k, KW[1]); } else w.textContent = TITLE[lang()] || TITLE.en; } bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; fitB(); bar.querySelector('.lc').textContent = lang().toUpperCase(); };
     lbtn.onclick = e => { e.stopPropagation(); if (!pop.hidden) { pop.hidden = true; return; }
