@@ -1256,12 +1256,21 @@
     if (alignFn && rafId && !document.hidden) { cancelAnimationFrame(rafId); lastT = 0; loop(performance.now()); }
   }
   // camera distance keeps a ~11-unit board in frame for any aspect ratio
+  // the board's own size (half of its larger footprint side, world units), measured once per board — the gallery frames it by it
+  function boardR() {
+    if (!cur) return 6.5; if (cur.userData._r) return cur.userData._r;
+    try { const bx = new (T().Box3)().setFromObject(cur), sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
+      return cur.userData._r = Math.max(2.5, Math.min(8, Math.max(sz.x, sz.z) / 2)); } catch (e) { return 6.5; }
+  }
   function camPose(k) {
-    const a = cam.aspect || 1, th = Math.tan(cam.fov * Math.PI / 360);
+    // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
+    const a = (cam.aspect || 1) * (hshift ? Math.max(.3, (cw - 2 * Math.abs(hshift)) / cw) : 1), th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
-    const needW = (k ? fw : 6.5) / (th * a), needH = (k ? fd : 6.8) / th;
-    const dist = Math.max(needW, needH) * (k ? 1 : 1.08) * (1 + (zoom - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
+    // the gallery's showcase: the board itself (its turning footprint) takes ~65% of the free area's shorter side
+    const mr = museumOn && !k ? boardR() / .65 : 0;
+    const needW = (k ? fw : mr || 6.5) / (th * a), needH = (k ? fd : mr ? mr * .62 : 6.8) / th;
+    const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
