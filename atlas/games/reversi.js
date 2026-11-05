@@ -23,6 +23,28 @@
     book = await fetch(BASE + 'book.json').then(r => r.ok ? r.json() : null).catch(() => null);
   })());
 
+  /* ---------- sounds (respect the portal's sound switch): a plastic disc clacking onto the board, light ticks as discs turn ---------- */
+  let AC = null;
+  function ac() {
+    try { if (localStorage.getItem('atlas-sfx') === '0') return null; } catch (e) {}
+    try { AC = AC || window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; }
+  }
+  function tone(a, t0, f0, f1, dur, vol, type) {
+    const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .004); g.gain.exponentialRampToValueAtTime(.001, t0 + dur); o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + .02);
+  }
+  function noise(a, t0, dur, vol, freq, q) {
+    const n = a.createBufferSource(), b = a.createBuffer(1, a.sampleRate * dur | 0, a.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 6);
+    n.buffer = b; const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q || 1.4;
+    const g = a.createGain(); g.gain.value = vol; n.connect(bp).connect(g).connect(a.destination); n.start(t0);
+  }
+  const SND = {
+    put() { const a = ac(); if (!a) return; const t = a.currentTime; tone(a, t, 260, 110, .09, .22); noise(a, t, .035, .55, 2600, 1.3); tone(a, t, 1900, 0, .06, .03, 'triangle'); },
+    flip(i) { const a = ac(); if (!a) return; const t = a.currentTime, k = Math.pow(1.06, Math.min(i, 12)); noise(a, t, .025, .3, 4200 * k, 2); tone(a, t, 900 * k, 600 * k, .05, .05, 'triangle'); },
+    pass() { const a = ac(); if (!a) return; const t = a.currentTime; tone(a, t, 523.25, 0, .22, .06, 'triangle'); tone(a, t + .12, 392, 0, .3, .06, 'triangle'); },
+  };
+
   const DIRS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
   function flipsOf(cells, sq, color) {
     if (cells[sq]) return [];
@@ -78,10 +100,11 @@
       return discs[sq];
     }
     function anim(dur, f, done) { const t0 = performance.now(); (function s(n) { const k = Math.min(1, (n - t0) / dur); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); }   // (every frame of it asks for a drawing: the table renders on demand)
-    function drop(sq, color) { const d = makeDisc(sq, color); anim(260, k => { d.outer.position.y = Y + DH + (1 - k) * (1 - k) * 2.2; }); }
-    function flip(sq, color, delay) {
+    function drop(sq, color, snd) { const d = makeDisc(sq, color); anim(260, k => { d.outer.position.y = Y + DH + (1 - k) * (1 - k) * 2.2; }, () => { if (snd && !stopped) SND.put(); }); }
+    function flip(sq, color, delay, i) {
       const d = discs[sq]; d.color = color;
       const from = d.inner.rotation.x, to = color === 1 ? Math.PI : 0;
+      if (i != null) setTimeout(() => { if (!stopped) SND.flip(i); }, delay + 190);   // the tick lands as the disc is edge-on
       setTimeout(() => anim(380, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; d.inner.rotation.x = from + (to - from) * e; d.outer.position.y = Y + DH + Math.sin(k * Math.PI) * .7; }), delay);
     }
     for (let s = 0; s < 64; s++) if (cells[s]) makeDisc(s, cells[s]);
@@ -101,9 +124,9 @@
       hideHint(); ply++; last = sq;
       const fl = flipsOf(cells, sq, color);
       cells[sq] = color; fl.forEach(s => { cells[s] = color; });
-      drop(sq, color);
+      drop(sq, color, true);
       const [x, z] = pos(sq);
-      fl.sort((a, b) => Math.hypot((a & 7) - (sq & 7), (a >> 3) - (sq >> 3)) - Math.hypot((b & 7) - (sq & 7), (b >> 3) - (sq >> 3))).forEach((s, i) => flip(s, color, 200 + i * 70));
+      fl.sort((a, b) => Math.hypot((a & 7) - (sq & 7), (a >> 3) - (sq >> 3)) - Math.hypot((b & 7) - (sq & 7), (b >> 3) - (sq >> 3))).forEach((s, i) => flip(s, color, 200 + i * 70, i));
       lastDot.position.set(x, Y + 2 * DH + .012, z); lastDot.visible = false;
       setTimeout(() => { lastDot.visible = true; if (T3.kick) T3.kick(150); }, 300);
       return 300 + fl.length * 70 + 380;
@@ -112,7 +135,7 @@
       if (stopped) return;
       const me = legal(cells, turn), opp = legal(cells, 3 - turn);
       if (!me.length && !opp.length) return end();
-      if (!me.length) { hud(pvp ? pname(turn) + ' · ' + L.pass : L.pass); turn = 3 - turn; ply++; onTurn(); if (T3.kick) T3.kick(150); return setTimeout(next, pvp ? 1400 : 900); }
+      if (!me.length) { SND.pass(); hud(pvp ? pname(turn) + ' · ' + L.pass : L.pass); turn = 3 - turn; ply++; onTurn(); if (T3.kick) T3.kick(150); return setTimeout(next, pvp ? 1400 : 900); }
       showHints(); onTurn(); if (T3.kick) T3.kick(150);
       if (pvp) { hud(PX.turn.replace('{p}', pname(turn))); return; }
       if (turn === human) { hud(L.turn); return; }
