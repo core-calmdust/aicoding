@@ -266,7 +266,11 @@
     }
     function ring(n) { const m = new TH.Mesh(new TH.CylinderGeometry(u * .16, u * .16, .02, 28), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .85, toneMapped: false })); const [x, z] = xz(n); m.position.set(x, Y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
     function cross(n) { const g = new TH.Group(), mat = new TH.MeshBasicMaterial({ color: 0xff3b3b, toneMapped: false }); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(u * .6, .03, u * .09), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = xz(n); g.position.set(x, Y + .05, z); marks.add(g); return g; }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .35 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) { any = true; p.position.y = Y + .05 + .2 * k; } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .35 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) { any = true; p.position.y = Y + .05 + .2 * k; } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
 
     /* ---------- moves ---------- */
     function moveTo(g, n, kind, done) {

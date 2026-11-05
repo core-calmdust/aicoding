@@ -217,7 +217,11 @@
     }
     function dot(i, color) { const m = new TH.Mesh(new TH.CylinderGeometry(.15, .15, .012, 28), new TH.MeshBasicMaterial({ color, transparent: true, opacity: .9, toneMapped: false, depthWrite: false })); const [x, z] = xz(i); m.position.set(x, Y + .02, z); m.userData.pulse = true; m.renderOrder = 2; marks.add(m); return m; }
     function ring(i, color) { const m = new TH.Mesh(new TH.TorusGeometry(.46, .032, 8, 44), new TH.MeshBasicMaterial({ color, transparent: true, opacity: .95, toneMapped: false, depthWrite: false })); m.rotation.x = Math.PI / 2; const [x, z] = xz(i); m.position.set(x, Y + .05, z); m.userData.pulse = true; m.renderOrder = 2; marks.add(m); return m; }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry.type !== 'PlaneGeometry') { const s = .88 + k * .24; m.scale.set(s, m.geometry.type === 'TorusGeometry' ? s : 1, s); } m.material.opacity = (m.geometry.type === 'PlaneGeometry' ? .25 : .45) + k * (m.geometry.type === 'PlaneGeometry' ? .3 : .5); } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry.type !== 'PlaneGeometry') { const s = .88 + k * .24; m.scale.set(s, m.geometry.type === 'TorusGeometry' ? s : 1, s); } m.material.opacity = (m.geometry.type === 'PlaneGeometry' ? .25 : .45) + k * (m.geometry.type === 'PlaneGeometry' ? .3 : .5); } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
     // the moves the task accepts (from the engine)
     function accepted(st) {
       const all = pos.moves();

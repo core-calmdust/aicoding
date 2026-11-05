@@ -267,7 +267,11 @@
     }
     function cross(n) { const g = new TH.Group(), mat = basic(0xe0281a, 1); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(c * .78, .03, c * .16), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = xz(n); g.position.set(x, Y + .01, z); g.userData.pulse = true; marks.add(g); return g; }
     function winRing(n, i) { later(() => { const m = new TH.Mesh(new TH.TorusGeometry(c * .5, c * .055, 8, 40), basic(0xffd24a, .95)); m.rotation.x = Math.PI / 2; const [x, z] = xz(n); m.position.set(x, Y + .02, z); m.scale.setScalar(.01); marks.add(m); anim(300, k => m.scale.setScalar(.01 + k)); const g = st[n]; if (g) anim(380, k => { g.userData.s.position.y = Math.sin(k * Math.PI) * c * .35; }); SFX.pachi(1.3 + i * .08); }, i * 110); }
-    (function pulse() { if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false; marks.children.forEach(m => { if (m.userData.tap) { any = true; m.userData.tick(now); return; } if (m.userData.pulse) { any = true; const s = .85 + k * .3; if (m.userData.ring) m.userData.ring.scale.set(s, s, s); else m.scale.set(s, 1, s); } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false; marks.children.forEach(m => { if (m.userData.tap) { any = true; m.userData.tick(now); return; } if (m.userData.pulse) { any = true; const s = .85 + k * .3; if (m.userData.ring) m.userData.ring.scale.set(s, s, s); else m.scale.set(s, 1, s); } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
 
     /* ---------- the ghost finger: after ~6 s without a tap it taps the right point ---------- */
     function hideHand() { if (hand) { hand.remove(); hand = null; } }

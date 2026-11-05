@@ -77,7 +77,7 @@
       board.add(outer); discs[sq] = { outer, inner, color };
       return discs[sq];
     }
-    function anim(dur, f, done) { const t0 = performance.now(); (function s(n) { const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); }
+    function anim(dur, f, done) { const t0 = performance.now(); (function s(n) { const k = Math.min(1, (n - t0) / dur); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); }   // (every frame of it asks for a drawing: the table renders on demand)
     function drop(sq, color) { const d = makeDisc(sq, color); anim(260, k => { d.outer.position.y = Y + DH + (1 - k) * (1 - k) * 2.2; }); }
     function flip(sq, color, delay) {
       const d = discs[sq]; d.color = color;
@@ -105,7 +105,7 @@
       const [x, z] = pos(sq);
       fl.sort((a, b) => Math.hypot((a & 7) - (sq & 7), (a >> 3) - (sq >> 3)) - Math.hypot((b & 7) - (sq & 7), (b >> 3) - (sq >> 3))).forEach((s, i) => flip(s, color, 200 + i * 70));
       lastDot.position.set(x, Y + 2 * DH + .012, z); lastDot.visible = false;
-      setTimeout(() => { lastDot.visible = true; }, 300);
+      setTimeout(() => { lastDot.visible = true; if (T3.kick) T3.kick(150); }, 300);
       return 300 + fl.length * 70 + 380;
     }
     function next() {

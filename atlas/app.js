@@ -94,7 +94,7 @@
   let page = 'home';
   function go(k, push = true) {
     if (!TABS.includes(k)) k = 'home';
-    page = k;
+    page = k; propWake();
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
@@ -202,20 +202,27 @@
   addEventListener('pointermove', e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; }, { passive: true });
   addEventListener('deviceorientation', e => { if (e.gamma != null) { tx = Math.max(-.5, Math.min(.5, e.gamma / 60)); ty = Math.max(-.5, Math.min(.5, (e.beta - 40) / 80)); } }, { passive: true });
   function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
+  // the bob runs only while it can be seen (home page, tab shown and focused, no 3D board over it): otherwise the loop stops
+  // (0 frames — battery) and propWake() starts it again when one of these changes
+  let propStep = null, propObs = false;
+  function propWake() { if (!propRaf && propStep) propRaf = requestAnimationFrame(propStep); }
   function startProps() {
-    cancelAnimationFrame(propRaf);
+    cancelAnimationFrame(propRaf); propRaf = 0;
+    if (!propObs) { propObs = true;
+      document.addEventListener('visibilitychange', propWake); addEventListener('focus', propWake);
+      try { new MutationObserver(propWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {} }
     const els = [...$('props').querySelectorAll('.pp')];
     els.forEach((el, i) => { el._ph = i * 1.7; el._sp = .7 + (i % 5) * .12; el._r = parseFloat(el.style.getPropertyValue('--r')) || 0; el._z = .4 + (i % 4) * .2; });
     let nextHop = performance.now() + 1200;
     let lastP = 0;
-    (function step(now) {
+    propStep = function step(now) {
+      propRaf = 0;
+      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected || !document.hasFocus() || $('bv').classList.contains('on')) return;   // (stopped: see propWake)
       propRaf = requestAnimationFrame(step);
-      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected) return;
       // 60 fps while a piece hops or the pointer / tilt moves them, 30 fps for the slow idle bob; stopped while the window isn't focused
       const busy = els.some(e => e._hop) || Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002;
-      if (!document.hasFocus() || now - lastP < 1000 / (busy ? 60 : 30) - 2) return;
+      if (now - lastP < 1000 / (busy ? 60 : 30) - 2) return;
       lastP = now;
-      if ($('bv').classList.contains('on')) return;   // hidden behind the 3D board
       px += (tx - px) * .06; py += (ty - py) * .06;
       if (now > nextHop) { hop(els[Math.random() * els.length | 0]); nextHop = now + 900 + Math.random() * 1400; }
       const t = now / 1000;
@@ -233,7 +240,8 @@
         const ox = -px * 26 * el._z, oy = -py * 18 * el._z;
         el.style.transform = `translate(calc(-50% + ${ox.toFixed(1)}px), calc(-50% + ${(y + oy).toFixed(1)}px)) rotate(${r.toFixed(1)}deg) scale(${sc.toFixed(3)}, ${(sc * sy).toFixed(3)})`;
       });
-    })(performance.now());
+    };
+    propStep(performance.now());
   }
   // after load, in idle time: start the 3D table, then build every board ahead of time (one per idle slice),
   // so tapping an icon never has to build a board while the fly / smoke / sparkle effects are playing

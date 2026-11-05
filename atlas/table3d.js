@@ -934,7 +934,7 @@
     [[1.5, 1.5], [7.5, 1.5]].forEach(([x, z]) => { const roof = new TT.Mesh(new TT.ConeGeometry(1.25, 1.6, 4), plastic(0x2f7fe0)); roof.rotation.y = Math.PI / 4; roof.position.set((x + .5) * U, (5 + .3 / BH) * BH + .8, (z + .5) * U); roof.castShadow = true; castle.add(roof); });
     const pole = new TT.Mesh(new TT.CylinderGeometry(.05, .05, 1.6, 8), plastic(0x555555)); pole.position.set(2 * U, 6.6 * BH, 2 * U); castle.add(pole);
     const flag = new TT.Mesh(new TT.PlaneGeometry(.9, .55), M({ color: 0xff5d5d, roughness: .7, side: TT.DoubleSide })); flag.position.set(2 * U + .46, 6.6 * BH + .5, 2 * U); castle.add(flag);
-    flag.userData.keep = true; roomTicks.push(t => { flag.rotation.y = Math.sin(t * 3) * .25; });
+    flag.userData.keep = true; roomTicks.push(Object.assign(t => { flag.rotation.y = Math.sin(t * 3) * .25; }, { obj: flag }));
     // a brick tree beside the gate
     brick(0, 5, .3 / BH, 1, 1, 0x8a5a2b); brick(0, 5, 1 + .3 / BH, 1, 1, 0x8a5a2b);
     const leaves = new TT.Mesh(new TT.SphereGeometry(.85, 10, 7), plastic(0x2fbf62)); leaves.position.set(.5 * U, 2 * BH + .9, 5.5 * U); leaves.castShadow = true; castle.add(leaves);
@@ -990,7 +990,7 @@
     [0, 1].forEach(i => { const k = new TT.Mesh(new TT.CylinderGeometry(.2, .2, .2, 8), plastic(i ? 0xff5d5d : 0x6a7088)); k.rotation.x = Math.PI / 2; k.position.set(1.15, 1.8 + 2.8 - i * .7, 1.82); tv.add(k); });
     const ant = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 2.4, 4, 1, true), plastic(0x9aa0b2)); ant.position.set(-.3, 1.8 + 4.2 + 1, -.3); ant.rotation.z = .5; tv.add(ant);
     const ant2 = ant.clone(); ant2.rotation.z = -.4; ant2.position.x = -1.4; tv.add(ant2);
-    roomTicks.push(t => { scr.offset.y = (Math.floor(t * 8) % 2) * .002; });
+    roomTicks.push(Object.assign(t => { scr.offset.y = (Math.floor(t * 8) % 2) * .002; }, { obj: screen }));
     const con = rbox(2.4, .6, 1.8, .2, plastic(0x9aa0b2)); con.position.set(2.4, 1.8 + .3, .4); tv.add(con);
     const slot = box(1.4, .08, .5, M({ color: 0x2b3044, roughness: .6 }), 2.4, 1.8 + .62, .3, 0, tv); slot.castShadow = false;
     const cart = rbox(1.2, .9, .3, .08, plastic(0xff5d5d)); cart.position.set(2.4, 1.8 + 1, .3); tv.add(cart);
@@ -1020,7 +1020,7 @@
         const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
         const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
         m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
-        if (m.userData.tick && !COARSE) { w.userData.keep = true; try { mergeStatic(m); } catch (e) {} roomTicks.push(t => m.userData.tick(t)); }   // PC: it breathes and blinks, but as a few meshes (the eyes stay separate)   // phones: the room's characters stand still and get merged (far fewer draw calls)
+        if (m.userData.tick && !COARSE) { w.userData.keep = true; try { mergeStatic(m); } catch (e) {} roomTicks.push(Object.assign(t => m.userData.tick(t), { obj: w })); }   // PC: it breathes and blinks, but as a few meshes (the eyes stay separate)   // phones: the room's characters stand still and get merged (far fewer draw calls)
         return w;
       };
       place('plop', 2.2, -.4, CH - .9, .2, .1, chest);                 // peeking out of the toy chest
@@ -1223,6 +1223,7 @@
     const up = () => { if (drag && drag.moved) { dragEnd = performance.now(); idleT = performance.now(); } drag = null; };
     container.addEventListener('pointerup', up); container.addEventListener('pointercancel', up);
     new ResizeObserver(resize).observe(container); resize();
+    wakeHooks();
     loop();
   }
   // the canvas always fills the screen (no seams); `inset` px at the bottom are covered by the info card,
@@ -1237,11 +1238,11 @@
     if (inset > .5 || Math.abs(hshift) > .5) cam.setViewOffset(cw, free, -hshift, 0, cw, ch); else cam.clearViewOffset();
     cam.updateProjectionMatrix();
   }
-  function setShift(px) { hshiftTo = px || 0; kick(900); }
+  function setShift(px) { const v = px || 0; if (v === hshiftTo) return; hshiftTo = v; kick(900); }
   // glide: a timed ease-in-out of the camera (and the framing above the info card) instead of the soft exponential follow
   let glide = null;
   const ioC = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-  function setInset(px) { insetTo = Math.max(0, px || 0); if (glide) glide.i1 = insetTo; }
+  function setInset(px) { const v = Math.max(0, px || 0); if (v === insetTo) return; insetTo = v; if (glide) glide.i1 = insetTo; kick(300); }   // (the same value again: nothing to draw)
   let sizeLate = false;
   function resize() {
     if (!R) return;
@@ -1253,7 +1254,7 @@
     if (w === cw && h === ch && R.domElement.width) { kick(300); return; }   // (the same size again: no new buffer)
     cw = w; ch = h; R.setSize(w, h, false); frame(); kick(300);
     // setSize clears the canvas: draw the new size right away, in this frame (a resize observer runs after the animation frame callbacks)
-    if (alignFn && rafId && !document.hidden) { cancelAnimationFrame(rafId); lastT = 0; loop(performance.now()); }
+    if (alignFn && !document.hidden) { cancelAnimationFrame(rafId); rafId = 0; lastT = 0; loop(performance.now()); }
   }
   // camera distance keeps a ~11-unit board in frame for any aspect ratio
   // the board's own size (half of its larger footprint side, world units), measured once per board — the gallery frames it by it
@@ -1280,7 +1281,7 @@
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
   //   o.roll: the camera is rolled 90° (screen up = world −x; roll: -1 the other way, screen up = world +x): o.w then runs along the screen height, o.d along its width
   let fitTo = null;
-  function fit(o) { fitTo = o || null; }
+  function fit(o) { const v = o || null; if (v === fitTo || (v && fitTo && JSON.stringify(v) === JSON.stringify(fitTo))) return; fitTo = v; kick(300); }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
   const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
@@ -1333,7 +1334,7 @@
   function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null;
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null; kick(400);
     const old = cur;
     const back = !model && takeKept(id);
     if (old) root.remove(old);
@@ -1356,7 +1357,7 @@
         else if (t < 250) { const k = (t - 150) / 100; sy = 1.12 - .44 * Math.sin(k * Math.PI / 2); sxz = .9 + .26 * Math.sin(k * Math.PI / 2); }
         else if (t < 430) { const k = ease.out3((t - 250) / 180); sy = .68 + .4 * k; sxz = 1.16 - .2 * k; }
         else if (t < 560) { const k = ease.out3((t - 430) / 130); sy = 1.08 - .08 * k; sxz = .96 + .04 * k; }
-        c.position.y = y; c.scale.set(sxz, sy, sxz);
+        c.position.y = y; c.scale.set(sxz, sy, sxz); kick(120);
         if (t < 560 && cur === c) requestAnimationFrame(anim); else c.scale.set(1, 1, 1);
       })(t0);
     };
@@ -1365,7 +1366,7 @@
       const go = () => { if (cur !== c || c.visible) return; c.visible = true; const t0 = performance.now();
       (function anim(now) {
         const k = Math.min(1, (now - t0) / 480), e = k === 1 ? 1 : 1 - Math.pow(2, -8 * k) * Math.cos(k * 9.5);
-        c.scale.setScalar(Math.max(.02, e)); c.rotation.y = (1 - ease.out3(k)) * -.9; c.position.y = (1 - ease.out3(k)) * 1.2;
+        c.scale.setScalar(Math.max(.02, e)); c.rotation.y = (1 - ease.out3(k)) * -.9; c.position.y = (1 - ease.out3(k)) * 1.2; kick(120);
         if (k < 1 && cur === c) requestAnimationFrame(anim); else { c.scale.set(1, 1, 1); c.rotation.y = 0; c.position.y = 0; }
       })(t0); };
       if (opts.hold) { revealFn = go; setTimeout(go, 1500); } else go();   // hold: wait for reveal() (the moment the icon vanishes)
@@ -1380,7 +1381,7 @@
       const k = Math.min(1, (now - t0) / D);
       const s = S0 * (.55 + .45 * ease.outBack(k));
       ic.scale.setScalar(s); ic.position.y = Math.sin(k * Math.PI) * 1.4;
-      ic.rotation.y = Math.PI / 4 - (1 - ease.out3(k)) * Math.PI * 2;
+      ic.rotation.y = Math.PI / 4 - (1 - ease.out3(k)) * Math.PI * 2; kick(120);
       if (k < 1 && cur === c) return requestAnimationFrame(anim);
       root.remove(ic); dispose(ic);
       if (cur !== c) return;
@@ -1390,7 +1391,7 @@
     return g;
   }
   let revealFn = null;
-  function reveal() { const f = revealFn; revealFn = null; if (f) f(); }
+  function reveal() { const f = revealFn; revealFn = null; if (f) f(); kick(300); }
   let lampShade = null;
   // play(on, {ortho:true}) (Historia's 「盤」 chapter): the top view becomes a true orthographic plan — no perspective, nothing leans.
   // The projection blends from perspective to ortho with the camera move (and back on the way down), see orthoBlend
@@ -1398,7 +1399,7 @@
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
     if (on) orthoWant = !!(o && o.ortho);
     if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
-    mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; }
+    mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; kick(400); }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
   function pick(ev, y) {
@@ -1421,11 +1422,11 @@
   // actually moved (the camera, the framing, a kick) — the showcase otherwise redraws the whole gallery every frame
   let quietOn = false, quietKey = '';
   function quiet(on) { quietOn = !!on; quietKey = ''; kick(300); }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else if (!rafId && R) rafId = requestAnimationFrame(loop); });
-  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; if (typeof kick === 'function') kick(300); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else kick(300); });
+  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; kick(300); });
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
-  let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0, idleTick = 0;
+  let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0;
   addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   const dockAnim = () => document.documentElement.classList.contains('dock-anim');
@@ -1436,10 +1437,40 @@
     queueMicrotask(() => {   // (after the skins' own listeners have placed the canvas box for the final layout; still before the paint)
       if (!R || !alignFn || dockAnim() || document.hidden) return;
       if (el.clientWidth !== cw || el.clientHeight !== ch || sizeLate) { sizeLate = false; resize(); return; }
-      kick(300); cancelAnimationFrame(rafId); lastT = 0; loop(performance.now());
+      kick(300); cancelAnimationFrame(rafId); rafId = 0; lastT = 0; loop(performance.now());
     });
   });
-  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; }
+  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; wake(); }
+  // the loop runs only while something needs frames and stops by itself afterwards (0 callbacks while idle — battery):
+  // wake() restarts it at once; poke(ms) asks it only to look whether the DOM board / the canvas moved or appeared
+  // (a frame is drawn only if it did) — for layout changes nobody announces (a class, a transition, a scroll, a late font)
+  let checkUntil = 0, wasHidden = false;
+  let parked = true;   // the loop has stopped: its first frame again starts the clock afresh (no jump for the time it slept)
+  function wake() { if (!rafId && R && !document.hidden && !blurred) rafId = requestAnimationFrame(loop); }
+  function poke(ms = 250) { checkUntil = Math.max(checkUntil, performance.now() + ms); wake(); }
+  let hooked = false;
+  function wakeHooks() {
+    if (hooked) return; hooked = true;
+    try {   // a texture uploaded again (a texgen picture done, a loaded image, a redrawn canvas): a frame for it
+      const TP = T().Texture.prototype, d = Object.getOwnPropertyDescriptor(TP, 'needsUpdate');
+      if (d && d.set) Object.defineProperty(TP, 'needsUpdate', { configurable: true, get: d.get, set(v) { d.set.call(this, v); if (v === true && R) kick(150); } });
+    } catch (e) {}
+    const de = document.documentElement, pk = () => poke(), pkLong = () => poke(600);
+    // (an attribute written with its old value — a clock re-setting its class — or a text change is no layout change: ignored)
+    // (the 3D room — portal, Historia — only needs to see its canvas appear: a style written by a page's own JS animation, e.g. the
+    // portal's floating pieces 30×/s, is not looked at there)
+    const real = m => m.type === 'attributes' ? m.oldValue !== m.target.getAttribute(m.attributeName) && (alignFn || m.attributeName !== 'style') : [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1);
+    try { new MutationObserver(ms => { if (ms.some(real)) pk(); })
+      .observe(de, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style', 'hidden', 'open'] }); } catch (e) {}
+    ['transitionrun', 'transitionend', 'transitioncancel', 'animationstart', 'animationend'].forEach(t => document.addEventListener(t, pkLong, true));
+    ['scroll', 'load'].forEach(t => document.addEventListener(t, pk, { capture: true, passive: true }));
+    // input: the skin pages kick for what they change themselves (a look is enough); the 3D room (portal, Historia, a game or the rules
+    // on the table) draws a moment after it too — a safety net for a handler that changes the scene without a kick
+    const inp = () => { if (alignFn) poke(); else if (R && el && el.offsetParent) kick(400); else poke(); };
+    ['pointerdown', 'pointerup', 'keydown', 'wheel'].forEach(t => addEventListener(t, inp, { capture: true, passive: true }));
+    if (window.visualViewport) visualViewport.addEventListener('resize', () => kick(300));
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', pk);
+  }
   /* ---------- auto-instancing (skin pages) ----------
      The skins keep one Group per piece (they move, lift, flip and fade them one by one). Right before each frame, every visible
      mesh that shares its geometry and material with others is drawn through one InstancedMesh per (geometry, material, mirrored)
@@ -1525,44 +1556,58 @@
       slowDone = true;
     } else if (med < 22) slowDone = true;   // fast enough: stop measuring
   }
+  // one frame; the next one is asked for only while step() says something still needs frames
   function loop(now = performance.now()) {
-    if (document.hidden) { rafId = 0; return; }
-    rafId = requestAnimationFrame(loop);
-    if (!el.offsetParent && !alignFn) return;
-    if (blurred) { lastT = now; return; }   // window not focused: no rendering at all (resumes on focus)
-    if (now - lastT < FRAME_MS - 2) return;
+    rafId = 0;
+    if (document.hidden || !R) { parked = true; return; }
+    if (parked) { parked = false; lastT = 0; }
+    const more = step(now);
+    if (rafId) return;   // (a kick inside the frame — or a resize() drawing at once — has asked for the next one already)
+    if (more && !document.hidden) rafId = requestAnimationFrame(loop); else parked = true;
+  }
+  function step(now) {
+    if (!el.offsetParent && !alignFn) { wasHidden = true; return now <= checkUntil; }   // the canvas is hidden: a poke (its class / style changed) looks again
+    if (wasHidden) { wasHidden = false; kick(300); }
+    if (blurred) return false;   // window not focused: no rendering at all (resumes on focus)
+    if (now - lastT < FRAME_MS - 2) return true;
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
+    let moving = false;   // anything below still easing / turning: more frames
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
       glide.t += Math.min(dt, 50); const k = Math.min(1, glide.t / glide.dur), e = ioC(k);   // one ease-in-out for everything that moves   // (a frame advances at most 50 ms: smooth steps, and a stall never makes it jump)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
       camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();   // the framing reaches its end on the same curve   // the framing follows smoothly even if the card changes size meanwhile
       if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; frame(); }
-    } else camK += (camTo - camK) * ez(.07);
-    zoom += (zoomTo - zoom) * ez(.18);
-    if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); }   // same pace as the camera, frame-rate independent
-    else if (inset !== insetTo) { inset = insetTo; frame(); }
-    if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); }
+      moving = true;
+    } else if (Math.abs(camTo - camK) > 1e-5) { camK += (camTo - camK) * ez(.07); moving = true; } else camK = camTo;
+    if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
+    if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); moving = true; }   // same pace as the camera, frame-rate independent
+    else if (inset !== insetTo) { inset = insetTo; frame(); moving = true; }
+    if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); moving = true; } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); moving = true; }
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
-    if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
+    if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; if (Math.abs(tilt) < 1e-5) tilt = 0; } else moving = true;
+    if (vel || tilt) moving = true;
     if (!drag && !vel && mode === 'view' && !quietOn && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
+    if (mode === 'view' && !quietOn && !alignFn) moving = true;   // (the showcase turns — or is about to — : it keeps the frames coming, as designed)
     if (mode === 'play' && tYaw !== null) { yaw = tYaw; vel = 0; }   // the 盤面反転 turn (turn()): the angle is given
     else if (mode === 'play') {   // in a game the board stays still, squared to the player
-      const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
+      const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; if (Math.abs(home - yaw) > 1e-5) { yaw += (home - yaw) * .15; moving = true; } else yaw = home; vel = 0;
     }
     root.rotation.y = yaw;
     { // the turn's scale: about the floor (the board and its legs stay standing on the table — its shadow stays put under it),
       // enlarged a hair so the field (lower now, further from the camera) still looks exactly s × its size, like the DOM board on top
       const s = tYaw !== null ? tS : 1, H0 = Math.max(1, cam.position.y - (alignTop || 0)), t = alignTop || 0, k = s === 1 ? 1 : s * (H0 + t) / (H0 + s * t);
       if (root.scale.x !== k) { root.scale.setScalar(k); root.position.y = 0; rootDirty = true; } }
-    if (roomTicks.length && !alignFn && !(quietOn && now > kickUntil)) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
+    const ticking = roomTicks.length && !alignFn && !(quietOn && now > kickUntil);
+    if (ticking) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
     // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
     // the board at a wrong size until the end; the crisp one is drawn at once when the transform is taken off (dockFinal)
-    if (alignFn && dockAnim()) return;
-    if (alignFn && sizeLate) { resize(); return; }   // (resize() draws the new size itself)
+    if (alignFn && dockAnim()) return true;
+    if (alignFn && sizeLate) { resize(); return true; }   // (resize() draws the new size itself)
+    const more = () => moving || dirty || now <= kickUntil || now <= checkUntil;
     if (alignFn) {   // skin mode: a straight top-down camera so the 3D field lands exactly on a DOM rectangle
-      // idle (nothing moved for 1 s): only re-measure the DOM board ~10×/s; a resize or kick() wakes it at once
-      if (now > kickUntil && !dirty && now - lastDraw > 1000 && (idleTick++ % 6)) return;
+      // idle: the loop has stopped; a kick(), a resize or a poke() (the page's layout may have moved the DOM board) runs it again,
+      // and while the board's rect keeps changing it is followed for another second
       const r = alignFn(); if (r && r.w > 10) {
         const W = cw, H = ch, half = (alignSize || 8.4) / 2, top = alignTop || .43;
         // match the DOM board's CSS transform: perspective(P px) rotateX(tilt) about its centre = a pinhole camera P px in front
@@ -1575,13 +1620,14 @@
         const LK = lastKey || (lastKey = [NaN, 0, 0, 0, 0, 0]), same = Math.abs(LK[0] - r.x) < .05 && Math.abs(LK[1] - r.y) < .05 && Math.abs(LK[2] - r.w) < .05 && Math.abs(LK[3] - r.h) < .05 && LK[4] === W && LK[5] === H;
         // (the online dock's move / resize, shared/headerbar.js html.dock-anim: the page slides the board with a CSS transform —
         // the picture is right as long as the board's place in the canvas is the same: the kicks of the resize are not redrawn)
-        if (same && now > kickUntil && !dirty) return;
+        if (same && now > kickUntil && !dirty) return more();
+        if (!same) checkUntil = Math.max(checkUntil, now + 1000);
         LK[0] = r.x; LK[1] = r.y; LK[2] = r.w; LK[3] = r.h; LK[4] = W; LK[5] = H; if (now > kickUntil) dirty = false;
 
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2) - sh * unit, W, H); cam.updateProjectionMatrix();
         autoInstance(cur);
         if (!R.shadowMap.autoUpdate) { R.shadowMap.needsUpdate = shadowDirty || now <= kickUntil; shadowDirty = false; }
-        R.render(scene, cam); lastDraw = now; return;
+        R.render(scene, cam); lastDraw = now; return more();
       }
     }
     const q = camPose(0), r2 = camPose(1), k = camK;
@@ -1593,12 +1639,26 @@
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     orthoBlend(orthoWant ? camK : 0);   // (the projection flattens on the camera's own curve: it lands with it, no late zoom)
     if (museumOn) glare(camK);
+    // the room's own life (PC: the characters breathe and blink, the castle flag waves, the TV flickers) keeps the frames coming
+    // while one of them is in the picture — e.g. a character at the edge of a game on the table; out of the picture it waits
+    if (ticking && !moving && !museumOn && tickSeen()) moving = true;
     if (quietOn) {
       const e = cam.projectionMatrix.elements, kq = [cam.position.x, cam.position.y, cam.position.z, yaw, e[0], e[5], e[8], e[9], e[11], cw, ch].map(v => v.toFixed(4)).join();
-      if (kq === quietKey && now > kickUntil && !dirty) return;
+      if (kq === quietKey && now > kickUntil && !dirty) return more();
       quietKey = kq; dirty = false;
-    }
-    R.render(scene, cam);
+    } else if (!moving && !dirty && now > kickUntil) return more();   // nothing changed: no frame (the showcase's turntable counts as moving)
+    R.render(scene, cam); lastDraw = now; if (now > kickUntil) dirty = false;
+    return more();
+  }
+  const _fr = { f: null, m: null };
+  function tickSeen() {
+    const TT = T(); if (!_fr.f) { _fr.f = new TT.Frustum(); _fr.m = new TT.Matrix4(); }
+    cam.updateMatrixWorld(); _fr.m.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); _fr.f.setFromProjectionMatrix(_fr.m);
+    return roomTicks.some(f => {
+      const o = f.obj; if (!o) return true; if (!o.visible) return false;
+      if (!o.userData._bs) { const b = new TT.Box3().setFromObject(o); if (b.isEmpty()) return true; o.userData._bs = b.getBoundingSphere(new TT.Sphere()); }   // (the room stands still: measured once)
+      return _fr.f.intersectsSphere(o.userData._bs);
+    });
   }
   // perspective → orthographic: the ortho frustum is matched to the perspective one on the plane the camera looks at
   // (same size and the same view offset there), so blending the two matrices element by element is seamless
@@ -1619,7 +1679,7 @@
     R.toneMappingExposure = .92 * (1 - .14 * w); shadowDirty = true;
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
-  function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }
+  function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; kick(300); }
   // skin pages, 盤面反転: the whole board (root) turned by `a` radians round the vertical axis through the field's centre and
   // scaled by s (so its corners stay inside the canvas while it turns); turn(null) ends it (squared to the player again)
   function turn(a, s) { if (a == null) { tYaw = null; tS = 1; yaw = 0; } else { tYaw = a; tS = s || 1; } rootDirty = true; kick(250); }
