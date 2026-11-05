@@ -778,7 +778,7 @@
       g.add(mesh(i ? new TT.IcosahedronGeometry(.7, 0) : new TT.TorusKnotGeometry(.45, .15, 48, 8), gold, x, FLOOR + 5.2, z)); });
     const preDeco = new Set(); g.traverse(o => { if (o.isMesh) preDeco.add(o); });
     /* ---------- the hall's finer dressing (2026-11: a grander gallery, ~the toy room's polygon budget) ---------- */
-    const lamp = M({ color: 0xfff1d0, emissive: 0xffd9a0, emissiveIntensity: 1.6, roughness: .4 }), crystal = M({ color: 0xf6f2ff, roughness: .05, metalness: .1, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 2.2 });
+    const lamp = M({ color: 0xfff1d0, emissive: 0xffd9a0, emissiveIntensity: 1.6, roughness: .4 });
     const velvetSeat = M({ color: 0x5c1420, roughness: .75, sheen: new TT.Color(0x7a2230) });
     // a carpet under the exhibit: claret field, gold and indigo border bands
     const rugT = canvasTex('musRug', SZm(1024), SZm(1024), (c, W) => {
@@ -824,30 +824,6 @@
     corr.add(mesh(RB(1.8, 1.9, 1.6, .08, 1), marble, 0, .95, 1.1)); corr.add(mesh(vase, M({ color: 0x1d3a72, roughness: .2, clearcoat: 1 }), 0, 1.9, 1.1));
     // the arch made grander: a keystone, a gilt archivolt
     back.add(mesh(RB(1, 1.4, .7, .1, 1), marble, 0, 13.4, .45)); { const av = new TT.Mesh(new TT.TorusGeometry(4.15, .12, 6, 28, Math.PI), gold); av.position.set(0, 9.5, .45); back.add(av); }
-    // a coffered ceiling with gilt rosettes
-    const CEIL = FLOOR + 22, ceilM = M({ map: plaster, color: 0xe9dcc2, roughness: .9 });
-    { const c = new TT.Mesh(new TT.PlaneGeometry(40, 34), ceilM); c.rotation.x = Math.PI / 2; c.position.set(0, CEIL, 0); g.add(c); }
-    for (let x = -20; x <= 20; x += 5) g.add(mesh(new TT.BoxGeometry(.5, .8, 34), marble, x, CEIL - .4, 0));
-    for (let z = -17; z <= 17; z += 4.25) g.add(mesh(new TT.BoxGeometry(40, .8, .5), marble, 0, CEIL - .4, z));
-    for (let x = -17.5; x < 20; x += 5) for (let z = -14.9; z < 17; z += 4.25) { const r = new TT.Mesh(new TT.CylinderGeometry(.5, .6, .14, 10), gold); r.position.set(x, CEIL - .07, z); g.add(r); }
-    // two chandeliers: brass rings and arms, candles with glowing flames, strings of crystal drops
-    const chand = (x, z) => {
-      const c = new TT.Group(); c.position.set(x, CEIL - 6, z); g.add(c);
-      c.add(mesh(new TT.CylinderGeometry(.05, .05, 5.2, 6), brass, 0, 3.4, 0));
-      c.add(mesh(new TT.SphereGeometry(.55, 14, 10), brass, 0, .4, 0)); c.add(mesh(new TT.ConeGeometry(.3, .8, 12), brass, 0, -.4, 0).rotateX(Math.PI));
-      [[1.9, .9, .08], [1.15, 1.6, .06]].forEach(([r, y, t]) => c.add(mesh(new TT.TorusGeometry(r, t, 6, 32), brass, 0, y, 0).rotateX(Math.PI / 2)));
-      for (let i = 0; i < 8; i++) {
-        const a = i / 8 * Math.PI * 2, cx = Math.cos(a) * 1.9, cz = Math.sin(a) * 1.9;
-        const arm = new TT.QuadraticBezierCurve3(new TT.Vector3(0, .4, 0), new TT.Vector3(cx * .6, -.2, cz * .6), new TT.Vector3(cx, .9, cz));
-        c.add(new TT.Mesh(new TT.TubeGeometry(arm, 8, .045, 5), brass));
-        c.add(mesh(new TT.CylinderGeometry(.16, .1, .14, 10), brass, cx, .97, cz)); c.add(mesh(new TT.CylinderGeometry(.07, .07, .5, 8), M({ color: 0xf7efe0, roughness: .6 }), cx, 1.29, cz));
-        c.add(mesh(new TT.ConeGeometry(.06, .2, 6), lamp, cx, 1.65, cz));
-        for (let j = 1; j <= 3; j++) c.add(mesh(new TT.OctahedronGeometry(.07 + j * .01, 0), crystal, cx * (1 - j * .1), .9 - j * .28, cz * (1 - j * .1)));
-      }
-      for (let i = 0; i < 16; i++) { const a = (i + .5) / 16 * Math.PI * 2; for (let j = 0; j < 2; j++) c.add(mesh(new TT.OctahedronGeometry(.08, 0), crystal, Math.cos(a) * 1.15, 1.3 - j * .25, Math.sin(a) * 1.15)); }
-      c.add(mesh(new TT.OctahedronGeometry(.22, 0), crystal, 0, -1.05, 0));
-    };
-    chand(-9, -2); chand(9, -2);
     // museum benches: buttoned velvet tops on turned walnut legs, facing the exhibit
     const bench = (x, z, ry) => {
       const b = new TT.Group(); b.position.set(x, FLOOR, z); b.rotation.y = ry; g.add(b);
