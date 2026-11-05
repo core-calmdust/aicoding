@@ -1260,7 +1260,8 @@
   function boardR() {
     if (!cur) return 6.5; if (cur.userData._r) return cur.userData._r;
     try { const bx = new (T().Box3)().setFromObject(cur), sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
-      return cur.userData._r = Math.max(2.5, Math.min(8, Math.max(sz.x, sz.z) / 2)); } catch (e) { return 6.5; }
+      cur.userData._h = Math.max(.3, Math.min(6, sz.y));
+      return cur.userData._r = Math.max(2.5, Math.min(9, Math.max(sz.x, sz.z) / 2 * .7 + Math.hypot(sz.x, sz.z) / 2 * .3)); } catch (e) { return 6.5; }   // (between half its side and half its diagonal: the slow turntable only swings it a little)
   }
   function camPose(k) {
     // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
@@ -1268,8 +1269,10 @@
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
     const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
     // the gallery's showcase: the board itself (its turning footprint) takes ~65% of the free area's shorter side
-    const mr = museumOn && !k ? boardR() / .65 : 0;
-    const needW = (k ? fw : mr || 6.5) / (th * a), needH = (k ? fd : mr ? mr * .62 : 6.8) / th;
+    // the gallery's showcase: the board is the exhibit — its turning footprint fills ~88% of the free area's limiting side
+    // (width: the half-diagonal; height: the footprint seen from the camera's low angle plus the pieces' height)
+    const mr = museumOn && !k ? boardR() / .9 : 0, mh = mr ? (boardR() * .5 + ((cur && cur.userData._h) || 1) * .7) / .9 : 0;
+    const needW = (k ? fw : mr || 6.5) / (th * a), needH = (k ? fd : mh || 6.8) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
