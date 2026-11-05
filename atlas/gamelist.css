@@ -96,8 +96,8 @@
 /* home: today's game card — the history fills the card; the bottom row is only ヒストリアを見る (secondary, start) and ちゃぶ台へ (primary, end).
    Side by side with the profile (PC) the card takes the profile's height and the text fills what is left (gamelist.js clampFit adds the "…"
    only when it truly runs out); stacked (narrow screens) the card simply grows to show the whole paragraph. */
-.today .hs{flex:1 1 0;min-height:4.95em;overflow:hidden}
-.today .hs.clamp{display:-webkit-box;-webkit-box-orient:vertical}
+.today .hs{flex:1 1 0;min-height:4.95em;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-inline-end:6px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--c) 45%,#e8dcc4) transparent;-webkit-mask:linear-gradient(#000 calc(100% - 14px),transparent);mask:linear-gradient(#000 calc(100% - 14px),transparent);padding-bottom:12px}
+.today .hs::-webkit-scrollbar{width:5px}.today .hs::-webkit-scrollbar-thumb{border-radius:3px;background:color-mix(in srgb,var(--c) 45%,#e8dcc4)}
 .today .ft{justify-content:space-between;flex-wrap:nowrap}
 .today .ft .tags{display:none}
 .today .hsb{flex:0 1 auto;min-width:0;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 11px;border-radius:99px;font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -106,7 +106,7 @@
 .today .hsb:hover{background:color-mix(in srgb,var(--c) 20%,#fff)}
 .today .hsb:active{transform:translateY(2px);box-shadow:none}
 .today .hsb:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
-@media (max-width:860px){ .today .hs{flex:none;min-height:0} }
+@media (max-width:860px){ .today .hs{flex:none;min-height:0;max-height:9.5em} }
 @media (max-width:600px){ .today .hsb{height:34px;font-size:13px} }
 @media (max-width:340px){ .today .hsb{padding:0 10px 0 8px;font-size:12px;gap:4px} .today .ft .btn.sm{padding-inline:12px} }
 /* board sheet, PC: ルール + ring with ヒストリア under them (gamelist.js sheetActions); the tags step back to one quiet line */
