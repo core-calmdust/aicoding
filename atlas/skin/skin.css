@@ -87,7 +87,7 @@ html.atlas-skin .brand{display:none!important}
 .atlas-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
 .atlas-brand img{flex:none;width:44px;height:44px}
 .atlas-brand span{display:flex;flex-direction:column;line-height:1.1;min-width:0;overflow:hidden}
-.atlas-brand .wk{font-style:normal;display:flex;align-items:center;gap:.7em;font-size:.42em;letter-spacing:.55em;padding-left:.55em;margin:0 0 .3em;color:#6b5f4c;line-height:1}.atlas-brand .wk::before,.atlas-brand .wk::after{content:'';flex:1;height:1px;background:#a48a5c;border-radius:1px}.atlas-brand b:has(.wk){font-size:17px;letter-spacing:.01em;overflow:visible}html.atlas-land .atlas-brand .wk{display:none}
+.atlas-brand .wk{font-style:normal;display:flex;align-items:center;gap:.7em;font-size:.42em;letter-spacing:.55em;padding-left:.55em;margin:0 0 .3em;color:#6b5f4c;line-height:1}.atlas-brand .wk::before,.atlas-brand .wk::after{content:'';flex:1;height:1px;background:#a48a5c;border-radius:1px}.atlas-brand b:has(.wk){font-size:17px;letter-spacing:.01em;overflow:visible}.atlas-brand:has(.wk){flex:none}.atlas-brand:has(.wk) small{font-size:9.5px;letter-spacing:.05em}html.atlas-land .atlas-brand .wk{display:none}
 .atlas-brand b{font-family:'RocknRoll One','Zen Maru Gothic',sans-serif;font-weight:400;font-size:20px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atlas-brand small{text-align:end;font-family:'RocknRoll One','Fredoka',sans-serif;font-weight:400;font-size:11px;letter-spacing:.08em;color:#6a7088;white-space:nowrap}
 .atlas-coin{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid #efe3c8;border-radius:99px;padding:4px 12px 4px 5px;font:700 16px 'Fredoka',sans-serif;box-shadow:0 2px 0 #efe3c8}

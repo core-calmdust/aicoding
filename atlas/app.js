@@ -1244,7 +1244,7 @@
     const title = t('title');
     $('wm').innerHTML = lang === 'en' || /[^\x00-\x7f]/.test(title) === false ? [...title].map(c => `<span>${esc(c)}</span>`).join('') : esc(title);
     if (lang === 'ja') $('wm').innerHTML = [...title].map(c => `<span>${esc(c)}</span>`).join('');
-    if (lang === 'en' && /^World /.test(title)) $('wm').innerHTML = '<i class="wk">WORLD</i>' + [...title.slice(6)].map(c => `<span>${esc(c)}</span>`).join('');   // English: a small ruled "WORLD" over "Board Game Atlas"
+    { const KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"]}[lang]; if (KW) $('wm').innerHTML = `<i class="wk">${esc(KW[0])}</i>` + [...KW[1]].map(c => `<span>${esc(c)}</span>`).join(''); }   // Latin languages: a small ruled kicker over the shorter main title
     $('wmSub').textContent = t('sub');
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
     $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
