@@ -246,10 +246,11 @@
   // the board's framing while open: phones frame it in the stage above the page; wide screens keep it full height (the canvas is shifted right in CSS)
   // the stage's final geometry for the layout the chapter is going to (phones): measured with transitions off, then the layout
   // goes back and animates there as usual — so the camera can head for its final framing from the first frame
+  let finalPgH = 0;   // the page area's height in the chapter's final layout (phones), measured with the stage
   function finalRects(rd, top) {
     const st = root.querySelector('.hs-stage'), g = root.querySelector('.hs-guide'), was = [root.classList.contains('read'), root.classList.contains('top')];
     root.classList.add('snap'); root.classList.toggle('read', rd); root.classList.toggle('top', top);
-    const r = st.getBoundingClientRect(), gt = g ? g.getBoundingClientRect().top : r.bottom;
+    const r = st.getBoundingClientRect(), gt = g ? g.getBoundingClientRect().top : r.bottom, pgs = root.querySelector('.hs-pages'); finalPgH = pgs ? pgs.clientHeight : 0;
     root.classList.toggle('read', was[0]); root.classList.toggle('top', was[1]); void root.offsetHeight; root.classList.remove('snap'); void root.offsetHeight;
     root.classList.toggle('read', rd); root.classList.toggle('top', top);
     return { r, gt };
@@ -345,7 +346,10 @@
     { const gh = root.querySelector('.hs-bub .ghost'); if (gh) gh.textContent = c.say || ''; }
     // phones: the reading chapters give the page more of the screen (the 3D stage shrinks), the visual ones give it back
     const rd = !['hook', 'board', 'end'].includes(c.k);
-    cam(c.k === 'board', rd);
+    finalPgH = 0; cam(c.k === 'board', rd);
+    // a map page is laid out and its dots drawn before it shows (final height, final framing): nothing changes until the first zoom
+    if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
+    mapInit(pg);
     if (window.Table3D && Table3D.quiet) Table3D.quiet(phone() && (rd || c.k === 'board') && !solo);   // (the top-down board view is still too: drawn when it moves)
   }
   // splits a title into letters (or words, for joined scripts) that rise in one after another
@@ -384,10 +388,11 @@
   // per-page motion once it is on screen: count-ups, map routes, the timeline's line, pieces landing
   function run(pg, c) {
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
-    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp, zm.dataset.z, 'none'); paintDots(mp);   /* the route framing from the first frame: dots and pins share it — no separate opening zoom */ addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
-    if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
     if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
+  }
+  function mapInit(pg) {
+    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp, zm.dataset.z, 'none'); paintDots(mp);   /* the route framing from the first frame: dots and pins share it — no separate opening zoom */ addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
   }
   // a page with a board diagram: on a short window the diagram gives up height so the text never ends up under the nav bar
   function fitDg(pg) {
@@ -410,7 +415,7 @@
     const sv = map.querySelector('svg');
     const cap = () => {
       if (!pg.isConnected) return;
-      const H = pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
+      const H = finalPgH || pg.clientHeight, nat = map.clientWidth / 1.6, card = (L[0] && L[0].offsetHeight) || 70;
       // short pages (small phones, browser bars): the map gets slimmer (down to ~72 px, still cropped around the pins) rather than
       // scrolling away — it only stops being pinned when even that would leave less than ~2 cards of text
       const h = Math.round(Math.max(72, Math.min(nat, H * (phone() ? .33 : .4), H - card * 2.1)));
@@ -418,7 +423,7 @@
       sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
       zmSet(map);
     };
-    cap(); later(cap, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); }, { signal: pageAC.signal });
+    cap(); later(() => { finalPgH = 0; cap(); }, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); }, { signal: pageAC.signal });
     const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
     let sq = 0; pg.addEventListener('scroll', () => { if (!sq) sq = requestAnimationFrame(() => { sq = 0; stuck(); }); }, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
@@ -501,7 +506,7 @@
     // pins and labels start with CSS transforms equal to where they stand (their SVG attributes): the first stage's move then
     // animates them from there, not from the map's corner
     keepSize(zb[2], 0);
-    later(tick, 1500);
+    later(tick, 1000);   // (from when the page is put in: ~0.5 s after its slide-in ends)
     L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
   }
   function fmt(v) { try { return Math.round(v).toLocaleString(lang === 'ar' ? 'en' : lang); } catch (e) { return String(Math.round(v)); } }
@@ -541,9 +546,10 @@
   const landAt = (m, lon, lat) => { const r = Math.floor((m.lat0 - lat) / m.step), c = Math.floor((lon + 180) / m.step); return r >= 0 && r < m.nr && c >= 0 && c < m.nc && m.g[r * m.nc + c] === 1; };
   // where the map's viewBox (360 × 225) sits in the svg box (CSS px, relative to the svg's own corner)
   function fitOf(map) {
-    const sv = map.querySelector('svg'), rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = rs.width, H = rs.height;
-    if (!W || !H) return null; const sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice'), sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
-    return { W, H, sc, ox: (W - 360 * sc) / 2, oy: (H - 225 * sc) / 2, left: rs.left - rm.left, top: rs.top - rm.top };
+    // (layout sizes, not the on-screen rects: right even while the page or the map is still sliding / scaling in)
+    const sv = map.querySelector('svg'), rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = sv.clientWidth, H = sv.clientHeight;
+    if (!W || !H) return null; const ks = rs.width / W || 1; const sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice'), sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
+    return { W, H, sc, ox: (W - 360 * sc) / 2, oy: (H - 225 * sc) / 2, left: (rs.left - rm.left) / ks, top: (rs.top - rm.top) / ks };
   }
   function drawDots(map, v, F) {
     const M = mask(window.HISTORIA_MAP_FINE, 'f') || mask(window.HISTORIA_MAP, 'c'); if (!M) return null;
