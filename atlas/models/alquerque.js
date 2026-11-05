@@ -46,19 +46,44 @@
     const rrect = (x0, z0, x1, z1, r) => g => { g.beginPath(); const L = X0(x0), Tt = Z0(z0), Wd = S(x1 - x0), Hd = S(z1 - z0), rr = S(r); g.moveTo(L + rr, Tt); g.arcTo(L + Wd, Tt, L + Wd, Tt + Hd, rr); g.arcTo(L + Wd, Tt + Hd, L, Tt + Hd, rr); g.arcTo(L, Tt + Hd, L, Tt, rr); g.arcTo(L, Tt, L + Wd, Tt, rr); g.closePath(); };
     const poly = pts => g => { g.beginPath(); pts.forEach(([x, z], i) => i ? g.lineTo(X0(x), Z0(z)) : g.moveTo(X0(x), Z0(z))); g.closePath(); };
     const star8 = (cx, cz, r, rot = 0) => { const p = []; for (let k = 0; k < 16; k++) { const ang = rot + k * Math.PI / 8, rr = k % 2 ? r * .62 : r; p.push([cx + Math.cos(ang) * rr, cz + Math.sin(ang) * rr]); } return poly(p); };
-    // 1. walnut: long grain along x, at half resolution
-    {
-      const hw = Wp >> 1, hh = Hp >> 1, c = document.createElement('canvas'); c.width = hw; c.height = hh;
-      const g = c.getContext('2d'), img = g.createImageData(hw, hh), d = img.data;
-      for (let y = 0; y < hh; y++) for (let x = 0; x < hw; x++) {
-        const u = x / hw * W, v = y / hh * H, w = NZ(u * .35, v * 1.2, 3) * 2.2, ring = Math.pow(.5 + .5 * Math.sin((v * 5.5 + w) * Math.PI), 3), f = NZ(u * 6, v * 40, 2);
-        const k = Math.min(1, Math.max(0, .3 + .5 * ring + .3 * (f - .5)));
-        const i = (y * hw + x) * 4; d[i] = 92 - 44 * k; d[i + 1] = 60 - 30 * k; d[i + 2] = 38 - 20 * k; d[i + 3] = 255;
+    // real wood, at full resolution: edge-glued boards, each plain-sawn (wandering growth rings that rise into
+    // cathedral arches, sharp latewood lines), fine fibres and open pores along the grain, the pores and latewood also in
+    // the height (the varnish sinks into them) and the roughness. Grain along x.
+    const ss = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+    const hsh = n => (((n * 2654435761) >>> 0) % 100000) / 100000;
+    function woodRegion(x0, z0, x1, z1, P) {
+      const px0 = Math.max(0, Math.floor(X0(x0))), pz0 = Math.max(0, Math.floor(Z0(z0))), px1 = Math.min(Wp, Math.ceil(X0(x1))), pz1 = Math.min(Hp, Math.ceil(Z0(z1))), w = px1 - px0, hgt = pz1 - pz0;
+      const iA = a.getImageData(px0, pz0, w, hgt), iH = h.getImageData(px0, pz0, w, hgt), iM = m.getImageData(px0, pz0, w, hgt), dA = iA.data, dH = iH.data, dM = iM.data;
+      const edges = [z0]; { let z = z0, k = 0; while (z < z1) { z += P.plank * (.75 + .5 * hsh(P.seed * 7 + k++)); edges.push(Math.min(z, z1)); } }
+      for (let y = 0; y < hgt; y++) {
+        const v = (pz0 + y + .5) / ppu - H / 2;
+        let pk = 0; while (pk < edges.length - 2 && v > edges[pk + 1]) pk++;
+        const sd = P.seed + pk * 13.7, tone = .92 + .16 * hsh(P.seed * 31 + pk), xc = x0 + (x1 - x0) * (.2 + .6 * hsh(P.seed * 5 + pk)), vv = v - edges[pk];
+        const seam = Math.min(v - edges[pk], edges[pk + 1] - v) * ppu;   // px to the glue line
+        for (let x = 0; x < w; x++) {
+          const u = (px0 + x + .5) / ppu - W / 2;
+          const warp = (NZ(u * .11 + sd, vv * .55 + sd, 3) - .5) * P.warp + (NZ(u * .7 + sd * 2, vv * 2.6, 2) - .5) * P.warp * .18;
+          const arch = P.fig * Math.sqrt(Math.abs(u - xc) * 2.4 + .2);
+          const t = (vv + warp * .25 + arch * .25) * P.period + NZ(u * .05, sd, 2) * .8, ri = Math.floor(t), f = t - ri;
+          const inten = .35 + .65 * Math.pow(hsh(ri * 17 + pk * 101 + P.seed), 1.4), wid = .55 + .3 * hsh(ri * 7 + 3);
+          const late = ss(wid, .94, f) * (1 - ss(.94, 1, f)) * inten;
+          const fib = NZ(u * 1.4 + sd, vv * 75, 2), fib2 = NZ(u * .25 + sd, vv * 14, 2);
+          const pr = NZ(u * 10 + sd * 3, vv * 170, 1), pore = Math.max(0, pr - .74) * 3.8 * P.pore;
+          let k = Math.min(1, Math.max(0, .42 + (fib2 - .5) * .55 + (fib - .5) * .25 + (1 - inten) * .05));
+          let r = P.light[0] + (P.dark[0] - P.light[0]) * k, g = P.light[1] + (P.dark[1] - P.light[1]) * k, b = P.light[2] + (P.dark[2] - P.light[2]) * k;
+          const lt = Math.min(1, late * .85); r += (P.late[0] - r) * lt; g += (P.late[1] - g) * lt; b += (P.late[2] - b) * lt;
+          const pd = Math.min(.6, pore); r *= (1 - pd) * tone; g *= (1 - pd) * tone; b *= (1 - pd * 1.05) * tone;
+          const sm = seam < 1.2 ? .7 : 1; r *= sm; g *= sm; b *= sm;   // the glue line between two boards
+          const i = (y * w + x) * 4;
+          dA[i] = r; dA[i + 1] = g; dA[i + 2] = b; dA[i + 3] = 255;
+          const hv = 128 - late * 16 - Math.min(1, pore) * 30 + (fib - .5) * 7 - (seam < 1.2 ? 18 : 0); dH[i] = dH[i + 1] = dH[i + 2] = hv; dH[i + 3] = 255;
+          dM[i] = 255; dM[i + 1] = Math.min(255, (P.rough + pore * .3 + late * .04) * 255); dM[i + 2] = 0; dM[i + 3] = 255;
+        }
       }
-      g.putImageData(img, 0, 0); a.drawImage(c, 0, 0, Wp, Hp);
-      h.fillStyle = 'rgb(128,128,128)'; h.fillRect(0, 0, Wp, Hp);
-      m.fillStyle = `rgb(255,${Math.round(.42 * 255)},0)`; m.fillRect(0, 0, Wp, Hp);
+      a.putImageData(iA, px0, pz0); h.putImageData(iH, px0, pz0); m.putImageData(iM, px0, pz0);
     }
+    // 1. walnut: the whole board (the border and the field are inlaid over it)
+    woodRegion(-W / 2, -H / 2, W / 2, H / 2, { light: [124, 84, 54], dark: [82, 52, 31], late: [40, 23, 12], period: 4.2, warp: 1.6, fig: .9, plank: 2.1, pore: 1, rough: .36, seed: 11 });
     const BONE = '#ece2cc', EBONY = '#1e1510', LEMON = '#c99a55', PEARL = '#e9eee8';
     // 2. the marquetry border: bone stringing, a band of triangles, a chequer of tiny diamonds
     const e0 = .13, hw = W / 2, hh = H / 2;
@@ -86,7 +111,7 @@
     // the chequer of tiny diamonds: e0 + .28 … e0 + .38
     const cb0 = e0 + .285, cs = .1;
     ringEO(e0 + .265, .02, BONE, 132);
-    fillAll(g => { g.beginPath(); g.rect(X0(-hw + cb0), Z0(-hh + cb0), S(W - 2 * cb0), S(H - 2 * cb0)); g.rect(X0(-hw + cb0 + cs), Z0(-hh + cb0 + cs), S(W - 2 * (cb0 + cs)), S(H - 2 * (cb0 + cs))); }, '#3a2618', 128, .4);
+    ringEO(cb0, cs, '#3a2618', 128);   // the chequer's dark ground (a frame only: the walnut inside stays bare)
     {
       const dia = (cx, cz) => poly([[cx, cz - cs / 2], [cx + cs / 2, cz], [cx, cz + cs / 2], [cx - cs / 2, cz]]);
       const c = -hh + cb0 + cs / 2, c2 = hh - cb0 - cs / 2, cx1 = -hw + cb0 + cs / 2, cx2 = hw - cb0 - cs / 2;
@@ -107,17 +132,7 @@
     // 4. the field: a lighter lemonwood panel in ebony / bone stringing, a faint khatam rosette
     fillAll(rect(-FP - .07, -FP - .07, FP + .07, FP + .07), BONE, 132, .38);
     fillAll(rect(-FP - .045, -FP - .045, FP + .045, FP + .045), EBONY, 126, .4);
-    {
-      const c = document.createElement('canvas'), n = Math.round(S(2 * FP)); c.width = c.height = n >> 1;
-      const g = c.getContext('2d'), img = g.createImageData(c.width, c.height), d = img.data;
-      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
-        const u = x / c.width * 2 * FP, v = y / c.height * 2 * FP, w = NZ(u * .5 + 9, v * 1.6, 3) * 1.6, ring = Math.pow(.5 + .5 * Math.sin((v * 7 + w) * Math.PI), 4), f = NZ(u * 8 + 3, v * 50, 2);
-        const k = Math.min(1, Math.max(0, .25 + .45 * ring + .3 * (f - .5)));
-        const i = (y * c.width + x) * 4; d[i] = 196 - 50 * k; d[i + 1] = 150 - 42 * k; d[i + 2] = 92 - 30 * k; d[i + 3] = 255;
-      }
-      g.putImageData(img, 0, 0); a.drawImage(c, X0(-FP), Z0(-FP), n, n);
-      h.fillStyle = 'rgb(128,128,128)'; h.fillRect(X0(-FP), Z0(-FP), n, n); m.fillStyle = `rgb(255,${Math.round(.4 * 255)},0)`; m.fillRect(X0(-FP), Z0(-FP), n, n);
-    }
+    woodRegion(-FP, -FP, FP, FP, { light: [214, 172, 112], dark: [184, 138, 84], late: [128, 86, 46], period: 6.5, warp: 1.2, fig: .55, plank: 1.7, pore: .55, rough: .34, seed: 47 });
     // the rosette under the lines: a large eight-pointed star and four small ones, in pale bone / walnut lines
     a.save(); a.globalAlpha = .34; a.lineWidth = S(.025); a.strokeStyle = '#5a3a20';
     [[0, 0, 1.75], [-1, -1, .48], [1, -1, .48], [1, 1, .48], [-1, 1, .48]].forEach(([cx, cz, r]) => { star8(cx, cz, r, Math.PI / 8)(a); a.stroke(); star8(cx, cz, r * .78, Math.PI / 8)(a); a.stroke(); });
@@ -254,7 +269,7 @@
     p.push([.88, hU / 2 - .02], [.84, hU / 2 - .05], [.78, hU / 2 - .02], [0, hU / 2 - .02]);
     const g = new TT.LatheGeometry(p.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 28 : 44); if (X.share) X.share(g); return (geos[key] = g);
   }
-  function faceGeo() { const key = 'f' + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key]; const g = new (T().CircleGeometry)(.78, LO() ? 28 : 44); g.rotateX(-Math.PI / 2); g.translate(0, PH / R / 2 - .018, 0); if (X.share) X.share(g); return (geos[key] = g); }
+  function faceGeo() { const key = 'f' + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key]; const g = new (T().CircleGeometry)(.78, LO() ? 28 : 44); g.rotateX(-Math.PI / 2); g.translate(0, PH / R / 2 - .006, 0); if (X.share) X.share(g); return (geos[key] = g); }
   // the face: an eight-pointed star in a ring of small lobes — engraved in brass / gold cloisonné wires in cobalt enamel
   function faceTex(col) {
     return X.canvasTex('alqFace' + col, SZ(512), SZ(512), (g, Wd) => {
@@ -276,6 +291,7 @@
   function pieceMats(col) {
     const body = mat('pb' + col, () => phys(col === 1 ? { color: '#d6aa48', metalness: .85, roughness: .34, envMapIntensity: 1.25 } : { color: '#5a4220', metalness: .9, roughness: .38, envMapIntensity: 1.1 }));
     const face = mat('pf' + col, () => phys(col === 1 ? { map: faceTex(1), color: 0xffffff, metalness: .85, roughness: .3, envMapIntensity: 1.25 } : { map: faceTex(2), color: 0xffffff, metalness: 0, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: .9 }));
+    face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -6;   // (drawn in front of the disc's top: no flicker from afar)
     return { body, face };
   }
   // col 1 White (brass) / 2 Black (cobalt enamel); the group's origin is the disc's middle (it rests at userData.rest)

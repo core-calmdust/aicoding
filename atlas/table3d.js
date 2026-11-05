@@ -356,7 +356,8 @@
         for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e)); }
         pts.push(new TT.Vector2(0, PH));
         const body = mesh(new TT.LatheGeometry(pts, 18), M({ map: wood('xqp', '#e7c287', '#b8874a', 256, 256, 1.6), roughness: .45, clearcoat: .3, clearcoatRoughness: .5 }));
-        const cap = new TT.Mesh(new TT.CircleGeometry(PR * .9, 18), M({ map: face, roughness: .5, bumpScale: .003 }));
+        const capM = M({ map: face, roughness: .5, bumpScale: .003 }); capM.polygonOffset = true; capM.polygonOffsetFactor = -2; capM.polygonOffsetUnits = -6;   // (in front of the piece's top: no flicker from afar)
+        const cap = new TT.Mesh(new TT.CircleGeometry(PR * .9, 18), capM);
         cap.rotation.x = -Math.PI / 2; cap.position.y = PH + .002; cap.castShadow = false; cap.receiveShadow = true;
         const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR };
         return p;
