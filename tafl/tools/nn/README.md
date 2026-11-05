@@ -37,6 +37,7 @@ python3 tools/nn/train.py --variant 0 --out tafl-v0.nnue data/v0-*.txt
 cc -O3 -DNATIVE -w -o /tmp/tafl tools/native.c -lm
 NNUE=tafl-v0.nnue /tmp/tafl nmatch 0 100 10        # 100組（攻守入れ替えで200局）、1手1万局面
 NNUE=tafl-v0.nnue NNSCALE=600 /tmp/tafl nmatch 0 100 10   # scale を変えて試す（探索の枝刈りの幅と釣り合う値を探す）
+NNUE=tafl-v0.nnue /tmp/tafl nrole 0 50 20 2       # 役割ごとの比較（攻め手2万・守り手2千局面で、手作りどうしと同じ序盤で比べる）
 NNUE=tafl-v0.nnue /tmp/tafl nncheck 0 data/v0-xxx.txt 5   # ネットの値（守り手から見たロジット）を数局面だけ表示
 ```
 - `net score` が0.5を超えればネットの方が強いです。攻め手・守り手それぞれの勝ち負けも出ます。

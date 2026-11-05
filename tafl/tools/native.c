@@ -8,6 +8,8 @@
 //   gendata <variant> <games> <nodesK> <out.txt> [seed] [maxRandomPlies]   training data for the learned evaluation (tools/nn/):
 //            one line per position: variant side ply score result src board f0..f15 (see tools/nn/README.md)
 //   nmatch <variant> <games> <nodesK> [seed]   the loaded net (NNUE=file) against the hand-made evaluation, both sides
+//   nrole <variant> <games> <nodesK attackers> <nodesK defenders> [seed]   the net in each role against the hand-made evaluation,
+//            compared with hand vs hand on the same openings (give the defenders fewer nodes so that the games are not one-sided)
 //   (env NNUE=file: load a net (tools/nn/train.py) for its rule set; gendata then plays with it)
 #include "../engine.c"
 #include <math.h>
@@ -50,7 +52,7 @@ static void printPos(const Pos *p) {
 static FILE *POSOUT = 0;
 static int *PW[2] = { 0, 0 }, TUNE_NK = 3;   // tuning: the weights of the attackers / defenders player
 static int plyCount;
-static int NNS[2] = { -1, -1 };   // nmatch / gendata: use the net for the attackers / defenders (search by nodes, TUNE_NK)
+static int NNS[2] = { -1, -1 }, NKS[2] = { 0, 0 };   // NKS: nodesK per side (attackers, defenders) when set (nrole)   // nmatch / gendata: use the net for the attackers / defenders (search by nodes, TUNE_NK)
 static FILE *GENOUT = 0; static char *GENBUF = 0; static size_t GENLEN = 0;
 static int playGame(int v, int lvA, int lvD, int randomPlies) {
   Pos p; startPos(v, &p); GSTART = p; GN = 0;
@@ -66,7 +68,7 @@ static int playGame(int v, int lvA, int lvD, int randomPlies) {
       if (!setupHist()) { fprintf(stderr, "bad setup\n"); exit(1); }
       ttSalt = p.side ? 0x5bd1e9955bd1e995ull : 0;
       if (PW[0]) { memcpy(EW, PW[p.side], sizeof(EW)); best(99, 0, TUNE_NK); }
-      else if (NNS[0] >= 0) { nnUse = NNS[p.side]; best(99, 0, TUNE_NK); }
+      else if (NNS[0] >= 0) { nnUse = NNS[p.side]; best(99, 0, NKS[p.side] ? NKS[p.side] : TUNE_NK); }
       else think(p.side ? lvD : lvA, (int)rnd32());
       if (GENOUT) {   // the position, its search value (defenders' view, raw evaluate() units) and the hand-made features
         int sv = IO[2];
@@ -352,6 +354,32 @@ int main(int argc, char **argv) {
       printf("%.4f\n", nnValue(&p));
     }
     fclose(f); return 0;
+  }
+  if (!strcmp(cmd, "nrole")) {
+    if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
+    int G = atoi(argv[3]); NKS[0] = atoi(argv[4]); NKS[1] = atoi(argv[5]);
+    if (argc > 6) rng ^= (u64)atoll(argv[6]) * 0x9E3779B97F4A7C15ull;
+    const char *nm[3] = { "hand att vs hand def", "NET att vs hand def", "hand att vs NET def" };
+    const int cfg[3][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 } };
+    int RW[3][3] = { { 0 } };   // [config][att win, draw, def win]
+    for (int g = 0; g < G; g++) {
+      u64 seed = rng; int rp = 2 + rnd32() % 4;
+      for (int c = 0; c < 3; c++) {
+        rng = seed; NNS[0] = cfg[c][0]; NNS[1] = cfg[c][1];
+        int r = playGame(v, 0, 0, rp); RW[c][r > 0 ? 0 : r == 0 ? 1 : 2]++;
+      }
+      rnd32();
+      fprintf(stderr, "\r%d/%d  attackers' score: hand-hand %.3f  NETatt %.3f  NETdef %.3f   ", g + 1, G,
+        (RW[0][0] + .5 * RW[0][1]) / (g + 1), (RW[1][0] + .5 * RW[1][1]) / (g + 1), (RW[2][0] + .5 * RW[2][1]) / (g + 1));
+    }
+    fprintf(stderr, "\n");
+    for (int c = 0; c < 3; c++) {
+      double sc = (RW[c][0] + .5 * RW[c][1]) / G;
+      printf("%-22s attackers +%d =%d -%d  attackers' score %.3f\n", nm[c], RW[c][0], RW[c][1], RW[c][2], sc);
+    }
+    double b = (RW[0][0] + .5 * RW[0][1]) / G, a = (RW[1][0] + .5 * RW[1][1]) / G, d = (RW[2][0] + .5 * RW[2][1]) / G;
+    printf("net as attackers: %+.0f Elo, net as defenders: %+.0f Elo (against hand vs hand)\n", eloOf(a) - eloOf(b), eloOf(1 - d) - eloOf(1 - b));
+    NNS[0] = NNS[1] = -1; NKS[0] = NKS[1] = 0; return 0;
   }
   if (!strcmp(cmd, "nmatch")) {
     if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
