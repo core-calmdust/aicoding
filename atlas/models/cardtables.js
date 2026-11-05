@@ -71,6 +71,9 @@
     const leather = mat('leather', () => M({ color: 0x1e1814, roughness: .72, metalness: 0, envMapIntensity: .35 }));   // padded leather: satin, not glossy (at a low angle a clear coat mirrored the room's wood: the rail looked see-through)
     g.add(mesh(ring(0, .5, .32, .04), woodM, 0, 0, 0));
     g.add(mesh(ring(.06, .52, .16, .1), leather, 0, .38, 0));
+    // the rings' inner walls (round the hole) come out of the extrusion facing away from the baize: seen from across the
+    // table they were culled and the far rail looked see-through — both rings are drawn double-sided
+    woodM.side = leather.side = T().DoubleSide;
     // the baize: a flat shape with the printed layout (UVs from the plan view)
     const top = new TT.ShapeGeometry(new TT.Shape(pts(.48)), 1); top.rotateX(-Math.PI / 2);
     const P = top.attributes.position, UV = top.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / W + .5, .5 - P.getZ(i) / D);
