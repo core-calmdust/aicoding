@@ -41,7 +41,7 @@ html.atlas-ugolki .pieces .hov{opacity:.4!important;box-shadow:none!important}
 html.atlas-ugolki .pieces .hov::before,html.atlas-ugolki .pieces .hov::after,html.atlas-ugolki .pieces .hov .orn{display:none!important}
 html.atlas-ugolki .pieces .hov.p1{background:radial-gradient(circle at 40% 35%,#fff,#e2e8f5 60%,#b8c4de)!important}
 html.atlas-ugolki .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#3a66cc,#1d3f9a 60%,#11275f)!important}
-html.atlas-ugolki .reserve .rsv-plate{background:rgba(255,255,255,.88)!important;box-shadow:0 2px 6px rgba(20,40,100,.18)!important}
+html.atlas-ugolki .reserve .rsv-plate{background:rgba(255,255,255,.88)!important;box-shadow:0 2px 6px rgba(20,40,100,.18)!important;color:#3a4566!important}\nhtml.atlas-ugolki .reserve .rsv-plate .rsv-l b,html.atlas-ugolki .reserve .rsv-plate .rsv-w:not(.hot) b{color:#14203f!important}\nhtml.atlas-ugolki .reserve .rsv-plate .rsv-w:not(.hot){color:#2c3658!important;background:transparent!important}
 html.atlas-ugolki #fPieces{display:none!important}
 html.atlas-ugolki .ug3dnote{margin:8px 0 0;padding:12px 14px;border-radius:14px;background:#f2f5fc;border:2px solid #d5def3;font-size:13px;line-height:1.6;color:#3d4a6e}
 html.atlas-2d .ug3dnote{display:none!important}

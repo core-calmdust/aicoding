@@ -1028,14 +1028,16 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate{background:rgba(255,255,255,.82);color:#3a4566}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-l b{color:#14203f}
 /* the move limit ("9 at home · 40 moves left"): large, bold numbers, readable colours; a red pill when it gets close */
-.reserve .rsv-plate{width:max-content;max-width:none;flex-wrap:nowrap}
-.reserve .rsv-plate > *{flex:none}
-.reserve .rsv-plate .rsv-bar{flex:0 0 calc(var(--cell) * 1.1)}
-.reserve .rsv-plate .rsv-w{display:inline-block;white-space:nowrap;font-size:calc(var(--cell) * .25);font-weight:700;letter-spacing:.02em;color:#eadfc8;line-height:1.2;padding:.1em .5em;margin-inline-end:-.3em;border-radius:999px;background:inherit}
+/* plain inline layout (not flex) so the plate always grows with its text, also on iOS Safari after the web fonts swap in */
+.reserve .rsv-plate{display:inline-block;flex:none;width:auto;max-width:none;white-space:nowrap;line-height:1;overflow:visible}
+.reserve .rsv-plate > *{display:inline-flex;vertical-align:middle;flex:none}
+.reserve .rsv-plate > * + *{margin-inline-start:calc(var(--cell) * .16)}
+.reserve .rsv-plate .rsv-bar{display:inline-block;width:calc(var(--cell) * 1.1);flex:none}
+.reserve .rsv-plate .rsv-w{display:inline-block;white-space:nowrap;font-size:calc(var(--cell) * .25);font-weight:700;letter-spacing:.02em;color:#eadfc8;line-height:1.2;padding:.1em .2em;border-radius:999px;background:transparent}
 .reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .33);color:#fff4dc;margin:0 .08em;vertical-align:-.04em}
 .reserve .rsv-plate .rsv-w.hot{color:#fff;background:#c7362a;padding:.1em .6em;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .reserve .rsv-plate .rsv-w.hot b{color:#fff}
-html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot){color:#2c3658;background:rgba(255,255,255,.92)}
+html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot){color:#2c3658}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{color:#14203f}
 /* Gzhel theme: cobalt and porcelain instead of the series' gold (shared components that bring their own gold) */
 .rules-offer{border-color:rgba(186,208,252,.5)!important;background:linear-gradient(90deg,rgba(150,182,245,.16),rgba(0,0,0,.15))!important}
@@ -1385,7 +1387,7 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=26')).then(() => load('../atlas/models/ugolki.js?v=3')).then(() => load('../atlas/skin/ugolki.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=26')).then(() => load('../atlas/models/ugolki.js?v=3')).then(() => load('../atlas/skin/ugolki.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -1393,7 +1395,7 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
 <script src="../shared/atlas.js?v=20261105aq1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
-<script src="../shared/infotabs.js?v=16" data-strips defer></script>
+<script src="../shared/infotabs.js?v=16" defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=25"></script>
 <script src="../shared/nglux.js?v=13"></script>
