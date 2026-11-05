@@ -857,7 +857,7 @@
   const roomTicks = [];
   // merge the static room meshes that share a material into one mesh each: the toy room has ~350 small meshes
   // (bricks, toys, characters…) → a few dozen draw calls (and as many shadow draws). Animated parts are kept as they are.
-  const SIGX = mt => mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid].join(',');
+  const SIGX = mt => mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid, mt.polygonOffset ? 'po' + mt.polygonOffsetFactor + ':' + mt.polygonOffsetUnits : ''].join(',');
   function mergeStatic(g) {
     const TT = T(); g.updateMatrixWorld(true);
     const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), buckets = new Map(), drop = [];
