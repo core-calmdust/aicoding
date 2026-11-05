@@ -74,12 +74,16 @@
 @keyframes fnT{from{transform:translate(-50%,8px);opacity:0}}`;
     document.head.appendChild(s);
   }
+  const GAMES = { fanorona: { id: 'fanorona', rule: 'sivy', model: 'fanorona', nc: 9, pcs: 22 }, alquerque: { id: 'alquerque', rule: 'alq', model: 'alquerque', nc: 5, pcs: 12 } };
+  const DKA = ['background:radial-gradient(circle at 38% 32%,#fff0b8,#d9ad4a 55%,#8a6420)', 'background:radial-gradient(circle at 38% 32%,#4a78e0,#1d3f9a 60%,#0d2470)'];
   const DK = ['background:radial-gradient(circle at 38% 32%,#f6e2bf,#d6ab73 55%,#9c7240)', 'background:radial-gradient(circle at 38% 32%,#6a4a36,#2e1d14 60%,#140b06)'];
 
-  function start(ctx) {
-    const T3 = ctx.Table3D, TH = window.THREE, F3 = T3.fanorona, t = ctx.t, X = TX[ctx.lang] || TX.en;
+  // G: the game — Fanorona (9×5, carved acacia, wooden balls) or Alquerque (5×5 on the same engine, the Damascene inlaid board)
+  function start(ctx, G0) {
+    const GG = G0 || GAMES.fanorona, NCg = GG.nc, NPg = 45;   // (the engine numbers the points r * 9 + c on every board)
+    const T3 = ctx.Table3D, TH = window.THREE, F3 = T3[GG.model], t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const board = F3.board('sivy'); T3.show('fanorona', board);
+    const board = F3.board(GG.rule); T3.show(GG.id, board);
     const U = board.userData, Y = U.top, GS = .66;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: Y + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: Y + .2, pitch: 1.0 });
@@ -89,7 +93,7 @@
     const pname = c => X.n[c - 1];
     let E = null;
     // point (r * 9 + c) ↔ board: display column left → right, display row far → near
-    const scr = i => { const r = (i / 9) | 0, c = i % 9; return flip ? [8 - c, r] : [c, 4 - r]; };
+    const scr = i => { const r = (i / 9) | 0, c = i % 9; return flip ? [NCg - 1 - c, r] : [c, 4 - r]; };
     const xz = i => U.pt(...scr(i));
     const bottomCol = flip ? 2 : 1;
 
@@ -128,14 +132,14 @@
     }
     const hOf = g => g.userData.h0 || 0;
     const _ax = new TH.Vector3(), _q = new TH.Quaternion();
-    function roll(g, dx, dz) { const d = Math.hypot(dx, dz); if (d < 1e-5) return; _ax.set(dz / d, 0, -dx / d); _q.setFromAxisAngle(_ax, d / g.userData.r); g.userData.ball.quaternion.premultiply(_q); }
+    function roll(g, dx, dz) { if (g.userData.noRoll) return; const d = Math.hypot(dx, dz); if (d < 1e-5) return; _ax.set(dz / d, 0, -dx / d); _q.setFromAxisAngle(_ax, d / g.userData.r); g.userData.ball.quaternion.premultiply(_q); }
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function bump(g) { const r = g.userData.r; anim(150, k => { g.userData.ball.scale.setScalar(r * (1 + Math.sin(k * Math.PI) * .04)); }, () => g.userData.ball.scale.setScalar(r)); }
-    const slot = (side, i) => { const [x, z] = U.groove.at(side, i, 22); return [x, U.groove.y(GS), z]; };
+    const slot = (side, i) => { const [x, z] = U.groove.at(side, i, GG.pcs); return [x, U.groove.y(GS), z]; };
     function setup() {
       Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; G.forEach(L => { L.forEach(drop); L.length = 0; });
       let n = 0;
-      const order = []; for (let i = 0; i < 45; i++) if (pos.at(i)) order.push(i);
+      const order = []; for (let i = 0; i < NPg; i++) if (pos.at(i)) order.push(i);
       order.sort((a, b) => scr(b)[1] - scr(a)[1]);   // the near rows first
       for (const i of order) {
         const k = pos.at(i), g = mk(k, i); pcs[i] = { g, k };
@@ -146,10 +150,10 @@
     }
     function rebuild() {   // balls exactly as the position says (after 待った), without the drop-in
       Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; G.forEach(L => { L.forEach(drop); L.length = 0; });
-      for (let i = 0; i < 45; i++) { const k = pos.at(i); if (k) pcs[i] = { g: mk(k, i), k }; }
+      for (let i = 0; i < NPg; i++) { const k = pos.at(i); if (k) pcs[i] = { g: mk(k, i), k }; }
       // the grooves: the balls each side has taken, next to the capturer
       for (const side of [0, 1]) {
-        const capturer = side ? bottomCol : 3 - bottomCol, lost = 3 - capturer, n = Math.max(0, 22 - pos.count(lost));
+        const capturer = side ? bottomCol : 3 - bottomCol, lost = 3 - capturer, n = Math.max(0, GG.pcs - pos.count(lost));
         for (let j = 0; j < n; j++) { const g = mk(lost, null, GS), [x, y, z] = slot(side, j); g.position.set(x, y, z); lift(g, 0, y, y - g.userData.r + .002); G[side].push(g); }
       }
       kick(300);
@@ -186,7 +190,7 @@
     function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
     function status() { return E.judge(pos, hashes); }
     function hud(msg) {
-      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : 22}</b></span>`;
+      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${(GG.id === 'alquerque' ? DKA : DK)[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : 22}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
     }
     function toast(msg) {
@@ -275,14 +279,14 @@
       const win = !pvp && !draw && st.winner === human, wt = pvp && !draw ? X.win.replace('{p}', pname(st.winner)) : '';
       hud(draw ? L.draw : pvp ? wt : win ? L.win : L.lose);
       if (!draw) {   // the loser's remaining balls darken a little
-        Object.values(pcs).forEach(p => { if (p.k !== st.winner) { const b = p.g.userData.ball; b.material = b.material.clone(); b.material.color.multiplyScalar(.6); } });
+        Object.values(pcs).forEach(p => { if (p.k !== st.winner) p.g.userData.ball.traverse(b => { if (b.isMesh) { b.material = b.material.clone(); b.material.color.multiplyScalar(.6); } }); });
         kick(300);
       }
       later(() => ctx.onEnd(pvp ? { win: false, draw, level: ctx.level, score: why, pvp: true, winnerText: wt } : { win, draw, level: ctx.level, score: why }), 700);
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: 'sivy' }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: GG.rule }); return w; }
     function aiMove() {
       thinking = true; hud(L.think); showMust();
       if (!worker) worker = newWorker();
@@ -299,15 +303,15 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule: 'sivy' });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule: GG.rule });
     }
 
     /* ---------- input ---------- */
     function pointOf(e) {
       const p = T3.pick(e, Y); if (!p) return -1;
-      const dc = Math.round(p.x + 4), dr = Math.round(p.z + 2);
-      if (dc < 0 || dc > 8 || dr < 0 || dr > 4 || Math.hypot(p.x + 4 - dc, p.z + 2 - dr) > .5) return -1;
-      const c = flip ? 8 - dc : dc, r = flip ? dr : 4 - dr;
+      const hc = (NCg - 1) / 2, dc = Math.round(p.x + hc), dr = Math.round(p.z + 2);
+      if (dc < 0 || dc > NCg - 1 || dr < 0 || dr > 4 || Math.hypot(p.x + hc - dc, p.z + 2 - dr) > .5) return -1;
+      const c = flip ? NCg - 1 - dc : dc, r = flip ? dr : 4 - dr;
       return r * 9 + c;
     }
     function onClick(e) {
@@ -345,7 +349,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule('sivy'); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(GG.rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -353,7 +357,7 @@
       state: () => ({ hint: hintMv, moves: moves.slice(), turn: pos && pos.turn, human, pvp, over, busy, thinking, sel: sel ? { from: sel.from, cur: selCur(), choose: !!sel.choose } : null, w: pos && pos.count(1), b: pos && pos.count(2), pieces: Object.keys(pcs).length, grooves: G.map(x => x.length) }),
       legal: () => pos ? pos.moves() : [],
     };
-    window.Atlas3D.fanorona._dbg = dbg;
+    window.Atlas3D[GG.id]._dbg = dbg;
     /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
     const myTurn = () => !!pos && !over && !busy && !thinking && !(sel && sel.st) && (pvp || pos.turn === human);
     const undoN = () => pvp ? 1 : 2;
@@ -389,7 +393,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'sivy' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: GG.rule });
         });
       },
       canResign: () => !!pos && !over,
@@ -401,7 +405,7 @@
         ctx.el.removeEventListener('click', onClick);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
-        if (window.Atlas3D.fanorona._dbg === dbg) delete window.Atlas3D.fanorona._dbg;
+        if (window.Atlas3D[GG.id]._dbg === dbg) delete window.Atlas3D[GG.id]._dbg;
       },
       _debug: dbg,
     };
@@ -441,5 +445,6 @@
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.fanorona = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.fanorona = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start: ctx => start(ctx, GAMES.fanorona) };
+  window.Atlas3D.alquerque = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start: ctx => start(ctx, GAMES.alquerque) };   // table: start() plays on the chabudai itself
 })();

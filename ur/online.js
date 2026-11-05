@@ -1,0 +1,893 @@
+window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
+// Online play for ウル王朝のゲーム (ported from Luxe Mancala, dice from Backgammon): lobby, Elo rating with history, rating-based
+// matchmaking per rule (finkel / blitz / masters), rooms with codes, spectating, rematch, resign / timeout / abandon, presence —
+// plus Google sign-in and cloud sync of local progress (sync/<uid>).
+//
+// Fair dice without a server (as Backgammon): commit–reveal hash chains. Each player derives a secret chain r[N] → r[N-1] = H(r[N]) → …
+// → r[0] (H = SHA-256, first 16 hex) for every game from a private key that never leaves the player (localStorage, backed up in the
+// private sync/<uid>/k) and writes r[0] (its commitment) into the record first. Roll i = H(rb[i] + rw[i] + ':' + i) (the bits make the
+// 4 / 3 binary dice through UrEngine.rollDice), where rb[i] / rw[i] are the players' i-th reveals; everybody checks H(r[i]) = r[i-1].
+// Order of a roll: the player who does NOT move reveals first (it can not know the dice: the mover's part is still secret), then the
+// mover writes its reveal together with its move in one write (it saw the dice only after the other's reveal, and no decision of its
+// own is left before the roll). Nobody can choose or foresee a roll.
+// moves = tokens joined by '.': c<16 hex> commitment · r<16 hex> reveal (the side not to move) · m<16 hex><X> reveal + move of the
+// mover (X = the moved piece's path index in base 36, 0 = entering; 'p' = no move). The order of the tokens fixes who writes each one:
+// b commits, w commits, then per roll the other side reveals, the mover moves. A write may carry several of the same player's tokens.
+// nt = uid of the player who must write next (the rules check turns and timeout / abandonment claims against it).
+// Game record: b = side 0 (Light, moves first), w = side 1 (Dark); v = rule; bn/wn names, br/wr ratings, mb/mw reserve (0: every
+// action has DELAY ms), t = time of the last write, lm = last writer, tc = time control id (= v); status play | over | resign | timeout |
+// abandon; win 1 / 2; why = 'home'; loser = uid (resign / timeout / abandon). Every write is a transaction; both clients (and
+// spectators) replay the record with UrEngine and reject anything illegal.
+// Backend: Firebase (anonymous / Google auth + Realtime Database) when window.FIREBASE_CONFIG is set,
+// or an in-browser mock (localStorage, shared between tabs) with ?mock=1 for testing.
+(function () {
+  'use strict';
+  const CFG = window.FIREBASE_CONFIG || null;
+  const Q = new URLSearchParams(location.search);
+  const MOCK = Q.has('mock');
+  const FB_VER = '10.12.2';
+  const INITIAL = 1500;
+  const VARIANTS = ['finkel', 'blitz', 'masters'];
+  // clock: every action (roll + move, reveal) has DELAY ms (the local rule "30 s per move"); no reserve
+  const TC = {}; VARIANTS.forEach(v => { TC[v] = { main: 0, inc: 0 }; });
+  const DELAY = MOCK && +Q.get('delay') > 0 ? +Q.get('delay') : 30000;
+  const DEF_V = 'finkel';
+  const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
+  const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
+  const ROOM_TTL = 10 * 60000;           // a room nobody joins expires after 10 min
+  const REMATCH_MS = 10000;
+  const HIST_N = 50;                     // rated games kept in players/<uid>/hist
+  const CHAIN_N = 600;                   // reveals per player and game (one per roll)
+  const varOk = v => VARIANTS.includes(v);
+  const tcOf = g => TC[g && varOk(g.v) ? g.v : DEF_V];
+  const sideOf = (g, u) => (g.b === u ? 'b' : 'w');
+  const mainOf = (g, side) => { const v = g && g['m' + side]; return typeof v === 'number' ? Math.max(0, v) : tcOf(g).main; };
+  const tcFields = v => { v = varOk(v) ? v : DEF_V; return { v, tc: v, mb: TC[v].main, mw: TC[v].main }; };
+  // clock of a side: { main: reserve left now, delay: free time left of this action, left: reserve after the delay (negative: flag fallen) }
+  function clockOf(g, side, moving, now) {
+    const m = mainOf(g, side);
+    if (!moving) return { main: m, delay: DELAY, left: m, moving: false };
+    const el = Math.max(0, (now == null ? (db ? db.now() : Date.now()) : now) - (g.t || now || Date.now())), used = Math.max(0, el - DELAY);
+    return { main: Math.max(0, m - used), delay: Math.max(0, DELAY - el), left: m - used, moving: true };
+  }
+
+  // ---------------------------------------------------------------- SHA-256 (sync; for the dice chains)
+  function sha256(ascii) {
+    const rr = (v, n) => (v >>> n) | (v << (32 - n));
+    const K = sha256.K || (sha256.K = []), H0 = sha256.H || (sha256.H = []);
+    if (!K.length) { let pc = 0; const comp = {}; for (let c = 2; pc < 64; c++) { if (!comp[c]) { for (let i = 0; i < 313; i += c) comp[i] = c; H0[pc] = (Math.pow(c, .5) * 4294967296) | 0; K[pc++] = (Math.pow(c, 1 / 3) * 4294967296) | 0; } } }
+    const bytes = [], utf = unescape(encodeURIComponent(ascii));
+    for (let i = 0; i < utf.length; i++) bytes.push(utf.charCodeAt(i));
+    const bitLen = bytes.length * 8;
+    bytes.push(0x80); while (bytes.length % 64 !== 56) bytes.push(0);
+    for (let i = 7; i >= 0; i--) bytes.push(i >= 4 ? 0 : (bitLen >>> (i * 8)) & 255);
+    const hash = H0.slice(0, 8);
+    for (let j = 0; j < bytes.length; j += 64) {
+      const w = []; for (let i = 0; i < 16; i++) w[i] = (bytes[j + i * 4] << 24) | (bytes[j + i * 4 + 1] << 16) | (bytes[j + i * 4 + 2] << 8) | bytes[j + i * 4 + 3];
+      const old = hash.slice(0);
+      for (let i = 0; i < 64; i++) {
+        const w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+        if (i >= 16) w[i] = (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0;
+        const t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + K[i] + w[i];
+        const t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash.unshift((t1 + t2) | 0); hash[4] = (hash[4] + t1) | 0; hash.pop();
+      }
+      for (let i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+    }
+    return hash.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+  }
+  const H = s => sha256(s).slice(0, 16);
+  const HEX = /^[0-9a-f]{16}$/;
+  // roll i from the two reveals: { d: [0 / 1 …], n } (UrEngine: masters counts 0 as 4)
+  function diceOf(rb, rw, i, rule) {
+    const x = sha256(rb + rw + ':' + i); let k = 0;
+    const r = window.UrEngine.rollDice(() => parseInt(x.substr((k++ % 32) * 2, 2), 16) / 256, rule);
+    return { d: r.dice, n: r.n };
+  }
+
+  // ---------------------------------------------------------------- rules (shared by both clients and spectators)
+  // replay a record: { ok, bad, n (tokens), plies [{ s, d, n, m: {from, to} | null, ag }], st (UrEngine state), over, win (1 / 2), why,
+  //   actor (side 0 / 1 that must write next; -1 over), need ('c' commit | 'r' reveal | 'm' roll + move), idx (roll number), revs [[b…], [w…]], commit [cb, cw] }
+  const rcache = new Map();   // (the record is replayed on every update / clock tick: the last results are kept)
+  function replay(v, s) {
+    v = varOk(v) ? v : DEF_V; s = String(s || '');
+    const ck = v + '|' + s, c = rcache.get(ck);
+    if (c) return c;
+    const out = replay0(v, s);
+    if (rcache.size > 24) rcache.delete(rcache.keys().next().value);
+    rcache.set(ck, out); return out;
+  }
+  function replay0(v, s) {
+    const E = window.UrEngine;
+    const toks = String(s || '') ? String(s).split('.') : [];
+    const out = { ok: true, bad: -1, n: 0, plies: [], st: E.newGame(v, 0), over: false, win: undefined, why: '', actor: 0, need: 'c', idx: 1, revs: [[], []], commit: [null, null] };
+    const prev = [null, null];
+    const next = () => {
+      if (!out.commit[0]) return ['c', 0];
+      if (!out.commit[1]) return ['c', 1];
+      if (out.st.winner >= 0) return ['', -1];
+      const m = out.st.turn, o = 1 - m;
+      return out.revs[o].length < out.idx ? ['r', o] : ['m', m];
+    };
+    for (let i = 0; i < toks.length; i++) {
+      const tk = toks[i], [need, side] = next(), ty = tk[0], x = tk.substr(1, 16);
+      const fail = () => { out.ok = false; out.bad = i; };
+      if (ty !== need || !HEX.test(x)) { fail(); break; }
+      if (ty === 'c') { if (tk.length !== 17) { fail(); break; } out.commit[side] = prev[side] = x; out.n++; continue; }
+      if (H(x) !== prev[side]) { fail(); break; }
+      if (ty === 'r') { if (tk.length !== 17) { fail(); break; } prev[side] = x; out.revs[side].push(x); out.n++; continue; }
+      // m: the mover's reveal + move
+      if (tk.length !== 18) { fail(); break; }
+      prev[side] = x; out.revs[side].push(x);
+      const r = diceOf(out.revs[0][out.idx - 1], out.revs[1][out.idx - 1], out.idx, v), ms = r.n ? E.legalMoves(out.st, r.n) : [], X = tk[17];
+      let mv = null;
+      if (X === 'p') { if (ms.length) { fail(); break; } }
+      else { const from = parseInt(X, 36); mv = ms.find(q => q.from === from) || null; if (!mv) { fail(); break; } }
+      const res = E.apply(out.st, mv);
+      out.plies.push({ s: side, d: r.d, n: r.n, m: mv ? { from: mv.from, to: mv.to } : null, ag: !!res.again });
+      out.st = res.state; out.idx++; out.n++;
+    }
+    const [need, side] = next(); out.need = need; out.actor = side;
+    if (out.st.winner >= 0) { out.over = true; out.win = out.st.winner + 1; out.why = 'home'; }
+    return out;
+  }
+  const turnOf = R => (R.over ? 0 : R.actor + 1);   // 1 / 2 = the side that must write next
+  const sideNo = (g, u) => (g.b === u ? 1 : g.w === u ? 2 : 0);
+
+  let db = null, uid = null, profile = null, ready = null;
+  // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
+  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: { abandon: true },
+    decorate: typeof secDecorate === 'function' ? (...a) => secDecorate(...a) : null,
+    onProfile: p => { profile = p; if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
+  const secure = () => !!(SEC && SEC.secure());
+
+  // ---------------------------------------------------------------- backend adapters
+  function loadScript(src) { const C = window.__fbScripts = window.__fbScripts || {}; return C[src] || (C[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); })); }  // shared with shared/atlas-account.js
+
+  function firebaseDB() {
+    const f = firebase.database();
+    let offset = 0;
+    f.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+    // onDisconnect handlers fire once and are gone: after every reconnect (sleep, network change) register them again and let the app rewrite its presence
+    const disc = new Set(), recon = new Set(); let wasUp = false;
+    f.ref('.info/connected').on('value', s => {
+      const up = !!s.val();
+      if (up && wasUp === 'down') { disc.forEach(p => f.ref(p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
+      wasUp = up ? true : (wasUp ? 'down' : false);
+    });
+    return {
+      on(path, cb) { const r = f.ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
+      get: async p => (await f.ref(p).get()).val(),
+      set: (p, v) => f.ref(p).set(v),
+      update: (p, v) => f.ref(p).update(v),
+      remove: p => f.ref(p).remove(),
+      async txn(p, fn) { const r = await f.ref(p).transaction(fn); return { committed: r.committed, value: r.snapshot.val() }; },
+      onDisconnectRemove: p => { disc.add(p); return f.ref(p).onDisconnect().remove(); },
+      cancelDisconnect: p => { disc.delete(p); return f.ref(p).onDisconnect().cancel(); },
+      onReconnect: cb => recon.add(cb),
+      stamp: () => firebase.database.ServerValue.TIMESTAMP,
+      now: () => Date.now() + offset,
+      push: p => f.ref(p).push().key,
+    };
+  }
+
+  // in-browser mock with the same surface (tree in localStorage, sharded by the first two path segments, change events across tabs)
+  function mockDB() {
+    const PFX = 'ur-mockdb:';
+    const parts = p => p.split('/').filter(Boolean);
+    const shardOf = ks => PFX + ks.slice(0, 2).join('/');
+    const readKey = k => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch (e) { return null; } };
+    function getPath(p) {
+      const ks = parts(p);
+      if (ks.length < 2) {
+        const out = {}; const pre = PFX + (ks[0] ? ks[0] + '/' : '');
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(pre)) { const v = readKey(k); if (v !== null) { const sub = k.slice(PFX.length).split('/'); if (ks.length) out[sub[1]] = v; else { (out[sub[0]] = out[sub[0]] || {})[sub[1]] = v; } } } }
+        return Object.keys(out).length ? out : null;
+      }
+      let x = readKey(shardOf(ks));
+      for (const k of ks.slice(2)) { if (x == null || typeof x !== 'object') return null; x = x[k]; }
+      return x === undefined ? null : x;
+    }
+    function setPath(p, v) {
+      const ks = parts(p);
+      if (ks.length < 2) { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k.startsWith(PFX + ks[0] + '/')) localStorage.removeItem(k); } if (v) for (const [c, x] of Object.entries(v)) setPath(ks[0] + '/' + c, x); return; }
+      const key = shardOf(ks);
+      if (ks.length === 2) { if (v === null || v === undefined) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(v)); return; }
+      let root = readKey(key) || {}, x = root;
+      for (let i = 2; i < ks.length - 1; i++) { if (x[ks[i]] == null || typeof x[ks[i]] !== 'object') x[ks[i]] = {}; x = x[ks[i]]; }
+      if (v === null || v === undefined) delete x[ks[ks.length - 1]]; else x[ks[ks.length - 1]] = JSON.parse(JSON.stringify(v));
+      localStorage.setItem(key, JSON.stringify(root));
+    }
+    const listeners = new Set();
+    const fire = () => { for (const l of listeners) { const v = JSON.stringify(getPath(l.path)); if (v !== l.last) { l.last = v; l.cb(JSON.parse(v)); } } };
+    window.addEventListener('storage', e => { if (!e.key || e.key.startsWith(PFX)) fire(); });
+    const write = fn => { fn(); setTimeout(fire, 0); };
+    const disc = new Set();
+    window.addEventListener('pagehide', () => { disc.forEach(p => setPath(p, null)); });
+    let n = 0;
+    return {
+      on(path, cb) { const l = { path, cb, last: undefined }; listeners.add(l); setTimeout(fire, 0); return () => listeners.delete(l); },
+      get: async p => getPath(p),
+      set: async (p, v) => write(() => setPath(p, v)),
+      update: async (p, v) => write(() => { for (const [k, x] of Object.entries(v)) setPath(p + '/' + k, x); }),
+      remove: async p => write(() => setPath(p, null)),
+      async txn(p, fn) { let out; write(() => { const cur = getPath(p); const nv = fn(cur === null ? null : JSON.parse(JSON.stringify(cur))); if (nv !== undefined) { setPath(p, nv); out = { committed: true, value: nv }; } else out = { committed: false, value: cur }; }); return out; },
+      onDisconnectRemove: p => { disc.add(p); },
+      cancelDisconnect: p => { disc.delete(p); },
+      stamp: () => Date.now(),
+      now: () => Date.now(),
+      push: () => Date.now().toString(36) + (n++).toString(36) + Math.random().toString(36).slice(2, 6),
+    };
+  }
+
+  // ---------------------------------------------------------------- auth
+  // mock Google: one fake Google account per browser profile (localStorage); a tab is "signed in" through sessionStorage
+  const MOCK_G = 'ur-mock-gacct', MOCK_UID = 'ur-mock-uid', MOCK_SIGNED = 'ur-mock-gsigned';
+  const mockAcc = () => { try { return JSON.parse(localStorage.getItem(MOCK_G) || 'null'); } catch (e) { return null; } };
+  let authUser = null;     // real Firebase user
+
+  async function init() {
+    if (ready) return ready;
+    ready = (async () => {
+      if (MOCK) {
+        db = db || mockDB();
+        uid = sessionStorage.getItem(MOCK_UID) || ('u' + Math.random().toString(36).slice(2, 10));
+        sessionStorage.setItem(MOCK_UID, uid);
+      } else {
+        if (!CFG) throw new Error('not-configured');
+        const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+        if (!window.firebase || !firebase.auth || !firebase.database) {   // the shared account (shared/atlas-account.js) may have loaded app + auth only
+          await loadScript(base + 'firebase-app-compat.js');
+          await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-database-compat.js')]);
+        }
+        if (!firebase.apps.some(a => a.name === '[DEFAULT]')) firebase.initializeApp(CFG);   // the shared-account app ('atlas') may already exist
+        if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);
+        const auth = firebase.auth();
+        // keep an existing session (Google or anonymous); only create an anonymous one if there is none
+        const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
+        try { await auth.getRedirectResult(); } catch (e) { console.warn(e); }
+        authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
+        uid = authUser.uid;
+        db = db || firebaseDB();
+      }
+      await loadProfile();
+      await ensureKey();
+      if (SEC) await SEC.init();
+      return { uid, profile };
+    })();
+    ready.catch(() => { ready = null; });
+    return ready;
+  }
+  async function loadProfile(serverName) {
+    profile = await db.get('players/' + uid);
+    if (!profile || typeof profile.rating !== 'number' || typeof profile.name !== 'string' || !profile.name) {
+      profile = Object.assign({ games: 0, wins: 0, losses: 0, draws: 0 }, profile || {}, { name: cleanName(profile && profile.name), rating: profile && typeof profile.rating === 'number' ? profile.rating : INITIAL });
+      await db.set('players/' + uid, profile);
+    }
+    // a fresh / this device's player takes the name chosen on this device; an existing account switched to keeps its own name
+    const ln = localName();
+    if (serverName) { try { localStorage.setItem(NAME_KEY, profile.name); } catch (e) {} }
+    else if (ln && ln !== profile.name) { profile.name = ln; await db.update('players/' + uid, { name: ln }); }
+    db.set('profiles/' + uid, { n: profile.name }).catch(() => {});
+  }
+  const NAME_KEY = 'ur-online-name';
+  function localName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } }
+  function defaultName() { const n = localName(); if (n) return n; const d = 'Player' + Math.floor(1000 + Math.random() * 9000); try { localStorage.setItem(NAME_KEY, d); } catch (e) {} return d; }
+  const cleanName = s => String(s || '').replace(/[\u0000-\u001f\u007f<>&"']/g, '').replace(/\s+/g, ' ').trim().slice(0, 16) || defaultName();
+
+  async function setName(name) {
+    name = cleanName(name);
+    try { localStorage.setItem(NAME_KEY, name); } catch (e) {}
+    if (!profile) return name;
+    profile.name = name; if (presOn) db.update('presence/' + uid, { name });
+    await db.update('players/' + uid, { name });
+    db.set('profiles/' + uid, { n: name }).catch(() => {});
+    return name;
+  }
+
+  // the linked Google account of this session (null: anonymous / not signed in)
+  function account() {
+    if (MOCK) { if (sessionStorage.getItem(MOCK_SIGNED) !== '1') return null; const a = mockAcc(); return a ? { email: maskMail(a.email), name: a.name } : null; }
+    try { const u = window.firebase && firebase.auth && firebase.auth().currentUser; return u && !u.isAnonymous ? { email: maskMail(u.email), name: u.displayName || '' } : null; } catch (e) { return null; }
+  }
+  // drop this session's live records (before switching account / signing out)
+  async function dropLive() {
+    try { await leave(); } catch (e) {}
+    clearInterval(matchTimer);
+    if (presOn) { db.cancelDisconnect('presence/' + uid); await db.remove('presence/' + uid).catch(() => {}); presOn = false; }
+  }
+  // keep the record with more rated games when an anonymous player switches to an existing Google account
+  // secure: through a private snapshot (xfer) taken by the old uid before the switch (x = OnlineSec.xferOut result)
+  async function carryPlayer(old, x) {
+    const cur = await db.get('players/' + uid);
+    if (!old || (cur && (old.games || 0) <= (cur.games || 0))) return;
+    if (x) { try { await OnlineSec.xferIn(db, uid, x); } catch (e) { console.warn(e); } return; }
+    if (!secure()) await db.set('players/' + uid, Object.assign({}, old, { last: null }));
+  }
+  const xferOut = async () => { if (!secure()) return null; try { return await OnlineSec.xferOut(db, uid); } catch (e) { console.warn(e); return null; } };
+  // sign in with Google: the anonymous account is upgraded (same uid) when possible, otherwise this session switches to
+  // the existing Google account (its uid); returns { uid, linked, switched }
+  async function google() {
+    await init();
+    if (MOCK) {
+      const a = mockAcc();
+      if (a && a.uid !== uid) {                       // credential already in use → switch
+        const old = profile; await dropLive();
+        const x = await xferOut();
+        await db.remove('players/' + uid).catch(() => {});
+        uid = a.uid; sessionStorage.setItem(MOCK_UID, uid); sessionStorage.setItem(MOCK_SIGNED, '1');
+        await carryPlayer(old, x); await loadProfile(true); await ensureKey(); emitAuth();
+        return { uid, linked: false, switched: true };
+      }
+      localStorage.setItem(MOCK_G, JSON.stringify({ uid, email: 'player@example.com', name: 'Mock Player' }));
+      sessionStorage.setItem(MOCK_SIGNED, '1'); emitAuth();
+      return { uid, linked: true, switched: false };
+    }
+    const auth = firebase.auth(), prov = new firebase.auth.GoogleAuthProvider();
+    prov.setCustomParameters({ prompt: 'select_account' });
+    const u = auth.currentUser;
+    try {
+      const r = u && u.isAnonymous ? await u.linkWithPopup(prov) : await auth.signInWithPopup(prov);
+      const switched = r.user.uid !== uid;
+      if (switched) { await dropLive(); uid = r.user.uid; await loadProfile(true); await ensureKey(); }
+      authUser = r.user; emitAuth();
+      return { uid, linked: !switched, switched };
+    } catch (e) {
+      if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+        const cred = e.credential || firebase.auth.GoogleAuthProvider.credentialFromError(e);
+        const old = profile; await dropLive();
+        const x = await xferOut();
+        await db.remove('players/' + uid).catch(() => {});
+        await db.remove('profiles/' + uid).catch(() => {});
+        const r = await auth.signInWithCredential(cred);
+        authUser = r.user; uid = r.user.uid;
+        await carryPlayer(old, x); await loadProfile(true); await ensureKey(); emitAuth();
+        return { uid, linked: false, switched: true };
+      }
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+        await (u && u.isAnonymous ? u.linkWithRedirect(prov) : auth.signInWithRedirect(prov));
+      }
+      throw e;
+    }
+  }
+  // sign out of Google: back to a fresh anonymous player on this device
+  async function logout() {
+    await init();
+    await dropLive();
+    if (MOCK) { sessionStorage.removeItem(MOCK_SIGNED); sessionStorage.removeItem(MOCK_UID); }
+    else { await firebase.auth().signOut(); authUser = null; }
+    ready = null; uid = null; profile = null;
+    await init(); emitAuth();
+  }
+  const authListeners = new Set();
+  function emitAuth() { authListeners.forEach(f => { try { f(account()); } catch (e) { console.warn(e); } }); }
+  const onAuth = f => { authListeners.add(f); return () => authListeners.delete(f); };
+
+  // cloud sync of local progress: sync/<uid> = { d: JSON string, t: time }
+  async function pull() { await init(); return db.get('sync/' + uid); }
+  async function push(d) { await init(); return db.update('sync/' + uid, { d, t: db.now() }); }   // update: keeps the dice key (k)
+
+  // ---------------------------------------------------------------- presence
+  let presOn = false, presState = 'idle';
+  async function setPresence(st, extra) {
+    if (!db || !uid || !profile) return;
+    presState = st || presState;
+    const v = Object.assign({ name: profile.name, rating: profile.rating, st: presState, t: db.stamp() }, extra || {});
+    await db.set('presence/' + uid, v);
+    if (!presOn) {
+      db.onDisconnectRemove('presence/' + uid); presOn = true;
+      if (db.onReconnect) db.onReconnect(() => setPresence().catch(() => {}));
+      setInterval(() => { if (presOn) setPresence().catch(() => {}); }, PRES_BEAT);   // heartbeat: rewrite the whole entry (a bare {t} update after an onDisconnect removal left nameless ghosts)
+    }
+  }
+  // entries whose owner stopped beating (crashed tab, lost disconnect handler) are not shown
+  const PRES_BEAT = 60000, PRES_STALE = 150000;
+  const presLive = x => typeof x.t === 'number' && !!x.name && db.now() - x.t < PRES_STALE;
+  // ---- stale records: a tab that vanished without its disconnect handler (crash, sleep, lost connection, failed delete) must not
+  // leave a room / lobby entry / presence behind for good. Rooms and lobby entries carry hb (server time) rewritten by the owner
+  // every LIVE_BEAT; older than LIVE_STALE = not listed / joined / matched. Records of older clients (no hb) are judged by
+  // created / since with LEGACY_STALE. Dead records (a margin past the limits) are deleted by whoever sees them (the rules allow
+  // that only for stale records), so leftovers in the database disappear the next time anyone opens the online lists.
+  const LIVE_BEAT = 60000, LIVE_STALE = 180000, LEGACY_STALE = 3600000, PRES_GONE = 300000, POST_IDLE = 180000, SWEEP_MARGIN = 20000;
+  const recOld = (x, base, now, margin) => {
+    if (!x || typeof x !== 'object') return true;
+    if (typeof x.hb === 'number') return now - x.hb > LIVE_STALE + margin;
+    return typeof base === 'number' ? now - base > LEGACY_STALE + margin : true;
+  };
+  const roomStale = (r, now) => recOld(r, r && r.created, now == null ? db.now() : now, 0);
+  const lobbyStale = (x, now) => recOld(x, x && x.since, now == null ? db.now() : now, 0);
+  const roomDead = (r, now) => recOld(r, r && r.created, now, SWEEP_MARGIN) || (!r.game && typeof r.expires === 'number' && now - r.expires > 60000 + SWEEP_MARGIN);
+  const lobbyDead = (x, now) => recOld(x, x && x.since, now, SWEEP_MARGIN);
+  const presDead = (x, now) => !x || typeof x !== 'object' || typeof x.t !== 'number' || now - x.t > PRES_GONE + SWEEP_MARGIN;
+  const swept = new Map();
+  // delete the dead children of node (not my own live records); each path is tried at most every 5 min; returns v
+  function sweep(node, v, dead) {
+    if (!v || typeof v !== 'object' || !db || !(MOCK || secure())) return v;    // the old (legacy) rules do not allow these deletes
+    const now = db.now();
+    for (const [id, x] of Object.entries(v)) {
+      if (node === 'rooms' ? id === roomCode : id === uid) continue;
+      if (!dead(x, now)) continue;
+      const p = node + '/' + id;
+      if (swept.get(p) > now) continue;
+      swept.set(p, now + 300000);
+      db.remove(p).catch(() => {});
+    }
+    return v;
+  }
+  // leaving the page: drop the own live records right away (the disconnect handlers are the fallback, the staleness above the last resort)
+  window.addEventListener('pagehide', () => {
+    if (!db || !uid) return;
+    try {
+      if (roomCode) db.remove('rooms/' + roomCode).catch(() => {});
+      if (lobbyState) db.remove('lobby/' + uid).catch(() => {});
+      if (presOn) db.remove('presence/' + uid).catch(() => {});
+    } catch (e) {}
+  });
+  // own heartbeats (transactions: never recreate a record that is gone)
+  function lobbyBeat(st) {
+    if (db.now() - (st.hbAt || st.since) < LIVE_BEAT) return;
+    st.hbAt = db.now();
+    db.txn('lobby/' + uid, cur => (cur === null ? null : Object.assign(cur, { hb: db.stamp() }))).catch(() => {});
+  }
+  let roomBeatAt = 0, roomIdle = null;
+  function roomBeat() {
+    if (db.now() - roomBeatAt < LIVE_BEAT) return;
+    roomBeatAt = db.now();
+    db.txn('rooms/' + roomCode, cur => (cur === null ? null : cur.host === uid ? Object.assign(cur, { hb: db.stamp() }) : undefined)).catch(() => {});
+  }
+  // delete the own room / lobby entry; the disconnect handler stays registered until the delete went through
+  async function roomDrop(c) {
+    try { await db.txn('rooms/' + c, cur => (cur === null ? null : cur.host === uid ? null : undefined)); db.cancelDisconnect('rooms/' + c); }
+    catch (e) { console.warn(e); }
+  }
+  async function lobbyDrop() {
+    const p = 'lobby/' + uid;
+    try { await db.remove(p); db.cancelDisconnect(p); } catch (e) { console.warn(e); }
+  }
+  const listOf = v => Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid }));
+  function watchPresence(cb) { return db.on('presence', v => cb(listOf(sweep('presence', v, presDead)).filter(x => x.me || presLive(x)).sort((a, b) => (b.rating || 0) - (a.rating || 0)))); }
+  const roomExp = r => (typeof r.expires === 'number' ? r.expires : (typeof r.created === 'number' ? r.created : 0) + ROOM_TTL);
+  const roomLive = (r, now) => { now = now == null ? db.now() : now; return !!r && !r.game && roomExp(r) > now && !roomStale(r, now); };
+  function watchRooms(cb) {
+    let last = null;
+    const emit = () => cb(listOf(last).filter(r => !r.priv && !roomStale(r) && (r.game ? !!r.host : roomLive(r))).sort((a, b) => (a.game ? 1 : 0) - (b.game ? 1 : 0) || (a.created || 0) - (b.created || 0)));
+    const off = db.on('rooms', v => { last = sweep('rooms', v, roomDead); emit(); });
+    const iv = setInterval(() => { if (last) emit(); }, 15000);
+    return () => { off(); clearInterval(iv); };
+  }
+  function watchLobby(cb) { return db.on('lobby', v => cb(listOf(sweep('lobby', v, lobbyDead)).filter(x => !x.game && (x.me || !lobbyStale(x))))); }
+
+  // ---------------------------------------------------------------- Elo
+  const kFactor = games => games < 10 ? 40 : games < 30 ? 32 : 24;
+  function elo(my, opp, score, games) { const exp = 1 / (1 + Math.pow(10, (opp - my) / 400)); return Math.round(my + kFactor(games) * (score - exp)); }
+
+  // ---------------------------------------------------------------- lobby & matchmaking (same board size only)
+  let lobbyUnsub = null, selfUnsub = null, matchTimer = 0, lobbyState = null;
+  const windowFor = waitMs => Math.min(400, 100 + 50 * Math.floor(waitMs / 10000));
+  async function enterLobby({ onList, onMatched, onStatus, v }) {
+    await leave();
+    setPresence('lobby');
+    v = varOk(v) ? v : DEF_V;
+    const since = db.now();
+    lobbyState = { since, onMatched, onStatus, v };
+    await secPrepare(lobbyState);
+    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, v, since: db.stamp(), hb: db.stamp(), game: null });
+    db.onDisconnectRemove('lobby/' + uid);
+    lobbyUnsub = db.on('lobby', v => {
+      const list = listOf(v).filter(x => x.me || !lobbyStale(x)).sort((a, b) => b.rating - a.rating);
+      if (lobbyState) lobbyState.list = list;
+      onList && onList(list);
+    });
+    selfUnsub = db.on('lobby/' + uid + '/game', gid => { if (gid && lobbyState) { const cb = lobbyState.onMatched; leave(true); cb(gid); } });
+    matchTimer = setInterval(tryMatch, 2000);
+    setTimeout(tryMatch, 600);
+  }
+  // secure protocol: an unsettled rated game blocks matching until it is settled (retried while searching); fresh stored rating
+  async function secPrepare(st) {
+    if (!secure()) return;
+    try { const p = await db.get('players/' + uid); if (p && typeof p.rating === 'number') profile.rating = p.rating; } catch (e) {}
+    st.blocked = !(await SEC.resolve().catch(() => false));
+    if (st.blocked) OnlineSec.notice('open', 6000);
+  }
+  const skip = new Map();     // candidates that still have an unsettled rated game (re-checked after a while)
+  async function tryMatch() {
+    const st = lobbyState; if (st) lobbyBeat(st); if (!st || !st.list || st.busy) return;
+    if (st.blocked) {
+      st.busy = true;
+      try { if (db.now() - (st.lastTry || 0) > 10000) { st.lastTry = db.now(); if (await SEC.resolve().catch(() => false)) { st.blocked = false; const p = await db.get('players/' + uid); if (p) { profile.rating = p.rating; await db.update('lobby/' + uid, { rating: p.rating }); } } } } finally { st.busy = false; }
+      if (st.blocked) return;
+    }
+    const now = db.now(), myWait = now - st.since;
+    const others = st.list.filter(x => !x.me && !x.game && !lobbyStale(x) && typeof x.rating === 'number' && x.v === st.v);
+    let best = null;
+    for (const o of others) {
+      const w = windowFor(Math.max(myWait, now - (o.since || now)));
+      const d = Math.abs(o.rating - profile.rating);
+      if (d <= w && (!best || d < best.d) && !(skip.get(o.id) > now)) best = { ...o, d };
+    }
+    st.onStatus && st.onStatus({ waiting: st.list.filter(x => !x.me && !x.game).length, same: others.length, window: windowFor(myWait), wait: myWait, v: st.v });
+    if (!best || uid > best.id) return;        // the smaller uid creates the game so both sides do not
+    st.busy = true;
+    try {
+      if (secure()) {        // the rules want both players' stored ratings and no unsettled rated game on either side
+        if (await SEC.blocked(best.id)) { skip.set(best.id, now + 30000); return; }
+        const [pm, po] = await Promise.all([db.get('players/' + uid), db.get('players/' + best.id)]);
+        if (!pm || !po) return;
+        profile.rating = pm.rating; best.rating = po.rating;
+      }
+      const gid = db.push('games');
+      const first = Math.random() < 0.5 ? uid : best.id, second = first === uid ? best.id : uid;
+      const names = { [uid]: profile.name, [best.id]: best.name }, rates = { [uid]: profile.rating, [best.id]: best.rating };
+      const rec = { b: first, w: second, bn: names[first], wn: names[second], br: rates[first], wr: rates[second], moves: '', status: 'play', rated: true, ...tcFields(st.v), created: db.stamp(), t: db.stamp() };
+      await (SEC ? SEC.createRated(gid, rec) : db.set('games/' + gid, rec));
+      const r = await db.txn('lobby/' + best.id, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
+      if (r.committed && r.value && r.value.game === gid) await db.update('lobby/' + uid, { game: gid });
+      else { await db.remove('games/' + gid); if (secure()) SEC.resolve().catch(() => {}); }   // the link points at nothing now: cleared
+    } catch (e) { console.warn(e); skip.set(best.id, db.now() + 15000); } finally { if (lobbyState === st) st.busy = false; }
+  }
+
+  // ---------------------------------------------------------------- rooms (unrated; open = listed, priv = joined only with the code)
+  let roomCode = null, roomV = DEF_V, roomPriv = false, roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
+  let roomGame = null, roomG = null, roomGameUnsub = null, roomBusy = false;
+  const roomListeners = new Set();
+  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, v: roomV, expires: roomExpires, left: Math.max(0, roomExpires - db.now()), game: roomGame } : null);
+  const roomEmit = (ev, x) => roomListeners.forEach(f => { try { f(ev, room(), x); } catch (e) { console.warn(e); } });
+  function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: open | closed | expired | gone | matched | reopen
+  const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function roomAttach(code, d, cbs) {
+    roomBeatAt = 0; roomIdle = null;
+    roomCode = code; roomV = d.v; roomPriv = !!d.priv; roomExpires = d.expires; roomCbs = cbs;
+    if (!d.game) setPresence('room', { room: d.priv ? null : code });
+    db.onDisconnectRemove('rooms/' + code);
+    let seen = false;
+    roomUnsub = db.on('rooms/' + code, v => {
+      if (roomCode !== code) return;
+      if (v && v.host === uid) {
+        seen = true;
+        if (typeof v.expires === 'number' && !v.game) roomExpires = v.expires;
+        if (v.game && v.game !== roomGame) { roomWatchGame(v.game); const cb = roomCbs && roomCbs.onMatched; roomEmit('matched'); cb && cb(v.game); }
+        else if (!v.game && roomGame) {
+          const g = roomG; roomWatchGame(null);
+          if (presState !== 'play' || !g || g.status !== 'play') setPresence('room', { room: roomPriv ? null : code });
+          roomEmit('reopen', g);
+        }
+        return;
+      }
+      if (seen || v) { roomEnd(); if (!v) roomEmit('gone'); }
+    });
+    roomTimer = setInterval(roomCheck, 5000);
+    roomEmit('open');
+  }
+  async function createRoom({ onMatched, onExpired, priv, v }) {
+    v = varOk(v) ? v : DEF_V;
+    await leave();
+    for (let tries = 0; tries < 6; tries++) {
+      const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+      const expires = db.now() + ROOM_TTL;
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, v, created: db.stamp(), hb: db.stamp(), expires, game: null, guest: null, priv: !!priv } : undefined);
+      if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
+      roomAttach(code, { v, priv: !!priv, expires }, { onMatched, onExpired });
+      return code;
+    }
+    throw new Error('room');
+  }
+  function roomCheck() {
+    if (!roomCode) return;
+    roomBeat();
+    if (roomGame) {
+      const g = roomG, gid = roomGame;
+      if (g && g.status !== 'play' && !g.post) {
+        // nobody decides after the game (both idle / gone elsewhere): stop listing it as playing, reopen the room
+        if (!roomIdle || roomIdle.gid !== gid) roomIdle = { gid, t: db.now() };
+        else if (!g.again && db.now() - roomIdle.t > POST_IDLE) setPost(gid, 'timeout').catch(() => {});
+        const guest = g.b === uid ? g.w : g.b;
+        db.get('presence/' + guest).then(p => { if ((!p || !presLive(p)) && roomGame === gid) setPost(gid, 'left'); }).catch(() => {});
+        if (g.again && db.now() - g.again.t > REMATCH_MS + 2000) expireRematch(gid);
+      }
+      return;
+    }
+    if (db.now() < roomExpires) return;
+    const cb = roomCbs && roomCbs.onExpired;
+    closeRoom('expired').then(() => cb && cb());
+  }
+  function roomWatchGame(gid) {
+    roomGameUnsub && roomGameUnsub(); roomGameUnsub = null;
+    roomGame = gid || null; roomG = null;
+    if (!gid) return;
+    roomGameUnsub = db.on('games/' + gid, g => { if (roomGame !== gid) return; roomG = g; roomFollow(gid, g); });
+  }
+  async function roomFollow(gid, g) {
+    if (roomBusy || roomGame !== gid || !roomCode) return;
+    const code = roomCode;
+    if (g && (g.status === 'play' || !g.post || g.next)) return;
+    roomBusy = true;
+    try {
+      if (g && g.post === 'again') {      // both agreed: next game in the same room, the other player moves first
+        const ngid = db.push('games');
+        const iFirst = g.w === uid, me = { n: profile.name, r: profile.rating }, op = g.b === uid ? { n: g.wn, r: g.wr } : { n: g.bn, r: g.br };
+        const B = iFirst ? me : op, W = iFirst ? op : me;
+        await db.set('games/' + ngid, { b: g.w, w: g.b, bn: B.n, wn: W.n, br: B.r, wr: W.r, moves: '', status: 'play', rated: false, room: code, host: uid, ...tcFields(g.v), created: db.stamp(), t: db.stamp() });
+        const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = ngid; return cur; });
+        if (r.committed && r.value && r.value.game === ngid) await db.update('games/' + gid, { next: ngid });
+        else await db.remove('games/' + ngid);
+      } else {
+        await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = null; cur.guest = null; cur.gname = null; cur.expires = db.now() + ROOM_TTL; return cur; });
+      }
+    } catch (e) { console.warn(e); } finally {
+      roomBusy = false;
+      setTimeout(() => { if (roomGame === gid && roomG && roomG !== g) roomFollow(gid, roomG); }, 0);
+    }
+  }
+  function roomEnd(keepDisc) {
+    roomUnsub && roomUnsub(); roomUnsub = null; clearInterval(roomTimer); roomTimer = 0;
+    roomWatchGame(null);
+    if (roomCode && !keepDisc) db.cancelDisconnect('rooms/' + roomCode);
+    roomCode = null; roomCbs = null; roomExpires = 0;
+  }
+  async function closeRoom(why) {
+    if (!roomCode) return;
+    const c = roomCode, gid = roomGame; roomEnd(true);
+    if (gid) setPost(gid, 'host').catch(() => {});
+    if (presOn && presState === 'room') setPresence('idle', { room: null });
+    await roomDrop(c);
+    roomEmit(why === 'expired' ? 'expired' : 'closed');
+  }
+  async function extendRoom() { if (!roomCode) return; roomExpires = db.now() + ROOM_TTL; await db.update('rooms/' + roomCode, { expires: roomExpires }); }
+  const normCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  async function joinRoom(code) {
+    code = normCode(code);
+    if (!code) return null;
+    const rm = await db.get('rooms/' + code);
+    if (!roomLive(rm) || rm.host === uid) return null;
+    await leave();
+    const gid = db.push('games');
+    const first = Math.random() < 0.5 ? uid : rm.host, second = first === uid ? rm.host : uid;
+    const names = { [uid]: profile.name, [rm.host]: rm.name }, rates = { [uid]: profile.rating, [rm.host]: rm.rating };
+    await db.set('games/' + gid, { b: first, w: second, bn: names[first], wn: names[second], br: rates[first], wr: rates[second], moves: '', status: 'play', rated: false, room: code, host: rm.host, ...tcFields(rm.v), created: db.stamp(), t: db.stamp() });
+    const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; cur.guest = uid; cur.gname = profile.name; return cur; });
+    if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
+    return gid;
+  }
+  const postable = (g, v) => g && !g.post && !g.next && g.room && !g.rated && (g.status !== 'play' || v === 'host');
+  const setPost = (gid, v) => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g, v)) return; g.post = v; return g; });
+  const requestRematch = gid => db.txn('games/' + gid, g => {
+    if (g === null) return null; if (!postable(g)) return;
+    if (g.again) { if (g.again.by === uid) return; g.post = 'again'; return g; }
+    g.again = { by: uid, t: db.stamp() }; return g;
+  });
+  const answerRematch = (gid, yes) => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || g.again.by === uid) return; g.post = yes ? 'again' : 'no'; return g; });
+  const expireRematch = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (!postable(g) || !g.again || db.now() - g.again.t < REMATCH_MS) return; g.post = 'timeout'; return g; });
+
+  // ---- spectating (open rooms only); the only write is watch/<gid>/<uid> = true
+  let watchGid = null;
+  async function roomGameOf(code) {
+    code = normCode(code);
+    const rm = code ? await db.get('rooms/' + code) : null;
+    return rm && !rm.priv && rm.game && rm.host !== uid && rm.guest !== uid ? rm.game : null;
+  }
+  function watchUnmark() { if (!watchGid) return; const p = 'watch/' + watchGid + '/' + uid; watchGid = null; db.cancelDisconnect(p); db.remove(p).catch(() => {}); }
+  function spectate(gid, cb) {
+    setPresence('watch', { room: null });
+    watchUnmark(); watchGid = gid;
+    db.set('watch/' + gid + '/' + uid, true).then(() => { if (watchGid === gid) db.onDisconnectRemove('watch/' + gid + '/' + uid); }).catch(() => {});
+    const off = db.on('games/' + gid, cb);
+    return () => { off(); if (watchGid === gid) watchUnmark(); };
+  }
+  const watchCount = (gid, cb) => db.on('watch/' + gid, v => cb(Object.keys(v || {}).length));
+
+  async function leaveLobby() {
+    clearInterval(matchTimer); matchTimer = 0;
+    lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub(); lobbyUnsub = selfUnsub = null;
+    if (lobbyState) { lobbyState = null; await lobbyDrop(); if (presOn && presState === 'lobby') setPresence(roomCode ? 'room' : 'idle', { room: roomCode && !roomPriv ? roomCode : null }); }
+  }
+  async function leave(keepMatched) {
+    if (!keepMatched && presOn) setPresence('idle', { room: null });
+    clearInterval(matchTimer); matchTimer = 0;
+    lobbyUnsub && lobbyUnsub(); selfUnsub && selfUnsub(); lobbyUnsub = selfUnsub = null;
+    if (lobbyState) { lobbyState = null; await lobbyDrop(); }
+    if (roomCode) { const c = roomCode, gid = roomGame; roomEnd(true); if (gid) setPost(gid, 'host').catch(() => {}); await roomDrop(c); roomEmit('closed'); }
+  }
+
+  // ---------------------------------------------------------------- private dice key (one per player; never shown to anybody else)
+  const KEY_P = 'ur-online-key:', KEY_RE = /^[0-9a-f]{32}$/;
+  let dkey = null;
+  const chains = new Map();
+  function rndHex() { const a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
+  // the key lives in this browser and in sync/<uid>/k (readable only by its owner), so a Google-linked player can finish a game on another device
+  async function ensureKey() {
+    let loc = null; try { loc = localStorage.getItem(KEY_P + uid); } catch (e) {}
+    if (loc && !KEY_RE.test(loc)) loc = null;
+    let rem = null; try { rem = await db.get('sync/' + uid + '/k'); } catch (e) {}
+    if (rem && KEY_RE.test(rem)) dkey = rem;
+    else {
+      const k = loc || rndHex();
+      try {
+        const r = await db.txn('sync/' + uid, cur => { if (cur === null) return { d: '', t: db.now(), k }; if (cur.k && KEY_RE.test(cur.k)) return; cur.k = k; return cur; });
+        dkey = r.value && KEY_RE.test(r.value.k || '') ? r.value.k : k;
+      } catch (e) { console.warn(e); dkey = k; }
+    }
+    try { localStorage.setItem(KEY_P + uid, dkey); } catch (e) {}
+    chains.clear();
+  }
+  function chainFor(gid) {
+    const ck = uid + '|' + gid;
+    if (chains.has(ck)) return chains.get(ck);
+    const r = new Array(CHAIN_N + 1);
+    r[CHAIN_N] = H(dkey + '|' + gid);
+    for (let i = CHAIN_N; i > 0; i--) r[i - 1] = H(r[i]);
+    chains.set(ck, r);
+    return r;
+  }
+  // my tokens for the actions the record waits for from me (commit / reveal), appended to `toks` while it is still my turn to write
+  function autoToks(g, gid, R, s) {
+    const ch = chainFor(gid), toks = [];
+    let moves = String(g.moves || '');
+    for (let k = 0; k < 3 && R.ok && !R.over && R.actor === s && (R.need === 'c' || R.need === 'r'); k++) {
+      const tk = R.need === 'c' ? 'c' + ch[0] : 'r' + ch[R.idx];
+      if (R.idx > CHAIN_N) break;
+      toks.push(tk); moves = moves ? moves + '.' + tk : tk; R = replay(g.v, moves);
+    }
+    return { toks, R };
+  }
+  // the dice of the roll I am to make now (the other side has revealed its part): { d, n } | null
+  function myDice(g, gid) {
+    if (!g || !dkey) return null;
+    const s = sideNo(g, uid) - 1; if (s < 0) return null;
+    const R = replay(g.v, g.moves);
+    if (!R.ok || R.over || R.actor !== s || R.need !== 'm' || R.idx > CHAIN_N) return null;
+    if (R.commit[s] !== chainFor(gid)[0]) return null;                      // not my chain (another key): can not roll
+    const mine = chainFor(gid)[R.idx], oth = R.revs[1 - s][R.idx - 1];
+    return s === 0 ? diceOf(mine, oth, R.idx, g.v) : diceOf(oth, mine, R.idx, g.v);
+  }
+  const keyOk = (g, gid) => { const s = sideNo(g, uid) - 1, R = replay(g.v, g.moves); return s < 0 || !R.commit[s] || R.commit[s] === chainFor(gid)[0]; };
+
+  // ---------------------------------------------------------------- games
+  function watchGame(gid, cb) { setPresence('play', { room: null }); if (SEC) SEC.join(gid); return db.on('games/' + gid, cb); }
+  // the writer pays the time since the last write, then gets the increment. false = its flag has already fallen
+  function chargeClock(g, side) {
+    const m = mainOf(g, side), el = Math.max(0, db.now() - (g.t || db.now())), used = Math.max(0, el - DELAY);
+    if (used > m + 1000) return false;
+    g['m' + side] = Math.max(0, m - used) + tcOf(g).inc;
+    return true;
+  }
+  // write the record's next tokens of mine: the waiting commit / reveal (auto), or — when it is my roll — my reveal + the move
+  // (from = path index of the moved piece, null = no move); n = tokens already seen (guards against double sends / races).
+  // The same write carries my following commit / reveal when the turn passes to the other side. A write that ends the game sets the result.
+  async function act(gid, n, from) {
+    const r = await db.txn('games/' + gid, g => {
+      if (g === null) return null;
+      if (g.status !== 'play' || !varOk(g.v)) return;
+      const s = sideNo(g, uid) - 1; if (s < 0) return;
+      let R = replay(g.v, g.moves);
+      if (!R.ok || R.over || R.n !== n || R.actor !== s) return;
+      if (!keyOk(g, gid)) return;
+      let moves = String(g.moves || '');
+      const add = tk => { moves = moves ? moves + '.' + tk : tk; R = replay(g.v, moves); };
+      if (R.need === 'm') {
+        if (from === undefined) return;                                       // a move needs the player's choice
+        add('m' + chainFor(gid)[R.idx] + (from === null ? 'p' : Number(from).toString(36)));
+        if (!R.ok) return;                                                    // illegal move
+      } else if (from !== undefined) return;
+      const a = autoToks(Object.assign({}, g, { moves }), gid, R, s);
+      if (a.toks.length) { moves = moves ? moves + '.' + a.toks.join('.') : a.toks.join('.'); R = a.R; }
+      if (!R.ok || moves === String(g.moves || '')) return;
+      if (!chargeClock(g, sideOf(g, uid))) return;
+      g.moves = moves; g.t = db.stamp(), g.lm = uid;
+      if (R.over) { g.status = 'over'; g.win = R.win; g.why = R.why; g.nt = null; }
+      else g.nt = R.actor === 0 ? g.b : g.w;
+      return g;
+    });
+    return r.committed;
+  }
+  const resign = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play' || !sideNo(g, uid)) return; g.status = 'resign'; g.loser = uid; return g; });
+  const claimTimeout = (gid, oppUid) => db.txn('games/' + gid, g => {
+    if (g === null) return null;
+    if (g.status !== 'play' || db.now() - g.t < mainOf(g, sideOf(g, oppUid)) + DELAY + GRACE) return;
+    const R = replay(g.v, g.moves); if (!R.ok || turnOf(R) !== sideNo(g, oppUid)) return;
+    g.status = 'timeout'; g.loser = oppUid; return g;
+  });
+  // the opponent left (no presence) while it is their turn to write: after ABANDON_MS the player still here wins
+  async function claimAbandon(gid, oppUid) {
+    if (await db.get('presence/' + oppUid)) return { committed: false };
+    return db.txn('games/' + gid, g => {
+      if (g === null) return null;
+      if (g.status !== 'play' || db.now() - g.t < ABANDON_MS) return;
+      const R = replay(g.v, g.moves); if (!R.ok || turnOf(R) !== sideNo(g, oppUid)) return;
+      g.status = 'abandon'; g.loser = oppUid; return g;
+    });
+  }
+  // board finished but the status was not set (old / interrupted write): either player may mark it
+  const markOver = gid => db.txn('games/' + gid, g => { if (g === null) return null; if (g.status !== 'play') return; const R = replay(g.v, g.moves); if (!R.ok || !R.over) return; g.status = 'over'; g.win = R.win; g.why = R.why; g.nt = null; return g; });
+  // the winner of a finished game: 1 first player, 2 second
+  function winnerOf(g) {
+    if (!g || g.status === 'play') return null;
+    if (g.status === 'resign' || g.status === 'timeout' || g.status === 'abandon') return g.loser === g.b ? 2 : 1;
+    if (typeof g.win === 'number') return g.win;
+    const R = replay(g.v, g.moves); return R.over ? R.win : 0;
+  }
+
+  // secure protocol: my own result of a game record that ended on the board (null: not finished by my replay → disputed)
+  function secOwn(g) { const R = replay(g.v, g.moves); if (!R.ok || !R.over) return null; return R.win === sideNo(g, uid) ? 1 : 0; }
+  // the history entry of a settled rated game (same fields as below)
+  function secDecorate(np, p, G, s, nr) {
+    const hist = Array.isArray(p.hist) ? p.hist.slice() : (p.hist && typeof p.hist === 'object' ? Object.values(p.hist) : []);
+    const opp = G.b === uid ? G.wr : G.br, oppName = G.b === uid ? G.wn : G.bn, gid = np.last;
+    hist.push({ g: gid, t: db.now(), v: G.v || DEF_V, o: String(oppName || '?').slice(0, 16), or: typeof opp === 'number' ? opp : INITIAL, s, d: nr - p.rating, r: nr, why: G.status === 'over' ? (G.why || 'home') : G.status });
+    np.hist = hist.slice(-HIST_N);
+  }
+  // apply a finished game to players/<uid> once (game id kept in `last` and in the history, so a reload / resume never counts twice).
+  // Rated games: Elo + a history entry { g, t, v, o (opponent), or, s (1 / 0.5 / 0), d, r, why }.
+  // own: my own view of a game that ended on the board (null = not finished here → disputed). Secure protocol: OnlineSec settles
+  // the linked game (both reports must agree; resign / timeout / abandon / agreed draw are decided by the record itself).
+  async function applyResult(gid, game, score, own) {
+    if (secure()) {
+      const r = await SEC.settle(gid, game, game && game.status === 'over' ? (own === undefined ? (typeof secOwn === 'function' ? secOwn(game, score) : score) : own) : score);
+      if (r.rated) profile = (await db.get('players/' + uid)) || profile;
+      return r;
+    }
+    const opp = game.b === uid ? game.wr : game.br, oppName = game.b === uid ? game.wn : game.bn;
+    let out = { old: profile.rating, now: profile.rating, rated: !!game.rated };
+    const r = await db.txn('players/' + uid, p => {
+      if (p === null) return null;
+      const hist = Array.isArray(p.hist) ? p.hist : (p.hist && typeof p.hist === 'object' ? Object.values(p.hist) : []);
+      if (p.last === gid || hist.some(h => h && h.g === gid)) return;
+      if (typeof p.rating !== 'number') p.rating = INITIAL;
+      const old = p.rating, nr = game.rated ? elo(p.rating, typeof opp === 'number' ? opp : INITIAL, score, p.games || 0) : p.rating;
+      p.rating = nr; p.games = (p.games || 0) + (game.rated ? 1 : 0);
+      if (game.rated) {
+        if (score === 1) p.wins = (p.wins || 0) + 1; else if (score === 0) p.losses = (p.losses || 0) + 1; else p.draws = (p.draws || 0) + 1;
+        hist.push({ g: gid, t: db.now(), v: game.v || DEF_V, o: String(oppName || '?').slice(0, 16), or: typeof opp === 'number' ? opp : INITIAL, s: score, d: nr - old, r: nr, why: game.status === 'over' ? (game.why || 'home') : game.status });
+      }
+      p.hist = hist.slice(-HIST_N);
+      p.last = gid; return p;
+    });
+    if (r.committed && r.value) { out = { old: profile.rating, now: r.value.rating, rated: !!game.rated }; profile = r.value; if (presOn) db.update('presence/' + uid, { rating: profile.rating }); }
+    return out;
+  }
+  const history = () => { const h = profile && profile.hist; return (Array.isArray(h) ? h : h && typeof h === 'object' ? Object.values(h) : []).filter(x => x && typeof x.r === 'number').sort((a, b) => (a.t || 0) - (b.t || 0)); };
+  async function topPlayers(n = 20) {
+    const all = await db.get('players') || {};
+    return Object.entries(all).filter(([, p]) => p && p.games > 0).map(([id, p]) => ({ id, ...p, me: id === uid })).sort((a, b) => b.rating - a.rating).slice(0, n);
+  }
+
+  // ---------------------------------------------------------------- public chat (everyone online in this game; no private messages)
+  // A ring of CHAT_N slots: chat/seq counts messages (transaction), message n goes to chat/msgs/<n % CHAT_N>, overwriting the oldest,
+  // so the database never holds more than the latest CHAT_N messages.
+  const CHAT_N = 20, CHAT_LEN = 100, CHAT_GAP = 3000;
+  let chatLast = 0;
+  const chatClean = s => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_LEN).trim();
+  function watchChat(cb) {
+    return db.on('chat/msgs', v => cb(Object.values(v || {}).filter(m => m && typeof m.n === 'number' && typeof m.text === 'string').sort((a, b) => a.n - b.n).slice(-CHAT_N).map(m => ({ ...m, me: m.uid === uid }))));
+  }
+  // → { ok } | { ok: false, why: 'empty' | 'rate' | 'error', wait }
+  async function sendChat(text) {
+    text = chatClean(text);
+    if (!text) return { ok: false, why: 'empty' };
+    const now = Date.now();
+    if (now - chatLast < CHAT_GAP) return { ok: false, why: 'rate', wait: CHAT_GAP - (now - chatLast) };
+    chatLast = now;
+    try {
+      const r = await db.txn('chat/seq', n => (typeof n === 'number' ? n : 0) + 1);
+      if (!r.committed || typeof r.value !== 'number') return { ok: false, why: 'error' };
+      const msg = { n: r.value, uid, name: profile.name, text, t: db.stamp() };
+      if (secure()) await db.update('/', { ['chat/msgs/' + (r.value % CHAT_N)]: msg, ['chatLast/' + uid]: db.stamp() });
+      else await db.set('chat/msgs/' + (r.value % CHAT_N), msg);
+      return { ok: true };
+    } catch (e) { console.warn(e); return { ok: false, why: 'error' }; }
+  }
+
+  window.UrOnline = {
+    CHAT_N, CHAT_LEN, CHAT_GAP, watchChat, sendChat,
+    available: !!CFG || MOCK, configured: !!CFG, mock: MOCK, INITIAL, VARIANTS, DEF_V, TC, DELAY, GRACE, ABANDON_MS, ROOM_TTL, REMATCH_MS, HIST_N,
+    tcOf, clockOf, replay, turnOf, sideNo, cleanName, defaultName, localName, myDice, keyOk: (g, gid) => (dkey ? keyOk(g, gid) : true),
+    get room() { return db ? room() : null; },
+    getGame: gid => db.get('games/' + gid),
+    init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
+    setPost, requestRematch, answerRematch, expireRematch, roomGameOf, spectate, watchCount,
+    winnerOf, history, watchGame, act, resign, claimTimeout, claimAbandon, markOver, applyResult, presenceOf: u => db.get('presence/' + u), topPlayers, elo,
+    account, google, logout, onAuth, pull, push,
+    get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile && dkey); }, now: () => (db ? db.now() : Date.now()),
+    get secure() { return secure(); }, secMsg: k => (window.OnlineSec ? OnlineSec.msg(k) : ''),
+    _sha: sha256, _diceOf: diceOf,
+  };
+})();

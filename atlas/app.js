@@ -517,7 +517,7 @@
     const rows = [];
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
-    const lv = pref[id + ':lv'] || Math.min(4, ad ? ad.levels : 4), side = pref[id + ':side'] || 1;
+    const lv = pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
     const mode = ad && ad.modes && ad.modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
@@ -660,7 +660,7 @@
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
-    if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi')); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
+    if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   // a level's name: kyu / dan for the Japanese games (shogi, go, gomoku); the games numbered Lv.1 … Lv.N (their name is 'Lv.N')
@@ -688,7 +688,7 @@
   }
   addEventListener('resize', () => fitStage());
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true, ur: true, fanorona: true, ugolki: true };
+  const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true, ur: true, fanorona: true, ugolki: true, agon: true, alquerque: true };
   let lastKind;
   function startPlay(kind) {
     const g = bvGame, ad = Atlas3D[g.id];
