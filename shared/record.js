@@ -131,6 +131,29 @@ html[dir=rtl] .grc-vp,html[lang=ar] .grc-vp{right:auto;left:0}
   .grc-hero{grid-template-columns:1fr;justify-items:center;padding:16px}.grc-right{width:100%}.grc-ring{width:120px;height:120px}
   .grc-row{grid-template-columns:minmax(0,1fr) 60px auto;gap:10px}.grc-row .grc-sc{display:none}
 }
+/* phone landscape: short and wide — a slim header, the summary card on the left (it stays put), the tables scroll on the right */
+@media (orientation: landscape) and (max-height: 520px){
+  .grc-ov{padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+  .grc{width:min(900px,100%);height:100%;border-radius:16px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;align-items:center}
+  .grc > *{grid-column:1 / -1}
+  .grc-hd{grid-column:1;grid-row:1;padding:8px 6px 8px 14px;gap:9px}.grc-hd h2{font-size:16px;flex:none}.grc-hd .grc-ic{width:30px;height:30px;border-radius:9px}.grc-hd svg{width:17px;height:17px}
+  .grc-hd .grc-x{position:absolute;inset-inline-end:10px;top:8px;width:32px;height:32px}.grc{position:relative}
+  .grc-tabs{grid-column:2;grid-row:1;margin:0 52px 0 6px;padding:2px;justify-self:start}.grc-tabs button{padding:5px 13px;font-size:13px}
+  .grc-vt{grid-row:2;margin:0 14px 6px}
+  .grc-bd{grid-row:3;align-self:stretch;display:grid;grid-template-columns:minmax(250px,36%) minmax(0,1fr);align-content:start;align-items:start;gap:12px 14px;padding:4px 14px 10px}
+  .grc-bd > *{grid-column:2;min-width:0}
+  .grc-bd > .grc-hero{grid-column:1;grid-row:1 / span 20;position:sticky;top:0;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:12px;border-radius:14px}
+  .grc-bd > .grc-cf,.grc-bd > .grc-empty{grid-column:1 / -1}
+  .grc-bd > .grc-empty{padding:16px 10px}
+  .grc-ring{width:86px;height:86px}.grc-ring .grc-ctr b{font-size:21px}.grc-ring .grc-ctr small{font-size:10px;margin-top:3px}
+  .grc-cnt{gap:5px}.grc-cnt div{padding:6px 7px;border-radius:9px;gap:2px}.grc-cnt span{font-size:11px}.grc-cnt b{font-size:19px}
+  .grc-right{gap:8px}.grc-form i{width:10px;height:10px;border-radius:3px}.grc-form small{font-size:11px;flex:0 0 100%;margin:0 0 2px}
+  .grc-meta{font-size:12px;padding-top:8px;gap:4px 12px}
+  .grc h3{margin:0 0 6px;font-size:11px}
+  .grc-row{grid-template-columns:minmax(0,1fr) 56px auto;gap:10px;padding:8px 12px;font-size:13.5px}.grc-row .grc-sc{display:none}
+  .grc-g{padding:7px 12px;font-size:13.5px;gap:10px}.grc-g .grc-rs{width:24px;height:24px;font-size:12px}
+  .grc-ft{grid-row:4;padding:7px 14px 9px;gap:10px}.grc-ft small{font-size:11px}.grc-ft button{padding:7px 13px;font-size:13px}.grc-ft .grc-go{min-width:80px}
+}
 html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
 .mtabs .grc-tab{display:none}
 .grc-ic svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
