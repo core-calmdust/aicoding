@@ -544,7 +544,7 @@
     { const [x, y, z] = goal(0, 0); put(0, x, y, z); const [x1, y1, z1] = goal(1, 0); put(1, x1, y1, z1); }
     // the four dice just thrown by the light side: 2
     [true, false, true, false].forEach((mk, k) => { const d = die(), [x, z] = diceAt(0, k); dieUp(d, mk, k * 1.3 + .4); d.position.set(x + (k % 2) * .05, DR / 3, z + (k % 2 ? .12 : -.05)); g.add(d); });
-    g.scale.setScalar(1.15);   // about the other boards' size on the chabudai
+    g.scale.setScalar(1.2);   // about the other boards' size on the chabudai
     return g;
   };
   X.ur = { board, piece, die, dieUp, MOTIF, motif, pt, U, P, W, D, H, TOP, PR, PH, DR, start, goal, diceAt };
