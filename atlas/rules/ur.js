@@ -53,7 +53,7 @@
   function start(ctx) {
     const T3 = ctx.Table3D, L = Object.assign({}, UI.en, UI[ctx.lang] || {});
     try { localStorage.setItem('aicoding-ur-rules-seen', '1'); } catch (e) {}
-    let stopped = false, step = 0, played = false, busy = false, timers = [], E = null, TX = null, kit = null, st = null, n = null, k = 0, phase = '', sel = -1;
+    let rosAt = 0, stopped = false, step = 0, played = false, busy = false, timers = [], E = null, TX = null, kit = null, st = null, n = null, k = 0, phase = '', sel = -1;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const T = (key, v) => { const D = (TX && (TX[ctx.lang] || TX.en)) || {}; let s = D[key]; if (s == null && TX) s = TX.en[key]; if (s == null) s = ''; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
     const SND = (window.Atlas3D && Atlas3D.ur && Atlas3D.ur.SND) || { put() {}, hop() {}, take() {}, roll() {}, dieStop() {}, ros() {}, home() {} };
@@ -131,7 +131,8 @@
       const pg = P(); kit.marks.clear();
       if (pg.glowPath && !played) { kit.marks.path(0, 1, 14, 0xffe27a); const q = rcOf(0, 14); kit.marks.ring(q.r, q.c, 0xffd65a); }
       if (pg.glowPath && played) { const q = rcOf(0, 14); kit.marks.cell(q.r, q.c, 0x3df59a, .45); }
-      (pg.glow || []).forEach(i => { const q = rcOf(0, i); kit.marks.cell(q.r, q.c, 0xffd65a, .22); });
+      if (!played) (pg.glow || []).forEach(i => { if (i === rosAt) return; const q = rcOf(0, i); kit.marks.glow(q.r, q.c, 0xffd65a, .5); });   // the squares the page speaks of, breathing
+      if (rosAt > 0 && !played) { const q = rcOf(0, rosAt); kit.marks.glow(q.r, q.c, 0xff7ab8, .6); }   // landed on a rosette: it lights up pink — that is why you roll again
       (pg.danger || []).forEach(i => { if (played) return; const q = rcOf(0, i); kit.marks.cell(q.r, q.c, 0xff5d5d, .3); });
       if (phase === 'roll' && !busy) kit.marks.frame();   // the dice to tap: a quiet frame round them (the dice themselves are not lit)
       if (phase === 'move') {
@@ -143,7 +144,7 @@
 
     /* ---------- pages ---------- */
     function go(nn) {
-      step = Math.max(0, Math.min(PAGES.length - 1, nn)); played = false; busy = false; phase = ''; n = null; k = 0; sel = -1;
+      step = Math.max(0, Math.min(PAGES.length - 1, nn)); rosAt = 0; played = false; busy = false; phase = ''; n = null; k = 0; sel = -1;
       timers.forEach(clearTimeout); timers = [];
       const pg = P(); lockH(); cnt('');
       if (pg.id === 'intro') {
@@ -159,7 +160,10 @@
       if (phase === 'roll') kit.diceBig(true, 0);
       marks(); buttons();
     }
-    function ok(textKey, v) { played = true; busy = false; phase = 'done'; sel = -1; marks(); cnt(tag(`✓ ${T(textKey, v)}`, '#e8f8ee', '#16784a')); SND.home(); buttons(); }
+    function ok(textKey, v) {
+      played = true; busy = false; phase = 'done'; sel = -1; marks(); cnt(tag(`✓ ${T(textKey, v)}`, '#e8f8ee', '#16784a')); SND.home(); buttons();
+      if (!P().last) { const s0 = step; later(() => { if (step === s0 && played) go(step + 1); }, 1800); }   // solved: on to the next page by itself (as every tour)
+    }
     function ng(textKey, v, html) { msg(`<span>${html || (textKey ? T(textKey, v) : L.wrong)}</span>`); const b = $('.bub'); if (b.animate) b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); }
     async function roll() {
       const pg = P(); if (phase !== 'roll' || busy) return;
@@ -200,7 +204,7 @@
       await kit.move(0, m.from, m.to, { capture: m.capture, onStep: () => SND.hop(), onHit: () => SND.take(), onLand: () => (m.finish ? SND.home : SND.put)() });
       if (stopped) return;
       const r = E.apply(st, m); st = r.state; st.turn = 0; n = null; busy = false; kit.sync(st);
-      if (pg.twice && r.again && k < pg.rolls.length) { SND.ros(); phase = 'roll'; kit.diceBig(true); marks(); cnt(tag(`🌸 ${T('again')} 🎲 ${L.rollK}`, '#e8f0ff', '#2f4fb0')); buttons(); return; }
+      if (pg.twice && r.again && k < pg.rolls.length) { SND.ros(); rosAt = m.to; phase = 'roll'; busy = true; marks(); kit.diceBig(true).then(() => { busy = false; if (!stopped && phase === 'roll') { marks(); buttons(); } }); /* the frame round the dice once they are back in their large place */ cnt(tag(`🌸 ${T('again')} 🎲 ${L.rollK}`, '#e8f0ff', '#2f4fb0')); buttons(); return; }
       const key = pg.id === 'enter' ? 'enter.ok' : pg.id + '.ok';
       ok(key);
     }
@@ -243,7 +247,7 @@
     requestAnimationFrame(() => el.classList.add('on'));
     // the game's rules and words (ur/engine.js, ur/tour.js), then the board
     say('…'); buttons();
-    loadJS(BASE + 'engine.js?v=2', () => !!window.UrEngine).then(() => loadJS(BASE + 'tour.js?v=3', () => !!window.UrTour)).then(() => {
+    loadJS(BASE + 'engine.js?v=2', () => !!window.UrEngine).then(() => loadJS(BASE + 'tour.js?v=4', () => !!window.UrTour)).then(() => {
       if (stopped) return; E = window.UrEngine; TX = window.UrTour && UrTour._TX;
       kit = window.UrKit.make(T3, { sfx: x => SND[x] && SND[x](), top: true, stage: true });   // the tour: straight down, the same view on every page; the dice rolled large in view
       later(() => go(0), 250);
