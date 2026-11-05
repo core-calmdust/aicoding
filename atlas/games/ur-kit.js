@@ -133,7 +133,7 @@
     const BS = Math.max(2.1, Math.min(3, 2.1 * Math.pow(844 / Math.max(560, innerHeight), 1.6)));   // the large dice: about 60–80 px on a phone (a short screen shows the board smaller)
     const STG = !opts.stage ? null : tall
       ? { big: { s: BS, y: Y, at: i => [.62 + (i < 2 ? .33 : -.33) * BS, (i % 2 ? .34 : -.34) * BS] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
-      : { big: { s: 1.25, y: 0, at: i => [1.95 + i * .8, U.D / 2 + .52] } };   // PC: a row on the table in front of the small block — inside the board's own width, so in view at any window shape (beside the board it went off a wide screen's edge)
+      : { big: { s: 1.25, y: 0, at: i => [1.2 + i * .8, U.D / 2 + .52] } };   // PC: a row on the table in front of the small block — inside the board's own width, so in view at any window shape (beside the board it went off a wide screen's edge)
     if (STG && !STG.small) STG.small = STG.big;
     let ST = STG ? STG.small : null, DS = ST ? ST.s : .8;
     // tilt: the large dice lean their top towards the top of the screen, as if seen from the player's side (straight down, an
@@ -195,11 +195,13 @@
     const MATC = {};
     const mat = (c, op) => MATC[c + ':' + op] || (MATC[c + ':' + op] = basic(c, op));
     const marks = {
-      clear() { while (marksG.children.length) marksG.remove(marksG.children[0]); T3.kick(120); },
+      clear() { while (marksG.children.length) { const m = marksG.children[0]; if (m.userData.pulseOp) m.material.dispose(); marksG.remove(m); } T3.kick(120); },
       cell(r, c, color = 0x3df59a, op = .4, y = .006) { const m = new TH.Mesh(GEO.sq, mat(color, op)), [x, z] = cellXZ(r, c); m.position.set(x, Y + y, z); m.renderOrder = 2; marksG.add(m); T3.kick(120); return m; },
       ring(r, c, color = 0x3df59a, h = .02) { const m = new TH.Mesh(GEO.ring, mat(color, .95)), [x, z] = cellXZ(r, c); m.position.set(x, Y + h, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
       dot(r, c, color = 0x3df59a) { const m = new TH.Mesh(GEO.dot, mat(color, .95)), [x, z] = cellXZ(r, c); m.position.set(x, Y + .012, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
       tray(side, kind, color = 0x3df59a, k = 0) { const [x, y, z] = slot(side, kind, k), m = new TH.Mesh(GEO.slot, mat(color, .5)); m.position.set(x, y + .004, z); m.renderOrder = 2; marksG.add(m); T3.kick(120); return m; },
+      // a square that breathes (its own material: the opacity pulses), with a ring — "look at this square"
+      glow(r, c, color = 0xffd65a, op = .55) { const [x, z] = cellXZ(r, c), m = new TH.Mesh(GEO.sq, basic(color, op)); m.position.set(x, Y + .007, z); m.renderOrder = 2; m.userData.pulseOp = op; marksG.add(m); marks.ring(r, c, color); return m; },
       ringAt(x, y, z, color = 0x3df59a) { const m = new TH.Mesh(GEO.ring, mat(color, .95)); m.position.set(x, y + .02, z); m.renderOrder = 3; marksG.add(m); T3.kick(120); return m; },
       // the dice are not ringed or lit (the user's call, 2026-11-05: the blue tips that come up are what you count). frame(): a quiet
       // rounded frame round the dice, for a task that asks you to tap them
@@ -220,7 +222,7 @@
     function pulse() {
       if (stopped || !marksG.children.length) { pulseOn = false; return; }
       const k = .5 + .5 * Math.sin(performance.now() / 260);
-      marksG.children.forEach(m => { if (m.geometry === GEO.ring || m.userData.pulse) m.scale.setScalar(.92 + k * .14); });
+      marksG.children.forEach(m => { if (m.geometry === GEO.ring || m.userData.pulse) m.scale.setScalar(.92 + k * .14); if (m.userData.pulseOp) m.material.opacity = m.userData.pulseOp * (.35 + .65 * k); });
       T3.kick(60); requestAnimationFrame(pulse);
     }
     const _add = marksG.add.bind(marksG);
