@@ -17,10 +17,12 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const THREE = window.THREE, T3 = window.Table3D, E = window.FanoronaEngine, F3 = T3 && T3.fanorona;
+  const THREE = window.THREE, T3 = window.Table3D, E = window.FanoronaEngine;
+  // Alquerque (alquerque/) runs on the same page scripts: its own board (atlas/models/alquerque.js, the same userData)
+  const GID = (window.GAME && GAME.id) || 'fanorona', ALQ = GID === 'alquerque', F3 = T3 && (ALQ ? T3.alquerque : T3.fanorona);
   if (!THREE || !T3 || !F3 || !E || !window.AtlasSkin || typeof window.syncPieces !== 'function' || typeof window.animateStep !== 'function' || typeof window.renderReserves !== 'function') return;
   const boardDom = document.getElementById('board'), piecesDom = document.getElementById('pieces'), de = document.documentElement;
-  de.classList.add('atlas-fanorona');
+  de.classList.add('atlas-fanorona'); if (ALQ) de.classList.add('atlas-alq3');
   const GS = .66;   // the balls in the grooves: two thirds the size (22 fit the 9×5 board's groove)
 
   /* ---------- page layout: the DOM frame = the slab's outer edge ---------- */
@@ -62,6 +64,10 @@ html.atlas-fanorona #fPieces{display:none!important}
 html.atlas-fanorona .fn3dnote{margin:8px 0 0;padding:12px 14px;border-radius:14px;background:#f8f0e0;border:2px solid #ead9b6;font-size:13px;line-height:1.6;color:#4a4f66}
 html.atlas-2d .fn3dnote{display:none!important}
 html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bottom:2px}
+html.atlas-alq3 .pieces .hov.p1,html.atlas-alq3 .pdisc.p1,html.atlas-alq3 .kifu button i.p1,html.atlas-alq3 .rv-list .mv i.p1{background:radial-gradient(circle at 38% 32%,#fff0b8,#d9ad4a 55%,#8a6420)!important}
+html.atlas-alq3 .pieces .hov.p2,html.atlas-alq3 .pdisc.p2,html.atlas-alq3 .kifu button i.p2,html.atlas-alq3 .rv-list .mv i.p2{background:radial-gradient(circle at 38% 32%,#4a78e0,#1d3f9a 60%,#0d2470)!important}
+html.atlas-alq3 .reserve .lbl{background:rgba(70,10,20,.62)!important}
+html.atlas-alq3 .fn3dnote{background:#fbf1e4;border-color:#ecd5b8}
 `;
   document.head.appendChild(st);
 
@@ -70,14 +76,14 @@ html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margi
     board: boardDom,
     persp: 10,   // a long lens: the balls stand high off the board, so a near camera showed them off their points (the DOM rings stay round them)
     outer: r => { const H = r.height * (NRp() + 3) / (NRp() + 1); return { top: r.top + r.height / 2 - H / 2, height: H }; },   // slab edge to slab edge
-    guide: '../images/atlas/g-crab.webp', guideFallback: '../images/atlas/fanorona.webp',
+    guide: ALQ ? '../images/atlas/g-gem.webp' : '../images/atlas/g-crab.webp', guideFallback: ALQ ? '../images/atlas/alquerque.webp' : '../images/atlas/fanorona.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: 'lines|\\.pc|\\.rv|reserve|sqfx|\\.dest|\\.mark|\\.hov|fxsvg|hintlbl|frame|prompt',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
-      draft.rule = 'sivy';
+      draft.rule = ALQ ? 'alq' : 'sivy';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
       segSync(); document.getElementById('btnStart').click();
@@ -101,12 +107,12 @@ html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margi
     if (root) holder.remove(root);
     P3.clear(); G[0].length = G[1].length = 0;
     root = F3.board(rule); U = root.userData; Y = U.top; holder.add(root);
-    T3.show('fanorona', holder, { still: true });
+    T3.show(GID, holder, { still: true });
     skin.alignTo(U.NR + 1, Y);
     T3.kick(600);
   }
   build();
-  if (skin.view) skin.view({ key: 'atlas-fanorona-view', row: document.getElementById('bdRow'), img: '../images/atlas/fanorona.webp', cls: ['atlas-fanorona'] });
+  if (skin.view) skin.view({ key: 'atlas-' + GID + '-view', row: document.getElementById('bdRow'), img: '../images/atlas/' + GID + '.webp', cls: ['atlas-fanorona'].concat(ALQ ? ['atlas-alq3'] : []) });
   new MutationObserver(() => { build(); try { mirror(); syncGrooves(); } catch (e) {} }).observe(de, { attributes: true, attributeFilter: ['data-rule', 'data-variant'] });
   T3.kick(800);
   { let last = ''; const app = document.querySelector('.app');   // the online dock / header bar can move the board without resizing it
@@ -126,10 +132,22 @@ html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margi
     hi: ['3D नक्काशीदार बोर्ड', 'बबूल की एक लकड़ी पर रेखाएँ और बिंदु खोदकर जलाए गए पारंपरिक बोर्ड और मैट लकड़ी की गोलियाँ (सफ़ेद: हल्की लकड़ी, काला: आबनूस)। पकड़ी गई गोलियाँ लंबी तरफ़ की नालियों में रखी जाती हैं।'],
     ar: ['رقعة منحوتة ثلاثية الأبعاد', 'رقعة تقليدية من خشب الأكاسيا خطوطها ونقاطها منحوتة ومحروقة، مع كرات خشبية مطفأة (الأبيض: خشب فاتح، الأسود: أبنوس). تصطف الكرات المأسورة في المجاري على الجانبين الطويلين.'],
   };
+  const NOTE_ALQ = {
+    ja: ['3D ダマスカス象嵌の盤', 'くるみ材に骨・黒檀・真珠母貝の寄木細工をほどこしたアラブ伝統の象嵌盤（線は真珠母貝、点は真鍮の鋲）と、真鍮の駒（白）と藍の七宝の駒（黒）で表示しています。取った駒は上下のベルベットのトレイに並びます。'],
+    en: ['Damascene inlaid 3D board', 'A traditional Arab inlaid board of walnut with bone, ebony and mother-of-pearl marquetry (mother-of-pearl lines, brass studs at the points), with brass pieces (White) and cobalt enamel pieces (Black). Captured pieces line up in the velvet trays above and below.'],
+    zh: ['3D大马士革镶嵌棋盘', '核桃木上镶嵌骨、乌木与珍珠母的阿拉伯传统镶嵌棋盘（线为珍珠母，点为黄铜钉），配黄铜棋子（白）与钴蓝珐琅棋子（黑）。吃掉的棋子排在上下的天鹅绒托盘里。'],
+    ko: ['3D 다마스쿠스 상감 판', '호두나무에 뼈·흑단·자개를 박은 아랍 전통 상감 판(선은 자개, 점은 황동 징)과, 황동 말(백)·코발트 칠보 말(흑)로 표시합니다. 잡은 말은 위아래 벨벳 트레이에 놓입니다.'],
+    es: ['Tablero 3D de taracea damasquina', 'Un tablero árabe tradicional de nogal con taracea de hueso, ébano y nácar (líneas de nácar, tachuelas de latón en los puntos), con piezas de latón (blancas) y de esmalte cobalto (negras). Las capturas se colocan en las bandejas de terciopelo.'],
+    fr: ['Plateau 3D marqueté de Damas', 'Un plateau arabe traditionnel en noyer marqueté d’os, d’ébène et de nacre (lignes de nacre, clous de laiton aux points), avec des pions en laiton (Blancs) et en émail cobalt (Noirs). Les prises se rangent dans les plateaux de velours.'],
+    pt: ['Tabuleiro 3D marchetado de Damasco', 'Um tabuleiro árabe tradicional de nogueira com marchetaria de osso, ébano e madrepérola (linhas de madrepérola, tachas de latão nos pontos), com peças de latão (brancas) e de esmalte cobalto (pretas). As capturadas ficam nas bandejas de veludo.'],
+    de: ['Damaszener Intarsienbrett 3D', 'Ein traditionelles arabisches Brett aus Nussbaum mit Intarsien aus Bein, Ebenholz und Perlmutt (Linien aus Perlmutt, Messingnägel an den Punkten), mit Messingsteinen (Weiß) und Kobaltemaille-Steinen (Schwarz). Geschlagene Steine liegen in den Samtschalen.'],
+    hi: ['3D दमिश्क़ी जड़ाऊ बोर्ड', 'अखरोट की लकड़ी पर हड्डी, आबनूस और सीप की जड़ाई वाला पारंपरिक अरबी बोर्ड (रेखाएँ सीप की, बिंदु पीतल की कीलें), पीतल के मोहरे (सफ़ेद) और कोबाल्ट मीनाकारी मोहरे (काला)। पकड़े गए मोहरे मखमली ट्रे में रहते हैं।'],
+    ar: ['رقعة دمشقية مطعّمة ثلاثية الأبعاد', 'رقعة عربية تقليدية من خشب الجوز مطعّمة بالعظم والأبنوس والصدف (خطوط من الصدف ومسامير نحاسية عند النقاط)، مع قطع نحاسية (الأبيض) وقطع من المينا الكوبالتية (الأسود). تصطف القطع المأسورة في صواني المخمل.'],
+  };
   const fd = document.getElementById('fDesign');
   if (fd) {
     const p = document.createElement('p'); p.className = 'fn3dnote'; fd.appendChild(p);
-    const paint = () => { const l = (document.getElementById('langSel') || {}).value || 'ja', n = NOTE[l] || NOTE.en; p.innerHTML = ''; const b = document.createElement('b'); b.textContent = n[0]; p.append(b, n[1]); };
+    const paint = () => { const l = (document.getElementById('langSel') || {}).value || 'ja', n = (ALQ ? NOTE_ALQ : NOTE)[l] || (ALQ ? NOTE_ALQ : NOTE).en; p.innerHTML = ''; const b = document.createElement('b'); b.textContent = n[0]; p.append(b, n[1]); };
     paint(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint, 30));
   }
 
@@ -170,7 +188,7 @@ html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margi
   const hOf = g => g.userData.h0 || 0;
   // rolling: the ball turns about the horizontal axis across its path by the distance / radius
   const _ax = new THREE.Vector3(), _q = new THREE.Quaternion();
-  function roll(g, dx, dz) { const d = Math.hypot(dx, dz); if (d < 1e-5) return; _ax.set(dz / d, 0, -dx / d); _q.setFromAxisAngle(_ax, d / g.userData.r); const b = g.userData.ball; b.quaternion.premultiply(_q); }
+  function roll(g, dx, dz) { if (g.userData.noRoll) return; const d = Math.hypot(dx, dz); if (d < 1e-5) return; _ax.set(dz / d, 0, -dx / d); _q.setFromAxisAngle(_ax, d / g.userData.r); const b = g.userData.ball; b.quaternion.premultiply(_q); }
   function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
   function bump(g, my) { anim(150, k => { const s = 1 + Math.sin(k * Math.PI) * .04; g.userData.ball.scale.setScalar(g.userData.r * s); }, () => g.userData.ball.scale.setScalar(g.userData.r), my); }
 
