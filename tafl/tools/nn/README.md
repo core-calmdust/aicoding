@@ -70,5 +70,15 @@ EXTRA="data/v0-*.txt data20/v0-*.txt" tools/nn/loop.sh 8 4000 10 8
 - 結果は `nnwork/log.txt`（各周の局面数・学習の最終行・`nrole` の結果）、最新のネットは `nnwork/net.nnue`。
 - 設定は環境変数で変えられます（`loop.sh` の先頭のコメント参照。例：`H=256 EPOCHS=12 WINDOW=4 LAM=0.75 SCALE=1000`）。
 
+## データセットの公開（Hugging Face）
+```sh
+pip install pyarrow huggingface_hub
+python3 tools/nn/export_hf.py --out hf-tafl --license cc-by-4.0 "nnwork/r*/v0-*.txt"
+hf auth login
+hf upload <ユーザー名>/copenhagen-hnefatafl-selfplay hf-tafl . --repo-type dataset
+```
+- 1行1局面の Parquet（`data/train-*.parquet`）と、説明つきの `README.md`（データセットカード）を作ります。
+- 各局面に、指された手・探索値（守り手から見た値）・勝敗・手作り特徴16個がつきます。
+
 ## できたら
 `.nnue` ファイル（と学習ログ）を送ってください。ページへの組み込み（engine.js での読み込み、レベルの調整、MODEL_CARD.md への記載）はこちらで行います。
