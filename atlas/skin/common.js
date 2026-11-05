@@ -350,11 +350,17 @@
     try { const r = boardDom.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, tb = bar.getBoundingClientRect(), y0 = tb.height && getComputedStyle(bar).position === 'fixed' ? tb.bottom : 0;
       hw = Math.max(b.w / 2, Math.min(hw, cx, innerWidth - cx)); hh = Math.max(b.h / 2, Math.min(hh, cy - y0, innerHeight - cy)); } catch (e) {}
     const room = a => { const c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)); return Math.min(.94 * 2 * hw / (ow * c + oh * s), .94 * 2 * hh / (ow * s + oh * c)); };   // (.94: the bezel's shadow too)
-    const r0 = Math.min(1, room(0)), fit = a => front ? 1 : Math.min(1, room(a) / r0);   // (1 at both ends: no jump when the turn starts / ends)
+    // one smooth dip: scale = 1 − K·sin(a) — down once to its least at 90°, back up, on the same curve as the turn (following the
+    // fit frame by frame looked like shrinking and growing twice: it dips at the diagonals). K is set once, from the worst case
+    // between the diagonals (45° … 135°: the corners stay in the room there; a board that fills its room may brush the edge for a
+    // moment just after the start / before the end)
+    const r0 = Math.min(1, room(0)); let K = 0;
+    if (!front) for (let i = 0; i <= 45; i++) { const a = Math.PI / 4 + i * Math.PI / 90, f = Math.min(1, room(a) / r0); K = Math.max(K, (1 - f) / Math.sin(a)); }
+    K = Math.min(K, .5); const fit = a => 1 - K * Math.sin(a);
     const D = window.__atlasTurnMs || 900, t0 = performance.now(), ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
     const deg = a => (a * 180 / Math.PI).toFixed(2) + 'deg';
     const pose = a => {   // a: the angle still to go (π → 0)
-      const s = fit(a);
+      const s = fit(a); if (window.__atlasTurnLog) window.__atlasTurnLog.push([a, s]);   // (a test hook: the turn frame by frame)
       T3.turn(Y1 + d * a, s);
       if (front) st.rotate = 'y ' + deg(-d * a);
       else { st.rotate = deg(-d * a); st.scale = s.toFixed(4); ups.forEach(e => { e.style.rotate = deg(d * a); }); }
