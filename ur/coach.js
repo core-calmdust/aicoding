@@ -10,7 +10,7 @@
 const TX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
-  rest: 'レート戦・AI同士・レッスン・パズルの間、コーチはお休みです。AIとの対局や二人対戦に戻ると再開します。',
+  rest: 'レート戦・オンライン・AI同士・レッスン・パズルの間、コーチはお休みです。AIとの対局や二人対戦に戻ると再開します。',
   offNote: 'コーチ機能はオフになっています。右上のスイッチをオンにすると、勝率・取られる確率・候補手の解説が表示されます。',
   overRv: '対局が終わりました。分析すると、この欄に一手ごとの振り返り（最善手・悪手とその理由）が表示されます。',
   oppTurn: '相手の番です。相手がどの目で、どの駒を取りにくるか予想してみよう。',
@@ -53,7 +53,7 @@ ja: {
 },
 en: {
   head: 'Coach', sw: 'Coach', swT: 'Coach (explanations) on / off', on: 'Coach ON', off: 'Coach OFF',
-  rest: 'The coach rests during rated games, AI vs AI, lessons and puzzles. It comes back when you play the AI or a friend.',
+  rest: 'The coach rests during rated and online games, AI vs AI, lessons and puzzles. It comes back when you play the AI or a friend.',
   offNote: 'The coach is off. Switch it on at the top right to see win chances, capture risks and explained candidate moves.',
   overRv: 'The game is over. Analyse it and a move-by-move review (best moves, mistakes and why) appears here.',
   oppTurn: 'Your rival’s turn. Guess which roll would let them hit which of your pieces.',
@@ -186,7 +186,7 @@ function render() {
   const rv = !!document.querySelector('#reviewCard.show');
   const over = !!game && game.plies.length > 0 && overNow(), playing = !!game && !over && atLatest() && !reviewing;
   const can = usable() && (playing || (over && !rv));
-  const resting = !can && !rv && (!!special || !!rgame || settings.mode === 'watch');
+  const resting = !can && !rv && (!!special || !!rgame || settings.mode === 'watch' || settings.mode === 'online');
   if (resting) { card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); S.hov = null; return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`); }
   const on = active();
   card.classList.toggle('hidden', !can);

@@ -80,12 +80,14 @@ const curState = () => special ? special.state : posAt(cur);
 function isAI(side) { return !special && !ken && (settings.mode === 'watch' || (settings.mode === 'ai' && side !== game.human)); }
 function levelFor(side) { if (rgame) return rgame.lv; return settings.mode === 'watch' ? (side === 0 ? settings.level : settings.level2) : settings.level; }
 const atLatest = () => cur === lineLen();
-const myTurnHuman = () => { const st = curState(); return !special ? (atLatest() && !overNow() && !isAI(st.turn) && (!reviewing || ken)) : true; };
+const OL = () => settings.mode === 'online' && !special && !ken && typeof olMyTurn === 'function';   // an online game is on the board (online-ui.js)
+const myTurnHuman = () => { if (OL()) return olMyTurn(); const st = curState(); return !special ? (atLatest() && !overNow() && !isAI(st.turn) && (!reviewing || ken)) : true; };
 const curRoll = () => special ? (special.n != null ? { d: special.dice, n: special.n } : null) : ken ? ken.roll : (atLatest() ? game.roll : null);
 function setRoll(r) { if (special) { special.n = r ? r.n : null; special.dice = r ? r.d : null; } else if (ken) ken.roll = r; else game.roll = r; }
 
 // ====================================================================== save / load
 function save() {
+  if (settings.mode === 'online') { if (typeof olSaveLocal === 'function') olSaveLocal(); return; }   // (the online game is not saved here: the local one is kept)
   try {
     const d = { v: 1, settings, game: game && !special ? { rule: game.rule, first: game.first, human: game.human, plies: game.plies, roll: game.roll, undoLeft: game.undoLeft, end: game.end, id: game.id, mode: settings.mode, level: settings.level, level2: settings.level2 } : null, rgame };
     localStorage.setItem(STORE, JSON.stringify(d));
@@ -351,6 +353,7 @@ window.UrApp = {
 // ====================================================================== info panel
 function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].filter(p => p >= g).length; }
 function playerName(s) {
+  if (settings.mode === 'online' && typeof olPlayerName === 'function') return olPlayerName(s);
   if (settings.mode === 'pvp') return sideName(s);
   if (settings.mode === 'watch') return 'AI ' + LV(levelFor(s));
   return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
@@ -374,6 +377,7 @@ function renderInfo() {
   if (special) { msg = special.msg || ''; }
   else if (sta.over) { msg = t('st.over', { s: sideName(sta.winner) }); sub = t('res.why.' + (sta.why || 'home')); }
   else if (reviewing && !ken) { msg = t('st.viewing', { n: cur }); }
+  else if (OL() && olStatusMsg(st)) { msg = olStatusMsg(st); }
   else if (thinking || isAI(st.turn)) { msg = t('st.ai', { s: playerName(st.turn) }); }
   else if (!r) { msg = t('st.roll', { s: settings.mode === 'pvp' || ken ? sideName(st.turn) : t('you') }); sub = t('st.rollSub'); }
   else if (!r.n) { msg = t('st.zero'); }
@@ -407,7 +411,7 @@ function hbInfo() {
     h += `<span class="hb-chip">${esc(t('rule.' + game.rule))}</span>`;
     const sta = statusAt(cur);
     if (!sta.over) h += `<span class="hb-chip"><span class="pdisc p${st.turn}"></span>${esc(t('hb.turn', { s: playerName(st.turn) }))}${r ? ` · <b>${r.n}</b>` : ''}</span>`;
-    if (settings.eval && !rtLive()) { const w = lightWp(cur); h += `<span class="hb-chip">${esc(t('eval'))} <b>${Math.round(w * 100)}%</b> <small>${esc(sideName(0))}</small></span>`; }
+    if (settings.eval && !rtLive() && !olNoEval()) { const w = lightWp(cur); h += `<span class="hb-chip">${esc(t('eval'))} <b>${Math.round(w * 100)}%</b> <small>${esc(sideName(0))}</small></span>`; }
     if (rgame) h += `<span class="hb-chip">${esc(t('ng.rated'))} · ${esc(LV(rgame.lv))}</span>`;
   }
   HB.setInfo(h);
@@ -420,8 +424,9 @@ function lightWp(i) {
   if (evalCache.size > 5000) evalCache.clear();
   evalCache.set(k, w); return w;
 }
+const olNoEval = () => settings.mode === 'online' && typeof olLive === 'function' && olLive();   // no win chances while an online game runs
 function renderEval() {
-  const show = settings.eval && !rtLive();
+  const show = settings.eval && !rtLive() && !olNoEval();
   const w = show ? lightWp(cur) : .5;
   $('#evalFill').style.width = (w * 100).toFixed(1) + '%';
   $('#evalText').textContent = show ? `${sideName(0)} ${Math.round(w * 100)}% — ${sideName(1)} ${100 - Math.round(w * 100)}%` : '—';
@@ -429,7 +434,8 @@ function renderEval() {
 }
 function renderGraph() {
   const svg = $('#graph'); if (special) { svg.innerHTML = ''; return; }
-  const N = ken ? ken.base : lineLen(), W = 300, H = 74;   // (explore moves are not drawn) if (!settings.eval || rtLive()) { svg.innerHTML = ''; return; }
+  const N = ken ? ken.base : lineLen(), W = 300, H = 74;   // (explore moves are not drawn)
+  if (!settings.eval || rtLive() || olNoEval()) { svg.innerHTML = ''; return; }
   const pts = []; for (let i = 0; i <= N; i++) pts.push(lightWp(i));
   const x = i => N ? i / N * W : 0, y = v => (H - 4 - v * (H - 8)).toFixed(1);
   let d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v)}`).join('');
@@ -472,8 +478,9 @@ function recordText() {
 // ====================================================================== clock (1手30秒)
 let clockStart = 0, clockKey = '', clockHold = true;   // (a game restored on page load: the clock waits for the first move)
 const clockSec = () => rgame ? 30 : settings.clock;
-function clockOn() { return !special && !ken && clockSec() > 0 && settings.mode !== 'watch' && !overNow() && atLatest() && !reviewing && !isAI(curState().turn); }
+function clockOn() { return settings.mode !== 'online' && !special && !ken && clockSec() > 0 && settings.mode !== 'watch' && !overNow() && atLatest() && !reviewing && !isAI(curState().turn); }
 function renderClock() {
+  if (settings.mode === 'online' && typeof olClockRender === 'function') { olClockRender(); return; }
   for (const s of [0, 1]) $('#clk' + s).textContent = '';
   if (!clockOn()) { document.body.classList.remove('has-clk'); return; }
   document.body.classList.add('has-clk');
@@ -497,7 +504,8 @@ function update() { renderBoard(); renderInfo(); }
 function renderAll() { renderBoard(); renderInfo(); }
 async function doRoll() {
   if (!canRollNow()) return;
-  const st = curState(), r0 = E.rollDice(Math.random, st.rule), r = { d: r0.dice, n: r0.n };
+  const st = curState(), r0 = OL() ? null : E.rollDice(Math.random, st.rule), r = OL() ? olRoll() : { d: r0.dice, n: r0.n };   // online: the dice of both players' chains
+  if (!r) return;
   const tok = busyToken; animating = true; hintMove = null; renderInfo();
   snd('roll');
   await UrSkinHooks.animateRoll(r.d);
@@ -523,6 +531,7 @@ async function commit(m) {
   const st = curState(), r = curRoll(); if (!r || animating) return;
   const fm = m ? fullMove(st, m) : null;
   if (m && !fm) return;
+  if (OL() && !olRemote && !olSend(st, fm)) return;   // online: my move is written to the record (the other side's plies come with olRemote)
   const tok = ++busyToken; animating = true; hoverMove = null; hintMove = null; coachHover = null;
   renderBoard();
   if (fm) { await UrSkinHooks.animateMove(st.turn, fm.from, fm.to, { capture: fm.capture, speed: SPD() }); snd(fm.capture ? 'cap' : fm.finish ? 'home' : 'place'); }
@@ -630,6 +639,7 @@ function newGame(rated) {
   save(); relayout(); update(); afterPosition();
 }
 function onGameEnd() {
+  if (settings.mode === 'online') { renderInfo(); return; }   // (online-ui.js shows the result)
   const sta = statusAt(game.plies.length);
   if (!sta.over || gameOverShown || cur !== game.plies.length) { renderInfo(); return; }
   gameOverShown = true; game.roll = null; save();
@@ -679,7 +689,7 @@ function wpActive() { return settings.mode === 'watch' && !special && !!game; }
 function wpRender() { if (!window.WatchPause) return; const on = wpActive() && !overNow(); WatchPause.set($('#btnUndo'), on ? (wpPaused ? 'resume' : 'pause') : null, LANG); if (on) $('#btnUndo').disabled = false; }
 function wpToggle() { if (!wpActive() || overNow()) return; wpPaused = !wpPaused; if (wpPaused) { busyToken++; thinking = 0; renderInfo(); } else { cur = game.plies.length; reviewing = false; update(); afterPosition(); } }
 // ---- hint
-function canHint() { return !special && !ken && !!game && !rgame && atLatest() && !overNow() && myTurnHuman() && !animating; }
+function canHint() { return settings.mode !== 'online' && !special && !ken && !!game && !rgame && atLatest() && !overNow() && myTurnHuman() && !animating; }
 function hint() {
   if (!canHint()) return;
   const st = curState(), r = curRoll();
@@ -690,8 +700,9 @@ function hint() {
   toast(t('hint.best', { m: plyText(st, { s: st.turn, n: r.n, m: ev[0].move }, false), p: Math.round(ev[0].wp * 100) }), 2600);
 }
 // ---- resign
-function canResign() { return !special && !ken && !!game && !overNow() && game.plies.length > 0 && (settings.mode === 'ai' || settings.mode === 'pvp'); }
+function canResign() { if (settings.mode === 'online') return typeof olLive === 'function' && olLive(); return !special && !ken && !!game && !overNow() && game.plies.length > 0 && (settings.mode === 'ai' || settings.mode === 'pvp'); }
 function resign() {
+  if (settings.mode === 'online') { if (typeof olResignAsk === 'function') olResignAsk(); return; }
   if (!canResign()) return;
   const go = () => { busyToken++; thinking = 0; const loser = settings.mode === 'ai' ? game.human : curState().turn; game.end = { winner: 1 - loser, why: 'resign' }; game.roll = null; cur = game.plies.length; reviewing = false; save(); update(); onGameEnd(); };
   if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else if (confirm(t('resign.q'))) go();
@@ -900,16 +911,8 @@ function resumeWith() {
   if (reviewing) resumeHere(); else { gameOverShown = false; save(); relayout(); update(); afterPosition(); }
 }
 
-// ====================================================================== online (準備中)
-function mtab(v) {
-  document.body.classList.toggle('mtab-online', v === 'online');
-  $$('#mtabs button').forEach(b => b.classList.toggle('sel', b.dataset.t === v));
-}
-$('#mtabs').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b && !b.classList.contains('grc-tab')) mtab(b.dataset.t); });
-$('#olBack').onclick = () => mtab('game');
-$('#dkSoon').onclick = () => showOverlay('#olOverlay');
-$('#olClose').onclick = () => hideOverlay('#olOverlay');
-document.documentElement.classList.add('ol-dock');
+// ====================================================================== online: online.js (UrOnline) + online-ui.js (the dock / tab, the
+// lobby, the online game on this board); its hooks here are the settings.mode === 'online' branches
 
 // ====================================================================== layout
 let lastO = '', lastPC = null;
@@ -919,7 +922,7 @@ function relayout(force) {
   if (view && (o !== view.orient() || phone() !== view.notch() || force)) { view.setOrient(o, undefined, phone()); bindHover(); }
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
-  const me = game ? (settings.mode === 'ai' ? game.human : 0) : 0;
+  const me = game ? (settings.mode === 'ai' || settings.mode === 'online' ? game.human : 0) : 0;
   const ev = $('#evalCard'), rb = $('#reviewBar');
   // the review bar (ここから再開 / 最新の局面へ): PC — under the player cards (the status box is not shown there); else in the status box
   if (pc) { if (pl.parentElement !== col) { col.prepend(pl); pl.appendChild($('#pl0')); pl.appendChild($('#pl1')); col.appendChild(sb); } if (ev.parentElement !== col) col.appendChild(ev); }

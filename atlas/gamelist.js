@@ -126,12 +126,31 @@
   function sheetActions(bvi, t) {
     if (!bvi) return;
     const row = bvi.querySelector('.L .row'), hs = bvi.querySelector('.L .tags .hstag'), tags = bvi.querySelector('.L .tags');
+    // games played on their own page (no 3D board: only 「あそぶ」 on the right): ヒストリアを見る goes right under あそぶ, full width,
+    // on PC and phone alike (on phones it replaces the top-left pill there)
+    const play = bvi.querySelector('.R .act > a.btn.big'), solo = play && !bvi.querySelector('#bvStart, #bvFull, #bvTable');
+    const pill = document.getElementById('bvHist'), hasH = window.Historia && pill && pill.style.display !== 'none';
+    document.getElementById('bv') && document.getElementById('bv').classList.toggle('hsin', !!(solo && hasH));
+    if (solo) {
+      if (hs) hs.remove();
+      if (hasH && !bvi.querySelector('.hsplay')) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn big2 hsplay';
+        b.innerHTML = `<span class="hb-ic">${(pill.querySelector('.hb-ic') || {}).innerHTML || ''}</span><b>${(window.ATLAS_I18N && t ? t('gl.histSee') : '') || (pill.querySelector('b') || {}).textContent || 'Historia'}</b>`;
+        b.setAttribute('aria-label', pill.getAttribute('aria-label') || '');
+        b.onclick = () => pill.click();
+        play.parentNode.classList.add('act-hs'); play.after(b);
+      }
+      return sheetTags(tags);
+    }
     if (row && hs && !row.querySelector('.bvact')) {
       const act = document.createElement('div'), top = document.createElement('div'); act.className = 'bvact'; top.className = 'bvact-t';
       const rules = row.querySelector('#bvRules'), ring = row.querySelector('.ring');
       if (rules) top.appendChild(rules); if (ring) top.appendChild(ring);
       act.append(top, hs); row.appendChild(act);
     }
+    sheetTags(tags);
+  }
+  function sheetTags(tags) {
     if (tags && !tags.dataset.one && matchMedia('(min-width: 820px)').matches) {
       tags.dataset.one = '1'; tags.classList.add('one');
       const all = [...tags.children], more = document.createElement('button'); more.type = 'button'; more.className = 'tgmore';
