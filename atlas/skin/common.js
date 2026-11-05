@@ -145,7 +145,7 @@
     const MQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const de = document.documentElement, body = document.body, app = document.querySelector('.app'), side = app && app.querySelector(':scope > .side');
     if (!side) return;
-    const GAP = 24, MY = 16, MX = 20, VARS = P.vars || ['--cell'];
+    const GAP = 24, MY = 24, MX = 20, VARS = P.vars || ['--cell'];
     let K = null, model = null, busy = false, on = false, reT = 0;
     // refits asked for by remeasure() alone (no outside change in between) are capped: on some boards (shogi, morris, checkers) the
     // measured frame and the fit kept nudging each other by a fraction of a pixel — a refit (and redraw) every ~2 s, forever
@@ -202,6 +202,39 @@
     }
     const reviewBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].some(b => b.getClientRects().length);
     const want = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !reviewBox() && visible(model);
+    // 振り返り with the review box under the board (reversi, shogi…): the page lays the board, the column and the box out itself (its
+    // grid), sized for the flat board — the 3D frame reaching past it would slip under the portal bar or onto the box. So the board is
+    // shrunk until its 3D frame fits between the bar and the box with MY px to spare above and below, and moved down (with the column)
+    let rvOn = false;
+    const rvBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].find(b => b.getClientRects().length);
+    const wantRv = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !!rvBox() && visible(model);
+    function fitReview() {
+      const g = grp(), rb = rvBox(); if (!g || !rb) return;
+      busy = true;
+      try {
+        rvOn = true; unplace(); setVar(null);
+        const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
+        const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
+        const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
+        let s = pr.offsetWidth || 40; pr.remove();
+        const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
+        for (let i = 0; i < 8; i++) {
+          g.style.top = ''; side.style.top = '';
+          const F = frame(), room = rb.getBoundingClientRect().top - MY - top, need = F.b - F.t;
+          if (need > room + .5) { s = Math.max(8, s * room / need); setVar(s); continue; }
+          const dy = Math.max(0, top - F.t);   // down just enough to clear the bar (the box below has room: checked above)
+          if (dy > .3) { if (getComputedStyle(g).position === 'static') g.style.position = 'relative'; if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
+            g.style.top = (px(g, 'top') + dy) + 'px'; }
+          // the column: from the frame's top down to the box (it keeps all the room the box leaves it, so its cards are not squeezed)
+          const F2 = frame(), sr = side.getBoundingClientRect(), sy = F2.t - sr.top, sh = rb.getBoundingClientRect().top - MY - F2.t;
+          if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
+          if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
+          side.style.setProperty('height', sh + 'px', 'important'); side.style.setProperty('max-height', 'none', 'important'); side.style.setProperty('min-height', '0px', 'important');
+          { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }
+          break;
+        }
+      } finally { busy = false; }
+    }
     const setVar = v => VARS.forEach(k => { if (v == null) { de.style.removeProperty(k); body.style.removeProperty(k); } else { de.style.setProperty(k, v + 'px', 'important'); body.style.setProperty(k, v + 'px', 'important'); } });
     const frame = () => { const r = boardDom.getBoundingClientRect(), h = r.height; return { l: r.left - K.l * h, t: r.top - K.t * h, r: r.right + K.r * h, b: r.bottom + K.b * h }; };
     const extent = F => {
@@ -220,6 +253,8 @@
       if (busy) return;
       if (de.classList.contains('dock-anim')) { setTimeout(later, 150); return; }   // the dock's move first (headerbar.js), then the layout
       const key = innerWidth + 'x' + innerHeight; if (key !== fitKey) { fitKey = key; setTimeout(later, 350); setTimeout(later, 1200); }   // a new window size: once more when everything has settled
+      if (wantRv()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); } fitReview(); return; }
+      if (rvOn) { rvOn = false; setVar(null); unplace(); }
       if (!want()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); if (sideFitFn) sideFitFn(); } return; }
       const g = grp(); if (!g) return;
       busy = true;

@@ -276,6 +276,7 @@ html.atlas-backgammon:not(.atlas-2d) .frame{background:transparent!important;box
    the page's own sizing (app.js pcFit) counts a 56px header + 12px gaps, so the app starts right under the portal bar */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-backgammon:not(.rot):not(.atlas-land) .app{padding-top:68px!important}
+  html.atlas-backgammon.hb-atlas:not(.atlas-2d):not(.rot):not(.atlas-land) .app{padding-top:88px!important}   /* (24px under the portal bar: backgammon/app.js pcFit counts it) */
   html.atlas-backgammon.atlas-2d.hb-atlas:not(.rot):not(.atlas-land) .app{padding-top:4px!important}   /* the 2D board: under the 64px portal bar as the 2D page is under its 56px bar (+12px) */
 }
 html.atlas-bg3d #boardSvg{visibility:hidden}

@@ -71,6 +71,8 @@
   }
   const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); };
 
+  // the starting view: the whole world on wide screens; on phones (a tall, narrow box) the part of it that holds the pins
+  const home0 = () => box().w < 520 ? fit(games().map(home), 1.12) : fit([], 0);
   /* ---------- drawing ---------- */
   function draw() {
     if (!host || !host.isConnected || !el.map) return;
@@ -93,28 +95,58 @@
   }
   // pins: one per game at its home, pushed apart in screen space when they crowd (a short leader line keeps the true spot)
   function placePins() {
-    const v = view, b = box(), list = games(), S = b.w < 520 ? 38 : 46;
+    const v = view, b = box(), list = games(), S = b.w < 520 ? 34 : 46;
     const A = list.map(g => { const [x, y] = toU(home(g)); return { g, ax: sx(v, x), ay: sy(v, y) }; });
-    A.forEach(p => { p.x = p.ax; p.y = p.ay - S * .62; });
+    // crowded spots (three or more games within about a pin's width) become one bubble with the count; tapping it zooms in.
+    // The picked game always keeps its own pin.
+    const C = [], R2 = (S * 1.05) ** 2, free = A.filter(p => p.g.id !== sel);
+    free.sort((p, q) => p.ax - q.ax);
+    const used = new Set();
+    free.forEach(p => {
+      if (used.has(p)) return;
+      const grp = free.filter(q => !used.has(q) && (q.ax - p.ax) ** 2 + (q.ay - p.ay) ** 2 < R2);
+      if (grp.length < 3) return;
+      // grow once from the group's centre so the bubble takes its whole neighbourhood
+      const cx = grp.reduce((s, q) => s + q.ax, 0) / grp.length, cy = grp.reduce((s, q) => s + q.ay, 0) / grp.length;
+      const all = free.filter(q => !used.has(q) && (q.ax - cx) ** 2 + (q.ay - cy) ** 2 < R2 * 1.3);
+      all.forEach(q => { used.add(q); q.clu = C.length; });
+      C.push({ m: all, ax: all.reduce((s, q) => s + q.ax, 0) / all.length, ay: all.reduce((s, q) => s + q.ay, 0) / all.length });
+    });
+    const P = A.filter(p => p.clu == null).concat(C.map(c => ({ c, ax: c.ax, ay: c.ay })));
+    P.forEach(p => { p.x = p.ax; p.y = p.ay - S * .62; });
     for (let it = 0; it < 40; it++) {
-      for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) {
-        const p = A[i], q = A[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = S * .94;
+      for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+        const p = P[i], q = P[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = S * .94;
         if (d >= need) continue; if (d < .01) { dx = (i % 2 ? 1 : -1) * .7; dy = .7; d = 1; }
         const k = (need - d) / 2 / d; p.x -= dx * k; p.y -= dy * k; q.x += dx * k; q.y += dy * k;
       }
-      A.forEach(p => { p.x += (p.ax - p.x) * .04; p.y += (p.ay - S * .62 - p.y) * .04; });
+      P.forEach(p => { p.x += (p.ax - p.x) * .04; p.y += (p.ay - S * .62 - p.y) * .04; });
     }
+    // the bubbles
+    const cl = el.clu; while (cl.children.length > C.length) cl.lastChild.remove();
+    while (cl.children.length < C.length) { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'amclu'; cl.appendChild(bt); }
+    P.filter(p => p.c).forEach((p, k) => {
+      const bt = cl.children[k], m = p.c.m, key = m.map(q => q.g.id).join(',');
+      if (bt.dataset.k !== key) { bt.dataset.k = key; bt.innerHTML = m.slice(0, 2).map((q, i) => `<span class="ci i${i}" style="--c:${q.g.color}">${ctx.art(q.g)}</span>`).join('') + `<b>${m.length}</b>`;
+        bt.setAttribute('aria-label', m.map(q => ctx.gname(q.g)).join(', ')); bt.title = m.map(q => ctx.gname(q.g)).join(' · '); }
+      const dim = !!sel || (reg !== 'all' && m.every(q => regionOf(home(q.g)) !== reg));
+      bt.classList.toggle('dim', dim);
+      bt.style.transform = `translate(${(p.x - S / 2).toFixed(1)}px,${(p.y - S / 2).toFixed(1)}px)`;
+      bt._pts = m.map(q => home(q.g));
+    });
+    A.forEach(p => { if (p.clu == null) return; const e = el.pins.querySelector(`[data-g="${p.g.id}"]`); if (e) e.style.visibility = 'hidden'; });
+    { const keep = P.filter(p => !p.c); A.length = 0; keep.forEach(p => A.push(p)); }
     let lines = '';
     A.forEach(p => {
       const e = el.pins.querySelector(`[data-g="${p.g.id}"]`); if (!e) return;
       const out = p.x < -S || p.x > b.w + S || p.y < -S || p.y > b.h + S;
       e.style.transform = `translate(${(p.x - S / 2).toFixed(1)}px,${(p.y - S / 2).toFixed(1)}px)`; e.style.visibility = out ? 'hidden' : '';
-      const dim = reg !== 'all' && regionOf(home(p.g)) !== reg;
+      const dim = (reg !== 'all' && regionOf(home(p.g)) !== reg) || (!!sel && sel !== p.g.id);
       e.classList.toggle('dim', dim && sel !== p.g.id); e.classList.toggle('on', sel === p.g.id);
       if (!out) lines += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${(p.y + S * .42).toFixed(1)}" class="${dim ? 'dim' : ''}"/><circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="3" class="${dim ? 'dim' : ''}" style="--c:${p.g.color}"/>`;
     });
     el.svg.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`);
-    const R = routeSvg(A.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
+    const R = routeSvg(P.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
     el.svg.innerHTML = R.under + `<g class="lead">${lines}</g>`;
     el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over;
   }
@@ -173,6 +205,8 @@
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
   }
+  // a bubble: fly in until its games stand apart (at least twice as close)
+  function openClu(pts) { const f = fit(pts, 2.2); fly(f.z > view.z * 1.6 ? f : { ...f, z: view.z * 2.4, x: f.x, y: f.y }); }
   function select(id, flyTo = true) {
     sel = id; info(); renderList();
     if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35)); } else redraw();
@@ -184,7 +218,7 @@
     reg = k; if (sel && k !== 'all' && regionOf(home(ctx.games.find(g => g.id === sel))) !== k) { sel = null; info(); }
     renderChips(); renderList();
     const pts = games().filter(g => k === 'all' || regionOf(home(g)) === k).map(home);
-    fly(k === 'all' ? fit([], 0) : fit(pts, 1.25));
+    fly(k === 'all' ? home0() : fit(pts, 1.25));
   }
 
   /* ---------- chips + list ---------- */
@@ -227,7 +261,7 @@
     });
     const up = e => {
       if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); m.classList.remove('grab');
-      if (moved <= 4 && !pts.size) { const p = e.target.closest && e.target.closest('.ampin'); if (p) select(p.dataset.g === sel ? null : p.dataset.g, p.dataset.g !== sel); }
+      if (moved <= 4 && !pts.size) { const c = e.target.closest && e.target.closest('.amclu'); if (c && c._pts) { openClu(c._pts); } const p = e.target.closest && e.target.closest('.ampin'); if (p) select(p.dataset.g === sel ? null : p.dataset.g, p.dataset.g !== sel); }
       if (!pts.size) st = null; else { const a = [...pts.values()]; st = { v: { ...view }, a, d: 0 }; }
     };
     m.addEventListener('pointerup', up); m.addEventListener('pointercancel', up);
@@ -242,7 +276,7 @@
     });
     el.zoom.querySelector('[data-z="in"]').onclick = () => { const b = box(); fly(zoomAt(b.w / 2, b.h / 2, 1.7), 320); };
     el.zoom.querySelector('[data-z="out"]').onclick = () => { const b = box(); fly(zoomAt(b.w / 2, b.h / 2, 1 / 1.7), 320); };
-    el.zoom.querySelector('[data-z="all"]').onclick = () => { sel = null; info(); renderList(); reg = 'all'; renderChips(); renderList(); fly(fit([], 0)); };
+    el.zoom.querySelector('[data-z="all"]').onclick = () => { sel = null; info(); renderList(); reg = 'all'; renderChips(); renderList(); fly(home0()); };
   }
 
   /* ---------- arrow keys: move the selection to the nearest game in that direction (on the map, by the pins' true spots) ---------- */
@@ -280,12 +314,12 @@
       host = sec;
       sec.innerHTML = `<div class="amhead"><h2 class="h" id="amTtl"></h2><p class="amsub" id="amSub"></p></div>
         <div class="chips cats amreg" id="amReg"></div>
-        <div class="amwrap"><div class="card ammap" id="amMap" dir="ltr" tabindex="0"><canvas></canvas><svg class="amsvg" aria-hidden="true"></svg><div class="ampins"></div><svg class="amsvg amsvg2" aria-hidden="true"></svg>
+        <div class="amwrap"><div class="card ammap" id="amMap" dir="ltr" tabindex="0"><canvas></canvas><svg class="amsvg" aria-hidden="true"></svg><div class="ampins"></div><div class="amclus"></div><svg class="amsvg amsvg2" aria-hidden="true"></svg>
           <div class="amzoom"><button type="button" data-z="in" aria-label="+">+</button><button type="button" data-z="out" aria-label="−">−</button><button type="button" data-z="all"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></svg></button></div>
           <p class="amhint" id="amHint"></p><p class="amload" id="amLoad"></p></div>
           <aside class="card aminfo" id="amInfo" aria-live="polite"></aside></div>
         <div class="amlist" id="amList"></div>`;
-      el = { map: sec.querySelector('#amMap'), cv: sec.querySelector('#amMap canvas'), svg: sec.querySelector('.amsvg'), svg2: sec.querySelector('.amsvg2'), pins: sec.querySelector('.ampins'), zoom: sec.querySelector('.amzoom'),
+      el = { map: sec.querySelector('#amMap'), cv: sec.querySelector('#amMap canvas'), svg: sec.querySelector('.amsvg'), svg2: sec.querySelector('.amsvg2'), pins: sec.querySelector('.ampins'), clu: sec.querySelector('.amclus'), zoom: sec.querySelector('.amzoom'),
         info: sec.querySelector('#amInfo'), chips: sec.querySelector('#amReg'), list: sec.querySelector('#amList') };
       bind();
       if (ro) ro.disconnect(); ro = new ResizeObserver(() => { if (view) { view = clamp(view); draw(); } }); ro.observe(el.map);
@@ -296,7 +330,7 @@
     ensure().then(() => {
       if (!host || !host.isConnected) return; ld.hidden = true;
       el.pins.innerHTML = games().map(g => `<button type="button" class="ampin" data-g="${g.id}" style="--c:${g.color}" aria-label="${esc(ctx.gname(g))}" title="${esc(ctx.gname(g))}">${ctx.art(g)}</button>`).join('');
-      if (!view) { view = fit([], 0); }
+      if (!view) { view = home0(); }
       view = clamp(view); renderChips(); renderList(); info(); draw();
       if (!fineP) fineP = load('historia/map-fine.js?v=6').then(redraw);
     });

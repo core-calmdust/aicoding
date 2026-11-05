@@ -1537,7 +1537,9 @@ const mqLand = matchMedia('(min-aspect-ratio: 1/1)');
 const landPhone = () => mqLand.matches && !mqPCW.matches;   // the phone landscape layout (phones, tablets, small PC windows)
 let PCW = false;
 function pcFit() {
-  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? 56 : 0;
+  // (the 3D board in the portal: its 64px bar, plus room above the case and below the info — 24px over, 16px under)
+  const de = document.documentElement, p3d = de.classList.contains('hb-atlas') && !de.classList.contains('atlas-2d');
+  const w = innerWidth, hgt = innerHeight, hb = (HB && HB.on) ? (p3d ? 104 : 56) : 0;
   const dfx = (window.DockFit && DockFit.extra) || 0;   // the opened online dock leaves less room (shared/headerbar.js)
   const px = w < 1300 ? 16 : 24;   // (= the CSS --px)
   const H = hgt - hb, B = document.body.classList;
