@@ -4124,8 +4124,22 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
     renderCtx.restore();
 }
 
-function drawTitleTextMorph(renderCtx, x, y, font, color) {
-    const originalText = 'outburst+';
+// タイトルのロゴ画像（白一色の画像を読み込み、COMET は白・OUTBURST+ はテーマ色に塗り分けた絵をテーマごとに作っておく）
+const titleLogoImg = new Image(); titleLogoImg.src = 'title-logo.png?v=1';
+const TITLE_LOGO_SPLIT = 0.743; // 画像の上から何割で COMET と OUTBURST+ を分けるか
+let titleLogoCache = null;
+function titleLogoCanvas(theme) {
+    if (!titleLogoImg.complete || !titleLogoImg.naturalWidth) return null;
+    const key = theme.ui;
+    if (titleLogoCache && titleLogoCache.key === key) return titleLogoCache.c;
+    const c = document.createElement('canvas'); c.width = titleLogoImg.naturalWidth; c.height = titleLogoImg.naturalHeight;
+    const g = c.getContext('2d'); g.drawImage(titleLogoImg, 0, 0); g.globalCompositeOperation = 'source-in';
+    const sy = Math.round(c.height * TITLE_LOGO_SPLIT);
+    const gr = g.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, '#ffffff'); gr.addColorStop(sy / c.height, '#ffffff'); gr.addColorStop(sy / c.height + 0.001, theme.ui); gr.addColorStop(1, theme.ui);
+    g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height); // source-in は塗った範囲の外を消すので、1回の塗りで上下を塗り分ける
+    titleLogoCache = { key, c }; return c;
+}
+function drawTitleTextMorph(renderCtx, x, y, font, color, originalText = 'outburst+', expand = 2) {
     const chars = "!?#$@%&<>*=/+abcdefghijklmnopqrstuvwxyz0123456789";
     const now = uiTime; // 画面のフレームクロック（実時刻だと表示の刻みとずれる）
     const cycle = 2000; // 2秒周期
@@ -4142,13 +4156,13 @@ function drawTitleTextMorph(renderCtx, x, y, font, color) {
         if (animProgress > 0.8) {
             // 最後の0.2秒で収束
             const convergeProgress = (animProgress - 0.8) / 0.2; // 0.0 ~ 1.0
-            const len = originalText.length + Math.round(originalText.length * (1 - convergeProgress));
+            const len = originalText.length + Math.round(originalText.length * (expand - 1) * (1 - convergeProgress));
             for(let i = 0; i < len; i++) {
                 textToShow += chars[Math.floor(Math.random() * chars.length)];
             }
         } else {
             // 最初の0.8秒は倍の長さ
-            const expandedLength = originalText.length * 2;
+            const expandedLength = Math.round(originalText.length * expand);
             for(let i = 0; i < expandedLength; i++) {
                 textToShow += chars[Math.floor(Math.random() * chars.length)];
             }
@@ -8575,13 +8589,17 @@ function draw() {
         renderCtx.textBaseline = 'alphabetic';
         // ロゴ: Rez風の細い小文字ロゴ
         if (hasLS) renderCtx.letterSpacing = IS_MOBILE ? '12px' : '34px';
-        renderCtx.font = `300 112px ${config.logoFontFamily}`;
-        drawWithGlow(renderCtx, () => {
-            renderCtx.fillStyle = '#ffffff';
-            renderCtx.fillText('comet', cx + (IS_MOBILE ? 6 : 17), 196);
-        }, theme.player, true);
-        if (hasLS) renderCtx.letterSpacing = IS_MOBILE ? '10px' : '22px';
-        drawTitleTextMorph(renderCtx, cx + (IS_MOBILE ? 5 : 11), 248, `300 26px ${config.logoFontFamily}`, theme.ui);
+        const logo = titleLogoCanvas(theme);
+        if (logo) { // ロゴ画像: COMET は白、OUTBURST+ はテーマ色。テーマ色の光をにじませる
+            const asp = logo.width / logo.height, LW = Math.min(150 * asp, tMaxW * 0.8), LH = LW / asp, lx = cx - LW / 2, ly = 252 - LH; // 下端を区切り線の少し上にそろえる。スマホは幅に収める
+            renderCtx.save(); renderCtx.shadowColor = theme.player; renderCtx.shadowBlur = 18 + Math.sin(frameCount * 0.05) * 4;
+            renderCtx.drawImage(logo, lx, ly, LW, LH); renderCtx.shadowBlur = 0; renderCtx.drawImage(logo, lx, ly, LW, LH); renderCtx.restore();
+        } else { // 画像の読み込み前は文字で
+            renderCtx.font = `300 112px ${config.logoFontFamily}`;
+            drawWithGlow(renderCtx, () => { renderCtx.fillStyle = '#ffffff'; renderCtx.fillText('comet', cx + (IS_MOBILE ? 6 : 17), 196); }, theme.player, true);
+            if (hasLS) renderCtx.letterSpacing = IS_MOBILE ? '10px' : '22px';
+            renderCtx.font = `300 26px ${config.logoFontFamily}`; renderCtx.fillStyle = theme.ui; renderCtx.fillText('outburst+', cx + (IS_MOBILE ? 5 : 11), 248);
+        }
         renderCtx.strokeStyle = 'rgba(255,255,255,0.55)';
         renderCtx.lineWidth = 1;
         renderCtx.beginPath();
@@ -8589,13 +8607,14 @@ function draw() {
         renderCtx.moveTo(cx - lw, 266); renderCtx.lineTo(cx + lw, 266);
         renderCtx.stroke();
         if (hasLS) renderCtx.letterSpacing = '12px';
-        renderCtx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         renderCtx.font = `400 12px ${config.fontFamily}`;
-        if (originMode) { // ORIGIN版は beta 2 の横にピンクで添える
-            const t1 = '3d edition · beta 2 · ', t2 = 'origin', w1 = renderCtx.measureText(t1).width, w2 = renderCtx.measureText(t2).width, al = renderCtx.textAlign;
+        { // 3d edition · beta 2 に文字が崩れて戻るエフェクト（以前は outburst+ にかけていたもの）。ORIGIN版は横にピンクで添える
+            const t1 = '3d edition · beta 2', t2 = originMode ? ' · origin' : '', w1 = renderCtx.measureText(t1).width, w2 = t2 ? renderCtx.measureText(t2).width : 0, al = renderCtx.textAlign;
             renderCtx.textAlign = 'left'; const x0 = cx + 6 - (w1 + w2) / 2;
-            renderCtx.fillText(t1, x0, 290); renderCtx.fillStyle = '#ff5ad8'; renderCtx.fillText(t2, x0 + w1, 290); renderCtx.textAlign = al;
-        } else renderCtx.fillText('3d edition · beta 2', cx + 6, 290);
+            drawTitleTextMorph(renderCtx, x0, 290, `400 12px ${config.fontFamily}`, 'rgba(255, 255, 255, 0.7)', t1, 1); // 崩れても文字数は同じ（はみ出さない）
+            if (t2) { renderCtx.fillStyle = '#ff5ad8'; renderCtx.fillText(t2, x0 + w1, 290); }
+            renderCtx.textAlign = al;
+        }
 
         // メニュー
         const menuY = 344, menuGap = 42;
