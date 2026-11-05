@@ -1013,6 +1013,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .reserve .rsv-w{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:500;letter-spacing:.04em}
 /* new-game ゲーム tab: no plain ルール label (the ルール button on every card comes from shared/ngtabs.js) */
 #fRules > label{display:none}
+/* four rule cards in two rows: a shorter picture so both rows (and their ルール buttons) fit the luxury dialog */
+#newOverlay #ruleCards .ngt-gcard .gart{min-height:0!important;height:clamp(84px, calc(var(--vh, 100vh) * .13), 118px)!important;padding:6px 0!important}
+#newOverlay #ruleCards .ngt-gcard .gart svg{height:100%!important;width:auto!important;max-height:none!important}
+#newOverlay #ruleCards .ngt-gcard{padding-bottom:44px}
 .tour-vars{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
 .tour-vars figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
 .tour-vars svg{width:100%!important;height:auto!important;max-width:100%}
@@ -1390,6 +1394,7 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
 <script src="../shared/infotabs.js?v=16" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=25"></script>
+<script src="../shared/nglux.js?v=13"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 <script src="../shared/rulelink.js?v=1"></script>
