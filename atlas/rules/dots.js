@@ -141,7 +141,7 @@
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .005); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(C.destination); o.start(t); o.stop(t + dur + .02);
     }
     const chime = () => [659.25, 880, 1318.5].forEach((f, i) => tone(f, 0, .45, .08, 'triangle', i * .07));
-    const box = () => [523.25, 783.99].forEach((f, i) => tone(f, 0, .35, .07, 'triangle', i * .07));
+    const box = (n = 1) => { const r = Math.pow(2, Math.min(n - 1, 8) * 2 / 12); [523.25, 783.99].forEach((f, i) => tone(f * r, 0, .35, .07, 'triangle', i * .07)); };   // n: boxes in a row → a whole tone higher each
     const blip = () => { const f = 520 + Math.random() * 240; tone(f, f * (Math.random() < .5 ? 1.25 : .82), .06, .06, 'triangle'); };
     const boop = () => tone(320, 200, .14, .08, 'triangle');
     return { chime, box, blip, boop, get on() { return on; }, toggle() { on = !on; try { localStorage.setItem('atlas-sfx', on ? '1' : '0'); } catch (e) {} if (on) ac(); return on; } };
@@ -180,6 +180,7 @@
     const redraw = () => K.redraw(by, owner, score);
 
     /* ---------- one line, drawn by a pen; returns the boxes it closed (−1: cut short) ---------- */
+    let combo = 0, comboPl = -1;   // boxes taken in a row (the chime climbs with it)
     async function line(e, pl) {
       const my = tok, ok = await K.drawLine(e, pl, () => my === tok && !stopped);
       if (!ok || stopped || my !== tok) return -1;
@@ -187,7 +188,7 @@
       by[e] = pl; K.ribbon.visible = false;
       cl.forEach(bx => { owner[bx] = pl; score[pl]++; });
       redraw();
-      if (cl.length) { cl.forEach(bx => K.flash(bx, pl)); SFX.box(); }
+      if (!cl.length) combo = 0; else { if (comboPl !== pl) combo = 0; comboPl = pl; combo += cl.length; cl.forEach(bx => K.flash(bx, pl)); SFX.box(combo); }
       return cl.length;
     }
 
@@ -228,7 +229,7 @@
       redraw();
     }
     function go(n, keepSay) {
-      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; got = 0; phase = ''; tok++;
+      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; got = 0; phase = ''; tok++; combo = 0;
       timers.forEach(clearTimeout); timers = [];
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
       K.ribbon.visible = false; K.markEdge(K.preview, -1); K.penHome(0); K.penHome(1);
