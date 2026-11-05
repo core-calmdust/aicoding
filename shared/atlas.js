@@ -70,7 +70,7 @@
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا') },
     { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2', 'backgammon-online-name'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 23 },
       name: N('バックギャモン V2', 'Backgammon V2', '西洋双陆棋 V2', '백개먼 V2', 'Backgammon V2', 'Backgammon V2', 'Gamão V2', 'Backgammon V2', 'बैकगैमन V2', 'طاولة الزهر V2') },
-    { id: 'ur', cat: 'hist', also: ['race'], store: ['aicoding-ur'], href: 'ur/', color: '#2a3f9e', released: '2026-11-04', tags: ['classic', 'ai', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: {},
+    { id: 'ur', cat: 'hist', also: ['race'], store: ['aicoding-ur', 'ur-online-name'], href: 'ur/', color: '#2a3f9e', released: '2026-11-04', tags: ['classic', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: {},
       name: N('ウル王朝のゲーム', 'The Royal Game of Ur', '乌尔王族局戏', '우르 왕실 게임', 'El Juego Real de Ur', 'Le Jeu royal d’Ur', 'O Jogo Real de Ur', 'Das Königliche Spiel von Ur', 'उर का शाही खेल', 'لعبة أور الملكية') },
     { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة') },

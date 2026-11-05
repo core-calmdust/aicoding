@@ -39,7 +39,8 @@ PRES_GONE = 300000      # presence: t older than this = owner gone
 # time control; tcs = {key: (main, byo, inc)}; legacy_byo = per-move limit of records without a time control (None: none);
 # free = free seconds per action (backgammon delay); extra immutable primitive fields; draw / abandon = statuses offered;
 # hist = players/<uid>/hist entries; moves_max = max length of the move record;
-# nt = the record names the player to move next (games with extra turns: turn order and timeout / abandon claims follow it).
+# nt = the record names the player to move next (games with extra turns: turn order and timeout / abandon claims follow it);
+# dkey = sync/<uid>/k holds the player's private dice key (games with commit–reveal dice).
 GAMES = {
     'reversi': dict(first='b', alt=False, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0)},
                     legacy_byo=90000, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
@@ -91,6 +92,12 @@ GAMES = {
     'agon': dict(first='b', alt=True, tckey='tc', tcs={'std': (420000, 0, 5000), 'place': (480000, 0, 5000)},
                  legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                  variant=('v', ['std', 'place'])),
+    # Royal Game of Ur: own project "ur-multiplay"; v = tc = 'finkel' / 'blitz' / 'masters'; b = Light (moves first). Extra turns
+    # (rosettes, blitz captures) and the dice commit–reveal tokens (the side not to move reveals first): nt names the next writer;
+    # every action has 30 s (free) and no reserve; dkey: sync/<uid>/k keeps the private dice key (as backgammon)
+    'ur': dict(first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'finkel': (0, 0, 0), 'blitz': (0, 0, 0), 'masters': (0, 0, 0)},
+               legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
+               variant=('v', ['finkel', 'blitz', 'masters'])),
     # Alquerque: in the Fanorona project under the node alq/ (its own players / ratings / lobby / games; the page reuses the
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
     'alquerque': dict(host=('fanorona', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
@@ -473,7 +480,7 @@ def build(name, P):
             '.validate': "newData.hasChildren(['d', 't']) && newData.child('d').isString() && newData.child('d').val().length <= 400000 && newData.child('t').isNumber()",
         },
     }
-    if P['bg']:
+    if P['bg'] or P.get('dkey'):
         sync['$uid']['k'] = {'.validate': 'newData.isString() && newData.val().length <= 64'}
     return {'rules': {
         'secv': {'.read': 'auth != null'},          # probe: readable only under these rules (the client switches to the secure protocol)
