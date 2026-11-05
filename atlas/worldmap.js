@@ -8,8 +8,8 @@
   'use strict';
   const V = 1;
   const UI = {
-    ja: { hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
-    en: { hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },
+    ja: { hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
+    en: { hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },
     zh: { hist: '历史', title: '地图', sub: '每款游戏诞生在世界的哪里？点击图钉，追寻它的旅程。', all: '全部', asia: '亚洲', europe: '欧洲', mea: '中东・非洲', americas: '美洲', play: '开始', born: '发源地', era: '年代', route: '游戏之旅', hint: '拖动移动・滚轮／双指缩放', pick: '选择图钉，这里会显示游戏的故事', reset: '显示全图', n: '{n}款', load: '正在展开地图…' },
     ko: { hist: '히스토리아', title: '지도', sub: '각 게임은 세계 어디에서 태어났을까요? 핀을 누르면 그 게임의 여정을 따라갈 수 있어요.', all: '전체', asia: '아시아', europe: '유럽', mea: '중동・아프리카', americas: '아메리카', play: '플레이', born: '발상지', era: '연대', route: '게임의 여정', hint: '드래그로 이동・휠／핀치로 확대', pick: '핀을 고르면 여기에 게임 이야기가 나와요', reset: '전체 보기', n: '{n}개', load: '지도를 펼치는 중…' },
     es: { hist: 'Historia', title: 'Atlas', sub: '¿En qué parte del mundo nació cada juego? Toca un pin para seguir su viaje.', all: 'Todo', asia: 'Asia', europe: 'Europa', mea: 'Oriente Medio y África', americas: 'América', play: 'Jugar', born: 'Origen', era: 'Época', route: 'Su viaje', hint: 'Arrastra para mover · rueda / pellizca para ampliar', pick: 'Elige un pin para leer la historia del juego', reset: 'Todo el mundo', n: '{n} juegos', load: 'Desplegando el mapa…' },
@@ -136,7 +136,7 @@
     if (!g || !d) { el.info.innerHTML = `<div class="amempty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><p>${esc(u('pick'))}</p></div>`; return; }
     const pins = pick(d.pn, lang) || [], order = d.p.map((_, i) => i);
     el.info.innerHTML = `<div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
-      <div class="amfacts"><span><i>${esc(u('born'))}</i>${esc(pins[d.h] || '')}</span><span><i>${esc(u('era'))}</i>${esc(pick(d.era, lang))}</span></div>
+      <div class="amfacts"><span><i>${esc(u('born'))}</i><b>${esc(pins[d.h] || '')}</b></span><span><i>${esc(u('era'))}</i><b>${esc(pick(d.era, lang))}</b></span></div>
       <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p></div>
       ${pins.length > 1 ? `<div class="amjour"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}">${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
       <div class="amacts"><button type="button" class="btn amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(u('play'))}</button>
@@ -202,19 +202,45 @@
     m.addEventListener('pointerup', up); m.addEventListener('pointercancel', up);
     m.addEventListener('wheel', e => { e.preventDefault(); cancelAnimationFrame(anim); const [x, y] = at(e); view = zoomAt(x, y, Math.exp(-e.deltaY * .0016)); redraw(); }, { passive: false });
     m.addEventListener('dblclick', e => { if (e.target.closest('.ampin,.amzoom')) return; const [x, y] = at(e); fly(zoomAt(x, y, 2), 380); });
-    // keyboard: pins are buttons (Enter selects); arrows pan, +/- zoom when the map has focus
+    // keyboard: +/- zoom while the map has focus (arrow keys pick pins: see the document listener below)
     m.addEventListener('keydown', e => {
-      const k = e.key, b = box(), st2 = 60 / view.z;
+      const k = e.key, b = box();
       if (k === 'Enter' && e.target.closest('.ampin')) { const id = e.target.closest('.ampin').dataset.g; select(id === sel ? null : id, id !== sel); e.preventDefault(); return; }
-      const mv = { ArrowLeft: [-st2, 0], ArrowRight: [st2, 0], ArrowUp: [0, -st2], ArrowDown: [0, st2] }[k];
-      if (mv) { view = clamp({ ...view, x: view.x + mv[0], y: view.y + mv[1] }); redraw(); e.preventDefault(); }
-      else if (k === '+' || k === '=') { fly(zoomAt(b.w / 2, b.h / 2, 1.6), 260); e.preventDefault(); }
+      if (k === '+' || k === '=') { fly(zoomAt(b.w / 2, b.h / 2, 1.6), 260); e.preventDefault(); }
       else if (k === '-') { fly(zoomAt(b.w / 2, b.h / 2, 1 / 1.6), 260); e.preventDefault(); }
     });
     el.zoom.querySelector('[data-z="in"]').onclick = () => { const b = box(); fly(zoomAt(b.w / 2, b.h / 2, 1.7), 320); };
     el.zoom.querySelector('[data-z="out"]').onclick = () => { const b = box(); fly(zoomAt(b.w / 2, b.h / 2, 1 / 1.7), 320); };
     el.zoom.querySelector('[data-z="all"]').onclick = () => { sel = null; info(); renderList(); reg = 'all'; renderChips(); renderList(); fly(fit([], 0)); };
   }
+
+  /* ---------- arrow keys: move the selection to the nearest game in that direction (on the map, by the pins' true spots) ---------- */
+  function stepSel(dx, dy) {
+    const list = games().filter(g => reg === 'all' || regionOf(home(g)) === reg); if (!list.length) return;
+    const at = g => toU(home(g));
+    if (!sel || !list.some(g => g.id === sel)) {
+      // nothing picked yet: start from the game nearest the middle of what is on screen
+      const c = [view.x, view.y]; list.sort((a, b) => Math.hypot(at(a)[0] - c[0], at(a)[1] - c[1]) - Math.hypot(at(b)[0] - c[0], at(b)[1] - c[1])); select(list[0].id); return;
+    }
+    const p = at(list.find(g => g.id === sel)); let best = null, bs = Infinity;
+    list.forEach(g => { if (g.id === sel) return; const q = at(g), vx = q[0] - p[0], vy = q[1] - p[1], along = vx * dx + vy * dy;
+      if (along <= 0.01) return; const side = Math.abs(vx * dy - vy * dx), s = along + side * 2.2;
+      if (s < bs) { bs = s; best = g; } });
+    if (!best) {   // nothing further that way: the same spot (shared city) counts, in list order
+      const same = list.filter(g => g.id !== sel && Math.hypot(at(g)[0] - p[0], at(g)[1] - p[1]) < .01); if (same.length && (dx > 0 || dy > 0)) best = same[0];
+    }
+    if (best) select(best.id);
+  }
+  document.addEventListener('keydown', e => {
+    if (!host || !host.isConnected || !host.classList.contains('on') || !el.map) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+    const bv = document.getElementById('bv'); if ((bv && bv.classList.contains('on')) || (window.Historia && Historia.on)) return;
+    const t = e.target; if (t && (t.closest('input,textarea,select,[contenteditable]') || (t.closest('.ov') && t.closest('.ov').classList.contains('on')))) return;
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (d) { e.preventDefault(); stepSel(d[0], d[1]); return; }
+    if (e.key === 'Enter' && sel && !(t && t.closest('button,a'))) { e.preventDefault(); const b = el.info.querySelector('.amplay'); if (b) b.click(); }
+    else if (e.key === 'Escape' && sel) { select(null, false); }
+  });
 
   /* ---------- entry ---------- */
   function render(sec, c) {

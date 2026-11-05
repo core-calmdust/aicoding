@@ -37,15 +37,27 @@
 .amload[hidden]{display:none}
 .aminfo{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
 .amwrap>.aminfo{min-height:0;box-sizing:border-box;height:var(--amH,300px)}   /* fixed size: the map never shifts when a game is picked */
-/* PC: the card sits under the full-width map in one row — game / story / journey / play */
+/* PC: one fixed-height row under the map, three columns split by hairlines —
+   left: the game (icon + name) with 発祥 / 年代 always as two label/value rows · middle: story on top, journey on the bottom · right: 遊ぶ over ヒストリア */
 @media (min-width:820px){
-  .aminfo{display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) auto;grid-template-areas:"top story play" "facts story play" "facts jour play";column-gap:22px;row-gap:8px;align-items:start;padding:16px 20px;--amH:196px;grid-template-rows:auto auto 1fr}
+  .aminfo{--amH:196px;display:grid;grid-template-columns:280px minmax(0,1fr) 190px;grid-template-rows:auto 1fr;grid-template-areas:"top story acts" "facts jour acts";column-gap:0;row-gap:0;padding:16px 0}
+  .aminfo .amfacts,.aminfo .amjour{padding-top:10px}
+  .aminfo>*{padding-inline:22px;min-width:0}
+  .aminfo .amtop{grid-area:top}
+  .aminfo .amtop b{font-size:19px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .aminfo .amfacts{grid-area:facts;align-self:end;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center}
+  .aminfo .amfacts span{display:contents}
+  .aminfo .amfacts i{justify-self:stretch;text-align:center;padding:3px 10px;background:#f6eedb}
+  .aminfo .amfacts span b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aminfo .amstory,.aminfo .amjour,.aminfo .amacts{border-inline-start:2px solid var(--line)}
+  .aminfo .amstory{grid-area:story}
+  .aminfo .amstory h3{margin:0 0 4px}
   .aminfo .amd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-  .aminfo .amtop{grid-area:top}.aminfo .amfacts{grid-area:facts;align-self:start}
-  .aminfo .amstory{grid-area:story;min-width:0}.aminfo .amjour{grid-area:jour;min-width:0}
-  .aminfo .amacts{grid-area:play;grid-row:1/-1;align-self:center;display:flex;flex-direction:column;gap:10px;min-width:160px}
-  .aminfo .amplay{margin:0}
-  .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;align-self:center;padding:0;display:flex;align-items:center;justify-content:center;gap:10px}
+  .aminfo .amjour{grid-area:jour;display:flex;flex-direction:column;justify-content:flex-end}
+  .aminfo .amjour div{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+  .aminfo .amjour div::-webkit-scrollbar{display:none}
+  .aminfo .amacts{grid-area:acts;grid-row:1/-1;margin:0;display:flex;flex-direction:column;justify-content:center;gap:10px}
+  .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;border:0;align-self:center;padding:0;display:flex;align-items:center;justify-content:center;gap:10px}
   .aminfo .amempty svg{width:30px;height:30px}.aminfo .amempty p{margin:0}
 }
 .amempty{margin:auto;padding:20px 0;text-align:center;color:var(--ink2);font-weight:700}
