@@ -143,6 +143,74 @@
     gem: () => gem(0x3cb4ff, 1.6), gem2: () => gem(0xff5d8f, 1.6),
     tile: () => numTile(7, 1.3, '#ffffff', '#ff5d8f'),
     bgChecker: () => at(checker(0x5a2a1a, 1.2), 0, 0, 0, -.3, 0, .2),
+    // the newer games' signature pieces (2026-11): same toy look as above
+    xq: () => at(xqPiece('帥', true, 1.3), 0, 0, 0, .5, 0, .15),
+    taflKing: () => taflPiece(0xf2e6cc, 1.3, true),
+    gzhel: () => at(gzhelPiece(true, 1.3), 0, 0, 0, .55, 0, -.2),
+    gzhelB: () => at(gzhelPiece(false, 1.2), 0, 0, 0, .5, 0, .25),
+    king: () => {   // checkers: two stacked red checkers with a gold crown
+      const k = new T.Group(); k.add(at(checker(0xc8202a, 1), 0, 0, 0)); k.add(at(checker(0xc8202a, 1), 0, .3, 0));
+      const gold = gloss(0xf2c94c), band = mesh(new T.CylinderGeometry(.3, .32, .14, 32, 1, true), gold); band.position.y = .66; k.add(band);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, c = mesh(new T.ConeGeometry(.075, .2, 12), gold); c.position.set(Math.cos(a) * .3, .82, Math.sin(a) * .3); k.add(c); }
+      k.scale.setScalar(1.3); return at(k, 0, 0, 0, .3, 0, -.15);
+    },
+    hexRed: () => { const p = puck(.5, .28, gloss(0xd2301f), .45); p.scale.setScalar(1.6); return at(grp(p), 0, 0, 0, .55, 0, .2); },
+    agonQueen: () => {   // agon: the bone queen (hexagonal piece) with a gold crown
+      const q = new T.Group(), body = mesh(new T.CylinderGeometry(.62, .66, .32, 6, 1), C(0xf2ead6, { roughness: .35 })); body.rotation.y = Math.PI / 6; body.position.y = .16; q.add(body);
+      const lip = mesh(new T.CylinderGeometry(.5, .6, .08, 6, 1), C(0xc9b892, { roughness: .35 })); lip.rotation.y = Math.PI / 6; lip.position.y = .36; q.add(lip);
+      const cr = crown(gloss(0xf2c94c), gloss(0x6c1a1c), .78); cr.position.y = .4; q.add(cr);
+      q.scale.setScalar(1.35); return at(q, 0, 0, 0, .3, 0, -.15);
+    },
+    urPiece: () => {   // ur: a shell piece with five lapis dots
+      const c = new T.Group(); c.add(puck(.62, .26, C(0xeee4cc, { roughness: .45 }), .5));
+      const dm = C(0x2a3fa8, { roughness: .4 }); [[0, 0], [-.27, -.27], [.27, -.27], [-.27, .27], [.27, .27]].forEach(([x, z]) => { const d = mesh(new T.CylinderGeometry(.08, .08, .04, 16), dm); d.position.set(x, .26, z); c.add(d); });
+      c.scale.setScalar(1.4); return at(c, 0, 0, 0, .6, 0, .2);
+    },
+    urDie: () => {   // ur: the tetrahedral die, white tip up
+      const dg = new T.Group(), body = C(0xd9cba8, { roughness: .45 }), V = [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].map(v => new T.Vector3(...v).multiplyScalar(.62));
+      const tet = new T.BufferGeometry().setFromPoints([V[1], V[2], V[3], V[0], V[2], V[1], V[0], V[3], V[2], V[0], V[1], V[3]]); tet.computeVertexNormals();
+      dg.add(mesh(tet, body)); const tip = mesh(new T.SphereGeometry(.13, 16, 10), C(0xf6f0e2, { roughness: .3 })); tip.position.copy(V[0]).multiplyScalar(.92); dg.add(tip);
+      const lap = mesh(new T.SphereGeometry(.07, 12, 8), C(0x2a3fa8, { roughness: .3 })); lap.position.copy(V[0]).multiplyScalar(1.02); dg.add(lap);
+      dg.scale.setScalar(1.6); return at(dg, 0, 0, 0, .3, .5, .25);
+    },
+    woodBall: () => ball(.62, M({ map: X.wood('pfb', '#c8915a', '#7a4a22'), roughness: .75 })),   // fanorona: a matte wooden ball
+    coin: () => {   // alquerque: a brass coin with an enamel star
+      const g = new T.Group(); g.add(puck(.62, .2, C(0xd9a640, { roughness: .25, metalness: .6 }), .4));
+      const face = M({ map: X.canvasTex('p-coin', 256, 256, (c, W) => { const r = W / 2; c.fillStyle = '#e8bd55'; c.fillRect(0, 0, W, W); c.strokeStyle = '#a3741f'; c.lineWidth = 10; c.beginPath(); c.arc(r, r, r * .82, 0, 7); c.stroke();
+        c.fillStyle = '#1d3f9a'; c.beginPath(); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8 - Math.PI / 2, rr = k % 2 ? r * .3 : r * .62; c[k ? 'lineTo' : 'moveTo'](r + rr * Math.cos(a), r + rr * Math.sin(a)); } c.closePath(); c.fill(); }), roughness: .3, metalness: .4 });
+      const top = mesh(new T.CircleGeometry(.56, 40), face); top.rotation.x = -Math.PI / 2; top.position.y = .202; g.add(top);
+      g.scale.setScalar(1.35); return at(g, 0, 0, 0, .6, 0, -.2);
+    },
+    card: () => {   // solitaire / blackjack: the Ace of spades, a chunky toy card
+      const tex = X.canvasTex('p-card', 256, 352, (c, W, H) => { c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); c.fillStyle = '#1f1f26'; c.font = 'bold 96px Georgia, serif'; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText('A', 20, 14); c.font = '230px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('♠', W / 2 + 10, H * .6); });
+      const b = rbox(1.5, .16, 2.1, .12, C(0xf3ead6, { roughness: .4 })), f = mesh(new T.PlaneGeometry(1.36, 1.96), M({ map: tex, roughness: .35 })); f.rotation.x = -Math.PI / 2; f.position.y = .165;
+      return at(grp(b, f), 0, 0, 0, 1.0, .3, -.15);
+    },
+    cardH: () => {   // baccarat: the King of hearts
+      const tex = X.canvasTex('p-cardh', 256, 352, (c, W, H) => { c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); c.fillStyle = '#c0232e'; c.font = 'bold 96px Georgia, serif'; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText('K', 20, 14); c.font = '230px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('♥', W / 2 + 10, H * .6); });
+      const b = rbox(1.5, .16, 2.1, .12, C(0xf3ead6, { roughness: .4 })), f = mesh(new T.PlaneGeometry(1.36, 1.96), M({ map: tex, roughness: .35 })); f.rotation.x = -Math.PI / 2; f.position.y = .165;
+      return at(grp(b, f), 0, 0, 0, 1.0, -.35, .2);
+    },
+    chip: () => {   // poker: a red toy chip
+      const tex = X.canvasTex('p-chip', 256, 256, (c, W, H) => { c.fillStyle = '#c8203a'; c.beginPath(); c.arc(W / 2, H / 2, W / 2, 0, 7); c.fill(); c.fillStyle = '#f7f1e3'; for (let i = 0; i < 8; i++) { c.save(); c.translate(W / 2, H / 2); c.rotate(i * Math.PI / 4); c.fillRect(-14, -W / 2, 28, 34); c.restore(); }
+        c.fillStyle = '#f6f1e4'; c.beginPath(); c.arc(W / 2, H / 2, W * .3, 0, 7); c.fill(); c.strokeStyle = '#c8203a'; c.lineWidth = 6; c.setLineDash([12, 8]); c.beginPath(); c.arc(W / 2, H / 2, W * .25, 0, 7); c.stroke(); });
+      const p = puck(.62, .2, gloss(0xc8203a), .35), top = mesh(new T.CircleGeometry(.56, 40), M({ map: tex, roughness: .3 })); top.rotation.x = -Math.PI / 2; top.position.y = .203;
+      const g = grp(p, top); g.scale.setScalar(1.4); return at(g, 0, 0, 0, .7, 0, .25);
+    },
+    block: () => {   // samegame: an orange mid-century block with a cream triangle
+      const tex = X.canvasTex('p-sgblk', 256, 256, (c, W) => { c.fillStyle = '#d9622b'; c.fillRect(0, 0, W, W); c.fillStyle = 'rgba(242,234,219,.9)'; c.beginPath(); c.moveTo(W / 2, 56); c.lineTo(200, 192); c.lineTo(56, 192); c.closePath(); c.fill(); });
+      const b = rbox(1, .6, 1, .18, C(0xd9622b, { roughness: .35 })), top = mesh(new T.PlaneGeometry(.8, .8), M({ map: tex, roughness: .45 })); top.rotation.x = -Math.PI / 2; top.position.y = .605;
+      const g = grp(b, top); g.scale.setScalar(1.3); return at(g, 0, 0, 0, .4, .35, -.25);
+    },
+    key: () => {   // jailbreak: the gold cell key
+      const gold = C(0xffcd3c, { roughness: .2, metalness: .7 }), k = new T.Group();
+      k.add(mesh(new T.TorusGeometry(.3, .1, 12, 28), gold)); k.add(at(mesh(new T.BoxGeometry(.7, .14, .14), gold), .58, 0, 0)); k.add(at(mesh(new T.BoxGeometry(.12, .26, .14), gold), .82, -.14, 0));
+      k.scale.setScalar(1.3); return at(k, 0, 0, 0, -.5, 0, .5);
+    },
+    dotBar: () => {   // dots and boxes: two dots joined by a blue line
+      const g = new T.Group(), blue = gloss(0x36b4ff); g.add(at(pin(0x2b3044, 1.2), -.65, 0, 0)); g.add(at(pin(0x2b3044, 1.2), .65, 0, 0));
+      g.add(at(rbox(1.3, .26, .3, .12, blue), 0, .23, 0)); g.scale.setScalar(1.1); return at(g, 0, 0, 0, .3, .3, -.2);
+    },
   };
 
   /* ---------- icon scenes ---------- */
