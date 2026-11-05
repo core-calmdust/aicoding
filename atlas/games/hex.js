@@ -281,10 +281,10 @@
 
   /* ---------- the board card ---------- */
   const LVN = {
-    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：相手の狙いをよく見落とす', '初級〜中級：ブリッジを作り、直接の狙いは止める', '上級：ラダーや詰み筋を読み切る', '有段：深い読み（考える時間が長め）'] },
+    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：相手の狙いをよく見落とす', '初級〜中級：ブリッジを作り、直接の狙いは止める', '上級：ラダーや詰み筋を読み切る', '最上級：深い読み（考える時間が長め）'] },
     en: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Novice: often misses the opponent\'s threats', 'Beginner to club: makes bridges, blocks direct threats', 'Advanced: reads ladders and forced connections', 'Expert: deep search (thinks longer)'] },
-    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：常看漏对手的威胁', '初级～中级：会搭桥，能挡住直接威胁', '高级：能算清梯子和强制连通', '段位：深度计算（思考时间较长）'] },
-    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 상대의 노림을 자주 놓침', '초급~중급: 브리지를 만들고 직접적인 노림은 막음', '상급: 래더와 강제 연결을 읽음', '유단: 깊은 수읽기(생각 시간이 김)'] },
+    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：常看漏对手的威胁', '初级～中级：会搭桥，能挡住直接威胁', '高级：能算清梯子和强制连通', '专家：深度计算（思考时间较长）'] },
+    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 상대의 노림을 자주 놓침', '초급~중급: 브리지를 만들고 직접적인 노림은 막음', '상급: 래더와 강제 연결을 읽음', '전문가: 깊은 수읽기(생각 시간이 김)'] },
     es: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Iniciación: a menudo no ve las amenazas', 'Principiante a club: hace puentes, para amenazas directas', 'Avanzado: calcula escaleras y conexiones forzadas', 'Experto: búsqueda profunda (piensa más)'] },
     fr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Initiation : rate souvent les menaces', 'Débutant à club : fait des ponts, pare les menaces directes', 'Avancé : calcule échelles et connexions forcées', 'Expert : recherche profonde (réfléchit plus longtemps)'] },
     pt: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Iniciação: muitas vezes não vê as ameaças', 'Iniciante a clube: faz pontes, para ameaças diretas', 'Avançado: calcula escadas e conexões forçadas', 'Especialista: busca profunda (pensa mais)'] },
@@ -308,7 +308,7 @@
   };
   function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 5 dan)
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
-    const name = i <= 15 ? L.kyu.replace('{n}', 16 - i) : L.dan[i - 16];
+    const name = 'Lv.' + i;
     return { name, desc: L.lvd[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3], rating: RATING[i], who: W[i - 1] };
   }
   const SIZE_L = l => (TX[l] || TX.en).size;

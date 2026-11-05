@@ -325,7 +325,7 @@
   const RATING = [450,  570,  670,  790,  960,  1030,  1100,  1160,  1230,  1290,  1390,  1480,  1580,  1670,  1760,  1880,  1960,  2040,  2120,  2200];   // tafl RT_LV (rated games)
   function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan)
     const L = TX[lang] || TX.en;
-    return { name: i <= 15 ? L.kyu.replace('{n}', 16 - i) : L.dan[i - 16], desc: '', rating: RATING[i - 1] };
+    return { name: 'Lv.' + i, desc: '', rating: RATING[i - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.tafl = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [7, 9, 11], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself

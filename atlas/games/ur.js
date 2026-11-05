@@ -14,16 +14,16 @@
     hi: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], ar: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'],
   };
   const LVD = {
-    ja: ['入門：目に任せて動かす', '初級〜中級：ロゼットと取りを考える', '上級：危険と勝率を読む', '有段：期待値を読み切る（最強はほぼ最善）'],
-    en: ['Beginner: moves by luck', 'Novice to intermediate: thinks about rosettes and captures', 'Advanced: weighs risks and win chances', 'Dan: reads the expectations through (the top level is nearly perfect)'],
-    zh: ['入门：凭运气走', '初级～中级：会考虑花格和吃子', '高级：权衡风险与胜率', '段位：算尽期望值（最强接近最佳）'],
-    ko: ['입문: 운에 맡겨 둔다', '초급~중급: 로제트와 잡기를 생각한다', '상급: 위험과 승률을 읽는다', '유단: 기댓값을 끝까지 읽는다(최강은 거의 최선)'],
-    es: ['Principiante: mueve al azar', 'Inicial a intermedio: piensa en rosetas y capturas', 'Avanzado: sopesa riesgos y probabilidades', 'Dan: calcula las esperanzas (el máximo es casi perfecto)'],
-    fr: ['Débutant : joue au hasard', 'Novice à intermédiaire : pense aux rosaces et aux prises', 'Avancé : pèse risques et chances', 'Dan : calcule les espérances (le sommet est presque parfait)'],
-    pt: ['Iniciante: joga ao acaso', 'Básico a intermediário: pensa em rosetas e capturas', 'Avançado: pesa riscos e chances', 'Dan: calcula as expectativas (o topo é quase perfeito)'],
-    de: ['Einsteiger: zieht nach Glück', 'Anfänger bis Mittel: denkt an Rosetten und Schlagen', 'Fortgeschritten: wägt Risiko und Chancen ab', 'Dan: rechnet die Erwartung durch (die Spitze ist fast perfekt)'],
-    hi: ['शुरुआती: किस्मत से चलता है', 'नौसिखिया से मध्यम: रोज़ेट और पकड़ के बारे में सोचता है', 'उन्नत: जोखिम और संभावना तौलता है', 'दान: अपेक्षाएँ पूरी गणना करता है (सबसे ऊपर लगभग सर्वोत्तम)'],
-    ar: ['مبتدئ: يتحرك بالحظ', 'مبتدئ إلى متوسط: يفكر في الورود والأسر', 'متقدم: يوازن المخاطر والفرص', 'دان: يحسب التوقعات حتى النهاية (الأقوى شبه مثالي)'],
+    ja: ['入門：目に任せて動かす', '初級〜中級：ロゼットと取りを考える', '上級：危険と勝率を読む', '最上級：期待値を読み切る（最強はほぼ最善）'],
+    en: ['Beginner: moves by luck', 'Novice to intermediate: thinks about rosettes and captures', 'Advanced: weighs risks and win chances', 'Expert: reads the expectations through (the top level is nearly perfect)'],
+    zh: ['入门：凭运气走', '初级～中级：会考虑花格和吃子', '高级：权衡风险与胜率', '专家：算尽期望值（最强接近最佳）'],
+    ko: ['입문: 운에 맡겨 둔다', '초급~중급: 로제트와 잡기를 생각한다', '상급: 위험과 승률을 읽는다', '전문가: 기댓값을 끝까지 읽는다(최강은 거의 최선)'],
+    es: ['Principiante: mueve al azar', 'Inicial a intermedio: piensa en rosetas y capturas', 'Avanzado: sopesa riesgos y probabilidades', 'Experto: calcula las esperanzas (el máximo es casi perfecto)'],
+    fr: ['Débutant : joue au hasard', 'Novice à intermédiaire : pense aux rosaces et aux prises', 'Avancé : pèse risques et chances', 'Expert : calcule les espérances (le sommet est presque parfait)'],
+    pt: ['Iniciante: joga ao acaso', 'Básico a intermediário: pensa em rosetas e capturas', 'Avançado: pesa riscos e chances', 'Especialista: calcula as expectativas (o topo é quase perfeito)'],
+    de: ['Einsteiger: zieht nach Glück', 'Anfänger bis Mittel: denkt an Rosetten und Schlagen', 'Fortgeschritten: wägt Risiko und Chancen ab', 'Experte: rechnet die Erwartung durch (die Spitze ist fast perfekt)'],
+    hi: ['शुरुआती: किस्मत से चलता है', 'नौसिखिया से मध्यम: रोज़ेट और पकड़ के बारे में सोचता है', 'उन्नत: जोखिम और संभावना तौलता है', 'विशेषज्ञ: अपेक्षाएँ पूरी गणना करता है (सबसे ऊपर लगभग सर्वोत्तम)'],
+    ar: ['مبتدئ: يتحرك بالحظ', 'مبتدئ إلى متوسط: يفكر في الورود والأسر', 'متقدم: يوازن المخاطر والفرص', 'خبير: يحسب التوقعات حتى النهاية (الأقوى شبه مثالي)'],
   };
   const WHO = {
     ja: ['はじめて', 'ルールを覚えた人', '何局か遊んだ人', '慣れた人', '強い人', '上級者', '達人'],
@@ -40,7 +40,7 @@
   // the game's measured rating of each AI level (ur/app.js RT_LV)
   const RATING = [0, 600, 660, 715, 725, 735, 800, 865, 930, 990, 1070, 1155, 1240, 1325, 1375, 1430, 1485, 1535, 1550, 1570, 1610];
   function levelInfo(n, lang) {
-    const name = n <= 15 ? (KYU[lang] || KYU.en).replace('{n}', 16 - n) : (DAN[lang] || DAN.en)[n - 16];
+    const name = 'Lv.' + n;
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name, desc: d[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: w[n <= 2 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 15 ? 4 : n <= 18 ? 5 : 6] };
   }

@@ -326,16 +326,16 @@
 
   /* ---------- the board card ---------- */
   const LVN = {
-    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：ときどき駒をただで渡す', '初級〜中級：数手先まで読む', '上級：取り合いと詰みを読み切る', '有段：深い読み（強豪エンジンから学習した評価）'] },
-    en: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Beginner: drops a piece now and then', 'Novice: reads a few moves ahead', 'Advanced: works out exchanges and mates', 'Dan: deep search (NNUE learned from a top engine)'] },
-    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：偶尔会白丢棋子', '初级～中级：能看几步', '高级：算清兑子与杀棋', '段位：深度计算（向顶级引擎学习的评估）'] },
-    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 가끔 기물을 공짜로 내줌', '초급~중급: 몇 수 앞을 읽음', '상급: 교환과 외통을 읽음', '유단: 깊은 탐색(최강 엔진에게서 학습한 평가)'] },
-    es: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Inicial: a veces regala piezas', 'Principiante: calcula unas jugadas', 'Avanzado: resuelve cambios y mates', 'Dan: búsqueda profunda'] },
-    fr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Débutant : laisse parfois une pièce', 'Novice : calcule quelques coups', 'Avancé : calcule échanges et mats', 'Dan : recherche profonde'] },
-    pt: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Iniciante: às vezes entrega peças', 'Novato: calcula alguns lances', 'Avançado: calcula trocas e mates', 'Dan: busca profunda'] },
-    de: { kyu: '{n}. Kyu', dan: ['1. Dan', '2. Dan', '3. Dan', '4. Dan', '5. Dan'], lvd: ['Einsteiger: stellt manchmal Steine ein', 'Anfänger: rechnet ein paar Züge', 'Fortgeschritten: rechnet Abtausch und Matt', 'Dan: tiefe Suche'] },
-    hi: { kyu: '{n} क्यू', dan: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], lvd: ['शुरुआती: कभी-कभी मोहरा दे देता है', 'नौसिखिया: कुछ चालें आगे देखता है', 'उन्नत: अदला-बदली और मात गिनता है', 'दान: गहरी खोज'] },
-    ar: { kyu: '{n} كيو', dan: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], lvd: ['مبتدئ: يخسر قطعة أحيانًا', 'مبتدئ: يحسب بضع نقلات', 'متقدم: يحسب التبادلات والكش مات', 'دان: بحث عميق'] },
+    ja: { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：ときどき駒をただで渡す', '初級〜中級：数手先まで読む', '上級：取り合いと詰みを読み切る', '最上級：深い読み（強豪エンジンから学習した評価）'] },
+    en: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Beginner: drops a piece now and then', 'Novice: reads a few moves ahead', 'Advanced: works out exchanges and mates', 'Expert: deep search (NNUE learned from a top engine)'] },
+    zh: { kyu: '{n}级', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入门：偶尔会白丢棋子', '初级～中级：能看几步', '高级：算清兑子与杀棋', '专家：深度计算（向顶级引擎学习的评估）'] },
+    ko: { kyu: '{n}급', dan: ['초단', '2단', '3단', '4단', '5단'], lvd: ['입문: 가끔 기물을 공짜로 내줌', '초급~중급: 몇 수 앞을 읽음', '상급: 교환과 외통을 읽음', '전문가: 깊은 탐색(최강 엔진에게서 학습한 평가)'] },
+    es: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Inicial: a veces regala piezas', 'Principiante: calcula unas jugadas', 'Avanzado: resuelve cambios y mates', 'Experto: búsqueda profunda'] },
+    fr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Débutant : laisse parfois une pièce', 'Novice : calcule quelques coups', 'Avancé : calcule échanges et mats', 'Expert : recherche profonde'] },
+    pt: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Iniciante: às vezes entrega peças', 'Novato: calcula alguns lances', 'Avançado: calcula trocas e mates', 'Especialista: busca profunda'] },
+    de: { kyu: '{n}. Kyu', dan: ['1. Dan', '2. Dan', '3. Dan', '4. Dan', '5. Dan'], lvd: ['Einsteiger: stellt manchmal Steine ein', 'Anfänger: rechnet ein paar Züge', 'Fortgeschritten: rechnet Abtausch und Matt', 'Experte: tiefe Suche'] },
+    hi: { kyu: '{n} क्यू', dan: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], lvd: ['शुरुआती: कभी-कभी मोहरा दे देता है', 'नौसिखिया: कुछ चालें आगे देखता है', 'उन्नत: अदला-बदली और मात गिनता है', 'विशेषज्ञ: गहरी खोज'] },
+    ar: { kyu: '{n} كيو', dan: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], lvd: ['مبتدئ: يخسر قطعة أحيانًا', 'مبتدئ: يحسب بضع نقلات', 'متقدم: يحسب التبادلات والكش مات', 'خبير: بحث عميق'] },
   };
   const RATING = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2487, 2552];   // xiangqi RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
@@ -353,7 +353,7 @@
   };
   function levelInfo(n, lang) {   // n = 1..20 (the game's level: 15 kyu … 5 dan)
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
-    const name = n <= 15 ? L.kyu.replace('{n}', 16 - n) : L.dan[n - 16];
+    const name = 'Lv.' + n;
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 10 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
