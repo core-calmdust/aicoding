@@ -99,13 +99,15 @@
     const A = list.map(g => { const [x, y] = toU(home(g)); return { g, ax: sx(v, x), ay: sy(v, y) }; });
     // crowded spots (three or more games within about a pin's width) become one bubble with the count; tapping it zooms in.
     // The picked game always keeps its own pin.
+    // zoomed well in, every game gets its own pin again (games from the same city fan out round it, joined by short lines)
+    const noClu = v.z >= zMax() * .45;
     const C = [], R2 = (S * 1.05) ** 2, free = A.filter(p => p.g.id !== sel);
     free.sort((p, q) => p.ax - q.ax);
     const used = new Set();
     free.forEach(p => {
       if (used.has(p)) return;
       const grp = free.filter(q => !used.has(q) && (q.ax - p.ax) ** 2 + (q.ay - p.ay) ** 2 < R2);
-      if (grp.length < 3) return;
+      if (grp.length < 3 || noClu) return;
       // grow once from the group's centre so the bubble takes its whole neighbourhood
       const cx = grp.reduce((s, q) => s + q.ax, 0) / grp.length, cy = grp.reduce((s, q) => s + q.ay, 0) / grp.length;
       const all = free.filter(q => !used.has(q) && (q.ax - cx) ** 2 + (q.ay - cy) ** 2 < R2 * 1.3);
@@ -114,13 +116,15 @@
     });
     const P = A.filter(p => p.clu == null).concat(C.map(c => ({ c, ax: c.ax, ay: c.ay })));
     P.forEach(p => { p.x = p.ax; p.y = p.ay - S * .62; });
-    for (let it = 0; it < 40; it++) {
+    // (zoomed in without bubbles: more rounds and a weaker pull home, so neighbours fully clear each other)
+    const IT = noClu ? 140 : 40, PULL = noClu ? .012 : .04, NEED = noClu ? 1.32 : .94;
+    for (let it = 0; it < IT; it++) {
       for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
-        const p = P[i], q = P[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = S * .94;
+        const p = P[i], q = P[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = S * NEED;
         if (d >= need) continue; if (d < .01) { dx = (i % 2 ? 1 : -1) * .7; dy = .7; d = 1; }
         const k = (need - d) / 2 / d; p.x -= dx * k; p.y -= dy * k; q.x += dx * k; q.y += dy * k;
       }
-      P.forEach(p => { p.x += (p.ax - p.x) * .04; p.y += (p.ay - S * .62 - p.y) * .04; });
+      P.forEach(p => { p.x += (p.ax - p.x) * PULL; p.y += (p.ay - S * .62 - p.y) * PULL; });
     }
     // the bubbles
     const cl = el.clu; while (cl.children.length > C.length) cl.lastChild.remove();
@@ -206,7 +210,7 @@
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
   }
   // a bubble: fly in until its games stand apart (at least twice as close)
-  function openClu(pts) { const f = fit(pts, 2.2); fly(f.z > view.z * 1.6 ? f : { ...f, z: view.z * 2.4, x: f.x, y: f.y }); }
+  function openClu(pts) { const f = fit(pts, 2.2), z = Math.max(f.z, view.z * 2.4, zMax() * .5); fly(clamp({ x: f.x, y: f.y, z })); }
   function select(id, flyTo = true) {
     sel = id; info(); renderList();
     if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35)); } else redraw();
