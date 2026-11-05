@@ -923,7 +923,8 @@ static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(t
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
 // with the net, a level can read fewer nodes (NN_NODES, k; 0 = the level's own) and use a larger noise (NN_NOISE, % of the level's)
 // so that the levels keep a smooth ladder from the hand-made ones below 8級 (see MODEL_CARD.md)
-static int NN_NODES[21] = { 0 }, NN_NOISE[21] = { 0 };
+static int NN_NODES[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 5, 8, 14, 22, 30, 60, 140, 460, 0, 0 },   // 8級 … 三段; 四段・五段: the level's time
+           NN_NOISE[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 800, 800, 800, 800, 800, 800, 600, 400, 0, 0, 0, 0, 0 };
 static int nnNoiseMul = 100;
 EXPORT(nn_noise) void nn_noise(int pct) { nnNoiseMul = pct; }
 EXPORT(nn_level) void nn_level(int level, int nodesK, int noisePct) { if (level >= 1 && level <= 20) { NN_NODES[level] = nodesK; NN_NOISE[level] = noisePct; } }
