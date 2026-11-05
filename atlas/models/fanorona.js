@@ -161,9 +161,8 @@
     const TT = T(), lo = LO(), W = D.W, H = D.H, x0 = -W / 2 + RE, x1 = W / 2 - RE, z0 = -H / 2 + RE, z1 = H / 2 - RE;
     const gz = H / 2 - GM, ga = (W - 1.1) / 2 - GW;
     const xs = new Set(), zs = new Set(), add = (S, a, b, st) => { for (let v = a; v < b - 1e-6; v += st) S.add(+v.toFixed(4)); S.add(+b.toFixed(4)); };
-    add(xs, x0, x1, lo ? .2 : .12);
-    [-1, 1].forEach(s => add(xs, s * ga - GW - .02, s * ga + GW + .02, lo ? .05 : .028));   // dense round the groove ends
-    [-1, 1].forEach(s => { add(xs, -ga, ga, lo ? .3 : .2); });
+    add(xs, x0, x1, .5);   // the top is flat (the carving is in the normal map): only the groove's round ends need columns
+    [-1, 1].forEach(s => add(xs, s * ga - GW - .02, s * ga + GW + .02, lo ? .06 : .035));
     add(zs, z0, z1, lo ? .45 : .3);
     [-1, 1].forEach(s => add(zs, s * gz - GW - .015, s * gz + GW + .015, lo ? .045 : .026));
     const X_ = [...xs].filter(v => v >= x0 - 1e-6 && v <= x1 + 1e-6).sort((a, b) => a - b), Z_ = [...zs].filter(v => v >= z0 - 1e-6 && v <= z1 + 1e-6).sort((a, b) => a - b);
@@ -195,11 +194,11 @@
       prof.forEach(([d, y], i) => {
         const L = Lh - d, [nd, ny] = nrm[i];
         for (const s of [-L, L]) {
-          P.push(o[0] * (Dd - d) + e[0] * s, y, o[2] * (Dd - d) + e[2] * s); N.push(o[0] * nd, ny, o[2] * nd);
+          P.push(o[0] * (Dd - d) + e[0] * s, y, o[2] * (Dd - d) + e[2] * s); N.push(-o[0] * nd, ny, -o[2] * nd);
           UV.push((s + Lh) / (2 * Lh) * (Lh / 6), .15 + arc[i] / tot * .7 + si * .02);
         }
       });
-      for (let i = 0; i < prof.length - 1; i++) { if (arc[i + 1] - arc[i] < 1e-6) continue; const a = base + i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
+      for (let i = 0; i < prof.length - 1; i++) { if (arc[i + 1] - arc[i] < 1e-6) continue; const a = base + i * 2; idx.push(a, a + 3, a + 1, a, a + 2, a + 3); }
     });
     const g = new TT.BufferGeometry();
     g.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
@@ -243,7 +242,7 @@
 
   /* ---------- the balls ---------- */
   const geos = {};
-  function ballGeo() { const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k]; const g = new (T().SphereGeometry)(1, LO() ? 18 : 28, LO() ? 12 : 18); if (X.share) X.share(g); return (geos[k] = g); }
+  function ballGeo() { const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k]; const g = new (T().SphereGeometry)(1, LO() ? 16 : 22, LO() ? 10 : 14); if (X.share) X.share(g); return (geos[k] = g); }
   function ballMat(col) {
     return mat('b' + col, () => {
       const TT = T(), dark = col === 2, t = simpleTex(dark ? 'fnBallD' : 'fnBallL', SZ(256), SZ(128), 'ball', { dark });

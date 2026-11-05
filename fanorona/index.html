@@ -1336,6 +1336,23 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
 .modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
 .modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
+/* PC, 9x5 with the info row under the board (not the wide column layout): when the coach / review takes the left box, the
+   two players sit side by side in one short row, so 形勢 below gets the height for its graph (2026-11-05) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx):is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)),
+  html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx){
+    grid-template-rows:var(--fhb) calc(var(--ich) * .3 - 8px) calc(var(--ich) * .2 - 4px) calc(var(--ich) * .5 - 8px)!important;grid-template-areas:"board board board" "ck pl rv" "ck ev rv" "ck ev kf"!important}
+  html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx):not(#zw):not(#zv){grid-template-areas:"board board board" "bx pl rv" "bx ev rv" "bx ev kf"!important}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:not(:has(> .side > .side-in > .review-card.show)):has(> .side > .side-in > #coachCard:not(.hidden)) .kifu-card{grid-row:2 / 5!important}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)) .side-in > .players,
+  html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > .players{flex-direction:row!important;align-items:stretch!important;gap:8px!important;padding:8px!important;overflow:hidden}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)) .side-in > .players .player,
+  html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > .players .player{flex:1 1 0!important;min-width:0;grid-template-columns:minmax(0,1fr) auto!important;padding:4px 10px!important}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)) .side-in > .players .player :is(.status, .count small),
+  html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > .players .player :is(.status, .count small){display:none!important}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > #evalCard{display:flex!important;flex-direction:column;min-height:0}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > #evalCard .graph{flex:1 1 auto!important;height:auto!important;min-height:34px}
+}
 </style>
 </head>
 <body>
@@ -1660,7 +1677,7 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=90')).then(() => load('../atlas/skin/common.js?v=23')).then(() => load('../atlas/models/fanorona.js?v=1')).then(() => load('../atlas/skin/fanorona.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=90')).then(() => load('../atlas/skin/common.js?v=23')).then(() => load('../atlas/models/fanorona.js?v=2')).then(() => load('../atlas/skin/fanorona.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
