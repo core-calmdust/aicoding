@@ -266,7 +266,7 @@ typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 
 #endif
 static Node T[NODES];
 static int nNodes;
-static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 8.0f, LP_A = .1f, LP_B = .5f;
+static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 30.0f, LP_A = .45f, LP_B = .5f;
 static int LP_ON = 1;   // the learned prior (prior_w.h) instead of the hand-made one
 static int EXPAND_T = 1, expT = 1;   // expT: the threshold in use (raised during a long search so the node pool lasts)
 static double tStop; static int maxPO, totalPO;

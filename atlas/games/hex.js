@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../hex/', VER = '?v=1';   // same file / version as hex/index.html → shared cache
+  const BASE = '../hex/', VER = '?v=3';   // same file / version as hex/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.HexEngine) return Promise.resolve(window.HexEngine);
