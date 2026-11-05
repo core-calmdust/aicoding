@@ -703,11 +703,39 @@
   let museumObjs = null, museumOn = false, roomExp = 0, placard = null, museumSpot = null, glareW = -1;
   function buildMuseum() {
     const TT = T(), g = new TT.Group(), FLOOR = -3.4, before = new Set(scene.children); rbCap = 1;
-    const floorT = wood('musFloor', '#7a4a28', '#3e2210', 1024, 1024, 1.6); floorT.wrapS = floorT.wrapT = TT.RepeatWrapping; floorT.repeat.set(5, 5);
+    const SZm = v => Math.round(v * texScale());
+    // herringbone parquet: oak blocks (each with its own tone and a run of grain), a dark joint between them
+    const floorT = canvasTex('musParq', SZm(1024), SZm(1024), (c, W, H) => {
+      const N = makeNoise(31), bw = W / 8, bl = bw * 4;
+      c.fillStyle = '#2a170b'; c.fillRect(0, 0, W, H);
+      for (let row = -2; row < 12; row++) for (let k = -2; k < 10; k++) for (let side = 0; side < 2; side++) {
+        const x0 = k * bw * 2 + (side ? bw : 0), y0 = row * bw * 2 + k * bw * 0 + (side ? 0 : bw);
+        c.save(); c.translate(x0 + (row % 2) * 0, y0); c.rotate(side ? Math.PI / 4 : -Math.PI / 4);
+        const t = N(k * 3.1 + side * 7, row * 2.3, 1), r = 122 + t * 46 | 0, gg = 78 + t * 30 | 0, b = 42 + t * 16 | 0;
+        const gr = c.createLinearGradient(0, 0, bl, 0); gr.addColorStop(0, `rgb(${r},${gg},${b})`); gr.addColorStop(.5, `rgb(${r - 14},${gg - 10},${b - 6})`); gr.addColorStop(1, `rgb(${r + 6},${gg + 4},${b + 2})`);
+        c.fillStyle = gr; c.fillRect(1.5, 1.5, bl / 1.42 - 3, bw / 1.42 - 3);
+        c.globalAlpha = .18; c.strokeStyle = '#3a200e'; c.lineWidth = 1;
+        for (let i = 0; i < 7; i++) { const yy = 3 + i * (bw / 1.42 - 6) / 6; c.beginPath(); c.moveTo(2, yy); c.bezierCurveTo(bl * .25, yy + (N(i, k, 1) - .5) * 6, bl * .45, yy - 3, bl / 1.42 - 2, yy + (N(k, i, 1) - .5) * 5); c.stroke(); }
+        c.globalAlpha = 1; c.restore();
+      }
+    });
+    floorT.wrapS = floorT.wrapT = TT.RepeatWrapping; floorT.repeat.set(6, 6); floorT.anisotropy = 8;
     const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), M({ map: floorT, roughness: .32, clearcoat: .5, clearcoatRoughness: .3 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; g.add(floor);
     const plaster = canvasTex('plaster', 512, 512, (c) => paintPx(c.canvas, 'plaster'));
-    const wallM = M({ map: plaster, color: 0x8a3a34, roughness: .9 }), dark = M({ map: wood('musWain', '#5a3418', '#2e1808', 512, 512, 1.4), roughness: .45 });
+    // silk damask above the wainscot: deep claret with a tone-on-tone medallion repeat
+    const damask = canvasTex('musDamask', SZm(512), SZm(512), (c, W, H) => {
+      c.fillStyle = '#7a2f2a'; c.fillRect(0, 0, W, H);
+      { const N = makeNoise(4), img = c.getImageData(0, 0, W, H), d = img.data; for (let i = 0; i < W * H; i++) { const k = (N((i % W) / 14, (i / W | 0) / 14, 3) - .5) * 18 + (N((i % W) / 1.2, (i / W | 0) / 40, 1) - .5) * 8; d[i * 4] += k; d[i * 4 + 1] += k * .6; d[i * 4 + 2] += k * .6; } c.putImageData(img, 0, 0); }
+      const motif = (cx, cy, s) => { c.save(); c.translate(cx, cy); c.scale(s, s);
+        c.beginPath(); for (let i = 0; i < 4; i++) { c.rotate(Math.PI / 2); c.moveTo(0, 0); c.bezierCurveTo(30, -18, 46, -60, 0, -92); c.bezierCurveTo(-46, -60, -30, -18, 0, 0); }
+        c.moveTo(0, -120); c.bezierCurveTo(18, -104, 18, -96, 0, -84); c.bezierCurveTo(-18, -96, -18, -104, 0, -120);
+        c.moveTo(0, 120); c.bezierCurveTo(18, 104, 18, 96, 0, 84); c.bezierCurveTo(-18, 96, -18, 104, 0, 120); c.fill(); c.restore(); };
+      c.fillStyle = 'rgba(40,8,8,.28)'; motif(W / 2, H / 2, W / 512); [[0, 0], [W, 0], [0, H], [W, H]].forEach(([x, y]) => motif(x, y, W / 512));
+      c.fillStyle = 'rgba(232,180,120,.07)'; motif(W / 2 + 2, H / 2 - 2, W / 512 * .96);
+    });
+    damask.wrapS = damask.wrapT = TT.RepeatWrapping; damask.repeat.set(6, 3);
+    const wallM = M({ map: damask, roughness: .82, sheen: new TT.Color(0x5a1c18) }), dark = M({ map: wood('musWain', '#5a3418', '#2e1808', 512, 512, 1.4), roughness: .45 });
     const gold = M({ color: 0xd9ad5b, roughness: .32, metalness: .85 }), marble = M({ color: 0xefe8db, roughness: .22, clearcoat: .6, clearcoatRoughness: .2 });
     const wall = (w, x, z, ry) => {
       const wg = new TT.Group(); wg.position.set(x, FLOOR, z); wg.rotation.y = ry; g.add(wg);
@@ -717,7 +745,6 @@
     };
     const back = wall(44, 0, -17, 0), left = wall(44, -20, 0, Math.PI / 2), right = wall(44, 20, 0, -Math.PI / 2);
     // an arched doorway on the back wall, flanked by two columns
-    back.add(mesh(new TT.PlaneGeometry(7, 9.5), M({ color: 0x1b120c, roughness: 1 }), 0, 4.75, .03));
     const arch = new TT.Mesh(new TT.TorusGeometry(3.7, .35, 8, 28, Math.PI), marble); arch.position.set(0, 9.5, .3); back.add(arch);
     [-3.7, 3.7].forEach(x => back.add(mesh(RB(.7, 9.5, .7), marble, x, 4.75, .3)));
     const col = (x, z) => { const c = new TT.Group(); c.position.set(x, FLOOR, z); g.add(c);
@@ -749,6 +776,103 @@
     const glass = new TT.MeshStandardMaterial({ color: 0xdfeef0, roughness: .08, metalness: 0, transparent: true, opacity: .16, depthWrite: false });
     [[-15, -11], [15, -11]].forEach(([x, z], i) => { g.add(mesh(RB(3.4, 4.2, 3.4), dark, x, FLOOR + 2.1, z)); g.add(mesh(RB(3.2, 2.8, 3.2), glass, x, FLOOR + 5.6, z));
       g.add(mesh(i ? new TT.IcosahedronGeometry(.7, 0) : new TT.TorusKnotGeometry(.45, .15, 48, 8), gold, x, FLOOR + 5.2, z)); });
+    const preDeco = new Set(); g.traverse(o => { if (o.isMesh) preDeco.add(o); });
+    /* ---------- the hall's finer dressing (2026-11: a grander gallery, ~the toy room's polygon budget) ---------- */
+    const lamp = M({ color: 0xfff1d0, emissive: 0xffd9a0, emissiveIntensity: 1.6, roughness: .4 }), crystal = M({ color: 0xf6f2ff, roughness: .05, metalness: .1, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 2.2 });
+    const velvetSeat = M({ color: 0x5c1420, roughness: .75, sheen: new TT.Color(0x7a2230) });
+    // a carpet under the exhibit: claret field, gold and indigo border bands
+    const rugT = canvasTex('musRug', SZm(1024), SZm(1024), (c, W) => {
+      c.fillStyle = '#5e1219'; c.fillRect(0, 0, W, W);
+      const band = (o, w, col) => { c.strokeStyle = col; c.lineWidth = w; c.strokeRect(o, o, W - 2 * o, W - 2 * o); };
+      band(W * .03, W * .03, '#b4893e'); band(W * .075, W * .045, '#1f2a4e'); band(W * .11, W * .01, '#c99a4a'); band(W * .135, W * .006, '#c99a4a');
+      c.fillStyle = 'rgba(201,154,74,.9)'; for (let i = 0; i < 40; i++) { const t = (i + .5) / 40 * (W - W * .2) + W * .1; [[t, W * .075], [t, W - W * .075], [W * .075, t], [W - W * .075, t]].forEach(([x, y]) => { c.beginPath(); c.moveTo(x, y - W * .012); c.lineTo(x + W * .012, y); c.lineTo(x, y + W * .012); c.lineTo(x - W * .012, y); c.fill(); }); }
+      c.strokeStyle = 'rgba(201,154,74,.35)'; c.lineWidth = W * .004; for (let r = 1; r <= 4; r++) { c.beginPath(); c.arc(W / 2, W / 2, W * .09 * r, 0, Math.PI * 2); c.stroke(); }
+      const N = makeNoise(12), img = c.getImageData(0, 0, W, W), d = img.data;
+      for (let i = 0; i < W * W; i++) { const k = (N((i % W) / 1.5, (i / W | 0) / 1.5, 1) - .5) * 26; d[i * 4] += k; d[i * 4 + 1] += k * .7; d[i * 4 + 2] += k * .7; }
+      c.putImageData(img, 0, 0);
+    });
+    const rug = new TT.Mesh(new TT.PlaneGeometry(27, 30), M({ map: rugT, roughness: 1, sheen: new TT.Color(0x3a0a10) })); rug.rotation.x = -Math.PI / 2; rug.position.set(0, FLOOR + .02, 1.5); rug.receiveShadow = true; g.add(rug);
+    // walls: boiserie panels (gilt mouldings) and fluted pilasters between the paintings, a stepped cornice with dentils
+    const moulding = (wg, x, y, w, h) => { const t = .12; [[x, y + h / 2, w, t], [x, y - h / 2, w, t], [x - w / 2, y, t, h], [x + w / 2, y, t, h]].forEach(([px, py, pw, ph]) => wg.add(mesh(RB(pw, ph, .1, .04, 1), gold, px, py, .06))); };
+    const pilaster = (wg, x) => {
+      const f = new TT.CylinderGeometry(.55, .55, 9.6, 20, 1, true, -Math.PI / 2, Math.PI);
+      const P = f.attributes.position; for (let i = 0; i < P.count; i++) { const a = Math.atan2(P.getX(i), P.getZ(i)), k = 1 - .09 * Math.pow(Math.abs(Math.sin(a * 5)), .6); P.setX(i, P.getX(i) * k); P.setZ(i, P.getZ(i) * k); } f.computeVertexNormals();
+      wg.add(mesh(f, marble, x, 8.6, 0));
+      wg.add(mesh(RB(1.5, .5, .9, .08, 1), marble, x, 3.95, .3)); wg.add(mesh(new TT.TorusGeometry(.56, .1, 6, 20, Math.PI), gold, x, 4.3, 0));
+      wg.add(mesh(RB(1.6, .35, .95, .06, 1), marble, x, 13.55, .3)); wg.add(mesh(new TT.TorusGeometry(.58, .12, 6, 20, Math.PI), gold, x, 13.25, 0));
+      [-1, 1].forEach(sx => { const v = new TT.Mesh(new TT.TorusGeometry(.2, .07, 6, 14), gold); v.position.set(x + sx * .55, 13.55, .55); wg.add(v); });
+    };
+    const dentils = (wg, w) => { for (let x = -w / 2 + .3; x < w / 2; x += .6) wg.add(mesh(new TT.BoxGeometry(.3, .32, .3), marble, x, 13.95, .46)); };
+    const dress = (wg, w, pics) => {
+      wg.add(mesh(RB(w, .3, .7, .1, 1), marble, 0, 14.2, .34)); wg.add(mesh(RB(w, .18, .9, .06, 1), gold, 0, 14.42, .44)); wg.add(mesh(RB(w, .45, 1.1, .12, 1), dark, 0, 15.1, .55));
+      dentils(wg, w);
+      wg.add(mesh(RB(w, .14, .44, .05, 1), gold, 0, 3.15, .36));   // the wainscot's gilt cap
+      for (let x = -w / 2 + 2.2; x < w / 2 - 1; x += 4.4) moulding(wg, x, 1.8, 3.4, 2.4);   // panels in the wainscot
+      pics.forEach(px => moulding(wg, px, 8.6, 7.6, 8.4));
+    };
+    dress(back, 44, [-13, 13]); dress(left, 44, [6, -6]); dress(right, 44, [-6, 6]);
+    [-17.5, -9.5, 9.5, 17.5].forEach(x => pilaster(back, x)); [-17, 0, 17].forEach(x => { pilaster(left, x); pilaster(right, x); });
+    // picture lights: a brass bar over each painting, its glass glowing
+    const picLight = (wg, x, w) => { wg.add(mesh(new TT.CylinderGeometry(.13, .13, w * .55, 12), brass, x, 12.1, .9).rotateZ(Math.PI / 2)); wg.add(mesh(new TT.BoxGeometry(w * .5, .05, .12), lamp, x, 12.0, .95)); wg.add(mesh(new TT.CylinderGeometry(.05, .05, .9, 6), brass, x, 12.35, .5).rotateX(Math.PI / 2)); };
+    picLight(back, -13, 5.5); picLight(back, 13, 5.5); [-6, 6].forEach(x => { picLight(left, x, 5); picLight(right, x, 5); });
+    // inside the arch: a lit niche with a cobalt vase (a shallow alcove in front of the wall's dark opening)
+    const corr = new TT.Group(); corr.position.set(0, FLOOR, -17 + .06); g.add(corr);
+    const glowT = canvasTex('musNiche', 64, 256, (c, W, H) => { const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#2a120e'); gr.addColorStop(.55, '#6a3524'); gr.addColorStop(1, '#3a1c12'); c.fillStyle = gr; c.fillRect(0, 0, W, H); });
+    corr.add(mesh(new TT.PlaneGeometry(6.9, 9.4), M({ map: glowT, roughness: 1, emissive: 0x2a1208 }), 0, 4.75, 0));
+    corr.add(mesh(RB(2.6, 4, .5, .1, 1), marble, 0, 4.6, .3)); corr.add(mesh(new TT.PlaneGeometry(2, 3.4), lamp, 0, 4.7, .56));
+    const vase = new TT.LatheGeometry([[0, 0], [.4, 0], [.5, .2], [.42, .5], [.7, 1.1], [.78, 1.5], [.5, 2], [.32, 2.3], [.42, 2.5], [0, 2.5]].map(([x, y]) => new TT.Vector2(x, y)), 18);
+    corr.add(mesh(RB(1.8, 1.9, 1.6, .08, 1), marble, 0, .95, 1.1)); corr.add(mesh(vase, M({ color: 0x1d3a72, roughness: .2, clearcoat: 1 }), 0, 1.9, 1.1));
+    // the arch made grander: a keystone, a gilt archivolt
+    back.add(mesh(RB(1, 1.4, .7, .1, 1), marble, 0, 13.4, .45)); { const av = new TT.Mesh(new TT.TorusGeometry(4.15, .12, 6, 28, Math.PI), gold); av.position.set(0, 9.5, .45); back.add(av); }
+    // a coffered ceiling with gilt rosettes
+    const CEIL = FLOOR + 22, ceilM = M({ map: plaster, color: 0xe9dcc2, roughness: .9 });
+    { const c = new TT.Mesh(new TT.PlaneGeometry(40, 34), ceilM); c.rotation.x = Math.PI / 2; c.position.set(0, CEIL, 0); g.add(c); }
+    for (let x = -20; x <= 20; x += 5) g.add(mesh(new TT.BoxGeometry(.5, .8, 34), marble, x, CEIL - .4, 0));
+    for (let z = -17; z <= 17; z += 4.25) g.add(mesh(new TT.BoxGeometry(40, .8, .5), marble, 0, CEIL - .4, z));
+    for (let x = -17.5; x < 20; x += 5) for (let z = -14.9; z < 17; z += 4.25) { const r = new TT.Mesh(new TT.CylinderGeometry(.5, .6, .14, 10), gold); r.position.set(x, CEIL - .07, z); g.add(r); }
+    // two chandeliers: brass rings and arms, candles with glowing flames, strings of crystal drops
+    const chand = (x, z) => {
+      const c = new TT.Group(); c.position.set(x, CEIL - 6, z); g.add(c);
+      c.add(mesh(new TT.CylinderGeometry(.05, .05, 5.2, 6), brass, 0, 3.4, 0));
+      c.add(mesh(new TT.SphereGeometry(.55, 14, 10), brass, 0, .4, 0)); c.add(mesh(new TT.ConeGeometry(.3, .8, 12), brass, 0, -.4, 0).rotateX(Math.PI));
+      [[1.9, .9, .08], [1.15, 1.6, .06]].forEach(([r, y, t]) => c.add(mesh(new TT.TorusGeometry(r, t, 6, 32), brass, 0, y, 0).rotateX(Math.PI / 2)));
+      for (let i = 0; i < 8; i++) {
+        const a = i / 8 * Math.PI * 2, cx = Math.cos(a) * 1.9, cz = Math.sin(a) * 1.9;
+        const arm = new TT.QuadraticBezierCurve3(new TT.Vector3(0, .4, 0), new TT.Vector3(cx * .6, -.2, cz * .6), new TT.Vector3(cx, .9, cz));
+        c.add(new TT.Mesh(new TT.TubeGeometry(arm, 8, .045, 5), brass));
+        c.add(mesh(new TT.CylinderGeometry(.16, .1, .14, 10), brass, cx, .97, cz)); c.add(mesh(new TT.CylinderGeometry(.07, .07, .5, 8), M({ color: 0xf7efe0, roughness: .6 }), cx, 1.29, cz));
+        c.add(mesh(new TT.ConeGeometry(.06, .2, 6), lamp, cx, 1.65, cz));
+        for (let j = 1; j <= 3; j++) c.add(mesh(new TT.OctahedronGeometry(.07 + j * .01, 0), crystal, cx * (1 - j * .1), .9 - j * .28, cz * (1 - j * .1)));
+      }
+      for (let i = 0; i < 16; i++) { const a = (i + .5) / 16 * Math.PI * 2; for (let j = 0; j < 2; j++) c.add(mesh(new TT.OctahedronGeometry(.08, 0), crystal, Math.cos(a) * 1.15, 1.3 - j * .25, Math.sin(a) * 1.15)); }
+      c.add(mesh(new TT.OctahedronGeometry(.22, 0), crystal, 0, -1.05, 0));
+    };
+    chand(-9, -2); chand(9, -2);
+    // museum benches: buttoned velvet tops on turned walnut legs, facing the exhibit
+    const bench = (x, z, ry) => {
+      const b = new TT.Group(); b.position.set(x, FLOOR, z); b.rotation.y = ry; g.add(b);
+      b.add(mesh(RB(5, .5, 1.7, .22, 2), velvetSeat, 0, 1.55, 0)); b.add(mesh(RB(5.1, .22, 1.8, .06, 1), dark, 0, 1.22, 0));
+      for (let i = -2; i <= 2; i++) b.add(mesh(new TT.SphereGeometry(.05, 6, 4), gold, i * .9, 1.81, 0));
+      const leg = new TT.LatheGeometry([[0, 0], [.12, 0], [.14, .2], [.08, .45], [.13, .7], [.1, 1.05], [.15, 1.12], [0, 1.12]].map(([a, y]) => new TT.Vector2(a, y)), 10);
+      [[-2.2, -.6], [2.2, -.6], [-2.2, .6], [2.2, .6]].forEach(([lx, lz]) => b.add(mesh(leg, dark, lx, 0, lz)));
+    };
+    bench(-15.5, 4, Math.PI / 2); bench(15.5, 4, -Math.PI / 2);
+    // potted palms at the front corners of the hall
+    const leafM = M({ color: 0x2f5a2c, roughness: .7, side: TT.DoubleSide }), potM = M({ color: 0xc8b48e, roughness: .4, clearcoat: .6 });
+    const palm = (x, z) => {
+      const p = new TT.Group(); p.position.set(x, FLOOR, z); g.add(p);
+      p.add(mesh(new TT.LatheGeometry([[0, 0], [.7, 0], [.9, .3], [1.05, 1.6], [1.2, 1.8], [0, 1.8]].map(([a, y]) => new TT.Vector2(a, y)), 18), potM));
+      p.add(mesh(new TT.CylinderGeometry(.12, .16, 3, 6), M({ color: 0x5a4126, roughness: .9 }), 0, 3.2, 0));
+      for (let i = 0; i < 9; i++) {
+        const a = i / 9 * Math.PI * 2, lf = new TT.PlaneGeometry(.7, 3, 1, 6), P = lf.attributes.position;
+        for (let k = 0; k < P.count; k++) { const t = (P.getY(k) + 1.5) / 3; P.setX(k, P.getX(k) * Math.sin(Math.PI * Math.min(1, t * 1.1)) ); P.setZ(k, -t * t * 1.4); } lf.computeVertexNormals();
+        const m = new TT.Mesh(lf, leafM); m.position.set(0, 4.6, 0); m.rotation.set(-.9 - (i % 2) * .25, a, 0, 'YXZ'); m.translateY(1.4); p.add(m);
+      }
+    };
+    palm(-17.5, 13); palm(17.5, 13);
+    // the plinth made grander: a gilt band and a stepped marble base
+    g.add(mesh(RB(17.2, .3, 17.2, .08, 1), marble, 0, FLOOR + .15, 0)); g.add(mesh(RB(15.6, .14, 15.6, .04, 1), gold, 0, -.47, 0));
+    g.traverse(o => { if (o.isMesh && !preDeco.has(o)) o.castShadow = false; });   // the dressing only receives: the exhibit's spotlight keeps its one shadow pass small
     g.traverse(o => { if (o.isMesh && o !== floor) o.castShadow = o.castShadow || false; });
     try { mergeStatic(g); } catch (e) {}
     rbCap = 9;
@@ -859,6 +983,36 @@
   // merge the static room meshes that share a material into one mesh each: the toy room has ~350 small meshes
   // (bricks, toys, characters…) → a few dozen draw calls (and as many shadow draws). Animated parts are kept as they are.
   const SIGX = mt => mt.type + (mt.color ? mt.color.getHexString() : '') + '|' + (mt.map ? mt.map.uuid : '') + (mt.bumpMap ? mt.bumpMap.uuid + mt.bumpScale : '') + '|' + [mt.roughness, mt.metalness, mt.clearcoat, mt.clearcoatRoughness, mt.opacity, mt.transparent, mt.side, mt.toneMapped, mt.depthWrite, mt.emissive && mt.emissive.getHexString(), mt.roughnessMap && mt.roughnessMap.uuid, mt.normalMap && mt.normalMap.uuid, mt.alphaMap && mt.alphaMap.uuid, mt.polygonOffset ? 'po' + mt.polygonOffsetFactor + ':' + mt.polygonOffsetUnits : ''].join(',');
+  // weld the merged (de-indexed) copy back into an indexed mesh: vertices whose position, normal and uv are the same (to 1e-5)
+  // are shared, so ~3 vertices per triangle become ~1 (the picture is identical; only memory and vertex work go down)
+  function weld(mg) {
+    const P = mg.attributes.position.array, N = mg.attributes.normal.array, U = mg.attributes.uv.array, n = P.length / 3;
+    if (n < 6) return;
+    let cap = 1; while (cap < n * 2) cap <<= 1;
+    const tab = new Int32Array(cap).fill(-1), q = v => Math.round(v * 1e5);
+    const nP = new Float32Array(n * 3), nN = new Float32Array(n * 3), nU = new Float32Array(n * 2), idx = n > 65535 ? new Uint32Array(n) : new Uint16Array(n);
+    let m = 0;
+    for (let i = 0; i < n; i++) {
+      const a = i * 3, b = i * 2;
+      const k0 = q(P[a]), k1 = q(P[a + 1]), k2 = q(P[a + 2]), k3 = q(N[a] * .1), k4 = q(N[a + 1] * .1), k5 = q(N[a + 2] * .1), k6 = q(U[b]), k7 = q(U[b + 1]);
+      let h = (k0 * 73856093) ^ (k1 * 19349663) ^ (k2 * 83492791) ^ (k3 * 2654435761) ^ (k4 * 40503) ^ (k5 * 97) ^ (k6 * 31337) ^ (k7 * 7919);
+      h &= cap - 1;
+      for (;;) {
+        const j = tab[h];
+        if (j < 0) {
+          tab[h] = m; nP[m * 3] = P[a]; nP[m * 3 + 1] = P[a + 1]; nP[m * 3 + 2] = P[a + 2]; nN[m * 3] = N[a]; nN[m * 3 + 1] = N[a + 1]; nN[m * 3 + 2] = N[a + 2];
+          nU[m * 2] = U[b]; nU[m * 2 + 1] = U[b + 1]; idx[i] = m++; break;
+        }
+        const c = j * 3, d = j * 2;
+        if (q(nP[c]) === k0 && q(nP[c + 1]) === k1 && q(nP[c + 2]) === k2 && q(nN[c] * .1) === k3 && q(nN[c + 1] * .1) === k4 && q(nN[c + 2] * .1) === k5 && q(nU[d]) === k6 && q(nU[d + 1]) === k7) { idx[i] = j; break; }
+        h = (h + 1) & (cap - 1);
+      }
+    }
+    if (m > n * .9) return;   // hardly anything shared: keep it as it is
+    const TT = T();
+    mg.setAttribute('position', new TT.BufferAttribute(nP.slice(0, m * 3), 3)); mg.setAttribute('normal', new TT.BufferAttribute(nN.slice(0, m * 3), 3)); mg.setAttribute('uv', new TT.BufferAttribute(nU.slice(0, m * 2), 2));
+    mg.setIndex(new TT.BufferAttribute(m > 65535 ? idx : (idx instanceof Uint16Array ? idx : Uint16Array.from(idx)), 1));
+  }
   function mergeStatic(g) {
     const TT = T(); g.updateMatrixWorld(true);
     const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), buckets = new Map(), drop = [];
@@ -898,6 +1052,7 @@
         off += count; if (own) gm.dispose();
       });
       const mg = new TT.BufferGeometry(); mg.setAttribute('position', new TT.BufferAttribute(P, 3)); mg.setAttribute('normal', new TT.BufferAttribute(N, 3)); mg.setAttribute('uv', new TT.BufferAttribute(U, 2));
+      weld(mg);
       mg.computeBoundingSphere();
       const m = new TT.Mesh(mg, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.ro; m.matrixAutoUpdate = false; g.add(m);
       b.list.forEach(it => { if (!it.grp) drop.push(it.o); });
