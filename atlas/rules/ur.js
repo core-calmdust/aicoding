@@ -165,7 +165,7 @@
     }
     function ok(textKey, v) {
       played = true; busy = false; phase = 'done'; sel = -1; marks(); cnt(tag(`✓ ${T(textKey, v)}`, '#e8f8ee', '#16784a')); SND.home(); buttons();
-      if (!P().last) { const s0 = step; later(() => { if (step === s0 && played) go(step + 1); }, 1800); }   // solved: on to the next page by itself (as every tour)
+      if (!P().last) { const s0 = step; if (window.AtlasRgdTimer) AtlasRgdTimer($('[data-a=next]'), 1400, () => step === s0); later(() => { if (step === s0 && played) go(step + 1); }, 1400); }   // solved: on to the next page by itself (as every tour)
     }
     function ng(textKey, v, html) { msg(`<span>${html || (textKey ? T(textKey, v) : L.wrong)}</span>`); const b = $('.bub'); if (b.animate) b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); }
     async function roll() {
