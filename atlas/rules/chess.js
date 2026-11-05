@@ -331,7 +331,9 @@
       const f = Math.floor(p.x + 4), r = Math.floor(p.z + 4);
       return f < 0 || f > 7 || r < 0 || r > 7 ? null : 'abcdefgh'[f] + (8 - r);
     }
-    function finish(extra) { busy = false; if (L.s[step].done) say(L.s[step].done); if (extra) extra(); buttons(); }
+    function finish(extra) { busy = false; if (L.s[step].done) say(L.s[step].done); if (extra) extra(); buttons(); autoNext(); }
+    // solved: on to the next step by itself once the reaction has been read (every rules tour)
+    function autoNext() { const s0 = step, n = ((L.s[step] && L.s[step].done) || '').replace(/<[^>]+>/g, '').length; later(() => { if (step === s0 && !STEPS[step].last) go(step + 1); }, Math.min(4800, 1600 + n * 45)); }
     function onClick(e) {
       if (busy || T3.wasDrag() || e.target.closest('.rgd')) return;
       const st = STEPS[step], q = cellOf(e); if (!q || !st.act || played) return;
