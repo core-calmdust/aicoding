@@ -54,6 +54,7 @@
       if (fr) {   // the painted flowers, as the 2D frame shows them (the picture is a 2 × 2 sheet of motifs, ~1.9 squares each)
         const tile = ppu * 3.8;
         g.save(); g.globalAlpha = .96;
+        g.beginPath(); g.rect(0, 0, Wp, oy - ppu * .16); g.rect(0, oy + F + ppu * .16, Wp, Hp - oy - F - ppu * .16); g.clip();   // the top and bottom bands only (the narrow side strips stay plain)
         for (let y = -tile * .25; y < Hp; y += tile) for (let x = -tile * .3; x < Wp; x += tile) g.drawImage(fr, x, y, tile, tile);
         g.restore();
       }
@@ -145,13 +146,13 @@
   }
   function pieceMats(col) {
     return [mat('pb' + col, () => phys({ color: col === 1 ? 0xf4f6fb : 0x1f43a6, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })),
-      mat('pd' + col, () => phys({ map: decalTex(col), color: 0xffffff, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }))];
+      mat('pd' + col, () => { const m = phys({ map: decalTex(col), color: 0xffffff, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }); m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -6; return m; })];   // (the painted face is drawn in front of the puck's top: seen from afar — the Historia gallery — the two flickered)
   }
   // col 1 white (White) / 2 cobalt (Black)
   function piece(col) {
     const TT = T(), g = new TT.Group(), [mb, md] = pieceMats(col);
     const body = new TT.Mesh(pieceGeo(), mb); body.castShadow = body.receiveShadow = true; g.add(body);
-    const face = new TT.Mesh(decalGeo(), md); face.position.y = PH + .0095; face.receiveShadow = true; g.add(face);
+    const face = new TT.Mesh(decalGeo(), md); face.position.y = PH + .013; face.receiveShadow = true; g.add(face);
     g.userData = { col, h: PH };
     return g;
   }

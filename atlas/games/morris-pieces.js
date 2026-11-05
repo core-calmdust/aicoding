@@ -142,16 +142,24 @@
     const MAT = { last: basic(0xff3b2b, .9), from: basic(0xff3b2b, .35), sel: basic(0xffd84a, .95), dest: basic(0xffe27a, .85), rm: basic(0xff4a3a, .9), mill: basic(0xffd24a, .85), hint: basic(0x4ad8ff, .9) };
     const GEO = { ring: new TH.TorusGeometry(.5, .035, 8, 40), dot: new TH.CylinderGeometry(.13, .13, .012, 20), big: new TH.TorusGeometry(.56, .06, 8, 44) };
     GEO.ring.rotateX(Math.PI / 2); GEO.big.rotateX(Math.PI / 2);
+    // candidate destinations: a bright core, a crisp ring and a soft additive glow, so they read at a glance
+    GEO.core = new TH.CylinderGeometry(.19, .19, .014, 28); GEO.dring = new TH.TorusGeometry(.32, .045, 8, 40); GEO.dring.rotateX(Math.PI / 2);
+    GEO.glow = new TH.PlaneGeometry(1.25, 1.25); GEO.glow.rotateX(-Math.PI / 2);
+    const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,236,140,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.75)'); gr.addColorStop(1, 'rgba(255,190,40,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+      const t = new TH.CanvasTexture(c); if (TH.SRGBColorSpace) t.colorSpace = TH.SRGBColorSpace; return t; })();
+    MAT.core = basic(0xfff1a8, 1); MAT.dring = basic(0xffd23a, .95);
+    MAT.glow = new TH.MeshBasicMaterial({ map: glowTex, transparent: true, opacity: .9, toneMapped: false, depthWrite: false, blending: TH.AdditiveBlending });
     let pulses = [], pulseOn = false;
     function put(geo, mat, i, y) { const m = new TH.Mesh(geo, mat), [x, , z] = slotOf('b', 0, i); m.position.set(x, (y == null ? TOP - .02 : y), z); m.renderOrder = 3; marks.add(m); return m; }
-    function pulse() { if (stopped || !pulses.length) { pulseOn = false; return; } const s = 1 + Math.sin(performance.now() / 160) * .08; pulses.forEach(m => m.scale.setScalar(s)); kick(60); requestAnimationFrame(pulse); }
+    function pulse() { if (stopped || !pulses.length) { pulseOn = false; return; } const w = Math.sin(performance.now() / 160), s = 1 + w * .1; pulses.forEach(m => m.scale.setScalar(s)); MAT.glow.opacity = .7 + w * .25; kick(60); requestAnimationFrame(pulse); }
     let millMarks = [];
     function setMarks(o = {}) {
       for (const m of [...marks.children]) if (!millMarks.includes(m)) marks.remove(m);
       pulses = [];
       if (o.last) { const [f, t] = o.last; if (f >= 0) put(GEO.dot, MAT.from, f); if (t >= 0) put(GEO.ring, MAT.last, t, TOP + .005); }
       if (o.sel >= 0 && o.sel != null) put(GEO.big, MAT.sel, o.sel, TOP + .01);
-      (o.dests || []).forEach(i => pulses.push(put(GEO.dot, MAT.dest, i, TOP - .015)));
+      (o.dests || []).forEach(i => { put(GEO.core, MAT.core, i, TOP + .008); pulses.push(put(GEO.dring, MAT.dring, i, TOP + .01)); pulses.push(put(GEO.glow, MAT.glow, i, TOP + .004)); });
       (o.rm || []).forEach(i => pulses.push(put(GEO.big, MAT.rm, i, TOP + .02)));
       if (o.hint) { const [f, t] = o.hint; if (f >= 0) put(GEO.big, MAT.hint, f, TOP + .02); if (t >= 0) pulses.push(put(GEO.big, MAT.hint, t, TOP + .02)); }
       if (pulses.length && !pulseOn) { pulseOn = true; pulse(); }

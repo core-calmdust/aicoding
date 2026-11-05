@@ -62,14 +62,20 @@
     // shapeFn draws in plan coordinates (x right, z towards the player); the shape's y is −z (rotateX(−π/2) below turns it back)
     const outline = inset => { const s = new TT.Shape(), q = { moveTo: (x, z) => s.moveTo(x, -z), lineTo: (x, z) => s.lineTo(x, -z), absarc: (x, z, r, a0, a1, cw) => s.absarc(x, -z, r, -a0, -a1, !cw) }; shapeFn(q, inset); return s; };
     // wooden edge (bottom) and leather rail (top), extruded rings
-    const ring = (outer, inner, h, bev) => { const s = outline(outer), hole = new TT.Path(); const sh2 = outline(inner); hole.curves = sh2.curves; hole.currentPoint = sh2.currentPoint; s.holes.push(hole);
-      const geo = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 4, curveSegments: 48 }); geo.rotateX(-Math.PI / 2); return geo; };
+    // (the outline as clean points: no repeated point where a line meets an arc or the path closes — those broke the
+    // triangulation of the ring: see-through patches and a notch in the rail)
+    const pts = inset => { const out = []; for (const p of outline(inset).getPoints(40)) { const q = out[out.length - 1]; if (!q || Math.hypot(p.x - q.x, p.y - q.y) > 1e-4) out.push(p); } if (out.length > 2 && out[0].distanceTo(out[out.length - 1]) < 1e-4) out.pop(); return out; };
+    const ring = (outer, inner, h, bev) => { const s = new TT.Shape(pts(outer)); s.holes.push(new TT.Path(pts(inner)));
+      const geo = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 4, curveSegments: 1 }); geo.rotateX(-Math.PI / 2); return geo; };
     const woodM = mat('rimWood', () => M({ map: wood('ctWood', '#6a3f22', '#341a0b'), roughness: .38, clearcoat: .5, clearcoatRoughness: .25 }));
-    const leather = mat('leather', () => M({ color: 0x1a1512, roughness: .5, clearcoat: .35, clearcoatRoughness: .35 }));
+    const leather = mat('leather', () => M({ color: 0x1e1814, roughness: .72, metalness: 0, envMapIntensity: .35 }));   // padded leather: satin, not glossy (at a low angle a clear coat mirrored the room's wood: the rail looked see-through)
     g.add(mesh(ring(0, .5, .32, .04), woodM, 0, 0, 0));
     g.add(mesh(ring(.06, .52, .16, .1), leather, 0, .38, 0));
+    // the rings' inner walls (round the hole) come out of the extrusion facing away from the baize: seen from across the
+    // table they were culled and the far rail looked see-through — both rings are drawn double-sided
+    woodM.side = leather.side = T().DoubleSide;
     // the baize: a flat shape with the printed layout (UVs from the plan view)
-    const top = new TT.ShapeGeometry(outline(.48), 48); top.rotateX(-Math.PI / 2);
+    const top = new TT.ShapeGeometry(new TT.Shape(pts(.48)), 1); top.rotateX(-Math.PI / 2);
     const P = top.attributes.position, UV = top.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / W + .5, .5 - P.getZ(i) / D);
     const tex = canvasTex(key, SZ(1024), Math.round(SZ(1024) * D / W), (c, w, h) => {
       const gr = c.createRadialGradient(w / 2, h * .45, w * .05, w / 2, h / 2, w * .62); gr.addColorStop(0, '#24806a'); gr.addColorStop(1, '#0e4a3c'); c.fillStyle = gr; c.fillRect(0, 0, w, h);
@@ -78,7 +84,7 @@
     });
     const baize = mesh(top, M({ map: tex, roughness: .95, bump: false }), 0, .3, 0); baize.receiveShadow = true; g.add(baize);
     // a dark base under the baize (seen through nothing, casts the table's shadow)
-    g.add(mesh(new TT.ShapeGeometry(outline(.4), 24).rotateX(-Math.PI / 2), M({ color: 0x0b2a22 }), 0, .02, 0));
+    g.add(mesh(new TT.ShapeGeometry(new TT.Shape(pts(.4)), 1).rotateX(-Math.PI / 2), M({ color: 0x0b2a22 }), 0, .02, 0));
     g.userData.top = .31;
     return g;
   }

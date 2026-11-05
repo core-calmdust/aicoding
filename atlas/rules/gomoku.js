@@ -337,7 +337,7 @@
     }
     function finish(extra) { busy = false; targets = []; clearTimeout(idleT); hideHand(); if (L.s[step].done) say(L.s[step].done); if (extra) extra(); buttons(); autoNext(); }
     // solved: on to the next step by itself once the reaction has been read (every rules tour)
-    function autoNext() { const s0 = step, n = ((L.s[step] && L.s[step].done) || '').replace(/<[^>]+>/g, '').length; later(() => { if (step === s0 && !STEPS[step].last) go(step + 1); }, Math.min(4800, 1600 + n * 45)); }
+    function autoNext() { const s0 = step, n = ((L.s[step] && L.s[step].done) || '').replace(/<[^>]+>/g, '').length; const ms = Math.min(3200, 1100 + n * 30); if (window.AtlasRgdTimer) AtlasRgdTimer(el.querySelector('[data-a="next"]'), ms, () => step === s0); later(() => { if (step === s0 && !STEPS[step].last) go(step + 1); }, ms); }
     function onClick(e) {
       if (busy || T3.wasDrag() || e.target.closest('.rgd')) return;
       const S = STEPS[step], q = pickCell(e); if (!q || !S.act || !targets.length) return;

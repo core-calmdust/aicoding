@@ -121,7 +121,7 @@
     const TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const ft = fieldTex(); ft.anisotropy = 8;
     const top = mat('top', () => { const m = phys({ map: ft, color: 0xffffff, roughness: .14, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.5 });
-      Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); return m; });   // marks where reflections may show
+      Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -6 }); return m; });   // (polygon offset: in front of the core's top just under it — no flicker from afar)   // marks where reflections may show
     // the core: a black lacquered slab under the whole board
     const bt = mat('burlTop', () => { const t = new TT.CanvasTexture(burl(SZ(768))); t.encoding = TT.sRGBEncoding; t.anisotropy = 4; return phys({ map: t, color: 0x4a4a50, roughness: .16, clearcoat: 1, clearcoatRoughness: .04 }); });
     const sideM = mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }));

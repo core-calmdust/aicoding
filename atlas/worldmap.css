@@ -1,0 +1,94 @@
+/* ボドゲ地図 (Atlas map tab) — atlas/worldmap.js */
+.amhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.amhead .h{margin-bottom:4px}
+.amsub{margin:0 0 8px;color:var(--ink2);font-weight:700;font-size:14px}
+.amreg{padding-top:4px}
+.amwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.ammap{position:relative;overflow:hidden;aspect-ratio:2/1;max-height:74vh;min-height:320px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;
+  background:radial-gradient(120% 90% at 50% 40%,#fdf9ee 0%,#f6ecd6 70%,#efe1c2 100%)}
+.ammap:focus-visible{box-shadow:0 0 0 3px var(--sky),var(--shadow)}
+.ammap.grab{cursor:grabbing}
+.ammap canvas,.ammap .amsvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ammap .amsvg .lead line{stroke:rgba(43,48,68,.28);stroke-width:1.4}
+.ammap .amsvg .lead circle{fill:var(--c);stroke:#fff;stroke-width:1.6}
+.ammap .amsvg .dim{opacity:.25}
+.ammap .amsvg .route path{fill:none;stroke:var(--c);stroke-width:2.6;stroke-dasharray:7 6;stroke-linecap:round;animation:amDash 1.1s linear infinite}
+.ammap .amsvg .route .stop circle{fill:#fff;stroke:var(--c);stroke-width:2.6}
+.ammap .amsvg .route .stop text{font:900 12.5px var(--font);fill:var(--ink);paint-order:stroke;stroke:#fffaf0;stroke-width:4px;stroke-linejoin:round}
+@keyframes amDash{to{stroke-dashoffset:-13}}
+.ampins{position:absolute;inset:0;pointer-events:none}
+.ampin{position:absolute;left:0;top:0;width:46px;height:46px;padding:0;border:3px solid #fff;border-radius:50%;background:color-mix(in srgb,var(--c) 22%,#fff);
+  box-shadow:0 3px 0 color-mix(in srgb,var(--c) 55%,#000),0 8px 14px -6px rgba(60,40,10,.5);pointer-events:auto;cursor:pointer;transition:opacity .2s,filter .2s,box-shadow .15s;will-change:transform}
+.ampin::after{content:"";position:absolute;left:50%;bottom:-7px;width:10px;height:10px;margin-left:-5px;background:#fff;transform:rotate(45deg);border-radius:2px;z-index:-1}
+.ampin img{position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);object-fit:contain;pointer-events:none;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.ampin img.flat{inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:8px}
+.ampin:hover img{transform:scale(1.14) translateY(-2px)}
+.ampin.on{z-index:3;border-color:var(--c);background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 35%,transparent),0 3px 0 color-mix(in srgb,var(--c) 55%,#000)}
+.ampin.on::after{background:var(--c)}
+.ampin.on img{transform:scale(1.2) translateY(-3px)}
+.ampin.dim{opacity:.32;filter:grayscale(.7)}
+.ampin:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.amzoom{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.amzoom button{width:38px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);font:700 22px var(--round);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.amzoom button:active{transform:translateY(2px);box-shadow:none}
+.amzoom svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
+.amhint{position:absolute;left:12px;bottom:8px;margin:0;font-size:11.5px;font-weight:700;color:var(--ink2);opacity:.75;pointer-events:none}
+.amload{position:absolute;inset:0;margin:0;display:grid;place-items:center;font-weight:900;color:var(--ink2)}
+.amload[hidden]{display:none}
+.aminfo{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
+.amwrap>.aminfo{min-height:0}
+/* PC: the card sits under the full-width map in one row — game / story / journey / play */
+@media (min-width:820px){
+  .aminfo{display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) auto;grid-template-areas:"top story play" "facts story play" "facts jour play";column-gap:22px;row-gap:8px;align-items:start;padding:16px 20px}
+  .aminfo .amtop{grid-area:top}.aminfo .amfacts{grid-area:facts;align-self:start}
+  .aminfo .amstory{grid-area:story;min-width:0}.aminfo .amjour{grid-area:jour;min-width:0}
+  .aminfo .amplay{grid-area:play;align-self:center;width:auto;min-width:150px;margin:0}
+  .aminfo .amempty{grid-column:1/-1;padding:18px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+  .aminfo .amempty svg{width:30px;height:30px}.aminfo .amempty p{margin:0}
+}
+.amempty{margin:auto;padding:20px 0;text-align:center;color:var(--ink2);font-weight:700}
+.amempty svg{width:46px;height:46px;fill:none;stroke:var(--line);stroke-width:1.8;stroke-linejoin:round}
+.amempty p{margin:6px 0 0;font-size:14px}
+.amtop{display:flex;align-items:center;gap:12px}
+.amtop small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
+.amtop b{display:block;font-size:20px;line-height:1.25}
+.amart{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:color-mix(in srgb,var(--c) 18%,#fff)}
+.amart img{width:118%;height:118%;object-fit:contain}
+.amart img.flat{width:76%;height:76%;border-radius:10px}
+.amfacts{display:flex;gap:8px;flex-wrap:wrap}
+.amfacts span{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13.5px}
+.amfacts i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
+.aminfo h3{margin:4px 0 0;font-size:16px}
+.amd{margin:0;font-size:14px;line-height:1.75;color:var(--ink)}
+.amjour i{display:block;font-style:normal;font-size:11.5px;font-weight:900;color:var(--ink2);margin-bottom:4px}
+.amjour div{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;font-weight:700}
+.amjour span{padding:2px 9px;border-radius:99px;border:2px solid var(--line);background:#fff}
+.amjour span.h{border-color:var(--ink);background:var(--ink);color:#fff}
+.amjour em{font-style:normal;color:var(--ink2)}
+.amplay{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 16px;border:0;border-radius:99px;background:var(--c);color:#fff;font:900 16px var(--font);
+  box-shadow:0 4px 0 color-mix(in srgb,var(--c) 60%,#000);cursor:pointer;white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.amplay:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--c) 60%,#000)}
+.amplay svg{width:18px;height:18px;fill:currentColor}
+.amlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:16px 0 8px}
+.amrow{min-width:0;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border:2px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 2px 0 var(--line);text-align:start;cursor:pointer;font-family:var(--font);color:var(--ink)}
+.amrow .amart{width:44px;height:44px;border-radius:14px}
+.amrow .tx{min-width:0}
+.amrow b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amrow small{display:block;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amrow.on{border-color:var(--c);box-shadow:0 2px 0 var(--c)}
+.amrow:active{transform:translateY(2px);box-shadow:none}
+@media (max-width:819px){
+  .amwrap{grid-template-columns:1fr;gap:10px}
+  .ammap{aspect-ratio:1.55/1;min-height:220px;max-height:50vh}
+  .aminfo{padding:14px}
+  .amwrap>.aminfo{min-height:0}
+  .ampin{width:38px;height:38px;border-width:2.5px}
+  .amhint{display:none}
+  .amzoom{right:8px;top:8px}
+  .amzoom button{width:34px;height:34px}
+  .amlist{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .amrow{padding:6px 8px 6px 6px;gap:8px;border-radius:14px}
+  .amrow .amart{width:38px;height:38px;border-radius:12px}
+  .amrow b{font-size:13px}
+  .amrow small{font-size:11px}
+}
