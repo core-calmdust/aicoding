@@ -152,10 +152,14 @@
     AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
   }
   // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
-  const PROPS = [['die', 'backgammon', 9, 22, 92, -12], ['shogi', 'shogi', 22, 14, 84, 8], ['knightB', 'chess', 6, 70, 96, 0], ['disc', 'reversi', 20, 84, 104, -6],
-    ['stoneB', 'gomoku', 33, 92, 70, 0], ['c4', 'connect4', 92, 20, 92, 14], ['gem', 'mancala', 78, 10, 64, 0], ['tile', 'sudoku', 95, 64, 80, 10],
-    ['checker', 'morris', 80, 88, 92, -8], ['knight', 'chess', 66, 92, 86, 6], ['stoneW', 'gomoku', 45, 8, 60, 0], ['gem2', 'mancala', 60, 6, 54, 0],
-    ['shogi2', 'shogi', 3, 45, 70, -14], ['pawn', 'chess', 97, 42, 64, 0], ['bgChecker', 'backgammon', 50, 95, 72, 0]];
+  // the pieces floating round the title: one signature piece per game (the first 11 are the ones phones show)
+  const PROPS = [['shogi', 'shogi', 22, 14, 84, 8], ['knightB', 'chess', 6, 70, 96, 0], ['disc', 'reversi', 20, 84, 104, -6], ['xq', 'xiangqi', 92, 20, 86, 10],
+    ['stoneB', 'go', 33, 92, 70, 0], ['die', 'backgammon', 9, 22, 92, -12], ['king', 'checkers', 80, 88, 88, -8], ['card', 'solitaire', 95, 64, 86, 10],
+    ['gzhel', 'ugolki', 78, 10, 74, 0], ['urPiece', 'ur', 66, 92, 80, 6], ['c4', 'connect4', 3, 45, 80, -14],
+    ['agonQueen', 'agon', 45, 10, 66, 0], ['woodBall', 'fanorona', 60, 9, 54, 0], ['taflKing', 'tafl', 97, 40, 72, 0], ['chip', 'poker', 50, 95, 66, 0],
+    ['gem', 'mancala', 33, 9, 50, 0], ['tile', 'sudoku', 89, 82, 58, 10], ['block', 'samegame', 12, 95, 56, -8], ['coin', 'alquerque', 14, 36, 52, 0],
+    ['hexRed', 'hex', 87, 32, 50, 0], ['key', 'jailbreak', 73, 22, 56, 0], ['dotBar', 'dots', 27, 26, 56, 0], ['cardH', 'baccarat', 86, 58, 60, -10],
+    ['stoneW', 'gomoku', 4, 9, 54, 0], ['checker', 'morris', 15, 60, 58, -8], ['gzhelB', 'ugolki', 97, 92, 50, 0]];
   // title emblem: a compass seal (the "atlas") with ring lettering and a swallow-tail ribbon
   const TF = 'RocknRoll One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
   function emblem(main, pre, n) {
@@ -194,7 +198,7 @@
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=1" alt="" decoding="async"></span>`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
