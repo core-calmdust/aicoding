@@ -345,7 +345,7 @@
         return head + `<div class="hs-stats">${(c.stats || []).map((x, j) => `<div class="hs-stat rv" ${st(j, 300, 140)}><div class="v"><b class="cnt" data-n="${esc(x[0])}">0</b><span>${esc(x[1] || '')}</span></div><small>${esc(x[2] || '')}</small></div>`).join('')}</div>` + P +
         `<div class="hs-cards ls">${(c.cards || []).map((x, j) => `<div class="hs-card nb rv" ${st(j, 600, 140)}><div class="tx"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div></div>`).join('')}</div>`;
       case 'trivia': return head + P + `<div class="hs-flips">${(c.cards || []).map((x, j) => `<button type="button" class="hs-flip rv" ${st(j, 350, 140)}><span class="f"><i>?</i><b>${esc(x[0])}</b><small>${esc(u('tap'))}</small></span><span class="b"><b>${esc(x[1])}</b></span></button>`).join('')}</div>`;
-      case 'end': return `<div class="hs-end"><img class="rv" ${st(0, 0)} src="${guideSrc(game.id)}" alt=""><h2 class="hs-h">${kin(c.t || '')}</h2>${P}<div class="hs-acts rv" ${st(0, 700)}><button type="button" class="hs-btn pri" data-act="back">${esc(u('back'))}</button><button type="button" class="hs-btn" data-act="again">${esc(u('again'))}</button></div></div>`;
+      case 'end': return `<div class="hs-end"><img class="rv" ${st(0, 0)} src="${guideSrc(game.id)}" alt=""><h2 class="hs-h">${kin(c.t || '')}</h2>${P}<div class="hs-acts rv" ${st(0, 700)}><button type="button" class="hs-btn" data-act="again">${esc(u('again'))}</button><button type="button" class="hs-btn pri" data-act="back">${esc(u('back'))}</button></div></div>`;
       default: return head + P;
     }
   }

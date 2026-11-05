@@ -440,7 +440,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261104x6';
+  const V = 'v=20261105x7';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

@@ -94,6 +94,7 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
   document.head.appendChild(css);
 
   const skin = AtlasSkin.init({
+    hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: 0.14,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
     outer: r => ({ top: r.top, height: r.height }),

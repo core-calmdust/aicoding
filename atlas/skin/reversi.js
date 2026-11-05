@@ -16,6 +16,7 @@
   const boardDom = document.getElementById('board');
   const board = T3.MODELS.reversi(true), S = board.userData.S, Y = board.userData.top;
   const skin = AtlasSkin.init({
+    hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
     pc: { vars: ['--board'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)

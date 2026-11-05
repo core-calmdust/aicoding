@@ -60,6 +60,7 @@
 
   const outerFn = r => { const u = r.height / (n + 1); return { top: r.top - RIM * u, height: (n + 1 + 2 * RIM + below) * u }; };
   const skin = AtlasSkin.init({
+    hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: 0.22,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit); the turn / pass bar under the board is as wide as
