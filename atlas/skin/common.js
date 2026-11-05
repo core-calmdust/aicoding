@@ -471,7 +471,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       return { is3d: () => is3, set };
     }
     const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
-    const paint = () => { { const w = bar.querySelector('.wmT'); if (lang() === 'en') w.innerHTML = '<i class="wk">WORLD</i>Board Game Atlas'; else w.textContent = TITLE[lang()] || TITLE.en; } bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; bar.querySelector('.lc').textContent = lang().toUpperCase(); };
+    const paint = () => { { const w = bar.querySelector('.wmT'), KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"]}[lang()]; if (KW) { w.textContent = ''; const k = document.createElement('i'); k.className = 'wk'; k.textContent = KW[0]; w.append(k, KW[1]); } else w.textContent = TITLE[lang()] || TITLE.en; } bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; bar.querySelector('.lc').textContent = lang().toUpperCase(); };
     lbtn.onclick = e => { e.stopPropagation(); if (!pop.hidden) { pop.hidden = true; return; }
       pop.innerHTML = [...sel.options].map(o => `<button type="button" data-l="${o.value}" aria-selected="${o.value === lang()}"><b>${o.text}</b><small>${o.value.toUpperCase()} · ${NAMES[o.value]}</small></button>`).join('');
       pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { pop.hidden = true; if (sel.value !== b.dataset.l) { sel.value = b.dataset.l; sel.dispatchEvent(new Event('change')); } setTimeout(paint, 50); });
