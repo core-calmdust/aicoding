@@ -271,7 +271,7 @@
     const gs = .66, n = 22;
     for (let i = 0; i < 6; i++) { const p = piece(1, gs), [x, z] = U.groove.at(0, i, n); p.position.set(x, U.groove.y(gs), z); g.add(p); }
     for (let i = 0; i < 4; i++) { const p = piece(2, gs), [x, z] = U.groove.at(1, i, n); p.position.set(x, U.groove.y(gs), z); g.add(p); }
-    g.scale.setScalar(.8);   // about the other boards' size on the chabudai
+    g.scale.setScalar(.88);   // about the other boards' size on the chabudai
     return g;
   };
   X.fanorona = { board, piece, dims, R, TH };
