@@ -755,7 +755,12 @@ for (const l in I18N) if (!I18N[l]["sub.card"]) I18N[l]["sub.card"] = I18N[l]["t
     document.querySelectorAll('[data-i18n]').forEach(e => { const v = tr(e.dataset.i18n); if (v !== undefined) e.innerHTML = v; });
     document.getElementById('langSel').value = l;
     window.dispatchEvent(new CustomEvent('aicoding:lang', { detail: l }));
+    fitLogo();
   }
+  // the sub line under a kicker-style title never grows wider than the main title
+  function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
+  function fitLogo() { const b = document.querySelector('.atlas-logo .wm b'), sm = document.querySelector('.atlas-logo .wm small'); fitWM(b, sm); }
+  if (document.fonts) document.fonts.ready.then(fitLogo); addEventListener('resize', fitLogo);
   apply(lang);
   // サウンドON/OFF: 全ゲーム共通（各ゲームの音のボタンとも連動）
   (function () {

@@ -1239,6 +1239,10 @@
   }
 
   /* ---------- language apply ---------- */
+  // the sub line under a kicker-style title never grows wider than the main title
+  function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
+  const fitBrand = () => fitWM($('wm'), $('wmSub'));
+  if (document.fonts) document.fonts.ready.then(() => fitBrand()); addEventListener('resize', () => fitBrand());
   function applyLang() {
     document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     const title = t('title');
@@ -1246,6 +1250,7 @@
     if (lang === 'ja') $('wm').innerHTML = [...title].map(c => `<span>${esc(c)}</span>`).join('');
     { const KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"]}[lang]; if (KW) $('wm').innerHTML = `<i class="wk">${esc(KW[0])}</i>` + [...KW[1]].map(c => `<span>${esc(c)}</span>`).join(''); }   // Latin languages: a small ruled kicker over the shorter main title
     $('wmSub').textContent = t('sub');
+    fitBrand();
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
     $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('back')); $('footBack').textContent = t('back');
