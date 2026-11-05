@@ -68,6 +68,7 @@ html.atlas-fanorona .fn3dnote b{display:block;font-size:14px;color:#2b3044;margi
   const skin = AtlasSkin.init({
     get margin() { return NRp() === 5 && (() => { try { return E.dims().w === 9; } catch (e) { return true; } })() ? .13 : .32; },   // canvas margin round the DOM board: the slab's edge and its shadow (the square boards' slab reaches further out)
     board: boardDom,
+    persp: 10,   // a long lens: the balls stand high off the board, so a near camera showed them off their points (the DOM rings stay round them)
     outer: r => { const H = r.height * (NRp() + 3) / (NRp() + 1); return { top: r.top + r.height / 2 - H / 2, height: H }; },   // slab edge to slab edge
     guide: '../images/atlas/g-crab.webp', guideFallback: '../images/atlas/fanorona.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
