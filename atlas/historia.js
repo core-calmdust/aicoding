@@ -424,17 +424,31 @@
       const sl = sv.getAttribute('preserveAspectRatio') === 'xMidYMid slice', sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
       const w = Math.min(360, W / sc), h = Math.min(225, H / sc); return { x: (360 - w) / 2, y: (225 - h) / 2, w, h, crop: sl };
     };
-    const apply = (v, ms) => { view = v; zmSet(map, `translate(${v[0].toFixed(2)}px,${v[1].toFixed(2)}px) scale(${v[2].toFixed(4)})`, `transform ${ms}ms cubic-bezier(.4,0,.2,1)`); };
+    // pins, labels and route lines keep their on-screen size whatever the zoom: they are scaled back by (route framing ÷ zoom)
+    const LB = [...map.querySelectorAll('[data-l]')], RS = RT.map(r => parseFloat(r.style.strokeWidth) || 0);
+    const keepSize = (z, ms) => {
+      const k = zb[2] / z, tn = `transform ${ms}ms cubic-bezier(.4,0,.2,1)`;
+      P.forEach(p => { const q = PM[+p.dataset.p], o = p.parentNode; if (!q) return; o.style.transition = tn; o.style.transform = `translate(${q[0]}px,${q[1]}px) scale(${k.toFixed(4)})`; });
+      LB.forEach(l => { const q = PM[+l.dataset.l]; if (!q) return; l.style.transition = tn + ',opacity .4s'; l.style.transform = `translate(${q[0]}px,${q[1]}px) scale(${k.toFixed(4)}) translate(${-q[0]}px,${-q[1]}px)`; });
+      RT.forEach((r, j) => { r.style.transition = `stroke-width ${ms}ms, stroke-dashoffset 1s cubic-bezier(.5,0,.3,1)`; r.style.strokeWidth = (RS[j] * k).toFixed(4); });
+    };
+    const apply = (v, ms) => { view = v; keepSize(v[2], ms); zmSet(map, `translate(${v[0].toFixed(2)}px,${v[1].toFixed(2)}px) scale(${v[2].toFixed(4)})`, `transform ${ms}ms cubic-bezier(.4,0,.2,1)`); };
+    // every stage frames its own neighbourhood — the active pin with the previous one (and the next, when it is close) filling
+    // ~2/3 of the visible box — whatever the box's size: a small panel gets the same close focus as a big one. The whole route
+    // shows only as the opening overview, before the first stage.
     const follow = n => {
-      const V = vis(), z0 = zb[2]; if (!V.crop) { apply([zb[0], zb[1], z0], 600); return; }
-      const ids = [pins[n], pins[n - 1]].filter(i => PM[i]);
-      if (!ids.length) return;
+      const V = vis(), cur = pins[n]; if (!PM[cur]) return;
+      const near = (a, b) => PM[a] && PM[b] && Math.hypot(PM[a][0] - PM[b][0], PM[a][1] - PM[b][1]) < 45;
+      let ids = [cur]; if (PM[pins[n - 1]] && pins[n - 1] !== cur) ids.push(pins[n - 1]); if (near(cur, pins[n + 1]) && pins[n + 1] !== cur) ids.push(pins[n + 1]);
       const fitIn = list => { const xs = list.map(i => PM[i][0]), ys = list.map(i => PM[i][1]);
         const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-        const z = Math.min(V.w * .5 / Math.max(1, x1 - x0), V.h * .55 / Math.max(1, y1 - y0));   /* room left for the labels beside the pins */ return { z, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; };
-      let f = fitIn(ids); if (ids.length > 1 && f.z < z0 * .6) f = fitIn(ids.slice(0, 1));   // too far apart: just the active pin
-      const z = Math.max(z0 * .6, Math.min(z0 * 1.35, f.z));
-      apply([V.x + V.w / 2 - f.cx * z, V.y + V.h / 2 - f.cy * z, z], 520);
+        // the pins fill the box less a margin for their labels (labels keep their screen size: ~14 units tall, up to ~90 wide)
+        const aw = Math.max(V.w * .3, Math.min(V.w * .62, V.w - 170)), ah = Math.max(V.h * .25, Math.min(V.h * .58, V.h - 72));
+        return { z: Math.min(aw / Math.max(1, x1 - x0), ah / Math.max(1, y1 - y0)), cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; };
+      const zMax = V.w / 34, zMin = V.w / 360;   // at most ~34° of the world across the box; at least the whole width
+      let f = fitIn(ids); if (ids.length > 1 && f.z < zMax * .3) f = fitIn([cur]);   // the neighbours are far apart: the active pin alone
+      const z = Math.max(zMin, Math.min(zMax, f.z));
+      apply([V.x + V.w / 2 - f.cx * z, V.y + V.h / 2 - f.cy * z, z], 560);
     };
     // drag / pinch on the map (horizontal drags only: vertical swipes still scroll the page)
     { const pts = new Map(); let st = null;
