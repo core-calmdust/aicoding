@@ -164,19 +164,21 @@
     const g = sel && ctx.games.find(x => x.id === sel), d = g && D(g.id);
     if (!g || !d) { el.info.innerHTML = `<div class="amempty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><p>${esc(u('pick'))}</p></div>`; return; }
     const pins = pick(d.pn, lang) || [], order = d.p.map((_, i) => i);
-    el.info.innerHTML = `<div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
+    el.info.innerHTML = `<span class="amart ph" style="--c:${g.color}" aria-hidden="true">${ctx.art(g)}</span><div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
       <div class="amfacts"><span><i>${esc(u('born'))}</i><b>${esc(pins[d.h] || '')}</b></span><span><i>${esc(u('era'))}</i><b>${esc(pick(d.era, lang))}</b></span></div>
       <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p></div>
       ${pins.length > 1 ? `<div class="amjour"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}">${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
       <div class="amacts"><button type="button" class="btn amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(u('play'))}</button>
       ${hasH(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(u('hist'))}</button>` : ''}</div>`;
-    el.info.querySelector('.amplay').onclick = () => ctx.open(g.id, el.info.querySelector('.amart img'));
+    el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
   }
   function select(id, flyTo = true) {
     sel = id; info(); renderList();
     if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35)); } else redraw();
-    if (id && innerWidth < 820) { const r = el.info.getBoundingClientRect(); if (r.top > innerHeight - 140) el.info.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    if (id && innerWidth < 820) {   // phones: keep the picked game's chip in view in the strip, and the card on screen
+      const c = el.list.querySelector('.amrow.on'); if (c) el.list.scrollTo({ left: c.offsetLeft - 16, behavior: 'smooth' });
+      const r = el.info.getBoundingClientRect(); if (r.bottom > innerHeight - 70) el.info.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
   }
   function setReg(k) {
     reg = k; if (sel && k !== 'all' && regionOf(home(ctx.games.find(g => g.id === sel))) !== k) { sel = null; info(); }
@@ -196,7 +198,7 @@
       .sort((a, b) => home(a)[0] - home(b)[0]);   // west → east, like reading the map
     el.list.innerHTML = list.map(g => { const d = D(g.id), pins = pick(d.pn, lang) || [];
       return `<button type="button" class="amrow${sel === g.id ? ' on' : ''}" data-g="${g.id}" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><span class="tx"><b>${esc(ctx.gname(g))}</b><small>${esc(pins[d.h] || '')} · ${esc(pick(d.era, lang))}</small></span></button>`; }).join('');
-    el.list.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { select(b.dataset.g); if (innerWidth < 820) el.map.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    el.list.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { select(b.dataset.g); });
   }
 
   /* ---------- input: drag, wheel, pinch, double-tap; a short tap on a pin selects it ---------- */
