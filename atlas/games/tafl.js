@@ -322,7 +322,7 @@
   }
 
   /* ---------- the board card ---------- */
-  const RATING = [450, 570, 670, 790, 960, 1030, 1100, 1130, 1275, 1350, 1465, 1590, 1685, 1790, 1895, 2110, 2240, 2355, 2470, 2560];   // tafl RT_LV (rated games)
+  const RATING = [450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650];   // tafl RT_LV (rated games)
   function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan)
     const L = TX[lang] || TX.en;
     return { name: 'Lv.' + i, desc: '', rating: RATING[i - 1] };
