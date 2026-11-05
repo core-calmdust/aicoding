@@ -24,36 +24,44 @@ NF = 16
 CLIP = 1.98   # |W1|, |b1| <= CLIP: int16 accumulator (×127) cannot overflow with up to 37 pieces
 
 
-def load(files, variant):
-    rows = []
+def load(files, variant, maxpos=0):
+    """streaming two-pass reader (tens of millions of records fit: the board is kept as uint8)"""
+    n = 0; n2 = None
+    for fn in files:
+        with open(fn) as f:
+            for line in f:
+                t = line.split(None, 7)
+                if len(t) >= 8 and t[0] == str(variant) and t[4] in ('0', '1', '2'):
+                    n += 1; n2 = n2 or len(t[6])
+    if not n:
+        sys.exit('no records for variant %d' % variant)
+    keep = n if not maxpos or maxpos >= n else maxpos
+    take = None if keep == n else np.sort(np.random.choice(n, keep, replace=False))   # a random subset (uniform over the files)
+    N = int(round(math.sqrt(n2)))
+    lut = np.zeros(256, np.uint8)
+    for ch, v in {'.': 0, 'a': 1, 'd': 2, 'k': 3}.items():
+        lut[ord(ch)] = v
+    B = np.zeros((keep, n2), np.uint8); side = np.zeros(keep, np.int64); score = np.zeros(keep, np.float32)
+    res = np.zeros(keep, np.float32); src = np.zeros(keep, np.int64); feat = np.zeros((keep, NF), np.float32)
+    i = 0; k = 0; ti = 0
     for fn in files:
         with open(fn) as f:
             for line in f:
                 t = line.split()
-                if len(t) != 7 + NF or int(t[0]) != variant or t[4] not in ('0', '1', '2'):
+                if len(t) != 7 + NF or t[0] != str(variant) or t[4] not in ('0', '1', '2'):
+                    if len(t) >= 8 and t[0] == str(variant) and t[4] in ('0', '1', '2'):
+                        i += 1
                     continue
-                rows.append(t)
-    if not rows:
-        sys.exit('no records for variant %d' % variant)
-    n2 = len(rows[0][6])
-    N = int(round(math.sqrt(n2)))
-    code = {'.': 0, 'a': 1, 'd': 2, 'k': 3}
-    B = np.zeros((len(rows), n2), np.uint8)
-    side = np.zeros(len(rows), np.int64)
-    score = np.zeros(len(rows), np.float32)
-    res = np.zeros(len(rows), np.float32)
-    src = np.zeros(len(rows), np.int64)
-    feat = np.zeros((len(rows), NF), np.float32)
-    for i, t in enumerate(rows):
-        side[i] = int(t[1]); score[i] = float(t[3]); r = int(t[4]); res[i] = 1.0 if r == 2 else 0.0 if r == 1 else 0.5
-        src[i] = int(t[5])
-        B[i] = np.frombuffer(t[6].encode(), np.uint8)
-        feat[i] = [float(x) for x in t[7:]]
-    lut = np.zeros(256, np.uint8)
-    for ch, v in code.items():
-        lut[ord(ch)] = v
-    B = lut[B]
-    return N, B, side, score, res, src, feat
+                if take is not None:
+                    if ti >= keep or take[ti] != i:
+                        i += 1; continue
+                    ti += 1
+                i += 1
+                side[k] = int(t[1]); score[k] = float(t[3]); r = t[4]; res[k] = 1.0 if r == '2' else 0.0 if r == '1' else 0.5
+                src[k] = int(t[5]); B[k] = lut[np.frombuffer(t[6].encode(), np.uint8)]
+                feat[k] = np.array(t[7:], np.float32)
+                k += 1
+    return N, B[:k], side[:k], score[:k], res[:k], src[:k], feat[:k]
 
 
 def symmetries(N):
@@ -113,6 +121,8 @@ def main():
     ap.add_argument('--out', default='tafl.nnue')
     ap.add_argument('--device', default='auto')
     ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--init', default='', help='start from a checkpoint (the .pt file written next to --out)')
+    ap.add_argument('--max-positions', type=int, default=0, help='use a random subset of at most this many positions')
     args = ap.parse_args()
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     dev = args.device
@@ -121,7 +131,7 @@ def main():
     print('device', dev)
 
     t0 = time.time()
-    N, B, side, score, res, src, feat = load(args.files, args.variant)
+    N, B, side, score, res, src, feat = load(args.files, args.variant, args.max_positions)
     n = len(B)
     print('%d positions (%dx%d) in %.0f s; results: attackers %.1f%%, defenders %.1f%%, draws %.1f%%' % (
         n, N, N, time.time() - t0, 100 * (res == 0).mean(), 100 * (res == 1).mean(), 100 * (res == 0.5).mean()))
@@ -133,18 +143,24 @@ def main():
     teach[score >= 29000] = 1.0; teach[score <= -29000] = 0.0
     target = args.lam * teach + (1 - args.lam) * res
 
-    fmu = feat.mean(0); fsd = feat.std(0) + 1e-6
+    ck = None
+    if args.init:
+        ck = torch.load(args.init, map_location='cpu', weights_only=False)
+        args.hidden = ck['hidden']; fmu, fsd = ck['fmu'], ck['fsd']   # the same feature normalisation as the net it continues
+        print('init from %s (H=%d)' % (args.init, args.hidden))
+    else:
+        fmu = feat.mean(0); fsd = feat.std(0) + 1e-6
     perm = np.random.permutation(n); nv = max(1, int(n * args.val))
     vi, ti = perm[:nv], perm[nv:]
     T = lambda x: torch.tensor(x).to(dev)
-    Bt, St, Ft, Yt = T(B.astype(np.int64)), T(side), T((feat - fmu) / fsd), T(target.astype(np.float32))
+    Bt, St, Ft, Yt = T(B), T(side), T(((feat - fmu) / fsd).astype(np.float32)), T(target.astype(np.float32))
     Rt = T(res)
     nin = 3 * N * N
     syms = [p.to(dev) for p in symmetries(N)]
     plane_off = torch.tensor([0, 0, N * N, 2 * N * N], device=dev)   # code 1..3 → plane 0..2
 
     def inputs(bi, sym):
-        b = Bt[bi]
+        b = Bt[bi].long()
         if sym is not None:
             b = b[:, sym]
         x = torch.zeros(len(bi), nin + 1, device=dev)
@@ -153,7 +169,10 @@ def main():
         x.scatter_(1, col, 1.0)
         return x[:, :nin]
 
-    net = Net(nin, args.hidden).to(dev)
+    net = Net(nin, args.hidden)
+    if ck is not None:
+        net.load_state_dict(ck['state'])
+    net = net.to(dev)
     opt = torch.optim.Adam(net.parameters(), lr=args.lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.epochs)
     tiT = torch.tensor(ti, device=dev); viT = torch.tensor(vi, device=dev)
@@ -187,6 +206,7 @@ def main():
         mark = ''
         if vl < best:
             best = vl; export(net, args, N, fmu, fsd); mark = '  saved ' + args.out
+            torch.save({'state': {k: v.detach().cpu() for k, v in net.state_dict().items()}, 'hidden': args.hidden, 'fmu': fmu, 'fsd': fsd, 'N': N, 'variant': args.variant}, args.out + '.pt')
         print('epoch %2d  train %.5f  val %.5f  result accuracy %.3f  (%.0f s)%s' % (ep, tl / len(ti), vl, va, time.time() - t1, mark), flush=True)
 
 
