@@ -122,7 +122,8 @@
   // the stops' names are set above the pins, each in the first spot around its dot that covers no pin, no other name
   // and stays inside the map (right, left, below, above, then the diagonals, then farther out)
   let mctx = null;
-  const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 12.5px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
+  const fs = () => box().w < 520 ? 14 : 16;   // the stop names' size (matches --amFs in worldmap.css)
+  const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 ' + fs() + 'px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
   function routeSvg(rects, b) {
     const d = sel && D(sel); if (!d) return { under: '', over: '' };
     const g = ctx.games.find(x => x.id === sel), v = view, P = d.p.map(p => { const [x, y] = toU(p); return [sx(v, x), sy(v, y)]; });
@@ -137,7 +138,7 @@
     P.forEach((p, i) => { if (i === d.h) return; dots.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5.5"/>`); busy.push([p[0] - 7, p[1] - 7, p[0] + 7, p[1] + 7]); });
     P.forEach((p, i) => {
       const s = pins[i]; if (i === d.h || !s) return;
-      const w = textW(s) + 6, h = 17, G = 9;
+      const w = textW(s) + 8, h = fs() + 6, G = 10;
       let best = null;
       for (const e of [0, 22, 46]) {
         for (const [ox, oy] of [[G + e, -h / 2], [-G - e - w, -h / 2], [-w / 2, G + e], [-w / 2, -G - e - h], [G * .7 + e, G * .7 + e], [G * .7 + e, -G * .7 - e - h], [-G * .7 - e - w, G * .7 + e], [-G * .7 - e - w, -G * .7 - e - h]]) {
@@ -152,7 +153,7 @@
       busy.push(best.r);
       const [x0, y0, x1, y1] = best.r, cx = Math.max(x0, Math.min(x1, p[0])), cy = Math.max(y0, Math.min(y1, p[1]));
       lbl.push((best.e ? `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>` : '') +
-        `<text x="${(x0 + 3).toFixed(1)}" y="${(y0 + 12.5).toFixed(1)}">${esc(s)}</text>`);
+        `<text x="${(x0 + 4).toFixed(1)}" y="${(y0 + fs() + 1).toFixed(1)}">${esc(s)}</text>`);
     });
     const st = `style="--c:${g ? g.color : '#c48a4a'}"`;
     return { under: `<g class="route" ${st}>${arcs}<g class="stop">${dots.join('')}</g></g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}</g>` };
