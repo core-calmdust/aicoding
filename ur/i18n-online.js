@@ -589,6 +589,7 @@ for (const l in M) Object.assign(S[l], M[l]);
 // ウル王朝のゲーム
 const X = {
 "ja": {
+"ol.waitDice": "あなたの番です（相手のサイコロの準備中…）",
 "ol.setup2": "公開までもうしばらくお待ちください。AI対戦・二人対戦・レート戦・レッスン・パズルはこのまま遊べます。",
 "ol.findDesc": "同じルールでレーティングの近い人と自動で組まれます（レート対局）。サイコロは両者の暗号で決まり、どちらも操作できません。",
 "ol.searchInfo": "同じルールで待っている人 {w}人 · レート差 ±{r} まで",
@@ -599,6 +600,7 @@ const X = {
 "ol.lLeft": "離脱"
 },
 "en": {
+"ol.waitDice": "Your turn (waiting for the opponent’s share of the dice…)",
 "ol.setup2": "Please wait a little longer. Play vs the AI, two players, rated games, lessons and puzzles work as usual.",
 "ol.findDesc": "You are matched with a player of a similar rating using the same rules (rated game). The dice come from both players' secret keys, so neither side can control them.",
 "ol.searchInfo": "{w} waiting with these rules · rating gap up to ±{r}",
@@ -609,6 +611,7 @@ const X = {
 "ol.lLeft": "Left"
 },
 "zh": {
+"ol.waitDice": "轮到你（等待对方的骰子数据…）",
 "ol.setup2": "请再稍等片刻。对战AI、双人对战、等级分战、课程和谜题均可照常游玩。",
 "ol.findDesc": "自动匹配规则相同、等级分相近的玩家（等级分对局）。骰子由双方的密钥共同决定，任何一方都无法操控。",
 "ol.searchInfo": "同规则等待中 {w}人 · 等级分差 ±{r} 以内",
@@ -619,6 +622,7 @@ const X = {
 "ol.lLeft": "离开"
 },
 "ko": {
+"ol.waitDice": "당신 차례입니다 (상대의 주사위 준비 중…)",
 "ol.setup2": "조금만 더 기다려 주세요. AI 대국, 2인 대국, 레이팅전, 레슨, 퍼즐은 그대로 즐길 수 있습니다.",
 "ol.findDesc": "같은 규칙에서 레이팅이 비슷한 사람과 자동으로 매칭됩니다(레이팅 대국). 주사위는 두 사람의 비밀 키로 정해져 어느 쪽도 조작할 수 없습니다.",
 "ol.searchInfo": "같은 규칙 대기 {w}명 · 레이팅 차 ±{r}까지",
@@ -629,6 +633,7 @@ const X = {
 "ol.lLeft": "이탈"
 },
 "es": {
+"ol.waitDice": "Tu turno (esperando la parte de los dados del rival…)",
 "ol.setup2": "Espera un poco más. Contra la IA, dos jugadores, partidas puntuadas, lecciones y retos funcionan como siempre.",
 "ol.findDesc": "Te emparejamos con alguien de puntuación parecida y las mismas reglas (partida puntuada). Los dados salen de las claves secretas de ambos: nadie puede controlarlos.",
 "ol.searchInfo": "{w} esperando con estas reglas · diferencia hasta ±{r}",
@@ -639,6 +644,7 @@ const X = {
 "ol.lLeft": "Abandonó"
 },
 "fr": {
+"ol.waitDice": "À vous (en attente de la part des dés de l’adversaire…)",
 "ol.setup2": "Encore un peu de patience. Contre l’IA, à deux, parties classées, leçons et défis fonctionnent comme d’habitude.",
 "ol.findDesc": "Vous êtes associé à un joueur de classement proche avec les mêmes règles (partie classée). Les dés viennent des clés secrètes des deux joueurs : personne ne peut les contrôler.",
 "ol.searchInfo": "{w} en attente avec ces règles · écart jusqu’à ±{r}",
@@ -649,6 +655,7 @@ const X = {
 "ol.lLeft": "Parti"
 },
 "pt": {
+"ol.waitDice": "Sua vez (aguardando a parte dos dados do adversário…)",
 "ol.setup2": "Aguarde mais um pouco. Contra a IA, dois jogadores, partidas ranqueadas, lições e desafios funcionam normalmente.",
 "ol.findDesc": "Você é pareado com alguém de rating próximo e as mesmas regras (partida ranqueada). Os dados vêm das chaves secretas dos dois: ninguém consegue controlá-los.",
 "ol.searchInfo": "{w} aguardando com estas regras · diferença até ±{r}",
@@ -659,6 +666,7 @@ const X = {
 "ol.lLeft": "Saiu"
 },
 "de": {
+"ol.waitDice": "Du bist dran (warte auf den Würfelanteil des Gegners…)",
 "ol.setup2": "Bitte noch etwas Geduld. Gegen die KI, zu zweit, Wertungspartien, Lektionen und Rätsel funktionieren wie gewohnt.",
 "ol.findDesc": "Du wirst mit jemandem ähnlicher Wertung und gleichen Regeln gepaart (Wertungspartie). Die Würfel entstehen aus den geheimen Schlüsseln beider – niemand kann sie steuern.",
 "ol.searchInfo": "{w} warten mit diesen Regeln · Wertungsabstand bis ±{r}",
@@ -669,6 +677,7 @@ const X = {
 "ol.lLeft": "Verlassen"
 },
 "hi": {
+"ol.waitDice": "आपकी बारी (प्रतिद्वंद्वी के पासे के हिस्से की प्रतीक्षा…)",
 "ol.setup2": "कृपया थोड़ा और इंतज़ार करें। AI के विरुद्ध, दो खिलाड़ी, रेटेड खेल, पाठ और पहेलियाँ सामान्य रूप से चलते हैं।",
 "ol.findDesc": "आपको समान नियमों और मिलती-जुलती रेटिंग वाले खिलाड़ी से जोड़ा जाता है (रेटेड खेल)। पासे दोनों खिलाड़ियों की गुप्त कुंजियों से बनते हैं, इसलिए कोई उन्हें नियंत्रित नहीं कर सकता।",
 "ol.searchInfo": "इन नियमों से {w} प्रतीक्षा में · रेटिंग अंतर ±{r} तक",
@@ -679,6 +688,7 @@ const X = {
 "ol.lLeft": "छोड़ दिया"
 },
 "ar": {
+"ol.waitDice": "دورك (بانتظار جزء النرد من الخصم…)",
 "ol.setup2": "يرجى الانتظار قليلًا. اللعب ضد الذكاء الاصطناعي واللعب الثنائي والمباريات المصنّفة والدروس والألغاز تعمل كالمعتاد.",
 "ol.findDesc": "تتم مطابقتك مع لاعب بتصنيف قريب يلعب بالقواعد نفسها (مباراة مصنّفة). النرد ناتج عن المفاتيح السرية للاعبَين، فلا يستطيع أي منهما التحكم فيه.",
 "ol.searchInfo": "{w} بانتظار هذه القواعد · فرق التصنيف حتى ±{r}",
