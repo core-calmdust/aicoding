@@ -11,7 +11,7 @@ for (const f of files) for (const line of fs.readFileSync(path.join(dir, f), 'ut
   if (!line.trim()) continue; const d = JSON.parse(line); const k = d.s.b + d.s.side; if (seen.has(k)) continue; seen.add(k);
   d.real = f === 'duel_raw.jsonl'; all.push(d);
 }
-const THEMES = [['x2', 'Step', d => d.n === 2, 24], ['w3', 'Step', d => d.n === 3 && d.s.side === 1, 24], ['b3', 'Step', d => d.n === 3 && d.s.side === 2, 24],
+const THEMES = [['x2', 'Step', d => d.n === 2, 8], ['w3', 'Step', d => d.n === 3 && d.s.side === 1, 24], ['b3', 'Step', d => d.n === 3 && d.s.side === 2, 24],
   ['w4', 'Tac', d => d.n === 4 && d.s.side === 1, 24], ['b4', 'Tac', d => d.n === 4 && d.s.side === 2, 24], ['w5', 'End', d => d.n === 5 && d.s.side === 1, 24], ['b5', 'End', d => d.n === 5 && d.s.side === 2, 24]];
 const themes = [];
 for (const [id, grp, test, max] of THEMES) {
