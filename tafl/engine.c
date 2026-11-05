@@ -145,8 +145,11 @@ static inline int hostile(const Pos *p, int sq, int vs) {
   if (x == EMP && (FL[sq] & (F_CORNER | F_THRONE))) return 1;
   return 0;
 }
+// the pieces a move takes off / puts on (for the learned evaluation's incremental first layer): +(1 + x·NSQ + sq) / −(…)
+static int dlog[48], dlen;
 static inline void removeAt(Pos *p, int sq) {
   int x = p->b[sq]; p->h ^= ZP[x][sq]; p->b[sq] = EMP; p->ncap++;
+  if (dlen < 48) dlog[dlen++] = -(1 + x * NSQ + sq);
   if (x == ATT) p->na--; else if (x == DEF) p->nd--;
 }
 static int kingCaptured(const Pos *p, int k, int from) {   // attackers just moved to `from` (adjacent to the king)
@@ -183,8 +186,13 @@ static void shieldwall(Pos *p, int t) {
     (void)nk;
   }
 }
+static inline int att8(const Pos *p, int t) {
+  return (p->b[t - W - 1] == ATT) + (p->b[t - W] == ATT) + (p->b[t - W + 1] == ATT) + (p->b[t - 1] == ATT)
+       + (p->b[t + 1] == ATT) + (p->b[t + W - 1] == ATT) + (p->b[t + W] == ATT) + (p->b[t + W + 1] == ATT);
+}
 static inline void doMove(Pos *p, const Move *m) {
   int f = m->f, t = m->t, x = p->b[f], side = p->side;
+  dlen = 2; dlog[0] = -(1 + x * NSQ + f); dlog[1] = 1 + x * NSQ + t;
   p->b[f] = EMP; p->b[t] = (u8)x; p->h ^= ZP[x][f] ^ ZP[x][t] ^ ZSIDE; p->ncap = 0; p->res = 0;
   if (x == KNG) { p->king = (u8)t; if (FL[t] & F_ESC) { p->res = 2; p->side = side ^ 1; return; } }
   int vs = side ^ 1, kingHit = 0;
@@ -197,7 +205,9 @@ static inline void doMove(Pos *p, const Move *m) {
   if (R.shield && (FL[t] & F_EDGE)) shieldwall(p, t);
   if (side == 0) {
     if (kingHit && kingCaptured(p, kingHit, t)) { p->res = 1; p->side = 1; return; }
-    if (R.encircle && encircled(p)) { p->res = 1; p->side = 1; return; }
+    // a new encirclement needs a capture (the last defender outside taken) or the moved attacker closing the ring
+    // (two attackers among its 8 neighbours): otherwise the position was not encircled before and still is not
+    if (R.encircle && (p->ncap || att8(p, t) >= 2) && encircled(p)) { p->res = 1; p->side = 1; return; }
   } else if (R.fort && (FL[p->king] & F_EDGE) && fortCheck(p)) { p->res = 2; p->side = 0; return; }
   p->side = side ^ 1;
 }
@@ -411,7 +421,7 @@ static int evaluate(const Pos *p) {
 #define NN_QA 127
 static int nnN = 0, nnH = 0; static float nnScale = 400;
 static i16 nnW1[NN_INMAX * NN_HMAX], nnB1[NN_HMAX];
-static float nnW2[2][NN_HMAX], nnU[2][NN_NF], nnB2[2];
+static float nnW2[2][NN_HMAX] __attribute__((aligned(16))), nnU[2][NN_NF], nnB2[2];
 static u8 nnBuf[4 * (5 + NN_INMAX * NN_HMAX + NN_HMAX + 2 * NN_HMAX + 2 * NN_NF + 2) + 16];
 EXPORT(nn_buf) u8 *nn_buf(void) { return nnBuf; }
 EXPORT(nn_buf_size) int nn_buf_size(void) { return (int)sizeof nnBuf; }
@@ -475,17 +485,90 @@ static void handFeat(const Pos *p, float *f) {
   f[5] = adjA * adjA / 2.f; f[6] = adjD; f[7] = near2; f[8] = blk; f[9] = nearA; f[10] = cd; f[11] = guard; f[12] = dist;
   f[13] = chain; f[14] = edgeD; f[15] = kd;
 }
-static float nnValue(const Pos *p) {   // defenders' view, logit units
-  i16 acc[NN_HMAX] __attribute__((aligned(16)));
+// first layer, incremental: ACC[k] is the accumulator of the position at search ply k (KEY), built from ply k-1 with the pieces
+// that move took off and put on (DEL, recorded by accPush right after doMove). GEN orders the pushes: a chain k-1 → k is
+// valid only if k was pushed after k-1 (otherwise k belongs to an older branch); anything else is rebuilt from the board.
+#define ACCN (MAXPLY + 8)
+static Pos ROOT;   // (defined with the root search below)
+static i16 ACC[ACCN][NN_HMAX] __attribute__((aligned(16)));
+static int DEL[ACCN][48], DN[ACCN], OKA[ACCN]; static u64 KEY[ACCN]; static u32 GEN[ACCN], genC; static int evPly = -1;
+static int nnRC[NSQ];   // padded square → r·N + c
+static void accPush(int k, const Pos *q) {
+  if (k < 0 || k >= ACCN) return;
+  DN[k] = dlen; for (int i = 0; i < dlen; i++) DEL[k][i] = dlog[i];
+  KEY[k] = q->h; GEN[k] = ++genC; OKA[k] = 0;
+}
+static void accRoot(const Pos *p) { KEY[0] = p->h; GEN[0] = ++genC; OKA[0] = 0; DN[0] = -1; }
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
+static inline void rowAdd(i16 *a, const i16 *w, int H) {
+#ifdef __wasm_simd128__
+  for (int j = 0; j < H; j += 8) wasm_v128_store(a + j, wasm_i16x8_add(wasm_v128_load(a + j), wasm_v128_load(w + j)));
+#else
+  for (int j = 0; j < H; j++) a[j] += w[j];
+#endif
+}
+static inline void rowSub(i16 *a, const i16 *w, int H) {
+#ifdef __wasm_simd128__
+  for (int j = 0; j < H; j += 8) wasm_v128_store(a + j, wasm_i16x8_sub(wasm_v128_load(a + j), wasm_v128_load(w + j)));
+#else
+  for (int j = 0; j < H; j++) a[j] -= w[j];
+#endif
+}
+static inline const i16 *nnRow(int x, int sq) { return nnW1 + ((x == ATT ? 0 : x == DEF ? 1 : 2) * nnN * nnN + nnRC[sq]) * nnH; }
+static void accBuild(const Pos *p, i16 *acc) {
   int H = nnH; for (int j = 0; j < H; j++) acc[j] = nnB1[j];
-  int NN2 = nnN * nnN;
   for (int r = 0; r < nnN; r++) for (int c = 0; c < nnN; c++) {
-    int x = p->b[SQ(r, c)]; if (x != ATT && x != DEF && x != KNG) continue;
-    const i16 *w = nnW1 + ((x == ATT ? 0 : x == DEF ? 1 : 2) * NN2 + r * nnN + c) * H;
-    for (int j = 0; j < H; j++) acc[j] += w[j];
+    int sq = SQ(r, c), x = p->b[sq]; if (x != ATT && x != DEF && x != KNG) continue;
+    rowAdd(acc, nnRow(x, sq), H);
   }
-  int s = p->side; float o = nnB2[s]; const float *w2 = nnW2[s];
+}
+static const i16 *accFor(const Pos *p, i16 *scratch) {
+  int k = evPly;
+  if (k < 0 || k >= ACCN || KEY[k] != p->h || (k > 0 && DN[k] < 0)) { accBuild(p, scratch); return scratch; }
+  if (OKA[k]) return ACC[k];
+  int j = k;
+  while (j > 0 && !OKA[j - 1] && GEN[j] > GEN[j - 1] && DN[j - 1] >= 0) j--;   // back to a computed ancestor of this branch
+  if (j == 1 && !OKA[0] && KEY[0] == ROOT.h && GEN[1] > GEN[0]) { accBuild(&ROOT, ACC[0]); OKA[0] = 1; }
+  if (j == 0 || !(GEN[j] > GEN[j - 1]) || !OKA[j - 1]) { accBuild(p, ACC[k]); OKA[k] = 1; return ACC[k]; }
+  for (int i = j; i <= k; i++) {
+    i16 *a = ACC[i]; const i16 *b = ACC[i - 1]; int H = nnH, n = DN[i];
+    const i16 *w[48]; int sg[48];
+    for (int d = 0; d < n; d++) { int e = DEL[i][d], v = e < 0 ? -e - 1 : e - 1; w[d] = nnRow(v / NSQ, v % NSQ); sg[d] = e > 0; }
+    if (n == 2 && !sg[0] && sg[1]) {   // a quiet move: one piece off one square, onto another (fused, one pass)
+#ifdef __wasm_simd128__
+      for (int q = 0; q < H; q += 8) wasm_v128_store(a + q, wasm_i16x8_add(wasm_i16x8_sub(wasm_v128_load(b + q), wasm_v128_load(w[0] + q)), wasm_v128_load(w[1] + q)));
+#else
+      for (int q = 0; q < H; q++) a[q] = b[q] - w[0][q] + w[1][q];
+#endif
+    } else {
+      for (int q = 0; q < H; q++) a[q] = b[q];
+      for (int d = 0; d < n; d++) { if (sg[d]) rowAdd(a, w[d], H); else rowSub(a, w[d], H); }
+    }
+    OKA[i] = 1;
+  }
+  return ACC[k];
+}
+static float nnValue(const Pos *p) {   // defenders' view, logit units
+  i16 scratch[NN_HMAX] __attribute__((aligned(16)));
+  if (!nnRC[SQ(nnN - 1, nnN - 1)] && nnN > 1) for (int r = 0; r < nnN; r++) for (int c = 0; c < nnN; c++) nnRC[SQ(r, c)] = r * nnN + c;
+  if (evPly == 0 && KEY[0] == p->h && !OKA[0]) { accBuild(p, ACC[0]); OKA[0] = 1; }
+  const i16 *acc = accFor(p, scratch);
+  int H = nnH, s = p->side; float o = nnB2[s]; const float *w2 = nnW2[s];
+#ifdef __wasm_simd128__
+  {
+    const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(NN_QA); v128_t sum = wasm_f32x4_splat(0);
+    for (int j = 0; j < H; j += 8) {
+      v128_t x = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(acc + j), lo), hi), xx = wasm_i16x8_mul(x, x);
+      sum = wasm_f32x4_add(sum, wasm_f32x4_mul(wasm_f32x4_convert_i32x4(wasm_i32x4_extend_low_i16x8(xx)), wasm_v128_load(w2 + j)));
+      sum = wasm_f32x4_add(sum, wasm_f32x4_mul(wasm_f32x4_convert_i32x4(wasm_i32x4_extend_high_i16x8(xx)), wasm_v128_load(w2 + j + 4)));
+    }
+    o += wasm_f32x4_extract_lane(sum, 0) + wasm_f32x4_extract_lane(sum, 1) + wasm_f32x4_extract_lane(sum, 2) + wasm_f32x4_extract_lane(sum, 3);
+  }
+#else
   for (int j = 0; j < H; j++) { int x = acc[j] < 0 ? 0 : acc[j] > NN_QA ? NN_QA : acc[j]; o += (float)(x * x) * w2[j]; }
+#endif
   float f[NN_NF]; handFeat(p, f);
   for (int i = 0; i < NN_NF; i++) o += nnU[s][i] * f[i];
   return o;
@@ -565,6 +648,7 @@ static int kingFork(const Pos *p) {
 }
 static int noTac = 0;   // the weakest levels sometimes play "blind": no tactical horizon (they miss two-move escapes / threats)
 static int leafValue(Pos *p, int alpha, int beta, int ply) {
+  evPly = ply;
   if (noTac) return evaluate(p);
   // tactical horizon: escape lines and king captures one move ahead are resolved exactly
   if (p->side == 1) {
@@ -579,16 +663,16 @@ static int leafValue(Pos *p, int alpha, int beta, int ply) {
 static int qsearch(Pos *p, int alpha, int beta, int ply) {
   u8 mark[NSQ]; for (int i = 0; i < NSQ; i++) mark[i] = 0;
   int lines = kingLines(p, p->king, mark);
-  if (!lines) return evaluate(p);
+  if (!lines) { evPly = ply; return evaluate(p); }
   nodes++;
   Move L[MAXMV]; int n = gen(p, L), best = -(WIN - ply - 2);
   for (int i = 0; i < n; i++) {
     if (!mark[L[i].t]) continue;
-    Pos q = *p; doMove(&q, &L[i]);
+    Pos q = *p; doMove(&q, &L[i]); accPush(ply + 1, &q);
     int v;
     if (q.res == 1) v = WIN - ply - 1;
     else if (kingLines(&q, q.king, 0)) v = -(WIN - ply - 2);
-    else v = -evaluate(&q);
+    else { evPly = ply + 1; v = -evaluate(&q); }
     if (v > best) { best = v; if (v > alpha) { alpha = v; if (v >= beta) break; } }
   }
   return best;
@@ -604,7 +688,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
     if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
   }
   if (timeUp() && ply > 0) return 0;
-  if (ply >= MAXPLY - 4) return evaluate(p);
+  if (ply >= MAXPLY - 4) { evPly = ply; return evaluate(p); }
   // immediate tactical facts
   if (!noTac && p->side == 1 && kingLines(p, p->king, 0)) return WIN - ply - 1;
   if (!noTac && p->side == 1 && depth <= 2 && kingFork(p)) return WIN - ply - 3;
@@ -649,7 +733,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     if (threat && sc[i] == -(1 << 30)) { if (best == -INF) { best = -(WIN - ply - 2); } break; }
     Move *m = &L[i];
-    Pos q = *p; doMove(&q, m);
+    Pos q = *p; doMove(&q, m); accPush(ply + 1, &q);
     int irr = q.ncap > 0, saveIrr = hirr;
     if (irr) hirr = hn;
     int qp = irr ? 0 : quietPlies + 1;
@@ -723,7 +807,7 @@ static void writeMove(i32 *o, const Move *m) { o[0] = fromPad(m->f) | (fromPad(m
 static int rootSearch(int depth, int all, int alpha0, int beta0) {
   int alpha = alpha0, best = -INF;
   for (int i = 0; i < rootN; i++) {
-    Move *m = &rootL[i]; Pos q = ROOT; doMove(&q, m);
+    Move *m = &rootL[i]; Pos q = ROOT; doMove(&q, m); accPush(1, &q);
     int irr = q.ncap > 0, saveIrr = hirr; hkeys[hn++] = ROOT.h; if (irr) hirr = hn;
     int qp = irr ? 0 : rootQuiet + 1, v;
     if (q.res) v = WIN - 1;
@@ -742,11 +826,11 @@ static void sortRoot(void) {
   for (int i = 1; i < rootN; i++) { Move m = rootL[i]; int v = rootVal[i], j = i - 1; while (j >= 0 && rootVal[j] < v) { rootL[j + 1] = rootL[j]; rootVal[j + 1] = rootVal[j]; j--; } rootL[j + 1] = m; rootVal[j + 1] = v; }
 }
 static void orderRoot(void) {   // a cheap first ordering: one-ply values
-  for (int i = 0; i < rootN; i++) { Pos q = ROOT; doMove(&q, &rootL[i]); rootVal[i] = q.res ? WIN : -leafValue(&q, -INF, INF, 1); }
+  for (int i = 0; i < rootN; i++) { Pos q = ROOT; doMove(&q, &rootL[i]); accPush(1, &q); rootVal[i] = q.res ? WIN : -leafValue(&q, -INF, INF, 1); }
   sortRoot();
 }
 static void beginSearch(int ms) {
-  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++;
+  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++; accRoot(&ROOT);
   for (int a = 0; a < 2; a++) for (int b = 0; b < NSQ; b++) { for (int c = 0; c < NSQ / 8 + 1; c++) hist[a][b][c] >>= 2; histT[a][b] >>= 2; }
   memset(killers, 0, sizeof(killers));
 }

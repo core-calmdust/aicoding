@@ -365,7 +365,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261106h5';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261106sp';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
