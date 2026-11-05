@@ -318,8 +318,10 @@
       if (L.s[step].done) say(L.s[step].done);
       if (st.act === 'win') { SFX.chime(); tip('🏆 ' + L.win); Object.values(pcs).forEach(p => anim(700, k => lift(p.g, Math.sin(k * Math.PI) * .6))); }
       else SFX.chime();
-      buttons();
+      buttons(); autoNext();
     }
+    // solved: on to the next step by itself once the reaction has been read (every rules tour)
+    function autoNext() { const s0 = step, n = ((L.s[step] && L.s[step].done) || '').replace(/<[^>]+>/g, '').length; later(() => { if (step === s0 && !STEPS[step].last) go(step + 1); }, Math.min(4800, 1600 + n * 45)); }
     function pointOf(e) {
       const p = T3.pick(e, Y); if (!p) return -1;
       const dc = Math.round(p.x + 4), dr = Math.round(p.z + 2);
