@@ -5,7 +5,10 @@
   boards : folk (painted American folk-art panel, default), victorian (mahogany + lithographed field),
            walnut (oiled black walnut, routed cells, brass), slate (honed slate, engraved, brass throne)
   pieces : bone (bone / ebony, default), folk (milk paint), ceramic (matte glaze), brass (brass / gunmetal)
-python3 agon/tools/gen_art.py [boards] [pieces] [preview <out.png>]"""
+  3d     img/3d-<folk|victorian>-<c|n|r>.webp : maps for the portal's 3D boards (atlas/models/agon.js):
+           c = unlit albedo, n = tangent-space normal map from the height field, r = G roughness / B metalness;
+           the 3D folk panel is more worn than the 2D one (a split along the pine grain, chipped corners)
+python3 agon/tools/gen_art.py [boards] [pieces] [3d] [preview <out.png>]"""
 import os, sys, math, numpy as np
 from PIL import Image, ImageDraw
 from scipy.ndimage import gaussian_filter, map_coordinates, rotate
@@ -58,12 +61,27 @@ def shade(h, albedo, gloss=40, spec=0.5, amb=0.4, metal=0.0, env=None):
     return col
 
 
+def exp3d(name, alb, h, rough, metal=None, k=1.0):
+    """3D maps: unlit albedo, a normal map of the height field (OpenGL / three.js convention), roughness (G) / metalness (B)"""
+    if not EXP3D: return
+    save_rgb(alb, f'3d-{name}-c.webp', 90)
+    gy, gx = np.gradient(gaussian_filter(h, .6))
+    n = np.dstack([-gx * k, gy * k, np.ones_like(h)]); n /= np.linalg.norm(n, axis=2, keepdims=True)
+    save_rgb((n * .5 + .5) * 255, f'3d-{name}-n.webp', 94)
+    m = np.zeros_like(h) if metal is None else metal
+    save_rgb(np.dstack([np.full_like(h, 255.), np.clip(rough, 0, 1) * 255, np.clip(m, 0, 1) * 255]), f'3d-{name}-r.webp', 90)
+
+
 def mix(a, b, t):
     t = np.clip(t, 0, 1)[..., None] if np.ndim(t) == 2 else t
     return a * (1 - t) + b * t
 
 
+EXP3D = False   # (gen_art.py 3d: the board functions write the 3D maps and skip their 2D pictures)
+
+
 def save_rgb(col, name, q=88):
+    if EXP3D and name.startswith('bd-'): return
     Image.fromarray(np.clip(col, 0, 255).astype(np.uint8), 'RGB').save(os.path.join(OUT, name), quality=q, method=6)
     print(name, os.path.getsize(os.path.join(OUT, name)) // 1024, 'KB')
 
@@ -365,6 +383,33 @@ def folk_board():
     h += -crack * .5 + (1 - smooth(0, 3, d1)) * .12 * paint
     h += noise(sh, 1.5, .06) + .25 * brush * .1
     h = gaussian_filter(h, .7)
+    if EXP3D:   # the 3D panel: more of a life behind it — a split along the pine grain from the right edge, another at the
+        # top left, chipped and rubbed corners down to the bare pine
+        alb3, h3 = alb.copy(), h.copy()
+        def split(y0, x0, x1, w0, seedv):
+            r2 = np.random.default_rng(seedv); xs = np.arange(N, dtype=float)
+            yc = y0 + np.cumsum(r2.normal(0, .35, N)); yc -= yc[int(x0)] - y0
+            t = np.clip((xx - x0) / (x1 - x0), 0, 1) * ((xx >= min(x0, x1)) & (xx <= max(x0, x1)))
+            w = w0 * t ** .7 + .2
+            d = np.abs(yy - yc[xx.astype(int)])
+            gap = smooth(w + .8, w * .5, d) * (t > 0)
+            lipz = smooth(w + 6, w + .8, d) * (t > 0) * (1 - gap)
+            return gap, lipz
+        g1, l1 = split(N * .705, N * .52, N - 1, 3.4, 7)
+        g2, l2 = split(N * .215, N * .2, 0, 2.2, 9)
+        gap = np.maximum(g1, g2); lipz = np.maximum(l1, l2)
+        bare = np.clip(lipz * (.5 + .5 * noise(sh, 3, 1)) * .9, 0, 1)
+        alb3 = mix(alb3, pine * .9, bare * .7)
+        alb3 = mix(alb3, C('#160e07'), gap)
+        h3 = h3 - gap * 3.5 - lipz * .35
+        # chipped corners: paint gone to the wood, the corner itself rounded off
+        for cx_, cy_, rr in ((N, N, 120), (0, N, 70), (N, 0, 55), (0, 0, 45)):
+            dd = np.hypot(xx - cx_, yy - cy_) + noise(sh, 6, 14) + noise(sh, 1.5, 4)
+            wear = smooth(rr, rr * .45, dd)
+            alb3 = mix(alb3, mix(pine, C('#5a4026'), .35 + .3 * noise(sh, 8, 1)), wear * .92)
+            h3 = h3 - wear * 1.2
+        rough = .64 + .2 * (1 - paint) - .1 * tone * paint + .2 * crack + .12 * bare + .2 * gap
+        exp3d('folk', alb3, h3, np.clip(rough, .4, .95), k=1.6)
     col = shade(h, alb, gloss=18, spec=.06, amb=.66)
     col = col * (1 - .1 * np.clip(1 - dsq / 6, 0, 1))[..., None]
     save_rgb(col, 'bd-folk.webp', 86)
@@ -471,6 +516,10 @@ def victorian_board():
     edge_h = 6 * np.sin(np.clip(dsq / 14, 0, 1) * math.pi / 2) ** .7
     h = edge_h + np.where(g.inside, .25 * paper_fib * .3, h_w * .5) + gold_all * .7 + gl_o * .4 - craze * .2
     h = gaussian_filter(h, .7)
+    if EXP3D:
+        rough = np.where(g.inside, .5, .26) + .2 * m_s / 255 * 0 + .22 * np.clip(m_s, 0, 1) + .1 * craze
+        rough = rough * (1 - gold_all) + (.3 + .25 * rub) * gold_all
+        exp3d('victorian', alb, h, np.clip(rough, .15, .9), metal=gold_all * (1 - .5 * rub), k=1.2)
     metal = gold_all * .55
     spec = np.where(g.inside, .10, .14) + gold_all * .25
     col = shade(h, alb, gloss=np.where(g.inside, 30, 45), spec=spec, amb=.68, metal=metal)
@@ -782,6 +831,9 @@ def preview(path):
 
 if __name__ == '__main__':
     want = sys.argv[1:] or ['boards', 'pieces']
+    if '3d' in want:
+        EXP3D = True; folk_board(); victorian_board(); want = [w for w in want if w != '3d']
+        if not want: sys.exit(0)
     if 'boards' in want: folk_board(); victorian_board(); walnut_board(); slate_board()
     for b in ('folk', 'victorian', 'walnut', 'slate'):
         if b in want: globals()[b + '_board']()
