@@ -833,7 +833,10 @@
       blob(g, B, [bc.x, bc.y, bc.z], BR);
       const fc = V3(0, 1.02, .26), FR = [.78, .76, .68];
       blob(g, Wt, [fc.x, fc.y, fc.z], FR);
-      [-1, 1].forEach(s => blob(g, B, [s * .2, 1.66, .5], [.3, .2, .2]));                         // widow's peak
+      // widow's peak: its own copy of the body material drawn a hair in front (polygon offset), so where it meets the white face
+      // it never flickers — the room builds the figures with few segments and the two surfaces run almost together there
+      const Bp = B.clone(); Bp.onBeforeCompile = B.onBeforeCompile; Bp.userData = Object.assign({}, B.userData); Bp.polygonOffset = true; Bp.polygonOffsetFactor = -2; Bp.polygonOffsetUnits = -4;
+      [-1, 1].forEach(s => blob(g, Bp, [s * .2, 1.66, .53], [.3, .2, .22]));
       const eyes = face(g, ell(fc, FR), { er: .11, gap: .24, v: .24, mouth: 'none', by: .17, bx: .13 });
       blob(g, O, [0, 1.06, .92], [.12, .07, .1]);                                                   // beak
       [-1, 1].forEach(s => blob(g, B, [s * .92, .82, .05], [.13, .34, .26], [0, 0, s * (s > 0 ? .9 : .45)]));   // flippers (one waving)
