@@ -252,7 +252,7 @@
       stop() { stopped = true; if (kit) kit.stop(); clearInterval(typeT); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); removeEventListener('resize', lockH); document.removeEventListener('keydown', onKey, true); el.remove(); css.remove(); },
       panel: el,
       _debug: { step: () => step, phase: () => phase, played: () => played, n: () => n, sel: () => sel, legal: () => E && st ? legal() : [], st: () => st && st.pos.map(a => a.slice()),
-        cell: (r, c) => kit && kit.projCell(r, c), slot: (side, kind, kk) => kit && kit.projSlot(side, kind, kk), die: i => kit && kit.projDie(i), dieSize: () => { const a = kit.projDie(0), g = kit.dice[0]; if (!a) return 0; const r = kit.U.dieR * g.userData.s; const b = kit.project(g.position.x + r, g.position.y, g.position.z); const c = kit.project(g.position.x, g.position.y, g.position.z + r); return Math.round(2 * Math.max(Math.hypot(b.x - a.x, b.y - a.y), Math.hypot(c.x - a.x, c.y - a.y))); }, rc: i => E && rcOf(0, i), go },
+        cell: (r, c) => kit && kit.projCell(r, c), slot: (side, kind, kk) => kit && kit.projSlot(side, kind, kk), die: i => kit && kit.projDie(i), kit: () => kit, dieSize: () => { const a = kit.projDie(0), g = kit.dice[0]; if (!a) return 0; const r = kit.U.dieR * g.userData.s; const b = kit.project(g.position.x + r, g.position.y, g.position.z); const c = kit.project(g.position.x, g.position.y, g.position.z + r); return Math.round(2 * Math.max(Math.hypot(b.x - a.x, b.y - a.y), Math.hypot(c.x - a.x, c.y - a.y))); }, rc: i => E && rcOf(0, i), go },
     };
     window.__rulesSess = sess;   // (tests)
     return sess;

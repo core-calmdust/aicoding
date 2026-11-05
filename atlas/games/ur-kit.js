@@ -132,8 +132,8 @@
        (then they step aside, small, to the free corner beside the small block), on a PC beside the small block (they stay there) */
     const BS = Math.max(2.1, Math.min(3, 2.1 * Math.pow(844 / Math.max(560, innerHeight), 1.6)));   // the large dice: about 60–80 px on a phone (a short screen shows the board smaller)
     const STG = !opts.stage ? null : tall
-      ? { big: { s: BS, y: Y, tilt: .75, at: i => [.62 + (i < 2 ? .33 : -.33) * BS, (i % 2 ? .34 : -.34) * BS] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
-      : { big: { s: 1.25, y: 0, tilt: .75, at: i => [U.W / 2 + 1.0 + (i & 1) * .78, (i >> 1) ? .45 : -.45] } };
+      ? { big: { s: BS, y: Y, at: i => [.62 + (i < 2 ? .33 : -.33) * BS, (i % 2 ? .34 : -.34) * BS] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
+      : { big: { s: 1.25, y: 0, at: i => [U.W / 2 + 1.0 + (i & 1) * .78, (i >> 1) ? .45 : -.45] } };
     if (STG && !STG.small) STG.small = STG.big;
     let ST = STG ? STG.small : null, DS = ST ? ST.s : .8;
     // tilt: the large dice lean their top towards the top of the screen, as if seen from the player's side (straight down, an
@@ -141,6 +141,26 @@
     let TL = ST && ST.tilt || 0;
     const TAX = tall ? new TH.Vector3(0, 0, 1) : new TH.Vector3(1, 0, 0);   // screen-horizontal (phone upright: screen up = +x; PC: screen up = −z)
     const BASE = () => ST ? ST.y : 0, REST = () => BASE() + U.dieRest * DS + U.dieR * DS * .55 * Math.sin(TL), DICE = [];
+    /* a settled roll: only the tip that points up keeps its inlay (each die has two marked tips; seen from above, the marked tip
+       lying at the foot showed its blue as well, and the dice could not be counted). Marked up: the lapis in the middle of the die;
+       plain up: no blue at all. While the dice tumble they are whole again. (Per-die copies of the shared geometry, cached.) */
+    const VARG = {}, BODY_U = .0625;
+    function variant(base, hide) {
+      const key = base.uuid + hide.join(''); if (VARG[key]) return VARG[key];
+      const g = base.clone(), pos = g.attributes.position, uv = g.attributes.uv, TV = U.dieVerts;
+      for (let t = 0; t < pos.count; t += 3) {
+        if (uv.getX(t) < .6) continue;   // (the inlay columns of the swatch strip: shell .6875, lapis .9375)
+        const cx = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3, cy = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3, cz = (pos.getZ(t) + pos.getZ(t + 1) + pos.getZ(t + 2)) / 3;
+        let j = 0, bd = 1e9; TV.forEach((v, k) => { const d = (v[0] - cx) ** 2 + (v[1] - cy) ** 2 + (v[2] - cz) ** 2; if (d < bd) { bd = d; j = k; } });
+        if (hide.includes(j)) for (let q = 0; q < 3; q++) uv.setXY(t + q, BODY_U, .5);
+      }
+      uv.needsUpdate = true; return (VARG[key] = g);
+    }
+    function faces(d) {   // d = the roll (null: the whole dice)
+      DICE.forEach((g, i) => { const m = g.userData.d.children[0]; if (!m || !m.geometry) return; const b = m.userData.g0 || (m.userData.g0 = m.geometry);
+        m.geometry = !d || i >= d.length ? b : variant(b, d[i] ? [1] : [0, 1]); });
+      T3.kick(120);
+    }
     const setTilt = g => g.userData.t.quaternion.setFromAxisAngle(TAX, -TL);
     function ensureDice(n) {
       while (DICE.length < n) {
@@ -169,20 +189,20 @@
       }).then(() => { DS = to.s; TL = t1; ensureDice(from.length); DICE.forEach((g, i) => { if (i < from.length) { g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.visible = true; } }); T3.kick(200); });
     }
     function restDice(side, d, n = 4) {
-      n = d ? d.length : n; ensureDice(n);
+      n = d ? d.length : n; ensureDice(n); faces(d);
       const Pl = places(side, n);
       for (let i = 0; i < n; i++) { const g = DICE[i]; U.dieUp(g.userData.d, !!(d && d[i]), i * 1.9 + side * .7 + .3); g.position.set(Pl[i][0], REST(), Pl[i][1]); g.userData.sh.position.y = .002 - REST(); g.userData.sh.scale.set(1, 1, 1); g.userData.sh.material.opacity = .45; }
       T3.kick(200);
     }
     async function roll(side, d) {   // the throw of the 3D skin (UrDice3D.throwPlan): in from outside the board on the roller's side
-      const n = d.length; ensureDice(n);
+      const n = d.length; ensureDice(n); faces(null);
       const Pl = places(side, n), sg = sideOf(side) === 0 ? 1 : -1;
       const items = DICE.slice(0, n).map((g, i) => ({ g, d: g.userData.d, sh: g.userData.sh, marked: !!d[i], rest: REST(), h0: 1.4 * Math.max(1, DS),
         from: [Pl[i][0] + (Math.random() - .5) * 1.4, Pl[i][1] + sg * (1.7 + Math.random() * .6)], to: [Pl[i][0], Pl[i][1]] }));
       const TP = window.UrDice3D.throwPlan(items, { dur: 980 / spd() });
       if (opts.sfx) opts.sfx('roll');
       await anim(TP.total / 1, k => TP.frame(k * TP.total));
-      TP.end();
+      TP.end(); faces(d);
       if (opts.sfx) opts.sfx('dieStop');
       T3.kick(200);
     }
