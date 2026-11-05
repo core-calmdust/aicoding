@@ -136,7 +136,7 @@
     const pins = pick(d.pn, lang) || [], order = d.p.map((_, i) => i);
     el.info.innerHTML = `<div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
       <div class="amfacts"><span><i>${esc(u('born'))}</i>${esc(pins[d.h] || '')}</span><span><i>${esc(u('era'))}</i>${esc(pick(d.era, lang))}</span></div>
-      <h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p>
+      <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p></div>
       ${pins.length > 1 ? `<div class="amjour"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}">${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
       <button type="button" class="btn amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(u('play'))}</button>`;
     el.info.querySelector('.amplay').onclick = () => ctx.open(g.id, el.info.querySelector('.amart img'));
