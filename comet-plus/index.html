@@ -8612,7 +8612,7 @@ function draw() {
             const t1 = '3d edition · beta 2', t2 = originMode ? ' · origin' : '', w1 = renderCtx.measureText(t1).width, w2 = t2 ? renderCtx.measureText(t2).width : 0, al = renderCtx.textAlign;
             renderCtx.textAlign = 'left'; const x0 = cx + 6 - (w1 + w2) / 2;
             drawTitleTextMorph(renderCtx, x0, 290, `400 12px ${config.fontFamily}`, 'rgba(255, 255, 255, 0.7)', t1, 1); // 崩れても文字数は同じ（はみ出さない）
-            if (t2) { renderCtx.fillStyle = '#ff5ad8'; renderCtx.fillText(t2, x0 + w1, 290); }
+            if (t2) drawTitleTextMorph(renderCtx, x0 + w1, 290, `400 12px ${config.fontFamily}`, '#ff5ad8', t2, 1); // origin も同じタイミングで崩れる
             renderCtx.textAlign = al;
         }
 
