@@ -66,24 +66,14 @@
     };
   })();
 
-  function start(ctx) {
-    const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, MC = T3.mancala, G = MC.G;
-    const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
-    const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const board = T3.MODELS.mancala(true); T3.show('mancala', board);
+  // the board, its gems, counts, rings and the sowing animation: shared by table play and the rules tour
+  // (atlas/rules/mancala.js), so a demo move looks exactly like a move in a game. bottom = the player whose row is near.
+  function kit(T3, bottom, o) {   // o.tall: force the upright-phone layout on / off
+    const THREE = window.THREE, MC = T3.mancala, G = MC.G, TOP = G.TOP, K0 = { dead: false };
+    const board = T3.MODELS.mancala(true);
     // phones held upright: the long board stands up the screen (camera rolled), your row on the right and your store at the top as in the 2D game
-    const tall = innerHeight > innerWidth * 1.15;
+    const tall = o && o.tall != null ? !!o.tall : innerHeight > innerWidth * 1.15;
     if (tall) board.rotation.y = Math.PI;
-    if (T3.fit) T3.fit(tall ? { w: 6.4, d: 13.4, y: G.TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: G.TOP, pitch: 1.05 });
-    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = +ctx.size === 6 ? 6 : 4, RULES = 'kalah';
-    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
-    const pname = s => s ? t('bv.second') : t('bv.first');
-    const bottom = human;   // the human's row (pvp: the first player's) is the near one, sowing counter-clockwise
-    let b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = SEEDS; b[i + 7] = SEEDS; }
-    let side = 0, over = false, stopped = false, busy = false, worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintPit = -1, msg = '';
-    const ix = s => s;   // HUD pill / clock: first player left (0), second right (1)
-    const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(side), { human: pvp || side === human, ply }); };
-
     /* ---------- geometry: engine slot → hollow on the board ---------- */
     const isStore = i => i === 6 || i === 13, ownerOf = i => i <= 6 ? 0 : 1;
     function hollow(i) {   // [x, z, straight half length, radius, depth]
@@ -108,7 +98,7 @@
     }
     let gemN = 0;
     function newGem() { const s = MC.stone((gemN++ * 5 + (rnd() * 8 | 0)) % MC.GEMS.length); s.rotation.set((rnd() - .5) * .5, rnd() * 6.3, (rnd() - .5) * .5); board.add(s); return s; }
-    function rebuild() {   // the gems as `b` says, without animation
+    function rebuild(b) {   // the gems as `b` says, without animation
       slots.forEach(l => { l.forEach(s => board.remove(s)); l.length = 0; });
       for (let i = 0; i < 14; i++) for (let n = 0; n < b[i]; n++) { const s = newGem(), p = spot(i); s.position.copy(p); s.userData.tp = p; slots[i].push(s); }
       for (let i = 0; i < 14; i++) setCount(i, b[i]);
@@ -144,25 +134,13 @@
     hintRing.rotation.x = Math.PI / 2; hintRing.visible = false; board.add(hintRing);
     const capM = new THREE.MeshBasicMaterial({ color: 0xff5d5d, transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
     const capRings = [0, 1].map(() => { const m = new THREE.Mesh(glowG, capM); m.scale.setScalar(1.12); m.visible = false; board.add(m); return m; });
-    let hover = -1;
-    function showGlows() {
-      const mine = !over && !busy && (pvp || side === human) && window.MancalaEngine;
-      for (let k = 0; k < 6; k++) {
-        const i = (side ? 7 : 0) + k, g = glows[k];
-        g.visible = !!(mine && b[i] > 0);
-        if (g.visible) { const [x, z] = hollow(i); g.position.set(x, TOP - .005, z); g.scale.setScalar(i === hover ? 1.07 : 1); }
-      }
-      if (T3.kick) T3.kick(150);
-    }
-    function hideHint() { hintPit = -1; if (hintRing.visible) { hintRing.visible = false; if (T3.kick) T3.kick(150); } hintJ++; }
-
     /* ---------- animation helpers ---------- */
     const tweens = new Set(); let raf = 0;
     function loop() {
       raf = 0; const now = performance.now();
       tweens.forEach(w => { const k = Math.min(1, (now - w.t0) / w.dur); if (k < 0) return; w.f(k); if (k >= 1) { tweens.delete(w); if (w.done) w.done(); } });
       if (T3.kick) T3.kick(120);
-      if (tweens.size && !stopped) raf = requestAnimationFrame(loop);
+      if (tweens.size && !K0.dead) raf = requestAnimationFrame(loop);
     }
     function anim(dur, f, done, delay = 0) { tweens.add({ t0: performance.now() + delay, dur, f, done }); if (!raf) raf = requestAnimationFrame(loop); }
     const nap = ms => new Promise(r => setTimeout(r, ms));
@@ -191,8 +169,7 @@
     function moveHand(i, dur) { const [x, z] = hollow(i), p0 = hand.position.clone(), to = new THREE.Vector3(x, HY, z); return new Promise(res => anim(dur, k => { hand.position.lerpVectors(p0, to, ease(k)); }, res)); }
 
     /* ---------- one move with the sowing animation (engine events) ---------- */
-    async function animate(tr) {
-      const my = ++tok, alive = () => my === tok && !stopped;
+    async function animate(tr, b, alive, cb) {   // cb: { cap(n), extra() } (the banners); alive(): still wanted
       const counts = Int8Array.from(b), total = tr.events.filter(e => e.t === 'drop').length;
       const step = total <= 8 ? 400 : Math.max(200, 400 - (total - 8) * 10), dur = Math.round(step * 1.35);   // the full game's 「ふつう」 timing
       for (const ev of tr.events) {
@@ -220,7 +197,7 @@
           const lit = [ev.from].concat(ev.own >= 0 ? [ev.own] : []);
           lit.forEach((i, j) => { const [x, z] = hollow(i), m = capRings[j]; m.position.set(x, TOP - .004, z); m.visible = true; });
           anim(600, k => { capM.opacity = Math.sin(k * Math.PI) * .95; });
-          msg = X.cap + ' +' + (ev.n + (ev.own >= 0 ? 1 : 0)); hud(); SND.cap();
+          if (cb && cb.cap) cb.cap(ev.n + (ev.own >= 0 ? 1 : 0)); SND.cap();
           await nap(650);
           if (!alive()) return;
           capRings.forEach(m => { m.visible = false; });
@@ -238,9 +215,48 @@
         }
       }
       if (!alive()) return;
-      if (tr.extra && !tr.over) { msg = X.extra; hud(); SND.extra(); await nap(900); }
+      if (tr.extra && !tr.over) { if (cb && cb.extra) cb.extra(); SND.extra(); await nap(900); }
       else await nap(dur);
     }
+
+    function pitAt(e, side) {   // the pit of `side` under the pointer
+      const p = T3.pick(e, TOP); if (!p) return -1;
+      for (let k = 0; k < 6; k++) { const i = (side ? 7 : 0) + k, [x, z] = hollow(i); if (Math.hypot(p.x - x, p.z - z) < G.PR * 1.2) return i; }
+      return -1;
+    }
+    return Object.assign(K0, { board, tall, isStore, ownerOf, hollow, slots, spot, newGem, rebuild, labels, setCount, glowM, glowG, glows, hintRing, capM, capRings,
+      anim, nap, ease, fly, hand, animate, pitAt,
+      stop() { K0.dead = true; tweens.clear(); if (raf) cancelAnimationFrame(raf); labels.forEach(l => { l.tex.dispose(); l.m.geometry.dispose(); l.m.material.dispose(); }); } });
+  }
+
+  function start(ctx) {
+    const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, MC = T3.mancala, G = MC.G;
+    const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
+    const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
+    const bottom0 = ctx.mode === 'pvp' ? 0 : ctx.side === 2 ? 1 : 0;   // the human's row (pvp: the first player's) is the near one, sowing counter-clockwise
+    const K = kit(T3, bottom0), { board, tall, isStore, ownerOf, hollow, slots, labels, setCount, glows, hintRing, anim } = K;
+    const rebuild = () => K.rebuild(b), pitAt = e => K.pitAt(e, side);
+    T3.show('mancala', board);
+    if (T3.fit) T3.fit(tall ? { w: 6.4, d: 13.4, y: G.TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: G.TOP, pitch: 1.05 });
+    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = +ctx.size === 6 ? 6 : 4, RULES = 'kalah';
+    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
+    const pname = s => s ? t('bv.second') : t('bv.first');
+    let b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = SEEDS; b[i + 7] = SEEDS; }
+    let side = 0, over = false, stopped = false, busy = false, worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintPit = -1, msg = '';
+    const ix = s => s;   // HUD pill / clock: first player left (0), second right (1)
+    const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(side), { human: pvp || side === human, ply }); };
+
+    let hover = -1;
+    function showGlows() {
+      const mine = !over && !busy && (pvp || side === human) && window.MancalaEngine;
+      for (let k = 0; k < 6; k++) {
+        const i = (side ? 7 : 0) + k, g = glows[k];
+        g.visible = !!(mine && b[i] > 0);
+        if (g.visible) { const [x, z] = hollow(i); g.position.set(x, TOP - .005, z); g.scale.setScalar(i === hover ? 1.07 : 1); }
+      }
+      if (T3.kick) T3.kick(150);
+    }
+    function hideHint() { hintPit = -1; if (hintRing.visible) { hintRing.visible = false; if (T3.kick) T3.kick(150); } hintJ++; }
 
     /* ---------- the game ---------- */
     function hud(m) {
@@ -254,7 +270,8 @@
       hideHint(); busy = true; hover = -1; showGlows(); ply++;
       const tr = MancalaEngine.trace(b, mover, k, RULES);
       msg = ''; hud();
-      await animate(tr);
+      const my = ++tok;
+      await K.animate(tr, b, () => my === tok && !stopped, { cap: n => { msg = X.cap + ' +' + n; hud(); }, extra: () => { msg = X.extra; hud(); } });
       if (stopped) return;
       b = Int8Array.from(tr.board); for (let i = 0; i < 14; i++) setCount(i, b[i]);
       over = tr.over; side = tr.over ? side : tr.next; busy = false;
@@ -287,11 +304,6 @@
       const me = human ? s1 : s0, op = human ? s0 : s1;
       hud(me > op ? L.win : me < op ? L.lose : L.draw);
       ctx.onEnd({ win: me > op, draw: me === op, level, score: me + ' - ' + op });
-    }
-    function pitAt(e) {
-      const p = T3.pick(e, TOP); if (!p) return -1;
-      for (let k = 0; k < 6; k++) { const i = (side ? 7 : 0) + k, [x, z] = hollow(i); if (Math.hypot(p.x - x, p.z - z) < G.PR * 1.2) return i; }
-      return -1;
     }
     const canTap = () => !over && !busy && (pvp || side === human) && !!window.MancalaEngine;
     function onClick(e) {
@@ -349,10 +361,9 @@
       resign() { if (!over) finish(pvp ? side : human, 'resign'); },
       timeout(s) { if (!over) finish(s, 'time'); },
       stop() {
-        stopped = true; tok++; tweens.clear(); if (raf) cancelAnimationFrame(raf);
+        stopped = true; tok++; K.stop();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
         if (worker) worker.terminate(); if (hintW) hintW.terminate();
-        labels.forEach(l => { l.tex.dispose(); l.m.geometry.dispose(); l.m.material.dispose(); });
       },
     };
     return api;
@@ -363,6 +374,6 @@
     return { name: a[n], desc: d[n], rating: 0, who: w[WG[n]] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.mancala = { levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [4, 6], size0: 4,
+  window.Atlas3D.mancala = { kit, levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [4, 6], size0: 4,
     sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', z), levelInfo, start };   // table: start() plays on the chabudai itself
 })();

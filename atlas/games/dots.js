@@ -75,15 +75,10 @@
     gc.putImageData(gi, 0, 0); c.fillStyle = c.createPattern(g, 'repeat'); c.fillRect(0, 0, CW, CH);
   }
 
-  function start(ctx) {
-    const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, D = T3.dots;
-    const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
-    const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const n = [3, 4, 5].includes(+ctx.size) ? +ctx.size : 4, level = Math.max(1, Math.min(10, +ctx.level || 5));
-    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
-    const pname = s => X.n[s];
-    const INK = [D.RED, D.BLUE];
-
+  // the notebook page, its ink and the two pens: shared by table play and the rules tour (atlas/rules/dots.js),
+  // so a demo line is drawn exactly as in a game. n = boxes per side.
+  function kit(T3, n, o) {   // o.tall: force the upright-phone layout on / off
+    const THREE = window.THREE, D = T3.dots, INK = [D.RED, D.BLUE], K0 = { dead: false };
     /* ---------- the notebook, the page we draw on, the two pens ---------- */
     const root = new THREE.Group(), nb = D.notebook(false); root.add(nb);
     const PW = D.PW, PD = D.PD, PY = D.PY;
@@ -151,7 +146,7 @@
       c.font = `italic 700 ${U(Math.min(.95, SP * .5))}px "Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive`; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.fillText(o ? 'B' : 'R', 0, 0); c.restore();
     }
-    function redraw() {   // paper + every drawn line + every closed box + the running tally in the margin
+    function redraw(by, owner, score) {   // paper + every drawn line + every closed box + the running tally in the margin
       const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(paper, 0, 0); c.setTransform(1, 0, 0, PH / CH, 0, 0);
       for (let bx = 0; bx < B; bx++) if (owner[bx] >= 0) boxInk(c, bx, owner[bx]);
       for (let e = 0; e < E; e++) if (by[e] >= 0) inkStroke(c, strokeOf(e), INK[by[e]]);
@@ -161,7 +156,7 @@
       tex.needsUpdate = true; if (T3.kick) T3.kick(150);
     }
     // the pens: red (first) lies right of the notebook, blue (second) on the left; the one in use is held over the page
-    const tall = innerHeight > innerWidth * 1.15;   // phones held upright
+    const tall = o && o.tall != null ? !!o.tall : innerHeight > innerWidth * 1.15;   // phones held upright
     const pens = INK.map((col, i) => {
       const yaw = new THREE.Group(), tilt = new THREE.Group(), p = D.pen(new THREE.Color(col).getHex(), false);
       p.position.set(1.695, 0, 0); tilt.add(p); yaw.add(tilt); root.add(yaw);
@@ -174,24 +169,13 @@
     const toRoot = (px, pz, y) => { const v = new THREE.Vector3(px - PW / 2, y, pz - PD / 2); nb.localToWorld(v); root.worldToLocal(v); return v; };   // page units → root space
     const WRITE = { yaw: -.75, tilt: .95 };
     root.userData.top = PY; root.userData.viewY = .4;
-    T3.show('dots', root);
-    if (T3.fit) T3.fit(tall ? { w: 8.3, d: 10.2, y: PY, pitch: 1.3 } : { w: 10.8, d: 10.2, y: PY, pitch: 1.2 });   // the whole page (and the pens beside it)
-
-    /* ---------- state ---------- */
-    let by = new Int8Array(E).fill(-1), owner = new Int8Array(B).fill(-1), score = [0, 0], turn = 0, over = false, stopped = false, busy = false;
-    let worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintE = -1, msg = '', moves = [];
-    const cnt = bx => boxEdges(bx).filter(e => by[e] >= 0).length;
-    const ix = c => c;
-    const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(turn), { human: pvp || turn === human, ply }); };
-    redraw();
-
     /* ---------- animation helpers ---------- */
     const tweens = new Set(); let raf = 0;
     function loop() {
       raf = 0; const now = performance.now();
       tweens.forEach(w => { const k = Math.min(1, (now - w.t0) / w.dur); if (k < 0) return; w.f(k); if (k >= 1) { tweens.delete(w); if (w.done) w.done(); } });
       if (T3.kick) T3.kick(120);
-      if (tweens.size && !stopped) raf = requestAnimationFrame(loop);
+      if (tweens.size && !K0.dead) raf = requestAnimationFrame(loop);
     }
     const anim = (dur, f, delay = 0) => new Promise(res => { tweens.add({ t0: performance.now() + delay, dur, f, done: res }); if (!raf) raf = requestAnimationFrame(loop); });
     const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -218,7 +202,6 @@
     const mkMark = (col, op, w) => { const g = ribbonG.clone(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array((RSEG + 1) * 6), 3)); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, toneMapped: false })); m.visible = false; m.renderOrder = 2; m.userData.w = w; nb.add(m); return m; };
     const preview = mkMark(0x6b6f7a, .32, .045), hintMk = mkMark(0xffa21a, .55, .22);
     function markEdge(m, e) { if (e < 0) { if (m.visible) { m.visible = false; if (T3.kick) T3.kick(120); } return; } const st = strokeOf(e); shapeRibbon(m.geometry, Object.assign({}, st, { x1: st.x1, z1: st.z1 }), m.userData.w, PY + .003); m.visible = true; if (T3.kick) T3.kick(120); }
-    function hideHint() { hintE = -1; markEdge(hintMk, -1); hintJ++; }
     // a closed box: a soft flash of the closer's colour
     function flash(bx, o) {
       const r = Math.floor(bx / n), cc = bx % n, [px, pz] = dotP(r, cc);
@@ -228,8 +211,7 @@
     }
 
     /* ---------- drawing a line ---------- */
-    async function drawLine(e, pl) {
-      const my = ++tok, alive = () => my === tok && !stopped;
+    async function drawLine(e, pl, alive) {   // the pen of player pl draws edge e (alive(): still wanted)
       const st = strokeOf(e), o = pens[pl], up = .55;
       penHome(1 - pl);
       o.away = true;
@@ -251,11 +233,51 @@
       penTo(o, Object.assign({ x: z.x, y: z.y + up, z: z.z }, WRITE), 120);
       return true;
     }
+    // the edge under the pointer: the nearer of the row / column lines, within ~0.38 spacing of it
+    function edgeAt(ev, by) {
+      const p = T3.pick(ev, PY); if (!p) return -1;
+      const v = new THREE.Vector3(p.x, PY, p.z); root.localToWorld(v); nb.worldToLocal(v);
+      const u = (v.x + PW / 2 - X0) / SP, w = (v.z + PD / 2 - Z0) / SP;
+      if (u < -.4 || w < -.4 || u > n + .4 || w > n + .4) return -1;
+      const rh = Math.round(w), ch = Math.floor(u), dh = Math.abs(w - rh), cv2 = Math.round(u), rv = Math.floor(w), dv = Math.abs(u - cv2);
+      const okH = ch >= 0 && ch < n && rh >= 0 && rh <= n, okV = rv >= 0 && rv < n && cv2 >= 0 && cv2 <= n;
+      let e = -1, d = .38;
+      if (okH && dh < d) { e = rh * n + ch; d = dh; }
+      if (okV && dv < d) e = HN + rv * (n + 1) + cv2;
+      return e >= 0 && by[e] < 0 ? e : -1;
+    }
+    return Object.assign(K0, { root, nb, page, PW, PD, PY, SP, X0, Z0, dotP, HN, E, B, edgeRC, boxEdges, edgeBoxes, INK, tall, pens, setPose, toRoot, WRITE,
+      strokeOf, qpt, redraw, anim, ease, penTo, penHome, ribbon, ribbonM, ribbonG, shapeRibbon, mkMark, preview, hintMk, markEdge, flash, drawLine, edgeAt,
+      stop() { K0.dead = true; tweens.clear(); if (raf) cancelAnimationFrame(raf); tex.dispose(); ribbonG.dispose(); } });
+  }
+
+  function start(ctx) {
+    const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, D = T3.dots;
+    const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
+    const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
+    const n = [3, 4, 5].includes(+ctx.size) ? +ctx.size : 4, level = Math.max(1, Math.min(10, +ctx.level || 5));
+    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
+    const pname = s => X.n[s];
+    const K = kit(T3, n), { root, nb, PY, E, B, HN, boxEdges, edgeBoxes, INK, tall, pens, anim, penHome, ribbon, ribbonG, preview, hintMk, markEdge, flash } = K;
+    const redraw = () => K.redraw(by, owner, score), edgeAt = ev => K.edgeAt(ev, by);
+
+    T3.show('dots', root);
+    if (T3.fit) T3.fit(tall ? { w: 8.3, d: 10.2, y: PY, pitch: 1.3 } : { w: 10.8, d: 10.2, y: PY, pitch: 1.2 });   // the whole page (and the pens beside it)
+
+    /* ---------- state ---------- */
+    let by = new Int8Array(E).fill(-1), owner = new Int8Array(B).fill(-1), score = [0, 0], turn = 0, over = false, stopped = false, busy = false;
+    let worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintE = -1, msg = '', moves = [];
+    const cnt = bx => boxEdges(bx).filter(e => by[e] >= 0).length;
+    const ix = c => c;
+    const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(turn), { human: pvp || turn === human, ply }); };
+    redraw();
+
+    function hideHint() { hintE = -1; markEdge(hintMk, -1); hintJ++; }
     async function play(e, pl) {   // player pl draws edge e
       if (pvp || pl === human) hist.push({ by: by.slice(), owner: owner.slice(), score: score.slice(), turn, moves: moves.slice() });
       hideHint(); markEdge(preview, -1); busy = true; ply++;
       msg = ''; hud();
-      const ok = await drawLine(e, pl);
+      const my = ++tok, ok = await K.drawLine(e, pl, () => my === tok && !stopped);
       if (!ok || stopped) return;
       by[e] = pl; moves.push(e); ribbon.visible = false;
       const closed = edgeBoxes(e).filter(bx => cnt(bx) === 4 && owner[bx] < 0);
@@ -305,19 +327,6 @@
       hud(me > op ? L.win : me < op ? L.lose : L.draw);
       ctx.onEnd({ win: me > op, draw: me === op, level, score: me + ' - ' + op });
     }
-    // the edge under the pointer: the nearer of the row / column lines, within ~0.38 spacing of it
-    function edgeAt(ev) {
-      const p = T3.pick(ev, PY); if (!p) return -1;
-      const v = new THREE.Vector3(p.x, PY, p.z); root.localToWorld(v); nb.worldToLocal(v);
-      const u = (v.x + PW / 2 - X0) / SP, w = (v.z + PD / 2 - Z0) / SP;
-      if (u < -.4 || w < -.4 || u > n + .4 || w > n + .4) return -1;
-      const rh = Math.round(w), ch = Math.floor(u), dh = Math.abs(w - rh), cv2 = Math.round(u), rv = Math.floor(w), dv = Math.abs(u - cv2);
-      const okH = ch >= 0 && ch < n && rh >= 0 && rh <= n, okV = rv >= 0 && rv < n && cv2 >= 0 && cv2 <= n;
-      let e = -1, d = .38;
-      if (okH && dh < d) { e = rh * n + ch; d = dh; }
-      if (okV && dv < d) e = HN + rv * (n + 1) + cv2;
-      return e >= 0 && by[e] < 0 ? e : -1;
-    }
     const canTap = () => !over && !busy && (pvp || turn === human);
     function onClick(ev) { if (!canTap() || T3.wasDrag()) return; const e = edgeAt(ev); if (e >= 0) play(e, turn); }
     let hov = -1;
@@ -329,7 +338,7 @@
     ctx.el.addEventListener('click', onClick); ctx.el.addEventListener('pointermove', onMove);
     hud(''); setTimeout(() => next(), 600);
     window.Atlas3D.dots._dbg = {
-      at: e => { const st = strokeOf(e), [x, z] = qpt(st, .5), v = toRoot(x, z, PY); return T3.project(v.x, v.z, PY); },
+      at: e => { const st = K.strokeOf(e), [x, z] = K.qpt(st, .5), v = K.toRoot(x, z, PY); return T3.project(v.x, v.z, PY); },
       state: () => ({ n, turn, over, busy, human, pvp, score: score.slice(), moves: moves.slice(), drawn: moves.length, E, owner: Array.from(owner), hint: hintE, hist: hist.length }),
       safe: () => { const free = []; for (let e = 0; e < E; e++) if (by[e] < 0 && !edgeBoxes(e).some(bx => cnt(bx) >= 2)) free.push(e); return free; },
       closing: () => { for (let e = 0; e < E; e++) if (by[e] < 0 && edgeBoxes(e).some(bx => cnt(bx) === 3)) return e; return -1; },
@@ -374,10 +383,9 @@
       resign() { if (!over) finish(pvp ? turn : human, 'resign'); },
       timeout(sd) { if (!over) finish(sd, 'time'); },
       stop() {
-        stopped = true; tok++; tweens.clear(); if (raf) cancelAnimationFrame(raf);
+        stopped = true; tok++; K.stop();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
         if (worker) worker.terminate(); if (hintW) hintW.terminate();
-        tex.dispose(); ribbonG.dispose();
       },
     };
     return api;
@@ -388,6 +396,6 @@
     return { name: a[n], desc: d[n], rating: RATING[n], who: w[WG[n]] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.dots = { levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [3, 4, 5], size0: 4,
+  window.Atlas3D.dots = { kit, levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [3, 4, 5], size0: 4,
     sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
 })();
