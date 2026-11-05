@@ -257,7 +257,7 @@ function renderReserves(pos) {
     const bottom = flip ? P2 : P1, el = $(p === bottom ? '#res1' : '#res2');
     const inT = pos.inTarget(p), home = pos.inHome(p), mv = pos.movesOf(p), lim = E.R.limit;
     let s = `<span class="rsv-l"><i class="pdisc p${p}"></i><b>${inT}</b>/${n}</span><span class="rsv-bar"><i style="width:${Math.round(inT / n * 100)}%"></i></span>`;
-    if (home && !startSpec) s += `<span class="rsv-w${mv >= lim - 8 ? ' hot' : ''}" title="${escHb(t('lim.title', { n: lim }))}">${t('lim.home', { k: home, n: Math.max(0, lim - mv) })}</span>`;
+    if (home && !startSpec) s += `<span class="rsv-w${mv >= lim - 8 ? ' hot' : ''}" title="${escHb(t('lim.title', { n: lim }))}">${t('lim.home', { k: `<b>${home}</b>`, n: `<b>${Math.max(0, lim - mv)}</b>` })}</span>`;
     el.innerHTML = `<span class="rsv-plate">${s}</span>`;
     el.title = t('rsv.title', { c: pname(p), a: inT, b: n });
     el.classList.remove('turn');
