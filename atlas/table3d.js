@@ -1538,7 +1538,10 @@
       const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
     }
     root.rotation.y = yaw;
-    { const s = tYaw !== null ? tS : 1; if (root.scale.x !== s) { root.scale.setScalar(s); root.position.y = (alignTop || 0) * (1 - s); rootDirty = true; } }   // (scaled about the field's top: it stays on the DOM board's plane)
+    { // the turn's scale: about the floor (the board and its legs stay standing on the table — its shadow stays put under it),
+      // enlarged a hair so the field (lower now, further from the camera) still looks exactly s × its size, like the DOM board on top
+      const s = tYaw !== null ? tS : 1, H0 = Math.max(1, cam.position.y - (alignTop || 0)), t = alignTop || 0, k = s === 1 ? 1 : s * (H0 + t) / (H0 + s * t);
+      if (root.scale.x !== k) { root.scale.setScalar(k); root.position.y = 0; rootDirty = true; } }
     if (roomTicks.length && !alignFn && !(quietOn && now > kickUntil)) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
     // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
