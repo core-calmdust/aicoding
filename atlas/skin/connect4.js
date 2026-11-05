@@ -46,6 +46,7 @@ html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(
 
   const skin = AtlasSkin.init({
     board: boardDom, persp: PERSP,
+    turn: 'y', hold: true,   // 盤面反転: the tower turns round its upright axis (seen from the front) and stays turned: its tiles keep their own columns
     pc: { vars: ['--cell'], all: true },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const u = r.height / 6; return { top: r.top - u * 1.2, height: u * 8.3 }; },   // rail tops to tray
     guide: '../images/atlas/g-plop.webp', guideFallback: '../images/atlas/connect4.webp',

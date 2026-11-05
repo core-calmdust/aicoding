@@ -94,6 +94,10 @@ html.atlas-skin .brand{display:none!important}
 .atlas-ic,.atlas-lbtn{height:40px;min-width:40px;border-radius:99px;border:2px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer;padding:0}
 .atlas-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .atlas-ic.off .on-w,.atlas-ic:not(.off) .off-x{display:none}
+/* 盤面反転 (on: turned round) and 戦績 icons of the game, mirrored into the portal bar; the phones' tab bar has its own 戦績 tab */
+#atlasFlip.flipped{color:#b07a1a;border-color:#e6c77e;background:linear-gradient(180deg,#fff8e6,#fbe9c0);box-shadow:0 2px 0 #e6c77e}
+.atlas-ic:focus-visible{outline:2px solid #e2b65e;outline-offset:2px}
+#atlasRec[hidden]{display:none}
 .atlas-lbtn{display:inline-flex;gap:6px;padding:0 12px 0 9px;font:700 14px 'Fredoka',sans-serif}
 .atlas-lbtn svg{width:20px;height:20px}
 .atlas-lpop{position:absolute;top:62px;right:60px;width:276px;padding:8px;border-radius:24px;background:#fffdf7;border:2px solid #efe3c8;box-shadow:0 6px 0 #efe3c8,0 24px 40px -18px rgba(80,40,0,.5);display:grid;grid-template-columns:1fr 1fr;gap:6px}
