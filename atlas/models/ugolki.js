@@ -54,6 +54,7 @@
       if (fr) {   // the painted flowers, as the 2D frame shows them (the picture is a 2 × 2 sheet of motifs, ~1.9 squares each)
         const tile = ppu * 3.8;
         g.save(); g.globalAlpha = .96;
+        g.beginPath(); g.rect(0, 0, Wp, oy - ppu * .16); g.rect(0, oy + F + ppu * .16, Wp, Hp - oy - F - ppu * .16); g.clip();   // the top and bottom bands only (the narrow side strips stay plain)
         for (let y = -tile * .25; y < Hp; y += tile) for (let x = -tile * .3; x < Wp; x += tile) g.drawImage(fr, x, y, tile, tile);
         g.restore();
       }
