@@ -1344,6 +1344,7 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
     grid-template-rows:var(--fhb) calc(var(--ich) * .3 - 8px) calc(var(--ich) * .2 - 4px) calc(var(--ich) * .5 - 8px)!important;grid-template-areas:"board board board" "ck pl rv" "ck ev rv" "ck ev kf"!important}
   html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app.app.app.app:not(#zz):not(#zy):not(#zx):not(#zw):not(#zv){grid-template-areas:"board board board" "bx pl rv" "bx ev rv" "bx ev kf"!important}
   html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:not(:has(> .side > .side-in > .review-card.show)):has(> .side > .side-in > #coachCard:not(.hidden)) .kifu-card{grid-row:2 / 5!important}
+  html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app #coachCard{grid-row:2 / 5!important}   /* (the coach spans the whole info row: all three of its rows) */
   html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)) .side-in > .players,
   html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > .players{flex-direction:row!important;align-items:stretch!important;gap:8px!important;padding:8px!important;overflow:hidden}
   html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app:is(:has(> .side > .side-in > #coachCard:not(.hidden)), :has(> .side > .side-in > .review-card.show)) .side-in > .players .player,
@@ -1352,6 +1353,11 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
   html.rvb-on[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > .players .player :is(.status, .count small){display:none!important}
   html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > #evalCard{display:flex!important;flex-direction:column;min-height:0}
   html[data-rule=sivy]:not(.sv-wide):not(:has(> body.dock-open:not(.ol-soon))) body .app .side-in > #evalCard .graph{flex:1 1 auto!important;height:auto!important;min-height:34px}
+  /* PC, the wide column layout: the two players side by side in one row, and 形勢 keeps its graph with the coach open too */
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .players{flex-direction:row!important;align-items:stretch!important;gap:8px!important;padding:8px!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .players .player{flex:1 1 0!important;min-width:0;grid-template-columns:minmax(0,1fr) auto!important;padding:6px 10px!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz) > .players .player :is(.status, .count small){display:none!important}
+  html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz):not(#zy) > #evalCard .graph{display:block!important;flex:none!important;height:clamp(40px, calc(var(--vh) * .075), 72px)!important}
 }
 </style>
 </head>
