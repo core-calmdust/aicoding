@@ -357,3 +357,6 @@ html.hs-open body > main.wrap *{animation-play-state:paused!important}
 
 /* origin map: pins and labels are scaled back against the zoom (Historia follow) */
 .hs-map.steps .zm > g,.hs-map.steps .lbg{transform-box:view-box;transform-origin:0 0}
+
+/* the origin map only fades in (no rise / scale): it stands still until its first zoom */
+.in .hs-map.steps.rv{animation:hsFade .45s var(--d,0ms) both}
