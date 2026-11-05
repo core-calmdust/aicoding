@@ -242,7 +242,7 @@
     const TT = T();
     if (look === 'folk') {
       const body = mat('fb' + side, () => phys({ color: side === 1 ? '#d9c9a2' : '#221e1a', roughness: .82, metalness: 0, envMapIntensity: .6 }));
-      return { body, face: q => mat('ff' + side + q, () => phys({ map: folkFace(side, q), color: 0xffffff, roughness: .8, metalness: 0, envMapIntensity: .6 })), crown: null };
+      return { body, face: q => mat('ff' + side + q, () => { const m = phys({ map: folkFace(side, q), color: 0xffffff, roughness: .8, metalness: 0, envMapIntensity: .6 }); m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -6; return m; }), crown: null };   // (painted faces drawn in front: no flicker from afar)
     }
     const bone = () => phys({ map: grainTex('agBone', [233, 222, 196], [204, 188, 156], 2.2), color: 0xffffff, roughness: .36, metalness: 0, clearcoat: .35, clearcoatRoughness: .3, envMapIntensity: 1.05 });
     const ebony = () => phys({ map: grainTex('agEbony', [30, 25, 22], [58, 44, 34], 1.6), color: 0xffffff, roughness: .26, metalness: 0, clearcoat: .7, clearcoatRoughness: .12, envMapIntensity: 1.1 });
@@ -261,7 +261,7 @@
       if (!folk) { const cr = new TT.Mesh(crownGeo(), M.crown); cr.position.y = QH; cr.castShadow = true; g.add(cr); }
     } else {
       const body = new TT.Mesh(guardGeo(!folk), M.body); body.castShadow = body.receiveShadow = true; g.add(body);
-      if (folk) { const f = new TT.Mesh(faceGeo(), M.face(false)); f.position.y = GH + .0045; f.receiveShadow = true; g.add(f); }
+      if (folk) { const f = new TT.Mesh(faceGeo(), M.face(false)); f.position.y = GH + .009; f.receiveShadow = true; g.add(f); }
     }
     g.userData = { kind, side, queen, h };
     return g;

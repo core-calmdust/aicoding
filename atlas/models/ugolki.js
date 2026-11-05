@@ -146,13 +146,13 @@
   }
   function pieceMats(col) {
     return [mat('pb' + col, () => phys({ color: col === 1 ? 0xf4f6fb : 0x1f43a6, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })),
-      mat('pd' + col, () => phys({ map: decalTex(col), color: 0xffffff, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }))];
+      mat('pd' + col, () => { const m = phys({ map: decalTex(col), color: 0xffffff, roughness: .28, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }); m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -6; return m; })];   // (the painted face is drawn in front of the puck's top: seen from afar — the Historia gallery — the two flickered)
   }
   // col 1 white (White) / 2 cobalt (Black)
   function piece(col) {
     const TT = T(), g = new TT.Group(), [mb, md] = pieceMats(col);
     const body = new TT.Mesh(pieceGeo(), mb); body.castShadow = body.receiveShadow = true; g.add(body);
-    const face = new TT.Mesh(decalGeo(), md); face.position.y = PH + .0095; face.receiveShadow = true; g.add(face);
+    const face = new TT.Mesh(decalGeo(), md); face.position.y = PH + .013; face.receiveShadow = true; g.add(face);
     g.userData = { col, h: PH };
     return g;
   }
