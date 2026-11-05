@@ -28,6 +28,7 @@
 
   const skin = AtlasSkin.init({
     board: boardEl,
+    turn: false,   // 盤面反転: the notebook (spiral on top) isn't turned round — the ink on its page follows the turned 2D board
     pc: { vars: ['--board'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const k = r.height / SQ; return { top: r.top - (BZ0 + .2) * k, height: (PD + .2) * k }; },   // the whole notebook
     guide: '../images/atlas/g-dot.webp', guideFallback: '../images/atlas/dots.webp',
@@ -72,7 +73,9 @@
   const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
   page.material = page.material.clone(); page.material.map = tex; page.material.needsUpdate = true;
   let paper = null, paperN = 0;
-  const geo = () => { const n = game.n, W = n * U + 2 * M; return { n, W, dot: (r, c) => [BX0 + (M + c * U) / W * SQ, BZ0 + (M + r * U) / W * SQ], sp: U / W * SQ }; };
+  // 盤面反転 (shared/flipbtn.js): the page draws its board turned round — the ink on the notebook follows it (the dots are symmetric)
+  const flipOn3 = () => { try { return typeof flipOn === 'function' && !!flipOn(); } catch (e) { return false; } };
+  const geo = () => { const n = game.n, W = n * U + 2 * M, F = flipOn3(); return { n, W, F, dot: (r, c) => { if (F) { r = n - r; c = n - c; } return [BX0 + (M + c * U) / W * SQ, BZ0 + (M + r * U) / W * SQ]; }, sp: U / W * SQ }; };
   function makePaper(gm) {
     const c = (paper = paper || document.createElement('canvas')).getContext('2d'); paper.width = CW; paper.height = PH; paperN = gm.n; c.setTransform(1, 0, 0, PH / CH, 0, 0);
     paperFill(c, CW, CH, T3);
@@ -142,7 +145,7 @@
     const sc = .93 + rr() * .14; c.scale(sc, sc); c.drawImage(o, -S / 2, -S / 2);
   }
   function boxInk(c, gm, bx, o) {
-    const r = Math.floor(bx / gm.n), cc = bx % gm.n, [px, pz] = gm.dot(r, cc), x0 = Uu(px), y0 = Uu(pz), sz = Uu(gm.sp), col = o === 2 ? NEUTRAL : INK[o];
+    const r = Math.floor(bx / gm.n), cc = bx % gm.n, [px, pz] = gm.F ? gm.dot(r + 1, cc + 1) : gm.dot(r, cc), x0 = Uu(px), y0 = Uu(pz), sz = Uu(gm.sp), col = o === 2 ? NEUTRAL : INK[o];
     let q = 131 * (bx + 3); const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
     c.save(); c.beginPath(); c.rect(x0 + Uu(.08), y0 + Uu(.08), sz - Uu(.16), sz - Uu(.16)); c.clip();
     c.strokeStyle = col; c.globalAlpha = o === 2 ? .12 : .24; c.lineWidth = Uu(.022);
@@ -206,7 +209,7 @@
     const r = oRender.apply(this, arguments);
     try {
       let ini = ''; try { ini = initial(0) + '|' + initial(1); } catch (e) {}   // (the initials too: a language switch rewrites them)
-      const key = S ? ini + ':' + game.n + ':' + S.p.drawn.join('') + ':' + Array.from(S.by).join(',') + ':' + Array.from(S.owner).join(',') : '';
+      const key = S ? ini + ':' + game.n + (flipOn3() ? 'f' : '') + ':' + S.p.drawn.join('') + ':' + Array.from(S.by).join(',') + ':' + Array.from(S.owner).join(',') : '';
       if (anim && S && S.log.length && settings.anim) { lastKey = key; animateLast(); }
       else if (key !== lastKey) { lastKey = key; anTok++; ribbon.visible = false; paint(); }
     } catch (e) {}

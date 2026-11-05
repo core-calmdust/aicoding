@@ -800,6 +800,8 @@
   }
   let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
+  // 盤面反転 on the skin pages (AtlasSkin): the table turned round its own centre — tYaw / tS set from outside each frame (turn())
+  let tYaw = null, tS = 1, rootDirty = false;
 
   /* ---------- the toy room: a chabudai (low round table) on tatami, walls, a window, toy shelves ----------
      Lighting follows the local time like the Sudoku backgrounds: morning / day / evening / night. */
@@ -1458,7 +1460,7 @@
     for (let i = 0; i < instHidden.length; i++) instHidden[i].layers.set(0);
     instHidden.length = 0;
     if (!top || !top.parent) return;
-    const TT = T(); top.updateMatrixWorld(true);
+    const TT = T(); if (rootDirty) { root.updateMatrixWorld(true); rootDirty = false; } else top.updateMatrixWorld(true);   // (the 盤面反転 turn moves root: the copies follow in the same frame)
     if (!_m4.a) { _m4.a = new TT.Matrix4(); _m4.flip = new TT.Matrix4().makeScale(1, -1, 1); }
     instCollect(top); let sig = 0;
     INST.forEach((byM, geo) => byM.forEach((pair, mat) => { for (let j = 0; j < 2; j++) {
@@ -1531,10 +1533,12 @@
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; }
     if (!drag && !vel && mode === 'view' && !quietOn && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
-    if (mode === 'play') {   // in a game the board stays still, squared to the player
+    if (mode === 'play' && tYaw !== null) { yaw = tYaw; vel = 0; }   // the 盤面反転 turn (turn()): the angle is given
+    else if (mode === 'play') {   // in a game the board stays still, squared to the player
       const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; yaw += (home - yaw) * .15; vel = 0;
     }
     root.rotation.y = yaw;
+    { const s = tYaw !== null ? tS : 1; if (root.scale.x !== s) { root.scale.setScalar(s); root.position.y = (alignTop || 0) * (1 - s); rootDirty = true; } }   // (scaled about the field's top: it stays on the DOM board's plane)
     if (roomTicks.length && !alignFn && !(quietOn && now > kickUntil)) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
     // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
@@ -1601,10 +1605,13 @@
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; }
+  // skin pages, 盤面反転: the whole board (root) turned by `a` radians round the vertical axis through the field's centre and
+  // scaled by s (so its corners stay inside the canvas while it turns); turn(null) ends it (squared to the player again)
+  function turn(a, s) { if (a == null) { tYaw = null; tS = 1; yaw = 0; } else { tYaw = a; tS = s || 1; } rootDirty = true; kick(250); }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
