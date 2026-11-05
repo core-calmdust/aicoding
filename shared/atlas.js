@@ -52,7 +52,7 @@
       name: N("ファノロナ", "Fanorona", "法诺罗纳", "파노로나", "Fanorona", "Fanorona", "Fanorona", "Fanorona", "फ़ानोरोना", "فانورونا") },
     { id: 'alquerque', cat: 'chess', store: ['aicoding-alquerque'], href: 'alquerque/', color: '#9a2a24', released: '2026-11-01', tags: ['classic', 'ai', 'online', 'rated', 'mobile'], total: {},
       name: N("アルケルケ", "Alquerque", "阿尔凯尔凯", "알케르케", "Alquerque", "Alquerque", "Alquerque", "Alquerque", "अलकेरके", "القِرْقة") },
-    { id: 'agon', cat: 'chess', store: ['aicoding-agon', 'agon-online-name'], href: 'agon/', color: '#6c1a1c', released: '2026-11-04', tags: ['classic', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 168, ls: 12 },
+    { id: 'agon', cat: 'chess', store: ['aicoding-agon', 'agon-online-name'], href: 'agon/', color: '#6c1a1c', released: '2026-11-04', tags: ['classic', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 152, ls: 12 },
       name: N("アゴン", "Agon", "阿贡棋", "아곤", "Agon", "Agon", "Agon", "Agon", "अगोन", "أغون") },
     { id: 'xiangqi', cat: 'chess', store: ['aicoding-xiangqi', 'xiangqi-online-name'], href: 'xiangqi/', color: '#c0392b', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 543, ls: 16 },
       name: N('シャンチー（中国象棋）', 'Xiangqi', '中国象棋', '샹치(중국 장기)', 'Xiangqi (ajedrez chino)', 'Xiangqi (échecs chinois)', 'Xiangqi (xadrez chinês)', 'Xiangqi (Chinesisches Schach)', 'शियांगची (चीनी शतरंज)', 'شيانغ تشي (الشطرنج الصيني)') },
