@@ -10,6 +10,7 @@
 //   nmatch <variant> <games> <nodesK> [seed]   the loaded net (NNUE=file) against the hand-made evaluation, both sides
 //   nrole <variant> <games> <nodesK attackers> <nodesK defenders> [seed]   the net in each role against the hand-made evaluation,
 //            compared with hand vs hand on the same openings (give the defenders fewer nodes so that the games are not one-sided)
+//   nvn <variant> <games> <nodesK> [seed]   net NNUE against net NNUE2 (both sides each opening)
 //   (env NNUE=file: load a net (tools/nn/train.py) for its rule set; gendata then plays with it)
 #include "../engine.c"
 #include <math.h>
@@ -53,6 +54,9 @@ static FILE *POSOUT = 0;
 static int *PW[2] = { 0, 0 }, TUNE_NK = 3;   // tuning: the weights of the attackers / defenders player
 static int plyCount;
 static int NNS[2] = { -1, -1 }, NKS[2] = { 0, 0 };   // NKS: nodesK per side (attackers, defenders) when set (nrole)   // nmatch / gendata: use the net for the attackers / defenders (search by nodes, TUNE_NK)
+static u8 *NETBUF[2] = { 0, 0 }; static int NETLEN[2], NETCUR = -1;   // nvn: two nets, reloaded when the side to move changes
+static void netSelect(int k) { if (NETCUR == k) return; memcpy(nnBuf, NETBUF[k], NETLEN[k]); nn_load(NETLEN[k]); NETCUR = k; }
+static int NVN[2] = { -1, -1 };   // nvn: the net of the attackers / defenders (0 = NNUE, 1 = NNUE2)
 static FILE *GENOUT = 0; static char *GENBUF = 0; static size_t GENLEN = 0;
 static int playGame(int v, int lvA, int lvD, int randomPlies) {
   Pos p; startPos(v, &p); GSTART = p; GN = 0;
@@ -68,6 +72,7 @@ static int playGame(int v, int lvA, int lvD, int randomPlies) {
       if (!setupHist()) { fprintf(stderr, "bad setup\n"); exit(1); }
       ttSalt = p.side ? 0x5bd1e9955bd1e995ull : 0;
       if (PW[0]) { memcpy(EW, PW[p.side], sizeof(EW)); best(99, 0, TUNE_NK); }
+      else if (NVN[0] >= 0) { netSelect(NVN[p.side]); nnUse = 1; best(99, 0, TUNE_NK); }
       else if (NNS[0] >= 0) { nnUse = NNS[p.side]; best(99, 0, NKS[p.side] ? NKS[p.side] : TUNE_NK); }
       else think(p.side ? lvD : lvA, (int)rnd32());
       if (GENOUT) {   // the position, its search value (defenders' view, raw evaluate() units) and the hand-made features
@@ -355,6 +360,33 @@ int main(int argc, char **argv) {
       printf("%.4f\n", nnValue(&p));
     }
     fclose(f); return 0;
+  }
+  if (!strcmp(cmd, "nvn")) {
+    if (!nnLoaded || !getenv("NNUE2")) { fprintf(stderr, "set NNUE=fileA NNUE2=fileB\n"); return 1; }
+    const char *fn[2] = { getenv("NNUE"), getenv("NNUE2") };
+    for (int k = 0; k < 2; k++) {
+      FILE *f = fopen(fn[k], "rb"); if (!f) { fprintf(stderr, "cannot open %s\n", fn[k]); return 1; }
+      NETBUF[k] = malloc(sizeof nnBuf); NETLEN[k] = (int)fread(NETBUF[k], 1, sizeof nnBuf, f); fclose(f);
+      NETCUR = -1; netSelect(k); if (nnVar != v) { fprintf(stderr, "bad net %s\n", fn[k]); return 1; }
+      if (getenv("NNSCALE")) nnScale = (float)atof(getenv("NNSCALE"));
+    }
+    int G = atoi(argv[3]); TUNE_NK = atoi(argv[4]);
+    if (argc > 5) rng ^= (u64)atoll(argv[5]) * 0x9E3779B97F4A7C15ull;
+    int sc = 0, n = 0, w[2] = { 0, 0 }, l[2] = { 0, 0 };
+    for (int g = 0; g < G; g++) {
+      u64 seed = rng; int rp = 2 + rnd32() % 4;
+      NVN[0] = 0; NVN[1] = 1; int r1 = playGame(v, 0, 0, rp);        // A = attackers
+      rng = seed; NVN[0] = 1; NVN[1] = 0; int r2 = playGame(v, 0, 0, rp);   // A = defenders
+      sc += r1 - r2; n += 2; rnd32();
+      if (r1 > 0) w[0]++; else if (r1 < 0) l[0]++;
+      if (r2 < 0) w[1]++; else if (r2 > 0) l[1]++;
+      double s2 = 0.5 + sc / (2.0 * n);
+      fprintf(stderr, "\r%d/%d  A score %.3f (Elo %+.0f)  A as attackers +%d -%d, as defenders +%d -%d   ", g + 1, G, s2, eloOf(s2), w[0], l[0], w[1], l[1]);
+    }
+    fprintf(stderr, "\n");
+    double s2 = 0.5 + sc / (2.0 * n);
+    printf("%s vs %s: %d games, A score %.3f (Elo %+.0f), A as attackers +%d -%d, as defenders +%d -%d\n", fn[0], fn[1], n, s2, eloOf(s2), w[0], l[0], w[1], l[1]);
+    NVN[0] = NVN[1] = -1; return 0;
   }
   if (!strcmp(cmd, "nrole")) {
     if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
