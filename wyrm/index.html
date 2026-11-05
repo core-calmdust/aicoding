@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script src="../shared/phonesnd.js?v=1"></script>
 <title>WYRMSPHERE (PRE-ALPHA)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="竜に乗って変化し続ける洞窟を翔けるレールシューター。照準で最大8体をロックし、離してホーミング弾を放つ。命中のたびに和音が鳴り、敵を倒すとステージが進化する。">
@@ -214,7 +215,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // =====================================================================
 // 基本設定
 // =====================================================================
-const BUILD = 521; // 更新番号（不具合の確認用。更新のたびに上げる）
+const BUILD = 522; // 更新番号（不具合の確認用。更新のたびに上げる）
 const IS_MOBILE = (() => {
     const q = new URLSearchParams(location.search).get('mobile');
     if (q === '1') return true; if (q === '0') return false;

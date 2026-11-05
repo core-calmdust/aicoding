@@ -29,6 +29,7 @@ function load() {
   d.sel = d.sel && d.chars[d.sel] ? d.sel : Object.keys(d.chars)[0];
   const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
   d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak }, d.set || {});
+  if (window.PhoneSnd && PhoneSnd.phone) d.set.snd = true;   // phones: the silent switch decides (shared/phonesnd.js)
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
   return d;
 }
