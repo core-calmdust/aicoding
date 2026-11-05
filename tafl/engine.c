@@ -921,6 +921,12 @@ static u64 trng = 1;
 static u32 tr32(void) { trng ^= trng << 13; trng ^= trng >> 7; trng ^= trng << 17; return (u32)(trng >> 11); }
 static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(tr32() % 2001) - 1000; return s * amp / 2000; }   // approx. N(0, amp^2 / 3)
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
+// with the net, a level can read fewer nodes (NN_NODES, k; 0 = the level's own) and use a larger noise (NN_NOISE, % of the level's)
+// so that the levels keep a smooth ladder from the hand-made ones below 8級 (see MODEL_CARD.md)
+static int NN_NODES[21] = { 0 }, NN_NOISE[21] = { 0 };
+static int nnNoiseMul = 100;
+EXPORT(nn_noise) void nn_noise(int pct) { nnNoiseMul = pct; }
+EXPORT(nn_level) void nn_level(int level, int nodesK, int noisePct) { if (level >= 1 && level <= 20) { NN_NODES[level] = nodesK; NN_NOISE[level] = noisePct; } }
 static void think1(int level, int seed);
 // the learned evaluation (when loaded) is used from 8級 up (searching levels); the weakest levels keep the hand-made one,
 // whose noise and slips were set on its scale
@@ -955,10 +961,12 @@ static void think1(int level, int seed) {
     for (int i = 0; i < rootN; i++) { int v = rootVal[i]; int x = v + (v > WINT || v < -WINT ? 0 : gaussI(L->noise)); if (x > bx) { bx = x; bi = i; } }
     writeMove(IO, &rootL[bi]); IO[2] = rep(bestv); IO[3] = L->depth; return;
   }
-  if (L->noise) set_noise(L->noise, (int)tr32()); else noiseAmp = 0;
+  const int net = nnUse && nnVar == VAR;
+  if (L->noise) set_noise(net ? L->noise * (NN_NOISE[level] ? NN_NOISE[level] : nnNoiseMul) / 100 : L->noise, (int)tr32()); else noiseAmp = 0;
+  int nk = net && NN_NODES[level] ? NN_NODES[level] : L->nodesK, ms = net && NN_NODES[level] ? 0 : L->ms;
 #ifdef NATIVE
-  if (getenv("NODES_FOR_MS")) { best(L->depth, 0, L->nodesK ? L->nodesK : L->ms * 3 / 4); noiseAmp = 0; return; }   // calibration: the browser searches about 0.75 k nodes per ms
+  if (getenv("NODES_FOR_MS")) { best(L->depth, 0, nk ? nk : ms * 3 / 4); noiseAmp = 0; return; }   // calibration: the browser searches about 0.75 k nodes per ms
 #endif
-  best(L->depth, L->ms, L->nodesK);
+  best(L->depth, ms, nk);
   noiseAmp = 0;
 }
