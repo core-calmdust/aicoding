@@ -506,6 +506,16 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   html.hb-on .app > .rvbox{grid-area:bx}
   .hb .hb-info .hb-chip .pdisc{width:14px;height:14px}
 }
+/* the online dock opened on a window without room for board + info row (≤ 1150px high): the board comes first — the players and the
+   eval bar with ◀▶ in a slim column at its right, the coach and the move list wait until the dock closes (common spec: dock-compact) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-height: 1150px){
+  html.hb-on body.dock-open{--bw:min(calc(100vw - 64px - 300px - 16px), calc((var(--vh) - 30px) * 1.674), 1500px)}
+  html.hb-on body.dock-open .app{grid-template-columns:auto 300px!important;grid-template-rows:auto!important;grid-template-areas:"board pl"!important;justify-content:center;align-content:center;align-items:center;column-gap:16px}
+  html.hb-on body.dock-open :is(#coachCard, #itCoachRest, .kifu-card, .review-card, .rvbox){display:none!important}
+  html.hb-on body.dock-open #evalCard .graph{display:none!important}
+  html.hb-on body.dock-open .pl-col{align-self:center}
+  html.hb-on body.dock-open #evalCard{flex:none!important}
+}
 /* every other layout: one column (phones, tablets, narrow windows) */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   .app{display:flex;flex-direction:column;gap:8px;padding:max(8px, env(safe-area-inset-top)) 10px 16px;max-width:900px;margin:0 auto}
