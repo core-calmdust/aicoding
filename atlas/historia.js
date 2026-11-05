@@ -85,6 +85,7 @@
   }
   function bgmStart() {
     if (!soundOn() || muted()) return;
+    if (document.hidden || !document.hasFocus()) { away = true; if (!bgm) { try { bgm = new Audio(); bgm.loop = true; bgm.preload = 'auto'; bgm.volume = 0; bgm.src = BGM_SRC; } catch (e) { bgm = null; } } return; }   // (opened in the background: starts when the page comes into view)
     try {
       if (!bgm) { bgm = new Audio(); bgm.loop = true; bgm.preload = 'auto'; bgm.volume = 0; bgm.addEventListener('error', () => { bgm = null; }); bgm.src = BGM_SRC; }
       bgm.volume = Math.min(bgm.volume, BGM_VOL);
@@ -92,7 +93,26 @@
       fadeTo(BGM_VOL, 1500);
     } catch (e) { bgm = null; }
   }
-  function bgmStop(ms = 1000) { if (!bgm) return; const a = bgm; fadeTo(0, ms, () => { try { a.pause(); } catch (e) {} }); }
+  function bgmStop(ms = 1000) { away = false; if (!bgm) return; const a = bgm; fadeTo(0, ms, () => { try { a.pause(); } catch (e) {} }); }
+  // the page out of view or out of focus (the same events that stop the 3D renderer: visibilitychange / blur, and pagehide):
+  // the music fades out and pauses where it is; it comes back from there when the page does, if Historia is still open
+  let away = false;
+  function bgmAway(hidden) {
+    if (!bgm || bgm.paused || away) return; away = true; const a = bgm;
+    if (hidden) { cancelAnimationFrame(bgmFade); try { a.volume = 0; a.pause(); } catch (e) {} return; }   // (hidden: no animation frames to fade with)
+    fadeTo(0, 300, () => { if (away) try { a.pause(); } catch (e) {} });
+  }
+  function bgmBack() {
+    if (!away) return; away = false;
+    if (!on || !bgm || muted() || !soundOn() || document.hidden || !document.hasFocus()) { if (bgm && !on) try { bgm.pause(); } catch (e) {} return; }
+    try { const p = bgm.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    fadeTo(BGM_VOL, 500);
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) bgmAway(true); else bgmBack(); });
+  addEventListener('pagehide', () => bgmAway(true));
+  addEventListener('blur', () => bgmAway(false));
+  addEventListener('focus', bgmBack);
+  addEventListener('pageshow', bgmBack);
   function paintMute() { const b = root && root.querySelector('.hs-mute'); if (!b) return; const off = muted() || !soundOn(); b.classList.toggle('off', off); b.setAttribute('aria-pressed', off ? 'false' : 'true'); b.title = u('bgm'); }
 
   /* ---------- open / close ---------- */
@@ -161,7 +181,7 @@
     if (!solo) { const bv = $('bv'); if (bv) bv.classList.add('hist'); shift(); requestAnimationFrame(() => { fit(); }); gallery(true, g); }
     if (fromList && has3D) loading3d(g.id);
     paintMute(); bgmStart();
-    Promise.all([getJSON(`historia/s/${g.id}.json`), loadText(g.id), loadMap()]).then(([s, t]) => {
+    Promise.all([getJSON(`historia/s/${g.id}.json`), loadText(g.id), loadMap(), loadFine()]).then(([s, t]) => {   // (the fine land mask too: the first zoom never swaps coarse → fine mid-move)
       if (my !== tok || !on) return;
       data = { s, t, ch: chapters(s, t) };
       root.querySelector('.hs-dots').innerHTML = data.ch.map((c, i) => `<button type="button" data-i="${i}" aria-label="${i + 1}"><i></i></button>`).join('');
@@ -358,7 +378,7 @@
   // per-page motion once it is on screen: count-ups, map routes, the timeline's line, pieces landing
   function run(pg, c) {
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
-    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp); paintDots(mp); later(() => zmSet(mp, zm.dataset.z), 350); addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
+    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp, zm.dataset.z, 'none'); paintDots(mp);   /* the route framing from the first frame: dots and pins share it — no separate opening zoom */ addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
     if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
     if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
@@ -472,6 +492,9 @@
       const up = e => { pts.delete(e.pointerId); if (!pts.size) st = null; else { const a = [...pts.values()]; st = { v: view.slice(), a, d: 0 }; } };
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => map.addEventListener(t, up)); }
     const tick = () => { if (!auto || !on || !pg.isConnected) return; if (k < L.length - 1) { set(k + 1); later(tick, 2300); } };
+    // pins and labels start with CSS transforms equal to where they stand (their SVG attributes): the first stage's move then
+    // animates them from there, not from the map's corner
+    keepSize(zb[2], 0);
     later(tick, 1500);
     L.forEach((li, j) => li.querySelector('button').onclick = () => { auto = false; set(j, true); });
   }
@@ -531,13 +554,15 @@
   // the CSS transform that carries a picture drawn for view a onto view b (both [tx, ty, z] in viewBox units)
   const relT = (a, b, F) => { const k = b[2] / a[2], tx = F.ox + F.sc * b[0] - k * (F.ox + F.sc * a[0]), ty = F.oy + F.sc * b[1] - k * (F.oy + F.sc * a[1]);
     return `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${k.toFixed(5)})`; };
-  function paintDots(map) { loadFine().then(() => { if (map.isConnected) zmSet(map, null, null, true); }); }
+  function paintDots(map) { if (window.HISTORIA_MAP_FINE) return; loadFine().then(() => { if (map.isConnected) zmSet(map, null, null, true); }); }
   // sets the map group's transform (translate(tx,ty) scale(z), viewBox units) and moves / redraws the dots to match
   function zmSet(map, tr, tn, redraw) {
     const zm = map.querySelector('.zm');
     if (tr != null) { if (tn != null) zm.style.transition = tn; zm.style.transform = tr; }
     const v = ((zm.style.transform || 'translate(0px,0px) scale(1)').match(/-?[\d.]+/g) || [0, 0, 1]).map(Number); const to = [v[0] || 0, v[1] || 0, v[2] || 1];
     const F = fitOf(map); if (!F) return;
+    // a redraw while the map is still moving waits for the move to end (a swap mid-move would jump the dots ahead of the pins)
+    if (tr == null && map._busy && performance.now() < map._busy) { clearTimeout(map._rd); map._rd = setTimeout(() => map.isConnected && zmSet(map, null, null, redraw), map._busy - performance.now() + 20); return; }
     const old = [...map.querySelectorAll('canvas.dots')], last = old[old.length - 1];
     let ms = 0; { const d = (tn != null ? tn : getComputedStyle(zm).transition || '').match(/([\d.]+)(ms|s)/); if (d) ms = +d[1] * (d[2] === 's' ? 1000 : 1); }
     if (tr == null) ms = 0;
@@ -545,6 +570,7 @@
     if (same && !redraw && last._fine === !!masks.f && last.width === Math.round(F.W * Math.min(2, window.devicePixelRatio || 1)) && last.height === Math.round(F.H * Math.min(2, window.devicePixelRatio || 1))) return;
     const cv = drawDots(map, to, F); if (!cv) return;
     const sv = map.querySelector('svg'); map.insertBefore(cv, sv);
+    map._busy = performance.now() + ms;
     if (!last || ms < 30) { old.forEach(c => c.remove()); return; }
     // the move: the old picture rides along with the map and fades; the new one starts where the old one is and settles
     old.slice(0, -1).forEach(c => c.remove());
@@ -732,5 +758,5 @@
     return `<svg class="dg${bigOne ? ' big' : ''}" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" dir="ltr" aria-hidden="true" style="--ln:${line}"><defs><marker id="hsArr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1 9 5 0 9z" fill="#d8423a"/></marker></defs>${out.join('')}${body}</svg>`;
   }
 
-  window.Historia = { sync, open, has, close: () => close(), go, fit, get on() { return on; }, _diag: diag };
+  window.Historia = { sync, open, has, close: () => close(), go, fit, get on() { return on; }, _diag: diag, get _bgm() { return bgm; } };
 })();
