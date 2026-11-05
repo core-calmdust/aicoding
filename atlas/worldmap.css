@@ -98,22 +98,46 @@
 .amrow small{display:block;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .amrow.on{border-color:var(--c);box-shadow:0 2px 0 var(--c)}
 .amrow:active{transform:translateY(2px);box-shadow:none}
+/* (the card's second icon is the phone layout's: hidden on wider screens) */
+.aminfo .amart.ph{display:none}
+/* phones: everything in about one screen — chips, a taller map, a one-row game strip that scrolls sideways,
+   then a compact card (icon · name · facts on one line, two lines of story, the journey, 遊ぶ | ヒストリア side by side) */
 @media (max-width:819px){
-  .amwrap{grid-template-columns:1fr;gap:10px}
-  .ammap{aspect-ratio:1.55/1;min-height:220px;max-height:50vh}
-  .aminfo{padding:14px;--amH:418px;gap:8px}
-  .aminfo .amd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
-  .aminfo .amjour div{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+  #pg-map.on{display:flex;flex-direction:column;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .amwrap{display:contents}
+  .amhead{order:0;gap:2px 10px}.amhead .h{margin-bottom:0}
+  .amsub{display:none}
+  .amreg{order:1;padding-bottom:8px}
+  .ammap{order:2;aspect-ratio:auto;height:clamp(260px,calc(100svh - 560px),108vw);min-height:0;max-height:none;--amFs:14px}
+  .amlist{order:3;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:8px -16px 8px;padding:2px 16px 4px;scroll-padding-inline:16px}
+  .amlist::-webkit-scrollbar{display:none}
+  .amrow{flex:none;scroll-snap-align:start;max-width:62vw;padding:5px 12px 5px 5px;gap:7px;border-radius:99px}
+  .amrow .amart{width:34px;height:34px;border-radius:50%}
+  .amrow b{font-size:13px}
+  .amrow small{display:none}
+  .aminfo{order:4;--amH:236px;scroll-margin-bottom:calc(80px + env(safe-area-inset-bottom));padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr auto auto;grid-template-areas:"art top" "art facts" "story story" "jour jour" "acts acts";gap:4px 10px;overflow:hidden}
+  .aminfo .amtop{grid-area:top;display:block;min-width:0}
+  .aminfo .amtop>.amart{display:none}
+  .aminfo .amtop b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aminfo .amtop small{font-size:11px}
+  .aminfo .amart.ph{display:grid;grid-area:art;width:50px;height:50px;border-radius:16px;align-self:center}
+  .aminfo .amfacts{grid-area:facts;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
+  .aminfo .amfacts span{padding:2px 9px 2px 3px;font-size:12px;white-space:nowrap;min-width:0}
+  .aminfo .amfacts span b{overflow:hidden;text-overflow:ellipsis}
+  .aminfo .amfacts i{font-size:10px;padding:1px 6px}
+  .aminfo .amstory{grid-area:story;min-width:0;margin-top:4px}
+  .aminfo .amstory h3{display:none}
+  .aminfo .amd{font-size:13px;line-height:1.6;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .aminfo .amjour{grid-area:jour;min-width:0}
+  .aminfo .amjour i{display:none}
+  .aminfo .amjour div{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;white-space:nowrap;font-size:12px}
   .aminfo .amjour div::-webkit-scrollbar{display:none}
-  .aminfo .amempty{margin:auto}
+  .aminfo .amjour span{padding:1px 8px}
+  .aminfo .amacts{grid-area:acts;flex-direction:row;gap:8px;margin-top:4px}
+  .aminfo .amacts>*{flex:1;padding-block:10px}
+  .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;margin:auto;padding:0}
   .ampin{width:38px;height:38px;border-width:2.5px}
-  .ammap{--amFs:14px}
   .amhint{display:none}
   .amzoom{right:8px;top:8px}
   .amzoom button{width:34px;height:34px}
-  .amlist{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
-  .amrow{padding:6px 8px 6px 6px;gap:8px;border-radius:14px}
-  .amrow .amart{width:38px;height:38px;border-radius:12px}
-  .amrow b{font-size:13px}
-  .amrow small{font-size:11px}
 }
