@@ -59,7 +59,7 @@
         g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.09, t + .03); g.gain.setValueAtTime(.09, t + dur * .8); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
         s.connect(f).connect(g).connect(c.destination); s.start(t); s.stop(t + dur + .05);
       }),
-      box: k => at((c, t) => { const S = [523.25, 659.25, 783.99, 1046.5]; for (let i = 0; i < k; i++) tone(c, t + i * .07, S[Math.min(i + 1, 3)], .45, .07); }),
+      box: (k, n = 1) => at((c, t) => { const S = [523.25, 659.25, 783.99, 1046.5], r = Math.pow(2, Math.min(n - 1, 8) * 2 / 12); for (let i = 0; i < k; i++) tone(c, t + i * .07, S[Math.min(i + 1, 3)] * r, .45, .07); }),   // n: chain position → a whole tone higher each
     };
   })();
 
@@ -183,7 +183,7 @@
       const a = Object.assign({}, o.pose);
       return anim(dur, k => { const e = ease(k), m = {}; for (const key of ['x', 'y', 'z', 'yaw', 'tilt']) m[key] = a[key] + (q[key] - a[key]) * e; if (q.arc) m.y += Math.sin(k * Math.PI) * q.arc; setPose(o, m); });
     }
-    function penHome(i) { const o = pens[i]; if (o.away) { o.away = false; penTo(o, Object.assign({ arc: .8 }, o.rest), 420); } }
+    function penHome(i) { const o = pens[i]; if (o.away) { o.away = false; penTo(o, Object.assign({ arc: .8 }, o.rest), 280); } }
     // the running stroke: a flat ribbon on the page along the same curve, revealed segment by segment
     const RSEG = 24, ribbonG = new THREE.BufferGeometry(); ribbonG.setAttribute('position', new THREE.BufferAttribute(new Float32Array((RSEG + 1) * 2 * 3), 3));
     { const I = []; for (let i = 0; i < RSEG; i++) { const a = i * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } ribbonG.setIndex(I); }
@@ -217,12 +217,12 @@
       o.away = true;
       const a = toRoot(st.x1, st.z1, PY), z = toRoot(st.x2, st.z2, PY);
       const far = Math.hypot(o.pose.x - a.x, o.pose.z - a.z);
-      await penTo(o, Object.assign({ x: a.x, y: a.y + up, z: a.z, arc: far > 3 ? .6 : 0 }, WRITE), Math.min(420, 160 + far * 45));
+      await penTo(o, Object.assign({ x: a.x, y: a.y + up, z: a.z, arc: far > 3 ? .6 : 0 }, WRITE), Math.min(260, 100 + far * 28));
       if (!alive()) return false;
-      await penTo(o, Object.assign({ x: a.x, y: a.y + .004, z: a.z }, WRITE), 90);
+      await penTo(o, Object.assign({ x: a.x, y: a.y + .004, z: a.z }, WRITE), 55);
       if (!alive()) return false;
       ribbonM.color.set(INK[pl]); shapeRibbon(ribbonG, st, st.w, PY + .002); ribbonG.setDrawRange(0, 0); ribbon.visible = true;
-      const dur = 320; SND.scratch(dur);
+      const dur = 200; SND.scratch(dur);
       await anim(dur, k => {
         const e2 = k < .15 ? k * k / .3 : k;   // a slow start, then a steady stroke
         ribbonG.setDrawRange(0, Math.ceil(e2 * RSEG) * 6);
@@ -230,7 +230,7 @@
         setPose(o, Object.assign({ x: p.x, y: p.y + .004 + Math.sin(k * Math.PI * 3) * .006, z: p.z }, WRITE));
       });
       if (!alive()) return false;
-      penTo(o, Object.assign({ x: z.x, y: z.y + up, z: z.z }, WRITE), 120);
+      penTo(o, Object.assign({ x: z.x, y: z.y + up, z: z.z }, WRITE), 80);
       return true;
     }
     // the edge under the pointer: the nearer of the row / column lines, within ~0.38 spacing of it
@@ -266,6 +266,7 @@
 
     /* ---------- state ---------- */
     let by = new Int8Array(E).fill(-1), owner = new Int8Array(B).fill(-1), score = [0, 0], turn = 0, over = false, stopped = false, busy = false;
+    let combo = 0, comboPl = -1;   // boxes closed in a row by one player (the chime climbs)
     let worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintE = -1, msg = '', moves = [];
     const cnt = bx => boxEdges(bx).filter(e => by[e] >= 0).length;
     const ix = c => c;
@@ -283,7 +284,7 @@
       const closed = edgeBoxes(e).filter(bx => cnt(bx) === 4 && owner[bx] < 0);
       closed.forEach(bx => { owner[bx] = pl; score[pl]++; });
       redraw();
-      if (closed.length) { closed.forEach(bx => flash(bx, pl)); SND.box(closed.length); }
+      if (!closed.length) combo = 0; else { if (comboPl !== pl) combo = 0; comboPl = pl; combo++; closed.forEach(bx => flash(bx, pl)); SND.box(closed.length, combo); }
       over = moves.length === E;
       if (!closed.length) turn = 1 - turn;
       busy = false;
@@ -357,7 +358,7 @@
       canUndo: () => canTap() && hist.length > 0,
       undo() {
         if (!api.canUndo()) return;
-        const h = hist.pop(); aiJ++; tok++; hideHint();
+        const h = hist.pop(); aiJ++; tok++; combo = 0; hideHint();
         by = h.by; owner = h.owner; score = h.score; turn = h.turn; moves = h.moves; ply++;
         redraw(); penHome(0); penHome(1); next();
       },
