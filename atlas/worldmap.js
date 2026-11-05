@@ -114,11 +114,17 @@
       if (!out) lines += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${(p.y + S * .42).toFixed(1)}" class="${dim ? 'dim' : ''}"/><circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="3" class="${dim ? 'dim' : ''}" style="--c:${p.g.color}"/>`;
     });
     el.svg.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`);
-    el.svg.innerHTML = routeSvg() + `<g class="lead">${lines}</g>`;
+    const R = routeSvg(A.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
+    el.svg.innerHTML = R.under + `<g class="lead">${lines}</g>`;
+    el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over;
   }
   // the selected game's journey: arcs between the stops, numbered dots and their names
-  function routeSvg() {
-    const d = sel && D(sel); if (!d) return '';
+  // the stops' names are set above the pins, each in the first spot around its dot that covers no pin, no other name
+  // and stays inside the map (right, left, below, above, then the diagonals, then farther out)
+  let mctx = null;
+  const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 12.5px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
+  function routeSvg(rects, b) {
+    const d = sel && D(sel); if (!d) return { under: '', over: '' };
     const g = ctx.games.find(x => x.id === sel), v = view, P = d.p.map(p => { const [x, y] = toU(p); return [sx(v, x), sy(v, y)]; });
     const pins = pick(d.pn, lang) || [];
     const arcs = (d.r && d.r.length ? d.r : P.slice(1).map((_, i) => [i, i + 1])).map(([a, b]) => {
@@ -126,8 +132,30 @@
       const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, k = .22 * L;
       return `<path d="M${A[0].toFixed(1)} ${A[1].toFixed(1)}Q${(mx - dy / L * k).toFixed(1)} ${(my + dx / L * k - .1 * L).toFixed(1)} ${B[0].toFixed(1)} ${B[1].toFixed(1)}"/>`;
     }).join('');
-    const dots = P.map((p, i) => i === d.h ? '' : `<g class="stop"><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5.5"/><text x="${(p[0] + 9).toFixed(1)}" y="${(p[1] + 4).toFixed(1)}">${esc(pins[i] || '')}</text></g>`).join('');
-    return `<g class="route" style="--c:${g ? g.color : '#c48a4a'}">${arcs}${dots}</g>`;
+    const hit = (r, q) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+    const busy = rects.slice(), dots = [], lbl = [];
+    P.forEach((p, i) => { if (i === d.h) return; dots.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5.5"/>`); busy.push([p[0] - 7, p[1] - 7, p[0] + 7, p[1] + 7]); });
+    P.forEach((p, i) => {
+      const s = pins[i]; if (i === d.h || !s) return;
+      const w = textW(s) + 6, h = 17, G = 9;
+      let best = null;
+      for (const e of [0, 22, 46]) {
+        for (const [ox, oy] of [[G + e, -h / 2], [-G - e - w, -h / 2], [-w / 2, G + e], [-w / 2, -G - e - h], [G * .7 + e, G * .7 + e], [G * .7 + e, -G * .7 - e - h], [-G * .7 - e - w, G * .7 + e], [-G * .7 - e - w, -G * .7 - e - h]]) {
+          const r = [p[0] + ox, p[1] + oy, p[0] + ox + w, p[1] + oy + h];
+          if (r[0] < 4 || r[1] < 4 || r[2] > b.w - 52 || r[3] > b.h - 4) continue;
+          if (busy.some(q => hit(r, q))) continue;
+          best = { r, e }; break;
+        }
+        if (best) break;
+      }
+      if (!best) best = { r: [p[0] + G, p[1] - h / 2, p[0] + G + w, p[1] + h / 2], e: 0 };
+      busy.push(best.r);
+      const [x0, y0, x1, y1] = best.r, cx = Math.max(x0, Math.min(x1, p[0])), cy = Math.max(y0, Math.min(y1, p[1]));
+      lbl.push((best.e ? `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>` : '') +
+        `<text x="${(x0 + 3).toFixed(1)}" y="${(y0 + 12.5).toFixed(1)}">${esc(s)}</text>`);
+    });
+    const st = `style="--c:${g ? g.color : '#c48a4a'}"`;
+    return { under: `<g class="route" ${st}>${arcs}<g class="stop">${dots.join('')}</g></g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}</g>` };
   }
 
   /* ---------- the side card ---------- */
@@ -249,12 +277,12 @@
       host = sec;
       sec.innerHTML = `<div class="amhead"><h2 class="h" id="amTtl"></h2><p class="amsub" id="amSub"></p></div>
         <div class="chips cats amreg" id="amReg"></div>
-        <div class="amwrap"><div class="card ammap" id="amMap" dir="ltr" tabindex="0"><canvas></canvas><svg class="amsvg" aria-hidden="true"></svg><div class="ampins"></div>
+        <div class="amwrap"><div class="card ammap" id="amMap" dir="ltr" tabindex="0"><canvas></canvas><svg class="amsvg" aria-hidden="true"></svg><div class="ampins"></div><svg class="amsvg amsvg2" aria-hidden="true"></svg>
           <div class="amzoom"><button type="button" data-z="in" aria-label="+">+</button><button type="button" data-z="out" aria-label="−">−</button><button type="button" data-z="all"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></svg></button></div>
           <p class="amhint" id="amHint"></p><p class="amload" id="amLoad"></p></div>
           <aside class="card aminfo" id="amInfo" aria-live="polite"></aside></div>
         <div class="amlist" id="amList"></div>`;
-      el = { map: sec.querySelector('#amMap'), cv: sec.querySelector('#amMap canvas'), svg: sec.querySelector('.amsvg'), pins: sec.querySelector('.ampins'), zoom: sec.querySelector('.amzoom'),
+      el = { map: sec.querySelector('#amMap'), cv: sec.querySelector('#amMap canvas'), svg: sec.querySelector('.amsvg'), svg2: sec.querySelector('.amsvg2'), pins: sec.querySelector('.ampins'), zoom: sec.querySelector('.amzoom'),
         info: sec.querySelector('#amInfo'), chips: sec.querySelector('#amReg'), list: sec.querySelector('#amList') };
       bind();
       if (ro) ro.disconnect(); ro = new ResizeObserver(() => { if (view) { view = clamp(view); draw(); } }); ro.observe(el.map);
