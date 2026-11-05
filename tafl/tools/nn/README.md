@@ -51,5 +51,12 @@ tools/nn/gen.sh 0 500 10 data2 8 tafl-v0.nnue
 python3 tools/nn/train.py --variant 0 --out tafl-v1.nnue data/v0-*.txt data2/v0-*.txt
 ```
 
+## 攻め手の勝ちが多いデータ
+`DEFK=2` を付けると守り手だけ読みを浅く（2千局面）して対局します。攻め手が勝つ対局が増え、攻め手の指し方を学ぶ材料になります。
+```sh
+DEFK=2 tools/nn/gen.sh 0 3000 20 dataA 8
+python3 tools/nn/train.py --variant 0 --hidden 256 --epochs 40 --lam 0.7 --out tafl-v2.nnue data/v0-*.txt data20/v0-*.txt dataA/v0-*.txt
+```
+
 ## できたら
 `.nnue` ファイル（と学習ログ）を送ってください。ページへの組み込み（engine.js での読み込み、レベルの調整、MODEL_CARD.md への記載）はこちらで行います。

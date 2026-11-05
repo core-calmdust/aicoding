@@ -335,6 +335,7 @@ int main(int argc, char **argv) {
     if (argc > 6) rng ^= (u64)atoll(argv[6]) * 0x9E3779B97F4A7C15ull;
     int rpMax = argc > 7 ? atoi(argv[7]) : 8; if (rpMax < 2) rpMax = 2;
     NNS[0] = NNS[1] = nnLoaded;
+    if (getenv("DEFK")) { NKS[0] = TUNE_NK; NKS[1] = atoi(getenv("DEFK")); }   // fewer nodes for the defenders: more games the attackers win
     int aw = 0, dw = 0, dr = 0; long pl = 0;
     for (int g = 0; g < G; g++) {
       int r = playGame(v, 0, 0, 2 + rnd32() % (rpMax - 1)); pl += plyCount;
