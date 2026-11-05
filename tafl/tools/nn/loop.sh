@@ -10,12 +10,13 @@
 # Settings by environment: V (rule set, 0), H (hidden units, 256), EPOCHS (12), WINDOW (rounds of data per training, 4),
 #   LAM (0.75), SCALE (1000), DEFK (2), EXTRA (more record files for every training, e.g. "data/v0-*.txt data20/v0-*.txt"),
 #   MAXPOS (positions per training, 30000000), EVAL ("50 20 2": nrole pairs, attackers' / defenders' nodesK)
+#   WORK (work folder, nnwork; use another one for another rule set, e.g. V=1 WORK=nnwork-brandubh)
 set -e
 cd "$(dirname "$0")/../.."
 R=$1; G=${2:-1000}; NK=${3:-10}; P=${4:-$(getconf _NPROCESSORS_ONLN)}
 V=${V:-0}; H=${H:-256}; EPOCHS=${EPOCHS:-12}; WINDOW=${WINDOW:-4}; LAM=${LAM:-0.75}; SCALE=${SCALE:-1000}; DEFK=${DEFK:-2}
 MAXPOS=${MAXPOS:-30000000}; EVAL=${EVAL:-"50 20 2"}
-W=nnwork; mkdir -p $W
+W=${WORK:-nnwork}; mkdir -p $W
 cc -O3 -DNATIVE -w -o $W/tafl-native tools/native.c -lm
 log() { echo "$(date '+%m-%d %H:%M') $*" | tee -a $W/log.txt; }
 r=1
