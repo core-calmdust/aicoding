@@ -52,7 +52,7 @@ html.atlas-fanorona .pdisc.p1,html.atlas-fanorona .kifu button i.p1,html.atlas-f
 html.atlas-fanorona .pdisc.p2,html.atlas-fanorona .kifu button i.p2,html.atlas-fanorona .rv-list .mv i.p2{background:radial-gradient(circle at 38% 32%,#6a4a36,#2e1d14 60%,#140b06)!important;box-shadow:0 1px 2px rgba(0,0,0,.3)!important}
 html.atlas-fanorona #fPieces{display:none!important}
 /* PC: the page's own layout under the 64px portal bar (as the 2D page sits 12px under its bar; --vh already leaves the bar out) */
-@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-fanorona.hb-atlas .app{padding-top:76px!important}
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-fanorona.hb-atlas body .app.app.app.app:not(#zz):not(#zy):not(#zx){padding-top:76px!important}
   html.atlas-fanorona.hb-atlas{--vh:calc(100vh - 64px - 12px)}html.atlas-fanorona.hb-atlas.ol-dock{--vh:calc(100vh - 108px - 64px - 12px)}
   @supports (height:100dvh){html.atlas-fanorona.hb-atlas{--vh:calc(100dvh - 64px - 12px)}html.atlas-fanorona.hb-atlas.ol-dock{--vh:calc(100dvh - 108px - 64px - 12px)}}
   /* the square boards (5×5 / 3×3): the page centres board + column in a box of --vh — that box starts under the bar */
