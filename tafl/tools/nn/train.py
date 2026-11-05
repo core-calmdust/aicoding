@@ -111,7 +111,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('files', nargs='+')
     ap.add_argument('--variant', type=int, default=0, help='0 Copenhagen 11x11, 1 Brandubh 7x7, 2 Tablut 9x9')
-    ap.add_argument('--hidden', type=int, default=128, help='hidden units (multiple of 8, at most 256)')
+    ap.add_argument('--hidden', type=int, default=128, help='hidden units (multiple of 8, at most 512)')
     ap.add_argument('--epochs', type=int, default=30)
     ap.add_argument('--batch', type=int, default=4096)
     ap.add_argument('--lr', type=float, default=2e-3)

@@ -406,7 +406,7 @@ static int evaluate(const Pos *p) {
 // File (little endian): "TFN1", int32 variant, N, H, NF, float32 scale, then float32 W1[3·N·N][H], b1[H], w2[2][H], u[2][NF], b2[2].
 // The first layer is kept in int16 (×NN_QA), the rest in float. evaluate() = value × scale (side to move's view).
 #define NN_NF 16
-#define NN_HMAX 256
+#define NN_HMAX 512
 #define NN_INMAX (3 * 11 * 11)
 #define NN_QA 127
 static int nnN = 0, nnH = 0; static float nnScale = 400;
