@@ -24,7 +24,7 @@
       roll: '振る', pass: 'パス', first: 'まず［振る］を押そう', die: '出目 {n}', pick: '動かす駒をタップ', again: 'もう一度振れます！',
       noMove: 'その駒は動かせません', own: 'その先には自分の駒がいて止まれません', over: '{n}ではゴールを越えてしまいます（ちょうどの目だけ）', safeNo: '相手の駒は中央のロゼットで守られていて、止まれません', notMine: 'あなたの駒は手前の列の駒です',
       'board.t': '盤と自分の道', 'board.b': 'あなたの駒は手前の列から入り、光る矢印の順に14マス進んでゴールします。中央の列は相手と共有です。', 'board.k': '道の最後のマス（14マス目）をタップしよう', 'board.ok': 'そこが最後のマス。次の一歩でゴールです！', 'board.ng': '矢印の先、いちばん最後のマスです',
-      'dice.t': 'サイコロ', 'dice.b': '四面体のサイコロを4個振り、上を向いた白い印の数だけ進みます。0〜4が出て、2がいちばん多く出ます。', 'dice.k': '［振る］を押して、白い印の数を答えよう', 'dice.k2': '白い印はいくつ？', 'dice.ok': '正解！{n}マス進めます', 'dice.ng': '上を向いた白い印を数えてみよう',
+      'dice.t': 'サイコロ', 'dice.b': '四面体のサイコロを4個振り、上を向いた青い印の数だけ進みます。0〜4が出て、2がいちばん多く出ます。', 'dice.k': '［振る］を押して、青い印の数を答えよう', 'dice.k2': '青い印はいくつ？', 'dice.ok': '正解！{n}マス進めます', 'dice.ng': '上を向いた青い印を数えてみよう',
       'enter.t': '駒を入れる', 'enter.b': '盤の外の駒は、出た目の数だけ道を進んだマスに入ります。1回に動かせるのは1枚だけです。', 'enter.k': '振ってから、盤の外の駒を入れよう', 'enter.ok': '入りました！手前の列を進んでいきます',
       'move.t': '進む', 'move.b': '盤上の駒も、出た目の数だけ道に沿って進めます。どの駒を動かすかは自分で選べます。', 'move.k': '振ってから、盤上の駒を進めよう', 'move.ok': '道に沿って進みました', 'move.ng': '今回は盤上の駒を進めてみよう',
       'own.t': '自分の駒には止まれない', 'own.b': '自分の駒がいるマスには止まれません。止まれない駒は動かせないので、ほかの駒を選びます。', 'own.k': '振ってから、動かせる駒を動かそう', 'own.ok': '正解！動かせるのはその駒だけでした',
@@ -32,7 +32,7 @@
       'ros.t': 'ロゼットでもう一度', 'ros.b': '花の模様のマス（ロゼット）に止まると、もう一度振れます。道の4・8・14マス目がロゼットです。', 'ros.k': 'ロゼットに止まって、もう一度振ろう', 'ros.k2': 'もう一度振れます！振って、どれか動かそう', 'ros.ok': '1回の番で2回動かせました', 'ros.ng': 'ロゼット（光るマス）に止まる駒を選ぼう',
       'safe.t': '中央のロゼットは安全', 'safe.b': '中央の列のロゼットにいる駒は取られません。相手の駒がいれば、そこには止まれません。', 'safe.k': '振ってから、ねらわれた駒を中央のロゼットへ', 'safe.ok': 'これで安全！ロゼットなのでもう一度振れます', 'safe.ng': 'ねらわれている（赤い印の）駒を中央のロゼットへ',
       'goal.t': 'ちょうどの目でゴール', 'goal.b': 'ゴールは道の14マス目の次です。ちょうどの目が出たときだけゴールでき、越える目では動けません。', 'goal.k': '振ってから、駒をゴールさせよう', 'goal.ok': 'ゴール！右下の列に並びます', 'goal.ng': 'ちょうどゴールに届く駒を選ぼう',
-      'pass.t': '0の目とパス', 'pass.b': '白い印が0個なら進めません。動かせる駒が1枚もないときもパスして、相手の番になります。', 'pass.k': '振ってみよう', 'pass.k2': '0が出ました。［パス］を押そう', 'pass.ok': '相手の番になります',
+      'pass.t': '0の目とパス', 'pass.b': '青い印が0個なら進めません。動かせる駒が1枚もないときもパスして、相手の番になります。', 'pass.k': '振ってみよう', 'pass.k2': '0が出ました。［パス］を押そう', 'pass.ok': '相手の番になります',
       'win.t': '勝ち方', 'win.b': '7枚すべてを先にゴールさせた方の勝ちです。あなたはあと1枚！', 'win.k': '振ってから、最後の駒をゴールさせよう', 'win.ok': '7枚ゴール、あなたの勝ち！', 'win.ng': 'ゴールに届くのは最後の駒です',
     },
     en: {
@@ -43,7 +43,7 @@
       roll: 'Roll', pass: 'Pass', first: 'Press “Roll” first', die: 'Roll {n}', pick: 'Tap a piece to move', again: 'Roll again!',
       noMove: 'That piece cannot move', own: 'Your own piece is there — you cannot land on it', over: 'A {n} would go past home (exact rolls only)', safeNo: 'The rival piece is safe on the middle rosette — you cannot land there', notMine: 'Your pieces are the ones on the near row',
       'board.t': 'The board and your track', 'board.b': 'Your pieces enter on the near row and follow the glowing arrows for 14 squares, then go home. The middle row is shared with your rival.', 'board.k': 'Tap the last square of the track (square 14)', 'board.ok': 'That is the last square. One more step and you are home!', 'board.ng': 'Follow the arrows to the very last square',
-      'dice.t': 'The dice', 'dice.b': 'Roll four pyramid dice and move as many squares as white tips point up: 0 to 4, and 2 is the most common.', 'dice.k': 'Press “Roll” and count the white tips', 'dice.k2': 'How many white tips?', 'dice.ok': 'Correct! You may move {n} squares', 'dice.ng': 'Count the dice with a white tip on top',
+      'dice.t': 'The dice', 'dice.b': 'Roll four pyramid dice and move as many squares as blue tips point up: 0 to 4, and 2 is the most common.', 'dice.k': 'Press “Roll” and count the blue tips', 'dice.k2': 'How many blue tips?', 'dice.ok': 'Correct! You may move {n} squares', 'dice.ng': 'Count the dice with a blue tip on top',
       'enter.t': 'Entering a piece', 'enter.b': 'A piece off the board enters on the square the roll counts to along the track. You move only one piece per roll.', 'enter.k': 'Roll, then bring a piece onto the board', 'enter.ok': 'It is in! It runs along your near row first',
       'move.t': 'Moving', 'move.b': 'Pieces on the board also move by the roll along the track. You choose which piece to move.', 'move.k': 'Roll, then move a piece on the board', 'move.ok': 'It moved along the track', 'move.ng': 'This time, move a piece that is on the board',
       'own.t': 'Not onto your own piece', 'own.b': 'You cannot land on a square with your own piece. A piece that cannot land cannot move, so pick another.', 'own.k': 'Roll, then move a piece that can move', 'own.ok': 'Right! That was the only piece that could move',
@@ -51,7 +51,7 @@
       'ros.t': 'Rosettes: roll again', 'ros.b': 'Land on a flower square (rosette) and you roll again. Squares 4, 8 and 14 of your track are rosettes.', 'ros.k': 'Land on a rosette and roll again', 'ros.k2': 'Roll again! Roll and move any piece', 'ros.ok': 'Two moves in one turn', 'ros.ng': 'Pick the piece that lands on a rosette (glowing square)',
       'safe.t': 'The middle rosette is safe', 'safe.b': 'A piece on the rosette in the middle row cannot be captured. If a rival sits there, you cannot land on it.', 'safe.k': 'Roll, then save the red piece on the middle rosette', 'safe.ok': 'Safe now! And a rosette means you roll again', 'safe.ng': 'Move the threatened (red) piece to the middle rosette',
       'goal.t': 'Exact roll to go home', 'goal.b': 'Home is the step after square 14. You go home only with the exact roll; a roll that goes past it cannot be used.', 'goal.k': 'Roll, then bring a piece home', 'goal.ok': 'Home! It joins the row at the lower right', 'goal.ng': 'Pick the piece that reaches home exactly',
-      'pass.t': 'Zero and passing', 'pass.b': 'If no white tip is up you cannot move. If no piece can move, you also pass and it is your rival’s turn.', 'pass.k': 'Roll the dice', 'pass.k2': 'A zero. Press “Pass”', 'pass.ok': 'Now it is your rival’s turn',
+      'pass.t': 'Zero and passing', 'pass.b': 'If no blue tip is up you cannot move. If no piece can move, you also pass and it is your rival’s turn.', 'pass.k': 'Roll the dice', 'pass.k2': 'A zero. Press “Pass”', 'pass.ok': 'Now it is your rival’s turn',
       'win.t': 'How to win', 'win.b': 'The first to bring all seven pieces home wins. You need just one more!', 'win.k': 'Roll, then bring your last piece home', 'win.ok': 'All seven home — you win!', 'win.ng': 'Only your last piece can reach home',
     },
     zh: {
@@ -62,7 +62,7 @@
       roll: '掷骰', pass: '跳过', first: '先按“掷骰”', die: '点数 {n}', pick: '点击要走的棋子', again: '再掷一次！',
       noMove: '这枚棋子不能走', own: '那里有自己的棋子，不能停', over: '{n}会越过终点（必须正好）', safeNo: '对方棋子在中央花格受到保护，不能停在那里', notMine: '你的棋子在靠近你的一行',
       'board.t': '棋盘与你的路线', 'board.b': '你的棋子从靠近你的一行进入，按发光箭头走14格后到达终点。中间一行与对手共用。', 'board.k': '点击路线的最后一格（第14格）', 'board.ok': '那是最后一格，再走一步就到终点！', 'board.ng': '沿箭头找到最后一格',
-      'dice.t': '骰子', 'dice.b': '掷4枚四面体骰子，朝上的白点有几个就走几格。点数0–4，2最常出现。', 'dice.k': '按“掷骰”，数一数白点', 'dice.k2': '有几个白点？', 'dice.ok': '正确！可以走{n}格', 'dice.ng': '数一数顶端是白点的骰子',
+      'dice.t': '骰子', 'dice.b': '掷4枚四面体骰子，朝上的蓝点有几个就走几格。点数0–4，2最常出现。', 'dice.k': '按“掷骰”，数一数蓝点', 'dice.k2': '有几个蓝点？', 'dice.ok': '正确！可以走{n}格', 'dice.ng': '数一数顶端是蓝点的骰子',
       'enter.t': '棋子入场', 'enter.b': '盘外的棋子按点数沿路线进入相应的格子。每次只能走一枚。', 'enter.k': '掷骰后，让盘外的棋子入场', 'enter.ok': '入场了！先沿靠近你的一行前进',
       'move.t': '前进', 'move.b': '盘上的棋子也按点数沿路线前进。走哪一枚由你决定。', 'move.k': '掷骰后，走盘上的棋子', 'move.ok': '沿路线前进了', 'move.ng': '这次请走盘上的棋子',
       'own.t': '不能停在自己的棋子上', 'own.b': '有自己棋子的格子不能停。不能停的棋子就不能走，请选别的棋子。', 'own.k': '掷骰后，走一枚能走的棋子', 'own.ok': '对！只有那枚能走',
@@ -70,7 +70,7 @@
       'ros.t': '花格再掷一次', 'ros.b': '停在花纹格（花格）上可以再掷一次。路线的第4、8、14格是花格。', 'ros.k': '停到花格上，再掷一次', 'ros.k2': '再掷一次！掷骰后任选一枚走', 'ros.ok': '一回合走了两次', 'ros.ng': '选能停到花格（发光格）的棋子',
       'safe.t': '中央花格是安全的', 'safe.b': '中间一行的花格上的棋子不会被吃。对方棋子在那里时，你不能停上去。', 'safe.k': '掷骰后，把被盯上的棋子逃到中央花格', 'safe.ok': '安全了！又是花格，可以再掷一次', 'safe.ng': '把被盯上的（红色标记）棋子移到中央花格',
       'goal.t': '正好的点数才能到终点', 'goal.b': '终点在第14格之后。只有点数正好才能到达，超过的点数不能用。', 'goal.k': '掷骰后，让一枚棋子到达终点', 'goal.ok': '到达终点！排在右下方', 'goal.ng': '选正好能到终点的棋子',
-      'pass.t': '0点与跳过', 'pass.b': '没有白点朝上就不能走。没有任何棋子能走时也要跳过，轮到对手。', 'pass.k': '掷骰看看', 'pass.k2': '掷出了0。按“跳过”', 'pass.ok': '轮到对手了',
+      'pass.t': '0点与跳过', 'pass.b': '没有蓝点朝上就不能走。没有任何棋子能走时也要跳过，轮到对手。', 'pass.k': '掷骰看看', 'pass.k2': '掷出了0。按“跳过”', 'pass.ok': '轮到对手了',
       'win.t': '胜利条件', 'win.b': '先让7枚棋子全部到达终点者获胜。你只差最后一枚！', 'win.k': '掷骰后，让最后一枚到达终点', 'win.ok': '7枚全部到达，你赢了！', 'win.ng': '能到终点的是最后那一枚',
     },
     ko: {
@@ -81,7 +81,7 @@
       roll: '굴리기', pass: '패스', first: '먼저 [굴리기]를 누르세요', die: '눈 {n}', pick: '움직일 말을 탭', again: '한 번 더 굴릴 수 있어요!',
       noMove: '그 말은 움직일 수 없어요', own: '그곳에는 내 말이 있어 멈출 수 없어요', over: '{n}이면 골을 넘어 버려요(딱 맞는 눈만)', safeNo: '상대 말은 가운데 로제트에서 보호되어 멈출 수 없어요', notMine: '내 말은 앞쪽 줄의 말이에요',
       'board.t': '판과 나의 길', 'board.b': '내 말은 앞쪽 줄에서 들어와 빛나는 화살표를 따라 14칸을 간 뒤 골인합니다. 가운데 줄은 상대와 함께 씁니다.', 'board.k': '길의 마지막 칸(14번째)을 탭하세요', 'board.ok': '거기가 마지막 칸. 한 걸음 더 가면 골인!', 'board.ng': '화살표 끝, 맨 마지막 칸이에요',
-      'dice.t': '주사위', 'dice.b': '사면체 주사위 4개를 굴려, 위를 향한 흰 표시의 수만큼 나아갑니다. 0~4가 나오며 2가 가장 많이 나옵니다.', 'dice.k': '[굴리기]를 누르고 흰 표시를 세어 보세요', 'dice.k2': '흰 표시는 몇 개?', 'dice.ok': '정답! {n}칸 갈 수 있어요', 'dice.ng': '위에 흰 표시가 있는 주사위를 세어 보세요',
+      'dice.t': '주사위', 'dice.b': '사면체 주사위 4개를 굴려, 위를 향한 파란 표시의 수만큼 나아갑니다. 0~4가 나오며 2가 가장 많이 나옵니다.', 'dice.k': '[굴리기]를 누르고 파란 표시를 세어 보세요', 'dice.k2': '파란 표시는 몇 개?', 'dice.ok': '정답! {n}칸 갈 수 있어요', 'dice.ng': '위에 파란 표시가 있는 주사위를 세어 보세요',
       'enter.t': '말 들여놓기', 'enter.b': '판 밖의 말은 나온 눈만큼 길을 따라간 칸으로 들어갑니다. 한 번에 1개만 움직입니다.', 'enter.k': '굴린 다음, 판 밖의 말을 들여놓으세요', 'enter.ok': '들어왔어요! 먼저 앞쪽 줄을 나아갑니다',
       'move.t': '나아가기', 'move.b': '판 위의 말도 나온 눈만큼 길을 따라 나아갑니다. 어느 말을 움직일지는 내가 고릅니다.', 'move.k': '굴린 다음, 판 위의 말을 움직이세요', 'move.ok': '길을 따라 나아갔어요', 'move.ng': '이번에는 판 위의 말을 움직여 보세요',
       'own.t': '내 말 위에는 멈출 수 없다', 'own.b': '내 말이 있는 칸에는 멈출 수 없습니다. 멈출 수 없는 말은 움직일 수 없으니 다른 말을 고릅니다.', 'own.k': '굴린 다음, 움직일 수 있는 말을 움직이세요', 'own.ok': '정답! 움직일 수 있는 말은 그것뿐이었어요',
@@ -89,7 +89,7 @@
       'ros.t': '로제트에서 한 번 더', 'ros.b': '꽃무늬 칸(로제트)에 멈추면 한 번 더 굴립니다. 길의 4·8·14번째 칸이 로제트입니다.', 'ros.k': '로제트에 멈추고 한 번 더 굴리세요', 'ros.k2': '한 번 더! 굴려서 아무 말이나 움직이세요', 'ros.ok': '한 차례에 두 번 움직였어요', 'ros.ng': '로제트(빛나는 칸)에 멈추는 말을 고르세요',
       'safe.t': '가운데 로제트는 안전', 'safe.b': '가운데 줄의 로제트에 있는 말은 잡히지 않습니다. 상대 말이 있으면 그 칸에는 멈출 수 없습니다.', 'safe.k': '굴린 다음, 노려지는 말을 가운데 로제트로 피하세요', 'safe.ok': '이제 안전! 로제트라 한 번 더 굴립니다', 'safe.ng': '노려지는(빨간 표시) 말을 가운데 로제트로',
       'goal.t': '딱 맞는 눈으로 골인', 'goal.b': '골은 14번째 칸의 다음입니다. 딱 맞는 눈이 나왔을 때만 골인하며, 넘는 눈으로는 움직일 수 없습니다.', 'goal.k': '굴린 다음, 말을 골인시키세요', 'goal.ok': '골인! 오른쪽 아래 줄에 놓입니다', 'goal.ng': '딱 골에 닿는 말을 고르세요',
-      'pass.t': '0과 패스', 'pass.b': '흰 표시가 0개면 나아갈 수 없습니다. 움직일 말이 하나도 없을 때도 패스하고 상대 차례가 됩니다.', 'pass.k': '굴려 보세요', 'pass.k2': '0이 나왔어요. [패스]를 누르세요', 'pass.ok': '상대 차례가 됩니다',
+      'pass.t': '0과 패스', 'pass.b': '파란 표시가 0개면 나아갈 수 없습니다. 움직일 말이 하나도 없을 때도 패스하고 상대 차례가 됩니다.', 'pass.k': '굴려 보세요', 'pass.k2': '0이 나왔어요. [패스]를 누르세요', 'pass.ok': '상대 차례가 됩니다',
       'win.t': '이기는 법', 'win.b': '7개를 모두 먼저 골인시킨 쪽이 이깁니다. 이제 1개 남았어요!', 'win.k': '굴린 다음, 마지막 말을 골인시키세요', 'win.ok': '7개 모두 골인, 승리!', 'win.ng': '골에 닿는 것은 마지막 말이에요',
     },
     es: {
@@ -100,7 +100,7 @@
       roll: 'Tirar', pass: 'Pasar', first: 'Pulsa «Tirar» primero', die: 'Tirada {n}', pick: 'Toca la ficha que mueves', again: '¡Vuelves a tirar!',
       noMove: 'Esa ficha no puede moverse', own: 'Ahí hay una ficha tuya: no puedes caer en ella', over: 'Con {n} te pasarías de la meta (solo tirada exacta)', safeNo: 'La ficha rival está a salvo en la roseta central: no puedes caer ahí', notMine: 'Tus fichas son las de la fila cercana',
       'board.t': 'El tablero y tu recorrido', 'board.b': 'Tus fichas entran por la fila cercana y siguen las flechas 14 casillas hasta la meta. La fila central se comparte con el rival.', 'board.k': 'Toca la última casilla del recorrido (la 14)', 'board.ok': 'Esa es la última casilla. ¡Un paso más y a la meta!', 'board.ng': 'Sigue las flechas hasta la última casilla',
-      'dice.t': 'Los dados', 'dice.b': 'Tira cuatro dados piramidales y avanza tantas casillas como puntas blancas queden arriba: de 0 a 4; el 2 es el más frecuente.', 'dice.k': 'Pulsa «Tirar» y cuenta las puntas blancas', 'dice.k2': '¿Cuántas puntas blancas?', 'dice.ok': '¡Correcto! Avanzas {n} casillas', 'dice.ng': 'Cuenta los dados con punta blanca arriba',
+      'dice.t': 'Los dados', 'dice.b': 'Tira cuatro dados piramidales y avanza tantas casillas como puntas azules queden arriba: de 0 a 4; el 2 es el más frecuente.', 'dice.k': 'Pulsa «Tirar» y cuenta las puntas azules', 'dice.k2': '¿Cuántas puntas azules?', 'dice.ok': '¡Correcto! Avanzas {n} casillas', 'dice.ng': 'Cuenta los dados con punta azul arriba',
       'enter.t': 'Meter una ficha', 'enter.b': 'Una ficha de fuera entra en la casilla a la que llega la tirada por el recorrido. Solo mueves una ficha por tirada.', 'enter.k': 'Tira y mete una ficha en el tablero', 'enter.ok': '¡Dentro! Primero recorre tu fila cercana',
       'move.t': 'Avanzar', 'move.b': 'Las fichas del tablero también avanzan según la tirada por el recorrido. Tú eliges qué ficha mover.', 'move.k': 'Tira y mueve una ficha del tablero', 'move.ok': 'Ha avanzado por el recorrido', 'move.ng': 'Esta vez mueve una ficha del tablero',
       'own.t': 'No sobre una ficha tuya', 'own.b': 'No puedes caer en una casilla con una ficha tuya. Si no puede caer, no se mueve: elige otra.', 'own.k': 'Tira y mueve una ficha que pueda moverse', 'own.ok': '¡Bien! Era la única ficha que podía moverse',
@@ -108,7 +108,7 @@
       'ros.t': 'Rosetas: vuelves a tirar', 'ros.b': 'Si caes en una casilla de flor (roseta) vuelves a tirar. Las casillas 4, 8 y 14 de tu recorrido son rosetas.', 'ros.k': 'Cae en una roseta y vuelve a tirar', 'ros.k2': '¡Otra tirada! Tira y mueve cualquier ficha', 'ros.ok': 'Dos movimientos en un turno', 'ros.ng': 'Elige la ficha que cae en una roseta (casilla brillante)',
       'safe.t': 'La roseta central es segura', 'safe.b': 'Una ficha en la roseta de la fila central no puede ser capturada. Si hay una rival allí, no puedes caer en ella.', 'safe.k': 'Tira y salva la ficha roja en la roseta central', 'safe.ok': '¡A salvo! Y en roseta vuelves a tirar', 'safe.ng': 'Lleva la ficha amenazada (roja) a la roseta central',
       'goal.t': 'Tirada exacta para la meta', 'goal.b': 'La meta es el paso tras la casilla 14. Solo se entra con la tirada exacta; una que se pase no se puede usar.', 'goal.k': 'Tira y lleva una ficha a la meta', 'goal.ok': '¡Meta! Se coloca en la fila de abajo a la derecha', 'goal.ng': 'Elige la ficha que llega justo a la meta',
-      'pass.t': 'El cero y pasar', 'pass.b': 'Sin puntas blancas arriba no avanzas. Si ninguna ficha puede moverse también pasas, y le toca al rival.', 'pass.k': 'Tira los dados', 'pass.k2': 'Un cero. Pulsa «Pasar»', 'pass.ok': 'Ahora le toca al rival',
+      'pass.t': 'El cero y pasar', 'pass.b': 'Sin puntas azules arriba no avanzas. Si ninguna ficha puede moverse también pasas, y le toca al rival.', 'pass.k': 'Tira los dados', 'pass.k2': 'Un cero. Pulsa «Pasar»', 'pass.ok': 'Ahora le toca al rival',
       'win.t': 'Cómo ganar', 'win.b': 'Gana quien lleve antes sus siete fichas a la meta. ¡Te falta solo una!', 'win.k': 'Tira y lleva tu última ficha a la meta', 'win.ok': '¡Las siete en la meta: ganas!', 'win.ng': 'Solo tu última ficha llega a la meta',
     },
     fr: {
@@ -119,7 +119,7 @@
       roll: 'Lancer', pass: 'Passer', first: 'Appuyez d’abord sur « Lancer »', die: 'Jet {n}', pick: 'Touchez le pion à jouer', again: 'Relancez !',
       noMove: 'Ce pion ne peut pas bouger', own: 'Un de vos pions y est déjà : impossible de s’y arrêter', over: 'Avec {n}, vous dépasseriez l’arrivée (jet exact seulement)', safeNo: 'Le pion adverse est protégé sur la rosace centrale : impossible de s’y arrêter', notMine: 'Vos pions sont ceux de la rangée proche',
       'board.t': 'Le plateau et votre parcours', 'board.b': 'Vos pions entrent par la rangée proche et suivent les flèches sur 14 cases jusqu’à l’arrivée. La rangée du milieu est partagée avec l’adversaire.', 'board.k': 'Touchez la dernière case du parcours (la 14ᵉ)', 'board.ok': 'C’est la dernière case. Encore un pas et c’est l’arrivée !', 'board.ng': 'Suivez les flèches jusqu’à la toute dernière case',
-      'dice.t': 'Les dés', 'dice.b': 'Lancez quatre dés pyramidaux et avancez d’autant de cases que de pointes blanches en haut : de 0 à 4, le 2 étant le plus fréquent.', 'dice.k': 'Lancez et comptez les pointes blanches', 'dice.k2': 'Combien de pointes blanches ?', 'dice.ok': 'Exact ! Vous avancez de {n} cases', 'dice.ng': 'Comptez les dés dont la pointe blanche est en haut',
+      'dice.t': 'Les dés', 'dice.b': 'Lancez quatre dés pyramidaux et avancez d’autant de cases que de pointes bleues en haut : de 0 à 4, le 2 étant le plus fréquent.', 'dice.k': 'Lancez et comptez les pointes bleues', 'dice.k2': 'Combien de pointes bleues ?', 'dice.ok': 'Exact ! Vous avancez de {n} cases', 'dice.ng': 'Comptez les dés dont la pointe bleue est en haut',
       'enter.t': 'Entrer un pion', 'enter.b': 'Un pion hors du plateau entre sur la case atteinte par le jet le long du parcours. On ne joue qu’un pion par jet.', 'enter.k': 'Lancez, puis entrez un pion', 'enter.ok': 'Il est entré ! Il parcourt d’abord votre rangée',
       'move.t': 'Avancer', 'move.b': 'Les pions sur le plateau avancent aussi selon le jet le long du parcours. Vous choisissez lequel jouer.', 'move.k': 'Lancez, puis avancez un pion du plateau', 'move.ok': 'Il a avancé sur le parcours', 'move.ng': 'Cette fois, avancez un pion déjà sur le plateau',
       'own.t': 'Pas sur votre propre pion', 'own.b': 'On ne peut pas s’arrêter sur une case occupée par son propre pion. Ce pion ne bouge pas : choisissez-en un autre.', 'own.k': 'Lancez, puis jouez un pion qui peut bouger', 'own.ok': 'Bien vu ! C’était le seul pion jouable',
@@ -127,7 +127,7 @@
       'ros.t': 'Rosaces : on rejoue', 'ros.b': 'En vous arrêtant sur une case fleurie (rosace), vous relancez. Les cases 4, 8 et 14 de votre parcours sont des rosaces.', 'ros.k': 'Arrêtez-vous sur une rosace et relancez', 'ros.k2': 'Relancez ! Puis jouez n’importe quel pion', 'ros.ok': 'Deux coups en un seul tour', 'ros.ng': 'Choisissez le pion qui s’arrête sur une rosace (case lumineuse)',
       'safe.t': 'La rosace centrale protège', 'safe.b': 'Un pion sur la rosace de la rangée du milieu ne peut pas être pris. Si un adversaire y est, vous ne pouvez pas vous y arrêter.', 'safe.k': 'Lancez, puis abritez le pion rouge au centre', 'safe.ok': 'À l’abri ! Et sur une rosace, on relance', 'safe.ng': 'Mettez le pion menacé (rouge) sur la rosace centrale',
       'goal.t': 'Jet exact pour sortir', 'goal.b': 'L’arrivée est juste après la case 14. On ne sort qu’avec le jet exact ; un jet trop fort ne peut pas servir.', 'goal.k': 'Lancez, puis sortez un pion', 'goal.ok': 'Arrivé ! Il se range en bas à droite', 'goal.ng': 'Choisissez le pion qui atteint l’arrivée pile',
-      'pass.t': 'Le zéro et passer', 'pass.b': 'Sans pointe blanche en haut, vous n’avancez pas. Si aucun pion ne peut bouger, vous passez aussi : à l’adversaire.', 'pass.k': 'Lancez les dés', 'pass.k2': 'Zéro. Appuyez sur « Passer »', 'pass.ok': 'C’est au tour de l’adversaire',
+      'pass.t': 'Le zéro et passer', 'pass.b': 'Sans pointe bleue en haut, vous n’avancez pas. Si aucun pion ne peut bouger, vous passez aussi : à l’adversaire.', 'pass.k': 'Lancez les dés', 'pass.k2': 'Zéro. Appuyez sur « Passer »', 'pass.ok': 'C’est au tour de l’adversaire',
       'win.t': 'Comment gagner', 'win.b': 'Le premier à sortir ses sept pions gagne. Il ne vous en reste qu’un !', 'win.k': 'Lancez, puis sortez votre dernier pion', 'win.ok': 'Sept pions sortis : vous gagnez !', 'win.ng': 'Seul votre dernier pion peut sortir',
     },
     pt: {
@@ -138,7 +138,7 @@
       roll: 'Lançar', pass: 'Passar', first: 'Toque em “Lançar” primeiro', die: 'Lance {n}', pick: 'Toque a peça a mover', again: 'Lance de novo!',
       noMove: 'Essa peça não pode se mover', own: 'Há uma peça sua lá: não pode parar nela', over: 'Com {n} passaria da chegada (só lance exato)', safeNo: 'A peça rival está protegida na roseta central: não pode parar lá', notMine: 'Suas peças são as da fileira próxima',
       'board.t': 'O tabuleiro e seu percurso', 'board.b': 'Suas peças entram pela fileira próxima e seguem as setas por 14 casas até a chegada. A fileira do meio é compartilhada com o rival.', 'board.k': 'Toque a última casa do percurso (a 14ª)', 'board.ok': 'Essa é a última casa. Mais um passo e chega!', 'board.ng': 'Siga as setas até a última casa',
-      'dice.t': 'Os dados', 'dice.b': 'Lance quatro dados piramidais e ande tantas casas quantas pontas brancas ficarem para cima: de 0 a 4; o 2 é o mais comum.', 'dice.k': 'Toque em “Lançar” e conte as pontas brancas', 'dice.k2': 'Quantas pontas brancas?', 'dice.ok': 'Certo! Você anda {n} casas', 'dice.ng': 'Conte os dados com a ponta branca para cima',
+      'dice.t': 'Os dados', 'dice.b': 'Lance quatro dados piramidais e ande tantas casas quantas pontas azuis ficarem para cima: de 0 a 4; o 2 é o mais comum.', 'dice.k': 'Toque em “Lançar” e conte as pontas azuis', 'dice.k2': 'Quantas pontas azuis?', 'dice.ok': 'Certo! Você anda {n} casas', 'dice.ng': 'Conte os dados com a ponta azul para cima',
       'enter.t': 'Entrar com uma peça', 'enter.b': 'Uma peça fora do tabuleiro entra na casa a que o lance chega pelo percurso. Só se move uma peça por lance.', 'enter.k': 'Lance e coloque uma peça no tabuleiro', 'enter.ok': 'Entrou! Primeiro ela percorre sua fileira',
       'move.t': 'Avançar', 'move.b': 'As peças no tabuleiro também avançam pelo lance ao longo do percurso. Você escolhe qual mover.', 'move.k': 'Lance e mova uma peça do tabuleiro', 'move.ok': 'Avançou pelo percurso', 'move.ng': 'Desta vez, mova uma peça que já está no tabuleiro',
       'own.t': 'Não sobre a sua peça', 'own.b': 'Não se pode parar numa casa com peça sua. A peça que não pode parar não se move: escolha outra.', 'own.k': 'Lance e mova uma peça que possa se mover', 'own.ok': 'Isso! Era a única peça que podia se mover',
@@ -146,7 +146,7 @@
       'ros.t': 'Rosetas: lance de novo', 'ros.b': 'Parando numa casa de flor (roseta), você lança de novo. As casas 4, 8 e 14 do percurso são rosetas.', 'ros.k': 'Pare numa roseta e lance de novo', 'ros.k2': 'Lance de novo! Depois mova qualquer peça', 'ros.ok': 'Dois movimentos num só turno', 'ros.ng': 'Escolha a peça que para numa roseta (casa brilhante)',
       'safe.t': 'A roseta central é segura', 'safe.b': 'Uma peça na roseta da fileira do meio não pode ser capturada. Se houver uma rival lá, você não pode parar nela.', 'safe.k': 'Lance e leve a peça ameaçada à roseta central', 'safe.ok': 'Segura! E na roseta você lança de novo', 'safe.ng': 'Leve a peça ameaçada (vermelha) à roseta central',
       'goal.t': 'Lance exato para chegar', 'goal.b': 'A chegada é o passo após a casa 14. Só se chega com o lance exato; um lance que passe não pode ser usado.', 'goal.k': 'Lance e leve uma peça à chegada', 'goal.ok': 'Chegou! Ela fica na fileira de baixo à direita', 'goal.ng': 'Escolha a peça que chega exatamente',
-      'pass.t': 'O zero e passar', 'pass.b': 'Sem pontas brancas para cima, você não anda. Se nenhuma peça puder se mover, também passa, e é a vez do rival.', 'pass.k': 'Lance os dados', 'pass.k2': 'Deu zero. Toque em “Passar”', 'pass.ok': 'Agora é a vez do rival',
+      'pass.t': 'O zero e passar', 'pass.b': 'Sem pontas azuis para cima, você não anda. Se nenhuma peça puder se mover, também passa, e é a vez do rival.', 'pass.k': 'Lance os dados', 'pass.k2': 'Deu zero. Toque em “Passar”', 'pass.ok': 'Agora é a vez do rival',
       'win.t': 'Como vencer', 'win.b': 'Vence quem levar primeiro as sete peças à chegada. Falta só uma!', 'win.k': 'Lance e leve sua última peça à chegada', 'win.ok': 'Sete peças na chegada: você venceu!', 'win.ng': 'Só a sua última peça chega',
     },
     de: {
@@ -157,7 +157,7 @@
       roll: 'Würfeln', pass: 'Passen', first: 'Zuerst „Würfeln“ drücken', die: 'Wurf {n}', pick: 'Tippe den Stein, den du ziehst', again: 'Nochmal würfeln!',
       noMove: 'Dieser Stein kann nicht ziehen', own: 'Dort steht dein eigener Stein – darauf darfst du nicht', over: 'Mit {n} gingst du übers Ziel hinaus (nur genauer Wurf)', safeNo: 'Der gegnerische Stein ist auf der mittleren Rosette sicher – dort darfst du nicht hin', notMine: 'Deine Steine sind die in der vorderen Reihe',
       'board.t': 'Das Brett und deine Bahn', 'board.b': 'Deine Steine ziehen in der vorderen Reihe ein und folgen den leuchtenden Pfeilen 14 Felder bis ins Ziel. Die mittlere Reihe teilst du mit dem Gegner.', 'board.k': 'Tippe das letzte Feld der Bahn (Feld 14)', 'board.ok': 'Das ist das letzte Feld. Noch ein Schritt, und du bist im Ziel!', 'board.ng': 'Folge den Pfeilen bis zum allerletzten Feld',
-      'dice.t': 'Die Würfel', 'dice.b': 'Wirf vier Pyramidenwürfel und ziehe so viele Felder, wie weiße Spitzen oben sind: 0 bis 4, am häufigsten 2.', 'dice.k': 'Drücke „Würfeln“ und zähle die weißen Spitzen', 'dice.k2': 'Wie viele weiße Spitzen?', 'dice.ok': 'Richtig! Du ziehst {n} Felder', 'dice.ng': 'Zähle die Würfel mit weißer Spitze oben',
+      'dice.t': 'Die Würfel', 'dice.b': 'Wirf vier Pyramidenwürfel und ziehe so viele Felder, wie blaue Spitzen oben sind: 0 bis 4, am häufigsten 2.', 'dice.k': 'Drücke „Würfeln“ und zähle die blauen Spitzen', 'dice.k2': 'Wie viele blaue Spitzen?', 'dice.ok': 'Richtig! Du ziehst {n} Felder', 'dice.ng': 'Zähle die Würfel mit blauer Spitze oben',
       'enter.t': 'Einen Stein einsetzen', 'enter.b': 'Ein Stein von außen kommt auf das Feld, bis zu dem der Wurf entlang der Bahn reicht. Pro Wurf ziehst du nur einen Stein.', 'enter.k': 'Würfle und setze einen Stein ein', 'enter.ok': 'Drin! Er läuft zuerst durch deine vordere Reihe',
       'move.t': 'Ziehen', 'move.b': 'Auch Steine auf dem Brett ziehen um den Wurf entlang der Bahn. Welchen Stein du ziehst, entscheidest du.', 'move.k': 'Würfle und ziehe einen Stein auf dem Brett', 'move.ok': 'Er ist die Bahn entlang gezogen', 'move.ng': 'Ziehe diesmal einen Stein, der schon auf dem Brett steht',
       'own.t': 'Nicht auf den eigenen Stein', 'own.b': 'Auf einem Feld mit deinem eigenen Stein darfst du nicht landen. Dieser Stein kann dann nicht ziehen – nimm einen anderen.', 'own.k': 'Würfle und ziehe einen Stein, der ziehen kann', 'own.ok': 'Richtig! Nur dieser Stein konnte ziehen',
@@ -165,7 +165,7 @@
       'ros.t': 'Rosetten: nochmal würfeln', 'ros.b': 'Landest du auf einem Blumenfeld (Rosette), würfelst du nochmal. Die Felder 4, 8 und 14 deiner Bahn sind Rosetten.', 'ros.k': 'Lande auf einer Rosette und würfle nochmal', 'ros.k2': 'Nochmal! Würfle und ziehe einen beliebigen Stein', 'ros.ok': 'Zwei Züge in einem Zug', 'ros.ng': 'Wähle den Stein, der auf einer Rosette (leuchtendes Feld) landet',
       'safe.t': 'Die mittlere Rosette ist sicher', 'safe.b': 'Ein Stein auf der Rosette der mittleren Reihe kann nicht geschlagen werden. Steht dort ein Gegner, darfst du nicht dorthin.', 'safe.k': 'Würfle und rette den roten Stein in die Mitte', 'safe.ok': 'In Sicherheit! Und auf der Rosette würfelst du nochmal', 'safe.ng': 'Bring den bedrohten (roten) Stein auf die mittlere Rosette',
       'goal.t': 'Genauer Wurf ins Ziel', 'goal.b': 'Das Ziel ist der Schritt nach Feld 14. Ins Ziel kommt man nur mit dem genauen Wurf; ein zu hoher Wurf geht nicht.', 'goal.k': 'Würfle und bring einen Stein ins Ziel', 'goal.ok': 'Im Ziel! Er reiht sich unten rechts ein', 'goal.ng': 'Wähle den Stein, der das Ziel genau erreicht',
-      'pass.t': 'Die Null und Passen', 'pass.b': 'Zeigt keine weiße Spitze nach oben, ziehst du nicht. Kann kein Stein ziehen, passt du auch – der Gegner ist dran.', 'pass.k': 'Würfle', 'pass.k2': 'Eine Null. Drücke „Passen“', 'pass.ok': 'Jetzt ist der Gegner dran',
+      'pass.t': 'Die Null und Passen', 'pass.b': 'Zeigt keine blaue Spitze nach oben, ziehst du nicht. Kann kein Stein ziehen, passt du auch – der Gegner ist dran.', 'pass.k': 'Würfle', 'pass.k2': 'Eine Null. Drücke „Passen“', 'pass.ok': 'Jetzt ist der Gegner dran',
       'win.t': 'So gewinnt man', 'win.b': 'Wer zuerst alle sieben Steine ins Ziel bringt, gewinnt. Dir fehlt nur noch einer!', 'win.k': 'Würfle und bring deinen letzten Stein ins Ziel', 'win.ok': 'Alle sieben im Ziel – du gewinnst!', 'win.ng': 'Nur dein letzter Stein erreicht das Ziel',
     },
     hi: {
@@ -176,7 +176,7 @@
       roll: 'पासा फेंकें', pass: 'पास', first: 'पहले “पासा फेंकें” दबाएँ', die: 'अंक {n}', pick: 'चलाने वाला मोहरा छुएँ', again: 'फिर से फेंकें!',
       noMove: 'यह मोहरा नहीं चल सकता', own: 'वहाँ आपका अपना मोहरा है, वहाँ नहीं रुक सकते', over: '{n} से घर से आगे निकल जाएँगे (केवल ठीक अंक)', safeNo: 'विरोधी का मोहरा बीच के रोज़ेट पर सुरक्षित है, वहाँ नहीं रुक सकते', notMine: 'आपके मोहरे पास वाली पंक्ति के हैं',
       'board.t': 'बोर्ड और आपका रास्ता', 'board.b': 'आपके मोहरे पास वाली पंक्ति से आते हैं और चमकते तीरों के क्रम में 14 खाने चलकर घर पहुँचते हैं। बीच की पंक्ति विरोधी के साथ साझा है।', 'board.k': 'रास्ते का आख़िरी खाना (14वाँ) छुएँ', 'board.ok': 'यही आख़िरी खाना है। एक क़दम और, फिर घर!', 'board.ng': 'तीरों के साथ बिल्कुल आख़िरी खाने तक जाएँ',
-      'dice.t': 'पासे', 'dice.b': 'चार पिरामिड पासे फेंकें; जितनी सफ़ेद नोकें ऊपर हों उतने खाने चलें। 0 से 4 आते हैं, 2 सबसे ज़्यादा।', 'dice.k': '“पासा फेंकें” दबाएँ और सफ़ेद नोकें गिनें', 'dice.k2': 'कितनी सफ़ेद नोकें?', 'dice.ok': 'सही! आप {n} खाने चल सकते हैं', 'dice.ng': 'जिन पासों की सफ़ेद नोक ऊपर है उन्हें गिनें',
+      'dice.t': 'पासे', 'dice.b': 'चार पिरामिड पासे फेंकें; जितनी नीली नोकें ऊपर हों उतने खाने चलें। 0 से 4 आते हैं, 2 सबसे ज़्यादा।', 'dice.k': '“पासा फेंकें” दबाएँ और नीली नोकें गिनें', 'dice.k2': 'कितनी नीली नोकें?', 'dice.ok': 'सही! आप {n} खाने चल सकते हैं', 'dice.ng': 'जिन पासों की नीली नोक ऊपर है उन्हें गिनें',
       'enter.t': 'मोहरा अंदर लाना', 'enter.b': 'बोर्ड के बाहर का मोहरा रास्ते पर अंक जितना आगे वाले खाने में आता है। एक बार में एक ही मोहरा चलता है।', 'enter.k': 'पासा फेंकें, फिर एक मोहरा बोर्ड पर लाएँ', 'enter.ok': 'अंदर आ गया! पहले यह पास वाली पंक्ति में चलेगा',
       'move.t': 'आगे बढ़ना', 'move.b': 'बोर्ड के मोहरे भी अंक जितना रास्ते पर आगे बढ़ते हैं। कौन-सा मोहरा चलाना है, आप चुनते हैं।', 'move.k': 'पासा फेंकें, फिर बोर्ड का मोहरा चलाएँ', 'move.ok': 'रास्ते पर आगे बढ़ गया', 'move.ng': 'इस बार बोर्ड पर रखा मोहरा चलाएँ',
       'own.t': 'अपने मोहरे पर नहीं', 'own.b': 'जिस खाने में आपका मोहरा हो वहाँ नहीं रुक सकते। ऐसा मोहरा नहीं चलता, कोई और चुनें।', 'own.k': 'पासा फेंकें, फिर चल सकने वाला मोहरा चलाएँ', 'own.ok': 'सही! केवल वही मोहरा चल सकता था',
@@ -184,7 +184,7 @@
       'ros.t': 'रोज़ेट पर फिर से', 'ros.b': 'फूल वाले खाने (रोज़ेट) पर रुकें तो फिर से पासा फेंकते हैं। रास्ते के 4, 8 और 14वें खाने रोज़ेट हैं।', 'ros.k': 'रोज़ेट पर रुकें और फिर फेंकें', 'ros.k2': 'फिर से! फेंकें और कोई भी मोहरा चलाएँ', 'ros.ok': 'एक बारी में दो चालें', 'ros.ng': 'वह मोहरा चुनें जो रोज़ेट (चमकते खाने) पर रुके',
       'safe.t': 'बीच का रोज़ेट सुरक्षित है', 'safe.b': 'बीच की पंक्ति के रोज़ेट पर रखा मोहरा मारा नहीं जा सकता। वहाँ विरोधी हो तो आप वहाँ नहीं रुक सकते।', 'safe.k': 'पासा फेंकें, फिर ख़तरे वाले मोहरे को बीच के रोज़ेट पर बचाएँ', 'safe.ok': 'अब सुरक्षित! रोज़ेट है, तो फिर से फेंकें', 'safe.ng': 'ख़तरे वाले (लाल) मोहरे को बीच के रोज़ेट पर ले जाएँ',
       'goal.t': 'ठीक अंक से घर', 'goal.b': 'घर 14वें खाने के बाद है। केवल ठीक अंक आने पर घर पहुँचते हैं; आगे निकलने वाला अंक काम नहीं आता।', 'goal.k': 'पासा फेंकें, फिर एक मोहरा घर पहुँचाएँ', 'goal.ok': 'घर! यह नीचे दाईं पंक्ति में लगता है', 'goal.ng': 'वह मोहरा चुनें जो ठीक घर तक पहुँचे',
-      'pass.t': 'शून्य और पास', 'pass.b': 'कोई सफ़ेद नोक ऊपर न हो तो नहीं चलते। कोई भी मोहरा न चल सके तब भी पास, फिर विरोधी की बारी।', 'pass.k': 'पासा फेंकें', 'pass.k2': 'शून्य आया। “पास” दबाएँ', 'pass.ok': 'अब विरोधी की बारी है',
+      'pass.t': 'शून्य और पास', 'pass.b': 'कोई नीली नोक ऊपर न हो तो नहीं चलते। कोई भी मोहरा न चल सके तब भी पास, फिर विरोधी की बारी।', 'pass.k': 'पासा फेंकें', 'pass.k2': 'शून्य आया। “पास” दबाएँ', 'pass.ok': 'अब विरोधी की बारी है',
       'win.t': 'जीत कैसे', 'win.b': 'जो पहले सातों मोहरे घर पहुँचाए, वह जीतता है। आपका बस एक बाकी है!', 'win.k': 'पासा फेंकें, फिर आख़िरी मोहरा घर पहुँचाएँ', 'win.ok': 'सातों घर पहुँचे, आप जीते!', 'win.ng': 'घर तक केवल आख़िरी मोहरा पहुँचता है',
     },
     ar: {
@@ -195,7 +195,7 @@
       roll: 'ارمِ', pass: 'تمرير', first: 'اضغط «ارمِ» أولاً', die: 'الرمية {n}', pick: 'المس القطعة التي تحركها', again: 'ارمِ مرة أخرى!',
       noMove: 'لا يمكن تحريك هذه القطعة', own: 'هناك قطعة لك، لا يمكنك التوقف عليها', over: 'بـ {n} تتجاوز النهاية (الرمية المضبوطة فقط)', safeNo: 'قطعة الخصم آمنة على الوردة الوسطى، لا يمكنك التوقف هناك', notMine: 'قطعك هي التي في الصف القريب منك',
       'board.t': 'اللوحة ومسارك', 'board.b': 'تدخل قطعك من الصف القريب وتتبع الأسهم المضيئة 14 مربعًا ثم تصل إلى النهاية. الصف الأوسط مشترك مع الخصم.', 'board.k': 'المس آخر مربع في المسار (المربع 14)', 'board.ok': 'هذا آخر مربع. خطوة أخرى وتصل!', 'board.ng': 'اتبع الأسهم حتى آخر مربع',
-      'dice.t': 'النرود', 'dice.b': 'ارمِ أربعة نرود هرمية وتقدّم بعدد الرؤوس البيضاء المتجهة للأعلى: من 0 إلى 4، و2 هو الأكثر.', 'dice.k': 'اضغط «ارمِ» وعُدّ الرؤوس البيضاء', 'dice.k2': 'كم رأسًا أبيض؟', 'dice.ok': 'صحيح! تتقدم {n} مربعات', 'dice.ng': 'عُدّ النرود التي رأسها الأبيض للأعلى',
+      'dice.t': 'النرود', 'dice.b': 'ارمِ أربعة نرود هرمية وتقدّم بعدد الرؤوس الزرقاء المتجهة للأعلى: من 0 إلى 4، و2 هو الأكثر.', 'dice.k': 'اضغط «ارمِ» وعُدّ الرؤوس الزرقاء', 'dice.k2': 'كم رأسًا أزرق؟', 'dice.ok': 'صحيح! تتقدم {n} مربعات', 'dice.ng': 'عُدّ النرود التي رأسها الأزرق للأعلى',
       'enter.t': 'إدخال قطعة', 'enter.b': 'تدخل القطعة من خارج اللوحة إلى المربع الذي تبلغه الرمية على المسار. تحرّك قطعة واحدة فقط في كل رمية.', 'enter.k': 'ارمِ ثم أدخل قطعة إلى اللوحة', 'enter.ok': 'دخلت! تسير أولاً في صفك القريب',
       'move.t': 'التقدم', 'move.b': 'القطع على اللوحة تتقدم أيضًا بحسب الرمية على المسار، وأنت تختار أي قطعة تحرك.', 'move.k': 'ارمِ ثم حرّك قطعة على اللوحة', 'move.ok': 'تقدمت على المسار', 'move.ng': 'هذه المرة حرّك قطعة موجودة على اللوحة',
       'own.t': 'لا تتوقف على قطعتك', 'own.b': 'لا يمكنك التوقف على مربع فيه قطعة لك. القطعة التي لا تستطيع التوقف لا تتحرك، فاختر غيرها.', 'own.k': 'ارمِ ثم حرّك قطعة يمكنها الحركة', 'own.ok': 'صحيح! كانت هي القطعة الوحيدة القادرة على الحركة',
@@ -203,7 +203,7 @@
       'ros.t': 'الوردة: ارمِ مرة أخرى', 'ros.b': 'إذا توقفت على مربع الزهرة (الوردة) ترمي مرة أخرى. المربعات 4 و8 و14 في مسارك ورود.', 'ros.k': 'توقّف على وردة وارمِ مرة أخرى', 'ros.k2': 'مرة أخرى! ارمِ وحرّك أي قطعة', 'ros.ok': 'حركتان في دور واحد', 'ros.ng': 'اختر القطعة التي تتوقف على وردة (مربع مضيء)',
       'safe.t': 'الوردة الوسطى آمنة', 'safe.b': 'لا يمكن أسر قطعة على وردة الصف الأوسط. وإن كانت عليها قطعة للخصم فلا يمكنك التوقف هناك.', 'safe.k': 'ارمِ ثم انقل القطعة المهددة إلى الوردة الوسطى', 'safe.ok': 'صارت آمنة! وعلى الوردة ترمي مرة أخرى', 'safe.ng': 'انقل القطعة المهددة (الحمراء) إلى الوردة الوسطى',
       'goal.t': 'رمية مضبوطة للوصول', 'goal.b': 'النهاية هي الخطوة بعد المربع 14. لا تصل إلا بالرمية المضبوطة، والرمية التي تتجاوزها لا تُستخدم.', 'goal.k': 'ارمِ ثم أوصِل قطعة إلى النهاية', 'goal.ok': 'وصلت! تصطف في الأسفل يمينًا', 'goal.ng': 'اختر القطعة التي تبلغ النهاية تمامًا',
-      'pass.t': 'الصفر والتمرير', 'pass.b': 'إن لم يتجه أي رأس أبيض للأعلى فلا تتقدم. وإن لم تستطع أي قطعة الحركة تمرّر أيضًا ويأتي دور الخصم.', 'pass.k': 'ارمِ النرود', 'pass.k2': 'صفر. اضغط «تمرير»', 'pass.ok': 'الآن دور الخصم',
+      'pass.t': 'الصفر والتمرير', 'pass.b': 'إن لم يتجه أي رأس أزرق للأعلى فلا تتقدم. وإن لم تستطع أي قطعة الحركة تمرّر أيضًا ويأتي دور الخصم.', 'pass.k': 'ارمِ النرود', 'pass.k2': 'صفر. اضغط «تمرير»', 'pass.ok': 'الآن دور الخصم',
       'win.t': 'طريقة الفوز', 'win.b': 'يفوز أول من يُوصل قطعه السبع إلى النهاية. بقيت لك قطعة واحدة!', 'win.k': 'ارمِ ثم أوصِل قطعتك الأخيرة', 'win.ok': 'وصلت السبع كلها، فزت!', 'win.ng': 'قطعتك الأخيرة وحدها تبلغ النهاية',
     },
   };
@@ -377,7 +377,7 @@
             else api.ng(T('board.ng'), { reset: false });
           } });
       } },
-    // ③ the dice: roll, then say how many white tips
+    // ③ the dice: roll, then say how many blue tips
     { id: 'dice', setup(api) {
         PH.dice = 0;
         const ctl = run(api, { s: ST([], []), rolls: [3],

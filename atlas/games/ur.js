@@ -160,7 +160,7 @@
       const r0 = E.rollDice(Math.random, 'finkel'), r = { d: r0.dice, n: r0.n };
       await kit.roll(st.turn, r.d); if (stopped) return;
       roll = r; busy = false;
-      kit.marks.clear(); kit.marks.dice(r.d, st.turn);
+      kit.marks.clear();
       afterRoll();
     }
     function afterRoll() {
@@ -206,7 +206,7 @@
       if (over || stopped) return;
       busy = true; const r0 = E.rollDice(Math.random, 'finkel'), r = { d: r0.dice, n: r0.n };
       await kit.roll(1, r.d); if (stopped) return;
-      roll = r; busy = false; kit.marks.clear(); kit.marks.dice(r.d, 1);
+      roll = r; busy = false; kit.marks.clear();
       const ms = legal();
       if (!ms.length) { phase = 'ai'; say(roll.n ? X.aiNoMove : X.aiZero); toast(roll.n ? X.aiNoMove : X.aiZero); later(() => commit(null), 1200); return; }
       aiMove(ms);

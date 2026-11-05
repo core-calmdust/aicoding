@@ -42,16 +42,27 @@ html.atlas-ur.ur-band .pdk{background:rgba(120,80,30,.1)!important;border-color:
 /* (2026-11-05) the same board size as the 2D page on a phone held upright: a slimmer portal bar (40px; the page's own brand row +
    gaps take 34px), no extra margin around the board, the same 8px gaps → the page's --oh + 6px − the face strip below (16px) */
 html.atlas-ur{--oh:330px!important}
+/* the roll button: the portal's coral primary button (round Zen Maru Gothic, a die icon) instead of the 2D bitumen-and-gold plate */
+html.atlas-ur .dice-dock .roll-pill{background:#ff5d5d!important;border:2px solid #fff!important;border-radius:99px!important;box-shadow:0 4px 0 #d93c3c,0 8px 16px -8px rgba(120,40,20,.6)!important;filter:none!important;animation:none!important;
+  color:#fff!important;text-shadow:none!important;font-family:'Zen Maru Gothic',sans-serif!important;font-weight:900!important;letter-spacing:.12em!important;text-indent:0!important;writing-mode:horizontal-tb!important;gap:.35em}
+html.atlas-ur .dice-dock .roll-pill::before{content:'';position:static!important;inset:auto!important;box-shadow:none!important;flex:none;width:1.05em;height:1.05em;border-radius:0!important;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M12 3 3 19h18z'/%3E%3Cpath d='M12 3v16M3 19l9-6 9 6'/%3E%3C/svg%3E") center/contain no-repeat}
+html.atlas-ur .dice-dock .roll-pill:active,html.atlas-ur .dice-dock.press .roll-pill{box-shadow:0 1px 0 #d93c3c!important;transform:translate(-50%,-50%) translateY(3px)!important}
+html.atlas-ur .dice-dock.can:not(.rolling) .roll-pill{animation:urRp 2.2s ease-in-out infinite!important}
+@keyframes urRp{0%,100%{box-shadow:0 4px 0 #d93c3c,0 0 0 0 rgba(255,93,93,0)}50%{box-shadow:0 4px 0 #d93c3c,0 0 0 6px rgba(255,93,93,.22)}}
+html.atlas-ur .frame > .dice-dock .roll-pill{font-size:calc(var(--bw) * .022)!important}
 /* phones held upright: the side columns (手持ち / ゴール, board2d 'vfn') — framed on the wood with dark labels */
 html.atlas-ur .ur-vfn .ur-tray .ur-trayb > circle{opacity:1!important;fill:none!important;stroke:rgba(90,55,15,.28)!important;stroke-dasharray:4 4}   /* (the DOM board lies over the 3D pieces: outlines only) */
 html.atlas-ur .ur-vfn .ur-sb{fill:rgba(255,248,230,.0)!important;stroke-width:3!important}
-html.atlas-ur .ur-vfn .ur-sb-start{stroke:#c9a352!important;stroke-opacity:.9!important}
-html.atlas-ur .ur-vfn .ur-sb-goal{stroke:#3f9b6c!important;stroke-opacity:.9!important}
-html.atlas-ur .ur-vfn .ur-sl-start{fill:#8a5d12!important}
-html.atlas-ur .ur-vfn .ur-sl-goal{fill:#25734b!important}
-html.atlas-ur .ur-vfn .ur-sn{fill:#2b3044!important}
-html.atlas-ur .ur-vfn :is(.ur-sl,.ur-sn){stroke:#fff8ea;stroke-width:5px;paint-order:stroke;stroke-linejoin:round}
-html.atlas-ur .ur-vfn .ur-sl{font-weight:800!important}
+/* 手持ち = bitumen brown / gold, ゴール = lapis lazuli; the label on a cream plate with the colour's rim (like the portal's tags) */
+html.atlas-ur .ur-vfn .ur-sb-start{stroke:#7a5426!important;stroke-opacity:.85!important;stroke-width:3.5!important}
+html.atlas-ur .ur-vfn .ur-sb-goal{stroke:#24409a!important;stroke-opacity:.9!important;stroke-width:3.5!important}
+html.atlas-ur .ur-vfn .ur-slb{fill:#fffaf0!important;stroke-width:2.5!important;stroke-opacity:1!important}
+html.atlas-ur .ur-vfn .ur-slb-start{stroke:#b98a3e!important}
+html.atlas-ur .ur-vfn .ur-slb-goal{stroke:#3d5fc4!important}
+html.atlas-ur .ur-vfn :is(.ur-sl,.ur-sn){font-family:'Zen Maru Gothic',sans-serif!important;font-weight:900!important;stroke:none!important}
+html.atlas-ur .ur-vfn .ur-sl-start, html.atlas-ur .ur-vfn .ur-sn-start{fill:#6b4518!important}
+html.atlas-ur .ur-vfn .ur-sl-goal, html.atlas-ur .ur-vfn .ur-sn-goal{fill:#1f3a8f!important}
 html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
 @media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
   html.atlas-skin.atlas-ur .app{padding-top:48px!important}

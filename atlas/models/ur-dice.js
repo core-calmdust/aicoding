@@ -17,7 +17,7 @@
   'use strict';
   if (window.UrDice3D) return;
   const T = () => window.THREE;
-  const DR = .3, DT = .3;   // circumradius, how much of each edge the tips are cut
+  const DR = .3, DT = .3, DTM = .4;   // circumradius, how much of each edge the tips are cut
   const TV = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].map(v => v.map(a => a * DR / Math.sqrt(3)));
   const MARKED = [true, true, false, false];
   let seed = 77; const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -34,7 +34,7 @@
       Pa.push(...a, ...b, ...c); for (let k = 0; k < 3; k++) Ca.push(col[0], col[1]);
     };
     const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-    const cut = (i, j) => lerp(TV[i], TV[j], DT);
+    const cut = (i, j) => lerp(TV[i], TV[j], MARKED[i] ? DTM : DT);   // marked tips are cut deeper: a bigger cap for the lapis
     seed = 77;
     const shell = [.6875, .5], lap = [.9375, .5];
     const jit = () => [.0625 + (rnd() * 3 | 0) * .125, .5];   // one of the body tones (columns 0..2 of 8)
@@ -49,7 +49,7 @@
       const o = [0, 1, 2, 3].filter(x => x !== i), tri = o.map(j => cut(i, j)), cen = [0, 1, 2].map(a => (tri[0][a] + tri[1][a] + tri[2][a]) / 3);
       const tip = lerp(cen, TV[i], .82);   // nearly the full point: sharp tips
       if (!MARKED[i]) { for (let s = 0; s < 3; s++) add(tip, tri[s], tri[(s + 1) % 3], jit()); continue; }
-      const inn = tri.map(p => lerp(tip, p, .5));
+      const inn = tri.map(p => lerp(tip, p, .84));   // (2026-11-05: the lapis fills most of the cap — a thin shell rim, readable from above)
       for (let s = 0; s < 3; s++) { const a = tri[s], b = tri[(s + 1) % 3], ia = inn[s], ib = inn[(s + 1) % 3]; add(a, b, ib, shell); add(a, ib, ia, shell); add(tip, ia, ib, lap); }
     }
     const g = new TT.BufferGeometry(); g.setAttribute('position', new TT.Float32BufferAttribute(Pa, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(Ca, 2));
@@ -61,7 +61,7 @@
     if (dieMats[look]) return dieMats[look];
     const TT = T(), c = document.createElement('canvas'); c.width = 8; c.height = 1;
     const x = c.getContext('2d'), B = look === 'stone' ? ['#a89a84', '#9e8f78', '#b1a48f'] : ['#d6c7a6', '#ccbb98', '#ddd0b2'];
-    ['', '', '', '', '', '#fbf8f0', '#fbf8f0', '#1f3290'].forEach((col, i) => { x.fillStyle = col || B[i % 3]; x.fillRect(i, 0, 1, 1); });
+    ['', '', '', '', '', '#fbf8f0', '#fbf8f0', '#1a2f9a'].forEach((col, i) => { x.fillStyle = col || B[i % 3]; x.fillRect(i, 0, 1, 1); });
     const t = new TT.CanvasTexture(c); t.encoding = TT.sRGBEncoding; t.magFilter = t.minFilter = TT.NearestFilter; t.generateMipmaps = false; t.anisotropy = 1;
     return (dieMats[look] = new TT.MeshStandardMaterial({ map: t, roughness: look === 'bone' ? .42 : .6, metalness: 0 }));
   }

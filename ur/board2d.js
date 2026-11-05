@@ -178,8 +178,11 @@
       for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
         const n = L.pieces.filter(q => q.side === side && q.where === kind).length, [x, y, w, h] = sideBox(o, side, kind), cx = x + w / 2;
         const t = (lab && lab(kind)) || (kind === 'goal' ? 'Home' : 'Start');
-        s += `<rect class="ur-sb ur-sb-${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="none" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-opacity=".55" stroke-width="2.5"/>` +
-          `<text class="ur-sl ur-sl-${kind}" x="${cx}" y="${y + 22}" text-anchor="middle" font-size="16.5" font-weight="700" fill="${kind === 'goal' ? '#a8ecc6' : '#f1d58c'}" font-family="'Zen Kaku Gothic New',system-ui,sans-serif">${t}</text>` +
+        // colours: 手持ち = gold on bitumen, ゴール = lapis lazuli (lightened for the night-blue page); a small label plate on top
+        const G = kind === 'goal', fc = G ? '#6f8ff0' : '#d9b45a';
+        s += `<rect class="ur-sb ur-sb-${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="none" stroke="${fc}" stroke-opacity=".7" stroke-width="2.5"/>` +
+          `<rect class="ur-slb ur-slb-${kind}" x="${x + 7}" y="${y + 5}" width="${w - 14}" height="45" rx="11" fill="${G ? 'rgba(36,64,154,.42)' : 'rgba(60,40,12,.45)'}" stroke="${fc}" stroke-opacity=".6" stroke-width="1.5"/>` +
+          `<text class="ur-sl ur-sl-${kind}" x="${cx}" y="${y + 22}" text-anchor="middle" font-size="16.5" font-weight="700" fill="${G ? '#c4d2ff' : '#f1d58c'}" font-family="'Zen Kaku Gothic New',system-ui,sans-serif">${t}</text>` +
           `<text class="ur-sn ur-sn-${kind}" x="${cx}" y="${y + 42}" text-anchor="middle" font-size="17" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text>`;
       }
       return s;
@@ -187,7 +190,7 @@
     for (const side of [0, 1]) for (const kind of ['start', 'goal']) {
       const n = L.pieces.filter(q => q.side === side && q.where === kind).length; if (!n) continue;
       const sx = nside(o, side), a = sx * (NX + 40), b2 = (FL(o) ? -NY[kind] : NY[kind]) + 22, x = OB(o) === 'v' ? a : b2, y = OB(o) === 'v' ? b2 : a;
-      s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#7fd6a4' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
+      s += `<g transform="translate(${x} ${y})"><circle r="17" fill="rgba(8,12,34,.86)" stroke="${kind === 'goal' ? '#6f8ff0' : '#d9b45a'}" stroke-width="2.5"/><text y="7.5" text-anchor="middle" font-size="21" font-weight="800" fill="#fff3cf" font-family="system-ui,sans-serif">${n}</text></g>`;
     }
     return s;
   }
@@ -383,7 +386,7 @@
      When three.js can be had (loaded in the background after the page, never in the 3D skin) the dice are the 3D
      dice of atlas/models/ur-dice.js, thrown on a small transparent WebGL canvas over the dice place (rendered only
      while they move). Otherwise (no WebGL, offline, not loaded yet) the flat SVG dice below. */
-  const BONE = { f: ['#efe5cd', '#d8c9a8', '#b3a27f'], e: '#6e5d40', m: ['#fbf8f0', '#1f3290'], base: '#cdbd9b' };
+  const BONE = { f: ['#efe5cd', '#d8c9a8', '#b3a27f'], e: '#6e5d40', m: ['#1c3196', '#9fbaff'], base: '#cdbd9b' };   // marks: deep lapis (as the 3D dice) with a thin shell rim and a faint glint; no glow
   const DSTYLE = { orig: BONE, ivory: BONE, wood: BONE, gold: BONE };
   const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   let threeP = null;
@@ -397,7 +400,7 @@
     threeP = new Promise(res => {
       const go = () => {
         const t = window.THREE ? Promise.resolve() : loadScript(THREE_URL);
-        t.then(() => window.UrDice3D ? null : loadScript(BASE + '../atlas/models/ur-dice.js?v=1')).then(() => res(!!(window.THREE && window.UrDice3D && THREE.WebGLRenderer))).catch(() => res(false));
+        t.then(() => window.UrDice3D ? null : loadScript(BASE + '../atlas/models/ur-dice.js?v=2')).then(() => res(!!(window.THREE && window.UrDice3D && THREE.WebGLRenderer))).catch(() => res(false));
       };
       const idle = () => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200));
       if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
@@ -407,7 +410,7 @@
   const LIVE3D = [];   // WebGL contexts are scarce: drop the ones whose dice left the page
   function reap() { for (let i = LIVE3D.length - 1; i >= 0; i--) if (!LIVE3D[i].wrap.isConnected) { try { LIVE3D[i].dispose(); } catch (e) {} LIVE3D.splice(i, 1); } }
 
-  function make3D(wrap, n, span) {
+  function make3D(wrap, n, span, shift) {
     const TT = window.THREE, UD = window.UrDice3D, DS = .86, REST = UD.DR / 3 * DS;
     reap();
     const R = new TT.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -420,13 +423,13 @@
     const key = new TT.DirectionalLight(0xffffff, .95); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -.0006; key.shadow.normalBias = .01; key.shadow.radius = 3; sc.add(key); sc.add(key.target);
     const fill = new TT.DirectionalLight(0xfff0d8, .22); sc.add(fill);
     const ground = new TT.Mesh(new TT.PlaneGeometry(1, 1), new TT.ShadowMaterial({ opacity: .42 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; sc.add(ground);
-    // a soft glow over a white tip that points up (after the dice stop): the count can be read at a glance
-    const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const g = gc.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,250,228,1)'); gr.addColorStop(.35, 'rgba(255,240,200,.55)'); gr.addColorStop(1, 'rgba(255,230,170,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+    // (formerly a glow over each marked tip that points up; now the dice simply show their lapis marks — the sprite stays hidden)
+    const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const g = gc.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(90,140,255,0)'); gr.addColorStop(.22, 'rgba(90,140,255,.15)'); gr.addColorStop(.42, 'rgba(110,160,255,.75)'); gr.addColorStop(.62, 'rgba(90,140,255,.32)'); gr.addColorStop(1, 'rgba(70,120,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
     const gtex = new TT.CanvasTexture(gc);
     const D = [];
     for (let i = 0; i < n; i++) {
       const g = new TT.Group(), d = UD.die(); d.scale.setScalar(DS); g.add(d); sc.add(g);
-      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xfff6dc, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.42, .42, 1); halo.renderOrder = 5; sc.add(halo);
+      const halo = new TT.Sprite(new TT.SpriteMaterial({ map: gtex, color: 0xffffff, transparent: true, opacity: 0, depthTest: false, blending: TT.AdditiveBlending })); halo.scale.set(.42, .42, 1); halo.renderOrder = 5; halo.visible = false;   // (no glow any more: the lapis marks themselves are read — 2026-11-05)
       D.push({ g, d, halo, x: 0, z: 0 });
     }
     // world units = board squares (the dice place is `span` squares long); x right, z down the screen; the line of
@@ -450,7 +453,7 @@
         const fov = 40, dist = (Hc / 2) / Math.tan(fov / 2 * Math.PI / 180), tilt = .12;   // a fairly wide lens: a die in the air grows, its shadow slides off
         cam.fov = fov; cam.aspect = Wc / Hc; cam.position.set(0, dist, dist * tilt); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
         cam.near = dist * .5; cam.far = dist * 1.6; cam.updateProjectionMatrix();
-        key.position.set(-3.2, 7.2, -4); key.target.position.set(0, 0, 0);
+        key.position.set(-2.4, 8.4, -2.6); key.target.position.set(0, 0, 0);
         const sh = key.shadow.camera, e = Math.max(Wc, Hc) / 2 + .5; Object.assign(sh, { left: -e, right: e, top: e, bottom: -e, near: 1, far: 20 }); sh.updateProjectionMatrix();
         fill.position.set(3, 4, 2);
       }
@@ -458,7 +461,7 @@
     }
     const render = () => { if (fit()) R.render(sc, cam); };
     const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.5, (L - .16) / n);
-      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05) + (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
+      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05 + (shift || 0)) + (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
     function haloAt(o, on) {
       const v = new TT.Vector3(), w = new TT.Vector3();
       for (const t of [0, 1]) { const q = new TT.Vector3(...UD.TV[t]).multiplyScalar(DS).applyQuaternion(o.d.quaternion); if (!t || q.y > v.y) v.copy(q); }
@@ -499,7 +502,7 @@
           while (hk < hits.length && hits[hk].t <= tms) { if (onHit) try { onHit(hits[hk].i, hits[hk].s); } catch (e) {} hk++; }
           if (tms >= TP.total) {
             TP.end(); raf = 0;
-            // the glow over the white tips fades in, then the canvas stays still
+            // one last frame, then the canvas stays still
             const f0 = performance.now();
             const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
             raf = requestAnimationFrame(fade); return;
@@ -534,9 +537,9 @@
       const sh = el('ellipse', { rx: RT * .95, ry: RT * .8, cx: 5, cy: 10, fill: `url(#${p}s)` }, g);
       const body = el('g', {}, g);
       const faces = [0, 1, 2].map(() => el('path', { stroke: st.e, 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, body));
-      const tips = [0, 1, 2].map(() => el('circle', { r: 6.5, 'stroke-width': 1.5 }, body));
+      const tips = [0, 1, 2].map(() => el('circle', { r: 7.5, 'stroke-width': 1.5 }, body));
       const glow = el('circle', { r: 22, fill: `url(#${p}gw)` }, body);
-      const top = el('g', {}, body); el('circle', { r: 11, stroke: '#6e5d40', 'stroke-width': 2 }, top); el('circle', { r: 4.6 }, top);
+      const top = el('g', {}, body); el('circle', { r: 15, stroke: '#f3ead4', 'stroke-width': 2.4 }, top); el('circle', { r: 3.4, opacity: .55 }, top);
       const apex = el('circle', { r: 3, fill: st.e }, body);
       D.push({ g, sh, body, faces, tips, glow, top, apex, up: 0, rot: (i * 47 + 13) % 120, x: 60 + i * 110, y: 60 });
     }
@@ -557,7 +560,7 @@
         t.setAttribute('cx', (q[0] * .86).toFixed(1)); t.setAttribute('cy', (q[1] * .86).toFixed(1));
         t.setAttribute('fill', m ? st.m[0] : 'none'); t.setAttribute('stroke', m ? st.e : 'none');
       }
-      d.top.style.display = up ? '' : 'none'; d.glow.style.display = up ? '' : 'none'; d.apex.style.display = up ? 'none' : '';
+      d.top.style.display = up ? '' : 'none'; d.glow.style.display = 'none'; d.apex.style.display = up ? 'none' : '';
       d.top.children[0].setAttribute('fill', st.m[0]); d.top.children[1].setAttribute('fill', st.m[1]);
       d.sh.setAttribute('cx', 5 + dy * -.1); d.sh.setAttribute('cy', 10 - dy * .2);
     }
@@ -570,7 +573,7 @@
     // the 3D dice, when they can be had (the SVG stays as the fallback until then)
     if (opts.three !== false && want3D(opts.three === 'skin')) load3D().then(ok => {
       if (!ok || !wrap.isConnected || d3) return;
-      try { d3 = make3D(wrap, n, opts.span || 1.96); svg.style.visibility = 'hidden'; if (opts.onReady) try { opts.onReady(); } catch (e) {} d3.rest(cur, true); }
+      try { d3 = make3D(wrap, n, opts.span || 1.96, opts.shift || 0); svg.style.visibility = 'hidden'; if (opts.onReady) try { opts.onReady(); } catch (e) {} d3.rest(cur, true); }
       catch (e) { console.error(e); d3 = null; svg.style.visibility = ''; }
     });
     async function roll(dv, o2 = {}) {
