@@ -153,6 +153,9 @@
             color: #00ccff; font: inherit; font-size: 12px; letter-spacing: 0.04em; padding: 0 6px; cursor: pointer; opacity: 0.8;
         }
         #langSel option { background: #0b0220; color: #ffffff; }
+        /* 共通の言語メニュー（shared/langsel.js）のボタンも、ほかのボタンと同じくテーマ色に合わせる（ボタンは最初の色を写し取るだけなので、ここで追従させる） */
+        .lsel-btn { color: var(--tb, #00ccff) !important; border-color: var(--tb, #00ccff) !important; box-shadow: 0 0 10px var(--tb, #00ccff) !important; text-shadow: 0 0 5px var(--tb, #00ccff) !important; opacity: 0.8; transition: color .3s, border-color .3s, box-shadow .3s; }
+        .lsel-btn:hover { opacity: 1; }
         /* ---- スマホ（縦画面）---- */
         body.mobile { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         body.mobile #instructions-container { display: none; }
