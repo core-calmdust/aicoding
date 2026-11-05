@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../tafl/', VER = '?v=rs1';   // same file / version as tafl/index.html → shared cache
+  const BASE = '../tafl/', VER = '?v=nn1';   // same file / version as tafl/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.TaflEngine) return Promise.resolve(window.TaflEngine);
@@ -322,7 +322,7 @@
   }
 
   /* ---------- the board card ---------- */
-  const RATING = [450,  570,  670,  790,  960,  1030,  1100,  1160,  1230,  1290,  1390,  1480,  1580,  1670,  1760,  1880,  1960,  2040,  2120,  2200];   // tafl RT_LV (rated games)
+  const RATING = [450, 570, 670, 790, 960, 1030, 1100, 1130, 1275, 1350, 1465, 1590, 1685, 1790, 1895, 2110, 2240, 2355, 2470, 2560];   // tafl RT_LV (rated games)
   function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan)
     const L = TX[lang] || TX.en;
     return { name: 'Lv.' + i, desc: '', rating: RATING[i - 1] };
