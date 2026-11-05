@@ -249,6 +249,7 @@ html.atlas-chess .dot.cap::before{background:transparent!important;box-shadow:in
 html.atlas-chess #segSkin{flex-wrap:wrap}
 /* the lacquer catches the light: a soft window reflection across the board */
 html.atlas-chess .frame::before{display:block!important;content:'';position:absolute;inset:0;border-radius:6px;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(118deg,rgba(255,255,255,0) 16%,rgba(255,255,255,.13) 31%,rgba(255,255,255,.04) 38%,rgba(255,255,255,0) 44%,rgba(255,255,255,0) 63%,rgba(255,255,255,.07) 71%,rgba(255,255,255,0) 79%)}
+html.atlas-chess .frame::before{transition:opacity .2s}html.atlas-turning.atlas-chess .frame::before{opacity:0!important}   /* 盤面反転の回転中: the lacquer's glare (fixed to the frame, not the board) fades out, so no bright patch is left on the table */
 html.atlas-chess .star{display:flex!important}
 html.atlas-chess .star,html.atlas-chess .dot,html.atlas-chess .fxsvg{z-index:12!important}html.atlas-chess .hintlbl{z-index:13!important}
 

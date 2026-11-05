@@ -340,7 +340,7 @@
     const st = boardDom.style, ups = o.upright ? [...boardDom.querySelectorAll(o.upright)] : [];
     const clear = () => { st.rotate = st.scale = ''; ups.forEach(e => { e.style.rotate = ''; }); };
     const b = box();
-    if (document.documentElement.classList.contains('atlas-2d') || !host.getClientRects().length || !b.w) { turnRaf = 0; clear(); turnRest(); return; }   // (the 2D board: no turn, the 3D one rests in place for later)
+    if (document.documentElement.classList.contains('atlas-2d') || !host.getClientRects().length || !b.w) { turnRaf = 0; clear(); turnRest(); document.documentElement.classList.remove('atlas-turning'); return; }   // (the 2D board: no turn, the 3D one rests in place for later)
     const front = o.turn === 'y', Y1 = holdYaw(), d = Y1 ? -1 : 1;   // yaw = Y1 + d·a while a goes π → 0
     const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));
     let ow = b.w, oh = b.h;   // the 3D board's outer size on screen (its frame round the field)
@@ -365,9 +365,10 @@
       if (front) st.rotate = 'y ' + deg(-d * a);
       else { st.rotate = deg(-d * a); st.scale = s.toFixed(4); ups.forEach(e => { e.style.rotate = deg(d * a); }); }
     };
-    const done = () => { turnRaf = 0; clear(); turnRest(); T3.kick(300); };
+    const done = () => { turnRaf = 0; clear(); turnRest(); T3.kick(300); document.documentElement.classList.remove('atlas-turning'); };
     const step = now => { const k = window.__atlasTurnK ?? Math.min(1, (now - t0) / D);   // (__atlasTurnK: a fixed point of the turn, for checking it)
       if (k >= 1) return done(); pose(Math.PI * (1 - ease(k))); turnRaf = requestAnimationFrame(step); };
+    document.documentElement.classList.add('atlas-turning');   // (html.atlas-turning: glare layers over the board fade out meanwhile — skin.css)
     pose(Math.PI); turnRaf = requestAnimationFrame(step);
   }
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
