@@ -872,6 +872,77 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .pt{grid-template-columns:1fr;justify-items:center;text-align:center;padding:4px 2px;row-gap:1px}.pt .ic{grid-row:auto;font-size:15px}.pt .ic .cn{width:18px;height:18px;font-size:9px}.pt b{font-size:13.5px}.pt b small{font-size:10px}.pt em{font-size:9.5px;max-width:100%}
   .lgh small{display:none}.lgd{gap:3px}.lgd .d i{width:17px;height:17px}.lgd .d small{font-size:8.5px}}
 .prof .pf-l .bgfill{filter:saturate(1.15)}.prof .pf-l{background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
+/* ---------- home on phones (≤760px): name row · today strip · one-line updates, so the game list peeks into the first screen ----------
+   (PC keeps the cards above: .pf-sum and .updline are hidden there, .pf-det is display:contents) */
+.pf-sum,.updline{display:none}
+.pf-det{display:contents}
+@media (max-width:760px){
+  /* name row: avatar · name · coins · streak · ⌄ — the stats, the login week and Google sign-in open under it */
+  #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 8px 8px!important;border-radius:22px}
+  #pg-home .prof .pf-r{display:contents}
+  #pg-home .prof .pf-l{width:auto;border-radius:50%;overflow:visible;background:none;align-self:center}
+  #pg-home .prof .pf-l .bgfill,#pg-home .prof .pf-l::after{display:none}
+  #pg-home .prof .pf-l .av svg,#pg-home .prof .pf-l .av img{width:46px;height:46px}
+  #pg-home .prof .pf-l .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}
+  #pg-home .prof .pf-l .av.framed{box-shadow:none}
+  #pg-home .prof .pf-l .av .lv{bottom:-7px;font-size:10px;padding:0 6px;line-height:15px}
+  #pg-home .prof .pf-r input{font-size:16px;min-width:0}
+  #pg-home .pf-sum{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--ink);font:inherit}
+  .pf-sum .pfc,.pf-sum .pfs{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 9px 0 4px;border-radius:99px;background:#fff;border:2px solid var(--line);font:700 13px var(--round);white-space:nowrap}
+  .pf-sum .pfs{padding:0 9px 0 6px;background:#fff7df;border-color:#f3e2b8}
+  .pf-sum .pfc i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00);font:700 10px var(--round);font-style:normal;color:#a66a00}
+  .pf-sum .pfv{width:26px;height:26px;padding:4px;border-radius:50%;background:#f3ead6;fill:none;stroke:var(--ink2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s}
+  #pg-home .prof.open .pf-sum .pfv{transform:rotate(180deg)}
+  #pg-home .prof .pf-det{display:none;grid-column:1/-1;flex-direction:column;gap:8px;padding:10px 2px 4px}
+  #pg-home .prof.open .pf-det{display:flex;animation:pgIn .25s ease}
+  #pg-home .prof .ptiles .pt.coin{display:none}
+  #pg-home .prof .ptiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* today's game: one strip — picture · label/date · name · ヒストリア / あそぶ (the history itself lives in Historia) */
+  #pg-home .today{flex-direction:row;border-radius:22px;min-height:0}
+  #pg-home .today .pan{width:94px;height:auto;min-height:118px;border-radius:22px 0 0 22px}
+  [dir=rtl] #pg-home .today .pan{border-radius:0 22px 22px 0}
+  #pg-home .today .pan img{width:88px;top:50%;bottom:auto;transform:translate(-50%,-50%)}
+  #pg-home .today .pan:hover img{transform:translate(-50%,-54%)}
+  #pg-home .today .tx{padding:10px 12px 11px;gap:4px;justify-content:center}
+  #pg-home .today .kk{gap:6px}
+  #pg-home .today .lbl{font-size:11px;padding:2px 8px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #pg-home .today .dt{font-size:11px}
+  #pg-home .today b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pg-home .today .hs{display:none}
+  #pg-home .today .ft{margin-top:2px;padding-top:0;gap:6px}
+  #pg-home .today .hsb{height:32px;font-size:12px;padding:0 10px;gap:4px}#pg-home .today .hsb svg{display:none}
+  #pg-home .today .ft .btn.sm{padding:7px 11px;font-size:13px;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis}
+  /* recent updates: one line instead of the carousel; tap → every update in a bottom sheet */
+  #pg-home #hUpd,#pg-home .updwrap{display:none}
+  #pg-home .updline{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;height:44px;padding:0 8px 0 6px;border:2px solid var(--line);border-radius:99px;background:#fff;box-shadow:0 3px 0 var(--line);cursor:pointer;color:var(--ink);font:inherit;text-align:start;position:relative}
+  #pg-home .updline:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+  .updline .ul-k{flex:none;font:700 11px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:4px 9px;box-shadow:0 2px 0 var(--coral2)}
+  .updline .ul-v{flex:1;min-width:0;position:relative;height:20px;overflow:hidden}
+  .updline .ul-i{position:absolute;inset:0;display:flex;align-items:baseline;gap:6px;white-space:nowrap;opacity:0;transform:translateY(100%);transition:opacity .35s,transform .35s}
+  .updline .ul-i.on{opacity:1;transform:none}
+  .updline .ul-d{flex:none;font:700 12px var(--round);color:var(--ink2)}
+  .updline .ul-i b{flex:none;font-size:14px;font-weight:900;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+  .updline .ul-t{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink2);overflow:hidden;text-overflow:ellipsis}
+  .updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
+  .updline .ul-ch{flex:none;font-size:20px;font-weight:900;color:var(--ink2);line-height:1}
+  [dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
+  /* the bottom sheet */
+  .sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
+  @keyframes usUp{from{transform:translateY(100%)}}
+  .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
+  .sheet.updsh > .ush h3{margin:0;font-size:20px}
+  .sheet.updsh .usx{flex:none;width:38px;height:38px}
+  .sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
+  .usr{--c:#ff5d5d;display:flex;gap:10px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:8px 10px 8px 8px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+  .usr:active{transform:scale(.98)}
+  .usr .usi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+  .usr .usi img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+  .usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .usr .ush b{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .usr .ush small{flex:none;font:700 11.5px var(--round);color:var(--ink2)}
+  .usr .usp{font-size:12.5px;font-weight:700;color:var(--ink2);line-height:1.55}
+}
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
   .rgd{width:min(1000px,calc(100% - 48px));gap:14px;bottom:calc(20px + env(safe-area-inset-bottom))}
@@ -958,6 +1029,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
     </div>
     <h2 class="h" id="hUpd"></h2>
     <div class="updwrap"><div class="updrow" id="updRow"></div><button type="button" class="updnav prev" id="updPrev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button><button type="button" class="updnav next" id="updNext" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
+    <button type="button" class="updline" id="updLine"></button>
     <h2 class="h" id="hIcons"></h2>
     <div class="gfilter"><div class="chips cats" id="catChips"></div><label class="gsearch"><span id="gSearchIc"></span><input id="gSearch" type="search" autocomplete="off" enterkeyhint="search"></label></div>
     <div class="igrid" id="iconGrid"></div>
@@ -1031,7 +1103,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas.js?v=20261106map1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
-<script src="i18n.js?v=46"></script>
+<script src="i18n.js?v=47"></script>
 <script src="gamelist-i18n.js?v=5"></script>
 <script src="table3d.js?v=97"></script>
 <script src="models/shogi.js?v=23"></script>
@@ -1114,6 +1186,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=169"></script>
+<script src="app.js?v=170"></script>
 </body>
 </html>
