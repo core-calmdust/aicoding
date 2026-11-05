@@ -36,14 +36,15 @@
 .amload{position:absolute;inset:0;margin:0;display:grid;place-items:center;font-weight:900;color:var(--ink2)}
 .amload[hidden]{display:none}
 .aminfo{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
-.amwrap>.aminfo{min-height:0}
+.amwrap>.aminfo{min-height:0;box-sizing:border-box;height:var(--amH,300px)}   /* fixed size: the map never shifts when a game is picked */
 /* PC: the card sits under the full-width map in one row — game / story / journey / play */
 @media (min-width:820px){
-  .aminfo{display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) auto;grid-template-areas:"top story play" "facts story play" "facts jour play";column-gap:22px;row-gap:8px;align-items:start;padding:16px 20px}
+  .aminfo{display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) auto;grid-template-areas:"top story play" "facts story play" "facts jour play";column-gap:22px;row-gap:8px;align-items:start;padding:16px 20px;--amH:196px;grid-template-rows:auto auto 1fr}
+  .aminfo .amd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .aminfo .amtop{grid-area:top}.aminfo .amfacts{grid-area:facts;align-self:start}
   .aminfo .amstory{grid-area:story;min-width:0}.aminfo .amjour{grid-area:jour;min-width:0}
   .aminfo .amplay{grid-area:play;align-self:center;width:auto;min-width:150px;margin:0}
-  .aminfo .amempty{grid-column:1/-1;padding:18px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+  .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;align-self:center;padding:0;display:flex;align-items:center;justify-content:center;gap:10px}
   .aminfo .amempty svg{width:30px;height:30px}.aminfo .amempty p{margin:0}
 }
 .amempty{margin:auto;padding:20px 0;text-align:center;color:var(--ink2);font-weight:700}
@@ -80,8 +81,11 @@
 @media (max-width:819px){
   .amwrap{grid-template-columns:1fr;gap:10px}
   .ammap{aspect-ratio:1.55/1;min-height:220px;max-height:50vh}
-  .aminfo{padding:14px}
-  .amwrap>.aminfo{min-height:0}
+  .aminfo{padding:14px;--amH:370px;gap:8px}
+  .aminfo .amd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+  .aminfo .amjour div{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+  .aminfo .amjour div::-webkit-scrollbar{display:none}
+  .aminfo .amempty{margin:auto}
   .ampin{width:38px;height:38px;border-width:2.5px}
   .amhint{display:none}
   .amzoom{right:8px;top:8px}
