@@ -829,14 +829,19 @@
     // ゴイシペン: a go-stone penguin chick — round charcoal body, white face, a white stone beret
     stone() {
       const g = new T.Group(), B = soft(0x30344a, { under: 0x5c66c0, uk: .5, sheen: 0xb8c4ff, sheenK: .4, rim: .32 }), Wt = soft(0xfffdf7, { under: 0xd6e0ff, uk: .35 }), O = soft(0xffb547, { under: 0xff8a5a });
+      // the room builds its figures with far fewer sphere segments (Table3D lowPoly); the body, the face and the fringe meet at
+      // shallow angles, and as coarse 12 × 8 spheres the white face poked through the body's flat facets above the eyes (jagged
+      // white triangles that shimmered while it breathes). There these three parts use a geodesic sphere instead (not reduced).
+      const lowP = (() => { const t = new T.SphereGeometry(1, 48, 32), w = t.parameters.widthSegments; t.dispose(); return w < 48; })();
+      const blobS = (gg, mat, p, R) => { if (!lowP) return blob(gg, mat, p, R); const m = mesh(new T.IcosahedronGeometry(1, 3), mat); m.scale.set(...R); m.position.set(...p); gg.add(m); return m; };
       const bc = V3(0, .98, 0), BR = [.96, .94, .9];
-      blob(g, B, [bc.x, bc.y, bc.z], BR);
+      blobS(g, B, [bc.x, bc.y, bc.z], BR);
       const fc = V3(0, 1.02, .26), FR = [.78, .76, .68];
-      blob(g, Wt, [fc.x, fc.y - .03, fc.z], [FR[0], FR[1] - .05, FR[2]]);   // (its top a little lower: it stays well inside the body up there)
+      blobS(g, Wt, [fc.x, fc.y, fc.z], FR);
       // widow's peak: its own copy of the body material drawn a hair in front (polygon offset), so where it meets the white face
       // it never flickers — the room builds the figures with few segments and the two surfaces run almost together there
       const Bp = B.clone(); Bp.onBeforeCompile = B.onBeforeCompile; Bp.userData = Object.assign({}, B.userData); Bp.polygonOffset = true; Bp.polygonOffsetFactor = -2; Bp.polygonOffsetUnits = -4;
-      [-1, 1].forEach(s => blob(g, Bp, [s * .2, 1.66, .53], [.3, .2, .22]));
+      [-1, 1].forEach(s => blobS(g, Bp, [s * .2, 1.66, .53], [.3, .2, .22]));
       const eyes = face(g, ell(fc, FR), { er: .11, gap: .24, v: .24, mouth: 'none', by: .17, bx: .13 });
       blob(g, O, [0, 1.06, .92], [.12, .07, .1]);                                                   // beak
       [-1, 1].forEach(s => blob(g, B, [s * .92, .82, .05], [.13, .34, .26], [0, 0, s * (s > 0 ? .9 : .45)]));   // flippers (one waving)
