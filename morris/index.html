@@ -5,6 +5,7 @@
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
+<script src="../shared/phonesnd.js?v=1"></script>
 <script>/* board / piece design before the first paint (2D only) */ try { if (!/[?&]skin=atlas\b/.test(location.search)) { var _s = (JSON.parse(localStorage.getItem('aicoding-morris') || '{}') || {}).settings || {}; if (/^[a-z]+$/.test(_s.bd || '')) document.documentElement.dataset.bd = _s.bd; if (/^[a-z]+$/.test(_s.pcs || '')) document.documentElement.dataset.pcs = _s.pcs; } } catch (e) {}</script>
 <meta name="theme-color" content="#0d0a17">
 <meta name="description" content="ミルを作って相手の駒を取る、二千年以上遊ばれてきた陣取りゲーム。ナイン・トゥエルブ・シックスの3ルール、10段階AI、入門〜戦術レッスン21ステップ、序盤の定跡、詰めモリス600問、今日の一問。">

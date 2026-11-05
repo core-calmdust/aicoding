@@ -4,6 +4,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
+<script src="../shared/phonesnd.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,600&family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
@@ -3863,6 +3864,7 @@ window.HD_SE_ENEMY = "data:audio/mpeg;base64,SUQzBAAAAAAANFRDT04AAAAHAAADT3RoZXI
     let ctx = null, master = null;
     const V = { sfx: .8, music: .6, sfxMute: false, musicMute: false };
     try { const j = JSON.parse(localStorage.getItem('hexdeck.vol') || 'null'); if (j) Object.assign(V, j); else if (localStorage.getItem('hexdeck.sound') === 'off') { V.sfxMute = V.musicMute = true; } } catch (_) {}
+    if (window.PhoneSnd && PhoneSnd.phone) V.sfxMute = V.musicMute = false;   // スマホは本体の消音スイッチに任せる（ボタンなし。shared/phonesnd.js）
     const sfxEff = () => V.sfxMute ? 0 : V.sfx * MAXV, musEff = () => V.musicMute ? 0 : V.music * MAXV;
     let on = true;   // 効果音を鳴らすか（ミュートでも音楽の制御は続ける）
     const save = () => { try { localStorage.setItem('hexdeck.vol', JSON.stringify(V)); } catch (_) {} };

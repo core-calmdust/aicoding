@@ -5,6 +5,7 @@
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
+<script src="../shared/phonesnd.js?v=1"></script>
 <meta name="theme-color" content="#0d1412">
 <meta name="description" content="自己対戦で学習したニューラルネットAI・ベアオフ完全データベース・ダブリングキューブ・マッチ戦・レッスン・パズルを備えた、美しいブラウザ版バックギャモン。">
 <title>Backgammon V2</title>

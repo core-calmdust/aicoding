@@ -89,6 +89,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (window.PhoneSnd && PhoneSnd.phone) settings.sound = true;   // phones: the silent switch decides (shared/phonesnd.js)
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 9;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 9;
