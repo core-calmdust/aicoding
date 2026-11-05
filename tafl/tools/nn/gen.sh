@@ -3,6 +3,7 @@
 #   tools/nn/gen.sh <variant> <games per process> <nodesK> <outdir> [processes] [net file]
 # e.g. tools/nn/gen.sh 0 500 10 data 8              (hand-made evaluation, 8 processes × 500 games, 10k nodes per move)
 #      tools/nn/gen.sh 0 500 10 data2 8 tafl-v0.nnue (the second round: the games are played with the net)
+#      DEFK=2 tools/nn/gen.sh 0 3000 20 dataA 8     (the defenders read only 2k nodes: games the attackers win more often)
 set -e
 cd "$(dirname "$0")/../.."
 V=$1; G=$2; NK=$3; OUT=$4; P=${5:-$(getconf _NPROCESSORS_ONLN)}; NET=$6

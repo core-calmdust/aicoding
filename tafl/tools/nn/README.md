@@ -37,6 +37,7 @@ python3 tools/nn/train.py --variant 0 --out tafl-v0.nnue data/v0-*.txt
 cc -O3 -DNATIVE -w -o /tmp/tafl tools/native.c -lm
 NNUE=tafl-v0.nnue /tmp/tafl nmatch 0 100 10        # 100組（攻守入れ替えで200局）、1手1万局面
 NNUE=tafl-v0.nnue NNSCALE=600 /tmp/tafl nmatch 0 100 10   # scale を変えて試す（探索の枝刈りの幅と釣り合う値を探す）
+NNUE=tafl-v0.nnue /tmp/tafl nrole 0 50 20 2       # 役割ごとの比較（攻め手2万・守り手2千局面で、手作りどうしと同じ序盤で比べる）
 NNUE=tafl-v0.nnue /tmp/tafl nncheck 0 data/v0-xxx.txt 5   # ネットの値（守り手から見たロジット）を数局面だけ表示
 ```
 - `net score` が0.5を超えればネットの方が強いです。攻め手・守り手それぞれの勝ち負けも出ます。
@@ -49,6 +50,24 @@ NNUE=tafl-v0.nnue /tmp/tafl nncheck 0 data/v0-xxx.txt 5   # ネットの値（�
 tools/nn/gen.sh 0 500 10 data2 8 tafl-v0.nnue
 python3 tools/nn/train.py --variant 0 --out tafl-v1.nnue data/v0-*.txt data2/v0-*.txt
 ```
+
+## 攻め手の勝ちが多いデータ
+`DEFK=2` を付けると守り手だけ読みを浅く（2千局面）して対局します。攻め手が勝つ対局が増え、攻め手の指し方を学ぶ材料になります。
+```sh
+DEFK=2 tools/nn/gen.sh 0 3000 20 dataA 8
+python3 tools/nn/train.py --variant 0 --hidden 256 --epochs 40 --lam 0.7 --out tafl-v2.nnue data/v0-*.txt data20/v0-*.txt dataA/v0-*.txt
+```
+
+## 本格的な学習（自動ループ）
+`loop.sh` が「最新のネットで自己対局 → そのネットから続けて学習 → 手作り評価と役割ごとに比べる」を周回します。
+途中で止めても、同じコマンドで続きから再開します（終わった周は飛ばします）。
+```sh
+EXTRA="data/v0-*.txt data20/v0-*.txt" tools/nn/loop.sh 8 4000 10 8
+```
+- 1周 = 8プロセス × 4000局（1手1万局面）≈ 500万局面。学習は直近4周分（約2000万局面）を使います。
+- プロセスの4分の1は守り手の読みを浅くして（DEFK=2）、攻め手の勝つ対局を混ぜます。
+- 結果は `nnwork/log.txt`（各周の局面数・学習の最終行・`nrole` の結果）、最新のネットは `nnwork/net.nnue`。
+- 設定は環境変数で変えられます（`loop.sh` の先頭のコメント参照。例：`H=256 EPOCHS=12 WINDOW=4 LAM=0.75 SCALE=1000`）。
 
 ## できたら
 `.nnue` ファイル（と学習ログ）を送ってください。ページへの組み込み（engine.js での読み込み、レベルの調整、MODEL_CARD.md への記載）はこちらで行います。
