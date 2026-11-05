@@ -10,6 +10,7 @@
 //   nmatch <variant> <games> <nodesK> [seed]   the loaded net (NNUE=file) against the hand-made evaluation, both sides
 //   nrole <variant> <games> <nodesK attackers> <nodesK defenders> [seed]   the net in each role against the hand-made evaluation,
 //            compared with hand vs hand on the same openings (give the defenders fewer nodes so that the games are not one-sided)
+//   lvmatch <variant> <games> <levelA> <levelB> [seed]   level A with the net (NNUE) against level B with the hand-made evaluation
 //   nvn <variant> <games> <nodesK> [seed]   net NNUE against net NNUE2 (both sides each opening)
 //   (env NNUE=file: load a net (tools/nn/train.py) for its rule set; gendata then plays with it)
 #include "../engine.c"
@@ -56,7 +57,7 @@ static int plyCount;
 static int NNS[2] = { -1, -1 }, NKS[2] = { 0, 0 };   // NKS: nodesK per side (attackers, defenders) when set (nrole)   // nmatch / gendata: use the net for the attackers / defenders (search by nodes, TUNE_NK)
 static u8 *NETBUF[2] = { 0, 0 }; static int NETLEN[2], NETCUR = -1;   // nvn: two nets, reloaded when the side to move changes
 static void netSelect(int k) { if (NETCUR == k) return; memcpy(nnBuf, NETBUF[k], NETLEN[k]); nn_load(NETLEN[k]); NETCUR = k; }
-static int NVN[2] = { -1, -1 };   // nvn: the net of the attackers / defenders (0 = NNUE, 1 = NNUE2)
+static int NVN[2] = { -1, -1 }, LNN[2] = { -1, -1 };   // LNN: lvmatch, the net on / off for the attackers / defenders (levels)   // nvn: the net of the attackers / defenders (0 = NNUE, 1 = NNUE2)
 static FILE *GENOUT = 0; static char *GENBUF = 0; static size_t GENLEN = 0;
 static int playGame(int v, int lvA, int lvD, int randomPlies) {
   Pos p; startPos(v, &p); GSTART = p; GN = 0;
@@ -74,7 +75,7 @@ static int playGame(int v, int lvA, int lvD, int randomPlies) {
       if (PW[0]) { memcpy(EW, PW[p.side], sizeof(EW)); best(99, 0, TUNE_NK); }
       else if (NVN[0] >= 0) { netSelect(NVN[p.side]); nnUse = 1; best(99, 0, TUNE_NK); }
       else if (NNS[0] >= 0) { nnUse = NNS[p.side]; best(99, 0, NKS[p.side] ? NKS[p.side] : TUNE_NK); }
-      else think(p.side ? lvD : lvA, (int)rnd32());
+      else { if (LNN[0] >= 0) nn_enable(LNN[p.side]); think(p.side ? lvD : lvA, (int)rnd32()); }
       if (GENOUT) {   // the position, its search value (defenders' view, raw evaluate() units) and the hand-made features
         int sv = IO[2];
         if (sv > -WINT && sv < WINT) sv += p.side ? D0[VAR] : -D0[VAR];   // undo rep(): raw value
@@ -286,6 +287,8 @@ int main(int argc, char **argv) {
     if (!nn_load(len)) { fprintf(stderr, "bad net file %s\n", getenv("NNUE")); return 1; }
     if (nnVar != v) { fprintf(stderr, "the net is for variant %d, not %d\n", nnVar, v); return 1; }
     if (getenv("NNSCALE")) nnScale = (float)atof(getenv("NNSCALE"));
+    if (getenv("NNOISE")) nn_noise(atoi(getenv("NNOISE")));
+    if (getenv("NNLV")) { char *q = getenv("NNLV"); int l, k, z, u; while (sscanf(q, "%d:%d:%d%n", &l, &k, &z, &u) == 3) { nn_level(l, k, z); q += u; if (*q == ',') q++; } }   // "level:nodesK:noise%,…"
     nnLoaded = 1; nnUse = 0;
     fprintf(stderr, "net: variant %d, %dx%d, H=%d, scale %.0f\n", nnVar, nnN, nnN, nnH, nnScale);
   }
@@ -311,7 +314,7 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (!strcmp(cmd, "bench")) {
-    Pos p; startPos(v, &p); GSTART = p; GN = 0; setupHist();
+    Pos p; startPos(v, &p); GSTART = p; GN = 0; setupHist(); nnUse = nnLoaded;
     double t0 = now(); best(99, 0, atoi(argv[3]));
     double dt = now() - t0; printf("move %d value %d depth %d nodes %dk  %.0f ms  %.0f kn/s\n", IO[0], IO[2], IO[3], IO[4], dt, IO[4] / dt * 1000);
     return 0;
@@ -360,6 +363,26 @@ int main(int argc, char **argv) {
       printf("%.4f\n", nnValue(&p));
     }
     fclose(f); return 0;
+  }
+  if (!strcmp(cmd, "lvmatch")) {
+    if (!nnLoaded) { fprintf(stderr, "set NNUE=file\n"); return 1; }
+    int G = atoi(argv[3]), la = atoi(argv[4]), lb = atoi(argv[5]);
+    if (argc > 6) rng ^= (u64)atoll(argv[6]) * 0x9E3779B97F4A7C15ull;
+    int sc = 0, n = 0, w[2] = { 0, 0 }, l[2] = { 0, 0 };
+    for (int g = 0; g < G; g++) {
+      u64 seed = rng; int rp = 2 + rnd32() % 4;
+      LNN[0] = 1; LNN[1] = 0; int r1 = playGame(v, la, lb, rp);
+      rng = seed; LNN[0] = 0; LNN[1] = 1; int r2 = playGame(v, lb, la, rp);
+      sc += r1 - r2; n += 2; rnd32();
+      if (r1 > 0) w[0]++; else if (r1 < 0) l[0]++;
+      if (r2 < 0) w[1]++; else if (r2 > 0) l[1]++;
+      double s2 = 0.5 + sc / (2.0 * n);
+      fprintf(stderr, "\r%d/%d  A score %.3f (Elo %+.0f)  A att +%d -%d, def +%d -%d   ", g + 1, G, s2, eloOf(s2), w[0], l[0], w[1], l[1]);
+    }
+    fprintf(stderr, "\n");
+    double s2 = 0.5 + sc / (2.0 * n);
+    printf("L%d(net) vs L%d(hand): %d games, score %.3f (Elo %+.0f), A as attackers +%d -%d, as defenders +%d -%d\n", la, lb, n, s2, eloOf(s2), w[0], l[0], w[1], l[1]);
+    LNN[0] = LNN[1] = -1; return 0;
   }
   if (!strcmp(cmd, "nvn")) {
     if (!nnLoaded || !getenv("NNUE2")) { fprintf(stderr, "set NNUE=fileA NNUE2=fileB\n"); return 1; }

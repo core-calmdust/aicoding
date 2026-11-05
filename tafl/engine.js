@@ -365,13 +365,25 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261025a';   // engine.wasm (unchanged)
+  const V = 'v=20261105n2';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const url = new URL('engine.wasm?' + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+      .then(r => { WX = r.instance.exports; return loadNet(); }).catch(() => { WX = null; });
+  }
+  // the learned evaluation for Copenhagen (tools/nn, MODEL_CARD.md); without it the hand-made evaluation is used
+  async function loadNet() {
+    try {
+      if (!WX || !WX.nn_load || typeof DecompressionStream !== 'function') return;
+      const res = await fetch(new URL('nnue-copenhagen.bin.gz?' + V, self.location.href));
+      if (!res.ok) return;
+      const buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+      if (buf.length > WX.nn_buf_size()) return;
+      new Uint8Array(WX.memory.buffer, WX.nn_buf(), buf.length).set(buf);
+      WX.nn_load(buf.length);
+    } catch (e) { /* hand-made evaluation */ }
   }
   let queue = Promise.resolve();
   self.onmessage = e => {
