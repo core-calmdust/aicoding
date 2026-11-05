@@ -16,8 +16,8 @@ static double now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t);
 
 static int setupMoves(int n, int sw, const int *mv, int k) { IO[0] = n; IO[1] = sw; IO[2] = k; for (int i = 0; i < k; i++) IO[3 + i] = mv[i]; return setup(); }
 // parameter sets for A/B tests: pa = params of side A, pb = side B (applied before each move)
-static int PA[4] = { 900, 0, 8, 1 }, PB_[4] = { 900, 0, 8, 1 };
-static void applyP(const int *p) { set_param(0, p[0]); set_param(1, p[1]); set_param(2, p[2]); set_param(3, p[3]); }
+static int PA[7] = { 900, 0, 30, 1, 450, 500, 1 }, PB_[7] = { 900, 0, 30, 1, 450, 500, 1 };
+static void applyP(const int *p) { for (int k = 0; k < 7; k++) set_param(k, p[k]); }
 static int aiMove(int n, int sw, const int *mv, int k, int lv) {
   setupMoves(n, sw, mv, k);
   Lv raw = { lv < 0 ? -lv * 100 : 0, 0, 0, 0, 2 };
