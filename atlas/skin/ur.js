@@ -422,6 +422,20 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   // the design tab: the piece look changes the 3D pieces (the page re-renders after setDesign)
   new MutationObserver(() => { const s = lastState || UrApp.state(); if (s) { mirror(s); } }).observe(de, { attributes: true, attributeFilter: ['data-pcs'] });
 
+  /* ---------- the rotate (landscape) button: the page's own one is in its hidden brand row → a copy in the portal bar (as backgammon;
+     shown on touch screens only, skin.css .atlas-land-b) ---------- */
+  (function landBtn() {
+    const bar = document.querySelector('.atlas-top'), land = document.getElementById('btnLand');
+    if (!bar || !land || document.getElementById('atlasLand')) return;
+    const home = bar.querySelector('a.atlas-ic[aria-label=Portal]');
+    const rb = document.createElement('button'); rb.type = 'button'; rb.id = 'atlasLand'; rb.innerHTML = land.innerHTML;
+    rb.setAttribute('aria-label', land.getAttribute('aria-label') || 'Landscape');
+    const sync = () => { rb.className = 'atlas-ic atlas-land-b' + (land.classList.contains('on') ? ' on' : '') + (land.classList.contains('pulse') ? ' pulse' : ''); rb.title = land.title || ''; };
+    rb.onclick = e => { e.stopPropagation(); land.click(); setTimeout(sync, 0); };
+    new MutationObserver(sync).observe(land, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
+    bar.insertBefore(rb, home || null);
+  })();
+
   // test hooks (Playwright)
   window.__urSkin = {
     pieces: () => P3.size, dice: () => DICE.filter(g => g.visible).length, lifted: () => [...P3.values()].filter(o => o.h > .1).length,

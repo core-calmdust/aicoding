@@ -50,6 +50,7 @@ let reviewing = false;
 let rgame = null;         // rated game: { id, lv, or, my, tag, done }
 let lesson = null, puzzle = null;   // app-learn.js
 let special = null;       // lesson / puzzle board: { state, n, dice, marks, last, hint, onMove(move) }
+let playTimer = 0;        // the record replay (▶)
 let ken = null;           // PC review box: exploring { base, plies, roll }
 let busyToken = 0, thinking = 0, animating = false, gameOverShown = false;
 let HB = null, view = null, dice2d = null;
@@ -396,6 +397,7 @@ function renderInfo() {
   wpRender();
   document.body.classList.toggle('rated-live', rtLive());
   document.body.classList.toggle('reviewing', reviewing && !special && !ken);
+  navNeedSync();
   $('#reviewText').textContent = t('st.viewing', { n: cur });
   renderDice();
   renderEval();
@@ -712,8 +714,14 @@ $('#btnHint').onclick = hint;
 $('#btnResign').onclick = resign;
 
 // ====================================================================== record navigation
-let playTimer = 0;
-function stopPlay() { clearInterval(playTimer); playTimer = 0; $('#navPlay').classList.remove('playing'); }
+// phones (the strip above the bottom tabs, the landscape box of landtabs.js): the |< < ▶ > >| bar only when it is of use — a
+// finished game, a past position on view (a tap in the move list / graph), the replay running, the review box open (PC: always)
+function navNeedSync() {
+  const rv = document.getElementById('reviewCard');
+  const need = !special && !!game && (overNow() || reviewing || !!playTimer || !!ken || !!(rv && rv.classList.contains('show')));
+  if (document.body.classList.contains('nav-need') !== need) document.body.classList.toggle('nav-need', need);
+}
+function stopPlay() { clearInterval(playTimer); playTimer = 0; $('#navPlay').classList.remove('playing'); navNeedSync(); }
 function viewAt(i) {
   if (special || !game) return;
   if (ken && window.UrRv) UrRv.kenStop();
@@ -732,6 +740,7 @@ function navGo(what) {
     if (cur >= N) viewAt(0);
     $('#navPlay').classList.add('playing');
     playTimer = setInterval(() => { if (special || cur >= game.plies.length) { stopPlay(); return; } viewAt(cur + 1); }, 900);
+    navNeedSync();
     return;
   }
   stopPlay();
@@ -739,6 +748,7 @@ function navGo(what) {
   if (to < 0 || to > N) return;
   viewAt(to);
 }
+{ const rv = $('#reviewCard'); if (rv) new MutationObserver(() => navNeedSync()).observe(rv, { attributes: true, attributeFilter: ['class'] }); }
 $('#navBar').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) navGo(b.dataset.n); });
 $('#statusBox').appendChild($('#reviewBar'));
 $('#btnLatest').onclick = () => viewAt(game.plies.length);
@@ -946,7 +956,7 @@ if (window.ResizeObserver) new ResizeObserver(() => placeDice()).observe($('#fra
 
 // ====================================================================== dialogs: outside click, title, tabs
 function dismissOverlay(o) {
-  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo' };
+  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo', landTipOverlay: '#lpKeep' };
   if (o.id === 'rulesOverlay') { if (window.UrLearn) UrLearn.closeRules(); else o.classList.remove('show'); return; }
   if (o.id === 'lessonOverlay') { const b = $('#lessonDoneView:not(.hidden)') ? $('#btnLessonQuit2') : $('#btnLessonClose'); if (b) b.click(); return; }
   const b = OUT[o.id] && $(OUT[o.id]); if (b) b.click(); else o.classList.remove('show');
@@ -990,3 +1000,55 @@ update();
 if (hadSave) { if (overNow()) gameOverShown = true; afterPosition(); }
 // expose for tests / other modules
 window.__ur = { get game() { return game; }, get cur() { return cur; }, settings, newGame, doRoll, commit, curState, curRoll, viewAt, rtStart, openNewDialog, get busy() { return animating || thinking; }, overNow, statusAt, posAt, line };
+// ====================================================================== landscape option (phones, as fanorona / backgammon)
+// The option turns the phone's screen even with the rotation locked: real fullscreen + orientation lock where the browser
+// allows it (Android), otherwise the page reloads into a wrapper (index.html) that shows the game in an iframe turned 90°,
+// so the game inside sees a real landscape viewport (the phone landscape layout of landtabs.js: the board across with its
+// 12-square block on the left; hit testing and touches stay correct). window.__EMBED: this page is the turned copy.
+const LAND_KEY = STORE + '-landscape', LAND_SKIP = STORE + '-landtip-skip';
+const landOn = () => { try { return localStorage.getItem(LAND_KEY) === '1'; } catch (e) { return false; } };
+const landCoarse = () => matchMedia('(pointer: coarse)').matches;
+function renderLandBtn() { const b = $('#btnLand'); if (b) b.classList.toggle('on', landOn()); }
+function landSkipNext() { try { sessionStorage.setItem(LAND_SKIP, '1'); } catch (e) {} }   // no tip right after the button reloaded the page
+async function setLand(want) {
+  try { localStorage.setItem(LAND_KEY, want ? '1' : '0'); } catch (e) {}
+  renderLandBtn(); landSkipNext();
+  toast(t(want ? 'land.on' : 'land.off'), 1100);
+  if (want) {
+    if (innerWidth > innerHeight) return;   // already held sideways (the wrapper takes over on the next visit)
+    let locked = false;
+    try {
+      if (document.documentElement.requestFullscreen && screen.orientation && screen.orientation.lock) {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+        await Promise.race([screen.orientation.lock('landscape'), sleep(1500).then(() => { throw new Error('lock timeout'); })]);
+        await sleep(700); locked = innerWidth > innerHeight;   // some browsers resolve the lock without turning: trust only a turned viewport
+      }
+    } catch (e) {}
+    if (!locked) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {} setTimeout(() => location.reload(), 350); }   // iOS etc.: the turned iframe
+  } else {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+    if (window.__EMBED && window.top !== window) setTimeout(() => window.top.location.reload(), 350);
+  }
+}
+$('#btnLand').onclick = () => setLand(!landOn());
+if (window.__EMBED) document.querySelectorAll('a.home, a.series').forEach(a => { a.target = '_top'; });
+renderLandBtn();
+// tip for phone users held upright: landscape play exists (every visit while the option is off; queued behind any dialog)
+{
+  const skip = (() => { try { const v = sessionStorage.getItem(LAND_SKIP) === '1'; sessionStorage.removeItem(LAND_SKIP); return v; } catch (e) { return false; } })();
+  const wanted = () => !skip && !window.__EMBED && !landOn() && landCoarse() && innerHeight > innerWidth;
+  const pulse = () => { const b = $('#btnLand'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 4500); };
+  const closeTip = on => { hideOverlay('#landTipOverlay'); if (on) setLand(true); else setTimeout(pulse, 250); };
+  $('#lpKeep').onclick = () => closeTip(false);
+  $('#lpOn').onclick = () => closeTip(true);
+  if (wanted()) {
+    const iv = setInterval(() => {
+      if (!wanted()) { clearInterval(iv); return; }
+      if (document.querySelector('.overlay.show') || lesson || puzzle || document.hidden) return;
+      clearInterval(iv);
+      document.body.classList.toggle('no-anim', !animOn());
+      showOverlay('#landTipOverlay');
+    }, 700);
+  }
+}

@@ -3,7 +3,7 @@
 <head>
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-ur') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.design || 'museum'; } catch (e) {}</script>
 <meta charset="UTF-8">
-<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search) && !(!/[?&]embed=1/.test(location.search) && (function () { try { return localStorage.getItem('aicoding-ur-landscape') === '1'; } catch (e) { return false; } })() && matchMedia('(pointer: coarse)').matches)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/phonesnd.js?v=1"></script>
@@ -70,6 +70,29 @@ html[lang=ja] .label, html[lang=zh] .label, html[lang=ko] .label{font-family:var
 html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .brand h1{font-family:var(--serif);font-size:23px;letter-spacing:.04em}
 .brand h1 small{display:none}
 .brand-r{display:flex;align-items:center;gap:6px;flex:none}
+/* landscape option (phones, as backgammon): the wrapper page only holds the turned iframe; the button, its pulse and the tip */
+body.rotwrap{overflow:hidden!important;height:100%;overscroll-behavior:none;touch-action:none;margin:0}
+html:has(body.rotwrap){overflow:hidden;height:100%;overscroll-behavior:none}
+body.rotwrap > :not(#rotFrame){display:none!important}
+#rotFrame{background:var(--bg, #1a0d08)}
+/* phones: the move navigation strip (shared/infotabs.js) only when it is of use — a finished game, a past position on view, the
+   replay, the review box (app.js navNeedSync → body.nav-need); landscape: landtabs.js navSync */
+body.it-on.it-nav:not(.nav-need) #itNav{display:none!important}
+@media not all and (pointer: coarse){#btnLand{display:none!important}}
+.lp-modal{width:min(360px,100%);text-align:center}
+html .lp-modal h2{text-align:center;margin-bottom:6px}
+.lp-sub{font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+html[lang=ar] .lp-sub{text-align:center}
+.lp-phone{width:120px;height:90px;display:block;margin:0 auto 8px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lp-phone .lp-scr{fill:rgba(217,163,90,.14);stroke:none}
+.lp-phone .lp-arc{stroke:var(--brass);stroke-width:1.8}
+.lp-rot{transform-origin:60px 41px;animation:lpRot 2.6s ease-in-out infinite}
+@keyframes lpRot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(90deg)}100%{transform:rotate(0)}}
+.snd.land.pulse{position:relative;color:var(--accent);border-color:var(--accent)}
+.snd.land.pulse::after{content:"";position:absolute;inset:-3px;border-radius:9px;border:2px solid var(--accent);animation:lpPulse 1.1s ease-out infinite;pointer-events:none}
+@keyframes lpPulse{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
+body.no-anim .lp-rot{animation:none;transform:rotate(90deg)}
+body.no-anim .snd.land.pulse::after{animation:none;opacity:.9;transform:none}
 #langSel{background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:11px;padding:3px 4px}
 .snd{width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim)}
 .snd:hover{color:var(--text)}
@@ -724,7 +747,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   <aside class="side">
     <div class="brand">
       <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1 class="to-board" role="button" tabindex="0"><span id="brandTitle"></span><small></small></h1></div>
-      <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><button id="btnLand" class="snd land" data-i18n-title="land.title" aria-label="Landscape"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 4.5h6M17 21a4 4 0 0 0 3-3"/><path d="M19.5 16.5 20 18l1.5-.5"/></svg></button><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
     <div class="card controls">
       <button class="btn primary" id="btnNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
@@ -955,49 +978,55 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   </div>
 </div>
 
-<script src="i18n.js?v=3lv"></script>
-<script src="i18n-online.js?v=1"></script>
-<script src="../shared/pzbook.js?v=5"></script>
-<script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=37"></script>
-<script src="../shared/cardbar.js?v=7"></script>
-<script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/tick.js?v=2"></script>
-<script src="../shared/ruletour.js?v=29"></script>
-<script src="engine.js?v=2"></script>
-<script src="board2d.js?v=7"></script>
-<script src="tour.js?v=3" onerror="window.__noTour=1"></script>
-<script src="../shared/resign.js?v=2"></script>
-<script src="../shared/coachkit.js?v=16"></script>
-<script src="../shared/record.js?v=10"></script>
-<script src="../shared/export.js?v=7"></script>
-<script src="coach.js?v=2"></script>
-<script src="coach-i18n.js?v=3"></script>
-<script src="firebase-config.js?v=1"></script>
-<script src="../shared/onlinesec.js?v=2"></script>
-<script src="online.js?v=1"></script>
-<script src="app.js?v=7ol"></script>
-<script src="rv-i18n.js?v=2"></script>
-<script src="rvbox.js?v=1"></script>
-<script src="app-learn.js?v=2"></script>
-<script src="online-ui.js?v=2"></script>
-<script src="landtabs.js?v=1"></script>
-<script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=25"></script>
-<script src="../shared/nglux.js?v=13"></script>
-<script src="../shared/resumeng.js?v=1"></script>
-<script src="../shared/rulelink.js?v=1" data-btn="#btnRules"></script>
+<!-- landscape tip (phones held upright) -->
+<div class="overlay" id="landTipOverlay">
+  <div class="modal lp-modal">
+    <svg class="lp-phone" viewBox="0 0 120 90" aria-hidden="true"><g class="lp-rot"><rect x="44" y="12" width="32" height="58" rx="6"/><path d="M56 63h8"/><rect class="lp-scr" x="48" y="19" width="24" height="40" rx="2"/></g><path class="lp-arc" d="M90 26a34 34 0 0 1 4 30"/><path class="lp-arc" d="M90 56l4 2 2-4"/></svg>
+    <h2 data-i18n="land.tip"></h2>
+    <p class="lp-sub" data-i18n="land.tipSub"></p>
+    <div class="modal-actions"><button class="mbtn" id="lpKeep" data-i18n="land.keep"></button><button class="mbtn go" id="lpOn" data-i18n="land.go"></button></div>
+  </div>
+</div>
+<script>
+// "landscape on a phone held upright" (the 横画面 button, app.js; as fanorona / backgammon): with the option on, this page only
+// shows the game in an iframe turned 90°, so the game inside sees a landscape viewport (the phone landscape layout of landtabs.js:
+// the board across, its 12-square block on the left; hit testing and touches stay correct)
+(function () {
+  var KEY = 'aicoding-ur-landscape', embed = /[?&]embed=1/.test(location.search), on = false;
+  window.__EMBED = embed;
+  // the turned page: links that leave the game open in the whole tab, not in the turned frame
+  if (embed) document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (!a || a.target) return; var u = new URL(a.href, location.href); if (u.pathname !== location.pathname) { e.preventDefault(); window.top.location.href = u.href; } }, true);
+  try { on = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  if (!embed && on && matchMedia('(pointer: coarse)').matches) {
+    window.__ROTWRAP = true;
+    document.body.classList.add('rotwrap');
+    var f = document.createElement('iframe'); f.id = 'rotFrame'; f.title = document.title; f.setAttribute('allow', 'fullscreen');
+    f.src = location.pathname + '?embed=1' + location.search.replace(/^\?/, '&') + location.hash;
+    document.body.appendChild(f);
+    var lastW = 0, lastP = null;
+    var fit = function () {
+      var W = innerWidth, H = innerHeight, p = H > W;
+      if (W === lastW && p === lastP) return;   // the browser bars only changed the height: keep the size
+      lastW = W; lastP = p;
+      f.style.cssText = p ? 'position:fixed;left:' + W + 'px;top:0;width:' + H + 'px;height:' + W + 'px;transform:rotate(90deg);transform-origin:0 0;border:0;display:block'
+                          : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
+    };
+    fit(); addEventListener('resize', fit);
+    // (the iframe took the room / record links along; the portal look stays for a reload)
+    try { history.replaceState(null, '', location.pathname + (/[?&]skin=atlas\b/.test(location.search) ? '?skin=atlas' : '')); } catch (e) {}
+  } else document.write('<script src="i18n.js?v=4ld"><\/script><script src="i18n-online.js?v=1"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=16"><\/script><script src="../shared/headerbar.js?v=37"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="engine.js?v=2"><\/script><script src="board2d.js?v=7"><\/script><script src="tour.js?v=3" onerror="window.__noTour=1"><\/script><script src="../shared/resign.js?v=2"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=10"><\/script><script src="../shared/export.js?v=7"><\/script><script src="coach.js?v=2"><\/script><script src="coach-i18n.js?v=3"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=1"><\/script><script src="app.js?v=9nv"><\/script><script src="rv-i18n.js?v=2"><\/script><script src="rvbox.js?v=1"><\/script><script src="app-learn.js?v=2"><\/script><script src="online-ui.js?v=2"><\/script><script src="landtabs.js?v=3"><\/script><script src="../shared/pickdrop.js?v=8"><\/script><script src="../shared/ngtabs.js?v=25"><\/script><script src="../shared/nglux.js?v=13"><\/script><script src="../shared/resumeng.js?v=1"><\/script><script src="../shared/rulelink.js?v=1" data-btn="#btnRules"><\/script>');
+})();
+</script>
 <!-- World Board Game Atlas portal skin: ur/?skin=atlas — the British Museum board in 3D (atlas/models/ur.js + atlas/skin/ur.js), the DOM board stays on top for taps (see SKIN-HOOKS.md) -->
 <script>
 (function () {
-  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  if (!/[?&]skin=atlas\b/.test(location.search) || window.__ROTWRAP) return;
   document.documentElement.classList.add('atlas-skin');
   const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=26')).then(() => load('../atlas/models/ur-dice.js?v=2')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=11'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=26')).then(() => load('../atlas/models/ur-dice.js?v=2')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=12'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>
