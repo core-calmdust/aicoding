@@ -1023,12 +1023,14 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate{background:rgba(255,255,255,.82);color:#3a4566}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-l b{color:#14203f}
 /* the move limit ("9 at home · 40 moves left"): large, bold numbers, readable colours; a red pill when it gets close */
-.reserve .rsv-plate .rsv-bar{flex-basis:calc(var(--cell) * 1.1)}
-.reserve .rsv-plate .rsv-w{font-size:calc(var(--cell) * .25);font-weight:700;letter-spacing:.02em;color:#eadfc8;line-height:1.2}
+.reserve .rsv-plate{width:max-content;max-width:none;flex-wrap:nowrap}
+.reserve .rsv-plate > *{flex:none}
+.reserve .rsv-plate .rsv-bar{flex:0 0 calc(var(--cell) * 1.1)}
+.reserve .rsv-plate .rsv-w{display:inline-block;white-space:nowrap;font-size:calc(var(--cell) * .25);font-weight:700;letter-spacing:.02em;color:#eadfc8;line-height:1.2;padding:.1em .5em;margin-inline-end:-.3em;border-radius:999px;background:inherit}
 .reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .33);color:#fff4dc;margin:0 .08em;vertical-align:-.04em}
 .reserve .rsv-plate .rsv-w.hot{color:#fff;background:#c7362a;padding:.1em .6em;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .reserve .rsv-plate .rsv-w.hot b{color:#fff}
-html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot){color:#2c3658}
+html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot){color:#2c3658;background:rgba(255,255,255,.92)}
 html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{color:#14203f}
 /* Gzhel theme: cobalt and porcelain instead of the series' gold (shared components that bring their own gold) */
 .rules-offer{border-color:rgba(186,208,252,.5)!important;background:linear-gradient(90deg,rgba(150,182,245,.16),rgba(0,0,0,.15))!important}
@@ -1366,7 +1368,7 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=7"></script>
-<script src="app.js?v=8lw"></script>
+<script src="app.js?v=8lx"></script>
 <script src="online-ui.js?v=3sec1l9ck1p"></script>
 <!-- World Board Game Atlas portal skin: ugolki/?skin=atlas — 3D Gzhel porcelain board (the 2D white-and-cobalt tiles and painted frame under a glossy glaze), porcelain pieces, guide speech bubbles, portal look (all features kept) -->
 <script>
