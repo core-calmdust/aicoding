@@ -1571,7 +1571,7 @@
         // r.shift (world units, optional): a shift lens — the camera stands that far towards the player but still looks straight down,
         // so the field keeps its exact square on the DOM board while the near side of a thick board (and its legs) comes into view
         const unit = r.h / ((alignSize || 8.4)), P = r.persp || r.h * 3, tl = (r.tilt || 0) * Math.PI / 180, D = P / unit, sh = r.shift || 0;
-        cam.fov = 2 * Math.atan(H / 2 / P) * 180 / Math.PI; cam.aspect = W / H;
+        cam.fov = 2 * Math.atan(H / 2 / P) * 180 / Math.PI; cam.aspect = W / H; cam.near = .1;
         cam.position.set(0, top + D * Math.cos(tl), D * Math.sin(tl) + sh); cam.up.set(0, Math.sin(tl), -Math.cos(tl)); cam.lookAt(0, top, sh);
         const LK = lastKey || (lastKey = [NaN, 0, 0, 0, 0, 0]), same = Math.abs(LK[0] - r.x) < .05 && Math.abs(LK[1] - r.y) < .05 && Math.abs(LK[2] - r.w) < .05 && Math.abs(LK[3] - r.h) < .05 && LK[4] === W && LK[5] === H;
         // (the online dock's move / resize, shared/headerbar.js html.dock-anim: the page slides the board with a CSS transform —
@@ -1592,6 +1592,9 @@
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0); cam.lookAt(0, ly, 0); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+    // the near plane follows the camera's distance (a far camera — the gallery's showcase — with near .1 had too little depth
+    // precision left at the board: inlays and piece faces a few thousandths above a surface flickered as it turned)
+    { const nn = Math.min(2, Math.max(.1, d * .05)); if (Math.abs(cam.near - nn) > .01) { cam.near = nn; cam.updateProjectionMatrix(); dirty = true; } }
     orthoBlend(orthoWant ? camK : 0);   // (the projection flattens on the camera's own curve: it lands with it, no late zoom)
     if (museumOn) glare(camK);
     if (quietOn) {

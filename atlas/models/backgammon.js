@@ -409,15 +409,16 @@
     const ft = tex(c, 4);
     const en = face === 'white';   // white = glossy enamel, the others leather
     const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: en ? .0012 : .006, roughness: en ? .18 : face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : en ? 0x000000 : 0x6a6050), clearcoat: en ? 1 : .1, clearcoatRoughness: en ? .05 : .5 });
+    faceM.polygonOffset = true; faceM.polygonOffsetFactor = -2; faceM.polygonOffsetUnits = -6;
     return (ckMats[id] = { metal, face: faceM });
   }
   let ckGeo = null;
   function checker(id = 'gold') {
     const TT = T(), m = checkerMats(id);
     if (!ckGeo) {
-      const R = CK_R, Hh = CK_H, pts = [[0, 0], [R - .02, 0], [R - .004, .006], [R, .022], [R, Hh - .022], [R - .004, Hh - .006], [R - .02, Hh], [R - .062, Hh], [R - .072, Hh - .008], [R - .076, Hh - .026], [0, Hh - .026]];
+      const R = CK_R, Hh = CK_H, pts = [[0, 0], [R - .02, 0], [R - .004, .006], [R, .022], [R, Hh - .022], [R - .004, Hh - .006], [R - .02, Hh], [R - .062, Hh], [R - .072, Hh - .008], [R - .076, Hh - .026], [0, Hh - .05]];
       ckGeo = { rim: new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(r, y)), X.coarse ? 20 : 24), face: new TT.CircleGeometry(R - .075, X.coarse ? 20 : 24) };
-      ckGeo.face.rotateX(-Math.PI / 2); ckGeo.face.translate(0, Hh - .025, 0);
+      ckGeo.face.rotateX(-Math.PI / 2); ckGeo.face.translate(0, Hh - .022, 0);   // (well clear of the recess floor: no flicker from afar)
     }
     const g = new TT.Group();
     const a = new TT.Mesh(ckGeo.rim, m.metal); a.castShadow = a.receiveShadow = true; g.add(a);
