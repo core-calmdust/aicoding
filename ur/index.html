@@ -462,12 +462,13 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   html.hb-on.ol-soon{--vh:calc(100vh - var(--hb-h) - 46px)}
   @supports (height:100dvh){html.hb-on.ol-soon{--vh:calc(100dvh - var(--hb-h) - 46px)}}
   html.hb-on body{overflow:hidden}
-  html.hb-on .app{height:var(--vh);display:grid;gap:12px;padding:12px clamp(16px, 2vw, 32px) 12px;
+  html.hb-on .app{height:var(--vh);display:grid;gap:12px;padding:28px clamp(16px, 2vw, 32px) 20px;   /* (a little room above the board and below the info: the 3D frame reaches past the flat board) */
+   
     grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);
     grid-template-rows:auto minmax(var(--ih),560px);align-content:center;
     grid-template-areas:"board board board" "ck pl kf"}
   /* (a tall window: the board is as wide as it can be, the info row grows (up to 560px) right under it, and the two stay together in the middle) */
-  html.hb-on{--ih:clamp(220px, calc(var(--vh) * .34), 330px);--bw:min(calc(100vw - 64px), calc((var(--vh) - var(--ih) - 36px) * 1.674), 1500px)}
+  html.hb-on{--ih:clamp(220px, calc(var(--vh) * .34), 330px);--bw:min(calc(100vw - 64px), calc((var(--vh) - var(--ih) - 60px) * 1.674), 1500px)}
   html.hb-on .side, html.hb-on .side-in{display:contents}
   /* the online dock opened on a short window (shared/headerbar.js: dock-fit lowers --vh, dock-compact squeezes the info): the info row
      shrinks first so the board keeps a useful size; the graph gives way, the move list gets lower and scrolls (the eval bar and the ◀▶ stay).
@@ -992,11 +993,11 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=35'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=36'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=24')).then(() => load('../atlas/models/ur-dice.js?v=2')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=9'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=97')).then(() => load('../atlas/skin/common.js?v=25')).then(() => load('../atlas/models/ur-dice.js?v=2')).then(() => load('../atlas/models/ur.js?v=3')).then(() => load('../atlas/skin/ur.js?v=11'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>

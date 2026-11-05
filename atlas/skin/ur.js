@@ -142,6 +142,8 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
       if (r.selectorText && /\b(html|body)\.hb-on\b/.test(r.selectorText)) css.push(wrap(conv(r.selectorText) + '{' + r.style.cssText + '}'));
     } };
     for (const sh of document.styleSheets) { const n = sh.ownerNode; if (sh.href || (n && n.id === 'hbCss')) continue; let R; try { R = sh.cssRules; } catch (e) { continue; } walk(R, t => t); }   // (not the header bar's own sheet: its 2D bar must stay hidden)
+    // a little room under the portal bar (the page's own 12px left the 3D pieces above the board touching it)
+    css.push('@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){html.atlas-ur.hb-atlas .app{padding-top:28px!important}}');
     const s2 = document.createElement('style'); s2.textContent = css.join('\n'); document.head.appendChild(s2);
   })();
 

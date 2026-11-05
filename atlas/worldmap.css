@@ -29,6 +29,16 @@
 .ampin.on::after{background:var(--c)}
 .ampin.on img{transform:scale(1.2) translateY(-3px)}
 .ampin.dim{opacity:.32;filter:grayscale(.7)}
+.amclus{position:absolute;inset:0;pointer-events:none;z-index:2}
+.amclu{position:absolute;left:0;top:0;width:46px;height:46px;padding:0;border:3px solid #fff;border-radius:50%;background:#fff;pointer-events:auto;cursor:pointer;
+  box-shadow:0 3px 0 rgba(43,48,68,.35),0 8px 14px -6px rgba(60,40,10,.5);transition:opacity .2s,filter .2s;will-change:transform}
+.amclu::after{content:"";position:absolute;left:50%;bottom:-7px;width:10px;height:10px;margin-left:-5px;background:#fff;transform:rotate(45deg);border-radius:2px;z-index:-1}
+.amclu .ci{position:absolute;width:62%;height:62%;border-radius:50%;background:color-mix(in srgb,var(--c) 25%,#fff);overflow:visible}
+.amclu .ci img{width:130%;height:130%;margin:-15%;object-fit:contain}
+.amclu .ci.i0{left:4%;top:8%}.amclu .ci.i1{right:4%;bottom:6%}
+.amclu b{position:absolute;right:-8px;top:-8px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;border-radius:99px;background:var(--ink);color:#fff;font:700 13px/22px var(--round);text-align:center;border:2px solid #fff}
+.amclu:hover{filter:brightness(1.03)}
+.amclu.dim{opacity:.32;filter:grayscale(.7)}
 .ampin:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 .amzoom{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
 .amzoom button{width:38px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);font:700 22px var(--round);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
@@ -136,8 +146,9 @@
   .aminfo .amacts{grid-area:acts;flex-direction:row;gap:8px;margin-top:4px}
   .aminfo .amacts>*{flex:1;padding-block:10px}
   .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;margin:auto;padding:0}
-  .ampin{width:38px;height:38px;border-width:2.5px}
+  .ampin,.amclu{width:34px;height:34px;border-width:2.5px}
+  .amclu b{min-width:19px;height:19px;font-size:11.5px;line-height:19px;right:-7px;top:-7px}
   .amhint{display:none}
-  .amzoom{right:8px;top:8px}
+  .amzoom{right:8px;top:auto;bottom:8px;flex-direction:row}
   .amzoom button{width:34px;height:34px}
 }
