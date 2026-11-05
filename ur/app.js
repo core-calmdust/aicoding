@@ -277,8 +277,9 @@ function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
   { const nd = E.RULES[st.rule].dice, bd = band();
     // (the strip on phones: one square = 92 px, the dice about 40 px; the 3D dice also in the 3D skin, as its own are on the board)
-    if (!dice2d || dice2d.count !== nd || dice2d.band !== bd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice(), span: bd ? 176 / 92 : 1.96, shift: bd ? 0 : .14, three: bd ? 'skin' : true, fromRight: bd }); dice2d.count = nd; dice2d.band = bd; } }
-  if (r) dice2d.show(r.d); else dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));
+    if (!dice2d || dice2d.count !== nd || dice2d.band !== bd) { dice2d = B2.dice($('#diceHost'), { style: settings.pieces, speed: SPD(), count: nd, onReady: () => placeDice(), span: bd ? 176 / 92 : 1.96, shift: bd ? 0 : .05, three: bd ? 'skin' : true, fromRight: bd }); dice2d.count = nd; dice2d.band = bd; } }
+  if (r) dice2d.show(r.d); else if (!dice2d.shown) dice2d.show(new Array(E.RULES[st.rule].dice).fill(0));   // after a move the dice keep lying as they fell
+  dice2d.shown = true;
   dock.classList.toggle('d3', !!(dice2d.is3D && dice2d.is3D()));
   const canRoll = canRollNow();
   dock.classList.toggle('can', canRoll);

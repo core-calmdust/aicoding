@@ -461,7 +461,7 @@
     }
     const render = () => { if (fit()) R.render(sc, cam); };
     const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.5, (L - .16) / n);
-      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05 + (shift || 0)) + (Math.random() - .5) * Math.min(.12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
+      return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05 + (shift || 0)) + (Math.random() - .5) * Math.min(shift ? .06 : .12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
     function haloAt(o, on) {
       const v = new TT.Vector3(), w = new TT.Vector3();
       for (const t of [0, 1]) { const q = new TT.Vector3(...UD.TV[t]).multiplyScalar(DS).applyQuaternion(o.d.quaternion); if (!t || q.y > v.y) v.copy(q); }
@@ -470,8 +470,10 @@
     function rest(dv, fresh) {
       const P = fresh || !D[0].placed ? places() : null;
       D.forEach((o, i) => {
-        if (P) { o.x = P[i][0]; o.z = P[i][1]; o.yaw = Math.random() * Math.PI * 2; o.placed = true; }
-        UD.dieUp(o.d, !!dv[i], o.yaw); o.g.position.set(o.x, REST, o.z); haloAt(o, dv[i] ? 1 : 0);
+        if (P) { o.x = P[i][0]; o.z = P[i][1]; o.yaw = Math.random() * Math.PI * 2; o.placed = true; o.q = null; }
+        // the dice stay exactly where and how they came to rest (2026-11-05): only a die whose face must change is turned in place
+        if (P || !o.q || o.up !== !!dv[i]) { UD.dieUp(o.d, !!dv[i], o.yaw); o.q = o.d.quaternion.clone(); o.up = !!dv[i]; } else o.d.quaternion.copy(o.q);
+        o.g.position.set(o.x, REST, o.z); haloAt(o, 0);
       });
       render();
     }
@@ -501,7 +503,7 @@
           const tms = now - t0;
           while (hk < hits.length && hits[hk].t <= tms) { if (onHit) try { onHit(hits[hk].i, hits[hk].s); } catch (e) {} hk++; }
           if (tms >= TP.total) {
-            TP.end(); raf = 0;
+            TP.end(); raf = 0; D.forEach((o, i) => { o.q = o.d.quaternion.clone(); o.up = !!dv[i]; o.g.position.set(o.x, REST, o.z); });   // keep the pose they landed in
             // one last frame, then the canvas stays still
             const f0 = performance.now();
             const fade = n2 => { const k = Math.min(1, (n2 - f0) / 200); D.forEach((o, i) => haloAt(o, dv[i] ? k : 0)); render(); if (k < 1) raf = requestAnimationFrame(fade); else { raf = 0; res(); } };
