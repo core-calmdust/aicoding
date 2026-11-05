@@ -725,6 +725,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .rgd-act .dots{flex:1;display:flex;justify-content:center;gap:6px}
 .rgd-act .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.rgd-act .dots i.done{background:var(--sun)}.rgd-act .dots i.on{background:var(--coral);width:20px;border-radius:99px}
 .rgd-act .btn.big{min-width:150px}
+.rgd-act .btn.rgd-auto{position:relative;overflow:hidden;isolation:isolate}
+.rgd-act .btn.rgd-auto::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(255,255,255,.22);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
+.rgd-act .btn.rgd-auto::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:4px;border-radius:4px;background:rgba(255,255,255,.95);box-shadow:0 0 6px rgba(255,255,255,.7);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
+[dir=rtl] .rgd-act .btn.rgd-auto::before,[dir=rtl] .rgd-act .btn.rgd-auto::after{transform-origin:right}
+@keyframes rgdT{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .rgd-act .btn.wait{background:#fff;color:var(--ink2);box-shadow:inset 0 0 0 2px var(--line);animation:rgWait 1.4s ease-in-out infinite}
 @keyframes rgWait{50%{color:var(--sun2)}}
 @media (max-width:600px){.rgd .pic{width:72px;height:72px}.rgd .tx{font-size:14.5px;line-height:1.7;min-height:4.2em}.rgd .bub{padding:10px 12px 12px}.rgd-act .btn.big{min-width:0;padding-left:16px;padding-right:16px}.rgd-act .dots i{width:6px;height:6px}.rgd-act .dots i.on{width:14px}}
@@ -1062,18 +1067,28 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="games/ur.js?v=4"></script>
 <script src="games/fanorona.js?v=1"></script>
 <script src="games/ugolki.js?v=1"></script>
-<script src="rules/reversi.js?v=10"></script>
-<script src="rules/shogi.js?v=17"></script>
-<script src="rules/chess.js?v=3"></script>
-<script src="rules/backgammon.js?v=9"></script>
-<script src="rules/gomoku.js?v=5"></script>
-<script src="rules/go.js?v=3"></script>
-<script src="rules/hex.js?v=2"></script>
-<script src="rules/tafl.js?v=3"></script>
-<script src="rules/xiangqi.js?v=2"></script>
-<script src="rules/ur.js?v=10"></script>
-<script src="rules/fanorona.js?v=2"></script>
-<script src="rules/ugolki.js?v=1"></script>
+<script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
+window.AtlasRgdTimer = function (btn, ms, alive) {
+  if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
+  btn.style.setProperty('--rgd0', '0ms');
+  const t0 = performance.now(), iv = setInterval(() => {
+    const el = performance.now() - t0;
+    if (!btn.isConnected || (alive && !alive()) || el > ms + 150) { clearInterval(iv); btn.classList.remove('rgd-auto'); return; }
+    if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
+  }, 60);
+};</script>
+<script src="rules/reversi.js?v=11"></script>
+<script src="rules/shogi.js?v=18"></script>
+<script src="rules/chess.js?v=4"></script>
+<script src="rules/backgammon.js?v=10"></script>
+<script src="rules/gomoku.js?v=6"></script>
+<script src="rules/go.js?v=4"></script>
+<script src="rules/hex.js?v=3"></script>
+<script src="rules/tafl.js?v=4"></script>
+<script src="rules/xiangqi.js?v=3"></script>
+<script src="rules/ur.js?v=11"></script>
+<script src="rules/fanorona.js?v=3"></script>
+<script src="rules/ugolki.js?v=2"></script>
 <link rel="stylesheet" href="historia.css?v=13">
 <script src="historia.js?v=18"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
