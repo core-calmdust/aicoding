@@ -37,7 +37,7 @@
     // opts.top (the rules tour): straight down, one view for every page; opts.stage: room for the large dice beside the small block (PC)
     const PT = opts.top ? 1.5703 : 0;
     // (fit's w / d are the extents across / up the screen: rolled, the board's length runs up it — as mancala's upright view)
-    if (T3.fit) T3.fit(tall ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: opts.stage ? U.W + 3.2 : U.W + .5, d: U.D + 1.9, y: Y, pitch: PT || 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
+    if (T3.fit) T3.fit(tall ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.W + .5, d: opts.stage ? U.D + 2.2 : U.D + 1.9, y: Y, pitch: PT || 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -129,11 +129,11 @@
 
     /* ---------- dice: four tetrahedra beside the roller's small block ---------- */
     /* opts.stage (the rules tour): the dice are rolled large where they can be counted — on a phone over the middle of the board
-       (then they step aside, small, to the free corner beside the small block), on a PC beside the small block (they stay there) */
+       (then they step aside, small, to the free corner beside the small block), on a PC in a row in front of the small block (they stay there) */
     const BS = Math.max(2.1, Math.min(3, 2.1 * Math.pow(844 / Math.max(560, innerHeight), 1.6)));   // the large dice: about 60–80 px on a phone (a short screen shows the board smaller)
     const STG = !opts.stage ? null : tall
       ? { big: { s: BS, y: Y, at: i => [.62 + (i < 2 ? .33 : -.33) * BS, (i % 2 ? .34 : -.34) * BS] }, small: { s: .9, y: 0, at: i => [2.2 + (i >> 1) * .62, -(U.D / 2 + .3 + (i & 1) * .62)] } }
-      : { big: { s: 1.25, y: 0, at: i => [U.W / 2 + 1.0 + (i & 1) * .78, (i >> 1) ? .45 : -.45] } };
+      : { big: { s: 1.25, y: 0, at: i => [1.95 + i * .8, U.D / 2 + .52] } };   // PC: a row on the table in front of the small block — inside the board's own width, so in view at any window shape (beside the board it went off a wide screen's edge)
     if (STG && !STG.small) STG.small = STG.big;
     let ST = STG ? STG.small : null, DS = ST ? ST.s : .8;
     // tilt: the large dice lean their top towards the top of the screen, as if seen from the player's side (straight down, an
