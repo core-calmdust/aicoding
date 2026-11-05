@@ -83,7 +83,11 @@
     const step = now => { const k = Math.min(1, (now - t0) / ms); try { a.volume = Math.max(0, Math.min(1, v0 + (v - v0) * k)); } catch (e) {} if (k < 1) bgmFade = requestAnimationFrame(step); else if (done) done(); };
     bgmFade = requestAnimationFrame(step);
   }
+  // phones: follow the ringer/silent switch (iOS Safari 16.4+ Audio Session API: 'ambient' = silenced by the mute switch, mixes with other audio)
+  function quietSession() { try { if (navigator.audioSession && navigator.audioSession.type !== 'ambient') navigator.audioSession.type = 'ambient'; } catch (e) {} }
+  quietSession();
   function bgmStart() {
+    quietSession();
     if (!soundOn() || muted()) return;
     if (document.hidden || !document.hasFocus()) { away = true; if (!bgm) { try { bgm = new Audio(); bgm.loop = true; bgm.preload = 'auto'; bgm.volume = 0; bgm.src = BGM_SRC; } catch (e) { bgm = null; } } return; }   // (opened in the background: starts when the page comes into view)
     try {
