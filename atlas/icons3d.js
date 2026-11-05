@@ -832,7 +832,7 @@
       const bc = V3(0, .98, 0), BR = [.96, .94, .9];
       blob(g, B, [bc.x, bc.y, bc.z], BR);
       const fc = V3(0, 1.02, .26), FR = [.78, .76, .68];
-      blob(g, Wt, [fc.x, fc.y, fc.z], FR);
+      blob(g, Wt, [fc.x, fc.y - .03, fc.z], [FR[0], FR[1] - .05, FR[2]]);   // (its top a little lower: it stays well inside the body up there)
       // widow's peak: its own copy of the body material drawn a hair in front (polygon offset), so where it meets the white face
       // it never flickers — the room builds the figures with few segments and the two surfaces run almost together there
       const Bp = B.clone(); Bp.onBeforeCompile = B.onBeforeCompile; Bp.userData = Object.assign({}, B.userData); Bp.polygonOffset = true; Bp.polygonOffsetFactor = -2; Bp.polygonOffsetUnits = -4;
