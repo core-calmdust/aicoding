@@ -290,8 +290,40 @@
     updNav();
     document.querySelectorAll('#updRow [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     document.querySelectorAll('#updRow [data-tab]').forEach(b => { b.onclick = () => go(b.dataset.tab); });
+    renderUpdLine(ups);
     renderFilter(); renderGrid();
     renderProfile(); renderToday();
+  }
+  /* phones: the updates carousel folds into one line (#updLine, shown by CSS ≤760px) that cycles the newest few;
+     a tap opens a bottom sheet with every changelog line. A red dot marks an update this viewer hasn't opened yet. */
+  const UPD_SEEN = 'atlas-upd-seen';
+  const updKey = u => u ? u[0] + '|' + u[1] : '';
+  const updSeen = () => { try { return localStorage.getItem(UPD_SEEN) || ''; } catch (e) { return ''; } };
+  const updWhat = u => { const g = A_.GAMES.find(x => x.id === u[1]); if (g) return { g, name: gname(g), color: g.color, art: artImg(g) };
+    const k = /^tab:(\w+)$/.exec(u[1]); if (!k || !FEAT[k[1]]) return null; return { tab: k[1], name: t('tab.' + k[1]), color: FEAT[k[1]].color, art: `<img src="${FEAT[k[1]].art}" alt="">` }; };
+  let updTimer = 0;
+  function renderUpdLine(ups) {
+    const el = $('updLine'); if (!el) return;
+    clearInterval(updTimer);
+    const items = ups.slice(0, 4).map(u => [u, updWhat(u)]).filter(x => x[1]);
+    if (!items.length) { el.hidden = true; return; }
+    const fresh = updKey(A_.UPDATES[0]) !== updSeen();
+    el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v">${items.map(([u, w], i) => `<span class="ul-i${i ? '' : ' on'}"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join('')}</span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
+    el.setAttribute('aria-label', t('upd.more'));
+    el.onclick = openUpdSheet;
+    if (items.length > 1) { let k = 0; updTimer = setInterval(() => {
+      if (!el.isConnected || !el.offsetParent || document.hidden) return;   // (PC / another tab: the line is hidden, nothing to cycle)
+      const its = el.querySelectorAll('.ul-i'); its[k].classList.remove('on'); k = (k + 1) % its.length; its[k].classList.add('on'); }, 4000); }
+  }
+  function openUpdSheet() {
+    try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
+    const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
+    const rows = A_.UPDATES.map(u => { const w = updWhat(u); if (!w) return '';
+      return `<button type="button" class="usr" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b><small>${esc(fmtDate(u[0]))}</small></span><span class="usp">${esc(utx(u))}</span></span></button>`; }).join('');
+    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${rows}</div>`, 'updsh');
+    const sh = $('sheet');
+    sh.querySelector('.usx').onclick = closeSheet;
+    sh.querySelectorAll('.usr').forEach(b => { b.onclick = () => { closeSheet(); if (b.dataset.g) flyOpen(b.dataset.g, null); else go(b.dataset.tab); }; });
   }
 
   /* home game list: category chips + search (the chip is remembered per viewer) */
@@ -933,6 +965,7 @@
     $('bv').addEventListener('pointercancel', () => { s0 = null; }, true);
   })();
 
+  let pfOpen = false;
   function renderProfile() {
     const touched = A_.GAMES.filter(g => P[g.id].touched).length, done = ACH.filter(a => a.done).length;
     const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
@@ -940,10 +973,13 @@
     const tile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
     $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${ART.avatar(W.av, 104, { clear: true })}<span class="lv">Lv.${lv}</span></button></div>
       <div class="pf-r"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
-      <div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
+      <button type="button" class="pf-sum" id="pfMore" aria-expanded="${pfOpen}" aria-controls="pfDet" aria-label="${esc(t('pf.more'))}"><span class="pfc"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><span class="pfs">🔥${s}</span><svg class="pfv" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="pf-det" id="pfDet"><div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
       <div class="lgw"><div class="lgh"><b>🔥 ${esc(t('login.day', { n: s }))}</b><small>${esc(t('login.week'))}</small></div>
       <div class="lgd">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="d ${d < pos ? 'got' : d === pos ? 'got now' : ''} ${d === 7 ? 'big' : ''}"><i>${d === 7 ? '🎁' : '¢'}</i><small>+${d === 7 ? 180 : 30}</small></span>`).join('')}</div></div>
-      <div class="accw"></div></div>`;
+      <div class="accw"></div></div></div>`;
+    $('prof').classList.toggle('open', pfOpen);
+    $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
     $('avBtn').onclick = () => go('dress');
     renderAcc();
     $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); };   // the same name in every game
