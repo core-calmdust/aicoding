@@ -444,6 +444,8 @@ EXPORT(nn_load) int nn_load(int len) {
   nnVar = v; nnN = n; nnH = h; nnScale = sc; nnAvail = 1; nnUse = nnWant;
   return 1;
 }
+static int nnCenter = 0;   // the start position's static value with the net (defenders' view), set by the page (nn_center)
+EXPORT(nn_center) void nn_center(int v) { nnCenter = v; }
 EXPORT(nn_enable) void nn_enable(int on) { nnWant = on; nnUse = nnAvail && on; }
 EXPORT(nn_active) int nn_active(void) { return nnUse && nnVar == VAR; }
 // the hand-made features, defenders' view (f[15]: the attackers capture the king next move, only with the defenders to move)
@@ -840,7 +842,7 @@ static void beginSearch(int ms) {
 static const int D0[3] = { 7982, 1130, -51 };
 static int rep(int v) {
   if (v > WINT || v < -WINT) return v;
-  if (nnUse && nnVar == VAR) return v * 2 / 5;   // the net: a logit × scale (1000) → the page's scale (about 400 per logit; 0 = an even game)
+  if (nnUse && nnVar == VAR) return (v - (ROOT.side ? nnCenter : -nnCenter)) * 2 / 5;   // the net: a logit × scale (1000) → the page's scale (about 400 per logit), taken relative to the start position like the hand-made values
   return v - (ROOT.side ? D0[VAR] : -D0[VAR]);
 }
 // best move: IO[0] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000

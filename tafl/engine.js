@@ -365,7 +365,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261106n5';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261106c1';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -382,7 +382,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       const buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
       if (buf.length > WX.nn_buf_size()) return;
       new Uint8Array(WX.memory.buffer, WX.nn_buf(), buf.length).set(buf);
-      WX.nn_load(buf.length);
+      if (WX.nn_load(buf.length) && WX.nn_center) {   // values are shown relative to the start position (as with the hand-made evaluation)
+        wSetup(null, [], 'copenhagen'); WX.new_game(); WX.nn_center(-WX.eval_root());   // attackers to move: their view → the defenders'
+      }
     } catch (e) { /* hand-made evaluation */ }
   }
   let queue = Promise.resolve();
