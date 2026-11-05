@@ -358,7 +358,7 @@
   // per-page motion once it is on screen: count-ups, map routes, the timeline's line, pieces landing
   function run(pg, c) {
     pg.querySelectorAll('.cnt').forEach((el, j) => later(() => countUp(el), 450 + j * 160));
-    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); paintDots(mp); zmSet(mp); later(() => zmSet(mp, zm.dataset.z), 350); addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
+    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp); paintDots(mp); later(() => zmSet(mp, zm.dataset.z), 350); addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
     if (c.k === 'origin' && pg.querySelector('.hs-st')) stepper(pg);
     if (pg.querySelector('.hs-dg svg')) { fitDg(pg); later(() => fitDg(pg), 600); }
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
@@ -445,10 +445,20 @@
         // the pins fill the box less a margin for their labels (labels keep their screen size: ~14 units tall, up to ~90 wide)
         const aw = Math.max(V.w * .3, Math.min(V.w * .62, V.w - 170)), ah = Math.max(V.h * .25, Math.min(V.h * .58, V.h - 72));
         return { z: Math.min(aw / Math.max(1, x1 - x0), ah / Math.max(1, y1 - y0)), cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; };
-      const zMax = V.w / 34, zMin = V.w / 360;   // at most ~34° of the world across the box; at least the whole width
+      const zMax = V.w / 42, zMin = V.w / 360;   // at most ~42° of the world across the box (some coastline around); at least the whole width
       let f = fitIn(ids); if (ids.length > 1 && f.z < zMax * .3) f = fitIn([cur]);   // the neighbours are far apart: the active pin alone
       const z = Math.max(zMin, Math.min(zMax, f.z));
-      apply([V.x + V.w / 2 - f.cx * z, V.y + V.h / 2 - f.cy * z, z], 560);
+      let tx = V.x + V.w / 2 - f.cx * z, ty = V.y + V.h / 2 - f.cy * z;
+      // keep the labels of the framed pins inside the box (the active one first): they keep their screen size around their pin
+      const k = zb[2] / z, box = list => { let b = null; list.forEach(i => { const rc = map.querySelector(`[data-l="${i}"] rect`), q = PM[i]; if (!rc || !q) return;
+        const x = +rc.getAttribute('x'), y = +rc.getAttribute('y'), w = +rc.getAttribute('width'), h = +rc.getAttribute('height');
+        const xs = [q[0] + k * (x - q[0]), q[0] + k * (x + w - q[0]), q[0]], ys = [q[1] + k * (y - q[1]), q[1] + k * (y + h - q[1]), q[1]];
+        const r = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; b = b ? [Math.min(b[0], r[0]), Math.min(b[1], r[1]), Math.max(b[2], r[2]), Math.max(b[3], r[3])] : r; }); return b; };
+      [ids, [cur]].forEach(list => { const b = box(list); if (!b) return; const m = 4;
+        const L = tx + z * b[0], R = tx + z * b[2], T = ty + z * b[1], B = ty + z * b[3];
+        if (R - L < V.w - 2 * m) { if (L < V.x + m) tx += V.x + m - L; else if (R > V.x + V.w - m) tx -= R - (V.x + V.w - m); }
+        if (B - T < V.h - 2 * m) { if (T < V.y + m) ty += V.y + m - T; else if (B > V.y + V.h - m) ty -= B - (V.y + V.h - m); } });
+      apply([tx, ty, z], 560);
     };
     // drag / pinch on the map (horizontal drags only: vertical swipes still scroll the page)
     { const pts = new Map(); let st = null;
@@ -482,42 +492,68 @@
     try { if (!mctx) mctx = document.createElement('canvas').getContext('2d'); mctx.font = `900 ${fs}px 'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif`; const w = mctx.measureText(str).width; if (w > 0) return w; } catch (e) {}
     return [...str].reduce((a, c) => a + (c.charCodeAt(0) > 0x2e80 ? fs : fs * .6), 0);
   }
-    // the dot map as a bitmap: thousands of dots in an SVG path made every pan, zoom and pin pulse repaint the whole map. They are
-  // painted once into a <canvas> under the SVG (sharp at the zoom it is shown at, with room for the stage-follow panning); the
-  // canvas copies the map group's transform, so it moves with the pins and routes as one picture
-  let dotsP = null;
-  function dotsPath2D(M) {
-    if (dotsP) return dotsP; dotsP = new Path2D(); const s = M.step, r = s * .31;
-    M.rows.split('|').forEach((row, y) => { const cy = y * s + s / 2; let x = 0;
-      row.split('.').forEach((v, i) => { const n = parseInt(v, 36); if (i & 1) for (let q = 0; q < n; q++) { const cx = (x + q) * s + s / 2; dotsP.moveTo(cx + r, cy); dotsP.arc(cx, cy, r, 0, 6.2832); } x += n; }); });
-    return dotsP;
+  // the dot map: drawn into a <canvas> under the SVG in screen space — a fixed dot pitch (~8 px) whatever the zoom, so a close-up
+  // shows more, finer dots and the coastlines stay recognisable instead of a few huge blobs. The land is sampled from a fine
+  // mask (0.2°, loaded lazily; the coarse 1.25° one meanwhile). One render per view; during a pan/zoom the old picture moves with
+  // the map and the new one (already drawn for where the map is going) fades in over it.
+  const masks = {};
+  function mask(M, key) {
+    if (!M) return null; if (masks[key]) return masks[key];
+    const rows = M.rows.split('|'), nc = Math.round(360 / M.step), g = new Uint8Array(nc * rows.length);
+    rows.forEach((row, y) => { let x = 0; row.split('.').forEach((v, i) => { const n = parseInt(v, 36); if (i & 1) g.fill(1, y * nc + x, y * nc + x + n); x += n; }); });
+    return masks[key] = { g, nc, nr: rows.length, step: M.step, lat0: M.lat0 };
   }
-  function dotsCanvas(ox, oy, w, h, z) {
-    const M = window.HISTORIA_MAP; if (!M) return '';
-    const H0 = M.rows.split('|').length * M.step;
-    const x0 = Math.max(0, ox - w * .6), y0 = Math.max(0, oy - h * .6), x1 = Math.min(360, ox + w * 1.6), y1 = Math.min(H0, oy + h * 1.6);
-    const css = Math.min(innerWidth, 760) / 360, dpr = Math.min(1.75, window.devicePixelRatio || 1);
-    const k = Math.min(z * 1.15 * css * dpr, 2048 / (x1 - x0), 2048 / (y1 - y0));
-    return `<canvas class="dots" aria-hidden="true" data-r="${[x0, y0, x1 - x0, y1 - y0, k].map(v => v.toFixed(3)).join()}"></canvas>`;
+  let fineP = null;
+  function loadFine() {
+    if (window.HISTORIA_MAP_FINE) return Promise.resolve();
+    if (!fineP) fineP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'historia/map-fine.js?v=' + V; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); });
+    return fineP;
   }
-  function paintDots(map) {
-    const cv = map.querySelector('canvas.dots'); if (!cv || cv.dataset.done || !window.HISTORIA_MAP) return; cv.dataset.done = '1';
-    const [x0, y0, w, h, k] = cv.dataset.r.split(',').map(Number);
-    cv.width = Math.ceil(w * k); cv.height = Math.ceil(h * k); cv.style.width = w + 'px'; cv.style.height = h + 'px';
-    const g = cv.getContext('2d'); g.fillStyle = 'rgba(201,180,138,.9)'; g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k); g.fill(dotsPath2D(window.HISTORIA_MAP));
+  const landAt = (m, lon, lat) => { const r = Math.floor((m.lat0 - lat) / m.step), c = Math.floor((lon + 180) / m.step); return r >= 0 && r < m.nr && c >= 0 && c < m.nc && m.g[r * m.nc + c] === 1; };
+  // where the map's viewBox (360 × 225) sits in the svg box (CSS px, relative to the svg's own corner)
+  function fitOf(map) {
+    const sv = map.querySelector('svg'), rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = rs.width, H = rs.height;
+    if (!W || !H) return null; const sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice'), sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
+    return { W, H, sc, ox: (W - 360 * sc) / 2, oy: (H - 225 * sc) / 2, left: rs.left - rm.left, top: rs.top - rm.top };
   }
-  // the map group's transform (translate(tx,ty) scale(z) in viewBox units) → the canvas's CSS transform, through the viewBox fit
-  function zmSet(map, tr, tn) {
-    const zm = map.querySelector('.zm'), cv = map.querySelector('canvas.dots'), sv = map.querySelector('svg');
+  function drawDots(map, v, F) {
+    const M = mask(window.HISTORIA_MAP_FINE, 'f') || mask(window.HISTORIA_MAP, 'c'); if (!M) return null;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), cv = document.createElement('canvas'); cv.className = 'dots'; cv.setAttribute('aria-hidden', 'true');
+    cv.width = Math.round(F.W * dpr); cv.height = Math.round(F.H * dpr); Object.assign(cv.style, { left: F.left + 'px', top: F.top + 'px', width: F.W + 'px', height: F.H + 'px' });
+    const g = cv.getContext('2d'), P = F.W < 500 ? 7 : 8, r = P * .31, lat0 = (window.HISTORIA_MAP || M).lat0;
+    g.scale(dpr, dpr); g.fillStyle = 'rgba(201,180,138,.9)'; g.beginPath();
+    for (let y = P / 2; y < F.H; y += P) for (let x = P / 2; x < F.W; x += P) {
+      const mx = ((x - F.ox) / F.sc - v[0]) / v[2], my = ((y - F.oy) / F.sc - v[1]) / v[2];
+      if (landAt(M, mx - 180, lat0 - my)) { g.moveTo(x + r, y); g.arc(x, y, r, 0, 6.2832); }
+    }
+    g.fill(); cv._v = v.slice(); cv._fine = M === masks.f; return cv;
+  }
+  // the CSS transform that carries a picture drawn for view a onto view b (both [tx, ty, z] in viewBox units)
+  const relT = (a, b, F) => { const k = b[2] / a[2], tx = F.ox + F.sc * b[0] - k * (F.ox + F.sc * a[0]), ty = F.oy + F.sc * b[1] - k * (F.oy + F.sc * a[1]);
+    return `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${k.toFixed(5)})`; };
+  function paintDots(map) { loadFine().then(() => { if (map.isConnected) zmSet(map, null, null, true); }); }
+  // sets the map group's transform (translate(tx,ty) scale(z), viewBox units) and moves / redraws the dots to match
+  function zmSet(map, tr, tn, redraw) {
+    const zm = map.querySelector('.zm');
     if (tr != null) { if (tn != null) zm.style.transition = tn; zm.style.transform = tr; }
-    if (!cv) return;
-    const v = ((zm.style.transform || 'translate(0px,0px) scale(1)').match(/-?[\d.]+/g) || [0, 0, 1]).map(Number), [tx, ty, z] = [v[0] || 0, v[1] || 0, v[2] || 1];
-    const rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = rs.width, H = rs.height, sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice');
-    if (!W || !H) return;
-    const sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225), oX = (W - 360 * sc) / 2 + rs.left - rm.left, oY = (H - 225 * sc) / 2 + rs.top - rm.top;
-    const [x0, y0] = cv.dataset.r.split(',').map(Number);
-    cv.style.transition = tn != null ? tn : (zm.style.transition || '');
-    cv.style.transform = `translate(${(oX + sc * (tx + z * x0)).toFixed(2)}px,${(oY + sc * (ty + z * y0)).toFixed(2)}px) scale(${(sc * z).toFixed(4)})`;
+    const v = ((zm.style.transform || 'translate(0px,0px) scale(1)').match(/-?[\d.]+/g) || [0, 0, 1]).map(Number); const to = [v[0] || 0, v[1] || 0, v[2] || 1];
+    const F = fitOf(map); if (!F) return;
+    const old = [...map.querySelectorAll('canvas.dots')], last = old[old.length - 1];
+    let ms = 0; { const d = (tn != null ? tn : getComputedStyle(zm).transition || '').match(/([\d.]+)(ms|s)/); if (d) ms = +d[1] * (d[2] === 's' ? 1000 : 1); }
+    if (tr == null) ms = 0;
+    const same = last && Math.abs(last._v[0] - to[0]) < .01 && Math.abs(last._v[1] - to[1]) < .01 && Math.abs(last._v[2] - to[2]) < 1e-4;
+    if (same && !redraw && last._fine === !!masks.f && last.width === Math.round(F.W * Math.min(2, window.devicePixelRatio || 1)) && last.height === Math.round(F.H * Math.min(2, window.devicePixelRatio || 1))) return;
+    const cv = drawDots(map, to, F); if (!cv) return;
+    const sv = map.querySelector('svg'); map.insertBefore(cv, sv);
+    if (!last || ms < 30) { old.forEach(c => c.remove()); return; }
+    // the move: the old picture rides along with the map and fades; the new one starts where the old one is and settles
+    old.slice(0, -1).forEach(c => c.remove());
+    const ease = (tn || zm.style.transition || '').match(/cubic-bezier\([^)]*\)/), e = ease ? ease[0] : 'ease';
+    cv.style.transform = relT(to, last._v, F); cv.style.opacity = '0'; void cv.offsetWidth;
+    cv.style.transition = last.style.transition = `transform ${ms}ms ${e}, opacity ${ms}ms ease`;
+    cv.style.transform = 'none'; cv.style.opacity = '1';
+    last.style.transform = relT(last._v, to, F); last.style.opacity = '0';
+    setTimeout(() => last.remove(), ms + 60);
   }
   function mapSvg(m, labels, steps) {
     if (!m || !m.pts) return '';
@@ -578,7 +614,7 @@
       let lead = '';
       if (B.ring) { const [px, py] = PZ[i], qx = Math.max(b.x, Math.min(b.x + b.w, px)), qy = Math.max(b.y, Math.min(b.y + b.h, py)); lead = `<path class="ld" d="M${(px / z + ox).toFixed(2)} ${(py / z + oy).toFixed(2)}L${(qx / z + ox).toFixed(2)} ${(qy / z + oy).toFixed(2)}" style="stroke-width:${U(1)}"/>`; }
       return `<g class="lbg" data-l="${i}" style="--d:${d}ms">${lead}<g class="lb"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${U(b.w)}" height="${U(b.h)}" rx="${U(BH / 2)}" style="stroke-width:${U(.8)}"/><text x="${(x + b.w / z / 2).toFixed(2)}" y="${(y + b.h / z / 2 + FS * .36 / z).toFixed(2)}" font-size="${U(FS)}" text-anchor="middle">${esc(labels[i])}</text></g></g>`; }).join('');
-    return dotsCanvas(ox, oy, w, h, z) + `<svg viewBox="0 0 ${W0} ${(W0 / 1.6).toFixed(1)}" dir="ltr" aria-hidden="true"><defs><marker id="hsArr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 9 5 0 9z" fill="var(--gc)"/></marker></defs>
+    return `<svg viewBox="0 0 ${W0} ${(W0 / 1.6).toFixed(1)}" dir="ltr" aria-hidden="true"><defs><marker id="hsArr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 9 5 0 9z" fill="var(--gc)"/></marker></defs>
       <g class="zm" data-z="translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${z.toFixed(3)})">${routes}${pins}${lbls}</g></svg>`;
   }
 
