@@ -4,6 +4,7 @@
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script src="../shared/latinfs.js?v=1"></script>
 <meta name="theme-color" content="#130d09">
 <meta name="description" content="Floodgateの棋譜と評価値から学習した評価関数で指す、ブラウザ版将棋。20級〜三段の段級位別レッスン付き。">
 <title>将棋 SHOGI</title>
