@@ -3,8 +3,8 @@
 .amhead .h{margin-bottom:4px}
 .amsub{margin:0 0 8px;color:var(--ink2);font-weight:700;font-size:14px}
 .amreg{padding-top:4px}
-.amwrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
-.ammap{position:relative;overflow:hidden;aspect-ratio:2.3/1;max-height:66vh;min-height:300px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;
+.amwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.ammap{position:relative;overflow:hidden;aspect-ratio:2/1;max-height:74vh;min-height:320px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;
   background:radial-gradient(120% 90% at 50% 40%,#fdf9ee 0%,#f6ecd6 70%,#efe1c2 100%)}
 .ammap:focus-visible{box-shadow:0 0 0 3px var(--sky),var(--shadow)}
 .ammap.grab{cursor:grabbing}
@@ -36,8 +36,17 @@
 .amload{position:absolute;inset:0;margin:0;display:grid;place-items:center;font-weight:900;color:var(--ink2)}
 .amload[hidden]{display:none}
 .aminfo{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
-.amwrap>.aminfo{align-self:start;min-height:280px}
-.amempty{margin:auto;padding:70px 0;text-align:center;color:var(--ink2);font-weight:700}
+.amwrap>.aminfo{min-height:0}
+/* PC: the card sits under the full-width map in one row — game / story / journey / play */
+@media (min-width:820px){
+  .aminfo{display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) auto;grid-template-areas:"top story play" "facts story play" "facts jour play";column-gap:22px;row-gap:8px;align-items:start;padding:16px 20px}
+  .aminfo .amtop{grid-area:top}.aminfo .amfacts{grid-area:facts;align-self:start}
+  .aminfo .amstory{grid-area:story;min-width:0}.aminfo .amjour{grid-area:jour;min-width:0}
+  .aminfo .amplay{grid-area:play;align-self:center;width:auto;min-width:150px;margin:0}
+  .aminfo .amempty{grid-column:1/-1;padding:18px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+  .aminfo .amempty svg{width:30px;height:30px}.aminfo .amempty p{margin:0}
+}
+.amempty{margin:auto;padding:20px 0;text-align:center;color:var(--ink2);font-weight:700}
 .amempty svg{width:46px;height:46px;fill:none;stroke:var(--line);stroke-width:1.8;stroke-linejoin:round}
 .amempty p{margin:6px 0 0;font-size:14px}
 .amtop{display:flex;align-items:center;gap:12px}

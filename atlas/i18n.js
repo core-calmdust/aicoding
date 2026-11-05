@@ -5,7 +5,7 @@ ja: {
   'acc.in': 'Googleでログイン', 'acc.out': 'ログアウト', 'acc.soon': '共通アカウントは準備中', 'acc.synced': '同期ずみ', 'acc.syncing': '同期中…', 'acc.note': '1回のログインで、全ゲームの記録・コイン・アイテムをどの端末でも引き継げます', 'acc.err': '同期できませんでした',
   'a.pw': '3D盤で{n}勝', 'a.pv': '3D盤でLv.{n}に勝つ', 'bv.start': 'スタート', 'bv.rules': 'ルール', 'bv.rating': 'レート目安', 'bv.m.ai': 'AI戦', 'bv.m.rated': 'レート戦', 'bv.m.pvp': '二人で対戦', 'bv.m.ratedNote': 'あなたのレートに近い強さのAIと対戦し、勝敗でレートが変わります', 'bv.m.pvpNote': '1台の画面で、2人が交互に指します', 'bv.classic': '2Dで遊ぶ', 'bv.level': 'AIの強さ', 'bv.side': '手番', 'bv.first': '先手', 'bv.second': '後手', 'bv.quit': 'やめる', 'bv.again': 'もう一局', 'bv.soon': '3D盤は準備中です。いつもの画面で遊べます。', 'bv.won': '勝利ボーナス', 'upd.games': 'ゲーム', 'bv.close': 'とじる',
   'title': '世界のボドゲ大百科', 'sub': 'World Board Game Atlas', 'site': 'CALMDUST COLLECTION',
-  'tab.home': 'ホーム', 'tab.map': 'ボドゲ地図', 'tab.games': 'ゲーム', 'tab.ach': '実績', 'tab.shop': 'ショップ', 'tab.gacha': 'ガチャ', 'tab.dress': 'きせかえ',
+  'tab.home': 'ホーム', 'tab.map': '地図', 'tab.games': 'ゲーム', 'tab.ach': '実績', 'tab.shop': 'ショップ', 'tab.gacha': 'ガチャ', 'tab.dress': 'きせかえ',
   'upd.h': '最近のアップデート', 'upd.more': 'すべての更新', 'play': 'あそぶ', 'drag': 'ドラッグで回せます',
   'pf.name': 'なまえを入れる', 'pf.player': 'プレイヤー', 'pf.coins': 'コイン', 'pf.ach': '実績', 'pf.games': '遊んだゲーム', 'pf.edit': 'きせかえ',
   'pg.pz': 'パズル', 'pg.ls': 'レッスン', 'pg.op': '定跡', 'pg.dl': '今日の一問', 'pg.rt': 'レート', 'pg.days': '{n}日', 'pg.none': 'まだ遊んでいません', 'pg.pct': '進み具合',
