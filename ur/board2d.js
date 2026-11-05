@@ -460,7 +460,7 @@
       return true;
     }
     const render = () => { if (fit()) R.render(sc, cam); };
-    const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.5, (L - .16) / n);
+    const places = () => { const L = tall ? Lz : Lx, Wd = tall ? Lx : Lz, sp = Math.min(.5, (L - .42) / n);   // (the outer dice stay inside the notch, clear of its frame)
       return D.map((_, i) => { const a = (i - (n - 1) / 2) * sp + (Math.random() - .5) * .07, b = (tall ? 0 : .05 + (shift || 0)) + (Math.random() - .5) * Math.min(shift ? .06 : .12, Wd * .2); return tall ? [b, a] : [a, b]; }); };
     function haloAt(o, on) {
       const v = new TT.Vector3(), w = new TT.Vector3();
