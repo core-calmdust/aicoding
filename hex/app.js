@@ -1039,7 +1039,7 @@ const RT_STORE = STORE + '-rated', RT_START = 1000;
 const rtClock = () => ({ base: 300000, inc: 3000 });
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan);
 // measured by level matches on 11×11 (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 560, 670, 835, 1000, 1165, 1365, 1490, 1555, 1650, 1690, 1730, 1795, 1835, 1875, 1915, 1955, 1995, 2035, 2095];   // from self-play matches (MODEL_CARD.md), compressed ×0.75
+const RT_LV = [0, 630, 740, 850, 1015, 1180, 1345, 1545, 1670, 1735, 1830, 1870, 1910, 1945, 1965, 1985, 2005, 2045, 2085, 2125, 2185];   // from self-play matches (MODEL_CARD.md), compressed ×0.75; + the learned move prior (2026-11)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
