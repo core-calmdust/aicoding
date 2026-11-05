@@ -96,12 +96,12 @@ function build() {
   });
   relabel();
 }
-// shown while there are moves to step through (as the phone strip of infotabs.js: a filled move list, not on the online screen)
+// shown while there are moves to step through and the bar is of use (body.nav-need) (as the phone strip of infotabs.js: a filled move list, not on the online screen)
 function navSync() {
   if (!nbox) return;
   const nav = $('#navBar'), k = $('#kifu');
   const has = !!k && k.children.length > 0 && !k.querySelector(':scope > .empty');
-  const show = on && !!nav && has && !onlineOn();
+  const show = on && !!nav && has && !onlineOn() && document.body.classList.contains('nav-need');   // (only when of use: app.js navNeedSync)
   if (document.body.classList.contains('lt-nav') !== show) document.body.classList.toggle('lt-nav', show);
   if (!nav) return;
   nav.querySelectorAll('button[data-n]').forEach(b => {
@@ -196,7 +196,7 @@ function leave() {
 function refit() {
   setTimeout(() => { try { window.dispatchEvent(new Event('resize')); } catch (e) {} fit(); }, 30);
 }
-function check() { if (MQ.matches && !window.__EMBED) enter(); else leave(); }
+function check() { if (MQ.matches) enter(); else leave(); }   // (also in the turned page of the 横画面 option: index.html)
 // a tap on the board closes the drawer (and does not play a move; in a lesson the next tap plays)
 document.addEventListener('click', e => {
   if (on && onlineOn() && e.target.closest && e.target.closest('.frame') && typeof mtab === 'function') { e.stopPropagation(); e.preventDefault(); mtab('game'); sync(); return; }
