@@ -118,7 +118,7 @@
     const marks = new TH.Group(); board.add(marks);
     let discs = {}, cells = [], step = 0, stopped = false, busy = false, played = false, timers = [];
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
 
     function makeDisc(q, color) {
       const inner = new TH.Group(); inner.add(T3.rvDisc(RM)); const outer = new TH.Group(); outer.add(inner); const ao = T3.contact(.42); ao.position.y = -DH + .002; outer.add(ao);
@@ -135,7 +135,11 @@
     function ring(q) { const m = new TH.Mesh(new TH.CylinderGeometry(.17, .17, .02, 24), new TH.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .8 })); const [x, z] = P(q); m.position.set(x, Y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
     function cross(q) { const g = new TH.Group(), mat = new TH.MeshBasicMaterial({ color: 0xff4d4d }); [1, -1].forEach(s => { const b = new TH.Mesh(new TH.BoxGeometry(cs * .62, .03, .07), mat); b.rotation.y = s * Math.PI / 4; g.add(b); }); const [x, z] = P(q); g.position.set(x, Y + .03, z); marks.add(g); return g; }
     // pulse the glowing marks
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); marks.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(.85 + k * .3); m.material.opacity = .45 + k * .45; } }); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; m.scale.setScalar(.85 + k * .3); m.material.opacity = .45 + k * .45; } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
 
     function setBoard(next) {   // swap the position: old discs hop away, new ones drop in
       Object.values(discs).forEach(d => board.remove(d.outer)); discs = {};
@@ -173,7 +177,7 @@
       if (!st.last && ag) ag.remove();
     }
     function go(n) {
-      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false;
+      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; if (T3.kick) T3.kick(400);   // (the table draws on demand)
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
       setBoard(st.cells);
       const intro = 220 + cells.filter(Boolean).length * 14;

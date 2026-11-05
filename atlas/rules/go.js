@@ -695,7 +695,11 @@
       return own;
     }
     // a gentle pulse for the tap marker / liberties / the × while they are shown (only kicks frames while something pulses)
-    (function pulse() { if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false; marks.children.forEach(m => { if (m.userData.tap) { any = true; m.userData.tick(now); return; } if (m.userData.pulse) { any = true; const s = .85 + k * .3; m.scale.setScalar(s); } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const now = performance.now(), k = .5 + .5 * Math.sin(now / 260); let any = false; marks.children.forEach(m => { if (m.userData.tap) { any = true; m.userData.tick(now); return; } if (m.userData.pulse) { any = true; const s = .85 + k * .3; m.scale.setScalar(s); } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
 
     /* ---------- the ghost finger: after ~6 s without a tap it taps the right point ---------- */
     function hideHand() { if (hand) { hand.remove(); hand = null; } }

@@ -268,7 +268,7 @@
     const marks = new TH.Group(); board.add(marks);
     let pcs = {}, hand = [], step = 0, stopped = false, busy = false, played = false, timers = [];
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, (n - t0) / dur); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     const key = (c, r) => c + ',' + r;
 
@@ -302,7 +302,11 @@
       const g = mk(t, gote); g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.material = o.material.map(x => { const y = x.clone(); y.transparent = true; y.opacity = .45; y.depthWrite = false; return y; }); } });
       const [x, z] = SG.cell(c, r); g.position.set(x, Y, z); marks.add(g); return g;
     }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); marks.children.forEach(m => { if (m.userData.pulse) { if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .4 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) p.position.y = Y + .08 + .28 * k; }); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .4 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) any = true, p.position.y = Y + .08 + .28 * k; }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
     const empties = () => { const o = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!pcs[key(c, r)]) o.push([c, r]); return o; };
     const targets = st => !st.act ? [] : st.act.to === 'empty' ? empties() : st.act.to;
     const selPiece = st => st.sel === 'hand' ? hand[0] : st.sel ? pcs[key(...st.sel)] : null;
@@ -359,7 +363,7 @@
       if (!st.last && ag) ag.remove();
     }
     function go(n) {
-      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false;
+      step = Math.max(0, Math.min(STEPS.length - 1, n)); played = false; busy = false; if (T3.kick) T3.kick(400);   // (the table draws on demand)
       timers.forEach(clearTimeout); timers = [];
       const st = STEPS[step]; clearMarks(); $('.cnt').innerHTML = '';
       const cnt = setBoard(st);

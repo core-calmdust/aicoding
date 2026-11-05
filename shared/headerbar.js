@@ -422,13 +422,14 @@ function drawNoPuzzle() {
   const upd = () => {
     const d = document.getElementById('btnDraw'), p = document.querySelector('#btnPuzzle, #btnTsume');
     if (!p) return;
-    if (!d || d.parentElement !== p.parentElement) { p.classList.remove('hb-skip'); return; }   // same button row (PC header menu or phone top menu)
+    if (!d || d.parentElement !== p.parentElement) { if (p.classList.contains('hb-skip')) p.classList.remove('hb-skip'); return; }   // same button row (PC header menu or phone top menu)   // (only when set: classList.remove always rewrites the attribute — a mutation — and this observer then ran again every frame)
     const on = !!(d && getComputedStyle(d).display !== 'none' && !d.classList.contains('hidden'));
     p.classList.toggle('hb-skip', on);
   };
   if (!document.getElementById('hbSkipCss')) { const st = document.createElement('style'); st.id = 'hbSkipCss'; st.textContent = '.hb-skip{display:none!important}'; document.head.appendChild(st); }
   let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; upd(); }); };
-  new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'hidden'], subtree: true });
+  // (an attribute written again with the same value — a clock re-setting its class each tick — changes nothing: no frame for it)
+  new MutationObserver(ms => { if (ms.some(m => m.oldValue !== m.target.getAttribute(m.attributeName))) later(); }).observe(document.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style', 'hidden'], subtree: true });
   window.addEventListener('resize', later); upd();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(drawNoPuzzle, 0)); else setTimeout(drawNoPuzzle, 0);

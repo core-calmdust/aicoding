@@ -147,11 +147,15 @@
     if (!side) return;
     const GAP = 24, MY = 16, MX = 20, VARS = P.vars || ['--cell'];
     let K = null, model = null, busy = false, on = false, reT = 0;
+    // refits asked for by remeasure() alone (no outside change in between) are capped: on some boards (shogi, morris, checkers) the
+    // measured frame and the fit kept nudging each other by a fraction of a pixel — a refit (and redraw) every ~2 s, forever
+    let refits = 0; const ext = f => function () { refits = 0; return f.apply(this, arguments); };
     // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
     const show0 = T3.show;
-    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; remeasure(); } return g; };
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; remeasure(); } return g; };
     const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
-    T3.align = function () { const r = align0.apply(this, arguments); remeasure(); return r; };
+    T3.align = function () { const r = align0.apply(this, arguments); refits = 0; remeasure(); return r; };
+    if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
     const grp = () => { let g = boardDom; while (g && g.parentElement !== app) g = g.parentElement; return g; };
     const visible = x => { for (let e = x; e; e = e.parent) if (!e.visible) return false; return true; };
     // the 3D board's visible extent beyond the DOM board, in DOM board heights (the camera is aligned to the DOM board, so this
@@ -192,7 +196,7 @@
         const same = m && prev && ['l', 'r', 't', 'b'].every(s => Math.abs(m[s] - prev[s]) < .0004);
         if (!same && k < 12) return setTimeout(() => step(k + 1, m), 90);
         if (!m) return k < 40 ? setTimeout(() => step(k + 1, null), 250) : undefined;
-        if (!K || ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - K[s]) > .0008)) { K = m; fit(); }
+        if (!K || ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - K[s]) > .0008)) { if (refits >= 4) return; refits++; K = m; fit(); }
       }, 40);
       setTimeout(() => step(0, null), 60);
     }
@@ -262,18 +266,19 @@
       } finally { busy = false; }
     }
     let q = 0; const later = () => { if (q) return; q = 1; const go = () => { if (!q) return; q = 0; fit(); }; requestAnimationFrame(go); setTimeout(go, 120); };   // (a timer too: frames wait while the window is hidden or occluded)
-    addEventListener('resize', later);
-    addEventListener('dockrelayout', fit);   // the online dock's probe (shared/headerbar.js): laid out at once, for its final place
-    addEventListener('fullscreenchange', () => { later(); setTimeout(later, 250); });
-    if (window.visualViewport) visualViewport.addEventListener('resize', later);
-    MQ.addEventListener ? MQ.addEventListener('change', later) : MQ.addListener(later);
-    if (window.ResizeObserver) { const ro = new ResizeObserver(later); ro.observe(de); ro.observe(boardDom); }
-    new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
-    new MutationObserver(() => { later(); setTimeout(later, 320); setTimeout(later, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
-    { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', later); }
-    if (document.fonts) document.fonts.ready.then(later);
-    [800, 2000, 4500].forEach(ms => setTimeout(remeasure, ms));
-    setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) later(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
+    const laterX = ext(later);
+    addEventListener('resize', laterX);
+    addEventListener('dockrelayout', ext(fit));   // the online dock's probe (shared/headerbar.js): laid out at once, for its final place
+    addEventListener('fullscreenchange', () => { laterX(); setTimeout(laterX, 250); });
+    if (window.visualViewport) visualViewport.addEventListener('resize', laterX);
+    MQ.addEventListener ? MQ.addEventListener('change', laterX) : MQ.addListener(laterX);
+    if (window.ResizeObserver) { new ResizeObserver(laterX).observe(de); new ResizeObserver(later).observe(boardDom); }   // (the board's own size: mostly the fit itself)
+    new MutationObserver(laterX).observe(de, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => { laterX(); setTimeout(laterX, 320); setTimeout(laterX, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
+    { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', laterX); }
+    if (document.fonts) document.fonts.ready.then(laterX);
+    [800, 2000, 4500].forEach(ms => setTimeout(ext(remeasure), ms));
+    setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) laterX(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
     window.__atlasPcFit = { fit, remeasure, measure, K: () => K, on: () => on, model: () => model };   // (test hook)
   })();
 

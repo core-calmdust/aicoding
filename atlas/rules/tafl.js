@@ -115,7 +115,11 @@
     }
     function ring(s) { const m = new TH.Mesh(new TH.CylinderGeometry(cs * .16, cs * .16, .02, 28), new TH.MeshBasicMaterial({ color: 0x2fd17a, transparent: true, opacity: .85, toneMapped: false })); const [x, z] = xz(s); m.position.set(x, Y + .02, z); m.userData.pulse = true; marks.add(m); return m; }
     function cross(s) { const g = new TH.Group(), mat = new TH.MeshBasicMaterial({ color: 0xff3b3b, toneMapped: false }); [1, -1].forEach(k => { const b = new TH.Mesh(new TH.BoxGeometry(cs * .62, .03, cs * .09), mat); b.rotation.y = k * Math.PI / 4; g.add(b); }); const [x, z] = xz(s); g.position.set(x, Y + .05, z); marks.add(g); return g; }
-    (function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry && m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .4 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) { any = true; p.position.y = Y + .05 + .2 * k; } }); if (any && T3.kick) T3.kick(60); requestAnimationFrame(pulse); })();
+    // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
+    let pulseOn = false;
+    function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (m.geometry && m.geometry.type === 'CylinderGeometry') m.scale.set(.85 + k * .3, 1, .85 + k * .3); m.material.opacity = .4 + k * .5; } }); Object.values(pcs).forEach(p => { if (p.userData.bob) { any = true; p.position.y = Y + .05 + .2 * k; } }); if (any && T3.kick) T3.kick(60); pulseOn = any && !stopped; if (pulseOn) requestAnimationFrame(pulse); }
+    { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
+    pulse();
 
     /* ---------- moves ---------- */
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .06; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
