@@ -342,7 +342,7 @@ static void evalInit(void) {
 }
 static const int MOBT[24] = { -60, -30, -10, 0, 10, 18, 25, 30, 35, 39, 43, 46, 49, 52, 54, 56, 58, 60, 62, 63, 64, 65, 66, 67 };
 static int nnEvaluate(const Pos *p);
-static int nnUse = 0, nnVar = -1;   // the learned evaluation (loaded net for rule set nnVar) instead of the hand-made one
+static int nnUse = 0, nnVar = -1, nnAvail = 0, nnWant = 1;   // nnAvail: a net is loaded; nnWant: the page's switch   // the learned evaluation (loaded net for rule set nnVar) instead of the hand-made one
 static int evaluate(const Pos *p) {
   if (nnUse && nnVar == VAR) return nnEvaluate(p);
   int k = p->king, kr = RR(k), kc = CC(k);
@@ -431,10 +431,11 @@ EXPORT(nn_load) int nn_load(int len) {
   for (int b = 0; b < 2; b++) for (int i = 0; i < h; i++, q += 4) nnW2[b][i] = rdF(q) / (NN_QA * NN_QA);
   for (int b = 0; b < 2; b++) for (int i = 0; i < nf; i++, q += 4) nnU[b][i] = rdF(q);
   for (int b = 0; b < 2; b++, q += 4) nnB2[b] = rdF(q);
-  nnVar = v; nnN = n; nnH = h; nnScale = sc; nnUse = 1;
+  nnVar = v; nnN = n; nnH = h; nnScale = sc; nnAvail = 1; nnUse = nnWant;
   return 1;
 }
-EXPORT(nn_enable) void nn_enable(int on) { nnUse = on; }
+EXPORT(nn_enable) void nn_enable(int on) { nnWant = on; nnUse = nnAvail && on; }
+EXPORT(nn_active) int nn_active(void) { return nnUse && nnVar == VAR; }
 // the hand-made features, defenders' view (f[15]: the attackers capture the king next move, only with the defenders to move)
 static void handFeat(const Pos *p, float *f) {
   int k = p->king, kr = RR(k), kc = CC(k);
@@ -753,7 +754,11 @@ static void beginSearch(int ms) {
 // the defenders in the raw score (it matters to the search: draws and repetitions are scored 0), so the values handed to
 // the page are taken relative to the start position's static score (defenders' view). Exact results are left as they are.
 static const int D0[3] = { 7982, 1130, -51 };
-static int rep(int v) { if (v > WINT || v < -WINT) return v; return v - (ROOT.side ? D0[VAR] : -D0[VAR]); }
+static int rep(int v) {
+  if (v > WINT || v < -WINT) return v;
+  if (nnUse && nnVar == VAR) return v * 2 / 5;   // the net: a logit × scale (1000) → the page's scale (about 400 per logit; 0 = an even game)
+  return v - (ROOT.side ? D0[VAR] : -D0[VAR]);
+}
 // best move: IO[0] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   beginSearch(ms); nodeLimit_on = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
@@ -916,8 +921,17 @@ static u64 trng = 1;
 static u32 tr32(void) { trng ^= trng << 13; trng ^= trng >> 7; trng ^= trng << 17; return (u32)(trng >> 11); }
 static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(tr32() % 2001) - 1000; return s * amp / 2000; }   // approx. N(0, amp^2 / 3)
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
+static void think1(int level, int seed);
+// the learned evaluation (when loaded) is used from 8級 up (searching levels); the weakest levels keep the hand-made one,
+// whose noise and slips were set on its scale
 EXPORT(think) void think(int level, int seed) {
+  int keep = nnUse;
   if (level < 1) level = 1; if (level > 20) level = 20;
+  if (LEVELS[level].kind == 0) nnUse = 0;
+  think1(level, seed);
+  nnUse = keep;
+}
+static void think1(int level, int seed) {
   const Level *L = &LEVELS[level];
   trng = (u64)(u32)seed * 0x9E3779B97F4A7C15ull + 0x1234567ull; if (!trng) trng = 1; tr32(); tr32();
   if (rootN == 0) { IO[0] = -1; IO[2] = -WIN; IO[3] = 0; return; }
