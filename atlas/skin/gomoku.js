@@ -34,6 +34,7 @@
   de.style.setProperty('--gmrim', RIM.toFixed(3));
 
   const skin = AtlasSkin.init({
+    hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: 0.18,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)

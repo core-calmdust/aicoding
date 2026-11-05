@@ -109,12 +109,16 @@ static struct { i16 W1[NN_IN * NN_H]; i16 B1[NN_H]; i16 W2[NN_BUCKETS][2 * NN_H]
 #define nnB1 NN.B1
 #define nnW2 NN.W2
 #define nnB2 NN.B2
-static int nnOn = 0;
+static int nnOn = 0, nnW2small = 0;   /* nnW2small: every |W2| <= 128, so clamp(acc)*W2 fits int16 (SIMD eval) */
+static void nn_check(void) { nnW2small = 1; for (int b = 0; b < NN_BUCKETS; b++) for (int i = 0; i < 2 * NN_H; i++) if (nnW2[b][i] > 128 || nnW2[b][i] < -128) nnW2small = 0; }
 EXPORT(nn_ptr) i16 *nn_ptr(void) { return NN.W1; }
 EXPORT(nn_size) int nn_size(void) { return (int)sizeof NN; }
-EXPORT(nn_enable) void nn_enable(int on) { nnOn = on; }
+EXPORT(nn_enable) void nn_enable(int on) { nnOn = on; if (on) nn_check(); }
 #ifndef __wasm__
-static void nn_load_blob(const u8 *p) { memcpy(&NN, p, sizeof NN); nnOn = 1; }
+static void nn_load_blob(const u8 *p) { memcpy(&NN, p, sizeof NN); nnOn = 1; nn_check(); }
+#endif
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
 #endif
 typedef struct { i16 v[2][NN_H] __attribute__((aligned(16))); } Acc;
 static inline int nn_index(int persp, int pc, int sq) {
@@ -177,6 +181,11 @@ static void nn_update(Acc *dst, const Acc *src, int na, const int *ap, const int
     const i16 *a0 = na > 0 ? nnW1 + nn_index(c, ap[0], as[0]) * NN_H : 0, *a1 = na > 1 ? nnW1 + nn_index(c, ap[1], as[1]) * NN_H : 0;
     const i16 *s0 = ns > 0 ? nnW1 + nn_index(c, sp_[0], ss[0]) * NN_H : 0, *s1 = ns > 1 ? nnW1 + nn_index(c, sp_[1], ss[1]) * NN_H : 0;
     const i16 *x = src->v[c]; i16 *y = dst->v[c];
+#ifdef __wasm_simd128__
+    if (na == 1 && ns == 1) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i))); continue; }
+    if (na == 1 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); continue; }
+    if (na == 2 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(a1 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); continue; }
+#endif
     if (na == 1 && ns == 1) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i];
     else if (na == 1 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i] - s1[i];
     else if (na == 2 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] + a1[i] - s0[i] - s1[i];
@@ -198,6 +207,21 @@ static int nn_eval(const Pos *p) {
   const i16 *us = a->v[p->side], *them = a->v[p->side ^ 1], *w = nnW2[bucket];
   /* sum is in QA*QA*QB units; 16-wide i32 partial sums cannot overflow, the total is kept in 64 bits */
   long long sum = 0;
+#ifdef __wasm_simd128__
+  /* exact same total: x = clamp(acc, 0, QA); x*w fits int16 when |w| <= 128, then i32x4_dot_i16x8 with x gives x*x*w summed in pairs
+     (each int32 lane holds at most 2*65025*128 per block before widening to 64 bits) */
+  if (nnW2small) {
+    const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(QA);
+    v128_t s64 = wasm_i64x2_splat(0);
+    for (int i = 0; i < NN_H; i += 8) {
+      v128_t xa = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(us + i), lo), hi), xb = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(them + i), lo), hi);
+      v128_t pa = wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa, wasm_v128_load(w + i)), xa), pb = wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb, wasm_v128_load(w + NN_H + i)), xb);
+      v128_t p = wasm_i32x4_add(pa, pb);
+      s64 = wasm_i64x2_add(s64, wasm_i64x2_add(wasm_i64x2_extend_low_i32x4(p), wasm_i64x2_extend_high_i32x4(p)));
+    }
+    sum = wasm_i64x2_extract_lane(s64, 0) + wasm_i64x2_extract_lane(s64, 1);
+  } else
+#endif
   for (int i0 = 0; i0 < NN_H; i0 += 16) {
     i32 part = 0;
     for (int i = i0; i < i0 + 16; i++) { i32 x = us[i] < 0 ? 0 : us[i] > QA ? QA : us[i]; part += x * x * w[i]; }

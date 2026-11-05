@@ -46,6 +46,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
   const HALF_D = 4.7 * SC;                   // the frame's half depth (world)
 
   const skin = AtlasSkin.init({
+    hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: .28,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom, persp: PERSP,
     pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)

@@ -319,6 +319,51 @@
     };
     setTimeout(go, 400);
   })();
+  /* ---------- 盤面反転 (shared/flipbtn.js) in 3D: the table turns round 180° ----------
+     The game redraws its DOM board turned round at once; the 3D board (Table3D.turn) and the DOM board on top of it (marks,
+     labels, sprites, the click targets) then start half a turn back — the old view — and turn smoothly to the new one, as if the
+     camera walked round the table. While turning, both are scaled down a little so the board's corners stay inside the canvas
+     and the window. o.turn:
+       (default) round the vertical axis, seen from above;  'y' = a front view (connect4: the tower turns round its upright axis);
+       false = no turn (the board model isn't symmetric: the dots notebook)
+     o.hold: the skin keeps its 3D pieces at the board's own places (it doesn't mirror the game's turned board): the table stays
+       turned round while flipped (yaw π); without it the skin's pieces / sprites already follow the turned board and the 3D board
+       turns back home (yaw π → 0)
+     o.upright: selector of DOM sprites that stand up (3/4 renders) — they stay upright while turning. */
+  let turnRaf = 0;
+  const flipNow = () => !!(window.FlipBtn && FlipBtn.on());
+  const holdYaw = () => (o.hold && flipNow() ? Math.PI : 0);
+  function turnRest() { if (!T3.turn) return; const y = holdYaw(); T3.turn(y ? y : null, 1); }   // where the table rests for the current flip
+  function turnTable() {
+    if (o.turn === false || !T3.turn) return;
+    cancelAnimationFrame(turnRaf);
+    const st = boardDom.style, ups = o.upright ? [...boardDom.querySelectorAll(o.upright)] : [];
+    const clear = () => { st.rotate = st.scale = ''; ups.forEach(e => { e.style.rotate = ''; }); };
+    const b = box();
+    if (document.documentElement.classList.contains('atlas-2d') || !host.getClientRects().length || !b.w) { turnRaf = 0; clear(); turnRest(); return; }   // (the 2D board: no turn, the 3D one rests in place for later)
+    const front = o.turn === 'y', Y1 = holdYaw(), d = Y1 ? -1 : 1;   // yaw = Y1 + d·a while a goes π → 0
+    const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));
+    let ow = b.w, oh = b.h;   // the 3D board's outer size on screen (its frame round the field)
+    try { const r = boardDom.getBoundingClientRect(), q = o.outer && o.outer(r); if (q && q.height > r.height) { ow = b.w + (q.height - r.height) * b.w / r.width; oh = b.h + (q.height - r.height) * b.h / r.height; } } catch (e) {}
+    // the room it may take while turning: the canvas, and the window below the top bar (a board that fills the screen zooms out a little more)
+    let hw = b.w / 2 + m, hh = b.h / 2 + m;
+    try { const r = boardDom.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, tb = bar.getBoundingClientRect(), y0 = tb.height && getComputedStyle(bar).position === 'fixed' ? tb.bottom : 0;
+      hw = Math.max(b.w / 2, Math.min(hw, cx, innerWidth - cx)); hh = Math.max(b.h / 2, Math.min(hh, cy - y0, innerHeight - cy)); } catch (e) {}
+    const room = a => { const c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)); return Math.min(.94 * 2 * hw / (ow * c + oh * s), .94 * 2 * hh / (ow * s + oh * c)); };   // (.94: the bezel's shadow too)
+    const r0 = Math.min(1, room(0)), fit = a => front ? 1 : Math.min(1, room(a) / r0);   // (1 at both ends: no jump when the turn starts / ends)
+    const D = window.__atlasTurnMs || 900, t0 = performance.now(), ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    const deg = a => (a * 180 / Math.PI).toFixed(2) + 'deg';
+    const pose = a => {   // a: the angle still to go (π → 0)
+      const s = fit(a);
+      T3.turn(Y1 + d * a, s);
+      if (front) st.rotate = 'y ' + deg(-d * a);
+      else { st.rotate = deg(-d * a); st.scale = s.toFixed(4); ups.forEach(e => { e.style.rotate = deg(d * a); }); }
+    };
+    const done = () => { turnRaf = 0; clear(); turnRest(); T3.kick(300); };
+    const step = now => { const k = window.__atlasTurnK ?? Math.min(1, (now - t0) / D);   // (__atlasTurnK: a fixed point of the turn, for checking it)
+      if (k >= 1) return done(); pose(Math.PI * (1 - ease(k))); turnRaf = requestAnimationFrame(step); };
+    pose(Math.PI); turnRaf = requestAnimationFrame(step);
+  }
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
     const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
     const TITLE = { ja: '世界のボドゲ大百科', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };
@@ -326,6 +371,7 @@
     bar.innerHTML = `<a class="atlas-brand" href="${BASE}"><img src="${BASE}logo.svg" alt="" width="44" height="44"><span><b class="wmT"></b><small>World Board Game Atlas</small></span></a><span class="sp"></span>
       <span class="atlas-coin"><i>¢</i><b class="coinN">0</b></span>
       <button type="button" class="atlas-ic" id="atlasFlip" aria-label="Flip"></button>
+      <button type="button" class="atlas-ic" id="atlasRec" aria-label="Record"></button>
       <button type="button" class="atlas-ic" id="atlasSnd" aria-label="Sound"></button>
       <button type="button" class="atlas-lbtn" id="atlasLang" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b class="lc">JA</b></button>
       <div class="atlas-lpop" id="atlasLangPop" hidden></div>
@@ -336,7 +382,31 @@
     if (snd) { mySnd.innerHTML = snd.innerHTML; mySnd.onclick = () => { snd.click(); mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); }; mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); } else mySnd.remove();
     // board flip: mirror the game's 盤面反転 button (shared/flipbtn.js)
     const flp = document.getElementById('btnFlip'), myFlp = bar.querySelector('#atlasFlip');
-    if (flp) { const sync = () => { myFlp.innerHTML = flp.innerHTML; myFlp.title = flp.title; myFlp.className = 'atlas-ic' + (flp.classList.contains('on') ? ' on' : ''); myFlp.style.color = flp.classList.contains('on') ? '#e2b65e' : ''; }; myFlp.onclick = () => { flp.click(); sync(); }; sync(); new MutationObserver(sync).observe(flp, { attributes: true }); } else myFlp.remove();
+    if (flp) {
+      let was = flp.classList.contains('on');
+      const sync = () => {
+        const on = flp.classList.contains('on');
+        if (myFlp.innerHTML !== flp.innerHTML) myFlp.innerHTML = flp.innerHTML;
+        myFlp.title = flp.title; myFlp.setAttribute('aria-label', flp.getAttribute('aria-label') || flp.title); myFlp.setAttribute('aria-pressed', on ? 'true' : 'false');
+        myFlp.className = 'atlas-ic' + (on ? ' flipped' : '');
+        if (on !== was) { was = on; turnTable(); }   // the button or the F key: the table turns round (the game has already redrawn the board turned)
+      };
+      myFlp.onclick = () => flp.click(); sync(); new MutationObserver(sync).observe(flp, { attributes: true });
+      turnRest();   // (a board already flipped when the page opens: a 'hold' skin's table starts turned round)
+    } else myFlp.remove();
+    // 戦績: mirror the game's record button (shared/record.js — on PC an icon in the icon set; the phones' tab bar keeps its own tab)
+    const myRec = bar.querySelector('#atlasRec');
+    (function recMirror(n) {
+      const rec = document.getElementById('btnRecord');
+      if (!rec) { if (n < 40 && window.GameRecord !== undefined) setTimeout(() => recMirror(n + 1), 150); else if (n >= 40 || !window.GameRecord) myRec.remove(); return; }
+      const svg = () => { const s = rec.querySelector('svg'); return s ? s.outerHTML : ''; };
+      const sync = () => { const h = svg(); if (h && myRec.innerHTML !== h) myRec.innerHTML = h; myRec.title = rec.title; myRec.setAttribute('aria-label', rec.getAttribute('aria-label') || rec.title); };
+      myRec.onclick = () => { if (window.GameRecord && GameRecord.open) GameRecord.open(); else rec.click(); };
+      sync(); new MutationObserver(sync).observe(rec, { attributes: true, childList: true, subtree: true });
+      // phones: the record is a tab in the bottom bar (shared/infotabs.js) — no second way in up here while that tab is shown
+      const tabbed = () => { const t = document.querySelector('.grc-tab'); myRec.hidden = !!(t && t.getClientRects().length); };
+      tabbed(); addEventListener('resize', () => setTimeout(tabbed, 60)); setTimeout(tabbed, 600); setTimeout(tabbed, 2000);
+    })(0);
     const sel = document.getElementById('langSel'), pop = bar.querySelector('#atlasLangPop'), lbtn = bar.querySelector('#atlasLang');
     /* ---------- 3D board or the game's own 2D board (picked in the new-game dialog's デザイン tab) ----------
        view({ key, row, html(label) → the 3D tile's inner HTML, label: {ja, en, …}, cls: [classes only for the 3D look], on(is3d) })
