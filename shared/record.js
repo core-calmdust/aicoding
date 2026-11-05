@@ -131,6 +131,26 @@ html[dir=rtl] .grc-vp,html[lang=ar] .grc-vp{right:auto;left:0}
   .grc-hero{grid-template-columns:1fr;justify-items:center;padding:16px}.grc-right{width:100%}.grc-ring{width:120px;height:120px}
   .grc-row{grid-template-columns:minmax(0,1fr) 60px auto;gap:10px}.grc-row .grc-sc{display:none}
 }
+/* phone portrait: a compact summary (ring beside the counts), tighter rows, a slim footer — more of the tables on screen */
+@media (max-width:560px) and (orientation: portrait){
+  .grc-ov{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+  .grc{height:100%;border-radius:16px}
+  .grc-hd{padding:12px 14px 8px;gap:10px}.grc-hd h2{font-size:17px}.grc-hd .grc-ic{width:32px;height:32px;border-radius:10px}.grc-hd svg{width:18px;height:18px}.grc-x{width:32px;height:32px}
+  .grc-tabs{margin:0 14px 2px;max-width:calc(100% - 28px)}.grc-tabs button{padding:6px 14px;font-size:13px}
+  .grc-vt{margin:0 14px 6px}
+  .grc-bd{padding:10px 14px 14px;gap:14px}
+  .grc-hero{grid-template-columns:auto minmax(0,1fr);justify-items:stretch;gap:14px;padding:12px 14px;border-radius:14px}
+  .grc-ring{width:92px;height:92px}.grc-ring .grc-ctr b{font-size:22px}.grc-ring .grc-ctr small{font-size:10px;margin-top:3px}
+  .grc-right{gap:8px}
+  .grc-cnt{gap:5px}.grc-cnt div{padding:6px 8px;border-radius:9px;gap:2px}.grc-cnt span{font-size:11.5px}.grc-cnt b{font-size:20px}
+  .grc-form{gap:3px}.grc-form small{flex:0 0 100%;font-size:11px;margin:0 0 2px}.grc-form i{width:10px;height:10px;border-radius:3px}
+  .grc-meta{justify-content:center;font-size:12px;padding-top:8px;gap:4px 14px}
+  .grc h3{margin:0 0 6px;font-size:11px}
+  .grc-tb{border-radius:12px}
+  .grc-row{grid-template-columns:minmax(0,1fr) 72px 3.2em;gap:10px;padding:8px 12px;font-size:13.5px}
+  .grc-g{padding:7px 12px;font-size:13.5px;gap:10px}.grc-g .grc-rs{width:24px;height:24px;font-size:12px}.grc-g .grc-mid small{font-size:11px}
+  .grc-ft{padding:8px 14px 10px;gap:8px;flex-wrap:wrap}.grc-ft small{flex:0 0 100%;font-size:10.5px;order:3;text-align:center}.grc-ft .grc-warn{margin-inline-end:auto;font-size:13px}.grc-ft .grc-go{padding:8px 14px;min-width:88px}
+}
 /* phone landscape: short and wide — a slim header, the summary card on the left (it stays put), the tables scroll on the right */
 @media (orientation: landscape) and (max-height: 520px){
   .grc-ov{padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
