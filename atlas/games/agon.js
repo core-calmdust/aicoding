@@ -72,7 +72,7 @@
     const A3 = T3.agon, board = A3.board(lookOf()); T3.show('agon', board);
     const U = board.userData, Y = U.top;
     const tall = innerHeight > innerWidth * 1.15;
-    if (T3.fit) T3.fit(tall ? { w: A3.B * .86, d: A3.B * .86, y: Y + .2, pitch: 1.0 } : { w: A3.B * .8, d: A3.B * .8, y: Y + .2, pitch: 1.0 });
+    if (T3.fit) T3.fit(tall ? { w: A3.B * .98, d: A3.B * .98, y: Y + .2, pitch: 1.0 } : { w: A3.B * .92, d: A3.B * .92, y: Y + .2, pitch: 1.0 });
     const pvp = ctx.mode === 'pvp';
     const human = pvp ? 1 : ctx.side === 2 ? 2 : 1;
     const flip = human === 2;
