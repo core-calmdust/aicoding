@@ -287,6 +287,8 @@ int main(int argc, char **argv) {
     if (!nn_load(len)) { fprintf(stderr, "bad net file %s\n", getenv("NNUE")); return 1; }
     if (nnVar != v) { fprintf(stderr, "the net is for variant %d, not %d\n", nnVar, v); return 1; }
     if (getenv("NNSCALE")) nnScale = (float)atof(getenv("NNSCALE"));
+    if (getenv("NNOISE")) nn_noise(atoi(getenv("NNOISE")));
+    if (getenv("NNLV")) { char *q = getenv("NNLV"); int l, k, z, u; while (sscanf(q, "%d:%d:%d%n", &l, &k, &z, &u) == 3) { nn_level(l, k, z); q += u; if (*q == ',') q++; } }   // "level:nodesK:noise%,…"
     nnLoaded = 1; nnUse = 0;
     fprintf(stderr, "net: variant %d, %dx%d, H=%d, scale %.0f\n", nnVar, nnN, nnN, nnH, nnScale);
   }
