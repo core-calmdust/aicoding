@@ -155,8 +155,8 @@
   // the pieces floating round the title: one signature piece per game (the first 11 are the ones phones show)
   const PROPS = [['shogi', 'shogi', 22, 14, 84, 8], ['knightB', 'chess', 6, 70, 96, 0], ['disc', 'reversi', 20, 84, 104, -6], ['xq', 'xiangqi', 92, 20, 86, 10],
     ['stoneB', 'go', 33, 92, 70, 0], ['die', 'backgammon', 9, 22, 92, -12], ['king', 'checkers', 80, 88, 88, -8], ['card', 'solitaire', 95, 64, 86, 10],
-    ['gzhel', 'ugolki', 78, 10, 74, 0], ['urPiece', 'ur', 66, 92, 80, 6], ['c4', 'connect4', 3, 45, 80, -14],
-    ['agonQueen', 'agon', 45, 10, 66, 0], ['woodBall', 'fanorona', 60, 9, 54, 0], ['taflKing', 'tafl', 97, 40, 72, 0], ['chip', 'poker', 50, 95, 66, 0],
+    ['gzhel', 'ugolki', 61, 8, 74, 0], ['urPiece', 'ur', 66, 92, 80, 6], ['c4', 'connect4', 3, 45, 80, -14],
+    ['agonQueen', 'agon', 45, 10, 66, 0], ['woodBall', 'fanorona', 78, 10, 58, 0], ['taflKing', 'tafl', 97, 40, 72, 0], ['chip', 'poker', 50, 95, 66, 0],
     ['gem', 'mancala', 33, 9, 50, 0], ['tile', 'sudoku', 89, 82, 58, 10], ['block', 'samegame', 12, 95, 56, -8], ['coin', 'alquerque', 14, 36, 52, 0],
     ['hexRed', 'hex', 87, 32, 50, 0], ['key', 'jailbreak', 73, 22, 56, 0], ['dotBar', 'dots', 27, 26, 56, 0], ['cardH', 'baccarat', 86, 58, 60, -10],
     ['stoneW', 'gomoku', 4, 9, 54, 0], ['checker', 'morris', 15, 60, 58, -8], ['gzhelB', 'ugolki', 97, 92, 50, 0]];
