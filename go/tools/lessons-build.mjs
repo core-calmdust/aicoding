@@ -119,7 +119,7 @@ for (const st of steps) {
 }
 if (ONLY) { console.log(errors.join('\n') || 'OK'); process.exit(0); }
 // translations: data/lessons-i18n.json maps each English string to {zh,ko,es,fr,pt,de,hi,ar}; merged into every {ja,en} object
-const I18N_LANGS = ['zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const I18N_LANGS = ['zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const I18N_FILE = path.join(DIR, 'data', 'lessons-i18n.json');
 const tr = fs.existsSync(I18N_FILE) ? JSON.parse(fs.readFileSync(I18N_FILE, 'utf8')) : {};
 const missingTr = new Set();
