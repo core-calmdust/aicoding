@@ -1056,7 +1056,7 @@
     const X = P3(); if (!X) return '';
     const k = X.table(), b = X.bright(), names = X.PLACES.name[lang] || X.PLACES.name.en, B = X.placeUi('b', lang);
     return `<div class="plp${big ? ' big' : ''}"><div class="plh">${esc(X.placeUi('place', lang))}<small>${esc(names[k])}</small></div>
-      <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
+      <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
       <div class="plh">${esc(X.placeUi('bright', lang))}</div>
       <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div></div>`;
   }
@@ -1070,7 +1070,7 @@
     plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
   }
   function bindPlace(root) {
-    root.querySelectorAll('.plb').forEach(b => b.onclick = e => { e.stopPropagation(); setPlace(+b.dataset.k); });
+    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); setPlace(+b.dataset.k); });
     root.querySelectorAll('.plbr button').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
   }
   // PC: while the panel is open the board slides aside (a shift lens, like ヒストリア), so the new place is seen at once
