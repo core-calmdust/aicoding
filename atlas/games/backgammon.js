@@ -39,7 +39,9 @@
   const CN = { ja: { gold: '金', black: '黒', white: '白', red: '赤' }, en: { gold: 'Gold', black: 'Black', white: 'White', red: 'Red' }, zh: { gold: '金', black: '黑', white: '白', red: '红' }, ko: { gold: '금', black: '검정', white: '흰색', red: '빨강' },
     es: { gold: 'Oro', black: 'Negro', white: 'Blanco', red: 'Rojo' }, fr: { gold: 'Or', black: 'Noir', white: 'Blanc', red: 'Rouge' }, pt: { gold: 'Ouro', black: 'Preto', white: 'Branco', red: 'Vermelho' }, de: { gold: 'Gold', black: 'Schwarz', white: 'Weiß', red: 'Rot' } };
   const PV = { ja: { turnC: '{c}の番', firstC: '{c}が先攻！', winC: '{c}の勝ち', noMoveC: '{c}は動かせません' }, en: { turnC: "{c}'s turn", firstC: '{c} goes first!', winC: '{c} wins', noMoveC: '{c} cannot move' },
-    zh: { turnC: '轮到{c}', firstC: '{c}先走！', winC: '{c}获胜', noMoveC: '{c}无法移动' }, ko: { turnC: '{c} 차례', firstC: '{c}이(가) 먼저!', winC: '{c} 승리', noMoveC: '{c}은(는) 움직일 수 없어요' } };
+    zh: { turnC: '轮到{c}', firstC: '{c}先走！', winC: '{c}获胜', noMoveC: '{c}无法移动' }, ko: { turnC: '{c} 차례', firstC: '{c}이(가) 먼저!', winC: '{c} 승리', noMoveC: '{c}은(는) 움직일 수 없어요' },
+    ru: { turnC: 'Ход: {c}', firstC: '{c} ходят первыми!', winC: 'Победа: {c}', noMoveC: '{c}: нет ходов' }, 'zh-TW': { turnC: '輪到{c}', firstC: '{c}先走！', winC: '{c}獲勝', noMoveC: '{c}無法移動' },
+    id: { turnC: 'Giliran {c}', firstC: '{c} jalan duluan!', winC: '{c} menang', noMoveC: '{c} tidak bisa bergerak' }, tr: { turnC: 'Sıra: {c}', firstC: 'İlk {c} başlıyor!', winC: '{c} kazandı', noMoveC: '{c} oynayamıyor' } };
   const DOT = { gold: 'radial-gradient(circle,#e9dfc8 52%,#d8b25e 56%)', black: 'radial-gradient(circle,#1c1c1f 52%,#d6d8dc 56%)', white: 'radial-gradient(circle,#f5f2ea 52%,#c9ccd2 56%)', red: 'radial-gradient(circle,#a8141d 52%,#d8b25e 56%)' };
   const NOSFX = { tok() {}, rattle() {}, blip() {}, chime() {} };
 
