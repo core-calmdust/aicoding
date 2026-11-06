@@ -1,6 +1,6 @@
 # コナネ（konane/）仕様
 
-URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「チェッカー」の次（cat: chess、定番タグ）。テーマ色 #0f8a7e（ティール）。
+URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「アルケルケ」の次（cat: chess、定番タグ）。テーマ色 #0f8a7e（ティール）。
 
 ## ルール（8×8 を既定、ゲームタブで 6×6・8×8・10×10）
 - すべてのマスに黒白の石を交互に置いて開始（a1＝黒、黒が先手 P1）。
@@ -20,9 +20,9 @@ URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「チェ�
 - 盤の上下：取られた数と跳べる手の数のプレート。序盤は取り除ける石が光る（rmable）、以後は「跳べる石を光らせる」オプション（mov）。最後の1手の残りは盤下の案内。
 - ルール（RuleTour、実際の盤）：紹介 → 盤と石 → 黒の取り除き → 白の取り除き → 跳んで取る → 連続ジャンプ → 曲がれない → 途中で止まる → 跳べなくなったら負け → 盤の大きさ。
 - レッスン9（tools/gen_lessons.js ＋ lesson_ramps.js、正解集合はルール／完全読みで計算）：はじめて4（最初の取り除き・取れる石を探す・連続ジャンプ・最後の跳び）、作戦5（相手の手を数える・途中で止まる・続けて跳ぶ・自分の手を残す・先を読む）。各5問・満点20・合格75。
-- パズル（tools/gen_puzzles.js → build_puzzles.js、PZBook v2 の勝ち切り型）：「N 手以内に相手を跳べなくせ」、相手は最長抵抗。勝ちの初手は1〜2通り、「相手の跳べる手が最も減る手」だけでは解けないものだけ。テーマ7＝N手で勝て（w1〜w5）＋止まって勝つ（stop）＋続けて勝つ（chain）、各36問・計252問。build 時に全問を再検証。
+- パズル（tools/gen_puzzles.js → build_puzzles.js、PZBook v2 の勝ち切り型）：「N 手以内に相手を跳べなくせ」、相手は最長抵抗。勝ちの初手は1〜2通り、「相手の跳べる手が最も減る手」だけでは解けないものだけ。テーマ7＝N手で勝て（w1〜w5）＋止まって勝つ（stop）＋続けて勝つ（chain）。1手で勝て（w1）は簡単すぎるので難しい順に10問だけ、ほかは各36問・計226問。build 時に全問を再検証。
 - コーチ（coach.js / coach-i18n.js 10言語）：序盤は評価値ではなくルールで解説（中央か隅か・どの隣を取るか、AIの好みは「少し好む」とだけ）。以降は方針分類（最後の跳び・連続跳び・途中で止める・相手の手を消す・自分の手を残す・端へ）と、跳んだ後の双方の「跳べる手」の数。
-- オンライン：準備中（firebase-config.js が null）。ルールは shared/tools/secrules.py の konane（s8・s6、引き分けなし）→ konane/database.rules.json。公開時は Firebase プロジェクト（例 konane-multiplay）を作って config と App Check キーを入れる。10×10 はオフラインのみ（K64 の 3 文字エンコードが 64 マスまで）。
+- オンライン：Firebase プロジェクト konane-multiplay（App Check サイトキー設定済み）。ルールは shared/tools/secrules.py の konane（s8・s6、引き分けなし）→ konane/database.rules.json。DBルールはコンソールに貼り付け、App Check に reCAPTCHA Enterprise キーを登録（claude/online-security-setup.md）。10×10 はオフラインのみ（K64 の 3 文字エンコードが 64 マスまで）。
 
 ## 3D（ポータル）
 - atlas/models/konane.js：3D盤2種（Table3D.BOARDS.konane、保存キー atlas-konane-look）。'quilt'（既定）＝オイル仕上げのコアのトレーにハワイアンキルト（bd-quilt＋fr-koa、各マスに縫い取りのくぼみ）、'papamu'＝手で割って整えた不揃いな輪郭の玄武岩の板に手で刻んだくぼみ（bd-stone／fr-stone、プリミティブ）。石はなめらかな白い珊瑚と黒い玄武岩の小石。board(n, look) で 6/8/10。サムネイル atlas/img/board-konane-<look>.webp（atlas/tools/boards.html）。
