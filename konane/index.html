@@ -843,7 +843,11 @@ html[data-pcs=stone]{--pcB:url(img/pc-stone-b.webp);--pcW:url(img/pc-stone-w.web
 html[data-pcs=glass]{--pcB:url(img/pc-glass-b.webp);--pcW:url(img/pc-glass-w.webp)}
 html[data-pcs=matte]{--pcB:url(img/pc-matte-b.webp);--pcW:url(img/pc-matte-w.webp)}
 html[data-pcs=pearl]{--pcB:url(img/pc-pearl-b.webp);--pcW:url(img/pc-pearl-w.webp)}
-html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=3);--pcW:url(img/pc-koa-w.webp?v=3)}
+html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=4);--pcW:url(img/pc-koa-w.webp?v=4)}
+/* koa: four cuts of the wood per colour, mixed over the stones so no two neighbours look alike */
+html[data-pcs=koa] .pieces .pc:nth-child(3n+2){--pcB:url(img/pc-koa-b-1.webp?v=1);--pcW:url(img/pc-koa-w-1.webp?v=1)}
+html[data-pcs=koa] .pieces .pc:nth-child(5n+3){--pcB:url(img/pc-koa-b-2.webp?v=1);--pcW:url(img/pc-koa-w-2.webp?v=1)}
+html[data-pcs=koa] .pieces .pc:nth-child(7n+4){--pcB:url(img/pc-koa-b-3.webp?v=1);--pcW:url(img/pc-koa-w-3.webp?v=1)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}

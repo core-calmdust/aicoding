@@ -431,12 +431,16 @@ def koa_piece():
     rip = np.sin(ph)
     rip = np.sign(rip) * np.abs(rip) ** .7
     amt = np.clip(.55 + .45 * nz(60, 40), 0, 1)
-    for name, seed, cols in (('pc-koa-w.webp', 44, ('#e8b064', '#c07a34', '#6a3414', '#3a1a08')),
-                             ('pc-koa-b.webp', 45, ('#8a4a20', '#5e2a10', '#2c1206', '#1a0a03'))):
-        slab = koa_slab(N2, seed, *cols, grain=.7)
-        slab = slab * (1 + .2 * (rip * amt)[..., None])          # the chatoyant figure
-        im = _I.fromarray(np.clip(slab, 0, 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)
-        alb = np.asarray(im).astype(float)
-        rp = np.asarray(_I.fromarray(((rip * amt * .5 + .5) * 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)).astype(float) / 255
-        col = shade(gaussian_filter(h, .7) + (rp - .5) * .5, alb, gloss=80, spec=.38, amb=.62)
-        save_pc(col, name, .22)
+    # four discs of each colour, each cut from another part of the wood and turned another way (the page varies them per stone)
+    for name, seed, cols in (('pc-koa-w', 44, ('#e8b064', '#c07a34', '#6a3414', '#3a1a08')),
+                             ('pc-koa-b', 45, ('#8a4a20', '#5e2a10', '#2c1206', '#1a0a03'))):
+        for v, ang in enumerate((0, 37, 101, 143)):
+            slab = koa_slab(N2, seed + v * 10, *cols, grain=.7)
+            slab = slab * (1 + .2 * (np.roll(rip, v * 97, axis=1) * amt)[..., None])          # the chatoyant figure
+            im = _I.fromarray(np.clip(slab, 0, 255).astype(np.uint8)).rotate(ang, resample=_I.BICUBIC, expand=False)
+            c0 = N2 // 2 - int(N2 * .36); im = im.crop((c0, c0, N2 - c0, N2 - c0)).resize((NP, NP), _I.LANCZOS)   # (inside the turned square)
+            alb = np.asarray(im).astype(float)
+            rr_ = _I.fromarray(((np.roll(rip, v * 97, axis=1) * amt * .5 + .5) * 255).astype(np.uint8)).rotate(ang, resample=_I.BICUBIC).crop((c0, c0, N2 - c0, N2 - c0)).resize((NP, NP), _I.LANCZOS)
+            rp = np.asarray(rr_).astype(float) / 255
+            col = shade(gaussian_filter(h, .7) + (rp - .5) * .5, alb, gloss=80, spec=.38, amb=.62)
+            save_pc(col, name + ('.webp' if v == 0 else '-%d.webp' % v), .22)
