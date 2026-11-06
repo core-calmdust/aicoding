@@ -931,7 +931,7 @@
     const KW = { en: 'Board Game Atlas', es: 'Juegos de Mesa', fr: 'Jeux de société', pt: 'Jogos de Tabuleiro', de: 'Brettspiel-Atlas' };   // (the kicker-style titles: the main line, as the 2D page's landscape pill)
     const wrap = document.createElement('div'); wrap.className = 'pl'; wrap.id = 'pl';
     wrap.innerHTML = '<div class="plb"><img src="logo.svg" alt="" width="26" height="26"><span class="plt"><b></b><em></em></span><span class="sp"></span>'
-      + '<button type="button" class="plic" data-pl="snd"></button><button type="button" class="plic" data-pl="quit">' + HOME + '</button></div>';
+      + (window.PhoneSnd && PhoneSnd.phone ? '' : '<button type="button" class="plic" data-pl="snd"></button>') + '<button type="button" class="plic" data-pl="quit">' + HOME + '</button></div>';
     wrap.addEventListener('click', e => {
       const b = e.target.closest('[data-pl]'); if (!b) return;
       e.stopPropagation();
@@ -943,8 +943,8 @@
       wrap.querySelector('.plt b').textContent = KW[lang] || t('title');
       wrap.querySelector('.plt em').textContent = bvGame ? gname(bvGame).replace(/\s*V\d+$/, '') : '';   // (the game's own name, as its page shows it)
       const sb = wrap.querySelector('[data-pl=snd]'), q = wrap.querySelector('[data-pl=quit]');
-      sb.innerHTML = $('sfxBtn').innerHTML; sb.classList.toggle('off', $('sfxBtn').classList.contains('off'));
-      sb.setAttribute('aria-label', $('sfxBtn').getAttribute('aria-label') || ''); sb.title = sb.getAttribute('aria-label');
+      if (sb) { sb.innerHTML = $('sfxBtn').innerHTML; sb.classList.toggle('off', $('sfxBtn').classList.contains('off'));
+      sb.setAttribute('aria-label', $('sfxBtn').getAttribute('aria-label') || ''); sb.title = sb.getAttribute('aria-label'); }
       q.setAttribute('aria-label', t('bv.quit')); q.title = t('bv.quit');
     }
     function sync() {
