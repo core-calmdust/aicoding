@@ -704,10 +704,41 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 /* the player card (app.js renderCard): the dress-up preview doubling as My Page.
    PC: a tall narrow column (340px) sticky beside the items: character + worn items on its background · name / coins / Lv ·
    2×2 stat tiles · login week · Google. Phones: one compact block — the login week and Google open from the 🔥 tile. */
+/* PC: one full-width row (title · icon/background/frame tabs · sort) sticky under the site header (--hdrH, measured in app.js);
+   below it the name card and the item grid start on the same line, and the card stays put (sticky) while the grid scrolls.
+   Phones keep their order (title · card · sort · grid) via display:contents + order. */
+.dtop{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;position:sticky;top:var(--hdrH,127px);z-index:12;margin:0 -16px 14px;padding:10px 16px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
+.dtop h2.h{margin:0;flex:none}
+.dtop .dbar{flex:1;min-width:0}
+.dress .dgrid{margin-top:0}
 .dress{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:1099px){.dress{grid-template-columns:320px minmax(0,1fr)}}
-@media (max-width:760px){.dress{grid-template-columns:1fr}}
-.dprev{position:sticky;top:90px;display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
+@media (max-width:760px){
+  .dress{grid-template-columns:1fr}
+  #pg-dress.on{display:flex;flex-direction:column}
+  #pg-dress .dtop,#pg-dress .dress{display:contents}
+  #pg-dress .dtop h2.h{order:0;margin:6px 0 12px}
+  #pg-dress .dprev{order:1;margin-bottom:18px}
+  #pg-dress .dbar{order:2}
+  #pg-dress .dgrid{order:3;margin-top:12px}
+  /* the sort chips stay pinned under the mini card */
+  #pg-dress .dbar{position:sticky;top:calc(var(--hdrH,62px) + 72px);z-index:12;margin:0 -16px;padding:6px 16px;background:rgba(255,246,226,.96)}
+  /* the mini name card: slides down from under the header once the full card has scrolled away */
+  .dmini{position:fixed;left:0;right:0;top:var(--hdrH,62px);z-index:25;height:72px;display:flex;align-items:center;gap:11px;padding:6px 16px;border:0;border-bottom:2px solid var(--line);background:rgba(255,253,247,.98);box-shadow:0 6px 14px -10px rgba(60,40,10,.35);font:inherit;color:inherit;text-align:start;cursor:pointer;transform:translateY(-105%);opacity:0;pointer-events:none;transition:transform .22s ease,opacity .18s}
+  .dmini.on{transform:none;opacity:1;pointer-events:auto}
+  .dmini .mav{position:relative;flex:none;width:58px;height:58px;border-radius:14px;overflow:hidden;display:grid;place-items:center;box-shadow:0 2px 0 var(--line)}
+  .dmini .mav .bgfill{position:absolute;inset:0}
+  .dmini .mav svg{position:relative;width:54px;height:54px}
+  .dmini .mtx{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px;row-gap:3px;align-items:center}
+  .dmini .mnm{grid-column:1/-1;font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dmini .mw{display:flex;flex-direction:column;min-width:0;padding:1px 5px;margin:0 -5px;border-radius:8px;line-height:1.25}
+  .dmini .mw.on{background:rgba(54,180,255,.14)}
+  .dmini .mw i{font-style:normal;font-size:10px;font-weight:800;color:#5a6078;white-space:nowrap}
+  .dmini .mw .rar{display:none}
+  .dmini .mw b{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+@media (min-width:761px){ .dmini{display:none} }
+.dprev{position:sticky;top:calc(var(--hdrH,127px) + var(--dtopH,66px) + 14px);display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
 .nc-l{grid-area:l;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px 12px 14px;overflow:hidden}
 .nc-l .bgfill{position:absolute;inset:0;opacity:.9}
 .nc-l > *:not(.bgfill){position:relative}
@@ -748,7 +779,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .dprev .acc{margin-top:0;font-size:12px}
 @media (min-width:761px){
   /* one column, short enough for an 800px-tall window; scrolls inside only on a very short one */
-  .dprev{display:flex;flex-direction:column;gap:11px;max-height:calc(100vh - 160px);overflow-y:auto;scrollbar-width:thin}
+  .dprev{display:flex;flex-direction:column;gap:11px;max-height:calc(100vh - var(--hdrH,127px) - var(--dtopH,66px) - 14px - 70px);overflow-y:auto;scrollbar-width:thin}
   /* the character with the worn items beside it, on the background */
   .nc-l{flex:none;flex-direction:row;align-items:center;gap:10px;padding:12px}
   .nc-l .poke{flex:none}
@@ -1399,11 +1430,12 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 
   <!-- DRESS -->
   <section class="pg" id="pg-dress">
-    <h2 class="h" id="hDress"></h2>
+    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div></div>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
-      <div><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div><div class="dgrid" id="dItems"></div></div>
+      <div class="dgrid" id="dItems"></div>
     </div>
+    <button type="button" class="dmini" id="dmini" aria-hidden="true" tabindex="-1"></button>
   </section>
 
   <p class="foot"><a href="../" id="footBack"></a> · CALMDUST COLLECTION</p>
@@ -1515,6 +1547,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=14">
 <script src="worldmap.js?v=19"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=184"></script>
+<script src="app.js?v=185"></script>
 </body>
 </html>
