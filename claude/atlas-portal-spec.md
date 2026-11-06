@@ -33,7 +33,7 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 実績はゲームごとの記録（localStorage）から自動計算。銅50・銀120・金300・プラチナ800コイン
 - コイン＝実績＋ログインボーナス（毎日30・7日ごと+150）＋ガチャかぶり返金−使用分
 - ガチャ 1回100／10回900（10回目SR以上）、N58/R28/SR10/SSR3.5/UR0.5%。アイテム350種（アバター200・背景100・フレーム50）
-- ショップ：毎日7品（アイコン4・背景2・フレーム1。PCは横1列、ガチャのページの下段）
+- ショップ：毎日6品（アイコン3・背景2・フレーム1。PCは横1列で幅いっぱい、スマホは3×2。ガチャのページの下段）
 
 ## 共通アカウント
 - Firebaseプロジェクト1つ（例: board-game-atlas、Google認証＋Realtime Database）。設定は shared/atlas-firebase-config.js（未設定の間は「準備中」）
