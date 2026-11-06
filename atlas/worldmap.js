@@ -226,7 +226,9 @@
     if (el.info._amT) { clearTimeout(el.info._amT); el.info._amT = 0; } el.info.style.height = el.info.style.overflow = el.info.style.transition = '';
     el.info.classList.remove('open');
     const mb = el.info.querySelector('.ammore'), pd = el.info.querySelector('.amd');
-    if (mb && pd.scrollHeight > pd.clientHeight + 2) {
+    const lh = pd ? parseFloat(getComputedStyle(pd).lineHeight) || 24 : 24;
+    if (mb && pd.scrollHeight > pd.clientHeight + 2 && pd.scrollHeight <= lh * 4 + 2) el.info.classList.add('open');   // up to 4 lines: the whole text, no toggle (2026-11-06)
+    else if (mb && pd.scrollHeight > pd.clientHeight + 2) {
       mb.hidden = false;
       mb.onclick = () => {   // the card grows / shrinks smoothly (2026-11-06): its height animates between the two layouts
         const card = el.info, o = !card.classList.contains('open');

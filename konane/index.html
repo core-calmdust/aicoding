@@ -843,7 +843,7 @@ html[data-pcs=stone]{--pcB:url(img/pc-stone-b.webp);--pcW:url(img/pc-stone-w.web
 html[data-pcs=glass]{--pcB:url(img/pc-glass-b.webp);--pcW:url(img/pc-glass-w.webp)}
 html[data-pcs=matte]{--pcB:url(img/pc-matte-b.webp);--pcW:url(img/pc-matte-w.webp)}
 html[data-pcs=pearl]{--pcB:url(img/pc-pearl-b.webp);--pcW:url(img/pc-pearl-w.webp)}
-html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp);--pcW:url(img/pc-koa-w.webp)}
+html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=2);--pcW:url(img/pc-koa-w.webp?v=2)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -997,8 +997,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .reserve .rsv-plate > *{display:inline-flex;vertical-align:middle;flex:none}
 .reserve .rsv-plate > * + *{margin-inline-start:calc(var(--cell) * .16)}
 .reserve .rsv-plate .rsv-bar{display:inline-block;width:calc(var(--cell) * 1.1);flex:none}
-.reserve .rsv-plate .rsv-w{display:inline-block;white-space:nowrap;font-size:calc(var(--cell) * .25);font-weight:800;letter-spacing:.02em;color:#eadfc8;line-height:1.2;padding:.1em .2em;border-radius:999px;background:transparent}
-.reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .33);color:#fff4dc;margin:0 .08em;vertical-align:-.04em}
+.reserve .rsv-plate .rsv-w{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:inherit;font-weight:800;letter-spacing:.02em;color:inherit;line-height:inherit;padding:0;border-radius:999px;background:transparent}
+.reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .3);color:#fff4dc;margin:0}
 .reserve .rsv-plate .rsv-w.hot{color:#fff;background:#c7362a;padding:.1em .6em;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .reserve .rsv-plate .rsv-w.hot b{color:#fff}
 .reserve .rsv-plate .rsv-w.warm{color:#ffd6a3}
@@ -1349,7 +1349,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=5')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=2')).then(() => load('../atlas/skin/konane.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=6')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=3')).then(() => load('../atlas/skin/konane.js?v=3'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

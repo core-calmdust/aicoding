@@ -412,3 +412,35 @@ def matte_piece():
     for name, base in (('b', '#222225'), ('w', '#f3f1ec')):
         col = shade(gaussian_filter(h, 1.2), C(base) * np.ones((NP, NP, 1)), gloss=16, spec=.06 if name == 'b' else .03, amb=.72)
         save_pc(col, 'pc-matte-' + name + '.webp', .12)
+
+
+def koa_piece():
+    """(overrides gen_art.py's) turned discs of figured ("curly") koa under a clear finish: golden blond koa (White) and
+    dark heartwood (Black) — wavy dark streaks along the grain and the strong chatoyant ripple across it"""
+    from PIL import Image as _I
+    xr = px_ - pc; yr = py_ - pc
+    h = (1 - rr ** 6) * 14 - np.clip((rr - .9) / .1, 0, 1) ** 2 * 8
+    r_ = np.random.default_rng(7)
+    N = NP
+
+    def nz(s, sx=None, seed=None):
+        g = np.random.default_rng(seed).standard_normal((N, N)) if seed is not None else r_.standard_normal((N, N))
+        n = gaussian_filter(g, (s, sx or s), mode='wrap'); return n / (n.std() + 1e-9)
+    y, x = np.mgrid[0:N, 0:N].astype(float)
+    wy = nz(14, 40) * 7                                       # the grain wanders
+    yy = y + wy
+    streak = np.sin(yy / 5.5 + nz(3, 30) * 1.2) * .5 + .5      # fine grain lines
+    dark = np.clip(nz(4, 80) * .9 + nz(1.5, 30) * .4 - .5, 0, 1)   # darker heartwood streaks along the grain
+    # the curl: ripples across the grain, bent by the grain, that flash light / dark
+    ph = x / 2.6 + nz(22, 12) * 1.1 + nz(5, 40) * .35 + wy * .18
+    curl = np.sin(ph) * .5 + .5
+    curl = curl ** 1.2
+    fig = np.clip(nz(18) * .6 + .7, .2, 1)                    # the figure comes and goes
+    for name, light, mid, deep, gl in (('pc-koa-w.webp', '#f2c070', '#c98436', '#6a3412', 70),
+                                        ('pc-koa-b.webp', '#a85a24', '#6e3214', '#2a1206', 70)):
+        L, M, D = C(light), C(mid), C(deep)
+        t = np.clip(.33 + .22 * streak + .4 * dark - .28 * (curl - .5) * fig, 0, 1)[..., None]
+        alb = np.where(t < .5, L + (M - L) * (t / .5), M + (D - M) * ((t - .5) / .5))
+        col = shade(gaussian_filter(h, .7) + curl * fig * .25, alb, gloss=gl, spec=.45, amb=.6)
+        col = col * (1 + .16 * ((curl - .5) * fig))[..., None]   # chatoyance: the ripples catch the light
+        save_pc(col, name, .25)
