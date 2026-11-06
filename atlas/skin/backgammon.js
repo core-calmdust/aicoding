@@ -194,6 +194,50 @@
   if (skin.view) V = skin.view({ key: 'atlas-bg-view', init: !!mine, on() { setTimeout(() => { try { render(); } catch (e) {} }, 0); } });
   look();
 
+
+  /* ---------- phone landscape (land.js, html.lnd) in the portal look: the 2D page's layout, cream pills and cards ---------- */
+  const LAND_CSS = [
+    'html.atlas-backgammon.lnd #lndTop{gap:5px}',
+    'html.atlas-backgammon.lnd #lndTop > :is(.brand-l,.brand-r){display:none!important}',
+    'html.atlas-backgammon.lnd #lndTop > .atlas-top{position:relative;z-index:6;top:auto;left:auto;right:auto;flex:0 1 auto;height:34px;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.95);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35)}',
+    'html.atlas-backgammon.lnd #lndTop > .atlas-top .sp{flex:0 0 2px;min-width:0}',
+    'html.atlas-backgammon.lnd .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}',
+    'html.atlas-backgammon.lnd .atlas-brand img{width:26px;height:26px}',
+    'html.atlas-backgammon.lnd .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap}',
+    'html.atlas-backgammon.lnd .atlas-brand b{font-size:13px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+    'html.atlas-backgammon.lnd .atlas-brand small{display:none}',
+    'html.atlas-backgammon.lnd .atlas-gname{display:block;flex:none;font-style:normal;font-weight:900;font-size:14px;color:#d93c3c;white-space:nowrap}',
+    'html.atlas-backgammon.lnd .atlas-coin{display:none}',
+    'html.atlas-backgammon.lnd #lndTop :is(.atlas-ic,.atlas-lbtn){height:28px;min-width:32px;width:32px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}',
+    'html.atlas-backgammon.lnd #lndTop :is(.atlas-ic,.atlas-lbtn) svg{width:16px;height:16px}',
+    'html.atlas-backgammon.lnd .atlas-lbtn b{display:none}',
+    'html.atlas-backgammon.lnd .atlas-lpop{top:36px;left:0;right:auto;z-index:90}',
+    'html[dir=rtl].atlas-backgammon.lnd .atlas-lpop{left:auto;right:0}',
+    // the menu (新規 · 待った · 投了 · ヒント): round white chips, as the portal's other landscape pages
+    'html.atlas-backgammon.lnd #lndTop .controls .btn{width:40px!important;height:32px!important;border-radius:99px!important;background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}',
+    'html.atlas-backgammon.lnd #lndTop .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}',
+    'html.atlas-backgammon.lnd #lndTop .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}',
+    'html.atlas-backgammon.lnd #lndTop .controls .btn svg{width:18px!important;height:18px!important}',
+    // the tab rail and its drawer: a cream card, coral for the open tab
+    'html.atlas-backgammon.lnd #lndRail{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important}',
+    'html.atlas-backgammon.lnd #lndRail button{color:#5a6078!important;font-family:"Zen Maru Gothic",var(--font,sans-serif)!important;font-weight:900!important;font-size:10.5px!important;letter-spacing:-.02em!important}',
+    'html.atlas-backgammon.lnd #lndRail button svg{stroke-width:2.1!important}',
+    'html.atlas-backgammon.lnd #lndRail button.sel{color:#d93c3c!important;background:#fff3d8!important}',
+    'html.atlas-backgammon.lnd #lndRail button.sel svg{stroke:#d93c3c!important}',
+    'html.atlas-backgammon.lnd #lndRail button.sel::before{background:#d93c3c!important}',
+    'html.atlas-backgammon.lnd #lndDrawer{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important;color:var(--text)}',
+    'html.atlas-backgammon.lnd #lndDrawer > .card{box-shadow:none!important;border:2px solid #f3e7cc!important;border-radius:16px!important}',
+    'html.atlas-backgammon.lnd #lndLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important;box-shadow:0 2px 0 #efe3c8}',
+    'html.atlas-backgammon.lnd #lndLearn button svg{stroke:#d93c3c!important}',
+    'html.atlas-backgammon.lnd body.lnd-nav #lndNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}',
+    'html.atlas-backgammon.lnd body.mtab-online .dock{border:2px solid #fff!important}',
+    // the players in the bear-off tray and the status messages over the board (large, readable)
+    'html.atlas-backgammon.lnd .lnd-pl{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:12px!important;color:#2b3044!important;box-shadow:0 4px 10px -4px rgba(0,0,0,.45)}',
+    'html.atlas-backgammon.lnd .lnd-pl.on{border-color:#ffc928!important;box-shadow:0 0 0 2px rgba(255,201,40,.45),0 4px 10px -4px rgba(0,0,0,.45)!important}',
+    'html.atlas-backgammon.lnd .lnd-pl.won{border-color:#5cc98d!important}',
+    'html.atlas-backgammon.lnd .lnd-pl :is(span,em){color:#5a6078!important}',
+    'html.atlas-backgammon.lnd #lndMsg{background:rgba(43,48,68,.88)!important;border:0!important;color:#fff!important;font:700 14px "Zen Maru Gothic",var(--font,sans-serif)!important;padding:6px 16px!important}',
+  ].join('\n');
   /* ---------- phone landscape (a landscape phone, or the page rotated on a portrait phone) ----------
      the portal's top bar becomes the slim first row of the game's grid (logo · game name · sound · language · rotate · home),
      next to the player chips; status line + menu icons in the second row; the 3D board across the full width below */
@@ -204,7 +248,7 @@
     // the game's name next to the portal's title
     const brand = bar.querySelector('.atlas-brand span'), gname = document.createElement('em'); gname.className = 'atlas-gname';
     if (brand) brand.appendChild(gname);
-    const paintName = () => { const t = document.querySelector('.brand h1 [data-i18n=title]'); gname.textContent = t ? t.textContent : ''; };
+    const paintName = () => { const t = document.querySelector('h1 [data-i18n=title]'); gname.textContent = t ? t.textContent : ''; };
     paintName(); const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paintName, 60));
     // the rotate (landscape) button: the game's own one is in its hidden title row
     if (land) {
@@ -215,19 +259,22 @@
       new MutationObserver(sync).observe(land, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
       bar.insertBefore(rb, home || null);
     }
-    const mq = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
+    // the game's own landscape layout (backgammon/land.js → html.lnd: a phone held sideways, or the page turned by the 横画面
+    // button) — the same top row, tab rail and drawer as the 2D page; the portal bar joins its top row as a slim pill
+    // (logo · title · game name · 反転 · language · 横画面 · home) in place of the page's title and icons, the 3D board lies
+    // under the DOM board straight from above (the camera follows #frame)
+    const css = document.createElement('style'); css.textContent = LAND_CSS; document.head.appendChild(css);
     let on = null;
     const apply = () => {
-      const v = de.classList.contains('rot') || mq.matches;
+      const v = de.classList.contains('lnd');
       if (v === on) return; on = v;
-      de.classList.toggle('atlas-land', v);
-      if (v) app.prepend(bar); else document.body.appendChild(bar);
+      const top = document.getElementById('lndTop');
+      if (v && top) top.insertBefore(bar, top.firstChild); else document.body.appendChild(bar);
       try { updateGeom(); } catch (e) {}
       requestAnimationFrame(() => { try { updateGeom(); render(); } catch (e) {} T3.kick(600); });
       T3.kick(600);
     };
     new MutationObserver(apply).observe(de, { attributes: true, attributeFilter: ['class'] });
-    if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
     apply();
   })();
 })();
