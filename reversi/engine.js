@@ -783,10 +783,10 @@ const LEVELS = [
   { depth: 8, exact: 14 },                          // 14 (old Lv.6)
   { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
   { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
-  { depth: 60, exact: 18, time: 1500, mpc: 1 },     // 17 (old Lv.8)
-  { depth: 60, exact: 18, time: 2200, mpc: 1 },     // 18
-  { depth: 60, exact: 19, time: 3000, mpc: 1 },     // 19 (old Lv.9)
-  { depth: 60, exact: 20, time: 5000, mpc: 1 },     // 20 (old Lv.10)
+  { depth: 60, exact: 18, wld: 20, time: 1500, mpc: 1 },     // 17 (old Lv.8)
+  { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
+  { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
+  { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -921,6 +921,15 @@ function think(cells, toMove, opts, onProgress) {
         }
       }
       result = r; exactDone = true;
+    } catch (e) { if (e !== ABORT) throw e; }
+  } else if (lv.wld && empties <= lv.wld && !variety && result) {
+    // win / draw / loss solve (window -1..1, much cheaper than exact): play a winning move when there is one,
+    // else a drawing one; a lost position keeps the midgame choice. Bounded by the same deadline as the exact solve.
+    if (time) deadline = t0 + Math.max(hardTime, 2000);
+    try {
+      const r = rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
+      if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
+      else if (r.score === 0 && result.score < 0) result = { move: r.move, score: 0 };
     } catch (e) { if (e !== ABORT) throw e; }
   }
 

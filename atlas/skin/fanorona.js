@@ -68,6 +68,43 @@ html.atlas-alq3 .pieces .hov.p1,html.atlas-alq3 .pdisc.p1,html.atlas-alq3 .kifu 
 html.atlas-alq3 .pieces .hov.p2,html.atlas-alq3 .pdisc.p2,html.atlas-alq3 .kifu button i.p2,html.atlas-alq3 .rv-list .mv i.p2{background:radial-gradient(circle at 38% 32%,#4a78e0,#1d3f9a 60%,#0d2470)!important}
 html.atlas-alq3 .reserve .lbl{background:rgba(70,10,20,.62)!important}
 html.atlas-alq3 .fn3dnote{background:#fbf1e4;border-color:#ecd5b8}
+/* phones held sideways (the page's landtabs.js → html.lt-land; also the page turned by the 横画面 button): the 2D page's own
+   layout — one top row, the board, the tab rail at the right edge and its drawer — in the portal look; the portal bar is a slim
+   pill in place of the page's title and icons (logo · name · 反転 · 戦績 · language · 横画面 · home), as ur/?skin=atlas */
+html.atlas-fanorona.lt-land body.lt-on .app.app{grid-template-columns:auto minmax(0,1fr) 58px!important;grid-template-areas:"bl ct ct" "board board rl"!important;padding-top:6px!important}
+html.atlas-fanorona.lt-land body.lt-on .side > .brand{display:none!important}
+html.atlas-fanorona.lt-land .app > .atlas-top{position:relative;z-index:6;grid-area:bl;top:auto;left:auto;right:auto;height:34px;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.95);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);align-self:center;justify-self:start}
+html.atlas-fanorona.lt-land .atlas-top .sp{flex:0 0 2px;min-width:0}
+html.atlas-fanorona.lt-land .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}
+html.atlas-fanorona.lt-land .atlas-brand img{width:26px;height:26px}
+html.atlas-fanorona.lt-land .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap}
+html.atlas-fanorona.lt-land .atlas-brand b{font-size:13px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.atlas-fanorona.lt-land .atlas-brand small{display:none}
+html.atlas-fanorona.lt-land .atlas-brand .fngn{display:block!important;flex:none;font-style:normal;font-weight:900;font-size:14px;color:#d93c3c;white-space:nowrap}
+html.atlas-fanorona.lt-land .atlas-coin{display:none}
+html.atlas-fanorona:not(.lt-land) .atlas-brand .fngn{display:none}
+html.atlas-fanorona.lt-land .atlas-top :is(.atlas-ic,.atlas-lbtn){height:28px;min-width:32px;width:32px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
+html.atlas-fanorona.lt-land .atlas-top :is(.atlas-ic,.atlas-lbtn) svg{width:16px;height:16px}
+html.atlas-fanorona.lt-land .atlas-lbtn b{display:none}
+html.atlas-fanorona.lt-land .atlas-lpop{top:36px;left:0;right:auto;z-index:90}
+html[dir=rtl].atlas-fanorona.lt-land .atlas-lpop{left:auto;right:0}
+html.atlas-fanorona.lt-land body.lt-on .app .controls.card{margin-inline-start:4px;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+html.atlas-fanorona.lt-land body.lt-on .controls .btn{width:40px!important;height:32px!important;border-radius:99px!important;background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+html.atlas-fanorona.lt-land body.lt-on .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}
+html.atlas-fanorona.lt-land body.lt-on .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
+html.atlas-fanorona.lt-land body.lt-on .controls .btn svg{width:18px!important;height:18px!important}
+html.atlas-fanorona.lt-land body.lt-on #ltRail{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important}
+html.atlas-fanorona.lt-land body.lt-on #ltRail button{color:#5a6078!important;font-family:'Zen Maru Gothic',var(--font,sans-serif)!important;font-weight:900!important;font-size:10.5px!important;letter-spacing:-.05em!important}
+html.atlas-fanorona.lt-land body.lt-on #ltRail button.sel{color:#d93c3c!important;background:#fff3d8!important}
+html.atlas-fanorona.lt-land body.lt-on #ltRail button.sel::before{background:#d93c3c!important}
+html.atlas-fanorona.lt-land body.lt-on #ltPanel{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important;color:var(--text)}
+html.atlas-fanorona.lt-land body.lt-on #ltPanel > .card{box-shadow:none!important;border:2px solid #f3e7cc!important;border-radius:16px!important}
+html.atlas-fanorona.lt-land body.lt-on #ltLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important;box-shadow:0 2px 0 #efe3c8}
+html.atlas-fanorona.lt-land body.lt-on #ltLearn button svg{stroke:#d93c3c!important}
+html.atlas-fanorona.lt-land body.lt-on.lt-nav #ltNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}
+html.atlas-fanorona.lt-land body.lt-on .reserve .onb{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;color:#2b3044!important;font:800 15px/1 'Zen Maru Gothic',var(--font,sans-serif)!important;padding:3px 10px 3px 6px!important;box-shadow:0 3px 8px -3px rgba(0,0,0,.45)}
+html.atlas-fanorona.lt-land body.lt-on .reserve .onb.on{border-color:#ffc928!important;box-shadow:0 0 0 2px rgba(255,201,40,.45)!important}
+html.atlas-fanorona.lt-land body.lt-on .reserve .lbl{display:none!important}
 `;
   document.head.appendChild(st);
 
@@ -333,6 +370,27 @@ html.atlas-alq3 .fn3dnote{background:#fbf1e4;border-color:#ecd5b8}
   }
   // the page may have drawn its pieces before we hooked in
   try { mirror(); syncGrooves(); } catch (e) {}
+
+  /* ---------- phones held sideways (landtabs.js): the portal bar in the top row carries the game's name (as the 2D page's title)
+     and the rotate (横画面) button — the page's own ones are in its hidden title row (as ur / backgammon) ---------- */
+  (function landBar() {
+    const bar = document.querySelector('.atlas-top'), land = document.getElementById('btnLand');
+    if (!bar) return;
+    const span = bar.querySelector('.atlas-brand span');
+    if (span && !span.querySelector('.fngn')) {
+      const em = document.createElement('em'); em.className = 'fngn'; span.appendChild(em);
+      const paint = () => { const t = document.getElementById('brandTitle'), v = t ? t.textContent.trim() : ''; if (em.textContent !== v) em.textContent = v; };
+      paint(); const t = document.getElementById('brandTitle'); if (t) new MutationObserver(paint).observe(t, { childList: true, characterData: true, subtree: true });
+    }
+    if (!land || document.getElementById('atlasLand')) return;
+    const home = bar.querySelector('a.atlas-ic[aria-label=Portal]');
+    const rb = document.createElement('button'); rb.type = 'button'; rb.id = 'atlasLand'; rb.innerHTML = land.innerHTML;
+    rb.setAttribute('aria-label', land.getAttribute('aria-label') || 'Landscape');
+    const sync = () => { rb.className = 'atlas-ic atlas-land-b' + (land.classList.contains('on') ? ' on' : '') + (land.classList.contains('pulse') ? ' pulse' : ''); rb.title = land.title || ''; };
+    rb.onclick = e => { e.stopPropagation(); land.click(); setTimeout(sync, 0); };
+    new MutationObserver(sync).observe(land, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
+    bar.insertBefore(rb, home || null);
+  })();
 
   // test hooks (Playwright)
   window.__fnSkin = { pieces: () => P3.size, grooves: () => G.map(L => L.length), at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); }, running: () => running, errs };

@@ -76,7 +76,7 @@ function navSync() {
     if (b.title && c.title !== b.title) c.title = b.title;
   });
 }
-const want = () => !!((ROT || landPhone()) && !html.classList.contains('atlas-skin') && !window.__EMBED);
+const want = () => !!((ROT || landPhone()) && !window.__EMBED);
 
 function enter() {
   const put = (el, host) => { if (!el) return; const ph = document.createComment('lnd'); el.parentNode.insertBefore(ph, el); moved.push([el, ph]); host.appendChild(el); };

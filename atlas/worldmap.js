@@ -8,16 +8,16 @@
   'use strict';
   const V = 1;
   const UI = {
-    ja: { hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
-    en: { hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },
-    zh: { hist: '历史', title: '地图', sub: '每款游戏诞生在世界的哪里？点击图钉，追寻它的旅程。', all: '全部', asia: '亚洲', europe: '欧洲', mea: '中东・非洲', americas: '美洲', play: '开始', born: '发源地', era: '年代', route: '游戏之旅', hint: '拖动移动・滚轮／双指缩放', pick: '选择图钉，这里会显示游戏的故事', reset: '显示全图', n: '{n}款', load: '正在展开地图…' },
-    ko: { hist: '히스토리아', title: '지도', sub: '각 게임은 세계 어디에서 태어났을까요? 핀을 누르면 그 게임의 여정을 따라갈 수 있어요.', all: '전체', asia: '아시아', europe: '유럽', mea: '중동・아프리카', americas: '아메리카', play: '플레이', born: '발상지', era: '연대', route: '게임의 여정', hint: '드래그로 이동・휠／핀치로 확대', pick: '핀을 고르면 여기에 게임 이야기가 나와요', reset: '전체 보기', n: '{n}개', load: '지도를 펼치는 중…' },
-    es: { hist: 'Historia', title: 'Atlas', sub: '¿En qué parte del mundo nació cada juego? Toca un pin para seguir su viaje.', all: 'Todo', asia: 'Asia', europe: 'Europa', mea: 'Oriente Medio y África', americas: 'América', play: 'Jugar', born: 'Origen', era: 'Época', route: 'Su viaje', hint: 'Arrastra para mover · rueda / pellizca para ampliar', pick: 'Elige un pin para leer la historia del juego', reset: 'Todo el mundo', n: '{n} juegos', load: 'Desplegando el mapa…' },
-    fr: { hist: 'Historia', title: 'Atlas', sub: 'Où chaque jeu est-il né ? Touchez une épingle pour suivre son voyage.', all: 'Tout', asia: 'Asie', europe: 'Europe', mea: 'Moyen-Orient et Afrique', americas: 'Amériques', play: 'Jouer', born: 'Origine', era: 'Époque', route: 'Son voyage', hint: 'Glisser pour déplacer · molette / pincer pour zoomer', pick: 'Choisissez une épingle pour lire l’histoire du jeu', reset: 'Monde entier', n: '{n} jeux', load: 'Dépliage de la carte…' },
-    pt: { hist: 'Historia', title: 'Atlas', sub: 'Onde nasceu cada jogo? Toque num pino para seguir a viagem dele.', all: 'Todos', asia: 'Ásia', europe: 'Europa', mea: 'Oriente Médio e África', americas: 'Américas', play: 'Jogar', born: 'Origem', era: 'Época', route: 'A viagem', hint: 'Arraste para mover · roda / pinça para ampliar', pick: 'Escolha um pino para ler a história do jogo', reset: 'Mundo todo', n: '{n} jogos', load: 'Abrindo o mapa…' },
-    de: { hist: 'Historia', title: 'Atlas', sub: 'Wo auf der Welt ist jedes Spiel entstanden? Tippe auf eine Nadel und folge seiner Reise.', all: 'Alle', asia: 'Asien', europe: 'Europa', mea: 'Nahost & Afrika', americas: 'Amerika', play: 'Spielen', born: 'Herkunft', era: 'Zeit', route: 'Seine Reise', hint: 'Ziehen zum Bewegen · Rad / Pinch zum Zoomen', pick: 'Wähle eine Nadel, um die Geschichte des Spiels zu lesen', reset: 'Ganze Welt', n: '{n} Spiele', load: 'Karte wird entfaltet…' },
-    hi: { hist: 'हिस्टोरिया', title: 'एटलस', sub: 'हर खेल दुनिया में कहाँ जन्मा? पिन पर टैप करके उसकी यात्रा देखें।', all: 'सभी', asia: 'एशिया', europe: 'यूरोप', mea: 'मध्य पूर्व व अफ़्रीका', americas: 'अमेरिका', play: 'खेलें', born: 'जन्मस्थान', era: 'काल', route: 'खेल की यात्रा', hint: 'खींचकर घुमाएँ · व्हील / पिंच से ज़ूम', pick: 'पिन चुनें, यहाँ खेल की कहानी दिखेगी', reset: 'पूरी दुनिया', n: '{n} खेल', load: 'नक्शा खुल रहा है…' },
-    ar: { hist: 'هيستوريا', title: 'الأطلس', sub: 'أين وُلدت كل لعبة في العالم؟ المس دبوسًا لتتبع رحلتها.', all: 'الكل', asia: 'آسيا', europe: 'أوروبا', mea: 'الشرق الأوسط وأفريقيا', americas: 'الأمريكتان', play: 'العب', born: 'المنشأ', era: 'الحقبة', route: 'رحلتها', hint: 'اسحب للتحريك · العجلة / القرص للتكبير', pick: 'اختر دبوسًا لتقرأ قصة اللعبة', reset: 'العالم كله', n: '{n} ألعاب', load: 'جارٍ فتح الخريطة…' },
+    ja: { more: 'もっと読む', less: '閉じる', hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
+    en: { more: 'Read more', less: 'Show less', hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },
+    zh: { more: '展开全文', less: '收起', hist: '历史', title: '地图', sub: '每款游戏诞生在世界的哪里？点击图钉，追寻它的旅程。', all: '全部', asia: '亚洲', europe: '欧洲', mea: '中东・非洲', americas: '美洲', play: '开始', born: '发源地', era: '年代', route: '游戏之旅', hint: '拖动移动・滚轮／双指缩放', pick: '选择图钉，这里会显示游戏的故事', reset: '显示全图', n: '{n}款', load: '正在展开地图…' },
+    ko: { more: '더 보기', less: '접기', hist: '히스토리아', title: '지도', sub: '각 게임은 세계 어디에서 태어났을까요? 핀을 누르면 그 게임의 여정을 따라갈 수 있어요.', all: '전체', asia: '아시아', europe: '유럽', mea: '중동・아프리카', americas: '아메리카', play: '플레이', born: '발상지', era: '연대', route: '게임의 여정', hint: '드래그로 이동・휠／핀치로 확대', pick: '핀을 고르면 여기에 게임 이야기가 나와요', reset: '전체 보기', n: '{n}개', load: '지도를 펼치는 중…' },
+    es: { more: 'Leer más', less: 'Ver menos', hist: 'Historia', title: 'Atlas', sub: '¿En qué parte del mundo nació cada juego? Toca un pin para seguir su viaje.', all: 'Todo', asia: 'Asia', europe: 'Europa', mea: 'Oriente Medio y África', americas: 'América', play: 'Jugar', born: 'Origen', era: 'Época', route: 'Su viaje', hint: 'Arrastra para mover · rueda / pellizca para ampliar', pick: 'Elige un pin para leer la historia del juego', reset: 'Todo el mundo', n: '{n} juegos', load: 'Desplegando el mapa…' },
+    fr: { more: 'Lire la suite', less: 'Réduire', hist: 'Historia', title: 'Atlas', sub: 'Où chaque jeu est-il né ? Touchez une épingle pour suivre son voyage.', all: 'Tout', asia: 'Asie', europe: 'Europe', mea: 'Moyen-Orient et Afrique', americas: 'Amériques', play: 'Jouer', born: 'Origine', era: 'Époque', route: 'Son voyage', hint: 'Glisser pour déplacer · molette / pincer pour zoomer', pick: 'Choisissez une épingle pour lire l’histoire du jeu', reset: 'Monde entier', n: '{n} jeux', load: 'Dépliage de la carte…' },
+    pt: { more: 'Ler mais', less: 'Mostrar menos', hist: 'Historia', title: 'Atlas', sub: 'Onde nasceu cada jogo? Toque num pino para seguir a viagem dele.', all: 'Todos', asia: 'Ásia', europe: 'Europa', mea: 'Oriente Médio e África', americas: 'Américas', play: 'Jogar', born: 'Origem', era: 'Época', route: 'A viagem', hint: 'Arraste para mover · roda / pinça para ampliar', pick: 'Escolha um pino para ler a história do jogo', reset: 'Mundo todo', n: '{n} jogos', load: 'Abrindo o mapa…' },
+    de: { more: 'Mehr lesen', less: 'Weniger', hist: 'Historia', title: 'Atlas', sub: 'Wo auf der Welt ist jedes Spiel entstanden? Tippe auf eine Nadel und folge seiner Reise.', all: 'Alle', asia: 'Asien', europe: 'Europa', mea: 'Nahost & Afrika', americas: 'Amerika', play: 'Spielen', born: 'Herkunft', era: 'Zeit', route: 'Seine Reise', hint: 'Ziehen zum Bewegen · Rad / Pinch zum Zoomen', pick: 'Wähle eine Nadel, um die Geschichte des Spiels zu lesen', reset: 'Ganze Welt', n: '{n} Spiele', load: 'Karte wird entfaltet…' },
+    hi: { more: 'और पढ़ें', less: 'कम दिखाएँ', hist: 'हिस्टोरिया', title: 'एटलस', sub: 'हर खेल दुनिया में कहाँ जन्मा? पिन पर टैप करके उसकी यात्रा देखें।', all: 'सभी', asia: 'एशिया', europe: 'यूरोप', mea: 'मध्य पूर्व व अफ़्रीका', americas: 'अमेरिका', play: 'खेलें', born: 'जन्मस्थान', era: 'काल', route: 'खेल की यात्रा', hint: 'खींचकर घुमाएँ · व्हील / पिंच से ज़ूम', pick: 'पिन चुनें, यहाँ खेल की कहानी दिखेगी', reset: 'पूरी दुनिया', n: '{n} खेल', load: 'नक्शा खुल रहा है…' },
+    ar: { more: 'اقرأ المزيد', less: 'عرض أقل', hist: 'هيستوريا', title: 'الأطلس', sub: 'أين وُلدت كل لعبة في العالم؟ المس دبوسًا لتتبع رحلتها.', all: 'الكل', asia: 'آسيا', europe: 'أوروبا', mea: 'الشرق الأوسط وأفريقيا', americas: 'الأمريكتان', play: 'العب', born: 'المنشأ', era: 'الحقبة', route: 'رحلتها', hint: 'اسحب للتحريك · العجلة / القرص للتكبير', pick: 'اختر دبوسًا لتقرأ قصة اللعبة', reset: 'العالم كله', n: '{n} ألعاب', load: 'جارٍ فتح الخريطة…' },
   };
   const REG = ['all', 'asia', 'europe', 'mea', 'americas'];
   const W0 = 360, H0 = 128.5;   // map units: 1 = 1° of longitude, equirectangular 72.5°N…56°S
@@ -51,7 +51,12 @@
   const zMax = () => zMin() * 9;
   function clamp(v) {
     const b = box(), z = Math.max(zMin(), Math.min(zMax(), v.z)), hw = b.w / 2 / z, hh = b.h / 2 / z;
-    return { x: hw * 2 >= W0 ? W0 / 2 : Math.max(hw, Math.min(W0 - hw, v.x)), y: hh * 2 >= H0 ? H0 / 2 - 12 : Math.max(hh, Math.min(H0 - hh, v.y)), z };
+    // an axis where the world is smaller than the box can still be dragged, as long as the world stays inside the box
+    // (phones: zoomed in a little, the map moves up/down as well as sideways); bigger than the box: it always covers it
+    // plus some slack past the world's edges (a quarter of the box), so a game near the top / an edge can be brought
+    // toward the middle — tafl's Scandinavia, for one — instead of stopping hard at the edge
+    const ax = (c, h, L, m) => h * 2 >= L ? Math.max(L - h - m, Math.min(h + m, c)) : Math.max(h - m, Math.min(L - h + m, c));
+    return { x: ax(v.x, hw, W0, hw * .5), y: ax(v.y, hh, H0, hh * .5), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
@@ -152,12 +157,12 @@
     el.svg.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`);
     const R = routeSvg(P.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
     el.svg.innerHTML = R.under + `<g class="lead">${lines}</g>`;
-    el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over;
+    el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over; if (hotN != null) el.svg2.querySelectorAll(`.num[data-n="${hotN}"]`).forEach(n => n.classList.add('hot'));
   }
   // the selected game's journey: arcs between the stops, numbered dots and their names
   // the stops' names are set above the pins, each in the first spot around its dot that covers no pin, no other name
   // and stays inside the map (right, left, below, above, then the diagonals, then farther out)
-  let mctx = null;
+  let mctx = null, hotN = null;   // hotN: the journey chip under the pointer (its stop stays lit through redraws)
   const fs = () => box().w < 520 ? 14 : 16;   // the stop names' size (matches --amFs in worldmap.css)
   const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 ' + fs() + 'px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
   function routeSvg(rects, b) {
@@ -171,7 +176,10 @@
     }).join('');
     const hit = (r, q) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
     const busy = rects.slice(), dots = [], lbl = [];
-    P.forEach((p, i) => { if (i === d.h) return; dots.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5.5"/>`); busy.push([p[0] - 7, p[1] - 7, p[0] + 7, p[1] + 7]); });
+    // numbered stops (the numbers match the journey chips in the card); the home stop's number sits on its pin's corner
+    P.forEach((p, i) => { const R = 9, home = i === d.h, x = home ? p[0] + 15 : p[0], y = home ? p[1] - 15 : p[1];
+      dots.push(`<g class="num${home ? ' h' : ''}" data-n="${i}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/><text x="${x.toFixed(1)}" y="${y.toFixed(1)}">${i + 1}</text></g>`);
+      if (!home) busy.push([p[0] - R - 1, p[1] - R - 1, p[0] + R + 1, p[1] + R + 1]); });
     P.forEach((p, i) => {
       const s = pins[i]; if (i === d.h || !s) return;
       const w = textW(s) + 8, h = fs() + 6, G = 10;
@@ -192,7 +200,7 @@
         `<text x="${(x0 + 4).toFixed(1)}" y="${(y0 + fs() + 1).toFixed(1)}">${esc(s)}</text>`);
     });
     const st = `style="--c:${g ? g.color : '#c48a4a'}"`;
-    return { under: `<g class="route" ${st}>${arcs}<g class="stop">${dots.join('')}</g></g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}</g>` };
+    return { under: `<g class="route" ${st}>${arcs}</g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}${dots.join('')}</g>` };
   }
 
   /* ---------- the side card ---------- */
@@ -202,12 +210,25 @@
     const pins = pick(d.pn, lang) || [], order = d.p.map((_, i) => i);
     el.info.innerHTML = `<span class="amart ph" style="--c:${g.color}" aria-hidden="true">${ctx.art(g)}</span><div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
       <div class="amfacts"><span><i>${esc(u('born'))}</i><b>${esc(pins[d.h] || '')}</b></span><span><i>${esc(u('era'))}</i><b>${esc(pick(d.era, lang))}</b></span></div>
-      <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p></div>
-      ${pins.length > 1 ? `<div class="amjour"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}">${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
+      <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p><button type="button" class="ammore" aria-expanded="false" hidden>${esc(u('more'))}</button></div>
+      ${pins.length > 1 ? `<div class="amjour" style="--c:${g.color}"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}" data-n="${i}"><u>${i + 1}</u>${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
       <div class="amacts"><button type="button" class="btn amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(u('play'))}</button>
       ${hasH(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(u('hist'))}</button>` : ''}</div>`;
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
+    // the journey chips: hovering (or touching) one lights its numbered stop on the map
+    el.info.querySelectorAll('.amjour [data-n]').forEach(ch => {
+      const lit = on => { hotN = on ? ch.dataset.n : null; el.map.querySelectorAll(`.num[data-n="${ch.dataset.n}"]`).forEach(n => n.classList.toggle('hot', on)); };
+      ch.addEventListener('pointerenter', () => lit(true)); ch.addEventListener('pointerleave', () => lit(false));
+      ch.addEventListener('pointerdown', () => { lit(true); setTimeout(() => lit(false), 1200); });
+    });
+    // the story is cut to two lines; when it runs on, a toggle opens the card to the whole text
+    el.info.classList.remove('open');
+    const mb = el.info.querySelector('.ammore'), pd = el.info.querySelector('.amd');
+    if (mb && pd.scrollHeight > pd.clientHeight + 2) {
+      mb.hidden = false;
+      mb.onclick = () => { const o = el.info.classList.toggle('open'); mb.textContent = u(o ? 'less' : 'more'); mb.setAttribute('aria-expanded', o); };
+    }
   }
   // a bubble: fly in until its games stand apart (at least twice as close)
   function openClu(pts) { const f = fit(pts, 2.2), z = Math.max(f.z, view.z * 2.4, zMax() * .5); fly(clamp({ x: f.x, y: f.y, z })); }

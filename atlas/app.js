@@ -12,6 +12,9 @@
   const t = (k, v) => { let s = (I[lang] && I[lang][k]) ?? I.en[k] ?? I.ja[k] ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
   const gname = g => g.name[lang] || g.name.en;
   const iname = it => it.name[lang] || it.name.en;
+  // the place of the 3D table (Table3D.table(): 0 ちゃぶ台 … 5 書斎) names the portal's own 3D play: 「ちゃぶ台へ」→「書斎へ」
+  const P3 = () => window.Table3D && Table3D.placeText ? Table3D : null;
+  const placeT = kind => { const X = P3(); if (!X) return t(kind === 'go' ? 'today.go' : 'bv.table'); return X.placeText(kind, lang) || t(kind === 'go' ? 'today.go' : 'bv.table'); };
   const utx = u => window.Atlas && Atlas.updText ? Atlas.updText(u, lang) : (lang === 'ja' ? u[2] : u[3]);   // changelog line in the current language
   const fmtDate = d => { try { return new Date(d + 'T00:00:00').toLocaleDateString(lang, { month: 'short', day: 'numeric' }); } catch (e) { return d; } };
 
@@ -134,22 +137,24 @@
 
   /* ---------- HOME ---------- */
   const GLOGO = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
-  function renderAcc() {
-    const host = document.querySelector('#prof .accw'); if (!host || !window.AtlasAccount) return;
-    let el = document.getElementById('acc'); if (!el) { el = document.createElement('div'); el.id = 'acc'; el.className = 'acc'; host.appendChild(el); }
-    const s = AtlasAccount.state();
-    if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
-    if (!s.user) { el.innerHTML = `<button class="gbtn" id="accIn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; $('accIn').onclick = () => AtlasAccount.signIn(); return; }
-    const when = s.last ? new Date(s.last).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) : '';
-    el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
-      <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost" id="accOut">${t('acc.out')}</button>`;
-    $('accOut').onclick = () => AtlasAccount.signOut();
+  function renderAcc() {   // Google sign-in / account state, in every .accw host (home profile card, My Page on きせかえ)
+    if (!window.AtlasAccount) return;
+    const s = AtlasAccount.state(), when = s.last ? new Date(s.last).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) : '';
+    document.querySelectorAll('.accw').forEach(host => {
+      let el = host.querySelector('.acc'); if (!el) { el = document.createElement('div'); el.className = 'acc'; host.appendChild(el); }
+      el.title = '';
+      if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
+      if (!s.user) { el.innerHTML = `<button class="gbtn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; el.querySelector('.gbtn').onclick = () => AtlasAccount.signIn(); return; }
+      el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
+      <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost">${t('acc.out')}</button>`;
+      el.querySelector('.btn').onclick = () => AtlasAccount.signOut();
+    });
   }
   if (window.AtlasAccount) {
     AtlasAccount.on(() => renderAcc());
     window.addEventListener('atlas-synced', () => { W = A_.load(); refresh(); if (!session) render(page); });
     // when the name changes, fill it in from Google if empty
-    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
+    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni) ni.value = W.name; }); } });
   }
   // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
   // the pieces floating round the title: one signature piece per game (the first 11 are the ones phones show)
@@ -198,7 +203,7 @@
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .52 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -320,12 +325,31 @@
     // one copy runs past at ~40px/s: measured once the ticker is on screen (it is display:none on PC and on the map / きせかえ)
     if (!el._w) { const w = el.querySelector('.ul-g').offsetWidth; if (w) { el._w = w; el.style.setProperty('--ud', Math.max(12, w / 40).toFixed(1) + 's'); } }
   }
+  /* すべての更新: a small newspaper — entries grouped by day under a date masthead (big day number, month, weekday,
+     a NEW mark for the last 14 days) with one "what was this day?" line from atlas/updnews.js; the first entry of each
+     day is the headline card (bigger picture). Tags come only from clear words in the ja changelog line. */
+  const UPD_RULES = /学ぶルール|覚えるルール|ルール(が|は|を|に)(ゲーム紹介|レッスン|チュートリアル)|ルールにゲーム紹介|ルールコース/;
+  const updTags = u => { const s = u[2] || '', o = [];
+    if (/新登場|新作/.test(s)) o.push('new'); if (/3D/.test(s)) o.push('3d'); if (/オンライン対戦/.test(s)) o.push('online'); if (UPD_RULES.test(s)) o.push('rules'); return o; };
+  const NEWS = () => window.AtlasNews || { FACTS: {}, LABEL: {}, TAGS: {} };
+  const nl = m => (m && (m[lang] || m.en)) || '';
+  const dParts = d => { const dt = new Date(d + 'T00:00:00'); try {
+      const day = new Intl.DateTimeFormat(lang, { day: 'numeric' }).formatToParts(dt).find(p => p.type === 'day');
+      return { n: day ? day.value : String(dt.getDate()), m: dt.toLocaleDateString(lang, { month: 'long' }), w: dt.toLocaleDateString(lang, { weekday: 'long' }) };
+    } catch (e) { return { n: String(dt.getDate()), m: String(dt.getMonth() + 1), w: '' }; } };
   function openUpdSheet() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
     const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
-    const rows = A_.UPDATES.map(u => { const w = updWhat(u); if (!w) return '';
-      return `<button type="button" class="usr" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b><small>${esc(fmtDate(u[0]))}</small></span><span class="usp">${esc(utx(u))}</span></span></button>`; }).join('');
-    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${rows}</div>`, 'updsh');
+    const N = NEWS(), days = [];
+    A_.UPDATES.forEach(u => { const w = updWhat(u); if (!w) return; const last = days[days.length - 1];
+      if (last && last.d === u[0]) last.items.push([u, w]); else days.push({ d: u[0], items: [[u, w]] }); });
+    const row = ([u, w], i) => { const tg = updTags(u).map(k => `<i class="utg t-${k}">${esc(nl(N.TAGS[k]))}</i>`).join('');
+      return `<button type="button" class="usr${i ? '' : ' hl'}" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b></span>${tg ? `<span class="utgs">${tg}</span>` : ''}<span class="usp">${esc(utx(u))}</span></span></button>`; };
+    const body = days.map(({ d, items }) => { const p = dParts(d), f = nl(N.FACTS[d.slice(5)]), fresh = A_.daysSince(d) <= 14;
+      return `<section class="udy"><h4 class="udh"><span class="udn">${esc(p.n)}</span><span class="udm"><b>${esc(p.m)}</b><small>${esc(p.w)}</small></span><span class="udr" aria-hidden="true"></span>${fresh ? '<span class="udnew">NEW</span>' : ''}</h4>`
+        + (f ? `<p class="udf"><b>${esc(nl(N.LABEL))}</b><span>${esc(f)}</span></p>` : '')
+        + `<div class="udg${items.length === 1 ? ' one' : ''}">${items.map(row).join('')}</div></section>`; }).join('');
+    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${body}</div>`, 'updsh');
     const sh = $('sheet');
     sh.querySelector('.usx').onclick = closeSheet;
     sh.querySelectorAll('.usr').forEach(b => { b.onclick = () => { closeSheet(); if (b.dataset.g) flyOpen(b.dataset.g, null); else go(b.dataset.tab); }; });
@@ -415,7 +439,7 @@
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
         <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
-        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg><span class="hsl">${esc(t('gl.histSee'))}</span></span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
+        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg><span class="hsl">${esc(t('gl.histSee'))}</span></span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(placeT('go'))} ▶</span></span></span>`;
     // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
     // the history scrolls inside the card (no cut); only the picture and the ▶ button open the table
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
@@ -555,6 +579,7 @@
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
     bvGame = g; stopSession();
+    setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
@@ -593,7 +618,7 @@
         ${ad.sizes && !(ad.table && TCS[ad.clock]) ? sizeHtml : ''}</div>
         ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}</div>` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
-        : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${t('bv.table')}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
+        : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button><a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}</div></div></div>`;
     if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
@@ -720,7 +745,7 @@
     }
     fitStage();
     if ($('bvi').animate) $('bvi').animate([{ opacity: 0, translate: '0 36px' }, { opacity: 1, translate: '0 0' }], { duration: 380, delay: flown ? 260 : 0, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
-    $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod();
+    $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod(); renderPlace();
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
     if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
   }
@@ -753,6 +778,7 @@
   const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true, ur: true, fanorona: true, ugolki: true, agon: true, alquerque: true };
   let lastKind;
   function startPlay(kind) {
+    if (renderPlace.close) renderPlace.close();
     const g = bvGame, ad = Atlas3D[g.id];
     if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table)) {
       const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
@@ -987,6 +1013,7 @@
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   let rulesFromList = false;
   function startRules(fromList) {
+    if (renderPlace.close) renderPlace.close();
     rulesFromList = fromList === true;
     if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
@@ -997,7 +1024,17 @@
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
   }
-  function closeBoard() { stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
+  // phones turned sideways on the table of a game with the 2D landscape spec: offer the full game (once per game per visit)
+  const LANDFULL = new Set(['backgammon', 'mancala', 'ur', 'fanorona', 'alquerque']), landMQ = matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 520px)');
+  function landNudge() {
+    const g = bvGame; if (!g || !LANDFULL.has(g.id) || !FULL_SKIN[g.id] || !landMQ.matches || !$('bv').classList.contains('on') || $('ov').classList.contains('on')) return;
+    try { if (sessionStorage.getItem('atlas-landq-' + g.id)) return; sessionStorage.setItem('atlas-landq-' + g.id, '1'); } catch (e) {}
+    openSheet(`<p style="font-size:15px;line-height:1.6;margin:0 0 14px">${esc(t('bv.landQ'))}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" data-k>${esc(t('bv.landKeep'))}</button><button class="btn" data-f>${esc(t('bv.full'))} ▶</button></div>`);
+    $('sheet').querySelector('[data-k]').onclick = closeSheet;
+    $('sheet').querySelector('[data-f]').onclick = () => { closeSheet(); location.href = '../' + g.href + '?skin=atlas'; };
+  }
+  landMQ.addEventListener('change', () => setTimeout(landNudge, 400));
+  function closeBoard() { if (renderPlace.close) renderPlace.close(); stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
   window.AtlasBoard = { open: id => openBoard(id), close: closeBoard };   // ヒストリア (opened from the game list) puts that game's board on the table first
   // the room's time of day (auto = by the clock)
@@ -1009,11 +1046,67 @@
     $('bvTodLb').textContent = L[K.indexOf(cur)];
     menu.innerHTML = K.map((v, i) => `<button type="button" role="option" data-v="${v}" class="${v === cur ? 'on' : ''}" aria-selected="${v === cur}"><span class="sw" style="background:${SW[v]}"></span>${L[i]}</button>`).join('');
     const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
-    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
+    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); const pm = $('bvPlMenu'); if (open && pm) pm.hidden = true; };
     menu.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); close(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.v); renderTod(); });
     if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
   }
   renderTod();
+  /* ---------- the place (table design) and 明るさ: the board view's chip + panel, and the きせかえ tab's テーブル ---------- */
+  function placeHtml(big) {
+    const X = P3(); if (!X) return '';
+    const k = X.table(), b = X.bright(), names = X.PLACES.name[lang] || X.PLACES.name.en, B = X.placeUi('b', lang);
+    return `<div class="plp${big ? ' big' : ''}"><div class="plh">${esc(X.placeUi('place', lang))}<small>${esc(names[k])}</small></div>
+      <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
+      <div class="plh">${esc(X.placeUi('bright', lang))}</div>
+      <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div></div>`;
+  }
+  // switching: a quick fade of the 3D room while it is rebuilt (no reload; the board on the table stays)
+  let plFade = 0;
+  function setPlace(k) {
+    const X = P3(); if (!X || k === X.table()) return;
+    const gl = $('gl'), vis = glOK && $('bv').classList.contains('on');
+    if (!vis) { X.setTable(k); return; }
+    clearTimeout(plFade); gl.style.transition = 'opacity .16s ease-out'; gl.style.opacity = '0';
+    plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
+  }
+  function bindPlace(root) {
+    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); setPlace(+b.dataset.k); });
+    root.querySelectorAll('.plbr button').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
+  }
+  // PC: while the panel is open the board slides aside (a shift lens, like ヒストリア), so the new place is seen at once
+  let plShift = false;
+  function aside(on) {
+    if (!on && !plShift) return; plShift = on;
+    if (!on && window.Historia && Historia.on) return;   // (ヒストリア has taken the lens over)
+    if (!glOK || !window.Table3D || !Table3D.setShift || matchMedia('(max-width:760px)').matches) return;
+    const w = on ? $('bvPlMenu').offsetWidth + 28 : 0, rtl = document.documentElement.dir === 'rtl'; Table3D.setShift(on ? (rtl ? w / 2 : -w / 2) : 0);
+  }
+  function renderPlace() {
+    const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
+    if (!X) { btn.hidden = true; return; }
+    const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
+    $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
+    btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
+    $('bvTodW').classList.toggle('notod', k !== 0);   // the time of day belongs to the chabudai's room
+    const m = $('bvPlMenu'); if (!m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
+    btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); };
+    if (!renderPlace.bound) { renderPlace.bound = 1;
+      const close = () => { if (!m.hidden) { m.hidden = true; btn.setAttribute('aria-expanded', 'false'); aside(false); } };
+      renderPlace.close = close;
+      m.addEventListener('click', e => e.stopPropagation());
+      document.addEventListener('click', close); document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      // a new place or brightness (here, the きせかえ tab, or a full game's デザイン tab in another tab of the browser): every label follows
+      addEventListener('atlas-table', () => {
+        renderPlace();
+        const tb = $('bvTable'), b = tb && tb.querySelector('b'); if (b) b.textContent = placeT('play');
+        const go = document.querySelector('#today [data-go]'); if (go) go.textContent = placeT('go') + ' ▶';
+        if (page === 'dress' && dKind === 'table') renderDress();
+        else if (!$('bv').classList.contains('on')) render(page);   // (the updates list names the place too; under the board view it is redrawn on close)
+      });
+      addEventListener('storage', e => { if (e.key === 'atlas-table' && P3()) P3().setTable(+e.newValue || 0); else if (e.key === 'atlas-bright' && P3()) P3().setBright(+e.newValue || 0); });
+    }
+  }
+  renderPlace();
   $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
@@ -1041,23 +1134,36 @@
   })();
 
   let pfOpen = false;
-  function renderProfile() {
+  // the numbers the home profile card and My Page (きせかえ) share
+  function profStats() {
     const touched = A_.GAMES.filter(g => P[g.id].touched).length, done = ACH.filter(a => a.done).length;
-    const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
+    const s = Math.max(1, W.login.streak || 1);
+    return { touched, done, s, pos: ((s - 1) % 7) + 1, lv: 1 + Math.floor(done / 3) };
+  }
+  const pTile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
+  // the login week as a row of coin stamps
+  const weekHtml = (head, pos) => `<div class="lgw"><div class="lgh"><b>${head}</b><small>${esc(t('login.week'))}</small></div>
+      <div class="lgd">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="d ${d < pos ? 'got' : d === pos ? 'got now' : ''} ${d === 7 ? 'big' : ''}"><i>${d === 7 ? '🎁' : '¢'}</i><small>+${d === 7 ? 180 : 30}</small></span>`).join('')}</div></div>`;
+  // the same name in every game (home card and My Page edit the same one)
+  function setName(v) {
+    W.name = v.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true);
+    ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
+    const mn = document.querySelector('#dmini .mnm'); if (mn) mn.textContent = W.name || t('pf.player');
+  }
+  function renderProfile() {
+    const { touched, done, s, pos, lv } = profStats();
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
-    const tile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
     $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${ART.avatar(W.av, 104, { clear: true })}<span class="lv">Lv.${lv}</span></button></div>
       <div class="pf-r"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
       <button type="button" class="pf-sum" id="pfMore" aria-expanded="${pfOpen}" aria-controls="pfDet" aria-label="${esc(t('pf.more'))}"><span class="pfc"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><span class="pfs">🔥${s}</span><svg class="pfv" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="pf-det" id="pfDet"><div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
-      <div class="lgw"><div class="lgh"><b>🔥 ${esc(t('login.day', { n: s }))}</b><small>${esc(t('login.week'))}</small></div>
-      <div class="lgd">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="d ${d < pos ? 'got' : d === pos ? 'got now' : ''} ${d === 7 ? 'big' : ''}"><i>${d === 7 ? '🎁' : '¢'}</i><small>+${d === 7 ? 180 : 30}</small></span>`).join('')}</div></div>
+      <div class="pf-det" id="pfDet"><div class="ptiles">${pTile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${pTile('🏆', done, ACH.length, t('pf.ach'))}${pTile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
+      ${weekHtml('🔥 ' + esc(t('login.day', { n: s })), pos)}
       <div class="accw"></div></div></div>`;
     $('prof').classList.toggle('open', pfOpen);
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
     $('avBtn').onclick = () => go('dress');
     renderAcc();
-    $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); };   // the same name in every game
+    $('nameIn').onchange = e => setName(e.target.value);
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
@@ -1252,19 +1358,65 @@
     const clip = `M${f(-46)} ${f(-89)}H${f(134)}V${f(41)}H${f(85)}A${f(41)} ${f(41)} 0 0 1 ${f(3)} ${f(41)}H${f(-46)}Z`;
     return `<span class="av-cw" style="position:absolute;left:${f(6)}px;top:${f(9)}px;width:${f(88)}px;height:${f(88)}px;clip-path:path('${clip}');-webkit-clip-path:path('${clip}');pointer-events:none"><img class="av-ch" src="${ART.avUrl(it.id)}" alt="" draggable="false" style="display:block;width:100%;height:100%"></span>`;
   }
+  // the player card (きせかえ's preview, doubling as My Page): the dressed-up character on its background · name · Lv · coins ·
+  // stat tiles (実績 → the achievements tab, games played, login streak, collection) · what is worn · the login week · Google.
+  // PC: a tall narrow column sticky beside the items (character + worn items · name/coins/Lv · 2×2 tiles · login week · Google);
+  // phones: a compact block
+  // (the worn items beside the character; the login week and Google open from the 🔥 tile)
+  let ncWk = false;
+  function renderCard() {
+    const el = $('dprev'), phone = matchMedia('(max-width:760px)').matches, PS = phone ? 92 : 128;
+    const { touched, done, s, pos, lv } = profStats(), got = done % 3, nx = esc(t('mp.next', { n: 3 - got }));
+    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
+      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
+    const tile = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="nct"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
+    el.classList.toggle('dark', ART.isDark(W.av.bg));
+    el.classList.toggle('wk', ncWk);
+    el.innerHTML = `<div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
+        <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+        ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
+      <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
+        <div class="nc-lv"><b>Lv.${lv}</b><span class="nc-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span><small>${nx}</small></div>
+        ${phone ? `<div class="dname">${worn}</div>` : ''}</div>
+      <div class="nc-tiles">${tile('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="nc-ar" aria-hidden="true">›</span>')}${tile('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${tile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${ncWk}" aria-controls="ncWk"`, '<svg class="nc-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}${tile('🎀', `${W.owned.length}<small>/${ART.items.length}</small>`, t('g.coll'))}</div>
+      <div class="nc-wk" id="ncWk">${weekHtml(esc(t('login.h')), pos)}<div class="accw"></div></div>`;
+    el.querySelector('.poke').onclick = () => pokeAvatar();
+    el.querySelector('[data-go=ach]').onclick = () => go('ach');
+    el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
+    $('dpName').onchange = e => setName(e.target.value);
+    renderAcc();
+    renderMini();
+  }
+  // phones: once the name card has scrolled away, a mini card (character on its background + frame · name · what is worn)
+  // stays pinned under the header, with the sort chips under it, so every change of clothes stays in sight
+  function renderMini() {
+    const el = $('dmini'); if (!el) return;
+    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
+      return `<span class="mw${k === dKind ? ' on' : ''}"><i>${t('kind.' + k)}</i>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}<b>${it ? esc(iname(it)) : '—'}</b></span>`; }).join('');
+    el.innerHTML = `<span class="mav"><span class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></span>${ART.avatar(W.av, 54, { clear: true })}</span>
+      <span class="mtx"><b class="mnm">${esc(W.name || t('pf.player'))}</b>${worn}</span>`;
+    miniPos();
+  }
+  function miniPos() {
+    const el = $('dmini'); if (!el) return;
+    const on = page === 'dress' && matchMedia('(max-width:760px)').matches && (() => {
+      const hd = document.querySelector('header'), c = $('dprev').getBoundingClientRect();
+      return c.height > 0 && c.bottom < (hd ? hd.offsetHeight : 62) + el.offsetHeight + 30; })();
+    if (el.classList.contains('on') !== on) { el.classList.toggle('on', on); el.setAttribute('aria-hidden', !on); }
+  }
+  if ($('dmini')) $('dmini').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  addEventListener('scroll', miniPos, { passive: true });
+  addEventListener('resize', miniPos);
+  matchMedia('(max-width:760px)').addEventListener('change', () => { if (page === 'dress') renderCard(); });   // the character's size follows the layout
   function renderDress() {
     $('hDress').textContent = t('dress.h');
-    $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
-    // the worn character / background / frame names live here (the item grid below is icons only)
-    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
-      // the meta line (kind + rarity) above, the full name below (wraps, never cut off)
-      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
-    const PS = matchMedia('(max-width:760px)').matches ? 118 : 230;   // a smaller character on phones (the names sit beside it), a big one on PC
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
-      <div class="dname"><div class="dpl"><b>${esc(W.name || t('pf.player'))}</b><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
-    $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
+    renderCard();
+    const kinds = ['icon', 'bg', 'frame'].concat(P3() ? ['table'] : []);
+    $('dseg').innerHTML = kinds.map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${k === 'table' ? esc(P3().placeUi('table', lang)) : t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
+    $('dsort').style.display = dKind === 'table' ? 'none' : '';
+    if (dKind === 'table') { $('dItems').classList.remove('grouped'); $('dItems').innerHTML = placeHtml(true); bindPlace($('dItems')); return; }
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
@@ -1273,22 +1425,29 @@
     const all = ART.items.filter(it => it.kind === dKind);
     const list = (dSort === 'own' ? all.filter(ownd) : all).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
-    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>` : list.map((it, i) => {
-      const head = dSort !== 'own' && (i === 0 || list[i - 1].rar !== it.rar) ? sec(it.rar) : '';
-      const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return head + `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`;
-    }).join('');
+    const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
+      return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
+    // rarity sorts: one rounded box per rarity, tinted in its colour, its heading (badge · owned / all) on the box's top edge
+    const groups = []; if (dSort !== 'own') list.forEach(it => { const g = groups[groups.length - 1]; if (g && g.r === it.rar) g.items.push(it); else groups.push({ r: it.rar, items: [it] }); });
+    $('dItems').classList.toggle('grouped', dSort !== 'own' && !!list.length);
+    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
+      : dSort === 'own' ? list.map(cell).join('')
+      : groups.map(g => `<section class="dgrp r${g.r}" aria-label="${ART.RAR[g.r]}">${sec(g.r)}<div class="dgg">${g.items.map(cell).join('')}</div></section>`).join('');
     // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
     $('dItems').querySelectorAll('.dic').forEach(c => { const id = c.dataset.id;
       if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));
       else if (W.av[slot] === id) c.onclick = () => pokeAvatar();
       else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
-    $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
-  function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
+  function dsegPos() {
+    const st = document.documentElement.style, tb = document.querySelector('.tabs'), hd = document.querySelector('header'), dt = document.querySelector('#pg-dress .dtop');
+    if (tb) st.setProperty('--tabsH', tb.offsetHeight + 'px');
+    if (hd) st.setProperty('--hdrH', hd.offsetHeight + 'px');   // PC きせかえ: the sticky title/tabs row sits under the header,
+    if (dt && dt.offsetHeight) st.setProperty('--dtopH', dt.offsetHeight + 'px');   //  and the name card under that row
+  }
   addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
-  if (window.ResizeObserver) new ResizeObserver(dsegPos).observe(tabsEl);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'); if (dt) ro.observe(dt); }   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
@@ -1387,7 +1546,7 @@
       if (taken) return; taken = true;
       const src = $('lbAmt') ? $('lbAmt').querySelector('i').getBoundingClientRect() : null;
       $('ov').classList.remove('on'); sheetClose = null;
-      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); after && after(); });
+      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); else if (page === 'dress') renderCard(); after && after(); });
       confetti(90);
     };
     openSheet(`<div class="lbp">
