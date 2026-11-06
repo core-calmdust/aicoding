@@ -53,6 +53,9 @@ const CSS = `
   html.it-on body.it-on .app{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:var(--it-b,calc(50px + env(safe-area-inset-bottom)))!important;height:auto!important;min-height:0!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px!important;margin:0!important}
   body.it-on .mtabs{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;z-index:45}
   body.it-on [data-itc]{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom));scroll-margin-top:8px}
+  /* the fixed strips outside the scroller: a swipe / double tap there must not pan or zoom the page (iOS: the top of
+     .app — the title row — would slide out of view and could not be scrolled back, since .app doesn't chain its overscroll) */
+  body.it-on .mtabs,body.it-on.it-nav #itNav{touch-action:none}
 }`;
 let cur = 'eval', saved = false;
 try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu' || v === 'coach') { cur = v; saved = true; } } catch (e) {}
@@ -192,7 +195,26 @@ function init(tries) {
   };
   setB(); addEventListener('resize', setB); new MutationObserver(setB).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   if (window.ResizeObserver) new ResizeObserver(setB).observe(bar);
+  // the page itself never scrolls while the shell is on: if it got moved anyway (iOS lets a hidden-overflow page be panned /
+  // scrolled into view, e.g. after the move strip appeared), put it back at the top so the title row is reachable again
+  // (not while zoomed in or typing: the keyboard / pinch zoom move the view on purpose)
+  const vv = window.visualViewport;
+  const pin = () => {
+    if (!navMq.matches || !document.documentElement.classList.contains('it-on') || scroller() === (document.scrollingElement || document.documentElement)) return;
+    if (vv && vv.scale > 1.01) return;
+    const a = document.activeElement; if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+    const se = document.scrollingElement || document.documentElement;
+    if (scrollX || scrollY || se.scrollTop || document.body.scrollTop || (vv && (Math.round(vv.offsetTop) || Math.round(vv.offsetLeft)))) {
+      ROOT_SCROLL.call(window, 0, 0); se.scrollTop = 0; document.body.scrollTop = 0;
+    }
+  };
+  addEventListener('scroll', pin, { passive: true });
+  if (vv) { vv.addEventListener('scroll', pin); vv.addEventListener('resize', pin); }
+  addEventListener('touchend', () => setTimeout(pin, 0), { passive: true });
+  new MutationObserver(() => requestAnimationFrame(pin)).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  pin();
 }
+const ROOT_SCROLL = window.scrollTo;
 // the phone scroller (.app when the shell is on, else the page)
 function scroller() { const a = document.querySelector('.app'); return a && document.documentElement.classList.contains('it-on') && getComputedStyle(a).position === 'fixed' ? a : (document.scrollingElement || document.documentElement); }
 window.InfoTabs = Object.assign(window.InfoTabs || {}, { scroller });

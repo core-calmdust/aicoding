@@ -37,7 +37,8 @@
     // opts.top (the rules tour): straight down, one view for every page; opts.stage: room for the large dice beside the small block (PC)
     const PT = opts.top ? 1.5703 : 0;
     // (fit's w / d are the extents across / up the screen: rolled, the board's length runs up it — as mancala's upright view)
-    if (T3.fit) T3.fit(tall ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.W + .5, d: opts.stage ? U.D + 2.2 : U.D + 1.9, y: Y, pitch: PT || 1.2 });   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
+    const fit0 = tall ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.W + .5, d: opts.stage ? U.D + 2.2 : U.D + 1.9, y: Y, pitch: PT || 1.2 };   // (fit0: table play puts it back after the phone-landscape layout)
+    if (T3.fit) T3.fit(fit0);   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -249,7 +250,7 @@
     const projDie = i => { const g = DICE[i]; return g && g.visible ? project(g.position.x, g.position.y, g.position.z) : null; };
 
     return {
-      board, U, Y, tall, sync, move, roll, restDice, diceBig, lift, setDesign, marks, hit, project, projCell, projPiece, projSlot, projDie, sleep, anim,
+      board, U, Y, tall, fit0, sync, move, roll, restDice, diceBig, lift, setDesign, marks, hit, project, projCell, projPiece, projSlot, projDie, sleep, anim,
       pieces: P, dice: DICE, route, cellXZ,
       stop() { stopped = true; },
     };

@@ -607,7 +607,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
 @media (max-width:760px){
   /* every one of the three pages leaves ~40px above the bottom tab bar (room for a one-line ticker there) */
-  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:40px}
+  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:calc(var(--ulH) + 6px)}
   /* bottom sheet (shop purchase · gacha rates / collection) */
   .sheet.bsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:86vh;max-height:86dvh;padding:6px 16px calc(14px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;animation:bshUp .28s cubic-bezier(.2,1,.4,1)}
   @keyframes bshUp{from{transform:translateY(100%)}}
@@ -651,7 +651,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
      coins + small links to the rates / collection sheet sit between them */
   #pg-gacha{padding-top:8px}
   #pg-gacha .gacha{gap:8px}
-  #pg-gacha .machine.m3{height:calc(100vh - 62px - var(--tabsH,66px) - 236px);height:calc(100svh - 62px - var(--tabsH,66px) - 236px);min-height:260px;max-height:520px;border-radius:24px}
+  #pg-gacha .machine.m3{height:calc(100vh - 62px - var(--tabsH,66px) - 236px - var(--ulH) + 34px);height:calc(100svh - 62px - var(--tabsH,66px) - 236px - var(--ulH) + 34px);min-height:260px;max-height:520px;border-radius:24px}
   .gpanel{padding:10px 12px 12px;gap:10px;border-radius:24px}
   .gpanel .gwallet,.gpanel .gsec,.gpanel .gfoot{display:none}
   .gmini{display:flex;align-items:center;gap:6px;order:-2;min-width:0}
@@ -805,6 +805,86 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
+/* ===== table play on a phone held sideways (app.js LAND, #bv.pland): the full game's own landscape layout
+   (atlas/skin/skin.css html.atlas-land for backgammon, atlas/skin/mancala.css html.mc-barmenu for mancala) ===== */
+.pl{display:none}
+.bv.pland .pl{position:absolute;z-index:6;display:grid;align-items:center;font-family:'Zen Maru Gothic',var(--font,sans-serif);color:#2b3044;pointer-events:none}
+.bv.pland .pl > *,.bv.pland .pl #hud > *{pointer-events:auto}
+.bv.pland .quit,.bv.pland .bgbub{display:none!important}
+.bv.pland #hud{display:contents}
+.bv.pland .tbar{position:static;transform:none!important;opacity:1;visibility:visible;pointer-events:auto;background:none;border:0;box-shadow:none;padding:0;gap:5px;transition:none}
+.bv.pland .tbar .tbtns{gap:5px}
+.bv.pland .tbar .tclk{min-width:0;height:30px;padding:0 9px;font-size:15px;border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35)}
+.bv.pland .tbar .tclk small{font-size:8px}
+.plb img{flex:none;width:26px;height:26px}
+.plb .plt{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
+.plb .plt b{font-family:'RocknRoll One',var(--round,sans-serif);font-weight:400;font-size:12.5px;color:#111;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.plb .plt em{flex:none;font-style:normal;font-weight:900;font-size:13px;color:#d93c3c}
+.plb .sp{flex:1 1 0;min-width:0}
+.plic{flex:none;height:26px;width:30px;padding:0;border-radius:99px;border:1.5px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer}
+.plic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* 'pill' (backgammon): row 1 = the slim pill + the player chips, row 2 = the status line + the menu icons */
+.bv.pl-pill .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:32px 30px;gap:6px 5px}
+.bv.pl-pill .plb{grid-row:1;grid-column:1;min-width:0;height:32px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;margin-inline-end:3px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-pill .plb .plt{margin-inline-start:2px}
+.bv.pl-pill #hud > .hs{grid-row:1;height:32px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px 0 7px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12px var(--font,sans-serif);color:#6a7088}
+.bv.pl-pill #hud > .hs:first-child{grid-column:2}
+.bv.pl-pill #hud > .hs:last-child{grid-column:3}
+.bv.pl-pill #hud > .hs.on{border-color:#ffc928;box-shadow:0 3px 0 #e09a00;background:rgba(255,253,247,.95)}
+.bv.pl-pill #hud > .hs b{font-family:'Shippori Mincho B1',Georgia,'Times New Roman',serif;font-weight:800;font-size:18px;line-height:1;min-width:0;color:#2b3044;font-variant-numeric:tabular-nums}
+.bv.pl-pill #hud > .hs :is(.dk,.bgk){width:19px!important;height:19px!important}
+.bv.pl-pill #hud > .hm{grid-row:2;grid-column:1;min-width:0;height:30px;box-sizing:border-box;line-height:26px;margin-inline-end:3px;padding:0 12px;border-radius:99px;background:rgba(255,253,247,.94);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12.5px var(--font,sans-serif);color:#2b3044;text-align:start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bv.pl-pill #hud > :not(.hs):not(.hm){grid-row:2;grid-column:1;justify-self:end;margin-inline-end:8px}
+.bv.pl-pill .tbar{grid-row:2;grid-column:2 / 4;justify-self:end}
+.bv.pl-pill .tbar button{width:38px;min-width:0;height:30px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-pill .tbar button span{display:none}
+.bv.pl-pill .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-pill .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+/* 'bar' (mancala): one full-width bar — logo | the menu (icon + label) | sound · やめる; the rest is on the board */
+.bv.pl-bar .pl{top:0;left:0;right:0;height:calc(46px + env(safe-area-inset-top));box-sizing:border-box;padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;background:rgba(255,246,226,.92);border-bottom:2px solid #efe3c8;box-shadow:0 4px 14px -10px rgba(80,40,0,.4);pointer-events:auto}
+.bv.pl-bar .plb{display:contents}
+.bv.pl-bar .plb img{grid-column:1;width:28px;height:28px}
+.bv.pl-bar .plb .plt,.bv.pl-bar .plb .sp,.bv.pl-bar #hud{display:none}
+.bv.pl-bar .plic{height:32px;width:34px;border-width:2px}
+.bv.pl-bar .plic svg{width:17px;height:17px}
+.bv.pl-bar .tbar{grid-column:2;grid-row:1;min-width:0;justify-content:flex-start}
+.bv.pl-bar .tbar .tbtns{flex:1 1 auto;min-width:0}
+.bv.pl-bar .tbar button{flex:0 1 112px;min-width:0;height:34px;padding:0 6px;flex-direction:row;gap:5px;border-radius:10px;background:#fff;border:2px solid #efe3c8;box-shadow:0 2px 0 #efe3c8;color:#2b3044;font:700 11.5px var(--font,sans-serif);white-space:nowrap}
+.bv.pl-bar .tbar button span{overflow:hidden;text-overflow:clip}
+.bv.pl-bar .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-bar .tbar button:disabled{opacity:.45}
+@media (max-width:620px){.bv.pl-bar .tbar button span{display:none}}
+/* 'side' (ur): row 1 = the slim pill + the menu icons, the player cards in a column at the left (the full game's landscape page) */
+.bv.pl-side .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));grid-template-columns:auto auto;grid-template-rows:34px minmax(0,1fr);gap:8px 6px;align-items:center;justify-content:start}
+.bv.pl-side .plb{grid-row:1;grid-column:1;min-width:0;max-width:calc(50vw - 20px);height:34px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-side .plb .plt{margin-inline:2px 6px}
+.bv.pl-side .plb .sp{display:none}
+.bv.pl-side .tbar{grid-row:1;grid-column:2;justify-self:start}
+.bv.pl-side .tbar button{width:38px;min-width:0;height:32px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-side .tbar button span{display:none}
+.bv.pl-side .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-side .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+.bv.pl-side .pl #hud{grid-row:2;grid-column:1 / 3;justify-self:start;align-self:center;display:flex;flex-direction:column;gap:12px;width:min(172px,24vw);position:static;transform:none;padding:0;background:none;border:0;box-shadow:none;max-width:none;transition:none}
+.bv.pl-side #hud > *{pointer-events:auto}
+/* (games/ur.js) a player card: name · pieces home (/7) · the roll button or the message in the box below */
+.bv.pl-side #hud .urc{display:flex;flex-direction:column;gap:6px;padding:9px 10px 10px;border-radius:16px;background:rgba(255,253,247,.96);border:2.5px solid #fff;box-shadow:0 4px 0 rgba(150,110,50,.3);color:#2b3044;box-sizing:border-box}
+.bv.pl-side #hud .urc.on{border-color:#ffc928;box-shadow:0 4px 0 #e09a00}
+.bv.pl-side #hud .urc-h{display:flex;align-items:center;gap:6px;font:700 13px var(--font,sans-serif);white-space:nowrap;min-width:0}
+.bv.pl-side #hud .urc-h > span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.bv.pl-side #hud .urc-h b{font:800 17px 'Shippori Mincho B1',Georgia,serif;font-variant-numeric:tabular-nums}
+.bv.pl-side #hud .urc-h small{font-size:9.5px;color:#8a90a2;font-weight:700}
+.bv.pl-side #hud .urc-b{min-height:38px;display:grid;place-items:center;border-radius:12px;background:#f3ead8;box-shadow:inset 0 1px 2px rgba(120,90,40,.18);padding:3px;box-sizing:border-box;font:700 11.5px var(--font,sans-serif);color:#6a7088;text-align:center;line-height:1.3}
+.bv.pl-side #hud .urc-b .urb{width:100%;height:36px;padding:0;border-radius:99px;background:#fff;border:2.5px solid #3557c9;color:#24409e;font:900 15px var(--font,sans-serif);letter-spacing:.12em;box-shadow:0 3px 0 #24409e;cursor:pointer;white-space:nowrap}
+.bv.pl-side #hud .urc-b .urb:active{transform:translateY(2px);box-shadow:0 1px 0 #24409e}
+html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% + min(86px,12vw))}
+/* mancala (games/mancala.js): the names above the stores and the turn message on the middle line, as the full game's landscape board */
+.mcl{display:none}
+.bv.pland .mcl.on{display:block;position:absolute;inset:0;z-index:3;pointer-events:none}
+.mcl > *{position:absolute;transform:translate(-50%,-50%);white-space:nowrap}
+.mcl-n{font:700 max(11px,calc(var(--u,60px) * .2)) 'Zen Maru Gothic',var(--font,sans-serif);letter-spacing:.04em;color:#c9b07a;padding:1px 8px;border-radius:99px;background:rgba(10,10,12,.55);border:1px solid rgba(226,194,117,.35)}
+.mcl-n.me{color:#ffd77a;border-color:rgba(255,215,122,.75)}
+.mcl-m{font:800 max(13px,calc(var(--u,60px) * .31)) 'Shippori Mincho B1',serif;letter-spacing:.12em;color:#ecd08e;text-shadow:0 0 18px rgba(226,194,117,.4),0 2px 6px rgba(0,0,0,.7)}
+.mcl-m:empty{display:none}
 .rgd{position:absolute;z-index:4;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));width:min(760px,calc(100% - 24px));transform:translate(-50%,130%);opacity:0;transition:transform .5s cubic-bezier(.3,1.3,.5,1),opacity .3s;display:grid;gap:10px}
 .rgd.on{transform:translate(-50%,0);opacity:1}
 .rgd-in{display:flex;align-items:flex-end;gap:12px}
@@ -1023,14 +1103,21 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   #pg-home .today .ft .btn.sm{padding:7px 11px;font-size:13px;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis}
   #pg-home .today .hs{grid-column:1/-1;grid-row:4;max-height:8.2em;margin:0 12px;padding:8px 6px 12px 2px;border-top:2px dashed color-mix(in srgb,var(--c) 22%,#ece3cf);font-size:12.5px;line-height:1.6}
   html[data-pg=map] .updline,html[data-pg=dress] .updline{display:none}
-  html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + 34px + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
+  html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + var(--ulH) + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
 }
 /* recent updates: the carousel is hidden; a one-line ticker sits fixed above the tab bar on every tab (not the map or
    きせかえ, nor over a board / Historia / a sheet); its text runs as one CSS transform loop (two copies, −50%), no JS frames.
    A tap → every update in a bottom sheet. */
 #pg-home #hUpd,#pg-home .updwrap{display:none}
-.updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:34px;margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
+.updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:var(--ulH);margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
 html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open .updline{display:none}
+:root{--ulH:52px}
+.updline .ul-i{align-items:center!important;gap:8px!important}
+.updline .ul-a{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.updline .ul-a img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.updline .ul-x{display:flex;flex-direction:column;gap:1px;line-height:1.2}
+.updline .ul-h{display:flex;align-items:baseline;gap:7px}
+.updline .ul-s{width:28px;padding:0!important}
 .updline .ul-k{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
 .updline .ul-v{flex:1;min-width:0;align-self:stretch;position:relative;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
 .updline .ul-tr{position:absolute;top:0;bottom:0;inset-inline-start:0;display:flex;width:max-content;animation:ulRun var(--ud,40s) linear infinite;will-change:transform}
@@ -1039,9 +1126,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 @keyframes ulRunR{to{transform:translateX(50%)}}
 .updline .ul-g{flex:none;display:flex;align-items:center;padding-inline-start:12px}
 .updline .ul-i{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
-.updline .ul-d{flex:none;font:700 11.5px var(--round);color:var(--coral2)}
-.updline .ul-i b{font-size:13px;font-weight:900}
-.updline .ul-t{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.updline .ul-d{flex:none;font:700 12.5px var(--round);color:var(--coral2)}
+.updline .ul-i b{font-size:14px;font-weight:900}
+.updline .ul-t{font-size:13.5px;font-weight:700;color:#4a4237}
 .updline .ul-s{padding:0 14px;color:#cdb98c;font-weight:900}
 .updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
 .updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
@@ -1059,27 +1146,30 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 .sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
 @keyframes usUp{from{transform:translateY(100%)}}
 .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
-.sheet.updsh > .ush h3{margin:0;font-size:20px}
+.sheet.updsh > .ush h3{margin:0;font-size:22px}
 .sheet.updsh .usx{flex:none;width:38px;height:38px}
 .sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-.usr{--c:#ff5d5d;display:flex;gap:10px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:8px 10px 8px 8px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:12px 14px 12px 10px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
 .usr:active{transform:scale(.98)}
-.usr .usi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
-.usr .usi img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.usr .usi{flex:none;width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.usr .usi img{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
 .usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.usr .ush b{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.usr .ush small{flex:none;font:700 11.5px var(--round);color:var(--ink2)}
-.usr .usp{font-size:12.5px;font-weight:700;color:var(--ink2);line-height:1.55}
+.usr .ush b{font-size:18px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usr .ush small{flex:none;font:700 14px var(--round);color:var(--ink2)}
+.usr .usp{font-size:16px;font-weight:700;color:#4a4237;line-height:1.7}
 /* PC (wider than phones): the same updates ticker, fixed at the very bottom of the window (no tab bar there), a little
    taller with bigger type; on every page — only a board, Historia, an overlay or a sheet hides it. The list opens as a dialog. */
 @media (min-width:761px){
-  .updline{bottom:0;height:48px;gap:14px;padding:0 max(20px,calc((100% - 1180px) / 2));border-top:2px solid var(--line)}
+  :root{--ulH:62px}
+  .updline .ul-a{width:46px;height:46px;border-radius:13px}.updline .ul-a img{width:42px;height:42px}
+  .updline .ul-s{width:44px}
+  .updline{bottom:0;gap:14px;padding:0 max(20px,calc((100% - 1180px) / 2));border-top:2px solid var(--line)}
   .updline .ul-k{font-size:12px;padding:4px 11px}
-  .updline .ul-d{font-size:13px}.updline .ul-i b{font-size:15px}.updline .ul-t{font-size:14px}.updline .ul-s{padding:0 20px}
+  .updline .ul-d{font-size:14px}.updline .ul-i b{font-size:17px}.updline .ul-t{font-size:15.5px}.updline .ul-s{padding:0 20px}
   .updline .ul-ch{font-size:22px}
   .updline:hover .ul-tr{animation-play-state:paused}
-  body{padding-bottom:64px}
+  body{padding-bottom:calc(var(--ulH) + 16px)}
   .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
@@ -1149,7 +1239,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
     <button type="button" class="lbtn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b id="langCode">JA</b></button>
     <div class="lpop" id="langPop" role="listbox" hidden></div>
     <select id="langSel" aria-hidden="true" tabindex="-1" hidden><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
-    <a class="icbtn" href="../" id="homeBtn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
+    <a class="icbtn" href="./" id="homeBtn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
   </div>
   <nav class="wrap tabs" role="tablist" id="tabs"></nav>
 </header>
@@ -1244,10 +1334,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=47"></script>
 <script src="gamelist-i18n.js?v=5"></script>
-<script src="table3d.js?v=98"></script>
+<script src="table3d.js?v=99"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
-<script src="models/backgammon.js?v=115"></script>
+<script src="models/backgammon.js?v=116"></script>
 <script src="models/goban.js?v=14"></script>
 <script src="models/hex.js?v=2"></script>
 <script src="models/xiangqi.js?v=3"></script>
@@ -1264,11 +1354,11 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="models/alquerque.js?v=2"></script>
 <script src="models/cardtables.js?v=3"></script>
 <script src="icons3d.js?v=25"></script>
-<script src="games/reversi.js?v=15"></script>
+<script src="games/reversi.js?v=16"></script>
 <script src="games/shogi-play.js?v=11"></script>
 <script src="games/shogi.js?v=12"></script>
 <script src="games/chess.js?v=5"></script>
-<script src="games/backgammon.js?v=15"></script>
+<script src="games/backgammon.js?v=16"></script>
 <script src="games/gomoku.js?v=4"></script>
 <script src="games/morris-pieces.js?v=2"></script>
 <script src="games/morris.js?v=1"></script>
@@ -1279,10 +1369,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="games/tafl.js?v=7"></script>
 <script src="games/xiangqi.js?v=8"></script>
 <script src="games/checkers.js?v=2"></script>
-<script src="games/mancala.js?v=3"></script>
+<script src="games/mancala.js?v=4"></script>
 <script src="games/dots.js?v=3"></script>
-<script src="games/ur-kit.js?v=12"></script>
-<script src="games/ur.js?v=4"></script>
+<script src="games/ur-kit.js?v=13"></script>
+<script src="games/ur.js?v=5"></script>
 <script src="games/fanorona.js?v=2"></script>
 <script src="games/ugolki.js?v=1"></script>
 <script src="games/agon.js?v=2"></script>
@@ -1325,6 +1415,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=175"></script>
+<script src="app.js?v=177"></script>
 </body>
 </html>
