@@ -1,0 +1,3308 @@
+{
+"Off": {
+"ru": "Выкл.",
+"zh-TW": "關",
+"id": "Mati",
+"tr": "Kapalı"
+},
+"Senet — World Board Game Atlas": {
+"ru": "Сенет — Атлас настольных игр мира",
+"zh-TW": "塞尼特 — 世界桌遊大百科",
+"id": "Senet — Atlas Permainan Papan Dunia",
+"tr": "Senet — Dünya Masa Oyunları Atlası"
+},
+"Senet": {
+"ru": "Сенет",
+"zh-TW": "塞尼特",
+"id": "Senet",
+"tr": "Senet"
+},
+"World Board Game Atlas": {
+"ru": "Атлас настольных игр мира",
+"zh-TW": "世界桌遊大百科",
+"id": "Atlas Permainan Papan Dunia",
+"tr": "Dünya Masa Oyunları Atlası"
+},
+"Spools": {
+"ru": "Катушки",
+"zh-TW": "線軸",
+"id": "Gulungan",
+"tr": "Makaralar"
+},
+"Cones": {
+"ru": "Конусы",
+"zh-TW": "圓錐",
+"id": "Kerucut",
+"tr": "Koniler"
+},
+"First": {
+"ru": "Первый",
+"zh-TW": "先手",
+"id": "Pertama",
+"tr": "Önce"
+},
+"Second": {
+"ru": "Второй",
+"zh-TW": "後手",
+"id": "Kedua",
+"tr": "Sonra"
+},
+"You": {
+"ru": "Вы",
+"zh-TW": "你",
+"id": "Anda",
+"tr": "Sen"
+},
+"Thinking…": {
+"ru": "Думаю…",
+"zh-TW": "思考中…",
+"id": "Berpikir…",
+"tr": "Düşünüyor…"
+},
+"New game": {
+"ru": "Новая игра",
+"zh-TW": "新對局",
+"id": "Permainan baru",
+"tr": "Yeni oyun"
+},
+"Start a new game": {
+"ru": "Начать новую игру",
+"zh-TW": "開始新對局",
+"id": "Mulai permainan baru",
+"tr": "Yeni bir oyun başlat"
+},
+"Undo": {
+"ru": "Отмена",
+"zh-TW": "悔棋",
+"id": "Batal",
+"tr": "Geri al"
+},
+"Undo (twice per game vs the AI)": {
+"ru": "Отмена (дважды за партию против ИИ)",
+"zh-TW": "悔棋（對 AI 每局兩次）",
+"id": "Batal (dua kali per permainan melawan AI)",
+"tr": "Geri al (yapay zekâya karşı oyun başına iki kez)"
+},
+"Resign": {
+"ru": "Сдаться",
+"zh-TW": "認輸",
+"id": "Menyerah",
+"tr": "Pes et"
+},
+"Hint": {
+"ru": "Подсказка",
+"zh-TW": "提示",
+"id": "Petunjuk",
+"tr": "İpucu"
+},
+"Show the best move with an arrow": {
+"ru": "Показать лучший ход стрелкой",
+"zh-TW": "用箭頭顯示最佳著法",
+"id": "Tunjukkan langkah terbaik dengan panah",
+"tr": "En iyi hamleyi okla göster"
+},
+"Rules": {
+"ru": "Правила",
+"zh-TW": "規則",
+"id": "Aturan",
+"tr": "Kurallar"
+},
+"Learn the rules by playing": {
+"ru": "Изучайте правила в игре",
+"zh-TW": "邊玩邊學規則",
+"id": "Pelajari aturan sambil bermain",
+"tr": "Kuralları oynayarak öğren"
+},
+"Lessons": {
+"ru": "Уроки",
+"zh-TW": "課程",
+"id": "Pelajaran",
+"tr": "Dersler"
+},
+"Learn step by step": {
+"ru": "Учитесь шаг за шагом",
+"zh-TW": "循序漸進地學習",
+"id": "Belajar langkah demi langkah",
+"tr": "Adım adım öğren"
+},
+"Puzzles": {
+"ru": "Задачи",
+"zh-TW": "謎題",
+"id": "Teka-teki",
+"tr": "Bulmacalar"
+},
+"Best-move puzzles": {
+"ru": "Задачи на лучший ход",
+"zh-TW": "最佳著法謎題",
+"id": "Teka-teki langkah terbaik",
+"tr": "En iyi hamle bulmacaları"
+},
+"Sound": {
+"ru": "Звук",
+"zh-TW": "音效",
+"id": "Suara",
+"tr": "Ses"
+},
+"Throw": {
+"ru": "Бросить",
+"zh-TW": "投擲",
+"id": "Lempar",
+"tr": "At"
+},
+"Pass": {
+"ru": "Пас",
+"zh-TW": "跳過",
+"id": "Lewati",
+"tr": "Pas"
+},
+"Throw {n}": {
+"ru": "Бросок {n}",
+"zh-TW": "點數 {n}",
+"id": "Lemparan {n}",
+"tr": "Atış {n}"
+},
+"First (↓)": {
+"ru": "В начало (↓)",
+"zh-TW": "最前 (↓)",
+"id": "Awal (↓)",
+"tr": "Başa (↓)"
+},
+"Back (←)": {
+"ru": "Назад (←)",
+"zh-TW": "上一步 (←)",
+"id": "Mundur (←)",
+"tr": "Geri (←)"
+},
+"Play / pause": {
+"ru": "Пуск / пауза",
+"zh-TW": "播放／暫停",
+"id": "Putar / jeda",
+"tr": "Oynat / duraklat"
+},
+"Forward (→)": {
+"ru": "Вперёд (→)",
+"zh-TW": "下一步 (→)",
+"id": "Maju (→)",
+"tr": "İleri (→)"
+},
+"Latest (↑)": {
+"ru": "К последнему (↑)",
+"zh-TW": "最新 (↑)",
+"id": "Terbaru (↑)",
+"tr": "En son (↑)"
+},
+"On board": {
+"ru": "На доске",
+"zh-TW": "盤上",
+"id": "Di papan",
+"tr": "Tahtada"
+},
+"Pips": {
+"ru": "Очки",
+"zh-TW": "步數",
+"id": "Langkah",
+"tr": "Adım"
+},
+"off": {
+"ru": "вышли",
+"zh-TW": "已出",
+"id": "keluar",
+"tr": "çıktı"
+},
+"{s} to throw the sticks": {
+"ru": "{s}: бросайте палочки",
+"zh-TW": "輪到{s}投擲木棒",
+"id": "{s} melempar tongkat",
+"tr": "Çubukları atma sırası: {s}"
+},
+"Throw button, Space, or tap the sticks": {
+"ru": "Кнопка «Бросить», пробел или нажмите на палочки",
+"zh-TW": "按［投擲］、空白鍵或點擊木棒",
+"id": "Tombol Lempar, Spasi, atau ketuk tongkat",
+"tr": "At düğmesi, boşluk tuşu veya çubuklara dokun"
+},
+"Throw {n}: choose a piece to move": {
+"ru": "Бросок {n}: выберите фишку",
+"zh-TW": "點數 {n}：選擇要走的棋子",
+"id": "Lemparan {n}: pilih bidak yang dijalankan",
+"tr": "Atış {n}: oynatılacak taşı seç"
+},
+"Tap a piece, then a green mark (a single option moves at once)": {
+"ru": "Нажмите фишку, затем зелёную метку (единственный вариант ходит сразу)",
+"zh-TW": "點選棋子，再點綠色標記（只有一種走法時會直接走）",
+"id": "Ketuk bidak, lalu tanda hijau (pilihan tunggal langsung bergerak)",
+"tr": "Bir taşa, sonra yeşil işarete dokun (tek seçenek hemen oynanır)"
+},
+"Throw {n}: no piece can move": {
+"ru": "Бросок {n}: ходить нечем",
+"zh-TW": "點數 {n}：沒有可走的棋子",
+"id": "Lemparan {n}: tidak ada bidak yang bisa bergerak",
+"tr": "Atış {n}: hiçbir taş oynayamaz"
+},
+"{s} to play": {
+"ru": "Ход: {s}",
+"zh-TW": "輪到{s}",
+"id": "Giliran {s}",
+"tr": "Sıra: {s}"
+},
+"{s} wins": {
+"ru": "{s} побеждают",
+"zh-TW": "{s}獲勝",
+"id": "{s} menang",
+"tr": "{s} kazandı"
+},
+"Showing move {n}": {
+"ru": "Показан ход {n}",
+"zh-TW": "正在顯示第 {n} 手",
+"id": "Menampilkan langkah {n}",
+"tr": "{n}. hamle gösteriliyor"
+},
+"Winner": {
+"ru": "Победитель",
+"zh-TW": "勝者",
+"id": "Pemenang",
+"tr": "Kazanan"
+},
+"No piece can move": {
+"ru": "Ходить нечем",
+"zh-TW": "沒有可走的棋子",
+"id": "Tidak ada bidak yang bisa bergerak",
+"tr": "Hiçbir taş oynayamaz"
+},
+"Again": {
+"ru": "Ещё раз",
+"zh-TW": "再一次",
+"id": "Lagi",
+"tr": "Tekrar"
+},
+"That piece cannot move with this throw": {
+"ru": "Эта фишка не может ходить с этим броском",
+"zh-TW": "這個點數無法移動那枚棋子",
+"id": "Bidak itu tidak bisa bergerak dengan lemparan ini",
+"tr": "O taş bu atışla oynayamaz"
+},
+"swap": {
+"ru": "обмен",
+"zh-TW": "交換",
+"id": "tukar",
+"tr": "takas"
+},
+"pass": {
+"ru": "пас",
+"zh-TW": "跳過",
+"id": "lewati",
+"tr": "pas"
+},
+"Moves": {
+"ru": "Ходы",
+"zh-TW": "棋譜",
+"id": "Langkah",
+"tr": "Hamleler"
+},
+"No moves yet": {
+"ru": "Ходов пока нет",
+"zh-TW": "尚無著法",
+"id": "Belum ada langkah",
+"tr": "Henüz hamle yok"
+},
+"Moves are not recorded in lessons and puzzles": {
+"ru": "В уроках и задачах ходы не записываются",
+"zh-TW": "課程與謎題中不記錄棋譜",
+"id": "Langkah tidak dicatat dalam pelajaran dan teka-teki",
+"tr": "Derslerde ve bulmacalarda hamleler kaydedilmez"
+},
+"Copy": {
+"ru": "Копировать",
+"zh-TW": "複製",
+"id": "Salin",
+"tr": "Kopyala"
+},
+"Moves copied": {
+"ru": "Ходы скопированы",
+"zh-TW": "已複製棋譜",
+"id": "Langkah disalin",
+"tr": "Hamleler kopyalandı"
+},
+"Share": {
+"ru": "Поделиться",
+"zh-TW": "分享",
+"id": "Bagikan",
+"tr": "Paylaş"
+},
+"Text": {
+"ru": "Текст",
+"zh-TW": "文字",
+"id": "Teks",
+"tr": "Metin"
+},
+"Win chance": {
+"ru": "Шанс победы",
+"zh-TW": "勝率",
+"id": "Peluang menang",
+"tr": "Kazanma şansı"
+},
+"Throw the sticks first": {
+"ru": "Сначала бросьте палочки",
+"zh-TW": "請先投擲木棒",
+"id": "Lempar tongkat dulu",
+"tr": "Önce çubukları at"
+},
+"There is no legal move": {
+"ru": "Допустимых ходов нет",
+"zh-TW": "沒有合法著法",
+"id": "Tidak ada langkah yang sah",
+"tr": "Geçerli hamle yok"
+},
+"Suggested: {m} (win {p}%)": {
+"ru": "Совет: {m} (победа {p}%)",
+"zh-TW": "建議：{m}（勝率 {p}%）",
+"id": "Saran: {m} (menang {p}%)",
+"tr": "Öneri: {m} (kazanma %{p})"
+},
+"Undo: {n} left": {
+"ru": "Отмен осталось: {n}",
+"zh-TW": "悔棋：剩 {n} 次",
+"id": "Batal: sisa {n}",
+"tr": "Geri alma: {n} kaldı"
+},
+"Took back a move": {
+"ru": "Ход отменён",
+"zh-TW": "已悔一步",
+"id": "Satu langkah dibatalkan",
+"tr": "Bir hamle geri alındı"
+},
+"Resign this game?": {
+"ru": "Сдать эту партию?",
+"zh-TW": "要認輸這一局嗎？",
+"id": "Menyerah dalam permainan ini?",
+"tr": "Bu oyunda pes edilsin mi?"
+},
+"Resume from here": {
+"ru": "Продолжить отсюда",
+"zh-TW": "從這裡繼續",
+"id": "Lanjutkan dari sini",
+"tr": "Buradan devam et"
+},
+"Latest position": {
+"ru": "Текущая позиция",
+"zh-TW": "最新局面",
+"id": "Posisi terbaru",
+"tr": "Son konum"
+},
+"Game": {
+"ru": "Игра",
+"zh-TW": "對局",
+"id": "Permainan",
+"tr": "Oyun"
+},
+"A game is in progress (move {n}). Continue it, or start a new one?": {
+"ru": "Идёт партия (ход {n}). Продолжить её или начать новую?",
+"zh-TW": "有一局正在進行（第 {n} 手）。要繼續，還是開新局？",
+"id": "Ada permainan yang sedang berlangsung (langkah {n}). Lanjutkan atau mulai yang baru?",
+"tr": "Süren bir oyun var ({n}. hamle). Devam mı, yeni oyun mu?"
+},
+"Start over": {
+"ru": "Начать заново",
+"zh-TW": "重新開始",
+"id": "Mulai ulang",
+"tr": "Baştan başla"
+},
+"You win!": {
+"ru": "Вы победили!",
+"zh-TW": "你贏了！",
+"id": "Anda menang!",
+"tr": "Kazandın!"
+},
+"The AI wins": {
+"ru": "Победил ИИ",
+"zh-TW": "AI 獲勝",
+"id": "AI menang",
+"tr": "Yapay zekâ kazandı"
+},
+"{n} plies · rival bore off {a}": {
+"ru": "{n} полуходов · соперник вывел {a}",
+"zh-TW": "{n} 手・對手已出 {a} 枚",
+"id": "{n} langkah · lawan mengeluarkan {a}",
+"tr": "{n} hamle · rakip {a} taş çıkardı"
+},
+"Opponent: AI {name}": {
+"ru": "Соперник: ИИ {name}",
+"zh-TW": "對手：AI {name}",
+"id": "Lawan: AI {name}",
+"tr": "Rakip: YZ {name}"
+},
+"See the board": {
+"ru": "Посмотреть доску",
+"zh-TW": "查看棋盤",
+"id": "Lihat papan",
+"tr": "Tahtaya bak"
+},
+"Play again": {
+"ru": "Сыграть ещё",
+"zh-TW": "再玩一局",
+"id": "Main lagi",
+"tr": "Tekrar oyna"
+},
+"All pieces borne off": {
+"ru": "Все фишки выведены",
+"zh-TW": "所有棋子都已走出",
+"id": "Semua bidak telah keluar",
+"tr": "Tüm taşlar çıkarıldı"
+},
+"Out of time": {
+"ru": "Время вышло",
+"zh-TW": "時間到",
+"id": "Waktu habis",
+"tr": "Süre doldu"
+},
+"Resigned": {
+"ru": "Сдался",
+"zh-TW": "認輸",
+"id": "Menyerah",
+"tr": "Pes etti"
+},
+"Left the game": {
+"ru": "Покинул игру",
+"zh-TW": "離開對局",
+"id": "Meninggalkan permainan",
+"tr": "Oyundan ayrıldı"
+},
+"Mode": {
+"ru": "Режим",
+"zh-TW": "模式",
+"id": "Mode",
+"tr": "Mod"
+},
+"vs AI": {
+"ru": "Против ИИ",
+"zh-TW": "對戰 AI",
+"id": "Lawan AI",
+"tr": "Yapay zekâya karşı"
+},
+"Rated": {
+"ru": "Рейтинг",
+"zh-TW": "積分戰",
+"id": "Berperingkat",
+"tr": "Dereceli"
+},
+"Two players": {
+"ru": "Два игрока",
+"zh-TW": "雙人",
+"id": "Dua pemain",
+"tr": "İki oyuncu"
+},
+"AI vs AI": {
+"ru": "ИИ против ИИ",
+"zh-TW": "AI 對 AI",
+"id": "AI lawan AI",
+"tr": "YZ'ye karşı YZ"
+},
+"Who starts": {
+"ru": "Кто начинает",
+"zh-TW": "先後手",
+"id": "Siapa mulai",
+"tr": "Kim başlar"
+},
+"Random": {
+"ru": "Случайно",
+"zh-TW": "隨機",
+"id": "Acak",
+"tr": "Rastgele"
+},
+"AI strength": {
+"ru": "Сила ИИ",
+"zh-TW": "AI 強度",
+"id": "Kekuatan AI",
+"tr": "Yapay zekâ gücü"
+},
+"Spools AI": {
+"ru": "ИИ катушек",
+"zh-TW": "線軸 AI",
+"id": "AI gulungan",
+"tr": "Makara YZ"
+},
+"Cones AI": {
+"ru": "ИИ конусов",
+"zh-TW": "圓錐 AI",
+"id": "AI kerucut",
+"tr": "Koni YZ"
+},
+"Time": {
+"ru": "Время",
+"zh-TW": "時間",
+"id": "Waktu",
+"tr": "Süre"
+},
+"None": {
+"ru": "Нет",
+"zh-TW": "無",
+"id": "Tidak ada",
+"tr": "Yok"
+},
+"30 s per move": {
+"ru": "30 с на ход",
+"zh-TW": "每手 30 秒",
+"id": "30 detik per langkah",
+"tr": "Hamle başına 30 sn"
+},
+"Animation": {
+"ru": "Анимация",
+"zh-TW": "動畫",
+"id": "Animasi",
+"tr": "Animasyon"
+},
+"Slow": {
+"ru": "Медленно",
+"zh-TW": "慢",
+"id": "Lambat",
+"tr": "Yavaş"
+},
+"Normal": {
+"ru": "Обычно",
+"zh-TW": "普通",
+"id": "Normal",
+"tr": "Normal"
+},
+"Fast": {
+"ru": "Быстро",
+"zh-TW": "快",
+"id": "Cepat",
+"tr": "Hızlı"
+},
+"Display & controls": {
+"ru": "Отображение и управление",
+"zh-TW": "顯示與操作",
+"id": "Tampilan & kontrol",
+"tr": "Görünüm ve kontroller"
+},
+"Throw automatically": {
+"ru": "Бросать автоматически",
+"zh-TW": "自動投擲",
+"id": "Lempar otomatis",
+"tr": "Otomatik at"
+},
+"Play a single possible move automatically": {
+"ru": "Делать единственный возможный ход автоматически",
+"zh-TW": "只有一種走法時自動走",
+"id": "Jalankan otomatis jika hanya ada satu langkah",
+"tr": "Tek olası hamleyi otomatik oyna"
+},
+"Show win chance": {
+"ru": "Показывать шанс победы",
+"zh-TW": "顯示勝率",
+"id": "Tampilkan peluang menang",
+"tr": "Kazanma şansını göster"
+},
+"Show the last move": {
+"ru": "Показывать последний ход",
+"zh-TW": "顯示上一手",
+"id": "Tampilkan langkah terakhir",
+"tr": "Son hamleyi göster"
+},
+"Show pieces at risk of a swap (coach on)": {
+"ru": "Показывать фишки под угрозой обмена (при включённом тренере)",
+"zh-TW": "顯示可能被交換的棋子（教練開啟時）",
+"id": "Tampilkan bidak yang berisiko ditukar (pelatih aktif)",
+"tr": "Takas riski olan taşları göster (koç açıkken)"
+},
+"Start": {
+"ru": "Начать",
+"zh-TW": "開始",
+"id": "Mulai",
+"tr": "Başla"
+},
+"Close": {
+"ru": "Закрыть",
+"zh-TW": "關閉",
+"id": "Tutup",
+"tr": "Kapat"
+},
+"Standard (5)": {
+"ru": "Стандарт (5)",
+"zh-TW": "標準（5 枚）",
+"id": "Standar (5)",
+"tr": "Standart (5)"
+},
+"Board": {
+"ru": "Доска",
+"zh-TW": "棋盤",
+"id": "Papan",
+"tr": "Tahta"
+},
+"Pieces": {
+"ru": "Фишки",
+"zh-TW": "棋子",
+"id": "Bidak",
+"tr": "Taşlar"
+},
+"Gold & lapis": {
+"ru": "Золото и лазурит",
+"zh-TW": "黃金與青金石",
+"id": "Emas & lapis",
+"tr": "Altın ve lapis"
+},
+"{n} kyu": {
+"ru": "{n} кю",
+"zh-TW": "{n} 級",
+"id": "{n} kyu",
+"tr": "{n}. kyu"
+},
+"1 dan": {
+"ru": "1 дан",
+"zh-TW": "初段",
+"id": "1 dan",
+"tr": "1. dan"
+},
+"2 dan": {
+"ru": "2 дан",
+"zh-TW": "二段",
+"id": "2 dan",
+"tr": "2. dan"
+},
+"3 dan": {
+"ru": "3 дан",
+"zh-TW": "三段",
+"id": "3 dan",
+"tr": "3. dan"
+},
+"4 dan": {
+"ru": "4 дан",
+"zh-TW": "四段",
+"id": "4 dan",
+"tr": "4. dan"
+},
+"5 dan": {
+"ru": "5 дан",
+"zh-TW": "五段",
+"id": "5 dan",
+"tr": "5. dan"
+},
+"Beginner: moves as the sticks fall": {
+"ru": "Новичок: ходит как выпадет",
+"zh-TW": "入門：照點數隨意走",
+"id": "Pemula: bergerak sesuai lemparan",
+"tr": "Başlangıç: çubuklar nasıl düşerse öyle oynar"
+},
+"Novice–intermediate: thinks about swaps and pairs": {
+"ru": "Начальный–средний: думает об обменах и парах",
+"zh-TW": "初級～中級：會考慮交換與成對",
+"id": "Pemula–menengah: memikirkan tukar dan pasangan",
+"tr": "Acemi–orta: takasları ve çiftleri düşünür"
+},
+"Advanced: weighs risk and odds": {
+"ru": "Продвинутый: взвешивает риск и шансы",
+"zh-TW": "高級：權衡風險與機率",
+"id": "Mahir: menimbang risiko dan peluang",
+"tr": "İleri: riski ve olasılıkları tartar"
+},
+"Expert: reads ahead through the next throws": {
+"ru": "Эксперт: просчитывает следующие броски",
+"zh-TW": "專家：預讀接下來的投擲",
+"id": "Ahli: memperhitungkan lemparan berikutnya",
+"tr": "Uzman: sonraki atışları önceden hesaplar"
+},
+"Rating": {
+"ru": "Рейтинг",
+"zh-TW": "積分",
+"id": "Rating",
+"tr": "Puan"
+},
+"Rated games against the AI (standard rules, 30 s per move, no takebacks). You face an AI close to your rating; wins and losses move it.": {
+"ru": "Рейтинговые партии против ИИ (стандартные правила, 30 с на ход, без отмен). Соперник — ИИ близкой силы; победы и поражения меняют рейтинг.",
+"zh-TW": "與 AI 的積分戰（標準規則、每手 30 秒、不可悔棋）。對手是與你積分相近的 AI，勝負會改變積分。",
+"id": "Permainan berperingkat melawan AI (aturan standar, 30 detik per langkah, tanpa batal). Lawan AI setara rating Anda; menang dan kalah mengubahnya.",
+"tr": "Yapay zekâya karşı dereceli oyunlar (standart kurallar, hamle başına 30 sn, geri alma yok). Puanına yakın bir YZ ile oynarsın; galibiyet ve yenilgiler puanını değiştirir."
+},
+"No rated games yet": {
+"ru": "Рейтинговых партий пока нет",
+"zh-TW": "尚無積分戰紀錄",
+"id": "Belum ada permainan berperingkat",
+"tr": "Henüz dereceli oyun yok"
+},
+"{n} games, {w} W {l} L": {
+"ru": "{n} партий, {w} П {l} П",
+"zh-TW": "{n} 局，{w} 勝 {l} 敗",
+"id": "{n} permainan, {w} M {l} K",
+"tr": "{n} oyun, {w} G {l} M"
+},
+"below Lv.1": {
+"ru": "ниже ур. 1",
+"zh-TW": "低於 Lv.1",
+"id": "di bawah Lv.1",
+"tr": "Sv.1'in altı"
+},
+"Opponent: AI {lv} (R{r}) {tag}": {
+"ru": "Соперник: ИИ {lv} (R{r}) {tag}",
+"zh-TW": "對手：AI {lv}（R{r}）{tag}",
+"id": "Lawan: AI {lv} (R{r}) {tag}",
+"tr": "Rakip: YZ {lv} (R{r}) {tag}"
+},
+"stronger": {
+"ru": "сильнее",
+"zh-TW": "較強",
+"id": "lebih kuat",
+"tr": "daha güçlü"
+},
+"weaker": {
+"ru": "слабее",
+"zh-TW": "較弱",
+"id": "lebih lemah",
+"tr": "daha zayıf"
+},
+"even": {
+"ru": "равный",
+"zh-TW": "相當",
+"id": "setara",
+"tr": "denk"
+},
+"A rated game is in progress. Leaving counts as a loss.": {
+"ru": "Идёт рейтинговая партия. Уход засчитывается как поражение.",
+"zh-TW": "積分戰進行中。離開將判為敗局。",
+"id": "Permainan berperingkat sedang berlangsung. Keluar dihitung kalah.",
+"tr": "Dereceli bir oyun sürüyor. Ayrılmak yenilgi sayılır."
+},
+"Leave (loss)": {
+"ru": "Выйти (поражение)",
+"zh-TW": "離開（判負）",
+"id": "Keluar (kalah)",
+"tr": "Ayrıl (yenilgi)"
+},
+"Left the rated game: R {o} → {n} ({d})": {
+"ru": "Вы покинули рейтинговую партию: R {o} → {n} ({d})",
+"zh-TW": "已離開積分戰：R {o} → {n}（{d}）",
+"id": "Keluar dari permainan berperingkat: R {o} → {n} ({d})",
+"tr": "Dereceli oyundan ayrıldın: R {o} → {n} ({d})"
+},
+"Idea → example → practice → scored problems. 20 points each; 75 of 100 to pass.": {
+"ru": "Идея → пример → практика → задачи на очки. По 20 очков; для зачёта 75 из 100.",
+"zh-TW": "觀念 → 範例 → 練習 → 計分題。每題 20 分，100 分中 75 分及格。",
+"id": "Ide → contoh → latihan → soal berskor. 20 poin per soal; lulus 75 dari 100.",
+"tr": "Fikir → örnek → alıştırma → puanlı sorular. Her biri 20 puan; geçmek için 100'de 75."
+},
+"New": {
+"ru": "Новое",
+"zh-TW": "新",
+"id": "Baru",
+"tr": "Yeni"
+},
+"Back to the list": {
+"ru": "К списку",
+"zh-TW": "返回列表",
+"id": "Kembali ke daftar",
+"tr": "Listeye dön"
+},
+"Quit lessons": {
+"ru": "Выйти из уроков",
+"zh-TW": "結束課程",
+"id": "Keluar dari pelajaran",
+"tr": "Dersleri bırak"
+},
+"Try again": {
+"ru": "Ещё раз",
+"zh-TW": "再試一次",
+"id": "Coba lagi",
+"tr": "Tekrar dene"
+},
+"Next lesson": {
+"ru": "Следующий урок",
+"zh-TW": "下一課",
+"id": "Pelajaran berikutnya",
+"tr": "Sonraki ders"
+},
+"See the result": {
+"ru": "Посмотреть результат",
+"zh-TW": "查看結果",
+"id": "Lihat hasil",
+"tr": "Sonucu gör"
+},
+"Almost!": {
+"ru": "Почти!",
+"zh-TW": "差一點！",
+"id": "Hampir!",
+"tr": "Az kaldı!"
+},
+"Could not load": {
+"ru": "Не удалось загрузить",
+"zh-TW": "無法載入",
+"id": "Gagal memuat",
+"tr": "Yüklenemedi"
+},
+"Find the best move for the position and the throw.": {
+"ru": "Найдите лучший ход для позиции и броска.",
+"zh-TW": "找出這個局面和點數下的最佳著法。",
+"id": "Temukan langkah terbaik untuk posisi dan lemparan ini.",
+"tr": "Bu konum ve atış için en iyi hamleyi bul."
+},
+"Best move": {
+"ru": "Лучший ход",
+"zh-TW": "最佳著法",
+"id": "Langkah terbaik",
+"tr": "En iyi hamle"
+},
+"The best move for the spools?": {
+"ru": "Лучший ход катушек?",
+"zh-TW": "線軸方的最佳著法是？",
+"id": "Langkah terbaik untuk gulungan?",
+"tr": "Makaralar için en iyi hamle?"
+},
+"Retry": {
+"ru": "Заново",
+"zh-TW": "重試",
+"id": "Ulangi",
+"tr": "Yeniden"
+},
+"Show answer": {
+"ru": "Показать ответ",
+"zh-TW": "顯示答案",
+"id": "Tampilkan jawaban",
+"tr": "Cevabı göster"
+},
+"Next puzzle": {
+"ru": "Следующая задача",
+"zh-TW": "下一題",
+"id": "Teka-teki berikutnya",
+"tr": "Sonraki bulmaca"
+},
+"Puzzle list": {
+"ru": "Список задач",
+"zh-TW": "謎題列表",
+"id": "Daftar teka-teki",
+"tr": "Bulmaca listesi"
+},
+"Puzzle of the day": {
+"ru": "Задача дня",
+"zh-TW": "每日謎題",
+"id": "Teka-teki hari ini",
+"tr": "Günün bulmacası"
+},
+"Play": {
+"ru": "Играть",
+"zh-TW": "對局",
+"id": "Main",
+"tr": "Oyna"
+},
+"Online play": {
+"ru": "Игра онлайн",
+"zh-TW": "線上對戰",
+"id": "Main daring",
+"tr": "Çevrim içi oyun"
+},
+"Coming soon": {
+"ru": "Скоро",
+"zh-TW": "即將推出",
+"id": "Segera hadir",
+"tr": "Yakında"
+},
+"Details": {
+"ru": "Подробнее",
+"zh-TW": "詳細",
+"id": "Detail",
+"tr": "Ayrıntılar"
+},
+"Back to the board": {
+"ru": "Вернуться к доске",
+"zh-TW": "回到棋盤",
+"id": "Kembali ke papan",
+"tr": "Tahtaya dön"
+},
+"Online play is coming soon. AI games, two players, rated games, lessons and puzzles are ready now.": {
+"ru": "Игра онлайн скоро появится. Игра с ИИ, вдвоём, рейтинговые партии, уроки и задачи уже доступны.",
+"zh-TW": "線上對戰即將推出。AI 對戰、雙人、積分戰、課程與謎題現在都能玩。",
+"id": "Main daring segera hadir. Main lawan AI, dua pemain, berperingkat, pelajaran, dan teka-teki sudah tersedia.",
+"tr": "Çevrim içi oyun yakında. Yapay zekâya karşı, iki kişilik, dereceli oyunlar, dersler ve bulmacalar şimdiden hazır."
+},
+"Review": {
+"ru": "Разбор",
+"zh-TW": "覆盤",
+"id": "Ulasan",
+"tr": "İnceleme"
+},
+"Analyse": {
+"ru": "Анализ",
+"zh-TW": "分析",
+"id": "Analisis",
+"tr": "Analiz"
+},
+"Back to lessons": {
+"ru": "К урокам",
+"zh-TW": "返回課程",
+"id": "Kembali ke pelajaran",
+"tr": "Derslere dön"
+},
+"{a}/{b} passed": {
+"ru": "Пройдено {a}/{b}",
+"zh-TW": "已通過 {a}/{b}",
+"id": "{a}/{b} lulus",
+"tr": "{a}/{b} geçildi"
+},
+"Odds, swaps, pairs and walls. Start here.": {
+"ru": "Шансы, обмены, пары и стены. Начните отсюда.",
+"zh-TW": "機率、交換、成對與牆。從這裡開始。",
+"id": "Peluang, tukar, pasangan, dan tembok. Mulai dari sini.",
+"tr": "Olasılıklar, takaslar, çiftler ve duvarlar. Buradan başla."
+},
+"Safe squares, escaping, attacking, and using the extra throws.": {
+"ru": "Безопасные клетки, бегство, атака и дополнительные броски.",
+"zh-TW": "安全格、逃跑、進攻與善用額外投擲。",
+"id": "Petak aman, kabur, menyerang, dan memakai lemparan tambahan.",
+"tr": "Güvenli kareler, kaçış, saldırı ve ek atışları kullanmak."
+},
+"From the House of Beauty to bearing off: avoid the water, wait for the exit throws.": {
+"ru": "От Дома красоты до выхода: избегайте воды, ждите выходных бросков.",
+"zh-TW": "從美之屋到走出：避開水，等待出口的點數。",
+"id": "Dari Rumah Keindahan hingga keluar: hindari air, tunggu lemparan keluar.",
+"tr": "Güzellik Evi'nden çıkışa: sudan kaçın, çıkış atışlarını bekle."
+},
+"Continue": {
+"ru": "Продолжить",
+"zh-TW": "繼續",
+"id": "Lanjutkan",
+"tr": "Devam"
+},
+"Rules after Kendall’s reconstruction (1978/79). The AI uses an evaluation learned by self-play.": {
+"ru": "Правила по реконструкции Кендалла (1978/79). ИИ использует оценку, выученную игрой с собой.",
+"zh-TW": "規則依照肯德爾的復原（1978/79）。AI 使用自我對弈學到的評估。",
+"id": "Aturan menurut rekonstruksi Kendall (1978/79). AI memakai evaluasi yang dipelajari dari bermain melawan diri sendiri.",
+"tr": "Kurallar Kendall'ın yeniden kurgusuna göre (1978/79). Yapay zekâ, kendine karşı oynayarak öğrendiği bir değerlendirme kullanır."
+},
+"{a} steps left · rival {b}": {
+"ru": "Осталось {a} шагов · соперник {b}",
+"zh-TW": "剩 {a} 步・對手 {b}",
+"id": "Sisa {a} langkah · lawan {b}",
+"tr": "{a} adım kaldı · rakip {b}"
+},
+"Play in landscape (phone)": {
+"ru": "Играть горизонтально (телефон)",
+"zh-TW": "橫向遊玩（手機）",
+"id": "Main dalam mode lanskap (ponsel)",
+"tr": "Yatay oyna (telefon)"
+},
+"Landscape on": {
+"ru": "Горизонтально: вкл.",
+"zh-TW": "橫向：開",
+"id": "Lanskap aktif",
+"tr": "Yatay açık"
+},
+"Landscape off": {
+"ru": "Горизонтально: выкл.",
+"zh-TW": "橫向：關",
+"id": "Lanskap mati",
+"tr": "Yatay kapalı"
+},
+"You can also play in landscape!": {
+"ru": "Можно играть и горизонтально!",
+"zh-TW": "也可以橫向遊玩！",
+"id": "Anda juga bisa bermain lanskap!",
+"tr": "Yatay da oynayabilirsin!"
+},
+"Use the button at the top right to switch to a bigger, sideways board.": {
+"ru": "Кнопка справа вверху переключает на большую горизонтальную доску.",
+"zh-TW": "用右上角的按鈕切換成更大的橫向棋盤。",
+"id": "Gunakan tombol kanan atas untuk beralih ke papan lebih besar yang menyamping.",
+"tr": "Daha büyük, yatay tahtaya geçmek için sağ üstteki düğmeyi kullan."
+},
+"Go landscape": {
+"ru": "Горизонтально",
+"zh-TW": "切換橫向",
+"id": "Ke lanskap",
+"tr": "Yataya geç"
+},
+"Keep as is": {
+"ru": "Оставить",
+"zh-TW": "維持原樣",
+"id": "Biarkan",
+"tr": "Böyle kalsın"
+},
+"Standard": {
+"ru": "Стандарт",
+"zh-TW": "標準",
+"id": "Standar",
+"tr": "Standart"
+},
+"No move — throw again": {
+"ru": "Ходов нет — бросьте ещё раз",
+"zh-TW": "無法走——再投一次",
+"id": "Tidak ada langkah — lempar lagi",
+"tr": "Hamle yok — tekrar at"
+},
+"A {n}: throw again": {
+"ru": "{n}: бросьте ещё раз",
+"zh-TW": "點數 {n}：再投一次",
+"id": "{n}: lempar lagi",
+"tr": "{n}: tekrar at"
+},
+"House of Water": {
+"ru": "Дом воды",
+"zh-TW": "水之屋",
+"id": "Rumah Air",
+"tr": "Su Evi"
+},
+"Back to square {n}": {
+"ru": "Назад на клетку {n}",
+"zh-TW": "回到第 {n} 格",
+"id": "Kembali ke petak {n}",
+"tr": "{n}. kareye geri"
+},
+"Long (7)": {
+"ru": "Длинная (7)",
+"zh-TW": "長局（7 枚）",
+"id": "Panjang (7)",
+"tr": "Uzun (7)"
+},
+"The most widely played reconstruction, after Kendall: five pieces each, alternating on squares 1–10.": {
+"ru": "Самая распространённая реконструкция, по Кендаллу: по пять фишек, поочерёдно на клетках 1–10.",
+"zh-TW": "最廣為流行的復原版，依肯德爾：各 5 枚，交錯排在第 1～10 格。",
+"id": "Rekonstruksi yang paling banyak dimainkan, menurut Kendall: lima bidak masing-masing, berselang-seling di petak 1–10.",
+"tr": "En yaygın oynanan yeniden kurgu, Kendall'a göre: her biri beş taş, 1–10. karelere sırayla dizilir."
+},
+"The number of pieces in Kendall’s first 1979 rules: seven each on squares 1–14, a longer game.": {
+"ru": "Число фишек в первых правилах Кендалла 1979 года: по семь на клетках 1–14, партия длиннее.",
+"zh-TW": "肯德爾 1979 年最初規則的棋子數：各 7 枚排在第 1～14 格，對局較長。",
+"id": "Jumlah bidak dalam aturan pertama Kendall 1979: tujuh masing-masing di petak 1–14, permainan lebih panjang.",
+"tr": "Kendall'ın ilk 1979 kurallarındaki taş sayısı: 1–14. karelerde her biri yedi, daha uzun bir oyun."
+},
+"Tutankhamun": {
+"ru": "Тутанхамон",
+"zh-TW": "圖坦卡門",
+"id": "Tutankhamun",
+"tr": "Tutankamon"
+},
+"Blue faience": {
+"ru": "Синий фаянс",
+"zh-TW": "藍色彩陶",
+"id": "Fayans biru",
+"tr": "Mavi fayans"
+},
+"Tomb painting": {
+"ru": "Роспись гробницы",
+"zh-TW": "墓室壁畫",
+"id": "Lukisan makam",
+"tr": "Mezar resmi"
+},
+"Nile night": {
+"ru": "Ночь на Ниле",
+"zh-TW": "尼羅河之夜",
+"id": "Malam di Sungai Nil",
+"tr": "Nil gecesi"
+},
+"Ivory & ebony": {
+"ru": "Слоновая кость и эбен",
+"zh-TW": "象牙與烏木",
+"id": "Gading & eboni",
+"tr": "Fildişi ve abanoz"
+},
+"Faience": {
+"ru": "Фаянс",
+"zh-TW": "彩陶",
+"id": "Fayans",
+"tr": "Fayans"
+},
+"Modern": {
+"ru": "Модерн",
+"zh-TW": "現代",
+"id": "Modern",
+"tr": "Modern"
+},
+"Chat": {
+"ru": "Чат",
+"zh-TW": "聊天",
+"id": "Obrolan",
+"tr": "Sohbet"
+},
+"Visible to everyone · press Enter to type": {
+"ru": "Видно всем · нажмите Enter, чтобы писать",
+"zh-TW": "所有人可見・按 Enter 輸入",
+"id": "Terlihat semua orang · tekan Enter untuk mengetik",
+"tr": "Herkes görür · yazmak için Enter'a bas"
+},
+"Send": {
+"ru": "Отправить",
+"zh-TW": "傳送",
+"id": "Kirim",
+"tr": "Gönder"
+},
+"No messages yet": {
+"ru": "Сообщений пока нет",
+"zh-TW": "尚無訊息",
+"id": "Belum ada pesan",
+"tr": "Henüz mesaj yok"
+},
+"Please wait 2 seconds between messages": {
+"ru": "Подождите 2 секунды между сообщениями",
+"zh-TW": "每則訊息請間隔 2 秒",
+"id": "Tunggu 2 detik di antara pesan",
+"tr": "Mesajlar arasında 2 saniye bekle"
+},
+"Public chat: everyone online can read it. Only the latest 20 messages are kept; there are no private messages.": {
+"ru": "Общий чат: его видят все в сети. Хранятся только 20 последних сообщений; личных сообщений нет.",
+"zh-TW": "公開聊天：線上所有人都看得到。只保留最新 20 則，沒有私訊。",
+"id": "Obrolan publik: semua yang daring bisa membacanya. Hanya 20 pesan terbaru yang disimpan; tidak ada pesan pribadi.",
+"tr": "Herkese açık sohbet: çevrim içi herkes okuyabilir. Yalnızca son 20 mesaj tutulur; özel mesaj yoktur."
+},
+"Online": {
+"ru": "Онлайн",
+"zh-TW": "線上",
+"id": "Daring",
+"tr": "Çevrim içi"
+},
+"Online now": {
+"ru": "Сейчас в сети",
+"zh-TW": "目前在線",
+"id": "Daring sekarang",
+"tr": "Şu an çevrim içi"
+},
+"Rooms": {
+"ru": "Комнаты",
+"zh-TW": "房間",
+"id": "Ruang",
+"tr": "Odalar"
+},
+"Ranking": {
+"ru": "Рейтинг",
+"zh-TW": "排行榜",
+"id": "Peringkat",
+"tr": "Sıralama"
+},
+"Go online": {
+"ru": "Выйти в сеть",
+"zh-TW": "上線",
+"id": "Masuk daring",
+"tr": "Çevrim içi ol"
+},
+"Online play is being prepared.": {
+"ru": "Игра онлайн готовится.",
+"zh-TW": "線上對戰準備中。",
+"id": "Main daring sedang disiapkan.",
+"tr": "Çevrim içi oyun hazırlanıyor."
+},
+"Please wait a little longer. Play vs AI, 2-player games, lessons and puzzles work as usual.": {
+"ru": "Подождите ещё немного. Игра с ИИ, вдвоём, уроки и задачи работают как обычно.",
+"zh-TW": "請再稍候。AI 對戰、雙人對局、課程與謎題照常可用。",
+"id": "Mohon tunggu sebentar lagi. Main lawan AI, dua pemain, pelajaran, dan teka-teki berjalan seperti biasa.",
+"tr": "Biraz daha bekle. Yapay zekâya karşı, iki kişilik oyun, dersler ve bulmacalar her zamanki gibi çalışıyor."
+},
+"Connecting…": {
+"ru": "Подключение…",
+"zh-TW": "連線中…",
+"id": "Menyambung…",
+"tr": "Bağlanıyor…"
+},
+"Could not connect.": {
+"ru": "Не удалось подключиться.",
+"zh-TW": "無法連線。",
+"id": "Tidak dapat tersambung.",
+"tr": "Bağlanılamadı."
+},
+"{w}W {l}L {d}D": {
+"ru": "{w}П {l}П {d}Н",
+"zh-TW": "{w}勝 {l}敗 {d}和",
+"id": "{w}M {l}K {d}S",
+"tr": "{w}G {l}M {d}B"
+},
+"Time control": {
+"ru": "Контроль времени",
+"zh-TW": "計時方式",
+"id": "Kontrol waktu",
+"tr": "Süre kontrolü"
+},
+"{m} min + {s} s/move": {
+"ru": "{m} мин + {s} с/ход",
+"zh-TW": "{m} 分 + 每手 {s} 秒",
+"id": "{m} mnt + {s} dtk/langkah",
+"tr": "{m} dk + hamle başı {s} sn"
+},
+"Find an opponent": {
+"ru": "Найти соперника",
+"zh-TW": "尋找對手",
+"id": "Cari lawan",
+"tr": "Rakip bul"
+},
+"Find another game": {
+"ru": "Найти другую игру",
+"zh-TW": "尋找下一局",
+"id": "Cari permainan lain",
+"tr": "Başka oyun bul"
+},
+"You are paired with someone of similar rating on the same board size (rated game).": {
+"ru": "Вас сведут с игроком близкого рейтинга на доске того же размера (рейтинговая партия).",
+"zh-TW": "會與相同棋盤大小、積分相近的玩家配對（積分戰）。",
+"id": "Anda dipasangkan dengan pemain berperingkat serupa pada ukuran papan yang sama (permainan berperingkat).",
+"tr": "Aynı tahta boyutunda benzer puanlı biriyle eşleşirsin (dereceli oyun)."
+},
+"Play a friend (rooms)": {
+"ru": "Сыграть с другом (комнаты)",
+"zh-TW": "與朋友對戰（房間）",
+"id": "Main dengan teman (ruang)",
+"tr": "Arkadaşınla oyna (odalar)"
+},
+"Open room": {
+"ru": "Открытая комната",
+"zh-TW": "公開房間",
+"id": "Ruang terbuka",
+"tr": "Açık oda"
+},
+"Listed, can be watched": {
+"ru": "В списке, можно смотреть",
+"zh-TW": "會列出，可觀戰",
+"id": "Terdaftar, bisa ditonton",
+"tr": "Listede, izlenebilir"
+},
+"Private room": {
+"ru": "Закрытая комната",
+"zh-TW": "私人房間",
+"id": "Ruang pribadi",
+"tr": "Özel oda"
+},
+"Code only": {
+"ru": "Только по коду",
+"zh-TW": "僅限代碼",
+"id": "Hanya dengan kode",
+"tr": "Yalnızca kodla"
+},
+"Create room": {
+"ru": "Создать комнату",
+"zh-TW": "建立房間",
+"id": "Buat ruang",
+"tr": "Oda oluştur"
+},
+"Room code": {
+"ru": "Код комнаты",
+"zh-TW": "房間代碼",
+"id": "Kode ruang",
+"tr": "Oda kodu"
+},
+"Join": {
+"ru": "Войти",
+"zh-TW": "加入",
+"id": "Gabung",
+"tr": "Katıl"
+},
+"Watch": {
+"ru": "Смотреть",
+"zh-TW": "觀戰",
+"id": "Tonton",
+"tr": "İzle"
+},
+"My room": {
+"ru": "Моя комната",
+"zh-TW": "我的房間",
+"id": "Ruang saya",
+"tr": "Odam"
+},
+"Show": {
+"ru": "Показать",
+"zh-TW": "顯示",
+"id": "Tampilkan",
+"tr": "Göster"
+},
+"Close room": {
+"ru": "Закрыть комнату",
+"zh-TW": "關閉房間",
+"id": "Tutup ruang",
+"tr": "Odayı kapat"
+},
+"No open rooms": {
+"ru": "Открытых комнат нет",
+"zh-TW": "沒有公開房間",
+"id": "Tidak ada ruang terbuka",
+"tr": "Açık oda yok"
+},
+"Nobody here": {
+"ru": "Никого нет",
+"zh-TW": "沒有人",
+"id": "Tidak ada siapa pun",
+"tr": "Kimse yok"
+},
+"Room not found or already started": {
+"ru": "Комната не найдена или игра уже началась",
+"zh-TW": "找不到房間或已開始",
+"id": "Ruang tidak ditemukan atau sudah dimulai",
+"tr": "Oda bulunamadı veya oyun başladı"
+},
+"Looking for an opponent…": {
+"ru": "Ищем соперника…",
+"zh-TW": "正在尋找對手…",
+"id": "Mencari lawan…",
+"tr": "Rakip aranıyor…"
+},
+"{w} waiting on this size · rating gap up to ±{r}": {
+"ru": "Ждут на этом размере: {w} · разница рейтинга до ±{r}",
+"zh-TW": "此大小等待中 {w} 人・積分差最多 ±{r}",
+"id": "{w} menunggu di ukuran ini · selisih rating hingga ±{r}",
+"tr": "Bu boyutta {w} kişi bekliyor · puan farkı en fazla ±{r}"
+},
+"Cancel": {
+"ru": "Отмена",
+"zh-TW": "取消",
+"id": "Batal",
+"tr": "İptal"
+},
+"Shown in the list. You can also send the code or link.": {
+"ru": "Показана в списке. Можно также отправить код или ссылку.",
+"zh-TW": "會顯示在列表中。也可以傳送代碼或連結。",
+"id": "Ditampilkan di daftar. Anda juga bisa mengirim kode atau tautan.",
+"tr": "Listede görünür. Kodu veya bağlantıyı da gönderebilirsin."
+},
+"Only people with the code or link can join.": {
+"ru": "Войти могут только те, у кого есть код или ссылка.",
+"zh-TW": "只有持有代碼或連結的人能加入。",
+"id": "Hanya yang punya kode atau tautan bisa bergabung.",
+"tr": "Yalnızca kodu veya bağlantısı olanlar katılabilir."
+},
+"Room closes in": {
+"ru": "Комната закроется через",
+"zh-TW": "房間將於此後關閉",
+"id": "Ruang ditutup dalam",
+"tr": "Oda kapanmasına kalan"
+},
+"Copy link": {
+"ru": "Копировать ссылку",
+"zh-TW": "複製連結",
+"id": "Salin tautan",
+"tr": "Bağlantıyı kopyala"
+},
+"The room timed out and was closed": {
+"ru": "Время комнаты истекло, она закрыта",
+"zh-TW": "房間逾時已關閉",
+"id": "Waktu ruang habis dan ditutup",
+"tr": "Oda zaman aşımına uğradı ve kapatıldı"
+},
+"Your opponent left. The room stays open": {
+"ru": "Соперник ушёл. Комната остаётся открытой",
+"zh-TW": "對手已離開。房間仍開著",
+"id": "Lawan Anda pergi. Ruang tetap terbuka",
+"tr": "Rakibin ayrıldı. Oda açık kalıyor"
+},
+"idle": {
+"ru": "свободен",
+"zh-TW": "閒置",
+"id": "diam",
+"tr": "boşta"
+},
+"searching": {
+"ru": "ищет",
+"zh-TW": "搜尋中",
+"id": "mencari",
+"tr": "arıyor"
+},
+"playing": {
+"ru": "играет",
+"zh-TW": "對局中",
+"id": "bermain",
+"tr": "oynuyor"
+},
+"in a room": {
+"ru": "в комнате",
+"zh-TW": "在房間",
+"id": "di ruang",
+"tr": "odada"
+},
+"watching": {
+"ru": "смотрит",
+"zh-TW": "觀戰中",
+"id": "menonton",
+"tr": "izliyor"
+},
+"{n} online · {w} waiting · {r} rooms": {
+"ru": "В сети {n} · ждут {w} · комнат {r}",
+"zh-TW": "在線 {n}・等待 {w}・房間 {r}",
+"id": "{n} daring · {w} menunggu · {r} ruang",
+"tr": "{n} çevrim içi · {w} bekliyor · {r} oda"
+},
+"Change name": {
+"ru": "Сменить имя",
+"zh-TW": "更改名稱",
+"id": "Ubah nama",
+"tr": "Adı değiştir"
+},
+"Save": {
+"ru": "Сохранить",
+"zh-TW": "儲存",
+"id": "Simpan",
+"tr": "Kaydet"
+},
+"Name changed to \"{n}\"": {
+"ru": "Имя изменено на «{n}»",
+"zh-TW": "名稱已改為「{n}」",
+"id": "Nama diubah menjadi \"{n}\"",
+"tr": "Ad \"{n}\" olarak değiştirildi"
+},
+"Rated game": {
+"ru": "Рейтинговая партия",
+"zh-TW": "積分戰",
+"id": "Permainan berperingkat",
+"tr": "Dereceli oyun"
+},
+"Room game": {
+"ru": "Игра в комнате",
+"zh-TW": "房間對局",
+"id": "Permainan ruang",
+"tr": "Oda oyunu"
+},
+"A game is in progress. Resign and leave?": {
+"ru": "Идёт партия. Сдаться и выйти?",
+"zh-TW": "對局進行中。要認輸並離開嗎？",
+"id": "Permainan sedang berlangsung. Menyerah dan keluar?",
+"tr": "Bir oyun sürüyor. Pes edip ayrılsın mı?"
+},
+"Game not found": {
+"ru": "Игра не найдена",
+"zh-TW": "找不到對局",
+"id": "Permainan tidak ditemukan",
+"tr": "Oyun bulunamadı"
+},
+"Received an illegal move": {
+"ru": "Получен недопустимый ход",
+"zh-TW": "收到不合法的著法",
+"id": "Menerima langkah tidak sah",
+"tr": "Geçersiz bir hamle alındı"
+},
+"Move not sent. Re-syncing the board": {
+"ru": "Ход не отправлен. Синхронизируем доску",
+"zh-TW": "著法未送出。正在重新同步棋盤",
+"id": "Langkah tidak terkirim. Menyinkronkan ulang papan",
+"tr": "Hamle gönderilmedi. Tahta yeniden eşitleniyor"
+},
+"You lose": {
+"ru": "Вы проиграли",
+"zh-TW": "你輸了",
+"id": "Anda kalah",
+"tr": "Kaybettin"
+},
+"You resigned": {
+"ru": "Вы сдались",
+"zh-TW": "你已認輸",
+"id": "Anda menyerah",
+"tr": "Pes ettin"
+},
+"Opponent resigned": {
+"ru": "Соперник сдался",
+"zh-TW": "對手認輸",
+"id": "Lawan menyerah",
+"tr": "Rakip pes etti"
+},
+"Lost on time": {
+"ru": "Поражение по времени",
+"zh-TW": "超時落敗",
+"id": "Kalah waktu",
+"tr": "Süreden kaybettin"
+},
+"Opponent ran out of time": {
+"ru": "У соперника вышло время",
+"zh-TW": "對手超時",
+"id": "Waktu lawan habis",
+"tr": "Rakibin süresi doldu"
+},
+"{p} resigned": {
+"ru": "{p} сдался",
+"zh-TW": "{p} 認輸",
+"id": "{p} menyerah",
+"tr": "{p} pes etti"
+},
+"{p} ran out of time": {
+"ru": "У {p} вышло время",
+"zh-TW": "{p} 超時",
+"id": "Waktu {p} habis",
+"tr": "{p} için süre doldu"
+},
+"Watching": {
+"ru": "Просмотр",
+"zh-TW": "觀戰中",
+"id": "Menonton",
+"tr": "İzleniyor"
+},
+"{n} watching": {
+"ru": "Смотрят: {n}",
+"zh-TW": "{n} 人觀戰",
+"id": "{n} menonton",
+"tr": "{n} izleyici"
+},
+"Stop watching": {
+"ru": "Прекратить просмотр",
+"zh-TW": "停止觀戰",
+"id": "Berhenti menonton",
+"tr": "İzlemeyi bırak"
+},
+"Close board": {
+"ru": "Закрыть доску",
+"zh-TW": "關閉棋盤",
+"id": "Tutup papan",
+"tr": "Tahtayı kapat"
+},
+"Ask for a rematch": {
+"ru": "Предложить реванш",
+"zh-TW": "要求再戰",
+"id": "Minta tanding ulang",
+"tr": "Rövanş iste"
+},
+"Rematch requested…": {
+"ru": "Реванш предложен…",
+"zh-TW": "已要求再戰…",
+"id": "Tanding ulang diminta…",
+"tr": "Rövanş istendi…"
+},
+"Your opponent wants a rematch": {
+"ru": "Соперник хочет реванш",
+"zh-TW": "對手想再戰",
+"id": "Lawan ingin tanding ulang",
+"tr": "Rakibin rövanş istiyor"
+},
+"Accept": {
+"ru": "Принять",
+"zh-TW": "接受",
+"id": "Terima",
+"tr": "Kabul et"
+},
+"Decline": {
+"ru": "Отклонить",
+"zh-TW": "拒絕",
+"id": "Tolak",
+"tr": "Reddet"
+},
+"Starting the rematch…": {
+"ru": "Начинаем реванш…",
+"zh-TW": "再戰即將開始…",
+"id": "Memulai tanding ulang…",
+"tr": "Rövanş başlıyor…"
+},
+"Rematch declined": {
+"ru": "Реванш отклонён",
+"zh-TW": "再戰被拒絕",
+"id": "Tanding ulang ditolak",
+"tr": "Rövanş reddedildi"
+},
+"No answer — no rematch": {
+"ru": "Нет ответа — реванша не будет",
+"zh-TW": "沒有回應——不再戰",
+"id": "Tidak ada jawaban — tidak ada tanding ulang",
+"tr": "Yanıt yok — rövanş yok"
+},
+"The room was closed": {
+"ru": "Комната закрыта",
+"zh-TW": "房間已關閉",
+"id": "Ruang telah ditutup",
+"tr": "Oda kapatıldı"
+},
+"Your opponent left": {
+"ru": "Соперник ушёл",
+"zh-TW": "對手已離開",
+"id": "Lawan Anda pergi",
+"tr": "Rakibin ayrıldı"
+},
+"Profile": {
+"ru": "Профиль",
+"zh-TW": "個人檔案",
+"id": "Profil",
+"tr": "Profil"
+},
+"Choose the name shown in online games. You can change it later with \"Change name\" in the online panel.": {
+"ru": "Выберите имя для онлайн-игр. Позже его можно сменить кнопкой «Сменить имя» в онлайн-панели.",
+"zh-TW": "選擇線上對局顯示的名稱。之後可在線上面板的「更改名稱」修改。",
+"id": "Pilih nama yang ditampilkan di permainan daring. Anda bisa mengubahnya nanti lewat \"Ubah nama\" di panel daring.",
+"tr": "Çevrim içi oyunlarda görünecek adı seç. Daha sonra çevrim içi panelindeki \"Adı değiştir\" ile değiştirebilirsin."
+},
+"Name (up to 16 characters)": {
+"ru": "Имя (до 16 символов)",
+"zh-TW": "名稱（最多 16 字）",
+"id": "Nama (maks. 16 karakter)",
+"tr": "Ad (en fazla 16 karakter)"
+},
+"Link a Google account to sync lesson, puzzle and opening progress, your daily streak, settings, name and rating between PC and phone.": {
+"ru": "Привяжите аккаунт Google, чтобы синхронизировать прогресс уроков, задач и дебютов, ежедневную серию, настройки, имя и рейтинг между ПК и телефоном.",
+"zh-TW": "連結 Google 帳號，即可在電腦與手機間同步課程、謎題與開局的進度、每日連續紀錄、設定、名稱與積分。",
+"id": "Tautkan akun Google untuk menyinkronkan kemajuan pelajaran, teka-teki dan pembukaan, rangkaian harian, pengaturan, nama, dan rating antara PC dan ponsel.",
+"tr": "Ders, bulmaca ve açılış ilerlemesini, günlük serini, ayarlarını, adını ve puanını bilgisayar ile telefon arasında eşitlemek için bir Google hesabı bağla."
+},
+"Later": {
+"ru": "Позже",
+"zh-TW": "稍後",
+"id": "Nanti",
+"tr": "Sonra"
+},
+"Google link": {
+"ru": "Связь с Google",
+"zh-TW": "Google 連結",
+"id": "Tautan Google",
+"tr": "Google bağlantısı"
+},
+"Link Google": {
+"ru": "Привязать Google",
+"zh-TW": "連結 Google",
+"id": "Tautkan Google",
+"tr": "Google'ı bağla"
+},
+"Link with Google": {
+"ru": "Привязать к Google",
+"zh-TW": "與 Google 連結",
+"id": "Tautkan dengan Google",
+"tr": "Google ile bağla"
+},
+"Link a Google account to sync your progress and rating between PC and phone.": {
+"ru": "Привяжите аккаунт Google, чтобы синхронизировать прогресс и рейтинг между ПК и телефоном.",
+"zh-TW": "連結 Google 帳號，在電腦與手機間同步進度與積分。",
+"id": "Tautkan akun Google untuk menyinkronkan kemajuan dan rating antara PC dan ponsel.",
+"tr": "İlerlemeni ve puanını bilgisayar ile telefon arasında eşitlemek için bir Google hesabı bağla."
+},
+"Linked with {e}": {
+"ru": "Привязано к {e}",
+"zh-TW": "已與 {e} 連結",
+"id": "Tertaut dengan {e}",
+"tr": "{e} ile bağlı"
+},
+"Sync now": {
+"ru": "Синхронизировать",
+"zh-TW": "立即同步",
+"id": "Sinkronkan sekarang",
+"tr": "Şimdi eşitle"
+},
+"Unlink": {
+"ru": "Отвязать",
+"zh-TW": "解除連結",
+"id": "Lepas tautan",
+"tr": "Bağlantıyı kaldır"
+},
+"Sign out of Google? This device becomes a new anonymous player (progress stays on this device).": {
+"ru": "Выйти из Google? Это устройство станет новым анонимным игроком (прогресс останется на нём).",
+"zh-TW": "要登出 Google 嗎？此裝置將成為新的匿名玩家（進度會留在此裝置）。",
+"id": "Keluar dari Google? Perangkat ini menjadi pemain anonim baru (kemajuan tetap di perangkat ini).",
+"tr": "Google'dan çıkılsın mı? Bu cihaz yeni bir anonim oyuncu olur (ilerleme bu cihazda kalır)."
+},
+"Signed out": {
+"ru": "Вы вышли",
+"zh-TW": "已登出",
+"id": "Telah keluar",
+"tr": "Çıkış yapıldı"
+},
+"Synced": {
+"ru": "Синхронизировано",
+"zh-TW": "已同步",
+"id": "Tersinkron",
+"tr": "Eşitlendi"
+},
+"Sync failed": {
+"ru": "Ошибка синхронизации",
+"zh-TW": "同步失敗",
+"id": "Sinkronisasi gagal",
+"tr": "Eşitleme başarısız"
+},
+"Linked with Google": {
+"ru": "Привязано к Google",
+"zh-TW": "已與 Google 連結",
+"id": "Tertaut dengan Google",
+"tr": "Google ile bağlandı"
+},
+"Switched to your Google account and synced": {
+"ru": "Переключено на ваш аккаунт Google и синхронизировано",
+"zh-TW": "已切換到你的 Google 帳號並同步",
+"id": "Beralih ke akun Google Anda dan tersinkron",
+"tr": "Google hesabına geçildi ve eşitlendi"
+},
+"Please link after the game": {
+"ru": "Привяжите после партии",
+"zh-TW": "請在對局結束後連結",
+"id": "Silakan tautkan setelah permainan",
+"tr": "Lütfen oyundan sonra bağla"
+},
+"Last sync {t}": {
+"ru": "Последняя синхронизация {t}",
+"zh-TW": "上次同步 {t}",
+"id": "Sinkron terakhir {t}",
+"tr": "Son eşitleme {t}"
+},
+"This site ({d}) is not an authorized domain in Firebase. Add it in Firebase console → Authentication → Settings → Authorized domains.": {
+"ru": "Этот сайт ({d}) не является разрешённым доменом в Firebase. Добавьте его: консоль Firebase → Authentication → Settings → Authorized domains.",
+"zh-TW": "此網站（{d}）不是 Firebase 的授權網域。請在 Firebase 主控台 → Authentication → Settings → Authorized domains 新增。",
+"id": "Situs ini ({d}) bukan domain resmi di Firebase. Tambahkan di Firebase console → Authentication → Settings → Authorized domains.",
+"tr": "Bu site ({d}) Firebase'de yetkili bir alan adı değil. Firebase konsolu → Authentication → Settings → Authorized domains bölümünden ekle."
+},
+"This sign-in method is disabled. Enable \"Google\" and \"Anonymous\" in Firebase console → Authentication → Sign-in method.": {
+"ru": "Этот способ входа отключён. Включите «Google» и «Anonymous» в консоли Firebase → Authentication → Sign-in method.",
+"zh-TW": "此登入方式已停用。請在 Firebase 主控台 → Authentication → Sign-in method 啟用「Google」與「Anonymous」。",
+"id": "Metode masuk ini dinonaktifkan. Aktifkan \"Google\" dan \"Anonymous\" di Firebase console → Authentication → Sign-in method.",
+"tr": "Bu giriş yöntemi kapalı. Firebase konsolu → Authentication → Sign-in method bölümünde \"Google\" ve \"Anonymous\" seçeneklerini aç."
+},
+"Blocked by the API key's HTTP referrer restriction. Allow {d} in Google Cloud console → Credentials → API key.": {
+"ru": "Заблокировано ограничением HTTP referrer ключа API. Разрешите {d} в Google Cloud console → Credentials → API key.",
+"zh-TW": "被 API 金鑰的 HTTP 參照網址限制封鎖。請在 Google Cloud 主控台 → Credentials → API key 允許 {d}。",
+"id": "Diblokir oleh pembatasan HTTP referrer kunci API. Izinkan {d} di Google Cloud console → Credentials → API key.",
+"tr": "API anahtarının HTTP referrer kısıtlaması engelledi. Google Cloud konsolu → Credentials → API key bölümünde {d} için izin ver."
+},
+"The API key is invalid. Check firebase-config.js.": {
+"ru": "Ключ API недействителен. Проверьте firebase-config.js.",
+"zh-TW": "API 金鑰無效。請檢查 firebase-config.js。",
+"id": "Kunci API tidak valid. Periksa firebase-config.js.",
+"tr": "API anahtarı geçersiz. firebase-config.js dosyasını kontrol et."
+},
+"No network connection. Check your connection.": {
+"ru": "Нет подключения к сети. Проверьте соединение.",
+"zh-TW": "沒有網路連線。請檢查連線。",
+"id": "Tidak ada koneksi jaringan. Periksa koneksi Anda.",
+"tr": "Ağ bağlantısı yok. Bağlantını kontrol et."
+},
+"The popup was blocked. Signing in on a new page instead.": {
+"ru": "Всплывающее окно заблокировано. Вход на новой странице.",
+"zh-TW": "彈出視窗被封鎖。改為在新頁面登入。",
+"id": "Popup diblokir. Masuk di halaman baru sebagai gantinya.",
+"tr": "Açılır pencere engellendi. Bunun yerine yeni sayfada giriş yapılıyor."
+},
+"Firebase Authentication is not enabled (press \"Get started\" in the console).": {
+"ru": "Firebase Authentication не включён (нажмите «Get started» в консоли).",
+"zh-TW": "尚未啟用 Firebase Authentication（請在主控台按「Get started」）。",
+"id": "Firebase Authentication belum diaktifkan (tekan \"Get started\" di konsol).",
+"tr": "Firebase Authentication etkin değil (konsolda \"Get started\" düğmesine bas)."
+},
+"Ancient Egypt": {
+"ru": "Древний Египет",
+"zh-TW": "古埃及",
+"id": "Mesir Kuno",
+"tr": "Antik Mısır"
+},
+"about 20 min": {
+"ru": "около 20 мин",
+"zh-TW": "約 20 分鐘",
+"id": "sekitar 20 menit",
+"tr": "yaklaşık 20 dk"
+},
+"Its name means “passing” in ancient Egyptian. Fragments of boards come from First Dynasty tombs (c. 3100 BC), and the earliest certain picture is in the tomb of Hesy (c. 2600 BC). Tutankhamun was buried with senet boards.": {
+"ru": "По-древнеегипетски название значит «прохождение». Обломки досок найдены в гробницах I династии (ок. 3100 г. до н. э.), а самое раннее достоверное изображение — в гробнице Хеси (ок. 2600 г. до н. э.). Тутанхамона похоронили с досками для сенета.",
+"zh-TW": "名稱在古埃及語中意為「通過」。第一王朝（約西元前 3100 年）的墓中出土了棋盤碎片，最早可確認的圖像在赫西之墓（約西元前 2600 年）。圖坦卡門下葬時也帶著塞尼特棋盤。",
+"id": "Namanya berarti “melintas” dalam bahasa Mesir kuno. Pecahan papan berasal dari makam Dinasti Pertama (sekitar 3100 SM), dan gambar tertua yang pasti ada di makam Hesy (sekitar 2600 SM). Tutankhamun dimakamkan bersama papan senet.",
+"tr": "Adı eski Mısırca “geçiş” demektir. Tahta parçaları I. Hanedan mezarlarından (MÖ 3100 dolayı) gelir; kesin bilinen en eski resim Hesy'nin mezarındadır (MÖ 2600 dolayı). Tutankamon senet tahtalarıyla gömüldü."
+},
+"Two players with five pieces each. Move along the 30-square reverse-S track by the throw of the sticks; the first to bear all pieces off wins.": {
+"ru": "Два игрока, по пять фишек. Фишки идут по 30-клеточному пути в форме обратной S на число, выпавшее на палочках; кто первым выведет все фишки, тот победил.",
+"zh-TW": "兩人各 5 枚棋子。依木棒的點數沿 30 格的反 S 形路線前進，先讓所有棋子走出棋盤者獲勝。",
+"id": "Dua pemain, masing-masing lima bidak. Jalankan bidak di lintasan 30 petak berbentuk S terbalik sesuai lemparan tongkat; yang pertama mengeluarkan semua bidak menang.",
+"tr": "İki oyuncu, her birinde beş taş. Çubuk atışına göre 30 karelik ters S yolunda ilerle; tüm taşlarını ilk çıkaran kazanır."
+},
+"By the New Kingdom the game stood for the soul’s passage through the underworld; the Book of the Dead (chapter 17) shows the dead playing an unseen opponent. The exact rules are lost; here you play Kendall’s reconstruction.": {
+"ru": "К Новому царству игра стала символом пути души через загробный мир; в «Книге мёртвых» (глава 17) умерший играет с невидимым соперником. Точные правила утеряны; здесь вы играете по реконструкции Кендалла.",
+"zh-TW": "到了新王國時期，這個遊戲象徵靈魂穿越冥界的旅程；《死者之書》第 17 章描繪死者與看不見的對手對弈。確切規則已失傳，這裡採用肯德爾的復原。",
+"id": "Pada masa Kerajaan Baru, permainan ini melambangkan perjalanan jiwa melewati alam baka; Kitab Orang Mati (bab 17) menggambarkan orang mati bermain melawan lawan tak terlihat. Aturan pastinya hilang; di sini Anda memainkan rekonstruksi Kendall.",
+"tr": "Yeni Krallık döneminde oyun, ruhun öteki dünyadan geçişini simgeliyordu; Ölüler Kitabı (17. bölüm) ölüyü görünmez bir rakiple oynarken gösterir. Kesin kurallar kayıp; burada Kendall'ın yeniden kurgusunu oynarsın."
+},
+"Press Throw first": {
+"ru": "Сначала нажмите «Бросить»",
+"zh-TW": "先按［投擲］",
+"id": "Tekan Lempar dulu",
+"tr": "Önce At'a bas"
+},
+"Tap a piece to move": {
+"ru": "Нажмите фишку, чтобы пойти",
+"zh-TW": "點選要走的棋子",
+"id": "Ketuk bidak untuk bergerak",
+"tr": "Oynatmak için bir taşa dokun"
+},
+"You throw again!": {
+"ru": "Вы бросаете ещё раз!",
+"zh-TW": "你可以再投一次！",
+"id": "Anda melempar lagi!",
+"tr": "Tekrar atıyorsun!"
+},
+"That piece cannot move": {
+"ru": "Эта фишка не может ходить",
+"zh-TW": "那枚棋子不能走",
+"id": "Bidak itu tidak bisa bergerak",
+"tr": "O taş oynayamaz"
+},
+"Your own piece is there: you cannot stop on it": {
+"ru": "Там ваша фишка: на неё вставать нельзя",
+"zh-TW": "那裡有自己的棋子，不能停在上面",
+"id": "Ada bidak Anda sendiri di sana: tidak bisa berhenti di situ",
+"tr": "Orada kendi taşın var: üstünde duramazsın"
+},
+"Two rival pieces side by side are protected: no swap": {
+"ru": "Две фишки соперника рядом защищены: обмена нет",
+"zh-TW": "並排的兩枚對手棋子受到保護，不能交換",
+"id": "Dua bidak lawan berdampingan terlindungi: tidak bisa ditukar",
+"tr": "Yan yana iki rakip taş korunur: takas yok"
+},
+"Three rival pieces in a row are a wall you cannot jump": {
+"ru": "Три фишки соперника подряд — стена, её не перепрыгнуть",
+"zh-TW": "三枚相連的對手棋子是牆，無法越過",
+"id": "Tiga bidak lawan berderet adalah tembok yang tak bisa dilompati",
+"tr": "Art arda üç rakip taş, üstünden atlayamayacağın bir duvardır"
+},
+"You must stop exactly on 26, the House of Beauty: no passing it": {
+"ru": "Нужно встать ровно на 26, Дом красоты: проходить мимо нельзя",
+"zh-TW": "必須剛好停在 26 美之屋，不能越過",
+"id": "Anda harus berhenti tepat di 26, Rumah Keindahan: tidak boleh melewatinya",
+"tr": "Tam olarak 26'da, Güzellik Evi'nde durmalısın: geçemezsin"
+},
+"From this square only one throw bears off": {
+"ru": "С этой клетки выводит только один бросок",
+"zh-TW": "從這格只有一種點數能走出",
+"id": "Dari petak ini hanya satu lemparan yang bisa mengeluarkan",
+"tr": "Bu kareden yalnızca tek bir atış çıkarır"
+},
+"That is a rival piece. Move your spools": {
+"ru": "Это фишка соперника. Ходите катушками",
+"zh-TW": "那是對手的棋子。請走線軸",
+"id": "Itu bidak lawan. Jalankan gulungan Anda",
+"tr": "O rakip taşı. Makaralarını oynat"
+},
+"The board and the track": {
+"ru": "Доска и путь",
+"zh-TW": "棋盤與路線",
+"id": "Papan dan lintasan",
+"tr": "Tahta ve yol"
+},
+"Three rows of ten. You go from 1 to 30 in a reverse S: right on the top row, left in the middle, right again at the bottom. Both players share the track.": {
+"ru": "Три ряда по десять клеток. Путь идёт от 1 до 30 обратной S: вправо по верхнему ряду, влево по среднему, снова вправо по нижнему. Путь у игроков общий.",
+"zh-TW": "三排各十格。從 1 走到 30 呈反 S 形：上排向右、中排向左、下排再向右。兩人共用同一條路線。",
+"id": "Tiga baris berisi sepuluh. Anda berjalan dari 1 ke 30 membentuk S terbalik: ke kanan di baris atas, ke kiri di tengah, ke kanan lagi di bawah. Kedua pemain berbagi lintasan.",
+"tr": "Onar karelik üç sıra. 1'den 30'a ters S çizerek gidersin: üst sırada sağa, ortada sola, altta yine sağa. İki oyuncu aynı yolu paylaşır."
+},
+"Tap the last square of the track (30)": {
+"ru": "Нажмите последнюю клетку пути (30)",
+"zh-TW": "點選路線的最後一格（30）",
+"id": "Ketuk petak terakhir lintasan (30)",
+"tr": "Yolun son karesine (30) dokun"
+},
+"Right! Past 30 the pieces go off the board": {
+"ru": "Верно! После 30 фишки уходят с доски",
+"zh-TW": "答對了！過了 30 棋子就走出棋盤",
+"id": "Benar! Setelah 30 bidak keluar dari papan",
+"tr": "Doğru! 30'dan sonra taşlar tahtadan çıkar"
+},
+"Follow the glowing track to its last square": {
+"ru": "Пройдите по светящемуся пути до последней клетки",
+"zh-TW": "沿著發光的路線找到最後一格",
+"id": "Ikuti lintasan yang menyala sampai petak terakhir",
+"tr": "Parlayan yolu son karesine kadar izle"
+},
+"The throw sticks": {
+"ru": "Палочки для бросков",
+"zh-TW": "投擲木棒",
+"id": "Tongkat lempar",
+"tr": "Atış çubukları"
+},
+"Throw four flat sticks, white on one side. Count the white sides (1–4). If all four are dark, it is 5.": {
+"ru": "Бросьте четыре плоские палочки, белые с одной стороны. Считайте белые стороны (1–4). Если все четыре тёмные — это 5.",
+"zh-TW": "投出四根一面白色的扁平木棒，數白面朝上的數量（1～4）。四根都是黑面則是 5。",
+"id": "Lempar empat tongkat pipih yang satu sisinya putih. Hitung sisi putih (1–4). Jika keempatnya gelap, nilainya 5.",
+"tr": "Bir yüzü beyaz dört yassı çubuğu at. Beyaz yüzleri say (1–4). Dördü de koyuysa 5'tir."
+},
+"Press Throw": {
+"ru": "Нажмите «Бросить»",
+"zh-TW": "按［投擲］",
+"id": "Tekan Lempar",
+"tr": "At'a bas"
+},
+"How many squares do you move?": {
+"ru": "На сколько клеток вы идёте?",
+"zh-TW": "要走幾格？",
+"id": "Berapa petak Anda bergerak?",
+"tr": "Kaç kare ilerlersin?"
+},
+"Correct! All dark counts as 5": {
+"ru": "Верно! Все тёмные — это 5",
+"zh-TW": "正確！全黑算 5",
+"id": "Benar! Semua gelap dihitung 5",
+"tr": "Doğru! Hepsi koyu 5 sayılır"
+},
+"No white sides at all. All dark means…?": {
+"ru": "Белых сторон нет вовсе. Все тёмные значит…?",
+"zh-TW": "完全沒有白面。全黑代表……？",
+"id": "Tidak ada sisi putih sama sekali. Semua gelap berarti…?",
+"tr": "Hiç beyaz yüz yok. Hepsi koyu demek…?"
+},
+"Moving a piece": {
+"ru": "Ход фишкой",
+"zh-TW": "走棋",
+"id": "Menjalankan bidak",
+"tr": "Taş oynatmak"
+},
+"You play the spools. Move one piece along the track by the number thrown. You choose which piece.": {
+"ru": "Вы играете катушками. Передвиньте одну фишку по пути на выпавшее число. Какую — решаете вы.",
+"zh-TW": "你執線軸。依點數沿路線移動一枚棋子，走哪一枚由你決定。",
+"id": "Anda memainkan gulungan. Jalankan satu bidak di lintasan sesuai angka lemparan. Anda yang memilih bidaknya.",
+"tr": "Makaraları oynuyorsun. Atılan sayı kadar bir taşı yol boyunca ilerlet. Hangi taş olacağını sen seçersin."
+},
+"Throw, then move one spool": {
+"ru": "Бросьте и передвиньте одну катушку",
+"zh-TW": "投擲後，走一枚線軸",
+"id": "Lempar, lalu jalankan satu gulungan",
+"tr": "At, sonra bir makarayı oynat"
+},
+"Nice! You move only one piece per throw": {
+"ru": "Отлично! За бросок ходит только одна фишка",
+"zh-TW": "很好！每次投擲只走一枚棋子",
+"id": "Bagus! Satu lemparan hanya menjalankan satu bidak",
+"tr": "Güzel! Her atışta yalnızca bir taş oynar"
+},
+"Not on your own piece": {
+"ru": "Не на свою фишку",
+"zh-TW": "不能停在自己的棋子上",
+"id": "Tidak di bidak sendiri",
+"tr": "Kendi taşının üstüne olmaz"
+},
+"You cannot stop on a square with your own piece. Jumping over pieces on the way is fine.": {
+"ru": "Нельзя вставать на клетку со своей фишкой. Перепрыгивать фишки по пути можно.",
+"zh-TW": "不能停在有自己棋子的格子。途中越過棋子沒有問題。",
+"id": "Anda tidak bisa berhenti di petak berisi bidak sendiri. Melompati bidak di jalan boleh.",
+"tr": "Kendi taşının olduğu karede duramazsın. Yoldaki taşların üstünden atlamak serbesttir."
+},
+"Throw, then find a piece that can move": {
+"ru": "Бросьте и найдите фишку, которая может пойти",
+"zh-TW": "投擲後，找出能走的棋子",
+"id": "Lempar, lalu cari bidak yang bisa bergerak",
+"tr": "At, sonra oynayabilen bir taş bul"
+},
+"Right! Choose a piece that can land": {
+"ru": "Верно! Выбирайте фишку, которой есть куда встать",
+"zh-TW": "答對了！選擇可以落腳的棋子",
+"id": "Benar! Pilih bidak yang bisa mendarat",
+"tr": "Doğru! Konabileceği yer olan taşı seç"
+},
+"Swapping": {
+"ru": "Обмен",
+"zh-TW": "交換",
+"id": "Bertukar",
+"tr": "Takas"
+},
+"Land on a square with a single rival piece and you swap places: it goes back to the square you came from.": {
+"ru": "Встаньте на клетку с одиночной фишкой соперника — и вы поменяетесь местами: она уйдёт на клетку, откуда вы пришли.",
+"zh-TW": "停在只有一枚對手棋子的格子，就與它交換位置：它退回你原本的格子。",
+"id": "Mendarat di petak berisi satu bidak lawan dan Anda bertukar tempat: bidak itu kembali ke petak asal Anda.",
+"tr": "Tek bir rakip taşın olduğu kareye konarsan yer değiştirirsiniz: o, senin geldiğin kareye geri gider."
+},
+"Throw, then swap with a rival cone": {
+"ru": "Бросьте и поменяйтесь с конусом соперника",
+"zh-TW": "投擲後，與對手的圓錐交換",
+"id": "Lempar, lalu bertukar dengan kerucut lawan",
+"tr": "At, sonra bir rakip koniyle takas yap"
+},
+"Swapped! The rival piece went back": {
+"ru": "Обмен! Фишка соперника ушла назад",
+"zh-TW": "交換成功！對手的棋子退回去了",
+"id": "Bertukar! Bidak lawan mundur",
+"tr": "Takas! Rakip taş geri gitti"
+},
+"Go for the swap in this task": {
+"ru": "В этом задании сделайте обмен",
+"zh-TW": "這一題請進行交換",
+"id": "Lakukan pertukaran dalam tugas ini",
+"tr": "Bu görevde takas yap"
+},
+"Pairs are protected": {
+"ru": "Пары защищены",
+"zh-TW": "成對受到保護",
+"id": "Pasangan terlindungi",
+"tr": "Çiftler korunur"
+},
+"Two or more pieces of one colour side by side on the track cannot be swapped. You cannot land on them.": {
+"ru": "Две и более фишки одного цвета рядом на пути нельзя обменять. На них нельзя вставать.",
+"zh-TW": "路線上並排兩枚以上的同色棋子不能被交換，也不能停在上面。",
+"id": "Dua bidak atau lebih yang sewarna berdampingan di lintasan tidak bisa ditukar. Anda tidak bisa mendarat di atasnya.",
+"tr": "Yolda yan yana duran aynı renkten iki veya daha fazla taş takas edilemez. Üzerlerine konamazsın."
+},
+"Throw, then move a piece that can move": {
+"ru": "Бросьте и походите фишкой, которая может пойти",
+"zh-TW": "投擲後，走一枚能走的棋子",
+"id": "Lempar, lalu jalankan bidak yang bisa bergerak",
+"tr": "At, sonra oynayabilen bir taşı oynat"
+},
+"Right! A pair is out of reach": {
+"ru": "Верно! Пара недосягаема",
+"zh-TW": "答對了！成對的棋子碰不到",
+"id": "Benar! Pasangan tak terjangkau",
+"tr": "Doğru! Çifte dokunulamaz"
+},
+"Three make a wall": {
+"ru": "Три — это стена",
+"zh-TW": "三枚成牆",
+"id": "Tiga membuat tembok",
+"tr": "Üç taş duvar yapar"
+},
+"Three or more in a row make a wall your rival cannot jump past. You may jump your own walls.": {
+"ru": "Три и более подряд образуют стену, которую сопернику не перепрыгнуть. Свои стены перепрыгивать можно.",
+"zh-TW": "三枚以上相連成牆，對手無法越過。自己的牆可以越過。",
+"id": "Tiga atau lebih berderet membentuk tembok yang tak bisa dilompati lawan. Tembok sendiri boleh dilompati.",
+"tr": "Art arda üç veya daha fazla taş, rakibin üstünden atlayamayacağı bir duvar olur. Kendi duvarlarının üstünden atlayabilirsin."
+},
+"Throw, then move a piece the wall does not stop": {
+"ru": "Бросьте и походите фишкой, которую стена не держит",
+"zh-TW": "投擲後，走一枚不受牆阻擋的棋子",
+"id": "Lempar, lalu jalankan bidak yang tidak dihalangi tembok",
+"tr": "At, sonra duvarın durdurmadığı bir taşı oynat"
+},
+"Correct! Some pieces are held up behind a wall": {
+"ru": "Верно! Некоторые фишки застряли за стеной",
+"zh-TW": "正確！有些棋子被擋在牆後",
+"id": "Benar! Beberapa bidak tertahan di balik tembok",
+"tr": "Doğru! Bazı taşlar duvarın arkasında takılır"
+},
+"1, 4 and 5 throw again": {
+"ru": "1, 4 и 5 — бросок ещё раз",
+"zh-TW": "1、4、5 可以再投",
+"id": "1, 4, dan 5 melempar lagi",
+"tr": "1, 4 ve 5 tekrar atar"
+},
+"After a 1, 4 or 5 you move and then throw again. After a 2 or 3 it is your rival’s turn.": {
+"ru": "После 1, 4 или 5 вы ходите и бросаете снова. После 2 или 3 ходит соперник.",
+"zh-TW": "擲出 1、4、5 時，走完後再投一次。擲出 2、3 則換對手。",
+"id": "Setelah 1, 4, atau 5 Anda bergerak lalu melempar lagi. Setelah 2 atau 3 giliran lawan.",
+"tr": "1, 4 veya 5'ten sonra oynar ve tekrar atarsın. 2 veya 3'ten sonra sıra rakibe geçer."
+},
+"Throw and move, then throw and move again": {
+"ru": "Бросьте и походите, затем снова бросьте и походите",
+"zh-TW": "投擲並走棋，再投擲並走棋",
+"id": "Lempar dan jalan, lalu lempar dan jalan lagi",
+"tr": "At ve oyna, sonra yine at ve oyna"
+},
+"Throw again!": {
+"ru": "Бросайте ещё!",
+"zh-TW": "再投一次！",
+"id": "Lempar lagi!",
+"tr": "Tekrar at!"
+},
+"Well done! Extra throws carry you far": {
+"ru": "Отлично! Дополнительные броски уводят далеко",
+"zh-TW": "做得好！額外的投擲讓你走得很遠",
+"id": "Bagus! Lemparan tambahan membawa Anda jauh",
+"tr": "Aferin! Ek atışlar seni uzağa taşır"
+},
+"26: the House of Beauty": {
+"ru": "26: Дом красоты",
+"zh-TW": "26：美之屋",
+"id": "26: Rumah Keindahan",
+"tr": "26: Güzellik Evi"
+},
+"Every piece must stop exactly on 26, the House of Beauty, before going on. Pieces there cannot be swapped.": {
+"ru": "Каждая фишка должна встать ровно на 26, Дом красоты, прежде чем идти дальше. Там её нельзя обменять.",
+"zh-TW": "每枚棋子都必須剛好停在 26 美之屋才能繼續前進。停在那裡的棋子不能被交換。",
+"id": "Setiap bidak harus berhenti tepat di 26, Rumah Keindahan, sebelum melanjutkan. Bidak di sana tidak bisa ditukar.",
+"tr": "Her taş devam etmeden önce tam olarak 26'da, Güzellik Evi'nde durmalıdır. Oradaki taşlar takas edilemez."
+},
+"Throw, then enter the House of Beauty": {
+"ru": "Бросьте и войдите в Дом красоты",
+"zh-TW": "投擲後，進入美之屋",
+"id": "Lempar, lalu masuk ke Rumah Keindahan",
+"tr": "At, sonra Güzellik Evi'ne gir"
+},
+"In the House of Beauty! Now head for the exits": {
+"ru": "Вы в Доме красоты! Теперь к выходам",
+"zh-TW": "進入美之屋了！接著前往出口",
+"id": "Di Rumah Keindahan! Sekarang menuju pintu keluar",
+"tr": "Güzellik Evi'ndesin! Şimdi çıkışlara yönel"
+},
+"27: the House of Water": {
+"ru": "27: Дом воды",
+"zh-TW": "27：水之屋",
+"id": "27: Rumah Air",
+"tr": "27: Su Evi"
+},
+"A 1 from the House of Beauty drops into the water and sends the piece back to 15, the House of Rebirth (the ankh) — or the first free square before it.": {
+"ru": "Единица из Дома красоты роняет фишку в воду и отправляет её на 15, Дом возрождения (анх), — или на первую свободную клетку перед ним.",
+"zh-TW": "從美之屋擲出 1 會落入水中，棋子被送回 15 重生之屋（安卡），若被佔就回到它之前的第一個空格。",
+"id": "Angka 1 dari Rumah Keindahan menjatuhkan bidak ke air dan mengirimnya kembali ke 15, Rumah Kelahiran Kembali (ankh) — atau petak kosong pertama sebelumnya.",
+"tr": "Güzellik Evi'nden 1 atınca taş suya düşer ve 15'e, Yeniden Doğuş Evi'ne (ankh) — ya da ondan önceki ilk boş kareye — geri gönderilir."
+},
+"Throw, then move the piece on 26": {
+"ru": "Бросьте и походите фишкой с 26",
+"zh-TW": "投擲後，走 26 上的棋子",
+"id": "Lempar, lalu jalankan bidak di 26",
+"tr": "At, sonra 26'daki taşı oynat"
+},
+"Into the water and back to 15. With a 1, move another piece if you can!": {
+"ru": "В воду и назад на 15. С единицей ходите другой фишкой, если можете!",
+"zh-TW": "落水回到 15。擲出 1 時，能走別的棋子就走別的！",
+"id": "Masuk air dan kembali ke 15. Dengan angka 1, jalankan bidak lain jika bisa!",
+"tr": "Suya düştü ve 15'e döndü. 1 gelince mümkünse başka bir taş oynat!"
+},
+"Move the piece on 26 in this task": {
+"ru": "В этом задании ходите фишкой с 26",
+"zh-TW": "這一題請走 26 上的棋子",
+"id": "Jalankan bidak di 26 dalam tugas ini",
+"tr": "Bu görevde 26'daki taşı oynat"
+},
+"Bearing off": {
+"ru": "Вывод фишек",
+"zh-TW": "走出棋盤",
+"id": "Mengeluarkan bidak",
+"tr": "Taş çıkarma"
+},
+"Bear off from 26 with a 5, from 28 with a 3, from 29 with a 2, from 30 with a 1. Pieces on 28–30 cannot move otherwise.": {
+"ru": "С 26 выводит 5, с 28 — 3, с 29 — 2, с 30 — 1. Иначе фишки на 28–30 не ходят.",
+"zh-TW": "26 擲 5、28 擲 3、29 擲 2、30 擲 1 即可走出。28～30 的棋子不能做其他移動。",
+"id": "Keluar dari 26 dengan 5, dari 28 dengan 3, dari 29 dengan 2, dari 30 dengan 1. Bidak di 28–30 tidak bisa bergerak dengan cara lain.",
+"tr": "26'dan 5 ile, 28'den 3 ile, 29'dan 2 ile, 30'dan 1 ile çıkılır. 28–30'daki taşlar başka şekilde oynayamaz."
+},
+"Throw, then bear a piece off": {
+"ru": "Бросьте и выведите фишку",
+"zh-TW": "投擲後，讓一枚棋子走出",
+"id": "Lempar, lalu keluarkan satu bidak",
+"tr": "At, sonra bir taş çıkar"
+},
+"Off! From 29 a 2 bears off": {
+"ru": "Вышла! С 29 выводит двойка",
+"zh-TW": "走出了！29 擲 2 就能走出",
+"id": "Keluar! Dari 29 angka 2 mengeluarkan",
+"tr": "Çıktı! 29'dan 2 ile çıkılır"
+},
+"Bear a piece off in this task": {
+"ru": "В этом задании выведите фишку",
+"zh-TW": "這一題請讓棋子走出",
+"id": "Keluarkan satu bidak dalam tugas ini",
+"tr": "Bu görevde bir taş çıkar"
+},
+"No move: pass": {
+"ru": "Хода нет — пас",
+"zh-TW": "無法走就跳過",
+"id": "Tidak bisa jalan: lewati",
+"tr": "Hamle yoksa pas"
+},
+"If no piece can move, you pass. But a 1, 4 or 5 still lets you throw again.": {
+"ru": "Если ходить нечем, вы пасуете. Но 1, 4 или 5 всё равно дают ещё бросок.",
+"zh-TW": "沒有棋子能走就跳過。不過擲出 1、4、5 仍然可以再投一次。",
+"id": "Jika tidak ada bidak yang bisa bergerak, Anda melewati giliran. Tapi 1, 4, atau 5 tetap memberi lemparan lagi.",
+"tr": "Hiçbir taş oynayamazsa pas geçersin. Ama 1, 4 veya 5 yine de tekrar attırır."
+},
+"No piece can move. Press Pass": {
+"ru": "Ходить нечем. Нажмите «Пас»",
+"zh-TW": "沒有棋子能走。請按［跳過］",
+"id": "Tidak ada bidak yang bisa bergerak. Tekan Lewati",
+"tr": "Hiçbir taş oynayamaz. Pas'a bas"
+},
+"Passed! The piece on 28 waits for a 3": {
+"ru": "Пас! Фишка на 28 ждёт тройку",
+"zh-TW": "跳過了！28 上的棋子在等 3",
+"id": "Dilewati! Bidak di 28 menunggu angka 3",
+"tr": "Pas geçildi! 28'deki taş 3 bekliyor"
+},
+"How to win": {
+"ru": "Как победить",
+"zh-TW": "勝利方式",
+"id": "Cara menang",
+"tr": "Nasıl kazanılır"
+},
+"The first to bear off all their pieces wins. Bear off your last one!": {
+"ru": "Побеждает тот, кто первым выведет все фишки. Выведите последнюю!",
+"zh-TW": "先讓全部棋子走出的人獲勝。讓最後一枚走出吧！",
+"id": "Yang pertama mengeluarkan semua bidaknya menang. Keluarkan bidak terakhir Anda!",
+"tr": "Tüm taşlarını ilk çıkaran kazanır. Son taşını çıkar!"
+},
+"Throw, then bear off your last piece": {
+"ru": "Бросьте и выведите последнюю фишку",
+"zh-TW": "投擲後，讓最後一枚棋子走出",
+"id": "Lempar, lalu keluarkan bidak terakhir",
+"tr": "At, sonra son taşını çıkar"
+},
+"All off — you win! You are ready to play": {
+"ru": "Все вышли — победа! Вы готовы играть",
+"zh-TW": "全部走出——你贏了！可以開始對局了",
+"id": "Semua keluar — Anda menang! Anda siap bermain",
+"tr": "Hepsi çıktı — kazandın! Oynamaya hazırsın"
+},
+"Move the piece that can bear off": {
+"ru": "Ходите фишкой, которая может выйти",
+"zh-TW": "走能走出的那枚棋子",
+"id": "Jalankan bidak yang bisa keluar",
+"tr": "Çıkabilen taşı oynat"
+},
+"Coach": {
+"ru": "Тренер",
+"zh-TW": "教練",
+"id": "Pelatih",
+"tr": "Koç"
+},
+"Coach (explanations) on / off": {
+"ru": "Тренер (пояснения) вкл. / выкл.",
+"zh-TW": "教練（講解）開／關",
+"id": "Pelatih (penjelasan) aktif / mati",
+"tr": "Koç (açıklamalar) açık / kapalı"
+},
+"Coach ON": {
+"ru": "Тренер ВКЛ.",
+"zh-TW": "教練 開",
+"id": "Pelatih AKTIF",
+"tr": "Koç AÇIK"
+},
+"Coach OFF": {
+"ru": "Тренер ВЫКЛ.",
+"zh-TW": "教練 關",
+"id": "Pelatih MATI",
+"tr": "Koç KAPALI"
+},
+"The coach rests during rated and online games, AI vs AI, lessons and puzzles. It comes back when you play the AI or a friend.": {
+"ru": "Тренер отдыхает в рейтинговых и онлайн-партиях, в режиме ИИ против ИИ, в уроках и задачах. Он вернётся, когда вы играете с ИИ или другом.",
+"zh-TW": "積分戰、線上對局、AI 對 AI、課程和謎題中教練會休息。與 AI 或朋友對局時就會回來。",
+"id": "Pelatih beristirahat selama permainan berperingkat dan daring, AI lawan AI, pelajaran, dan teka-teki. Ia kembali saat Anda melawan AI atau teman.",
+"tr": "Koç dereceli ve çevrim içi oyunlarda, YZ'ye karşı YZ'de, derslerde ve bulmacalarda dinlenir. Yapay zekâya veya bir arkadaşa karşı oynadığında geri gelir."
+},
+"The coach is off. Switch it on at the top right to see win chances, swap risks and explained candidate moves.": {
+"ru": "Тренер выключен. Включите его справа вверху, чтобы видеть шансы на победу, риск обмена и разбор вариантов.",
+"zh-TW": "教練已關閉。打開右上角的開關，可顯示勝率、被交換的機率和候選著法講解。",
+"id": "Pelatih mati. Aktifkan di kanan atas untuk melihat peluang menang, risiko ditukar, dan penjelasan langkah kandidat.",
+"tr": "Koç kapalı. Kazanma şansını, takas risklerini ve açıklamalı aday hamleleri görmek için sağ üstten aç."
+},
+"The game is over. Analyse it and a move-by-move review (best moves, mistakes and why) appears here.": {
+"ru": "Партия окончена. Запустите анализ — здесь появится разбор ход за ходом (лучшие ходы, ошибки и почему).",
+"zh-TW": "對局結束。進行分析後，這裡會出現逐手覆盤（最佳著法、失誤與原因）。",
+"id": "Permainan selesai. Analisis dan ulasan langkah demi langkah (langkah terbaik, kesalahan, dan alasannya) muncul di sini.",
+"tr": "Oyun bitti. Analiz et; hamle hamle inceleme (en iyi hamleler, hatalar ve nedenleri) burada görünür."
+},
+"Your rival’s turn. Guess which throw would let them swap with which of your pieces.": {
+"ru": "Ход соперника. Угадайте, какой бросок позволит ему поменяться с какой из ваших фишек.",
+"zh-TW": "輪到對手。想想對手擲出幾點時，會和你的哪枚棋子交換位置。",
+"id": "Giliran lawan. Tebak lemparan mana yang memungkinkannya bertukar dengan bidak Anda yang mana.",
+"tr": "Rakibin sırası. Hangi atışın onu hangi taşınla takas ettireceğini tahmin et."
+},
+"Thinking about the candidates…": {
+"ru": "Обдумываю варианты…",
+"zh-TW": "正在思考候選著法…",
+"id": "Memikirkan kandidat…",
+"tr": "Adaylar düşünülüyor…"
+},
+"Opening": {
+"ru": "Дебют",
+"zh-TW": "開局",
+"id": "Pembukaan",
+"tr": "Açılış"
+},
+"Middle game": {
+"ru": "Миттельшпиль",
+"zh-TW": "中盤",
+"id": "Pertengahan",
+"tr": "Oyun ortası"
+},
+"Endgame": {
+"ru": "Эндшпиль",
+"zh-TW": "終盤",
+"id": "Akhir permainan",
+"tr": "Oyun sonu"
+},
+"Win": {
+"ru": "Победа",
+"zh-TW": "勝率",
+"id": "Menang",
+"tr": "Kazanma"
+},
+"Race": {
+"ru": "Гонка",
+"zh-TW": "競速",
+"id": "Balapan",
+"tr": "Yarış"
+},
+"Walls": {
+"ru": "Стены",
+"zh-TW": "牆",
+"id": "Tembok",
+"tr": "Duvarlar"
+},
+"ahead": {
+"ru": "впереди",
+"zh-TW": "領先",
+"id": "unggul",
+"tr": "önde"
+},
+"behind": {
+"ru": "позади",
+"zh-TW": "落後",
+"id": "tertinggal",
+"tr": "geride"
+},
+"Throw first. The chances: 1 is 4/16, 2 is 6/16, 3 is 4/16, 4 is 1/16, 5 is 1/16. A 1, 4 or 5 lets you throw again.": {
+"ru": "Сначала бросьте. Шансы: 1 — 4/16, 2 — 6/16, 3 — 4/16, 4 — 1/16, 5 — 1/16. После 1, 4 или 5 — ещё бросок.",
+"zh-TW": "先投擲。機率：1 = 4/16、2 = 6/16、3 = 4/16、4 = 1/16、5 = 1/16。擲出 1、4、5 可以再投一次。",
+"id": "Lempar dulu. Peluangnya: 1 = 4/16, 2 = 6/16, 3 = 4/16, 4 = 1/16, 5 = 1/16. Angka 1, 4, atau 5 memberi lemparan lagi.",
+"tr": "Önce at. Olasılıklar: 1 = 4/16, 2 = 6/16, 3 = 4/16, 4 = 1/16, 5 = 1/16. 1, 4 veya 5 tekrar attırır."
+},
+"For this throw the first choice is “{c}”. Your win chance after it: {p}%.": {
+"ru": "Для этого броска первый выбор — «{c}». Ваш шанс победы после него: {p}%.",
+"zh-TW": "這次投擲的首選方針是「{c}」。走完後的勝率 {p}%。",
+"id": "Untuk lemparan ini pilihan pertama adalah “{c}”. Peluang menang setelahnya: {p}%.",
+"tr": "Bu atış için ilk tercih “{c}”. Sonrasında kazanma şansın: %{p}."
+},
+"The second choice is clearly worse ({x} less) — play this one precisely.": {
+"ru": "Второй вариант заметно хуже (на {x} меньше) — играйте этот точно.",
+"zh-TW": "第二選擇明顯較差（少 {x}）——請精準下這一手。",
+"id": "Pilihan kedua jelas lebih buruk ({x} lebih rendah) — mainkan yang ini dengan tepat.",
+"tr": "İkinci tercih açıkça daha kötü ({x} daha az) — bunu tam oyna."
+},
+"The candidates are close: a fork in the road. Pick the plan you like.": {
+"ru": "Варианты близки: развилка. Выбирайте план по вкусу.",
+"zh-TW": "候選著法差不多：這是分岔路口，選你喜歡的方針。",
+"id": "Kandidatnya berdekatan: persimpangan jalan. Pilih rencana yang Anda suka.",
+"tr": "Adaylar birbirine yakın: yol ayrımı. Sevdiğin planı seç."
+},
+"This is the only move.": {
+"ru": "Это единственный ход.",
+"zh-TW": "這是唯一的著法。",
+"id": "Ini satu-satunya langkah.",
+"tr": "Tek hamle bu."
+},
+"Fork — plans to choose from": {
+"ru": "Развилка — планы на выбор",
+"zh-TW": "分岔——可選擇的方針",
+"id": "Persimpangan — rencana untuk dipilih",
+"tr": "Yol ayrımı — seçilecek planlar"
+},
+"None of these is much worse than another.": {
+"ru": "Ни один из них не намного хуже другого.",
+"zh-TW": "這些之間沒有明顯的優劣。",
+"id": "Tidak ada yang jauh lebih buruk dari yang lain.",
+"tr": "Bunların hiçbiri diğerinden çok daha kötü değil."
+},
+"Candidates and plans": {
+"ru": "Варианты и планы",
+"zh-TW": "候選著法與方針",
+"id": "Kandidat dan rencana",
+"tr": "Adaylar ve planlar"
+},
+"The best candidates, by plan (hover or tap a row to see the arrow on the board).": {
+"ru": "Лучшие варианты по планам (наведите или нажмите строку, чтобы увидеть стрелку на доске).",
+"zh-TW": "依方針列出的最佳候選（滑過或點選一列可在棋盤上看到箭頭）。",
+"id": "Kandidat terbaik menurut rencana (arahkan atau ketuk baris untuk melihat panah di papan).",
+"tr": "Plana göre en iyi adaylar (tahtadaki oku görmek için bir satırın üstüne gel veya dokun)."
+},
+"Best": {
+"ru": "Лучший",
+"zh-TW": "最佳",
+"id": "Terbaik",
+"tr": "En iyi"
+},
+"About the same": {
+"ru": "Почти так же",
+"zh-TW": "差不多",
+"id": "Hampir sama",
+"tr": "Aşağı yukarı aynı"
+},
+"A bit worse": {
+"ru": "Чуть хуже",
+"zh-TW": "稍差",
+"id": "Sedikit lebih buruk",
+"tr": "Biraz daha kötü"
+},
+"Worse": {
+"ru": "Хуже",
+"zh-TW": "較差",
+"id": "Lebih buruk",
+"tr": "Daha kötü"
+},
+"Piece on {from} to {to}": {
+"ru": "Фишка с {from} на {to}",
+"zh-TW": "{from} 的棋子走到 {to}",
+"id": "Bidak di {from} ke {to}",
+"tr": "{from}'deki taş {to}'a"
+},
+"Piece on {from} off": {
+"ru": "Фишка с {from} выходит",
+"zh-TW": "{from} 的棋子走出棋盤",
+"id": "Bidak di {from} keluar",
+"tr": "{from}'deki taş çıkar"
+},
+"Piece on {from} into the water (back to {to})": {
+"ru": "Фишка с {from} в воду (назад на {to})",
+"zh-TW": "{from} 的棋子落水（回到 {to}）",
+"id": "Bidak di {from} masuk air (kembali ke {to})",
+"tr": "{from}'deki taş suya (geri {to}'a)"
+},
+"Bear off": {
+"ru": "Вывести",
+"zh-TW": "走出",
+"id": "Keluarkan",
+"tr": "Çıkar"
+},
+"Bear a piece off": {
+"ru": "Вывести фишку",
+"zh-TW": "讓棋子走出棋盤",
+"id": "Keluarkan satu bidak",
+"tr": "Bir taş çıkar"
+},
+"Off the board with the exact throw. Each piece off brings you closer to winning the race.": {
+"ru": "Уход с доски точным броском. Каждая выведенная фишка приближает победу в гонке.",
+"zh-TW": "用恰好的點數走出棋盤。每走出一枚，離勝利就更近一步。",
+"id": "Keluar dari papan dengan lemparan tepat. Setiap bidak yang keluar membawa Anda lebih dekat ke kemenangan.",
+"tr": "Tam atışla tahtadan çık. Çıkan her taş seni yarışı kazanmaya yaklaştırır."
+},
+"Swap": {
+"ru": "Обмен",
+"zh-TW": "交換",
+"id": "Tukar",
+"tr": "Takas"
+},
+"Swap with a rival piece": {
+"ru": "Обменяться с фишкой соперника",
+"zh-TW": "與對手棋子交換位置",
+"id": "Bertukar dengan bidak lawan",
+"tr": "Bir rakip taşla takas"
+},
+"Swap places with the rival piece and push it {d} squares back: you go forward, it goes back.": {
+"ru": "Поменяйтесь местами с фишкой соперника и отбросьте её на {d} клеток: вы вперёд, она назад.",
+"zh-TW": "與對手的棋子交換位置，把它推回 {d} 格：你前進，它後退。",
+"id": "Bertukar tempat dengan bidak lawan dan dorong ia {d} petak ke belakang: Anda maju, ia mundur.",
+"tr": "Rakip taşla yer değiştir ve onu {d} kare geri it: sen ilerlersin, o geriler."
+},
+"House of Beauty": {
+"ru": "Дом красоты",
+"zh-TW": "美之屋",
+"id": "Rumah Keindahan",
+"tr": "Güzellik Evi"
+},
+"Enter the House of Beauty (26)": {
+"ru": "Войти в Дом красоты (26)",
+"zh-TW": "進入美之屋（26）",
+"id": "Masuk ke Rumah Keindahan (26)",
+"tr": "Güzellik Evi'ne (26) gir"
+},
+"To an exit": {
+"ru": "К выходу",
+"zh-TW": "去出口",
+"id": "Ke pintu keluar",
+"tr": "Çıkışa"
+},
+"Move on to an exit square": {
+"ru": "Перейти на выходную клетку",
+"zh-TW": "走到出口格",
+"id": "Pindah ke petak keluar",
+"tr": "Bir çıkış karesine geç"
+},
+"From the House of Beauty to {to}. From {to} a {e} bears off ({p}% per throw).": {
+"ru": "Из Дома красоты на {to}. С {to} выводит {e} ({p}% за бросок).",
+"zh-TW": "從美之屋走到 {to}。在 {to} 擲出 {e} 即可走出（每次 {p}%）。",
+"id": "Dari Rumah Keindahan ke {to}. Dari {to} angka {e} mengeluarkan bidak ({p}% per lemparan).",
+"tr": "Güzellik Evi'nden {to}'a. {to}'dan {e} ile çıkılır (atış başına %{p})."
+},
+"Pair": {
+"ru": "Пара",
+"zh-TW": "成對",
+"id": "Pasangan",
+"tr": "Çift"
+},
+"Pair up to protect": {
+"ru": "Встать парой для защиты",
+"zh-TW": "並排保護",
+"id": "Berpasangan untuk melindungi",
+"tr": "Korumak için çift ol"
+},
+"Puts the piece next to a friend. Two pieces side by side cannot be swapped.": {
+"ru": "Ставит фишку рядом со своей. Две фишки рядом нельзя обменять.",
+"zh-TW": "讓棋子挨著自己的棋子。兩枚並排的棋子不會被交換。",
+"id": "Menaruh bidak di samping teman. Dua bidak berdampingan tidak bisa ditukar.",
+"tr": "Taşı kendi taşının yanına koyar. Yan yana iki taş takas edilemez."
+},
+"Wall": {
+"ru": "Стена",
+"zh-TW": "牆",
+"id": "Tembok",
+"tr": "Duvar"
+},
+"Build a wall of three": {
+"ru": "Построить стену из трёх",
+"zh-TW": "三枚連成牆",
+"id": "Bangun tembok tiga",
+"tr": "Üçlü duvar kur"
+},
+"Three or more in a row make a wall your rival cannot jump past — it holds their pieces back.": {
+"ru": "Три и более подряд — стена, которую соперник не перепрыгнет: она сдерживает его фишки.",
+"zh-TW": "三枚以上連成一排就是牆，對手無法越過，可以拖住對手的棋子。",
+"id": "Tiga atau lebih berderet membuat tembok yang tak bisa dilompati lawan — menahan bidak-bidaknya.",
+"tr": "Art arda üç veya daha fazlası rakibin atlayamayacağı bir duvar yapar — taşlarını geride tutar."
+},
+"Escape": {
+"ru": "Бегство",
+"zh-TW": "逃跑",
+"id": "Kabur",
+"tr": "Kaçış"
+},
+"Save a threatened piece": {
+"ru": "Спасти фишку под угрозой",
+"zh-TW": "救出被瞄準的棋子",
+"id": "Selamatkan bidak terancam",
+"tr": "Tehdit altındaki taşı kurtar"
+},
+"Moves the threatened piece ({r0}% to be swapped) to a square with {r1}%.": {
+"ru": "Переводит фишку под угрозой ({r0}% обмена) на клетку с {r1}%.",
+"zh-TW": "把被瞄準的棋子（被交換機率 {r0}%）移到 {r1}% 的格子。",
+"id": "Memindahkan bidak terancam ({r0}% ditukar) ke petak dengan {r1}%.",
+"tr": "Tehdit altındaki taşı (takas olasılığı %{r0}) %{r1} olan bir kareye taşır."
+},
+"Safe": {
+"ru": "Надёжно",
+"zh-TW": "穩妥",
+"id": "Aman",
+"tr": "Güvenli"
+},
+"Play safe": {
+"ru": "Играть надёжно",
+"zh-TW": "穩妥地走",
+"id": "Main aman",
+"tr": "Güvenli oyna"
+},
+"After this move your pieces are swapped next turn with {r}% in total — a low-risk move.": {
+"ru": "После этого хода ваши фишки обменяют на следующем ходу с вероятностью {r}% в сумме — ход с малым риском.",
+"zh-TW": "走完後，你的棋子下回合被交換的機率合計 {r}%，風險很小。",
+"id": "Setelah langkah ini, bidak Anda ditukar giliran berikutnya dengan total {r}% — langkah berisiko rendah.",
+"tr": "Bu hamleden sonra taşların bir sonraki turda toplam %{r} olasılıkla takas edilir — düşük riskli bir hamle."
+},
+"Advance": {
+"ru": "Вперёд",
+"zh-TW": "前進",
+"id": "Maju",
+"tr": "İlerle"
+},
+"Move ahead": {
+"ru": "Продвинуться",
+"zh-TW": "向前推進",
+"id": "Bergerak maju",
+"tr": "Öne geç"
+},
+"Moves a piece ahead to shorten your race. Check it is not easy to swap there ({r}%).": {
+"ru": "Продвигает фишку и сокращает вашу гонку. Проверьте, что там её нелегко обменять ({r}%).",
+"zh-TW": "把棋子往前推，縮短你的路程。注意那裡是否容易被交換（{r}%）。",
+"id": "Memajukan bidak untuk memperpendek balapan. Pastikan di sana tidak mudah ditukar ({r}%).",
+"tr": "Yarışını kısaltmak için bir taşı ilerletir. Orada kolay takas edilmediğini kontrol et (%{r})."
+},
+"Water": {
+"ru": "Вода",
+"zh-TW": "落水",
+"id": "Air",
+"tr": "Su"
+},
+"Fall into the water": {
+"ru": "Упасть в воду",
+"zh-TW": "掉進水中",
+"id": "Jatuh ke air",
+"tr": "Suya düş"
+},
+"Stopping on 27, the House of Water, sends the piece back to 15, the House of Rebirth. Only when nothing else is possible.": {
+"ru": "Остановка на 27, в Доме воды, отправляет фишку на 15, в Дом возрождения. Только если иначе нельзя.",
+"zh-TW": "停在 27 水之屋的棋子要回到 15 重生之屋。只在別無選擇時才這樣走。",
+"id": "Berhenti di 27, Rumah Air, mengirim bidak kembali ke 15, Rumah Kelahiran Kembali. Hanya jika tak ada pilihan lain.",
+"tr": "27'de, Su Evi'nde durmak taşı 15'e, Yeniden Doğuş Evi'ne geri gönderir. Yalnızca başka çare yoksa."
+},
+"How to think": {
+"ru": "Как думать",
+"zh-TW": "思考方式",
+"id": "Cara berpikir",
+"tr": "Nasıl düşünmeli"
+},
+"More tips ({n})": {
+"ru": "Ещё советы ({n})",
+"zh-TW": "更多提示（{n}）",
+"id": "Tips lainnya ({n})",
+"tr": "Daha fazla ipucu ({n})"
+},
+"Fold": {
+"ru": "Свернуть",
+"zh-TW": "收合",
+"id": "Lipat",
+"tr": "Daralt"
+},
+"Your piece on {p} is swapped next turn with {r}% (it stands alone 1–5 squares ahead of a rival piece).": {
+"ru": "Вашу фишку на {p} обменяют на следующем ходу с вероятностью {r}% (она одна в 1–5 клетках перед фишкой соперника).",
+"zh-TW": "你在 {p} 的棋子下回合被交換的機率是 {r}%（它單獨站在對手棋子前方 1～5 格）。",
+"id": "Bidak Anda di {p} ditukar giliran berikutnya dengan {r}% (ia sendirian 1–5 petak di depan bidak lawan).",
+"tr": "{p}'deki taşın bir sonraki turda %{r} olasılıkla takas edilir (bir rakip taşın 1–5 kare önünde tek başına duruyor)."
+},
+"Your piece on {p} is in real danger ({r}%). Two squares ahead of a rival is the worst: 6/16 = 38%.": {
+"ru": "Фишка на {p} в серьёзной опасности ({r}%). Хуже всего — две клетки перед соперником: 6/16 = 38%.",
+"zh-TW": "你在 {p} 的棋子很危險（{r}%）。站在對手前方 2 格最糟：6/16 = 38%。",
+"id": "Bidak Anda di {p} dalam bahaya besar ({r}%). Dua petak di depan lawan adalah yang terburuk: 6/16 = 38%.",
+"tr": "{p}'deki taşın ciddi tehlikede (%{r}). Rakibin iki kare önü en kötüsüdür: 6/16 = %38."
+},
+"None of your pieces can be swapped right now.": {
+"ru": "Сейчас ни одну вашу фишку обменять нельзя.",
+"zh-TW": "現在你的棋子都不會被交換。",
+"id": "Saat ini tidak ada bidak Anda yang bisa ditukar.",
+"tr": "Şu anda hiçbir taşın takas edilemez."
+},
+"Two in a row cannot be swapped; three in a row make a wall your rival cannot jump.": {
+"ru": "Две подряд не обменять; три подряд — стена, которую сопернику не перепрыгнуть.",
+"zh-TW": "兩枚並排不會被交換；三枚連排成牆，對手無法越過。",
+"id": "Dua berderet tidak bisa ditukar; tiga berderet membuat tembok yang tak bisa dilompati lawan.",
+"tr": "Art arda iki taş takas edilemez; art arda üç taş rakibin atlayamayacağı bir duvar olur."
+},
+"Throw chances: 1 is 4/16, 2 is 6/16, 3 is 4/16, 4 is 1/16, 5 is 1/16. A 1, 4 or 5 (6/16 together) gives another throw.": {
+"ru": "Шансы бросков: 1 — 4/16, 2 — 6/16, 3 — 4/16, 4 — 1/16, 5 — 1/16. 1, 4 или 5 (вместе 6/16) дают ещё бросок.",
+"zh-TW": "投擲機率：1 = 4/16、2 = 6/16、3 = 4/16、4 = 1/16、5 = 1/16。擲出 1、4、5（合計 6/16）可以再投一次。",
+"id": "Peluang lemparan: 1 = 4/16, 2 = 6/16, 3 = 4/16, 4 = 1/16, 5 = 1/16. Angka 1, 4, atau 5 (total 6/16) memberi lemparan lagi.",
+"tr": "Atış olasılıkları: 1 = 4/16, 2 = 6/16, 3 = 4/16, 4 = 1/16, 5 = 1/16. 1, 4 veya 5 (toplam 6/16) bir atış daha verir."
+},
+"Opening: rather than racing your front piece, line pieces up in twos and threes to block your rival’s road.": {
+"ru": "Дебют: вместо того чтобы гнать переднюю фишку, выстраивайте фишки по две и по три и перекрывайте дорогу сопернику.",
+"zh-TW": "開局：與其讓最前面的棋子狂奔，不如把棋子排成兩枚、三枚一組，堵住對手的去路。",
+"id": "Pembukaan: daripada memacu bidak terdepan, susun bidak berpasangan dan bertiga untuk menghalangi jalan lawan.",
+"tr": "Açılış: öndeki taşını koşturmak yerine taşlarını ikili ve üçlü dizip rakibin yolunu kapat."
+},
+"You must land exactly on 26, the House of Beauty. A throw that would pass 26 cannot be used, so watch the distances.": {
+"ru": "Нужно встать ровно на 26, Дом красоты. Бросок, который проходит 26, использовать нельзя, так что следите за расстояниями.",
+"zh-TW": "必須剛好停在 26 美之屋。會越過 26 的點數不能用，留意距離。",
+"id": "Anda harus mendarat tepat di 26, Rumah Keindahan. Lemparan yang melewati 26 tidak bisa dipakai, jadi perhatikan jaraknya.",
+"tr": "Tam olarak 26'ya, Güzellik Evi'ne inmelisin. 26'yı geçecek bir atış kullanılamaz; mesafelere dikkat et."
+},
+"A piece on 26 moved with a 1 falls into the water and goes back to 15. With a 1, use another piece if you can.": {
+"ru": "Фишка с 26, пошедшая на 1, падает в воду и возвращается на 15. С единицей ходите другой фишкой, если можете.",
+"zh-TW": "26 上的棋子以 1 移動會落水，回到 15。擲出 1 時盡量動別的棋子。",
+"id": "Bidak di 26 yang dijalankan dengan 1 jatuh ke air dan kembali ke 15. Dengan angka 1, gunakan bidak lain jika bisa.",
+"tr": "26'daki taş 1 ile oynarsa suya düşer ve 15'e döner. 1 gelince mümkünse başka bir taş kullan."
+},
+"Bearing off: from 26 a 5, from 28 a 3 (25%), from 29 a 2 (38%), from 30 a 1 (25%). 29 is the easiest exit.": {
+"ru": "Вывод: с 26 — 5, с 28 — 3 (25%), с 29 — 2 (38%), с 30 — 1 (25%). 29 — самый лёгкий выход.",
+"zh-TW": "走出：26 需要 5，28 需要 3（25%），29 需要 2（38%），30 需要 1（25%）。29 是最容易的出口。",
+"id": "Mengeluarkan: dari 26 angka 5, dari 28 angka 3 (25%), dari 29 angka 2 (38%), dari 30 angka 1 (25%). 29 adalah pintu keluar termudah.",
+"tr": "Çıkış: 26'dan 5, 28'den 3 (%25), 29'dan 2 (%38), 30'dan 1 (%25). En kolay çıkış 29'dur."
+},
+"No more contact: a pure race. Pieces waiting on an exit square slow you down.": {
+"ru": "Контакта больше нет: чистая гонка. Фишки, ждущие на выходных клетках, тормозят вас.",
+"zh-TW": "已經沒有接觸：純粹的競速。停在出口格等待的棋子會拖慢你。",
+"id": "Tidak ada kontak lagi: balapan murni. Bidak yang menunggu di petak keluar memperlambat Anda.",
+"tr": "Artık temas yok: saf bir yarış. Çıkış karesinde bekleyen taşlar seni yavaşlatır."
+},
+"You lead the race by {d}. Cut the risks and run home.": {
+"ru": "Вы ведёте в гонке на {d}. Снижайте риск и бегите домой.",
+"zh-TW": "競速領先 {d}。減少風險，直奔終點。",
+"id": "Anda unggul {d} dalam balapan. Kurangi risiko dan lari pulang.",
+"tr": "Yarışta {d} öndesin. Riskleri azalt ve eve koş."
+},
+"You trail the race by {d}. Look for swaps.": {
+"ru": "Вы отстаёте в гонке на {d}. Ищите обмены.",
+"zh-TW": "競速落後 {d}。尋找交換的機會。",
+"id": "Anda tertinggal {d} dalam balapan. Cari kesempatan bertukar.",
+"tr": "Yarışta {d} gerideysin. Takas fırsatı ara."
+},
+"◎ Best": {
+"ru": "◎ Лучший",
+"zh-TW": "◎ 最佳",
+"id": "◎ Terbaik",
+"tr": "◎ En iyi"
+},
+"○ Good": {
+"ru": "○ Хороший",
+"zh-TW": "○ 好棋",
+"id": "○ Bagus",
+"tr": "○ İyi"
+},
+"△ Dubious": {
+"ru": "△ Сомнительный",
+"zh-TW": "△ 疑問手",
+"id": "△ Meragukan",
+"tr": "△ Şüpheli"
+},
+"✕ Mistake": {
+"ru": "✕ Ошибка",
+"zh-TW": "✕ 壞棋",
+"id": "✕ Kesalahan",
+"tr": "✕ Hata"
+},
+"Last move {m}: {q}": {
+"ru": "Последний ход {m}: {q}",
+"zh-TW": "上一手 {m}：{q}",
+"id": "Langkah terakhir {m}: {q}",
+"tr": "Son hamle {m}: {q}"
+},
+"Same as the AI’s first choice.": {
+"ru": "Совпадает с первым выбором ИИ.",
+"zh-TW": "與 AI 的首選相同。",
+"id": "Sama dengan pilihan pertama AI.",
+"tr": "Yapay zekânın ilk tercihiyle aynı."
+},
+"The AI’s first choice was {m} ({c}), {x} better.": {
+"ru": "Первый выбор ИИ — {m} ({c}), лучше на {x}.",
+"zh-TW": "AI 的首選是 {m}（{c}），好 {x}。",
+"id": "Pilihan pertama AI adalah {m} ({c}), {x} lebih baik.",
+"tr": "Yapay zekânın ilk tercihi {m} ({c}), {x} daha iyi."
+},
+"There was only one move.": {
+"ru": "Ход был единственный.",
+"zh-TW": "只有一種著法。",
+"id": "Hanya ada satu langkah.",
+"tr": "Tek bir hamle vardı."
+},
+"💡Tip: when you can swap, compare it with the risk of being swapped back.": {
+"ru": "💡Совет: когда можно обменяться, сравните это с риском ответного обмена.",
+"zh-TW": "💡提示：能交換時，也要比較被換回去的風險。",
+"id": "💡Tips: saat bisa bertukar, bandingkan dengan risiko ditukar balik.",
+"tr": "💡İpucu: takas yapabildiğinde, geri takas edilme riskiyle karşılaştır."
+},
+"💡Tip: before moving, check the piece does not stand alone 1–5 squares ahead of a rival piece.": {
+"ru": "💡Совет: прежде чем ходить, проверьте, что фишка не останется одна в 1–5 клетках перед фишкой соперника.",
+"zh-TW": "💡提示：走之前，確認棋子沒有單獨站在對手棋子前方 1～5 格。",
+"id": "💡Tips: sebelum bergerak, pastikan bidak tidak sendirian 1–5 petak di depan bidak lawan.",
+"tr": "💡İpucu: oynamadan önce taşın bir rakip taşın 1–5 kare önünde yalnız kalmadığını kontrol et."
+},
+"💡Tip: breaking up a pair gives your rival a target.": {
+"ru": "💡Совет: разбивая пару, вы даёте сопернику цель.",
+"zh-TW": "💡提示：拆開一對棋子，會給對手留下目標。",
+"id": "💡Tips: memecah pasangan memberi lawan sasaran.",
+"tr": "💡İpucu: bir çifti bozmak rakibine hedef verir."
+},
+"Accuracy": {
+"ru": "Точность",
+"zh-TW": "準確度",
+"id": "Akurasi",
+"tr": "İsabet"
+},
+"Fine": {
+"ru": "Неплохо",
+"zh-TW": "不錯",
+"id": "Baik",
+"tr": "İyi"
+},
+"Dubious": {
+"ru": "Сомнительно",
+"zh-TW": "疑問手",
+"id": "Meragukan",
+"tr": "Şüpheli"
+},
+"Mistake": {
+"ru": "Ошибка",
+"zh-TW": "壞棋",
+"id": "Kesalahan",
+"tr": "Hata"
+},
+"Only move": {
+"ru": "Единственный ход",
+"zh-TW": "唯一著法",
+"id": "Satu-satunya langkah",
+"tr": "Tek hamle"
+},
+"Analysing… {i}/{n}": {
+"ru": "Анализ… {i}/{n}",
+"zh-TW": "分析中… {i}/{n}",
+"id": "Menganalisis… {i}/{n}",
+"tr": "Analiz ediliyor… {i}/{n}"
+},
+"No dubious moves or mistakes — a fine game.": {
+"ru": "Ни сомнительных ходов, ни ошибок — отличная партия.",
+"zh-TW": "沒有疑問手和壞棋。漂亮的一局。",
+"id": "Tidak ada langkah meragukan atau kesalahan — permainan yang bagus.",
+"tr": "Şüpheli hamle ya da hata yok — güzel bir oyun."
+},
+"Dubious moves and mistakes": {
+"ru": "Сомнительные ходы и ошибки",
+"zh-TW": "疑問手・壞棋",
+"id": "Langkah meragukan dan kesalahan",
+"tr": "Şüpheli hamleler ve hatalar"
+},
+"The starting position. Step through with ← → to see each move judged and explained.": {
+"ru": "Начальная позиция. Листайте ← →, чтобы увидеть оценку и пояснение каждого хода.",
+"zh-TW": "開始局面。用 ←→ 逐手前進，可看到每手的評價與講解。",
+"id": "Posisi awal. Telusuri dengan ← → untuk melihat penilaian dan penjelasan setiap langkah.",
+"tr": "Başlangıç konumu. Her hamlenin değerlendirmesini ve açıklamasını görmek için ← → ile ilerle."
+},
+"{m}: win {a}% → best {b}% ({s})": {
+"ru": "{m}: победа {a}% → лучший {b}% ({s})",
+"zh-TW": "{m}：勝率 {a}% → 最佳 {b}%（{s}）",
+"id": "{m}: menang {a}% → terbaik {b}% ({s})",
+"tr": "{m}: kazanma %{a} → en iyi %{b} ({s})"
+},
+"Best was {m} ({c}).": {
+"ru": "Лучше было {m} ({c}).",
+"zh-TW": "最佳是 {m}（{c}）。",
+"id": "Yang terbaik {m} ({c}).",
+"tr": "En iyisi {m} ({c}) idi."
+},
+"Pass (no legal move)": {
+"ru": "Пас (нет допустимых ходов)",
+"zh-TW": "跳過（沒有合法著法）",
+"id": "Lewati (tidak ada langkah sah)",
+"tr": "Pas (geçerli hamle yok)"
+},
+"Why: ": {
+"ru": "Почему: ",
+"zh-TW": "原因：",
+"id": "Alasan: ",
+"tr": "Neden: "
+},
+"Candidates (throw {n})": {
+"ru": "Варианты (бросок {n})",
+"zh-TW": "候選著法（點數 {n}）",
+"id": "Kandidat (lemparan {n})",
+"tr": "Adaylar (atış {n})"
+},
+"No throw here yet (or no legal move).": {
+"ru": "Здесь ещё нет броска (или нет допустимых ходов).",
+"zh-TW": "此局面尚未投擲（或無可走著法）。",
+"id": "Belum ada lemparan di sini (atau tidak ada langkah sah).",
+"tr": "Burada henüz atış yok (ya da geçerli hamle yok)."
+},
+"Explore": {
+"ru": "Исследовать",
+"zh-TW": "研究",
+"id": "Jelajahi",
+"tr": "Keşfet"
+},
+"Exploring": {
+"ru": "Исследование",
+"zh-TW": "研究中",
+"id": "Menjelajah",
+"tr": "Keşfediliyor"
+},
+"Back one": {
+"ru": "На шаг назад",
+"zh-TW": "退一步",
+"id": "Mundur satu",
+"tr": "Bir geri"
+},
+"Restore": {
+"ru": "Вернуть",
+"zh-TW": "還原",
+"id": "Pulihkan",
+"tr": "Geri yükle"
+},
+"Throw and move freely on the board. “Restore” goes back to the game.": {
+"ru": "Бросайте и ходите на доске свободно. «Вернуть» возвращает к партии.",
+"zh-TW": "可在棋盤上自由投擲和走子。「還原」會回到對局。",
+"id": "Lempar dan jalankan bebas di papan. “Pulihkan” kembali ke permainan.",
+"tr": "Tahtada serbestçe at ve oyna. “Geri yükle” oyuna döner."
+},
+"Hover a row for the arrow on the board, click to play it in explore mode.": {
+"ru": "Наведите на строку — на доске появится стрелка; щелчок сыграет её в режиме исследования.",
+"zh-TW": "滑過一列可在棋盤上看到箭頭，點擊即在研究模式中走這一手。",
+"id": "Arahkan ke baris untuk panah di papan, klik untuk memainkannya dalam mode jelajah.",
+"tr": "Tahtada oku görmek için bir satırın üstüne gel, keşif modunda oynamak için tıkla."
+},
+"loss {x}": {
+"ru": "потеря {x}",
+"zh-TW": "損失 {x}",
+"id": "rugi {x}",
+"tr": "kayıp {x}"
+},
+"Move": {
+"ru": "Ход",
+"zh-TW": "著法",
+"id": "Langkah",
+"tr": "Hamle"
+},
+"You threw {n}. Which move is best?": {
+"ru": "Выпало {n}. Какой ход лучший?",
+"zh-TW": "點數 {n}。哪一手最好？",
+"id": "Anda melempar {n}. Langkah mana yang terbaik?",
+"tr": "{n} attın. Hangi hamle en iyi?"
+},
+"Choose the answer": {
+"ru": "Выберите ответ",
+"zh-TW": "選擇答案",
+"id": "Pilih jawaban",
+"tr": "Cevabı seç"
+},
+"Correct!": {
+"ru": "Верно!",
+"zh-TW": "正確！",
+"id": "Benar!",
+"tr": "Doğru!"
+},
+"Not quite.": {
+"ru": "Не совсем.",
+"zh-TW": "差一點！",
+"id": "Belum tepat.",
+"tr": "Tam değil."
+},
+"Next": {
+"ru": "Далее",
+"zh-TW": "下一步",
+"id": "Berikutnya",
+"tr": "İleri"
+},
+"Passed!": {
+"ru": "Зачёт!",
+"zh-TW": "通過！",
+"id": "Lulus!",
+"tr": "Geçtin!"
+},
+"{n} pts": {
+"ru": "{n} очк.",
+"zh-TW": "{n} 分",
+"id": "{n} poin",
+"tr": "{n} puan"
+},
+"75 points to pass": {
+"ru": "Для зачёта 75 очков",
+"zh-TW": "75 分及格",
+"id": "75 poin untuk lulus",
+"tr": "Geçmek için 75 puan"
+},
+"Warm-up {i}/{n}": {
+"ru": "Разминка {i}/{n}",
+"zh-TW": "暖身 {i}/{n}",
+"id": "Pemanasan {i}/{n}",
+"tr": "Isınma {i}/{n}"
+},
+"To the problems": {
+"ru": "К задачам",
+"zh-TW": "前往題目",
+"id": "Ke soal",
+"tr": "Sorulara geç"
+},
+"Skip warm-up": {
+"ru": "Пропустить разминку",
+"zh-TW": "略過暖身",
+"id": "Lewati pemanasan",
+"tr": "Isınmayı atla"
+},
+"Warm-ups are not scored. Try as often as you like.": {
+"ru": "Разминка не оценивается. Пробуйте сколько угодно.",
+"zh-TW": "暖身不計分，可以盡情嘗試。",
+"id": "Pemanasan tidak dinilai. Coba sesering yang Anda mau.",
+"tr": "Isınmalar puanlanmaz. İstediğin kadar dene."
+},
+"Well done!": {
+"ru": "Отлично!",
+"zh-TW": "做得好！",
+"id": "Bagus sekali!",
+"tr": "Aferin!"
+},
+"Think again. Press “Hint” if you are stuck.": {
+"ru": "Подумайте ещё. Если застряли, нажмите «Подсказка».",
+"zh-TW": "再想想看。卡住時請按「提示」。",
+"id": "Pikirkan lagi. Tekan “Petunjuk” jika buntu.",
+"tr": "Bir daha düşün. Takılırsan “İpucu”na bas."
+},
+"Look at the glowing squares and red marks": {
+"ru": "Посмотрите на светящиеся клетки и красные метки",
+"zh-TW": "看看發光的格子和紅色標記",
+"id": "Lihat petak yang menyala dan tanda merah",
+"tr": "Parlayan karelere ve kırmızı işaretlere bak"
+},
+"Answer: {m}": {
+"ru": "Ответ: {m}",
+"zh-TW": "答案：{m}",
+"id": "Jawaban: {m}",
+"tr": "Cevap: {m}"
+},
+"Swap with the rival piece and push it {d} back. Win {a}% (next best {b}%).": {
+"ru": "Обменяйтесь с фишкой соперника и отбросьте её на {d}. Победа {a}% (следующий {b}%).",
+"zh-TW": "與對手的棋子交換，把它推回 {d} 格。勝率 {a}%（次佳 {b}%）。",
+"id": "Bertukar dengan bidak lawan dan dorong ia {d} ke belakang. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Rakip taşla takas yap ve onu {d} geri it. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Pair up with a friend so neither can be swapped. Win {a}% (next best {b}%).": {
+"ru": "Встаньте парой со своей фишкой, чтобы ни одну не обменяли. Победа {a}% (следующий {b}%).",
+"zh-TW": "與自己的棋子並排，兩枚都不會被交換。勝率 {a}%（次佳 {b}%）。",
+"id": "Berpasangan dengan teman agar keduanya tak bisa ditukar. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Kendi taşınla çift ol ki ikisi de takas edilemesin. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Build a wall of three to hold the rival back. Win {a}% (next best {b}%).": {
+"ru": "Постройте стену из трёх, чтобы сдержать соперника. Победа {a}% (следующий {b}%).",
+"zh-TW": "三枚連成牆擋住對手。勝率 {a}%（次佳 {b}%）。",
+"id": "Bangun tembok tiga untuk menahan lawan. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Rakibi geride tutmak için üçlü duvar kur. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Save the threatened piece ({r0}%) to a square with {r1}%. Win {a}% (next best {b}%).": {
+"ru": "Уведите фишку под угрозой ({r0}%) на клетку с {r1}%. Победа {a}% (следующий {b}%).",
+"zh-TW": "把被瞄準的棋子（{r0}%）救到 {r1}% 的格子。勝率 {a}%（次佳 {b}%）。",
+"id": "Selamatkan bidak terancam ({r0}%) ke petak dengan {r1}%. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Tehdit altındaki taşı (%{r0}) %{r1} olan bir kareye kurtar. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"After it your pieces are swapped with {r}% in total — the low-risk move. Win {a}% (next best {b}%).": {
+"ru": "После него ваши фишки обменяют с вероятностью {r}% в сумме — ход с малым риском. Победа {a}% (следующий {b}%).",
+"zh-TW": "走完後你的棋子被交換的機率合計 {r}%，是風險最小的一手。勝率 {a}%（次佳 {b}%）。",
+"id": "Setelahnya bidak Anda ditukar dengan total {r}% — langkah berisiko rendah. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Sonrasında taşların toplam %{r} olasılıkla takas edilir — düşük riskli hamle. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Into the House of Beauty (26) with the exact throw. Win {a}% (next best {b}%).": {
+"ru": "В Дом красоты (26) точным броском. Победа {a}% (следующий {b}%).",
+"zh-TW": "用恰好的點數進入美之屋（26）。勝率 {a}%（次佳 {b}%）。",
+"id": "Masuk Rumah Keindahan (26) dengan lemparan tepat. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Tam atışla Güzellik Evi'ne (26). Kazanma %{a} (sonraki en iyi %{b})."
+},
+"On from the House of Beauty toward the exit. Win {a}% (next best {b}%).": {
+"ru": "Из Дома красоты к выходу. Победа {a}% (следующий {b}%).",
+"zh-TW": "從美之屋走向出口。勝率 {a}%（次佳 {b}%）。",
+"id": "Dari Rumah Keindahan menuju pintu keluar. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Güzellik Evi'nden çıkışa doğru. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Bear a piece off with the exact throw. Win {a}% (next best {b}%).": {
+"ru": "Выведите фишку точным броском. Победа {a}% (следующий {b}%).",
+"zh-TW": "用恰好的點數讓棋子走出。勝率 {a}%（次佳 {b}%）。",
+"id": "Keluarkan bidak dengan lemparan tepat. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Tam atışla bir taş çıkar. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"Keep the piece on 26 and use the 1 elsewhere — avoid the water. Win {a}% (next best {b}%).": {
+"ru": "Оставьте фишку на 26 и потратьте единицу на другую — избегайте воды. Победа {a}% (следующий {b}%).",
+"zh-TW": "讓 26 上的棋子留著，把 1 用在別處——避開水。勝率 {a}%（次佳 {b}%）。",
+"id": "Biarkan bidak di 26 dan pakai angka 1 di tempat lain — hindari air. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "26'daki taşı bırak, 1'i başka yerde kullan — sudan kaçın. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"A pure race: use the throw without waste. Win {a}% (next best {b}%).": {
+"ru": "Чистая гонка: используйте бросок без потерь. Победа {a}% (следующий {b}%).",
+"zh-TW": "純競速：不浪費點數。勝率 {a}%（次佳 {b}%）。",
+"id": "Balapan murni: gunakan lemparan tanpa sia-sia. Menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Saf yarış: atışı israf etmeden kullan. Kazanma %{a} (sonraki en iyi %{b})."
+},
+"This move wins {a}% (next best {b}%).": {
+"ru": "Этот ход даёт {a}% победы (следующий {b}%).",
+"zh-TW": "這手的勝率 {a}%（次佳 {b}%）。",
+"id": "Langkah ini menang {a}% (terbaik berikutnya {b}%).",
+"tr": "Bu hamle %{a} kazandırır (sonraki en iyi %{b})."
+},
+"That falls into the water and back to 15 (win {x}%, best {a}%).": {
+"ru": "Так фишка упадёт в воду и вернётся на 15 (победа {x}%, лучший {a}%).",
+"zh-TW": "那樣會落水回到 15（勝率 {x}%，最佳 {a}%）。",
+"id": "Itu jatuh ke air dan kembali ke 15 (menang {x}%, terbaik {a}%).",
+"tr": "Bu suya düşer ve 15'e döner (kazanma %{x}, en iyi %{a})."
+},
+"After that you are swapped with {r}% in total (win {x}%, best {a}%).": {
+"ru": "После этого вас обменяют с вероятностью {r}% в сумме (победа {x}%, лучший {a}%).",
+"zh-TW": "那樣走之後被交換的機率合計 {r}%（勝率 {x}%，最佳 {a}%）。",
+"id": "Setelah itu Anda ditukar dengan total {r}% (menang {x}%, terbaik {a}%).",
+"tr": "Bundan sonra toplam %{r} olasılıkla takas edilirsin (kazanma %{x}, en iyi %{a})."
+},
+"That misses the swap (win {x}%, best {a}%).": {
+"ru": "Так вы упускаете обмен (победа {x}%, лучший {a}%).",
+"zh-TW": "那樣錯過了交換（勝率 {x}%，最佳 {a}%）。",
+"id": "Itu melewatkan pertukaran (menang {x}%, terbaik {a}%).",
+"tr": "Bu takası kaçırır (kazanma %{x}, en iyi %{a})."
+},
+"That move wins {x}% (best {a}%).": {
+"ru": "Этот ход даёт {x}% победы (лучший {a}%).",
+"zh-TW": "那手的勝率 {x}%（最佳 {a}%）。",
+"id": "Langkah itu menang {x}% (terbaik {a}%).",
+"tr": "O hamle %{x} kazandırır (en iyi %{a})."
+},
+"The chance of a {n} is {m}/16.": {
+"ru": "Шанс выбросить {n} — {m}/16.",
+"zh-TW": "擲出 {n} 的機率是 {m}/16。",
+"id": "Peluang angka {n} adalah {m}/16.",
+"tr": "{n} gelme olasılığı {m}/16."
+},
+"1, 4 and 5 together: 4+1+1 = 6/16, a bit more than one in three.": {
+"ru": "1, 4 и 5 вместе: 4+1+1 = 6/16, чуть больше одного из трёх.",
+"zh-TW": "1、4、5 合計：4+1+1 = 6/16，略多於三分之一。",
+"id": "1, 4, dan 5 bersama: 4+1+1 = 6/16, sedikit lebih dari sepertiga.",
+"tr": "1, 4 ve 5 birlikte: 4+1+1 = 6/16, üçte birden biraz fazla."
+},
+"{d} squares ahead of a rival piece: a {d} swaps you, {m}/16.": {
+"ru": "В {d} клетках перед фишкой соперника: вас обменяет {d}, {m}/16.",
+"zh-TW": "在對手棋子前方 {d} 格：對手擲出 {d} 就會交換，{m}/16。",
+"id": "{d} petak di depan bidak lawan: angka {d} menukar Anda, {m}/16.",
+"tr": "Rakip taşın {d} kare önünde: {d} gelirse takas edilirsin, {m}/16."
+},
+"Basics": {
+"ru": "Основы",
+"zh-TW": "基礎",
+"id": "Dasar",
+"tr": "Temeller"
+},
+"Tactics": {
+"ru": "Тактика",
+"zh-TW": "戰術",
+"id": "Taktik",
+"tr": "Taktik"
+},
+"The odds of the sticks": {
+"ru": "Шансы палочек",
+"zh-TW": "木棒的機率",
+"id": "Peluang tongkat",
+"tr": "Çubukların olasılıkları"
+},
+"2 is the most common; 1, 4, 5 throw again.": {
+"ru": "2 выпадает чаще всего; 1, 4, 5 дают ещё бросок.",
+"zh-TW": "2 最常出現；1、4、5 再投。",
+"id": "2 paling sering; 1, 4, 5 melempar lagi.",
+"tr": "En sık 2 gelir; 1, 4, 5 tekrar attırır."
+},
+"Four sticks give 16 patterns. Count them by the number of white sides.": {
+"ru": "Четыре палочки дают 16 вариантов. Посчитайте их по числу белых сторон.",
+"zh-TW": "四根木棒有 16 種組合，依白面的數量來數。",
+"id": "Empat tongkat memberi 16 pola. Hitung menurut jumlah sisi putih.",
+"tr": "Dört çubuk 16 desen verir. Onları beyaz yüz sayısına göre say."
+},
+"<p>By white sides: <b>1: 4/16 · 2: 6/16 · 3: 4/16 · 4: 1/16 · 5 (all dark): 1/16</b>.</p><p>A 1, 4 or 5 throws again (6/16 together). Standing <b>two squares</b> ahead of a rival is the most dangerous.</p>": {
+"ru": "<p>По белым сторонам: <b>1: 4/16 · 2: 6/16 · 3: 4/16 · 4: 1/16 · 5 (все тёмные): 1/16</b>.</p><p>1, 4 или 5 дают ещё бросок (вместе 6/16). Опаснее всего стоять <b>в двух клетках</b> перед соперником.</p>",
+"zh-TW": "<p>依白面數：<b>1：4/16・2：6/16・3：4/16・4：1/16・5（全黑）：1/16</b>。</p><p>1、4、5 可以再投（合計 6/16）。站在對手前方 <b>2 格</b>最危險。</p>",
+"id": "<p>Menurut sisi putih: <b>1: 4/16 · 2: 6/16 · 3: 4/16 · 4: 1/16 · 5 (semua gelap): 1/16</b>.</p><p>Angka 1, 4, atau 5 melempar lagi (total 6/16). Berdiri <b>dua petak</b> di depan lawan paling berbahaya.</p>",
+"tr": "<p>Beyaz yüzlere göre: <b>1: 4/16 · 2: 6/16 · 3: 4/16 · 4: 1/16 · 5 (hepsi koyu): 1/16</b>.</p><p>1, 4 veya 5 tekrar attırır (toplam 6/16). Rakibin <b>iki kare</b> önünde durmak en tehlikelisidir.</p>"
+},
+"Swap with a lone rival piece and push it back.": {
+"ru": "Обменяйтесь с одиночной фишкой соперника и отбросьте её.",
+"zh-TW": "與單獨的對手棋子交換，把它推回去。",
+"id": "Bertukar dengan bidak lawan yang sendirian dan dorong ia mundur.",
+"tr": "Yalnız bir rakip taşla takas yap ve onu geri it."
+},
+"Is a lone rival piece exactly the throw away?": {
+"ru": "Есть ли одиночная фишка соперника ровно на расстоянии броска?",
+"zh-TW": "有沒有單獨的對手棋子剛好在點數的距離？",
+"id": "Adakah bidak lawan sendirian tepat sejauh lemparan?",
+"tr": "Tam atış uzaklığında yalnız bir rakip taş var mı?"
+},
+"<p>Land exactly on a lone rival piece to <b>swap</b>: you go forward, it goes back.</p><p>Check that you will not be swapped straight back.</p>": {
+"ru": "<p>Встаньте ровно на одиночную фишку соперника, чтобы <b>обменяться</b>: вы вперёд, она назад.</p><p>Проверьте, не обменяют ли вас сразу обратно.</p>",
+"zh-TW": "<p>剛好停在單獨的對手棋子上就能<b>交換</b>：你前進，它後退。</p><p>確認不會馬上被換回去。</p>",
+"id": "<p>Mendarat tepat di bidak lawan yang sendirian untuk <b>bertukar</b>: Anda maju, ia mundur.</p><p>Pastikan Anda tidak langsung ditukar balik.</p>",
+"tr": "<p><b>Takas</b> için yalnız bir rakip taşın tam üstüne kon: sen ilerlersin, o geriler.</p><p>Hemen geri takas edilmeyeceğini kontrol et.</p>"
+},
+"Pairs and walls": {
+"ru": "Пары и стены",
+"zh-TW": "成對與牆",
+"id": "Pasangan dan tembok",
+"tr": "Çiftler ve duvarlar"
+},
+"Stand together to protect; three in a row stop the rival.": {
+"ru": "Стойте вместе для защиты; три подряд останавливают соперника.",
+"zh-TW": "並排保護自己；三枚相連擋住對手。",
+"id": "Berdiri bersama untuk melindungi; tiga berderet menghentikan lawan.",
+"tr": "Korunmak için yan yana dur; art arda üç taş rakibi durdurur."
+},
+"Which move lands next to one of your pieces?": {
+"ru": "Какой ход ставит фишку рядом с вашей?",
+"zh-TW": "哪一手會停在自己棋子的旁邊？",
+"id": "Langkah mana yang mendarat di samping bidak Anda?",
+"tr": "Hangi hamle taşlarından birinin yanına konar?"
+},
+"<p><b>Two pieces side by side cannot be swapped.</b> <b>Three in a row are a wall</b> the rival cannot jump.</p><p>Lone pieces are targets — move in pairs when you can.</p>": {
+"ru": "<p><b>Две фишки рядом нельзя обменять.</b> <b>Три подряд — стена</b>, которую соперник не перепрыгнет.</p><p>Одиночные фишки — мишени: по возможности ходите парами.</p>",
+"zh-TW": "<p><b>並排的兩枚棋子不會被交換。</b><b>三枚相連就是牆</b>，對手無法越過。</p><p>單獨的棋子是目標——能的話就成對移動。</p>",
+"id": "<p><b>Dua bidak berdampingan tidak bisa ditukar.</b> <b>Tiga berderet adalah tembok</b> yang tak bisa dilompati lawan.</p><p>Bidak sendirian adalah sasaran — bergeraklah berpasangan bila bisa.</p>",
+"tr": "<p><b>Yan yana iki taş takas edilemez.</b> <b>Art arda üç taş bir duvardır</b>, rakip üstünden atlayamaz.</p><p>Yalnız taşlar hedeftir — mümkünse çift halinde ilerle.</p>"
+},
+"Escaping": {
+"ru": "Бегство",
+"zh-TW": "逃跑",
+"id": "Kabur",
+"tr": "Kaçmak"
+},
+"Get a lone piece out of a rival’s 1–5 squares.": {
+"ru": "Уведите одиночную фишку из зоны 1–5 клеток перед соперником.",
+"zh-TW": "讓單獨的棋子離開對手前方 1～5 格。",
+"id": "Keluarkan bidak sendirian dari jarak 1–5 petak di depan lawan.",
+"tr": "Yalnız bir taşı rakibin 1–5 karelik menzilinden çıkar."
+},
+"Move the red-marked piece into a pair or away from the rival.": {
+"ru": "Переведите фишку с красной меткой в пару или подальше от соперника.",
+"zh-TW": "把有紅色標記的棋子移去成對，或遠離對手。",
+"id": "Pindahkan bidak bertanda merah ke pasangan atau menjauh dari lawan.",
+"tr": "Kırmızı işaretli taşı bir çifte ya da rakipten uzağa taşı."
+},
+"<p>A <b>lone piece 1–5 squares ahead of a rival</b> may be swapped.</p><p>Red marks show the chance on the rival’s next throw. Pair it up or run ahead.</p>": {
+"ru": "<p><b>Одиночную фишку в 1–5 клетках перед соперником</b> могут обменять.</p><p>Красные метки показывают шанс на следующем броске соперника. Поставьте её в пару или убегайте вперёд.</p>",
+"zh-TW": "<p><b>單獨站在對手前方 1～5 格的棋子</b>可能被交換。</p><p>紅色標記顯示對手下次投擲的機率。讓它成對，或往前跑。</p>",
+"id": "<p><b>Bidak sendirian 1–5 petak di depan lawan</b> bisa ditukar.</p><p>Tanda merah menunjukkan peluang pada lemparan lawan berikutnya. Pasangkan atau lari ke depan.</p>",
+"tr": "<p><b>Bir rakibin 1–5 kare önündeki yalnız taş</b> takas edilebilir.</p><p>Kırmızı işaretler rakibin sonraki atışındaki olasılığı gösterir. Onu çift yap ya da ileri kaç.</p>"
+},
+"Playing safe": {
+"ru": "Надёжная игра",
+"zh-TW": "穩妥地走",
+"id": "Bermain aman",
+"tr": "Güvenli oynamak"
+},
+"The move that leaves you hardest to swap.": {
+"ru": "Ход, после которого вас труднее всего обменять.",
+"zh-TW": "走完後最不容易被交換的一手。",
+"id": "Langkah yang membuat Anda paling sulit ditukar.",
+"tr": "Takas edilmeni en zorlaştıran hamle."
+},
+"After the move, how far ahead of a rival is that piece? Two squares is the worst.": {
+"ru": "Насколько впереди соперника окажется фишка после хода? Две клетки — хуже всего.",
+"zh-TW": "走完後那枚棋子在對手前方幾格？2 格最糟。",
+"id": "Setelah bergerak, seberapa jauh bidak itu di depan lawan? Dua petak yang terburuk.",
+"tr": "Hamleden sonra o taş rakibin kaç kare önünde? İki kare en kötüsü."
+},
+"<p>When moves gain about the same, pick <b>the one with the smallest swap risk afterwards</b>.</p><p>Two squares ahead of a rival (6/16), one or three ahead (4/16) are dangerous.</p>": {
+"ru": "<p>Если ходы дают примерно одно и то же, выбирайте <b>тот, после которого риск обмена меньше</b>.</p><p>Опасно стоять в двух клетках перед соперником (6/16), в одной или трёх (4/16).</p>",
+"zh-TW": "<p>收穫差不多時，選<b>走完後被交換風險最小的一手</b>。</p><p>在對手前方 2 格（6/16）、1 格或 3 格（4/16）都很危險。</p>",
+"id": "<p>Jika langkah-langkah memberi hasil serupa, pilih <b>yang risiko ditukarnya paling kecil setelahnya</b>.</p><p>Dua petak di depan lawan (6/16), satu atau tiga petak (4/16) berbahaya.</p>",
+"tr": "<p>Hamleler yaklaşık aynı kazancı sağlıyorsa, <b>sonrasında takas riski en düşük olanı</b> seç.</p><p>Rakibin iki kare önü (6/16), bir ya da üç kare önü (4/16) tehlikelidir.</p>"
+},
+"Into the House of Beauty": {
+"ru": "В Дом красоты",
+"zh-TW": "進入美之屋",
+"id": "Masuk Rumah Keindahan",
+"tr": "Güzellik Evi'ne"
+},
+"Land exactly on 26.": {
+"ru": "Встаньте ровно на 26.",
+"zh-TW": "剛好停在 26。",
+"id": "Mendarat tepat di 26.",
+"tr": "Tam olarak 26'ya in."
+},
+"Which piece is exactly the throw short of 26?": {
+"ru": "Какая фишка отстоит от 26 ровно на бросок?",
+"zh-TW": "哪一枚棋子離 26 剛好是這個點數？",
+"id": "Bidak mana yang tepat sejauh lemparan dari 26?",
+"tr": "Hangi taş 26'ya tam atış kadar uzak?"
+},
+"<p>Every piece must <b>stop exactly on 26, the House of Beauty</b>, before going on. A throw that would pass it cannot be used.</p><p>Pieces on 26 are safe from swaps.</p>": {
+"ru": "<p>Каждая фишка должна <b>встать ровно на 26, Дом красоты</b>, прежде чем идти дальше. Бросок, проходящий мимо, использовать нельзя.</p><p>На 26 фишки защищены от обмена.</p>",
+"zh-TW": "<p>每枚棋子都必須<b>剛好停在 26 美之屋</b>才能繼續前進。會越過它的點數不能用。</p><p>26 上的棋子不會被交換。</p>",
+"id": "<p>Setiap bidak harus <b>berhenti tepat di 26, Rumah Keindahan</b>, sebelum melanjutkan. Lemparan yang melewatinya tidak bisa dipakai.</p><p>Bidak di 26 aman dari pertukaran.</p>",
+"tr": "<p>Her taş devam etmeden önce <b>tam olarak 26'da, Güzellik Evi'nde durmalıdır</b>. Onu geçecek bir atış kullanılamaz.</p><p>26'daki taşlar takastan korunur.</p>"
+},
+"Avoiding the water": {
+"ru": "Избегайте воды",
+"zh-TW": "避開水",
+"id": "Menghindari air",
+"tr": "Sudan kaçınmak"
+},
+"A 1 from 26 sends the piece back to 15.": {
+"ru": "Единица с 26 отправляет фишку на 15.",
+"zh-TW": "從 26 擲出 1 會被送回 15。",
+"id": "Angka 1 dari 26 mengirim bidak kembali ke 15.",
+"tr": "26'dan 1 atmak taşı 15'e geri gönderir."
+},
+"Can another piece use the 1?": {
+"ru": "Может ли единицу использовать другая фишка?",
+"zh-TW": "別的棋子能用這個 1 嗎？",
+"id": "Bisakah bidak lain memakai angka 1?",
+"tr": "1'i başka bir taş kullanabilir mi?"
+},
+"<p>A <b>1</b> from the House of Beauty (26) falls into <b>27, the House of Water</b>, and back to <b>15, the House of Rebirth</b>.</p><p>With a 1, use another piece if you can.</p>": {
+"ru": "<p><b>Единица</b> из Дома красоты (26) роняет фишку в <b>27, Дом воды</b>, и возвращает на <b>15, Дом возрождения</b>.</p><p>С единицей ходите другой фишкой, если можете.</p>",
+"zh-TW": "<p>從美之屋（26）擲出 <b>1</b> 會落入 <b>27 水之屋</b>，回到 <b>15 重生之屋</b>。</p><p>擲出 1 時，能的話就走別的棋子。</p>",
+"id": "<p>Angka <b>1</b> dari Rumah Keindahan (26) jatuh ke <b>27, Rumah Air</b>, dan kembali ke <b>15, Rumah Kelahiran Kembali</b>.</p><p>Dengan angka 1, gunakan bidak lain jika bisa.</p>",
+"tr": "<p>Güzellik Evi'nden (26) <b>1</b> atınca taş <b>27'ye, Su Evi'ne</b> düşer ve <b>15'e, Yeniden Doğuş Evi'ne</b> döner.</p><p>1 gelince mümkünse başka bir taş kullan.</p>"
+},
+"Exits and bearing off": {
+"ru": "Выходы и вывод фишек",
+"zh-TW": "出口與走出",
+"id": "Pintu keluar dan mengeluarkan bidak",
+"tr": "Çıkışlar ve taş çıkarma"
+},
+"Bear off from 26, 28, 29, 30 with their throws.": {
+"ru": "Выводите с 26, 28, 29, 30 их бросками.",
+"zh-TW": "在 26、28、29、30 用對應的點數走出。",
+"id": "Keluarkan dari 26, 28, 29, 30 dengan lemparannya masing-masing.",
+"tr": "26, 28, 29, 30'dan kendi atışlarıyla çık."
+},
+"26 needs 5, 28 needs 3, 29 needs 2, 30 needs 1. 29 is the easiest exit.": {
+"ru": "Для 26 нужно 5, для 28 — 3, для 29 — 2, для 30 — 1. 29 — самый лёгкий выход.",
+"zh-TW": "26 需要 5、28 需要 3、29 需要 2、30 需要 1。29 是最容易的出口。",
+"id": "26 butuh 5, 28 butuh 3, 29 butuh 2, 30 butuh 1. 29 pintu keluar termudah.",
+"tr": "26 için 5, 28 için 3, 29 için 2, 30 için 1 gerekir. En kolay çıkış 29."
+},
+"<p>Bear off with <b>26: 5, 28: 3, 29: 2, 30: 1</b>. Pieces on 28–30 cannot move otherwise; they wait for their throw.</p><p>A 2 is the most common (6/16), so <b>29 is the best exit</b>.</p>": {
+"ru": "<p>Вывод: <b>26: 5, 28: 3, 29: 2, 30: 1</b>. Иначе фишки на 28–30 не ходят — ждут своего броска.</p><p>Двойка выпадает чаще всего (6/16), поэтому <b>29 — лучший выход</b>.</p>",
+"zh-TW": "<p>走出的點數：<b>26：5、28：3、29：2、30：1</b>。28～30 的棋子不能做其他移動，只能等待自己的點數。</p><p>2 最常出現（6/16），所以 <b>29 是最好的出口</b>。</p>",
+"id": "<p>Keluar dengan <b>26: 5, 28: 3, 29: 2, 30: 1</b>. Bidak di 28–30 tidak bisa bergerak dengan cara lain; mereka menunggu lemparannya.</p><p>Angka 2 paling sering (6/16), jadi <b>29 pintu keluar terbaik</b>.</p>",
+"tr": "<p>Çıkış: <b>26: 5, 28: 3, 29: 2, 30: 1</b>. 28–30'daki taşlar başka şekilde oynayamaz; kendi atışlarını beklerler.</p><p>En sık 2 gelir (6/16), bu yüzden <b>en iyi çıkış 29'dur</b>.</p>"
+},
+"Racing": {
+"ru": "Гонка",
+"zh-TW": "競速",
+"id": "Balapan",
+"tr": "Yarış"
+},
+"No more contact: use every throw well.": {
+"ru": "Контакта больше нет: используйте каждый бросок с толком.",
+"zh-TW": "已無接觸：好好運用每次投擲。",
+"id": "Tidak ada kontak lagi: manfaatkan setiap lemparan.",
+"tr": "Artık temas yok: her atışı iyi kullan."
+},
+"Prefer pieces that reach 26 or fit an exit throw.": {
+"ru": "Предпочитайте фишки, которые доходят до 26 или попадают под выходной бросок.",
+"zh-TW": "優先走能到 26 或符合出口點數的棋子。",
+"id": "Utamakan bidak yang mencapai 26 atau cocok dengan lemparan keluar.",
+"tr": "26'ya ulaşan ya da bir çıkış atışına uyan taşları tercih et."
+},
+"<p>In a <b>race</b> with no more swaps, do not waste throws.</p><p>Pieces that would pass 26 cannot move, so keep the distances of your back pieces handy.</p>": {
+"ru": "<p>В <b>гонке</b> без обменов не тратьте броски впустую.</p><p>Фишки, которые прошли бы 26, не ходят, так что держите в уме расстояния задних фишек.</p>",
+"zh-TW": "<p>在不再交換的<b>競速</b>中，不要浪費點數。</p><p>會越過 26 的棋子不能走，記好後方棋子的距離。</p>",
+"id": "<p>Dalam <b>balapan</b> tanpa pertukaran lagi, jangan sia-siakan lemparan.</p><p>Bidak yang akan melewati 26 tidak bisa bergerak, jadi ingat jarak bidak belakang Anda.</p>",
+"tr": "<p>Takasın olmadığı bir <b>yarışta</b> atışları boşa harcama.</p><p>26'yı geçecek taşlar oynayamaz; arkadaki taşlarının mesafelerini aklında tut.</p>"
+},
+"{t}": {
+"ru": "{t}",
+"zh-TW": "{t}",
+"id": "{t}",
+"tr": "{t}"
+},
+"{d} {w}": {
+"ru": "{d} {w}",
+"zh-TW": "{d} {w}",
+"id": "{d} {w}",
+"tr": "{d} {w}"
+}
+}

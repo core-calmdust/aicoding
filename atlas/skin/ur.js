@@ -92,6 +92,7 @@ html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
   html.atlas-ur.ur-land .atlas-brand b{font-size:12.5px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   html.atlas-ur.ur-land .atlas-brand small{display:none}
   html.atlas-ur.ur-land .atlas-coin{display:none}
+  html.atlas-ur.ur-land .atlas-gname{display:block;flex:none;font-style:normal;font-weight:900;font-size:13px;color:#1f3a8f;white-space:nowrap}
   html.atlas-ur.ur-land :is(.atlas-ic,.atlas-lbtn){height:26px;min-width:30px;width:30px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
   html.atlas-ur.ur-land :is(.atlas-ic,.atlas-lbtn) svg{width:15px;height:15px}
   html.atlas-ur.ur-land .atlas-lbtn b{display:none}
@@ -426,7 +427,15 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
      shown on touch screens only, skin.css .atlas-land-b) ---------- */
   (function landBtn() {
     const bar = document.querySelector('.atlas-top'), land = document.getElementById('btnLand');
-    if (!bar || !land || document.getElementById('atlasLand')) return;
+    if (!bar) return;
+    // the game's name in the portal pill (phones held sideways, as backgammon)
+    const brand = bar.querySelector('.atlas-brand span');
+    if (brand && !brand.querySelector('.atlas-gname')) {
+      const g = document.createElement('em'); g.className = 'atlas-gname'; brand.appendChild(g);
+      const paint = () => { const t = document.getElementById('brandTitle') || document.querySelector('h1 [data-i18n=title]'); g.textContent = t ? t.textContent : ''; };
+      paint(); const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 60));
+    }
+    if (!land || document.getElementById('atlasLand')) return;
     const home = bar.querySelector('a.atlas-ic[aria-label=Portal]');
     const rb = document.createElement('button'); rb.type = 'button'; rb.id = 'atlasLand'; rb.innerHTML = land.innerHTML;
     rb.setAttribute('aria-label', land.getAttribute('aria-label') || 'Landscape');
