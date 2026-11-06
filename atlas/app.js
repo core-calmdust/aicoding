@@ -1025,9 +1025,8 @@
     }
     requestAnimationFrame(upd);
   }
-  let achF = 'all', achS = 'all';   // achS: phone-only done / to-do filter (the PC page always shows all)
+  let achF = 'all', achS = 'all';   // achS: done / to-do filter (phones and PC)
   function renderAch() {
-    if (!isPhone()) achS = 'all';
     $('hAch').textContent = t('ach.h');
     const done = ACH.filter(a => a.done).length, coins = ACH.filter(a => a.done).reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
     $('achSum').innerHTML = `<span class="coin"><i>¢</i>${coins.toLocaleString()}</span><b style="font-family:var(--round);font-size:18px">${done} / ${ACH.length}</b>
