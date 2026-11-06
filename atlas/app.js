@@ -413,7 +413,7 @@
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
         <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
-        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
+        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg><span class="hsl">${esc(t('gl.histSee'))}</span></span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
     // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
     // the history scrolls inside the card (no cut); only the picture and the ▶ button open the table
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
@@ -422,7 +422,12 @@
     { const b = el.querySelector('[data-go]'); b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') goT(e); }; }
     const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
     if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
-      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
+      // when 「ヒストリアを見る」 doesn't fit its button (narrow phones, long languages) it says just 「ヒストリア」
+      const lb = hb.querySelector('.hsl'), fitH = () => { if (!hb.isConnected) return; lb.textContent = t('gl.histSee'); if (hb.scrollWidth > hb.clientWidth + 1) lb.textContent = t('gl.historia'); };
+      requestAnimationFrame(fitH); if (document.fonts) document.fonts.ready.then(fitH);
+      if (!renderToday.rs) { renderToday.rs = 1; let q = 0; addEventListener('resize', () => { clearTimeout(q); q = setTimeout(() => { const f = document.querySelector('#today [data-hist]'); if (f && f.__fit) f.__fit(); }, 150); }); }
+      hb.__fit = fitH; }
   }
 
   /* ---------- 3D board viewer ---------- */
