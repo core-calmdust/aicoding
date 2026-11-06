@@ -239,11 +239,15 @@
       legal: () => legal.map(m => ({ m, from: E.mFrom(m), to: E.mTo(m) })),
     };
     window.Atlas3D.ugolki._dbg = dbg;
+    let drawAsked = -99;
     const myTurn = () => !!pos && !over && !busy && !thinking && (pvp || pos.side + 1 === human);
     const undoN = () => pvp ? 1 : 2;
     function finish(loser, why) {
       if (over || !pos) return;
       over = true; busy = false; thinking = false; jid++; hintJ++; clear(mv); sel = null; if (ctx.onTurn) ctx.onTurn(-1);
+      if (why === 'draw') {   // 合意の引き分け（ポータルの操作バーの［引き分け］）
+        hud(L.draw); return later(() => ctx.onEnd(pvp ? { win: false, draw: true, level: ctx.level, score: t('act.drawAgreed'), pvp: true, winnerText: '' } : { win: false, draw: true, level: ctx.level, score: t('act.drawAgreed') }), 200);
+      }
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       if (pvp) { const wt = X.win.replace('{p}', pname(3 - loser)); hud(wt); return later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: t('act.pvpEnd', { p: pname(loser), r, w: wt }), pvp: true, winnerText: wt }), 200); }
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
@@ -269,6 +273,23 @@
           hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'c33' });
         });
       },
+      // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
+      // （AI は強めの探索で形勢を見て、自分が良くなければ同意。20手未満と、断ってから6手以内は受けない）
+      canDraw: () => myTurn() && moves.length >= 2,
+      offerDraw() {
+        if (!myTurn()) return Promise.resolve('no');
+        if (moves.length - drawAsked < 6) return Promise.resolve('wait');
+        drawAsked = moves.length;
+        if (moves.length < 20) return Promise.resolve('no');
+        const j = ++hintJ, mvs = moves.slice();
+        return new Promise(res => {
+          if (!hintW) hintW = newWorker();
+          hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
+          hintW.onerror = () => { hintW = null; res('no'); };
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'c33' });
+        });
+      },
+      draw() { if (pos && !over) finish(-1, 'draw'); },
       canResign: () => !!pos && !over,
       resign() { if (pos && !over) finish(pvp ? pos.side + 1 : human, 'resign'); },
       timeout(side) { finish(side + 1, 'time'); },

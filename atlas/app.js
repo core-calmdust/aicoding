@@ -841,10 +841,10 @@
       hint: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
     };
     const bar = document.createElement('div'); bar.className = 'tbar'; bar.id = 'tbar';
-    bar.innerHTML = '<span class="tclk" data-s="0" hidden></span><span class="tbtns"><button type="button" data-a="undo"></button><button type="button" data-a="resign"></button><button type="button" data-a="hint"></button></span><span class="tclk" data-s="1" hidden></span>';
+    bar.innerHTML = '<span class="tclk" data-s="0" hidden></span><span class="tbtns"><button type="button" data-a="undo"></button><button type="button" data-a="resign"></button><button type="button" data-a="hint"></button><button type="button" data-a="draw" hidden></button></span><span class="tclk" data-s="1" hidden></span>';
     $('bv').appendChild(bar);
     const ck = [...bar.querySelectorAll('.tclk')], btn = k => bar.querySelector(`[data-a="${k}"]`);
-    let S = null, ended = false, hinting = false, iv = 0, ro = null;
+    let S = null, ended = false, hinting = false, drawing = false, iv = 0, ro = null;
     // the clock: tc = { main, byo, inc } (s) · left[s] = main time left (ms) · the side to move's turn started at t0
     const C = { tc: null, left: [0, 0], side: -1, key: '', human: false, t0: 0, show: [false, false], pvp: false, flagged: false };
     const now = () => performance.now();
@@ -888,12 +888,14 @@
       btn('undo').disabled = !can('canUndo');
       btn('hint').disabled = hinting || !can('canHint'); btn('hint').classList.toggle('busy', hinting);
       btn('resign').disabled = ended || (S.canResign ? !S.canResign() : false);
+      btn('draw').hidden = !S.offerDraw; btn('draw').disabled = drawing || !can('canDraw');   // 引き分け: games with draws (adapter offerDraw / draw)
     }
     function paint() {
       btn('undo').innerHTML = `${IC.undo}<span>${esc(t('act.undo'))}</span>`;
       btn('resign').innerHTML = `${window.Resign ? Resign.icon : ''}<span>${esc(window.Resign ? Resign.label(lang) : t('act.resigned'))}</span>`;
       btn('hint').innerHTML = `${IC.hint}<span>${esc(t('act.hint'))}</span>`;
-      ['undo', 'resign', 'hint'].forEach(k => { const b = btn(k); b.setAttribute('aria-label', b.textContent); b.title = b.textContent; });
+      btn('draw').innerHTML = `${window.DrawOffer ? DrawOffer.icon : ''}<span>${esc(window.DrawOffer ? DrawOffer.tx('btn', lang) : t('res.draw'))}</span>`;
+      ['undo', 'resign', 'hint', 'draw'].forEach(k => { const b = btn(k); b.setAttribute('aria-label', b.textContent); b.title = b.textContent; });
     }
     // where the bar sits: the bottom centre (the board is framed above it); the backgammon landscape views: a slim column
     // at the landscape left, mirroring the HUD column on the right
@@ -915,6 +917,22 @@
         if (!s.canHint()) return; hinting = true; sync(); SFX.tok();
         Promise.resolve(s.hint()).then(ok => { if (ok === false && S === s) toast(t('act.noHint')); }).catch(() => {}).then(() => { hinting = false; if (S === s) sync(); });
       }
+      else if (a === 'draw') {   // 2人対局：合意の確認 → 引き分け。AI 対局：AI に提案（形勢を見て同意 / 断る）
+        if (!s.canDraw || !s.canDraw()) return;
+        const D = k => window.DrawOffer ? DrawOffer.tx(k, lang) : k;
+        if (C.pvp) {
+          const go = () => { if (S === s && !ended && s.canDraw()) { turn(-1); s.draw(); } };
+          if (window.Resign) Resign.confirm({ lang, kind: 'draw', icon: window.DrawOffer && DrawOffer.icon, question: D('q'), note: D('sub') }).then(ok => { if (ok) go(); }); else go();
+        } else {
+          drawing = true; sync(); SFX.tok();
+          Promise.resolve(s.offerDraw()).then(r => {
+            drawing = false;
+            if (S !== s || ended) return;
+            if (r === 'yes') { toast(D('aiYes')); turn(-1); s.draw(); } else toast(D(r === 'wait' ? 'wait' : 'aiNo'));
+            sync();
+          }).catch(() => { drawing = false; if (S === s) sync(); });
+        }
+      }
       else if (a === 'resign') {
         const go = () => { if (S === s && !ended && (!s.canResign || s.canResign())) { turn(-1); s.resign(); } };
         if (window.Resign) Resign.confirm({ lang }).then(ok => { if (ok) go(); }); else go();
@@ -924,7 +942,7 @@
     return {
       // a table game starts: tc = the chosen time control (null: none), human = the player's side (-1: two players)
       on(sess, tc, human) {
-        S = sess; ended = false; hinting = false; C.tc = tc && (tc.main || tc.byo) ? tc : null; C.side = -1; C.key = ''; C.flagged = false; C.pvp = human < 0;
+        S = sess; ended = false; hinting = false; drawing = false; C.tc = tc && (tc.main || tc.byo) ? tc : null; C.side = -1; C.key = ''; C.flagged = false; C.pvp = human < 0;
         C.left = [0, 1].map(() => C.tc ? (C.tc.main || 0) * 1000 : 0); C.show = [0, 1].map(s => !!C.tc && (C.pvp || s === human));
         if (window.CountTick) { CountTick.reset(); CountTick.setMuted(() => !SFX.on); }
         paint(); ck.forEach(el => { el.hidden = true; el._t = ''; });

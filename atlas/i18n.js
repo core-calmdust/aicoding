@@ -335,6 +335,7 @@ ar: {
   add('act.undo', { ja: '待った', en: 'Undo', zh: '悔棋', ko: '무르기', es: 'Deshacer', fr: 'Annuler', pt: 'Desfazer', de: 'Zurück', hi: 'वापस', ar: 'تراجع' });
   add('act.hint', { ja: 'ヒント', en: 'Hint', zh: '提示', ko: '힌트', es: 'Pista', fr: 'Indice', pt: 'Dica', de: 'Tipp', hi: 'संकेत', ar: 'تلميح' });
   add('act.noHint', { ja: 'ヒントが出せませんでした', en: 'No hint available', zh: '暂时无法给出提示', ko: '힌트를 낼 수 없어요', es: 'No hay pista disponible', fr: 'Aucun indice disponible', pt: 'Nenhuma dica disponível', de: 'Kein Tipp verfügbar', hi: 'कोई संकेत उपलब्ध नहीं', ar: 'لا يوجد تلميح' });
+  add('act.drawAgreed', { ja: '合意により引き分け', en: 'Drawn by agreement', zh: '双方同意和棋', ko: '합의에 의한 무승부', es: 'Tablas por acuerdo', fr: 'Nulle par accord mutuel', pt: 'Empate por acordo', de: 'Remis durch Vereinbarung', hi: 'सहमति से ड्रॉ', ar: 'تعادل بالاتفاق' });
   add('act.resigned', { ja: '投了', en: 'Resigned', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मानी', ar: 'استسلام' });
   add('act.timeout', { ja: '時間切れ', en: 'Lost on time', zh: '超时负', ko: '시간 초과', es: 'Tiempo agotado', fr: 'Perte au temps', pt: 'Tempo esgotado', de: 'Zeit überschritten', hi: 'समय समाप्त', ar: 'انتهى الوقت' });
   add('act.pvpEnd', { ja: '{p}の{r} · {w}', en: '{p}: {r} · {w}', zh: '{p}{r} · {w}', ko: '{p} {r} · {w}', es: '{p}: {r} · {w}', fr: '{p} : {r} · {w}', pt: '{p}: {r} · {w}', de: '{p}: {r} · {w}', hi: '{p}: {r} · {w}', ar: '{p}: {r} · {w}' });
