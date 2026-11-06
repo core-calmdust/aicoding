@@ -257,7 +257,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .plcb span{max-width:100%;line-height:1.2;min-height:2.4em;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
 .plcb[aria-pressed=true]{border-color:var(--sun);background:#fff3d2;box-shadow:0 0 0 2px var(--sun)}
 .plbr{display:flex;gap:6px;padding:4px;border-radius:16px;background:#f6efe1}
-.plbr button{flex:1 1 0;min-width:0;padding:10px 8px;border:0;border-radius:12px;background:none;font:800 15px var(--round,inherit);color:var(--ink2);cursor:pointer;white-space:nowrap}
+.plbr button{flex:1 1 auto;min-width:0;padding:10px 6px;border:0;border-radius:12px;background:none;font:800 15px var(--round,inherit);color:var(--ink2);cursor:pointer;white-space:nowrap}
 .plbr button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 2px 0 var(--line),0 0 0 2px var(--sun)}
 .plbr button i{display:inline-block;width:13px;height:13px;border-radius:50%;margin-inline-end:7px;vertical-align:-1px;background:radial-gradient(circle,#fff6c8 0 35%,#ffc928 36%);box-shadow:0 0 0 1px rgba(0,0,0,.08)}
 .plbr button[data-b="1"] i{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 0 5px 1px #ffd75e}
@@ -268,6 +268,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .plrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;padding-bottom:4px;margin:0 -4px;padding-inline:4px;scrollbar-width:none}
   .plrow::-webkit-scrollbar{display:none}
   .plcb{flex:0 0 100px;scroll-snap-align:start}
+  .plbr{gap:2px}.plbr button{font-size:14px;padding:10px 4px}.plbr button i{margin-inline-end:5px}   /* 「とても明るい」 fits on a phone */
   .bvplb span{max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
 }
 /* the きせかえ tab: テーブル (the same picker, bigger) */
@@ -475,6 +476,19 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hsn.l{left:-6px}.hsn.r{right:-6px}
 .hsn.on{opacity:1;pointer-events:auto}
 .hsn:hover{background:rgba(43,48,68,.68)}
+/* the sideways rows' guide (app.js scrollGuide): a translucent ‹ › and a fade on the side with more */
+.sgw{position:relative;min-width:0}
+.gfilter > .sgw{flex:1;min-width:0}
+.plp .plh + .sgw + .plh{margin-top:14px}
+.sgn{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.75);background:rgba(43,48,68,.42);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.14);opacity:0;pointer-events:none;transition:opacity .2s,background .15s;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.sgn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.sgn.l{left:2px}.sgn.r{right:2px}
+.sgn.on{opacity:1;pointer-events:auto}
+.sgn:hover{background:rgba(43,48,68,.6)}
+.plrow + .sgn, .plrow ~ .sgn{top:calc(50% - 14px)}
+.sgR{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 56px),rgba(0,0,0,.18));mask-image:linear-gradient(to right,#000 calc(100% - 56px),rgba(0,0,0,.18))}
+.sgL{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 56px),rgba(0,0,0,.18));mask-image:linear-gradient(to left,#000 calc(100% - 56px),rgba(0,0,0,.18))}
+.sgL.sgR{-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 56px,#000 calc(100% - 56px),rgba(0,0,0,.18));mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 56px,#000 calc(100% - 56px),rgba(0,0,0,.18))}
 .chip{flex:none;display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px 5px 6px;font-weight:900;font-size:13.5px;box-shadow:0 2px 0 var(--line)}
 .chip img{width:24px;height:24px;border-radius:7px}
 .chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 0 #161a28}
@@ -1530,8 +1544,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=52"></script>
 <script src="gamelist-i18n.js?v=7"></script>
-<script src="table3d.js?v=105"></script>
-<script src="tables3d.js?v=9"></script>
+<script src="table3d.js?v=107"></script>
+<script src="tables3d.js?v=10"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=13"></script>
 <script src="models/backgammon.js?v=118"></script>
@@ -1548,7 +1562,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="models/fanorona.js?v=3"></script>
 <script src="models/ugolki.js?v=3"></script>
 <script src="models/konane.js?v=5"></script>
-<script src="models/senet.js?v=2"></script>
+<script src="models/senet.js?v=3"></script>
 <script src="models/agon.js?v=3"></script>
 <script src="models/alquerque.js?v=2"></script>
 <script src="models/cardtables.js?v=3"></script>
@@ -1575,8 +1589,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/fanorona.js?v=3"></script>
 <script src="games/ugolki.js?v=2"></script>
 <script src="games/konane.js?v=2"></script>
-<script src="games/senet-kit.js?v=1"></script>
-<script src="games/senet.js?v=1"></script>
+<script src="games/senet-kit.js?v=2"></script>
+<script src="games/senet.js?v=2"></script>
 <script src="games/agon.js?v=3"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
@@ -1601,7 +1615,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="rules/fanorona.js?v=5"></script>
 <script src="rules/ugolki.js?v=5"></script>
 <script src="rules/konane.js?v=2"></script>
-<script src="rules/senet.js?v=1"></script>
+<script src="rules/senet.js?v=2"></script>
 <script src="rules/agon.js?v=2"></script>
 <script src="rules/alquerque.js?v=3"></script>
 <script src="rules/checkers.js?v=2"></script>
@@ -1610,7 +1624,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="rules/mancala.js?v=3"></script>
 <script src="rules/dots.js?v=2"></script>
 <link rel="stylesheet" href="historia.css?v=14">
-<script src="historia.js?v=24"></script>
+<script src="historia.js?v=25"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -1620,6 +1634,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=16">
 <script src="worldmap.js?v=24"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=196"></script>
+<script src="app.js?v=197"></script>
 </body>
 </html>

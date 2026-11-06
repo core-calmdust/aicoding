@@ -26,8 +26,8 @@ try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1'
 const save = () => { DB.mt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.__schedPush) window.__schedPush(); };
 
 /* ---------------- i18n ---------------- */
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-let lang = DB.set.lang || (() => { const n = (navigator.language || 'ja').slice(0, 2); return LANGS.includes(n) ? n : 'en'; })();
+const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+let lang = DB.set.lang || (() => { const f = navigator.language || 'ja'; if (/^zh-(TW|HK|MO|Hant)/i.test(f)) return 'zh-TW'; const n = f.slice(0, 2).toLowerCase(); return LANGS.includes(n) ? n : 'en'; })();
 function t(k, v) {
   const I = window.SAME_I18N || {};
   let s = (I[lang] && I[lang][k]) ?? (I.en && I.en[k]) ?? (I.ja && I.ja[k]) ?? k;

@@ -6,9 +6,9 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 7;                       // data version (bump when historia/*.json change)
+  const V = 8;                       // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
-  const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+  const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
     ja: { btn: 'ヒストリア', sub: 'このゲームの歴史', close: '閉じる', prev: '前へ', next: '次へ', load: '頁をひらいています…', fail: '読み込めませんでした', bgm: 'BGM', back: '盤にもどる', again: 'はじめから', tap: 'タップでめくる', src: '年代には諸説あります' },
     en: { btn: 'Historia', sub: 'The story of this game', close: 'Close', prev: 'Previous', next: 'Next', load: 'Opening the pages…', fail: 'Could not load', bgm: 'Music', back: 'Back to the board', again: 'From the start', tap: 'Tap to flip', src: 'Some dates are disputed' },
@@ -20,12 +20,16 @@
     de: { btn: 'Historia', sub: 'Die Geschichte des Spiels', close: 'Schließen', prev: 'Zurück', next: 'Weiter', load: 'Seiten werden aufgeschlagen…', fail: 'Konnte nicht geladen werden', bgm: 'Musik', back: 'Zurück zum Brett', again: 'Von vorn', tap: 'Zum Umdrehen tippen', src: 'Manche Daten sind umstritten' },
     hi: { btn: 'हिस्टोरिया', sub: 'इस खेल की कहानी', close: 'बंद करें', prev: 'पिछला', next: 'अगला', load: 'पन्ने खुल रहे हैं…', fail: 'लोड नहीं हो सका', bgm: 'संगीत', back: 'बोर्ड पर लौटें', again: 'शुरू से', tap: 'पलटने के लिए टैप करें', src: 'कुछ तिथियों पर मतभेद है' },
     ar: { btn: 'هيستوريا', sub: 'حكاية هذه اللعبة', close: 'إغلاق', prev: 'السابق', next: 'التالي', load: 'جارٍ فتح الصفحات…', fail: 'تعذّر التحميل', bgm: 'الموسيقى', back: 'العودة إلى اللوحة', again: 'من البداية', tap: 'المس للقلب', src: 'بعض التواريخ مختلف عليها' },
+    ru: { btn: 'Хистория', sub: 'История этой игры', close: 'Закрыть', prev: 'Назад', next: 'Далее', load: 'Открываем страницы…', fail: 'Не удалось загрузить', bgm: 'Музыка', back: 'К доске', again: 'Сначала', tap: 'Нажмите, чтобы перевернуть', src: 'Датировки спорны' },
+    'zh-TW': { btn: '歷史', sub: '這款遊戲的故事', close: '關閉', prev: '上一頁', next: '下一頁', load: '正在翻開書頁…', fail: '無法載入', bgm: '音樂', back: '回到棋盤', again: '從頭開始', tap: '點擊翻面', src: '年代眾說紛紜' },
+    id: { btn: 'Historia', sub: 'Kisah permainan ini', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', load: 'Membuka halaman…', fail: 'Gagal memuat', bgm: 'Musik', back: 'Kembali ke papan', again: 'Dari awal', tap: 'Ketuk untuk membalik', src: 'Penanggalan masih diperdebatkan' },
+    tr: { btn: 'Historia', sub: 'Bu oyunun hikâyesi', close: 'Kapat', prev: 'Önceki', next: 'Sonraki', load: 'Sayfalar açılıyor…', fail: 'Yüklenemedi', bgm: 'Müzik', back: 'Tahtaya dön', again: 'Baştan', tap: 'Çevirmek için dokun', src: 'Tarihler tartışmalıdır' },
   };
   // the guide who narrates each game: the game's own Atlas Mon where it has one, else a plush avatar that suits it
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -46,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
