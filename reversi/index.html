@@ -1786,7 +1786,7 @@ let weights = null, weightsReady;
 const NPHASE_DEFAULT = 12;
 weightsReady = (async () => {
   try {
-    const res = await fetch('weights.bin.gz');
+    const res = await fetch('weights.bin.gz?v=4');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);
