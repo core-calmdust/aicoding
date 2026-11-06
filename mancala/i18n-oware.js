@@ -615,4 +615,5 @@ window.MancalaOware = {
   coach: (k, lang) => pick(COACH, k, lang),
   rv: (k, lang) => pick(RV, k, lang),
 };
+window.MANCALA_RULE_TX = { oware: [{ coach: COACH, rv: RV }] };   // (i18n-world.js adds the other rules and the lookup)
 })();

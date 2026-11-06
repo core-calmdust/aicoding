@@ -388,7 +388,9 @@ function mcFeatures(b, side, k, rules) {
     over: tr.over, sweep: sweep ? [sweep.n0, sweep.n1] : null, give, gain: tr.board[E.storeOf(side)] - b[E.storeOf(side)] };
   F.mySide = E.sideSum(tr.board, side); F.oppSide = E.sideSum(tr.board, opp);
   F.hoard = tr.board[base + 5];
-  if (rules === 'oware') { F.hoard = 0; for (let q = 0; q < 6; q++) F.hoard = Math.max(F.hoard, tr.board[base + q]); }
+  if (rules === 'oware' || E.RULES[rules].gen) { F.hoard = 0; for (let q = 0; q < 6; q++) F.hoard = Math.max(F.hoard, tr.board[base + q]); }
+  // (the seeds swept at the end go to one store in Mangala / Bohnenspiel / Ayoayo)
+  if (sweep && sweep.to >= 0) F.sweep = sweep.to === 6 ? [sweep.n0 + sweep.n1, 0] : [0, sweep.n0 + sweep.n1];
   if (!tr.over && !F.extra) {
     F.threatBefore = mcBestCap(b, opp, rules);
     F.threatAfter = mcBestCap(tr.board, opp, rules);
@@ -424,7 +426,7 @@ function mcMove(i) {
     const tot = P[e + 1].b[E.storeOf(side)] - pos.b[E.storeOf(side)];
     if (e > i && tot > 1) why.push(mcT('extraTurn', { n: tot }));
   }
-  if (F.cap) { why.push(mcT('cap', { n: F.cap, g: F.capG })); if (rules === 'basic') why.push(mcT('capKeep')); if (rules === 'oware' && F.tr.caps >= 2) why.push(mcT('capChain', { k: F.tr.caps })); }
+  if (F.cap) { why.push(mcT('cap', { n: F.cap, g: F.capG })); if (rules === 'basic') why.push(mcT('capKeep')); if ((rules === 'oware' || rules === 'bohnen') && F.tr.caps >= 2) why.push(mcT('capChain', { k: F.tr.caps })); }
   if (F.tr.slam) why.push(mcT('slam'));
   if (F.over && F.sweep) why.push(mcT('end', { p0: mcEsc(shortName(0)), p1: mcEsc(shortName(1)), a: F.sweep[0], b: F.sweep[1] }));
   if (P[i + 1] && P[i + 1].mv && P[i + 1].mv.cycle) why.push(mcT('cycle'));
@@ -452,7 +454,7 @@ function mcMove(i) {
     }
     if (!replied && F.oppTurn.g >= 5 && (j.q === 'bad' || j.q === 'dubious') && !(T1.n >= 2 && F.oppTurn.how === 'hCap')) why.push(mcT('oppGain', { n: F.oppTurn.g, how: F.oppTurn.how.split('+').map(x => mcT(x)).join('・') || '—' }));
     if (F.myCapNext.n >= 3 && T1.n < F.myCapNext.n) why.push(mcT('capThreat', { x: mcPit(F.myCapNext.by), n: F.myCapNext.n }));
-    if (rules !== 'sunka' && F.hoard >= (rules === 'oware' ? 12 : 10)) why.push(mcT('hoard', { n: F.hoard }));
+    if (rules !== 'sunka' && F.hoard >= (rules === 'oware' || E.RULES[rules].gen ? 12 : 10)) why.push(mcT('hoard', { n: F.hoard }));
     if (F.oppSide <= 3 && F.mySide >= 6) why.push(mcT('starve', { n: F.oppSide, m: F.mySide }));
     else if (F.mySide <= 3 && F.oppSide >= 6) why.push(mcT('low', { n: F.mySide, m: F.oppSide }));
   }
@@ -479,7 +481,7 @@ function mcMove(i) {
     else if (!B.extra && !F.extra && B.mySide - F.mySide >= 3 && B.give < F.give) why.push(mcT('bSide', { b: mcPit(j.best), a: F.mySide, b2: B.mySide }));
     else why.push(mcT('bDeep', { b: mcPit(j.best) }));
   }
-  if (!okMove && !tip) tip = rules === 'sunka' ? 'tRelay' : rules === 'easy' ? 'tEasy' : rules === 'oware' ? 'tOware' : 'tGen';
+  if (!okMove && !tip) tip = rules === 'sunka' ? 'tRelay' : rules === 'easy' ? 'tEasy' : rules === 'oware' ? 'tOware' : E.RULES[rules].gen ? 'tRule' : 'tGen';
   h += out.map(x => `<p>${x}</p>`).join('');
   if (why.length) h += `<ul class="cr-list">${why.map(x => `<li>${x}</li>`).join('')}</ul>`;
   if (tip) h += `<p class="cr-tip">💡 ${mcT(tip)}</p>`;
