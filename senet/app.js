@@ -358,7 +358,7 @@ function renderInfo() {
     const el = $('#pl' + s), home = homeCount(st, s), onb = st.pos[s].filter(p => p > 0 && p < rl.goal).length;
     $('#name' + s).textContent = special ? sideName(s) : playerName(s);
     $('#sub' + s).innerHTML = `${esc(t('pl.board'))} <b>${onb}</b> · ${esc(t('pl.left'))} <b>${rc.pips[s]}</b>`;
-    $('#home' + s).innerHTML = `${home}<small>/${rl.pieces} ${esc(t('pl.home'))}</small>`;
+    $('#home' + s).innerHTML = `${home}<small>/${rl.pieces}<span class="hl"> ${esc(t('pl.home'))}</span></small>`;
     el.classList.toggle('active', !sta.over && st.turn === s);
     el.classList.toggle('won', sta.over && sta.winner === s);
     el.classList.toggle('thinking', !!thinking && st.turn === s);
@@ -913,6 +913,8 @@ function relayout(force) {
   const o = orient(), pc = mqPC.matches;
   document.documentElement.classList.toggle('bv', o === 'v');
   if (view && (o !== view.orient() || force)) { view.setOrient(o); bindHover(); }
+  // phones held sideways (landtabs.js → html.sn-land): no bear-off trays around the board (the counts are in the players' cards) → a bigger board
+  if (view && view.trays() === document.documentElement.classList.contains('sn-land')) { view.setTrays(!view.trays()); bindHover(); }
   // players: PC — in the info row; elsewhere — the opponent above the board, you (and the status / roll box) below it
   const ba = $('#boardArea'), fr = $('#frame'), col = $('#plCol'), pl = $('#players'), sb = $('#statusBox');
   const me = game ? (settings.mode === 'ai' || settings.mode === 'online' ? game.human : 0) : 0;

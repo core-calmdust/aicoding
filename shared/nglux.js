@@ -83,6 +83,22 @@ ${P}.ngt-on :is(.ng-col,[data-ng=design]) > .field > label:first-child,${P}.ngt-
 ${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:6px!important}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{padding:3px 3px 5px!important;border-radius:10px!important}
+/* phones held sideways (html.ngt-land / html.rot, 2026-11-07): the dialog is short and wide — the ルール panels side by side
+   (two columns, tighter), the デザイン rows two per line (a wide row such as the portal's 場所 keeps the full width) */
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] .ng-cols:not(.ngt-hide){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;align-items:start!important;margin:0 0 6px!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] .ng-cols.ngl-one:not(.ngt-hide){grid-template-columns:minmax(0,1fr)!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){gap:12px!important;padding:11px 12px 12px!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on :is(.ng-col,[data-ng=design]) > .field > label:first-child,:is(html.ngt-land,html.rot) ${P}.ngt-on [data-ng=design] > label:first-child{margin-bottom:5px}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] .level-wrap{gap:4px!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] :is(.level-name,#levelName){min-height:0!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] .rules-offer{padding-top:6px!important;padding-bottom:6px!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=design] .ng-col:has(> [data-ng=design]:not(.ngt-hide)){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=design] .ng-col:has(> [data-ng=design]:not(.ngt-hide)) > [data-ng=design]{margin:0!important;min-width:0}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=design] .ng-col > [data-ng=design]:is(.atlas-place,.wide){grid-column:1 / -1}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules]:has(> .rules-offer:not(.hidden)):has(> .ngt-modef:not(.hidden)){flex-flow:row wrap!important;align-content:flex-start!important;column-gap:10px!important}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules]:has(> .rules-offer:not(.hidden)):has(> .ngt-modef:not(.hidden)) > *{flex:1 1 100%;min-width:0}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules]:has(> .rules-offer:not(.hidden)):has(> .ngt-modef:not(.hidden)) > :is(.rules-offer,.ngt-modef){flex:1 1 calc(50% - 5px)!important;width:auto!important;margin-bottom:8px!important;align-self:stretch}
+:is(html.ngt-land,html.rot) ${P}.ngt-on[data-ngt=rules] > .rules-offer span{font-size:12px!important;line-height:1.45!important}
 /* the portal skin (light): cream panels and trays */
 html.atlas-skin ${P}{--ngl-pbg:linear-gradient(180deg,#fffaf0,#f8eedb);--ngl-pbd:#ecdab4;--ngl-psh:0 1px 0 #fff inset, 0 10px 24px -18px rgba(120,80,20,.55);--ngl-a:#b8812f;--ngl-hi:#e0a33a}
 html.atlas-skin ${P} .seg{background:#f2e7cf!important;border-color:#ead9b6!important}
