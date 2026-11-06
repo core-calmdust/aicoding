@@ -8,16 +8,16 @@
   'use strict';
   const V = 1;
   const UI = {
-    ja: { hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…', more: 'もっと読む', less: '閉じる' },
-    en: { hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…', more: 'Read more', less: 'Show less' },
-    zh: { hist: '历史', title: '地图', sub: '每款游戏诞生在世界的哪里？点击图钉，追寻它的旅程。', all: '全部', asia: '亚洲', europe: '欧洲', mea: '中东・非洲', americas: '美洲', play: '开始', born: '发源地', era: '年代', route: '游戏之旅', hint: '拖动移动・滚轮／双指缩放', pick: '选择图钉，这里会显示游戏的故事', reset: '显示全图', n: '{n}款', load: '正在展开地图…', more: '展开全文', less: '收起' },
-    ko: { hist: '히스토리아', title: '지도', sub: '각 게임은 세계 어디에서 태어났을까요? 핀을 누르면 그 게임의 여정을 따라갈 수 있어요.', all: '전체', asia: '아시아', europe: '유럽', mea: '중동・아프리카', americas: '아메리카', play: '플레이', born: '발상지', era: '연대', route: '게임의 여정', hint: '드래그로 이동・휠／핀치로 확대', pick: '핀을 고르면 여기에 게임 이야기가 나와요', reset: '전체 보기', n: '{n}개', load: '지도를 펼치는 중…', more: '더 보기', less: '접기' },
-    es: { hist: 'Historia', title: 'Atlas', sub: '¿En qué parte del mundo nació cada juego? Toca un pin para seguir su viaje.', all: 'Todo', asia: 'Asia', europe: 'Europa', mea: 'Oriente Medio y África', americas: 'América', play: 'Jugar', born: 'Origen', era: 'Época', route: 'Su viaje', hint: 'Arrastra para mover · rueda / pellizca para ampliar', pick: 'Elige un pin para leer la historia del juego', reset: 'Todo el mundo', n: '{n} juegos', load: 'Desplegando el mapa…', more: 'Leer más', less: 'Ver menos' },
-    fr: { hist: 'Historia', title: 'Atlas', sub: 'Où chaque jeu est-il né ? Touchez une épingle pour suivre son voyage.', all: 'Tout', asia: 'Asie', europe: 'Europe', mea: 'Moyen-Orient et Afrique', americas: 'Amériques', play: 'Jouer', born: 'Origine', era: 'Époque', route: 'Son voyage', hint: 'Glisser pour déplacer · molette / pincer pour zoomer', pick: 'Choisissez une épingle pour lire l’histoire du jeu', reset: 'Monde entier', n: '{n} jeux', load: 'Dépliage de la carte…', more: 'Lire la suite', less: 'Réduire' },
-    pt: { hist: 'Historia', title: 'Atlas', sub: 'Onde nasceu cada jogo? Toque num pino para seguir a viagem dele.', all: 'Todos', asia: 'Ásia', europe: 'Europa', mea: 'Oriente Médio e África', americas: 'Américas', play: 'Jogar', born: 'Origem', era: 'Época', route: 'A viagem', hint: 'Arraste para mover · roda / pinça para ampliar', pick: 'Escolha um pino para ler a história do jogo', reset: 'Mundo todo', n: '{n} jogos', load: 'Abrindo o mapa…', more: 'Ler mais', less: 'Mostrar menos' },
-    de: { hist: 'Historia', title: 'Atlas', sub: 'Wo auf der Welt ist jedes Spiel entstanden? Tippe auf eine Nadel und folge seiner Reise.', all: 'Alle', asia: 'Asien', europe: 'Europa', mea: 'Nahost & Afrika', americas: 'Amerika', play: 'Spielen', born: 'Herkunft', era: 'Zeit', route: 'Seine Reise', hint: 'Ziehen zum Bewegen · Rad / Pinch zum Zoomen', pick: 'Wähle eine Nadel, um die Geschichte des Spiels zu lesen', reset: 'Ganze Welt', n: '{n} Spiele', load: 'Karte wird entfaltet…', more: 'Mehr lesen', less: 'Weniger' },
-    hi: { hist: 'हिस्टोरिया', title: 'एटलस', sub: 'हर खेल दुनिया में कहाँ जन्मा? पिन पर टैप करके उसकी यात्रा देखें।', all: 'सभी', asia: 'एशिया', europe: 'यूरोप', mea: 'मध्य पूर्व व अफ़्रीका', americas: 'अमेरिका', play: 'खेलें', born: 'जन्मस्थान', era: 'काल', route: 'खेल की यात्रा', hint: 'खींचकर घुमाएँ · व्हील / पिंच से ज़ूम', pick: 'पिन चुनें, यहाँ खेल की कहानी दिखेगी', reset: 'पूरी दुनिया', n: '{n} खेल', load: 'नक्शा खुल रहा है…', more: 'और पढ़ें', less: 'कम दिखाएँ' },
-    ar: { hist: 'هيستوريا', title: 'الأطلس', sub: 'أين وُلدت كل لعبة في العالم؟ المس دبوسًا لتتبع رحلتها.', all: 'الكل', asia: 'آسيا', europe: 'أوروبا', mea: 'الشرق الأوسط وأفريقيا', americas: 'الأمريكتان', play: 'العب', born: 'المنشأ', era: 'الحقبة', route: 'رحلتها', hint: 'اسحب للتحريك · العجلة / القرص للتكبير', pick: 'اختر دبوسًا لتقرأ قصة اللعبة', reset: 'العالم كله', n: '{n} ألعاب', load: 'جارٍ فتح الخريطة…', more: 'اقرأ المزيد', less: 'عرض أقل' },
+    ja: { more: 'もっと読む', less: '閉じる', hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
+    en: { more: 'Read more', less: 'Show less', hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },
+    zh: { more: '展开全文', less: '收起', hist: '历史', title: '地图', sub: '每款游戏诞生在世界的哪里？点击图钉，追寻它的旅程。', all: '全部', asia: '亚洲', europe: '欧洲', mea: '中东・非洲', americas: '美洲', play: '开始', born: '发源地', era: '年代', route: '游戏之旅', hint: '拖动移动・滚轮／双指缩放', pick: '选择图钉，这里会显示游戏的故事', reset: '显示全图', n: '{n}款', load: '正在展开地图…' },
+    ko: { more: '더 보기', less: '접기', hist: '히스토리아', title: '지도', sub: '각 게임은 세계 어디에서 태어났을까요? 핀을 누르면 그 게임의 여정을 따라갈 수 있어요.', all: '전체', asia: '아시아', europe: '유럽', mea: '중동・아프리카', americas: '아메리카', play: '플레이', born: '발상지', era: '연대', route: '게임의 여정', hint: '드래그로 이동・휠／핀치로 확대', pick: '핀을 고르면 여기에 게임 이야기가 나와요', reset: '전체 보기', n: '{n}개', load: '지도를 펼치는 중…' },
+    es: { more: 'Leer más', less: 'Ver menos', hist: 'Historia', title: 'Atlas', sub: '¿En qué parte del mundo nació cada juego? Toca un pin para seguir su viaje.', all: 'Todo', asia: 'Asia', europe: 'Europa', mea: 'Oriente Medio y África', americas: 'América', play: 'Jugar', born: 'Origen', era: 'Época', route: 'Su viaje', hint: 'Arrastra para mover · rueda / pellizca para ampliar', pick: 'Elige un pin para leer la historia del juego', reset: 'Todo el mundo', n: '{n} juegos', load: 'Desplegando el mapa…' },
+    fr: { more: 'Lire la suite', less: 'Réduire', hist: 'Historia', title: 'Atlas', sub: 'Où chaque jeu est-il né ? Touchez une épingle pour suivre son voyage.', all: 'Tout', asia: 'Asie', europe: 'Europe', mea: 'Moyen-Orient et Afrique', americas: 'Amériques', play: 'Jouer', born: 'Origine', era: 'Époque', route: 'Son voyage', hint: 'Glisser pour déplacer · molette / pincer pour zoomer', pick: 'Choisissez une épingle pour lire l’histoire du jeu', reset: 'Monde entier', n: '{n} jeux', load: 'Dépliage de la carte…' },
+    pt: { more: 'Ler mais', less: 'Mostrar menos', hist: 'Historia', title: 'Atlas', sub: 'Onde nasceu cada jogo? Toque num pino para seguir a viagem dele.', all: 'Todos', asia: 'Ásia', europe: 'Europa', mea: 'Oriente Médio e África', americas: 'Américas', play: 'Jogar', born: 'Origem', era: 'Época', route: 'A viagem', hint: 'Arraste para mover · roda / pinça para ampliar', pick: 'Escolha um pino para ler a história do jogo', reset: 'Mundo todo', n: '{n} jogos', load: 'Abrindo o mapa…' },
+    de: { more: 'Mehr lesen', less: 'Weniger', hist: 'Historia', title: 'Atlas', sub: 'Wo auf der Welt ist jedes Spiel entstanden? Tippe auf eine Nadel und folge seiner Reise.', all: 'Alle', asia: 'Asien', europe: 'Europa', mea: 'Nahost & Afrika', americas: 'Amerika', play: 'Spielen', born: 'Herkunft', era: 'Zeit', route: 'Seine Reise', hint: 'Ziehen zum Bewegen · Rad / Pinch zum Zoomen', pick: 'Wähle eine Nadel, um die Geschichte des Spiels zu lesen', reset: 'Ganze Welt', n: '{n} Spiele', load: 'Karte wird entfaltet…' },
+    hi: { more: 'और पढ़ें', less: 'कम दिखाएँ', hist: 'हिस्टोरिया', title: 'एटलस', sub: 'हर खेल दुनिया में कहाँ जन्मा? पिन पर टैप करके उसकी यात्रा देखें।', all: 'सभी', asia: 'एशिया', europe: 'यूरोप', mea: 'मध्य पूर्व व अफ़्रीका', americas: 'अमेरिका', play: 'खेलें', born: 'जन्मस्थान', era: 'काल', route: 'खेल की यात्रा', hint: 'खींचकर घुमाएँ · व्हील / पिंच से ज़ूम', pick: 'पिन चुनें, यहाँ खेल की कहानी दिखेगी', reset: 'पूरी दुनिया', n: '{n} खेल', load: 'नक्शा खुल रहा है…' },
+    ar: { more: 'اقرأ المزيد', less: 'عرض أقل', hist: 'هيستوريا', title: 'الأطلس', sub: 'أين وُلدت كل لعبة في العالم؟ المس دبوسًا لتتبع رحلتها.', all: 'الكل', asia: 'آسيا', europe: 'أوروبا', mea: 'الشرق الأوسط وأفريقيا', americas: 'الأمريكتان', play: 'العب', born: 'المنشأ', era: 'الحقبة', route: 'رحلتها', hint: 'اسحب للتحريك · العجلة / القرص للتكبير', pick: 'اختر دبوسًا لتقرأ قصة اللعبة', reset: 'العالم كله', n: '{n} ألعاب', load: 'جارٍ فتح الخريطة…' },
   };
   const REG = ['all', 'asia', 'europe', 'mea', 'americas'];
   const W0 = 360, H0 = 128.5;   // map units: 1 = 1° of longitude, equirectangular 72.5°N…56°S
@@ -47,39 +47,19 @@
 
   /* ---------- view: centre (map units) + zoom (px per unit), clamped so the map always covers the box ---------- */
   function box() { return { w: el.map.clientWidth || 1, h: el.map.clientHeight || 1 }; }
-  // the whole world fits the width (the box is a little taller than the map: sea above and below);
-  // phones (a tall, narrow box): the lands' height (72.5°N…56°S) fills the box instead, the sides are cropped and panned
-  const zMin = () => { const b = box(); return ph() ? Math.max(b.w / W0, b.h / (H0 - 2)) : b.w / W0; };
-  const zMax = () => ph() ? Math.max(box().w / W0 * 9, zMin() * 3) : zMin() * 9;
+  const zMin = () => box().w / W0;   // the whole world fits the width (the box is a little taller than the map: sea above and below)
+  const zMax = () => zMin() * 9;
   function clamp(v) {
     const b = box(), z = Math.max(zMin(), Math.min(zMax(), v.z)), hw = b.w / 2 / z, hh = b.h / 2 / z;
     return { x: hw * 2 >= W0 ? W0 / 2 : Math.max(hw, Math.min(W0 - hw, v.x)), y: hh * 2 >= H0 ? H0 / 2 - 12 : Math.max(hh, Math.min(H0 - hh, v.y)), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
-  // (phones: when the points are wider than the cropped view, it centres on the stretch holding the most of them,
-  // always with the first point — a game's home — in it; the rest are a drag away)
-  function fit(pts, pad = 1.6, anchor = null) {
+  function fit(pts, pad = 1.6) {
     const b = box(); if (!pts.length) return clamp({ x: W0 / 2, y: H0 / 2 - 8, z: 0 });
     const U = pts.map(toU), x0 = Math.min(...U.map(p => p[0])), x1 = Math.max(...U.map(p => p[0])), y0 = Math.min(...U.map(p => p[1])), y1 = Math.max(...U.map(p => p[1]));
     const w = Math.max(26, (x1 - x0) * pad + 14), h = Math.max(16, (y1 - y0) * pad + 12);
-    const v = clamp({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: Math.min(b.w / w, b.h / h) });
-    if (!ph()) return v;
-    const vw = b.w / v.z, m = Math.min(22, vw * .14), span = vw - m * 2;
-    if (x1 - x0 <= span) return v;
-    const A = anchor ? toU(anchor)[0] : null, xs = U.map(p => p[0]).sort((a, c) => a - c);
-    let best = null;
-    xs.forEach(l => { if (A != null && (A < l || A > l + span)) return;
-      const n = xs.filter(x => x >= l && x <= l + span).length, c = l + span / 2, sc = n * 1000 - (A != null ? Math.abs(c - A) : 0);
-      if (!best || sc > best.sc) best = { sc, c }; });
-    if (!best && A != null) best = { c: A };
-    if (!best) return v;
-    // then frame just the points in that stretch (not closer than about twice the lands-fill zoom, to keep some context)
-    const l = best.c - span / 2, S = U.filter(p => p[0] >= l - .01 && p[0] <= l + span + .01);
-    if (!S.length) return clamp({ x: best.c, y: v.y, z: v.z });
-    const sx0 = Math.min(...S.map(p => p[0])), sx1 = Math.max(...S.map(p => p[0])), sy0 = Math.min(...S.map(p => p[1])), sy1 = Math.max(...S.map(p => p[1]));
-    const sz = Math.min(b.w / Math.max(26, (sx1 - sx0) * pad + 14), b.h / Math.max(16, (sy1 - sy0) * pad + 12));
-    return clamp({ x: (sx0 + sx1) / 2, y: (sy0 + sy1) / 2, z: Math.max(v.z, Math.min(sz, zMin() * 2.2)) });
+    return clamp({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: Math.min(b.w / w, b.h / h) });
   }
   function fly(to, ms = 650) {
     cancelAnimationFrame(anim); const from = { ...view }, t0 = performance.now();
@@ -114,18 +94,14 @@
     placePins();
   }
   // pins: one per game at its home, pushed apart in screen space when they crowd (a short leader line keeps the true spot)
-  // phones (the same breakpoint as worldmap.css): with a game picked, the other games shrink to small calm dots
-  // (a 40px tap area each) so the picked pin, its numbered stops and their names stand out
-  const ph = () => window.matchMedia('(max-width:819px)').matches;
   function placePins() {
-    const v = view, b = box(), list = games(), PH = ph(), S = PH ? 42 : b.w < 520 ? 34 : 46;
-    const mini = PH && !!sel, SM = 16, CS = mini ? 26 : S;   // CS: a bubble's size
-    const A = list.map(g => { const [x, y] = toU(home(g)); const m = mini && g.id !== sel; return { g, ax: sx(v, x), ay: sy(v, y), s: m ? SM : S, off: m ? 0 : S * .62 }; });
+    const v = view, b = box(), list = games(), S = b.w < 520 ? 34 : 46;
+    const A = list.map(g => { const [x, y] = toU(home(g)); return { g, ax: sx(v, x), ay: sy(v, y) }; });
     // crowded spots (three or more games within about a pin's width) become one bubble with the count; tapping it zooms in.
     // The picked game always keeps its own pin.
     // zoomed well in, every game gets its own pin again (games from the same city fan out round it, joined by short lines)
     const noClu = v.z >= zMax() * .45;
-    const C = [], R2 = ((mini ? 20 : S) * 1.05) ** 2, free = A.filter(p => p.g.id !== sel);
+    const C = [], R2 = (S * 1.05) ** 2, free = A.filter(p => p.g.id !== sel);
     free.sort((p, q) => p.ax - q.ax);
     const used = new Set();
     free.forEach(p => {
@@ -138,17 +114,17 @@
       all.forEach(q => { used.add(q); q.clu = C.length; });
       C.push({ m: all, ax: all.reduce((s, q) => s + q.ax, 0) / all.length, ay: all.reduce((s, q) => s + q.ay, 0) / all.length });
     });
-    const P = A.filter(p => p.clu == null).concat(C.map(c => ({ c, ax: c.ax, ay: c.ay, s: CS, off: mini ? 0 : S * .62 })));
-    P.forEach(p => { p.x = p.ax; p.y = p.ay - p.off; });
+    const P = A.filter(p => p.clu == null).concat(C.map(c => ({ c, ax: c.ax, ay: c.ay })));
+    P.forEach(p => { p.x = p.ax; p.y = p.ay - S * .62; });
     // (zoomed in without bubbles: more rounds and a weaker pull home, so neighbours fully clear each other)
     const IT = noClu ? 140 : 40, PULL = noClu ? .012 : .04, NEED = noClu ? 1.32 : .94;
     for (let it = 0; it < IT; it++) {
       for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
-        const p = P[i], q = P[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = (p.s + q.s) / 2 * NEED;
+        const p = P[i], q = P[j]; let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy); const need = S * NEED;
         if (d >= need) continue; if (d < .01) { dx = (i % 2 ? 1 : -1) * .7; dy = .7; d = 1; }
         const k = (need - d) / 2 / d; p.x -= dx * k; p.y -= dy * k; q.x += dx * k; q.y += dy * k;
       }
-      P.forEach(p => { p.x += (p.ax - p.x) * PULL; p.y += (p.ay - p.off - p.y) * PULL; });
+      P.forEach(p => { p.x += (p.ax - p.x) * PULL; p.y += (p.ay - S * .62 - p.y) * PULL; });
     }
     // the bubbles
     const cl = el.clu; while (cl.children.length > C.length) cl.lastChild.remove();
@@ -157,9 +133,9 @@
       const bt = cl.children[k], m = p.c.m, key = m.map(q => q.g.id).join(',');
       if (bt.dataset.k !== key) { bt.dataset.k = key; bt.innerHTML = m.slice(0, 2).map((q, i) => `<span class="ci i${i}" style="--c:${q.g.color}">${ctx.art(q.g)}</span>`).join('') + `<b>${m.length}</b>`;
         bt.setAttribute('aria-label', m.map(q => ctx.gname(q.g)).join(', ')); bt.title = m.map(q => ctx.gname(q.g)).join(' · '); }
-      const dim = (!!sel && !mini) || (reg !== 'all' && m.every(q => regionOf(home(q.g)) !== reg));
-      bt.classList.toggle('dim', dim); bt.classList.toggle('mini', mini);
-      bt.style.transform = `translate(${(p.x - CS / 2).toFixed(1)}px,${(p.y - CS / 2).toFixed(1)}px)`;
+      const dim = !!sel || (reg !== 'all' && m.every(q => regionOf(home(q.g)) !== reg));
+      bt.classList.toggle('dim', dim);
+      bt.style.transform = `translate(${(p.x - S / 2).toFixed(1)}px,${(p.y - S / 2).toFixed(1)}px)`;
       bt._pts = m.map(q => home(q.g));
     });
     A.forEach(p => { if (p.clu == null) return; const e = el.pins.querySelector(`[data-g="${p.g.id}"]`); if (e) e.style.visibility = 'hidden'; });
@@ -167,18 +143,14 @@
     let lines = '';
     A.forEach(p => {
       const e = el.pins.querySelector(`[data-g="${p.g.id}"]`); if (!e) return;
-      const out = p.x < -S || p.x > b.w + S || p.y < -S || p.y > b.h + S, sm = p.s < S;
-      e.style.transform = `translate(${(p.x - p.s / 2).toFixed(1)}px,${(p.y - p.s / 2).toFixed(1)}px)`; e.style.visibility = out ? 'hidden' : '';
-      const dim = (reg !== 'all' && regionOf(home(p.g)) !== reg) || (!!sel && sel !== p.g.id && !mini);
-      e.classList.toggle('dim', dim && sel !== p.g.id); e.classList.toggle('on', sel === p.g.id); e.classList.toggle('mini', sm);
-      if (out) return;
-      // a small dot is its own marker: a line back home only when it had to step aside
-      if (sm) { if (Math.hypot(p.x - p.ax, p.y - p.ay) > 5) lines += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" class="${dim ? 'dim' : ''}"/>`; return; }
-      lines += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${(p.y + S * .42).toFixed(1)}" class="${dim ? 'dim' : ''}"/><circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="3" class="${dim ? 'dim' : ''}" style="--c:${p.g.color}"/>`;
+      const out = p.x < -S || p.x > b.w + S || p.y < -S || p.y > b.h + S;
+      e.style.transform = `translate(${(p.x - S / 2).toFixed(1)}px,${(p.y - S / 2).toFixed(1)}px)`; e.style.visibility = out ? 'hidden' : '';
+      const dim = (reg !== 'all' && regionOf(home(p.g)) !== reg) || (!!sel && sel !== p.g.id);
+      e.classList.toggle('dim', dim && sel !== p.g.id); e.classList.toggle('on', sel === p.g.id);
+      if (!out) lines += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${(p.y + S * .42).toFixed(1)}" class="${dim ? 'dim' : ''}"/><circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="3" class="${dim ? 'dim' : ''}" style="--c:${p.g.color}"/>`;
     });
     el.svg.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`);
-    // the route's names keep clear of pins and bubbles (on phones the small dots may sit under a name: they are only context)
-    const R = routeSvg(P.filter(p => p.x > -S && p.x < b.w + S && !(p.s < S && !p.c)).map(p => [p.x - p.s / 2 - 2, p.y - p.s / 2 - 2, p.x + p.s / 2 + 2, p.y + p.s / 2 + (p.off ? 10 : 2)]), b);
+    const R = routeSvg(P.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
     el.svg.innerHTML = R.under + `<g class="lead">${lines}</g>`;
     el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over;
   }
@@ -186,60 +158,23 @@
   // the stops' names are set above the pins, each in the first spot around its dot that covers no pin, no other name
   // and stays inside the map (right, left, below, above, then the diagonals, then farther out)
   let mctx = null;
-  const fs = () => ph() ? 13 : box().w < 520 ? 14 : 16;   // the stop names' size (matches --amFs in worldmap.css)
+  const fs = () => box().w < 520 ? 14 : 16;   // the stop names' size (matches --amFs in worldmap.css)
   const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 ' + fs() + 'px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
   function routeSvg(rects, b) {
     const d = sel && D(sel); if (!d) return { under: '', over: '' };
     const g = ctx.games.find(x => x.id === sel), v = view, P = d.p.map(p => { const [x, y] = toU(p); return [sx(v, x), sy(v, y)]; });
-    const pins = pick(d.pn, lang) || [], PH = ph();
+    const pins = pick(d.pn, lang) || [];
     const arcs = (d.r && d.r.length ? d.r : P.slice(1).map((_, i) => [i, i + 1])).map(([a, b]) => {
       const A = P[a], B = P[b]; if (!A || !B) return '';
       const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, k = .22 * L;
-      return `M${A[0].toFixed(1)} ${A[1].toFixed(1)}Q${(mx - dy / L * k).toFixed(1)} ${(my + dx / L * k - .1 * L).toFixed(1)} ${B[0].toFixed(1)} ${B[1].toFixed(1)}`;
-    }).filter(Boolean);
+      return `<path d="M${A[0].toFixed(1)} ${A[1].toFixed(1)}Q${(mx - dy / L * k).toFixed(1)} ${(my + dx / L * k - .1 * L).toFixed(1)} ${B[0].toFixed(1)} ${B[1].toFixed(1)}"/>`;
+    }).join('');
     const hit = (r, q) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
     const busy = rects.slice(), dots = [], lbl = [];
-    const st = `style="--c:${g ? g.color : '#c48a4a'}"`;
-    if (PH) {
-      // phones: every stop (home too) gets a numbered dot matching the journey chips in the card, and its name on a pill;
-      // a name with no free spot is left out (the number and the chip still tell it)
-      const z = el.zoom, R = 11, inb = p => p[0] >= 2 && p[0] <= b.w - 2 && p[1] >= 2 && p[1] <= b.h - 2;
-      busy.push([z.offsetLeft - 6, z.offsetTop - 6, z.offsetLeft + z.offsetWidth + 6, z.offsetTop + z.offsetHeight + 6]);
-      // stops close together (zoomed out) push their numbers apart, each keeping a short line to its true spot
-      const E = R + 4, N = P.map(p => inb(p) ? p.slice() : [Math.max(E, Math.min(b.w - E, p[0])), Math.max(E, Math.min(b.h - E, p[1]))]);
-      for (let it = 0; it < 30; it++) for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
-        const p = N[i], q = N[j]; let dx = q[0] - p[0], dy = q[1] - p[1], dd = Math.hypot(dx, dy); if (dd >= R * 2 + 2) continue;
-        if (dd < .01) { dx = .7; dy = (i % 2 ? .7 : -.7); dd = 1; }
-        const k = (R * 2 + 2 - dd) / 2 / dd; p[0] -= dx * k; p[1] -= dy * k; q[0] += dx * k; q[1] += dy * k;
-      }
-      P.forEach((p, i) => { const n = N[i], off = !inb(p);
-        if (!off && Math.hypot(n[0] - p[0], n[1] - p[1]) > 3) dots.unshift(`<line class="nl" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${n[0].toFixed(1)}" y2="${n[1].toFixed(1)}"/><circle class="nd" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"/>`);
-        dots.push(`<g class="num${i === d.h ? ' h' : ''}${off ? ' off' : ''}"><circle cx="${n[0].toFixed(1)}" cy="${n[1].toFixed(1)}" r="${R}"/><text x="${n[0].toFixed(1)}" y="${n[1].toFixed(1)}">${i + 1}</text></g>`); busy.push([n[0] - R - 1, n[1] - R - 1, n[0] + R + 1, n[1] + R + 1]); });
-      // the home name first (it sits by the big pin), then the rest in route order
-      const order = P.map((_, i) => i).sort((a, c) => (c === d.h) - (a === d.h));
-      order.forEach(i => {
-        const p = N[i], s = pins[i]; if (!s || !inb(P[i])) return;
-        const w = Math.ceil(textW(s)) + 18, h = fs() + 11, G = R + 3;
-        let best = null;
-        for (const e of [0, 14, 30]) {
-          for (const [ox, oy] of [[G + e, -h / 2], [-G - e - w, -h / 2], [-w / 2, G + e], [-w / 2, -G - e - h], [G * .7 + e, G * .7 + e], [G * .7 + e, -G * .7 - e - h], [-G * .7 - e - w, G * .7 + e], [-G * .7 - e - w, -G * .7 - e - h]]) {
-            const r = [p[0] + ox, p[1] + oy, p[0] + ox + w, p[1] + oy + h];
-            if (r[0] < 4 || r[1] < 4 || r[2] > b.w - 4 || r[3] > b.h - 4) continue;
-            if (busy.some(q => hit(r, q))) continue;
-            best = { r, e }; break;
-          }
-          if (best) break;
-        }
-        if (!best) return;
-        busy.push(best.r);
-        const [x0, y0, x1, y1] = best.r, cx = Math.max(x0, Math.min(x1, p[0])), cy = Math.max(y0, Math.min(y1, p[1]));
-        lbl.push((best.e ? `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>` : '') +
-          `<g class="amlb${i === d.h ? ' h' : ''}"><rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w}" height="${h}" rx="${h / 2}"/><text x="${((x0 + x1) / 2).toFixed(1)}" y="${((y0 + y1) / 2 + .5).toFixed(1)}">${esc(s)}</text></g>`);
-      });
-      const pa = arcs.map(a => `<path class="case" d="${a}"/>`).join('') + arcs.map(a => `<path d="${a}"/>`).join('');
-      return { under: `<g class="route ph" ${st}>${pa}</g>`, over: `<g class="route lbl ph" ${st}>${lbl.join('')}${dots.join('')}</g>` };
-    }
-    P.forEach((p, i) => { if (i === d.h) return; dots.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5.5"/>`); busy.push([p[0] - 7, p[1] - 7, p[0] + 7, p[1] + 7]); });
+    // numbered stops (the numbers match the journey chips in the card); the home stop's number sits on its pin's corner
+    P.forEach((p, i) => { const R = 9, home = i === d.h, x = home ? p[0] + 15 : p[0], y = home ? p[1] - 15 : p[1];
+      dots.push(`<g class="num${home ? ' h' : ''}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/><text x="${x.toFixed(1)}" y="${y.toFixed(1)}">${i + 1}</text></g>`);
+      if (!home) busy.push([p[0] - R - 1, p[1] - R - 1, p[0] + R + 1, p[1] + R + 1]); });
     P.forEach((p, i) => {
       const s = pins[i]; if (i === d.h || !s) return;
       const w = textW(s) + 8, h = fs() + 6, G = 10;
@@ -259,13 +194,14 @@
       lbl.push((best.e ? `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>` : '') +
         `<text x="${(x0 + 4).toFixed(1)}" y="${(y0 + fs() + 1).toFixed(1)}">${esc(s)}</text>`);
     });
-    return { under: `<g class="route" ${st}>${arcs.map(a => `<path d="${a}"/>`).join('')}<g class="stop">${dots.join('')}</g></g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}</g>` };
+    const st = `style="--c:${g ? g.color : '#c48a4a'}"`;
+    return { under: `<g class="route" ${st}>${arcs}</g>`, over: `<g class="route lbl" ${st}>${lbl.join('')}${dots.join('')}</g>` };
   }
 
   /* ---------- the side card ---------- */
   function info() {
     const g = sel && ctx.games.find(x => x.id === sel), d = g && D(g.id);
-    if (!g || !d) { el.info.classList.remove('open'); el.info.innerHTML = `<div class="amempty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><p>${esc(u('pick'))}</p></div>`; return; }
+    if (!g || !d) { el.info.innerHTML = `<div class="amempty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><p>${esc(u('pick'))}</p></div>`; return; }
     const pins = pick(d.pn, lang) || [], order = d.p.map((_, i) => i);
     el.info.innerHTML = `<span class="amart ph" style="--c:${g.color}" aria-hidden="true">${ctx.art(g)}</span><div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
       <div class="amfacts"><span><i>${esc(u('born'))}</i><b>${esc(pins[d.h] || '')}</b></span><span><i>${esc(u('era'))}</i><b>${esc(pick(d.era, lang))}</b></span></div>
@@ -275,10 +211,10 @@
       ${hasH(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(u('hist'))}</button>` : ''}</div>`;
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
-    // phones: the story is cut to two lines; when it runs on, a toggle opens the card to the whole text
+    // the story is cut to two lines; when it runs on, a toggle opens the card to the whole text
     el.info.classList.remove('open');
     const mb = el.info.querySelector('.ammore'), pd = el.info.querySelector('.amd');
-    if (mb && ph() && pd.scrollHeight > pd.clientHeight + 2) {
+    if (mb && pd.scrollHeight > pd.clientHeight + 2) {
       mb.hidden = false;
       mb.onclick = () => { const o = el.info.classList.toggle('open'); mb.textContent = u(o ? 'less' : 'more'); mb.setAttribute('aria-expanded', o); };
     }
@@ -287,13 +223,10 @@
   function openClu(pts) { const f = fit(pts, 2.2), z = Math.max(f.z, view.z * 2.4, zMax() * .5); fly(clamp({ x: f.x, y: f.y, z })); }
   function select(id, flyTo = true) {
     sel = id; info(); renderList();
-    if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35, d.p[d.h])); } else redraw();
+    if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35)); } else redraw();
     if (id && innerWidth < 820) {   // phones: keep the picked game's chip in view in the strip, and the card on screen
       const c = el.list.querySelector('.amrow.on'); if (c) el.list.scrollTo({ left: c.offsetLeft - 16, behavior: 'smooth' });
-      // bring the card up, but never so far that the map's top slips under the sticky header
-      const r = el.info.getBoundingClientRect(), hd = document.querySelector('header'), top = hd ? hd.getBoundingClientRect().bottom : 0;
-      const dy = Math.min(r.bottom - (innerHeight - 70), el.map.getBoundingClientRect().top - top - 4);
-      if (dy > 1) scrollBy({ top: dy, behavior: 'smooth' }); }
+      const r = el.info.getBoundingClientRect(); if (r.bottom > innerHeight - 70) el.info.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
   }
   function setReg(k) {
     reg = k; if (sel && k !== 'all' && regionOf(home(ctx.games.find(g => g.id === sel))) !== k) { sel = null; info(); }

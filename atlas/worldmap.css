@@ -110,8 +110,6 @@
 .amrow:active{transform:translateY(2px);box-shadow:none}
 /* (the card's second icon is the phone layout's: hidden on wider screens) */
 .aminfo .amart.ph{display:none}
-/* (the journey chips' stop numbers and the story's もっと読む toggle are phone-only too) */
-.amjour u,.ammore{display:none}
 /* phones: everything in about one screen — chips, a taller map, a one-row game strip that scrolls sideways,
    then a compact card (icon · name · facts on one line, two lines of story, the journey, 遊ぶ | ヒストリア side by side) */
 @media (max-width:819px){
@@ -120,8 +118,7 @@
   .amhead{order:0;gap:2px 10px}.amhead .h{margin-bottom:0}
   .amsub{display:none}
   .amreg{order:1;padding-bottom:8px}
-  /* the map runs edge to edge and takes about half the screen */
-  .ammap{order:2;aspect-ratio:auto;height:clamp(300px,calc(100svh - 380px),150vw);min-height:0;max-height:none;--amFs:13px;margin-inline:-16px;border-radius:0;border-inline:0}
+  .ammap{order:2;aspect-ratio:auto;height:clamp(260px,calc(100svh - 560px),108vw);min-height:0;max-height:none;--amFs:14px}
   .amlist{order:3;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:8px -16px 8px;padding:2px 16px 4px;scroll-padding-inline:16px}
   .amlist::-webkit-scrollbar{display:none}
   .amrow{flex:none;scroll-snap-align:start;max-width:62vw;padding:5px 12px 5px 5px;gap:7px;border-radius:99px}
@@ -149,35 +146,20 @@
   .aminfo .amacts{grid-area:acts;flex-direction:row;gap:8px;margin-top:4px}
   .aminfo .amacts>*{flex:1;padding-block:10px}
   .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;margin:auto;padding:0}
-  .ampin,.amclu{width:42px;height:42px;border-width:3px}
-  .amclu b{min-width:25px;height:25px;padding:0 6px;font:900 14px/21px var(--round);right:-10px;top:-10px;border-width:2px}
-  /* a game picked: the others become small dots (40px to tap) and their bubbles plain counts */
-  .ampin.mini{width:16px;height:16px;border-width:2.5px;background:var(--c);box-shadow:0 1px 3px rgba(43,48,68,.45)}
-  .ampin.mini img,.ampin.mini::after,.amclu.mini .ci,.amclu.mini::after{display:none}
-  .ampin.mini::before,.amclu.mini::before{content:"";position:absolute;inset:-14px;border-radius:50%}
-  .amclu.mini{width:26px;height:26px;border:2px solid #b5ab96;background:#fff;box-shadow:0 1px 3px rgba(43,48,68,.3)}
-  .amclu.mini b{position:static;display:block;min-width:0;height:auto;padding:0;border:0;background:none;color:var(--ink2);font:900 12px/22px var(--round)}
-  /* the journey: a cased, thicker line; numbered stops (matching the card's chips); names on pills */
-  .ammap .amsvg .route.ph path{stroke-width:3.4;stroke:color-mix(in srgb,var(--c) 80%,#2b3044)}
-  .ammap .amsvg .route.ph path.case{stroke:#fffaf0;stroke-width:8;stroke-dasharray:none;animation:none;opacity:.9}
-  .ammap .amsvg .num circle{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:2.5}
-  .ammap .amsvg .lbl .num text{font:900 12px var(--round);fill:#fff;stroke:none;text-anchor:middle;dominant-baseline:central}
-  .ammap .amsvg .lbl.ph line{stroke-width:2;opacity:.85}
-  .ammap .amsvg .num.off circle{fill:#fff;stroke:color-mix(in srgb,var(--c) 70%,#1d2030);stroke-dasharray:4 3}
-  .ammap .amsvg .lbl .num.off text{fill:color-mix(in srgb,var(--c) 70%,#1d2030)}
-  .ammap .amsvg .lbl .nd{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:1.5}
-  .ammap .amsvg .amlb rect{fill:#fff;stroke:color-mix(in srgb,var(--c) 50%,#fff);stroke-width:1.5}
-  .ammap .amsvg .lbl .amlb text{font:900 13px var(--font);fill:var(--ink);stroke:none;text-anchor:middle;dominant-baseline:central}
-  .ammap .amsvg .amlb.h rect{fill:var(--ink);stroke:#fff}
-  .ammap .amsvg .lbl .amlb.h text{fill:#fff}
-  .amjour u{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-inline-end:5px;border-radius:99px;background:color-mix(in srgb,var(--c) 70%,#1d2030);color:#fff;font:900 10.5px/1 var(--round);text-decoration:none;vertical-align:1px}
-  /* the story: two lines, and もっと読む opens the card to the whole text */
-  .ammore:not([hidden]){display:inline-flex;align-items:center;gap:3px;margin:2px 0 0;padding:4px 0;border:0;background:none;color:color-mix(in srgb,var(--c,var(--ink)) 70%,var(--ink));font:900 12.5px var(--font);cursor:pointer}
-  .ammore::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);margin-inline-start:4px}
-  .aminfo.open .ammore::after{transform:translateY(1px) rotate(-135deg)}
-  .aminfo.open{height:auto}
-  .aminfo.open .amd{display:block;-webkit-line-clamp:none;overflow:visible}
+  .ampin,.amclu{width:34px;height:34px;border-width:2.5px}
+  .amclu b{min-width:19px;height:19px;font-size:11.5px;line-height:19px;right:-7px;top:-7px}
   .amhint{display:none}
   .amzoom{right:8px;top:auto;bottom:8px;flex-direction:row}
-  .amzoom button{width:40px;height:40px}
+  .amzoom button{width:34px;height:34px}
 }
+
+/* the story's 「もっと読む」 toggle (shown only when the two-line cut hides text) */
+.ammore{display:none}
+.ammore:not([hidden]){display:inline-flex;align-items:center;gap:3px;margin:2px 0 0;padding:4px 0;border:0;background:none;color:color-mix(in srgb,var(--c,var(--ink)) 70%,var(--ink));font:900 12.5px var(--font,inherit);cursor:pointer}
+.ammore::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);margin-inline-start:4px}
+.aminfo.open .ammore::after{transform:translateY(1px) rotate(-135deg)}
+.aminfo.open .amd{display:block!important;-webkit-line-clamp:none!important;overflow:visible!important}
+/* numbered stops on the map and in the journey chips */
+.ammap .amsvg .num circle{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:2.2}
+.ammap .amsvg .lbl .num text{font:900 11px var(--round,inherit);fill:#fff;stroke:none;text-anchor:middle;dominant-baseline:central}
+.amjour u{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-inline-end:5px;border-radius:99px;background:color-mix(in srgb,var(--c,#8a6a3a) 70%,#1d2030);color:#fff;font:900 10.5px/1 var(--round,inherit);text-decoration:none;vertical-align:1px}
