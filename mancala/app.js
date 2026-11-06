@@ -14,7 +14,8 @@ function t(k, v) {
   return x;
 }
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
-const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka'];   // 'basic' is shown as "Normal"
+const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka', 'oware'];   // 'basic' is shown as "Normal"; Oware has its own group in the ゲーム tab
+const RULE_GROUPS = [['kalah', ['basic', 'easy', 'kalah', 'sunka']], ['oware', ['oware']]];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -54,6 +55,8 @@ function recompute() {
   if (cur > game.moves.length) cur = game.moves.length;
 }
 const shownPos = () => inStudy() ? studyTop() : P[cur];
+// Oware: a pit that would not reach the opponent's empty row cannot be played (lessons / puzzles have no Oware)
+const feedBlocked = (p, i) => game.rules === 'oware' && !lesson && !puzzle && p.b[i] > 0 && !E.isLegal(p.b, p.side, i % 7, 'oware');
 const isOver = i => P[i === undefined ? cur : i].over;
 // resignation (common 投了 button): game.resigned = side that resigned; the game then ends at its last move
 const resignedNow = () => !lesson && !puzzle && game.resigned != null;
@@ -93,7 +96,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028B10');
+  const w = new Worker('engine.js?v=20261106ow1');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
   w.onerror = e => console.warn('worker', e.message);
@@ -441,20 +444,30 @@ async function animateMove(b, side, k, rules) {
         setTimeout(() => { if (tok !== animTok) return; counts[at]++; setBadges(counts, at); sDrop(isStore(at)); }, motionOn() ? dur * 0.78 : 0);
         await nap(step);
       } else if (ev.t === 'cap') {
-        await nap(dur);
+        // (Oware takes a run of pits: the first one gets the banner with the total, the rest follow quickly)
+        const run = !!ev.chain;
+        await nap(run ? dur * 0.4 : dur);
         if (tok !== animTok) break;
         // capture: both pits light up, then the seeds fly together into the store
         capFx(ev.from); if (ev.own >= 0) capFx(ev.own);
         handAt(ev.to, 0, 'cap');
-        showBanner(t('bn.capture'), '+' + (ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture();
-        await nap(650 * f);
+        if (!run) { showBanner(t(rules === 'oware' ? 'bn.capO' : 'bn.capture'), '+' + (rules === 'oware' ? tr.cap : ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture(); }
+        else sDrop(true);
+        await nap((run ? 300 : 650) * f);
         if (tok !== animTok) break;
         const got = seeds[ev.from].splice(0).concat(ev.own >= 0 ? seeds[ev.own].splice(0) : []);
         counts[ev.from] = 0; if (ev.own >= 0) counts[ev.own] = 0; setBadges(counts);
         got.forEach((s, j) => { const [x, y] = placeIn(ev.to, seeds[ev.to]); seeds[ev.to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: ev.to, x, y }, 1100 * f, 1.7, { cap: true }); }, j * 110 * f); });
-        await nap((1150 + got.length * 110) * f);
+        await nap(((run ? 700 : 1150) + got.length * 110) * f);
         if (tok !== animTok) break;
         counts[ev.to] += got.length; setBadges(counts, ev.to);
+      } else if (ev.t === 'slam') {
+        // Oware grand slam: the run lights up, but nothing is taken
+        await nap(dur);
+        if (tok !== animTok) break;
+        for (let i = ev.from; i <= ev.at; i++) capFx(i);
+        showBanner(t('bn.slam'), t('bn.slamSub'), ''); sWrong();
+        await nap(1100 * f);
       } else if (ev.t === 'sweep') {
         await nap(dur);
         if (tok !== animTok) break;
@@ -613,7 +626,7 @@ function renderFx() {
 }
 function previewAllowed() { if (lesson) return lesson.i === 0 || lesson.hinted; if (puzzle) return false; return settings.preview; }
 function drawPreview(i) {
-  const p = shownPos(); if (p.over || !canHumanPlay() || ownerOf(i) !== p.side || !p.b[i]) return;
+  const p = shownPos(); if (p.over || !canHumanPlay() || ownerOf(i) !== p.side || !p.b[i] || feedBlocked(p, i)) return;
   const tr = E.trace(p.b, p.side, i % 7, game.rules);
   const cnt = new Map(), relays = [];
   for (const ev of tr.events) { if (ev.t === 'drop') cnt.set(ev.at, (cnt.get(ev.at) || 0) + 1); if (ev.t === 'pick' && ev.relay) relays.push(ev.at); }
@@ -624,7 +637,9 @@ function drawPreview(i) {
   fxRing(tr.land, tr.extra ? 'ok' : tr.cap ? '' : '');
   const u = slotUV(tr.land);
   if (tr.extra) tipAt(tr.land, 'tip', t('pv.extra'));
+  else if (tr.cap && game.rules === 'oware') { for (const ev of tr.events) if (ev.t === 'cap') fxRing(ev.from, 'cap'); tipAt(tr.land, 'tip cap', t('pv.capO', { n: tr.cap })); }
   else if (tr.cap) { fxRing(tr.capFrom, 'cap'); tipAt(tr.land, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
+  else if (tr.slam) tipAt(tr.land, 'tip plain', t('pv.slam'));
 }
 function setHover(i) {
   hoverPit = i;
@@ -705,7 +720,7 @@ function renderTurnLabel() {
 }
 function renderPits() {
   const can = canHumanPlay(), p = shownPos();
-  for (let i = 0; i < 14; i++) if (!isStore(i)) slotEls[i].classList.toggle('can', can && ownerOf(i) === p.side && p.b[i] > 0);
+  for (let i = 0; i < 14; i++) if (!isStore(i)) slotEls[i].classList.toggle('can', can && ownerOf(i) === p.side && p.b[i] > 0 && !feedBlocked(p, i));
 }
 function evalOf(i) {
   const p = P[i]; if (!p) return null;
@@ -825,7 +840,7 @@ document.addEventListener('pointerdown', e => { if (armedPit >= 0 && !(e.target.
 function onPit(i) {
   ctx();
   if (performance.now() - skippedAt < 450) return;
-  if (lastPtr === 'touch' && canHumanPlay() && ownerOf(i) === shownPos().side && shownPos().b[i] && armedPit !== i) {
+  if (lastPtr === 'touch' && canHumanPlay() && ownerOf(i) === shownPos().side && shownPos().b[i] && !feedBlocked(shownPos(), i) && armedPit !== i) {
     armedPit = i; setHover(i);
     let n = 0; try { n = +localStorage.getItem(STORE + '-taphint') || 0; } catch (e) {}
     if (n < 2) { toast(t('tap.again'), 1600); try { localStorage.setItem(STORE + '-taphint', n + 1); } catch (e) {} }
@@ -840,6 +855,7 @@ function onPit(i) {
   }
   if (ownerOf(i) !== p.side) return;
   if (!p.b[i]) { toast(t('emptyPit'), 1000); return; }
+  if (feedBlocked(p, i)) { toast(t('ow.mustFeed'), 1800); return; }
   const k = i % 7;
   setHover(-1);
   if (inStudy()) return studyMove(k);
@@ -926,10 +942,20 @@ function onGameEnd() {
   $('#resultTitle').textContent = w < 0 ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: shortName(w) });
   $('#res0').textContent = a; $('#res1').textContent = o;
   let sub = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${t('info.moves', { n: game.moves.length })}`;
+  const why = owareEndText(P[game.moves.length]); if (why) sub = why + '<br>' + sub;
   if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
   $('#resultSub').innerHTML = sub;
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
   recordGame(w < 0 ? 'd' : w === game.human ? 'w' : 'l', a + '–' + o);
+}
+// Oware: how the game ended (25 captured / the empty row could not be fed / a position repeated three times)
+function owareEndText(pos) {
+  if (game.rules !== 'oware' || !pos || !pos.over || !pos.mv) return '';
+  const b = pos.b, tot = b.reduce((a, x) => a + x, 0);
+  if (pos.mv.cycle) return t('ow.end.cycle');
+  if (pos.mv.fed) return t('ow.end.feed');
+  if (b[6] * 2 === tot && b[13] * 2 === tot) return t('ow.end.draw');
+  return t('ow.end.score', { w: Math.floor(tot / 2) + 1 });
 }
 // 勝敗記録 (shared/record.js): games against the AI (online games are recorded in online-ui.js finishOnline)
 function recordGame(res, why) {
@@ -1121,6 +1147,12 @@ function ruleArt(r) {
   if (r === 'easy') {   // sow along the bottom row into the store: "one more turn"
     for (let i = 0; i < n; i++) s += seeds(px(i), y1, 2) + (i < 3 ? seeds(px(i), y2, 2) : '');
     s += seeds(W - 10, H / 2, 3, gold) + arrow(`M${px(3)} ${y2 + 9} Q${px(5) + 4} ${y2 + 12} ${W - 11} ${H / 2 + 8}`, gold) + arrow(`M${W - 15} ${H / 2 + 5} l4 3 l1 -5`, gold);
+  } else if (r === 'oware') {   // past the store (never sown into) onto the far row: pits made 2 and 3 are taken
+    for (let i = 0; i < n; i++) s += seeds(px(i), y2, i === 5 ? 0 : 2) + (i < 4 ? seeds(px(i), y1, i === 1 ? 1 : 4) : '');
+    s += seeds(px(5), y1, 3, red) + seeds(px(4), y1, 2, red);
+    s += `<circle cx="${px(5)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/><circle cx="${px(4)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/>`;
+    s += arrow(`M${px(5) + 3} ${y2 - 2} Q${W - 2} ${H / 2} ${px(5) + 4} ${y1 + 3}`, gold) + arrow(`M${px(5) + 7} ${y1 + 5} l-3 -2 l0.5 3.6`, gold);
+    s += `<text x="${W - 10}" y="${H / 2 + 3}" font-size="9" text-anchor="middle" fill="${gold}" opacity=".85">×</text>`;
   } else if (r === 'sunka') {   // relay: land on a full pit, pick it up, sow on
     for (let i = 0; i < n; i++) s += seeds(px(i), y1, 3) + seeds(px(i), y2, i === 1 ? 0 : 3);
     s += arrow(`M${px(1)} ${y2 - 7} Q${px(2)} ${y2 - 15} ${px(3)} ${y2 - 7}`, gold) + arrow(`M${px(3)} ${y2 - 7} Q${px(4)} ${y2 - 15} ${px(5)} ${y2 - 7}`, gold) + arrow(`M${px(5) - 4} ${y2 - 9} l4 2 l0 -4.5`, gold);
@@ -1133,8 +1165,10 @@ function ruleArt(r) {
   return s + '</svg>';
 }
 function renderRuleCards() {
-  // ゲーム tab (shared/ngtabs.js): art, name, level + how it differs
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rules === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleArt(r)}</span><b>${t('rule.' + r)}</b><p><span class="gtag">${t('rule.' + r + '.lvl')}</span>${r === 'kalah' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  // ゲーム tab (shared/ngtabs.js): two families, each with a heading — the store-sowing rules (four cards) and the
+  // traditional African rules (Oware, one wide card); every card: art, name, level + how it differs
+  const card = r => `<button type="button" class="ngt-gcard${draft.rules === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleArt(r)}</span><b>${t('rule.' + r)}</b><p><span class="gtag">${t('rule.' + r + '.lvl')}</span>${r === 'kalah' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`;
+  $('#ruleCards').innerHTML = RULE_GROUPS.map(([g, rs]) => `<section class="rgrp rg-${g}"><h4 class="rg-h"><b>${t('rg.' + g)}</b><small>${t('rg.' + g + '.d')}</small></h4><div class="ngt-gcards rg-cards n${rs.length}">${rs.map(card).join('')}</div></section>`).join('');
 }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
@@ -1300,7 +1334,7 @@ async function rtSow(api, b, k, rules) {
   const handXY = i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y - 34 : i > 6 ? y + 34 : y - 34]; };   // the hand travels in the lane between the rows
   const arc = (a, z, e, lift) => [a[0] + (z[0] - a[0]) * e, a[1] + (z[1] - a[1]) * e - Math.sin(Math.PI * e) * lift];
   let mk = { [k]: 'src' }, at = k, held = 0;
-  const draw = () => rtDraw(api, c, mk, { busy: true });
+  const draw = () => rtDraw(api, c, mk, { busy: true, caption: rules === 'oware' ? t('rl.owBottom') : '' });
   for (const ev of tr.events) {
     if (!api.alive()) return tr;
     if (ev.t === 'pick') {
@@ -1333,6 +1367,11 @@ async function rtSow(api, b, k, rules) {
       await rtTween(api, T(620), e => rtOverlay(api, { gems: from.map(([p0, j]) => { const ee = Math.max(0, Math.min(1, (e - j * 0.05) / 0.75)), q = rtEase(ee), [x, y] = arc(p0, [st[0] + ((j % 3) - 1) * 6, st[1] - 20 + j * 8], q, 40); return [x, y, j * 3]; }) }));
       c[ev.to] += add; draw(); sDrop(true);
       await api.sleep(T(260));
+    } else if (ev.t === 'slam') {
+      // Oware grand slam: the whole run lights up, nothing moves
+      mk = { [k]: 'src' }; for (let i = ev.from; i <= ev.at; i++) mk[i] = 'cap';
+      draw(); sWrong(); await api.sleep(T(900));
+      mk = { [k]: 'src', [ev.at]: 'land' }; draw();
     } else if (ev.t === 'sweep') {
       await api.sleep(T(300));
       const fl = [];
@@ -1348,8 +1387,8 @@ async function rtSow(api, b, k, rules) {
   if (!api.alive()) return tr;
   if (tr.extra && !tr.over) { rtOverlay(api, { ring: tr.land }); await api.sleep(T(300)); }
   const fm = { [k]: 'src', [tr.land]: tr.extra ? 'store' : 'land' };
-  if (tr.cap) { fm[tr.capFrom] = 'cap'; fm[6] = 'store'; }
-  rtDraw(api, Array.from(tr.board), fm, { busy: true });
+  if (tr.cap) { fm[tr.capFrom] = 'cap'; fm[6] = 'store'; for (const ev of tr.events) if (ev.t === 'cap') fm[ev.from] = 'cap'; }
+  rtDraw(api, Array.from(tr.board), fm, { busy: true, caption: rules === 'oware' ? t('rl.owBottom') : '' });
   return tr;
 }
 // a page: board b; clicking a pit sows it; judge(trace, k) -> true (cleared) / string (wrong, message)
@@ -1357,12 +1396,13 @@ function rtSowPage(id, title, body, task, b, rules, judge, opt) {
   opt = opt || {};
   return { id, title, body, task, setup(api) {
     let busy = false;
-    rtDraw(api, b, opt.marks);
+    rtDraw(api, b, opt.marks, { caption: rules === 'oware' ? t('rl.owBottom') : '' });
     if (opt.say) api.say(opt.say());
     api.board.onclick = async e => {
       if (busy || api.state.done) return;
       const k = rtPitAt(api, e); if (k < 0) return;
       if (!b[k]) { api.say(t('emptyPit'), 'ng'); return; }
+      if (!E.isLegal(Int8Array.from(b), 0, k, rules)) { api.ng(opt.illegalMsg ? opt.illegalMsg() : t('ow.mustFeed'), { reset: false }); return; }
       if (opt.only !== undefined && k !== opt.only) { api.ng(opt.onlyMsg(), { reset: false }); return; }
       busy = true; ctx();
       const tr = await rtSow(api, b, k, rules);
@@ -1395,9 +1435,32 @@ const RT_PAGES = [
   rtSowPage('relay', () => t('rl.relay.h'), () => `<p>${t('rl.relay')}</p>`, () => t('rt.relay.task'),
     B0([1, 0, 2, 0, 1, 2], [1, 0, 2, 0, 1, 3], 3, 4), 'sunka', tr => tr.extra || t('rt.relay.ng'),
     { okMsg: () => t('rt.relay.ok') }),
+  // Oware (Abapa): the stores are never sown into; captures of 2-3 on the far row (and the run before them);
+  // 12+ seeds skip the pit sown from; an empty row must be fed; a grand slam takes nothing; 25 of 48 wins
+  rtSowPage('owSow', () => t('rl.owSow.h'), () => `<p>${t('rl.owSow')}</p>`, () => t('rt.owSow.task'),
+    B0([2, 1, 3, 0, 1, 5], [3, 2, 1, 4, 4, 3], 9, 10), 'oware', () => true,
+    { only: 5, onlyMsg: () => t('rt.owSow.ng'), okMsg: () => t('rt.owSow.ok') }),
+  rtSowPage('owCap', () => t('rl.owCap.h'), () => `<p>${t('rl.owCap')}</p>`, () => t('rt.owCap.task'),
+    B0([1, 4, 0, 2, 3, 2], [3, 1, 4, 2, 1, 5], 9, 11), 'oware', tr => tr.cap > 0 || t('rt.owCap.ng'),
+    { okMsg: () => t('rt.owCap.ok') }),
+  rtSowPage('owChain', () => t('rl.owChain.h'), () => `<p>${t('rl.owChain')}</p>`, () => t('rt.owChain.task'),
+    B0([1, 0, 2, 0, 1, 3], [1, 2, 2, 4, 3, 3], 13, 13), 'oware', tr => tr.caps >= 3 || t('rt.owChain.ng'),
+    { okMsg: () => t('rt.owChain.ok') }),
+  rtSowPage('owLap', () => t('rl.owLap.h'), () => `<p>${t('rl.owLap')}</p>`, () => t('rt.owLap.task'),
+    B0([1, 0, 12, 1, 1, 2], [2, 3, 1, 2, 2, 4], 9, 8), 'oware', () => true,
+    { only: 2, onlyMsg: () => t('rt.owLap.ng'), okMsg: () => t('rt.owLap.ok') }),
+  rtSowPage('owFeed', () => t('rl.owFeed.h'), () => `<p>${t('rl.owFeed')}</p>`, () => t('rt.owFeed.task'),
+    B0([3, 1, 0, 3, 0, 1], [0, 0, 0, 0, 0, 0], 20, 20), 'oware', () => true,
+    { illegalMsg: () => t('rt.owFeed.ng'), okMsg: () => t('rt.owFeed.ok') }),
+  rtSowPage('owSlam', () => t('rl.owSlam.h'), () => `<p>${t('rl.owSlam')}</p>`, () => t('rt.owSlam.task'),
+    B0([1, 0, 1, 0, 0, 2], [2, 1, 0, 0, 0, 0], 21, 20), 'oware', tr => tr.slam || t('rt.owSlam.ng'),
+    { only: 5, onlyMsg: () => t('rt.owSlam.ng'), okMsg: () => t('rt.owSlam.ok') }),
+  rtSowPage('owEnd', () => t('rl.owEnd.h'), () => `<p>${t('rl.owEnd')}</p>`, () => t('rt.owEnd.task'),
+    B0([0, 2, 0, 1, 0, 2], [1, 1, 0, 0, 1, 0], 23, 17), 'oware', tr => (tr.over && tr.board[6] > tr.board[13]) || t('rt.owEnd.ng'),
+    { okMsg: tr => `${t('rt.owEnd.ok')} <b>${tr.board[6]} − ${tr.board[13]}</b>` }),
 ];
 // the new-game dialog's "?" opens the page of that rule variant directly (by page id)
-const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay' };
+const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay', oware: 'owSow' };
 const ruleTour = window.RuleTour ? RuleTour.create({
   mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG, aspect: MB.W / MB.H,
   close: () => $('#rulesOverlay').classList.remove('show'),
@@ -2276,7 +2339,7 @@ function studyStart(k) {
 function studyRecompute() { study.P = E.replay(P[study.base].b, P[study.base].side, study.moves, game.rules).positions; }
 async function studyMove(k) {
   if (!inStudy() || animating) return;
-  const from = studyTop(); if (from.over || !from.b[E.baseOf(from.side) + k]) return;
+  const from = studyTop(); if (from.over || !E.isLegal(from.b, from.side, k, game.rules)) return;
   bxHover = -1; setHover(-1); fxEl.innerHTML = '';
   const tok = ++busyToken;
   await animateMove(from.b, from.side, k, game.rules);
@@ -2384,7 +2447,7 @@ function renderBox() {
 // the board while a candidate is hovered: the pit, where its last seed lands and what it captures
 function drawBoxFx() {
   if (bxHover < 0 || !document.body.classList.contains('rvbox-on')) return;
-  const p = shownPos(); if (p.over || !p.b[pitIndex(p.side, bxHover)]) return;
+  const p = shownPos(); if (p.over || !E.isLegal(p.b, p.side, bxHover, game.rules)) return;
   const tr = E.trace(p.b, p.side, bxHover, game.rules);
   fxRing(pitIndex(p.side, bxHover), 'cand');
   fxRing(tr.land, tr.extra ? 'ok' : '');

@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../mancala/engine.js?v=20261028B10';   // (the same engine file and cache key as the table game)
+  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../mancala/engine.js?v=20261106ow1';   // (the same engine file and cache key as the table game)
   const loadEngine = () => window.MancalaEngine ? Promise.resolve(window.MancalaEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.MancalaEngine ? res(window.MancalaEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
 
   // a position: your pits left → right, your store, the far row as you see it (left → right), their store
@@ -43,7 +43,7 @@
       { say: 'こんどは<b>横取り</b>！ 最後の1粒が<b>自分の側の空っぽの穴</b>に止まったら、<b>向かいの相手の穴の種</b>とその<b>最後の1粒</b>を、まとめて自分のストアに入れられるよ。光っている穴をタップ！', done: '横取り成功〜！ 向かいの5粒と最後の1粒で、<b>6粒</b>もゲットだよ！' },
       { say: 'もう1問！ この中で<b>横取りできる穴</b>はどれかな？ 最後の1粒が自分の側の<b>空っぽの穴</b>に止まって、その向かいに種がある穴をさがしてね。', done: '大正解！ 4粒＋1粒をいただき〜！ 向かいが空っぽのときは横取りにならないから、気をつけてね。' },
       { say: 'どちらかの<b>6つの穴がぜんぶ空っぽ</b>になったら<b>おしまい</b>。そのとき残っている種は、その列の持ち主のストアに入るよ。最後の1粒をまいて、ゲームを終わらせちゃおう！', done: 'あなたの列が空っぽになって終局！ 相手の残りの種は相手のストアへ。ストアをくらべて…<b>25対23</b>で、あなたの勝ち〜！' },
-      { say: 'じつはマンカラには、世界中に<b>たくさんのルール</b>があるんだ。ここで遊ぶのは、いちばん人気の「<b>カラハ</b>」。フル機能版では、横取りなしの「<b>イージー</b>」、相手の種だけ取る「<b>ノーマル</b>」、リレーでまき続ける「<b>スンカ</b>」も選べるよ。アフリカの「オワリ」みたいな仲間もいるんだ〜。' },
+      { say: 'じつはマンカラには、世界中に<b>たくさんのルール</b>があるんだ。ここで遊ぶのは、いちばん人気の「<b>カラハ</b>」。フル機能版では、横取りなしの「<b>イージー</b>」、相手の種だけ取る「<b>ノーマル</b>」、リレーでまき続ける「<b>スンカ</b>」、アフリカの伝統ルール「<b>オワレ</b>」（ストアにまかず、相手の穴を2〜3粒にして取る）も選べるよ〜。' },
       { say: 'これでルールはばっちり！ コツは、<b>ストアにぴったりの穴</b>で「もう一回」をねらうことと、相手に<b>横取りされそうな穴</b>を空けっぱなしにしないこと。さあ、さっそく対局してみよう！' },
     ] },
     en: { name: 'Gembeetle', next: 'Next', back: 'Back', start: "Let's play", again: 'Again', tap: 'Tap a glowing pit', nope: "You can't pick that pit right now", cap: 'Capture!', extra: 'Extra turn!', you: 'You', opp: 'Opponent', win: 'You win!',
@@ -56,7 +56,7 @@
       { say: 'Now a <b>capture</b>! If your last seed lands in an <b>empty pit on your side</b>, you take <b>the seeds in the pit opposite</b> plus that <b>last seed</b>, straight into your store. Tap the glowing pit!', done: 'Got them! Five seeds from across the board plus your last one: <b>six</b> in one go!' },
       { say: 'One more! Which pit gives you a <b>capture</b> here? Look for the one whose last seed stops in an <b>empty pit</b> on your side, with seeds across from it.', done: "Exactly right! Four plus one, all yours. If the pit across is empty, there's no capture, so watch out." },
       { say: "When either player's <b>six pits are all empty</b>, the game is <b>over</b>. Any seeds still on the board go to the store of the player whose row they're in. Sow your last seed and finish the game!", done: "Your row is empty, so that's the end! Their leftover seeds go to their store. Counting up... <b>25 to 23</b>, you win!" },
-      { say: "Mancala actually has <b>lots of rule sets</b> around the world. Here we play the most popular one, <b>Kalah</b>. In the full game you can also pick <b>Easy</b> (no captures), <b>Normal</b> (take only the opponent's seeds) or <b>Sunka</b> (keep sowing in a relay). There are cousins like <b>Oware</b> from Africa, too!" },
+      { say: "Mancala actually has <b>lots of rule sets</b> around the world. Here we play the most popular one, <b>Kalah</b>. In the full game you can also pick <b>Easy</b> (no captures), <b>Normal</b> (take only the opponent's seeds), <b>Sunka</b> (keep sowing in a relay) or the traditional African <b>Oware</b> (no sowing into stores — make the opponent's pits 2 or 3 to capture)!" },
       { say: "That's all the rules! Tips: aim for the pit that lands <b>right in your store</b> for an extra turn, and don't leave empty pits your opponent can <b>capture</b> into. Now let's play a real game!" },
     ] },
     zh: { name: '宝石甲虫', next: '下一步', back: '返回', start: '来下一局', again: '再来一次', tap: '点击发光的坑', nope: '现在不能选这个坑哦～', cap: '吃子！', extra: '再走一次！', you: '你', opp: '对手', win: '你赢了！',
@@ -69,7 +69,7 @@
       { say: '接下来是<b>吃子</b>！最后一颗落在<b>自己这边的空坑</b>里时，就能把<b>对面坑里的种子</b>和这<b>最后一颗</b>一起放进自己的仓。点发光的坑！', done: '吃子成功～！对面的5颗加上最后1颗，一下拿到<b>6颗</b>！' },
       { say: '再来一题！这里<b>能吃子的坑</b>是哪个？找出最后一颗会停在自己这边<b>空坑</b>、而且对面有种子的那个坑吧。', done: '答对了！4颗加1颗，全归你啦～对面是空的话就吃不到哦，要注意。' },
       { say: '任何一方的<b>6个坑全空</b>时，游戏就<b>结束</b>。剩下的种子归那一排主人的仓。播下最后一颗，结束这局吧！', done: '你这排空了，终局！对手剩下的种子进对手的仓。比一比仓……<b>25比23</b>，你赢了～！' },
-      { say: '其实播棋在世界各地有<b>很多种规则</b>。这里玩的是最受欢迎的“<b>卡拉</b>”。在完整版里还能选没有吃子的“<b>简单</b>”、只吃对手种子的“<b>普通</b>”、接力播种的“<b>松卡</b>”。还有非洲的“奥瓦里”等好多亲戚哦～' },
+      { say: '其实播棋在世界各地有<b>很多种规则</b>。这里玩的是最受欢迎的“<b>卡拉</b>”。在完整版里还能选没有吃子的“<b>简单</b>”、只吃对手种子的“<b>普通</b>”、接力播种的“<b>松卡</b>”，还有非洲传统规则“<b>奥瓦雷</b>”（不往仓库播种，把对方的坑变成2〜3颗来吃）哦～' },
       { say: '规则全部学会啦！诀窍是：用<b>刚好进仓</b>的坑争取“再走一次”，别留下会被对手<b>吃子</b>的空坑。来，马上下一局吧！' },
     ] },
     ko: { name: '보석풍뎅이', next: '다음', back: '이전', start: '대국해 보기', again: '한 번 더', tap: '빛나는 구멍을 탭하세요', nope: '그 구멍은 지금 고를 수 없어~', cap: '가져오기!', extra: '한 번 더!', you: '나', opp: '상대', win: '승리!',
@@ -82,7 +82,7 @@
       { say: '이번엔 <b>가져오기</b>! 마지막 씨앗이 <b>내 쪽의 빈 구멍</b>에서 멈추면, <b>맞은편 상대 구멍의 씨앗</b>과 그 <b>마지막 씨앗</b>을 한꺼번에 내 창고에 넣을 수 있어. 빛나는 구멍을 탭!', done: '가져오기 성공~! 맞은편 5개와 마지막 1개로 <b>6개</b>나 얻었어!' },
       { say: '한 문제 더! 여기서 <b>가져오기를 할 수 있는 구멍</b>은 어디일까? 마지막 씨앗이 내 쪽 <b>빈 구멍</b>에서 멈추고, 맞은편에 씨앗이 있는 구멍을 찾아봐.', done: '정답! 4개+1개 다 네 거야~ 맞은편이 비어 있으면 가져오기가 안 되니까 조심해.' },
       { say: '어느 한쪽의 <b>구멍 6개가 모두 비면</b> <b>게임 끝</b>. 그때 남은 씨앗은 그 줄 주인의 창고로 가. 마지막 씨앗을 뿌려서 게임을 끝내 보자!', done: '네 줄이 비어서 종국! 상대의 남은 씨앗은 상대 창고로. 창고를 비교하면… <b>25 대 23</b>으로 네 승리~!' },
-      { say: '사실 만칼라에는 세계 곳곳에 <b>여러 가지 규칙</b>이 있어. 여기서 하는 건 가장 인기 있는 <b>칼라</b>야. 풀 버전에서는 가져오기가 없는 <b>이지</b>, 상대 씨앗만 가져오는 <b>노멀</b>, 릴레이로 계속 뿌리는 <b>숭카</b>도 고를 수 있어. 아프리카의 오와레 같은 친척도 있단다~' },
+      { say: '사실 만칼라에는 세계 곳곳에 <b>여러 가지 규칙</b>이 있어. 여기서 하는 건 가장 인기 있는 <b>칼라</b>야. 풀 버전에서는 가져오기가 없는 <b>이지</b>, 상대 씨앗만 가져오는 <b>노멀</b>, 릴레이로 계속 뿌리는 <b>숭카</b>, 아프리카 전통 규칙 <b>오와레</b>(창고에 뿌리지 않고 상대 구멍을 2~3개로 만들어 가져오기)도 고를 수 있어~' },
       { say: '이제 규칙은 완벽해! 요령은 <b>창고에 딱 맞는 구멍</b>으로 한 번 더를 노리는 것, 그리고 상대에게 <b>가져오기 당할 빈 구멍</b>을 남기지 않는 것. 자, 바로 대국해 보자!' },
     ] },
     es: { name: 'Escarabajoya', next: 'Siguiente', back: 'Atrás', start: '¡A jugar!', again: 'Otra vez', tap: 'Toca un hoyo que brille', nope: 'Ese hoyo no se puede elegir ahora', cap: '¡Captura!', extra: '¡Turno extra!', you: 'Tú', opp: 'Rival', win: '¡Ganas!',
@@ -95,7 +95,7 @@
       { say: '¡Ahora una <b>captura</b>! Si tu última semilla cae en un <b>hoyo vacío de tu lado</b>, te llevas <b>las semillas del hoyo de enfrente</b> y esa <b>última semilla</b>, directo a tu almacén. ¡Toca el hoyo que brilla!', done: '¡Captura! Cinco semillas de enfrente más tu última: ¡<b>seis</b> de golpe!' },
       { say: '¡Una más! ¿Qué hoyo te da una <b>captura</b> aquí? Busca aquel cuya última semilla se detiene en un <b>hoyo vacío</b> de tu lado, con semillas enfrente.', done: '¡Exacto! Cuatro más una, todas tuyas. Si el hoyo de enfrente está vacío no hay captura, ojo.' },
       { say: 'Cuando los <b>seis hoyos</b> de cualquiera de los dos se quedan <b>vacíos</b>, la partida <b>termina</b>. Las semillas que queden van al almacén del dueño de esa fila. ¡Siembra tu última semilla y acaba la partida!', done: '¡Tu fila está vacía, fin de la partida! Sus semillas restantes van a su almacén. Contamos... <b>25 a 23</b>, ¡ganas tú!' },
-      { say: 'El mancala tiene en realidad <b>muchísimas reglas</b> por todo el mundo. Aquí jugamos la más popular, <b>Kalah</b>. En el juego completo también puedes elegir <b>Fácil</b> (sin capturas), <b>Normal</b> (solo te llevas las semillas del rival) o <b>Sunka</b> (siembra en relevos). ¡Y hay primos como el <b>Oware</b> de África!' },
+      { say: 'El mancala tiene en realidad <b>muchísimas reglas</b> por todo el mundo. Aquí jugamos la más popular, <b>Kalah</b>. En el juego completo también puedes elegir <b>Fácil</b> (sin capturas), <b>Normal</b> (solo te llevas las semillas del rival), <b>Sunka</b> (siembra en relevos) o el <b>Oware</b> tradicional africano (sin sembrar en los almacenes: deja hoyos rivales con 2 o 3 para capturar).' },
       { say: '¡Ya conoces todas las reglas! Trucos: busca el hoyo que cae <b>justo en tu almacén</b> para repetir turno, y no dejes hoyos vacíos donde el rival pueda <b>capturar</b>. ¡Vamos a jugar una partida!' },
     ] },
     fr: { name: 'Scarabijou', next: 'Suivant', back: 'Retour', start: 'On joue !', again: 'Encore', tap: 'Touche un trou qui brille', nope: 'Tu ne peux pas choisir ce trou pour l’instant', cap: 'Capture !', extra: 'Tour en plus !', you: 'Toi', opp: 'Adversaire', win: 'Gagné !',
@@ -108,7 +108,7 @@
       { say: 'Place à la <b>capture</b> ! Si ta dernière graine tombe dans un <b>trou vide de ton côté</b>, tu prends <b>les graines du trou d’en face</b> et cette <b>dernière graine</b>, direction ton grenier. Touche le trou qui brille !', done: 'Capturé ! Cinq graines d’en face plus ta dernière : <b>six</b> d’un coup !' },
       { say: 'Encore une ! Quel trou te donne une <b>capture</b> ici ? Cherche celui dont la dernière graine s’arrête dans un <b>trou vide</b> de ton côté, avec des graines en face.', done: 'Exactement ! Quatre plus une, tout pour toi. Si le trou d’en face est vide, pas de capture : attention.' },
       { say: 'Dès que les <b>six trous</b> d’un joueur sont <b>vides</b>, la partie est <b>finie</b>. Les graines qui restent vont dans le grenier du propriétaire de la rangée. Sème ta dernière graine pour terminer !', done: 'Ta rangée est vide : fin de partie ! Ses graines restantes vont dans son grenier. On compte… <b>25 à 23</b>, tu gagnes !' },
-      { say: 'Le mancala a en fait <b>plein de règles</b> à travers le monde. Ici, on joue la plus populaire, le <b>Kalah</b>. Dans le jeu complet, tu peux aussi choisir <b>Facile</b> (sans capture), <b>Normale</b> (on ne prend que les graines adverses) ou <b>Sunka</b> (semis en relais). Il existe aussi des cousins comme l’<b>awalé</b> d’Afrique !' },
+      { say: 'Le mancala a en fait <b>plein de règles</b> à travers le monde. Ici, on joue la plus populaire, le <b>Kalah</b>. Dans le jeu complet, tu peux aussi choisir <b>Facile</b> (sans capture), <b>Normale</b> (on ne prend que les graines adverses), <b>Sunka</b> (semis en relais) ou l’<b>Oware</b> (awalé) africain traditionnel (pas de semis dans les greniers : on prend en amenant les trous adverses à 2 ou 3) !' },
       { say: 'Tu connais toutes les règles ! Astuces : vise le trou qui tombe <b>pile dans ton grenier</b> pour rejouer, et ne laisse pas de trou vide où l’adversaire pourrait <b>capturer</b>. Allez, une vraie partie !' },
     ] },
     pt: { name: 'Besourojoia', next: 'Próximo', back: 'Voltar', start: 'Vamos jogar', again: 'De novo', tap: 'Toque numa casa brilhante', nope: 'Não dá para escolher essa casa agora', cap: 'Captura!', extra: 'Jogada extra!', you: 'Você', opp: 'Rival', win: 'Você venceu!',
@@ -121,7 +121,7 @@
       { say: 'Agora uma <b>captura</b>! Se a última semente cair numa <b>casa vazia do seu lado</b>, você leva <b>as sementes da casa em frente</b> e essa <b>última semente</b> direto para o depósito. Toque na casa brilhante!', done: 'Capturou! Cinco sementes da frente mais a sua última: <b>seis</b> de uma vez!' },
       { say: 'Mais uma! Qual casa dá uma <b>captura</b> aqui? Procure aquela cuja última semente para numa <b>casa vazia</b> do seu lado, com sementes em frente.', done: 'Isso mesmo! Quatro mais uma, tudo seu. Se a casa da frente estiver vazia, não há captura, cuidado.' },
       { say: 'Quando as <b>seis casas</b> de qualquer jogador ficam <b>vazias</b>, o jogo <b>acaba</b>. As sementes que sobrarem vão para o depósito do dono daquela fileira. Semeie a última semente e termine o jogo!', done: 'Sua fileira esvaziou: fim de jogo! As sementes que sobraram vão para o depósito dele. Contando… <b>25 a 23</b>, você venceu!' },
-      { say: 'Na verdade, o mancala tem <b>muitas regras</b> pelo mundo. Aqui jogamos a mais popular, o <b>Kalah</b>. No jogo completo você também pode escolher <b>Fácil</b> (sem capturas), <b>Normal</b> (só leva as sementes do rival) ou <b>Sunka</b> (semeadura em revezamento). E há primos como o <b>Oware</b>, da África!' },
+      { say: 'Na verdade, o mancala tem <b>muitas regras</b> pelo mundo. Aqui jogamos a mais popular, o <b>Kalah</b>. No jogo completo você também pode escolher <b>Fácil</b> (sem capturas), <b>Normal</b> (só leva as sementes do rival), <b>Sunka</b> (semeadura em revezamento) ou o <b>Oware</b> tradicional africano (sem semear nos depósitos: deixe casas rivais com 2 ou 3 para capturar)!' },
       { say: 'Pronto, você já sabe as regras! Dicas: mire na casa que cai <b>certinho no depósito</b> para jogar de novo, e não deixe casas vazias onde o rival possa <b>capturar</b>. Vamos jogar uma partida!' },
     ] },
     de: { name: 'Juwelkäfer', next: 'Weiter', back: 'Zurück', start: 'Los geht’s', again: 'Nochmal', tap: 'Tippe auf eine leuchtende Mulde', nope: 'Diese Mulde kannst du gerade nicht wählen', cap: 'Gefangen!', extra: 'Extrazug!', you: 'Du', opp: 'Gegner', win: 'Gewonnen!',
@@ -134,7 +134,7 @@
       { say: 'Jetzt wird <b>gefangen</b>! Landet dein letzter Samen in einer <b>leeren Mulde auf deiner Seite</b>, holst du <b>die Samen aus der Mulde gegenüber</b> und diesen <b>letzten Samen</b> direkt in deinen Speicher. Tippe auf die leuchtende Mulde!', done: 'Erwischt! Fünf Samen von gegenüber plus dein letzter: <b>sechs</b> auf einmal!' },
       { say: 'Noch eine! Mit welcher Mulde kannst du hier <b>fangen</b>? Such die, deren letzter Samen in einer <b>leeren Mulde</b> auf deiner Seite liegen bleibt, mit Samen gegenüber.', done: 'Genau richtig! Vier plus einer, alle für dich. Ist die Mulde gegenüber leer, wird nichts gefangen, pass auf.' },
       { say: 'Sind die <b>sechs Mulden</b> eines Spielers <b>alle leer</b>, ist das Spiel <b>vorbei</b>. Übrige Samen kommen in den Speicher dessen, in dessen Reihe sie liegen. Säe deinen letzten Samen und beende die Partie!', done: 'Deine Reihe ist leer, Spielende! Seine restlichen Samen kommen in seinen Speicher. Gezählt wird… <b>25 zu 23</b>, du gewinnst!' },
-      { say: 'Mancala hat übrigens <b>ganz viele Regelvarianten</b> auf der Welt. Hier spielen wir die beliebteste, <b>Kalah</b>. Im vollen Spiel kannst du auch <b>Einfach</b> (ohne Fangen), <b>Normal</b> (nur die gegnerischen Samen) oder <b>Sunka</b> (Staffel-Säen) wählen. Und es gibt Verwandte wie <b>Oware</b> aus Afrika!' },
+      { say: 'Mancala hat übrigens <b>ganz viele Regelvarianten</b> auf der Welt. Hier spielen wir die beliebteste, <b>Kalah</b>. Im vollen Spiel kannst du auch <b>Einfach</b> (ohne Fangen), <b>Normal</b> (nur die gegnerischen Samen), <b>Sunka</b> (Staffel-Säen) oder das traditionelle afrikanische <b>Oware</b> wählen (nie in die Speicher säen – gegnerische Mulden zu 2 oder 3 machen und fangen)!' },
       { say: 'Jetzt kennst du alle Regeln! Tipps: Ziel auf die Mulde, die <b>genau im Speicher</b> landet, für einen Extrazug, und lass keine leeren Mulden, in denen der Gegner <b>fangen</b> kann. Los, eine echte Partie!' },
     ] },
     hi: { name: 'रत्नू भौंरा', next: 'आगे', back: 'पीछे', start: 'खेलें!', again: 'फिर से', tap: 'चमकते गड्ढे पर टैप करें', nope: 'यह गड्ढा अभी नहीं चुन सकते', cap: 'पकड़!', extra: 'अतिरिक्त चाल!', you: 'आप', opp: 'विरोधी', win: 'आप जीते!',
@@ -147,7 +147,7 @@
       { say: 'अब <b>पकड़</b>! अगर आखिरी बीज <b>आपकी तरफ़ के खाली गड्ढे</b> में रुके, तो <b>सामने वाले गड्ढे के बीज</b> और वह <b>आखिरी बीज</b>, दोनों सीधे आपके भंडार में। चमकता गड्ढा टैप करो!', done: 'पकड़ लिया! सामने के 5 बीज और आपका आखिरी 1: एक बार में <b>6</b>!' },
       { say: 'एक और! यहाँ किस गड्ढे से <b>पकड़</b> होगी? वह ढूँढो जिसका आखिरी बीज आपकी तरफ़ के <b>खाली गड्ढे</b> में रुके और सामने बीज हों।', done: 'बिल्कुल सही! 4 और 1, सब आपके। सामने का गड्ढा खाली हो तो पकड़ नहीं होती, ध्यान रखना।' },
       { say: 'जब किसी भी खिलाड़ी के <b>छहों गड्ढे खाली</b> हो जाएँ, खेल <b>ख़त्म</b>। बचे हुए बीज उस पंक्ति के मालिक के भंडार में जाते हैं। आखिरी बीज बोकर खेल पूरा करो!', done: 'आपकी पंक्ति खाली, खेल ख़त्म! उसके बचे बीज उसके भंडार में। गिनती… <b>25 बनाम 23</b>, आप जीत गए!' },
-      { say: 'दरअसल दुनिया भर में मनकाला के <b>बहुत सारे नियम</b> हैं। यहाँ हम सबसे लोकप्रिय <b>कलाह</b> खेलते हैं। पूरे खेल में आप <b>आसान</b> (बिना पकड़), <b>नॉर्मल</b> (सिर्फ़ विरोधी के बीज) या <b>सुंका</b> (रिले बुवाई) भी चुन सकते हो। अफ़्रीका का <b>ओवारे</b> जैसे रिश्तेदार भी हैं!' },
+      { say: 'दरअसल दुनिया भर में मनकाला के <b>बहुत सारे नियम</b> हैं। यहाँ हम सबसे लोकप्रिय <b>कलाह</b> खेलते हैं। पूरे खेल में आप <b>आसान</b> (बिना पकड़), <b>नॉर्मल</b> (सिर्फ़ विरोधी के बीज) या <b>सुंका</b> (रिले बुवाई) और अफ़्रीका का पारंपरिक <b>ओवारे</b> (भंडार में बुवाई नहीं — विरोधी के गड्ढे 2 या 3 बनाकर पकड़ें) भी चुन सकते हो!' },
       { say: 'अब सारे नियम पक्के! तरकीब: एक और चाल के लिए वह गड्ढा चुनो जो <b>ठीक भंडार में</b> गिरे, और ऐसे खाली गड्ढे मत छोड़ो जहाँ विरोधी <b>पकड़</b> कर सके। चलो, एक असली बाज़ी खेलें!' },
     ] },
     ar: { name: 'خنفوس الجواهر', next: 'التالي', back: 'رجوع', start: 'هيا نلعب', again: 'مرة أخرى', tap: 'انقر على حفرة مضيئة', nope: 'لا يمكنك اختيار هذه الحفرة الآن', cap: 'أسر!', extra: 'دور إضافي!', you: 'أنت', opp: 'الخصم', win: 'فزت!',
@@ -160,7 +160,7 @@
       { say: 'والآن <b>الأسر</b>! إذا توقفت بذرتك الأخيرة في <b>حفرة فارغة في جهتك</b>، تأخذ <b>بذور الحفرة المقابلة</b> مع تلك <b>البذرة الأخيرة</b> إلى مخزنك مباشرة. انقر على الحفرة المضيئة!', done: 'أسرتها! خمس بذور من الجهة المقابلة وبذرتك الأخيرة: <b>ست</b> دفعة واحدة!' },
       { say: 'سؤال آخر! أي حفرة تمنحك <b>أسرًا</b> هنا؟ ابحث عن التي تتوقف بذرتها الأخيرة في <b>حفرة فارغة</b> في جهتك وأمامها بذور.', done: 'إجابة صحيحة! أربع وواحدة، كلها لك. إذا كانت الحفرة المقابلة فارغة فلا أسر، انتبه.' },
       { say: 'عندما تصبح <b>الحفر الست</b> لأي لاعب <b>فارغة كلها</b>، <b>تنتهي</b> المباراة. البذور الباقية تذهب إلى مخزن صاحب الصف الذي هي فيه. ابذر بذرتك الأخيرة وأنهِ المباراة!', done: 'صفّك فارغ، انتهت المباراة! بذوره الباقية تذهب إلى مخزنه. لنعدّ… <b>25 مقابل 23</b>، فزت!' },
-      { say: 'في الحقيقة للمنقلة <b>قواعد كثيرة</b> حول العالم. هنا نلعب أشهرها، <b>كالاه</b>. في اللعبة الكاملة يمكنك أيضًا اختيار <b>سهلة</b> (بلا أسر) أو <b>عادية</b> (تأخذ بذور الخصم فقط) أو <b>سونكا</b> (البذر بالتتابع). ولها أقارب مثل <b>الأواري</b> من أفريقيا!' },
+      { say: 'في الحقيقة للمنقلة <b>قواعد كثيرة</b> حول العالم. هنا نلعب أشهرها، <b>كالاه</b>. في اللعبة الكاملة يمكنك أيضًا اختيار <b>سهلة</b> (بلا أسر) أو <b>عادية</b> (تأخذ بذور الخصم فقط) أو <b>سونكا</b> (البذر بالتتابع) أو <b>الأواري</b> الأفريقية التقليدية (بلا بذر في المخازن: اجعل حفر الخصم 2 أو 3 لتأسرها)!' },
       { say: 'أصبحت تعرف كل القواعد! نصائح: اختر الحفرة التي تسقط <b>تمامًا في مخزنك</b> لتحصل على دور إضافي، ولا تترك حفرًا فارغة يستطيع الخصم <b>الأسر</b> فيها. هيا نلعب مباراة حقيقية!' },
     ] },
   };
