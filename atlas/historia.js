@@ -500,7 +500,7 @@
         // the pins fill the box less a margin for their labels (labels keep their screen size: ~14 units tall, up to ~90 wide)
         const aw = Math.max(V.w * .3, Math.min(V.w * .62, V.w - 170)), ah = Math.max(V.h * .25, Math.min(V.h * .58, V.h - 72));
         return { z: Math.min(aw / Math.max(1, x1 - x0), ah / Math.max(1, y1 - y0)), cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }; };
-      const zMax = Math.max(V.w / 42, zb[2] * 1.6), zMin = V.w / 360;   // at most ~42° of the world across the box (or a little closer than the opening framing) (some coastline around); at least the whole width
+      const zMax = Math.max(V.w / 42, zb[2] * 2.2), zMin = V.w / 360;   // at most ~42° of the world across the box (or a little closer than the opening framing) (some coastline around); at least the whole width
       let f = fitIn(ids); if (ids.length > 1 && f.z < zMax * .3) f = fitIn([cur]);   // the neighbours are far apart: the active pin alone
       const z = Math.max(zMin, Math.min(zMax, f.z));
       let tx = V.x + V.w / 2 - f.cx * z, ty = V.y + V.h / 2 - f.cy * z;
@@ -629,7 +629,7 @@
     // zoom to the pins (with a margin), keeping the frame 16:10
     let x0 = Math.min(...P.map(p => p[0])), x1 = Math.max(...P.map(p => p[0])), y0 = Math.min(...P.map(p => p[1])), y1 = Math.max(...P.map(p => p[1]));
     const W0 = 360, H0 = 128.5;   // full map 180°W–180°E × 72.5°N–56°S
-    let w = Math.max(30, (x1 - x0) * 1.5 + 16), h = Math.max(19, (y1 - y0) * 1.5 + 14);   // (a small route, e.g. one island chain: closer, 2026-11-06) if (w / h > 1.6) h = w / 1.6; else w = h * 1.6;
+    let w = Math.max(16, (x1 - x0) * 1.35 + 8), h = Math.max(10, (y1 - y0) * 1.35 + 8);   // (a small route, e.g. one island chain: closer, 2026-11-06) if (w / h > 1.6) h = w / 1.6; else w = h * 1.6;
     w = Math.min(w, W0); h = w / 1.6;   // the frame stays 16:10, even when it is taller than the map itself
     let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; cx = Math.max(w / 2, Math.min(W0 - w / 2, cx));
     if (h >= H0) cy = (cy + H0 / 2) / 2;   // taller than the map: lean towards the pins instead of leaving them at the edge
