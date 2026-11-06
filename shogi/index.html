@@ -1492,7 +1492,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="i18n.js?v=20261104prn"></script>
 <script src="rules-i18n.js?v=20261022sp"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=8"></script>
+<script src="../shared/export.js?v=9"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
 <script src="engine.js?v=20261104v6"></script>
 <script src="strategy.js?v=20261018ol"></script>
@@ -3473,7 +3473,7 @@ function exportRender() {
   }
   const uses = exportFmt !== 'url' && exportFmt !== 'usi';
   $('#exportMeta').style.display = $('#exportNames').style.display = window.RecordExport ? 'flex' : 'none';
-  $('#exportMeta').style.visibility = $('#exportNames').style.visibility = uses ? 'visible' : 'hidden';
+  [$('#exportMeta'), $('#exportNames')].forEach(el => { el.style.visibility = 'visible'; el.style.opacity = uses ? '' : '.38'; el.style.pointerEvents = uses ? '' : 'none'; el.setAttribute('aria-disabled', uses ? 'false' : 'true'); el.querySelectorAll('input').forEach(i => { i.disabled = !uses; }); });   // (URL など: 消さずにグレーアウト)
   if (window.RecordExport) { const ovr = RecordExport.names('shogi'); [0, 1].forEach(c => { $('#exportNL' + c).textContent = cname(c); const ni = $('#exportN' + c); ni.placeholder = RecordExport.tx('nm', null, LANG); ni.title = cname(c); if (document.activeElement !== ni) ni.value = ovr[c] || playerName(c) || ''; }); }
   const img = exportFmt === 'img';
   $('#exportText').classList.toggle('hidden', img); $('#exportImg').classList.toggle('hidden', !img);
