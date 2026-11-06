@@ -598,6 +598,103 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .toast{bottom:max(calc(96px + env(safe-area-inset-bottom)),calc(var(--tbclear,0px) + 10px))}
 #confetti{display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
 
+/* ---------- phones: shop / gacha / achievements (PC keeps the layout above) ---------- */
+.gmini,.aseg{display:none}
+@media (max-width:760px){
+  /* every one of the three pages leaves ~40px above the bottom tab bar (room for a one-line ticker there) */
+  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:40px}
+  /* bottom sheet (shop purchase · gacha rates / collection) */
+  .sheet.bsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:86vh;max-height:86dvh;padding:6px 16px calc(14px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;animation:bshUp .28s cubic-bezier(.2,1,.4,1)}
+  @keyframes bshUp{from{transform:translateY(100%)}}
+  .bgrab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 12px}
+  .bsi{display:flex;gap:14px;align-items:center}
+  .bsi .item{flex:none;width:118px;padding:8px;border-radius:20px}
+  .bsi .item .rar{top:6px;inset-inline-start:6px}
+  .bst{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .bst b{font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+  .bsp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;font-family:var(--round);font-weight:700;font-size:20px;color:#a66a00}
+  .bsp .price i{width:20px;height:20px}
+  .bsp small{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;gap:4px}.bsp small .price i{width:14px;height:14px}
+  .bsok{margin-top:4px;font-weight:900;font-size:13.5px;color:var(--mint2)}
+  .bsb{display:flex;gap:10px;margin-top:16px}
+  .bsb .btn{flex:1;min-height:52px;padding:10px 12px}
+  .bsb .btn.sun .price{background:rgba(255,255,255,.35);border-radius:99px;padding:1px 9px 1px 3px}
+  .sheet.ginfo h3{font-size:19px;margin:0 0 10px;text-align:center}
+  .sheet.ginfo .gsec{margin-bottom:14px}
+
+  /* SHOP: a slim sticky bar (title · coins · note) and the six items in one 3-column screen */
+  #pg-shop{padding-top:0}
+  #pg-shop .shophead{position:sticky;top:62px;z-index:12;margin:0 -16px 10px;padding:8px 16px 8px;gap:2px 10px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
+  #pg-shop .shophead h2.h{margin:0;font-size:19px;gap:8px}
+  #pg-shop .shophead h2.h::before{width:7px;height:16px;box-shadow:10px 0 0 var(--sun),20px 0 0 var(--sky);margin-right:20px}
+  #pg-shop .shophead .note{order:3;flex-basis:100%;font-size:11.5px}
+  #pg-shop .shophead .coin{font-size:14px;padding:2px 10px 2px 3px;box-shadow:none}#pg-shop .shophead .coin i{width:20px;height:20px}
+  #pg-shop .items{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  #pg-shop .item{padding:6px 6px 8px;gap:4px;border-radius:16px}
+  #pg-shop .item .art{border-radius:12px}
+  #pg-shop .item .nm{font-size:11.5px;line-height:1.25;min-height:2.5em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-items:normal}
+  #pg-shop .item .kd{font-size:10px;margin-top:-2px}
+  #pg-shop .item .rar{top:4px;inset-inline-start:4px;font-size:9.5px;padding:1px 6px;border-radius:6px}
+  #pg-shop .item .btn{width:100%;padding:7px 4px;font-size:13.5px;min-height:36px;margin-top:auto}
+  #pg-shop .item .btn.ghost{font-size:11.5px;padding:7px 2px;box-shadow:0 3px 0 var(--line)}
+  #pg-shop .item.own:not(.on) .art{background:#eef8ff}
+  #pg-shop .item.on{outline:3px solid var(--mint);outline-offset:-2px}
+  #pg-shop .item .won{color:var(--mint2);border-color:#c6f0dc;background:#effcf5;box-shadow:0 3px 0 #c6f0dc}
+  #pg-shop .how{margin-top:12px;font-size:12px;padding:8px 12px;border-radius:14px}
+
+  /* GACHA: the machine fills the screen down to the pull buttons, which sit right above the tab bar (thumb reach);
+     coins + small links to the rates / collection sheet sit between them */
+  #pg-gacha{padding-top:8px}
+  #pg-gacha .gacha{gap:8px}
+  #pg-gacha .machine.m3{height:calc(100vh - 62px - var(--tabsH,66px) - 236px);height:calc(100svh - 62px - var(--tabsH,66px) - 236px);min-height:260px;max-height:520px;border-radius:24px}
+  .gpanel{padding:10px 12px 12px;gap:10px;border-radius:24px}
+  .gpanel .gwallet,.gpanel .gsec,.gpanel .gfoot{display:none}
+  .gmini{display:flex;align-items:center;gap:6px;order:-2;min-width:0}
+  .gmini .coin{font-size:14px;padding:2px 10px 2px 3px;box-shadow:none;margin-inline-end:auto}.gmini .coin i{width:20px;height:20px}
+  .gml{flex:none;border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 10px;font-weight:900;font-size:12px;color:var(--ink2);white-space:nowrap;min-height:34px}
+  .gml b{font-family:var(--round);color:var(--ink)}
+  .gbtns{gap:10px}
+  .gbig{min-height:74px;padding:12px 8px 10px;gap:4px;font-size:16.5px;border-radius:22px}
+  .gbig .price{font-size:14px}
+  .gbig .gneed{font-size:11px}
+  /* ×10 results: 4 per row (10 fit on one phone screen), names kept to two lines */
+  .sheet .res:not(.one){display:flex;flex-wrap:wrap;justify-content:center;gap:12px 6px;margin:6px 0 16px}
+  .sheet .res:not(.one) .cap{width:calc(25% - 5px)}
+  .sheet .res .cap .b{padding:4px 3px;gap:2px;border-width:2.5px;border-radius:14px}
+  .sheet .res .cap .f{border-radius:14px}
+  .sheet .res:not(.one) .cap .b .n{font-size:9.5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .sheet .res:not(.one) .cap .b .rr,.sheet .res:not(.one) .cap .b .nw,.sheet .res:not(.one) .cap .b .dp{font-size:9.5px;padding:0 5px}
+  .sheet .res:not(.one) .cap .b .nw{top:-6px;inset-inline-end:-4px}
+  .sheet.gres,.sheet:has(.res){padding:16px 12px}
+  .sheet:has(.res) h3{font-size:20px;margin-bottom:8px}
+
+  /* ACHIEVEMENTS: one compact summary card, sticky game chips, dense rows */
+  #pg-ach h2.h{margin-bottom:8px;font-size:19px}
+  .achsum{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 10px;margin:0 0 8px;padding:8px 10px;background:#fff;border:2px solid var(--line);border-radius:18px}
+  .achsum > b{font-size:16px!important}
+  .achsum .bar{min-width:0!important;height:8px}
+  .achsum .coin{grid-column:3;grid-row:1;font-size:13px;padding:1px 9px 1px 2px;box-shadow:none}.achsum .coin i{width:18px;height:18px;font-size:10px}
+  .aseg{grid-column:1/-1;display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd}
+  .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
+  .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
+  #achHsc{position:sticky;top:62px;z-index:12;margin:0 -16px 6px;padding:6px 16px 0;background:rgba(255,246,226,.96)}
+  #achHsc .hsn{display:none}
+  #achChips{padding-bottom:6px}
+  #achChips .chip{padding:3px 10px 3px 4px;font-size:12.5px;min-height:34px}
+  #achChips .chip img{width:22px;height:22px}
+  .alist{grid-template-columns:1fr;gap:6px}
+  .alist .ach{gap:10px;padding:7px 10px;border-radius:14px}
+  .alist .medal{width:34px;height:34px}.alist .medal svg{width:34px;height:34px}
+  .alist .ach .t1{font-size:13px;line-height:1.3}
+  .alist .ach .gi{width:16px;height:16px;vertical-align:-3px;margin-inline-end:4px;border-radius:5px}
+  .alist .ach .t2{margin-top:3px;font-size:11px;gap:6px}
+  .alist .ach .t2 .bar{height:6px}
+  .alist .ach .rw{font-size:12px;min-width:46px;justify-content:flex-end}
+  .alist .ach .rw i{width:14px;height:14px}
+  .alist .ach:not(.todo) .rw{color:var(--mint2)}
+  .alist .ach:not(.todo) .rw::after{content:'✓';margin-inline-start:2px}
+}
+
 /* ---------- dress ---------- */
 .dress{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:760px){.dress{grid-template-columns:1fr}}
@@ -1212,6 +1309,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=172"></script>
+<script src="app.js?v=173"></script>
 </body>
 </html>

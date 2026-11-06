@@ -1025,12 +1025,15 @@
     }
     requestAnimationFrame(upd);
   }
-  let achF = 'all';
+  let achF = 'all', achS = 'all';   // achS: phone-only done / to-do filter (the PC page always shows all)
   function renderAch() {
+    if (!isPhone()) achS = 'all';
     $('hAch').textContent = t('ach.h');
     const done = ACH.filter(a => a.done).length, coins = ACH.filter(a => a.done).reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
     $('achSum').innerHTML = `<span class="coin"><i>¢</i>${coins.toLocaleString()}</span><b style="font-family:var(--round);font-size:18px">${done} / ${ACH.length}</b>
-      <span class="bar" style="flex:1;min-width:120px;--c:var(--mint)"><i style="width:${done / ACH.length * 100}%"></i></span>`;
+      <span class="bar" style="flex:1;min-width:120px;--c:var(--mint)"><i style="width:${done / ACH.length * 100}%"></i></span>
+      <div class="aseg" role="group">${['all', 'done', 'todo'].map(k => `<button type="button" aria-pressed="${achS === k}" data-s="${k}">${t('ach.' + k)}</button>`).join('')}</div>`;
+    $('achSum').querySelectorAll('.aseg button').forEach(b => b.onclick = () => { achS = b.dataset.s; renderAch(); });
     const groups = [['all', t('ach.all'), null], ['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])];
     $('achChips').innerHTML = groups.map(([k, l, g]) => {
       const list = k === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === k);
@@ -1039,23 +1042,55 @@
     $('achChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { achF = b.dataset.k; renderAch(); });
     hscroll($('achHsc'));
     const list = (achF === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === achF)).slice()
+      .filter(a => achS === 'all' || (achS === 'done') === !!a.done)
       .sort((a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need)));
     $('achList').innerHTML = list.map(achHtml).join('');
   }
 
   /* ---------- SHOP ---------- */
+  // phones get their own shop / gacha / achievements layout (CSS under max-width:760px); PC keeps the plain one
+  const isPhone = () => matchMedia('(max-width:760px)').matches;
+  { const mq = matchMedia('(max-width:760px)'), re = () => { if (page === 'shop') renderShop(); else if (page === 'gacha' && !busy) renderGacha(); else if (page === 'ach') renderAch(); };
+    mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re); }
+  const wearing = id => { const it = ART.byId(id); return !!it && W.av[it.kind] === id; };
+  function wear(id) { const it = ART.byId(id); if (!it || !W.owned.includes(id)) return; W.av[it.kind] = id; A_.save(W); SFX.boing && SFX.boing(); }
   function renderShop() {
     $('hShop').textContent = t('shop.h'); $('shopNote').textContent = t('shop.note'); $('how1').textContent = t('how');
+    const ph = isPhone();
     $('shopItems').innerHTML = A_.shop(W).map(({ id, price }) => {
-      const it = ART.byId(id), own = W.owned.includes(id);
-      const foot = own ? `<span class="btn sm ghost" aria-disabled="true">${t('shop.owned')}</span>` : `<button class="btn sm sun" data-buy="${id}" data-p="${price}" ${C.balance < price ? 'disabled' : ''}><span class="price"><i></i>${price}</span></button>`;
-      return itemCard(it, foot);
+      const it = ART.byId(id), own = W.owned.includes(id), on = own && wearing(id);
+      // phone: owned items can be worn right here (and show when they are worn)
+      const foot = own ? (ph ? (on ? `<span class="btn sm ghost won" aria-disabled="true">✓ ${t('dress.on')}</span>` : `<button class="btn sm sky" data-eq="${id}">${t('dress.wear')}</button>`)
+        : `<span class="btn sm ghost" aria-disabled="true">${t('shop.owned')}</span>`)
+        : `<button class="btn sm sun" data-buy="${id}" data-p="${price}" ${C.balance < price ? 'disabled' : ''}><span class="price"><i></i>${price}</span></button>`;
+      return itemCard(it, foot, ph ? (own ? 'own' : '') + (on ? ' on' : '') : '');
     }).join('');
+    const buyNow = (id, p, quiet) => {
+      if (C.balance < p) return toast(t('shop.short'));
+      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); if (!quiet) toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); return true; }
+    };
     $('shopItems').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
       const id = b.dataset.buy, p = +b.dataset.p;
-      if (C.balance < p) return toast(t('shop.short'));
-      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); }
+      if (isPhone()) return shopSheet(id, p, buyNow);
+      buyNow(id, p);
     });
+    $('shopItems').querySelectorAll('[data-eq]').forEach(b => b.onclick = () => { wear(b.dataset.eq); renderShop(); });
+    // phone: tapping the picture of an unbought item opens the same purchase sheet
+    if (ph) $('shopItems').querySelectorAll('.item').forEach(c => { const b = c.querySelector('[data-buy]'); if (b) c.querySelector('.art').onclick = () => b.click(); });
+  }
+  // phone purchase confirm: a bottom sheet with the item, its price and the balance after; once bought it offers to wear it
+  function shopSheet(id, p, buyNow) {
+    const it = ART.byId(id);
+    const body = bought => `<div class="bgrab" aria-hidden="true"></div><div class="bsi"><div class="card item r${it.rar}" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
+      <div class="bst"><b>${esc(iname(it))}</b><span class="gnote">${t('kind.' + it.kind)}</span>
+      ${bought ? `<span class="bsok">${esc(t('shop.bought', { name: iname(it) }))}</span>` : `<span class="bsp"><span class="price"><i></i>${p.toLocaleString()}</span><small>→ <span class="price"><i></i>${(C.balance - p).toLocaleString()}</span></small></span>`}</div></div>
+      <div class="bsb">${bought ? (wearing(id) ? `<span class="btn ghost" aria-disabled="true">✓ ${t('dress.on')}</span>` : `<button class="btn sky" data-eq="${id}">${t('dress.wear')}</button>`)
+        : `<button class="btn sun" data-cbuy="${id}" ${C.balance < p ? 'disabled' : ''}>${t('shop.buy')} <span class="price"><i></i>${p.toLocaleString()}</span></button>`}<button class="btn ghost" data-x>${t('g.close')}</button></div>`;
+    const wire = () => { const sh = $('sheet');
+      sh.querySelector('[data-x]').onclick = closeSheet;
+      const cb = sh.querySelector('[data-cbuy]'); if (cb) cb.onclick = () => { if (buyNow(id, p, true)) { sh.innerHTML = body(true); wire(); } };
+      const eb = sh.querySelector('[data-eq]'); if (eb) eb.onclick = () => { wear(id); renderShop(); sh.innerHTML = body(true); wire(); }; };
+    openSheet(body(false), 'bsh'); wire();
   }
 
   /* ---------- GACHA ---------- */
@@ -1077,6 +1112,7 @@
     return G3;
   }
   function renderGacha() {
+    dsegPos();   // --tabsH: the phone layout sizes the machine to end right above the pull buttons + tab bar
     if (!gacha3()) $('machine').innerHTML = MACHINE;
     const R = A_.GACHA, own = W.owned.length, all = ART.items.length, pct = Math.round(own / all * 100);
     const capIco = '<svg class="gico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="#fff"/><path d="M3 16a13 13 0 0 0 26 0z" fill="#ff6b6b"/><path d="M3 16h26" stroke="#d93c3c" stroke-width="2.4"/><ellipse cx="11" cy="9.5" rx="4" ry="2.2" fill="#fff" opacity=".9" transform="rotate(-25 11 9.5)"/><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1.5"/></svg>';
@@ -1088,8 +1124,13 @@
       <div class="gsec"><div class="gst">${t('g.rates')}</div><div class="rates">${R.rates.map((p, i) => `<span class="r${i}"><i></i><b>${ART.RAR[i]}</b>${(p * 100).toFixed(1)}%</span>`).join('')}</div></div>
       <div class="gsec"><div class="gst">${t('g.coll')}<span class="gcnt">${own} / ${all}</span></div><div class="gbar"><i style="width:${Math.max(2, pct)}%"></i></div>
         <button type="button" class="glink" id="gDress">${t('g.toDress')} <span aria-hidden="true">›</span></button></div>
-      <p class="gfoot">★ ${t('g.dup')}</p>`;
+      <p class="gfoot">★ ${t('g.dup')}</p>
+      <div class="gmini"><span class="coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><button type="button" class="gml" id="gmInfo">${t('g.rates')} <span aria-hidden="true">›</span></button><button type="button" class="gml" id="gmColl">${t('g.coll')} <b>${own}/${all}</b> <span aria-hidden="true">›</span></button></div>`;
     $('gDress').onclick = () => go('dress');
+    // phone: the rates + collection live in a bottom sheet behind the two small links (the panel shows only the coins and the pull buttons)
+    const info = () => { openSheet(`<div class="bgrab" aria-hidden="true"></div><h3>${t('g.h')}</h3>${[...$('gpanel').querySelectorAll('.gsec,.gfoot')].map(e => e.outerHTML).join('').replace('id="gDress"', 'id="gDressS"')}<div class="bsb"><button class="btn ghost" data-x>${t('g.close')}</button></div>`, 'bsh ginfo');
+      $('sheet').querySelector('[data-x]').onclick = closeSheet; $('sheet').querySelector('#gDressS').onclick = () => { closeSheet(); go('dress'); }; };
+    $('gmInfo').onclick = info; $('gmColl').onclick = info;
     $('g1').onclick = () => doPull(1); $('g10').onclick = () => doPull(10);
   }
   let busy = false;
