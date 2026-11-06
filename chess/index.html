@@ -1114,11 +1114,11 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 /* 3D editions (tools/gen_3d2d.py): the 3D page's lacquered burl boards and Staunton pieces, as pictures */
 body:is(.skin-lux3d,.skin-wood3d) .squares .l,body:is(.skin-lux3d,.skin-wood3d) .squares .d{fill:transparent}
 body:is(.skin-lux3d,.skin-wood3d) .board::after{display:none}
-body.skin-lux3d .board{background:url(img/bd-lux3d.webp) center/100% 100%;box-shadow:0 0 0 2px #f1e6c8,0 0 0 3px #6f706c,0 0 0 calc(var(--cell) * .06) #4e4f4c,0 12px 30px rgba(0,0,0,.55)}
+body.skin-lux3d .board{background:url(img/bd-lux3d.webp?v=2) center/100% 100%;box-shadow:0 0 0 2px #ece6d8,0 0 0 3px #6f706c,0 0 0 calc(var(--cell) * .06) #4e4f4c,0 12px 30px rgba(0,0,0,.55)}
 body.skin-wood3d .board{background:url(img/bd-wood3d.webp) center/100% 100%;box-shadow:0 0 0 2px #2a1306,0 0 0 calc(var(--cell) * .05) #7a3f15,0 12px 30px rgba(0,0,0,.55)}
 body.skin-lux3d .frame{background:url(img/fr-lux3d.webp) 0 0/calc(var(--cell) * 3) auto,#7d7e7a}
 body.skin-wood3d .frame{background:url(img/fr-wood3d.webp) 0 0/calc(var(--cell) * 3) auto,#8a4c1e}
-body.skin-lux3d .squares text.on-l{fill:#5d5e5b}body.skin-lux3d .squares text.on-d{fill:#efe3c4}
+body.skin-lux3d .squares text.on-l{fill:#5d5e5b}body.skin-lux3d .squares text.on-d{fill:#ece6d8}
 body.skin-wood3d .squares text.on-l{fill:#7a3f15}body.skin-wood3d .squares text.on-d{fill:#f4ebd6}
 body:is(.skin-lux3d,.skin-wood3d) .reserve{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
 .reserve .cp,.promo button{position:relative}
@@ -1542,7 +1542,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=3')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/chess.js?v=12')).then(() => load('../atlas/skin/chess.js?v=9'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=3')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/chess.js?v=13')).then(() => load('../atlas/skin/chess.js?v=9'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

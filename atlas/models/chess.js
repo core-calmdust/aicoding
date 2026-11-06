@@ -1,6 +1,6 @@
 /* =====================================================================
    Chess on the 3D table — a luxury lacquered board: wide high-gloss grey
-   burl frame, a cream inlay line, squares in ivory maple (less yellow since 2026-11-06) and grey burl;
+   burl frame, a cream inlay line, squares in cream maple and grey burl;
    Staunton pieces with polished metal: White = chrome / silver on grey
    marbled resin, Black = gold plate on black marbled resin.
    Registers into Table3D:
@@ -105,14 +105,14 @@
   const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
   // two sets: 'lux' = grey burl + silver/gold Staunton; 'wood' = amboyna/elm burl + boxwood/padauk
   const SETS = {
-    lux: { frame: () => burl('chBurlF', '#c4bfb7', '#4a4642', 31, 1024, 2.4), sq: () => burl('chBurlS', '#97938c', '#33302d', 47), light: () => maple('chMaple2', 512, [242, 236, 224, 26, 30, 36]), inlay: 'cream', side: 0x23201c },
+    lux: { frame: () => burl('chBurlF', '#c4bfb7', '#4a4642', 31, 1024, 2.4), sq: () => burl('chBurlS', '#97938c', '#33302d', 47), light: () => maple('chMaple'), inlay: 'cream', side: 0x23201c },
     wood: { frame: () => burl('chBurlFw2', '#cf8c48', '#3f1806', 37, 1024, 1.5), sq: () => burl('chBurlSw2', '#c7843f', '#3a1605', 53, 768, .8), light: () => maple('chMapleW', 512, [248, 241, 226, 20, 26, 34]), inlay: 'line', side: 0x2a160b },
   };
   const FRAME_BURL = (set = 'lux') => SETS[set].frame();
   // the whole lacquered top in one picture: burl frame, inlay, the 64 squares
   function boardTop(set = 'lux') {
     const ST = SETS[set], F = ST.frame(), SB = ST.sq(), MP = ST.light();
-    return canvasTex(set === 'lux' ? 'chessTop5' : 'chessTop5' + set, SZ(2048), SZ(2048), (c0) => later([F, SB, MP], c0.canvas, (c, W) => {
+    return canvasTex(set === 'lux' ? 'chessTop4' : 'chessTop4' + set, SZ(2048), SZ(2048), (c0) => later([F, SB, MP], c0.canvas, (c, W) => {
       const k = W / OW;
       // frame: the burl sheet, drawn twice as large (its figure is bold on a real board)
       // frame: four mitred veneer strips cut from the burl sheet (each turned its own way)
@@ -128,7 +128,7 @@
       // inlay round the field: dark line, cream maple stripe, dark line
       const band = (a, b, col) => { c.fillStyle = col; c.fillRect(o - b * k, o - b * k, S * k + 2 * b * k, S * k + 2 * b * k); };
       if (ST.inlay === 'cream') {
-        band(0, .16, 'rgba(24,20,16,.92)'); band(0, .145, '#ebe3d3'); band(0, .1, 'rgba(24,20,16,.92)');
+        band(0, .16, 'rgba(24,20,16,.92)'); band(0, .145, '#efe1c0'); band(0, .1, 'rgba(24,20,16,.92)');
         c.drawImage(SB, 0, 0, SB.width, SB.width, o - .085 * k, o - .085 * k, S * k + .17 * k, S * k + .17 * k);   // burl again between inlay and squares
         band(0, .02, 'rgba(24,20,16,.9)');
       } else band(0, .05, 'rgba(26,14,8,.95)');   // one thin ebony line

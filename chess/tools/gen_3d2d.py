@@ -15,6 +15,12 @@ for st in ('lux', 'wood'):
     field = top.crop((m, m, W - m, W - m)).resize((1200, 1200), Image.LANCZOS)
     a = np.asarray(field).astype(float); yy, xx = np.mgrid[0:1200, 0:1200] / 1200
     sheen = np.clip(1 - np.hypot((xx - .3) / .55, (yy - .25) / .4), 0, 1) ** 2 * (26 if st == 'lux' else 20)
+    if st == 'lux':   # 2026-11-06: the light (maple) squares less yellow on the 2D page — ivory: 42% of the colour, a faint warmth kept
+        for r in range(8):
+            for c in range(8):
+                if (r + c) % 2: continue
+                b = a[r * 150:(r + 1) * 150, c * 150:(c + 1) * 150]; lum = (b * [.299, .587, .114]).sum(2, keepdims=True)
+                a[r * 150:(r + 1) * 150, c * 150:(c + 1) * 150] = lum + (b - lum) * .42 + np.array([3, 1, -2.0])
     Image.fromarray(np.clip(a + sheen[..., None], 0, 255).astype(np.uint8)).save(os.path.join(ROOT, 'img', f'bd-{st}3d.webp'), quality=88, method=6)
     strip = top.crop((m, int(m * .1), m + int(m * 2.4), int(m * .9)))   # a piece of the frame veneer (above the field)
     tile = strip.resize((360, 120), Image.LANCZOS)
