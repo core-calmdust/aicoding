@@ -32,7 +32,7 @@ const ACCS = ['ribbon', 'flower', 'beret', 'sprout', 'phones', 'glasses', 'starc
 const ACOL = ['#ff7096', '#6cb8ff', '#ffc94a', '#a982ff', '#4fcf9e', '#ff9150'];
 const JEWEL = [['#ff7aa2', '#9c1446', '#4f0723'], ['#78b4ff', '#2433a0', '#0f1550'], ['#5fe6b4', '#0f7a62', '#053b33'], ['#cf8dff', '#5a1fa0', '#260a4f'], ['#ffcf6b', '#b05410', '#5a2205']];
 const INK = '#4a3846';
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 
 /* ---------- words (10 languages) ---------- */
 const W = {
@@ -47,6 +47,10 @@ const W = {
     de: ['Kätzchen', 'Häschen', 'Bärchen', 'Panda', 'Frosch', 'Küken', 'Pinguin', 'Füchschen', 'Hamster', 'Hündchen', 'Schäfchen', 'Eule', 'Krake', 'Dino', 'Wal', 'Gespenst', 'Schleim', 'Einhorn', 'Drache', 'Axolotl', 'Alpaka', 'Igel'],
     hi: ['बिल्ली', 'खरगोश', 'भालू', 'पांडा', 'मेंढक', 'चूज़ा', 'पेंगुइन', 'लोमड़ी', 'हैम्स्टर', 'पिल्ला', 'भेड़', 'उल्लू', 'ऑक्टोपस', 'डायनो', 'व्हेल', 'भूत', 'स्लाइम', 'यूनिकॉर्न', 'ड्रैगन', 'एक्सोलोटल', 'अल्पाका', 'साही'],
     ar: ['قطة', 'أرنب', 'دبدوب', 'باندا', 'ضفدع', 'كتكوت', 'بطريق', 'ثعلب', 'هامستر', 'جرو', 'خروف', 'بومة', 'أخطبوط', 'ديناصور', 'حوت', 'شبح', 'سلايم', 'يونيكورن', 'تنين', 'أكسولوتل', 'ألباكا', 'قنفذ'],
+    ru: ['Котик', 'Зайка', 'Мишка', 'Панда', 'Лягушонок', 'Цыплёнок', 'Пингвин', 'Лисёнок', 'Хомяк', 'Щенок', 'Овечка', 'Совушка', 'Осьминог', 'Дино', 'Кит', 'Призрак', 'Слайм', 'Единорог', 'Дракончик', 'Аксолотль', 'Альпака', 'Ёжик'],
+    'zh-TW': ['貓咪', '兔兔', '小熊', '熊貓', '青蛙', '小雞', '企鵝', '狐狸', '倉鼠', '小狗', '綿羊', '貓頭鷹', '章魚', '恐龍', '鯨魚', '幽靈', '史萊姆', '獨角獸', '小龍', '六角恐龍', '羊駝', '刺蝟'],
+    id: ['Kucing', 'Kelinci', 'Beruang', 'Panda', 'Katak', 'Anak Ayam', 'Penguin', 'Rubah', 'Hamster', 'Anak Anjing', 'Domba', 'Burung Hantu', 'Gurita', 'Dino', 'Paus', 'Hantu', 'Slime', 'Unikorn', 'Naga', 'Aksolotl', 'Alpaka', 'Landak'],
+    tr: ['Kedicik', 'Tavşan', 'Ayıcık', 'Panda', 'Kurbağa', 'Civciv', 'Penguen', 'Tilki', 'Hamster', 'Köpekçik', 'Kuzu', 'Baykuş', 'Ahtapot', 'Dino', 'Balina', 'Hayalet', 'Slime', 'Unicorn', 'Ejderha', 'Aksolotl', 'Alpaka', 'Kirpi'],
   },
   pal: {
     ja: ['いちご', 'ミント', 'レモン', 'ソーダ', 'ココア', 'ラベンダー', 'ピーチ', 'ミッドナイト', 'スノー', 'チェリー', 'まっちゃ', 'キャラメル'],
@@ -59,6 +63,10 @@ const W = {
     de: ['Erdbeer', 'Minz', 'Zitronen', 'Soda', 'Kakao', 'Lavendel', 'Pfirsich', 'Mitternachts', 'Schnee', 'Kirsch', 'Matcha', 'Karamell'],
     hi: ['स्ट्रॉबेरी', 'पुदीना', 'नींबू', 'सोडा', 'कोको', 'लैवेंडर', 'आड़ू', 'आधी रात', 'स्नो', 'चेरी', 'माचा', 'कैरमल'],
     ar: ['الفراولة', 'النعناع', 'الليمون', 'الصودا', 'الكاكاو', 'الخزامى', 'الخوخ', 'منتصف الليل', 'الثلج', 'الكرز', 'الماتشا', 'الكراميل'],
+    ru: ['Клубничка', 'Мятка', 'Лимончик', 'Газировка', 'Какао', 'Лаванда', 'Персик', 'Полночь', 'Снежок', 'Вишенка', 'Матча', 'Карамелька'],
+    'zh-TW': ['草莓', '薄荷', '檸檬', '汽水', '可可', '薰衣草', '蜜桃', '午夜', '雪白', '櫻桃', '抹茶', '焦糖'],
+    id: ['Stroberi', 'Mint', 'Lemon', 'Soda', 'Cokelat', 'Lavender', 'Persik', 'Tengah Malam', 'Salju', 'Ceri', 'Matcha', 'Karamel'],
+    tr: ['Çilekli', 'Naneli', 'Limonlu', 'Gazozlu', 'Kakaolu', 'Lavanta', 'Şeftalili', 'Gece Yarısı', 'Kar Beyazı', 'Kirazlı', 'Matcha', 'Karamelli'],
   },
   acc: {
     ja: ['リボン', 'おはな', 'ベレー', 'ふたば', 'ヘッドホン', 'めがね', 'ほしピン', 'コック', 'まじょ', 'パーティー', 'マフラー', 'ちょうネクタイ'],
@@ -71,6 +79,10 @@ const W = {
     de: ['Schleife', 'Blume', 'Baskenmütze', 'Spross', 'Kopfhörern', 'Brille', 'Sternspange', 'Kochmütze', 'Hexenhut', 'Partyhut', 'Schal', 'Fliege'],
     hi: ['रिबन', 'फूल', 'बेरे', 'अंकुर', 'हेडफ़ोन', 'चश्मा', 'सितारा', 'शेफ़', 'जादुई', 'पार्टी', 'मफ़लर', 'बो-टाई'],
     ar: ['بالشريطة', 'بالزهرة', 'بالبيريه', 'بالبرعم', 'بالسماعات', 'بالنظارة', 'بالنجمة', 'الطاهي', 'الساحر', 'الاحتفالي', 'بالوشاح', 'بالبابيون'],
+    ru: ['с бантиком', 'с цветком', 'в берете', 'с росточком', 'в наушниках', 'в очках', 'со звёздочкой', 'шеф-повар', 'в шляпе ведьмы', 'на вечеринке', 'в шарфике', 'с бабочкой'],
+    'zh-TW': ['蝴蝶結', '小花', '貝雷帽', '嫩芽', '耳機', '眼鏡', '星星髮夾', '廚師', '魔女', '派對', '圍巾', '領結'],
+    id: ['Berpita', 'Berbunga', 'Berbaret', 'Bertunas', 'DJ', 'Berkacamata', 'Berbintang', 'Koki', 'Penyihir', 'Pesta', 'Bersyal', 'Berdasi Kupu'],
+    tr: ['Kurdeleli', 'Çiçekli', 'Bereli', 'Filizli', 'Kulaklıklı', 'Gözlüklü', 'Yıldızlı', 'Aşçı', 'Cadı', 'Partici', 'Atkılı', 'Papyonlu'],
   },
   adj: {
     ja: ['きらきら', 'ゆめみる', 'ほしくず', 'ふわふわ', 'ひだまり', 'にじいろ', 'つきよの', 'はなさく', 'しゃぼん', 'きらめき'],
@@ -83,6 +95,10 @@ const W = {
     de: ['Funkel', 'Traum', 'Sternen', 'Flausch', 'Sonnen', 'Regenbogen', 'Mond', 'Blüten', 'Seifenblasen', 'Glitzer'],
     hi: ['चमकीला', 'सपनीला', 'तारों वाला', 'रुई-सा', 'धूप-सा', 'इंद्रधनुषी', 'चाँदनी', 'फूलों वाला', 'बुलबुला', 'झिलमिल'],
     ar: ['متلألئ', 'حالم', 'نجمي', 'ناعم', 'مشمس', 'ملوّن', 'قمري', 'مزهر', 'فقاعي', 'برّاق'],
+    ru: ['в блёстках', 'из сказки', 'из звёздной пыли', 'как пушинка', 'как солнышко', 'цвета радуги', 'под луной', 'в цветах', 'в пузырьках', 'в сиянии'],
+    'zh-TW': ['閃閃', '夢幻', '星塵', '軟綿綿', '暖陽', '彩虹', '月夜', '花開', '泡泡', '微光'],
+    id: ['Berkilau', 'Pemimpi', 'Debu Bintang', 'Lembut', 'Cerah', 'Pelangi', 'Cahaya Bulan', 'Mekar', 'Gelembung', 'Gemerlap'],
+    tr: ['Pırıl Pırıl', 'Rüya Gibi', 'Yıldız Tozu', 'Pofuduk', 'Güneşli', 'Gökkuşağı', 'Ay Işığı', 'Çiçek Açan', 'Baloncuk', 'Işıltılı'],
   },
   ttl: {
     ja: ['ロイヤル', 'コズミック', 'プリンセス', 'ナイト', 'エンペラー', 'セレスティアル', 'ジュエル', 'オーロラ'],
@@ -95,6 +111,10 @@ const W = {
     de: ['Königs', 'Kosmos', 'Prinzessinnen', 'Ritter', 'Kaiser', 'Himmels', 'Juwelen', 'Polarlicht'],
     hi: ['शाही', 'ब्रह्मांडीय', 'राजकुमारी', 'योद्धा', 'सम्राट', 'दिव्य', 'रत्न', 'ध्रुवज्योति'],
     ar: ['ملكي', 'كوني', 'أميري', 'فارس', 'إمبراطور', 'سماوي', 'جوهري', 'شفقي'],
+    ru: ['королевских кровей', 'из космоса', 'принцесса', 'рыцарь', 'император', 'с небес', 'из самоцветов', 'полярного сияния'],
+    'zh-TW': ['皇家', '宇宙', '公主', '騎士', '帝王', '天空', '寶石', '極光'],
+    id: ['Kerajaan', 'Kosmik', 'Putri', 'Ksatria', 'Kaisar', 'Surgawi', 'Permata', 'Aurora'],
+    tr: ['Kraliyet', 'Kozmik', 'Prenses', 'Şövalye', 'İmparator', 'Göksel', 'Mücevher', 'Kutup Işığı'],
   },
   ur: {
     ja: ['星詠みドラゴン', '虹のユニコーン', '月の女王ねこ', '太陽の守護神フェニックス', '銀河くじら'],
@@ -107,6 +127,10 @@ const W = {
     de: ['Sternenseher-Drache', 'Regenbogen-Einhorn', 'Mondkönigin-Kätzchen', 'Sonnenwächter-Phönix', 'Galaxie-Wal'],
     hi: ['तारा-वाचक ड्रैगन', 'इंद्रधनुषी यूनिकॉर्न', 'चंद्र-रानी बिल्ली', 'सूर्य-रक्षक फ़ीनिक्स', 'आकाशगंगा व्हेल'],
     ar: ['تنين قارئ النجوم', 'يونيكورن قوس قزح', 'قطة ملكة القمر', 'العنقاء حارسة الشمس', 'حوت المجرة'],
+    ru: ['Дракон-звездочёт', 'Радужный Единорог', 'Кошка — Королева Луны', 'Феникс — Страж Солнца', 'Галактический Кит'],
+    'zh-TW': ['星詠之龍', '彩虹獨角獸', '月之女王貓', '太陽守護神鳳凰', '銀河鯨魚'],
+    id: ['Naga Pembaca Bintang', 'Unikorn Pelangi', 'Kucing Ratu Bulan', 'Phoenix Penjaga Matahari', 'Paus Galaksi'],
+    tr: ['Yıldız Kâhini Ejderha', 'Gökkuşağı Unicorn', 'Ay Kraliçesi Kedi', 'Güneş Muhafızı Anka', 'Galaksi Balinası'],
   },
 };
 const word = (cat, lang, i) => { const t = W[cat]; return (t[lang] || t.en || t.ja)[i] || t.en[i] || t.ja[i]; };
@@ -121,6 +145,10 @@ const FMT = { // N: p+s ; R: a+p+s ; SR/SSR: a+s
   de: [(p, s) => `${p}-${s}`, (a, p, s) => `${p}-${s} mit ${a}`, (a, s) => `${a}-${s}`],
   hi: [(p, s) => `${p} ${s}`, (a, p, s) => `${a} ${p} ${s}`, (a, s) => `${a} ${s}`],
   ar: [(p, s) => `${s} ${p}`, (a, p, s) => `${s} ${p} ${a}`, (a, s) => `${s} ${a}`],
+  ru: [(p, s) => `${s} ${p}`, (a, p, s) => `${s} ${p} ${a}`, (a, s) => `${s} ${a}`],
+  'zh-TW': [(p, s) => `${p}${s}`, (a, p, s) => `${a}${p}${s}`, (a, s) => `${a}${s}`],
+  id: [(p, s) => `${s} ${p}`, (a, p, s) => `${s} ${p} ${a}`, (a, s) => `${s} ${a}`],
+  tr: [(p, s) => `${p} ${s}`, (a, p, s) => `${a} ${p} ${s}`, (a, s) => `${a} ${s}`],
 };
 
 /* ---------- speed reward characters ---------- */
