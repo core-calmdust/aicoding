@@ -1,9 +1,9 @@
 {
 "Off": {
-"ru": "Выкл.",
-"zh-TW": "關",
-"id": "Mati",
-"tr": "Kapalı"
+"ru": "Вышли",
+"zh-TW": "已出",
+"id": "Keluar",
+"tr": "Çıktı"
 },
 "Senet — World Board Game Atlas": {
 "ru": "Сенет — Атлас настольных игр мира",
@@ -720,7 +720,7 @@
 "tr": "Henüz dereceli oyun yok"
 },
 "{n} games, {w} W {l} L": {
-"ru": "{n} партий, {w} П {l} П",
+"ru": "{n} партий, {w} В {l} П",
 "zh-TW": "{n} 局，{w} 勝 {l} 敗",
 "id": "{n} permainan, {w} M {l} K",
 "tr": "{n} oyun, {w} G {l} M"
@@ -1194,7 +1194,7 @@
 "tr": "Bağlanılamadı."
 },
 "{w}W {l}L {d}D": {
-"ru": "{w}П {l}П {d}Н",
+"ru": "{w}В {l}П {d}Н",
 "zh-TW": "{w}勝 {l}敗 {d}和",
 "id": "{w}M {l}K {d}S",
 "tr": "{w}G {l}M {d}B"
@@ -3304,5 +3304,413 @@
 "zh-TW": "{d} {w}",
 "id": "{d} {w}",
 "tr": "{d} {w}"
+},
+"Please wait a little longer. Play vs AI, rated games, 2-player games, lessons and puzzles work as usual.": {
+"ru": "Подождите ещё немного. Игра с ИИ, рейтинговые партии, игра вдвоём, уроки и задачи работают как обычно.",
+"zh-TW": "請再稍候。AI 對戰、積分戰、雙人對局、課程與謎題照常可用。",
+"id": "Mohon tunggu sebentar lagi. Main lawan AI, permainan berperingkat, dua pemain, pelajaran, dan teka-teki berjalan seperti biasa.",
+"tr": "Biraz daha bekle. Yapay zekâya karşı, dereceli, iki kişilik oyunlar, dersler ve bulmacalar her zamanki gibi çalışıyor."
+},
+"You are paired with someone of similar rating playing the same rules (rated game).": {
+"ru": "Вас сведут с игроком близкого рейтинга по тем же правилам (рейтинговая партия).",
+"zh-TW": "會與相同規則、積分相近的玩家配對（積分戰）。",
+"id": "Anda dipasangkan dengan pemain berperingkat serupa dengan aturan yang sama (permainan berperingkat).",
+"tr": "Aynı kurallarla oynayan, puanı yakın biriyle eşleşirsin (dereceli oyun)."
+},
+"{w} waiting with these rules · rating gap up to ±{r}": {
+"ru": "Ждут по этим правилам: {w} · разница рейтинга до ±{r}",
+"zh-TW": "此規則等待中 {w} 人・積分差最多 ±{r}",
+"id": "{w} menunggu dengan aturan ini · selisih rating hingga ±{r}",
+"tr": "Bu kurallarla {w} kişi bekliyor · puan farkı en fazla ±{r}"
+},
+"Link a Google account to sync lesson, puzzle and opening progress, your daily streak, rated games vs the AI, settings, name and online rating between PC and phone.": {
+"ru": "Привяжите аккаунт Google, чтобы синхронизировать между ПК и телефоном прогресс уроков, задач и дебютов, ежедневную серию, рейтинговые партии с ИИ, настройки, имя и онлайн-рейтинг.",
+"zh-TW": "連結 Google 帳號，即可在電腦與手機間同步課程、謎題與開局的進度、每日連續紀錄、與 AI 的積分戰、設定、名稱與線上積分。",
+"id": "Tautkan akun Google untuk menyinkronkan kemajuan pelajaran, teka-teki dan pembukaan, rangkaian harian, permainan berperingkat lawan AI, pengaturan, nama, dan rating daring antara PC dan ponsel.",
+"tr": "Ders, bulmaca ve açılış ilerlemesini, günlük serini, yapay zekâya karşı dereceli oyunlarını, ayarlarını, adını ve çevrim içi puanını bilgisayar ile telefon arasında eşitlemek için bir Google hesabı bağla."
+},
+"Play people from around the world. Pick the rules (Nine / Twelve / Six) for automatic pairing, or create a room for a friend.": {
+"ru": "Играйте с людьми со всего мира. Выберите правила (девять / двенадцать / шесть) для автоподбора или создайте комнату для друга.",
+"zh-TW": "與世界各地的玩家對戰。選擇規則（九子／十二子／六子）自動配對，或為朋友建立房間。",
+"id": "Bermain dengan orang dari seluruh dunia. Pilih aturan (Sembilan / Dua belas / Enam) untuk pemasangan otomatis, atau buat ruang untuk teman.",
+"tr": "Dünyanın dört bir yanından insanlarla oyna. Otomatik eşleşme için kuralları (Dokuz / On iki / Altı) seç ya da bir arkadaşın için oda oluştur."
+},
+"Rating history": {
+"ru": "История рейтинга",
+"zh-TW": "積分變化",
+"id": "Riwayat rating",
+"tr": "Puan geçmişi"
+},
+"W": {
+"ru": "В",
+"zh-TW": "勝",
+"id": "M",
+"tr": "G"
+},
+"L": {
+"ru": "П",
+"zh-TW": "敗",
+"id": "K",
+"tr": "M"
+},
+"D": {
+"ru": "Н",
+"zh-TW": "和",
+"id": "S",
+"tr": "B"
+},
+"Offer draw": {
+"ru": "Предложить ничью",
+"zh-TW": "提和",
+"id": "Tawarkan seri",
+"tr": "Beraberlik teklif et"
+},
+"Offer your opponent a draw? (It lapses when they make their next move.)": {
+"ru": "Предложить сопернику ничью? (Предложение сгорает, когда он сделает ход.)",
+"zh-TW": "要向對手提和嗎？（對手下一手後失效。）",
+"id": "Tawarkan seri kepada lawan? (Batal saat ia melangkah berikutnya.)",
+"tr": "Rakibine beraberlik teklif edilsin mi? (Bir sonraki hamlesini yapınca geçersiz olur.)"
+},
+"Draw offered…": {
+"ru": "Ничья предложена…",
+"zh-TW": "已提和…",
+"id": "Seri ditawarkan…",
+"tr": "Beraberlik teklif edildi…"
+},
+"Your opponent offers a draw": {
+"ru": "Соперник предлагает ничью",
+"zh-TW": "對手提和",
+"id": "Lawan menawarkan seri",
+"tr": "Rakibin beraberlik teklif ediyor"
+},
+"A draw has been offered": {
+"ru": "Предложена ничья",
+"zh-TW": "有人提和",
+"id": "Seri telah ditawarkan",
+"tr": "Beraberlik teklif edildi"
+},
+"Draw by agreement": {
+"ru": "Ничья по соглашению",
+"zh-TW": "協議和棋",
+"id": "Seri atas kesepakatan",
+"tr": "Anlaşmalı beraberlik"
+},
+"Lost — you were disconnected": {
+"ru": "Поражение — вы отключились",
+"zh-TW": "落敗——你已斷線",
+"id": "Kalah — koneksi Anda terputus",
+"tr": "Kaybettin — bağlantın koptu"
+},
+"Your opponent left the game": {
+"ru": "Соперник покинул игру",
+"zh-TW": "對手離開了對局",
+"id": "Lawan meninggalkan permainan",
+"tr": "Rakibin oyundan ayrıldı"
+},
+"{p} left the game": {
+"ru": "{p} покинул игру",
+"zh-TW": "{p} 離開了對局",
+"id": "{p} meninggalkan permainan",
+"tr": "{p} oyundan ayrıldı"
+},
+"{p} wins": {
+"ru": "{p} побеждает",
+"zh-TW": "{p} 獲勝",
+"id": "{p} menang",
+"tr": "{p} kazandı"
+},
+"Your last online game had ended: {r}": {
+"ru": "Ваша последняя онлайн-партия завершилась: {r}",
+"zh-TW": "你上一局線上對局已結束：{r}",
+"id": "Permainan daring terakhir Anda telah berakhir: {r}",
+"tr": "Son çevrim içi oyunun bitmişti: {r}"
+},
+"The rated game vs the AI was abandoned for the online game": {
+"ru": "Рейтинговая партия с ИИ прервана ради онлайн-игры",
+"zh-TW": "因線上對局而放棄了與 AI 的積分戰",
+"id": "Permainan berperingkat lawan AI ditinggalkan demi permainan daring",
+"tr": "Yapay zekâya karşı dereceli oyun, çevrim içi oyun için bırakıldı"
+},
+"Link copied": {
+"ru": "Ссылка скопирована",
+"zh-TW": "已複製連結",
+"id": "Tautan disalin",
+"tr": "Bağlantı kopyalandı"
+},
+"Your turn (waiting for the opponent’s share of the dice…)": {
+"ru": "Ваш ход (ждём долю кубиков от соперника…)",
+"zh-TW": "輪到你（正在等待對手那一半的骰子…）",
+"id": "Giliran Anda (menunggu bagian dadu dari lawan…)",
+"tr": "Sıra sende (rakibin zar payı bekleniyor…)"
+},
+"Please wait a little longer. Play vs the AI, two players, rated games, lessons and puzzles work as usual.": {
+"ru": "Подождите ещё немного. Игра с ИИ, вдвоём, рейтинговые партии, уроки и задачи работают как обычно.",
+"zh-TW": "請再稍候。AI 對戰、雙人、積分戰、課程與謎題照常可用。",
+"id": "Mohon tunggu sebentar lagi. Main lawan AI, dua pemain, berperingkat, pelajaran, dan teka-teki berjalan seperti biasa.",
+"tr": "Biraz daha bekle. Yapay zekâya karşı, iki kişilik, dereceli oyunlar, dersler ve bulmacalar her zamanki gibi çalışıyor."
+},
+"You are matched with a player of a similar rating using the same rules (rated game). The dice come from both players' secret keys, so neither side can control them.": {
+"ru": "Вас сведут с игроком близкого рейтинга по тем же правилам (рейтинговая партия). Кубики складываются из секретных ключей обоих игроков, поэтому ни одна сторона не может ими управлять.",
+"zh-TW": "會與相同規則、積分相近的玩家配對（積分戰）。骰子由雙方的祕密金鑰共同產生，任何一方都無法操控。",
+"id": "Anda dipasangkan dengan pemain berperingkat serupa dengan aturan yang sama (permainan berperingkat). Dadu berasal dari kunci rahasia kedua pemain, jadi tidak ada pihak yang bisa mengendalikannya.",
+"tr": "Aynı kurallarla, puanı yakın bir oyuncuyla eşleşirsin (dereceli oyun). Zarlar iki oyuncunun gizli anahtarlarından gelir; hiçbir taraf onları kontrol edemez."
+},
+"Link a Google account to sync lesson and puzzle progress, settings, your name and online rating between PC and phone.": {
+"ru": "Привяжите аккаунт Google, чтобы синхронизировать между ПК и телефоном прогресс уроков и задач, настройки, имя и онлайн-рейтинг.",
+"zh-TW": "連結 Google 帳號，在電腦與手機間同步課程與謎題的進度、設定、名稱與線上積分。",
+"id": "Tautkan akun Google untuk menyinkronkan kemajuan pelajaran dan teka-teki, pengaturan, nama, dan rating daring antara PC dan ponsel.",
+"tr": "Ders ve bulmaca ilerlemesini, ayarlarını, adını ve çevrim içi puanını bilgisayar ile telefon arasında eşitlemek için bir Google hesabı bağla."
+},
+"Play people from around the world. Pick the rules for auto-matching, or make a room for a friend.": {
+"ru": "Играйте с людьми со всего мира. Выберите правила для автоподбора или создайте комнату для друга.",
+"zh-TW": "與世界各地的玩家對戰。選擇規則自動配對，或為朋友建立房間。",
+"id": "Bermain dengan orang dari seluruh dunia. Pilih aturan untuk pemasangan otomatis, atau buat ruang untuk teman.",
+"tr": "Dünyanın dört bir yanından insanlarla oyna. Otomatik eşleşme için kuralları seç ya da bir arkadaşın için oda kur."
+},
+"{s} s per move": {
+"ru": "{s} с на ход",
+"zh-TW": "每手 {s} 秒",
+"id": "{s} detik per langkah",
+"tr": "Hamle başına {s} sn"
+},
+"Left": {
+"ru": "Ушёл",
+"zh-TW": "已離開",
+"id": "Keluar",
+"tr": "Ayrıldı"
+},
+"Watch an example": {
+"ru": "Посмотрите пример",
+"zh-TW": "看看範例",
+"id": "Lihat contoh",
+"tr": "Bir örneğe bak"
+},
+"Now play it the same way": {
+"ru": "Теперь сыграйте так же",
+"zh-TW": "現在照同樣的方式走",
+"id": "Sekarang mainkan dengan cara yang sama",
+"tr": "Şimdi aynı şekilde oyna"
+},
+"That’s it!": {
+"ru": "Вот так!",
+"zh-TW": "就是這樣！",
+"id": "Begitu!",
+"tr": "İşte böyle!"
+},
+"The chance of a 2?": {
+"ru": "Шанс выбросить 2?",
+"zh-TW": "擲出 2 的機率？",
+"id": "Peluang angka 2?",
+"tr": "2 gelme olasılığı?"
+},
+"The chance of a 5 (all dark)?": {
+"ru": "Шанс выбросить 5 (все тёмные)?",
+"zh-TW": "擲出 5（全黑）的機率？",
+"id": "Peluang angka 5 (semua gelap)?",
+"tr": "5 (hepsi koyu) gelme olasılığı?"
+},
+"The chance of an extra throw (1, 4 or 5)?": {
+"ru": "Шанс на дополнительный бросок (1, 4 или 5)?",
+"zh-TW": "可再投（1、4、5）的機率合計？",
+"id": "Peluang lemparan tambahan (1, 4, atau 5)?",
+"tr": "Ek atış (1, 4 veya 5) olasılığı?"
+},
+"Your piece on 7 is two ahead of the rival on 5. Its swap chance?": {
+"ru": "Ваша фишка на 7 в двух клетках перед фишкой соперника на 5. Каков шанс обмена?",
+"zh-TW": "你在 7 的棋子位於對手（5）前方 2 格。被交換的機率？",
+"id": "Bidak Anda di 7 dua petak di depan lawan di 5. Peluang ditukar?",
+"tr": "7'deki taşın, 5'teki rakibin iki kare önünde. Takas olasılığı?"
+},
+"How far ahead of a rival is most dangerous?": {
+"ru": "На каком расстоянии перед соперником опаснее всего?",
+"zh-TW": "在對手前方幾格最危險？",
+"id": "Seberapa jauh di depan lawan yang paling berbahaya?",
+"tr": "Rakibin kaç kare önü en tehlikelisi?"
+},
+"Record": {
+"ru": "Статистика",
+"zh-TW": "戰績",
+"id": "Rekor",
+"tr": "Kayıt"
+},
+"Rules\nLessons": {
+"ru": "Правила\nУроки",
+"zh-TW": "規則\n課程",
+"id": "Aturan\nPelajaran",
+"tr": "Kurallar\nDersler"
+},
+"The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.": {
+"ru": "Тренер работает, когда вы играете с ИИ или с другом на этом устройстве. Во время игры ИИ против ИИ, онлайн-партий, уроков и т. п. он отдыхает. После партии разбор появится в этой вкладке.",
+"zh-TW": "教練在與 AI 對局或雙人對戰時可用。AI 對 AI、線上對局、課程等期間暫停。終局後可在此分頁查看覆盤。",
+"id": "Pelatih aktif saat Anda melawan AI atau teman di perangkat ini. Ia beristirahat saat AI lawan AI, permainan daring, pelajaran, dan sejenisnya. Setelah permainan, ulasan muncul di tab ini.",
+"tr": "Koç, bu cihazda yapay zekâya ya da bir arkadaşa karşı oynarken çalışır. YZ'ye karşı YZ, çevrim içi oyunlar, dersler gibi durumlarda dinlenir. Oyundan sonra inceleme bu sekmede görünür."
+},
+"Learn": {
+"ru": "Учиться",
+"zh-TW": "學習",
+"id": "Belajar",
+"tr": "Öğren"
+},
+"3D: Tutankhamun’s game box": {
+"ru": "3D: игровой ларец Тутанхамона",
+"zh-TW": "3D：圖坦卡門的遊戲盒",
+"id": "3D: kotak permainan Tutankhamun",
+"tr": "3D: Tutankamon'un oyun kutusu"
+},
+"After the senet box from Tutankhamun’s tomb: an ebony casket on a lion-legged stand. Its top shows the board design you choose above.": {
+"ru": "По образцу ларца для сенета из гробницы Тутанхамона: эбеновый ящик на подставке с львиными лапами. На крышке — выбранный выше рисунок доски.",
+"zh-TW": "仿照圖坦卡門墓中的塞尼特盒：放在獅腳台座上的烏木箱。盒面是上方選擇的棋盤圖樣。",
+"id": "Meniru kotak senet dari makam Tutankhamun: peti eboni di atas penyangga berkaki singa. Bagian atasnya menampilkan desain papan yang Anda pilih di atas.",
+"tr": "Tutankamon'un mezarındaki senet kutusundan: aslan ayaklı bir kaide üstünde abanoz bir sandık. Üstünde yukarıda seçtiğin tahta deseni görünür."
+},
+"Seti": {
+"ru": "Сети",
+"zh-TW": "塞提",
+"id": "Seti",
+"tr": "Seti"
+},
+"Back": {
+"ru": "Назад",
+"zh-TW": "返回",
+"id": "Kembali",
+"tr": "Geri"
+},
+"Let's play": {
+"ru": "Сыграем",
+"zh-TW": "來玩吧",
+"id": "Ayo main",
+"tr": "Hadi oynayalım"
+},
+"Tap the sticks to throw": {
+"ru": "Нажмите на палочки, чтобы бросить",
+"zh-TW": "點擊木棒來投擲",
+"id": "Ketuk tongkat untuk melempar",
+"tr": "Atmak için çubuklara dokun"
+},
+"Pick the number": {
+"ru": "Выберите число",
+"zh-TW": "選擇數字",
+"id": "Pilih angkanya",
+"tr": "Sayıyı seç"
+},
+"Press Pass": {
+"ru": "Нажмите «Пас»",
+"zh-TW": "按［跳過］",
+"id": "Tekan Lewati",
+"tr": "Pas'a bas"
+},
+"Tap the glowing spot": {
+"ru": "Нажмите на светящееся место",
+"zh-TW": "點擊發光的位置",
+"id": "Ketuk tempat yang menyala",
+"tr": "Parlayan yere dokun"
+},
+"Not quite — try again!": {
+"ru": "Не совсем — попробуйте ещё!",
+"zh-TW": "差一點——再試一次！",
+"id": "Belum tepat — coba lagi!",
+"tr": "Tam değil — tekrar dene!"
+},
+"Hi! I’m <b>Seti</b>. <b>Senet</b> is a board game from ancient Egypt — Tutankhamun took one to his tomb. Its name means “passing”. Throw four sticks, run the 30 squares and <b>bear all your pieces off first</b> to win. Let’s try it!": {
+"ru": "Привет! Я <b>Сети</b>. <b>Сенет</b> — настольная игра Древнего Египта: Тутанхамон даже взял её с собой в гробницу. Название значит «прохождение». Бросайте четыре палочки, пройдите 30 клеток и <b>первым выведите все фишки</b>, чтобы победить. Попробуем!",
+"zh-TW": "嗨！我是<b>塞提</b>。<b>塞尼特</b>是古埃及的桌上遊戲，圖坦卡門還把它帶進了墳墓。名稱的意思是「通過」。投擲四根木棒、跑完 30 格，<b>先讓所有棋子走出棋盤</b>就贏了。來試試吧！",
+"id": "Halo! Aku <b>Seti</b>. <b>Senet</b> adalah permainan papan dari Mesir kuno — Tutankhamun membawanya ke makamnya. Namanya berarti “melintas”. Lempar empat tongkat, lalui 30 petak, dan <b>keluarkan semua bidakmu lebih dulu</b> untuk menang. Ayo coba!",
+"tr": "Merhaba! Ben <b>Seti</b>. <b>Senet</b>, antik Mısır'dan bir masa oyunu — Tutankamon onu mezarına bile götürdü. Adı “geçiş” demek. Dört çubuk at, 30 kareyi koş ve kazanmak için <b>tüm taşlarını ilk sen çıkar</b>. Hadi deneyelim!"
+},
+"First game": {
+"ru": "Первая игра",
+"zh-TW": "第一次玩",
+"id": "Permainan pertama",
+"tr": "İlk oyun"
+},
+"Knows the rules": {
+"ru": "Знает правила",
+"zh-TW": "懂規則",
+"id": "Tahu aturannya",
+"tr": "Kuralları biliyor"
+},
+"Has played a few games": {
+"ru": "Сыграл несколько партий",
+"zh-TW": "玩過幾局",
+"id": "Pernah main beberapa kali",
+"tr": "Birkaç oyun oynadı"
+},
+"Regular player": {
+"ru": "Играет регулярно",
+"zh-TW": "常玩",
+"id": "Pemain rutin",
+"tr": "Düzenli oyuncu"
+},
+"Strong player": {
+"ru": "Сильный игрок",
+"zh-TW": "強手",
+"id": "Pemain kuat",
+"tr": "Güçlü oyuncu"
+},
+"Expert": {
+"ru": "Эксперт",
+"zh-TW": "專家",
+"id": "Ahli",
+"tr": "Uzman"
+},
+"Master": {
+"ru": "Мастер",
+"zh-TW": "大師",
+"id": "Master",
+"tr": "Usta"
+},
+"Tap a glowing piece": {
+"ru": "Нажмите на светящуюся фишку",
+"zh-TW": "點選發光的棋子",
+"id": "Ketuk bidak yang menyala",
+"tr": "Parlayan bir taşa dokun"
+},
+"Tap where to go": {
+"ru": "Нажмите, куда идти",
+"zh-TW": "點選要去的位置",
+"id": "Ketuk tujuan",
+"tr": "Gideceğin yere dokun"
+},
+"AI: no move": {
+"ru": "ИИ: хода нет",
+"zh-TW": "AI：無法走",
+"id": "AI: tidak ada langkah",
+"tr": "YZ: hamle yok"
+},
+"Swap!": {
+"ru": "Обмен!",
+"zh-TW": "交換！",
+"id": "Tukar!",
+"tr": "Takas!"
+},
+"Off!": {
+"ru": "Вышла!",
+"zh-TW": "走出！",
+"id": "Keluar!",
+"tr": "Çıktı!"
+},
+"Into the water… back to 15": {
+"ru": "В воду… назад на 15",
+"zh-TW": "落水……回到 15",
+"id": "Masuk air… kembali ke 15",
+"tr": "Suya düştü… 15'e geri"
+},
+"First: {p}": {
+"ru": "Первыми ходят: {p}",
+"zh-TW": "先手：{p}",
+"id": "Pertama: {p}",
+"tr": "İlk: {p}"
+},
+"{p} to throw": {
+"ru": "Бросают: {p}",
+"zh-TW": "輪到{p}投擲",
+"id": "Giliran {p} melempar",
+"tr": "Atma sırası: {p}"
+},
+"{p} win": {
+"ru": "{p} победили",
+"zh-TW": "{p}獲勝",
+"id": "{p} menang",
+"tr": "{p} kazandı"
 }
 }

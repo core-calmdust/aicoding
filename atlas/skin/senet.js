@@ -158,6 +158,10 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     de: ['3D: Tutanchamuns Spielkasten', 'Nach dem Senet aus Tutanchamuns Grab: ein Ebenholzkasten auf einem Gestell mit Löwenbeinen. Oben zeigt er das darüber gewählte Brett.'],
     hi: ['3D: तूतनख़ामुन का खेल-बक्सा', 'तूतनख़ामुन की कब्र के सेनेट पर आधारित: शेर-पैरों वाले स्टैंड पर आबनूस का बक्सा। ऊपर चुना गया बोर्ड डिज़ाइन इसकी सतह पर दिखता है।'],
     ar: ['ثلاثي الأبعاد: صندوق توت عنخ آمون', 'مستوحى من سينيت مقبرة توت عنخ آمون: صندوق من الأبنوس على حامل بأرجل أسد. يظهر على سطحه تصميم اللوح الذي تختاره أعلاه.'],
+    ru: ['3D: игровой ларец Тутанхамона', 'По образцу ларца для сенета из гробницы Тутанхамона: эбеновый ящик на подставке с львиными лапами. На крышке — выбранный выше рисунок доски.'],
+    'zh-TW': ['3D：圖坦卡門的遊戲盒', '仿照圖坦卡門墓中的塞尼特盒：放在獅腳台座上的烏木箱。盒面是上方選擇的棋盤圖樣。'],
+    id: ['3D: kotak permainan Tutankhamun', 'Meniru kotak senet dari makam Tutankhamun: peti eboni di atas penyangga berkaki singa. Bagian atasnya menampilkan desain papan yang Anda pilih di atas.'],
+    tr: ['3D: Tutankamon\'un oyun kutusu', 'Tutankamon\'un mezarındaki senet kutusundan: aslan ayaklı bir kaide üstünde abanoz bir sandık. Üstünde yukarıda seçtiğin tahta deseni görünür.'],
   };
   const fd = document.getElementById('fDesign');
   if (fd) {

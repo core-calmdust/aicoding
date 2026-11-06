@@ -24,6 +24,10 @@
     de: { name: 'Seti', next: 'Weiter', back: 'Zurück', start: 'Spielen', again: 'Nochmal', rollK: 'Tippe auf die Stäbe', pickN: 'Wähle die Zahl', pressPass: 'Drücke Passen', tapIt: 'Tippe auf das Leuchtende', pass: 'Passen', wrong: 'Fast! Versuch es noch einmal' },
     hi: { name: 'सेती', next: 'आगे', back: 'पीछे', start: 'खेलें', again: 'फिर से', rollK: 'डंडियाँ छूकर फेंकें', pickN: 'अंक चुनें', pressPass: 'पास दबाएँ', tapIt: 'चमकती जगह छुएँ', pass: 'पास', wrong: 'लगभग! फिर कोशिश करें' },
     ar: { name: 'سيتي', next: 'التالي', back: 'رجوع', start: 'لنلعب', again: 'مرة أخرى', rollK: 'المس العصيّ للرمي', pickN: 'اختر الرقم', pressPass: 'اضغط «تمرير»', tapIt: 'المس ما يضيء', pass: 'تمرير', wrong: 'قريب! حاول مجددًا' },
+    ru: { name: 'Сети', next: 'Далее', back: 'Назад', start: 'Сыграем', again: 'Ещё раз', rollK: 'Нажмите на палочки, чтобы бросить', pickN: 'Выберите число', pressPass: 'Нажмите «Пас»', tapIt: 'Нажмите на светящееся место', pass: 'Пас', wrong: 'Не совсем — попробуйте ещё!' },
+    'zh-TW': { name: '塞提', next: '下一步', back: '返回', start: '來玩吧', again: '再一次', rollK: '點擊木棒來投擲', pickN: '選擇數字', pressPass: '按［跳過］', tapIt: '點擊發光的位置', pass: '跳過', wrong: '差一點——再試一次！' },
+    id: { name: 'Seti', next: 'Berikutnya', back: 'Kembali', start: 'Ayo main', again: 'Lagi', rollK: 'Ketuk tongkat untuk melempar', pickN: 'Pilih angkanya', pressPass: 'Tekan Lewati', tapIt: 'Ketuk tempat yang menyala', pass: 'Lewati', wrong: 'Belum tepat — coba lagi!' },
+    tr: { name: 'Seti', next: 'İleri', back: 'Geri', start: 'Hadi oynayalım', again: 'Tekrar', rollK: 'Atmak için çubuklara dokun', pickN: 'Sayıyı seç', pressPass: 'Pas\'a bas', tapIt: 'Parlayan yere dokun', pass: 'Pas', wrong: 'Tam değil — tekrar dene!' },
   };
   const HELLO = {
     ja: 'やあ！ぼくは<b>セティ</b>。<b>セネト</b>は古代エジプトの盤ゲームで、ツタンカーメンのお墓にも入っていたんだ。名前の意味は「通過」。4本の棒を投げて30マスを進み、<b>全部の駒を先に上げたら勝ち</b>。いっしょにやってみよう！',
@@ -36,6 +40,10 @@
     de: 'Hallo! Ich bin <b>Seti</b>. <b>Senet</b> ist ein Brettspiel aus dem alten Ägypten – Tutanchamun nahm eins mit ins Grab. Der Name heißt „Vorübergehen“. Wirf vier Stäbe, lauf die 30 Felder und <b>bring als Erster alle Figuren hinaus</b>. Los geht’s!',
     hi: 'नमस्ते! मैं <b>सेती</b> हूँ। <b>सेनेट</b> प्राचीन मिस्र का खेल है — तूतनख़ामुन की कब्र में भी था। नाम का अर्थ है “पार होना”। चार डंडियाँ फेंककर 30 खाने चलें और <b>सबसे पहले सारी गोटियाँ बाहर निकालें</b>। चलो खेलें!',
     ar: 'مرحبًا! أنا <b>سيتي</b>. <b>سينيت</b> لعبة من مصر القديمة، ودُفنت مع توت عنخ آمون. اسمها يعني «العبور». ارمِ أربع عصيّ واقطع 30 مربعًا و<b>أخرج كل قطعك أولًا</b> لتفوز. هيا نجرب!',
+    ru: 'Привет! Я <b>Сети</b>. <b>Сенет</b> — настольная игра Древнего Египта: Тутанхамон даже взял её с собой в гробницу. Название значит «прохождение». Бросайте четыре палочки, пройдите 30 клеток и <b>первым выведите все фишки</b>, чтобы победить. Попробуем!',
+    'zh-TW': '嗨！我是<b>塞提</b>。<b>塞尼特</b>是古埃及的桌上遊戲，圖坦卡門還把它帶進了墳墓。名稱的意思是「通過」。投擲四根木棒、跑完 30 格，<b>先讓所有棋子走出棋盤</b>就贏了。來試試吧！',
+    id: 'Halo! Aku <b>Seti</b>. <b>Senet</b> adalah permainan papan dari Mesir kuno — Tutankhamun membawanya ke makamnya. Namanya berarti “melintas”. Lempar empat tongkat, lalui 30 petak, dan <b>keluarkan semua bidakmu lebih dulu</b> untuk menang. Ayo coba!',
+    tr: 'Merhaba! Ben <b>Seti</b>. <b>Senet</b>, antik Mısır\'dan bir masa oyunu — Tutankamon onu mezarına bile götürdü. Adı “geçiş” demek. Dört çubuk at, 30 kareyi koş ve kazanmak için <b>tüm taşlarını ilk sen çıkar</b>. Hadi deneyelim!',
   };
   // the guide's own (friendlier) words in ja / en; the other languages use senet/tour.js's texts
   const VOICE = {
