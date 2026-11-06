@@ -33,7 +33,9 @@ html.atlas-konane{--pcB:url(img/pc-stone-b.webp)!important;--pcW:url(img/pc-ston
 html.atlas-konane .lines{overflow:visible!important}
 html.atlas-konane .lines .num{fill:rgba(255,236,200,.78)!important;font-weight:700}
 html.atlas-konane .lines .num:not([text-anchor]){transform:translate(-.36px,0)}   /* ranks: out on the side band, clear of the pebbles */
-html.atlas-konane .lines .num[text-anchor]{transform:translate(0,.26px)}   /* files: just below the last row */
+html.atlas-konane .lines .num[text-anchor]{transform:translate(0,.15px)}   /* files: just below the last row */
+html.atlas-konane .frame > .reserve.bot{transform:translateY(calc(var(--cell) * .14))}html.atlas-konane .frame > .reserve.top{transform:translateY(calc(var(--cell) * -.08))}
+html.atlas-konane .prompt{left:auto!important;right:calc(var(--cell) * .3)!important;transform:translateY(calc(var(--cell) * .14))!important}   /* beside the near plate, not under it */   /* the count plates nearer the slab's edge: clear of the file letters */
 html.atlas-konane .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
 html.atlas-konane .pieces .pc:not(.hov)::before,html.atlas-konane .pieces .pc:not(.hov)::after,html.atlas-konane .pieces .pc:not(.hov) .orn{display:none!important}
 html.atlas-konane .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 0 18px rgba(255,200,80,.75)!important}
