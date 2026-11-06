@@ -599,10 +599,15 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 #confetti{display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95;will-change:transform;transform:translateZ(0)}
 
 /* ---------- phones: shop / gacha / achievements (PC keeps the layout above) ---------- */
-.gmini,.aseg{display:none}
+.gmini{display:none}
+/* PC: the all / earned / to-do switch sits at the end of the summary row */
+.aseg{display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd;flex:none}
+.aseg button{border:0;background:none;border-radius:99px;padding:6px 16px;font:inherit;font-weight:900;font-size:13px;color:var(--ink2);cursor:pointer;min-height:32px}
+.aseg button:hover{color:var(--ink)}
+.aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
 @media (max-width:760px){
   /* every one of the three pages leaves ~40px above the bottom tab bar (room for a one-line ticker there) */
-  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:40px}
+  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:calc(var(--ulH) + 6px)}
   /* bottom sheet (shop purchase · gacha rates / collection) */
   .sheet.bsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:86vh;max-height:86dvh;padding:6px 16px calc(14px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;animation:bshUp .28s cubic-bezier(.2,1,.4,1)}
   @keyframes bshUp{from{transform:translateY(100%)}}
@@ -646,7 +651,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
      coins + small links to the rates / collection sheet sit between them */
   #pg-gacha{padding-top:8px}
   #pg-gacha .gacha{gap:8px}
-  #pg-gacha .machine.m3{height:calc(100vh - 62px - var(--tabsH,66px) - 236px);height:calc(100svh - 62px - var(--tabsH,66px) - 236px);min-height:260px;max-height:520px;border-radius:24px}
+  #pg-gacha .machine.m3{height:calc(100vh - 62px - var(--tabsH,66px) - 236px - var(--ulH) + 34px);height:calc(100svh - 62px - var(--tabsH,66px) - 236px - var(--ulH) + 34px);min-height:260px;max-height:520px;border-radius:24px}
   .gpanel{padding:10px 12px 12px;gap:10px;border-radius:24px}
   .gpanel .gwallet,.gpanel .gsec,.gpanel .gfoot{display:none}
   .gmini{display:flex;align-items:center;gap:6px;order:-2;min-width:0}
@@ -971,7 +976,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .prof .pf-l .bgfill{filter:saturate(1.15)}.prof .pf-l{background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
 /* ---------- home on phones (≤760px): name row · today strip · one-line updates, so the game list peeks into the first screen ----------
    (PC keeps the cards above: .pf-sum and .updline are hidden there, .pf-det is display:contents) */
-.pf-sum,.updline{display:none}
+.pf-sum{display:none}
 .pf-det{display:contents}
 @media (max-width:760px){
   /* the title and the name row make one card, as tall as the title box was (250px): emblem above, name row attached under it;
@@ -1017,54 +1022,75 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   #pg-home .today .hsb{height:32px;font-size:12px;padding:0 10px;gap:4px}#pg-home .today .hsb svg{display:none}
   #pg-home .today .ft .btn.sm{padding:7px 11px;font-size:13px;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis}
   #pg-home .today .hs{grid-column:1/-1;grid-row:4;max-height:8.2em;margin:0 12px;padding:8px 6px 12px 2px;border-top:2px dashed color-mix(in srgb,var(--c) 22%,#ece3cf);font-size:12.5px;line-height:1.6}
-  /* recent updates: the carousel is hidden; a one-line ticker sits fixed above the tab bar on every tab (not the map or
-     きせかえ, nor over a board / Historia / a sheet); its text runs as one CSS transform loop (two copies, −50%), no JS frames.
-     A tap → every update in a bottom sheet. */
-  #pg-home #hUpd,#pg-home .updwrap{display:none}
-  .updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:34px;margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
-  .updline[hidden],html[data-pg=map] .updline,html[data-pg=dress] .updline,html.hs-open .updline{display:none}
-  html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline{display:none}
-  html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + 34px + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
-  .updline .ul-k{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
-  .updline .ul-v{flex:1;min-width:0;align-self:stretch;position:relative;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
-  .updline .ul-tr{position:absolute;top:0;bottom:0;inset-inline-start:0;display:flex;width:max-content;animation:ulRun var(--ud,40s) linear infinite;will-change:transform}
-  [dir=rtl] .updline .ul-tr{animation-name:ulRunR}
-  @keyframes ulRun{to{transform:translateX(-50%)}}
-  @keyframes ulRunR{to{transform:translateX(50%)}}
-  .updline .ul-g{flex:none;display:flex;align-items:center;padding-inline-start:12px}
-  .updline .ul-i{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
-  .updline .ul-d{flex:none;font:700 11.5px var(--round);color:var(--coral2)}
-  .updline .ul-i b{font-size:13px;font-weight:900}
-  .updline .ul-t{font-size:12.5px;font-weight:700;color:var(--ink2)}
-  .updline .ul-s{padding:0 14px;color:#cdb98c;font-weight:900}
-  .updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
-  .updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
-  [dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
-  /* reduced motion: no run — the newest update stands still (cut with …) */
-  @media (prefers-reduced-motion:reduce){
-    .updline .ul-v{-webkit-mask:none;mask:none}
-    .updline .ul-tr{animation:none;position:static;width:100%;height:100%}
-    .updline .ul-g{flex:1;min-width:0;padding:0}
-    .updline .ul-g + .ul-g,.updline .ul-s,.updline .ul-i ~ .ul-i{display:none}
-    .updline .ul-i{min-width:0;overflow:hidden}.updline .ul-i b{flex:none}
-    .updline .ul-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
-  }
-  /* the bottom sheet */
-  .sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
-  @keyframes usUp{from{transform:translateY(100%)}}
-  .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
-  .sheet.updsh > .ush h3{margin:0;font-size:20px}
-  .sheet.updsh .usx{flex:none;width:38px;height:38px}
-  .sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-  .usr{--c:#ff5d5d;display:flex;gap:10px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:8px 10px 8px 8px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
-  .usr:active{transform:scale(.98)}
-  .usr .usi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
-  .usr .usi img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
-  .usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-  .usr .ush b{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .usr .ush small{flex:none;font:700 11.5px var(--round);color:var(--ink2)}
-  .usr .usp{font-size:12.5px;font-weight:700;color:var(--ink2);line-height:1.55}
+  html[data-pg=map] .updline,html[data-pg=dress] .updline{display:none}
+  html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + var(--ulH) + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
+}
+/* recent updates: the carousel is hidden; a one-line ticker sits fixed above the tab bar on every tab (not the map or
+   きせかえ, nor over a board / Historia / a sheet); its text runs as one CSS transform loop (two copies, −50%), no JS frames.
+   A tap → every update in a bottom sheet. */
+#pg-home #hUpd,#pg-home .updwrap{display:none}
+.updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:var(--ulH);margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
+html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open .updline{display:none}
+:root{--ulH:52px}
+.updline .ul-i{align-items:center!important;gap:8px!important}
+.updline .ul-a{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.updline .ul-a img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.updline .ul-x{display:flex;flex-direction:column;gap:1px;line-height:1.2}
+.updline .ul-h{display:flex;align-items:baseline;gap:7px}
+.updline .ul-s{width:28px;padding:0!important}
+.updline .ul-k{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
+.updline .ul-v{flex:1;min-width:0;align-self:stretch;position:relative;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+.updline .ul-tr{position:absolute;top:0;bottom:0;inset-inline-start:0;display:flex;width:max-content;animation:ulRun var(--ud,40s) linear infinite;will-change:transform}
+[dir=rtl] .updline .ul-tr{animation-name:ulRunR}
+@keyframes ulRun{to{transform:translateX(-50%)}}
+@keyframes ulRunR{to{transform:translateX(50%)}}
+.updline .ul-g{flex:none;display:flex;align-items:center;padding-inline-start:12px}
+.updline .ul-i{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
+.updline .ul-d{flex:none;font:700 12.5px var(--round);color:var(--coral2)}
+.updline .ul-i b{font-size:14px;font-weight:900}
+.updline .ul-t{font-size:13.5px;font-weight:700;color:#4a4237}
+.updline .ul-s{padding:0 14px;color:#cdb98c;font-weight:900}
+.updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
+.updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
+[dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
+/* reduced motion: no run — the newest update stands still (cut with …) */
+@media (prefers-reduced-motion:reduce){
+  .updline .ul-v{-webkit-mask:none;mask:none}
+  .updline .ul-tr{animation:none;position:static;width:100%;height:100%}
+  .updline .ul-g{flex:1;min-width:0;padding:0}
+  .updline .ul-g + .ul-g,.updline .ul-s,.updline .ul-i ~ .ul-i{display:none}
+  .updline .ul-i{min-width:0;overflow:hidden}.updline .ul-i b{flex:none}
+  .updline .ul-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
+/* the bottom sheet */
+.sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
+@keyframes usUp{from{transform:translateY(100%)}}
+.sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
+.sheet.updsh > .ush h3{margin:0;font-size:22px}
+.sheet.updsh .usx{flex:none;width:38px;height:38px}
+.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
+.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:12px 14px 12px 10px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.usr:active{transform:scale(.98)}
+.usr .usi{flex:none;width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.usr .usi img{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.usr .ush b{font-size:18px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usr .ush small{flex:none;font:700 14px var(--round);color:var(--ink2)}
+.usr .usp{font-size:16px;font-weight:700;color:#4a4237;line-height:1.7}
+/* PC (wider than phones): the same updates ticker, fixed at the very bottom of the window (no tab bar there), a little
+   taller with bigger type; on every page — only a board, Historia, an overlay or a sheet hides it. The list opens as a dialog. */
+@media (min-width:761px){
+  :root{--ulH:62px}
+  .updline .ul-a{width:46px;height:46px;border-radius:13px}.updline .ul-a img{width:42px;height:42px}
+  .updline .ul-s{width:44px}
+  .updline{bottom:0;gap:14px;padding:0 max(20px,calc((100% - 1180px) / 2));border-top:2px solid var(--line)}
+  .updline .ul-k{font-size:12px;padding:4px 11px}
+  .updline .ul-d{font-size:14px}.updline .ul-i b{font-size:17px}.updline .ul-t{font-size:15.5px}.updline .ul-s{padding:0 20px}
+  .updline .ul-ch{font-size:22px}
+  .updline:hover .ul-tr{animation-play-state:paused}
+  body{padding-bottom:calc(var(--ulH) + 16px)}
+  .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
@@ -1133,7 +1159,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
     <button type="button" class="lbtn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b id="langCode">JA</b></button>
     <div class="lpop" id="langPop" role="listbox" hidden></div>
     <select id="langSel" aria-hidden="true" tabindex="-1" hidden><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
-    <a class="icbtn" href="../" id="homeBtn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
+    <a class="icbtn" href="./" id="homeBtn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a>
   </div>
   <nav class="wrap tabs" role="tablist" id="tabs"></nav>
 </header>
@@ -1228,7 +1254,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=47"></script>
 <script src="gamelist-i18n.js?v=5"></script>
-<script src="table3d.js?v=97"></script>
+<script src="table3d.js?v=98"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
 <script src="models/backgammon.js?v=115"></script>
@@ -1299,8 +1325,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="rules/connect4.js?v=1"></script>
 <script src="rules/mancala.js?v=1"></script>
 <script src="rules/dots.js?v=2"></script>
-<link rel="stylesheet" href="historia.css?v=13">
-<script src="historia.js?v=19"></script>
+<link rel="stylesheet" href="historia.css?v=14">
+<script src="historia.js?v=21"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -1309,6 +1335,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=173"></script>
+<script src="app.js?v=176"></script>
 </body>
 </html>

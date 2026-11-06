@@ -302,14 +302,16 @@
   const updWhat = u => { const g = A_.GAMES.find(x => x.id === u[1]); if (g) return { g, name: gname(g), color: g.color, art: artImg(g) };
     const k = /^tab:(\w+)$/.exec(u[1]); if (!k || !FEAT[k[1]]) return null; return { tab: k[1], name: t('tab.' + k[1]), color: FEAT[k[1]].color, art: `<img src="${FEAT[k[1]].art}" alt="">` }; };
   let updSig = '';
+  // a news-style headline: the first sentence of the changelog line, cut to ~26 (CJK) / ~52 (others) characters
+  const headline = x => { let h = String(x).split(/(?<=[。！？!?])|(?<=\.)\s|[：:—–]\s?/)[0].trim(); const n = /^(ja|zh|ko)$/.test(lang) ? 26 : 52; const c = [...h]; return c.length > n ? c.slice(0, n - 1).join('').replace(/[、,，\s]+$/, '') + '…' : h; };
   function renderUpdLine() {
     const el = $('updLine'); if (!el) return;
     const seen = new Set(), items = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1])).map(u => [u, updWhat(u)]).filter(x => x[1]).slice(0, 5);
     if (!items.length) { el.hidden = true; return; }
     const fresh = updKey(A_.UPDATES[0]) !== updSeen(), sig = lang + '|' + items.map(x => updKey(x[0])).join() + '|' + fresh;
     if (sig !== updSig) { updSig = sig; el._w = 0;
-      const sep = '<span class="ul-s" aria-hidden="true">・</span>';
-      const one = items.map(([u, w]) => `<span class="ul-i"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join(sep) + sep;
+      const sep = '<span class="ul-s" aria-hidden="true"></span>';
+      const one = items.map(([u, w]) => `<span class="ul-i" style="--c:${w.color}"><span class="ul-a">${w.art}</span><span class="ul-x"><span class="ul-h"><b>${esc(w.name)}</b><span class="ul-d">${esc(fmtDate(u[0]))}</span></span><span class="ul-t">${esc(headline(utx(u)))}</span></span></span>`).join(sep) + sep;   // picture + two lines (name · date / a short headline)
       el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v"><span class="ul-tr"><span class="ul-g">${one}</span><span class="ul-g" aria-hidden="true">${one}</span></span></span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
       el.setAttribute('aria-label', t('upd.more') + ': ' + items.map(([u, w]) => w.name).join(', '));
       el.onclick = openUpdSheet;
@@ -1025,9 +1027,8 @@
     }
     requestAnimationFrame(upd);
   }
-  let achF = 'all', achS = 'all';   // achS: phone-only done / to-do filter (the PC page always shows all)
+  let achF = 'all', achS = 'all';   // achS: done / to-do filter (phones and PC)
   function renderAch() {
-    if (!isPhone()) achS = 'all';
     $('hAch').textContent = t('ach.h');
     const done = ACH.filter(a => a.done).length, coins = ACH.filter(a => a.done).reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
     $('achSum').innerHTML = `<span class="coin"><i>¢</i>${coins.toLocaleString()}</span><b style="font-family:var(--round);font-size:18px">${done} / ${ACH.length}</b>
@@ -1375,7 +1376,7 @@
     fitBrand();
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
     $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
-    $('homeBtn').setAttribute('aria-label', t('back')); $('footBack').textContent = t('back');
+    $('homeBtn').setAttribute('aria-label', t('tab.home')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
   }
   // game-styled language picker (the native <select> stays as the source of the options)
@@ -1397,6 +1398,9 @@
     if (!window.AtlasMap) return;
     AtlasMap.render($('pg-map'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img) => flyOpen(id, img) });
   }
+  // the header's house: the Atlas's own home tab (not the CALMDUST top page); over a board it reloads the portal's home
+  { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
+    e.preventDefault(); if (page !== 'home') go('home'); scrollTo({ top: 0, behavior: 'smooth' }); }); }
   function render(k) {
     sfxIcon();
     renderUpdLine();
