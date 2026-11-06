@@ -576,6 +576,7 @@
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
     bvGame = g; stopSession();
+    setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
@@ -1018,6 +1019,16 @@
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
   }
+  // phones turned sideways on the table of a game with the 2D landscape spec: offer the full game (once per game per visit)
+  const LANDFULL = new Set(['backgammon', 'mancala', 'ur', 'fanorona', 'alquerque']), landMQ = matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 520px)');
+  function landNudge() {
+    const g = bvGame; if (!g || !LANDFULL.has(g.id) || !FULL_SKIN[g.id] || !landMQ.matches || !$('bv').classList.contains('on') || $('ov').classList.contains('on')) return;
+    try { if (sessionStorage.getItem('atlas-landq-' + g.id)) return; sessionStorage.setItem('atlas-landq-' + g.id, '1'); } catch (e) {}
+    openSheet(`<p style="font-size:15px;line-height:1.6;margin:0 0 14px">${esc(t('bv.landQ'))}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" data-k>${esc(t('bv.landKeep'))}</button><button class="btn" data-f>${esc(t('bv.full'))} ▶</button></div>`);
+    $('sheet').querySelector('[data-k]').onclick = closeSheet;
+    $('sheet').querySelector('[data-f]').onclick = () => { closeSheet(); location.href = '../' + g.href + '?skin=atlas'; };
+  }
+  landMQ.addEventListener('change', () => setTimeout(landNudge, 400));
   function closeBoard() { stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
   window.AtlasBoard = { open: id => openBoard(id), close: closeBoard };   // ヒストリア (opened from the game list) puts that game's board on the table first
