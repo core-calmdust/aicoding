@@ -47,19 +47,39 @@
 
   /* ---------- view: centre (map units) + zoom (px per unit), clamped so the map always covers the box ---------- */
   function box() { return { w: el.map.clientWidth || 1, h: el.map.clientHeight || 1 }; }
-  const zMin = () => box().w / W0;   // the whole world fits the width (the box is a little taller than the map: sea above and below)
-  const zMax = () => zMin() * 9;
+  // the whole world fits the width (the box is a little taller than the map: sea above and below);
+  // phones (a tall, narrow box): the lands' height (72.5°N…56°S) fills the box instead, the sides are cropped and panned
+  const zMin = () => { const b = box(); return ph() ? Math.max(b.w / W0, b.h / (H0 - 2)) : b.w / W0; };
+  const zMax = () => ph() ? Math.max(box().w / W0 * 9, zMin() * 3) : zMin() * 9;
   function clamp(v) {
     const b = box(), z = Math.max(zMin(), Math.min(zMax(), v.z)), hw = b.w / 2 / z, hh = b.h / 2 / z;
     return { x: hw * 2 >= W0 ? W0 / 2 : Math.max(hw, Math.min(W0 - hw, v.x)), y: hh * 2 >= H0 ? H0 / 2 - 12 : Math.max(hh, Math.min(H0 - hh, v.y)), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
-  function fit(pts, pad = 1.6) {
+  // (phones: when the points are wider than the cropped view, it centres on the stretch holding the most of them,
+  // always with the first point — a game's home — in it; the rest are a drag away)
+  function fit(pts, pad = 1.6, anchor = null) {
     const b = box(); if (!pts.length) return clamp({ x: W0 / 2, y: H0 / 2 - 8, z: 0 });
     const U = pts.map(toU), x0 = Math.min(...U.map(p => p[0])), x1 = Math.max(...U.map(p => p[0])), y0 = Math.min(...U.map(p => p[1])), y1 = Math.max(...U.map(p => p[1]));
     const w = Math.max(26, (x1 - x0) * pad + 14), h = Math.max(16, (y1 - y0) * pad + 12);
-    return clamp({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: Math.min(b.w / w, b.h / h) });
+    const v = clamp({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: Math.min(b.w / w, b.h / h) });
+    if (!ph()) return v;
+    const vw = b.w / v.z, m = Math.min(22, vw * .14), span = vw - m * 2;
+    if (x1 - x0 <= span) return v;
+    const A = anchor ? toU(anchor)[0] : null, xs = U.map(p => p[0]).sort((a, c) => a - c);
+    let best = null;
+    xs.forEach(l => { if (A != null && (A < l || A > l + span)) return;
+      const n = xs.filter(x => x >= l && x <= l + span).length, c = l + span / 2, sc = n * 1000 - (A != null ? Math.abs(c - A) : 0);
+      if (!best || sc > best.sc) best = { sc, c }; });
+    if (!best && A != null) best = { c: A };
+    if (!best) return v;
+    // then frame just the points in that stretch (not closer than about twice the lands-fill zoom, to keep some context)
+    const l = best.c - span / 2, S = U.filter(p => p[0] >= l - .01 && p[0] <= l + span + .01);
+    if (!S.length) return clamp({ x: best.c, y: v.y, z: v.z });
+    const sx0 = Math.min(...S.map(p => p[0])), sx1 = Math.max(...S.map(p => p[0])), sy0 = Math.min(...S.map(p => p[1])), sy1 = Math.max(...S.map(p => p[1]));
+    const sz = Math.min(b.w / Math.max(26, (sx1 - sx0) * pad + 14), b.h / Math.max(16, (sy1 - sy0) * pad + 12));
+    return clamp({ x: (sx0 + sx1) / 2, y: (sy0 + sy1) / 2, z: Math.max(v.z, Math.min(sz, zMin() * 2.2)) });
   }
   function fly(to, ms = 650) {
     cancelAnimationFrame(anim); const from = { ...view }, t0 = performance.now();
@@ -183,18 +203,18 @@
     if (PH) {
       // phones: every stop (home too) gets a numbered dot matching the journey chips in the card, and its name on a pill;
       // a name with no free spot is left out (the number and the chip still tell it)
-      const z = el.zoom, R = 11, inb = p => p[0] > -R && p[0] < b.w + R && p[1] > -R && p[1] < b.h + R;
+      const z = el.zoom, R = 11, inb = p => p[0] >= 2 && p[0] <= b.w - 2 && p[1] >= 2 && p[1] <= b.h - 2;
       busy.push([z.offsetLeft - 6, z.offsetTop - 6, z.offsetLeft + z.offsetWidth + 6, z.offsetTop + z.offsetHeight + 6]);
       // stops close together (zoomed out) push their numbers apart, each keeping a short line to its true spot
-      const N = P.map(p => p.slice());
+      const E = R + 4, N = P.map(p => inb(p) ? p.slice() : [Math.max(E, Math.min(b.w - E, p[0])), Math.max(E, Math.min(b.h - E, p[1]))]);
       for (let it = 0; it < 30; it++) for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
         const p = N[i], q = N[j]; let dx = q[0] - p[0], dy = q[1] - p[1], dd = Math.hypot(dx, dy); if (dd >= R * 2 + 2) continue;
         if (dd < .01) { dx = .7; dy = (i % 2 ? .7 : -.7); dd = 1; }
         const k = (R * 2 + 2 - dd) / 2 / dd; p[0] -= dx * k; p[1] -= dy * k; q[0] += dx * k; q[1] += dy * k;
       }
-      P.forEach((p, i) => { const n = N[i]; if (!inb(p)) return;
-        if (Math.hypot(n[0] - p[0], n[1] - p[1]) > 3) dots.unshift(`<line class="nl" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${n[0].toFixed(1)}" y2="${n[1].toFixed(1)}"/><circle class="nd" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"/>`);
-        dots.push(`<g class="num${i === d.h ? ' h' : ''}"><circle cx="${n[0].toFixed(1)}" cy="${n[1].toFixed(1)}" r="${R}"/><text x="${n[0].toFixed(1)}" y="${n[1].toFixed(1)}">${i + 1}</text></g>`); busy.push([n[0] - R - 1, n[1] - R - 1, n[0] + R + 1, n[1] + R + 1]); });
+      P.forEach((p, i) => { const n = N[i], off = !inb(p);
+        if (!off && Math.hypot(n[0] - p[0], n[1] - p[1]) > 3) dots.unshift(`<line class="nl" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${n[0].toFixed(1)}" y2="${n[1].toFixed(1)}"/><circle class="nd" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"/>`);
+        dots.push(`<g class="num${i === d.h ? ' h' : ''}${off ? ' off' : ''}"><circle cx="${n[0].toFixed(1)}" cy="${n[1].toFixed(1)}" r="${R}"/><text x="${n[0].toFixed(1)}" y="${n[1].toFixed(1)}">${i + 1}</text></g>`); busy.push([n[0] - R - 1, n[1] - R - 1, n[0] + R + 1, n[1] + R + 1]); });
       // the home name first (it sits by the big pin), then the rest in route order
       const order = P.map((_, i) => i).sort((a, c) => (c === d.h) - (a === d.h));
       order.forEach(i => {
@@ -267,10 +287,13 @@
   function openClu(pts) { const f = fit(pts, 2.2), z = Math.max(f.z, view.z * 2.4, zMax() * .5); fly(clamp({ x: f.x, y: f.y, z })); }
   function select(id, flyTo = true) {
     sel = id; info(); renderList();
-    if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35)); } else redraw();
+    if (id && flyTo) { const d = D(id); fly(fit(d.p, 1.35, d.p[d.h])); } else redraw();
     if (id && innerWidth < 820) {   // phones: keep the picked game's chip in view in the strip, and the card on screen
       const c = el.list.querySelector('.amrow.on'); if (c) el.list.scrollTo({ left: c.offsetLeft - 16, behavior: 'smooth' });
-      const r = el.info.getBoundingClientRect(); if (r.bottom > innerHeight - 70) el.info.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
+      // bring the card up, but never so far that the map's top slips under the sticky header
+      const r = el.info.getBoundingClientRect(), hd = document.querySelector('header'), top = hd ? hd.getBoundingClientRect().bottom : 0;
+      const dy = Math.min(r.bottom - (innerHeight - 70), el.map.getBoundingClientRect().top - top - 4);
+      if (dy > 1) scrollBy({ top: dy, behavior: 'smooth' }); }
   }
   function setReg(k) {
     reg = k; if (sel && k !== 'all' && regionOf(home(ctx.games.find(g => g.id === sel))) !== k) { sel = null; info(); }

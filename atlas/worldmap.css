@@ -163,6 +163,8 @@
   .ammap .amsvg .num circle{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:2.5}
   .ammap .amsvg .lbl .num text{font:900 12px var(--round);fill:#fff;stroke:none;text-anchor:middle;dominant-baseline:central}
   .ammap .amsvg .lbl.ph line{stroke-width:2;opacity:.85}
+  .ammap .amsvg .num.off circle{fill:#fff;stroke:color-mix(in srgb,var(--c) 70%,#1d2030);stroke-dasharray:4 3}
+  .ammap .amsvg .lbl .num.off text{fill:color-mix(in srgb,var(--c) 70%,#1d2030)}
   .ammap .amsvg .lbl .nd{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:1.5}
   .ammap .amsvg .amlb rect{fill:#fff;stroke:color-mix(in srgb,var(--c) 50%,#fff);stroke-width:1.5}
   .ammap .amsvg .lbl .amlb text{font:900 13px var(--font);fill:var(--ink);stroke:none;text-anchor:middle;dominant-baseline:central}
