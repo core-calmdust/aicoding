@@ -1148,6 +1148,7 @@
   function setName(v) {
     W.name = v.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true);
     ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
+    const mn = document.querySelector('#dmini .mnm'); if (mn) mn.textContent = W.name || t('pf.player');
   }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
@@ -1384,7 +1385,28 @@
     el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
     $('dpName').onchange = e => setName(e.target.value);
     renderAcc();
+    renderMini();
   }
+  // phones: once the name card has scrolled away, a mini card (character on its background + frame · name · what is worn)
+  // stays pinned under the header, with the sort chips under it, so every change of clothes stays in sight
+  function renderMini() {
+    const el = $('dmini'); if (!el) return;
+    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
+      return `<span class="mw${k === dKind ? ' on' : ''}"><i>${t('kind.' + k)}</i>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}<b>${it ? esc(iname(it)) : '—'}</b></span>`; }).join('');
+    el.innerHTML = `<span class="mav"><span class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></span>${ART.avatar(W.av, 54, { clear: true })}</span>
+      <span class="mtx"><b class="mnm">${esc(W.name || t('pf.player'))}</b>${worn}</span>`;
+    miniPos();
+  }
+  function miniPos() {
+    const el = $('dmini'); if (!el) return;
+    const on = page === 'dress' && matchMedia('(max-width:760px)').matches && (() => {
+      const hd = document.querySelector('header'), c = $('dprev').getBoundingClientRect();
+      return c.height > 0 && c.bottom < (hd ? hd.offsetHeight : 62) + el.offsetHeight + 30; })();
+    if (el.classList.contains('on') !== on) { el.classList.toggle('on', on); el.setAttribute('aria-hidden', !on); }
+  }
+  if ($('dmini')) $('dmini').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  addEventListener('scroll', miniPos, { passive: true });
+  addEventListener('resize', miniPos);
   matchMedia('(max-width:760px)').addEventListener('change', () => { if (page === 'dress') renderCard(); });   // the character's size follows the layout
   function renderDress() {
     $('hDress').textContent = t('dress.h');
@@ -1415,9 +1437,14 @@
       else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
-  function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
+  function dsegPos() {
+    const st = document.documentElement.style, tb = document.querySelector('.tabs'), hd = document.querySelector('header'), dt = document.querySelector('#pg-dress .dtop');
+    if (tb) st.setProperty('--tabsH', tb.offsetHeight + 'px');
+    if (hd) st.setProperty('--hdrH', hd.offsetHeight + 'px');   // PC きせかえ: the sticky title/tabs row sits under the header,
+    if (dt && dt.offsetHeight) st.setProperty('--dtopH', dt.offsetHeight + 'px');   //  and the name card under that row
+  }
   addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
-  if (window.ResizeObserver) new ResizeObserver(dsegPos).observe(tabsEl);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'); if (dt) ro.observe(dt); }   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
