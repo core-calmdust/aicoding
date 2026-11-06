@@ -1140,16 +1140,36 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
 .sheet.updsh > .ush h3{margin:0;font-size:20px}
 .sheet.updsh .usx{flex:none;width:38px;height:38px}
-.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:10px 12px 10px 9px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:0 12px 6px;-webkit-overflow-scrolling:touch}
+/* a day: masthead (sticky while its entries scroll) · "this day" line · the entries, first one the headline */
+.udy{padding-bottom:10px}
+.udh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;margin:0 -12px;padding:10px 16px 8px;background:var(--paper);font-family:var(--round)}
+.udh .udn{font-size:38px;font-weight:700;line-height:.9;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.udh .udm{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.udh .udm b{font-size:14px;font-weight:900;white-space:nowrap}
+.udh .udm small{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.udh .udr{flex:1;min-width:16px;height:6px;border-top:2px solid #e4d3ab;border-bottom:1px solid #e4d3ab}
+.udh .udnew{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
+.udf{margin:0 0 10px;padding:8px 12px;border-radius:14px;background:#fff4d6;border:2px dashed #f1d58a;font-size:13px;font-weight:700;line-height:1.6;color:#5d4a20}
+.udf b{display:inline-block;margin-inline-end:7px;padding:0 8px;border-radius:99px;background:var(--sun);color:#5b3d00;font:700 11px/1.7 var(--round);vertical-align:1px}
+.udg{display:flex;flex-direction:column;gap:8px}
+.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-inline-start:5px solid var(--c);border-radius:18px;background:#fff;padding:10px 12px 10px 9px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
 .usr:active{transform:scale(.98)}
 .usr .usi{flex:none;width:54px;height:54px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
 .usr .usi img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
-.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.usr .ush{display:flex;align-items:baseline;gap:8px}
 .usr .ush b{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.usr .ush small{flex:none;font:700 12.5px var(--round);color:var(--ink2)}
 .usr .usp{font-size:14.5px;font-weight:700;color:#4a4237;line-height:1.65}
+.usr .utgs{display:flex;flex-wrap:wrap;gap:4px}
+.usr .utg{font:700 11px/1.6 var(--round);font-style:normal;padding:0 8px;border-radius:99px;color:#fff;background:var(--ink2)}
+.usr .utg.t-new{background:var(--coral)}.usr .utg.t-3d{background:var(--grape)}.usr .utg.t-online{background:var(--sky2)}.usr .utg.t-rules{background:var(--mint2)}
+/* the day's headline: a wide picture panel in the game's colour above the text */
+.usr.hl{flex-direction:column;gap:9px;padding:9px 9px 12px;background:color-mix(in srgb,var(--c) 7%,#fff);border-color:color-mix(in srgb,var(--c) 30%,var(--line));border-inline-start-color:var(--c)}
+.usr.hl .usi{width:100%;height:100px;border-radius:13px;background:radial-gradient(90% 140% at 25% 0%,color-mix(in srgb,var(--c) 40%,#fff) 0%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000) 100%)}
+.usr.hl .usi img{width:90px;height:90px}
+.usr.hl .ust{padding:0 4px}
+.usr.hl .ush b{font-size:18px;white-space:normal}
 /* phones: a calmer ticker — smaller NEW tag, picture and type (PC keeps its larger set below) */
 @media (max-width:760px){
   :root{--ulH:46px}
@@ -1170,7 +1190,24 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
   .updline .ul-ch{font-size:22px}
   .updline:hover .ul-tr{animation-play-state:paused}
   body{padding-bottom:calc(var(--ulH) + 16px)}
-  .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  /* the list as a wide dialog: each day's entries in a 2–3 column grid under a full-width masthead; the headline takes two columns */
+  .sheet.updsh{align-self:center;width:min(1100px,calc(100% - 48px));max-width:1100px;margin:0;max-height:88vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  .sheet.updsh > .ush{padding:16px 18px 10px 26px}.sheet.updsh > .ush h3{font-size:22px}
+  .sheet.updsh .usl{padding:0 24px 8px}
+  .udy{padding-bottom:16px}
+  .udh{margin:0 -24px;padding:16px 28px 10px;gap:14px}
+  .udh .udn{font-size:52px}.udh .udm b{font-size:16px}.udh .udm small{font-size:13px}
+  .udh .udnew{font-size:12px;padding:4px 11px}
+  .udf{display:inline-block;margin-bottom:14px;font-size:14px;padding:8px 16px}
+  .udg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));grid-auto-flow:dense;gap:12px}
+  .usr{height:100%;transition:transform .15s,box-shadow .15s}
+  .usr:hover{transform:translateY(-2px);box-shadow:0 8px 18px -10px color-mix(in srgb,var(--c) 70%,#000)}
+  .usr.hl{grid-column:span 2;flex-direction:row;align-items:stretch;gap:16px;padding:10px 16px 10px 10px}
+  .udg.one .usr.hl{grid-column:1/-1}
+  .usr.hl .usi{width:160px;height:auto;min-height:140px}
+  .usr.hl .usi img{width:120px;height:120px}
+  .usr.hl .ust{padding:6px 0;justify-content:center}
+  .usr.hl .ush b{font-size:20px}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
@@ -1415,6 +1452,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=178"></script>
+<script src="updnews.js?v=1"></script>
+<script src="app.js?v=179"></script>
 </body>
 </html>
