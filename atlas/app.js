@@ -320,12 +320,31 @@
     // one copy runs past at ~40px/s: measured once the ticker is on screen (it is display:none on PC and on the map / きせかえ)
     if (!el._w) { const w = el.querySelector('.ul-g').offsetWidth; if (w) { el._w = w; el.style.setProperty('--ud', Math.max(12, w / 40).toFixed(1) + 's'); } }
   }
+  /* すべての更新: a small newspaper — entries grouped by day under a date masthead (big day number, month, weekday,
+     a NEW mark for the last 14 days) with one "what was this day?" line from atlas/updnews.js; the first entry of each
+     day is the headline card (bigger picture). Tags come only from clear words in the ja changelog line. */
+  const UPD_RULES = /学ぶルール|覚えるルール|ルール(が|は|を|に)(ゲーム紹介|レッスン|チュートリアル)|ルールにゲーム紹介|ルールコース/;
+  const updTags = u => { const s = u[2] || '', o = [];
+    if (/新登場|新作/.test(s)) o.push('new'); if (/3D/.test(s)) o.push('3d'); if (/オンライン対戦/.test(s)) o.push('online'); if (UPD_RULES.test(s)) o.push('rules'); return o; };
+  const NEWS = () => window.AtlasNews || { FACTS: {}, LABEL: {}, TAGS: {} };
+  const nl = m => (m && (m[lang] || m.en)) || '';
+  const dParts = d => { const dt = new Date(d + 'T00:00:00'); try {
+      const day = new Intl.DateTimeFormat(lang, { day: 'numeric' }).formatToParts(dt).find(p => p.type === 'day');
+      return { n: day ? day.value : String(dt.getDate()), m: dt.toLocaleDateString(lang, { month: 'long' }), w: dt.toLocaleDateString(lang, { weekday: 'long' }) };
+    } catch (e) { return { n: String(dt.getDate()), m: String(dt.getMonth() + 1), w: '' }; } };
   function openUpdSheet() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
     const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
-    const rows = A_.UPDATES.map(u => { const w = updWhat(u); if (!w) return '';
-      return `<button type="button" class="usr" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b><small>${esc(fmtDate(u[0]))}</small></span><span class="usp">${esc(utx(u))}</span></span></button>`; }).join('');
-    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${rows}</div>`, 'updsh');
+    const N = NEWS(), days = [];
+    A_.UPDATES.forEach(u => { const w = updWhat(u); if (!w) return; const last = days[days.length - 1];
+      if (last && last.d === u[0]) last.items.push([u, w]); else days.push({ d: u[0], items: [[u, w]] }); });
+    const row = ([u, w], i) => { const tg = updTags(u).map(k => `<i class="utg t-${k}">${esc(nl(N.TAGS[k]))}</i>`).join('');
+      return `<button type="button" class="usr${i ? '' : ' hl'}" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b></span>${tg ? `<span class="utgs">${tg}</span>` : ''}<span class="usp">${esc(utx(u))}</span></span></button>`; };
+    const body = days.map(({ d, items }) => { const p = dParts(d), f = nl(N.FACTS[d.slice(5)]), fresh = A_.daysSince(d) <= 14;
+      return `<section class="udy"><h4 class="udh"><span class="udn">${esc(p.n)}</span><span class="udm"><b>${esc(p.m)}</b><small>${esc(p.w)}</small></span><span class="udr" aria-hidden="true"></span>${fresh ? '<span class="udnew">NEW</span>' : ''}</h4>`
+        + (f ? `<p class="udf"><b>${esc(nl(N.LABEL))}</b><span>${esc(f)}</span></p>` : '')
+        + `<div class="udg${items.length === 1 ? ' one' : ''}">${items.map(row).join('')}</div></section>`; }).join('');
+    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${body}</div>`, 'updsh');
     const sh = $('sheet');
     sh.querySelector('.usx').onclick = closeSheet;
     sh.querySelectorAll('.usr').forEach(b => { b.onclick = () => { closeSheet(); if (b.dataset.g) flyOpen(b.dataset.g, null); else go(b.dataset.tab); }; });
