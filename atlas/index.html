@@ -805,6 +805,64 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
+/* ===== きせかえ: My Page (app.js renderMyPage) — PC: profile left · stats right; phones: one compact block above the dress-up ===== */
+.mypage{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;padding:14px;margin-bottom:18px}
+.mp-id{position:relative;overflow:hidden;border-radius:20px;padding:18px;display:flex;align-items:center;gap:18px;background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
+.mp-id .bgfill{position:absolute;inset:0;opacity:.9;filter:saturate(1.15)}
+.mp-id .bgfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,253,247,0) 0%,rgba(255,253,247,.9) 46%)}
+[dir=rtl] .mp-id .bgfill::after{background:linear-gradient(270deg,rgba(255,253,247,0) 0%,rgba(255,253,247,.9) 46%)}
+.mp-id > *:not(.bgfill){position:relative}
+.mp-id .av{box-shadow:0 6px 0 rgba(0,0,0,.12),0 0 0 5px rgba(255,255,255,.85)}
+.mp-id .av.framed{box-shadow:none}
+.mp-id .av .lv{bottom:-9px;font-size:13px;padding:2px 10px}
+.mp-who{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.mp-who input{border:0;border-bottom:2px dashed #d8c9a6;background:transparent;font-size:20px;font-weight:900;width:100%;padding:1px 0;outline:none;color:var(--ink)}
+.mp-who input:focus{border-bottom-color:var(--sky)}
+.mp-who .coin{font-size:17px}
+.mp-lv{width:100%}
+.mp-lvh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.mp-lvh b{font:700 15px var(--round);color:var(--grape2)}.mp-lvh small{font-size:13.5px;font-weight:800;color:var(--ink2)}
+.mp-lvb{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
+.mp-lvb i{height:9px;border-radius:99px;background:rgba(0,0,0,.08)}.mp-lvb i.on{background:var(--grape)}
+.mp-st{display:flex;flex-direction:column;gap:10px;justify-content:center;min-width:0}
+.mypage .ptiles{gap:10px}
+.mypage .pt{padding:9px 6px 8px;row-gap:2px;position:relative}
+.mypage .pt .ic{font-size:22px}
+.mypage .pt b{font-size:24px}.mypage .pt b small{font-size:13px}
+.mypage .pt em{font-size:13px}
+.mypage .pt.go{font:inherit;color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.mypage .pt.go b{font:700 24px var(--round)}
+.mypage .pt.go:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--line)}
+.mypage .pt.go:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+.mypage .pt .mp-ar{position:absolute;top:5px;inset-inline-end:9px;font:700 18px var(--round);color:var(--sky)}
+.mypage .lgw{padding:8px 12px 9px}
+.mypage .lgh b{font-size:14px}.mypage .lgh small{font-size:12px}
+.mypage .lgd{gap:6px;margin-top:6px}
+.mypage .lgd .d{padding:4px 0 3px}.mypage .lgd .d i{width:24px;height:24px;font-size:11px}.mypage .lgd .d.big i{height:24px;font-size:18px}.mypage .lgd .d small{font-size:11px}
+.mypage .acc{margin-top:0;font-size:12.5px}
+@media (max-width:760px){
+  .mypage{grid-template-columns:1fr;gap:10px;padding:10px;margin-bottom:12px;border-radius:22px}
+  .mp-id{padding:10px 12px;gap:14px;border-radius:16px}
+  .mp-id .av svg,.mp-id .av img{width:64px;height:64px}
+  .mp-id .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px rgba(255,255,255,.85)}
+  .mp-id .av .lv{bottom:-7px;font-size:11px;padding:0 7px;line-height:16px}
+  .mp-who{gap:5px}
+  .mp-who input{font-size:17px}
+  .mp-who .coin{position:absolute;top:0;inset-inline-end:0;font-size:14px;padding:2px 9px 2px 3px}.mp-who .coin i{width:20px;height:20px;font-size:10px}
+  .mp-who input{padding-inline-end:96px}
+  .mp-lvh b{font-size:13px}.mp-lvh small{font-size:11.5px}.mp-lvb i{height:7px}
+  .mp-st{gap:8px}
+  .mypage .ptiles{gap:7px}
+  .mypage .pt{padding:6px 3px 5px;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:5px}   /* icon beside the number: one line lower */
+  .mypage .pt em{grid-column:1/-1}
+  .mypage .pt .ic{font-size:16px}
+  .mypage .pt b,.mypage .pt.go b{font-size:18px}.mypage .pt b small{font-size:11px}
+  .mypage .pt em{font-size:11px;max-width:100%}
+  .mypage .pt .mp-ar{top:2px;inset-inline-end:6px;font-size:15px}
+  .mypage .lgw{padding:6px 9px 7px}
+  .mypage .lgh b{font-size:13px}.mypage .lgh small{display:block;font-size:11px}
+  .mypage .lgd{gap:4px}.mypage .lgd .d i{width:20px;height:20px;font-size:10px}.mypage .lgd .d.big i{height:20px;font-size:16px}.mypage .lgd .d small{font-size:9.5px}
+  .mypage .acc{font-size:12px}
+}
 /* ===== table play on a phone held sideways (app.js LAND, #bv.pland): the full game's own landscape layout
    (atlas/skin/skin.css html.atlas-land for backgammon, atlas/skin/mancala.css html.mc-barmenu for mancala) ===== */
 .pl{display:none}
@@ -1140,16 +1198,36 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
 .sheet.updsh > .ush h3{margin:0;font-size:20px}
 .sheet.updsh .usx{flex:none;width:38px;height:38px}
-.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:10px 12px 10px 9px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:0 12px 6px;-webkit-overflow-scrolling:touch}
+/* a day: masthead (sticky while its entries scroll) · "this day" line · the entries, first one the headline */
+.udy{padding-bottom:10px}
+.udh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;margin:0 -12px;padding:10px 16px 8px;background:var(--paper);font-family:var(--round)}
+.udh .udn{font-size:38px;font-weight:700;line-height:.9;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.udh .udm{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.udh .udm b{font-size:14px;font-weight:900;white-space:nowrap}
+.udh .udm small{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.udh .udr{flex:1;min-width:16px;height:6px;border-top:2px solid #e4d3ab;border-bottom:1px solid #e4d3ab}
+.udh .udnew{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
+.udf{margin:0 0 10px;padding:8px 12px;border-radius:14px;background:#fff4d6;border:2px dashed #f1d58a;font-size:13px;font-weight:700;line-height:1.6;color:#5d4a20}
+.udf b{display:inline-block;margin-inline-end:7px;padding:0 8px;border-radius:99px;background:var(--sun);color:#5b3d00;font:700 11px/1.7 var(--round);vertical-align:1px}
+.udg{display:flex;flex-direction:column;gap:8px}
+.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-inline-start:5px solid var(--c);border-radius:18px;background:#fff;padding:10px 12px 10px 9px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
 .usr:active{transform:scale(.98)}
 .usr .usi{flex:none;width:54px;height:54px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
 .usr .usi img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
-.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.usr .ush{display:flex;align-items:baseline;gap:8px}
 .usr .ush b{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.usr .ush small{flex:none;font:700 12.5px var(--round);color:var(--ink2)}
 .usr .usp{font-size:14.5px;font-weight:700;color:#4a4237;line-height:1.65}
+.usr .utgs{display:flex;flex-wrap:wrap;gap:4px}
+.usr .utg{font:700 11px/1.6 var(--round);font-style:normal;padding:0 8px;border-radius:99px;color:#fff;background:var(--ink2)}
+.usr .utg.t-new{background:var(--coral)}.usr .utg.t-3d{background:var(--grape)}.usr .utg.t-online{background:var(--sky2)}.usr .utg.t-rules{background:var(--mint2)}
+/* the day's headline: a wide picture panel in the game's colour above the text */
+.usr.hl{flex-direction:column;gap:9px;padding:9px 9px 12px;background:color-mix(in srgb,var(--c) 7%,#fff);border-color:color-mix(in srgb,var(--c) 30%,var(--line));border-inline-start-color:var(--c)}
+.usr.hl .usi{width:100%;height:100px;border-radius:13px;background:radial-gradient(90% 140% at 25% 0%,color-mix(in srgb,var(--c) 40%,#fff) 0%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000) 100%)}
+.usr.hl .usi img{width:90px;height:90px}
+.usr.hl .ust{padding:0 4px}
+.usr.hl .ush b{font-size:18px;white-space:normal}
 /* phones: a calmer ticker — smaller NEW tag, picture and type (PC keeps its larger set below) */
 @media (max-width:760px){
   :root{--ulH:46px}
@@ -1170,7 +1248,24 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
   .updline .ul-ch{font-size:22px}
   .updline:hover .ul-tr{animation-play-state:paused}
   body{padding-bottom:calc(var(--ulH) + 16px)}
-  .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  /* the list as a wide dialog: each day's entries in a 2–3 column grid under a full-width masthead; the headline takes two columns */
+  .sheet.updsh{align-self:center;width:min(1100px,calc(100% - 48px));max-width:1100px;margin:0;max-height:88vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  .sheet.updsh > .ush{padding:16px 18px 10px 26px}.sheet.updsh > .ush h3{font-size:22px}
+  .sheet.updsh .usl{padding:0 24px 8px}
+  .udy{padding-bottom:16px}
+  .udh{margin:0 -24px;padding:16px 28px 10px;gap:14px}
+  .udh .udn{font-size:52px}.udh .udm b{font-size:16px}.udh .udm small{font-size:13px}
+  .udh .udnew{font-size:12px;padding:4px 11px}
+  .udf{display:inline-block;margin-bottom:14px;font-size:14px;padding:8px 16px}
+  .udg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));grid-auto-flow:dense;gap:12px}
+  .usr{height:100%;transition:transform .15s,box-shadow .15s}
+  .usr:hover{transform:translateY(-2px);box-shadow:0 8px 18px -10px color-mix(in srgb,var(--c) 70%,#000)}
+  .usr.hl{grid-column:span 2;flex-direction:row;align-items:stretch;gap:16px;padding:10px 16px 10px 10px}
+  .udg.one .usr.hl{grid-column:1/-1}
+  .usr.hl .usi{width:160px;height:auto;min-height:140px}
+  .usr.hl .usi img{width:120px;height:120px}
+  .usr.hl .ust{padding:6px 0;justify-content:center}
+  .usr.hl .ush b{font-size:20px}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
@@ -1301,6 +1396,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
   <!-- DRESS -->
   <section class="pg" id="pg-dress">
     <h2 class="h" id="hDress"></h2>
+    <div class="card mypage" id="mypage"></div>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
       <div><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div><div class="dgrid" id="dItems"></div></div>
@@ -1332,9 +1428,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="../shared/atlas.js?v=20261106map1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
-<script src="i18n.js?v=47"></script>
+<script src="i18n.js?v=48"></script>
 <script src="gamelist-i18n.js?v=5"></script>
-<script src="table3d.js?v=99"></script>
+<script src="table3d.js?v=100"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
 <script src="models/backgammon.js?v=116"></script>
@@ -1415,6 +1511,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=12">
 <script src="worldmap.js?v=15"></script>
-<script src="app.js?v=178"></script>
+<script src="updnews.js?v=1"></script>
+<script src="app.js?v=180"></script>
 </body>
 </html>

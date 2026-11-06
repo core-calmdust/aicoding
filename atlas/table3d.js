@@ -17,7 +17,9 @@
   // visit where the frames were slow (see the adaptive check in loop()). Lite = 1× pixels, no antialias, small soft-free
   // shadows, half-size procedural textures, small parts cast no shadows (they have contact shadows).
   const COARSE = matchMedia('(pointer: coarse)').matches;
-  const LITE = (() => { try { if (localStorage.getItem('atlas-lite') === '1') return true; } catch (e) {}
+  // 'lite' remembered from a slow visit only lasts a day (it used to stick forever, and a busy first second could trip it)
+  try { localStorage.removeItem('atlas-lite'); } catch (e) {}
+  const LITE = (() => { try { const t = +localStorage.getItem('atlas-lite2') || 0; if (t && Date.now() - t < 864e5) return true; } catch (e) {}
     return COARSE && (navigator.deviceMemory || 8) <= 3; })();   // (core counts are unreliable on iOS: the frame-time check below decides there)
   const texScale = () => (LITE ? .5 : COARSE ? .5 : 1);   // phones never need 2048² procedural textures
   let texNest = 0;   // > 1 while one procedural canvas is drawn inside another (a composite: its sources are drawn at once)
@@ -1301,7 +1303,7 @@
   function mount(container, opts = {}) {
     el = container;
     const coarse = COARSE, skinPage = !!opts.local;
-    pr = Math.min(LITE ? 1 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    pr = Math.min(LITE ? 1.25 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // (lite: 1.25×, not 1× — 1× looked blurry on phones)   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
     // skin pages drawn at 2x: no MSAA on top (the 2x pixels already smooth the edges; MSAA would multiply the fill and memory again)
     R = new (T().WebGLRenderer)({ antialias: !LITE && !(skinPage && pr >= 2), alpha: true, powerPreference: 'high-performance' });
     R.setPixelRatio(pr);
@@ -1682,16 +1684,20 @@
   }
   // adaptive resolution: while something animates, watch the frame interval; if a phone can't keep up (median > 34 ms),
   // drop to 1× pixels at once and remember 'lite' for the next visit (half-size textures, small shadows)
-  let pr = 1, slow = [], slowDone = false;
+  // (only after the first 4 s — textures and shaders are still being built then — and only when two windows in a row are slow;
+  //  the step down is to 1.25×, never below)
+  let pr = 1, slow = [], slowDone = false, slowHits = 0; const t0Speed = performance.now();
   function watchSpeed(dt) {
-    if (slowDone || !COARSE || !R) return;
+    if (slowDone || !COARSE || !R || performance.now() - t0Speed < 4000) return;
     slow.push(dt); if (slow.length < 40) return;
     const med = slow.slice().sort((a, b) => a - b)[20]; slow = [];
-    if (med > 34) {
-      if (pr > 1) { pr = 1; R.setPixelRatio(1); frame(); kick(300); }
-      try { localStorage.setItem('atlas-lite', '1'); } catch (e) {}
+    if (med > 40) {
+      if (++slowHits < 2) return;
+      const lo = Math.min(1.25, window.devicePixelRatio || 1);
+      if (pr > lo) { pr = lo; R.setPixelRatio(lo); frame(); kick(300); }
+      try { localStorage.setItem('atlas-lite2', String(Date.now())); } catch (e) {}
       slowDone = true;
-    } else if (med < 22) slowDone = true;   // fast enough: stop measuring
+    } else { slowHits = 0; if (med < 22) slowDone = true; }   // fast enough: stop measuring
   }
   // one frame; the next one is asked for only while step() says something still needs frames
   function loop(now = performance.now()) {

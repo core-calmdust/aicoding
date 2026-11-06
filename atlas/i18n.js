@@ -313,6 +313,10 @@ ar: {
 
   /* home on phones: the one-line profile opens its details */
   add('pf.more', { ja: 'プロフィールの詳細', en: 'Profile details', zh: '个人资料详情', ko: '프로필 자세히', es: 'Detalles del perfil', fr: 'Détails du profil', pt: 'Detalhes do perfil', de: 'Profildetails', hi: 'प्रोफ़ाइल विवरण', ar: 'تفاصيل الملف الشخصي' });
+  /* きせかえ: My Page (the home profile with its stats, the login week and the Google account) */
+  add('mp.streak', { ja: '連続ログイン', en: 'Login streak', zh: '连续登录', ko: '연속 로그인', es: 'Racha de acceso', fr: 'Connexions d’affilée', pt: 'Login seguido', de: 'Login-Serie', hi: 'लगातार लॉगिन', ar: 'دخول متتالٍ' });
+  add('mp.d', { ja: '日', en: 'days', zh: '天', ko: '일', es: 'días', fr: 'jours', pt: 'dias', de: 'Tage', hi: 'दिन', ar: 'أيام' });
+  add('mp.next', { ja: '次のLvまで 実績あと{n}個', en: '{n} more awards to the next Lv', zh: '再获得{n}个成就即可升级', ko: '다음 Lv까지 업적 {n}개', es: '{n} logros más para el siguiente Lv', fr: 'Encore {n} succès pour le Lv suivant', pt: 'Mais {n} conquistas para o próximo Lv', de: 'Noch {n} Erfolge bis zum nächsten Lv', hi: 'अगले Lv तक {n} और उपलब्धियाँ', ar: '{n} إنجازات أخرى للمستوى التالي' });
 
   /* table play: time controls, the action bar (待った · 投了 · ヒント) */
   add('tc.h', { ja: '持ち時間', en: 'Clock', zh: '用时', ko: '제한 시간', es: 'Reloj', fr: 'Pendule', pt: 'Relógio', de: 'Bedenkzeit', hi: 'समय', ar: 'الوقت' });
