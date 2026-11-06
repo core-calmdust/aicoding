@@ -90,7 +90,7 @@ function build() {
   const IN = 'flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line,rgba(255,255,255,.18));background:rgba(0,0,0,.22);color:var(--text,#eee)';
   const nmL = i => `<label style="flex:1 1 0;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-nl${i}" style="white-space:nowrap;opacity:.85;max-width:40%;overflow:hidden;text-overflow:ellipsis"></span><input class="rx-nm${i}" data-i="${i}" type="text" maxlength="40" autocomplete="off" spellcheck="false" style="${IN}"></label>`;
   // one fixed size whatever the tab: the stage (image preview / record text) has a fixed height, text scrolls inside it,
-  // and the rows above keep their place (visibility) even for formats that do not use them
+  // and the rows above keep their place even for formats that do not use them (greyed out and disabled there)
   { const st = document.createElement('style'); st.textContent = '@media (hover: hover) and (pointer: fine) and (min-width: 1040px){ .rx-modal{width:min(980px, calc(100vw - 64px))!important} .rx-modal :is(.rx-stage,#exportStage){height:var(--rx-sh, min(calc(100vh - 300px), 640px))!important} }'; document.head.appendChild(st); }
   ov.innerHTML = `<div class="modal rx-modal" style="width:min(580px,100%)"><h2 class="rx-h"></h2>
 <div class="rx-meta" style="display:flex;gap:6px 12px;align-items:center;flex-wrap:nowrap;margin-bottom:8px;font-size:13px"><label style="flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0"><span class="rx-tl" style="white-space:nowrap;opacity:.85"></span><input class="rx-ttl" type="text" maxlength="60" autocomplete="off" spellcheck="false" style="${IN}"></label><label style="flex:none;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer"><input class="rx-date" type="checkbox" style="width:18px;height:18px;margin:0;accent-color:var(--accent,#d4a24c)"><span class="rx-dt"></span></label></div>
@@ -144,6 +144,8 @@ function fmtList() {
 }
 // the two sides: [{ label, name (the game's default), tag (PGN-style header), sgf (SGF property) }]
 const sideList = () => { let a = []; try { a = (O.sides && O.sides()) || []; } catch (e) {} return [0, 1].map(i => Object.assign({ label: '', name: '' }, a[i] || {})); };
+// a row the current format does not use: kept in place, greyed out, its inputs disabled (2026-11-06; was hidden)
+function rxOff(el, off) { if (!el) return; el.style.visibility = 'visible'; el.style.opacity = off ? '.38' : ''; el.style.pointerEvents = off ? 'none' : ''; el.setAttribute('aria-disabled', off ? 'true' : 'false'); el.querySelectorAll('input').forEach(i => { i.disabled = off; }); }
 const modeList = () => (O.image && O.image.modes) || ['board'];
 async function render() {
   const q = s => ov.querySelector(s), list = fmtList();
@@ -156,9 +158,9 @@ async function render() {
   q('.rx-tl').textContent = tx('ttl'); q('.rx-dt').textContent = tx('date'); q('.rx-date').checked = m.date;
   const ti = q('.rx-ttl'); ti.placeholder = cleanTitle(O.title); if (document.activeElement !== ti) ti.value = m.title;
   const f0 = list.find(x => x.id === fmt), uses = fmt === 'img' || !!(f0 && f0.id !== 'url' && f0.meta !== false);
-  q('.rx-meta').style.visibility = uses ? 'visible' : 'hidden';
+  rxOff(q('.rx-meta'), !uses);   // (formats without a title / names: the rows stay, greyed out and not editable)
   const sides = sideList(), ov2 = nameOv(O.key);
-  q('.rx-names').style.display = O.sides ? 'flex' : 'none'; q('.rx-names').style.visibility = uses ? 'visible' : 'hidden';
+  q('.rx-names').style.display = O.sides ? 'flex' : 'none'; rxOff(q('.rx-names'), !uses);
   sides.forEach((sd, i) => { q('.rx-nl' + i).textContent = sd.label; const ni = q('.rx-nm' + i); ni.placeholder = tx('nm'); ni.title = sd.label; if (document.activeElement !== ni) ni.value = ov2[i] || sd.name || ''; });
   m.players = sides.map((sd, i) => ({ tag: sd.tag, sgf: sd.sgf, name: ov2[i] }));
   const img = fmt === 'img';
