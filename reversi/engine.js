@@ -338,6 +338,7 @@ function setWeights(arr, nphase) {
   else if (per === PS_V1) { USE_EXT = false; PHASE_SIZE = PS_V1; }
   else throw new Error('weights size mismatch: ' + per);
   evaluate = evalPattern;
+  if (typeof wasmWeights === 'function') wasmWeights();
 }
 
 // ------------------------------------------------------ search state
@@ -361,7 +362,7 @@ function hash(pl, ph, ol, oh) {
   h ^= h >>> 15; h = Math.imul(h, 0x2C1B3C6D); h ^= h >>> 12; h = Math.imul(h, 0x297A2D39); h ^= h >>> 15;
   return h;
 }
-function clearTT() { T_D.fill(-1); T_M.fill(-1); E_V.fill(0); E_M.fill(-1); }
+function clearTT() { T_D.fill(-1); T_M.fill(-1); E_V.fill(0); E_M.fill(-1); if (WON) WX.clear_tt(); }
 
 // static square ordering values
 const SQV = new Int16Array([
@@ -427,7 +428,7 @@ function evalAt(ply, pl, ph, ol, oh) {
   return ((s * 100) / 32) | 0;
 }
 // entry point used outside the recursive search: (re)initialises the index stack at this ply
-function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
+function searchJS(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   initIdx(ply, pl, ph, ol, oh);
   return searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed);
 }
@@ -572,7 +573,7 @@ function quadParity(el, eh, q) { return ((pc(el & QMASK_L[q]) + pc(eh & QMASK_H[
 
 const SMALL = 6;
 const TUNE = { evalMin: 12, searchMin: 14, sDepth: 1, kE: 8 };
-function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
+function solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
   if (empties <= SMALL) return solveSmall(pl, ph, ol, oh, alpha, beta, empties, passed);
   if ((++nodes & 16383) === 0) checkTime();
 
@@ -596,7 +597,7 @@ function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
     if (passed) return finalScore(pl, ph, ol, oh);
     genMoves(ol, oh, pl, ph);
     if ((ML | MH) === 0) return finalScore(pl, ph, ol, oh);
-    return -solve(ol, oh, pl, ph, -beta, -alpha, empties, ply + 1, true);
+    return -solveJS(ol, oh, pl, ph, -beta, -alpha, empties, ply + 1, true);
   }
   const base = ply * 36;
   let n = 0;
@@ -624,7 +625,7 @@ function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
     }
     sc += SQV[s];
     if (empties >= TUNE.evalMin) {
-      if (empties >= TUNE.searchMin) sc -= (search(nol, noh, npl, nph, TUNE.sDepth, -32000, 32000, ply + 1, false) * TUNE.kE) >> 4;
+      if (empties >= TUNE.searchMin) sc -= (searchJS(nol, noh, npl, nph, TUNE.sDepth, -32000, 32000, ply + 1, false) * TUNE.kE) >> 4;
       else sc -= (evaluate(nol, noh, npl, nph) * TUNE.kE) >> 4;
     }
     SC[base + i] = sc;
@@ -641,10 +642,10 @@ function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
     if (s < 32) { npl = pl | fl | (1 << s); nph = ph | fh; } else { npl = pl | fl; nph = ph | fh | (1 << (s - 32)); }
     const nol = ol & ~fl, noh = oh & ~fh;
     let v;
-    if (i === 0) v = -solve(nol, noh, npl, nph, -beta, -alpha, empties - 1, ply + 1, false);
+    if (i === 0) v = -solveJS(nol, noh, npl, nph, -beta, -alpha, empties - 1, ply + 1, false);
     else {
-      v = -solve(nol, noh, npl, nph, -alpha - 1, -alpha, empties - 1, ply + 1, false);
-      if (v > alpha && v < beta) v = -solve(nol, noh, npl, nph, -beta, -v, empties - 1, ply + 1, false);
+      v = -solveJS(nol, noh, npl, nph, -alpha - 1, -alpha, empties - 1, ply + 1, false);
+      if (v > alpha && v < beta) v = -solveJS(nol, noh, npl, nph, -beta, -v, empties - 1, ply + 1, false);
     }
     if (v > best) {
       best = v; bestMove = s;
@@ -658,6 +659,47 @@ function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
     E_HI[ti] = best < beta ? best : 99;
   }
   return best;
+}
+
+// ---- the same search in WebAssembly (engine.c, built by tools/build-wasm.sh): used when available, same nodes and values
+let WX = null, WON = false;
+(function loadWasm() {
+  try {
+    let bytes = null;
+    if (typeof importScripts === 'function' && typeof window === 'undefined') {
+      try { importScripts('engine-wasm.js' + ((self.location && self.location.search) || '')); } catch (e) { /* JS search */ }
+      if (self.REVERSI_WASM) { const b = atob(self.REVERSI_WASM); bytes = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i); }
+    } else if (typeof require === 'function' && typeof __dirname === 'string' && !(typeof process !== 'undefined' && process.env && process.env.REVERSI_NOWASM)) {
+      const fs = require('fs'), path = require('path'), f = path.join(__dirname, 'engine.wasm');
+      if (fs.existsSync(f)) bytes = fs.readFileSync(f);
+    }
+    if (!bytes || typeof WebAssembly === 'undefined') return;
+    WX = new WebAssembly.Instance(new WebAssembly.Module(bytes), { env: { now: () => Date.now() } }).exports;
+    WX.init();
+  } catch (e) { WX = null; }
+})();
+function wasmWeights() {
+  WON = false;
+  if (!WX || !W || W.length > WX.w_max()) return;
+  new Int16Array(WX.memory.buffer, WX.w_ptr(), W.length).set(W);
+  new Int32Array(WX.memory.buffer, WX.tab_ptr(0), NINST).set(I_OFF.subarray(0, NINST));
+  new Int32Array(WX.memory.buffer, WX.tab_ptr(1), 65).set(SQ_START);
+  new Int32Array(WX.memory.buffer, WX.tab_ptr(2), SQ_START[64]).set(SQI.subarray(0, SQ_START[64]));
+  new Int32Array(WX.memory.buffer, WX.tab_ptr(3), SQ_START[64]).set(SQP.subarray(0, SQ_START[64]));
+  WX.set_patterns(NINST, NPHASE, PHASE_SIZE, USE_EXT ? 1 : 0, EXT_OFF);
+  WX.clear_tt(); WON = true;
+}
+function wasmIn() {
+  WX.set_state(nodes, deadline === Infinity ? 0 : deadline, MPC.on ? 1 : 0, MPC.t, MPC.A, MPC.B, MPC.C, MPC.minDepth, TUNE.evalMin, TUNE.searchMin, TUNE.sDepth, TUNE.kE);
+}
+function wasmOut(v) { nodes = WX.get_nodes(); if (WX.get_aborted()) { aborted = true; throw ABORT; } return v; }
+function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
+  if (!WON || evaluate !== evalPattern) return searchJS(pl, ph, ol, oh, depth, alpha, beta, ply, passed);
+  wasmIn(); return wasmOut(WX.search(pl, ph, ol, oh, depth, alpha, beta, ply, passed ? 1 : 0));
+}
+function solve(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
+  if (!WON || evaluate !== evalPattern) return solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed);
+  wasmIn(); return wasmOut(WX.solve_(pl, ph, ol, oh, alpha, beta, empties, ply, passed ? 1 : 0));
 }
 
 // --------------------------------------------------------- root drivers
