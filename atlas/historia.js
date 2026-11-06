@@ -30,7 +30,8 @@
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const $ = id => document.getElementById(id);
-  const phone = () => innerWidth < 820;
+  // (a media query, not innerWidth: reading innerWidth right after a class change forced a whole style + layout pass)
+  const PHONE_Q = matchMedia('(max-width: 819.98px)'), phone = () => PHONE_Q.matches;
   let lang = 'ja', game = null, ctx = null, root = null, on = false, data = null, idx = 0, busy = 0, tok = 0;
   const u = k => (UI[lang] || UI.en)[k] || UI.en[k];
   const rtl = () => lang === 'ar';
@@ -396,7 +397,9 @@
     if (c.k === 'trivia') pg.querySelectorAll('.hs-flip').forEach((el, j) => later(() => el.classList.add('peek'), 1400 + j * 200));
   }
   function mapInit(pg) {
-    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp, zm.dataset.z, 'none'); paintDots(mp);   /* the route framing from the first frame: dots and pins share it — no separate opening zoom */ addEventListener('resize', () => zmSet(mp), { signal: pageAC.signal }); }
+    const zm = pg.querySelector('.zm'); if (zm) { const mp = zm.closest('.hs-map'); zmSet(mp, zm.dataset.z, 'none'); paintDots(mp);   /* the route framing from the first frame: dots and pins share it — no separate opening zoom */ addEventListener('resize', () => { mp._F = null; zmSet(mp); }, { signal: pageAC.signal });
+      // the map's measured box (fitOf) is dropped whenever the svg changes size (a late font, a scrollbar coming or going)
+      if (window.ResizeObserver) { const ro = new ResizeObserver(() => { mp._F = null; }), sig = pageAC.signal; ro.observe(mp.querySelector('svg')); sig.addEventListener('abort', () => ro.disconnect(), { once: true }); } }
   }
   // a page with a board diagram: on a short window the diagram gives up height so the text never ends up under the nav bar
   function fitDg(pg) {
@@ -424,10 +427,10 @@
       // scrolling away — it only stops being pinned when even that would leave less than ~2 cards of text
       const h = Math.round(Math.max(72, Math.min(nat, H * (phone() ? .33 : .4), H - card * 2.1)));
       map.classList.toggle('stick', H - h >= card * 1.6);
-      sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet');
+      sv.style.height = h + 'px'; sv.setAttribute('preserveAspectRatio', h < nat - 1 ? 'xMidYMid slice' : 'xMidYMid meet'); map._F = null;
       zmSet(map);
     };
-    cap(); later(() => { finalPgH = 0; cap(); }, 520); addEventListener('resize', () => { cap(); if (k >= 0) follow(k); }, { signal: pageAC.signal });
+    cap(); later(() => { finalPgH = 0; cap(); }, 520); addEventListener('resize', () => { map._F = null; cap(); if (k >= 0) follow(k); }, { signal: pageAC.signal });
     const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
     let sq = 0; pg.addEventListener('scroll', () => { if (!sq) sq = requestAnimationFrame(() => { sq = 0; stuck(); }); }, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
@@ -452,23 +455,29 @@
         pg.scrollTop = y0 + d * e; gl = k < 1 ? requestAnimationFrame(st) : 0; };
       gl = requestAnimationFrame(st);
     };
-    const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
+    // (all the reading — the scroll target, the map's box — happens before the classes are written: one style / layout pass per
+    // stage instead of one after each write)
+    const set = (n, force) => { k = n; bring(n, force); const V = vis();
+      L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
       const seen = new Set(pins.slice(0, n + 1)), cur = pins[n];
       P.forEach(p => { const i = +p.dataset.p; p.classList.toggle('hot', i === cur); p.classList.toggle('seen', seen.has(i));
-        if (i === cur) { p.classList.remove('ping'); void p.getBoundingClientRect(); p.classList.add('ping'); } });   // a ring pulses out of the stage's pin
+        if (i === cur) ping(p); });   // a ring pulses out of the stage's pin
       map.querySelectorAll('[data-l]').forEach(l => l.classList.toggle('seen', seen.has(+l.dataset.l)));
       RT.forEach((r, j) => { const [a, b] = R[j] || []; r.classList.toggle('on', seen.has(a) && seen.has(b)); });
-      bring(n, force); follow(n); };
+      follow(n, V); };
+    // the ring: the pin's halo stops its idle pulse (.ping) and plays one ring out (Web Animations: restarts without a reflow)
+    const ping = p => { p.classList.add('ping'); const pl = p.querySelector('.pl'); if (!pl || !pl.animate) return;
+      if (pl._ring) pl._ring.cancel();
+      pl._ring = pl.animate([{ transform: 'scale(.8)', opacity: .6 }, { transform: 'scale(3.2)', opacity: 0 }], { duration: 900, easing: 'ease-out' }); };
     // the map follows the stages: when it is cropped (phones, short pages) it pans/zooms so the active pin — and the previous
     // one, when both fit — sit in the visible part; uncropped, the whole route stays in view. A drag or pinch on the map wins
     // until the next stage.
     const zm = map.querySelector('.zm'), zb = (zm.dataset.z.match(/-?[\d.]+/g) || [0, 0, 1]).map(Number);   // [tx, ty, z] of the route framing
     const PM = []; P.forEach(p => { const m = (p.parentNode.getAttribute('transform') || '').match(/-?[\d.]+/g); if (m) PM[+p.dataset.p] = [+m[0], +m[1]]; });
     let view = null;
-    const vis = () => {   // the part of the 360×225 viewBox that is on screen
-      const W = sv.clientWidth, H = sv.clientHeight; if (!W || !H) return { x: 0, y: 0, w: 360, h: 225, crop: false };
-      const sl = sv.getAttribute('preserveAspectRatio') === 'xMidYMid slice', sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
-      const w = Math.min(360, W / sc), h = Math.min(225, H / sc); return { x: (360 - w) / 2, y: (225 - h) / 2, w, h, crop: sl };
+    const vis = () => {   // the part of the 360×225 viewBox that is on screen (from the map's measured box: no layout read of its own)
+      const F = fitOf(map); if (!F) return { x: 0, y: 0, w: 360, h: 225, crop: false };
+      const w = Math.min(360, F.W / F.sc), h = Math.min(225, F.H / F.sc); return { x: (360 - w) / 2, y: (225 - h) / 2, w, h, crop: F.sl };
     };
     // pins, labels and route lines keep their on-screen size whatever the zoom: they are scaled back by (route framing ÷ zoom)
     const LB = [...map.querySelectorAll('[data-l]')], RS = RT.map(r => parseFloat(r.style.strokeWidth) || 0);
@@ -482,8 +491,8 @@
     // every stage frames its own neighbourhood — the active pin with the previous one (and the next, when it is close) filling
     // ~2/3 of the visible box — whatever the box's size: a small panel gets the same close focus as a big one. The whole route
     // shows only as the opening overview, before the first stage.
-    const follow = n => {
-      const V = vis(), cur = pins[n]; if (!PM[cur]) return;
+    const follow = (n, V0) => {
+      const V = V0 || vis(), cur = pins[n]; if (!PM[cur]) return;
       const near = (a, b) => PM[a] && PM[b] && Math.hypot(PM[a][0] - PM[b][0], PM[a][1] - PM[b][1]) < 45;
       let ids = [cur]; if (PM[pins[n - 1]] && pins[n - 1] !== cur) ids.push(pins[n - 1]); if (near(cur, pins[n + 1]) && pins[n + 1] !== cur) ids.push(pins[n + 1]);
       const fitIn = list => { const xs = list.map(i => PM[i][0]), ys = list.map(i => PM[i][1]);
@@ -511,7 +520,7 @@
       map.addEventListener('pointerdown', e => { if (!view) return; pts.set(e.pointerId, [e.clientX, e.clientY]); const a = [...pts.values()];
         st = { v: view.slice(), a: a.map(x => x.slice()), d: a.length > 1 ? Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) : 0 }; });
       map.addEventListener('pointermove', e => { if (!st || !pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
-        const a = [...pts.values()], k2 = 360 / Math.max(1, sv.clientWidth) * (vis().w / 360);
+        const a = [...pts.values()], F = fitOf(map), k2 = 360 / Math.max(1, F ? F.W : sv.clientWidth) * (vis().w / 360);
         if (a.length > 1 && st.d) { const d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]), r = Math.max(.5, Math.min(2.5, d / st.d)), z = st.v[2] * r;
           const V = vis(), cx = V.x + V.w / 2, cy = V.y + V.h / 2; apply([cx - (cx - st.v[0]) * r, cy - (cy - st.v[1]) * r, z], 0); }
         else { const dx = (a[0][0] - st.a[0][0]) * k2, dy = (a[0][1] - st.a[0][1]) * k2; if (Math.abs(dx) > 3 || Math.abs(dy) > 3) apply([st.v[0] + dx, st.v[1] + dy, st.v[2]], 0); } });
@@ -560,11 +569,14 @@
   }
   const landAt = (m, lon, lat) => { const r = Math.floor((m.lat0 - lat) / m.step), c = Math.floor((lon + 180) / m.step); return r >= 0 && r < m.nr && c >= 0 && c < m.nc && m.g[r * m.nc + c] === 1; };
   // where the map's viewBox (360 × 225) sits in the svg box (CSS px, relative to the svg's own corner)
+  // (measured once and kept on the map until its box changes — stepper's cap() and a resize clear map._F — : a stage's move writes
+  // the pins' styles first, and a fresh measurement then forced a whole style + layout pass in the middle of it)
   function fitOf(map) {
+    if (map._F && map.isConnected) return map._F;
     // (layout sizes, not the on-screen rects: right even while the page or the map is still sliding / scaling in)
     const sv = map.querySelector('svg'), rs = sv.getBoundingClientRect(), rm = map.getBoundingClientRect(), W = sv.clientWidth, H = sv.clientHeight;
     if (!W || !H) return null; const ks = rs.width / W || 1; const sl = (sv.getAttribute('preserveAspectRatio') || '').includes('slice'), sc = sl ? Math.max(W / 360, H / 225) : Math.min(W / 360, H / 225);
-    return { W, H, sc, ox: (W - 360 * sc) / 2, oy: (H - 225 * sc) / 2, left: (rs.left - rm.left) / ks, top: (rs.top - rm.top) / ks };
+    return map._F = { W, H, sc, sl, ox: (W - 360 * sc) / 2, oy: (H - 225 * sc) / 2, left: (rs.left - rm.left) / ks, top: (rs.top - rm.top) / ks };
   }
   function drawDots(map, v, F) {
     const M = mask(window.HISTORIA_MAP_FINE, 'f') || mask(window.HISTORIA_MAP, 'c'); if (!M) return null;
@@ -602,9 +614,11 @@
     // the move: the old picture rides along with the map and fades; the new one starts where the old one is and settles
     old.slice(0, -1).forEach(c => c.remove());
     const ease = (tn || zm.style.transition || '').match(/cubic-bezier\([^)]*\)/), e = ease ? ease[0] : 'ease';
-    cv.style.transform = relT(to, last._v, F); cv.style.opacity = '0'; void cv.offsetWidth;
-    cv.style.transition = last.style.transition = `transform ${ms}ms ${e}, opacity ${ms}ms ease`;
-    cv.style.transform = 'none'; cv.style.opacity = '1';
+    // (the new one by Web Animations — its start needs no reflow —, the old one by its transition: it may still be mid-move)
+    if (cv.animate) cv.animate([{ transform: relT(to, last._v, F), opacity: 0, easing: e }, { transform: 'none', opacity: 1 }], { duration: ms });
+    // (a move started before the last one's fade-in ended — rare, quick taps — : that picture leaves from where it is now)
+    const run = last.getAnimations ? last.getAnimations() : []; if (run.length) { run.forEach(a => { try { a.commitStyles(); } catch (x) {} a.cancel(); }); void last.offsetWidth; }
+    last.style.transition = `transform ${ms}ms ${e}, opacity ${ms}ms ease`;
     last.style.transform = relT(last._v, to, F); last.style.opacity = '0';
     setTimeout(() => last.remove(), ms + 60);
   }

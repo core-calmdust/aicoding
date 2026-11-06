@@ -160,7 +160,7 @@
 /* once stuck at the top: square top corners (no card shows through them) and a soft shadow over the list */
 .hs-map.steps.stuck{border-radius:0 0 18px 18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 12px 18px -10px rgba(60,40,10,.45)}
 .hs-map.steps svg{width:100%}
-.hs-map.steps .pin.ping .pl{animation:hsPing .9s ease-out}
+.hs-map.steps .pin.ping .pl{animation:none}   /* (the ring itself is played by historia.js: Web Animations, restarted without a reflow) */
 @keyframes hsPing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(3.2);opacity:0}}
 .hs-map.steps .pin{animation:none!important;opacity:.28;transition:opacity .4s,transform .4s}
 .hs-map.steps .pin.seen{opacity:1}

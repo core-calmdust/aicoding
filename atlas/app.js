@@ -312,7 +312,7 @@
     el.setAttribute('aria-label', t('upd.more'));
     el.onclick = openUpdSheet;
     if (items.length > 1) { let k = 0; updTimer = setInterval(() => {
-      if (!el.isConnected || !el.offsetParent || document.hidden) return;   // (PC / another tab: the line is hidden, nothing to cycle)
+      if (!el.isConnected || !el.offsetParent || document.hidden || document.documentElement.classList.contains('hs-open')) return;   // (PC / another tab / under Historia: the line is hidden, nothing to cycle)
       const its = el.querySelectorAll('.ul-i'); its[k].classList.remove('on'); k = (k + 1) % its.length; its[k].classList.add('on'); }, 4000); }
   }
   function openUpdSheet() {
