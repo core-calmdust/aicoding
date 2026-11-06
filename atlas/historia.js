@@ -448,8 +448,8 @@
     let gl = 0;
     const glide = top => {
       if (gl) cancelAnimationFrame(gl), gl = 0;
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { pg.scrollTop = top; return; }
-      const y0 = pg.scrollTop, d = top - y0, T = Math.min(520, 260 + Math.abs(d) * .35), t0 = performance.now();
+      // (no reduced-motion shortcut: a short glide keeps the reader's place better than a jump — the user asked for it on every phone)
+      const y0 = pg.scrollTop, d = top - y0, T = Math.min(560, 300 + Math.abs(d) * .4), t0 = performance.now();
       const st = now => { if (!pg.isConnected) { gl = 0; return; }
         const k = Math.min(1, (now - t0) / T), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
         pg.scrollTop = y0 + d * e; gl = k < 1 ? requestAnimationFrame(st) : 0; };
