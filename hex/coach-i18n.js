@@ -1,5 +1,5 @@
 'use strict';
-// ヘックス・コーチ: texts in zh / ko / es / fr / pt / de / hi / ar (ja / en are in coach.js)
+// ヘックス・コーチ: texts in zh / ko / es / fr / pt / de / hi / ar / ru / zh-TW / id / tr (ja / en are in coach.js)
 (() => { if (!window.HexCoach) return; HexCoach.merge({
 zh: {
   head: '教练', sw: '教练', swT: '开启／关闭教练（思路讲解）', on: '教练 ON', off: '教练 OFF',
