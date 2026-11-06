@@ -1150,6 +1150,14 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 .usr .ush b{font-size:18px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .usr .ush small{flex:none;font:700 14px var(--round);color:var(--ink2)}
 .usr .usp{font-size:16px;font-weight:700;color:#4a4237;line-height:1.7}
+/* phones: a calmer ticker — smaller NEW tag, picture and type (PC keeps its larger set below) */
+@media (max-width:760px){
+  :root{--ulH:46px}
+  .updline .ul-k{font-size:9px;padding:2px 6px;letter-spacing:.04em;box-shadow:0 1.5px 0 var(--coral2)}
+  .updline .ul-a{width:32px;height:32px;border-radius:9px}.updline .ul-a img{width:29px;height:29px}
+  .updline .ul-i b{font-size:12.5px}.updline .ul-d{font-size:11px}.updline .ul-t{font-size:12px}
+  .updline .ul-s{width:22px}
+}
 /* PC (wider than phones): the same updates ticker, fixed at the very bottom of the window (no tab bar there), a little
    taller with bigger type; on every page — only a board, Historia, an overlay or a sheet hides it. The list opens as a dialog. */
 @media (min-width:761px){
