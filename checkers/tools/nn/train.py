@@ -205,7 +205,7 @@ def main():
     elif a.init and a.init.endswith('.npz'): K = Net.load(a.init)[1]
     else:
         sub = np.random.default_rng(0).choice(N, min(N, 500000), replace=False); best = None
-        for Kc in [50, 60, 70, 80, 90, 100, 120, 140, 170, 200, 250, 300, 400]:
+        for Kc in [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 120, 140, 170, 200, 250, 300, 400]:
             e = float(np.mean((sig(val[sub] / Kc) - (res[sub] + 1) / 2) ** 2))
             if best is None or e < best[0]: best = (e, Kc)
         K = float(best[1])
