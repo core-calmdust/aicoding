@@ -232,6 +232,10 @@
     de: W5('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'die stärkste Stufe (perfektes Spiel)'),
     hi: W5('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'सबसे मज़बूत स्तर (परफ़ेक्ट खेल)'),
     ar: W5('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'أقوى مستوى (لعب مثالي)'),
+    ru: W5('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'самый сильный (идеальная игра)'),
+    'zh-TW': W5('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '最強（完美對弈）'),
+    id: W5('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'yang terkuat (permainan sempurna)'),
+    tr: W5('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'en güçlüsü (kusursuz oyun)'),
   };
   function levelInfo(n, lang) {   // n = 1..8
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;

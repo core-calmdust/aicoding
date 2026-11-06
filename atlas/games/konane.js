@@ -36,6 +36,10 @@
     de: { n: ['Schwarz', 'Weiß'], turn: '{p} am Zug', win: '{p} gewinnt', rm1: 'Nimm einen eigenen Stein aus der Mitte oder einer Ecke ab', rm2: 'Nimm einen eigenen Stein neben dem Loch ab', rmNg: 'Dieser Stein darf nicht abgenommen werden', stuck: 'Dieser Stein kann gerade nicht springen', own: 'Wähle einen deiner Steine', move: 'Dort kann er nicht landen', why: 'Der Gegner konnte nicht springen', jump: '{n} in Folge!', mob: 'Sprünge' },
     hi: { n: ['काला', 'सफ़ेद'], turn: '{p} की बारी', win: '{p} की जीत', rm1: 'बीच या कोने से अपना एक पत्थर हटाओ', rm2: 'खाली खाने के बगल वाला अपना एक पत्थर हटाओ', rmNg: 'वह पत्थर नहीं हटा सकते', stuck: 'वह पत्थर अभी नहीं कूद सकता', own: 'अपना एक पत्थर चुनो', move: 'वहाँ नहीं उतर सकता', why: 'विरोधी कूद नहीं सका', jump: 'लगातार {n}!', mob: 'छलाँगें' },
     ar: { n: ['الأسود', 'الأبيض'], turn: 'دور {p}', win: 'فوز {p}', rm1: 'انزع أحد أحجارك من الوسط أو من زاوية', rm2: 'انزع أحد أحجارك المجاورة للحفرة', rmNg: 'لا يمكن نزع هذا الحجر', stuck: 'هذا الحجر لا يستطيع القفز الآن', own: 'اختر أحد أحجارك', move: 'لا يمكنه الهبوط هناك', why: 'لم يستطع الخصم القفز', jump: '{n} متتالية!', mob: 'قفزات' },
+    ru: { n: ['Чёрные', 'Белые'], turn: 'Ход: {p}', win: '{p} побеждают', rm1: 'Снимите свой камень в центре или в углу', rm2: 'Снимите свой камень рядом с пустой клеткой', rmNg: 'Этот камень снять нельзя', stuck: 'Этот камень сейчас не может прыгнуть', own: 'Выберите свой камень', move: 'Туда приземлиться нельзя', why: 'Соперник не смог прыгнуть', jump: '{n} подряд!', mob: 'прыжков' },
+    'zh-TW': { n: ['黑方', '白方'], turn: '輪到{p}', win: '{p}獲勝', rm1: '從中央或四角取走1顆自己的石子', rm2: '取走空位旁邊的1顆自己的石子', rmNg: '那顆石子不能取走', stuck: '那顆石子現在不能跳', own: '請選擇自己的石子', move: '不能落在那裡', why: '對手無法跳', jump: '連跳{n}次！', mob: '可跳' },
+    id: { n: ['Hitam', 'Putih'], turn: 'Giliran {p}', win: '{p} menang', rm1: 'Angkat salah satu batumu dari tengah atau pojok', rm2: 'Angkat salah satu batumu di sebelah lubang', rmNg: 'Batu itu tidak bisa diangkat', stuck: 'Batu itu tidak bisa melompat sekarang', own: 'Pilih salah satu batumu', move: 'Tidak bisa mendarat di sana', why: 'Lawan tidak bisa melompat', jump: '{n} beruntun!', mob: 'lompatan' },
+    tr: { n: ['Siyah', 'Beyaz'], turn: 'Sıra: {p}', win: '{p} kazandı', rm1: 'Ortadan ya da bir köşeden taşlarından birini al', rm2: 'Boşluğun yanındaki taşlarından birini al', rmNg: 'Bu taş alınamaz', stuck: 'Bu taş şu an atlayamaz', own: 'Taşlarından birini seç', move: 'Oraya inemez', why: 'Rakip atlayamadı', jump: 'Art arda {n}!', mob: 'atlama' },
   };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
@@ -312,6 +316,10 @@
     de: ['Anfänger: sieht nur den nächsten Zug', 'Einsteiger–Mittel: zählt ein paar Züge voraus', 'Fortgeschritten: weiß, wann anhalten und wann weiter', 'Experte: rechnet Endspiele tief durch'],
     hi: ['शुरुआती: सिर्फ़ सामने की चाल देखता है', 'नौसिखिया–मध्यम: कुछ चालें आगे गिनता है', 'उन्नत: जानता है कब रुकना और कब बढ़ना', 'विशेषज्ञ: अंत को गहराई से पढ़ता है'],
     ar: ['مبتدئ: يرى النقلة القريبة فقط', 'مبتدئ–متوسط: يعدّ بضع نقلات', 'متقدم: يعرف متى يتوقف ومتى يتابع', 'خبير: يحسب النهايات بعمق'],
+    ru: ['Начальный: видит только ход перед собой', 'Новичок–средний: считает на несколько ходов', 'Продвинутый: знает, когда остановиться, а когда продолжать', 'Эксперт: глубоко считает эндшпиль'],
+    'zh-TW': ['入門：只看得到眼前的一步', '初級～中級：能算幾步', '高級：知道何時該停、何時該繼續', '最高級：深入計算殘局'],
+    id: ['Pemula: hanya melihat langkah di depannya', 'Dasar–menengah: menghitung beberapa langkah ke depan', 'Mahir: tahu kapan berhenti dan kapan lanjut', 'Ahli: membaca akhir permainan secara dalam'],
+    tr: ['Başlangıç: yalnızca önündeki hamleyi görür', 'Acemi–orta: birkaç hamle ileriyi sayar', 'İleri: ne zaman durup ne zaman devam edeceğini bilir', 'Uzman: oyunsonlarını derin okur'],
   };
   const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // konane RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
@@ -326,6 +334,10 @@
     de: W7('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'selbst für Profis knifflig', 'die stärkste Stufe'),
     hi: W7('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'विशेषज्ञों के लिए भी कठिन', 'सबसे मज़बूत स्तर'),
     ar: W7('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'صعب حتى على الخبراء', 'أقوى مستوى'),
+    ru: W7('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'трудно даже экспертам', 'самый сильный'),
+    'zh-TW': W7('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '連專家都覺得難', '最強'),
+    id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
+    tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   function levelInfo(n, lang) {
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;

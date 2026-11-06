@@ -30,6 +30,10 @@
     de: { mate: 'Matt nach {n} Zügen', resign: 'Aufgabe nach Zug {n}', sen: 'Wiederholung (Sennichite)', perp: 'Dauerschach', decl: 'Eingedrungener König', max: 'Remis nach Zug 512', yes: 'Befördern', no: 'Nicht', check: 'Schach!', ply: 'Zug {n}', book: 'Buch' },
     hi: { mate: '{n} चालों में मात', resign: 'चाल {n} पर हार मानी', sen: 'दोहराव (सेन्निचिते)', perp: 'लगातार शह', decl: 'राजा प्रवेश घोषणा', max: 'चाल 512 पर ड्रॉ', yes: 'प्रमोट', no: 'नहीं', check: 'शह!', ply: 'चाल {n}', book: 'ओपनिंग' },
     ar: { mate: 'كش مات في {n} نقلة', resign: 'استسلام عند النقلة {n}', sen: 'تكرار (سينّيتشيتي)', perp: 'كش دائم', decl: 'إعلان دخول الملك', max: 'تعادل عند النقلة 512', yes: 'رقِّ', no: 'أبقِ', check: 'كش!', ply: 'النقلة {n}', book: 'افتتاح' },
+    ru: { mate: 'Мат на {n}-м ходу', resign: 'Сдача на {n}-м ходу', sen: 'Повторение (сэннитэ)', perp: 'Вечный шах', decl: 'Объявление вошедшего короля', max: 'Ничья на 512-м ходу', yes: 'Превратить', no: 'Оставить', check: 'Шах!', ply: 'Ход {n}', book: 'Дебют' },
+    'zh-TW': { mate: '第{n}手將死', resign: '第{n}手認輸', sen: '千日手', perp: '連續將軍千日手', decl: '入玉宣言', max: '第512手和局', yes: '升變', no: '不升變', check: '將軍！', ply: '第{n}手', book: '定跡' },
+    id: { mate: 'Skakmat di langkah {n}', resign: 'Menyerah di langkah {n}', sen: 'Pengulangan (sennichite)', perp: 'Skak abadi', decl: 'Deklarasi raja masuk', max: 'Seri di langkah 512', yes: 'Promosi', no: 'Tetap', check: 'Skak!', ply: 'Langkah {n}', book: 'Buku' },
+    tr: { mate: '{n}. hamlede mat', resign: '{n}. hamlede terk', sen: 'Tekrar (sennichite)', perp: 'Sürekli şah', decl: 'Giren kral beyanı', max: '512. hamlede berabere', yes: 'Terfi et', no: 'Kalsın', check: 'Şah!', ply: '{n}. hamle', book: 'Kitap' },
   };
 
   // two players on one device (ctx.mode 'pvp'): the sides' names, whose turn, who won
@@ -38,7 +42,7 @@
     zh: { n: ['先手', '后手'], turn: '轮到{p}', win: '{p}胜' }, ko: { n: ['선수', '후수'], turn: '{p} 차례', win: '{p} 승리' },
     es: { n: ['Sente', 'Gote'], turn: 'Turno de {p}', win: 'Gana {p}' }, fr: { n: ['Sente', 'Gote'], turn: 'Au tour de {p}', win: 'Victoire de {p}' },
     pt: { n: ['Sente', 'Gote'], turn: 'Vez de {p}', win: 'Vitória de {p}' }, de: { n: ['Sente', 'Gote'], turn: '{p} am Zug', win: '{p} gewinnt' },
-    hi: { n: ['सेंते', 'गोते'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['سينتي', 'غوتي'], turn: 'دور {p}', win: 'فوز {p}' },
+    hi: { n: ['सेंते', 'गोते'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['سينتي', 'غوتي'], turn: 'دور {p}', win: 'فوز {p}' }, ru: { n: ['Сэнтэ', 'Готэ'], turn: 'Ход: {p}', win: 'Победа: {p}' }, 'zh-TW': { n: ['先手', '後手'], turn: '輪到{p}', win: '{p}獲勝' }, id: { n: ['Sente', 'Gote'], turn: 'Giliran {p}', win: '{p} menang' }, tr: { n: ['Sente', 'Gote'], turn: 'Sıra: {p}', win: '{p} kazandı' },
   };
 
   /* ---------- the full game's engine, weights and book (loaded once, on the first game) ---------- */
