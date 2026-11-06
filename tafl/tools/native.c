@@ -1,5 +1,6 @@
 // Native test / tool driver for tafl/engine.c
 // build: gcc -O3 -march=native -DNATIVE -o /tmp/tafl tools/native.c -lm
+//   eval0 <variant>                          the start position's static score (defenders' view, for D0 in engine.c)
 //   perft <variant> <depth>                 move-generator count from the start
 //   bench <variant> <nodesK>                 time of one search from the start
 //   match <variant> <games> <lvA> <lvB> [randomPlies]   level A vs level B, both sides (A plays attackers in half the games)
@@ -16,13 +17,19 @@
 #include "../engine.c"
 #include <math.h>
 
-static const char *START[3] = {
+static const char *START[6] = {
   // Copenhagen 11x11
   "...aaaaa........a................a....d....aa...ddd...aaa.ddkdd.aaa...ddd...aa....d....a................a........aaaaa...",
   // Brandubh 7x7
   "...a......a......d...aadkdaa...d......a......a...",
   // Tablut 9x9
   "...aaa.......a........d....a...d...aaaddkddaaa...d...a....d........a.......aaa...",
+  // Tawlbwrdd 11x11
+  "....aaa........a.a.........a..........d.....aa..ddd..aaa.addkdda.aaa..ddd..aa.....d..........a.........a.a........aaa....",
+  // Fetlar 11x11
+  "...aaaaa........a................a....d....aa...ddd...aaa.ddkdd.aaa...ddd...aa....d....a................a........aaaaa...",
+  // Ard Ri 7x7
+  "..aaa.....a...a.ddd.aaadkdaaa.ddd.a...a.....aaa..",
 };
 static void startPos(int v, Pos *p) {
   setVariant(v); evalInit(); posInit(p);
@@ -138,7 +145,8 @@ static int cmdTune(int v, int iters, int nk, int pairs, const char *out) {
   Pos p0; startPos(v, &p0);
   int th[NW]; for (int i = 0; i < NW; i++) th[i] = EWV[v][i];
   double T[NW]; for (int i = 0; i < NW; i++) T[i] = th[i];
-  const int tune[NW] = { 0, 1, 1, 1, 1, v == 2 ? 0 : 1, 1, 1, v == 2 ? 0 : 1, 0, 1, 1, 1, 1, 1, 0, v == 2 ? 0 : 1, v == 2 ? 0 : 1 };
+  const int ee = R.escEdge;   // edge escape (Tablut, Tawlbwrdd): the corner terms are unused
+  const int tune[NW] = { 0, 1, 1, 1, 1, ee ? 0 : 1, 1, 1, ee ? 0 : 1, 0, 1, 1, 1, 1, 1, 0, ee ? 0 : 1, ee ? 0 : 1 };
   TUNE_NK = nk;
   double tot = 0; int gamesTot = 0;
   for (int it = 1; it <= iters; it++) {
@@ -307,6 +315,9 @@ int main(int argc, char **argv) {
       fprintf(stderr, "\r%d/%d  A score %.3f (Elo %+.0f)  attackers won %d defenders %d   ", g + 1, G, s2, eloOf(s2), aw, dw);
     }
     fprintf(stderr, "\n"); return 0;
+  }
+  if (!strcmp(cmd, "eval0")) {   // eval0 <variant>: the start position's static score (defenders' view; engine.c D0)
+    Pos p; startPos(v, &p); printf("%d\n", -evaluate(&p)); return 0;
   }
   if (!strcmp(cmd, "perft")) {
     Pos p; startPos(v, &p); printPos(&p);

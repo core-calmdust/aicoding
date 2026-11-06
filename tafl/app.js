@@ -6,7 +6,9 @@
 // ====================================================================== rules (shared with the engine)
 const E = window.TaflEngine, WIN = E.WIN, WINT = E.WINT;
 const P1 = 1, P2 = 2;                 // P1 = the attackers (move first), P2 = the defenders (the king's side)
-const RULE_ORDER = ['copenhagen', 'brandubh', 'tablut'];
+const RULE_ORDER = ['copenhagen', 'fetlar', 'tawlbwrdd', 'tablut', 'brandubh', 'ardri'];
+// the ゲーム tab groups them by the board: 11x11 / the smaller boards (9x9, 7x7)
+const RULE_GROUPS = [{ id: 'big', rules: ['copenhagen', 'fetlar', 'tawlbwrdd'] }, { id: 'small', rules: ['tablut', 'brandubh', 'ardri'] }];
 const mFrom = E.mFrom, mTo = E.mTo;
 let gv = 'copenhagen', N = 11;
 let HB = null;                        // PC header bar (shared/headerbar.js)
@@ -109,7 +111,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2';
+const ENGINE_URL = 'engine.js?v=nn2tw';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -818,7 +820,7 @@ $('#btnResume').onclick = () => { if (rgame || settings.mode === 'online' || les
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
 $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame(); };
-const VTAG = { copenhagen: 'Copenhagen', brandubh: 'Brandubh', tablut: 'Tablut' };
+const VTAG = { copenhagen: 'Copenhagen', brandubh: 'Brandubh', tablut: 'Tablut', tawlbwrdd: 'Tawlbwrdd', fetlar: 'Fetlar', ardri: 'ArdRi' };
 function recordText() {
   const pos = E.Pos.from(startSpec, gv), out = [];
   moves.forEach((m, i) => { out.push((i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + mvIn(pos, m)); pos.play(m); });
@@ -991,8 +993,21 @@ const TOUR_PAGES = [
   tourRead('edge', pic(TS(['a6', 'c9', 'b7', 'b8'], ['a7', 'a8'], 'f6', P1), { marks: { [sq('a7')]: 'x', [sq('a8')]: 'x' }, arrows: [[sq('c9'), sq('a9')]] })),
   tourRead('fort', pic(TS(['c7', 'c3', 'd8', 'e2'], ['a5', 'b4', 'b3', 'a2'], 'a4', P1), { esc: [sq('a4'), sq('a3')] })),
   tourRead('ends', pic(TS(['d6', 'c5', 'e5', 'b4', 'f4', 'c3', 'e3', 'd2'], ['d5', 'c4', 'e4', 'd3'], 'd4', P2))),
+  tourRead('compare', () => ruleTable()),
   tourRead('variants', () => `<div class="tour-pic" style="gap:10px;display:flex;justify-content:center">${miniSVG({ v: 'brandubh', b: E.START.brandubh, side: 1 }, { cls: '' })}${miniSVG({ v: 'tablut', b: E.START.tablut, side: 1 }, { cls: '' })}</div>`),
+  // Tawlbwrdd (Welsh, 11x11): the king escapes to any edge square, and is captured by two (try both)
+  tourPage('tawlbwrdd', TS(['e3', 'b7', 'j7', 'h9'], ['g6', 'd5'], 'e7', P2, 'tawlbwrdd'), { marks: () => ({ [sq('e11', 'tawlbwrdd')]: 'esc' }), check: (m, a) => a.res === P2 ? 'ok' : t('tr.tawlbwrdd.ng') }),
+  tourPage('tawlking', TS(['b7', 'h7', 'g4', 'j10'], ['h2', 'e10'], 'c7', P1, 'tawlbwrdd'), { check: (m, a) => a.res === P1 ? 'ok' : t('tr.tawlking.ng') }),
+  tourRead('fetlar', pic({ v: 'fetlar', b: E.START.fetlar, side: 1 }, { marks: { 0: 'ring', 10: 'ring', 110: 'ring', 120: 'ring' } })),
+  tourPage('ardri', TS(['a5', 'b6', 'b4', 'c2', 'f6'], ['e1', 'f3'], 'b5', P1, 'ardri'), { check: (m, a) => a.res === P1 ? 'ok' : t('tr.ardri.ng') }),
 ];
+// all the rule sets side by side (the 「ルールの比較」 page)
+function ruleTable() {
+  const yes = '<span class="tf-yes">●</span>', no = '<span class="tf-no">—</span>';
+  const row = r => { const R = E.RULES[r], b = E.START[r], na = [...b].filter(x => x === 'a').length, nd = [...b].filter(x => x === 'd').length;
+    return `<tr${r === gv ? ' class="cur"' : ''}><th>${ruleIcon(r)}<span>${t('rule.' + r)}</span></th><td>${R.n}×${R.n}</td><td>${na} / ${nd}+1</td><td>${t(R.escEdge ? 'rule.tb.edge' : 'rule.tb.corner')}</td><td>${t(R.king4 ? 'rule.tb.k4' : 'rule.tb.k2')}</td><td>${R.shield ? yes : no}</td></tr>`; };
+  return `<div class="tf-rtable"><table><thead><tr><th></th><th>${t('rule.tb.board')}</th><th>${t('rule.tb.men')}</th><th>${t('rule.tb.escape')}</th><th>${t('rule.tb.king')}</th><th>${t('rule.tb.extra')}</th></tr></thead><tbody>${RULE_ORDER.map(row).join('')}</tbody></table></div>`;
+}
 let TOUR = null;
 function tourFor() {
   if (TOUR) return TOUR;
@@ -1019,9 +1034,16 @@ function ruleIcon(r) {
   for (let i = 0; i < n * n; i++) { const x = 2 + (i % n) * u, y = 2 + Math.floor(i / n) * u; if (F[i] & 16) s += `<rect x="${x}" y="${y}" width="${u}" height="${u}" fill="#8a5f22"/>`; if (b[i] !== '.') s += `<circle cx="${x + u / 2}" cy="${y + u / 2}" r="${u * .36}" fill="${b[i] === 'a' ? '#26282d' : '#f4ead2'}" ${b[i] === 'k' ? 'stroke="#c9a961" stroke-width="1"' : ''}/>`; }
   return s + '</svg>';
 }
+// the rule at a glance (chips on the card): where the king escapes, how he is captured, Copenhagen's extra endings
+function ruleChips(r) {
+  const R = E.RULES[r], c = [t(R.escEdge ? 'rule.chip.edge' : 'rule.chip.corner'), t(R.king4 ? 'rule.chip.k4' : 'rule.chip.k2')];
+  if (R.shield) c.push(t('rule.chip.extra'));
+  return c.map(x => `<span class="tf-chip">${x}</span>`).join('');
+}
 function renderRuleCards() {
-  // ゲーム tab (shared/ngtabs.js): art, name, how it differs
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleIcon(r)}</span><b>${t('rule.' + r)}</b><p>${r === 'copenhagen' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  // ゲーム tab (shared/ngtabs.js): grouped by the board; each card: art, name, the rule at a glance, how it differs
+  const card = r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleIcon(r)}</span><span class="tf-head"><b>${t('rule.' + r)}</b><span class="tf-chips">${ruleChips(r)}</span></span><p>${r === 'copenhagen' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`;
+  $('#ruleCards').innerHTML = RULE_GROUPS.map(g => `<div class="tf-rgh"><b>${t('rule.grp.' + g.id)}</b><small>${t('rule.grp.' + g.id + '.d')}</small></div><div class="ngt-gcards tf-rg">${g.rules.map(card).join('')}</div>`).join('');
 }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
@@ -1064,8 +1086,9 @@ $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-// the ルール button on each card (shared/ngtabs.js): Copenhagen from the start, Brandubh / Tablut at the variants page
-$('#ruleCards').ngtRules = r => openRules(r, r === 'copenhagen' ? 0 : Math.max(0, TOUR_PAGES.findIndex(p => p.id === 'variants')));
+// the ルール button on each card (shared/ngtabs.js): Copenhagen from the start, the others at their own page
+const RULE_PAGE = { brandubh: 'variants', tablut: 'variants', tawlbwrdd: 'tawlbwrdd', fetlar: 'fetlar', ardri: 'ardri' };
+$('#ruleCards').ngtRules = r => openRules(r, r === 'copenhagen' ? 0 : Math.max(0, TOUR_PAGES.findIndex(p => p.id === RULE_PAGE[r])));
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -2089,7 +2112,8 @@ function parseGameText(v) {
   const h = v.match(/#(.*)$/);
   if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const vr = RULE_ORDER.includes(q.get('v')) ? q.get('v') : 'copenhagen'; const list = decMoves(q.get('k') || '', null, vr); if (!list) return null; return { list, v: vr, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }
   let vr = 'copenhagen';
-  const tag = v.match(/\[\s*(copenhagen|brandubh|tablut)[^\]]*\]/i) || v.match(/\[Variant\s+"(copenhagen|brandubh|tablut)/i); if (tag) vr = tag[1].toLowerCase();
+  const RX = 'copenhagen|brandubh|tablut|tawlbwrdd|fetlar|ardri|ard ?ri', tag = v.match(new RegExp('\\[\\s*(' + RX + ')[^\\]]*\\]', 'i')) || v.match(new RegExp('\\[Variant\\s+"(' + RX + ')', 'i'));
+  if (tag) vr = tag[1].toLowerCase().replace(/ /g, '');
   v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ').replace(/\d+\.(\.\.)?/g, ' ');
   const toks = v.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
@@ -2129,7 +2153,7 @@ function loadFromHash() {
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
 function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#k=' + encMoves(moves) + (gv !== 'copenhagen' ? '&v=' + gv : '') + (cur < moves.length ? '&n=' + cur : ''); }
 // 共有: algebraic record (a1 at the bottom left, "d1-d4" moves, "x" captures, K = king; as on aagenielsen.dk / OpenTafl), own text, URL, diagram
-const TF_NAME = { copenhagen: 'Copenhagen Hnefatafl 11x11', brandubh: 'Brandubh 7x7', tablut: 'Tablut 9x9' };
+const TF_NAME = { copenhagen: 'Copenhagen Hnefatafl 11x11', brandubh: 'Brandubh 7x7', tablut: 'Tablut 9x9', tawlbwrdd: 'Tawlbwrdd 11x11', fetlar: 'Fetlar Hnefatafl 11x11', ardri: 'Ard Ri 7x7' };
 function tfRecord() {
   const st = statusAt(moves.length), res = st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '1/2-1/2') : '*', pos = E.Pos.from(startSpec, gv), tk = [];
   moves.forEach((m, i) => { if (i % 2 === 0) tk.push((i / 2 + 1) + '.'); tk.push(mvIn(pos, m)); pos.play(m); });

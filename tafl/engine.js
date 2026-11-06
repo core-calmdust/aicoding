@@ -1,29 +1,36 @@
 // Hnefatafl — rules (for the page) and the AI worker (WebAssembly search from engine.c).
 // Works as a Web Worker (postMessage API), as a plain <script> (window.TaflEngine) and as a Node module.
 //
-// Rule sets: copenhagen (11x11, the main one), brandubh (7x7), tablut (9x9). See engine.c for the rules in full.
+// Rule sets: copenhagen (11x11, the main one), brandubh (7x7), tablut (9x9), tawlbwrdd (11x11), fetlar (11x11), ardri (7x7).
+// See engine.c for the rules in full.
 // Squares: i = r * N + c, r = 0 the top row; names a1.. with files a, b, … from the left and rank 1 at the bottom.
 // Sides: P1 = the attackers (move first), P2 = the defenders (the king's side). Pieces: 1 attacker, 2 defender, 3 king.
 // Moves are plain numbers: m = from + 256 * to. Captures follow from the position (pos.capsOf(m)).
-// Game end: the king escapes (a corner; any edge in Tablut) / an unbreakable edge fort (Copenhagen) → defenders win;
+// Game end: the king escapes (a corner; any edge in Tablut / Tawlbwrdd) / an unbreakable edge fort (Copenhagen) → defenders win;
 // the king is captured / every defender is encircled (Copenhagen) → attackers win; a side that cannot move loses;
 // the third occurrence of a position → the defenders lose; 200 plies without a capture → draw.
 (function () {
 'use strict';
 const P1 = 1, P2 = 2;
 const WIN = 30000, WINT = 29000, DRAW_PLIES = 200;
-const VARIANTS = ['copenhagen', 'brandubh', 'tablut'];
-const VID = { copenhagen: 0, brandubh: 1, tablut: 2 };
+const VARIANTS = ['copenhagen', 'brandubh', 'tablut', 'tawlbwrdd', 'fetlar', 'ardri'];
+const VID = { copenhagen: 0, brandubh: 1, tablut: 2, tawlbwrdd: 3, fetlar: 4, ardri: 5 };
 // the start positions ('.' empty, 'a' attacker, 'd' defender, 'k' king), row by row from the top
 const START = {
   copenhagen: '...aaaaa........a................a....d....aa...ddd...aaa.ddkdd.aaa...ddd...aa....d....a................a........aaaaa...',
   brandubh: '...a......a......d...aadkdaa...d......a......a...',
   tablut: '...aaa.......a........d....a...d...aaaddkddaaa...d...a....d........a.......aaa...',
+  tawlbwrdd: '....aaa........a.a.........a..........d.....aa..ddd..aaa.addkdda.aaa..ddd..aa.....d..........a.........a.a........aaa....',
+  fetlar: '...aaaaa........a................a....d....aa...ddd...aaa.ddkdd.aaa...ddd...aa....d....a................a........aaaaa...',
+  ardri: '..aaa.....a...a.ddd.aaadkdaaa.ddd.a...a.....aaa..',
 };
 const RULES = {
   copenhagen: { n: 11, escEdge: false, king4: true, shield: true, fort: true, encircle: true },
   brandubh: { n: 7, escEdge: false, king4: false, shield: false, fort: false, encircle: false },
   tablut: { n: 9, escEdge: true, king4: false, shield: false, fort: false, encircle: false },
+  tawlbwrdd: { n: 11, escEdge: true, king4: false, shield: false, fort: false, encircle: false },
+  fetlar: { n: 11, escEdge: false, king4: true, shield: false, fort: false, encircle: false },
+  ardri: { n: 7, escEdge: false, king4: true, shield: false, fort: false, encircle: false },
 };
 // per rule set geometry: flags per square (1 edge, 2 corner, 4 throne, 8 escape, 16 restricted)
 const GEO = {};
@@ -365,7 +372,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261106c1';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261106tw1';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
