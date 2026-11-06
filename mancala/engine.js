@@ -1,4 +1,4 @@
-// Luxe Mancala engine — rules (Easy / Basic / Kalah / Sunka) + alpha-beta search with iterative deepening,
+// Luxe Mancala engine — rules (Easy / Basic / Kalah / Sunka / Oware) + alpha-beta search with iterative deepening,
 // transposition table and exact endgame solving. Works as a Web Worker, a page script and a Node module.
 (function (root) {
 'use strict';
@@ -10,8 +10,13 @@ const RULES = {
   basic: { id: 'basic', cap: 1, relay: false },   // capture the opposite seeds only (the last seed stays)
   kalah: { id: 'kalah', cap: 2, relay: false },   // capture the opposite seeds and the last seed
   sunka: { id: 'sunka', cap: 2, relay: true },    // Sungka: relay sowing + Kalah capture
+  // Oware (Abapa): the stores only hold captured seeds (never sown into); 12+ seeds skip the emptied pit;
+  // the last seed making an opponent pit 2 or 3 captures it and the run of 2s/3s just before it;
+  // a grand slam (taking every opposing seed) is legal but captures nothing; you must feed an empty opponent;
+  // more than half the seeds wins, a 50/50 split is a draw
+  oware: { id: 'oware', cap: 0, relay: false, oware: true },
 };
-const RULE_IDS = ['easy', 'basic', 'kalah', 'sunka'];
+const RULE_IDS = ['easy', 'basic', 'kalah', 'sunka', 'oware'];
 const MAX_RELAY = 120;   // safety valve for endless relay sowing (never reached in practice)
 
 function initial(seeds) { const b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = seeds; b[i + 7] = seeds; } return b; }
@@ -19,12 +24,23 @@ const storeOf = s => s ? 13 : 6;
 const baseOf = s => s ? 7 : 0;
 const opposite = i => 12 - i;
 function sideSum(b, s) { const o = s ? 7 : 0; return b[o] + b[o + 1] + b[o + 2] + b[o + 3] + b[o + 4] + b[o + 5]; }
-function legal(b, side) { const o = baseOf(side), r = []; for (let k = 0; k < 6; k++) if (b[o + k] > 0) r.push(k); return r; }
+const ruleOf = r => typeof r === 'string' ? (RULES[r] || RULES.kalah) : (r || RULES.kalah);
+// Oware: when the opponent's row is empty, only moves that reach it are allowed (6 - k seeds from pit k)
+const feeds = (b, side, k) => b[baseOf(side) + k] >= 6 - k;
+function canFeed(b, side) { for (let k = 0; k < 6; k++) if (feeds(b, side, k)) return true; return false; }
+function legal(b, side, rules) {
+  const o = baseOf(side), r = [], must = rules && ruleOf(rules).oware && sideSum(b, 1 - side) === 0;
+  for (let k = 0; k < 6; k++) if (b[o + k] > 0 && (!must || feeds(b, side, k))) r.push(k);
+  return r;
+}
+const isLegal = (b, side, k, rules) => k >= 0 && k <= 5 && legal(b, side, rules).includes(k);
 
 // Plays pit k for `side` on board b (in place). Optional `rec` collects animation events.
 // Returns a result object (re-used; copy what you need): extra, over, land, cap (seeds captured), relays
-const RES = { extra: false, over: false, land: -1, cap: 0, relays: 0, capFrom: -1, swept: false };
+const RES = { extra: false, over: false, land: -1, cap: 0, relays: 0, capFrom: -1, swept: false, caps: 0, slam: false, fed: false };
 function play(b, side, k, R, rec) {
+  if (R.oware) return playOware(b, side, k, rec);
+  RES.caps = 0; RES.slam = false; RES.fed = false;
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   let idx = (side ? 7 : 0) + k, n = b[idx];
   RES.extra = false; RES.over = false; RES.cap = 0; RES.relays = 0; RES.capFrom = -1; RES.swept = false;
@@ -51,7 +67,7 @@ function play(b, side, k, R, rec) {
     if (b[o] > 0) {
       const got = b[o] + (R.cap === 2 ? 1 : 0);
       if (rec) rec.push({ t: 'cap', from: o, n: b[o], own: R.cap === 2 ? idx : -1, to: ms });
-      RES.cap = b[o]; RES.capFrom = o;
+      RES.cap = b[o]; RES.capFrom = o; RES.caps = 1;
       b[ms] += got; b[o] = 0; if (R.cap === 2) b[idx] = 0;
     }
   }
@@ -64,23 +80,69 @@ function play(b, side, k, R, rec) {
   }
   return RES;
 }
+// Oware sowing / capture / end of the game (see RULES.oware). Events: pick, drop, cap (one per captured pit,
+// own -1), slam (a grand slam: the seeds stay), sweep (the game ends because the empty side cannot be fed:
+// the side that still has seeds keeps them)
+function playOware(b, side, k, rec) {
+  const ms = side ? 13 : 6, os = side ? 6 : 13, ob = side ? 0 : 7, org = (side ? 7 : 0) + k;
+  let idx = org, n = b[idx];
+  RES.extra = false; RES.over = false; RES.cap = 0; RES.relays = 0; RES.capFrom = -1; RES.swept = false; RES.caps = 0; RES.slam = false; RES.fed = false;
+  b[idx] = 0;
+  if (rec) rec.push({ t: 'pick', at: idx, n });
+  while (n > 0) {
+    idx = idx === 13 ? 0 : idx + 1;
+    if (idx === 6 || idx === 13 || idx === org) continue;
+    b[idx]++; n--;
+    if (rec) rec.push({ t: 'drop', at: idx });
+  }
+  RES.land = idx;
+  if (idx >= ob && idx <= ob + 5 && (b[idx] === 2 || b[idx] === 3)) {
+    let j = idx, got = 0;
+    while (j >= ob && (b[j] === 2 || b[j] === 3)) { got += b[j]; j--; }
+    if (got === sideSum(b, 1 - side)) { RES.slam = true; if (rec) rec.push({ t: 'slam', at: idx, from: j + 1 }); }
+    else {
+      for (let i = idx; i > j; i--) {
+        if (rec) rec.push({ t: 'cap', from: i, n: b[i], own: -1, to: ms, chain: idx - i });
+        b[ms] += b[i]; b[i] = 0; RES.caps++;
+      }
+      RES.cap = got; RES.capFrom = idx;
+    }
+  }
+  let tot = b[6] + b[13]; const s0 = sideSum(b, 0), s1 = sideSum(b, 1); tot += s0 + s1;
+  if (b[ms] * 2 > tot || b[os] * 2 > tot || (b[ms] * 2 === tot && b[os] * 2 === tot)) RES.over = true;
+  else if (sideSum(b, side) === 0 && !canFeed(b, 1 - side)) {
+    // the opponent cannot feed this empty row: the game ends and they keep the seeds on their side
+    RES.over = true; RES.swept = true; RES.fed = true;
+    if (rec) rec.push({ t: 'sweep', n0: s0, n1: s1 });
+    b[6] += s0; b[13] += s1;
+    for (let i = 0; i < 6; i++) { b[i] = 0; b[i + 7] = 0; }
+  }
+  return RES;
+}
+// Oware: a position repeated for the third time ends an endless cycle; each side keeps the seeds on its row
+function cycleEnd(b) { b[6] += sideSum(b, 0); b[13] += sideSum(b, 1); for (let i = 0; i < 6; i++) { b[i] = 0; b[i + 7] = 0; } }
+// game over in the start position (set-up positions): nothing to play
+function stuck(b, side, rules) { return sideSum(b, 0) === 0 || sideSum(b, 1) === 0 ? (!ruleOf(rules).oware || legal(b, side, rules).length === 0) : false; }
 // convenience: play on a copy and describe the move for the UI
 function trace(b, side, k, rules) {
   const R = RULES[rules] || RULES.kalah, nb = Int8Array.from(b), ev = [];
   const r = play(nb, side, k, R, ev);
-  return { board: nb, events: ev, extra: r.extra, over: r.over, land: r.land, cap: r.cap, capFrom: r.capFrom, relays: r.relays, swept: r.swept, next: r.over ? -1 : r.extra ? side : 1 - side };
+  return { board: nb, events: ev, extra: r.extra, over: r.over, land: r.land, cap: r.cap, capFrom: r.capFrom, caps: r.caps, slam: r.slam, fed: r.fed, relays: r.relays, swept: r.swept, next: r.over ? -1 : r.extra ? side : 1 - side };
 }
 // replay a whole game: returns positions[] ({b, side, over, info of the move that led here})
 function replay(start, side0, moves, rules) {
   const R = RULES[rules] || RULES.kalah;
-  let b = Int8Array.from(start), side = side0, over = sideSum(b, 0) === 0 || sideSum(b, 1) === 0;
+  let b = Int8Array.from(start), side = side0, over = stuck(b, side, R);
   const out = [{ b: Int8Array.from(b), side, over, mv: null }];
+  const seen = R.oware ? new Map() : null, key = () => side + ':' + b.join(',');
+  if (seen) seen.set(key(), 1);
   for (let i = 0; i < moves.length; i++) {
     const k = moves[i];
-    if (over || k < 0 || k > 5 || b[baseOf(side) + k] === 0) return { positions: out, bad: i };
+    if (over || !isLegal(b, side, k, R)) return { positions: out, bad: i };
     const r = play(b, side, k, R);
-    const mv = { k, side, extra: r.extra, cap: r.cap, over: r.over, land: r.land, relays: r.relays };
+    const mv = { k, side, extra: r.extra, cap: r.cap, caps: r.caps, slam: r.slam, fed: r.fed, over: r.over, land: r.land, relays: r.relays };
     over = r.over; side = over ? side : r.extra ? side : 1 - side;
+    if (seen && !over) { const kk = key(), c = (seen.get(kk) || 0) + 1; seen.set(kk, c); if (c >= 3) { cycleEnd(b); over = true; mv.over = true; mv.cycle = true; } }
     out.push({ b: Int8Array.from(b), side, over, mv });
   }
   return { positions: out, bad: -1 };
@@ -90,7 +152,7 @@ function turnMax(b, side, rules) {
   const R = RULES[rules] || RULES.kalah, ms = storeOf(side), start = b[ms];
   let best = -1, lines = [];
   const rec = (bb, line) => {
-    for (const k of legal(bb, side)) {
+    for (const k of legal(bb, side, R)) {
       const nb = Int8Array.from(bb), r = play(nb, side, k, R);
       const ln = line.concat(k);
       if (r.extra && !r.over) rec(nb, ln);
@@ -107,8 +169,9 @@ function turnMax(b, side, rules) {
 // gain obtainable this turn starting with pit k
 function turnMaxFirst(b, side, rules) {
   const R = RULES[rules] || RULES.kalah, ms = storeOf(side), out = [];
+  const ok = legal(b, side, R);
   for (let k = 0; k < 6; k++) {
-    if (!b[baseOf(side) + k]) { out.push(null); continue; }
+    if (!ok.includes(k)) { out.push(null); continue; }
     const nb = Int8Array.from(b), r = play(nb, side, k, R);
     if (r.extra && !r.over) { const t = turnMax(nb, side, rules); out.push(nb[ms] - b[ms] + t.gain); }
     else out.push(nb[ms] - b[ms]);
@@ -119,7 +182,39 @@ function turnMaxFirst(b, side, rules) {
 // ---------------------------------------------------------------------------- search
 const INF = 1000000, SEED = 100;
 const W = { side: 22, myExtra: 55, oppExtra: 30, myCap: 55, oppCap: 32 };
+// Oware: captured seeds, plus a little for the seeds kept on your own row (mobility and the endgame), the
+// opponent's pits of 1-2 seeds you could turn into 2-3 (targets) and the best capture available right now
+const WO = { side: 6, target: 14, myCap: 45, oppCap: 25 };
+function owareCap(b, side, k) {   // seeds captured by playing pit k (no side effects)
+  const base = side ? 7 : 0, ob = side ? 0 : 7, org = base + k, n = b[org];
+  if (!n) return 0;
+  // where the last seed lands: 11 usable pits per lap once the origin is skipped
+  const lap = n > 11 ? n - 11 * Math.floor((n - 1) / 11) : n, laps = n > 11 ? Math.floor((n - 1) / 11) : 0;
+  let land = org, s = lap; while (s > 0) { land = land === 13 ? 0 : land + 1; if (land === 6 || land === 13 || land === org) continue; s--; }
+  if (land < ob || land > ob + 5) return 0;
+  // count on each opponent pit after the sow: +laps everywhere, +1 for those passed in the last lap
+  let got = 0, j = land;
+  const add = i => { const d = (i - org + 14) % 14, dl = (land - org + 14) % 14; return laps + (d <= dl ? 1 : 0); };
+  while (j >= ob) { const v = b[j] + add(j); if (v !== 2 && v !== 3) break; got += v; j--; }
+  return got;
+}
+function evalOware(b, side) {
+  const ms = side ? 13 : 6, os = side ? 6 : 13, mb = side ? 7 : 0, ob = side ? 0 : 7;
+  let my = 0, op = 0, myT = 0, opT = 0, myCap = 0, opCap = 0;
+  for (let k = 0; k < 6; k++) {
+    const m = b[mb + k], o = b[ob + k];
+    my += m; op += o;
+    if (o === 1 || o === 2) myT++;
+    if (m === 1 || m === 2) opT++;
+    const a = owareCap(b, side, k); if (a > myCap) myCap = a;
+    const c = owareCap(b, 1 - side, k); if (c > opCap) opCap = c;
+  }
+  if (myCap >= op) myCap = 0;   // a grand slam takes nothing
+  if (opCap >= my) opCap = 0;
+  return (b[ms] - b[os]) * SEED + WO.side * (my - op) + WO.target * (myT - opT) + WO.myCap * myCap - WO.oppCap * opCap;
+}
 function evaluate(b, side, R) {
+  if (R.oware) return evalOware(b, side);
   const ms = side ? 13 : 6, os = side ? 6 : 13, mb = side ? 7 : 0, ob = side ? 0 : 7;
   let mySeeds = 0, oppSeeds = 0, myExtra = 0, oppExtra = 0, myCap = 0, oppCap = 0;
   for (let k = 0; k < 6; k++) {
@@ -142,7 +237,7 @@ let rs = 0x9e3779b9;
 function rnd() { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; return rs; }
 const ZN = 128, Z1 = new Uint32Array(14 * ZN), Z2 = new Uint32Array(14 * ZN);
 for (let i = 0; i < Z1.length; i++) { Z1[i] = rnd(); Z2[i] = rnd(); }
-const ZS1 = rnd(), ZS2 = rnd(), ZR1 = [rnd(), rnd(), rnd(), rnd()], ZR2 = [rnd(), rnd(), rnd(), rnd()];
+const ZS1 = rnd(), ZS2 = rnd(), ZR1 = [rnd(), rnd(), rnd(), rnd(), rnd()], ZR2 = [rnd(), rnd(), rnd(), rnd(), rnd()];
 
 const TT_BITS = 21, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 let ttKey = null, ttVal, ttInfo;   // info: depth (8 bits) | flag (2 bits) << 8 | move+1 (3 bits) << 10
@@ -187,8 +282,9 @@ function search(b, side, depth, alpha, beta, ply) {
   // children
   const kids = boards[ply], base = side ? 7 : 0;
   const order = [], key = [], nside = [];
+  const must = Rcur.oware && sideSum(b, 1 - side) === 0;
   for (let k = 0; k < 6; k++) {
-    if (!b[base + k]) continue;
+    if (!b[base + k] || (must && b[base + k] < 6 - k)) continue;
     const c = kids[k]; c.set(b);
     const r = play(c, side, k, Rcur);
     let s;
@@ -197,6 +293,7 @@ function search(b, side, depth, alpha, beta, ply) {
     if (k === ttMove) s += 1e7;
     order.push(k); key[k] = s;
   }
+  if (!order.length) return (b[ms] - b[os]) * SEED;   // (never in real play: a stuck side ends the game)
   order.sort((x, y) => key[y] - key[x]);
   const a0 = alpha;
   let best = -INF, bestK = order[0];
@@ -225,7 +322,7 @@ function setup(b, rules) {
 // value of each legal root move (full window), from the mover's view, in 1/100 seeds
 function rootValues(b, side, depth) {
   const out = [];
-  for (const k of legal(b, side)) {
+  for (const k of legal(b, side, Rcur)) {
     const c = new Int8Array(14); c.set(b);
     const r = play(c, side, k, Rcur);
     const ms = side ? 13 : 6, os = side ? 6 : 13;
@@ -241,7 +338,7 @@ function rootValues(b, side, depth) {
 // principal-variation root search: best move only (faster than full root values)
 function rootBest(b, side, depth, prevBest) {
   const ms = side ? 13 : 6, os = side ? 6 : 13;
-  let moves = legal(b, side);
+  let moves = legal(b, side, Rcur);
   if (prevBest >= 0 && moves.includes(prevBest)) moves = [prevBest].concat(moves.filter(x => x !== prevBest));
   let alpha = -INF, best = -INF, bestK = moves[0], anyCut = false;
   for (const k of moves) {
@@ -270,7 +367,7 @@ function think(b, side, rules, opt) {
   b = Int8Array.from(b); setup(b, rules);
   const ms = opt.ms || 0, maxD = opt.depth || 60;
   nodes = 0; aborted = false; deadline = ms ? now() + ms : Infinity;
-  const moves = legal(b, side);
+  const moves = legal(b, side, Rcur);
   if (moves.length === 1 && !opt.full) { // still give a value for the evaluation display
     let res = { move: moves[0], value: 0, exact: false, depth: 0 };
     try { deadline = now() + Math.min(ms || 300, 300); const r = deepen(b, side, Math.min(maxD, 30)); if (r) res = { move: moves[0], value: r.v / SEED, exact: r.exact, depth: r.d }; } catch (e) { if (!(e instanceof Abort)) throw e; }
@@ -304,7 +401,7 @@ function analyze(b, side, rules, ms, maxDepth) {
       if (l.every(x => x.exact)) break;
     }
   } catch (e) { if (!(e instanceof Abort)) throw e; }
-  if (!list) { list = legal(b, side).map(m => ({ m, v: 0, exact: false })); }
+  if (!list) { list = legal(b, side, Rcur).map(m => ({ m, v: 0, exact: false })); }
   else list = list.map(x => ({ m: x.m, v: x.v / SEED, exact: x.exact }));
   return { list, depth, exact: list.every(x => x.exact), nodes };
 }
@@ -363,7 +460,7 @@ const LEVELS = [null,
 let seedRand = Math.random;
 function chooseMove(b, side, rules, level) {
   const L = LEVELS[Math.max(1, Math.min(10, level | 0))];
-  const moves = legal(b, side);
+  const moves = legal(b, side, rules);
   if (moves.length === 0) return { move: -1 };
   if (L.kind === 'random') return { move: moves[Math.floor(seedRand() * moves.length)] };
   if (L.kind === 'greedy') {
@@ -384,8 +481,8 @@ function chooseMove(b, side, rules, level) {
   return think(b, side, rules, { ms: L.ms });
 }
 
-const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
-  evaluate, think, analyze, solve, chooseMove, LEVELS, W, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, isLegal, canFeed, stuck, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
+  evaluate, think, analyze, solve, chooseMove, LEVELS, W, WO, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;

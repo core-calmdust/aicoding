@@ -350,7 +350,9 @@ ar: {
 },
 };
 function mcT(k, v) {
-  let s = (MC_TEXT[typeof LANG !== 'undefined' ? LANG : 'ja'] || MC_TEXT.en)[k]; if (s === undefined) s = MC_TEXT.en[k];
+  const lg = typeof LANG !== 'undefined' ? LANG : 'ja';
+  let s = window.MancalaOware && MancalaOware.on() ? MancalaOware.rv(k, lg) : undefined;   // Oware wording (i18n-oware.js)
+  if (s === undefined) s = (MC_TEXT[lg] || MC_TEXT.en)[k]; if (s === undefined) s = MC_TEXT.en[k];
   return v ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] !== undefined ? v[x] : '') : s;
 }
 const mcEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -364,7 +366,7 @@ function mcOutcome(v, exact) {
 // the biggest single-move capture `side` could make on board b (the gain includes the capturing seed under Kalah / Sunka)
 function mcBestCap(b, side, rules) {
   let best = { n: 0, by: -1, from: -1, g: 0 };
-  for (const k of E.legal(b, side)) {
+  for (const k of E.legal(b, side, rules)) {
     const tr = E.trace(b, side, k, rules);
     if (tr.cap > best.n) best = { n: tr.cap, by: k, from: tr.capFrom, g: tr.cap + (E.RULES[rules].cap === 2 ? 1 : 0) };
   }
@@ -373,7 +375,8 @@ function mcBestCap(b, side, rules) {
 // pits of `side` that reach the store exactly (extra turn) — not counted under Sunka, where relays decide
 function mcExtras(b, side, rules) {
   const out = [];
-  for (const k of E.legal(b, side)) { const tr = E.trace(b, side, k, rules); if (tr.extra && !tr.over) out.push(k); }
+  if (rules === 'oware') return out;
+  for (const k of E.legal(b, side, rules)) { const tr = E.trace(b, side, k, rules); if (tr.extra && !tr.over) out.push(k); }
   return out;
 }
 // everything the commentary needs about move k of `side` on board b
@@ -385,6 +388,7 @@ function mcFeatures(b, side, k, rules) {
     over: tr.over, sweep: sweep ? [sweep.n0, sweep.n1] : null, give, gain: tr.board[E.storeOf(side)] - b[E.storeOf(side)] };
   F.mySide = E.sideSum(tr.board, side); F.oppSide = E.sideSum(tr.board, opp);
   F.hoard = tr.board[base + 5];
+  if (rules === 'oware') { F.hoard = 0; for (let q = 0; q < 6; q++) F.hoard = Math.max(F.hoard, tr.board[base + q]); }
   if (!tr.over && !F.extra) {
     F.threatBefore = mcBestCap(b, opp, rules);
     F.threatAfter = mcBestCap(tr.board, opp, rules);
@@ -420,8 +424,10 @@ function mcMove(i) {
     const tot = P[e + 1].b[E.storeOf(side)] - pos.b[E.storeOf(side)];
     if (e > i && tot > 1) why.push(mcT('extraTurn', { n: tot }));
   }
-  if (F.cap) { why.push(mcT('cap', { n: F.cap, g: F.capG })); if (rules === 'basic') why.push(mcT('capKeep')); }
+  if (F.cap) { why.push(mcT('cap', { n: F.cap, g: F.capG })); if (rules === 'basic') why.push(mcT('capKeep')); if (rules === 'oware' && F.tr.caps >= 2) why.push(mcT('capChain', { k: F.tr.caps })); }
+  if (F.tr.slam) why.push(mcT('slam'));
   if (F.over && F.sweep) why.push(mcT('end', { p0: mcEsc(shortName(0)), p1: mcEsc(shortName(1)), a: F.sweep[0], b: F.sweep[1] }));
+  if (P[i + 1] && P[i + 1].mv && P[i + 1].mv.cycle) why.push(mcT('cycle'));
   if (!F.over && !F.extra) {
     const T0 = F.threatBefore, T1 = F.threatAfter;
     if (T0.n >= 2 && T1.n < T0.n && !(T1.from === T0.from && T1.n >= T0.n)) why.push(mcT('defend', { y: mcPit(T0.from % 7), n: T0.n }));
@@ -446,7 +452,7 @@ function mcMove(i) {
     }
     if (!replied && F.oppTurn.g >= 5 && (j.q === 'bad' || j.q === 'dubious') && !(T1.n >= 2 && F.oppTurn.how === 'hCap')) why.push(mcT('oppGain', { n: F.oppTurn.g, how: F.oppTurn.how.split('+').map(x => mcT(x)).join('・') || '—' }));
     if (F.myCapNext.n >= 3 && T1.n < F.myCapNext.n) why.push(mcT('capThreat', { x: mcPit(F.myCapNext.by), n: F.myCapNext.n }));
-    if (rules !== 'sunka' && F.hoard >= 10) why.push(mcT('hoard', { n: F.hoard }));
+    if (rules !== 'sunka' && F.hoard >= (rules === 'oware' ? 12 : 10)) why.push(mcT('hoard', { n: F.hoard }));
     if (F.oppSide <= 3 && F.mySide >= 6) why.push(mcT('starve', { n: F.oppSide, m: F.mySide }));
     else if (F.mySide <= 3 && F.oppSide >= 6) why.push(mcT('low', { n: F.mySide, m: F.oppSide }));
   }
@@ -473,7 +479,7 @@ function mcMove(i) {
     else if (!B.extra && !F.extra && B.mySide - F.mySide >= 3 && B.give < F.give) why.push(mcT('bSide', { b: mcPit(j.best), a: F.mySide, b2: B.mySide }));
     else why.push(mcT('bDeep', { b: mcPit(j.best) }));
   }
-  if (!okMove && !tip) tip = rules === 'sunka' ? 'tRelay' : rules === 'easy' ? 'tEasy' : 'tGen';
+  if (!okMove && !tip) tip = rules === 'sunka' ? 'tRelay' : rules === 'easy' ? 'tEasy' : rules === 'oware' ? 'tOware' : 'tGen';
   h += out.map(x => `<p>${x}</p>`).join('');
   if (why.length) h += `<ul class="cr-list">${why.map(x => `<li>${x}</li>`).join('')}</ul>`;
   if (tip) h += `<p class="cr-tip">💡 ${mcT(tip)}</p>`;
