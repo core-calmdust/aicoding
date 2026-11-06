@@ -9,6 +9,9 @@
 //   node tools/i18n-langs.js apply <file> <tr.json>      → tr.json = { "<id>": { "ru": …, "zh-TW": …, "id": …, "tr": … } }
 //                                                          inserts the 4 entries right after `ar` (same quote/key style, same indentation)
 //   node tools/i18n-langs.js coverage [dir…]             → per folder: strings that still lack each new language
+//   node tools/i18n-langs.js missing <dir> [out.json]     → language dictionaries (I18N.zh = {…}, { ja: {…}, en: {…} }) of a folder:
+//                                                          for each new language, the en keys it lacks + their en text and the files involved
+//                                                          (add them by hand, e.g. I18N.ru = {…}; next to the I18N.ar assignment)
 //
 // Missing languages fall back to English in every game's t() and in the shared parts (T[lang] || T.en), so a
 // partly translated file never breaks; but a game only gets the 4 languages in its language menu when coverage is 0.
@@ -172,10 +175,38 @@ function coverage(dirs) {
   console.log(`\n${rows.filter(r => r[2] === 0).length}/${rows.length} folders complete; ${sum} strings still need ru.`);
 }
 
+// language dictionaries (I18N.zh = {…} / { ja: {…}, en: {…}, … }) of one folder: the en keys each new language lacks, with the en text
+function missingDicts(dir, out) {
+  const root = path.join(__dirname, '..'), D = new Map(), EN = new Map(), WHERE = new Map();
+  for (const f of walk(path.isAbsolute(dir) ? dir : path.join(root, dir), []).filter(f => !/[\\/]tools[\\/]/.test(f))) {
+    const src = fs.readFileSync(f, 'utf8'), objs = dicts(src, f, D), byStart = new Map(objs.map(o => [o.start, o]));
+    const rel = path.relative(root, f), note = (ns, l) => { if (!WHERE.has(ns)) WHERE.set(ns, {}); (WHERE.get(ns)[l] = WHERE.get(ns)[l] || new Set()).add(rel); };
+    const enOf = (ns, o) => { if (!EN.has(ns)) EN.set(ns, {}); for (const e of o.entries) EN.get(ns)[e.key] = src.slice(e.valStart, e.valEnd); };
+    for (const o of objs) {
+      const pre = src.slice(Math.max(0, o.start - 80), o.start);
+      for (const re of ASSIGN) { const m = pre.match(re); if (m) { const l = m.slice(2).find(Boolean), ns = 'var:' + m[1]; note(ns, l); if (l === 'en') enOf(ns, o); break; } }
+      const by = {}; for (const e of o.entries) by[e.key] = e;
+      if (!by.en || !byStart.has(by.en.valStart) || !(by.ja || by.zh || by.ar)) continue;
+      const nm = pre.match(/([A-Za-z_$][\w$]*)\s*=\s*$/), ns = nm ? 'var:' + nm[1] : 'obj:' + rel + ':' + lineOf(src, o.start);
+      if (!D.has(ns)) D.set(ns, new Map());
+      for (const [l, e] of Object.entries(by)) { const v = byStart.get(e.valStart); if (!v) continue; const m = D.get(ns); if (!m.has(l)) m.set(l, new Set()); v.entries.forEach(x => m.get(l).add(x.key)); note(ns, l); if (l === 'en') enOf(ns, v); }
+    }
+  }
+  const res = [];
+  for (const [ns, m] of D) {
+    const en = m.get('en'); if (!en || !m.has('ar') && !m.has('hi')) continue;
+    for (const l of NEW) { const have = m.get(l), keys = {}; for (const k of en) if (!have || !have.has(k)) { const t = (EN.get(ns) || {})[k]; const v = t === undefined ? undefined : literal(t); keys[k] = v === undefined ? { source: t } : v; } if (Object.keys(keys).length) res.push({ ns, lang: l, files: Object.fromEntries(Object.entries(WHERE.get(ns) || {}).map(([a, b]) => [a, [...b]])), keys }); }
+  }
+  const json = JSON.stringify(res, null, 1);
+  if (out) fs.writeFileSync(out, json); else process.stdout.write(json + '\n');
+  console.error(`${dir}: ${res.length} dictionaries × language with missing keys (${res.reduce((a, r) => a + Object.keys(r.keys).length, 0)} keys)`);
+}
+
 const [cmd, ...args] = process.argv.slice(2);
 if (require.main !== module) { /* used as a library */ }
 else if (cmd === 'extract') extract(args[0], args[1]);
 else if (cmd === 'apply') apply(args[0], args[1]);
 else if (cmd === 'coverage') coverage(args);
-else { console.log('usage: i18n-langs.js extract <file> [out.json] | apply <file> <tr.json> | coverage [dir…]'); process.exit(1); }
+else if (cmd === 'missing') missingDicts(args[0], args[1]);
+else { console.log('usage: i18n-langs.js extract <file> [out.json] | apply <file> <tr.json> | coverage [dir…] | missing <dir> [out.json]'); process.exit(1); }
 module.exports = { scan, units, NEW };
