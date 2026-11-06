@@ -139,7 +139,7 @@
      board + the fixed 360px info column, laid out from the 3D board's VISIBLE frame (its projected meshes), not the DOM box:
      the board as large as fits between the portal bar and the online dock, the column's top / bottom = the frame's top / bottom,
      GAP px between them, the whole group centred — the same in every game, at every window size (resize, full screen, zoom) ===== */
-  let pcActive = false, sideFitFn = null;
+  let pcActive = false, pcReview = false, sideFitFn = null;   // (pcReview: pcFit's fitReview places the column — sideFit keeps out)
   (function pcFit() {
     const P = o.pc, THREE = window.THREE; if (!P || !THREE || !T3.project) return;
     const MQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
@@ -149,12 +149,14 @@
     let K = null, model = null, busy = false, on = false, reT = 0;
     // refits asked for by remeasure() alone (no outside change in between) are capped: on some boards (shogi, morris, checkers) the
     // measured frame and the fit kept nudging each other by a fraction of a pixel — a refit (and redraw) every ~2 s, forever
-    let refits = 0; const ext = f => function () { refits = 0; return f.apply(this, arguments); };
+    // (and a frame that only goes back to one already used since the last outside change — two values taking turns — is not refitted:
+    // the board and the column were seen shaking by a few px after the online dock closed)
+    let refits = 0, usedK = []; const ext = f => function () { refits = 0; usedK = []; return f.apply(this, arguments); };
     // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
     const show0 = T3.show;
-    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; remeasure(); } return g; };
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; usedK = []; remeasure(); } return g; };
     const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
-    T3.align = function () { const r = align0.apply(this, arguments); refits = 0; remeasure(); return r; };
+    T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; remeasure(); return r; };
     if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
     const grp = () => { let g = boardDom; while (g && g.parentElement !== app) g = g.parentElement; return g; };
     const visible = x => { for (let e = x; e; e = e.parent) if (!e.visible) return false; return true; };
@@ -196,7 +198,10 @@
         const same = m && prev && ['l', 'r', 't', 'b'].every(s => Math.abs(m[s] - prev[s]) < .0004);
         if (!same && k < 12) return setTimeout(() => step(k + 1, m), 90);
         if (!m) return k < 40 ? setTimeout(() => step(k + 1, null), 250) : undefined;
-        if (!K || ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - K[s]) > .0008)) { if (refits >= 4) return; refits++; K = m; fit(); }
+        // (a refit that follows a refit needs a clearer change: the frame measured right after a fit can differ by a few tenths of
+        // a px each time — the board then grew and shrank by 2–4 px for a couple of seconds)
+        const tol = refits ? .004 : .0008, differs = a => ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - a[s]) > tol);
+        if (!K || differs(K)) { if (refits >= 4 || usedK.some(a => !differs(a))) return; refits++; if (K) usedK.push(K); K = m; fit(); }
       }, 40);
       setTimeout(() => step(0, null), 60);
     }
@@ -212,7 +217,7 @@
       const g = grp(), rb = rvBox(); if (!g || !rb) return;
       busy = true;
       try {
-        rvOn = true; unplace(); setVar(null);
+        rvOn = true; pcReview = true; unplace(); setVar(null);
         const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
         const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
         const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
@@ -231,6 +236,10 @@
           if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
           side.style.setProperty('height', sh + 'px', 'important'); side.style.setProperty('max-height', 'none', 'important'); side.style.setProperty('min-height', '0px', 'important');
           { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }
+          // the box: from the 3D frame's left edge (it reaches past the flat board the page's grid is sized for) to the column's right
+          // edge — not narrower than the board above it
+          rbEl = rb; const rr = rb.getBoundingClientRect(), ml = frame().l - rr.left;
+          if (ml < -.5) rb.style.setProperty('margin-left', ml + 'px', 'important');
           break;
         }
       } finally { busy = false; }
@@ -247,14 +256,15 @@
       });
       return E;
     };
-    const unplace = () => { const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
+    let rbEl = null;
+    const unplace = () => { if (rbEl) { rbEl.style.removeProperty('margin-left'); rbEl = null; } const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
     let fitKey = '';
     function fit() {
       if (busy) return;
       if (de.classList.contains('dock-anim')) { setTimeout(later, 150); return; }   // the dock's move first (headerbar.js), then the layout
       const key = innerWidth + 'x' + innerHeight; if (key !== fitKey) { fitKey = key; setTimeout(later, 350); setTimeout(later, 1200); }   // a new window size: once more when everything has settled
       if (wantRv()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); } fitReview(); return; }
-      if (rvOn) { rvOn = false; setVar(null); unplace(); }
+      if (rvOn) { rvOn = false; pcReview = false; setVar(null); unplace(); }
       if (!want()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); if (sideFitFn) sideFitFn(); } return; }
       const g = grp(); if (!g) return;
       busy = true;
@@ -324,7 +334,9 @@
     if (!side || !o.outer) return;
     const fit = sideFitFn = () => {
       if (document.documentElement.classList.contains('dock-anim')) return;   // the online dock's FLIP (shared/headerbar.js) moves it; fitted again at its end
-      if (pcActive) return;   // PC: pcFit below places the column (and sizes the board)
+      if (pcActive || pcReview) return;   // PC: pcFit below places the column (and sizes the board) — also in the review layout (fitReview):
+      // two fits writing the column's top / height in turn made it jump and (in the online dock's review mode, where the CSS
+      // height is 0 until a fit sets it) vanish and reappear, forever — each change restarted the dock's move watcher
       side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
       const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
       if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
