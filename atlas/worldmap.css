@@ -126,6 +126,7 @@
   .amrow b{font-size:13px}
   .amrow small{display:none}
   .aminfo{order:4;--amH:236px;scroll-margin-bottom:calc(80px + env(safe-area-inset-bottom));padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr auto auto;grid-template-areas:"art top" "art facts" "story story" "jour jour" "acts acts";gap:4px 10px;overflow:hidden}
+  .amwrap>.aminfo{height:auto;min-height:var(--amH)}   /* phones: never squeeze the icon / facts rows; only the story grows when 「もっと読む」 opens (2026-11-06) */
   .aminfo .amtop{grid-area:top;display:block;min-width:0}
   .aminfo .amtop>.amart{display:none}
   .aminfo .amtop b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
