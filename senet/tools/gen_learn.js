@@ -3,7 +3,7 @@
 // 局面は AI 同士（Lv.14）の対局から集め、手番＝糸巻き（side 0）に正規化。最善手は深さ3の評価、次善との勝率差で易しい順に並べる。
 const fs = require('fs');
 const E = require('../engine.js');
-const { L, UI, MSG } = require('./learn_text.js');
+const { L, O, UI, MSG } = require('./learn_text.js');
 const { CATS, TH, RAMP } = require('./learn_themes.js');
 const GAMES = +process.argv[2] || 2500;
 const rng = E.mulberry32(20261107);
@@ -114,7 +114,7 @@ function stepOf(th) {
   if (th === 'prob') {
     const s0 = { rule: 'std', pos: [[7, 12, 13, 22, 31], [5, 10, 18, 24, 31]], turn: 0 };
     step.diagram = { s: s0, marks: [Object.assign(sq(7), { type: 'danger', text: '38%' })] };
-    const Q = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
+    const Q = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => O([ja, en, zh, ko, es, fr, pt, de, hi, ar]);   // (+ ru / zh-TW / id / tr from tm14.json)
     step.ramp = [{ k: 'explain', s: s0, n: null, seq: [], marks: [Object.assign(sq(7), { type: 'danger', text: '38%' }), { type: 'arrow', from: sq(5), to: sq(7), color: '#ff6b5b' }], t: RAMP.et, body: T.body }];
     step.problems = [
       { kind: 'choice', q: Q('2 が出る確率は？', 'The chance of a 2?', '掷出2的概率？', '2가 나올 확률은?', '¿Probabilidad de un 2?', 'Probabilité d’un 2 ?', 'Chance de um 2?', 'Chance auf eine 2?', '2 आने की संभावना?', 'احتمال الرمية 2؟'), opts: ['4/16', '6/16', '8/16', '1/16'], ans: 1, why: ['c.roll', { n: 2, m: 6 }] },

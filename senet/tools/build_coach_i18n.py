@@ -8,3 +8,5 @@ out = ['// senet/coach-i18n.js — coach texts (zh ko es fr pt de hi ar); ja/en 
 for l in ['zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar']:
     d = {k: ur[l][k] for k in GEN}; d.update(O[l]); out.append(l + ': ' + json.dumps(d, ensure_ascii=False) + ',')
 out.append('});'); open(os.path.join(R, 'senet/coach-i18n.js'), 'w').write('\n'.join(out) + '\n')
+# + ru / zh-TW / id / tr through the translation memory (tools/tm14.json)
+subprocess.check_call(['node', 'senet/tools/apply14.js', 'senet/coach-i18n.js', 'senet/coach.js#\nen: {'], cwd=R)
