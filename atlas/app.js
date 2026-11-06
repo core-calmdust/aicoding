@@ -1361,11 +1361,14 @@
     const all = ART.items.filter(it => it.kind === dKind);
     const list = (dSort === 'own' ? all.filter(ownd) : all).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
-    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>` : list.map((it, i) => {
-      const head = dSort !== 'own' && (i === 0 || list[i - 1].rar !== it.rar) ? sec(it.rar) : '';
-      const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return head + `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`;
-    }).join('');
+    const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
+      return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
+    // rarity sorts: one rounded box per rarity, tinted in its colour, its heading (badge · owned / all) on the box's top edge
+    const groups = []; if (dSort !== 'own') list.forEach(it => { const g = groups[groups.length - 1]; if (g && g.r === it.rar) g.items.push(it); else groups.push({ r: it.rar, items: [it] }); });
+    $('dItems').classList.toggle('grouped', dSort !== 'own' && !!list.length);
+    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
+      : dSort === 'own' ? list.map(cell).join('')
+      : groups.map(g => `<section class="dgrp r${g.r}" aria-label="${ART.RAR[g.r]}">${sec(g.r)}<div class="dgg">${g.items.map(cell).join('')}</div></section>`).join('');
     // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
     $('dItems').querySelectorAll('.dic').forEach(c => { const id = c.dataset.id;
       if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));
