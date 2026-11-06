@@ -55,12 +55,21 @@
     new MutationObserver(sync).observe(rot, { attributes: true, attributeFilter: ['class', 'title'] }); sync();
     bar.insertBefore(rb, home || null);
   })(0);
+  // phones held sideways (landtabs.js): the portal bar in the top row carries the game's name, as the 2D page's title
+  (function gameName() {
+    const span = document.querySelector('.atlas-top .atlas-brand span'), h = document.querySelector('.brand h1, .brand-l h1');
+    if (!span || !h || span.querySelector('.mcgn')) return;
+    const em = document.createElement('em'); em.className = 'mcgn'; span.appendChild(em);
+    const paint = () => { const c = h.cloneNode(true); c.querySelectorAll('small').forEach(x => x.remove()); const v = c.textContent.trim(); if (em.textContent !== v) em.textContent = v; };
+    paint(); new MutationObserver(paint).observe(h, { childList: true, characterData: true, subtree: true });
+  })();
   // phones sideways: the game's menu (対局 · 待った …) goes into the portal bar, between the title and the icons
   (function menuInBar() {
     const bar = document.querySelector('.atlas-top'), ctr = document.querySelector('.controls'); if (!bar || !ctr) return;
     const home = ctr.parentElement, next = ctr.nextSibling, sp = bar.querySelector('.sp');
     const mq = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px)');
     const apply = () => {
+      if (window.LandTabs) return;   // (the page's landscape layout — mancala/landtabs.js — has the menu in its own top row)
       if (mq.matches) { if (ctr.parentElement !== bar) bar.insertBefore(ctr, sp || bar.children[1]); de.classList.add('mc-barmenu'); }
       else { if (ctr.parentElement === bar) home.insertBefore(ctr, next && next.parentNode === home ? next : null); de.classList.remove('mc-barmenu'); }
     };

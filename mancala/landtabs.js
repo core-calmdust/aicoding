@@ -38,7 +38,7 @@ const REST = {
 };
 const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
 const $ = s => document.querySelector(s);
-let rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
+let barMo = null, rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
 try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
 const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
 const tt = (k, d) => (typeof t === 'function' ? t(k) : d);
@@ -155,25 +155,34 @@ function enter() {
   if (!rail) build();
   homes = boxes().map(([k, el]) => ({ el, parent: el.parentNode, next: el.nextSibling, k }));
   const app = $('.app');
+  // the 3D skin's portal bar: into the top row (put back on leave; as ur/landtabs.js)
+  const bar = document.documentElement.classList.contains('atlas-skin') ? document.querySelector('body > .atlas-top') : null;
+  if (bar) homes.push({ el: bar, parent: bar.parentNode, next: bar.nextSibling, k: 'bar', keep: true });
   app.appendChild(rail); app.appendChild(panel); app.appendChild(nbox);
-  for (const h of homes) { h.el.dataset.ltc = h.k; panel.appendChild(h.el); }
-  document.body.classList.add('lt-on');
+  if (bar) app.insertBefore(bar, app.firstChild);
+  else if (document.documentElement.classList.contains('atlas-skin') && !barMo) {   // (the portal bar comes later: the skin loads after the page)
+    barMo = new MutationObserver(() => { const b = document.querySelector('body > .atlas-top'); if (!b) return; barMo.disconnect(); barMo = null; if (!on) return;
+      homes.push({ el: b, parent: b.parentNode, next: b.nextSibling, k: 'bar', keep: true }); $('.app').insertBefore(b, $('.app').firstChild); refit(); });
+    barMo.observe(document.body, { childList: true });
+  }
+  for (const h of homes) { if (h.keep) continue; h.el.dataset.ltc = h.k; panel.appendChild(h.el); }
+  document.body.classList.add('lt-on'); document.documentElement.classList.add('lt-land');
   if (!saved && coachOk()) cur = 'coach';
   setOpen(false); refit();
 }
 function leave() {
   if (!on) return; on = false; open = false;
-  for (const h of homes.slice().reverse()) { delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
+  for (const h of homes.slice().reverse()) { if (!h.keep) delete h.el.dataset.ltc; if (h.parent) h.parent.insertBefore(h.el, h.next && h.next.parentNode === h.parent ? h.next : null); else h.el.remove(); }
   homes = [];
   rail.remove(); panel.remove(); nbox.remove();
-  document.body.classList.remove('lt-on', 'lt-open', 'lt-nav', 'lt-ckrest'); delete document.body.dataset.lt;
+  document.body.classList.remove('lt-on', 'lt-open', 'lt-nav', 'lt-ckrest'); delete document.body.dataset.lt; document.documentElement.classList.remove('lt-land');
   refit();
 }
 function refit() {
   try { fixW = 0; fixSize(); } catch (e) {}
   setTimeout(() => { try { layout(); } catch (e) {} fit(); }, 30);
 }
-function check() { if (MQ.matches && !document.documentElement.classList.contains('atlas-skin')) enter(); else leave(); }
+function check() { if (MQ.matches) enter(); else leave(); }   // (the 3D portal skin too: its portal bar joins the top row)
 // a tap on the board closes the drawer (and does not play a pit)
 document.addEventListener('click', e => {
   if (on && recOn() && e.target.closest && e.target.closest('.frame') && window.GameRecord) { e.stopPropagation(); e.preventDefault(); GameRecord.close(); document.body.classList.remove('lt-rec'); sync(); return; }
