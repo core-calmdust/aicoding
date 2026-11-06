@@ -702,10 +702,10 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
 /* ---------- dress ---------- */
 /* the player card (app.js renderCard): the dress-up preview doubling as My Page.
-   PC: character + worn items on the left (on the background), name · Lv · coins · stat tiles · login week · Google on the right;
-   sticky beside the items. Phones: one compact block — the login week and Google open from the 🔥 tile. */
-.dress{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:1099px){.dress{grid-template-columns:minmax(0,500px) minmax(0,1fr)}}
+   PC: a tall narrow column (340px) sticky beside the items: character + worn items on its background · name / coins / Lv ·
+   2×2 stat tiles · login week · Google. Phones: one compact block — the login week and Google open from the 🔥 tile. */
+.dress{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1099px){.dress{grid-template-columns:320px minmax(0,1fr)}}
 @media (max-width:760px){.dress{grid-template-columns:1fr}}
 .dprev{position:sticky;top:90px;display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
 .nc-l{grid-area:l;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px 12px 14px;overflow:hidden}
@@ -746,29 +746,42 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .dprev .lgh small{display:block;font-size:11.5px}.dprev .lgh b{font-size:13.5px}
 .dprev .lgd .d i{width:21px;height:21px;font-size:10.5px}.dprev .lgd .d.big i{height:21px;font-size:16px}.dprev .lgd .d small{font-size:10.5px}
 .dprev .acc{margin-top:0;font-size:12px}
-@media (max-width:1099px){ .dprev{grid-template-columns:180px minmax(0,1fr)} .nc-side,.nc-tiles{padding-inline:14px} .nc-wk{padding:0 14px 14px} }
+@media (min-width:761px){
+  /* one column, short enough for an 800px-tall window; scrolls inside only on a very short one */
+  .dprev{display:flex;flex-direction:column;gap:11px;max-height:calc(100vh - 160px);overflow-y:auto;scrollbar-width:thin}
+  /* the character with the worn items beside it, on the background */
+  .nc-l{flex:none;flex-direction:row;align-items:center;gap:10px;padding:12px}
+  .nc-l .poke{flex:none}
+  .dprev .nc-l .dname{flex:1;min-width:0;padding:6px 9px;gap:2px}
+  .dprev .nc-l .dw b{font-size:13px}
+  .nc-side{padding:0 16px;gap:7px}.nc-tiles{padding:0 16px}.nc-wk{padding:0 16px 16px}
+  .nc-top input{font-size:19px}
+  .nc-lv small{display:none}
+  .nct{padding:6px 9px;column-gap:8px}.nct .ic{font-size:20px}.nct b{font-size:18px}
+}
 @media (max-width:760px){
   /* phones: character | name · coins · Lv · worn items, then four tiles in a row; the 🔥 tile opens the login week + Google */
-  .dprev{position:relative;top:auto;grid-template-columns:112px minmax(0,1fr);grid-template-areas:"l side" "tiles tiles" "wk wk";grid-template-rows:auto;row-gap:0;border-radius:22px}
-  .nc-l{padding:8px 4px;border-end-end-radius:18px}
-  .nc-side{padding:9px 11px 4px;gap:5px}
+  .dprev{display:grid;position:relative;top:auto;grid-template-columns:112px minmax(0,1fr);grid-template-areas:"l side" "tiles tiles" "wk wk";grid-template-rows:auto;row-gap:0;border-radius:22px}
+  .nc-l{padding:12px 4px;border-end-end-radius:18px}
+  .nc-side{padding:13px 13px 9px 12px;gap:8px}
   .nc-top{gap:8px}.nc-top input{font-size:16px}
   .nc-coin{font-size:13.5px;padding:2px 8px 2px 3px}.nc-coin i{width:19px;height:19px;font-size:10px}
   .nc-lv b{font-size:12.5px}.nc-lvb i{height:6px}.nc-lv small{display:none}
-  .dprev .dname{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;gap:1px}
-  .dprev .dw{flex-direction:row;align-items:center;gap:5px;padding:1px 5px;margin:0 -5px;font-size:12px}
+  .nc-lv{margin-top:-1px}
+  .dprev .dname{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;gap:3px;margin-top:2px}
+  .dprev .dw{flex-direction:row;align-items:center;gap:6px;padding:2px 6px;margin:0 -6px;font-size:12px;line-height:1.45}
   .dprev .dwh{flex:none;gap:4px}.dprev .dw .dwk{font-size:10.5px;min-width:3.6em}.dprev .dw .rar{font-size:9px;padding:0 4px}
-  .dprev .dw b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nc-tiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:8px 10px 10px}
-  .nct{grid-template-columns:auto auto;justify-content:center;column-gap:3px;padding:4px 3px 3px;border-radius:12px;text-align:center}
+  .dprev .dw b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nc-tiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:12px 12px 12px}
+  .nct{grid-template-columns:auto auto;justify-content:center;column-gap:3px;row-gap:3px;padding:8px 3px 7px;border-radius:13px;text-align:center}
   .nct .ic{grid-row:auto;font-size:13px}
   .nct b{font-size:14px}.nct b small{font-size:9.5px}
   .nct em{grid-column:1/-1;font-size:10.5px;text-align:center;white-space:normal;line-height:1.2;overflow-wrap:anywhere}   /* long labels (ar, de …) wrap instead of being cut */
   .nct .nc-ar{top:2px;inset-inline-end:4px;font-size:12px}
   /* the 🔥 tile's ⌄ is a little pull tab on its bottom edge (it opens the login week + Google) */
   .nct .nc-v{top:auto;bottom:-9px;inset-inline-end:auto;left:50%;margin-left:-11px;width:22px;height:15px;padding:1px 4px;background:#fff;border:2px solid var(--line);border-radius:8px;box-sizing:border-box}
-  .nc-tiles{padding-bottom:14px}
-  .nc-wk{display:none;padding:0 10px 10px;gap:8px}.dprev.wk .nc-wk{display:flex}
+  .nc-tiles{padding-bottom:17px}
+  .nc-wk{display:none;padding:0 12px 13px;gap:10px}.dprev.wk .nc-wk{display:flex}
   .dprev .lgh small{font-size:10.5px}.dprev .lgh b{font-size:12.5px}
   .dprev .lgd .d i{width:19px;height:19px;font-size:9.5px}.dprev .lgd .d.big i{height:19px;font-size:15px}.dprev .lgd .d small{font-size:9.5px}
 }
@@ -1502,6 +1515,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=14">
 <script src="worldmap.js?v=17"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=182"></script>
+<script src="app.js?v=183"></script>
 </body>
 </html>
