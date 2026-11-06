@@ -14,7 +14,7 @@ const SHORT = {
   zh: ['教练', '形势·棋谱', '规则\n课程', '战绩', '在线'], ko: ['코치', '형세·기보', '규칙\n레슨', '전적', '온라인'],
   es: ['Guía', 'Eval. · Jugadas', 'Reglas\nLecciones', 'Historial', 'En línea'], fr: ['Coach', 'Éval. · Coups', 'Règles\nLeçons', 'Bilan', 'En ligne'],
   pt: ['Treino', 'Aval. · Lances', 'Regras\nLições', 'Histórico', 'Online'], de: ['Coach', 'Bew. · Züge', 'Regeln\nLektionen', 'Bilanz', 'Online'],
-  hi: ['कोच', 'स्थिति · चालें', 'नियम\nपाठ', 'रिकॉर्ड', 'ऑनलाइन'], ar: ['المدرب', 'التقييم · النقلات', 'القواعد\nالدروس', 'السجل', 'أونلاين'],
+  hi: ['कोच', 'स्थिति · चालें', 'नियम\nपाठ', 'रिकॉर्ड', 'ऑनलाइन'], ar: ['المدرب', 'التقييم · النقلات', 'القواعد\nالدروس', 'السجل', 'أونلاين'], ru: ['Тренер', 'Оценка · Ходы', 'Правила\nУроки', 'Статистика', 'Онлайн'], 'zh-TW': ['教練', '形勢·棋譜', '規則\n課程', '戰績', '線上'], id: ['Pelatih', 'Evaluasi · Langkah', 'Aturan\nPelajaran', 'Rekor', 'Online'], tr: ['Koç', 'Durum · Hamleler', 'Kurallar\nDersler', 'Kayıt', 'Çevrimiçi'],
 };
 // the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated, lessons…) its box says so (the same
 // words as shared/infotabs.js on portrait phones)
@@ -28,7 +28,11 @@ const REST = {
   pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
   de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
   hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
-  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.',
+  ru: 'Тренер помогает, когда вы играете с ИИ или с другом на этом устройстве. Во время игры ИИ против ИИ, онлайн-партий, уроков и т. п. он отдыхает. После партии в этой вкладке появится разбор.',
+  'zh-TW': '教練在與 AI 對局或雙人對戰時可以使用。AI 對 AI、線上對局、課程等期間會暫停。終局後可在此分頁查看複盤。',
+  id: 'Pelatih aktif saat kamu melawan AI atau teman di perangkat ini. Pelatih istirahat saat AI vs AI, permainan online, pelajaran, dan sejenisnya. Setelah permainan, ulasan muncul di tab ini.',
+  tr: 'Koç, yapay zekâya veya bu cihazda bir arkadaşınıza karşı oynarken çalışır. YZ\'ye karşı YZ, çevrimiçi oyunlar, dersler vb. sırasında dinlenir. Oyundan sonra inceleme bu sekmede görünür.'
 };
 const TABS = ['coach', 'kifu', 'learn', 'rec', 'online'];
 const IC = {
