@@ -54,18 +54,24 @@
     const CID = ctx.side === 2 && !PVP ? [ck[1], ck[0]] : [ck[0], ck[1]];
     const cname = s => (CN[ctx.lang] || CN.en)[CID[s]] || CID[s], pname = s => PVP ? cname(s) : s ? L.ai : L.you;   // engine side 0 = you (bottom, 24 → 1), side 1 = the AI
 
-    const board = T3.MODELS.backgammon(true, { look }); T3.show('backgammon', board); T3.play(true);
-    const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, H2 = g.H / 2, SC = .62;
+    // the case (H = 12; the phone-landscape layout gives it the full game's flatter landscape height, see reshape) inside a holder
+    // that also carries the checkers, dice and marks, so the case can be swapped without touching them
+    let kase = T3.MODELS.backgammon(true, { look, H: 12 });
+    const board = new TH.Group(); board.add(kase); board.userData.top = kase.userData.top;
+    T3.show('backgammon', board); T3.play(true);
+    const g = M3.geom(12), Y = board.userData.top, W2 = g.W / 2, SC = .62; let H2 = g.H / 2, flat = false, ready = false;   // (ready: the pieces exist — frameOn already asks for a shape while this starts)
     board.scale.setScalar(SC);
-    const bvEl = ctx.el.parentNode;
+    const bvEl = ctx.el.parentNode, isPL = () => !!(bvEl && bvEl.classList.contains('pland'));   // the portal's phone-landscape layout (app.js LAND)
     let turned = false, colUI = false;
     const FR = M3.frameOn(board, T3, { SC, Y, g, left: ctx.bar ? 92 : 6, right: 92,   // (ctx.bar: the portal's action bar takes a column at the landscape left)
-      onChange: m => { turned = m === 'turn'; colUI = m !== 'norm'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
+      land: isPL, top: () => window.__land ? __land.top() : 0, shape: m => reshape(m === 'land' ? flatH() : 12),
+      onChange: m => { turned = m === 'turn'; colUI = m === 'turn' || m === 'wide'; if (bvEl) { bvEl.classList.toggle('land', turned); bvEl.classList.toggle('bgwide', m === 'wide'); }   // the page's UI turns with the view
       setTimeout(() => { if (!stopped) { hud(); placeLater(); T3.kick(300); } }, 0); } });   // the whole case, large; turned 90° on a portrait phone
     const marks = new TH.Group(); board.add(marks);
     let stopped = false, timers = [], cks = [], dice = [], phase = 'wait', over = false, toMove = -1, msg = '';
     let pos = null, T = null, sel = null, dests = null, worker = null, jid = 0, seed = '', stream = null, nRoll = 0, busy = false;
-    let ply = 0, hist = [], hintPlay = null, hintJ = 0;   // 待った: the position + dice at the start of each human turn · ヒント: the best play's remaining steps
+    let ply = 0, hist = [], hintPlay = null, hintJ = 0, lastAI = '';   // 待った: the position + dice at the start of each human turn · ヒント: the best play's remaining steps · lastAI: the AI's last play in its own numbering ("AI Lv6: 24/23 13/8", the full game's status line)
+    const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const turnOn = side => { ply++; if (ctx.onTurn) ctx.onTurn(side, { human: PVP || side === 0, ply }); };   // the clock: a player's time runs from the roll to the last step
     const jobs = new Map();
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
@@ -79,11 +85,56 @@
     function spot(c) {   // c = { side, at: view point | 'bar' | 'off', k, n }
       if (c.at === 'bar') { const st = c.n <= 1 ? g.C : Math.min(g.C, (g.MID - g.TOP - 1.6 - g.C) / (c.n - 1)); const uy = c.side ? g.MID + 1.02 + c.k * st : g.MID - 1.02 - c.k * st; return { x: g.BX + g.B / 2 - W2, y: Y, z: uy - H2, edge: false }; }
       if (c.at === 'off') { const st = Math.min(.28, (g.MID - g.TOP - .55) / 15), uy = c.side ? g.TOP + .17 + c.k * st + .125 : g.BOT - .17 - c.k * st - .125; return { x: g.TX + g.TW / 2 - W2, y: Y + M3.CK_R, z: uy - H2, edge: true }; }
-      const [x, z] = M3.stackXZ(c.at, c.k, c.n, g); return { x, y: Y, z, edge: false };
+      const [x, z] = stackXZ(c.at, c.k, c.n); return { x, y: Y, z, edge: false };
+    }
+    // a point's stack: on the flat landscape board as in the full game (backgammon/app.js stackStep / stackCap: fewer checkers
+    // are drawn, the rest sit under the bottom one and the top one shows the count)
+    const stackCap = () => flat ? Math.max(2, Math.floor((g.MID - g.TOP - .12 - g.C) / (g.C * .7)) + 1) : 99;
+    function stackXZ(vp, k, n) {
+      if (!flat) return M3.stackXZ(vp, k, n, g);
+      const cap = stackCap(); if (n > cap) { k = Math.max(0, k - (n - cap)); n = cap; }
+      const st = n <= 1 ? g.C : Math.min(g.C, (g.MID - g.TOP - .12 - g.C) / (n - 1)), ux = M3.slotX(vp, g), uy = vp >= 13 ? g.TOP + g.C / 2 + k * st : g.BOT - g.C / 2 - k * st;
+      return [ux - W2, uy - H2];
+    }
+    // the count on a stack's top checker (flat board: more than min(5, cap) checkers), in the checker's own ink as in the full game
+    const INK = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0' }, cntTex = {}, cnts = new TH.Group(); board.add(cnts);
+    function cntMesh(n, id) {
+      const k = id + n; if (!cntTex[k]) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = INK[id] || '#2b3044'; x.font = '800 78px "Shippori Mincho B1", Georgia, "Times New Roman", serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 64, 70); cntTex[k] = new TH.CanvasTexture(c); cntTex[k].encoding = TH.sRGBEncoding; }
+      const m = new TH.Mesh(new TH.PlaneGeometry(.7, .7), new TH.MeshBasicMaterial({ map: cntTex[k], transparent: true, depthWrite: false, toneMapped: false })); m.rotation.x = -Math.PI / 2; m.renderOrder = 3; return m;
+    }
+    function counts() {
+      while (cnts.children.length) { const m = cnts.children[0]; cnts.remove(m); m.geometry.dispose(); m.material.dispose(); }
+      if (!flat) return;
+      const grp = {}; cks.forEach(c => { if (typeof c.at === 'number') (grp[c.side + ':' + c.at] = grp[c.side + ':' + c.at] || []).push(c); });
+      Object.values(grp).forEach(a => {
+        const n = a.length; if (n <= Math.min(5, stackCap())) return;
+        const c = a[0], [x, z] = stackXZ(c.at, n - 1, n), m = cntMesh(n, CID[c.side]); m.position.set(x, Y + M3.CK_H + .012, z); cnts.add(m);
+      });
+      T3.kick(200);
+    }
+    // the case's height: 12 (the tour's board), or on a phone held sideways the full game's flat landscape board (backgammon/app.js
+    // flatFit: as wide as the screen, its height fitted to the room under the bar, 6.4 … 10)
+    function flatH() {
+      const cv = T3.renderer && T3.renderer() && T3.renderer().domElement, w = cv && cv.clientWidth || innerWidth, h = cv && cv.clientHeight || innerHeight;
+      const avail = h - (window.__land ? __land.top() : 80) - 8, u = Math.min((w - 16) / 15.85, avail / 6.4, 60);
+      return Math.max(6.4, Math.min(10, avail / u));
+    }
+    function reshape(H) {
+      const fl = H < 11.99;
+      if (Math.abs(H - g.H) < .02 && fl === flat) return;
+      board.remove(kase); kase.traverse(o => { if (o.geometry && /Extrude|Tube/.test(o.geometry.type)) o.geometry.dispose(); });
+      Object.assign(g, M3.geom(H)); H2 = g.H / 2; flat = fl;
+      kase = T3.MODELS.backgammon(true, { look, H }); board.add(kase);
+      if (!ready) return;
+      triGeo = mkTri();
+      restack(); cks.forEach(c => { if (c !== lifted) place(c); });
+      if (lifted) { const p = spot(lifted); lifted.m.position.set(p.x, Y + .4, p.z); }
+      if (phase === 'move' && T && !busy) { const s0 = sel; showSources(); if (s0 !== null && legalNow().some(x => x.from === s0)) select(s0); }
+      T3.kick(400);
     }
     function place(c, p) { T3.kick(200); p = p || spot(c); c.m.position.set(p.x, p.y, p.z + (p.edge ? -M3.CK_H / 2 : 0)); c.m.rotation.set(p.edge ? Math.PI / 2 : 0, 0, 0); }
     function mk(side) { const m = M3.checker(CID[side]); const sh = T3.contact(.47, .45); sh.position.y = .002; sh.userData.contact = true; m.add(sh); board.add(m); return m; }
-    function restack() { const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); }); Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; })); }
+    function restack() { const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); }); Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; })); counts(); }
     const shadow = c => c.m.children.forEach(ch => { if (ch.userData.contact) ch.visible = c.at !== 'off'; });
     function setBoard() {   // the starting position, dropped in one by one
       const P = { 24: 2, 13: 5, 8: 3, 6: 5 };
@@ -149,7 +200,8 @@
     const nextRoll = () => stream.get(nRoll++);
 
     /* ---------- marks ---------- */
-    const triGeo = (() => { const s = new TH.Shape(); s.moveTo(-.46, 0); s.lineTo(.46, 0); s.lineTo(0, g.PL); s.closePath(); return new TH.ShapeGeometry(s); })();
+    const mkTri = () => { const s = new TH.Shape(); s.moveTo(-.46, 0); s.lineTo(.46, 0); s.lineTo(0, g.PL); s.closePath(); return new TH.ShapeGeometry(s); };
+    let triGeo = mkTri();
     const ringGeo = new TH.TorusGeometry(.33, .05, 10, 40);
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); T3.kick(120); }
     function glowPt(vp, color, op) {
@@ -272,6 +324,8 @@
       const ok = moves && plays.some(x => { const q = pos.slice(); moves.forEach(c => BG.apply(q, 1, BG.mvFrom(c), BG.mvTo(c))); return BG.key(q) === BG.key(x.pos); });
       if (!ok) moves = plays[0].moves;   // (the worker failed to load: still a legal play)
       const wait = 450 - (Date.now() - t0); if (wait > 0) await sleep(wait);
+      { const q = pos.slice(), nt = moves.map(c => { const f = BG.mvFrom(c), tt = BG.mvTo(c), hit = BG.mvHit(BG.apply(q, 1, f, tt)); return (f === 25 ? 'bar' : f) + '/' + (tt === 0 ? 'off' : tt) + (hit ? '*' : ''); });
+        lastAI = `${L.ai} Lv${level}: ${nt.join(' ')}`; }
       say('');
       const left = d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice();
       for (const c of moves) {
@@ -318,9 +372,22 @@
       + '.bv.bgwide .quit{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));bottom:auto;transform:translateX(50%)}.bv.bgwide .x{inset-inline-start:auto;inset-inline-end:auto;left:auto;right:calc(45px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));transform:translateX(50%)}'
       + '.bv.bgwide .bgbub{right:auto;top:auto;transform:translateX(-50%)}.bv.land .bgbub,.bv.bgwide .bgbub{font-size:12px;padding:6px 9px;border-radius:12px;width:max-content;max-width:120px}'
       + '.bv.land .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 40px)}.bv.land .endc h3{white-space:nowrap}.bv.land .endc.on{animation:bgpopL .4s cubic-bezier(.3,1.5,.5,1)}@keyframes bgpopL{from{transform:translate(-50%,-50%) rotate(90deg) scale(.7);opacity:0}}'
+      // the portal's phone-landscape layout (#bv.pland): roll / undo / done on the board, in the half where the dice fall (as the full game's .bbtn)
+      + '.bgbb{position:absolute;z-index:3;display:none;gap:calc(var(--u,40px) * .18);transform:translate(-50%,-50%);flex-wrap:nowrap}.bv.pland .bgbb.on{display:flex}'
+      + '.bgbb .bbtn{padding:calc(var(--u,40px) * .16) calc(var(--u,40px) * .3);min-width:calc(var(--u,40px) * 1.7);border-radius:99px;font:900 max(12px,calc(var(--u,40px) * .3)) var(--font,sans-serif);letter-spacing:.06em;white-space:nowrap;background:rgba(255,253,247,.95);color:#2b3044;border:2px solid #fff;box-shadow:0 4px 0 rgba(150,110,50,.45),0 10px 22px rgba(0,0,0,.3);cursor:pointer}'
+      + '.bv.pland .hud .bgs{display:flex;gap:4px;margin-inline-end:3px!important}.bgsb{height:24px;display:flex;align-items:center;gap:3px;padding:0 9px 0 6px;border-radius:99px;border:0;background:#36b4ff;color:#fff;font:900 11.5px var(--font,sans-serif);box-shadow:0 2px 0 #1f86c4;cursor:pointer;white-space:nowrap}.bgsb svg{width:13px;height:13px}'
+      + '.bgbb .bbtn.go{background:#ff5d5d;color:#fff;border-color:transparent;box-shadow:0 4px 0 #d93c3c,0 10px 22px rgba(0,0,0,.3)}.bgbb .bbtn:active{transform:translateY(2px)}'
       + '@media (max-width:560px){.hud .bgb{padding:7px 10px;font-size:13px}.hud .bgb.go{font-size:14px;padding:8px 12px}.hud .bgm{gap:5px}.bgbub{font-size:13px;padding:7px 13px}}';
     document.head.appendChild(css);
     const host = ctx.el.parentNode || document.body, bub = document.createElement('div'); bub.className = 'bgbub'; host.appendChild(bub);
+    const bbt = document.createElement('div'); bbt.className = 'bgbb'; host.appendChild(bbt);
+    function placeBB() {   // the on-board buttons: centred on the roller's half of the board (the full game's setButtons)
+      if (stopped || !isPL() || !bbt.innerHTML) return;
+      const hr = host.getBoundingClientRect(), side = toMove === 1 ? 1 : 0;
+      const a = FR.toCur(halfX(side), Y, 0), q = T3.project(a.x, a.z, a.y), l = FR.toCur(-W2, Y, 0), r = FR.toCur(W2, Y, 0), ql = T3.project(l.x, l.z, l.y), qr = T3.project(r.x, r.z, r.y);
+      bbt.style.left = (q.x - hr.left) + 'px'; bbt.style.top = (q.y - hr.top) + 'px'; bbt.style.setProperty('--u', ((qr.x - ql.x) / g.W).toFixed(1) + 'px');
+    }
+    const bbIv = setInterval(placeBB, 400);   // (the camera eases into its framing after every layout change)
     function placeBub() {   // above the bar when it sits at the bottom (phones), below it when it is at the top (PC)
       if (stopped) return;
       const h = document.getElementById('hud'); if (!h || !bub.textContent) { bub.classList.remove('on'); return; }
@@ -343,7 +410,7 @@
       bub.style.top = up ? '' : (t0 + hh + 12) + 'px'; bub.style.bottom = up ? (H - t0 + 12) + 'px' : '';
       bub.classList.add('on');
     }
-    const placeLater = () => { placeBub(); later(placeBub, 520); };
+    const placeLater = () => { placeBub(); placeBB(); later(() => { placeBub(); placeBB(); }, 520); };
     addEventListener('resize', placeLater);
     function say(m) { msg = m || ''; hud(); }
     function hud() {
@@ -358,6 +425,23 @@
       const btn = (a, cls, ic, lb) => colUI ? `<button type="button" class="btn bgb ic ${cls}" data-bgt="${a}" title="${lb}" aria-label="${lb}">${ic}</button>` : `<button type="button" class="btn bgb ${cls}" data-bgt="${a}">${ic} ${lb}</button>`;
       const b = []; let m = msg;
       if (PVP && toMove >= 0 && (m === L.tapCk || m === L.tapDest)) m = `<b>${cname(toMove)}</b> · ${m}`;   // two players: whose move it is
+      if (isPL()) {   // phone held sideways: the full game's landscape row — player chips, a status line (the AI's last move · the prompt), buttons on the board
+        const nm = s => PVP ? cname(s) : s ? `${L.ai} Lv${level}` : L.you, chip = s => `<span class="hs ${toMove === s ? 'on' : ''}">${dot(s)}${nm(s)}<b>${pips(s)}</b></span>`;
+        const bb = (a, cls, lb) => `<button type="button" class="bbtn ${cls}" data-bgt="${a}">${lb}</button>`, sb = [];
+        if (phase === 'roll') { b.push(bb('roll', 'go', L.roll)); if (!m) m = PVP ? L.turnC.replace('{c}', cname(toMove)) : L.turn; }
+        else if (phase === 'move' && T && !busy) {
+          const done = !legalNow().length;
+          if (T.steps.length) sb.push(`<button type="button" class="bgsb" data-bgt="undo">${ICU}${L.undo}</button>`);   // (a step back: a small pill at the end of the status line)
+          if (done) { b.push(bb('ok', 'go', L.ok)); m = ''; }
+        }
+        if (!m && phase === 'ai') m = L.think;
+        if (!m && phase === 'move' && !PVP) m = L.turn;
+        const st = (!PVP && lastAI ? esc(lastAI) + (m ? ' · ' : '') : '') + (m || '');
+        ctx.hud(`${chip(0)}<span class="hm">${st}</span>${sb.length ? `<span class="bgs">${sb.join('')}</span>` : ''}${chip(1)}`);
+        const bh = b.join(''); if (bbt.innerHTML !== bh) bbt.innerHTML = bh;
+        bbt.classList.toggle('on', !!bh); placeBB(); bub.classList.remove('on'); return;
+      }
+      bbt.classList.remove('on');
       if (phase === 'roll') { b.push(btn('roll', 'go', '🎲', L.roll)); if (!PVP) m = ''; }
       else if (phase === 'move' && T && !busy) {
         const done = !legalNow().length;
@@ -400,6 +484,7 @@
     ctx.el.addEventListener('click', onClick);
 
     /* ---------- go ---------- */
+    ready = true;
     setBoard();
     const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube); T3.kick(400);   // decoration: no doubling in table play
     say('');
@@ -481,7 +566,7 @@
       stop() {
         stopped = true; timers.forEach(clearTimeout); timers = [];
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
-        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); if (bvEl) bvEl.classList.remove('land', 'bgwide'); removeEventListener('resize', placeLater); FR.stop();
+        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); bub.remove(); bbt.remove(); clearInterval(bbIv); counts(); if (bvEl) bvEl.classList.remove('land', 'bgwide'); removeEventListener('resize', placeLater); FR.stop();
       },
       _debug: { hint: () => hintPlay, hist: () => hist.length, marks: () => marks.children.length, hit: (x, y) => hitOf({ clientX: x, clientY: y }), st: () => ({ phase, busy, toMove, over, sel, pos: pos && Array.from(pos), T: T && { side: T.side, left: T.left.slice(), steps: T.steps.length, legal: legalNow(), pos: Array.from(T.pos) }, dests: dests && [...dests.keys()] }),
         pt: p => { const sd = T ? T.side : 0, at = locOf(sd, p), c = topOf(sd, at); const [x, z] = c && p !== 0 ? [c.m.position.x, c.m.position.z] : landXZ(sd, at); const v = FR.toCur(x, Y, z); return T3.project(v.x, v.z, v.y); },
@@ -509,5 +594,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], who: Wh[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
+  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, land: 'pill', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
 })();

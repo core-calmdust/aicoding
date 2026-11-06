@@ -101,6 +101,14 @@
     const HUD_SIDE = s => s;                       // HUD pill / clock: Light left (0), Dark right (1)
     const onTurn = s => { ply++; if (ctx.onTurn) ctx.onTurn(s < 0 ? -1 : HUD_SIDE(s), { human: s >= 0 && (pvp || s === 0), ply }); };
     const mine = () => st && !over && (pvp || st.turn === 0);
+    const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    // the portal's phone-landscape layout (#bv.pland, app.js LAND 'side'): the cards in a column at the left, the board straight
+    // from above in the room beside them (as the full game's landscape page); otherwise the kit's own framing
+    const bvEl = ctx.el.parentNode, isPL = () => !!(bvEl && bvEl.classList.contains('pland'));
+    function frame() { if (stopped) return; if (T3.fit) T3.fit(isPL() ? { w: kit.U.W + .7, d: kit.U.D + 2.1, y: kit.Y, pitch: 1.5 } : kit.fit0); if (isPL() !== plWas) { plWas = isPL(); hud(); } }
+    let plWas = null;
+    const onPL = () => { frame(); setTimeout(frame, 350); };
+    addEventListener('atlasland', onPL); addEventListener('resize', onPL);
 
     /* ---------- HUD ---------- */
     function hud() {
@@ -109,7 +117,12 @@
       const home = s => st ? st.pos[s].filter(p => p >= goal).length : 0;
       const side = s => `<span class="hs ${st && st.turn === s && !over ? 'on' : ''}"><i class="dk" style="${DK[s]};width:18px;height:18px;border-radius:50%;display:inline-block;flex:none"></i>${pname(s)}<b>${home(s)}</b></span>`;
       const btn = phase === 'roll' && mine() ? `<button type="button" class="btn urb go" data-urt="roll">🎲 ${X.roll}</button>` : phase === 'pass' && mine() ? `<button type="button" class="btn urb go" data-urt="pass">${X.pass}</button>` : `<span class="hm">${msg}</span>`;
-      ctx.hud(`${side(0)}${btn}${side(1)}`);
+      if (isPL()) {   // phone held sideways: the full game's landscape cards in a column — the rival above, you below; the roll button
+        // (or the message) in the box of the side to move
+        const act = phase === 'roll' && mine() ? `<button type="button" class="urb" data-urt="roll">${X.roll}</button>` : phase === 'pass' && mine() ? `<button type="button" class="urb" data-urt="pass">${X.pass}</button>` : esc(msg);
+        const card = s => `<div class="urc ${st && st.turn === s && !over ? 'on' : ''}"><div class="urc-h"><i class="dk" style="${DK[s]};width:18px;height:18px;border-radius:50%;display:inline-block;flex:none"></i><span>${esc(pvp ? X.n[s] : s === 0 ? L.you : `${L.ai} Lv.${level}`)}</span><b>${home(s)}</b><small>/7 ${esc(X.inHome)}</small></div><div class="urc-b">${(st ? st.turn === s : s === first) || over ? act : ''}</div></div>`;
+        ctx.hud(`${card(1)}${card(0)}`);
+      } else ctx.hud(`${side(0)}${btn}${side(1)}`);
       if (phase === 'roll' || phase === 'pass') { if (msg) toast(msg); }
     }
     let toastEl = null, toastT = 0;
@@ -266,7 +279,7 @@
     document.addEventListener('keydown', onKey);
 
     /* ---------- go ---------- */
-    hud();
+    frame();
     loadEngine().then(e => {
       if (stopped) return; E = e;
       st = E.newGame('finkel', first); kit.sync(st); kit.restDice(st.turn, null);
@@ -304,7 +317,7 @@
       resign() { if (!over && st) finish(pvp ? st.turn : 0, 'resign'); },
       timeout(side) { finish(side, 'time'); },
       stop() {
-        stopped = true; kit.stop(); timers.forEach(clearTimeout);
+        stopped = true; kit.stop(); timers.forEach(clearTimeout); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove();
       },
@@ -317,5 +330,5 @@
 
   window.Atlas3D = window.Atlas3D || {};
   // table: true — ちゃぶ台で遊ぶ (AI / two players, start() above); フル機能 opens ur/?skin=atlas (rated games there)
-  window.Atlas3D.ur = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start, SND };   // SND: shared with the rules tour (atlas/rules/ur.js)
+  window.Atlas3D.ur = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, land: 'side', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start, SND };   // SND: shared with the rules tour (atlas/rules/ur.js)
 })();

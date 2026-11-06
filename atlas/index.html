@@ -805,6 +805,86 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
+/* ===== table play on a phone held sideways (app.js LAND, #bv.pland): the full game's own landscape layout
+   (atlas/skin/skin.css html.atlas-land for backgammon, atlas/skin/mancala.css html.mc-barmenu for mancala) ===== */
+.pl{display:none}
+.bv.pland .pl{position:absolute;z-index:6;display:grid;align-items:center;font-family:'Zen Maru Gothic',var(--font,sans-serif);color:#2b3044;pointer-events:none}
+.bv.pland .pl > *,.bv.pland .pl #hud > *{pointer-events:auto}
+.bv.pland .quit,.bv.pland .bgbub{display:none!important}
+.bv.pland #hud{display:contents}
+.bv.pland .tbar{position:static;transform:none!important;opacity:1;visibility:visible;pointer-events:auto;background:none;border:0;box-shadow:none;padding:0;gap:5px;transition:none}
+.bv.pland .tbar .tbtns{gap:5px}
+.bv.pland .tbar .tclk{min-width:0;height:30px;padding:0 9px;font-size:15px;border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35)}
+.bv.pland .tbar .tclk small{font-size:8px}
+.plb img{flex:none;width:26px;height:26px}
+.plb .plt{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
+.plb .plt b{font-family:'RocknRoll One',var(--round,sans-serif);font-weight:400;font-size:12.5px;color:#111;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.plb .plt em{flex:none;font-style:normal;font-weight:900;font-size:13px;color:#d93c3c}
+.plb .sp{flex:1 1 0;min-width:0}
+.plic{flex:none;height:26px;width:30px;padding:0;border-radius:99px;border:1.5px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer}
+.plic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* 'pill' (backgammon): row 1 = the slim pill + the player chips, row 2 = the status line + the menu icons */
+.bv.pl-pill .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:32px 30px;gap:6px 5px}
+.bv.pl-pill .plb{grid-row:1;grid-column:1;min-width:0;height:32px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;margin-inline-end:3px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-pill .plb .plt{margin-inline-start:2px}
+.bv.pl-pill #hud > .hs{grid-row:1;height:32px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px 0 7px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12px var(--font,sans-serif);color:#6a7088}
+.bv.pl-pill #hud > .hs:first-child{grid-column:2}
+.bv.pl-pill #hud > .hs:last-child{grid-column:3}
+.bv.pl-pill #hud > .hs.on{border-color:#ffc928;box-shadow:0 3px 0 #e09a00;background:rgba(255,253,247,.95)}
+.bv.pl-pill #hud > .hs b{font-family:'Shippori Mincho B1',Georgia,'Times New Roman',serif;font-weight:800;font-size:18px;line-height:1;min-width:0;color:#2b3044;font-variant-numeric:tabular-nums}
+.bv.pl-pill #hud > .hs :is(.dk,.bgk){width:19px!important;height:19px!important}
+.bv.pl-pill #hud > .hm{grid-row:2;grid-column:1;min-width:0;height:30px;box-sizing:border-box;line-height:26px;margin-inline-end:3px;padding:0 12px;border-radius:99px;background:rgba(255,253,247,.94);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12.5px var(--font,sans-serif);color:#2b3044;text-align:start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bv.pl-pill #hud > :not(.hs):not(.hm){grid-row:2;grid-column:1;justify-self:end;margin-inline-end:8px}
+.bv.pl-pill .tbar{grid-row:2;grid-column:2 / 4;justify-self:end}
+.bv.pl-pill .tbar button{width:38px;min-width:0;height:30px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-pill .tbar button span{display:none}
+.bv.pl-pill .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-pill .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+/* 'bar' (mancala): one full-width bar — logo | the menu (icon + label) | sound · やめる; the rest is on the board */
+.bv.pl-bar .pl{top:0;left:0;right:0;height:calc(46px + env(safe-area-inset-top));box-sizing:border-box;padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;background:rgba(255,246,226,.92);border-bottom:2px solid #efe3c8;box-shadow:0 4px 14px -10px rgba(80,40,0,.4);pointer-events:auto}
+.bv.pl-bar .plb{display:contents}
+.bv.pl-bar .plb img{grid-column:1;width:28px;height:28px}
+.bv.pl-bar .plb .plt,.bv.pl-bar .plb .sp,.bv.pl-bar #hud{display:none}
+.bv.pl-bar .plic{height:32px;width:34px;border-width:2px}
+.bv.pl-bar .plic svg{width:17px;height:17px}
+.bv.pl-bar .tbar{grid-column:2;grid-row:1;min-width:0;justify-content:flex-start}
+.bv.pl-bar .tbar .tbtns{flex:1 1 auto;min-width:0}
+.bv.pl-bar .tbar button{flex:0 1 112px;min-width:0;height:34px;padding:0 6px;flex-direction:row;gap:5px;border-radius:10px;background:#fff;border:2px solid #efe3c8;box-shadow:0 2px 0 #efe3c8;color:#2b3044;font:700 11.5px var(--font,sans-serif);white-space:nowrap}
+.bv.pl-bar .tbar button span{overflow:hidden;text-overflow:clip}
+.bv.pl-bar .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-bar .tbar button:disabled{opacity:.45}
+@media (max-width:620px){.bv.pl-bar .tbar button span{display:none}}
+/* 'side' (ur): row 1 = the slim pill + the menu icons, the player cards in a column at the left (the full game's landscape page) */
+.bv.pl-side .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));grid-template-columns:auto auto;grid-template-rows:34px minmax(0,1fr);gap:8px 6px;align-items:center;justify-content:start}
+.bv.pl-side .plb{grid-row:1;grid-column:1;min-width:0;max-width:calc(50vw - 20px);height:34px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-side .plb .plt{margin-inline:2px 6px}
+.bv.pl-side .plb .sp{display:none}
+.bv.pl-side .tbar{grid-row:1;grid-column:2;justify-self:start}
+.bv.pl-side .tbar button{width:38px;min-width:0;height:32px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-side .tbar button span{display:none}
+.bv.pl-side .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-side .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+.bv.pl-side .pl #hud{grid-row:2;grid-column:1 / 3;justify-self:start;align-self:center;display:flex;flex-direction:column;gap:12px;width:min(172px,24vw);position:static;transform:none;padding:0;background:none;border:0;box-shadow:none;max-width:none;transition:none}
+.bv.pl-side #hud > *{pointer-events:auto}
+/* (games/ur.js) a player card: name · pieces home (/7) · the roll button or the message in the box below */
+.bv.pl-side #hud .urc{display:flex;flex-direction:column;gap:6px;padding:9px 10px 10px;border-radius:16px;background:rgba(255,253,247,.96);border:2.5px solid #fff;box-shadow:0 4px 0 rgba(150,110,50,.3);color:#2b3044;box-sizing:border-box}
+.bv.pl-side #hud .urc.on{border-color:#ffc928;box-shadow:0 4px 0 #e09a00}
+.bv.pl-side #hud .urc-h{display:flex;align-items:center;gap:6px;font:700 13px var(--font,sans-serif);white-space:nowrap;min-width:0}
+.bv.pl-side #hud .urc-h > span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.bv.pl-side #hud .urc-h b{font:800 17px 'Shippori Mincho B1',Georgia,serif;font-variant-numeric:tabular-nums}
+.bv.pl-side #hud .urc-h small{font-size:9.5px;color:#8a90a2;font-weight:700}
+.bv.pl-side #hud .urc-b{min-height:38px;display:grid;place-items:center;border-radius:12px;background:#f3ead8;box-shadow:inset 0 1px 2px rgba(120,90,40,.18);padding:3px;box-sizing:border-box;font:700 11.5px var(--font,sans-serif);color:#6a7088;text-align:center;line-height:1.3}
+.bv.pl-side #hud .urc-b .urb{width:100%;height:36px;padding:0;border-radius:99px;background:#fff;border:2.5px solid #3557c9;color:#24409e;font:900 15px var(--font,sans-serif);letter-spacing:.12em;box-shadow:0 3px 0 #24409e;cursor:pointer;white-space:nowrap}
+.bv.pl-side #hud .urc-b .urb:active{transform:translateY(2px);box-shadow:0 1px 0 #24409e}
+html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% + min(86px,12vw))}
+/* mancala (games/mancala.js): the names above the stores and the turn message on the middle line, as the full game's landscape board */
+.mcl{display:none}
+.bv.pland .mcl.on{display:block;position:absolute;inset:0;z-index:3;pointer-events:none}
+.mcl > *{position:absolute;transform:translate(-50%,-50%);white-space:nowrap}
+.mcl-n{font:700 max(11px,calc(var(--u,60px) * .2)) 'Zen Maru Gothic',var(--font,sans-serif);letter-spacing:.04em;color:#c9b07a;padding:1px 8px;border-radius:99px;background:rgba(10,10,12,.55);border:1px solid rgba(226,194,117,.35)}
+.mcl-n.me{color:#ffd77a;border-color:rgba(255,215,122,.75)}
+.mcl-m{font:800 max(13px,calc(var(--u,60px) * .31)) 'Shippori Mincho B1',serif;letter-spacing:.12em;color:#ecd08e;text-shadow:0 0 18px rgba(226,194,117,.4),0 2px 6px rgba(0,0,0,.7)}
+.mcl-m:empty{display:none}
 .rgd{position:absolute;z-index:4;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));width:min(760px,calc(100% - 24px));transform:translate(-50%,130%);opacity:0;transition:transform .5s cubic-bezier(.3,1.3,.5,1),opacity .3s;display:grid;gap:10px}
 .rgd.on{transform:translate(-50%,0);opacity:1}
 .rgd-in{display:flex;align-items:flex-end;gap:12px}
@@ -1254,10 +1334,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=47"></script>
 <script src="gamelist-i18n.js?v=5"></script>
-<script src="table3d.js?v=98"></script>
+<script src="table3d.js?v=99"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
-<script src="models/backgammon.js?v=115"></script>
+<script src="models/backgammon.js?v=116"></script>
 <script src="models/goban.js?v=14"></script>
 <script src="models/hex.js?v=2"></script>
 <script src="models/xiangqi.js?v=3"></script>
@@ -1278,7 +1358,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="games/shogi-play.js?v=11"></script>
 <script src="games/shogi.js?v=12"></script>
 <script src="games/chess.js?v=5"></script>
-<script src="games/backgammon.js?v=15"></script>
+<script src="games/backgammon.js?v=16"></script>
 <script src="games/gomoku.js?v=4"></script>
 <script src="games/morris-pieces.js?v=2"></script>
 <script src="games/morris.js?v=1"></script>
@@ -1289,10 +1369,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="games/tafl.js?v=7"></script>
 <script src="games/xiangqi.js?v=8"></script>
 <script src="games/checkers.js?v=2"></script>
-<script src="games/mancala.js?v=3"></script>
+<script src="games/mancala.js?v=4"></script>
 <script src="games/dots.js?v=3"></script>
-<script src="games/ur-kit.js?v=12"></script>
-<script src="games/ur.js?v=4"></script>
+<script src="games/ur-kit.js?v=13"></script>
+<script src="games/ur.js?v=5"></script>
 <script src="games/fanorona.js?v=2"></script>
 <script src="games/ugolki.js?v=1"></script>
 <script src="games/agon.js?v=2"></script>
@@ -1335,6 +1415,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=10">
 <script src="worldmap.js?v=13"></script>
-<script src="app.js?v=176"></script>
+<script src="app.js?v=177"></script>
 </body>
 </html>

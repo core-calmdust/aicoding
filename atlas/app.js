@@ -745,7 +745,7 @@
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
-    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4);   // playing: the board is framed above the action bar
+    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing && window.__land ? __land.top() : 0);   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
@@ -768,7 +768,8 @@
     const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
     const clock = tcT ? { id: 'test', byo: +tcT } : tc;   // (tests: ?tcTest=5 → 5 s per move)
     if ($('bvTc')) { pref[g.id + ':tc'] = $('bvTc').dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
-    $('bv').classList.add('playing'); $('endc').classList.remove('on'); fitStage();
+    $('bv').classList.add('playing'); $('endc').classList.remove('on');
+    LAND.game(ad.land || ''); fitStage();
     let sess = null, tbOn = false;
     session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); },
@@ -789,9 +790,10 @@
         }, 900);
       } });
     TB.on(sess, clock, pmode === 'pvp' ? -1 : sess.human != null ? sess.human : side === 2 ? 1 : 0); tbOn = true;   // the human's HUD pill (left when playing first, unless the adapter says)
+    LAND.sync();
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
-  function stopSession() { TB.off(); if (session) { session.stop(); session = null; } $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  function stopSession() { TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
 
   /* ---------- table play: time controls, clocks and the action bar (待った · 投了 · ヒント), one implementation for every game ----------
      Adapter session API (atlas/games/*.js): undo() canUndo() · hint() → Promise canHint() · resign() canResign() · timeout(side).
@@ -868,12 +870,12 @@
     // where the bar sits: the bottom centre (the board is framed above it); the backgammon landscape views: a slim column
     // at the landscape left, mirroring the HUD column on the right
     function place() {
-      const bv = $('bv'), col = bv.classList.contains('land') || bv.classList.contains('bgwide');
+      const bv = $('bv'), pl = bv.classList.contains('pland'), col = !pl && (bv.classList.contains('land') || bv.classList.contains('bgwide'));
       bar.classList.toggle('col', col);
-      const band = bv.classList.contains('tbon') && !col ? bar.offsetHeight + 14 + 8 : 0;
+      const band = bv.classList.contains('tbon') && !col && !pl ? bar.offsetHeight + 14 + 8 : 0;   // (phone landscape: the bar is in the game bar at the top)
       bv.style.setProperty('--tbh', band + 'px');
-      const hudR = $('hud').getBoundingClientRect(), phoneHud = !col && innerWidth <= 560;
-      document.documentElement.style.setProperty('--tbclear', (col ? 18 : phoneHud ? innerHeight - hudR.top + 4 : band + 4) + 'px');   // toasts stay clear of the bar (and the HUD below on phones)
+      const hudR = $('hud').getBoundingClientRect(), phoneHud = !col && !pl && innerWidth <= 560;
+      document.documentElement.style.setProperty('--tbclear', (col || pl ? 18 : phoneHud ? innerHeight - hudR.top + 4 : band + 4) + 'px');   // toasts stay clear of the bar (and the HUD below on phones)
       fitStage();
     }
     bar.addEventListener('click', e => {
@@ -907,11 +909,74 @@
       hide() { $('bv').classList.remove('tbon'); },                 // the end card is up
       off() { clearInterval(iv); iv = 0; if (S) turn(-1); S = null; ended = true; C.tc = null; $('bv').classList.remove('tbon'); $('bv').style.setProperty('--tbh', '0px'); document.documentElement.style.removeProperty('--tbclear'); if (window.CountTick) CountTick.reset(); },
       place,
-      get band() { return $('bv').classList.contains('tbon') && !bar.classList.contains('col') ? parseFloat($('bv').style.getPropertyValue('--tbh')) || 0 : 0; },
+      get band() { return $('bv').classList.contains('tbon') && !bar.classList.contains('col') && !$('bv').classList.contains('pland') ? parseFloat($('bv').style.getPropertyValue('--tbh')) || 0 : 0; },
       _dbg: () => ({ side: C.side, human: C.human, left: C.left.slice(), tc: C.tc, show: C.show.slice(), ended, r: C.tc ? [remain(0), remain(1)] : null, undo: !btn('undo').disabled, hint: !btn('hint').disabled, resign: !btn('resign').disabled }),
     };
   })();
   window.__tbar = TB;   // (tests)
+
+  /* ---------- table play on a phone held sideways: the full game's landscape layout (atlas/skin, html.atlas-land) ----------
+     The adapter names its game's look (Atlas3D[id].land):
+       'pill' (backgammon)  row 1 = a slim pill (logo · portal title · game name · sound · やめる) + the player chips,
+                            row 2 = the status line + the action bar as small icon pills; the board fills the rest
+       'bar'  (mancala)     one full-width bar (logo | 待った · 投了 · ヒント | sound · やめる); names, counts and the turn
+                            message are on the board itself (the adapter draws them)
+       'side' (ur)          row 1 = the slim pill + the action bar as icon pills; the player cards (the adapter's HUD) in a
+                            column at the left; the board is framed in the room right of it (Table3D.setShift)
+     #hud and #tbar move into the bar (#hud as display:contents, so its pills and message become grid cells); the camera keeps
+     the bar's band free (Table3D.setInset(0, top)). The adapter reads #bv.pland and listens to the 'atlasland' event. */
+  const LAND = (() => {
+    const Q = matchMedia('(min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px)');
+    const HOME = '<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/></svg>';
+    const KW = { en: 'Board Game Atlas', es: 'Juegos de Mesa', fr: 'Jeux de société', pt: 'Jogos de Tabuleiro', de: 'Brettspiel-Atlas' };   // (the kicker-style titles: the main line, as the 2D page's landscape pill)
+    const wrap = document.createElement('div'); wrap.className = 'pl'; wrap.id = 'pl';
+    wrap.innerHTML = '<div class="plb"><img src="logo.svg" alt="" width="26" height="26"><span class="plt"><b></b><em></em></span><span class="sp"></span>'
+      + (window.PhoneSnd && PhoneSnd.phone ? '' : '<button type="button" class="plic" data-pl="snd"></button>') + '<button type="button" class="plic" data-pl="quit">' + HOME + '</button></div>';
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('[data-pl]'); if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.pl === 'snd') { $('sfxBtn').click(); paint(); } else $('bvQuit').click();
+    });
+    let want = '', style = '';
+    function paint() {
+      if (!style) return;
+      wrap.querySelector('.plt b').textContent = KW[lang] || t('title');
+      wrap.querySelector('.plt em').textContent = bvGame ? gname(bvGame).replace(/\s*V\d+$/, '') : '';   // (the game's own name, as its page shows it)
+      const sb = wrap.querySelector('[data-pl=snd]'), q = wrap.querySelector('[data-pl=quit]');
+      if (sb) { sb.innerHTML = $('sfxBtn').innerHTML; sb.classList.toggle('off', $('sfxBtn').classList.contains('off'));
+      sb.setAttribute('aria-label', $('sfxBtn').getAttribute('aria-label') || ''); sb.title = sb.getAttribute('aria-label'); }
+      q.setAttribute('aria-label', t('bv.quit')); q.title = t('bv.quit');
+    }
+    function sync() {
+      const bv = $('bv'), st = want && Q.matches && bv.classList.contains('playing') && !bv.classList.contains('rules') ? want : '';
+      if (st === style) { paint(); return; }
+      style = st;
+      bv.classList.toggle('pland', !!st); bv.classList.toggle('pl-pill', st === 'pill'); bv.classList.toggle('pl-bar', st === 'bar'); bv.classList.toggle('pl-side', st === 'side');
+      document.documentElement.classList.toggle('bv-pland', !!st);
+      if (st) { bv.appendChild(wrap); wrap.appendChild($('hud')); wrap.appendChild($('tbar')); paint(); }
+      else if (wrap.parentNode) { bv.insertBefore($('hud'), $('bvi')); bv.appendChild($('tbar')); wrap.remove(); }
+      try { TB.place(); } catch (e) {}
+      shift(); fitStage();
+      dispatchEvent(new Event('atlasland'));   // (the adapter re-frames its board)
+    }
+    // 'side': the board is framed in the room right of the player column (a shift lens, as Historia's page beside the board)
+    let shifted = false;
+    function shift() {
+      if (style === 'side') { const r = $('hud').getBoundingClientRect(), b = $('bv').getBoundingClientRect(); if (r.width) { Table3D.setShift(Math.round((r.right - b.left + 4) / 2)); shifted = true; } }
+      else if (shifted) { Table3D.setShift(0); shifted = false; }
+    }
+    const onQ = () => { sync(); setTimeout(() => { try { TB.place(); } catch (e) {} shift(); fitStage(); }, 120); };
+    if (Q.addEventListener) Q.addEventListener('change', onQ); else Q.addListener(onQ);
+    if (window.ResizeObserver) new ResizeObserver(() => { if (style) { shift(); fitStage(); } }).observe(wrap);
+    return {
+      game(st) { want = st || ''; sync(); },   // the table game's landscape look ('' = none / the game ended)
+      sync,
+      get on() { return !!style; },
+      top() { return style && wrap.parentNode ? Math.round((style === 'side' ? wrap.querySelector('.plb') : wrap).getBoundingClientRect().bottom - $('bv').getBoundingClientRect().top + 6) : 0; },   // px kept free above the board ('side': the top row only)
+      query: Q,
+    };
+  })();
+  window.__land = LAND;   // (the adapters: __land.on / __land.top())
   // back from a game (page restored from the back-forward cache): drop the loading screen and the "playing" state,
   // so the board viewer shows its info card again instead of a bare board with only the × button
   addEventListener('pageshow', e => {

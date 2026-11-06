@@ -237,10 +237,41 @@
     const K = kit(T3, bottom0), { board, tall, isStore, ownerOf, hollow, slots, labels, setCount, glows, hintRing, anim } = K;
     const rebuild = () => K.rebuild(b), pitAt = e => K.pitAt(e, side);
     T3.show('mancala', board);
-    if (T3.fit) T3.fit(tall ? { w: 6.4, d: 13.4, y: G.TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: G.TOP, pitch: 1.05 });
     const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = +ctx.size === 6 ? 6 : 4, RULES = 'kalah';
     const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => s ? t('bv.second') : t('bv.first');
+
+    /* ---------- the portal's phone-landscape layout (#bv.pland, app.js LAND 'bar'): the full game's landscape page —
+       the board straight from above under the bar, the names (with 先手 / 後手) above the stores, both store counts below
+       them, the turn / capture message on the board's middle line (mancala/index.html .slabel · .turnlbl.mincho) ---------- */
+    const bvEl = ctx.el.parentNode, isPL = () => !!(bvEl && bvEl.classList.contains('pland'));
+    const ov = document.createElement('div'); ov.className = 'mcl';
+    ov.innerHTML = '<span class="mcl-n" data-s="0"></span><span class="mcl-n" data-s="1"></span><span class="mcl-m"></span>';
+    if (bvEl) bvEl.appendChild(ov);
+    let plOn = null;
+    function frame() {
+      if (stopped) return;
+      const pl = isPL(), rot = tall && !pl;   // (an upright phone's turned board is turned back while the phone is held sideways)
+      if (pl !== plOn) {
+        plOn = pl; ov.classList.toggle('on', pl);
+        board.rotation.y = rot ? Math.PI : 0;
+        labels.forEach((l, i) => { l.m.rotation.z = rot ? -Math.PI / 2 : 0; if (isStore(i)) l.m.position.z = pl ? 1.76 : ownerOf(i) === bottom0 ? 1.76 : -1.76; });
+        if (T3.kick) T3.kick(400);
+      }
+      if (T3.fit) T3.fit(pl ? { w: G.W + 1.3, d: G.D + .9, y: TOP, pitch: 1.53 } : rot ? { w: 6.4, d: 13.4, y: TOP, pitch: 1.5, roll: true } : { w: 12.2, d: 5.8, y: TOP, pitch: 1.05 });
+      placeOv();
+    }
+    function placeOv() {
+      if (stopped || !plOn) return;
+      const hr = bvEl.getBoundingClientRect(), P = (x, z) => { const q = T3.project(x, z, TOP); return [q.x - hr.left, q.y - hr.top]; };
+      const [l0] = P(-G.W / 2, 0), [r0] = P(G.W / 2, 0), u = (r0 - l0) / G.W;   // px per board unit
+      ov.style.setProperty('--u', u.toFixed(2) + 'px');
+      ov.querySelectorAll('.mcl-n').forEach(e => { const s = +e.dataset.s, [x] = hollow(s ? 13 : 6), [px, py] = P(x, -G.D / 2 + .36); e.style.left = px + 'px'; e.style.top = py + 'px'; });
+      const m = ov.querySelector('.mcl-m'), [mx, my] = P(0, 0); m.style.left = mx + 'px'; m.style.top = my + 'px';
+    }
+    const plIv = setInterval(placeOv, 400);   // (the camera eases into its framing after every layout change)
+    const onPL = () => { frame(); setTimeout(frame, 350); };
+    addEventListener('atlasland', onPL); addEventListener('resize', onPL);
     let b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = SEEDS; b[i + 7] = SEEDS; }
     let side = 0, over = false, stopped = false, busy = false, worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintPit = -1, msg = '';
     const ix = s => s;   // HUD pill / clock: first player left (0), second right (1)
@@ -263,6 +294,13 @@
       if (m !== undefined) msg = m;
       const pill = c => `<span class="hs ${side === c && !over ? 'on' : ''}"><i class="dk ${c ? 'w' : 'b'}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${b[c ? 13 : 6]}</b></span>`;
       ctx.hud(`${pill(0)}<span class="hm">${msg || ''}</span>${pill(1)}`);
+      // the landscape layout's names and message (the full game's store labels: "AI 中級+ · 後手", "あなた · 先手")
+      ov.querySelectorAll('.mcl-n').forEach(e => {
+        const c = +e.dataset.s, me = pvp ? side === c && !over : c === human;
+        e.textContent = pvp ? pname(c) : (c === human ? L.you : `${L.ai} ${(LV[lang] || LV.en)[level]}`) + ' · ' + pname(c);
+        e.classList.toggle('me', me);
+      });
+      ov.querySelector('.mcl-m').textContent = msg || '';
     }
     function turnMsg() { return pvp ? X.turn.replace('{p}', pname(side)) : side === human ? L.turn : L.think; }
     async function play(k, mover) {   // mover sows pit k (0..5 from its first pit)
@@ -317,7 +355,7 @@
       if (h !== hover) { hover = h; ctx.el.style.cursor = h >= 0 ? 'pointer' : ''; showGlows(); }
     }
     ctx.el.addEventListener('click', onClick); ctx.el.addEventListener('pointermove', onMove);
-    rebuild(); hud('');
+    rebuild(); hud(''); frame();
     loadEngine().then(() => { if (!stopped) setTimeout(next, 500); }).catch(() => hud('—'));
     // test hooks (Playwright): a hollow's screen position, the state
     window.Atlas3D.mancala._dbg = { at: i => { const [x, z] = hollow(i); return T3.project(x, z, TOP); }, state: () => ({ b: Array.from(b), side, over, busy, human, pvp, hint: hintPit, hist: hist.length, gems: slots.map(l => l.length), labels: labels.map(l => l.n) }) };
@@ -361,7 +399,7 @@
       resign() { if (!over) finish(pvp ? side : human, 'resign'); },
       timeout(s) { if (!over) finish(s, 'time'); },
       stop() {
-        stopped = true; tok++; K.stop();
+        stopped = true; tok++; K.stop(); ov.remove(); clearInterval(plIv); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
         if (worker) worker.terminate(); if (hintW) hintW.terminate();
       },
@@ -374,6 +412,6 @@
     return { name: a[n], desc: d[n], rating: 0, who: w[WG[n]] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.mancala = { kit, levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [4, 6], size0: 4,
+  window.Atlas3D.mancala = { kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [4, 6], size0: 4,
     sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', z), levelInfo, start };   // table: start() plays on the chabudai itself
 })();
