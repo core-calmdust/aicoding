@@ -630,7 +630,10 @@ html.pc2 .side-in:has(> #coachCard:not(.hidden):not(.ck-off)) > #evalCard .graph
 /* review box (rbox.js, PC only): while a finished game is reviewed after the analysis, a wide box under the board and the right
    column (commentary | candidate moves with their lines | study mode); the board and both columns give up its height (2026-10-28) */
 .rbox{--rb-bg:var(--panel);--rb-line:var(--line);--rb-text:var(--text);--rb-muted:var(--muted);--rb-acc:var(--accent);--rb-acc-ink:#1a1408;--rb-s1:#111;--rb-s2:#f4f2ea}
-html.pc2.rb-on{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);--bv:calc(var(--vh) - var(--pad) * 2 - 52px - var(--ttop) - var(--rbh) - var(--gap))}
+html.pc2.rb-on{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);--bv:calc(var(--vh) - var(--pad) * 2 - var(--ttop) - var(--rbh) - var(--gap))}
+/* 検討（下の振り返りボックス）中は盤下のバー（手番・パス）を出さず、その分だけ盤を大きく（2026-11-06） */
+html.pc2.rb-on #playbar{display:none!important}
+html.pc2.rb-on .side{height:var(--bs)}
 html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh)}
 .rb-body .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b0e15;background:#8fe3b8}.rb-body .tag.dubious{background:#f2c060}.rb-body .tag.bad{background:#ff6b5b}
@@ -950,9 +953,9 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=2"></script>
 <script src="../shared/onlinesec.js?v=1"></script>
 <script src="online.js?v=stale2"></script>
-<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/resign.js?v=3"></script>
 <script src="rbox.js?v=5"></script>
-<script src="../shared/export.js?v=7"></script>
+<script src="../shared/export.js?v=8"></script>
 <script src="app.js?v=22rx4"></script>
 <script src="../shared/coachkit.js?v=16"></script>
 <script src="../shared/record.js?v=12"></script>
@@ -980,7 +983,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=2')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/goban.js?v=11')).then(() => load('../atlas/skin/go.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=3')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/goban.js?v=11')).then(() => load('../atlas/skin/go.js?v=6'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

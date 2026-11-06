@@ -88,7 +88,7 @@
     dress: '<path d="M9 4l3 2 3-2 5 3-2 4-2-1v10H8V10l-2 1-2-4z"/>',
     map: '<path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
   };
-  const TABS = ['home', 'games', 'map', 'ach', 'shop', 'gacha', 'dress'];
+  const TABS = ['home', 'games', 'map', 'ach', 'gacha', 'dress'];   // ショップはガチャのページの下段（2026-11-06）。#shop はガチャへ
   const tabsEl = $('tabs');
   TABS.forEach(k => {
     const b = document.createElement('button'); b.className = 'tab'; b.role = 'tab'; b.dataset.k = k;
@@ -97,13 +97,15 @@
   });
   let page = 'home';
   function go(k, push = true) {
+    const toShop = k === 'shop'; if (toShop) k = 'gacha';
     if (!TABS.includes(k)) k = 'home';
     page = k; propWake(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
     render(k);
-    if (push) window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (toShop) requestAnimationFrame(() => $('shopSec').scrollIntoView({ behavior: push ? 'smooth' : 'auto', block: 'start' }));
+    else if (push) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /* ---------- common renderers ---------- */
@@ -1240,7 +1242,7 @@
   /* ---------- SHOP ---------- */
   // phones get their own shop / gacha / achievements layout (CSS under max-width:760px); PC keeps the plain one
   const isPhone = () => matchMedia('(max-width:760px)').matches;
-  { const mq = matchMedia('(max-width:760px)'), re = () => { if (page === 'shop') renderShop(); else if (page === 'gacha' && !busy) renderGacha(); else if (page === 'ach') renderAch(); };
+  { const mq = matchMedia('(max-width:760px)'), re = () => { if (page === 'gacha') { if (!busy) renderGacha(); renderShop(); } else if (page === 'ach') renderAch(); };
     mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re); }
   const wearing = id => { const it = ART.byId(id); return !!it && W.av[it.kind] === id; };
   function wear(id) { const it = ART.byId(id); if (!it || !W.owned.includes(id)) return; W.av[it.kind] = id; A_.save(W); SFX.boing && SFX.boing(); }
@@ -1257,7 +1259,7 @@
     }).join('');
     const buyNow = (id, p, quiet) => {
       if (C.balance < p) return toast(t('shop.short'));
-      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); if (!quiet) toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); return true; }
+      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); if (!quiet) toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); if (page === 'gacha' && !busy) renderGacha(); return true; }
     };
     $('shopItems').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
       const id = b.dataset.buy, p = +b.dataset.p;
@@ -1356,7 +1358,7 @@
     let done = false;
     try { done = await g.play(res, { info, skip: t('g.skip'), onOpen: r => { if (r.rar >= 3) confetti(r.rar === 4 ? 160 : 70); } }); }
     catch (e) { console.error(e); done = true; }
-    busy = false; renderGacha();
+    busy = false; renderGacha(); renderShop();
     if (!done) return;
     if (n === 1) {
       const a = g.actions(`<button class="btn ghost" id="gClose1">${t('g.close')}</button><button class="btn sky" id="gAgain1" ${C.balance < cost ? 'disabled' : ''}>${t('g.again')}</button>`);
@@ -1647,7 +1649,7 @@
     sfxIcon();
     renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
-    else if (k === 'shop') renderShop(); else if (k === 'gacha') renderGacha(); else if (k === 'dress') renderDress();
+    else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
   }
   // progress may change in another tab (a game) — re-read when coming back
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !session) { W = A_.load(); refresh(); render(page); welcome(); } });

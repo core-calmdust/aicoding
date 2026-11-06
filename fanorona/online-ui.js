@@ -51,6 +51,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
 $('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="ol.draw"></span></button>`);
+if (window.DrawOffer) DrawOffer.init({ btn: '#btnDraw', lang: () => LANG, live: () => window.drawLiveKind ? drawLiveKind() : '', online: () => settings.mode === 'online', ai: () => { if (window.playerDraw) playerDraw(); }, agree: () => { if (window.drawAgree) drawAgree(); } });
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
 // the new-game dialog: "online" shows a short description and opens the online dialog

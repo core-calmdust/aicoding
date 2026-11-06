@@ -503,7 +503,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); }
+function update(anim) { if (!anim) { sel = null; closePromo(); } renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); if (window.DrawOffer) DrawOffer.sync(); }
 
 // ====================================================================== input: tap or drag
 function squareAt(cx, cy) {
@@ -672,9 +672,38 @@ async function maybeAI(tok) {
   const wait = (settings.mode === 'watch' ? 650 : 350) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
+  if (settings.mode === 'watch' && res.move) {   // AI同士: 千日手模様なら不利な方が投了する
+    const loser = await watchRepLoser(p, res, tok);
+    if (tok !== busyToken) return;
+    if (loser) { thinking = 0; watchResign(loser); return; }
+  }
   thinking = 0;
   if (!res.move) { renderInfo(); return; }
   playMove(res.move);
+}
+// AI同士の対局で千日手模様（今の局面か、指そうとしている手の後の局面が前にも出ている）のとき、
+// はっきり不利な側（評価 1ポーン以上の差）を返す。互角なら 0（そのまま千日手の引き分けへ）。
+const WATCH_REP_CP = 100;
+async function watchRepLoser(p, res, tok) {
+  if (lesson || puzzle || inStudy()) return 0;
+  const { pos, hashes } = posAt(cur), seen = h => hashes.reduce((c, x) => c + (x === h ? 1 : 0), 0);
+  let near = seen(pos.h1) >= 2;
+  if (!near) { try { near = seen(E.replay(startFen, moves.slice(0, cur).concat([res.move])).pos.h1) >= 2; } catch (e) {} }
+  if (!near) return 0;
+  let v = res.v;
+  if (typeof v !== 'number') {   // (弱いレベルの手は評価値を返さないので、強めの探索で形勢を測る)
+    const r2 = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 16 });
+    if (tok !== busyToken) return 0;
+    v = r2 && r2.v;
+  }
+  if (typeof v !== 'number' || Math.abs(v) < WATCH_REP_CP) return 0;
+  return v < 0 ? p : (p === P1 ? P2 : P1);   // v は手番側から見た値
+}
+function watchResign(loser) {
+  busyToken++; cancelWorker('ai'); animating = false;
+  localOver = Object.assign({ mv: moves }, { over: true, winner: loser === P1 ? P2 : P1, why: 'resign' });
+  cur = moves.length; reviewing = false; hintList = null; sel = null; closePromo();
+  save(); update(false); onGameEnd(statusAt(moves.length));
 }
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
@@ -881,6 +910,16 @@ function olDrawSync() {
 $('#olDrawNo').onclick = () => olDrawAnswer(false);
 $('#olDrawYes').onclick = () => olDrawAnswer(true);
 $('#btnDraw').onclick = () => { if (settings.mode === 'online') olDrawOffer(); else playerDraw(); };
+// 同じ端末の2人対局でも引き分け（合意）をメニューから（shared/drawoffer.js）。AI 対局は上の playerDraw
+function drawLiveKind() { if (aiGameLive()) return 'ai'; return settings.mode === 'pvp' && !net && !lesson && !puzzle && !inStudy() && cur === moves.length && !gameOver(moves.length) ? 'pvp' : ''; }
+function drawAgree() {
+  if (drawLiveKind() !== 'pvp') return;
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false;
+  localOver = Object.assign({ mv: moves }, { over: true, winner: 0, draw: true, why: 'agree' });
+  reviewing = false; hintList = null; sel = null; closePromo();
+  save(); update(false); onGameEnd(statusAt(moves.length));
+}
+if (window.DrawOffer) DrawOffer.init({ btn: '#btnDraw', lang: () => LANG, live: drawLiveKind, online: () => settings.mode === 'online', ai: () => playerDraw(), agree: drawAgree });
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (settings.mode === 'online') return;

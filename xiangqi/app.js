@@ -512,7 +512,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); }
+function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); if (window.DrawOffer) DrawOffer.sync(); }
 
 // ====================================================================== input (click a piece, then its destination)
 function squareAt(clientX, clientY) {
@@ -622,6 +622,10 @@ async function maybeAI(tok) {
 let drawAsked = -99;   // ply of the last draw offer (either side), so offers are not repeated every move
 const pieces = pos => pos.count(P1) + pos.count(P2);
 function aiGameLive() { return settings.mode === 'ai' && !lesson && !puzzle && !gameOver(moves.length) && cur === moves.length; }
+// 引き分けの提案（shared/drawoffer.js）：AI 対局（AI が判定）と同じ端末の2人対局（合意）でもメニューから出せる
+function drawLiveKind() { if (lesson || puzzle || gameOver(moves.length) || cur !== moves.length) return ''; return settings.mode === 'ai' ? 'ai' : settings.mode === 'pvp' ? 'pvp' : ''; }
+window.drawLiveKind = drawLiveKind;
+window.drawAgree = () => { if (drawLiveKind() === 'pvp') endManually({ over: true, winner: 0, draw: true, why: 'agree' }); };
 function endManually(st) {
   busyToken++; cancelWorker('ai'); thinking = 0;
   st.n = moves.length;
