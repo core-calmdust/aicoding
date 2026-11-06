@@ -495,7 +495,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 
 /* ---------- items (shop / dress / gacha results) ---------- */
 .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-@media (min-width:761px){#shopItems{grid-template-columns:repeat(7,minmax(0,1fr))}}   /* today's shop: the 7 items in one row */
+@media (min-width:761px){#shopItems{grid-template-columns:repeat(6,minmax(0,1fr))}}   /* today's shop: the 6 items in one row, each as wide as the row allows */
 .item{position:relative;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;border-radius:22px}
 .item .art{width:100%;aspect-ratio:1;border-radius:18px;display:grid;place-items:center;background:#f6efdd;overflow:hidden}
 .item .art svg{width:82%;height:82%}
@@ -1526,7 +1526,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="texgen.js?v=1"></script>
 <script src="art.js?v=6"></script>
-<script src="../shared/atlas.js?v=20261106sh7"></script>
+<script src="../shared/atlas.js?v=20261106sh6"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=50"></script>
