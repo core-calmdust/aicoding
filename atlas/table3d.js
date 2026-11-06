@@ -959,7 +959,7 @@
      picked by ?tbl=k (temporary) or localStorage 'atlas-table'; Table3D.setTable(k) rebuilds the room */
   const TABLES = {};
   let tableStyle = (() => { try { const m = /[?&]tbl=(\d)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
-  let tblInfo = null, roomBg = null;
+  let tblInfo = null, roomBg = null, viewOnly = [];
   try { const m = /[?&]bright=(\d)/.exec(location.search); if (m) localStorage.setItem('atlas-bright', m[1]); } catch (e) {}
   const LOOK = {
     morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
@@ -1268,12 +1268,14 @@
     const TT = T(), mode = plain ? 'day' : curTod(), L = LOOK[mode];   // the games themselves are always lit like daytime
     const g = new TT.Group(); scene.add(g); rbCap = 1;
     const FLOOR = -3.4;
-    tblInfo = null; lampShade = null; boardLamp = ambLift = null; roomCss = '';
+    tblInfo = null; lampShade = null; boardLamp = ambLift = null; roomCss = ''; viewOnly = [];
     const ST = !plain && tableStyle && TABLES[tableStyle];
     if (ST) {   // one of the other table designs: it builds its own table, surroundings and lights
       rbCap = 4;
       const gid = () => (cur && cur.userData.gameId) || 'chess';
-      try { tblInfo = ST({ TT, g, scene, LITE, COARSE, texScale: texScale(), game: gid(), css: v => { roomCss = v || ''; if (!museumOn) paintCss(roomCss); } }) || {}; } finally { rbCap = 9; }
+      // (tod: the time of day for the places that follow it — ダイニング, テラス; viewOnly objects such as a pendant over the table hide in play view)
+      try { tblInfo = ST({ TT, g, scene, LITE, COARSE, tod: mode, texScale: texScale(), game: gid(), css: v => { roomCss = v || ''; if (!museumOn) paintCss(roomCss); } }) || {}; } finally { rbCap = 9; }
+      viewOnly = []; g.traverse(x => { if (x.userData.viewOnly) viewOnly.push(x); });
       keyLight = tblInfo.key || null;
       if (keyLight) { keyLight.castShadow = true; keyLight.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); keyLight.shadow.bias = keyLight.shadow.bias || -.0004; keyLight.shadow.normalBias = .02; }
       boardLight(TT, scene, tblInfo.board ?? .3, tblInfo.boardCol);
@@ -1384,7 +1386,7 @@
     R.outputEncoding = T().sRGBEncoding; R.toneMapping = T().ACESFilmicToneMapping; R.toneMappingExposure = expo(baseExp);
     container.appendChild(R.domElement);
     scene = new (T().Scene)();
-    cam = new (T().PerspectiveCamera)(32, 1, .1, 200);
+    cam = new (T().PerspectiveCamera)(32, 1, .1, 900);   // (far: the places' rooms and the terrace's sea and sky lie up to ~500 away)
     const envMake = () => {
     // studio-like image-based lighting (soft boxes) for believable reflections on lacquer, stones and discs
     try {
@@ -1808,6 +1810,7 @@
     if (Math.abs(insetTTo - insetT) > .5) { insetT += (insetTTo - insetT) * ez(.12); frame(); moving = true; } else if (insetT !== insetTTo) { insetT = insetTTo; frame(); moving = true; }
     if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); moving = true; } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); moving = true; }
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
+    if (viewOnly.length) { const on = !museumOn && mode !== 'play' && camK < .5; if (viewOnly[0].visible !== on) { viewOnly.forEach(x => { x.visible = on; }); dirty = true; } }   // (a place's lamp over the table: never between the play camera and the board)
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; if (Math.abs(tilt) < 1e-5) tilt = 0; } else moving = true;
     if (vel || tilt) moving = true;
     if (!drag && !vel && mode === 'view' && !quietOn && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
