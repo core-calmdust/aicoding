@@ -17,7 +17,9 @@
   // visit where the frames were slow (see the adaptive check in loop()). Lite = 1× pixels, no antialias, small soft-free
   // shadows, half-size procedural textures, small parts cast no shadows (they have contact shadows).
   const COARSE = matchMedia('(pointer: coarse)').matches;
-  const LITE = (() => { try { if (localStorage.getItem('atlas-lite') === '1') return true; } catch (e) {}
+  // 'lite' remembered from a slow visit only lasts a day (it used to stick forever, and a busy first second could trip it)
+  try { localStorage.removeItem('atlas-lite'); } catch (e) {}
+  const LITE = (() => { try { const t = +localStorage.getItem('atlas-lite2') || 0; if (t && Date.now() - t < 864e5) return true; } catch (e) {}
     return COARSE && (navigator.deviceMemory || 8) <= 3; })();   // (core counts are unreliable on iOS: the frame-time check below decides there)
   const texScale = () => (LITE ? .5 : COARSE ? .5 : 1);   // phones never need 2048² procedural textures
   let texNest = 0;   // > 1 while one procedural canvas is drawn inside another (a composite: its sources are drawn at once)
@@ -1369,7 +1371,7 @@
   function mount(container, opts = {}) {
     el = container;
     const coarse = COARSE, skinPage = !!opts.local;
-    pr = Math.min(LITE ? 1 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    pr = Math.min(LITE ? 1.25 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // (lite: 1.25×, not 1× — 1× looked blurry on phones)   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
     // skin pages drawn at 2x: no MSAA on top (the 2x pixels already smooth the edges; MSAA would multiply the fill and memory again)
     R = new (T().WebGLRenderer)({ antialias: !LITE && !(skinPage && pr >= 2), alpha: true, powerPreference: 'high-performance' });
     R.setPixelRatio(pr);
@@ -1440,17 +1442,19 @@
   // hshift px: the picture is moved sideways inside the canvas (a shift lens) — Historia keeps its board beside the page this way,
   // so the canvas itself never moves and the room fills the whole screen
   let hshift = 0, hshiftTo = 0;
+  // insetT px at the top: a band kept free above the board (the portal's phone-landscape game bar, app.js landSync)
+  let insetT = 0, insetTTo = 0;
   function frame() {
-    const free = Math.max(120, ch - inset);
+    const free = Math.max(120, ch - inset - insetT);
     cam.aspect = cw / free;
-    if (inset > .5 || Math.abs(hshift) > .5) cam.setViewOffset(cw, free, -hshift, 0, cw, ch); else cam.clearViewOffset();
+    if (inset > .5 || insetT > .5 || Math.abs(hshift) > .5) cam.setViewOffset(cw, free, -hshift, -insetT, cw, ch); else cam.clearViewOffset();
     cam.updateProjectionMatrix();
   }
   function setShift(px) { const v = px || 0; if (v === hshiftTo) return; hshiftTo = v; kick(900); }
   // glide: a timed ease-in-out of the camera (and the framing above the info card) instead of the soft exponential follow
   let glide = null;
   const ioC = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-  function setInset(px) { const v = Math.max(0, px || 0); if (v === insetTo) return; insetTo = v; if (glide) glide.i1 = insetTo; kick(300); }   // (the same value again: nothing to draw)
+  function setInset(px, top) { const v = Math.max(0, px || 0), vt = Math.max(0, top || 0); if (v === insetTo && vt === insetTTo) return; insetTo = v; insetTTo = vt; if (glide) glide.i1 = insetTo; kick(300); }   // (the same value again: nothing to draw)
   let sizeLate = false;
   function resize() {
     if (!R) return;
@@ -1757,16 +1761,20 @@
   }
   // adaptive resolution: while something animates, watch the frame interval; if a phone can't keep up (median > 34 ms),
   // drop to 1× pixels at once and remember 'lite' for the next visit (half-size textures, small shadows)
-  let pr = 1, slow = [], slowDone = false;
+  // (only after the first 4 s — textures and shaders are still being built then — and only when two windows in a row are slow;
+  //  the step down is to 1.25×, never below)
+  let pr = 1, slow = [], slowDone = false, slowHits = 0; const t0Speed = performance.now();
   function watchSpeed(dt) {
-    if (slowDone || !COARSE || !R) return;
+    if (slowDone || !COARSE || !R || performance.now() - t0Speed < 4000) return;
     slow.push(dt); if (slow.length < 40) return;
     const med = slow.slice().sort((a, b) => a - b)[20]; slow = [];
-    if (med > 34) {
-      if (pr > 1) { pr = 1; R.setPixelRatio(1); frame(); kick(300); }
-      try { localStorage.setItem('atlas-lite', '1'); } catch (e) {}
+    if (med > 40) {
+      if (++slowHits < 2) return;
+      const lo = Math.min(1.25, window.devicePixelRatio || 1);
+      if (pr > lo) { pr = lo; R.setPixelRatio(lo); frame(); kick(300); }
+      try { localStorage.setItem('atlas-lite2', String(Date.now())); } catch (e) {}
       slowDone = true;
-    } else if (med < 22) slowDone = true;   // fast enough: stop measuring
+    } else { slowHits = 0; if (med < 22) slowDone = true; }   // fast enough: stop measuring
   }
   // one frame; the next one is asked for only while step() says something still needs frames
   function loop(now = performance.now()) {
@@ -1794,6 +1802,7 @@
     if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); moving = true; }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); moving = true; }
+    if (Math.abs(insetTTo - insetT) > .5) { insetT += (insetTTo - insetT) * ez(.12); frame(); moving = true; } else if (insetT !== insetTTo) { insetT = insetTTo; frame(); moving = true; }
     if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); moving = true; } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); moving = true; }
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; if (Math.abs(tilt) < 1e-5) tilt = 0; } else moving = true;
@@ -1900,8 +1909,8 @@
   function turn(a, s) { if (a == null) { tYaw = null; tS = 1; yaw = 0; } else { tYaw = a; tS = s || 1; } rootDirty = true; kick(250); }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
-  function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
-  const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
+  function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
+  const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
   window.Table3D = { TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

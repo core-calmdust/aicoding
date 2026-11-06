@@ -1673,7 +1673,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=3"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=37"></script>
+<script src="../shared/headerbar.js?v=38"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1804,7 +1804,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() => null).then(b => (book = b));
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=43');
+  const w = new Worker('engine.js?v=44');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -2015,13 +2015,19 @@ function applyFlip() {
 
 function makeDisc(color) {
   const w = document.createElement('div'); w.className = 'disc-wrap';
+  w.addEventListener('animationend', discAnimEnd);
   const d = document.createElement('div'); d.className = 'disc' + (color === WHITE ? ' white' : '');
   d.innerHTML = '<div class="face b"></div><div class="face w"></div>';
   w.appendChild(d); return w;
 }
+// (the lift / drop animation classes are taken off again when they have played: left on, every disc that had ever flipped
+// played its lift again whenever the board was redrawn without animation (.no-anim off again) — stepping through a review
+// made the whole board twitch)
+const discAnimEnd = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('flip', 'drop'); };
 function setDisc(s, color, anim) {
   const el = discEls[s];
   if (!color) { if (el) { el.remove(); discEls[s] = null; } return; }
+  if (el && !anim) el.classList.remove('flip', 'drop');
   if (!el) {
     const w = makeDisc(color); if (anim === 'drop') w.classList.add('drop');
     cellEls[s].appendChild(w); discEls[s] = w; return;
@@ -2431,7 +2437,15 @@ function viewAt(i) {
   if (rbS) RBox.stop();
   if (i === positions.length - 1 && !reviewing) return;
   busyToken++; cancelAI(); cancelAna();
+  // one move forward / back: only the discs that change move — the placed disc drops in (or is taken off), the flipped ones
+  // turn over (back again when going back); a jump further is drawn at once
+  const was = cur, A = positions[was], B = positions[i];
   cur = i; reviewing = i !== positions.length - 1;
+  if (Math.abs(i - was) === 1 && A && B && settings.anim) {
+    const sq = (i > was ? B : A).last, flips = [];
+    if (sq >= 0) for (let s = 0; s < 64; s++) if (s !== sq && A.cells[s] && B.cells[s] && A.cells[s] !== B.cells[s]) flips.push(s);
+    if (sq >= 0) { renderBoard({ sq, flips }); renderInfo(); save(); schedule(null); return; }
+  }
   update(null);
 }
 $('#btnLatest').onclick = () => { reviewing = false; cur = positions.length - 1; update(null); };
@@ -5520,7 +5534,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=99')).then(() => load('../atlas/tables3d.js?v=1')).then(() => load('../atlas/skin/common.js?v=27')).then(() => load('../atlas/skin/reversi.js?v=23'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=101')).then(() => load('../atlas/tables3d.js?v=1')).then(() => load('../atlas/skin/common.js?v=28')).then(() => load('../atlas/skin/reversi.js?v=23'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

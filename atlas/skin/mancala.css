@@ -87,3 +87,41 @@ html.atlas-mancala #bgfx{display:none!important}
   /* the info column beside the board (online dock open): from the top bar to the bottom bar, as in the 2D page (not only the 3D board's height) */
   html.atlas-mancala body.dock-open:not(.ol-soon) .side{top:0!important}
 }
+/* ===== phones held sideways (the page's landtabs.js → html.lt-land; also the page turned by the 横画面 button): the 2D page's own
+   layout — one top row, the board, the tab rail at the right edge and its drawer — in the portal look; the portal bar is a slim pill
+   in place of the page's title and icons (logo · name · 反転 · 戦績 · language · 横画面 · home), as ur/?skin=atlas ===== */
+html.atlas-mancala.lt-land body.lt-on .app.app{grid-template-columns:auto minmax(0,1fr) 58px!important;grid-template-areas:"brand ctrl ctrl" "fr fr rl"!important;padding-top:6px!important}
+html.atlas-mancala.lt-land body.lt-on.in-lesson .app.app,html.atlas-mancala.lt-land body.lt-on.in-puzzle .app.app{grid-template-columns:auto minmax(0,1fr) var(--ltw,300px)!important;grid-template-areas:"brand ctrl ctrl" "fr fr pn"!important}
+html.atlas-mancala.lt-land .app > .atlas-top{position:relative;z-index:6;grid-area:brand;top:auto;left:auto;right:auto;height:34px;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.95);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);align-self:center;justify-self:start}
+html.atlas-mancala.lt-land .atlas-top .sp{flex:0 0 2px;min-width:0}
+html.atlas-mancala.lt-land .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}
+html.atlas-mancala.lt-land .atlas-brand img{width:26px;height:26px}
+html.atlas-mancala.lt-land .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap}
+html.atlas-mancala.lt-land .atlas-brand b{font-size:13px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.atlas-mancala.lt-land .atlas-brand small{display:none}
+html.atlas-mancala.lt-land .atlas-brand .mcgn{display:block!important;flex:none;font-style:normal;font-weight:900;font-size:14px;color:#d93c3c;white-space:nowrap}
+html.atlas-mancala:not(.lt-land) .atlas-brand .mcgn{display:none}
+html.atlas-mancala.lt-land .atlas-coin{display:none}
+html.atlas-mancala.lt-land .atlas-top :is(.atlas-ic,.atlas-lbtn){height:28px;min-width:32px;width:32px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
+html.atlas-mancala.lt-land .atlas-top :is(.atlas-ic,.atlas-lbtn) svg{width:16px;height:16px}
+html.atlas-mancala.lt-land .atlas-lbtn b{display:none}
+html.atlas-mancala.lt-land .atlas-lpop{top:36px;left:0;right:auto;z-index:90}
+html[dir=rtl].atlas-mancala.lt-land .atlas-lpop{left:auto;right:0}
+html.atlas-mancala.lt-land body.lt-on .app .controls.card{margin:0 0 0 4px!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;align-self:center}
+html.atlas-mancala.lt-land body.lt-on .controls .btn{width:40px!important;height:32px!important;border-radius:99px!important;background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+html.atlas-mancala.lt-land body.lt-on .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}
+html.atlas-mancala.lt-land body.lt-on .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
+html.atlas-mancala.lt-land body.lt-on .controls .btn svg{width:18px!important;height:18px!important}
+html.atlas-mancala.lt-land body.lt-on #ltRail{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important}
+html.atlas-mancala.lt-land body.lt-on #ltRail button{color:#5a6078!important;font-family:'Zen Maru Gothic',var(--font,sans-serif)!important;font-weight:900!important;font-size:10.5px!important;letter-spacing:-.05em!important}
+html.atlas-mancala.lt-land body.lt-on #ltRail button.sel{color:#d93c3c!important;background:#fff3d8!important}
+html.atlas-mancala.lt-land body.lt-on #ltRail button.sel::before{background:#d93c3c!important}
+html.atlas-mancala.lt-land body.lt-on #ltPanel{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important;color:var(--text)}
+html.atlas-mancala.lt-land body.lt-on #ltPanel > .card{box-shadow:none!important;border:2px solid #f3e7cc!important;border-radius:16px!important}
+html.atlas-mancala.lt-land body.lt-on #ltLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important;box-shadow:0 2px 0 #efe3c8}
+html.atlas-mancala.lt-land body.lt-on #ltLearn button svg{stroke:#d93c3c!important}
+html.atlas-mancala.lt-land body.lt-on.lt-nav #ltNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}
+/* the names above the stores (the 2D page's landscape board), as readable pills */
+html.atlas-mancala.lt-land body.lt-on .slabel{font:700 max(12px,calc(var(--u) * .2)) 'Zen Maru Gothic',sans-serif!important;letter-spacing:.04em!important;color:#f0d696!important;padding:1px 9px;border-radius:99px;background:rgba(10,10,12,.6);border:1px solid rgba(226,194,117,.4)}
+html.atlas-mancala.lt-land body.lt-on .slabel::after{content:none!important}
+html.atlas-mancala.lt-land body.lt-on .slabel.me{color:#ffd77a!important;border-color:rgba(255,215,122,.75)}

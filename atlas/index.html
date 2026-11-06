@@ -738,27 +738,89 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 }
 
 /* ---------- dress ---------- */
-.dress{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
+/* the player card (app.js renderCard): the dress-up preview doubling as My Page.
+   PC: a tall narrow column (340px) sticky beside the items: character + worn items on its background · name / coins / Lv ·
+   2×2 stat tiles · login week · Google. Phones: one compact block — the login week and Google open from the 🔥 tile. */
+.dress{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1099px){.dress{grid-template-columns:320px minmax(0,1fr)}}
 @media (max-width:760px){.dress{grid-template-columns:1fr}}
-.dprev{padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;position:sticky;top:90px;overflow:hidden}
-.dprev .bgfill{position:absolute;inset:0;opacity:.85}
-.dprev > *:not(.bgfill){position:relative}
-/* worn names: player + character / background / frame, beside (phone) or under (PC) the character */
-.dprev .dname{width:100%;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:5px;text-align:start}
-.dprev .dpl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:5px;border-bottom:2px dashed rgba(0,0,0,.08)}
-.dprev .dpl b{font-size:18px;color:var(--ink);min-width:0;overflow-wrap:anywhere}.dprev .dpl .gnote{color:#5a6078;flex:none}
-.dprev .dw{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
-.dprev .dw.on{background:rgba(54,180,255,.14)}
+.dprev{position:sticky;top:90px;display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
+.nc-l{grid-area:l;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px 12px 14px;overflow:hidden}
+.nc-l .bgfill{position:absolute;inset:0;opacity:.9}
+.nc-l > *:not(.bgfill){position:relative}
+.nc-side{grid-area:side;min-width:0;padding:16px 18px 0;display:flex;flex-direction:column;gap:8px}
+.nc-tiles{grid-area:tiles;padding:0 18px}
+.nc-wk{grid-area:wk;padding:0 18px 16px;display:flex;flex-direction:column;gap:9px}
+/* worn names: a translucent white panel on the background (PC, under the character) */
+.dprev .dname{width:100%;padding:7px 10px;border-radius:14px;background:rgba(255,255,255,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 0 rgba(0,0,0,.06),0 6px 16px rgba(60,40,10,.12);border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;gap:3px;text-align:start}
+.dprev .dw{display:flex;flex-direction:column;align-items:stretch;gap:0;font-size:13px;line-height:1.3;padding:2px 6px;margin:0 -6px;border-radius:9px}
+.dprev .dw.on{background:rgba(54,180,255,.16)}
 .dprev .dwh{display:flex;align-items:center;gap:6px}.dprev .dw .dwk{font-size:11px;font-weight:800;color:#5a6078;white-space:nowrap}
-.dprev .dw b{font-weight:900;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.dprev .dw b{font-weight:900;font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
 .dprev .dw .rar{position:static;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
-/* the name panel stays translucent white on every background (no dark variant) */
+.nc-top{display:flex;align-items:center;gap:10px}
+.nc-top input{flex:1;min-width:0;border:0;border-bottom:2px dashed #d8c9a6;background:transparent;font-size:20px;font-weight:900;padding:1px 0;outline:none;color:var(--ink)}
+.nc-top input:focus{border-bottom-color:var(--sky)}
+.nc-coin{flex:none;font-size:16px;padding:3px 11px 3px 4px}.nc-coin i{width:22px;height:22px}
+.nc-lv{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:8px;row-gap:1px}
+.nc-lv b{font:700 15px var(--round);color:var(--grape2)}
+.nc-lvb{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.nc-lvb i{height:8px;border-radius:99px;background:#ece4d2}.nc-lvb i.on{background:var(--grape)}
+.nc-lv small{grid-column:2;font-size:12px;font-weight:800;color:var(--ink2)}
+.nc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.nct{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:9px;text-align:start;background:#fff;border:2px solid var(--line);border-radius:14px;padding:7px 10px;box-shadow:0 2px 0 var(--line);font:inherit;color:inherit;min-width:0}
+.nct .ic{grid-row:1/3;font-size:22px;line-height:1}
+.nct b{font:700 19px var(--round);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nct b small{font-size:12px;color:var(--ink2)}
+.nct em{font-style:normal;font-size:12px;font-weight:900;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.nct{cursor:pointer;transition:transform .15s,box-shadow .15s}
+button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--line)}button.nct[data-go]:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+.nct .nc-ar,.nct .nc-v{position:absolute;top:5px;inset-inline-end:8px}
+.nct .nc-ar{font:700 16px var(--round);color:var(--sky);line-height:1}
+.nct .nc-v{width:13px;height:13px;fill:none;stroke:var(--ink2);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.dprev.wk .nct .nc-v{transform:rotate(180deg)}
+/* PC: the login week is always shown, so the 🔥 tile is just a tile */
+@media (min-width:761px){ .nct .nc-v{display:none} button.nct[data-wk]{cursor:default;pointer-events:none} }
+.dprev .lgh small{display:block;font-size:11.5px}.dprev .lgh b{font-size:13.5px}
+.dprev .lgd .d i{width:21px;height:21px;font-size:10.5px}.dprev .lgd .d.big i{height:21px;font-size:16px}.dprev .lgd .d small{font-size:10.5px}
+.dprev .acc{margin-top:0;font-size:12px}
+@media (min-width:761px){
+  /* one column, short enough for an 800px-tall window; scrolls inside only on a very short one */
+  .dprev{display:flex;flex-direction:column;gap:11px;max-height:calc(100vh - 160px);overflow-y:auto;scrollbar-width:thin}
+  /* the character with the worn items beside it, on the background */
+  .nc-l{flex:none;flex-direction:row;align-items:center;gap:10px;padding:12px}
+  .nc-l .poke{flex:none}
+  .dprev .nc-l .dname{flex:1;min-width:0;padding:6px 9px;gap:2px}
+  .dprev .nc-l .dw b{font-size:13px}
+  .nc-side{padding:0 16px;gap:7px}.nc-tiles{padding:0 16px}.nc-wk{padding:0 16px 16px}
+  .nc-top input{font-size:19px}
+  .nc-lv small{display:none}
+  .nct{padding:6px 9px;column-gap:8px}.nct .ic{font-size:20px}.nct b{font-size:18px}
+}
 @media (max-width:760px){
-  .dprev{position:relative;top:auto;flex-direction:row;padding:12px;gap:10px}
-  .dprev .poke{flex:none}
-  .dprev .dname{flex:1;min-width:0;padding:8px 10px;gap:3px}
-  .dprev .dpl b{font-size:15px}
-  .dprev .dw{gap:0}.dprev .dw b{font-size:12px}.dprev .dw .dwk{font-size:10px}.dprev .dw .rar{font-size:9px;padding:0 5px}
+  /* phones: character | name · coins · Lv · worn items, then four tiles in a row; the 🔥 tile opens the login week + Google */
+  .dprev{display:grid;position:relative;top:auto;grid-template-columns:112px minmax(0,1fr);grid-template-areas:"l side" "tiles tiles" "wk wk";grid-template-rows:auto;row-gap:0;border-radius:22px}
+  .nc-l{padding:12px 4px;border-end-end-radius:18px}
+  .nc-side{padding:13px 13px 9px 12px;gap:8px}
+  .nc-top{gap:8px}.nc-top input{font-size:16px}
+  .nc-coin{font-size:13.5px;padding:2px 8px 2px 3px}.nc-coin i{width:19px;height:19px;font-size:10px}
+  .nc-lv b{font-size:12.5px}.nc-lvb i{height:6px}.nc-lv small{display:none}
+  .nc-lv{margin-top:-1px}
+  .dprev .dname{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;gap:3px;margin-top:2px}
+  .dprev .dw{flex-direction:row;align-items:center;gap:6px;padding:2px 6px;margin:0 -6px;font-size:12px;line-height:1.45}
+  .dprev .dwh{flex:none;gap:4px}.dprev .dw .dwk{font-size:10.5px;min-width:3.6em}.dprev .dw .rar{font-size:9px;padding:0 4px}
+  .dprev .dw b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nc-tiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:12px 12px 12px}
+  .nct{grid-template-columns:auto auto;justify-content:center;column-gap:3px;row-gap:3px;padding:8px 3px 7px;border-radius:13px;text-align:center}
+  .nct .ic{grid-row:auto;font-size:13px}
+  .nct b{font-size:14px}.nct b small{font-size:9.5px}
+  .nct em{grid-column:1/-1;font-size:10.5px;text-align:center;white-space:normal;line-height:1.2;overflow-wrap:anywhere}   /* long labels (ar, de …) wrap instead of being cut */
+  .nct .nc-ar{top:2px;inset-inline-end:4px;font-size:12px}
+  /* the 🔥 tile's ⌄ is a little pull tab on its bottom edge (it opens the login week + Google) */
+  .nct .nc-v{top:auto;bottom:-9px;inset-inline-end:auto;left:50%;margin-left:-11px;width:22px;height:15px;padding:1px 4px;background:#fff;border:2px solid var(--line);border-radius:8px;box-sizing:border-box}
+  .nc-tiles{padding-bottom:17px}
+  .nc-wk{display:none;padding:0 12px 13px;gap:10px}.dprev.wk .nc-wk{display:flex}
+  .dprev .lgh small{font-size:10.5px}.dprev .lgh b{font-size:12.5px}
+  .dprev .lgd .d i{width:19px;height:19px;font-size:9.5px}.dprev .lgd .d.big i{height:19px;font-size:15px}.dprev .lgd .d small{font-size:9.5px}
 }
 /* the item list: a compact icon grid (rarity = border colour, lock = not owned yet, check = worn) */
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:12px}
@@ -842,6 +904,86 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
+/* ===== table play on a phone held sideways (app.js LAND, #bv.pland): the full game's own landscape layout
+   (atlas/skin/skin.css html.atlas-land for backgammon, atlas/skin/mancala.css html.mc-barmenu for mancala) ===== */
+.pl{display:none}
+.bv.pland .pl{position:absolute;z-index:6;display:grid;align-items:center;font-family:'Zen Maru Gothic',var(--font,sans-serif);color:#2b3044;pointer-events:none}
+.bv.pland .pl > *,.bv.pland .pl #hud > *{pointer-events:auto}
+.bv.pland .quit,.bv.pland .bgbub{display:none!important}
+.bv.pland #hud{display:contents}
+.bv.pland .tbar{position:static;transform:none!important;opacity:1;visibility:visible;pointer-events:auto;background:none;border:0;box-shadow:none;padding:0;gap:5px;transition:none}
+.bv.pland .tbar .tbtns{gap:5px}
+.bv.pland .tbar .tclk{min-width:0;height:30px;padding:0 9px;font-size:15px;border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35)}
+.bv.pland .tbar .tclk small{font-size:8px}
+.plb img{flex:none;width:26px;height:26px}
+.plb .plt{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
+.plb .plt b{font-family:'RocknRoll One',var(--round,sans-serif);font-weight:400;font-size:12.5px;color:#111;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.plb .plt em{flex:none;font-style:normal;font-weight:900;font-size:13px;color:#d93c3c}
+.plb .sp{flex:1 1 0;min-width:0}
+.plic{flex:none;height:26px;width:30px;padding:0;border-radius:99px;border:1.5px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer}
+.plic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* 'pill' (backgammon): row 1 = the slim pill + the player chips, row 2 = the status line + the menu icons */
+.bv.pl-pill .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:32px 30px;gap:6px 5px}
+.bv.pl-pill .plb{grid-row:1;grid-column:1;min-width:0;height:32px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;margin-inline-end:3px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-pill .plb .plt{margin-inline-start:2px}
+.bv.pl-pill #hud > .hs{grid-row:1;height:32px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px 0 7px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12px var(--font,sans-serif);color:#6a7088}
+.bv.pl-pill #hud > .hs:first-child{grid-column:2}
+.bv.pl-pill #hud > .hs:last-child{grid-column:3}
+.bv.pl-pill #hud > .hs.on{border-color:#ffc928;box-shadow:0 3px 0 #e09a00;background:rgba(255,253,247,.95)}
+.bv.pl-pill #hud > .hs b{font-family:'Shippori Mincho B1',Georgia,'Times New Roman',serif;font-weight:800;font-size:18px;line-height:1;min-width:0;color:#2b3044;font-variant-numeric:tabular-nums}
+.bv.pl-pill #hud > .hs :is(.dk,.bgk){width:19px!important;height:19px!important}
+.bv.pl-pill #hud > .hm{grid-row:2;grid-column:1;min-width:0;height:30px;box-sizing:border-box;line-height:26px;margin-inline-end:3px;padding:0 12px;border-radius:99px;background:rgba(255,253,247,.94);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12.5px var(--font,sans-serif);color:#2b3044;text-align:start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bv.pl-pill #hud > :not(.hs):not(.hm){grid-row:2;grid-column:1;justify-self:end;margin-inline-end:8px}
+.bv.pl-pill .tbar{grid-row:2;grid-column:2 / 4;justify-self:end}
+.bv.pl-pill .tbar button{width:38px;min-width:0;height:30px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-pill .tbar button span{display:none}
+.bv.pl-pill .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-pill .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+/* 'bar' (mancala): one full-width bar — logo | the menu (icon + label) | sound · やめる; the rest is on the board */
+.bv.pl-bar .pl{top:0;left:0;right:0;height:calc(46px + env(safe-area-inset-top));box-sizing:border-box;padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;background:rgba(255,246,226,.92);border-bottom:2px solid #efe3c8;box-shadow:0 4px 14px -10px rgba(80,40,0,.4);pointer-events:auto}
+.bv.pl-bar .plb{display:contents}
+.bv.pl-bar .plb img{grid-column:1;width:28px;height:28px}
+.bv.pl-bar .plb .plt,.bv.pl-bar .plb .sp,.bv.pl-bar #hud{display:none}
+.bv.pl-bar .plic{height:32px;width:34px;border-width:2px}
+.bv.pl-bar .plic svg{width:17px;height:17px}
+.bv.pl-bar .tbar{grid-column:2;grid-row:1;min-width:0;justify-content:flex-start}
+.bv.pl-bar .tbar .tbtns{flex:1 1 auto;min-width:0}
+.bv.pl-bar .tbar button{flex:0 1 112px;min-width:0;height:34px;padding:0 6px;flex-direction:row;gap:5px;border-radius:10px;background:#fff;border:2px solid #efe3c8;box-shadow:0 2px 0 #efe3c8;color:#2b3044;font:700 11.5px var(--font,sans-serif);white-space:nowrap}
+.bv.pl-bar .tbar button span{overflow:hidden;text-overflow:clip}
+.bv.pl-bar .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-bar .tbar button:disabled{opacity:.45}
+@media (max-width:620px){.bv.pl-bar .tbar button span{display:none}}
+/* 'side' (ur): row 1 = the slim pill + the menu icons, the player cards in a column at the left (the full game's landscape page) */
+.bv.pl-side .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));grid-template-columns:auto auto;grid-template-rows:34px minmax(0,1fr);gap:8px 6px;align-items:center;justify-content:start}
+.bv.pl-side .plb{grid-row:1;grid-column:1;min-width:0;max-width:calc(50vw - 20px);height:34px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
+.bv.pl-side .plb .plt{margin-inline:2px 6px}
+.bv.pl-side .plb .sp{display:none}
+.bv.pl-side .tbar{grid-row:1;grid-column:2;justify-self:start}
+.bv.pl-side .tbar button{width:38px;min-width:0;height:32px;padding:0;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);color:#2b3044}
+.bv.pl-side .tbar button span{display:none}
+.bv.pl-side .tbar button svg{width:16px;height:16px;stroke-width:2.2}
+.bv.pl-side .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
+.bv.pl-side .pl #hud{grid-row:2;grid-column:1 / 3;justify-self:start;align-self:center;display:flex;flex-direction:column;gap:12px;width:min(172px,24vw);position:static;transform:none;padding:0;background:none;border:0;box-shadow:none;max-width:none;transition:none}
+.bv.pl-side #hud > *{pointer-events:auto}
+/* (games/ur.js) a player card: name · pieces home (/7) · the roll button or the message in the box below */
+.bv.pl-side #hud .urc{display:flex;flex-direction:column;gap:6px;padding:9px 10px 10px;border-radius:16px;background:rgba(255,253,247,.96);border:2.5px solid #fff;box-shadow:0 4px 0 rgba(150,110,50,.3);color:#2b3044;box-sizing:border-box}
+.bv.pl-side #hud .urc.on{border-color:#ffc928;box-shadow:0 4px 0 #e09a00}
+.bv.pl-side #hud .urc-h{display:flex;align-items:center;gap:6px;font:700 13px var(--font,sans-serif);white-space:nowrap;min-width:0}
+.bv.pl-side #hud .urc-h > span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.bv.pl-side #hud .urc-h b{font:800 17px 'Shippori Mincho B1',Georgia,serif;font-variant-numeric:tabular-nums}
+.bv.pl-side #hud .urc-h small{font-size:9.5px;color:#8a90a2;font-weight:700}
+.bv.pl-side #hud .urc-b{min-height:38px;display:grid;place-items:center;border-radius:12px;background:#f3ead8;box-shadow:inset 0 1px 2px rgba(120,90,40,.18);padding:3px;box-sizing:border-box;font:700 11.5px var(--font,sans-serif);color:#6a7088;text-align:center;line-height:1.3}
+.bv.pl-side #hud .urc-b .urb{width:100%;height:36px;padding:0;border-radius:99px;background:#fff;border:2.5px solid #3557c9;color:#24409e;font:900 15px var(--font,sans-serif);letter-spacing:.12em;box-shadow:0 3px 0 #24409e;cursor:pointer;white-space:nowrap}
+.bv.pl-side #hud .urc-b .urb:active{transform:translateY(2px);box-shadow:0 1px 0 #24409e}
+html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% + min(86px,12vw))}
+/* mancala (games/mancala.js): the names above the stores and the turn message on the middle line, as the full game's landscape board */
+.mcl{display:none}
+.bv.pland .mcl.on{display:block;position:absolute;inset:0;z-index:3;pointer-events:none}
+.mcl > *{position:absolute;transform:translate(-50%,-50%);white-space:nowrap}
+.mcl-n{font:700 max(11px,calc(var(--u,60px) * .2)) 'Zen Maru Gothic',var(--font,sans-serif);letter-spacing:.04em;color:#c9b07a;padding:1px 8px;border-radius:99px;background:rgba(10,10,12,.55);border:1px solid rgba(226,194,117,.35)}
+.mcl-n.me{color:#ffd77a;border-color:rgba(255,215,122,.75)}
+.mcl-m{font:800 max(13px,calc(var(--u,60px) * .31)) 'Shippori Mincho B1',serif;letter-spacing:.12em;color:#ecd08e;text-shadow:0 0 18px rgba(226,194,117,.4),0 2px 6px rgba(0,0,0,.7)}
+.mcl-m:empty{display:none}
 .rgd{position:absolute;z-index:4;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));width:min(760px,calc(100% - 24px));transform:translate(-50%,130%);opacity:0;transition:transform .5s cubic-bezier(.3,1.3,.5,1),opacity .3s;display:grid;gap:10px}
 .rgd.on{transform:translate(-50%,0);opacity:1}
 .rgd-in{display:flex;align-items:flex-end;gap:12px}
@@ -1090,31 +1232,51 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 .updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
 .updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
 [dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
-/* reduced motion: no run — the newest update stands still (cut with …) */
-@media (prefers-reduced-motion:reduce){
-  .updline .ul-v{-webkit-mask:none;mask:none}
-  .updline .ul-tr{animation:none;position:static;width:100%;height:100%}
-  .updline .ul-g{flex:1;min-width:0;padding:0}
-  .updline .ul-g + .ul-g,.updline .ul-s,.updline .ul-i ~ .ul-i{display:none}
-  .updline .ul-i{min-width:0;overflow:hidden}.updline .ul-i b{flex:none}
-  .updline .ul-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
-}
+/* (no reduced-motion stop: the user wants this run whatever the OS setting — it is a slow, steady ticker) */
 /* the bottom sheet */
 .sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
 @keyframes usUp{from{transform:translateY(100%)}}
 .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
-.sheet.updsh > .ush h3{margin:0;font-size:22px}
+.sheet.updsh > .ush h3{margin:0;font-size:20px}
 .sheet.updsh .usx{flex:none;width:38px;height:38px}
-.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:12px 14px 12px 10px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:0 12px 6px;-webkit-overflow-scrolling:touch}
+/* a day: masthead (sticky while its entries scroll) · "this day" line · the entries, first one the headline */
+.udy{padding-bottom:10px}
+.udh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;margin:0 -12px;padding:10px 16px 8px;background:var(--paper);font-family:var(--round)}
+.udh .udn{font-size:38px;font-weight:700;line-height:.9;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.udh .udm{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.udh .udm b{font-size:14px;font-weight:900;white-space:nowrap}
+.udh .udm small{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.udh .udr{flex:1;min-width:16px;height:6px;border-top:2px solid #e4d3ab;border-bottom:1px solid #e4d3ab}
+.udh .udnew{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
+.udf{margin:0 0 10px;padding:8px 12px;border-radius:14px;background:#fff4d6;border:2px dashed #f1d58a;font-size:13px;font-weight:700;line-height:1.6;color:#5d4a20}
+.udf b{display:inline-block;margin-inline-end:7px;padding:0 8px;border-radius:99px;background:var(--sun);color:#5b3d00;font:700 11px/1.7 var(--round);vertical-align:1px}
+.udg{display:flex;flex-direction:column;gap:8px}
+.usr{--c:#ff5d5d;display:flex;gap:12px;align-items:flex-start;width:100%;border:2px solid var(--line);border-inline-start:5px solid var(--c);border-radius:18px;background:#fff;padding:10px 12px 10px 9px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
 .usr:active{transform:scale(.98)}
-.usr .usi{flex:none;width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
-.usr .usi img{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
-.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.usr .ush b{font-size:18px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.usr .ush small{flex:none;font:700 14px var(--round);color:var(--ink2)}
-.usr .usp{font-size:16px;font-weight:700;color:#4a4237;line-height:1.7}
+.usr .usi{flex:none;width:54px;height:54px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.usr .usi img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.usr .ush{display:flex;align-items:baseline;gap:8px}
+.usr .ush b{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usr .usp{font-size:14.5px;font-weight:700;color:#4a4237;line-height:1.65}
+.usr .utgs{display:flex;flex-wrap:wrap;gap:4px}
+.usr .utg{font:700 11px/1.6 var(--round);font-style:normal;padding:0 8px;border-radius:99px;color:#fff;background:var(--ink2)}
+.usr .utg.t-new{background:var(--coral)}.usr .utg.t-3d{background:var(--grape)}.usr .utg.t-online{background:var(--sky2)}.usr .utg.t-rules{background:var(--mint2)}
+/* the day's headline: a wide picture panel in the game's colour above the text */
+.usr.hl{flex-direction:column;gap:9px;padding:9px 9px 12px;background:color-mix(in srgb,var(--c) 7%,#fff);border-color:color-mix(in srgb,var(--c) 30%,var(--line));border-inline-start-color:var(--c)}
+.usr.hl .usi{width:100%;height:100px;border-radius:13px;background:radial-gradient(90% 140% at 25% 0%,color-mix(in srgb,var(--c) 40%,#fff) 0%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000) 100%)}
+.usr.hl .usi img{width:90px;height:90px}
+.usr.hl .ust{padding:0 4px}
+.usr.hl .ush b{font-size:18px;white-space:normal}
+/* phones: a calmer ticker — smaller NEW tag, picture and type (PC keeps its larger set below) */
+@media (max-width:760px){
+  :root{--ulH:46px}
+  .updline .ul-k{font-size:9px;padding:2px 6px;letter-spacing:.04em;box-shadow:0 1.5px 0 var(--coral2)}
+  .updline .ul-a{width:32px;height:32px;border-radius:9px}.updline .ul-a img{width:29px;height:29px}
+  .updline .ul-i b{font-size:12.5px}.updline .ul-d{font-size:11px}.updline .ul-t{font-size:12px}
+  .updline .ul-s{width:22px}
+}
 /* PC (wider than phones): the same updates ticker, fixed at the very bottom of the window (no tab bar there), a little
    taller with bigger type; on every page — only a board, Historia, an overlay or a sheet hides it. The list opens as a dialog. */
 @media (min-width:761px){
@@ -1127,7 +1289,24 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
   .updline .ul-ch{font-size:22px}
   .updline:hover .ul-tr{animation-play-state:paused}
   body{padding-bottom:calc(var(--ulH) + 16px)}
-  .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  /* the list as a wide dialog: each day's entries in a 2–3 column grid under a full-width masthead; the headline takes two columns */
+  .sheet.updsh{align-self:center;width:min(1100px,calc(100% - 48px));max-width:1100px;margin:0;max-height:88vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
+  .sheet.updsh > .ush{padding:16px 18px 10px 26px}.sheet.updsh > .ush h3{font-size:22px}
+  .sheet.updsh .usl{padding:0 24px 8px}
+  .udy{padding-bottom:16px}
+  .udh{margin:0 -24px;padding:16px 28px 10px;gap:14px}
+  .udh .udn{font-size:52px}.udh .udm b{font-size:16px}.udh .udm small{font-size:13px}
+  .udh .udnew{font-size:12px;padding:4px 11px}
+  .udf{display:inline-block;margin-bottom:14px;font-size:14px;padding:8px 16px}
+  .udg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));grid-auto-flow:dense;gap:12px}
+  .usr{height:100%;transition:transform .15s,box-shadow .15s}
+  .usr:hover{transform:translateY(-2px);box-shadow:0 8px 18px -10px color-mix(in srgb,var(--c) 70%,#000)}
+  .usr.hl{grid-column:span 2;flex-direction:row;align-items:stretch;gap:16px;padding:10px 16px 10px 10px}
+  .udg.one .usr.hl{grid-column:1/-1}
+  .usr.hl .usi{width:160px;height:auto;min-height:140px}
+  .usr.hl .usi img{width:120px;height:120px}
+  .usr.hl .ust{padding:6px 0;justify-content:center}
+  .usr.hl .ush b{font-size:20px}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
@@ -1290,13 +1469,13 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="../shared/atlas.js?v=20261106tb1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
-<script src="i18n.js?v=47"></script>
+<script src="i18n.js?v=49"></script>
 <script src="gamelist-i18n.js?v=5"></script>
-<script src="table3d.js?v=99"></script>
+<script src="table3d.js?v=101"></script>
 <script src="tables3d.js?v=1"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=9"></script>
-<script src="models/backgammon.js?v=115"></script>
+<script src="models/backgammon.js?v=116"></script>
 <script src="models/goban.js?v=14"></script>
 <script src="models/hex.js?v=2"></script>
 <script src="models/xiangqi.js?v=3"></script>
@@ -1313,11 +1492,11 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="models/alquerque.js?v=2"></script>
 <script src="models/cardtables.js?v=3"></script>
 <script src="icons3d.js?v=25"></script>
-<script src="games/reversi.js?v=16"></script>
+<script src="games/reversi.js?v=17"></script>
 <script src="games/shogi-play.js?v=11"></script>
 <script src="games/shogi.js?v=12"></script>
 <script src="games/chess.js?v=5"></script>
-<script src="games/backgammon.js?v=15"></script>
+<script src="games/backgammon.js?v=16"></script>
 <script src="games/gomoku.js?v=4"></script>
 <script src="games/morris-pieces.js?v=2"></script>
 <script src="games/morris.js?v=1"></script>
@@ -1328,10 +1507,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="games/tafl.js?v=7"></script>
 <script src="games/xiangqi.js?v=8"></script>
 <script src="games/checkers.js?v=2"></script>
-<script src="games/mancala.js?v=3"></script>
+<script src="games/mancala.js?v=4"></script>
 <script src="games/dots.js?v=3"></script>
-<script src="games/ur-kit.js?v=12"></script>
-<script src="games/ur.js?v=4"></script>
+<script src="games/ur-kit.js?v=13"></script>
+<script src="games/ur.js?v=5"></script>
 <script src="games/fanorona.js?v=2"></script>
 <script src="games/ugolki.js?v=1"></script>
 <script src="games/agon.js?v=2"></script>
@@ -1372,8 +1551,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="../shared/resign.js?v=2"></script>
 <script src="../shared/tick.js?v=2"></script>
 <script src="gamelist.js?v=14"></script>
-<link rel="stylesheet" href="worldmap.css?v=10">
-<script src="worldmap.js?v=13"></script>
-<script src="app.js?v=177"></script>
+<link rel="stylesheet" href="worldmap.css?v=14">
+<script src="worldmap.js?v=19"></script>
+<script src="updnews.js?v=1"></script>
+<script src="app.js?v=185"></script>
 </body>
 </html>

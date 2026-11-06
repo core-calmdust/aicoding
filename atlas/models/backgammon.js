@@ -578,9 +578,18 @@
     function apply() {
       const a = aspect(), r = o.rotate !== false && a < .8, cv = T3.renderer && T3.renderer() && T3.renderer().domElement, cs = cv && cv.clientWidth ? Math.min(cv.clientWidth, cv.clientHeight) : Math.min(innerWidth, innerHeight), short = cs;
       // 'turn': portrait screen held sideways · 'wide': a short landscape screen (phone) · 'norm'
-      const mode = r ? 'turn' : (o.left || o.right) && a > 1.3 && short < 560 ? 'wide' : 'norm', key = mode + ':' + a.toFixed(3);
+      // 'land': the portal's phone-landscape layout (o.land()): a bar at the top (o.top() px, the camera keeps it free), the board
+      // straight from above across the full width, as in the full game's landscape page
+      const mode = r ? 'turn' : o.land && o.land() ? 'land' : (o.left || o.right) && a > 1.3 && short < 560 ? 'wide' : 'norm', top = mode === 'land' && o.top ? o.top() : 0;
+      const key = mode + ':' + a.toFixed(3) + (mode === 'land' ? ':' + top + ':' + (cv ? cv.clientWidth : 0) : '');
       if (key === rot) return; rot = key;
-      if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
+      if (o.shape) o.shape(mode);   // (the adapter may give the board another height for this view — before it is framed)
+      if (mode === 'land') {
+        const bw = g.W + .5, bd = g.H + .5;
+        board.position.set(0, 0, 0);
+        F = { w: bw * SC, d: bd * SC, y: o.Y * SC, pitch: 1.52 };
+        if (T3.fit) T3.fit(F);
+      } else if (o.legacy) { if (T3.fit) T3.fit({ w: (g.W + 1) * SC, d: (g.H + .6) * SC, y: o.Y * SC, pitch: 1.18 }); }
       else if (mode === 'norm') {   // as large as the screen allows; a band at the top is kept for the HUD
         const bw = g.W + 1.1, bd = g.H + .9, top = .05, dT = bd * SC / (1 - top);   // the case incl. its rails (+ perspective)
         board.position.set(0, 0, top / 2 * dT);
@@ -604,14 +613,15 @@
       const R = T3.renderer && T3.renderer(), d = T3._dbg && T3._dbg(), fr = R && R.info ? R.info.render.frame : 0;
       if (!R || (d && d.camK < .995) || fr === lastFr) { fixT = setTimeout(fix, 250); return; }   // a fresh frame of the settled camera
       const cr = R.domElement.getBoundingClientRect(), turn = mode0 === 'turn', LW = turn ? cr.height : cr.width, LH = turn ? cr.width : cr.height;
-      const ex = g.W / 2 + .45, ez = g.H / 2 + .35; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      const land = mode0 === 'land', sl = land ? 8 : o.left || 0, sr = land ? 8 : o.right || 0, st = land && o.top ? o.top() : 0, sb = land ? 6 : 0;
+      const ex = g.W / 2 + (land ? .08 : .45), ez = g.H / 2 + (land ? .08 : .35); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
       [[-ex, -ez], [ex, -ez], [-ex, ez], [ex, ez]].forEach(([x, z]) => {
         const v = new TT.Vector3(x, o.Y, z); board.updateMatrix(); v.applyMatrix4(board.matrix);
         const q = T3.project(v.x, v.z, v.y), X = turn ? q.y - cr.top : q.x - cr.left, Y = turn ? cr.right - q.x : q.y - cr.top;
         x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
       });
-      const m = 4, aw = LW - (o.left || 0) - (o.right || 0), ah = LH - 2 * m, f = Math.max((x1 - x0) / aw, (y1 - y0) / ah);
-      const dx = ((o.left || 0) + aw / 2) - (x0 + x1) / 2, dy = LH / 2 - (y0 + y1) / 2;
+      const m = 4, aw = LW - sl - sr, ah = LH - st - sb - 2 * m, f = Math.max((x1 - x0) / aw, (y1 - y0) / ah);
+      const dx = (sl + aw / 2) - (x0 + x1) / 2, dy = st + (LH - st - sb) / 2 - (y0 + y1) / 2;
       if (Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5 && Math.abs(f - 1) < .012) return;
       board.position.x += dx / ((x1 - x0) / (2 * ex * SC)); board.position.z += dy / ((y1 - y0) / (2 * ez * SC));
       F.w *= f; F.d *= f; if (T3.fit) T3.fit(F);
@@ -620,7 +630,7 @@
     }
     apply();
     const onR = () => { apply(); setTimeout(apply, 350); };
-    addEventListener('resize', onR); if (window.visualViewport) visualViewport.addEventListener('resize', onR);
+    addEventListener('resize', onR); if (window.visualViewport) visualViewport.addEventListener('resize', onR); addEventListener('atlasland', onR);
     const ts = [300, 800, 1600].map(ms => setTimeout(apply, ms));   // the canvas aspect settles after the play / rules layout
     const inv = new TT.Matrix4();
     return {
@@ -628,7 +638,7 @@
       check: apply,
       toBoard(p) { board.updateMatrix(); inv.copy(board.matrix).invert(); const v = new TT.Vector3(p.x, o.Y * SC, p.z).applyMatrix4(inv); return { x: v.x, z: v.z }; },
       toCur(x, y, z) { board.updateMatrix(); return new TT.Vector3(x, y, z).applyMatrix4(board.matrix); },
-      stop() { dead = true; clearTimeout(fixT); removeEventListener('resize', onR); if (window.visualViewport) visualViewport.removeEventListener('resize', onR); ts.forEach(clearTimeout); },
+      stop() { dead = true; clearTimeout(fixT); removeEventListener('resize', onR); removeEventListener('atlasland', onR); if (window.visualViewport) visualViewport.removeEventListener('resize', onR); ts.forEach(clearTimeout); },
     };
   }
 
