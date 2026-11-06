@@ -1,5 +1,15 @@
 # CLAUDE.md
 
+## 仕様書（最初に読む）
+
+- 仕様書の正本は `claude/` フォルダ。作業の前に `git pull` して最新版を読む。
+  - まず `claude/handoff-common-rules.md`（全体像）、次に作業に関係する `claude/<game>-spec.md` などの仕様書。
+  - 優先順位：ユーザーの最新の指示 ＞ `claude/game-conventions-addendum.md` ＞ `claude/game-conventions.md` ＞ 各 spec。
+  - 仕様書のないゲーム（将棋・チェス・リバーシ等）は、各フォルダの `MODEL_CARD.md`・`README.md` などのコードが実質の仕様。
+- 仕様が決まったり変わったりしたら、該当の spec（共通ルールは addendum）を同じPRで更新する。新しいゲームは `claude/<game>-spec.md` を作る。
+- 複数のアカウントで作業している。addendum は全員が触るので、更新したら早めにマージする。
+- リポジトリは公開。未発表の企画など秘密にしたいことは仕様書に書かない。
+
 ## 作業の進め方
 
 - 変更が終わったら、作業ブランチにコミット・プッシュし、main 向けの PR を作成して main にマージまで行う（ユーザーへの確認は不要）。
