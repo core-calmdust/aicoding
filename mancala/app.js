@@ -1505,25 +1505,64 @@ const RT_PAGES = [
     B0([1, 0, 3, 0, 2, 0], [2, 4, 1, 3, 5, 2], 13, 12), 'ayo', tr => tr.cap > 0 || t('rt.ayCap.ng'),
     { okMsg: () => t('rt.ayCap.ok') }),
 ];
-// the new-game dialog's "?" opens the page of that rule variant directly (by page id)
-const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay', oware: 'owSow', mangala: 'mgSow', bohnen: 'bnCap', ayo: 'ayRelay' };
-const ruleTour = window.RuleTour ? RuleTour.create({
-  mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG, aspect: MB.W / MB.H,
-  close: () => $('#rulesOverlay').classList.remove('show'),
-  play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); },
-  lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),
-  sound: k => (k === 'ok' ? sExtra() : sWrong()),
-  pages: RT_PAGES,
-}) : null;
-// r: open at the page of that rule variant (from the new-game dialog); the menu / first-time banner start at step 1
+// the rules are split by game variant: each rule set has its own short course (the common intro, the pages of that
+// rule, then the rule comparison); a row of the eight rule sets above the steps switches between them
+const RT_COURSES = {
+  basic: ['intro', 'sow', 'extra', 'capB', 'end', 'variants'],
+  easy: ['intro', 'sow', 'extra', 'end', 'variants'],
+  kalah: ['intro', 'sow', 'extra', 'cap', 'end', 'variants'],
+  sunka: ['intro', 'sow', 'extra', 'cap', 'relay', 'end', 'variants'],
+  oware: ['intro', 'owSow', 'owCap', 'owChain', 'owLap', 'owFeed', 'owSlam', 'owEnd', 'variants'],
+  mangala: ['intro', 'mgSow', 'mgCap', 'mgEnd', 'variants'],
+  bohnen: ['intro', 'bnCap', 'bnEnd', 'variants'],
+  ayo: ['intro', 'ayRelay', 'ayCap', 'variants'],
+};
+const RT_STORE = 'mancala-rules-v2', RT_LAST = STORE + '-rules-course';
+const rtTours = {};
+let rtCourse = (() => { try { const c = localStorage.getItem(RT_LAST); if (RT_COURSES[c]) return c; } catch (e) {} return null; })();
+function rtTour(c) {
+  if (!window.RuleTour) return null;
+  if (rtTours[c]) return rtTours[c];
+  const el = document.createElement('div'); el.className = 'rt-course'; el.dataset.c = c; $('#rulesBody').appendChild(el);
+  return (rtTours[c] = RuleTour.create({
+    mount: el, store: RT_STORE, lang: () => LANG, aspect: MB.W / MB.H,
+    close: () => $('#rulesOverlay').classList.remove('show'),
+    play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); draft.rules = c; if (c === 'bohnen') draft.seeds = 6; segSync(); },   // (the new game starts with this rule picked)
+    lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),
+    sound: k => (k === 'ok' ? sExtra() : sWrong()),
+    onMark: () => rtPick(),
+    pages: RT_COURSES[c].map(id => RT_PAGES.find(p => p.id === id)),
+  }));
+}
+const curTour = () => rtCourse ? rtTours[rtCourse] || null : null;
+// the rule-set row (short names; a ✓ once every step of that course is cleared)
+function rtPick() {
+  let box = $('#rtPick');
+  if (!box) { box = document.createElement('div'); box.id = 'rtPick'; box.className = 'seg var-tabs'; box.setAttribute('role', 'tablist'); $('#rulesBody').prepend(box);
+    box.onclick = e => { const b = e.target.closest('button[data-c]'); if (b && b.dataset.c !== rtCourse) { rtShow(b.dataset.c); sTick(); } }; }
+  let done = {}; try { done = JSON.parse(localStorage.getItem(RT_STORE) || '{}'); } catch (e) {}
+  box.innerHTML = RULE_ORDER.map(r => { const all = RT_COURSES[r].every(id => done[id]); return `<button type="button" role="tab" data-c="${r}" class="${r === rtCourse ? 'sel' : ''}" aria-selected="${r === rtCourse}">${t('rule.' + r + '.s') !== 'rule.' + r + '.s' ? t('rule.' + r + '.s') : t('rule.' + r)}${all ? '<small class="ok">✓</small>' : ''}</button>`; }).join('');
+}
+// show course c at page i (keeps the page the course was on when i is undefined)
+function rtShow(c, i) {
+  const old = curTour(); if (old && rtCourse !== c) old.stop();
+  rtCourse = c; try { localStorage.setItem(RT_LAST, c); } catch (e) {}
+  const tour = rtTour(c);
+  document.querySelectorAll('#rulesBody > .rt-course').forEach(el => el.classList.toggle('hidden', el.dataset.c !== c));
+  rtPick();
+  if (tour) tour.open(i === undefined ? tour.page : i);
+}
+// r: open that rule's course at its first rule page (from the new-game dialog); the menu / first-time banner open the
+// course of the rule being played (or the one looked at last) where it was left
 // the rules are the first tab of the lessons dialog (ルール / レッスン / パズル)
 function openRules(r) {
   selTab('rules'); $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show');
   $('#rulesOverlay').classList.add('show');
-  if (ruleTour) ruleTour.open(r && RT_START[r] ? Math.max(0, RT_PAGES.findIndex(p => p.id === RT_START[r])) : 0);
+  if (r && RT_COURSES[r]) rtShow(r, 1);
+  else rtShow(RT_COURSES[game.rules] && !lesson && !puzzle ? game.rules : rtCourse || 'kalah');
 }
-function renderRules() { if (ruleTour) ruleTour.render(); }
-$('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); $('#rulesOverlay').classList.remove('show'); };
+function renderRules() { rtPick(); const tour = curTour(); if (tour) tour.render(); }
+$('#rulesClose').onclick = () => { const tour = curTour(); if (tour) tour.stop(); $('#rulesOverlay').classList.remove('show'); };
 
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
@@ -1560,7 +1599,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   const v = b.dataset.v, shown = { rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }[v];
   if (!shown || ($(shown).classList.contains('show') && !(v === 'lesson' && $('#lessonListView').classList.contains('hidden')))) return;
   tabSwitch(() => {
-    if (v !== 'rules' && ruleTour) ruleTour.stop();
+    if (v !== 'rules' && curTour()) curTour().stop();
     Object.values({ rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }).forEach(x => { if (x !== shown) $(x).classList.remove('show'); });
     if (v === 'rules') openRules(); else if (v === 'puzzle') openPuzzles(); else openLessons();
   });
