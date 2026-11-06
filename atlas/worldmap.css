@@ -152,3 +152,20 @@
   .amzoom{right:8px;top:auto;bottom:8px;flex-direction:row}
   .amzoom button{width:34px;height:34px}
 }
+
+/* the story's 「もっと読む」 toggle (shown only when the two-line cut hides text) */
+.ammore{display:none}
+.ammore:not([hidden]){display:inline-flex;align-items:center;gap:3px;margin:2px 0 0;padding:4px 0;border:0;background:none;color:color-mix(in srgb,var(--c,var(--ink)) 70%,var(--ink));font:900 12.5px var(--font,inherit);cursor:pointer}
+.ammore::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);margin-inline-start:4px}
+.aminfo.open .ammore::after{transform:translateY(1px) rotate(-135deg)}
+.aminfo.open .amd{display:block!important;-webkit-line-clamp:none!important;overflow:visible!important}
+/* numbered stops on the map and in the journey chips */
+.ammap .amsvg .num circle{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:2.2}
+.ammap .amsvg .lbl .num text{font:900 11px var(--round,inherit);fill:#fff;stroke:none;text-anchor:middle;dominant-baseline:central}
+.amjour u{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-inline-end:5px;border-radius:99px;background:color-mix(in srgb,var(--c,#8a6a3a) 70%,#1d2030);color:#fff;font:900 10.5px/1 var(--round,inherit);text-decoration:none;vertical-align:1px}
+/* a journey chip under the pointer lights its stop on the map */
+.ammap .amsvg .num circle,.ammap .amsvg .lbl .num text{transition:transform .18s ease,fill .18s}
+.ammap .amsvg .num{transform-box:fill-box;transform-origin:center;transition:transform .18s ease,filter .18s}
+.ammap .amsvg .num.hot{transform:scale(1.55);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 80%,#fff)) drop-shadow(0 0 2px #fff)}
+.ammap .amsvg .num.hot circle{fill:#ff5d5d}
+.amjour [data-n]{cursor:default}
