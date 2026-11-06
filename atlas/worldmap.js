@@ -53,8 +53,10 @@
     const b = box(), z = Math.max(zMin(), Math.min(zMax(), v.z)), hw = b.w / 2 / z, hh = b.h / 2 / z;
     // an axis where the world is smaller than the box can still be dragged, as long as the world stays inside the box
     // (phones: zoomed in a little, the map moves up/down as well as sideways); bigger than the box: it always covers it
-    const ax = (c, h, L) => h * 2 >= L ? Math.max(L - h, Math.min(h, c)) : Math.max(h, Math.min(L - h, c));
-    return { x: ax(v.x, hw, W0), y: ax(v.y, hh, H0), z };
+    // plus some slack past the world's edges (a quarter of the box), so a game near the top / an edge can be brought
+    // toward the middle — tafl's Scandinavia, for one — instead of stopping hard at the edge
+    const ax = (c, h, L, m) => h * 2 >= L ? Math.max(L - h - m, Math.min(h + m, c)) : Math.max(h - m, Math.min(L - h + m, c));
+    return { x: ax(v.x, hw, W0, hw * .5), y: ax(v.y, hh, H0, hh * .5), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
