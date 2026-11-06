@@ -88,7 +88,7 @@ GAMES = {
     'ugolki': dict(first='b', alt=True, tckey='tc', tcs={'c33': (300000, 0, 5000), 'c34': (300000, 0, 5000), 'c44': (420000, 0, 5000), 'diag': (300000, 0, 5000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                    variant=('v', ['c33', 'c34', 'c44', 'diag'])),
-    # Kōnane: own project (準備中: konane/firebase-config.js); v = tc = 's8' / 's6' (10x10 is offline only); b = Black (moves first);
+    # Kōnane: own project "konane-multiplay"; v = tc = 's8' / 's6' (10x10 is offline only); b = Black (moves first);
     # moves are 3 K64 chars each (the two opening removals are from = to); no draws
     'konane': dict(first='b', alt=True, tckey='tc', tcs={'s8': (300000, 0, 5000), 's6': (180000, 0, 3000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=600, bg=False,

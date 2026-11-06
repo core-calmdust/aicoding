@@ -6,7 +6,7 @@
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js');
 E.setRule('s8');
-const MAX = 36;
+const MAX = 36, MAX_W1 = 10;   // win-in-1 is easy: only the 10 hardest
 const raw = [];
 for (const f of process.argv.slice(2)) for (const l of fs.readFileSync(f, 'utf8').split('\n')) if (l.trim()) raw.push(JSON.parse(l));
 const uniq = new Map(); for (const p of raw) { const k = p.s.b + p.s.side; if (!uniq.has(k)) uniq.set(k, p); }
@@ -25,7 +25,7 @@ const ok = all.filter(p => {
 const chain = take(ok.filter(p => p.tags.includes('chain') && p.n >= 2 && p.n <= 3), MAX);
 const stop = take(ok.filter(p => p.tags.includes('stop')), MAX);
 const T = [];
-for (let n = 1; n <= 5; n++) T.push({ id: 'w' + n, grp: 'Win', puzzles: take(ok.filter(p => p.n === n), MAX) });
+for (let n = 1; n <= 5; n++) T.push({ id: 'w' + n, grp: 'Win', puzzles: n === 1 ? take(ok.filter(p => p.n === 1).reverse(), MAX_W1) : take(ok.filter(p => p.n === n), MAX) });
 T.push({ id: 'stop', grp: 'Tac', puzzles: stop }, { id: 'chain', grp: 'Tac', puzzles: chain });
 for (const t of T) t.puzzles = t.puzzles.sort((a, b) => diff(a) - diff(b)).map(p => ({ s: { b: p.s.b, side: p.s.side }, n: p.n, a: p.nm }));
 const out = { version: 2, rule: 's8', kind: 'duel', daily: ['w1', 'w2', 'stop', 'w3', 'chain', 'w2', 'w4'], themes: T };
