@@ -169,7 +169,7 @@ function tx(k, v) {
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const gl = h => window.CoachKit ? CoachKit.gloss(h, (TX[L()] || TX.en).gl || TX.en.gl) : h;
 const r1 = x => Math.round(x * 10) / 10;
-const sepL = () => (L() === 'ja' || L() === 'zh') ? '・' : ', ';
+const sepL = () => (L() === 'ja' || L() === 'zh' || L() === 'zh-TW') ? '・' : ', ';
 
 // ------------------------------------------------------------------------------------------ opening book
 // Kalah (capture includes the capturing seed) from the standard start, Mark Rawlings' perfect-play results (pits 1-6 from the

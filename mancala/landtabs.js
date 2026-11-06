@@ -44,7 +44,7 @@ const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'A
 const $ = s => document.querySelector(s);
 let barMo = null, rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];
 try { const v = localStorage.getItem(KEY); if (v === 'coach' || v === 'ek' || v === 'learn') { cur = v; saved = true; } } catch (e) {}
-const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').slice(0, 2));
+const lang = () => (typeof LANG !== 'undefined' ? LANG : (document.documentElement.lang || 'ja').replace(/^zh-CN$/, 'zh').replace(/^(..)-(?!TW).*$/, '$1'));
 const tt = (k, d) => (typeof t === 'function' ? t(k) : d);
 const boxes = () => [['coach', $('#coachCard')], ['coach', $('#reviewCard')], ['coach', rest], ['ek', $('#evalCard')], ['ek', $('.kifu-card')], ['learn', learn], ['ls', $('.lesson-card')], ['ls', $('.puzzle-card')]].filter(x => x[1]);
 const coachOk = () => document.body.classList.contains('ck-tab');   // the coach (or its review) can work now

@@ -2,8 +2,8 @@
 // Luxe Mancala — UI
 const E = window.MancalaEngine;
 const $ = s => document.querySelector(s);
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'en').toLowerCase().slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const f = (navigator.language || 'en').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(f)) return 'zh-TW'; const n = f.slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
 function t(k, v) {
   let x = (I18N[LANG] || {})[k];
@@ -720,7 +720,7 @@ function renderTurnLabel() {
   else if (settings.mode === 'ai') txt = p.side === game.human ? t('turn.you') : t('turn.ai');
   else txt = t('turn.p', { c: shortName(p.side) });
   el.textContent = txt;
-  el.className = 'turnlbl ' + (['en', 'es', 'fr', 'pt', 'de'].includes(LANG) ? 'script' : ['ja', 'zh', 'ko'].includes(LANG) ? 'mincho' : '');
+  el.className = 'turnlbl ' + (['en', 'es', 'fr', 'pt', 'de'].includes(LANG) ? 'script' : ['ja', 'zh', 'zh-TW', 'ko'].includes(LANG) ? 'mincho' : '');
 }
 function renderPits() {
   const can = canHumanPlay(), p = shownPos();
@@ -1566,7 +1566,7 @@ $('#rulesClose').onclick = () => { const tour = curTour(); if (tour) tour.stop()
 
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261107l14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const puzzlesReady = fetch('puzzles.json?v=20261104pzd').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
