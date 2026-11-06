@@ -391,27 +391,23 @@
       for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0x2a56b8)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
       return g;
     },
-    konane() {   // a corner of the quilt board: a cream Hawaiian quilt with a teal appliqué and echo quilting in a koa tray, stitched cups; a basalt pebble hops over a coral one into the empty cup
-      const top = M({ map: X.canvasTex('ickn4', 512, 512, (c, W) => {
-        c.fillStyle = '#d4b98a'; c.fillRect(0, 0, W, W);
-        const cx = W * .5, cy = W * .5;
-        // the appliqué: an eight-lobed ʻulu-leaf medallion, then echo lines of quilting round it
-        const lobe = (r0, r1, k) => { c.beginPath(); for (let a = 0; a <= 360; a += 2) { const t = a * Math.PI / 180, rr = r0 + (r1 - r0) * Math.pow(Math.abs(Math.cos(t * k / 2)), 1.6); c[a ? 'lineTo' : 'moveTo'](cx + rr * Math.cos(t), cy + rr * Math.sin(t)); } c.closePath(); };
-        c.strokeStyle = 'rgba(15,110,102,.4)'; c.lineWidth = 4;
-        for (let e = 0; e < 7; e++) { lobe(W * (.2 + e * .055), W * (.42 + e * .055), 8); c.stroke(); }
-        lobe(W * .18, W * .46, 8); c.fillStyle = '#0f8a7e'; c.fill();
-        lobe(W * .07, W * .17, 8); c.fillStyle = '#d4b98a'; c.fill();
-        c.fillStyle = '#0f8a7e'; c.beginPath(); c.arc(cx, cy, W * .045, 0, 7); c.fill();
-        c.strokeStyle = 'rgba(10,80,74,.55)'; c.lineWidth = 2.2; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; c.beginPath(); c.moveTo(cx + Math.cos(a) * W * .2, cy + Math.sin(a) * W * .2); c.lineTo(cx + Math.cos(a) * W * .36, cy + Math.sin(a) * W * .36); c.stroke(); }   // the leaf veins
-        const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {   // the stitched cups
-          const px = (x + .5) * s, py = (y + .5) * s, g = c.createRadialGradient(px, py + 8, 6, px, py, s * .4); g.addColorStop(0, 'rgba(70,56,36,.38)'); g.addColorStop(.75, 'rgba(70,56,36,.16)'); g.addColorStop(1, 'rgba(70,56,36,0)'); c.fillStyle = g; c.beginPath(); c.arc(px, py, s * .4, 0, 7); c.fill();
-          c.setLineDash([9, 6]); c.strokeStyle = 'rgba(13,95,91,.7)'; c.lineWidth = 3; c.beginPath(); c.arc(px, py, s * .41, 0, 7); c.stroke(); c.setLineDash([]); }
-      }), roughness: .85 });
-      const g = boardChunk(3, 3.6, top, M({ map: X.wood('ickoa', '#a65a2a', '#4e220c'), roughness: .35 }));
+    konane() {   // a corner of the stone papamū (the 3D default): weathered grey basalt with pecked cups; rough beach pebbles of basalt and coral, one hopping over another into the empty cup
+      const top = M({ map: X.canvasTex('ickn5', 512, 512, (c, W) => {
+        c.fillStyle = '#8f877b'; c.fillRect(0, 0, W, W);
+        let sd = 5; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 160; k++) { const g = c.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, `rgba(${r() < .5 ? '170,160,140' : '96,90,82'},.35)`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.save(); c.translate(r() * W, r() * W); c.scale(20 + r() * 50, 20 + r() * 50); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 1, 0, 7); c.fill(); c.restore(); }
+        for (let k = 0; k < 1400; k++) { c.fillStyle = `rgba(${r() < .5 ? '60,55,50' : '190,182,166'},${.25 + r() * .35})`; c.beginPath(); c.arc(r() * W, r() * W, .8 + r() * 2.2, 0, 7); c.fill(); }   // vesicles and grit
+        const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {   // pecked cups, not quite round
+          const cx = (x + .5) * s, cy = (y + .5) * s, rr = s * (.36 + r() * .04), g = c.createRadialGradient(cx, cy + 6, 4, cx, cy, rr);
+          g.addColorStop(0, 'rgba(40,36,32,.75)'); g.addColorStop(.7, 'rgba(52,47,42,.5)'); g.addColorStop(1, 'rgba(52,47,42,0)'); c.fillStyle = g;
+          c.save(); c.translate(cx, cy); c.scale(1 + (r() - .5) * .12, 1 + (r() - .5) * .12); c.translate(-cx, -cy); c.beginPath(); c.arc(cx, cy, rr, 0, 7); c.fill(); c.restore(); }
+      }), roughness: .92 });
+      const g = boardChunk(3, 3.6, top, C(0x5a544b, { roughness: .95 }));
       const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
-      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xfbf9f4, { roughness: .45 }) : gloss(0x1e1d1c), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
+      let sd = 3; const rr = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      const pebble = (white, sc) => { const m = ball(.5, C(white ? 0xe9e1cf : 0x24221f, { roughness: white ? .9 : .7 }), .5); m.position.y = .24; m.scale.set(1 + (rr() - .5) * .3, .42 * (1 + (rr() - .5) * .25), 1 + (rr() - .5) * .3); m.rotation.y = rr() * 6; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
       [[0, 0, 0], [1, 0, 1], [2, 0, 0], [0, 2, 1], [1, 2, 0], [2, 2, 1], [1, 1, 1]].forEach(([x, z, w]) => g.add(at(pebble(!!w, .78), p(x), .5, p(z))));
-      // the big basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); teal dots trace the arc
+      // the basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); teal dots trace the arc
       g.add(at(pebble(false, 1.35), p(1) - .2, 2.35, p(1), 0, 0, -.28));
       const dotM = gloss(0x14a596);
       for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, dotM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }

@@ -151,8 +151,8 @@
     agon: { list: ['victorian', 'folk'],
       get: () => (ls.get('atlas-agon-look3') || ls.get('atlas-agon-look')) === 'folk' ? 'folk' : 'victorian',
       set: k => { ls.set('atlas-agon-look', k); ls.set('atlas-agon-look3', k); } },
-    // atlas/skin/konane.js: 'atlas-konane-look' ('quilt' | 'papamu')
-    konane: { list: ['quilt', 'papamu'], get: () => ls.get('atlas-konane-look') === 'papamu' ? 'papamu' : 'quilt', set: k => ls.set('atlas-konane-look', k) },
+    // atlas/skin/konane.js: 'atlas-konane-look' ('papamu' the default | 'quilt')
+    konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };

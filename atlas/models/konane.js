@@ -1,9 +1,9 @@
 /* =====================================================================
    Kōnane on the 3D table — two boards (Table3D.BOARDS.konane, chosen in the portal's 盤 row and the full game's design tab):
-   · 'quilt'  (the default) an artistic board after the 2D page's Hawaiian quilt: an oiled koa-wood tray (konane/img/fr-koa.webp)
+   · 'quilt'  an artistic board after the 2D page's Hawaiian quilt: an oiled koa-wood tray (konane/img/fr-koa.webp)
               holding a kapa kuiki — the teal ʻulu appliqué with its echo quilting (konane/img/bd-quilt.webp) — a soft hollow
               stitched into the cloth on every square;
-   · 'papamu' the primitive papamū of old: one rough slab of weathered basalt (konane/img/bd-stone.webp / fr-stone.webp), its
+   · 'papamu' (the default, as in the Historia) the primitive papamū of old: one rough slab of weathered basalt (konane/img/bd-stone.webp / fr-stone.webp), its
               edges hand-dressed and uneven, a cup pecked on every square.
    The stones are smooth pebbles as in old Hawaiʻi: black basalt and white coral (after konane/img/pc-stone-b/w).
    Registers into Table3D:
@@ -20,7 +20,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const BX = .45, BZ = .8, TH = .5, RAD = .5, R = .36, PH = .22, CUP = .4, DEPTH = .07;   // side bands (x) / the bands with the count plates (z)
   const WOf = n => n + 2 * BX, HOf = n => n + 2 * BZ;
-  const LOOKS = ['quilt', 'papamu'];
+  const LOOKS = ['papamu', 'quilt'];
   const IMG = (() => { try { const s = document.currentScript && document.currentScript.src; if (s) return new URL('../../konane/img/', s).href; } catch (e) {} return '../konane/img/'; })();
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
@@ -143,7 +143,7 @@
     return mat('sideT' + look, () => { const t = new (T().TextureLoader)().load(IMG + (look === 'quilt' ? 'fr-koa.webp' : 'fr-stone.webp'), () => X.kick && X.kick(200)); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(3, 1); return t; });
   }
   function board(n, look) {
-    n = n || 8; look = LOOKS.includes(look) ? look : (X.BOARDS && X.BOARDS.konane ? X.BOARDS.konane.get() : 'quilt');
+    n = n || 8; look = LOOKS.includes(look) ? look : (X.BOARDS && X.BOARDS.konane ? X.BOARDS.konane.get() : 'papamu');
     const Q = look === 'quilt', TT = T(), g = new TT.Group(), tx = topTex(n, look), W = WOf(n), H = HOf(n);
     const topM = mat('top' + look + n, () => Q
       ? phys({ map: tx.map, normalMap: tx.nm, normalScale: new TT.Vector2(1, 1), color: '#ffffff', roughness: .82, metalness: 0, envMapIntensity: .75 })
@@ -165,7 +165,7 @@
     const k = (LO() ? 'lo' : 'hi') + v; if (geos[k]) return geos[k];
     const TT = T(), st = LO() ? 10 : 16, pts = [], rough = v > 0, o = v * 17.3;
     for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI * i / st, r = Math.cos(a), y = Math.sin(a); pts.push(new TT.Vector2(Math.max(0, r * R * (1 + .05 * Math.cos(a * 2))), (y * .5 + .5) * PH * (rough ? .9 : 1))); }
-    const g = new TT.LatheGeometry(pts, LO() ? 22 : 36);
+    const g = new TT.LatheGeometry(pts, LO() ? 22 : 28);   // (64 pebbles ≈ 57k triangles + the slab ≈ 3k: under the 80k of a showcase board)
     const P = g.attributes.position;   // a pebble, not a lathe: a lumpy wobble (strong and uneven on the papamū's stones)
     const A = rough ? .3 : .09, B = rough ? .35 : .08, F = rough ? 3.2 : 5;
     for (let i = 0; i < P.count; i++) {

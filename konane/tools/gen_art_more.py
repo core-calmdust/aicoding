@@ -415,32 +415,28 @@ def matte_piece():
 
 
 def koa_piece():
-    """(overrides gen_art.py's) turned discs of figured ("curly") koa under a clear finish: golden blond koa (White) and
-    dark heartwood (Black) — wavy dark streaks along the grain and the strong chatoyant ripple across it"""
+    """(overrides gen_art.py's) turned discs of figured koa under a clear finish, from the same realistic slab as the koa
+    board (fine fibres, pores, flowing streaks) at twice the resolution, then the curl: irregular ripples across the grain
+    that flash light / dark as on real curly koa. Golden koa (White) and dark heartwood (Black)."""
     from PIL import Image as _I
-    xr = px_ - pc; yr = py_ - pc
     h = (1 - rr ** 6) * 14 - np.clip((rr - .9) / .1, 0, 1) ** 2 * 8
-    r_ = np.random.default_rng(7)
-    N = NP
+    N2 = NP * 2
+    y, x = np.mgrid[0:N2, 0:N2].astype(float)
+    r_ = np.random.default_rng(11)
 
-    def nz(s, sx=None, seed=None):
-        g = np.random.default_rng(seed).standard_normal((N, N)) if seed is not None else r_.standard_normal((N, N))
-        n = gaussian_filter(g, (s, sx or s), mode='wrap'); return n / (n.std() + 1e-9)
-    y, x = np.mgrid[0:N, 0:N].astype(float)
-    wy = nz(14, 40) * 7                                       # the grain wanders
-    yy = y + wy
-    streak = np.sin(yy / 5.5 + nz(3, 30) * 1.2) * .5 + .5      # fine grain lines
-    dark = np.clip(nz(4, 80) * .9 + nz(1.5, 30) * .4 - .5, 0, 1)   # darker heartwood streaks along the grain
-    # the curl: ripples across the grain, bent by the grain, that flash light / dark
-    ph = x / 2.6 + nz(22, 12) * 1.1 + nz(5, 40) * .35 + wy * .18
-    curl = np.sin(ph) * .5 + .5
-    curl = curl ** 1.2
-    fig = np.clip(nz(18) * .6 + .7, .2, 1)                    # the figure comes and goes
-    for name, light, mid, deep, gl in (('pc-koa-w.webp', '#f2c070', '#c98436', '#6a3412', 70),
-                                        ('pc-koa-b.webp', '#a85a24', '#6e3214', '#2a1206', 70)):
-        L, M, D = C(light), C(mid), C(deep)
-        t = np.clip(.33 + .22 * streak + .4 * dark - .28 * (curl - .5) * fig, 0, 1)[..., None]
-        alb = np.where(t < .5, L + (M - L) * (t / .5), M + (D - M) * ((t - .5) / .5))
-        col = shade(gaussian_filter(h, .7) + curl * fig * .25, alb, gloss=gl, spec=.45, amb=.6)
-        col = col * (1 + .16 * ((curl - .5) * fig))[..., None]   # chatoyance: the ripples catch the light
-        save_pc(col, name, .25)
+    def nz(sy, sx):
+        n = gaussian_filter(r_.standard_normal((N2, N2)), (sy, sx), mode='wrap'); return n / (n.std() + 1e-9)
+    # the curl: ripples run across the grain (vertical here), their spacing and phase wander, their strength comes and goes
+    ph = x / 5.2 + nz(30, 8) * 1.6 + nz(6, 50) * .5
+    rip = np.sin(ph)
+    rip = np.sign(rip) * np.abs(rip) ** .7
+    amt = np.clip(.55 + .45 * nz(60, 40), 0, 1)
+    for name, seed, cols in (('pc-koa-w.webp', 44, ('#e8b064', '#c07a34', '#6a3414', '#3a1a08')),
+                             ('pc-koa-b.webp', 45, ('#8a4a20', '#5e2a10', '#2c1206', '#1a0a03'))):
+        slab = koa_slab(N2, seed, *cols, grain=.7)
+        slab = slab * (1 + .2 * (rip * amt)[..., None])          # the chatoyant figure
+        im = _I.fromarray(np.clip(slab, 0, 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)
+        alb = np.asarray(im).astype(float)
+        rp = np.asarray(_I.fromarray(((rip * amt * .5 + .5) * 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)).astype(float) / 255
+        col = shade(gaussian_filter(h, .7) + (rp - .5) * .5, alb, gloss=80, spec=.38, amb=.62)
+        save_pc(col, name, .22)
