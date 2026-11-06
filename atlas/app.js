@@ -1416,7 +1416,7 @@
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
     $('dsort').style.display = dKind === 'table' ? 'none' : '';
-    if (dKind === 'table') { $('dItems').innerHTML = placeHtml(true); bindPlace($('dItems')); return; }
+    if (dKind === 'table') { $('dItems').classList.remove('grouped'); $('dItems').innerHTML = placeHtml(true); bindPlace($('dItems')); return; }
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
