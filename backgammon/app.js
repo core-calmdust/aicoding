@@ -1775,7 +1775,7 @@ async function runReview() {
   const total = match.games.reduce((s, gm) => s + gm.actions.length, 0);
   if (!total) { toast(t('nokifu')); return; }
   const sig = rvSig();
-  if (rv && rv.sig === sig) { rvOpen = true; renderReview(); revealReview(); return; }
+  if (rv && rv.sig === sig) { rvOpen = true; renderReview(); renderBox(); revealReview(); return; }   // (the box comes back too)
   rvCancel();
   // jobs: plays and cube decisions
   const jobs = [];
@@ -1928,7 +1928,7 @@ $('#rvBody').addEventListener('click', e => {
   }
   renderArrows(); renderReview();
 });
-$('#rvClose').onclick = () => { rvOpen = false; rvSel = null; if (rv && rv.running) rvCancel(); extraArrows = []; renderReview(); renderArrows(); renderKifu(); };
+$('#rvClose').onclick = () => { rvOpen = false; rvSel = null; if (rv && rv.running) rvCancel(); extraArrows = []; renderReview(); renderArrows(); renderKifu(); renderBox(); };   // (the commentary box closes too, as in every game)
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 
