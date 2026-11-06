@@ -29,7 +29,11 @@ html.atlas-konane .frame{background:transparent!important;box-shadow:none!import
 html.atlas-konane .frame::before,html.atlas-konane .frame::after,html.atlas-konane .board::after,html.atlas-konane .board::before{display:none!important}
 html.atlas-konane .board{background:none!important;box-shadow:none!important}
 html.atlas-konane .lines :is(.puka,.puka-hl,.puka-rim){fill:transparent!important;stroke:none!important}
-html.atlas-konane .lines .num{fill:rgba(255,236,200,.6)!important}
+html.atlas-konane{--pcB:url(img/pc-stone-b.webp)!important;--pcW:url(img/pc-stone-w.webp)!important}   /* the 3D boards' stones (basalt / coral pebbles) everywhere on the page: plates, players, record */
+html.atlas-konane .lines{overflow:visible!important}
+html.atlas-konane .lines .num{fill:rgba(255,236,200,.78)!important;font-weight:700}
+html.atlas-konane .lines .num:not([text-anchor]){transform:translate(-.36px,0)}   /* ranks: out on the side band, clear of the pebbles */
+html.atlas-konane .lines .num[text-anchor]{transform:translate(0,.26px)}   /* files: just below the last row */
 html.atlas-konane .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
 html.atlas-konane .pieces .pc:not(.hov)::before,html.atlas-konane .pieces .pc:not(.hov)::after,html.atlas-konane .pieces .pc:not(.hov) .orn{display:none!important}
 html.atlas-konane .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 0 18px rgba(255,200,80,.75)!important}
@@ -45,6 +49,8 @@ html.atlas-konane .reserve .rsv-plate{background:rgba(24,18,14,.82)!important;bo
 html.atlas-konane .reserve .rsv-plate .rsv-l b,html.atlas-konane .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
 html.atlas-konane .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9bd!important;background:transparent!important}
 html.atlas-konane #fPieces{display:none!important}
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#eef8f5;border:2px solid #bfe3da}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#0f6f66;margin:0 0 8px}
 html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
 `;
   document.head.appendChild(st);
@@ -77,7 +83,7 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
   const P3 = new Map();   // square → { g, k }
   let tok = 0;            // a full re-sync cancels running animations
   function build() {
-    const n = NS(), look = T3.BOARDS && T3.BOARDS.konane ? T3.BOARDS.konane.get() : 'quilt';
+    const n = NS(), look = T3.BOARDS && T3.BOARDS.konane ? T3.BOARDS.konane.get() : 'papamu';
     if (n + look === built && root) return false;
     built = n + look; tok++;
     if (root) holder.remove(root);
@@ -97,7 +103,7 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
     if (app && window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(chk)).observe(app); setTimeout(chk, 3000); setTimeout(chk, 6000); }
 
   /* ---------- the new-game dialog: the 3D set replaces the 2D board / stone designs ---------- */
-  // the new-game dialog's design tab: a 「3D盤」 row above the 2D boards (the standard for every game with 3D boards, 2026-11-06).
+  // the new-game dialog's design tab: a 「3D盤」 box inside the 盤面 box, under the 2D boards (the standard for every game with 3D boards, 2026-11-06).
   // A 3D board picked: the 3D view with that board; a 2D board picked: the 2D page. Exactly one tile of the two rows is selected.
   const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد' };
   const lng = () => ((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja')).slice(0, 2);
@@ -126,8 +132,8 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
   }
   const fd = document.getElementById('fDesign');
   if (fd) {
-    f3 = document.createElement('div'); f3.className = 'field'; f3.id = 'f3D'; f3.dataset.ng = 'design'; f3.style.order = getComputedStyle(fd).order;
-    f3.innerHTML = '<label></label><div class="bdrow"></div>'; fd.before(f3);
+    f3 = document.createElement('div'); f3.id = 'f3D';   // inside the 盤面 box, under the 2D boards
+    f3.innerHTML = '<label></label><div class="bdrow"></div>'; fd.appendChild(f3);
     paint3(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
     const r2 = document.getElementById('bdRow');
     if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);   // a 2D board: the 2D page
