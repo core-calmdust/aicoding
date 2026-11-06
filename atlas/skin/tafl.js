@@ -10,7 +10,7 @@
      • mirrors the page's pieces (pcEls) into the turned walnut / bone pieces and the
        crowned king: a move slides the piece over the board with a little lift, a taken
        piece is lifted off and fades; the selected piece rises a hair
-     • rebuilds the board when the rule set (board size) changes
+     • rebuilds the board when the rule set changes (size, corner knots, the attackers' start squares)
      • inside the frame the board is drawn a little smaller (frame-local --cell), so the
        3D frame and the captured pieces fit the page's own layout
      • adds "3D" to the board and piece design rows of the new-game dialog (the game's own
@@ -32,14 +32,22 @@
   try { const v = localStorage.getItem(LK); if (v === '2d') bd3 = pc3 = false; else if (v === '3d2') pc3 = false; } catch (e) {}
 
   const curN = () => { try { return N; } catch (e) { return 11; } };
-  let root = null, U = null, n = 0;
+  const curV = () => { try { return gv; } catch (e) { return 'copenhagen'; } };
+  // the board of the rule set: corner knots only where the king escapes to a corner; the attackers' start squares shaded
+  const boardOpt = v => {
+    const E = window.TaflEngine, R = E && E.RULES[v]; if (!R) return {};
+    let home; if (v === 'tawlbwrdd' || v === 'ardri') { home = []; for (let i = 0; i < E.START[v].length; i++) if (E.START[v][i] === 'a') home.push(i); }   // (the others: the model's own shading for n)
+    return { edge: !!R.escEdge, home, key: v };
+  };
+  let root = null, U = null, n = 0, nv = '';
   const group = new THREE.Group();
   const map = new Map();   // DOM piece element → { g, code, i, n }
   function build(size) {
-    if (root && size === n) return false;
-    n = size;
+    const v = curV();
+    if (root && size === n && v === nv) return false;
+    n = size; nv = v;
     for (const [, o] of map) drop(o); map.clear();
-    root = T3.MODELS.tafl(true, { n }); U = root.userData;
+    root = T3.MODELS.tafl(true, Object.assign({ n }, boardOpt(v))); U = root.userData;
     root.add(group);
     return true;
   }
