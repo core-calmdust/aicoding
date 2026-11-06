@@ -427,13 +427,13 @@
     W.spent += cost; W.pulls += count; save(W);
     return res;
   }
-  // today's shop: 6 items picked from what you don't own, seeded by date (same for the whole day)
+  // today's shop: 7 items (icons 4 · backgrounds 2 · a frame; one full row on PC, 2026-11-06) picked from what you don't own, seeded by date (same for the whole day)
   function shop(W) {
     const t = ymd(Date.now()); let s = 0; for (const ch of t) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
     const rnd = () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296);
     const pool = AtlasArt.items.filter(it => it.rar <= 3 && it.id !== 'f-none').slice();
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    const kinds = { icon: 3, bg: 2, frame: 1 }, out = [];
+    const kinds = { icon: 4, bg: 2, frame: 1 }, out = [];
     for (const it of pool) if (kinds[it.kind] > 0) { kinds[it.kind]--; out.push({ id: it.id, price: SHOP_PRICE[it.rar] }); }
     return out;
   }
