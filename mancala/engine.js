@@ -1,4 +1,4 @@
-// Luxe Mancala engine — rules (Easy / Basic / Kalah / Sunka / Oware) + alpha-beta search with iterative deepening,
+// Luxe Mancala engine — rules (Easy / Basic / Kalah / Sunka / Oware / Mangala / Bohnenspiel / Ayoayo) + alpha-beta search with iterative deepening,
 // transposition table and exact endgame solving. Works as a Web Worker, a page script and a Node module.
 (function (root) {
 'use strict';
@@ -14,9 +14,21 @@ const RULES = {
   // the last seed making an opponent pit 2 or 3 captures it and the run of 2s/3s just before it;
   // a grand slam (taking every opposing seed) is legal but captures nothing; you must feed an empty opponent;
   // more than half the seeds wins, a 50/50 split is a draw
-  oware: { id: 'oware', cap: 0, relay: false, oware: true },
+  oware: { id: 'oware', cap: 0, relay: false, oware: true, feed: true, cyc: true },
+  // Mangala (Turkey, tournament rules): a pit of 2+ seeds puts its first seed back in itself (a single seed moves on);
+  // sows into your own store (exact: move again); the last seed making an opposing pit even takes it; the last seed
+  // in your own empty pit takes it with the opposite seeds; when a row empties, its owner takes the other row's seeds
+  mangala: { id: 'mangala', cap: 0, relay: false, gen: 'mangala' },
+  // Bohnenspiel (Baltic / German bean game): the stores are not sown into; the last bean making a pit 2, 4 or 6 (either
+  // row) takes it and the run of 2s / 4s / 6s before it; a player with no beans on their turn ends the game, the
+  // other one takes the beans left on their side
+  bohnen: { id: 'bohnen', cap: 0, relay: false, gen: 'bohnen', cyc: true },
+  // Ayoayo (Yoruba, Nigeria): relay sowing that skips the pit each sowing started from (and the stores); stop in an
+  // empty pit of your own row to take the opposite seeds (the last seed stays); an empty opponent must be fed; a
+  // player who cannot move ends the game and the other one takes the seeds left
+  ayo: { id: 'ayo', cap: 0, relay: true, gen: 'ayo', feed: true, cyc: true },
 };
-const RULE_IDS = ['easy', 'basic', 'kalah', 'sunka', 'oware'];
+const RULE_IDS = ['easy', 'basic', 'kalah', 'sunka', 'oware', 'mangala', 'bohnen', 'ayo'];
 const MAX_RELAY = 120;   // safety valve for endless relay sowing (never reached in practice)
 
 function initial(seeds) { const b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = seeds; b[i + 7] = seeds; } return b; }
@@ -29,8 +41,8 @@ const ruleOf = r => typeof r === 'string' ? (RULES[r] || RULES.kalah) : (r || RU
 const feeds = (b, side, k) => b[baseOf(side) + k] >= 6 - k;
 function canFeed(b, side) { for (let k = 0; k < 6; k++) if (feeds(b, side, k)) return true; return false; }
 function legal(b, side, rules) {
-  const o = baseOf(side), r = [], must = rules && ruleOf(rules).oware && sideSum(b, 1 - side) === 0;
-  for (let k = 0; k < 6; k++) if (b[o + k] > 0 && (!must || feeds(b, side, k))) r.push(k);
+  const R = rules ? ruleOf(rules) : null, o = baseOf(side), r = [], must = R && R.feed && sideSum(b, 1 - side) === 0;
+  for (let k = 0; k < 6; k++) if (b[o + k] > 0 && (!must || (R.oware ? feeds(b, side, k) : ayoFeeds(b, side, k)))) r.push(k);
   return r;
 }
 const isLegal = (b, side, k, rules) => k >= 0 && k <= 5 && legal(b, side, rules).includes(k);
@@ -40,6 +52,7 @@ const isLegal = (b, side, k, rules) => k >= 0 && k <= 5 && legal(b, side, rules)
 const RES = { extra: false, over: false, land: -1, cap: 0, relays: 0, capFrom: -1, swept: false, caps: 0, slam: false, fed: false };
 function play(b, side, k, R, rec) {
   if (R.oware) return playOware(b, side, k, rec);
+  if (R.gen) return R.gen === 'mangala' ? playMangala(b, side, k, rec) : R.gen === 'bohnen' ? playBohnen(b, side, k, rec) : playAyo(b, side, k, rec);
   RES.caps = 0; RES.slam = false; RES.fed = false;
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   let idx = (side ? 7 : 0) + k, n = b[idx];
@@ -119,10 +132,115 @@ function playOware(b, side, k, rec) {
   }
   return RES;
 }
+function resetRes() { RES.extra = false; RES.over = false; RES.cap = 0; RES.relays = 0; RES.capFrom = -1; RES.swept = false; RES.caps = 0; RES.slam = false; RES.fed = false; }
+// the game ends: every seed left on the board goes to store `to` (or, with to < 0, to the owner of its row)
+function sweepTo(b, to, rec) {
+  const s0 = sideSum(b, 0), s1 = sideSum(b, 1);
+  RES.over = true; RES.extra = false;
+  if (s0 + s1 === 0) return;
+  RES.swept = true;
+  if (rec) rec.push({ t: 'sweep', n0: s0, n1: s1, to });
+  if (to >= 0) b[to] += s0 + s1; else { b[6] += s0; b[13] += s1; }
+  for (let i = 0; i < 6; i++) { b[i] = 0; b[i + 7] = 0; }
+}
+const prevPit = i => i === 0 ? 12 : i === 7 ? 5 : i - 1;
+function playMangala(b, side, k, rec) {
+  const ms = side ? 13 : 6, os = side ? 6 : 13, ob = side ? 0 : 7, mb = side ? 7 : 0, org = mb + k;
+  let n = b[org], idx = org;
+  resetRes();
+  b[org] = 0;
+  if (rec) rec.push({ t: 'pick', at: org, n });
+  if (n > 1) { b[org]++; n--; if (rec) rec.push({ t: 'drop', at: org }); }   // the first seed goes back into its own pit
+  while (n > 0) {
+    idx = idx === 13 ? 0 : idx + 1;
+    if (idx === os) continue;
+    b[idx]++; n--;
+    if (rec) rec.push({ t: 'drop', at: idx });
+  }
+  RES.land = idx;
+  if (idx === ms) RES.extra = true;
+  else if (idx >= ob && idx <= ob + 5) {
+    if (b[idx] % 2 === 0) { const v = b[idx]; if (rec) rec.push({ t: 'cap', from: idx, n: v, own: -1, to: ms }); b[ms] += v; b[idx] = 0; RES.cap = v; RES.capFrom = idx; RES.caps = 1; }
+  } else if (b[idx] === 1 && b[12 - idx] > 0) {
+    const o = 12 - idx, v = b[o];
+    if (rec) rec.push({ t: 'cap', from: o, n: v, own: idx, to: ms });
+    b[ms] += v + 1; b[o] = 0; b[idx] = 0; RES.cap = v + 1; RES.capFrom = o; RES.caps = 1;
+  }
+  const s0 = sideSum(b, 0), s1 = sideSum(b, 1);
+  // a row is empty: its owner takes what is left on the other row
+  if (s0 === 0 || s1 === 0) sweepTo(b, s0 === 0 ? 6 : 13, rec);
+  return RES;
+}
+function playBohnen(b, side, k, rec) {
+  const ms = side ? 13 : 6, org = (side ? 7 : 0) + k;
+  let n = b[org], idx = org;
+  resetRes();
+  b[org] = 0;
+  if (rec) rec.push({ t: 'pick', at: org, n });
+  while (n > 0) {
+    idx = idx === 13 ? 0 : idx + 1;
+    if (idx === 6 || idx === 13) continue;
+    b[idx]++; n--;
+    if (rec) rec.push({ t: 'drop', at: idx });
+  }
+  RES.land = idx;
+  let j = idx, got = 0, c = 0;
+  while (c < 12 && (b[j] === 2 || b[j] === 4 || b[j] === 6)) {
+    if (rec) rec.push({ t: 'cap', from: j, n: b[j], own: -1, to: ms, chain: c });
+    got += b[j]; b[ms] += b[j]; b[j] = 0; c++; j = prevPit(j);
+  }
+  if (c) { RES.cap = got; RES.caps = c; RES.capFrom = idx; }
+  // the opponent has no beans for their turn: the game ends and the mover keeps their own
+  if (sideSum(b, 1 - side) === 0) sweepTo(b, ms, rec);
+  return RES;
+}
+// Ayoayo sowing + capture on a board (no RES, no end of game): returns the landing pit, the seeds taken, relays
+function ayoCore(b, side, k, rec) {
+  const ms = side ? 13 : 6, mb = side ? 7 : 0;
+  let start = mb + k, idx = start, n = b[idx], relays = 0, cap = 0, capFrom = -1;
+  b[idx] = 0;
+  if (rec) rec.push({ t: 'pick', at: idx, n });
+  for (;;) {
+    while (n > 0) {
+      idx = idx === 13 ? 0 : idx + 1;
+      if (idx === 6 || idx === 13 || idx === start) continue;
+      b[idx]++; n--;
+      if (rec) rec.push({ t: 'drop', at: idx });
+    }
+    if (b[idx] > 1 && relays < MAX_RELAY) { n = b[idx]; b[idx] = 0; start = idx; relays++; if (rec) rec.push({ t: 'pick', at: idx, n, relay: true }); continue; }
+    break;
+  }
+  if (idx >= mb && idx <= mb + 5 && b[idx] === 1 && b[12 - idx] > 0) {
+    const o = 12 - idx; cap = b[o]; capFrom = o;
+    if (rec) rec.push({ t: 'cap', from: o, n: cap, own: -1, to: ms });
+    b[ms] += cap; b[o] = 0;
+  }
+  return { land: idx, cap, capFrom, relays };
+}
+const AYO_TMP = new Int8Array(14);
+function ayoFeeds(b, side, k) { AYO_TMP.set(b); ayoCore(AYO_TMP, side, k); return sideSum(AYO_TMP, 1 - side) > 0; }
+function playAyo(b, side, k, rec) {
+  resetRes();
+  const r = ayoCore(b, side, k, rec), ms = side ? 13 : 6, os = side ? 6 : 13;
+  RES.land = r.land; RES.relays = r.relays;
+  if (r.cap) { RES.cap = r.cap; RES.capFrom = r.capFrom; RES.caps = 1; }
+  if (sideSum(b, 1 - side) === 0) sweepTo(b, ms, rec);   // the opponent cannot move: the mover takes the rest
+  else if (sideSum(b, side) === 0) {
+    // the opponent must feed this empty row; if no move can, they keep the seeds on their side
+    let ok = false; for (let q = 0; q < 6 && !ok; q++) if (b[(side ? 0 : 7) + q] && ayoFeeds(b, 1 - side, q)) ok = true;
+    if (!ok) { sweepTo(b, os, rec); RES.fed = true; }
+  }
+  return RES;
+}
 // Oware: a position repeated for the third time ends an endless cycle; each side keeps the seeds on its row
 function cycleEnd(b) { b[6] += sideSum(b, 0); b[13] += sideSum(b, 1); for (let i = 0; i < 6; i++) { b[i] = 0; b[i + 7] = 0; } }
 // game over in the start position (set-up positions): nothing to play
-function stuck(b, side, rules) { return sideSum(b, 0) === 0 || sideSum(b, 1) === 0 ? (!ruleOf(rules).oware || legal(b, side, rules).length === 0) : false; }
+function stuck(b, side, rules) {
+  const R = ruleOf(rules);
+  if (R.gen === 'bohnen') return sideSum(b, side) === 0;
+  if (sideSum(b, 0) && sideSum(b, 1)) return false;
+  return R.feed ? legal(b, side, R).length === 0 : true;
+}
 // convenience: play on a copy and describe the move for the UI
 function trace(b, side, k, rules) {
   const R = RULES[rules] || RULES.kalah, nb = Int8Array.from(b), ev = [];
@@ -134,7 +252,7 @@ function replay(start, side0, moves, rules) {
   const R = RULES[rules] || RULES.kalah;
   let b = Int8Array.from(start), side = side0, over = stuck(b, side, R);
   const out = [{ b: Int8Array.from(b), side, over, mv: null }];
-  const seen = R.oware ? new Map() : null, key = () => side + ':' + b.join(',');
+  const seen = R.cyc ? new Map() : null, key = () => side + ':' + b.join(',');
   if (seen) seen.set(key(), 1);
   for (let i = 0; i < moves.length; i++) {
     const k = moves[i];
@@ -213,8 +331,24 @@ function evalOware(b, side) {
   if (opCap >= my) opCap = 0;
   return (b[ms] - b[os]) * SEED + WO.side * (my - op) + WO.target * (myT - opT) + WO.myCap * myCap - WO.oppCap * opCap;
 }
+// Mangala / Bohnenspiel / Ayoayo: captured seeds, the best immediate gain for each side (one move, played out), and
+// the seeds on your own row (they end up yours at the end in Bohnenspiel and Ayoayo; in Mangala the one who runs out
+// first takes the other row, so no bonus there)
+const WG = { my: 40, opp: 30, side: { mangala: 0, bohnen: 16, ayo: 0 } };
+const EV_TMP = new Int8Array(14);
+function evalGen(b, side, R) {
+  const ms = side ? 13 : 6, os = side ? 6 : 13, mb = side ? 7 : 0, ob = side ? 0 : 7;
+  let my = 0, op = 0, myG = 0, opG = 0;
+  for (let k = 0; k < 6; k++) {
+    my += b[mb + k]; op += b[ob + k];
+    if (b[mb + k]) { EV_TMP.set(b); play(EV_TMP, side, k, R); const g = EV_TMP[ms] - b[ms]; if (g > myG) myG = g; }
+    if (b[ob + k]) { EV_TMP.set(b); play(EV_TMP, 1 - side, k, R); const g = EV_TMP[os] - b[os]; if (g > opG) opG = g; }
+  }
+  return (b[ms] - b[os]) * SEED + WG.my * myG - WG.opp * opG + WG.side[R.gen] * (my - op);
+}
 function evaluate(b, side, R) {
   if (R.oware) return evalOware(b, side);
+  if (R.gen) return evalGen(b, side, R);
   const ms = side ? 13 : 6, os = side ? 6 : 13, mb = side ? 7 : 0, ob = side ? 0 : 7;
   let mySeeds = 0, oppSeeds = 0, myExtra = 0, oppExtra = 0, myCap = 0, oppCap = 0;
   for (let k = 0; k < 6; k++) {
@@ -238,6 +372,7 @@ function rnd() { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >
 const ZN = 128, Z1 = new Uint32Array(14 * ZN), Z2 = new Uint32Array(14 * ZN);
 for (let i = 0; i < Z1.length; i++) { Z1[i] = rnd(); Z2[i] = rnd(); }
 const ZS1 = rnd(), ZS2 = rnd(), ZR1 = [rnd(), rnd(), rnd(), rnd(), rnd()], ZR2 = [rnd(), rnd(), rnd(), rnd(), rnd()];
+for (let i = 5; i < 8; i++) { ZR1.push(rnd()); ZR2.push(rnd()); }
 
 const TT_BITS = 21, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 let ttKey = null, ttVal, ttInfo;   // info: depth (8 bits) | flag (2 bits) << 8 | move+1 (3 bits) << 10
@@ -282,11 +417,12 @@ function search(b, side, depth, alpha, beta, ply) {
   // children
   const kids = boards[ply], base = side ? 7 : 0;
   const order = [], key = [], nside = [];
-  const must = Rcur.oware && sideSum(b, 1 - side) === 0;
+  const must = Rcur.feed && sideSum(b, 1 - side) === 0;
   for (let k = 0; k < 6; k++) {
-    if (!b[base + k] || (must && b[base + k] < 6 - k)) continue;
+    if (!b[base + k] || (must && Rcur.oware && b[base + k] < 6 - k)) continue;
     const c = kids[k]; c.set(b);
     const r = play(c, side, k, Rcur);
+    if (must && !r.over && sideSum(c, 1 - side) === 0) continue;   // (Ayoayo: a move that does not feed)
     let s;
     if (r.over) { s = 1e6 + (c[ms] - c[os]) * 10; nside[k] = -1; }
     else { s = (r.extra ? 5000 : 0) + (c[ms] - b[ms]) * 100 - k; nside[k] = r.extra ? side : 1 - side; }
@@ -482,7 +618,7 @@ function chooseMove(b, side, rules, level) {
 }
 
 const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, isLegal, canFeed, stuck, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
-  evaluate, think, analyze, solve, chooseMove, LEVELS, W, WO, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+  evaluate, think, analyze, solve, chooseMove, LEVELS, W, WO, WG, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;
