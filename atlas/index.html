@@ -830,6 +830,21 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 }
 /* rarity sections (rarity sorts): a small header with owned / total */
 .dsec{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:8px;padding-bottom:4px;border-bottom:2px solid var(--line)}.dsec:first-child{margin-top:0}
+/* rarity sorts (app.js renderDress): each rarity in its own rounded box, tinted in the rarity colour, heading on its top edge;
+   the first box starts on the name card's top line (PC) */
+.dgrid.grouped{display:flex;flex-direction:column;gap:14px}
+.dgrp{--gc:var(--r0);position:relative;border-radius:20px;padding:10px 12px 12px;background:color-mix(in srgb,var(--gc) 9%,#fffdf7);border:2px solid color-mix(in srgb,var(--gc) 55%,#fff);box-shadow:0 3px 0 color-mix(in srgb,var(--gc) 22%,transparent)}
+.dgrp.r1{--gc:var(--r1)}.dgrp.r2{--gc:var(--r2)}.dgrp.r3{--gc:var(--r3)}
+.dgrp.r4{--gc:#ffa51e;background:linear-gradient(135deg,color-mix(in srgb,#ff7fbe 9%,#fffdf7),color-mix(in srgb,#ffb21e 10%,#fffdf7),color-mix(in srgb,#36b4ff 9%,#fffdf7))}
+.dgrp .dsec{margin:0 0 10px;padding:0;border:0}
+.dgrp .dsn{color:color-mix(in srgb,var(--gc) 60%,var(--ink));direction:ltr;unicode-bidi:isolate}   /* '0 / 28' reads the same in Arabic */
+.dgg{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px}
+@media (max-width:760px){
+  .dgrid.grouped{gap:10px}
+  .dgrp{border-radius:16px;padding:8px 8px 9px}
+  .dgrp .dsec{margin-bottom:7px}
+  .dgg{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+}
 .dsec .rar{position:static;font-size:12px;padding:2px 9px}.dsec .dsn{font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink2)}
 .dempty{grid-column:1/-1;text-align:center;padding:24px 0}
 .dic{position:relative;display:block;aspect-ratio:1;padding:3px;border:0;border-radius:16px;background:var(--rc);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1)}
@@ -1547,6 +1562,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=15">
 <script src="worldmap.js?v=19"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=185"></script>
+<script src="app.js?v=186"></script>
 </body>
 </html>
