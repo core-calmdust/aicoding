@@ -488,6 +488,250 @@ window.SAME_I18N.ar = {
   'tu.a3.h': "FEVER!", 'tu.a3': "املأ العداد لتدخل FEVER: 6 ثوانٍ من النقاط المضاعفة، ويمكن إزالة المكعبات المفردة أيضًا.",
   'tu.a4.h': "امسك البطل", 'tu.a4': "انقر البطل الطائر لتحصل على +3 ثوانٍ و300 نقطة. بقع حبر؟ انقرها لإزالتها.",
 };
+window.SAME_I18N.ru = {
+'skin.swiss': 'Швейцарский минимализм', 'skin.wa': 'Японский модерн', 'skin.mid': 'Середина века', 'skin.pixel': 'Пиксели',
+'gi.rule': 'Правила', 'gi.blocks': 'Особые блоки',
+'st.demo': 'Посмотреть, как играть',
+'set.skin': 'Цвета', 'skin.pop': 'Классический POP', 'skin.vintage': 'Винтаж', 'skin.riso': 'Ризография', 'skin.night': 'Ночной POP',
+  'title.doc': "SameGame POP! — головоломка в стиле поп-арт", series: "Атлас настольных игр мира", title: "SameGame", home: "Главная", help: "Как играть",
+  'ht.daily': "День", 'ht.stage': "Уровни", 'ht.action': "Экшен", 'ht.me': "Профиль", 'set.lang': "Язык",
+  'pf.edit': "Профиль", 'pf.guest': "Гость", 'pf.streak': "дн. подряд", 'pf.name': "Ник (виден в рейтинге)", 'pf.ph': "До 12 символов", 'pf.note': "Задайте ник, чтобы участвовать в рейтинге.", 'pf.icon': "Значок (больше — в гаче)",
+  'd.puzzle': "Пазл дня", 'd.puzzle.h': "Рекорд на сегодняшнем поле", 'd.puzzle.d': "Все играют на одном поле. Играйте сколько угодно — в рейтинг идёт лучший результат.",
+  'd.blitz': "BLITZ дня", 'd.blitz.h': "60 секунд на очки", 'd.blitz.d': "BLITZ дня: 3 попытки. Пустые места заполняются сверху; убирайте подряд ради комбо.",
+  'd.best': "Рекорд", 'd.play': "Играть", 'd.again': "Ещё раз", 'd.done': "На сегодня всё", 'd.tries': "Осталось {n}",
+  'd.medals': "Бронза — не больше 15 блоков в остатке, серебро — не больше 5, золото — поле очищено.",
+  'cal.played': "Сыграно дней: {n}", 'cal.streak': "{n} дн. подряд", 'wd.0': "Вс", 'wd.1': "Пн", 'wd.2': "Вт", 'wd.3': "Ср", 'wd.4': "Чт", 'wd.5': "Пт", 'wd.6': "Сб",
+  'f.title': "Свободная игра", 'f.desc': "Выберите размер и число цветов для классической партии.", 'f.size': "Размер", 'f.colors': "Цвета",
+  'st.h': "Уровни", 'st.d': "Уберите все блоки, чтобы пройти. 15 правил × 50 задач.", 'st.comp': "COMPLETE!", 'st.lock': "Пройдите ещё {n} в STAGE {s}, чтобы открыть", 'st.goal': "Уберите все блоки",
+  't.0': "Новичок", 't.1': "Легко", 't.2': "Средне", 't.3': "Сложно", 't.4': "Эксперт", 't.5': "Мастер",
+  'th.cl': "Классика", 'th.cl.d': "Убирайте группы из 2+ блоков одного цвета.", 'th.cl.r': "Нажмите на группу из 2+ одинаковых блоков. Блоки сверху падают, пустые столбцы сдвигаются влево.",
+  'th.tr': "Тройка", 'th.tr.d': "Убрать можно только группы из 3+ блоков.", 'th.tr.r': "Убираются только группы из 3+",
+  'th.rk': "Камни", 'th.rk.d': "Камни не нажимаются — уберите соседа, чтобы разбить их.", 'th.rk.r': "Камни нельзя нажать. Если убрать блок рядом с камнем, камень тоже разбивается.",
+  'th.ic': "Лёд", 'th.ic.d': "Замёрзшие блоки тают, когда убирают соседа.", 'th.ic.r': "Замёрзшие блоки не соединяются. Уберите соседний блок — и они оттают в обычные.",
+  'th.bm': "Бомбы", 'th.bm.d': "Группа с бомбой взрывает квадрат 3×3 вокруг.", 'th.bm.r': "Если убрать группу с бомбой, исчезнет и квадрат 3×3 вокруг бомбы. Бомбы детонируют друг друга.",
+  'th.wd': "Радуга", 'th.wd.d': "Радужные блоки соединяются с любым цветом.", 'th.wd.r': "Радужные блоки соединяются с любым цветом, но сами по себе не нажимаются.",
+  'th.pt': "Краска", 'th.pt.d': "Краска перекрашивает блоки вокруг себя.", 'th.pt.r': "Если убрать группу с краской, блоки 3×3 вокруг неё перекрасятся в этот цвет.",
+  'th.mx': "Микс", 'th.mx.d': "Все механики вместе — финальный экзамен.", 'th.mx.r': "Сразу 2–3 механики: камни, лёд, бомбы, радуга и краска.",
+  'a.blitz': "BLITZ 60", 'a.blitz.d': "Сколько очков за 60 секунд? Большие группы добавляют время.", 'a.rise': "Подъём", 'a.rise.d': "Ряды поднимаются снизу. Дошли до верха — конец.",
+  'm.h': "Миссии", 'm.d': "30 экшен-испытаний. Цель — ★1, высокий счёт — ★3.", 'm.lock': "Пройдите ещё {n} в ранге выше, чтобы открыть", 'm.no': "Миссия {n}",
+  'mt.0': "ROOKIE", 'mt.1': "HERO", 'mt.2': "LEGEND",
+  'goal.score': "Набрать {n} очков", 'goal.big': "Убрать {n}+ за раз", 'goal.combo': "Комбо ×{n}", 'goal.hero': "Поймать героя {n} раз", 'goal.fever': "Включить FEVER {n} раз", 'goal.pops': "Убрать {n} групп", 'goal.survive': "Продержаться {n} с",
+  'g.hero': "Герой", 'g.bomb': "Бомбы", 'g.rock': "Камни", 'g.ice': "Лёд", 'g.wild': "Радуга", 'g.ink': "Чернила",
+  'u.colors': " цв.", 'u.sec': "с", 'u.left': "осталось", 'u.list': "К списку", 'u.home': "Главная", 'u.save': "Сохранить", 'u.prev': "Назад", 'u.next': "Далее", 'u.start': "Начать", 'u.back': "Назад", 'u.score': "Очки",
+  'g.undo': "Отменить", 'g.hint': "Подсказка", 'h.none': "Это поле уже не очистить полностью. Отмените ход, чтобы вернуться.",
+  'r.s3': "Поле очищено без ошибок!", 'r.s2': "Пройдено с отменой или повтором", 'r.s1': "Пройдено с подсказкой", 'r.next': "Далее", 'r.retry': "Ещё раз", 'r.new': "Новое поле", 'r.end': "Конец игры", 'r.best': "Новый рекорд!",
+  'r.stuck': "Ходов больше нет…", 'r.stuck.d': "Осталось блоков: {n}. Отмените ход и попробуйте иначе.", 'r.left': "Осталось блоков: {n}",
+  'r.combo': "Макс. комбо", 'r.big': "Макс.", 'r.hero': "Герой", 'r.val': "Итог: {n}", 'r.mstar': "★2 — {a}, ★3 — {b}", 'r.surv': "Продержались {n} с", 'r.againN': "Ещё раз (осталось {n})", 'r.nudge': "Задайте ник и участвуйте в рейтинге",
+  'md.1': "Бронза", 'md.2': "Серебро", 'md.3': "Золото",
+  'ev.medal': "Медаль STAGE {s}!", 'ev.unlock': "STAGE {s} открыт!", 'ev.comp': "Тема пройдена!",
+  'q.quit': "Выйти из игры на главную?",
+  'ach.title': "Достижения", 'ach.d': "За каждое выполненное — монеты.", 'ach.got': "Получено",
+  'ach.first': "Первый POP", 'ach.pops100': "Убрать 100 групп", 'ach.pops1k': "Убрать 1 000 групп", 'ach.pops5k': "Убрать 5 000 групп", 'ach.big10': "10 за раз", 'ach.big20': "20 за раз", 'ach.big30': "30 за раз",
+  'ach.perf1': "Первая полная очистка", 'ach.perf10': "10 полных очисток", 'ach.perf50': "50 полных очисток", 'ach.combo10': "Комбо 10", 'ach.combo20': "Комбо 20", 'ach.combo30': "Комбо 30",
+  'ach.hero10': "Поймать героя 10 раз", 'ach.hero50': "Поймать героя 50 раз", 'ach.fever5': "5 раз FEVER", 'ach.fever30': "30 раз FEVER",
+  'ach.st10': "Пройти 10 уровней", 'ach.st100': "Пройти 100 уровней", 'ach.st400': "Пройти все 750 уровней", 'ach.star3x50': "★3 на 50 уровнях", 'ach.theme1': "Пройти одну тему",
+  'ach.mis10': "Пройти 10 миссий", 'ach.mis30': "Пройти все 30 миссий", 'ach.mis3s': "★3 во всех миссиях",
+  'ach.daily7': "7 дней подряд", 'ach.daily30': "30 дней подряд", 'ach.gold10': "10 золотых медалей дня", 'ach.blitz10k': "10 000 в BLITZ", 'ach.rise10k': "10 000 в «Подъёме»", 'ach.col30': "30 персонажей", 'ach.col100': "Все 100 персонажей",
+  'ga.title': "Гача", 'ga.one': "×1", 'ga.ten': "×10", 'ga.rate': "N 55% / R 28% / SR 12% / SSR 4% / UR 1%. 10-я крутка в ×10 — SR или выше.", 'ga.dup': "Повторы превращаются в монеты (N5, R15, SR40, SSR100, UR300).", 'ga.refund': "За повторы возвращено {n} монет",
+  'sh.title': "Магазин", 'sh.d': "Покупайте фоны и меняйте облик игры.", 'sh.use': "Выбрать", 'sh.using': "Выбрано",
+  'bg.dots': "Горошек", 'bg.rays': "Лучи", 'bg.blue': "Синий горошек", 'bg.pink': "Розовый горошек", 'bg.stripe': "Полоски", 'bg.city': "Комикс-город", 'bg.sea': "Акулье море", 'bg.boom': "Бабах",
+  'bk.title': "Коллекция", 'bk.d': "Собрано {n} / 100",
+  'rk.title': "Рейтинг", 'rk.p': "Пазл дня", 'rk.b': "BLITZ дня", 'rk.m': "Этот месяц", 'rk.t': "За всё время", 'rk.load': "LOADING…", 'rk.off': "Рейтинг скоро появится.", 'rk.err': "Не удалось загрузить рейтинг. Проверьте подключение и откройте снова.", 'rk.empty': "Пока нет результатов. Будьте первым!", 'rk.me': "Вы на {r}-м месте ({s})",
+  'set.title': "Настройки", 'set.snd': "Звуки", 'set.anim': "Эффекты (облачка POP!, конфетти)", 'set.emb': "Значки на блоках (помощь в цветах)", 'set.tut': "Как играть", 'set.reset': "Удалить данные", 'set.reset.q': "Все рекорды, монеты и персонажи будут удалены. Удалить всё?",
+  'login': "Бонус за вход +{n} монет (день {d})", 'err.load': "Не удалось загрузить уровни. Перезагрузите страницу.",
+  'tu.b1.h': "Убирайте связанные цвета", 'tu.b1': "Если касаются 2+ блока одного цвета, нажмите — и они исчезнут разом.", 'tu.b1.c': "Нажмите на 3 красных!",
+  'tu.b2.h': "Больше группа — больше очков", 'tu.b2': "За n блоков дают (n−2)² очков. Убирайте мелочь, чтобы собрать цвет, а потом — одним большим ударом!",
+  'tu.b3.h': "Падают и сдвигаются", 'tu.b3': "Блоки сверху падают в пустоты. Если столбец опустел, столбцы справа сдвигаются влево.",
+  'tu.b4.h': "Бонус за очистку", 'tu.b4': "Уберите все блоки — бонус 1 000 очков! В уровнях цель — полная очистка.",
+  'tu.try': "Попробуйте", 'tu.try.d': "Очистите это поле целиком. Порядок важен!", 'tu.try.no': "Один блок убрать нельзя", 'tu.try.ok': "Отлично!", 'tu.try.re': "Тупик… попробуйте другой порядок.",
+  'tu.a1.h': "60 секунд BLITZ", 'tu.a1': "Сверху падают новые блоки. Уберите 7+ за раз, чтобы добавить время.",
+  'tu.a2.h': "Комбо копят очки", 'tu.a2': "Убирайте снова в течение 1,8 с — это комбо, до ×3 очков!",
+  'tu.a3.h': "FEVER!", 'tu.a3': "Заполните шкалу для FEVER: 6 секунд двойных очков, и даже одиночные блоки убираются.",
+  'tu.a4.h': "Поймайте героя", 'tu.a4': "Нажмите на пролетающего героя: +3 секунды и 300 очков. Кляксы чернил? Смахните их нажатием.",
+};
+window.SAME_I18N['zh-TW'] = {
+'skin.swiss': '瑞士極簡', 'skin.wa': '和風摩登', 'skin.mid': '中世紀現代', 'skin.pixel': '像素',
+'gi.rule': '規則', 'gi.blocks': '特殊方塊',
+'st.demo': '看看怎麼玩',
+'set.skin': '配色', 'skin.pop': '經典POP', 'skin.vintage': '復古', 'skin.riso': '孔版印刷', 'skin.night': '夜間POP',
+  'title.doc': "SameGame POP! — 普普風消除方塊", series: "世界桌遊大百科", title: "SameGame", home: "首頁", help: "玩法",
+  'ht.daily': "每日", 'ht.stage': "關卡", 'ht.action': "動作", 'ht.me': "我的", 'set.lang': "語言",
+  'pf.edit': "個人資料", 'pf.guest': "訪客", 'pf.streak': "天連續", 'pf.name': "暱稱（顯示於排行榜）", 'pf.ph': "最多12個字", 'pf.note': "設定暱稱即可參加排行榜。", 'pf.icon': "頭像（轉蛋可獲得更多）",
+  'd.puzzle': "每日謎題", 'd.puzzle.h': "挑戰今日盤面高分", 'd.puzzle.d': "所有人挑戰同一盤面。可無限次遊玩，最佳成績列入排行榜。",
+  'd.blitz': "每日BLITZ", 'd.blitz.h': "60秒得分挑戰", 'd.blitz.d': "今日BLITZ每天限3次。消除後從上方補充，連續消除形成連擊。",
+  'd.best': "最佳", 'd.play': "開始", 'd.again': "再玩一次", 'd.done': "今天結束了", 'd.tries': "剩餘{n}次",
+  'd.medals': "剩餘方塊15個以下得銅牌，5個以下得銀牌，全部消除得金牌。",
+  'cal.played': "已玩{n}天", 'cal.streak': "連續{n}天", 'wd.0': "日", 'wd.1': "一", 'wd.2': "二", 'wd.3': "三", 'wd.4': "四", 'wd.5': "五", 'wd.6': "六",
+  'f.title': "自由模式", 'f.desc': "選擇大小和顏色數量，來一局經典玩法。", 'f.size': "大小", 'f.colors': "顏色數",
+  'st.h': "關卡", 'st.d': "消除所有方塊即可過關。15種規則 × 50題。", 'st.comp': "COMPLETE!", 'st.lock': "再過關STAGE {s}的{n}題即可解鎖", 'st.goal': "消除所有方塊",
+  't.0': "入門", 't.1': "初級", 't.2': "中級", 't.3': "高級", 't.4': "達人", 't.5': "大師",
+  'th.cl': "經典", 'th.cl.d': "消除2個以上相連的同色方塊。", 'th.cl.r': "點擊2個以上相連的同色方塊即可消除。上方方塊會落下，空欄向左靠攏。",
+  'th.tr': "三連", 'th.tr.d': "只能消除3個以上相連的方塊。", 'th.tr.r': "只能消除3個以上相連的顏色",
+  'th.rk': "岩石", 'th.rk.d': "岩石無法點擊，消除相鄰方塊即可擊碎。", 'th.rk.r': "岩石無法點擊。消除岩石旁邊的方塊時，岩石會一起被擊碎。",
+  'th.ic': "冰塊", 'th.ic.d': "消除相鄰方塊可讓冰凍方塊解凍。", 'th.ic.r': "冰凍方塊不會相連。消除相鄰方塊後會解凍，變回普通方塊。",
+  'th.bm': "炸彈", 'th.bm.d': "消除含炸彈的組時，周圍3×3也會被炸掉。", 'th.bm.r': "消除含炸彈的組時，炸彈周圍3×3也會一起消除。炸彈會連鎖引爆。",
+  'th.wd': "彩虹", 'th.wd.d': "彩虹方塊能與任何顏色相連。", 'th.wd.r': "彩虹方塊能與所有顏色相連，但不能單獨點擊。",
+  'th.pt': "油漆", 'th.pt.d': "消除油漆後，周圍方塊會被染成同色。", 'th.pt.r': "消除含油漆的組時，油漆周圍3×3的方塊會被染成該顏色。",
+  'th.mx': "混合", 'th.mx.d': "各種機關混在一起的終極挑戰。", 'th.mx.r': "岩石、冰塊、炸彈、彩虹、油漆中的2～3種同時出現。",
+  'a.blitz': "BLITZ 60", 'a.blitz.d': "60秒內能拿多少分？大量消除可增加時間。", 'a.rise': "上升", 'a.rise.d': "方塊從下方逐列上升，超過頂端即結束。",
+  'm.h': "任務", 'm.d': "30個動作模式挑戰。達成目標得★1，高分得★3。", 'm.lock': "再完成上一等級的{n}個任務即可解鎖", 'm.no': "任務 {n}",
+  'mt.0': "ROOKIE", 'mt.1': "HERO", 'mt.2': "LEGEND",
+  'goal.score': "拿到{n}分", 'goal.big': "一次消除{n}個以上", 'goal.combo': "達成{n}連擊", 'goal.hero': "抓住英雄{n}次", 'goal.fever': "觸發FEVER {n}次", 'goal.pops': "消除{n}次", 'goal.survive': "撐過{n}秒",
+  'g.hero': "英雄", 'g.bomb': "炸彈", 'g.rock': "岩石", 'g.ice': "冰塊", 'g.wild': "彩虹", 'g.ink': "墨水",
+  'u.colors': "色", 'u.sec': "秒", 'u.left': "剩餘", 'u.list': "返回列表", 'u.home': "首頁", 'u.save': "儲存", 'u.prev': "上一個", 'u.next': "下一個", 'u.start': "開始", 'u.back': "返回", 'u.score': "分數",
+  'g.undo': "悔棋", 'g.hint': "提示", 'h.none': "這個盤面已經無法全部消除。用「悔棋」返回吧。",
+  'r.s3': "零失誤全消！", 'r.s2': "使用悔棋或重來後過關", 'r.s1': "使用提示後過關", 'r.next': "下一關", 'r.retry': "再試一次", 'r.new': "新盤面", 'r.end': "結束", 'r.best': "刷新最佳！",
+  'r.stuck': "已經消不了了…", 'r.stuck.d': "剩下{n}個方塊。可以用「悔棋」返回重來。", 'r.left': "剩餘方塊 {n}個",
+  'r.combo': "最大連擊", 'r.big': "最大", 'r.hero': "英雄", 'r.val': "結果：{n}", 'r.mstar': "★2需{a}分，★3需{b}分", 'r.surv': "撐了{n}秒", 'r.againN': "再來一次（剩餘{n}次）", 'r.nudge': "設定暱稱，參加排行榜",
+  'md.1': "銅牌", 'md.2': "銀牌", 'md.3': "金牌",
+  'ev.medal': "STAGE {s} 獲得獎牌！", 'ev.unlock': "STAGE {s} 已解鎖！", 'ev.comp': "主題完成！",
+  'q.quit': "要結束遊戲回到首頁嗎？",
+  'ach.title': "成就", 'ach.d': "達成後可領取金幣。", 'ach.got': "已領取",
+  'ach.first': "第一次POP", 'ach.pops100': "消除100次", 'ach.pops1k': "消除1,000次", 'ach.pops5k': "消除5,000次", 'ach.big10': "一次消除10個", 'ach.big20': "一次消除20個", 'ach.big30': "一次消除30個",
+  'ach.perf1': "第一次全消", 'ach.perf10': "全消10次", 'ach.perf50': "全消50次", 'ach.combo10': "10連擊", 'ach.combo20': "20連擊", 'ach.combo30': "30連擊",
+  'ach.hero10': "抓住英雄10次", 'ach.hero50': "抓住英雄50次", 'ach.fever5': "FEVER 5次", 'ach.fever30': "FEVER 30次",
+  'ach.st10': "通過10個關卡", 'ach.st100': "通過100個關卡", 'ach.st400': "通過全部750個關卡", 'ach.star3x50': "50個關卡拿到★3", 'ach.theme1': "完成一個主題",
+  'ach.mis10': "完成10個任務", 'ach.mis30': "完成全部30個任務", 'ach.mis3s': "所有任務拿到★3",
+  'ach.daily7': "連續7天遊玩", 'ach.daily30': "連續30天遊玩", 'ach.gold10': "10面每日金牌", 'ach.blitz10k': "BLITZ拿到10,000分", 'ach.rise10k': "上升模式拿到10,000分", 'ach.col30': "收集30種角色", 'ach.col100': "收集全部100種角色",
+  'ga.title': "轉蛋", 'ga.one': "1次", 'ga.ten': "10次", 'ga.rate': "N 55% / R 28% / SR 12% / SSR 4% / UR 1%。10連抽的第10個必為SR以上。", 'ga.dup': "重複的角色會變回金幣（N5、R15、SR40、SSR100、UR300）。", 'ga.refund': "重複返還 {n}金幣",
+  'sh.title': "商店", 'sh.d': "購買背景來換裝。", 'sh.use': "使用", 'sh.using': "使用中",
+  'bg.dots': "圓點", 'bg.rays': "放射光", 'bg.blue': "藍色圓點", 'bg.pink': "粉紅圓點", 'bg.stripe': "條紋", 'bg.city': "漫畫城市", 'bg.sea': "鯊魚之海", 'bg.boom': "咔砰",
+  'bk.title': "圖鑑", 'bk.d': "已收集 {n} / 100 種",
+  'rk.title': "排行榜", 'rk.p': "今日謎題", 'rk.b': "今日BLITZ", 'rk.m': "本月", 'rk.t': "累計", 'rk.load': "LOADING…", 'rk.off': "排行榜即將開放。", 'rk.err': "無法載入排行榜。請確認網路連線後再開啟一次。", 'rk.empty': "還沒有紀錄。快來搶第一！", 'rk.me': "你是第{r}名（{s}）",
+  'set.title': "設定", 'set.snd': "音效", 'set.anim': "特效（POP!對話框、彩帶）", 'set.emb': "在方塊上顯示記號（輔助辨色）", 'set.tut': "查看玩法", 'set.reset': "刪除資料", 'set.reset.q': "所有紀錄、金幣和角色都會被刪除。確定要刪除嗎？",
+  'login': "登入獎勵 +{n}金幣（第{d}天）", 'err.load': "無法載入關卡。請重新整理頁面。",
+  'tu.b1.h': "消除相連的顏色", 'tu.b1': "2個以上同色方塊相連時，點一下就能一起消除。", 'tu.b1.c': "點擊3個紅色！",
+  'tu.b2.h': "消越多分越高", 'tu.b2': "消除n個方塊得 (n−2)² 分。先小塊消除把顏色聚在一起，最後一口氣大消除是訣竅！",
+  'tu.b3.h': "落下並靠攏", 'tu.b3': "消除後上方方塊會落下。整欄清空時，右邊的欄會向左靠攏。",
+  'tu.b4.h': "全消獎勵", 'tu.b4': "消除所有方塊可獲得1,000分獎勵！關卡模式以全消為過關條件。",
+  'tu.try': "試試看", 'tu.try.d': "把這個盤面全部消除吧。消除順序很重要！", 'tu.try.no': "單個方塊無法消除喔", 'tu.try.ok': "不錯！", 'tu.try.re': "消不動了…換個順序試試。",
+  'tu.a1.h': "60秒BLITZ", 'tu.a1': "消除後新方塊會從上方落下。一次消除7個以上可增加時間。",
+  'tu.a2.h': "連擊越打越多", 'tu.a2': "1.8秒內連續消除形成連擊，分數最高3倍！",
+  'tu.a3.h': "FEVER!", 'tu.a3': "集滿能量條進入FEVER：6秒內分數加倍，單個方塊也能消除！",
+  'tu.a4.h': "抓住英雄", 'tu.a4': "點擊飛過的英雄可獲得+3秒和300分。有墨水飛來時，點一下擦掉吧。",
+};
+window.SAME_I18N.id = {
+'skin.swiss': 'Minimalis Swiss', 'skin.wa': 'Jepang modern', 'skin.mid': 'Pertengahan abad', 'skin.pixel': 'Piksel',
+'gi.rule': 'Aturan', 'gi.blocks': 'Blok khusus',
+'st.demo': 'Lihat cara mainnya',
+'set.skin': 'Warna', 'skin.pop': 'POP Klasik', 'skin.vintage': 'Vintage', 'skin.riso': 'Risograf', 'skin.night': 'POP Malam',
+  'title.doc': "SameGame POP! — puzzle blok bergaya pop art", series: "Atlas Permainan Papan Dunia", title: "SameGame", home: "Beranda", help: "Cara main",
+  'ht.daily': "Harian", 'ht.stage': "Stage", 'ht.action': "Aksi", 'ht.me': "Saya", 'set.lang': "Bahasa",
+  'pf.edit': "Profil", 'pf.guest': "Tamu", 'pf.streak': "hari beruntun", 'pf.name': "Nama panggilan (tampil di peringkat)", 'pf.ph': "Maks. 12 karakter", 'pf.note': "Buat nama panggilan untuk ikut peringkat.", 'pf.icon': "Ikon (dapatkan lebih banyak dari gacha)",
+  'd.puzzle': "Puzzle Harian", 'd.puzzle.h': "Skor tertinggi di papan hari ini", 'd.puzzle.d': "Semua orang memainkan papan yang sama. Main sesukamu — skor terbaikmu masuk peringkat.",
+  'd.blitz': "BLITZ Harian", 'd.blitz.h': "Serangan skor 60 detik", 'd.blitz.d': "BLITZ hari ini: 3 kali. Ruang kosong terisi dari atas; terus hapus untuk kombo.",
+  'd.best': "Terbaik", 'd.play': "Main", 'd.again': "Main lagi", 'd.done': "Selesai hari ini", 'd.tries': "Sisa {n}",
+  'd.medals': "Perunggu jika sisa 15 blok atau kurang, perak jika 5 atau kurang, emas jika bersih total.",
+  'cal.played': "{n} hari bermain", 'cal.streak': "{n} hari beruntun", 'wd.0': "M", 'wd.1': "S", 'wd.2': "S", 'wd.3': "R", 'wd.4': "K", 'wd.5': "J", 'wd.6': "S",
+  'f.title': "Main bebas", 'f.desc': "Pilih ukuran dan jumlah warna untuk permainan klasik.", 'f.size': "Ukuran", 'f.colors': "Warna",
+  'st.h': "Stage", 'st.d': "Hapus semua blok untuk menang. 15 aturan × 50 puzzle.", 'st.comp': "COMPLETE!", 'st.lock': "Selesaikan {n} lagi di STAGE {s} untuk membuka", 'st.goal': "Hapus semua blok",
+  't.0': "Pengenalan", 't.1': "Mudah", 't.2': "Sedang", 't.3': "Sulit", 't.4': "Ahli", 't.5': "Master",
+  'th.cl': "Klasik", 'th.cl.d': "Hapus grup berisi 2+ blok berwarna sama.", 'th.cl.r': "Ketuk grup 2+ blok yang sama. Blok di atas jatuh, dan kolom kosong bergeser ke kiri.",
+  'th.tr': "Tripel", 'th.tr.d': "Hanya grup berisi 3+ yang bisa dihapus.", 'th.tr.r': "Hanya grup 3+ yang bisa dihapus",
+  'th.rk': "Batu", 'th.rk.d': "Batu tak bisa diketuk — hapus blok di sebelahnya untuk menghancurkannya.", 'th.rk.r': "Batu tak bisa diketuk. Menghapus blok di sebelah batu ikut menghancurkannya.",
+  'th.ic': "Es", 'th.ic.d': "Blok beku mencair saat blok di sebelahnya dihapus.", 'th.ic.r': "Blok beku tidak tersambung. Hapus blok di sebelahnya agar mencair jadi blok biasa.",
+  'th.bm': "Bom", 'th.bm.d': "Grup berisi bom meledakkan 3×3 di sekitarnya.", 'th.bm.r': "Menghapus grup berisi bom juga menghapus 3×3 di sekitar bom. Bom saling memicu.",
+  'th.wd': "Pelangi", 'th.wd.d': "Blok pelangi tersambung dengan warna apa pun.", 'th.wd.r': "Blok pelangi tersambung dengan semua warna, tapi tak bisa diketuk sendiri.",
+  'th.pt': "Cat", 'th.pt.d': "Menghapus cat mewarnai ulang blok di sekitarnya.", 'th.pt.r': "Menghapus grup berisi cat mewarnai ulang 3×3 di sekitarnya dengan warna itu.",
+  'th.mx': "Campuran", 'th.mx.d': "Semua gimik dicampur jadi satu.", 'th.mx.r': "Dua atau tiga dari batu, es, bom, pelangi, dan cat sekaligus.",
+  'a.blitz': "BLITZ 60", 'a.blitz.d': "Berapa skor yang bisa kamu raih dalam 60 detik? Hapusan besar menambah waktu.", 'a.rise': "Naik", 'a.rise.d': "Baris terdorong naik dari bawah. Lewat batas atas, permainan selesai.",
+  'm.h': "Misi", 'm.d': "30 tantangan aksi. Capai target untuk ★1, skor tinggi untuk ★3.", 'm.lock': "Selesaikan {n} lagi di peringkat sebelumnya untuk membuka", 'm.no': "Misi {n}",
+  'mt.0': "ROOKIE", 'mt.1': "HERO", 'mt.2': "LEGEND",
+  'goal.score': "Raih {n} poin", 'goal.big': "Hapus {n}+ sekaligus", 'goal.combo': "Capai kombo {n}", 'goal.hero': "Tangkap pahlawan {n} kali", 'goal.fever': "Picu FEVER {n} kali", 'goal.pops': "Hapus {n} grup", 'goal.survive': "Bertahan {n} detik",
+  'g.hero': "Pahlawan", 'g.bomb': "Bom", 'g.rock': "Batu", 'g.ice': "Es", 'g.wild': "Pelangi", 'g.ink': "Tinta",
+  'u.colors': " warna", 'u.sec': "dtk", 'u.left': "sisa", 'u.list': "Kembali ke daftar", 'u.home': "Beranda", 'u.save': "Simpan", 'u.prev': "Kembali", 'u.next': "Lanjut", 'u.start': "Mulai", 'u.back': "Kembali", 'u.score': "Skor",
+  'g.undo': "Urungkan", 'g.hint': "Petunjuk", 'h.none': "Papan ini sudah tak bisa dibersihkan total. Urungkan untuk kembali.",
+  'r.s3': "Bersih total tanpa salah!", 'r.s2': "Selesai dengan urungkan atau ulang", 'r.s1': "Selesai dengan petunjuk", 'r.next': "Lanjut", 'r.retry': "Coba lagi", 'r.new': "Papan baru", 'r.end': "Permainan selesai", 'r.best': "Rekor baru!",
+  'r.stuck': "Tidak ada langkah lagi…", 'r.stuck.d': "Sisa {n} blok. Urungkan dan coba cara lain.", 'r.left': "Sisa {n} blok",
+  'r.combo': "Kombo maks.", 'r.big': "Terbesar", 'r.hero': "Pahlawan", 'r.val': "Hasil: {n}", 'r.mstar': "★2 di {a}, ★3 di {b}", 'r.surv': "Bertahan {n} detik", 'r.againN': "Lagi (sisa {n})", 'r.nudge': "Buat nama panggilan untuk ikut peringkat",
+  'md.1': "Medali perunggu", 'md.2': "Medali perak", 'md.3': "Medali emas",
+  'ev.medal': "Medali STAGE {s}!", 'ev.unlock': "STAGE {s} terbuka!", 'ev.comp': "Tema selesai!",
+  'q.quit': "Keluar dari permainan dan kembali ke beranda?",
+  'ach.title': "Pencapaian", 'ach.d': "Dapatkan koin untuk setiap yang kamu selesaikan.", 'ach.got': "Diterima",
+  'ach.first': "POP pertama", 'ach.pops100': "Hapus 100 grup", 'ach.pops1k': "Hapus 1.000 grup", 'ach.pops5k': "Hapus 5.000 grup", 'ach.big10': "Hapus 10 sekaligus", 'ach.big20': "Hapus 20 sekaligus", 'ach.big30': "Hapus 30 sekaligus",
+  'ach.perf1': "Bersih total pertama", 'ach.perf10': "10 kali bersih total", 'ach.perf50': "50 kali bersih total", 'ach.combo10': "Kombo 10", 'ach.combo20': "Kombo 20", 'ach.combo30': "Kombo 30",
+  'ach.hero10': "Tangkap pahlawan 10 kali", 'ach.hero50': "Tangkap pahlawan 50 kali", 'ach.fever5': "5 kali FEVER", 'ach.fever30': "30 kali FEVER",
+  'ach.st10': "Selesaikan 10 stage", 'ach.st100': "Selesaikan 100 stage", 'ach.st400': "Selesaikan semua 750 stage", 'ach.star3x50': "★3 di 50 stage", 'ach.theme1': "Tuntaskan satu tema",
+  'ach.mis10': "Selesaikan 10 misi", 'ach.mis30': "Selesaikan semua 30 misi", 'ach.mis3s': "★3 di semua misi",
+  'ach.daily7': "7 hari beruntun", 'ach.daily30': "30 hari beruntun", 'ach.gold10': "10 medali emas harian", 'ach.blitz10k': "10.000 di BLITZ", 'ach.rise10k': "10.000 di Naik", 'ach.col30': "30 karakter", 'ach.col100': "Semua 100 karakter",
+  'ga.title': "Gacha", 'ga.one': "×1", 'ga.ten': "×10", 'ga.rate': "N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Tarikan ke-10 dari ×10 pasti SR atau lebih.", 'ga.dup': "Duplikat kembali jadi koin (N5, R15, SR40, SSR100, UR300).", 'ga.refund': "{n} koin kembali dari duplikat",
+  'sh.title': "Toko", 'sh.d': "Beli latar untuk mengganti gaya permainan.", 'sh.use': "Pakai", 'sh.using': "Dipakai",
+  'bg.dots': "Titik", 'bg.rays': "Pancaran", 'bg.blue': "Titik biru", 'bg.pink': "Titik pink", 'bg.stripe': "Garis", 'bg.city': "Kota komik", 'bg.sea': "Laut hiu", 'bg.boom': "Ka-boom",
+  'bk.title': "Koleksi", 'bk.d': "Terkumpul {n} / 100",
+  'rk.title': "Peringkat", 'rk.p': "Puzzle hari ini", 'rk.b': "BLITZ hari ini", 'rk.m': "Bulan ini", 'rk.t': "Sepanjang masa", 'rk.load': "LOADING…", 'rk.off': "Peringkat segera hadir.", 'rk.err': "Gagal memuat peringkat. Periksa koneksi lalu buka lagi.", 'rk.empty': "Belum ada skor. Jadilah yang pertama!", 'rk.me': "Kamu #{r} ({s})",
+  'set.title': "Pengaturan", 'set.snd': "Efek suara", 'set.anim': "Efek (balon POP!, konfeti)", 'set.emb': "Tampilkan simbol di blok (bantuan warna)", 'set.tut': "Cara main", 'set.reset': "Hapus data", 'set.reset.q': "Semua rekor, koin, dan karakter akan dihapus. Hapus semuanya?",
+  'login': "Bonus login +{n} koin (hari {d})", 'err.load': "Gagal memuat stage. Muat ulang halaman.",
+  'tu.b1.h': "Hapus warna yang tersambung", 'tu.b1': "Jika 2 blok atau lebih berwarna sama bersentuhan, ketuk untuk menghapus semuanya sekaligus.", 'tu.b1.c': "Ketuk 3 merah!",
+  'tu.b2.h': "Hapusan besar, skor besar", 'tu.b2': "Menghapus n blok memberi (n−2)² poin. Hapus grup kecil untuk mengumpulkan warna, lalu hapus semuanya sekaligus!",
+  'tu.b3.h': "Jatuh dan bergeser", 'tu.b3': "Blok di atas jatuh mengisi celah. Jika satu kolom kosong, kolom di kanannya bergeser ke kiri.",
+  'tu.b4.h': "Bonus bersih total", 'tu.b4': "Hapus semua blok untuk bonus 1.000 poin! Di Stage, bersih total adalah targetnya.",
+  'tu.try': "Coba", 'tu.try.d': "Bersihkan seluruh papan ini. Urutan itu penting!", 'tu.try.no': "Satu blok saja tak bisa dihapus", 'tu.try.ok': "Bagus!", 'tu.try.re': "Buntu… coba urutan lain.",
+  'tu.a1.h': "BLITZ 60 detik", 'tu.a1': "Blok baru jatuh dari atas. Hapus 7 atau lebih sekaligus untuk menambah waktu.",
+  'tu.a2.h': "Kombo menumpuk skor", 'tu.a2': "Hapus lagi dalam 1,8 detik untuk kombo — hingga 3× poin!",
+  'tu.a3.h': "FEVER!", 'tu.a3': "Isi meteran untuk FEVER: 6 detik poin ganda, dan blok tunggal pun bisa dihapus.",
+  'tu.a4.h': "Tangkap pahlawan", 'tu.a4': "Ketuk pahlawan yang terbang lewat untuk +3 detik dan 300 poin. Ada cipratan tinta? Ketuk untuk membersihkannya.",
+};
+window.SAME_I18N.tr = {
+'skin.swiss': 'İsviçre minimal', 'skin.wa': 'Japon modern', 'skin.mid': 'Yüzyıl ortası', 'skin.pixel': 'Piksel',
+'gi.rule': 'Kurallar', 'gi.blocks': 'Özel bloklar',
+'st.demo': 'Nasıl oynandığını izle',
+'set.skin': 'Renkler', 'skin.pop': 'Klasik POP', 'skin.vintage': 'Vintage', 'skin.riso': 'Risograf', 'skin.night': 'Gece POP',
+  'title.doc': "SameGame POP! — pop-art blok bulmacası", series: "Dünya Masa Oyunları Atlası", title: "SameGame", home: "Ana sayfa", help: "Nasıl oynanır",
+  'ht.daily': "Günlük", 'ht.stage': "Bölümler", 'ht.action': "Aksiyon", 'ht.me': "Ben", 'set.lang': "Dil",
+  'pf.edit': "Profil", 'pf.guest': "Misafir", 'pf.streak': "günlük seri", 'pf.name': "Takma ad (sıralamada görünür)", 'pf.ph': "En fazla 12 karakter", 'pf.note': "Sıralamaya katılmak için bir takma ad belirle.", 'pf.icon': "Simge (gachadan daha fazlası)",
+  'd.puzzle': "Günlük Bulmaca", 'd.puzzle.h': "Bugünün tahtasında en yüksek skor", 'd.puzzle.d': "Herkes aynı tahtada oynar. İstediğin kadar oyna — en iyi skorun sıralamaya girer.",
+  'd.blitz': "Günlük BLITZ", 'd.blitz.h': "60 saniyelik skor yarışı", 'd.blitz.d': "Bugünün BLITZ'i: 3 hak. Boşluklar yukarıdan dolar; kombo için silmeye devam et.",
+  'd.best': "En iyi", 'd.play': "Oyna", 'd.again': "Tekrar oyna", 'd.done': "Bugünlük bitti", 'd.tries': "{n} kaldı",
+  'd.medals': "15 veya daha az blok kalırsa bronz, 5 veya daha az kalırsa gümüş, tamamen temizlersen altın.",
+  'cal.played': "{n} gün oynandı", 'cal.streak': "{n} günlük seri", 'wd.0': "Pz", 'wd.1': "Pt", 'wd.2': "Sa", 'wd.3': "Ça", 'wd.4': "Pe", 'wd.5': "Cu", 'wd.6': "Ct",
+  'f.title': "Serbest oyun", 'f.desc': "Klasik bir oyun için boyut ve renk sayısı seç.", 'f.size': "Boyut", 'f.colors': "Renk",
+  'st.h': "Bölümler", 'st.d': "Kazanmak için tüm blokları temizle. 15 kural × 50 bulmaca.", 'st.comp': "COMPLETE!", 'st.lock': "Açmak için STAGE {s}'de {n} tane daha geç", 'st.goal': "Tüm blokları temizle",
+  't.0': "Giriş", 't.1': "Kolay", 't.2': "Orta", 't.3': "Zor", 't.4': "Uzman", 't.5': "Usta",
+  'th.cl': "Klasik", 'th.cl.d': "Aynı renkten 2+ bloklu grupları temizle.", 'th.cl.r': "2+ aynı bloktan oluşan bir gruba dokun. Üstteki bloklar düşer, boş sütunlar sola kayar.",
+  'th.tr': "Üçlü", 'th.tr.d': "Yalnızca 3+ bloklu gruplar temizlenebilir.", 'th.tr.r': "Yalnızca 3+ gruplar temizlenebilir",
+  'th.rk': "Kayalar", 'th.rk.d': "Kayalara dokunulamaz — kırmak için yanındakini temizle.", 'th.rk.r': "Kayalara dokunulamaz. Kayanın yanındaki bloğu temizlemek onu da kırar.",
+  'th.ic': "Buz", 'th.ic.d': "Donmuş bloklar yanındaki temizlenince çözülür.", 'th.ic.r': "Donmuş bloklar bağlanmaz. Yanındaki bloğu temizlersen normal bloğa döner.",
+  'th.bm': "Bombalar", 'th.bm.d': "Bombalı grup çevresindeki 3×3'ü patlatır.", 'th.bm.r': "Bombalı bir grubu temizlemek bombanın çevresindeki 3×3'ü de temizler. Bombalar birbirini patlatır.",
+  'th.wd': "Gökkuşağı", 'th.wd.d': "Gökkuşağı blokları her renge bağlanır.", 'th.wd.r': "Gökkuşağı blokları tüm renklere bağlanır ama tek başına dokunulamaz.",
+  'th.pt': "Boya", 'th.pt.d': "Boyayı temizlemek çevresindeki blokları boyar.", 'th.pt.r': "Boyalı bir grubu temizlemek çevresindeki 3×3'ü o renge boyar.",
+  'th.mx': "Karışık", 'th.mx.d': "Tüm mekanikler bir arada.", 'th.mx.r': "Kaya, buz, bomba, gökkuşağı ve boyadan iki veya üçü bir arada.",
+  'a.blitz': "BLITZ 60", 'a.blitz.d': "60 saniyede ne kadar skor yapabilirsin? Büyük silmeler süre ekler.", 'a.rise': "Yükseliş", 'a.rise.d': "Sıralar aşağıdan yükselir. Tepeyi aşarsa oyun biter.",
+  'm.h': "Görevler", 'm.d': "30 aksiyon görevi. Hedefe ulaş ★1, yüksek skor ★3.", 'm.lock': "Açmak için üstteki rütbede {n} tane daha geç", 'm.no': "Görev {n}",
+  'mt.0': "ROOKIE", 'mt.1': "HERO", 'mt.2': "LEGEND",
+  'goal.score': "{n} puan yap", 'goal.big': "Tek seferde {n}+ temizle", 'goal.combo': "{n} kombo yap", 'goal.hero': "Kahramanı {n} kez yakala", 'goal.fever': "{n} kez FEVER yap", 'goal.pops': "{n} grup temizle", 'goal.survive': "{n} saniye dayan",
+  'g.hero': "Kahraman", 'g.bomb': "Bombalar", 'g.rock': "Kayalar", 'g.ice': "Buz", 'g.wild': "Gökkuşağı", 'g.ink': "Mürekkep",
+  'u.colors': " renk", 'u.sec': "sn", 'u.left': "kaldı", 'u.list': "Listeye dön", 'u.home': "Ana sayfa", 'u.save': "Kaydet", 'u.prev': "Geri", 'u.next': "İleri", 'u.start': "Başla", 'u.back': "Geri", 'u.score': "Skor",
+  'g.undo': "Geri al", 'g.hint': "İpucu", 'h.none': "Bu tahta artık tamamen temizlenemez. Geri almak için Geri al'a bas.",
+  'r.s3': "Hatasız tam temizlik!", 'r.s2': "Geri al veya tekrar ile geçildi", 'r.s1': "İpucuyla geçildi", 'r.next': "İleri", 'r.retry': "Tekrar dene", 'r.new': "Yeni tahta", 'r.end': "Oyun bitti", 'r.best': "Yeni rekor!",
+  'r.stuck': "Hamle kalmadı…", 'r.stuck.d': "{n} blok kaldı. Geri alıp başka bir yol dene.", 'r.left': "{n} blok kaldı",
+  'r.combo': "Maks. kombo", 'r.big': "En büyük", 'r.hero': "Kahraman", 'r.val': "Sonuç: {n}", 'r.mstar': "★2: {a}, ★3: {b}", 'r.surv': "{n} saniye dayandın", 'r.againN': "Tekrar ({n} kaldı)", 'r.nudge': "Sıralamaya katılmak için takma ad belirle",
+  'md.1': "Bronz madalya", 'md.2': "Gümüş madalya", 'md.3': "Altın madalya",
+  'ev.medal': "STAGE {s} madalyası!", 'ev.unlock': "STAGE {s} açıldı!", 'ev.comp': "Tema tamamlandı!",
+  'q.quit': "Oyundan çıkıp ana sayfaya dönülsün mü?",
+  'ach.title': "Başarımlar", 'ach.d': "Tamamladığın her biri için jeton al.", 'ach.got': "Alındı",
+  'ach.first': "İlk POP", 'ach.pops100': "100 grup temizle", 'ach.pops1k': "1.000 grup temizle", 'ach.pops5k': "5.000 grup temizle", 'ach.big10': "Tek seferde 10", 'ach.big20': "Tek seferde 20", 'ach.big30': "Tek seferde 30",
+  'ach.perf1': "İlk tam temizlik", 'ach.perf10': "10 tam temizlik", 'ach.perf50': "50 tam temizlik", 'ach.combo10': "10 kombo", 'ach.combo20': "20 kombo", 'ach.combo30': "30 kombo",
+  'ach.hero10': "Kahramanı 10 kez yakala", 'ach.hero50': "Kahramanı 50 kez yakala", 'ach.fever5': "5 FEVER", 'ach.fever30': "30 FEVER",
+  'ach.st10': "10 bölüm geç", 'ach.st100': "100 bölüm geç", 'ach.st400': "750 bölümün hepsini geç", 'ach.star3x50': "50 bölümde ★3", 'ach.theme1': "Bir temayı tamamla",
+  'ach.mis10': "10 görev geç", 'ach.mis30': "30 görevin hepsini geç", 'ach.mis3s': "Tüm görevlerde ★3",
+  'ach.daily7': "7 günlük seri", 'ach.daily30': "30 günlük seri", 'ach.gold10': "10 günlük altın madalya", 'ach.blitz10k': "BLITZ'te 10.000", 'ach.rise10k': "Yükseliş'te 10.000", 'ach.col30': "30 karakter", 'ach.col100': "100 karakterin hepsi",
+  'ga.title': "Gacha", 'ga.one': "×1", 'ga.ten': "×10", 'ga.rate': "N %55 / R %28 / SR %12 / SSR %4 / UR %1. ×10 çekilişin 10.'su SR veya üstü.", 'ga.dup': "Aynısı çıkanlar jetona döner (N5, R15, SR40, SSR100, UR300).", 'ga.refund': "Aynı çıkanlar için {n} jeton iade",
+  'sh.title': "Mağaza", 'sh.d': "Oyunun görünümünü değiştirmek için arka plan al.", 'sh.use': "Kullan", 'sh.using': "Kullanımda",
+  'bg.dots': "Puantiye", 'bg.rays': "Güneş ışınları", 'bg.blue': "Mavi puantiye", 'bg.pink': "Pembe puantiye", 'bg.stripe': "Çizgili", 'bg.city': "Çizgi roman şehri", 'bg.sea': "Köpekbalığı denizi", 'bg.boom': "Ka-bum",
+  'bk.title': "Koleksiyon", 'bk.d': "{n} / 100 toplandı",
+  'rk.title': "Sıralama", 'rk.p': "Bugünün bulmacası", 'rk.b': "Bugünün BLITZ'i", 'rk.m': "Bu ay", 'rk.t': "Tüm zamanlar", 'rk.load': "LOADING…", 'rk.off': "Sıralama yakında geliyor.", 'rk.err': "Sıralama yüklenemedi. Bağlantını kontrol edip tekrar aç.", 'rk.empty': "Henüz skor yok. İlk sen ol!", 'rk.me': "{r}. sıradasın ({s})",
+  'set.title': "Ayarlar", 'set.snd': "Ses efektleri", 'set.anim': "Efektler (POP! balonları, konfeti)", 'set.emb': "Bloklarda simge göster (renk yardımı)", 'set.tut': "Nasıl oynanır", 'set.reset': "Verileri sil", 'set.reset.q': "Tüm kayıtlar, jetonlar ve karakterler silinecek. Hepsi silinsin mi?",
+  'login': "Giriş bonusu +{n} jeton ({d}. gün)", 'err.load': "Bölümler yüklenemedi. Sayfayı yenile.",
+  'tu.b1.h': "Bağlı renkleri temizle", 'tu.b1': "Aynı renkten 2 veya daha fazla blok birbirine değiyorsa, dokunarak hepsini birden temizle.", 'tu.b1.c': "3 kırmızıya dokun!",
+  'tu.b2.h': "Büyük silme, büyük puan", 'tu.b2': "n blok temizlemek (n−2)² puan verir. Küçük grupları silip rengi biriktir, sonra tek hamlede patlat!",
+  'tu.b3.h': "Düşme ve kayma", 'tu.b3': "Üstteki bloklar boşluklara düşer. Bir sütun tamamen boşalırsa sağındaki sütunlar sola kayar.",
+  'tu.b4.h': "Tam temizlik bonusu", 'tu.b4': "Tüm blokları temizle, 1.000 puan bonus kazan! Bölümlerde hedef tam temizlik.",
+  'tu.try': "Dene", 'tu.try.d': "Bu tahtanın tamamını temizle. Sıra önemli!", 'tu.try.no': "Tek bir blok temizlenemez", 'tu.try.ok': "Güzel!", 'tu.try.re': "Takıldın… başka bir sıra dene.",
+  'tu.a1.h': "60 saniyelik BLITZ", 'tu.a1': "Yukarıdan yeni bloklar düşer. Süre eklemek için tek seferde 7 veya daha fazla temizle.",
+  'tu.a2.h': "Kombolar puanı katlar", 'tu.a2': "1,8 saniye içinde tekrar temizlersen kombo — 3 kata kadar puan!",
+  'tu.a3.h': "FEVER!", 'tu.a3': "Göstergeyi doldur, FEVER başlasın: 6 saniye çift puan ve tek bloklar da temizlenir.",
+  'tu.a4.h': "Kahramanı yakala", 'tu.a4': "Uçup geçen kahramana dokun: +3 saniye ve 300 puan. Mürekkep lekesi mi? Dokunarak sil.",
+};
 
 /* v3: daily difficulties, tutorial caption (applied to every language) */
 (function () {
@@ -502,6 +746,10 @@ window.SAME_I18N.ar = {
     de: { 'd.gim': 'Heutiger Kniff', 'dl.e': 'Leicht', 'dl.m': 'Normal', 'dl.h': 'Schwer', 'd.medals2': 'Je weniger Blöcke übrig: Bronze → Silber → Gold. Alles abgeräumt ist Gold.', 'rk.pe': 'Leicht', 'rk.p': 'Normal', 'rk.ph': 'Schwer', 'tu.b1.c': 'Tippe die 3 gleichen Blöcke an!', 'd.puzzle.d': 'Alle spielen dieselben Bretter. Wähle eine von 3 Stufen und spiele so oft du willst – dein bestes Ergebnis kommt in die Rangliste.' },
     hi: { 'd.gim': 'आज की चाल', 'dl.e': 'आसान', 'dl.m': 'सामान्य', 'dl.h': 'कठिन', 'd.medals2': 'जितने कम ब्लॉक बचें: कांस्य → रजत → स्वर्ण। सब साफ़ करने पर स्वर्ण।', 'rk.pe': 'आसान', 'rk.p': 'सामान्य', 'rk.ph': 'कठिन', 'tu.b1.c': 'एक जैसे 3 ब्लॉक टैप करें!', 'd.puzzle.d': 'सभी एक ही बोर्ड खेलते हैं। 3 कठिनाइयों में से चुनें और जितनी बार चाहें खेलें; सबसे अच्छा स्कोर रैंकिंग में जाता है।' },
     ar: { 'd.gim': 'آلية اليوم', 'dl.e': 'سهل', 'dl.m': 'عادي', 'dl.h': 'صعب', 'd.medals2': 'كلما قلّت الكتل المتبقية: برونز ← فضة ← ذهب. إزالة الكل ذهب.', 'rk.pe': 'سهل', 'rk.p': 'عادي', 'rk.ph': 'صعب', 'tu.b1.c': 'انقر على الكتل الثلاث المتشابهة!', 'd.puzzle.d': 'الجميع يلعب اللوحات نفسها. اختر من 3 مستويات والعب كما تشاء؛ أفضل نتيجة تدخل الترتيب.' },
+    ru: { 'd.gim': 'Механика дня', 'dl.e': 'Легко', 'dl.m': 'Обычно', 'dl.h': 'Сложно', 'd.medals2': 'Чем меньше блоков осталось: бронза → серебро → золото. Полная очистка — золото.', 'rk.pe': 'Легко', 'rk.p': 'Обычно', 'rk.ph': 'Сложно', 'tu.b1.c': 'Нажмите на 3 одинаковых блока!', 'd.puzzle.d': 'Все играют на одних и тех же полях. Выберите одну из 3 сложностей и играйте сколько угодно — в рейтинг идёт лучший результат.' },
+    'zh-TW': { 'd.gim': '今日機關', 'dl.e': '簡單', 'dl.m': '普通', 'dl.h': '困難', 'd.medals2': '剩餘方塊越少，獎牌從銅→銀→金。全消就是金牌。', 'rk.pe': '簡單', 'rk.p': '普通', 'rk.ph': '困難', 'tu.b1.c': '點擊這3個同色方塊！', 'd.puzzle.d': '所有人挑戰同樣的盤面。可從3種難度中選擇，隨時重玩，最佳分數列入排行榜。' },
+    id: { 'd.gim': 'Gimik hari ini', 'dl.e': 'Mudah', 'dl.m': 'Normal', 'dl.h': 'Sulit', 'd.medals2': 'Makin sedikit blok tersisa: perunggu → perak → emas. Bersih total dapat emas.', 'rk.pe': 'Mudah', 'rk.p': 'Normal', 'rk.ph': 'Sulit', 'tu.b1.c': 'Ketuk 3 blok yang sama!', 'd.puzzle.d': 'Semua orang memainkan papan yang sama. Pilih salah satu dari 3 tingkat kesulitan dan main sesukamu — skor terbaikmu masuk peringkat.' },
+    tr: { 'd.gim': 'Günün mekaniği', 'dl.e': 'Kolay', 'dl.m': 'Normal', 'dl.h': 'Zor', 'd.medals2': 'Ne kadar az blok kalırsa: bronz → gümüş → altın. Tam temizlik altın.', 'rk.pe': 'Kolay', 'rk.p': 'Normal', 'rk.ph': 'Zor', 'tu.b1.c': 'Aynı 3 bloğa dokun!', 'd.puzzle.d': 'Herkes aynı tahtalarda oynar. 3 zorluktan birini seç, istediğin kadar oyna — en iyi skorun sıralamaya girer.' },
   };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
 })();
@@ -518,6 +766,10 @@ window.SAME_I18N.ar = {
     de: { 'f.orient': 'Form', 'f.h': 'Breit', 'f.v': 'Hoch', 'gt.goal': 'Bis alles weg ist', 'gt.left': 'noch {n}' },
     hi: { 'f.orient': 'आकार', 'f.h': 'चौड़ा', 'f.v': 'लंबा', 'gt.goal': 'सब साफ़ करने तक', 'gt.left': '{n} बाकी' },
     ar: { 'f.orient': 'الشكل', 'f.h': 'عريض', 'f.v': 'طويل', 'gt.goal': 'حتى إزالة الكل', 'gt.left': 'باقٍ {n}' },
+    ru: { 'f.orient': 'Форма', 'f.h': 'Широкое', 'f.v': 'Высокое', 'gt.goal': 'До полной очистки', 'gt.left': 'Осталось {n}' },
+    'zh-TW': { 'f.orient': '方向', 'f.h': '橫', 'f.v': '直', 'gt.goal': '距離全消', 'gt.left': '還剩{n}個' },
+    id: { 'f.orient': 'Bentuk', 'f.h': 'Lebar', 'f.v': 'Tinggi', 'gt.goal': 'Menuju bersih total', 'gt.left': 'Sisa {n}' },
+    tr: { 'f.orient': 'Şekil', 'f.h': 'Geniş', 'f.v': 'Uzun', 'gt.goal': 'Tam temizliğe', 'gt.left': '{n} kaldı' },
   };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
 })();
@@ -534,12 +786,16 @@ window.SAME_I18N.ar = {
     de: { 'g.restart': 'Neu starten', 'q.restart': 'Von vorn beginnen?', 'f.head': 'Klassisches SameGame', 'bz.ext': 'Extra', 'a.blitz.d': 'Große Gruppen bringen Zeit (insgesamt max. +20 s). Alle 20 Sekunden steigt das Level: mehr Farben, schnellere Uhr.', 'd.blitz.d': 'Heutiges BLITZ: 3 Versuche. Lücken füllen sich von oben. Extrazeit max. +20 s, alle 20 s wird es schwerer.', 'tu.a1': 'Neue Blöcke fallen von oben nach. Räume 8 oder mehr auf einmal ab für Extrazeit – insgesamt bis +20 s. Alle 20 s steigt das Level: mehr Farben, schnellere Uhr. Fehltipp kostet 1 s!' },
     hi: { 'g.restart': 'फिर से', 'q.restart': 'शुरू से फिर खेलें?', 'f.head': 'क्लासिक SameGame', 'bz.ext': 'अतिरिक्त', 'a.blitz.d': 'बड़े समूह साफ़ करने पर समय बढ़ता है (कुल +20 सेकंड तक)। हर 20 सेकंड में लेवल बढ़ता है: ज़्यादा रंग, तेज़ घड़ी।', 'd.blitz.d': 'आज का BLITZ: 3 बार। खाली जगह ऊपर से भरती है। अतिरिक्त समय कुल +20 सेकंड तक, हर 20 सेकंड कठिन।', 'tu.a1': 'ऊपर से नए ब्लॉक गिरते हैं। एक साथ 8+ साफ़ करने पर समय बढ़ता है, कुल +20 सेकंड तक। हर 20 सेकंड में लेवल बढ़ता है: ज़्यादा रंग, तेज़ घड़ी। गलत टैप पर −1 सेकंड!' },
     ar: { 'g.restart': 'إعادة', 'q.restart': 'البدء من جديد؟', 'f.head': 'SameGame الكلاسيكية', 'bz.ext': 'إضافي', 'a.blitz.d': 'المجموعات الكبيرة تضيف وقتًا (حتى +20 ث إجمالًا). كل 20 ثانية يرتفع المستوى: ألوان أكثر وساعة أسرع.', 'd.blitz.d': 'BLITZ اليوم: 3 محاولات. تمتلئ الفراغات من الأعلى. الوقت الإضافي حتى +20 ث، ويصعب كل 20 ثانية.', 'tu.a1': 'تسقط كتل جديدة من الأعلى. أزل 8 أو أكثر دفعة واحدة لكسب وقت، حتى +20 ث إجمالًا. كل 20 ثانية يرتفع المستوى: ألوان أكثر وساعة أسرع. النقرة الخاطئة تكلّف ثانية!' },
+    ru: { 'g.restart': 'Заново', 'q.restart': 'Начать с самого начала?', 'f.head': 'Классический SameGame', 'bz.ext': 'Бонус', 'a.blitz.d': 'Большие группы добавляют время (всего до +20 с). Каждые 20 секунд уровень растёт: больше цветов и быстрее таймер.', 'd.blitz.d': 'BLITZ дня: 3 попытки. Пустоты заполняются. Бонус времени — до +20 с, каждые 20 секунд сложнее.', 'tu.a1': 'Сверху падают новые блоки. Уберите 8+ за раз ради доп. времени — всего до +20 секунд. Каждые 20 секунд уровень растёт: больше цветов, быстрее таймер. Промах стоит 1 секунду!' },
+    'zh-TW': { 'g.restart': '重來', 'q.restart': '要從頭重來嗎？', 'f.head': '經典消除', 'bz.ext': '延長', 'a.blitz.d': '大塊消除可延長時間（合計最多+20秒）。每20秒升級一次：顏色增加、時鐘變快。', 'd.blitz.d': '今日BLITZ每天3次。消除後從上方補充。延長合計最多+20秒，每20秒變難。', 'tu.a1': '消除後上方會落下新方塊。一次消除8個以上可延長時間，但合計最多+20秒。每20秒升級：顏色增加、時鐘變快。點錯扣1秒！' },
+    id: { 'g.restart': 'Ulang', 'q.restart': 'Mulai lagi dari awal?', 'f.head': 'SameGame klasik', 'bz.ext': 'Ekstra', 'a.blitz.d': 'Hapusan besar menambah waktu (total hingga +20 dtk). Tiap 20 detik level naik: warna bertambah dan jam makin cepat.', 'd.blitz.d': 'BLITZ hari ini: 3 kali. Ruang kosong terisi lagi. Waktu ekstra maks. +20 dtk dan makin sulit tiap 20 detik.', 'tu.a1': 'Blok baru jatuh dari atas. Hapus 8 atau lebih sekaligus untuk waktu ekstra — total hingga +20 detik. Tiap 20 detik level naik: warna bertambah, jam makin cepat. Salah ketuk −1 detik!' },
+    tr: { 'g.restart': 'Yeniden', 'q.restart': 'En baştan başlansın mı?', 'f.head': 'Klasik SameGame', 'bz.ext': 'Ek süre', 'a.blitz.d': 'Büyük silmeler süre ekler (toplam en fazla +20 sn). Her 20 saniyede seviye artar: daha çok renk, daha hızlı saat.', 'd.blitz.d': 'Bugünün BLITZ\'i: 3 hak. Boşluklar yeniden dolar. Ek süre en fazla +20 sn, her 20 saniyede zorlaşır.', 'tu.a1': 'Yukarıdan yeni bloklar düşer. Ek süre için tek seferde 8 veya daha fazla temizle — toplam en fazla +20 saniye. Her 20 saniyede seviye artar: daha çok renk, daha hızlı saat. Yanlış dokunuş 1 saniye!' },
   };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, A[l]);
 })();
 
 (function () {
-  const A = { ja: ['あそびかた', 'アクションのあそびかた', 'ルール説明'], en: ['How to play', 'Action guide', 'Rules'], zh: ['玩法', '动作模式玩法', '规则说明'], ko: ['플레이 방법', '액션 플레이 방법', '규칙 설명'], es: ['Cómo jugar', 'Guía de acción', 'Reglas'], fr: ['Comment jouer', 'Guide action', 'Règles'], pt: ['Como jogar', 'Guia de ação', 'Regras'], de: ['So wird gespielt', 'Action-Anleitung', 'Regeln'], hi: ['कैसे खेलें', 'एक्शन गाइड', 'नियम'], ar: ['طريقة اللعب', 'دليل الحركة', 'القواعد'] };
+  const A = { ja: ['あそびかた', 'アクションのあそびかた', 'ルール説明'], en: ['How to play', 'Action guide', 'Rules'], zh: ['玩法', '动作模式玩法', '规则说明'], ko: ['플레이 방법', '액션 플레이 방법', '규칙 설명'], es: ['Cómo jugar', 'Guía de acción', 'Reglas'], fr: ['Comment jouer', 'Guide action', 'Règles'], pt: ['Como jogar', 'Guia de ação', 'Regras'], de: ['So wird gespielt', 'Action-Anleitung', 'Regeln'], hi: ['कैसे खेलें', 'एक्शन गाइड', 'नियम'], ar: ['طريقة اللعب', 'دليل الحركة', 'القواعد'], ru: ['Как играть', 'Экшен-режимы', 'Правила'], 'zh-TW': ['玩法', '動作模式玩法', '規則說明'], id: ['Cara main', 'Panduan aksi', 'Aturan'], tr: ['Nasıl oynanır', 'Aksiyon rehberi', 'Kurallar'] };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'tu.title': A[l][0], 'tu.atitle': A[l][1], 'tu.rule': A[l][2] });
 })();
 
@@ -551,6 +807,18 @@ window.SAME_I18N.ar = {
     en: { 'a.order': 'Order', 'a.order.d': 'Clear the ordered color in groups of 3+. Fill orders in a row for bigger bonuses. 60 seconds.', 'a.order.t1': 'Clear 3+ of the first color in the order queue: +300 × streak and +2s', 'a.order.t2': 'Clearing another color scores only 40% and breaks the streak', 'a.order.t3': 'Build up the ordered color, then clear it in one go', 'a.order.q': 'Order', 'a.order.r': '{n} orders filled',
           'a.fuse': 'Fuse', 'a.fuse.d': 'When the fuse burns out, it is over. Every clear lengthens it. Survive as long as you can.', 'a.fuse.t1': 'The fuse (max 8s) keeps burning — faster and faster', 'a.fuse.t2': 'Bigger clears add more fuse (pairs barely add any)', 'a.fuse.t3': 'Mis-taps cost 0.6s. Keep clearing without stopping',
           'a.dive': 'Dive', 'a.dive.d': 'Drop the pearls to the bottom to collect them. Clear the blocks underneath to open a path. 60 seconds.', 'a.dive.t1': "Pearls can't be tapped, don't connect and survive bombs", 'a.dive.t2': 'A pearl on the bottom row is collected: +800 and +3s (extra time caps at +20s)', 'a.dive.t3': 'New pearls fall in from the top after each pickup', 'a.dive.r': '{n} pearls collected' },
+    ru: { 'a.order': 'Заказ', 'a.order.d': 'Убирайте заказанный цвет группами от 3. Выполняйте заказы подряд ради больших бонусов. 60 секунд.', 'a.order.t1': 'Уберите 3+ первого цвета в очереди заказов: +300 × серия и +2 с', 'a.order.t2': 'Другой цвет даёт лишь 40% очков и обрывает серию', 'a.order.t3': 'Накопите заказанный цвет и уберите его разом', 'a.order.q': 'Заказ', 'a.order.r': 'Выполнено заказов: {n}',
+          'a.fuse': 'Фитиль', 'a.fuse.d': 'Догорел фитиль — конец. Каждая очистка удлиняет его. Выживайте как можно дольше.', 'a.fuse.t1': 'Фитиль (до 8 с) горит всё быстрее', 'a.fuse.t2': 'Чем больше группа, тем длиннее фитиль (пары почти не дают)', 'a.fuse.t3': 'Промах стоит 0,6 с. Убирайте без остановки',
+          'a.dive': 'Погружение', 'a.dive.d': 'Опускайте жемчужины на дно, чтобы собрать их. Убирайте блоки под ними. 60 секунд.', 'a.dive.t1': 'Жемчужины не нажимаются, не соединяются и не боятся бомб', 'a.dive.t2': 'Жемчужина в нижнем ряду собрана: +800 и +3 с (бонус времени до +20 с)', 'a.dive.t3': 'После сбора сверху падают новые жемчужины', 'a.dive.r': 'Собрано жемчужин: {n}' },
+    'zh-TW': { 'a.order': '訂單', 'a.order.d': '依訂單顏色3個以上一起消除。連續完成獎勵越高的60秒挑戰。', 'a.order.t1': '把訂單最前面的顏色3個以上一起消除即完成：+300×連續次數，+2秒', 'a.order.t2': '消除其他顏色只拿4成分數，連續也會中斷', 'a.order.t3': '先把訂單顏色養大再一口氣消除', 'a.order.q': '訂單', 'a.order.r': '完成訂單 {n}次',
+          'a.fuse': '引信', 'a.fuse.d': '引信燒完就結束。每次消除都會延長引信。沒有時間限制的生存戰。', 'a.fuse.t1': '引信（最多8秒）越燒越快', 'a.fuse.t2': '消得越大引信越長（2個幾乎不會延長）', 'a.fuse.t3': '點錯扣0.6秒。不要停，持續消除',
+          'a.dive': '潛水', 'a.dive.d': '把珍珠落到最底部回收。消除下方方塊開出通道的60秒挑戰。', 'a.dive.t1': '珍珠無法點擊、不會相連、炸彈也炸不壞', 'a.dive.t2': '珍珠到達最底列即回收：+800分、+3秒（延長合計最多20秒）', 'a.dive.t3': '回收後上方會落下新的珍珠', 'a.dive.r': '回收珍珠 {n}顆' },
+    id: { 'a.order': 'Pesanan', 'a.order.d': 'Hapus warna pesanan dalam grup 3+. Penuhi pesanan beruntun untuk bonus lebih besar. 60 detik.', 'a.order.t1': 'Hapus 3+ warna pertama di antrean pesanan: +300 × beruntun dan +2 dtk', 'a.order.t2': 'Menghapus warna lain hanya dapat 40% dan memutus beruntun', 'a.order.t3': 'Kumpulkan warna pesanan, lalu hapus sekaligus', 'a.order.q': 'Pesanan', 'a.order.r': '{n} pesanan terpenuhi',
+          'a.fuse': 'Sumbu', 'a.fuse.d': 'Jika sumbu habis terbakar, selesai. Tiap hapusan memperpanjangnya. Bertahanlah selama mungkin.', 'a.fuse.t1': 'Sumbu (maks. 8 dtk) terus terbakar — makin lama makin cepat', 'a.fuse.t2': 'Hapusan besar menambah sumbu lebih banyak (pasangan nyaris tidak)', 'a.fuse.t3': 'Salah ketuk −0,6 dtk. Terus hapus tanpa berhenti',
+          'a.dive': 'Selam', 'a.dive.d': 'Jatuhkan mutiara ke dasar untuk mengumpulkannya. Hapus blok di bawahnya untuk membuka jalan. 60 detik.', 'a.dive.t1': 'Mutiara tak bisa diketuk, tak tersambung, dan tahan bom', 'a.dive.t2': 'Mutiara di baris bawah terkumpul: +800 dan +3 dtk (waktu ekstra maks. +20 dtk)', 'a.dive.t3': 'Mutiara baru jatuh dari atas setelah tiap pengambilan', 'a.dive.r': '{n} mutiara terkumpul' },
+    tr: { 'a.order': 'Sipariş', 'a.order.d': 'Sipariş edilen rengi 3+ gruplar halinde temizle. Art arda siparişler daha büyük bonus verir. 60 saniye.', 'a.order.t1': 'Sipariş sırasındaki ilk renkten 3+ temizle: +300 × seri ve +2 sn', 'a.order.t2': 'Başka renk temizlemek yalnızca %40 puan verir ve seriyi bozar', 'a.order.t3': 'Sipariş rengini biriktir, sonra tek seferde temizle', 'a.order.q': 'Sipariş', 'a.order.r': '{n} sipariş tamamlandı',
+          'a.fuse': 'Fitil', 'a.fuse.d': 'Fitil yanıp biterse oyun biter. Her temizlik onu uzatır. Olabildiğince uzun dayan.', 'a.fuse.t1': 'Fitil (en fazla 8 sn) giderek hızlanarak yanar', 'a.fuse.t2': 'Büyük silmeler fitili daha çok uzatır (ikililer neredeyse hiç)', 'a.fuse.t3': 'Yanlış dokunuş 0,6 sn. Durmadan temizlemeye devam et',
+          'a.dive': 'Dalış', 'a.dive.d': 'İncileri toplamak için en alta indir. Yol açmak için altlarındaki blokları temizle. 60 saniye.', 'a.dive.t1': 'İncilere dokunulamaz, bağlanmazlar ve bombadan etkilenmezler', 'a.dive.t2': 'En alt sıraya gelen inci toplanır: +800 ve +3 sn (ek süre en fazla +20 sn)', 'a.dive.t3': 'Her toplamadan sonra yukarıdan yeni inciler düşer', 'a.dive.r': '{n} inci toplandı' },
   };
   const M = {
     zh: ['订单', '按订单颜色3个以上一起消除。连续完成奖励越高的60秒挑战。', '把订单队首颜色3个以上一起消除即完成：+300×连续次数，+2秒', '消除其他颜色只得4成分数，连续中断', '先攒订单颜色再一口气消除', '订单', '完成订单 {n}次', '引线', '引线燃尽即结束。每次消除都会延长引线。没有时间限制的生存模式。', '引线（最多8秒）不断缩短，燃烧越来越快', '消除越多引线延长越多（2个几乎不延长）', '误点−0.6秒。别停手持续消除', '潜水', '把珍珠落到最底部回收。消除下方方块开路的60秒挑战。', '珍珠无法点击、不相连、炸弹也炸不坏', '珍珠到达最底行即回收：+800分、+3秒（延长合计最多20秒）', '回收后上方会落下新的珍珠', '回收珍珠 {n}个'],
@@ -568,7 +836,7 @@ window.SAME_I18N.ar = {
 })();
 
 (function () {
-  const P = { ja: ['真珠', '一番下の段に着くと回収。タップできない'], en: ['Pearl', 'Collected on the bottom row. Cannot be tapped'], zh: ['珍珠', '到达最底行即回收，无法点击'], ko: ['진주', '맨 아랫줄에 닿으면 회수. 탭할 수 없음'], es: ['Perla', 'Se recoge en la fila de abajo. No se puede tocar'], fr: ['Perle', 'Récupérée sur la rangée du bas. Impossible à toucher'], pt: ['Pérola', 'Coletada na fileira de baixo. Não pode ser tocada'], de: ['Perle', 'Wird in der untersten Reihe eingesammelt. Nicht antippbar'], hi: ['मोती', 'सबसे नीचे की पंक्ति पर इकट्ठा। टैप नहीं होता'], ar: ['لؤلؤة', 'تُجمع في الصف السفلي. لا يمكن نقرها'] };
+  const P = { ja: ['真珠', '一番下の段に着くと回収。タップできない'], en: ['Pearl', 'Collected on the bottom row. Cannot be tapped'], zh: ['珍珠', '到达最底行即回收，无法点击'], ko: ['진주', '맨 아랫줄에 닿으면 회수. 탭할 수 없음'], es: ['Perla', 'Se recoge en la fila de abajo. No se puede tocar'], fr: ['Perle', 'Récupérée sur la rangée du bas. Impossible à toucher'], pt: ['Pérola', 'Coletada na fileira de baixo. Não pode ser tocada'], de: ['Perle', 'Wird in der untersten Reihe eingesammelt. Nicht antippbar'], hi: ['मोती', 'सबसे नीचे की पंक्ति पर इकट्ठा। टैप नहीं होता'], ar: ['لؤلؤة', 'تُجمع في الصف السفلي. لا يمكن نقرها'], ru: ['Жемчужина', 'Собирается в нижнем ряду. Не нажимается'], 'zh-TW': ['珍珠', '到達最底列即回收，無法點擊'], id: ['Mutiara', 'Terkumpul di baris paling bawah. Tak bisa diketuk'], tr: ['İnci', 'En alt sırada toplanır. Dokunulamaz'] };
   for (const l in P) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'th.pearl': P[l][0], 'th.pearl.d': P[l][1] });
 })();
 
@@ -584,11 +852,15 @@ window.SAME_I18N.ar = {
     de: ['Weiterspielen', 'Zur Startseite', 'Beenden', 'Spiel beenden und zur Startseite?', 'Von vorn beginnen?', 'Serie ×{n}', 'Räume 3+ der hervorgehobenen Farbe ab', 'Die Perlen kommen nicht mehr runter!', 'Abbrechen'],
     hi: ['जारी रखें', 'होम पर जाएँ', 'छोड़ें', 'खेल छोड़कर होम पर जाएँ?', 'शुरू से फिर खेलें?', 'लगातार ×{n}', 'चमकते रंग के 3+ एक साथ साफ़ करें', 'अब मोती नीचे नहीं जा सकते!', 'रद्द करें'],
     ar: ['متابعة', 'العودة للرئيسية', 'إنهاء', 'إنهاء اللعبة والعودة للرئيسية؟', 'البدء من جديد؟', 'تتابع ×{n}', 'أزل 3+ من اللون المضيء', 'لم يعد بالإمكان إنزال اللآلئ!', 'إلغاء'],
+    ru: ['Продолжить', 'На главную', 'Выйти', 'Выйти из игры на главную?', 'Начать с самого начала?', 'Серия ×{n}', 'Уберите 3+ подсвеченного цвета', 'Жемчужинам некуда падать!', 'Отмена'],
+    'zh-TW': ['繼續', '回到首頁', '結束', '要結束遊戲回到首頁嗎？', '要從頭重來嗎？', '連續 ×{n}', '把發亮的顏色3個以上一起消除', '珍珠已經落不下去了！', '取消'],
+    id: ['Lanjut main', 'Ke beranda', 'Keluar', 'Keluar dari permainan dan ke beranda?', 'Mulai lagi dari awal?', 'Beruntun ×{n}', 'Hapus 3+ warna yang menyala', 'Mutiara tak bisa turun lagi!', 'Batal'],
+    tr: ['Devam et', 'Ana sayfaya dön', 'Çık', 'Oyundan çıkıp ana sayfaya dönülsün mü?', 'En baştan başlansın mı?', 'Seri ×{n}', 'Parlayan renkten 3+ temizle', 'İnciler artık inemez!', 'İptal'],
   };
   const K = ['q.keep', 'q.home', 'q.quitb', 'q.quit', 'q.restart', 'a.order.stk', 'a.order.h', 'a.dive.stuck', 'q.cancel'];
   for (const l in A) { const o = {}; K.forEach((k, i) => o[k] = A[l][i]); window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, o); }
   // DIVE rule line about getting stuck
-  const D = { ja: '真珠の下をもう掘れなくなったら詰みで終了', en: 'If no move can dig under any pearl, the game ends', zh: '若无法再挖到任何珍珠下方，游戏结束', ko: '어떤 진주 아래도 더 팔 수 없으면 종료', es: 'Si ningún movimiento puede excavar bajo una perla, se acaba', fr: 'Si plus aucun coup ne peut creuser sous une perle, la partie s’arrête', pt: 'Se nenhum movimento cavar sob uma pérola, o jogo acaba', de: 'Kann kein Zug mehr unter eine Perle graben, ist das Spiel vorbei', hi: 'अगर किसी मोती के नीचे खुदाई न हो सके तो खेल ख़त्म', ar: 'إذا لم يعد بالإمكان الحفر تحت أي لؤلؤة تنتهي اللعبة' };
+  const D = { ja: '真珠の下をもう掘れなくなったら詰みで終了', en: 'If no move can dig under any pearl, the game ends', zh: '若无法再挖到任何珍珠下方，游戏结束', ko: '어떤 진주 아래도 더 팔 수 없으면 종료', es: 'Si ningún movimiento puede excavar bajo una perla, se acaba', fr: 'Si plus aucun coup ne peut creuser sous une perle, la partie s’arrête', pt: 'Se nenhum movimento cavar sob uma pérola, o jogo acaba', de: 'Kann kein Zug mehr unter eine Perle graben, ist das Spiel vorbei', hi: 'अगर किसी मोती के नीचे खुदाई न हो सके तो खेल ख़त्म', ar: 'إذا لم يعد بالإمكان الحفر تحت أي لؤلؤة تنتهي اللعبة', ru: 'Если ни один ход не подкапывает жемчужину, игра заканчивается', 'zh-TW': '若已經挖不到任何珍珠下方，遊戲結束', id: 'Jika tak ada langkah yang bisa menggali di bawah mutiara, permainan berakhir', tr: 'Hiçbir hamle bir incinin altını kazamıyorsa oyun biter' };
   for (const l in D) window.SAME_I18N[l]['a.dive.t3'] = D[l];
 })();
 
@@ -602,7 +874,11 @@ window.SAME_I18N.ar = {
     pt: ['Ação diária', '3 tentativas cada', 'BLITZ, Pedido, Pavio e Mergulho. Todos jogam o mesmo tabuleiro; sua melhor pontuação vai para o ranking.', 'Diário'],
     de: ['Tages-Action', 'je 3 Versuche', 'BLITZ, Bestellung, Lunte und Tauchgang. Alle spielen dasselbe Brett; dein bestes Ergebnis kommt in die Rangliste.', 'Täglich'],
     hi: ['दैनिक एक्शन', 'हर एक 3 बार', 'BLITZ, ऑर्डर, फ़्यूज़ और डाइव। सबका एक ही बोर्ड; सबसे अच्छा स्कोर रैंकिंग में।', 'दैनिक'],
-    ar: ['حركة يومية', '3 محاولات لكل منها', 'BLITZ والطلب والفتيل والغوص. الجميع على اللوحة نفسها؛ أفضل نتيجة تدخل الترتيب.', 'يومي'] };
+    ar: ['حركة يومية', '3 محاولات لكل منها', 'BLITZ والطلب والفتيل والغوص. الجميع على اللوحة نفسها؛ أفضل نتيجة تدخل الترتيب.', 'يومي'],
+    ru: ['Экшен дня', 'по 3 попытки', 'BLITZ, Заказ, Фитиль и Погружение. Все играют на одном поле; в рейтинг идёт лучший результат.', 'День'],
+    'zh-TW': ['每日動作', '各每天3次', 'BLITZ・訂單・引信・潛水。所有人同一盤面，最佳分數列入排行榜。', '每日'],
+    id: ['Aksi harian', 'masing-masing 3 kali', 'BLITZ, Pesanan, Sumbu, dan Selam. Semua main di papan yang sama; skor terbaikmu masuk peringkat.', 'Harian'],
+    tr: ['Günlük aksiyon', 'her biri 3 hak', 'BLITZ, Sipariş, Fitil ve Dalış. Herkes aynı tahtada oynar; en iyi skorun sıralamaya girer.', 'Günlük'] };
   for (const l in A) window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'd.act': A[l][0], 'd.act.n': A[l][1], 'd.act.d': A[l][2], 'd.daily': A[l][3] });
 })();
 
@@ -618,12 +894,16 @@ window.SAME_I18N.ar = {
     de: ['Schließen', 'Lücken füllen sich von oben. Große Gruppen bringen Zeit (8: +1 s / 12: +2 s / 18: +3 s, max. +20 s)', 'Alle 20 s steigt das Level: eine Farbe mehr, Uhr 15 % schneller', 'Fehltipp −1 s, Mischen bei Stillstand −3 s. Punkte mit Combos und FEVER', 'Reihen schieben sich von unten hoch, immer schneller', 'Leere Spalten rücken nach links. Über den Rand hinaus – vorbei', 'Kein Zeitlimit – wie lange hältst du durch?'],
     hi: ['बंद करें', 'खाली जगह ऊपर से भरती है। बड़े समूह से समय बढ़ता है (8:+1 से./12:+2 से./18:+3 से., कुल +20 से. तक)', 'हर 20 सेकंड में लेवल: एक रंग और, घड़ी 15% तेज़', 'गलत टैप −1 से., अटकने पर फेंटना −3 से.। कॉम्बो और FEVER से अंक', 'नीचे से पंक्तियाँ ऊपर आती हैं, तेज़ होती जाती हैं', 'खाली कॉलम बाईं ओर खिसकते हैं। ऊपर पार हुआ तो ख़त्म', 'कोई समय सीमा नहीं — कितनी देर टिकोगे?'],
     ar: ['إغلاق', 'تمتلئ الفراغات من الأعلى. المجموعات الكبيرة تضيف وقتًا (8: +1 ث / 12: +2 ث / 18: +3 ث، حتى +20 ث)', 'كل 20 ثانية يرتفع المستوى: لون إضافي وساعة أسرع 15%', 'نقرة خاطئة −1 ث، خلط عند التوقف −3 ث. سجّل بالكومبو وFEVER', 'تصعد الصفوف من الأسفل بسرعة متزايدة', 'تنزاح الأعمدة الفارغة يسارًا. تجاوز القمة يعني النهاية', 'بلا حد زمني — كم ستصمد؟'],
+    ru: ['Закрыть', 'Пустоты заполняются сверху. Большие группы дают время (8: +1 с / 12: +2 с / 18: +3 с, до +20 с)', 'Каждые 20 с уровень растёт: +1 цвет и таймер на 15% быстрее', 'Промах −1 с, перемешивание в тупике −3 с. Набирайте очки комбо и FEVER', 'Ряды поднимаются снизу всё быстрее', 'Пустые столбцы сдвигаются влево. Дошли до верха — конец', 'Без лимита времени — сколько продержитесь?'],
+    'zh-TW': ['關閉', '消除後從上方補充。大塊消除延長時間（8個+1秒／12個+2秒／18個+3秒，合計最多+20秒）', '每20秒升級：顏色+1，時鐘加快15%', '點錯−1秒，卡住重排−3秒。用連擊和FEVER拿分', '方塊從下方一列列升起，越來越快', '空欄會向左靠攏。超過頂端即結束', '沒有時間限制，看你能撐多久'],
+    id: ['Tutup', 'Ruang kosong terisi dari atas. Hapusan besar menambah waktu (8: +1 dtk / 12: +2 dtk / 18: +3 dtk, hingga +20 dtk)', 'Tiap 20 dtk level naik: satu warna lagi dan jam 15% lebih cepat', 'Salah ketuk −1 dtk, acak saat buntu −3 dtk. Cetak skor dengan kombo dan FEVER', 'Baris terdorong naik dari bawah, makin lama makin cepat', 'Kolom kosong bergeser ke kiri. Lewat batas atas, selesai', 'Tanpa batas waktu — berapa lama kamu bertahan?'],
+    tr: ['Kapat', 'Boşluklar yukarıdan dolar. Büyük silmeler süre ekler (8: +1 sn / 12: +2 sn / 18: +3 sn, en fazla +20 sn)', 'Her 20 sn\'de seviye artar: bir renk daha ve %15 hızlı saat', 'Yanlış dokunuş −1 sn, tıkanınca karıştırma −3 sn. Kombo ve FEVER ile puan topla', 'Sıralar aşağıdan giderek hızlanarak yükselir', 'Boş sütunlar sola kayar. Tepeyi aşarsa biter', 'Süre sınırı yok — ne kadar dayanabilirsin?'],
   };
   for (const l in A) { const v = A[l]; window.SAME_I18N[l] = Object.assign(window.SAME_I18N[l] || {}, { 'u.close': v[0], 'a.blitz.t1': v[1], 'a.blitz.t2': v[2], 'a.blitz.t3': v[3], 'a.rise.t1': v[4], 'a.rise.t2': v[5], 'a.rise.t3': v[6] }); }
 })();
 
 (function () {
-  const L = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+  const L = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
   for (const l of L) Object.assign(window.SAME_I18N[l] = window.SAME_I18N[l] || {}, { 'a.order': 'ORDER', 'a.fuse': 'FUSE', 'a.dive': 'DIVE' });
   const A = {
     ja: ['ログインボーナス', '{n}日目', '{n}日連続ログイン中', '今日のボーナスは {n} コイン！ 7日目はビッグボーナス。', '{n}コイン受け取る', 'Googleでログイン', '連携中', 'クラウド同期', 'Googleでログインすると、記録・コイン・キャラを他の端末と同期できます。', '{e} で同期中', '今すぐ同期', 'ログアウト', 'ログアウトしますか？（この端末の記録は残ります）', '同期しました', '同期できませんでした。時間をおいてもう一度試してください', 'ログアウトしました', 'タップして名前を変更'],
@@ -636,13 +916,17 @@ window.SAME_I18N.ar = {
     de: ['Login-Bonus', 'Tag {n}', '{n} Tage in Folge', 'Heutiger Bonus: {n} Münzen! Tag 7 ist der große.', '{n} Münzen holen', 'Mit Google anmelden', 'Verknüpft', 'Cloud-Sync', 'Mit Google anmelden, um Rekorde, Münzen und Figuren geräteübergreifend zu synchronisieren.', 'Synchronisiert als {e}', 'Jetzt synchronisieren', 'Abmelden', 'Abmelden? (Daten auf diesem Gerät bleiben erhalten)', 'Synchronisiert', 'Synchronisieren fehlgeschlagen. Später erneut versuchen', 'Abgemeldet', 'Tippen zum Umbenennen'],
     hi: ['लॉगिन बोनस', 'दिन {n}', 'लगातार {n} दिन लॉगिन', 'आज का बोनस: {n} सिक्के! 7वें दिन बड़ा बोनस।', '{n} सिक्के लें', 'Google से साइन इन करें', 'जुड़ा हुआ', 'क्लाउड सिंक', 'Google से साइन इन करें और रिकॉर्ड, सिक्के व पात्र दूसरे डिवाइस पर सिंक करें।', '{e} के रूप में सिंक', 'अभी सिंक करें', 'साइन आउट', 'साइन आउट करें? (इस डिवाइस का डेटा रहेगा)', 'सिंक हो गया', 'सिंक नहीं हो सका। बाद में फिर कोशिश करें', 'साइन आउट हो गया', 'नाम बदलने के लिए टैप करें'],
     ar: ['مكافأة الدخول', 'اليوم {n}', 'دخول متتالٍ {n} أيام', 'مكافأة اليوم: {n} عملة! اليوم السابع هو الأكبر.', 'احصل على {n} عملة', 'تسجيل الدخول عبر Google', 'مرتبط', 'المزامنة السحابية', 'سجّل الدخول عبر Google لمزامنة السجلات والعملات والشخصيات بين الأجهزة.', 'تتم المزامنة باسم {e}', 'مزامنة الآن', 'تسجيل الخروج', 'تسجيل الخروج؟ (تبقى بيانات هذا الجهاز)', 'تمت المزامنة', 'تعذرت المزامنة. حاول لاحقًا', 'تم تسجيل الخروج', 'انقر لتغيير الاسم'],
+    ru: ['Бонус за вход', 'День {n}', '{n} дн. входа подряд', 'Бонус дня: {n} монет! На 7-й день — большой бонус.', 'Забрать {n} монет', 'Войти через Google', 'Привязано', 'Облачная синхронизация', 'Войдите через Google, чтобы синхронизировать рекорды, монеты и персонажей между устройствами.', 'Синхронизация: {e}', 'Синхронизировать', 'Выйти', 'Выйти? (Данные на этом устройстве сохранятся)', 'Синхронизировано', 'Не удалось синхронизировать. Попробуйте позже', 'Вы вышли', 'Нажмите, чтобы сменить имя'],
+    'zh-TW': ['登入獎勵', '第{n}天', '連續登入{n}天', '今日獎勵 {n} 金幣！第7天有大獎。', '領取{n}金幣', '使用Google登入', '已連結', '雲端同步', '使用Google登入後，紀錄、金幣和角色可在多台裝置間同步。', '正在以 {e} 同步', '立即同步', '登出', '要登出嗎？（本裝置的紀錄會保留）', '已同步', '同步失敗，請稍後再試', '已登出', '點擊可修改名稱'],
+    id: ['Bonus login', 'Hari {n}', 'Login {n} hari beruntun', 'Bonus hari ini: {n} koin! Hari ke-7 bonus besar.', 'Ambil {n} koin', 'Masuk dengan Google', 'Tertaut', 'Sinkron cloud', 'Masuk dengan Google untuk menyinkronkan rekor, koin, dan karakter antar perangkat.', 'Sinkron sebagai {e}', 'Sinkronkan', 'Keluar', 'Keluar? (Data di perangkat ini tetap disimpan)', 'Tersinkron', 'Gagal sinkron. Coba lagi nanti', 'Sudah keluar', 'Ketuk untuk ganti nama'],
+    tr: ['Giriş bonusu', '{n}. gün', '{n} günlük giriş serisi', 'Bugünün bonusu: {n} jeton! 7. gün büyük bonus.', '{n} jeton al', 'Google ile giriş yap', 'Bağlı', 'Bulut eşitleme', 'Rekorları, jetonları ve karakterleri cihazlar arasında eşitlemek için Google ile giriş yap.', '{e} olarak eşitleniyor', 'Şimdi eşitle', 'Çıkış yap', 'Çıkış yapılsın mı? (Bu cihazdaki veriler kalır)', 'Eşitlendi', 'Eşitlenemedi. Lütfen sonra tekrar dene', 'Çıkış yapıldı', 'Adı değiştirmek için dokun'],
   };
   const K = ['lb.title', 'lb.day', 'lb.streak', 'lb.msg', 'lb.get', 'sync.google', 'sync.on', 'sync.title', 'sync.desc', 'sync.on2', 'sync.now', 'sync.logout', 'sync.logout.q', 'sync.done', 'sync.err', 'sync.out', 'pf.name'];
   for (const l in A) { const o = {}; K.forEach((k, i) => o[k] = A[l][i]); Object.assign(window.SAME_I18N[l], o); }
 })();
 
 (function () {
-  const A = { ja: '次は {n} コイン', en: 'Next: {n} coins', zh: '下次 {n} 金币', ko: '다음 {n}코인', es: 'Siguiente: {n} monedas', fr: 'Suivant : {n} pièces', pt: 'Próximo: {n} moedas', de: 'Nächster: {n} Münzen', hi: 'अगला: {n} सिक्के', ar: 'التالي: {n} عملة' };
+  const A = { ja: '次は {n} コイン', en: 'Next: {n} coins', zh: '下次 {n} 金币', ko: '다음 {n}코인', es: 'Siguiente: {n} monedas', fr: 'Suivant : {n} pièces', pt: 'Próximo: {n} moedas', de: 'Nächster: {n} Münzen', hi: 'अगला: {n} सिक्के', ar: 'التالي: {n} عملة', ru: 'Далее: {n} монет', 'zh-TW': '下次 {n} 金幣', id: 'Berikutnya: {n} koin', tr: 'Sonraki: {n} jeton' };
   for (const l in A) window.SAME_I18N[l]['lb.next'] = A[l];
 })();
 
@@ -658,6 +942,10 @@ window.SAME_I18N.ar = {
     de: ['Wie viel schaffst du in 60 s?', 'Bestellte Farbe ab 3 abräumen', 'Abräumen, bevor die Lunte abbrennt', 'Perlen ganz nach unten bringen'],
     hi: ['60 सेकंड में कितना स्कोर?', 'ऑर्डर वाला रंग 3+ साफ़ करें', 'फ़्यूज़ जलने से पहले साफ़ करते रहें', 'मोती सबसे नीचे गिराएँ'],
     ar: ['كم تجمع في 60 ثانية؟', 'أزل لون الطلب 3 فأكثر', 'واصل الإزالة قبل احتراق الفتيل', 'أنزل اللآلئ إلى الأسفل'],
+    ru: ['Сколько очков за 60 с?', 'Убирайте заказанный цвет, от 3 штук', 'Убирайте, пока не догорел фитиль', 'Опустите жемчужины на самый низ'],
+    'zh-TW': ['60秒能拿多少分？', '依訂單顏色3個以上消除', '在引信燒完前不停消除', '把珍珠落到最底部'],
+    id: ['Berapa skormu dalam 60 dtk?', 'Hapus warna pesanan, 3+ sekaligus', 'Terus hapus sebelum sumbu habis', 'Jatuhkan mutiara ke dasar'],
+    tr: ['60 sn\'de kaç puan?', 'Sipariş rengini 3+ temizle', 'Fitil bitmeden temizlemeye devam et', 'İncileri en alta indir'],
   };
   const M = ['blitz', 'order', 'fuse', 'dive'];
   for (const l in A) M.forEach((m, i) => window.SAME_I18N[l]['a.' + m + '.s'] = A[l][i]);
@@ -742,13 +1030,17 @@ window.SAME_I18N.ar = {
          ['لغز', 'يظهر لونه عند إزالة جاره.', 'مكعبات «؟» تخفي لونها ولا تتصل. أزل جارًا لتكشفها.'],
          ['حرباء', 'تغيّر لونها كل حركة.', 'تتحول الحرباء إلى اللون التالي بعد كل حركة. اغتنم لحظة تطابق الألوان.'],
          ['MIX EX', 'كل الحيل الجديدة معًا.', 'جليد صلب وخطوط ومناشير وألغاز وحرباوات، كلها معًا.']],
+    ru: [['Крепкий лёд', 'Тает после двух очисток рядом.', 'Толстый лёд после очистки соседа становится обычным, а после второй — тает и превращается в блок.'], ['Линия ряда', 'Убирает весь ряд.', 'Уберите группу с блоком-стрелкой вбок — исчезнет весь его ряд.'], ['Линия столбца', 'Убирает весь столбец.', 'Уберите группу с блоком-стрелкой вверх — исчезнет весь его столбец.'], ['Призма', 'Убирает все блоки своего цвета.', 'Уберите группу с призмой — исчезнут все блоки этого цвета на поле.'], ['Загадка', 'Раскрывается при очистке соседа.', 'Блоки «?» скрывают цвет и не соединяются. Уберите соседа, чтобы их раскрыть.'], ['Хамелеон', 'Меняет цвет каждый ход.', 'Хамелеоны после каждого хода переходят на следующий цвет. Ловите момент, когда цвета совпадут.'], ['MIX EX', 'Все новые механики сразу.', 'Крепкий лёд, линии, призмы, загадки и хамелеоны — всё вместе.']],
+    'zh-TW': [['堅冰', '相鄰消除兩次才會融化。', '厚冰在相鄰方塊被消除一次後變成普通冰，再消除一次就融化成方塊。'], ['橫線', '消除時整列一起消失。', '消除含橫箭頭方塊的組合時，該列全部消失。'], ['直線', '消除時整欄一起消失。', '消除含直箭頭方塊的組合時，該欄全部消失。'], ['稜鏡', '消除同色的所有方塊。', '消除含稜鏡的組合時，盤面上同色方塊全部消失。'], ['謎塊', '相鄰消除後顯示顏色。', '「？」方塊看不到顏色，也不會相連。消除相鄰方塊後就會現出真面目。'], ['變色龍', '每走一步就變色。', '變色龍每走一步就變成下一種顏色。抓準顏色對齊的時機。'], ['MIX EX', '新機關全部混合的進階篇。', '堅冰、橫直線、稜鏡、謎塊、變色龍混在一起的最終挑戰。']],
+    id: [['Es Keras', 'Mencair setelah dua kali hapus di sebelahnya.', 'Es tebal menjadi es biasa saat blok di sebelahnya dihapus, lalu mencair menjadi blok setelah hapusan kedua.'], ['Garis Baris', 'Menghapus seluruh barisnya.', 'Hapus grup berisi blok panah samping dan seluruh barisnya lenyap.'], ['Garis Kolom', 'Menghapus seluruh kolomnya.', 'Hapus grup berisi blok panah atas dan seluruh kolomnya lenyap.'], ['Prisma', 'Menghapus semua blok sewarna.', 'Hapus grup berisi prisma dan semua blok berwarna sama di papan lenyap.'], ['Misteri', 'Terungkap saat blok di sebelahnya dihapus.', 'Blok "?" menyembunyikan warnanya dan tidak tersambung. Hapus blok di sebelahnya untuk mengungkapnya.'], ['Bunglon', 'Berganti warna setiap langkah.', 'Bunglon berganti ke warna berikutnya setiap langkah. Atur waktunya agar warnanya cocok.'], ['MIX EX', 'Semua gimik baru sekaligus.', 'Es keras, garis, prisma, misteri, dan bunglon, semuanya dicampur.']],
+    tr: [['Sert Buz', 'Yanında iki silmeden sonra çözülür.', 'Kalın buz, yanındaki temizlenince normal buza döner; ikinci temizlikte çözülüp bloğa dönüşür.'], ['Sıra Çizgisi', 'Tüm sırasını temizler.', 'Yan oklu blok içeren bir grubu temizlersen o sıranın tamamı yok olur.'], ['Sütun Çizgisi', 'Tüm sütununu temizler.', 'Yukarı oklu blok içeren bir grubu temizlersen o sütunun tamamı yok olur.'], ['Prizma', 'Kendi rengindeki tüm blokları temizler.', 'Prizmalı bir grubu temizlersen tahtadaki o renkteki tüm bloklar yok olur.'], ['Gizem', 'Yanındaki temizlenince ortaya çıkar.', '"?" blokları rengini gizler ve bağlanmaz. Ortaya çıkarmak için yanındakini temizle.'], ['Bukalemun', 'Her hamlede renk değiştirir.', 'Bukalemunlar her hamleden sonra bir sonraki renge geçer. Renklerin denk geldiği anı yakala.'], ['MIX EX', 'Tüm yeni mekanikler bir arada.', 'Sert buz, çizgiler, prizmalar, gizem ve bukalemun blokları bir arada.']],
   };
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => { D['th.' + k] = A[l][i][0]; D['th.' + k + '.d'] = A[l][i][1]; D['th.' + k + '.r'] = A[l][i][2]; }); }
 })();
 
 /* ORDER: game over when nothing can be cleared */
 (function () {
-  const S = { ja: ['詰み！消せるブロックがない', '消せるブロックがなくなったら詰みで即終了'], en: ['Stuck! Nothing left to clear', 'If nothing can be cleared, the game ends at once'], zh: ['死局！没有可消除的方块', '没有可消除的方块时立即结束'], ko: ['막혔다! 지울 블록이 없어요', '지울 수 있는 블록이 없으면 바로 종료'], es: ['¡Bloqueado! No queda nada que despejar', 'Si no se puede despejar nada, la partida termina al instante'], fr: ['Bloqué ! Plus rien à effacer', 'S’il n’y a plus rien à effacer, la partie s’arrête aussitôt'], pt: ['Travou! Nada para limpar', 'Se não houver nada para limpar, o jogo acaba na hora'], de: ['Festgefahren! Nichts mehr abzuräumen', 'Lässt sich nichts mehr abräumen, endet das Spiel sofort'], hi: ['फँस गए! हटाने को कुछ नहीं', 'कुछ भी हटाया न जा सके तो खेल तुरंत खत्म'], ar: ['طريق مسدود! لا شيء لإزالته', 'إذا لم يبقَ ما يمكن إزالته تنتهي اللعبة فورًا'] };
+  const S = { ja: ['詰み！消せるブロックがない', '消せるブロックがなくなったら詰みで即終了'], en: ['Stuck! Nothing left to clear', 'If nothing can be cleared, the game ends at once'], zh: ['死局！没有可消除的方块', '没有可消除的方块时立即结束'], ko: ['막혔다! 지울 블록이 없어요', '지울 수 있는 블록이 없으면 바로 종료'], es: ['¡Bloqueado! No queda nada que despejar', 'Si no se puede despejar nada, la partida termina al instante'], fr: ['Bloqué ! Plus rien à effacer', 'S’il n’y a plus rien à effacer, la partie s’arrête aussitôt'], pt: ['Travou! Nada para limpar', 'Se não houver nada para limpar, o jogo acaba na hora'], de: ['Festgefahren! Nichts mehr abzuräumen', 'Lässt sich nichts mehr abräumen, endet das Spiel sofort'], hi: ['फँस गए! हटाने को कुछ नहीं', 'कुछ भी हटाया न जा सके तो खेल तुरंत खत्म'], ar: ['طريق مسدود! لا شيء لإزالته', 'إذا لم يبقَ ما يمكن إزالته تنتهي اللعبة فورًا'], ru: ['Тупик! Убирать больше нечего', 'Если убрать нечего, игра сразу заканчивается'], 'zh-TW': ['死局！沒有可消除的方塊', '沒有可消除的方塊時立即結束'], id: ['Buntu! Tak ada yang bisa dihapus', 'Jika tak ada yang bisa dihapus, permainan langsung berakhir'], tr: ['Tıkandın! Temizlenecek blok yok', 'Temizlenecek bir şey kalmazsa oyun hemen biter'] };
   for (const l in S) { const D = window.SAME_I18N[l]; if (!D) continue; D['a.order.stuck'] = S[l][0]; D['a.order.t3'] = S[l][1]; }
 })();
 
@@ -759,7 +1051,7 @@ window.SAME_I18N.ar = {
     zh: ['完成{n}次订单', '回收{n}颗珍珠', '横竖线'], ko: ['주문 {n}회 달성', '진주 {n}개 회수', '라인'],
     es: ['Completa {n} pedidos', 'Recoge {n} perlas', 'Líneas'], fr: ['Remplis {n} commandes', 'Récupère {n} perles', 'Lignes'],
     pt: ['Complete {n} pedidos', 'Colete {n} pérolas', 'Linhas'], de: ['Erfülle {n} Bestellungen', 'Sammle {n} Perlen', 'Linien'],
-    hi: ['{n} ऑर्डर पूरे करें', '{n} मोती इकट्ठा करें', 'लाइन'], ar: ['أنجز {n} طلبات', 'اجمع {n} لآلئ', 'خطوط'],
+    hi: ['{n} ऑर्डर पूरे करें', '{n} मोती इकट्ठा करें', 'लाइन'], ar: ['أنجز {n} طلبات', 'اجمع {n} لآلئ', 'خطوط'], ru: ['Выполнить {n} заказов', 'Собрать {n} жемчужин', 'Линии'], 'zh-TW': ['完成{n}次訂單', '回收{n}顆珍珠', '直橫線'], id: ['Penuhi {n} pesanan', 'Kumpulkan {n} mutiara', 'Garis'], tr: ['{n} sipariş tamamla', '{n} inci topla', 'Çizgiler'],
   };
   for (const l in G) { const D = window.SAME_I18N[l]; if (!D) continue; D['goal.orders'] = G[l][0]; D['goal.pearls'] = G[l][1]; D['g.line'] = G[l][2]; D['g.prism'] = D['th.pr']; D['g.ice2'] = D['th.ih']; D['g.hid'] = D['th.hd']; D['g.cham'] = D['th.ch']; }
 })();
@@ -778,6 +1070,10 @@ window.SAME_I18N.ar = {
     de: ['Icon', 'Sticker', 'Hintergrund', 'Bis zu 3 rund um deine Figur (antippen zum Hinzufügen/Entfernen)', 'Sticker gibt es im Gacha', 'Icons', 'Sticker', 'Hintergründe', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Icons, Sticker und Hintergründe in einem Topf. Der 10. Zug eines ×10 ist SR oder besser.', 'Doppelte werden zu Münzen (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', '{n} / {m} gesammelt', '50 Objekte sammeln', '200 Objekte sammeln', 'Die ganze Sammlung vervollständigen', 'Gold', 'Galaxie'],
     hi: ['आइकन', 'स्टैम्प', 'बैकग्राउंड', 'कैरेक्टर के आसपास 3 तक लगाएँ (टैप करके लगाएँ/हटाएँ)', 'स्टैम्प गाचा से मिलते हैं', 'आइकन', 'स्टैम्प', 'बैकग्राउंड', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%। आइकन, स्टैम्प और बैकग्राउंड एक ही पूल में। ×10 का 10वाँ SR या बेहतर।', 'डुप्लिकेट सिक्कों में बदलते हैं (N{a} · R{b} · SR{c} · SSR{d} · UR{e})।', '{n} / {m} इकट्ठा किए', '50 आइटम इकट्ठा करें', '200 आइटम इकट्ठा करें', 'पूरा कलेक्शन पूरा करें', 'गोल्ड', 'गैलेक्सी'],
     ar: ['الأيقونة', 'الملصقات', 'الخلفية', 'ضع حتى 3 حول شخصيتك (انقر للإضافة/الإزالة)', 'احصل على الملصقات من الغاتشا', 'الأيقونات', 'الملصقات', 'الخلفيات', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. الأيقونات والملصقات والخلفيات في سحب واحد. السحبة العاشرة في ×10 هي SR أو أعلى.', 'المكرر يتحول إلى عملات (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'جمعت {n} / {m}', 'اجمع 50 عنصرًا', 'اجمع 200 عنصر', 'أكمل المجموعة كلها', 'ذهبي', 'مجرة'],
+    ru: ['Значок', 'Стикеры', 'Фон', 'До 3 штук вокруг персонажа (нажмите, чтобы добавить/убрать)', 'Стикеры выпадают в гаче', 'Значки', 'Стикеры', 'Фоны', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Значки, стикеры и фоны в одном пуле. 10-я крутка в ×10 — SR или выше.', 'Повторы превращаются в монеты (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'Собрано {n} / {m}', 'Собрать 50 предметов', 'Собрать 200 предметов', 'Собрать всю коллекцию', 'Золото', 'Галактика'],
+    'zh-TW': ['頭像', '貼圖', '背景', '角色周圍最多可貼3個（點擊可貼上／取下）', '貼圖可從轉蛋獲得', '頭像', '貼圖', '背景', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%。頭像、貼圖、背景共用同一獎池。10連抽的第10個必為SR以上。', '重複的會變回金幣（N{a}・R{b}・SR{c}・SSR{d}・UR{e}）。', '已收集 {n} / {m}', '收集50個', '收集200個', '收集全部', '黃金', '銀河'],
+    id: ['Ikon', 'Stiker', 'Latar', 'Tempel hingga 3 di sekitar karaktermu (ketuk untuk pasang/lepas)', 'Dapatkan stiker dari gacha', 'Ikon', 'Stiker', 'Latar', 'N 55% / R 28% / SR 12% / SSR 4% / UR 1%. Ikon, stiker, dan latar dalam satu pool. Tarikan ke-10 dari ×10 pasti SR atau lebih.', 'Duplikat berubah jadi koin (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', 'Terkumpul {n} / {m}', 'Kumpulkan 50 item', 'Kumpulkan 200 item', 'Lengkapi seluruh koleksi', 'Emas', 'Galaksi'],
+    tr: ['Simge', 'Çıkartmalar', 'Arka plan', 'Karakterinin çevresine en fazla 3 tane koy (eklemek/kaldırmak için dokun)', 'Çıkartmalar gachadan çıkar', 'Simgeler', 'Çıkartmalar', 'Arka planlar', 'N %55 / R %28 / SR %12 / SSR %4 / UR %1. Simgeler, çıkartmalar ve arka planlar tek havuzda. ×10 çekilişin 10.\'su SR veya üstü.', 'Aynısı çıkanlar jetona döner (N{a} · R{b} · SR{c} · SSR{d} · UR{e}).', '{n} / {m} toplandı', '50 öğe topla', '200 öğe topla', 'Tüm koleksiyonu tamamla', 'Altın', 'Galaksi'],
   };
   const P = { // pattern names, palette names
     ja: [['ドット', 'ストライプ', 'チェック', 'グリッド', 'ウェーブ', 'ジグザグ', 'トライアングル', 'リング', 'タータン', 'スター'], ['ミント', 'ピーチ', 'レモン', 'ナイト']],
@@ -790,6 +1086,10 @@ window.SAME_I18N.ar = {
     de: [['Punkte', 'Streifen', 'Karo', 'Raster', 'Wellen', 'Zickzack', 'Dreiecke', 'Ringe', 'Schottenkaro', 'Sterne'], ['Minze', 'Pfirsich', 'Zitrone', 'Nacht']],
     hi: [['डॉट्स', 'धारियाँ', 'चेक', 'ग्रिड', 'लहरें', 'ज़िगज़ैग', 'त्रिकोण', 'रिंग', 'प्लेड', 'तारे'], ['मिंट', 'पीच', 'नींबू', 'रात']],
     ar: [['نقاط', 'خطوط', 'مربعات', 'شبكة', 'أمواج', 'متعرج', 'مثلثات', 'حلقات', 'ترتان', 'نجوم'], ['نعناع', 'خوخ', 'ليمون', 'ليل']],
+    ru: [['Горошек', 'Полоски', 'Клетка', 'Сетка', 'Волны', 'Зигзаг', 'Треугольники', 'Кольца', 'Шотландка', 'Звёзды'], ['Мята', 'Персик', 'Лимон', 'Ночь']],
+    'zh-TW': [['圓點', '條紋', '格紋', '方格', '波浪', '鋸齒', '三角', '圓環', '蘇格蘭格紋', '星星'], ['薄荷', '蜜桃', '檸檬', '夜晚']],
+    id: [['Titik', 'Garis', 'Kotak', 'Kisi', 'Gelombang', 'Zigzag', 'Segitiga', 'Cincin', 'Tartan', 'Bintang'], ['Mint', 'Persik', 'Lemon', 'Malam']],
+    tr: [['Puantiye', 'Çizgili', 'Kareli', 'Izgara', 'Dalga', 'Zikzak', 'Üçgenler', 'Halkalar', 'Ekose', 'Yıldızlar'], ['Nane', 'Şeftali', 'Limon', 'Gece']],
   };
   const PAT = ['dots', 'stripe', 'check', 'grid', 'wave', 'zigzag', 'tri', 'ring', 'plaid', 'stars'];
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); PAT.forEach((p, i) => D['bgp.' + p] = P[l][0][i]); P[l][1].forEach((c, i) => D['bgc.' + i] = c); }
@@ -809,17 +1109,21 @@ window.SAME_I18N.ar = {
     de: ['Grundpunkte', 'Rückgängig ×{n}', 'Bonus ohne Rückgängig', 'Zeit {t} (+{p}%)', 'Zeit', 'Jedes Rückgängig −5 %, ohne Rückgängig +10 % und bis zu +30 % für ein schnelles Ende.'],
     hi: ['मूल स्कोर', 'अनडू ×{n}', 'बिना अनडू बोनस', 'समय {t} (+{p}%)', 'समय', 'हर अनडू पर −5%, बिना अनडू +10%, और जल्दी पूरा करने पर +30% तक बोनस।'],
     ar: ['النتيجة الأساسية', 'تراجع ×{n}', 'مكافأة بلا تراجع', 'الوقت {t} (+{p}%)', 'الوقت', 'كل تراجع −5%، وبلا تراجع +10%، وحتى +30% لإنهاء سريع.'],
+    ru: ['Базовые очки', 'Отмен ×{n}', 'Бонус без отмен', 'Время {t} (+{p}%)', 'Время', 'Каждая отмена −5%, без отмен +10%, и до +30% за быстрое решение.'],
+    'zh-TW': ['基本分數', '悔棋 {n}次', '無悔棋獎勵', '時間 {t}（+{p}%）', '時間', '每悔棋1次−5%，不悔棋+10%，解得越快最多再+30%。'],
+    id: ['Skor dasar', 'Urungkan ×{n}', 'Bonus tanpa urungkan', 'Waktu {t} (+{p}%)', 'Waktu', 'Tiap urungkan −5%, tanpa urungkan +10%, dan hingga +30% jika cepat selesai.'],
+    tr: ['Temel skor', 'Geri al ×{n}', 'Geri almadan bonusu', 'Süre {t} (+%{p})', 'Süre', 'Her geri alma −%5, hiç geri almazsan +%10 ve hızlı bitirirsen en fazla +%30.'],
   };
   for (const l in A) { const D = window.SAME_I18N[l]; if (!D) continue; K.forEach((k, i) => D[k] = A[l][i]); }
 })();
 
 /* daily action tiles: short "used up" label so it fits the button */
 (function () {
-  const A = { ja: 'やすみ', en: 'Rest', zh: '休息', ko: '휴식', es: 'Descanso', fr: 'Repos', pt: 'Pausa', de: 'Pause', hi: 'आराम', ar: 'استراحة' };
+  const A = { ja: 'やすみ', en: 'Rest', zh: '休息', ko: '휴식', es: 'Descanso', fr: 'Repos', pt: 'Pausa', de: 'Pause', hi: 'आराम', ar: 'استراحة', ru: 'Отдых', 'zh-TW': '休息', id: 'Istirahat', tr: 'Mola' };
   for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['d.done'] = A[l];
 })();
 /* phone group chips above the bottom bar: the action modes group */
 (function () {
-  const A = { ja: 'モード', en: 'Modes', zh: '模式', ko: '모드', es: 'Modos', fr: 'Modes', pt: 'Modos', de: 'Modi', hi: 'मोड', ar: 'الأنماط' };
+  const A = { ja: 'モード', en: 'Modes', zh: '模式', ko: '모드', es: 'Modos', fr: 'Modes', pt: 'Modos', de: 'Modi', hi: 'मोड', ar: 'الأنماط', ru: 'Режимы', 'zh-TW': '模式', id: 'Mode', tr: 'Modlar' };
   for (const l in A) if (window.SAME_I18N[l]) window.SAME_I18N[l]['sg.modes'] = A[l];
 })();
