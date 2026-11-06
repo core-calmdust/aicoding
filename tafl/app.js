@@ -187,6 +187,12 @@ function drawLines() {
   let s = `<defs><linearGradient id="wdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--wd1)"/><stop offset=".55" style="stop-color:var(--wd2)"/><stop offset="1" style="stop-color:var(--wd3)"/></linearGradient></defs>`;
   s += `<rect class="wd" x="0" y="0" width="${N}" height="${N}"/>`;
   for (let i = 0; i < N * N; i++) if (F[i] & 16) { const [r, c] = dRC(i); s += `<rect class="sp" x="${c + .04}" y="${r + .04}" width=".92" height=".92" rx=".08"/><path class="knot" d="${knotPath(c + .5, r + .5, 1)}"/>`; }
+  // picture boards (carved / ballinderry / runestone / longship) have the corners marked: where the king escapes at any
+  // edge (Tablut, Tawlbwrdd) the corner squares are covered with a plain square of the same picture (the one beside it)
+  if (G.R.escEdge && RASTER_BD[settings.bd]) {
+    const url = `img/bd-${settings.bd}-${N}.webp`;
+    for (const [r, c] of [[0, 0], [0, N - 1], [N - 1, 0], [N - 1, N - 1]]) { const sc = c ? c - 1 : 1; s += `<svg class="cfix" x="${c}" y="${r}" width="1" height="1" viewBox="${sc} ${r} 1 1"><image href="${url}" x="0" y="0" width="${N}" height="${N}" preserveAspectRatio="none"/></svg>`; }
+  }
   let d = ''; for (let k = 0; k <= N; k++) d += `M${k},0V${N}M0,${k}H${N}`;
   s += `<path class="gl" d="${d}"/>`;
   const FB = flipOn();   // coordinates follow the board when it is turned round (still on the bottom / left edges, upright)
@@ -1081,7 +1087,7 @@ function resumeWith() {
   hideOverlay('#resultOverlay');
   if (reviewing) resumeHere(); else { gameOverShown = false; update(false); save(); afterPosition(); }
 }
-$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
+$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); drawLines(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };

@@ -556,6 +556,8 @@
     },
     // Hnefatafl: an oak board with a carved grid, knotwork corners and throne, a rune-carved frame;
     // dark walnut attackers, bone defenders, a crowned king. o.n = 11 | 9 | 7 (same outer size, larger cells).
+    // o.edge: escape at any edge (Tablut, Tawlbwrdd) → no corner knots; o.home: the attackers' start squares (y·n + x) when
+    // they differ from the usual ones for n (Tawlbwrdd); o.key names the rule set for the texture cache
     // live → userData { top, S, n, cs, cell(f, r) → [x, z] (f: column left→right, r: row top→bottom), piece(k: 1 att | 2 def | 3 king) → Group }
     tafl(live, o = {}) {
       const TT = T(), g = new TT.Group(), n = o.n || 11, S = 8.6, cs = S / n, mid = n >> 1;
@@ -566,13 +568,14 @@
         for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; c.beginPath(); c.moveTo(x + Math.cos(a) * r * .42, y + Math.sin(a) * r * .42); c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); c.stroke(); }
       };
       const tw = wood('tfw', '#c39762', '#7a5230', 512, 512, 1.3).image;
-      const top = M({ map: canvasTex('tf' + n, 1024, 1024, (c0) => { later([tw], c0.canvas, (c, W) => {
+      const top = M({ map: canvasTex('tf' + n + (o.key ? '-' + o.key : ''), 1024, 1024, (c0) => { later([tw], c0.canvas, (c, W) => {
         c.drawImage(tw, 0, 0, W, W);
         const s = W / n, home = new Set();
-        if (n === 11) [[0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 5]].forEach(([a, b]) => [[a, b], [b, a], [n - 1 - a, b], [b, n - 1 - a]].forEach(([x, y]) => home.add(y * n + x)));
+        if (o.home) o.home.forEach(i => home.add(i));
+        else if (n === 11) [[0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 5]].forEach(([a, b]) => [[a, b], [b, a], [n - 1 - a, b], [b, n - 1 - a]].forEach(([x, y]) => home.add(y * n + x)));
         else for (let k = 0; k < n; k++) if ((k >= mid - (n === 9 ? 1 : 0) && k <= mid + (n === 9 ? 1 : 0)) || k === mid) [[k, 0], [0, k], [k, n - 1], [n - 1, k]].forEach(([x, y]) => home.add(y * n + x));
         home.forEach(i => { c.fillStyle = 'rgba(70,38,16,.16)'; c.fillRect((i % n) * s, (i / n | 0) * s, s, s); });
-        [[0, 0], [n - 1, 0], [0, n - 1], [n - 1, n - 1], [mid, mid]].forEach(([x, y]) => {
+        (o.edge ? [[mid, mid]] : [[0, 0], [n - 1, 0], [0, n - 1], [n - 1, n - 1], [mid, mid]]).forEach(([x, y]) => {
           c.fillStyle = 'rgba(60,30,10,.5)'; c.fillRect(x * s + 4, y * s + 4, s - 8, s - 8);
           knot(c, x * s + s / 2, y * s + s / 2, s * .3, 'rgba(236,206,150,.85)');
         });

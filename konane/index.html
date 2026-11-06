@@ -831,10 +831,10 @@ html[data-bd=kona]{--bdImg:url(img/bd-kona.webp);--frameBg:url(img/fr-kona.webp)
 html[data-bd=stone]{--bdImg:url(img/bd-stone.webp);--frameBg:url(img/fr-stone.webp) 0 0/240px 240px,#3f3c38;--frm:#4a4640;--puka1:rgba(16,14,12,.72);--puka2:rgba(40,36,32,.5);--puka3:rgba(60,56,50,.25);--pukaRim:rgba(200,190,172,.22);--pukaHl:rgba(220,212,196,.22);--num:rgba(230,222,206,.55)}
 /* koa: an oiled koa papamū with drilled holes (as the boards made today) */
 html[data-bd=koa]{--bdImg:url(img/bd-koa.webp);--frameBg:url(img/fr-koa.webp) 0 0/300px 300px,#4e2410;--frm:#5a2a12;--puka1:rgba(14,6,2,.9);--puka2:rgba(30,14,6,.82);--puka3:rgba(60,30,12,.5);--pukaRim:rgba(255,214,160,.32);--pukaHl:rgba(255,226,180,.3);--num:rgba(255,230,196,.6)}
-/* modern: warm grey matte · sunset gradient · midnight navy with a gold niho manō band */
+/* modern: warm grey matte · sunset gradient · midnight navy with a fine gold line */
 html[data-bd=mono]{--bdImg:url(img/bd-mono.webp);--frameBg:url(img/fr-mono.webp) 0 0/240px 240px,#2a2a2d;--frm:#3a3a3e;--puka1:rgba(0,0,0,.1);--puka2:rgba(0,0,0,.05);--pukaRim:rgba(0,0,0,.2);--pukaHl:rgba(255,255,255,.75);--num:rgba(40,40,42,.5)}
 html[data-bd=sunset]{--bdImg:url(img/bd-sunset.webp);--frameBg:url(img/fr-sunset.webp) 0 0/240px 240px,#2b1f5c;--frm:#3a2a72;--puka1:rgba(60,20,80,.2);--puka2:rgba(60,20,80,.1);--pukaRim:rgba(255,255,255,.5);--pukaHl:rgba(255,255,255,.35);--num:rgba(255,255,255,.75)}
-html[data-bd=midnight]{--bdImg:url(img/bd-midnight.webp);--frameBg:url(img/fr-midnight.webp) 0 0/240px 240px,#0a1428;--frm:#c9a05a;--puka1:rgba(0,0,0,.36);--puka2:rgba(0,0,0,.2);--pukaRim:rgba(214,178,106,.62);--pukaHl:rgba(255,236,200,.18);--num:rgba(214,178,106,.75)}
+html[data-bd=midnight]{--bdImg:url(img/bd-midnight.webp?v=2);--frameBg:url(img/fr-midnight.webp?v=2) 0 0/240px 240px,#0a1428;--frm:#c9a05a;--puka1:rgba(0,0,0,.36);--puka2:rgba(0,0,0,.2);--pukaRim:rgba(214,178,106,.62);--pukaHl:rgba(255,236,200,.18);--num:rgba(214,178,106,.75)}
 html[data-bd=quilt] .reserve .rsv-plate{background:rgba(255,252,244,.86);color:#24504c}
 html[data-bd=quilt] .reserve .rsv-plate .rsv-l b, html[data-bd=quilt] .reserve .rsv-plate .rsv-w:not(.hot) b{color:#0d3f3c}
 html[data-bd=quilt] .reserve .rsv-plate .rsv-w:not(.hot){color:#24504c}
@@ -843,7 +843,7 @@ html[data-pcs=stone]{--pcB:url(img/pc-stone-b.webp);--pcW:url(img/pc-stone-w.web
 html[data-pcs=glass]{--pcB:url(img/pc-glass-b.webp);--pcW:url(img/pc-glass-w.webp)}
 html[data-pcs=matte]{--pcB:url(img/pc-matte-b.webp);--pcW:url(img/pc-matte-w.webp)}
 html[data-pcs=pearl]{--pcB:url(img/pc-pearl-b.webp);--pcW:url(img/pc-pearl-w.webp)}
-html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp);--pcW:url(img/pc-koa-w.webp)}
+html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=3);--pcW:url(img/pc-koa-w.webp?v=3)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -997,8 +997,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .reserve .rsv-plate > *{display:inline-flex;vertical-align:middle;flex:none}
 .reserve .rsv-plate > * + *{margin-inline-start:calc(var(--cell) * .16)}
 .reserve .rsv-plate .rsv-bar{display:inline-block;width:calc(var(--cell) * 1.1);flex:none}
-.reserve .rsv-plate .rsv-w{display:inline-block;white-space:nowrap;font-size:calc(var(--cell) * .25);font-weight:800;letter-spacing:.02em;color:#eadfc8;line-height:1.2;padding:.1em .2em;border-radius:999px;background:transparent}
-.reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .33);color:#fff4dc;margin:0 .08em;vertical-align:-.04em}
+.reserve .rsv-plate .rsv-w{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:inherit;font-weight:800;letter-spacing:.02em;color:inherit;line-height:inherit;padding:0;border-radius:999px;background:transparent}
+.reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .3);color:#fff4dc;margin:0}
 .reserve .rsv-plate .rsv-w.hot{color:#fff;background:#c7362a;padding:.1em .6em;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .reserve .rsv-plate .rsv-w.hot b{color:#fff}
 .reserve .rsv-plate .rsv-w.warm{color:#ffd6a3}
@@ -1349,7 +1349,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=5')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=2')).then(() => load('../atlas/skin/konane.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=7')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=5')).then(() => load('../atlas/skin/konane.js?v=5'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

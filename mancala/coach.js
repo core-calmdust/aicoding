@@ -223,17 +223,17 @@ function facts(at) {
   f.myStore = b[E.storeOf(me)]; f.oppStore = b[E.storeOf(opp)];
   f.w = Math.floor(f.total / 2) + 1;
   f.stage = (f.onBoard <= f.total * 0.35 || Math.min(f.mySide, f.oppSide) <= 3) ? 'end' : (at < 6 && f.onBoard >= f.total * 0.8) ? 'open' : 'mid';
-  f.threat = R.cap || R.oware ? mcBestCap(b, opp, rules) : { n: 0 };
-  f.myCap = R.cap || R.oware ? mcBestCap(b, me, rules) : { n: 0 };
+  f.threat = R.cap || R.oware || R.gen ? mcBestCap(b, opp, rules) : { n: 0 };
+  f.myCap = R.cap || R.oware || R.gen ? mcBestCap(b, me, rules) : { n: 0 };
   f.extras = rules === 'sunka' ? [] : mcExtras(b, me, rules);
   f.oppExtras = rules === 'sunka' ? [] : mcExtras(b, opp, rules);
   // own piles opposite the opponent's empty pits
   f.exposed = [];
   // (Oware: own pits of 1-2, which the opponent can make 2-3)
   if (R.oware) { for (let k = 0; k < 6; k++) { const v = b[(me ? 7 : 0) + k]; if (v === 1 || v === 2) f.exposed.push(k); } }
-  else if (R.cap) for (let k = 0; k < 6; k++) { const i = (me ? 7 : 0) + k, o = 12 - i; if (b[i] >= 3 && !b[o]) f.exposed.push(k); }
+  else if (R.cap || R.gen === 'mangala' || R.gen === 'ayo') for (let k = 0; k < 6; k++) { const i = (me ? 7 : 0) + k, o = 12 - i; if (b[i] >= 3 && !b[o]) f.exposed.push(k); }
   let mx = 0, mi = 0; for (let k = 0; k < 6; k++) { const v = b[(me ? 7 : 0) + k]; if (v > mx) { mx = v; mi = k; } }
-  f.hoard = mx >= (R.oware ? 12 : 10) && rules !== 'sunka' ? { n: mx, p: mi + 1 } : null;
+  f.hoard = mx >= (R.oware || R.gen ? 12 : 10) && rules !== 'sunka' ? { n: mx, p: mi + 1 } : null;
   f.fm = [formOfSide(b, me, rules), formOfSide(b, opp, rules)];
   return f;
 }
@@ -367,9 +367,10 @@ function tipsOf(f, cl) {
   if (game.rules === 'easy') add('tp.easy', 40);
   if (game.rules === 'sunka') add('tp.relay', 62);
   if (game.rules === 'oware') add('tp.oware', 45);
+  if (E.RULES[game.rules].gen) add('tp.rule', 45);
   if (f.myCap.n >= 4) add('tp.greed', 30);
   if (f.stage === 'open') { add('tp.open1', 22); add('tp.open2', 18); }
-  else if (f.stage === 'mid') { if (E.RULES[game.rules].cap || game.rules === 'oware') add('tp.mid1', 20); add('tp.mid2', 16); }
+  else if (f.stage === 'mid') { if (E.RULES[game.rules].cap || game.rules === 'oware' || E.RULES[game.rules].gen) add('tp.mid1', 20); add('tp.mid2', 16); }
   else { add('tp.end1', 26); add('tp.end2', 15); }
   return out.sort((a, b) => b.pr - a.pr);
 }

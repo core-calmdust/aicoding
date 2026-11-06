@@ -1,9 +1,9 @@
 /* =====================================================================
    Kōnane on the 3D table — two boards (Table3D.BOARDS.konane, chosen in the portal's 盤 row and the full game's design tab):
-   · 'quilt'  (the default) an artistic board after the 2D page's Hawaiian quilt: an oiled koa-wood tray (konane/img/fr-koa.webp)
+   · 'quilt'  an artistic board after the 2D page's Hawaiian quilt: an oiled koa-wood tray (konane/img/fr-koa.webp)
               holding a kapa kuiki — the teal ʻulu appliqué with its echo quilting (konane/img/bd-quilt.webp) — a soft hollow
               stitched into the cloth on every square;
-   · 'papamu' the primitive papamū of old: one rough slab of weathered basalt (konane/img/bd-stone.webp / fr-stone.webp), its
+   · 'papamu' (the default, as in the Historia) the primitive papamū of old: one rough slab of weathered basalt (konane/img/bd-stone.webp / fr-stone.webp), its
               edges hand-dressed and uneven, a cup pecked on every square.
    The stones are smooth pebbles as in old Hawaiʻi: black basalt and white coral (after konane/img/pc-stone-b/w).
    Registers into Table3D:
@@ -20,7 +20,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const BX = .45, BZ = .8, TH = .5, RAD = .5, R = .36, PH = .22, CUP = .4, DEPTH = .07;   // side bands (x) / the bands with the count plates (z)
   const WOf = n => n + 2 * BX, HOf = n => n + 2 * BZ;
-  const LOOKS = ['quilt', 'papamu'];
+  const LOOKS = ['papamu', 'quilt'];
   const IMG = (() => { try { const s = document.currentScript && document.currentScript.src; if (s) return new URL('../../konane/img/', s).href; } catch (e) {} return '../konane/img/'; })();
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
@@ -143,7 +143,7 @@
     return mat('sideT' + look, () => { const t = new (T().TextureLoader)().load(IMG + (look === 'quilt' ? 'fr-koa.webp' : 'fr-stone.webp'), () => X.kick && X.kick(200)); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(3, 1); return t; });
   }
   function board(n, look) {
-    n = n || 8; look = LOOKS.includes(look) ? look : (X.BOARDS && X.BOARDS.konane ? X.BOARDS.konane.get() : 'quilt');
+    n = n || 8; look = LOOKS.includes(look) ? look : (X.BOARDS && X.BOARDS.konane ? X.BOARDS.konane.get() : 'papamu');
     const Q = look === 'quilt', TT = T(), g = new TT.Group(), tx = topTex(n, look), W = WOf(n), H = HOf(n);
     const topM = mat('top' + look + n, () => Q
       ? phys({ map: tx.map, normalMap: tx.nm, normalScale: new TT.Vector2(1, 1), color: '#ffffff', roughness: .82, metalness: 0, envMapIntensity: .75 })
@@ -154,19 +154,26 @@
     const slab = new TT.Mesh(slabGeo(n, look), [topM, sideM]); slab.castShadow = slab.receiveShadow = true; g.add(slab);
     g.userData.S = n; g.userData.top = TH + .002; g.userData.W = W; g.userData.H = H;
     g.userData.pt = (x, y) => [-n / 2 + x + .5, -n / 2 + y + .5];
-    g.userData.piece = piece; g.userData.sink = DEPTH * .55; g.userData.look = look;   // a stone rests a little down in its cup
+    g.userData.piece = col => piece(col, look); g.userData.sink = DEPTH * .55; g.userData.look = look;   // a stone rests a little down in its cup
     return g;
   }
 
   /* ---------- the stones: smooth white coral and black basalt pebbles ---------- */
   const geos = {};
-  function pebbleGeo() {
-    const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k];
-    const TT = T(), st = LO() ? 10 : 16, pts = [];
-    for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI * i / st, r = Math.cos(a), y = Math.sin(a); pts.push(new TT.Vector2(Math.max(0, r * R * (1 + .05 * Math.cos(a * 2))), (y * .5 + .5) * PH)); }
-    const g = new TT.LatheGeometry(pts, LO() ? 22 : 36);
-    const P = g.attributes.position;   // a pebble, not a lathe: a gentle lumpy wobble
-    for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), w = 1 + (fbm(x * 5 + 3, z * 5 + y * 4) - .5) * .09; P.setX(i, x * w); P.setZ(i, z * w); P.setY(i, y * (1 + (fbm(z * 4, x * 4) - .5) * .08)); }
+  // v: 0 the smooth pebble (quilt board); 1..4 rough beach stones for the papamū — each a different, uneven shape
+  function pebbleGeo(v = 0) {
+    const k = (LO() ? 'lo' : 'hi') + v; if (geos[k]) return geos[k];
+    const TT = T(), st = LO() ? 8 : 12, pts = [], rough = v > 0, o = v * 17.3;
+    for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI * i / st, r = Math.cos(a), y = Math.sin(a); pts.push(new TT.Vector2(Math.max(0, r * R * (1 + .05 * Math.cos(a * 2))), (y * .5 + .5) * PH * (rough ? .9 : 1))); }
+    const g = new TT.LatheGeometry(pts, LO() ? 16 : 22);   // (64 pebbles ≈ 34k triangles + the slab ≈ 3k)
+    const P = g.attributes.position;   // a pebble, not a lathe: a lumpy wobble (strong and uneven on the papamū's stones)
+    const A = rough ? .3 : .09, B = rough ? .35 : .08, F = rough ? 3.2 : 5;
+    for (let i = 0; i < P.count; i++) {
+      const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+      const w = 1 + (fbm(x * F + 3 + o, z * F + y * 4 - o) - .5) * A + (rough ? (fbm(x * 11 + o, z * 11 + y * 9) - .5) * .06 : 0);
+      P.setX(i, x * w * (rough ? 1 + .12 * Math.cos(v) : 1)); P.setZ(i, z * w * (rough ? 1 - .1 * Math.cos(v) : 1));
+      P.setY(i, y * (1 + (fbm(z * 4 + o, x * 4) - .5) * B) + (rough ? (fbm(x * 6 - o, z * 6) - .5) * .03 * (y / PH) : 0));
+    }
     g.computeVertexNormals(); if (X.share) X.share(g); return (geos[k] = g);
   }
   // a faint unevenness on each pebble's skin (a normal map, a canvas)
@@ -188,18 +195,22 @@
     t.encoding = T().LinearEncoding;   // (a normal map: no colour space)
     return t;
   }
-  function pieceMat(col) {
+  function pieceMat(col, rough) {
     const TT = T();
+    if (rough) return col === 2   // the papamū: weathered coral and dull basalt, as they come off the beach
+      ? mat('pw2', () => { const t = poreTex('w'); return phys({ color: '#e7dfcd', roughness: .92, normalMap: t, normalScale: new TT.Vector2(.9, .9), envMapIntensity: .6 }); })
+      : mat('pb2', () => { const t = poreTex('b'); return phys({ color: '#22201d', roughness: .78, normalMap: t, normalScale: new TT.Vector2(.8, .8), envMapIntensity: .7 }); });
     return col === 2
       ? mat('pw', () => { const t = poreTex('w'); return phys({ color: '#f1ece2', roughness: .7, normalMap: t, normalScale: new TT.Vector2(.3, .3), envMapIntensity: .9 }); })
       : mat('pb', () => { const t = poreTex('b'); return phys({ color: '#181716', roughness: .34, normalMap: t, normalScale: new TT.Vector2(.25, .25), clearcoat: .5, clearcoatRoughness: .2, envMapIntensity: 1.3 }); });
   }
   // col 1 black (basalt, Black) / 2 white (coral, White); each pebble turned a little differently
   let seed = 1;
-  function piece(col) {
-    const TT = T(), g = new TT.Group();
-    const body = new TT.Mesh(pebbleGeo(), pieceMat(col)); body.castShadow = body.receiveShadow = true;
-    body.rotation.y = (seed = (seed * 16807) % 2147483647) / 2147483647 * Math.PI * 2;
+  function piece(col, look) {
+    const TT = T(), g = new TT.Group(), rough = look === 'papamu';
+    seed = (seed * 16807) % 2147483647;
+    const body = new TT.Mesh(pebbleGeo(rough ? 1 + seed % 4 : 0), pieceMat(col, rough)); body.castShadow = body.receiveShadow = true;
+    body.rotation.y = seed / 2147483647 * Math.PI * 2;
     g.add(body); g.userData = { col, h: PH };
     return g;
   }
@@ -209,7 +220,7 @@
     if (live) return g;
     // a game in progress: the full board after a few jumps (Black = col 1 at a1)
     const empty = new Set(['3,4', '4,4', '3,2', '5,4', '2,4', '3,6', '5,2', '6,4', '1,4']);
-    const put = (x, y, col) => { const p = piece(col), [px, pz] = U.pt(x, y); p.position.set(px, Y, pz); g.add(p); const sh = X.contact(R * .9, .45); sh.position.set(px, Y + .001, pz); g.add(sh); };
+    const put = (x, y, col) => { const p = U.piece(col), [px, pz] = U.pt(x, y); p.position.set(px, Y, pz); g.add(p); const sh = X.contact(R * .9, .45); sh.position.set(px, Y + .001, pz); g.add(sh); };
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { if (empty.has(x + ',' + y)) continue; const r = 7 - y; put(x, y, (x + r) % 2 === 0 ? 1 : 2); }
     g.scale.setScalar(.88);
     return g;

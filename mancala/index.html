@@ -7,12 +7,12 @@
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/phonesnd.js?v=1"></script>
 <meta name="theme-color" content="#0c0809">
-<meta name="description" content="宝石の種をまく本格マンカラ。カラハ・ノーマル・イージー・スンカ・オワレの5ルール、10段階AI（終盤は完全読み）、レッスンとパズル、今日の一問。">
+<meta name="description" content="宝石の種をまく本格マンカラ。カラハなど4ルールと世界の伝統ルール（オワレ・マンガラ・ボーネンシュピール・アヨアヨ）の8ルール、10段階AI（終盤は完全読み）、レッスンとパズル、今日の一問。">
 <title>Luxe Mancala</title>
 <script>try { var _sk = (JSON.parse(localStorage.getItem('aicoding-mancala-v1') || '{}').settings || {}).skin; document.documentElement.dataset.sk = /^(luxe|walnut|marble|jade|ocean)$/.test(_sk) ? _sk : 'luxe'; } catch (e) { document.documentElement.dataset.sk = 'luxe'; }</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%233a2416'/%3E%3Crect x='6' y='14' width='10' height='36' rx='5' fill='%23160d07'/%3E%3Crect x='48' y='14' width='10' height='36' rx='5' fill='%23160d07'/%3E%3Ccircle cx='32' cy='23' r='8' fill='%23160d07'/%3E%3Ccircle cx='32' cy='41' r='8' fill='%23160d07'/%3E%3Ccircle cx='30' cy='40' r='3.4' fill='%23e2c275'/%3E%3Ccircle cx='35' cy='43' r='3' fill='%23d44a5a'/%3E%3Ccircle cx='31' cy='22' r='3' fill='%235fa9e9'/%3E%3C/svg%3E">
 <meta property="og:title" content="Luxe Mancala — 宝石の種をまくマンカラ">
-<meta property="og:description" content="オワレを含む5つのルール、10段階AI、レッスン・パズル・今日の一問。登録不要でスマホでも遊べます。">
+<meta property="og:description" content="世界の伝統ルールを含む8つのルール、10段階AI、レッスン・パズル・今日の一問。登録不要でスマホでも遊べます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/mancala/">
 <meta property="og:image" content="https://core-calmdust.github.io/aicoding/images/mancala.webp">
@@ -294,6 +294,10 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .rulecard small{display:block;font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:3px}
 .rulecard .std{color:var(--accent);font-size:10.5px}
 #ruleCards .gart svg{width:116px;height:54px}
+/* rules tour: 22 steps + ★ — smaller dots in one row on PC, two even rows on phones */
+#rulesBody .rt-steps{gap:4px;flex-wrap:nowrap}
+#rulesBody .rt-steps button{width:28px;height:28px;font-size:11px;flex:none}
+@media (max-width: 520px){#rulesBody .rt-steps{flex-wrap:wrap;gap:4px 3px;max-width:340px;margin-inline:auto}#rulesBody .rt-steps button{width:24px;height:24px;flex:none;aspect-ratio:auto;font-size:10px}}
 /* ゲーム tab: the rules in two families — a heading each, the four store-sowing rules side by side, then Oware as one wide card */
 .rgroups{display:flex;flex-direction:column;gap:14px}
 .rgrp{min-width:0}
@@ -305,6 +309,10 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .rg-cards.n1 .ngt-gcard{display:grid;grid-template-columns:minmax(120px,38%) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:14px;row-gap:4px;align-items:start}
 .rg-cards.n1 .gart{grid-row:1/3;align-self:stretch}
 .rg-cards.n1 b{align-self:end;padding-inline-end:26px}
+.ngt-gcard .gname{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;min-width:0;padding-inline-end:26px}
+.ngt-gcard .gname b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ngt-gcard .gtags{display:inline-flex;gap:4px;flex:none}
+.ngt-gcard .gtags .gtag{margin:0}
 .rg-cards .gart{border-radius:10px;background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(0,0,0,.18));box-shadow:inset 0 0 0 1px var(--line,rgba(255,255,255,.12))}
 #ruleCards .rg-cards .gart svg{width:100%;height:auto;max-width:180px;max-height:none}
 /* PC dialog: four store-sowing rules in one row, Oware wide underneath; the cards share the tab's height */
@@ -313,28 +321,45 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 .modal.ngt-pc #ruleCards .rg-cards.n1{grid-template-columns:1fr}
 .modal.ngt-pc .rg-cards .ngt-gcard{padding:12px 14px 14px;gap:6px;border-radius:14px}
 .modal.ngt-pc .rg-cards .gart{padding:10px 8px;min-height:0}
-.modal.ngt-pc #ruleCards .rg-cards .gart svg{max-width:240px;height:clamp(40px, calc((min(860px, 100vh - 40px) - 590px) / 2.1), 110px)}
-.modal.ngt-pc .rg-cards b{font-size:19px}
-.modal.ngt-pc .rg-cards p{font-size:13px;line-height:1.65}
+.modal.ngt-pc #ruleCards .rg-cards .gart svg{max-width:220px;height:clamp(36px, calc((min(860px, 100vh - 40px) - 640px) / 3), 74px)}
+.modal.ngt-pc .rg-cards b{font-size:16.5px}
+.modal.ngt-pc #ruleCards .gname{padding-inline-end:0}
+.modal.ngt-pc #ruleCards .gname b{letter-spacing:.02em}
+/* (longer Latin-script texts: a little tighter, so the two rows fit without scrolling) */
+:is(html[lang=de],html[lang=fr],html[lang=es],html[lang=pt]) .modal.ngt-pc #ruleCards .rg-cards p{font-size:12.5px!important;line-height:1.5!important}
+:is(html[lang=de],html[lang=fr],html[lang=es],html[lang=pt]) .modal.ngt-pc #ruleCards{gap:8px}
+.modal.ngt-pc .rg-cards p{font-size:13px!important;line-height:1.6!important}
 .modal.ngt-pc .rg-cards .gpick{top:10px;right:10px;width:24px;height:24px;font-size:13px;font-weight:700}
 .modal.ngt-pc .rg-cards.n1 .ngt-gcard{grid-template-columns:minmax(200px,30%) minmax(0,1fr);column-gap:20px;padding:14px 18px 16px}
 .modal.ngt-pc #ruleCards .rg-cards.n1 .gart svg{max-width:240px}
 .modal.ngt-pc .rg-cards.n1 b{margin-top:6px}
 .modal.ngt-pc .rg-h b{font-size:16px}
+#newOverlay .modal.ngt-pc #ruleCards .ngt-gcard.ngt-hasrl{padding-bottom:42px!important}
 @media (max-height: 780px){
   .modal.ngt-pc .rg-h{margin-bottom:5px}
   .modal.ngt-pc .rg-cards .ngt-gcard{padding:9px 12px 10px;gap:4px}
   .modal.ngt-pc .rg-cards .gart{padding:6px}
-  .modal.ngt-pc .rg-cards b{font-size:17px}
+  .modal.ngt-pc .rg-cards b{font-size:16.5px}
+.modal.ngt-pc #ruleCards .gname{padding-inline-end:0}
+.modal.ngt-pc #ruleCards .gname b{letter-spacing:.02em}
+/* (longer Latin-script texts: a little tighter, so the two rows fit without scrolling) */
+:is(html[lang=de],html[lang=fr],html[lang=es],html[lang=pt]) .modal.ngt-pc #ruleCards .rg-cards p{font-size:12.5px!important;line-height:1.5!important}
+:is(html[lang=de],html[lang=fr],html[lang=es],html[lang=pt]) .modal.ngt-pc #ruleCards{gap:8px}
   .modal.ngt-pc .rg-cards p{line-height:1.55}
   .modal.ngt-pc .rg-cards.n1 .ngt-gcard{padding:10px 16px 12px}
+  /* (short screens: the ルール pill sits on the picture's corner instead of a row of its own under the text) */
+  #newOverlay .modal.ngt-pc #ruleCards .ngt-gcard.ngt-hasrl{padding-bottom:11px!important}
+  .modal.ngt-pc #ruleCards .rg-cards .gart{justify-content:flex-start;padding-inline-start:12px}
+  .modal.ngt-pc #ruleCards .rg-cards .gart svg{width:auto}
+  #newOverlay .modal.ngt-pc #ruleCards .ngt-rl{bottom:auto;top:calc(9px + 12px + clamp(36px, calc((min(860px, 100vh - 40px) - 640px) / 3), 74px) - 30px);right:20px;padding:3px 12px}
+  :is([dir=rtl],html[lang|=ar]) #newOverlay .modal.ngt-pc #ruleCards .ngt-rl{right:auto;left:20px}
 }
 /* phone sheet: two by two, Oware wide with the picture on the left */
 .modal.ngt-on #ruleCards{gap:12px}
 .modal.ngt-on .rg-h{margin-bottom:6px}
 .modal.ngt-on .rg-cards .ngt-gcard{padding:9px 10px 10px;gap:4px}
-.modal.ngt-on .rg-cards .gart{padding:8px 4px}
-.modal.ngt-on #ruleCards .rg-cards .gart svg{max-width:150px}
+.modal.ngt-on .rg-cards .gart{padding:6px 4px}
+.modal.ngt-on #ruleCards .rg-cards .gart svg{max-width:132px}
 .modal.ngt-on .rg-cards b{font-size:16px}
 .modal.ngt-on .rg-cards .gpick{width:22px;height:22px;font-size:12px}
 .modal.ngt-on .rg-cards.n1 .ngt-gcard{grid-template-columns:118px minmax(0,1fr);column-gap:12px}
@@ -1513,8 +1538,9 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
 <script src="i18n-learn.js?v=20261021c"></script>
 <script src="i18n-pz.js?v=20261021c"></script>
 <script src="i18n-online.js?v=stale1"></script>
-<script src="i18n-oware.js?v=1"></script>
-<script src="engine.js?v=20261106ow1"></script>
+<script src="i18n-oware.js?v=2"></script>
+<script src="i18n-world.js?v=1"></script>
+<script src="engine.js?v=20261106wr1"></script>
 <script>
 // "landscape on a phone held upright": if the option is on, show the game in an iframe turned 90°, so the
 // embedded page sees a landscape viewport (its own layout, hit testing and touch coordinates stay correct)
@@ -1539,7 +1565,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=3"><\/script><script src="../shared/rulesoffer.js?v=16"><\/script><script src="../shared/headerbar.js?v=43"><\/script><script src="../shared/flipbtn.js?v=3"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="rvcoach.js?v=20261106ow1"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=12"><\/script><script src="coach.js?v=9"><\/script><script src="coach-i18n.js?v=3"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="../shared/export.js?v=9"><\/script><script src="app.js?v=20261106ow1"><\/script><script src="online-ui.js?v=20261030ck1p"><\/script><script src="landtabs.js?v=10"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=3"><\/script><script src="../shared/rulesoffer.js?v=16"><\/script><script src="../shared/headerbar.js?v=43"><\/script><script src="../shared/flipbtn.js?v=3"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="rvcoach.js?v=20261106wr1"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=12"><\/script><script src="coach.js?v=10"><\/script><script src="coach-i18n.js?v=3"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="firebase-config.js?v=ac2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=stale2"><\/script><script src="../shared/export.js?v=9"><\/script><script src="app.js?v=20261106wr1"><\/script><script src="online-ui.js?v=20261030ck1p"><\/script><script src="landtabs.js?v=10"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->
@@ -1553,7 +1579,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=5')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/mancala.js?v=3')).then(() => load('../atlas/skin/mancala.js?v=10'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=7')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/mancala.js?v=3')).then(() => load('../atlas/skin/mancala.js?v=10'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

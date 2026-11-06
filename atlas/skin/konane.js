@@ -29,7 +29,13 @@ html.atlas-konane .frame{background:transparent!important;box-shadow:none!import
 html.atlas-konane .frame::before,html.atlas-konane .frame::after,html.atlas-konane .board::after,html.atlas-konane .board::before{display:none!important}
 html.atlas-konane .board{background:none!important;box-shadow:none!important}
 html.atlas-konane .lines :is(.puka,.puka-hl,.puka-rim){fill:transparent!important;stroke:none!important}
-html.atlas-konane .lines .num{fill:rgba(255,236,200,.6)!important}
+html.atlas-konane{--pcB:url(img/pc-stone-b.webp)!important;--pcW:url(img/pc-stone-w.webp)!important}   /* the 3D boards' stones (basalt / coral pebbles) everywhere on the page: plates, players, record */
+html.atlas-konane .lines{overflow:visible!important}
+html.atlas-konane .lines .num{fill:rgba(255,236,200,.78)!important;font-weight:700}
+html.atlas-konane .lines .num:not([text-anchor]){transform:translate(-.36px,0)}   /* ranks: out on the side band, clear of the pebbles */
+html.atlas-konane .lines .num[text-anchor]{transform:translate(0,.15px)}   /* files: just below the last row */
+html.atlas-konane .frame > .reserve.bot{transform:translateY(calc(var(--cell) * .14))}html.atlas-konane .frame > .reserve.top{transform:translateY(calc(var(--cell) * -.08))}
+html.atlas-konane .prompt{left:auto!important;right:calc(var(--cell) * .3)!important;transform:translateY(calc(var(--cell) * .14))!important}   /* beside the near plate, not under it */   /* the count plates nearer the slab's edge: clear of the file letters */
 html.atlas-konane .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
 html.atlas-konane .pieces .pc:not(.hov)::before,html.atlas-konane .pieces .pc:not(.hov)::after,html.atlas-konane .pieces .pc:not(.hov) .orn{display:none!important}
 html.atlas-konane .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 0 18px rgba(255,200,80,.75)!important}
@@ -45,12 +51,9 @@ html.atlas-konane .reserve .rsv-plate{background:rgba(24,18,14,.82)!important;bo
 html.atlas-konane .reserve .rsv-plate .rsv-l b,html.atlas-konane .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
 html.atlas-konane .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9bd!important;background:transparent!important}
 html.atlas-konane #fPieces{display:none!important}
-html.atlas-konane .kn3dnote{margin:8px 0 0;padding:12px 14px;border-radius:14px;background:#eef8f5;border:2px solid #bfe3da;font-size:13px;line-height:1.6;color:#24453f}
-html.atlas-konane .kn3dnote b{display:block;font-size:14px;color:#0f6f66;margin-bottom:2px}
-html.atlas-konane .kn3looks{display:grid;grid-template-columns:repeat(2,minmax(0,180px));gap:8px;margin:8px 0 0}
-html.atlas-konane .kn3looks button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;background:#fff;border:2px solid #d5ece6;color:#24453f;font-weight:700;font-size:12.5px;line-height:1.3;text-align:center}
-html.atlas-konane .kn3looks button img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px;display:block}
-html.atlas-konane .kn3looks button[aria-pressed="true"]{border-color:#0f8a7e;box-shadow:0 0 0 2px rgba(15,138,126,.25)}
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#eef8f5;border:2px solid #bfe3da}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#0f6f66;margin:0 0 8px}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
 `;
   document.head.appendChild(st);
 
@@ -82,7 +85,7 @@ html.atlas-konane .kn3looks button[aria-pressed="true"]{border-color:#0f8a7e;box
   const P3 = new Map();   // square → { g, k }
   let tok = 0;            // a full re-sync cancels running animations
   function build() {
-    const n = NS(), look = T3.BOARDS && T3.BOARDS.konane ? T3.BOARDS.konane.get() : 'quilt';
+    const n = NS(), look = T3.BOARDS && T3.BOARDS.konane ? T3.BOARDS.konane.get() : 'papamu';
     if (n + look === built && root) return false;
     built = n + look; tok++;
     if (root) holder.remove(root);
@@ -95,55 +98,50 @@ html.atlas-konane .kn3looks button[aria-pressed="true"]{border-color:#0f8a7e;box
     return true;
   }
   build();
-  const V = skin.view && skin.view({ key: 'atlas-konane-view', row: document.getElementById('bdRow'), img: '../images/atlas/konane.webp', cls: ['atlas-konane'] });
+  const V = skin.view && skin.view({ key: 'atlas-konane-view', cls: ['atlas-konane'] });   // (no 3D tile in the 盤面 row: the 3D boards have their own 「3D盤」 row)
   T3.kick(800);
   { let last = ''; const app = document.querySelector('.app');   // the online dock / header bar can move the board without resizing it
     const chk = () => { const r = boardDom.getBoundingClientRect(), k = Math.round(r.left) + ',' + Math.round(r.top + scrollY) + ',' + Math.round(r.width); if (k !== last) { last = k; dispatchEvent(new Event('resize')); } };
     if (app && window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(chk)).observe(app); setTimeout(chk, 3000); setTimeout(chk, 6000); }
 
   /* ---------- the new-game dialog: the 3D set replaces the 2D board / stone designs ---------- */
-  const NOTE = {
-    ja: ['3D盤', 'ハワイアンキルトを納めたコアの盤と、玄武岩の板に手でくぼみを刻んだ昔ながらの石のパパムーから選べます。石は白い珊瑚（白）と玄武岩（黒）のなめらかな小石です。'],
-    en: ['3D boards', 'Choose a koa tray holding a Hawaiian quilt, or the old stone papamū — a basalt slab with a cup pecked by hand for every stone. The stones are smooth pebbles of white coral (White) and basalt (Black).'],
-    zh: ['3D棋盘', '可选择装着夏威夷拼布的寇阿木棋盘，或古老的石制帕帕穆——在玄武岩板上为每颗棋子手凿浅坑。棋子是白珊瑚（白）和玄武岩（黑）的光滑小石子。'],
-    ko: ['3D 판', '하와이안 퀼트를 담은 코아 나무 판과, 현무암 판에 손으로 홈을 판 옛 돌 파파무 중에서 고를 수 있습니다. 돌은 흰 산호(백)와 현무암(흑)의 매끈한 조약돌입니다.'],
-    es: ['Tableros 3D', 'Elige una bandeja de koa con una colcha hawaiana o el antiguo papamū de piedra: una losa de basalto con un hoyuelo picado a mano para cada piedra. Las piedras son guijarros lisos de coral blanco (blancas) y basalto (negras).'],
-    fr: ['Plateaux 3D', 'Choisissez un plateau en koa garni d’une courtepointe hawaïenne, ou l’ancien papamū de pierre — une dalle de basalte creusée à la main d’une cupule par pierre. Les pierres sont des galets lisses de corail blanc (Blancs) et de basalte (Noirs).'],
-    pt: ['Tabuleiros 3D', 'Escolha uma bandeja de koa com uma colcha havaiana ou o antigo papamū de pedra — uma laje de basalto com uma covinha picada à mão para cada pedra. As pedras são seixos lisos de coral branco (brancas) e basalto (pretas).'],
-    de: ['3D-Bretter', 'Wähle ein Koa-Tablett mit einem Hawaii-Quilt oder das alte Stein-Papamū — eine Basaltplatte mit einer von Hand gepickten Mulde für jeden Stein. Die Steine sind glatte Kiesel aus weißer Koralle (Weiß) und Basalt (Schwarz).'],
-    hi: ['3D बोर्ड', 'हवाईयन क्विल्ट वाली कोआ लकड़ी की ट्रे, या पुराना पत्थर का पापामू — बेसाल्ट की पटिया जिसमें हर पत्थर के लिए हाथ से गड्ढा खोदा गया है — चुनें। पत्थर सफ़ेद मूँगे (सफ़ेद) और बेसाल्ट (काला) के चिकने कंकड़ हैं।'],
-    ar: ['رقعتان ثلاثيتا الأبعاد', 'اختر صينية من خشب الكوا تحمل لحافًا هاوائيًا، أو البابامو الحجري القديم — لوح بازلت نُقرت فيه باليد حفرة لكل حجر. الأحجار حصى ملساء من المرجان الأبيض (الأبيض) والبازلت (الأسود).'],
-  };
+  // the new-game dialog's design tab: a 「3D盤」 box inside the 盤面 box, under the 2D boards (the standard for every game with 3D boards, 2026-11-06).
+  // A 3D board picked: the 3D view with that board; a 2D board picked: the 2D page. Exactly one tile of the two rows is selected.
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد' };
   const lng = () => ((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja')).slice(0, 2);
+  const is3 = () => !V || V.is3d();
   function setLook(k) {
     if (!T3.BOARDS || !T3.BOARDS.konane) return;
     if (T3.setBoard) T3.setBoard('konane', k); else T3.BOARDS.konane.set(k);
-    if (V && !V.is3d()) V.set(true);   // a 3D board chosen: the 3D view
+    if (V && !V.is3d()) V.set(true);
     try { mirror(); } catch (e) {}
-    paintNote();
+    paint3();
   }
-  let note = null;
-  function paintNote() {
-    if (!note) return;
-    const l = lng(), n = NOTE[l] || NOTE.en, B = T3.BOARDS && T3.BOARDS.konane, cur = B ? B.get() : 'quilt';
-    note.innerHTML = ''; const b = document.createElement('b'); b.textContent = n[0]; note.append(b, n[1]);
-    if (!B) return;
-    const row = document.createElement('div'); row.className = 'kn3looks';
-    B.list.forEach(k => {
-      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k; bt.setAttribute('aria-pressed', String(cur === k && (!V || V.is3d())));
-      const im = document.createElement('img'); im.src = T3.boardThumb ? T3.boardThumb('konane', k) : ''; im.alt = ''; im.loading = 'lazy'; im.draggable = false;
-      const sp = document.createElement('span'); sp.textContent = T3.boardName ? T3.boardName(k, l) : k;
-      bt.append(im, sp); bt.onclick = () => setLook(k); row.appendChild(bt);
+  let f3 = null;
+  function paint3() {
+    const B = T3.BOARDS && T3.BOARDS.konane; if (!f3 || !B) return;
+    const l = lng(), cur = B.get(), on = is3();
+    f3.querySelector('label').textContent = T3L[l] || T3L.en;
+    const row = f3.querySelector('.bdrow');
+    if (!row.children.length) B.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardThumb ? T3.boardThumb('konane', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
     });
-    note.appendChild(row);
+    row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    const r2 = document.getElementById('bdRow');   // 3D chosen: no 2D board shows as selected
+    if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
   }
   const fd = document.getElementById('fDesign');
   if (fd) {
-    note = document.createElement('div'); note.className = 'kn3dnote'; fd.appendChild(note);
-    paintNote(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintNote, 30));
-    const row = document.getElementById('bdRow'); if (row) row.addEventListener('click', () => setTimeout(paintNote, 30));
+    f3 = document.createElement('div'); f3.id = 'f3D';   // inside the 盤面 box, under the 2D boards
+    f3.innerHTML = '<label></label><div class="bdrow"></div>'; fd.appendChild(f3);
+    paint3(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
+    const r2 = document.getElementById('bdRow');
+    if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);   // a 2D board: the 2D page
+    if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
   }
-  addEventListener('storage', e => { if (e.key === 'atlas-konane-look') { try { mirror(); } catch (x) {} paintNote(); } });
+  addEventListener('storage', e => { if (e.key === 'atlas-konane-look') { try { mirror(); } catch (x) {} paint3(); } });
 
   /* ---------- 3D stones mirrored from the page's stones ---------- */
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;

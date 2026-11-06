@@ -308,15 +308,12 @@ def niho(d, P, ss, x0, y0, x1, y1, size, up=True):
 def midnight_board():
     g = noise((NB, NB), .6, 1)
     col = mix(C('#0f1c36'), C('#16294d'), .5 + .25 * fbm((NB, NB), [(180, 1)])) * (1 + .03 * g[..., None])
-    # faint gold lattice of diamonds, a niho manō band round the edge
+    # simple: only a fine double gold line round the field
     cv = Canvas(NB, 3)
-    lat = cv.mask(lambda d, P, ss: [line(d, P, ss, [(k * 128 - NB, 0), (k * 128, NB)], 1.2) for k in range(0, 17)] + [line(d, P, ss, [(k * 128, 0), (k * 128 - NB, NB)], 1.2) for k in range(0, 17)], .4)
-    col = paint(col, C('#d6b26a'), lat * .1)
-    o = 30; s_ = 22
-    band = cv.mask(lambda d, P, ss: (niho(d, P, ss, o, o, NB - o, o, s_), niho(d, P, ss, NB - o, o, NB - o, NB - o, s_), niho(d, P, ss, NB - o, NB - o, o, NB - o, s_), niho(d, P, ss, o, NB - o, o, o, s_),
-                                     [line(d, P, ss, pts, 2) for pts in ([(o - 6, o - 6), (NB - o + 6, o - 6), (NB - o + 6, NB - o + 6), (o - 6, NB - o + 6), (o - 6, o - 6)],)]), .5)
+    o = 22
+    band = cv.mask(lambda d, P, ss: [line(d, P, ss, [(a, a), (NB - a, a), (NB - a, NB - a), (a, NB - a), (a, a)], w) for a, w in ((o, 2.2), (o + 9, 1))], .5)
     gold = vgrad([(0, '#f1d48e'), (.5, '#c99a4c'), (1, '#f1d48e')], (X01 + Y01) / 2)
-    col = paint(col, gold, band * .9)
+    col = paint(col, gold, band * .85)
     save_rgb(col, 'bd-midnight.webp')
 
 
@@ -366,14 +363,11 @@ def frames_more():
     save_rgb(shade(gaussian_filter(h, 1.0, mode='wrap'), alb, gloss=10, spec=.05, amb=.6, wrap=True), 'fr-stone.webp')
     # koa: the board's edge, darker oiled koa
     save_rgb(koa_slab(NF, 43, '#9a5a2c', '#6e3818', '#341608', '#1c0a03', .7), 'fr-koa.webp')
-    # modern: charcoal felt-matte / indigo grain / navy with the gold niho band
+    # modern: charcoal felt-matte / indigo grain / plain navy
     g = noise(S, .6, 1, True)
     save_rgb(mix(C('#2a2a2d'), C('#323236'), .5 + .3 * fbm(S, [(80, 1)], True)) * (1 + .02 * g[..., None]), 'fr-mono.webp')
     save_rgb(mix(C('#2b1f5c'), C('#3a2a72'), .5 + .3 * fbm(S, [(80, 1)], True)) * (1 + .03 * g[..., None]), 'fr-sunset.webp')
     col = mix(C('#0a1428'), C('#0f1d38'), .5 + .3 * fbm(S, [(80, 1)], True)) * (1 + .03 * g[..., None])
-    cvn = Canvas(NF, 3, wrap=True)
-    bnd = cvn.mask(lambda d, P, ss: [niho(d, P, ss, 0, y, NF, y, 32, up) for y, up in ((128, True), (384, False))], .5)
-    col = paint(col, C('#c9a05a'), bnd * .5)
     save_rgb(col, 'fr-midnight.webp')
 
 
@@ -418,3 +412,31 @@ def matte_piece():
     for name, base in (('b', '#222225'), ('w', '#f3f1ec')):
         col = shade(gaussian_filter(h, 1.2), C(base) * np.ones((NP, NP, 1)), gloss=16, spec=.06 if name == 'b' else .03, amb=.72)
         save_pc(col, 'pc-matte-' + name + '.webp', .12)
+
+
+def koa_piece():
+    """(overrides gen_art.py's) turned discs of figured koa under a clear finish, from the same realistic slab as the koa
+    board (fine fibres, pores, flowing streaks) at twice the resolution, then the curl: irregular ripples across the grain
+    that flash light / dark as on real curly koa. Golden koa (White) and dark heartwood (Black)."""
+    from PIL import Image as _I
+    h = (1 - rr ** 6) * 14 - np.clip((rr - .9) / .1, 0, 1) ** 2 * 8
+    N2 = NP * 2
+    y, x = np.mgrid[0:N2, 0:N2].astype(float)
+    r_ = np.random.default_rng(11)
+
+    def nz(sy, sx):
+        n = gaussian_filter(r_.standard_normal((N2, N2)), (sy, sx), mode='wrap'); return n / (n.std() + 1e-9)
+    # the curl: ripples run across the grain (vertical here), their spacing and phase wander, their strength comes and goes
+    ph = x / 5.2 + nz(30, 8) * 1.6 + nz(6, 50) * .5
+    rip = np.sin(ph)
+    rip = np.sign(rip) * np.abs(rip) ** .7
+    amt = np.clip(.55 + .45 * nz(60, 40), 0, 1)
+    for name, seed, cols in (('pc-koa-w.webp', 44, ('#e8b064', '#c07a34', '#6a3414', '#3a1a08')),
+                             ('pc-koa-b.webp', 45, ('#8a4a20', '#5e2a10', '#2c1206', '#1a0a03'))):
+        slab = koa_slab(N2, seed, *cols, grain=.7)
+        slab = slab * (1 + .2 * (rip * amt)[..., None])          # the chatoyant figure
+        im = _I.fromarray(np.clip(slab, 0, 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)
+        alb = np.asarray(im).astype(float)
+        rp = np.asarray(_I.fromarray(((rip * amt * .5 + .5) * 255).astype(np.uint8)).resize((NP, NP), _I.LANCZOS)).astype(float) / 255
+        col = shade(gaussian_filter(h, .7) + (rp - .5) * .5, alb, gloss=80, spec=.38, amb=.62)
+        save_pc(col, name, .22)

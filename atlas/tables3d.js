@@ -151,12 +151,12 @@
     agon: { list: ['victorian', 'folk'],
       get: () => (ls.get('atlas-agon-look3') || ls.get('atlas-agon-look')) === 'folk' ? 'folk' : 'victorian',
       set: k => { ls.set('atlas-agon-look', k); ls.set('atlas-agon-look3', k); } },
-    // atlas/skin/konane.js: 'atlas-konane-look' ('quilt' | 'papamu')
-    konane: { list: ['quilt', 'papamu'], get: () => ls.get('atlas-konane-look') === 'papamu' ? 'papamu' : 'quilt', set: k => ls.set('atlas-konane-look', k) },
+    // atlas/skin/konane.js: 'atlas-konane-look' ('papamu' the default | 'quilt')
+    konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=1', ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'konane' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة' };
