@@ -393,14 +393,14 @@
     },
     konane() {   // a corner of the quilt board: a cream Hawaiian quilt with a teal appliqué and echo quilting in a koa tray, stitched cups; a basalt pebble hops over a coral one into the empty cup
       const top = M({ map: X.canvasTex('ickn4', 512, 512, (c, W) => {
-        c.fillStyle = '#f3ebd9'; c.fillRect(0, 0, W, W);
+        c.fillStyle = '#d4b98a'; c.fillRect(0, 0, W, W);
         const cx = W * .5, cy = W * .5;
         // the appliqué: an eight-lobed ʻulu-leaf medallion, then echo lines of quilting round it
         const lobe = (r0, r1, k) => { c.beginPath(); for (let a = 0; a <= 360; a += 2) { const t = a * Math.PI / 180, rr = r0 + (r1 - r0) * Math.pow(Math.abs(Math.cos(t * k / 2)), 1.6); c[a ? 'lineTo' : 'moveTo'](cx + rr * Math.cos(t), cy + rr * Math.sin(t)); } c.closePath(); };
-        c.strokeStyle = 'rgba(15,110,102,.28)'; c.lineWidth = 3;
+        c.strokeStyle = 'rgba(15,110,102,.4)'; c.lineWidth = 4;
         for (let e = 0; e < 7; e++) { lobe(W * (.2 + e * .055), W * (.42 + e * .055), 8); c.stroke(); }
-        lobe(W * .16, W * .4, 8); c.fillStyle = '#0f8a7e'; c.fill();
-        lobe(W * .07, W * .17, 8); c.fillStyle = '#f3ebd9'; c.fill();
+        lobe(W * .18, W * .46, 8); c.fillStyle = '#0f8a7e'; c.fill();
+        lobe(W * .07, W * .17, 8); c.fillStyle = '#d4b98a'; c.fill();
         c.fillStyle = '#0f8a7e'; c.beginPath(); c.arc(cx, cy, W * .045, 0, 7); c.fill();
         c.strokeStyle = 'rgba(10,80,74,.55)'; c.lineWidth = 2.2; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; c.beginPath(); c.moveTo(cx + Math.cos(a) * W * .2, cy + Math.sin(a) * W * .2); c.lineTo(cx + Math.cos(a) * W * .36, cy + Math.sin(a) * W * .36); c.stroke(); }   // the leaf veins
         const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {   // the stitched cups
@@ -409,7 +409,7 @@
       }), roughness: .85 });
       const g = boardChunk(3, 3.6, top, M({ map: X.wood('ickoa', '#a65a2a', '#4e220c'), roughness: .35 }));
       const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
-      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xf4efe5, { roughness: .6 }) : gloss(0x1e1d1c), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
+      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xfbf9f4, { roughness: .45 }) : gloss(0x1e1d1c), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
       [[0, 0, 0], [1, 0, 1], [2, 0, 0], [0, 2, 1], [1, 2, 0], [2, 2, 1], [1, 1, 1]].forEach(([x, z, w]) => g.add(at(pebble(!!w, .78), p(x), .5, p(z))));
       // the big basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); teal dots trace the arc
       g.add(at(pebble(false, 1.35), p(1) - .2, 2.35, p(1), 0, 0, -.28));

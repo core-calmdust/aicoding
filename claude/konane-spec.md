@@ -25,8 +25,8 @@ URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「アル�
 - オンライン：Firebase プロジェクト konane-multiplay（App Check サイトキー設定済み）。ルールは shared/tools/secrules.py の konane（s8・s6、引き分けなし）→ konane/database.rules.json。DBルールはコンソールに貼り付け、App Check に reCAPTCHA Enterprise キーを登録（claude/online-security-setup.md）。10×10 はオフラインのみ（K64 の 3 文字エンコードが 64 マスまで）。
 
 ## 3D（ポータル）
-- atlas/models/konane.js：3D盤2種（Table3D.BOARDS.konane、保存キー atlas-konane-look）。'quilt'（既定）＝オイル仕上げのコアのトレーにハワイアンキルト（bd-quilt＋fr-koa、各マスに縫い取りのくぼみ）、'papamu'＝手で割って整えた不揃いな輪郭の玄武岩の板に手で刻んだくぼみ（bd-stone／fr-stone、プリミティブ）。石はなめらかな白い珊瑚と黒い玄武岩の小石。board(n, look) で 6/8/10。サムネイル atlas/img/board-konane-<look>.webp（atlas/tools/boards.html）。
-- atlas/skin/konane.js（フル機能版 ?skin=atlas）：デザインタブの3D欄の下に3D盤2種の選択（ポータルの「盤」と同じキー）、盤サイズ・3D盤の変更で作り直し、取り除き・取られた石は浮いて消える。atlas/games/konane.js（ちゃぶ台対局、8×8）、atlas/rules/konane.js（チェッカニのルールコース、6×6、autoNext）。
+- atlas/models/konane.js：3D盤2種（Table3D.BOARDS.konane、保存キー atlas-konane-look）。'quilt'（既定）＝オイル仕上げのコアのトレーにハワイアンキルト（bd-quilt＋fr-koa、各マスに縫い取りのくぼみ）、'papamu'＝手で割って整えた不揃いな輪郭の玄武岩の板に手で刻んだくぼみ（bd-stone／fr-stone、プリミティブ）。石はキルト盤ではなめらかな白い珊瑚と黒い玄武岩の小石、パパムーでは形の不揃いなざらついた浜の小石（4形）。board(n, look) で 6/8/10。サムネイル atlas/img/board-konane-<look>.webp（atlas/tools/boards.html）。
+- atlas/skin/konane.js（フル機能版 ?skin=atlas）：デザインタブの「盤面」の上に「3D盤」の欄（3D盤2種のタイル、ポータルの「盤」と同じキー。3Dタイル・説明文はなし）、盤サイズ・3D盤の変更で作り直し、取り除き・取られた石は浮いて消える。atlas/games/konane.js（ちゃぶ台対局、8×8）、atlas/rules/konane.js（チェッカニのルールコース、6×6、autoNext）。
 - アイコン：atlas/icons3d.js の konane()（キルト盤の角）→ images/atlas/konane.webp。ヒストリア：atlas/historia/s/konane.json ＋ 10言語、案内役 av/hermit-0。地図：atlas/mapdata.js（ハワイ島・カウアイ島・ホノルル）。
 
 ## 保存キー
