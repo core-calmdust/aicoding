@@ -2056,7 +2056,7 @@ function rvbLine(pos, list, n0) { let p = pos.clone(), out = []; for (const m of
 function rvbLeft() {
   if (rv.running) return `<p class="rvb-dim">${BOX.t('analyzing', { a: rv.done, b: rv.total })}</p>`;
   let h = rvCoach().replace(/class="cr-see" data-i=/g, 'class="cr-see rvb-see" data-goto=');
-  if (cur >= moves.length) { const st = statusAt(moves.length); h = `<div class="rvb-h">${st.over ? (st.winner ? t('res.pWin', { c: pname(st.winner) }) : t('res.draw')) + ' · ' : ''}${t('info.moves', { n: moves.length })}</div>` + h; }
+  if (cur >= moves.length) { const st = statusAt(moves.length); h = `<div class="rvb-h">${st.over ? (st.winner ? t('res.pWin', { c: pname(st.winner) }) : t('res.draw')) + ' · ' : BOX.t('now') + ' · '}${t('info.moves', { n: moves.length })}</div>` + h; }
   return h;
 }
 function rvbKenLeft(key) {
