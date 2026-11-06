@@ -455,6 +455,47 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(dockCenter, 0)); else setTimeout(dockCenter, 0);
 // the info line (盤の大きさ・ルール・AI・←→ の案内…) sits at the bottom inside the kifu box, and never breaks inside a part:
 // its parts (split at ·) wrap as whole pieces onto a second row when the line is too long (common spec, 2026-11-06)
+// the info column (PC, beside the board) must never run past its bottom (= the board's bottom): when its cards do not fit
+// (the review card and the record sharing a column made short by the review box under the board, the online panel…),
+// html.side-tight lets the review card / record / coach give way (they scroll inside) and lowers the graph; html.side-tighter
+// also hides the graph and the players' extra line; html.side-tightest (still too tall) lets the column scroll. Measured on every layout change, so it only steps in where needed (2026-11-06)
+function sideTight() {
+  const root = document.documentElement;
+  if (!document.getElementById('sideTightCss')) {
+    const st = document.createElement('style'); st.id = 'sideTightCss';
+    const F = 'html.side-tight .app > .side .side-in > ';
+    st.textContent = F + ':is(.review-card.show, .kifu-card, #coachCard:not(.hidden)){flex:1 1 0!important;min-height:64px!important;max-height:none!important;height:auto!important;overflow-y:auto!important}'
+      + F + '.kifu-card{display:flex!important;flex-direction:column!important;overflow:hidden!important}' + F + '.kifu-card > .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;height:auto!important;overflow-y:auto!important}'
+      + 'html.side-tight .app > .side :is(#evalCard, #progCard) .graph, html.side-tight .app > .side #graph{height:28px!important;min-height:0!important;max-height:28px!important}'
+      + 'html.side-tighter .app > .side :is(#evalCard, #progCard) .graph, html.side-tighter .app > .side #graph, html.side-tighter .app > .side .pl-info{display:none!important}'
+      + 'html.side-tight .app > .side .side-in{min-height:0!important}'
+      + 'html.side-tightest .app > .side{overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin}';   // (a very short column: it scrolls, nothing is drawn past its edge)
+    document.head.appendChild(st);
+  }
+  const over = () => {
+    const sd = document.querySelector('.app > .side'); if (!sd || !root.classList.contains('side-col') || !sd.getClientRects().length) return 0;
+    const si = sd.querySelector('.side-in') || sd, sb = sd.getBoundingClientRect().bottom; let m = 0;
+    for (const c of si.children) { if (!c.getClientRects().length) continue; const r = c.getBoundingClientRect(); if (r.height >= 2) m = Math.max(m, r.bottom - sb); }
+    return m;
+  };
+  let q = 0, busy = false;
+  const run = () => {
+    q = 0; busy = true;
+    try { root.classList.remove('side-tight', 'side-tighter', 'side-tightest'); if (over() > 1) { root.classList.add('side-tight'); if (over() > 1) { root.classList.add('side-tighter'); if (over() > 1) root.classList.add('side-tightest'); } } }
+    finally { setTimeout(() => { busy = false; }, 0); }
+  };
+  const later = () => { if (!busy && !q) q = requestAnimationFrame(run); };
+  const mo = new MutationObserver(ms => { if (ms.some(m => m.attributeName !== 'class' || !/\bside-tight/.test((m.oldValue || '') + ' ' + m.target.className))) later(); });
+  mo.observe(root, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
+  mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  const sd = document.querySelector('.app > .side .side-in, .app > .side');
+  if (sd) new MutationObserver(later).observe(sd, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
+  // (and any card that changes its height on its own — text filled in later, a graph drawn: watched with a ResizeObserver)
+  if (sd && window.ResizeObserver) { const ro = new ResizeObserver(later), watchAll = () => { ro.disconnect(); ro.observe(sd); for (const c of sd.children) ro.observe(c); }; watchAll(); new MutationObserver(watchAll).observe(sd, { childList: true }); }
+  window.addEventListener('resize', later);
+  later();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sideTight, 0)); else setTimeout(sideTight, 0);
 function infoInKifu() {
   const el = document.getElementById('infoLine'); if (!el) return;
   const kc = el.closest('.kifu-card') || (el.previousElementSibling && el.previousElementSibling.classList.contains('kifu-card') ? el.previousElementSibling : document.querySelector('.kifu-card'));
@@ -464,10 +505,15 @@ function infoInKifu() {
     st.textContent = '.kifu-card > #infoLine{margin-top:auto;padding-top:8px;border-top:1px solid var(--line,rgba(127,127,127,.22));flex:none;min-width:0}'
       + '#infoLine .il-wrap{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:.45em;row-gap:0}'
       + '#infoLine .il-seg{white-space:nowrap}#infoLine .il-dot{opacity:.55}'
-      // the record box: one size in every game (PC, the info column beside the board), a little larger than before but
-      // well below the coach (2026-11-06). Not while the review card shares the column (half and half) or the compact dock layout
-      + 'html.side-col:not(.dock-compact) .side .side-in:not(:has(> .review-card.show:not(.slim))) > .kifu-card{flex:0 0 auto!important;height:clamp(150px,20vh,210px)!important;min-height:0!important;max-height:none!important;display:flex!important;flex-direction:column!important;box-sizing:border-box}'
-      + 'html.side-col:not(.dock-compact) .side .side-in:not(:has(> .review-card.show:not(.slim))) > .kifu-card > .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;height:auto!important;overflow-y:auto!important}';
+      // the record box (PC, the info column beside the board): the same size in every game, clamp(110px, 44vh − 200px, 240px) — larger
+      // than before but below the coach, the main box (2026-11-06). It may give way (down to 110px) when the column is short, and
+      // the coach box gives way too (down to 120px, it scrolls), so nothing ever runs past the column. Only while playing: not with
+      // the review card, the review box under the board (rb-on / rvb-on / rvbox-on / rv-on), lessons / puzzles or the online
+      // panel's fitted layouts — there the games' own sizes apply. With the coach off, the record takes the rest of the column.
+      + 'html.side-col:not(.dock-compact):not(.dock-rvb):not(:is(.rb-on,.rvb-on,.rvbox-on,.rv-on)):not(:has(body:is(.rb-on,.rvb-on,.rvbox-on,.rv-on,.in-lesson,.in-puzzle))) .side .side-in:not(:has(> .review-card.show)) > .kifu-card{flex:0 1 clamp(110px,calc(44vh - 200px),240px)!important;height:auto!important;min-height:min(110px,12vh)!important;max-height:none!important;display:flex!important;flex-direction:column!important;box-sizing:border-box}'
+      + 'html.side-col:not(.dock-compact):not(.dock-rvb):not(:is(.rb-on,.rvb-on,.rvbox-on,.rv-on)):not(:has(body:is(.rb-on,.rvb-on,.rvbox-on,.rv-on,.in-lesson,.in-puzzle))) .side .side-in:not(:has(> .review-card.show)) > .kifu-card > .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;height:auto!important;overflow-y:auto!important}'
+      + 'html.side-col:not(.dock-compact):not(.dock-rvb):not(:is(.rb-on,.rvb-on,.rvbox-on,.rv-on)):not(:has(body:is(.rb-on,.rvb-on,.rvbox-on,.rv-on,.in-lesson,.in-puzzle))) .side .side-in:not(:has(> .review-card.show)):has(> #coachCard:not(.hidden):not(.ck-off)) > #coachCard{flex:1 1 0!important;min-height:min(120px,11vh)!important;max-height:none!important;height:auto!important;overflow-y:auto!important}'
+      + 'html.side-col:not(.dock-compact):not(.dock-rvb):not(:is(.rb-on,.rvb-on,.rvbox-on,.rv-on)):not(:has(body:is(.rb-on,.rvb-on,.rvbox-on,.rv-on,.in-lesson,.in-puzzle))) .side .side-in:not(:has(> .review-card.show)):not(:has(> #coachCard:not(.hidden):not(.ck-off))) > .kifu-card{flex-grow:1!important}';
     document.head.appendChild(st);
   }
   const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
