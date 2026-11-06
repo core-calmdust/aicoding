@@ -51,7 +51,10 @@
   const zMax = () => zMin() * 9;
   function clamp(v) {
     const b = box(), z = Math.max(zMin(), Math.min(zMax(), v.z)), hw = b.w / 2 / z, hh = b.h / 2 / z;
-    return { x: hw * 2 >= W0 ? W0 / 2 : Math.max(hw, Math.min(W0 - hw, v.x)), y: hh * 2 >= H0 ? H0 / 2 - 12 : Math.max(hh, Math.min(H0 - hh, v.y)), z };
+    // an axis where the world is smaller than the box can still be dragged, as long as the world stays inside the box
+    // (phones: zoomed in a little, the map moves up/down as well as sideways); bigger than the box: it always covers it
+    const ax = (c, h, L) => h * 2 >= L ? Math.max(L - h, Math.min(h, c)) : Math.max(h, Math.min(L - h, c));
+    return { x: ax(v.x, hw, W0), y: ax(v.y, hh, H0), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
