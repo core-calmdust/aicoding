@@ -882,7 +882,7 @@
     (museumObjs || []).forEach(x => { x.visible = on; });
     if (on) setTimeout(() => { if (museumOn) warmMuseum(); }, 1200);
     if (on) { drawPlacard(o); roomExp = R.toneMappingExposure; R.toneMappingExposure = .92; scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); }
-    else { R.toneMappingExposure = roomExp || R.toneMappingExposure; scene.background = new (T().Color)(LOOK[roomMode] ? LOOK[roomMode].sky[1] : '#f6e3c4').convertSRGBToLinear(); }
+    else { R.toneMappingExposure = roomExp || R.toneMappingExposure; scene.background = roomBg || new (T().Color)(LOOK[roomMode] ? LOOK[roomMode].sky[1] : '#f6e3c4').convertSRGBToLinear(); }
     if (lampShade && on) lampShade.visible = false;
     zoomTo = on ? 1.32 : 1;   // the gallery: step back a little so the plinth and the room show
     dirty = shadowDirty = true; kick(400);
@@ -899,6 +899,16 @@
     if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
     kick(600);
   }
+  function setTable(k) {   // switch the table design (0..5) and rebuild the room
+    k = Math.max(0, Math.min(5, k | 0)); tableStyle = k;
+    try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
+    if (!R || !scene || mountOpts.plain) return;
+    roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry && !SHARED.has(x.geometry)) x.geometry.dispose(); }); });
+    const before = new Set(scene.children); buildRoom(scene, false); roomObjs = scene.children.filter(o => !before.has(o) && o !== root);
+    try { envBuild && envBuild(); } catch (e) {}
+    if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
+    dirty = shadowDirty = true; kick(600);
+  }
   let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   // 盤面反転 on the skin pages (AtlasSkin): the table turned round its own centre — tYaw / tS set from outside each frame (turn())
@@ -910,6 +920,11 @@
   const todPick = () => { try { const v = localStorage.getItem('atlas-tod'); return ['morning', 'day', 'evening', 'night'].includes(v) ? v : 'auto'; } catch (e) { return 'auto'; } };
   const curTod = () => { const v = todPick(); return v === 'auto' ? timeOfDay(new Date().getHours()) : v; };
   function timeOfDay(h) { return h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
+  /* ---------- table designs (prototype): 0 = the toy room's chabudai, 1..5 = the environments in tables3d.js (Table3D.TABLES[k]) ----------
+     picked by ?tbl=k (temporary) or localStorage 'atlas-table'; Table3D.setTable(k) rebuilds the room */
+  const TABLES = {};
+  let tableStyle = (() => { try { const m = /[?&]tbl=(\d)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
+  let tblInfo = null, roomBg = null;
   const LOOK = {
     morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
     day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.02, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .46], lamp: 0, exp: .78 },
@@ -1213,6 +1228,17 @@
     const TT = T(), mode = plain ? 'day' : curTod(), L = LOOK[mode];   // the games themselves are always lit like daytime
     const g = new TT.Group(); scene.add(g); rbCap = 1;
     const FLOOR = -3.4;
+    tblInfo = null; lampShade = null;
+    const ST = !plain && tableStyle && TABLES[tableStyle];
+    if (ST) {   // one of the other table designs: it builds its own table, surroundings and lights
+      rbCap = 4;
+      try { tblInfo = ST({ TT, g, scene, LITE, COARSE, texScale: texScale(), game: cur && cur.userData.gameId }) || {}; } finally { rbCap = 9; }
+      keyLight = tblInfo.key || null;
+      if (keyLight) { keyLight.castShadow = true; keyLight.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); keyLight.shadow.bias = keyLight.shadow.bias || -.0004; keyLight.shadow.normalBias = .02; }
+      if (R) R.toneMappingExposure = tblInfo.exp || .8;
+      roomBg = new TT.Color(tblInfo.bg || '#000').convertSRGBToLinear(); scene.background = roomBg;
+      roomMode = mode; return;
+    }
     if (plain && localFloor) {   // skin pages: the floor is the page's own CSS background; the canvas only carries the board and its shadow
       const sc = new TT.Mesh(new TT.PlaneGeometry(200, 200), new TT.ShadowMaterial({ opacity: .32 })); sc.rotation.x = -Math.PI / 2; sc.receiveShadow = true; g.add(sc);
     } else if (plain === 'tatami') {   // shogi: the board stands on tatami
@@ -1296,7 +1322,7 @@
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 20, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); shade.visible = camTo < .5; lampShade = shade; scene.add(shade); }
     if (R) R.toneMappingExposure = L.exp * (plain ? .8 : 1);
     scene.background = plain && localFloor ? null : new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
-    roomMode = mode;
+    roomBg = scene.background; roomMode = mode;
   }
   function mount(container, opts = {}) {
     el = container;
@@ -1319,6 +1345,14 @@
       const sky = new TT.Mesh(new TT.SphereGeometry(30, 32, 16), new TT.MeshBasicMaterial({ side: TT.BackSide, vertexColors: true }));
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
       // tinted by the hour (see LOOK): reflections and ambient follow morning / day / evening / night
+      const EV = !opts.plain && tblInfo && tblInfo.env;
+      if (EV) {   // a table design's own reflections: a graded sky + its soft boxes
+        const a = new TT.Color(EV.top).convertSRGBToLinear(), b = new TT.Color(EV.bottom).convertSRGBToLinear();
+        for (let i = 0; i < pos.count; i++) { const y = (pos.getY(i) / 30 + 1) / 2; c.copy(b).lerp(a, y); col.push(c.r, c.g, c.b); }
+        sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
+        EV.panels.forEach(([x, y, z, w, h, hx, k]) => { const lc = new TT.Color(hx).convertSRGBToLinear().multiplyScalar(k); const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: lc, side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
+        const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose(); envOK = true; return;
+      }
       const Lk = LOOK[opts.plain ? 'day' : curTod()], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
       for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = (.06 + .3 * y) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
@@ -1330,9 +1364,9 @@
       envOK = true;
     } catch (e) {}
     };
-    envMake();
     localFloor = !!opts.local; mountOpts = opts; envBuild = envMake;
     { const before = new Set(scene.children); buildRoom(scene, opts.plain || false); roomObjs = scene.children.filter(o => !before.has(o)); }
+    envMake();
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
@@ -1479,7 +1513,8 @@
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
     if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
-    const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id;
+    const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id; c.userData.gameId = id;
+    if (tblInfo && tblInfo.onShow) try { tblInfo.onShow(id); } catch (e) {}
     const land = () => {        // board drops in and lands with squash & stretch
       root.add(c);
       const t0 = performance.now();
@@ -1823,5 +1858,5 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { TABLES, setTable, table: () => tableStyle, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
