@@ -340,8 +340,8 @@ static int hand(const Pos *p) {
 #define N2_QA 127
 #define N2_QB 256
 static int N2 = 0, N2FB = 1, N2H = 0, N2L1 = 0, N2L2 = 0, N2OB = 1; static float N2SCALE = 100;
-static i16 N2FW[N2_FBMAX * 128 * N2_HMAX], N2FBIAS[N2_HMAX];
-static i16 N2W1[N2_OBMAX][N2_L1MAX * 2 * N2_HMAX]; static i32 N2B1[N2_OBMAX][N2_L1MAX];
+static i16 N2FW[N2_FBMAX * 128 * N2_HMAX] __attribute__((aligned(16))), N2FBIAS[N2_HMAX] __attribute__((aligned(16)));
+static i16 N2W1[N2_OBMAX][N2_L1MAX * 2 * N2_HMAX] __attribute__((aligned(16))); static i32 N2B1[N2_OBMAX][N2_L1MAX];
 static float N2W2[N2_OBMAX][N2_L2MAX * N2_L1MAX], N2B2[N2_OBMAX][N2_L2MAX], N2W3[N2_OBMAX][N2_L2MAX], N2B3[N2_OBMAX];
 static u8 N2BUF[1 << 21];
 EXPORT(net2_buf) u8 *net2_buf(void) { return N2BUF; }
@@ -369,7 +369,22 @@ EXPORT(net2_load) int net2_load(int len) {
   return 1;
 }
 static inline int n2Bucket(int npc, int nb) { int b = (24 - npc) * nb / 24; return b < 0 ? 0 : b >= nb ? nb - 1 : b; }
-static i16 ACC2[MAXPLY + 4][2][N2_HMAX];
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
+static i16 ACC2[MAXPLY + 4][2][N2_HMAX] __attribute__((aligned(16)));
+// a = b - w0 + w1 (w1 / w0 may be 0), H a multiple of 8
+static inline void n2Row(i16 *a, const i16 *b, const i16 *w0, const i16 *w1, int H) {
+#ifdef __wasm_simd128__
+  if (w0 && w1) for (int k = 0; k < H; k += 8) wasm_v128_store(a + k, wasm_i16x8_add(wasm_i16x8_sub(wasm_v128_load(b + k), wasm_v128_load(w0 + k)), wasm_v128_load(w1 + k)));
+  else if (w1) for (int k = 0; k < H; k += 8) wasm_v128_store(a + k, wasm_i16x8_add(wasm_v128_load(b + k), wasm_v128_load(w1 + k)));
+  else for (int k = 0; k < H; k += 8) wasm_v128_store(a + k, wasm_i16x8_sub(wasm_v128_load(b + k), wasm_v128_load(w0 + k)));
+#else
+  if (w0 && w1) for (int k = 0; k < H; k++) a[k] = (i16)(b[k] - w0[k] + w1[k]);
+  else if (w1) for (int k = 0; k < H; k++) a[k] = (i16)(b[k] + w1[k]);
+  else for (int k = 0; k < H; k++) a[k] = (i16)(b[k] - w0[k]);
+#endif
+}
 static u8 ACC2B[MAXPLY + 4];   // feature bucket the accumulators of this ply were built with
 static void acc2Full(const Pos *p, int ply) {
   const int H = N2H, fb = n2Bucket(pc(p->p[0] | p->p[1]), N2FB);
@@ -377,8 +392,7 @@ static void acc2Full(const Pos *p, int ply) {
   for (int c = 0; c < 2; c++) {
     i16 *a = ACC2[ply][c]; for (int k = 0; k < H; k++) a[k] = N2FBIAS[k];
     for (int who = 0; who < 2; who++) for (u32 x = p->p[c ^ who]; x; x &= x - 1) {
-      int i = ctz(x); const i16 *w = N2FW + ((long)(fb * 4 + who * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H;
-      for (int k = 0; k < H; k++) a[k] += w[k];
+      int i = ctz(x); n2Row(a, a, 0, N2FW + ((long)(fb * 4 + who * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H, H);
     }
   }
 }
@@ -395,26 +409,53 @@ static void acc2Move(const Pos *p, const Move *m, int ply) {   // p = position b
     const int who = s == c ? 0 : 1, base = fb * 4;
     const i16 *wf = N2FW + ((long)(base + who * 2 + k0) * 32 + (c ? 31 - m->f : m->f)) * H;
     const i16 *wt = N2FW + ((long)(base + who * 2 + k1) * 32 + (c ? 31 - m->t : m->t)) * H;
-    for (int k = 0; k < H; k++) a[k] = (i16)(src[k] - wf[k] + wt[k]);
+    n2Row(a, src, wf, wt, H);
     for (u32 x = m->cap; x; x &= x - 1) {
-      int i = ctz(x); const i16 *w = N2FW + ((long)(base + (who ^ 1) * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H;
-      for (int k = 0; k < H; k++) a[k] -= w[k];
+      int i = ctz(x); n2Row(a, a, N2FW + ((long)(base + (who ^ 1) * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H, 0, H);
     }
   }
 }
 static int net2Out(const Pos *p, const i16 *am, const i16 *ao) {   // accumulators of the mover and of the other side
   const int H = N2H, L1 = N2L1, L2 = N2L2, ob = n2Bucket(pc(p->p[0] | p->p[1]), N2OB);
-  i16 x[2 * N2_HMAX];
-  for (int k = 0; k < H; k++) { int v = am[k]; x[k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
-  for (int k = 0; k < H; k++) { int v = ao[k]; x[H + k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
+  i16 x[2 * N2_HMAX] __attribute__((aligned(16)));
   float h1[N2_L1MAX];
   const float inv = 1.0f / (N2_QA * N2_QB);
-  for (int j = 0; j < L1; j++) {
-    const i16 *w = N2W1[ob] + (long)j * 2 * H; i32 s = 0;
-    for (int k = 0; k < 2 * H; k++) s += (i32)x[k] * (i32)w[k];
-    float z = (float)(s + N2B1[ob][j]) * inv;
-    h1[j] = z < 0 ? 0 : z > 1 ? 1 : z;
+#ifdef __wasm_simd128__
+  { const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(N2_QA);
+    for (int k = 0; k < H; k += 8) {
+      wasm_v128_store(x + k, wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(am + k), lo), hi));
+      wasm_v128_store(x + H + k, wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(ao + k), lo), hi));
+    } }
+  for (int j = 0; j < L1; j += 4) {   // four outputs per pass over x (L1 rows past the end are never read: n > 0 only for j + r < L1)
+    const int n = L1 - j < 4 ? L1 - j : 4;
+    const i16 *w0 = N2W1[ob] + (long)j * 2 * H, *w1 = n > 1 ? w0 + 2 * H : w0, *w2 = n > 2 ? w0 + 4 * H : w0, *w3 = n > 3 ? w0 + 6 * H : w0;
+    v128_t s0 = wasm_i32x4_splat(0), s1 = s0, s2 = s0, s3 = s0;
+    for (int k = 0; k < 2 * H; k += 8) {
+      v128_t xv = wasm_v128_load(x + k);
+      s0 = wasm_i32x4_add(s0, wasm_i32x4_dot_i16x8(xv, wasm_v128_load(w0 + k)));
+      s1 = wasm_i32x4_add(s1, wasm_i32x4_dot_i16x8(xv, wasm_v128_load(w1 + k)));
+      s2 = wasm_i32x4_add(s2, wasm_i32x4_dot_i16x8(xv, wasm_v128_load(w2 + k)));
+      s3 = wasm_i32x4_add(s3, wasm_i32x4_dot_i16x8(xv, wasm_v128_load(w3 + k)));
+    }
+    i32 sum[4] = {
+      wasm_i32x4_extract_lane(s0, 0) + wasm_i32x4_extract_lane(s0, 1) + wasm_i32x4_extract_lane(s0, 2) + wasm_i32x4_extract_lane(s0, 3),
+      wasm_i32x4_extract_lane(s1, 0) + wasm_i32x4_extract_lane(s1, 1) + wasm_i32x4_extract_lane(s1, 2) + wasm_i32x4_extract_lane(s1, 3),
+      wasm_i32x4_extract_lane(s2, 0) + wasm_i32x4_extract_lane(s2, 1) + wasm_i32x4_extract_lane(s2, 2) + wasm_i32x4_extract_lane(s2, 3),
+      wasm_i32x4_extract_lane(s3, 0) + wasm_i32x4_extract_lane(s3, 1) + wasm_i32x4_extract_lane(s3, 2) + wasm_i32x4_extract_lane(s3, 3) };
+    for (int r = 0; r < n; r++) { float z = (float)(sum[r] + N2B1[ob][j + r]) * inv; h1[j + r] = z < 0 ? 0 : z > 1 ? 1 : z; }
   }
+#else
+  for (int k = 0; k < H; k++) { int v = am[k]; x[k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
+  for (int k = 0; k < H; k++) { int v = ao[k]; x[H + k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
+  for (int j = 0; j < L1; j += 4) {   // four outputs per pass over x (auto-vectorized: NEON on Apple silicon, AVX2 on x86)
+    const int n = L1 - j < 4 ? L1 - j : 4;
+    const i16 *w0 = N2W1[ob] + (long)j * 2 * H, *w1 = n > 1 ? w0 + 2 * H : w0, *w2 = n > 2 ? w0 + 4 * H : w0, *w3 = n > 3 ? w0 + 6 * H : w0;
+    i32 s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+    for (int k = 0; k < 2 * H; k++) { i32 xv = x[k]; s0 += xv * w0[k]; s1 += xv * w1[k]; s2 += xv * w2[k]; s3 += xv * w3[k]; }
+    i32 sum[4] = { s0, s1, s2, s3 };
+    for (int r = 0; r < n; r++) { float z = (float)(sum[r] + N2B1[ob][j + r]) * inv; h1[j + r] = z < 0 ? 0 : z > 1 ? 1 : z; }
+  }
+#endif
   float out = N2B3[ob];
   for (int j = 0; j < L2; j++) {
     const float *w = N2W2[ob] + j * L1; float z = N2B2[ob][j];
@@ -499,6 +540,7 @@ EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
 static u64 nodes; static double tEnd; static int stopFlag, nodeLimit_on; static u64 nodeLimit;
+EXPORT(nodes_k) int nodes_k(void) { return (int)(nodes / 1000); }   // nodes of the last search, in thousands (speed checks)
 static int hist[2][32][32];
 static Move killers[MAXPLY][2];
 static u64 hkeys[1024 + MAXPLY]; static int hn, hirr;   // hash history (game + search) and index after the last irreversible move
