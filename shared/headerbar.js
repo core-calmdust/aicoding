@@ -449,5 +449,32 @@ function sideCol() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sideCol, 0)); else setTimeout(sideCol, 0);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(dockCenter, 0)); else setTimeout(dockCenter, 0);
+// the info line (盤の大きさ・ルール・AI・←→ の案内…) sits at the bottom inside the kifu box, and never breaks inside a part:
+// its parts (split at ·) wrap as whole pieces onto a second row when the line is too long (common spec, 2026-11-06)
+function infoInKifu() {
+  const el = document.getElementById('infoLine'); if (!el) return;
+  const kc = el.closest('.kifu-card') || (el.previousElementSibling && el.previousElementSibling.classList.contains('kifu-card') ? el.previousElementSibling : document.querySelector('.kifu-card'));
+  if (kc && el.parentElement !== kc) kc.appendChild(el);
+  if (!document.getElementById('ilCss')) {
+    const st = document.createElement('style'); st.id = 'ilCss';
+    st.textContent = '.kifu-card > #infoLine{margin-top:auto;padding-top:8px;border-top:1px solid var(--line,rgba(127,127,127,.22));flex:none;min-width:0}'
+      + '#infoLine .il-wrap{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:.45em;row-gap:0}'
+      + '#infoLine .il-seg{white-space:nowrap}#infoLine .il-dot{opacity:.55}';
+    document.head.appendChild(st);
+  }
+  const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const seg = () => {
+    const txt = el.textContent; if (el.dataset.ilt === txt) return;
+    const parts = txt.split(/\s*[·・]\s+|\s+[·・]\s*/).map(x => x.trim()).filter(Boolean);
+    el.innerHTML = parts.length ? '<span class="il-wrap">' + parts.map((x, i) => (i ? '<span class="il-dot">·</span>' : '') + '<span class="il-seg">' + esc(x) + '</span>').join('') + '</span>' : '';
+    el.dataset.ilt = el.textContent; dots();
+  };
+  // a · where the line breaks is left out (no dot at the end of the first row)
+  const dots = () => el.querySelectorAll('.il-dot').forEach(d => { d.style.display = ''; const a = d.previousElementSibling, b = d.nextElementSibling; if (a && b && b.offsetTop > a.offsetTop + 2) d.style.display = 'none'; });
+  new MutationObserver(seg).observe(el, { childList: true, characterData: true, subtree: true });
+  if (window.ResizeObserver) new ResizeObserver(() => dots()).observe(el);
+  seg();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(infoInKifu, 0)); else setTimeout(infoInKifu, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES };
 })();

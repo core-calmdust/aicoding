@@ -634,6 +634,8 @@ html.pc2.rb-on{--rbh:clamp(180px, calc(var(--vh) * .30), 265px);--bv:calc(var(--
 /* 検討（下の振り返りボックス）中は盤下のバー（手番・パス）を出さず、その分だけ盤を大きく（2026-11-06） */
 html.pc2.rb-on #playbar{display:none!important}
 html.pc2.rb-on .side{height:var(--bs)}
+/* 盤と下の検討ボックスの間＝盤の縁（厚み、--bs×2%）＋ボックス間と同じ 10px（2026-11-06） */
+html.pc2.rb-on .app{row-gap:calc(var(--bs) * .02 + 10px)}
 html.pc2.rb-on .app{grid-template-areas:"board side" "rbox rbox"}
 html.pc2.rb-on .rbox{display:grid;grid-area:rbox;height:var(--rbh)}
 .rb-body .tag{font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b0e15;background:#8fe3b8}.rb-body .tag.dubious{background:#f2c060}.rb-body .tag.bad{background:#ff6b5b}
@@ -942,7 +944,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=38"></script>
+<script src="../shared/headerbar.js?v=39"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
