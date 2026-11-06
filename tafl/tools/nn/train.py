@@ -44,7 +44,7 @@ def load(files, variant, maxpos=0):
     B = np.zeros((keep, n2), np.uint8); side = np.zeros(keep, np.int64); score = np.zeros(keep, np.float32)
     res = np.zeros(keep, np.float32); src = np.zeros(keep, np.int64); feat = np.zeros((keep, NF), np.float32)
     i = 0; k = 0; ti = 0
-    for fn in files:
+    for fi, fn in enumerate(files):
         with open(fn) as f:
             for line in f:
                 t = line.split()
@@ -58,7 +58,7 @@ def load(files, variant, maxpos=0):
                     ti += 1
                 i += 1
                 side[k] = int(t[1]); score[k] = float(t[3]); r = t[4]; res[k] = 1.0 if r == '2' else 0.0 if r == '1' else 0.5
-                src[k] = int(t[5]); B[k] = lut[np.frombuffer(t[6].encode(), np.uint8)]
+                src[k] = 0 if t[5] == '0' else 1 + fi; B[k] = lut[np.frombuffer(t[6].encode(), np.uint8)]
                 feat[k] = np.array(t[7:], np.float32)
                 k += 1
     return N, B[:k], side[:k], score[:k], res[:k], src[:k], feat[:k]
@@ -74,10 +74,13 @@ def symmetries(N):
 
 
 def calibrate(score, res, src):
-    """per src: a, b with sigmoid(a·score + b) ≈ result (non-proven values only)"""
+    """per group (the hand-made evaluation's records; each file of net records, i.e. one round's net): a, b with
+    sigmoid(a·score + b) ≈ result (non-proven values only). Each net has its own scale, so they are not pooled."""
     cal = {}
     for s in np.unique(src):
         m = (src == s) & (np.abs(score) < 29000)
+        if m.sum() < 1000:
+            continue
         x = torch.tensor(score[m], dtype=torch.float64); y = torch.tensor(res[m], dtype=torch.float64)
         mu, sd = x.mean(), x.std() + 1e-9
         xn = (x - mu) / sd
@@ -88,7 +91,11 @@ def calibrate(score, res, src):
         opt.step(closure)
         a = (p[0] / sd).item(); b = (p[1] - p[0] * mu / sd).item()
         cal[int(s)] = (a, b)
-        print('src %d: %d positions, teacher = sigmoid(%.6f * score %+.3f)  (score of an even game %.0f)' % (s, m.sum(), a, b, -b / a))
+    xs = [a for s, (a, b) in cal.items() if s > 0]
+    if 0 in cal:
+        print('hand-made records: teacher = sigmoid(%.6f * score %+.3f)' % cal[0])
+    if xs:
+        print('net records: %d files, slope %.6f .. %.6f (median %.6f)' % (len(xs), min(xs), max(xs), float(np.median(xs))))
     return cal
 
 
@@ -137,7 +144,9 @@ def main():
         n, N, N, time.time() - t0, 100 * (res == 0).mean(), 100 * (res == 1).mean(), 100 * (res == 0.5).mean()))
     cal = calibrate(score, res, src)
     teach = np.empty(n, np.float32)
-    for s, (a, b) in cal.items():
+    fallback = cal.get(0) or next(iter(cal.values()))
+    for s in np.unique(src):
+        a, b = cal.get(int(s), fallback)
         m = src == s
         teach[m] = 1 / (1 + np.exp(-np.clip(a * score[m] + b, -30, 30)))
     teach[score >= 29000] = 1.0; teach[score <= -29000] = 0.0
