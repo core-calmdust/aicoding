@@ -12,7 +12,8 @@ async function load(opts) {
   if (fs.existsSync(netFile)) {
     let b = fs.readFileSync(netFile); if (netFile.endsWith('.gz')) b = zlib.gunzipSync(b);
     const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length), dv = new DataView(ab);
-    if (dv.getUint32(0, true) === 0x314E4B43) { const H = dv.getUint32(4, true), H2 = dv.getUint32(8, true), sc = dv.getFloat32(12, true), n = 128 * H + H + H * H2 + H2 + H2 + 1; new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(ab, 16, n)); X.net_set(H, H2, sc); }
+    if (dv.getUint32(0, true) === 0x324E4B43) { new Uint8Array(X.memory.buffer, X.net2_buf(), ab.byteLength).set(new Uint8Array(ab)); X.net2_load(ab.byteLength); }
+    else if (dv.getUint32(0, true) === 0x314E4B43) { const H = dv.getUint32(4, true), H2 = dv.getUint32(8, true), sc = dv.getFloat32(12, true), n = 128 * H + H + H * H2 + H2 + H2 + 1; new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(ab, 16, n)); X.net_set(H, H2, sc); }
   }
   const dbFile = path.join(root, 'egdb4.bin.gz');
   if (fs.existsSync(dbFile)) {

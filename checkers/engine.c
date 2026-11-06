@@ -145,9 +145,10 @@ static inline int anyMove(const Pos *p) {
 }
 static inline void doMove(Pos *p, const Move *m) {
   int s = p->side; u32 fb = 1u << m->f, tb = 1u << m->t;
-  p->p[s] ^= fb | tb;
+  // fb == tb when a king's capture loop ends on its starting square: the piece stays where it is
+  p->p[s] = (p->p[s] & ~fb) | tb;
   if (m->cap) { p->p[s ^ 1] &= ~m->cap; p->k &= ~m->cap; }
-  if (p->k & fb) p->k ^= fb | tb; else if (m->promo) p->k |= tb;
+  if (p->k & fb) p->k = (p->k & ~fb) | tb; else if (m->promo) p->k |= tb;
   p->side = s ^ 1;
 }
 static inline u64 hashMove(u64 h, const Pos *p, const Move *m) {   // p = position before the move
@@ -326,8 +327,108 @@ static int hand(const Pos *p) {
   }
   return diff;
 }
+// ---------------------------------------------------------------- NNUE (v2 nets, header 'CKN2')
+// features: (piece-count bucket) x (own man, own king, opp man, opp king) x 32 squares, each seen from both sides
+// (c = 0 Black as is, c = 1 White with the board rotated 180°). Two int16 accumulators (QA = 127 ~ 1.0), the mover's first:
+// [clip(acc_mover), clip(acc_other)] (2H) -> L1 (int16 weights, QB = 256) -> clipped ReLU -> L2 (float) -> clipped ReLU -> 1,
+// the L1..output layers chosen by an output bucket (piece count). Value = out * scale (man = 100). See tools/nn/.
+#define N2_HMAX 512
+#define N2_L1MAX 32
+#define N2_L2MAX 32
+#define N2_FBMAX 4
+#define N2_OBMAX 8
+#define N2_QA 127
+#define N2_QB 256
+static int N2 = 0, N2FB = 1, N2H = 0, N2L1 = 0, N2L2 = 0, N2OB = 1; static float N2SCALE = 100;
+static i16 N2FW[N2_FBMAX * 128 * N2_HMAX], N2FBIAS[N2_HMAX];
+static i16 N2W1[N2_OBMAX][N2_L1MAX * 2 * N2_HMAX]; static i32 N2B1[N2_OBMAX][N2_L1MAX];
+static float N2W2[N2_OBMAX][N2_L2MAX * N2_L1MAX], N2B2[N2_OBMAX][N2_L2MAX], N2W3[N2_OBMAX][N2_L2MAX], N2B3[N2_OBMAX];
+static u8 N2BUF[1 << 21];
+EXPORT(net2_buf) u8 *net2_buf(void) { return N2BUF; }
+static u32 rdU32(const u8 *b) { return (u32)b[0] | (u32)b[1] << 8 | (u32)b[2] << 16 | (u32)b[3] << 24; }
+// load a v2 net from N2BUF (the whole file, len bytes). Returns 1 when it was accepted.
+EXPORT(net2_load) int net2_load(int len) {
+  const u8 *b = N2BUF; N2 = 0;
+  if (len < 28 || rdU32(b) != 0x324E4B43u) return 0;
+  int fb = rdU32(b + 4), h = rdU32(b + 8), l1 = rdU32(b + 12), l2 = rdU32(b + 16), ob = rdU32(b + 20); float sc; u32 t = rdU32(b + 24); memcpy(&sc, &t, 4);
+  if (fb < 1 || fb > N2_FBMAX || h < 8 || h > N2_HMAX || (h & 7) || l1 < 1 || l1 > N2_L1MAX || l2 < 1 || l2 > N2_L2MAX || ob < 1 || ob > N2_OBMAX) return 0;
+  long need = 28 + (long)fb * 128 * h * 2 + h * 2 + (long)ob * ((long)l1 * 2 * h * 2 + l1 * 4 + l2 * l1 * 4 + l2 * 4 + l2 * 4 + 4);
+  if (len < need) return 0;
+  const u8 *q = b + 28;
+  memcpy(N2FW, q, (long)fb * 128 * h * 2); q += (long)fb * 128 * h * 2;
+  memcpy(N2FBIAS, q, h * 2); q += h * 2;
+  for (int o = 0; o < ob; o++) {
+    memcpy(N2W1[o], q, (long)l1 * 2 * h * 2); q += (long)l1 * 2 * h * 2;
+    memcpy(N2B1[o], q, l1 * 4); q += l1 * 4;
+    memcpy(N2W2[o], q, l2 * l1 * 4); q += l2 * l1 * 4;
+    memcpy(N2B2[o], q, l2 * 4); q += l2 * 4;
+    memcpy(N2W3[o], q, l2 * 4); q += l2 * 4;
+    memcpy(&N2B3[o], q, 4); q += 4;
+  }
+  N2FB = fb; N2H = h; N2L1 = l1; N2L2 = l2; N2OB = ob; N2SCALE = sc; N2 = 1;
+  return 1;
+}
+static inline int n2Bucket(int npc, int nb) { int b = (24 - npc) * nb / 24; return b < 0 ? 0 : b >= nb ? nb - 1 : b; }
+static i16 ACC2[MAXPLY + 4][2][N2_HMAX];
+static u8 ACC2B[MAXPLY + 4];   // feature bucket the accumulators of this ply were built with
+static void acc2Full(const Pos *p, int ply) {
+  const int H = N2H, fb = n2Bucket(pc(p->p[0] | p->p[1]), N2FB);
+  ACC2B[ply] = (u8)fb;
+  for (int c = 0; c < 2; c++) {
+    i16 *a = ACC2[ply][c]; for (int k = 0; k < H; k++) a[k] = N2FBIAS[k];
+    for (int who = 0; who < 2; who++) for (u32 x = p->p[c ^ who]; x; x &= x - 1) {
+      int i = ctz(x); const i16 *w = N2FW + ((long)(fb * 4 + who * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H;
+      for (int k = 0; k < H; k++) a[k] += w[k];
+    }
+  }
+}
+static void acc2Move(const Pos *p, const Move *m, int ply) {   // p = position before m (at ply), result at ply + 1
+  int fb = ACC2B[ply];
+  if (m->cap) {
+    int nb = n2Bucket(pc(p->p[0] | p->p[1]) - m->n, N2FB);
+    if (nb != fb) { Pos q = *p; doMove(&q, m); acc2Full(&q, ply + 1); return; }
+  }
+  ACC2B[ply + 1] = (u8)fb;
+  const int H = N2H, s = p->side, k0 = (p->k >> m->f) & 1, k1 = k0 | m->promo;
+  for (int c = 0; c < 2; c++) {
+    const i16 *src = ACC2[ply][c]; i16 *a = ACC2[ply + 1][c];
+    const int who = s == c ? 0 : 1, base = fb * 4;
+    const i16 *wf = N2FW + ((long)(base + who * 2 + k0) * 32 + (c ? 31 - m->f : m->f)) * H;
+    const i16 *wt = N2FW + ((long)(base + who * 2 + k1) * 32 + (c ? 31 - m->t : m->t)) * H;
+    for (int k = 0; k < H; k++) a[k] = (i16)(src[k] - wf[k] + wt[k]);
+    for (u32 x = m->cap; x; x &= x - 1) {
+      int i = ctz(x); const i16 *w = N2FW + ((long)(base + (who ^ 1) * 2 + ((p->k >> i) & 1)) * 32 + (c ? 31 - i : i)) * H;
+      for (int k = 0; k < H; k++) a[k] -= w[k];
+    }
+  }
+}
+static int net2Out(const Pos *p, const i16 *am, const i16 *ao) {   // accumulators of the mover and of the other side
+  const int H = N2H, L1 = N2L1, L2 = N2L2, ob = n2Bucket(pc(p->p[0] | p->p[1]), N2OB);
+  i16 x[2 * N2_HMAX];
+  for (int k = 0; k < H; k++) { int v = am[k]; x[k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
+  for (int k = 0; k < H; k++) { int v = ao[k]; x[H + k] = (i16)(v < 0 ? 0 : v > N2_QA ? N2_QA : v); }
+  float h1[N2_L1MAX];
+  const float inv = 1.0f / (N2_QA * N2_QB);
+  for (int j = 0; j < L1; j++) {
+    const i16 *w = N2W1[ob] + (long)j * 2 * H; i32 s = 0;
+    for (int k = 0; k < 2 * H; k++) s += (i32)x[k] * (i32)w[k];
+    float z = (float)(s + N2B1[ob][j]) * inv;
+    h1[j] = z < 0 ? 0 : z > 1 ? 1 : z;
+  }
+  float out = N2B3[ob];
+  for (int j = 0; j < L2; j++) {
+    const float *w = N2W2[ob] + j * L1; float z = N2B2[ob][j];
+    for (int k = 0; k < L1; k++) z += w[k] * h1[k];
+    z = z < 0 ? 0 : z > 1 ? 1 : z;
+    out += N2W3[ob][j] * z;
+  }
+  float vf = out * N2SCALE; int v = (int)(vf + (vf >= 0 ? 0.5f : -0.5f));
+  return v > 9000 ? 9000 : v < -9000 ? -9000 : v;
+}
+static int net2Eval(const Pos *p) { acc2Full(p, MAXPLY + 3); return net2Out(p, ACC2[MAXPLY + 3][p->side], ACC2[MAXPLY + 3][p->side ^ 1]); }
+
 static int useNet = 1;
-static inline int evaluate(const Pos *p) { return (NH && useNet) ? netEval(p) : hand(p); }
+static inline int evaluate(const Pos *p) { return useNet && N2 ? net2Eval(p) : (NH && useNet) ? netEval(p) : hand(p); }
 // incremental first layer: ACC[ply][c] = the first-layer sums seen from side c (c = 0 Black, 1 White), updated move by move
 static float ACC[MAXPLY + 4][2][NH_MAX];
 static inline int sqOf(int c, int i) { return c ? 31 - i : i; }
@@ -364,7 +465,14 @@ static int netEvalAcc(const Pos *p, int ply) {
   int v = (int)(out * NSCALE + (out >= 0 ? 0.5f : -0.5f));
   return v > 9000 ? 9000 : v < -9000 ? -9000 : v;
 }
-static inline int evalAt(const Pos *p, int ply) { return (NH && useNet) ? netEvalAcc(p, ply) : hand(p); }
+static inline int netOn(void) { return useNet && (N2 || NH); }
+static inline void accRoot(const Pos *p) { if (N2) acc2Full(p, 0); else accFull(p, 0); }
+static inline void accStep(const Pos *p, const Move *m, int ply) { if (N2) acc2Move(p, m, ply); else accMove(p, m, ply); }
+static inline int evalAt(const Pos *p, int ply) {
+  if (!useNet) return hand(p);
+  if (N2) return net2Out(p, ACC2[ply][p->side], ACC2[ply][p->side ^ 1]);
+  return NH ? netEvalAcc(p, ply) : hand(p);
+}
 
 
 // ---------------------------------------------------------------- transposition table
@@ -465,7 +573,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move *m = &L[i];
     Pos q = *p; doMove(&q, m);
-    if (NH && useNet) accMove(p, m, ply);
+    if (netOn()) accStep(p, m, ply);
     u64 k2 = hashMove(key, p, m);
     int irr = irreversible(p, m), saveIrr = hirr;
     if (irr) hirr = hn;
@@ -530,10 +638,10 @@ static void writeMove(i32 *o, const Move *m) { o[0] = m->f | (m->t << 5); o[1] =
 // search the root moves; with all = 1 every move gets an exact value (for hints / analysis)
 static int rootSearch(int depth, int all, int alpha0, int beta0) {
   int alpha = alpha0, best = -INF;
-  if (NH && useNet) accFull(&ROOT, 0);
+  if (netOn()) accRoot(&ROOT);
   for (int i = 0; i < rootN; i++) {
     Move *m = &rootL[i]; Pos q = ROOT; doMove(&q, m);
-    if (NH && useNet) accMove(&ROOT, m, 0);
+    if (netOn()) accStep(&ROOT, m, 0);
     u64 k2 = hashMove(rootKey, &ROOT, m);
     int irr = irreversible(&ROOT, m), saveIrr = hirr; hkeys[hn++] = rootKey; if (irr) hirr = hn;
     int qp = irr ? 0 : rootPly + 1, v;

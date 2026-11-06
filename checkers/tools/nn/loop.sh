@@ -1,0 +1,69 @@
+#!/bin/sh
+# Reinforcement loop for the checkers NNUE: self-play with the latest net -> train (continuing from it) -> measure, repeated.
+#   tools/nn/loop.sh <rounds> [games per process per round] [processes]
+#   e.g. tools/nn/loop.sh 12 600 10
+# Resumable: finished rounds are skipped, so the same command continues after an interruption.
+# Work folder nnwork/ (WORK=...):
+#   egdb6.bin           endgame database (6 pieces), built once at the start (hours; SKIP_EGDB=1 to go without)
+#   base.bin            the current site's small net (evalnet.bin.gz, unpacked): round 1 plays with it
+#   rN/                 the round's self-play records (*.bin, 24 bytes per position)
+#   net-N.nnue (.npz)   the round's net (+ float weights for --init); net.nnue = the latest
+#   log.txt             positions, training summaries, matches (new vs previous at equal nodes, vs base at equal time)
+# Settings (environment):
+#   NODES (self-play nodes per move in thousands, 20)   XR (random plies after the ballot, 0..XR, 4)
+#   H (hidden, 256)  FB (feature buckets, 4)  OB (output buckets, 8)  L1 (32)  L2 (32)
+#   EPOCHS (10)  WINDOW (rounds of data per training, 4)  LAM (0.75)  LR (0.001 for round 1, then LR2 = 0.0005)
+#   MAXPOS (positions per training, 40000000)  EXTRA (more record files for every training)
+#   MNODES (match nodes, 20k)  MTIME (equal-time match vs base, 50ms; "" to skip)
+set -e
+cd "$(dirname "$0")/../.."
+R=$1; G=${2:-500}; P=${3:-$(getconf _NPROCESSORS_ONLN)}
+NODES=${NODES:-20}; XR=${XR:-4}; H=${H:-256}; FB=${FB:-4}; OB=${OB:-8}; L1=${L1:-32}; L2=${L2:-32}
+EPOCHS=${EPOCHS:-10}; WINDOW=${WINDOW:-4}; LAM=${LAM:-0.75}; LR=${LR:-0.001}; LR2=${LR2:-0.0005}; MAXPOS=${MAXPOS:-40000000}
+MNODES=${MNODES:-20k}; MTIME=${MTIME-50ms}
+W=${WORK:-nnwork}; mkdir -p $W
+export WORK=$W
+tools/nn/build.sh
+BIN=$W/ck-native; export BIN
+log() { echo "$(date '+%m-%d %H:%M') $*" | tee -a $W/log.txt; }
+[ -f $W/base.bin ] || gzip -dc evalnet.bin.gz > $W/base.bin
+if [ -z "$SKIP_EGDB" ] && [ ! -f $W/egdb6.bin ]; then
+  log "endgame database (6 pieces): building (checkpoints in $W/egdb.d)"
+  CKPT_DIR=$W/egdb.d $W/ck-egdb 6 $W/egdb6.tmp 2> $W/egdb.log && mv $W/egdb6.tmp $W/egdb6.bin
+  log "endgame database: $(ls -l $W/egdb6.bin | awk '{print $5}') bytes"
+fi
+[ -f $W/egdb6.bin ] && export EGDB=$W/egdb6.bin
+r=1
+while [ $r -le $R ]; do
+  if [ -f $W/net-$r.nnue ]; then r=$((r + 1)); continue; fi
+  prev=$((r - 1)); NET=$W/base.bin; [ $prev -ge 1 ] && NET=$W/net-$prev.nnue
+  # 1. self-play
+  if [ ! -f $W/r$r/done ]; then
+    rm -rf $W/r$r; mkdir -p $W/r$r
+    log "round $r: self-play with $NET, $P processes x $G games, ${NODES}k nodes"
+    i=1
+    while [ $i -le $P ]; do
+      SEED=$(( r * 1000 + i ))
+      $BIN gen2 $G ${NODES}k:$NET $W/r$r/d-$SEED.bin $SEED $XR 2> $W/r$r/log-$SEED.txt &
+      i=$((i + 1))
+    done
+    wait
+    touch $W/r$r/done
+    log "round $r: $(cat $W/r$r/d-*.bin | wc -c | awk '{print int($1 / 24)}') positions"
+  fi
+  # 2. training on the last WINDOW rounds (+ EXTRA), continuing from the previous net
+  FILES=""; k=$((r - WINDOW + 1)); [ $k -lt 1 ] && k=1
+  while [ $k -le $r ]; do FILES="$FILES $W/r$k/d-*.bin"; k=$((k + 1)); done
+  INIT=""; RLR=$LR
+  if [ $prev -ge 1 ] && [ -f $W/net-$prev.nnue.npz ]; then INIT="--init $W/net-$prev.nnue.npz"; RLR=$LR2; fi
+  log "round $r: training (data rounds $(( r - WINDOW + 1 < 1 ? 1 : r - WINDOW + 1 ))-$r${EXTRA:+ + extra})"
+  python3 tools/nn/train.py --fb $FB --hidden $H --l1 $L1 --l2 $L2 --ob $OB --epochs $EPOCHS --lam $LAM --lr $RLR \
+    --max-positions $MAXPOS --seed $r $INIT --out $W/tmp.nnue $FILES $EXTRA > $W/train-$r.txt 2>/dev/null
+  tail -1 $W/train-$r.txt | sed "s/^/round $r: /" | tee -a $W/log.txt
+  mv $W/tmp.nnue.npz $W/net-$r.nnue.npz; mv $W/tmp.nnue $W/net-$r.nnue; cp $W/net-$r.nnue $W/net.nnue
+  # 3. measurement
+  tools/nn/match.sh $MNODES:$W/net-$r.nnue $MNODES:$NET $P | sed "s/^/round $r: /" | tee -a $W/log.txt
+  [ -n "$MTIME" ] && tools/nn/match.sh $MTIME:$W/net-$r.nnue $MTIME:$W/base.bin $P | sed "s/^/round $r: /" | tee -a $W/log.txt
+  r=$((r + 1))
+done
+log "done: $W/net.nnue"

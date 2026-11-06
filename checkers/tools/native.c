@@ -16,14 +16,23 @@ static void sqName(char *o, const Move *m) { sprintf(o, "%d%c%d", m->f + 1, m->c
 // ---------------------------------------------------------------- self-play
 static u64 rng = 88172645463325252ull;
 static u32 rnd32(void) { rng ^= rng << 13; rng ^= rng >> 7; rng ^= rng << 17; return (u32)rng; }
-typedef struct { float *w; int h, h2; float scale; int n; } Net;
+typedef struct { float *w; int h, h2; float scale; int n; u8 *raw; long rawLen; } Net;   // v1 (float, CKN1) or v2 NNUE (CKN2, raw)
 static Net loadNet(const char *fn) {
   Net N = { 0 }; FILE *f = fopen(fn, "rb"); if (!f) { fprintf(stderr, "no net %s\n", fn); exit(1); }
-  u32 hd[3]; float sc; fread(hd, 4, 3, f); fread(&sc, 4, 1, f);
+  fseek(f, 0, SEEK_END); long len = ftell(f); fseek(f, 0, SEEK_SET);
+  u8 *b = malloc(len); if (fread(b, 1, len, f) != (size_t)len) { fprintf(stderr, "read %s\n", fn); exit(1); } fclose(f);
+  if (rdU32(b) == 0x324E4B43u) { N.raw = b; N.rawLen = len; return N; }
+  u32 hd[3]; float sc; memcpy(hd, b, 12); memcpy(&sc, b + 12, 4);
   N.h = hd[1]; N.h2 = hd[2]; N.scale = sc; N.n = NIN * N.h + N.h + N.h * N.h2 + N.h2 + N.h2 + 1;
-  N.w = malloc(N.n * 4); fread(N.w, 4, N.n, f); fclose(f); return N;
+  N.w = (float *)(b + 16); return N;
 }
-static void useNetW(const Net *N) { if (!N || !N->w) { NH = 0; return; } memcpy(W1, N->w, N->n * 4); net_set(N->h, N->h2, N->scale); }
+static const Net *curNet = (const Net *)1;
+static void useNetW(const Net *N) {
+  if (N == curNet) return; curNet = N;
+  N2 = 0; NH = 0; if (!N) return;
+  if (N->raw) { if (N->rawLen > (long)sizeof(N2BUF) || (memcpy(N2BUF, N->raw, N->rawLen), !net2_load((int)N->rawLen))) { fprintf(stderr, "bad v2 net\n"); exit(1); } return; }
+  if (N->w) { memcpy(W1, N->w, N->n * 4); net_set(N->h, N->h2, N->scale); }
+}
 // one engine "player": node budget (k), optional net
 typedef struct { int nodesK; int depth; Net *net; int ms; } Player;
 static int setupFrom(const Pos *start, Move *hist, int nh) {
@@ -80,13 +89,18 @@ static int playGame(Player *B, Player *W, int randomPlies, Pos *startOut, int *n
   return result;
 }
 
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+// endgame database file ("CKDB", see tools/egdb.c), memory-mapped so that parallel processes share one copy
 static void egLoad(const char *fn) {
-  FILE *f = fopen(fn, "rb"); if (!f) return;
-  char mg[4]; u32 nc; fread(mg, 1, 4, f); fread(&nc, 4, 1, f);
-  u8 (*h)[4] = malloc(nc * 4); u32 *len = malloc(nc * 4);
-  for (u32 i = 0; i < nc; i++) { fread(h[i], 1, 4, f); fread(&len[i], 4, 1, f); }
-  for (u32 i = 0; i < nc; i++) { u8 *d = malloc(len[i]); fread(d, 1, len[i], f); eg_add(h[i][0], h[i][1], h[i][2], h[i][3], d); }
-  fclose(f); fprintf(stderr, "egdb: %u classes, up to %d pieces\n", nc, egMaxN);
+  int fd = open(fn, O_RDONLY); if (fd < 0) { fprintf(stderr, "no egdb %s\n", fn); return; }
+  off_t len = lseek(fd, 0, SEEK_END);
+  const u8 *m = mmap(0, (size_t)len, PROT_READ, MAP_SHARED, fd, 0); close(fd);
+  if (m == MAP_FAILED || memcmp(m, "CKDB", 4)) { fprintf(stderr, "bad egdb %s\n", fn); return; }
+  u32 nc; memcpy(&nc, m + 4, 4); const u8 *d = m + 8 + (size_t)nc * 8;
+  for (u32 i = 0; i < nc; i++) { const u8 *h = m + 8 + (size_t)i * 8; u32 l; memcpy(&l, h + 4, 4); if (h[0] + h[1] + h[2] + h[3] <= DBMAX) eg_add(h[0], h[1], h[2], h[3], d); d += l; }
+  fprintf(stderr, "egdb: %u classes, up to %d pieces\n", nc, egMaxN);
 }
 static int cmdMatch(int argc, char **argv) {
   // match games nodesA nodesB [netA|-] [netB|-] [depthA depthB]
@@ -189,6 +203,124 @@ static int cmdLv(int argc, char **argv) {   // lv A B games [net] [tscale]
   return 0;
 }
 
+// ---------------------------------------------------------------- 3-move ballots (openings for matches and self-play)
+// All 3-ply openings from the start position; tools/ballots.txt keeps the ones that are not clearly lost (see "ballots").
+// Line format: "f-t f-t f-t" with standard square numbers (captures as fxt), e.g. "9-13 21-17 5-9".
+typedef struct { Move m[3]; } Ballot;
+static Ballot BAL[400]; static int NBAL = 0;
+static int allBallots(Ballot *out) {
+  int n = 0; Pos p = startPos(); Move L1[MAXMV]; int n1 = gen(&p, L1);
+  for (int a = 0; a < n1; a++) { Pos q = p; doMove(&q, &L1[a]); Move L2[MAXMV]; int n2 = gen(&q, L2);
+    for (int b = 0; b < n2; b++) { Pos r = q; doMove(&r, &L2[b]); Move L3[MAXMV]; int n3 = gen(&r, L3);
+      for (int c = 0; c < n3; c++) { out[n].m[0] = L1[a]; out[n].m[1] = L2[b]; out[n].m[2] = L3[c]; n++; } } }
+  return n;
+}
+static void ballotStr(char *o, const Ballot *b) { char x[3][16]; for (int i = 0; i < 3; i++) sqName(x[i], &b->m[i]); sprintf(o, "%s %s %s", x[0], x[1], x[2]); }
+static void loadBallots(void) {
+  const char *fn = getenv("BALLOTS") ? getenv("BALLOTS") : "tools/ballots.txt";
+  FILE *f = fopen(fn, "r"); Ballot all[400]; int na = allBallots(all);
+  if (!f) { fprintf(stderr, "no %s: using all %d 3-ply openings\n", fn, na); memcpy(BAL, all, sizeof(Ballot) * na); NBAL = na; return; }
+  char line[256];
+  while (fgets(line, sizeof line, f)) {
+    if (line[0] == '#' || line[0] < ' ') continue;
+    for (int i = 0; i < na; i++) { char s[64]; ballotStr(s, &all[i]); if (!strncmp(line, s, strlen(s)) && (line[strlen(s)] <= ' ')) { BAL[NBAL++] = all[i]; break; } }
+  }
+  fclose(f);
+}
+// player spec: "<n>k" nodes (thousands) or "<n>ms" time, optionally ":<net file>" ("-" or none = hand-made evaluation)
+static Player parsePlayer(const char *spec) {
+  Player P = { 0, 0, 0, 0 }; char buf[512]; snprintf(buf, sizeof buf, "%s", spec);
+  char *c = strchr(buf, ':'); if (c) { *c = 0; if (strcmp(c + 1, "-")) { Net *n = malloc(sizeof(Net)); *n = loadNet(c + 1); P.net = n; } }
+  int v = atoi(buf); if (strstr(buf, "ms")) P.ms = v; else P.nodesK = v;
+  return P;
+}
+// one game from an opening; returns 1 black win, -1 white win, 0 draw. extra random plies after the opening.
+// data: quiet positions (not in the opening) with the mover's search value; result filled at the end.
+static int playFrom(Player *B, Player *W, const Move *open, int nOpen, int extraRandom, FILE *data, int *plies) {
+  Pos start = startPos(), p = start; int nh = 0, quiet = 0, result = 0, nk = 0; u64 keys[1200]; keys[nk++] = hashOf(&p);
+  static i32 recs[1200][6]; int nrec = 0;
+  new_game(); Player *last = 0;
+  int ply;
+  for (ply = 0; ply < 400; ply++) {
+    Move L[MAXMV]; int n = gen(&p, L);
+    if (!n) { result = p.side ? 1 : -1; break; }
+    Move m; int v = 0, searched = 0;
+    if (ply < nOpen) m = open[ply];
+    else if (ply < nOpen + extraRandom) m = L[rnd32() % n];
+    else {
+      Player *P = p.side ? W : B; if (P != last) { new_game(); last = P; }
+      pickMove(P, &start, GH, nh, &m, &v); searched = 1;
+    }
+    if (data && searched && !hasCaps(&p) && v > -WINT && v < WINT && nrec < 1200) { i32 *r = recs[nrec++]; r[0] = (i32)p.p[0]; r[1] = (i32)p.p[1]; r[2] = (i32)p.k; r[3] = p.side | (ply << 8); r[4] = v; }
+    GH[nh++] = m; int irr = irreversible(&p, &m); doMove(&p, &m);
+    quiet = irr ? 0 : quiet + 1; if (irr) nk = 0; keys[nk++] = hashOf(&p);
+    int rep = 0; for (int i = 0; i < nk - 1; i++) if (keys[i] == keys[nk - 1]) rep++;
+    if (rep >= 2 || quiet >= DRAW_PLIES) { result = 0; break; }
+    if (egMaxN && ply >= nOpen) { int e = egProbe(&p); if (e && !hasCaps(&p)) { result = e == 3 ? 0 : ((e == 1) == (p.side == 0)) ? 1 : -1; break; } }
+  }
+  if (data) for (int i = 0; i < nrec; i++) { recs[i][5] = (recs[i][3] & 1) ? -result : result; fwrite(recs[i], 4, 6, data); }
+  if (plies) *plies = ply;
+  return result;
+}
+static double eloOf(double sc) { return sc <= 0 ? -999 : sc >= 1 ? 999 : -400 * log10(1 / sc - 1); }
+// bmatch <A> <B> [from] [to]: every ballot in [from, to) played twice (colours swapped). Prints a summary line for scripts.
+static int cmdBmatch(int argc, char **argv) {
+  loadBallots(); Player A = parsePlayer(argv[2]), B = parsePlayer(argv[3]);
+  int from = argc > 4 ? atoi(argv[4]) : 0, to = argc > 5 ? atoi(argv[5]) : NBAL; if (to > NBAL) to = NBAL;
+  int w = 0, d = 0, l = 0, pw = 0, pl = 0;   // pairs: A won the pair / lost the pair
+  for (int g = from; g < to; g++) {
+    int r1 = playFrom(&A, &B, BAL[g].m, 3, 0, 0, 0), r2 = -playFrom(&B, &A, BAL[g].m, 3, 0, 0, 0);
+    for (int x = 0; x < 2; x++) { int r = x ? r2 : r1; if (r > 0) w++; else if (r < 0) l++; else d++; }
+    if (r1 + r2 > 0) pw++; else if (r1 + r2 < 0) pl++;
+    double sc = (w + d * 0.5) / (w + d + l);
+    fprintf(stderr, "\r%d/%d  +%d =%d -%d  score %.3f  Elo %+.0f   ", g - from + 1, to - from, w, d, l, sc, eloOf(sc));
+  }
+  fprintf(stderr, "\n");
+  printf("RESULT %d %d %d %d %d\n", w, d, l, pw, pl);
+  return 0;
+}
+// gen2 <games> <A> <out.bin> [seed] [extraRandomMax]: self-play (A against itself) from random ballots + 0..extraRandomMax random plies
+static int cmdGen2(int argc, char **argv) {
+  loadBallots(); int G = atoi(argv[2]); Player P = parsePlayer(argv[3]);
+  FILE *f = fopen(argv[4], "ab"); if (!f) { perror(argv[4]); return 1; }
+  if (argc > 5) rng ^= (u64)atoll(argv[5]) * 0x9E3779B97F4A7C15ull; for (int i = 0; i < 5; i++) rnd32();
+  int xr = argc > 6 ? atoi(argv[6]) : 4, res[3] = { 0 }; long pos = 0; double t0 = now();
+  for (int g = 0; g < G; g++) {
+    int r = playFrom(&P, &P, BAL[rnd32() % NBAL].m, 3, rnd32() % (xr + 1), f, 0); res[r + 1]++;
+    fflush(f); pos = ftell(f) / 24;
+    fprintf(stderr, "\rgame %d/%d  pos %ld  W/D/L(black) %d/%d/%d  %.1f games/min   ", g + 1, G, pos, res[2], res[1], res[0], (g + 1) / ((now() - t0) / 60000));
+  }
+  fclose(f); fprintf(stderr, "\n"); return 0;
+}
+// ballots <ms> [from] [to]: search every 3-ply opening (White is to move after it) and print the value from Black's view and the depth
+static int cmdBallots(int argc, char **argv) {
+  int ms = argc > 2 ? atoi(argv[2]) : 2000, from = argc > 3 ? atoi(argv[3]) : 0, to = argc > 4 ? atoi(argv[4]) : 1000;
+  Ballot all[400]; int na = allBallots(all); if (to > na) to = na;
+  for (int i = from; i < to; i++) {
+    Pos s = startPos(); IO[0] = s.p[0]; IO[1] = s.p[1]; IO[2] = 0; IO[3] = 0; IO[4] = 3;
+    for (int k = 0; k < 3; k++) { IO[5 + 2 * k] = all[i].m[k].f | (all[i].m[k].t << 5); IO[6 + 2 * k] = all[i].m[k].cap; }
+    setup(); new_game(); best(99, ms, 0);
+    char b[64]; ballotStr(b, &all[i]); printf("%s\t%d\t%d\n", b, -IO[2], IO[3]); fflush(stdout);   // after 3 plies White is to move
+  }
+  return 0;
+}
+// evalpos <records.bin> [n]: print net / hand values of the first n records (checks the trainer's export against the engine)
+static int cmdEvalpos(int argc, char **argv) {
+  FILE *f = fopen(argv[2], "rb"); int n = argc > 3 ? atoi(argv[3]) : 10; i32 r[6];
+  while (n-- > 0 && fread(r, 4, 6, f) == 6) { Pos p; p.p[0] = (u32)r[0]; p.p[1] = (u32)r[1]; p.k = (u32)r[2]; p.side = r[3] & 1; printf("%d %d %d\n", evaluate(&p), r[4], r[5]); }
+  fclose(f); return 0;
+}
+// bench <ms>: nodes per second on the ballots (first 8 openings)
+static int cmdBench(int argc, char **argv) {
+  int ms = argc > 2 ? atoi(argv[2]) : 1000; loadBallots(); u64 tot = 0; double t = 0; int dep = 0;
+  for (int i = 0; i < 8 && i < NBAL; i++) {
+    Pos s = startPos(); IO[0] = s.p[0]; IO[1] = s.p[1]; IO[2] = 0; IO[3] = 0; IO[4] = 3;
+    for (int k = 0; k < 3; k++) { IO[5 + 2 * k] = BAL[i].m[k].f | (BAL[i].m[k].t << 5); IO[6 + 2 * k] = BAL[i].m[k].cap; }
+    setup(); new_game(); double t0 = now(); best(99, ms, 0); t += now() - t0; tot += nodes; dep += IO[3];
+  }
+  printf("%.2f Mnps, average depth %.1f\n", tot / t / 1000, dep / 8.0); return 0;
+}
+
 int main(int argc, char **argv) {
   initGeo(); initCB();
   if (getenv("EGDB")) egLoad(getenv("EGDB"));
@@ -209,12 +341,23 @@ int main(int argc, char **argv) {
   if (argc > 1 && !strcmp(argv[1], "match")) return cmdMatch(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "gen")) return cmdGen(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "lv")) return cmdLv(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "bmatch")) return cmdBmatch(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "gen2")) return cmdGen2(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "ballots")) return cmdBallots(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "evalpos")) return cmdEvalpos(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "bench")) return cmdBench(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "acctest")) {   // incremental vs full net evaluation along random games
     int bad = 0, tot = 0;
     for (int g = 0; g < 200; g++) { Pos p = startPos(); accFull(&p, 0); int ply = 0;
       for (; ply < 100; ply++) { Move L[MAXMV]; int n = gen(&p, L); if (!n) break; Move m = L[rnd32() % n]; accMove(&p, &m, ply); doMove(&p, &m);
         int a = netEvalAcc(&p, ply + 1), b = netEval(&p); tot++; if (abs(a - b) > 1) { bad++; } if (ply + 2 >= MAXPLY) break; } }
     printf("acc mismatches %d / %d\n", bad, tot); return 0; }
-  printf("usage: native perft [d] | think [ms]\n");
+  if (argc > 1 && !strcmp(argv[1], "acctest2")) {   // v2 net: incremental (accStep) vs full evaluation along random games
+    int bad = 0, tot = 0;
+    for (int g = 0; g < 300; g++) { Pos p = startPos(); accRoot(&p); int ply = 0;
+      for (; ply < MAXPLY - 4; ply++) { Move L[MAXMV]; int n = gen(&p, L); if (!n) break; Move m = L[rnd32() % n]; accStep(&p, &m, ply); doMove(&p, &m);
+        int a = evalAt(&p, ply + 1), b = evaluate(&p); tot++; if (a != b) bad++; } }
+    printf("v2 acc mismatches %d / %d\n", bad, tot); return 0; }
+  printf("usage: native perft [d] | think [ms] | bench [ms] | bmatch A B [from to] | gen2 games A out.bin [seed] [extraRandom] | ballots [ms] | evalpos file [n] | lv A B games [net]\n");
   return 0;
 }

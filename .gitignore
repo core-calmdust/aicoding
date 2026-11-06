@@ -1,3 +1,6 @@
 tafl/nnwork*/
 tafl/data*/
 *.nnue.pt
+checkers/nnwork*/
+checkers/egdb.d/
+*.nnue.npz

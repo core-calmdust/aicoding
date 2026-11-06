@@ -14,6 +14,8 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 - 終盤DB：4駒以下の勝ち負け引き分け（egdb4.bin.gz 517KB）を読み込む。
 - ブラウザがSIMD対応なら engine_simd.wasm（約1.8倍速）。ビルドは tools/build.sh。
 - 学習：tools/native.c gen の自己対局（約31万局面、探索値と勝敗の混合）→ tools/train.py（numpy）。
+- NNUE（v2、`CKN2`）：エンジンは対応済み。Mac で強化学習（tools/nn/loop.sh、6駒DB、3手バロット）。完成したネットは `checkers/nnue-candidate.nnue` でコミット → 強さ確認・レベル再調整のうえ evalnet.bin.gz を差し替え。強さの比較は tools/nn/match.sh（3手バロット532局、同じ持ち時間）。
+- キングが一周して元のマスに戻る取り（f＝t）は駒が残る（2026-11 修正）。
 
 ## AIの強さ（20段階）
 - 15級〜1級、初段〜五段。engine.js の LEVELS と tools/native.c の LVS を同じ値に保つ（native の lv コマンドで隣接レベルを対戦させて調整）。
