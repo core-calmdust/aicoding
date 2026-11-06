@@ -37,28 +37,38 @@
       if (o.units) unitPx = r.height / o.units;
       paintFloor();
     };
-    let floorURL = null;
+    const floorURL = {};   // per place (Table3D.table()): the floor picture as a data URL, made once
+    const GAME = (location.pathname.match(/([^/]+)\/(?:index\.html)?$/) || [])[1] || '';
     // the floor stays put while the online dock is open (or opening / closing): the board moves and shrinks over it, the
     // table does not (its grain followed the board's place and size before) — repainted again only for a new window size
     // (and once the dock has been opened, also after it is closed again: the closed layout may come back a few px different)
     let floorVP = '', floorHeld = false;
-    function paintFloor() {
+    function paintFloor(force) {
       try {
         const vp = innerWidth + 'x' + innerHeight, cl = document.documentElement.classList;
-        if (vp !== floorVP) floorHeld = false;
-        if (floorVP && (document.body.classList.contains('dock-open') || cl.contains('dock-anim'))) floorHeld = true;
+        if (vp !== floorVP || force) floorHeld = false;
+        if (floorVP && !force && (document.body.classList.contains('dock-open') || cl.contains('dock-anim'))) floorHeld = true;
         if (floorVP && floorHeld && vp === floorVP) return;
-        const F = T3.floorImage(o.floor === 'tatami' ? 'tatami' : 'wood'); if (!F) return;
+        const F = T3.floorImage(o.floor === 'tatami' ? 'tatami' : 'wood', GAME); if (!F) return;
         floorVP = vp;
-        if (!floorURL) floorURL = F.img.toDataURL('image/jpeg', .86);
-        const de = document.documentElement.style;
-        de.setProperty('background-image', `linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL}")`);
-        de.setProperty('background-size', `auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
-        de.setProperty('background-repeat', 'repeat'); de.setProperty('background-attachment', 'scroll');
+        const de = document.documentElement.style, k = T3.table ? T3.table() : 0;
+        cl.toggle('atlas-place-dark', !!F.dark);
+        if (F.css) {   // 2D準拠: the game's own 2D page background, as it is
+          de.setProperty('background', F.css); de.setProperty('background-attachment', 'fixed');
+          return;
+        }
+        de.removeProperty('background');
+        if (!floorURL[k]) floorURL[k] = F.img.toDataURL('image/jpeg', .86);
+        const over = F.over ? F.over + ',' : '', n = F.over ? (() => { let d = 0, c = 1; for (const ch of F.over) { if (ch === '(') d++; else if (ch === ')') d--; else if (ch === ',' && !d) c++; } return c; })() : 0, rep = (v) => Array(n).fill(v).join(', ') + (n ? ', ' : '');
+        de.setProperty('background-image', `${over}linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL[k]}")`);
+        de.setProperty('background-size', `${rep('100% 100%')}auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
+        de.setProperty('background-repeat', `${rep('no-repeat')}repeat, repeat`); de.setProperty('background-attachment', `${rep('fixed')}scroll, scroll`);
         const r = boardDom.getBoundingClientRect();   // the tile grid is centred on the board, like the 3D floor
-        de.setProperty('background-position', `0 0, ${Math.round(r.left + scrollX + r.width / 2 - F.w * unitPx / 2)}px ${Math.round(r.top + scrollY + r.height / 2 - F.h * unitPx / 2)}px`);
+        de.setProperty('background-position', `${rep('0 0')}0 0, ${Math.round(r.left + scrollX + r.width / 2 - F.w * unitPx / 2)}px ${Math.round(r.top + scrollY + r.height / 2 - F.h * unitPx / 2)}px`);
       } catch (e) {}
     }
+    // another place / brightness chosen (the デザイン tab, or another tab of the series): the floor follows at once
+    addEventListener('atlas-table', () => paintFloor(true));
     const alignTo = (units, top) => {
       o.units = units; placeHost();
       T3.align(() => { const b = box(); return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
@@ -540,7 +550,45 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     const coins = () => { try { const A = window.Atlas; if (!A) return; const W = A.load(); bar.querySelector('.coinN').textContent = A.coins(W, A.achievements(A.allProgress(), W)).balance.toLocaleString(); } catch (e) {} };
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });
     document.querySelectorAll('a.snd.home, .brand a.series').forEach(a => { a.href = BASE; });
+    placeField();
     return { T3, ready, alignTo, view };
+  }
+  /* ---------- 場所 (the table design, shared with the portal) and 明るさ: the first row of the new-game dialog's デザイン tab ---------- */
+  function placeField() {
+    const X = window.Table3D; if (!X || !X.PLACES || !X.TABLES[5]) return;
+    const modal = document.querySelector('#newOverlay .modal'), first = modal && modal.querySelector('[data-ng=design]'); if (!first) return;
+    if (!document.getElementById('atlasPlaceCss')) {
+      const st = document.createElement('style'); st.id = 'atlasPlaceCss';
+      // (#newOverlay #fPlace…: above nglux's auto-fill tiles — the six places stay in one row; their names show when the row is wide enough)
+      st.textContent = `#newOverlay #fPlace.atlas-place{container-type:inline-size}
+#newOverlay #fPlace.atlas-place .atlas-plrow.dsg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important}
+#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:3px 3px 3px!important;border-radius:10px!important;cursor:pointer;font:inherit;font-size:14px;font-weight:700}
+#newOverlay #fPlace.atlas-place .atlas-plrow img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;background:#efe6d6}
+#newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:none;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (min-width:600px){#newOverlay #fPlace.atlas-place .atlas-plrow img{aspect-ratio:3/2}#newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:block}#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{padding:4px 4px 7px!important}}
+#newOverlay #fPlace.atlas-place > .dsg-now{font-size:15px!important;font-weight:800}
+#newOverlay #fPlace.atlas-place .atlas-brh{margin:14px 0 8px;font-size:14px;font-weight:800;opacity:.8}
+#newOverlay #fPlace.atlas-place .atlas-br{display:flex!important;gap:6px}
+#newOverlay #fPlace.atlas-place .atlas-br > button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:15px!important;padding:10px 6px!important}`;
+      document.head.appendChild(st);
+    }
+    const f = document.createElement('div'); f.className = 'field dsg-field atlas-place'; f.id = 'fPlace'; f.dataset.ng = 'design';
+    first.parentNode.insertBefore(f, first);
+    const lang = () => ((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja').slice(0, 2);
+    const paint = () => {
+      const l = lang(), k = X.table(), b = X.bright(), N = X.PLACES.name[l] || X.PLACES.name.en, B = X.placeUi('b', l);
+      f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${N[k]}</b>`
+        + `<div class="dsg atlas-plrow">${N.map((n, i) => `<button type="button" data-k="${i}" class="${i === k ? 'sel' : ''}" aria-pressed="${i === k}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
+        + `<div class="atlas-brh">${X.placeUi('bright', l)}</div><div class="seg atlas-br">${B.map((n, i) => `<button type="button" data-b="${i}" class="${i === b ? 'sel' : ''}" aria-pressed="${i === b}">${n}</button>`).join('')}</div>`;
+    };
+    f.addEventListener('click', e => {
+      const p = e.target.closest('[data-k]'), q = e.target.closest('[data-b]');
+      if (p) { e.stopPropagation(); X.setTable(+p.dataset.k); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
+    });
+    addEventListener('atlas-table', paint);
+    addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright') X.setBright(+e.newValue || 0); });
+    const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
+    paint();
   }
   window.AtlasSkin = { init };
 })();

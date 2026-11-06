@@ -190,7 +190,17 @@
   const DAY = 864e5;
   const ymd = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
   const daysSince = s => Math.floor((Date.parse(ymd(Date.now())) - Date.parse(s)) / DAY);
-  const updText = (u, l) => l === 'ja' ? u[2] : l === 'en' ? u[3] : (u[4] && u[4][l]) || u[3];
+  // the portal's own 3D play is named after the place chosen for it (localStorage 'atlas-table', atlas/tables3d.js):
+  // the changelog's ちゃぶ台 / chabudai become that place (ja) or a plain "table" (the other languages)
+  const PLACE_JA = ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎'];
+  const PLACE_W = { en: [/chabudai/g, 'table'], hi: [/चाबुदाई/g, 'मेज़'], zh: [/矮桌/g, '棋桌'], ko: [/밥상/g, '테이블'] };
+  const placeK = () => { try { const k = +localStorage.getItem('atlas-table'); return k >= 1 && k <= 5 ? k | 0 : 0; } catch (e) { return 0; } };
+  function placeWord(s, l) {
+    const k = placeK(); if (!k || !s) return s;
+    if (l === 'ja') return s.replace(/ちゃぶ台の3D盤/g, k === 1 ? '3D盤' : PLACE_JA[k] + 'の3D盤').replace(/ちゃぶ台/g, PLACE_JA[k]);
+    const w = PLACE_W[l]; return w ? s.replace(w[0], w[1]) : s;
+  }
+  const updText = (u, l) => placeWord(l === 'ja' ? u[2] : l === 'en' ? u[3] : (u[4] && u[4][l]) || u[3], l);
   const lastUpdate = id => (UPDATES.find(u => u[1] === id) || [])[0] || null;
   // Badges (max 2 shown, in this priority):
   //   NEW     released within 14 days

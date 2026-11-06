@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- Dev tool (prototype): the portal's 3D room with one of the table designs (Table3D.TABLES, atlas/tables3d.js)
+     and a chess game in progress on it, framed by the portal camera.
+     http://localhost:8000/atlas/tools/tables.html?tbl=0..5[&game=chess|reversi]  → window.READY becomes true when drawn. -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}#gl{position:absolute;inset:0}#gl canvas{display:block;width:100%!important;height:100%!important}</style></head>
+<body><div id="gl"></div>
+<script>try { localStorage.setItem('atlas-tod', 'day'); localStorage.removeItem('atlas-lite'); } catch (e) {}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../models/chess.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), X = window.Table3D;
+  X.mount(document.getElementById('gl'));
+  // a quiet Italian game, move 8 or so
+  const FEN = 'r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1';
+  const g = X.MODELS.chess(true), Y = g.userData.top, C = X.chess;
+  FEN.split('/').forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; }
+    const col = ch === ch.toUpperCase() ? 'w' : 'b', t = ch.toUpperCase(), p = C.piece(t, col, { reflect: true }), [x, z] = C.cell(f, r);
+    p.position.set(x, Y, z); if (t === 'N') p.rotation.y = col === 'w' ? Math.PI / 2 + (f < 4 ? -.35 : .35) : -Math.PI / 2 + (f < 4 ? .35 : -.35);
+    g.add(p); const sh = X.contact(.34, .5); sh.position.set(x, Y + .002, z); g.add(sh); f++; } });
+  g.scale.setScalar(.98);
+  X.show('chess', g, { still: true });
+  X.quiet(true); X.snap();
+  setTimeout(() => { X.snap(); X.kick(1500); setTimeout(() => { window.READY = true; }, 1600); }, 300);
+})();
+</script>
+</body></html>
