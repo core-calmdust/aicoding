@@ -256,13 +256,17 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   let sync = false;
   const wait = ms => sync ? null : new Promise(r => setTimeout(r, ms));
   // a step can overshoot (the review box gets lower too, the board snaps to whole sizes): give back what is left over
+  // (a step that went too far — the board and the review box under it both grow with --vh — is halved, not given up)
   const loosen = async my => {
-    for (let k = 0; k < 4 && R > 0; k++) {
+    let step = 0;
+    for (let k = 0; k < 7 && R > 0; k++) {
       const [top, bot] = region(), u = bounds(); if (!u || my !== gen) return;
       const slack = (bot - top - 2 * M) - (u[1] - u[0]); if (slack < 12) return;
-      const keep = R; R = Math.max(0, R - Math.floor(slack) + 4); apply(); await wait(180); if (my !== gen) return;
+      step = step ? Math.min(step, Math.floor(slack) - 4) : Math.floor(slack) - 4; if (step < 6) return;
+      const keep = R; R = Math.max(0, R - step); apply(); await wait(180); if (my !== gen) return;
       const [t2, b2] = region(), u2 = bounds(); if (!u2) return;
-      if (u2[1] - u2[0] > b2 - t2 - 2 * M + 1) { R = keep; apply(); await wait(180); return; }   // too far: back to the last size that fitted
+      if (u2[1] - u2[0] > b2 - t2 - 2 * M + 1) { R = keep; apply(); await wait(180); step = Math.floor(step / 2); }   // too far: back, and try half as much
+      else step = 0;
     }
   };
   // too tall for the space between the header and the dock: lay the game out smaller (a few passes: not everything scales with --vh)
@@ -270,7 +274,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     let prev = Infinity, good = R, stall = 0;
     for (let k = 0; k < 10; k++) {
       const [top, bot] = region(), room = bot - top - 2 * M, u = bounds(); if (!u || my !== gen) return;
-      const h = u[1] - u[0], over = h - room; if (over <= 4) { if (k) await loosen(my); return; }   // (a few px into the margin M is fine)
+      const h = u[1] - u[0], over = h - room; if (over <= 4) { if (k || R > 0) await loosen(my); return; }   // (also at once: a refine finding the layout came out smaller than the probe thought — a JS-sized board redrawn later — gives the room back)   // (a few px into the margin M is fine)
       // a step that did not make it smaller (the board is limited by the width, or the layout is at its minimum): try a
       // larger one; after three in a row, go back to the last size that helped and stop
       if (h < prev - 1) { good = R; stall = 0; prev = h; } else if (++stall >= 3) { R = good; apply(); await wait(120); return; }
@@ -405,7 +409,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     await Promise.race([dockDone(), new Promise(r => setTimeout(r, 2000))]);
     await new Promise(r => setTimeout(r, 80)); if (my !== gen || !isOpen()) return;
     const b0 = snap();   // (what the refine changes is shown as a short move too)
-    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { sync = true; try { await fit(my); } finally { sync = false; } if (my !== gen || !isOpen()) return; }
+    const u = bounds(); if (u && Math.abs(u[1] - u[0] - hp) > 2) { await fit(my); if (my !== gen || !isOpen()) return; }   // (with waits: boards a game sizes in JS after a resize have to be redrawn between the steps — connect4 came out far too small)
     moveTo(delta()); flip(b0, 180);
     // the dock (or the header) ended up elsewhere than expected: settle again
     setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
