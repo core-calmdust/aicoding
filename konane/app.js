@@ -40,7 +40,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-konane';
-const settings = { mode: 'ai', rule: 's8', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'kapa', pcs: 'coral' };
+const settings = { mode: 'ai', rule: 's8', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'quilt', pcs: 'coral' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -853,7 +853,7 @@ document.addEventListener('keydown', e => {
 // Hawaiian crafts instead of the plain stone papamū of old: kapa (beaten bark cloth stamped with bamboo-stamp bands),
 // kapa kuiki (the Hawaiian quilt: an ʻulu appliqué with echo quilting), lauhala (woven pandanus), pāhoehoe lava.
 // Stones: white coral and black basalt (the traditional pieces), kukui nuts, pearls, koa wood.
-const BD_KEYS = ['kapa', 'quilt', 'lauhala', 'pahoehoe'], PC_KEYS = ['coral', 'kukui', 'pearl', 'koa'];   // kapa first: the default
+const BD_KEYS = ['quilt', 'kapa', 'lauhala', 'pahoehoe'], PC_KEYS = ['coral', 'kukui', 'pearl', 'koa'];   // quilt first: the default
 const BD_DEFS = '';
 // [surface (fallback), puka, frame, frame line]
 const BD_PAL = {
@@ -870,7 +870,7 @@ const PC_PAL = {
   koa: [['#5a2e16', '#22100a'], ['#dcae72', '#9a6a36']],
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'kapa';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'quilt';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'coral';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }

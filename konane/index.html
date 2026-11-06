@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-konane') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'kapa'; document.documentElement.dataset.pcs = S.pcs || 'coral'; document.documentElement.style.setProperty('--S', { s6: 6, s10: 10 }[S.rule] || 8); } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-konane') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'quilt'; document.documentElement.dataset.pcs = S.pcs || 'coral'; document.documentElement.style.setProperty('--S', { s6: 6, s10: 10 }[S.rule] || 8); } catch (e) {}</script>
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -706,7 +706,6 @@ body.in-online #coachCard{display:none!important}
 .fxsvg .arrow.ng{stroke:#ff5a48}
 .fxsvg .arrow.pl{stroke:#fff}
 .fxsvg .arrow.ck{stroke:#3df59a!important;stroke-width:.1px;filter:drop-shadow(0 0 1px #08120c) drop-shadow(0 0 3px rgba(0,0,0,.9))!important}
-#btnDraw{display:none!important}
 .fxsvg .ring.ck{stroke:#3df59a;filter:drop-shadow(0 0 3px rgba(0,0,0,.9))}
 .fxsvg .arrow.rvb1{stroke:#ffd25a}
 .fxsvg .arrow.rvb2{stroke:#8ce8d6}
@@ -1314,8 +1313,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="i18n-online.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
-<script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=38"></script>
+<script src="../shared/rulesoffer.js?v=17"></script>
+<script src="../shared/headerbar.js?v=39"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1325,16 +1324,16 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="firebase-config.js?v=1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=1"></script>
-<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/resign.js?v=3"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="../shared/coachkit.js?v=16"></script>
 <script src="../shared/record.js?v=12"></script>
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
-<script src="../shared/export.js?v=7"></script>
+<script src="../shared/export.js?v=9"></script>
 <script src="app.js?v=1"></script>
 <script src="online-ui.js?v=1"></script>
-<!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D papamū (a koa-framed board with a kapa inlay and carved puka), coral and basalt stones, guide speech bubbles, portal look (all features kept) -->
+<!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D lava papamū (the pāhoehoe field with a carved cup on every square, molten cracks in the band), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
@@ -1343,12 +1342,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=2')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=1')).then(() => load('../atlas/skin/konane.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=4')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=1')).then(() => load('../atlas/skin/konane.js?v=1'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261106tb1" defer></script>
+<script src="../shared/atlas.js?v=20261106sh6" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=17" defer></script>

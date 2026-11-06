@@ -391,6 +391,31 @@
       for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0x2a56b8)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
       return g;
     },
+    konane() {   // a corner of the lava papamū: carved cups on black basalt, molten cracks glowing round the edge; a basalt pebble hops over a coral one into the empty cup
+      const cracks = (c, W, glow) => {   // the same cracks on the colour map and (alone) on the glow map
+        let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        c.strokeStyle = glow ? '#ffffff' : '#ff8a30'; c.lineJoin = c.lineCap = 'round';
+        for (let k = 0; k < 18; k++) { const side = k % 4, t0 = r() * W; let x = side === 0 ? t0 : side === 1 ? W - 18 : side === 2 ? t0 : 18, y = side === 0 ? 18 : side === 1 ? t0 : side === 2 ? W - 18 : t0;
+          c.lineWidth = 7 + r() * 6; c.beginPath(); c.moveTo(x, y);
+          for (let j = 0; j < 5; j++) { x += side % 2 ? (r() - .5) * 26 : 26 + r() * 24; y += side % 2 ? 26 + r() * 24 : (r() - .5) * 26; c.lineTo(x, y); } c.stroke(); }
+      };
+      const top = M({ map: X.canvasTex('ickn3', 512, 512, (c, W) => {
+        c.fillStyle = '#2b2521'; c.fillRect(0, 0, W, W);
+        let sd = 3; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 900; k++) { c.fillStyle = `rgba(${r() < .5 ? '74,64,58' : '12,10,9'},${.25 + r() * .3})`; c.beginPath(); c.arc(r() * W, r() * W, 2 + r() * 7, 0, 7); c.fill(); }
+        cracks(c, W, false);
+        const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) { const cx = (x + .5) * s, cy = (y + .5) * s, g = c.createRadialGradient(cx, cy + 8, 6, cx, cy, s * .4); g.addColorStop(0, '#050404'); g.addColorStop(.72, '#16120f'); g.addColorStop(1, 'rgba(60,50,44,0)'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, s * .4, 0, 7); c.fill(); }
+      }), emissiveMap: X.canvasTex('ickn3e', 512, 512, (c, W) => { c.fillStyle = '#000'; c.fillRect(0, 0, W, W); cracks(c, W, true); }), emissive: 0xff4a08, emissiveIntensity: .85, roughness: .7 });
+      const g = boardChunk(3, 3.6, top, C(0x231d19, { roughness: .8 }));
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xf1ebdf, { roughness: .9 }) : gloss(0x1c1b1b), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
+      [[0, 0, 0], [1, 0, 1], [2, 0, 0], [0, 2, 1], [1, 2, 0], [2, 2, 1], [1, 1, 1]].forEach(([x, z, w]) => g.add(at(pebble(!!w, .78), p(x), .5, p(z))));
+      // the big basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); glowing dots trace the arc
+      g.add(at(pebble(false, 1.35), p(1) - .2, 2.35, p(1), 0, 0, -.28));
+      const glowM = M({ color: 0xff6a1a, emissive: 0xff4a08, emissiveIntensity: .7 });
+      for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, glowM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
+      return g;
+    },
     agon() {   // a fragment of the Victorian (Jaques) Agon board: mahogany, rings of oxblood and ivory with gilt lines round the bottle-green throne; the bone queen with a gold crown steps onto the throne past bone and ebony guards
       const top = M({ map: X.canvasTex('icag2', 512, 512, (c, W) => {
         c.fillStyle = '#5a2316'; c.fillRect(0, 0, W, W);

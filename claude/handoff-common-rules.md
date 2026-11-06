@@ -44,7 +44,7 @@
 | AI学習 | ユーザーの Mac mini（メモリ64GB）で実行。数千万局面規模で本格的に学習してよい（約2000万局面で目に見える効果、という経験則） |
 
 ### 主なフォルダ
-- ボードゲーム：`shogi/ chess/ reversi/ gomoku/ checkers/ go/ xiangqi/ morris/ dots/ connect4/ mancala/ backgammon/ tafl/ hex/ fanorona/ alquerque/ ugolki/ agon/ ur/`
+- ボードゲーム：`shogi/ chess/ reversi/ gomoku/ checkers/ go/ xiangqi/ morris/ dots/ connect4/ mancala/ backgammon/ tafl/ hex/ fanorona/ alquerque/ ugolki/ agon/ ur/ konane/`
 - カードゲーム（2D専用）：`poker/ blackjack/ baccarat/ solitaire/`、麻雀：`mahjong/`
 - パズル系ポータル（別ルール）：`sudoku/`（まいにち数独）`speed-sudoku/` `samegame/` `jailbreak/`
 - 開発室（アルファ）：`hexdeck/`（NUMBERLANDS）、`wyrm/`（WYRMSPHERE）
@@ -390,7 +390,7 @@
 | `claude/atlas-portal-spec.md` | ポータル仕様 |
 | `claude/online-security-setup.md` | オンライン改ざん対策・Firebase設定手順 |
 | `claude/<game>-spec.md` | 各ゲームの仕様（ur, agon, ugolki, fanorona, alquerque, checkers, go, poker, mahjong, solitaire, hexdeck, jailbreak, samegame-pop, speed-sudoku 等） |
-| `claude/COACH.md` | `shared/COACH.md` の写し（正本は `shared/COACH.md`） |
+| `claude/COACH.md` | `shared/COACH.md` への案内だけ（内容は正本の `shared/COACH.md` に書く） |
 | `CLAUDE.md` | 作業の進め方（PR・マージ・バージョン番号） |
 | `shared/COACH.md` | コーチ・戦績・下タブのテンプレ |
 | `atlas/README.md` | ポータルの実装詳細 |
