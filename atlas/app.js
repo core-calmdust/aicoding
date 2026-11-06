@@ -1076,7 +1076,6 @@
   function setName(v) {
     W.name = v.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true);
     ['nameIn', 'mpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
-    const dn = document.querySelector('#dprev .dpl b'); if (dn) dn.textContent = W.name || t('pf.player');
   }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
@@ -1093,22 +1092,24 @@
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
   }
-  // My Page at the top of きせかえ: the home profile (avatar · Lv · name · coins) with its stats, the login week and the Google account
-  // PC: profile on the left, stats on the right · phones: one compact block above the dress-up
+  // My Page at the top of きせかえ: one slim card, about the home name card's size — small avatar · name · Lv bar · coins,
+  // then stat chips (実績 → the achievements tab · games played · login streak, which opens the login week) and the Google account.
+  // The look itself (big character, background, frame) is the dress preview's job right below, so it isn't repeated here.
+  let mpWk = false;
   function renderMyPage() {
     const el = $('mypage'); if (!el) return;
-    const { touched, done, s, pos, lv } = profStats(), got = done % 3;
-    el.innerHTML = `<div class="mp-id"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
-        <span class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}">${ART.avatar(W.av, 128, { clear: true })}<span class="lv">Lv.${lv}</span></span>
-        <div class="mp-who"><input id="mpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
-          <span class="coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span>
-          <div class="mp-lv"><div class="mp-lvh"><b>Lv.${lv}</b><small>${esc(t('mp.next', { n: 3 - got }))}</small></div><div class="mp-lvb">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</div></div></div></div>
-      <div class="mp-st"><div class="ptiles">
-          <button type="button" class="pt go" data-go="ach" aria-label="${esc(t('pf.ach'))} ${done} / ${ACH.length}"><span class="ic">🏆</span><b>${done}<small>/${ACH.length}</small></b><em>${esc(t('pf.ach'))}</em><span class="mp-ar" aria-hidden="true">›</span></button>
-          ${pTile('🎲', touched, A_.GAMES.length, t('pf.games'))}${pTile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, null, t('mp.streak'), 'stk')}</div>
-        ${weekHtml(esc(t('login.h')), pos)}
-        <div class="accw"></div></div>`;
+    const { touched, done, s, pos, lv } = profStats(), got = done % 3, nx = esc(t('mp.next', { n: 3 - got }));
+    const chip = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="mpc"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
+    el.innerHTML = `<span class="mp-av av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}">${ART.avatar(W.av, 52, { clear: true })}</span>
+      <div class="mp-who"><input id="mpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
+        <div class="mp-lv" title="${nx}"><b>Lv.${lv}</b><span class="mp-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span></div></div>
+      <span class="coin mp-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span>
+      <div class="mp-chips">${chip('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="mp-ar" aria-hidden="true">›</span>')}${chip('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${chip('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${mpWk}" aria-controls="mpWk"`, '<svg class="mp-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}</div>
+      <div class="accw"></div>
+      <div class="mp-wk" id="mpWk">${weekHtml(esc(t('login.h')), pos)}</div>`;
+    el.classList.toggle('wk', mpWk);
     el.querySelector('[data-go=ach]').onclick = () => go('ach');
+    el.querySelector('[data-wk]').onclick = e => { mpWk = !mpWk; el.classList.toggle('wk', mpWk); e.currentTarget.setAttribute('aria-expanded', mpWk); };
     $('mpName').onchange = e => setName(e.target.value);
     renderAcc();
   }
@@ -1315,7 +1316,7 @@
       return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
     const PS = matchMedia('(max-width:760px)').matches ? 118 : 230;   // a smaller character on phones (the names sit beside it), a big one on PC
     $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
-      <div class="dname"><div class="dpl"><b>${esc(W.name || t('pf.player'))}</b><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
+      <div class="dname"><div class="dpl"><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();

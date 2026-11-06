@@ -805,63 +805,58 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
-/* ===== きせかえ: My Page (app.js renderMyPage) — PC: profile left · stats right; phones: one compact block above the dress-up ===== */
-.mypage{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;padding:14px;margin-bottom:18px}
-.mp-id{position:relative;overflow:hidden;border-radius:20px;padding:18px;display:flex;align-items:center;gap:18px;background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
-.mp-id .bgfill{position:absolute;inset:0;opacity:.9;filter:saturate(1.15)}
-.mp-id .bgfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,253,247,0) 0%,rgba(255,253,247,.9) 46%)}
-[dir=rtl] .mp-id .bgfill::after{background:linear-gradient(270deg,rgba(255,253,247,0) 0%,rgba(255,253,247,.9) 46%)}
-.mp-id > *:not(.bgfill){position:relative}
-.mp-id .av{box-shadow:0 6px 0 rgba(0,0,0,.12),0 0 0 5px rgba(255,255,255,.85)}
-.mp-id .av.framed{box-shadow:none}
-.mp-id .av .lv{bottom:-9px;font-size:13px;padding:2px 10px}
-.mp-who{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:9px}
-.mp-who input{border:0;border-bottom:2px dashed #d8c9a6;background:transparent;font-size:20px;font-weight:900;width:100%;padding:1px 0;outline:none;color:var(--ink)}
+/* ===== きせかえ: My Page (app.js renderMyPage) — one slim card about the home name card's size:
+   PC ≥1100px one row (avatar · name/Lv · coins · chips · Google); narrower: chips and Google on a 2nd row; phones: 2 rows.
+   The 🔥 chip opens the login week under it. ===== */
+.mypage{display:grid;grid-template-columns:auto minmax(140px,220px) auto minmax(0,1fr) auto;grid-template-areas:"av who coin chips acc" "wk wk wk wk wk";align-items:center;column-gap:14px;padding:10px 16px;margin-bottom:16px;border-radius:22px}
+.mp-av{grid-area:av}.mp-who{grid-area:who;min-width:0}.mp-coin{grid-area:coin}.mp-chips{grid-area:chips;min-width:0}.mypage .accw{grid-area:acc;min-width:0}.mp-wk{grid-area:wk}
+.mp-av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}.mp-av.framed{box-shadow:none}
+.mp-who input{display:block;border:0;border-bottom:2px dashed #d8c9a6;background:transparent;font-size:18px;font-weight:900;width:100%;padding:1px 0;outline:none;color:var(--ink)}
 .mp-who input:focus{border-bottom-color:var(--sky)}
-.mp-who .coin{font-size:17px}
-.mp-lv{width:100%}
-.mp-lvh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.mp-lvh b{font:700 15px var(--round);color:var(--grape2)}.mp-lvh small{font-size:13.5px;font-weight:800;color:var(--ink2)}
-.mp-lvb{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
-.mp-lvb i{height:9px;border-radius:99px;background:rgba(0,0,0,.08)}.mp-lvb i.on{background:var(--grape)}
-.mp-st{display:flex;flex-direction:column;gap:10px;justify-content:center;min-width:0}
-.mypage .ptiles{gap:10px}
-.mypage .pt{padding:9px 6px 8px;row-gap:2px;position:relative}
-.mypage .pt .ic{font-size:22px}
-.mypage .pt b{font-size:24px}.mypage .pt b small{font-size:13px}
-.mypage .pt em{font-size:13px}
-.mypage .pt.go{font:inherit;color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
-.mypage .pt.go b{font:700 24px var(--round)}
-.mypage .pt.go:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--line)}
-.mypage .pt.go:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
-.mypage .pt .mp-ar{position:absolute;top:5px;inset-inline-end:9px;font:700 18px var(--round);color:var(--sky)}
-.mypage .lgw{padding:8px 12px 9px}
-.mypage .lgh b{font-size:14px}.mypage .lgh small{font-size:12px}
-.mypage .lgd{gap:6px;margin-top:6px}
-.mypage .lgd .d{padding:4px 0 3px}.mypage .lgd .d i{width:24px;height:24px;font-size:11px}.mypage .lgd .d.big i{height:24px;font-size:18px}.mypage .lgd .d small{font-size:11px}
-.mypage .acc{margin-top:0;font-size:12.5px}
+.mp-lv{display:flex;align-items:center;gap:8px;margin-top:5px}
+.mp-lv b{font:700 14px var(--round);color:var(--grape2);flex:none}
+.mp-lvb{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:130px}
+.mp-lvb i{height:7px;border-radius:99px;background:#ece4d2}.mp-lvb i.on{background:var(--grape)}
+.mp-coin{font-size:16px;padding:3px 11px 3px 4px}.mp-coin i{width:22px;height:22px}
+.mp-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* a chip: icon + number on one line, the label under it (labels stay whole in every language) */
+.mpc{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:5px;row-gap:0;background:#fff;border:2px solid var(--line);border-radius:14px;padding:5px 8px 4px;box-shadow:0 2px 0 var(--line);font:inherit;color:inherit;white-space:nowrap;min-width:0;position:relative}
+.mpc .ic{font-size:16px}
+.mpc b{font:700 17px var(--round);line-height:1.15}.mpc b small{font-size:12px;color:var(--ink2)}
+.mpc em{grid-column:1/-1;text-align:center;font-style:normal;font-size:12.5px;font-weight:900;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;max-width:100%}
+button.mpc{cursor:pointer;transition:transform .15s,box-shadow .15s}
+button.mpc:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--line)}button.mpc:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+.mpc .mp-ar,.mpc .mp-v{position:absolute;top:4px;inset-inline-end:7px}
+.mpc .mp-ar{font:700 15px var(--round);color:var(--sky)}
+.mpc .mp-v{width:14px;height:14px;fill:none;stroke:var(--ink2);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.mypage.wk .mpc .mp-v{transform:rotate(180deg)}
+.mypage .acc{margin-top:0;font-size:12px;flex-wrap:nowrap;justify-content:flex-end}
+.mypage .acc span{max-width:170px}
+.mp-wk{display:none;margin-top:10px}.mypage.wk .mp-wk{display:block}
+.mypage .lgh small{display:block;font-size:12px}.mypage .lgh b{font-size:14px}
+.mypage .lgd .d i{width:22px;height:22px;font-size:11px}.mypage .lgd .d.big i{height:22px;font-size:17px}.mypage .lgd .d small{font-size:11px}
+@media (max-width:1099px){
+  .mypage{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"av who coin" "chips chips acc" "wk wk wk"}
+  .mp-chips,.mypage .accw{margin-top:10px}
+}
 @media (max-width:760px){
-  .mypage{grid-template-columns:1fr;gap:10px;padding:10px;margin-bottom:12px;border-radius:22px}
-  .mp-id{padding:10px 12px;gap:14px;border-radius:16px}
-  .mp-id .av svg,.mp-id .av img{width:64px;height:64px}
-  .mp-id .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px rgba(255,255,255,.85)}
-  .mp-id .av .lv{bottom:-7px;font-size:11px;padding:0 7px;line-height:16px}
-  .mp-who{gap:5px}
-  .mp-who input{font-size:17px}
-  .mp-who .coin{position:absolute;top:0;inset-inline-end:0;font-size:14px;padding:2px 9px 2px 3px}.mp-who .coin i{width:20px;height:20px;font-size:10px}
-  .mp-who input{padding-inline-end:96px}
-  .mp-lvh b{font-size:13px}.mp-lvh small{font-size:11.5px}.mp-lvb i{height:7px}
-  .mp-st{gap:8px}
-  .mypage .ptiles{gap:7px}
-  .mypage .pt{padding:6px 3px 5px;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:5px}   /* icon beside the number: one line lower */
-  .mypage .pt em{grid-column:1/-1}
-  .mypage .pt .ic{font-size:16px}
-  .mypage .pt b,.mypage .pt.go b{font-size:18px}.mypage .pt b small{font-size:11px}
-  .mypage .pt em{font-size:11px;max-width:100%}
-  .mypage .pt .mp-ar{top:2px;inset-inline-end:6px;font-size:15px}
-  .mypage .lgw{padding:6px 9px 7px}
-  .mypage .lgh b{font-size:13px}.mypage .lgh small{display:block;font-size:11px}
-  .mypage .lgd{gap:4px}.mypage .lgd .d i{width:20px;height:20px;font-size:10px}.mypage .lgd .d.big i{height:20px;font-size:16px}.mypage .lgd .d small{font-size:9.5px}
-  .mypage .acc{font-size:12px}
+  .mypage{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"av who coin" "chips chips chips" "acc acc acc" "wk wk wk";column-gap:10px;padding:8px 10px 10px;margin-bottom:12px}
+  .mp-av svg,.mp-av img{width:46px;height:46px}
+  .mp-who input{font-size:16px}
+  .mp-lv{margin-top:4px}.mp-lv b{font-size:12.5px}
+  .mp-coin{font-size:14px;padding:2px 9px 2px 3px}.mp-coin i{width:20px;height:20px;font-size:10px}
+  .mp-chips{gap:6px}
+  .mpc{column-gap:4px;padding:4px 4px 3px;border-radius:12px}
+  .mpc em{font-size:11px}
+  .mpc .ic{font-size:14px}.mpc b{font-size:15px}.mpc b small{font-size:10.5px}
+  .mpc .mp-ar,.mpc .mp-v{top:3px;inset-inline-end:5px}
+  .mpc .mp-ar{font-size:13px}.mpc .mp-v{width:12px;height:12px}
+  /* phones: the Google line and the login week open together from the 🔥 chip */
+  .mypage .accw{display:none}.mypage.wk .accw{display:block}
+  .mypage .acc{justify-content:flex-start;flex-wrap:wrap}
+  .mp-chips,.mypage .accw,.mp-wk{margin-top:8px}
+  .mypage .lgh small{font-size:11px}.mypage .lgh b{font-size:13px}
+  .mypage .lgd .d i{width:20px;height:20px;font-size:10px}.mypage .lgd .d.big i{height:20px;font-size:16px}.mypage .lgd .d small{font-size:9.5px}
 }
 /* ===== table play on a phone held sideways (app.js LAND, #bv.pland): the full game's own landscape layout
    (atlas/skin/skin.css html.atlas-land for backgammon, atlas/skin/mancala.css html.mc-barmenu for mancala) ===== */
@@ -1512,6 +1507,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=13">
 <script src="worldmap.js?v=16"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=180"></script>
+<script src="app.js?v=181"></script>
 </body>
 </html>
