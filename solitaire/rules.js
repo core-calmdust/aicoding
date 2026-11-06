@@ -343,6 +343,382 @@ ar: {
       { t: 'نقل عدة أوراق', b: 'الأماكن الفارغة تتيح نقل متتالية: (الخانات الحرة + 1) × 2^(الأعمدة الفارغة) ورقة.', task: 'انقل 9♥ 8♠ معاً إلى 10♠', ok: 'ورقتان دفعة واحدة!' },
     ] },
 },
+ru: {
+  klondike: {
+    origin: 'Северная Америка',
+    players: '1',
+    time: '5–15 мин',
+    hist: 'Название, как считается, связано с Клондайкской золотой лихорадкой в канадском Юконе (с 1896 года). В 1990 году игра вошла в Windows 3.0 как «Пасьянс» и стала самым известным пасьянсом в мире. В России её знают как «Косынку».',
+    win: 'Соберите все 52 карты на четыре базы (справа вверху): каждую масть от туза до короля.',
+    cult: 'В Британии такие игры называют «пейшенс» (терпение) — карточные игры, в которые спокойно играют в одиночку.',
+    p: [{
+      t: 'Базы начинаются с туза',
+      b: 'Четыре базы (справа вверху) собираются по мастям от туза вверх: Т, 2, 3… Начать базу может только туз.',
+      task: 'Перетащите туза ♠ на базу (или дважды щёлкните по нему)',
+      ok: 'Туз ♠ на базе!'
+    }, {
+      t: 'По убыванию, чередуя цвета',
+      b: 'В семи столбцах кладите карту на 1 меньше и другого цвета (красную 7 на чёрную 8).',
+      task: 'Положите красную 7 на чёрную 8',
+      ok: 'На 1 меньше и другого цвета — это главное правило!'
+    }, {
+      t: 'Открывайте скрытые карты',
+      b: 'Уберите верхнюю карту столбца — и закрытая карта под ней откроется. Чтобы победить, нужно открыть их все.',
+      task: 'Переложите валета ♦ на даму ♠, чтобы открыть скрытую карту',
+      ok: 'Скрытая карта открыта!'
+    }, {
+      t: 'В пустой столбец — король',
+      b: 'В пустой столбец можно положить только короля (или ряд, начинающийся с короля).',
+      task: 'Переложите короля ♦ в пустой столбец',
+      ok: 'Король занял пустой столбец!'
+    }, {
+      t: 'Открывайте колоду',
+      b: 'Щёлкните по колоде (слева вверху), чтобы открыть карту в сброс, и сыграйте её. Когда колода кончится, сброс переворачивается и используется снова.',
+      task: 'Откройте карту из колоды и положите 4♥ на 5♠',
+      ok: 'Картами из колоды тоже можно играть!'
+    }]
+  },
+  spider: {
+    origin: 'Британия / США',
+    players: '1',
+    time: '10–30 мин',
+    hist: 'Классический пасьянс на две колоды. Он входит в Windows начиная с Windows Me и стал не менее популярен, чем «Косынка».',
+    win: 'Соберите в столбце от короля до туза одной масти (13 карт) — и они уйдут со стола. Соберите 8 таких рядов, чтобы победить.',
+    cult: 'Число мастей (1, 2 или 4) сильно меняет сложность, поэтому игра подходит и новичкам, и опытным игрокам.',
+    p: [{
+      t: 'Кладите на 1 меньше',
+      b: 'На столбец можно положить любую карту на 1 меньше, независимо от масти (8 на 9).',
+      task: 'Положите любую 8 на 9♠',
+      ok: 'Для укладки масть не важна!'
+    }, {
+      t: 'Ряды одной масти двигаются вместе',
+      b: 'Ряд одной масти (например, 9♠ 8♠ 7♠) можно перенести целиком.',
+      task: 'Перенесите 9♠ 8♠ 7♠ вместе на 10♠',
+      ok: 'Перенесено целиком!'
+    }, {
+      t: 'От короля до туза — ряд уходит',
+      b: 'Когда в столбце собран ряд от короля до туза одной масти, эти 13 карт считаются собранными и убираются.',
+      task: 'Положите туза ♠ на 2♠, чтобы собрать ряд от короля до туза',
+      ok: 'Один ряд готов! Соберите восемь.'
+    }, {
+      t: 'Раздача из колоды',
+      b: 'Застряли? Щёлкните по колоде (справа вверху) — в каждый столбец ляжет по карте. При пустом столбце раздавать нельзя.',
+      task: 'Щёлкните по колоде, чтобы раздать',
+      ok: 'Каждый столбец получил новую карту!'
+    }]
+  },
+  freecell: {
+    origin: 'США',
+    players: '1',
+    time: '5–15 мин',
+    hist: 'Пол Алфилл написал «Свободную ячейку» в 1978 году для компьютерной системы PLATO; позже игра прославилась благодаря Windows.',
+    win: 'Соберите все 52 карты на четыре базы (справа вверху): каждую масть от туза до короля.',
+    cult: 'Из раскладов Windows с номерами от 1 до 32 000 нерешаемым считается только один — № 11982.',
+    p: [{
+      t: 'Одна карта в ячейке',
+      b: 'В каждую свободную ячейку (слева вверху) можно отложить одну любую карту.',
+      task: 'Положите короля ♠ в ячейку, чтобы освободить 3♦',
+      ok: 'Вы воспользовались ячейкой!'
+    }, {
+      t: 'Базы начинаются с туза',
+      b: 'Базы (справа вверху) собираются по мастям от туза вверх.',
+      task: 'Переложите туза ♦ на базу',
+      ok: 'Туз ♦ на базе!'
+    }, {
+      t: 'По убыванию, чередуя цвета',
+      b: 'В столбцах кладите карту на 1 меньше и другого цвета.',
+      task: 'Положите красную 8 на чёрную 9',
+      ok: 'Отлично!'
+    }, {
+      t: 'Перенос нескольких карт',
+      b: 'Свободные места позволяют перенести ряд сразу: (свободные ячейки + 1) × 2^(пустые столбцы) карт.',
+      task: 'Перенесите 9♥ 8♠ вместе на 10♠',
+      ok: 'Две карты перенесены сразу!'
+    }]
+  }
+},
+'zh-TW': {
+  klondike: {
+    origin: '北美洲',
+    players: '1人',
+    time: '5〜15分鐘',
+    hist: '據說名稱來自加拿大育空的「克朗代克淘金熱」（1896年起）。1990年以「接龍」之名收錄在Windows 3.0，成為全世界最有名的單人紙牌遊戲。',
+    win: '把52張牌依花色從A→2→…→K的順序，全部疊到右上的4個基礎堆就贏了。',
+    cult: '在英國這類遊戲叫做「Patience（耐心）」，是一個人慢慢享受的紙牌遊戲代表。',
+    p: [{
+      t: '基礎堆從A開始',
+      b: '右上的4個基礎堆，依同花色A→2→3…的順序疊上。一開始只能放A。',
+      task: '把A♠拖曳（或雙擊）到基礎堆',
+      ok: 'A♠放上基礎堆了！'
+    }, {
+      t: '紅黑交錯、小1疊上',
+      b: '下方7列要紅黑交錯，疊上比它小1的牌（黑8上放紅7）。',
+      task: '把紅色的7疊到黑色的8上',
+      ok: '顏色不同、小1的數字。這就是基本規則！'
+    }, {
+      t: '翻開背面的牌',
+      b: '移走列最上面的牌，下面背面朝上的牌就會翻開。把牌全部翻開是獲勝的關鍵。',
+      task: '把J♦疊到Q♠上，翻開背面的牌',
+      ok: '背面的牌翻開了！'
+    }, {
+      t: '空列只能放K',
+      b: '列空出來後，只能放K（或由K開始的一串牌）。',
+      task: '把K♦移到空列',
+      ok: 'K放進空列了！'
+    }, {
+      t: '翻開牌堆',
+      b: '點擊左上的牌堆會翻出1張到廢牌堆，可以再打到列或基礎堆。牌堆用完時，廢牌堆翻回來可以再用。',
+      task: '翻開牌堆，把翻出的4♥疊到5♠上',
+      ok: '牌堆的牌也能用！'
+    }]
+  },
+  spider: {
+    origin: '英國・美國',
+    players: '1人',
+    time: '10〜30分鐘',
+    hist: '使用兩副牌的經典接龍。從Windows Me起成為內建遊戲，人氣不輸克朗代克。',
+    win: '在列中湊齊同花色K→Q→…→A共13張，這13張就會從牌桌消去。湊齊8組就贏了。',
+    cult: '花色數（1・2・4）會大大改變難度，從新手到高手都能享受。',
+    p: [{
+      t: '疊上小1的牌',
+      b: '只要比它小1，不論花色都能疊到列上（9上放8）。',
+      task: '把任一張8疊到9♠上',
+      ok: '花色不同也能疊！'
+    }, {
+      t: '同花色可整串移動',
+      b: '同花色連續的一串（如9♠8♠7♠）可以整串移動。',
+      task: '把9♠8♠7♠整串移到10♠上',
+      ok: '整串移動成功！'
+    }, {
+      t: 'K〜A湊齊就消去',
+      b: '同花色從K到A的13張湊齊後，就會從列中移出完成。',
+      task: '把A♠疊到2♠上，完成K〜A',
+      ok: '完成1組！要湊齊8組。'
+    }, {
+      t: '從牌堆發牌',
+      b: '沒步可走時，點擊右上的牌堆，每列各發1張。有空列時不能發牌。',
+      task: '點擊牌堆發牌',
+      ok: '每列都發到1張了！'
+    }]
+  },
+  freecell: {
+    origin: '美國',
+    players: '1人',
+    time: '5〜15分鐘',
+    hist: '1978年由保羅・阿爾菲爾為大學電腦系統PLATO所寫，後來收錄在Windows而聞名。',
+    win: '把52張牌依花色從A→K的順序，全部疊到右上的4個基礎堆就贏了。',
+    cult: 'Windows版1〜32000號牌局中，已知無解的只有11982號這一局。',
+    p: [{
+      t: '暫存格放1張',
+      b: '左上的暫存格，每格可以先放任何1張牌。',
+      task: '把K♠放進暫存格，讓3♦露出來',
+      ok: '用上暫存格了！'
+    }, {
+      t: '基礎堆從A開始',
+      b: '右上的基礎堆，依同花色A→2→3…的順序疊上。',
+      task: '把A♦移到基礎堆',
+      ok: 'A♦放上基礎堆了！'
+    }, {
+      t: '紅黑交錯、小1疊上',
+      b: '列中要紅黑交錯，疊上比它小1的牌。',
+      task: '把紅色的8疊到黑色的9上',
+      ok: '很好！'
+    }, {
+      t: '多張一起移動',
+      b: '有空位時就能整串移動。可移動張數為（空暫存格＋1）× 2^(空列數)。',
+      task: '把9♥8♠整串移到10♠上',
+      ok: '一次移動了2張！'
+    }]
+  }
+},
+id: {
+  klondike: {
+    origin: 'Amerika Utara',
+    players: '1',
+    time: '5–15 menit',
+    hist: 'Namanya konon berasal dari Demam Emas Klondike di Yukon, Kanada (sejak 1896). Game ini hadir sebagai “Solitaire” di Windows 3.0 pada 1990 dan menjadi permainan kartu satu orang paling terkenal di dunia.',
+    win: 'Susun ke-52 kartu ke empat fondasi (kanan atas), tiap jenis dari As sampai Raja.',
+    cult: 'Di Inggris permainan seperti ini disebut “patience” (kesabaran) — permainan kartu yang dinikmati sendirian dengan santai.',
+    p: [{
+      t: 'Fondasi dimulai dari As',
+      b: 'Empat fondasi (kanan atas) masing-masing menampung satu jenis, mulai dari As: A, 2, 3… Hanya As yang bisa memulainya.',
+      task: 'Seret (atau klik ganda) A♠ ke fondasi',
+      ok: 'A♠ sudah di fondasi!'
+    }, {
+      t: 'Menurun, warna selang-seling',
+      b: 'Di tujuh kolom, taruh kartu yang satu lebih rendah dan berwarna lain (7 merah di atas 8 hitam).',
+      task: 'Taruh 7 merah di atas 8 hitam',
+      ok: 'Satu lebih rendah, warna lain — itu aturan utamanya!'
+    }, {
+      t: 'Buka kartu tertutup',
+      b: 'Pindahkan kartu teratas sebuah kolom dan kartu tertutup di bawahnya akan terbuka. Membuka semuanya adalah kunci kemenangan.',
+      task: 'Pindahkan J♦ ke Q♠ untuk membuka kartu tertutup',
+      ok: 'Kartu tertutup sudah terbuka!'
+    }, {
+      t: 'Raja ke kolom kosong',
+      b: 'Kolom kosong hanya bisa diisi Raja (atau deret yang dimulai dengan Raja).',
+      task: 'Pindahkan K♦ ke kolom kosong',
+      ok: 'Raja mengisi kolom kosong!'
+    }, {
+      t: 'Buka stok',
+      b: 'Klik stok (kiri atas) untuk membuka kartu ke buangan, lalu mainkan. Jika stok habis, buangan dibalik untuk dipakai lagi.',
+      task: 'Buka stok, lalu taruh 4♥ di atas 5♠',
+      ok: 'Kartu stok juga bisa dimainkan!'
+    }]
+  },
+  spider: {
+    origin: 'Inggris / AS',
+    players: '1',
+    time: '10–30 menit',
+    hist: 'Solitaire klasik dengan dua dek. Hadir di Windows sejak Windows Me dan menjadi sepopuler Klondike.',
+    win: 'Kumpulkan Raja sampai As satu jenis (13 kartu) di sebuah kolom dan kartu itu keluar dari meja. Selesaikan 8 deret untuk menang.',
+    cult: 'Jumlah jenis (1, 2 atau 4) sangat mengubah tingkat kesulitan, jadi cocok untuk pemula maupun ahli.',
+    p: [{
+      t: 'Menurun satu angka',
+      b: 'Di kolom kamu boleh menaruh kartu apa pun yang satu lebih rendah, apa pun jenisnya (8 di atas 9).',
+      task: 'Taruh salah satu 8 di atas 9♠',
+      ok: 'Jenis tidak penting untuk menyusun!'
+    }, {
+      t: 'Deret sejenis bergerak bersama',
+      b: 'Deret satu jenis (seperti 9♠ 8♠ 7♠) bisa dipindah sekaligus.',
+      task: 'Pindahkan 9♠ 8♠ 7♠ bersama ke 10♠',
+      ok: 'Dipindah sekaligus!'
+    }, {
+      t: 'Raja sampai As terhapus',
+      b: 'Jika sebuah kolom berisi Raja sampai As satu jenis, 13 kartu itu selesai dan dihapus.',
+      task: 'Taruh A♠ di atas 2♠ untuk melengkapi Raja sampai As',
+      ok: 'Satu deret selesai! Lengkapi delapan.'
+    }, {
+      t: 'Membagi dari stok',
+      b: 'Buntu? Klik stok (kanan atas) untuk membagi satu kartu ke setiap kolom. Tidak bisa membagi saat ada kolom kosong.',
+      task: 'Klik stok untuk membagi',
+      ok: 'Setiap kolom mendapat kartu baru!'
+    }]
+  },
+  freecell: {
+    origin: 'AS',
+    players: '1',
+    time: '5–15 menit',
+    hist: 'Paul Alfille menulis FreeCell pada 1978 untuk sistem komputer PLATO; kemudian game ini terkenal lewat Windows.',
+    win: 'Susun ke-52 kartu ke empat fondasi (kanan atas), tiap jenis dari As sampai Raja.',
+    cult: 'Dari bagian Windows bernomor 1 sampai 32.000, hanya satu — nomor 11982 — yang diketahui tidak bisa diselesaikan.',
+    p: [{
+      t: 'Satu kartu per sel bebas',
+      b: 'Setiap sel bebas (kiri atas) bisa menyimpan satu kartu apa pun untuk nanti.',
+      task: 'Taruh K♠ di sel bebas untuk membebaskan 3♦',
+      ok: 'Kamu memakai sel bebas!'
+    }, {
+      t: 'Fondasi dimulai dari As',
+      b: 'Fondasi (kanan atas) masing-masing satu jenis, mulai dari As.',
+      task: 'Pindahkan A♦ ke fondasi',
+      ok: 'A♦ sudah di fondasi!'
+    }, {
+      t: 'Menurun, warna selang-seling',
+      b: 'Di kolom, taruh kartu yang satu lebih rendah dan berwarna lain.',
+      task: 'Taruh 8 merah di atas 9 hitam',
+      ok: 'Bagus!'
+    }, {
+      t: 'Memindah beberapa kartu',
+      b: 'Tempat kosong memungkinkan memindah deret sekaligus: (sel bebas + 1) × 2^(kolom kosong) kartu.',
+      task: 'Pindahkan 9♥ 8♠ bersama ke 10♠',
+      ok: 'Dua kartu dipindah sekaligus!'
+    }]
+  }
+},
+tr: {
+  klondike: {
+    origin: 'Kuzey Amerika',
+    players: '1',
+    time: '5–15 dk',
+    hist: 'Adının Kanada\'nın Yukon bölgesindeki Klondike Altına Hücum\'undan (1896\'dan itibaren) geldiği söylenir. 1990\'da Windows 3.0 ile “Solitaire” adıyla geldi ve dünyanın en bilinen tek kişilik kart oyunu oldu.',
+    win: '52 kartın hepsini, her türü As\'tan Papaz\'a kadar dört temele (sağ üst) diz.',
+    cult: 'İngiltere\'de bu oyunlara “patience” (sabır) denir — tek başına sakin sakin oynanan kart oyunları.',
+    p: [{
+      t: 'Temeller As ile başlar',
+      b: 'Dört temel (sağ üst) her biri bir türü As\'tan yukarı alır: A, 2, 3… Bir temeli yalnızca As başlatabilir.',
+      task: 'A♠\'yi temele sürükle (ya da çift tıkla)',
+      ok: 'A♠ temelde!'
+    }, {
+      t: 'Renk değiştirerek azalan',
+      b: 'Yedi sütunda bir küçük ve diğer renkten kart koy (siyah 8\'in üstüne kırmızı 7).',
+      task: 'Kırmızı 7\'yi siyah 8\'in üstüne koy',
+      ok: 'Bir küçük, diğer renk — temel kural bu!'
+    }, {
+      t: 'Kapalı kartları aç',
+      b: 'Bir sütunun üst kartını taşıyınca altındaki kapalı kart açılır. Hepsini açmak kazanmanın anahtarıdır.',
+      task: 'Kapalı kartı açmak için J♦\'yu Q♠\'nin üstüne taşı',
+      ok: 'Kapalı kart açıldı!'
+    }, {
+      t: 'Boş sütuna Papaz',
+      b: 'Boş bir sütuna yalnızca Papaz (ya da Papaz\'la başlayan bir dizi) konabilir.',
+      task: 'K♦\'yu boş sütuna taşı',
+      ok: 'Papaz boş sütunu doldurdu!'
+    }, {
+      t: 'Desteyi aç',
+      b: 'Atık yığınına kart açmak için desteye (sol üst) tıkla, sonra oyna. Deste bitince atık yığını ters çevrilip yeniden kullanılır.',
+      task: 'Desteyi aç, sonra 4♥\'yi 5♠\'nin üstüne koy',
+      ok: 'Destedeki kartlar da oynanabilir!'
+    }]
+  },
+  spider: {
+    origin: 'İngiltere / ABD',
+    players: '1',
+    time: '10–30 dk',
+    hist: 'İki desteyle oynanan klasik bir patience. Windows Me\'den itibaren Windows\'la geldi ve Klondike kadar sevildi.',
+    win: 'Bir sütunda aynı türden Papaz\'dan As\'a (13 kart) diz, kartlar masadan kalksın. Kazanmak için 8 dizi tamamla.',
+    cult: 'Tür sayısı (1, 2 ya da 4) zorluğu çok değiştirir; bu yüzden hem yeni başlayanlara hem uzmanlara uygundur.',
+    p: [{
+      t: 'Bir küçüğünü koy',
+      b: 'Bir sütuna türü ne olursa olsun bir küçük kartı koyabilirsin (9\'un üstüne 8).',
+      task: '8\'lerden birini 9♠\'nin üstüne koy',
+      ok: 'Dizerken tür önemli değil!'
+    }, {
+      t: 'Aynı tür diziler birlikte taşınır',
+      b: 'Tek türden bir dizi (9♠ 8♠ 7♠ gibi) toplu taşınabilir.',
+      task: '9♠ 8♠ 7♠\'yi birlikte 10♠\'nin üstüne taşı',
+      ok: 'Tek seferde taşındı!'
+    }, {
+      t: 'Papaz\'dan As\'a temizlenir',
+      b: 'Bir sütunda aynı türden Papaz\'dan As\'a dizi oluşunca bu 13 kart tamamlanır ve kalkar.',
+      task: 'Papaz\'dan As\'a diziyi tamamlamak için A♠\'yi 2♠\'nin üstüne koy',
+      ok: 'Bir dizi tamam! Sekiz tane tamamla.'
+    }, {
+      t: 'Desteden dağıt',
+      b: 'Takıldın mı? Her sütuna birer kart dağıtmak için desteye (sağ üst) tıkla. Boş sütun varken dağıtılamaz.',
+      task: 'Dağıtmak için desteye tıkla',
+      ok: 'Her sütun yeni bir kart aldı!'
+    }]
+  },
+  freecell: {
+    origin: 'ABD',
+    players: '1',
+    time: '5–15 dk',
+    hist: 'Paul Alfille, FreeCell\'i 1978\'de PLATO bilgisayar sistemi için yazdı; oyun daha sonra Windows sayesinde ünlendi.',
+    win: '52 kartın hepsini, her türü As\'tan Papaz\'a kadar dört temele (sağ üst) diz.',
+    cult: '1\'den 32.000\'e kadar numaralı Windows dağıtımlarından yalnızca birinin — 11982 numaralı dağıtımın — çözümsüz olduğu bilinir.',
+    p: [{
+      t: 'Her hücreye bir kart',
+      b: 'Her boş hücre (sol üst) sonrası için herhangi bir kartı tutabilir.',
+      task: '3♦\'yu serbest bırakmak için K♠\'yi bir hücreye koy',
+      ok: 'Boş hücreyi kullandın!'
+    }, {
+      t: 'Temeller As ile başlar',
+      b: 'Temeller (sağ üst) her biri bir türü As\'tan yukarı alır.',
+      task: 'A♦\'yu bir temele taşı',
+      ok: 'A♦ temelde!'
+    }, {
+      t: 'Renk değiştirerek azalan',
+      b: 'Sütunlarda bir küçük ve diğer renkten kart koy.',
+      task: 'Kırmızı 8\'i siyah 9\'un üstüne koy',
+      ok: 'Harika!'
+    }, {
+      t: 'Birden çok kart taşıma',
+      b: 'Boş yerler bir diziyi tek seferde taşımanı sağlar: (boş hücre + 1) × 2^(boş sütun) kart.',
+      task: '9♥ 8♠\'yi birlikte 10♠\'nin üstüne taşı',
+      ok: 'İki kart tek seferde taşındı!'
+    }]
+  }
+},
 };
 /* texts for Golf, TriPeaks, Pyramid */
 RT.ja.golf = {"origin": "イギリス", "players": "1人", "time": "3〜5分", "hist": "19世紀末から遊ばれているペイシェンスで、ホールを回るように1ゲームずつ点数を数えることから「ゴルフ」と呼ばれます。", "win": "7列のカードを全部捨て札に出せば勝ちです。山札は1周しか使えません。", "cult": "9ゲームを1ラウンドとして、残ったカードの枚数をスコアにする遊び方もあります（少ないほど良い）。", "p": [{"t": "1つ上か下を出す", "b": "列のいちばん下（手前）のカードを、捨て札より1つ大きいか小さい数なら捨て札に出せます。マークは関係ありません。", "task": "捨て札の7♥に、8か6を出しましょう", "ok": "1つちがいなら出せます！"}, {"t": "続けて出す", "b": "出したカードが新しい捨て札になります。6→7→8のように、上がったり下がったりしながら続けられます。", "task": "カードを2枚続けて出しましょう", "ok": "連続で出せました！"}, {"t": "Kの上と山札", "b": "標準ルールでは捨て札がKのとき、その上には何も出せません。出せないときは山札をめくって新しい捨て札にします。", "task": "山札をめくって、出せるカードを出しましょう", "ok": "山札で流れを変えられます！"}]};
@@ -375,6 +751,18 @@ RT.hi.pyramid = {"origin": "ब्रिटेन / अमेरिका", "pla
 RT.ar.golf = {"origin": "بريطانيا", "players": "1", "time": "3–5 دقائق", "hist": "لعبة صبر تُلعب منذ أواخر القرن التاسع عشر، وسُمّيت الغولف لأن كل توزيعة تُحسب كحفرة.", "win": "العب كل أوراق الأعمدة السبعة على المهملات. للرصيد جولة واحدة فقط.", "cult": "يلعب البعض تسع توزيعات كجولة ويحسبون الأوراق المتبقية — الأقل أفضل.", "p": [{"t": "أعلى أو أدنى بواحد", "b": "الورقة الأمامية في العمود تُلعب على المهملات إن كانت أعلى أو أدنى بواحد. النوع لا يهم.", "task": "العب 8 أو 6 على 7♥", "ok": "فارق واحد يكفي!"}, {"t": "واصل السلسلة", "b": "الورقة الملعوبة تصبح ورقة المهملات الجديدة، فيمكنك الصعود والنزول: 6، 7، 8…", "task": "العب ورقتين متتاليتين", "ok": "سلسلة من ورقتين!"}, {"t": "الملك والرصيد", "b": "في القواعد القياسية لا يُلعب شيء على الملك. إن تعثرت فاقلب الرصيد.", "task": "اقلب الرصيد ثم العب ورقة", "ok": "الرصيد يعيدك إلى اللعب!"}]};
 RT.ar.tripeaks = {"origin": "الولايات المتحدة", "players": "1", "time": "3–5 دقائق", "hist": "لعبة سوليتير حديثة يُقال إن روبرت هوغان ابتكرها عام 1989، وهي قريبة من الغولف. اسمها من القمم الثلاث.", "win": "العب أوراق القمم الثلاث الـ28 كلها على المهملات.", "cult": "عادةً يتصل الملك بالآس فتستمر السلسلة: ملكة، ملك، آس، 2… السلاسل الطويلة تعني نقاطًا أكثر.", "p": [{"t": "أعلى أو أدنى بواحد", "b": "الورقة المكشوفة الحرة تُلعب على المهملات إن اختلفت بواحد.", "task": "العب 5 أو 7 على 6♥", "ok": "أحسنت!"}, {"t": "اكشف الأوراق العليا", "b": "عندما تختفي الورقتان اللتان تغطيان ورقة، تنقلب مكشوفة.", "task": "العب أوراقًا متتالية لتكشف الورقة المخفية", "ok": "انكشفت الورقة المخفية!"}, {"t": "اقلب الرصيد", "b": "لا توجد حركة؟ انقر الرصيد. تصبح ورقته ورقة المهملات الجديدة وتبدأ السلسلة من جديد.", "task": "اقلب الرصيد ثم العب ورقة", "ok": "رائع!"}]};
 RT.ar.pyramid = {"origin": "بريطانيا / أمريكا", "players": "1", "time": "5–10 دقائق", "hist": "لعبة صبر قديمة: الأوراق الـ28 المرتبة في مثلث تشبه هرمًا مصريًا.", "win": "أزل أوراق الهرم الـ28 كلها.", "cult": "الشاب 11 والملكة 12 والملك 13. ابحث عن أزواج مثل 6 و7 أو 5 و8.", "p": [{"t": "أزواج مجموعها 13", "b": "ورقتان حرتان مجموعهما 13 تُزالان معًا: ضع إحداهما على الأخرى (الشاب 11، الملكة 12).", "task": "اجمع الـ8 والـ5", "ok": "13 — أُزيلتا!"}, {"t": "الملك وحده", "b": "الملك يساوي 13 فيُزال وحده: اسحبه إلى كومة الإزالة يمينًا أو انقر نقرًا مزدوجًا.", "task": "أزل الملك ♦", "ok": "الملوك تُزال وحدها!"}, {"t": "زوج مع الرصيد", "b": "الورقة العليا في المهملات (المقلوبة من الرصيد) تشكّل زوجًا مع ورقة الهرم أيضًا.", "task": "زاوج 7♠ مع 6♦ في المهملات", "ok": "أوراق الرصيد تُحتسب أيضًا!"}]};
+RT.ru.golf = {"origin": "Британия", "players": "1", "time": "3–5 мин", "hist": "Пасьянс, известный с конца XIX века. Он называется «Гольф», потому что каждый расклад считается как лунка.", "win": "Переложите в сброс все карты семи столбцов. Колода проходится только один раз.", "cult": "Некоторые играют раунд из девяти раскладов и каждый раз считают оставшиеся карты — чем меньше, тем лучше.", "p": [{"t": "На 1 выше или ниже", "b": "Переднюю карту столбца можно положить в сброс, если она на 1 выше или ниже. Масть не важна.", "task": "Положите 8 или 6 на 7♥", "ok": "Достаточно разницы в 1!"}, {"t": "Продолжайте серию", "b": "Сыгранная карта становится новой картой сброса, так что можно идти вверх и вниз: 6, 7, 8…", "task": "Сыграйте две карты подряд", "ok": "Серия из двух!"}, {"t": "Короли и колода", "b": "По стандартным правилам на короля ничего класть нельзя. Если ходов нет, откройте карту из колоды.", "task": "Откройте карту из колоды и сыграйте карту", "ok": "Колода помогает продолжить!"}]};
+RT.ru.tripeaks = {"origin": "США", "players": "1", "time": "3–5 мин", "hist": "Сравнительно новый пасьянс, который, как считается, придумал Роберт Хоган в 1989 году; родственник «Гольфа». Название — от трёх пиков.", "win": "Переложите в сброс все 28 карт трёх пиков.", "cult": "Обычно король и туз связаны, так что серия может идти Д, К, Т, 2… Длинные серии — ключ к высокому счёту.", "p": [{"t": "На 1 выше или ниже", "b": "Открытую карту, на которой ничего не лежит, можно положить в сброс, если она отличается на 1.", "task": "Положите 5 или 7 на 6♥", "ok": "Отлично!"}, {"t": "Открывайте карты выше", "b": "Когда обе карты, накрывающие карту, убраны, она открывается.", "task": "Сыграйте карты подряд, чтобы открыть скрытую карту", "ok": "Скрытая карта открыта!"}, {"t": "Открывайте колоду", "b": "Если ходов нет, щёлкните по колоде. Её карта станет новой картой сброса, а серия начнётся заново.", "task": "Откройте карту из колоды и сыграйте карту", "ok": "Хорошо сделано!"}]};
+RT.ru.pyramid = {"origin": "Британия / США", "players": "1", "time": "5–10 мин", "hist": "Старинный пасьянс. 28 карт, разложенные треугольником, напоминают египетскую пирамиду.", "win": "Уберите все 28 карт пирамиды.", "cult": "В = 11, Д = 12, К = 13. Ищите пары вроде 6 и 7 или 5 и 8.", "p": [{"t": "Пары на 13", "b": "Две открытые карты с суммой 13 убираются вместе — положите одну на другую (В = 11, Д = 12).", "task": "Соедините 8 и 5", "ok": "13 — убрано!"}, {"t": "Король уходит один", "b": "Король равен 13, поэтому уходит один: перетащите его в отбой или дважды щёлкните по нему.", "task": "Уберите короля ♦", "ok": "Короли уходят сами!"}, {"t": "Пара с колодой", "b": "Верхняя карта сброса (открытая из колоды) тоже может составить пару с картой пирамиды.", "task": "Составьте пару из 7♠ и 6♦ в сбросе", "ok": "Карты колоды тоже считаются!"}]};
+RT['zh-TW'].golf = {"origin": "英國", "players": "1人", "time": "3〜5分鐘", "hist": "19世紀末就有人玩的接龍。每局像打一洞那樣計分，因此叫「高爾夫」。", "win": "把7列的牌全部打到廢牌堆就贏了。牌堆只能用一輪。", "cult": "也有以9局為一輪、按剩餘張數計分的玩法（越少越好）。", "p": [{"t": "大1或小1", "b": "每列最前面的牌，只要比廢牌堆頂大1或小1就能打出，與花色無關。", "task": "在7♥上打出8或6", "ok": "相差1就能出！"}, {"t": "連續出牌", "b": "打出的牌成為新的廢牌堆頂，可以像6→7→8這樣上下連續出牌。", "task": "連續打出兩張牌", "ok": "連出成功！"}, {"t": "K與牌堆", "b": "標準規則下，廢牌堆頂是K時不能再出牌。出不了時就翻開牌堆。", "task": "翻開牌堆，再打出一張牌", "ok": "牌堆可以扭轉局面！"}]};
+RT['zh-TW'].tripeaks = {"origin": "美國", "players": "1人", "time": "3〜5分鐘", "hist": "據說由羅伯特・霍根於1989年發明的較新接龍，是高爾夫的同類。名稱來自三座山峰的形狀。", "win": "把三座山峰的28張牌全部打到廢牌堆就贏了。", "cult": "標準規則下K與A相連，可以Q→K→A→2…一路連下去。連得越長是高分的關鍵。", "p": [{"t": "大1或小1", "b": "沒有被壓住的明牌，只要與廢牌堆頂相差1就能打出。", "task": "在6♥上打出5或7", "ok": "很好！"}, {"t": "翻開上面的牌", "b": "壓住某張牌的兩張都不見後，它就會翻開。", "task": "連續出牌，翻開背面的牌", "ok": "背面的牌翻開了！"}, {"t": "翻開牌堆", "b": "沒有牌可出時點擊牌堆。翻出的牌成為新的廢牌堆頂，連續出牌數重新計算。", "task": "翻開牌堆，再打出一張牌", "ok": "用得好！"}]};
+RT['zh-TW'].pyramid = {"origin": "英國・美國", "players": "1人", "time": "5〜10分鐘", "hist": "歷史悠久的接龍。28張牌排成三角形，形狀像埃及金字塔。", "win": "移除金字塔的全部28張牌就贏了。", "cult": "J=11、Q=12、K=13。找出6和7、5和8這樣合計13的組合是訣竅。", "p": [{"t": "合計13就移除", "b": "兩張沒被壓住的牌合計13時，把一張疊到另一張上就能一起移除（J=11、Q=12）。", "task": "把8和5疊在一起", "ok": "合計13，移除！"}, {"t": "K單張移除", "b": "K等於13，單張就能移除：拖到右邊的棄牌處或雙擊。", "task": "移除K♦", "ok": "K單張就能移除！"}, {"t": "與牌堆配對", "b": "從牌堆翻出的廢牌堆頂，也能與金字塔的牌配對。", "task": "把7♠和廢牌堆的6♦配對移除", "ok": "牌堆的牌也能用！"}]};
+RT.id.golf = {"origin": "Inggris", "players": "1", "time": "3–5 menit", "hist": "Patience yang dimainkan sejak akhir abad ke-19. Disebut Golf karena tiap bagian dihitung seperti satu hole.", "win": "Mainkan semua kartu dari tujuh kolom ke buangan. Stok hanya satu putaran.", "cult": "Ada yang memainkan sembilan bagian sebagai satu ronde dan menghitung kartu tersisa — makin sedikit makin baik.", "p": [{"t": "Satu naik atau turun", "b": "Kartu terdepan sebuah kolom bisa ke buangan jika satu lebih tinggi atau rendah. Jenis tidak penting.", "task": "Mainkan 8 atau 6 di atas 7♥", "ok": "Cukup beda satu!"}, {"t": "Lanjutkan deretnya", "b": "Kartu yang dimainkan menjadi kartu buangan baru, jadi kamu bisa naik dan turun: 6, 7, 8…", "task": "Mainkan dua kartu berturut-turut", "ok": "Deret dua kartu!"}, {"t": "Raja dan stok", "b": "Menurut aturan standar, tidak ada kartu di atas Raja. Saat buntu, buka stok untuk kartu buangan baru.", "task": "Buka stok, lalu mainkan kartu", "ok": "Stok membuatmu lanjut lagi!"}]};
+RT.id.tripeaks = {"origin": "AS", "players": "1", "time": "3–5 menit", "hist": "Solitaire yang lebih baru, konon diciptakan Robert Hogan pada 1989, dan kerabat Golf. Namanya dari tiga puncaknya.", "win": "Mainkan ke-28 kartu dari tiga puncak ke buangan.", "cult": "Biasanya Raja dan As tersambung, jadi deret bisa Q, K, A, 2… Deret panjang adalah kunci skor tinggi.", "p": [{"t": "Satu naik atau turun", "b": "Kartu terbuka yang tidak tertutup apa pun bisa ke buangan jika berbeda satu.", "task": "Mainkan 5 atau 7 di atas 6♥", "ok": "Bagus!"}, {"t": "Buka kartu di atas", "b": "Jika kedua kartu yang menutupi sebuah kartu sudah hilang, kartu itu terbuka.", "task": "Mainkan kartu berturut-turut untuk membuka kartu tertutup", "ok": "Kartu tertutup sudah terbuka!"}, {"t": "Buka stok", "b": "Jika tidak ada yang bisa dimainkan, klik stok. Kartunya menjadi kartu buangan baru dan deretmu dimulai ulang.", "task": "Buka stok, lalu mainkan kartu", "ok": "Mantap!"}]};
+RT.id.pyramid = {"origin": "Inggris / AS", "players": "1", "time": "5–10 menit", "hist": "Patience kuno. 28 kartu yang dibagi berbentuk segitiga mirip piramida Mesir.", "win": "Buang ke-28 kartu piramida.", "cult": "J bernilai 11, Q 12 dan K 13. Cari pasangan seperti 6 dan 7 atau 5 dan 8.", "p": [{"t": "Pasangan berjumlah 13", "b": "Dua kartu terbuka berjumlah 13 bisa dibuang bersama — jatuhkan satu di atas yang lain (J = 11, Q = 12).", "task": "Satukan 8 dan 5", "ok": "13 — terbuang!"}, {"t": "Raja dibuang sendiri", "b": "Raja bernilai 13, jadi dibuang sendiri: seret ke tempat buang atau klik ganda.", "task": "Buang K♦", "ok": "Raja dibuang sendiri!"}, {"t": "Pasangkan dengan stok", "b": "Kartu teratas buangan (dibuka dari stok) juga bisa dipasangkan dengan kartu piramida.", "task": "Pasangkan 7♠ dengan 6♦ di buangan", "ok": "Kartu stok juga dihitung!"}]};
+RT.tr.golf = {"origin": "İngiltere", "players": "1", "time": "3–5 dk", "hist": "19. yüzyılın sonlarından beri oynanan bir patience. Her dağıtım bir delik gibi puanlandığı için adı Golf'tür.", "win": "Yedi sütundaki tüm kartları atık yığınına oyna. Deste yalnızca bir tur kullanılır.", "cult": "Bazıları dokuz dağıtımı bir tur sayar ve her seferinde kalan kartları puanlar — ne kadar az, o kadar iyi.", "p": [{"t": "Bir büyük ya da küçük", "b": "Bir sütunun öndeki kartı bir büyük ya da küçükse atık yığınına gidebilir. Tür önemli değil.", "task": "7♥'nin üstüne 8 ya da 6 oyna", "ok": "Bir fark yeterli!"}, {"t": "Seriyi sürdür", "b": "Oynadığın kart yeni atık kartı olur; böylece inip çıkabilirsin: 6, 7, 8…", "task": "Arka arkaya iki kart oyna", "ok": "İkili seri!"}, {"t": "Papazlar ve deste", "b": "Standart kurallarda Papaz'ın üstüne kart konmaz. Takılınca yeni atık kartı için desteyi aç.", "task": "Desteyi aç, sonra bir kart oyna", "ok": "Deste oyunu yeniden açar!"}]};
+RT.tr.tripeaks = {"origin": "ABD", "players": "1", "time": "3–5 dk", "hist": "1989'da Robert Hogan'ın icat ettiği söylenen yeni bir solitaire; Golf'ün akrabası. Adını üç tepesinden alır.", "win": "Üç tepedeki 28 kartın hepsini atık yığınına oyna.", "cult": "Normalde Papaz ve As bağlıdır, yani seri Q, K, A, 2… diye gidebilir. Uzun seriler yüksek puanın anahtarıdır.", "p": [{"t": "Bir büyük ya da küçük", "b": "Üstünde kart olmayan açık bir kart, bir fark varsa atık yığınına gidebilir.", "task": "6♥'nin üstüne 5 ya da 7 oyna", "ok": "Aferin!"}, {"t": "Üstteki kartları aç", "b": "Bir kartı örten iki kart da gidince o kart açılır.", "task": "Kapalı kartı açmak için arka arkaya kart oyna", "ok": "Kapalı kart açıldı!"}, {"t": "Desteyi aç", "b": "Oynanacak kart yoksa desteye tıkla. Kartı yeni atık kartı olur ve serin baştan başlar.", "task": "Desteyi aç, sonra bir kart oyna", "ok": "Güzel iş!"}]};
+RT.tr.pyramid = {"origin": "İngiltere / ABD", "players": "1", "time": "5–10 dk", "hist": "Eski bir patience. Üçgen şeklinde dağıtılan 28 kart bir Mısır piramidine benzer.", "win": "Piramitteki 28 kartın hepsini kaldır.", "cult": "J 11, Q 12, K 13 sayılır. 6 ile 7 ya da 5 ile 8 gibi çiftler ara.", "p": [{"t": "Toplamı 13 olan çiftler", "b": "Toplamı 13 olan iki açık kart birlikte kalkar — birini diğerinin üstüne bırak (J = 11, Q = 12).", "task": "8 ile 5'i birleştir", "ok": "13 — kalktı!"}, {"t": "Papaz tek başına gider", "b": "Papaz 13 sayılır, bu yüzden tek başına gider: atma yerine sürükle ya da çift tıkla.", "task": "K♦'yu kaldır", "ok": "Papazlar kendi başına gider!"}, {"t": "Desteyle eşleştir", "b": "Atık yığınının üstündeki kart (desteden açılan) da piramit kartıyla eşleşebilir.", "task": "7♠'yi atıktaki 6♦ ile eşleştir", "ok": "Deste kartları da sayılır!"}]};
 /* ---------- pages (layouts + checks) ---------- */
 const top = (st, i) => S.top(st.p[i]);
 const RULES = {

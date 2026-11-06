@@ -1,6 +1,12 @@
-// senet/tools/learn_text.js — レッスン・パズルの文言（10言語）。配列の順は L。
+// senet/tools/learn_text.js — レッスン・パズルの文言（14言語）。配列の順は L。
 const L = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-const O = a => Object.fromEntries(L.map((l, i) => [l, a[i]]));
+// ru / zh-TW / id / tr come from the translation memory (tools/tm14.json, English → the 4 languages)
+const NEW = ['ru', 'zh-TW', 'id', 'tr'], TM = require('./tm14.json');
+const O = a => {
+  const o = Object.fromEntries(L.map((l, i) => [l, a[i]]));
+  const e = TM[a[1]]; if (!e && /[A-Za-z]/.test(a[1])) { if (process.env.TM_COLLECT) (global.TM_MISS = global.TM_MISS || new Set()).add(a[1]); else throw new Error('missing from tm14.json: ' + a[1]); }
+  NEW.forEach(l => { o[l] = e ? e[l] : a[1]; }); return o;
+};
 const UI = {
   qMove: O(['出目 {n}。いちばん良い手はどれ？', 'You threw {n}. Which move is best?', '点数 {n}。哪一手最好？', '{n}이 나왔습니다. 가장 좋은 수는?', 'Sacaste {n}. ¿Cuál es la mejor jugada?', 'Vous avez lancé {n}. Quel est le meilleur coup ?', 'Você tirou {n}. Qual é o melhor lance?', 'Du hast {n} geworfen. Welcher Zug ist am besten?', '{n} आया। सबसे अच्छी चाल कौन-सी?', 'رميت {n}. ما أفضل نقلة؟']),
   qChoice: O(['答えを選ぼう', 'Choose the answer', '选择答案', '답을 고르세요', 'Elige la respuesta', 'Choisissez la réponse', 'Escolha a resposta', 'Wähle die Antwort', 'उत्तर चुनें', 'اختر الإجابة']),

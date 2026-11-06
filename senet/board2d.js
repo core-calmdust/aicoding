@@ -265,12 +265,13 @@
   function mount(host, opts = {}) {
     const p = 'sn' + (++uid) + '_';
     let o = OB(opts.orient), design = BOARDS.includes(opts.design) ? opts.design : 'tut', pcs = piecesKey(opts.pieces);
-    const interactive = opts.interactive !== false, trays = opts.trays !== false;
+    const interactive = opts.interactive !== false; let trays = opts.trays !== false;
     const H = {}; const on = (ev, fn) => { (H[ev] = H[ev] || []).push(fn); return view; }, emit = (ev, a) => (H[ev] || []).forEach(f => f(a));
     let svg, gImg, gHit, gTray, gUnder, gPieces, gOver, gTg, state = null, ropt = {}, pieceEls = new Map(), busy = 0;
+    function vbox() { return trays ? VIEW[o].slice() : IMG[o].map((v, i) => i < 2 ? v - 8 : v + 16); }
     function build() {
       host.innerHTML = '';
-      const V = trays ? VIEW[o] : IMG[o].map((v, i) => i < 2 ? v - 8 : v + 16);
+      const V = vbox();
       host.insertAdjacentHTML('beforeend', `<svg xmlns="${NS}" class="sn-board sn-${o}" viewBox="${V.join(' ')}" style="display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent">${defs(p, pcs)}<g class="sn-img"></g><g class="sn-tray"></g><g class="sn-under"></g><g class="sn-hit"></g><g class="sn-pieces"></g><g class="sn-tgs"></g><g class="sn-over" pointer-events="none"></g></svg>`);
       svg = host.lastChild; [gImg, gTray, gUnder, gHit, gPieces, gTg, gOver] = ['img', 'tray', 'under', 'hit', 'pieces', 'tgs', 'over'].map(k => svg.querySelector('.sn-' + k));
       const R = IMG[o]; el('image', { href: boardHref(design, o), x: R[0], y: R[1], width: R[2], height: R[3], preserveAspectRatio: 'none' }, gImg);
@@ -378,7 +379,9 @@
       toClient(x, y) { const m = svg.getScreenCTM(), pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const q = pt.matrixTransform(m); return { x: q.x, y: q.y }; },
       setDesign(d, pc) { if (d && BOARDS.includes(d)) design = d; if (pc) pcs = piecesKey(pc); build(); return view; },
       setOrient(v) { v = OB(v); if (v !== o) { o = v; build(); } return view; },
-      orient: () => o, rotated: () => false, key: () => o, notch: () => false, design: () => ({ board: design, pieces: pcs }), svg: () => svg,
+      // the bear-off trays above / below the board can be left out (phones held sideways: the counts are in the players' cards)
+      setTrays(b) { b = !!b; if (b !== trays) { trays = b; build(); } return view; }, trays: () => trays, vbox,
+      orient: () => o, rotated: () => false, key: () => o + (trays ? '' : 'n'), notch: () => false, design: () => ({ board: design, pieces: pcs }), svg: () => svg,
       destroy() { host.innerHTML = ''; },
     };
     build(); view.el = svg;
