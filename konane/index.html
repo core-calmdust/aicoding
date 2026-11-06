@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-konane') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'quilt'; document.documentElement.dataset.pcs = S.pcs || 'coral'; document.documentElement.style.setProperty('--S', { s6: 6, s10: 10 }[S.rule] || 8); } catch (e) {}</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-konane') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'quilt'; document.documentElement.dataset.pcs = S.pcs || 'stone'; document.documentElement.style.setProperty('--S', { s6: 6, s10: 10 }[S.rule] || 8); } catch (e) {}</script>
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/phonesnd.js?v=1"></script>
 <meta name="theme-color" content="#04211f">
-<meta name="description" content="ハワイに伝わる跳び取りゲーム「コナネ（Kōnane）」。盤いっぱいの白黒の石から始めて、縦横に相手の石を跳び越えて取る。最後に跳べた人の勝ち。カパ布・ハワイアンキルト・ラウハラ・溶岩の盤、珊瑚と玄武岩の石。20段階AI、レーティング戦、実際の盤で覚えるルール、レッスン・パズル・今日の一問。">
+<meta name="description" content="ハワイに伝わる跳び取りゲーム「コナネ（Kōnane）」。盤いっぱいの白黒の石から始めて、縦横に相手の石を跳び越えて取る。最後に跳べた人の勝ち。ハワイアンキルト・海・コナ・アート・石のパパムーなど8種の盤。20段階AI、レーティング戦、実際の盤で覚えるルール、レッスン・パズル・今日の一問。">
 <title>コナネ — 世界のボドゲ大百科</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b7a72'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%23f3eee2'/%3E%3Ccircle cx='44' cy='20' r='9' fill='%231c1a1a'/%3E%3Ccircle cx='20' cy='44' r='9' fill='%231c1a1a'/%3E%3Ccircle cx='44' cy='44' r='9' fill='%23f3eee2'/%3E%3C/svg%3E">
 <meta property="og:title" content="コナネ — ハワイの跳び取りゲーム">
@@ -820,21 +820,28 @@ body .info-line{font-size:12.5px}
 .frame{background:var(--frameBg,linear-gradient(145deg,#2a1a10 0%,#120a06 55%,#24160c 100%))}
 .frame::before{display:none}
 .board{background:var(--bdImg,none) center/100% 100% no-repeat}
-/* kapa: beaten bark cloth with black / red-brown stamped bands */
-html[data-bd=kapa]{--bdImg:url(img/bd-kapa.webp);--frameBg:url(img/fr-kapa.webp) 0 0/220px 220px,#6e4a2c;--frm:#2a1a10;--puka1:rgba(38,22,10,.68);--puka2:rgba(70,44,22,.45);--pukaRim:rgba(255,232,190,.38);--pukaHl:rgba(255,240,210,.3);--num:rgba(38,22,10,.6)}
 /* kapa kuiki (Hawaiian quilt): stitched rings on the cotton */
 html[data-bd=quilt]{--bdImg:url(img/bd-quilt.webp);--frameBg:url(img/fr-quilt.webp) 0 0/240px 240px,#0d5f5b;--frm:#0d5f5b;--puka1:rgba(70,58,40,.34);--puka2:rgba(90,76,52,.22);--pukaRim:rgba(13,95,91,.55);--pukaHl:rgba(255,255,255,.55);--num:rgba(13,80,76,.7)}
 html[data-bd=quilt] .lines .puka-rim{stroke-dasharray:.05 .035;stroke-width:.028}
-/* lauhala: woven pandanus */
-html[data-bd=lauhala]{--bdImg:url(img/bd-lauhala.webp);--frameBg:url(img/fr-lauhala.webp) 0 0/160px 160px,#7d5427;--frm:#3e2812;--puka1:rgba(52,30,10,.66);--puka2:rgba(84,52,20,.42);--pukaRim:rgba(255,236,190,.35);--pukaHl:rgba(255,242,210,.32);--num:rgba(52,30,10,.62)}
-/* pāhoehoe lava: holes carved in the basalt, the rim still glowing */
-html[data-bd=pahoehoe]{--bdImg:url(img/bd-pahoehoe.webp);--frameBg:url(img/fr-pahoehoe.webp) 0 0/260px 260px,#141212;--frm:#ff7a2a;--puka1:rgba(0,0,0,.78);--puka2:rgba(14,10,8,.6);--pukaRim:rgba(255,190,140,.28);--pukaHl:rgba(255,220,190,.16);--num:rgba(255,226,200,.6)}
+/* ocean art: a sunset over the sea, dolphins and a honu under the water — the cups are bubbles of light */
+html[data-bd=ocean]{--bdImg:url(img/bd-ocean.webp);--frameBg:url(img/fr-ocean.webp) 0 0/260px 260px,#0a2d63;--frm:#0d4c86;--puka1:rgba(2,24,60,.32);--puka2:rgba(2,30,70,.18);--pukaRim:rgba(190,245,255,.6);--pukaHl:rgba(255,255,255,.4);--num:rgba(220,248,255,.75)}
+/* Kona gallery art: watercolour hibiscus, plumeria and monstera on warm paper — the cups drawn as soft pencil rings */
+html[data-bd=kona]{--bdImg:url(img/bd-kona.webp);--frameBg:url(img/fr-kona.webp) 0 0/240px 240px,#123f2e;--frm:#1d5a3f;--puka1:rgba(110,80,50,.2);--puka2:rgba(130,100,70,.1);--pukaRim:rgba(90,60,36,.42);--pukaHl:rgba(255,255,255,.6);--num:rgba(90,60,36,.6)}
+/* stone: a primitive papamū — weathered basalt with pecked, worn cups */
+html[data-bd=stone]{--bdImg:url(img/bd-stone.webp);--frameBg:url(img/fr-stone.webp) 0 0/240px 240px,#3f3c38;--frm:#4a4640;--puka1:rgba(16,14,12,.72);--puka2:rgba(40,36,32,.5);--puka3:rgba(60,56,50,.25);--pukaRim:rgba(200,190,172,.22);--pukaHl:rgba(220,212,196,.22);--num:rgba(230,222,206,.55)}
+/* koa: an oiled koa papamū with drilled holes (as the boards made today) */
+html[data-bd=koa]{--bdImg:url(img/bd-koa.webp);--frameBg:url(img/fr-koa.webp) 0 0/300px 300px,#4e2410;--frm:#5a2a12;--puka1:rgba(14,6,2,.9);--puka2:rgba(30,14,6,.82);--puka3:rgba(60,30,12,.5);--pukaRim:rgba(255,214,160,.32);--pukaHl:rgba(255,226,180,.3);--num:rgba(255,230,196,.6)}
+/* modern: warm grey matte · sunset gradient · midnight navy with a gold niho manō band */
+html[data-bd=mono]{--bdImg:url(img/bd-mono.webp);--frameBg:url(img/fr-mono.webp) 0 0/240px 240px,#2a2a2d;--frm:#3a3a3e;--puka1:rgba(0,0,0,.1);--puka2:rgba(0,0,0,.05);--pukaRim:rgba(0,0,0,.2);--pukaHl:rgba(255,255,255,.75);--num:rgba(40,40,42,.5)}
+html[data-bd=sunset]{--bdImg:url(img/bd-sunset.webp);--frameBg:url(img/fr-sunset.webp) 0 0/240px 240px,#2b1f5c;--frm:#3a2a72;--puka1:rgba(60,20,80,.2);--puka2:rgba(60,20,80,.1);--pukaRim:rgba(255,255,255,.5);--pukaHl:rgba(255,255,255,.35);--num:rgba(255,255,255,.75)}
+html[data-bd=midnight]{--bdImg:url(img/bd-midnight.webp);--frameBg:url(img/fr-midnight.webp) 0 0/240px 240px,#0a1428;--frm:#c9a05a;--puka1:rgba(0,0,0,.36);--puka2:rgba(0,0,0,.2);--pukaRim:rgba(214,178,106,.62);--pukaHl:rgba(255,236,200,.18);--num:rgba(214,178,106,.75)}
 html[data-bd=quilt] .reserve .rsv-plate{background:rgba(255,252,244,.86);color:#24504c}
 html[data-bd=quilt] .reserve .rsv-plate .rsv-l b, html[data-bd=quilt] .reserve .rsv-plate .rsv-w:not(.hot) b{color:#0d3f3c}
 html[data-bd=quilt] .reserve .rsv-plate .rsv-w:not(.hot){color:#24504c}
 /* stone sets: rendered faces (tools/gen_art.py) */
-html[data-pcs=coral]{--pcB:url(img/pc-coral-b.webp);--pcW:url(img/pc-coral-w.webp)}
-html[data-pcs=kukui]{--pcB:url(img/pc-kukui-b.webp);--pcW:url(img/pc-kukui-w.webp)}
+html[data-pcs=stone]{--pcB:url(img/pc-stone-b.webp);--pcW:url(img/pc-stone-w.webp)}
+html[data-pcs=glass]{--pcB:url(img/pc-glass-b.webp);--pcW:url(img/pc-glass-w.webp)}
+html[data-pcs=matte]{--pcB:url(img/pc-matte-b.webp);--pcW:url(img/pc-matte-w.webp)}
 html[data-pcs=pearl]{--pcB:url(img/pc-pearl-b.webp);--pcW:url(img/pc-pearl-w.webp)}
 html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp);--pcW:url(img/pc-koa-w.webp)}
 
@@ -1308,8 +1315,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 </div>
 
 <script src="../checkers/i18n.js?v=20261104tln"></script>
-<script src="i18n-kn.js?v=1"></script>
-<script src="i18n-kn-more.js?v=1"></script>
+<script src="i18n-kn.js?v=2"></script>
+<script src="i18n-kn-more.js?v=2"></script>
 <script src="i18n-online.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
@@ -1331,9 +1338,9 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=9"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 <script src="online-ui.js?v=1"></script>
-<!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D lava papamū (the pāhoehoe field with a carved cup on every square, molten cracks in the band), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
+<!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
@@ -1342,12 +1349,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=4')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=1')).then(() => load('../atlas/skin/konane.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=5')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=2')).then(() => load('../atlas/skin/konane.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261106kn1" defer></script>
+<script src="../shared/atlas.js?v=20261106kn2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
 <script src="../shared/infotabs.js?v=17" defer></script>

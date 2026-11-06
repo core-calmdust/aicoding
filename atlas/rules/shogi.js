@@ -283,9 +283,21 @@
     function clearPieces() { Object.values(pcs).forEach(g => board.remove(g)); hand.forEach(g => board.remove(g)); pcs = {}; hand = []; }
     function fall(g, y, delay, h = 1.4) { g.visible = false; later(() => { g.visible = true; anim(260, k => { g.position.y = y + (1 - k) * (1 - k) * h; }); }, delay); }
     function setBoard(st) {   // swap the position: the pieces drop in one by one
-      clearPieces(); let i = 0;
-      st.pos.forEach(([t, c, r, gote]) => { const g = mk(t, gote), [x, z] = SG.cell(c, r); g.position.set(x, Y, z); board.add(g); pcs[key(c, r)] = g; fall(g, Y, 40 + (i++) * 16); });
-      (st.hand || []).forEach((t, j) => { const g = mk(t, 0), [x, z] = slot(j); g.position.set(x, KH, z); board.add(g); hand.push(g); fall(g, KH, 60 + (i++) * 16); });
+      // (diff against the pieces already there: the same ones stay still, only new ones drop in)
+      const old = pcs, oldH = hand; pcs = {}; hand = []; let i = 0;
+      const same = (o, t, gote) => o && o.userData.type === t && !!o.userData.gote === !!gote;
+      const keep = (o, x, y, z) => { o.visible = true; o.position.set(x, y, z); o.scale.set(1, 1, 1); o.rotation.set(0, o.userData.gote ? Math.PI : 0, 0); };
+      st.pos.forEach(([t, c, r, gote]) => {
+        const k = key(c, r), o = old[k], [x, z] = SG.cell(c, r);
+        if (same(o, t, gote)) { delete old[k]; pcs[k] = o; keep(o, x, Y, z); return; }
+        const g = mk(t, gote); g.position.set(x, Y, z); board.add(g); pcs[k] = g; fall(g, Y, 40 + (i++) * 16);
+      });
+      (st.hand || []).forEach((t, j) => {
+        const o = oldH[j], [x, z] = slot(j);
+        if (same(o, t, 0)) { oldH[j] = null; hand.push(o); keep(o, x, KH, z); return; }
+        const g = mk(t, 0); g.position.set(x, KH, z); board.add(g); hand.push(g); fall(g, KH, 60 + (i++) * 16);
+      });
+      Object.values(old).forEach(g => board.remove(g)); oldH.forEach(g => { if (g) board.remove(g); });
       return i;
     }
 

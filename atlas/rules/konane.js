@@ -1,5 +1,5 @@
 /* =====================================================================
-   Kōnane rules — a guided tour on the 3D table (the lava papamū,
+   Kōnane rules — a guided tour on the 3D table (the papamū board — the look chosen in the portal,
    atlas/models/konane.js, on the 6×6 board), told by the guide character (Checkrab).
    A short hands-on course: the full board, Black's first removal (centre or corner), White's
    removal next to the hole (shown), a jump that captures, a double jump, no turning in a
@@ -32,7 +32,7 @@
 
   const TXT = {
     ja: { name: 'チェッカニ', next: 'つぎへ', back: 'もどる', start: '対局してみる', again: 'もういちど', tap: '光っている所をタップ', nope: 'そこへは跳べないよ〜', stuck: 'その石は今は跳べないよ', own: '黒い石をタップしてね', rmNg: 'その石は取り除けないよ。光っている石から選んでね', want: '今回はお題の跳び方をさがしてね', wantWin: 'それだと白はまだ跳べちゃう。もう一回！', win: '🏆 勝ち！', s: [
-      { say: 'アロハ〜！ ぼくは<b>チェッカニ</b>。今日はハワイの浜辺で生まれた<b>コナネ</b>を、溶岩に彫った盤「<b>パパムー</b>」で覚えよう！ 練習は小さめの6×6の盤でいくよ。' },
+      { say: 'アロハ〜！ ぼくは<b>チェッカニ</b>。今日はハワイの浜辺で生まれた<b>コナネ</b>を、盤「<b>パパムー</b>」で覚えよう！ 練習は小さめの6×6の盤でいくよ。' },
       { say: '盤は<b>すべてのマスに黒と白の石が交互に</b>びっしり。左下のa1は黒で、<b>黒が先手</b>だよ。光っているのは中央の4マスと四隅。最初の一手で使うマスなんだ。' },
       { say: '最初の1手は<b>取り除くだけ</b>！ 黒は<b>中央か四隅</b>にある自分の石を1つ取って、盤に穴をあけるよ。光っている黒い石を1つタップしてみて！', done: 'ぽこっ！ 穴があいたね。これで跳び合いの準備ができたよ。' },
       { say: '次は白の番。白は<b>穴のすぐ隣（たて・よこ）</b>の自分の石を1つ取り除くよ。見ててね…', done: 'ほら、空きが2つ並んだ！ ここからは<b>跳んで取る</b>ゲームのはじまりだ。' },
@@ -44,7 +44,7 @@
       { say: '対局では<b>8×8</b>が標準。短い<b>6×6</b>、長い<b>10×10</b>も選べるよ。引き分けはないから、最後の一跳びまで気をぬかないでね。さあ、遊んでみよう〜！' },
     ] },
     en: { name: 'Checkrab', next: 'Next', back: 'Back', start: "Let's play", again: 'Again', tap: 'Tap a glowing spot', nope: "It can't land there!", stuck: "That stone can't jump right now", own: 'Tap a black stone', rmNg: "That stone can't be lifted. Pick one of the glowing stones", want: "This time, find the jump I asked for", wantWin: "White could still jump after that. Try again!", win: '🏆 You win!', s: [
-      { say: "Aloha! I'm <b>Checkrab</b>. Today let's learn <b>kōnane</b>, born on the beaches of Hawaiʻi, on a <b>papamū</b> carved in lava! We'll practise on a small 6×6 board." },
+      { say: "Aloha! I'm <b>Checkrab</b>. Today let's learn <b>kōnane</b>, born on the beaches of Hawaiʻi, on a <b>papamū</b>, the kōnane board! We'll practise on a small 6×6 board." },
       { say: 'The board starts with <b>black and white stones in turn on every square</b>. a1, bottom left, is black, and <b>Black moves first</b>. The glowing squares are the four in the centre and the corners — the first move uses them.' },
       { say: 'The first move only <b>lifts a stone off</b>! Black takes one of its own stones from <b>the centre or a corner</b> to open a hole. Tap one of the glowing black stones!', done: 'Pop! A hole. Now the board is ready for jumping.' },
       { say: "Now it's White's turn. White lifts one of its stones <b>right next to the hole</b> (up, down, left or right). Watch…", done: 'See? Two empty squares side by side. From here on, the game is <b>jumping to capture</b>.' },
@@ -56,7 +56,7 @@
       { say: 'In games, <b>8×8</b> is the standard; you can also pick a short <b>6×6</b> or a long <b>10×10</b>. There are no draws, so stay sharp until the very last jump. Now, let\'s play!' },
     ] },
     zh: { name: '跳棋蟹', next: '下一步', back: '返回', start: '开始对局', again: '再来一次', tap: '点击发光的地方', nope: '那里跳不过去哦～', stuck: '这枚子现在跳不了哦', own: '请点击黑色的子', rmNg: '这枚子不能取下，请从发光的子里选', want: '这次请找出题目要的跳法', wantWin: '这样白方还能跳哦，再试一次！', win: '🏆 赢了！', s: [
-      { say: 'Aloha～！我是<b>跳棋蟹</b>。今天在刻于熔岩的棋盘“<b>帕帕穆</b>”上，一起学夏威夷海边诞生的<b>科纳内</b>吧！先用小一点的6×6棋盘练习。' },
+      { say: 'Aloha～！我是<b>跳棋蟹</b>。今天在棋盘“<b>帕帕穆</b>”上，一起学夏威夷海边诞生的<b>科纳内</b>吧！先用小一点的6×6棋盘练习。' },
       { say: '开局时<b>每一格都交替摆满黑白棋子</b>。左下角a1是黑子，<b>黑方先走</b>。发光的是中央4格和四个角，第一步就要用到它们。' },
       { say: '第一步<b>只是取下一子</b>！黑方从<b>中央或四角</b>取下一枚自己的子，在棋盘上开一个洞。点一下发光的黑子吧！', desc: '', done: '啵！开了个洞。跳吃的准备完成啦。' },
       { say: '接着轮到白方。白方取下<b>紧挨洞口（上下左右）</b>的一枚白子。看好啦…', done: '你看，两个空格并排了！从这里开始就是<b>跳过去吃子</b>的游戏。' },
@@ -68,7 +68,7 @@
       { say: '对局时标准是<b>8×8</b>，也能选短局<b>6×6</b>和长局<b>10×10</b>。没有和棋，最后一跳之前都别大意哦。来，开始玩吧～！' },
     ] },
     ko: { name: '체카니', next: '다음', back: '이전', start: '대국해 보기', again: '다시 하기', tap: '빛나는 곳을 탭', nope: '거기로는 못 뛰어요~', stuck: '그 돌은 지금 뛸 수 없어요', own: '검은 돌을 탭해요', rmNg: '그 돌은 뺄 수 없어요. 빛나는 돌 중에서 골라요', want: '이번엔 문제에서 말한 점프를 찾아봐요', wantWin: '그러면 백이 아직 뛸 수 있어요. 다시 한번!', win: '🏆 승리!', s: [
-      { say: '알로하~! 나는 <b>체카니</b>. 오늘은 하와이 바닷가에서 태어난 <b>코나네</b>를 용암에 새긴 판 「<b>파파무</b>」에서 배워 보자! 연습은 조금 작은 6×6 판으로 할게.' },
+      { say: '알로하~! 나는 <b>체카니</b>. 오늘은 하와이 바닷가에서 태어난 <b>코나네</b>를 판 「<b>파파무</b>」에서 배워 보자! 연습은 조금 작은 6×6 판으로 할게.' },
       { say: '판은 <b>모든 칸에 흑백 돌이 번갈아</b> 빽빽하게 놓여 있어. 왼쪽 아래 a1은 흑이고, <b>흑이 먼저</b> 둬. 빛나는 곳은 가운데 4칸과 네 구석. 첫 수에 쓰는 칸이야.' },
       { say: '첫 수는 <b>빼기만</b> 해! 흑은 <b>가운데나 네 구석</b>의 자기 돌을 하나 빼서 판에 구멍을 내. 빛나는 검은 돌 하나를 탭해 봐!', done: '퐁! 구멍이 생겼어. 이제 점프할 준비 완료.' },
       { say: '다음은 백 차례. 백은 <b>구멍 바로 옆(상하좌우)</b>의 자기 돌을 하나 빼. 잘 봐…', done: '봐, 빈칸 두 개가 나란히! 여기서부터 <b>뛰어넘어 잡는</b> 게임이 시작돼.' },
@@ -80,7 +80,7 @@
       { say: '대국에서는 <b>8×8</b>이 표준. 짧은 <b>6×6</b>, 긴 <b>10×10</b>도 고를 수 있어. 무승부가 없으니 마지막 점프까지 방심하지 마. 자, 놀아 보자~!' },
     ] },
     es: { name: 'Checkrab', next: 'Siguiente', back: 'Atrás', start: 'Jugar', again: 'Otra vez', tap: 'Toca un punto que brilla', nope: '¡Ahí no puede caer!', stuck: 'Esa piedra no puede saltar ahora', own: 'Toca una piedra negra', rmNg: 'Esa piedra no se puede retirar. Elige una de las que brillan', want: 'Esta vez, busca el salto que te pedí', wantWin: 'Así las blancas aún pueden saltar. ¡Otra vez!', win: '🏆 ¡Ganas!', s: [
-      { say: '¡Aloha! Soy <b>Checkrab</b>. ¡Hoy aprendemos el <b>kōnane</b>, nacido en las playas de Hawái, en un <b>papamū</b> tallado en lava! Practicaremos en un tablero pequeño de 6×6.' },
+      { say: '¡Aloha! Soy <b>Checkrab</b>. ¡Hoy aprendemos el <b>kōnane</b>, nacido en las playas de Hawái, en un <b>papamū</b>, su tablero! Practicaremos en un tablero pequeño de 6×6.' },
       { say: 'El tablero empieza con <b>piedras negras y blancas alternadas en todas las casillas</b>. a1, abajo a la izquierda, es negra, y <b>empiezan las negras</b>. Brillan las cuatro casillas centrales y las esquinas: la primera jugada las usa.' },
       { say: '¡La primera jugada solo <b>retira una piedra</b>! Las negras quitan una piedra suya del <b>centro o de una esquina</b> para abrir un hueco. ¡Toca una de las piedras negras que brillan!', done: '¡Pop! Un hueco. El tablero ya está listo para saltar.' },
       { say: 'Ahora juegan las blancas. Retiran una piedra suya <b>justo al lado del hueco</b> (arriba, abajo o a los lados). Mira…', done: '¿Ves? Dos casillas vacías juntas. Desde aquí el juego es <b>saltar para capturar</b>.' },
@@ -92,7 +92,7 @@
       { say: 'En las partidas el estándar es <b>8×8</b>; también puedes elegir un corto <b>6×6</b> o un largo <b>10×10</b>. No hay tablas, así que atento hasta el último salto. ¡A jugar!' },
     ] },
     fr: { name: 'Checkrab', next: 'Suivant', back: 'Retour', start: 'Jouer', again: 'Encore', tap: 'Touche un point qui brille', nope: 'Elle ne peut pas atterrir là !', stuck: 'Cette pierre ne peut pas sauter pour l’instant', own: 'Touche une pierre noire', rmNg: 'Cette pierre ne peut pas être retirée. Choisis une pierre qui brille', want: 'Cette fois, trouve le saut demandé', wantWin: 'Les Blancs pourraient encore sauter. Réessaie !', win: '🏆 Gagné !', s: [
-      { say: 'Aloha ! Moi c’est <b>Checkrab</b>. Aujourd’hui on apprend le <b>kōnane</b>, né sur les plages d’Hawaï, sur un <b>papamū</b> taillé dans la lave ! On s’entraîne sur un petit plateau 6×6.' },
+      { say: 'Aloha ! Moi c’est <b>Checkrab</b>. Aujourd’hui on apprend le <b>kōnane</b>, né sur les plages d’Hawaï, sur un <b>papamū</b>, son plateau ! On s’entraîne sur un petit plateau 6×6.' },
       { say: 'Au départ, <b>chaque case porte une pierre, noire et blanche en alternance</b>. a1, en bas à gauche, est noire, et <b>les Noirs commencent</b>. Les cases qui brillent sont les quatre du centre et les coins : le premier coup s’en sert.' },
       { say: 'Le premier coup <b>retire seulement une pierre</b> ! Les Noirs ôtent une de leurs pierres <b>au centre ou dans un coin</b> pour ouvrir un trou. Touche une des pierres noires qui brillent !', done: 'Pop ! Un trou. Le plateau est prêt pour les sauts.' },
       { say: 'Maintenant, les Blancs. Ils retirent une de leurs pierres <b>juste à côté du trou</b> (en haut, en bas ou sur le côté). Regarde…', done: 'Tu vois ? Deux cases vides côte à côte. Désormais, le jeu consiste à <b>sauter pour prendre</b>.' },
@@ -104,7 +104,7 @@
       { say: 'En partie, le <b>8×8</b> est la norme ; tu peux aussi choisir un court <b>6×6</b> ou un long <b>10×10</b>. Pas de nulle : reste concentré jusqu’au dernier saut. Allez, on joue !' },
     ] },
     pt: { name: 'Checkrab', next: 'Próximo', back: 'Voltar', start: 'Jogar', again: 'De novo', tap: 'Toque num ponto que brilha', nope: 'Ela não pode pousar aí!', stuck: 'Essa pedra não pode saltar agora', own: 'Toque numa pedra preta', rmNg: 'Essa pedra não pode ser retirada. Escolha uma das que brilham', want: 'Desta vez, ache o salto que eu pedi', wantWin: 'Assim as brancas ainda podem saltar. De novo!', win: '🏆 Você venceu!', s: [
-      { say: 'Aloha! Eu sou o <b>Checkrab</b>. Hoje vamos aprender o <b>kōnane</b>, nascido nas praias do Havaí, num <b>papamū</b> entalhado na lava! Vamos treinar num tabuleiro pequeno de 6×6.' },
+      { say: 'Aloha! Eu sou o <b>Checkrab</b>. Hoje vamos aprender o <b>kōnane</b>, nascido nas praias do Havaí, num <b>papamū</b>, o seu tabuleiro! Vamos treinar num tabuleiro pequeno de 6×6.' },
       { say: 'O tabuleiro começa com <b>pedras pretas e brancas alternadas em todas as casas</b>. a1, embaixo à esquerda, é preta, e <b>as pretas começam</b>. Brilham as quatro casas do centro e os cantos: o primeiro lance usa essas casas.' },
       { say: 'O primeiro lance só <b>retira uma pedra</b>! As pretas tiram uma pedra sua do <b>centro ou de um canto</b> para abrir um buraco. Toque numa das pedras pretas que brilham!', done: 'Pop! Um buraco. O tabuleiro está pronto para os saltos.' },
       { say: 'Agora é a vez das brancas. Elas retiram uma pedra sua <b>logo ao lado do buraco</b> (em cima, embaixo ou dos lados). Olha só…', done: 'Viu? Duas casas vazias juntas. Daqui em diante o jogo é <b>saltar para capturar</b>.' },
@@ -116,7 +116,7 @@
       { say: 'Nas partidas o padrão é <b>8×8</b>; você também pode escolher um curto <b>6×6</b> ou um longo <b>10×10</b>. Não há empate, então fique atento até o último salto. Vamos jogar!' },
     ] },
     de: { name: 'Checkrab', next: 'Weiter', back: 'Zurück', start: 'Los spielen', again: 'Nochmal', tap: 'Tippe einen leuchtenden Punkt an', nope: 'Dort kann er nicht landen!', stuck: 'Dieser Stein kann gerade nicht springen', own: 'Tippe einen schwarzen Stein an', rmNg: 'Dieser Stein darf nicht abgenommen werden. Wähle einen leuchtenden', want: 'Diesmal suchst du den Sprung aus der Aufgabe', wantWin: 'Danach könnte Weiß noch springen. Nochmal!', win: '🏆 Gewonnen!', s: [
-      { say: 'Aloha! Ich bin <b>Checkrab</b>. Heute lernen wir <b>Kōnane</b>, entstanden an den Stränden Hawaiʻis, auf einem in Lava gehauenen <b>Papamū</b>! Geübt wird auf einem kleinen 6×6-Brett.' },
+      { say: 'Aloha! Ich bin <b>Checkrab</b>. Heute lernen wir <b>Kōnane</b>, entstanden an den Stränden Hawaiʻis, auf einem <b>Papamū</b>, seinem Brett! Geübt wird auf einem kleinen 6×6-Brett.' },
       { say: 'Zu Beginn liegen <b>auf jedem Feld Steine, abwechselnd schwarz und weiß</b>. a1 unten links ist schwarz, und <b>Schwarz beginnt</b>. Es leuchten die vier Mittelfelder und die Ecken – die braucht der erste Zug.' },
       { say: 'Der erste Zug <b>nimmt nur einen Stein ab</b>! Schwarz nimmt einen eigenen Stein aus <b>der Mitte oder einer Ecke</b> und macht ein Loch. Tippe einen der leuchtenden schwarzen Steine an!', done: 'Plopp! Ein Loch. Jetzt ist das Brett bereit zum Springen.' },
       { say: 'Jetzt ist Weiß dran. Weiß nimmt einen eigenen Stein <b>direkt neben dem Loch</b> ab (oben, unten oder seitlich). Schau mal…', done: 'Siehst du? Zwei leere Felder nebeneinander. Ab jetzt heißt es <b>springen und schlagen</b>.' },
@@ -128,7 +128,7 @@
       { say: 'Gespielt wird meist auf <b>8×8</b>; du kannst auch ein kurzes <b>6×6</b> oder ein langes <b>10×10</b> wählen. Remis gibt es nicht – bleib bis zum letzten Sprung wach. Los, spielen wir!' },
     ] },
     hi: { name: 'चेकरैब', next: 'आगे', back: 'पीछे', start: 'खेलकर देखें', again: 'फिर से', tap: 'चमकती जगह पर टैप करें', nope: 'वहाँ नहीं उतर सकता!', stuck: 'वह पत्थर अभी नहीं कूद सकता', own: 'कोई काला पत्थर टैप करो', rmNg: 'वह पत्थर नहीं हटा सकते। चमकते पत्थरों में से चुनो', want: 'इस बार वही छलांग ढूँढो जो मैंने कही', wantWin: 'ऐसे तो सफ़ेद अब भी कूद सकता है। फिर से!', win: '🏆 जीत गए!', s: [
-      { say: 'अलोहा! मैं हूँ <b>चेकरैब</b>। आज लावा में तराशे बोर्ड “<b>पापामू</b>” पर हवाई के समुद्र-तटों पर जन्मा <b>कोनाने</b> सीखते हैं! अभ्यास छोटे 6×6 बोर्ड पर करेंगे।' },
+      { say: 'अलोहा! मैं हूँ <b>चेकरैब</b>। आज बोर्ड “<b>पापामू</b>” पर हवाई के समुद्र-तटों पर जन्मा <b>कोनाने</b> सीखते हैं! अभ्यास छोटे 6×6 बोर्ड पर करेंगे।' },
       { say: 'शुरू में <b>हर खाने पर बारी-बारी काले और सफ़ेद पत्थर</b> होते हैं। नीचे-बाएँ a1 काला है, और <b>काला पहले चलता है</b>। चमक रहे हैं बीच के चार खाने और चारों कोने — पहली चाल इन्हीं से होती है।' },
       { say: 'पहली चाल में <b>बस एक पत्थर हटाना</b> है! काला <b>बीच या कोने</b> से अपना एक पत्थर हटाकर बोर्ड में छेद बनाता है। किसी चमकते काले पत्थर पर टैप करो!', done: 'पॉप! छेद बन गया। अब बोर्ड कूदने के लिए तैयार है।' },
       { say: 'अब सफ़ेद की बारी। सफ़ेद <b>छेद के ठीक बगल (ऊपर-नीचे-दाएँ-बाएँ)</b> वाला अपना एक पत्थर हटाता है। देखो…', done: 'देखा? दो खाली खाने साथ-साथ! यहाँ से खेल है <b>कूदकर पत्थर लेना</b>।' },
@@ -140,7 +140,7 @@
       { say: 'खेल में मानक <b>8×8</b> है; छोटा <b>6×6</b> और लंबा <b>10×10</b> भी चुन सकते हो। ड्रॉ नहीं होता, इसलिए आख़िरी छलांग तक चौकन्ने रहो। चलो, खेलते हैं!' },
     ] },
     ar: { name: 'تشيكراب', next: 'التالي', back: 'رجوع', start: 'لنلعب', again: 'مرة أخرى', tap: 'انقر نقطة متوهجة', nope: 'لا يمكنه الهبوط هناك!', stuck: 'هذا الحجر لا يستطيع القفز الآن', own: 'انقر حجرًا أسود', rmNg: 'لا يمكن نزع هذا الحجر. اختر من الأحجار المتوهجة', want: 'هذه المرة ابحث عن القفزة المطلوبة', wantWin: 'هكذا ما زال الأبيض يستطيع القفز. حاول مجددًا!', win: '🏆 فزت!', s: [
-      { say: 'ألوها! أنا <b>تشيكراب</b>. اليوم نتعلّم <b>الكونانيه</b>، المولودة على شواطئ هاواي، على «<b>بابامو</b>» محفورة في الحمم! سنتدرّب على لوحة صغيرة 6×6.' },
+      { say: 'ألوها! أنا <b>تشيكراب</b>. اليوم نتعلّم <b>الكونانيه</b>، المولودة على شواطئ هاواي، على لوحتها «<b>بابامو</b>»! سنتدرّب على لوحة صغيرة 6×6.' },
       { say: 'تبدأ اللوحة <b>بحجر على كل مربع، أسود وأبيض بالتناوب</b>. a1 أسفل اليسار سوداء، و<b>الأسود يبدأ</b>. المتوهج هو المربعات الأربعة الوسطى والزوايا — تُستخدم في النقلة الأولى.' },
       { say: 'النقلة الأولى <b>تنزع حجرًا فقط</b>! ينزع الأسود أحد أحجاره من <b>الوسط أو من زاوية</b> ليفتح حفرة. انقر أحد الأحجار السوداء المتوهجة!', done: 'بوب! حفرة. اللوحة جاهزة للقفز الآن.' },
       { say: 'الآن دور الأبيض. ينزع أحد أحجاره <b>الملاصقة للحفرة مباشرة</b> (أعلى أو أسفل أو جانبًا). انظر…', done: 'أرأيت؟ مربعان فارغان متجاوران. من هنا تصبح اللعبة <b>القفز للأسر</b>.' },
@@ -190,15 +190,18 @@
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .05; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
     function vanish(g, delay) { later(() => { SFX.take(); const x0 = g.position.x, z0 = g.position.z; anim(340, k => { lift(g, Math.sin(k * Math.PI * .6) * .5); const s = 1 - io(k) * .85; g.scale.set(s, s, s); g.rotation.z = k * .6; g.position.x = x0; g.position.z = z0; }, () => drop(g)); }, delay); }
-    function setBoard() {
-      Object.values(pcs).forEach(drop); pcs = {};
+    function setBoard() {   // diff against the stones already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {};
       let n = 0;
       for (let i = 0; i < N * N; i++) {
         const c = pos.owner(i); if (!c) continue;
+        const o = old[i];
+        if (o && o.userData.col === c) { delete old[i]; pcs[i] = o; const [x, z] = xz(i); o.visible = true; o.position.x = x; o.position.z = z; o.scale.set(1, 1, 1); o.rotation.z = 0; lift(o, 0); continue; }
         const g = mk(c), [x, z] = xz(i); g.position.set(x, Y, z); pcs[i] = g;
         g.visible = false; const d = 40 + (n++) * 16;
         later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); land(g); }); }, d);
       }
+      Object.values(old).forEach(drop);
       return n;
     }
     const HOP = 300;

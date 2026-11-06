@@ -232,12 +232,16 @@
     }
     // solved: on to the next step by itself once the reaction has been read (every rules tour)
     function autoNext() { const s0 = step, n = ((L.s[step] && L.s[step].done) || '').replace(/<[^>]+>/g, '').length; const ms = Math.min(3200, 1100 + n * 30); if (window.AtlasRgdTimer) AtlasRgdTimer(el.querySelector('[data-a="next"]'), ms, () => step === s0); later(() => { if (step === s0 && !STEPS[step].last) go(step + 1); }, ms); }
-    function load(animate) {   // the step's tower: the tiles drop in one after another, from the bottom up
+    let shown = null;   // the tower on the table now (the tiles the same as the step's stay still)
+    { const s0 = set.sync; set.sync = (gg, ...a) => { shown = gg.map(x => x.slice()); return s0(gg, ...a); }; }
+    function load(animate) {   // the step's tower: the tiles it shares with the tower already there stay; only the new ones drop in, from the bottom up
       g = grid(STEPS[step].cols); set.win(null);
       if (!animate) { set.sync(g, null, false); return 0; }
-      set.sync(grid(['', '', '', '', '', '', '']), null, false);
-      const order = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (r < g[c].length) order.push([c, r]);
-      const part = grid(['', '', '', '', '', '', '']), gap = order.length > 20 ? 28 : 70;
+      const part = g.map((col, c) => { const o = (shown && shown[c]) || [], k = []; for (let r = 0; r < col.length && r < o.length && o[r] === col[r]; r++) k.push(col[r]); return k; });
+      set.sync(part.map(x => x.slice()), null, false);
+      const order = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (r >= part[c].length && r < g[c].length) order.push([c, r]);
+      if (!order.length) return 0;
+      const gap = order.length > 20 ? 28 : 70;
       order.forEach(([c, r], i) => later(() => { part[c].push(g[c][r]); set.sync(part.map(x => x.slice()), c + ',' + r, true); }, 120 + i * gap));
       return 120 + order.length * gap + 500;
     }

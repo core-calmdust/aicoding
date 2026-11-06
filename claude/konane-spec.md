@@ -16,7 +16,7 @@ URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「チェ�
 - ソルバー：duelGood / duelMin / duelReply（N 手以内に相手を跳べなくする、相手は最長抵抗）、winningMoves / solve（完全読み、レッスンの正解集合）。
 
 ## 画面（ugolki/ から派生）
-- 盤（tools/gen_art.py のレンダリング画像）：ハワイアンキルト（既定）・カパ布・ラウハラ編み・パホエホエ溶岩。駒：珊瑚と玄武岩（既定）・ククイの実・真珠・コア。各マスにプカ（くぼみ）、座標 a–j / 1–10。
+- 盤（tools/gen_art.py ＋ gen_art_more.py のレンダリング画像、方針は「アーティスティックに」：質感の写実より絵としての美しさ）8種：ハワイアンキルト（既定）・オーシャンアート（ラッセン風の夕日の海・イルカ・ホヌ）・コナ・アート（水彩のモンステラ・ハイビスカス・プルメリア）・石のパパムー（風化した玄武岩、プリミティブ）・コアの盤・モダン3種（グレー・サンセット・ミッドナイト）。駒5種：玄武岩と珊瑚の小石（既定、なめらか）・真珠・コア材・ガラス・マット。ボツボツ・多孔質など対局中に気が散る質感は使わない。各マスにプカ（くぼみ）、座標 a–j / 1–10。
 - 盤の上下：取られた数と跳べる手の数のプレート。序盤は取り除ける石が光る（rmable）、以後は「跳べる石を光らせる」オプション（mov）。最後の1手の残りは盤下の案内。
 - ルール（RuleTour、実際の盤）：紹介 → 盤と石 → 黒の取り除き → 白の取り除き → 跳んで取る → 連続ジャンプ → 曲がれない → 途中で止まる → 跳べなくなったら負け → 盤の大きさ。
 - レッスン9（tools/gen_lessons.js ＋ lesson_ramps.js、正解集合はルール／完全読みで計算）：はじめて4（最初の取り除き・取れる石を探す・連続ジャンプ・最後の跳び）、作戦5（相手の手を数える・途中で止まる・続けて跳ぶ・自分の手を残す・先を読む）。各5問・満点20・合格75。
@@ -25,9 +25,9 @@ URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「チェ�
 - オンライン：準備中（firebase-config.js が null）。ルールは shared/tools/secrules.py の konane（s8・s6、引き分けなし）→ konane/database.rules.json。公開時は Firebase プロジェクト（例 konane-multiplay）を作って config と App Check キーを入れる。10×10 はオフラインのみ（K64 の 3 文字エンコードが 64 マスまで）。
 
 ## 3D（ポータル）
-- atlas/models/konane.js：溶岩のパパムー（パホエホエの面に各マスのくぼみ＝法線マップ、縁は光る溶岩の割れ目＝emissive）、石は白い珊瑚（多孔質）と磨いた玄武岩の小石。board(n) で 6/8/10。
-- atlas/skin/konane.js（フル機能版 ?skin=atlas）：盤サイズ変更で作り直し、取り除き・取られた石は浮いて消える。atlas/games/konane.js（ちゃぶ台対局、8×8）、atlas/rules/konane.js（チェッカニのルールコース、6×6、autoNext）。
-- アイコン：atlas/icons3d.js の konane() → images/atlas/konane.webp。ヒストリア：atlas/historia/s/konane.json ＋ 10言語、案内役 av/hermit-0。地図：atlas/mapdata.js（ハワイ島・カウアイ島・ホノルル）。
+- atlas/models/konane.js：3D盤2種（Table3D.BOARDS.konane、保存キー atlas-konane-look）。'quilt'（既定）＝オイル仕上げのコアのトレーにハワイアンキルト（bd-quilt＋fr-koa、各マスに縫い取りのくぼみ）、'papamu'＝手で割って整えた不揃いな輪郭の玄武岩の板に手で刻んだくぼみ（bd-stone／fr-stone、プリミティブ）。石はなめらかな白い珊瑚と黒い玄武岩の小石。board(n, look) で 6/8/10。サムネイル atlas/img/board-konane-<look>.webp（atlas/tools/boards.html）。
+- atlas/skin/konane.js（フル機能版 ?skin=atlas）：デザインタブの3D欄の下に3D盤2種の選択（ポータルの「盤」と同じキー）、盤サイズ・3D盤の変更で作り直し、取り除き・取られた石は浮いて消える。atlas/games/konane.js（ちゃぶ台対局、8×8）、atlas/rules/konane.js（チェッカニのルールコース、6×6、autoNext）。
+- アイコン：atlas/icons3d.js の konane()（キルト盤の角）→ images/atlas/konane.webp。ヒストリア：atlas/historia/s/konane.json ＋ 10言語、案内役 av/hermit-0。地図：atlas/mapdata.js（ハワイ島・カウアイ島・ホノルル）。
 
 ## 保存キー
 - aicoding-konane（設定・対局）、-lessons、-puzzles、-daily、-rated、-rules、aicoding-konane-rules-seen、konane-online-name。

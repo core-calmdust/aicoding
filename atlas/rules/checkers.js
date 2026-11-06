@@ -228,17 +228,21 @@
     const hOf = g => g.userData.h0 || 0;
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(170, k => { const s = 1 + Math.sin(k * Math.PI) * .05; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
-    function setBoard() {
-      Object.values(pcs).forEach(p => drop(p.g)); pcs = {};
+    function setBoard() {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {};
       board.children.filter(o => o.userData && o.userData.dying).forEach(drop);
       const order = []; for (let sq = 0; sq < 32; sq++) if (pos.at(sq)) order.push(sq);
       order.sort((a, b) => scr(b)[1] - scr(a)[1]);   // the near rows first
-      order.forEach((sq, n) => {
-        const k = pos.at(sq), g = mk(k, sq); pcs[sq] = { g, k };
+      let n = 0;
+      order.forEach(sq => {
+        const k = pos.at(sq), o = old[sq];
+        if (o && o.k === k && !o.g.userData.dying) { delete old[sq]; pcs[sq] = o; const [x, z] = xz(sq); o.g.visible = true; o.g.position.x = x; o.g.position.z = z; o.g.scale.set(1, 1, 1); o.g.rotation.set(0, o.g.rotation.y, 0); lift(o.g, 0); return; }
+        const g = mk(k, sq), j = n++; pcs[sq] = { g, k };
         g.visible = false;
-        later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); land(g); }); }, 40 + n * 16);
+        later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); land(g); }); }, 40 + j * 16);
       });
-      return order.length;
+      Object.values(old).forEach(p => drop(p.g));
+      return n;
     }
     function knockOff(g, dx, dz) {
       g.userData.dying = true;

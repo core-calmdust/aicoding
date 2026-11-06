@@ -187,15 +187,18 @@
     function lift(g, h) { g.position.y = Y + h; g.userData.h0 = h; const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); } }
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .05; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
-    function setBoard() {
-      Object.values(pcs).forEach(drop); pcs = {};
+    function setBoard() {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {};
       let n = 0;
       for (let i = 0; i < 64; i++) {
         const c = pos.owner(i); if (!c) continue;
-        const g = mk(c), [x, z] = xz(i); g.position.set(x, Y, z); pcs[i] = g;
+        const o = old[i];
+        if (o && o.userData.kc === c) { delete old[i]; pcs[i] = o; const [x, z] = xz(i); o.visible = true; o.position.x = x; o.position.z = z; o.scale.set(1, 1, 1); lift(o, 0); continue; }
+        const g = mk(c); g.userData.kc = c; const [x, z] = xz(i); g.position.set(x, Y, z); pcs[i] = g;
         g.visible = false; const d = 40 + (n++) * 16;
         later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); land(g); }); }, d);
       }
+      Object.values(old).forEach(drop);
       return n;
     }
     function travel(g, path, jump, done) {
