@@ -1875,7 +1875,7 @@ async function runReview() {
   studyEnd();
   if (lesson || puzzle) return;
   if (moves.length < 1) { toast(t('nokifu')); return; }
-  if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); revealReview(); return; }
+  if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); rvbRender(); revealReview(); return; }   // (the box under the board comes back too)
   rvCancel();
   const game = moves.slice(), key = gameKey(), st0 = startSpec;
   const run = rv = { key, list: [], done: 0, total: game.length, running: true, ws: [] };
@@ -2007,7 +2007,7 @@ function drawReviewFx(svg) {
   return true;
 }
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
-$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
+$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); rvbRender(); };   // (閉じる also closes the box under the board, as in every game)
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 
@@ -2082,7 +2082,7 @@ function rvbRender() {
     if (!j) explain = `<p>${t('cr.noData')}</p>`;
     else { const x = crExplain(cur, j); explain = `<p>${x.txt}</p>` + (x.kind ? `<p class="cr-tip">${t('cr.tip.' + x.kind)}</p>` : ''); }
   } else {
-    head = escHb(RVB.T('final'));
+    head = escHb(RVB.T(gameOver(moves.length) ? 'final' : 'now'));   // (対局の途中で分析したときは「現在の局面」)
     explain = rvCoach().replace(/<div class="cr-h">[\s\S]*?<\/div>/, '').replace(/<p class="cr-more">[\s\S]*?<\/p>/, '');
   }
   RVB.render({ show: true, study: inStudy(), canBack: inStudy() && cur > rvStudy.base, head, explain, unit: RVB.T('unit'), key: over ? '' : key, start: over ? null : rvbCands });

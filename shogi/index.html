@@ -1500,7 +1500,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261022cs"></script>
 <script src="openings-ui.js?v=20261022cr"></script>
 <script src="../shared/pzbook.js?v=5"></script>
-<script src="../shared/headerbar.js?v=42"></script>
+<script src="../shared/headerbar.js?v=43"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1515,7 +1515,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
 <script src="variants/variants.js?v=20261104th-crl"></script>
-<script src="rvbox.js?v=20261028fsa"></script>
+<script src="rvbox.js?v=20261028fsa-rc1"></script>
 <script src="rvtip.js?v=1"></script>
 <script src="../shared/coachkit.js?v=16"></script>
 <script src="../shared/record.js?v=12"></script>
@@ -3182,7 +3182,7 @@ function renderReview() {
   $('#rvBody').innerHTML = html;
 }
 $('#rvBody').addEventListener('click', e => { const ob = e.target.closest('[data-opset],[data-opid]'); if (ob) { const fi = ob.dataset.opid ? ShogiOpenUI.findId(ob.dataset.opid).then(i => i >= 0 ? i : OPEN.sets.findIndex(g => g.id === ob.dataset.opfb)) : Promise.resolve(+ob.dataset.opset); lsTab = 'open'; showOverlay('#lessonOverlay'); Promise.all([fi, openLessons()]).then(([oi]) => { if (oi >= 0) openOpeningChoice(oi); }); return; } if (e.target.closest('#rvPvBtn')) { rvPvShow = !rvPvShow; renderReview(); drawArrows(); return; } const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
-$('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); };
+$('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); rvbRender(); };   // (the box under the board closes with it, as in the other games)
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
 
@@ -3276,7 +3276,7 @@ function rvbRender() {
     const r = rvLoss(cur + 1), q = r ? qOfDrop(r.drop) : '';
     head = `${escHb(t('rv.ex.move', { n: cur + 1 }))} <b>${escHb(kan1(sf, game.moves[cur]))}</b>${q ? `<span class="tag ${q}">${escHb(t('q.' + q))}</span>` : ''}`;
     explain = rvExplainHtml().replace(/<div class="rv-ex-h">[\s\S]*?<\/div>/, '').replace(/<p class="pv">[\s\S]*?<\/p>/, '').replace(/<button class="rv-pvbtn"[\s\S]*?<\/button>/, '');
-  } else { head = escHb(RVB.T('final')); explain = rvbSummary(); }
+  } else { head = escHb(RVB.T(game.over ? 'final' : 'now')); explain = rvbSummary(); }
   const done = over || !P.legalMoves(false).length;
   RVB.render({ show: true, study: inStudy(), canBack: inStudy() && cur > rvStudy.base, head, explain, unit: RVB.T('unit'), key: done ? '' : rvbKey(), start: done ? null : rvbCands });
 }

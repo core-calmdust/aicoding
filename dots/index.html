@@ -1145,7 +1145,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="i18n-learn.js?v=20261021ru3"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5"></script><!-- learn-ui -->
-<script src="../shared/headerbar.js?v=42"></script>
+<script src="../shared/headerbar.js?v=43"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1154,7 +1154,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/ruletour.js?v=29"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
 <script src="engine.js?v=20261028rb"></script>
-<script src="rvbox.js?v=20261106al"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
+<script src="rvbox.js?v=20261106al-rc1"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1982,7 +1982,7 @@ function rbStudyPlay(e) { if (!S || S.over || S.p.drawn[e]) return; csLine.push(
 if (window.RvBox) RvBox.init({
   active: rbActive, lang: () => LANG, key: () => game.n + ':' + game.moves.slice(0, viewPly === null ? game.moves.length : viewPly).concat(rbCons() ? csLine : []).join(','), boardEl: () => $('#board'),
   head() {
-    if (viewPly === null) return `${escH(t('cr.title'))} · ${escH(RvBox.tx('final'))}`;
+    if (viewPly === null) return `${escH(t('cr.title'))} · ${escH(RvBox.tx(SF && SF.over ? 'final' : 'now'))}`;
     const i = viewPly, j = rvJudge(i);
     return `${escH(t('cr.move', { n: i + 1, who: shortName(rv.mover[i]) }))} <span class="mv" style="color:var(--accent)">${edgeName(game.moves[i])}</span>` + (j ? `<span class="tag ${j.q}">${escH(t('q.' + j.q))}</span>` : '');
   },

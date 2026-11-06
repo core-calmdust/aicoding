@@ -1432,7 +1432,7 @@ if (window.RBox) RBox.init({
   explain: () => {
     if (cur < moves.length) { const x = rvCoachMove(); return { head: x.head, tag: x.tag, html: x.body }; }
     const h = rvCoach().replace(/^<div class="cr-box"><div class="cr-h">[^<]*<\/div>/, '').replace(/<\/div>$/, '').replace(/<p class="cr-more">.*?<\/p>/, '');
-    return { head: RBox.t('final') + (statusAt(moves.length).over ? ' · ' + escHb(resultLine(statusAt(moves.length))) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
+    return { head: RBox.t(statusAt(moves.length).over || isCounting(moves.length) ? 'final' : 'now') + (statusAt(moves.length).over ? ' · ' + escHb(resultLine(statusAt(moves.length))) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
   },
   analyze: rbAnalyze,
   seed: rbSeed,

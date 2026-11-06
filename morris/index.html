@@ -1340,7 +1340,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
-<script src="../shared/headerbar.js?v=42"></script>
+<script src="../shared/headerbar.js?v=43"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1348,7 +1348,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/tick.js?v=2"></script>
 <script src="../shared/ruletour.js?v=29"></script>
 <script src="engine.js?v=20261028rb"></script>
-<script src="rvbox.js?v=20261106al"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
+<script src="rvbox.js?v=20261106al-rc1"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
@@ -3458,7 +3458,7 @@ function rbStudyPlay(m) {
 if (window.RvBox) RvBox.init({
   active: rbActive, lang: () => LANG, key: () => shownKeyOf(cur), boardEl: () => $('#frame'),
   head() {
-    if (cur >= moves.length) return `${t('cr.title')} · ${RvBox.tx('final')}`;
+    if (cur >= moves.length) return `${t('cr.title')} · ${RvBox.tx(rbRealOver() ? 'final' : 'now')}`;
     const i = cur, j = rvJudge(i), who = i & 1 ? P2 : P1;
     return t('cr.move', { n: i + 1, who: sideLabel(who), m: crName(moves[i]) }) + (j && j.q ? `<span class="tag ${j.q}">${t('q.' + j.q)}</span>` : j && j.ok ? `<span class="tag best">${t('q.best')}</span>` : '');
   },
