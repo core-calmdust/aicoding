@@ -152,12 +152,12 @@
     el.svg.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`);
     const R = routeSvg(P.filter(p => p.x > -S && p.x < b.w + S).map(p => [p.x - S / 2 - 2, p.y - S / 2 - 2, p.x + S / 2 + 2, p.y + S / 2 + 10]), b);
     el.svg.innerHTML = R.under + `<g class="lead">${lines}</g>`;
-    el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over;
+    el.svg2.setAttribute('viewBox', `0 0 ${b.w} ${b.h}`); el.svg2.innerHTML = R.over; if (hotN != null) el.svg2.querySelectorAll(`.num[data-n="${hotN}"]`).forEach(n => n.classList.add('hot'));
   }
   // the selected game's journey: arcs between the stops, numbered dots and their names
   // the stops' names are set above the pins, each in the first spot around its dot that covers no pin, no other name
   // and stays inside the map (right, left, below, above, then the diagonals, then farther out)
-  let mctx = null;
+  let mctx = null, hotN = null;   // hotN: the journey chip under the pointer (its stop stays lit through redraws)
   const fs = () => box().w < 520 ? 14 : 16;   // the stop names' size (matches --amFs in worldmap.css)
   const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 ' + fs() + 'px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
   function routeSvg(rects, b) {
@@ -173,7 +173,7 @@
     const busy = rects.slice(), dots = [], lbl = [];
     // numbered stops (the numbers match the journey chips in the card); the home stop's number sits on its pin's corner
     P.forEach((p, i) => { const R = 9, home = i === d.h, x = home ? p[0] + 15 : p[0], y = home ? p[1] - 15 : p[1];
-      dots.push(`<g class="num${home ? ' h' : ''}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/><text x="${x.toFixed(1)}" y="${y.toFixed(1)}">${i + 1}</text></g>`);
+      dots.push(`<g class="num${home ? ' h' : ''}" data-n="${i}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/><text x="${x.toFixed(1)}" y="${y.toFixed(1)}">${i + 1}</text></g>`);
       if (!home) busy.push([p[0] - R - 1, p[1] - R - 1, p[0] + R + 1, p[1] + R + 1]); });
     P.forEach((p, i) => {
       const s = pins[i]; if (i === d.h || !s) return;
@@ -206,11 +206,17 @@
     el.info.innerHTML = `<span class="amart ph" style="--c:${g.color}" aria-hidden="true">${ctx.art(g)}</span><div class="amtop" style="--c:${g.color}"><span class="amart">${ctx.art(g)}</span><div><small class="round">${esc(ctx.no(g))}</small><b>${esc(ctx.gname(g))}</b></div></div>
       <div class="amfacts"><span><i>${esc(u('born'))}</i><b>${esc(pins[d.h] || '')}</b></span><span><i>${esc(u('era'))}</i><b>${esc(pick(d.era, lang))}</b></span></div>
       <div class="amstory"><h3>${esc(pick(d.t, lang))}</h3><p class="amd">${esc(pick(d.d, lang))}</p><button type="button" class="ammore" aria-expanded="false" hidden>${esc(u('more'))}</button></div>
-      ${pins.length > 1 ? `<div class="amjour" style="--c:${g.color}"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}"><u>${i + 1}</u>${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
+      ${pins.length > 1 ? `<div class="amjour" style="--c:${g.color}"><i>${esc(u('route'))}</i><div>${order.map(i => `<span class="${i === d.h ? 'h' : ''}" data-n="${i}"><u>${i + 1}</u>${esc(pins[i] || '')}</span>`).join('<em>›</em>')}</div></div>` : ''}
       <div class="amacts"><button type="button" class="btn amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(u('play'))}</button>
       ${hasH(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(u('hist'))}</button>` : ''}</div>`;
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
+    // the journey chips: hovering (or touching) one lights its numbered stop on the map
+    el.info.querySelectorAll('.amjour [data-n]').forEach(ch => {
+      const lit = on => { hotN = on ? ch.dataset.n : null; el.map.querySelectorAll(`.num[data-n="${ch.dataset.n}"]`).forEach(n => n.classList.toggle('hot', on)); };
+      ch.addEventListener('pointerenter', () => lit(true)); ch.addEventListener('pointerleave', () => lit(false));
+      ch.addEventListener('pointerdown', () => { lit(true); setTimeout(() => lit(false), 1200); });
+    });
     // the story is cut to two lines; when it runs on, a toggle opens the card to the whole text
     el.info.classList.remove('open');
     const mb = el.info.querySelector('.ammore'), pd = el.info.querySelector('.amd');
