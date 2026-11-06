@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Dev tool: one game's showcase board on the dining table (place 2), for the 盤 thumbnails of the portal's place panel
+     (atlas/img/board-<game>-<look>.webp). http://localhost:8000/atlas/tools/boards.html?game=chess&look=wood → window.READY -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}#gl{position:absolute;inset:0}#gl canvas{display:block;width:100%!important;height:100%!important}</style></head>
+<body><div id="gl"></div>
+<script>try { localStorage.setItem('atlas-tod', 'day'); localStorage.removeItem('atlas-lite'); localStorage.setItem('atlas-table', '2'); localStorage.setItem('atlas-bright', '0'); } catch (e) {}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../texgen.js"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../models/chess.js"></script>
+<script src="../models/backgammon.js"></script>
+<script src="../models/goban.js"></script>
+<script src="../models/agon.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), X = window.Table3D, id = q.get('game') || 'chess', look = q.get('look');
+  if (look && X.BOARDS[id]) X.BOARDS[id].set(look);
+  X.mount(document.getElementById('gl'));
+  X.show(id, null, { still: true });
+  X.quiet(true); X.snap();
+  setTimeout(() => { X.snap(); X.kick(1500); setTimeout(() => { window.READY = true; }, 1600); }, 600);
+})();
+</script>
+</body></html>

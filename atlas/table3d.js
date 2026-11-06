@@ -1521,9 +1521,9 @@
   const KEEP_N = COARSE ? 2 : 3, kept = [];   // [{ id, c, st }]
   // the settings a showcase board is built from (the goban look, the backgammon checker colours): a kept / prepared board is
   // only reused while they are unchanged (a table game can change them)
-  const stamp = () => { try { const ls = localStorage; let ck = ''; try { ck = JSON.stringify(JSON.parse(ls.getItem('aicoding-backgammon-v2') || '{}').settings.ck || ''); } catch (e) {} return (ls.getItem('atlas-go-look') || '') + '|' + (ls.getItem('atlas-gomoku-look') || '') + '|' + ck; } catch (e) { return ''; } };
+  const stamp = () => { try { const ls = localStorage; let ck = ''; try { ck = JSON.stringify(JSON.parse(ls.getItem('aicoding-backgammon-v2') || '{}').settings.ck || ''); } catch (e) {} return (ls.getItem('atlas-go-look') || '') + '|' + (ls.getItem('atlas-gomoku-look') || '') + '|' + ck + '|' + ['atlas-chess-pc', 'atlas-chess-pc-bd', 'atlas-bg-look', 'atlas-agon-look', 'atlas-agon-look3'].map(k => ls.getItem(k) || '').join(','); } catch (e) { return ''; } };
   function keepBoard(id, c, next) {
-    kept.push({ id, c, st: stamp() });
+    kept.push({ id, c, st: c.userData.st ?? stamp() });   // (the settings it was built with: a board changed just now is not kept as the new look)
     while (kept.length > KEEP_N) { const k = kept.shift(); dispose(k.c); freeBoard(k.c, [scene, next, ...kept.map(e => e.c)]); }
   }
   function takeKept(id) {
@@ -1559,7 +1559,7 @@
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
     if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
-    const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id; c.userData.gameId = id;
+    const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id; c.userData.st = stamp(); c.userData.gameId = id;
     if (tblInfo && tblInfo.onShow) try { tblInfo.onShow(id); } catch (e) {}
     const land = () => {        // board drops in and lands with squash & stretch
       root.add(c);
