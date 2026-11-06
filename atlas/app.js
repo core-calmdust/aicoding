@@ -151,7 +151,7 @@
     AtlasAccount.on(() => renderAcc());
     window.addEventListener('atlas-synced', () => { W = A_.load(); refresh(); if (!session) render(page); });
     // when the name changes, fill it in from Google if empty
-    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); ['nameIn', 'mpName'].forEach(id => { const ni = $(id); if (ni) ni.value = W.name; }); } });
+    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni) ni.value = W.name; }); } });
   }
   // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
   // the pieces floating round the title: one signature piece per game (the first 11 are the ones phones show)
@@ -1075,7 +1075,7 @@
   // the same name in every game (home card and My Page edit the same one)
   function setName(v) {
     W.name = v.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true);
-    ['nameIn', 'mpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
+    ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
   }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
@@ -1091,27 +1091,6 @@
     $('avBtn').onclick = () => go('dress');
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
-  }
-  // My Page at the top of きせかえ: one slim card, about the home name card's size — small avatar · name · Lv bar · coins,
-  // then stat chips (実績 → the achievements tab · games played · login streak, which opens the login week) and the Google account.
-  // The look itself (big character, background, frame) is the dress preview's job right below, so it isn't repeated here.
-  let mpWk = false;
-  function renderMyPage() {
-    const el = $('mypage'); if (!el) return;
-    const { touched, done, s, pos, lv } = profStats(), got = done % 3, nx = esc(t('mp.next', { n: 3 - got }));
-    const chip = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="mpc"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
-    el.innerHTML = `<span class="mp-av av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}">${ART.avatar(W.av, 52, { clear: true })}</span>
-      <div class="mp-who"><input id="mpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
-        <div class="mp-lv" title="${nx}"><b>Lv.${lv}</b><span class="mp-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span></div></div>
-      <span class="coin mp-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span>
-      <div class="mp-chips">${chip('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="mp-ar" aria-hidden="true">›</span>')}${chip('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${chip('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${mpWk}" aria-controls="mpWk"`, '<svg class="mp-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}</div>
-      <div class="accw"></div>
-      <div class="mp-wk" id="mpWk">${weekHtml(esc(t('login.h')), pos)}</div>`;
-    el.classList.toggle('wk', mpWk);
-    el.querySelector('[data-go=ach]').onclick = () => go('ach');
-    el.querySelector('[data-wk]').onclick = e => { mpWk = !mpWk; el.classList.toggle('wk', mpWk); e.currentTarget.setAttribute('aria-expanded', mpWk); };
-    $('mpName').onchange = e => setName(e.target.value);
-    renderAcc();
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
@@ -1306,17 +1285,37 @@
     const clip = `M${f(-46)} ${f(-89)}H${f(134)}V${f(41)}H${f(85)}A${f(41)} ${f(41)} 0 0 1 ${f(3)} ${f(41)}H${f(-46)}Z`;
     return `<span class="av-cw" style="position:absolute;left:${f(6)}px;top:${f(9)}px;width:${f(88)}px;height:${f(88)}px;clip-path:path('${clip}');-webkit-clip-path:path('${clip}');pointer-events:none"><img class="av-ch" src="${ART.avUrl(it.id)}" alt="" draggable="false" style="display:block;width:100%;height:100%"></span>`;
   }
+  // the player card (きせかえ's preview, doubling as My Page): the dressed-up character on its background · name · Lv · coins ·
+  // stat tiles (実績 → the achievements tab, games played, login streak, collection) · what is worn · the login week · Google.
+  // PC: a wide card (character + worn items left, profile right), sticky beside the items; phones: a compact block
+  // (the worn items beside the character; the login week and Google open from the 🔥 tile)
+  let ncWk = false;
+  function renderCard() {
+    const el = $('dprev'), phone = matchMedia('(max-width:760px)').matches, PS = phone ? 92 : 168;
+    const { touched, done, s, pos, lv } = profStats(), got = done % 3, nx = esc(t('mp.next', { n: 3 - got }));
+    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
+      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
+    const tile = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="nct"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
+    el.classList.toggle('dark', ART.isDark(W.av.bg));
+    el.classList.toggle('wk', ncWk);
+    el.innerHTML = `<div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
+        <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+        ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
+      <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
+        <div class="nc-lv"><b>Lv.${lv}</b><span class="nc-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span><small>${nx}</small></div>
+        ${phone ? `<div class="dname">${worn}</div>` : ''}</div>
+      <div class="nc-tiles">${tile('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="nc-ar" aria-hidden="true">›</span>')}${tile('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${tile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${ncWk}" aria-controls="ncWk"`, '<svg class="nc-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}${tile('🎀', `${W.owned.length}<small>/${ART.items.length}</small>`, t('g.coll'))}</div>
+      <div class="nc-wk" id="ncWk">${weekHtml(esc(t('login.h')), pos)}<div class="accw"></div></div>`;
+    el.querySelector('.poke').onclick = () => pokeAvatar();
+    el.querySelector('[data-go=ach]').onclick = () => go('ach');
+    el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
+    $('dpName').onchange = e => setName(e.target.value);
+    renderAcc();
+  }
+  matchMedia('(max-width:760px)').addEventListener('change', () => { if (page === 'dress') renderCard(); });   // the character's size follows the layout
   function renderDress() {
     $('hDress').textContent = t('dress.h');
-    renderMyPage();
-    $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
-    // the worn character / background / frame names live here (the item grid below is icons only)
-    const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
-      // the meta line (kind + rarity) above, the full name below (wraps, never cut off)
-      return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
-    const PS = matchMedia('(max-width:760px)').matches ? 118 : 230;   // a smaller character on phones (the names sit beside it), a big one on PC
-    $('dprev').innerHTML = `<div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
-      <div class="dname"><div class="dpl"><span class="gnote">${t('dress.got', { n: W.owned.length, m: ART.items.length })}</span></div>${worn}</div>`;
+    renderCard();
     $('dseg').innerHTML = ['icon', 'bg', 'frame'].map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
@@ -1338,7 +1337,6 @@
       if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));
       else if (W.av[slot] === id) c.onclick = () => pokeAvatar();
       else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
-    $('dprev').querySelector('.poke').onclick = () => pokeAvatar();
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
   function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
@@ -1442,7 +1440,7 @@
       if (taken) return; taken = true;
       const src = $('lbAmt') ? $('lbAmt').querySelector('i').getBoundingClientRect() : null;
       $('ov').classList.remove('on'); sheetClose = null;
-      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); else if (page === 'dress') renderMyPage(); after && after(); });
+      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); else if (page === 'dress') renderCard(); after && after(); });
       confetti(90);
     };
     openSheet(`<div class="lbp">
