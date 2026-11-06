@@ -413,6 +413,36 @@
       for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, dotM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
       return g;
     },
+    senet() {   // a corner of Tutankhamun's senet box: ivory squares in ebony with the House of Beauty (three nefer) and the House of Water; a big ivory spool hopping over to them, an ebony cone and a throw stick
+      const top = M({ map: X.canvasTex('icsn1', 512, 512, (c, W) => {
+        c.fillStyle = '#1c120b'; c.fillRect(0, 0, W, W);
+        const s = W / 3, gap = 9;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+          const g = c.createLinearGradient(x * s, y * s, (x + 1) * s, (y + 1) * s); g.addColorStop(0, '#f6ead0'); g.addColorStop(1, '#d9c393');
+          c.fillStyle = g; c.fillRect(x * s + gap, y * s + gap, s - 2 * gap, s - 2 * gap);
+          c.strokeStyle = 'rgba(150,120,70,.35)'; c.lineWidth = 2; for (let k = 0; k < 6; k++) { const yy = y * s + gap + (k + .5) * (s - 2 * gap) / 6; c.beginPath(); c.moveTo(x * s + gap + 4, yy); c.lineTo((x + 1) * s - gap - 4, yy + 3); c.stroke(); }
+        }
+        c.strokeStyle = '#d9b05a'; c.lineWidth = 6; c.strokeRect(3, 3, W - 6, W - 6);
+        // the House of Beauty (three nefer signs) and the House of Water (three zigzags) in the near row
+        const ink = '#2a170c';
+        const nefer = (x, y) => { c.fillStyle = ink; c.beginPath(); c.ellipse(x, y + 14, 11, 16, 0, 0, 7); c.fill(); c.fillRect(x - 3, y - 30, 6, 30); c.fillRect(x - 11, y - 20, 22, 5); };
+        [-34, 0, 34].forEach(dx => nefer(s * 1.5 + dx, s * 2.5));
+        c.strokeStyle = '#1f3a6a'; c.lineWidth = 7; c.lineJoin = 'round';
+        [-24, 0, 24].forEach(dy => { c.beginPath(); for (let k = 0; k <= 8; k++) { const xx = s * 2.5 - 50 + k * 12.5, yy = s * 2.5 + dy + (k % 2 ? 8 : -8); k ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke(); });
+      }), roughness: .45 });
+      const g = boardChunk(3, 3.6, top, C(0x1c120b, { roughness: .35 }));
+      const lathe = (pts, mat) => mesh(new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), 36), mat);
+      const ivory = C(0xf0e3c2, { roughness: .4 }), ebony = gloss(0x24170e);
+      const spool = () => { const p = new T.Group(); p.add(lathe([[0, 0], [.6, 0], [.62, .06], [.6, .18], [.46, .26], [.32, .42], [.28, .58], [.32, .74], [.46, .88], [.6, .96], [.62, 1.06], [.58, 1.12], [0, 1.13]], ivory)); return p; };
+      const cone = () => { const p = new T.Group(); p.add(lathe([[0, 0], [.55, 0], [.57, .07], [.5, .18], [.34, .55], [.2, .9], [.16, 1.02], [.2, 1.1], [.2, 1.2], [.13, 1.3], [0, 1.33]], ebony)); return p; };
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      g.add(at(cone(), p(0), .5, p(0), 0, 0, 0));
+      const sp = spool(); sp.scale.setScalar(1.3); g.add(at(sp, p(0) + .25, 1.75, p(2) - .15, .25, 0, .2));
+      const dotM = gloss(0x8c9a2e);
+      for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.085, dotM); d.position.set(p(0) + (p(1) - p(0)) * t + .2, .75 + Math.sin(t * Math.PI) * 1.1, p(2)); g.add(d); }
+      const stick = mesh(new T.BoxGeometry(.28, .09, 2.2), [ebony, ebony, C(0xf2e6c6, { roughness: .5 }), ebony, ebony, ebony]); g.add(at(stick, p(2) + .1, .55, p(0) + .3, 0, .5, 0));
+      return g;
+    },
     agon() {   // a fragment of the Victorian (Jaques) Agon board: mahogany, rings of oxblood and ivory with gilt lines round the bottle-green throne; the bone queen with a gold crown steps onto the throne past bone and ebony guards
       const top = M({ map: X.canvasTex('icag2', 512, 512, (c, W) => {
         c.fillStyle = '#5a2316'; c.fillRect(0, 0, W, W);

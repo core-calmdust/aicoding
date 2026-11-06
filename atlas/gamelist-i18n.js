@@ -32,6 +32,7 @@
     morris: ['3つ並べて駒を取る', 'Make mills to capture', '连成三子即吃子', '세 개 이어 잡기', 'Haz molinos y captura', 'Formez des moulins', 'Faça moinhos', 'Mühlen bilden', 'तीन जोड़ो, मोहरे मारो', 'كوّن ثلاثية لتأسر'],
     agon: ['女王を盤の中心へ', 'Bring your queen to the center', '把女王送到中心', '여왕을 중앙으로', 'Lleva tu reina al centro', 'Menez votre reine au centre', 'Leve sua rainha ao centro', 'Bring die Königin zur Mitte', 'रानी को केंद्र तक ले जाओ', 'أوصل ملكتك إلى المركز'],
     ur: ['古代メソポタミアの双六', 'A race from ancient Mesopotamia', '古美索不达米亚的竞速棋', '고대 메소포타미아의 경주', 'Carrera de la antigua Mesopotamia', 'Course de l’antique Mésopotamie', 'Corrida da antiga Mesopotâmia', 'Rennspiel aus Mesopotamien', 'प्राचीन मेसोपोटामिया की दौड़', 'سباق من بلاد الرافدين'],
+    senet: ['古代エジプトの「通過」の遊び', 'Ancient Egypt’s game of passing', '古埃及的“通过”之戏', '고대 이집트의 “지나감” 놀이', 'El juego egipcio del paso', 'Le jeu égyptien du passage', 'O jogo egípcio da passagem', 'Ägyptens Spiel des Vorübergehens', 'प्राचीन मिस्र का “पार” खेल', 'لعبة العبور المصرية القديمة'],
     hex: ['向かいの辺をつなげ', 'Connect your two sides', '连通己方两边', '마주 보는 변 잇기', 'Une tus dos lados', 'Reliez vos deux bords', 'Ligue seus dois lados', 'Verbinde deine Seiten', 'दोनों किनारे जोड़ो', 'صِل ضلعيك'],
   };
   const HI = ['ヒストリア', 'Historia', '历史', '히스토리아', 'Historia', 'Historia', 'Historia', 'Historia', 'हिस्टोरिया', 'هيستوريا'];   // the Historia viewer's button (same names as atlas/historia.js)

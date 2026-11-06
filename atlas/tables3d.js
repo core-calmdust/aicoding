@@ -180,6 +180,7 @@
     morris: ["#0d0a17", "radial-gradient(1200px 700px at 28% -10%, #172a44, transparent 60%), radial-gradient(900px 600px at 110% 110%, #14203a, transparent 60%)"],
     tafl: ["#0b1116", "radial-gradient(1200px 700px at 28% -10%, #1b3a4c, transparent 60%), radial-gradient(900px 600px at 110% 110%, #123a34, transparent 60%)"],
     ugolki: ["#07112f", "radial-gradient(1200px 700px at 28% -10%, #1a2c6e, transparent 60%), radial-gradient(900px 600px at 110% 110%, #14235a, transparent 60%)"],
+    senet: ["#130c07", "radial-gradient(1100px 620px at 18% -12%, rgba(31, 143, 168, 0.22), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(214, 150, 60, 0.16), transparent 60%)"],
     ur: ["#080d26", "radial-gradient(1100px 620px at 18% -12%, rgba(42, 63, 158, 0.55), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(142, 42, 28, 0.28), transparent 60%), radial-gradient(1px 1px at 12% 22%, rgba(255, 240, 200, 0.6), transparent), radial-gradient(1px 1px at 78% 12%, rgba(255, 240, 200, 0.5), transparent), radial-gradient(1.4px 1.4px at 64% 30%, rgba(255, 240, 200, 0.45), transparent), radial-gradient(1px 1px at 36% 8%, rgba(255, 240, 200, 0.5), transparent)"],
     agon: ["#0e0907", "radial-gradient(1200px 700px at 28% -10%, #3a1d12, transparent 60%), radial-gradient(900px 600px at 110% 110%, #24120b, transparent 60%)"],
     konane: ["#03201f", "radial-gradient(1200px 700px at 28% -10%, #0c5a55, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],

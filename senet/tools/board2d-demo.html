@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#2b1c12;color:#fff;font-family:sans-serif">
+<div id="w" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px"></div>
+<script src="../engine.js"></script><script src="../board2d.js"></script>
+<script>
+const B=SenetBoard2D,E=SenetEngine;
+const s={rule:'std',pos:[[1,3,15,26,31],[2,4,6,27,29]],turn:0,winner:-1};
+s.pos[1][3]=28;
+B.BOARDS.forEach((d,i)=>{const div=document.createElement('div');div.style.cssText='height:300px';w.appendChild(div);const v=B.mount(div,{design:d,pieces:B.PIECES[i]});v.render(s,{targets:[{r:0,c:5},{r:2,c:9,capture:true}],last:{from:{r:0,c:0},to:{r:0,c:2}},marks:[{r:0,c:4,type:'danger',text:'25%'}]});});
+const dd=document.createElement('div');dd.style.cssText='height:120px;background:#3a2a1a';w.appendChild(dd);const D=B.dice(dd,{style:'tut'});D.show([1,0,1,1]);
+const vv=document.createElement('div');vv.style.cssText='height:520px;width:280px';w.appendChild(vv);B.mount(vv,{orient:'v',design:'night',pieces:'modern'}).render(E.newGame('std',0));
+</script>
