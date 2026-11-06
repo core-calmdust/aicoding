@@ -1129,7 +1129,7 @@
     const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
     $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
-    $('bvTodW').classList.toggle('notod', k !== 0);   // the time of day belongs to the chabudai's room
+    $('bvTodW').classList.toggle('notod', k !== 0 && k !== 2 && k !== 4);   // the time of day: the chabudai's room, the dining room and the terrace
     const m = $('bvPlMenu'); if (!m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
     btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); };
     if (!renderPlace.bound) { renderPlace.bound = 1;

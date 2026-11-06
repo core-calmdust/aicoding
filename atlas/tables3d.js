@@ -2,10 +2,11 @@
    World Board Game Atlas — the places (table designs) of the 3D room
    Registers Table3D.TABLES[k] (k = 1..5; 0 is the toy room's chabudai in table3d.js):
      1 2D準拠      no room: the game's own 2D page background (its CSS layers, behind a transparent canvas), the board floats over a soft shadow
-     2 木のダイニング  light oak dining table, a blurred white wall with a house plant, soft daylight
-     3 緑のフェルト    deep green felt in a walnut rail, one overhead spotlight, dark club room
-     4 大理石のテラス  white marble top, an evening sky over the sea, balustrade silhouettes
-     5 夜の書斎      walnut desk with a leather desk mat, a banker's lamp, a blurred bookshelf behind
+     2 木のダイニング  an oak table sized for the board in a dining room: chairs, a sideboard, a window; morning … night (food of the hour)
+     3 緑のフェルト    deep green felt in a walnut rail under a billiard shade; chips, cards, dice, a rocks glass; dark club room
+     4 大理石のテラス  a marble table on a terracotta terrace: stone balustrade, the house wall, the sea and a coast; morning … night
+     5 夜の書斎      a matte-black desk, leather mat, banker's lamp, built-in walnut bookshelves (3D), a mesh office chair
+     (2026-11-07: every place is a closed room — dragging / zooming never shows an edge; see the section 'The rooms of places 2..5')
    Each builder gets { TT, g, scene, texScale, game, css(v) } and returns
      { bg (null: transparent canvas), exp, minExp, board (the guaranteed light on the board), key (the shadow-casting light),
        env: { top, bottom, panels }, onShow(id) }.
@@ -79,30 +80,8 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=1', ME).href;
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k >= 2 ? 2 : 1), ME).href;
 
-  // painted backdrop: plane coords x ∈ [−w/2, w/2], v ∈ [−h/2, h/2] (v up); the table's back edge hides v < ~9..12
-  function backdrop(o, key, draw, opt = {}) {
-    const TT = o.TT, w = opt.w || 110, h = opt.h || 76, D = opt.D || 60, W = Math.round((opt.px || 1024) * Math.max(.5, o.texScale)), H = Math.round(W * h / w);
-    // blur(c, px) starts a layer: what follows is drawn sharp on its own canvas and composited with ONE blur when the next
-    // layer starts (a canvas filter on every small shape blurs a full-size layer per shape: minutes on a phone)
-    const run = (main, fn) => {
-      let layer = null, lpx = 0, target = main;
-      const setup = (cx) => { cx.setTransform(1, 0, 0, 1, 0, 0); cx.translate(W / 2, H / 2); cx.scale(W / w, -H / h); };
-      const flush = () => { if (!layer) return; main.save(); main.setTransform(1, 0, 0, 1, 0, 0); main.filter = `blur(${lpx}px)`; main.drawImage(layer.canvas, 0, 0); main.restore(); layer = null; target = main; };
-      const P = new Proxy({}, {
-        get: (_, k) => { if (k === '__blur') return (px) => { flush(); if (px > .3) { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; layer = cv.getContext('2d'); lpx = px; setup(layer); target = layer; } };
-          const v = target[k]; return typeof v === 'function' ? v.bind(target) : v; },
-        set: (_, k, v) => { target[k] = v; return true; },
-      });
-      main.save(); setup(main); fn(P, W / w); flush(); main.restore();
-    };
-    const tex = canvasTex(key, W, H, (c) => run(c, draw));
-    const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ map: tex, toneMapped: false, depthWrite: false }));
-    m.position.set(0, -D * Math.sin(PITCH), -D * Math.cos(PITCH)); m.rotation.x = -PITCH; m.renderOrder = -1; o.g.add(m);
-    m.userData.repaint = (fn) => { const c = tex.image.getContext('2d'); c.clearRect(0, 0, W, H); run(c, fn); tex.needsUpdate = true; };
-    return m;
-  }
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const blur = (c, px) => c.__blur(px);
@@ -215,89 +194,334 @@
   TABLES[1].plain = { sun: 0xfff8ee, sunI: .78, hemi: [0xf2f4ff, 0x3a3028, .5], exp: .66 };
   TABLES[1].floor = (o) => ({ css: css2d(o.game) });
 
-  /* ---------- 2 · 木のダイニング: light oak, white wall, a plant, daylight ---------- */
+  /* =====================================================================
+     The rooms of places 2..5 (2026-11-07). Each place is a closed room: painted walls (light baked in), a lit floor and a ceiling
+     on every side the camera can face, so dragging the view up / down or zooming out never runs off the edge of the picture.
+     The table is sized to the boards (the turning go board needs a radius of ~8.6; nothing on the table comes inside ~9.5).
+     Scale: 1 unit ≈ 4.5 cm (a chess board is ~9.5). The table top is y = 0; the floor is FL.
+     Triangles (PC): every room stays well under the ~60k of the portal's budget (phones: fewer segments, half-size textures).
+     ===================================================================== */
+  const V2 = (TT, a) => a.map(([x, y]) => new TT.Vector2(x, y));
+  const lathe = (TT, pts, seg, mat) => new TT.Mesh(new TT.LatheGeometry(V2(TT, pts), seg), mat);
+  // put a mesh into a group: position, an optional turn, shadows (cast by default)
+  function at(G, m, x, y, z, ry = 0, cast = true) { m.position.set(x, y, z); if (ry) m.rotation.y = ry; m.castShadow = cast; m.receiveShadow = true; G.add(m); return m; }
+  function grp(TT, g, x, y, z, ry = 0) { const G = new TT.Group(); G.position.set(x, y, z); G.rotation.y = ry; g.add(G); return G; }
+  const SEG = (o, n) => o.COARSE || o.LITE ? Math.max(6, Math.round(n * .6)) : n;
+
+  // a painted texture in world units: draw(c, ppu) draws with x ∈ [x0, x1] to the right and y ∈ [y0, y1] up; blur(c, px) starts a layer: what follows is drawn sharp on its own canvas and composited with ONE blur when the next layer starts (a canvas filter per small shape is minutes on a phone)
+  function ptex(o, key, x0, y0, x1, y1, px, draw) {
+    const w = x1 - x0, h = y1 - y0, W = Math.max(64, Math.round(px * Math.max(.5, o.texScale))), H = Math.max(32, Math.min(4096, Math.round(W * h / w)));
+    const setup = (cx) => { cx.setTransform(1, 0, 0, 1, 0, 0); cx.scale(W / w, -H / h); cx.translate(-x0, -y1); };
+    return canvasTex(key, W, H, (main) => {
+      let layer = null, lpx = 0, target = main;
+      const flush = () => { if (!layer) return; main.save(); main.setTransform(1, 0, 0, 1, 0, 0); main.filter = `blur(${lpx}px)`; main.drawImage(layer.canvas, 0, 0); main.restore(); layer = null; target = main; };
+      const P = new Proxy({}, {
+        get: (_, k) => { if (k === '__blur') return (bpx) => { flush(); if (bpx > .3) { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; layer = cv.getContext('2d'); lpx = bpx; setup(layer); target = layer; } };
+          const v = target[k]; return typeof v === 'function' ? v.bind(target) : v; },
+        set: (_, k, v) => { target[k] = v; return true; },
+      });
+      main.save(); setup(main); draw(P, W / w); flush(); main.restore();
+    });
+  }
+  const flat = (TT, tex, w, h, extra) => new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial(Object.assign({ map: tex, toneMapped: false }, extra)));
+  // the room's box: back wall (z = zb), left (x = xl) and right (x = xr) walls and the ceiling (y = y1), painted; they run to zf in front
+  // (behind the camera at any zoom) and overlap at the corners. Painted walls carry their own light (not tone-mapped, like the old backdrops), times `wb`.
+  function roomBox(o, R) {
+    const { TT, g } = o, { xl, xr, zb, zf, y0, y1, key } = R, E = 1, px = R.px || 2048, wb = R.wb || 1;
+    const add = (tex, w, h) => { const m = flat(TT, tex, w, h); m.material.color.setScalar(wb); g.add(m); return m; };
+    if (R.back) { const m = add(ptex(o, key + '-b', xl - E, y0 - E, xr + E, y1 + E, px, R.back), xr - xl + 2 * E, y1 - y0 + 2 * E); m.position.set((xl + xr) / 2, (y0 + y1) / 2, zb); }
+    if (R.left) { const m = add(ptex(o, key + '-l', -zf - E, y0 - E, -zb + E, y1 + E, R.pxs || px / 2, R.left), zf - zb + 2 * E, y1 - y0 + 2 * E); m.rotation.y = Math.PI / 2; m.position.set(xl, (y0 + y1) / 2, (zb + zf) / 2); }
+    if (R.right) { const m = add(ptex(o, key + '-r', zb - E, y0 - E, zf + E, y1 + E, R.pxs || px / 2, R.right), zf - zb + 2 * E, y1 - y0 + 2 * E); m.rotation.y = -Math.PI / 2; m.position.set(xr, (y0 + y1) / 2, (zb + zf) / 2); }
+    if (R.ceil) { const m = add(ptex(o, key + '-c', xl - E, zb - E, xr + E, zf + E, R.pxc || 512, R.ceil), xr - xl + 2 * E, zf - zb + 2 * E); m.rotation.x = Math.PI / 2; m.position.set((xl + xr) / 2, y1, (zb + zf) / 2); }
+    if (R.floor) { const m = new TT.Mesh(new TT.PlaneGeometry(xr - xl + 2 * E, zf - zb + 2 * E), R.floor); m.rotation.x = -Math.PI / 2; m.position.set((xl + xr) / 2, y0, (zb + zf) / 2); m.receiveShadow = true; g.add(m); }
+  }
+  // a soft patch of light (a window's panes) laid on a surface: additive, no light cost
+  function lightPatch(o, x, y, z, w, d, rz, col, panes = [2, 2]) {
+    const { TT, g } = o;
+    const sp = canvasTex('patch-' + panes.join('x'), 256, 192, (c, W, H) => { c.filter = 'blur(6px)'; c.fillStyle = '#fff'; const [nx, ny] = panes, gx = 14, cw = (W - 24 - gx * (nx - 1)) / nx, ch = (H - 24 - gx * (ny - 1)) / ny; for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) c.fillRect(12 + i * (cw + gx), 12 + j * (ch + gx), cw, ch); c.filter = 'none'; });
+    const m = new TT.Mesh(new TT.PlaneGeometry(w, d), new TT.MeshBasicMaterial({ map: sp, transparent: true, depthWrite: false, toneMapped: false, color: col, blending: TT.AdditiveBlending }));
+    m.rotation.x = -Math.PI / 2; m.rotation.z = rz; m.position.set(x, y, z); m.renderOrder = 1; g.add(m); return m;
+  }
+  // a blob of contact shadow under a piece of furniture standing on the floor
+  function ao(o, x, y, z, w, d, k = .5) {
+    const { TT, g } = o;
+    const t = canvasTex('ao-blob', 128, 128, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(0,0,0,1)'], [.55, 'rgba(0,0,0,.55)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, W); });
+    const m = new TT.Mesh(new TT.PlaneGeometry(w, d), new TT.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, color: 0x000000, opacity: k }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, y + .03, z); m.renderOrder = 1; g.add(m); return m;
+  }
+  // a tiled texture of the floor: repeat it over the room
+  const rep = (TT, t, u, v, rot = 0) => { const c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = TT.RepeatWrapping; c.repeat.set(u, v); if (rot) { c.center.set(.5, .5); c.rotation = rot; } return c; };
+
+  /* ---------- the props (tableware, food, books ...) ---------- */
+  const glassM = () => M({ color: 0xffffff, roughness: .04, clearcoat: 1, clearcoatRoughness: .05, transparent: true, opacity: .26, depthWrite: false });
+  function cupSaucer(o, G0, x, z, ry, china, drink = 0x3b1e0e) {
+    const TT = o.TT, s = SEG(o, 30), G = grp(TT, G0, x, 0, z, ry);
+    at(G, lathe(TT, [[0, 0], [1.05, 0], [1.5, .12], [1.62, .24], [1.52, .26], [.9, .14], [0, .14]], s, china), 0, 0, 0);
+    at(G, lathe(TT, [[0, .14], [.5, .14], [.56, .2], [.82, .5], [.95, 1.15], [.98, 1.42], [.92, 1.43], [.87, 1.15], [.75, .52], [0, .4]], s, china), 0, 0, 0);
+    const lq = new TT.Mesh(new TT.CircleGeometry(.88, s), M({ color: drink, roughness: .12, clearcoat: .6 })); lq.rotation.x = -Math.PI / 2; at(G, lq, 0, 1.24, 0, 0, false);
+    const h = new TT.Mesh(new TT.TorusGeometry(.33, .085, 6, 12, Math.PI * 1.25), china); h.rotation.z = -Math.PI * .625; at(G, h, 1.1, .85, 0);
+    if (drink === 0x3b1e0e) { const cr = new TT.Mesh(new TT.RingGeometry(.55, .82, s), M({ color: 0xb98a5a, roughness: .5, transparent: true, opacity: .55 })); cr.rotation.x = -Math.PI / 2; at(G, cr, 0, 1.245, 0, 0, false); }   // the crema's ring
+    const sp = new TT.Mesh(RB(.14, .05, 2.2, .02, 1), M({ color: 0xd8d8d8, metalness: 1, roughness: .25 })); sp.rotation.y = .5; at(G, sp, -.95, .3, .55);
+    return G;
+  }
+  function plate(o, G, x, z, r, mat, y = 0) { const p = lathe(o.TT, [[0, 0], [r * .62, 0], [r * .66, .07], [r * .9, .14], [r, .26], [r * .97, .28], [r * .86, .2], [r * .62, .12], [0, .12]], SEG(o, 36), mat); return at(G, p, x, y, z); }
+  function wineGlass(o, G0, x, z, wine) {
+    const TT = o.TT, s = SEG(o, 24), G = grp(TT, G0, x, 0, z);
+    at(G, lathe(TT, [[0, 0], [.95, 0], [.98, .05], [.12, .12], [.08, .2], [.08, 2.3], [.3, 2.55], [.78, 3.0], [.92, 3.6], [.8, 4.4], [.77, 4.4], [.88, 3.6], [.74, 3.02], [0, 2.62]], s, glassM()), 0, 0, 0, 0, false);
+    if (wine) at(G, lathe(TT, [[0, 2.64], [.3, 2.66], [.66, 2.98], [.8, 3.4], [0, 3.4]], s, M({ color: wine, roughness: .05, clearcoat: 1, transparent: true, opacity: .9 })), 0, 0, 0, 0, false);
+    return G;
+  }
+  function bottle(o, G0, x, z, glassCol, labelCol, ry = 0) {
+    const TT = o.TT, s = SEG(o, 24), G = grp(TT, G0, x, 0, z, ry);
+    at(G, lathe(TT, [[0, 0], [.85, 0], [.88, .1], [.88, 4.2], [.8, 4.7], [.38, 5.6], [.3, 6.6], [.34, 6.7], [.34, 7.3], [0, 7.3]], s, M({ color: glassCol, roughness: .08, clearcoat: 1, clearcoatRoughness: .05 })), 0, 0, 0);
+    const lb = new TT.Mesh(new TT.CylinderGeometry(.895, .895, 2.2, s, 1, true, -1.3, 2.6), M({ map: canvasTex('label-' + labelCol, 256, 128, (c, W, H) => { c.fillStyle = labelCol; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(120,90,40,.8)'; c.lineWidth = 3; c.strokeRect(10, 10, W - 20, H - 20); c.fillStyle = '#5a2a20'; c.fillRect(W * .3, H * .38, W * .4, 9); c.fillStyle = 'rgba(80,60,40,.6)'; c.fillRect(W * .36, H * .58, W * .28, 5); c.fillRect(W * .4, H * .68, W * .2, 4); }), roughness: .7 }));
+    at(G, lb, 0, 2.6, 0, 0, false);
+    at(G, new TT.Mesh(new TT.CylinderGeometry(.36, .36, .7, s), M({ color: 0x5a1420, roughness: .5, metalness: .3 })), 0, 7.0, 0, 0, false);   // the foil
+    return G;
+  }
+  function candle(o, G0, x, z, lit, light) {
+    const TT = o.TT, s = SEG(o, 20), G = grp(TT, G0, x, 0, z), brass = M({ color: 0xc9a25a, metalness: 1, roughness: .3 });
+    at(G, lathe(TT, [[0, 0], [1.05, 0], [1.1, .15], [.5, .4], [.28, .7], [.3, 2.6], [.55, 2.8], [.6, 3.0], [0, 3.0]], s, brass), 0, 0, 0);
+    at(G, new TT.Mesh(new TT.CylinderGeometry(.36, .38, 4.2, s), M({ color: 0xf3ecdc, roughness: .6, emissive: new TT.Color(lit ? 0x2a1a08 : 0) })), 0, 5.1, 0);
+    if (lit) {
+      const f = new TT.Mesh(new TT.SphereGeometry(.16, 8, 6), new TT.MeshBasicMaterial({ color: 0xffd38a, toneMapped: false })); f.scale.set(1, 2.4, 1); at(G, f, 0, 7.6, 0, 0, false);
+      const halo = new TT.Mesh(new TT.PlaneGeometry(2.6, 2.6), new TT.MeshBasicMaterial({ map: canvasTex('flame-halo', 64, 64, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(255,214,140,.9)'], [.25, 'rgba(255,170,80,.35)'], [1, 'rgba(255,150,60,0)']]); c.fillRect(0, 0, W, W); }), transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false }));
+      halo.userData.keep = 1; at(G, halo, 0, 7.6, 0, 0, false); halo.onBeforeRender = (r, s2, cam) => { halo.quaternion.copy(cam.quaternion); };
+      if (light && !o.COARSE) { const L = new TT.PointLight(0xffb062, .55, 22, 2); L.position.set(0, 8.2, 0); G.add(L); }
+    }
+    return G;
+  }
+  function croissant(o, G0, x, y, z, ry, mat) {
+    const TT = o.TT, G = grp(TT, G0, x, y, z, ry), sg = new TT.SphereGeometry(1, SEG(o, 14), SEG(o, 10));
+    for (let i = 0; i < 11; i++) { const t = i / 10 - .5, a = t * 2.6, r = .66 - Math.pow(Math.abs(t) * 2, 1.4) * .46; const m = new TT.Mesh(sg, mat); m.scale.set(r * .62, r * .8, r * 1.1); m.rotation.y = a; at(G, m, Math.sin(a) * 1.3, r * .7, Math.cos(a) * 1.3 - 1.3); }
+    return G;
+  }
+  function tumbler(o, G0, x, z, fill, h = 2.6, r = .85) {
+    const TT = o.TT, s = SEG(o, 24), G = grp(TT, G0, x, 0, z);
+    at(G, lathe(TT, [[0, 0], [r * .92, 0], [r, .1], [r * 1.05, h], [r * .99, h], [r * .94, .32], [0, .3]], s, glassM()), 0, 0, 0, 0, false);
+    if (fill) at(G, new TT.Mesh(new TT.CylinderGeometry(r * .97, r * .92, h * fill[1], s), M({ color: fill[0], roughness: .05, clearcoat: 1, transparent: true, opacity: .78 })), 0, .31 + h * fill[1] / 2, 0, 0, false);
+    return G;
+  }
+  function ice(o, G, x, y, z, n) { const m = M({ color: 0xffffff, roughness: .05, clearcoat: 1, transparent: true, opacity: .45, depthWrite: false }); for (let i = 0; i < n; i++) { const c = new (o.TT.Mesh)(RB(.62, .62, .62, .1, 1), m); c.rotation.set(i * .7, i * 1.3, i * .4); at(G, c, x + Math.sin(i * 2.4) * .3, y + i * .22, z + Math.cos(i * 2.4) * .3, 0, false); } }
+  const pageTex = () => canvasTex('pages-edge', 64, 64, (c, W, H) => { c.fillStyle = '#efe6d0'; c.fillRect(0, 0, W, H); for (let y = 0; y < H; y += 2) { c.fillStyle = `rgba(150,130,100,${.08 + Math.random() * .14})`; c.fillRect(0, y, W, 1); } });
+  // a hardback lying flat: covers, the page block, a rounded spine with gilt bands; w along x (the spine at −x), d along z, h thick
+  function book(o, G0, x, y, z, ry, w, d, h, col, gilt = true) {
+    const TT = o.TT, G = grp(TT, G0, x, y, z, ry), cov = M({ map: X.cloth('bookcloth-' + col, col, 22, 256), roughness: .62, bumpScale: .004 });
+    const pg = M({ map: pageTex(), roughness: .85, bump: false });
+    at(G, new TT.Mesh(RB(w - .32, h - .2, d - .26, .03, 1), pg), .1, h / 2, 0);
+    [.055, h - .055].forEach(yy => at(G, new TT.Mesh(RB(w, .11, d, .04, 1), cov), 0, yy, 0));
+    const sp = new TT.Mesh(new TT.CylinderGeometry(h / 2, h / 2, d, SEG(o, 12), 1, true, Math.PI, Math.PI), M({ map: canvasTex('spine-' + col + (gilt ? 'g' : ''), 64, 256, (c, W, H) => { c.fillStyle = col; c.fillRect(0, 0, W, H); if (gilt) { c.fillStyle = '#c8a050'; [.12, .16, .84, .88].forEach(k => c.fillRect(0, H * k, W, H * .012)); c.fillRect(0, H * .44, W, H * .1); c.fillStyle = col; c.fillRect(0, H * .455, W, H * .07); } }), roughness: .6 }));
+    sp.rotation.x = Math.PI / 2; at(G, sp, -w / 2 + .02, h / 2, 0);
+    return G;
+  }
+  // leaves on stems (a fiddle-leaf fig / an olive): textured quads, cut out
+  function leafTex(key, a, b) { return canvasTex(key, 128, 128, (c, W) => { c.clearRect(0, 0, W, W); const g2 = c.createLinearGradient(0, 0, W, 0); g2.addColorStop(0, a); g2.addColorStop(1, b); c.fillStyle = g2; c.beginPath(); c.moveTo(W / 2, 4); c.bezierCurveTo(W * .98, W * .25, W * .9, W * .85, W / 2, W - 4); c.bezierCurveTo(W * .1, W * .85, W * .02, W * .25, W / 2, 4); c.fill(); c.strokeStyle = 'rgba(220,240,190,.45)'; c.lineWidth = 2; c.beginPath(); c.moveTo(W / 2, 8); c.lineTo(W / 2, W - 8); c.stroke(); c.lineWidth = 1; for (let i = 1; i < 6; i++) { const y = W * i / 6.5; c.beginPath(); c.moveTo(W / 2, y); c.lineTo(W * .2, y - W * .1); c.moveTo(W / 2, y); c.lineTo(W * .8, y - W * .1); c.stroke(); } }); }
+  function foliage(o, G, n, cx, cy, cz, rx, ry, rz, tex, s0, seed, tint = 0xffffff) {
+    const TT = o.TT, R = rng(seed), mat = new TT.MeshStandardMaterial({ map: tex, alphaTest: .5, side: TT.DoubleSide, roughness: .65, color: tint }), geo = new TT.PlaneGeometry(1, 1);
+    for (let i = 0; i < n; i++) { const m = new TT.Mesh(geo, mat), s = s0 * (.7 + R() * .6); m.scale.set(s * .8, s, 1); m.rotation.set((R() - .5) * 2.2, R() * 6.3, (R() - .5) * 1.2); m.position.set(cx + (R() - .5) * 2 * rx, cy + (R() - .5) * 2 * ry, cz + (R() - .5) * 2 * rz); m.castShadow = true; G.add(m); }
+  }
+  function potPlant(o, G0, x, z, y, s, potMat, leaf, seed) {
+    const TT = o.TT, G = grp(TT, G0, x, y, z);
+    at(G, lathe(TT, [[0, 0], [2.6 * s, 0], [3.2 * s, 5.2 * s], [3.45 * s, 5.3 * s], [3.45 * s, 6 * s], [3.1 * s, 6 * s], [0, 5.6 * s]], SEG(o, 24), potMat), 0, 0, 0);
+    const trunk = M({ color: 0x6b5236, roughness: .8 });
+    [[0, 0], [.6, -.4], [-.5, .3]].forEach(([a, b], i) => { const t = new TT.Mesh(new TT.CylinderGeometry(.12 * s, .2 * s, (16 - i * 3) * s, 6), trunk); t.rotation.set(b * .25, 0, -a * .25); at(G, t, a * 1.5 * s, (5.6 + (8 - i * 1.5)) * s, b * 1.5 * s); });
+    foliage(o, G, o.COARSE ? 40 : 64, 0, 18 * s, 0, 4.6 * s, 6.5 * s, 4.6 * s, leaf, 3.4 * s, seed);
+    return G;
+  }
+
+  /* ---------- the time of day of the places that follow it (ダイニング・テラス) ---------- */
+  const TOD = (o) => ['morning', 'day', 'evening', 'night'].includes(o.tod) ? o.tod : 'day';
+
+  /* ---------- 2 · ダイニング: an oak table sized for the board in a dining room, morning ... night ---------- */
   const oak = o => X.planks('tbl2-oak', '#d6b284', '#9a6c40', 5, sz(o, 2048));
+  const DIN = {   // wall tint (multiply), the window's view, the key light, ambient, exposure, the board's light
+    morning: { tint: '#fff3e6', glow: 'rgba(255,236,210,.55)', sky: ['#bcd8f2', '#f8e6cf'], trees: '#7d9a6a', key: [0xffe4c0, 1.5, [-34, 15, -8]], hemi: [0xe8eefa, 0xb08a62, .42], exp: .74, board: .26, patch: 0x1a150c },
+    day: { tint: '#ffffff', glow: 'rgba(255,255,250,.45)', sky: ['#8cc2ee', '#e2f1fb'], trees: '#6f9a5c', key: [0xfff6ea, 1.45, [-24, 26, -4]], hemi: [0xf2f4fb, 0xb8976c, .44], exp: .72, board: .24, patch: 0x181612 },
+    evening: { tint: '#f6dcc0', glow: 'rgba(255,190,120,.5)', sky: ['#e9a07a', '#ffd59a'], trees: '#5d5a3a', key: [0xffb36e, 1.35, [-36, 8, -10]], hemi: [0xffd8b8, 0x7a4c30, .38], exp: .78, board: .3, patch: 0x241406 },
+    night: { tint: '#9c8a7c', glow: 'rgba(255,196,130,.55)', sky: ['#0b1328', '#1d2a4c'], trees: '#0c1418', key: [0xffd2a0, 3.6, [0, 25, 1]], hemi: [0x55607e, 0x2a1c12, .3], exp: .86, board: .44, patch: 0 },
+  };
   TABLES[2] = (o) => {
-    const { TT, g, scene } = o;
+    const { TT, g, scene } = o, T = TOD(o), D = DIN[T], FL = -16, Z0 = 1;
     const pk = oak(o);
-    const top = M({ map: pk, roughness: .52, clearcoat: .2, clearcoatRoughness: .45, bumpScale: .0025 });
-    const t = new TT.Mesh(RB(46, 1.6, 36, .55, 3), top); t.position.set(0, -.8, 5); t.receiveShadow = true; g.add(t);
-    // a stoneware mug and a little bud vase at the far corners
-    const mugM = M({ color: 0xe9e4da, roughness: .38, clearcoat: .4 }), inM = M({ color: 0x3a2214, roughness: .2 });
-    const mugP = [[0, 0], [.95, 0], [1.05, .1], [1.1, 1.8], [1.02, 1.82], [.95, .2], [0, .2]].map(([x, y]) => new TT.Vector2(x, y));
-    const mug = new TT.Mesh(new TT.LatheGeometry(mugP, 28), mugM); mug.position.set(-12.5, 0, -7.5); mug.castShadow = mug.receiveShadow = true; g.add(mug);
-    const cof = new TT.Mesh(new TT.CircleGeometry(.96, 24), inM); cof.rotation.x = -Math.PI / 2; cof.position.set(-12.5, 1.45, -7.5); g.add(cof);
-    const hdl = new TT.Mesh(new TT.TorusGeometry(.5, .13, 8, 16, Math.PI * 1.3), mugM); hdl.position.set(-11.35, .95, -7.5); hdl.rotation.z = -Math.PI * .65; hdl.castShadow = true; g.add(hdl);
-    const vaseP = [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]].map(([x, y]) => new TT.Vector2(x, y));
-    const vase = new TT.Mesh(new TT.LatheGeometry(vaseP, 24), M({ color: 0x9fb3a2, roughness: .3, clearcoat: .5 })); vase.position.set(12.5, 0, -9); vase.castShadow = true; g.add(vase);
-    const twigM = M({ color: 0x6d7f4c, roughness: .7 });
-    [[-.2, .25], [.25, -.15], [0, -.35]].forEach(([a, b], i) => { const s = new TT.Mesh(new TT.CylinderGeometry(.035, .05, 4.2 - i * .6, 5), twigM); s.position.set(12.5 + a * 1.8, 3.1 + (2.1 - i * .3), -9 + b * 1.4); s.rotation.set(b * .5, 0, -a * .6); s.castShadow = true; g.add(s);
-      const lf = new TT.Mesh(new TT.SphereGeometry(.42, 8, 6), M({ color: 0x7e9a5a, roughness: .6 })); lf.scale.set(1, .35, .6); lf.position.set(12.5 + a * 4, 3.1 + 4.1 - i * .9, -9 + b * 3); g.add(lf); });
-    // a linen runner along the far side and a wooden bowl of lemons on it
-    const linen = M({ map: X.cloth('tbl2-linen', '#ece4d4', 14, sz(o, 256)), roughness: .9 });
-    const run = new TT.Mesh(RB(30, .05, 5.2, .02, 1), linen); run.position.set(0, .025, -9.6); run.receiveShadow = true; g.add(run);
-    const bowlP = [[0, 0], [.9, 0], [1.6, .25], [2.3, .9], [2.45, 1.2], [2.3, 1.22], [1.5, .6], [0, .45]].map(([x, y]) => new TT.Vector2(x, y));
-    const bowl = new TT.Mesh(new TT.LatheGeometry(bowlP, 28), M({ map: wood('tbl2-bowl', '#b98a58', '#7a522c', sz(o, 256), sz(o, 256), .8), roughness: .45, clearcoat: .3 })); bowl.position.set(5.5, .05, -10); bowl.castShadow = bowl.receiveShadow = true; g.add(bowl);
-    const lemM = M({ color: 0xf2cf3a, roughness: .42, clearcoat: .2 });
-    [[4.7, -9.6, .1], [6.1, -10.4, -.4], [5.4, -10.6, .8], [6.2, -9.5, .3]].forEach(([x, z, r], i) => { const l = new TT.Mesh(new TT.SphereGeometry(.62, 14, 10), lemM); l.scale.set(1.18, .92, .92); l.rotation.y = r; l.position.set(x, .75 + (i === 3 ? .5 : 0), z); l.castShadow = true; g.add(l); });
-    // the window's light falling across the table (left, from the key light's side): four soft panes, no light cost
-    const sp = canvasTex('tbl2-sun', 256, 192, (c, W, H) => { c.filter = 'blur(6px)'; c.fillStyle = '#fff'; [[24, 18], [136, 18], [24, 102], [136, 102]].forEach(([x, y]) => c.fillRect(x, y, 96, 72)); c.filter = 'none'; });
-    const sun = new TT.Mesh(new TT.PlaneGeometry(17, 12.75), new TT.MeshBasicMaterial({ map: sp, transparent: true, depthWrite: false, toneMapped: false, color: 0x2a2418, blending: TT.AdditiveBlending }));
-    sun.rotation.x = -Math.PI / 2; sun.rotation.z = -.32; sun.position.set(-13.5, .02, 6); sun.renderOrder = 1; g.add(sun);
-    // (visible: PC v 16..26 over x ±39; phone v 11..33 over x ±13 — the table hides what is below)
-    backdrop(o, 'tbl2-bd', (c, ppu) => {
-      const R = rng(7);
-      c.fillStyle = lin(c, 40, 10, [[0, '#d9d2c6'], [1, '#f3efe8']]); c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = rad(c, -34, 26, 50, [[0, 'rgba(255,254,250,.95)'], [1, 'rgba(255,254,250,0)']]); c.fillRect(-60, -40, 120, 80);
-      // window light on the wall: four soft panes
-      blur(c, 1.4 * ppu); c.fillStyle = 'rgba(255,249,235,.6)';
-      [[1, 19.5], [6.6, 19.5], [1, 26], [6.6, 26]].forEach(([x, y]) => { c.save(); c.translate(x, y); c.transform(1, 0, .45, 1, 0, 0); c.fillRect(0, 0, 4.8, 5.8); c.restore(); });
-      // floor and skirting, far behind the table
-      blur(c, .6 * ppu);
-      c.fillStyle = lin(c, 14, 6, [[0, '#d6bd96'], [1, '#c2a47a']]); c.fillRect(-60, -40, 120, 54);
-      c.fillStyle = '#f7f4ee'; c.fillRect(-60, 14, 120, .8);
-      // a low oak sideboard on the right, with a vase of pampas and a few books
-      c.fillStyle = '#d4b385'; c.fillRect(12, 14.3, 30, 6.2); c.fillStyle = '#c5a273'; c.fillRect(12, 20.2, 30, .5);
-      c.fillStyle = 'rgba(90,64,40,.28)'; [19.5, 27, 34.5].forEach(x => c.fillRect(x, 14.8, .2, 5));
-      c.fillStyle = '#3b3632'; c.fillRect(13, 13.6, .5, .8); c.fillRect(41, 13.6, .5, .8);
-      c.fillStyle = '#ece6dc'; c.beginPath(); c.moveTo(15.4, 20.7); c.quadraticCurveTo(14.2, 23.2, 15.7, 25.3); c.lineTo(16.9, 25.3); c.quadraticCurveTo(18.4, 23.2, 17.2, 20.7); c.fill();
-      c.strokeStyle = '#b89c74'; c.lineWidth = .12; for (let i = 0; i < 9; i++) { const a = -.7 + i * .17; c.beginPath(); c.moveTo(16.3, 25); c.quadraticCurveTo(16.3 + a * 3, 28, 16.3 + a * 6, 30 + R() * 2); c.stroke(); }
-      c.fillStyle = 'rgba(232,214,180,.8)'; for (let i = 0; i < 9; i++) { const a = -.7 + i * .17; ell(c, 16.3 + a * 6.2, 30.6 + R() * 2, .9, 1.9, -a * .6); }
-      [['#8a9a86', 1.1], ['#d9c9a8', .8], ['#b06a4c', .9]].reduce((y, [col, h]) => { c.fillStyle = col; c.fillRect(22, y, 5.2, h); return y + h; }, 20.7);
-      c.fillStyle = '#efe7da'; ell(c, 31.5, 22, 1.6, 1.6); c.fillStyle = '#d8a46c'; c.fillRect(31.3, 20.7, .4, 1);   // a little globe lamp
-      // a framed print above it
-      c.fillStyle = '#e8e0d2'; c.fillRect(25, 22.5, 9, 11); c.fillStyle = '#c9cfbd'; c.fillRect(26, 23.5, 7, 9); c.fillStyle = '#a6b39a'; ell(c, 29.5, 28, 2.2, 2.8); c.fillStyle = '#d9a982'; ell(c, 28.3, 26, 1.1, 1.1);
-      // a pendant lamp hanging over the room (phones see it)
-      c.fillStyle = '#4a4744'; c.fillRect(3.93, 31, .14, 10); c.fillStyle = '#e8e2d8'; c.beginPath(); c.moveTo(1.6, 29); c.quadraticCurveTo(4, 33.4, 6.4, 29); c.fill();
-      c.fillStyle = 'rgba(255,240,205,.95)'; ell(c, 4, 29, 2.4, .32);
-      // two oak chairs on the far side of the table, their spindle backs just above the edge
-      [[-21, 1], [19.5, -1]].forEach(([x, s]) => { c.fillStyle = '#b99064'; c.fillRect(x - 3.6, 19.2, 7.2, .9); c.fillRect(x - 3.4, 13.5, .55, 6); c.fillRect(x + 2.85, 13.5, .55, 6);
-        c.fillStyle = '#c9a274'; for (let i = 0; i < 5; i++) c.fillRect(x - 2.3 + i * 1.15, 14, .32, 5.3); c.fillStyle = 'rgba(255,248,230,.35)'; c.fillRect(x - 3.6, 20, 7.2, .15); });
-      // the plant: a terracotta pot and a fiddle-leaf fig
-      blur(c, .45 * ppu);
-      c.fillStyle = '#c98c62'; c.beginPath(); c.moveTo(-12.4, 14.2); c.lineTo(-5.6, 14.2); c.lineTo(-5.1, 19.6); c.lineTo(-12.9, 19.6); c.fill();
-      c.fillStyle = '#b77a52'; c.fillRect(-13.1, 19.3, 8.2, .7); c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(-12.4, 14.2, 2, 5.1);
-      c.strokeStyle = '#6b5638'; c.lineWidth = .32; c.beginPath(); c.moveTo(-9, 19.6); c.bezierCurveTo(-8.6, 23, -9.8, 26, -9.2, 31); c.stroke();
-      c.lineWidth = .18; [[-9.1, 23, -12.5, 25.5], [-9.3, 25, -5.8, 27.4], [-9.4, 27.5, -12.2, 30.2], [-9.2, 29, -6.4, 31.4]].forEach(([a, b, x, y]) => { c.beginPath(); c.moveTo(a, b); c.quadraticCurveTo((a + x) / 2, b + .3, x, y); c.stroke(); });
-      for (let i = 0; i < 34; i++) {
-        const t = i / 34, y = 21 + t * 12 + (R() - .5) * 1.4, side = i % 2 ? 1 : -1, x = -9.2 + side * (1 + R() * (2.5 + 2.5 * Math.sin(t * Math.PI))), s = 1.15 + R() * .7;
-        const sh = R(); c.fillStyle = `rgb(${46 + sh * 30 | 0},${88 + sh * 40 | 0},${40 + sh * 18 | 0})`;
-        const ang = side * (.5 + R() * .6) + (R() - .5) * .3;
-        c.save(); c.translate(x, y); c.rotate(ang); c.beginPath(); c.moveTo(0, -s); c.bezierCurveTo(s * .9, -s * .6, s * .8, s * .9, 0, s * 1.15); c.bezierCurveTo(-s * .8, s * .9, -s * .9, -s * .6, 0, -s); c.fill();
-        c.strokeStyle = 'rgba(190,220,150,.35)'; c.lineWidth = .07; c.beginPath(); c.moveTo(0, -s * .9); c.lineTo(0, s); c.stroke(); c.restore();
-      }
-      blur(c, 0);
-      c.fillStyle = 'rgba(243,239,232,.12)'; c.fillRect(-60, -40, 120, 80);   // a breath of haze (depth)
-    }, { px: 2048 });
-    scene.add(new TT.HemisphereLight(0xf3f1ec, 0xb8976c, .36));
-    const key = dirLight(TT, 0xfff1dc, 1.55, [-19, 15, -5], 16); scene.add(key);
-    const fill = new TT.DirectionalLight(0xeef2ff, .22); fill.position.set(9, 10, 16); scene.add(fill);
-    return { bg: '#ece6dc', exp: .72, board: .24, key, env: { top: '#f4efe6', bottom: '#b4936a', panels: [[-14, 12, -10, 14, 10, '#ffffff', 1.7], [12, 8, 10, 10, 6, '#fff3e4', .6], [0, 18, 4, 20, 6, '#ffffff', .5]] } };
+    // the table: 28 × 21 (≈ 1.25 × 0.95 m: the board and a few things round it), oak top on a recessed apron and four tapered legs
+    const top = M({ map: pk, roughness: .5, clearcoat: .22, clearcoatRoughness: .42, bumpScale: .0025 });
+    at(g, new TT.Mesh(RB(28, 1.3, 21, .45, 3), top), 0, -.65, Z0, 0, false).receiveShadow = true;
+    const legM = M({ map: wood('tbl2-leg', '#c9a070', '#8a5e34', sz(o, 256), sz(o, 512), .7), roughness: .5, clearcoat: .15 });
+    at(g, new TT.Mesh(RB(23.4, 1.8, 16.4, .2, 1), legM), 0, -2.2, Z0);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz2]) => { const l = new TT.Mesh(new TT.CylinderGeometry(.75, .5, 14.7, SEG(o, 10)), legM); l.rotation.set(sz2 * .03, 0, -sx * .03); at(g, l, sx * 11.8, FL + 7.35, Z0 + sz2 * 8.2); });
+    // the rug under it and the floor
+    const rugT = canvasTex('tbl2-rug', sz(o, 1024), sz(o, 768), (c, W, H) => { const N = makeNoise(9), img = c.createImageData(W, H), d = img.data;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const k = (N(x / 1.5, y / 1.5, 2) - .5) * 26 + ((x + y) % 4 < 2 ? 5 : -5), i = (y * W + x) * 4; d[i] = 214 + k; d[i + 1] = 202 + k; d[i + 2] = 182 + k; d[i + 3] = 255; }
+      c.putImageData(img, 0, 0); const u = W / 46; c.strokeStyle = 'rgba(120,96,70,.55)'; c.lineWidth = u * .5; c.strokeRect(u * 2, u * 2, W - u * 4, H - u * 4); c.lineWidth = u * .18; c.strokeRect(u * 3.2, u * 3.2, W - u * 6.4, H - u * 6.4); });
+    at(g, new TT.Mesh(RB(48, .25, 38, .1, 1), M({ map: rugT, roughness: .95, bumpScale: .01 })), 0, FL + .12, Z0, 0, false);
+    ao(o, 0, FL + .25, Z0, 32, 25, .35);
+    const flT = X.planks('tbl2-floor', '#9c7048', '#5e3c20', 6, sz(o, 1024));
+    // the room: a white-plaster dining room, a steel-framed window on the left of the back wall, a sideboard and prints on the right
+    const Y1 = 52, ZB = -62, XL = -74, XR = 74, ZF = 150;
+    const nightish = T === 'night';
+    roomBox(o, { key: 'tbl2-room-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
+      floor: M({ map: rep(TT, flT, 6, 7, Math.PI / 2), roughness: .5, clearcoat: .2, clearcoatRoughness: .45, bumpScale: .002, color: nightish ? 0x8a7a6c : 0xe8e0d8 }),
+      back: (c, ppu) => {
+        const R = rng(3);
+        c.fillStyle = lin(c, Y1, FL, [[0, '#f4f0ea'], [.85, '#ece6dc'], [1, '#e2dacd']]); c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
+        for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,255' : '160,140,120'},${.02 + R() * .03})`; ell(c, XL + R() * (XR - XL), FL + R() * (Y1 - FL), 1 + R() * 4, .6 + R() * 3); }   // plaster
+        c.fillStyle = '#f8f6f2'; c.fillRect(XL - 2, FL, XR - XL + 4, 1.4); c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(XL - 2, FL + 1.4, XR - XL + 4, .15);   // skirting
+        c.fillStyle = '#f8f6f2'; c.fillRect(XL - 2, Y1 - 1.6, XR - XL + 4, 1.6); c.fillStyle = 'rgba(0,0,0,.06)'; c.fillRect(XL - 2, Y1 - 1.8, XR - XL + 4, .2);   // cornice
+        // two framed prints over the sideboard: soft abstract shapes in muted colours
+        [[14, '#c9b79c', '#7f8f78', '#c27e5c'], [32, '#d9cdb8', '#4f6170', '#d4a76a']].forEach(([x, bg, a, b], i) => {
+          c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(x + .5, 7.5, 14, 18); c.fillStyle = i ? '#2b2724' : '#c8a878'; c.fillRect(x, 8, 14, 18); c.fillStyle = '#f6f2ea'; c.fillRect(x + .7, 8.7, 12.6, 16.6);
+          c.fillStyle = bg; c.fillRect(x + 2.4, 10.4, 9.2, 13.2); c.fillStyle = a; ell(c, x + 6, 15, 3, 3.6); c.fillStyle = b; ell(c, x + 8.6, 19.6, 2.2, 2.2); c.fillStyle = 'rgba(40,30,20,.5)'; c.fillRect(x + 3.4, 12.2, 5.5, .25); });
+        // the wall's own light and shade (multiply)
+        c.globalCompositeOperation = 'multiply';
+        c.fillStyle = D.tint; c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
+        c.fillStyle = lin(c, FL + 8, FL, [[0, 'rgba(255,255,255,1)'], [1, 'rgba(200,190,176,1)']]); c.fillRect(XL - 2, FL - 2, XR - XL + 4, 10);
+        c.fillStyle = rad(c, XR, 20, 50, [[0, 'rgba(210,200,190,1)'], [1, 'rgba(255,255,255,1)']]); c.fillRect(XR - 50, FL - 2, 52, Y1 - FL + 4);
+        if (nightish) { c.fillStyle = rad(c, 0, 30, 70, [[0, '#ffffff'], [.5, '#b8aa9a'], [1, '#6a5c50']]); c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4); }
+        c.globalCompositeOperation = 'source-over';
+        // the window: what is outside first, then the steel frame and the sheers
+        const WX0 = -50, WX1 = -16, WY0 = -11, WY1 = 38;
+        c.save(); c.beginPath(); c.rect(WX0, WY0, WX1 - WX0, WY1 - WY0); c.clip();
+        c.fillStyle = lin(c, WY1, WY0, [[0, D.sky[0]], [.75, D.sky[1]], [1, D.sky[1]]]); c.fillRect(WX0, WY0, WX1 - WX0, WY1 - WY0);
+        blur(c, 1.1 * ppu);
+        if (T === 'evening') { c.fillStyle = rad(c, -40, 6, 16, [[0, 'rgba(255,240,200,.95)'], [.2, 'rgba(255,200,140,.5)'], [1, 'rgba(255,170,110,0)']]); c.fillRect(WX0, WY0, WX1 - WX0, WY1 - WY0); }
+        if (T === 'night') { c.fillStyle = '#f2ead0'; ell(c, -24, 31, 1.3, 1.3); for (let i = 0; i < 30; i++) { c.fillStyle = `rgba(255,255,255,${.3 + R() * .5})`; ell(c, WX0 + R() * 34, 18 + R() * 20, .12, .12); } }
+        else { c.fillStyle = 'rgba(255,255,255,.75)'; [[-44, 30, 5, 1.6], [-30, 33, 7, 2], [-22, 27, 4, 1.2]].forEach(([x, y, w, h]) => ell(c, x, y, w, h)); }
+        const tr = D.trees; c.fillStyle = tr; for (let i = 0; i < 26; i++) ell(c, WX0 - 2 + R() * 38, 2 + R() * 14, 3 + R() * 4, 3 + R() * 5);   // the garden's trees
+        c.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 14; i++) ell(c, WX0 + R() * 36, 4 + R() * 8, 2 + R() * 3, 2 + R() * 3);
+        c.fillStyle = T === 'night' ? '#0a120e' : T === 'evening' ? '#4e5232' : '#5f8a4a'; c.fillRect(WX0, WY0, WX1 - WX0, 7.5);   // the hedge
+        c.fillStyle = T === 'night' ? '#121a14' : T === 'evening' ? '#86804a' : '#93b36a'; c.fillRect(WX0, WY0, WX1 - WX0, 3);   // the lawn
+        if (T === 'night') { [[-38, 7], [-27, 9.5], [-20, 6]].forEach(([x, y]) => { c.fillStyle = rad(c, x, y, 2.5, [[0, 'rgba(255,200,120,.9)'], [1, 'rgba(255,180,100,0)']]); c.fillRect(x - 3, y - 3, 6, 6); }); c.fillStyle = rad(c, -30, 22, 9, [[0, 'rgba(255,214,160,.25)'], [1, 'rgba(255,214,160,0)']]); c.fillRect(WX0, WY0, 34, 49); }   // a reflection of the pendant
+        blur(c, 0); c.restore();
+        const FR = nightish ? '#18181a' : '#2a2a2c';
+        c.fillStyle = FR; [WX0, -41.5, -33, -24.5, WX1].forEach(x => c.fillRect(x - .45, WY0, .9, WY1 - WY0)); [WY0, 1.5, 14, 26, WY1].forEach(y => c.fillRect(WX0 - .45, y - .45, WX1 - WX0 + .9, .9));
+        c.fillStyle = 'rgba(255,255,255,.12)'; [WX0, -41.5, -33, -24.5, WX1].forEach(x => c.fillRect(x - .45, WY0, .2, WY1 - WY0));
+        c.fillStyle = nightish ? '#7c7064' : '#f2eee8'; c.fillRect(WX0 - 1.4, WY0 - 1.2, WX1 - WX0 + 2.8, 1.2);   // the sill
+        // linen sheers on a black rod
+        c.fillStyle = '#222'; c.fillRect(-58, 41.4, 50, .4); [-58, -8].forEach(x => ell(c, x, 41.6, .5, .5));
+        [[-57.5, -49], [-17, -8.5]].forEach(([x0, x1]) => { for (let x = x0; x < x1; x += .7) { const k = .5 + .5 * Math.sin((x - x0) * 2.3 + x0); c.fillStyle = nightish ? `rgba(${150 + k * 40 | 0},${136 + k * 36 | 0},${118 + k * 30 | 0},.92)` : `rgba(${238 + k * 14 | 0},${232 + k * 14 | 0},${220 + k * 14 | 0},.86)`; c.fillRect(x, FL + .4, .72, 41.2 - FL); } });
+        // glows
+        if (T !== 'night') { blur(c, 3 * ppu); c.fillStyle = D.glow; c.beginPath(); c.moveTo(-50, FL + 1); c.lineTo(-16, FL + 1); c.lineTo(-4, FL + 7); c.lineTo(-34, FL + 7); c.fill(); blur(c, 0); }
+        else { c.fillStyle = rad(c, 30, 30, 16, [[0, 'rgba(255,200,140,.18)'], [1, 'rgba(255,200,140,0)']]); c.fillRect(14, 14, 32, 32); }
+      },
+      left: (c) => {   // the left wall (x = −74; seen from inside, z = +150 on the left … −62 on the right): plaster, a doorway to the hall
+        c.fillStyle = '#ece6dc'; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4);
+        c.fillStyle = '#f8f6f2'; c.fillRect(-ZF - 2, FL, ZF - ZB + 4, 1.4); c.fillRect(-ZF - 2, Y1 - 1.6, ZF - ZB + 4, 1.6);
+        c.fillStyle = '#d8cfc0'; c.fillRect(8, FL, 18, 34); c.fillStyle = '#c4b8a6'; c.fillRect(9.2, FL, 15.6, 32.8); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillRect(8, FL + 34, 18, .5);   // the doorway
+        c.fillStyle = '#b9ad9b'; c.fillRect(12, FL, 9, 24); c.fillStyle = 'rgba(255,250,240,.35)'; c.fillRect(13, FL + 6, 7, 14);   // a glimpse of the hall
+        c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(40, 12, 12, 16); c.fillStyle = '#3a342e'; c.fillRect(40.3, 12.3, 11.4, 15.4); c.fillStyle = '#e8e0d2'; c.fillRect(41.2, 13.2, 9.6, 13.6); c.fillStyle = '#8fa39a'; ell(c, 46, 18, 3, 2); c.fillStyle = '#d6b98e'; c.fillRect(42, 13.2, 8, 3);   // a framed print
+        c.globalCompositeOperation = 'multiply'; c.fillStyle = D.tint; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = lin(c, -ZB, -ZB - 50, [[0, 'rgba(225,215,205,1)'], [1, 'rgba(255,255,255,1)']]); c.fillRect(-ZB - 50, FL - 2, 52, Y1 - FL + 4); c.globalCompositeOperation = 'source-over';
+      },
+      right: (c) => {   // the right wall: open shelves of plates and jars (the kitchen side)
+        c.fillStyle = '#efe9e0'; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4);
+        c.fillStyle = '#f8f6f2'; c.fillRect(ZB - 2, FL, ZF - ZB + 4, 1.4); c.fillRect(ZB - 2, Y1 - 1.6, ZF - ZB + 4, 1.6);
+        const R = rng(19);
+        [14, 24].forEach(y => { c.fillStyle = '#b48a5e'; c.fillRect(-54, y, 26, .9); c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(-54, y - .8, 26, .8);
+          for (let x = -53; x < -29;) { const k = R(); if (k < .4) { c.fillStyle = '#f4f1ea'; ell(c, x + 1.3, y + 2.4, 1.3, 2.3); c.fillStyle = 'rgba(0,0,0,.06)'; ell(c, x + 1.3, y + 2.4, .8, 1.6); x += 2.9; } else if (k < .75) { c.fillStyle = ['#c9a77c', '#8fa39a', '#d8cdb8'][R() * 3 | 0]; c.fillRect(x, y + .9, 2.2, 3.2); c.fillStyle = '#5a4a3a'; c.fillRect(x + .1, y + 4.1, 2, .5); x += 3; } else { c.fillStyle = '#e8e2d6'; c.fillRect(x, y + .9, 3.2, 1.4); c.fillRect(x + .2, y + 2.3, 2.8, 1.2); x += 3.8; } } });
+        c.globalCompositeOperation = 'multiply'; c.fillStyle = D.tint; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = lin(c, ZB, ZB + 40, [[0, 'rgba(200,190,180,1)'], [1, 'rgba(240,235,230,1)']]); c.fillRect(ZB - 2, FL - 2, 42, Y1 - FL + 4); c.globalCompositeOperation = 'source-over';
+      },
+      ceil: (c) => { c.fillStyle = nightish ? '#7c7064' : '#ece8e2'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); c.fillStyle = rad(c, 0, Z0, 30, [[0, nightish ? 'rgba(255,214,160,.5)' : 'rgba(255,255,255,.4)'], [1, 'rgba(255,255,255,0)']]); c.fillRect(XL, ZB, XR - XL, ZF - ZB);
+        c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, 3); },
+    });
+    // furniture: two chairs across the table, a sideboard, a fig tree, the pendant over the table
+    const chairM = M({ map: wood('tbl2-chair', '#c99d6c', '#93653a', sz(o, 256), sz(o, 512), .8), roughness: .48, clearcoat: .2 }), seatM = M({ map: X.cloth('tbl2-seat', '#d9cdb6', 14, sz(o, 256)), roughness: .9 });
+    const bent = (w, h, d, b) => { const G2 = new TT.BoxGeometry(w, h, d, 8, 1, 1), P = G2.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i); P.setZ(i, P.getZ(i) + b * (x / (w / 2)) * (x / (w / 2))); } G2.computeVertexNormals(); return G2; };
+    const chair = (x, z, ry) => {
+      const G = grp(TT, g, x, FL, z, ry), lg = new TT.CylinderGeometry(.34, .26, 10, SEG(o, 8));
+      [[-3.3, 3.1], [3.3, 3.1]].forEach(([a, b]) => { const l = new TT.Mesh(lg, chairM); l.rotation.set(.04, 0, a > 0 ? -.03 : .03); at(G, l, a, 5, b); });
+      [-3.2, 3.2].forEach(a => { const p = new TT.Mesh(new TT.CylinderGeometry(.34, .3, 19.6, SEG(o, 8)), chairM); p.rotation.x = -.1; at(G, p, a, 9.6, -3.5); });
+      at(G, new TT.Mesh(RB(7.8, .7, 7.4, .3, 2), chairM), 0, 10.2, 0); at(G, new TT.Mesh(RB(7.2, .55, 6.8, .25, 2), seatM), 0, 10.8, .1);
+      [[16.8, 2.2], [13.2, 1.1]].forEach(([y, h]) => { const r = new TT.Mesh(bent(7.2, h, .5, .7), chairM); r.rotation.x = -.1; at(G, r, 0, y, -3.6 - (y - 10) * .1 + .5); });
+      [[0, 4.6], [0, -2.9]].forEach(([a, b]) => at(G, new TT.Mesh(RB(6.4, .6, .5, .15, 1), chairM), a, 2.6, b, 0, false));
+    };
+    chair(-7, -13.4, 0); chair(7, -13.4, 0);   // (the two on this side are behind the camera; chairs at the ends crowded the view's edges)
+    [[-7, -13.4], [7, -13.4]].forEach(([x, z]) => ao(o, x, FL + .26, z, 10, 10, .4));
+    // the sideboard (walnut, slatted doors) against the back wall, right; a lamp, vases and books on it
+    const sbM = M({ map: canvasTex('tbl2-sbfront', sz(o, 512), sz(o, 192), (c, W, H) => { c.drawImage(wood('tbl2-sbw', '#8a5a36', '#4e2e18', 512, 512, 1.2).image, 0, 0, W, H); c.fillStyle = 'rgba(0,0,0,.35)'; for (let x = 0; x < W; x += W / 48) c.fillRect(x, H * .06, Math.max(1, W / 380), H * .88); c.fillStyle = 'rgba(0,0,0,.6)'; [.25, .5, .75].forEach(k => c.fillRect(W * k - 1, 0, 2, H)); c.fillStyle = 'rgba(255,240,220,.18)'; c.fillRect(0, 0, W, H * .02); }), roughness: .45, clearcoat: .25 });
+    const sbSide = M({ map: wood('tbl2-sbw', '#8a5a36', '#4e2e18', 512, 512, 1.2), roughness: .45, clearcoat: .25 });
+    const SBX = 31, SBZ = ZB + 5.2, SBY = FL + 13;
+    at(g, new TT.Mesh(RB(36, 10, 9, .25, 2), [sbSide, sbSide, sbSide, sbSide, sbM, sbSide]), SBX, FL + 8, SBZ);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const l = new TT.Mesh(new TT.CylinderGeometry(.35, .22, 3, 8), M({ color: 0x2a2018, roughness: .5 })); at(g, l, SBX + a * 16.5, FL + 1.5, SBZ + b * 3.6); });
+    ao(o, SBX, FL, SBZ, 40, 12, .45);
+    const cer = M({ color: 0xe9e4da, roughness: .4, clearcoat: .3 }), sage = M({ color: 0x9fb3a2, roughness: .35, clearcoat: .4 });
+    { const Gl = grp(TT, g, SBX - 11, SBY, SBZ);   // the table lamp
+      at(Gl, lathe(TT, [[0, 0], [1.6, 0], [1.9, 1.2], [2.1, 3.4], [1.4, 5.6], [.4, 6.4], [.3, 7.2], [0, 7.2]], SEG(o, 24), cer), 0, 0, 0);
+      const lit = T === 'evening' || T === 'night';
+      const sh = new TT.Mesh(new TT.CylinderGeometry(2.6, 3.4, 4.4, SEG(o, 24), 1, true), new TT.MeshStandardMaterial({ color: 0xf2ead8, roughness: .9, side: TT.DoubleSide, emissive: new TT.Color(lit ? 0xffc890 : 0), emissiveIntensity: lit ? .9 : 0 }));
+      at(Gl, sh, 0, 8.6, 0, 0, false);
+      if (lit) { const L = new TT.PointLight(0xffc488, .7, 40, 2); L.position.set(SBX - 11, SBY + 8, SBZ + 2); g.add(L); } }
+    at(g, lathe(TT, [[0, 0], [.9, 0], [1.4, 1], [1.5, 4.5], [.7, 7.2], [.55, 8.6], [.7, 8.8], [0, 8.8]], SEG(o, 20), sage), SBX + 2, SBY, SBZ - 1);
+    { const tw = M({ color: 0x8c7552, roughness: .8 }); for (let i = 0; i < 5; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.05, .07, 9, 4), tw); s.rotation.set((i - 2) * .06, 0, (i - 2) * .15); at(g, s, SBX + 2 + (i - 2) * .6, SBY + 13, SBZ - 1); } }
+    book(o, g, SBX + 10, SBY, SBZ, .1, 6, 4.4, .9, '#7b8a74'); book(o, g, SBX + 10.2, SBY + .9, SBZ, -.08, 5.5, 4, .8, '#c9b48e'); at(g, lathe(TT, [[0, 0], [1.6, 0], [2.2, .6], [2.4, 1.4], [2.2, 1.45], [1.5, .7], [0, .6]], SEG(o, 22), cer), SBX + 10, SBY + 1.7, SBZ);
+    // a fiddle-leaf fig in a terracotta pot, back left corner; a basket by it
+    potPlant(o, g, -60, ZB + 10, FL, 1.45, M({ color: 0xc58a62, roughness: .85 }), leafTex('leaf-fig', '#4f7a3a', '#2e5527'), 4);
+    ao(o, -60, FL, ZB + 10, 14, 14, .45);
+    // the pendant over the table (hidden in the play view): a dome of spun brass, glowing at night
+    { const Gp = grp(TT, g, 0, 0, Z0 - 1); Gp.userData.viewOnly = 1; Gp.userData.keep = 1; const lit = T === 'night' || T === 'evening';
+      at(Gp, lathe(TT, [[0, 0], [5.8, 0], [5.7, .3], [4.6, 2.4], [2.2, 4.2], [.5, 4.5], [0, 4.5]], SEG(o, 32), M({ color: 0xb08850, metalness: .9, roughness: .3, side: TT.DoubleSide })), 0, 30, 0, 0, false);
+      const dif = new TT.Mesh(new TT.CircleGeometry(5.6, SEG(o, 32)), new TT.MeshBasicMaterial({ color: lit ? 0xfff0d8 : 0xe8e2d8, toneMapped: !lit })); dif.rotation.x = Math.PI / 2; at(Gp, dif, 0, 30.05, 0, 0, false);
+      at(Gp, new TT.Mesh(new TT.CylinderGeometry(.06, .06, Y1 - 34.5, 5), M({ color: 0x222222 })), 0, 34.5 + (Y1 - 34.5) / 2, 0, 0, false);
+      at(Gp, new TT.Mesh(new TT.CylinderGeometry(1.2, 1.2, .5, 16), M({ color: 0xb08850, metalness: .9, roughness: .3 })), 0, Y1 - .25, 0, 0, false); }
+    // the window's light on the floor and across the table (not at night)
+    if (T !== 'night') { lightPatch(o, -30, FL + .3, -16, 26, 19, .5, D.patch, [4, 4]); lightPatch(o, -10.5, .02, Z0 + 3, 10, 7.5, -.32 + (T === 'evening' ? .25 : 0), D.patch); }
+    // the table setting of the hour (nothing inside r ≈ 9.5 of the board's centre: the go board turns through 8.6)
+    const china = M({ color: 0xf2efe8, roughness: .3, clearcoat: .5 }), bread = M({ map: canvasTex('crust', 128, 128, (c, W) => { const g2 = c.createLinearGradient(0, 0, 0, W); g2.addColorStop(0, '#c98a3e'); g2.addColorStop(.5, '#e0a95a'); g2.addColorStop(1, '#a8682a'); c.fillStyle = g2; c.fillRect(0, 0, W, W); c.fillStyle = 'rgba(110,60,20,.35)'; for (let i = 0; i < W; i += 9) c.fillRect(0, i, W, 3); }), roughness: .6, clearcoat: .25 });
+    const linen = M({ map: X.cloth('tbl2-napkin', '#ece4d4', 14, 128), roughness: .9 });
+    const napkin = (x, z, r) => at(g, new TT.Mesh(RB(4.2, .12, 4.2, .05, 1), linen), x, .06, z, r, false);
+    const vase = (x, z, n, col) => { at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), sage), x, 0, z);
+      const st = M({ color: 0x6d7f4c, roughness: .7 }), fl = M({ color: col, roughness: .6 }); for (let i = 0; i < n; i++) { const a = i * 2.1; const s = new TT.Mesh(new TT.CylinderGeometry(.035, .05, 4 - i * .5, 4), st); s.rotation.set(Math.cos(a) * .2, 0, Math.sin(a) * .25); at(g, s, x + Math.sin(a) * .3, 4.8 - i * .2, z + Math.cos(a) * .2, 0, false); const f = new TT.Mesh(new TT.SphereGeometry(.42, 8, 6), fl); f.scale.set(1, .7, 1); at(g, f, x + Math.sin(a) * .9, 6.8 - i * .5, z + Math.cos(a) * .6); } };
+    if (T === 'morning') {
+      cupSaucer(o, g, -10.2, -3.4, .5, china); cupSaucer(o, g, 11.2, 4.6, -2.6, china);
+      plate(o, g, -10.8, -6.4, 2.4, china); croissant(o, g, -11.2, .2, -6.9, .6, bread); croissant(o, g, -10, .2, -5.8, -2.2, bread);
+      tumbler(o, g, -5.8, -8.2, [0xf2a12a, .78], 2.9, .78);
+      { const Gj = grp(TT, g, 9, 0, -6.6); at(Gj, lathe(TT, [[0, 0], [.8, 0], [.85, 1.6], [.7, 1.75], [0, 1.75]], SEG(o, 20), glassM()), 0, 0, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(.76, .76, 1.4, SEG(o, 20)), M({ color: 0x8a1626, roughness: .2, clearcoat: .8 })), 0, .75, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(.82, .82, .4, SEG(o, 20)), M({ color: 0xd8c28a, metalness: .6, roughness: .35 })), 0, 1.95, 0); }
+      plate(o, g, 11.8, -3, 1.6, china); at(g, new TT.Mesh(RB(1.6, .8, 1, .12, 1), M({ color: 0xf6e7a8, roughness: .5 })), 11.8, .55, -3, .3);
+      vase(6.2, -8.2, 3, 0xf3e9d2);
+    } else if (T === 'day') {
+      plate(o, g, -10.8, -6.3, 2.6, china);
+      const sw = (x, z, r) => { const Gs = grp(TT, g, x, .24, z, r), sh = new TT.Shape(); sh.moveTo(-1.6, -1.4); sh.lineTo(1.6, -1.4); sh.lineTo(-1.6, 1.6); sh.lineTo(-1.6, -1.4);
+        [[.38, 0xe9d3a6], [.16, 0x7aa84a], [.22, 0xd9614a], [.38, 0xe9d3a6]].reduce((y, [h, col]) => { const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: h, bevelEnabled: true, bevelThickness: .04, bevelSize: .06, bevelSegments: 1 }), M({ color: col, roughness: .8 })); m.rotation.x = -Math.PI / 2; at(Gs, m, 0, y, 0); return y + h; }, 0); };
+      sw(-11.3, -6.8, .3); sw(-10, -5.6, 2.6);
+      { const Gb = grp(TT, g, 10.6, 0, -6.1); Gb.scale.setScalar(.88); at(Gb, lathe(TT, [[0, 0], [1.4, 0], [2.6, .8], [3.1, 2], [2.95, 2.05], [2.4, 1], [0, .4]], SEG(o, 28), china), 0, 0, 0);
+        const R = rng(5); for (let i = 0; i < 22; i++) { const a = R() * 6.3, r = R() * 2.1, l = new TT.Mesh(new TT.SphereGeometry(.7, 7, 5), M({ color: [0x6d9a3e, 0x8ab84e, 0x4f7a32, 0x9a3a5a][R() * 4 | 0], roughness: .6 })); l.scale.set(1, .3, .8); l.rotation.set(R(), R() * 3, R()); at(Gb, l, Math.cos(a) * r, 1.3 + R() * .5, Math.sin(a) * r, 0, false); }
+        for (let i = 0; i < 5; i++) { const a = i * 1.3; at(Gb, new TT.Mesh(new TT.SphereGeometry(.36, 10, 8), M({ color: 0xd8302a, roughness: .25, clearcoat: .6 })), Math.cos(a) * 1.3, 1.9, Math.sin(a) * 1.3); } }
+      [[-10.4, -2.4], [11, 3.8]].forEach(([x, z]) => { const Gt = tumbler(o, g, x, z, [0xb8681e, .7], 3.2, .8); ice(o, Gt, 0, 1.5, 0, 3); const sl = new TT.Mesh(new TT.CylinderGeometry(.6, .6, .1, 14, 1, false, 0, Math.PI), M({ color: 0xf2d24a, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, .2); at(Gt, sl, .7, 3.1, 0, 0, false); });
+      vase(-5.8, -8.2, 4, 0xe8a0a8);
+    } else if (T === 'evening') {
+      { const Gc = grp(TT, g, 11, 0, -6.4, .3); Gc.scale.setScalar(.72); at(Gc, new TT.Mesh(RB(7, .5, 4.6, .2, 2), M({ map: wood('tbl2-cb', '#b98a58', '#7a522c', 256, 256, .8), roughness: .45, clearcoat: .3 })), 0, .25, 0);
+        const wedge = (x, z, r, col, rind) => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.lineTo(2.2, -.7); sh.lineTo(2.2, .7); sh.lineTo(0, 0); const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: 1.1, bevelEnabled: false }), [M({ color: rind, roughness: .7 }), M({ color: col, roughness: .55 })]); m.rotation.x = -Math.PI / 2; m.rotation.z = r; at(Gc, m, x, .5, z); };
+        wedge(-2.6, -.6, .2, 0xf2d27a, 0xe8c262); wedge(-1.2, 1, -1, 0xf4ecd2, 0xe2d6b2);
+        const gm = M({ color: 0x5a2846, roughness: .25, clearcoat: .7 }), gs = new TT.SphereGeometry(.34, 10, 8); for (let i = 0; i < 16; i++) { const a = i * 2.39, r = Math.sqrt(i) * .32; at(Gc, new TT.Mesh(gs, gm), 1.5 + Math.cos(a) * r, .8 + (i % 3) * .12 - r * .1, -.9 + Math.sin(a) * r * 1.4); }
+        const sl = M({ map: canvasTex('crumb', 64, 64, (c, W) => { c.fillStyle = '#f0dcb0'; c.fillRect(0, 0, W, W); for (let i = 0; i < 60; i++) { c.fillStyle = 'rgba(160,120,60,.35)'; c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 1 + Math.random() * 2.5, 0, 7); c.fill(); } c.strokeStyle = '#b8742c'; c.lineWidth = 6; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 3, 0, 7); c.stroke(); }), roughness: .8 });
+        for (let i = 0; i < 4; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.8, .8, .3, 14), [M({ color: 0xc98a3e, roughness: .6 }), sl, sl]); s.rotation.set(.3, 0, .25); at(Gc, s, .6 + i * .75, .85, 1.2); } }
+      bottle(o, g, -11, -6.6, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.8, -3.6, 0x5a0d1c); wineGlass(o, g, 9.6, 3.4, 0x5a0d1c);
+      candle(o, g, -5.8, -8.2, false);
+    } else {
+      [[-11.2, 3.8, .4], [11.2, 3.8, -.4]].forEach(([x, z, r]) => { plate(o, g, x, z, 2.4, china); napkin(x - Math.sign(x) * .2, z + 2.2, r);
+        const Gm = grp(TT, g, x, .14, z, r), nt = M({ map: canvasTex('pasta', 128, 128, (c, W) => { c.fillStyle = '#e9c983'; c.fillRect(0, 0, W, W); c.strokeStyle = 'rgba(190,140,60,.6)'; c.lineWidth = 2; for (let i = 0; i < 40; i++) { c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 8 + Math.random() * 30, Math.random() * 6, Math.random() * 6 + 2); c.stroke(); } c.fillStyle = 'rgba(190,50,30,.55)'; for (let i = 0; i < 14; i++) { c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 3 + Math.random() * 6, 0, 7); c.fill(); } }), roughness: .5, clearcoat: .3 });
+        const m = new TT.Mesh(new TT.SphereGeometry(1.3, SEG(o, 18), SEG(o, 10), 0, Math.PI * 2, 0, Math.PI / 2), nt); m.scale.set(1, .55, 1); at(Gm, m, 0, 0, 0);
+        [0, 2.1, 4.2].forEach(a => { const l = new TT.Mesh(new TT.SphereGeometry(.3, 6, 4), M({ color: 0x3e7a2e, roughness: .5 })); l.scale.set(1, .25, .6); at(Gm, l, Math.cos(a) * .5, .82, Math.sin(a) * .5, 0, false); }); });
+      bottle(o, g, -11, -6.6, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.6, -2, 0x5a0d1c); wineGlass(o, g, 9.6, -2, 0x5a0d1c);
+      candle(o, g, -5.4, -8.2, true, true); candle(o, g, 5.4, -8.2, true, true);
+      { const Gb = grp(TT, g, 10.8, 0, -6.4); const wv = M({ map: canvasTex('basket', 128, 64, (c, W, H) => { c.fillStyle = '#b48a52'; c.fillRect(0, 0, W, H); for (let y = 0; y < H; y += 8) for (let x = (y / 8 % 2) * 8; x < W; x += 16) { c.fillStyle = 'rgba(90,60,30,.4)'; c.fillRect(x, y, 8, 7); } }), roughness: .8 });
+        at(Gb, lathe(TT, [[0, 0], [1.8, 0], [2.4, 1.4], [2.5, 1.6], [2.3, 1.6], [1.7, .3], [0, .3]], SEG(o, 22), wv), 0, 0, 0);
+        for (let i = 0; i < 4; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.9, .9, .35, 14), bread); s.rotation.set(1.2, i * .9, 0); at(Gb, s, Math.cos(i * 1.6) * .8, 1.3, Math.sin(i * 1.6) * .8); } }
+    }
+    // lights of the hour
+    scene.add(new TT.HemisphereLight(D.hemi[0], D.hemi[1], D.hemi[2]));
+    let key;
+    if (T === 'night') { key = new TT.SpotLight(D.key[0], D.key[1], 80, .95, .85, 1.2); key.position.set(...D.key[2]); key.target.position.set(0, 0, 0); scene.add(key.target); key.shadow.camera.near = 8; key.shadow.camera.far = 50; key.shadow.bias = -.0002;
+      const fill = new TT.DirectionalLight(0xb8c4ee, .12); fill.position.set(-20, 14, -10); scene.add(fill); }
+    else { key = dirLight(TT, D.key[0], D.key[1], D.key[2], 17); const fill = new TT.DirectionalLight(0xeef2ff, T === 'evening' ? .14 : .22); fill.position.set(9, 10, 16); scene.add(fill); }
+    scene.add(key);
+    try { X.mergeStatic(g); } catch (e) {}
+    const env = T === 'night' ? { top: '#4a3c30', bottom: '#14100c', panels: [[0, 18, 0, 10, 10, '#ffd8a8', 3], [-14, 8, -10, 8, 10, '#3a4a70', .5], [0, 8, 18, 20, 5, '#806650', .5]] }
+      : { top: T === 'evening' ? '#f0d0b0' : '#f4efe6', bottom: '#b4936a', panels: [[-14, 12, -10, 14, 10, T === 'evening' ? '#ffd0a0' : '#ffffff', 1.7], [12, 8, 10, 10, 6, '#fff3e4', .6], [0, 18, 4, 20, 6, '#ffffff', .5]] };
+    return { bg: T === 'night' ? '#2a221c' : '#ece6dc', exp: D.exp, board: D.board, boardCol: T === 'night' ? 0xffe8cc : undefined, key, env };
   };
   TABLES[2].plain = { sun: 0xfff1dc, sunI: .74, hemi: [0xf3f1ec, 0xb8976c, .48], exp: .64 };
   TABLES[2].floor = (o) => ({ img: oak(o).image, w: 46, h: 36, over: 'radial-gradient(120% 90% at 16% 0%, rgba(255,252,240,.38), transparent 62%), radial-gradient(140% 120% at 50% 40%, transparent 60%, rgba(90,60,30,.18))' });
 
-  /* ---------- 3 · 緑のフェルト: felt in a walnut rail, an overhead spotlight, a dark club room ---------- */
+  /* ---------- 3 · 緑のフェルト: felt in a walnut rail under one spotlight, in a dark club room ---------- */
   const feltTex = o => canvasTex('tbl3-felt', sz(o, 1024), sz(o, 1024), (c, W) => {
       const N = makeNoise(31), img = c.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
@@ -306,8 +530,25 @@
       }
       c.putImageData(img, 0, 0);
     });
+  // a suit drawn in a unit box centred at (0, 0), y down (canvas)
+  function suit(c, s, x, y, r, col) {
+    c.save(); c.translate(x, y); c.scale(r, r); c.fillStyle = col; c.beginPath();
+    if (s === 'h') { c.moveTo(0, .9); c.bezierCurveTo(-1.2, -.1, -.8, -1.1, 0, -.45); c.bezierCurveTo(.8, -1.1, 1.2, -.1, 0, .9); }
+    else if (s === 'd') { c.moveTo(0, -1); c.lineTo(.7, 0); c.lineTo(0, 1); c.lineTo(-.7, 0); }
+    else if (s === 's') { c.moveTo(0, -1); c.bezierCurveTo(1.3, -.1, .8, .9, .08, .35); c.lineTo(.35, 1); c.lineTo(-.35, 1); c.lineTo(-.08, .35); c.bezierCurveTo(-.8, .9, -1.3, -.1, 0, -1); }
+    else { [[0, -.5], [-.48, .1], [.48, .1]].forEach(([a, b]) => { c.moveTo(a + .42, b); c.arc(a, b, .42, 0, 7); }); c.moveTo(-.1, .2); c.lineTo(.1, .2); c.lineTo(.3, 1); c.lineTo(-.3, 1); }
+    c.fill(); c.restore();
+  }
+  const cardFace = (rank, s) => canvasTex('card-' + rank + s, 128, 180, (c, W, H) => {
+    const col = s === 'h' || s === 'd' ? '#c0282e' : '#1a1a1a';
+    c.fillStyle = '#fbf8f0'; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(0,0,0,.12)'; c.strokeRect(1, 1, W - 2, H - 2);
+    c.fillStyle = col; c.font = 'bold 26px Georgia, serif'; c.textAlign = 'center'; c.fillText(rank, 18, 30); suit(c, s, 18, 44, 8, col);
+    c.save(); c.translate(W, H); c.rotate(Math.PI); c.fillText(rank, 18, 30); suit(c, s, 18, 44, 8, col); c.restore();
+    suit(c, s, W / 2, H / 2, rank === 'A' ? 26 : 18, col);
+    if (rank !== 'A') { c.strokeStyle = col; c.globalAlpha = .4; c.strokeRect(30, 34, W - 60, H - 68); c.globalAlpha = 1; }
+  });
   TABLES[3] = (o) => {
-    const { TT, g, scene } = o;
+    const { TT, g, scene } = o, FL = -16;
     const ft = feltTex(o);
     ft.wrapS = ft.wrapT = TT.RepeatWrapping; ft.repeat.set(3, 2.2);
     const feltM = M({ map: ft, roughness: .95, bumpScale: .006, sheen: new TT.Color(0x2c7a50) });
@@ -320,44 +561,72 @@
     const wt = wood('tbl3-walnut', '#7a4a2a', '#2a160b', sz(o, 512), sz(o, 512), 1.6); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.02, .02); wt.offset.set(.5, .5);
     const railM = M({ map: wt, roughness: .45, clearcoat: .35, clearcoatRoughness: .35, bumpScale: .002 });
     const rail = new TT.Mesh(rg, railM); rail.rotation.x = -Math.PI / 2; rail.position.set(0, .05, cz); rail.castShadow = rail.receiveShadow = true; g.add(rail);
-    const apron = new TT.Mesh(RB(2 * OX + .6, 3, 2 * OZ + .6, 1.2, 2), M({ color: 0x24140a, roughness: .5 })); apron.position.set(0, -1.9, cz); g.add(apron);
-    // a few clay chips in stacks and a deck of cards by the far right corner (just inside the rail)
-    const chipG = new TT.CylinderGeometry(.82, .82, .2, 24), chipC = [0xb8282e, 0xf1ece0, 0x24418c, 0x1f6b44];
-    [[14.5, -9.4, 0, 7], [16.4, -8.6, 1, 5], [15.1, -7.4, 2, 4]].forEach(([x, z, c0, n]) => { for (let i = 0; i < n; i++) { const ch = new TT.Mesh(chipG, M({ color: chipC[(c0 + (i % 3 === 2 ? 1 : 0)) % 4], roughness: .55, clearcoat: .2 })); ch.position.set(x + (Math.sin(i * 7.1) * .05), .1 + i * .205, z + Math.cos(i * 3.3) * .05); ch.castShadow = ch.receiveShadow = true; g.add(ch); } });
+    const darkW = M({ color: 0x24140a, roughness: .5 });
+    at(g, new TT.Mesh(RB(2 * OX + .6, 3, 2 * OZ + .6, 1.2, 2), darkW), 0, -1.9, cz, 0, false);
+    // a heavy turned pedestal to the floor and a carpet
+    at(g, lathe(TT, [[0, 0], [9, 0], [9, .6], [5, 1.6], [2.4, 3], [2, 6], [2.6, 9], [2, 12.6], [3.4, 13.2], [0, 13.2]], SEG(o, 32), darkW), 0, FL, cz);
+    // chips in stacks, a deck (and a boxed one), a fan of cards, dice, the dealer button, a chip rack, a rocks glass, a score pad
+    const chipG = new TT.CylinderGeometry(.82, .82, .2, SEG(o, 24)), chipC = [0xb8282e, 0xf1ece0, 0x24418c, 0x1f6b44, 0x1a1a1a];
+    const chipMs = chipC.map(cl => M({ map: canvasTex('chip-edge-' + cl, 64, 16, (c, W, H) => { c.fillStyle = '#' + cl.toString(16).padStart(6, '0'); c.fillRect(0, 0, W, H); c.fillStyle = cl === 0xf1ece0 ? '#2a4a8c' : '#f4efe4'; for (let x = 0; x < W; x += 16) c.fillRect(x, 0, 5, H); }), roughness: .55, clearcoat: .2, bump: false }));
+    const chipTop = chipC.map(cl => M({ map: canvasTex('chip-top-' + cl, 64, 64, (c, W) => { c.fillStyle = '#' + cl.toString(16).padStart(6, '0'); c.fillRect(0, 0, W, W); c.strokeStyle = cl === 0xf1ece0 ? '#2a4a8c' : '#f4efe4'; c.lineWidth = 5; c.setLineDash([8, 8]); c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 4, 0, 7); c.stroke(); c.setLineDash([]); c.lineWidth = 1.5; c.beginPath(); c.arc(W / 2, W / 2, W * .3, 0, 7); c.stroke(); }), roughness: .5, clearcoat: .2, bump: false }));
+    const stack = (x, z, c0, n, mix = true) => { for (let i = 0; i < n; i++) { const ci = (c0 + (mix && i % 3 === 2 ? 1 : 0)) % chipC.length; const ch = new TT.Mesh(chipG, [chipMs[ci], chipTop[ci], chipTop[ci]]); at(g, ch, x + Math.sin(i * 7.1) * .05, .1 + i * .205, z + Math.cos(i * 3.3) * .05, i * .7); } };
+    stack(14.5, -9.4, 0, 7); stack(16.4, -8.6, 1, 5); stack(15.1, -7.4, 2, 4); stack(17.2, -10.4, 4, 9, false); stack(-12.6, -7.2, 3, 6, false); stack(-11.2, -8.4, 0, 3, false);
     const back = canvasTex('tbl3-card', 128, 180, (c, W, H) => { c.fillStyle = '#f6f2e8'; c.fillRect(0, 0, W, H); c.fillStyle = '#8f1e2a'; c.fillRect(8, 8, W - 16, H - 16); c.strokeStyle = 'rgba(255,230,200,.6)'; c.lineWidth = 2; for (let i = -H; i < W + H; i += 10) { c.beginPath(); c.moveTo(i, 8); c.lineTo(i + H, H); c.stroke(); } c.strokeStyle = '#f6f2e8'; c.lineWidth = 3; c.strokeRect(14, 14, W - 28, H - 28); });
-    const deck = new TT.Mesh(RB(2.5, .5, 3.5, .1, 2), [M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ map: back, roughness: .5, clearcoat: .2 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 })]);
-    deck.position.set(-15.6, .25, -8.8); deck.rotation.y = .28; deck.castShadow = deck.receiveShadow = true; g.add(deck);
-    backdrop(o, 'tbl3-bd', (c, ppu) => {
-      const R = rng(11);
-      c.fillStyle = '#060607'; c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = rad(c, 0, 16, 40, [[0, '#1d1a14'], [1, 'rgba(10,10,10,0)']]); c.fillRect(-60, -40, 120, 80);
-      // the far wall: dark panelling, picked out by a few warm sconces; out-of-focus lights as bokeh
-      c.fillStyle = 'rgba(40,30,20,.5)'; for (let x = -54; x < 56; x += 9) c.fillRect(x, 10, .25, 30);
-      blur(c, 1.5 * ppu);
-      [[-26, 22], [26, 22], [-8, 24], [9, 24]].forEach(([x, y]) => { c.fillStyle = rad(c, x, y, 7, [[0, 'rgba(255,190,110,.55)'], [.15, 'rgba(255,170,90,.25)'], [1, 'rgba(255,150,80,0)']]); c.fillRect(x - 8, y - 8, 16, 16); });
-      for (let i = 0; i < 26; i++) {
-        const x = (R() - .5) * 100, y = 12 + R() * 24, r = .5 + R() * 1.4, warm = R() > .25;
-        c.fillStyle = warm ? `rgba(255,${190 + R() * 40 | 0},120,${.08 + R() * .16})` : `rgba(120,200,190,${.06 + R() * .1})`; ell(c, x, y, r, r);
-      }
-      // a gilt frame on the far wall and a brass rail along the panelling
-      c.fillStyle = 'rgba(190,150,80,.35)'; c.fillRect(-6, 25, 12, 9); c.fillStyle = 'rgba(40,30,22,.9)'; c.fillRect(-5.2, 25.8, 10.4, 7.4); c.fillStyle = 'rgba(120,90,60,.35)'; ell(c, -1, 29.4, 3.4, 2.2);
-      c.fillStyle = 'rgba(200,160,90,.28)'; c.fillRect(-60, 18.2, 120, .35);
-      // a neighbouring table's lamp glow, far left
-      c.fillStyle = rad(c, -40, 14, 14, [[0, 'rgba(70,140,90,.22)'], [1, 'rgba(70,140,90,0)']]); c.fillRect(-60, 0, 40, 30);
-      blur(c, 0);
+    const edge = M({ color: 0xe9e3d4, roughness: .8 });
+    const deck = new TT.Mesh(RB(2.5, .5, 3.5, .1, 2), [edge, edge, M({ map: back, roughness: .5, clearcoat: .2 }), edge, edge, edge]); at(g, deck, -15.6, .25, -8.8, .28);
+    { const bx = canvasTex('tbl3-box', 128, 180, (c, W, H) => { c.fillStyle = '#1e3264'; c.fillRect(0, 0, W, H); c.strokeStyle = '#d8c08a'; c.lineWidth = 3; c.strokeRect(10, 10, W - 20, H - 20); suit(c, 's', W / 2, H / 2, 22, '#d8c08a'); });
+      const side = M({ color: 0x1e3264, roughness: .6 }); at(g, new TT.Mesh(RB(2.6, .95, 3.6, .08, 1), [side, side, M({ map: bx, roughness: .45, clearcoat: .2 }), side, side, side]), -18.6, .48, -7.8, -.15); }
+    [['A', 's'], ['K', 'h'], ['Q', 'c'], ['J', 'd'], ['10', 's']].forEach(([r, s], i) => { const cd = new TT.Mesh(RB(2.5, .03, 3.5, .01, 1), [edge, edge, M({ map: cardFace(r, s), roughness: .45, clearcoat: .15, bump: false }), M({ map: back, roughness: .5 }), edge, edge]); const a = -.5 + i * .25; cd.rotation.set(0, a, 0); at(g, cd, -10.4 + Math.sin(a) * 2.2, .02 + i * .03, -11 + Math.cos(a) * 1.4 - 1.4, a, false); });
+    { const pips = [0, 1, 2, 3, 4, 5].map(n => { const f = [1, 6, 2, 5, 3, 4][n]; return M({ map: canvasTex('die-' + f, 64, 64, (c, W) => { c.fillStyle = '#f6f2ea'; c.fillRect(0, 0, W, W); c.fillStyle = f === 1 ? '#b8202a' : '#1a1a1a'; const P = { 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.27, .22], [.73, .22], [.27, .5], [.73, .5], [.27, .78], [.73, .78]] }[f]; P.forEach(([a, b]) => { c.beginPath(); c.arc(a * W, b * W, f === 1 ? 9 : 6, 0, 7); c.fill(); }); }), roughness: .3, clearcoat: .6, bump: false }); });
+      [[11.4, -4.4, .4], [12.9, -3, -.3]].forEach(([x, z, r]) => at(g, new TT.Mesh(RB(1.15, 1.15, 1.15, .14, 2), pips), x, .58, z, r)); }
+    { const bt = canvasTex('dealer-btn', 128, 128, (c, W) => { c.fillStyle = '#f6f2ea'; c.fillRect(0, 0, W, W); c.fillStyle = '#1a1a1a'; c.font = 'bold 22px Georgia, serif'; c.textAlign = 'center'; c.fillText('DEALER', W / 2, W / 2 + 8); c.strokeStyle = '#1a1a1a'; c.lineWidth = 3; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 8, 0, 7); c.stroke(); });
+      at(g, new TT.Mesh(new TT.CylinderGeometry(1.15, 1.15, .32, SEG(o, 28)), [M({ color: 0xf6f2ea, roughness: .4 }), M({ map: bt, roughness: .35, clearcoat: .4, bump: false }), M({ color: 0xf6f2ea })]), -8.4, .16, -9.6, .4); }
+    { const Gr = grp(TT, g, -17.6, 0, -1.2, Math.PI / 2 + .06); at(Gr, new TT.Mesh(RB(8.6, .7, 3.6, .2, 2), M({ color: 0x2a1a10, roughness: .35, clearcoat: .6 })), 0, .35, 0);
+      const rowG = new TT.CylinderGeometry(.78, .78, 7.8, SEG(o, 18)); [0, 1, 2, 3].forEach(i => { const m = new TT.Mesh(rowG, M({ map: canvasTex('chip-row-' + i, 32, 256, (c, W, H) => { c.fillStyle = '#' + chipC[i].toString(16).padStart(6, '0'); c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(0,0,0,.35)'; for (let y = 0; y < H; y += 6.6) c.fillRect(0, y, W, 1); c.fillStyle = chipC[i] === 0xf1ece0 ? 'rgba(40,70,140,.7)' : 'rgba(255,250,240,.6)'; for (let y = 0; y < H; y += 6.6) for (let x = (y / 6.6 % 2) * 8; x < W; x += 16) c.fillRect(x, y + 1, 5, 5); }), roughness: .5, clearcoat: .2, bump: false })); m.rotation.z = Math.PI / 2; at(Gr, m, 0, .9, -1.2 + i * .82); }); }
+    { const Gw = grp(TT, g, 15.4, 0, 1.6); at(Gw, new TT.Mesh(new TT.CylinderGeometry(1.5, 1.5, .12, SEG(o, 24)), M({ color: 0x3a2214, roughness: .6 })), 0, .06, 0, 0, false);
+      const tw = tumbler(o, Gw, 0, 0, [0xa85a14, .42], 2.4, 1.0); tw.position.y = .12; ice(o, tw, 0, 1.1, 0, 2); }
+    { const Gs = grp(TT, g, 17.8, 0, -3.2, -.3); at(Gs, new TT.Mesh(RB(3.4, .25, 4.8, .05, 1), M({ map: canvasTex('scorepad', 128, 180, (c, W, H) => { c.fillStyle = '#f7f2e2'; c.fillRect(0, 0, W, H); c.fillStyle = '#7a1e2a'; c.fillRect(0, 0, W, 22); c.strokeStyle = 'rgba(60,80,140,.4)'; for (let y = 36; y < H; y += 12) { c.beginPath(); c.moveTo(6, y); c.lineTo(W - 6, y); c.stroke(); } c.strokeStyle = 'rgba(160,40,40,.5)'; c.beginPath(); c.moveTo(W / 2, 26); c.lineTo(W / 2, H - 6); c.stroke(); c.fillStyle = 'rgba(30,30,60,.75)'; for (let y = 46; y < 120; y += 12) { c.fillRect(14 + Math.random() * 8, y - 6, 18 + Math.random() * 14, 2); c.fillRect(W / 2 + 10 + Math.random() * 8, y - 6, 14 + Math.random() * 14, 2); } }), roughness: .85, bump: false })), 0, .125, 0);
+      const pen = new TT.Mesh(new TT.CylinderGeometry(.13, .13, 4.4, 6), M({ color: 0xe8b830, roughness: .5 })); pen.rotation.set(0, .5, Math.PI / 2); at(Gs, pen, 2.2, .14, .5); }
+    // the club room around it: dark panelled walls with warm sconces, a patterned carpet, a coffered ceiling
+    const XL = -70, XR = 70, ZB = -60, ZF = 150, Y1 = 50;
+    const carpet = canvasTex('tbl3-carpet', sz(o, 512), sz(o, 512), (c, W) => { c.fillStyle = '#3a1416'; c.fillRect(0, 0, W, W); const u = W / 8; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { c.fillStyle = (i + j) % 2 ? '#4a1c1c' : '#2c1012'; c.beginPath(); c.moveTo(i * u + u / 2, j * u); c.lineTo(i * u + u, j * u + u / 2); c.lineTo(i * u + u / 2, j * u + u); c.lineTo(i * u, j * u + u / 2); c.fill(); c.fillStyle = 'rgba(190,150,80,.35)'; c.beginPath(); c.arc(i * u + u / 2, j * u + u / 2, u * .08, 0, 7); c.fill(); }
+      const N = makeNoise(4), img = c.getImageData(0, 0, W, W), d = img.data; for (let p = 0; p < d.length; p += 4) { const k = (Math.random() - .5) * 18; d[p] += k; d[p + 1] += k * .6; d[p + 2] += k * .6; } c.putImageData(img, 0, 0); });
+    roomBox(o, { key: 'tbl3-room', xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
+      floor: M({ map: rep(TT, carpet, 10, 12), roughness: .95, color: 0x8a7a70, bumpScale: .006 }),
+      back: (c, ppu) => {
+        const R = rng(11);
+        c.fillStyle = '#0d0907'; c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
+        c.fillStyle = '#17100a'; c.fillRect(XL - 2, FL - 2, XR - XL + 4, 16); c.fillStyle = 'rgba(200,160,90,.25)'; c.fillRect(XL - 2, FL + 14, XR - XL + 4, .4);   // wainscot + brass rail
+        for (let x = XL; x < XR; x += 12) { c.strokeStyle = 'rgba(70,46,26,.6)'; c.lineWidth = .35; c.strokeRect(x + 1.2, FL + 2, 9.6, 10.5); c.strokeRect(x + 1.2, FL + 17, 9.6, 26); }
+        blur(c, .8 * ppu);
+        [[-30, 26], [30, 26], [-56, 26], [56, 26]].forEach(([x, y]) => { c.fillStyle = rad(c, x, y, 12, [[0, 'rgba(255,190,110,.55)'], [.18, 'rgba(255,170,90,.22)'], [1, 'rgba(255,150,80,0)']]); c.fillRect(x - 13, y - 13, 26, 26); });
+        for (let i = 0; i < 30; i++) { const x = XL + R() * (XR - XL), y = FL + 18 + R() * 30, r = .5 + R() * 1.3, warm = R() > .3; c.fillStyle = warm ? `rgba(255,${190 + R() * 40 | 0},120,${.06 + R() * .12})` : `rgba(120,200,190,${.05 + R() * .08})`; ell(c, x, y, r, r); }
+        blur(c, 0);
+        [[-30, 26], [30, 26], [-56, 26], [56, 26]].forEach(([x, y]) => { c.fillStyle = 'rgba(200,160,90,.7)'; c.fillRect(x - .2, y - 3, .4, 3); c.fillStyle = 'rgba(255,226,170,.9)'; c.beginPath(); c.moveTo(x - 1.6, y + 1.6); c.lineTo(x + 1.6, y + 1.6); c.lineTo(x + 1, y - .6); c.lineTo(x - 1, y - .6); c.fill(); });
+        c.fillStyle = 'rgba(190,150,80,.55)'; c.fillRect(-9, 18, 18, 14); c.fillStyle = 'rgba(30,22,16,1)'; c.fillRect(-8.2, 18.8, 16.4, 12.4); c.fillStyle = 'rgba(110,80,52,.55)'; ell(c, -2, 24.6, 4.6, 3.2); c.fillStyle = 'rgba(70,90,70,.45)'; ell(c, 3.6, 22.4, 3, 1.8);   // a gilt-framed painting
+        c.fillStyle = rad(c, 0, 16, 60, [[0, 'rgba(60,44,30,.35)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
+      },
+      left: (c) => { c.fillStyle = '#0b0806'; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(-ZF - 2, FL + 14, ZF - ZB + 4, .4); c.fillStyle = rad(c, 40, 26, 10, [[0, 'rgba(255,180,100,.4)'], [1, 'rgba(255,170,90,0)']]); c.fillRect(30, 16, 20, 20); },
+      right: (c) => { c.fillStyle = '#0b0806'; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(ZB - 2, FL + 14, ZF - ZB + 4, .4); c.fillStyle = rad(c, -40, 26, 10, [[0, 'rgba(255,180,100,.4)'], [1, 'rgba(255,170,90,0)']]); c.fillRect(-50, 16, 20, 20); },
+      ceil: (c) => { c.fillStyle = '#080605'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); c.strokeStyle = 'rgba(60,40,24,.6)'; c.lineWidth = .6; for (let x = XL; x < XR; x += 14) for (let z = ZB; z < ZF; z += 14) c.strokeRect(x + 1, z + 1, 12, 12); },
     });
+    // the lampshade over the table (a green-glass billiard shade; hidden in the play view)
+    { const Gp = grp(TT, g, 0, 0, cz); Gp.userData.viewOnly = 1; Gp.userData.keep = 1;
+      at(Gp, lathe(TT, [[0, 0], [7.2, 0], [7, .4], [5.4, 2.4], [1.4, 4.2], [.5, 4.6], [0, 4.6]], SEG(o, 32), M({ color: 0x0f4a2a, roughness: .2, clearcoat: 1, side: TT.DoubleSide, emissive: new TT.Color(0x031a0c) })), 0, 32, 0, 0, false);
+      const dif = new TT.Mesh(new TT.CircleGeometry(7, SEG(o, 32)), new TT.MeshBasicMaterial({ color: 0xfff2d8, toneMapped: false })); dif.rotation.x = Math.PI / 2; at(Gp, dif, 0, 32.05, 0, 0, false);
+      at(Gp, new TT.Mesh(new TT.CylinderGeometry(.08, .08, Y1 - 36.6, 5), M({ color: 0xb08850, metalness: 1, roughness: .3 })), 0, 36.6 + (Y1 - 36.6) / 2, 0, 0, false); }
+    try { X.mergeStatic(g); } catch (e) {}
     scene.add(new TT.HemisphereLight(0x8a96a8, 0x0a0a0a, .1));
     const key = new TT.SpotLight(0xfff0d4, 4.4, 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
     key.shadow.camera.near = 10; key.shadow.camera.far = 60; key.shadow.bias = -.0002;
     const rim = new TT.DirectionalLight(0xffd7a0, .18); rim.position.set(-12, 8, -18); scene.add(rim);
     return { bg: '#060607', exp: .95, board: .34, boardCol: 0xfff0dc, key, env: { top: '#2b2620', bottom: '#040404', panels: [[0, 22, 3, 12, 12, '#fff0d8', 4], [-16, 8, -10, 5, 9, '#ffcf96', .9], [16, 8, -10, 5, 9, '#ffcf96', .7], [0, 9, 20, 22, 5, '#d8c8b0', .55], [-18, 6, 8, 5, 8, '#ffe2b8', .5]] } };
   };
-
   TABLES[3].plain = { sun: 0xfff0d4, sunI: .8, hemi: [0xc8d4c8, 0x203020, .42], exp: .66 };
   TABLES[3].floor = (o) => ({ img: feltTex(o).image, w: 15, h: 15, dark: true,
     over: 'radial-gradient(60% 58% at 50% 44%, rgba(255,240,210,.14), transparent 75%), radial-gradient(125% 115% at 50% 46%, transparent 48%, rgba(0,0,0,.58))' });
 
-  /* ---------- 4 · 大理石のテラス: white marble, an evening sky over the sea, a balustrade ---------- */
+  /* ---------- 4 · テラス: a marble table on a terracotta terrace over the sea, a stone balustrade, the house wall; morning ... night ---------- */
   const marbleTex = o => { const W = sz(o, 1024); return canvasTex('tbl4-marble', W, W, (c) => {
       const N = makeNoise(53), img = c.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
@@ -371,138 +640,307 @@
       }
       c.putImageData(img, 0, 0);
     }); };
+  const TER = {   // sky (zenith → horizon), the sea (far → near), the sun / moon (azimuth°, height), the key light, ambient, exposure
+    morning: { sky: ['#7fa8d6', '#c9dcec', '#f7e4cc'], sea: ['#8fb0c8', '#4d7f9e'], sun: [-38, 26, '#fff4dc'], hill: ['#8a9cb0', '#6f8a8a'], key: [0xffe6c4, 1.35, [-26, 14, -22]], hemi: [0xe2ecfa, 0xd8b896, .5], exp: .76, board: .26, light: 0 },
+    day: { sky: ['#3f86d6', '#8cc0ea', '#dcedf8'], sea: ['#4f93c2', '#25638f'], sun: [-20, 120, '#ffffff'], hill: ['#7f97a8', '#5d7f5a'], key: [0xfff6ea, 1.45, [-10, 30, -12]], hemi: [0xf2f6ff, 0xe0c0a0, .5], exp: .72, board: .24, light: 0 },
+    evening: { sky: ['#33407e', '#b06fa0', '#ffc086'], sea: ['#9a7fae', '#434b88'], sun: [-12, 8, '#fff2d0'], hill: ['#6a5788', '#4e3e66'], key: [0xffc896, 1.2, [-8, 9, -22]], hemi: [0xfbe4e0, 0xffd0b0, .48], exp: .8, board: .32, light: 1 },
+    night: { sky: ['#03060f', '#0b1530', '#1d2b4e'], sea: ['#13203c', '#070d1c'], sun: [18, 60, '#f4f0dc'], hill: ['#0e1426', '#0a0f1c'], key: [0xaebce8, .55, [14, 26, -16]], hemi: [0x34405e, 0x1a1410, .34], exp: .9, board: .5, light: 2 },
+  };
   TABLES[4] = (o) => {
-    const { TT, g, scene } = o;
+    const { TT, g, scene } = o, T = TOD(o), D = TER[T], FL = -16, Z0 = 1;
     const mt = marbleTex(o);
     const marble = M({ map: mt, bump: false, roughness: .3, clearcoat: .35, clearcoatRoughness: .2 });
-    const t = new TT.Mesh(RB(46, 1.4, 36, .5, 3), marble); t.position.set(0, -.7, 5); t.receiveShadow = true; g.add(t);
-    // a glass of lemonade with a slice on the rim (back left) and a small terracotta pot of rosemary (back right)
-    const glP = [[0, 0], [.95, 0], [1, .12], [1.12, 3.2], [1.06, 3.2], [.9, .2], [0, .2]].map(([x, y]) => new TT.Vector2(x, y));
-    const gl = new TT.Mesh(new TT.LatheGeometry(glP, 28), M({ color: 0xffffff, roughness: .05, clearcoat: 1, transparent: true, opacity: .32, depthWrite: false })); gl.position.set(-13, 0, -8); g.add(gl);
-    const drink = new TT.Mesh(new TT.CylinderGeometry(1.0, .9, 2.2, 24), M({ color: 0xffe9a0, roughness: .1, transparent: true, opacity: .72, emissive: new TT.Color(0x3a2a08) })); drink.position.set(-13, 1.3, -8); g.add(drink);
-    const slice = new TT.Mesh(new TT.CylinderGeometry(.7, .7, .12, 18, 1, false, 0, Math.PI), M({ color: 0xf6d348, roughness: .5 })); slice.rotation.set(Math.PI / 2, 0, .3); slice.position.set(-12.05, 3.15, -8); g.add(slice);
-    const potP = [[0, 0], [1.1, 0], [1.45, 2], [1.6, 2.05], [1.6, 2.4], [0, 2.4]].map(([x, y]) => new TT.Vector2(x, y));
-    const pot = new TT.Mesh(new TT.LatheGeometry(potP, 22), M({ color: 0xc27a52, roughness: .8 })); pot.position.set(14, 0, -9); pot.castShadow = pot.receiveShadow = true; g.add(pot);
-    const herbM = M({ color: 0x5f7d4f, roughness: .8 });
-    for (let i = 0; i < 9; i++) { const a = i * 2.4, r = .25 + (i % 3) * .3, h = 2.2 + (i % 4) * .5; const st = new TT.Mesh(new TT.CylinderGeometry(.05, .09, h, 5), herbM); st.position.set(14 + Math.cos(a) * r, 2.3 + h / 2, -9 + Math.sin(a) * r); st.rotation.set(Math.sin(a) * .25, 0, Math.cos(a) * .25); st.castShadow = true; g.add(st); }
-    backdrop(o, 'tbl4-bd', (c, ppu) => {
-      const R = rng(5), HZ = 22.6, SX = -9;
-      c.fillStyle = lin(c, 40, HZ, [[0, '#33407e'], [.3, '#7a5fa8'], [.6, '#e38ba0'], [.85, '#ffb07c'], [1, '#ffd69c']]); c.fillRect(-60, HZ, 120, 40);
-      c.fillStyle = rad(c, SX, HZ + 1, 28, [[0, 'rgba(255,244,210,.95)'], [.1, 'rgba(255,216,160,.7)'], [.45, 'rgba(255,170,130,.22)'], [1, 'rgba(255,150,120,0)']]); c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = '#fff8e2'; ell(c, SX, HZ + 1.1, 1.3, 1.3);
-      blur(c, 1.2 * ppu);
-      c.fillStyle = 'rgba(255,196,196,.5)'; [[16, 28, 9, .8], [25, 26.6, 6, .55], [-32, 30, 11, .7], [6, 32, 8, .55], [-18, 26.4, 6, .4]].forEach(([x, y, w, h]) => ell(c, x, y, w, h));
-      blur(c, .3 * ppu);
-      c.fillStyle = lin(c, HZ, 12, [[0, '#9a7fae'], [.25, '#6e639c'], [1, '#434b88']]); c.fillRect(-60, -40, 120, HZ + 40);
-      c.fillStyle = '#6a5788'; c.beginPath(); c.moveTo(14, HZ); c.quadraticCurveTo(26, HZ + 2.6, 38, HZ + 1.8); c.quadraticCurveTo(48, HZ + 1, 60, HZ + 2.4); c.lineTo(60, HZ); c.fill();
-      c.fillStyle = '#7a6694'; c.beginPath(); c.moveTo(-60, HZ); c.quadraticCurveTo(-48, HZ + 1.4, -38, HZ + .6); c.lineTo(-30, HZ); c.fill();
-      for (let i = 0; i < 46; i++) { const y = HZ - .2 - R() * 6.5, k = 1 - (HZ - y) / 8, wd = (1.2 + R() * 3) * k; c.fillStyle = `rgba(255,${205 + R() * 40 | 0},160,${.3 + R() * .5})`; c.fillRect(SX - wd / 2 + (R() - .5) * 2.2 * (1.5 - k), y, wd, .13); }
-      // the balustrade, close behind the table: silhouettes against the light
-      blur(c, .2 * ppu);
-      const SIL = '#3f2b40', B0 = 13.4, B1 = 19.8, bh = (B1 - B0) / 9.2, by = v => B0 + (v - 9.5) * bh;
-      c.fillStyle = SIL; c.fillRect(-60, -40, 120, B0 + 40);           // the parapet below (mostly hidden behind the table)
-      c.fillRect(-60, B1, 120, 1.3); c.fillStyle = '#4a3249'; c.fillRect(-60, B1 - .3, 120, .45);
-      c.fillStyle = SIL;
-      for (let x = -59; x < 60; x += 2.7) {   // slim vase-shaped balusters with clear gaps between them
-        c.beginPath(); c.moveTo(x - .3, by(9.5)); c.lineTo(x - .4, by(10.4)); c.bezierCurveTo(x - .95, by(11.6), x - .9, by(14.4), x - .3, by(15.6)); c.lineTo(x - .22, by(17.3)); c.lineTo(x - .45, by(18.7));
-        c.lineTo(x + .45, by(18.7)); c.lineTo(x + .22, by(17.3)); c.lineTo(x + .3, by(15.6)); c.bezierCurveTo(x + .9, by(14.4), x + .95, by(11.6), x + .4, by(10.4)); c.lineTo(x + .3, by(9.5)); c.fill();
-      }
-      c.fillStyle = 'rgba(255,196,150,.5)'; c.fillRect(-60, B1 + 1.2, 120, .1);   // the rail's sunlit edge
-      // bougainvillea trailing over the rail and in from the corners, out of focus
-      blur(c, .9 * ppu);
-      const flower = (x, y, n, sx, sy) => { for (let i = 0; i < n; i++) { const fx = x + (R() - .5) * sx, fy = y + (R() - .5) * sy; c.fillStyle = R() > .28 ? `rgba(${205 + R() * 40 | 0},${48 + R() * 40 | 0},${128 + R() * 40 | 0},.9)` : `rgba(${58 + R() * 20 | 0},${92 + R() * 20 | 0},${52},.9)`; ell(c, fx, fy, .45 + R() * .6, .4 + R() * .45); } };
-      flower(-26, 21.8, 60, 16, 3.2); flower(-33, 18.5, 26, 6, 5); flower(30, 21.8, 40, 12, 2.6); flower(-28, 30, 70, 26, 9); flower(36, 30, 40, 22, 7); flower(-9, 34, 30, 14, 4);
+    at(g, new TT.Mesh(RB(28, 1.2, 21, .4, 3), marble), 0, -.6, Z0, 0, false).receiveShadow = true;
+    // a wrought-iron base: a frame under the top, four slim legs with scrolled feet
+    const iron = M({ color: 0x1c1c1e, roughness: .45, metalness: .6 });
+    at(g, new TT.Mesh(RB(24, 1.2, 17, .15, 1), iron), 0, -1.8, Z0);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { at(g, new TT.Mesh(new TT.CylinderGeometry(.42, .42, 14.6, SEG(o, 8)), iron), a * 11.4, FL + 7.3, Z0 + b * 7.8); const f = new TT.Mesh(new TT.TorusGeometry(.8, .22, 6, 12, Math.PI), iron); f.rotation.y = Math.atan2(b, a); at(g, f, a * 11.8, FL + .2, Z0 + b * 8.2); });
+    // the terrace: terracotta tiles; the stone balustrade (back and right); the house wall (left)
+    const tileT = canvasTex('tbl4-tiles', sz(o, 512), sz(o, 512), (c, W) => { const R = rng(8), u = W / 4; c.fillStyle = '#d8c8b0'; c.fillRect(0, 0, W, W);
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { const k = R(); c.fillStyle = `rgb(${190 + k * 30 | 0},${100 + k * 22 | 0},${66 + k * 14 | 0})`; c.fillRect(i * u + 3, j * u + 3, u - 6, u - 6); for (let n = 0; n < 40; n++) { c.fillStyle = `rgba(${R() > .5 ? '255,220,190' : '90,40,20'},${.05 + R() * .08})`; ell(c, i * u + 3 + R() * (u - 6), j * u + 3 + R() * (u - 6), 2 + R() * 9, 2 + R() * 7); } } });
+    const ZB = -58, XL = -60, XR = 64, ZF = 150;
+    const floorM = M({ map: rep(TT, tileT, (XR - XL) / 26, (ZF - ZB) / 26), roughness: .7, bumpScale: .006, color: T === 'night' ? 0x8090b0 : 0xffffff });
+    { const m = new TT.Mesh(new TT.PlaneGeometry(XR - XL + 2, ZF - ZB + 2), floorM); m.rotation.x = -Math.PI / 2; m.position.set((XL + XR) / 2, FL, (ZB + ZF) / 2); m.receiveShadow = true; g.add(m); }
+    const stoneM = M({ map: canvasTex('tbl4-stone', 256, 256, (c, W) => { const N = makeNoise(77), img = c.createImageData(W, W), d = img.data; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const k = (N(x / 4, y / 4, 3) - .5) * 30 + (Math.random() - .5) * 10, i = (y * W + x) * 4; d[i] = 226 + k; d[i + 1] = 214 + k; d[i + 2] = 192 + k; d[i + 3] = 255; } c.putImageData(img, 0, 0); }), roughness: .85, bumpScale: .01 });
+    const BH = 9.8, balG = new TT.LatheGeometry(V2(TT, [[1.2, 0], [1.2, 1.1], [.6, 1.7], [1.25, 6.4], [1.28, 8.6], [.48, 13.2], [.62, 14.5], [1.1, 15.1], [1.1, 16.4]].map(([r, y]) => [r * .85, y * BH / 16.4])), o.COARSE ? 6 : 8);   // a low balustrade (≈ 60 cm): the sea shows over it from the table   // (open at both ends: the plinth and the rail cover them)
+    const run = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), ang = Math.atan2(z1 - z0, x1 - x0), n = Math.floor(L / 2.5);
+      const G = grp(TT, g, (x0 + x1) / 2, 0, (z0 + z1) / 2, -ang);
+      at(G, new TT.Mesh(RB(L, 2.2, 3.8, .15, 1), stoneM), 0, FL + 1.1, 0); at(G, new TT.Mesh(RB(L + 1, 1.8, 4.4, .45, 2), stoneM), 0, FL + 2.2 + BH + .9, 0);
+      for (let i = 0; i < n; i++) at(G, new TT.Mesh(balG, stoneM), -L / 2 + (i + .5) * L / n, FL + 2.2, 0, 0, false);
+      for (let i = 0; i <= 4; i++) at(G, new TT.Mesh(RB(3.6, BH, 4, .1, 1), stoneM), -L / 2 + i * L / 4, FL + 2.2 + BH / 2, 0);   // the piers
+    };
+    run(XL, ZB, XR, ZB); run(XR, ZB, XR, 70);
+    // lavender in pots along the balustrade, a lemon tree by the house
+    const terra = M({ color: 0xc27a52, roughness: .85 }), lav = M({ color: 0x8a76c8, roughness: .7 }), lavG = new TT.CylinderGeometry(.12, .05, 1.6, 4), stemM = M({ color: 0x7e9468, roughness: .8 });
+    [[-34, ZB + 4], [-14, ZB + 4], [18, ZB + 4], [40, ZB + 4], [XR - 4, -30]].forEach(([x, z], i) => { at(g, lathe(TT, [[0, 0], [1.8, 0], [2.4, 3.4], [2.6, 3.5], [2.6, 4], [0, 3.8]], SEG(o, 16), terra), x, FL, z); const R = rng(i + 3);
+      for (let k = 0; k < 18; k++) { const a = R() * 6.3, r = R() * 1.8, h = 2.5 + R() * 2.2, s = new TT.Mesh(new TT.CylinderGeometry(.05, .05, h, 3), stemM); s.rotation.set((R() - .5) * .5, 0, (R() - .5) * .5); at(g, s, x + Math.cos(a) * r, FL + 3.8 + h / 2, z + Math.sin(a) * r, 0, false); at(g, new TT.Mesh(lavG, lav), x + Math.cos(a) * r * 1.15, FL + 3.8 + h + .5, z + Math.sin(a) * r * 1.15, 0, false); } });
+    { const Gt = grp(TT, g, -50, FL, -44); at(Gt, lathe(TT, [[0, 0], [3.2, 0], [4.2, 6.4], [4.5, 6.6], [4.5, 7.4], [0, 7]], SEG(o, 24), terra), 0, 0, 0);
+      at(Gt, new TT.Mesh(new TT.CylinderGeometry(.35, .55, 12, 6), M({ color: 0x6b5638, roughness: .9 })), 0, 13, 0);
+      foliage(o, Gt, o.COARSE ? 70 : 120, 0, 23, 0, 6.5, 5, 6.5, leafTex('leaf-lemon', '#4f7a36', '#2f5a28'), 1.6, 12);
+      const lm = M({ color: 0xf2cf3a, roughness: .42, clearcoat: .2 }), R = rng(2); for (let i = 0; i < 12; i++) { const a = R() * 6.3, r = 4 + R() * 2.4; const l = new TT.Mesh(new TT.SphereGeometry(.62, 10, 8), lm); l.scale.set(1.2, .92, .92); at(Gt, l, Math.cos(a) * r, 20 + R() * 7, Math.sin(a) * r); } }
+    ao(o, -50, FL, -44, 12, 12, .4);
+    // two bistro chairs across the table: black iron, woven rattan seats
+    const rattan = M({ map: canvasTex('rattan', 128, 128, (c, W) => { c.fillStyle = '#c8a46c'; c.fillRect(0, 0, W, W); for (let y = 0; y < W; y += 8) for (let x = ((y / 8) % 2) * 8; x < W; x += 16) { c.fillStyle = 'rgba(110,70,30,.45)'; c.fillRect(x, y, 8, 8); c.fillStyle = 'rgba(255,240,200,.18)'; c.fillRect(x + 1, y + 1, 6, 2); } }), roughness: .75 });
+    const chair = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry), lg = new TT.CylinderGeometry(.22, .22, 10.2, 6);
+      [[-3, 3], [3, 3], [-3, -3], [3, -3]].forEach(([a, b]) => { const l = new TT.Mesh(lg, iron); l.rotation.set(b * .015, 0, -a * .015); at(G, l, a, 5.1, b); });
+      at(G, new TT.Mesh(new TT.CylinderGeometry(3.9, 3.9, .7, SEG(o, 24)), [iron, rattan, iron]), 0, 10.4, 0);
+      const bk = new TT.Mesh(new TT.TorusGeometry(3.6, .26, 6, SEG(o, 20), Math.PI), iron); bk.rotation.x = -.15; at(G, bk, 0, 13.6, -3.4);
+      const pn = new TT.Mesh(new TT.CylinderGeometry(3.4, 3.4, 4.6, SEG(o, 16), 1, true, -Math.PI / 2, Math.PI), rattan); pn.material.side = TT.DoubleSide; pn.rotation.set(-.12, Math.PI, 0); pn.scale.set(1, 1, .25); at(G, pn, 0, 15.2, -3.6); };
+    chair(-7, -13.6, 0); chair(7, -13.6, 0);
+    // the sea, the coast and the sky: a painted band all round the view, a sky dome over it and the sea below it
+    const PR = 300, DEG = PR * Math.PI / 180, AL = -75, AR = 110, BY0 = -110, BY1 = 130, HZ = 6;
+    const ax = a => -a * DEG;   // the band's drawing x of an azimuth (degrees right of straight ahead)
+    const skyAt = (y) => { const e = Math.atan2(y, PR) / (Math.PI / 2); const [z, m, h] = D.sky; return e > .25 ? [m, z, (e - .25) / .75] : [h, m, Math.max(0, e) / .25]; };
+    const band = ptex(o, 'tbl4-pano-' + T, ax(AR), BY0, ax(AL), BY1, 3072, (c, ppu) => {
+      const R = rng(5), W0 = ax(AR), W1 = ax(AL), Wd = W1 - W0;
+      c.fillStyle = lin(c, BY1, HZ, [[0, D.sky[0]], [.55, D.sky[1]], [1, D.sky[2]]]); c.fillRect(W0, HZ, Wd, BY1 - HZ);
+      // the sun (or the moon) and its glow
+      const SX = ax(D.sun[0]), SY = HZ + D.sun[1];
+      if (T !== 'night') { c.fillStyle = rad(c, SX, SY, T === 'day' ? 160 : 120, [[0, 'rgba(255,248,226,.9)'], [.08, 'rgba(255,226,180,.55)'], [.45, 'rgba(255,200,150,.16)'], [1, 'rgba(255,190,140,0)']]); c.fillRect(W0, HZ, Wd, BY1 - HZ); c.fillStyle = D.sun[2]; ell(c, SX, SY, 4.2, 4.2); }
+      else { c.fillStyle = rad(c, SX, SY, 40, [[0, 'rgba(230,236,255,.35)'], [1, 'rgba(200,210,255,0)']]); c.fillRect(SX - 40, SY - 40, 80, 80); c.fillStyle = D.sun[2]; ell(c, SX, SY, 3.6, 3.6); c.fillStyle = 'rgba(180,186,170,.35)'; ell(c, SX - 1, SY + .8, 1, .8); ell(c, SX + 1.3, SY - 1.1, .7, .6);
+        for (let i = 0; i < 380; i++) { const y = HZ + 8 + R() * (BY1 - HZ - 8); c.fillStyle = `rgba(255,255,${230 + R() * 25 | 0},${.25 + R() * .6 * Math.min(1, (y - HZ) / 40)})`; const r = .18 + R() * .3; ell(c, W0 + R() * Wd, y, r, r); } }
+      // clouds
+      blur(c, 1.6 * ppu);
+      const cl = T === 'night' ? 'rgba(40,50,80,.45)' : T === 'evening' ? 'rgba(255,190,190,.55)' : 'rgba(255,255,255,.8)';
+      for (let i = 0; i < 26; i++) { const x = W0 + R() * Wd, y = HZ + 14 + R() * 60, w = 14 + R() * 40; c.fillStyle = cl; ell(c, x, y, w, 2 + R() * 4); if (T !== 'night') { c.fillStyle = 'rgba(255,255,255,.2)'; ell(c, x - w * .2, y + 1.2, w * .5, 1.6); } }
       blur(c, 0);
-    }, { px: 2048 });
-    scene.add(new TT.HemisphereLight(0xfbeee8, 0xffdcc4, .5));
-    const key = dirLight(TT, 0xffc896, 1.15, [-8, 9, -22], 15); scene.add(key);
-    const fill = new TT.DirectionalLight(0xffe4dc, .38); fill.position.set(5, 12, 16); scene.add(fill);
-    return { bg: '#4a3249', exp: .8, board: .32, boardCol: 0xfff0e6, key, env: { top: '#d8bcc4', bottom: '#f6dcc8', panels: [[-12, 3, -20, 10, 4, '#ffcf9a', 3], [0, 16, -8, 26, 8, '#c8b6f0', .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] } };
+      // the far coast: a long headland on the right with a white village, islands on the left
+      const ridge = (a0, a1, h, col, seed) => { const Rr = rng(seed); c.fillStyle = col; c.beginPath(); c.moveTo(ax(a0), HZ); for (let a = a0; a <= a1; a += .5) { const t = (a - a0) / (a1 - a0), y = HZ + h * Math.sin(t * Math.PI) * (.7 + .3 * Math.sin(t * 11 + seed)) + Rr() * .6; c.lineTo(ax(a), y); } c.lineTo(ax(a1), HZ); c.fill(); };
+      blur(c, .5 * ppu);
+      ridge(-62, -28, 9, D.hill[0], 3); ridge(-44, -36, 4, D.hill[1], 4);
+      ridge(16, 112, 30, D.hill[0], 7); ridge(30, 112, 20, D.hill[1], 9);
+      blur(c, 0);
+      for (let i = 0; i < 90; i++) { const a = 34 + R() * 40, y = HZ + 2 + R() * (8 + (a - 34) * .28); const x = ax(a), w = 1.4 + R() * 1.8, h = 1 + R() * .9;
+        c.fillStyle = T === 'night' ? '#20283c' : T === 'evening' ? '#e6c8c0' : '#f4efe6'; c.fillRect(x, y, w, h); c.fillStyle = T === 'night' ? '#141a28' : '#b8603a'; c.fillRect(x - .1, y + h, w + .2, .35);
+        if (T === 'night' && R() > .35) { c.fillStyle = 'rgba(255,200,120,.95)'; c.fillRect(x + w * .3, y + h * .3, .35, .35); } if (T === 'evening' && R() > .8) { c.fillStyle = 'rgba(255,214,150,.9)'; c.fillRect(x + w * .3, y + h * .3, .3, .3); } }
+      c.fillStyle = T === 'night' ? '#060a12' : '#2c3a26'; for (let i = 0; i < 26; i++) { const a = 30 + R() * 50, y = HZ + 3 + R() * 14; ell(c, ax(a), y + 2.4, .45, 2.4); }   // cypresses
+      // the sea: deeper near, glitter under the sun / the moon
+      c.fillStyle = lin(c, HZ, BY0, [[0, D.sea[0]], [.35, D.sea[1]], [1, D.sea[1]]]); c.fillRect(W0, BY0, Wd, HZ - BY0);
+      c.fillStyle = 'rgba(255,255,255,.08)'; for (let i = 0; i < 260; i++) { const y = HZ - R() * (HZ - BY0); c.fillRect(W0 + R() * Wd, y, 2 + R() * 10 * (1 - (HZ - y) / 200), .14); }
+      for (let i = 0; i < 140; i++) { const y = HZ - .3 - R() * 70, k = 1 - (HZ - y) / 80, wd = (1.5 + R() * 5) * (1.4 - k); c.fillStyle = T === 'night' ? `rgba(220,230,255,${.2 + R() * .4})` : `rgba(255,${235 + R() * 20 | 0},${200 + R() * 40 | 0},${.25 + R() * .5})`; c.fillRect(SX - wd / 2 + (R() - .5) * (4 + (1 - k) * 22), y, wd, .22); }
+      if (T !== 'night') [[-28, -2.4], [8, -1.2], [52, -3]].forEach(([a, y]) => { const x = ax(a); c.fillStyle = '#fbfbf6'; c.beginPath(); c.moveTo(x, HZ + y + .6); c.lineTo(x + .1, HZ + y + 4); c.lineTo(x + 2, HZ + y + .6); c.fill(); c.fillStyle = '#5a4a3a'; c.fillRect(x - 1.2, HZ + y, 3.4, .6); });   // sails
+      else [[30, -1.6], [-18, -2.2]].forEach(([a, y]) => { c.fillStyle = 'rgba(255,220,150,.9)'; ell(c, ax(a), HZ + y, .4, .4); });
+      c.globalCompositeOperation = 'destination-out'; c.fillStyle = lin(c, BY1, BY1 - 34, [[0, 'rgba(0,0,0,1)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(W0, BY1 - 34, Wd, 34); c.globalCompositeOperation = 'source-over';   // the top fades into the dome
+    });
+    const th0 = Math.PI - AR * Math.PI / 180, thL = (AR - AL) * Math.PI / 180;
+    const bm = new TT.Mesh(new TT.CylinderGeometry(PR, PR, BY1 - BY0, 48, 1, true, th0, thL), new TT.MeshBasicMaterial({ map: band, side: TT.BackSide, transparent: true, depthWrite: false, toneMapped: false }));
+    bm.position.y = (BY0 + BY1) / 2; bm.renderOrder = -2; g.add(bm);
+    { const geo = new TT.SphereGeometry(PR * 1.6, 24, 12), P = geo.attributes.position, col = [], cc = new TT.Color(), a = new TT.Color(), b = new TT.Color();
+      for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 1.6; if (y < HZ) { cc.set(D.sea[1]); } else { const [p, q, t] = skyAt(y); a.set(p); b.set(q); cc.copy(a).lerp(b, t); } cc.convertSRGBToLinear(); col.push(cc.r, cc.g, cc.b); }
+      geo.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); const dm = new TT.Mesh(geo, new TT.MeshBasicMaterial({ vertexColors: true, side: TT.BackSide, depthWrite: false, toneMapped: false })); dm.renderOrder = -3; g.add(dm); }
+    // the house wall on the left: warm stucco, a French window with shutters, bougainvillea; below the balustrade, the garden falling to the sea
+    const house = ptex(o, 'tbl4-house-' + T, -ZF, FL - 1, -ZB + 1, 70, 1024, (c, ppu) => {
+      c.fillStyle = '#e9d6b8'; c.fillRect(-ZF, FL - 1, ZF - ZB + 1, 71 - FL);
+      const R = rng(31); for (let i = 0; i < 300; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,245,220' : '150,110,70'},${.04 + R() * .05})`; ell(c, -ZF + R() * (ZF - ZB), FL + R() * (70 - FL), 1 + R() * 5, 1 + R() * 4); }
+      c.fillStyle = '#d8c2a0'; c.fillRect(-ZF, FL, ZF - ZB, 2);
+      const fx = 16; c.fillStyle = '#3a4a4a'; c.fillRect(fx, FL + 2, 12, 30); c.fillStyle = 'rgba(255,240,210,.25)'; c.fillRect(fx + 1, FL + 3, 4.6, 27); c.fillRect(fx + 6.4, FL + 3, 4.6, 27);
+      c.fillStyle = '#efe6d8'; [fx - .8, fx + 5.6, fx + 11.4].forEach(x => c.fillRect(x, FL + 2, .9, 30.6)); c.fillRect(fx - .8, FL + 31.8, 13.6, 1);
+      ['#5f7f6a', '#5f7f6a'].forEach((col, i) => { const x = i ? fx + 12.6 : fx - 7; c.fillStyle = col; c.fillRect(x, FL + 2, 6.4, 30.4); c.fillStyle = 'rgba(0,0,0,.18)'; for (let y = FL + 3; y < FL + 32; y += 1.2) c.fillRect(x + .5, y, 5.4, .45); });
+      c.fillStyle = '#2a2420'; c.fillRect(36, 26, .5, 3); c.fillStyle = T === 'night' || T === 'evening' ? 'rgba(255,214,150,1)' : '#e8dcc0'; c.fillRect(35, 22.6, 2.4, 3.4); c.strokeStyle = '#2a2420'; c.lineWidth = .3; c.strokeRect(35, 22.6, 2.4, 3.4);   // a wall lantern
+      if (T === 'night' || T === 'evening') { c.fillStyle = rad(c, 36.2, 24, 14, [[0, 'rgba(255,200,130,.35)'], [1, 'rgba(255,200,130,0)']]); c.fillRect(22, 10, 28, 28); }
+      blur(c, .3 * ppu); for (let i = 0; i < 520; i++) { const t = R(), x = fx - 12 + t * 34 + (R() - .5) * 8, y = FL + 30 + Math.sin(t * 3) * 6 + R() * 14; c.fillStyle = R() > .3 ? `rgba(${200 + R() * 40 | 0},${40 + R() * 40 | 0},${120 + R() * 40 | 0},.95)` : `rgba(${60 + R() * 20 | 0},${100 + R() * 20 | 0},50,.95)`; ell(c, x, y, .4 + R() * .5, .35 + R() * .4); } blur(c, 0);
+      c.globalCompositeOperation = 'multiply'; c.fillStyle = T === 'night' ? '#4a5470' : T === 'evening' ? '#f0c8b0' : T === 'morning' ? '#fff0e0' : '#ffffff'; c.fillRect(-ZF, FL - 1, ZF - ZB + 1, 71 - FL); c.globalCompositeOperation = 'source-over';
+    });
+    { const m = flat(TT, house, ZF - ZB + 1, 71 - FL); m.rotation.y = Math.PI / 2; m.position.set(XL, (FL - 1 + 70) / 2, (ZB - 1 + ZF) / 2); g.add(m); }
+    { const cl = ptex(o, 'tbl4-below-' + T, -180, -120, 260, FL, 512, (c) => { c.fillStyle = T === 'night' ? '#0a0f14' : '#4a5a3a'; c.fillRect(-180, -120, 440, 120 + FL); const R = rng(41); for (let i = 0; i < 160; i++) { c.fillStyle = T === 'night' ? `rgba(20,30,30,${.5 + R() * .4})` : `rgba(${50 + R() * 40 | 0},${80 + R() * 40 | 0},${40 + R() * 20 | 0},.8)`; ell(c, -180 + R() * 440, -120 + R() * (104 + FL + 16), 3 + R() * 8, 2 + R() * 5); } });
+      const m = flat(TT, cl, 440, 120 + FL); m.position.set(40, (-120 + FL) / 2, ZB - 2.4); g.add(m);
+      const m2 = flat(TT, cl, 440, 120 + FL); m2.rotation.y = -Math.PI / 2; m2.position.set(XR + 2.4, (-120 + FL) / 2, 40); g.add(m2); }
+    // the table of the hour
+    const china = M({ color: 0xf6f3ec, roughness: .3, clearcoat: .5 }), blue = M({ color: 0x2e5f9a, roughness: .3, clearcoat: .5 });
+    const bread = M({ map: canvasTex('crust', 128, 128, (c, W) => { const g2 = c.createLinearGradient(0, 0, 0, W); g2.addColorStop(0, '#c98a3e'); g2.addColorStop(.5, '#e0a95a'); g2.addColorStop(1, '#a8682a'); c.fillStyle = g2; c.fillRect(0, 0, W, W); c.fillStyle = 'rgba(110,60,20,.35)'; for (let i = 0; i < W; i += 9) c.fillRect(0, i, W, 3); }), roughness: .6, clearcoat: .25 });
+    const fruit = (G, x, y, z, r, col) => { const m = new TT.Mesh(new TT.SphereGeometry(r, SEG(o, 14), SEG(o, 10)), M({ color: col, roughness: .4, clearcoat: .3 })); m.scale.set(1.05, .95, 1); return at(G, m, x, y, z); };
+    if (T === 'morning') {
+      cupSaucer(o, g, -10.2, -3.4, .6, blue, 0x3b1e0e); cupSaucer(o, g, 11, 4.4, -2.4, blue, 0x3b1e0e);
+      plate(o, g, 10.8, -6.3, 2.4, china); croissant(o, g, 10.5, .2, -6.8, .4, bread); croissant(o, g, 11.5, .2, -5.6, 2.4, bread);
+      tumbler(o, g, -11.2, -6.2, [0xf2a12a, .78], 2.9, .78); tumbler(o, g, -8.8, -7.6, [0xf2a12a, .7], 2.9, .78);
+      { const Gb = grp(TT, g, 5.8, 0, -8.2); at(Gb, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), blue), 0, 0, 0); for (let i = 0; i < 9; i++) { const a = i * .7 - 2.8, st = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3, 3), stemM); st.rotation.z = a * .08; at(Gb, st, a * .18, 4.3, 0, 0, false); at(Gb, new TT.Mesh(lavG, lav), a * .3, 5.9, 0, 0, false); } }
+    } else if (T === 'day') {
+      { const Gj = grp(TT, g, -11, 0, -6.3); at(Gj, lathe(TT, [[0, 0], [1.4, 0], [1.5, .1], [1.6, 4.8], [1.9, 5.4], [1.5, 5.4], [1.45, 4.8], [1.35, .3], [0, .3]], SEG(o, 24), glassM()), 0, 0, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(1.4, 1.32, 3.8, SEG(o, 24)), M({ color: 0xf6e9a0, roughness: .05, clearcoat: 1, transparent: true, opacity: .6 })), 0, 2.2, 0, 0, false); ice(o, Gj, 0, 2.6, 0, 4);
+        const h = new TT.Mesh(new TT.TorusGeometry(1.1, .14, 6, 12, Math.PI), glassM()); h.rotation.z = -Math.PI / 2; at(Gj, h, 1.6, 3, 0, 0, false); }
+      [[-9.9, -3], [10.6, 3.8]].forEach(([x, z]) => { const Gt = tumbler(o, g, x, z, [0xf6e9a0, .72], 3.2, .8); ice(o, Gt, 0, 1.5, 0, 3); const sl = new TT.Mesh(new TT.CylinderGeometry(.6, .6, .1, 14, 1, false, 0, Math.PI), M({ color: 0xf2d24a, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, .2); at(Gt, sl, .7, 3.1, 0, 0, false); });
+      { const Gb = grp(TT, g, 10.7, 0, -6); Gb.scale.setScalar(.84); at(Gb, lathe(TT, [[0, 0], [1.6, 0], [2.8, 1], [3.1, 1.8], [2.9, 1.85], [2.4, 1], [0, .45]], SEG(o, 28), blue), 0, 0, 0);
+        [[0, 0, 0xf2cf3a], [1.2, .6, 0xf2cf3a], [-1.1, .7, 0xf28c28], [.3, -1.2, 0xf2cf3a], [-.6, -.9, 0xf28c28], [1, -.6, 0xe24a2a]].forEach(([x, z, col], i) => fruit(Gb, x, 1.4 + (i > 3 ? .5 : 0), z, .78, col)); }
+      at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), blue), 5.8, 0, -8.2);
+      for (let i = 0; i < 9; i++) { const a = i * .7 - 2.8, s = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3, 3), stemM); s.rotation.z = a * .08; at(g, s, 5.8 + a * .18, 4.3, -8.2, 0, false); at(g, new TT.Mesh(lavG, lav), 5.8 + a * .3, 5.9, -8.2, 0, false); }
+    } else if (T === 'evening') {
+      [[-9.9, -3.4], [10.2, 3.4]].forEach(([x, z]) => { const Gw = wineGlass(o, g, x, z, 0xf2641e); ice(o, Gw, 0, 3, 0, 2); const sl = new TT.Mesh(new TT.CylinderGeometry(.62, .62, .1, 14), M({ color: 0xf28a28, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, 0); at(Gw, sl, .4, 3.7, 0, 0, false); });
+      { const Gb = grp(TT, g, 10.8, 0, -6.2); at(Gb, lathe(TT, [[0, 0], [1, 0], [1.6, .9], [1.7, 1.2], [1.5, 1.2], [.9, .4], [0, .35]], SEG(o, 22), blue), 0, 0, 0); const ol = M({ color: 0x5a6a28, roughness: .3, clearcoat: .6 }); for (let i = 0; i < 10; i++) { const a = i * 2.3, r = .3 + (i % 3) * .3; const m = new TT.Mesh(new TT.SphereGeometry(.32, 8, 6), ol); m.scale.set(1, .8, 1.3); at(Gb, m, Math.cos(a) * r, .9 + (i > 6 ? .3 : 0), Math.sin(a) * r); } }
+      { const Gg = tumbler(o, g, -11, -6.3, null, 3.6, .8); for (let i = 0; i < 6; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.09, .09, 6.4, 5), bread); s.rotation.set(Math.sin(i * 2) * .18, 0, Math.cos(i * 2) * .18); at(Gg, s, Math.sin(i * 2) * .3, 3.4, Math.cos(i * 2) * .3); } }
+      bottle(o, g, 5.9, -8.2, 0x2a3a1e, '#f2ead6');
+    } else {
+      { const Gp = grp(TT, g, 10.8, 0, -5.6, .4); Gp.scale.setScalar(.88); at(Gp, new TT.Mesh(new TT.CylinderGeometry(3.3, 3.3, .35, SEG(o, 32)), M({ map: wood('tbl4-peel', '#c9a070', '#8a5e34', 256, 256, .7), roughness: .55 })), 0, .18, 0); at(Gp, new TT.Mesh(RB(1, .3, 4, .1, 1), M({ color: 0xb08a5a, roughness: .6 })), 0, .18, 4.6);
+        at(Gp, new TT.Mesh(new TT.CylinderGeometry(2.9, 2.9, .3, SEG(o, 32)), [M({ color: 0xd8a254, roughness: .6 }), M({ map: canvasTex('pizza', 256, 256, (c, W) => { c.fillStyle = '#d8a254'; c.fillRect(0, 0, W, W); c.fillStyle = '#c63a1e'; c.beginPath(); c.arc(W / 2, W / 2, W * .42, 0, 7); c.fill(); for (let i = 0; i < 14; i++) { c.fillStyle = '#f6ecd0'; c.beginPath(); c.arc(W / 2 + (Math.random() - .5) * W * .6, W / 2 + (Math.random() - .5) * W * .6, 10 + Math.random() * 12, 0, 7); c.fill(); } for (let i = 0; i < 8; i++) { c.fillStyle = '#2f7a2a'; c.beginPath(); c.ellipse(W / 2 + (Math.random() - .5) * W * .5, W / 2 + (Math.random() - .5) * W * .5, 9, 5, Math.random() * 3, 0, 7); c.fill(); } c.strokeStyle = 'rgba(90,40,10,.6)'; c.lineWidth = 2; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(W / 2, W / 2); const a = i * Math.PI / 4; c.lineTo(W / 2 + Math.cos(a) * W, W / 2 + Math.sin(a) * W); c.stroke(); c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 - Math.cos(a) * W, W / 2 - Math.sin(a) * W); c.stroke(); } }), roughness: .5, clearcoat: .3, bump: false }), M({ color: 0xc89048 })]), 0, .5, 0); }
+      bottle(o, g, -11, -6.5, 0x8aa070, '#f4eedc'); wineGlass(o, g, -9.7, -2.2, 0xf2e2a0); wineGlass(o, g, 9.9, 3.9, 0xf2e2a0);
+      { const Gl = grp(TT, g, -6, 0, -8.2); at(Gl, new TT.Mesh(RB(2, .3, 2, .08, 1), iron), 0, .15, 0); at(Gl, new TT.Mesh(RB(1.8, 3.8, 1.8, .05, 1), glassM()), 0, 2.2, 0, 0, false); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(Gl, new TT.Mesh(new TT.CylinderGeometry(.07, .07, 3.9, 4), iron), a * .9, 2.2, b * .9, 0, false)); at(Gl, new TT.Mesh(new TT.ConeGeometry(1.4, 1, 4), iron), 0, 4.6, 0, Math.PI / 4); candle(o, Gl, 0, 0, true, true).scale.setScalar(.55); }
+      candle(o, g, 5.8, -8.2, true, false);
+    }
+    // lights of the hour
+    scene.add(new TT.HemisphereLight(D.hemi[0], D.hemi[1], D.hemi[2]));
+    const key = dirLight(TT, D.key[0], D.key[1], D.key[2], 17); scene.add(key);
+    const fill = new TT.DirectionalLight(T === 'night' ? 0xffc890 : 0xffe4dc, T === 'night' ? .2 : .32); fill.position.set(5, 12, 16); scene.add(fill);
+    try { X.mergeStatic(g); } catch (e) {}
+    const env = { top: D.sky[1], bottom: T === 'night' ? '#141010' : '#f0d8c0', panels: [[-12, 3, -20, 10, 4, T === 'night' ? '#c8d0f0' : '#ffe8c8', T === 'night' ? .6 : 3], [0, 16, -8, 26, 8, D.sky[1], .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] };
+    return { bg: D.sky[1], exp: D.exp, board: D.board, boardCol: T === 'night' ? 0xffe6cc : 0xfff0e6, key, env };
   };
-
   TABLES[4].plain = { sun: 0xffd8b0, sunI: .74, hemi: [0xfbeee8, 0xffdcc4, .5], exp: .64 };
   TABLES[4].floor = (o) => ({ img: marbleTex(o).image, w: 46, h: 36, over: 'linear-gradient(160deg, rgba(255,196,156,.26), transparent 46%), linear-gradient(0deg, rgba(120,100,170,.10), transparent 40%), linear-gradient(rgba(255,252,248,.34), rgba(255,252,248,.34))' });
 
-  /* ---------- 5 · 夜の書斎: walnut desk, leather desk mat, a banker's lamp, a blurred bookshelf ---------- */
-  const walnut = o => woodTop('tbl5-walnut', '#80502f', '#3a1f10', sz(o, 2048), sz(o, 2048));
+  /* ---------- 5 · 夜の書斎: a matte-black desk with a leather mat, a banker's lamp, built-in walnut bookshelves, a mesh office chair ---------- */
   TABLES[5] = (o) => {
-    const { TT, g, scene } = o;
-    const MAT = .16;
-    const desk = M({ map: walnut(o), roughness: .4, clearcoat: .45, clearcoatRoughness: .3, bumpScale: .002 });
-    const t = new TT.Mesh(RB(48, 1.6, 36, .5, 3), desk); t.position.set(0, -MAT - .8, 5); t.receiveShadow = true; g.add(t);
+    const { TT, g, scene } = o, FL = -16, MAT = .16, Z0 = 1;
+    // the desk: matte black (a fine grain so it reads as a surface, not a hole), a modesty panel and two slab legs
+    const blackT = canvasTex('tbl5-black', sz(o, 512), sz(o, 512), (c, W) => { const img = c.createImageData(W, W), d = img.data, N = makeNoise(5); for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const k = (Math.random() - .5) * 6 + (N(x / 60, y / 8, 2) - .5) * 5, i = (y * W + x) * 4; d[i] = 26 + k; d[i + 1] = 26 + k; d[i + 2] = 27 + k; d[i + 3] = 255; } c.putImageData(img, 0, 0); });
+    const black = M({ map: blackT, roughness: .82, metalness: 0, bumpScale: .0015, sheen: new TT.Color(0x30302e) });
+    at(g, new TT.Mesh(RB(38, 1.3, 23, .3, 3), black), 0, -MAT - .65, Z0, 0, false).receiveShadow = true;
+    const brassEdge = M({ color: 0xb8924a, metalness: 1, roughness: .35 });
+    [[-1], [1]].forEach(([s]) => { at(g, new TT.Mesh(RB(1.6, FL * -1 - 1.5, 20, .2, 1), black), s * 17.4, (FL - MAT - 1.3) / 2, Z0); at(g, new TT.Mesh(RB(1.7, .25, 20.1, .05, 1), brassEdge), s * 17.4, FL + .12, Z0, 0, false); });
+    at(g, new TT.Mesh(RB(33, 7, .8, .1, 1), black), 0, -MAT - 4.8, Z0 - 9.6);
+    at(g, new TT.Mesh(RB(38.2, .12, .14, .03, 1), brassEdge), 0, -MAT - .7, Z0 + 11.52, 0, false);   // a thin brass inlay on the front edge
     // the desk mat: dark green leather, a tooled gold line and a stitched edge
     const LW = 24, LD = 16, LT = sz(o, 1024), LH = Math.round(LT * LD / LW);
     const lt = canvasTex('tbl5-leather', LT, LH, (c, W, H) => {
       const N = makeNoise(17), img = c.createImageData(W, H), d = img.data;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const p = N(x / 2.2, y / 2.2, 2), k = (p - .5) * 22 + (N(x / 70, y / 70, 3) - .5) * 14, i = (y * W + x) * 4;
-        d[i] = 30 + k * .5; d[i + 1] = 52 + k * .8; d[i + 2] = 40 + k * .6; d[i + 3] = 255;
-      }
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const p = N(x / 2.2, y / 2.2, 2), k = (p - .5) * 22 + (N(x / 70, y / 70, 3) - .5) * 14, i = (y * W + x) * 4; d[i] = 30 + k * .5; d[i + 1] = 52 + k * .8; d[i + 2] = 40 + k * .6; d[i + 3] = 255; }
       c.putImageData(img, 0, 0);
       const u = W / LW;
       c.strokeStyle = 'rgba(214,176,96,.85)'; c.lineWidth = Math.max(1, u * .07); c.strokeRect(u * 1.1, u * 1.1, W - u * 2.2, H - u * 2.2);
       c.strokeStyle = 'rgba(214,176,96,.5)'; c.lineWidth = Math.max(1, u * .035); c.strokeRect(u * 1.35, u * 1.35, W - u * 2.7, H - u * 2.7);
       c.strokeStyle = 'rgba(190,180,150,.55)'; c.lineWidth = Math.max(1, u * .05); c.setLineDash([u * .22, u * .16]); c.strokeRect(u * .4, u * .4, W - u * .8, H - u * .8);
     });
-    const mat = new TT.Mesh(RB(LW, MAT, LD, .07, 2), [M({ color: 0x1c2a20, roughness: .6 }), M({ color: 0x1c2a20, roughness: .6 }), M({ map: lt, roughness: .62, clearcoat: .15, clearcoatRoughness: .6, bumpScale: .004 }), M({ color: 0x1c2a20, roughness: .6 }), M({ color: 0x1c2a20, roughness: .6 }), M({ color: 0x1c2a20, roughness: .6 })]);
-    mat.position.set(0, -MAT / 2, 0); mat.receiveShadow = true; g.add(mat);
-    // banker's lamp (back left): brass base and stem, a green glass shade glowing underneath
-    const brass = M({ color: 0xc8a050, metalness: 1, roughness: .28 }), LX = -12.5, LZ = -8.5;
-    const base = new TT.Mesh(new TT.CylinderGeometry(1.5, 1.8, .45, 32), brass); base.position.set(LX, .22 - MAT, LZ); base.castShadow = true; g.add(base);
-    const stem = new TT.Mesh(new TT.CylinderGeometry(.16, .16, 3.4, 12), brass); stem.position.set(LX, 2.1 - MAT, LZ); g.add(stem);
-    const arm = new TT.Mesh(new TT.CylinderGeometry(.12, .12, 2.2, 10), brass); arm.rotation.x = Math.PI / 2; arm.position.set(LX, 3.75 - MAT, LZ + 1.1); g.add(arm);
+    const matE = M({ color: 0x1c2a20, roughness: .6 });
+    at(g, new TT.Mesh(RB(LW, MAT, LD, .07, 2), [matE, matE, M({ map: lt, roughness: .62, clearcoat: .15, clearcoatRoughness: .6, bumpScale: .004 }), matE, matE, matE]), 0, -MAT / 2, 0, 0, false).receiveShadow = true;
+    // the banker's lamp (back left): brass base and stem, a green glass shade glowing underneath
+    const brass = M({ color: 0xc8a050, metalness: 1, roughness: .28 }), LX = -13.6, LZ = -7.4;
+    at(g, lathe(TT, [[0, 0], [1.9, 0], [1.95, .15], [1.7, .4], [1.2, .55], [.3, .7], [.22, .8], [0, .8]], SEG(o, 32), brass), LX, -MAT, LZ);
+    at(g, new TT.Mesh(new TT.CylinderGeometry(.16, .16, 3.4, 12), brass), LX, 2.1 - MAT, LZ);
+    const arm = new TT.Mesh(new TT.CylinderGeometry(.12, .12, 2.2, 10), brass); arm.rotation.x = Math.PI / 2; at(g, arm, LX, 3.75 - MAT, LZ + 1.1);
+    const pull = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 1.8, 4), brass); at(g, pull, LX + 1.2, 2.9 - MAT, LZ + 2.9, 0, false); at(g, new TT.Mesh(new TT.SphereGeometry(.16, 8, 6), brass), LX + 1.2, 2 - MAT, LZ + 2.9, 0, false);
     const glass = M({ color: 0x0f5a2c, roughness: .15, clearcoat: 1, clearcoatRoughness: .05, emissive: new TT.Color(0x05200d) });
-    const shade = new TT.Mesh(new TT.CylinderGeometry(1.25, 1.25, 6.2, 28, 1, true, 0, Math.PI), glass); shade.rotation.set(0, 0, Math.PI / 2); shade.rotation.order = 'ZYX'; shade.position.set(LX, 4.1 - MAT, LZ + 2.1);
-    shade.material.side = TT.DoubleSide; shade.castShadow = true; g.add(shade);
-    const capM = M({ color: 0xc8a050, metalness: 1, roughness: .3 });
-    [-3.1, 3.1].forEach(dx => { const cp = new TT.Mesh(new TT.CircleGeometry(1.27, 20, 0, Math.PI), capM); cp.rotation.y = dx > 0 ? Math.PI / 2 : -Math.PI / 2; cp.rotation.order = 'YXZ'; cp.position.set(LX + dx, 4.1 - MAT, LZ + 2.1); g.add(cp); });
-    const glow = new TT.Mesh(new TT.PlaneGeometry(6, 2.2), new TT.MeshBasicMaterial({ color: 0xffd9a0, toneMapped: false })); glow.rotation.x = Math.PI / 2; glow.position.set(LX, 3.95 - MAT, LZ + 2.1); g.add(glow);
-    // a stack of books (back right)
-    [[0x5a2420, 7, 5, 1.1, .05], [0x23392c, 6.4, 4.6, .9, -.08], [0x6b4a24, 6.8, 4.8, 1, .12]].reduce((y, [col, w, d, h, r]) => {
-      const b = new TT.Mesh(RB(w, h, d, .08, 2), M({ color: col, roughness: .6 })); b.position.set(15, y + h / 2, -7.5); b.rotation.y = r; b.castShadow = b.receiveShadow = true; g.add(b);
-      const pg = new TT.Mesh(RB(w - .3, h - .25, d - .1, .04, 1), M({ color: 0xe8dcc0, roughness: .8 })); pg.position.set(15 + .17, y + h / 2, -7.5); pg.rotation.y = r; g.add(pg);
-      return y + h;
-    }, -MAT);
-    // an inkwell (cut glass, brass cap) and a fountain pen lying beside the mat
-    const ink = new TT.Mesh(RB(1.7, 1.3, 1.7, .22, 2), M({ color: 0x1c2430, roughness: .08, clearcoat: 1, clearcoatRoughness: .05, metalness: .1 })); ink.position.set(9.5, .65 - MAT, -10); ink.rotation.y = .5; ink.castShadow = true; g.add(ink);
-    const cap = new TT.Mesh(new TT.CylinderGeometry(.48, .52, .45, 18), brass); cap.position.set(9.5, 1.5 - MAT, -10); g.add(cap);
-    const pen = new TT.Mesh(new TT.CylinderGeometry(.16, .16, 4.4, 12), M({ color: 0x14100c, roughness: .2, clearcoat: 1 })); pen.rotation.set(0, .35, Math.PI / 2); pen.position.set(13.6, .17 - MAT, 1.5); pen.castShadow = true; g.add(pen);
-    const nib = new TT.Mesh(new TT.ConeGeometry(.16, .7, 12), brass); nib.rotation.set(0, .35, -Math.PI / 2); nib.position.set(13.6 + Math.cos(.35) * 2.55, .17 - MAT, 1.5 - Math.sin(.35) * 2.55); g.add(nib);
-    backdrop(o, 'tbl5-bd', (c, ppu) => {
-      const R = rng(23);
-      c.fillStyle = '#100a06'; c.fillRect(-60, -40, 120, 80);
-      // the bookshelf: dark shelves full of spines, in the warm falloff of the lamp
-      const SH = [10, 16.2, 23.4, 30.6, 37.8];
-      blur(c, 1.2 * ppu);
-      for (let s = 0; s < SH.length - 1; s++) {
-        let x = -58; const y0 = SH[s] + .6, top = SH[s + 1];
-        while (x < 58) {
-          const w = .55 + R() * .75, h = Math.min(top - y0 - .4, 3.6 + R() * 2.4), pal = ['#5c1f1a', '#2a3c2c', '#6d4a28', '#1e2a3c', '#7a6440', '#3d2a20', '#8a3a24', '#40463a'];
-          const lean = R() < .06 ? .25 : 0;
-          c.fillStyle = pal[R() * pal.length | 0]; c.save(); c.translate(x, y0); c.transform(1, 0, lean, 1, 0, 0); c.fillRect(0, 0, w, h);
-          if (R() > .4) { c.fillStyle = 'rgba(210,170,90,.55)'; c.fillRect(0, h * .78, w, .18); c.fillRect(0, h * .2, w, .12); }
-          c.restore(); x += w + (R() < .08 ? 1.5 + R() * 2 : .04);
-        }
-      }
-      c.fillStyle = '#2a1a0f'; SH.forEach(y => c.fillRect(-60, y, 120, .7));
-      c.fillStyle = '#1c1108'; [-40, -14, 12, 38].forEach(x => c.fillRect(x, 0, .9, 40));
-      // the lamp's warm light falls on the left of the shelf; the right sinks into the dark
-      blur(c, 0);
-      c.globalCompositeOperation = 'multiply';
-      c.fillStyle = rad(c, -16, 16, 46, [[0, '#ffffff'], [.45, '#c4a68e'], [1, '#3a2c26']]); c.fillRect(-60, -40, 120, 80);
-      c.globalCompositeOperation = 'source-over';
-      c.fillStyle = rad(c, -16, 14, 22, [[0, 'rgba(255,170,90,.22)'], [1, 'rgba(255,150,70,0)']]); c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = lin(c, 9, 4, [[0, 'rgba(10,6,4,0)'], [1, 'rgba(10,6,4,.9)']]); c.fillRect(-60, -40, 120, 49);
+    const shade = new TT.Mesh(new TT.CylinderGeometry(1.25, 1.25, 6.2, SEG(o, 28), 1, true, 0, Math.PI), glass); shade.rotation.set(0, 0, Math.PI / 2); shade.rotation.order = 'ZYX'; shade.material.side = TT.DoubleSide; at(g, shade, LX, 4.1 - MAT, LZ + 2.1);
+    [-3.1, 3.1].forEach(dx => { const cp = new TT.Mesh(new TT.CircleGeometry(1.27, 20, 0, Math.PI), brass); cp.rotation.y = dx > 0 ? Math.PI / 2 : -Math.PI / 2; cp.rotation.order = 'YXZ'; at(g, cp, LX + dx, 4.1 - MAT, LZ + 2.1, 0, false); });
+    const glow = new TT.Mesh(new TT.PlaneGeometry(6, 2.2), new TT.MeshBasicMaterial({ color: 0xffd9a0, toneMapped: false })); glow.rotation.x = Math.PI / 2; at(g, glow, LX, 3.95 - MAT, LZ + 2.1, 0, false);
+    // books: a real stack (covers, page block, rounded spine with gilt), an open book with reading glasses
+    book(o, g, 14.2, -MAT, -6.8, .06, 6.8, 5, 1.2, '#5a1e1c'); book(o, g, 14.3, -MAT + 1.2, -6.8, -.1, 6.2, 4.6, 1, '#1f3a2c'); book(o, g, 14, -MAT + 2.2, -6.9, .14, 6.6, 4.8, 1.1, '#2a2a3c'); book(o, g, 14.2, -MAT + 3.3, -6.8, -.04, 5.6, 4.2, .8, '#6b4a24', false);
+    { const Go = grp(TT, g, 13.8, -MAT, 3.4, -.25), cov = M({ map: X.cloth('bookcloth-#4a1a16', '#4a1a16', 22, 256), roughness: .55 });
+      at(Go, new TT.Mesh(RB(9.4, .18, 6.4, .06, 1), cov), 0, .09, 0);
+      const txt = canvasTex('tbl5-text', 256, 352, (c, W, H) => { c.fillStyle = '#f2ead6'; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(40,30,20,.55)'; for (let y = 34; y < H - 26; y += 10) { let x = 24; while (x < W - 24) { const w = 6 + Math.random() * 26; if (x + w > W - 24) break; c.fillRect(x, y, w, 3); x += w + 5; } } c.fillStyle = 'rgba(40,30,20,.7)'; c.fillRect(W / 2 - 30, 14, 60, 5); });
+      const pgM = M({ map: txt, roughness: .85, bump: false, side: TT.DoubleSide });
+      [-1, 1].forEach(s => { const geo = new TT.PlaneGeometry(4.4, 6, 12, 1), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), t = (x + 2.2) / 4.4, tt = s < 0 ? 1 - t : t; P.setZ(i, .62 * Math.sin(Math.min(1, tt * 1.8 + .05) * Math.PI / 2) * (1 - .22 * tt) - .5 * Math.max(0, tt - .9)); } geo.computeVertexNormals();
+        const m = new TT.Mesh(geo, pgM); m.rotation.x = -Math.PI / 2; at(Go, m, s * 2.3, .22, 0); at(Go, new TT.Mesh(RB(4.3, .3, 5.9, .05, 1), M({ map: pageTex(), roughness: .85, bump: false })), s * 2.3, .3, 0, 0, false); });
+      const gm = M({ color: 0xc8a050, metalness: 1, roughness: .25 }), lens = new TT.TorusGeometry(.7, .06, 6, 20); [-1, 1].forEach(s => { const l = new TT.Mesh(lens, gm); l.rotation.x = -Math.PI / 2 + .25; at(Go, l, s * .85 + 1.6, 1.15, .6, 0, false); const tp = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3.2, 4), gm); tp.rotation.x = Math.PI / 2 - .15; at(Go, tp, s * 1.5 + 1.6, 1.1, -1, 0, false); }); at(Go, new TT.Mesh(new TT.TorusGeometry(.24, .05, 4, 8, Math.PI), gm), 1.6, 1.3, .6, 0, false); }
+    // a fountain pen (black resin, gold clip and bands) by an inkwell (cut glass, brass cap)
+    { at(g, new TT.Mesh(RB(8.4, .3, 1.9, .3, 2), M({ map: X.cloth('tbl5-tray', '#2a1810', 10, 128), roughness: .55, clearcoat: .3 })), 3.6, -MAT + .15, -9.4, -.04);
+      const Gp = grp(TT, g, 3.9, -MAT + .3, -9.4, -.04), res = M({ color: 0x0c0c0e, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), gold = M({ color: 0xd8b060, metalness: 1, roughness: .22 });
+      const body = new TT.Mesh(new TT.CylinderGeometry(.24, .2, 3.4, SEG(o, 16)), res); body.rotation.z = Math.PI / 2; at(Gp, body, -.6, .24, 0);
+      const capm = new TT.Mesh(new TT.CylinderGeometry(.28, .26, 2.8, SEG(o, 16)), res); capm.rotation.z = Math.PI / 2; at(Gp, capm, 2.4, .28, 0);
+      [[.95, .06], [1.1, .05], [3.75, .05]].forEach(([x, w]) => { const b = new TT.Mesh(new TT.CylinderGeometry(.29, .29, w * 2, SEG(o, 16)), gold); b.rotation.z = Math.PI / 2; at(Gp, b, x, .28, 0, 0, false); });
+      const tipC = new TT.Mesh(new TT.SphereGeometry(.28, 12, 8), res); tipC.scale.set(.6, 1, 1); at(Gp, tipC, 3.8, .28, 0, 0, false);
+      const clip = new TT.Mesh(RB(2.1, .08, .16, .03, 1), gold); at(Gp, clip, 2.6, .58, 0, 0, false); at(Gp, new TT.Mesh(new TT.SphereGeometry(.12, 8, 6), gold), 1.6, .56, 0, 0, false);
+      const sec = new TT.Mesh(new TT.CylinderGeometry(.19, .15, .7, SEG(o, 16)), res); sec.rotation.z = Math.PI / 2; at(Gp, sec, -2.6, .2, 0, 0, false);
+      const nib = new TT.Mesh(new TT.ConeGeometry(.16, 1.2, 12, 1, false, 0, Math.PI), gold); nib.rotation.set(0, 0, Math.PI / 2); nib.scale.set(1, 1, .45); at(Gp, nib, -3.5, .2, 0, 0, false); }
+    { const Gi = grp(TT, g, 9.4, -MAT, -8.6, .5); at(Gi, new TT.Mesh(RB(2, 1.5, 2, .25, 2), M({ color: 0xcfd8e0, roughness: .03, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false })), 0, .75, 0, 0, false); at(Gi, new TT.Mesh(RB(1.6, .9, 1.6, .2, 2), M({ color: 0x0e1a3a, roughness: .1 })), 0, .5, 0, 0, false); at(Gi, lathe(TT, [[0, 0], [.55, 0], [.58, .3], [.4, .45], [.12, .6], [.18, .75], [0, .8]], SEG(o, 18), brass), 0, 1.5, 0); }
+    // a crystal decanter and a tumbler of whisky on a silver tray (left), a brass carriage clock (back)
+    { const Gt = grp(TT, g, -14.8, -MAT, -.6, .2), silver = M({ color: 0xd8dadc, metalness: 1, roughness: .2 });
+      at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .1], [3.7, .35], [3.5, .38], [3.3, .14], [0, .14]], SEG(o, 32), silver), 0, 0, 0);
+      const crys = M({ color: 0xe8f0f4, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .42, depthWrite: false, envMapIntensity: 1.6 });
+      at(Gt, lathe(TT, [[0, .14], [1.3, .14], [1.5, .4], [1.55, 2.6], [1.1, 3.6], [.4, 4.4], [.42, 5.2], [.5, 5.3], [0, 5.3]], SEG(o, 10), crys), -1, 0, -.6, 0, false);
+      at(Gt, lathe(TT, [[0, .22], [1.2, .22], [1.36, .42], [1.4, 1.9], [1.2, 2.25], [0, 2.25]], SEG(o, 10), M({ color: 0xb8641a, roughness: .04, clearcoat: 1, transparent: true, opacity: .55, depthWrite: false })), -1, 0, -.6, 0, false);
+      const st = new TT.Mesh(new TT.OctahedronGeometry(.62, 0), crys); st.scale.set(1, 1.2, 1); at(Gt, st, -1, 5.9, -.6, 0, false);
+      const tw = tumbler(o, Gt, 1.5, 1, [0x9a4e10, .35], 2.2, .85); tw.position.y = .14; }
+    { const Gc = grp(TT, g, -4.6, -MAT, -10.4, .1);
+      at(Gc, new TT.Mesh(RB(2.6, 3.4, 1.6, .15, 2), brass), 0, 1.9, 0); at(Gc, new TT.Mesh(RB(3, .3, 2, .1, 1), brass), 0, .15, 0); at(Gc, new TT.Mesh(new TT.TorusGeometry(.7, .09, 6, 16, Math.PI), brass), 0, 3.6, 0);
+      const face = canvasTex('tbl5-clock', 128, 128, (c, W) => { c.fillStyle = '#f6efe0'; c.fillRect(0, 0, W, W); c.strokeStyle = '#2a2420'; c.fillStyle = '#2a2420'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillRect(W / 2 + Math.cos(a) * 46 - 2, W / 2 + Math.sin(a) * 46 - 5, 4, 10); } c.lineWidth = 4; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 + 22, W / 2 - 18); c.stroke(); c.lineWidth = 2.5; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 - 6, W / 2 - 38); c.stroke(); });
+      const fc = new TT.Mesh(new TT.CircleGeometry(1, 24), M({ map: face, roughness: .3, clearcoat: .8, bump: false })); at(Gc, fc, 0, 2.1, .82, 0, false); }
+    // the room: chevron parquet and a Persian-style rug, dark green panelled walls, built-in walnut shelves behind the desk
+    const XL = -64, XR = 64, ZB = -46, ZF = 150, Y1 = 46;
+    const parq = canvasTex('tbl5-parquet', sz(o, 1024), sz(o, 1024), (c, W) => { const n = 8, cw = W / n, R = rng(14), step = cw * .42;
+      for (let i = 0; i < n; i++) for (let y = -cw; y < W + cw; y += step) { const k = R(), s = i % 2 ? 1 : -1; c.fillStyle = `rgb(${92 + k * 34 | 0},${58 + k * 22 | 0},${32 + k * 14 | 0})`; c.beginPath(); c.moveTo(i * cw, y); c.lineTo((i + 1) * cw, y + s * cw); c.lineTo((i + 1) * cw, y + s * cw + step); c.lineTo(i * cw, y + step); c.fill(); c.strokeStyle = 'rgba(20,10,4,.6)'; c.lineWidth = 1.5; c.stroke(); }
+      const img = c.getImageData(0, 0, W, W), d = img.data; for (let p = 0; p < d.length; p += 4) { const k = (Math.random() - .5) * 10; d[p] += k; d[p + 1] += k; d[p + 2] += k; } c.putImageData(img, 0, 0); });
+    const rugT = canvasTex('tbl5-rug', sz(o, 1024), sz(o, 768), (c, W, H) => { const u = W / 60;
+      c.fillStyle = '#4e1a1a'; c.fillRect(0, 0, W, H); c.fillStyle = '#26303e'; c.fillRect(u * 3, u * 3, W - u * 6, H - u * 6); c.fillStyle = '#5c1e1c'; c.fillRect(u * 6, u * 6, W - u * 12, H - u * 12);
+      c.strokeStyle = '#a88a52'; c.lineWidth = u * .3; [2, 3, 6].forEach(k => c.strokeRect(u * k, u * k, W - u * k * 2, H - u * k * 2));
+      for (let x = u * 4.5; x < W - u * 3; x += u * 3) [u * 4.5, H - u * 4.5].forEach(y => { c.fillStyle = '#b8a07a'; c.beginPath(); c.moveTo(x, y - u); c.lineTo(x + u, y); c.lineTo(x, y + u); c.lineTo(x - u, y); c.fill(); c.fillStyle = '#5c1e1c'; c.beginPath(); c.arc(x, y, u * .35, 0, 7); c.fill(); });
+      const cx = W / 2, cy = H / 2; [[15, '#26303e'], [12.4, '#8a7048'], [11.6, '#b8a684'], [8.6, '#4e1a1a'], [5.6, '#26303e'], [2.6, '#8a7048']].forEach(([r, col]) => { c.fillStyle = col; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, rr = (i % 2 ? .78 : 1) * r * u; c.lineTo(cx + Math.cos(a) * rr * 1.3, cy + Math.sin(a) * rr); } c.fill(); });
+      const R = rng(6); for (let i = 0; i < 70; i++) { const x = u * 8 + R() * (W - u * 16), y = u * 8 + R() * (H - u * 16); if (Math.hypot((x - cx) / 1.3, y - cy) < u * 18) continue; c.fillStyle = ['#8a7048', '#a8987a', '#26303e', '#34483e'][R() * 4 | 0]; c.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, rr = (k % 2 ? .45 : 1) * u * .8; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.fill(); }
+      const img = c.getImageData(0, 0, W, H), d = img.data; for (let p = 0; p < d.length; p += 4) { const k = (Math.random() - .5) * 22; d[p] += k; d[p + 1] += k * .8; d[p + 2] += k * .8; } c.putImageData(img, 0, 0); });
+    at(g, new TT.Mesh(RB(58, .25, 44, .1, 1), M({ map: rugT, roughness: .95, bumpScale: .012 })), 0, FL + .12, Z0 + 3, 0, false);
+    ao(o, 0, FL + .25, Z0, 42, 28, .45);
+    const panel = (c, a0, a1, lit) => { c.fillStyle = '#16231c'; c.fillRect(a0, FL - 2, a1 - a0, Y1 - FL + 4); for (let x = a0 + 2; x < a1 - 8; x += 13) { c.strokeStyle = 'rgba(70,100,80,.5)'; c.lineWidth = .4; c.strokeRect(x, FL + 2, 11, 12); c.strokeRect(x, FL + 17, 11, 22); c.strokeStyle = 'rgba(0,0,0,.5)'; c.strokeRect(x + .4, FL + 2.4, 11, 12); c.strokeRect(x + .4, FL + 17.4, 11, 22); } c.fillStyle = '#0e1612'; c.fillRect(a0, FL, a1 - a0, 1.6); c.fillStyle = 'rgba(200,170,100,.35)'; c.fillRect(a0, FL + 15.2, a1 - a0, .3); c.fillStyle = '#0e1612'; c.fillRect(a0, Y1 - 2.2, a1 - a0, 2.2); };
+    roomBox(o, { key: 'tbl5-room', xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
+      floor: M({ map: rep(TT, parq, 8, 12), roughness: .45, clearcoat: .3, clearcoatRoughness: .35, bumpScale: .002 }),
+      back: (c, ppu) => { panel(c, XL - 2, XR + 2);
+        c.fillStyle = rad(c, -20, 10, 70, [[0, 'rgba(255,190,110,.12)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(XL, FL, XR - XL, Y1 - FL); },
+      left: (c, ppu) => { panel(c, -ZF - 2, -ZB + 2);   // a tall window on the night city, velvet drapes
+        const W0 = 4, W1 = 26; c.fillStyle = lin(c, Y1 - 6, FL + 4, [[0, '#060a18'], [1, '#1a2240']]); c.fillRect(W0, FL + 4, W1 - W0, Y1 - 10 - FL);
+        blur(c, .5 * ppu); const R = rng(9); for (let i = 0; i < 70; i++) { const x = W0 + R() * (W1 - W0), y = FL + 5 + R() * 18; c.fillStyle = `rgba(255,${190 + R() * 50 | 0},${110 + R() * 80 | 0},${.4 + R() * .5})`; ell(c, x, y, .3 + R() * .6, .3 + R() * .6); } c.fillStyle = 'rgba(20,26,40,1)'; for (let i = 0; i < 9; i++) { const x = W0 + i * 2.6, h = 6 + R() * 12; c.fillRect(x, FL + 4, 2.2, h); } for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,214,150,${.4 + R() * .4})`; c.fillRect(W0 + R() * 22, FL + 5 + R() * 14, .3, .4); } blur(c, 0);
+        c.fillStyle = '#2a1e14'; [W0, (W0 + W1) / 2, W1].forEach(x => c.fillRect(x - .4, FL + 4, .8, Y1 - 10 - FL)); [FL + 4, 14, Y1 - 6].forEach(y => c.fillRect(W0, y - .4, W1 - W0, .8));
+        [[W0 - 7, W0 + 1], [W1 - 1, W1 + 7]].forEach(([a, b]) => { for (let x = a; x < b; x += .6) { const k = .5 + .5 * Math.sin((x - a) * 3.1); c.fillStyle = `rgb(${40 + k * 40 | 0},${18 + k * 14 | 0},${22 + k * 16 | 0})`; c.fillRect(x, FL, .62, Y1 - 3 - FL); } });
+        c.fillStyle = '#b8924a'; c.fillRect(W0 - 8, Y1 - 3.6, W1 - W0 + 16, .5); },
+      right: (c) => { panel(c, ZB - 2, ZF + 2);   // an oil painting under a picture light
+        const px = -20; c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(px + .6, 12.4, 22, 16); c.fillStyle = '#9a7a3a'; c.fillRect(px, 13, 22, 16); c.fillStyle = '#2a2a22'; c.fillRect(px + 1.2, 14.2, 19.6, 13.6);
+        c.fillStyle = lin(c, 27.8, 14.2, [[0, '#4a5a6a'], [.6, '#8a8060'], [1, '#3a3a28']]); c.fillRect(px + 1.2, 14.2, 19.6, 13.6); c.fillStyle = '#2f3a24'; c.beginPath(); c.moveTo(px + 1.2, 14.2); c.quadraticCurveTo(px + 8, 21, px + 20.8, 17); c.lineTo(px + 20.8, 14.2); c.fill(); c.fillStyle = 'rgba(255,230,180,.35)'; ell(c, px + 15, 24, 2, 1.4);
+        c.fillStyle = '#b8924a'; c.fillRect(px + 6, 30.2, 10, .7); c.fillStyle = rad(c, px + 11, 22, 14, [[0, 'rgba(255,214,150,.35)'], [1, 'rgba(255,214,150,0)']]); c.fillRect(px - 4, 10, 30, 22); },
+      ceil: (c) => { c.fillStyle = '#0c0a08'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); c.fillStyle = rad(c, -14, -6, 20, [[0, 'rgba(255,190,110,.12)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(XL, ZB, XR - XL, ZF - ZB); },
     });
-    // the lamp still carries the mood (and the one shadow), but the board itself gets an even warm light from above as well:
-    // a dark corner of the board is the one thing the study must never have
+    // the built-in bookshelves: walnut carcass, a warm light under each shelf, books in instanced rows (baked light, crisp — not blurred)
+    { const SX0 = -52, SX1 = 52, SZ = ZB + .2, DEP = 6.2, TOP = Y1 - 3, bays = 5, bw = (SX1 - SX0) / bays, lv = [FL + 3.4, FL + 12.4, FL + 21, FL + 29.6, FL + 38.2, FL + 46.8];
+      const wd = new TT.MeshBasicMaterial({ map: wood('tbl5-shelf', '#6a4026', '#2a160b', 256, 256, 1.2), color: 0x9a8070 }), bk = new TT.MeshBasicMaterial({ color: 0x1a0f08 });
+      at(g, new TT.Mesh(new TT.PlaneGeometry(SX1 - SX0, TOP - FL), bk), 0, (TOP + FL) / 2, SZ, 0, false);
+      for (let i = 0; i <= bays; i++) at(g, new TT.Mesh(RB(1.3, TOP - FL, DEP, .1, 1), wd), SX0 + i * bw, (TOP + FL) / 2, SZ + DEP / 2, 0, false);
+      at(g, new TT.Mesh(RB(SX1 - SX0 + 2, 2.2, DEP + .8, .2, 1), wd), 0, TOP + .6, SZ + DEP / 2 + .2, 0, false);
+      lv.forEach(y => { if (y > TOP - 2) return; at(g, new TT.Mesh(RB(SX1 - SX0, .9, DEP, .1, 1), wd), 0, y, SZ + DEP / 2, 0, false);
+        const led = new TT.Mesh(new TT.PlaneGeometry(SX1 - SX0 - 2, .12), new TT.MeshBasicMaterial({ color: 0xffd8a0, toneMapped: false })); led.rotation.x = Math.PI / 2; at(g, led, 0, y - .46, SZ + DEP - .6, 0, false); });
+      const spineT = canvasTex('tbl5-spine', 32, 128, (c, W, H) => { const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.4, '#e6e6e6'); gr.addColorStop(1, '#a8a8a8'); c.fillStyle = gr; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, H * .1, W, 3); c.fillRect(0, H * .86, W, 3); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(W * .2, H * .36, W * .6, H * .16); c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(0, 0, 3, H); c.fillRect(W - 3, 0, 3, H); });
+      const books = [], gilts = [], R = rng(23), pal = [[92, 31, 26], [42, 60, 44], [109, 74, 40], [30, 42, 60], [122, 100, 64], [61, 42, 32], [138, 58, 36], [64, 70, 58], [140, 120, 96], [28, 28, 30]];
+      for (let b = 0; b < bays; b++) for (let s = 0; s < lv.length - 1; s++) { const y0 = lv[s] + .45, gap = lv[s + 1] - .45 - y0; if (lv[s + 1] > TOP - 1) continue;
+        let x = SX0 + b * bw + .9; const xe = SX0 + (b + 1) * bw - .9, deco = R() < .22 ? x + R() * (bw - 8) : null;
+        while (x < xe) {
+          if (deco !== null && x >= deco && x < deco + 5.5) { if (R() < .5) { let yy = y0; for (let k = 0; k < 4; k++) { const h = .7 + R() * .4, w = 5 + R() * .6; books.push([x + 2.8, yy + h / 2, w, h, 4.6, 0, 0]); yy += h; } } x = deco + 6; continue; }
+          const w = .5 + R() * .7, h = Math.min(gap - .4, 5 + R() * 2.2), lean = R() < .05 && x + 2 < xe ? .2 : 0, d = 4.2 + R() * 1;
+          books.push([x + w / 2 + lean * h / 2, y0 + h / 2, w, h, d, lean, R()]); if (R() < .32) gilts.push([x + w / 2, y0 + h * (.78 + R() * .06), w * .9, y0 + h * .2]);
+          x += w + (R() < .06 ? .8 + R() * 1.2 : .02) + lean * h;
+        } }
+      const n = books.length, bm = new TT.InstancedMesh(new TT.BoxGeometry(1, 1, 1), [0, 0, 0, 0, 0, 0].map((_, i) => i === 4 ? new TT.MeshBasicMaterial({ map: spineT }) : new TT.MeshBasicMaterial({ color: i === 2 ? 0xd8ccb0 : 0x8a8070 })), n);
+      const mm = new TT.Matrix4(), q = new TT.Quaternion(), e = new TT.Euler(), cc = new TT.Color(), sc = new TT.Vector3(), pp = new TT.Vector3();
+      books.forEach(([x, y, w, h, d, lean, k], i) => { e.set(0, 0, -lean); q.setFromEuler(e); pp.set(x, y, SZ + d / 2 + .3); sc.set(w, h, d); mm.compose(pp, q, sc); bm.setMatrixAt(i, mm);
+        const p = pal[(k * pal.length) | 0] || pal[i % pal.length], lift = .72 + .5 * Math.max(0, 1 - Math.abs(x + 18) / 70); cc.setRGB(p[0] / 255 * lift, p[1] / 255 * lift, p[2] / 255 * lift); cc.convertSRGBToLinear(); bm.setColorAt(i, cc); });
+      bm.frustumCulled = false; g.add(bm);
+      const gm = new TT.InstancedMesh(new TT.PlaneGeometry(1, .14), new TT.MeshBasicMaterial({ color: 0xc8a050 }), gilts.length * 2);
+      gilts.forEach(([x, y, w, y2], i) => { [y, y2].forEach((yy, j) => { pp.set(x, yy, SZ + 5.5); sc.set(w, 1, 1); mm.compose(pp, q.set(0, 0, 0, 1), sc); gm.setMatrixAt(i * 2 + j, mm); }); });
+      gm.frustumCulled = false; g.add(gm);
+      // a few objects among the books: a brass globe, a bust-like vase, framed photographs
+      at(g, new TT.Mesh(new TT.SphereGeometry(2.2, 16, 12), new TT.MeshBasicMaterial({ map: canvasTex('tbl5-globe', 128, 64, (c, W, H) => { c.fillStyle = '#c8b48a'; c.fillRect(0, 0, W, H); c.fillStyle = '#8a6a3a'; [[20, 18, 14, 10], [44, 36, 10, 14], [70, 20, 16, 12], [96, 30, 12, 9], [108, 46, 8, 5]].forEach(([x, y, a, b]) => { c.beginPath(); c.ellipse(x, y, a, b, .4, 0, 7); c.fill(); }); c.strokeStyle = 'rgba(60,40,20,.3)'; for (let i = 0; i < W; i += 16) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, H); c.stroke(); } }), color: 0xb0a090 })), SX0 + 2 * bw + 5, lv[3] + 2.8, SZ + 3.2, 0, false);
+      at(g, lathe(TT, [[0, 0], [1, 0], [1.4, 1.2], [1, 3], [.5, 4], [.7, 4.6], [0, 4.6]], 12, new TT.MeshBasicMaterial({ color: 0x3a3a38 })), SX0 + 4 * bw - 4, lv[1] + .45, SZ + 3, 0, false);
+      [[SX0 + bw + 6, lv[2] + .45], [SX0 + 3 * bw + 10, lv[4] + .45]].forEach(([x, y]) => { at(g, new TT.Mesh(RB(3, 3.8, .3, .05, 1), new TT.MeshBasicMaterial({ color: 0x8a6a2a })), x, y + 1.9, SZ + 4, 0, false); at(g, new TT.Mesh(new TT.PlaneGeometry(2.3, 3), new TT.MeshBasicMaterial({ color: 0x6a645a })), x, y + 1.9, SZ + 4.16, 0, false); });
+    }
+    // a leather wingback by the window (left, far) and a floor-standing globe would crowd it — one chair is enough: the mesh office chair at the front left
+    { const G = grp(TT, g, -22.5, FL, 13.2, -.62), frame = M({ color: 0x1a1a1c, roughness: .42, metalness: .3 }), alu = M({ color: 0x8a8c90, metalness: 1, roughness: .32 });
+      const meshT = canvasTex('tbl5-mesh', 64, 64, (c, W) => { c.clearRect(0, 0, W, W); c.strokeStyle = 'rgba(14,14,16,.92)'; c.lineWidth = 2.2; for (let i = -W; i < W * 2; i += 6) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + W, W); c.stroke(); c.beginPath(); c.moveTo(i, W); c.lineTo(i + W, 0); c.stroke(); } });
+      meshT.wrapS = meshT.wrapT = TT.RepeatWrapping; meshT.repeat.set(5, 6);
+      const meshM = new TT.MeshStandardMaterial({ map: meshT, transparent: true, side: TT.DoubleSide, roughness: .8, depthWrite: false }), seatM = new TT.MeshStandardMaterial({ color: 0x1c1c1e, roughness: .85, side: TT.DoubleSide });
+      for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5, leg = new TT.Mesh(RB(6.4, .7, 1, .25, 1), alu); leg.rotation.set(0, -a, -.08); at(G, leg, Math.cos(a) * 3.2, 1.4, Math.sin(a) * 3.2); const cs = new TT.Mesh(new TT.CylinderGeometry(.55, .55, .5, 10), frame); cs.rotation.z = Math.PI / 2; cs.rotation.y = -a; at(G, cs, Math.cos(a) * 6.2, .55, Math.sin(a) * 6.2); }
+      at(G, new TT.Mesh(new TT.CylinderGeometry(.75, .75, 1.6, 12), alu), 0, 2, 0); at(G, new TT.Mesh(new TT.CylinderGeometry(.5, .5, 6, 12), frame), 0, 5.6, 0);
+      at(G, new TT.Mesh(RB(3.6, 1.2, 3.6, .3, 1), frame), 0, 8.8, 0);
+      const outline = (w0, w1, h, r) => { const s = new TT.Shape(); s.moveTo(-w0 / 2 + r, 0); s.lineTo(w0 / 2 - r, 0); s.quadraticCurveTo(w0 / 2, 0, w0 / 2, r); s.lineTo(w1 / 2, h - r); s.quadraticCurveTo(w1 / 2, h, w1 / 2 - r, h); s.lineTo(-w1 / 2 + r, h); s.quadraticCurveTo(-w1 / 2, h, -w1 / 2, h - r); s.lineTo(-w0 / 2, r); s.quadraticCurveTo(-w0 / 2, 0, -w0 / 2 + r, 0); return s; };
+      const bendG = (geo, k) => { const P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i); P.setZ(i, P.getZ(i) - k * x * x); } geo.computeVertexNormals(); return geo; };
+      { const seat = outline(9.4, 9.8, 9, 2.4), Gs = grp(TT, G, 0, 10, 4.5); const fr = new TT.Mesh(new TT.ShapeGeometry(seat, 8), seatM); fr.rotation.x = -Math.PI / 2; at(Gs, fr, 0, .1, 0, 0, false);
+        const rim = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(seat.getSpacedPoints(36).map(p => new TT.Vector3(p.x, 0, -p.y)), true), 48, .34, 6, true), frame); at(Gs, rim, 0, .1, 0); }
+      { const back = outline(7.6, 9.6, 13, 2.6), Gb = grp(TT, G, 0, 12.2, 4.8); Gb.rotation.x = .2;
+        at(Gb, new TT.Mesh(bendG(new TT.ShapeGeometry(back, 8), .02), meshM), 0, 0, 0, 0, false);
+        const pts = back.getSpacedPoints(48).map(p => new TT.Vector3(p.x, p.y, -.02 * p.x * p.x)); at(Gb, new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), 64, .36, 6, true), frame), 0, 0, 0);
+        at(G, new TT.Mesh(RB(1.6, 1.2, 6.2, .3, 1), frame), 0, 10.4, 2.2); }
+      [-1, 1].forEach(s => { at(G, new TT.Mesh(RB(.8, 6, 1, .2, 1), frame), s * 5.4, 13, .6); at(G, new TT.Mesh(RB(1.5, .7, 6, .3, 1), frame), s * 5.4, 16.2, -.6); at(G, new TT.Mesh(RB(1.2, .6, 3, .2, 1), frame), s * 4.8, 10.4, .6); }); }
+    ao(o, -22.5, FL, 13.2, 15, 15, .45);
+    try { X.mergeStatic(g); } catch (e) {}
+    // the lamp carries the mood (and the one shadow); the board also gets an even warm light from above: never a dark corner on the board
     scene.add(new TT.HemisphereLight(0x8a90b8, 0x2a170c, .3));
     const key = new TT.SpotLight(0xffc78a, 4.2, 80, 1.05, .95, .9); key.position.set(LX, 3.7 - MAT, LZ + 2.1); key.target.position.set(3, 0, 4); scene.add(key); scene.add(key.target);
-    const over = new TT.DirectionalLight(0xffdcb0, .38); over.position.set(-4, 30, 10); scene.add(over);
+    const over = new TT.DirectionalLight(0xffdcb0, .42); over.position.set(-4, 30, 10); scene.add(over);
     key.shadow.camera.near = 1; key.shadow.camera.far = 50; key.shadow.bias = -.0003;
     const pool = new TT.PointLight(0xffb060, .9, 16, 2); pool.position.set(LX, 3.1, LZ + 2.1); scene.add(pool);
-    const moon = new TT.DirectionalLight(0x8090c8, .16); moon.position.set(14, 12, 12); scene.add(moon);
-    return { bg: '#0d0906', exp: 1.02, minExp: .95, board: .5, boardCol: 0xffe6c4, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8]] } };
+    const shelfL = new TT.PointLight(0xffc890, .6, 70, 2); shelfL.position.set(0, 18, ZB + 14); scene.add(shelfL);   // the shelves' light falling on the chair, the desk's back edge
+    const moon = new TT.DirectionalLight(0x8090c8, .16); moon.position.set(-24, 12, 12); scene.add(moon);
+    return { bg: '#0d0906', exp: 1.02, minExp: .95, board: .5, boardCol: 0xffe6c4, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8], [0, 14, -20, 30, 10, '#ffcf90', .7]] } };
   };
   TABLES[5].plain = { sun: 0xffd8a8, sunI: .78, hemi: [0xd8d0e0, 0x3a2414, .46], exp: .68 };
   // the full games' pages (?skin=atlas): the floor is the desk mat's dark green leather (2026-11-06; was the walnut desk).
