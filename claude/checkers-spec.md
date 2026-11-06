@@ -1,0 +1,32 @@
+# チェッカー（checkers/）仕様
+
+URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html はトップの「旧バージョン」に残す
+
+## ルール
+- 英国式（English draughts / American checkers）。8×8の暗いマス32個、黒（先手）が上から下へ。
+- 取りは義務・連続跳びは最後まで・成ったら手番終了・キングは前後1マス。
+- 引き分け：同一局面3回、または取り・兵の前進なし80手（40手ずつ）。合意の引き分けはオンラインのみ。
+
+## エンジン（engine.c → engine.wasm / engine_simd.wasm）
+- 盤は32ビットのビットボード。手の内部表現 m = 元 + 32×先 + 1024×取った駒のマスク（wasm 入出力は (元|先<<5, マスク)）。
+- PVS＋aspiration、置換表、killer/history、LMR、1手しかない手の延長、末端は取りの解消まで読む。
+- 評価：128→64→32→1 の小さなNN（差分更新のアキュムレータ、eval = 出力×60）。弱いレベル（15級〜5級）は手作り評価。
+- 終盤DB：4駒以下の勝ち負け引き分け（egdb4.bin.gz 517KB）を読み込む。
+- ブラウザがSIMD対応なら engine_simd.wasm（約1.8倍速）。ビルドは tools/build.sh。
+- 学習：tools/native.c gen の自己対局（約31万局面、探索値と勝敗の混合）→ tools/train.py（numpy）。
+
+## AIの強さ（20段階）
+- 15級〜1級、初段〜五段。engine.js の LEVELS と tools/native.c の LVS を同じ値に保つ（native の lv コマンドで隣接レベルを対戦させて調整）。
+- 15級〜5級：手作り評価・固定深さ＋ノイズ＋一定確率の悪手。4級〜三段：学習評価・1手の局面数で区切る（2千〜50万、端末の速さによらない）。四段・五段：1秒／2.5秒、序盤8手は互角の手からランダム。
+- 隣接レベルの対戦結果と RT_LV（レート基準：15級450、+125ずつ、1級2090、五段2350）は checkers/MODEL_CARD.md。
+
+## オンライン
+- Firebase（匿名＋Googleログイン、Realtime Database）。Firebaseプロジェクト checkers-multiplay（asia-southeast1）。database.rules.json の v は ^(english)$。
+- 1手 = K64 3文字（元・先・同じ元/先の合法手の中の番号）。?mock=1 で localStorage のモック（2タブで対戦テスト可）。
+
+## データ
+- lessons.json（13ステップ×5問）、openings.json（19の定跡、学習＋実戦練習）、puzzles.json（PZBook v2、10テーマ×50＝500問、今日の一問）。
+- 生成：tools/gen_lessons.js、tools/gen_openings.js、tools/pzgen.c → tools/build_puzzles.py。文言は tools/i18n/*.json → tools/build_i18n.py → i18n.js（10言語）。
+
+## 保存キー
+- aicoding-checkers（設定）、-puzzles、-lessons、-open、-daily、-rated、-rules、aicoding-checkers-rules-seen、checkers-online-*。
