@@ -1579,7 +1579,9 @@
   let checkUntil = 0, wasHidden = false;
   let parked = true;   // the loop has stopped: its first frame again starts the clock afresh (no jump for the time it slept)
   function wake() { if (!rafId && R && !document.hidden && !blurred) rafId = requestAnimationFrame(loop); }
-  function poke(ms = 250) { checkUntil = Math.max(checkUntil, performance.now() + ms); wake(); }
+  // (quiet — Historia's page over the room on phones — : the page's own class changes, animations and scrolling are not looked at;
+  // Historia announces every change of the stage itself — setInset / play / museum kick)
+  function poke(ms = 250) { if (quietOn) return; checkUntil = Math.max(checkUntil, performance.now() + ms); wake(); }
   let hooked = false;
   function wakeHooks() {
     if (hooked) return; hooked = true;
@@ -1598,7 +1600,8 @@
     ['scroll', 'load'].forEach(t => document.addEventListener(t, pk, { capture: true, passive: true }));
     // input: the skin pages kick for what they change themselves (a look is enough); the 3D room (portal, Historia, a game or the rules
     // on the table) draws a moment after it too — a safety net for a handler that changes the scene without a kick
-    const inp = () => { if (alignFn) poke(); else if (R && el && el.offsetParent) kick(400); else poke(); };
+    const inp = e => { if (quietOn && !(el && el.parentNode && e && el.parentNode.contains(e.target))) return;   // (quiet: a tap or a scroll on Historia's page is no reason to redraw the room)
+      if (alignFn) poke(); else if (R && el && el.offsetParent) kick(400); else poke(); };
     ['pointerdown', 'pointerup', 'keydown', 'wheel'].forEach(t => addEventListener(t, inp, { capture: true, passive: true }));
     if (window.visualViewport) visualViewport.addEventListener('resize', () => kick(300));
     if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', pk);
