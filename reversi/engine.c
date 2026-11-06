@@ -232,20 +232,63 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
 }
 static int searchE(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) { initIdx(ply, P, O); return searchI(P, O, depth, alpha, beta, ply, passed); }
 
+
+// ------------------------------------------------------------------ stability (endgame cutoff): discs of X that can never be flipped
+#define COLA 0x0101010101010101ULL
+#define COLH 0x8080808080808080ULL
+#define ROW1 0x00000000000000FFULL
+#define ROW8 0xFF00000000000000ULL
+static u64 DIAG7M[15], DIAG9M[15];
+static void initDiag(void) {
+  for (int s = 0; s < 64; s++) { int r = s >> 3, c = s & 7; DIAG9M[r - c + 7] |= 1ULL << s; DIAG7M[r + c] |= 1ULL << s; }
+}
+static u64 stableOf(u64 X, u64 filled) {
+  u64 fh = 0, fv = 0, f7 = 0, f9 = 0;
+  for (int r = 0; r < 8; r++) { u64 m = ROW1 << (8 * r); if ((filled & m) == m) fh |= m; }
+  for (int c = 0; c < 8; c++) { u64 m = COLA << c; if ((filled & m) == m) fv |= m; }
+  for (int d = 0; d < 15; d++) { if ((filled & DIAG7M[d]) == DIAG7M[d]) f7 |= DIAG7M[d]; if ((filled & DIAG9M[d]) == DIAG9M[d]) f9 |= DIAG9M[d]; }
+  const u64 B = ROW1 | ROW8 | COLA | COLH;
+  u64 st = 0, prev;
+  do {
+    prev = st;
+    u64 sh = fh | COLA | COLH | ((st >> 1) & ~COLH) | ((st << 1) & ~COLA);
+    u64 sv = fv | ROW1 | ROW8 | (st >> 8) | (st << 8);
+    u64 s9 = f9 | B | ((st >> 9) & ~COLH) | ((st << 9) & ~COLA);
+    u64 s7 = f7 | B | ((st >> 7) & ~COLA) | ((st << 7) & ~COLH);
+    st |= X & sh & sv & s9 & s7;
+  } while (st != prev);
+  return st;
+}
+
 // ------------------------------------------------------------------ endgame solver
 static i8 QUAD[64];
 static const u64 QMASK[4] = { 0x0F0F0F0FULL, 0xF0F0F0F0ULL, 0x0F0F0F0FULL << 32, 0xF0F0F0F0ULL << 32 };
+static int solveLast1(u64 P, u64 O) {   // one empty square: play it if possible (else the opponent, else nobody)
+  ++nodes;
+  const u64 E = ~(P | O); const int s = lsb(E);
+  u64 f = flips(s, P, O);
+  if (f) return pc(P) - pc(O) + 1 + 2 * pc(f);
+  ++nodes;   // (the pass node of the generic solver)
+  f = flips(s, O, P);
+  if (f) return pc(P) - pc(O) - 1 - 2 * pc(f);
+  int d = pc(P) - pc(O); return d > 0 ? d + 1 : d < 0 ? d - 1 : 0;
+}
+static u64 NEIGH[64];   // the 8 squares around each square
 static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed) {
+  if (empties == 1 && !passed) return solveLast1(P, O);
   ++nodes;
   const u64 E = ~(P | O); int best = -99, moved = 0;
+  u64 odd = 0;   // the empty squares in quadrants with an odd number of empties (searched first)
+  for (int q = 0; q < 4; q++) if (pc(E & QMASK[q]) & 1) odd |= QMASK[q];
+  const u64 cand = E & neighbours(O);   // a move must touch an opponent disc
   for (int pass = 0; pass < 2; pass++) {
-    for (u64 x = E; x; x &= x - 1) {
-      int s = lsb(x), odd = (pc(E & QMASK[QUAD[s]]) & 1) == 1;
-      if ((pass == 0) != odd) continue;
+    for (u64 x = cand & (pass ? ~odd : odd); x; x &= x - 1) {
+      int s = lsb(x);
       u64 f = flips(s, P, O); if (!f) continue;
       moved = 1;
       u64 nP = P | f | (1ULL << s), nO = O & ~f; int v;
       if (empties == 1) v = discDiff(nP, nO);
+      else if (empties == 2) v = -solveLast1(nO, nP);
       else v = -solveSmall(nO, nP, -beta, -alpha, empties - 1, 0);
       if (v > best) { best = v; if (v > alpha) { alpha = v; if (alpha >= beta) return best; } }
     }
@@ -256,6 +299,8 @@ static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed
   }
   return best;
 }
+static int STAB_ON = 1, STAB_MIN = 0;
+EXPORT(set_stab) void set_stab(int on, int mn) { STAB_ON = on; STAB_MIN = mn; }
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= 6) return solveSmall(P, O, alpha, beta, empties, passed);
   if (((long long)(++nodes) & 16383) == 0) { checkTime(); if (aborted) return 0; }
@@ -271,6 +316,11 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
       if (hi < beta) beta = hi;
       ttMove = E_M[ti];
     }
+  }
+  if (STAB_ON && alpha >= STAB_MIN) {   // the opponent's stable discs bound our score from above
+    int bound = 64 - 2 * pc(stableOf(O, P | O));
+    if (bound <= alpha) return bound;
+    if (bound < beta) beta = bound;
   }
   u64 m = genMoves(P, O);
   if (!m) {
@@ -326,7 +376,7 @@ EXPORT(search) int search(u32 pl, u32 ph, u32 ol, u32 oh, int depth, int alpha, 
 EXPORT(solve_) int solve_(u32 pl, u32 ph, u32 ol, u32 oh, int alpha, int beta, int empties, int ply, int passed) { return solve(B(pl, ph), B(ol, oh), alpha, beta, empties, ply, passed); }
 EXPORT(evaluate) int evaluate(u32 pl, u32 ph, u32 ol, u32 oh) { return evalFull(B(pl, ph), B(ol, oh)); }
 EXPORT(init) void init(void) {
-  initRays();
+  initRays(); initDiag();
   for (int s = 0; s < 64; s++) QUAD[s] = (i8)(((s >> 5) << 1) | ((s & 7) >> 2));
   clear_tt();
 }
