@@ -9,7 +9,7 @@ let SPD = null;                                  // speed module, once its data 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 const STORE = 'mainichi-sudoku-v1';
 const FIRST_DAY = '2026-10-01';
 const DIFFS = ['e', 'm', 'h'];
@@ -76,7 +76,7 @@ function persist(now) {
 /* ================= i18n ================= */
 let LANG = 'ja';
 {
-  const nav = (navigator.language || 'ja').slice(0, 2);
+  const nl = navigator.language || 'ja', nav = /^zh-(TW|HK|MO|Hant)/i.test(nl) ? 'zh-TW' : nl.slice(0, 2);
   if (SUPPORTED.includes(nav)) LANG = nav;
   try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
   const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) LANG = q;
@@ -85,7 +85,7 @@ function t(k, p) {
   const L = window.I18N[LANG] || {}, s0 = L[k] ?? window.I18N.en[k] ?? window.I18N.ja[k] ?? k;
   return p ? String(s0).replace(/\{(\w+)\}/g, (_, x) => (p[x] ?? '')) : s0;
 }
-const locale = () => ({ zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', hi: 'hi-IN', ar: 'ar' }[LANG] || LANG);
+const locale = () => ({ zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', hi: 'hi-IN', ar: 'ar', ru: 'ru-RU', tr: 'tr-TR', id: 'id-ID' }[LANG] || LANG);
 const fmtN = n => Math.round(n).toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : locale());
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
@@ -1854,7 +1854,7 @@ function hbList() {
 function openSettings() {
   const items = [['clean', 'set.clean'], ['hl', 'set.hl'], ['timer', 'set.timer'], ['flick', 'set.flick'], ['sound', 'set.sound'], ['vib', 'set.vib'], ['motion', 'set.motion']];
   const tods = ['auto', 'day', 'eve', 'night'];
-  const LN = { ja: '日本語', en: 'English', zh: '中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', hi: 'हिन्दी', ar: 'العربية' };
+  const LN = { ja: '日本語', en: 'English', zh: '简体中文', 'zh-TW': '繁體中文', ko: '한국어', es: 'Español', fr: 'Français', pt: 'Português', de: 'Deutsch', ru: 'Русский', tr: 'Türkçe', id: 'Bahasa Indonesia', hi: 'हिन्दी', ar: 'العربية' };
   $('#setBody').innerHTML = `<label class="set langset"><span class="lbl"><b>${esc(t('set.lang'))}</b></span><select id="langSel" aria-label="Language">${Object.keys(LN).map(l => `<option value="${l}" ${l === LANG ? 'selected' : ''}>${LN[l]}</option>`).join('')}</select></label>`
     + `<div class="set" style="flex-wrap:wrap"><span class="lbl"><b>${esc(t('set.tod'))}</b><small>${esc(t('set.tod.d'))}</small></span><span class="seg" id="todSeg">${tods.map(k => `<button data-k="${k}" class="${DB.set.tod === k ? 'on' : ''}">${esc(t('tod.' + k))}</button>`).join('')}</span></div>`
     + `<div class="set hbset"><span class="lbl"><b>${esc(t('hb.title'))}</b><small>${esc(t('hb.desc'))}${SPD ? ' ' + esc(t('hb.spdesc')) : ''}</small></span><div class="hbgrid">${hbList().map(k => { const ok = !k || hbOK(k), cur = DB.set[hbKey()] || '', on = cur === k && ok || (!k && cur && !hbOK(cur)); return `<button class="hbt ${on ? 'on' : ''} ${ok ? '' : 'lock'}" data-hb="${k}" ${ok ? '' : 'disabled'} title="${esc(bgName(k) + (ok ? '' : ' · ' + (isSpBg(k) ? SPD.bgCond(k) : t('hb.lock'))))}">${BG.svg(k || (MODE === 'speed' ? 'speedway' : 'daily'), 160, 100, k ? '' : 'm')}${ok ? '' : '<i>🔒</i>'}<span>${esc(bgName(k))}</span></button>`; }).join('')}</div></div>`
