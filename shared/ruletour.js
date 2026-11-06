@@ -44,6 +44,10 @@ const S = {
   de: { prev: 'Zurück', next: 'Weiter', close: 'Schließen', again: 'Nochmal', watch: 'Erst zuschauen…', play: 'Eine Partie spielen', lessons: 'Zu den Lektionen', finT: 'Jetzt kannst du spielen!', finB: 'Das sind alle Regeln. Probiere zuerst eine Partie gegen eine leichte KI. Tipps und Strategie gibt es in den Lektionen.', step: 'Schritt {n}', ok: 'Richtig!', ng: 'Nicht ganz' },
   hi: { prev: 'पीछे', next: 'आगे', close: 'बंद करें', again: 'फिर से', watch: 'पहले देखिए…', play: 'एक खेल खेलें', lessons: 'पाठों पर जाएँ', finT: 'अब आप खेल सकते हैं!', finB: 'नियम बस इतने ही हैं। पहले आसान AI के साथ खेलकर देखें। तरकीबें और रणनीति पाठों में हैं।', step: 'चरण {n}', ok: 'सही!', ng: 'सही नहीं' },
   ar: { prev: 'السابق', next: 'التالي', close: 'إغلاق', again: 'أعد المحاولة', watch: 'شاهد أولاً…', play: 'العب مباراة', lessons: 'إلى الدروس', finT: 'أنت جاهز للعب!', finB: 'هذه كل القواعد. جرّب أولاً مباراة ضد ذكاء اصطناعي سهل. النصائح والاستراتيجية في الدروس.', step: 'الخطوة {n}', ok: 'صحيح!', ng: 'ليس تماماً' },
+  ru: { prev: 'Назад', next: 'Далее', close: 'Закрыть', again: 'Ещё раз', watch: 'Сначала посмотреть…', play: 'Сыграть партию', lessons: 'К урокам', finT: 'Вы готовы играть!', finB: 'Это все правила. Сначала сыграйте со слабым ИИ. Советы и стратегия — в уроках.', step: 'Шаг {n}', ok: 'Верно!', ng: 'Не совсем' },
+  'zh-TW': { prev: '上一步', next: '下一步', close: '關閉', again: '再試一次', watch: '先看示範…', play: '開始對局', lessons: '前往課程', finT: '可以開始玩了！', finB: '規則就是這些。先和簡單的 AI 下一局吧。訣竅與戰術都在課程裡。', step: '第 {n} 步', ok: '答對了！', ng: '差一點' },
+  id: { prev: 'Kembali', next: 'Lanjut', close: 'Tutup', again: 'Coba lagi', watch: 'Tonton dulu…', play: 'Mulai bermain', lessons: 'Ke pelajaran', finT: 'Kamu siap bermain!', finB: 'Itulah semua aturannya. Coba main dulu melawan AI yang mudah. Tips dan strategi ada di pelajaran.', step: 'Langkah {n}', ok: 'Benar!', ng: 'Belum tepat' },
+  tr: { prev: 'Geri', next: 'İleri', close: 'Kapat', again: 'Tekrar dene', watch: 'Önce izle…', play: 'Oyun oyna', lessons: 'Derslere git', finT: 'Oynamaya hazırsın!', finB: 'Kuralların hepsi bu kadar. Önce kolay bir yapay zekâya karşı oyna. İpuçları ve strateji derslerde.', step: 'Adım {n}', ok: 'Doğru!', ng: 'Tam değil' },
 };
 const IL = {
   ja: { hist: '歴史', win: '勝ち方', cult: '文化', origin: '発祥', players: '人数', time: '1局の目安' },
@@ -56,6 +60,10 @@ const IL = {
   de: { hist: 'Geschichte', win: 'So gewinnt man', cult: 'Kultur', origin: 'Herkunft', players: 'Spieler', time: 'Spieldauer' },
   hi: { hist: 'इतिहास', win: 'जीत कैसे', cult: 'संस्कृति', origin: 'उद्गम', players: 'खिलाड़ी', time: 'खेल की अवधि' },
   ar: { hist: 'التاريخ', win: 'طريقة الفوز', cult: 'الثقافة', origin: 'الأصل', players: 'اللاعبون', time: 'مدة اللعب' },
+  ru: { hist: 'История', win: 'Как победить', cult: 'Культура', origin: 'Происхождение', players: 'Игроки', time: 'Длительность' },
+  'zh-TW': { hist: '歷史', win: '勝利條件', cult: '文化', origin: '起源', players: '人數', time: '對局時間' },
+  id: { hist: 'Sejarah', win: 'Cara menang', cult: 'Budaya', origin: 'Asal', players: 'Pemain', time: 'Durasi' },
+  tr: { hist: 'Tarih', win: 'Nasıl kazanılır', cult: 'Kültür', origin: 'Köken', players: 'Oyuncular', time: 'Süre' },
 };
 const CSS = `
 /* layout (common spec): step numbers on top, the page in the middle, Back / Close / Next fixed at the bottom of the dialog.

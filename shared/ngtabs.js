@@ -16,9 +16,9 @@
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
 const L = {
-  game: { ja: 'ゲーム', en: 'Game', zh: '游戏', ko: '게임', es: 'Juego', fr: 'Jeu', pt: 'Jogo', de: 'Spiel', hi: 'खेल', ar: 'اللعبة' },
-  rules: { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد' },
-  design: { ja: 'デザイン', en: 'Design', zh: '外观', ko: '디자인', es: 'Diseño', fr: 'Apparence', pt: 'Visual', de: 'Design', hi: 'डिज़ाइन', ar: 'التصميم' },
+  game: { ja: 'ゲーム', en: 'Game', zh: '游戏', ko: '게임', es: 'Juego', fr: 'Jeu', pt: 'Jogo', de: 'Spiel', hi: 'खेल', ar: 'اللعبة', ru: 'Партия', 'zh-TW': '對局', id: 'Permainan', tr: 'Oyun' },
+  rules: { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد', ru: 'Правила', 'zh-TW': '規則', id: 'Aturan', tr: 'Kurallar' },
+  design: { ja: 'デザイン', en: 'Design', zh: '外观', ko: '디자인', es: 'Diseño', fr: 'Apparence', pt: 'Visual', de: 'Design', hi: 'डिज़ाइन', ar: 'التصميم', ru: 'Оформление', 'zh-TW': '外觀', id: 'Tampilan', tr: 'Görünüm' },
 };
 const CSS = `
 .ngt-bar{display:none}

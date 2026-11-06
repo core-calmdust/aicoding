@@ -20,6 +20,10 @@ const T = {
   de: { aiYes: 'Die KI hat das Remis angenommen', aiNo: 'Die KI hat das Remis abgelehnt (sie will weiterspielen)', wait: 'Spiele noch ein paar Züge, bevor du erneut anbietest', btn: 'Remis', q: 'Remis vereinbaren?', sub: 'Beide Spieler beenden die Partie einvernehmlich mit Remis.', agreed: 'Remis durch Vereinbarung' },
   hi: { aiYes: 'AI ड्रॉ के लिए सहमत हुआ', aiNo: 'AI ने ड्रॉ अस्वीकार किया (वह खेलना जारी रखना चाहता है)', wait: 'फिर से प्रस्ताव देने से पहले कुछ चालें और खेलें', btn: 'ड्रॉ', q: 'क्या ड्रॉ पर सहमत हैं?', sub: 'दोनों खिलाड़ी सहमति से यह खेल ड्रॉ पर समाप्त करते हैं।', agreed: 'सहमति से ड्रॉ' },
   ar: { aiYes: 'وافق الذكاء الاصطناعي على التعادل', aiNo: 'رفض الذكاء الاصطناعي التعادل (يريد مواصلة اللعب)', wait: 'العب بضع نقلات أخرى قبل أن تعرض التعادل مجددًا', btn: 'تعادل', q: 'هل تتفقان على التعادل؟', sub: 'يتفق اللاعبان على إنهاء المباراة بالتعادل.', agreed: 'تعادل بالاتفاق' },
+  ru: { aiYes: 'ИИ согласился на ничью', aiNo: 'ИИ отказался от ничьей (хочет играть дальше)', wait: 'Сделайте ещё несколько ходов, прежде чем предлагать снова', btn: 'Ничья', q: 'Согласиться на ничью?', sub: 'Оба игрока соглашаются завершить партию вничью.', agreed: 'Ничья по соглашению' },
+  'zh-TW': { aiYes: 'AI 同意和棋', aiNo: 'AI 拒絕和棋（還想繼續下）', wait: '請再下幾步後再提和', btn: '和棋', q: '同意和棋嗎？', sub: '雙方同意，本局以和棋結束。', agreed: '雙方同意和棋' },
+  id: { aiYes: 'AI setuju seri', aiNo: 'AI menolak seri (masih ingin bermain)', wait: 'Mainkan beberapa langkah lagi sebelum menawarkan lagi', btn: 'Seri', q: 'Setuju seri?', sub: 'Kedua pemain sepakat mengakhiri permainan ini dengan seri.', agreed: 'Seri atas kesepakatan' },
+  tr: { aiYes: 'Yapay zekâ beraberliği kabul etti', aiNo: 'Yapay zekâ beraberliği reddetti (oynamaya devam etmek istiyor)', wait: 'Tekrar teklif etmeden önce birkaç hamle daha oyna', btn: 'Beraberlik', q: 'Beraberliği kabul ediyor musunuz?', sub: 'İki oyuncu da oyunu berabere bitirmeyi kabul eder.', agreed: 'Anlaşmayla berabere' },
 };
 const icon = '<svg viewBox="0 0 24 24"><path d="M5 9h14M5 15h14"/></svg>';
 function tx(k, lang) { const L = T[lang] || T[document.documentElement.lang] || T.en; return L[k] != null ? L[k] : T.en[k]; }

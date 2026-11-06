@@ -19,6 +19,10 @@ const T = {
   de: { btn: 'Aufgeben', q: 'Partie aufgeben?', sub: 'Die Partie endet als Niederlage für dich.', yes: 'Ja', no: 'Nein' },
   hi: { btn: 'हार मानें', q: 'क्या आप हार मानना चाहते हैं?', sub: 'यह खेल आपकी हार के रूप में समाप्त होगा।', yes: 'हाँ', no: 'नहीं' },
   ar: { btn: 'استسلام', q: 'هل تريد الاستسلام؟', sub: 'ستنتهي المباراة بخسارتك.', yes: 'نعم', no: 'لا' },
+  ru: { btn: 'Сдаться', q: 'Сдаться в этой партии?', sub: 'Партия будет засчитана вам как поражение.', yes: 'Да', no: 'Нет' },
+  'zh-TW': { btn: '認輸', q: '要認輸嗎？', sub: '本局將以你的落敗結束。', yes: '是', no: '否' },
+  id: { btn: 'Menyerah', q: 'Menyerah di permainan ini?', sub: 'Permainan akan berakhir sebagai kekalahanmu.', yes: 'Ya', no: 'Tidak' },
+  tr: { btn: 'Pes et', q: 'Bu oyunda pes etmek istiyor musun?', sub: 'Oyun senin yenilginle sona erecek.', yes: 'Evet', no: 'Hayır' },
 };
 const icon = '<svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
 const CSS = `

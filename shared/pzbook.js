@@ -28,6 +28,10 @@ const S = {
   de: { tier: ['Neuling', 'Anfänger', 'Mittelstufe', 'Fortgeschritten', 'Experte', 'Meister'], stage: 'STUFE {n}', next: 'WEITER', cont: 'Weiter', lock: 'Noch {n} in STUFE {p} lösen zum Freischalten', locked: 'Noch gesperrt', unlocked: 'STUFE {n} freigeschaltet!', stageClear: 'STUFE {n} geschafft!', complete: 'Komplett', medal: ['Bronzemedaille', 'Silbermedaille', 'Goldmedaille'], medalHow: 'Alles ★★★ für Gold', stars: '★ {a}/{b}', got: '★{n} erhalten', best: 'Bestwert ★{n}', left: 'Noch {n} in dieser Stufe', allDone: 'Alles gelöst!' },
   hi: { tier: ['नौसिखिया', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ', 'उस्ताद'], stage: 'स्टेज {n}', next: 'अगला', cont: 'जारी रखें', lock: 'स्टेज {p} में {n} और हल करने पर खुलेगा', locked: 'अभी बंद है', unlocked: 'स्टेज {n} खुल गया!', stageClear: 'स्टेज {n} पूरा!', complete: 'पूरा', medal: ['कांस्य पदक', 'रजत पदक', 'स्वर्ण पदक'], medalHow: 'सभी ★★★ पर स्वर्ण', stars: '★ {a}/{b}', got: '★{n} मिले', best: 'सर्वश्रेष्ठ ★{n}', left: 'इस स्टेज में {n} बाकी', allDone: 'सब हल हो गए!' },
   ar: { tier: ['مبتدئ', 'ناشئ', 'متوسط', 'متقدم', 'خبير', 'أستاذ'], stage: 'المرحلة {n}', next: 'التالي', cont: 'متابعة', lock: 'حُلّ {n} أخرى في المرحلة {p} لفتحها', locked: 'غير مفتوحة بعد', unlocked: 'فُتحت المرحلة {n}!', stageClear: 'اكتملت المرحلة {n}!', complete: 'مكتمل', medal: ['ميدالية برونزية', 'ميدالية فضية', 'ميدالية ذهبية'], medalHow: 'كل الألغاز ★★★ للذهبية', stars: '★ {a}/{b}', got: 'حصلت على ★{n}', best: 'الأفضل ★{n}', left: 'بقي {n} في هذه المرحلة', allDone: 'حُلّت جميعها!' },
+  ru: { tier: ['Новичок', 'Начинающий', 'Средний', 'Продвинутый', 'Эксперт', 'Мастер'], stage: 'ЭТАП {n}', next: 'ДАЛЕЕ', cont: 'Продолжить', lock: 'Решите ещё {n} на ЭТАПЕ {p}, чтобы открыть', locked: 'Пока закрыто', unlocked: 'ЭТАП {n} открыт!', stageClear: 'ЭТАП {n} пройден!', complete: 'Пройдено', medal: ['Бронзовая медаль', 'Серебряная медаль', 'Золотая медаль'], medalHow: 'Все ★★★ — золото', stars: '★ {a}/{b}', got: 'Получено ★{n}', best: 'Лучшее ★{n}', left: 'Осталось на этапе: {n}', allDone: 'Всё пройдено!' },
+  'zh-TW': { tier: ['入門', '初級', '中級', '高級', '專家', '大師'], stage: 'STAGE {n}', next: 'NEXT', cont: '繼續', lock: '在 STAGE {p} 再解開 {n} 題即可解鎖', locked: '尚未解鎖', unlocked: 'STAGE {n} 已解鎖！', stageClear: 'STAGE {n} 通關！', complete: '完成', medal: ['銅牌', '銀牌', '金牌'], medalHow: '全部 ★★★ 可得金牌', stars: '★ {a}/{b}', got: '獲得 ★{n}', best: '最佳 ★{n}', left: '本關還剩 {n} 題', allDone: '全部通關！' },
+  id: { tier: ['Pemula', 'Dasar', 'Menengah', 'Mahir', 'Ahli', 'Master'], stage: 'TAHAP {n}', next: 'BERIKUTNYA', cont: 'Lanjutkan', lock: 'Selesaikan {n} lagi di TAHAP {p} untuk membuka', locked: 'Belum terbuka', unlocked: 'TAHAP {n} terbuka!', stageClear: 'TAHAP {n} selesai!', complete: 'Tuntas', medal: ['Medali perunggu', 'Medali perak', 'Medali emas'], medalHow: 'Semua ★★★ untuk emas', stars: '★ {a}/{b}', got: 'Dapat ★{n}', best: 'Terbaik ★{n}', left: 'Sisa {n} di tahap ini', allDone: 'Semua selesai!' },
+  tr: { tier: ['Acemi', 'Başlangıç', 'Orta', 'İleri', 'Uzman', 'Usta'], stage: 'AŞAMA {n}', next: 'SONRAKİ', cont: 'Devam et', lock: 'Açmak için AŞAMA {p}\'de {n} tane daha çöz', locked: 'Henüz açılmadı', unlocked: 'AŞAMA {n} açıldı!', stageClear: 'AŞAMA {n} tamamlandı!', complete: 'Tamamlandı', medal: ['Bronz madalya', 'Gümüş madalya', 'Altın madalya'], medalHow: 'Altın için hepsi ★★★', stars: '★ {a}/{b}', got: '★{n} kazandın', best: 'En iyi ★{n}', left: 'Bu aşamada {n} kaldı', allDone: 'Hepsi tamamlandı!' },
 };
 // v2: keep playing up to the puzzle's move count; obvious blunders are flagged at once
 const S2 = {
@@ -41,13 +45,17 @@ const S2 = {
   de: { movesLeft: 'Noch {n} Züge', blunder: 'Das ist ein klarer Fehler.', outOfMoves: 'In {n} Zügen nicht geschafft.', retry: 'Nochmal' },
   hi: { movesLeft: '{n} चालें बाकी', blunder: 'यह साफ़ गलती है।', outOfMoves: '{n} चालों में लक्ष्य पूरा नहीं हुआ।', retry: 'फिर कोशिश करें' },
   ar: { movesLeft: 'تبقّى {n} نقلات', blunder: 'هذه نقلة خاطئة بوضوح.', outOfMoves: 'لم يتحقق الهدف خلال {n} نقلات.', retry: 'أعد المحاولة' },
+  ru: { movesLeft: 'Осталось ходов: {n}', blunder: 'Это явная ошибка.', outOfMoves: 'Не удалось за {n} ходов.', retry: 'Ещё раз' },
+  'zh-TW': { movesLeft: '還剩 {n} 步', blunder: '這是明顯的失誤。', outOfMoves: '未能在 {n} 步內達成。', retry: '再試一次' },
+  id: { movesLeft: 'Sisa {n} langkah', blunder: 'Itu kesalahan yang jelas.', outOfMoves: 'Tidak tercapai dalam {n} langkah.', retry: 'Coba lagi' },
+  tr: { movesLeft: '{n} hamle kaldı', blunder: 'Bu açık bir hata.', outOfMoves: '{n} hamlede başarılamadı.', retry: 'Tekrar dene' },
 };
 for (const k in S2) Object.assign(S[k], S2[k]);
 // v3: collection home (hero, daily, category tabs, theme cards with a board)
 const S3 = {
   ja: { count: '{n}問', diff: '難易度' }, en: { count: '{n} puzzles', diff: 'Difficulty' }, zh: { count: '{n}题', diff: '难度' }, ko: { count: '{n}문제', diff: '난이도' },
   es: { count: '{n} problemas', diff: 'Dificultad' }, fr: { count: '{n} problèmes', diff: 'Difficulté' }, pt: { count: '{n} problemas', diff: 'Dificuldade' },
-  de: { count: '{n} Aufgaben', diff: 'Schwierigkeit' }, hi: { count: '{n} पहेलियाँ', diff: 'कठिनाई' }, ar: { count: '{n} لغزًا', diff: 'الصعوبة' },
+  de: { count: '{n} Aufgaben', diff: 'Schwierigkeit' }, hi: { count: '{n} पहेलियाँ', diff: 'कठिनाई' }, ar: { count: '{n} لغزًا', diff: 'الصعوبة' }, ru: { count: 'Задач: {n}', diff: 'Сложность' }, 'zh-TW': { count: '{n} 題', diff: '難度' }, id: { count: '{n} teka-teki', diff: 'Tingkat kesulitan' }, tr: { count: '{n} bulmaca', diff: 'Zorluk' },
 };
 for (const k in S3) Object.assign(S[k], S3[k]);
 let L = 'ja';

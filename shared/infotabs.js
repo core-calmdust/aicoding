@@ -21,7 +21,7 @@ const IC = {
   kifu: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   online: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
 };
-const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
+const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين', ru: 'Онлайн', 'zh-TW': '線上', id: 'Online', tr: 'Çevrimiçi' };
 const CSS = `
 .mtabs [data-it]{display:none}
 .mtabs .it-ic{display:none}
@@ -62,7 +62,7 @@ try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu' || v
 
 // tabs: coach (optional: #coachCard, shown while body.ck-tab — the game sets it), eval (#evalCard / #progCard), kifu (.kifu-card).
 // Other boxes that belong to a tab carry data-itc="<tab>" themselves (e.g. the review card under the coach tab).
-const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب' };
+const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب', ru: 'Тренер', 'zh-TW': '教練', id: 'Pelatih', tr: 'Koç' };
 const REST = {
   ja: 'コーチはAIとの対局・二人対戦の間に使えます。AI同士・オンライン・レッスンなどの間はお休みです。終局後の振り返りは、このタブで見られます。',
   en: 'The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.',
@@ -73,7 +73,11 @@ const REST = {
   pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
   de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
   hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
-  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.',
+  ru: 'Тренер помогает, когда вы играете с ИИ или с другом на этом устройстве. Во время партий ИИ против ИИ, онлайн-игр, уроков и т. п. он отдыхает. После партии здесь появится разбор.',
+  'zh-TW': '與 AI 對戰或在本裝置上雙人對戰時，教練會陪你下棋。AI 互戰、線上對戰、課程等期間教練會休息。對局結束後，覆盤會顯示在這個分頁。',
+  id: 'Pelatih bekerja saat kamu bermain melawan AI atau teman di perangkat ini. Pelatih beristirahat saat AI lawan AI, permainan online, pelajaran, dan sejenisnya. Setelah permainan, ulasan muncul di tab ini.',
+  tr: 'Koç, yapay zekâya ya da bu cihazda bir arkadaşına karşı oynarken çalışır. Yapay zekâ karşılaşmaları, çevrimiçi oyunlar, dersler ve benzerlerinde dinlenir. Oyundan sonra değerlendirme bu sekmede görünür.'
 };
 function init(tries) {
   if (window.__ROTWRAP || window.__EMBED) return;   // the rotated (landscape) board and embedded copies keep their own layout

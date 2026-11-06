@@ -12,7 +12,7 @@
 'use strict';
 const T = {
   ja: '盤面を反転', en: 'Flip the board', zh: '翻转棋盘', ko: '판 뒤집기', es: 'Girar el tablero', fr: 'Retourner le plateau',
-  pt: 'Girar o tabuleiro', de: 'Brett drehen', hi: 'बोर्ड पलटें', ar: 'قلب اللوحة',
+  pt: 'Girar o tabuleiro', de: 'Brett drehen', hi: 'बोर्ड पलटें', ar: 'قلب اللوحة', ru: 'Перевернуть доску', 'zh-TW': '翻轉棋盤', id: 'Balik papan', tr: 'Tahtayı çevir',
 };
 const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 14.3-3.3"/><path d="M18.6 2.6v3.3h-3.3"/><path d="M20 15a8 8 0 0 1-14.3 3.3"/><path d="M5.4 21.4v-3.3h3.3"/><path d="M9.5 9.5h5v5h-5z"/></svg>';
 const CSS = '.flip-btn.on{color:var(--accent,#d8b56a)!important;border-color:color-mix(in srgb,var(--accent,#d8b56a) 55%,transparent)!important;background:color-mix(in srgb,var(--accent,#d8b56a) 12%,transparent)!important}';
