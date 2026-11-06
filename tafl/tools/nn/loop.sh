@@ -10,12 +10,12 @@
 # Settings by environment: V (rule set, 0), H (hidden units, 256), EPOCHS (12), WINDOW (rounds of data per training, 4),
 #   LAM (0.75), SCALE (1000), DEFK (2), EXTRA (more record files for every training, e.g. "data/v0-*.txt data20/v0-*.txt"),
 #   MAXPOS (positions per training, 30000000), EVAL ("50 20 2": nrole pairs, attackers' / defenders' nodesK)
-#   WORK (work folder, nnwork; use another one for another rule set, e.g. V=1 WORK=nnwork-brandubh)
+#   LR (learning rate, 0.002; lower, e.g. 0.0005, when continuing from a good net), WORK (work folder, nnwork; use another one for another rule set, e.g. V=1 WORK=nnwork-brandubh)
 set -e
 cd "$(dirname "$0")/../.."
 R=$1; G=${2:-1000}; NK=${3:-10}; P=${4:-$(getconf _NPROCESSORS_ONLN)}
 V=${V:-0}; H=${H:-256}; EPOCHS=${EPOCHS:-12}; WINDOW=${WINDOW:-4}; LAM=${LAM:-0.75}; SCALE=${SCALE:-1000}; DEFK=${DEFK:-2}
-MAXPOS=${MAXPOS:-30000000}; EVAL=${EVAL:-"50 20 2"}
+MAXPOS=${MAXPOS:-30000000}; EVAL=${EVAL:-"50 20 2"}; LR=${LR:-0.002}
 W=${WORK:-nnwork}; mkdir -p $W
 cc -O3 -DNATIVE -w -o $W/tafl-native tools/native.c -lm
 log() { echo "$(date '+%m-%d %H:%M') $*" | tee -a $W/log.txt; }
@@ -43,7 +43,7 @@ while [ $r -le $R ]; do
   while [ $k -le $r ]; do FILES="$FILES $W/r$k/v$V-*.txt"; k=$((k + 1)); done
   INIT=""; [ -n "$NET" ] && [ -f $NET.pt ] && INIT="--init $NET.pt"
   log "round $r: training (rounds $((r - WINDOW + 1 < 1 ? 1 : r - WINDOW + 1))-$r ${EXTRA:++ extra})"
-  python3 tools/nn/train.py --variant $V --hidden $H --epochs $EPOCHS --lam $LAM --scale $SCALE --max-positions $MAXPOS $INIT \
+  python3 tools/nn/train.py --variant $V --hidden $H --epochs $EPOCHS --lam $LAM --scale $SCALE --lr $LR --max-positions $MAXPOS $INIT \
     --out $W/tmp.nnue $FILES $EXTRA > $W/train-$r.txt 2>&1
   tail -1 $W/train-$r.txt | tee -a $W/log.txt
   mv $W/tmp.nnue.pt $W/net-$r.nnue.pt; mv $W/tmp.nnue $W/net-$r.nnue; cp $W/net-$r.nnue $W/net.nnue

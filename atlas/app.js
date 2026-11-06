@@ -95,7 +95,7 @@
   let page = 'home';
   function go(k, push = true) {
     if (!TABS.includes(k)) k = 'home';
-    page = k; propWake();
+    page = k; propWake(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
@@ -198,7 +198,7 @@
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .52 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -290,30 +290,33 @@
     updNav();
     document.querySelectorAll('#updRow [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     document.querySelectorAll('#updRow [data-tab]').forEach(b => { b.onclick = () => go(b.dataset.tab); });
-    renderUpdLine(ups);
     renderFilter(); renderGrid();
     renderProfile(); renderToday();
   }
-  /* phones: the updates carousel folds into one line (#updLine, shown by CSS ≤760px) that cycles the newest few;
-     a tap opens a bottom sheet with every changelog line. A red dot marks an update this viewer hasn't opened yet. */
+  /* phones: a one-line updates ticker (#updLine, fixed above the tab bar by CSS ≤760px, on every tab but the map / きせかえ):
+     the newest few changelog lines run across it as one CSS transform loop (no JS frames; paused with the page by atlas-idle).
+     A tap opens a bottom sheet with every line; a red dot marks an update this viewer hasn't opened yet. */
   const UPD_SEEN = 'atlas-upd-seen';
   const updKey = u => u ? u[0] + '|' + u[1] : '';
   const updSeen = () => { try { return localStorage.getItem(UPD_SEEN) || ''; } catch (e) { return ''; } };
   const updWhat = u => { const g = A_.GAMES.find(x => x.id === u[1]); if (g) return { g, name: gname(g), color: g.color, art: artImg(g) };
     const k = /^tab:(\w+)$/.exec(u[1]); if (!k || !FEAT[k[1]]) return null; return { tab: k[1], name: t('tab.' + k[1]), color: FEAT[k[1]].color, art: `<img src="${FEAT[k[1]].art}" alt="">` }; };
-  let updTimer = 0;
-  function renderUpdLine(ups) {
+  let updSig = '';
+  function renderUpdLine() {
     const el = $('updLine'); if (!el) return;
-    clearInterval(updTimer);
-    const items = ups.slice(0, 4).map(u => [u, updWhat(u)]).filter(x => x[1]);
+    const seen = new Set(), items = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1])).map(u => [u, updWhat(u)]).filter(x => x[1]).slice(0, 5);
     if (!items.length) { el.hidden = true; return; }
-    const fresh = updKey(A_.UPDATES[0]) !== updSeen();
-    el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v">${items.map(([u, w], i) => `<span class="ul-i${i ? '' : ' on'}"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join('')}</span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
-    el.setAttribute('aria-label', t('upd.more'));
-    el.onclick = openUpdSheet;
-    if (items.length > 1) { let k = 0; updTimer = setInterval(() => {
-      if (!el.isConnected || !el.offsetParent || document.hidden || document.documentElement.classList.contains('hs-open')) return;   // (PC / another tab / under Historia: the line is hidden, nothing to cycle)
-      const its = el.querySelectorAll('.ul-i'); its[k].classList.remove('on'); k = (k + 1) % its.length; its[k].classList.add('on'); }, 4000); }
+    const fresh = updKey(A_.UPDATES[0]) !== updSeen(), sig = lang + '|' + items.map(x => updKey(x[0])).join() + '|' + fresh;
+    if (sig !== updSig) { updSig = sig; el._w = 0;
+      const sep = '<span class="ul-s" aria-hidden="true">・</span>';
+      const one = items.map(([u, w]) => `<span class="ul-i"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join(sep) + sep;
+      el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v"><span class="ul-tr"><span class="ul-g">${one}</span><span class="ul-g" aria-hidden="true">${one}</span></span></span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
+      el.setAttribute('aria-label', t('upd.more') + ': ' + items.map(([u, w]) => w.name).join(', '));
+      el.onclick = openUpdSheet;
+      el.style.setProperty('--ud', Math.max(16, el.querySelector('.ul-g').textContent.length * .2).toFixed(1) + 's');   // (a guess until it can be measured)
+    }
+    // one copy runs past at ~40px/s: measured once the ticker is on screen (it is display:none on PC and on the map / きせかえ)
+    if (!el._w) { const w = el.querySelector('.ul-g').offsetWidth; if (w) { el._w = w; el.style.setProperty('--ud', Math.max(12, w / 40).toFixed(1) + 's'); } }
   }
   function openUpdSheet() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
@@ -410,7 +413,7 @@
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
         <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
-        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
+        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg><span class="hsl">${esc(t('gl.histSee'))}</span></span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
     // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
     // the history scrolls inside the card (no cut); only the picture and the ▶ button open the table
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
@@ -419,7 +422,12 @@
     { const b = el.querySelector('[data-go]'); b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') goT(e); }; }
     const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
     if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
-      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
+      // when 「ヒストリアを見る」 doesn't fit its button (narrow phones, long languages) it says just 「ヒストリア」
+      const lb = hb.querySelector('.hsl'), fitH = () => { if (!hb.isConnected) return; lb.textContent = t('gl.histSee'); if (hb.scrollWidth > hb.clientWidth + 1) lb.textContent = t('gl.historia'); };
+      requestAnimationFrame(fitH); if (document.fonts) document.fonts.ready.then(fitH);
+      if (!renderToday.rs) { renderToday.rs = 1; let q = 0; addEventListener('resize', () => { clearTimeout(q); q = setTimeout(() => { const f = document.querySelector('#today [data-hist]'); if (f && f.__fit) f.__fit(); }, 150); }); }
+      hb.__fit = fitH; }
   }
 
   /* ---------- 3D board viewer ---------- */
@@ -1017,12 +1025,14 @@
     }
     requestAnimationFrame(upd);
   }
-  let achF = 'all';
+  let achF = 'all', achS = 'all';   // achS: done / to-do filter (phones and PC)
   function renderAch() {
     $('hAch').textContent = t('ach.h');
     const done = ACH.filter(a => a.done).length, coins = ACH.filter(a => a.done).reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
     $('achSum').innerHTML = `<span class="coin"><i>¢</i>${coins.toLocaleString()}</span><b style="font-family:var(--round);font-size:18px">${done} / ${ACH.length}</b>
-      <span class="bar" style="flex:1;min-width:120px;--c:var(--mint)"><i style="width:${done / ACH.length * 100}%"></i></span>`;
+      <span class="bar" style="flex:1;min-width:120px;--c:var(--mint)"><i style="width:${done / ACH.length * 100}%"></i></span>
+      <div class="aseg" role="group">${['all', 'done', 'todo'].map(k => `<button type="button" aria-pressed="${achS === k}" data-s="${k}">${t('ach.' + k)}</button>`).join('')}</div>`;
+    $('achSum').querySelectorAll('.aseg button').forEach(b => b.onclick = () => { achS = b.dataset.s; renderAch(); });
     const groups = [['all', t('ach.all'), null], ['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])];
     $('achChips').innerHTML = groups.map(([k, l, g]) => {
       const list = k === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === k);
@@ -1031,23 +1041,55 @@
     $('achChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { achF = b.dataset.k; renderAch(); });
     hscroll($('achHsc'));
     const list = (achF === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === achF)).slice()
+      .filter(a => achS === 'all' || (achS === 'done') === !!a.done)
       .sort((a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need)));
     $('achList').innerHTML = list.map(achHtml).join('');
   }
 
   /* ---------- SHOP ---------- */
+  // phones get their own shop / gacha / achievements layout (CSS under max-width:760px); PC keeps the plain one
+  const isPhone = () => matchMedia('(max-width:760px)').matches;
+  { const mq = matchMedia('(max-width:760px)'), re = () => { if (page === 'shop') renderShop(); else if (page === 'gacha' && !busy) renderGacha(); else if (page === 'ach') renderAch(); };
+    mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re); }
+  const wearing = id => { const it = ART.byId(id); return !!it && W.av[it.kind] === id; };
+  function wear(id) { const it = ART.byId(id); if (!it || !W.owned.includes(id)) return; W.av[it.kind] = id; A_.save(W); SFX.boing && SFX.boing(); }
   function renderShop() {
     $('hShop').textContent = t('shop.h'); $('shopNote').textContent = t('shop.note'); $('how1').textContent = t('how');
+    const ph = isPhone();
     $('shopItems').innerHTML = A_.shop(W).map(({ id, price }) => {
-      const it = ART.byId(id), own = W.owned.includes(id);
-      const foot = own ? `<span class="btn sm ghost" aria-disabled="true">${t('shop.owned')}</span>` : `<button class="btn sm sun" data-buy="${id}" data-p="${price}" ${C.balance < price ? 'disabled' : ''}><span class="price"><i></i>${price}</span></button>`;
-      return itemCard(it, foot);
+      const it = ART.byId(id), own = W.owned.includes(id), on = own && wearing(id);
+      // phone: owned items can be worn right here (and show when they are worn)
+      const foot = own ? (ph ? (on ? `<span class="btn sm ghost won" aria-disabled="true">✓ ${t('dress.on')}</span>` : `<button class="btn sm sky" data-eq="${id}">${t('dress.wear')}</button>`)
+        : `<span class="btn sm ghost" aria-disabled="true">${t('shop.owned')}</span>`)
+        : `<button class="btn sm sun" data-buy="${id}" data-p="${price}" ${C.balance < price ? 'disabled' : ''}><span class="price"><i></i>${price}</span></button>`;
+      return itemCard(it, foot, ph ? (own ? 'own' : '') + (on ? ' on' : '') : '');
     }).join('');
+    const buyNow = (id, p, quiet) => {
+      if (C.balance < p) return toast(t('shop.short'));
+      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); if (!quiet) toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); return true; }
+    };
     $('shopItems').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
       const id = b.dataset.buy, p = +b.dataset.p;
-      if (C.balance < p) return toast(t('shop.short'));
-      if (A_.buy(W, id, p)) { refresh(); bumpCoins(); toast(t('shop.bought', { name: iname(ART.byId(id)) })); confetti(60); renderShop(); }
+      if (isPhone()) return shopSheet(id, p, buyNow);
+      buyNow(id, p);
     });
+    $('shopItems').querySelectorAll('[data-eq]').forEach(b => b.onclick = () => { wear(b.dataset.eq); renderShop(); });
+    // phone: tapping the picture of an unbought item opens the same purchase sheet
+    if (ph) $('shopItems').querySelectorAll('.item').forEach(c => { const b = c.querySelector('[data-buy]'); if (b) c.querySelector('.art').onclick = () => b.click(); });
+  }
+  // phone purchase confirm: a bottom sheet with the item, its price and the balance after; once bought it offers to wear it
+  function shopSheet(id, p, buyNow) {
+    const it = ART.byId(id);
+    const body = bought => `<div class="bgrab" aria-hidden="true"></div><div class="bsi"><div class="card item r${it.rar}" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
+      <div class="bst"><b>${esc(iname(it))}</b><span class="gnote">${t('kind.' + it.kind)}</span>
+      ${bought ? `<span class="bsok">${esc(t('shop.bought', { name: iname(it) }))}</span>` : `<span class="bsp"><span class="price"><i></i>${p.toLocaleString()}</span><small>→ <span class="price"><i></i>${(C.balance - p).toLocaleString()}</span></small></span>`}</div></div>
+      <div class="bsb">${bought ? (wearing(id) ? `<span class="btn ghost" aria-disabled="true">✓ ${t('dress.on')}</span>` : `<button class="btn sky" data-eq="${id}">${t('dress.wear')}</button>`)
+        : `<button class="btn sun" data-cbuy="${id}" ${C.balance < p ? 'disabled' : ''}>${t('shop.buy')} <span class="price"><i></i>${p.toLocaleString()}</span></button>`}<button class="btn ghost" data-x>${t('g.close')}</button></div>`;
+    const wire = () => { const sh = $('sheet');
+      sh.querySelector('[data-x]').onclick = closeSheet;
+      const cb = sh.querySelector('[data-cbuy]'); if (cb) cb.onclick = () => { if (buyNow(id, p, true)) { sh.innerHTML = body(true); wire(); } };
+      const eb = sh.querySelector('[data-eq]'); if (eb) eb.onclick = () => { wear(id); renderShop(); sh.innerHTML = body(true); wire(); }; };
+    openSheet(body(false), 'bsh'); wire();
   }
 
   /* ---------- GACHA ---------- */
@@ -1069,6 +1111,7 @@
     return G3;
   }
   function renderGacha() {
+    dsegPos();   // --tabsH: the phone layout sizes the machine to end right above the pull buttons + tab bar
     if (!gacha3()) $('machine').innerHTML = MACHINE;
     const R = A_.GACHA, own = W.owned.length, all = ART.items.length, pct = Math.round(own / all * 100);
     const capIco = '<svg class="gico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="#fff"/><path d="M3 16a13 13 0 0 0 26 0z" fill="#ff6b6b"/><path d="M3 16h26" stroke="#d93c3c" stroke-width="2.4"/><ellipse cx="11" cy="9.5" rx="4" ry="2.2" fill="#fff" opacity=".9" transform="rotate(-25 11 9.5)"/><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1.5"/></svg>';
@@ -1080,8 +1123,13 @@
       <div class="gsec"><div class="gst">${t('g.rates')}</div><div class="rates">${R.rates.map((p, i) => `<span class="r${i}"><i></i><b>${ART.RAR[i]}</b>${(p * 100).toFixed(1)}%</span>`).join('')}</div></div>
       <div class="gsec"><div class="gst">${t('g.coll')}<span class="gcnt">${own} / ${all}</span></div><div class="gbar"><i style="width:${Math.max(2, pct)}%"></i></div>
         <button type="button" class="glink" id="gDress">${t('g.toDress')} <span aria-hidden="true">›</span></button></div>
-      <p class="gfoot">★ ${t('g.dup')}</p>`;
+      <p class="gfoot">★ ${t('g.dup')}</p>
+      <div class="gmini"><span class="coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><button type="button" class="gml" id="gmInfo">${t('g.rates')} <span aria-hidden="true">›</span></button><button type="button" class="gml" id="gmColl">${t('g.coll')} <b>${own}/${all}</b> <span aria-hidden="true">›</span></button></div>`;
     $('gDress').onclick = () => go('dress');
+    // phone: the rates + collection live in a bottom sheet behind the two small links (the panel shows only the coins and the pull buttons)
+    const info = () => { openSheet(`<div class="bgrab" aria-hidden="true"></div><h3>${t('g.h')}</h3>${[...$('gpanel').querySelectorAll('.gsec,.gfoot')].map(e => e.outerHTML).join('').replace('id="gDress"', 'id="gDressS"')}<div class="bsb"><button class="btn ghost" data-x>${t('g.close')}</button></div>`, 'bsh ginfo');
+      $('sheet').querySelector('[data-x]').onclick = closeSheet; $('sheet').querySelector('#gDressS').onclick = () => { closeSheet(); go('dress'); }; };
+    $('gmInfo').onclick = info; $('gmColl').onclick = info;
     $('g1').onclick = () => doPull(1); $('g10').onclick = () => doPull(10);
   }
   let busy = false;
@@ -1172,7 +1220,8 @@
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
   function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
-  addEventListener('resize', () => { if (page === 'dress') dsegPos(); });
+  addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
+  if (window.ResizeObserver) new ResizeObserver(dsegPos).observe(tabsEl);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
@@ -1349,6 +1398,7 @@
   }
   function render(k) {
     sfxIcon();
+    renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
     else if (k === 'shop') renderShop(); else if (k === 'gacha') renderGacha(); else if (k === 'dress') renderDress();
   }
@@ -1361,7 +1411,7 @@
     document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
   })();
 
-  applyLang(); refresh();
+  applyLang(); refresh(); dsegPos();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
   go(h0, false);
   history.replaceState(null, '', '#' + page);
