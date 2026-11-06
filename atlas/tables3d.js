@@ -1,22 +1,85 @@
 /* =====================================================================
-   World Board Game Atlas — table designs for the 3D room (PROTOTYPE)
+   World Board Game Atlas — the places (table designs) of the 3D room
    Registers Table3D.TABLES[k] (k = 1..5; 0 is the toy room's chabudai in table3d.js):
-     1 2D準拠      no room: the game's own 2D page colours as a soft gradient, the board floats over a contact shadow
+     1 2D準拠      no room: the game's own 2D page background (its CSS layers, behind a transparent canvas), the board floats over a soft shadow
      2 木のダイニング  light oak dining table, a blurred white wall with a house plant, soft daylight
      3 緑のフェルト    deep green felt in a walnut rail, one overhead spotlight, dark club room
      4 大理石のテラス  white marble top, an evening sky over the sea, balustrade silhouettes
      5 夜の書斎      walnut desk with a leather desk mat, a banker's lamp, a blurred bookshelf behind
-   Each builder gets { TT, g, scene, texScale, game } and returns
-     { bg, exp, key (the shadow-casting light), env: { top, bottom, panels }, onShow(id) }.
-   The background is a painted, pre-blurred backdrop: one plane facing the camera far behind the table
-   (the camera of the portal looks at the table from a fixed pitch; only its distance changes), so
-   each look costs a table, a plane or two and a handful of lights.
+   Each builder gets { TT, g, scene, texScale, game, css(v) } and returns
+     { bg (null: transparent canvas), exp, minExp, board (the guaranteed light on the board), key (the shadow-casting light),
+       env: { top, bottom, panels }, onShow(id) }.
+   TABLES[k].plain: the place on the full games' pages (?skin=atlas): the board's light there;
+   TABLES[k].floor(o): the page's floor ({ img, w, h } world units, + `over`: CSS layers above it, or `css`: the whole background).
+   Textures are made only when a place is chosen (canvasTex caches them by key).
+   The picker's names and the place-dependent labels (「ちゃぶ台へ」→「書斎へ」…) are Table3D.PLACES (10 languages).
    ===================================================================== */
 (function () {
   'use strict';
   const X = window.Table3D; if (!X || !X.TABLES) return;
   const { TABLES, M, RB, canvasTex, woodTop, wood, makeNoise } = X;
   const PITCH = .52;   // the portal's showcase camera pitch (camPose)
+
+  /* ---------- names and labels (10 languages): name = the picker, go = 「〜へ」 (today's card), play = 「〜で遊ぶ」 (the board card) ---------- */
+  const PLACES = {
+    name: {
+      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎'],
+      en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study'],
+      zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房'],
+      ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재'],
+      es: ['Mesa baja', 'Como en 2D', 'Comedor', 'Tapete verde', 'Terraza', 'Estudio'],
+      fr: ['Table basse', 'Comme en 2D', 'Salle à manger', 'Tapis vert', 'Terrasse', 'Bureau'],
+      pt: ['Mesa baixa', 'Como no 2D', 'Sala de jantar', 'Feltro verde', 'Terraço', 'Escritório'],
+      de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer'],
+      hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम'],
+      ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب'],
+    },
+    go: {
+      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ'],
+      en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study'],
+      zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房'],
+      ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기'],
+      es: ['Ir a la mesa', 'Ir al tablero', 'Ir al comedor', 'Ir al tapete', 'Ir a la terraza', 'Ir al estudio'],
+      fr: ['Vers la table', 'Vers le plateau', 'Vers la salle à manger', 'Vers le tapis vert', 'Vers la terrasse', 'Vers le bureau'],
+      pt: ['Ir para a mesa', 'Ir para o tabuleiro', 'Ir para a sala de jantar', 'Ir para o feltro', 'Ir para o terraço', 'Ir para o escritório'],
+      de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer'],
+      hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें'],
+      ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب'],
+    },
+    play: {
+      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ'],
+      en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study'],
+      zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩'],
+      ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이'],
+      es: ['Jugar en la mesa', 'Jugar en el tablero', 'Jugar en el comedor', 'Jugar en el tapete', 'Jugar en la terraza', 'Jugar en el estudio'],
+      fr: ['Jouer sur la table', 'Jouer sur le plateau', 'Jouer dans la salle à manger', 'Jouer sur le tapis vert', 'Jouer sur la terrasse', 'Jouer au bureau'],
+      pt: ['Jogar na mesa', 'Jogar no tabuleiro', 'Jogar na sala de jantar', 'Jogar no feltro', 'Jogar no terraço', 'Jogar no escritório'],
+      de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen'],
+      hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें'],
+      ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب'],
+    },
+    // the updates list (shared/atlas.js) says ちゃぶ台 / chabudai for the portal's own 3D play: the word that replaces it
+    news: {
+      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎'],
+      en: ['chabudai', 'table', 'table', 'table', 'table', 'table'],
+      hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
+    },
+    ui: {
+      place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان' },
+      table: { ja: 'テーブル', en: 'Table', zh: '桌子', ko: '테이블', es: 'Mesa', fr: 'Table', pt: 'Mesa', de: 'Tisch', hi: 'टेबल', ar: 'الطاولة' },
+      bright: { ja: '明るさ', en: 'Brightness', zh: '亮度', ko: '밝기', es: 'Brillo', fr: 'Luminosité', pt: 'Brilho', de: 'Helligkeit', hi: 'रोशनी', ar: 'السطوع' },
+      b: { ja: ['標準', '明るい', 'とても明るい'], en: ['Normal', 'Bright', 'Very bright'], zh: ['标准', '明亮', '非常明亮'], ko: ['보통', '밝게', '아주 밝게'],
+        es: ['Normal', 'Claro', 'Muy claro'], fr: ['Normal', 'Clair', 'Très clair'], pt: ['Normal', 'Claro', 'Muito claro'], de: ['Normal', 'Hell', 'Sehr hell'],
+        hi: ['सामान्य', 'तेज़', 'बहुत तेज़'], ar: ['عادي', 'ساطع', 'ساطع جدًا'] },
+    },
+  };
+  const pick = (o, l) => o[l] || o.en;
+  X.PLACES = PLACES;
+  X.placeText = (kind, lang, k = X.table()) => { const o = kind === 'news' ? PLACES.news[lang] : pick(PLACES[kind], lang); return o ? o[k] ?? o[0] : ''; };
+  X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
+  // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
+  const ME = (document.currentScript && document.currentScript.src) || location.href;
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=1', ME).href;
 
   // painted backdrop: plane coords x ∈ [−w/2, w/2], v ∈ [−h/2, h/2] (v up); the table's back edge hides v < ~9..12
   function backdrop(o, key, draw, opt = {}) {
@@ -56,52 +119,63 @@
     p.lineTo(x0 + r, y1); p.quadraticCurveTo(x0, y1, x0, y1 - r); p.lineTo(x0, y0 + r); p.quadraticCurveTo(x0, y0, x0 + r, y0); return p;
   }
 
-  /* ---------- 1 · 2D準拠: the game's own page colours ---------- */
-  // [glow (the page's upper-left radial), base (--bg), lower-right glow] from each game's <game>/index.html body background
-  const PAL = {
-    chess: ['#2a2016', '#0b0a09', '#1c1712'], gomoku: ['#2a2016', '#0b0a09', '#1c1712'], shogi: ['#34230f', '#130d09', '#24180c'],
-    reversi: ['#1b2b26', '#0b1110', '#16231f'], backgammon: ['#1b2b26', '#0b1110', '#16231f'], go: ['#1d2740', '#0b0e15', '#1a1f33'],
-    xiangqi: ['#461521', '#13090b', '#3c121d'], checkers: ['#461521', '#13090b', '#3c121d'], hex: ['#461521', '#0b0f1c', '#3c121d'],
-    connect4: ['#0f2c30', '#061315', '#0b2226'], mancala: ['#4a1a24', '#0b0708', '#3e1820'],
+  /* ---------- 1 · 2D準拠: each game's own 2D page background ---------- */
+  // the CSS layers that the game's 2D page (<game>/index.html) paints on its body, read from the rendered pages: [color, image layers]
+  // (the canvas stays transparent and its container carries them — the very same gradients, at no texture cost)
+  const BG2D = {
+    chess: ["#0b0a09", "radial-gradient(1200px 700px at 28% -10%, #2a2016, transparent 60%), radial-gradient(900px 600px at 110% 110%, #1c1712, transparent 60%)"],
+    shogi: ["#130d09", "radial-gradient(1200px 700px at 30% -10%, #34230f, transparent 60%), radial-gradient(900px 600px at 110% 110%, #281a0d, transparent 60%)"],
+    go: ["#0b0e15", "radial-gradient(1100px 700px at 25% -10%, #1d2740, transparent 60%), radial-gradient(900px 600px at 110% 110%, #1a1f33, transparent 60%)"],
+    reversi: ["#0b1110", "radial-gradient(1200px 700px at 30% -10%, #1b2b26, transparent 60%), radial-gradient(900px 600px at 110% 110%, #16231f, transparent 60%)"],
+    xiangqi: ["#13090b", "radial-gradient(1200px 700px at 28% -10%, #461521, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3c121d, transparent 60%)"],
+    backgammon: ["#0b1110", "radial-gradient(1200px 700px at 30% -10%, #1b2b26, transparent 60%), radial-gradient(900px 600px at 110% 110%, #16231f, transparent 60%)"],
+    gomoku: ["#0b0a09", "radial-gradient(1200px 700px at 28% -10%, #2a2016, transparent 60%), radial-gradient(900px 600px at 110% 110%, #1c1712, transparent 60%)"],
+    checkers: ["#13090b", "radial-gradient(1200px 700px at 28% -10%, #461521, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3c121d, transparent 60%)"],
+    hex: ["#0b0f1c", "radial-gradient(1200px 700px at 28% -10%, #461521, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3c121d, transparent 60%)"],
+    connect4: ["#061315", "radial-gradient(1200px 700px at 30% -10%, #0f2c30, transparent 60%), radial-gradient(900px 600px at 110% 110%, #0b2226, transparent 60%)"],
+    mancala: ["#0a0a0b", "radial-gradient(1300px 700px at 50% -25%, #222224, transparent 62%), linear-gradient(#131314, #09090a)"],
+    dots: ["#16130f", "radial-gradient(1200px 700px at 30% -10%, #3a2e1f, transparent 60%), radial-gradient(900px 600px at 110% 110%, #18202e, transparent 60%)"],
+    morris: ["#0d0a17", "radial-gradient(1200px 700px at 28% -10%, #172a44, transparent 60%), radial-gradient(900px 600px at 110% 110%, #14203a, transparent 60%)"],
+    tafl: ["#0b1116", "radial-gradient(1200px 700px at 28% -10%, #1b3a4c, transparent 60%), radial-gradient(900px 600px at 110% 110%, #123a34, transparent 60%)"],
+    ugolki: ["#07112f", "radial-gradient(1200px 700px at 28% -10%, #1a2c6e, transparent 60%), radial-gradient(900px 600px at 110% 110%, #14235a, transparent 60%)"],
+    ur: ["#080d26", "radial-gradient(1100px 620px at 18% -12%, rgba(42, 63, 158, 0.55), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(142, 42, 28, 0.28), transparent 60%), radial-gradient(1px 1px at 12% 22%, rgba(255, 240, 200, 0.6), transparent), radial-gradient(1px 1px at 78% 12%, rgba(255, 240, 200, 0.5), transparent), radial-gradient(1.4px 1.4px at 64% 30%, rgba(255, 240, 200, 0.45), transparent), radial-gradient(1px 1px at 36% 8%, rgba(255, 240, 200, 0.5), transparent)"],
+    agon: ["#0e0907", "radial-gradient(1200px 700px at 28% -10%, #3a1d12, transparent 60%), radial-gradient(900px 600px at 110% 110%, #24120b, transparent 60%)"],
+    fanorona: ["#170b06", "radial-gradient(1200px 700px at 28% -10%, #4b2510, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3d1c0b, transparent 60%)"],
+    alquerque: ["#14070c", "radial-gradient(1200px 700px at 28% -10%, #4b2510, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3d1c0b, transparent 60%)"],
   };
+  const css2d = id => { const b = BG2D[id] || BG2D.chess; return b[1] + ', ' + b[0]; };
+  X.css2d = css2d;
   TABLES[1] = (o) => {
     const { TT, g, scene } = o;
-    const paint = (id) => (c) => {
-      const P = PAL[id] || PAL.chess;
-      c.fillStyle = P[1]; c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = rad(c, -22, 34, 60, [[0, P[0]], [1, 'rgba(0,0,0,0)']]); c.fillRect(-60, -40, 120, 80);
-      c.fillStyle = rad(c, 40, -6, 50, [[0, P[2]], [1, 'rgba(0,0,0,0)']]); c.fillRect(-60, -40, 120, 80);
-      // a soft halo behind the board so a dark board still reads against a dark page
-      c.fillStyle = rad(c, 0, 16, 26, [[0, 'rgba(255,240,215,.07)'], [1, 'rgba(255,240,215,0)']]); c.fillRect(-60, -40, 120, 80);
-    };
     let cur = o.game || 'chess';
-    const bd = backdrop(o, 'tbl1-bd', (c) => paint(cur)(c), { px: 512 });
-    // the board floats: a blurred contact shadow below it, plus the key light's own shadow (for the board's outline)
-        const ao = canvasTex('tbl1-ao', 256, 256, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(0,0,0,.85)'], [.45, 'rgba(0,0,0,.5)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, W); });
+    const ao = canvasTex('tbl1-ao', 256, 256, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(0,0,0,.85)'], [.45, 'rgba(0,0,0,.5)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, W); });
     ao.encoding = TT.LinearEncoding;
     const FL = -1.6;
-    // a faint pool of the page's own glow colour under the board, so the floating shadow reads on a dark page
+    // a faint warm pool under the board (the 2D pages light their board the same way), so the floating shadow reads on a dark page
     const pt = canvasTex('tbl1-pool', 256, 256, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(255,255,255,1)'], [.4, 'rgba(255,255,255,.5)'], [.75, 'rgba(255,255,255,.12)'], [1, 'rgba(255,255,255,0)']]); c.fillRect(0, 0, W, W); });
-    const lift = (hx, k) => { const c = new TT.Color(hx); c.lerp(new TT.Color(0xfff2dc), k); return c; };
-    const pool = new TT.Mesh(new TT.PlaneGeometry(28, 20), new TT.MeshBasicMaterial({ map: pt, transparent: true, depthWrite: false, toneMapped: false, color: lift((PAL[cur] || PAL.chess)[0], .14) }));
+    const pool = new TT.Mesh(new TT.PlaneGeometry(30, 22), new TT.MeshBasicMaterial({ map: pt, transparent: true, depthWrite: false, toneMapped: false, color: 0x2a2620, blending: TT.AdditiveBlending }));
     pool.rotation.x = -Math.PI / 2; pool.position.set(0, FL - .02, .5); pool.renderOrder = 0; g.add(pool);
-    const blob = new TT.Mesh(new TT.PlaneGeometry(17, 15), new TT.MeshBasicMaterial({ map: ao, transparent: true, depthWrite: false, color: 0x000000, opacity: .75 }));
+    const blob = new TT.Mesh(new TT.PlaneGeometry(17, 15), new TT.MeshBasicMaterial({ map: ao, transparent: true, depthWrite: false, color: 0x000000, opacity: .7 }));
     blob.rotation.x = -Math.PI / 2; blob.position.y = FL; blob.renderOrder = 1; g.add(blob);
     const sc = new TT.Mesh(new TT.PlaneGeometry(40, 40), new TT.ShadowMaterial({ opacity: .35 })); sc.rotation.x = -Math.PI / 2; sc.position.y = FL + .01; sc.receiveShadow = true; sc.renderOrder = 2; g.add(sc);
-    scene.add(new TT.HemisphereLight(0xf2f4ff, 0x3a3028, .5));
+    scene.add(new TT.HemisphereLight(0xf2f4ff, 0x3a3028, .55));
     const key = dirLight(TT, 0xfff8ee, 1.0, [-5, 24, 7], 10); scene.add(key);
     const fill = new TT.DirectionalLight(0xffeedd, .3); fill.position.set(8, 10, 12); scene.add(fill);
+    o.css(css2d(cur));
     return {
-      bg: (PAL[cur] || PAL.chess)[1], exp: .8, key,
+      bg: null, exp: .84, board: .42, key,
       env: { top: '#c9cdd4', bottom: '#2a2420', panels: [[-8, 16, 6, 12, 7, '#ffffff', 1.5], [10, 10, -6, 8, 6, '#fff4e6', .7], [0, 6, 18, 18, 4, '#ffffff', .35]] },
-      onShow(id) { if (id === cur) return; cur = id; bd.userData.repaint(paint(id)); pool.material.color.copy(lift((PAL[id] || PAL.chess)[0], .14)); o.scene.background = new TT.Color((PAL[id] || PAL.chess)[1]).convertSRGBToLinear(); },
+      onShow(id) { if (id === cur) return; cur = id; o.css(css2d(id)); },
     };
   };
+  TABLES[1].plain = { sun: 0xfff8ee, sunI: .78, hemi: [0xf2f4ff, 0x3a3028, .5], exp: .66 };
+  TABLES[1].floor = (o) => ({ css: css2d(o.game) });
 
   /* ---------- 2 · 木のダイニング: light oak, white wall, a plant, daylight ---------- */
+  const oak = o => X.planks('tbl2-oak', '#d6b284', '#9a6c40', 5, sz(o, 2048));
   TABLES[2] = (o) => {
     const { TT, g, scene } = o;
-    const pk = X.planks('tbl2-oak', '#d6b284', '#9a6c40', 5, sz(o, 2048));
+    const pk = oak(o);
     const top = M({ map: pk, roughness: .52, clearcoat: .2, clearcoatRoughness: .45, bumpScale: .0025 });
     const t = new TT.Mesh(RB(46, 1.6, 36, .55, 3), top); t.position.set(0, -.8, 5); t.receiveShadow = true; g.add(t);
     // a stoneware mug and a little bud vase at the far corners
@@ -115,6 +189,17 @@
     const twigM = M({ color: 0x6d7f4c, roughness: .7 });
     [[-.2, .25], [.25, -.15], [0, -.35]].forEach(([a, b], i) => { const s = new TT.Mesh(new TT.CylinderGeometry(.035, .05, 4.2 - i * .6, 5), twigM); s.position.set(12.5 + a * 1.8, 3.1 + (2.1 - i * .3), -9 + b * 1.4); s.rotation.set(b * .5, 0, -a * .6); s.castShadow = true; g.add(s);
       const lf = new TT.Mesh(new TT.SphereGeometry(.42, 8, 6), M({ color: 0x7e9a5a, roughness: .6 })); lf.scale.set(1, .35, .6); lf.position.set(12.5 + a * 4, 3.1 + 4.1 - i * .9, -9 + b * 3); g.add(lf); });
+    // a linen runner along the far side and a wooden bowl of lemons on it
+    const linen = M({ map: X.cloth('tbl2-linen', '#ece4d4', 14, sz(o, 256)), roughness: .9 });
+    const run = new TT.Mesh(RB(30, .05, 5.2, .02, 1), linen); run.position.set(0, .025, -9.6); run.receiveShadow = true; g.add(run);
+    const bowlP = [[0, 0], [.9, 0], [1.6, .25], [2.3, .9], [2.45, 1.2], [2.3, 1.22], [1.5, .6], [0, .45]].map(([x, y]) => new TT.Vector2(x, y));
+    const bowl = new TT.Mesh(new TT.LatheGeometry(bowlP, 28), M({ map: wood('tbl2-bowl', '#b98a58', '#7a522c', sz(o, 256), sz(o, 256), .8), roughness: .45, clearcoat: .3 })); bowl.position.set(5.5, .05, -10); bowl.castShadow = bowl.receiveShadow = true; g.add(bowl);
+    const lemM = M({ color: 0xf2cf3a, roughness: .42, clearcoat: .2 });
+    [[4.7, -9.6, .1], [6.1, -10.4, -.4], [5.4, -10.6, .8], [6.2, -9.5, .3]].forEach(([x, z, r], i) => { const l = new TT.Mesh(new TT.SphereGeometry(.62, 14, 10), lemM); l.scale.set(1.18, .92, .92); l.rotation.y = r; l.position.set(x, .75 + (i === 3 ? .5 : 0), z); l.castShadow = true; g.add(l); });
+    // the window's light falling across the table (left, from the key light's side): four soft panes, no light cost
+    const sp = canvasTex('tbl2-sun', 256, 192, (c, W, H) => { c.filter = 'blur(6px)'; c.fillStyle = '#fff'; [[24, 18], [136, 18], [24, 102], [136, 102]].forEach(([x, y]) => c.fillRect(x, y, 96, 72)); c.filter = 'none'; });
+    const sun = new TT.Mesh(new TT.PlaneGeometry(17, 12.75), new TT.MeshBasicMaterial({ map: sp, transparent: true, depthWrite: false, toneMapped: false, color: 0x2a2418, blending: TT.AdditiveBlending }));
+    sun.rotation.x = -Math.PI / 2; sun.rotation.z = -.32; sun.position.set(-13.5, .02, 6); sun.renderOrder = 1; g.add(sun);
     // (visible: PC v 16..26 over x ±39; phone v 11..33 over x ±13 — the table hides what is below)
     backdrop(o, 'tbl2-bd', (c, ppu) => {
       const R = rng(7);
@@ -141,6 +226,9 @@
       // a pendant lamp hanging over the room (phones see it)
       c.fillStyle = '#4a4744'; c.fillRect(3.93, 31, .14, 10); c.fillStyle = '#e8e2d8'; c.beginPath(); c.moveTo(1.6, 29); c.quadraticCurveTo(4, 33.4, 6.4, 29); c.fill();
       c.fillStyle = 'rgba(255,240,205,.95)'; ell(c, 4, 29, 2.4, .32);
+      // two oak chairs on the far side of the table, their spindle backs just above the edge
+      [[-21, 1], [19.5, -1]].forEach(([x, s]) => { c.fillStyle = '#b99064'; c.fillRect(x - 3.6, 19.2, 7.2, .9); c.fillRect(x - 3.4, 13.5, .55, 6); c.fillRect(x + 2.85, 13.5, .55, 6);
+        c.fillStyle = '#c9a274'; for (let i = 0; i < 5; i++) c.fillRect(x - 2.3 + i * 1.15, 14, .32, 5.3); c.fillStyle = 'rgba(255,248,230,.35)'; c.fillRect(x - 3.6, 20, 7.2, .15); });
       // the plant: a terracotta pot and a fiddle-leaf fig
       blur(c, .45 * ppu);
       c.fillStyle = '#c98c62'; c.beginPath(); c.moveTo(-12.4, 14.2); c.lineTo(-5.6, 14.2); c.lineTo(-5.1, 19.6); c.lineTo(-12.9, 19.6); c.fill();
@@ -160,13 +248,13 @@
     scene.add(new TT.HemisphereLight(0xf3f1ec, 0xb8976c, .36));
     const key = dirLight(TT, 0xfff1dc, 1.55, [-19, 15, -5], 16); scene.add(key);
     const fill = new TT.DirectionalLight(0xeef2ff, .22); fill.position.set(9, 10, 16); scene.add(fill);
-    return { bg: '#ece6dc', exp: .72, key, env: { top: '#f4efe6', bottom: '#b4936a', panels: [[-14, 12, -10, 14, 10, '#ffffff', 1.7], [12, 8, 10, 10, 6, '#fff3e4', .6], [0, 18, 4, 20, 6, '#ffffff', .5]] } };
+    return { bg: '#ece6dc', exp: .72, board: .24, key, env: { top: '#f4efe6', bottom: '#b4936a', panels: [[-14, 12, -10, 14, 10, '#ffffff', 1.7], [12, 8, 10, 10, 6, '#fff3e4', .6], [0, 18, 4, 20, 6, '#ffffff', .5]] } };
   };
+  TABLES[2].plain = { sun: 0xfff1dc, sunI: .74, hemi: [0xf3f1ec, 0xb8976c, .48], exp: .64 };
+  TABLES[2].floor = (o) => ({ img: oak(o).image, w: 46, h: 36, over: 'radial-gradient(120% 90% at 16% 0%, rgba(255,252,240,.38), transparent 62%), radial-gradient(140% 120% at 50% 40%, transparent 60%, rgba(90,60,30,.18))' });
 
   /* ---------- 3 · 緑のフェルト: felt in a walnut rail, an overhead spotlight, a dark club room ---------- */
-  TABLES[3] = (o) => {
-    const { TT, g, scene } = o;
-    const ft = canvasTex('tbl3-felt', sz(o, 1024), sz(o, 1024), (c, W) => {
+  const feltTex = o => canvasTex('tbl3-felt', sz(o, 1024), sz(o, 1024), (c, W) => {
       const N = makeNoise(31), img = c.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
         const k = (Math.random() - .5) * 16 + (N(x / 1.6, y / 1.6, 2) - .5) * 20 + (N(x / 50, y / 50, 3) - .5) * 10, i = (y * W + x) * 4;
@@ -174,6 +262,9 @@
       }
       c.putImageData(img, 0, 0);
     });
+  TABLES[3] = (o) => {
+    const { TT, g, scene } = o;
+    const ft = feltTex(o);
     ft.wrapS = ft.wrapT = TT.RepeatWrapping; ft.repeat.set(3, 2.2);
     const feltM = M({ map: ft, roughness: .95, bumpScale: .006, sheen: new TT.Color(0x2c7a50) });
     const cz = 2, OX = 23, OZ = 17, RW = 2.4;
@@ -186,6 +277,12 @@
     const railM = M({ map: wt, roughness: .45, clearcoat: .35, clearcoatRoughness: .35, bumpScale: .002 });
     const rail = new TT.Mesh(rg, railM); rail.rotation.x = -Math.PI / 2; rail.position.set(0, .05, cz); rail.castShadow = rail.receiveShadow = true; g.add(rail);
     const apron = new TT.Mesh(RB(2 * OX + .6, 3, 2 * OZ + .6, 1.2, 2), M({ color: 0x24140a, roughness: .5 })); apron.position.set(0, -1.9, cz); g.add(apron);
+    // a few clay chips in stacks and a deck of cards by the far right corner (just inside the rail)
+    const chipG = new TT.CylinderGeometry(.82, .82, .2, 24), chipC = [0xb8282e, 0xf1ece0, 0x24418c, 0x1f6b44];
+    [[14.5, -9.4, 0, 7], [16.4, -8.6, 1, 5], [15.1, -7.4, 2, 4]].forEach(([x, z, c0, n]) => { for (let i = 0; i < n; i++) { const ch = new TT.Mesh(chipG, M({ color: chipC[(c0 + (i % 3 === 2 ? 1 : 0)) % 4], roughness: .55, clearcoat: .2 })); ch.position.set(x + (Math.sin(i * 7.1) * .05), .1 + i * .205, z + Math.cos(i * 3.3) * .05); ch.castShadow = ch.receiveShadow = true; g.add(ch); } });
+    const back = canvasTex('tbl3-card', 128, 180, (c, W, H) => { c.fillStyle = '#f6f2e8'; c.fillRect(0, 0, W, H); c.fillStyle = '#8f1e2a'; c.fillRect(8, 8, W - 16, H - 16); c.strokeStyle = 'rgba(255,230,200,.6)'; c.lineWidth = 2; for (let i = -H; i < W + H; i += 10) { c.beginPath(); c.moveTo(i, 8); c.lineTo(i + H, H); c.stroke(); } c.strokeStyle = '#f6f2e8'; c.lineWidth = 3; c.strokeRect(14, 14, W - 28, H - 28); });
+    const deck = new TT.Mesh(RB(2.5, .5, 3.5, .1, 2), [M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ map: back, roughness: .5, clearcoat: .2 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 }), M({ color: 0xe9e3d4, roughness: .8 })]);
+    deck.position.set(-15.6, .25, -8.8); deck.rotation.y = .28; deck.castShadow = deck.receiveShadow = true; g.add(deck);
     backdrop(o, 'tbl3-bd', (c, ppu) => {
       const R = rng(11);
       c.fillStyle = '#060607'; c.fillRect(-60, -40, 120, 80);
@@ -198,6 +295,9 @@
         const x = (R() - .5) * 100, y = 12 + R() * 24, r = .5 + R() * 1.4, warm = R() > .25;
         c.fillStyle = warm ? `rgba(255,${190 + R() * 40 | 0},120,${.08 + R() * .16})` : `rgba(120,200,190,${.06 + R() * .1})`; ell(c, x, y, r, r);
       }
+      // a gilt frame on the far wall and a brass rail along the panelling
+      c.fillStyle = 'rgba(190,150,80,.35)'; c.fillRect(-6, 25, 12, 9); c.fillStyle = 'rgba(40,30,22,.9)'; c.fillRect(-5.2, 25.8, 10.4, 7.4); c.fillStyle = 'rgba(120,90,60,.35)'; ell(c, -1, 29.4, 3.4, 2.2);
+      c.fillStyle = 'rgba(200,160,90,.28)'; c.fillRect(-60, 18.2, 120, .35);
       // a neighbouring table's lamp glow, far left
       c.fillStyle = rad(c, -40, 14, 14, [[0, 'rgba(70,140,90,.22)'], [1, 'rgba(70,140,90,0)']]); c.fillRect(-60, 0, 40, 30);
       blur(c, 0);
@@ -206,14 +306,15 @@
     const key = new TT.SpotLight(0xfff0d4, 4.4, 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
     key.shadow.camera.near = 10; key.shadow.camera.far = 60; key.shadow.bias = -.0002;
     const rim = new TT.DirectionalLight(0xffd7a0, .18); rim.position.set(-12, 8, -18); scene.add(rim);
-    return { bg: '#060607', exp: .95, key, env: { top: '#2b2620', bottom: '#040404', panels: [[0, 22, 3, 12, 12, '#fff0d8', 4], [-16, 8, -10, 5, 9, '#ffcf96', .9], [16, 8, -10, 5, 9, '#ffcf96', .7], [0, 9, 20, 22, 5, '#d8c8b0', .55], [-18, 6, 8, 5, 8, '#ffe2b8', .5]] } };
+    return { bg: '#060607', exp: .95, board: .34, boardCol: 0xfff0dc, key, env: { top: '#2b2620', bottom: '#040404', panels: [[0, 22, 3, 12, 12, '#fff0d8', 4], [-16, 8, -10, 5, 9, '#ffcf96', .9], [16, 8, -10, 5, 9, '#ffcf96', .7], [0, 9, 20, 22, 5, '#d8c8b0', .55], [-18, 6, 8, 5, 8, '#ffe2b8', .5]] } };
   };
 
+  TABLES[3].plain = { sun: 0xfff0d4, sunI: .8, hemi: [0xc8d4c8, 0x203020, .42], exp: .66 };
+  TABLES[3].floor = (o) => ({ img: feltTex(o).image, w: 15, h: 15, dark: true,
+    over: 'radial-gradient(60% 58% at 50% 44%, rgba(255,240,210,.14), transparent 75%), radial-gradient(125% 115% at 50% 46%, transparent 48%, rgba(0,0,0,.58))' });
+
   /* ---------- 4 · 大理石のテラス: white marble, an evening sky over the sea, a balustrade ---------- */
-  TABLES[4] = (o) => {
-    const { TT, g, scene } = o;
-    const W = sz(o, 1024);
-    const mt = canvasTex('tbl4-marble', W, W, (c) => {
+  const marbleTex = o => { const W = sz(o, 1024); return canvasTex('tbl4-marble', W, W, (c) => {
       const N = makeNoise(53), img = c.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
         const u = x / W, v = y / W;
@@ -225,9 +326,21 @@
         d[i] = L + 1; d[i + 1] = L - 1; d[i + 2] = L - 4 + k * 4; d[i + 3] = 255;
       }
       c.putImageData(img, 0, 0);
-    });
+    }); };
+  TABLES[4] = (o) => {
+    const { TT, g, scene } = o;
+    const mt = marbleTex(o);
     const marble = M({ map: mt, bump: false, roughness: .3, clearcoat: .35, clearcoatRoughness: .2 });
     const t = new TT.Mesh(RB(46, 1.4, 36, .5, 3), marble); t.position.set(0, -.7, 5); t.receiveShadow = true; g.add(t);
+    // a glass of lemonade with a slice on the rim (back left) and a small terracotta pot of rosemary (back right)
+    const glP = [[0, 0], [.95, 0], [1, .12], [1.12, 3.2], [1.06, 3.2], [.9, .2], [0, .2]].map(([x, y]) => new TT.Vector2(x, y));
+    const gl = new TT.Mesh(new TT.LatheGeometry(glP, 28), M({ color: 0xffffff, roughness: .05, clearcoat: 1, transparent: true, opacity: .32, depthWrite: false })); gl.position.set(-13, 0, -8); g.add(gl);
+    const drink = new TT.Mesh(new TT.CylinderGeometry(1.0, .9, 2.2, 24), M({ color: 0xffe9a0, roughness: .1, transparent: true, opacity: .72, emissive: new TT.Color(0x3a2a08) })); drink.position.set(-13, 1.3, -8); g.add(drink);
+    const slice = new TT.Mesh(new TT.CylinderGeometry(.7, .7, .12, 18, 1, false, 0, Math.PI), M({ color: 0xf6d348, roughness: .5 })); slice.rotation.set(Math.PI / 2, 0, .3); slice.position.set(-12.05, 3.15, -8); g.add(slice);
+    const potP = [[0, 0], [1.1, 0], [1.45, 2], [1.6, 2.05], [1.6, 2.4], [0, 2.4]].map(([x, y]) => new TT.Vector2(x, y));
+    const pot = new TT.Mesh(new TT.LatheGeometry(potP, 22), M({ color: 0xc27a52, roughness: .8 })); pot.position.set(14, 0, -9); pot.castShadow = pot.receiveShadow = true; g.add(pot);
+    const herbM = M({ color: 0x5f7d4f, roughness: .8 });
+    for (let i = 0; i < 9; i++) { const a = i * 2.4, r = .25 + (i % 3) * .3, h = 2.2 + (i % 4) * .5; const st = new TT.Mesh(new TT.CylinderGeometry(.05, .09, h, 5), herbM); st.position.set(14 + Math.cos(a) * r, 2.3 + h / 2, -9 + Math.sin(a) * r); st.rotation.set(Math.sin(a) * .25, 0, Math.cos(a) * .25); st.castShadow = true; g.add(st); }
     backdrop(o, 'tbl4-bd', (c, ppu) => {
       const R = rng(5), HZ = 22.6, SX = -9;
       c.fillStyle = lin(c, 40, HZ, [[0, '#33407e'], [.3, '#7a5fa8'], [.6, '#e38ba0'], [.85, '#ffb07c'], [1, '#ffd69c']]); c.fillRect(-60, HZ, 120, 40);
@@ -260,14 +373,18 @@
     scene.add(new TT.HemisphereLight(0xfbeee8, 0xffdcc4, .5));
     const key = dirLight(TT, 0xffc896, 1.15, [-8, 9, -22], 15); scene.add(key);
     const fill = new TT.DirectionalLight(0xffe4dc, .38); fill.position.set(5, 12, 16); scene.add(fill);
-    return { bg: '#e8a07c', exp: .8, key, env: { top: '#d8bcc4', bottom: '#f6dcc8', panels: [[-12, 3, -20, 10, 4, '#ffcf9a', 3], [0, 16, -8, 26, 8, '#c8b6f0', .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] } };
+    return { bg: '#4a3249', exp: .8, board: .32, boardCol: 0xfff0e6, key, env: { top: '#d8bcc4', bottom: '#f6dcc8', panels: [[-12, 3, -20, 10, 4, '#ffcf9a', 3], [0, 16, -8, 26, 8, '#c8b6f0', .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] } };
   };
 
+  TABLES[4].plain = { sun: 0xffd8b0, sunI: .74, hemi: [0xfbeee8, 0xffdcc4, .5], exp: .64 };
+  TABLES[4].floor = (o) => ({ img: marbleTex(o).image, w: 46, h: 36, over: 'linear-gradient(160deg, rgba(255,196,156,.26), transparent 46%), linear-gradient(0deg, rgba(120,100,170,.10), transparent 40%), linear-gradient(rgba(255,252,248,.34), rgba(255,252,248,.34))' });
+
   /* ---------- 5 · 夜の書斎: walnut desk, leather desk mat, a banker's lamp, a blurred bookshelf ---------- */
+  const walnut = o => woodTop('tbl5-walnut', '#80502f', '#3a1f10', sz(o, 2048), sz(o, 2048));
   TABLES[5] = (o) => {
     const { TT, g, scene } = o;
     const MAT = .16;
-    const desk = M({ map: woodTop('tbl5-walnut', '#80502f', '#3a1f10', sz(o, 2048), sz(o, 2048)), roughness: .4, clearcoat: .45, clearcoatRoughness: .3, bumpScale: .002 });
+    const desk = M({ map: walnut(o), roughness: .4, clearcoat: .45, clearcoatRoughness: .3, bumpScale: .002 });
     const t = new TT.Mesh(RB(48, 1.6, 36, .5, 3), desk); t.position.set(0, -MAT - .8, 5); t.receiveShadow = true; g.add(t);
     // the desk mat: dark green leather, a tooled gold line and a stitched edge
     const LW = 24, LD = 16, LT = sz(o, 1024), LH = Math.round(LT * LD / LW);
@@ -302,6 +419,11 @@
       const pg = new TT.Mesh(RB(w - .3, h - .25, d - .1, .04, 1), M({ color: 0xe8dcc0, roughness: .8 })); pg.position.set(15 + .17, y + h / 2, -7.5); pg.rotation.y = r; g.add(pg);
       return y + h;
     }, -MAT);
+    // an inkwell (cut glass, brass cap) and a fountain pen lying beside the mat
+    const ink = new TT.Mesh(RB(1.7, 1.3, 1.7, .22, 2), M({ color: 0x1c2430, roughness: .08, clearcoat: 1, clearcoatRoughness: .05, metalness: .1 })); ink.position.set(9.5, .65 - MAT, -10); ink.rotation.y = .5; ink.castShadow = true; g.add(ink);
+    const cap = new TT.Mesh(new TT.CylinderGeometry(.48, .52, .45, 18), brass); cap.position.set(9.5, 1.5 - MAT, -10); g.add(cap);
+    const pen = new TT.Mesh(new TT.CylinderGeometry(.16, .16, 4.4, 12), M({ color: 0x14100c, roughness: .2, clearcoat: 1 })); pen.rotation.set(0, .35, Math.PI / 2); pen.position.set(13.6, .17 - MAT, 1.5); pen.castShadow = true; g.add(pen);
+    const nib = new TT.Mesh(new TT.ConeGeometry(.16, .7, 12), brass); nib.rotation.set(0, .35, -Math.PI / 2); nib.position.set(13.6 + Math.cos(.35) * 2.55, .17 - MAT, 1.5 - Math.sin(.35) * 2.55); g.add(nib);
     backdrop(o, 'tbl5-bd', (c, ppu) => {
       const R = rng(23);
       c.fillStyle = '#100a06'; c.fillRect(-60, -40, 120, 80);
@@ -328,11 +450,17 @@
       c.fillStyle = rad(c, -16, 14, 22, [[0, 'rgba(255,170,90,.22)'], [1, 'rgba(255,150,70,0)']]); c.fillRect(-60, -40, 120, 80);
       c.fillStyle = lin(c, 9, 4, [[0, 'rgba(10,6,4,0)'], [1, 'rgba(10,6,4,.9)']]); c.fillRect(-60, -40, 120, 49);
     });
-    scene.add(new TT.HemisphereLight(0x6a78a8, 0x1a0e08, .2));
-    const key = new TT.SpotLight(0xffc27e, 4.6, 70, 1.0, .9, 1.25); key.position.set(LX, 3.7 - MAT, LZ + 2.1); key.target.position.set(2, 0, 3); scene.add(key); scene.add(key.target);
+    // the lamp still carries the mood (and the one shadow), but the board itself gets an even warm light from above as well:
+    // a dark corner of the board is the one thing the study must never have
+    scene.add(new TT.HemisphereLight(0x8a90b8, 0x2a170c, .3));
+    const key = new TT.SpotLight(0xffc78a, 4.2, 80, 1.05, .95, .9); key.position.set(LX, 3.7 - MAT, LZ + 2.1); key.target.position.set(3, 0, 4); scene.add(key); scene.add(key.target);
+    const over = new TT.DirectionalLight(0xffdcb0, .38); over.position.set(-4, 30, 10); scene.add(over);
     key.shadow.camera.near = 1; key.shadow.camera.far = 50; key.shadow.bias = -.0003;
     const pool = new TT.PointLight(0xffb060, .9, 16, 2); pool.position.set(LX, 3.1, LZ + 2.1); scene.add(pool);
     const moon = new TT.DirectionalLight(0x8090c8, .16); moon.position.set(14, 12, 12); scene.add(moon);
-    return { bg: '#0d0906', exp: 1.0, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8]] } };
+    return { bg: '#0d0906', exp: 1.02, minExp: .95, board: .5, boardCol: 0xffe6c4, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8]] } };
   };
+  TABLES[5].plain = { sun: 0xffd8a8, sunI: .78, hemi: [0xd8d0e0, 0x3a2414, .46], exp: .68 };
+  TABLES[5].floor = (o) => ({ img: walnut(o).image, w: 48, h: 36, dark: true,
+    over: 'radial-gradient(80% 70% at 20% 10%, rgba(255,196,120,.24), transparent 62%), radial-gradient(130% 120% at 50% 46%, transparent 52%, rgba(12,6,2,.5))' });
 })();
