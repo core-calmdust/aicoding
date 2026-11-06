@@ -1348,7 +1348,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/tick.js?v=2"></script>
 <script src="../shared/ruletour.js?v=29"></script>
 <script src="engine.js?v=20261028rb"></script>
-<script src="rvbox.js?v=20261028fs"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
+<script src="rvbox.js?v=20261106al"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2"></script>
@@ -3437,7 +3437,7 @@ function rbRealOver() {
   const { pos, hashes } = E.replay(gv, startSpec, moves); let c = 0; for (const h of hashes) if (h === pos.h1) c++;
   return pos.status() !== 0 || c >= 3;
 }
-function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && (cur < moves.length || rbRealOver()) && !rtLive() && !(window.olLive && olLive()); }
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && !rtLive() && !(window.olLive && olLive()); }
 function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
 function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
 function rbRows(list, lines) {

@@ -1949,7 +1949,7 @@ function rbShown() { return rbS ? rbS.pos[rbS.pos.length - 1] : posAt(cur).pos; 
 function rbActive() {
   if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || settings.mode === 'online' || rtLive()) return false;
   if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
-  return gameOver(moves.length) || settings.mode === 'pvp';   // finished games (or a loaded / two-player record)
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 let rbW = null;
 function rbAnalyze(done) {

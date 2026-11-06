@@ -2263,8 +2263,7 @@ const bxEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;
 const bxCache = new Map();  // position key → analysis list with lines
 let bxW = null, bxPending = '';
 function bxAllowed() {
-  return !!(HB && HB.on && !lesson && !puzzle && rvOpen && rv && rv.key === rvKey() && !(settings.mode === 'online' && window.olNoAna && olNoAna())
-    && (settings.mode !== 'ai' || isOver(game.moves.length) || game.resigned != null));   // (not while a game against the AI is still on)
+  return !!(HB && HB.on && !lesson && !puzzle && rvOpen && rv && rv.key === rvKey() && !(settings.mode === 'online' && window.olNoAna && olNoAna()));   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 const bxKey = p => game.rules + p.side + ':' + Array.from(p.b).join(',');
 function studyStart(k) {
