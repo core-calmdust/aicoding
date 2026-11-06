@@ -399,9 +399,12 @@
   X.MODELS.chess = function (live, o) {
     const g = board(), Y = g.userData.top;
     if (live) return g;
+    // the showcase follows the set chosen for the 3D board (the portal's 盤 row / the full game's design tab: Table3D.BOARDS.chess)
+    const set = (X.BOARDS && X.BOARDS.chess) ? X.BOARDS.chess.get() : 'lux';
+    if (g.userData.setSet) g.userData.setSet(set);
     const back = 'RNBQKBNR';
     const put = (t, f, r, col) => {
-      const p = piece(t, col, { reflect: true }), [x, z] = cell(f, r); p.position.set(x, Y, z);
+      const p = piece(t, col, { reflect: true, set }), [x, z] = cell(f, r); p.position.set(x, Y, z);
       if (t === 'N') p.rotation.y = col === 'w' ? Math.PI / 2 + (f < 4 ? -.35 : .35) : -Math.PI / 2 + (f < 4 ? .35 : -.35);   // knights look at the opponent, a little outward
       g.add(p); const sh = X.contact(.34, .5); sh.position.set(x, Y + .002, z); g.add(sh);
     };

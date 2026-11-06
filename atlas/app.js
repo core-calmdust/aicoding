@@ -578,7 +578,7 @@
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
-    bvGame = g; stopSession();
+    bvGame = g; stopSession(); renderPlace();   // (the panel's 盤 row follows the game on the table)
     setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
@@ -1057,8 +1057,26 @@
     const k = X.table(), b = X.bright(), names = X.PLACES.name[lang] || X.PLACES.name.en, B = X.placeUi('b', lang);
     return `<div class="plp${big ? ' big' : ''}"><div class="plh">${esc(X.placeUi('place', lang))}<small>${esc(names[k])}</small></div>
       <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
+      ${boardRowHtml(big)}
       <div class="plh">${esc(X.placeUi('bright', lang))}</div>
       <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div></div>`;
+  }
+  // 盤: the game on the table has more than one 3D board (Table3D.BOARDS: chess, go, gomoku, backgammon, agon) → its boards
+  // as a row of their own, under the places (the board view's panel only; the きせかえ tab has no game)
+  function boardRowHtml(big) {
+    const X = P3(), B = !big && bvGame && X && X.BOARDS && X.BOARDS[bvGame.id]; if (!B) return '';
+    const k = B.get();
+    return `<div class="plh">${esc(X.placeUi('board', lang))}<small>${esc(X.boardName(k, lang))}</small></div>
+      <div class="plrow plbd" role="group">${B.list.map(v => `<button type="button" class="plcb" data-bd="${v}" aria-pressed="${v === k}"><img src="${X.boardThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.boardName(v, lang))}</span></button>`).join('')}</div>`;
+  }
+  // another 3D board: the shared key is written (the full game shows it too) and the board on the table is rebuilt at once
+  function setBoard(v) {
+    const X = P3(), g = bvGame; if (!X || !g || !X.BOARDS[g.id] || X.BOARDS[g.id].get() === v) return;
+    X.setBoard(g.id, v);
+    const m = $('bvPlMenu'); if (m && !m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
+    if (!glOK || !$('bv').classList.contains('on') || $('bv').classList.contains('playing')) return;
+    const gl = $('gl'); clearTimeout(plFade); gl.style.transition = 'opacity .12s ease-out'; gl.style.opacity = '0';
+    plFade = setTimeout(() => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .24s ease-in'; gl.style.opacity = ''; })); }, 130);
   }
   // switching: a quick fade of the 3D room while it is rebuilt (no reload; the board on the table stays)
   let plFade = 0;
@@ -1070,7 +1088,7 @@
     plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
   }
   function bindPlace(root) {
-    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); setPlace(+b.dataset.k); });
+    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else setPlace(+b.dataset.k); });
     root.querySelectorAll('.plbr button').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
   }
   // PC: while the panel is open the board slides aside (a shift lens, like ヒストリア), so the new place is seen at once

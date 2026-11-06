@@ -506,7 +506,8 @@
   const toWorld = (ux, uy, g = geom()) => [ux - g.W / 2, uy - g.H / 2];
 
   X.MODELS.backgammon = function (live, o) {
-    const g = board((o && o.look) || 'marq', (o && o.H) || 12), Y = g.userData.top;
+    const look = (o && o.look) || (!live && X.BOARDS && X.BOARDS.backgammon ? X.BOARDS.backgammon.get() : 'marq');   // the showcase: the chosen 3D board
+    const g = board(look, (o && o.H) || 12), Y = g.userData.top;
     if (live) return g;
     let ck = ['gold', 'black']; try { const c = JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}').settings.ck; if (c && CKL[c[0]] && CKL[c[1]] && c[0] !== c[1]) ck = c; } catch (e) {}
     const put = (id, vp, n) => { for (let k = 0; k < n; k++) { const c = checker(id), [x, z] = stackXZ(vp, k, n); c.position.set(x, Y, z); g.add(c); const sh = X.contact(.47, .45); sh.position.set(x, Y + .002, z); g.add(sh); } };

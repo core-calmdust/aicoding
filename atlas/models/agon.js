@@ -268,11 +268,12 @@
   }
 
   X.MODELS.agon = function (live) {
-    const g = board('victorian'), U = g.userData, Y = U.top;
+    const look = !live && X.BOARDS && X.BOARDS.agon ? X.BOARDS.agon.get() : 'victorian';   // the showcase: the chosen 3D board
+    const g = board(look), U = g.userData, Y = U.top;
     if (live) return g;
     // a game in progress: White's queen near the throne with guards gathering, Black closing in
     const XC = (q, r) => [q + r / 2, r * Math.sqrt(3) / 2];
-    const put = (q, r, kind) => { const p = piece('victorian', kind), [x, z] = XC(q, r); p.position.set(x, Y, z); g.add(p); const sh = X.contact(R * .95, .5); sh.position.set(x, Y + .001, z); g.add(sh); };
+    const put = (q, r, kind) => { const p = piece(look, kind), [x, z] = XC(q, r); p.position.set(x, Y, z); g.add(p); const sh = X.contact(R * .95, .5); sh.position.set(x, Y + .001, z); g.add(sh); };
     put(1, -1, 2); put(0, -1, 1); put(2, -1, 1); put(1, 0, 1); put(-2, 3, 1); put(4, -5, 1); put(-5, 2, 1);
     put(-1, 0, 4); put(0, 1, 3); put(2, -2, 3); put(-2, 1, 3); put(3, 1, 3); put(-4, 0, 3); put(1, 3, 3);
     g.scale.setScalar(.74);
