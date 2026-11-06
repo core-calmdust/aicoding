@@ -95,7 +95,7 @@
   let page = 'home';
   function go(k, push = true) {
     if (!TABS.includes(k)) k = 'home';
-    page = k; propWake();
+    page = k; propWake(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
@@ -198,7 +198,7 @@
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .62 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 11).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .52 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
     startProps();
   }
@@ -290,30 +290,33 @@
     updNav();
     document.querySelectorAll('#updRow [data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     document.querySelectorAll('#updRow [data-tab]').forEach(b => { b.onclick = () => go(b.dataset.tab); });
-    renderUpdLine(ups);
     renderFilter(); renderGrid();
     renderProfile(); renderToday();
   }
-  /* phones: the updates carousel folds into one line (#updLine, shown by CSS ≤760px) that cycles the newest few;
-     a tap opens a bottom sheet with every changelog line. A red dot marks an update this viewer hasn't opened yet. */
+  /* phones: a one-line updates ticker (#updLine, fixed above the tab bar by CSS ≤760px, on every tab but the map / きせかえ):
+     the newest few changelog lines run across it as one CSS transform loop (no JS frames; paused with the page by atlas-idle).
+     A tap opens a bottom sheet with every line; a red dot marks an update this viewer hasn't opened yet. */
   const UPD_SEEN = 'atlas-upd-seen';
   const updKey = u => u ? u[0] + '|' + u[1] : '';
   const updSeen = () => { try { return localStorage.getItem(UPD_SEEN) || ''; } catch (e) { return ''; } };
   const updWhat = u => { const g = A_.GAMES.find(x => x.id === u[1]); if (g) return { g, name: gname(g), color: g.color, art: artImg(g) };
     const k = /^tab:(\w+)$/.exec(u[1]); if (!k || !FEAT[k[1]]) return null; return { tab: k[1], name: t('tab.' + k[1]), color: FEAT[k[1]].color, art: `<img src="${FEAT[k[1]].art}" alt="">` }; };
-  let updTimer = 0;
-  function renderUpdLine(ups) {
+  let updSig = '';
+  function renderUpdLine() {
     const el = $('updLine'); if (!el) return;
-    clearInterval(updTimer);
-    const items = ups.slice(0, 4).map(u => [u, updWhat(u)]).filter(x => x[1]);
+    const seen = new Set(), items = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1])).map(u => [u, updWhat(u)]).filter(x => x[1]).slice(0, 5);
     if (!items.length) { el.hidden = true; return; }
-    const fresh = updKey(A_.UPDATES[0]) !== updSeen();
-    el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v">${items.map(([u, w], i) => `<span class="ul-i${i ? '' : ' on'}"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join('')}</span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
-    el.setAttribute('aria-label', t('upd.more'));
-    el.onclick = openUpdSheet;
-    if (items.length > 1) { let k = 0; updTimer = setInterval(() => {
-      if (!el.isConnected || !el.offsetParent || document.hidden) return;   // (PC / another tab: the line is hidden, nothing to cycle)
-      const its = el.querySelectorAll('.ul-i'); its[k].classList.remove('on'); k = (k + 1) % its.length; its[k].classList.add('on'); }, 4000); }
+    const fresh = updKey(A_.UPDATES[0]) !== updSeen(), sig = lang + '|' + items.map(x => updKey(x[0])).join() + '|' + fresh;
+    if (sig !== updSig) { updSig = sig; el._w = 0;
+      const sep = '<span class="ul-s" aria-hidden="true">・</span>';
+      const one = items.map(([u, w]) => `<span class="ul-i"><span class="ul-d">${esc(fmtDate(u[0]))}</span><b>${esc(w.name)}</b><span class="ul-t">${esc(utx(u))}</span></span>`).join(sep) + sep;
+      el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v"><span class="ul-tr"><span class="ul-g">${one}</span><span class="ul-g" aria-hidden="true">${one}</span></span></span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
+      el.setAttribute('aria-label', t('upd.more') + ': ' + items.map(([u, w]) => w.name).join(', '));
+      el.onclick = openUpdSheet;
+      el.style.setProperty('--ud', Math.max(16, el.querySelector('.ul-g').textContent.length * .2).toFixed(1) + 's');   // (a guess until it can be measured)
+    }
+    // one copy runs past at ~40px/s: measured once the ticker is on screen (it is display:none on PC and on the map / きせかえ)
+    if (!el._w) { const w = el.querySelector('.ul-g').offsetWidth; if (w) { el._w = w; el.style.setProperty('--ud', Math.max(12, w / 40).toFixed(1) + 's'); } }
   }
   function openUpdSheet() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
@@ -410,7 +413,7 @@
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
         <b>${esc(gname(g))}</b><span class="hs">${esc(hs)}</span>
-        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg>${esc(t('gl.histSee'))}</span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
+        <span class="ft">${window.Historia && (!Historia.has || Historia.has(g.id)) ? `<span class="hsb" role="button" tabindex="0" data-hist="${g.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14M6 20V10M10 20V10M14 20V10M18 20V10M4 10h16M12 3l8 4.5H4z"/></svg><span class="hsl">${esc(t('gl.histSee'))}</span></span>` : ''}<span class="btn sm" role="button" tabindex="0" data-go>${esc(t('today.go'))} ▶</span></span></span>`;
     // the history fills the room above the two buttons; it is cut (…) only where the card truly has no more height
     // the history scrolls inside the card (no cut); only the picture and the ▶ button open the table
     el.setAttribute('aria-label', t('today.h') + ': ' + gname(g));
@@ -419,7 +422,12 @@
     { const b = el.querySelector('[data-go]'); b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') goT(e); }; }
     const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
     if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
-      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); }; }
+      hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
+      // when 「ヒストリアを見る」 doesn't fit its button (narrow phones, long languages) it says just 「ヒストリア」
+      const lb = hb.querySelector('.hsl'), fitH = () => { if (!hb.isConnected) return; lb.textContent = t('gl.histSee'); if (hb.scrollWidth > hb.clientWidth + 1) lb.textContent = t('gl.historia'); };
+      requestAnimationFrame(fitH); if (document.fonts) document.fonts.ready.then(fitH);
+      if (!renderToday.rs) { renderToday.rs = 1; let q = 0; addEventListener('resize', () => { clearTimeout(q); q = setTimeout(() => { const f = document.querySelector('#today [data-hist]'); if (f && f.__fit) f.__fit(); }, 150); }); }
+      hb.__fit = fitH; }
   }
 
   /* ---------- 3D board viewer ---------- */
@@ -1213,7 +1221,8 @@
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
   function dsegPos() { const tb = document.querySelector('.tabs'); if (tb) document.documentElement.style.setProperty('--tabsH', tb.offsetHeight + 'px'); }
-  addEventListener('resize', () => { if (page === 'dress') dsegPos(); });
+  addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
+  if (window.ResizeObserver) new ResizeObserver(dsegPos).observe(tabsEl);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
@@ -1390,6 +1399,7 @@
   }
   function render(k) {
     sfxIcon();
+    renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
     else if (k === 'shop') renderShop(); else if (k === 'gacha') renderGacha(); else if (k === 'dress') renderDress();
   }
@@ -1402,7 +1412,7 @@
     document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
   })();
 
-  applyLang(); refresh();
+  applyLang(); refresh(); dsegPos();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
   go(h0, false);
   history.replaceState(null, '', '#' + page);

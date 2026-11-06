@@ -431,7 +431,7 @@
     const y0 = map.offsetTop, stuck = () => map.classList.toggle('stuck', map.classList.contains('stick') && pg.scrollTop > y0 - 2);   // (y0: where the map sits before any scrolling)
     let sq = 0; pg.addEventListener('scroll', () => { if (!sq) sq = requestAnimationFrame(() => { sq = 0; stuck(); }); }, { passive: true });
     // the reader scrolling by hand pauses the automatic scrolling for a few seconds (it never fights them)
-    const mine = () => { hold = performance.now() + 4000; };
+    const mine = () => { hold = performance.now() + 4000; if (gl) { cancelAnimationFrame(gl); gl = 0; } };
     ['wheel', 'touchmove'].forEach(e => pg.addEventListener(e, mine, { passive: true }));
     pg.addEventListener('keydown', e => { if (/^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine(); });
     const bring = (n, force) => {
@@ -439,7 +439,18 @@
       const li = L[n]; if (!li || pg.scrollHeight <= pg.clientHeight + 2) return;
       const prev = L[n - 1], peek = prev ? Math.min(prev.offsetHeight * .45, 44) : 0;
       const top = Math.max(0, li.offsetTop - (map.classList.contains('stick') ? map.offsetHeight : 0) - 12 - peek);
-      if (Math.abs(top - pg.scrollTop) > 2) pg.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      if (Math.abs(top - pg.scrollTop) > 2) glide(top);
+    };
+    // a quick eased glide of our own (~0.4 s) — the native smooth scroll jumps on some phones (iOS) when the sticky map changes state
+    let gl = 0;
+    const glide = top => {
+      if (gl) cancelAnimationFrame(gl), gl = 0;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { pg.scrollTop = top; return; }
+      const y0 = pg.scrollTop, d = top - y0, T = Math.min(520, 260 + Math.abs(d) * .35), t0 = performance.now();
+      const st = now => { if (!pg.isConnected) { gl = 0; return; }
+        const k = Math.min(1, (now - t0) / T), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        pg.scrollTop = y0 + d * e; gl = k < 1 ? requestAnimationFrame(st) : 0; };
+      gl = requestAnimationFrame(st);
     };
     const set = (n, force) => { k = n; L.forEach((li, j) => { li.classList.toggle('on', j === n); li.classList.toggle('past', j < n); });
       const seen = new Set(pins.slice(0, n + 1)), cur = pins[n];
