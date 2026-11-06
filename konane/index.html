@@ -843,7 +843,11 @@ html[data-pcs=stone]{--pcB:url(img/pc-stone-b.webp);--pcW:url(img/pc-stone-w.web
 html[data-pcs=glass]{--pcB:url(img/pc-glass-b.webp);--pcW:url(img/pc-glass-w.webp)}
 html[data-pcs=matte]{--pcB:url(img/pc-matte-b.webp);--pcW:url(img/pc-matte-w.webp)}
 html[data-pcs=pearl]{--pcB:url(img/pc-pearl-b.webp);--pcW:url(img/pc-pearl-w.webp)}
-html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=3);--pcW:url(img/pc-koa-w.webp?v=3)}
+html[data-pcs=koa]{--pcB:url(img/pc-koa-b.webp?v=4);--pcW:url(img/pc-koa-w.webp?v=4)}
+/* koa: four cuts of the wood per colour, mixed over the stones so no two neighbours look alike */
+html[data-pcs=koa] .pieces .pc:nth-child(3n+2){--pcB:url(img/pc-koa-b-1.webp?v=1);--pcW:url(img/pc-koa-w-1.webp?v=1)}
+html[data-pcs=koa] .pieces .pc:nth-child(5n+3){--pcB:url(img/pc-koa-b-2.webp?v=1);--pcW:url(img/pc-koa-w-2.webp?v=1)}
+html[data-pcs=koa] .pieces .pc:nth-child(7n+4){--pcB:url(img/pc-koa-b-3.webp?v=1);--pcW:url(img/pc-koa-w-3.webp?v=1)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -1321,7 +1325,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=17"></script>
-<script src="../shared/headerbar.js?v=42"></script>
+<script src="../shared/headerbar.js?v=43"></script>
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
@@ -1332,13 +1336,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/onlinesec.js?v=2"></script>
 <script src="online.js?v=1"></script>
 <script src="../shared/resign.js?v=3"></script>
-<script src="rvbox.js?v=1"></script>
+<script src="rvbox.js?v=1-rc1"></script>
 <script src="../shared/coachkit.js?v=16"></script>
 <script src="../shared/record.js?v=12"></script>
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=9"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=3-rc1"></script>
 <script src="online-ui.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -1349,7 +1353,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=7')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=4')).then(() => load('../atlas/skin/konane.js?v=4'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=7')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/konane.js?v=5')).then(() => load('../atlas/skin/konane.js?v=5'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

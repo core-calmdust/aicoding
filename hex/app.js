@@ -2007,7 +2007,7 @@ if (window.RBox) RBox.init({
     if (cur < moves.length) { const x = rvCoachMove(); return { head: x.head, tag: x.tag, html: x.body }; }
     const st = statusAt(moves.length);
     const h = rvCoach().replace(/^<div class="cr-box"><div class="cr-h">[^<]*<\/div>/, '').replace(/<\/div>$/, '').replace(/<p class="cr-more">.*?<\/p>/, '');
-    return { head: RBox.t('final') + (st.winner ? ' · ' + escHb(t('hb.won', { c: pname(st.winner) })) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
+    return { head: RBox.t(st.over || st.winner ? 'final' : 'now') + (st.winner ? ' · ' + escHb(t('hb.won', { c: pname(st.winner) })) : ''), html: h + `<p class="rb-note">${RBox.t('finalNote')}</p>` };
   },
   analyze: rbAnalyze,
   hover: () => renderFx(),

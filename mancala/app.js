@@ -14,8 +14,11 @@ function t(k, v) {
   return x;
 }
 const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
-const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka', 'oware'];   // 'basic' is shown as "Normal"; Oware has its own group in the ゲーム tab
-const RULE_GROUPS = [['kalah', ['basic', 'easy', 'kalah', 'sunka']], ['oware', ['oware']]];
+const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka', 'oware', 'mangala', 'bohnen', 'ayo'];   // 'basic' is shown as "Normal"
+// the ゲーム tab: two rows of four — the store-sowing rules, then traditional rules of the world
+const RULE_GROUPS = [['kalah', ['basic', 'easy', 'kalah', 'sunka']], ['world', ['oware', 'mangala', 'bohnen', 'ayo']]];
+const ruleR = r => E.RULES[r] || E.RULES.kalah;
+const noStore = r => !!(ruleR(r).oware || r === 'bohnen' || r === 'ayo');   // rules whose stores only hold captures
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -56,7 +59,7 @@ function recompute() {
 }
 const shownPos = () => inStudy() ? studyTop() : P[cur];
 // Oware: a pit that would not reach the opponent's empty row cannot be played (lessons / puzzles have no Oware)
-const feedBlocked = (p, i) => game.rules === 'oware' && !lesson && !puzzle && p.b[i] > 0 && !E.isLegal(p.b, p.side, i % 7, 'oware');
+const feedBlocked = (p, i) => ruleR(game.rules).feed && !lesson && !puzzle && p.b[i] > 0 && !E.isLegal(p.b, p.side, i % 7, game.rules);
 const isOver = i => P[i === undefined ? cur : i].over;
 // resignation (common 投了 button): game.resigned = side that resigned; the game then ends at its last move
 const resignedNow = () => !lesson && !puzzle && game.resigned != null;
@@ -96,7 +99,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261106ow1');
+  const w = new Worker('engine.js?v=20261106wr1');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
   w.onerror = e => console.warn('worker', e.message);
@@ -451,7 +454,8 @@ async function animateMove(b, side, k, rules) {
         // capture: both pits light up, then the seeds fly together into the store
         capFx(ev.from); if (ev.own >= 0) capFx(ev.own);
         handAt(ev.to, 0, 'cap');
-        if (!run) { showBanner(t(rules === 'oware' ? 'bn.capO' : 'bn.capture'), '+' + (rules === 'oware' ? tr.cap : ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture(); }
+        const world = ruleR(rules).oware || ruleR(rules).gen;
+        if (!run) { showBanner(t(world ? 'bn.capO' : 'bn.capture'), '+' + (world ? tr.cap : ev.n + (ev.own >= 0 ? 1 : 0)), 'cap'); sCapture(); }
         else sDrop(true);
         await nap((run ? 300 : 650) * f);
         if (tok !== animTok) break;
@@ -473,7 +477,7 @@ async function animateMove(b, side, k, rules) {
         if (tok !== animTok) break;
         handHide();
         const moving = [];
-        for (let i = 0; i < 14; i++) if (!isStore(i) && seeds[i].length) { const to = ownerOf(i) ? 13 : 6; for (const s of seeds[i].splice(0)) moving.push([s, to]); counts[i] = 0; }
+        for (let i = 0; i < 14; i++) if (!isStore(i) && seeds[i].length) { const to = ev.to >= 0 ? ev.to : ownerOf(i) ? 13 : 6; for (const s of seeds[i].splice(0)) moving.push([s, to]); counts[i] = 0; }
         setBadges(counts);
         moving.forEach(([s, to], j) => { const [x, y] = placeIn(to, seeds[to]); seeds[to].push(s); setTimeout(() => { if (tok === animTok) fly(s, { slot: to, x, y }, 800 * f, 0.7); }, j * 40 * f); });
         await nap((850 + moving.length * 40) * f);
@@ -637,7 +641,7 @@ function drawPreview(i) {
   fxRing(tr.land, tr.extra ? 'ok' : tr.cap ? '' : '');
   const u = slotUV(tr.land);
   if (tr.extra) tipAt(tr.land, 'tip', t('pv.extra'));
-  else if (tr.cap && game.rules === 'oware') { for (const ev of tr.events) if (ev.t === 'cap') fxRing(ev.from, 'cap'); tipAt(tr.land, 'tip cap', t('pv.capO', { n: tr.cap })); }
+  else if (tr.cap && (ruleR(game.rules).oware || ruleR(game.rules).gen)) { for (const ev of tr.events) if (ev.t === 'cap') fxRing(ev.from, 'cap'); tipAt(tr.land, 'tip cap', t('pv.capO', { n: tr.cap })); }
   else if (tr.cap) { fxRing(tr.capFrom, 'cap'); tipAt(tr.land, 'tip cap', t('pv.cap', { n: tr.cap + (E.RULES[game.rules].cap === 2 ? 1 : 0) })); }
   else if (tr.slam) tipAt(tr.land, 'tip plain', t('pv.slam'));
 }
@@ -948,12 +952,15 @@ function onGameEnd() {
   setTimeout(() => $('#resultOverlay').classList.add('show'), 500);
   recordGame(w < 0 ? 'd' : w === game.human ? 'w' : 'l', a + '–' + o);
 }
-// Oware: how the game ended (25 captured / the empty row could not be fed / a position repeated three times)
+// how the game ended — Oware: 25 captured / the empty row could not be fed / a position repeated three times;
+// Mangala / Bohnenspiel / Ayoayo: who took the seeds left
 function owareEndText(pos) {
-  if (game.rules !== 'oware' || !pos || !pos.over || !pos.mv) return '';
+  const R = ruleR(game.rules);
+  if (!(R.oware || R.gen) || !pos || !pos.over || !pos.mv) return '';
   const b = pos.b, tot = b.reduce((a, x) => a + x, 0);
   if (pos.mv.cycle) return t('ow.end.cycle');
   if (pos.mv.fed) return t('ow.end.feed');
+  if (R.gen) return t('end.' + game.rules);
   if (b[6] * 2 === tot && b[13] * 2 === tot) return t('ow.end.draw');
   return t('ow.end.score', { w: Math.floor(tot / 2) + 1 });
 }
@@ -1153,6 +1160,20 @@ function ruleArt(r) {
     s += `<circle cx="${px(5)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/><circle cx="${px(4)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/>`;
     s += arrow(`M${px(5) + 3} ${y2 - 2} Q${W - 2} ${H / 2} ${px(5) + 4} ${y1 + 3}`, gold) + arrow(`M${px(5) + 7} ${y1 + 5} l-3 -2 l0.5 3.6`, gold);
     s += `<text x="${W - 10}" y="${H / 2 + 3}" font-size="9" text-anchor="middle" fill="${gold}" opacity=".85">×</text>`;
+  } else if (r === 'mangala') {   // the first seed back into its own pit, then on: an opposing pit made even is taken
+    for (let i = 0; i < n; i++) s += seeds(px(i), y2, i === 2 ? 1 : 2) + seeds(px(i), y1, i === 3 ? 0 : 2);
+    s += seeds(px(4), y1, 4, red) + `<circle cx="${px(4)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/>`;
+    s += `<circle cx="${px(2)}" cy="${y2}" r="${pr + 1.6}" fill="none" stroke="${gold}" stroke-width="1.2"/>` + arrow(`M${px(2)} ${y2 - 7} Q${px(2) - 6} ${y2 - 16} ${px(2) - 1} ${y2 - 8}`, gold);
+    s += seeds(W - 10, H / 2 - 4, 4, red) + arrow(`M${px(4) + pr + 1} ${y1 + 2} Q${W - 30} ${y1 + 2} ${W - 13} ${H / 2 - 6}`, red);
+  } else if (r === 'bohnen') {   // beans: a run of pits made 2, 4, 6 taken together (on either row)
+    for (let i = 0; i < n; i++) s += seeds(px(i), y2, i < 3 ? 6 : 5) + (i < 2 || i > 4 ? seeds(px(i), y1, 6) : '');
+    [[2, 2], [3, 4], [4, 6]].forEach(([i, k]) => { s += seeds(px(i), y1, k, red) + `<circle cx="${px(i)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/>`; });
+    s += arrow(`M${px(4) + pr + 2} ${y1 - 7} Q${px(3)} ${y1 - 15} ${px(2) - pr - 2} ${y1 - 7}`, red) + arrow(`M${px(2) - pr - 5} ${y1 - 9} l3 2.6 l0.4 -4`, red);
+  } else if (r === 'ayo') {   // relays on (skipping the start), then the last seed in your own empty pit takes the opposite
+    for (let i = 0; i < n; i++) s += seeds(px(i), y2, i === 4 ? 0 : 2) + seeds(px(i), y1, i === 1 ? 4 : 2);
+    s += seeds(px(1), y1, 4, red) + `<circle cx="${px(1)}" cy="${y1}" r="${pr + 1.6}" fill="none" stroke="${red}" stroke-width="1.2"/>`;
+    s += arrow(`M${px(0)} ${y2 - 7} Q${px(1)} ${y2 - 15} ${px(2)} ${y2 - 7}`, gold) + arrow(`M${px(2)} ${y2 - 7} Q${px(3)} ${y2 - 15} ${px(4)} ${y2 - 7}`, gold) + arrow(`M${px(4) - 4} ${y2 - 9} l4 2 l0 -4.5`, gold);
+    s += `<circle cx="${px(4)}" cy="${y2}" r="${pr + 1.6}" fill="none" stroke="${gold}" stroke-width="1.2"/>`;
   } else if (r === 'sunka') {   // relay: land on a full pit, pick it up, sow on
     for (let i = 0; i < n; i++) s += seeds(px(i), y1, 3) + seeds(px(i), y2, i === 1 ? 0 : 3);
     s += arrow(`M${px(1)} ${y2 - 7} Q${px(2)} ${y2 - 15} ${px(3)} ${y2 - 7}`, gold) + arrow(`M${px(3)} ${y2 - 7} Q${px(4)} ${y2 - 15} ${px(5)} ${y2 - 7}`, gold) + arrow(`M${px(5) - 4} ${y2 - 9} l4 2 l0 -4.5`, gold);
@@ -1165,9 +1186,9 @@ function ruleArt(r) {
   return s + '</svg>';
 }
 function renderRuleCards() {
-  // ゲーム tab (shared/ngtabs.js): two families, each with a heading — the store-sowing rules (four cards) and the
-  // traditional African rules (Oware, one wide card); every card: art, name, level + how it differs
-  const card = r => `<button type="button" class="ngt-gcard${draft.rules === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleArt(r)}</span><b>${t('rule.' + r)}</b><p><span class="gtag">${t('rule.' + r + '.lvl')}</span>${r === 'kalah' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`;
+  // ゲーム tab (shared/ngtabs.js): two rows of four with a heading each — the store-sowing rules, then traditional rules
+  // of the world; every card: art, the name with its level tags beside it, how it differs
+  const card = r => `<button type="button" class="ngt-gcard${draft.rules === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleArt(r)}</span><span class="gname"><b>${t('rule.' + r)}</b><span class="gtags"><span class="gtag">${t('rule.' + r + '.lvl')}</span>${r === 'kalah' ? `<span class="gtag">${t('rule.std')}</span>` : ''}</span></span><p>${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`;
   $('#ruleCards').innerHTML = RULE_GROUPS.map(([g, rs]) => `<section class="rgrp rg-${g}"><h4 class="rg-h"><b>${t('rg.' + g)}</b><small>${t('rg.' + g + '.d')}</small></h4><div class="ngt-gcards rg-cards n${rs.length}">${rs.map(card).join('')}</div></section>`).join('');
 }
 function segSync() {
@@ -1216,7 +1237,7 @@ $('#segSpeed').onclick = e => { const b = e.target.closest('button'); if (!b) re
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#segSeeds').onclick = e => { const b = e.target.closest('button'); if (b) { draft.seeds = +b.dataset.v; segSync(); } };
-$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rules = b.dataset.r; segSync(); } };
+$('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rules = b.dataset.r; if (draft.rules === 'bohnen') draft.seeds = 6; segSync(); } };   // (Bohnenspiel is played with 6 beans per pit)
 // the ルール button on each card (shared/ngtabs.js): the rules at that variant's page
 $('#ruleCards').ngtRules = r => openRules(r);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
@@ -1334,7 +1355,7 @@ async function rtSow(api, b, k, rules) {
   const handXY = i => { const [x, y] = mbXY(i); return [x, isStore(i) ? y - 34 : i > 6 ? y + 34 : y - 34]; };   // the hand travels in the lane between the rows
   const arc = (a, z, e, lift) => [a[0] + (z[0] - a[0]) * e, a[1] + (z[1] - a[1]) * e - Math.sin(Math.PI * e) * lift];
   let mk = { [k]: 'src' }, at = k, held = 0;
-  const draw = () => rtDraw(api, c, mk, { busy: true, caption: rules === 'oware' ? t('rl.owBottom') : '' });
+  const draw = () => rtDraw(api, c, mk, { busy: true, caption: noStore(rules) ? t('rl.owBottom') : '' });
   for (const ev of tr.events) {
     if (!api.alive()) return tr;
     if (ev.t === 'pick') {
@@ -1375,8 +1396,9 @@ async function rtSow(api, b, k, rules) {
     } else if (ev.t === 'sweep') {
       await api.sleep(T(300));
       const fl = [];
-      for (let i = 0; i < 14; i++) if (!isStore(i) && c[i]) { for (let j = 0; j < Math.min(c[i], 4); j++) fl.push([mbXY(i), mbXY(i < 6 ? 6 : 13), j + i]); }
-      const gain0 = c.slice(0, 6).reduce((x, y) => x + y, 0), gain1 = c.slice(7, 13).reduce((x, y) => x + y, 0);
+      for (let i = 0; i < 14; i++) if (!isStore(i) && c[i]) { for (let j = 0; j < Math.min(c[i], 4); j++) fl.push([mbXY(i), mbXY(ev.to >= 0 ? ev.to : i < 6 ? 6 : 13), j + i]); }
+      let gain0 = c.slice(0, 6).reduce((x, y) => x + y, 0), gain1 = c.slice(7, 13).reduce((x, y) => x + y, 0);
+      if (ev.to === 6) { gain0 += gain1; gain1 = 0; } else if (ev.to === 13) { gain1 += gain0; gain0 = 0; }
       for (let i = 0; i < 6; i++) c[i] = c[7 + i] = 0;
       mk = { [6]: 'store', [13]: 'store' }; draw();
       await rtTween(api, T(700), e => rtOverlay(api, { gems: fl.map(([p0, p1, j]) => { const [x, y] = arc(p0, [p1[0], p1[1] - 30 + (j % 6) * 12], rtEase(e), 30); return [x, y, j]; }) }));
@@ -1388,7 +1410,7 @@ async function rtSow(api, b, k, rules) {
   if (tr.extra && !tr.over) { rtOverlay(api, { ring: tr.land }); await api.sleep(T(300)); }
   const fm = { [k]: 'src', [tr.land]: tr.extra ? 'store' : 'land' };
   if (tr.cap) { fm[tr.capFrom] = 'cap'; fm[6] = 'store'; for (const ev of tr.events) if (ev.t === 'cap') fm[ev.from] = 'cap'; }
-  rtDraw(api, Array.from(tr.board), fm, { busy: true, caption: rules === 'oware' ? t('rl.owBottom') : '' });
+  rtDraw(api, Array.from(tr.board), fm, { busy: true, caption: noStore(rules) ? t('rl.owBottom') : '' });
   return tr;
 }
 // a page: board b; clicking a pit sows it; judge(trace, k) -> true (cleared) / string (wrong, message)
@@ -1396,7 +1418,7 @@ function rtSowPage(id, title, body, task, b, rules, judge, opt) {
   opt = opt || {};
   return { id, title, body, task, setup(api) {
     let busy = false;
-    rtDraw(api, b, opt.marks, { caption: rules === 'oware' ? t('rl.owBottom') : '' });
+    rtDraw(api, b, opt.marks, { caption: noStore(rules) ? t('rl.owBottom') : '' });
     if (opt.say) api.say(opt.say());
     api.board.onclick = async e => {
       if (busy || api.state.done) return;
@@ -1458,26 +1480,89 @@ const RT_PAGES = [
   rtSowPage('owEnd', () => t('rl.owEnd.h'), () => `<p>${t('rl.owEnd')}</p>`, () => t('rt.owEnd.task'),
     B0([0, 2, 0, 1, 0, 2], [1, 1, 0, 0, 1, 0], 23, 17), 'oware', tr => (tr.over && tr.board[6] > tr.board[13]) || t('rt.owEnd.ng'),
     { okMsg: tr => `${t('rt.owEnd.ok')} <b>${tr.board[6]} − ${tr.board[13]}</b>` }),
+  // Mangala (Turkey): first seed back into its own pit; an opposing pit made even is taken; the emptied row takes the rest
+  rtSowPage('mgSow', () => t('rl.mgSow.h'), () => `<p>${t('rl.mgSow')}</p>`, () => t('rt.mgSow.task'),
+    B0([2, 1, 4, 3, 0, 2], [3, 2, 4, 1, 2, 3], 10, 11), 'mangala', () => true,
+    { only: 2, onlyMsg: () => t('rt.mgSow.ng'), okMsg: () => t('rt.mgSow.ok') }),
+  rtSowPage('mgCap', () => t('rl.mgCap.h'), () => `<p>${t('rl.mgCap')}</p>`, () => t('rt.mgCap.task'),
+    B0([1, 2, 0, 3, 1, 4], [2, 3, 1, 4, 2, 1], 12, 12), 'mangala', tr => (tr.cap > 0 && tr.land >= 7) || t('rt.mgCap.ng'),
+    { okMsg: () => t('rt.mgCap.ok') }),
+  rtSowPage('mgEnd', () => t('rl.mgEnd.h'), () => `<p>${t('rl.mgEnd')}</p>`, () => t('rt.mgEnd.task'),
+    B0([0, 0, 0, 0, 0, 1], [2, 1, 3, 0, 1, 2], 20, 18), 'mangala', tr => (tr.over && tr.board[6] > tr.board[13]) || t('rt.mgEnd.ng'),
+    { okMsg: tr => `${t('rt.mgEnd.ok')} <b>${tr.board[6]} − ${tr.board[13]}</b>` }),
+  // Bohnenspiel: 2 / 4 / 6 on either row, with the run before; a player with no beans on their turn ends the game
+  rtSowPage('bnCap', () => t('rl.bnCap.h'), () => `<p>${t('rl.bnCap')}</p>`, () => t('rt.bnCap.task'),
+    B0([6, 5, 3, 7, 2, 3], [3, 1, 5, 6, 6, 6], 10, 9), 'bohnen', tr => tr.caps >= 2 || t('rt.bnCap.ng'),
+    { okMsg: () => t('rt.bnCap.ok') }),
+  rtSowPage('bnEnd', () => t('rl.bnEnd.h'), () => `<p>${t('rl.bnEnd')}</p>`, () => t('rt.bnEnd.task'),
+    B0([0, 0, 0, 3, 0, 1], [1, 0, 0, 0, 0, 0], 34, 33), 'bohnen', tr => (tr.over && tr.board[6] > tr.board[13]) || t('rt.bnEnd.ng'),
+    { okMsg: tr => `${t('rt.bnEnd.ok')} <b>${tr.board[6]} − ${tr.board[13]}</b>` }),
+  // Ayoayo: relay sowing (skipping the start), the last seed in your own empty pit takes the opposite seeds
+  rtSowPage('ayRelay', () => t('rl.ayRelay.h'), () => `<p>${t('rl.ayRelay')}</p>`, () => t('rt.ayRelay.task'),
+    B0([2, 1, 0, 3, 1, 2], [1, 0, 2, 1, 3, 2], 15, 15), 'ayo', tr => tr.relays > 0 || t('rt.ayRelay.ng'),
+    { okMsg: () => t('rt.ayRelay.ok') }),
+  rtSowPage('ayCap', () => t('rl.ayCap.h'), () => `<p>${t('rl.ayCap')}</p>`, () => t('rt.ayCap.task'),
+    B0([1, 0, 3, 0, 2, 0], [2, 4, 1, 3, 5, 2], 13, 12), 'ayo', tr => tr.cap > 0 || t('rt.ayCap.ng'),
+    { okMsg: () => t('rt.ayCap.ok') }),
 ];
-// the new-game dialog's "?" opens the page of that rule variant directly (by page id)
-const RT_START = { kalah: 'sow', easy: 'variants', basic: 'capB', sunka: 'relay', oware: 'owSow' };
-const ruleTour = window.RuleTour ? RuleTour.create({
-  mount: '#rulesBody', store: 'mancala-rules-v2', lang: () => LANG, aspect: MB.W / MB.H,
-  close: () => $('#rulesOverlay').classList.remove('show'),
-  play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); },
-  lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),
-  sound: k => (k === 'ok' ? sExtra() : sWrong()),
-  pages: RT_PAGES,
-}) : null;
-// r: open at the page of that rule variant (from the new-game dialog); the menu / first-time banner start at step 1
+// the rules are split by game variant: each rule set has its own short course (the common intro, the pages of that
+// rule, then the rule comparison); a row of the eight rule sets above the steps switches between them
+const RT_COURSES = {
+  basic: ['intro', 'sow', 'extra', 'capB', 'end', 'variants'],
+  easy: ['intro', 'sow', 'extra', 'end', 'variants'],
+  kalah: ['intro', 'sow', 'extra', 'cap', 'end', 'variants'],
+  sunka: ['intro', 'sow', 'extra', 'cap', 'relay', 'end', 'variants'],
+  oware: ['intro', 'owSow', 'owCap', 'owChain', 'owLap', 'owFeed', 'owSlam', 'owEnd', 'variants'],
+  mangala: ['intro', 'mgSow', 'mgCap', 'mgEnd', 'variants'],
+  bohnen: ['intro', 'bnCap', 'bnEnd', 'variants'],
+  ayo: ['intro', 'ayRelay', 'ayCap', 'variants'],
+};
+const RT_STORE = 'mancala-rules-v2', RT_LAST = STORE + '-rules-course';
+const rtTours = {};
+let rtCourse = (() => { try { const c = localStorage.getItem(RT_LAST); if (RT_COURSES[c]) return c; } catch (e) {} return null; })();
+function rtTour(c) {
+  if (!window.RuleTour) return null;
+  if (rtTours[c]) return rtTours[c];
+  const el = document.createElement('div'); el.className = 'rt-course'; el.dataset.c = c; $('#rulesBody').appendChild(el);
+  return (rtTours[c] = RuleTour.create({
+    mount: el, store: RT_STORE, lang: () => LANG, aspect: MB.W / MB.H,
+    close: () => $('#rulesOverlay').classList.remove('show'),
+    play: () => { $('#rulesOverlay').classList.remove('show'); openNewDialog(); draft.rules = c; if (c === 'bohnen') draft.seeds = 6; segSync(); },   // (the new game starts with this rule picked)
+    lessons: () => tabSwitch(() => { $('#rulesOverlay').classList.remove('show'); openLessons(); }),
+    sound: k => (k === 'ok' ? sExtra() : sWrong()),
+    onMark: () => rtPick(),
+    pages: RT_COURSES[c].map(id => RT_PAGES.find(p => p.id === id)),
+  }));
+}
+const curTour = () => rtCourse ? rtTours[rtCourse] || null : null;
+// the rule-set row (short names; a ✓ once every step of that course is cleared)
+function rtPick() {
+  let box = $('#rtPick');
+  if (!box) { box = document.createElement('div'); box.id = 'rtPick'; box.className = 'seg var-tabs'; box.setAttribute('role', 'tablist'); $('#rulesBody').prepend(box);
+    box.onclick = e => { const b = e.target.closest('button[data-c]'); if (b && b.dataset.c !== rtCourse) { rtShow(b.dataset.c); sTick(); } }; }
+  let done = {}; try { done = JSON.parse(localStorage.getItem(RT_STORE) || '{}'); } catch (e) {}
+  box.innerHTML = RULE_ORDER.map(r => { const all = RT_COURSES[r].every(id => done[id]); return `<button type="button" role="tab" data-c="${r}" class="${r === rtCourse ? 'sel' : ''}" aria-selected="${r === rtCourse}">${t('rule.' + r + '.s') !== 'rule.' + r + '.s' ? t('rule.' + r + '.s') : t('rule.' + r)}${all ? '<small class="ok">✓</small>' : ''}</button>`; }).join('');
+}
+// show course c at page i (keeps the page the course was on when i is undefined)
+function rtShow(c, i) {
+  const old = curTour(); if (old && rtCourse !== c) old.stop();
+  rtCourse = c; try { localStorage.setItem(RT_LAST, c); } catch (e) {}
+  const tour = rtTour(c);
+  document.querySelectorAll('#rulesBody > .rt-course').forEach(el => el.classList.toggle('hidden', el.dataset.c !== c));
+  rtPick();
+  if (tour) tour.open(i === undefined ? tour.page : i);
+}
+// r: open that rule's course at its first rule page (from the new-game dialog); the menu / first-time banner open the
+// course of the rule being played (or the one looked at last) where it was left
 // the rules are the first tab of the lessons dialog (ルール / レッスン / パズル)
 function openRules(r) {
   selTab('rules'); $('#lessonOverlay').classList.remove('show'); $('#puzzleOverlay').classList.remove('show');
   $('#rulesOverlay').classList.add('show');
-  if (ruleTour) ruleTour.open(r && RT_START[r] ? Math.max(0, RT_PAGES.findIndex(p => p.id === RT_START[r])) : 0);
+  if (r && RT_COURSES[r]) rtShow(r, 1);
+  else rtShow(RT_COURSES[game.rules] && !lesson && !puzzle ? game.rules : rtCourse || 'kalah');
 }
-function renderRules() { if (ruleTour) ruleTour.render(); }
-$('#rulesClose').onclick = () => { if (ruleTour) ruleTour.stop(); $('#rulesOverlay').classList.remove('show'); };
+function renderRules() { rtPick(); const tour = curTour(); if (tour) tour.render(); }
+$('#rulesClose').onclick = () => { const tour = curTour(); if (tour) tour.stop(); $('#rulesOverlay').classList.remove('show'); };
 
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
@@ -1514,7 +1599,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
   const v = b.dataset.v, shown = { rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }[v];
   if (!shown || ($(shown).classList.contains('show') && !(v === 'lesson' && $('#lessonListView').classList.contains('hidden')))) return;
   tabSwitch(() => {
-    if (v !== 'rules' && ruleTour) ruleTour.stop();
+    if (v !== 'rules' && curTour()) curTour().stop();
     Object.values({ rules: '#rulesOverlay', lesson: '#lessonOverlay', puzzle: '#puzzleOverlay' }).forEach(x => { if (x !== shown) $(x).classList.remove('show'); });
     if (v === 'rules') openRules(); else if (v === 'puzzle') openPuzzles(); else openLessons();
   });

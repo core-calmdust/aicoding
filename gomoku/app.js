@@ -2140,7 +2140,8 @@ function rvbSummary() {
   const st = statusAt(moves.length), sides = settings.mode === 'ai' ? [humanColor] : [P1, P2], S = {}, all = [];
   sides.forEach(p => (S[p] = { n: 0, ok: 0, bad: 0, dubious: 0 }));
   for (let i = 0; i < moves.length; i++) { const who = toMoveAt(i); if (!S[who]) continue; const j = rvJudge(i); if (!j) continue; const x = S[who]; x.n++; if (j.ok) x.ok++; if (j.q) { x[j.q]++; all.push({ i, who, ...j }); } }
-  let h = `<div class="rvb-h">${t('hb.over')} · ${st.winner ? t('res.pWin', { c: pname(st.winner) }) : st.draw ? t('res.draw') : ''} · ${t('info.moves', { n: moves.length })}</div>`;
+  // (分析は対局の途中でもできる: 終局前は「現在の局面」と手数だけ)
+  let h = st.over ? `<div class="rvb-h">${t('hb.over')} · ${st.winner ? t('res.pWin', { c: pname(st.winner) }) : st.draw ? t('res.draw') : ''} · ${t('info.moves', { n: moves.length })}</div>` : `<div class="rvb-h">${BOX.t('now')} · ${t('info.moves', { n: moves.length })}</div>`;
   for (const p of sides) { const x = S[p]; h += `<p>${BOX.t('sumWho', { who: sideLabel(p), p: x.n ? Math.round(x.ok / x.n * 100) : 0, b: x.bad, d: x.dubious })}</p>`; }
   if (!all.length) h += `<p class="rvb-tip">${BOX.t('clean')}</p>`;
   else { const x = all.slice().sort((a, b) => b.loss - a.loss)[0]; h += `<p><b>${BOX.t('turn')}</b> ${x.i + 1}. <b>${sqName(x.m)}</b> <span class="tag ${x.q}" style="font-size:12px;font-weight:700;border-radius:5px;padding:1px 7px;color:#0b1110">${t('q.' + x.q)}</span> → <b>${sqName(x.best)}</b><button class="rvb-see" data-goto="${x.i}">${BOX.t('see')}</button></p>`; }

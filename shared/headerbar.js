@@ -459,6 +459,31 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 // (the review card and the record sharing a column made short by the review box under the board, the online panel…),
 // html.side-tight lets the review card / record / coach give way (they scroll inside) and lowers the graph; html.side-tighter
 // also hides the graph and the players' extra line; html.side-tightest (still too tall) lets the column scroll. Measured on every layout change, so it only steps in where needed (2026-11-06)
+// the review box under the board / in the info column must always be closable the same way: where the review card (with its
+// 閉じる) is not shown (fanorona's wide layout, backgammon), the box gets the same 閉じる at its top right (2026-11-06)
+function rvCloseInBox() {
+  if (!document.getElementById('rvcbCss')) { const st = document.createElement('style'); st.id = 'rvcbCss';
+    st.textContent = '.rvcb{position:absolute;top:8px;inset-inline-end:12px;z-index:5;border:0;background:none;padding:2px 4px;font:inherit;font-size:13px;letter-spacing:.04em;color:var(--muted,#9a9184);cursor:pointer}.rvcb:hover{color:var(--text,#eee)}.rvcb[hidden]{display:none}';
+    document.head.appendChild(st); }
+  let q = 0;
+  const run = () => { q = 0;
+    const close = document.getElementById('rvClose'); if (!close) return;
+    const shown = e => !!(e && e.getClientRects().length && e.getBoundingClientRect().height > 2);
+    const own = shown(close);
+    document.querySelectorAll('.app .rvbox, .app .rbox, body > .rbox').forEach(box => {
+      let b = box.querySelector(':scope > .rvcb');
+      const want = !own && shown(box);
+      if (!want) { if (b && !b.hidden) b.hidden = true; return; }
+      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'rvcb'; b.onclick = e => { e.stopPropagation(); const c = document.getElementById('rvClose'); if (c) c.click(); }; if (getComputedStyle(box).position === 'static') box.style.position = 'relative'; box.prepend(b); }
+      const tx = close.textContent.trim(); if (b.textContent !== tx) b.textContent = tx; if (b.title !== (close.title || tx)) b.title = close.title || tx; if (b.hidden) b.hidden = false;   // (only real changes: this runs from a MutationObserver)
+    });
+  };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true, childList: true });
+  new MutationObserver(later).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', later); later();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(rvCloseInBox, 0)); else setTimeout(rvCloseInBox, 0);
 function sideTight() {
   const root = document.documentElement;
   if (!document.getElementById('sideTightCss')) {

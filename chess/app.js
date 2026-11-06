@@ -2143,7 +2143,7 @@ async function runReview() {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   if (net) return;
   if (moves.length < 1) { toast(t('nokifu')); return; }
-  if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); revealReview(); return; }
+  if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); rvbRender(); revealReview(); return; }   // (the box under the board comes back too)
   rvCancel();
   const game = moves.slice(), key = gameKey(), fen = startFen;
   const run = rv = { key, list: [], done: 0, total: game.length, running: true, ws: [] };
@@ -2240,7 +2240,7 @@ function drawReviewFx(svg) {
   return true;
 }
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
-$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
+$('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); rvbRender(); };   // (閉じる also closes the box under the board, as in every game)
 $('#btnAnalyze').onclick = () => runReview();
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 // your dubious moves and blunders against the AI (graded by the coach) become practice problems
@@ -2342,7 +2342,7 @@ function rvbRender() {
     const q = !j ? '' : j.q || (j.best === j.m ? 'best' : 'good');
     head = `<b>${no} ${hbEsc(sanOf(cur))}</b>${q ? `<span class="tag ${q}">${hbEsc(t('cq.' + q))}</span>` : ''}`;
     explain = rvExplainHtml().replace(/<div class="rv-ex-h">[\s\S]*?<\/div>/, '');
-  } else { head = hbEsc(RVB.T('final')); explain = rvbSummary(); }
+  } else { head = hbEsc(RVB.T(gameOver(moves.length) ? 'final' : 'now')); explain = rvbSummary(); }
   RVB.render({ show: true, study: inStudy(), canBack: inStudy() && cur > rvStudy.base, head, explain, unit: RVB.T('unit'), key: over ? '' : key, start: over ? null : rvbCands });
 }
 // the hovered candidate on the board: its arrow, the reply fainter
