@@ -325,7 +325,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   let flips = [], flipT = 0, watch = null;
   const dockDone = () => Promise.all((dock.getAnimations ? dock.getAnimations({ subtree: true }) : []).map(a => a.finished.catch(() => 0)));
   const stopFlips = () => { flips.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; clearTimeout(flipT); root.classList.remove('dock-anim'); };
-  const flip = (before, dur = D) => {
+  const flip = (before, dur = D, chained = false) => {
     stopFlips();
     // (a box that was not one before — a column that was display:contents and now holds its cards — moves as its cards:
     // each of them from where it was)
@@ -351,7 +351,7 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     const mine = flips;
     // the end (all finished, or at the latest 4 s — a busy page may start them late, a hidden tab never runs them): everything measures the final place once
     return new Promise(res => {
-      const end = () => { if (flips !== mine) return res(); clearTimeout(flipT); mine.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; let last = snap(); root.classList.remove('dock-anim'); relayout(true); res(); after(last); };
+      const end = () => { if (flips !== mine) return res(); clearTimeout(flipT); mine.forEach(a => { try { a.cancel(); } catch (e) {} }); flips = []; let last = snap(); root.classList.remove('dock-anim'); relayout(true); res(); after(last, chained); };
       // (and the dock's own animation: whatever measures the space above it then sees its final place)
       Promise.all(mine.map(a => a.finished).concat(dockDone())).then(end, end); flipT = setTimeout(end, 4000);
     });
@@ -359,13 +359,16 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
   // for a moment after the end: the final layout pass (and a game that lays its board out again a little later — go redraws
   // after a resize; the 3D pages re-centre the board group) can still move or resize the board a few px — each such change is
   // shown as a short move too, not as a jump (checked every frame before it is painted, for 1.2 s)
-  const after = last => {
-    if (watch) watch(); const t0 = performance.now(); let raf = 0, stop = false;
+  // (one window per open / close: a move shown from inside the watch does not open a new one — a page whose layout kept
+  // changing after every relayout (two fits taking turns) was otherwise moved again and again, forever)
+  let afterT0 = 0;
+  const after = (last, chained) => {
+    if (watch) watch(); const t0 = chained ? afterT0 : (afterT0 = performance.now()); let raf = 0, stop = false;
     const moved = now => kids().some(c => { const o = last.get(c), n = now.get(c); return o && n && (Math.abs(o.r.width - n.r.width) > 1 || Math.abs(o.r.top - n.r.top) > 1 || Math.abs(o.r.left - n.r.left) > 1); });
     const tick = () => {
       if (stop) return;
       if (performance.now() - t0 > 1200) { watch = null; return; }
-      if (!flips.length) { const now = snap(); if (moved(now)) { const b = last; last = now; flip(b, 180); } }
+      if (!flips.length) { const now = snap(); if (moved(now)) { const b = last; last = now; flip(b, 180, true); } }
       raf = requestAnimationFrame(tick);
     };
     watch = () => { stop = true; cancelAnimationFrame(raf); watch = null; };
