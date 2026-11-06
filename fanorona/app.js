@@ -61,8 +61,12 @@ function canon(pos, m) { const L = pos.moves(); if (L.includes(m)) return m; for
 // ====================================================================== state
 const STORE = GM.store || 'aicoding-fanorona';
 const settings = { mode: 'ai', rule: BASE, color: 1, level: 1, level2: 1, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, coach: true, lang: '', bd: GM.bd || 'lambared', pcs: GM.pcs || 'lacquer' };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() {
+  const n = (navigator.language || 'ja').toLowerCase();
+  if (/^zh-(tw|hk|mo)\b|^zh-hant\b/.test(n)) return 'zh-TW';
+  return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || (n.startsWith('in') ? 'id' : 'en');
+}
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
@@ -71,7 +75,7 @@ const LV_MAX = 20;
 const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
 const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
-  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;   // zh-TW stays 'zh-TW'
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
   document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });

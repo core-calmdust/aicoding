@@ -1129,7 +1129,7 @@
     const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
     $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
-    $('bvTodW').classList.toggle('notod', k !== 0 && k !== 2 && k !== 4);   // the time of day: the chabudai's room, the dining room and the terrace
+    $('bvTodW').classList.toggle('notod', k === 1);   // the time of day: every place but 「2D準拠」 (which follows the 2D page)
     const m = $('bvPlMenu'); if (!m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
     btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); };
     if (!renderPlace.bound) { renderPlace.bound = 1;
@@ -1240,6 +1240,29 @@
     }
     requestAnimationFrame(upd);
   }
+  /* every other row that scrolls sideways (the place / board pickers on phones, the category chips): a translucent ‹ › guide on the side
+     that has more, and a soft fade there. Rows are found as they appear (pickers are rebuilt each time they open). Not for rows that
+     already have their own buttons (.hsc, the updates row). */
+  const SG_SEL = '.plrow, .chips';
+  function scrollGuide(row) {
+    if (row._sg || row.closest('.hsc') || !row.parentNode) return; row._sg = 1;
+    const w = document.createElement('div'); w.className = 'sgw'; row.parentNode.insertBefore(w, row); w.appendChild(row);
+    const mk = (side, d) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sgn ' + side; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true');
+      b.innerHTML = `<svg viewBox="0 0 24 24"><path d="${side === 'l' ? 'M15 5 8 12l7 7' : 'M9 5l7 7-7 7'}"/></svg>`;
+      b.onclick = e => { e.stopPropagation(); row.scrollBy({ left: d * Math.max(140, row.clientWidth * .7), behavior: 'smooth' }); }; w.appendChild(b); return b; };
+    const L = mk('l', -1), Rb = mk('r', 1);
+    const upd = () => { const rtl = getComputedStyle(row).direction === 'rtl', x = Math.abs(row.scrollLeft), m = row.scrollWidth - row.clientWidth;
+      const scr = m > 8 && getComputedStyle(row).overflowX !== 'visible', a = scr && x > 8, b = scr && x < m - 8;   // (8: snap padding is not 'more')   // a: hidden at the start, b: at the end
+      const left = rtl ? b : a, right = rtl ? a : b;
+      L.classList.toggle('on', left); Rb.classList.toggle('on', right); row.classList.toggle('sgL', left); row.classList.toggle('sgR', right); };
+    row.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd);
+    try { new ResizeObserver(upd).observe(row); } catch (e) {}
+    try { new MutationObserver(() => requestAnimationFrame(upd)).observe(row, { childList: true }); } catch (e) {}
+    requestAnimationFrame(upd); setTimeout(upd, 400);
+  }
+  const sgScan = root => { if (root.matches && root.matches(SG_SEL)) scrollGuide(root); if (root.querySelectorAll) root.querySelectorAll(SG_SEL).forEach(scrollGuide); };
+  sgScan(document.body);
+  try { new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1 && !n.classList.contains('sgw')) sgScan(n); }))).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
   let achF = 'all', achS = 'all';   // achS: done / to-do filter (phones and PC)
   function renderAch() {
     $('hAch').textContent = t('ach.h');

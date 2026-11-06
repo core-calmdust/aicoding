@@ -38,7 +38,7 @@ function enhance(sel) {
   sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(btn); wrap.appendChild(sel); sel.style.display = 'none';
   const pop = document.createElement('div'); pop.className = 'lsel-pop'; pop.setAttribute('role', 'listbox'); document.body.appendChild(pop);
   const opts = () => [...sel.options];
-  const label = () => { const o = sel.options[sel.selectedIndex] || sel.options[0]; btn.innerHTML = GLOBE + `<span class="lsel-n">${o ? o.textContent : ''}</span><span class="lsel-c">${o ? o.value.toUpperCase() : ''}</span>` + CHEV; };
+  const label = () => { const o = sel.options[sel.selectedIndex] || sel.options[0]; btn.innerHTML = GLOBE + `<span class="lsel-n">${o ? o.textContent : ''}</span><span class="lsel-c">${o ? (o.value === 'zh-TW' ? 'TW' : o.value.toUpperCase()) : ''}</span>` + CHEV; };
   // follow programmatic changes of .value / .selectedIndex
   const P = HTMLSelectElement.prototype;
   for (const k of ['value', 'selectedIndex']) {
