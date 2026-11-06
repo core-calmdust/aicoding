@@ -19,7 +19,7 @@
    The page calls RvBox.refresh() after it renders, and checks RvBox.cons (study on) for its input and keys. */
 (function () {
   const MQ = (window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
-  const TX = {
+  const RBX = {
     ja: { final: '最終局面', now: '現在の局面', cands: '候補手', pv: '読み筋', loading: '読み込み中…', study: '検討する', studying: '検討中', revert: '元に戻す', back: '1手戻す', played: '実戦', none: '候補手はありません（終局）', studyNote: '盤上で自由に手を指せます。候補手をクリックしてもその手を指せます。', studyN: '検討 {n}手', rowTip: 'クリックでこの手を指して検討' },
     en: { final: 'Final position', now: 'Current position', cands: 'Candidate moves', pv: 'Line', loading: 'Loading…', study: 'Explore', studying: 'Exploring', revert: 'Revert', back: 'One move back', played: 'Played', none: 'No candidates (game over)', studyNote: 'Play any moves on the board, or click a candidate to play it.', studyN: 'Explore: {n} moves', rowTip: 'Click to play this move and explore' },
     zh: { final: '最终局面', now: '当前局面', cands: '候选着法', pv: '变化', loading: '读取中…', study: '研究', studying: '研究中', revert: '还原', back: '退回一步', played: '实战', none: '没有候选着法（已终局）', studyNote: '可以在棋盘上自由落子，点击候选着法也可以走出该着。', studyN: '研究 {n}步', rowTip: '点击走这一步进行研究' },
@@ -38,7 +38,7 @@
   let A = null, box = null, flag = null, mq = null, shown = false;
   let key = null, rows = null, done = false, job = 0, hov = null;
   const R = { cons: false, refresh, init, endCons, get shown() { return shown; }, pc: () => !!(mq && mq.matches), tx: (k, v) => tx(k, v) };
-  const tx = (k, v) => { const L = TX[(A && A.lang()) || 'en'] || TX.en; let s = L[k] || TX.en[k] || k; if (v) for (const n in v) s = s.split('{' + n + '}').join(v[n]); return s; };
+  const tx = (k, v) => { const L = RBX[(A && A.lang()) || 'en'] || RBX.en; let s = L[k] || RBX.en[k] || k; if (v) for (const n in v) s = s.split('{' + n + '}').join(v[n]); return s; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const CSS = `
 @media ${MQ}{
