@@ -134,22 +134,24 @@
 
   /* ---------- HOME ---------- */
   const GLOGO = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
-  function renderAcc() {
-    const host = document.querySelector('#prof .accw'); if (!host || !window.AtlasAccount) return;
-    let el = document.getElementById('acc'); if (!el) { el = document.createElement('div'); el.id = 'acc'; el.className = 'acc'; host.appendChild(el); }
-    const s = AtlasAccount.state();
-    if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
-    if (!s.user) { el.innerHTML = `<button class="gbtn" id="accIn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; $('accIn').onclick = () => AtlasAccount.signIn(); return; }
-    const when = s.last ? new Date(s.last).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) : '';
-    el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
-      <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost" id="accOut">${t('acc.out')}</button>`;
-    $('accOut').onclick = () => AtlasAccount.signOut();
+  function renderAcc() {   // Google sign-in / account state, in every .accw host (home profile card, My Page on きせかえ)
+    if (!window.AtlasAccount) return;
+    const s = AtlasAccount.state(), when = s.last ? new Date(s.last).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) : '';
+    document.querySelectorAll('.accw').forEach(host => {
+      let el = host.querySelector('.acc'); if (!el) { el = document.createElement('div'); el.className = 'acc'; host.appendChild(el); }
+      el.title = '';
+      if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
+      if (!s.user) { el.innerHTML = `<button class="gbtn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; el.querySelector('.gbtn').onclick = () => AtlasAccount.signIn(); return; }
+      el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
+      <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost">${t('acc.out')}</button>`;
+      el.querySelector('.btn').onclick = () => AtlasAccount.signOut();
+    });
   }
   if (window.AtlasAccount) {
     AtlasAccount.on(() => renderAcc());
     window.addEventListener('atlas-synced', () => { W = A_.load(); refresh(); if (!session) render(page); });
     // when the name changes, fill it in from Google if empty
-    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); const ni = $('nameIn'); if (ni) ni.value = W.name; } });
+    AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); ['nameIn', 'mpName'].forEach(id => { const ni = $(id); if (ni) ni.value = W.name; }); } });
   }
   // floating toy pieces around the title: [piece image, game, x%, y%, width px, rotation]
   // the pieces floating round the title: one signature piece per game (the first 11 are the ones phones show)
@@ -1060,23 +1062,55 @@
   })();
 
   let pfOpen = false;
-  function renderProfile() {
+  // the numbers the home profile card and My Page (きせかえ) share
+  function profStats() {
     const touched = A_.GAMES.filter(g => P[g.id].touched).length, done = ACH.filter(a => a.done).length;
-    const s = Math.max(1, W.login.streak || 1), pos = ((s - 1) % 7) + 1, lv = 1 + Math.floor(done / 3);
+    const s = Math.max(1, W.login.streak || 1);
+    return { touched, done, s, pos: ((s - 1) % 7) + 1, lv: 1 + Math.floor(done / 3) };
+  }
+  const pTile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
+  // the login week as a row of coin stamps
+  const weekHtml = (head, pos) => `<div class="lgw"><div class="lgh"><b>${head}</b><small>${esc(t('login.week'))}</small></div>
+      <div class="lgd">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="d ${d < pos ? 'got' : d === pos ? 'got now' : ''} ${d === 7 ? 'big' : ''}"><i>${d === 7 ? '🎁' : '¢'}</i><small>+${d === 7 ? 180 : 30}</small></span>`).join('')}</div></div>`;
+  // the same name in every game (home card and My Page edit the same one)
+  function setName(v) {
+    W.name = v.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true);
+    ['nameIn', 'mpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
+    const dn = document.querySelector('#dprev .dpl b'); if (dn) dn.textContent = W.name || t('pf.player');
+  }
+  function renderProfile() {
+    const { touched, done, s, pos, lv } = profStats();
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
-    const tile = (ic, v, of, lbl, cls = '') => `<div class="pt ${cls}"><span class="ic">${ic}</span><b>${v}${of != null ? `<small>/${of}</small>` : ''}</b><em>${esc(lbl)}</em></div>`;
     $('prof').innerHTML = `<div class="pf-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div><button class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}" id="avBtn" aria-label="${t('pf.edit')}">${ART.avatar(W.av, 104, { clear: true })}<span class="lv">Lv.${lv}</span></button></div>
       <div class="pf-r"><input id="nameIn" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
       <button type="button" class="pf-sum" id="pfMore" aria-expanded="${pfOpen}" aria-controls="pfDet" aria-label="${esc(t('pf.more'))}"><span class="pfc"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span><span class="pfs">🔥${s}</span><svg class="pfv" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="pf-det" id="pfDet"><div class="ptiles">${tile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${tile('🏆', done, ACH.length, t('pf.ach'))}${tile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
-      <div class="lgw"><div class="lgh"><b>🔥 ${esc(t('login.day', { n: s }))}</b><small>${esc(t('login.week'))}</small></div>
-      <div class="lgd">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="d ${d < pos ? 'got' : d === pos ? 'got now' : ''} ${d === 7 ? 'big' : ''}"><i>${d === 7 ? '🎁' : '¢'}</i><small>+${d === 7 ? 180 : 30}</small></span>`).join('')}</div></div>
+      <div class="pf-det" id="pfDet"><div class="ptiles">${pTile('<i class="cn">¢</i>', `<span class="coinM">${C.balance.toLocaleString()}</span>`, null, t('pf.coins'), 'coin')}${pTile('🏆', done, ACH.length, t('pf.ach'))}${pTile('🎲', touched, A_.GAMES.length, t('pf.games'))}</div>
+      ${weekHtml('🔥 ' + esc(t('login.day', { n: s })), pos)}
       <div class="accw"></div></div></div>`;
     $('prof').classList.toggle('open', pfOpen);
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
     $('avBtn').onclick = () => go('dress');
     renderAcc();
-    $('nameIn').onchange = e => { W.name = e.target.value.trim(); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); };   // the same name in every game
+    $('nameIn').onchange = e => setName(e.target.value);
+  }
+  // My Page at the top of きせかえ: the home profile (avatar · Lv · name · coins) with its stats, the login week and the Google account
+  // PC: profile on the left, stats on the right · phones: one compact block above the dress-up
+  function renderMyPage() {
+    const el = $('mypage'); if (!el) return;
+    const { touched, done, s, pos, lv } = profStats(), got = done % 3;
+    el.innerHTML = `<div class="mp-id"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
+        <span class="av${W.av.frame && W.av.frame !== 'f-none' ? ' framed' : ''}">${ART.avatar(W.av, 128, { clear: true })}<span class="lv">Lv.${lv}</span></span>
+        <div class="mp-who"><input id="mpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}">
+          <span class="coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span>
+          <div class="mp-lv"><div class="mp-lvh"><b>Lv.${lv}</b><small>${esc(t('mp.next', { n: 3 - got }))}</small></div><div class="mp-lvb">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</div></div></div></div>
+      <div class="mp-st"><div class="ptiles">
+          <button type="button" class="pt go" data-go="ach" aria-label="${esc(t('pf.ach'))} ${done} / ${ACH.length}"><span class="ic">🏆</span><b>${done}<small>/${ACH.length}</small></b><em>${esc(t('pf.ach'))}</em><span class="mp-ar" aria-hidden="true">›</span></button>
+          ${pTile('🎲', touched, A_.GAMES.length, t('pf.games'))}${pTile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, null, t('mp.streak'), 'stk')}</div>
+        ${weekHtml(esc(t('login.h')), pos)}
+        <div class="accw"></div></div>`;
+    el.querySelector('[data-go=ach]').onclick = () => go('ach');
+    $('mpName').onchange = e => setName(e.target.value);
+    renderAcc();
   }
   /* ---------- GAMES ---------- */
   function renderGames() {
@@ -1273,6 +1307,7 @@
   }
   function renderDress() {
     $('hDress').textContent = t('dress.h');
+    renderMyPage();
     $('dprev').classList.toggle('dark', ART.isDark(W.av.bg));
     // the worn character / background / frame names live here (the item grid below is icons only)
     const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
@@ -1406,7 +1441,7 @@
       if (taken) return; taken = true;
       const src = $('lbAmt') ? $('lbAmt').querySelector('i').getBoundingClientRect() : null;
       $('ov').classList.remove('on'); sheetClose = null;
-      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); after && after(); });
+      flyCoins(src, from, C.balance, () => { refresh(); if (page === 'home') renderProfile(); else if (page === 'dress') renderMyPage(); after && after(); });
       confetti(90);
     };
     openSheet(`<div class="lbp">
