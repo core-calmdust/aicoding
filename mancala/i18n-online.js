@@ -419,7 +419,7 @@ ru: {
   'pf.later': 'Позже',
   'sync.title': 'Привязка Google',
   'sync.link': 'Привязать Google',
-  'sync.google': 'Привязать через Google',
+  'sync.google': 'Привязать Google',
   'sync.desc': 'Привяжите аккаунт Google, чтобы синхронизировать прогресс и рейтинг между ПК и телефоном.',
   'sync.on': 'Привязано: {e}',
   'sync.now': 'Синхронизировать',
