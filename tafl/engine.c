@@ -1,7 +1,8 @@
 // Hnefatafl (Viking chess) search engine in C, compiled to WebAssembly for the browser
 // (also builds natively for the tools: -DNATIVE).
 //
-// Rule sets (variant 0 = Copenhagen 11x11, 1 = Brandubh 7x7, 2 = Tablut 9x9). Attackers (side 0) move first.
+// Rule sets (variant 0 = Copenhagen 11x11, 1 = Brandubh 7x7, 2 = Tablut 9x9, 3 = Tawlbwrdd 11x11, 4 = Fetlar 11x11,
+// 5 = Ard Ri 7x7). Attackers (side 0) move first.
 //   Every piece moves like a rook (any number of empty squares along a row or column). Only the king may stop on the
 //   throne (centre) and, with corner escape, on the four corners; any piece may pass over the empty throne.
 //   A man is captured when the enemy moves so that it stands between two enemy pieces on a row or column (or between an
@@ -12,9 +13,11 @@
 //     may be one end) and every member has an enemy in front of it (a king in the row is not captured).
 //     Edge fort: the king on the edge, able to move, in a fort the attackers can never break → the defenders win.
 //     Encirclement: when the attackers surround every defender (no defender can reach the edge) the attackers win.
-//   Brandubh / Tablut: the king is captured like a man (two sides) away from the throne; on the throne four attackers,
+//   Fetlar / Ard Ri: the king is captured as in Copenhagen (four sides, never on the edge); no shieldwall, fort or
+//     encirclement.
+//   Brandubh / Tablut / Tawlbwrdd: the king is captured like a man (two sides) away from the throne; on the throne four attackers,
 //     next to it three attackers and the throne are needed.
-//   Escape: corners (Copenhagen, Brandubh), any edge square (Tablut).
+//   Escape: corners (Copenhagen, Brandubh, Fetlar, Ard Ri), any edge square (Tablut, Tawlbwrdd).
 //   A side without a legal move loses. Repetition: the third occurrence of a position is a loss for the defenders.
 //   Draw: 200 plies without a capture (host + search).
 //
@@ -80,6 +83,9 @@ static void setVariant(int v) {
   VAR = v;
   if (v == 1) { Rules r = { 7, 0, 0, 0, 0, 0 }; R = r; }
   else if (v == 2) { Rules r = { 9, 1, 0, 0, 0, 0 }; R = r; }
+  else if (v == 3) { Rules r = { 11, 1, 0, 0, 0, 0 }; R = r; }   // Tawlbwrdd: Tablut's rules on 11x11
+  else if (v == 4) { Rules r = { 11, 0, 1, 0, 0, 0 }; R = r; }   // Fetlar: Copenhagen without shieldwall / edge fort / encirclement
+  else if (v == 5) { Rules r = { 7, 0, 1, 0, 0, 0 }; R = r; }    // Ard Ri: 7x7, corners, the king captured on four sides
   else { Rules r = { 11, 0, 1, 1, 1, 1 }; R = r; VAR = 0; }
   N = R.n;
   for (int i = 0; i < NSQ; i++) FL[i] = 0;
@@ -331,10 +337,13 @@ static int kingCapNow(const Pos *p) {
 // per rule set (tuned by self-play, tools/native.c tune; see MODEL_CARD.md). Pieces: an attacker man = 100.
 #define NW 18
 static const char *EW_NAME[NW] = { "att", "def", "kmob", "kthr", "kadjA", "block", "kadjD", "kdist", "cornerA", "tempo", "kdanger", "near2", "chain", "kthr2", "edgeD", "bias", "cdanger", "cguard" };
-static int EWV[3][NW] = {
+static int EWV[6][NW] = {
   { 100, 855, 59, 91, 4, 69, 9, 43, 37, 20, 260, 2, 31, 68, 1, -784, 35, 15 },   // Copenhagen (SPSA re-tune after the repetition fix: 410 iterations × 4 games, 4k nodes; +70 Elo over the previous set (100 games, 15k nodes))
   { 100, 426, 66, 62, 54, 29, 2, 7, 28, 20, 267, 21, 1, 115, 17, -149, 42, 6 },   // Brandubh (SPSA re-tune after the repetition fix: 480 iterations; even with the previous set (+9 Elo, 300 games))
   { 100, 87, 12, 4, 7, 0, 10, 8, 0, 20, 69, 21, 9, 7, 4, -949, 0, 0 },   // Tablut (SPSA re-tune: 300 × 6 games, 6k nodes; +131 Elo over the previous set)
+  { 100, 87, 12, 4, 7, 0, 10, 8, 0, 20, 69, 21, 9, 7, 4, -949, 0, 0 },   // Tawlbwrdd (Tablut's set; an SPSA tune, 250 × 6 games, was even with it: −3 Elo, 200 games, 6k nodes)
+  { 100, 855, 59, 91, 4, 69, 9, 43, 37, 20, 260, 2, 31, 68, 1, -784, 35, 15 },   // Fetlar (Copenhagen's set: the same board, corners and king capture)
+  { 100, 426, 66, 62, 54, 29, 2, 7, 28, 20, 267, 21, 1, 115, 17, -149, 42, 6 },   // Ard Ri (Brandubh's set; an SPSA tune, 160 × 6 games, gave +38 ± 50 Elo but a jumpy start value, so not used)
 };
 static int EW[NW];
 static int noiseAmp = 0; static u64 noiseSeed = 1;
@@ -839,7 +848,7 @@ static void beginSearch(int ms) {
 // reported values (analysis, the AI's own view, the evaluation bar): the tuned weights leave a large constant edge for
 // the defenders in the raw score (it matters to the search: draws and repetitions are scored 0), so the values handed to
 // the page are taken relative to the start position's static score (defenders' view). Exact results are left as they are.
-static const int D0[3] = { 7982, 1130, -51 };
+static const int D0[6] = { 7982, 1130, -51, -583, 8079, 120 };   // Ard Ri: from the search (its start is tactical: the static score is far off)
 static int rep(int v) {
   if (v > WINT || v < -WINT) return v;
   if (nnUse && nnVar == VAR) return (v - (ROOT.side ? nnCenter : -nnCenter)) * 2 / 5;   // the net: a logit × scale (1000) → the page's scale (about 400 per logit), taken relative to the start position like the hand-made values

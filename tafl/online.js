@@ -4,7 +4,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 // local progress (sync/<uid>).
 // Moves: three characters per move in K64 (from * 128 + to in base 64; squares r * N + c), appended to games/<gid>/moves.
 // The turn always alternates: even count = the attackers (b, first player) to move.
-// Game record: b = the attackers' uid (P1), w = the defenders' (P2); v = rule set (copenhagen | brandubh | tablut); bn/wn names, br/wr ratings, mb/mw clock (ms left),
+// Game record: b = the attackers' uid (P1), w = the defenders' (P2); v = rule set (copenhagen | fetlar | tawlbwrdd | tablut | brandubh | ardri); bn/wn names, br/wr ratings, mb/mw clock (ms left),
 // t = time of the last move, tc = time control id; status play | over | resign | timeout | abandon | draw; win 1 / 2 / 0 (draw);
 // why = reason (escape | fort | capture | encircle | block | rep | long | agree); loser = uid (resign / timeout / abandon); offer = { by, n } draw offer.
 // Every move is a transaction on the game record, so the game survives a reload / server hiccup and is resumed from the database.
@@ -18,9 +18,9 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
   const INITIAL = 1500;
-  const VARIANTS = ['copenhagen', 'brandubh', 'tablut'];
+  const VARIANTS = ['copenhagen', 'fetlar', 'tawlbwrdd', 'tablut', 'brandubh', 'ardri'];
   // Fischer clock per variant: base time per player + increment per move
-  const TC = { copenhagen: { main: 600000, inc: 5000 }, brandubh: { main: 300000, inc: 3000 }, tablut: { main: 420000, inc: 4000 } };
+  const TC = { copenhagen: { main: 600000, inc: 5000 }, fetlar: { main: 600000, inc: 5000 }, tawlbwrdd: { main: 600000, inc: 5000 }, tablut: { main: 420000, inc: 4000 }, brandubh: { main: 300000, inc: 3000 }, ardri: { main: 300000, inc: 3000 } };
   const DEF_V = 'copenhagen';
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
