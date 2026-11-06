@@ -169,3 +169,5 @@
 .ammap .amsvg .num.hot{transform:scale(1.55);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 80%,#fff)) drop-shadow(0 0 2px #fff)}
 .ammap .amsvg .num.hot circle{fill:#ff5d5d}
 .amjour [data-n]{cursor:default}
+/* 「もっと読む」 opened: the card grows to its content (the fixed size only holds while it is closed) */
+.amwrap>.aminfo.open{height:auto;overflow:visible}
