@@ -1,7 +1,7 @@
 // node tools/test_icons.js — sanity checks for icons.js
 const I = require('../icons.js');
 const assert = require('assert');
-const L = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const L = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 const want = { N: 250, R: 150, SR: 70, SSR: 25, UR: 5 }, lim = { N: 3000, R: 3000, SR: 6000, SSR: 7000, UR: 20000 };
 assert.strictEqual(I.COUNT, 500);
 let all = [];
