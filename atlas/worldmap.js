@@ -269,7 +269,7 @@
     m.addEventListener('pointerdown', e => {
       if (e.target.closest('.amzoom')) return;
       cancelAnimationFrame(anim); pts.set(e.pointerId, at(e)); moved = 0;
-      const a = [...pts.values()]; st = { v: { ...view }, a: a.map(p => p.slice()), d: a.length > 1 ? Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) : 0 };
+      const a = [...pts.values()], was = st; st = { v: { ...view }, a: a.map(p => p.slice()), d: a.length > 1 ? Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) : 0, t0: a.length > 1 && was ? was.t0 : performance.now(), multi: a.length > 1 || !!(was && was.multi) };
       m.classList.add('grab');
     });
     m.addEventListener('pointermove', e => {
@@ -286,8 +286,10 @@
     });
     const up = e => {
       if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); m.classList.remove('grab');
-      if (moved <= 4 && !pts.size) { const c = e.target.closest && e.target.closest('.amclu'); if (c && c._pts) { openClu(c._pts); } const p = e.target.closest && e.target.closest('.ampin'); if (p) select(p.dataset.g === sel ? null : p.dataset.g, p.dataset.g !== sel); }
-      if (!pts.size) st = null; else { const a = [...pts.values()]; st = { v: { ...view }, a, d: 0 }; }
+      if (moved <= 4 && !pts.size) { const c = e.target.closest && e.target.closest('.amclu'); if (c && c._pts) { openClu(c._pts); } const p = e.target.closest && e.target.closest('.ampin'); if (p) select(p.dataset.g === sel ? null : p.dataset.g, p.dataset.g !== sel);
+        // a clean tap on empty map (one finger, no drag, no pinch, not a long press) lets go of the picked game
+        else if (!c && sel && st && !st.multi && performance.now() - st.t0 < 450) select(null); }
+      if (!pts.size) st = null; else { const a = [...pts.values()]; st = { v: { ...view }, a, d: 0, t0: st ? st.t0 : 0, multi: true }; }
     };
     m.addEventListener('pointerup', up); m.addEventListener('pointercancel', up);
     m.addEventListener('wheel', e => { e.preventDefault(); cancelAnimationFrame(anim); const [x, y] = at(e); view = zoomAt(x, y, Math.exp(-e.deltaY * .0016)); redraw(); }, { passive: false });
