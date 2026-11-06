@@ -463,7 +463,11 @@ function infoInKifu() {
     const st = document.createElement('style'); st.id = 'ilCss';
     st.textContent = '.kifu-card > #infoLine{margin-top:auto;padding-top:8px;border-top:1px solid var(--line,rgba(127,127,127,.22));flex:none;min-width:0}'
       + '#infoLine .il-wrap{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:.45em;row-gap:0}'
-      + '#infoLine .il-seg{white-space:nowrap}#infoLine .il-dot{opacity:.55}';
+      + '#infoLine .il-seg{white-space:nowrap}#infoLine .il-dot{opacity:.55}'
+      // the record box: one size in every game (PC, the info column beside the board), a little larger than before but
+      // well below the coach (2026-11-06). Not while the review card shares the column (half and half) or the compact dock layout
+      + 'html.side-col:not(.dock-compact) .side .side-in:not(:has(> .review-card.show:not(.slim))) > .kifu-card{flex:0 0 auto!important;height:clamp(150px,20vh,210px)!important;min-height:0!important;max-height:none!important;display:flex!important;flex-direction:column!important;box-sizing:border-box}'
+      + 'html.side-col:not(.dock-compact) .side .side-in:not(:has(> .review-card.show:not(.slim))) > .kifu-card > .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;height:auto!important;overflow-y:auto!important}';
     document.head.appendChild(st);
   }
   const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
