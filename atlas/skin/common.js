@@ -151,12 +151,12 @@
     // measured frame and the fit kept nudging each other by a fraction of a pixel — a refit (and redraw) every ~2 s, forever
     // (and a frame that only goes back to one already used since the last outside change — two values taking turns — is not refitted:
     // the board and the column were seen shaking by a few px after the online dock closed)
-    let refits = 0, usedK = []; const ext = f => function () { refits = 0; usedK = []; return f.apply(this, arguments); };
+    let refits = 0, usedK = [], checks = 0, chkT = 0; const ext = f => function () { refits = 0; usedK = []; checks = 0; return f.apply(this, arguments); };
     // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
     const show0 = T3.show;
-    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; usedK = []; remeasure(); } return g; };
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; usedK = []; checks = 0; remeasure(); } return g; };
     const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
-    T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; remeasure(); return r; };
+    T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; checks = 0; remeasure(); return r; };
     if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
     const grp = () => { let g = boardDom; while (g && g.parentElement !== app) g = g.parentElement; return g; };
     const visible = x => { for (let e = x; e; e = e.parent) if (!e.visible) return false; return true; };
@@ -200,8 +200,15 @@
         if (!m) return k < 40 ? setTimeout(() => step(k + 1, null), 250) : undefined;
         // (a refit that follows a refit needs a clearer change: the frame measured right after a fit can differ by a few tenths of
         // a px each time — the board then grew and shrank by 2–4 px for a couple of seconds)
-        const tol = refits ? .004 : .0008, differs = a => ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - a[s]) > tol);
-        if (!K || differs(K)) { if (refits >= 4 || usedK.some(a => !differs(a))) return; refits++; if (K) usedK.push(K); K = m; fit(); }
+        const tol = refits ? .004 : .0008, differs = (a, t = tol) => ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - a[s]) > t);
+        if (!K || differs(K)) { if (refits >= 4 || usedK.some(a => !differs(a))) { K = m; settle(); return; } refits++; if (K) usedK.push(K); K = m; fit(); }
+        // a frame a little off the one the layout was made for (a fraction of a px — or the refits are over): the board stays as it
+        // is (a refit would move the camera and the frame once more), only the column (and the review box) are put against the
+        // frame as it really is drawn, so the gaps and the edges match exactly
+        else if (differs(K, .0001)) { K = m; settle(); }
+        // once more a little later (a few times after each outside change): on a busy machine the camera can follow the board
+        // only after two equal measurements — the layout then stayed a px or two off the frame as finally drawn
+        if (checks < 3) { checks++; clearTimeout(chkT); chkT = setTimeout(remeasure, 1200); }
       }, 40);
       setTimeout(() => step(0, null), 60);
     }
@@ -210,39 +217,109 @@
     // 振り返り with the review box under the board (reversi, shogi…): the page lays the board, the column and the box out itself (its
     // grid), sized for the flat board — the 3D frame reaching past it would slip under the portal bar or onto the box. So the board is
     // shrunk until its 3D frame fits between the bar and the box with MY px to spare above and below, and moved down (with the column)
-    let rvOn = false;
+    let rvOn = false, rbShare = .32;
     const rvBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].find(b => b.getClientRects().length);
     const wantRv = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !!rvBox() && visible(model);
+    // 振り返り with the review box under the board (reversi, chess, shogi…): laid out like the page's own 2D grid — the board, the
+    // column beside it and the box under both — but from the 3D frame (it reaches past the flat board the grid is sized for): the
+    // column the page's column gap to the right of the frame, level with its top and bottom; the box the page's row gap under
+    // them, from the frame's left edge to the column's right edge; the board as large as fits with the box between the portal bar
+    // and the online dock (MY px to spare), the whole group centred
     function fitReview() {
       const g = grp(), rb = rvBox(); if (!g || !rb) return;
       busy = true;
       try {
         rvOn = true; pcReview = true; unplace(); setVar(null);
-        const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
-        const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
-        const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
-        let s = pr.offsetWidth || 40; pr.remove();
-        const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
-        for (let i = 0; i < 8; i++) {
-          g.style.top = ''; side.style.top = '';
-          const F = frame(), room = rb.getBoundingClientRect().top - MY - top, need = F.b - F.t;
-          if (need > room + .5) { s = Math.max(8, s * room / need); setVar(s); continue; }
-          const dy = Math.max(0, top - F.t);   // down just enough to clear the bar (the box below has room: checked above)
-          if (dy > .3) { if (getComputedStyle(g).position === 'static') g.style.position = 'relative'; if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
-            g.style.top = (px(g, 'top') + dy) + 'px'; }
-          // the column: from the frame's top down to the box (it keeps all the room the box leaves it, so its cards are not squeezed)
-          const F2 = frame(), sr = side.getBoundingClientRect(), sy = F2.t - sr.top, sh = rb.getBoundingClientRect().top - MY - F2.t;
-          if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
-          if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
-          side.style.setProperty('height', sh + 'px', 'important'); side.style.setProperty('max-height', 'none', 'important'); side.style.setProperty('min-height', '0px', 'important');
-          { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }
-          // the box: from the 3D frame's left edge (it reaches past the flat board the page's grid is sized for) to the column's right
-          // edge — not narrower than the board above it
-          rbEl = rb; const rr = rb.getBoundingClientRect(), ml = frame().l - rr.left;
-          if (ml < -.5) rb.style.setProperty('margin-left', ml + 'px', 'important');
-          break;
+        const GP = GPc = gaps();   // (the page's own gaps, measured with its grid as it is: the box still in it)
+        // the box leaves the page's grid (placed below; kept in it, a box wider than the flat board's track would widen the track)
+        // (its height too, as the page's grid gave it: with the online dock open, headerbar.js makes the box's row shorter)
+        rbEl = rb; const r0 = rb.getBoundingClientRect(), w0 = r0.width;
+        if (getComputedStyle(rb).position !== 'fixed') { rb.style.setProperty('position', 'absolute', 'important'); rb.style.setProperty('margin', '0', 'important'); rb.style.setProperty('left', '0px', 'important'); rb.style.setProperty('top', '0px', 'important'); }
+        rb.style.setProperty('width', w0 + 'px', 'important'); rb.style.setProperty('max-width', 'none', 'important'); rb.style.setProperty('min-width', '0px', 'important');
+        if (r0.height > 0) { rb.style.setProperty('height', r0.height + 'px', 'important'); rb.style.setProperty('box-sizing', 'border-box', 'important'); }
+        const { top, bot } = room(), SW = side.offsetWidth || 360;
+        // (the online dock open: the 2D page lays everything out smaller (headerbar.js shrinks its --vh until it fits), the box
+        // too — here the box keeps the share of the height it has with the dock closed, so the board is not the only one to shrink)
+        let RH = rb.offsetHeight || 0;
+        if (!body.classList.contains('dock-open')) rbShare = RH / Math.max(1, bot - top);
+        else if (RH > rbShare * (bot - top)) { RH = Math.max(Math.min(RH, 140), rbShare * (bot - top)); rb.style.setProperty('height', RH + 'px', 'important'); rb.style.setProperty('box-sizing', 'border-box', 'important'); }
+        const availH = bot - top - RH - GP.y, availW = innerWidth - 2 * MX - GP.x - SW;
+        size(availW, availH);
+        prepSide(g);
+        const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0, appShift = -(parseFloat(getComputedStyle(app).top) || 0);
+        for (let i = 0; i < 4; i++) {
+          const E = extent(frame()), W = (E.r - E.l) + GP.x + SW, Hh = (E.b - E.t) + GP.y + RH;
+          const dx = (innerWidth - W) / 2 - E.l, dy = top + (bot - top - Hh) / 2 - (E.t + appShift);
+          if (Math.abs(dx) > .3) g.style.left = (px(g, 'left') + dx) + 'px';
+          if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
+          const ok = placeSide(GP.x) & placeBox(rb, GP.y);
+          if (ok && Math.abs(dx) <= .3 && Math.abs(dy) <= .3) break;
         }
+        placeHost();
+        checks = 0; clearTimeout(reT); reT = setTimeout(remeasure, 250);
       } finally { busy = false; }
+    }
+    // the box: the row gap under the frame (and the column), from the frame's left edge to the column's right edge → true when in place
+    function placeBox(rb, gy) {
+      const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
+      const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect(), rr = rb.getBoundingClientRect();
+      const bw = sr.right - E2.l, bx = E2.l - rr.left, by = Math.max(E2.b, sr.bottom) + gy - rr.top;
+      if (Math.abs(rr.width - bw) > .3) rb.style.setProperty('width', bw + 'px', 'important');
+      if (Math.abs(bx) > .3) rb.style.setProperty('left', (px(rb, 'left') + bx) + 'px', 'important');
+      if (Math.abs(by) > .3) rb.style.setProperty('top', (px(rb, 'top') + by) + 'px', 'important');
+      return Math.abs(rr.width - bw) <= .3 && Math.abs(bx) <= .3 && Math.abs(by) <= .3;
+    }
+    // the frame as measured now, the board left as it is: the column (and the box) against it once more
+    let GPc = null;
+    function settle() {
+      if (busy || !GPc || de.classList.contains('dock-anim')) return;
+      busy = true;
+      try {
+        if (rvOn && rbEl && rbEl.getClientRects().length) { for (let i = 0; i < 3; i++) if (placeSide(GPc.x) & placeBox(rbEl, GPc.y)) break; }
+        else if (on) { for (let i = 0; i < 3; i++) if (placeSide(GPc.x)) break; }
+      } finally { busy = false; }
+    }
+    // the gaps of the page's own (2D) layout: its grid's column gap between the board and the column, its row gap above the box
+    function gaps() {
+      const cs = getComputedStyle(app), x = parseFloat(cs.columnGap), y = parseFloat(cs.rowGap);
+      return { x: x > 0 ? x : GAP, y: y > 0 ? y : (x > 0 ? x : GAP) };
+    }
+    // the free area: under the portal bar, above the online dock (its bar, or the opened dock), MY px to spare
+    function room() {
+      const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
+      const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
+      const dk = document.getElementById('dock') || document.querySelector('.dock');
+      let bot = innerHeight; if (dk && dk.getClientRects().length && getComputedStyle(dk).position === 'fixed') bot = Math.min(bot, dk.getBoundingClientRect().top);
+      return { top, bot: bot - MY };
+    }
+    // the board size: as large as its frame (and the parts beside it) fits both ways (a few passes: not every part scales with the board)
+    function size(availW, availH) {
+      setVar(null);
+      const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
+      const s0 = pr.offsetWidth; pr.remove();
+      let s = s0 || 40;
+      for (let i = 0; i < 6; i++) {
+        setVar(s); const E = extent(frame()), k = Math.min(availH / (E.b - E.t), availW / (E.r - E.l));
+        if (Math.abs(k - 1) < .0015) break;
+        s = Math.max(8, s * k);
+      }
+      const E = extent(frame()); if ((E.b - E.t) > availH + .5 || (E.r - E.l) > availW + .5) { s *= Math.min(availH / (E.b - E.t), availW / (E.r - E.l)); setVar(s); }
+    }
+    function prepSide(g) {
+      if (getComputedStyle(g).position === 'static') g.style.position = 'relative';
+      if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
+      side.style.setProperty('max-height', 'none', 'important');
+      { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }   // (the cards scroll inside the column, also in the dock's compact mode)
+    }
+    // the column: gx px right of the board group, its top / bottom level with the 3D frame's → true when nothing had to move
+    function placeSide(gx) {
+      const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
+      const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect();
+      const fh = F2.b - F2.t, sx = E2.r + gx - sr.left, sy = F2.t - sr.top;
+      if (Math.abs(sr.height - fh) > .3) { side.style.setProperty('height', fh + 'px', 'important'); side.style.setProperty('min-height', '0px', 'important'); }
+      if (Math.abs(sx) > .3) side.style.left = (px(side, 'left') + sx) + 'px';
+      if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
+      return Math.abs(sx) <= .3 && Math.abs(sy) <= .3 && Math.abs(sr.height - fh) <= .3;
     }
     const setVar = v => VARS.forEach(k => { if (v == null) { de.style.removeProperty(k); body.style.removeProperty(k); } else { de.style.setProperty(k, v + 'px', 'important'); body.style.setProperty(k, v + 'px', 'important'); } });
     const frame = () => { const r = boardDom.getBoundingClientRect(), h = r.height; return { l: r.left - K.l * h, t: r.top - K.t * h, r: r.right + K.r * h, b: r.bottom + K.b * h }; };
@@ -257,7 +334,7 @@
       return E;
     };
     let rbEl = null;
-    const unplace = () => { if (rbEl) { rbEl.style.removeProperty('margin-left'); rbEl = null; } const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
+    const unplace = () => { if (rbEl) { ['position', 'margin', 'margin-left', 'left', 'top', 'width', 'max-width', 'min-width', 'height', 'box-sizing'].forEach(k => rbEl.style.removeProperty(k)); rbEl = null; } const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
     let fitKey = '';
     function fit() {
       if (busy) return;
@@ -270,44 +347,20 @@
       busy = true;
       try {
         on = true; pcActive = true; unplace();
-        // the free area: under the portal bar, above the online dock (its bar, or the opened dock)
-        const bar = [...document.querySelectorAll('.atlas-top, header.hb')].find(b => b.getClientRects().length && getComputedStyle(b).position === 'fixed');
-        const top = (bar ? bar.getBoundingClientRect().bottom : 0) + MY;
-        const dk = document.getElementById('dock') || document.querySelector('.dock');
-        let bot = innerHeight; if (dk && dk.getClientRects().length && getComputedStyle(dk).position === 'fixed') bot = Math.min(bot, dk.getBoundingClientRect().top);
-        bot -= MY;
-        const SW = side.offsetWidth || 360, availH = bot - top, availW = innerWidth - 2 * MX - GAP - SW;
-        // the size: as large as fits both ways (a few passes: not every part of the group scales with the board)
-        setVar(null);
-        const pr = document.createElement('div'); pr.style.cssText = `position:absolute;visibility:hidden;width:var(${VARS[0]})`; body.appendChild(pr);
-        const s0 = pr.offsetWidth; pr.remove();
-        let s = s0 || 40;
-        for (let i = 0; i < 6; i++) {
-          setVar(s); const E = extent(frame()), k = Math.min(availH / (E.b - E.t), availW / (E.r - E.l));
-          if (Math.abs(k - 1) < .0015) break;
-          s = Math.max(8, s * k);
-        }
-        { const E = extent(frame()); if ((E.b - E.t) > availH + .5 || (E.r - E.l) > availW + .5) { s *= Math.min(availH / (E.b - E.t), availW / (E.r - E.l)); setVar(s); } }
-        // the place: the group (board + column) centred; the column level with the frame, GAP px to the right of the board
-        if (getComputedStyle(g).position === 'static') g.style.position = 'relative';
-        if (getComputedStyle(side).position === 'static') side.style.position = 'relative';
-        side.style.setProperty('max-height', 'none', 'important');
-        { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.setProperty('height', '100%', 'important'); si.style.setProperty('max-height', '100%', 'important'); } }   // (the cards scroll inside the column, also in the dock's compact mode)
+        const GP = GPc = gaps(), { top, bot } = room(), SW = side.offsetWidth || 360, availH = bot - top, availW = innerWidth - 2 * MX - GP.x - SW;
+        size(availW, availH);
+        // the place: the group (board + column) centred; the column level with the frame, the page's gap to the right of the board
+        prepSide(g);
         const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0, appShift = -(parseFloat(getComputedStyle(app).top) || 0);
         for (let i = 0; i < 4; i++) {
-          const F = frame(), E = extent(F), W = (E.r - E.l) + GAP + SW;
+          const F = frame(), E = extent(F), W = (E.r - E.l) + GP.x + SW;
           const dx = (innerWidth - W) / 2 - E.l, dy = top + (availH - (E.b - E.t)) / 2 - (E.t + appShift);   // (centred as if the online dock's shift of .app were not there: headerbar.js then leaves it at 0)
           if (Math.abs(dx) > .3) g.style.left = (px(g, 'left') + dx) + 'px';
           if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
-          const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect();
-          const fh = F2.b - F2.t, sx = E2.r + GAP - sr.left, sy = F2.t - sr.top;
-          if (Math.abs(sr.height - fh) > .3) { side.style.setProperty('height', fh + 'px', 'important'); side.style.setProperty('min-height', '0px', 'important'); }
-          if (Math.abs(sx) > .3) side.style.left = (px(side, 'left') + sx) + 'px';
-          if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
-          if (Math.abs(dx) <= .3 && Math.abs(dy) <= .3 && Math.abs(sx) <= .3 && Math.abs(sy) <= .3 && Math.abs(sr.height - fh) <= .3) break;
+          if (placeSide(GP.x) && Math.abs(dx) <= .3 && Math.abs(dy) <= .3) break;
         }
         placeHost();
-        clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
+        checks = 0; clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
       } finally { busy = false; }
     }
     let q = 0; const later = () => { if (q) return; q = 1; const go = () => { if (!q) return; q = 0; fit(); }; requestAnimationFrame(go); setTimeout(go, 120); };   // (a timer too: frames wait while the window is hidden or occluded)
@@ -324,7 +377,7 @@
     if (document.fonts) document.fonts.ready.then(laterX);
     [800, 2000, 4500].forEach(ms => setTimeout(ext(remeasure), ms));
     setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) laterX(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
-    window.__atlasPcFit = { fit, remeasure, measure, K: () => K, on: () => on, model: () => model };   // (test hook)
+    window.__atlasPcFit = { fit, remeasure, measure, K: () => K, on: () => on || rvOn, model: () => model, board: () => boardDom, extras: P.extras };   // (test hook)
   })();
 
   /* ---------- side column = exactly the height of the 3D board; info line inside the kifu card ---------- */
