@@ -4302,8 +4302,7 @@ function rbShown() { return rbS ? rbS.stack[rbS.stack.length - 1] : positions[cu
 function rbActive() {
   if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || net || settings.mode === 'online' || rtLive()) return false;
   if (!rvOpen || rvRun || !positions[0] || positions[0].rv !== 1 || positions.length < 2) return false;
-  const L = positions[positions.length - 1];
-  return !L.toMove || !!resignedBy() || !!(clock && clock.lost) || settings.mode === 'pvp';   // finished games (or a loaded / two-player record)
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 let rbW = null, rbJob = null;
 function rbAnalyze(done) {

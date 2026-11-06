@@ -1343,7 +1343,7 @@ function rbActive() {
   if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
   // finished games — also while the dead stones are being marked after both passed (整地), so 分析 works before the count is
   // confirmed — or a loaded / two-player record
-  return gameOver(moves.length) || isCounting(moves.length) || settings.mode === 'pvp';
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 // the review box's searches run in the review worker W2 (already holding the strong net after the whole-game pass): no third
 // worker / second copy of the net. Positions already searched by the whole-game review are shown at once (rbSeed); the box

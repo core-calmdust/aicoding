@@ -2269,7 +2269,7 @@ function inStudy() { return !!(rvStudy && moves === rvStudy.line); }
 function rvbGameKey() { return inStudy() ? (startFen || '') + '|' + rvStudy.orig.join(',') : gameKey(); }
 function rvbShow() {
   if (!RVB || lesson || puzzle || net || settings.mode === 'online' || rtLive() || !rvOpen || !rv || rv.running || rv.key !== rvbGameKey()) return false;
-  return inStudy() || gameOver(moves.length) || settings.mode === 'pvp';   // not during a game in progress vs the AI
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 function rvbStart() {
   if (inStudy() || !rvbShow()) return false;

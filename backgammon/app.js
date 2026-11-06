@@ -1954,7 +1954,7 @@ function bxAllowed() {
   if (!(HB && HB.on && PCW && !ROT && !lesson && !puzzle && match && rvOpen && rv && rv.sig === rvSig())) return false;
   if (settings.mode === 'online' && window.olLiveNow && olLiveNow()) return false;
   const g = match.games.length - 1;
-  return settings.mode !== 'ai' || stateAt(g, match.games[g].actions.length).over;   // (not while a game against the AI is still on)
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 // the action played from the shown position (the box describes it): roll + play, or a cube action
 function bxNext() {

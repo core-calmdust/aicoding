@@ -1154,7 +1154,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/ruletour.js?v=29"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
 <script src="engine.js?v=20261028rb"></script>
-<script src="rvbox.js?v=20261028sk"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
+<script src="rvbox.js?v=20261106al"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=stale1"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1809,7 +1809,7 @@ function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0]
 let rv = null;        // { key, n, items[], mover[], sc[][], done, total, running, ws[] }
 let rvOpen = true;
 const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
-function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && (SF.over || settings.mode === 'pvp' || (settings.mode === 'watch' && wpPaused)); }   // AI同士: the record can be browsed while paused
+function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()) && (SF.over || settings.mode !== 'watch' || wpPaused); }   // 分析はいつでも（AI同士は一時停止中）。2026-11-06   // AI同士: the record can be browsed while paused
 function rvCancel() { if (rv && rv.running) { rv.ws.forEach(w => w.terminate()); rv = null; } }
 function rvOnce(w, n, edges, played, ms) {
   return new Promise(resolve => {
@@ -1962,7 +1962,7 @@ let csLine = [];      // 検討: edges drawn from the reviewed position (not par
 let rbW = null, rbBusy = false, rbLines = {}, rbHov = null;
 const rbCons = () => !!(window.RvBox && RvBox.cons);
 // only after the game (or while stepping back through the record): never during a game in progress, rated or online
-function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === game.moves.join(',') && (viewPly !== null || !!(SF && SF.over)) && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === game.moves.join(',') && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
 function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
 function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
 function rbLineHtml(line) {

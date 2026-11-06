@@ -850,7 +850,10 @@ html.pc2.rb-on .side-in > .players{display:none}   /* (the header bar shows the 
 html.pc2.rb-on .side-in > #evalCard{grid-column:1;grid-row:1 / 3}
 html.pc2.rb-on .side-in > .review-card{grid-column:2;grid-row:1}
 html.pc2.rb-on .side-in > .kifu-card{grid-column:2;grid-row:2}
-html.pc2.rb-on .side-in:not(:has(> .review-card.show)) > .kifu-card{grid-row:1 / 3}
+html.pc2.rb-on .side-in > #coachCard{grid-column:2;grid-row:1;min-height:0;overflow-y:auto}   /* 分析は対局中でも出せる（2026-11-06）: the coach takes the review card's place */
+html.pc2.rb-on .side-in:has(> .review-card.show) > #coachCard{display:none!important}
+html.pc2.rb-on .side-in > .kifu-card{min-height:0}
+html.pc2.rb-on .side-in:not(:has(> .review-card.show)):not(:has(> #coachCard:not(.hidden))) > .kifu-card{grid-row:1 / 3}
 html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 .rbpv{position:absolute;width:calc(var(--cell) * .66);height:calc(var(--cell) * .66);margin:calc(var(--cell) * -.33) 0 0 calc(var(--cell) * -.33);border-radius:50%;display:grid;place-items:center;z-index:9;pointer-events:none;font:800 calc(var(--cell) * .3)/1 system-ui,sans-serif;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.45);opacity:.9}
 .rbpv.s1{background:var(--pr2)}.rbpv.s2{background:var(--pb2)}
@@ -1176,7 +1179,7 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
 <script src="coach.js?v=8"></script>
 <script src="coach-i18n.js?v=4"></script>
 <script src="../shared/export.js?v=9"></script>
-<script src="app.js?v=12lplv"></script>
+<script src="app.js?v=12lplv-an1"></script>
 <script src="online-ui.js?v=4"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other

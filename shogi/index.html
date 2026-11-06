@@ -3084,7 +3084,7 @@ function thinkOnce(w, idx, time) {
 function rvCancel() { if (rvRun) { rvRun.ws.forEach(w => w.terminate()); rvRun = null; } }
 async function runReview() {
   studyEnd();
-  if (!game || lesson || game.moves.length < 2) return;
+  if (!game || lesson || game.moves.length < 1) return;   // (1手からでも分析できる・2026-11-06)
   if (rvRun && rvRun.game === game && rvRun.n === game.moves.length) { rvOpen = true; renderReview(); return; }   // still running for this record: just show it
   rvCancel(); busyToken++; cancelAI(); cancelAna();
   const n = game.moves.length, todo = [];
@@ -3195,7 +3195,7 @@ const rvbKey = () => game.start + '|' + game.moves.slice(0, cur).join(',');
 function rvbShow() {
   const g = inStudy() ? rvStudy.orig : game;
   if (!RVB || !g || lesson || edit || settings.mode === 'online' || rtLive() || !rvOpen || rvRun || !g.rv) return false;
-  return inStudy() || !!g.over || settings.mode === 'pvp';   // not during a game in progress vs the AI
+  return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 function rvbStart() {
   if (inStudy() || !rvbShow()) return false;

@@ -158,15 +158,18 @@ html[lang=ar] .rb-coach{text-align:right}/* larger, easier-to-read text (PC, 202
   function place() {
     const b = A.boardEl(), r = document.querySelector('.app > .side-r') || document.querySelector('.app > .side');
     if (!b) return;
-    const bb = b.getBoundingClientRect(), rr = r && r.offsetParent ? r.getBoundingClientRect() : bb;
-    const L = Math.round(Math.min(bb.left, rr.left)), Rr = Math.round(Math.max(bb.right, rr.right));
+    // the board's whole card (its frame: the outermost box of the board column, e.g. dots' .frame around #board) sets the
+    // left edge, so the box lines up with what is drawn, not with the playing area inside it (2026-11-06)
+    let card = b; while (card.parentElement && card.parentElement.parentElement && !card.parentElement.parentElement.classList.contains('app')) card = card.parentElement;
+    const bb = b.getBoundingClientRect(), cb = card.getBoundingClientRect(), rr = r && r.offsetParent ? r.getBoundingClientRect() : cb;
+    const L = Math.round(Math.min(cb.left, rr.left)), Rr = Math.round(Math.max(cb.right, rr.right));
     box.style.left = L + 'px'; box.style.width = (Rr - L) + 'px';
     flag.style.left = Math.round(bb.left + bb.width / 2) + 'px'; flag.style.top = Math.round(bb.top + 6) + 'px';
     // above the online dock (fixed at the bottom of the window on PC)
     const d = document.getElementById('dock'), dr = d && getComputedStyle(d).position === 'fixed' && d.offsetHeight ? d.getBoundingClientRect() : null;
     const lim = (dr && dr.top < innerHeight ? dr.top - 8 : innerHeight - 12), h = box.offsetHeight || 220;
     box.style.bottom = 'auto';
-    box.style.top = Math.round(Math.min(Math.max(bb.bottom, rr.bottom) + 16, lim - h)) + 'px';   // right under the board (tall windows), above the dock
+    box.style.top = Math.round(Math.min(Math.max(cb.bottom, rr.bottom) + 16, lim - h)) + 'px';   // right under the board (tall windows), above the dock
   }
   function refresh() {
     if (!A) return;
