@@ -1542,7 +1542,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=106')).then(() => load('../atlas/tables3d.js?v=9')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/chess.js?v=13')).then(() => load('../atlas/skin/chess.js?v=9'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107')).then(() => load('../atlas/tables3d.js?v=10')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/chess.js?v=13')).then(() => load('../atlas/skin/chess.js?v=9'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -1553,7 +1553,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/infotabs.js?v=17" defer></script>
 <script src="../shared/pickdrop.js?v=8"></script>
 <script src="../shared/ngtabs.js?v=25"></script>
-<script src="../shared/nglux.js?v=13"></script>
+<script src="../shared/nglux.js?v=14"></script>
 <script src="../shared/resumeng.js?v=1"></script>
 <script src="../shared/langsel.js?v=1" defer></script>
 </body>
