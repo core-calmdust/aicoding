@@ -1298,11 +1298,12 @@
   }
   // the player card (きせかえ's preview, doubling as My Page): the dressed-up character on its background · name · Lv · coins ·
   // stat tiles (実績 → the achievements tab, games played, login streak, collection) · what is worn · the login week · Google.
-  // PC: a wide card (character + worn items left, profile right), sticky beside the items; phones: a compact block
+  // PC: a tall narrow column sticky beside the items (character + worn items · name/coins/Lv · 2×2 tiles · login week · Google);
+  // phones: a compact block
   // (the worn items beside the character; the login week and Google open from the 🔥 tile)
   let ncWk = false;
   function renderCard() {
-    const el = $('dprev'), phone = matchMedia('(max-width:760px)').matches, PS = phone ? 92 : 168;
+    const el = $('dprev'), phone = matchMedia('(max-width:760px)').matches, PS = phone ? 92 : 128;
     const { touched, done, s, pos, lv } = profStats(), got = done % 3, nx = esc(t('mp.next', { n: 3 - got }));
     const worn = ['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]) || (k === 'icon' ? ART.byId(ART.DEFAULT_ICON) : null);
       return `<div class="dw${k === dKind ? ' on' : ''}"><div class="dwh"><span class="dwk">${t('kind.' + k)}</span>${it ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}</div><b>${it ? esc(iname(it)) : '—'}</b></div>`; }).join('');
