@@ -102,9 +102,14 @@
     function mk(kind) { const g = U.piece(kind === 'a' ? 1 : kind === 'd' ? 2 : 3), sh = T3.contact(cs * .36, .5); sh.position.y = .002; g.add(sh); return g; }
     function clearPieces() { Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; }
     function fall(g, delay, h = 1.4) { g.visible = false; later(() => { g.visible = true; anim(260, k => { g.position.y = Y + (1 - k) * (1 - k) * h; }); }, delay); }
-    function setBoard(st) {
-      clearPieces(); let i = 0;
-      st.pos.forEach(([k, s]) => { const g = mk(k), [x, z] = xz(s); g.position.set(x, Y, z); board.add(g); pcs[s] = g; fall(g, 40 + (i++) * 12); });
+    function setBoard(st) {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {}; let i = 0;
+      st.pos.forEach(([k, s]) => {
+        const o = old[s], [x, z] = xz(s);
+        if (o && o.userData.kk === k) { delete old[s]; pcs[s] = o; o.visible = true; o.position.set(x, Y, z); o.scale.set(1, 1, 1); return; }
+        const g = mk(k); g.userData.kk = k; g.position.set(x, Y, z); board.add(g); pcs[s] = g; fall(g, 40 + (i++) * 12);
+      });
+      Object.values(old).forEach(g => board.remove(g));
       return i;
     }
     /* ---------- marks ---------- */

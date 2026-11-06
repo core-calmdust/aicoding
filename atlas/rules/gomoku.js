@@ -234,7 +234,7 @@
     /* ---------- stones ---------- */
     function put(n, col, delay = 0, drop = true) {
       const g = new TH.Group(), s = GB.stone(col, c, (typeof n === 'number' ? n : cellOf(n)) * 7 + col), sh = T3.contact(c * .47, .5); sh.position.y = .002; g.add(sh, s);
-      const [x, z] = xz(n); g.position.set(x, Y, z); stones.add(g); st[n] = g; g.userData.s = s;
+      const [x, z] = xz(n); g.position.set(x, Y, z); stones.add(g); st[n] = g; g.userData.s = s; g.userData.col = col;
       if (!drop) return g;
       g.visible = false;
       later(() => {
@@ -246,11 +246,18 @@
       return g;
     }
     function clearStones() { while (stones.children.length) stones.remove(stones.children[0]); st = {}; }
+    // lay a position: the stones already on the board in the same colour stay still, only new ones drop in (the rest are lifted off)
+    function lay(want, gap, t0 = 60) {
+      const old = st, keep = new Set(), fresh = []; st = {};
+      want.forEach(([q, col]) => { const o = old[q]; if (o && o.userData.col === col && !keep.has(o)) { keep.add(o); st[q] = o; } else fresh.push([q, col]); });
+      stones.children.slice().forEach(g => { if (!keep.has(g)) stones.remove(g); });
+      keep.forEach(g => { g.visible = true; const s = g.userData.s; if (s) { s.position.set(0, 0, 0); s.rotation.x = 0; s.rotation.z = 0; s.scale.set(1, 1, 1); } const sh = g.children[0]; if (sh && sh.material && sh !== s) sh.material.opacity = .5; });
+      fresh.forEach(([q, col], i) => put(q, col, t0 + i * gap));
+      return fresh.length;
+    }
     function setBoard(S) {
-      clearStones(); let i = 0;
-      if (S.show) { SHOW.forEach((m, k) => put(m, k % 2 ? 2 : 1, 60 + (i++) * 45)); return i; }
-      S.b.forEach(n => put(n, 1, 60 + (i++) * 70)); S.w.forEach(n => put(n, 2, 60 + (i++) * 70));
-      return i;
+      if (S.show) return lay(SHOW.map((m, k) => [m, k % 2 ? 2 : 1]), 45);
+      return lay(S.b.map(n => [n, 1]).concat(S.w.map(n => [n, 2])), 70);
     }
     /* ---------- marks ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });

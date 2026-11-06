@@ -9,7 +9,7 @@
      Input as on the page: in the opening tap the stone to lift off; then tap a stone and the
      square it lands on (any stop of its jump line).
      ctx.mode 'pvp': two players take turns on one device (Black first, at the bottom).
-     Board and stones: atlas/models/konane.js (the lava papamū, coral and basalt pebbles).
+     Board and stones: atlas/models/konane.js (the quilt board or the stone papamū — the look chosen in the portal — with coral and basalt pebbles).
    Rendering is on demand: animations kick Table3D; nothing loops while idle.
    ===================================================================== */
 (function () {

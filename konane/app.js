@@ -40,7 +40,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-konane';
-const settings = { mode: 'ai', rule: 's8', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'quilt', pcs: 'coral' };
+const settings = { mode: 'ai', rule: 's8', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'quilt', pcs: 'stone' };
 const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -850,28 +850,34 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D board designs and stone sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-// Hawaiian crafts instead of the plain stone papamū of old: kapa (beaten bark cloth stamped with bamboo-stamp bands),
-// kapa kuiki (the Hawaiian quilt: an ʻulu appliqué with echo quilting), lauhala (woven pandanus), pāhoehoe lava.
-// Stones: white coral and black basalt (the traditional pieces), kukui nuts, pearls, koa wood.
-const BD_KEYS = ['quilt', 'kapa', 'lauhala', 'pahoehoe'], PC_KEYS = ['coral', 'kukui', 'pearl', 'koa'];   // quilt first: the default
+// Artistic boards instead of the plain stone papamū of old: kapa kuiki (the Hawaiian quilt: an ʻulu appliqué with echo
+// quilting), ocean art (a sunset over the sea, dolphins and a honu), Kona gallery art (watercolour flowers), and the papamū
+// itself as a primitive basalt slab and as a koa board with drilled holes; three modern ones (warm grey, sunset, midnight).
+// Stones: smooth black basalt / white coral pebbles, pearls, koa wood, glass, matte discs.
+const BD_KEYS = ['quilt', 'ocean', 'kona', 'stone', 'koa', 'mono', 'sunset', 'midnight'], PC_KEYS = ['stone', 'pearl', 'koa', 'glass', 'matte'];   // quilt / stone first: the defaults
 const BD_DEFS = '';
 // [surface (fallback), puka, frame, frame line]
 const BD_PAL = {
-  kapa: ['#d4ab74', '#6a4426', '#7a5232', '#1d1410'],
   quilt: ['#f2ead8', '#a39276', '#0d5f5b', '#f7f1e2'],
-  lauhala: ['#d6ad6c', '#6b4620', '#7d5427', '#3e2812'],
-  pahoehoe: ['#544c47', '#161212', '#161212', '#ff7a2a'],
+  ocean: ['#1a8fbe', '#06305e', '#0a2d63', '#9ee8ff'],
+  kona: ['#f6eedd', '#9a7a58', '#123f2e', '#f4e6c8'],
+  stone: ['#6a655e', '#1e1c19', '#3f3c38', '#8a847a'],
+  koa: ['#a8622e', '#1a0a04', '#4e2410', '#d9a46a'],
+  mono: ['#dfdbd4', '#b6b1a9', '#2a2a2d', '#55555a'],
+  sunset: ['#f07a8a', '#8a3a8a', '#2b1f5c', '#ffd8a6'],
+  midnight: ['#13244a', '#050b18', '#0a1428', '#d6b26a'],
 };
 // [[Black fill, rim], [White fill, rim]]
 const PC_PAL = {
-  coral: [['#2e2b2a', '#0c0b0b'], ['#f3eee2', '#b8ab92']],
-  kukui: [['#2a1810', '#050302'], ['#eadcc0', '#a48d63']],
+  stone: [['#2a2827', '#0c0b0b'], ['#f1ece2', '#b9b0a0']],
   pearl: [['#3a3946', '#14131a'], ['#fbf6ef', '#c9bfb2']],
   koa: [['#5a2e16', '#22100a'], ['#dcae72', '#9a6a36']],
+  glass: [['#161a20', '#3a4452'], ['#f2f4f2', '#c8d2d0']],
+  matte: [['#232326', '#0e0e10'], ['#f3f1ec', '#c9c6be']],
 };
 function designApply() {
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'quilt';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'coral';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'stone';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 function designSpec() { const keep = E.rule; E.setRule('s6'); const p = E.Pos.from(null); p.play(p.moves()[1]); p.play(p.moves()[0]); const s = p.spec(); E.setRule(keep); return s; }
@@ -883,7 +889,7 @@ function designPickers() {
 }
 // a stone-set tile: the two stones (their rendered faces) on a patch of the current board
 function pcSwatch(k) {
-  const BP = BD_PAL[settings.bd] || BD_PAL.kapa;
+  const BP = BD_PAL[settings.bd] || BD_PAL.quilt;
   return `<svg class="bdm" viewBox="0 0 120 120"><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[2]}"/><image href="img/bd-${settings.bd}.webp" x="8" y="8" width="104" height="104" preserveAspectRatio="xMidYMid slice"/>` +
     `<circle cx="38" cy="62" r="21" fill="rgba(0,0,0,.35)"/><circle cx="82" cy="62" r="21" fill="rgba(0,0,0,.35)"/>` +
     `<image href="img/pc-${k}-b.webp" x="16" y="38" width="44" height="44"/><image href="img/pc-${k}-w.webp" x="60" y="38" width="44" height="44"/></svg>`;
@@ -901,7 +907,7 @@ function miniSVG(spec, o) {
   if (rl !== keep) E.setRule(rl);
   const fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [N - 1 - r, N - 1 - c] : [r, c]; };
   const u = 240 / N, pad = 8, W = 240 + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
-  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.kapa, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.coral;
+  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.quilt, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.stone;
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
   s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[2]}"/><rect x="${pad}" y="${pad}" width="240" height="240" fill="${BP[0]}"/><image href="img/bd-${bdk}.webp" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;
   for (let i = 0; i < N * N; i++) s += `<circle cx="${X(i).toFixed(1)}" cy="${Y(i).toFixed(1)}" r="${(u * 0.29).toFixed(1)}" fill="${BP[1]}" fill-opacity=".55"/>`;

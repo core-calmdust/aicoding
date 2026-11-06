@@ -253,9 +253,14 @@
     function mk(code) { const g = U.piece(code); const sh = T3.contact(u * .44, .5); sh.position.y = .002; g.add(sh); return g; }
     function clearPieces() { Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; }
     function fall(g, delay, h = 1.3) { g.visible = false; later(() => { g.visible = true; anim(260, k => { g.position.y = Y + (1 - k) * (1 - k) * h; }); }, delay); }
-    function setBoard(st) {
-      clearPieces(); let i = 0;
-      parse(st.fen).forEach(([code, n]) => { const g = mk(code), [x, z] = xz(n); g.position.set(x, Y, z); board.add(g); pcs[n] = g; fall(g, 40 + (i++) * 14); });
+    function setBoard(st) {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {}; let i = 0;
+      parse(st.fen).forEach(([code, n]) => {
+        const o = old[n], [x, z] = xz(n);
+        if (o && o.userData.kk === code) { delete old[n]; pcs[n] = o; o.visible = true; o.position.set(x, Y, z); o.scale.set(1, 1, 1); return; }
+        const g = mk(code); g.userData.kk = code; g.position.set(x, Y, z); board.add(g); pcs[n] = g; fall(g, 40 + (i++) * 14);
+      });
+      Object.values(old).forEach(g => board.remove(g));
       return i;
     }
     /* ---------- marks ---------- */

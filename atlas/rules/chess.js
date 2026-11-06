@@ -249,9 +249,14 @@
     function mk(t, col) { const g = CS.piece(t, col, { reflect: true }); if (t === 'N') g.rotation.y = col === 'w' ? Math.PI / 2 - .5 : -Math.PI / 2 + .5; const sh = T3.contact(.34, .5); sh.position.y = .002; g.add(sh); return g; }
     function clearPieces() { Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; }
     function fall(g, delay, h = 1.4) { g.visible = false; later(() => { g.visible = true; anim(260, k => { g.position.y = Y + (1 - k) * (1 - k) * h; }); }, delay); }
-    function setBoard(st) {
-      clearPieces(); let i = 0;
-      st.pos.forEach(([t, n, col]) => { const g = mk(t, col), [x, z] = xz(n); g.position.set(x, Y, z); board.add(g); pcs[n] = g; fall(g, 40 + (i++) * 16); });
+    function setBoard(st) {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {}; let i = 0;
+      st.pos.forEach(([t, n, col]) => {
+        const o = old[n], [x, z] = xz(n);
+        if (o && o.userData.type === t && o.userData.color === col) { delete old[n]; pcs[n] = o; o.visible = true; o.position.set(x, Y, z); o.scale.set(1, 1, 1); return; }
+        const g = mk(t, col); g.position.set(x, Y, z); board.add(g); pcs[n] = g; fall(g, 40 + (i++) * 16);
+      });
+      Object.values(old).forEach(g => board.remove(g));
       return i;
     }
     /* ---------- marks ---------- */

@@ -391,29 +391,30 @@
       for (let i = 0; i < 5; i++) { const t = (i + 1) / 6, d = ball(.06, gloss(0x2a56b8)); d.position.set(p(0) + (p(2) - p(0)) * t, .62 + Math.sin(t * Math.PI) * 1.1, p(2) + (p(0) - p(2)) * t); g.add(d); }
       return g;
     },
-    konane() {   // a corner of the lava papamū: carved cups on black basalt, molten cracks glowing round the edge; a basalt pebble hops over a coral one into the empty cup
-      const cracks = (c, W, glow) => {   // the same cracks on the colour map and (alone) on the glow map
-        let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-        c.strokeStyle = glow ? '#ffffff' : '#ff8a30'; c.lineJoin = c.lineCap = 'round';
-        for (let k = 0; k < 18; k++) { const side = k % 4, t0 = r() * W; let x = side === 0 ? t0 : side === 1 ? W - 18 : side === 2 ? t0 : 18, y = side === 0 ? 18 : side === 1 ? t0 : side === 2 ? W - 18 : t0;
-          c.lineWidth = 7 + r() * 6; c.beginPath(); c.moveTo(x, y);
-          for (let j = 0; j < 5; j++) { x += side % 2 ? (r() - .5) * 26 : 26 + r() * 24; y += side % 2 ? 26 + r() * 24 : (r() - .5) * 26; c.lineTo(x, y); } c.stroke(); }
-      };
-      const top = M({ map: X.canvasTex('ickn3', 512, 512, (c, W) => {
-        c.fillStyle = '#2b2521'; c.fillRect(0, 0, W, W);
-        let sd = 3; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-        for (let k = 0; k < 900; k++) { c.fillStyle = `rgba(${r() < .5 ? '74,64,58' : '12,10,9'},${.25 + r() * .3})`; c.beginPath(); c.arc(r() * W, r() * W, 2 + r() * 7, 0, 7); c.fill(); }
-        cracks(c, W, false);
-        const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) { const cx = (x + .5) * s, cy = (y + .5) * s, g = c.createRadialGradient(cx, cy + 8, 6, cx, cy, s * .4); g.addColorStop(0, '#050404'); g.addColorStop(.72, '#16120f'); g.addColorStop(1, 'rgba(60,50,44,0)'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, s * .4, 0, 7); c.fill(); }
-      }), emissiveMap: X.canvasTex('ickn3e', 512, 512, (c, W) => { c.fillStyle = '#000'; c.fillRect(0, 0, W, W); cracks(c, W, true); }), emissive: 0xff4a08, emissiveIntensity: .85, roughness: .7 });
-      const g = boardChunk(3, 3.6, top, C(0x231d19, { roughness: .8 }));
+    konane() {   // a corner of the quilt board: a cream Hawaiian quilt with a teal appliqué and echo quilting in a koa tray, stitched cups; a basalt pebble hops over a coral one into the empty cup
+      const top = M({ map: X.canvasTex('ickn4', 512, 512, (c, W) => {
+        c.fillStyle = '#f3ebd9'; c.fillRect(0, 0, W, W);
+        const cx = W * .5, cy = W * .5;
+        // the appliqué: an eight-lobed ʻulu-leaf medallion, then echo lines of quilting round it
+        const lobe = (r0, r1, k) => { c.beginPath(); for (let a = 0; a <= 360; a += 2) { const t = a * Math.PI / 180, rr = r0 + (r1 - r0) * Math.pow(Math.abs(Math.cos(t * k / 2)), 1.6); c[a ? 'lineTo' : 'moveTo'](cx + rr * Math.cos(t), cy + rr * Math.sin(t)); } c.closePath(); };
+        c.strokeStyle = 'rgba(15,110,102,.28)'; c.lineWidth = 3;
+        for (let e = 0; e < 7; e++) { lobe(W * (.2 + e * .055), W * (.42 + e * .055), 8); c.stroke(); }
+        lobe(W * .16, W * .4, 8); c.fillStyle = '#0f8a7e'; c.fill();
+        lobe(W * .07, W * .17, 8); c.fillStyle = '#f3ebd9'; c.fill();
+        c.fillStyle = '#0f8a7e'; c.beginPath(); c.arc(cx, cy, W * .045, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(10,80,74,.55)'; c.lineWidth = 2.2; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; c.beginPath(); c.moveTo(cx + Math.cos(a) * W * .2, cy + Math.sin(a) * W * .2); c.lineTo(cx + Math.cos(a) * W * .36, cy + Math.sin(a) * W * .36); c.stroke(); }   // the leaf veins
+        const s = W / 3; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {   // the stitched cups
+          const px = (x + .5) * s, py = (y + .5) * s, g = c.createRadialGradient(px, py + 8, 6, px, py, s * .4); g.addColorStop(0, 'rgba(70,56,36,.38)'); g.addColorStop(.75, 'rgba(70,56,36,.16)'); g.addColorStop(1, 'rgba(70,56,36,0)'); c.fillStyle = g; c.beginPath(); c.arc(px, py, s * .4, 0, 7); c.fill();
+          c.setLineDash([9, 6]); c.strokeStyle = 'rgba(13,95,91,.7)'; c.lineWidth = 3; c.beginPath(); c.arc(px, py, s * .41, 0, 7); c.stroke(); c.setLineDash([]); }
+      }), roughness: .85 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('ickoa', '#a65a2a', '#4e220c'), roughness: .35 }));
       const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
-      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xf1ebdf, { roughness: .9 }) : gloss(0x1c1b1b), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
+      const pebble = (white, sc) => { const m = ball(.5, white ? C(0xf4efe5, { roughness: .6 }) : gloss(0x1e1d1c), .55); m.position.y = .26; const o = new T.Group(); o.add(m); o.scale.setScalar(sc); return o; };
       [[0, 0, 0], [1, 0, 1], [2, 0, 0], [0, 2, 1], [1, 2, 0], [2, 2, 1], [1, 1, 1]].forEach(([x, z, w]) => g.add(at(pebble(!!w, .78), p(x), .5, p(z))));
-      // the big basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); glowing dots trace the arc
+      // the big basalt pebble mid-jump over the coral one in the middle row (from the left cup to the empty right one); teal dots trace the arc
       g.add(at(pebble(false, 1.35), p(1) - .2, 2.35, p(1), 0, 0, -.28));
-      const glowM = M({ color: 0xff6a1a, emissive: 0xff4a08, emissiveIntensity: .7 });
-      for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, glowM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
+      const dotM = gloss(0x14a596);
+      for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, dotM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
       return g;
     },
     agon() {   // a fragment of the Victorian (Jaques) Agon board: mahogany, rings of oxblood and ivory with gilt lines round the bottle-green throne; the bone queen with a gold crown steps onto the throne past bone and ebony guards

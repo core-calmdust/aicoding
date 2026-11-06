@@ -141,10 +141,15 @@
     { const add0 = marks.add.bind(marks), rm0 = marks.remove.bind(marks); marks.add = (...a) => { const r = add0(...a); if (T3.kick) T3.kick(150); if (!pulseOn && !stopped) { pulseOn = true; requestAnimationFrame(pulse); } return r; }; marks.remove = (...a) => { if (T3.kick) T3.kick(150); return rm0(...a); }; }
     pulse();
 
-    function setBoard(next) {   // swap the position: old discs hop away, new ones drop in
-      Object.values(discs).forEach(d => board.remove(d.outer)); discs = {};
+    function setBoard(next) {   // swap the position: the discs already there in the same colour stay still, only new ones drop in
+      const old = discs; discs = {};
       cells = next.slice(); let i = 0;
-      cells.forEach((c, q) => { if (c) drop(q, c, 40 + (i++) * 14, 1.2); });
+      cells.forEach((c, q) => {
+        const o = old[q];
+        if (c && o && o.color === c) { delete old[q]; discs[q] = o; o.outer.visible = true; o.outer.position.y = Y + DH; o.inner.rotation.x = c === 1 ? Math.PI : 0; return; }
+        if (c) drop(q, c, 40 + (i++) * 14, 1.2);
+      });
+      Object.values(old).forEach(d => board.remove(d.outer));
     }
 
     /* ---------- guide panel ---------- */

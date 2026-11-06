@@ -183,15 +183,18 @@
     function roll(g, dx, dz) { if (g.userData.noRoll) return; const d = Math.hypot(dx, dz); if (d < 1e-5) return; _ax.set(dz / d, 0, -dx / d); _q.setFromAxisAngle(_ax, d / g.userData.r); g.userData.ball.quaternion.premultiply(_q); }
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function bump(g) { const r = g.userData.r; anim(150, k => g.userData.ball.scale.setScalar(r * (1 + Math.sin(k * Math.PI) * .05)), () => g.userData.ball.scale.setScalar(r)); }
-    function setBoard() {
-      Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; G.forEach(drop); G = [];
+    function setBoard() {   // diff against the balls already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {}; G.forEach(drop); G = [];
       let n = 0;
       for (let i = 0; i < 45; i++) {
         const k = pos.at(i); if (!k) continue;
+        const o = old[i];
+        if (o && o.k === k) { delete old[i]; pcs[i] = o; const [x, z] = xz(i); o.g.visible = true; o.g.position.x = x; o.g.position.z = z; o.g.scale.set(1, 1, 1); lift(o.g, 0); continue; }
         const g = mk(k), [x, z] = xz(i); g.position.set(x, U.rest, z); pcs[i] = { g, k };
         g.visible = false; const d = 40 + (n++) * 12;
         later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); bump(g); }); }, d);
       }
+      Object.values(old).forEach(p => drop(p.g));
       return n;
     }
     // one step: the ball rolls along the line; its captures pop out and hop into your groove

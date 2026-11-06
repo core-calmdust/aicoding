@@ -228,15 +228,18 @@
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .05; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
     function lean(g, on, quick) { const a0 = g.rotation.z, a1 = on ? -.22 : 0, b0 = g.rotation.x, b1 = on ? .12 : 0; if (quick) { g.rotation.z = a1; g.rotation.x = b1; return; } anim(220, k => { const e = io(k); g.rotation.z = a0 + (a1 - a0) * e; g.rotation.x = b0 + (b1 - b0) * e; }); }
-    function setBoard() {
-      Object.values(pcs).forEach(drop); pcs = {};
+    function setBoard() {   // diff against the pieces already on the board: the same ones stay still, only new ones drop in
+      const old = pcs; pcs = {};
       let n = 0;
       for (let i = 0; i < E.N; i++) {
         const k = pos.at(i); if (!k) continue;
-        const g = mk(k), [x, z] = xz(i); g.position.set(x, Y, z); pcs[i] = g; if (pos.captured(i)) lean(g, true, true);
+        const o = old[i];
+        if (o && o.userData.kk === k) { delete old[i]; pcs[i] = o; const [x, z] = xz(i); o.visible = true; o.position.x = x; o.position.z = z; o.scale.set(1, 1, 1); lift(o, 0); lean(o, !!pos.captured(i), true); continue; }
+        const g = mk(k), [x, z] = xz(i); g.userData.kk = k; g.position.set(x, Y, z); pcs[i] = g; if (pos.captured(i)) lean(g, true, true);
         g.visible = false; const d = 40 + (n++) * 22;
         later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * 1.2), () => { lift(g, 0); land(g); }); }, d);
       }
+      Object.values(old).forEach(drop);
       return n;
     }
     function travel(g, f, t, reloc, done) {
