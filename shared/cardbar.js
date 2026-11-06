@@ -86,15 +86,15 @@ const st = document.createElement('style'); st.id = 'cardbar-css'; st.textConten
 
 const $ = id => document.getElementById(id);
 // ---- the quit button's label: 〈name〉をやめる in the page language, the name taken from the game's i18n
-const QT = { ja: '{x}をやめる', en: 'Quit {x}', zh: '退出{x}', ko: '{x} 그만하기', es: 'Salir de {x}', fr: 'Quitter les {x}', pt: 'Encerrar {x}', de: '{x} beenden', hi: '{x} छोड़ें', ar: 'إنهاء {x}' };
+const QT = { ja: '{x}をやめる', en: 'Quit {x}', zh: '退出{x}', ko: '{x} 그만하기', es: 'Salir de {x}', fr: 'Quitter les {x}', pt: 'Encerrar {x}', de: '{x} beenden', hi: '{x} छोड़ें', ar: 'إنهاء {x}', ru: 'Выйти: {x}', 'zh-TW': '退出{x}', id: 'Keluar dari {x}', tr: 'Bitir: {x}' };
 const QN = {   // fallback names
-  pz: { ja: 'パズル', en: 'puzzles', zh: '谜题', ko: '퍼즐', es: 'problemas', fr: 'problèmes', pt: 'desafios', de: 'Rätsel', hi: 'पहेलियाँ', ar: 'الألغاز' },
-  ls: { ja: 'レッスン', en: 'lessons', zh: '课程', ko: '레슨', es: 'lecciones', fr: 'leçons', pt: 'lições', de: 'Lektionen', hi: 'पाठ', ar: 'الدروس' },
-  op: { ja: '定跡', en: 'openings', zh: '开局', ko: '정석', es: 'aperturas', fr: 'ouvertures', pt: 'aberturas', de: 'Eröffnungen', hi: 'ओपनिंग', ar: 'الافتتاحيات' },
+  pz: { ja: 'パズル', en: 'puzzles', zh: '谜题', ko: '퍼즐', es: 'problemas', fr: 'problèmes', pt: 'desafios', de: 'Rätsel', hi: 'पहेलियाँ', ar: 'الألغاز', ru: 'задачи', 'zh-TW': '謎題', id: 'teka-teki', tr: 'bulmacalar' },
+  ls: { ja: 'レッスン', en: 'lessons', zh: '课程', ko: '레슨', es: 'lecciones', fr: 'leçons', pt: 'lições', de: 'Lektionen', hi: 'पाठ', ar: 'الدروس', ru: 'уроки', 'zh-TW': '課程', id: 'pelajaran', tr: 'dersler' },
+  op: { ja: '定跡', en: 'openings', zh: '开局', ko: '정석', es: 'aperturas', fr: 'ouvertures', pt: 'aberturas', de: 'Eröffnungen', hi: 'ओपनिंग', ar: 'الافتتاحيات', ru: 'дебюты', 'zh-TW': '開局', id: 'pembukaan', tr: 'açılışlar' },
 };
 const QF = {   // whole labels
-  rv: { ja: '復習をやめる', en: 'Quit review', zh: '退出复习', ko: '복습 그만하기', es: 'Salir del repaso', fr: 'Quitter la révision', pt: 'Encerrar revisão', de: 'Wiederholung beenden', hi: 'समीक्षा छोड़ें', ar: 'إنهاء المراجعة' },
-  ex: { ja: 'テストをやめる', en: 'Quit test', zh: '退出测试', ko: '테스트 그만하기', es: 'Salir del examen', fr: 'Quitter le test', pt: 'Encerrar teste', de: 'Test beenden', hi: 'टेस्ट छोड़ें', ar: 'إنهاء الاختبار' },
+  rv: { ja: '復習をやめる', en: 'Quit review', zh: '退出复习', ko: '복습 그만하기', es: 'Salir del repaso', fr: 'Quitter la révision', pt: 'Encerrar revisão', de: 'Wiederholung beenden', hi: 'समीक्षा छोड़ें', ar: 'إنهاء المراجعة', ru: 'Выйти из повторения', 'zh-TW': '退出複習', id: 'Keluar dari ulasan', tr: 'Tekrarı bitir' },
+  ex: { ja: 'テストをやめる', en: 'Quit test', zh: '退出测试', ko: '테스트 그만하기', es: 'Salir del examen', fr: 'Quitter le test', pt: 'Encerrar teste', de: 'Test beenden', hi: 'टेस्ट छोड़ें', ar: 'إنهاء الاختبار', ru: 'Выйти из теста', 'zh-TW': '退出測驗', id: 'Keluar dari tes', tr: 'Testi bitir' },
 };
 const GAME_ID = ((window.GAME && window.GAME.id) || (location.pathname.match(/\/([^/]+)\/(?:index\.html)?$/) || [])[1] || '').toLowerCase();
 // i18n key of each name, per game (default: pz.title / tab.lesson / tab.open); null = the fallback name

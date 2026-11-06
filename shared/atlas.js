@@ -508,7 +508,7 @@
   const MEDAL = [['#e8a46a', '#b8703a'], ['#e3e8f0', '#9aa6b8'], ['#ffd84d', '#d79a1c'], ['#c9f1ff', '#7f8cff']];
   const medal = tier => { const c = MEDAL[tier] || MEDAL[0]; return `<svg viewBox="0 0 46 46" width="46" height="46"><path d="M14 2h7l4 14h-7zM32 2h-7l-4 14h7z" fill="${tier === 3 ? '#a17cff' : '#ff6b6b'}"/><circle cx="23" cy="28" r="15" fill="${c[1]}"/><circle cx="23" cy="27" r="13" fill="${c[0]}"/><path d="M23 19l2.4 5l5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#fff" opacity=".85"/></svg>`; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  const UNLOCK = { ja: '実績解除！', en: 'Achievement unlocked!', zh: '成就解锁！', ko: '업적 달성!', es: '¡Logro desbloqueado!', fr: 'Succès débloqué !', pt: 'Conquista desbloqueada!', de: 'Erfolg freigeschaltet!', hi: 'उपलब्धि अनलॉक!', ar: 'تم فتح إنجاز!' };
+  const UNLOCK = { ja: '実績解除！', en: 'Achievement unlocked!', zh: '成就解锁！', ko: '업적 달성!', es: '¡Logro desbloqueado!', fr: 'Succès débloqué !', pt: 'Conquista desbloqueada!', de: 'Erfolg freigeschaltet!', hi: 'उपलब्धि अनलॉक!', ar: 'تم فتح إنجاز!', ru: 'Достижение получено!', 'zh-TW': '解鎖成就！', id: 'Pencapaian terbuka!', tr: 'Başarım açıldı!' };
 
   let host = null, queue = [], showing = false;
   function css() {

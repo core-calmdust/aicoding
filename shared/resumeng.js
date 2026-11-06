@@ -11,9 +11,9 @@
 (function () {
 'use strict';
 const TX = {
-  title: { ja: 'この局面から再開', en: 'Resume from this position', zh: '从此局面继续', ko: '이 국면에서 재개', es: 'Reanudar desde esta posición', fr: 'Reprendre depuis cette position', pt: 'Retomar desta posição', de: 'Ab dieser Stellung fortsetzen', hi: 'इस स्थिति से फिर शुरू करें', ar: 'الاستئناف من هذا الوضع' },
-  start: { ja: 'この局面から再開', en: 'Resume', zh: '从此局面继续', ko: '이 국면에서 재개', es: 'Reanudar', fr: 'Reprendre', pt: 'Retomar', de: 'Fortsetzen', hi: 'फिर शुरू करें', ar: 'استئناف' },
-  side: { ja: 'あなたが持つ側', en: 'Your side', zh: '你执的一方', ko: '내가 맡을 쪽', es: 'Tu bando', fr: 'Votre camp', pt: 'Seu lado', de: 'Deine Seite', hi: 'आपका पक्ष', ar: 'جانبك' },
+  title: { ja: 'この局面から再開', en: 'Resume from this position', zh: '从此局面继续', ko: '이 국면에서 재개', es: 'Reanudar desde esta posición', fr: 'Reprendre depuis cette position', pt: 'Retomar desta posição', de: 'Ab dieser Stellung fortsetzen', hi: 'इस स्थिति से फिर शुरू करें', ar: 'الاستئناف من هذا الوضع', ru: 'Продолжить с этой позиции', 'zh-TW': '從此局面繼續', id: 'Lanjutkan dari posisi ini', tr: 'Bu konumdan devam et' },
+  start: { ja: 'この局面から再開', en: 'Resume', zh: '从此局面继续', ko: '이 국면에서 재개', es: 'Reanudar', fr: 'Reprendre', pt: 'Retomar', de: 'Fortsetzen', hi: 'फिर शुरू करें', ar: 'استئناف', ru: 'Продолжить', 'zh-TW': '繼續', id: 'Lanjutkan', tr: 'Devam et' },
+  side: { ja: 'あなたが持つ側', en: 'Your side', zh: '你执的一方', ko: '내가 맡을 쪽', es: 'Tu bando', fr: 'Votre camp', pt: 'Seu lado', de: 'Deine Seite', hi: 'आपका पक्ष', ar: 'جانبك', ru: 'Ваша сторона', 'zh-TW': '你執的一方', id: 'Pihakmu', tr: 'Tarafın' },
   note: {
     ja: '盤面と棋譜はそのままで続けます。対戦形式（AIと対戦・二人で対戦・AI同士）や手番、AIの強さを変えられます。',
     en: 'The position and the move record are kept. You can change the mode (vs AI, two players, AI vs AI), your side and the AI strength.',
@@ -25,6 +25,10 @@ const TX = {
     de: 'Stellung und Notation bleiben erhalten. Modus (gegen die KI, zu zweit, KI gegen KI), deine Seite und die KI-Stärke lassen sich ändern.',
     hi: 'स्थिति और चालों का रिकॉर्ड वैसा ही रहता है। मोड (AI से, दो खिलाड़ी, AI बनाम AI), अपना पक्ष और AI की ताकत बदल सकते हैं।',
     ar: 'يبقى الوضع وسجل النقلات كما هما. يمكنك تغيير النمط (ضد الذكاء الاصطناعي، لاعبان، ذكاء ضد ذكاء) وجانبك وقوة الذكاء الاصطناعي.',
+    ru: 'Позиция и запись ходов сохранятся. Можно сменить режим (против ИИ, вдвоём, ИИ против ИИ), свою сторону и силу ИИ.',
+    'zh-TW': '局面與棋譜維持不變。可以更改對戰方式（對戰 AI、雙人對戰、AI 互戰）、你執的一方與 AI 強度。',
+    id: 'Posisi dan catatan langkah tetap disimpan. Kamu bisa mengganti mode (lawan AI, dua pemain, AI lawan AI), pihakmu, dan kekuatan AI.',
+    tr: 'Konum ve hamle kaydı korunur. Modu (yapay zekâya karşı, iki oyuncu, yapay zekâ karşı yapay zekâ), tarafını ve yapay zekânın gücünü değiştirebilirsin.',
   },
 };
 const lang = () => { const l = (document.documentElement.lang || 'ja').slice(0, 2); return TX.title[l] ? l : 'en'; };
