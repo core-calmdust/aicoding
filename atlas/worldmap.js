@@ -223,11 +223,23 @@
       ch.addEventListener('pointerdown', () => { lit(true); setTimeout(() => lit(false), 1200); });
     });
     // the story is cut to two lines; when it runs on, a toggle opens the card to the whole text
+    if (el.info._amT) { clearTimeout(el.info._amT); el.info._amT = 0; } el.info.style.height = el.info.style.overflow = el.info.style.transition = '';
     el.info.classList.remove('open');
     const mb = el.info.querySelector('.ammore'), pd = el.info.querySelector('.amd');
     if (mb && pd.scrollHeight > pd.clientHeight + 2) {
       mb.hidden = false;
-      mb.onclick = () => { const o = el.info.classList.toggle('open'); mb.textContent = u(o ? 'less' : 'more'); mb.setAttribute('aria-expanded', o); };
+      mb.onclick = () => {   // the card grows / shrinks smoothly (2026-11-06): its height animates between the two layouts
+        const card = el.info, o = !card.classList.contains('open');
+        mb.textContent = u(o ? 'less' : 'more'); mb.setAttribute('aria-expanded', o);
+        if (card._amT) { clearTimeout(card._amT); card.style.height = card.style.overflow = card.style.transition = ''; }
+        const h0 = card.offsetHeight;
+        card.classList.toggle('open', o); const h1 = card.offsetHeight;   // (closing: measured shut, then held open while it shrinks)
+        if (!o) card.classList.add('open');
+        if (Math.abs(h1 - h0) < 2) { card.classList.toggle('open', o); return; }
+        card.style.overflow = 'hidden'; card.style.height = h0 + 'px'; void card.offsetHeight;
+        card.style.transition = 'height .34s cubic-bezier(.22,.72,.2,1)'; card.style.height = h1 + 'px';
+        card._amT = setTimeout(() => { card._amT = 0; card.classList.toggle('open', o); card.style.height = card.style.overflow = card.style.transition = ''; }, 360);
+      };
     }
   }
   // a bubble: fly in until its games stand apart (at least twice as close)
