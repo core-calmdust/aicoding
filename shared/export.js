@@ -169,7 +169,7 @@ async function render() {
   q('.rx-mode').style.visibility = ms.length > 1 ? 'visible' : 'hidden';
   q('.rx-mode').innerHTML = ms.map(m => `<button data-v="${m}" class="${m === mode ? 'sel' : ''}">${esc(tx(m))}</button>`).join('');
   const my = ++job; blob = null;
-  let cv; try { cv = await O.image.draw(mode); } catch (e) { console.error(e); return; }
+  let cv; try { cv = await luxPass(() => O.image.draw(mode)); } catch (e) { console.error(e); return; }
   if (my !== job || !cv) return;
   q('.rx-prev').src = cv.toDataURL('image/png');
   cv.toBlob(b => { if (my === job) blob = b; }, 'image/png');
@@ -208,9 +208,34 @@ function loadImg(src) {
   const p = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
   imgCache.set(src, p); return p;
 }
-async function fonts() { try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {} }
 const SANS = "'Zen Kaku Gothic New','Hiragino Sans','Noto Sans JP','Noto Sans',system-ui,sans-serif";
 const SERIF = "'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif";
+// LUX: the one typeface of every shared diagram's text (title, date, caption, names, move list, site URL), the same in all
+// games (2026-11-06). The board's own labels / move numbers stay as each game draws them.
+const LUX = "'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP','Noto Serif SC','Noto Serif KR','Noto Serif',serif";
+const LUX_W = ['500', '600', '800'];
+let luxLink = false; const luxSeen = new Set();
+function luxInject() {
+  if (luxLink || typeof document === 'undefined') return; luxLink = true;
+  const l = document.createElement('link'); l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;600;800&display=swap';
+  document.head.appendChild(l);
+}
+// loads the Shippori Mincho B1 slices for the text the last sheet() used; true when something new came in (draw again)
+async function luxLoad() {
+  if (!document.fonts || !document.fonts.load) return false;
+  luxInject();
+  const txt = [...luxSeen].join(''); if (!txt) return false;
+  let fresh = false;
+  for (const w of LUX_W) {
+    const spec = `${w} 16px 'Shippori Mincho B1'`;
+    try { if (document.fonts.check(spec, txt)) continue; const r = await Promise.race([document.fonts.load(spec, txt), new Promise(res => setTimeout(() => res(null), 2500))]); if (r && r.length) fresh = true; } catch (e) {}
+  }
+  return fresh;
+}
+// draw a diagram, load the luxury typeface for its text, draw again if the font just arrived
+async function luxPass(draw) { let cv = await draw(); try { if (await luxLoad()) cv = await draw(); } catch (e) {} return cv; }
+async function fonts() { luxInject(); try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {} }
 // wrap a list of tokens into lines no wider than w
 const glue = tokens => { const out = []; for (let i = 0; i < tokens.length; i++) { const x = String(tokens[i]); if (/^\d+\.+$/.test(x) && i + 1 < tokens.length) { out.push(x + ' ' + tokens[++i]); } else out.push(x); } return out; };
 // plain-text lines of at most `w` characters (PGN / SGF style), keeping "12." with its move
@@ -225,7 +250,7 @@ function wrap(g, tokens, w) {
 // o: { bw, bh, title, caption, players: [{ name, swatch: (g, x, y, r) => {} }], moves: [tokens] | null, path, font, minW,
 //      key / lang (pages that draw a sheet without attach(), e.g. shogi) }
 function sheet(o) {
-  const M = o.margin || 34, font = o.font || SANS, dpr = 2;
+  const M = o.margin || 34, font = LUX, dpr = 2;   // o.font / o.titleFont are ignored: one typeface for every game
   const W = Math.max(o.bw + M * 2, o.minW || 560), cw = W - M * 2;
   const meas = document.createElement('canvas').getContext('2d');
   meas.font = `14px ${font}`;
@@ -243,7 +268,8 @@ function sheet(o) {
   const mk = o.key || (O && O.key), mt = mk ? meta(mk) : { title: '', date: false, day: new Date() }, ds = mt.date ? dateText(mt.day, o.lang) : '';
   let dw = 0; if (ds) { g.font = `14px ${font}`; dw = g.measureText(ds).width + 16; }
   const ht = mt.title || o.title || '';
-  let fs = 19; g.font = `700 ${fs}px ${o.titleFont || font}`; while (fs > 13 && g.measureText(ht).width > cw - dw) { fs--; g.font = `700 ${fs}px ${o.titleFont || font}`; }
+  luxSeen.clear(); [ht, ds, o.caption || '', 'core-calmdust.github.io/aicoding/' + (o.path || ''), ' — ', ...players.map(p => String(p.name)), ...mvLines].forEach(x => x && luxSeen.add(x));
+  let fs = 21; g.font = `800 ${fs}px ${font}`; while (fs > 13 && g.measureText(ht).width > cw - dw) { fs--; g.font = `800 ${fs}px ${font}`; }
   let ht2 = ht; while (ht2.length > 1 && g.measureText(ht2).width > cw - dw) ht2 = ht2.slice(0, -2) + '…';
   g.fillText(ht2, M, 34);
   if (ds) { g.font = `14px ${font}`; g.fillStyle = '#5c554a'; g.textAlign = 'right'; g.fillText(ds, W - M, 34); g.textAlign = 'left'; g.fillStyle = ink; }
@@ -253,7 +279,7 @@ function sheet(o) {
   g.save(); o.draw(g, bx, y); g.restore();
   y += o.bh + 14;
   if (players.length) {
-    g.font = `600 14.5px ${font}`; g.textBaseline = 'middle';
+    g.font = `600 15px ${font}`; g.textBaseline = 'middle';
     let x = M; const cy = y + 12;
     players.forEach((p, i) => {
       if (i) { g.fillStyle = '#8a8276'; g.fillText(' — ', x, cy); x += g.measureText(' — ').width + 4; }
@@ -267,7 +293,7 @@ function sheet(o) {
     g.fillStyle = ink; g.font = `14px ${font}`; y += 26;
     for (const ln of mvLines) { g.fillText(ln, M, y); y += 21; }
   }
-  g.font = `11.5px ${SANS}`; g.fillStyle = '#9a9184'; g.textAlign = 'right'; g.textBaseline = 'alphabetic';
+  g.font = `500 12px ${font}`; g.fillStyle = '#9a9184'; g.textAlign = 'right'; g.textBaseline = 'alphabetic';
   g.fillText('core-calmdust.github.io/aicoding/' + (o.path || ''), W - 14, H - 13);
   return cv;
 }
@@ -298,5 +324,5 @@ function goBoard(g, x0, y0, o) {
   }
   return { w: L + 2 * m, h: L + 2 * m };
 }
-window.RecordExport = { meta, setMeta, name, setName, names: key => [name(0, '', key), name(1, '', key)], applyMeta, dateText, goBoard, attach, open, tx, sheet, loadImg, fonts, disc, wrap, lines, SANS, SERIF, stamp };
+window.RecordExport = { meta, setMeta, name, setName, names: key => [name(0, '', key), name(1, '', key)], applyMeta, dateText, goBoard, attach, open, tx, sheet, loadImg, fonts, luxPass, LUX, disc, wrap, lines, SANS, SERIF, stamp };
 })();

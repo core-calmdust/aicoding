@@ -33,6 +33,8 @@ const CSS = `
 .rsg-btns{display:flex;gap:10px}
 .rsg-btns button{flex:1;padding:12px 10px;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;border:1px solid var(--line,rgba(255,255,255,.16));background:rgba(255,255,255,.06);color:var(--text,#eee)}
 .rsg-btns button.yes{border:0;background:linear-gradient(180deg,#ff7a6a,#d9483a);color:#fff}
+.rsg-ov.draw .rsg-flag{background:rgba(226,194,117,.16);color:var(--accent,#e2c275)}
+.rsg-ov.draw .rsg-btns button.yes{background:linear-gradient(180deg,#e9cf8a,#c9a24f);color:#1b1408}
 .rsg-btns button:focus-visible{outline:2px solid var(--accent,#e2c275);outline-offset:2px}
 html[lang=ar] .rsg-box{direction:rtl}
 `;
@@ -43,8 +45,8 @@ function confirm(o) {
   if (open) return open;
   if (!document.getElementById('rsgCss')) { const st = document.createElement('style'); st.id = 'rsgCss'; st.textContent = CSS; document.head.appendChild(st); }
   const L = tx(o.lang);
-  const ov = document.createElement('div'); ov.className = 'rsg-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
-  ov.innerHTML = `<div class="rsg-box"><div class="rsg-flag">${icon}</div><p class="rsg-q"></p><p class="rsg-sub"></p><div class="rsg-btns"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>`;
+  const ov = document.createElement('div'); ov.className = 'rsg-ov' + (o.kind === 'draw' ? ' draw' : ''); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+  ov.innerHTML = `<div class="rsg-box"><div class="rsg-flag">${o.icon || icon}</div><p class="rsg-q"></p><p class="rsg-sub"></p><div class="rsg-btns"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>`;
   ov.querySelector('.rsg-q').textContent = o.question || L.q;
   ov.querySelector('.rsg-sub').textContent = o.note != null ? o.note : L.sub;
   ov.querySelector('.no').textContent = L.no; ov.querySelector('.yes').textContent = L.yes;

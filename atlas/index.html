@@ -515,6 +515,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .how{font-size:13px;font-weight:700;color:var(--ink2);background:#fff;border:2px dashed var(--line);border-radius:16px;padding:10px 14px;margin-top:16px}
 
 /* ---------- gacha ---------- */
+.shopsec{margin-top:34px;scroll-margin-top:84px}
+@media (max-width:760px){.shopsec{margin-top:22px}}
 .gacha{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:20px;align-items:stretch}
 @media (max-width:760px){.gacha{grid-template-columns:1fr;gap:12px}}
 .machine{display:grid;place-items:center;padding:16px}
@@ -644,7 +646,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
 @media (max-width:760px){
   /* every one of the three pages leaves ~40px above the bottom tab bar (room for a one-line ticker there) */
-  #pg-shop,#pg-gacha,#pg-ach{padding-bottom:calc(var(--ulH) + 6px)}
+  #pg-gacha,#pg-ach{padding-bottom:calc(var(--ulH) + 6px)}
   /* bottom sheet (shop purchase · gacha rates / collection) */
   .sheet.bsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:86vh;max-height:86dvh;padding:6px 16px calc(14px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;animation:bshUp .28s cubic-bezier(.2,1,.4,1)}
   @keyframes bshUp{from{transform:translateY(100%)}}
@@ -665,24 +667,23 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .sheet.ginfo .gsec{margin-bottom:14px}
 
   /* SHOP: a slim sticky bar (title · coins · note) and the six items in one 3-column screen */
-  #pg-shop{padding-top:0}
-  #pg-shop .shophead{position:sticky;top:62px;z-index:12;margin:0 -16px 10px;padding:8px 16px 8px;gap:2px 10px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
-  #pg-shop .shophead h2.h{margin:0;font-size:19px;gap:8px}
-  #pg-shop .shophead h2.h::before{width:7px;height:16px;box-shadow:10px 0 0 var(--sun),20px 0 0 var(--sky);margin-right:20px}
-  #pg-shop .shophead .note{order:3;flex-basis:100%;font-size:11.5px}
-  #pg-shop .shophead .coin{font-size:14px;padding:2px 10px 2px 3px;box-shadow:none}#pg-shop .shophead .coin i{width:20px;height:20px}
-  #pg-shop .items{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  #pg-shop .item{padding:6px 6px 8px;gap:4px;border-radius:16px}
-  #pg-shop .item .art{border-radius:12px}
-  #pg-shop .item .nm{font-size:11.5px;line-height:1.25;min-height:2.5em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-items:normal}
-  #pg-shop .item .kd{font-size:10px;margin-top:-2px}
-  #pg-shop .item .rar{top:4px;inset-inline-start:4px;font-size:9.5px;padding:1px 6px;border-radius:6px}
-  #pg-shop .item .btn{width:100%;padding:7px 4px;font-size:13.5px;min-height:36px;margin-top:auto}
-  #pg-shop .item .btn.ghost{font-size:11.5px;padding:7px 2px;box-shadow:0 3px 0 var(--line)}
-  #pg-shop .item.own:not(.on) .art{background:#eef8ff}
-  #pg-shop .item.on{outline:3px solid var(--mint);outline-offset:-2px}
-  #pg-shop .item .won{color:var(--mint2);border-color:#c6f0dc;background:#effcf5;box-shadow:0 3px 0 #c6f0dc}
-  #pg-shop .how{margin-top:12px;font-size:12px;padding:8px 12px;border-radius:14px}
+  #shopSec .shophead{position:sticky;top:62px;z-index:12;margin:0 -16px 10px;padding:8px 16px 8px;gap:2px 10px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
+  #shopSec .shophead h2.h{margin:0;font-size:19px;gap:8px}
+  #shopSec .shophead h2.h::before{width:7px;height:16px;box-shadow:10px 0 0 var(--sun),20px 0 0 var(--sky);margin-right:20px}
+  #shopSec .shophead .note{order:3;flex-basis:100%;font-size:11.5px}
+  #shopSec .shophead .coin{font-size:14px;padding:2px 10px 2px 3px;box-shadow:none}#shopSec .shophead .coin i{width:20px;height:20px}
+  #shopSec .items{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  #shopSec .item{padding:6px 6px 8px;gap:4px;border-radius:16px}
+  #shopSec .item .art{border-radius:12px}
+  #shopSec .item .nm{font-size:11.5px;line-height:1.25;min-height:2.5em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-items:normal}
+  #shopSec .item .kd{font-size:10px;margin-top:-2px}
+  #shopSec .item .rar{top:4px;inset-inline-start:4px;font-size:9.5px;padding:1px 6px;border-radius:6px}
+  #shopSec .item .btn{width:100%;padding:7px 4px;font-size:13.5px;min-height:36px;margin-top:auto}
+  #shopSec .item .btn.ghost{font-size:11.5px;padding:7px 2px;box-shadow:0 3px 0 var(--line)}
+  #shopSec .item.own:not(.on) .art{background:#eef8ff}
+  #shopSec .item.on{outline:3px solid var(--mint);outline-offset:-2px}
+  #shopSec .item .won{color:var(--mint2);border-color:#c6f0dc;background:#effcf5;box-shadow:0 3px 0 #c6f0dc}
+  #shopSec .how{margin-top:12px;font-size:12px;padding:8px 12px;border-radius:14px}
 
   /* GACHA: the machine fills the screen down to the pull buttons, which sit right above the tab bar (thumb reach);
      coins + small links to the rates / collection sheet sit between them */
@@ -1465,18 +1466,16 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
     <div class="alist" id="achList"></div>
   </section>
 
-  <!-- SHOP -->
-  <section class="pg" id="pg-shop">
-    <div class="shophead"><h2 class="h" id="hShop"></h2><span class="note" id="shopNote"></span><span class="coin mob" style="margin-inline-start:auto"><i>¢</i><span class="coinM">0</span></span></div>
-    <div class="items" id="shopItems"></div>
-    <p class="how" id="how1"></p>
-  </section>
-
-  <!-- GACHA -->
+  <!-- GACHA + SHOP (one page since 2026-11-06: the gacha on top, the shop below; the tab is called ガチャ) -->
   <section class="pg" id="pg-gacha">
     <div class="gacha">
       <div class="machine" id="machine"></div>
       <div class="card gpanel" id="gpanel"></div>
+    </div>
+    <div class="shopsec" id="shopSec">
+      <div class="shophead"><h2 class="h" id="hShop"></h2><span class="note" id="shopNote"></span><span class="coin mob" style="margin-inline-start:auto"><i>¢</i><span class="coinM">0</span></span></div>
+      <div class="items" id="shopItems"></div>
+      <p class="how" id="how1"></p>
     </div>
   </section>
 
@@ -1519,7 +1518,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open
 <script src="i18n.js?v=49"></script>
 <script src="gamelist-i18n.js?v=5"></script>
 <script src="table3d.js?v=102"></script>
-<script src="tables3d.js?v=2"></script>
+<script src="tables3d.js?v=3"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=11"></script>
 <script src="models/backgammon.js?v=118"></script>
@@ -1595,12 +1594,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=4"></script>
 <script src="gacha3d.js?v=7"></script>
-<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/resign.js?v=3"></script>
 <script src="../shared/tick.js?v=2"></script>
 <script src="gamelist.js?v=14"></script>
 <link rel="stylesheet" href="worldmap.css?v=15">
 <script src="worldmap.js?v=20"></script>
 <script src="updnews.js?v=1"></script>
-<script src="app.js?v=188"></script>
+<script src="app.js?v=189"></script>
 </body>
 </html>

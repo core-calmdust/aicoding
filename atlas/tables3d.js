@@ -499,6 +499,17 @@
     return { bg: '#0d0906', exp: 1.02, minExp: .95, board: .5, boardCol: 0xffe6c4, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8]] } };
   };
   TABLES[5].plain = { sun: 0xffd8a8, sunI: .78, hemi: [0xd8d0e0, 0x3a2414, .46], exp: .68 };
-  TABLES[5].floor = (o) => ({ img: walnut(o).image, w: 48, h: 36, dark: true,
-    over: 'radial-gradient(80% 70% at 20% 10%, rgba(255,196,120,.24), transparent 62%), radial-gradient(130% 120% at 50% 46%, transparent 52%, rgba(12,6,2,.5))' });
+  // the full games' pages (?skin=atlas): the floor is the desk mat's dark green leather (2026-11-06; was the walnut desk).
+  // One tile of 24 × 18 units, tileable (the fine grain is per pixel, the slow mottling a periodic wave), centred on the board.
+  const leatherFloor = o => { const W = sz(o, 1024), H = Math.round(W * 18 / 24); return canvasTex('tbl5-leather-floor', W, H, (c) => {
+      const N = makeNoise(17), img = c.createImageData(W, H), d = img.data, P2 = Math.PI * 2;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const u = x / W, v = y / H, slow = Math.sin(P2 * u + 1.3) * Math.cos(P2 * v * 2 + .4) * .5 + Math.sin(P2 * (u * 2 + v) + 2.1) * .5;
+        const k = (N(x / 2.2, y / 2.2, 2) - .5) * 22 + slow * 6, i = (y * W + x) * 4;
+        d[i] = 30 + k * .5; d[i + 1] = 52 + k * .8; d[i + 2] = 40 + k * .6; d[i + 3] = 255;
+      }
+      c.putImageData(img, 0, 0);
+    }); };
+  TABLES[5].floor = (o) => ({ img: leatherFloor(o).image, w: 24, h: 18, dark: true,
+    over: 'radial-gradient(80% 70% at 20% 10%, rgba(255,196,120,.20), transparent 62%), radial-gradient(130% 120% at 50% 46%, transparent 52%, rgba(4,8,5,.55))' });
 })();

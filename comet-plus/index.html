@@ -1985,8 +1985,9 @@ function setupNewStage() {
     }
 
     // 3面ごとにボス
-    if (stage % 3 === 0) bossSpawnFrame = frameCount + 150;
-    calm3 = originMode ? false : BOSS_CALM[stage] || (stage >= 15 && stage % 3 === 0 ? 0.49 : false); // ボス面（3・6・9面）は彗星を減らす
+    const bossMode = gameMode === 'STANDARD MODE'; // ボスが出るのは STANDARD だけ（他のモードはボス面でも彗星を減らさない）
+    if (stage % 3 === 0 && bossMode) bossSpawnFrame = frameCount + 150;
+    calm3 = originMode || !bossMode ? false : BOSS_CALM[stage] || (stage >= 15 && stage % 3 === 0 ? 0.49 : false); // ボス面（3・6・9面）は彗星を減らす
 }
 
 async function startGame(mode) {
@@ -2003,7 +2004,7 @@ async function startGame(mode) {
     if (TEST_START_STAGE > 1 && gameMode !== 'STARTRAIL MODE') { // テスト用の途中ステージ開始
         stage = TEST_START_STAGE; currentThemeIndex = (stage - 1) % themes.length; applyThemeStyles(themes[currentThemeIndex]);
         bossCount = Math.floor((stage - 1) / 3); currentCometSpeed += config.cometSpeedIncrease * (stage - 1) * STAGE_LENGTH_IN_FRAMES / 60;
-        if (stage % 3 === 0) bossSpawnFrame = 150;
+        if (stage % 3 === 0 && gameMode === 'STANDARD MODE') bossSpawnFrame = 150;
     }
     // Determine monster spawn counts for the first stage
     invaderSpawnCountForStage = originMode ? Math.floor(stage / 2) : stage <= EASY_N ? [0, 1, 0, 1, 1, 0][stage - 1] : Math.max(1, Math.floor(dStage() / 2)); // 2面から少しだけ敵を出す（ボス面の3・6面は0）
@@ -4129,7 +4130,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 }
 
 // タイトルのロゴ画像（白一色の画像を読み込み、COMET は白・OUTBURST+ はテーマ色に塗り分けた絵をテーマごとに作っておく）
-const titleLogoImg = new Image(); titleLogoImg.src = 'title-logo.png?v=2';
+const titleLogoImg = new Image(); titleLogoImg.src = 'title-logo.png?v=3';
 const TITLE_LOGO_SPLIT = 0.743; // 画像の上から何割で COMET と OUTBURST+ を分けるか
 let titleLogoCache = null;
 function titleLogoCanvas(theme) {

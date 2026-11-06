@@ -1336,7 +1336,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/record.js?v=12"></script>
 <script src="coach.js?v=7"></script>
 <script src="coach-i18n.js?v=4"></script>
-<script src="../shared/export.js?v=7"></script>
+<script src="../shared/export.js?v=8"></script>
 <script src="../shared/pzbook.js?v=5"></script>
 <script src="../shared/placement.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=16"></script>
@@ -1344,7 +1344,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/flipbtn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7"></script>
 <script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/resign.js?v=2"></script>
+<script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
 <script src="../shared/ruletour.js?v=29"></script>
 <script src="engine.js?v=20261028rb"></script>
@@ -1459,7 +1459,7 @@ function load() {
       if (!validMoves(d.moves)) { setVariant(settings.rule); return false; }
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }   // restored on load: the clock waits for the first move
-      resignOver = d.resign && d.resign.loser ? { over: true, winner: d.resign.winner, loser: d.resign.loser, why: 'resign', mv: moves } : null;
+      resignOver = d.resign && d.resign.draw ? { over: true, winner: 0, draw: true, why: 'agree', mv: moves } : d.resign && d.resign.loser ? { over: true, winner: d.resign.winner, loser: d.resign.loser, why: 'resign', mv: moves } : null;
       cur = moves.length; gameOverShown = statusAt(cur).over;
       return true;
     }
@@ -1469,7 +1469,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resign: resignOver && resignOver.mv === moves ? { winner: resignOver.winner, loser: resignOver.loser } : null })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resign: resignOver && resignOver.mv === moves ? (resignOver.draw ? { draw: true } : { winner: resignOver.winner, loser: resignOver.loser }) : null })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
@@ -1910,7 +1910,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); }
+function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); if (window.DrawOffer) DrawOffer.sync(); }
 
 // ====================================================================== input
 function pointAt(clientX, clientY) {
@@ -2098,7 +2098,7 @@ function onGameEnd(st) {
   if (youWin || (settings.mode === 'pvp' && st.winner)) confetti();
   $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
   $('#resultTitle').textContent = st.draw ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { c: pname(st.winner) });
-  let sub = (st.why === 'resign' ? (settings.mode === 'pvp' ? t('ol.wResign', { p: pname(st.loser) }) : t('ol.youResigned')) : t('res.why.' + st.why)) + '<br>' + t('res.sub', { n: moves.length });
+  let sub = (st.why === 'resign' ? (settings.mode === 'pvp' ? t('ol.wResign', { p: pname(st.loser) }) : t('ol.youResigned')) : st.why === 'agree' && window.DrawOffer ? DrawOffer.tx('agreed', LANG) : t('res.why.' + st.why)) + '<br>' + t('res.sub', { n: moves.length });
   if (rgame) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
@@ -2137,6 +2137,29 @@ $('#btnResign').onclick = () => {
     else resignNow();
   });
 };
+// 引き分けの提案（shared/drawoffer.js、2026-11-06）：AI 対局は AI が不利でなければ同意、同じ端末の2人対局は合意で引き分け
+let drawAsked = -99;
+function drawLiveKind() { if (lesson || puzzle || statusAt(moves.length).over || cur !== moves.length) return ''; return settings.mode === 'ai' ? 'ai' : settings.mode === 'pvp' ? 'pvp' : ''; }
+function drawEnd() {
+  busyToken++; cancelWorker('ai'); thinking = 0; animating = false; sel = null; hintList = null;
+  cur = moves.length; reviewing = false; gameOverShown = false;
+  const st = { over: true, winner: 0, draw: true, why: 'agree' };
+  if (rgame) rgame.over = st; else resignOver = Object.assign(st, { mv: moves });
+  save(); update(false); onGameEnd(st);
+}
+async function playerDraw() {
+  if (drawLiveKind() !== 'ai') return;
+  const D = k => DrawOffer.tx(k, LANG);
+  if (moves.length - drawAsked < 6) { toast(D('wait'), 1800); return; }
+  drawAsked = moves.length;
+  const n = moves.length, ai = humanColor === P1 ? P2 : P1;
+  let ev = null; for (let i = n; i >= 0 && !ev; i--) ev = evals[i] || null;
+  if (!ev || ev.kind === 'heur') { const r = await request('ana', { type: 'analyze', moves: moves.slice(0, n), time: 900 }); if (n !== moves.length || drawLiveKind() !== 'ai') return; if (r && r.list) ev = evalFromList(r.list, toMoveAt(n)) || ev; }
+  const v = ev ? ev.s * (ai === P1 ? 1 : -1) : 0;   // the AI's view (-1 … 1)
+  if (n >= 24 && v <= 0.08) { toast(D('aiYes'), 1600); drawEnd(); } else toast(D('aiNo'), 2000);
+}
+window.drawLiveKind = drawLiveKind; window.playerDraw = playerDraw;
+window.drawAgree = () => { if (drawLiveKind() === 'pvp') drawEnd(); };
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
   if (resignOver && resignOver.mv === moves) return false;
@@ -3738,7 +3761,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261030ckp"></script>
+<script src="online-ui.js?v=20261030ckp-dr1"></script>
 <!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
@@ -3748,7 +3771,7 @@ window.addEventListener('resize', () => renderFx());
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=2')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=2')).then(() => load('../atlas/skin/morris.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=102')).then(() => load('../atlas/tables3d.js?v=3')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/morris.js?v=5')).then(() => load('../atlas/games/morris-pieces.js?v=2')).then(() => load('../atlas/skin/morris.js?v=6'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
