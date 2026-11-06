@@ -1257,10 +1257,9 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   html[data-pg=gacha]{--gsH:48px}
   #gsSeg{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;box-sizing:border-box;height:var(--gsH);margin:0;padding:4px 8px;gap:4px;border:0;border-top:2px solid var(--line);border-radius:0;background:rgba(255,253,247,.97);box-shadow:0 -6px 14px -10px rgba(60,40,10,.35)}
   #gsSeg button{flex:1;padding:6px 4px;border-radius:12px;font-size:13.5px}#gsSeg button[aria-pressed=true]{background:var(--sky);color:#fff}
-  html[data-pg=gacha] .updline{bottom:calc(var(--tabsH,calc(64px + env(safe-area-inset-bottom))) + var(--gsH))}
   html[data-pg=gacha] body{padding-bottom:calc(84px + var(--ulH) + var(--gsH) + env(safe-area-inset-bottom))}
   html[data-gs=shop] #pg-gacha .gacha{display:none}html:not([data-gs=shop]) #shopSec{display:none}
-  html[data-pg=gacha][data-gs=shop] .updline{display:none}html[data-pg=gacha][data-gs=shop]{--ulH:0px}
+  html[data-pg=gacha] .updline{display:none}html[data-pg=gacha]{--ulH:0px}   /* no news ticker on the gacha page (ガチャ・ショップとも) */
   html[data-gs=shop] #shopSec{margin-top:0}
   html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + var(--ulH) + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
 }
