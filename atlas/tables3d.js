@@ -34,6 +34,10 @@
       de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer'],
       hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम'],
       ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب'],
+      ru: ['Столик', 'Как в 2D', 'Обеденный стол', 'Зелёное сукно', 'Терраса', 'Кабинет'],
+      'zh-TW': ['矮桌', '同2D', '餐桌', '綠色絨布桌', '露台', '書房'],
+      id: ['Meja rendah', 'Seperti 2D', 'Meja makan', 'Kain hijau', 'Teras', 'Ruang baca'],
+      tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası'],
     },
     go: {
       ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ'],
@@ -46,6 +50,10 @@
       de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer'],
       hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें'],
       ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب'],
+      ru: ['К столику', 'К доске', 'К обеденному столу', 'К суконному столу', 'На террасу', 'В кабинет'],
+      'zh-TW': ['前往矮桌', '前往棋盤', '前往餐桌', '前往絨布桌', '前往露台', '前往書房'],
+      id: ['Ke meja', 'Ke papan', 'Ke meja makan', 'Ke meja kain', 'Ke teras', 'Ke ruang baca'],
+      tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına'],
     },
     play: {
       ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ'],
@@ -58,6 +66,10 @@
       de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen'],
       hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें'],
       ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب'],
+      ru: ['Играть на столике', 'Играть на доске', 'Играть за обеденным столом', 'Играть на сукне', 'Играть на террасе', 'Играть в кабинете'],
+      'zh-TW': ['在矮桌上玩', '在棋盤上玩', '在餐桌上玩', '在絨布桌上玩', '在露台上玩', '在書房裡玩'],
+      id: ['Main di meja', 'Main di papan', 'Main di meja makan', 'Main di kain hijau', 'Main di teras', 'Main di ruang baca'],
+      tr: ['Masada oyna', 'Tahtada oyna', 'Yemek masasında oyna', 'Çuhada oyna', 'Terasta oyna', 'Çalışma odasında oyna'],
     },
     // the updates list (shared/atlas.js) says ちゃぶ台 / chabudai for the portal's own 3D play: the word that replaces it
     news: {
@@ -66,12 +78,12 @@
       hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
     },
     ui: {
-      place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان' },
-      table: { ja: 'テーブル', en: 'Table', zh: '桌子', ko: '테이블', es: 'Mesa', fr: 'Table', pt: 'Mesa', de: 'Tisch', hi: 'टेबल', ar: 'الطاولة' },
-      bright: { ja: '明るさ', en: 'Brightness', zh: '亮度', ko: '밝기', es: 'Brillo', fr: 'Luminosité', pt: 'Brilho', de: 'Helligkeit', hi: 'रोशनी', ar: 'السطوع' },
+      place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان', ru: 'Место', 'zh-TW': '場所', id: 'Tempat', tr: 'Mekân' },
+      table: { ja: 'テーブル', en: 'Table', zh: '桌子', ko: '테이블', es: 'Mesa', fr: 'Table', pt: 'Mesa', de: 'Tisch', hi: 'टेबल', ar: 'الطاولة', ru: 'Стол', 'zh-TW': '桌子', id: 'Meja', tr: 'Masa' },
+      bright: { ja: '明るさ', en: 'Brightness', zh: '亮度', ko: '밝기', es: 'Brillo', fr: 'Luminosité', pt: 'Brilho', de: 'Helligkeit', hi: 'रोशनी', ar: 'السطوع', ru: 'Яркость', 'zh-TW': '亮度', id: 'Kecerahan', tr: 'Parlaklık' },
       b: { ja: ['標準', '明るい', 'とても明るい'], en: ['Normal', 'Bright', 'Very bright'], zh: ['标准', '明亮', '非常明亮'], ko: ['보통', '밝게', '아주 밝게'],
         es: ['Normal', 'Claro', 'Muy claro'], fr: ['Normal', 'Clair', 'Très clair'], pt: ['Normal', 'Claro', 'Muito claro'], de: ['Normal', 'Hell', 'Sehr hell'],
-        hi: ['सामान्य', 'तेज़', 'बहुत तेज़'], ar: ['عادي', 'ساطع', 'ساطع جدًا'] },
+        hi: ['सामान्य', 'तेज़', 'बहुत तेज़'], ar: ['عادي', 'ساطع', 'ساطع جدًا'], ru: ['Обычная', 'Яркая', 'Очень яркая'], 'zh-TW': ['一般', '明亮', '非常明亮'], id: ['Normal', 'Terang', 'Sangat terang'], tr: ['Normal', 'Parlak', 'Çok parlak'] },
     },
   };
   const pick = (o, l) => o[l] || o.en;
@@ -103,16 +115,16 @@
      always show the same board. Names are the design tab's own (10 languages). Games with a single 3D board are not listed. */
   const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
   const N3 = {   // the design tab's names
-    lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي' },
-    wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي' },
-    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي' },
-    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي' },
-    marq: { ja: '寄木細工 3D', en: 'Marquetry 3D', zh: '镶嵌木 3D', ko: '상감 목재 3D', es: 'Marquetería 3D', fr: 'Marqueterie 3D', pt: 'Marchetaria 3D', de: 'Intarsie 3D', hi: 'मार्केट्री 3D', ar: 'تطعيم خشبي ثلاثي' },
-    scarlet: { ja: 'レザー 3D', en: 'Leather 3D', zh: '皮革 3D', ko: '가죽 3D', es: 'Cuero 3D', fr: 'Cuir 3D', pt: 'Couro 3D', de: 'Leder 3D', hi: 'लेदर 3D', ar: 'جلد ثلاثي' },
-    victorian: { ja: '3D ヴィクトリア盤', en: '3D Victorian board', zh: '3D 维多利亚盘', ko: '3D 빅토리아 판', es: 'Tablero victoriano 3D', fr: 'Plateau victorien 3D', pt: 'Tabuleiro vitoriano 3D', de: 'Viktorianisches Brett 3D', hi: '3D विक्टोरियन बोर्ड', ar: 'رقعة فيكتورية ثلاثية الأبعاد' },
-    folk: { ja: '3D 民藝盤', en: '3D folk-art board', zh: '3D 民间彩绘盘', ko: '3D 민예 판', es: 'Tablero folk 3D', fr: 'Plateau folk 3D', pt: 'Tabuleiro folk 3D', de: 'Volkskunst-Brett 3D', hi: '3D लोक-कला बोर्ड', ar: 'رقعة شعبية ثلاثية الأبعاد' },
-    quilt: { ja: 'ハワイアンキルト 3D', en: 'Hawaiian quilt 3D', zh: '夏威夷拼布 3D', ko: '하와이안 퀼트 3D', es: 'Colcha hawaiana 3D', fr: 'Courtepointe hawaïenne 3D', pt: 'Colcha havaiana 3D', de: 'Hawaii-Quilt 3D', hi: 'हवाईयन क्विल्ट 3D', ar: 'لحاف هاوائي ثلاثي' },
-    papamu: { ja: '石のパパムー 3D', en: 'Stone papamū 3D', zh: '石刻棋盘 3D', ko: '돌 파파무 3D', es: 'Papamū de piedra 3D', fr: 'Papamū de pierre 3D', pt: 'Papamū de pedra 3D', de: 'Stein-Papamū 3D', hi: 'पत्थर का पापामू 3D', ar: 'بابامو حجري ثلاثي' },
+    lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي', ru: 'Роскошная 3D', 'zh-TW': '高級3D', id: '3D mewah', tr: 'Lüks 3D' },
+    wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي', ru: 'Деревянная 3D', 'zh-TW': '木製3D', id: '3D kayu', tr: 'Ahşap 3D' },
+    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: '3D из каи', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
+    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лаковая 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
+    marq: { ja: '寄木細工 3D', en: 'Marquetry 3D', zh: '镶嵌木 3D', ko: '상감 목재 3D', es: 'Marquetería 3D', fr: 'Marqueterie 3D', pt: 'Marchetaria 3D', de: 'Intarsie 3D', hi: 'मार्केट्री 3D', ar: 'تطعيم خشبي ثلاثي', ru: '3D маркетри', 'zh-TW': '拼花3D', id: '3D marketri', tr: 'Marketeri 3D' },
+    scarlet: { ja: 'レザー 3D', en: 'Leather 3D', zh: '皮革 3D', ko: '가죽 3D', es: 'Cuero 3D', fr: 'Cuir 3D', pt: 'Couro 3D', de: 'Leder 3D', hi: 'लेदर 3D', ar: 'جلد ثلاثي', ru: 'Кожаная 3D', 'zh-TW': '皮革3D', id: '3D kulit', tr: 'Deri 3D' },
+    victorian: { ja: '3D ヴィクトリア盤', en: '3D Victorian board', zh: '3D 维多利亚盘', ko: '3D 빅토리아 판', es: 'Tablero victoriano 3D', fr: 'Plateau victorien 3D', pt: 'Tabuleiro vitoriano 3D', de: 'Viktorianisches Brett 3D', hi: '3D विक्टोरियन बोर्ड', ar: 'رقعة فيكتورية ثلاثية الأبعاد', ru: 'Викторианская 3D-доска', 'zh-TW': '維多利亞時代3D棋盤', id: 'Papan 3D Victoria', tr: '3D Viktorya tahtası' },
+    folk: { ja: '3D 民藝盤', en: '3D folk-art board', zh: '3D 民间彩绘盘', ko: '3D 민예 판', es: 'Tablero folk 3D', fr: 'Plateau folk 3D', pt: 'Tabuleiro folk 3D', de: 'Volkskunst-Brett 3D', hi: '3D लोक-कला बोर्ड', ar: 'رقعة شعبية ثلاثية الأبعاد', ru: 'Народная 3D-доска', 'zh-TW': '民藝3D棋盤', id: 'Papan 3D seni rakyat', tr: '3D halk sanatı tahtası' },
+    quilt: { ja: 'ハワイアンキルト 3D', en: 'Hawaiian quilt 3D', zh: '夏威夷拼布 3D', ko: '하와이안 퀼트 3D', es: 'Colcha hawaiana 3D', fr: 'Courtepointe hawaïenne 3D', pt: 'Colcha havaiana 3D', de: 'Hawaii-Quilt 3D', hi: 'हवाईयन क्विल्ट 3D', ar: 'لحاف هاوائي ثلاثي', ru: 'Гавайское одеяло 3D', 'zh-TW': '夏威夷拼布3D', id: 'Quilt Hawaii 3D', tr: 'Hawaii yorganı 3D' },
+    papamu: { ja: '石のパパムー 3D', en: 'Stone papamū 3D', zh: '石刻棋盘 3D', ko: '돌 파파무 3D', es: 'Papamū de piedra 3D', fr: 'Papamū de pierre 3D', pt: 'Papamū de pedra 3D', de: 'Stein-Papamū 3D', hi: 'पत्थर का पापामू 3D', ar: 'بابامو حجري ثلاثي', ru: 'Каменная папаму 3D', 'zh-TW': '石製帕帕穆3D', id: 'Papamū batu 3D', tr: 'Taş papamū 3D' },
   };
   const BOARDS = {
     // atlas/skin/chess.js: 'atlas-chess-pc' = the piece set ('1' lux · 'wood' · '0' the 2D pieces), '-bd' = the board's wood
@@ -138,7 +150,7 @@
   X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'konane' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
-  PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة' };
+  PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
 
   /* ---------- 1 · 2D準拠: each game's own 2D page background ---------- */
   // the CSS layers that the game's 2D page (<game>/index.html) paints on its body, read from the rendered pages: [color, image layers]

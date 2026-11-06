@@ -20,6 +20,10 @@
     de: { btn: 'Historia', sub: 'Die Geschichte des Spiels', close: 'Schließen', prev: 'Zurück', next: 'Weiter', load: 'Seiten werden aufgeschlagen…', fail: 'Konnte nicht geladen werden', bgm: 'Musik', back: 'Zurück zum Brett', again: 'Von vorn', tap: 'Zum Umdrehen tippen', src: 'Manche Daten sind umstritten' },
     hi: { btn: 'हिस्टोरिया', sub: 'इस खेल की कहानी', close: 'बंद करें', prev: 'पिछला', next: 'अगला', load: 'पन्ने खुल रहे हैं…', fail: 'लोड नहीं हो सका', bgm: 'संगीत', back: 'बोर्ड पर लौटें', again: 'शुरू से', tap: 'पलटने के लिए टैप करें', src: 'कुछ तिथियों पर मतभेद है' },
     ar: { btn: 'هيستوريا', sub: 'حكاية هذه اللعبة', close: 'إغلاق', prev: 'السابق', next: 'التالي', load: 'جارٍ فتح الصفحات…', fail: 'تعذّر التحميل', bgm: 'الموسيقى', back: 'العودة إلى اللوحة', again: 'من البداية', tap: 'المس للقلب', src: 'بعض التواريخ مختلف عليها' },
+    ru: { btn: 'История', sub: 'История этой игры', close: 'Закрыть', prev: 'Назад', next: 'Далее', load: 'Открываем страницы…', fail: 'Не удалось загрузить', bgm: 'Музыка', back: 'К доске', again: 'Сначала', tap: 'Нажмите, чтобы перевернуть', src: 'Некоторые даты спорны' },
+    'zh-TW': { btn: '歷史館', sub: '這款遊戲的故事', close: '關閉', prev: '上一頁', next: '下一頁', load: '翻開書頁中…', fail: '無法載入', bgm: '音樂', back: '回到棋盤', again: '從頭開始', tap: '點一下翻頁', src: '部分年代有不同說法' },
+    id: { btn: 'Historia', sub: 'Kisah permainan ini', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', load: 'Membuka halaman…', fail: 'Gagal memuat', bgm: 'Musik', back: 'Kembali ke papan', again: 'Dari awal', tap: 'Ketuk untuk membalik', src: 'Beberapa tanggal diperdebatkan' },
+    tr: { btn: 'Historia', sub: 'Bu oyunun hikâyesi', close: 'Kapat', prev: 'Önceki', next: 'Sonraki', load: 'Sayfalar açılıyor…', fail: 'Yüklenemedi', bgm: 'Müzik', back: 'Tahtaya dön', again: 'Baştan', tap: 'Çevirmek için dokun', src: 'Bazı tarihler tartışmalı' },
   };
   // the guide who narrates each game: the game's own Atlas Mon where it has one, else a plush avatar that suits it
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',

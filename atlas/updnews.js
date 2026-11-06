@@ -21,7 +21,11 @@
       pt: '«Dia da Luz» no Japão: neste dia, em 1879, a lâmpada incandescente de Edison acendeu com sucesso.',
       de: 'Japans „Tag des Lichts“: An diesem Tag im Jahr 1879 leuchtete Edisons Glühlampe im Test erfolgreich auf.',
       hi: 'जापान का "प्रकाश दिवस": 1879 में आज ही के दिन एडिसन का तापदीप्त बल्ब परीक्षण में सफलतापूर्वक जला था।',
-      ar: '«يوم الضوء» في اليابان: في مثل هذا اليوم من عام 1879 أضاء مصباح إديسون المتوهّج بنجاح في التجربة.' },
+      ar: '«يوم الضوء» في اليابان: في مثل هذا اليوم من عام 1879 أضاء مصباح إديسون المتوهّج بنجاح في التجربة.',
+      ru: '«День света» в Японии: в этот день в 1879 году лампа накаливания Эдисона успешно загорелась на испытаниях.',
+      'zh-TW': '日本的「光之日」：1879年的這一天，愛迪生的白熾燈實驗成功點亮。',
+      id: '"Hari Cahaya" di Jepang: pada hari ini tahun 1879, uji coba lampu pijar Edison berhasil menyala.',
+      tr: 'Japonya\'da "Işık Günü": 1879\'da bugün Edison\'ın akkor lambası denemede başarıyla yandı.' },
     // first xerographic copy "10-22-38 ASTORIA", 22 Oct 1938 — aps.org/apsnews/2003/10/october-1938-invention-xerography, thehenryford.org/collections/explore/articles/xerox
     '10-22': {
       ja: '1938年のこの日、カールソンが世界初の電子写真（コピー機の原理）で「10-22-38 ASTORIA」の文字を写しました。',
@@ -33,7 +37,11 @@
       pt: 'Neste dia, em 1938, Chester Carlson fez a primeira cópia xerográfica: «10-22-38 ASTORIA». Nascia a fotocopiadora.',
       de: 'An diesem Tag im Jahr 1938 fertigte Chester Carlson die erste xerografische Kopie an: „10-22-38 ASTORIA“. Die Geburtsstunde des Kopierers.',
       hi: '1938 में आज ही के दिन चेस्टर कार्लसन ने पहली ज़ेरोग्राफ़िक कॉपी बनाई — "10-22-38 ASTORIA"। यहीं से फ़ोटोकॉपी मशीन की शुरुआत हुई।',
-      ar: 'في مثل هذا اليوم من عام 1938 صنع تشستر كارلسون أول نسخة بالتصوير الجاف: «10-22-38 ASTORIA». هكذا وُلدت آلة النسخ.' },
+      ar: 'في مثل هذا اليوم من عام 1938 صنع تشستر كارلسون أول نسخة بالتصوير الجاف: «10-22-38 ASTORIA». هكذا وُلدت آلة النسخ.',
+      ru: 'В этот день в 1938 году Честер Карлсон сделал первую ксерокопию — «10-22-38 ASTORIA». Так родился копировальный аппарат.',
+      'zh-TW': '1938年的這一天，切斯特・卡爾森完成了第一份靜電複印「10-22-38 ASTORIA」，影印機就此誕生。',
+      id: 'Pada hari ini tahun 1938, Chester Carlson membuat salinan xerografi pertama — "10-22-38 ASTORIA". Mesin fotokopi pun lahir.',
+      tr: '1938\'de bugün Chester Carlson ilk kserografik kopyayı yaptı — "10-22-38 ASTORIA". Fotokopi makinesi doğdu.' },
     // United Nations Day: the UN Charter entered into force on 24 Oct 1945 — un.org (UN Day)
     '10-24': {
       ja: '「国連デー」。1945年のこの日、国際連合憲章が発効し、国連が正式に発足しました。',
@@ -45,7 +53,11 @@
       pt: 'Dia das Nações Unidas: neste dia, em 1945, a Carta da ONU entrou em vigor e a organização nasceu oficialmente.',
       de: 'Tag der Vereinten Nationen: An diesem Tag im Jahr 1945 trat die UN-Charta in Kraft – die UNO war offiziell gegründet.',
       hi: 'संयुक्त राष्ट्र दिवस: 1945 में आज ही के दिन संयुक्त राष्ट्र चार्टर लागू हुआ और संयुक्त राष्ट्र की औपचारिक स्थापना हुई।',
-      ar: 'يوم الأمم المتحدة: في مثل هذا اليوم من عام 1945 دخل ميثاق الأمم المتحدة حيّز التنفيذ وتأسست المنظمة رسميًا.' },
+      ar: 'يوم الأمم المتحدة: في مثل هذا اليوم من عام 1945 دخل ميثاق الأمم المتحدة حيّز التنفيذ وتأسست المنظمة رسميًا.',
+      ru: 'День ООН: в этот день в 1945 году вступил в силу Устав ООН, и организация была официально основана.',
+      'zh-TW': '聯合國日：1945年的這一天《聯合國憲章》生效，聯合國正式成立。',
+      id: 'Hari PBB: Piagam PBB mulai berlaku pada hari ini tahun 1945, dan PBB resmi berdiri.',
+      tr: 'Birleşmiş Milletler Günü: BM Şartı 1945\'te bugün yürürlüğe girdi ve BM resmen kuruldu.' },
     // Pablo Picasso born 25 Oct 1881 in Málaga — sparknotes.com/biography/picasso/timeline, spain.info/picasso-2023
     '10-25': {
       ja: '1881年のこの日、画家パブロ・ピカソがスペインのマラガで生まれました。',
@@ -57,7 +69,11 @@
       pt: 'Pablo Picasso nasceu neste dia, em 1881, em Málaga, na Espanha.',
       de: 'An diesem Tag im Jahr 1881 wurde Pablo Picasso im spanischen Málaga geboren.',
       hi: '1881 में आज ही के दिन चित्रकार पाब्लो पिकासो का जन्म स्पेन के मालागा में हुआ था।',
-      ar: 'في مثل هذا اليوم من عام 1881 وُلد الرسّام بابلو بيكاسو في مالقة بإسبانيا.' },
+      ar: 'في مثل هذا اليوم من عام 1881 وُلد الرسّام بابلو بيكاسو في مالقة بإسبانيا.',
+      ru: 'В этот день в 1881 году в Малаге (Испания) родился Пабло Пикассо.',
+      'zh-TW': '1881年的這一天，畢卡索出生於西班牙馬拉加。',
+      id: 'Pablo Picasso lahir pada hari ini tahun 1881 di Málaga, Spanyol.',
+      tr: 'Pablo Picasso 1881\'de bugün İspanya\'nın Málaga kentinde doğdu.' },
     // Statue of Liberty dedicated 28 Oct 1886 — history.com/this-day-in-history/October-28/statue-of-liberty-dedicated
     '10-28': {
       ja: '1886年のこの日、ニューヨークで自由の女神像の除幕式が行われました。フランスからアメリカへの贈り物です。',
@@ -69,7 +85,11 @@
       pt: 'Neste dia, em 1886, a Estátua da Liberdade, presente da França aos EUA, foi inaugurada em Nova York.',
       de: 'An diesem Tag im Jahr 1886 wurde in New York die Freiheitsstatue eingeweiht – ein Geschenk Frankreichs an die USA.',
       hi: '1886 में आज ही के दिन न्यूयॉर्क में स्टैच्यू ऑफ़ लिबर्टी का अनावरण हुआ — यह फ़्रांस की ओर से अमेरिका को एक उपहार थी।',
-      ar: 'في مثل هذا اليوم من عام 1886 أُزيح الستار في نيويورك عن تمثال الحرية، هدية فرنسا إلى الولايات المتحدة.' },
+      ar: 'في مثل هذا اليوم من عام 1886 أُزيح الستار في نيويورك عن تمثال الحرية، هدية فرنسا إلى الولايات المتحدة.',
+      ru: 'Статуя Свободы, подарок Франции Соединённым Штатам, была открыта в Нью-Йорке в этот день в 1886 году.',
+      'zh-TW': '法國送給美國的自由女神像，於1886年的這一天在紐約揭幕。',
+      id: 'Patung Liberty, hadiah Prancis untuk Amerika Serikat, diresmikan di New York pada hari ini tahun 1886.',
+      tr: 'Fransa\'nın ABD\'ye hediyesi Özgürlük Heykeli 1886\'da bugün New York\'ta açıldı.' },
     // first ARPANET message UCLA→SRI, 29 Oct 1969: "LOGIN" crashed after "LO" — historyofinformation.com/detail.php?id=882, livescience.com (science history, Oct 29 1969)
     '10-29': {
       ja: '1969年のこの日、インターネットの祖先ARPANETで初のメッセージが送られました。「LOGIN」のはずが、届いたのは「LO」だけ。',
@@ -81,7 +101,11 @@
       pt: 'Neste dia, em 1969, a ARPANET, ancestral da internet, enviou sua primeira mensagem. Era para ser «LOGIN», mas só chegou «LO».',
       de: 'An diesem Tag im Jahr 1969 schickte das ARPANET, der Vorläufer des Internets, seine erste Nachricht. Geplant war „LOGIN“ – an kam nur „LO“.',
       hi: '1969 में आज ही के दिन इंटरनेट के पूर्वज ARPANET पर पहला संदेश भेजा गया। भेजना था "LOGIN", पर पहुँचा सिर्फ़ "LO"।',
-      ar: 'في مثل هذا اليوم من عام 1969 أرسلت شبكة ARPANET، سلف الإنترنت، أول رسالة لها. كان يُفترض أن تكون «LOGIN»، لكن لم يصل سوى «LO».' },
+      ar: 'في مثل هذا اليوم من عام 1969 أرسلت شبكة ARPANET، سلف الإنترنت، أول رسالة لها. كان يُفترض أن تكون «LOGIN»، لكن لم يصل سوى «LO».',
+      ru: 'В этот день в 1969 году ARPANET — предок интернета — отправила первое сообщение. Должно было быть «LOGIN», но дошло только «LO».',
+      'zh-TW': '1969年的這一天，網際網路的前身ARPANET傳出第一則訊息。原本要傳「LOGIN」，結果只送到「LO」。',
+      id: 'Pada hari ini tahun 1969, ARPANET — leluhur internet — mengirim pesan pertamanya. Seharusnya "LOGIN", tapi hanya "LO" yang sampai.',
+      tr: '1969\'da bugün internetin atası ARPANET ilk mesajını gönderdi. "LOGIN" olacaktı ama yalnızca "LO" ulaştı.' },
     // 犬の日 (Japan): 1 Nov, ワンワンワン pun, set in 1987 by ペットフード協会 — bestcalendar.jp/dates/kinenbi/4474, pref.saitama.lg.jp/b0716/doubutu-inunohi1.html
     '11-01': {
       ja: '日本では「犬の日」。ワン（1）ワン（1）ワン（1）の語呂合わせで、1987年に制定されました。',
@@ -93,7 +117,11 @@
       pt: 'No Japão é o Dia do Cachorro: 1-1-1 se lê «one, one, one», como «wan wan wan», o «au au» japonês. Criado em 1987.',
       de: 'In Japan ist Hundetag: 1-1-1 klingt wie „one, one, one“ – „wan wan wan“, das japanische „Wau wau“. Eingeführt 1987.',
       hi: 'जापान में आज "कुत्ता दिवस" है: 1-1-1 को "वन, वन, वन" पढ़ें तो यह जापानी में कुत्ते की "वान वान वान" (भौं-भौं) जैसा लगता है। 1987 में शुरू हुआ।',
-      ar: 'في اليابان هو «يوم الكلب»: يُقرأ 1-1-1 «وَن وَن وَن»، مثل «وان وان وان»، نباح الكلب باليابانية. أُقرّ عام 1987.' },
+      ar: 'في اليابان هو «يوم الكلب»: يُقرأ 1-1-1 «وَن وَن وَن»، مثل «وان وان وان»، نباح الكلب باليابانية. أُقرّ عام 1987.',
+      ru: 'В Японии — День собаки: 1-1-1 читается как «ван-ван-ван», по-японски «гав-гав-гав». Учреждён в 1987 году.',
+      'zh-TW': '日本的「狗之日」：11月1日的1・1・1念起來像日語的狗叫聲「汪汪汪」，1987年訂立。',
+      id: 'Di Jepang hari ini Hari Anjing: 1-1-1 dibaca "wan wan wan", bunyi gonggongan dalam bahasa Jepang. Ditetapkan pada 1987.',
+      tr: 'Japonya\'da bugün Köpek Günü: 1-1-1, Japonca havlama sesi "van van van" gibi okunur. 1987\'de belirlendi.' },
     // Howard Carter found the first step to Tutankhamun's tomb, 4 Nov 1922 — history.com/this-day-in-history/November-4/entrance-to-king-tuts-tomb-discovered, en.wikipedia.org/wiki/Howard_Carter
     '11-04': {
       ja: '1922年のこの日、エジプトでハワード・カーターがツタンカーメン王墓へ続く階段の最初の一段を発見しました。',
@@ -105,7 +133,11 @@
       pt: 'Neste dia, em 1922, Howard Carter encontrou no Egito o primeiro degrau que levava ao túmulo de Tutancâmon.',
       de: 'An diesem Tag im Jahr 1922 entdeckte Howard Carter in Ägypten die erste Stufe hinab zum Grab des Tutanchamun.',
       hi: '1922 में आज ही के दिन हॉवर्ड कार्टर ने मिस्र में तूतनख़ामुन की क़ब्र तक जाने वाली पहली सीढ़ी खोजी थी।',
-      ar: 'في مثل هذا اليوم من عام 1922 عثر هوارد كارتر في مصر على أول درجة تقود إلى مقبرة توت عنخ آمون.' },
+      ar: 'في مثل هذا اليوم من عام 1922 عثر هوارد كارتر في مصر على أول درجة تقود إلى مقبرة توت عنخ آمون.',
+      ru: 'В этот день в 1922 году Говард Картер нашёл в Египте первую ступень, ведущую в гробницу Тутанхамона.',
+      'zh-TW': '1922年的這一天，霍華德・卡特在埃及發現了通往圖坦卡門墓的第一級階梯。',
+      id: 'Pada hari ini tahun 1922, Howard Carter menemukan anak tangga pertama menuju makam Tutankhamun di Mesir.',
+      tr: '1922\'de bugün Howard Carter, Mısır\'da Tutankamon\'un mezarına inen ilk basamağı buldu.' },
     // Guy Fawkes Night, 5 Nov: bonfires & fireworks for the foiled Gunpowder Plot of 1605 — learnenglish.britishcouncil.org (Bonfire Night), newworldencyclopedia.org/entry/Guy_Fawkes_Night
     '11-05': {
       ja: 'イギリスの「ガイ・フォークス・ナイト」。1605年の火薬陰謀事件にちなみ、各地で焚き火と花火が上がります。',
@@ -117,7 +149,11 @@
       pt: 'Noite de Guy Fawkes no Reino Unido: fogueiras e fogos de artifício lembram a frustrada Conspiração da Pólvora de 1605.',
       de: 'Guy Fawkes Night in Großbritannien: Freudenfeuer und Feuerwerk erinnern an die vereitelte Pulververschwörung von 1605.',
       hi: 'ब्रिटेन में "गाय फ़ॉक्स नाइट": 1605 के विफल बारूद षड्यंत्र की याद में अलाव जलते हैं और आतिशबाज़ी होती है।',
-      ar: '«ليلة غاي فوكس» في بريطانيا: نيران المخيّمات والألعاب النارية تُحيي ذكرى إحباط مؤامرة البارود عام 1605.' },
+      ar: '«ليلة غاي فوكس» في بريطانيا: نيران المخيّمات والألعاب النارية تُحيي ذكرى إحباط مؤامرة البارود عام 1605.',
+      ru: 'Ночь Гая Фокса в Британии: костры и фейерверки напоминают о раскрытом Пороховом заговоре 1605 года.',
+      'zh-TW': '英國的蓋伊・福克斯之夜：以篝火與煙火紀念1605年被阻止的火藥陰謀。',
+      id: 'Malam Guy Fawkes di Inggris: api unggun dan kembang api mengenang gagalnya Komplotan Bubuk Mesiu 1605.',
+      tr: 'İngiltere\'de Guy Fawkes Gecesi: şenlik ateşleri ve havai fişekler 1605\'teki engellenen Barut Komplosu\'nu anar.' },
     // James Naismith, inventor of basketball, born 6 Nov 1861 — britannica.com/biography/James-Naismith, kansashistory.gov/kansapedia/james-naismith/12154
     '11-06': {
       ja: '1861年のこの日、バスケットボールを考案したジェームズ・ネイスミスが生まれました。',
@@ -129,14 +165,18 @@
       pt: 'James Naismith, o inventor do basquete, nasceu neste dia, em 1861.',
       de: 'An diesem Tag im Jahr 1861 wurde James Naismith geboren, der Erfinder des Basketballs.',
       hi: '1861 में आज ही के दिन बास्केटबॉल के आविष्कारक जेम्स नाइस्मिथ का जन्म हुआ था।',
-      ar: 'في مثل هذا اليوم من عام 1861 وُلد جيمس نايسميث، مخترع كرة السلة.' },
+      ar: 'في مثل هذا اليوم من عام 1861 وُلد جيمس نايسميث، مخترع كرة السلة.',
+      ru: 'Джеймс Нейсмит, изобретатель баскетбола, родился в этот день в 1861 году.',
+      'zh-TW': '籃球的發明者詹姆士・奈史密斯，於1861年的這一天出生。',
+      id: 'James Naismith, penemu bola basket, lahir pada hari ini tahun 1861.',
+      tr: 'Basketbolu icat eden James Naismith 1861\'de bugün doğdu.' },
   };
-  const LABEL = { ja: 'この日は？', en: 'On this day', zh: '这一天', ko: '이날은', es: 'Un día como hoy', fr: 'Ce jour-là', pt: 'Neste dia', de: 'An diesem Tag', hi: 'इस दिन', ar: 'في مثل هذا اليوم' };
+  const LABEL = { ja: 'この日は？', en: 'On this day', zh: '这一天', ko: '이날은', es: 'Un día como hoy', fr: 'Ce jour-là', pt: 'Neste dia', de: 'An diesem Tag', hi: 'इस दिन', ar: 'في مثل هذا اليوم', ru: 'В этот день', 'zh-TW': '歷史上的今天', id: 'Hari ini dalam sejarah', tr: 'Tarihte bugün' };
   const TAGS = {
-    new: { ja: '新作', en: 'New game', zh: '新作', ko: '신작', es: 'Nuevo juego', fr: 'Nouveau jeu', pt: 'Novo jogo', de: 'Neues Spiel', hi: 'नया गेम', ar: 'لعبة جديدة' },
-    '3d': { ja: '3D', en: '3D', zh: '3D', ko: '3D', es: '3D', fr: '3D', pt: '3D', de: '3D', hi: '3D', ar: '3D' },
-    online: { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'عبر الإنترنت' },
-    rules: { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد' },
+    new: { ja: '新作', en: 'New game', zh: '新作', ko: '신작', es: 'Nuevo juego', fr: 'Nouveau jeu', pt: 'Novo jogo', de: 'Neues Spiel', hi: 'नया गेम', ar: 'لعبة جديدة', ru: 'Новая игра', 'zh-TW': '新遊戲', id: 'Permainan baru', tr: 'Yeni oyun' },
+    '3d': { ja: '3D', en: '3D', zh: '3D', ko: '3D', es: '3D', fr: '3D', pt: '3D', de: '3D', hi: '3D', ar: '3D', ru: '3D', 'zh-TW': '3D', id: '3D', tr: '3D' },
+    online: { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'عبر الإنترنت', ru: 'Онлайн', 'zh-TW': '線上', id: 'Online', tr: 'Çevrim içi' },
+    rules: { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد', ru: 'Правила', 'zh-TW': '規則', id: 'Aturan', tr: 'Kurallar' },
   };
   window.AtlasNews = { FACTS, LABEL, TAGS };
 })();
