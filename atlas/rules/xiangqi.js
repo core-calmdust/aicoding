@@ -192,6 +192,174 @@
         { say: 'في شيانغ تشي <b>من لا يملك نقلة قانونية يخسر أيضًا</b>. التكرار الثلاثي تعادل، لكن <b>تكرار الكش أو المطاردة يخسر</b>. هيا نلعب!' },
       ],
     },
+    ru: {
+      name: 'Сёгицунэ',
+      next: 'Далее',
+      back: 'Назад',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящийся пункт',
+      nope: 'Туда нельзя!',
+      mate: 'Мат!',
+      s: [{
+        say: 'Привет, я <b>Сёгицунэ</b>! Сегодня заглянем к родственнику сёги — <b>сянци</b>, китайским шахматам.'
+      }, {
+        say: 'Фигуры стоят на <b>пересечениях линий</b>. <b>Река</b> разделяет лагеря, а квадраты с × — это <b>дворцы</b>. Ты играешь <b>красными</b> на ближней стороне, и <b>красные ходят первыми</b>.'
+      }, {
+        say: 'Цель — <b>поставить мат вражескому генералу</b>! Светятся оба генерала. Генерал ходит только на один пункт внутри своего дворца.'
+      }, {
+        say: '<b>Колесница</b> (ладья) ходит на любое расстояние по прямой — сильнейшая фигура. Нажми на светящийся пункт и возьми чёрную фигуру!',
+        done: 'Бах! Встав на фигуру соперника, ты её берёшь.'
+      }, {
+        say: '<b>Конь</b> делает шаг по прямой, а затем по диагонали — как шахматный конь. Возьми им чёрного солдата!',
+        done: 'Цок-цок! Та же форма хода, что у шахматного коня.'
+      }, {
+        say: 'Но конь не прыгает! Если пункт, на который он сначала шагает, занят, туда идти нельзя (<b>связанная нога</b>). Пойди конём в свободную сторону.',
+        done: 'Верно! Он ходит только туда, где нога свободна.'
+      }, {
+        say: '<b>Слон</b> ходит на два пункта по диагонали и <b>никогда не переходит реку</b> (слева). <b>Советник</b> ходит на один пункт по диагонали внутри дворца (справа). Оба охраняют генерала.'
+      }, {
+        say: '<b>Пушка</b> ходит как колесница, но <b>бьёт, перепрыгивая ровно одну фигуру</b> (лафет). Возьми чёрную колесницу!',
+        done: 'Бум! Лафетом был солдат.'
+      }, {
+        say: '<b>Солдат</b> ходит на один пункт вперёд, а <b>перейдя реку</b>, может ходить и вбок. Возьми чёрного коня рядом с ним!',
+        done: 'Да! Солдат за рекой силён.'
+      }, {
+        say: 'Два генерала <b>никогда не могут стоять друг против друга</b> на открытой вертикали. Так что твой генерал помогает атаковать! Пойди колесницей так, чтобы у чёрного генерала не осталось ходов.',
+        done: 'Победа! Чёрный генерал не может встать на вертикаль напротив твоего.'
+      }, {
+        say: 'Угроза генералу — это <b>шах</b>. Если от него не защититься, это <b>мат</b>, и ты победил! Пойди колесницей на светящийся пункт и поставь мат!',
+        done: 'Ура, <b>мат</b>!'
+      }, {
+        say: 'В сянци сторона, у которой <b>нет ходов, тоже проигрывает</b>. Троекратное повторение — ничья, но <b>вечный шах или вечное преследование — поражение</b>. Сыграем!'
+      }]
+    },
+    'zh-TW': {
+      name: '將棋狐',
+      next: '下一步',
+      back: '返回',
+      start: '來對局吧',
+      again: '再一次',
+      tap: '點擊發光的點',
+      nope: '那裡不能走喔！',
+      mate: '將死！',
+      s: [{
+        say: '你好，我是<b>將棋狐</b>！今天來看看將棋的親戚——<b>象棋</b>。'
+      }, {
+        say: '棋子放在<b>線的交叉點</b>上。<b>河界</b>把雙方陣地分開，畫有×的方框是<b>九宮</b>。你是靠近自己這側的<b>紅方</b>，<b>紅方先走</b>。'
+      }, {
+        say: '目標是<b>將死對方的將</b>！發光的棋子就是雙方的帥與將。帥（將）只能在九宮內一次走1點。'
+      }, {
+        say: '<b>俥</b>可以直走任意距離，是最強的棋子。點擊發光的點，吃掉黑方的棋子！',
+        done: '碰！走到對方棋子上就能吃掉它。'
+      }, {
+        say: '<b>傌</b>先直走1點，再斜走1點——和西洋棋的騎士很像。用它吃掉黑方的卒！',
+        done: '喀噠喀噠！和騎士一樣的走法。'
+      }, {
+        say: '但是傌不能跳！如果它先直走的那一點有棋子，就不能往那個方向走（<b>蹩馬腿</b>）。把傌往沒被擋住的方向走。',
+        done: '對！只能往馬腿沒被蹩住的方向走。'
+      }, {
+        say: '<b>相</b>斜走2點，而且<b>不能過河</b>（左）。<b>仕</b>在九宮內斜走1點（右）。兩者都負責守護帥。'
+      }, {
+        say: '<b>炮</b>走法和俥一樣，但<b>吃子時要隔著剛好1枚棋子跳過去</b>（炮架）。吃掉黑方的車！',
+        done: '轟！兵就是炮架。'
+      }, {
+        say: '<b>兵</b>往前走1點——<b>過河之後</b>還可以往旁邊走。吃掉旁邊黑方的馬！',
+        done: '對！過河的兵很強。'
+      }, {
+        say: '雙方的帥將<b>不能在同一直線上直接照面</b>。所以你的帥也能幫忙進攻！移動俥，讓黑方的將無處可走。',
+        done: '你贏了！黑方的將不能走到和你的帥照面的那一行。'
+      }, {
+        say: '威脅帥將就是<b>將軍</b>。無法應將就是<b>將死</b>，你就贏了！把俥移到發光的點將死對方！',
+        done: '萬歲，<b>將死</b>！'
+      }, {
+        say: '象棋中<b>無棋可走（困斃）也算輸</b>。三次重複局面為和棋——但<b>長將或長捉判負</b>。來下一局吧！'
+      }]
+    },
+    id: {
+      name: 'Shogitsune',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk titik yang menyala',
+      nope: 'Tidak bisa ke sana!',
+      mate: 'Skakmat!',
+      s: [{
+        say: 'Hai, aku <b>Shogitsune</b>! Hari ini kita mengunjungi sepupu shogi: <b>xiangqi</b>, catur Tiongkok.'
+      }, {
+        say: 'Bidak berdiri di <b>titik persilangan garis</b>. <b>Sungai</b> memisahkan kedua kubu, dan kotak bertanda × adalah <b>istana</b>. Kamu bermain <b>Merah</b> di sisi dekat, dan <b>Merah jalan duluan</b>.'
+      }, {
+        say: 'Tujuannya: <b>skakmat jenderal lawan</b>! Bidak yang menyala adalah kedua jenderal. Jenderal hanya melangkah satu titik di dalam istananya.'
+      }, {
+        say: '<b>Kereta</b> (benteng) bergerak lurus sejauh apa pun — bidak terkuat. Ketuk titik yang menyala dan makan bidak hitam!',
+        done: 'Bam! Pindah ke bidak lawan berarti memakannya.'
+      }, {
+        say: '<b>Kuda</b> melangkah satu titik lurus, lalu satu diagonal — seperti kuda catur. Makan prajurit hitam dengannya!',
+        done: 'Tuk-tak! Bentuk geraknya sama dengan kuda catur.'
+      }, {
+        say: 'Tapi kuda tidak bisa melompat! Jika titik yang pertama ia injak terisi, ia tak bisa ke arah itu (<b>kaki terhalang</b>). Gerakkan kuda ke arah yang bebas.',
+        done: 'Benar! Ia hanya ke arah yang kakinya bebas.'
+      }, {
+        say: '<b>Gajah</b> bergerak dua titik diagonal dan <b>tak pernah menyeberangi sungai</b> (kiri). <b>Penasihat</b> melangkah satu titik diagonal di dalam istana (kanan). Keduanya menjaga jenderal.'
+      }, {
+        say: '<b>Meriam</b> bergerak seperti kereta, tapi <b>memakan dengan melompati tepat satu bidak</b> (layar). Makan kereta hitam!',
+        done: 'Dor! Prajuritlah layarnya.'
+      }, {
+        say: '<b>Prajurit</b> melangkah satu titik ke depan — dan <b>setelah menyeberangi sungai</b> boleh juga ke samping. Makan kuda hitam di sebelahnya!',
+        done: 'Ya! Prajurit di seberang sungai itu kuat.'
+      }, {
+        say: 'Kedua jenderal <b>tak boleh saling berhadapan</b> di lajur terbuka. Jadi jenderalmu ikut membantu menyerang! Gerakkan kereta agar jenderal hitam tak punya langkah.',
+        done: 'Kamu menang! Jenderal hitam tak bisa masuk ke lajur yang berhadapan dengan jenderalmu.'
+      }, {
+        say: 'Mengancam jenderal disebut <b>skak</b>. Jika tak bisa dijawab, itu <b>skakmat</b> dan kamu menang! Pindahkan kereta ke titik yang menyala dan skakmat!',
+        done: 'Hore, <b>skakmat</b>!'
+      }, {
+        say: 'Di xiangqi, pihak yang <b>tak punya langkah sah juga kalah</b>. Pengulangan tiga kali itu seri — tapi <b>skak abadi atau kejar abadi berarti kalah</b>. Ayo main!'
+      }]
+    },
+    tr: {
+      name: 'Shogitsune',
+      next: 'İleri',
+      back: 'Geri',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan bir noktaya dokun',
+      nope: 'Oraya gidemez!',
+      mate: 'Şah mat!',
+      s: [{
+        say: 'Merhaba, ben <b>Shogitsune</b>! Bugün shogi\'nin kuzenini ziyaret edelim: Çin satrancı <b>xiangqi</b>.'
+      }, {
+        say: 'Taşlar <b>çizgilerin kesiştiği noktalarda</b> durur. <b>Nehir</b> kampları ayırır, × işaretli kutular <b>saraylar</b>dır. Sen yakın taraftaki <b>Kırmızı</b>sın ve <b>ilk Kırmızı oynar</b>.'
+      }, {
+        say: 'Amaç: <b>rakip generali mat etmek</b>! Parlayan taşlar iki general. General yalnızca sarayının içinde birer nokta gider.'
+      }, {
+        say: '<b>Savaş arabası</b> (kale) düz çizgide istediği kadar gider — en güçlü taş. Parlayan noktaya dokun ve siyah bir taşı al!',
+        done: 'Güm! Rakip taşın üstüne gitmek onu alır.'
+      }, {
+        say: '<b>At</b> bir nokta düz, sonra bir nokta çapraz gider — satrançtaki at gibi. Onunla siyah eri al!',
+        done: 'Tıkır tıkır! Satranç atıyla aynı şekil.'
+      }, {
+        say: 'Ama at atlayamaz! İlk adım attığı nokta doluysa o yöne gidemez (<b>bağlı bacak</b>). Atı serbest bir yöne oynat.',
+        done: 'Doğru! Yalnızca bacağı serbest olan yöne gider.'
+      }, {
+        say: '<b>Fil</b> çapraz iki nokta gider ve <b>nehri asla geçmez</b> (solda). <b>Danışman</b> saray içinde çapraz bir nokta gider (sağda). İkisi de generali korur.'
+      }, {
+        say: '<b>Top</b> araba gibi hareket eder ama <b>tam bir taşın üzerinden atlayarak alır</b> (perde). Siyah arabayı al!',
+        done: 'Bum! Perde er idi.'
+      }, {
+        say: '<b>Er</b> bir nokta ileri gider — ve <b>nehri geçince</b> yana da gidebilir. Yanındaki siyah atı al!',
+        done: 'Evet! Nehri geçen er güçlüdür.'
+      }, {
+        say: 'İki general açık bir sütunda <b>asla yüz yüze gelemez</b>. Yani senin generalin de saldırıya yardım eder! Arabayı oynat ki siyah generalin hamlesi kalmasın.',
+        done: 'Kazandın! Siyah general seninkinin karşısındaki sütuna giremez.'
+      }, {
+        say: 'Generali tehdit etmeye <b>şah</b> denir. Karşılanamazsa <b>şah mat</b> olur ve sen kazanırsın! Arabayı parlayan noktaya götürüp mat et!',
+        done: 'Yaşasın, <b>şah mat</b>!'
+      }, {
+        say: 'Xiangqi\'de <b>yasal hamlesi olmayan taraf da kaybeder</b>. Üç kez tekrar beraberliktir — ama <b>sürekli şah ya da sürekli kovalama kaybettirir</b>. Hadi oynayalım!'
+      }]
+    },
   };
 
   /* board, marks and interactivity of each step.
