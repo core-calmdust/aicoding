@@ -1,9 +1,13 @@
 // Endgame database builder for English checkers (win / loss / draw for the side to move, all positions with
 // up to MAXN pieces). Iterates each class (black men, black kings, white men, white kings) to a fixpoint;
 // moves into other classes (captures, crowning) use classes solved earlier. Ignores the 40-move rule / repetition.
-// build: gcc -O3 -march=native -fopenmp -DNATIVE -o egdb tools/egdb.c   run: ./egdb 6 egdb6.bin  (6 pieces: ~1.5 GB of RAM for the result)
-#include <omp.h>
+// build: gcc -O3 -march=native -fopenmp -DNATIVE -o egdb tools/egdb.c   (macOS: see tools/nn/README.md; without -fopenmp it runs single-threaded)   run: ./egdb 6 egdb6.bin  (6 pieces: ~1.5 GB of RAM for the result)
 #include "../engine.c"
+#ifdef _OPENMP
+#include <omp.h>
+#else   // no OpenMP (e.g. Apple clang without libomp): single-threaded
+static double omp_get_wtime(void) { return now() / 1000; }
+#endif
 
 typedef struct { int bm, bk, wm, wk; u32 n; u8 *v; } Cls;   // v: 2 bits per (index * 2 + side)
 static Cls C[400]; static int NC; static Cls *TAB[13][13][13][13];

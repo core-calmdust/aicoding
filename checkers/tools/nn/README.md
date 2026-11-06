@@ -1,0 +1,77 @@
+# チェッカーの NNUE 評価関数（tools/nn）
+
+今の小さな評価ネット（`evalnet.bin.gz`、128→64→32→1、約1万パラメータ）に代えて、NNUE 形式の評価関数を強化学習で育てるための一式です。
+自己対局 → 学習 → 対局で確認、を周回します。Mac で長時間回す前提です。
+
+## ネットの形（`engine.c` の「NNUE (v2 nets)」と一致）
+- 入力：（駒数バケツ FB）×（自分の兵・自分のキング・相手の兵・相手のキング）× 32マス。黒・白それぞれの目で見た2組（白の目は盤を180°回す）。
+  学習中は「全バケツ共通の重み＋バケツ別の重み」に分けて学び、書き出すときに足し合わせます。
+- 隠れ層：H（既定256、8の倍数で512まで）を両者ぶん → `[手番側, 相手側]`（2H）→ L1（32）→ L2（32）→ 1。
+  L1 以降は駒数で選ぶ出力バケツ（OB、既定8）ごとに別の重み。
+- 量子化：1層目は int16（127 ≒ 1.0）で差分更新、L1 は int16（×256）、以降は float。
+- 値：出力 × scale（教師の尺度。兵1枚 ≒ 100）。ファイルの先頭は `CKN2`。`evalnet.bin.gz` の中身を差し替えるだけでサイトに反映できます（旧形式 `CKN1` もそのまま読めます）。
+- 速さの目安：H=256 で今のネットのおよそ半分の局面数/秒、H=128 で約4分の3。強さは **同じ持ち時間** の対局で判断します。
+
+## 0. 準備
+```sh
+cd checkers
+pip3 install numpy               # 学習は numpy だけで動きます（macOS では Accelerate で高速）
+brew install libomp              # 任意：終盤DBの作成を全コアで（無いと1コアで時間がかかる）
+tools/nn/build.sh                # nnwork/ck-native と nnwork/ck-egdb を作る
+```
+
+## 1. まとめて回す（おすすめ）
+```sh
+tools/nn/loop.sh 12 600 10       # 12周、1周あたり 10プロセス × 600局
+```
+- 最初に6駒の終盤DB（`nnwork/egdb6.bin`）を作ります（数時間。途中で止めても `nnwork/egdb.d/` から続きを再開）。
+  自己対局の勝敗判定と探索に使い、教師の質を上げます。`SKIP_EGDB=1` で省略。
+- 1周目は今のサイトのネット（`evalnet.bin.gz`）で自己対局、2周目からは前の周のネットで自己対局します。
+- 序盤は 3手バロット（`tools/ballots.txt`、互角な3手の序盤266通り）からランダムに選び、さらに0〜4手ランダムに指して変化をつけます。
+- 同じコマンドで続きから再開できます（終わった周は飛ばす）。
+- 1周ごとに `nnwork/log.txt` に2つの対局結果が出ます：
+  - 新しいネット vs 前の周（同じ局面数 20k）… 伸びているか
+  - 新しいネット vs 今のサイトのネット（同じ持ち時間 50ms）… 実戦での強さ
+- 主な設定（環境変数）：`NODES`（自己対局の1手の局面数、千単位、既定20）、`H`（256）、`EPOCHS`（10）、
+  `WINDOW`（学習に使う直近の周数、4）、`LAM`（教師のうち探索値の割合、0.75）、`MAXPOS`（1回の学習の最大局面数、4000万）。
+
+目安：1局およそ90局面。10プロセス × 600局 ＝ 約54万局面／周。2,000万局面には約40周、または `G` を増やして少ない周で。
+読みを深く（`NODES=50` など）すると教師の質が上がる代わりに遅くなります。周を重ねて伸びが鈍ったら試す価値があります。
+
+## 2. 伸びが止まったら
+- 隠れ層を広げて、溜まったデータで一から学習：
+  ```sh
+  python3 tools/nn/train.py --hidden 512 --epochs 30 --out nnwork/big.nnue nnwork/r{5,6,7,8,9,10,11,12}/d-*.bin
+  tools/nn/match.sh 100ms:nnwork/big.nnue 100ms:nnwork/net.nnue
+  ```
+- 続きの周をその大きいネットで回す（例：12周目の代わりにする）：
+  ```sh
+  cp nnwork/big.nnue nnwork/net-12.nnue; cp nnwork/big.nnue.npz nnwork/net-12.nnue.npz
+  H=512 tools/nn/loop.sh 20 600 10     # 13周目から。学習は前の周の .npz の形を引き継ぎます
+  ```
+
+## 3. 個別のコマンド
+```sh
+B=nnwork/ck-native
+$B gen2 600 20k:nnwork/net.nnue out.bin 123 4      # 自己対局データ（局面数20k、乱数の種123、追加ランダム0〜4手）
+python3 tools/nn/train.py --out a.nnue data/*.bin   # 学習（--init 前の.npz で続きから）
+tools/nn/match.sh 20k:a.nnue 20k:b.nnue             # 3手バロット全部を先後入れ替えで（532局）
+tools/nn/match.sh 100ms:a.nnue 100ms:nnwork/base.bin
+NETFILE=a.nnue $B bench 1000                       # 速さ（Mnps）と平均の読みの深さ
+python3 tools/nn/train.py --check a.nnue data.bin  # 学習側の計算 …
+NETFILE=a.nnue $B evalpos data.bin 20              # … とエンジンの評価値が完全に一致するか
+```
+- 対局のプレイヤー指定：`20k`＝1手2万局面、`100ms`＝1手0.1秒、`:ファイル` でネット（無し・`-` は手作り評価）。
+- `match.sh` の結果は `score`（0.5超で左が強い）、Elo と95%の幅、`pairs`（同じ序盤の先後2局で勝ち越した組の数）。
+
+## 4. サイトへの反映
+完成したネット（例 `nnwork/net-12.nnue`）を `checkers/nnue-candidate.nnue` としてコミットしてください（`nnwork/` は Git に入りません）。
+反映側で次を行います：
+1. 今のネットとの同じ持ち時間の対局で強さを確認（ブラウザ相当の wasm でも速さを確認）
+2. `gzip -9` して `evalnet.bin.gz` を差し替え、`engine.js` の `V` と `index.html` / `app.js` のキャッシュ番号を上げる
+3. レベル（`engine.js` の `LEVELS`、`tools/native.c` の `LVS`）とレーティング戦の基準（`app.js` の `RT_LV`）を測り直す
+4. `MODEL_CARD.md` を更新
+
+## データの形式
+1局面 24バイト（int32 × 6）：黒の駒・白の駒・キング（各32ビット）、`手番 | 手数 << 8`、探索値（手番側、兵1枚＝100）、結果（手番側から 1 / 0 / −1）。
+取りがある局面と、探索で勝ち負けが決まった局面は記録しません。

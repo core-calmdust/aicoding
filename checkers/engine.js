@@ -100,9 +100,10 @@ class Pos {
     const nk = (pk === 1 || pk === 3) && (PROMO[s] & tb) ? pk + 1 : pk;
     h1 ^= Z1[pk - 1][f] ^ Z1[nk - 1][t]; h2 ^= Z2[pk - 1][f] ^ Z2[nk - 1][t];
     for (let i = 0; i < 32; i++) if (cap & bit(i)) { const x = this.at(i); h1 ^= Z1[x - 1][i]; h2 ^= Z2[x - 1][i]; }
-    if (s) this.w = (this.w ^ fb ^ tb) >>> 0; else this.b = (this.b ^ fb ^ tb) >>> 0;
+    // f === t when a king's capture loop ends on its starting square: the piece stays
+    if (s) this.w = ((this.w & ~fb) | tb) >>> 0; else this.b = ((this.b & ~fb) | tb) >>> 0;
     if (cap) { if (s) this.b = (this.b & ~cap) >>> 0; else this.w = (this.w & ~cap) >>> 0; this.k = (this.k & ~cap) >>> 0; }
-    if (this.k & fb) this.k = (this.k ^ fb ^ tb) >>> 0; else if (nk !== pk) this.k = (this.k | tb) >>> 0;
+    if (this.k & fb) this.k = ((this.k & ~fb) | tb) >>> 0; else if (nk !== pk) this.k = (this.k | tb) >>> 0;
     this.side = s ^ 1; h1 ^= ZS1; h2 ^= ZS2;
     this.h1 = h1 >>> 0; this.h2 = h2 >>> 0;
     this.quiet = irr ? 0 : this.quiet + 1;
@@ -293,7 +294,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261021c';
+  const V = 'v=20261106n';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
@@ -304,10 +305,14 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       .then(async r => {
         const X = r.instance.exports;
         const gunzip = async u => { const res = await fetch(new URL(u, self.location.href)); if (!res.ok) throw 0; return typeof DecompressionStream === 'function' ? new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : null; };
-        // learned evaluation (CKN1: magic, H, H2, scale, then the float32 weights)
+        // learned evaluation: CKN2 = NNUE (whole file to net2_buf), CKN1 = the older small net (magic, H, H2, scale, float32 weights)
         try {
           const b = await gunzip('evalnet.bin.gz?' + V);
-          if (b) { const dv = new DataView(b); if (dv.getUint32(0, true) === 0x314E4B43) { const H = dv.getUint32(4, true), H2 = dv.getUint32(8, true), sc = dv.getFloat32(12, true), n = 128 * H + H + H * H2 + H2 + H2 + 1; new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(b, 16, n)); X.net_set(H, H2, sc); } }
+          if (b) {
+            const dv = new DataView(b), mg = dv.getUint32(0, true);
+            if (mg === 0x324E4B43) { new Uint8Array(X.memory.buffer, X.net2_buf(), b.byteLength).set(new Uint8Array(b)); X.net2_load(b.byteLength); }
+            else if (mg === 0x314E4B43) { const H = dv.getUint32(4, true), H2 = dv.getUint32(8, true), sc = dv.getFloat32(12, true), n = 128 * H + H + H * H2 + H2 + H2 + 1; new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(b, 16, n)); X.net_set(H, H2, sc); }
+          }
         } catch (e) {}
         // endgame databases (up to 4 pieces)
         try {
