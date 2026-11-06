@@ -976,7 +976,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .prof .pf-l .bgfill{filter:saturate(1.15)}.prof .pf-l{background:linear-gradient(160deg,#ffe9b8,#ffd0de)}
 /* ---------- home on phones (≤760px): name row · today strip · one-line updates, so the game list peeks into the first screen ----------
    (PC keeps the cards above: .pf-sum and .updline are hidden there, .pf-det is display:contents) */
-.pf-sum,.updline{display:none}
+.pf-sum{display:none}
 .pf-det{display:contents}
 @media (max-width:760px){
   /* the title and the name row make one card, as tall as the title box was (250px): emblem above, name row attached under it;
@@ -1022,54 +1022,65 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   #pg-home .today .hsb{height:32px;font-size:12px;padding:0 10px;gap:4px}#pg-home .today .hsb svg{display:none}
   #pg-home .today .ft .btn.sm{padding:7px 11px;font-size:13px;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis}
   #pg-home .today .hs{grid-column:1/-1;grid-row:4;max-height:8.2em;margin:0 12px;padding:8px 6px 12px 2px;border-top:2px dashed color-mix(in srgb,var(--c) 22%,#ece3cf);font-size:12.5px;line-height:1.6}
-  /* recent updates: the carousel is hidden; a one-line ticker sits fixed above the tab bar on every tab (not the map or
-     きせかえ, nor over a board / Historia / a sheet); its text runs as one CSS transform loop (two copies, −50%), no JS frames.
-     A tap → every update in a bottom sheet. */
-  #pg-home #hUpd,#pg-home .updwrap{display:none}
-  .updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:34px;margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
-  .updline[hidden],html[data-pg=map] .updline,html[data-pg=dress] .updline,html.hs-open .updline{display:none}
-  html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline{display:none}
+  html[data-pg=map] .updline,html[data-pg=dress] .updline{display:none}
   html:not([data-pg=map]):not([data-pg=dress]) body{padding-bottom:calc(84px + 34px + env(safe-area-inset-bottom))}   /* the ticker never covers the end of a page */
-  .updline .ul-k{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
-  .updline .ul-v{flex:1;min-width:0;align-self:stretch;position:relative;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
-  .updline .ul-tr{position:absolute;top:0;bottom:0;inset-inline-start:0;display:flex;width:max-content;animation:ulRun var(--ud,40s) linear infinite;will-change:transform}
-  [dir=rtl] .updline .ul-tr{animation-name:ulRunR}
-  @keyframes ulRun{to{transform:translateX(-50%)}}
-  @keyframes ulRunR{to{transform:translateX(50%)}}
-  .updline .ul-g{flex:none;display:flex;align-items:center;padding-inline-start:12px}
-  .updline .ul-i{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
-  .updline .ul-d{flex:none;font:700 11.5px var(--round);color:var(--coral2)}
-  .updline .ul-i b{font-size:13px;font-weight:900}
-  .updline .ul-t{font-size:12.5px;font-weight:700;color:var(--ink2)}
-  .updline .ul-s{padding:0 14px;color:#cdb98c;font-weight:900}
-  .updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
-  .updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
-  [dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
-  /* reduced motion: no run — the newest update stands still (cut with …) */
-  @media (prefers-reduced-motion:reduce){
-    .updline .ul-v{-webkit-mask:none;mask:none}
-    .updline .ul-tr{animation:none;position:static;width:100%;height:100%}
-    .updline .ul-g{flex:1;min-width:0;padding:0}
-    .updline .ul-g + .ul-g,.updline .ul-s,.updline .ul-i ~ .ul-i{display:none}
-    .updline .ul-i{min-width:0;overflow:hidden}.updline .ul-i b{flex:none}
-    .updline .ul-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
-  }
-  /* the bottom sheet */
-  .sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
-  @keyframes usUp{from{transform:translateY(100%)}}
-  .sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
-  .sheet.updsh > .ush h3{margin:0;font-size:20px}
-  .sheet.updsh .usx{flex:none;width:38px;height:38px}
-  .sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
-  .usr{--c:#ff5d5d;display:flex;gap:10px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:8px 10px 8px 8px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
-  .usr:active{transform:scale(.98)}
-  .usr .usi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
-  .usr .usi img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
-  .usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-  .usr .ush b{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .usr .ush small{flex:none;font:700 11.5px var(--round);color:var(--ink2)}
-  .usr .usp{font-size:12.5px;font-weight:700;color:var(--ink2);line-height:1.55}
+}
+/* recent updates: the carousel is hidden; a one-line ticker sits fixed above the tab bar on every tab (not the map or
+   きせかえ, nor over a board / Historia / a sheet); its text runs as one CSS transform loop (two copies, −50%), no JS frames.
+   A tap → every update in a bottom sheet. */
+#pg-home #hUpd,#pg-home .updwrap{display:none}
+.updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:34px;margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
+html:has(#bv.on,#hist.on,#ov.on,.lvsheet) .updline,.updline[hidden],html.hs-open .updline{display:none}
+.updline .ul-k{flex:none;font:700 10.5px var(--round);letter-spacing:.06em;color:#fff;background:var(--coral);border-radius:99px;padding:3px 8px;box-shadow:0 2px 0 var(--coral2)}
+.updline .ul-v{flex:1;min-width:0;align-self:stretch;position:relative;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+.updline .ul-tr{position:absolute;top:0;bottom:0;inset-inline-start:0;display:flex;width:max-content;animation:ulRun var(--ud,40s) linear infinite;will-change:transform}
+[dir=rtl] .updline .ul-tr{animation-name:ulRunR}
+@keyframes ulRun{to{transform:translateX(-50%)}}
+@keyframes ulRunR{to{transform:translateX(50%)}}
+.updline .ul-g{flex:none;display:flex;align-items:center;padding-inline-start:12px}
+.updline .ul-i{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
+.updline .ul-d{flex:none;font:700 11.5px var(--round);color:var(--coral2)}
+.updline .ul-i b{font-size:13px;font-weight:900}
+.updline .ul-t{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.updline .ul-s{padding:0 14px;color:#cdb98c;font-weight:900}
+.updline .ul-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #fff}
+.updline .ul-ch{flex:none;font-size:19px;font-weight:900;color:var(--ink2);line-height:1}
+[dir=rtl] .updline .ul-ch{transform:scaleX(-1)}
+/* reduced motion: no run — the newest update stands still (cut with …) */
+@media (prefers-reduced-motion:reduce){
+  .updline .ul-v{-webkit-mask:none;mask:none}
+  .updline .ul-tr{animation:none;position:static;width:100%;height:100%}
+  .updline .ul-g{flex:1;min-width:0;padding:0}
+  .updline .ul-g + .ul-g,.updline .ul-s,.updline .ul-i ~ .ul-i{display:none}
+  .updline .ul-i{min-width:0;overflow:hidden}.updline .ul-i b{flex:none}
+  .updline .ul-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
+/* the bottom sheet */
+.sheet.updsh{align-self:flex-end;width:calc(100% + 32px);max-width:none;margin:0 -16px -16px;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;padding:0 0 calc(10px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;border-width:3px 0 0;text-align:start;overflow:hidden;animation:usUp .3s cubic-bezier(.2,1,.4,1)}
+@keyframes usUp{from{transform:translateY(100%)}}
+.sheet.updsh > .ush{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 8px 18px;border-bottom:2px solid var(--line)}
+.sheet.updsh > .ush h3{margin:0;font-size:20px}
+.sheet.updsh .usx{flex:none;width:38px;height:38px}
+.sheet.updsh .usl{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px}
+.usr{--c:#ff5d5d;display:flex;gap:10px;align-items:flex-start;width:100%;border:2px solid var(--line);border-radius:18px;background:#fff;padding:8px 10px 8px 8px;text-align:start;cursor:pointer;color:var(--ink);font:inherit}
+.usr:active{transform:scale(.98)}
+.usr .usi{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
+.usr .usi img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.usr .ust{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.usr .ush{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.usr .ush b{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usr .ush small{flex:none;font:700 11.5px var(--round);color:var(--ink2)}
+.usr .usp{font-size:12.5px;font-weight:700;color:var(--ink2);line-height:1.55}
+/* PC (wider than phones): the same updates ticker, fixed at the very bottom of the window (no tab bar there), a little
+   taller with bigger type; on every page — only a board, Historia, an overlay or a sheet hides it. The list opens as a dialog. */
+@media (min-width:761px){
+  .updline{bottom:0;height:48px;gap:14px;padding:0 max(20px,calc((100% - 1180px) / 2));border-top:2px solid var(--line)}
+  .updline .ul-k{font-size:12px;padding:4px 11px}
+  .updline .ul-d{font-size:13px}.updline .ul-i b{font-size:15px}.updline .ul-t{font-size:14px}.updline .ul-s{padding:0 20px}
+  .updline .ul-ch{font-size:22px}
+  .updline:hover .ul-tr{animation-play-state:paused}
+  body{padding-bottom:64px}
+  .sheet.updsh{align-self:center;width:min(680px,100%);max-width:680px;margin:0;max-height:82vh;border-radius:28px;border-width:3px;padding:0 0 10px;animation:pop .3s cubic-bezier(.2,1,.4,1)}
 }
 /* rules tour on PC: bigger bubble, text and nav row */
 @media (min-width:900px){
