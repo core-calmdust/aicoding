@@ -70,6 +70,8 @@ html.atlas-sn body:is(.in-lesson,.in-puzzle){--oh:410px!important}
   html.atlas-sn.sn-land .atlas-lbtn b{display:none}
   html.atlas-sn.sn-land .atlas-lpop{top:34px;right:0;z-index:90}
   html.atlas-sn.sn-land body.lt-on .controls .btn{width:38px!important;height:30px!important;border-radius:99px!important;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+  html.atlas-sn.sn-land body.lt-on .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}
+  html.atlas-sn.sn-land body.lt-on .controls .btn.primary svg{stroke:#fff!important}
   html.atlas-sn.sn-land body.lt-on .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
   html.atlas-sn.sn-land body.lt-on .board-area > .player{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important}
   html.atlas-sn.sn-land body.lt-on .board-area > .player.active{border-color:#ffc928!important}
@@ -128,7 +130,7 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   let board = T3.senet.board(dsg()), U = board.userData, Y = U.top; inner.add(board);
   let O = 'h';
   const vkey = () => { const v = SenetApp.view; return v && v.key ? v.key() : O; };
-  const units = () => B2.VIEW[O][3] / 100;
+  const units = () => { const v = SenetApp.view; return ((v && v.vbox) ? v.vbox() : B2.VIEW[O])[3] / 100; };   // (the frame's height in board units: no trays on a phone held sideways)
   function orientTo(o) {
     O = String(o)[0] === 'v' ? 'v' : 'h';
     board.rotation.y = O === 'v' ? -Math.PI / 2 : 0;
@@ -193,10 +195,11 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
   function lift(o, h) { o.h = h; o.g.userData.pc.position.y = h; const sh = o.g.userData.sh, s = 1 + h * .6; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 2); }
   function layout(s) {
     const out = new Map(), L = B2.layout(s, O);
-    for (const q of L.pieces) out.set(q.side * 100 + q.k, { xy: q.xy, y: q.where === 'board' ? Y : 0, pos: q.pos, side: q.side, k: q.k, sc: q.d / B2.PD });
+    const v = SenetApp.view, tr = !(v && v.trays) || v.trays();   // (no trays: the pieces borne off leave the table)
+    for (const q of L.pieces) out.set(q.side * 100 + q.k, { xy: q.xy, y: q.where === 'board' ? Y : 0, pos: q.pos, side: q.side, k: q.k, sc: q.d / B2.PD, hide: !tr && q.where !== 'board' });
     return out;
   }
-  function placeAt(o, q) { const [x, z] = at(q.xy, q.y); o.g.position.set(x, q.y, z); o.g.scale.setScalar(q.sc || 1); o.pos = q.pos; }
+  function placeAt(o, q) { const [x, z] = at(q.xy, q.y); o.g.position.set(x, q.y, z); o.g.scale.setScalar(q.sc || 1); o.pos = q.pos; o.g.visible = !q.hide; }
   let moving = null, lastState = null;
   function selected(s) {
     let hm = null; try { hm = typeof hoverMove !== 'undefined' ? hoverMove : null; } catch (e) {}
