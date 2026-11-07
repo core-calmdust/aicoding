@@ -3154,7 +3154,7 @@ function rvExplainHtml() {
   h += `<button class="rv-pvbtn" id="rvPvBtn">${t(rvPvShow ? 'rv.ex.hidePv' : 'rv.ex.showPv')}</button></div>`;
   return h;
 }
-function sideName(c) { return settings.mode === 'ai' ? (c === game.human ? t('you') : 'AI') : cname(c); }
+function sideName(c) { return settings.mode === 'ai' ? (c === game.human ? t('you') : aiP().trim()) : cname(c); }
 function renderReview() {
   if (inStudy()) return;
   const card = $('#reviewCard');
