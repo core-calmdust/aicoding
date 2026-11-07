@@ -7,6 +7,6 @@ self.addEventListener('message', function boot(e) {
   const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
   X.mt_stack(m.top); X.mt_thread(m.tls);
   self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
-  importScripts('../engine.js?v=51');
+  importScripts('../engine.js?v=52');
   self.postMessage({ type: 'mtready' });
 });

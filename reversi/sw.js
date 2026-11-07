@@ -4,7 +4,7 @@
 importScripts('../shared/mt-sw.js?v=2');
 const CACHE = 'reversi-v4-70';
 const CORE = ['./', 'index.html', 'i18n.js', 'engine.js', 'engine-wasm.js', 'online.js', 'rbox.js', 'firebase-config.js', '../shared/onlinesec.js', 'manifest.webmanifest', 'icon-192.png', '../shared/pzbook.js', '../shared/rulesoffer.js', '../shared/headerbar.js', '../shared/tick.js', '../shared/fischer.js', '../shared/ruletour.js', '../shared/resign.js', '../shared/mtengine.js', '../shared/proset.js', 'mt-worker.js'];
-const DATA = ['weights.bin.gz', 'weights.json', 'book.json', 'lessons.json', 'puzzles.json'];
+const DATA = ['weights.bin.gz', 'weights.json', 'book.bin', 'lessons.json', 'puzzles.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.concat(DATA))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k.startsWith('reversi-')).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 function own(req) {   // same-origin GET: the offline cache
