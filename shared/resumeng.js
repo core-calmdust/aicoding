@@ -31,7 +31,7 @@ const TX = {
     tr: 'Konum ve hamle kaydı korunur. Modu (yapay zekâya karşı, iki oyuncu, yapay zekâ karşı yapay zekâ), tarafını ve yapay zekânın gücünü değiştirebilirsin.',
   },
 };
-const lang = () => { const l = (document.documentElement.lang || 'ja').slice(0, 2); return TX.title[l] ? l : 'en'; };
+const lang = () => { const l = (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja'); return TX.title[l] ? l : 'en'; };
 const tx = k => TX[k][lang()] || TX[k].en;
 const CSS = `
 #newOverlay .rsng-h,#newOverlay .rsng-note{display:none}
