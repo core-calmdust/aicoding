@@ -55,7 +55,8 @@
   .aminfo{--amH:196px;display:grid;grid-template-columns:280px minmax(0,1fr) 190px;grid-template-rows:auto 1fr;grid-template-areas:"top story acts" "facts jour acts";column-gap:0;row-gap:0;padding:16px 0}
   .aminfo .amfacts,.aminfo .amjour{padding-top:10px}
   .aminfo>*{padding-inline:22px;min-width:0}
-  .aminfo .amtop{grid-area:top}
+  .aminfo .amtop{grid-area:top;align-self:start;align-items:flex-start}   /* the icon keeps one place whatever the name's length (1 or 2 lines) */
+  .aminfo .amtop>div{padding-top:4px}
   .aminfo .amtop b{font-size:19px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .aminfo .amfacts{grid-area:facts;align-self:end;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center}
   .aminfo .amfacts span{display:contents}
