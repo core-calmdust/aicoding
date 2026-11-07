@@ -1501,19 +1501,30 @@
     // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
     const a = (cam.aspect || 1) * (hshift ? Math.max(.3, (cw - 2 * Math.abs(hshift)) / cw) : 1), th = Math.tan(cam.fov * Math.PI / 360);
     // keep the board (~10.5 wide incl. margin, ~9 deep) inside both the width and the height of the view
-    const fw = fitTo ? fitTo.w / 2 : 6.0, fd = fitTo ? fitTo.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
+    const F = fitCur || fitTo, fw = F ? F.w / 2 : 6.0, fd = F ? F.d / 2 : 7.0;   // play view: frame the given board size (half extents + a small margin)
     // the gallery's showcase: the board itself (its turning footprint) takes ~65% of the free area's shorter side
     // the gallery's showcase: the board is the exhibit — its turning footprint fills ~88% of the free area's limiting side
     // (width: the half-diagonal; height: the footprint seen from the camera's low angle plus the pieces' height)
     const mr = museumOn && !k ? boardR() / .9 : 0, mh = mr ? (boardR() * .5 + ((cur && cur.userData._h) || 1) * .7) / .9 : 0;
     const needW = (k ? fw : mr || 6.5) / (th * a), needH = (k ? fd : mh || 6.8) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
-    const pitch = .52 + k * ((orthoWant ? 1.5703 : fitTo && fitTo.pitch ? fitTo.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
+    const pitch = .52 + k * ((orthoWant ? 1.5703 : F && F.pitch ? F.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
   //   o.up: shift the board up the screen by that many world units (a bottom HUD); o.roll: the camera is rolled 90° (screen up = world −x; roll: -1 the other way, screen up = world +x): o.w then runs along the screen height, o.d along its width
-  let fitTo = null;
+  //   o.cx, o.cz: the point of the board (world units, board space) to frame instead of its middle (a game's focus on the player to move);
+  //   o.ease: move there smoothly (pan and zoom on the camera's own pace) instead of a cut — Ludo's focus on the seat to move (phones)
+  let fitTo = null, fitCur = null;
+  const FIT_K = ['w', 'd', 'y', 'cx', 'cz', 'pitch'];
+  function fitStep(ez) {   // fitCur: the framing as drawn; it eases toward fitTo when fitTo.ease, else it is fitTo
+    if (!fitTo) { fitCur = null; return false; }
+    const tv = k => k === 'pitch' ? (fitTo.pitch || 1.34) : (fitTo[k] || 0);
+    if (!fitCur || !fitTo.ease) { fitCur = {}; FIT_K.forEach(k => { fitCur[k] = tv(k); }); return false; }
+    let mv = false;
+    FIT_K.forEach(k => { const t = tv(k), d = t - fitCur[k]; if (Math.abs(d) > 1e-4) { fitCur[k] += d * ez(.06); mv = true; } else fitCur[k] = t; });
+    return mv;
+  }
   function fit(o) { const v = o || null; if (v === fitTo || (v && fitTo && JSON.stringify(v) === JSON.stringify(fitTo))) return; fitTo = v; kick(300); }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
@@ -1828,6 +1839,7 @@
       moving = true;
     } else if (Math.abs(camTo - camK) > 1e-5) { camK += (camTo - camK) * ez(.07); moving = true; } else camK = camTo;
     if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
+    if (fitStep(ez)) moving = true;
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); moving = true; }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); moving = true; }
     if (Math.abs(insetTTo - insetT) > .5) { insetT += (insetTTo - insetT) * ez(.12); frame(); moving = true; } else if (insetT !== insetTTo) { insetT = insetTTo; frame(); moving = true; }
@@ -1886,9 +1898,9 @@
     // view mode: on phones the board sits above the info card, on wide screens to the right of it
     if (mode === 'view' && !blurred && dt > 0 && dt < 250) watchSpeed(dt);   // the showcase renders every frame: a good place to measure
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
-      const ly = fitTo ? vy + (fitTo.y - vy) * camK : vy; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0);
+      const F = fitCur || fitTo, ly = F ? vy + (F.y - vy) * camK : vy, fcx = F && F.cx ? F.cx * camK : 0, fcz = F && F.cz ? F.cz * camK : 0; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0);
       const sh = fitTo && fitTo.up ? fitTo.up * camK : 0, ux = rl ? -rs : 0, uz = rl ? 0 : -1;   // fit.up: the board sits this far (world units) above the middle of the view (clear of a HUD at the bottom)
-      cam.position.x -= ux * sh; cam.position.z -= uz * sh; cam.lookAt(-ux * sh, ly, -uz * sh); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      cam.position.x += fcx - ux * sh; cam.position.z += fcz - uz * sh; cam.lookAt(fcx - ux * sh, ly, fcz - uz * sh); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     // the near plane follows the camera's distance (a far camera — the gallery's showcase — with near .1 had too little depth
     // precision left at the board: inlays and piece faces a few thousandths above a surface flickered as it turned)
     { const nn = Math.min(2, Math.max(.1, d * .05)); if (Math.abs(cam.near - nn) > .01) { cam.near = nn; cam.updateProjectionMatrix(); dirty = true; } }
