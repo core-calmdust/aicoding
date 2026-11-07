@@ -40,7 +40,7 @@
 - ルール違い（ゲームタブ）：標準（5枚）／ロング（7枚）。
 - 棋譜：「⇄」入れ替え、「↻」もう一度、「27≈15」水に落ちて戻った先。
 - コーチ（`senet/coach.js`、8言語は `coach-i18n.js`＝`tools/build_coach_i18n.py` で生成）：勝率・レース差・壁・上がり数、方針（上がり／入れ替え／美の家／出口へ／ペア／壁／逃げる／安全／前進／水）、入れ替えられる確率、投げ棒の確率。
-- オンライン：「準備中」（`firebase-config.js` は null）。
+- オンライン（2026-11-07）：Firebase プロジェクト `senet-multiplay`（asia-southeast1）。ルールは `senet/database.rules.json`（`shared/tools/secrules.py` の `senet`：ウルと同じ投げ棒のコミット・リビール、もう一度投げる手番は nt、1手30秒、v＝std / long）。App Check のサイトキー設定済み。
 - 14言語（2026-11-07、言語メニューにも追加済み・`node tools/i18n-langs.js coverage senet` で未翻訳0）。
   - `senet/i18n.js` は `tools/build_i18n.py`（ウルの i18n ＋ `tools/i18n_over.py`）で生成。ru・zh-TW・id・tr は**翻訳メモリ `senet/tools/tm14.json`**（英語 → 4言語）から。同じ英語で意味が違うものは build_i18n.py の `KEYOVR`（例：sp.off）。
   - 辞書形式のファイル（i18n-online.js・tour.js・rv-i18n.js・coach-i18n.js）は `node senet/tools/apply14.js <file> [英語辞書のファイル#目印]`、1文字列ずつの形式（lessons.json・puzzles.json・landtabs.js・atlas 側）は `node senet/tools/tm_apply_units.js <file>`。足りない英語は一覧が出るので tm14.json に足す。
