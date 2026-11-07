@@ -118,7 +118,7 @@
   })();
   /* ---------- light theme: convert the game's dark-theme colours rule by rule ---------- */
   (function retheme() {
-    const SKIP = new RegExp('\\b(board|cell|disc|ghost|hint|star|last-mark|odot|sqlbl|edgeband|fx-|confetti|overlay\\b|coach|toast|atlas-' + (o.skip ? '|' + o.skip : '') + ')');
+    const SKIP = new RegExp('\\b(board|cell|disc|ghost|hint|star|last-mark|odot|sqlbl|edgeband|fx-|confetti|overlay\\b|coach|toast|rbpv|rb-d\\b|atlas-' + (o.skip ? '|' + o.skip : '') + ')');
     const parse = v => { let m = v.match(/rgba?\(([^)]+)\)/); if (m) { const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p[3] ?? 1]; } m = v.match(/^#([0-9a-f]{3,8})$/i); if (m) { let h = m[1]; if (h.length <= 4) h = h.split('').map(c => c + c).join(''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), h.length > 6 ? parseInt(h.slice(6, 8), 16) / 255 : 1]; } return null; };
     const lum = ([r, g, b]) => (.2126 * r + .7152 * g + .0722 * b) / 255, sat = ([r, g, b]) => (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
     const rgba = (r, g, b, a) => `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${+a.toFixed(3)})`;
@@ -173,7 +173,7 @@
     // the 3D board's visible extent beyond the DOM board, in DOM board heights (the camera is aligned to the DOM board, so this
     // does not change with the size or the place of the board)
     function measure() {
-      if (!model || !model.parent || !visible(model)) return null;
+      if (!model || !model.parent || !visible(model) || de.classList.contains('atlas-2d')) return null;   // (the game's own 2D board: the 3D one is hidden, its projection meaningless)
       const r = boardDom.getBoundingClientRect(), h = r.height; if (h < 40) return null;
       const cur = model.parent, v = new THREE.Vector3(), L = []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, n = 0;
       cur.updateMatrixWorld(true);
@@ -381,7 +381,10 @@
     if (window.visualViewport) visualViewport.addEventListener('resize', laterX);
     MQ.addEventListener ? MQ.addEventListener('change', laterX) : MQ.addListener(laterX);
     if (window.ResizeObserver) { new ResizeObserver(laterX).observe(de); new ResizeObserver(later).observe(boardDom); }   // (the board's own size: mostly the fit itself)
-    new MutationObserver(laterX).observe(de, { attributes: true, attributeFilter: ['class'] });
+    // back from the game's own 2D board to the 3D one: the frame is measured afresh (a measurement taken while the 3D board was hidden
+    // left the board shrunk to a few px — reversi: 3D → 2D → 3D in the デザイン tab)
+    let was2d = de.classList.contains('atlas-2d');
+    new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
     new MutationObserver(() => { laterX(); setTimeout(laterX, 320); setTimeout(laterX, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
     { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', laterX); }
     if (document.fonts) document.fonts.ready.then(laterX);
