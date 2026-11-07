@@ -227,6 +227,8 @@ function placeDice() {
   dock.style.flexDirection = row ? 'row' : ''; dock.style.justifyContent = row ? 'flex-start' : ''; dock.style.gap = row ? Math.round(rr.height * .06) + 'px' : '';
   if (row) { const hw = Math.min(rr.width * .62, rr.height * 256 / 140); host.style.flex = 'none'; host.style.width = hw + 'px'; host.style.height = '100%'; dock.style.setProperty('--pillx', hw / 2 + 'px'); }
   else dock.style.removeProperty('--pillx');
+  // the count on the strip's middle line, level with the 上がり / Off count (the sticks reach into the room past the strip, the strip itself is the first / last 2/3)
+  const cap = $('#diceCap'); cap.style.transform = row ? `translateY(${(side === 1 ? 1 : -1) * rr.height / 6}px)` : '';
 }
 
 function lastMarks() {
