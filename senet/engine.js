@@ -11,7 +11,8 @@
  * 相手の駒が道の上で2枚以上並んでいると守られていて止まれない。3枚以上並ぶと壁になり、跳び越えられない。
  * 26 美の家：すべての駒は 26 にちょうどの目で止まってからでないと先へ行けない（26 を越える手は不可）。
  * 26 から：1→27 水の家（落ちて 15 再生の家へ戻る。15 がふさがっていれば、その手前で最初の空きマス）、2→28、3→29、4→30、5→上がり。
- * 28 三つの真実の家：3 でのみ上がり。29 二つの家（レ・アトゥム）：2 でのみ上がり。30 ホルスの家：1 でのみ上がり（どこへも進めない）。
+ * 28 三つの真実の家：3 で上がり。29 二つの家（レ・アトゥム）：2 で上がり。30 ホルスの家：1 で上がり。28・29 からは、空いていれば
+ * 先のマスへも進める（28→29 は 1、28→30 は 2、29→30 は 1。2026-11-07 から）。
  * 26・28・29・30 にいる駒は入れ替えられない（安全）。先に全部の駒を上げた側の勝ち。
  *
  * ── API（ur/engine.js と同じ形）──────────────────────────────
@@ -87,7 +88,11 @@
     s.pos[me].forEach((p, k) => {
       if (p >= GOAL || seen[p]) return; seen[p] = 1;
       const m = { piece: k, from: p, to: p + n, n, capture: false, finish: false, water: false, dest: p + n, again: AGAIN(n) };
-      if (p === 28 || p === 29 || p === 30) { if (EXIT[p] === n) { m.to = GOAL; m.dest = GOAL; m.finish = true; out.push(m); } return; }
+      if (p === 28 || p === 29 || p === 30) {
+        if (EXIT[p] === n) { m.to = GOAL; m.dest = GOAL; m.finish = true; out.push(m); }
+        else if (p + n <= 30 && b[p + n] < 0) out.push(m);   // 空いている先のマスへ（28〜30 は安全：相手がいれば止まれない）
+        return;
+      }
       if (p === 26) {
         if (n === 5) { m.to = GOAL; m.dest = GOAL; m.finish = true; out.push(m); return; }
         if (n === 1) { const bb = b.slice(); bb[26] = -1; const d = waterDest(bb); m.water = true; m.dest = d < 0 ? 26 : d; out.push(m); return; }
@@ -128,7 +133,12 @@
   (function () {
     T[GOAL] = 0;
     // 28〜30：出口の目が出るまで
-    T[28] = 1 / PROB[3]; T[29] = 1 / PROB[2]; T[30] = 1 / PROB[1];
+    T[30] = 1 / PROB[1];
+    // 29：2 で上がり、1 なら 30 へ進むかそのまま（得なほう）；28：3 で上がり、1・2 で 29・30 へ
+    for (let it = 0; it < 200; it++) {
+      T[29] = (1 + PROB[1] * Math.min(T[30], T[29]) - PROB[1] * T[29]) / (1 - (1 - PROB[2] - PROB[1]) - PROB[1]);
+      T[28] = (1 + PROB[1] * Math.min(T[29], T[28]) + PROB[2] * Math.min(T[30], T[28])) / (PROB[1] + PROB[2] + PROB[3]) - 0;
+    }
     // 26：反復で解く（27 → 15 に戻るので 15 以下と連立）
     for (let it = 0; it < 200; it++) {
       for (let p = 25; p >= 1; p--) {   // p+n>26 は動けない（その投げは無駄）
