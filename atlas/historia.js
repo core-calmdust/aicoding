@@ -162,7 +162,7 @@
     if (typeof id === 'string') {
       const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G || !has(id)) return;
       const bv = $('bv'), onBoard = bv && bv.classList.contains('on') && !bv.classList.contains('playing') && game && game.id === id;
-      if (!onBoard) { let l = lang; try { l = localStorage.getItem('aicoding-lang') || (navigator.language || 'ja').slice(0, 2); } catch (e) {} lang = LANGS.includes(l) ? l : 'en'; game = G; }
+      if (!onBoard) { let l = lang; try { l = localStorage.getItem('aicoding-lang') || (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(navigator.language || 'ja'); } catch (e) {} lang = LANGS.includes(l) ? l : 'en'; game = G; }
       solo = !onBoard; fromList = false;
       // a game with a 3D board: open its board view first (the same path as tapping it), then Historia over it
       if (!onBoard && window.AtlasBoard && window.Table3D && Table3D.MODELS && Table3D.MODELS[id]) {
@@ -322,7 +322,7 @@
     // scripts that join letters (Arabic, Devanagari) fade in whole; others are typed
     if (lang === 'ar' || lang === 'hi') { sp.textContent = s; sp.classList.remove('typing'); return; }
     const chars = [...s]; let n = 0; sp.textContent = ''; sp.classList.add('typing');
-    sayT = setInterval(() => { n += lang === 'ja' || lang === 'zh' || lang === 'ko' ? 1 : 2; sp.textContent = chars.slice(0, n).join(''); if (n >= chars.length) { clearInterval(sayT); sp.classList.remove('typing'); } }, 34);
+    sayT = setInterval(() => { n += lang === 'ja' || lang === 'zh' || lang === 'zh-TW' || lang === 'ko' ? 1 : 2; sp.textContent = chars.slice(0, n).join(''); if (n >= chars.length) { clearInterval(sayT); sp.classList.remove('typing'); } }, 34);
   }
 
   /* ---------- chapters ---------- */

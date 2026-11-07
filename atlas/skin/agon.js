@@ -103,7 +103,7 @@ html.atlas-agon3 .ag3note b{display:block;font-size:14px;color:#7a3a1c;margin-bo
     id: ['Bidak di papan 3D', 'Papan seni rakyat memakai bidak kayu bercat susu (krem dengan merah, hitam dengan mustard), papan Victoria memakai tulang dan eboni. Ratu adalah bidak heksagon.'],
     tr: ['3D tahtalardaki taşlar', 'Halk sanatı tahtasında süt boyalı ahşap taşlar (kırmızılı krem, hardallı siyah), Viktorya tahtasında kemik ve abanoz kullanılır. Kraliçeler altıgen taşlardır.'],
   };
-  const lang = () => ((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja').slice(0, 2);
+  const lang = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja');
   function paintRow() {
     const row = document.getElementById('bdRow'); if (!row) return;
     row.classList.add('ag3row');

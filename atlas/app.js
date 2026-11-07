@@ -7,7 +7,7 @@
 
   /* ---------- language ---------- */
   let lang = 'ja';
-  try { lang = localStorage.getItem('aicoding-lang') || (navigator.language || 'ja').slice(0, 2); } catch (e) {}
+  try { lang = localStorage.getItem('aicoding-lang') || (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(navigator.language || 'ja'); } catch (e) {}   // zh-TW / zh-HK / zh-Hant → zh-TW, other zh → zh
   if (!I[lang]) lang = 'ja';
   const t = (k, v) => { let s = (I[lang] && I[lang][k]) ?? I.en[k] ?? I.ja[k] ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
   const gname = g => g.name[lang] || g.name.en;
@@ -1664,7 +1664,7 @@
     $('wmSub').textContent = t('sub');
     fitBrand();
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
-    $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
+    $('langSel').value = lang; $('langCode').textContent = lang === 'zh-TW' ? 'TW' : lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('tab.home')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
     document.querySelectorAll('#gsSeg button').forEach(b => { b.textContent = t('tab.' + b.dataset.v); });
@@ -1674,7 +1674,7 @@
   function openLang(on) {
     const pop = $('langPop'), btn = $('langBtn');
     if (on === undefined) on = pop.hidden;
-    if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
+    if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value === 'zh-TW' ? 'TW' : o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
     pop.hidden = !on; btn.setAttribute('aria-expanded', on);
     pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { openLang(false); if (b.dataset.l !== lang) { $('langSel').value = b.dataset.l; $('langSel').dispatchEvent(new Event('change')); } });
   }

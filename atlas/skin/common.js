@@ -554,7 +554,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       const vlang = () => (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja';
       const row = v.row; let tile = null;
       if (row) { tile = document.createElement('button'); tile.type = 'button'; tile.className = 'a3v'; tile.dataset.a3view = '1'; row.prepend(tile); }
-      const paint = () => { if (!tile) return; const L = v.label || {}; tile.innerHTML = v.html(L[vlang().slice(0, 2)] || L.en || '3D'); fix(); };
+      const paint = () => { if (!tile) return; const L = v.label || {}; tile.innerHTML = v.html(L[(l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(vlang())] || L.en || '3D'); fix(); };
       function fix() {   // 3D: the tile is the choice (the game's own buttons are not); 2D: the game's own choice
         if (!tile) return;
         if (row.firstElementChild !== tile) row.prepend(tile);   // the game redrew its row (innerHTML): the 3D tile goes back first
@@ -627,7 +627,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     }
     const f = document.createElement('div'); f.className = 'field dsg-field atlas-place'; f.id = 'fPlace'; f.dataset.ng = 'design';
     first.parentNode.insertBefore(f, first);
-    const lang = () => ((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja').slice(0, 2);
+    const lang = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja');
     const paint = () => {
       const l = lang(), k = X.table(), b = X.bright(), N = X.PLACES.name[l] || X.PLACES.name.en, B = X.placeUi('b', l);
       f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${N[k]}</b>`
