@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
 const DIR = process.env.RVDIR || '/home/claude/wt-rv1000/reversi';
 const raw = zlib.gunzipSync(fs.readFileSync(path.join(DIR, 'weights.bin.gz')));
-const W = new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2), BOOK = JSON.parse(fs.readFileSync(path.join(DIR, 'book.json'), 'utf8'));
+const W = new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2), BOOK = fs.readFileSync(path.join(DIR, process.env.RVBOOK || 'book.bin'));
 function loadEngine() {
   const f = require.resolve(path.join(DIR, 'engine.js')); delete require.cache[f];
   const E = require(f); E.setWeights(W, 30); E.setBook(BOOK); return E;

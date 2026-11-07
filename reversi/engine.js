@@ -822,15 +822,58 @@ const SYMS = [];
 for (let t = 0; t < 8; t++) { const m = new Int8Array(64); for (let q = 0; q < 64; q++) { let r = q >> 3, c = q & 7; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; if (t & 4) { const x = r; r = c; c = x; } m[q] = r * 8 + c; } SYMS.push(m); }
 function symBits(pl, ph, ol, oh, m) { let a = 0, b = 0, c = 0, d = 0; for (let q = 0; q < 64; q++) { const t = m[q]; if (bit(pl, ph, q)) { if (t < 32) a |= 1 << t; else b |= 1 << (t - 32); } else if (bit(ol, oh, q)) { if (t < 32) c |= 1 << t; else d |= 1 << (t - 32); } } return [a, b, c, d]; }
 const hex8 = x => (x >>> 0).toString(16).padStart(8, '0');
+// canonical form (the smallest of the 8 symmetric forms, the same as symBits with SYMS[t]): [key, symmetry, bits]
+// by bytes (rows): t & 1 mirrors the columns, t & 2 the rows, t & 4 transposes
+const REV8 = new Uint8Array(256), TLO = new Int32Array(256), THI = new Int32Array(256);
+for (let b = 0; b < 256; b++) for (let c = 0; c < 8; c++) if (b >> c & 1) { REV8[b] |= 128 >> c; if (c < 4) TLO[b] |= 1 << (c * 8); else THI[b] |= 1 << ((c - 4) * 8); }
+const SYMR = new Uint8Array(8);
+function symBB(lo, hi, t, out, o) {
+  for (let r = 0; r < 8; r++) { let b = (r < 4 ? lo >>> (r * 8) : hi >>> ((r - 4) * 8)) & 255; if (t & 1) b = REV8[b]; SYMR[t & 2 ? 7 - r : r] = b; }
+  let l = 0, h = 0;
+  if (t & 4) for (let r = 0; r < 8; r++) { const b = SYMR[r]; l |= TLO[b] << r; h |= THI[b] << r; }
+  else { l = SYMR[0] | SYMR[1] << 8 | SYMR[2] << 16 | SYMR[3] << 24; h = SYMR[4] | SYMR[5] << 8 | SYMR[6] << 16 | SYMR[7] << 24; }
+  out[o] = l; out[o + 1] = h;
+}
+const CAN_T = new Int32Array(4), CAN_B = new Int32Array(4);
+function bookCanon(pl, ph, ol, oh) {
+  let bt = -1;
+  for (let t = 0; t < 8; t++) {
+    symBB(pl, ph, t, CAN_T, 0); symBB(ol, oh, t, CAN_T, 2);
+    let less = bt < 0;
+    if (!less) for (let i = 0; i < 4; i++) { const x = CAN_T[i] >>> 0, y = CAN_B[i] >>> 0; if (x !== y) { less = x < y; break; } }
+    if (less) { bt = t; CAN_B.set(CAN_T); }
+  }
+  const bb = [CAN_B[0], CAN_B[1], CAN_B[2], CAN_B[3]];
+  return [bb.map(hex8).join(''), bt, bb];
+}
 function bookLookup(pl, ph, ol, oh) {
   if (!BOOK) return null;
-  let best = null, bt = 0;
-  for (let t = 0; t < 8; t++) { const k = symBits(pl, ph, ol, oh, SYMS[t]).map(hex8).join(''); if (best === null || k < best) { best = k; bt = t; } }
-  const e = BOOK[best]; if (!e) return null;
+  const [best, bt] = bookCanon(pl, ph, ol, oh);
+  const e = BOOK instanceof Map ? BOOK.get(best) : BOOK[best]; if (!e) return null;
   const inv = new Int8Array(64); for (let q = 0; q < 64; q++) inv[SYMS[bt][q]] = q;
   return e.map(([m, v]) => ({ move: inv[m], score: v }));
 }
-function setBook(obj) { BOOK = obj; }
+// book.bin (tools/book-gen.js): 'RVB2', u8 version, u8 window (1/10 disc), 2 reserved, u32 node count, then the book tree depth-first from the
+// initial position, each node in its canonical form: u8 n, n x (u8 move | 0x80 when that child's node follows, i16 LE score
+// in 1/10 disc for the side to move, best first), then the nodes of the flagged children in order (skipping one already read
+// through an earlier sibling). Moves are in the canonical frame (as book.json).
+function decodeBook(buf) {
+  const u8 = buf instanceof ArrayBuffer ? new Uint8Array(buf) : new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+  if (u8.length < 12 || u8[0] !== 82 || u8[1] !== 86 || u8[2] !== 66 || u8[3] !== 50) return null;
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), map = new Map();
+  let p = 12;
+  const node = (key, bits) => {
+    const n = u8[p++], list = [], kids = [];
+    for (let i = 0; i < n; i++) { const m = u8[p], v = dv.getInt16(p + 1, true); p += 3; list.push([m & 63, v / 10]); if (m & 128) kids.push(m & 63); }
+    map.set(key, list);
+    for (const m of kids) { const c = childOf(bits[0], bits[1], bits[2], bits[3], m), [k, , b] = bookCanon(c[0], c[1], c[2], c[3]); if (!map.has(k)) node(k, b); }   // (already read through a sibling: not written again)
+  };
+  const [k0, , b0] = bookCanon(0x10000000, 0x8, 0x08000000, 0x10);   // the initial position, black to move
+  node(k0, b0);
+  map.window = u8[5] / 10 || 3;   // (the book's window in discs: moves further below the best are not listed)
+  return map;
+}
+function setBook(obj) { BOOK = obj && (obj instanceof ArrayBuffer || ArrayBuffer.isView(obj)) ? decodeBook(obj) : obj; }
 
 /**
  * think(cells, toMove, opts) -> {move, score, depth, nodes, exact, ms}
@@ -1020,11 +1063,19 @@ function analyze(cells, toMove, opts, onProgress) {
   }
   deadline = t0 + time * 2;
   let prev = null;
+  // in the opening book (book.bin): its moves get the book's values (deeper searches backed up through the book tree);
+  // a move that is not listed was more than the book's window below the best there, so it is shown at most that low
+  const bk = BOOK instanceof Map && !opts.noBook ? bookLookup(pl, ph, ol, oh) : null;
+  const withBook = list => {
+    if (!bk || !bk.length) return list;
+    const mp = new Map(bk.map(x => [x.move, x.score])), cap = bk[0].score - (BOOK.window || 3);
+    return list.map(x => mp.has(x.move) ? Object.assign({}, x, { score: mp.get(x.move), book: true }) : Object.assign({}, x, { score: Math.min(x.score, cap) }));
+  };
   try {
     for (let d = 1; d <= Math.min(60, empties); d++) {
       const all = scoreAllMoves(pos, orderRoot(moves, prev), 'mid', d);
       prev = new Map(all.map(x => [x.move, x.score]));
-      out = all.map(x => ({ move: x.move, score: x.score / SCALE, depth: d }));
+      out = withBook(all.map(x => ({ move: x.move, score: x.score / SCALE, depth: d })));
       onProgress && onProgress(out);
       if (Date.now() - t0 > time * 0.5) break;
     }
@@ -1045,7 +1096,7 @@ function searchMove(cells, toMove, move, depth, alpha, beta, mode, dl) {
   } catch (e) { if (e === ABORT) return null; throw e; }
 }
 const API = {
-  think, analyze, searchMove, setWeights, setBook, bookLookup, clearTT, toBits, legalList, childOf, featureIndices,
+  think, analyze, searchMove, setWeights, setBook, bookLookup, bookCanon, decodeBook, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
   TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, NLEVELS, SCALE,

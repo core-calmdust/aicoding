@@ -20,7 +20,7 @@
       const meta = await fetch(BASE + 'weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
       weights = { buffer: buf, nphase: meta.nphase };
     } catch (e) { weights = null; }
-    book = await fetch(BASE + 'book.json').then(r => r.ok ? r.json() : null).catch(() => null);
+    book = await fetch(BASE + 'book.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);   // (the opening book, decoded in each worker: engine.js decodeBook)
   })());
 
   /* ---------- sounds (respect the portal's sound switch): a plastic disc clacking onto the board, light ticks as discs turn ---------- */
@@ -146,7 +146,7 @@
       await ready();
       if (stopped) return;
       if (!worker) {
-        worker = new Worker(BASE + 'engine.js?v=51');
+        worker = new Worker(BASE + 'engine.js?v=52');
         if (weights) worker.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase });
         if (book) worker.postMessage({ type: 'book', book });
       }
@@ -219,7 +219,7 @@
         const j = ++hintJ, c0 = cells.slice(), me = turn;
         return ready().then(() => new Promise(res => {
           if (stopped || j !== hintJ) return res(true);
-          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=51'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
+          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=52'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
           hintW.onmessage = e => {
             const m = e.data; if (m.type !== 'result') return;
             if (stopped || j !== hintJ || turn !== me || over) return res(true);

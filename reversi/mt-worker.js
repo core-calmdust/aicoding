@@ -9,7 +9,7 @@ self.addEventListener('message', function boot(e) {
     const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
     X.mt_stack(m.top); X.mt_thread(m.tls);
     self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
-    importScripts('engine.js?v=51');
+    importScripts('engine.js?v=52');
   } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
   const id = m.id, ctl = m.ctl, cnt = m.cnt, R = self.ReversiEngine;
   if (id > 0) {

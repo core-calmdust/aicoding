@@ -4,3 +4,4 @@ tafl/data*/
 checkers/nnwork*/
 checkers/egdb.d/
 *.nnue.npz
+reversi/tools/book-work/nodes.jsonl
