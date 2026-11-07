@@ -466,7 +466,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 // 閉じる) is not shown (fanorona's wide layout, backgammon), the box gets the same 閉じる at its top right (2026-11-06)
 function rvCloseInBox() {
   if (!document.getElementById('rvcbCss')) { const st = document.createElement('style'); st.id = 'rvcbCss';
-    st.textContent = '.rvcb{position:absolute;top:8px;inset-inline-end:12px;z-index:5;border:0;background:none;padding:2px 4px;font:inherit;font-size:13px;letter-spacing:.04em;color:var(--muted,#9a9184);cursor:pointer}.rvcb:hover{color:var(--text,#eee)}.rvcb[hidden]{display:none}.rvb-rh .rvb-t{white-space:normal!important;min-width:0;line-height:1.35}';
+    st.textContent = '.rvcb{position:absolute;top:8px;inset-inline-end:12px;z-index:5;border:0;background:none;padding:2px 4px;font:inherit;font-size:13px;letter-spacing:.04em;color:var(--muted,#9a9184);cursor:pointer}.rvcb:hover{color:var(--text,#eee)}.rvcb[hidden]{display:none}.rvb-rh .rvb-t{white-space:normal!important;min-width:0;line-height:1.35}.rvcb.inrow{position:static;flex:none;align-self:stretch;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line,rgba(128,128,128,.35));border-radius:8px;font-size:12.5px;font-weight:700;background:rgba(127,127,127,.06)}.rvcb.inrow[hidden]{display:none}';
     document.head.appendChild(st); }
   let q = 0;
   const run = () => { q = 0;
@@ -474,14 +474,15 @@ function rvCloseInBox() {
     const shown = e => !!(e && e.getClientRects().length && e.getBoundingClientRect().height > 2);
     const own = shown(close);
     document.querySelectorAll('.app .rvbox, .app .rbox, body > .rbox').forEach(box => {
-      let b = box.querySelector(':scope > .rvcb');
+      let b = box.querySelector(':scope > .rvcb, :scope > .rvb-top > .rvcb, :scope > .rb-top > .rvcb');
       const want = !own && shown(box);
       if (!want) { if (b && !b.hidden) b.hidden = true; box.querySelectorAll('[data-rvcb-pad]').forEach(e => { e.style.marginInlineEnd = ''; e.removeAttribute('data-rvcb-pad'); }); return; }
-      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'rvcb'; b.onclick = e => { e.stopPropagation(); const c = document.getElementById('rvClose'); if (c) c.click(); }; if (getComputedStyle(box).position === 'static') box.style.position = 'relative'; box.prepend(b); }
+      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'rvcb'; b.onclick = e => { e.stopPropagation(); const c = document.getElementById('rvClose'); if (c) c.click(); }; const top = box.querySelector(':scope > .rvb-top, :scope > .rb-top');
+        if (top) { b.classList.add('inrow'); top.appendChild(b); } else { if (getComputedStyle(box).position === 'static') box.style.position = 'relative'; box.prepend(b); } }
       const tx = close.textContent.trim(); if (b.textContent !== tx) b.textContent = tx; if (b.title !== (close.title || tx)) b.title = close.title || tx; if (b.hidden) b.hidden = false;   // (only real changes: this runs from a MutationObserver)
       // the box's own top-right buttons (検討する…) must not sit under the 閉じる: their row moves left by its width (2026-11-07)
       const r = b.getBoundingClientRect();
-      if (r.width) box.querySelectorAll('button').forEach(x => { if (x === b || x.closest('[data-rvcb-pad]')) return; const q = x.getBoundingClientRect();
+      if (r.width && !b.classList.contains('inrow')) box.querySelectorAll('button').forEach(x => { if (x === b || x.closest('[data-rvcb-pad]')) return; const q = x.getBoundingClientRect();
         if (q.width && q.top < r.bottom && q.bottom > r.top && q.left < r.right && q.right > r.left) { const row = x.parentElement === box ? x : x.parentElement; row.setAttribute('data-rvcb-pad', ''); row.style.marginInlineEnd = (r.width + 10) + 'px'; } });
     });
   };

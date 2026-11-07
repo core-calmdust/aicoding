@@ -179,7 +179,7 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
       if (row) row.querySelectorAll('button[data-v]').forEach(bt => {
         if (bt.querySelector('img.sn3t')) return;
         const sv = bt.querySelector('svg'), im = document.createElement('img'); im.className = 'sn3t'; im.alt = ''; im.draggable = false;
-        im.src = '../atlas/img/board-senet-' + bt.dataset.v + '.webp?v=1';
+        im.src = '../atlas/img/board-senet-' + bt.dataset.v + '.webp?v=2';
         if (sv) sv.replaceWith(im); else bt.prepend(im); bt.classList.add('sn3b');
       });
     };
@@ -187,7 +187,7 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     if (lab) new MutationObserver(() => { if (lab.textContent && !/3D/.test(lab.textContent)) thumbs(); }).observe(lab, { childList: true, characterData: true, subtree: true });
     const st3 = document.createElement('style');
     st3.textContent = `html.atlas-sn #bdRow button.sn3b{position:relative}
-html.atlas-sn #bdRow img.sn3t{display:block;width:100%;aspect-ratio:320/104;object-fit:cover;border-radius:6px}
+html.atlas-sn #bdRow img.sn3t{display:block;width:100%;aspect-ratio:320/104;object-fit:cover;object-position:50% 46%;border-radius:6px}
 html.atlas-sn #bdRow button.sn3b::after{content:'3D';position:absolute;top:6px;inset-inline-start:6px;padding:0 6px;border-radius:99px;background:linear-gradient(180deg,#ffcf5c,#e09a00);color:#fff;font:900 10px/1.5 'Fredoka',system-ui,sans-serif;letter-spacing:.06em;box-shadow:0 2px 0 #b97a00;pointer-events:none}`;
     document.head.appendChild(st3);
   }
