@@ -200,7 +200,8 @@ function init(o) {
   return api;
 }
 // phone / tablet menu (the buttons under the title): a name that does not fit its button (ru «Подсказка», de «Lektionen» …) is
-// set a little smaller — only that one, down to 78% of its size — before it would be cut with … (2026-11-07)
+// set a little smaller — only that one, down to 78% of its size; a name of several words that is still too long goes on two
+// lines inside the same button; a single long word may go down to 70% — never cut with … (2026-11-07)
 // (the bottom tabs — shared/infotabs.js .mtabs: 評価・棋譜・コーチ… — the same way)
 function fitLabels(controls, isOn) {
   let q = 0, tabs = null;
@@ -219,14 +220,25 @@ function fitLabels(controls, isOn) {
     q = 0;
     if (!tabs || !tabs.isConnected) { tabs = document.querySelector('.mtabs'); if (tabs) mo.observe(tabs, { childList: true, subtree: true, characterData: true }); }
     const spans = [...controls.querySelectorAll(':scope > button > span, :scope > a > span')].concat(tabs ? [...tabs.querySelectorAll('button > .it-lb')] : []);
-    spans.forEach(s => { if (s.dataset.hbFs) { s.style.fontSize = ''; s.style.letterSpacing = ''; delete s.dataset.hbFs; } });
+    spans.forEach(s => { if (s.dataset.hbFs) { for (const k of ['fontSize', 'letterSpacing', 'whiteSpace', 'lineHeight', 'textOverflow', 'textAlign', 'overflowWrap']) s.style[k] = ''; delete s.dataset.hbFs; } });
+    const bad = s => { const n = need(s); return n.w > n.room + 1 || n.spill > 1; };
     for (const s of spans) {
       if (!s.getClientRects().length || (!tabs || !tabs.contains(s)) && isOn() || !s.textContent.trim()) continue;
-      const n = need(s); if (n.room <= 4 || (n.w <= n.room + 1 && n.spill <= 1)) continue;
+      const n = need(s); if (n.room <= 4 || !bad(s)) continue;
       const fs = parseFloat(getComputedStyle(s).fontSize) || 12;
-      const k = Math.max(0.78, Math.min(1, (n.room - 1) / n.w));
-      s.dataset.hbFs = '1'; s.style.fontSize = (fs * k).toFixed(2) + 'px';
-      const m = need(s); if (m.w > m.room + 1 || m.spill > 1) s.style.letterSpacing = '-0.03em';
+      s.dataset.hbFs = '1';
+      // smaller, a step at a time (measured each time: letter spacing and fonts do not scale exactly), down to 78%
+      let k = Math.max(0.78, Math.min(1, (n.room - 1) / n.w));
+      for (let i = 0; i < 6; i++) { s.style.fontSize = (fs * k).toFixed(2) + 'px'; if (!bad(s) || k <= 0.78) break; k = Math.max(0.78, k - 0.04); }
+      if (bad(s)) s.style.letterSpacing = '-0.03em';
+      // still too long (de «Remis anbieten», fr «Proposer nulle» …): two lines, split between words — only for the menu
+      // buttons (the bottom tabs keep one line) and only when the name has a space
+      if (bad(s) && controls.contains(s) && /\s/.test(s.textContent.trim())) {
+        Object.assign(s.style, { fontSize: (fs * 0.86).toFixed(2) + 'px', letterSpacing: '-0.02em', whiteSpace: 'normal', lineHeight: '1.02', textOverflow: 'clip', textAlign: 'center', overflowWrap: 'normal' });
+        if (bad(s)) s.style.fontSize = (fs * 0.78).toFixed(2) + 'px';
+      }
+      // one long word (fr «Abandonner» in a narrow button): a little smaller still, down to 70%
+      for (let k2 = 0.74; bad(s) && k2 >= 0.70; k2 -= 0.04) s.style.fontSize = (fs * k2).toFixed(2) + 'px';
     }
     mo.takeRecords();
   };
