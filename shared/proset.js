@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2s"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -239,7 +239,7 @@ function init(cfg) {
   // the effective values for a level (values = saved or the dialog's draft): the level's defaults with the changes on top
   function effOf(lv, values) {
     const d = defs(lv), eff = Object.assign({}, d), changed = [];
-    for (const p of params) {
+    for (const p of params.filter(q => !q.when).concat(params.filter(q => q.when))) {   // (conditional ones last: their condition sees the other changes, e.g. threads needs variety off)
       const v = values[p.key]; if (v === undefined) continue;
       if (p.key === 'threads' && maxThreads() < 2) continue;   // (no threads here: the level's own way)
       if (p.when && !p.when(Object.assign({}, eff, { [p.key]: v }))) continue;
@@ -345,10 +345,10 @@ function init(cfg) {
         const R = kindRange(p, cur.k), val = cur.v != null ? cur.v : (d.limit && d.limit.k === cur.k ? d.limit.v : R.min);
         const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
-      } else if (p.type === 'threads') {
-        const mx = maxThreads(), list = [...new Set([1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64].filter(n => n < mx - 2).concat([mx - 2, mx - 1, mx]).filter(n => n >= 1))];   // (the top three: all cores, or one / two left free)
-        const cur = eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1;
-        ctl = segHtml('threads', list.map(n => ({ v: n, label: String(n) })), Math.min(cur, mx), d.threads != null ? Math.min(d.threads, mx) : 1);
+      } else if (p.type === 'threads') {   // a slider 1 … every core the browser reports (e.g. 10 = only the performance cores of a 10+4 chip)
+        const mx = maxThreads(), cur = Math.min(mx, eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1), dv = d.threads != null ? Math.min(d.threads, mx) : 1;
+        const row = numRow('threads', cur, dv, 1, mx, 1, '/ ' + mx, v => setVal('threads', v));
+        ctl = row.html.replace('</div>', `<button type="button" class="pro-dv" data-k="threads" data-v="${dv}" title="${esc(tx('def'))}">● ${dv}</button></div>`); binds.push(['threads', row.bind]);
       } else if (p.type === 'bool') {
         ctl = segHtml(p.key, [{ v: true, label: T.on }, { v: false, label: T.off }], !!eff[p.key], !!d[p.key]);
       } else if (p.type === 'choice') {
