@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108pro'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108pro2'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,14 +203,14 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro2&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
   if (msg.type !== 'think') return false;   // (rated games too: the user's decision 2026-11-08, device differences accepted)
-  if (msg.cfg) { const c = msg.cfg; return c.threads > 1 && c.ms >= 100 && !c.wnodes && c.noise === undefined && !c.hand; }   // PRO: its own thread count (mtThreads)
+  if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit (time, depth or nodes — the lead's limit; the helpers fill the shared table)   // PRO: its own thread count (mtThreads)
   const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
 }
 function request(which, msg, onProgress) {
@@ -1132,7 +1132,7 @@ const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
     threads: !L.wnodes && L.noise === undefined && L.ms >= 500 ? ProSet.maxThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads', when: e => e.limit.k === 'time' && !e.var && e.eval !== 'hand' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }] }) : null;
 // the PRO level for an AI side (null: the level as it is; never in rated / online games)
 function proCfg(lv) {
