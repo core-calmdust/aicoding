@@ -143,7 +143,7 @@ const MTP = window.MTEngine ? MTEngine.use({
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
-  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1 && !msg.cfg.nk && msg.cfg.d >= 99;   // PRO: a time limit on its own thread count
+  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1;   // PRO: any limit   // PRO: a time limit on its own thread count
   return msg.type === 'think' && msg.level >= 19;   // (rated games too: the user's decision 2026-11-08)
 }
 function request(which, msg, onProgress) {
@@ -1139,7 +1139,7 @@ const PRO_TS = { 19: 1.2, 20: 2.5, 21: 4, 22: 6, 23: 9, 24: 13.5, 25: 20 };   //
 var PRO = window.ProSet ? ProSet.init({ game: 'tafl', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: PRO_TS[lv] || 2.5 }, threads: ProSet.maxThreads() },
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads', when: e => e.limit.k === 'time' }] }) : null;
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads' }] }) : null;
 function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {

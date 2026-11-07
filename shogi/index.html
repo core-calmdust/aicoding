@@ -1694,7 +1694,7 @@ const MTP = window.MTEngine ? MTEngine.use({
 function mtPool(msg, prio) {
   if (!MTP || (game && game.variant) || msg.variant) return null;
   const o = msg.opts || {};
-  const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && o.time && !o.nodes && !o.noise && !o.linear);
+  const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && (msg.mtThreads > 1 || (o.time && !o.nodes && !o.noise && !o.linear)));
   return ok ? MTP.pool(prio) : null;
 }
 // the speed of a search on the threads, in the info line under the moves (as after the AI's moves)
@@ -2910,7 +2910,7 @@ const PRO_DEF = lv => { const L = LEVELS[lv] || LEVELS[LV_DEFAULT];
 const proVariantEng = () => { const c = document.querySelector('#newOverlay .ngt-gcard.sel[data-v]'); return !!(c && c.dataset.v && window.Variants && Variants.eng(c.dataset.v)); };
 var PRO = window.ProSet ? ProSet.init({ game: 'shogi', lang: () => LANG, level: () => +$('#rngLevel').value, show: () => (dlg.mode === 'ai' || dlg.mode === 'watch') && !proVariantEng(),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads', when: e => e.limit.k === 'time' && !e.var && e.eval === 'nnue' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' }] }) : null;
 // the PRO settings of an AI side: { opts (for engine.js 'think'), book, resign, threads } or null (the level as it is; rated / online / variants with their own engine)
 function proCfg(lv) {

@@ -810,7 +810,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   function wThink(fen, moves, level, rand, cfg) {
     rand = rand || Math.random;
     const L = cfg || LEVELS[level] || LEVELS[12];
-    if (L.hand && !MTL) { X.nn_enable(0); try { return wThink(fen, moves, level, rand, Object.assign({}, L, { hand: 0 })); } finally { X.nn_enable(1); } }
+    if (L.hand) { X.nn_enable(0);   /* (on the threads: the flag is shared, so the helpers search with the same evaluation) */ try { return wThink(fen, moves, level, rand, Object.assign({}, L, { hand: 0 })); } finally { X.nn_enable(1); } }
     const jpos = replay(fen, moves).pos;
     if (!jpos.legal().length) return { move: 0 };
     if (L.book && !fen) {
