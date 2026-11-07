@@ -1573,6 +1573,9 @@
     if (old) root.remove(old);
     const pre = !model && !back && take(id);
     const g = model || back || (pre && pre.g) || (MODELS[id] ? MODELS[id]() : null);
+    // a board taken back from the cache wears the look chosen now (chess: the lacquer's top is one material shared by every board, so the
+    // board built for another look had left its own top on it — 赤い盤 → もう片方 kept showing the red top)
+    { const BD = window.Table3D && Table3D.BOARDS; if (back && back.userData && back.userData.setSet && BD && BD[id]) { try { back.userData.setSet(BD[id].get()); } catch (e) {} } }
     if (old) {
       if (old.userData.showId && old.children[0] !== g) keepBoard(old.userData.showId, old, g);   // a showcase board: kept for a while
       else if (old.children[0] !== g) { dispose(old); freeBoard(old, [scene, g, ...kept.map(e => e.c)]); }   // a game's live board: freed at once (the room, the incoming board and the kept ones keep theirs)
