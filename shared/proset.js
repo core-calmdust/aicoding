@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2svhxb"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2svhxbf"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -379,6 +379,11 @@ function init(cfg) {
     if (fk) { const el = panel.querySelector(`[data-k="${fk}"] input[type=number]`) || panel.querySelector(`[data-k="${fk}"] button.sel`); if (el && el.focus) try { el.focus({ preventScroll: true }); } catch (e) {} }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+  // the level slider / buttons of the dialog: the panel follows the chosen level at once (its defaults, e.g. the thinking limit)
+  let lastLv = null;
+  const follow = () => { if (!btn) return; const lv = cfg.level(); if (lv !== lastLv) { lastLv = lv; render(); } };
+  let ft = 0;
+  ['input', 'change', 'click'].forEach(t => document.addEventListener(t, e => { if (panel && panel.contains(e.target)) return; setTimeout(follow, 0); clearTimeout(ft); ft = setTimeout(() => { lastLv = null; follow(); }, 150); }, true));   // (again a moment later: the page may update its level after this event)
   return api;
 }
 // The common 20-step ladder of the board games (checkers, xiangqi, janggi, ugolki, agon, fanorona, kōnane):
