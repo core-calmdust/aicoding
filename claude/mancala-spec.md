@@ -77,3 +77,6 @@
 ## 未対応
 - オンライン対戦の世界の伝統ルール4種（`online.js` の RULES と Firebase の `database.rules.json` の v の許可リストが4ルールのまま。追加するときは両方を変え、DBルールのデプロイが必要）。
 - 世界の伝統ルールのレッスン・パズル・定跡。
+
+## 対局設定の Pro モード（2026-11-08）
+対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間 0.1〜30 秒／深さ 1〜30）、手のばらつき（深さのときだけ。変えると 小 30／大 140）。Lv.1〜3（でたらめ・欲ばり）は変えると深さで読む AI になる。engine.js `chooseMove` の `cfg`（`{ kind: 'depth', depth, noise }` か `{ kind: 'time', ms }`）。レート戦では使わない。戦績のキーは `ai:pro…`、相手名に「PRO」。

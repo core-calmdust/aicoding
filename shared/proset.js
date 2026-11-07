@@ -12,7 +12,7 @@
        level: () => draft.level,                    // the level shown in the dialog now
        show: () => draft.mode === 'ai' || draft.mode === 'watch',   // AI games that are not rated
        defaults: lv => ({ limit: { k: 'nodes', v: 8000 }, book: true, var: 0, … }),   // the level's own values
-       params: [ { key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1e3, 1e8] } },
+       params: [ { key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1e3, 1e8] } },   // (+ klabel / kunit: { nodes: {…14} } e.g. playouts)
                  { key: 'threads' }, { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' },
                  { key: 'exact', type: 'int', min: 0, max: 30, group: 'read', label: {…14}, help: {…14}, unit: {…14} } ],
        store: { get: () => obj, set: obj => … },   // optional (e.g. inside the synced settings)
@@ -341,9 +341,9 @@ function init(cfg) {
       let ctl = '';
       if (p.type === 'limit') {
         const kinds = Object.keys(p.kinds), cur = eff.limit || d.limit || { k: kinds[0], v: kindRange(p, kinds[0]).min };
-        ctl = segHtml('limit.k', kinds.map(k => ({ v: k, label: T['k.' + k] })), cur.k, d.limit && d.limit.k);
+        ctl = segHtml('limit.k', kinds.map(k => ({ v: k, label: (p.klabel && p.klabel[k]) || T['k.' + k] })), cur.k, d.limit && d.limit.k);
         const R = kindRange(p, cur.k), val = cur.v != null ? cur.v : (d.limit && d.limit.k === cur.k ? d.limit.v : R.min);
-        const row = numRow('limit', val, val, R.min, R.max, R.step, tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
+        const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
       } else if (p.type === 'threads') {
         const mx = maxThreads(), list = []; for (let n = 1; n <= mx; n = n < 2 ? 2 : n * 2) list.push(n); if (list[list.length - 1] !== mx) list.push(mx);

@@ -419,9 +419,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${LV(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
 let thinking = 0;
 function renderInfo() {
@@ -580,7 +580,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); svg.classList.remove('can');
   const t0 = Date.now(), lv = levelFor(p);
-  const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? rtAiTime() : undefined });
+  const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? rtAiTime() : undefined, params: proCfg(lv) || undefined });
   let res = await job();
   if (res && res.error && tok === busyToken) res = await job();   // the engine rebuilds itself after a crash: try once more
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
@@ -745,7 +745,7 @@ function recordGame(st) {
   st.rec = 1;
   const why = st.why === 'score' ? resultLine(st) : st.why ? t('why.' + st.why) : '';
   const lv = rgame ? rgame.lv : settings.level;
-  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + ' · ' + game.n + '×' + game.n, key: (rgame ? 'rt:' : 'ai:') + lv + ':' + game.n, n: moves.length, why });
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + proTag(lv) + ' · ' + game.n + '×' + game.n, key: (rgame ? 'rt:' : proCfg(lv) ? 'ai:pro' : 'ai:') + lv + ':' + game.n, n: moves.length, why });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1026,6 +1026,22 @@ $('#selHandi').onchange = e => { draft.ha = +e.target.value; segSync(); };
 $('#selKomi').onchange = e => { draft.komi = e.target.value === 'auto' ? 'auto' : +e.target.value; };
 $('#selTap').onchange = e => { draft.tap = e.target.value; };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+// Go: the searching levels (engine.js LEVELS 21–27: net / visits / time); a change on the policy levels (1–20) makes a searching AI.
+const PRO_GO = { 21: ['light', 3, 1200], 22: ['light', 6, 1500], 23: ['light', 12, 2000], 24: ['light', 20, 2500], 25: ['light', 32, 3000], 26: ['strong', 64, 4500], 27: ['strong', 160, 7000] };   // (= engine.js LEVELS)
+var PRO = window.ProSet ? ProSet.init({ game: 'go', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => { const g = PRO_GO[lv]; return g ? { limit: { k: 'nodes', v: g[1] }, eval: g[0] } : { limit: { k: 'nodes', v: 1 }, eval: 'light' }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], nodes: [1, 20000] }, klabel: { nodes: { ja: '探索回数', en: 'Visits', zh: '访问次数', 'zh-TW': '訪問次數', ko: '방문 수', es: 'Visitas', fr: 'Visites', pt: 'Visitas', de: 'Besuche', ru: 'Визиты', tr: 'Ziyaret', id: 'Kunjungan', hi: 'विज़िट', ar: 'الزيارات' } }, kunit: { nodes: { ja: '回', en: 'visits', zh: '次', 'zh-TW': '次', ko: '회', es: 'visitas', fr: 'visites', pt: 'visitas', de: 'Besuche', ru: 'виз.', tr: 'ziyaret', id: 'kunjungan', hi: 'विज़िट', ar: 'زيارة' } } },
+    { key: 'eval', label: { ja: '評価ネット', en: 'Network', zh: '评估网络', 'zh-TW': '評估網路', ko: '평가 신경망', es: 'Red', fr: 'Réseau', pt: 'Rede', de: 'Netz', ru: 'Сеть', tr: 'Ağ', id: 'Jaringan', hi: 'नेटवर्क', ar: 'الشبكة' }, help: { ja: '形勢を判断するニューラルネット。強いネットは重いので、同じ時間で読める数が減ります。', en: 'The neural network that judges positions. The strong one is heavier, so it searches fewer positions in the same time.', zh: '判断形势的神经网络。强力网络较重，同样时间内搜索得更少。', 'zh-TW': '判斷形勢的神經網路。強力網路較重，同樣時間內搜尋得更少。', ko: '형세를 판단하는 신경망. 강력 신경망은 무거워서 같은 시간에 읽는 수가 줄어듭니다.', es: 'La red neuronal que juzga las posiciones. La fuerte es más pesada: en el mismo tiempo explora menos.', fr: 'Le réseau neuronal qui juge les positions. Le fort est plus lourd : il explore moins dans le même temps.', pt: 'A rede neural que julga as posições. A forte é mais pesada: no mesmo tempo explora menos.', de: 'Das neuronale Netz, das Stellungen bewertet. Das starke ist schwerer und durchsucht in gleicher Zeit weniger.', ru: 'Нейросеть, оценивающая позицию. Сильная тяжелее, поэтому за то же время просматривает меньше.', tr: 'Pozisyonu değerlendiren sinir ağı. Güçlü olan daha ağır; aynı sürede daha az arar.', id: 'Jaringan saraf yang menilai posisi. Yang kuat lebih berat, jadi dalam waktu sama mencari lebih sedikit.', hi: 'स्थिति आँकने वाला न्यूरल नेटवर्क। मज़बूत वाला भारी है, इसलिए उतने समय में कम खोजता है।', ar: 'الشبكة العصبية التي تقيّم المواقف. القوية أثقل، فتبحث أقل في الوقت نفسه.' }, opts: [{ v: 'light', label: { ja: '軽量', en: 'Light', zh: '轻量', 'zh-TW': '輕量', ko: '경량', es: 'Ligera', fr: 'Légère', pt: 'Leve', de: 'Leicht', ru: 'Лёгкая', tr: 'Hafif', id: 'Ringan', hi: 'हल्का', ar: 'خفيفة' } }, { v: 'strong', label: { ja: '強い', en: 'Strong', zh: '强力', 'zh-TW': '強力', ko: '강력', es: 'Fuerte', fr: 'Forte', pt: 'Forte', de: 'Stark', ru: 'Сильная', tr: 'Güçlü', id: 'Kuat', hi: 'मज़बूत', ar: 'قوية' } }] }] }) : null;
+// the PRO search for an AI side: engine.js think(job.params) or null (the level as it is; never rated)
+function proCfg(lv) {
+  if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  return e.limit.k === 'nodes' ? { net: e.eval, visits: e.limit.v, time: 600000 } : { net: e.eval, visits: 1e7, time: Math.round(e.limit.v * 1000) };
+}
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {

@@ -100,7 +100,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261106wr1');
+  const w = new Worker('engine.js?v=20261106wr1-pro1');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
   w.onerror = e => console.warn('worker', e.message);
@@ -668,8 +668,8 @@ function canHumanPlay() {
 function sideName(s) {
   if (lesson || puzzle) return s === 0 ? t('you') : (puzzle && puzzle.P.kind === 'end' ? t('defender') : t('opp'));
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(s);
-  if (settings.mode === 'ai') return s === game.human ? t('you') : `${AIW()} ${LV(settings.level)}`;
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}`;
+  if (settings.mode === 'ai') return s === game.human ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}${proTag(levelFor(s))}`;
   return t(s === 0 ? 'p0' : 'p1');
 }
 function shortName(s) {
@@ -902,7 +902,7 @@ async function maybeAI(tok) {
   const p = shownPos(), side = p.side, idx = cur;
   thinking = side; renderInfo();
   const t0 = performance.now();
-  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side) });
+  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side), cfg: proCfg(levelFor(side)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
   if (res.value !== undefined && res.value !== null) evals[idx] = { v: side === 0 ? res.value : -res.value, exact: !!res.exact };
   const wait = (settings.mode === 'watch' ? 600 : (P[idx].mv && P[idx].mv.extra ? 280 : 420)) - (performance.now() - t0);
@@ -970,7 +970,7 @@ function recordGame(res, why) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || !game.moves.length || game.recorded) return;
   game.recorded = true;
   const h = game.human;
-  try { GameRecord.add({ mode: 'ai', res, side: h, opp: `AI Lv.${settings.level} ${LV(settings.level)}`, key: 'ai:' + settings.level + ':' + game.rules, n: game.moves.length, why: [t('rule.' + game.rules), why].filter(Boolean).join(' · ') }); } catch (e) {}
+  try { GameRecord.add({ mode: 'ai', res, side: h, opp: `AI Lv.${settings.level} ${LV(settings.level)}${proTag(settings.level)}`, key: (proCfg(settings.level) ? 'ai:pro' : 'ai:') + settings.level + ':' + game.rules, n: game.moves.length, why: [t('rule.' + game.rules), why].filter(Boolean).join(' · ') }); } catch (e) {}
 }
 function canResign() {
   if (inStudy()) return false;
@@ -1242,6 +1242,20 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b
 // the ルール button on each card (shared/ngtabs.js): the rules at that variant's page
 $('#ruleCards').ngtRules = r => openRules(r);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+var PRO = window.ProSet ? ProSet.init({ game: 'mancala', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }, { key: 'var', when: e => e.limit.k === 'depth' }] }) : null;
+function proGet(lv) { if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proCfg(lv) {
+  const e = proGet(lv); if (!e) return null;
+  const L = E.LEVELS[lv] || E.LEVELS[5];
+  if (e.limit.k === 'time') return { kind: 'time', ms: Math.round(e.limit.v * 1000) };
+  return { kind: 'depth', depth: e.limit.v, noise: !e.var ? 0 : !e.changed.includes('var') && L.kind === 'depth' ? L.noise : e.var === 1 ? 30 : 140 };
+}
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => { $('#newOverlay').classList.remove('show'); maybeRotTip(); };
