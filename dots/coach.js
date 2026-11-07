@@ -219,7 +219,7 @@ function tx(k, v) {
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const gl = h => window.CoachKit ? CoachKit.gloss(h, (TX[L()] || TX.en).gl || TX.en.gl) : h;
 const mv = e => `<bdi dir="ltr">${esc(edgeName(e))}</bdi>`;
-const sp = () => (L() === 'ja' || L() === 'zh') ? '' : ' ';
+const sp = () => (L() === 'ja' || L() === 'zh' || L() === 'zh-TW') ? '' : ' ';
 const fmtB = x => String(Math.round(x * 10) / 10);
 
 // --------------------------------------------------------------------------------------------- position facts

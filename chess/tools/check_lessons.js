@@ -3,7 +3,7 @@
 // among the engine's best (or a mate when the goal is mate), marks are on real squares, all 10 languages present.
 'use strict';
 const E = require('../engine.js'), D = require('../lessons.json');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 let bad = 0, n = 0;
 const fail = (id, msg) => { bad++; console.log('NG', id, msg); };
 const sqOk = q => /^[a-h][1-8]$/.test(q);

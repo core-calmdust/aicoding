@@ -168,7 +168,7 @@ const CSS = `
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
 `;
-const lang = () => (document.documentElement.lang || 'ja').slice(0, 2);
+const lang = () => (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja');
 const isSel = b => b.classList.contains('sel') || b.classList.contains('on') || b.classList.contains('active') || b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true';
 function init() {
   const ov = document.getElementById('newOverlay'), modal = ov && ov.querySelector('.modal');

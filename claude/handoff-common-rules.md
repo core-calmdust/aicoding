@@ -324,7 +324,7 @@
 - ja・en を先に書き、残りを用意。アラビア語はRTL（盤面と数字はLTR、スワイプ方向・スライド方向も逆）。
 - タイトルやボタンが独・仏・西語、**露・土・尼語**（文字列が長くなりやすい）で折り返さない長さに。
 - **新しい文言は最初から14言語**で書く。既存の文言は ru・zh-TW・id・tr を順次追加中。
-- **言語メニューへの追加はゲーム単位**：そのゲームの新4言語が揃うまでは、`<select id="langSel">`・`SUPPORTED`・`detectLang()` に ru／zh-TW／id／tr を足さない（英語まじりの中途半端な画面を出さない）。揃ったら次の順で表示：日本語, English, 简体中文, 繁體中文, 한국어, Español, Français, Português, Deutsch, Русский, Türkçe, Bahasa Indonesia, हिन्दी, العربية（各言語の自言語表記）。
+- **言語メニューへの追加はゲーム単位**：そのゲームの新4言語が揃うまでは、`<select id="langSel">`・`SUPPORTED`・`detectLang()` に ru／zh-TW／id／tr を足さない（英語まじりの中途半端な画面を出さない）。揃ったら次の順で表示：日本語, English, 简体中文, 繁體中文, 한국어, Español, Français, Português, Deutsch, Русский, Türkçe, Indonesian, हिन्दी, العربية（各言語の自言語表記）。
 - **zh-TW**：簡体字の機械的な字形変換で済ませない。台湾の用語・表記に直す（例：网络→網路、视频→影片、菜单→選單、积分→積分、设置→設定）。ブラウザの言語判定は `zh-TW`・`zh-HK`・`zh-Hant` を zh-TW に、それ以外の zh を zh に振り分ける（`startsWith('zh')` だけで判定しない）。
 - **用語の目安**：ru は「ИИ」（AI）、tr は「yapay zekâ／YZ」、id は「AI」、zh-TW は「AI」。チェッカーは ru「шашки」、tr「dama」、id「dam」。バックギャモンは ru「нарды」、tr「tavla」。マンカラは tr「mangala」、id「congklak」を添える。
 - **共通部品（`shared/*.js`）は 14言語対応済み**（2026-11-07：resign・drawoffer・rulesoffer・cardbar・ruletour・record・placement・pzbook・export・watchpause・resumeng・onlinesec・ngtabs・infotabs・headerbar・flipbtn）。未翻訳の言語は英語に戻る（`T[lang] || T.en`）。ポータルの `shared/atlas.js`（`N(...)` の位置引数と更新履歴の配列）は未対応。
