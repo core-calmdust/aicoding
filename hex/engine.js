@@ -174,9 +174,10 @@ function bookMove(pos, L, rand) {
   }
   return -1;
 }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (shared/proset.js)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: { po | ms, temp, rnd, must, book } as LEVELS)
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -236,7 +237,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     queue = queue.then(() => Promise.all([readyP, firstP])).catch(() => {}).then(() => {
       try {
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') self.postMessage({ id: m.id, type: 'result', ...analyze(m.start, m.moves, m.time || 1000, null, m.max, m.pv) });
         else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n, m.defend, m.budget) });
         else if (m.type === 'newgame') self.postMessage({ id: m.id, type: 'result' });

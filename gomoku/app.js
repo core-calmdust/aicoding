@@ -118,7 +118,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261104fb'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261104fb-pro1'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -298,9 +298,9 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
 function stonesOf(pos, c) { let n = 0; for (let m = 0; m < 225; m++) if (pos.at(m) === c) n++; return n; }
 // PC header bar (shared/headerbar.js): turn, move number, evaluation (not in rated / online games, not when switched off), rule
@@ -515,7 +515,7 @@ async function maybeAI(tok) {
   const p = toMoveAt(cur); if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now();
-  const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p) });
+  const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : 380) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -594,7 +594,7 @@ function recordGame(st) {
   recKey = k; if (rgame) rgame.recorded = true;
   const lv = rgame ? rgame.lv : settings.level;
   const why = st.why === 'resign' ? t('ol.wResign') : st.why === 'time' ? t('ol.wTime') : st.why === 'abandon' ? t('ol.wResign') : t('res.why.' + st.why);
-  try { GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + (rgame ? '' : ' · ' + t('rule.' + rule)), key: (rgame ? 'rt:' + lv : 'ai:' + lv + ':' + rule), n: moves.length, why }); } catch (e) {}
+  try { GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + proTag(lv) + (rgame ? '' : ' · ' + t('rule.' + rule)), key: (rgame ? 'rt:' + lv : (proCfg(lv) ? 'ai:pro' : 'ai:') + lv + ':' + rule), n: moves.length, why }); } catch (e) {}
 }
 // ---------------------------------------------------------------- resign (common spec, shared/resign.js)
 // The 投了 button sits after 対局 / 待った and asks 「投了しますか？」 (はい / いいえ); はい ends the game as your loss
@@ -1035,6 +1035,27 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b
 // the ルール button on each card (shared/ngtabs.js): renju at the forbidden moves, standard / free at the overline page
 $('#ruleCards').ngtRules = r => openRules(r === 'renju' ? 'renju' : 'overline');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+var PRO = window.ProSet ? ProSet.init({ game: 'gomoku', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.noise !== undefined ? { limit: { k: 'time', v: L.ms / 1000 }, var: L.blunder ? 2 : 1, vct: 0 } : { limit: L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.ms || 1000) / 1000 }, var: 0, vct: L.vct || 0 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 20], nodes: [1000, 5000000] } }, { key: 'vct', type: 'int', group: 'read', min: 0, max: 21, step: 1, label: { ja: '勝ち筋の読み（VCT）', en: 'Threat search (VCT)', zh: '连续冲四活三计算（VCT）', 'zh-TW': '連續衝四活三計算（VCT）', ko: '승리 수순 탐색(VCT)', es: 'Búsqueda de amenazas (VCT)', fr: 'Recherche de menaces (VCT)', pt: 'Busca de ameaças (VCT)', de: 'Drohungssuche (VCT)', ru: 'Поиск угроз (VCT)', tr: 'Tehdit araması (VCT)', id: 'Pencarian ancaman (VCT)', hi: 'ख़तरा खोज (VCT)', ar: 'بحث التهديدات (VCT)' }, help: { ja: '四や三を続けて勝ち切る手順を何手先まで探すか。0 で探しません。', en: 'How many moves ahead to look for a forced win by fours and threes. 0 = off.', zh: '向前搜索多少步以冲四、活三连续取胜。0 为不搜索。', 'zh-TW': '向前搜尋多少步以衝四、活三連續取勝。0 為不搜尋。', ko: '4와 3을 이어 이기는 수순을 몇 수 앞까지 찾을지. 0이면 찾지 않음.', es: 'Cuántas jugadas por delante busca una victoria forzada con cuatros y treses. 0 = no.', fr: 'Jusqu’à combien de coups chercher une victoire forcée par des quatre et des trois. 0 = non.', pt: 'Quantos lances à frente procurar uma vitória forçada com quatros e três. 0 = não.', de: 'Wie viele Züge voraus ein erzwungener Gewinn mit Vierern und Dreiern gesucht wird. 0 = aus.', ru: 'На сколько ходов вперёд искать форсированную победу четвёрками и тройками. 0 — нет.', tr: 'Dörtlü ve üçlülerle zorlayıcı kazancın kaç hamle ileri aranacağı. 0 = kapalı.', id: 'Berapa langkah ke depan mencari kemenangan paksa dengan empat dan tiga. 0 = mati.', hi: 'चौकों और तिकड़ों से मजबूर जीत कितनी चाल आगे तक खोजें। 0 = बंद।', ar: 'كم نقلة إلى الأمام يبحث عن فوز إجباري بالرباعيات والثلاثيات. 0 = إيقاف.' }, unit: ProSet.T['u.ply'], when: e => !e.var },
+    { key: 'var', when: e => e.limit.k === 'time' }] }) : null;
+function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proCfg(lv) {
+  const e = proGet(lv); if (!e) return null;
+  const L = E.LEVELS[lv] || E.LEVELS[5];
+  if (e.var && e.limit.k === 'time') {   // the weak levels' way: all candidates within the time, with noise
+    const c = { d: 1, ms: Math.round(e.limit.v * 1000) };
+    if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 45 : 260;
+    return c;
+  }
+  const c = { vct: e.vct || 0, defend: e.vct ? L.defend || 3 : 0, vctNodes: L.vctNodes, ms: 600000 };
+  if (e.limit.k === 'time') c.ms = Math.round(e.limit.v * 1000); else if (e.limit.k === 'nodes') c.nodes = e.limit.v; else c.d = e.limit.v;
+  return c;
+}
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
@@ -2189,7 +2210,7 @@ function rvbUpdate() {
   });
 }
 if (window.RvBox) BOX = RvBox.create({
-  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261104fb',
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261104fb-pro1',
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
@@ -2847,7 +2868,7 @@ async function googleLink() {
 // rated record: the one with the newer last game (else more games), settings / name: newest change wins.
 const GomokuSync = (() => {
   const META = 'gomoku-sync-meta', RU_KEY = 'aicoding-gomoku-rules-seen', RT_KEY = STORE + '-rules-v2';
-  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'forbid', 'num', 'confirm', 'skin', 'coach', 'level', 'level2', 'lvv', 'rule', 'color', 'lang'];
+  const SET_KEYS = ['pro', 'anim', 'sound', 'hint', 'eval', 'last', 'threat', 'forbid', 'num', 'confirm', 'skin', 'coach', 'level', 'level2', 'lvv', 'rule', 'color', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };

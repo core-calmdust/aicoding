@@ -1347,13 +1347,13 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
-<script src="engine.js?v=20261028rb"></script>
+<script src="engine.js?v=20261028rb-pro1"></script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=20261107l14-hb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script>
+<script src="../shared/proset.js?v=3"></script><script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
 const E = window.MorrisEngine, NONE = E.NONE, WIN = E.WIN, WINT = E.WINT;
@@ -1476,7 +1476,7 @@ function save() {
 // ====================================================================== engine workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028rb');
+  const w = new Worker('engine.js?v=20261028rb-pro1');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1814,9 +1814,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
 let thinking = 0, animating = false;
 function phaseText(pos, p) { return pos.hand[p] > 0 ? t('ph.place') : pos.flying(p) ? t('ph.fly') : t('ph.move'); }
@@ -2037,7 +2037,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1]) : 0;
   const wait = Math.max((settings.mode === 'watch' ? 700 : 420), prevDur + 120) - (Date.now() - t0);
@@ -2111,9 +2111,9 @@ function onGameEnd(st) {
 function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || !st || !st.over) return;
   if (st.why === 'resign' && moves.length < 2) return;   // (resigned before playing: not a game)
-  const opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI ' + LV(settings.level) + (gv !== 'nine' ? ' · ' + t('rule.' + gv) : '');
+  const opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI ' + LV(settings.level) + proTag(settings.level) + (gv !== 'nine' ? ' · ' + t('rule.' + gv) : '');
   const why = st.why === 'resign' ? t('ol.youResigned') : st.why ? t('res.why.' + st.why) : '';
-  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + settings.level) + (gv !== 'nine' ? ':' + gv : ''), n: moves.length, why });
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : (proCfg(settings.level) ? 'ai:pro' : 'ai:') + settings.level) + (gv !== 'nine' ? ':' + gv : ''), n: moves.length, why });
 }
 // 投了 (common spec, shared/resign.js): after 対局 and 待った; asks 投了しますか？ and only はい ends the game as a loss.
 // vs AI (incl. rated): the human resigns; 2 players on one device: the side to move resigns; online: online-ui.js sends the resignation.
@@ -2499,6 +2499,20 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b
 // the ルール button on each card (shared/ngtabs.js): that variant's rules tab (12 / 6 men: past the shared intro, at their own first page)
 $('#ruleCards').ngtRules = r => openRules(r, r === 'nine' ? 0 : 1);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }, { key: 'var' }] }) : null;
+function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proCfg(lv) {
+  const e = proGet(lv); if (!e) return null;
+  const L = E.LEVELS[lv] || E.LEVELS[5], c = e.limit.k === 'depth' ? { d: e.limit.v } : { d: 60, ms: Math.round(e.limit.v * 1000) };
+  if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 14 : 90; }
+  return c;
+}
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 // designs apply at once (the board behind the dialog changes) and are kept right away

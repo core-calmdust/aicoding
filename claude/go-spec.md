@@ -48,3 +48,6 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 
 ## 保存キー
 - aicoding-go（設定）、-lessons、-puzzles、-open、-daily、-rated、aicoding-go-rules-seen、go-online-*。
+
+## 対局設定の Pro モード（2026-11-08）
+対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。探索するレベル（engine.js LEVELS 21〜27：ネット／探索回数／時間）を元に、項目：思考の制限（時間 0.1〜60 秒／探索回数 1〜2万）、評価ネット（軽量／強い）。方策だけで打つレベル（1〜20）で変えると、探索する AI になる。ページの `PRO_GO` は engine.js LEVELS の写し。値は `think` の `job.params`（`net`／`visits`／`time`）。レート戦では使わない。戦績のキーは `ai:pro…`、相手名に「PRO」。

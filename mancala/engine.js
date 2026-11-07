@@ -594,8 +594,8 @@ const LEVELS = [null,
   { kind: 'time', ms: 1800 },
 ];
 let seedRand = Math.random;
-function chooseMove(b, side, rules, level) {
-  const L = LEVELS[Math.max(1, Math.min(10, level | 0))];
+function chooseMove(b, side, rules, level, cfg) {
+  const L = cfg || LEVELS[Math.max(1, Math.min(10, level | 0))];   // (cfg: the page's PRO mode, { kind: 'depth', depth, noise } | { kind: 'time', ms })
   const moves = legal(b, side, rules);
   if (moves.length === 0) return { move: -1 };
   if (L.kind === 'random') return { move: moves[Math.floor(seedRand() * moves.length)] };
@@ -630,7 +630,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
     try {
       const b = Int8Array.from(m.b);
       if (m.type === 'move') {
-        const r = chooseMove(b, m.side, m.rules, m.level);
+        const r = chooseMove(b, m.side, m.rules, m.level, m.cfg);
         root.postMessage({ type: 'move', id: m.id, move: r.move, value: r.value, exact: r.exact, depth: r.depth });
       } else if (m.type === 'analyze') {
         const r = analyze(b, m.side, m.rules, m.ms || 1000, m.maxDepth);

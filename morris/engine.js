@@ -537,8 +537,9 @@ function wSetup(variant, start, moves) {
   wIO().set(a); return WX.setup();
 }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: r[2 + 2 * i], v: r[3 + 2 * i], kind: kindOf(r[3 + 2 * i]) }); return L; }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (shared/proset.js)
 function think(variant, start, moves, level, rand) {
-  const L0 = LEVELS[level] || LEVELS[5];
+  const L0 = PRO_CFG || LEVELS[level] || LEVELS[5];   // (PRO_CFG: { d, ms, noise, blunder } as LEVELS)
   if (WX && L0.noise === undefined && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { move: -1 };
     WX.best(L0.d, L0.ms || 0, 0); const r = wIO();
@@ -547,7 +548,7 @@ function think(variant, start, moves, level, rand) {
   rand = rand || Math.random;
   const { pos, hashes } = replay(variant, start, moves);
   const E = eng(); E.setHistory(hashes);
-  const L = LEVELS[level] || LEVELS[5];
+  const L = L0;
   const all = pos.moves();
   if (all.length === 0) return { move: -1 };
   if (L.noise !== undefined) {
@@ -657,7 +658,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     if (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') wantDB(m);
     try {
-      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.variant, m.start, m.moves, m.level) });
+      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.variant, m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
         self.postMessage({ id: m.id, type: 'result', ...r });

@@ -107,7 +107,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3';
+const ENGINE_URL = 'engine.js?v=3-pro1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -423,9 +423,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
 let thinking = 0, animating = false;
 function renderInfo() {
@@ -605,7 +605,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = Math.max((settings.mode === 'watch' ? 700 : 420), moveDur() + 120) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -627,7 +627,7 @@ function endManually(st) {
 }
 // the AI resigns when it is lost for sure (a forced connection found) or hopeless twice in a row; not the weakest levels
 function aiResigns(p) {
-  const lv = levelFor(p), v = aiVals[cur]; if (lv < 6 || typeof v !== 'number') return false;
+  const lv = levelFor(p), v = aiVals[cur], pc = proCfg(lv); if ((pc ? !pc.resign : lv < 6) || typeof v !== 'number') return false;   // (PRO mode: its own choice)
   const prev = aiVals.slice(0, cur).filter(x => typeof x === 'number').slice(-1)[0];
   const lost = v < -WINT || (v <= -920 && prev !== undefined && prev <= -900);
   if (!lost) return false;
@@ -719,7 +719,7 @@ function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || startSpec) return;
   if (st.why === 'resign' && !st.aiResigned && moves.length < 2) return;   // (resigned before playing: not a game)
   const lv = rgame ? rgame.lv : settings.level;
-  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + ' · ' + gN + '×' + gN, key: (rgame ? 'rt:' : 'ai:') + lv + ':' + gN, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why, { c: pname(st.winner) }) });
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + proTag(lv) + ' · ' + gN + '×' + gN, key: (rgame ? 'rt:' : proCfg(lv) ? 'ai:pro' : 'ai:') + lv + ':' + gN, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why, { c: pname(st.winner) }) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1020,6 +1020,23 @@ $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+var PRO = window.ProSet ? ProSet.init({ game: 'hex', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[10]; return { limit: L.po ? { k: 'nodes', v: L.po } : { k: 'time', v: L.ms / 1000 }, book: !!L.book, var: L.rnd ? 2 : L.temp ? 1 : 0, resign: lv >= 6 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], nodes: [10, 2000000] }, klabel: { nodes: { ja: 'プレイアウト', en: 'Playouts', zh: '模拟次数', 'zh-TW': '模擬次數', ko: '플레이아웃', es: 'Simulaciones', fr: 'Simulations', pt: 'Simulações', de: 'Simulationen', ru: 'Симуляции', tr: 'Simülasyon', id: 'Simulasi', hi: 'सिमुलेशन', ar: 'المحاكاة' } }, kunit: { nodes: { ja: '回', en: 'playouts', zh: '次', 'zh-TW': '次', ko: '회', es: 'sim.', fr: 'sim.', pt: 'sim.', de: 'Sim.', ru: 'сим.', tr: 'sim.', id: 'sim.', hi: 'बार', ar: 'مرة' } } }, { key: 'book' }, { key: 'var' }, { key: 'resign' }] }) : null;
+function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proCfg(lv) {
+  const e = proGet(lv); if (!e) return null;
+  const L = E.LEVELS[lv] || E.LEVELS[10], c = { must: L.must || 0 };
+  if (e.limit.k === 'nodes') c.po = e.limit.v; else c.ms = Math.round(e.limit.v * 1000);
+  if (e.book) c.book = 1;
+  if (e.var && !e.changed.includes('var')) { if (L.temp) c.temp = L.temp; if (L.rnd) c.rnd = L.rnd; } else if (e.var) c.temp = e.var === 1 ? 150 : 500;
+  c.resign = !!e.resign;
+  return c;
+}
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {

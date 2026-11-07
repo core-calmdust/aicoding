@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2sr-lv2mt';
+const ENGINE_URL = 'engine.js?v=nn2sr-lv2mt-pro1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -143,11 +143,12 @@ const MTP = window.MTEngine ? MTEngine.use({
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1 && !msg.cfg.nk && msg.cfg.d >= 99 && !(which === 'ai' && rgame);   // PRO: a time limit on its own thread count
   return msg.type === 'think' && msg.level >= 19 && !(which === 'ai' && rgame);
 }
 function request(which, msg, onProgress) {
   const mp = MTP && mtWants(which, msg) && MTP.pool();
-  if (mp) { const t0 = performance.now(), full = { start: startSpec, v: gv, ...msg }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, v: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
 function requestW(which, msg, onProgress) {   // (the one-thread workers)
@@ -444,9 +445,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
 let thinking = 0, animating = false;
 function renderInfo() {
@@ -637,7 +638,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = Math.max((settings.mode === 'watch' ? 700 : 420), prevDur + 120) - (Date.now() - t0);
@@ -762,7 +763,7 @@ function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle) return;
   if (!moves.some((m, i) => toMoveAt(i) === humanColor)) return;   // no move of the player: not recorded
   const lv = rgame ? rgame.lv : settings.level;
-  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + (gv !== 'copenhagen' ? ' · ' + t('rule.' + gv) : ''), key: (rgame ? 'rt:' : 'ai:') + lv + ':' + gv, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why) });
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw || !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI ' + LV(lv) + proTag(lv) + (gv !== 'copenhagen' ? ' · ' + t('rule.' + gv) : ''), key: (rgame ? 'rt:' : proCfg(lv) ? 'ai:pro' : 'ai:') + lv + ':' + gv, n: moves.length, why: st.aiResigned ? t('dr.aiResigned') : t('res.why.' + st.why) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1131,6 +1132,21 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b
 const RULE_PAGE = { brandubh: 'variants', tablut: 'variants', tawlbwrdd: 'tawlbwrdd', fetlar: 'fetlar', ardri: 'ardri' };
 $('#ruleCards').ngtRules = r => openRules(r, r === 'copenhagen' ? 0 : Math.max(0, TOUR_PAGES.findIndex(p => p.id === RULE_PAGE[r])));
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
+// AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
+const PRO_TN = [0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 620];   // (= engine.c NN_NODES, hundreds of nodes: the defaults shown)
+var PRO = window.ProSet ? ProSet.init({ game: 'tafl', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: lv => lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: lv === 19 ? 1.2 : 2.5 }, threads: ProSet.maxThreads() },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads', when: e => e.limit.k === 'time' }] }) : null;
+function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proCfg(lv) {
+  const e = proGet(lv); if (!e) return null;
+  const c = { d: 99, ms: 600000, threads: e.threads || 1 };
+  if (e.limit.k === 'depth') c.d = e.limit.v; else if (e.limit.k === 'nodes') c.nk = e.limit.v / 1000; else c.ms = Math.round(e.limit.v * 1000);
+  return c;
+}
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {

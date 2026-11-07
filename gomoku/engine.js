@@ -892,9 +892,10 @@ function openingMove(pos, level, rand) {
   }
   return -1;
 }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (shared/proset.js)
 function think(rule, moves, level, start, rand) {
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[5];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[5];   // (PRO_CFG: as LEVELS)
   const pos = replay(rule, moves, start);
   if (pos.status().over) return { move: -1 };
   if (!pos.legal().length) return { move: -1, nomove: true };   // renju: black has only forbidden points left (lost by the rules)
@@ -1005,7 +1006,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     try {
       if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, nnStd: !!NNI.std, learnedStd: !!LW.std });
-      else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.rule, m.moves, m.level, m.start) });
+      else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.rule, m.moves, m.level, m.start); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
         self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog) });

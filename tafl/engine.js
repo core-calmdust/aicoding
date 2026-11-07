@@ -319,6 +319,7 @@ function resist(start, moves, v, pos) {
   const m = resistBest(pos, L.filter(e => e.v === top).map(e => e.m));
   return m == null ? null : { move: m, v: top };
 }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (shared/proset.js)
 function think(start, moves, level, v, seed) {
   const { pos } = replay(start, moves, v);
   const all = pos.moves();
@@ -329,7 +330,8 @@ function think(start, moves, level, v, seed) {
     let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + (Math.random() - 0.5) * 2 * noise; if (x > bv) { bv = x; best = e.m; } } return { move: best };
   }
   if (!wSetup(start, moves, v)) return { move: -1 };
-  WX.think(level, seed === undefined ? (Math.random() * 2147483647) | 0 : seed);
+  if (PRO_CFG) WX.best(PRO_CFG.d || 99, PRO_CFG.ms || 0, PRO_CFG.nk || 0);   // PRO mode: a search of its own (the level's net)
+  else WX.think(level, seed === undefined ? (Math.random() * 2147483647) | 0 : seed);
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
   const out = { move: wMove(r[0]), v: r[2], depth: r[3], nodes: WX.last_nodes ? WX.last_nodes() : 0 };
@@ -424,7 +426,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     if (m && m.type === 'mtinit') return;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, m.v, m.seed) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level, m.v, m.seed); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), m.v);
           self.postMessage({ id: m.id, type: 'result', ...r });
