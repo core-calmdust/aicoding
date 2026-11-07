@@ -25,6 +25,26 @@ const MQ = '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-
 const H = 56;
 const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد', ru: 'Правила', 'zh-TW': '規則', id: 'Aturan', tr: 'Kurallar' };
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب', ru: 'Изучите правила в игре', 'zh-TW': '邊玩邊學規則', id: 'Pelajari aturan sambil bermain', tr: 'Kuralları oynayarak öğren' };
+// short names for the menu buttons (PC header bar and the phone menu under the title only — dialogs keep the game's own
+// longer wording; 2026-11-07): one natural word where the language has one, as Japanese already says 新規 rather than
+// 新しいゲーム. Keyed by language and by the game's full label, so only a known long label is replaced (a cash-out button
+// keeps its own meaning); the full label stays in the button's title. A short name already used by another button of the same
+// menu is not applied (de casino: «Lernen» is the study button there, so its lessons stay «Lektionen»). Japanese is unchanged.
+const SHORT = {
+  en: { 'New game': 'New', 'Offer draw': 'Draw?', 'Online play': 'Online' },
+  es: { 'Ofrecer tablas': '¿Tablas?', 'Problemas': 'Retos', 'Juego en línea': 'En línea', 'Retirar fichas': 'Cobrar' },
+  fr: { 'Abandonner': 'Abandon', 'Proposer nulle': 'Nulle ?', 'Problèmes': 'Défis', 'Jeu en ligne': 'En ligne', 'Statistiques': 'Stats' },
+  pt: { 'Propor empate': 'Empate?', 'Jogo online': 'Online' },
+  de: { 'Remis anbieten': 'Remis?', 'Lektionen': 'Lernen', 'Aufgaben': 'Rätsel', 'Online spielen': 'Online' },
+  ru: { 'Новая игра': 'Новая', 'Отмена хода': 'Отмена', 'Отменить': 'Отмена', 'Подсказка': 'Совет', 'Подсказки': 'Совет', 'Игра онлайн': 'Онлайн', 'Онлайн-игра': 'Онлайн', 'Забрать фишки': 'Выйти' },
+  tr: { 'Yeni oyun': 'Yeni', 'Beraberlik': 'Berabere?', 'Bulmacalar': 'Bulmaca', 'İpuçları': 'İpucu', 'Çevrim içi oyun': 'Çevrim içi', 'Fişleri boz': 'Kalk' },
+  id: { 'Permainan baru': 'Baru', 'Main baru': 'Baru', 'Urungkan': 'Batal', 'Tawarkan seri': 'Seri?', 'Tawar seri': 'Seri?', 'Tawarkan remis': 'Remis?', 'Teka-teki': 'Soal', 'Pelajaran': 'Belajar', 'Main online': 'Online' },
+  hi: { 'ड्रॉ प्रस्ताव': 'ड्रॉ?', 'पहेलियाँ': 'पहेली', 'ऑनलाइन खेल': 'ऑनलाइन' },
+  ar: { 'عرض تعادل': 'تعادل؟', 'الألغاز': 'ألغاز', 'الدروس': 'دروس', 'اللعب عبر الإنترنت': 'أونلاين', 'الإحصاءات': 'إحصاءات' },
+  ko: { '무승부 제안': '무승부?', '온라인 대국': '온라인' },
+  zh: { '在线对战': '在线', '离桌结算': '离桌', '结算离桌': '离桌', '残局题': '残局' },
+  'zh-TW': { '提議和棋': '提和', '提議和局': '提和', '線上對戰': '線上', '結算離桌': '離桌', '殘局題': '殘局' },
+};
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
 /* lesson / puzzle card buttons in the PC info column (common spec): two per row, labels on one line */
@@ -64,7 +84,7 @@ body.hb-on{padding-top:${H}px}
 .hb .hb-info{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted, #9aa);overflow:hidden;white-space:nowrap}
 .hb .hb-info:empty{visibility:hidden}
 .hb .hb-info b{color:var(--text, #eee);font-weight:700}
-.hb .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);overflow:hidden;text-overflow:ellipsis}
+.hb .hb-info .hb-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);overflow:hidden;text-overflow:ellipsis}
 .hb .hb-menu{flex:none;display:flex!important;flex-direction:row!important;align-items:center;gap:6px!important;margin:0!important;padding:0 14px 0 0!important;border:0!important;border-right:1px solid var(--line, rgba(255,255,255,.12))!important;background:none!important;box-shadow:none!important;border-radius:0!important;width:auto!important;height:auto!important;max-width:none!important;grid-template-columns:none!important;order:0!important;position:static!important}
 .hb .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;width:auto!important;min-width:0!important;height:36px!important;margin:0!important;padding:0 11px!important;font-size:13px!important;line-height:1!important;gap:6px!important;border-radius:10px!important;white-space:nowrap}
 .hb .hb-menu > * svg{width:16px!important;height:16px!important;margin:0!important;flex:none}
@@ -93,6 +113,23 @@ html[dir=rtl] .hb, html[lang=ar] .hb{direction:rtl}
 html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px solid var(--line, rgba(255,255,255,.12))}
 @media (max-width: 1180px){.hb .hb-menu > * span{display:none}.hb .hb-menu > *{padding:0 10px!important}}
 @media (max-width: 960px){.hb .hb-title .brand-l .series{display:none}}
+/* fitting the bar to the window (2026-11-07, long languages): fit() below adds these step by step, only while something does not
+   fit — the bar never runs past the window and the info keeps room for its first chips. hb-t1: tighter spacing; hb-lc: the language
+   button shows its code (DE) instead of its name; hb-ico: a menu button shows its icon only (its name stays in title / aria-label,
+   lowest priority first: from the end of the menu); in the info, a chip that does not fit is left out whole (hb-cut, from the
+   end) instead of being cut, and the first one shrinks with …. The title / logo (World Board Game Atlas and its wide overseas
+   variant) is never touched: its design is fixed. */
+.hb.hb-t1{gap:10px}
+.hb.hb-t1 .hb-menu{gap:4px!important;padding:0 10px 0 0!important}
+html[lang=ar] .hb.hb-t1 .hb-menu{padding:0 0 0 10px!important}
+.hb.hb-t1 .hb-menu > *{padding:0 8px!important}
+.hb.hb-t1 .hb-icons,.hb.hb-t1 .hb-icons .brand-r{gap:4px}
+.hb .hb-menu > .hb-ico > span{display:none!important}
+.hb .hb-menu > .hb-ico{padding:0 10px!important}
+.hb.hb-lc .lsel-btn .lsel-n{display:none}.hb.hb-lc .lsel-btn .lsel-c{display:inline}
+.hb .hb-info > .hb-cut{display:none!important}
+.hb .hb-info > .hb-shrink{flex:0 1 auto!important;min-width:0!important;max-width:100%}
+.hb .hb-info > .hb-shrink > b,.hb .hb-info > .hb-shrink > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* PC: the game-over dialog is wide enough for its buttons on one line each (all games) */
 @media ${MQ}{#resultOverlay .modal{width:min(640px, calc(100vw - 64px))}#resultOverlay .modal-actions .mbtn,#resultOverlay .modal-actions button{white-space:nowrap}}
 `;
@@ -129,6 +166,7 @@ function init(o) {
     // keep the others (in their own order) after the common ones
     [...controls.children].filter(el => !list.includes(el)).forEach(el => controls.appendChild(el));
   }
+  if (controls) shortLabels(controls, L);
   // the bar
   const bar = document.createElement('header'); bar.className = 'hb'; bar.setAttribute('role', 'banner');
   bar.innerHTML = '<div class="hb-title"></div><div class="hb-info" aria-live="polite"></div><nav class="hb-menu-slot"></nav><div class="hb-icons"></div>';
@@ -178,7 +216,175 @@ function init(o) {
     setInfo(html) { info.innerHTML = html || ''; } };
   if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
   apply();
+  if (!portal) fitBar(bar, info, () => controls, () => on);
+  if (controls) fitLabels(controls, () => on);
   return api;
+}
+// the menu buttons' short names (SHORT above): applied whenever the game writes a label (start, language change, the draw
+// offer appearing …); the full label is kept in title (when the game set none) and in aria-label
+function shortLabels(controls, L) {
+  let q = 0;
+  const run = () => {
+    q = 0;
+    const lang = L() || document.documentElement.lang, map = SHORT[lang] || {};
+    const btns = [...controls.children].filter(b => b.querySelector(':scope > span'));
+    const sp = b => b.querySelector(':scope > span');
+    // a language change puts back the game's full label: drop what we added for the old one first
+    for (const b of btns) {
+      const s = sp(b), t = s.textContent.trim();
+      if (b.dataset.hbShort && t !== b.dataset.hbShort) {
+        if (b.dataset.hbST && b.title === b.dataset.hbFull) b.removeAttribute('title');
+        if (b.dataset.hbSA && b.getAttribute('aria-label') === b.dataset.hbFull) b.removeAttribute('aria-label');
+        for (const k of ['hbShort', 'hbFull', 'hbST', 'hbSA']) delete b.dataset[k];
+      }
+    }
+    const used = new Set(btns.map(b => sp(b).textContent.trim()));
+    for (const b of btns) {
+      const s = sp(b), t = s.textContent.trim(), sh = map[t];
+      if (!sh || b.dataset.hbShort || used.has(sh)) continue;
+      s.textContent = sh; used.add(sh);
+      b.dataset.hbShort = sh; b.dataset.hbFull = t;
+      if (!b.title) { b.title = t; b.dataset.hbST = '1'; }
+      if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', t); b.dataset.hbSA = '1'; }
+    }
+    mo.takeRecords();
+  };
+  // (a microtask, not a frame: the full label is never painted first)
+  const later = () => { if (!q) { q = 1; Promise.resolve().then(run); } };
+  const mo = new MutationObserver(later);
+  mo.observe(controls, { childList: true, subtree: true, characterData: true });
+  new MutationObserver(later).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  window.addEventListener('load', later);
+  run();
+}
+// phone / tablet menu (the buttons under the title): a name that does not fit its button (ru «Подсказка», de «Lektionen» …) is
+// set a little smaller — only that one, down to 78% of its size; a name of several words that is still too long goes on two
+// lines inside the same button; a single long word may go down to 70% — never cut with … (2026-11-07)
+// (the bottom tabs — shared/infotabs.js .mtabs: 評価・棋譜・コーチ… — the same way)
+function fitLabels(controls, isOn) {
+  let q = 0, tabs = null;
+  // how much a label needs: its own text width against the room its button leaves it (a label may also spill out of a
+  // button that does not clip — morris — so the button's content box is the measure, not the label's own box)
+  const need = s => {
+    const b = s.parentElement, br = b.getBoundingClientRect(), cs = getComputedStyle(b), sr = s.getBoundingClientRect();
+    const inL = br.left + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0), inR = br.right - (parseFloat(cs.paddingRight) || 0) - (parseFloat(cs.borderRightWidth) || 0);
+    const row = cs.flexDirection.startsWith('row') && cs.display.includes('flex');
+    // room: the label's own box when it is clipped there; otherwise what the button's inside leaves (beside an icon, in a row)
+    let room = Math.min(sr.width, inR - inL);
+    if (row) { let used = 0; for (const c of b.children) if (c !== s && c.getClientRects().length) used += c.getBoundingClientRect().width + (parseFloat(cs.columnGap) || 0); room = Math.min(room + 0.5, inR - inL - used); }
+    return { w: s.scrollWidth, room, spill: Math.max(0, sr.right - inR, inL - sr.left) };
+  };
+  const run = () => {
+    q = 0;
+    if (!tabs || !tabs.isConnected) { tabs = document.querySelector('.mtabs'); if (tabs) mo.observe(tabs, { childList: true, subtree: true, characterData: true }); }
+    const spans = [...controls.querySelectorAll(':scope > button > span, :scope > a > span')].concat(tabs ? [...tabs.querySelectorAll('button > .it-lb')] : []);
+    spans.forEach(s => { if (s.dataset.hbFs) { for (const k of ['fontSize', 'letterSpacing', 'whiteSpace', 'lineHeight', 'textOverflow', 'textAlign', 'overflowWrap']) s.style[k] = ''; delete s.dataset.hbFs; } });
+    const bad = s => { const n = need(s); return n.w > n.room + 1 || n.spill > 1; };
+    for (const s of spans) {
+      if (!s.getClientRects().length || (!tabs || !tabs.contains(s)) && isOn() || !s.textContent.trim()) continue;
+      const n = need(s); if (n.room <= 4 || !bad(s)) continue;
+      const fs = parseFloat(getComputedStyle(s).fontSize) || 12;
+      s.dataset.hbFs = '1';
+      // smaller, a step at a time (measured each time: letter spacing and fonts do not scale exactly), down to 78%
+      let k = Math.max(0.78, Math.min(1, (n.room - 1) / n.w));
+      for (let i = 0; i < 6; i++) { s.style.fontSize = (fs * k).toFixed(2) + 'px'; if (!bad(s) || k <= 0.78) break; k = Math.max(0.78, k - 0.04); }
+      if (bad(s)) s.style.letterSpacing = '-0.03em';
+      // still too long (de «Remis anbieten», fr «Proposer nulle» …): two lines, split between words — only for the menu
+      // buttons (the bottom tabs keep one line) and only when the name has a space
+      if (bad(s) && controls.contains(s) && /\s/.test(s.textContent.trim())) {
+        Object.assign(s.style, { fontSize: (fs * 0.86).toFixed(2) + 'px', letterSpacing: '-0.02em', whiteSpace: 'normal', lineHeight: '1.02', textOverflow: 'clip', textAlign: 'center', overflowWrap: 'normal' });
+        if (bad(s)) s.style.fontSize = (fs * 0.78).toFixed(2) + 'px';
+      }
+      // one long word (fr «Abandonner» in a narrow button): a little smaller still, down to 70%
+      for (let k2 = 0.74; bad(s) && k2 >= 0.70; k2 -= 0.04) s.style.fontSize = (fs * k2).toFixed(2) + 'px';
+    }
+    mo.takeRecords();
+  };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  const mo = new MutationObserver(later);
+  mo.observe(controls, { childList: true, subtree: true, characterData: true });
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  setTimeout(later, 600); setTimeout(later, 2000);   // (the bottom tabs are made a little later)
+  // a button that appears or changes size without a change inside the menu (the draw offer, shown by a class on body)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(later), all = () => { ro.disconnect(); for (const b of controls.children) ro.observe(b); }; all(); new MutationObserver(all).observe(controls, { childList: true }); }
+  window.addEventListener('resize', later);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+  window.addEventListener('load', later);
+  later();
+}
+// the PC bar fitted to the window (2026-11-07): long languages (de / fr / ru / id / tr …) made the menu run off the right edge
+// and squeezed the info (turn, move, evaluation) to nothing. Measured on every change, the bar steps down only as far as needed:
+// tighter spacing → the language button shows its code → menu buttons show their icon only (from the last one: lessons /
+// draw offer / puzzles before new / undo). The title / logo is left as it is (its design is fixed, 2026-11-07). The info keeps
+// room for its first two chips; chips that still do not fit are left out whole from the end (never cut in half), the first
+// one alone shrinks with … as the very last resort.
+function fitBar(bar, info, getMenu, isOn) {
+  let q = 0;
+  const shown = e => !!(e && e.getClientRects().length);
+  const chipW = c => Math.max(c.getBoundingClientRect().width, c.scrollWidth);
+  // how far anything in the bar runs past its edges (px)
+  const over = () => {
+    const br = bar.getBoundingClientRect(); let m = 0;
+    for (const el of [bar.querySelector('.hb-title'), getMenu(), bar.querySelector('.hb-icons')]) {
+      if (!shown(el) || !bar.contains(el)) continue;
+      const r = el.getBoundingClientRect(); m = Math.max(m, r.right - br.right, br.left - r.left);
+    }
+    return Math.max(m, bar.scrollWidth - bar.clientWidth);
+  };
+  const run = () => {
+    q = 0; if (!isOn()) return;
+    const menu = getMenu(), btns = menu ? [...menu.children] : [];
+    bar.classList.remove('hb-t1', 'hb-lc');
+    btns.forEach(b => { b.classList.remove('hb-ico'); if (b.dataset.hbAl) { b.removeAttribute('aria-label'); delete b.dataset.hbAl; } if (b.dataset.hbT) { b.removeAttribute('title'); delete b.dataset.hbT; } });
+    const chips = [...info.children];
+    chips.forEach(c => c.classList.remove('hb-cut', 'hb-shrink'));
+    // the room the info wants: all its chips (the game's optional ones — .opt — aside), at most 30% of the bar but always its
+    // first two (or a short text)
+    const vc = chips.filter(shown), gap = parseFloat(getComputedStyle(info).columnGap) || 0;
+    let want = 0, least = 0, two = 0;
+    if (vc.length) {
+      const sum = list => list.reduce((s, c, i) => s + chipW(c) + (i ? gap : 0), 0);
+      const main = vc.filter(c => !c.classList.contains('opt'));
+      want = Math.max(sum(vc.slice(0, 2)), Math.min(sum(main.length ? main : vc), bar.clientWidth * 0.3));
+      least = sum(vc.slice(0, 1)); two = Math.min(want, sum(vc.slice(0, 2)));
+    } else if (info.textContent.trim()) want = least = two = Math.min(info.scrollWidth, 200);
+    const ok = () => over() <= 1 && info.clientWidth + 1 >= want;
+    if (!ok()) {
+      // a menu button can show its icon only when it has an icon and its name in a span (the name moves to title / aria-label)
+      const ico = btns.filter(b => shown(b) && b.querySelector(':scope > svg, :scope > img, :scope > i') && b.querySelector(':scope > span') && b.querySelector(':scope > span').textContent.trim() && getComputedStyle(b.querySelector(':scope > span')).display !== 'none').reverse();
+      // (before a button loses its name, the info settles for its first two chips; before one of the main four — new / undo /
+      //  resign / hint — does, for its first chip alone — the turn —; the chips left over are left out whole below)
+      const toIco = b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); };
+      const main4 = btns.filter(shown).slice(0, 4);
+      // (Japanese: the bar at 1280 px stays as it was designed — the info gives up its extra chips first, before the spacing,
+      //  the language button or a menu button changes)
+      const ja = (document.documentElement.lang || 'ja') === 'ja';
+      const steps = (ja ? [() => { want = least; }] : []).concat([() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc'), () => { want = Math.max(ja ? least : 0, Math.min(want, two)); }])
+        .concat(ico.filter(b => !main4.includes(b)).map(toIco), [() => { want = least; }], ico.filter(b => main4.includes(b)).map(toIco));
+      for (const st of steps) { st(); if (ok()) break; }
+    }
+    // chips that still do not fit: left out whole, from the end; the first one alone shrinks
+    // (measured on the chips' own edges, not scrollWidth: a chip may end a fraction of a pixel past the info and be clipped)
+    let left = chips.filter(shown);
+    const spill = () => { if (info.scrollWidth > info.clientWidth + 1) return true; const ir = info.getBoundingClientRect(); return left.some(c => { const r = c.getBoundingClientRect(); return r.right > ir.right + 0.5 || r.left < ir.left - 0.5; }); };
+    while (left.length > 1 && spill()) left.pop().classList.add('hb-cut');
+    if (left.length && spill()) left[0].classList.add('hb-shrink');
+    mos.forEach(m => m.takeRecords());   // (our own class changes are not changes to react to)
+  };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  const mos = [];
+  const watch = (el, opt) => { if (!el) return; const m = new MutationObserver(later); m.observe(el, opt); mos.push(m); };
+  watch(info, { childList: true, subtree: true, characterData: true });
+  // (attribute changes only where they change a size: a class toggled with the same value — a clock ticking — is skipped)
+  { const m = new MutationObserver(ms => { if (ms.some(x => x.type !== 'attributes' || x.oldValue !== x.target.getAttribute(x.attributeName))) later(); });
+    m.observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'hidden', 'style'] }); mos.push(m); }
+  watch(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir'] });
+  window.addEventListener('resize', later);
+  // (sizes that change without a mutation in the bar: web fonts, the game's own media queries)
+  if (window.ResizeObserver) { let lw = -1; new ResizeObserver(() => { const w = bar.clientWidth; if (w !== lw) { lw = w; later(); } }).observe(bar); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+  window.addEventListener('load', later);
+  later();
 }
 // Online dock (common spec): when the dock at the bottom is opened on PC, the page content (.app: board + info) scrolls up
 // smoothly so that it sits centred between the header bar and the top of the opened dock; closing scrolls it back.
