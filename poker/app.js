@@ -4,7 +4,7 @@
 (function () {
 'use strict';
 const P = window.PK, E = window.PKE, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const STORE = 'aicoding-poker', SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const STORE = 'aicoding-poker', SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 const FELTS = ['green', 'teal', 'blue', 'wine', 'charcoal', 'purple', 'mocha', 'linen'];
 const BACKS = ['skullBlack', 'skull', 'gangsta', 'ornate', 'ornateBlack', 'floral', 'floralBlack', 'azure', 'azureBlack', 'hex', 'cube', 'red', 'blue', 'crimson', 'navy'];
 const COURTS = ['gangsta', 'classic', 'antique', 'flat'];
@@ -39,7 +39,7 @@ function prefOf(v) {
 }
 
 /* ---------------- language ---------------- */
-let LANG = (() => { const n = (navigator.language || 'ja').toLowerCase(); return SUPPORTED.find(c => n.startsWith(c)) || 'en'; })();
+let LANG = (() => { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return SUPPORTED.find(c => n.split('-')[0] === c) || 'en'; })();
 try { const g = localStorage.getItem('aicoding-lang'); if (SUPPORTED.includes(g)) LANG = g; } catch (e) {}
 { const q = new URLSearchParams(location.search).get('lang'); if (SUPPORTED.includes(q)) LANG = q; }
 function t(k, v) {
