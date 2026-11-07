@@ -32,4 +32,4 @@
 - atlas：i18n（about/hist）、gamelist-i18n、mapdata（中国→朝鮮半島、伝来時期は諸説）、tables3d の背景。
 
 - 3Dルールコース：atlas/rules/janggi.js（rules/xiangqi.js のフォーク、案内はショウギツネ、14ステップ・14言語。車・九宮の斜め・馬・足・象・士・包・卒・상차림・詰み・点数決着）。
-- ヒストリア：atlas/historia/<lang>/janggi.json と s/janggi.json（盤図は八角駒 ps:'jg'）。伝来の時期など不確かなことは「はっきりしない」と書く。
+- ヒストリア：atlas/historia/<lang>/janggi.json と s/janggi.json（盤図は八角駒 ps:'jg'）。伝来の時期など不確かなことは「はっきりしない」と書く。 2026-11-08 起源・年表を拡充（15世紀の象戯の記録、17世紀 張維『象戯志』、19世紀末 金俊根の風俗画、1956年の棋士団体・翌年の国手戦、楚漢＝項羽と劉邦、楚は草書・漢は楷書）。三国史記の「蓋鹵王が将棋」は囲碁の話なので書かない。

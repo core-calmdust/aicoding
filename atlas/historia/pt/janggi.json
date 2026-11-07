@@ -11,8 +11,9 @@
    "t": "O xiangqi sem rio",
    "say": "O xadrez chinês renasceu na península coreana.",
    "p": [
-    "O xiangqi chinês chegou à península coreana e ganhou regras próprias. Não se sabe quando chegou.",
-    "O rio sumiu, o elefante e o canhão mudaram e as peças ficaram octogonais."
+    "O xiangqi chinês chegou à península coreana e ganhou regras próprias. Não se sabe quando chegou; os registros seguros começam na era Joseon.",
+    "O rio sumiu, o elefante e o canhão mudaram e as peças ficaram octogonais.",
+    "Os nomes Cho e Han lembram Xiang Yu (Chu) e Liu Bang (Han), que disputaram a China após a queda dos Qin. As peças Cho são escritas em cursiva, e as Han em escrita regular."
    ],
    "pins": [
     "China",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Debatido",
+     "Dinastia Song",
      "China",
-     "O xiangqi toma forma"
+     "Toma forma o xiangqi com o canhão"
     ],
     [
-     "Data desconhecida",
+     "Data incerta",
      "Coreia",
-     "Vira o janggi, sem rio"
+     "Chega e perde o rio"
+    ],
+    [
+     "Século XV",
+     "Joseon",
+     "Um ensaio registra partidas no tempo do rei Sejong"
+    ],
+    [
+     "Século XVII",
+     "Joseon",
+     "Jang Yu escreve um tratado sobre como jogar"
+    ],
+    [
+     "Fim do séc. XIX",
+     "Joseon",
+     "Kim Jun-geun pinta uma partida"
     ]
    ]
   },
@@ -41,12 +57,24 @@
      "O xiangqi com canhão ganha a forma moderna na China"
     ],
     [
-     "Data desconhecida",
-     "Chega à península coreana"
+     "Data incerta",
+     "Chega à Coreia; o rio some, o elefante e o canhão mudam"
     ],
     [
-     "Depois",
-     "O rio some; o elefante e o canhão mudam"
+     "Século XV",
+     "Um ensaio registra partidas no tempo do rei Sejong"
+    ],
+    [
+     "Século XVII",
+     "O tratado de Jang Yu discute como jogar"
+    ],
+    [
+     "Fim do séc. XIX",
+     "As pinturas de costumes de Kim Jun-geun mostram uma partida"
+    ],
+    [
+     "1956",
+     "Surge uma associação de jogadores; no ano seguinte, o título Guksu"
     ],
     [
      "Hoje",

@@ -11,8 +11,9 @@
    "t": "El xiangqi sin río",
    "say": "El ajedrez chino renació en la península de Corea.",
    "p": [
-    "El xiangqi chino llegó a la península de Corea y desarrolló reglas propias. No se sabe bien cuándo llegó.",
-    "Desapareció el río, cambiaron el elefante y el cañón, y las piezas se volvieron octogonales."
+    "El xiangqi chino llegó a la península de Corea y desarrolló reglas propias. No se sabe cuándo llegó; los registros firmes empiezan en la era Joseon.",
+    "Desapareció el río, cambiaron el elefante y el cañón, y las piezas se volvieron octogonales.",
+    "Los nombres Cho y Han evocan a Xiang Yu (Chu) y Liu Bang (Han), que lucharon por China tras la caída de los Qin. Las piezas Cho se escriben en cursiva y las Han en escritura regular."
    ],
    "pins": [
     "China",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Debatido",
+     "Dinastía Song",
      "China",
-     "Se forma el xiangqi"
+     "Toma forma el xiangqi con el cañón"
     ],
     [
-     "Fecha desconocida",
+     "Fecha incierta",
      "Corea",
-     "Se convierte en el janggi, sin río"
+     "Llega y pierde el río"
+    ],
+    [
+     "Siglo XV",
+     "Joseon",
+     "Un ensayo registra partidas en tiempos del rey Sejong"
+    ],
+    [
+     "Siglo XVII",
+     "Joseon",
+     "Jang Yu escribe un tratado sobre cómo jugar"
+    ],
+    [
+     "Finales del s. XIX",
+     "Joseon",
+     "Kim Jun-geun pinta una partida"
     ]
    ]
   },
@@ -41,16 +57,28 @@
      "El xiangqi con cañón toma su forma moderna en China"
     ],
     [
-     "Fecha desconocida",
-     "Llega a la península de Corea"
+     "Fecha incierta",
+     "Llega a Corea; desaparece el río y cambian el elefante y el cañón"
     ],
     [
-     "Después",
-     "Desaparece el río; cambian el elefante y el cañón"
+     "Siglo XV",
+     "Un ensayo registra partidas en tiempos del rey Sejong"
+    ],
+    [
+     "Siglo XVII",
+     "El tratado de Jang Yu analiza cómo jugar"
+    ],
+    [
+     "Finales del s. XIX",
+     "Las pinturas costumbristas de Kim Jun-geun muestran una partida"
+    ],
+    [
+     "1956",
+     "Nace una asociación de jugadores; al año siguiente, el título Guksu"
     ],
     [
      "Hoy",
-     "Se juega en parques y casas, y hay torneos"
+     "Se juega en parques y hogares, con torneos"
     ]
    ]
   },

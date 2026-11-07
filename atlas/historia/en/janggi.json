@@ -11,8 +11,9 @@
    "t": "Xiangqi without the river",
    "say": "Chinese chess was reborn on the Korean peninsula.",
    "p": [
-    "Chinese xiangqi reached the Korean peninsula and grew rules of its own. When it arrived is unclear.",
-    "The river went, the elephant and cannon changed, and the pieces became octagons."
+    "Chinese xiangqi reached the Korean peninsula and grew rules of its own. When it arrived is unclear; firm records begin in the Joseon era.",
+    "The river went, the elephant and cannon changed, and the pieces became octagons.",
+    "The names Cho and Han recall Xiang Yu (Chu) and Liu Bang (Han), who fought for China after the fall of the Qin. Cho pieces are written in cursive script, Han pieces in regular script."
    ],
    "pins": [
     "China",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Debated",
+     "Song dynasty",
      "China",
-     "Xiangqi takes shape"
+     "Xiangqi with the cannon takes shape"
     ],
     [
      "Date unknown",
      "Korea",
-     "Grows into janggi, with no river"
+     "Arrives and loses its river"
+    ],
+    [
+     "15th c.",
+     "Joseon",
+     "An essay records xiangqi games in King Sejong's time"
+    ],
+    [
+     "17th c.",
+     "Joseon",
+     "Jang Yu writes a treatise on how to play"
+    ],
+    [
+     "Late 19th c.",
+     "Joseon",
+     "Kim Jun-geun paints players at the board"
     ]
    ]
   },
@@ -42,11 +58,23 @@
     ],
     [
      "Date unknown",
-     "It reaches the Korean peninsula"
+     "It reaches Korea; the river goes, the elephant and cannon change"
     ],
     [
-     "Later",
-     "The river disappears; the elephant and cannon change"
+     "15th c.",
+     "An essay records games in King Sejong's time"
+    ],
+    [
+     "17th c.",
+     "Jang Yu's treatise discusses how to play"
+    ],
+    [
+     "Late 19th c.",
+     "Kim Jun-geun's genre paintings show a game"
+    ],
+    [
+     "1956",
+     "A players' association forms; the Guksu title starts the next year"
     ],
     [
      "Today",

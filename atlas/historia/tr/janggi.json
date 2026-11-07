@@ -11,8 +11,9 @@
    "t": "Nehirsiz xiangqi",
    "say": "Çin satrancı Kore'de yeniden doğdu.",
    "p": [
-    "Çin xiangqi'si Kore yarımadasına ulaştı ve kendi kurallarını edindi. Ne zaman geldiği belirsiz.",
-    "Nehir kalktı, fil ve top değişti, taşlar sekizgen oldu."
+    "Çin satrancı xiangqi Kore Yarımadası'na ulaştı ve kendine özgü kurallar kazandı. Ne zaman geldiği belirsiz; sağlam kayıtlar Joseon döneminde başlar.",
+    "Nehir kalktı, fil ve top değişti, taşlar sekizgen oldu.",
+    "Cho ve Han adları, Qin'in yıkılışından sonra Çin için savaşan Xiang Yu'yu (Chu) ve Liu Bang'ı (Han) anar. Cho taşları el yazısı, Han taşları düzgün yazıyla yazılır."
    ],
    "pins": [
     "Çin",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Tartışmalı",
+     "Song hanedanı",
      "Çin",
-     "Xiangqi şekillenir"
+     "Toplu xiangqi biçimlenir"
     ],
     [
-     "Tarih bilinmiyor",
+     "Tarih belirsiz",
      "Kore",
-     "Nehirsiz janggi'ye dönüşür"
+     "Gelir ve nehrini kaybeder"
+    ],
+    [
+     "15. yy",
+     "Joseon",
+     "Bir deneme Kral Sejong dönemindeki oyunları kaydeder"
+    ],
+    [
+     "17. yy",
+     "Joseon",
+     "Jang Yu oyunu anlatan bir inceleme yazar"
+    ],
+    [
+     "19. yy sonu",
+     "Joseon",
+     "Kim Jun-geun bir oyunu resmeder"
     ]
    ]
   },
@@ -41,16 +57,28 @@
      "Toplu xiangqi Çin'de bugünkü biçimini alır"
     ],
     [
-     "Tarih bilinmiyor",
-     "Kore yarımadasına ulaşır"
+     "Tarih belirsiz",
+     "Kore'ye ulaşır; nehir kalkar, fil ve top değişir"
     ],
     [
-     "Sonra",
-     "Nehir kalkar; fil ve top değişir"
+     "15. yy",
+     "Bir deneme Kral Sejong dönemindeki oyunları kaydeder"
+    ],
+    [
+     "17. yy",
+     "Jang Yu'nun incelemesi oyunu tartışır"
+    ],
+    [
+     "19. yy sonu",
+     "Kim Jun-geun'ün tablolarında bir oyun"
+    ],
+    [
+     "1956",
+     "Bir oyuncu derneği kurulur; ertesi yıl Guksu unvanı başlar"
     ],
     [
      "Bugün",
-     "Parklarda ve evlerde oynanır, turnuvalar yapılır"
+     "Parklarda ve evlerde oynanır, turnuvalar düzenlenir"
     ]
    ]
   },
