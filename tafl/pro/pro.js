@@ -109,7 +109,7 @@
   const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
   let FB = null;
   function goFB() {
-    if (!FB) FB = new Worker('../engine.js?v=nn2sr-lv2');
+    if (!FB) FB = new Worker('../engine.js?v=nn2sr-lv2mt');
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, start, moves: line.slice(), level: 20, v: V }); });
   }
 

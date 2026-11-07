@@ -382,8 +382,23 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=20261108lv2';   // engine.wasm + nnue-copenhagen.bin.gz
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory, sent
+  // with the first message ('mtinit'); the helpers (mt-helper.js) search the same root position meanwhile (Lazy SMP).
+  // The net goes into the shared memory once (here); the helpers use it from there.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
   let readyP = null;
-  if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
+  if (MTL) {
+    readyP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(async m => {
+        try {
+          const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
+          x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+          WX = Object.assign({}, x, { memory: m.mem });   // (the shared memory is imported, not exported)
+          await loadNet(); WX.new_game();
+          self.postMessage({ type: 'mtready' });
+        } catch (err) { WX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); }
+      });
+  } else if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const url = new URL('engine.wasm?' + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
@@ -406,6 +421,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, m.v, m.seed) });

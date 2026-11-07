@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2sr-lv2';
+const ENGINE_URL = 'engine.js?v=nn2sr-lv2mt';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -132,11 +132,30 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, the coach, the review box and the
+// timed top levels (Lv.19・20) outside rated games go to the pool of threads when it is free; rated games and the
+// node-limited levels (Lv.1–18) stay on the one-thread workers (the same moves on every device)
+const mtSetup = (start, mv, v) => { const p = E.Pos.from(start, v), a = [E.VID[p.v], p.turn === P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]); a.push(mv.length); for (const m of mv) a.push(mFrom(m) | (mTo(m) << 8)); return a; };
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=20261108lv2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
+  help: m => ({ setup: mtSetup(m.start, m.moves || [], m.v) }),
+}) : null;
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  return msg.type === 'think' && msg.level >= 19 && !(which === 'ai' && rgame);
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool();
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, v: gv, ...msg }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ start: startSpec, v: gv, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -2112,7 +2131,7 @@ function rvbUpdate() {
   });
 }
 if (window.RvBox) BOX = RvBox.create({
-  app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL, pool: () => MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
