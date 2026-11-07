@@ -102,10 +102,10 @@ let LANG = detectLang();
     de: { btn: 'Remis anbieten', agree: 'Remis durch Einigung', wait: 'Spiele erst noch ein paar Züge, bevor du erneut anbietest', accepted: 'Die KI hat das Remis angenommen', declined: 'Die KI hat das Remis abgelehnt (sie will weiterspielen)' },
     hi: { btn: 'ड्रॉ प्रस्ताव', agree: 'सहमति से ड्रॉ', wait: 'दोबारा प्रस्ताव से पहले कुछ और चालें चलें', accepted: 'AI ड्रॉ के लिए राज़ी हो गया', declined: 'AI ने ड्रॉ ठुकरा दिया (वह खेलना जारी रखना चाहता है)' },
     ar: { btn: 'عرض تعادل', agree: 'تعادل بالاتفاق', wait: 'العب بضع نقلات أخرى قبل عرض التعادل مجددًا', accepted: 'وافق الذكاء الاصطناعي على التعادل', declined: 'رفض الذكاء الاصطناعي التعادل (يريد المتابعة)' },
-    ru: { btn: 'Предложить ничью', agree: 'Ничья по соглашению', wait: 'Сделайте ещё несколько ходов, прежде чем предлагать снова', accepted: 'ИИ согласился на ничью', declined: 'ИИ отклонил ничью (хочет играть дальше)' },
+    ru: { btn: 'Ничья?', agree: 'Ничья по соглашению', wait: 'Сделайте ещё несколько ходов, прежде чем предлагать снова', accepted: 'ИИ согласился на ничью', declined: 'ИИ отклонил ничью (хочет играть дальше)' },
     'zh-TW': { btn: '提和', agree: '協議和棋', wait: '請再下幾步棋後再提和', accepted: 'AI 同意和棋', declined: 'AI 拒絕和棋（似乎還想繼續下）' },
     id: { btn: 'Tawarkan remis', agree: 'Remis atas kesepakatan', wait: 'Mainkan beberapa langkah lagi sebelum menawarkan lagi', accepted: 'AI menerima remis', declined: 'AI menolak remis (ingin terus bermain)' },
-    tr: { btn: 'Beraberlik teklif et', agree: 'Anlaşmayla beraberlik', wait: 'Tekrar teklif etmeden önce birkaç hamle daha yapın', accepted: 'Yapay zekâ beraberliği kabul etti', declined: 'Yapay zekâ beraberliği reddetti (oynamaya devam etmek istiyor)' } };
+    tr: { btn: 'Berabere?', agree: 'Anlaşmayla beraberlik', wait: 'Tekrar teklif etmeden önce birkaç hamle daha yapın', accepted: 'Yapay zekâ beraberliği kabul etti', declined: 'Yapay zekâ beraberliği reddetti (oynamaya devam etmek istiyor)' } };
   for (const l in DR) if (I18N[l]) { const d = DR[l], L = I18N[l]; if (L['dr.btn'] === undefined) L['dr.btn'] = d.btn; if (L['res.why.agree'] === undefined) L['res.why.agree'] = d.agree; for (const k of ['wait', 'accepted', 'declined']) if (L['dr.' + k] === undefined) L['dr.' + k] = d[k]; } }
 // 引分提案 in online games: confirmation, the opponent's dialog, answers
 { const OD = {

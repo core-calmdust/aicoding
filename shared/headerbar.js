@@ -235,6 +235,8 @@ function fitLabels(controls, isOn) {
   mo.observe(controls, { childList: true, subtree: true, characterData: true });
   mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   setTimeout(later, 600); setTimeout(later, 2000);   // (the bottom tabs are made a little later)
+  // a button that appears or changes size without a change inside the menu (the draw offer, shown by a class on body)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(later), all = () => { ro.disconnect(); for (const b of controls.children) ro.observe(b); }; all(); new MutationObserver(all).observe(controls, { childList: true }); }
   window.addEventListener('resize', later);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
   window.addEventListener('load', later);

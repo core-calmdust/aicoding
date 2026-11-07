@@ -838,7 +838,7 @@ const M = {
 "ol.resW": "G",
 "ol.resL": "M",
 "ol.resD": "B",
-"ol.draw": "Beraberlik teklif et",
+"ol.draw": "Berabere?",
 "ol.drawQ": "Rakibinize beraberlik teklif edilsin mi? (Rakip bir sonraki hamlesini yapınca geçersiz olur.)",
 "ol.drawSent": "Beraberlik teklif edildi…",
 "ol.drawGot": "Rakibiniz beraberlik teklif ediyor",
