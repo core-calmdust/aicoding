@@ -1884,7 +1884,65 @@
       quietKey = kq; dirty = false;
     } else if (!moving && !dirty && now > kickUntil) return more();   // nothing changed: no frame (the showcase's turntable counts as moving)
     R.render(scene, cam); lastDraw = now; if (now > kickUntil) dirty = false;
+    if (DOF_OK && mode === 'view' && !museumOn && !quietOn) dof();
     return more();
+  }
+  /* ---------- a light depth of field (PC, the portal's room): what lies beyond the board goes softly out of focus ----------
+     No second scene render: the finished frame is copied (copyFramebufferToTexture), blurred at half size in two passes
+     (9 taps each) and laid back over the frame with a mask — clear on the board and in front of it, blurring in above the
+     board's far edge (farther away in this slanted view) and a little toward the sides. Costs a copy and three cheap
+     full-screen passes on the frames that are drawn anyway (the renderer stays on demand). Off on touch / lite devices. */
+  const DOF_OK = !COARSE && !LITE && !/[?&]nodof\b/.test(location.search);
+  let dofS = null;
+  function dofInit(w, h) {
+    const TT = T();
+    if (dofS && dofS.w === w && dofS.h === h) return dofS;
+    if (dofS) { dofS.tex.dispose(); dofS.a.dispose(); dofS.b.dispose(); }
+    const tex = new TT.DataTexture(null, w, h, TT.RGBAFormat); tex.minFilter = tex.magFilter = TT.LinearFilter; tex.generateMipmaps = false;
+    const o = { minFilter: TT.LinearFilter, magFilter: TT.LinearFilter, depthBuffer: false, stencilBuffer: false };
+    const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1), a = new TT.WebGLRenderTarget(hw, hh, o), b = new TT.WebGLRenderTarget(hw, hh, o);
+    if (!dofS) {
+      const vs = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }';
+      const blur = new TT.ShaderMaterial({ uniforms: { t: { value: null }, d: { value: new TT.Vector2() } }, vertexShader: vs, depthTest: false, depthWrite: false,
+        fragmentShader: 'uniform sampler2D t; uniform vec2 d; varying vec2 vUv; void main(){ vec4 c = texture2D(t, vUv) * .2270; '
+          + 'c += (texture2D(t, vUv + d * 1.3846) + texture2D(t, vUv - d * 1.3846)) * .3162; c += (texture2D(t, vUv + d * 3.2308) + texture2D(t, vUv - d * 3.2308)) * .0703; gl_FragColor = c; }' });
+      const mix = new TT.ShaderMaterial({ uniforms: { t: { value: null }, top: { value: .6 }, cx: { value: 0 }, amt: { value: .85 } }, vertexShader: vs, depthTest: false, depthWrite: false, transparent: true,
+        fragmentShader: 'uniform sampler2D t; uniform float top, cx, amt; varying vec2 vUv; void main(){ vec2 p = vUv * 2. - 1.; '
+          + 'float m = smoothstep(top - .06, top + .34, p.y);'                       // above the board's far edge
+          + 'm = max(m, smoothstep(.62, 1.05, abs(p.x - cx)) * .55 * smoothstep(top - .9, top, p.y));'   // a little toward the far sides
+          + 'gl_FragColor = vec4(texture2D(t, vUv).rgb, m * amt); }' });
+      blur.toneMapped = mix.toneMapped = false;
+      const quad = new TT.Mesh(new TT.PlaneGeometry(2, 2), blur); quad.frustumCulled = false;
+      const qs = new TT.Scene(); qs.add(quad);
+      dofS = { blur, mix, quad, qs, qc: new TT.OrthographicCamera(-1, 1, 1, -1, 0, 1), box: new TT.Box3(), v: new TT.Vector3() };
+    }
+    Object.assign(dofS, { w, h, tex, a, b });
+    return dofS;
+  }
+  const _dsz = { x: 0, y: 0 };
+  function dof() {
+    try {
+      const TT = T(), sz = R.getDrawingBufferSize(new TT.Vector2()), w = sz.x, h = sz.y; if (w < 8 || h < 8) return;
+      const D = dofInit(w, h);
+      // the board's far edge on screen (NDC y): the focus ends there
+      let top = .55, cx = 0;
+      if (cur) {
+        D.box.setFromObject(cur); if (!D.box.isEmpty()) {
+          let y1 = -2, x0 = 2, x1 = -2;
+          for (let i = 0; i < 8; i++) { D.v.set(i & 1 ? D.box.max.x : D.box.min.x, i & 2 ? D.box.max.y : D.box.min.y, i & 4 ? D.box.max.z : D.box.min.z).project(cam); y1 = Math.max(y1, D.v.y); x0 = Math.min(x0, D.v.x); x1 = Math.max(x1, D.v.x); }
+          top = Math.min(.95, Math.max(-.6, y1)); cx = (x0 + x1) / 2;
+        }
+      }
+      R.copyFramebufferToTexture(new TT.Vector2(0, 0), D.tex);
+      const at = R.autoClear, rt = R.getRenderTarget(); R.autoClear = false;
+      D.quad.material = D.blur;
+      D.blur.uniforms.t.value = D.tex; D.blur.uniforms.d.value.set(1.6 / w, 0); R.setRenderTarget(D.a); R.render(D.qs, D.qc);
+      D.blur.uniforms.t.value = D.a.texture; D.blur.uniforms.d.value.set(0, 1.6 / D.a.height); R.setRenderTarget(D.b); R.render(D.qs, D.qc);
+      D.blur.uniforms.t.value = D.b.texture; D.blur.uniforms.d.value.set(1.6 / D.a.width, 0); R.setRenderTarget(D.a); R.render(D.qs, D.qc);   // (a second round: softer, still light)
+      D.blur.uniforms.t.value = D.a.texture; D.blur.uniforms.d.value.set(0, 1.6 / D.a.height); R.setRenderTarget(D.b); R.render(D.qs, D.qc);
+      D.quad.material = D.mix; D.mix.uniforms.t.value = D.b.texture; D.mix.uniforms.top.value = top; D.mix.uniforms.cx.value = cx;
+      R.setRenderTarget(rt); R.render(D.qs, D.qc); R.autoClear = at;
+    } catch (e) { console.warn('[table3d] dof', e); }
   }
   const _fr = { f: null, m: null };
   function tickSeen() {
