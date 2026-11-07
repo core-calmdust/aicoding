@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.TaflEngine;
-  const VER = '?v=1', NETV = '?v=20261106tw1';
+  const VER = '?v=2', NETV = '?v=20261106tw1';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const VNAME = { ja: { copenhagen: 'コペンハーゲン・ヘネフタフル', brandubh: 'ブランダブ', tablut: 'タブル', tawlbwrdd: 'タウルブルズ', fetlar: 'フェトラー', ardri: 'アルド・リー' },
     en: { copenhagen: 'Copenhagen Hnefatafl', brandubh: 'Brandubh', tablut: 'Tablut', tawlbwrdd: 'Tawlbwrdd', fetlar: 'Fetlar', ardri: 'Ard Rí' } }[LANG];
@@ -109,7 +109,7 @@
   const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
   let FB = null;
   function goFB() {
-    if (!FB) FB = new Worker('../engine.js?v=nn2tw');
+    if (!FB) FB = new Worker('../engine.js?v=nn2sr');
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, start, moves: line.slice(), level: 20, v: V }); });
   }
 
