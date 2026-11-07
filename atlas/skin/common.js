@@ -345,6 +345,23 @@
     };
     let rbEl = null;
     const unplace = () => { if (rbEl) { ['position', 'margin', 'margin-left', 'left', 'top', 'width', 'max-width', 'min-width', 'height', 'box-sizing'].forEach(k => rbEl.style.removeProperty(k)); rbEl = null; } const g = grp(); if (g) { g.style.left = ''; g.style.top = ''; } side.style.left = ''; side.style.top = ''; side.style.removeProperty('height'); side.style.removeProperty('max-height'); side.style.removeProperty('min-height'); { const si = side.querySelector(':scope > .side-in'); if (si) { si.style.removeProperty('height'); si.style.removeProperty('max-height'); } } if (P.unplace) P.unplace(); };
+    // the game's own 2D board (html.atlas-2d, PC): the page lays the board and the column out itself, sized for the 2D board — no
+    // place left over from the 3D layout (the 3D frame is wider than the flat board: the group stayed where the 3D board had put it,
+    // off to one side), and the board + column centred in the window (2026-11-07: tafl and the other games with a 2D / 3D switch)
+    let c2T = 0;
+    function center2d() {
+      const g = grp(); if (!g || !MQ.matches) return;
+      g.style.left = ''; g.style.top = ''; side.style.left = '';
+      clearTimeout(c2T); c2T = setTimeout(() => {
+        if (!de.classList.contains('atlas-2d') || on || rvOn || de.classList.contains('dock-anim')) return;
+        if (getComputedStyle(side).display === 'none' || getComputedStyle(side).position === 'fixed') return;
+        const a = g.getBoundingClientRect(), s = side.getBoundingClientRect(); if (a.width < 40 || s.width < 40) return;
+        if (s.left < a.right - 4 && a.left < s.right - 4) return;   // (stacked, not side by side: the page's own phone-like layout)
+        const L = Math.min(a.left, s.left), R = innerWidth - Math.max(a.right, s.right), dx = (R - L) / 2;
+        if (Math.abs(dx) <= 2 || L + dx < 0) return;
+        [g, side].forEach(e => { if (getComputedStyle(e).position === 'static') e.style.position = 'relative'; e.style.left = ((parseFloat(e.style.left) || 0) + dx) + 'px'; });
+      }, 60);
+    }
     let fitKey = '';
     function fit() {
       if (busy) return;
@@ -352,7 +369,7 @@
       const key = innerWidth + 'x' + innerHeight; if (key !== fitKey) { fitKey = key; setTimeout(later, 350); setTimeout(later, 1200); }   // a new window size: once more when everything has settled
       if (wantRv()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); } fitReview(); return; }
       if (rvOn) { rvOn = false; pcReview = false; setVar(null); unplace(); }
-      if (!want()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); if (sideFitFn) sideFitFn(); } return; }
+      if (!want()) { if (on) { on = false; pcActive = false; setVar(null); unplace(); if (sideFitFn) sideFitFn(); } if (de.classList.contains('atlas-2d')) center2d(); return; }
       const g = grp(); if (!g) return;
       busy = true;
       try {
