@@ -790,7 +790,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       if (Math.abs(top) > MATET && MATE - Math.abs(top) < d) break;
       if (performance.now() - t0 > ms * 0.5) break;
     }
-    return { list: (last || []).map(e => ({ m: pos.fromUci(wUci(e.cm)), v: e.v, kind: e.kind })), depth };
+    return { list: (last || []).map(e => ({ m: pos.fromUci(wUci(e.cm)), v: e.v, kind: e.kind })), depth, nodes: X.res_nodes() };
   }
   function wThink(fen, moves, level, rand) {
     rand = rand || Math.random;
@@ -812,7 +812,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     }
     const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : X.think(L.ms * 0.55, L.ms, 64, 0);
     const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8);
-    return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], wasm: true };
+    return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], nodes: X.res_nodes(), wasm: true };
   }
   // review box: the best few moves with their lines (each search excludes the moves already found), best first
   function multiPV(m) {

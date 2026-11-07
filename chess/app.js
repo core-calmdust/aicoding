@@ -184,16 +184,24 @@ function save() {
 }
 
 // ====================================================================== workers
+// search speed of the last engine search (nodes per second), shown quietly at the end of the info line under the moves
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261105sd'); w.jobs = new Map();
-  w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
+  const w = new Worker('engine.js?v=20261107nps'); w.jobs = new Map();
+  w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();
 function request(which, msg, onProgress) {
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ fen: startFen, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ fen: startFen, ...msg, id }); });
 }
 function cancelWorker(which) {
   const w = which === 'ai' ? aiW : anaW;
@@ -444,7 +452,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); rvbRender();
   if (window.ChessCoach) ChessCoach.render();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
 let HB = null;   // set at boot (shared/headerbar.js)
