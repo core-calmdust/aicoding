@@ -310,7 +310,7 @@ window.SAME_I18N.de = {
 'gi.rule': 'Regeln', 'gi.blocks': 'Spezialblöcke',
 'st.demo': 'So funktioniert es',
 'set.skin': 'Farbschema', 'skin.pop': 'Klassik-POP', 'skin.vintage': 'Vintage', 'skin.riso': 'Risografie', 'skin.night': 'Nacht-POP',
-  'title.doc': "SameGame POP! — Blöcke abräumen im Pop-Art-Stil", series: "Weltatlas der Brettspiele", title: "SameGame", home: "Start", help: "Anleitung",
+  'title.doc': "SameGame POP! — Blöcke abräumen im Pop-Art-Stil", series: "Welt-Brettspielatlas", title: "SameGame", home: "Start", help: "Anleitung",
   'ht.daily': "Täglich", 'ht.stage': "Level", 'ht.action': "Action", 'ht.me': "Profil", 'set.lang': "Sprache",
   'pf.edit': "Profil", 'pf.guest': "Gast", 'pf.streak': "Tage in Folge", 'pf.name': "Spitzname (in der Rangliste sichtbar)", 'pf.ph': "Bis zu 12 Zeichen", 'pf.note': "Wähle einen Spitznamen, um an der Rangliste teilzunehmen.", 'pf.icon': "Symbol (mehr per Gacha)",
   'd.puzzle': "Tagesrätsel", 'd.puzzle.h': "Highscore auf dem heutigen Brett", 'd.puzzle.d': "Alle spielen dasselbe Brett. Spiel so oft du willst – dein bester Score kommt in die Rangliste.",

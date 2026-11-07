@@ -1380,7 +1380,7 @@ I18N.pt = {
 };
 
 I18N.de = {
-  series: 'Weltatlas der Brettspiele', 'meta.title': 'Baccara | Weltatlas der Brettspiele', title: 'Baccara', back: 'Start',
+  series: 'Welt-Brettspielatlas', 'meta.title': 'Baccara | Welt-Brettspielatlas', title: 'Baccara', back: 'Start',
   'btn.sound': 'Ton', 'btn.settings': 'Einstellungen', 'btn.new': 'Neues Spiel', 'btn.new.s': 'Neu', 'btn.new.t': 'Regeln, Decks, Guthaben und Design wählen',
   'btn.resign': 'Auscashen', 'btn.resign.t': 'Von diesem Tisch auscashen und mit einem neuen Schlitten beginnen',
   'btn.hint': 'Tipp', 'btn.hint.t': 'Die Wette, die gerade am wenigsten kostet (H)', 'btn.rules': 'Regeln', 'btn.rules.t': 'Regeln (Tutorial)',
