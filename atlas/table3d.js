@@ -878,6 +878,19 @@
     x.font = "700 24px Fredoka,'Zen Maru Gothic',sans-serif"; x.fillStyle = '#d9b46a'; x.fillText(o.sub || 'WORLD BOARD GAME ATLAS', W / 2, 152, W - 80);
     placard.needsUpdate = true;
   }
+  const MUSEUM_EXP = .92;
+  let roomEnv = null, musEnv = null;
+  function museumEnv() {   // warm gallery reflections: a dark room, a bright spot from above, soft wall washes (built once)
+    if (musEnv) return musEnv;
+    try {
+      const TT = T(), env = new TT.Scene();
+      env.add(new TT.Mesh(new TT.SphereGeometry(30, 24, 12), new TT.MeshBasicMaterial({ color: new TT.Color('#2a1c12').convertSRGBToLinear().multiplyScalar(.6), side: TT.BackSide })));
+      [[0, 22, 6, 10, 10, 2.2, '#ffe2b8'], [-16, 9, 0, 8, 10, .45, '#ffd6a0'], [16, 9, 0, 8, 10, .45, '#ffd6a0'], [0, 8, -18, 18, 8, .35, '#ffe6c4'], [0, -6, 14, 22, 5, .12, '#8a6a48']].forEach(([x, y, z, w, h, k, hx]) => {
+        const c = new TT.Color(hx).convertSRGBToLinear().multiplyScalar(k), p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: c, side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
+      const pm = new TT.PMREMGenerator(R); musEnv = pm.fromScene(env, .03).texture; pm.dispose();
+    } catch (e) { musEnv = null; }
+    return musEnv;
+  }
   function museum(on, o = {}) {
     if (!R || !scene || mountOpts.plain) return false;
     on = !!on; if (on === museumOn) { if (on) drawPlacard(o); return true; }
@@ -886,8 +899,10 @@
     roomObjs.forEach(x => { x.visible = !on; });
     (museumObjs || []).forEach(x => { x.visible = on; });
     if (on) setTimeout(() => { if (museumOn) warmMuseum(); }, 1200);
-    if (on) { drawPlacard(o); R.toneMappingExposure = expo(.92); scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); }
-    else { R.toneMappingExposure = expo(baseExp); scene.background = roomBg; }
+    // the gallery has its own fixed light: its exposure (not the brightness option) and its own reflections — not the chosen
+    // place's (a chabudai, a terrace…), which stayed in scene.environment and tinted the plinth and the board
+    if (on) { drawPlacard(o); R.toneMappingExposure = MUSEUM_EXP; scene.background = new (T().Color)('#1d130d').convertSRGBToLinear(); roomEnv = scene.environment; scene.environment = museumEnv() || roomEnv; }
+    else { R.toneMappingExposure = expo(baseExp); scene.background = roomBg; if (roomEnv) scene.environment = roomEnv; roomEnv = null; }
     paintCss(on ? '' : roomCss);
     if (lampShade && on) lampShade.visible = false;
     zoomTo = on ? 1.32 : 1;   // the gallery: step back a little so the plinth and the room show
@@ -930,7 +945,7 @@
   function setBright(b) {
     bright = Math.max(0, Math.min(2, b | 0));
     try { localStorage.setItem('atlas-bright', String(bright)); } catch (e) {}
-    if (R) { if (!museumOn) R.toneMappingExposure = expo(baseExp); else { glareW = -1; R.toneMappingExposure = expo(.92); }
+    if (R) { if (!museumOn) R.toneMappingExposure = expo(baseExp); else { glareW = -1; R.toneMappingExposure = MUSEUM_EXP; }
       if (boardLamp) boardLamp.intensity = boardLampI + BOARD_ADD[bright]; if (ambLift) ambLift.intensity = AMB_ADD[bright]; dirty = true; kick(300); }
     say();
   }
@@ -1970,7 +1985,7 @@
   function glare(w) {
     if (!museumSpot || Math.abs(w - glareW) < .002) return; glareW = w;
     museumSpot.position.set(-9 * w, 24 - 5 * w, 9 + 8 * w); museumSpot.intensity = 2.1 * (1 - .3 * w);
-    R.toneMappingExposure = expo(.92 * (1 - .14 * w)); shadowDirty = true;
+    R.toneMappingExposure = MUSEUM_EXP * (1 - .14 * w); shadowDirty = true;
   }
   // skin mode: fn() → {x,y,w,h} screen rect of the playing field; size/top = field width and height in world units
   function align(fn, size, top) { alignFn = fn; alignSize = size; alignTop = top; mode = 'play'; spin = false; yaw = 0; root.rotation.y = 0; fitShadow(); dirty = shadowDirty = true; kick(300); }
