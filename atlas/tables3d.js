@@ -279,8 +279,17 @@
   /* ---------- the props (tableware, food, books ...) ---------- */
   const glassM = () => M({ color: 0xffffff, roughness: .04, clearcoat: 1, clearcoatRoughness: .05, transparent: true, opacity: .26, depthWrite: false });
   function cupSaucer(o, G0, x, z, ry, china, drink = 0x3b1e0e) {
-    const TT = o.TT, s = SEG(o, 30), G = grp(TT, G0, x, 0, z, ry);
+    const TT = o.TT, s = SEG(o, 30), G = grp(TT, G0, x, 0, z, ry), cap = drink === 'cap';
     at(G, lathe(TT, [[0, 0], [1.05, 0], [1.5, .12], [1.62, .24], [1.52, .26], [.9, .14], [0, .14]], s, china), 0, 0, 0);
+    if (cap) {   // a wide cappuccino cup, the foam domed over the rim
+      at(G, lathe(TT, [[0, .14], [.45, .14], [.52, .2], [.95, .5], [1.2, 1.1], [1.26, 1.52], [1.2, 1.53], [1.14, 1.1], [.9, .52], [0, .4]], s, china), 0, 0, 0);
+      const fg = new TT.SphereGeometry(1.2, s, 6, 0, Math.PI * 2, 0, Math.PI / 2), P = fg.attributes.position, U = fg.attributes.uv;
+      for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / 2.4 + .5, .5 - P.getZ(i) / 2.4);   // seen from above: the picture laid flat
+      const fm = new TT.Mesh(fg, M({ map: capFoam(), roughness: .85, bump: false })); fm.scale.set(1, .1, 1); at(G, fm, 0, 1.44, 0, 0, false);
+      const h = new TT.Mesh(new TT.TorusGeometry(.36, .09, 6, 12, Math.PI * 1.25), china); h.rotation.z = -Math.PI * .625; at(G, h, 1.36, .9, 0);
+      const sp = new TT.Mesh(RB(.14, .05, 2.2, .02, 1), M({ color: 0xd8d8d8, metalness: 1, roughness: .25 })); sp.rotation.y = .5; at(G, sp, -1.1, .3, .6);
+      return G;
+    }
     at(G, lathe(TT, [[0, .14], [.5, .14], [.56, .2], [.82, .5], [.95, 1.15], [.98, 1.42], [.92, 1.43], [.87, 1.15], [.75, .52], [0, .4]], s, china), 0, 0, 0);
     const lq = new TT.Mesh(new TT.CircleGeometry(.88, s), M({ color: drink, roughness: .12, clearcoat: .6 })); lq.rotation.x = -Math.PI / 2; at(G, lq, 0, 1.24, 0, 0, false);
     const h = new TT.Mesh(new TT.TorusGeometry(.33, .085, 6, 12, Math.PI * 1.25), china); h.rotation.z = -Math.PI * .625; at(G, h, 1.1, .85, 0);
@@ -323,7 +332,56 @@
   function tumbler(o, G0, x, z, fill, h = 2.6, r = .85) {
     const TT = o.TT, s = SEG(o, 24), G = grp(TT, G0, x, 0, z);
     at(G, lathe(TT, [[0, 0], [r * .92, 0], [r, .1], [r * 1.05, h], [r * .99, h], [r * .94, .32], [0, .3]], s, glassM()), 0, 0, 0, 0, false);
-    if (fill) at(G, new TT.Mesh(new TT.CylinderGeometry(r * .97, r * .92, h * fill[1], s), M({ color: fill[0], roughness: .05, clearcoat: 1, transparent: true, opacity: .78 })), 0, .31 + h * fill[1] / 2, 0, 0, false);
+    if (fill) at(G, new TT.Mesh(new TT.CylinderGeometry(r * .97, r * .92, h * fill[1], s), M({ color: fill[0], roughness: .05, clearcoat: 1, transparent: true, opacity: fill[2] || .78, depthWrite: !fill[2] })), 0, .31 + h * fill[1] / 2, 0, 0, false);   // fill[2]: a see-through spirit (whisky, brandy)
+    return G;
+  }
+  // a brandy snifter: a short stem, a wide bowl narrowing to the rim; a finger of see-through amber in the bottom
+  function snifter(o, G0, x, z, col = 0xa8561a, lvl = 1) {
+    const TT = o.TT, s = SEG(o, 28), G = grp(TT, G0, x, 0, z);
+    at(G, lathe(TT, [[0, 0], [1.05, 0], [1.08, .06], [.14, .16], [.1, .3], [.1, .9], [.4, 1.04], [1.05, 1.5], [1.42, 2.3], [1.38, 3.1], [1.06, 3.8], [.98, 4.05], [.95, 4.05], [1.02, 3.8], [1.33, 3.1], [1.37, 2.3], [1, 1.54], [.38, 1.12], [0, 1.08]], s, glassM()), 0, 0, 0, 0, false);
+    const top = 1.6 + .55 * lvl, rAt = y => y < 1.54 ? .38 + (y - 1.12) / .42 * .62 : 1 + (Math.min(y, 2.3) - 1.54) / .76 * .36;
+    const liq = M({ color: col, roughness: .04, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false });
+    at(G, lathe(TT, [[0, 1.12], [.36, 1.13], [.95, 1.55], [rAt(top) - .05, top], [0, top]], s, liq), 0, 0, 0, 0, false);
+    return G;
+  }
+  // a stem between two points (flowers in a vase: every stem starts inside the neck)
+  function rod(TT, mat, a, b, r) { const v = new TT.Vector3().subVectors(b, a), L = v.length(), m = new TT.Mesh(new TT.CylinderGeometry(r, r * 1.25, L, 5), mat); m.position.copy(a).addScaledVector(v, .5); m.quaternion.setFromUnitVectors(new TT.Vector3(0, 1, 0), v.normalize()); return m; }
+  // flowers in a vase standing at (x, 0, z) in G: stems rise from inside the neck (ny: the rim's height, nr: its inner radius) and fan out;
+  // head(Gh, i) draws one bloom at the top of a stem, turned along it
+  function bouquet(o, G0, x, z, ny, nr, n, len, fan, stemCol, head, seed = 3) {
+    const TT = o.TT, G = grp(TT, G0, x, 0, z), st = M({ color: stemCol, roughness: .7 }), R = rng(seed), up = new TT.Vector3(0, 1, 0);
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.4 + R() * .6, k = n > 1 ? .45 + .55 * (i % 3) / 2 : 0;
+      const b = new TT.Vector3(Math.cos(a) * nr * .45, ny - 1.2, Math.sin(a) * nr * .45), t = new TT.Vector3(Math.cos(a) * fan * k, ny + len * (.78 + R() * .3) - k * .6, Math.sin(a) * fan * k);
+      G.add(rod(TT, st, b, t, .045));
+      const Gh = new TT.Group(); Gh.position.copy(t); Gh.quaternion.setFromUnitVectors(up, t.clone().sub(b).normalize()); G.add(Gh); head(Gh, i);
+    }
+    return G;
+  }
+  // a cup of cappuccino: the milk foam (a heart poured into a ring of crema) domed just over the rim
+  const capFoam = () => canvasTex('cappuccino-foam', 128, 128, (c, W) => {
+    c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, '#f4eadb'], [.55, '#efe0c8'], [.8, '#b98656'], [1, '#8a5428']]); c.fillRect(0, 0, W, W);
+    c.fillStyle = '#9a6234'; c.beginPath(); c.arc(W / 2, W / 2, W * .36, 0, 7); c.fill();
+    c.fillStyle = '#fbf4e8'; c.beginPath(); c.moveTo(W / 2, W * .78); c.bezierCurveTo(W * .12, W * .5, W * .26, W * .2, W / 2, W * .4); c.bezierCurveTo(W * .74, W * .2, W * .88, W * .5, W / 2, W * .78); c.fill();
+    c.strokeStyle = 'rgba(251,244,232,.8)'; c.lineWidth = 2; c.beginPath(); c.moveTo(W / 2, W * .3); c.lineTo(W / 2, W * .74); c.stroke();
+    for (let i = 0; i < 90; i++) { c.fillStyle = `rgba(110,60,25,${.15 + Math.random() * .25})`; const a = Math.random() * 6.3, r = Math.random() * W * .47; c.fillRect(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r, 1.5, 1.5); }   // a dusting of cocoa
+  });
+  // an antipasto board: prosciutto, salami, two cheeses, olives, grapes, grissini — on an olive-wood board (ry: its turn)
+  function antipasti(o, G0, x, z, ry, sc = 1) {
+    const TT = o.TT, G = grp(TT, G0, x, 0, z, ry); G.scale.setScalar(sc);
+    at(G, new TT.Mesh(RB(6.6, .4, 4.2, .2, 2), M({ map: wood('antipasti-board', '#c9a26e', '#8a6438', 256, 256, .9), roughness: .5, clearcoat: .25 })), 0, .2, 0);
+    const salT = canvasTex('salami', 64, 64, (c, W) => { c.fillStyle = '#9a2a2e'; c.fillRect(0, 0, W, W); for (let i = 0; i < 40; i++) { c.fillStyle = Math.random() > .3 ? 'rgba(250,230,220,.9)' : 'rgba(60,10,12,.6)'; c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 1 + Math.random() * 2.4, 0, 7); c.fill(); } c.strokeStyle = '#5a1416'; c.lineWidth = 4; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 2, 0, 7); c.stroke(); });
+    const salM = M({ map: salT, roughness: .45, clearcoat: .3, bump: false }), salE = M({ color: 0x6a1a1c, roughness: .6 }), sg = new TT.CylinderGeometry(.62, .62, .1, SEG(o, 18));
+    for (let i = 0; i < 6; i++) { const m = new TT.Mesh(sg, [salE, salM, salM]); m.rotation.set(.12, 0, -.32); at(G, m, -2.4 + i * .42, .52 + i * .07, -1.1 + i * .05); }
+    const pro = M({ color: 0xd8726a, roughness: .45, clearcoat: .35 }), fat = M({ color: 0xf6e2d8, roughness: .5 });
+    for (let i = 0; i < 4; i++) { const t = new TT.Mesh(new TT.TorusGeometry(.42, .2, 6, 14, Math.PI * 1.4), pro); t.scale.set(1, 1, .45); t.rotation.set(Math.PI / 2 - .3, 0, i * .9); at(G, t, -2.3 + (i % 2) * .7, .62, .95 + (i > 1 ? .55 : 0) - (i % 2) * .2); const f = new TT.Mesh(new TT.TorusGeometry(.56, .06, 4, 14, Math.PI * 1.2), fat); f.scale.set(1, 1, .45); f.rotation.copy(t.rotation); at(G, f, -2.3 + (i % 2) * .7, .66, .95 + (i > 1 ? .55 : 0) - (i % 2) * .2, 0, false); }
+    const wedge = (px, pz, r, col, rind) => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.lineTo(1.9, -.62); sh.lineTo(1.9, .62); sh.lineTo(0, 0); const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: .9, bevelEnabled: true, bevelThickness: .04, bevelSize: .04, bevelSegments: 1 }), [M({ color: col, roughness: .55 }), M({ color: rind, roughness: .7 })]); m.rotation.x = -Math.PI / 2; m.rotation.z = r; at(G, m, px, .4, pz); };
+    wedge(.1, -.4, .5, 0xf2d27a, 0xd8a848); wedge(.4, 1.1, -.4, 0xf6eedb, 0xe6dcc0);
+    { const Gb = grp(TT, G, 2.3, .4, -1); at(Gb, lathe(TT, [[0, 0], [.55, 0], [.9, .4], [.95, .62], [.85, .62], [.5, .2], [0, .18]], SEG(o, 18), M({ color: 0xf2efe8, roughness: .3, clearcoat: .5 })), 0, 0, 0);
+      const ol = M({ color: 0x6a7a2a, roughness: .25, clearcoat: .7 }), ob = M({ color: 0x2a1a20, roughness: .25, clearcoat: .7 }); for (let i = 0; i < 9; i++) { const a = i * 2.4, r = Math.sqrt(i / 9) * .58; const m = new TT.Mesh(new TT.SphereGeometry(.24, 8, 6), i % 3 ? ol : ob); m.scale.set(1, .85, 1.3); at(Gb, m, Math.cos(a) * r, .4 + (i > 5 ? .16 : 0), Math.sin(a) * r); } }
+    { const gr = M({ color: 0x6a2a4a, roughness: .25, clearcoat: .7 }), gg = new TT.SphereGeometry(.24, 10, 8); for (let i = 0; i < 14; i++) { const a = i * 2.39, r = Math.sqrt(i) * .2; at(G, new TT.Mesh(gg, gr), 2.2 + Math.cos(a) * r * .8, .62 + (i < 5 ? .18 : 0), .95 + Math.sin(a) * r * 1.4); } }
+    { const gs = M({ color: 0xe0b26a, roughness: .7 }); for (let i = 0; i < 3; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.08, .08, 4.6, 5), gs); s.rotation.set(Math.PI / 2, 0, Math.PI / 2 + .08 * i); at(G, s, 0, .5 + i * .14, 1.9 - i * .14, 0, false); } }
+    { const bl = M({ color: 0x3e7a2e, roughness: .5, side: TT.DoubleSide }); [[-1.5, -1.6], [1.2, .2]].forEach(([a, b], i) => { const l = new TT.Mesh(new TT.SphereGeometry(.3, 6, 4), bl); l.scale.set(1, .2, .6); l.rotation.y = i; at(G, l, a, .5, b, 0, false); }); }
     return G;
   }
   function ice(o, G, x, y, z, n) { const m = M({ color: 0xffffff, roughness: .05, clearcoat: 1, transparent: true, opacity: .45, depthWrite: false }); for (let i = 0; i < n; i++) { const c = new (o.TT.Mesh)(RB(.62, .62, .62, .1, 1), m); c.rotation.set(i * .7, i * 1.3, i * .4); at(G, c, x + Math.sin(i * 2.4) * .3, y + i * .22, z + Math.cos(i * 2.4) * .3, 0, false); } }
@@ -331,11 +389,13 @@
   // a hardback lying flat: covers, the page block, a rounded spine with gilt bands; w along x (the spine at −x), d along z, h thick
   function book(o, G0, x, y, z, ry, w, d, h, col, gilt = true) {
     const TT = o.TT, G = grp(TT, G0, x, y, z, ry), cov = M({ map: X.cloth('bookcloth-' + col, col, 22, 256), roughness: .62, bumpScale: .004 });
-    const pg = M({ map: pageTex(), roughness: .85, bump: false });
-    at(G, new TT.Mesh(RB(w - .32, h - .2, d - .26, .03, 1), pg), .1, h / 2, 0);
-    [.055, h - .055].forEach(yy => at(G, new TT.Mesh(RB(w, .11, d, .04, 1), cov), 0, yy, 0));
-    const sp = new TT.Mesh(new TT.CylinderGeometry(h / 2, h / 2, d, SEG(o, 12), 1, true, Math.PI, Math.PI), M({ map: canvasTex('spine-' + col + (gilt ? 'g' : ''), 64, 256, (c, W, H) => { c.fillStyle = col; c.fillRect(0, 0, W, H); if (gilt) { c.fillStyle = '#c8a050'; [.12, .16, .84, .88].forEach(k => c.fillRect(0, H * k, W, H * .012)); c.fillRect(0, H * .44, W, H * .1); c.fillStyle = col; c.fillRect(0, H * .455, W, H * .07); } }), roughness: .6 }));
-    sp.rotation.x = Math.PI / 2; at(G, sp, -w / 2 + .02, h / 2, 0);
+    // (2026-11-07) the boards overhang the page block a little on three sides; the spine is a solid rounded back joining both boards
+    // (it was an open half-tube that showed as a loose flap at each end)
+    const pg = M({ map: pageTex(), roughness: .85, bump: false }), T2 = .1, SQ = .16;
+    at(G, new TT.Mesh(RB(w - SQ, h - 2 * T2, d - 2 * SQ, .02, 1), pg), -SQ / 2, h / 2, 0);
+    [T2 / 2, h - T2 / 2].forEach(yy => at(G, new TT.Mesh(RB(w, T2, d, .03, 1), cov), 0, yy, 0));
+    const sp = new TT.Mesh(new TT.CylinderGeometry(h / 2, h / 2, d, SEG(o, 14), 1, false, Math.PI, Math.PI), [M({ map: canvasTex('spine-' + col + (gilt ? 'g' : ''), 64, 256, (c, W, H) => { c.fillStyle = col; c.fillRect(0, 0, W, H); if (gilt) { c.fillStyle = '#c8a050'; [.12, .16, .84, .88].forEach(k => c.fillRect(0, H * k, W, H * .012)); c.fillRect(0, H * .44, W, H * .1); c.fillStyle = col; c.fillRect(0, H * .455, W, H * .07); } }), roughness: .6 }), cov, cov]);
+    sp.rotation.x = Math.PI / 2; sp.scale.set(.42, 1, 1); at(G, sp, -w / 2 + .01, h / 2, 0);   // a gently rounded back (not a full half-round)
     return G;
   }
   // leaves on stems (a fiddle-leaf fig / an olive): textured quads, cut out
@@ -491,10 +551,16 @@
     const china = M({ color: 0xf2efe8, roughness: .3, clearcoat: .5 }), bread = M({ map: canvasTex('crust', 128, 128, (c, W) => { const g2 = c.createLinearGradient(0, 0, 0, W); g2.addColorStop(0, '#c98a3e'); g2.addColorStop(.5, '#e0a95a'); g2.addColorStop(1, '#a8682a'); c.fillStyle = g2; c.fillRect(0, 0, W, W); c.fillStyle = 'rgba(110,60,20,.35)'; for (let i = 0; i < W; i += 9) c.fillRect(0, i, W, 3); }), roughness: .6, clearcoat: .25 });
     const linen = M({ map: X.cloth('tbl2-napkin', '#ece4d4', 14, 128), roughness: .9 });
     const napkin = (x, z, r) => at(g, new TT.Mesh(RB(4.2, .12, 4.2, .05, 1), linen), x, .06, z, r, false);
-    const vase = (x, z, n, col) => { at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), sage), x, 0, z);
-      const st = M({ color: 0x6d7f4c, roughness: .7 }), fl = M({ color: col, roughness: .6 }); for (let i = 0; i < n; i++) { const a = i * 2.1; const s = new TT.Mesh(new TT.CylinderGeometry(.035, .05, 4 - i * .5, 4), st); s.rotation.set(Math.cos(a) * .2, 0, Math.sin(a) * .25); at(g, s, x + Math.sin(a) * .3, 4.8 - i * .2, z + Math.cos(a) * .2, 0, false); const f = new TT.Mesh(new TT.SphereGeometry(.42, 8, 6), fl); f.scale.set(1, .7, 1); at(g, f, x + Math.sin(a) * .9, 6.8 - i * .5, z + Math.cos(a) * .6); } };
+    // a bud vase: the stems start inside its neck and fan out (2026-11-07: they stood beside it), a small rose-like bloom on each
+    const vase = (x, z, n, col) => { at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [.3, 3.15], [.22, 3], [.22, 2.4], [0, 2.3]], SEG(o, 20), sage), x, 0, z);
+      const fl = M({ color: col, roughness: .55, side: TT.DoubleSide }), sep = M({ color: 0x5a7a3a, roughness: .7 }), leafM = M({ color: 0x5f8a44, roughness: .6, side: TT.DoubleSide });
+      bouquet(o, g, x, z, 3.15, .24, n, 3.2, 1, 0x6d7f4c, (Gh, i) => {
+        at(Gh, new TT.Mesh(new TT.ConeGeometry(.22, .3, 6), sep), 0, -.05, 0, 0, false);
+        const b2 = new TT.Mesh(new TT.SphereGeometry(.36, 10, 8), fl); b2.scale.set(1, .85, 1); at(Gh, b2, 0, .3, 0);
+        for (let k = 0; k < 5; k++) { const pt = new TT.Mesh(new TT.SphereGeometry(.3, 8, 6, 0, Math.PI), fl); pt.scale.set(1, 1.1, .45); pt.rotation.set(-.35, k * 1.26, 0); at(Gh, pt, Math.sin(k * 1.26) * .26, .26, Math.cos(k * 1.26) * .26, 0, false); }
+        if (i % 2) { const lf = new TT.Mesh(new TT.SphereGeometry(.3, 6, 4), leafM); lf.scale.set(.45, .1, 1); lf.rotation.set(.5, i, 0); at(Gh, lf, .2, -1, .2, 0, false); } }, 11); };
     if (T === 'morning') {
-      cupSaucer(o, g, -10.2, -3.4, .5, china); cupSaucer(o, g, 10, -3.2, -2.6, china);
+      cupSaucer(o, g, -10.2, -3.4, .5, china, 'cap'); cupSaucer(o, g, 10, -3.2, -2.6, china, 'cap');   // cappuccino
       plate(o, g, -10.8, -6.4, 2.4, china); croissant(o, g, -11.2, .2, -6.9, .6, bread); croissant(o, g, -10, .2, -5.8, -2.2, bread);
       tumbler(o, g, -5.8, -8.2, [0xf2a12a, .78], 2.9, .78);
       { const Gj = grp(TT, g, 9, 0, -6.6); at(Gj, lathe(TT, [[0, 0], [.8, 0], [.85, 1.6], [.7, 1.75], [0, 1.75]], SEG(o, 20), glassM()), 0, 0, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(.76, .76, 1.4, SEG(o, 20)), M({ color: 0x8a1626, roughness: .2, clearcoat: .8 })), 0, .75, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(.82, .82, .4, SEG(o, 20)), M({ color: 0xd8c28a, metalness: .6, roughness: .35 })), 0, 1.95, 0); }
@@ -502,9 +568,28 @@
       vase(6.2, -8.2, 3, 0xf3e9d2);
     } else if (T === 'day') {
       plate(o, g, -10.8, -6.3, 2.6, china);
-      const sw = (x, z, r) => { const Gs = grp(TT, g, x, .24, z, r), sh = new TT.Shape(); sh.moveTo(-1.6, -1.4); sh.lineTo(1.6, -1.4); sh.lineTo(-1.6, 1.6); sh.lineTo(-1.6, -1.4);
-        [[.38, 0xe9d3a6], [.16, 0x7aa84a], [.22, 0xd9614a], [.38, 0xe9d3a6]].reduce((y, [h, col]) => { const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: h, bevelEnabled: true, bevelThickness: .04, bevelSize: .06, bevelSegments: 1 }), M({ color: col, roughness: .8 })); m.rotation.x = -Math.PI / 2; at(Gs, m, 0, y, 0); return y + h; }, 0); };
-      sw(-11.3, -6.8, .3); sw(-10, -5.6, 2.6);
+      // a club sandwich cut on the diagonal (2026-11-07: more real): toasted bread with a golden crust, frilly lettuce, tomato slices,
+      // ham and cheese hanging over the edges, a cocktail pick through each half
+      const crumb = M({ map: canvasTex('sw-crumb', 128, 128, (c, W) => { c.fillStyle = '#f2e6c8'; c.fillRect(0, 0, W, W); for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(${Math.random() > .5 ? '200,170,120' : '255,250,235'},${.25 + Math.random() * .4})`; c.beginPath(); c.ellipse(Math.random() * W, Math.random() * W, 1 + Math.random() * 3, .6 + Math.random() * 1.6, Math.random() * 3, 0, 7); c.fill(); } }), roughness: .9, bump: false });
+      const crust = M({ map: canvasTex('sw-crust', 64, 64, (c, W) => { const g2 = c.createLinearGradient(0, 0, 0, W); g2.addColorStop(0, '#a8662a'); g2.addColorStop(.5, '#c98a44'); g2.addColorStop(1, '#9a5a22'); c.fillStyle = g2; c.fillRect(0, 0, W, W); for (let i = 0; i < 80; i++) { c.fillStyle = 'rgba(90,50,20,.3)'; c.fillRect(Math.random() * W, Math.random() * W, 2, 1); } }), roughness: .7, bump: false });
+      const toast = M({ map: canvasTex('sw-toast', 128, 128, (c, W) => { c.fillStyle = '#e2b672'; c.fillRect(0, 0, W, W); for (let i = 0; i < 220; i++) { c.fillStyle = `rgba(${Math.random() > .6 ? '150,90,40' : '250,230,190'},${.2 + Math.random() * .3})`; c.beginPath(); c.arc(Math.random() * W, Math.random() * W, .8 + Math.random() * 2.4, 0, 7); c.fill(); } c.fillStyle = 'rgba(160,96,40,.25)'; for (let y = 10; y < W; y += 22) c.fillRect(0, y, W, 6); }), roughness: .8, bump: false });
+      const tri = (k = 0, wob = 0, seed = 1) => { const R = rng(seed), P = [[-1.6, -1.4], [1.6, -1.4], [-1.6, 1.6]], sh = new TT.Shape();
+        for (let e = 0; e < 3; e++) { const [x0, y0] = P[e], [x1, y1] = P[(e + 1) % 3], L = Math.hypot(x1 - x0, y1 - y0), nx = (y1 - y0) / L, ny = -(x1 - x0) / L, N = wob ? 14 : 1;
+          for (let q = 0; q < N; q++) { const t = q / N, w = wob ? (Math.sin(t * 40 + seed) * .5 + .5) * wob + R() * wob * .4 : 0; const px = x0 + (x1 - x0) * t + nx * (k + w), py = y0 + (y1 - y0) * t + ny * (k + w); e + q ? sh.lineTo(px, py) : sh.moveTo(px, py); } }
+        return sh; };
+      const layer = (G, sh, h, y, mat) => { const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: h, bevelEnabled: true, bevelThickness: .05, bevelSize: .06, bevelSegments: 2, curveSegments: 4 }), mat); m.rotation.x = -Math.PI / 2; at(G, m, 0, y, 0); return m; };
+      const sw = (x, z, r, seed) => { const Gs = grp(TT, g, x, .24, z, r);
+        layer(Gs, tri(-.02), .42, .05, [toast, crust]);
+        layer(Gs, tri(.1, .26, seed), .07, .52, M({ color: 0x86b84c, roughness: .45, clearcoat: .3 }));   // lettuce, frilly past the bread
+        layer(Gs, tri(.04, .06, seed + 3), .1, .62, M({ color: 0xe8a09a, roughness: .45, clearcoat: .2 }));   // ham
+        const tm = [M({ color: 0xc8281e, roughness: .35, clearcoat: .5 }), M({ map: canvasTex('tomato-slice', 64, 64, (c, W) => { c.fillStyle = '#d23a2a'; c.fillRect(0, 0, W, W); c.fillStyle = '#f07a5a'; for (let i = 0; i < 4; i++) { c.beginPath(); c.ellipse(W / 2 + Math.cos(i * 1.57) * W * .2, W / 2 + Math.sin(i * 1.57) * W * .2, W * .12, W * .08, i * 1.57, 0, 7); c.fill(); } c.fillStyle = '#f6d07a'; for (let i = 0; i < 16; i++) { const a = i * .39; c.fillRect(W / 2 + Math.cos(a) * W * .2, W / 2 + Math.sin(a) * W * .2, 2.5, 2.5); } }), roughness: .3, clearcoat: .6, bump: false })];
+        [[.5, .1], [-.55, .55], [-.3, -.6]].forEach(([a, b]) => { const t = new TT.Mesh(new TT.CylinderGeometry(.62, .62, .14, 16), [tm[0], tm[1], tm[1]]); at(Gs, t, a, .82, -b); });
+        { const ch = layer(Gs, tri(.02), .05, .96, M({ color: 0xf2c440, roughness: .4, clearcoat: .3 })); ch.rotation.z = .12; }   // cheese, turned so its corners hang over
+        layer(Gs, tri(-.02), .42, 1.08, [toast, crust]);
+        const pick = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 2.6, 5), M({ color: 0xe0c48a, roughness: .7 })); at(Gs, pick, -.6, 1.5, .3, 0, false);
+        at(Gs, new TT.Mesh(new TT.SphereGeometry(.24, 10, 8), M({ color: 0x5a7a2a, roughness: .25, clearcoat: .8 })), -.6, 2.55, .3);
+        const fr = new TT.Mesh(new TT.ConeGeometry(.16, .4, 8), M({ color: 0xd83a3a, roughness: .5 })); fr.rotation.x = Math.PI; at(Gs, fr, -.6, 2.95, .3, 0, false); };
+      sw(-11.3, -6.8, .3, 3); sw(-10, -5.6, 2.6, 9);
       { const Gb = grp(TT, g, 10.6, 0, -6.1); Gb.scale.setScalar(.88); at(Gb, lathe(TT, [[0, 0], [1.4, 0], [2.6, .8], [3.1, 2], [2.95, 2.05], [2.4, 1], [0, .4]], SEG(o, 28), china), 0, 0, 0);
         const R = rng(5); for (let i = 0; i < 22; i++) { const a = R() * 6.3, r = R() * 2.1, l = new TT.Mesh(new TT.SphereGeometry(.7, 7, 5), M({ color: [0x6d9a3e, 0x8ab84e, 0x4f7a32, 0x9a3a5a][R() * 4 | 0], roughness: .6 })); l.scale.set(1, .3, .8); l.rotation.set(R(), R() * 3, R()); at(Gb, l, Math.cos(a) * r, 1.3 + R() * .5, Math.sin(a) * r, 0, false); }
         for (let i = 0; i < 5; i++) { const a = i * 1.3; at(Gb, new TT.Mesh(new TT.SphereGeometry(.36, 10, 8), M({ color: 0xd8302a, roughness: .25, clearcoat: .6 })), Math.cos(a) * 1.3, 1.9, Math.sin(a) * 1.3); } }
@@ -521,11 +606,16 @@
       candle(o, g, -5.8, -8.2, false); cupSaucer(o, g, 11.6, .4, -2.4, china);
     } else {
       [[-11.2, 3.8, .4], [11.2, 3.8, -.4]].forEach(([x, z, r]) => { plate(o, g, x, z, 2.4, china); napkin(x - Math.sign(x) * .2, z + 2.2, r);
-        const Gm = grp(TT, g, x, .14, z, r), nt = M({ map: canvasTex('pasta', 128, 128, (c, W) => { c.fillStyle = '#e9c983'; c.fillRect(0, 0, W, W); c.strokeStyle = 'rgba(190,140,60,.6)'; c.lineWidth = 2; for (let i = 0; i < 40; i++) { c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 8 + Math.random() * 30, Math.random() * 6, Math.random() * 6 + 2); c.stroke(); } c.fillStyle = 'rgba(190,50,30,.55)'; for (let i = 0; i < 14; i++) { c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 3 + Math.random() * 6, 0, 7); c.fill(); } }), roughness: .5, clearcoat: .3 });
-        const m = new TT.Mesh(new TT.SphereGeometry(1.3, SEG(o, 18), SEG(o, 10), 0, Math.PI * 2, 0, Math.PI / 2), nt); m.scale.set(1, .55, 1); at(Gm, m, 0, 0, 0);
-        [0, 2.1, 4.2].forEach(a => { const l = new TT.Mesh(new TT.SphereGeometry(.3, 6, 4), M({ color: 0x3e7a2e, roughness: .5 })); l.scale.set(1, .25, .6); at(Gm, l, Math.cos(a) * .5, .82, Math.sin(a) * .5, 0, false); }); });
+        // a steak dinner (2026-11-07: was pasta): a sirloin, sliced and fanned (pink inside, a seared crust), roast potatoes, green beans, a sprig of rosemary
+        const Gm = grp(TT, g, x, .14, z, r), sear = M({ map: canvasTex('steak-sear', 128, 128, (c, W) => { c.fillStyle = '#5a2e1a'; c.fillRect(0, 0, W, W); for (let i = 0; i < 300; i++) { c.fillStyle = `rgba(${Math.random() > .5 ? '30,14,8' : '140,80,40'},${.2 + Math.random() * .4})`; c.fillRect(Math.random() * W, Math.random() * W, 2 + Math.random() * 3, 1 + Math.random() * 2); } c.strokeStyle = 'rgba(20,8,4,.85)'; c.lineWidth = 6; for (let i = -W; i < W * 2; i += 26) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + W * .6, W); c.stroke(); } }), roughness: .45, clearcoat: .5, bump: false });
+        const cut = M({ map: canvasTex('steak-cut', 64, 64, (c, W) => { c.fillStyle = '#4a2414'; c.fillRect(0, 0, W, W); c.fillStyle = '#a8503a'; c.fillRect(W * .07, W * .1, W * .86, W * .8); c.fillStyle = '#d06a62'; c.fillRect(W * .14, W * .22, W * .72, W * .56); c.fillStyle = 'rgba(240,170,160,.5)'; c.fillRect(W * .2, W * .34, W * .6, W * .3); }), roughness: .4, clearcoat: .5, bump: false });
+        for (let k = 0; k < 5; k++) { const sl = new TT.Mesh(RB(.5, .7, 2.1, .1, 2), [cut, cut, sear, sear, sear, sear]); sl.rotation.set(0, 0, k < 4 ? -.28 : 0); at(Gm, sl, -.95 + k * .42, .42, -.2 + k * .05); }
+        const pot = M({ color: 0xd8a04a, roughness: .5, clearcoat: .3 }), pg = new TT.SphereGeometry(.36, 10, 8); [[1.2, .9], [1.55, .25], [.7, 1.35], [1.45, -.45]].forEach(([a, b], k) => { const m = new TT.Mesh(pg, pot); m.scale.set(1.1, .8, .9); m.rotation.y = k; at(Gm, m, a, .36, b); });
+        const bean = M({ color: 0x4f8a34, roughness: .45, clearcoat: .3 }), bg = new TT.CylinderGeometry(.07, .07, 1.5, 5); for (let k = 0; k < 7; k++) { const m = new TT.Mesh(bg, bean); m.rotation.set(Math.PI / 2, 0, .9 + k * .06); at(Gm, m, -.4 + k * .16, .2 + (k % 2) * .08, 1.3 - k * .03, 0, false); }
+        { const rs = M({ color: 0x3a5a2a, roughness: .6 }); const st = new TT.Mesh(new TT.CylinderGeometry(.03, .03, 1.8, 4), rs); st.rotation.set(Math.PI / 2, 0, -.5); at(Gm, st, .2, .9, -1, 0, false); for (let k = 0; k < 9; k++) { const n2 = new TT.Mesh(new TT.CylinderGeometry(.02, .02, .4, 3), rs); n2.rotation.set(Math.PI / 2 + (k % 2 ? .7 : -.7), 0, -.5); at(Gm, n2, .2 + (k - 4) * .17, .92, -1 - (k - 4) * .1, 0, false); } }
+        const sv = M({ color: 0xd8d8d8, metalness: 1, roughness: .22 }); [[-.45, 4], [.45, 3.6]].forEach(([dz, L]) => { const m = new TT.Mesh(RB(L, .06, .24, .03, 1), sv); at(g, m, x - Math.sign(x) * .2, .16, z + 2.2 + dz, r, false); }); });   // knife and fork on the napkin
       bottle(o, g, -11, -6.6, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.6, -2, 0x5a0d1c); wineGlass(o, g, 9.6, -2, 0x5a0d1c);
-      candle(o, g, -5.4, -8.2, true, true); candle(o, g, 5.4, -8.2, true, true); cupSaucer(o, g, -12.2, -.4, .6, china);   // an after-dinner coffee
+      candle(o, g, -5.4, -8.2, true, true); candle(o, g, 5.4, -8.2, true, true);   // (no coffee at dinner)
       { const Gb = grp(TT, g, 10.8, 0, -6.4); const wv = M({ map: canvasTex('basket', 128, 64, (c, W, H) => { c.fillStyle = '#b48a52'; c.fillRect(0, 0, W, H); for (let y = 0; y < H; y += 8) for (let x = (y / 8 % 2) * 8; x < W; x += 16) { c.fillStyle = 'rgba(90,60,30,.4)'; c.fillRect(x, y, 8, 7); } }), roughness: .8 });
         at(Gb, lathe(TT, [[0, 0], [1.8, 0], [2.4, 1.4], [2.5, 1.6], [2.3, 1.6], [1.7, .3], [0, .3]], SEG(o, 22), wv), 0, 0, 0);
         for (let i = 0; i < 4; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.9, .9, .35, 14), bread); s.rotation.set(1.2, i * .9, 0); at(Gb, s, Math.cos(i * 1.6) * .8, 1.3, Math.sin(i * 1.6) * .8); } }
@@ -628,7 +718,7 @@
     { const Gr = grp(TT, g, -17.6, 0, -1.2, Math.PI / 2 + .06); at(Gr, new TT.Mesh(RB(8.6, .7, 3.6, .2, 2), M({ color: 0x2a1a10, roughness: .35, clearcoat: .6 })), 0, .35, 0);
       const rowG = new TT.CylinderGeometry(.78, .78, 7.8, SEG(o, 18)); [0, 1, 2, 3].forEach(i => { const m = new TT.Mesh(rowG, M({ map: canvasTex('chip-row-' + i, 32, 256, (c, W, H) => { c.fillStyle = '#' + chipC[i].toString(16).padStart(6, '0'); c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(0,0,0,.35)'; for (let y = 0; y < H; y += 6.6) c.fillRect(0, y, W, 1); c.fillStyle = chipC[i] === 0xf1ece0 ? 'rgba(40,70,140,.7)' : 'rgba(255,250,240,.6)'; for (let y = 0; y < H; y += 6.6) for (let x = (y / 6.6 % 2) * 8; x < W; x += 16) c.fillRect(x, y + 1, 5, 5); }), roughness: .5, clearcoat: .2, bump: false })); m.rotation.z = Math.PI / 2; at(Gr, m, 0, .9, -1.2 + i * .82); }); }
     { const Gw = grp(TT, g, 15.4, 0, 1.6); at(Gw, new TT.Mesh(new TT.CylinderGeometry(1.5, 1.5, .12, SEG(o, 24)), M({ color: 0x3a2214, roughness: .6 })), 0, .06, 0, 0, false);
-      const tw = tumbler(o, Gw, 0, 0, [0xa85a14, .42], 2.4, 1.0); tw.position.y = .12; ice(o, tw, 0, 1.1, 0, 2); }
+      snifter(o, Gw, 0, 0, 0xa8561a, 1).position.y = .12; }   // a snifter of brandy, see-through (2026-11-07: was whisky on the rocks)
     { const Gs = grp(TT, g, 17.8, 0, -3.2, -.3); at(Gs, new TT.Mesh(RB(3.4, .25, 4.8, .05, 1), M({ map: canvasTex('scorepad', 128, 180, (c, W, H) => { c.fillStyle = '#f7f2e2'; c.fillRect(0, 0, W, H); c.fillStyle = '#7a1e2a'; c.fillRect(0, 0, W, 22); c.strokeStyle = 'rgba(60,80,140,.4)'; for (let y = 36; y < H; y += 12) { c.beginPath(); c.moveTo(6, y); c.lineTo(W - 6, y); c.stroke(); } c.strokeStyle = 'rgba(160,40,40,.5)'; c.beginPath(); c.moveTo(W / 2, 26); c.lineTo(W / 2, H - 6); c.stroke(); c.fillStyle = 'rgba(30,30,60,.75)'; for (let y = 46; y < 120; y += 12) { c.fillRect(14 + Math.random() * 8, y - 6, 18 + Math.random() * 14, 2); c.fillRect(W / 2 + 10 + Math.random() * 8, y - 6, 14 + Math.random() * 14, 2); } }), roughness: .85, bump: false })), 0, .125, 0);
       const pen = new TT.Mesh(new TT.CylinderGeometry(.13, .13, 4.4, 6), M({ color: 0xe8b830, roughness: .5 })); pen.rotation.set(0, .5, Math.PI / 2); at(Gs, pen, 2.2, .14, .5); }
     // ... and the clutter of a long game: loose chips, a toppled stack, stray cards face down, a dice cup on its side, a bowl of nuts, a second glass
@@ -645,7 +735,7 @@
       { const pips2 = [1, 6, 2, 5, 3, 4].map(f => M({ map: canvasTex('die-' + f, 64, 64, () => {}), roughness: .3, clearcoat: .6, bump: false })); at(g, new TT.Mesh(RB(1.15, 1.15, 1.15, .14, 2), pips2), 8.1, .58, -7.4, 1.1); }
       { const Gb = grp(TT, g, 6.6, 0, -10.4); at(Gb, lathe(TT, [[0, 0], [.9, 0], [1.6, .6], [1.85, 1.2], [1.7, 1.25], [1.45, .7], [0, .5]], SEG(o, 24), M({ color: 0x2a1a10, roughness: .3, clearcoat: .7 })), 0, 0, 0);
         const nut = M({ color: 0xb98a54, roughness: .6 }), nut2 = M({ color: 0x7a4a22, roughness: .5 }); for (let i = 0; i < 26; i++) { const a = i * 2.39, r = Math.sqrt(i / 26) * 1.35; const m = new TT.Mesh(new TT.SphereGeometry(.24, 6, 4), i % 3 ? nut : nut2); m.scale.set(1.3, .7, .9); m.rotation.y = a; at(Gb, m, Math.cos(a) * r, .75 + (1 - r / 1.35) * .3 + (i % 2) * .1, Math.sin(a) * r, 0, false); } }
-      { const Gw = grp(TT, g, -12.4, 0, -3.8); at(Gw, new TT.Mesh(new TT.CylinderGeometry(1.5, 1.5, .12, SEG(o, 24)), M({ color: 0x3a2214, roughness: .6 })), 0, .06, 0, 0, false); const tw = tumbler(o, Gw, 0, 0, [0xa85a14, .16], 2.4, 1.0); tw.position.y = .12; }
+      { const Gw = grp(TT, g, -12.4, 0, -3.8); at(Gw, new TT.Mesh(new TT.CylinderGeometry(1.5, 1.5, .12, SEG(o, 24)), M({ color: 0x3a2214, roughness: .6 })), 0, .06, 0, 0, false); snifter(o, Gw, 0, 0, 0xa8561a, .3).position.y = .12; }
     }
     // the club room around it: dark panelled walls with warm sconces, a patterned carpet, a coffered ceiling
     const XL = -70, XR = 70, ZB = -60, ZF = 150, Y1 = 50;
@@ -749,11 +839,21 @@
     ao(o, -50, FL, -44, 12, 12, .4);
     // two bistro chairs across the table: black iron, woven rattan seats
     const rattan = M({ map: canvasTex('rattan', 128, 128, (c, W) => { c.fillStyle = '#c8a46c'; c.fillRect(0, 0, W, W); for (let y = 0; y < W; y += 8) for (let x = ((y / 8) % 2) * 8; x < W; x += 16) { c.fillStyle = 'rgba(110,70,30,.45)'; c.fillRect(x, y, 8, 8); c.fillStyle = 'rgba(255,240,200,.18)'; c.fillRect(x + 1, y + 1, 6, 2); } }), roughness: .75 });
+    // (2026-11-07) the back is one piece now: the back legs run on up as its uprights, a curved top rail and a woven rattan panel
+    // bowed between them (it was a hoop floating over the seat with a flat panel poking out of it)
     const chair = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry), lg = new TT.CylinderGeometry(.22, .22, 10.2, 6);
-      [[-3, 3], [3, 3], [-3, -3], [3, -3]].forEach(([a, b]) => { const l = new TT.Mesh(lg, iron); l.rotation.set(b * .015, 0, -a * .015); at(G, l, a, 5.1, b); });
+      [[-3, 3], [3, 3]].forEach(([a, b]) => { const l = new TT.Mesh(lg, iron); l.rotation.set(b * .015, 0, -a * .015); at(G, l, a, 5.1, b); });
       at(G, new TT.Mesh(new TT.CylinderGeometry(3.9, 3.9, .7, SEG(o, 24)), [iron, rattan, iron]), 0, 10.4, 0);
-      const bk = new TT.Mesh(new TT.TorusGeometry(3.6, .26, 6, SEG(o, 20), Math.PI), iron); bk.rotation.x = -.15; at(G, bk, 0, 13.6, -3.4);
-      const pn = new TT.Mesh(new TT.CylinderGeometry(3.4, 3.4, 4.6, SEG(o, 16), 1, true, -Math.PI / 2, Math.PI), rattan); pn.material.side = TT.DoubleSide; pn.rotation.set(-.12, Math.PI, 0); pn.scale.set(1, 1, .25); at(G, pn, 0, 15.2, -3.6); };
+      at(G, new TT.Mesh(new TT.TorusGeometry(3.9, .18, 6, SEG(o, 28)), iron), 0, 10.4, 0, 0, false).rotation.x = Math.PI / 2;
+      const bow = (xx) => -3.1 - .75 * (1 - (xx / 3.2) * (xx / 3.2));   // the back's curve (z at x)
+      const lean = (y) => (y - 10.8) * .12;   // leaning back as it rises
+      [-1, 1].forEach(s2 => { const a = new TT.Vector3(s2 * 3, 0, -3), b = new TT.Vector3(s2 * 3.05, 10.6, bow(3.05) - .1), c = new TT.Vector3(s2 * 3.1, 18, bow(3.1) - lean(18));
+        G.add(rod(TT, iron, a, b, .22)); G.add(rod(TT, iron, b, c, .22)); at(G, new TT.Mesh(new TT.SphereGeometry(.3, 8, 6), iron), c.x, c.y + .1, c.z); });
+      const railY = (k) => new TT.CatmullRomCurve3([-3.1, -1.6, 0, 1.6, 3.1].map(xx => new TT.Vector3(xx, k, bow(xx) - lean(k))));
+      at(G, new TT.Mesh(new TT.TubeGeometry(railY(17.6), 24, .24, 6, false), iron), 0, 0, 0);
+      at(G, new TT.Mesh(new TT.TubeGeometry(railY(12.4), 24, .16, 6, false), iron), 0, 0, 0);
+      { const pg = new TT.BoxGeometry(6, 4.8, .22, 14, 1, 1), P = pg.attributes.position; for (let i = 0; i < P.count; i++) { const xx = P.getX(i), yy = P.getY(i) + 15; P.setZ(i, P.getZ(i) + bow(xx) - lean(yy)); }
+        pg.computeVertexNormals(); at(G, new TT.Mesh(pg, rattan), 0, 15, 0); } };
     chair(-7, -13.6, 0); chair(7, -13.6, 0);
     // the sea, the coast and the sky: a painted band all round the view, a sky dome over it and the sea below it
     const PR = 300, DEG = PR * Math.PI / 180, AL = -75, AR = 110, BY0 = -110, BY1 = 130, HZ = 6;
@@ -832,20 +932,22 @@
     // the table of the hour
     const china = M({ color: 0xf6f3ec, roughness: .3, clearcoat: .5 }), blue = M({ color: 0x2e5f9a, roughness: .3, clearcoat: .5 });
     const bread = M({ map: canvasTex('crust', 128, 128, (c, W) => { const g2 = c.createLinearGradient(0, 0, 0, W); g2.addColorStop(0, '#c98a3e'); g2.addColorStop(.5, '#e0a95a'); g2.addColorStop(1, '#a8682a'); c.fillStyle = g2; c.fillRect(0, 0, W, W); c.fillStyle = 'rgba(110,60,20,.35)'; for (let i = 0; i < W; i += 9) c.fillRect(0, i, W, 3); }), roughness: .6, clearcoat: .25 });
+    // a bud vase of lavender: every stem starts inside the neck (2026-11-07: they stood beside it), a spike of flowers at its tip
+    const lavVase = (x, z) => { at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [.3, 3.15], [.22, 3], [.22, 2.4], [0, 2.3]], SEG(o, 20), blue), x, 0, z);
+      bouquet(o, g, x, z, 3.15, .24, 9, 2.9, .9, 0x7e9468, (Gh) => { at(Gh, new TT.Mesh(lavG, lav), 0, .7, 0, 0, false); }, 7); };
     const fruit = (G, x, y, z, r, col) => { const m = new TT.Mesh(new TT.SphereGeometry(r, SEG(o, 14), SEG(o, 10)), M({ color: col, roughness: .4, clearcoat: .3 })); m.scale.set(1.05, .95, 1); return at(G, m, x, y, z); };
     if (T === 'morning') {
-      cupSaucer(o, g, -10.2, -3.4, .6, blue, 0x3b1e0e); cupSaucer(o, g, 11, 4.4, -2.4, blue, 0x3b1e0e);
+      cupSaucer(o, g, -10.2, -3.4, .6, blue, 'cap'); cupSaucer(o, g, 11, 4.4, -2.4, blue, 'cap');   // cappuccino
       plate(o, g, 10.8, -6.3, 2.4, china); croissant(o, g, 10.5, .2, -6.8, .4, bread); croissant(o, g, 11.5, .2, -5.6, 2.4, bread);
       tumbler(o, g, -11.2, -6.2, [0xf2a12a, .78], 2.9, .78); tumbler(o, g, -8.8, -7.6, [0xf2a12a, .7], 2.9, .78);
-      { const Gb = grp(TT, g, 5.8, 0, -8.2); at(Gb, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), blue), 0, 0, 0); for (let i = 0; i < 9; i++) { const a = i * .7 - 2.8, st = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3, 3), stemM); st.rotation.z = a * .08; at(Gb, st, a * .18, 4.3, 0, 0, false); at(Gb, new TT.Mesh(lavG, lav), a * .3, 5.9, 0, 0, false); } }
+      lavVase(5.8, -8.2);
     } else if (T === 'day') {
       { const Gj = grp(TT, g, -11, 0, -6.3); at(Gj, lathe(TT, [[0, 0], [1.4, 0], [1.5, .1], [1.6, 4.8], [1.9, 5.4], [1.5, 5.4], [1.45, 4.8], [1.35, .3], [0, .3]], SEG(o, 24), glassM()), 0, 0, 0, 0, false); at(Gj, new TT.Mesh(new TT.CylinderGeometry(1.4, 1.32, 3.8, SEG(o, 24)), M({ color: 0xf6e9a0, roughness: .05, clearcoat: 1, transparent: true, opacity: .6 })), 0, 2.2, 0, 0, false); ice(o, Gj, 0, 2.6, 0, 4);
         const h = new TT.Mesh(new TT.TorusGeometry(1.1, .14, 6, 12, Math.PI), glassM()); h.rotation.z = -Math.PI / 2; at(Gj, h, 1.6, 3, 0, 0, false); }
       [[-9.9, -3], [10.6, 3.8]].forEach(([x, z]) => { const Gt = tumbler(o, g, x, z, [0xf6e9a0, .72], 3.2, .8); ice(o, Gt, 0, 1.5, 0, 3); const sl = new TT.Mesh(new TT.CylinderGeometry(.6, .6, .1, 14, 1, false, 0, Math.PI), M({ color: 0xf2d24a, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, .2); at(Gt, sl, .7, 3.1, 0, 0, false); });
       { const Gb = grp(TT, g, 10.7, 0, -6); Gb.scale.setScalar(.84); at(Gb, lathe(TT, [[0, 0], [1.6, 0], [2.8, 1], [3.1, 1.8], [2.9, 1.85], [2.4, 1], [0, .45]], SEG(o, 28), blue), 0, 0, 0);
         [[0, 0, 0xf2cf3a], [1.2, .6, 0xf2cf3a], [-1.1, .7, 0xf28c28], [.3, -1.2, 0xf2cf3a], [-.6, -.9, 0xf28c28], [1, -.6, 0xe24a2a]].forEach(([x, z, col], i) => fruit(Gb, x, 1.4 + (i > 3 ? .5 : 0), z, .78, col)); }
-      at(g, lathe(TT, [[0, 0], [.55, 0], [.75, .5], [.7, 1.4], [.3, 2.4], [.28, 3], [.36, 3.15], [0, 3.15]], SEG(o, 20), blue), 5.8, 0, -8.2);
-      for (let i = 0; i < 9; i++) { const a = i * .7 - 2.8, s = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3, 3), stemM); s.rotation.z = a * .08; at(g, s, 5.8 + a * .18, 4.3, -8.2, 0, false); at(g, new TT.Mesh(lavG, lav), 5.8 + a * .3, 5.9, -8.2, 0, false); }
+      lavVase(5.8, -8.2);
     } else if (T === 'evening') {
       [[-9.9, -3.4], [10.2, 3.4]].forEach(([x, z]) => { const Gw = wineGlass(o, g, x, z, 0xf2641e); ice(o, Gw, 0, 3, 0, 2); const sl = new TT.Mesh(new TT.CylinderGeometry(.62, .62, .1, 14), M({ color: 0xf28a28, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, 0); at(Gw, sl, .4, 3.7, 0, 0, false); });
       { const Gb = grp(TT, g, 10.8, 0, -6.2); at(Gb, lathe(TT, [[0, 0], [1, 0], [1.6, .9], [1.7, 1.2], [1.5, 1.2], [.9, .4], [0, .35]], SEG(o, 22), blue), 0, 0, 0); const ol = M({ color: 0x5a6a28, roughness: .3, clearcoat: .6 }); for (let i = 0; i < 10; i++) { const a = i * 2.3, r = .3 + (i % 3) * .3; const m = new TT.Mesh(new TT.SphereGeometry(.32, 8, 6), ol); m.scale.set(1, .8, 1.3); at(Gb, m, Math.cos(a) * r, .9 + (i > 6 ? .3 : 0), Math.sin(a) * r); } }
@@ -854,7 +956,8 @@
     } else {
       { const Gp = grp(TT, g, 10.8, 0, -5.6, .4); Gp.scale.setScalar(.88); at(Gp, new TT.Mesh(new TT.CylinderGeometry(3.3, 3.3, .35, SEG(o, 32)), M({ map: wood('tbl4-peel', '#c9a070', '#8a5e34', 256, 256, .7), roughness: .55 })), 0, .18, 0); at(Gp, new TT.Mesh(RB(1, .3, 4, .1, 1), M({ color: 0xb08a5a, roughness: .6 })), 0, .18, 4.6);
         at(Gp, new TT.Mesh(new TT.CylinderGeometry(2.9, 2.9, .3, SEG(o, 32)), [M({ color: 0xd8a254, roughness: .6 }), M({ map: canvasTex('pizza', 256, 256, (c, W) => { c.fillStyle = '#d8a254'; c.fillRect(0, 0, W, W); c.fillStyle = '#c63a1e'; c.beginPath(); c.arc(W / 2, W / 2, W * .42, 0, 7); c.fill(); for (let i = 0; i < 14; i++) { c.fillStyle = '#f6ecd0'; c.beginPath(); c.arc(W / 2 + (Math.random() - .5) * W * .6, W / 2 + (Math.random() - .5) * W * .6, 10 + Math.random() * 12, 0, 7); c.fill(); } for (let i = 0; i < 8; i++) { c.fillStyle = '#2f7a2a'; c.beginPath(); c.ellipse(W / 2 + (Math.random() - .5) * W * .5, W / 2 + (Math.random() - .5) * W * .5, 9, 5, Math.random() * 3, 0, 7); c.fill(); } c.strokeStyle = 'rgba(90,40,10,.6)'; c.lineWidth = 2; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(W / 2, W / 2); const a = i * Math.PI / 4; c.lineTo(W / 2 + Math.cos(a) * W, W / 2 + Math.sin(a) * W); c.stroke(); c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 - Math.cos(a) * W, W / 2 - Math.sin(a) * W); c.stroke(); } }), roughness: .5, clearcoat: .3, bump: false }), M({ color: 0xc89048 })]), 0, .5, 0); }
-      bottle(o, g, -11, -6.5, 0x8aa070, '#f4eedc'); wineGlass(o, g, -9.7, -2.2, 0xf2e2a0); wineGlass(o, g, 9.9, 3.9, 0xf2e2a0);
+      bottle(o, g, -11, -6.5, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.7, -2.2, 0x5a0d1c); wineGlass(o, g, 9.9, 3.9, 0x5a0d1c);   // red wine (2026-11-07: was white)
+      antipasti(o, g, -11.3, 5.4, .22, .78);   // an antipasto board to go with it
       { const Gl = grp(TT, g, -6, 0, -8.2); at(Gl, new TT.Mesh(RB(2, .3, 2, .08, 1), iron), 0, .15, 0); at(Gl, new TT.Mesh(RB(1.8, 3.8, 1.8, .05, 1), glassM()), 0, 2.2, 0, 0, false); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(Gl, new TT.Mesh(new TT.CylinderGeometry(.07, .07, 3.9, 4), iron), a * .9, 2.2, b * .9, 0, false)); at(Gl, new TT.Mesh(new TT.ConeGeometry(1.4, 1, 4), iron), 0, 4.6, 0, Math.PI / 4); candle(o, Gl, 0, 0, true, true).scale.setScalar(.55); }
       candle(o, g, 5.8, -8.2, true, false);
     }
@@ -893,18 +996,34 @@
     });
     const matE = M({ color: 0x1c2a20, roughness: .6 });
     at(g, new TT.Mesh(RB(LW, MAT, LD, .07, 2), [matE, matE, M({ map: lt, roughness: .62, clearcoat: .15, clearcoatRoughness: .6, bumpScale: .004 }), matE, matE, matE]), 0, -MAT / 2, 0, 0, false).receiveShadow = true;
-    // the banker's lamp (back left): brass base and stem, a green glass shade glowing underneath
-    const brass = M({ color: 0xc8a050, metalness: 1, roughness: .28 }), LX = -13.6, LZ = -7.4;
-    at(g, lathe(TT, [[0, 0], [1.9, 0], [1.95, .15], [1.7, .4], [1.2, .55], [.3, .7], [.22, .8], [0, .8]], SEG(o, 32), brass), LX, -MAT, LZ);
-    at(g, new TT.Mesh(new TT.CylinderGeometry(.16, .16, 3.4, 12), brass), LX, 2.1 - MAT, LZ);
-    const arm = new TT.Mesh(new TT.CylinderGeometry(.12, .12, 2.2, 10), brass); arm.rotation.x = Math.PI / 2; at(g, arm, LX, 3.75 - MAT, LZ + 1.1);
-    const pull = new TT.Mesh(new TT.CylinderGeometry(.04, .04, 1.8, 4), brass); at(g, pull, LX + 1.2, 2.9 - MAT, LZ + 2.9, 0, false); at(g, new TT.Mesh(new TT.SphereGeometry(.16, 8, 6), brass), LX + 1.2, 2 - MAT, LZ + 2.9, 0, false);
-    const glass = M({ color: 0x0f5a2c, roughness: .15, clearcoat: 1, clearcoatRoughness: .05, emissive: new TT.Color(0x05200d) });
-    const shade = new TT.Mesh(new TT.CylinderGeometry(1.25, 1.25, 6.2, SEG(o, 28), 1, true, 0, Math.PI), glass); shade.rotation.set(0, 0, Math.PI / 2); shade.rotation.order = 'ZYX'; shade.material.side = TT.DoubleSide; at(g, shade, LX, 4.1 - MAT, LZ + 2.1);
-    [-3.1, 3.1].forEach(dx => { const cp = new TT.Mesh(new TT.CircleGeometry(1.27, 20, 0, Math.PI), brass); cp.rotation.y = dx > 0 ? Math.PI / 2 : -Math.PI / 2; cp.rotation.order = 'YXZ'; at(g, cp, LX + dx, 4.1 - MAT, LZ + 2.1, 0, false); });
-    const glow = new TT.Mesh(new TT.PlaneGeometry(6, 2.2), new TT.MeshBasicMaterial({ color: 0xffd9a0, toneMapped: false })); glow.rotation.x = Math.PI / 2; at(g, glow, LX, 3.95 - MAT, LZ + 2.1, 0, false);
+    // the desk lamp (back left, 2026-11-07: was a banker's lamp): a Bauhaus-style lamp — a round chrome base with a black glass top,
+    // a knuckle joint, a chrome arm arching up and over, a glossy black dome shade, white inside, a cut-glass bulb glowing in it
+    const brass = M({ color: 0xc8a050, metalness: 1, roughness: .28 }), LX = -14.2, LZ = -7.6;
+    const chrome = M({ color: 0xe8eaee, metalness: 1, roughness: .12 }), lacq = M({ color: 0x0a0a0c, roughness: .1, clearcoat: 1, clearcoatRoughness: .04 });
+    const lampG = grp(TT, g, LX, -MAT, LZ, -.5);   // local +x: towards the board
+    at(lampG, lathe(TT, [[0, 0], [2.3, 0], [2.42, .1], [2.45, .62], [2.36, .74], [2.1, .76], [0, .76]], SEG(o, 36), chrome), 0, 0, 0);
+    { const tp = new TT.Mesh(new TT.CylinderGeometry(2.08, 2.08, .05, SEG(o, 36)), lacq); at(lampG, tp, 0, .77, 0); }
+    at(lampG, new TT.Mesh(new TT.CylinderGeometry(.08, .08, .3, 8), chrome), .9, .9, .9, 0, false);   // the switch
+    const knuckle = new TT.Vector3(-.5, 1.55, 0);
+    at(lampG, new TT.Mesh(new TT.CylinderGeometry(.22, .3, .8, 12), chrome), -.5, 1.05, 0);
+    { const kn = new TT.Mesh(new TT.SphereGeometry(.42, 14, 10), chrome); at(lampG, kn, knuckle.x, knuckle.y, 0); const ax = new TT.Mesh(new TT.CylinderGeometry(.2, .2, 1.1, 12), chrome); ax.rotation.x = Math.PI / 2; at(lampG, ax, knuckle.x, knuckle.y, 0, 0, false);
+      [-1, 1].forEach(s => at(lampG, new TT.Mesh(new TT.CylinderGeometry(.3, .3, .12, 14), chrome), knuckle.x, knuckle.y, s * .6, 0, false).rotation.x = Math.PI / 2); }
+    const SH = new TT.Vector3(2.6, 7.4, 0);   // the shade's top (its pivot)
+    { const curve = new TT.CatmullRomCurve3([knuckle.clone(), new TT.Vector3(-1.3, 3.6, 0), new TT.Vector3(-1.5, 6, 0), new TT.Vector3(-.6, 8.1, 0), new TT.Vector3(1, 8.6, 0), new TT.Vector3(SH.x - .3, SH.y + .7, 0)]);
+      at(lampG, new TT.Mesh(new TT.TubeGeometry(curve, 40, .15, 10, false), chrome), 0, 0, 0); }
+    const Gs = new TT.Group(); Gs.position.copy(SH); Gs.rotation.z = .62; lampG.add(Gs);   // the dome turned down towards the board
+    at(Gs, new TT.Mesh(new TT.SphereGeometry(.34, 12, 8), chrome), -.1, .55, 0, 0, false);
+    at(Gs, new TT.Mesh(new TT.CylinderGeometry(.5, .62, .9, 16), lacq), 0, .1, 0, 0, false);   // the socket housing
+    const dome = [[.6, -.3], [1.2, -.48], [1.9, -.9], [2.35, -1.5], [2.55, -2.1], [2.6, -2.35]];
+    at(Gs, lathe(TT, [[0, -.25], ...dome], SEG(o, 40), lacq), 0, 0, 0, 0, false);
+    at(Gs, lathe(TT, [[0, -.32], ...dome.map(([r, y]) => [r - .06, y - .02])], SEG(o, 40), new TT.MeshStandardMaterial({ color: 0xfff6ea, roughness: .55, side: TT.BackSide, emissive: new TT.Color(0xffe2b8), emissiveIntensity: day ? .35 : .8 })), 0, 0, 0, 0, false);
+    at(Gs, new TT.Mesh(new TT.TorusGeometry(2.58, .05, 6, SEG(o, 40)), lacq), 0, -2.35, 0, 0, false).rotation.x = Math.PI / 2;
+    { const bt = canvasTex('cutglass-bulb', 64, 64, (c, W) => { c.fillStyle = '#fff2d6'; c.fillRect(0, 0, W, W); c.strokeStyle = 'rgba(200,150,80,.55)'; c.lineWidth = 2; for (let i = -W; i < W * 2; i += 8) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + W, W); c.stroke(); c.beginPath(); c.moveTo(i, W); c.lineTo(i + W, 0); c.stroke(); } });
+      const bulb = new TT.Mesh(new TT.SphereGeometry(.85, 16, 12), new TT.MeshBasicMaterial({ map: bt, color: 0xffe4b0, toneMapped: false })); at(Gs, bulb, 0, -1.3, 0, 0, false); }
+    lampG.updateMatrixWorld(true);
+    const bulbW = Gs.localToWorld(new TT.Vector3(0, -1.3, 0));
     // books: a real stack (covers, page block, rounded spine with gilt), an open book with reading glasses
-    book(o, g, 14.2, -MAT, -6.8, .06, 6.8, 5, 1.2, '#5a1e1c'); book(o, g, 14.3, -MAT + 1.2, -6.8, -.1, 6.2, 4.6, 1, '#1f3a2c'); book(o, g, 14, -MAT + 2.2, -6.9, .14, 6.6, 4.8, 1.1, '#2a2a3c'); book(o, g, 14.2, -MAT + 3.3, -6.8, -.04, 5.6, 4.2, .8, '#6b4a24', false);
+    book(o, g, 15.4, -MAT, -6.6, .06, 6.8, 5, 1.2, '#5a1e1c'); book(o, g, 15.5, -MAT + 1.2, -6.6, -.1, 6.2, 4.6, 1, '#1f3a2c'); book(o, g, 15.2, -MAT + 2.2, -6.7, .14, 6.6, 4.8, 1.1, '#2a2a3c'); book(o, g, 15.4, -MAT + 3.3, -6.6, -.04, 5.6, 4.2, .8, '#6b4a24', false);   // (moved right: the inkwell stood in the stack)
     { const Go = grp(TT, g, 13.8, -MAT, 3.4, -.25), cov = M({ map: X.cloth('bookcloth-#4a1a16', '#4a1a16', 22, 256), roughness: .55 });
       at(Go, new TT.Mesh(RB(9.4, .18, 6.4, .06, 1), cov), 0, .09, 0);
       const txt = canvasTex('tbl5-text', 256, 352, (c, W, H) => { c.fillStyle = '#f2ead6'; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(40,30,20,.55)'; for (let y = 34; y < H - 26; y += 10) { let x = 24; while (x < W - 24) { const w = 6 + Math.random() * 26; if (x + w > W - 24) break; c.fillRect(x, y, w, 3); x += w + 5; } } c.fillStyle = 'rgba(40,30,20,.7)'; c.fillRect(W / 2 - 30, 14, 60, 5); });
@@ -922,19 +1041,41 @@
       const clip = new TT.Mesh(RB(2.1, .08, .16, .03, 1), gold); at(Gp, clip, 2.6, .58, 0, 0, false); at(Gp, new TT.Mesh(new TT.SphereGeometry(.12, 8, 6), gold), 1.6, .56, 0, 0, false);
       const sec = new TT.Mesh(new TT.CylinderGeometry(.19, .15, .7, SEG(o, 16)), res); sec.rotation.z = Math.PI / 2; at(Gp, sec, -2.6, .2, 0, 0, false);
       const nib = new TT.Mesh(new TT.ConeGeometry(.16, 1.2, 12, 1, false, 0, Math.PI), gold); nib.rotation.set(0, 0, Math.PI / 2); nib.scale.set(1, 1, .45); at(Gp, nib, -3.5, .2, 0, 0, false); }
-    { const Gi = grp(TT, g, 9.4, -MAT, -8.6, .5); at(Gi, new TT.Mesh(RB(2, 1.5, 2, .25, 2), M({ color: 0xcfd8e0, roughness: .03, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false })), 0, .75, 0, 0, false); at(Gi, new TT.Mesh(RB(1.6, .9, 1.6, .2, 2), M({ color: 0x0e1a3a, roughness: .1 })), 0, .5, 0, 0, false); at(Gi, lathe(TT, [[0, 0], [.55, 0], [.58, .3], [.4, .45], [.12, .6], [.18, .75], [0, .8]], SEG(o, 18), brass), 0, 1.5, 0); }
+    { const Gi = grp(TT, g, 9.6, -MAT, -9.7, .5); at(Gi, new TT.Mesh(RB(2, 1.5, 2, .25, 2), M({ color: 0xcfd8e0, roughness: .03, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false })), 0, .75, 0, 0, false); at(Gi, new TT.Mesh(RB(1.6, .9, 1.6, .2, 2), M({ color: 0x0e1a3a, roughness: .1 })), 0, .5, 0, 0, false); at(Gi, lathe(TT, [[0, 0], [.55, 0], [.58, .3], [.4, .45], [.12, .6], [.18, .75], [0, .8]], SEG(o, 18), brass), 0, 1.5, 0); }
     // a crystal decanter and a tumbler of whisky on a silver tray (left), a brass carriage clock (back)
     { const Gt = grp(TT, g, -14.8, -MAT, -.6, .2), silver = M({ color: 0xd8dadc, metalness: 1, roughness: .2 });
       at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .1], [3.7, .35], [3.5, .38], [3.3, .14], [0, .14]], SEG(o, 32), silver), 0, 0, 0);
       const crys = M({ color: 0xe8f0f4, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .42, depthWrite: false, envMapIntensity: 1.6 });
       at(Gt, lathe(TT, [[0, .14], [1.3, .14], [1.5, .4], [1.55, 2.6], [1.1, 3.6], [.4, 4.4], [.42, 5.2], [.5, 5.3], [0, 5.3]], SEG(o, 10), crys), -1, 0, -.6, 0, false);
-      at(Gt, lathe(TT, [[0, .22], [1.2, .22], [1.36, .42], [1.4, 1.9], [1.2, 2.25], [0, 2.25]], SEG(o, 10), M({ color: 0xb8641a, roughness: .04, clearcoat: 1, transparent: true, opacity: .55, depthWrite: false })), -1, 0, -.6, 0, false);
+      at(Gt, lathe(TT, [[0, .22], [1.2, .22], [1.36, .42], [1.4, 1.9], [1.2, 2.25], [0, 2.25]], SEG(o, 10), M({ color: 0xb8641a, roughness: .04, clearcoat: 1, transparent: true, opacity: .4, depthWrite: false })), -1, 0, -.6, 0, false);
       const st = new TT.Mesh(new TT.OctahedronGeometry(.62, 0), crys); st.scale.set(1, 1.2, 1); at(Gt, st, -1, 5.9, -.6, 0, false);
-      const tw = tumbler(o, Gt, 1.5, 1, [0x9a4e10, .35], 2.2, .85); tw.position.y = .14; }
-    { const Gc = grp(TT, g, -4.6, -MAT, -10.4, .1);
-      at(Gc, new TT.Mesh(RB(2.6, 3.4, 1.6, .15, 2), brass), 0, 1.9, 0); at(Gc, new TT.Mesh(RB(3, .3, 2, .1, 1), brass), 0, .15, 0); at(Gc, new TT.Mesh(new TT.TorusGeometry(.7, .09, 6, 16, Math.PI), brass), 0, 3.6, 0);
-      const face = canvasTex('tbl5-clock', 128, 128, (c, W) => { c.fillStyle = '#f6efe0'; c.fillRect(0, 0, W, W); c.strokeStyle = '#2a2420'; c.fillStyle = '#2a2420'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillRect(W / 2 + Math.cos(a) * 46 - 2, W / 2 + Math.sin(a) * 46 - 5, 4, 10); } c.lineWidth = 4; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 + 22, W / 2 - 18); c.stroke(); c.lineWidth = 2.5; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 - 6, W / 2 - 38); c.stroke(); });
-      const fc = new TT.Mesh(new TT.CircleGeometry(1, 24), M({ map: face, roughness: .3, clearcoat: .8, bump: false })); at(Gc, fc, 0, 2.1, .82, 0, false); }
+      snifter(o, Gt, 1.6, 1, 0xa8561a, .8).position.y = .14; }   // a brandy snifter, the spirit see-through (2026-11-07: was a whisky tumbler)
+    // a mantel clock (2026-11-07: was a brass carriage clock): a round black-faced clock with gold Roman numerals hung in a polished
+    // gold frame (two columns with ball finials, a top bar), on a black marble plinth veined with gold
+    { const Gc = grp(TT, g, -4.6, -MAT, -10.2, .12); Gc.scale.setScalar(.82); const gold = M({ color: 0xe0b45a, metalness: 1, roughness: .16 });
+      const mbT = canvasTex('tbl5-blackmarble', 256, 128, (c, W, H) => { c.fillStyle = '#121112'; c.fillRect(0, 0, W, H); const R = rng(71);
+        for (let k = 0; k < 9; k++) { c.strokeStyle = R() > .4 ? `rgba(214,170,90,${.35 + R() * .45})` : `rgba(240,236,228,${.15 + R() * .2})`; c.lineWidth = .6 + R() * 1.4; c.beginPath(); let x = R() * W, y = R() * H; c.moveTo(x, y); for (let n = 0; n < 7; n++) { x += (R() - .3) * 40; y += (R() - .5) * 30; c.lineTo(x, y); } c.stroke(); } });
+      at(Gc, new TT.Mesh(RB(6.2, 1.1, 2.4, .08, 2), M({ map: mbT, roughness: .12, clearcoat: 1, clearcoatRoughness: .05, bump: false })), 0, .55, 0);
+      const PX = 2.35, PH = 5.6, y0 = 1.1;
+      [-PX, PX].forEach(x => { at(Gc, lathe(TT, [[0, 0], [.42, 0], [.42, .16], [.3, .26], [.22, .4], [.2, PH - .5], [.28, PH - .38], [.24, PH - .26], [0, PH - .26]], SEG(o, 16), gold), x, y0, 0);
+        at(Gc, new TT.Mesh(new TT.SphereGeometry(.36, 16, 12), gold), x, y0 + PH + .08, 0); });
+      { const bar = new TT.Mesh(new TT.CylinderGeometry(.13, .13, 2 * PX, 12), gold); bar.rotation.z = Math.PI / 2; at(Gc, bar, 0, y0 + PH - .42, 0); [-1, 1].forEach(s2 => { const cl = new TT.Mesh(new TT.CylinderGeometry(.2, .2, .26, 12), gold); cl.rotation.z = Math.PI / 2; at(Gc, cl, s2 * (PX - .38), y0 + PH - .42, 0, 0, false); }); }
+      const CY = y0 + 2.75, CR = 1.7;
+      at(Gc, new TT.Mesh(new TT.CylinderGeometry(.09, .09, PH - .42 - 2.75 - CR + .1, 8), gold), 0, (y0 + PH - .42 + CY + CR) / 2, 0, 0, false);   // the hanger
+      at(Gc, new TT.Mesh(RB(.34, .3, .34, .08, 1), gold), 0, CY + CR + .1, 0, 0, false);
+      [-1, 1].forEach(s2 => { at(Gc, new TT.Mesh(new TT.SphereGeometry(.28, 12, 8), gold), s2 * (CR + .3), CY, 0); at(Gc, new TT.Mesh(new TT.CylinderGeometry(.07, .07, PX - CR - .3, 6), gold), s2 * (CR + .3 + (PX - CR - .3) / 2), CY, 0, 0, false).rotation.z = Math.PI / 2; });   // the pivots on the columns
+      { const case_ = new TT.Mesh(new TT.CylinderGeometry(CR, CR, .7, SEG(o, 40)), gold); case_.rotation.x = Math.PI / 2; at(Gc, case_, 0, CY, 0);
+        const bz = new TT.Mesh(new TT.TorusGeometry(CR - .06, .14, 10, SEG(o, 48)), gold); at(Gc, bz, 0, CY, .36, 0, false); }
+      const face = canvasTex('tbl5-clock2', 256, 256, (c, W) => { const C = W / 2; c.fillStyle = rad(c, C, C, C, [[0, '#1a1a1c'], [1, '#0a0a0b']]); c.fillRect(0, 0, W, W);
+        c.strokeStyle = 'rgba(214,176,96,.7)'; c.lineWidth = 1.2; c.beginPath(); c.arc(C, C, C * .62, 0, 7); c.stroke();
+        c.fillStyle = '#d8b062'; for (let i = 0; i < 60; i++) { const a = i * Math.PI / 30, r0 = C * .86; c.save(); c.translate(C + Math.cos(a) * r0, C + Math.sin(a) * r0); c.rotate(a); c.fillRect(-1, -1, i % 5 ? 4 : 7, i % 5 ? 1.6 : 2.6); c.restore(); }
+        const RN = ['XII', 'I', 'II', 'III', 'IIII', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+        c.font = `600 ${W * .1}px "Times New Roman", Georgia, serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        RN.forEach((n, i) => { const a = i * Math.PI / 6 - Math.PI / 2, r0 = C * .72; c.save(); c.translate(C + Math.cos(a) * r0, C + Math.sin(a) * r0); c.rotate(a + Math.PI / 2); c.fillText(n, 0, 0); c.restore(); });
+        const hand = (a, L, w) => { c.save(); c.translate(C, C); c.rotate(a); c.beginPath(); c.moveTo(-w, 0); c.lineTo(0, -L); c.lineTo(w, 0); c.lineTo(0, L * .14); c.closePath(); c.fill(); c.restore(); };
+        c.fillStyle = '#e4bc6a'; hand(-Math.PI / 6 * 2.2, C * .46, W * .022); hand(Math.PI / 6 * 1.8, C * .7, W * .016); c.beginPath(); c.arc(C, C, W * .028, 0, 7); c.fill(); });
+      const fc = new TT.Mesh(new TT.CircleGeometry(CR - .1, SEG(o, 40)), M({ map: face, roughness: .25, clearcoat: 1, clearcoatRoughness: .03, bump: false })); at(Gc, fc, 0, CY, .352, 0, false);
+      at(Gc, new TT.Mesh(new TT.CircleGeometry(CR - .1, SEG(o, 40)), M({ color: 0x0c0c0e, roughness: .4 })), 0, CY, -.352, Math.PI, false); }
     // the room: chevron parquet and a Persian-style rug, dark green panelled walls, built-in walnut shelves behind the desk
     const XL = -64, XR = 64, ZB = -46, ZF = 150, Y1 = 46;
     const parq = canvasTex('tbl5-parquet', sz(o, 1024), sz(o, 1024), (c, W) => { const n = 8, cw = W / n, R = rng(14), step = cw * .42;
@@ -1015,10 +1156,10 @@
     try { X.mergeStatic(g); } catch (e) {}
     // the lamp carries the mood (and the one shadow); the board also gets an even warm light from above: never a dark corner on the board
     scene.add(new TT.HemisphereLight(day ? 0xe4ecf8 : T === 'evening' ? 0xd8b0a0 : 0x8a90b8, 0x2a170c, day ? .48 : T === 'evening' ? .36 : .3));
-    const key = new TT.SpotLight(0xffc78a, day ? 2.4 : 4.2, 80, 1.05, .95, .9); key.position.set(LX, 3.7 - MAT, LZ + 2.1); key.target.position.set(3, 0, 4); scene.add(key); scene.add(key.target);
+    const key = new TT.SpotLight(0xffc78a, day ? 2.4 : 4.2, 80, 1.05, .95, .9); key.position.copy(bulbW); key.target.position.set(3, 0, 4); scene.add(key); scene.add(key.target);
     const over = new TT.DirectionalLight(0xffdcb0, .42); over.position.set(-4, 30, 10); scene.add(over);
     key.shadow.camera.near = 1; key.shadow.camera.far = 50; key.shadow.bias = -.0003;
-    const pool = new TT.PointLight(0xffb060, .9, 16, 2); pool.position.set(LX, 3.1, LZ + 2.1); scene.add(pool);
+    const pool = new TT.PointLight(0xffb060, .9, 16, 2); pool.position.copy(bulbW).y -= .8; scene.add(pool);
     const shelfL = new TT.PointLight(0xffc890, .6, 70, 2); shelfL.position.set(0, 18, ZB + 14); scene.add(shelfL);   // the shelves' light falling on the chair, the desk's back edge
     const moon = new TT.DirectionalLight(day ? 0xfff2e0 : T === 'evening' ? 0xffb080 : 0x8090c8, day ? (T === 'morning' ? .7 : .8) : T === 'evening' ? .4 : .16); moon.position.set(-40, day ? 22 : 12, 6); scene.add(moon);   // the window's light: daylight, sunset, or the moon
     return { bg: day ? '#1a120c' : '#0d0906', exp: day ? .9 : 1.02, minExp: day ? .85 : .95, board: .5, boardCol: 0xffe6c4, key, env: { top: '#2e2218', bottom: '#080504', panels: [[-12, 6, -6, 8, 5, '#ffc070', 5], [14, 10, 6, 7, 9, '#7a88b8', .6], [0, 10, 18, 20, 5, '#5a4636', .8], [-16, 4, 10, 5, 6, '#ffb060', .8], [0, 14, -20, 30, 10, '#ffcf90', .7]] } };
