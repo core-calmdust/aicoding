@@ -142,7 +142,7 @@
       const p = piece(t | (han ? 8 : 0)), [x, z] = g.userData.pt(i, j); p.position.set(x, Y0, z); g.add(p);
       const sh = X.contact(SIZE[t] * u * 1.05, .5); sh.position.set(x, Y0 + .001, z); g.add(sh);
     }));
-    g.scale.setScalar(.92);
+    g.scale.setScalar(1.1);   // the long side ≈ 10.1 (portal display-board size rule)
     return g;
   };
   X.janggi = { board, piece, u, W, D, SIZE, PH };

@@ -179,7 +179,7 @@
     function material(c) { let s = 0; for (let sq = 0; sq < 90; sq++) { const p = pos.at(sq); if (p && (p >> 3) === c) s += VAL[p & 7]; } return s; }
     function hud(msg) {
       const d = pos ? Math.round(material(0) - material(1)) : 0;
-      const side = c => { const adv = c ? -d : d; return `<span class="hs ${pos && pos.side === c && !over ? 'on' : ''}"><i class="dk ${c ? 'b' : 'w'}" style="${c ? 'background:#211b17' : 'background:#c8261d'}"></i>${pvp ? PX.n[c] : c === human ? L.you : L.ai}<b>${adv > 0 ? '+' + adv : ''}</b></span>`; };
+      const side = c => { const adv = c ? -d : d; return `<span class="hs ${pos && pos.side === c && !over ? 'on' : ''}"><i class="dk ${c ? 'b' : 'w'}" style="${c ? 'background:#c8261d' : 'background:#13705c'}"></i>${pvp ? PX.n[c] : c === human ? L.you : L.ai}<b>${adv > 0 ? '+' + adv : ''}</b></span>`; };
       ctx.hud(`${side(0)}<span class="hm">${msg || ''}</span>${side(1)}`);
     }
     function showMarks() {
@@ -299,7 +299,6 @@
     };
     window.Atlas3D.janggi._dbg = dbg;
     /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
-    let drawAsked = -99;
     const myTurn = () => !!pos && !over && !busy && !thinking && (pvp || pos.side === human);
     const undoN = () => pvp ? 1 : 2;
     function finish(loser, why) {   // resign / time-out: colour `loser` (0 Red, 1 Black) loses
@@ -346,23 +345,7 @@
           hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
         });
       },
-      // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
-      // （AI は強めの探索で形勢を見て、自分が良くなければ同意。20手未満と、断ってから6手以内は受けない）
-      canDraw: () => false,   // janggi has no draws
-      offerDraw() {
-        if (!myTurn()) return Promise.resolve('no');
-        if (moves.length - drawAsked < 6) return Promise.resolve('wait');
-        drawAsked = moves.length;
-        if (moves.length < 20) return Promise.resolve('no');
-        const j = ++hintJ, mvs = moves.slice();
-        return new Promise(res => {
-          if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
-          hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
-          hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
-        });
-      },
-      draw() { if (pos && !over) finish(-1, 'draw'); },
+      // no draws in janggi: no offerDraw / draw, so the portal's action bar shows no 引き分け button
       canResign: () => !!pos && !over,
       resign() { if (pos && !over) finish(pvp ? pos.side : human, 'resign'); },
       timeout(side) { finish(side, 'time'); },
