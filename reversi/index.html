@@ -1808,7 +1808,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=52');
+  const w = new Worker('engine.js?v=53');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1847,7 +1847,7 @@ let jobId = 0;
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 },
   21: { exact: 21, wld: 23 }, 22: { exact: 22, wld: 23 }, 23: { exact: 22, wld: 24 }, 24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=2', lead: 'mt-worker.js?v=5', helper: 'mt-worker.js?v=5', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=6', helper: 'mt-worker.js?v=6', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
@@ -2854,7 +2854,7 @@ const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
     var: !L.noise ? 0 : L.noise >= 400 ? 2 : 1, exact: L.exact, wld: L.wld || 0 }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30] } }, { key: 'threads' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [10000, 1e9] } }, { key: 'threads' },
     { key: 'exact', type: 'int', group: 'read', min: 0, max: 28, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
     { key: 'wld', type: 'int', group: 'read', min: 0, max: 30, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
     { key: 'book', label: Object.assign({}, ProSet.T.book, PRO_T.book) }, { key: 'var' }] }) : null;
@@ -2864,7 +2864,7 @@ function proCfg(lv) {
   const e = PRO.get(lv); if (!e) return null;
   const L = LEVELS_UI[lv] || LEVELS_UI[15], c = { depth: 60, exact: e.exact, mpc: L.mpc ? 1 : 0 }, o = { cfg: c };
   if (e.wld > e.exact) c.wld = e.wld;
-  if (e.limit.k === 'depth') c.depth = e.limit.v; else c.time = Math.round(e.limit.v * 1000);
+  if (e.limit.k === 'depth') c.depth = e.limit.v; else if (e.limit.k === 'nodes') c.nodes = e.limit.v; else c.time = Math.round(e.limit.v * 1000);
   if (e.var && !e.changed.includes('var') && L.noise) { c.noise = L.noise; c.depth = e.limit.k === 'depth' ? e.limit.v : L.depth; }   // (the level's own randomness: a fixed depth)
   else if (e.var) { o.variety = true; o.varietyMargin = e.var === 1 ? 150 : 400; }
   if (e.book) o.book = true; else o.noBook = true;

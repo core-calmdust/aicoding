@@ -342,9 +342,9 @@ function setWeights(arr, nphase) {
 }
 
 // ------------------------------------------------------ search state
-let nodes = 0, deadline = Infinity, aborted = false;
+let nodes = 0, deadline = Infinity, aborted = false, nodeMax = 0;   // nodeMax: PRO mode's node limit (cfg.nodes), 0 = none
 const ABORT = { abort: true };
-function checkTime() { if (Date.now() > deadline) { aborted = true; throw ABORT; } }
+function checkTime() { if (Date.now() > deadline || (nodeMax && nodes >= nodeMax)) { aborted = true; throw ABORT; } }
 
 // transposition table (midgame)
 const TT_BITS = 20, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
@@ -710,6 +710,7 @@ function wasmWeights() {
   WX.clear_tt(); WON = true;
 }
 function wasmIn() {
+  if (WX.set_node_max) WX.set_node_max(nodeMax);
   WX.set_state(nodes, deadline === Infinity ? 0 : deadline, MPC.on ? 1 : 0, MPC.t, MPC.A, MPC.B, MPC.C, MPC.minDepth, TUNE.evalMin, TUNE.searchMin, TUNE.sDepth, TUNE.kE);
 }
 function wasmOut(v) { nodes = WX.get_nodes(); if (WX.get_aborted()) { aborted = true; throw ABORT; } return v; }
@@ -910,6 +911,7 @@ function think(cells, toMove, opts, onProgress) {
   }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
   const time = opts.time ?? lv.time;
+  nodeMax = lv.nodes || 0;   // (PRO: a node limit — the search stops like at a deadline and keeps the last finished depth)
   const rand = opts.random || Math.random;
   const variety = opts.variety ?? (empties > 50);  // vary opening play
   let result = null;
@@ -1052,7 +1054,7 @@ function analyze(cells, toMove, opts, onProgress) {
   const [pl, ph, ol, oh] = pos;
   const moves = legalList(pl, ph, ol, oh);
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
-  const t0 = Date.now(); nodes = 0;
+  const t0 = Date.now(); nodes = 0; nodeMax = 0;
   const time = opts.time || 1500;
   let out = null;
   if (empties <= (opts.exact ?? 18)) {
@@ -1089,7 +1091,7 @@ function searchMove(cells, toMove, move, depth, alpha, beta, mode, dl) {
   const [pl, ph, ol, oh] = toBits(cells, toMove);
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
   const [a, b, c, d] = childOf(pl, ph, ol, oh, move);
-  deadline = dl || Infinity; aborted = false; nodes = 0;
+  deadline = dl || Infinity; aborted = false; nodes = 0; nodeMax = 0;
   try {
     if (mode === 'exact') return -solve(a, b, c, d, -beta, -alpha, empties - 1, 1, false);
     return -search(a, b, c, d, depth - 1, -beta, -alpha, 1, false);
