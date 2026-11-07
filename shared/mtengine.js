@@ -190,7 +190,7 @@
     const H = helpers(), SLOT = cfg.slot || (2 << 20);
     const isDone = cfg.isDone || (m => m.type === 'result'), isProg = cfg.isProg || (m => m.type === 'progress');   // the lead's message types
     let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0;
-    const P = { threads: 1 + H, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close };
+    const P = { threads: 1 + H, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t) };
     const spawn = (url, msg) => new Promise((res, rej) => {
       const w = new Worker(url);
       w.onerror = e => rej(e.message || 'worker');
@@ -245,6 +245,9 @@
       })().catch(e => { console.warn('[mtengine]', e); dead = true; if (j.resolve) j.resolve(j.cancelled ? null : undefined); }).finally(() => { if (job === j) job = null; if (dead) close(); });
       return out;
     }
+    function preempt(tag) {   // the AI's move goes first: a running job of another kind (analysis, coach, …) is cancelled
+      const j = job; if (j && !j.cancelled && j.tag !== tag) cancel();
+    }
     function cancel(tag) {
       const j = job; if (!j || j.cancelled || (tag !== undefined && j.tag !== tag)) return;
       j.cancelled = true; if (j.resolve) j.resolve(null);
@@ -260,7 +263,7 @@
     const sync = v => { if (v) { if (!p) timer = setTimeout(make, 1500); } else { clearTimeout(timer); if (p) { p.close(); p = null; } } };
     subs.push(sync); sync(on());
     return {
-      pool() { if (!on()) return null; const q = make(); return q && q.free() ? q : null; },
+      pool(prio) { if (!on()) return null; const q = make(); if (prio && q && !q.free()) q.preempt(prio); return q && q.free() ? q : null; },   // prio ('ai'): take the threads from a background job
       ready() { if (!on()) return Promise.resolve(null); const q = make(); return q.ready.then(okk => okk ? q : null); },
       cancel(tag) { if (p) p.cancel(tag); },
       get threads() { return p ? p.threads : 1; },
