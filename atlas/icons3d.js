@@ -12,14 +12,26 @@
   const T = THREE, X = Table3D, M = X.M, mesh = X.mesh;
   const C = (hex, o) => M(Object.assign({ color: hex, roughness: .42 }, o || {}));
   const gloss = (hex) => C(hex, { roughness: .22 });
+  // pale woods of the older icons: the grain of X.wood (made more realistic later) toned down so the icons keep their look
+  const softWood = (key, base, dark, ...r) => { const h = c => parseInt(c.slice(1), 16), A = h(base), B = h(dark), mix = (s) => ((A >> s & 255) + ((B >> s & 255) - (A >> s & 255)) * .38) | 0;
+    return X.wood(key, base, '#' + ((mix(16) << 16) | (mix(8) << 8) | mix(0)).toString(16).padStart(6, '0'), ...r); };
 
   /* ---------- chunky primitives ---------- */
-  function rbox(w, h, d, r, mat) {          // rounded box (extruded rounded rect + bevel)
+  // rounded box (extruded rounded rect + bevel). full: the true w × d footprint centred on the origin — the bases of the game
+  // icons use it (the older outline, kept for the pieces / creatures so they look as before, is r short on one side and off-centre)
+  function rbox(w, h, d, r, mat, full) {
     r = Math.min(r, w / 2, d / 2);
     const s = new T.Shape(), x = -w / 2 + r, z = -d / 2 + r, W = w - 2 * r, D = d - 2 * r;
+    if (full) {
+      const x0 = -w / 2, x1 = w / 2, z0 = -d / 2, z1 = d / 2;
+      s.moveTo(x0 + r, z0); s.lineTo(x1 - r, z0); s.quadraticCurveTo(x1, z0, x1, z0 + r);
+      s.lineTo(x1, z1 - r); s.quadraticCurveTo(x1, z1, x1 - r, z1);
+      s.lineTo(x0 + r, z1); s.quadraticCurveTo(x0, z1, x0, z1 - r); s.lineTo(x0, z0 + r); s.quadraticCurveTo(x0, z0, x0 + r, z0);
+    } else {
     s.moveTo(x, z); s.lineTo(x + W, z); s.quadraticCurveTo(x + W + r, z, x + W + r, z + r);
     s.lineTo(x + W + r, z + D); s.quadraticCurveTo(x + W + r, z + D + r, x + W, z + D + r);
     s.lineTo(x, z + D + r); s.quadraticCurveTo(x - r, z + D + r, x - r, z + D); s.lineTo(x - r, z + r); s.quadraticCurveTo(x - r, z, x, z);
+    }
     const bv = Math.min(r * .8, h / 2.2);
     const g = new T.ExtrudeGeometry(s, { depth: h - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv * .9, bevelSegments: 5, curveSegments: 10 });
     g.rotateX(-Math.PI / 2); g.translate(0, bv, 0); g.computeVertexNormals();
@@ -218,14 +230,14 @@
   const BASE_H = 1.05;
   function boardChunk(n, size, topMat, sideMat, lines, h) {
     const g = new T.Group(), inner = new T.Group();
-    g.add(rbox(size, BASE_H, size, .3, sideMat));
+    g.add(rbox(size, BASE_H, size, .3, sideMat, true));
     const top = mesh(new T.PlaneGeometry(size - .5, size - .5), topMat); top.rotation.x = -Math.PI / 2; top.position.y = BASE_H + .004; g.add(top);
     g.userData.lift = BASE_H - (h || .5);
     return g;
   }
   // wrap a scene: everything added after the base is lifted onto its top
   function lifted(base, ...items) { const L = new T.Group(); L.position.y = base.userData.lift || 0; items.forEach(i => L.add(i)); base.add(L); return base; }
-  function plinth(size, mat) { const b = new T.Group(); b.add(rbox(size, BASE_H, size, .3, mat)); b.userData.lift = BASE_H; return b; }
+  function plinth(size, mat) { const b = new T.Group(); b.add(rbox(size, BASE_H, size, .3, mat, true)); b.userData.lift = BASE_H; return b; }
   const gridMat = (key, base, line, n, opt = {}) => M({ map: X.canvasTex('icg-' + key, 512, 512, (g, W) => {
     g.fillStyle = base; g.fillRect(0, 0, W, W); g.strokeStyle = line; g.lineWidth = opt.lw || 14; g.lineCap = 'round';
     const pad = opt.points ? W / (n * 2) : 0, st = opt.points ? (W - 2 * pad) / (n - 1) : W / n;
@@ -242,7 +254,7 @@
       return g;
     },
     shogi() {
-      const g = boardChunk(3, 3.6, gridMat('sh', '#f1c97a', '#3a2410', 3, { lw: 8 }), M({ map: X.wood('icw', '#e8b866', '#b07a32') }));
+      const g = boardChunk(3, 3.6, gridMat('sh', '#f1c97a', '#3a2410', 3, { lw: 8 }), M({ map: softWood('icw', '#e8b866', '#b07a32') }));
       g.add(at(shogiPiece('歩', .62), -1.05, .62, 1.05, -Math.PI / 2, 0, 0));
       g.add(at(shogiPiece('金', .62), 1.05, .62, 1.05, -Math.PI / 2, 0, .1));
       g.add(at(shogiPiece('王', 1.55), 0, 1.6, -.3, -.42, 0, -.08));
@@ -279,7 +291,7 @@
       return g;
     },
     gomoku() {
-      const g = boardChunk(4, 3.8, gridMat('gm', '#efc173', '#3a2410', 4, { points: true, lw: 9 }), M({ map: X.wood('icw2', '#e2ad5c', '#a87430') }), null, .7);
+      const g = boardChunk(4, 3.8, gridMat('gm', '#efc173', '#3a2410', 4, { points: true, lw: 9 }), M({ map: softWood('icw2', '#e2ad5c', '#a87430') }), null, .7);
       const st = (3.8 - .3 - 3.5 / 4) / 3, p = i => -(st * 1.5) + st * i;
       [[0, 3, 1], [1, 2, 1], [2, 1, 1], [1, 1, 0], [2, 2, 0], [3, 3, 0]].forEach(([x, z, b]) => g.add(at(goStone(!!b, .78), p(x), .7, p(z))));
       g.add(at(goStone(true, 1.15), p(3) + .1, 1.9, p(0) - .1, .5, 0, -.3));
@@ -340,7 +352,7 @@
     },
     mancala() {
       const g = new T.Group();
-      g.add(rbox(3.9, .7, 3.9, .3, M({ map: X.wood('icm', '#c68a4c', '#7a4a20', 512, 512, 1.4), roughness: .5 })));
+      g.add(rbox(3.9, .7, 3.9, .3, M({ map: softWood('icm', '#c68a4c', '#7a4a20', 512, 512, 1.4), roughness: .5 }), true));
       const pit = C(0x6b3f1c, { roughness: .8 }), cols = [0xff5d5d, 0x36b4ff, 0xffc928, 0x3ccf91, 0x8d6bff, 0xff7fbe];
       [-1, 1].forEach((x, k) => {
         const p = mesh(new T.CylinderGeometry(.82, .68, .1, 40), pit); p.position.set(x * .9, .71, x * .9); g.add(p);
@@ -361,7 +373,7 @@
     },
     morris() {
       const top = M({ map: X.canvasTex('icnm', 512, 512, (c, W) => { c.fillStyle = '#f2dcae'; c.fillRect(0, 0, W, W); c.strokeStyle = '#3a2410'; c.lineWidth = 18; c.lineCap = 'round'; c.strokeRect(70, 70, W - 140, W - 140); c.strokeRect(190, 190, W - 380, W - 380); c.beginPath(); c.moveTo(W / 2, 70); c.lineTo(W / 2, 190); c.moveTo(70, W / 2); c.lineTo(190, W / 2); c.stroke(); }) });
-      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icnw', '#d9a865', '#9a6a2a') }));
+      const g = boardChunk(3, 3.6, top, M({ map: softWood('icnw', '#d9a865', '#9a6a2a') }));
       const p = v => -1.65 + 3.3 * v / 512;
       g.add(at(checker(0xf3ead8, .62), p(70), .5, p(70))); g.add(at(checker(0xf3ead8, .62), p(256), .5, p(70)));
       g.add(at(checker(0x7a2a1a, .62), p(70), .5, p(256))); g.add(at(checker(0x7a2a1a, .62), p(190), .5, p(190)));
@@ -381,7 +393,7 @@
     },
     ugolki() {   // a corner of a Gzhel board (white porcelain / cobalt, cobalt side band); a white porcelain piece hops over a cobalt one into the house
       const g = boardChunk(3, 3.6, gridMat('ugz2', '#f3f6fd', '#f3f6fd', 3, { check: '#163a94' }), C(0x1d3f9a, { roughness: .25 }));
-      const band = rbox(3.66, .09, 3.66, .32, gloss(0xf3f6fd)); band.position.y = .16; g.add(band);
+      const band = rbox(3.66, .09, 3.66, .32, gloss(0xf3f6fd), true); band.position.y = .16; g.add(band);
       const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
       const white = s => gzhelPiece(true, s);
       const blue = s => gzhelPiece(false, s);
@@ -1124,7 +1136,7 @@
     FIX[id] = () => {
       const g = ICONS[id]();
       if (PLINTH[id]) {
-        const [col, size] = PLINTH[id], wrap = new T.Group(), pl = rbox(size, BASE_H, size, .34, id === 'mancala' ? M({ map: X.wood('icpl', '#d39a5c', '#8a5a2a'), roughness: .5 }) : gloss(col));
+        const [col, size] = PLINTH[id], wrap = new T.Group(), pl = rbox(size, BASE_H, size, .34, id === 'mancala' ? M({ map: softWood('icpl', '#d39a5c', '#8a5a2a'), roughness: .5 }) : gloss(col), true);
         g.position.y = BASE_H; wrap.add(pl, g); return wrap;
       }
       const lift = g.userData.lift || 0;

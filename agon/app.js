@@ -1048,7 +1048,7 @@ function tourPage(id, spec, o) {
 const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''), html });
 const tourPic = (spec, o) => { const keep = E.rule; E.setRule('std'); const h = `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '', rule: 'std' }, o || {}))}</div>`; E.setRule(keep); return h; };
 // page 1: what the game is (history / how to win / culture), read only — common spec
-const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/agon.webp?v=1', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
+const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/agon.webp?v=2', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const RING1 = E.INNER.map(E.sqName);
 const arrow = (a, ng) => { const x = a.slice(); if (ng) x.ng = true; return x; };
 const TOUR_PAGES = [

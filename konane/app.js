@@ -1016,7 +1016,7 @@ const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: (
 const tourPic = (spec, o) => `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '' }, o || {}))}</div>`;
 const sq8 = nm => sqIdxN(nm, 8);
 // page 1: what the game is (history / how to win / culture), read only — common spec
-const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/konane.webp?v=1', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
+const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/konane.webp?v=2', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const TOUR_PAGES = [
   introPage(),
   tourRead('board', () => tourPic(fullSpec(8, []), { marks: { [sq8('a1')]: 'ok', [sq8('h8')]: 'ok', [sq8('d4')]: 'ok', [sq8('e5')]: 'ok' } })),
