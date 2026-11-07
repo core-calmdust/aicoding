@@ -157,7 +157,7 @@
           if (stopped || j !== aiJ || over) return;
           const wait = m.move >= 0 ? apply(m.move, ai) : 0;
           turn = human; busy = false; onTurn(); setTimeout(next, wait);
-        }, Math.max(0, 450 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.postMessage({ type: 'think', id: 1, cells: cells.slice(), toMove: ai, opts: { level: ctx.level } });
     }

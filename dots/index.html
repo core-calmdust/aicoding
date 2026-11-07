@@ -1528,7 +1528,7 @@ function aiTurn() {
   const tok = ++busy;
   aiPending = true; renderInfo();
   const last = S.log[S.log.length - 1];
-  const delay = settings.mode === 'watch' || puzzle ? (last && last.k ? 300 : 480) : (last && last.k && last.pl === S.turn ? 260 : 420);
+  const delay = settings.mode === 'watch' || puzzle ? (last && last.k ? 300 : 480) : (last && settings.anim ? 260 : 0);   // AIの着手は即時：前の線を引くアニメ（.26s）が終わるのを待つだけ（観戦・パズルは今までの間）
   const t0 = performance.now();
   const lv = puzzle ? 8 : levelFor(S.turn);
   const before = { rem: S.G.B - S.p.filled, sc: S.scores.slice(), pl: S.turn };

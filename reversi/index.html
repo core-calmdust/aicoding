@@ -2081,18 +2081,21 @@ function setDisc(s, color, anim) {
 }
 
 let lastMarkEl = null;
+let flipEndAt = 0;   // when the last disc of the running move has turned over (AIの着手は即時：AIはこれだけ待つ)
 function renderBoard(animInfo) {
   const p = rbShown();
   const cells = p.cells;
   const animate = animInfo && settings.anim;
   if (!animate) boardEl.classList.add('no-anim');
+  let endMs = 0;
   for (let s = 0; s < 64; s++) {
-    if (animate && s === animInfo.sq) setDisc(s, cells[s], 'drop');
+    if (animate && s === animInfo.sq) { setDisc(s, cells[s], 'drop'); endMs = Math.max(endMs, 320); }
     else if (animate && animInfo.flips.includes(s)) {
       const dist = Math.max(Math.abs((s >> 3) - (animInfo.sq >> 3)), Math.abs((s & 7) - (animInfo.sq & 7)));
-      setDisc(s, cells[s], 40 + dist * 55);
+      setDisc(s, cells[s], 40 + dist * 55); endMs = Math.max(endMs, 40 + dist * 55 + 360);   // (the turn is done at ~3/4 of its .48s)
     } else setDisc(s, cells[s], false);
   }
+  flipEndAt = performance.now() + endMs;
   if (!animate) { void boardEl.offsetWidth; boardEl.classList.remove('no-anim'); }
   // last move
   if (lastMarkEl) { lastMarkEl.remove(); lastMarkEl = null; }
@@ -2344,8 +2347,9 @@ async function schedule(animInfo) {
     if (token !== busyToken) return;
     if (!res) res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, prog, pc);
     if (token !== busyToken) return;
-    const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 1100 : 380);
-    const wait = minDelay - (performance.now() - t0);
+    // AIの着手は即時：前の手の石が返り終わるのを待つだけ。観戦は今までの間、パスの案内は少しだけ読ませる
+    const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 800 : 0);
+    const wait = settings.mode === 'watch' ? minDelay - (performance.now() - t0) : Math.max(minDelay - (performance.now() - t0), flipEndAt - performance.now());
     if (wait > 0) await sleep(wait);
     if (token !== busyToken) return;
     if (res.move < 0) return;

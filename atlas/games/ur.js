@@ -266,7 +266,7 @@
       phase = 'ai'; say(L.think);
       const t0 = Date.now(), r = await ask(st, roll.n); if (stopped || over) return;
       let m = r && r.move ? ms.find(x => x.from === r.move.from) : null; if (!m) m = E.think(st, roll.n, level) || ms[0];
-      const w = 420 - (Date.now() - t0); if (w > 0) await sleep(w);
+      // AIの着手は即時（前の手のアニメは終わっている）
       say(''); commit(m);
     }
     function end(w) {

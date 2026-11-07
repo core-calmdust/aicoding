@@ -312,7 +312,7 @@
         play(m, next);
       };
       const bm = bookMove();
-      if (bm) { const id0 = jobId; return later(() => { if (id0 === jobId) go(bm); }, 400); }
+      if (bm) { const id0 = jobId; return later(() => { if (id0 === jobId) go(bm); }, 0); }   // AIの着手は即時（定跡の手も）
       const id = ++jobId;
       worker.onmessage = e => {
         const r = e.data; if (r.id !== id || r.type !== 'result' || stopped || over) return;
@@ -321,7 +321,7 @@
           if (!r.move) return end({ winner: hc, reason: 'mate', ply: moves.length });
           if (!LV.noise && r.score <= -E.MATE + 200) return end({ winner: hc, reason: 'resign', ply: moves.length });   // hopeless: the strong levels resign, as in the full game
           go(r.move);
-        }, Math.max(0, 350 - (performance.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onerror = () => { if (stopped) return; worker.terminate(); worker = newWorker(); later(() => go(null), 50); };
       worker.postMessage({ type: 'think', id, sfen: START, moves: moves.slice(), opts: LV });

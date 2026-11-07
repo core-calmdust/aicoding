@@ -98,7 +98,8 @@ html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(
     const s = state(); if (!s) return;
     let fresh = null;
     if (anim && s.shown.length) { const c = s.shown.charCodeAt(s.shown.length - 1) - 49; fresh = c + ',' + (s.g[c].length - 1); }
-    set.sync(s.g, fresh, animOk() ? true : false);
+    const w = set.sync(s.g, fresh, animOk() ? true : false);
+    if (w > 0 && typeof dropEndAt === 'number') dropEndAt = Math.max(dropEndAt, performance.now() + w);   // the AI plays as soon as the 3D tile has landed (AIの着手は即時)
     marks();
   }
   const oRB = window.renderBoard;

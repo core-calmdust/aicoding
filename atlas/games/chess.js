@@ -292,7 +292,7 @@
           thinking = false;
           if (!m) { next(); return; }
           busy = true; play(m, () => { busy = false; next(); });
-        }, Math.max(0, 350 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? 0 : r.move); };
       worker.onerror = () => { worker = null; reply(0); };

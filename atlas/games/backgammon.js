@@ -329,7 +329,7 @@
       let moves = r && r.moves;
       const ok = moves && plays.some(x => { const q = pos.slice(); moves.forEach(c => BG.apply(q, 1, BG.mvFrom(c), BG.mvTo(c))); return BG.key(q) === BG.key(x.pos); });
       if (!ok) moves = plays[0].moves;   // (the worker failed to load: still a legal play)
-      const wait = 450 - (Date.now() - t0); if (wait > 0) await sleep(wait);
+      // AIの着手は即時（前の手のアニメもさいころも終わっている）
       { const q = pos.slice(), nt = moves.map(c => { const f = BG.mvFrom(c), tt = BG.mvTo(c), hit = BG.mvHit(BG.apply(q, 1, f, tt)); return (f === 25 ? 'bar' : f) + '/' + (tt === 0 ? 'off' : tt) + (hit ? '*' : ''); });
         lastAI = `${L.ai} Lv${level}: ${nt.join(' ')}`; }
       say('');

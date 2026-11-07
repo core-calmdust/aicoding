@@ -889,7 +889,7 @@ async function drive() {
       }
     }
     thinking = -1;
-    await sleep(settings.mode === 'watch' ? 250 : 120); if (tok !== busyToken) return;
+    if (settings.mode === 'watch') { await sleep(250); if (tok !== busyToken) return; }   // AIの着手は即時（観戦だけ間を取る）
     await doRoll(g, false); return;
   }
   // human
@@ -921,7 +921,7 @@ async function doRoll(g, opening) {
     const t0 = Date.now();
     const r = await request('ai', { type: 'move', pos: st.pos, side: s, dice, level: levelFor(s), tag: match.seed + g + ':' + k });
     if (tok !== busyToken || !r) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
-    const wait = (settings.mode === 'watch' ? 500 : 300) - (Date.now() - t0);
+    const wait = (settings.mode === 'watch' ? 500 : 0) - (Date.now() - t0);   // AIの着手は即時：さいころはもう止まっている（観戦だけ間を取る）
     if (wait > 0) await sleep(wait);
     if (tok !== busyToken) return;
     thinking = -1;

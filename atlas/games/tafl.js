@@ -226,7 +226,7 @@
           thinking = false;
           if (m == null || m < 0 || !legal.includes(m)) { next(); return; }
           busy = true; play(m, () => { busy = false; next(); });
-        }, Math.max(0, 380 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? -1 : r.move); };
       worker.onerror = () => { worker = null; reply(-1); };
