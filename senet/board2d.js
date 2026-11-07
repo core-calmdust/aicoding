@@ -357,8 +357,8 @@
       const R = IMG[o]; el('image', { href: boardHref(design, o), x: R[0], y: R[1], width: R[2], height: R[3], preserveAspectRatio: 'none' }, gImg);
       if (trays) for (const side of [0, 1]) {
         const [x, y, w, h] = trayBox(o, side), g = el('g', { class: 'sn-trayb', 'data-side': side, 'data-kind': 'goal' }, gTray);
-        el('rect', { x, y, width: w, height: h, rx: Math.min(w, h) / 2, fill: 'rgba(0,0,0,.18)', stroke: 'rgba(255,230,170,.16)', 'stroke-width': 1.5 }, g);
-        for (const [cx, cy] of traySlots(o, side, 'goal')) el('circle', { cx, cy, r: TD / 2 - 4, fill: 'rgba(0,0,0,.16)', stroke: 'rgba(0,0,0,.2)', 'stroke-width': 1.5 }, g);
+        el('rect', { x, y, width: w, height: h, rx: Math.min(w, h) / 2, fill: 'transparent' }, g);   // (no box: the borne-off pieces simply stand beside the board, as in the full game)
+        for (const [cx, cy] of traySlots(o, side, 'goal')) el('circle', { cx, cy, r: TD / 2 - 6, fill: 'rgba(0,0,0,.08)' }, g);
         if (interactive) { g.style.cursor = 'pointer'; g.addEventListener('click', e => { e.stopPropagation(); emit('tray', { side, kind: 'goal' }); }); }
       }
       for (let r = 0; r < 3; r++) for (let c = 0; c < 10; c++) {
@@ -506,7 +506,7 @@
   };
   // a flat stick, slightly rounded across (lit from the upper left): the white face painted with bands and a lozenge, the back plain wood
   function stickSVG(up, sty, id) {
-    if (SPR('stick1')) return `<image href="${SPR(up ? 'stick1' : 'stick0')}" x="-17" y="-76" width="34" height="152" preserveAspectRatio="none"/>`;   // (the 3D stick: same for every piece set)
+    if (SPR('stick1')) return `<image href="${SPR(up ? 'stick1' : 'stick0')}" x="-13" y="-69" width="26" height="138" preserveAspectRatio="none"/>`;   // (the 3D stick: same for every piece set)
     const c = STK[sty] || STK.tut, R = 'x="-12" y="-62" width="24" height="124" rx="11"';
     if (up) return `<rect ${R} fill="url(#${id}w)" stroke="${c.w3}" stroke-width="1.6"/><rect ${R} fill="url(#${id}v)"/>`
       + `<path d="M-8 -46h16M-8 -39h16M-8 46h16M-8 39h16" stroke="${c.line}" stroke-width="3" stroke-linecap="round" opacity=".85"/><path d="M0 -28 L7 0 L0 28 L-7 0 Z" fill="${c.blue}" fill-opacity=".18" stroke="${c.line}" stroke-width="2.2" opacity=".85"/>`
@@ -518,15 +518,15 @@
     let sty = piecesKey(opts.style), cur = [0, 0, 0, 0], busy = false;
     const id = 'snd' + (++uid) + '_';
     host.innerHTML = '';
-    const svg = el('svg', { viewBox: '-162 -46 324 92', class: 'sn-sticks', style: 'display:block;width:100%;height:100%;overflow:visible' }, host);
+    const svg = el('svg', { viewBox: '-128 -70 256 140', class: 'sn-sticks', style: 'display:block;width:100%;height:100%;overflow:visible' }, host);
     const mkDefs = () => { const c = STK[sty] || STK.tut; return `<defs><linearGradient id="${id}w" x1="0" x2="1"><stop offset="0" stop-color="${c.w2}"/><stop offset=".3" stop-color="${c.w}"/><stop offset=".62" stop-color="${c.w}"/><stop offset="1" stop-color="${c.w3}"/></linearGradient>`
       + `<linearGradient id="${id}b" x1="0" x2="1"><stop offset="0" stop-color="${c.b2}"/><stop offset=".32" stop-color="${c.b}"/><stop offset=".6" stop-color="${c.b}"/><stop offset="1" stop-color="${c.b2}"/></linearGradient>`
       + `<linearGradient id="${id}v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>`
       + `<pattern id="${id}g" width="24" height="124" patternUnits="userSpaceOnUse" x="-12" y="-62"><path d="M3 0 C6 30 1 62 5 124 M9 0 C12 40 7 80 11 124 M15 0 C13 36 18 70 15 124 M20 0 C22 44 18 90 21 124" fill="none" stroke="#1e0f05" stroke-opacity=".35" stroke-width="1.1"/><path d="M6 0 C9 50 4 90 8 124 M17 0 C15 52 20 96 18 124" fill="none" stroke="#f3c890" stroke-opacity=".18" stroke-width="1"/></pattern>`
       + `<filter id="${id}bl" x="-1" y="-.2" width="3" height="1.4"><feGaussianBlur stdDeviation="1.6"/></filter>`
       + `<radialGradient id="${id}s"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>`; };
-    // the sticks lie across the strip, two by two (the strip is long and low: lying down they are drawn much larger)
-    const X = [-78, 78, -80, 76], Y0 = [-21, -23, 21, 22], A0 = [92, 87, 89, 94];
+    // the sticks stand side by side, as the full game's 3D sticks do
+    const X = [-90, -30, 30, 90], Y0 = [0, 0, 0, 0], A0 = [-6, 3, -2, 7];
     const rest = X.map((x, i) => ({ x, y: Y0[i], a: A0[i] }));
     // the picture is built once (defs, four shadows, four sticks with both faces); a frame only moves them (attributes), so the
     // throw runs smoothly — rebuilding the SVG every frame (and decoding the stick pictures again) made it stutter
