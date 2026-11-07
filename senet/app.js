@@ -217,6 +217,7 @@ function placeDice() {
   if (dock.parentElement !== fr) fr.insertBefore(dock, $('#fxMsg'));
   // the sticks lie in the strip of the side to throw (h: left of its off-board row; v: the top of its column)
   const rr = view.stickRect(side), fb = fr.getBoundingClientRect(); if (!rr) return;
+  if (HB && HB.on && view.orient() !== 'v') { const g = rr.height * .5; rr.height += g; if (side === 1) rr.top -= g; }   // (PC: the sticks a size larger, reaching into the room above / below the board)
   dock.style.left = (rr.left - fb.left) + 'px'; dock.style.top = (rr.top - fb.top) + 'px'; dock.style.width = rr.width + 'px'; dock.style.height = rr.height + 'px';
   const host = $('#diceHost'); ['position', 'width', 'height', 'left', 'top', 'flex'].forEach(k => { host.style[k] = ''; });
   dock.classList.toggle('d3', false);

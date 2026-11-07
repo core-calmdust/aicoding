@@ -125,6 +125,11 @@
     folk: { ja: '3D 民藝盤', en: '3D folk-art board', zh: '3D 民间彩绘盘', ko: '3D 민예 판', es: 'Tablero folk 3D', fr: 'Plateau folk 3D', pt: 'Tabuleiro folk 3D', de: 'Volkskunst-Brett 3D', hi: '3D लोक-कला बोर्ड', ar: 'رقعة شعبية ثلاثية الأبعاد', ru: 'Народная 3D-доска', 'zh-TW': '民藝3D棋盤', id: 'Papan 3D seni rakyat', tr: '3D halk sanatı tahtası' },
     quilt: { ja: 'ハワイアンキルト 3D', en: 'Hawaiian quilt 3D', zh: '夏威夷拼布 3D', ko: '하와이안 퀼트 3D', es: 'Colcha hawaiana 3D', fr: 'Courtepointe hawaïenne 3D', pt: 'Colcha havaiana 3D', de: 'Hawaii-Quilt 3D', hi: 'हवाईयन क्विल्ट 3D', ar: 'لحاف هاوائي ثلاثي', ru: 'Гавайское одеяло 3D', 'zh-TW': '夏威夷拼布3D', id: 'Quilt Hawaii 3D', tr: 'Hawaii yorganı 3D' },
     papamu: { ja: '石のパパムー 3D', en: 'Stone papamū 3D', zh: '石刻棋盘 3D', ko: '돌 파파무 3D', es: 'Papamū de piedra 3D', fr: 'Papamū de pierre 3D', pt: 'Papamū de pedra 3D', de: 'Stein-Papamū 3D', hi: 'पत्थर का पापामू 3D', ar: 'بابامو حجري ثلاثي', ru: 'Каменная папаму 3D', 'zh-TW': '石製帕帕穆3D', id: 'Papamū batu 3D', tr: 'Taş papamū 3D' },
+    // senet (the design tab's 盤 names)
+    tut: { ja: "ツタンカーメン", en: "Tutankhamun", zh: "图坦卡蒙", ko: "투탕카멘", es: "Tutankamón", fr: "Toutânkhamon", pt: "Tutancâmon", de: "Tutanchamun", hi: "तूतनख़ामुन", ar: "توت عنخ آمون", ru: "Тутанхамон", 'zh-TW': "圖坦卡門", id: "Tutankhamun", tr: "Tutankamon" },
+    faience: { ja: "青いファイアンス", en: "Blue faience", zh: "蓝色釉陶", ko: "푸른 파이앙스", es: "Fayenza azul", fr: "Faïence bleue", pt: "Faiança azul", de: "Blaue Fayence", hi: "नीली फ़ायंस", ar: "القاشاني الأزرق", ru: "Синий фаянс", 'zh-TW': "藍色彩陶", id: "Fayans biru", tr: "Mavi fayans" },
+    papyrus: { ja: "墓の壁画", en: "Tomb painting", zh: "墓室壁画", ko: "무덤 벽화", es: "Pintura de tumba", fr: "Peinture de tombe", pt: "Pintura de túmulo", de: "Grabmalerei", hi: "मकबरे का चित्र", ar: "رسم المقبرة", ru: "Роспись гробницы", 'zh-TW': "墓室壁畫", id: "Lukisan makam", tr: "Mezar resmi" },
+    night: { ja: "ナイルの夜", en: "Nile night", zh: "尼罗之夜", ko: "나일의 밤", es: "Noche del Nilo", fr: "Nuit du Nil", pt: "Noite do Nilo", de: "Nilnacht", hi: "नील की रात", ar: "ليل النيل", ru: "Ночь на Ниле", 'zh-TW': "尼羅河之夜", id: "Malam di Sungai Nil", tr: "Nil gecesi" },
   };
   const BOARDS = {
     // atlas/skin/chess.js: 'atlas-chess-pc' = the piece set ('1' lux · 'wood' · '0' the 2D pieces), '-bd' = the board's wood
@@ -143,11 +148,15 @@
       get: () => (ls.get('atlas-agon-look3') || ls.get('atlas-agon-look')) === 'folk' ? 'folk' : 'victorian',
       set: k => { ls.set('atlas-agon-look', k); ls.set('atlas-agon-look3', k); } },
     // atlas/skin/konane.js: 'atlas-konane-look' ('papamu' the default | 'quilt')
+    // senet: every design is a 3D box — the game's own settings.design ('aicoding-senet'), read by atlas/models/senet.js and the skin
+    senet: { list: ['tut', 'faience', 'papyrus', 'night'],
+      get: () => { try { const d = (JSON.parse(ls.get('aicoding-senet') || '{}').settings || {}).design; return ['faience', 'papyrus', 'night'].includes(d) ? d : 'tut'; } catch (e) { return 'tut'; } },
+      set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'konane' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'konane' || id === 'senet' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
