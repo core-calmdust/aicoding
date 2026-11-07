@@ -9,6 +9,7 @@
 // Hints go concept (h) → cells to look at (look) → the answer. %P1% / %P2% are the disc names of the current skin.
 'use strict';
 const fs = require('fs'), path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const FILE = path.join(__dirname, '..', 'lessons.json');
 const L = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 
@@ -168,5 +169,5 @@ for (const id in RAMPS) {
   if (!s) throw new Error('no lesson ' + id);
   s.ramp = RAMPS[id];
 }
-fs.writeFileSync(FILE, JSON.stringify(D));
+fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE)));
 console.log('ramps written:', Object.entries(RAMPS).map(([k, v]) => k + ' ' + v.length).join(', '));

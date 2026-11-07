@@ -5,7 +5,7 @@
 'use strict';
 const E = require('../engine.js'), path = require('path');
 const { sqOf, sqName, M2I, I2M, C } = E, N = 15;
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const cells = s => String(s || '').split(/\s+/).filter(Boolean).map(sqOf);
 function setup(it) { return E.setup(it.rule || 'renju', { b: cells(it.b), w: cells(it.w), side: it.side || 1 }); }
 const fiveAt = (pos, m, c) => { const i = M2I[m]; return pos.b[i] === 0 && pos.cls[c][i] === C.FIVE; };

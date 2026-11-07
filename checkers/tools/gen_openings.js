@@ -3,7 +3,16 @@
 // each continued by this site's engine to a 14-ply study line, plus practice problems (engine values of every move).
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
-const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
+// ru / zh-TW / id / tr: looked up by the English text in tools/op_new4.json ({ en: [ru, zh-TW, id, tr] }); texts with a
+// placeholder ({n}, {m}) are looked up by the English template (the template is filled for each language). A new text
+// needs its 4 translations there (the generator stops otherwise).
+const NEW4 = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'op_new4.json'), 'utf8'));
+const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar, tpl) => {
+  const m = NEW4[tpl ? tpl.en : en]; if (!m) throw new Error('op_new4.json: no ru / zh-TW / id / tr for: ' + (tpl ? tpl.en : en));
+  const f = s => tpl ? s.replace(/\{(\w+)\}/g, (_, k) => tpl.v[k]) : s;
+  return { ja, en, zh, ko, es, fr, pt, de, hi, ar, ru: f(m[0]), 'zh-TW': f(m[1]), id: f(m[2]), tr: f(m[3]) };
+};
 // [id, group, moves, label (short), title]
 const SETS = [
   ['single', 'a', '11-15 22-18', 'Single Corner', L10('シングル・コーナー', 'Single Corner', '单角', '싱글 코너', 'Esquina simple', 'Coin simple', 'Canto simples', 'Einfache Ecke', 'सिंगल कॉर्नर', 'الزاوية المفردة')],
@@ -37,7 +46,9 @@ const NOTE = {
   dev: L10('駒を進めて形を整える。', 'Developing.', '出子，整形。', '말을 전개.', 'Desarrollo.', 'Développement.', 'Desenvolvimento.', 'Entwicklung.', 'विकास की चाल।', 'تطوير.'),
 };
 const EVW = { even: L10('互角', 'level', '均势', '호각', 'igualado', 'équilibré', 'equilibrado', 'ausgeglichen', 'बराबर', 'متكافئ'), b: L10('黒やや良し', 'Black slightly better', '黑稍优', '흑 약간 유리', 'algo mejor para las negras', 'léger avantage aux noirs', 'pretas um pouco melhor', 'Schwarz etwas besser', 'काला थोड़ा बेहतर', 'الأسود أفضل قليلًا'), w: L10('白やや良し', 'White slightly better', '白稍优', '백 약간 유리', 'algo mejor para las blancas', 'léger avantage aux blancs', 'brancas um pouco melhor', 'Weiß etwas besser', 'सफ़ेद थोड़ा बेहतर', 'الأبيض أفضل قليلًا') };
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
+// the engine's verdict after a note: '（AI: …）' (ja / zh), '（AI：…）' (zh-TW), ' (ИИ: …)', ' (YZ: …)', ' (AI: …)'
+const AIW = l => l === 'ja' || l === 'zh' ? ['（AI: ', '）'] : l === 'zh-TW' ? ['（AI：', '）'] : l === 'ru' ? [' (ИИ: ', ')'] : l === 'tr' ? [' (YZ: ', ')'] : [' (AI: ', ')'];
 (async () => {
   const W = await load(), E = W.E;
   const ms = +(process.argv[2] || 2500);
@@ -56,7 +67,7 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
       const f = E.mFrom(m), tt = E.mTo(m), cap = E.mCap(m);
       let k = cap ? (before.clone().play(m).hasCaps() ? 'exch' : 'jump') : CENTER.includes(tt) ? 'center' : (before.turn === 1 ? f < 4 : f >= 28) ? 'back' : [3, 4, 11, 12, 19, 20, 27, 28].includes(tt + 1) ? 'side' : 'dev';
       const vb = (before.turn === 1 ? 1 : -1) * L[0].v, ev = Math.abs(vb) < 25 ? 'even' : vb > 0 ? 'b' : 'w';
-      const note = {}; for (const l of LANGS) note[l] = NOTE[k][l] + (l === 'ja' || l === 'zh' ? '（' : ' (') + 'AI: ' + EVW[ev][l] + (l === 'ja' || l === 'zh' ? '）' : ')');
+      const note = {}; for (const l of LANGS) note[l] = NOTE[k][l] + AIW(l)[0] + EVW[ev][l] + AIW(l)[1];
       notes.push(note);
     }
     // the named moves get the opening's name on the last one
@@ -77,5 +88,5 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
     sets.push({ id, grp, side, show: named, moves: mvs, label: { en: label }, title, short: null, intro: null, study: { line, notes }, problems });
     console.error(id, 'line', line.length, 'problems', problems.length);
   }
-  fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify({ version: 1, sets }));
+  fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify(keepLangs({ version: 1, sets }, path.join(__dirname, '..', 'openings.json'))));
 })();

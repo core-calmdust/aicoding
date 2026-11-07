@@ -8,6 +8,7 @@
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js');
 const { RAMPS, UI } = require('./lesson_ramps.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const G = +(process.argv[2] || 160);
 let seed = 4242;
 const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
@@ -97,5 +98,5 @@ for (const st of STEPS) {
   });
 }
 for (const st of STEPS) if (st.problems.length < 5) process.stderr.write(`WARNING ${st.id}: only ${st.problems.length} problems\n`);
-fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify({ version: 1, steps: STEPS, rampUi: UI }));
+fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify(keepLangs({ version: 1, steps: STEPS, rampUi: UI }, path.join(__dirname, '..', 'lessons.json'))));
 process.stderr.write('lessons.json: ' + STEPS.map(s => s.id + ' ' + s.problems.length + (s.ramp ? '+' + s.ramp.length : '')).join(', ') + '\n');

@@ -5,6 +5,8 @@
 // Warm-up ramps (step.ramp, not scored) come from tools/lesson_ramps.js.
 // node tools/gen_lessons.js > lessons.json
 const E = require('../engine.js'); E.setRule('std');
+const path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 let seed = 1842; const rand = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // mulberry32
 const ri = n => Math.floor(rand() * n);
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = ri(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -210,4 +212,4 @@ add('s_best', 'strategy', gather(fromPool(1), p => {
 }, 5, 's_best'));
 
 const RUI = require('./lesson_ramps.js').UI;
-console.log(JSON.stringify({ version: 1, steps, rampUi: RUI }));
+console.log(JSON.stringify(keepLangs({ version: 1, steps, rampUi: RUI }, path.join(__dirname, '..', 'lessons.json'))));

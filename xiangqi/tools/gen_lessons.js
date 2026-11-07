@@ -7,6 +7,7 @@
 // Each problem stores the engine value of every legal move (sc), so near-best answers earn partial points.
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const VAL = [0, 0, 200, 200, 400, 900, 450, 100];
 let rs = 12345; const rnd = n => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; return rs % n; };
 (async () => {
@@ -114,6 +115,6 @@ let rs = 12345; const rnd = n => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; 
     t_capture: 'tactics', t_fork: 'tactics', t_check: 'tactics', t_defend: 'tactics', m_mate2: 'mates', m_hc: 'mates', m_dc: 'mates', m_face: 'mates', e_rook: 'endgame', e_pawn: 'endgame' };
   const all = Object.assign({}, Object.fromEntries(Object.entries(got).map(([k, v]) => [k, pick(v, want[k])])), mates, ends);
   const steps = Object.keys(COURSE).filter(id => all[id] && all[id].length >= 3).map(id => ({ id, course: COURSE[id], problems: all[id].map(p => { const o = { s: p.s }; if (p.ok) o.ok = p.ok; o.best = p.best; if (p.sc) o.sc = p.sc; return o; }) }));
-  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify({ version: 1, steps }));
+  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify(keepLangs({ version: 1, steps }, path.join(__dirname, '..', 'lessons.json'))));
   console.log('lessons.json', steps.length, 'steps', steps.reduce((a, s) => a + s.problems.length, 0), 'problems');
 })();

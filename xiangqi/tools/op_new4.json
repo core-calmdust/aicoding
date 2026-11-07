@@ -1,0 +1,344 @@
+{
+ "Central Cannon vs Screen Horses": [
+  "Центральная пушка против коней-ширмы",
+  "中炮對屏風馬",
+  "Meriam Tengah lawan Kuda Tirai",
+  "Merkez Topu - Perde Atları"
+ ],
+ "The most famous defence: both horses guard the centre": [
+  "Самая известная защита: оба коня охраняют центр",
+  "最經典的布局：雙馬護中",
+  "Pertahanan paling terkenal: kedua kuda menjaga tengah",
+  "En ünlü savunma: iki at merkezi korur"
+ ],
+ "Central Cannon, river-crossing rook vs Screen Horses": [
+  "Центральная пушка с колесницей за рекой против коней-ширмы",
+  "中炮過河車對屏風馬",
+  "Meriam Tengah, kereta menyeberang sungai lawan Kuda Tirai",
+  "Merkez Topu, nehri geçen kale - Perde Atları"
+ ],
+ "An aggressive line: the rook dashes across the river": [
+  "Агрессивный вариант: колесница мчится за реку",
+  "車直衝過河，積極進攻",
+  "Variasi agresif: kereta melesat menyeberangi sungai",
+  "Saldırgan bir varyant: kale nehrin karşısına atılır"
+ ],
+ "Five-Seven Cannons vs Screen Horses": [
+  "Пушки на пятой и седьмой против коней-ширмы",
+  "五七炮對屏風馬",
+  "Meriam Lima-Tujuh lawan Kuda Tirai",
+  "Beş-Yedi Topları - Perde Atları"
+ ],
+ "Red's cannons stand on files five and seven": [
+  "Пушки красных стоят на пятой и седьмой вертикалях",
+  "雙炮分置五路與七路",
+  "Meriam Merah berdiri di lajur lima dan tujuh",
+  "Kırmızı'nın topları beşinci ve yedinci dikeyde"
+ ],
+ "Central Cannon vs Reverse Palace Horses": [
+  "Центральная пушка против обратных дворцовых коней",
+  "中炮對反宮馬",
+  "Meriam Tengah lawan Kuda Istana Terbalik",
+  "Merkez Topu - Ters Saray Atları"
+ ],
+ "A cannon on the advisor's corner, then the horses": [
+  "Пушка в угол советника, затем кони",
+  "炮置士角再跳馬",
+  "Meriam di sudut penasihat, lalu kuda-kuda",
+  "Danışman köşesine top, sonra atlar"
+ ],
+ "Same Direction Cannons": [
+  "Пушки в одну сторону",
+  "順炮直車對橫車",
+  "Meriam Searah",
+  "Aynı Yön Topları"
+ ],
+ "Black answers with a central cannon from the same side": [
+  "Чёрные отвечают центральной пушкой с той же стороны",
+  "黑方同側也架中炮，針鋒相對",
+  "Hitam membalas dengan meriam tengah dari sisi yang sama",
+  "Siyah aynı taraftan bir merkez topuyla karşılık verir"
+ ],
+ "Opposite Direction Cannons": [
+  "Пушки в разные стороны",
+  "列炮",
+  "Meriam Berlawanan",
+  "Zıt Yön Topları"
+ ],
+ "Black's central cannon comes from the other side": [
+  "Центральная пушка чёрных приходит с другой стороны",
+  "黑方用另一側的炮還架中炮",
+  "Meriam tengah Hitam datang dari sisi lain",
+  "Siyah'ın merkez topu diğer taraftan gelir"
+ ],
+ "Central Cannon vs Single Lifted Horse": [
+  "Центральная пушка против одного поднятого коня",
+  "中炮對單提馬",
+  "Meriam Tengah lawan Kuda Tunggal di Tepi",
+  "Merkez Topu - Tek Kenar Atı"
+ ],
+ "One horse goes to the edge": [
+  "Один конь уходит на край",
+  "一馬跳邊",
+  "Satu kuda pergi ke tepi",
+  "Bir at kenara gider"
+ ],
+ "Elephant Opening": [
+  "Дебют слона",
+  "飛相局",
+  "Pembukaan Gajah",
+  "Fil Açılışı"
+ ],
+ "A calm first move: the elephant goes up to guard the centre": [
+  "Спокойный первый ход: слон поднимается охранять центр",
+  "先飛相穩固陣形",
+  "Langkah pertama yang tenang: gajah naik menjaga tengah",
+  "Sakin bir ilk hamle: fil merkezi korumak için çıkar"
+ ],
+ "Elephant Opening vs Palace-crossing Cannon": [
+  "Дебют слона против пушки через дворец",
+  "飛相對過宮炮",
+  "Pembukaan Gajah lawan Meriam Lintas Istana",
+  "Fil Açılışı - Sarayı Geçen Top"
+ ],
+ "Black swings a cannon across the palace": [
+  "Чёрные переводят пушку через дворец",
+  "黑方炮過宮",
+  "Hitam menggeser meriam melintasi istana",
+  "Siyah bir topu sarayın içinden geçirir"
+ ],
+ "Pawn Opening (pawns face each other)": [
+  "Дебют солдата (солдаты друг против друга)",
+  "仙人指路對兵局",
+  "Pembukaan Prajurit (prajurit saling berhadapan)",
+  "Er Açılışı (erler karşı karşıya)"
+ ],
+ "Push one pawn and see what the opponent does": [
+  "Продвиньте солдата и посмотрите, что сделает соперник",
+  "挺一兵投石問路",
+  "Majukan satu prajurit dan lihat apa yang dilakukan lawan",
+  "Bir eri sürün ve rakibin ne yaptığına bakın"
+ ],
+ "Pawn Opening vs Cannon under the Pawn": [
+  "Дебют солдата против пушки под солдатом",
+  "仙人指路對卒底炮",
+  "Pembukaan Prajurit lawan Meriam di Bawah Prajurit",
+  "Er Açılışı - Er Altı Topu"
+ ],
+ "Black aims a cannon at the advanced pawn's file": [
+  "Чёрные наводят пушку на вертикаль продвинутого солдата",
+  "炮打卒底，針對挺起的兵",
+  "Hitam membidikkan meriam ke lajur prajurit yang maju",
+  "Siyah bir topu ilerleyen erin dikeyine çevirir"
+ ],
+ "Horse Opening": [
+  "Дебют коня",
+  "起馬局",
+  "Pembukaan Kuda",
+  "At Açılışı"
+ ],
+ "A flexible first move: develop a horse first": [
+  "Гибкий первый ход: сначала вывести коня",
+  "先跳馬，靈活穩健",
+  "Langkah pertama yang lentur: kembangkan kuda dulu",
+  "Esnek bir ilk hamle: önce bir at çıkarın"
+ ],
+ "Palace-crossing Cannon": [
+  "Пушка через дворец",
+  "過宮炮",
+  "Meriam Lintas Istana",
+  "Sarayı Geçen Top"
+ ],
+ "Red's first move swings a cannon across the palace": [
+  "Первым ходом красные переводят пушку через дворец",
+  "首著炮過宮",
+  "Langkah pertama Merah menggeser meriam melintasi istana",
+  "Kırmızı ilk hamlede bir topu sarayın içinden geçirir"
+ ],
+ "Advisor-corner Cannon": [
+  "Пушка в угол советника",
+  "士角炮",
+  "Meriam Sudut Penasihat",
+  "Danışman Köşesi Topu"
+ ],
+ "A solid first move: the cannon on the advisor's corner": [
+  "Надёжный первый ход: пушка в угол советника",
+  "炮置士角，穩中求變",
+  "Langkah pertama yang kokoh: meriam di sudut penasihat",
+  "Sağlam bir ilk hamle: danışman köşesine top"
+ ],
+ "Red places a cannon on the central file; Black brings both horses towards the centre to protect the middle pawn, like a folding screen. It is the most played opening system in xiangqi.": [
+  "Красные ставят пушку на центральную вертикаль; чёрные выводят обоих коней к центру, защищая центрального солдата, словно складной ширмой. Это самая популярная дебютная система сянци.",
+  "紅方架中炮，黑方雙馬如屏風般護住中卒，是象棋中最常見的布局。",
+  "Merah menaruh meriam di lajur tengah; Hitam membawa kedua kuda ke tengah untuk melindungi prajurit tengah, seperti tirai lipat. Ini sistem pembukaan yang paling sering dimainkan dalam xiangqi.",
+  "Kırmızı merkez dikeye bir top koyar; Siyah orta eri korumak için iki atını katlanır bir perde gibi merkeze getirir. Xiangqi'de en çok oynanan açılış sistemidir."
+ ],
+ "Against the Screen Horses, Red sends its right rook across the river at once to attack Black's horse and pawns — a sharp, heavily studied line.": [
+  "Против коней-ширмы красные сразу отправляют правую колесницу за реку, атакуя коня и солдат чёрных, — острый и глубоко изученный вариант.",
+  "對屏風馬，紅方右車直接過河，壓制黑馬與卒，是研究最深的激烈布局之一。",
+  "Melawan Kuda Tirai, Merah langsung mengirim kereta kanannya menyeberangi sungai untuk menyerang kuda dan prajurit Hitam — variasi tajam yang banyak dipelajari.",
+  "Perde Atlarına karşı Kırmızı sağ kalesini hemen nehrin karşısına göndererek Siyah'ın atına ve erlerine saldırır — keskin ve çok çalışılmış bir varyant."
+ ],
+ "Red swings its other cannon to the seventh file to press on Black's right wing (the pawn and horse there). Popular in modern tournaments.": [
+  "Красные переводят вторую пушку на седьмую вертикаль, давя на правый фланг чёрных (солдата и коня там). Популярно в современных турнирах.",
+  "另一門炮平到七路，壓制黑方右翼（那裡的卒與馬），是現代比賽常見的布局。",
+  "Merah menggeser meriam lainnya ke lajur tujuh untuk menekan sayap kanan Hitam (prajurit dan kuda di sana). Populer di turnamen modern.",
+  "Kırmızı diğer topunu yedinci dikeye kaydırarak Siyah'ın sağ kanadına (oradaki er ve ata) baskı yapar. Modern turnuvalarda popülerdir."
+ ],
+ "Black puts a cannon on the advisor's corner (file six) with a horse on each side — the \"Reverse Palace Horses\", a flexible defence aiming for counterplay.": [
+  "Чёрные ставят пушку в угол советника (шестая вертикаль) с конём по обе стороны — «обратные дворцовые кони», гибкая защита с расчётом на контригру.",
+  "黑方炮置士角（六路），兩側跳馬，形成「反宮馬」，是富有反擊力的靈活應法。",
+  "Hitam menaruh meriam di sudut penasihat (lajur enam) dengan kuda di kedua sisinya — “Kuda Istana Terbalik”, pertahanan lentur yang mengincar serangan balik.",
+  "Siyah danışman köşesine (altıncı dikey) bir top koyar, iki yanına da birer at — “Ters Saray Atları”, karşı oyun arayan esnek bir savunma."
+ ],
+ "Black meets the central cannon with its own central cannon from the same side (\"Same Direction Cannons\"): both sides stare down the centre in an old and sharp battle.": [
+  "Чёрные встречают центральную пушку своей центральной пушкой с той же стороны («пушки в одну сторону»): стороны противостоят по центру в старинной острой борьбе.",
+  "黑方以同側炮還架中炮，形成「順炮」，雙方中路對峙，是古老而激烈的布局。",
+  "Hitam menyambut meriam tengah dengan meriam tengahnya sendiri dari sisi yang sama (“Meriam Searah”): kedua pihak saling tatap di tengah dalam pertarungan kuno yang tajam.",
+  "Siyah merkez topuna aynı taraftan kendi merkez topuyla karşılık verir (“Aynı Yön Topları”): iki taraf merkezde karşı karşıya gelir; eski ve keskin bir savaş."
+ ],
+ "Black puts its cannon from the opposite side onto the central file. Both sides aim at the enemy's central pawn — a line of mutual attack.": [
+  "Чёрные ставят на центральную вертикаль пушку с противоположной стороны. Обе стороны целятся в центрального солдата соперника — вариант взаимной атаки.",
+  "黑方以對側的炮架中炮，形成「列炮」，雙方互攻中卒。",
+  "Hitam menaruh meriam dari sisi berlawanan ke lajur tengah. Kedua pihak membidik prajurit tengah lawan — variasi saling serang.",
+  "Siyah karşı taraftaki topunu merkez dikeye koyar. İki taraf da rakibin orta erini hedefler — karşılıklı saldırı varyantı."
+ ],
+ "Black jumps one horse to the edge file instead of the centre (\"Single Lifted Horse\"), opening the rook's path early.": [
+  "Чёрные прыгают одним конём не к центру, а на крайнюю вертикаль («один поднятый конь»), рано открывая путь колеснице.",
+  "黑方一馬跳邊而非向中，形成「單提馬」，意在儘早開通車路。",
+  "Hitam melompatkan satu kuda ke lajur tepi alih-alih ke tengah (“Kuda Tunggal di Tepi”), membuka jalan kereta lebih awal.",
+  "Siyah bir atını merkez yerine kenar dikeye sıçratır (“Tek Kenar Atı”), kalenin yolunu erkenden açar."
+ ],
+ "Red opens by lifting an elephant to the centre — not a quick attack like the Central Cannon, but a solid set-up. Black pushes its seventh pawn to free a horse.": [
+  "Красные начинают, поднимая слона к центру, — не быстрая атака, как центральная пушка, а прочное построение. Чёрные продвигают седьмого солдата, освобождая коня.",
+  "紅方首著飛相，不急於進攻，先求穩固。黑方挺7卒替馬開路。",
+  "Merah membuka dengan menaikkan gajah ke tengah — bukan serangan cepat seperti Meriam Tengah, melainkan susunan yang kokoh. Hitam memajukan prajurit ketujuh untuk membebaskan kuda.",
+  "Kırmızı bir fili merkeze çıkararak açar — Merkez Topu gibi hızlı bir saldırı değil, sağlam bir diziliş. Siyah bir atı serbest bırakmak için yedinci erini sürer."
+ ],
+ "Black answers the Elephant Opening by moving a cannon across the palace to file four, fighting from the side instead of the centre.": [
+  "Чёрные отвечают на дебют слона, переводя пушку через дворец на четвёртую вертикаль и ведя борьбу с фланга, а не по центру.",
+  "對飛相局，黑方炮過宮到四路，從側翼展開。",
+  "Hitam menjawab Pembukaan Gajah dengan memindahkan meriam melintasi istana ke lajur empat, bertarung dari sayap alih-alih dari tengah.",
+  "Siyah Fil Açılışına bir topu sarayın içinden dördüncü dikeye geçirerek karşılık verir; merkez yerine kanattan savaşır."
+ ],
+ "Its poetic name means \"the immortal points the way\": Red pushes the third pawn to probe, keeping both the Central Cannon and the Elephant Opening in reserve. Black answering with a pawn push is the \"facing pawns\" line.": [
+  "Его поэтическое название означает «бессмертный указывает путь»: красные продвигают третьего солдата для разведки, оставляя в запасе и центральную пушку, и дебют слона. Ответ чёрных продвижением солдата — вариант «солдаты друг против друга».",
+  "「仙人指路」投石問路，可視對方應法轉中炮或飛相。黑方也挺卒應對，就是「對兵局」。",
+  "Nama puitisnya berarti “dewa menunjuk jalan”: Merah memajukan prajurit ketiga untuk menjajaki, sambil menyimpan Meriam Tengah maupun Pembukaan Gajah. Jika Hitam membalas dengan memajukan prajurit, itulah variasi “prajurit berhadapan”.",
+  "Şiirsel adı “ölümsüz yolu gösterir” anlamına gelir: Kırmızı yoklamak için üçüncü erini sürer, hem Merkez Topunu hem Fil Açılışını yedekte tutar. Siyah'ın er sürerek karşılık vermesi “erler karşı karşıya” varyantıdır."
+ ],
+ "Black swings a cannon onto the file of Red's advanced pawn (\"cannon under the pawn\"), targeting it and fighting for the initiative.": [
+  "Чёрные переводят пушку на вертикаль продвинутого красного солдата («пушка под солдатом»), целясь в него и борясь за инициативу.",
+  "對仙人指路，黑方炮打卒底，針對紅方挺起的兵，積極爭先。",
+  "Hitam menggeser meriam ke lajur prajurit Merah yang maju (“meriam di bawah prajurit”), mengincarnya dan berebut inisiatif.",
+  "Siyah bir topu Kırmızı'nın ilerleyen erinin dikeyine kaydırır (“er altı topu”), onu hedef alıp inisiyatif için savaşır."
+ ],
+ "Red starts with a horse move, developing pieces before committing in the centre. Black replies with a pawn push.": [
+  "Красные начинают ходом коня, развивая фигуры, прежде чем определиться в центре. Чёрные отвечают продвижением солдата.",
+  "紅方首著起馬，先出子整形，不急於中路。黑方挺卒應對。",
+  "Merah memulai dengan langkah kuda, mengembangkan bidak sebelum menentukan sikap di tengah. Hitam membalas dengan memajukan prajurit.",
+  "Kırmızı bir at hamlesiyle başlar, merkezde karar vermeden önce taşlarını geliştirir. Siyah bir er sürerek karşılık verir."
+ ],
+ "Red swings its right cannon across the palace to file six, leaving the centre open and attacking from the side. Black answers with a central cannon.": [
+  "Красные переводят правую пушку через дворец на шестую вертикаль, оставляя центр открытым и атакуя с фланга. Чёрные отвечают центральной пушкой.",
+  "紅方右炮過宮到六路，避開中路從側翼進攻，黑方以中炮應對。",
+  "Merah menggeser meriam kanannya melintasi istana ke lajur enam, membiarkan tengah terbuka dan menyerang dari sayap. Hitam membalas dengan meriam tengah.",
+  "Kırmızı sağ topunu sarayın içinden altıncı dikeye geçirir, merkezi açık bırakıp kanattan saldırır. Siyah merkez topuyla karşılık verir."
+ ],
+ "Red places a cannon on the advisor's corner (file four) — less aggressive than the Central Cannon, but well balanced between defence and counterattack.": [
+  "Красные ставят пушку в угол советника (четвёртая вертикаль) — менее агрессивно, чем центральная пушка, но с хорошим балансом защиты и контратаки.",
+  "紅方炮置士角（四路），不如中炮激進，但攻守兼備。",
+  "Merah menaruh meriam di sudut penasihat (lajur empat) — tidak seagresif Meriam Tengah, tetapi seimbang antara bertahan dan serangan balik.",
+  "Kırmızı danışman köşesine (dördüncü dikey) bir top koyar — Merkez Topu kadar saldırgan değil ama savunma ile karşı saldırı arasında dengeli."
+ ],
+ "The rook comes into play.": [
+  "Колесница вступает в игру.",
+  "出車。",
+  "Kereta masuk permainan.",
+  "Kale oyuna girer."
+ ],
+ "Red slightly better": [
+  "у красных чуть лучше",
+  "紅稍優",
+  "Merah sedikit unggul",
+  "Kırmızı biraz iyi"
+ ],
+ "level": [
+  "равно",
+  "均勢",
+  "seimbang",
+  "eşit"
+ ],
+ "A horse develops.": [
+  "Конь развивается.",
+  "跳馬出子。",
+  "Kuda dikembangkan.",
+  "At gelişir."
+ ],
+ "A cannon moves.": [
+  "Ход пушкой.",
+  "調炮。",
+  "Meriam bergerak.",
+  "Top oynar."
+ ],
+ "A capture (exchange).": [
+  "Взятие (размен).",
+  "吃子（兌換）。",
+  "Makan (pertukaran).",
+  "Taş alma (değiş)."
+ ],
+ "A pawn advances.": [
+  "Солдат идёт вперёд.",
+  "挺兵（卒）。",
+  "Prajurit maju.",
+  "Er ilerler."
+ ],
+ "Advisor or elephant: the defence is firmed up.": [
+  "Советник или слон: защита укреплена.",
+  "補仕（相）鞏固防守。",
+  "Penasihat atau gajah: pertahanan diperkuat.",
+  "Danışman ya da fil: savunma sağlamlaşır."
+ ],
+ "Red better": [
+  "у красных лучше",
+  "紅優",
+  "Merah unggul",
+  "Kırmızı daha iyi"
+ ],
+ "A cannon to the centre.": [
+  "Пушка в центр.",
+  "炮佔中路。",
+  "Meriam ke tengah.",
+  "Top merkeze."
+ ],
+ "Black slightly better": [
+  "у чёрных чуть лучше",
+  "黑稍優",
+  "Hitam sedikit unggul",
+  "Siyah biraz iyi"
+ ],
+ "Check.": [
+  "Шах.",
+  "將軍。",
+  "Skak.",
+  "Şah."
+ ],
+ "The general moves.": [
+  "Генерал ходит.",
+  "動帥（將）。",
+  "Jenderal bergerak.",
+  "General oynar."
+ ],
+ "Black better": [
+  "у чёрных лучше",
+  "黑優",
+  "Hitam unggul",
+  "Siyah daha iyi"
+ ],
+ "The {n} move order.": [
+  "Порядок ходов: {n}.",
+  "「{n}」的著法。",
+  "Urutan langkah {n}.",
+  "{n} hamle sırası."
+ ]
+}

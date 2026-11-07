@@ -136,10 +136,31 @@
         ctx.hud(`${card(1)}${card(0)}`);
       } else ctx.hud(`${side(0)}${btn}${side(1)}`);
       if (phase === 'roll' || phase === 'pass') { if (msg) toast(msg); }
+      chip();
+    }
+    // the roll button also beside the dice themselves (where the eye is): it follows them on screen while it is your throw
+    let chipEl = null, chipT = 0;
+    function chipAt() {
+      if (!chipEl || stopped) return;
+      const s = st ? st.turn : 0, ps = [0, 1, 2, 3].map(i => kit.projDie(i)).filter(Boolean);
+      let p = null;
+      if (ps.length) p = { x: ps.reduce((a, q) => a + q.x, 0) / ps.length, y: Math.max(...ps.map(q => q.y)) };
+      else p = kit.projSlot(s, 'start', 3);
+      if (!p || !isFinite(p.x)) { chipEl.style.display = 'none'; return; }
+      const r = chipEl.getBoundingClientRect(), x = Math.max(8, Math.min(innerWidth - r.width - 8, p.x - r.width / 2)), y = Math.max(70, Math.min(innerHeight - r.height - 90, p.y + 26));
+      chipEl.style.display = ''; chipEl.style.transform = `translate(${x | 0}px, ${y | 0}px)`;
+    }
+    function chip() {
+      const want = !stopped && !over && !isPL() && mine() && (phase === 'roll' || phase === 'pass');
+      if (!want) { if (chipEl) { chipEl.remove(); chipEl = null; } clearInterval(chipT); chipT = 0; return; }
+      const html = phase === 'roll' ? `🎲 ${X.roll}` : X.pass, k = phase === 'roll' ? 'roll' : 'pass';
+      if (!chipEl) { chipEl = document.createElement('button'); chipEl.type = 'button'; chipEl.className = 'urdk'; document.body.appendChild(chipEl); }
+      chipEl.dataset.urt = k; chipEl.innerHTML = html; chipAt();
+      if (!chipT) chipT = setInterval(chipAt, 120);
     }
     let toastEl = null, toastT = 0;
     const css = document.createElement('style');
-    css.textContent = '.hud .urb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.urtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;animation:urT .25s ease-out;white-space:nowrap}@keyframes urT{from{transform:translate(-50%,-8px);opacity:0}}@media (max-width:560px){.hud .urb{padding:7px 11px;font-size:13px}}';
+    css.textContent = '.urdk{position:fixed;left:0;top:0;z-index:85;padding:9px 18px;border:0;border-radius:999px;font:900 15px/1 var(--font,system-ui),sans-serif;color:#fff;background:linear-gradient(#ff7a6a,#ff5d5d);box-shadow:0 4px 0 #d93c3c,0 8px 18px rgba(0,0,0,.35);cursor:pointer;white-space:nowrap;animation:urdkP 1.4s ease-in-out infinite}@keyframes urdkP{50%{filter:brightness(1.12)}}.hud .urb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.urtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;animation:urT .25s ease-out;white-space:nowrap}@keyframes urT{from{transform:translate(-50%,-8px);opacity:0}}@media (max-width:560px){.hud .urb{padding:7px 11px;font-size:13px}}';
     document.head.appendChild(css);
     function toast(m) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m) return; toastEl = document.createElement('div'); toastEl.className = 'urtoast'; toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, 1800); }
     const say = m => { msg = m || ''; hud(); };
@@ -329,7 +350,7 @@
       resign() { if (!over && st) finish(pvp ? st.turn : 0, 'resign'); },
       timeout(side) { finish(side, 'time'); },
       stop() {
-        stopped = true; kit.stop(); timers.forEach(clearTimeout); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
+        stopped = true; if (chipEl) chipEl.remove(); clearInterval(chipT); kit.stop(); timers.forEach(clearTimeout); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove();
       },

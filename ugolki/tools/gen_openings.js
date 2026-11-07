@@ -3,6 +3,8 @@
 // allowed for the first moves), then continued by the engine; practice problems with the engine's values.
 // node tools/gen_openings.js > openings.json
 const E = require('../engine.js'); E.setRule('c33');
+const path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const mir = s => s.replace(/([a-h])([1-8])/g, (_, f, r) => 'hgfedcba'['abcdefgh'.indexOf(f)] + (9 - r));
 const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 const SETS = [
@@ -53,4 +55,4 @@ for (const S of SETS) {
   out.push({ id: S.id, grp: 'a', side: 1, show: 4, moves: book, label: S.label, title: S.title, short: null, intro: null, study: { line, notes }, problems });
   console.error(S.id, book);
 }
-process.stdout.write(JSON.stringify({ version: 1, sets: out }));
+process.stdout.write(JSON.stringify(keepLangs({ version: 1, sets: out }, path.join(__dirname, '..', 'openings.json'))));

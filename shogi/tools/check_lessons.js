@@ -6,7 +6,7 @@
 // and every text exists in 10 languages.   node tools/check_lessons.js
 'use strict';
 const E = require('../engine.js'), path = require('path');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const D = require(path.join(__dirname, '..', 'lessons.json'));
 const posOf = sfen => { const p = new E.Position(); p.setSfen(sfen); return p; };
 const sqOk = q => /^[1-9][a-i]$/.test(q);
