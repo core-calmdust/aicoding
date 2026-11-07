@@ -20,3 +20,6 @@
 - ちゃぶ台対局 atlas/games/fanorona.js（9×5、AI／二人対戦、接近・離脱の選択、連続取りは次の点 or 玉をタップで終了）。
 - 横向き固定（rotwrap）の外側ページではスキンを読まない（iframe 内で読む）。
 - ポータルのカードゲーム（poker / blackjack / baccarat / solitaire）は2D専用：ボードカードに「カードゲームは2Dで遊ぶよ」の案内（atlas/app.js CARD2D、i18n bv.card2d）。
+
+## 対局設定の Pro モード（2026-11-08）
+対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js` の `ProSet.ladder()`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間／深さ／局面数）、定跡（ファノロナ本来のルールのみ。既定は Lv.15 以上。アルケルケには出さない）、手のばらつき（深さで読むときだけ）。変えた値は fanorona/engine.js `think` の `cfg`（LEVELS と同じキー）で渡す。レート戦では使わない。戦績のキーは `ai:pro<レベル>`、相手名に「PRO」。

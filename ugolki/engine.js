@@ -335,10 +335,11 @@ function bestMove(pos, hist, maxD, ms, nk) {
 }
 const histOf = (start, moves) => { const { hashes } = replay(start, moves); hashes.pop(); return hashes; };
 
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -375,7 +376,7 @@ function think(start, moves, level, rand, rule) {
     const vals = rootValues(pos, 3, hist), good = vals.filter(e => e.v >= vals[0].v - 10);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
-  const r = bestMove(pos, hist, 60, L.ms || 3000, L.nk || 0);
+  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, L.nk || 0);
   return { move: r.move, v: r.v, depth: r.depth };
 }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
@@ -556,7 +557,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
     queueP = queueP.then(() => {
       try {
         setRule(m.rule || 'c33');
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });

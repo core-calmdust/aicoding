@@ -441,10 +441,11 @@ function resist(pos, vals) {
   for (const e of same) { const v = -evaluate(pos.clone().play(e.m)); if (v > bv) { bv = v; bm = e.m; } }
   return bm;
 }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -471,7 +472,7 @@ function think(start, moves, level, rand, rule) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  const r = bestMove(pos, hist, 60, L.ms || 3000, L.nk || 0);
+  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, L.nk || 0);
   if (r.v < -WINT) {   // lost anyway: resist as long as possible
     nodes = 0; stop = false; tEnd = Date.now() + 600; nodeLimit = Infinity;
     const vals = rootValues(pos, Math.max(2, Math.min(4, r.depth)), hist); const rs = resist(pos, vals); if (rs !== null) return { move: rs, v: r.v, depth: r.depth };
@@ -611,7 +612,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
     queueP = queueP.then(() => {
       try {
         setRule(m.rule || 'std');
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });

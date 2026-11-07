@@ -10,3 +10,6 @@
 - 三角形数：盤＋駒 約3.4万。ショーケース scale 1.3。
 - ルールコース（atlas/rules/alquerque.js、案内役マンカラビ g-gem）：9ステップ（2Dチュートリアル TOUR_ALQ の局面）、連続取りは必ず続ける、正解で自動で次へ。`window.__aqRules`。
 - ポータル：FULL_SKIN に alquerque、Atlas3D.alquerque（levels 20、kyu/dan 表記はファノロナと同じ）。
+
+## 対局設定の Pro モード（2026-11-08）
+対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js` の `ProSet.ladder()`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間／深さ／局面数）、定跡（ファノロナ本来のルールのみ。既定は Lv.15 以上。アルケルケには出さない）、手のばらつき（深さで読むときだけ）。変えた値は fanorona/engine.js `think` の `cfg`（LEVELS と同じキー）で渡す。レート戦では使わない。戦績のキーは `ai:pro<レベル>`、相手名に「PRO」。
