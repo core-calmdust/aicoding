@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -222,7 +222,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 let cssDone = false;
 function addCss() { if (cssDone) return; cssDone = true; const st = document.createElement('style'); st.id = 'proSetCss'; st.textContent = CSS; document.head.appendChild(st); }
 // threads available on this page now (shared/mtengine.js): 1 = none
-function maxThreads() { const M = window.MTEngine; return M && M.on && M.on() ? 1 + M.helpers() : 1; }
+function maxThreads() { const M = window.MTEngine; return M && M.on && M.on() ? 1 + (M.maxHelpers ? M.maxHelpers() : M.helpers()) : 1; }   // (every core the browser reports — no fixed cap, the user's own choice)
 
 function init(cfg) {
   const key = 'aicoding-pro:' + cfg.game;
@@ -346,7 +346,7 @@ function init(cfg) {
         const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
       } else if (p.type === 'threads') {
-        const mx = maxThreads(), list = []; for (let n = 1; n <= mx; n = n < 2 ? 2 : n * 2) list.push(n); if (list[list.length - 1] !== mx) list.push(mx);
+        const mx = maxThreads(), list = [1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64].filter(n => n < mx); list.push(mx);
         const cur = eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1;
         ctl = segHtml('threads', list.map(n => ({ v: n, label: String(n) })), Math.min(cur, mx), d.threads != null ? Math.min(d.threads, mx) : 1);
       } else if (p.type === 'bool') {
