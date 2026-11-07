@@ -782,7 +782,7 @@ function orderRoot(moves, prev) {
   return moves.slice().sort((a, b) => (prev.get(b) ?? -1e9) - (prev.get(a) ?? -1e9));
 }
 
-// 20 strength levels (v4.1). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
+// 25 strength levels (v4.1: 20, 2026-11-08: +21-25). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
 // mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-20 also split the root over several workers in the page).
 // The old 10 levels are the same settings as new 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20. Measured Elo of each level: MODEL_CARD.md.
 const LEVELS = [
@@ -807,6 +807,12 @@ const LEVELS = [
   { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
   { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
   { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
+  // 21-25 (2026-11-08): longer thinking on all threads (page: MT_CFG); max = the hard limit per move in ms (else 2.5 × time)
+  { depth: 60, exact: 21, wld: 23, time: 7000, max: 17500, mpc: 1 },    // 21
+  { depth: 60, exact: 22, wld: 23, time: 9000, max: 20000, mpc: 1 },    // 22
+  { depth: 60, exact: 22, wld: 24, time: 11000, max: 20000, mpc: 1 },   // 23
+  { depth: 60, exact: 23, wld: 24, time: 14000, max: 20000, mpc: 1 },   // 24
+  { depth: 60, exact: 23, wld: 25, time: 18000, max: 20000, mpc: 1 },   // 25
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -886,7 +892,7 @@ function think(cells, toMove, opts, onProgress) {
     return { move: moves[0], score: sc / SCALE, depth: 1, nodes, ms: Date.now() - t0, forced: true };
   }
 
-  const hardTime = time ? time * 2.5 : Infinity;
+  const hardTime = time ? Math.min(time * 2.5, opts.time == null && lv.max || Infinity) : Infinity;   // (lv.max: Lv.21-25 stop by 20 s)
   deadline = time ? t0 + hardTime : Infinity;
   const softTime = time || Infinity;
 

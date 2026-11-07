@@ -1098,42 +1098,44 @@ EXPORT(root_res) int root_res(void) { return gameRes; }
 EXPORT(set_weight) void set_weight(int i, int v) { if (i >= 0 && i < NW) EW[i] = v; }
 EXPORT(set_noise) void set_noise(int amp, int seed) { noiseAmp = amp; noiseSeed = (u64)seed * 0x9E3779B97F4A7C15ull + 1; }
 
-// ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段)
+// ---------------------------------------------------------------- AI levels (25 steps: 15級 … 1級, 初段 … 五段, Lv.21-25)
 // kind 0: fixed-depth values of all moves + noise / an occasional slip; kind 1: normal search (node budget or time) with
 // a small evaluation noise for the middle levels. Shared by the browser (engine.js) and the native tools.
 typedef struct { int kind, depth, nodesH, ms, noise, slip, blind, miss; } Level;   // nodesH: node budget in hundreds; slip, blind, miss: per mille
 // blind: the move is chosen without the tactical horizon (escape lines, king captures); miss (defenders only): an escape in
 // one is passed over — the low levels' defenders would otherwise never let a beginner's open line go
-static const Level LEVELS[21] = { { 0 },
+static const Level LEVELS[26] = { { 0 },
   { 0, 1, 0, 0, 320, 300, 700, 500 }, { 0, 1, 0, 0, 260, 220, 550, 400 }, { 0, 1, 0, 0, 200, 160, 420, 300 },   // 15級 14級 13級
   { 0, 1, 0, 0, 160, 120, 300, 200 }, { 0, 2, 0, 0, 140, 90, 200, 120 }, { 0, 2, 0, 0, 110, 60, 120, 70 }, { 0, 2, 0, 0, 85, 40, 60, 30 },   // 12級 … 9級
   { 1, 99, 20, 0, 60, 0, 0 }, { 1, 99, 20, 0, 50, 0, 0 }, { 1, 99, 22, 0, 40, 0, 0 }, { 1, 99, 35, 0, 30, 0, 0 },     // 8級 … 5級
   { 1, 99, 58, 0, 22, 0, 0 }, { 1, 99, 60, 0, 15, 0, 0 }, { 1, 99, 85, 0, 10, 0, 0 }, { 1, 99, 260, 0, 6, 0, 0 },   // 4級 … 1級
   { 1, 99, 800, 3000, 0, 0, 0 }, { 1, 99, 1200, 3000, 0, 0, 0 }, { 1, 99, 3200, 3000, 0, 0, 0 },            // 初段 二段 三段
-  { 1, 99, 0, 1200, 0, 0, 0 }, { 1, 99, 0, 2500, 0, 0, 0 } };                                             // 四段 五段
+  { 1, 99, 0, 1200, 0, 0, 0 }, { 1, 99, 0, 2500, 0, 0, 0 },                                               // 四段 五段
+  // Lv.21-25 (2026-11-08): longer thinking (the page uses all threads); ms is the hard limit per move (Lv.25: 20 s)
+  { 1, 99, 0, 4000, 0, 0, 0 }, { 1, 99, 0, 6000, 0, 0, 0 }, { 1, 99, 0, 9000, 0, 0, 0 }, { 1, 99, 0, 13500, 0, 0, 0 }, { 1, 99, 0, 20000, 0, 0, 0 } };
 static TLS u64 trng = 1;
 static u32 tr32(void) { trng ^= trng << 13; trng ^= trng >> 7; trng ^= trng << 17; return (u32)(trng >> 11); }
 static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(tr32() % 2001) - 1000; return s * amp / 2000; }   // approx. N(0, amp^2 / 3)
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
 // with the net, a level can read fewer nodes (NN_NODES, hundreds of nodes; 0 = the level's own) and use a larger noise (NN_NOISE, % of the level's)
 // so that the levels keep a smooth ladder from the hand-made ones below 8級 (see MODEL_CARD.md)
-static int NN_NODES[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 620, 0, 0 },   // 8級 … 三段 (hundreds of nodes); 四段・五段: the level's time
-           NN_NOISE[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 800, 800, 800, 800, 800, 800, 600, 400, 0, 0, 0, 0, 0 };
+static int NN_NODES[26] = { 0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 620, 0, 0, 0, 0, 0, 0, 0 },   // 8級 … 三段 (hundreds of nodes); 四段・五段: the level's time
+           NN_NOISE[26] = { 0, 0, 0, 0, 0, 0, 0, 0, 800, 800, 800, 800, 800, 800, 600, 400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 // rule sets where the search v2 needs other node budgets than the levels' own (hand-made evaluation) for the same strength
 // (0 = the level's own; measured, MODEL_CARD.md): Tablut and Tawlbwrdd (escape on any edge square) and Ard Ri (7x7, a king of four sides)
-static const int VAR_NODES[6][21] = { { 0 }, { 0 },
+static const int VAR_NODES[6][26] = { { 0 }, { 0 },
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 130, 200, 480, 0, 0, 0, 0, 0 },
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 130, 200, 480, 0, 0, 0, 0, 0 }, { 0 },
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0, 90, 200, 0, 900, 1800, 3600, 0, 0 } };
 static int nnNoiseMul = 100;
 EXPORT(nn_noise) void nn_noise(int pct) { nnNoiseMul = pct; }
-EXPORT(nn_level) void nn_level(int level, int nodesH, int noisePct) { if (level >= 1 && level <= 20) { NN_NODES[level] = nodesH; NN_NOISE[level] = noisePct; } }
+EXPORT(nn_level) void nn_level(int level, int nodesH, int noisePct) { if (level >= 1 && level <= 25) { NN_NODES[level] = nodesH; NN_NOISE[level] = noisePct; } }
 static void think1(int level, int seed);
 // the learned evaluation (when loaded) is used from 8級 up (searching levels); the weakest levels keep the hand-made one,
 // whose noise and slips were set on its scale
 EXPORT(think) void think(int level, int seed) {
   int keep = nnUse;
-  if (level < 1) level = 1; if (level > 20) level = 20;
+  if (level < 1) level = 1; if (level > 25) level = 25;
   if (LEVELS[level].kind == 0) nnUse = 0;
   think1(level, seed);
   nnUse = keep;

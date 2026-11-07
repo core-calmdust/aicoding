@@ -52,9 +52,9 @@ let LANG = detectLang();
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-// AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
-const LV_MAX = 20;
-const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
+// AI strength: 25 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20), Lv.21–25 (2026-11-08: longer thinking on all threads)
+const LV_MAX = 25;
+const LV = i => 'Lv.' + i;   // levels 1 … 25 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
 const LVD = i => t('lvd')[i <= 3 ? 0 : i <= 7 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2sr-lv2mt-pro1';
+const ENGINE_URL = 'engine.js?v=nn2sr-lv25';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -133,11 +133,11 @@ function noteNps(nodes, ms) {
 }
 let aiW = makeWorker(), anaW = makeWorker();
 // multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, the coach, the review box and the
-// timed top levels (Lv.19・20) outside rated games go to the pool of threads when it is free; rated games and the
+// timed top levels (Lv.19–25, rated games too) go to the pool of threads when it is free; rated games and the
 // node-limited levels (Lv.1–18) stay on the one-thread workers (the same moves on every device)
 const mtSetup = (start, mv, v) => { const p = E.Pos.from(start, v), a = [E.VID[p.v], p.turn === P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]); a.push(mv.length); for (const m of mv) a.push(mFrom(m) | (mTo(m) << 8)); return a; };
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=20261108lv2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=20261108lv25', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ setup: mtSetup(m.start, m.moves || [], m.v) }),
 }) : null;
@@ -1135,9 +1135,10 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 const PRO_TN = [0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 620];   // (= engine.c NN_NODES, hundreds of nodes: the defaults shown)
+const PRO_TS = { 19: 1.2, 20: 2.5, 21: 4, 22: 6, 23: 9, 24: 13.5, 25: 20 };   // (= engine.c LEVELS ms of the timed levels, seconds)
 var PRO = window.ProSet ? ProSet.init({ game: 'tafl', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: lv === 19 ? 1.2 : 2.5 }, threads: ProSet.maxThreads() },
+  defaults: lv => lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: PRO_TS[lv] || 2.5 }, threads: ProSet.maxThreads() },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads', when: e => e.limit.k === 'time' }] }) : null;
 function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
@@ -1165,11 +1166,11 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo, Copenhagen rules)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 420000, inc: 4000 };
 // rating of each AI step (15級 = 450): measured by self-play of adjacent levels, both sides, smoothed (MODEL_CARD.md)
-const RT_LV = [0, 450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650];   // 2026-11: Lv.8 up with the learned evaluation (Copenhagen), MODEL_CARD.md
+const RT_LV = [0, 450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650, 2695, 2735, 2765, 2795, 2825];   // 2026-11: Lv.8 up with the learned evaluation (Copenhagen); Lv.21–25 (2026-11-08) estimated from node-doubling matches, MODEL_CARD.md
 // the defenders' advantage at equal strength (Elo, fitted from the same self-play per level, smoothed): a player who takes the
 // defenders is expected to score as if RT_SIDE_LV[level] points stronger; it grows with the level (strong attackers rarely break through)
-const RT_SIDE_LV = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350];
-const RT_SIDE = lv => RT_SIDE_LV[Math.max(1, Math.min(20, lv || 1))];
+const RT_SIDE_LV = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350];
+const RT_SIDE = lv => RT_SIDE_LV[Math.max(1, Math.min(LV_MAX, lv || 1))];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

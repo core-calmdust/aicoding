@@ -236,8 +236,8 @@ function judge(pos, hashes) {
   return { over: false };
 }
 
-// ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段) — see engine.c think()
-const LEVELS = 20;
+// ---------------------------------------------------------------- AI levels (25 steps: 15級 … 1級, 初段 … 五段, Lv.21–25 timed) — see engine.c think()
+const LEVELS = 25;
 
 // ---------------------------------------------------------------- tiny JS search (fallback when WebAssembly is not available)
 function jsEval(p) {
@@ -383,7 +383,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261108lv2';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261108lv25';   // engine.wasm + nnue-copenhagen.bin.gz
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory, sent
   // with the first message ('mtinit'); the helpers (mt-helper.js) search the same root position meanwhile (Lazy SMP).
   // The net goes into the shared memory once (here); the helpers use it from there.
