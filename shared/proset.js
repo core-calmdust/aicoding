@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2s"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2sv"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -68,6 +68,18 @@ const T = {
   'u.ply': { ja: '手', en: 'ply', zh: '步', 'zh-TW': '步', ko: '수', es: 'ply', fr: 'ply', pt: 'ply', de: 'Ply', ru: 'пл.', tr: 'ply', id: 'ply', hi: 'प्लाई', ar: 'نقلة' },
   'u.nodes': { ja: '局面', en: 'nodes', zh: '局面', 'zh-TW': '局面', ko: '국면', es: 'nodos', fr: 'nœuds', pt: 'nós', de: 'Knoten', ru: 'узл.', tr: 'düğüm', id: 'node', hi: 'नोड', ar: 'عقدة' },
   threads: { ja: 'スレッド数', en: 'Threads', zh: '线程数', 'zh-TW': '執行緒數', ko: '스레드 수', es: 'Hilos', fr: 'Threads', pt: 'Threads', de: 'Threads', ru: 'Потоки', tr: 'İş parçacığı', id: 'Thread', hi: 'थ्रेड', ar: 'المسارات' },
+  'threads.need': { ja: '思考の制限が「時間」で、手のばらつきが「なし」のときに使われます（今の設定では1スレッド）。', en: 'Used when the thinking limit is Time and variety is None (one thread with the current settings).',
+    zh: '思考限制为“时间”且着法变化为“无”时使用（当前设置下为单线程）。', 'zh-TW': '思考限制為「時間」且著法變化為「無」時使用（目前設定為單執行緒）。', ko: '생각 제한이 "시간"이고 수의 변화가 "없음"일 때 사용됩니다(현재 설정은 1스레드).',
+    es: 'Se usa con límite por Tiempo y variedad Ninguna (un hilo con la configuración actual).', fr: 'Utilisé avec une limite en Temps et la variété sur Aucune (un seul thread avec les réglages actuels).',
+    pt: 'Usado com limite por Tempo e variedade Nenhuma (um thread com a configuração atual).', de: 'Wird genutzt bei Zeitgrenze „Zeit" und Abwechslung „Keine" (mit den aktuellen Einstellungen ein Thread).',
+    ru: 'Работает при ограничении «Время» и разнообразии «Нет» (сейчас — один поток).', tr: 'Düşünme sınırı Süre ve çeşitlilik Yok iken kullanılır (şu anki ayarlarla tek iş parçacığı).',
+    id: 'Dipakai bila batas berpikir Waktu dan variasi Tidak ada (satu thread dengan pengaturan sekarang).', hi: 'सोचने की सीमा "समय" और विविधता "कोई नहीं" होने पर उपयोग होता है (अभी की सेटिंग में एक थ्रेड)।',
+    ar: 'يُستخدم عندما يكون حد التفكير «الوقت» والتنويع «بلا» (مسار واحد بالإعدادات الحالية).' },
+  'threads.mt': { ja: 'オプション（歯車）の「マルチスレッド」をオンにすると選べます。', en: 'Turn on "Multi-thread" in Options (gear) to choose this.',
+    zh: '在选项（齿轮）中开启“多线程”后可选。', 'zh-TW': '在選項（齒輪）中開啟「多執行緒」後可選。', ko: '옵션(톱니바퀴)에서 "멀티스레드"를 켜면 선택할 수 있습니다.',
+    es: 'Activa «Multihilo» en Opciones (engranaje) para elegirlo.', fr: 'Activez « Multithread » dans les Options (roue dentée) pour le choisir.', pt: 'Ative “Multithread” nas Opções (engrenagem) para escolher.',
+    de: 'Schalte „Multithreading" in den Optionen (Zahnrad) ein, um dies zu wählen.', ru: 'Включите «Многопоточность» в Опциях (шестерёнка), чтобы выбрать.', tr: 'Seçmek için Seçenekler\'de (dişli) "Çoklu iş parçacığı"nı açın.',
+    id: 'Aktifkan "Multi-thread" di Opsi (roda gigi) untuk memilih.', hi: 'चुनने के लिए विकल्प (गियर) में "मल्टी-थ्रेड" चालू करें।', ar: 'شغّل «متعدد المسارات» في الخيارات (الترس) لاختيار ذلك.' },
   'threads.h': { ja: '時間で考えるときに同時に使うCPUコアの数（オプションのマルチスレッドがオンのとき）。',
     en: 'CPU cores that search together on a time limit (when multi-threading is on in Options).',
     zh: '按时间思考时同时使用的CPU核心数（选项中的多线程开启时）。', 'zh-TW': '按時間思考時同時使用的CPU核心數（選項中的多執行緒開啟時）。',
@@ -197,6 +209,7 @@ const CSS = `
 .pro-num input[type=number]{flex:none;width:88px;box-sizing:border-box;padding:4px 6px;border-radius:7px;border:1px solid var(--line,rgba(255,255,255,.14));background:rgba(0,0,0,.3);color:var(--text,#eee);font:inherit;font-size:13px;text-align:end;-moz-appearance:textfield}
 .pro-num input[type=number]::-webkit-inner-spin-button,.pro-num input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .pro-num .pro-u{flex:none;min-width:2.4em;font-size:12px;color:var(--muted,#aaa)}
+.pro-dim{opacity:.4;pointer-events:none}.pro-note{color:var(--ngl-a,var(--accent,#d8b56a))!important}
 .pro-num .pro-dv{flex:none;font-size:11px;color:var(--ngl-a,var(--accent,#d8b56a));cursor:pointer;white-space:nowrap;background:none;border:0;padding:0;font:inherit;font-size:11px}
 .pro-foot{display:flex;justify-content:flex-end;margin-top:8px}
 .pro-reset{padding:6px 12px;border-radius:999px;border:1px solid var(--line,rgba(255,255,255,.14));background:none;color:var(--muted,#aaa);font:inherit;font-size:12px;cursor:pointer}
@@ -332,10 +345,13 @@ function init(cfg) {
     const binds = [];
     const segHtml = (k, list, cur, def) => `<div class="pro-seg" role="group">${list.map(o => `<button type="button" data-k="${k}" data-v="${esc(JSON.stringify(o.v))}" class="${same(o.v, cur) ? 'sel' : ''} ${same(o.v, def) ? 'def' : ''}"${same(o.v, def) ? ` title="${esc(tx('def'))}"` : ''}>${esc(pick(o.label, l))}</button>`).join('')}</div>`;
     const groups = { read: [], play: [], misc: [] };
+    const mtCan = () => { const M = window.MTEngine; return !!(M && M.maxHelpers && M.maxHelpers() > 0); };
     for (const p of params) {
-      if (p.key === 'threads' && maxThreads() < 2) continue;
+      const thrOff = p.key === 'threads' && maxThreads() < 2;   // threads not running on this page: shown greyed with how to turn them on
+      if (thrOff && !mtCan()) continue;
       if (p.hidden && p.hidden()) continue;
-      const show = !p.when || p.when(eff);
+      const condOff = p.key === 'threads' && p.when && !p.when(eff);
+      const show = p.key === 'threads' ? true : (!p.when || p.when(eff));
       const ch = eff.changed.includes(p.key);
       const lab = p.label ? pick(p.label, l) : tx(p.key), help = p.help ? pick(p.help, l) : T[p.key + '.h'] ? tx(p.key + '.h') : '';
       let ctl = '';
@@ -345,10 +361,13 @@ function init(cfg) {
         const R = kindRange(p, cur.k), val = cur.v != null ? cur.v : (d.limit && d.limit.k === cur.k ? d.limit.v : R.min);
         const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
+      } else if (p.type === 'threads' && thrOff) {
+        ctl = `<small class="pro-help pro-note">${esc(tx('threads.mt'))}</small>`;
       } else if (p.type === 'threads') {   // a slider 1 … every core the browser reports (e.g. 10 = only the performance cores of a 10+4 chip)
         const mx = maxThreads(), cur = Math.min(mx, eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1), dv = d.threads != null ? Math.min(d.threads, mx) : 1;
         const row = numRow('threads', cur, dv, 1, mx, 1, '/ ' + mx, v => setVal('threads', v));
         ctl = row.html.replace('</div>', `<button type="button" class="pro-dv" data-k="threads" data-v="${dv}" title="${esc(tx('def'))}">● ${dv}</button></div>`); binds.push(['threads', row.bind]);
+        if (condOff) ctl = `<div class="pro-dim">${ctl}</div><small class="pro-help pro-note">${esc(tx('threads.need'))}</small>`;   // (greyed: the current limit / variety do not use threads)
       } else if (p.type === 'bool') {
         ctl = segHtml(p.key, [{ v: true, label: T.on }, { v: false, label: T.off }], !!eff[p.key], !!d[p.key]);
       } else if (p.type === 'choice') {
