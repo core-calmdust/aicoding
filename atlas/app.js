@@ -814,7 +814,22 @@
     $('bv').classList.add('playing'); $('endc').classList.remove('on');
     LAND.game(ad.land || ''); fitStage();
     let sess = null, tbOn = false;
-    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+  // phones: a HUD message too long for its slot moves to a popup just above the HUD (the slot is left empty) — 2026-11-07
+  let hudPopT = 0, hudPopTxt = '';
+  function hudFit() {
+    const hm = $('hud') && $('hud').querySelector('.hm'), old = document.getElementById('hudPop');
+    const txt = hm ? hm.textContent.trim() : '';
+    if (!hm || !txt || !matchMedia('(max-width: 600px)').matches || hm.scrollWidth <= hm.clientWidth + 2) { if (old && txt !== hudPopTxt) { old.remove(); hudPopTxt = ''; } return; }
+    hm.textContent = '';
+    if (old && txt === hudPopTxt) return;
+    if (old) old.remove();
+    const el = document.createElement('div'); el.id = 'hudPop'; el.className = 'hudpop'; el.textContent = txt; el.setAttribute('role', 'status');
+    const r = $('hud').getBoundingClientRect(); el.style.bottom = Math.round(innerHeight - r.top + 10) + 'px';
+    el.onclick = () => el.remove(); document.body.appendChild(el); hudPopTxt = txt;
+    clearTimeout(hudPopT); hudPopT = setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (hudPopTxt === txt) hudPopTxt = ''; }, 300); }, Math.max(3500, txt.length * 120));
+  }
+
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); },
       onEnd: res => {
         if (session === sess) TB.end();

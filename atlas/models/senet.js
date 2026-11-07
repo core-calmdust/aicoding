@@ -84,9 +84,25 @@
     const t = new TT.CanvasTexture(c); t.encoding = TT.sRGBEncoding; t.anisotropy = 8;
     const draw = () => {
       const B2 = window.SenetBoard2D; if (!B2 || !B2.boardSVG) return;
-      const im = new Image(); im.decoding = 'async';
-      im.onload = () => { g.drawImage(im, 0, 0, c.width, c.height); if (design === 'faience') grooves(g, k, 'color'); t.needsUpdate = true; if (X.kick) X.kick(300); };
-      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(B2.boardSVG(design, 'h'));
+      // (iOS Safari now and then paints an SVG image blank into a canvas right after it loads — so the picture is checked
+      //  and drawn again, and the whole image reloaded on an error, until the squares are really there)
+      const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(B2.boardSVG(design, 'h'));
+      const bg = g.getImageData(c.width >> 1, c.height >> 1, 1, 1).data.join();
+      const painted = () => { const pts = [[.3, .5], [.5, .3], [.7, .7], [.15, .2]]; return pts.some(([x, y]) => g.getImageData(Math.round(c.width * x), Math.round(c.height * y), 1, 1).data.join() !== bg); };
+      let tries = 0;
+      const load = () => {
+        const im = new Image(); im.decoding = 'async';
+        const paint = () => {
+          g.fillStyle = BOX[design].body; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+          let ok = true; try { ok = painted(); } catch (e) {}
+          if (!ok && ++tries < 8) return setTimeout(tries % 3 ? paint : load, 250 * tries);
+          if (design === 'faience') grooves(g, k, 'color'); t.needsUpdate = true; if (X.kick) X.kick(300);
+        };
+        im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(paint);
+        im.onerror = () => { if (++tries < 8) setTimeout(load, 300 * tries); };
+        im.src = src;
+      };
+      load();
     };
     if (window.SenetBoard2D) draw(); else b2Ready().then(draw);   // (the portal builds the board before the game's own scripts arrive)
     return (tops[design] = t);
