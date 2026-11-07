@@ -201,7 +201,7 @@ pt: {
   'pz.th.x2': 'Vença em 2', 'pz.th.x2.sub': 'Os dois lados · o arremate',
 },
 de: {
-  'meta.title': 'Ugolki — Weltatlas der Brettspiele', 'title': 'Ugolki', 'sub': 'Уголки', 'p1': 'Weiß', 'p2': 'Schwarz',
+  'meta.title': 'Ugolki — Welt-Brettspielatlas', 'title': 'Ugolki', 'sub': 'Уголки', 'p1': 'Weiß', 'p2': 'Schwarz',
   'pcs': 'noch {d} Felder · {h} zu Hause', 'hb.dist': 'noch {n}', 'hb.limit': 'Zug {a}/{b}',
   'lim.title': 'Nach Zug {n} müssen alle Steine die eigene Ecke verlassen haben, sonst verlierst du', 'lim.home': '{k} zu Hause · noch {n}', 'lim.warn': 'Nur noch {n} Züge, um {k} Stein(e) aus der Ecke zu holen!',
   'rsv.title': '{c}: {a}/{b} in der gegnerischen Ecke', 'cant.stuck': 'Dieser Stein kann nicht ziehen', 'cant.move': 'Dorthin geht es nicht',

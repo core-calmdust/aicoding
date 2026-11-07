@@ -135,7 +135,7 @@ window.JB_I18N.ko = {
   'tu.4.h': '데일리와 모드', 'tu.4': '매일 감방 3개와 서치라이트로 랭킹에 도전. 열쇠・압력판・얼음 바닥・간수・굴 파기・기우는 감방 등 12가지 모드도 기다려요.',
 };
 window.JB_I18N.es = {
-  'title.doc': 'Fuga Deslizante — puzle de bloques para escapar de la cárcel', series: 'Atlas de juegos de mesa', title: '¡FUGA!', home: 'Inicio', help: 'Cómo jugar',
+  'title.doc': 'Fuga Deslizante — puzle de bloques para escapar de la cárcel', series: 'Atlas Mundial de Juegos de Mesa', title: '¡FUGA!', home: 'Inicio', help: 'Cómo jugar',
   'ht.daily': 'Diario', 'ht.course': 'Ruta', 'ht.modes': 'Modos',
   'pf.edit': 'Perfil', 'pf.guest': 'Invitado', 'pf.streak': 'días seguidos', 'pf.next': 'Próximo título: «{t}»', 'pf.esc': 'Fugas', 'pf.perfect': 'Fugas perfectas',
   'pf.name': 'Apodo (aparece en los rankings)', 'pf.ph': 'Hasta 12 caracteres', 'pf.note': 'Elige un apodo para entrar en los rankings.', 'pf.icon': 'Icono (preso)', 'pf.skin': 'Diseño del suelo',
@@ -202,7 +202,7 @@ window.JB_I18N.es = {
   'tu.4.h': 'Diarios y modos', 'tu.4': 'Tres celdas y un Reflector cada día con rankings, y además 12 modos: llaves, placas de presión, hielo, guardias, excavar, celdas que se inclinan y más.',
 };
 window.JB_I18N.fr = {
-  'title.doc': 'Évasion Glissée — un puzzle de blocs coulissants pour s’évader', series: 'Atlas des jeux de société', title: 'ÉVASION !', home: 'Accueil', help: 'Comment jouer',
+  'title.doc': 'Évasion Glissée — un puzzle de blocs coulissants pour s’évader', series: 'Atlas mondial des jeux de société', title: 'ÉVASION !', home: 'Accueil', help: 'Comment jouer',
   'ht.daily': 'Du jour', 'ht.course': 'Parcours', 'ht.modes': 'Modes',
   'pf.edit': 'Profil', 'pf.guest': 'Invité', 'pf.streak': 'jours d’affilée', 'pf.next': 'Prochain titre : « {t} »', 'pf.esc': 'Évasions', 'pf.perfect': 'Évasions parfaites',
   'pf.name': 'Pseudo (affiché dans les classements)', 'pf.ph': '12 caractères max.', 'pf.note': 'Choisis un pseudo pour entrer dans les classements.', 'pf.icon': 'Icône (détenu)', 'pf.skin': 'Motif du sol',
@@ -336,7 +336,7 @@ window.JB_I18N.pt = {
   'tu.4.h': 'Diários e modos', 'tu.4': 'Três celas e um Holofote por dia com rankings — e mais 12 modos: chaves, placas de pressão, gelo, guardas, escavação, celas que inclinam e mais.',
 };
 window.JB_I18N.de = {
-  'title.doc': 'Ausbruch-Schieber — ein Schiebeblock-Rätsel für den Gefängnisausbruch', series: 'Weltatlas der Brettspiele', title: 'AUSBRUCH!', home: 'Start', help: 'Spielanleitung',
+  'title.doc': 'Ausbruch-Schieber — ein Schiebeblock-Rätsel für den Gefängnisausbruch', series: 'Welt-Brettspielatlas', title: 'AUSBRUCH!', home: 'Start', help: 'Spielanleitung',
   'ht.daily': 'Täglich', 'ht.course': 'Route', 'ht.modes': 'Modi',
   'pf.edit': 'Profil', 'pf.guest': 'Gast', 'pf.streak': 'Tage in Folge', 'pf.next': 'Nächster Titel: „{t}“', 'pf.esc': 'Ausbrüche', 'pf.perfect': 'Perfekte Ausbrüche',
   'pf.name': 'Spitzname (in den Ranglisten)', 'pf.ph': 'Bis zu 12 Zeichen', 'pf.note': 'Mit einem Spitznamen nimmst du an den Ranglisten teil.', 'pf.icon': 'Symbol (Häftling)', 'pf.skin': 'Bodenmuster',

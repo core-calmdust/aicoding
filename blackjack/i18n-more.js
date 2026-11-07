@@ -4822,8 +4822,8 @@ I18N.pt = {
 };
 
 I18N.de = {
- "series": "Weltatlas der Brettspiele",
- "meta.title": "Blackjack | Weltatlas der Brettspiele",
+ "series": "Welt-Brettspielatlas",
+ "meta.title": "Blackjack | Welt-Brettspielatlas",
  "title": "Blackjack",
  "back": "Start",
  "btn.sound": "Ton",
