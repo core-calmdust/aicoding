@@ -213,19 +213,6 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const xferOut = async () => { if (!secure()) return null; try { return await OnlineSec.xferOut(db, uid); } catch (e) { console.warn(e); return null; } };
   // sign in with Google: the anonymous account is upgraded (same uid) when possible, otherwise this session switches to
   // the existing Google account (its uid); returns { uid, linked, switched }
-  // iPhone / iPad: this game's own Google popup ends on "The requested action is invalid" (shogi and chess only; the same code
-  // works for reversi / janggi and on PC — cause not found), while the shared account's popup works: sign in there, it hands the
-  // Google credential to every game's project (shared/atlas-account.js) and this page picks the new session up
-  const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  async function viaAtlas(auth) {
-    await AtlasAccount.signIn();
-    const u = await new Promise(res => {
-      let off = null; const to = setTimeout(() => { if (off) off(); res(null); }, 20000);
-      off = auth.onAuthStateChanged(x => { if (x && !x.isAnonymous) { clearTimeout(to); off(); res(x); } });
-    });
-    if (!u) { const e = new Error('sign-in did not complete'); e.code = 'auth/popup-closed-by-user'; throw e; }
-    return { user: u, additionalUserInfo: null };
-  }
   async function google() {
     await init();
     if (MOCK) {
@@ -249,7 +236,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     try {
       // the popup opens before anything is awaited: linkWithPopup first checks the account over the network and Safari (iPhone)
       // then blocks the popup — so sign in directly and carry the anonymous player's record over afterwards (x0: made in advance)
-      const r = IOS && window.AtlasAccount && AtlasAccount.signIn ? await viaAtlas(auth) : await auth.signInWithPopup(prov);
+      const r = await auth.signInWithPopup(prov);
       const fresh = !!(r.additionalUserInfo && r.additionalUserInfo.isNewUser);
       const switched = r.user.uid !== uid && !(anon && fresh);
       if (r.user.uid !== uid) { await dropLive(); uid = r.user.uid; if (anon) await carryPlayer(old, x0); await loadProfile(true); }
