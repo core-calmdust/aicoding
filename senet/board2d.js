@@ -49,7 +49,7 @@
   /* ================================================================ board art */
   const PAL = {
     tut: { frame: '#140c07', frame2: '#2b1a10', gild: '#d7ae55', sq: '#f1e4c4', sq2: '#d6bf8e', line: '#1a0f08', ink: '#2a170c', num: 'rgba(60,35,15,.38)', glyph: '#2c180c', accent: '#8a2d1c' },
-    faience: { frame: '#0c3a52', frame2: '#12577a', gild: '#e8d9a6', sq: '#5cc3d6', sq2: '#2690b4', line: '#0b1f33', ink: '#0b1c2c', num: 'rgba(5,20,40,.42)', glyph: '#0a1a2a', accent: '#e8d9a6' },
+    faience: { frame: '#0b3f5c', frame2: '#145f86', gild: '#f1e3b0', sq: '#45c0cf', sq2: '#0f6f9a', line: '#0b1f33', ink: '#0b1c2c', num: 'rgba(5,20,40,.42)', glyph: '#0a1a2a', accent: '#e8d9a6' },
     papyrus: { frame: '#cdb487', frame2: '#b9955e', gild: '#a8442c', sq: '#ecdcb4', sq2: '#d9c18e', line: '#4a2c18', ink: '#2a1d14', num: 'rgba(80,45,15,.4)', glyph: '#2c4a8a', accent: '#3d7a6e' },
     night: { frame: '#0a1030', frame2: '#141c4a', gild: '#e2c27a', sq: '#18225a', sq2: '#111a48', line: '#e2c27a', ink: '#e2c27a', num: 'rgba(226,194,122,.45)', glyph: '#f0d58e', accent: '#3fb6c8' },
   };
@@ -83,7 +83,7 @@
     if (design === 'tut') defs += `<filter id="${id}w" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${V ? '.11 .0035' : '.0035 .11'}" numOctaves="4" seed="7"/><feColorMatrix values="0 0 0 0 .30  0 0 0 0 .19  0 0 0 0 .11  0 0 0 .7 -.28"/><feComposite in2="SourceGraphic" operator="in"/></filter>
 <filter id="${id}i" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${V ? '.22 .012' : '.012 .22'}" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 .52  0 0 0 0 .40  0 0 0 0 .24  0 0 0 .42 -.12"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
     if (design === 'faience') defs += `<filter id="${id}w" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="4" seed="11"/><feColorMatrix values="0 0 0 0 .05  0 0 0 0 .25  0 0 0 0 .32  0 0 0 .7 -.22"/><feComposite in2="SourceGraphic" operator="in"/></filter>
-<filter id="${id}i" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".08" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 .85  0 0 0 0 .97  0 0 0 0 1  0 0 0 .55 -.22"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
+<filter id="${id}i" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .92  0 0 0 0 .95  0 0 0 .5 -.2"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
     if (design === 'papyrus') defs += `<filter id="${id}w" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".02" numOctaves="4" seed="2"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .14  0 0 0 0 .05  0 0 0 .8 -.25"/><feComposite in2="SourceGraphic" operator="in"/></filter>
 <filter id="${id}i" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".008 .32" numOctaves="2" seed="9" result="a"/><feTurbulence type="fractalNoise" baseFrequency=".32 .008" numOctaves="2" seed="4" result="b"/><feBlend in="a" in2="b" mode="multiply"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .14  0 0 0 .7 -.18"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
     if (design === 'night') defs += `<filter id="${id}w" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 .92  0 0 0 0 .7  0 0 0 9 -8.4"/><feComposite in2="SourceGraphic" operator="in"/></filter>
@@ -91,13 +91,14 @@
     // the squares lit as slightly domed tiles (blurred alpha → diffuse + specular light): soft bevels, no drawn highlight lines
     if (design !== 'night') defs += `<filter id="${id}lt" x="-2%" y="-5%" width="104%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="${design === 'faience' ? 5 : 3.4}" result="b"/>`
       + `<feDiffuseLighting in="b" surfaceScale="${design === 'faience' ? 6 : 4}" diffuseConstant="1" lighting-color="#fff" result="d"><feDistantLight azimuth="235" elevation="${design === 'papyrus' ? 62 : 52}"/></feDiffuseLighting>`
-      + `<feSpecularLighting in="b" surfaceScale="${design === 'faience' ? 6 : 4}" specularConstant="${design === 'faience' ? .9 : design === 'tut' ? .45 : .12}" specularExponent="${design === 'faience' ? 26 : 16}" lighting-color="#fff" result="s"><feDistantLight azimuth="235" elevation="${design === 'papyrus' ? 62 : 52}"/></feSpecularLighting>`
+      + `<feSpecularLighting in="b" surfaceScale="${design === 'faience' ? 6 : 4}" specularConstant="${design === 'faience' ? .4 : design === 'tut' ? .45 : .12}" specularExponent="${design === 'faience' ? 45 : 16}" lighting-color="#fff" result="s"><feDistantLight azimuth="235" elevation="${design === 'papyrus' ? 62 : 52}"/></feSpecularLighting>`
       + `<feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/><feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1=".85" k2=".2" result="m"/><feComposite in="m" in2="s2" operator="arithmetic" k2="1" k3="1"/><feComposite in2="SourceAlpha" operator="in"/></filter>`;
+    if (design === 'faience') defs += `<radialGradient id="${id}pool" cx=".5" cy=".5" r=".72"><stop offset=".55" stop-color="#0a4f73" stop-opacity="0"/><stop offset=".9" stop-color="#0a4f73" stop-opacity=".35"/><stop offset="1" stop-color="#06324d" stop-opacity=".6"/></radialGradient>`;
     if (design === 'faience') defs += `<filter id="${id}cr" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".07" numOctaves="1" seed="21"/><feComponentTransfer><feFuncA type="table" tableValues="0 0 0 0 .8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/></feComponentTransfer><feColorMatrix values="0 0 0 0 .02  0 0 0 0 .2  0 0 0 0 .3  0 0 0 .32 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
     if (design === 'papyrus') defs += `<filter id="${id}rg" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="13" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>`
       + `<filter id="${id}pl" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="4" seed="6" result="t"/><feColorMatrix in="t" values="0 0 0 0 .86  0 0 0 0 .78  0 0 0 0 .62  0 0 0 -14 4.75" result="flake"/><feComposite in="flake" in2="SourceGraphic" operator="in"/></filter>`
       + `<filter id="${id}ck" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".012 .02" numOctaves="3" seed="31"/><feComponentTransfer><feFuncA type="table" tableValues="0 .7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/></feComponentTransfer><feColorMatrix values="0 0 0 0 .25  0 0 0 0 .16  0 0 0 0 .08  0 0 0 .38 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
-    defs += `<linearGradient id="${id}sh" x1="0" y1="0" x2="${V ? 1 : 0}" y2="${V ? 0 : 1}"><stop offset="0" stop-color="#fff" stop-opacity="${design === 'faience' ? .28 : .12}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+    defs += `<linearGradient id="${id}sh" x1="0" y1="0" x2="${V ? 1 : 0}" y2="${V ? 0 : 1}"><stop offset="0" stop-color="#fff" stop-opacity="${design === 'faience' ? .1 : .12}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
 <radialGradient id="${id}sq" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="${p.sq}"/><stop offset="1" stop-color="${p.sq2}"/></radialGradient>`;
     // 枠
     const [fx, fy, fw, fh] = R;
@@ -109,12 +110,16 @@
       body += `<ellipse cx="${fx + fw * .32}" cy="${fy + fh * (V ? .5 : .12)}" rx="${V ? fw * .12 : fw * .34}" ry="${V ? fh * .4 : fh * .06}" fill="#fff3d6" opacity=".10" filter="url(#${id}gl)"/>`;
       body += `<rect x="${fx + 10}" y="${fy + 10}" width="${fw - 20}" height="${fh - 20}" rx="10" fill="none" stroke="url(#${id}au)" stroke-width="3.4"/><rect x="${fx + 17}" y="${fy + 17}" width="${fw - 34}" height="${fh - 34}" rx="7" fill="none" stroke="url(#${id}au)" stroke-opacity=".6" stroke-width="1.4"/>`;
     } else if (design === 'faience') {
-      defs += `<filter id="${id}gl" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>`;
-      body += `<rect x="${fx + 9}" y="${fy + 9}" width="${fw - 18}" height="${fh - 18}" rx="11" fill="none" stroke="#071827" stroke-width="5"/>`;
-      body += `<ellipse cx="${fx + fw * .3}" cy="${fy + fh * (V ? .5 : .1)}" rx="${V ? fw * .1 : fw * .3}" ry="${V ? fh * .38 : fh * .05}" fill="#e8fbff" opacity=".22" filter="url(#${id}gl)"/>`;
-      // 縁の文様帯（ロータスの点）
-      const n = V ? 30 : 30, L = V ? fh : fw;
-      for (let i = 0; i < n; i++) { const t = (i + .5) / n * (L - 40) + 20; const pts = V ? [[fx + 22, fy + t], [fx + fw - 22, fy + t]] : [[fx + t, fy + 22], [fx + t, fy + fh - 22]]; for (const [x, y] of pts) body += `<circle cx="${x}" cy="${y}" r="3.2" fill="${p.gild}" opacity=".75"/>`; }
+      // 施釉の陶器：ガラス質の釉が厚く溜まった縁、ぽってりした角、やわらかく大きな照り返し（ぼかし）、釉の上に盛った白い点の文様
+      defs += `<filter id="${id}gl" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="9"/></filter><filter id="${id}gl2" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>`
+        + `<linearGradient id="${id}fz" x1="0" y1="0" x2="${V ? 1 : 0}" y2="${V ? 0 : 1}"><stop offset="0" stop-color="#2a8fb8"/><stop offset=".08" stop-color="#145f86"/><stop offset=".92" stop-color="#0b3f5c"/><stop offset="1" stop-color="#062a40"/></linearGradient>`
+        + `<radialGradient id="${id}dt" cx=".38" cy=".32" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f1e3b0"/><stop offset="1" stop-color="#b9a46a"/></radialGradient>`;
+      body += `<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="url(#${id}fz)" opacity=".85"/>`;
+      body += `<rect x="${fx + 3}" y="${fy + 3}" width="${fw - 6}" height="${fh - 6}" rx="${rad - 2}" fill="none" stroke="#9fe4f0" stroke-opacity=".35" stroke-width="3" filter="url(#${id}gl2)"/>`;   // the rounded, glazed rim catching the light
+      body += `<rect x="${fx + 13}" y="${fy + 13}" width="${fw - 26}" height="${fh - 26}" rx="9" fill="none" stroke="#04192a" stroke-opacity=".7" stroke-width="4" filter="url(#${id}gl2)"/>`;
+      const n = 30, L = V ? fh : fw;
+      for (let i = 0; i < n; i++) { const t = (i + .5) / n * (L - 40) + 20; const pts = V ? [[fx + 22, fy + t], [fx + fw - 22, fy + t]] : [[fx + t, fy + 22], [fx + t, fy + fh - 22]]; for (const [x, y] of pts) body += `<circle cx="${x}" cy="${y}" r="3.6" fill="url(#${id}dt)"/><circle cx="${x - 1}" cy="${y - 1.2}" r="1.1" fill="#fff" opacity=".9"/>`; }
+      body += `<ellipse cx="${fx + fw * (V ? .3 : .26)}" cy="${fy + fh * (V ? .32 : .09)}" rx="${V ? fw * .14 : fw * .2}" ry="${V ? fh * .26 : fh * .035}" fill="#f2feff" opacity=".45" filter="url(#${id}gl)"/>`;   // the window's reflection on the glaze
     } else if (design === 'papyrus') {
       // 墓の壁画：漆喰の壁に描いた盤（ネフェルタリ墓の壁画のように）。ベンガラの赤・エジプシャンブルー・黄土の帯（手描きの揺れ）、
       // 漆喰のむら、剥落、細いひび
@@ -142,9 +147,13 @@
         const rr = design === 'papyrus' ? 2 : design === 'faience' ? 7 : 4, k = rnd(sq);
         tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="url(#${id}sq)"/>`;
         // each tile its own tone (aged ivory, uneven glaze, hand-mixed paint)
-        tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="${k < .5 ? '#7a5426' : '#fffaf0'}" opacity="${(design === 'faience' ? .10 : .07) * Math.abs(k - .5) * 2 + .015}"/>`;
+        tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="${design === 'faience' ? (k < .5 ? '#04324f' : '#7fe6e8') : k < .5 ? '#7a5426' : '#fffaf0'}" opacity="${(design === 'faience' ? .10 : .07) * Math.abs(k - .5) * 2 + .015}"/>`;
         tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="#fff" filter="url(#${id}i)"/>`;
-        if (design === 'faience') tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="#fff" filter="url(#${id}cr)"/>`;
+        if (design === 'faience') {   // glaze: thicker (deeper) where it pools at the edges, a soft bloom of light, fine crazing
+          tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="url(#${id}pool)"/>`;
+          tiles += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="#fff" filter="url(#${id}cr)" opacity=".7"/>`;
+          marks += `<ellipse cx="${x0 + w * .34}" cy="${y0 + w * .27}" rx="${w * .22}" ry="${w * .1}" transform="rotate(-18 ${x0 + w * .34} ${y0 + w * .27})" fill="#ffffff" opacity="${.32 + .18 * k}" filter="url(#${id}gl2)"/>`;
+        }
         marks += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="${rr}" fill="none" stroke="${p.line}" stroke-opacity="${design === 'papyrus' ? .8 : .55}" stroke-width="${design === 'papyrus' ? 2.6 : 1.6}"/>`;
       }
       const g = { 15: 'rebirth', 26: 'beauty', 27: 'water', 28: 'three', 29: 'two', 30: 'horus' }[sq];
@@ -519,32 +528,52 @@
     // the sticks lie across the strip, two by two (the strip is long and low: lying down they are drawn much larger)
     const X = [-78, 78, -80, 76], Y0 = [-21, -23, 21, 22], A0 = [92, 87, 89, 94];
     const rest = X.map((x, i) => ({ x, y: Y0[i], a: A0[i] }));
+    // the picture is built once (defs, four shadows, four sticks with both faces); a frame only moves them (attributes), so the
+    // throw runs smoothly — rebuilding the SVG every frame (and decoding the stick pictures again) made it stutter
+    let built = '', SH = [], SG = [];
+    function build() {
+      const key = sty + (window.SENET_SPRITES ? 's' : 'v'); if (built === key) return; built = key;
+      svg.innerHTML = mkDefs() + X.map(() => `<g class="sh"><ellipse rx="20" ry="70" fill="url(#${id}s)"/></g>`).join('')
+        + X.map(() => `<g class="st"><g class="fw">${stickSVG(1, sty, id)}</g><g class="fb">${stickSVG(0, sty, id)}</g></g>`).join('');
+      SH = [...svg.querySelectorAll(':scope > .sh')]; SG = [...svg.querySelectorAll(':scope > .st')].map(g => ({ g, w: g.querySelector('.fw'), b: g.querySelector('.fb'), up: -1 }));
+    }
     function draw(d, poses) {
-      let s = mkDefs();
-      d.forEach((u, i) => { const q = poses ? poses[i] : rest[i]; s += `<g transform="translate(${q.x.toFixed(1)} ${(q.y + 8).toFixed(1)}) rotate(${q.a.toFixed(1)})" opacity="${q.sh == null ? 1 : q.sh}"><ellipse rx="20" ry="68" fill="url(#${id}s)"/></g>`; });
-      d.forEach((u, i) => { const q = poses ? poses[i] : rest[i]; const sx = q.flip == null ? 1 : q.flip; s += `<g transform="translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) rotate(${q.a.toFixed(1)}) scale(${Math.max(.08, Math.abs(sx)).toFixed(3)} ${(q.k || 1).toFixed(3)})">${stickSVG(sx >= 0 ? u : 1 - u, sty, id)}</g>`; });
-      svg.innerHTML = s;
+      build();
+      d.forEach((u, i) => {
+        const q = poses ? poses[i] : rest[i], fl = q.flip == null ? 1 : q.flip, h = q.h || 0, S = SG[i];
+        SH[i].setAttribute('transform', `translate(${q.x.toFixed(1)} ${(q.y + 8 + h * .35).toFixed(1)}) rotate(${q.a.toFixed(1)}) scale(${(1 + h * .012).toFixed(3)})`);
+        SH[i].setAttribute('opacity', (Math.max(.15, 1 - h * .018) * (q.sh == null ? 1 : q.sh)).toFixed(3));
+        S.g.setAttribute('transform', `translate(${q.x.toFixed(1)} ${(q.y - h).toFixed(1)}) rotate(${q.a.toFixed(1)}) scale(${Math.max(.06, Math.abs(fl)).toFixed(3)} ${(1 + h * .006).toFixed(3)})`);
+        const up = (fl >= 0 ? u : 1 - u) ? 1 : 0;
+        if (S.up !== up) { S.up = up; S.w.style.display = up ? '' : 'none'; S.b.style.display = up ? 'none' : ''; }
+      });
     }
     function show(d) { cur = d.slice(); rest.forEach((q, i) => { q.a = A0[i] + (Math.random() - .5) * 6; }); draw(cur); }
+    // a toss: each stick flies in from the thrower's side on an arc (up and down under gravity), turning end over end (the
+    // faces flip), lands, bounces once low and slides a little to rest — all eased per frame, the four a few ms apart
     async function roll(d, o2 = {}) {
-      busy = true; const sp = o2.speed || 1, ms = 760 / sp, from = o2.side ? -1 : 1;
-      const st = X.map((x, i) => ({ x0: x + (Math.random() - .5) * 60, y0: from * (120 + Math.random() * 40), spin: (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 300), flips: 3 + (Math.random() * 3 | 0), delay: i * 40 + Math.random() * 30, end: A0[i] + (Math.random() - .5) * 8 }));
-      let hit = [0, 0, 0, 0];
-      await tween(ms + 160, t => {
-        const T = t * (ms + 160);
+      busy = true; const sp = o2.speed || 1, ms = 980 / sp, from = o2.side ? -1 : 1;
+      const st = X.map((x, i) => ({ x0: x + (Math.random() - .5) * 70, y0: from * (110 + Math.random() * 30), spin: (Math.random() < .5 ? -1 : 1) * (160 + Math.random() * 200), flips: 2 + (Math.random() * 3 | 0), delay: i * 55 + Math.random() * 25, end: A0[i] + (Math.random() - .5) * 8, top: 70 + Math.random() * 30 }));
+      const hit = [0, 0, 0, 0], LAND = .68;
+      const smooth = t => t * t * (3 - 2 * t);
+      await tween(ms + 260, t => {
+        const T = t * (ms + 260);
         const poses = st.map((q, i) => {
-          const u = Math.max(0, Math.min(1, (T - q.delay) / ms)), e = easeOut(u);
-          if (u > .62 && !hit[i]) { hit[i] = 1; if (o2.onHit) try { o2.onHit(i, 1); } catch (e) {} }
-          const bounce = u > .62 ? Math.abs(Math.sin((u - .62) / .38 * Math.PI * 2)) * (1 - u) * 18 : 0;
-          const ph = (1 - e) * q.flips * Math.PI;   // 裏返り
-          return { x: q.x0 + (X[i] - q.x0) * e, y: Y0[i] + q.y0 * (1 - e) - bounce, a: q.end + (1 - e) * q.spin, flip: Math.cos(ph), k: 1 + (1 - e) * .25, sh: .4 + .6 * e };
+          const u = Math.max(0, Math.min(1, (T - q.delay) / ms));
+          let h, gx;   // h: height above the strip; gx: how far along the way in (0 → 1)
+          if (u < LAND) { const k = u / LAND; h = q.top * 4 * k * (1 - k); gx = k * .9; }   // the flight: a parabola
+          else { const k = (u - LAND) / (1 - LAND); h = Math.abs(Math.sin(Math.min(1, k * 1.6) * Math.PI)) * 14 * (1 - k) * (k < .62 ? 1 : 0); gx = .9 + .1 * smooth(k); }   // one low bounce, then a short slide
+          if (u >= LAND && !hit[i]) { hit[i] = 1; if (o2.onHit) try { o2.onHit(i, 1); } catch (e) {} }
+          const turn = u < LAND ? u / LAND : 1, e = smooth(Math.min(1, u / .92));
+          const ph = (1 - turn) * q.flips * Math.PI;   // 裏返り（宙にいる間だけ）
+          return { x: q.x0 + (X[i] - q.x0) * gx, y: Y0[i] + q.y0 * (1 - gx), h, a: q.end + (1 - e) * q.spin, flip: Math.cos(ph), sh: u <= 0 ? 0 : .35 + .65 * Math.min(1, u * 2) };
         });
         draw(d, poses);
       });
       st.forEach((q, i) => { rest[i].a = q.end; }); cur = d.slice(); draw(cur); busy = false;
     }
     show(cur);
-    return { roll, show, setStyle(s) { sty = piecesKey(s); draw(cur); }, is3D: () => false, get busy() { return busy; } };
+    return { roll, show, setStyle(s) { sty = piecesKey(s); built = ''; draw(cur); }, is3D: () => false, get busy() { return busy; } };
   }
 
   window.SenetBoard2D = { mount, mini, dice, pieceIcon, pieceSVG, boardSVG, boardHref, BOARDS, PIECES, IMG, VIEW, cellXY, sqXY, sqRC, traySlots, stickBox, layout, GREEN, PD, TD };

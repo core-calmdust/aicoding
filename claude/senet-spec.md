@@ -24,7 +24,7 @@
 - デザイン：盤 `tut`（ツタンカーメン：黒檀×象牙・金縁、既定）／`faience`（青いファイアンス）／`papyrus`（パピルス画）／`night`（夜空・モダン）。駒 `tut`／`faience`／`gold`／`modern`。
 - 駒の形：side0＝糸巻き（spool）、side1＝円錐（cone）。2Dの駒と投げ棒は3Dモデル（atlas/models/senet.js、素材のテクスチャ付き）を描いた絵：`senet/sprites.js`（webp の data URL）を `senet/tools/make_sprites.py`（`tools/sprites.html` をヘッドレス Chrome で描画）で作る。3Dの駒・棒を変えたら作り直す。sprites.js がないときだけベクターの絵。投げ棒は帯の中に2本ずつ横に寝かせて大きく見せる。
 - 盤の光：マスはぼかしたアルファからの拡散光＋鏡面光（feDiffuse/SpecularLighting）でやわらかい面取り。ファイアンスは細い貫入、`papyrus`（墓の壁画）：盤そのものは普通の彩色した木の盤。周りの縁だけが墓の壁画風（漆喰、手描きの揺れのある帯、剥落とひび）。
-- 投げ棒：大きく明るく。白い面は彩色（帯と菱形）、裏は木目。3D（atlas/models/senet.js）も裏は木目のテクスチャ、断面は少し丸く、長さ方向にわずかに反る。
+- 投げ棒：大きく明るく。2Dの投げる動きは、SVGを一度だけ組み立てて毎フレーム属性だけ動かす（放物線で飛んで回転・裏返り、1回小さく弾んで止まる）。白い面は彩色（帯と菱形）、裏は木目。3D（atlas/models/senet.js）も裏は木目のテクスチャ、断面は少し丸く、長さ方向にわずかに反る。
 - 投げ棒：`dice(host,{style})` → `{roll, show, setStyle}`。盤の両脇の帯（stickBox）で投げる。
 - `mini(state, opts)`：チュートリアル・カード用の同じ絵。
 
