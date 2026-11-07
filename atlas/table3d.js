@@ -908,8 +908,8 @@
   // the place (table design, 0..5) and the brightness (0..2) are shared by the portal and every ?skin=atlas page:
   // localStorage 'atlas-table' / 'atlas-bright'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
   const say = () => { try { dispatchEvent(new CustomEvent('atlas-table', { detail: { table: tableStyle, bright } })); } catch (e) {} };
-  function setTable(k) {   // switch the table design (0..5) and rebuild the room (no reload)
-    k = Math.max(0, Math.min(5, k | 0)); if (!TABLES[k] && k) k = 0;
+  function setTable(k) {   // switch the table design (0..11) and rebuild the room (no reload)
+    k = Math.max(0, Math.min(11, k | 0)); if (!TABLES[k] && k) k = 0;
     const same = k === tableStyle; tableStyle = k;
     try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
     if (R && scene && !same) {
@@ -955,10 +955,10 @@
   const todPick = () => { try { const v = localStorage.getItem('atlas-tod'); return ['morning', 'day', 'evening', 'night'].includes(v) ? v : 'auto'; } catch (e) { return 'auto'; } };
   const curTod = () => { const v = todPick(); return v === 'auto' ? timeOfDay(new Date().getHours()) : v; };
   function timeOfDay(h) { return h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
-  /* ---------- table designs (prototype): 0 = the toy room's chabudai, 1..5 = the environments in tables3d.js (Table3D.TABLES[k]) ----------
+  /* ---------- table designs (prototype): 0 = the toy room's chabudai, 1..11 = the environments in tables3d.js (Table3D.TABLES[k]) ----------
      picked by ?tbl=k (temporary) or localStorage 'atlas-table'; Table3D.setTable(k) rebuilds the room */
   const TABLES = {};
-  let tableStyle = (() => { try { const m = /[?&]tbl=(\d)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
+  let tableStyle = (() => { try { const m = /[?&]tbl=(\d+)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
   let tblInfo = null, roomBg = null, viewOnly = [];
   try { const m = /[?&]bright=(\d)/.exec(location.search); if (m) localStorage.setItem('atlas-bright', m[1]); } catch (e) {}
   const LOOK = {
