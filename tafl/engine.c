@@ -710,7 +710,7 @@ static int qsearch(Pos *p, int alpha, int beta, int ply) {
 // search switches / margins (SP[i], set_sp for the test tools). Margins are in the evaluation's units: the net's (1000 per
 // logit) or the hand-made one's (an attacker man = 100), scaled by SP_UNIT / SP_HUNIT.
 enum { SP_TTFIRST, SP_RFP, SP_RFPD, SP_RFPM, SP_NMP, SP_NMPD, SP_FUT, SP_FUTD, SP_FUTM, SP_LMP, SP_LMPD, SP_LMPB, SP_LMR, SP_LMRK, SP_UNIT, SP_HUNIT, SP_NMPR, SP_LMRB, SP_KTHR, SP_BLK, SP_N };
-static int SP[32] = { 1, 1, 3, 150, 1, 3, 1, 2, 200, 1, 3, 10, 1, 225, 100, 100, 3, 0, 2, 1 };
+static int SP[32] = { 1, 1, 3, 150, 1, 3, 1, 2, 200, 1, 3, 10, 1, 225, 100, 50, 3, 0, 2, 1 };
 EXPORT(set_sp) void set_sp(int i, int v) { if (i >= 0 && i < 32) SP[i] = v; }
 static double lnx(double x) {   // natural log (no libm in the wasm build)
   if (x < 1) return 0;
