@@ -8,6 +8,7 @@
 // Hints go concept (h) → where to look (look) → the answer.  Texts: {ja,en,zh,ko,es,fr,pt,de,hi,ar}.
 'use strict';
 const fs = require('fs'), path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const FILE = path.join(__dirname, '..', 'lessons.json');
 const L = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 
@@ -126,7 +127,7 @@ if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   for (const g of D.grades) { if (RAMPS[g.id]) g.ramp = RAMPS[g.id]; else delete g.ramp; }
   D.rampUi = UI;
-  fs.writeFileSync(FILE, JSON.stringify(D));
+  fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE)));
   console.log('ramps written:', Object.keys(RAMPS).join(', '));
 }
 module.exports = { RAMPS, UI };

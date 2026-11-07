@@ -1,4 +1,7 @@
 {
+  "btn.rules.title": "Aprender las reglas",
+  "ls.toList": "Volver a las lecciones",
+  "ls.toOpen": "Volver a las aperturas",
   "meta.title": "Gomoku y Renju — Cinco en línea",
   "brand": "Gomoku y Renju",
   "p1": "Negras",
@@ -387,7 +390,6 @@
   "ru.open.task1": "Jugada 1: pon una negra en el punto central",
   "ru.open.task3": "Jugada 3: pon una negra a no más de dos líneas del centro (zona punteada)",
   "ru.open.ok": "Ya tienes una apertura de renju.",
-  "btn.rules.title": "Aprender las reglas",
   "op.d.kansei": "Centro, blanca y negra en una línea vertical. Negro tapa la piedra blanca y construye desde arriba.",
   "op.d.keigetsu": "En diagonal sobre la blanca, tocándola. Apertura ganadora típica en la que negro ataca rápido.",
   "op.d.sosei": "Lejos del centro en diagonal. Las negras quedan poco conectadas; blanco está algo mejor.",

@@ -7,6 +7,7 @@ const N = 15, { sqName, sqOf, M2I, I2M } = E;
 const games = fs.readFileSync(process.argv[2], 'utf8').trim().split('\n').map(l => JSON.parse(l));
 const mined = fs.readFileSync(process.argv[3], 'utf8').trim().split('\n').map(l => JSON.parse(l));
 const OUT = process.argv[4] || require('path').join(__dirname, '..', 'lessons.json');
+const { keepLangs } = require(require('path').join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 let seed = 20261019; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 
 // ---------- brute-force line helpers on a plain grid (0 empty, 1 black, 2 white)
@@ -207,5 +208,5 @@ for (const s of steps) for (const P of s.problems) {
   if (pos.status().over) throw new Error('over ' + s.id);
   if (P.kind !== 'pick') for (const m of P.ok) if (!pos.isLegal(sqOf(m))) throw new Error('illegal answer ' + s.id + ' ' + m);
 }
-fs.writeFileSync(OUT, JSON.stringify({ v: 1, steps }, null, 1));
+fs.writeFileSync(OUT, JSON.stringify(keepLangs({ v: 1, steps }, require('path').join(__dirname, '..', 'lessons.json')), null, 1));
 console.log(steps.map(s => s.id + ':' + s.problems.map(p => p.ok.length).join('')).join(' '));

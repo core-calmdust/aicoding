@@ -12,7 +12,7 @@ const DIR = path.join(__dirname, '..');
 const raw = zlib.gunzipSync(fs.readFileSync(path.join(DIR, 'weights.bin.gz')));
 const E = require(path.join(DIR, 'engine.js')); E.setWeights(new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2), 30);
 const { legal, play, flips, start } = require('./eng-lite.js');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const CN = [0, 7, 56, 63];
 const nm = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1), sq = s => 'abcdefgh'.indexOf(s[0]) + (+s.slice(1) - 1) * 8;
 const nb = q => { const r = q >> 3, c = q & 7, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8) o.push(rr * 8 + cc); } return o; };
@@ -101,7 +101,7 @@ if (mode === 'build' || mode === 'facts') {
       for (const l of LANGS) { if (!txt[l]) throw new Error('missing language ' + l + ' in ' + lid); L.text[l].warm = txt[l]; }
     }
   }
-  if (mode === 'build') { if (bad) { console.log('not written:', bad, 'bad steps'); process.exit(1); } fs.writeFileSync(LF, JSON.stringify(data)); console.log('written', LF); }
+  if (mode === 'build') { if (bad) { console.log('not written:', bad, 'bad steps'); process.exit(1); } fs.writeFileSync(LF, JSON.stringify(require('../../tools/keep-langs.js').keepLangs(data, LF))); console.log('written', LF); }
   else console.log('bad', bad);
 } else {
   let n = 0, bad = 0;

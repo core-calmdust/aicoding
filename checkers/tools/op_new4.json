@@ -1,0 +1,176 @@
+{
+ "Single Corner": [
+  "Одиночный угол",
+  "單角",
+  "Sudut Tunggal",
+  "Tek Köşe"
+ ],
+ "Cross": [
+  "Крест",
+  "交叉",
+  "Silang",
+  "Çapraz"
+ ],
+ "Ayrshire Lassie": [
+  "Эйрширская девушка",
+  "艾爾郡姑娘",
+  "Ayrshire Lassie",
+  "Ayrshire Lassie"
+ ],
+ "Old Fourteenth": [
+  "Старый четырнадцатый",
+  "老十四",
+  "Old Fourteenth",
+  "Old Fourteenth"
+ ],
+ "Glasgow": [
+  "Глазго",
+  "格拉斯哥",
+  "Glasgow",
+  "Glasgow"
+ ],
+ "Laird and Lady": [
+  "Лэрд и леди",
+  "領主與夫人",
+  "Laird and Lady",
+  "Laird and Lady"
+ ],
+ "Alma": [
+  "Альма",
+  "阿爾馬",
+  "Alma",
+  "Alma"
+ ],
+ "Souter": [
+  "Сутер",
+  "蘇特",
+  "Souter",
+  "Souter"
+ ],
+ "Fife": [
+  "Файф",
+  "法夫",
+  "Fife",
+  "Fife"
+ ],
+ "Whilter": [
+  "Уилтер",
+  "威爾特",
+  "Whilter",
+  "Whilter"
+ ],
+ "Edinburgh": [
+  "Эдинбург",
+  "愛丁堡",
+  "Edinburgh",
+  "Edinburgh"
+ ],
+ "Double Corner": [
+  "Двойной угол",
+  "雙角",
+  "Sudut Ganda",
+  "Çift Köşe"
+ ],
+ "Double Cross": [
+  "Двойной крест",
+  "雙交叉",
+  "Silang Ganda",
+  "Çift Çapraz"
+ ],
+ "Pioneer": [
+  "Пионер",
+  "先鋒",
+  "Pioneer",
+  "Pioneer"
+ ],
+ "Denny": [
+  "Денни",
+  "丹尼",
+  "Denny",
+  "Denny"
+ ],
+ "Kelso": [
+  "Келсо",
+  "凱爾索",
+  "Kelso",
+  "Kelso"
+ ],
+ "Bristol": [
+  "Бристоль",
+  "布里斯托",
+  "Bristol",
+  "Bristol"
+ ],
+ "Bristol Cross": [
+  "Бристольский крест",
+  "布里斯托交叉",
+  "Bristol Cross",
+  "Bristol Çaprazı"
+ ],
+ "Dundee": [
+  "Данди",
+  "鄧迪",
+  "Dundee",
+  "Dundee"
+ ],
+ "An exchange.": [
+  "Размен.",
+  "兌子。",
+  "Tukar biji.",
+  "Değişim."
+ ],
+ "level": [
+  "равно",
+  "均勢",
+  "imbang",
+  "eşit"
+ ],
+ "Capturing is compulsory: the recapture.": [
+  "Бить обязательно: ответное взятие.",
+  "吃子是強制的：吃回。",
+  "Makan itu wajib: makan balik.",
+  "Almak zorunlu: geri alma."
+ ],
+ "Developing.": [
+  "Развитие.",
+  "出子。",
+  "Pengembangan.",
+  "Gelişim."
+ ],
+ "A back-row man comes out.": [
+  "Выходит шашка последнего ряда.",
+  "底線的子出動。",
+  "Biji baris belakang keluar.",
+  "Arka sıra taşı çıkıyor."
+ ],
+ "Into the centre.": [
+  "В центр.",
+  "走向中央。",
+  "Ke tengah.",
+  "Merkeze."
+ ],
+ "To the side.": [
+  "На край.",
+  "走向邊上。",
+  "Ke tepi.",
+  "Kenara."
+ ],
+ "White slightly better": [
+  "у белых чуть лучше",
+  "白方稍優",
+  "Putih sedikit unggul",
+  "Beyaz biraz iyi"
+ ],
+ "Black slightly better": [
+  "у чёрных чуть лучше",
+  "黑方稍優",
+  "Hitam sedikit unggul",
+  "Siyah biraz iyi"
+ ],
+ "The {n} move order.": [
+  "«{n}»: порядок ходов.",
+  "「{n}」的著法。",
+  "Urutan langkah {n}.",
+  "{n} hamle sırası."
+ ]
+}

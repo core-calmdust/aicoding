@@ -3712,5 +3712,11 @@
 "zh-TW": "{p}獲勝",
 "id": "{p} menang",
 "tr": "{p} kazandı"
+},
+"<p>Bear off with <b>26: 5, 28: 3, 29: 2, 30: 1</b>. A piece on 28 or 29 may also move on to an empty square ahead; a piece on 30 waits for a 1.</p><p>A 2 is the most common (6/16), so <b>29 is the best exit</b>.</p>": {
+"ru": "<p>Вывод: <b>26: 5, 28: 3, 29: 2, 30: 1</b>. Фишка с 28 или 29 может и пройти на свободную клетку впереди; фишка на 30 ждёт единицу.</p><p>Двойка выпадает чаще всего (6/16), поэтому <b>29 — лучший выход</b>.</p>",
+"zh-TW": "<p>走出的點數：<b>26：5、28：3、29：2、30：1</b>。28、29 的棋子也可以前進到空著的後面格子；30 的棋子等待擲出 1。</p><p>2 最常出現（6/16），所以 <b>29 是最好的出口</b>。</p>",
+"id": "<p>Keluar dengan <b>26: 5, 28: 3, 29: 2, 30: 1</b>. Bidak di 28 atau 29 juga boleh maju ke petak kosong di depannya; bidak di 30 menunggu angka 1.</p><p>Angka 2 paling sering (6/16), jadi <b>29 pintu keluar terbaik</b>.</p>",
+"tr": "<p>Çıkış: <b>26: 5, 28: 3, 29: 2, 30: 1</b>. 28 ya da 29'daki taş öndeki boş kareye de ilerleyebilir; 30'daki taş 1 bekler.</p><p>En sık 2 gelir (6/16), bu yüzden <b>en iyi çıkış 29'dur</b>.</p>"
 }
 }

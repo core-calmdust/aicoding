@@ -5,7 +5,9 @@
 // node tools/gen_openings.js > openings.json
 const E = require('../engine.js'); E.setRule('std');
 const TXT = require('./op_text.js');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const L = (k, v) => { const o = TXT[k]; const r = {}; for (const l of LANGS) { let s = (o[l] || o.en); if (v) s = s.replace(/\{(\w+)\}/g, (_, y) => { const x = v[y]; return x && typeof x === 'object' ? (x[l] || x.en) : x; }); r[l] = s; } return r; };
 let seed = 1842; const rand = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // mulberry32
 const LV = 15;
@@ -51,4 +53,4 @@ for (const id of Object.keys(PLANS)) {
   sets.push({ id, grp: 'a', side: 1, show: 4, moves: names.join(' '), label: L(id + '.title'), title: L(id + '.title'), short: null, intro: null, study: { line, notes }, problems });
   console.error(id, names.join(' '), problems.length);
 }
-console.log(JSON.stringify({ version: 1, sets }));
+console.log(JSON.stringify(keepLangs({ version: 1, sets }, path.join(__dirname, '..', 'openings.json'))));

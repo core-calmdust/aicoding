@@ -3,6 +3,7 @@
 // basics: "ok" lists (rule-level answers); tactics: engine values of every move ("sc"); endgames: database results ("ok").
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 (async () => {
   const W = await load(), E = W.E;
   const [dataFile, pzPos, pzEg] = process.argv.slice(2);
@@ -144,5 +145,5 @@ const { load } = require('./wasm.js');
   steps.push({ id: 'e_men', course: 'endgame', problems: egSteps('e_men', pos => E.popc((pos.b | pos.w) & ~pos.k) >= 2, 1) });
   steps.push({ id: 'e_draw', course: 'endgame', problems: egSteps('e_draw', pos => true, 0) });
   for (const s of steps) console.error(s.id, s.problems.length);
-  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify({ version: 1, steps }));
+  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify(keepLangs({ version: 1, steps }, path.join(__dirname, '..', 'lessons.json'))));
 })();

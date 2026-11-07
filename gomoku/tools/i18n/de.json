@@ -1,4 +1,7 @@
 {
+  "btn.rules.title": "Regeln lernen",
+  "ls.toList": "Zurück zu den Lektionen",
+  "ls.toOpen": "Zurück zu den Eröffnungen",
   "meta.title": "Gomoku & Renju — Fünf in einer Reihe",
   "brand": "Gomoku & Renju",
   "p1": "Schwarz",
@@ -387,7 +390,6 @@
   "ru.open.task1": "Zug 1: Setze Schwarz auf den Mittelpunkt",
   "ru.open.task3": "Zug 3: Setze Schwarz höchstens zwei Linien von der Mitte (gepunkteter Bereich)",
   "ru.open.ok": "Das ist eine Renju-Eröffnung.",
-  "btn.rules.title": "Regeln lernen",
   "op.d.kansei": "Mitte, Weiß und Schwarz stehen senkrecht in einer Linie. Schwarz deckelt den weißen Stein und baut von oben auf.",
   "op.d.keigetsu": "Diagonal über Weiß, mit Kontakt. Eine typische Gewinneröffnung, in der Schwarz schnell angreift.",
   "op.d.sosei": "Diagonal weit weg von der Mitte. Die schwarzen Steine sind lose verbunden; Weiß steht leicht besser.",

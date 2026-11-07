@@ -52,6 +52,8 @@
  "ls.stepq",
  "ls.title",
  "ls.toGame",
+ "ls.toList",
+ "ls.toOpen",
  "ls.turn",
  "lv",
  "nav.first",

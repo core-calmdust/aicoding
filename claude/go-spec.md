@@ -25,9 +25,9 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 - レーティング戦：9路、5分＋秒読み20秒、RT_LV＝EGF換算（app.js egfOf）、開始値1000、予備選3局（Placement）。
 
 ## コンテンツ（すべて14言語：2026-11-07 に ru・zh-TW・id・tr を追加）
-- 多言語の注意：UI辞書は tools/i18n/<lang>.json（online_<lang>.json）→ tools/build_i18n.py で i18n.js の2行目を生成（3〜4行目の ls.toList/ls.toOpen は手書きなので、生成後に消えていたら戻す）。コーチは coach.js（ja/en）＋ coach-i18n.js の GoCoach.merge（残り12言語。i18n-langs.js の coverage には数えられない）。
-- lessons.json の4言語は tools/data/lessons-i18n.json にも入れてある（lessons-build.mjs で再生成しても残る）。ただしウォームアップ（step.ramp と rampUi）は lessons-ramps.mjs が10言語の位置引数 L(...) で書くため、再実行すると4言語が消える。再実行する前に L() に4言語を足すこと。
-- openings.json の訳（ja/en 以外の12言語）は生成元（tools/joseki/txt_*.mjs、tools/fuseki-text-*.mjs は ja/en のみ）にないので、build で作り直すと消える。作り直したら tools/i18n-langs.js extract/apply で訳を戻す。
+- 多言語の注意：UI辞書は tools/i18n/<lang>.json（online_<lang>.json）→ tools/build_i18n.py で i18n.js の2行目を生成（3〜4行目の ls.toList/ls.toOpen は手書き。build_i18n.py は3行目以降をそのまま残す）。コーチは coach.js（ja/en）＋ coach-i18n.js の GoCoach.merge（残り12言語。i18n-langs.js の coverage には数えられない）。
+- lessons.json の4言語は tools/data/lessons-i18n.json にも入れてある（lessons-build.mjs で再生成しても残る）。ウォームアップ（step.ramp と rampUi）は lessons-ramps.mjs が10言語の L(...) で書くが、書き出し時に tools/keep-langs.js が英文の同じ文言の4言語を今の lessons.json から引き継ぐ（英文を変えた・足した文言だけ4言語が無くなり、一覧が表示される）。
+- openings.json は tools/openings-build.mjs が tools/data/openings-joseki.json・openings-fuseki.json（ja/en のみ）から作る。ja/en 以外の12言語は英文が同じ文言について今の openings.json から引き継ぐ（keep-langs.js）。英文を変えた文言は訳を足す（i18n-langs.js extract/apply）。
 - lessons.json：6コース21ステップ×5問（ソルバー／エンジン検証）。生成 tools/lessons-build.mjs（訳は tools/data/lessons-i18n.json を合成）。
 - openings.json：7カテゴリ45本（定石23：星・小目・三々/高目/目外し・AI定石、布石22：基本・9/13路・置き碁）。全手解説・変化図・練習問題。生成 tools/joseki/、tools/fuseki-*.mjs、検証 tools/check-openings.mjs。置き碁は評価値を表示しない。
 - puzzles.json：詰碁10テーマ×50＝500問（取る・シチョウゲタ・ウッテガエシ・生き/殺し1手3手・5手以上・攻め合い・手筋）。ソルバー tsumego.js（GoTsumego.solve/reached）、生成 tools/gen-tsumego.mjs、検証 tools/test-tsumego.mjs。対象の石に△印。今日の一問あり。

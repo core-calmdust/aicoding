@@ -2,7 +2,7 @@
 // "try" = one unscored move whose correct set is computed here from the rules). Texts: tools/ramp_text.js.
 const E = require('../engine.js'); E.setRule('std');
 const TXT = require('./ramp_text.js');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 const L = k => { const o = TXT[k]; if (!o) throw new Error('no text ' + k); const r = {}; for (const l of LANGS) r[l] = o[l] || o.en; return r; };
 const P = o => { const r = {}; for (const l in o) r[l] = '<p>' + o[l].split('\n').join('</p><p>') + '</p>'; return r; };
 const I = nm => E.sqParse(nm);

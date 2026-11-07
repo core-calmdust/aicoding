@@ -245,7 +245,7 @@ if (require.main === module) {
   const NEWL = ['ru', 'zh-TW', 'id', 'tr'], keep = (o, old) => { if (o && old && o.en === old.en) for (const l of NEWL) if (o[l] === undefined && old[l] !== undefined) o[l] = old[l]; };
   for (const s of D.steps) { if (RAMPS[s.id]) { const prev = s.ramp || []; RAMPS[s.id].forEach((it, j) => { for (const k of ['t', 'b', 'g', 'h', 'y']) keep(it[k], (prev[j] || {})[k]); }); s.ramp = RAMPS[s.id]; } else delete s.ramp; }
   D.rampUi = UI;
-  fs.writeFileSync(FILE, JSON.stringify(D));
+  fs.writeFileSync(FILE, JSON.stringify(require('../../tools/keep-langs.js').keepLangs(D, FILE)));
   console.log('ramps written:', Object.keys(RAMPS).join(', '));
 }
 module.exports = { RAMPS, UI };

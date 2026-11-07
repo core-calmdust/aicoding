@@ -330,7 +330,7 @@
 - **対局者名などの「AI」**（「AI Lv.6」「AI 10級」、振り返りの側名、情報行）：直書きせず各ゲームの `AIW()`（ru「ИИ」、tr「YZ」、他は「AI」。将棋は `aiP()`）で表示する。戦績に保存する `opp`・棋譜の書き出し（PGN/SGF）・オンラインのデータは従来どおり「AI」のまま（2026-11-07）。
 - **対応状況（2026-11-07）**：公開中の全ゲーム・大百科ポータル・トップページ・共通部品（`shared/*.js`、`shared/atlas.js` 含む）が14言語対応済み。**対象外（開発中のため保留、完成時に14言語にする）**：COMET（comet/）・NUMBERLANDS（hexdeck/）・クイズ（quiz/）・WYRMSPHERE（wyrm/）・麻雀（mahjong/、プレアルファ前）。言語判定は html の lang を先頭2文字だけで見ない（zh-TW が zh になる）。
 - **言語メニュー**：`shared/langsel.js` は言語が9つ以上なら2列表示。インドネシア語の表示名は「Indonesian」。
-- **道具**：`node tools/i18n-langs.js coverage` でゲームごとの未翻訳数、`extract <file> out.json` → 訳を書いた JSON を `apply <file> tr.json` で、`ar` の直後に4言語を同じ書式で差し込む（`{ ja:…, en:…, …, ar:… }` 形式のみ。`I18N.zh = {…}` のような言語ごとの代入形式は `missing <dir>` で一覧を出し、手で `I18N.ru = {…}` 等を足す）。HTML 内に直接書いた辞書と、コーチの `XxxCoach.merge({…})`（coach.js の ja/en と別ファイル）は数えられないので、手で確認する。生成スクリプトで作る翻訳ファイル（lessons.json・openings.json・i18n.js など）は、スクリプト側にも14言語を入れておく（入っていないと作り直しで新しい言語が消える）。
+- **道具**：`node tools/i18n-langs.js coverage` でゲームごとの未翻訳数、`extract <file> out.json` → 訳を書いた JSON を `apply <file> tr.json` で、`ar` の直後に4言語を同じ書式で差し込む（`{ ja:…, en:…, …, ar:… }` 形式のみ。`I18N.zh = {…}` のような言語ごとの代入形式は `missing <dir>` で一覧を出し、手で `I18N.ru = {…}` 等を足す）。HTML 内に直接書いた辞書と、コーチの `XxxCoach.merge({…})`（coach.js の ja/en と別ファイル）は数えられないので、手で確認する。生成スクリプトで作る翻訳ファイル（lessons.json・openings.json・i18n.js など）は、スクリプト側にも14言語を入れておく。10言語しか持たない生成スクリプト（ramps・gen_lessons・gen_openings など）は、書き出す直前に `tools/keep-langs.js` の `keepLangs(データ, 出力ファイル)` を通す（英文が同じ文言の ru／zh-TW／id／tr を今のファイルと HEAD から引き継ぐ。英文を変えた文言は一覧が出るので訳を足す）。生成物（i18n.js・lessons.json など）だけを手で直さず、元データも直す（作り直すと消える）。
 
 ---
 
