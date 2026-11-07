@@ -84,11 +84,11 @@ function hanging(pos, color) {
 // ====================================================================== state
 const STORE = 'aicoding-chess';
 const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', pcs: 'std', coach: true };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.split('-')[0] === c) || 'en'; }
 let LANG = detectLang();
 // result reason for a resigned game (投了)
-{ const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام' };
+{ const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام', ru: 'Сдача', 'zh-TW': '認輸', id: 'Menyerah', tr: 'Terk' };
   for (const l in RW) if (I18N[l] && I18N[l]['res.why.resign'] === undefined) I18N[l]['res.why.resign'] = RW[l]; }
 // 引分提案 (offer a draw to the AI): button label, result reason, answers
 { const DR = {
@@ -101,7 +101,11 @@ let LANG = detectLang();
     pt: { btn: 'Propor empate', agree: 'Empate por acordo', wait: 'Faça mais alguns lances antes de propor de novo', accepted: 'A IA aceitou o empate', declined: 'A IA recusou o empate (quer continuar)' },
     de: { btn: 'Remis anbieten', agree: 'Remis durch Einigung', wait: 'Spiele erst noch ein paar Züge, bevor du erneut anbietest', accepted: 'Die KI hat das Remis angenommen', declined: 'Die KI hat das Remis abgelehnt (sie will weiterspielen)' },
     hi: { btn: 'ड्रॉ प्रस्ताव', agree: 'सहमति से ड्रॉ', wait: 'दोबारा प्रस्ताव से पहले कुछ और चालें चलें', accepted: 'AI ड्रॉ के लिए राज़ी हो गया', declined: 'AI ने ड्रॉ ठुकरा दिया (वह खेलना जारी रखना चाहता है)' },
-    ar: { btn: 'عرض تعادل', agree: 'تعادل بالاتفاق', wait: 'العب بضع نقلات أخرى قبل عرض التعادل مجددًا', accepted: 'وافق الذكاء الاصطناعي على التعادل', declined: 'رفض الذكاء الاصطناعي التعادل (يريد المتابعة)' } };
+    ar: { btn: 'عرض تعادل', agree: 'تعادل بالاتفاق', wait: 'العب بضع نقلات أخرى قبل عرض التعادل مجددًا', accepted: 'وافق الذكاء الاصطناعي على التعادل', declined: 'رفض الذكاء الاصطناعي التعادل (يريد المتابعة)' },
+    ru: { btn: 'Предложить ничью', agree: 'Ничья по соглашению', wait: 'Сделайте ещё несколько ходов, прежде чем предлагать снова', accepted: 'ИИ согласился на ничью', declined: 'ИИ отклонил ничью (хочет играть дальше)' },
+    'zh-TW': { btn: '提和', agree: '協議和棋', wait: '請再下幾步棋後再提和', accepted: 'AI 同意和棋', declined: 'AI 拒絕和棋（似乎還想繼續下）' },
+    id: { btn: 'Tawarkan remis', agree: 'Remis atas kesepakatan', wait: 'Mainkan beberapa langkah lagi sebelum menawarkan lagi', accepted: 'AI menerima remis', declined: 'AI menolak remis (ingin terus bermain)' },
+    tr: { btn: 'Beraberlik teklif et', agree: 'Anlaşmayla beraberlik', wait: 'Tekrar teklif etmeden önce birkaç hamle daha yapın', accepted: 'Yapay zekâ beraberliği kabul etti', declined: 'Yapay zekâ beraberliği reddetti (oynamaya devam etmek istiyor)' } };
   for (const l in DR) if (I18N[l]) { const d = DR[l], L = I18N[l]; if (L['dr.btn'] === undefined) L['dr.btn'] = d.btn; if (L['res.why.agree'] === undefined) L['res.why.agree'] = d.agree; for (const k of ['wait', 'accepted', 'declined']) if (L['dr.' + k] === undefined) L['dr.' + k] = d[k]; } }
 // 引分提案 in online games: confirmation, the opponent's dialog, answers
 { const OD = {
@@ -114,10 +118,15 @@ let LANG = detectLang();
     pt: { q: 'Propor empate ao adversário? (A proposta cai se ele recusar ou fizer o próximo lance.)', yes: 'Propor empate', sent: 'Empate proposto…', head: 'Proposta de empate', got: 'Seu adversário propõe empate. Aceitar?', acc: 'Aceitar', dec: 'Recusar', declined: 'Seu adversário recusou o empate', pending: 'Aguardando a resposta à sua proposta de empate' },
     de: { q: 'Deinem Gegner Remis anbieten? (Das Angebot verfällt, wenn er ablehnt oder seinen nächsten Zug macht.)', yes: 'Remis anbieten', sent: 'Remis angeboten…', head: 'Remisangebot', got: 'Dein Gegner bietet Remis an. Annehmen?', acc: 'Annehmen', dec: 'Ablehnen', declined: 'Dein Gegner hat das Remis abgelehnt', pending: 'Warte auf die Antwort auf dein Remisangebot' },
     hi: { q: 'प्रतिद्वंद्वी को ड्रॉ का प्रस्ताव दें? (उनके मना करने या अगली चाल चलने पर यह रद्द हो जाएगा)', yes: 'प्रस्ताव दें', sent: 'ड्रॉ का प्रस्ताव भेजा…', head: 'ड्रॉ प्रस्ताव', got: 'प्रतिद्वंद्वी ड्रॉ का प्रस्ताव दे रहे हैं। स्वीकारें?', acc: 'स्वीकारें', dec: 'मना करें', declined: 'प्रतिद्वंद्वी ने ड्रॉ ठुकरा दिया', pending: 'ड्रॉ प्रस्ताव के जवाब की प्रतीक्षा है' },
-    ar: { q: 'هل تعرض التعادل على خصمك؟ (يسقط العرض إذا رفضه أو لعب نقلته التالية)', yes: 'اعرض التعادل', sent: 'تم عرض التعادل…', head: 'عرض تعادل', got: 'خصمك يعرض التعادل. هل تقبل؟', acc: 'قبول', dec: 'رفض', declined: 'رفض خصمك التعادل', pending: 'بانتظار الرد على عرض التعادل' } };
+    ar: { q: 'هل تعرض التعادل على خصمك؟ (يسقط العرض إذا رفضه أو لعب نقلته التالية)', yes: 'اعرض التعادل', sent: 'تم عرض التعادل…', head: 'عرض تعادل', got: 'خصمك يعرض التعادل. هل تقبل؟', acc: 'قبول', dec: 'رفض', declined: 'رفض خصمك التعادل', pending: 'بانتظار الرد على عرض التعادل' },
+    ru: { q: 'Предложить сопернику ничью? (Предложение отменяется, если он откажется или сделает следующий ход.)', yes: 'Предложить', sent: 'Ничья предложена…', head: 'Предложение ничьей', got: 'Соперник предлагает ничью. Принять?', acc: 'Принять', dec: 'Отклонить', declined: 'Соперник отклонил ничью', pending: 'Ждём ответа на предложение ничьей' },
+    'zh-TW': { q: '要向對手提和嗎？（對手拒絕或下了下一步後即失效）', yes: '提和', sent: '已提和…', head: '提和', got: '對手提議和棋。要接受嗎？', acc: '接受', dec: '拒絕', declined: '對手拒絕了和棋', pending: '正在等待對手回覆提和' },
+    id: { q: 'Tawarkan remis kepada lawan? (Tawaran batal jika lawan menolak atau melangkah berikutnya.)', yes: 'Tawarkan', sent: 'Remis ditawarkan…', head: 'Tawaran remis', got: 'Lawan menawarkan remis. Terima?', acc: 'Terima', dec: 'Tolak', declined: 'Lawan menolak remis', pending: 'Menunggu jawaban atas tawaran remis' },
+    tr: { q: 'Rakibinize beraberlik teklif edilsin mi? (Reddederse veya sıradaki hamlesini yaparsa geçersiz olur.)', yes: 'Teklif et', sent: 'Beraberlik teklif edildi…', head: 'Beraberlik teklifi', got: 'Rakibiniz beraberlik teklif ediyor. Kabul ediyor musunuz?', acc: 'Kabul et', dec: 'Reddet', declined: 'Rakibiniz beraberliği reddetti', pending: 'Beraberlik teklifinize yanıt bekleniyor' } };
   for (const l in OD) if (I18N[l]) for (const k in OD[l]) if (I18N[l]['od.' + k] === undefined) I18N[l]['od.' + k] = OD[l][k]; }
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI'; // the word "AI" in player labels (ru / tr use their own abbreviation)
 const LV = i => t('lv')[i];
 // level description: how the AI plays + its rating on this site's scale (RT_LV)
 function LVD(i) {
@@ -401,9 +410,9 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
-  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 function material(pos, c) { let m = 0; for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const p = pos.b[s]; if (p && (p >> 3) === c) m += PVAL[p & 7]; } return m; }
 function renderInfo() {
@@ -768,7 +777,7 @@ function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
   if (st.why === 'resign' && moves.length < 2) return;   // resigning before playing is not a game
   recordedMv = moves;
-  const lv = levelFor(3 - humanColor), opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI Lv.' + lv + ' ' + LV(lv);
+  const lv = levelFor(3 - humanColor), opp = rgame ? AIW() + ' ' + rtLvName(rgame.lv) : AIW() + ' Lv.' + lv + ' ' + LV(lv);
   GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + lv), n: Math.ceil(moves.length / 2), why: t('res.why.' + st.why) });
 }
 function canUndo() {
@@ -1259,7 +1268,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261107i14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1654,7 +1663,7 @@ function drillMove(m) {
 
 // ====================================================================== openings: study a main line, then practice the moves strong players choose
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261019g').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261107i14').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -2197,7 +2206,7 @@ function plainWhy(best, mine, mover, pos) {
   const sa = word(best.v), sb = word(mine.v);
   return t('rx.cp', { b, a: amt }) + (sa !== sb ? ' ' + t('rx.flow', { c: sideLabel(mover), x: sa, y: sb }) : '');
 }
-function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
+function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : AIW()) : pname(p); }
 // the move at the current position only (like shogi): what the best move was and why
 function rvExplainHtml() {
   if (!rv || rv.running || cur >= moves.length) return '';
