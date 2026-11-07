@@ -84,8 +84,8 @@ html.atlas-agon3 .ag3note b{display:block;font-size:14px;color:#7a3a1c;margin-bo
 
   /* ---------- the design tab: two 3D boards first, then the page's own 2D boards ---------- */
   const LBL = {
-    folk: { ja: ['3D 民藝盤', 'ミルクペイントの松板・使い込み'], en: ['3D folk-art board', 'Milk paint on pine, well worn'], zh: ['3D 民间彩绘盘', '松木乳漆·久经使用'], ko: ['3D 민예 판', '소나무 우유 페인트·오래 쓴'], es: ['Tablero folk 3D', 'Pintura de leche sobre pino, muy usado'], fr: ['Plateau folk 3D', 'Peinture au lait sur pin, très usé'], pt: ['Tabuleiro folk 3D', 'Tinta de leite sobre pinho, bem gasto'], de: ['Volkskunst-Brett 3D', 'Milchfarbe auf Kiefer, abgegriffen'], hi: ['3D लोक-कला बोर्ड', 'चीड़ पर मिल्क पेंट, खूब घिसा'], ar: ['رقعة شعبية ثلاثية الأبعاد', 'طلاء حليبي على خشب الصنوبر، مستعملة كثيرًا'] },
-    victorian: { ja: ['3D ヴィクトリア盤', '1842年ロンドン・マホガニーと金'], en: ['3D Victorian board', 'London 1842: mahogany and gilt'], zh: ['3D 维多利亚盘', '1842年伦敦·桃花心木与金饰'], ko: ['3D 빅토리아 판', '1842년 런던·마호가니와 금박'], es: ['Tablero victoriano 3D', 'Londres 1842: caoba y dorado'], fr: ['Plateau victorien 3D', 'Londres 1842 : acajou et dorure'], pt: ['Tabuleiro vitoriano 3D', 'Londres 1842: mogno e dourado'], de: ['Viktorianisches Brett 3D', 'London 1842: Mahagoni und Gold'], hi: ['3D विक्टोरियन बोर्ड', 'लंदन 1842: महोगनी और सोना'], ar: ['رقعة فيكتورية ثلاثية الأبعاد', 'لندن 1842: ماهوجني وتذهيب'] },
+    folk: { ja: ['3D 民藝盤', 'ミルクペイントの松板・使い込み'], en: ['3D folk-art board', 'Milk paint on pine, well worn'], zh: ['3D 民间彩绘盘', '松木乳漆·久经使用'], ko: ['3D 민예 판', '소나무 우유 페인트·오래 쓴'], es: ['Tablero folk 3D', 'Pintura de leche sobre pino, muy usado'], fr: ['Plateau folk 3D', 'Peinture au lait sur pin, très usé'], pt: ['Tabuleiro folk 3D', 'Tinta de leite sobre pinho, bem gasto'], de: ['Volkskunst-Brett 3D', 'Milchfarbe auf Kiefer, abgegriffen'], hi: ['3D लोक-कला बोर्ड', 'चीड़ पर मिल्क पेंट, खूब घिसा'], ar: ['رقعة شعبية ثلاثية الأبعاد', 'طلاء حليبي على خشب الصنوبر، مستعملة كثيرًا'], ru: ['3D: народная доска', 'Молочная краска на сосне, потёртая'], 'zh-TW': ['3D 民藝棋盤', '牛奶漆松木板・使用痕跡'], id: ['Papan 3D seni rakyat', 'Cat susu di kayu pinus, sudah usang'], tr: ['3D halk sanatı tahtası', 'Çam üzerine süt boyası, eskimiş'] },
+    victorian: { ja: ['3D ヴィクトリア盤', '1842年ロンドン・マホガニーと金'], en: ['3D Victorian board', 'London 1842: mahogany and gilt'], zh: ['3D 维多利亚盘', '1842年伦敦·桃花心木与金饰'], ko: ['3D 빅토리아 판', '1842년 런던·마호가니와 금박'], es: ['Tablero victoriano 3D', 'Londres 1842: caoba y dorado'], fr: ['Plateau victorien 3D', 'Londres 1842 : acajou et dorure'], pt: ['Tabuleiro vitoriano 3D', 'Londres 1842: mogno e dourado'], de: ['Viktorianisches Brett 3D', 'London 1842: Mahagoni und Gold'], hi: ['3D विक्टोरियन बोर्ड', 'लंदन 1842: महोगनी और सोना'], ar: ['رقعة فيكتورية ثلاثية الأبعاد', 'لندن 1842: ماهوجني وتذهيب'], ru: ['3D: викторианская доска', 'Лондон, 1842: красное дерево и позолота'], 'zh-TW': ['3D 維多利亞棋盤', '1842年倫敦・桃花心木與鍍金'], id: ['Papan 3D Victoria', 'London 1842: mahoni dan sepuhan emas'], tr: ['3D Viktorya tahtası', 'Londra 1842: maun ve yaldız'] },
   };
   const NOTE = {
     ja: ['3D盤の駒', '民藝盤はミルクペイントの木駒（クリームに赤・黒にからし色）、ヴィクトリア盤は骨と黒檀の駒で表示します。女王は六角形の駒です。'],
@@ -98,8 +98,12 @@ html.atlas-agon3 .ag3note b{display:block;font-size:14px;color:#7a3a1c;margin-bo
     de: ['Steine der 3D-Bretter', 'Das Volkskunst-Brett hat bemalte Holzsteine (Creme mit Rot, Schwarz mit Senfgelb), das viktorianische Bein und Ebenholz. Die Königinnen sind sechseckig.'],
     hi: ['3D बोर्ड के मोहरे', 'लोक-कला बोर्ड पर रंगे लकड़ी के मोहरे (क्रीम पर लाल, काले पर सरसों), विक्टोरियन पर हड्डी और आबनूस। षट्कोण मोहरे रानियाँ हैं।'],
     ar: ['قطع الرقعتين ثلاثيتي الأبعاد', 'الرقعة الشعبية بقطع خشبية مطلية (كريمي مع أحمر، أسود مع خردلي)، والفيكتورية بقطع من العظم والأبنوس. الملكات هي القطع السداسية.'],
+    ru: ['Фишки на 3D-досках', 'На народной доске — деревянные фишки на молочной краске (кремовые с красным, чёрные с горчичным), на викторианской — кость и эбен. Королевы — шестиугольные фишки.'],
+    'zh-TW': ['3D棋盤的棋子', '民藝棋盤使用牛奶漆木棋子（奶油色配紅、黑色配芥末黃），維多利亞棋盤使用骨與烏木棋子。六角形的棋子是女王。'],
+    id: ['Bidak di papan 3D', 'Papan seni rakyat memakai bidak kayu bercat susu (krem dengan merah, hitam dengan mustard), papan Victoria memakai tulang dan eboni. Ratu adalah bidak heksagon.'],
+    tr: ['3D tahtalardaki taşlar', 'Halk sanatı tahtasında süt boyalı ahşap taşlar (kırmızılı krem, hardallı siyah), Viktorya tahtasında kemik ve abanoz kullanılır. Kraliçeler altıgen taşlardır.'],
   };
-  const lang = () => ((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja').slice(0, 2);
+  const lang = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja');
   function paintRow() {
     const row = document.getElementById('bdRow'); if (!row) return;
     row.classList.add('ag3row');

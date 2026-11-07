@@ -73,6 +73,146 @@
     de: {"name": "Wendeschildi", "title": "Reversi-Regeln", "next": "Weiter", "back": "Zurück", "skip": "Schließen", "start": "Los geht’s", "again": "Nochmal", "tap": "Tippe auf ein leuchtendes Feld", "nope": "Da gibt es nichts einzuschließen! Auf ✕-Felder kannst du nicht setzen.", "s": [{"say": "Hallo, ich bin <b>Wendeschildi</b>! Lass uns die Reversi-Regeln gemeinsam direkt hier auf dem Brett anschauen."}, {"say": "Das Brett hat <b>64 Felder</b> (8×8). Zu Beginn liegen je zwei schwarze und weiße Steine diagonal in der Mitte, und <b>Schwarz</b> beginnt."}, {"say": "Du darfst nur dort setzen, wo du <b>mindestens einen</b> Stein des Gegners einschließt. Tippe auf eines der vier leuchtenden Felder!", "done": "Super! Der eingeschlossene weiße Stein wurde auf Schwarz gewendet."}, {"say": "Egal wie viele Steine in der Reihe liegen – eingeschlossen werden <b>alle</b> gewendet. Probier das leuchtende Feld!", "done": "Drei auf einmal – wende, wende, wende! Toll, oder?"}, {"say": "Waagrecht, senkrecht, diagonal – <b>alle</b> eingeschlossenen Richtungen werden gleichzeitig gewendet. Was passiert hier?", "done": "Mehrere Richtungen auf einmal! Steine, die nicht eingeschlossen sind, bleiben liegen."}, {"say": "Liegt am anderen Ende kein eigener Stein oder ist dazwischen ein <b>leeres Feld</b>, wird nichts eingeschlossen – dort darfst du nicht setzen (✕). Gewendete Steine lösen keine Kettenreaktion aus."}, {"say": "Hast du keinen gültigen Zug, musst du <b>passen</b>. Hier kann Weiß nirgends setzen, also ist Schwarz noch einmal dran."}, {"say": "Das Spiel <b>endet</b>, wenn das Brett voll ist oder niemand mehr setzen kann. Wer mehr Steine hat, gewinnt! Bei Gleichstand ist es unentschieden."}, {"say": "Noch ein Tipp zum Schluss: <b>Ecken</b> (gold) können nie gewendet werden. Vorsicht bei den <b>X</b>-Feldern (rot) und <b>C</b>-Feldern (orange) neben einer leeren Ecke – sie verschenken sie oft."}, {"say": "Jetzt kennst du alle Regeln! Lass uns eine Partie spielen. Frag mich jederzeit wieder."}]},
     hi: {"name": "पलटू कछुआ", "title": "रिवर्सी के नियम", "next": "आगे", "back": "पीछे", "skip": "बंद करें", "start": "खेलें!", "again": "फिर से", "tap": "चमकते खाने पर टैप करें", "nope": "वहाँ कुछ नहीं घिरता! ✕ वाले खानों पर चाल नहीं चल सकते।", "s": [{"say": "नमस्ते, मैं हूँ <b>पलटू कछुआ</b>! चलो, इसी बोर्ड पर मिलकर रिवर्सी के नियम देखते हैं।"}, {"say": "बोर्ड में 8×8 यानी <b>64 खाने</b> हैं। बीच में दो काली और दो सफ़ेद गोटियाँ तिरछी रखकर खेल शुरू होता है, और पहली चाल <b>काला</b> चलता है।"}, {"say": "तुम सिर्फ़ वहीं चाल चल सकते हो जहाँ विरोधी की <b>कम से कम एक</b> गोटी घिर जाए। चार चमकते खानों में से किसी एक पर टैप करो!", "done": "शाबाश! घिरी हुई सफ़ेद गोटी पलटकर काली हो गई।"}, {"say": "लाइन में कितनी भी गोटियाँ हों, घिर जाएँ तो <b>सारी</b> पलट जाती हैं। चमकते खाने पर चलकर देखो!", "done": "एक साथ तीन — पलट, पलट, पलट! मज़ा आया ना?"}, {"say": "आड़ी, खड़ी या तिरछी — जितनी भी <b>दिशाओं</b> में गोटियाँ घिरें, सब एक साथ पलटती हैं। यहाँ चलने पर क्या होगा?", "done": "कई दिशाएँ एक साथ पलट गईं। जो गोटियाँ नहीं घिरीं, वे वैसी ही रहती हैं।"}, {"say": "अगर दूसरे छोर पर तुम्हारी गोटी न हो, या बीच में <b>खाली खाना</b> हो, तो कुछ नहीं घिरता और वहाँ चाल नहीं चल सकते (✕)। पलटी गोटियों से आगे कोई सिलसिला नहीं बनता।"}, {"say": "कोई सही चाल न हो तो <b>पास</b> करना पड़ता है। यहाँ सफ़ेद कहीं नहीं चल सकता, इसलिए काला फिर से चलेगा।"}, {"say": "बोर्ड भर जाए या कोई भी चाल न चल सके, तो खेल <b>ख़त्म</b>। जिसकी गोटियाँ ज़्यादा, वही जीता! बराबर हों तो ड्रॉ।"}, {"say": "आख़िरी टिप: <b>कोने</b> (सुनहरे) कभी नहीं पलटते — ये सबसे ताक़तवर खाने हैं। ख़ाली कोने के पास वाले <b>X</b> (लाल) और <b>C</b> (नारंगी) खानों से सावधान, इनसे अक्सर कोना हाथ से निकल जाता है।"}, {"say": "अब तुम्हें सारे नियम आ गए! चलो, एक बाज़ी खेलते हैं। कभी भी दोबारा पूछ लेना।"}]},
     ar: {"name": "قلّوب", "title": "قواعد ريفيرسي", "next": "التالي", "back": "رجوع", "skip": "إغلاق", "start": "هيا نلعب", "again": "مرة أخرى", "tap": "انقر على مربع مضيء", "nope": "لا يوجد ما تحاصره هنا! لا يمكنك اللعب في مربعات ✕.", "s": [{"say": "مرحبًا، أنا السلحفاة <b>قلّوب</b>! هيا نتعرّف معًا على قواعد ريفيرسي هنا على اللوحة."}, {"say": "في اللوحة <b>64 مربعًا</b> (8×8). نبدأ بقطعتين سوداوين وقطعتين بيضاوين بشكل قطري في المنتصف، ويبدأ <b>الأسود</b> أولًا."}, {"say": "يمكنك اللعب فقط حيث <b>تحاصر قطعة واحدة على الأقل</b> من قطع خصمك. انقر على أحد المربعات الأربعة المضيئة!", "done": "أحسنت! انقلبت القطعة البيضاء المحاصَرة إلى الأسود."}, {"say": "مهما كان عدد القطع في الخط، إذا حاصرتها تنقلب <b>كلها</b>. جرّب المربع المضيء!", "done": "ثلاث دفعة واحدة — قلبة، قلبة، قلبة! ممتع، أليس كذلك؟"}, {"say": "أفقيًا أو عموديًا أو قطريًا — تنقلب <b>كل</b> الاتجاهات المحاصَرة في الوقت نفسه. ماذا سيحدث هنا؟", "done": "انقلبت عدة اتجاهات معًا. القطع غير المحاصَرة تبقى كما هي."}, {"say": "إذا لم تكن لديك قطعة في الطرف الآخر، أو كان بينهما <b>مربع فارغ</b>، فلا حصار ولا يمكنك اللعب هناك (✕). والقطع المقلوبة لا تسبب سلسلة."}, {"say": "إذا لم تكن لديك نقلة صحيحة فعليك أن <b>تمرّر</b>. هنا لا يستطيع الأبيض اللعب في أي مكان، لذا يلعب الأسود مرة أخرى."}, {"say": "<b>تنتهي</b> اللعبة عندما تمتلئ اللوحة أو لا يستطيع أحد اللعب. صاحب القطع الأكثر يفوز! وإذا تساوى العدد فهو تعادل."}, {"say": "نصيحة أخيرة: <b>الزوايا</b> (الذهبية) لا يمكن قلبها أبدًا. احذر مربعات <b>X</b> (الحمراء) و<b>C</b> (البرتقالية) بجوار زاوية فارغة، فهي غالبًا تمنحها لخصمك."}, {"say": "صرت تعرف كل القواعد! هيا نلعب مباراة. اسألني مرة أخرى في أي وقت."}]},
+    ru: {
+      name: 'Флиптёртл',
+      title: 'Правила реверси',
+      next: 'Далее',
+      back: 'Назад',
+      skip: 'Закрыть',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящуюся клетку',
+      nope: 'Здесь нечего зажать! На клетки с ✕ ходить нельзя.',
+      s: [{
+        say: 'Привет, я <b>Флиптёртл</b>! Давай вместе разберём правила реверси прямо на этой доске.'
+      }, {
+        say: 'На доске <b>64 клетки</b> (8×8). В центре по диагонали стоят две чёрные и две белые фишки, первыми ходят <b>чёрные</b>.'
+      }, {
+        say: 'Ходить можно только туда, где ты <b>зажимаешь хотя бы одну</b> фишку соперника. Нажми на одну из четырёх светящихся клеток!',
+        done: 'Отлично! Зажатая белая фишка перевернулась в чёрную.'
+      }, {
+        say: 'Сколько бы фишек ни было в линии, при зажатии переворачиваются <b>все</b>. Попробуй светящуюся клетку!',
+        done: 'Сразу три — щёлк, щёлк, щёлк!'
+      }, {
+        say: 'По горизонтали, вертикали, диагонали — <b>все</b> зажатые направления переворачиваются одновременно. Что будет здесь?',
+        done: 'Перевернулось сразу много направлений. Незажатые фишки остаются как есть.'
+      }, {
+        say: 'Если на дальнем конце нет твоей фишки или между ними есть <b>пустая клетка</b>, ничего не зажато, и ходить туда нельзя (✕). Перевороты не идут цепочкой.'
+      }, {
+        say: 'Если допустимых ходов нет, нужно <b>пасовать</b>. Здесь белым некуда ходить, поэтому чёрные ходят снова.'
+      }, {
+        say: 'Игра <b>заканчивается</b>, когда доска заполнена или никто не может ходить. Больше фишек — победа, поровну — ничья.'
+      }, {
+        say: 'Последний совет: <b>углы</b> (золотые) никогда не переворачиваются. Клетки <b>X</b> (красные) и <b>C</b> (оранжевые) рядом с пустым углом часто отдают его сопернику.'
+      }, {
+        say: 'Вот и все правила! Давай сыграем. Спрашивай меня в любое время.'
+      }]
+    },
+    'zh-TW': {
+      name: '翻翻龜',
+      title: '黑白棋規則',
+      next: '下一步',
+      back: '返回',
+      skip: '關閉',
+      start: '來玩吧',
+      again: '再一次',
+      tap: '點擊發光的格子',
+      nope: '那裡夾不到喔～有✕的格子不能下。',
+      s: [{
+        say: '你好，我是<b>翻翻龜</b>！一起在這個棋盤上看看黑白棋的規則吧。'
+      }, {
+        say: '棋盤有8×8共<b>64格</b>。中央斜放黑白各2顆開始，由<b>黑方</b>先下喔。'
+      }, {
+        say: '只能下在能<b>夾住至少1顆</b>對方棋子的格子。點一下發光的4個格子之一吧！',
+        done: '成功了！被夾住的白子翻成黑子囉。'
+      }, {
+        say: '不管一條線上有幾顆，只要夾住就會<b>全部</b>翻過來。下在發光的格子試試！',
+        done: '一次3顆，翻翻翻！'
+      }, {
+        say: '橫、直、斜，夾住的<b>每個方向</b>都會同時翻過來。下在這裡會怎樣呢？',
+        done: '好幾個方向一起翻了。沒被夾住的棋子不會翻喔。'
+      }, {
+        say: '另一端沒有自己的棋子，或中間有<b>空格</b>，就夾不到，那裡不能下（✕）。翻過來的棋子不會連鎖。'
+      }, {
+        say: '沒有地方可下時就要<b>虛手（PASS）</b>。這裡白方哪裡都不能下，所以黑方再下一次。'
+      }, {
+        say: '棋盤下滿或雙方都不能下時遊戲<b>結束</b>。棋子多的一方獲勝，一樣多就是和局。'
+      }, {
+        say: '最後一個訣竅：<b>角</b>（金色）永遠不會被翻。空角旁邊的<b>X</b>（紅色）和<b>C</b>（橘色）格子常會把角讓給對手，要小心喔。'
+      }, {
+        say: '規則都學會了！來下一局吧。隨時都可以再來問我喔。'
+      }]
+    },
+    id: {
+      name: 'Flipturtle',
+      title: 'Aturan Reversi',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      skip: 'Tutup',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk kotak yang menyala',
+      nope: 'Tidak ada yang terapit di sana! Kamu tak bisa main di kotak ✕.',
+      s: [{
+        say: 'Hai, aku <b>Flipturtle</b>! Ayo kita pelajari aturan Reversi bersama, langsung di papan ini.'
+      }, {
+        say: 'Papan punya <b>64 kotak</b> (8×8). Dua cakram hitam dan dua putih mulai secara diagonal di tengah, dan <b>Hitam</b> jalan duluan.'
+      }, {
+        say: 'Kamu hanya bisa main di tempat yang <b>mengapit setidaknya satu</b> cakram lawan. Ketuk salah satu dari empat kotak yang menyala!',
+        done: 'Bagus! Cakram putih yang terapit berbalik jadi hitam.'
+      }, {
+        say: 'Berapa pun cakram dalam barisan, <b>semuanya</b> berbalik saat diapit. Coba kotak yang menyala!',
+        done: 'Tiga sekaligus — balik, balik, balik!'
+      }, {
+        say: 'Mendatar, menurun, diagonal — <b>setiap</b> arah yang terapit berbalik bersamaan. Apa yang terjadi di sini?',
+        done: 'Banyak arah berbalik bersamaan. Cakram yang tak terapit tetap di tempat.'
+      }, {
+        say: 'Jika tak ada cakrammu di ujung sana, atau ada <b>kotak kosong</b> di antaranya, tak ada yang terapit dan kamu tak bisa main di sana (✕). Balikan tidak berantai.'
+      }, {
+        say: 'Jika tak ada langkah sah, kamu harus <b>pass</b>. Di sini Putih tak bisa bergerak ke mana pun, jadi Hitam main lagi.'
+      }, {
+        say: 'Permainan <b>berakhir</b> saat papan penuh atau tak ada yang bisa bergerak. Cakram terbanyak menang — jumlah sama berarti seri.'
+      }, {
+        say: 'Satu tips terakhir: <b>pojok</b> (emas) tak pernah bisa dibalik. Kotak <b>X</b> (merah) dan <b>C</b> (oranye) di sebelah pojok kosong sering memberikannya ke lawan.'
+      }, {
+        say: 'Itu semua aturannya! Ayo main. Tanya aku lagi kapan saja.'
+      }]
+    },
+    tr: {
+      name: 'Flipturtle',
+      title: 'Reversi kuralları',
+      next: 'İleri',
+      back: 'Geri',
+      skip: 'Kapat',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan bir kareye dokun',
+      nope: 'Orada sıkıştırılacak taş yok! ✕ karelerine oynanmaz.',
+      s: [{
+        say: 'Merhaba, ben <b>Flipturtle</b>! Reversi\'nin kurallarına tam bu tahtada birlikte bakalım.'
+      }, {
+        say: 'Tahtada <b>64 kare</b> (8×8) var. Ortada çapraz duran iki siyah ve iki beyaz taşla başlanır, ilk <b>Siyah</b> oynar.'
+      }, {
+        say: 'Yalnızca rakibin <b>en az bir</b> taşını sıkıştırdığın yere oynayabilirsin. Parlayan dört kareden birine dokun!',
+        done: 'Harika! Sıkışan beyaz taş siyaha döndü.'
+      }, {
+        say: 'Sırada kaç taş olursa olsun, sıkıştırınca <b>hepsi</b> döner. Parlayan kareyi dene!',
+        done: 'Üçü birden — çevir, çevir, çevir!'
+      }, {
+        say: 'Yatay, dikey, çapraz — sıkıştırdığın <b>her</b> yön aynı anda döner. Burada ne olacak?',
+        done: 'Birçok yön birlikte döndü. Sıkışmayan taşlar yerinde kalır.'
+      }, {
+        say: 'Uçta senin taşın yoksa ya da arada <b>boş kare</b> varsa hiçbir şey sıkışmaz ve oraya oynayamazsın (✕). Dönmeler zincirleme olmaz.'
+      }, {
+        say: 'Yasal hamlen yoksa <b>pas</b> geçmelisin. Burada Beyaz hiçbir yere oynayamıyor, bu yüzden Siyah tekrar oynar.'
+      }, {
+        say: 'Tahta dolunca ya da kimse oynayamayınca oyun <b>biter</b>. Çok taşı olan kazanır — eşitse berabere.'
+      }, {
+        say: 'Son bir ipucu: <b>köşeler</b> (altın) asla dönmez. Boş bir köşenin yanındaki <b>X</b> (kırmızı) ve <b>C</b> (turuncu) kareleri çoğu zaman köşeyi rakibe verir.'
+      }, {
+        say: 'Kuralların hepsi bu! Hadi bir oyun oynayalım. İstediğin zaman bana tekrar sor.'
+      }]
+    },
   };
   // board, marks and interactivity of each step
   const STEPS = [

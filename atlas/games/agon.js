@@ -37,6 +37,10 @@
     de: { n: ['Weiß', 'Schwarz'], turn: '{p} am Zug', win: '{p} gewinnt', stuck: 'Dieser Stein kann nicht ziehen', own: 'Wähle einen deiner Steine', move: 'Dorthin geht es nicht', reloc: 'Setze deinen geschlagenen Stein neu', relocQ: 'Setze deine geschlagene Königin neu', throne: 'Königin auf dem Thron, sechs Wachen um sie', empty: 'Sechs Wachen um einen leeren Thron', rep: 'Dreifache Wiederholung', cap: 'Zuglimit: Remis', took: 'Geschlagen!' },
     hi: { n: ['सफ़ेद', 'काला'], turn: '{p} की बारी', win: '{p} की जीत', stuck: 'यह मोहरा नहीं चल सकता', own: 'अपना कोई मोहरा चुनें', move: 'वहाँ नहीं जा सकते', reloc: 'पकड़ा गया मोहरा दोबारा रखें', relocQ: 'पकड़ी गई रानी दोबारा रखें', throne: 'रानी सिंहासन पर, छह रक्षक चारों ओर', empty: 'खाली सिंहासन को छह रक्षकों ने घेरा', rep: 'तीन बार एक ही स्थिति', cap: 'चाल सीमा: ड्रॉ', took: 'पकड़ लिया!' },
     ar: { n: ['الأبيض', 'الأسود'], turn: 'دور {p}', win: 'فوز {p}', stuck: 'هذه القطعة لا تستطيع الحركة', own: 'اختر إحدى قطعك', move: 'لا يمكن الذهاب إلى هناك', reloc: 'أعد وضع قطعتك المأسورة', relocQ: 'أعد وضع ملكتك المأسورة', throne: 'الملكة على العرش وحولها ستة حراس', empty: 'ستة حراس حول عرش فارغ', rep: 'تكرار ثلاثي', cap: 'حد النقلات: تعادل', took: 'أسر!' },
+    ru: { n: ['Белые', 'Чёрные'], turn: 'Ход: {p}', win: '{p} побеждают', stuck: 'Эта фишка не может ходить', own: 'Выберите свою фишку', move: 'Туда нельзя', reloc: 'Переставьте взятую фишку', relocQ: 'Переставьте взятую королеву', throne: 'Королева на троне, вокруг шесть стражей', empty: 'Шесть стражей вокруг пустого трона', rep: 'Троекратное повторение', cap: 'Лимит ходов: ничья', took: 'Взято!' },
+    'zh-TW': { n: ['白方', '黑方'], turn: '輪到{p}', win: '{p}獲勝', stuck: '這枚棋子不能移動', own: '請選擇自己的棋子', move: '不能走到那裡', reloc: '把被吃的棋子重新放置', relocQ: '把被吃的女王重新放置', throne: '女王坐上王座，6名護衛圍繞', empty: '6名護衛圍住了空王座', rep: '三次重複局面', cap: '達到步數上限：和局', took: '吃子！' },
+    id: { n: ['Putih', 'Hitam'], turn: 'Giliran {p}', win: '{p} menang', stuck: 'Bidak itu tidak bisa bergerak', own: 'Pilih salah satu bidakmu', move: 'Tidak bisa ke sana', reloc: 'Pindahkan bidakmu yang ditangkap', relocQ: 'Pindahkan ratumu yang ditangkap', throne: 'Ratu di takhta, enam pengawal mengelilinginya', empty: 'Enam pengawal mengelilingi takhta kosong', rep: 'Pengulangan tiga kali', cap: 'Batas langkah: seri', took: 'Ditangkap!' },
+    tr: { n: ['Beyaz', 'Siyah'], turn: 'Sıra: {p}', win: '{p} kazandı', stuck: 'Bu taş hareket edemez', own: 'Taşlarından birini seç', move: 'Oraya gidemez', reloc: 'Alınan taşını yeniden yerleştir', relocQ: 'Alınan kraliçeni yeniden yerleştir', throne: 'Kraliçe tahtta, çevresinde altı muhafız', empty: 'Boş tahtın çevresinde altı muhafız', rep: 'Üç kez tekrar', cap: 'Hamle sınırı: berabere', took: 'Alındı!' },
   };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
@@ -351,6 +355,10 @@
     de: ['Einsteiger: will zum Thron, übersieht aber Schläge', 'Anfänger bis Mittel: sieht Schläge einige Züge voraus', 'Fortgeschritten: rechnet Neusetzen und den Ring um den Thron', 'Meister: tiefe Suche, die der Königin den Weg bahnt'],
     hi: ['शुरुआती: सिंहासन की ओर जाता है पर पकड़ चूकता है', 'नौसिखिया से मध्यम: कुछ चाल आगे की पकड़ देखता है', 'उन्नत: दोबारा रखना और सिंहासन का घेरा गिनता है', 'विशेषज्ञ: गहरी गणना से रानी का रास्ता बनाता है'],
     ar: ['مبتدئ: يتجه إلى العرش لكنه يفوّت الأسر', 'مبتدئ إلى متوسط: يرى الأسر قبل بضع نقلات', 'متقدم: يحسب إعادة الوضع وحلقة العرش', 'خبير: بحث عميق يفتح طريق الملكة'],
+    ru: ['Начальный: идёт к трону, но упускает взятия', 'Новичок–средний: видит взятия на несколько ходов вперёд', 'Продвинутый: учитывает перестановки и кольцо вокруг трона', 'Эксперт: глубокий поиск, расчищающий путь королеве'],
+    'zh-TW': ['入門：會往王座前進但常漏掉吃子', '初級～中級：能看出幾步內的吃子', '高級：計算重新放置與王座周圍的包圍', '最高級：深入搜尋，替女王開路'],
+    id: ['Pemula: menuju takhta tapi melewatkan tangkapan', 'Dasar–menengah: melihat tangkapan beberapa langkah ke depan', 'Mahir: memperhitungkan pemindahan dan cincin sekitar takhta', 'Ahli: pencarian mendalam yang membuka jalan sang ratu'],
+    tr: ['Başlangıç: tahta yönelir ama almaları kaçırır', 'Acemi–orta: birkaç hamle ilerideki almaları görür', 'İleri: yeniden yerleştirmeleri ve taht çevresini hesaplar', 'Uzman: kraliçenin yolunu açan derin arama'],
   };
   const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // agon RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
@@ -365,6 +373,10 @@
     de: W7('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'selbst für Profis knifflig', 'die stärkste Stufe'),
     hi: W7('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'विशेषज्ञों के लिए भी कठिन', 'सबसे मज़बूत स्तर'),
     ar: W7('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'صعب حتى على الخبراء', 'أقوى مستوى'),
+    ru: W7('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'трудно даже экспертам', 'самый сильный'),
+    'zh-TW': W7('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '連專家都覺得難', '最強'),
+    id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
+    tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   function levelInfo(n, lang) {
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;

@@ -107,8 +107,8 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
   /* ---------- the new-game dialog: the 3D set replaces the 2D board / stone designs ---------- */
   // the new-game dialog's design tab: a 「3D盤」 box inside the 盤面 box, under the 2D boards (the standard for every game with 3D boards, 2026-11-06).
   // A 3D board picked: the 3D view with that board; a 2D board picked: the 2D page. Exactly one tile of the two rows is selected.
-  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد' };
-  const lng = () => ((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja')).slice(0, 2);
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja'));
   const is3 = () => !V || V.is3d();
   function setLook(k) {
     if (!T3.BOARDS || !T3.BOARDS.konane) return;

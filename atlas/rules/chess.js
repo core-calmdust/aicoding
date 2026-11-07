@@ -188,6 +188,174 @@
         { say: 'لا نقلة قانونية ولا كش؟ هذا <b>تعادل بالجمود</b>. وهناك أيضًا أسر خاص للبيدق اسمه <b>الأخذ بالمرور</b> (في الدروس). نصائح: سيطر على الوسط، وأخرج قطعك مبكرًا، وبيّت ملكك. هيا نلعب!' },
       ],
     },
+    ru: {
+      name: 'Найтон',
+      next: 'Далее',
+      back: 'Назад',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящуюся клетку',
+      nope: 'Туда нельзя!',
+      mate: 'Мат!',
+      s: [{
+        say: 'Привет, я <b>Найтон</b>! Давай вместе разберём правила шахмат на этой блестящей доске.'
+      }, {
+        say: 'На доске <b>64 клетки</b> (8×8), правый ближний угол — <b>светлое поле</b>. Серебряные — <b>белые</b> (это ты), золотые — <b>чёрные</b>. <b>Белые ходят первыми</b>, дальше по очереди.'
+      }, {
+        say: 'Цель — <b>поставить мат королю соперника</b>! Светятся оба короля. Если мат твоему королю, ты проиграл.'
+      }, {
+        say: '<b>Ладья</b> ходит на любое расстояние по прямой — по горизонтали и вертикали, но не перепрыгивает фигуры. Нажми на светящуюся клетку, чтобы пойти ладьёй!',
+        done: 'Вжух! Она остановилась прямо перед своей пешкой.'
+      }, {
+        say: '<b>Слон</b> ходит на любое расстояние по диагонали (синие клетки). Встав на фигуру соперника, ты её <b>берёшь</b>. Возьми слоном чёрного коня!',
+        done: 'Есть! Взятая фигура уходит с доски.'
+      }, {
+        say: '<b>Ферзь</b> ходит на любое расстояние по прямой и по диагонали — сильнейшая фигура (слева). <b>Король</b> ходит на одну клетку в любую сторону (справа) и никогда не может встать под шах.'
+      }, {
+        say: 'Мой друг <b>конь</b> прыгает буквой «Г»: две клетки в одну сторону и одну вбок. Это единственная фигура, которая <b>перепрыгивает другие</b>. Сделай прыжок конём!',
+        done: 'Бум! Прямо через пешки.'
+      }, {
+        say: '<b>Пешка</b> ходит на одну клетку вперёд (первым ходом — на две), но <b>бьёт по диагонали</b> вперёд. Возьми чёрную пешку своей!',
+        done: 'Хрум, по диагонали! Пешки никогда не ходят назад.'
+      }, {
+        say: 'Пешка, дошедшая до последнего ряда, <b>превращается</b> в ферзя, ладью, слона или коня. Двигай пешку!',
+        done: 'Сияние! Она стала ферзём — обычно это лучший выбор.'
+      }, {
+        say: '<b>Рокировка</b>: король идёт на две клетки в сторону, а ладья перепрыгивает на другую сторону от него. Можно, только если оба ещё не ходили, между ними пусто и король не проходит через битое поле. Пойди королём на светящуюся клетку!',
+        done: 'Бац! Король укрылся в углу, а ладья вышла в центр.'
+      }, {
+        say: 'Нападение на короля — это <b>шах</b>. Если спастись нельзя, это <b>мат</b>, и ты победил! Пойди ладьёй на светящуюся клетку и поставь мат чёрному королю!',
+        done: 'Ура, <b>мат</b>! Короля заперли его же пешки.'
+      }, {
+        say: 'Ходов нет, но и шаха нет? Это <b>пат</b> — <b>ничья</b>. Есть и особое взятие пешкой — <b>взятие на проходе</b> (см. уроки). Советы: занимай центр, быстрее выводи фигуры и рокируйся. Сыграем!'
+      }]
+    },
+    'zh-TW': {
+      name: '奈頓',
+      next: '下一步',
+      back: '返回',
+      start: '來對局吧',
+      again: '再一次',
+      tap: '點擊發光的格子',
+      nope: '那裡不能走喔！',
+      mate: '將死！',
+      s: [{
+        say: '你好，我是<b>奈頓</b>！一起在這個閃亮的棋盤上看看西洋棋的規則吧。'
+      }, {
+        say: '棋盤有8×8共<b>64格</b>，擺放時右下角要是<b>淺色格</b>。銀色是<b>白方</b>（你），金色是<b>黑方</b>。<b>白方先走</b>，之後輪流下。'
+      }, {
+        say: '目標是<b>將死對方的國王</b>！發光的棋子就是雙方的國王。自己的國王被將死就輸了。'
+      }, {
+        say: '<b>城堡</b>可以沿直線橫向或縱向走任意格數，但不能跳過其他棋子。點擊發光的格子移動城堡！',
+        done: '咻！它停在自己的兵前面。'
+      }, {
+        say: '<b>主教</b>可以斜走任意格數（藍色格子）。走到對方棋子上就能<b>吃掉</b>它。用主教吃掉黑方的騎士！',
+        done: '吃到了！被吃的棋子會離開棋盤。'
+      }, {
+        say: '<b>皇后</b>可以直走或斜走任意格數，是最強的棋子（左）。<b>國王</b>可以往任何方向走1格（右），但不能走進被將軍的位置。'
+      }, {
+        say: '我的朋友<b>騎士</b>走「L」形：往一個方向走2格，再往旁邊走1格。它是唯一能<b>跳過其他棋子</b>的棋子。讓騎士跳吧！',
+        done: '咚！直接跳過了兵。'
+      }, {
+        say: '<b>兵</b>往前走1格（第一步可走2格），但要<b>斜前方吃子</b>。用你的兵吃掉黑方的兵！',
+        done: '喀滋，斜著吃！兵永遠不能後退。'
+      }, {
+        say: '兵走到最底線就能<b>升變</b>成皇后、城堡、主教或騎士。把兵往前推！',
+        done: '閃閃發亮！變成皇后了——通常這是最好的選擇。'
+      }, {
+        say: '<b>入堡</b>：國王往旁邊走2格，城堡跳到國王的另一側。只有在兩者都還沒動過、中間沒有棋子，而且國王不經過被攻擊的格子時才能進行。把國王移到發光的格子！',
+        done: '喀噹！國王躲進角落，城堡來到中央。'
+      }, {
+        say: '攻擊國王就是<b>將軍</b>。無路可逃就是<b>將死</b>，你就贏了！把城堡移到發光的格子將死黑方國王！',
+        done: '耶，<b>將死</b>！國王被自己的兵困住了。'
+      }, {
+        say: '沒有合法步但也沒被將軍？那就是<b>逼和</b>——算<b>和局</b>。還有一種特殊的兵吃法叫<b>吃過路兵</b>（請看課程）。訣竅：佔領中央、盡早出子，並入堡讓國王安全。來下棋吧！'
+      }]
+    },
+    id: {
+      name: 'Knighton',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk kotak yang menyala',
+      nope: 'Tidak bisa ke sana!',
+      mate: 'Skakmat!',
+      s: [{
+        say: 'Hai, aku <b>Knighton</b>! Ayo kita pelajari aturan catur bersama di papan mengilap ini.'
+      }, {
+        say: 'Papan punya <b>64 kotak</b> (8×8), dipasang agar pojok kanan dekat adalah <b>kotak terang</b>. Perak adalah <b>Putih</b> (kamu), emas adalah <b>Hitam</b>. <b>Putih jalan duluan</b>, lalu bergantian.'
+      }, {
+        say: 'Tujuannya: <b>skakmat raja lawan</b>! Bidak yang menyala adalah kedua raja. Jika rajamu diskakmat, kamu kalah.'
+      }, {
+        say: '<b>Benteng</b> bergerak lurus sejauh apa pun sepanjang baris dan lajur — tapi tak bisa melompati bidak. Ketuk kotak yang menyala untuk menggerakkan benteng!',
+        done: 'Wus! Ia berhenti tepat di depan pionmu sendiri.'
+      }, {
+        say: '<b>Gajah</b> bergerak diagonal sejauh apa pun (kotak biru). Bergerak ke bidak lawan berarti <b>memakan</b>nya. Makan kuda Hitam dengan gajahmu!',
+        done: 'Dapat! Bidak yang dimakan keluar dari papan.'
+      }, {
+        say: '<b>Ratu</b> bergerak lurus atau diagonal sejauh apa pun — bidak terkuat (kiri). <b>Raja</b> melangkah satu kotak ke arah mana pun (kanan), dan tak boleh masuk ke posisi skak.'
+      }, {
+        say: 'Temanku si <b>kuda</b> melompat membentuk "L": dua kotak ke satu arah, lalu satu ke samping. Hanya ia yang bisa <b>melompati bidak lain</b>. Buat kudanya melompat!',
+        done: 'Boing! Langsung melewati pion-pion.'
+      }, {
+        say: '<b>Pion</b> maju satu kotak (dua di langkah pertamanya) tapi <b>memakan secara diagonal</b> ke depan. Makan pion Hitam dengan pionmu!',
+        done: 'Hap, secara diagonal! Pion tak pernah mundur.'
+      }, {
+        say: 'Pion yang mencapai ujung papan <b>dipromosikan</b> jadi ratu, benteng, gajah, atau kuda. Majukan pionnya!',
+        done: 'Berkilau! Ia jadi ratu — biasanya pilihan terbaik.'
+      }, {
+        say: '<b>Rokade</b>: raja bergerak dua kotak ke samping dan benteng melompat ke sisi lainnya. Hanya jika keduanya belum bergerak, tak ada yang menghalangi, dan raja tak melewati kotak yang diserang. Pindahkan raja ke kotak yang menyala!',
+        done: 'Tok! Raja berlindung di pojok dan benteng masuk ke tengah.'
+      }, {
+        say: 'Menyerang raja disebut <b>skak</b>. Jika tak ada jalan keluar, itu <b>skakmat</b> dan kamu menang! Pindahkan benteng ke kotak yang menyala untuk menskakmat raja Hitam!',
+        done: 'Hore, <b>skakmat</b>! Rajanya terkurung oleh pionnya sendiri.'
+      }, {
+        say: 'Tak ada langkah sah tapi tidak sedang diskak? Itu <b>pat</b> — <b>remis</b>. Ada juga tangkapan pion khusus, <b>en passant</b> (lihat pelajaran). Tips: kuasai tengah, kembangkan bidak lebih awal, dan rokade agar raja aman. Ayo main!'
+      }]
+    },
+    tr: {
+      name: 'Knighton',
+      next: 'İleri',
+      back: 'Geri',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan bir kareye dokun',
+      nope: 'Oraya gidemez!',
+      mate: 'Şah mat!',
+      s: [{
+        say: 'Merhaba, ben <b>Knighton</b>! Bu parlak tahtada satrancın kurallarına birlikte bakalım.'
+      }, {
+        say: 'Tahtada <b>64 kare</b> (8×8) var; sağ alt köşe <b>açık renkli kare</b> olacak şekilde konur. Gümüşler <b>Beyaz</b> (sen), altınlar <b>Siyah</b>. <b>İlk Beyaz oynar</b>, sonra sırayla.'
+      }, {
+        say: 'Amaç: <b>rakip şahı mat etmek</b>! Parlayan taşlar iki şah. Şahın mat olursa kaybedersin.'
+      }, {
+        say: '<b>Kale</b> yatay ve dikey düz çizgide istediği kadar gider — ama taşların üzerinden atlayamaz. Kaleyi oynatmak için parlayan kareye dokun!',
+        done: 'Vın! Kendi piyonunun hemen önünde durdu.'
+      }, {
+        say: '<b>Fil</b> çaprazda istediği kadar gider (mavi kareler). Rakip taşın üstüne gidersen onu <b>alırsın</b>. Filinle Siyah\'ın atını al!',
+        done: 'Aldın! Alınan taş tahtadan çıkar.'
+      }, {
+        say: '<b>Vezir</b> düz ya da çapraz istediği kadar gider — en güçlü taş (solda). <b>Şah</b> her yöne bir kare gider (sağda) ve asla şaha giremez.'
+      }, {
+        say: 'Arkadaşım <b>at</b> "L" çizerek zıplar: bir yöne iki kare, sonra yana bir kare. <b>Diğer taşların üzerinden atlayan</b> tek taştır. Atı zıplat!',
+        done: 'Hop! Piyonların tam üzerinden.'
+      }, {
+        say: '<b>Piyon</b> bir kare ileri gider (ilk hamlesinde iki), ama <b>çapraz ileri alır</b>. Siyah\'ın piyonunu kendi piyonunla al!',
+        done: 'Hapır, çapraz! Piyonlar asla geri gitmez.'
+      }, {
+        say: 'Son sıraya ulaşan piyon vezir, kale, fil ya da ata <b>terfi eder</b>. Piyonu ilerlet!',
+        done: 'Parıl parıl! Vezir oldu — genelde en iyi seçim.'
+      }, {
+        say: '<b>Rok</b>: şah yana iki kare gider ve kale onun öbür yanına atlar. Yalnızca ikisi de hiç oynamamışsa, aralarında taş yoksa ve şah tehdit altındaki bir kareden geçmiyorsa yapılır. Şahı parlayan kareye götür!',
+        done: 'Tak! Şah köşeye sığındı, kale merkeze geldi.'
+      }, {
+        say: 'Şaha saldırmaya <b>şah</b> denir. Kaçış yoksa <b>şah mat</b> olur ve sen kazanırsın! Kaleyi parlayan kareye götürüp Siyah şahı mat et!',
+        done: 'Yaşasın, <b>şah mat</b>! Şah kendi piyonlarıyla sıkıştı.'
+      }, {
+        say: 'Yasal hamle yok ama şah da yok mu? Buna <b>pat</b> denir — <b>berabere</b>. Bir de özel piyon alma kuralı var: <b>geçerken alma</b> (derslere bak). İpuçları: merkezi tut, taşlarını erken geliştir ve şahını rokla güvene al. Hadi oynayalım!'
+      }]
+    },
   };
 
   /* board, marks and interactivity of each step.

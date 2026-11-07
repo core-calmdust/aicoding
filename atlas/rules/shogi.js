@@ -207,6 +207,178 @@
         { say: 'نصيحة أخيرة: <b>أحِط ملكك بالجنرالات الذهبية والفضية</b>، واحتفظ بالقطع التي في يدك للحظة المناسبة. صرت تعرف كل القواعد — هيا نلعب!' },
       ],
     },
+    ru: {
+      name: 'Сёгицунэ',
+      title: 'Правила сёги',
+      next: 'Далее',
+      back: 'Назад',
+      skip: 'Закрыть',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящуюся клетку',
+      nope: 'Сюда сбрасывать нельзя — это нарушение!',
+      mate: 'Мат!',
+      s: [{
+        say: 'Привет, я <b>Сёгицунэ</b>! Давай вместе разберём правила сёги прямо на этой доске.'
+      }, {
+        say: 'На доске <b>81 клетка</b> (9×9). Каждая сторона расставляет <b>20 фигур</b> вот так. Фигуры смотрят на соперника; ты — на ближней стороне (<b>сэнтэ</b>). Сэнтэ ходит первым, дальше по очереди.'
+      }, {
+        say: 'Цель одна — <b>поставить мат королю соперника</b>! Светятся оба короля. Потеряешь своего — проиграешь, так что береги его.'
+      }, {
+        say: '<b>Король</b> ходит на одну клетку в любом из 8 направлений. <b>Золотой генерал</b> — в 6 (не по диагонали назад), <b>серебряный</b> — в 5 (вперёд и по диагоналям). Светящиеся клетки показывают, куда они могут пойти.'
+      }, {
+        say: '<b>Ладья</b> ходит на любое расстояние по прямой, <b>слон</b> — по диагонали (синие клетки), но перепрыгивать фигуры они не могут. Нажми на светящуюся клетку, чтобы пойти ладьёй!',
+        done: 'Вжух, до самого конца! Слон скользит так же, только по диагонали.'
+      }, {
+        say: '<b>Конь</b> прыгает на две вперёд и одну вбок — единственная фигура, которая <b>перепрыгивает</b> другие. <b>Стрелка</b> бежит прямо вперёд, <b>пешка</b> ходит на одну вперёд. Сделай прыжок конём!',
+        done: 'Бум! Прямо через пешки. Конь, стрелка и пешка ходят только вперёд.'
+      }, {
+        say: 'Встань на фигуру соперника, чтобы <b>взять</b> её. Возьми серебряным генералом <b>лошадь</b> (превращённого слона) соперника!',
+        done: 'Взятые фигуры уходят к тебе на подставку как <b>фигуры в руке</b>. Превращённая лошадь снова становится <b>слоном</b>.'
+      }, {
+        say: 'В свой ход вместо хода можно <b>сбросить</b> фигуру из руки на <b>любую пустую клетку</b> — это и есть твой ход. Сбрось золотого генерала на светящуюся клетку!',
+        done: 'Хлоп! Повторное использование взятых фигур — то, что делает сёги особенными.'
+      }, {
+        say: 'Три дальних ряда (красные) — <b>лагерь соперника</b>. Когда фигура входит в него, ходит внутри или выходит из него, она может перевернуться и <b>превратиться</b>. Введи серебряного генерала в лагерь!',
+        done: 'Переворот! Теперь это красный <b>превращённый серебряный</b>, который ходит как золотой. Превращаться — по желанию, а <b>золотой генерал и король не превращаются</b>.'
+      }, {
+        say: 'Два запрета при сбросе: <b>нифу</b> — вторая пешка на вертикали, где уже есть твоя пешка (красные вертикали, слева), и <b>мат сбросом пешки</b> — нельзя ставить мат, сбросив пешку (справа вверху).'
+      }, {
+        say: 'Ход, угрожающий королю, — это <b>шах</b>. Если королю некуда уйти, это <b>мат</b>, и ты победил! Пойди золотым генералом на светящуюся клетку и поставь мат!',
+        done: 'Ура, <b>мат</b>! Куда бы король ни пошёл, его возьмёт золотой, а если он возьмёт золотого — отобьёт пешка.'
+      }, {
+        say: 'Последний совет: <b>прячь короля за стеной из золотых и серебряных</b>, а фигуры в руке береги для лучшего момента. Вот и все правила — сыграем!'
+      }]
+    },
+    'zh-TW': {
+      name: '將棋狐',
+      title: '將棋規則',
+      next: '下一步',
+      back: '返回',
+      skip: '關閉',
+      start: '來玩吧',
+      again: '再一次',
+      tap: '點擊發光的格子',
+      nope: '那裡不能打入——是犯規喔！',
+      mate: '將死！',
+      s: [{
+        say: '你好，我是<b>將棋狐</b>！一起在這個棋盤上看看將棋的規則吧。'
+      }, {
+        say: '棋盤有9×9共<b>81格</b>。雙方各像這樣擺好<b>20枚棋子</b>。棋子的尖端朝向對手；你在靠近自己的這一側（<b>先手</b>）。先手先下，之後輪流。'
+      }, {
+        say: '目標只有一個——<b>將死對方的王</b>！發光的棋子就是雙方的王。自己的王被將死就輸了，要好好守住喔。'
+      }, {
+        say: '<b>王</b>可以往8個方向走1格。<b>金將</b>可以走6個方向（不能斜後退），<b>銀將</b>可以走5個方向（前方與斜向）。發光的格子就是它們能走的地方。'
+      }, {
+        say: '<b>飛車</b>可以直走任意格數，<b>角行</b>可以斜走任意格數（藍色格子），但都不能跳過其他棋子。點擊發光的格子移動飛車！',
+        done: '咻，一路到底！角行也一樣，只是斜著走。'
+      }, {
+        say: '<b>桂馬</b>往前2格再往旁1格跳躍，是唯一能<b>跳過</b>其他棋子的棋子。<b>香車</b>往正前方直衝，<b>步兵</b>往前走1格。讓桂馬跳吧！',
+        done: '咚！直接跳過了步兵。桂馬、香車、步兵都只能往前走。'
+      }, {
+        say: '走到對方棋子上就能<b>吃掉</b>它。用銀將吃掉對方的<b>龍馬</b>（升變的角行）！',
+        done: '吃掉的棋子會放到你的駒台上成為<b>持駒</b>。升變的龍馬會變回<b>角行</b>。'
+      }, {
+        say: '輪到你時，也可以不移動棋子，而是把持駒<b>打入</b>到<b>任何空格</b>——這就算一步。把金將打在發光的格子上！',
+        done: '啪！能再利用吃來的棋子，正是將棋特別的地方。'
+      }, {
+        say: '最遠的3排（紅色）是<b>敵陣</b>。棋子走進、在其中移動或走出敵陣時，可以翻面<b>升變</b>。把銀將走進敵陣！',
+        done: '翻！變成紅色的<b>成銀</b>，走法和金將一樣。升不升變可以自己選，<b>金將和王不能升變</b>。'
+      }, {
+        say: '打入有2種犯規：<b>二步</b>——在已經有自己步兵的直行再打一枚步兵（紅色直行，左），以及<b>打步詰</b>——打入步兵將死對方（右上）。'
+      }, {
+        say: '威脅王的一步叫<b>將軍</b>。王無處可逃就是<b>將死</b>，你就贏了！把金將移到發光的格子將死對方的王！',
+        done: '萬歲，<b>將死</b>！王不管逃到哪裡都會被金將吃掉，吃掉金將的話步兵就會吃回來。'
+      }, {
+        say: '最後一個訣竅：<b>用金將和銀將把王圍起來</b>，持駒則留到最好的時機再用。規則就這些——來下一局吧！'
+      }]
+    },
+    id: {
+      name: 'Shogitsune',
+      title: 'Aturan shogi',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      skip: 'Tutup',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk kotak yang menyala',
+      nope: 'Kamu tak bisa menjatuhkan di sana — itu pelanggaran!',
+      mate: 'Skakmat!',
+      s: [{
+        say: 'Hai, aku <b>Shogitsune</b>! Ayo kita pelajari aturan shogi bersama, langsung di papan ini.'
+      }, {
+        say: 'Papan punya <b>81 kotak</b> (9×9). Tiap pihak menyusun <b>20 bidak</b> seperti ini. Bidak menghadap lawan; kamu di sisi dekat (<b>Sente</b>). Sente jalan duluan, lalu bergantian.'
+      }, {
+        say: 'Tujuannya hanya satu: <b>skakmat raja lawan</b>! Bidak yang menyala adalah kedua raja. Jika rajamu kalah, kamu kalah, jadi jaga baik-baik.'
+      }, {
+        say: '<b>Raja</b> melangkah satu kotak ke 8 arah. <b>Jenderal emas</b> ke 6 arah (tidak diagonal mundur), <b>jenderal perak</b> ke 5 arah (maju dan diagonal). Kotak yang menyala menunjukkan ke mana mereka bisa pergi.'
+      }, {
+        say: '<b>Benteng</b> bergerak lurus sejauh apa pun, <b>gajah</b> diagonal sejauh apa pun (kotak biru) — tapi keduanya tak bisa melompati bidak. Ketuk kotak yang menyala untuk menggerakkan benteng!',
+        done: 'Wus, sampai ujung! Gajah meluncur sama saja, hanya diagonal.'
+      }, {
+        say: '<b>Kuda</b> melompat dua ke depan dan satu ke samping — satu-satunya bidak yang <b>melompati</b> bidak lain. <b>Tombak</b> lari lurus ke depan, <b>pion</b> maju satu. Buat kudanya melompat!',
+        done: 'Boing! Langsung melewati pion. Kuda, tombak, dan pion hanya bisa maju.'
+      }, {
+        say: 'Pindah ke bidak lawan untuk <b>memakan</b>nya. Makan <b>kuda naga</b> lawan (gajah yang dipromosikan) dengan jenderal perakmu!',
+        done: 'Bidak yang dimakan masuk ke dudukanmu sebagai <b>bidak di tangan</b>. Kuda naga yang dipromosikan kembali jadi <b>gajah</b>.'
+      }, {
+        say: 'Di giliranmu, kamu bisa <b>menjatuhkan</b> bidak dari tangan ke <b>kotak kosong mana pun</b> alih-alih bergerak — itu langkahmu. Jatuhkan jenderal emas di kotak yang menyala!',
+        done: 'Plok! Memakai ulang bidak tangkapan inilah yang membuat shogi istimewa.'
+      }, {
+        say: 'Tiga baris terjauh (merah) adalah <b>kubu lawan</b>. Saat bidak masuk, bergerak di dalam, atau keluar darinya, ia boleh dibalik dan <b>dipromosikan</b>. Bawa jenderal perak masuk ke kubu!',
+        done: 'Balik! Kini ia <b>perak promosi</b> bersisi merah yang bergerak seperti emas. Promosi itu pilihanmu, dan <b>emas serta raja tak pernah dipromosikan</b>.'
+      }, {
+        say: 'Dua pelanggaran menjatuhkan: <b>nifu</b> — pion kedua di lajur yang sudah ada pionmu (lajur merah, kiri) — dan <b>skakmat jatuhan pion</b>, memberi skakmat dengan menjatuhkan pion (kanan atas).'
+      }, {
+        say: 'Langkah yang mengancam raja disebut <b>skak</b>. Jika raja tak bisa lolos, itu <b>skakmat</b> dan kamu menang! Pindahkan jenderal emas ke kotak yang menyala untuk menskakmat!',
+        done: 'Hore, <b>skakmat</b>! Ke mana pun raja pergi emas memakannya, dan jika ia memakan emas, pion memakan balik.'
+      }, {
+        say: 'Satu tips terakhir: <b>lindungi rajamu dengan tembok emas dan perak</b>, dan simpan bidak di tangan untuk saat yang tepat. Itu semua aturannya — ayo main!'
+      }]
+    },
+    tr: {
+      name: 'Shogitsune',
+      title: 'Shogi kuralları',
+      next: 'İleri',
+      back: 'Geri',
+      skip: 'Kapat',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan bir kareye dokun',
+      nope: 'Oraya bırakamazsın — bu faul!',
+      mate: 'Şah mat!',
+      s: [{
+        say: 'Merhaba, ben <b>Shogitsune</b>! Shogi\'nin kurallarına tam bu tahtada birlikte bakalım.'
+      }, {
+        say: 'Tahtada <b>81 kare</b> (9×9) var. Her taraf <b>20 taşı</b> böyle dizer. Taşlar rakibe bakar; sen yakın taraftasın (<b>Sente</b>). İlk Sente oynar, sonra sırayla.'
+      }, {
+        say: 'Tek bir amaç var: <b>rakip şahı mat etmek</b>! Parlayan taşlar iki şah. Kendi şahını kaybedersen oyunu kaybedersin, iyi koru.'
+      }, {
+        say: '<b>Şah</b> 8 yönden birine bir kare gider. <b>Altın general</b> 6 yöne (çapraz geri değil), <b>gümüş general</b> 5 yöne (ileri ve çaprazlar). Parlayan kareler gidebilecekleri yerleri gösterir.'
+      }, {
+        say: '<b>Kale</b> düz çizgide, <b>fil</b> çaprazda (mavi kareler) istediği kadar gider — ama ikisi de taşların üzerinden atlayamaz. Kaleyi oynatmak için parlayan kareye dokun!',
+        done: 'Vın, sonuna kadar! Fil de aynı şekilde kayar, sadece çapraz.'
+      }, {
+        say: '<b>At</b> iki ileri bir yana zıplar — diğer taşların <b>üzerinden atlayan</b> tek taş. <b>Mızrak</b> düz ileri koşar, <b>piyon</b> bir ileri gider. Atı zıplat!',
+        done: 'Hop! Piyonların tam üzerinden. At, mızrak ve piyon yalnızca ileri gider.'
+      }, {
+        say: 'Rakip taşın üstüne gidersen onu <b>alırsın</b>. Gümüş generalinle rakibin <b>ejder atını</b> (terfi etmiş fil) al!',
+        done: 'Alınan taşlar <b>eldeki taşlar</b> olarak senin rafına gider. Terfi etmiş ejder at yeniden <b>fil</b> olur.'
+      }, {
+        say: 'Sıranda taş oynatmak yerine elindeki bir taşı <b>herhangi bir boş kareye</b> <b>bırakabilirsin</b> — bu senin hamlendir. Altın generali parlayan kareye bırak!',
+        done: 'Pat! Alınan taşları yeniden kullanmak shogi\'yi özel kılan şeydir.'
+      }, {
+        say: 'En uzak üç sıra (kırmızı) <b>rakip kamp</b>tır. Bir taş kampa girerken, içinde oynarken ya da çıkarken ters dönüp <b>terfi edebilir</b>. Gümüş generali kampa sok!',
+        done: 'Döndü! Artık altın gibi oynayan kırmızı yüzlü <b>terfi gümüş</b>. Terfi senin seçimin, ve <b>altın general ile şah asla terfi etmez</b>.'
+      }, {
+        say: 'Bırakmada iki faul var: <b>nifu</b> — zaten piyonun olan sütuna ikinci piyon bırakmak (kırmızı sütunlar, solda) — ve <b>piyon bırakarak mat</b>, piyon bırakıp mat etmek (sağ üst).'
+      }, {
+        say: 'Şahı tehdit eden hamleye <b>şah</b> denir. Şah kaçamazsa <b>şah mat</b> olur ve sen kazanırsın! Altın generali parlayan kareye götürüp mat et!',
+        done: 'Yaşasın, <b>şah mat</b>! Şah nereye gitse altın onu alır, altını alırsa piyon geri alır.'
+      }, {
+        say: 'Son bir ipucu: <b>şahını altın ve gümüşlerden bir duvarla koru</b>, eldeki taşları en iyi ana sakla. Kuralların hepsi bu — hadi oynayalım!'
+      }]
+    },
   };
 
   /* board, marks and interactivity of each step.

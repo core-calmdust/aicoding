@@ -572,6 +572,186 @@
     "say": "يفوز صاحب المجموع الأكبر من <b>الأرض + الأسرى</b>! هنا للأسود 35 وللأبيض 28 + 6.5 = 34.5، فيفوز الأسود <b>بنصف نقطة</b>. بفضل الكومي تكون المباريات متقاربة هكذا غالبًا. اصنع أشكالًا لا تُؤسر وأحِط بمساحة كبيرة. هيا نلعب!"
    }
   ]
+ },
+ "ru": {
+   "name": "Стоунгвин",
+   "next": "Далее",
+   "back": "Назад",
+   "start": "Сыграем",
+   "again": "Ещё раз",
+   "tap": "Нажми на светящийся пункт",
+   "nope": "Не туда! Нажми на светящийся пункт",
+   "atari": "Атари!",
+   "cap": "Снято!",
+   "ko": "Ко",
+   "alive": "Жива!",
+   "forb": "Нельзя (самоубийство)",
+   "b": "Чёрные",
+   "w": "Белые",
+   "komi": "коми",
+   "s": [{
+     "say": "Привет! Я <b>Стоунгвин</b>. Давай шаг за шагом изучим правила <b>го</b> на маленькой доске 9×9!"
+   }, {
+     "say": "Камни ставят на <b>пересечения линий</b>. <b>Чёрные ходят первыми</b>, дальше по очереди. Нажми на светящийся центральный пункт, чтобы поставить чёрный камень!",
+     "done": "Щёлк! Поставленные камни не двигаются — но в го камни можно <b>снять</b>."
+   }, {
+     "say": "Пустые пункты вплотную к камню (сверху, снизу, слева, справа) — его <b>дамэ</b> (дыхания). У белого камня в центре их два (зелёные). Нажми на светящийся пункт, чтобы закрыть одно!",
+     "done": "У белых осталось только <b>одно</b> дыхание. Камень, который можно снять следующим ходом, — в <b>атари</b>."
+   }, {
+     "say": "Белый камень в атари! Поставь чёрный на его последнее дыхание (светящийся пункт) и <b>сними</b> его!",
+     "done": "Снято! Камни без дыханий убирают с доски, и они становятся твоими <b>пленными</b>."
+   }, {
+     "say": "Камни, <b>соединённые</b> сверху, снизу, слева или справа, <b>делят</b> дыхания. У этих двух белых камней одно дыхание — светящийся пункт. Сними оба!",
+     "done": "Сразу два! Камни, касающиеся только по диагонали, не соединены — будь внимателен."
+   }, {
+     "say": "Пункт × окружён белыми. Чёрный камень там остался бы без дыханий. Нажми на него!",
+     "done": "Бззт! Нельзя делать ход, оставляющий свой камень без дыханий (<b>самоубийство</b>), — если только он не снимает камни соперника."
+   }, {
+     "say": "Если чёрные сходят на светящийся пункт, они снимут один белый камень. Попробуй!",
+     "done": "Снято! Но белые не могут сразу отбить на ×. Такая перепалка называется <b>ко</b>: белым нужно сначала сходить в другом месте."
+   }, {
+     "say": "Пустые пункты, окружённые твоими камнями, называются <b>глазами</b>. Нажми на светящийся пункт, чтобы разделить пространство чёрных на два!",
+     "done": "<b>Два глаза!</b> Белые никогда не закроют оба, поэтому эту группу чёрных снять нельзя. Она <b>жива</b>."
+   }, {
+     "say": "Когда полезных ходов не осталось, ты <b>пасуешь</b>. Два паса подряд <b>заканчивают партию</b>. Окружённые тобой пустые пункты — твоя <b>территория</b>: у чёрных 35, у белых 28. Белые ходили вторыми, поэтому получают <b>коми</b>: 6,5 очка."
+   }, {
+     "say": "Побеждает тот, у кого больше <b>территории + пленных</b>! Здесь у чёрных 35, а у белых 28 + 6,5 = 34,5, так что чёрные выигрывают на <b>пол-очка</b>. Благодаря коми партии часто такие близкие. Строй формы, которые нельзя снять, и окружай побольше. Сыграем!"
+   }]
+ },
+ "zh-TW": {
+   "name": "棋子企鵝",
+   "next": "下一步",
+   "back": "返回",
+   "start": "來下棋吧",
+   "again": "再一次",
+   "tap": "點擊發光的點",
+   "nope": "不是那裡！請點擊發光的點",
+   "atari": "叫吃！",
+   "cap": "提子！",
+   "ko": "劫",
+   "alive": "活棋！",
+   "forb": "禁著點（自殺）",
+   "b": "黑方",
+   "w": "白方",
+   "komi": "貼目",
+   "s": [{
+     "say": "你好！我是<b>棋子企鵝</b>。今天在小小的9路棋盤上，一步一步學<b>圍棋</b>的規則吧！"
+   }, {
+     "say": "棋子下在<b>線的交叉點</b>上。<b>黑方先下</b>，之後黑白輪流。點擊發光的中央點下一顆黑子吧！",
+     "done": "喀！棋子下了就不會移動——但在圍棋裡，棋子是可以被<b>提掉</b>的。"
+   }, {
+     "say": "棋子上下左右緊鄰的空點是它的<b>氣</b>。中央的白子有2口氣（綠色）。點擊發光的點堵住其中一口！",
+     "done": "白子只剩<b>1口</b>氣了。下一手就會被提掉的狀態叫做<b>叫吃</b>。"
+   }, {
+     "say": "白子被叫吃了！在它最後一口氣（發光的點）下黑子，把它<b>提掉</b>！",
+     "done": "提子！沒有氣的棋子會從棋盤上拿走，成為你的<b>俘虜</b>。"
+   }, {
+     "say": "上下左右<b>相連</b>的棋子<b>共用</b>氣。這2顆白子只剩1口氣：發光的點。把它們一起提掉！",
+     "done": "一次提2顆！只有斜向相接的棋子並不相連，要小心。"
+   }, {
+     "say": "×點被白子包圍。黑子下在那裡會完全沒有氣。點點看！",
+     "done": "嗶！不能下讓自己的棋子沒有氣的一手（<b>自殺</b>）——除非能提掉對方的棋子。"
+   }, {
+     "say": "黑方下在發光的點，就能提掉1顆白子。試試看！",
+     "done": "提子！但白方不能馬上在×提回來。這種來回叫做<b>劫</b>：白方必須先在別處下一手。"
+   }, {
+     "say": "被自己棋子圍住的空點叫做<b>眼</b>。點擊發光的點，把黑棋的空間分成兩塊！",
+     "done": "<b>兩眼！</b>白方永遠無法同時填滿兩個眼，所以這塊黑棋絕對不會被提掉，是<b>活棋</b>。"
+   }, {
+     "say": "沒有有用的地方可下時就<b>虛手</b>。雙方連續虛手，<b>對局結束</b>。自己圍住的空點是<b>地</b>：黑35目，白28目。白方是後手，所以有<b>貼目</b>6.5目。"
+   }, {
+     "say": "<b>地＋俘虜</b>合計較多的一方<b>獲勝</b>！這裡黑35，白28＋6.5＝34.5，黑勝<b>半目</b>。因為有貼目，對局常常這麼接近。做出不會被吃的棋形，圍出大片的地吧。來下棋吧！"
+   }]
+ },
+ "id": {
+   "name": "Stoneguin",
+   "next": "Berikutnya",
+   "back": "Kembali",
+   "start": "Ayo main",
+   "again": "Lagi",
+   "tap": "Ketuk titik yang menyala",
+   "nope": "Bukan di situ! Ketuk titik yang menyala",
+   "atari": "Atari!",
+   "cap": "Ditangkap!",
+   "ko": "Ko",
+   "alive": "Hidup!",
+   "forb": "Terlarang (bunuh diri)",
+   "b": "Hitam",
+   "w": "Putih",
+   "komi": "komi",
+   "s": [{
+     "say": "Hai! Aku <b>Stoneguin</b>. Hari ini ayo belajar aturan <b>Go</b> selangkah demi selangkah di papan kecil 9×9!"
+   }, {
+     "say": "Batu ditaruh di <b>titik persilangan garis</b>. <b>Hitam jalan duluan</b>, lalu Hitam dan Putih bergantian. Ketuk titik tengah yang menyala untuk menaruh batu hitam!",
+     "done": "Klik! Batu tak pernah bergerak setelah ditaruh — tapi dalam Go, batu bisa <b>ditangkap</b>."
+   }, {
+     "say": "Titik kosong tepat di sebelah batu (atas, bawah, kiri, kanan) adalah <b>kebebasan</b>nya. Batu putih di tengah punya dua (hijau). Ketuk titik yang menyala untuk mengisi satu!",
+     "done": "Putih tinggal <b>satu</b> kebebasan. Batu yang bisa ditangkap di langkah berikutnya sedang <b>atari</b>."
+   }, {
+     "say": "Putih dalam atari! Main Hitam di kebebasan terakhirnya (titik yang menyala) dan <b>tangkap</b>!",
+     "done": "Ditangkap! Batu tanpa kebebasan diangkat dari papan dan jadi <b>tawanan</b>mu."
+   }, {
+     "say": "Batu yang <b>terhubung</b> atas, bawah, kiri, atau kanan <b>berbagi</b> kebebasan. Dua batu putih ini tinggal satu: titik yang menyala. Tangkap keduanya!",
+     "done": "Dua sekaligus! Batu yang hanya bersentuhan diagonal tidak terhubung — hati-hati."
+   }, {
+     "say": "Titik × dikepung Putih. Batu hitam di sana sama sekali tak punya kebebasan. Ketuk!",
+     "done": "Bzzt! Kamu tak boleh main langkah yang membuat batumu tanpa kebebasan (<b>bunuh diri</b>) — kecuali langkah itu menangkap batu lawan."
+   }, {
+     "say": "Jika Hitam main di titik yang menyala, ia menangkap satu batu putih. Coba!",
+     "done": "Ditangkap! Tapi Putih tak boleh langsung merebut kembali di ×. Bolak-balik ini disebut <b>ko</b>: Putih harus main di tempat lain dulu."
+   }, {
+     "say": "Titik kosong yang dikelilingi batumu disebut <b>mata</b>. Ketuk titik yang menyala untuk membelah ruang Hitam menjadi dua!",
+     "done": "<b>Dua mata!</b> Putih tak akan bisa mengisi keduanya, jadi kelompok hitam ini tak bisa ditangkap. Ia <b>hidup</b>."
+   }, {
+     "say": "Jika tak ada langkah berguna lagi, kamu <b>pass</b>. Dua pass berturut-turut <b>mengakhiri permainan</b>. Titik kosong yang kamu kepung adalah <b>wilayah</b>mu: Hitam 35, Putih 28. Putih jalan kedua, jadi Putih dapat <b>komi</b>: 6,5 poin."
+   }, {
+     "say": "Total <b>wilayah + tawanan</b> yang lebih besar <b>menang</b>! Di sini Hitam 35 dan Putih 28 + 6,5 = 34,5, jadi Hitam menang <b>setengah poin</b>. Berkat komi, permainan sering seketat itu. Buat bentuk yang tak bisa ditangkap dan kepung banyak wilayah. Ayo main!"
+   }]
+ },
+ "tr": {
+   "name": "Stoneguin",
+   "next": "İleri",
+   "back": "Geri",
+   "start": "Hadi oynayalım",
+   "again": "Tekrar",
+   "tap": "Parlayan noktaya dokun",
+   "nope": "Orası değil! Parlayan noktaya dokun",
+   "atari": "Atari!",
+   "cap": "Alındı!",
+   "ko": "Ko",
+   "alive": "Canlı!",
+   "forb": "Yasak (intihar)",
+   "b": "Siyah",
+   "w": "Beyaz",
+   "komi": "komi",
+   "s": [{
+     "say": "Merhaba! Ben <b>Stoneguin</b>. Bugün küçük bir 9×9 tahtada <b>Go</b>'nun kurallarını adım adım öğrenelim!"
+   }, {
+     "say": "Taşlar <b>çizgilerin kesiştiği noktalara</b> konur. <b>İlk Siyah oynar</b>, sonra Siyah ve Beyaz sırayla. Siyah taş koymak için parlayan merkez noktaya dokun!",
+     "done": "Tık! Konan taşlar asla hareket etmez — ama Go'da taşlar <b>alınabilir</b>."
+   }, {
+     "say": "Bir taşın hemen yanındaki (üst, alt, sol, sağ) boş noktalar onun <b>özgürlükleri</b>dir. Ortadaki beyaz taşın iki tane var (yeşil). Birini doldurmak için parlayan noktaya dokun!",
+     "done": "Beyazın yalnızca <b>bir</b> özgürlüğü kaldı. Bir sonraki hamlede alınabilecek taş <b>atari</b>dedir."
+   }, {
+     "say": "Beyaz atari'de! Son özgürlüğüne (parlayan nokta) Siyah oyna ve onu <b>al</b>!",
+     "done": "Alındı! Özgürlüğü kalmayan taşlar tahtadan kaldırılır ve senin <b>esirin</b> olur."
+   }, {
+     "say": "Üst, alt, sol ya da sağdan <b>bağlı</b> taşlar özgürlüklerini <b>paylaşır</b>. Bu iki beyaz taşın yalnızca bir özgürlüğü var: parlayan nokta. İkisini birden al!",
+     "done": "İkisi birden! Yalnızca çapraz değen taşlar bağlı değildir — dikkat et."
+   }, {
+     "say": "× noktası Beyazla çevrili. Oraya konan siyah taşın hiç özgürlüğü olmaz. Dokun!",
+     "done": "Bıızt! Kendi taşını özgürlüksüz bırakan hamle (<b>intihar</b>) yapılamaz — rakip taş almadıkça."
+   }, {
+     "say": "Siyah parlayan noktaya oynarsa bir beyaz taş alır. Dene!",
+     "done": "Alındı! Ama Beyaz × noktasında hemen geri alamaz. Bu karşılıklı duruma <b>ko</b> denir: Beyaz önce başka yere oynamalı."
+   }, {
+     "say": "Taşlarınla çevrili boş noktalara <b>göz</b> denir. Siyahın alanını ikiye bölmek için parlayan noktaya dokun!",
+     "done": "<b>İki göz!</b> Beyaz ikisini birden asla dolduramaz, bu yüzden bu siyah grup hiç alınamaz. <b>Canlı</b>dır."
+   }, {
+     "say": "Oynanacak işe yarar hamle kalmayınca <b>pas</b> geçersin. Art arda iki pas <b>oyunu bitirir</b>. Çevrelediğin boş noktalar senin <b>alanın</b>dır: Siyah 35, Beyaz 28. Beyaz ikinci oynadığı için <b>komi</b> alır: 6,5 puan."
+   }, {
+     "say": "<b>Alan + esir</b> toplamı büyük olan <b>kazanır</b>! Burada Siyah 35, Beyaz 28 + 6,5 = 34,5, yani Siyah <b>yarım puan</b> farkla kazanır. Komi sayesinde oyunlar sık sık bu kadar yakın biter. Alınamayan şekiller kur ve bolca alan çevrele. Hadi oynayalım!"
+   }]
  }
 };
   // the opening picture: a small 9 × 9 game in progress

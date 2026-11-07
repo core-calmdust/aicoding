@@ -192,8 +192,8 @@ html.atlas-go .playbar .pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4
 
   /* ---------- the board-design row: two 3D looks + the game's own 2D boards ---------- */
   const LBLS = {
-    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي' },
-    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي' },
+    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: 'Кая 3D', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
+    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
   };
   // thumbnails: the game's own kaya thumbnail (a real little board), the lacquer one with a black urushi side and a gold line
   const thumb = k => { let s = ''; try { s = designThumb('kaya', 'classic'); } catch (e) {} if (!s) return '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#e1b469"/></svg>';
