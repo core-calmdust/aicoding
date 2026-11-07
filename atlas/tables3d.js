@@ -368,22 +368,83 @@
     c.strokeStyle = 'rgba(251,244,232,.8)'; c.lineWidth = 2; c.beginPath(); c.moveTo(W / 2, W * .3); c.lineTo(W / 2, W * .74); c.stroke();
     for (let i = 0; i < 90; i++) { c.fillStyle = `rgba(110,60,25,${.15 + Math.random() * .25})`; const a = Math.random() * 6.3, r = Math.random() * W * .47; c.fillRect(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r, 1.5, 1.5); }   // a dusting of cocoa
   });
-  // an antipasto board: prosciutto, salami, two cheeses, olives, grapes, grissini — on an olive-wood board (ry: its turn)
+  // an antipasto board (2026-11-07, more appetising): draped prosciutto, fanned salami (fat, peppercorns), a wedge of manchego with its
+  // basket-weave rind, a wedge of brie with its white bloom, olives, a bunch of grapes, figs cut open, grissini, rosemary — on an olive-wood board
   function antipasti(o, G0, x, z, ry, sc = 1) {
-    const TT = o.TT, G = grp(TT, G0, x, 0, z, ry); G.scale.setScalar(sc);
+    const TT = o.TT, G = grp(TT, G0, x, 0, z, ry), R = rng(77); G.scale.setScalar(sc);
     at(G, new TT.Mesh(RB(6.6, .4, 4.2, .2, 2), M({ map: wood('antipasti-board', '#c9a26e', '#8a6438', 256, 256, .9), roughness: .5, clearcoat: .25 })), 0, .2, 0);
-    const salT = canvasTex('salami', 64, 64, (c, W) => { c.fillStyle = '#9a2a2e'; c.fillRect(0, 0, W, W); for (let i = 0; i < 40; i++) { c.fillStyle = Math.random() > .3 ? 'rgba(250,230,220,.9)' : 'rgba(60,10,12,.6)'; c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 1 + Math.random() * 2.4, 0, 7); c.fill(); } c.strokeStyle = '#5a1416'; c.lineWidth = 4; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 2, 0, 7); c.stroke(); });
-    const salM = M({ map: salT, roughness: .45, clearcoat: .3, bump: false }), salE = M({ color: 0x6a1a1c, roughness: .6 }), sg = new TT.CylinderGeometry(.62, .62, .1, SEG(o, 18));
-    for (let i = 0; i < 6; i++) { const m = new TT.Mesh(sg, [salE, salM, salM]); m.rotation.set(.12, 0, -.32); at(G, m, -2.4 + i * .42, .52 + i * .07, -1.1 + i * .05); }
-    const pro = M({ color: 0xd8726a, roughness: .45, clearcoat: .35 }), fat = M({ color: 0xf6e2d8, roughness: .5 });
-    for (let i = 0; i < 4; i++) { const f = new TT.Mesh(new TT.SphereGeometry(.62, 12, 8), pro); f.scale.set(1, .26, .62); f.rotation.set(0, .5 + i * .8, (i % 2 ? .2 : -.2)); at(G, f, -2.2 + (i % 2) * .75, .5 + (i > 1 ? .12 : 0), .7 + (i > 1 ? .6 : 0) - (i % 2) * .15); }   // folds of prosciutto
-    const wedge = (px, pz, r, col, rind) => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.lineTo(1.9, -.62); sh.lineTo(1.9, .62); sh.lineTo(0, 0); const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: .9, bevelEnabled: true, bevelThickness: .04, bevelSize: .04, bevelSegments: 1 }), [M({ color: col, roughness: .55 }), M({ color: rind, roughness: .7 })]); m.rotation.x = -Math.PI / 2; m.rotation.z = r; at(G, m, px, .4, pz); };
-    wedge(.1, -.4, .5, 0xf2d27a, 0xd8a848); wedge(.5, .55, -.4, 0xf6eedb, 0xe6dcc0);
-    { const Gb = grp(TT, G, 2.3, .4, -1); at(Gb, lathe(TT, [[0, 0], [.55, 0], [.9, .4], [.95, .62], [.85, .62], [.5, .2], [0, .18]], SEG(o, 18), M({ color: 0xf2efe8, roughness: .3, clearcoat: .5 })), 0, 0, 0);
-      const ol = M({ color: 0x6a7a2a, roughness: .25, clearcoat: .7 }), ob = M({ color: 0x2a1a20, roughness: .25, clearcoat: .7 }); for (let i = 0; i < 9; i++) { const a = i * 2.4, r = Math.sqrt(i / 9) * .58; const m = new TT.Mesh(new TT.SphereGeometry(.24, 8, 6), i % 3 ? ol : ob); m.scale.set(1, .85, 1.3); at(Gb, m, Math.cos(a) * r, .4 + (i > 5 ? .16 : 0), Math.sin(a) * r); } }
-    { const gr = M({ color: 0x6a2a4a, roughness: .25, clearcoat: .7 }), gg = new TT.SphereGeometry(.24, 10, 8); for (let i = 0; i < 14; i++) { const a = i * 2.39, r = Math.sqrt(i) * .2; at(G, new TT.Mesh(gg, gr), 2.2 + Math.cos(a) * r * .8, .62 + (i < 5 ? .18 : 0), .95 + Math.sin(a) * r * 1.4); } }
-    { const gs = M({ color: 0xe0b26a, roughness: .7 }); for (let i = 0; i < 3; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.08, .08, 3.4, 5), gs); s.rotation.set(0, 0, Math.PI / 2 + .04 * i); at(G, s, -.9, .5 + (i === 2 ? .16 : 0), 1.8 - i * .17 + (i === 2 ? .08 : 0), 0, false); } }
-    { const bl = M({ color: 0x3e7a2e, roughness: .5, side: TT.DoubleSide }); [[-1.5, -1.6], [1.2, .2]].forEach(([a, b], i) => { const l = new TT.Mesh(new TT.SphereGeometry(.3, 6, 4), bl); l.scale.set(1, .2, .6); l.rotation.y = i; at(G, l, a, .5, b, 0, false); }); }
+    // salami: deep red with white fat, black pepper, a thin casing
+    const salT = canvasTex('salami2', 128, 128, (c, W) => { const C = W / 2, r2 = rng(5); c.fillStyle = '#8e1c24'; c.fillRect(0, 0, W, W);
+      for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(${120 + r2() * 60 | 0},${16 + r2() * 20 | 0},${24 + r2() * 20 | 0},.6)`; c.fillRect(r2() * W, r2() * W, 3, 3); }
+      for (let i = 0; i < 46; i++) { const px = r2() * W, py = r2() * W, s = 2 + r2() * 4; c.fillStyle = `rgba(250,${226 + r2() * 20 | 0},${214 + r2() * 20 | 0},.95)`; c.beginPath(); for (let k = 0; k < 6; k++) { const a = k * 1.05 + r2() * .4; c.lineTo(px + Math.cos(a) * s * (.6 + r2() * .6), py + Math.sin(a) * s * (.6 + r2() * .6)); } c.fill(); }
+      c.fillStyle = '#1a1210'; for (let i = 0; i < 14; i++) { c.beginPath(); c.arc(r2() * W, r2() * W, 1.6, 0, 7); c.fill(); }
+      c.globalCompositeOperation = 'destination-in'; c.beginPath(); c.arc(C, C, C - 1, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over';
+      c.strokeStyle = '#4a1418'; c.lineWidth = 4; c.beginPath(); c.arc(C, C, C - 3, 0, 7); c.stroke(); });
+    const salM = M({ map: salT, roughness: .38, clearcoat: .45, clearcoatRoughness: .3, bump: false }), salE = M({ color: 0x5a161a, roughness: .55 }), sg = new TT.CylinderGeometry(.62, .62, .08, SEG(o, 20));
+    for (let i = 0; i < 7; i++) { const m = new TT.Mesh(sg, [salE, salM, salM]); m.rotation.set(.1, i * .9, -.36); at(G, m, -2.55 + i * .36, .48 + i * .06, -1.25 + Math.sin(i) * .08); }
+    // prosciutto: thin rosy ribbons with a white fat edge, draped in loose folds
+    const proT = canvasTex('prosciutto', 128, 64, (c, W, H) => { const r2 = rng(9); const g2 = c.createLinearGradient(0, 0, 0, H); g2.addColorStop(0, '#f6e6dc'); g2.addColorStop(.16, '#f2d2c4'); g2.addColorStop(.24, '#d86a64'); g2.addColorStop(1, '#c4525a'); c.fillStyle = g2; c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) { c.strokeStyle = `rgba(250,${200 + r2() * 40 | 0},${200 + r2() * 30 | 0},${.25 + r2() * .3})`; c.lineWidth = .8; c.beginPath(); const y0 = H * .3 + r2() * H * .65; c.moveTo(r2() * W, y0); c.quadraticCurveTo(r2() * W, y0 + (r2() - .5) * 12, r2() * W, y0 + (r2() - .5) * 8); c.stroke(); } });
+    const proM = M({ map: proT, roughness: .42, clearcoat: .35, clearcoatRoughness: .4, side: TT.DoubleSide, bump: false });
+    for (let i = 0; i < 3; i++) { const geo = new TT.PlaneGeometry(2.4, .8, SEG(o, 18), 2), P = geo.attributes.position;
+      for (let k = 0; k < P.count; k++) { const u = P.getX(k), v = P.getY(k); P.setZ(k, .22 * Math.sin(u * 3.4 + i) + .05 * Math.sin(v * 6 + u * 5)); P.setY(k, v * (.85 + .15 * Math.cos(u * 3.4 + i))); }
+      geo.computeVertexNormals(); const m = new TT.Mesh(geo, proM); m.rotation.set(-Math.PI / 2 + .08, 0, .5 + i * .45); at(G, m, -2.05 + i * .32, .66 + i * .05, .85 + i * .28 - (i === 2 ? .2 : 0), 0, false); }
+    // the cheeses: a sector of a wheel — paste on the cut faces, the rind as a band round the outside
+    const sector = (px, pz, rot, r, h, ang, paste, rind, top = paste) => { const Gc = grp(TT, G, px, .4, pz, rot), sh = new TT.Shape(); sh.moveTo(0, 0); sh.absarc(0, 0, r, -ang / 2, ang / 2, false); sh.lineTo(0, 0);
+      const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false, curveSegments: 8 }), [top, paste]); m.rotation.x = -Math.PI / 2; at(Gc, m, 0, 0, 0);
+      const band = new TT.Mesh(new TT.CylinderGeometry(r + .02, r + .02, h + .02, 10, 1, true, Math.PI / 2 - ang / 2, ang), rind); at(Gc, band, 0, h / 2, 0, 0, false); return Gc; };
+    const manT = canvasTex('manchego', 64, 64, (c, W) => { const r2 = rng(3); c.fillStyle = '#e8c870'; c.fillRect(0, 0, W, W); for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(${r2() > .5 ? '255,250,220' : '210,180,110'},.5)`; c.beginPath(); c.arc(r2() * W, r2() * W, .6 + r2() * 1.4, 0, 7); c.fill(); } });
+    const rindT = canvasTex('manchego-rind', 128, 32, (c, W, H) => { c.fillStyle = '#6a5a3a'; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(30,24,14,.6)'; c.lineWidth = 1.2; for (let x = -H; x < W; x += 6) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + H, H); c.stroke(); c.beginPath(); c.moveTo(x + H, 0); c.lineTo(x, H); c.stroke(); } });
+    sector(.5, -.85, 2.6, 1.55, .8, .62, M({ map: manT, roughness: .62, bump: false, color: 0xf0d88a }), M({ map: rindT, roughness: .7, bumpScale: .02 }));
+    const brieIn = M({ color: 0xf6e9c0, roughness: .45, clearcoat: .2 }), bloom = M({ color: 0xf8f6ee, roughness: .9 });
+    sector(.95, .75, -2.4, 1.9, .55, .7, brieIn, bloom, bloom);
+    for (let i = 0; i < 6; i++) { const cr = new TT.Mesh(RB(.75, .07, .75, .05, 1), M({ color: 0xe2b874, roughness: .7 })); cr.rotation.set(.05, i * .2, -.2); at(G, cr, .25 + i * .14, .44 + i * .05, 1.55); }   // crackers, leaning in a row
+    // olives in a bowl, glossy
+    { const Gb = grp(TT, G, 2.35, .4, -1.05); at(Gb, lathe(TT, [[0, 0], [.55, 0], [.9, .4], [.95, .62], [.85, .62], [.5, .2], [0, .18]], SEG(o, 18), M({ color: 0xf2efe8, roughness: .3, clearcoat: .5 })), 0, 0, 0);
+      const ol = M({ color: 0x6a7a2a, roughness: .18, clearcoat: .9 }), ob = M({ color: 0x2a1622, roughness: .18, clearcoat: .9 }), og = new TT.SphereGeometry(.22, 10, 8); for (let i = 0; i < 10; i++) { const a = i * 2.4, r = Math.sqrt(i / 10) * .6; const m = new TT.Mesh(og, i % 3 ? ol : ob); m.scale.set(1, .85, 1.35); m.rotation.y = a; at(Gb, m, Math.cos(a) * r, .38 + (i > 6 ? .16 : 0), Math.sin(a) * r); } }
+    // grapes: a bunch on its stalk, the dusty bloom on the skins
+    { const gr = M({ color: 0x5a2448, roughness: .5, clearcoat: .35, clearcoatRoughness: .5, sheen: new TT.Color(0x9a8aa8) }), gg = new TT.SphereGeometry(.23, 12, 9), Gg = grp(TT, G, 2.35, .62, .85, .4);
+      for (let i = 0; i < 18; i++) { const t = i / 18, r = .55 * (1 - t * .7), a = i * 2.39; at(Gg, new TT.Mesh(gg, gr), -.7 + t * 1.6, (i % 3) * .12 + (1 - t) * .1, Math.sin(a) * r); }
+      const stalk = new TT.Mesh(new TT.CylinderGeometry(.03, .04, 1.4, 4), M({ color: 0x6a5a34, roughness: .8 })); stalk.rotation.z = Math.PI / 2; at(Gg, stalk, .4, .3, 0, 0, false); }
+    // figs, halved: purple skin, a red heart full of seeds
+    { const figIn = M({ map: canvasTex('fig-cut', 64, 64, (c, W) => { const C = W / 2, r2 = rng(4); c.fillStyle = '#f4e6c8'; c.fillRect(0, 0, W, W); c.fillStyle = rad(c, C, C * 1.05, C * .8, [[0, '#a8202e'], [.6, '#c83a3a'], [1, '#f0b0a0']]); c.beginPath(); c.ellipse(C, C * 1.05, C * .7, C * .8, 0, 0, 7); c.fill(); c.fillStyle = '#f6dca0'; for (let i = 0; i < 40; i++) { const a = r2() * 6.3, rr = r2() * C * .6; c.fillRect(C + Math.cos(a) * rr, C * 1.05 + Math.sin(a) * rr * 1.1, 1.6, 1.6); } c.strokeStyle = '#6a2a4a'; c.lineWidth = 3; c.beginPath(); c.ellipse(C, C, C - 2, C - 2, 0, 0, 7); c.stroke(); }), roughness: .4, clearcoat: .4, bump: false });
+      const skin = M({ color: 0x4a2a44, roughness: .55 });
+      [[-.55, 1.55, .3], [-.05, 1.7, -.5]].forEach(([px, pz, r]) => { const Gf = grp(TT, G, px, .4, pz, r); const half = new TT.Mesh(new TT.SphereGeometry(.42, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), skin); half.scale.set(1, .9, 1.15); half.rotation.x = -Math.PI / 2; at(Gf, half, 0, .42, 0);
+        const face = new TT.Mesh(new TT.CircleGeometry(.42, 16), figIn); face.scale.set(1, 1.15, 1); face.rotation.x = -Math.PI / 2 + .9; at(Gf, face, 0, .42, .02, 0, false); }); }
+    // grissini and a sprig of rosemary
+    { const gT = canvasTex('grissini', 16, 64, (c, W, H) => { c.fillStyle = '#e2b26a'; c.fillRect(0, 0, W, H); for (let i = 0; i < 30; i++) { c.fillStyle = `rgba(${Math.random() > .5 ? '170,110,50' : '250,230,190'},.6)`; c.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5); } });
+      const gs = M({ map: gT, roughness: .7, bump: false }); for (let i = 0; i < 3; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.07, .08, 3.6, 6), gs); s.rotation.set(0, -.12 * i, Math.PI / 2 + .03 * i); at(G, s, -1.6, .5 + (i === 2 ? .15 : 0), -1.95 + i * .16, 0, false); }
+      const rl = M({ color: 0x3a5a2e, roughness: .6 }), Gr = grp(TT, G, -2.6, .45, 1.6, .7); for (let k = 0; k < 9; k++) { const l = new TT.Mesh(new TT.SphereGeometry(.12, 5, 3), rl); l.scale.set(.3, .2, 1.3); l.rotation.y = k % 2 ? .6 : -.6; at(Gr, l, -.6 + k * .14, 0, 0, 0, false); } }
+    return G;
+  }
+  // a Neapolitan margherita (2026-11-07, more appetising): a puffed, leopard-spotted cornicione, a glossy tomato base, pools of melted
+  // fior di latte browning at the edges, basil leaves, a thread of olive oil; cut in eight
+  function pizza(o, G, r) {
+    const TT = o.TT, S = sz(o, 512);
+    const top = canvasTex('pizza2', S, S, (c, W) => { const C = W / 2, R2 = rng(21), u = W / (2 * r);
+      c.fillStyle = '#e8b878'; c.fillRect(0, 0, W, W);
+      c.fillStyle = rad(c, C, C, C * .86, [[0, '#a8180c'], [.75, '#9a160a'], [.95, '#8a1c0c'], [1, '#c87a3a']]); c.beginPath(); c.arc(C, C, C * .84, 0, 7); c.fill();
+      for (let i = 0; i < 500; i++) { const a = R2() * 6.3, rr = Math.sqrt(R2()) * C * .82; c.fillStyle = `rgba(${R2() > .5 ? '220,70,40' : '120,16,10'},${.15 + R2() * .25})`; c.beginPath(); c.arc(C + Math.cos(a) * rr, C + Math.sin(a) * rr, 1 + R2() * 4, 0, 7); c.fill(); }
+      for (let i = 0; i < 9; i++) { const a = i * .7 + R2(), rr = (.2 + R2() * .55) * C, x = C + Math.cos(a) * rr, y = C + Math.sin(a) * rr, s = (.11 + R2() * .07) * W;   // melted mozzarella
+        c.fillStyle = rad(c, x, y, s, [[0, '#fffaf0'], [.6, '#f6ead2'], [.85, 'rgba(236,200,150,.85)'], [1, 'rgba(200,120,60,0)']]); c.beginPath(); for (let k = 0; k < 10; k++) { const b = k * .63, q = s * (.75 + R2() * .3); c.lineTo(x + Math.cos(b) * q, y + Math.sin(b) * q); } c.fill();
+        c.fillStyle = 'rgba(200,140,70,.35)'; for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(x + (R2() - .5) * s, y + (R2() - .5) * s, s * .12, 0, 7); c.fill(); } }
+      c.fillStyle = 'rgba(255,190,60,.18)'; for (let i = 0; i < 18; i++) { const a = R2() * 6.3, rr = R2() * C * .75; c.beginPath(); c.ellipse(C + Math.cos(a) * rr, C + Math.sin(a) * rr, 6 + R2() * 10, 3 + R2() * 5, R2() * 3, 0, 7); c.fill(); }   // olive oil
+      c.strokeStyle = 'rgba(70,20,10,.45)'; c.lineWidth = Math.max(1, W / 256); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 4 + .2; c.beginPath(); c.moveTo(C - Math.cos(a) * C * .9, C - Math.sin(a) * C * .9); c.lineTo(C + Math.cos(a) * C * .9, C + Math.sin(a) * C * .9); c.stroke(); }
+      c.fillStyle = 'rgba(30,60,20,.6)'; for (let i = 0; i < 40; i++) c.fillRect(C + (R2() - .5) * C * 1.5, C + (R2() - .5) * C * 1.5, 1.5, 1.5); });
+    const base = new TT.Mesh(new TT.CylinderGeometry(r * .9, r * .9, .12, SEG(o, 40)), [M({ color: 0xe0a860, roughness: .7 }), M({ map: top, roughness: .5, bumpScale: .004 }), M({ color: 0xd89a50, roughness: .7 })]);
+    at(G, base, 0, .43, 0);
+    const crustT = canvasTex('cornicione', 256, 64, (c, W, H) => { const R2 = rng(13); const g2 = c.createLinearGradient(0, 0, 0, H); g2.addColorStop(0, '#d89048'); g2.addColorStop(.35, '#ecc078'); g2.addColorStop(.6, '#f2d098'); g2.addColorStop(1, '#c88440'); c.fillStyle = g2; c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 70; i++) { const x = R2() * W, y = H * .15 + R2() * H * .55, s = 1.5 + R2() * 4; c.fillStyle = rad(c, x, y, s * 1.6, [[0, 'rgba(30,14,6,.9)'], [.5, 'rgba(70,34,12,.6)'], [1, 'rgba(120,60,20,0)']]); c.fillRect(x - s * 2, y - s * 2, s * 4, s * 4); }   // leopard spotting
+      for (let i = 0; i < 90; i++) { c.fillStyle = 'rgba(255,240,210,.35)'; c.fillRect(R2() * W, R2() * H, 1.5, 1.5); } });
+    crustT.wrapS = TT.RepeatWrapping;
+    const ringG = new TT.TorusGeometry(r * .9, .3, SEG(o, 10), SEG(o, 48)), P = ringG.attributes.position;
+    for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), a = Math.atan2(y, x), k = 1 + .14 * Math.sin(a * 7 + 1) * Math.sin(a * 3) + .06 * Math.sin(a * 17); const cx = Math.cos(a) * r * .9, cy = Math.sin(a) * r * .9; P.setXY(i, cx + (x - cx) * k, cy + (y - cy) * k); P.setZ(i, P.getZ(i) * k * 1.1); }
+    ringG.computeVertexNormals();
+    const ring = new TT.Mesh(ringG, M({ map: crustT, roughness: .6, bumpScale: .02 })); ring.rotation.x = -Math.PI / 2; ring.scale.set(1, 1, .82); at(G, ring, 0, .6, 0);
+    const moz = M({ color: 0xf4e6cc, roughness: .55 }), mg = new TT.SphereGeometry(.36, SEG(o, 16), 5, 0, Math.PI * 2, 0, Math.PI / 2), R3 = rng(21);
+    for (let i = 0; i < 5; i++) { const a = i * .7 + R3(), rr = (.2 + R3() * .55) * r * .84; R3(); const m = new TT.Mesh(mg, moz); m.scale.set(1.1 + R3() * .5, .13, .9 + R3() * .5); m.rotation.y = R3() * 3; at(G, m, Math.cos(a) * rr, .49, Math.sin(a) * rr); }
+    const basil = M({ color: 0x2c6a24, roughness: .3, clearcoat: .7, side: TT.DoubleSide }), bg = new TT.SphereGeometry(.3, 14, 6);
+    [[.4, .2, .3], [-.9, .6, 1.4], [.9, -1, 2.4], [-.4, -1.2, 4], [1.3, .8, 5]].forEach(([px, pz, a]) => { const l = new TT.Mesh(bg, basil); l.scale.set(.75, .08, 1.35); l.rotation.set(.08, a, 0); at(G, l, px, .56, pz, 0, false); });
     return G;
   }
   function ice(o, G, x, y, z, n) { const m = M({ color: 0xffffff, roughness: .05, clearcoat: 1, transparent: true, opacity: .45, depthWrite: false }); for (let i = 0; i < n; i++) { const c = new (o.TT.Mesh)(RB(.62, .62, .62, .1, 1), m); c.rotation.set(i * .7, i * 1.3, i * .4); at(G, c, x + Math.sin(i * 2.4) * .3, y + i * .22, z + Math.cos(i * 2.4) * .3, 0, false); } }
@@ -598,14 +659,14 @@
       [[-10.8, 1.4], [11, 3.8]].forEach(([x, z]) => { const Gt = tumbler(o, g, x, z, [0xb8681e, .7], 3.2, .8); ice(o, Gt, 0, 1.5, 0, 3); const sl = new TT.Mesh(new TT.CylinderGeometry(.6, .6, .1, 14, 1, false, 0, Math.PI), M({ color: 0xf2d24a, roughness: .5 })); sl.rotation.set(Math.PI / 2, 0, .2); at(Gt, sl, .7, 3.1, 0, 0, false); });
       vase(-5.8, -8.2, 4, 0xe8a0a8); cupSaucer(o, g, 11.6, .2, -2.4, china);
     } else if (T === 'evening') {
-      { const Gc = grp(TT, g, 11, 0, -6.4, .3); Gc.scale.setScalar(.72); at(Gc, new TT.Mesh(RB(7, .5, 4.6, .2, 2), M({ map: wood('tbl2-cb', '#b98a58', '#7a522c', 256, 256, .8), roughness: .45, clearcoat: .3 })), 0, .25, 0);
+      { const Gc = grp(TT, g, 10.4, 0, -7.1, .05); Gc.scale.setScalar(.72);   // (moved in from the table's edge, before the right-hand seat) at(Gc, new TT.Mesh(RB(7, .5, 4.6, .2, 2), M({ map: wood('tbl2-cb', '#b98a58', '#7a522c', 256, 256, .8), roughness: .45, clearcoat: .3 })), 0, .25, 0);
         const wedge = (x, z, r, col, rind) => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.lineTo(2.2, -.7); sh.lineTo(2.2, .7); sh.lineTo(0, 0); const m = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: 1.1, bevelEnabled: false }), [M({ color: rind, roughness: .7 }), M({ color: col, roughness: .55 })]); m.rotation.x = -Math.PI / 2; m.rotation.z = r; at(Gc, m, x, .5, z); };
         wedge(-2.6, -.6, .2, 0xf2d27a, 0xe8c262); wedge(-1.2, 1, -1, 0xf4ecd2, 0xe2d6b2);
         const gm = M({ color: 0x5a2846, roughness: .25, clearcoat: .7 }), gs = new TT.SphereGeometry(.34, 10, 8); for (let i = 0; i < 16; i++) { const a = i * 2.39, r = Math.sqrt(i) * .32; at(Gc, new TT.Mesh(gs, gm), 1.5 + Math.cos(a) * r, .8 + (i % 3) * .12 - r * .1, -.9 + Math.sin(a) * r * 1.4); }
         const sl = M({ map: canvasTex('crumb', 64, 64, (c, W) => { c.fillStyle = '#f0dcb0'; c.fillRect(0, 0, W, W); for (let i = 0; i < 60; i++) { c.fillStyle = 'rgba(160,120,60,.35)'; c.beginPath(); c.arc(Math.random() * W, Math.random() * W, 1 + Math.random() * 2.5, 0, 7); c.fill(); } c.strokeStyle = '#b8742c'; c.lineWidth = 6; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 3, 0, 7); c.stroke(); }), roughness: .8 });
         for (let i = 0; i < 4; i++) { const s = new TT.Mesh(new TT.CylinderGeometry(.8, .8, .3, 14), [M({ color: 0xc98a3e, roughness: .6 }), sl, sl]); s.rotation.set(.3, 0, .25); at(Gc, s, .6 + i * .75, .85, 1.2); } }
-      bottle(o, g, -11, -6.6, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.8, -3.6, 0x5a0d1c); wineGlass(o, g, 9.6, 3.4, 0x5a0d1c);
-      candle(o, g, -5.8, -8.2, false); cupSaucer(o, g, 11.6, .4, -2.4, china);
+      bottle(o, g, -11, -6.6, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -10.2, .6, 0x5a0d1c); wineGlass(o, g, 9.8, 4.8, 0x5a0d1c);   // (glasses forward, clear of the bottle and the cup)
+      candle(o, g, -5.8, -8.2, false); cupSaucer(o, g, 12, -2.4, -2.4, china);
     } else {
       [[-11.2, 3.8, .4], [11.2, 3.8, -.4]].forEach(([x, z, r]) => { plate(o, g, x, z, 2.4, china); napkin(x - Math.sign(x) * .2, z + 2.2, r);
         // a steak dinner (2026-11-07: was pasta): a sirloin, sliced and fanned (pink inside, a seared crust), roast potatoes, green beans, a sprig of rosemary
@@ -957,7 +1018,7 @@
       bottle(o, g, 5.9, -8.2, 0x2a3a1e, '#f2ead6');
     } else {
       { const Gp = grp(TT, g, 10.8, 0, -5.6, .4); Gp.scale.setScalar(.88); at(Gp, new TT.Mesh(new TT.CylinderGeometry(3.3, 3.3, .35, SEG(o, 32)), M({ map: wood('tbl4-peel', '#c9a070', '#8a5e34', 256, 256, .7), roughness: .55 })), 0, .18, 0); at(Gp, new TT.Mesh(RB(1, .3, 4, .1, 1), M({ color: 0xb08a5a, roughness: .6 })), 0, .18, 4.6);
-        at(Gp, new TT.Mesh(new TT.CylinderGeometry(2.9, 2.9, .3, SEG(o, 32)), [M({ color: 0xd8a254, roughness: .6 }), M({ map: canvasTex('pizza', 256, 256, (c, W) => { c.fillStyle = '#d8a254'; c.fillRect(0, 0, W, W); c.fillStyle = '#c63a1e'; c.beginPath(); c.arc(W / 2, W / 2, W * .42, 0, 7); c.fill(); for (let i = 0; i < 14; i++) { c.fillStyle = '#f6ecd0'; c.beginPath(); c.arc(W / 2 + (Math.random() - .5) * W * .6, W / 2 + (Math.random() - .5) * W * .6, 10 + Math.random() * 12, 0, 7); c.fill(); } for (let i = 0; i < 8; i++) { c.fillStyle = '#2f7a2a'; c.beginPath(); c.ellipse(W / 2 + (Math.random() - .5) * W * .5, W / 2 + (Math.random() - .5) * W * .5, 9, 5, Math.random() * 3, 0, 7); c.fill(); } c.strokeStyle = 'rgba(90,40,10,.6)'; c.lineWidth = 2; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(W / 2, W / 2); const a = i * Math.PI / 4; c.lineTo(W / 2 + Math.cos(a) * W, W / 2 + Math.sin(a) * W); c.stroke(); c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 - Math.cos(a) * W, W / 2 - Math.sin(a) * W); c.stroke(); } }), roughness: .5, clearcoat: .3, bump: false }), M({ color: 0xc89048 })]), 0, .5, 0); }
+        pizza(o, Gp, 2.9); }
       bottle(o, g, -11, -6.5, 0x1e2a18, '#efe6d2'); wineGlass(o, g, -9.7, -2.2, 0x5a0d1c); wineGlass(o, g, 9.9, 3.9, 0x5a0d1c);   // red wine (2026-11-07: was white)
       antipasti(o, g, -10.8, 6.6, .22, .78);   // an antipasto board to go with it
       { const Gl = grp(TT, g, -6, 0, -8.2); at(Gl, new TT.Mesh(RB(2, .3, 2, .08, 1), iron), 0, .15, 0); at(Gl, new TT.Mesh(RB(1.8, 3.8, 1.8, .05, 1), glassM()), 0, 2.2, 0, 0, false); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(Gl, new TT.Mesh(new TT.CylinderGeometry(.07, .07, 3.9, 4), iron), a * .9, 2.2, b * .9, 0, false)); at(Gl, new TT.Mesh(new TT.ConeGeometry(1.4, 1, 4), iron), 0, 4.6, 0, Math.PI / 4); candle(o, Gl, 0, 0, true, true).scale.setScalar(.55); }
@@ -1045,7 +1106,8 @@
       const nib = new TT.Mesh(new TT.ConeGeometry(.16, 1.2, 12, 1, false, 0, Math.PI), gold); nib.rotation.set(0, 0, Math.PI / 2); nib.scale.set(1, 1, .45); at(Gp, nib, -3.5, .2, 0, 0, false); }
     { const Gi = grp(TT, g, 9.6, -MAT, -9.7, .5); at(Gi, new TT.Mesh(RB(2, 1.5, 2, .25, 2), M({ color: 0xcfd8e0, roughness: .03, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false })), 0, .75, 0, 0, false); at(Gi, new TT.Mesh(RB(1.6, .9, 1.6, .2, 2), M({ color: 0x0e1a3a, roughness: .1 })), 0, .5, 0, 0, false); at(Gi, lathe(TT, [[0, 0], [.55, 0], [.58, .3], [.4, .45], [.12, .6], [.18, .75], [0, .8]], SEG(o, 18), brass), 0, 1.5, 0); }
     // a crystal decanter and a tumbler of whisky on a silver tray (left), a brass carriage clock (back)
-    { const Gt = grp(TT, g, -14.8, -MAT, -.6, .2), silver = M({ color: 0xd8dadc, metalness: 1, roughness: .2 });
+    { const Gt = grp(TT, g, -15.2, .01, -.6, .2), silver = M({ color: 0xd8dadc, metalness: 1, roughness: .2 });
+      for (let k = 0; k < 4; k++) { const f = new TT.Mesh(new TT.CylinderGeometry(.16, .12, .18, 10), silver); at(Gt, f, Math.cos(k * 1.57 + .78) * 3.1, -.08, Math.sin(k * 1.57 + .78) * 3.1, 0, false); }   // little feet: the tray stands just above the desk mat (it sat in it, and the mat showed through its floor)
       at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .1], [3.7, .35], [3.5, .38], [3.3, .14], [0, .14]], SEG(o, 32), silver), 0, 0, 0);
       const crys = M({ color: 0xe8f0f4, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .42, depthWrite: false, envMapIntensity: 1.6 });
       at(Gt, lathe(TT, [[0, .14], [1.3, .14], [1.5, .4], [1.55, 2.6], [1.1, 3.6], [.4, 4.4], [.42, 5.2], [.5, 5.3], [0, 5.3]], SEG(o, 10), crys), -1, 0, -.6, 0, false);
