@@ -333,6 +333,7 @@ int main(int argc, char **argv) {
   if (!strcmp(cmd, "match")) {
     int G = atoi(argv[3]), la = atoi(argv[4]), lb = atoi(argv[5]), rp = argc > 6 ? atoi(argv[6]) : 2;
     if (argc > 7) rng ^= (u64)atoll(argv[7]) * 0x9E3779B97F4A7C15ull;
+    if (getenv("NETBOTH")) LNN[0] = LNN[1] = 1;   // both levels with the loaded net (NNUE=file), as in the browser
     MatchRes M = match(v, G, la, lb, rp, 0);
     double sc = (M.aw + M.dw + 0.5 * (M.ad + M.dd)) / M.games;
     printf("L%d vs L%d: A-att +%d =%d -%d, A-def +%d =%d -%d, score %.3f (Elo %+.0f), attackers won %d of %d\n", la, lb, M.aw, M.ad, M.al, M.dw, M.dd, M.dl, sc, eloOf(sc), M.aw + M.dl, M.games);

@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../tafl/', VER = '?v=nn2sr-lv2mt';   // same file / version as tafl/index.html → shared cache
+  const BASE = '../tafl/', VER = '?v=nn2sr-lv25';   // same file / version as tafl/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.TaflEngine) return Promise.resolve(window.TaflEngine);
@@ -344,11 +344,11 @@
   }
 
   /* ---------- the board card ---------- */
-  const RATING = [450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650];   // tafl RT_LV (rated games)
-  function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan)
+  const RATING = [450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650, 2695, 2735, 2765, 2795, 2825];   // tafl RT_LV (rated games; Lv.21–25 since 2026-11-08)
+  function levelInfo(i, lang) {   // i = 1..25 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan, Lv.21–25)
     const L = TX[lang] || TX.en;
     return { name: 'Lv.' + i, desc: '', rating: RATING[i - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.tafl = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [7, 9, 11], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.tafl = { levels: 25, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [7, 9, 11], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
 })();
