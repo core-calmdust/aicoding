@@ -2,7 +2,7 @@
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
-  const VER = '?v=2';
+  const VER = '?v=3';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← リバーシ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -114,7 +114,7 @@
   const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
   let FB = null;
   async function goFB(time) {
-    if (!FB) { FB = new Worker('../engine.js?v=49'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
+    if (!FB) { FB = new Worker('../engine.js?v=50'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { level: 20, time } }); });
   }

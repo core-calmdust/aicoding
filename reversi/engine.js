@@ -479,7 +479,25 @@ function searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   // collect & order moves
   const base = ply * 36;
   let n = 0;
-  const ordDepth = depth >= 9 ? 3 : depth >= 6 ? 2 : depth >= 4 ? 1 : depth >= 3 ? 0 : -1;
+  // with Multi-ProbCut: shallower orderings and the table's move first, before ordering the others (= engine.c)
+  const ordDepth = MPC.on ? (depth >= 18 ? 3 : depth >= 12 ? 2 : depth >= 8 ? 1 : depth >= 3 ? 0 : -1)
+    : depth >= 9 ? 3 : depth >= 6 ? 2 : depth >= 4 ? 1 : depth >= 3 ? 0 : -1;
+  const alpha0 = alpha;
+  let best = -32767, bestMove = -1, first = false;
+  if (MPC.on && ordDepth >= 0 && ttMove >= 0 && (ttMove < 32 ? (ml >>> ttMove) & 1 : (mh >>> (ttMove - 32)) & 1)) {
+    const s = ttMove;
+    flips(s, pl, ph, ol, oh);
+    const fl = FL, fh = FH;
+    let npl, nph;
+    if (s < 32) { npl = pl | fl | (1 << s); nph = ph | fh; } else { npl = pl | fl; nph = ph | fh | (1 << (s - 32)); }
+    childIdx(ply, s, fl, fh);
+    const v = -searchI(ol & ~fl, oh & ~fh, npl, nph, depth - 1, -beta, -alpha, ply + 1, false);
+    best = v; bestMove = s; first = true;
+    if (v > alpha) alpha = v;
+    if (s < 32) ml &= ~(1 << s); else mh &= ~(1 << (s - 32));
+    ttMove = -1;
+  }
+  if (alpha < beta) {
   while (ml) { const s = lsb(ml); ml &= ml - 1; MV[base + n++] = s; }
   while (mh) { const s = lsb(mh); mh &= mh - 1; MV[base + n++] = s + 32; }
   for (let i = 0; i < n; i++) {
@@ -501,8 +519,7 @@ function searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
   }
   sortMoves(base, n);
 
-  const alpha0 = alpha;
-  let best = -32767, bestMove = MV[base];
+  if (bestMove < 0) bestMove = MV[base];
   for (let i = 0; i < n; i++) {
     const s = MV[base + i];
     flips(s, pl, ph, ol, oh);
@@ -512,7 +529,7 @@ function searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
     const nol = ol & ~fl, noh = oh & ~fh;
     childIdx(ply, s, fl, fh);
     let v;
-    if (i === 0) v = -searchI(nol, noh, npl, nph, depth - 1, -beta, -alpha, ply + 1, false);
+    if (i === 0 && !first) v = -searchI(nol, noh, npl, nph, depth - 1, -beta, -alpha, ply + 1, false);
     else {
       v = -searchI(nol, noh, npl, nph, depth - 1, -alpha - 1, -alpha, ply + 1, false);
       if (v > alpha && v < beta) v = -searchI(nol, noh, npl, nph, depth - 1, -beta, -v, ply + 1, false);
@@ -521,6 +538,7 @@ function searchI(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {
       best = v; bestMove = s;
       if (v > alpha) { alpha = v; if (alpha >= beta) break; }
     }
+  }
   }
   // store
   if (T_D[ti] <= depth || !(T_K[k4] === pl && T_K[k4 + 1] === ph && T_K[k4 + 2] === ol && T_K[k4 + 3] === oh)) {
@@ -754,7 +772,7 @@ function rootPVS(pos, moves, depth, mode, a0, b0) {
       v = S(alpha, alpha + 1);
       if (v > alpha) v = S(v - 1 > alpha ? v - 1 : alpha, beta);
     }
-    if (v > bestScore) { bestScore = v; best = s; if (v > alpha) alpha = v; }
+    if (v > bestScore) { bestScore = v; best = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
   return { move: best, score: mode === 'exact' ? bestScore * SCALE : bestScore };
 }
