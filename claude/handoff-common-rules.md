@@ -86,6 +86,7 @@
 | `tick.js` | 秒読み時報音 `CountTick` |
 | `onlinesec.js` ＋ `tools/secrules.py` | オンライン改ざん対策（クライアント精算＋DBルール生成） |
 | `atlas.js` / `atlas-account.js` / `atlas-firebase-config.js` | ポータル共通アカウント・同期・タグ／バッジ |
+| `mtengine.js` / `mt-sw.js` | 本編のマルチスレッド（分離の Service Worker、オプション「マルチスレッド」、スレッドの組。addendum「本編のマルチスレッド」） |
 | その他 | `langsel.js`（言語選択）、`flipbtn.js`、`rangetouch.js`、`watchpause.js`、`phonesnd.js`、`latinfs.js`、`export.js`、`rulelink.js` |
 
 ---

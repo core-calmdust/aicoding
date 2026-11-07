@@ -1494,7 +1494,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/rulesoffer.js?v=16l14j"></script>
-<script src="engine.js?v=20261107sp"></script>
+<script src="engine.js?v=20261108mt"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261107l14"></script>
 <script src="lists-ui.js?v=20261107l14"></script>
@@ -1509,6 +1509,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2"></script>
+<script src="../shared/mtengine.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js?v=1' });</script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
 <script src="variants/vtext.js?v=20261107l14"></script>
@@ -1653,7 +1654,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261107sp');
+  const w = new Worker('engine.js?v=20261108mt');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1676,10 +1677,31 @@ function anaMsg(e) {
   else { const j = anaJob; anaJob = null; j.resolve(m); }
 }
 aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, the coach and the review box go to the
+// pool of threads when it is free (standard shogi only). The AI levels are node budgets (the same strength on every device),
+// so the AI and rated games stay on the one-thread workers.
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108mt&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
+  after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
+  help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
+    for (const u of m.moves || []) { const x = p.fromUsi(u); moves.push(x); p.doMove(x); p.sp = 0; } return { board, hand, side, moves }; },
+  isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
+}) : null;
+function mtPool(msg) {
+  if (!MTP || (game && game.variant) || msg.variant) return null;
+  const o = msg.opts || {};
+  const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && o.time && !o.nodes && !o.noise && !o.linear);
+  return ok ? MTP.pool() : null;
+}
+// the speed of a search on the threads, in the info line under the moves (as after the AI's moves)
+function mtNps(r, t0) { const ms = performance.now() - t0; if (r && r.nodes > 50000 && ms > 20) { const el = $('#infoLine'); if (el) el.textContent = t('info', { nps: Math.round(r.nodes / ms * 1000).toLocaleString() }); } }
 function cancelAI() { if (aiJob) { if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
-function cancelAna() { if (anaJob) { if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
+function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
 function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress }; const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
-function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress }; const vw = window.Variants && Variants.wk(msg, 'ana', anaMsg, anaJob.id); if (vw) anaJob.vw = 1; (vw || anaWorker).postMessage({ ...msg, id: anaJob.id }); }); }
+function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress };
+  const mp = mtPool(msg);
+  if (mp) { const j = anaJob, t0 = performance.now(); j.mt = 1; mp.run(msg, m => { if (anaJob === j && j.onProgress) j.onProgress(m, false); }, 'ana').then(r => { if (anaJob !== j) return; anaJob = null; mtNps(r, t0); resolve(r); }); return; } const vw = window.Variants && Variants.wk(msg, 'ana', anaMsg, anaJob.id); if (vw) anaJob.vw = 1; (vw || anaWorker).postMessage({ ...msg, id: anaJob.id }); }); }
 
 // ====================================================================== sound
 let actx = null;
@@ -3242,7 +3264,7 @@ function studyEnd(quiet) {
   game = S.orig; cur = S.cur; reviewing = S.reviewing;
   if (!quiet) { refresh(false); renderReview(); }
 }
-function rvbKill() { if (rvbW) { rvbW.terminate(); rvbW = null; } rvbJob = null; }
+function rvbKill() { if (rvbW) { rvbW.terminate(); rvbW = null; } if (rvbJob && MTP) MTP.cancel('rvb'); rvbJob = null; }
 // continuous analysis (rvbox.js runs it): the worker searches depth 1, 2, 3, ... and posts the best 4 moves with their
 // lines after every depth; RVB stops it (terminate) on another position, the time limit or Stop
 function rvbCands(push, done) {
@@ -3253,6 +3275,15 @@ function rvbCands(push, done) {
   const conv = list => (list || []).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
     return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
   rvbKill();
+  const mp = !vr && MTP && MTP.pool();   // (the threads when free)
+  if (mp) {
+    const id = ++jobId; rvbJob = id;
+    const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+    weightsReady.then(() => { if (rvbJob !== id) return;
+      mp.run({ type: 'mpvLoop', sfen: game.start, moves: mv, opts: { n: 4, depth: 40 } }, m => { if (rvbJob === id && m.list) push(conv(m.list), info(m)); }, 'rvb')
+        .then(r => { if (rvbJob !== id) return; rvbJob = null; done(r && !r.error ? conv(r.list) : null, r ? info(r) : {}); }); });
+    return () => { if (rvbJob === id) { rvbJob = null; MTP.cancel('rvb'); } };
+  }
   const id = ++jobId, w = rvbW = vr ? Variants.newWorker() : makeWorker(null);
   rvbJob = id;
   w.onmessage = e => { const m = e.data; if (!m || m.id !== id || rvbJob !== id) return; const info = { depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial };

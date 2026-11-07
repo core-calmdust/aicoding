@@ -1684,6 +1684,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2"></script>
+<script src="../shared/mtengine.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1838,8 +1839,30 @@ function anaMsg(e) {
 aiWorker = makeWorker(aiMsg);
 anaWorker = makeWorker(anaMsg);
 let jobId = 0;
-function cancelAI() { cancelPool(); if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
-function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, the coach, the review box and the
+// strongest timed levels (17–20) outside rated games go to the pool of threads when it is free (Lazy SMP on engine_mt.wasm,
+// the helpers start from other root moves). Rated games keep the search they had (one thread, or the root split below).
+const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 } };   // the helpers' settings (engine.js LEVELS)
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: 'mt-worker.js?v=1', helper: 'mt-worker.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
+  after: async (X, mem, ws) => {
+    X.init();   // (the tables in the shared memory, once)
+    const wt = await weightsReady, bk = await bookReady;
+    ws.forEach(w => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); if (bk) w.postMessage({ type: 'book', book: bk }); });
+  },
+  help: m => { const o = m.opts || {}, L = MT_CFG[o.level], ex = L ? L.exact : o.exact || 18;
+    return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: L ? L.wld : ex + 2, mpc: 1 } }; },
+  isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
+}) : null;
+const mtPool = () => MTP && MTP.pool();
+function cancelAI() { cancelPool(); if (MTP) MTP.cancel('ai'); if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
+function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } anaJob = null; } }
+// the AI's move on the threads (levels 17–20, not rated); null: use the usual search
+function mtThink(cells, toMove, level, onProgress) {
+  const mp = !rtGame() && MT_CFG[level] && mtPool(); if (!mp) return null;
+  return mp.run({ type: 'think', cells, toMove, opts: { level } }, onProgress, 'ai').then(r => { if (r) noteNps(r); return r; });
+}
 function think(cells, toMove, level, onProgress) {
   return new Promise(resolve => {
     aiJob = { id: ++jobId, resolve, onProgress };
@@ -1915,6 +1938,8 @@ async function parallelThink(cells, toMove, level, onProgress) {
 function analyze(cells, toMove, time, onProgress) {
   cancelAna();
   anaJob = { id: ++jobId, onProgress };
+  const mp = mtPool();
+  if (mp) { const j = anaJob; j.mt = 1; mp.run({ type: 'analyze', cells, toMove, opts: { time, exact: 18 } }, m => { if (anaJob === j) onProgress(m.list, false); }, 'ana').then(r => { if (anaJob !== j) return; anaJob = null; if (r) onProgress(r.list, true); }); return; }
   anaWorker.postMessage({ type: 'analyze', id: anaJob.id, cells, toMove, opts: { time, exact: 18 } });
 }
 
@@ -2308,10 +2333,13 @@ async function schedule(animInfo) {
     if (token !== busyToken) return;
     const lv = levelFor(color), [cb, cw] = counts(p.cells);
     const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 45 && legalMoves(p.cells, color).length > 1;
-    const res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, m => {
+    const prog = m => {
       if (token !== busyToken) return;
       setStatus(color, rtLive() ? t('depth', { d: m.depth }) : `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
-    });
+    };
+    let res = await mtThink(p.cells.slice(), color, lv, prog);   // (null: not on the threads)
+    if (token !== busyToken) return;
+    if (!res) res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, prog);
     if (token !== busyToken) return;
     const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 1100 : 380);
     const wait = minDelay - (performance.now() - t0);
@@ -2356,6 +2384,8 @@ function coachDeep(idx, token, p) {
     ReversiCoach.render();
     if (settings.hint) showHints(p.ana, true);
   } };
+  const mp = mtPool();
+  if (mp) { const j = anaJob; j.mt = 1; mp.run({ type: 'think', cells: p.cells.slice(), toMove: p.toMove, opts: { level: COACH_DEEP } }, null, 'ana').then(r => { if (anaJob !== j) return; anaJob = null; if (r) { noteNps(r); j.resolve(r); } }); return; }
   anaWorker.postMessage({ type: 'think', id: anaJob.id, cells: p.cells.slice(), toMove: p.toMove, opts: { level: COACH_DEEP } });
 }
 const fmt = v => (v > 0 ? '+' : '') + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1));
@@ -4332,6 +4362,13 @@ function rbAnalyze(done) {
     for (const m of (x.pv || [])) { if (m < 0) { pv.push({ t: RBox.t('pass'), s: side }); side = 3 - side; continue; } pv.push({ t: sqName(m), s: side }); side = 3 - side; }
     return { id: x.move, mv: sqName(x.move), val: (v > 0 ? '+' : v < 0 ? '−' : '±') + (x.exact ? Math.abs(v) : Math.abs(v).toFixed(1)), sub: x.exact ? RBox.t('exact') : '', cls: v >= 0.5 ? 'good' : v <= -0.5 ? 'bad' : '', pv: fin || x.pv ? pv : null, played: x.move === isPlayed };
   });
+  const mp = mtPool();   // (the threads when free)
+  if (mp) {
+    rbJob = { id, done, fmt: fmtList, mt: 1 };
+    mp.run({ type: 'analyze', cells: p.cells.slice(), toMove: p.toMove, opts: { time: 1200, exact: 16, pv: 5 } }, m => { if (rbJob && rbJob.id === id) done(fmtList(m.list, false), false); }, 'rvb')
+      .then(r => { if (!rbJob || rbJob.id !== id) return; rbJob = null; done(fmtList(r && r.list || [], true), true); });
+    return () => { if (rbJob && rbJob.id === id) { rbJob = null; MTP.cancel('rvb'); } };
+  }
   if (!rbW) rbW = makeWorker(e => { const m = e.data, j = rbJob; if (!j || m.id !== j.id) return; if (m.type === 'analysisProgress') j.done(j.fmt(m.list, false), false); else if (m.type === 'analysis') { rbJob = null; j.done(j.fmt(m.list || [], true), true); } });
   rbJob = { id, done, fmt: fmtList };
   rbW.postMessage({ type: 'analyze', id, cells: p.cells.slice(), toMove: p.toMove, opts: { time: 1200, exact: 16, pv: 5 } });
@@ -4994,7 +5031,7 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 // ====================================================================== boot
 loadOpenings().then(() => { if (positions.length) renderInfo(); });
 if (window.Online && Online.available) { setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800); } else document.body.classList.add('no-online');
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// (the service worker sw.js — offline cache + the isolation for the threads — is registered by shared/mtengine.js)
 const hadSave = load();
 try { const sp = localStorage.getItem('atlas-sfx'); if (sp === '0' || sp === '1') settings.sound = sp === '1'; } catch (e) {} // サイト共通のサウンド設定（トップページと連動）
 rtSync();
