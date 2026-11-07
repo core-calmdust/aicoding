@@ -365,7 +365,9 @@
   function kin(s, d0 = 0) {
     const joined = lang === 'ar' || lang === 'hi';
     const parts = joined ? String(s).split(/(\s+)/) : [...String(s)];
-    return parts.map((p, i) => /^\s+$/.test(p) ? p : `<span class="ki" style="--d:${d0 + i * (joined ? 70 : 28)}ms">${esc(p)}</span>`).join('');
+    const html = parts.map((p, i) => /^\s+$/.test(p) ? p : `<span class="ki" style="--d:${d0 + i * (joined ? 70 : 28)}ms">${esc(p)}</span>`).join('');
+    // spaced scripts: keep each word's letters together (a line could otherwise break mid-word, e.g. "hi|gher"); CJK may still wrap anywhere
+    return joined ? html : html.replace(/(?:<span class="ki"[^>]*>[^<]*<\/span>)+/g, w => /[　-鿿가-힯＀-￯]/.test(w) ? w : `<span style="white-space:nowrap">${w}</span>`);
   }
   const st = (i, base = 0, gap = 90) => `style="--d:${base + i * gap}ms"`;
   function page(c, i) {
