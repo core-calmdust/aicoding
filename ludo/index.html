@@ -43,10 +43,13 @@ button{font:inherit;color:inherit}
 .snd.off .on-w{display:none}.snd:not(.off) .off-x{display:none}
 #langSel{height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:0 8px}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:12px 14px}
-.controls{display:flex;flex-wrap:wrap;gap:6px;padding:8px}
-.btn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;white-space:nowrap;font-size:14px;font-weight:500}
-.btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn.primary{background:linear-gradient(180deg,#f6c25c,#e09a2a);border-color:#f8d07e;color:#2a1600;font-weight:700}
+/* menu (common spec: one row under the title on phones, icon above a short label — same as senet / shogi) */
+.controls{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;padding:8px}
+.btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:11.5px;color:var(--muted);white-space:nowrap;min-width:0;overflow:hidden;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
+.btn.primary{color:var(--text);border-color:rgba(244,176,66,.5)}
+@media (pointer: coarse) and (max-width: 760px){.controls .btn{font-size:10.5px;padding:7px 0}.controls .btn svg{width:18px;height:18px}.board-area{padding:0}}
 .btn:disabled{opacity:.45;cursor:default}
 /* ---------- board ---------- */
 .board-area{display:flex;justify-content:center;align-items:center;padding:6px 0}
