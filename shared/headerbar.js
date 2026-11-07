@@ -64,7 +64,7 @@ body.hb-on{padding-top:${H}px}
 .hb .hb-info{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted, #9aa);overflow:hidden;white-space:nowrap}
 .hb .hb-info:empty{visibility:hidden}
 .hb .hb-info b{color:var(--text, #eee);font-weight:700}
-.hb .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);overflow:hidden;text-overflow:ellipsis}
+.hb .hb-info .hb-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);overflow:hidden;text-overflow:ellipsis}
 .hb .hb-menu{flex:none;display:flex!important;flex-direction:row!important;align-items:center;gap:6px!important;margin:0!important;padding:0 14px 0 0!important;border:0!important;border-right:1px solid var(--line, rgba(255,255,255,.12))!important;background:none!important;box-shadow:none!important;border-radius:0!important;width:auto!important;height:auto!important;max-width:none!important;grid-template-columns:none!important;order:0!important;position:static!important}
 .hb .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;width:auto!important;min-width:0!important;height:36px!important;margin:0!important;padding:0 11px!important;font-size:13px!important;line-height:1!important;gap:6px!important;border-radius:10px!important;white-space:nowrap}
 .hb .hb-menu > * svg{width:16px!important;height:16px!important;margin:0!important;flex:none}
@@ -90,6 +90,26 @@ html[dir=rtl] .hb, html[lang=ar] .hb{direction:rtl}
 html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px solid var(--line, rgba(255,255,255,.12))}
 @media (max-width: 1180px){.hb .hb-menu > * span{display:none}.hb .hb-menu > *{padding:0 10px!important}}
 @media (max-width: 960px){.hb .hb-title .brand-l .series{display:none}}
+/* fitting the bar to the window (2026-11-07, long languages): fit() below adds these step by step, only while something does not
+   fit — the bar never runs past the window and the info keeps room for its first chips. hb-t1: tighter spacing; hb-lc: the language
+   button shows its code (DE) instead of its name; hb-ico: a menu button shows its icon only (its name stays in title / aria-label,
+   lowest priority first: from the end of the menu); hb-t2: the title gives way (subtitle hidden, then cut with …); in the info,
+   a chip that does not fit is left out whole (hb-cut, from the end) instead of being cut, and the first one shrinks with … */
+.hb.hb-t1{gap:10px}
+.hb.hb-t1 .hb-menu{gap:4px!important;padding:0 10px 0 0!important}
+html[lang=ar] .hb.hb-t1 .hb-menu{padding:0 0 0 10px!important}
+.hb.hb-t1 .hb-menu > *{padding:0 8px!important}
+.hb.hb-t1 .hb-icons,.hb.hb-t1 .hb-icons .brand-r{gap:4px}
+.hb .hb-menu > .hb-ico > span{display:none!important}
+.hb .hb-menu > .hb-ico{padding:0 10px!important}
+.hb.hb-lc .lsel-btn .lsel-n{display:none}.hb.hb-lc .lsel-btn .lsel-c{display:inline}
+.hb.hb-t2 .hb-title{flex:0 1 auto;min-width:72px;overflow:hidden}
+.hb.hb-t2 .hb-title .brand-l{min-width:0;max-width:100%}
+.hb.hb-t2 .hb-title .brand-l > *{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.hb.hb-t2 .hb-title .brand-l h1 small,.hb.hb-t2 .hb-title .brand-l h1 .sub{display:none!important}
+.hb .hb-info > .hb-cut{display:none!important}
+.hb .hb-info > .hb-shrink{flex:0 1 auto!important;min-width:0!important;max-width:100%}
+.hb .hb-info > .hb-shrink > b,.hb .hb-info > .hb-shrink > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* PC: the game-over dialog is wide enough for its buttons on one line each (all games) */
 @media ${MQ}{#resultOverlay .modal{width:min(640px, calc(100vw - 64px))}#resultOverlay .modal-actions .mbtn,#resultOverlay .modal-actions button{white-space:nowrap}}
 `;
@@ -175,7 +195,99 @@ function init(o) {
     setInfo(html) { info.innerHTML = html || ''; } };
   if (mq.addEventListener) mq.addEventListener('change', apply); else mq.addListener(apply);
   apply();
+  if (!portal) fitBar(bar, info, () => controls, () => on);
+  if (controls) fitLabels(controls, () => on);
   return api;
+}
+// phone / tablet menu (the buttons under the title): a name that does not fit its button (ru «Подсказка», de «Lektionen» …) is
+// set a little smaller — only that one, down to 78% of its size — before it would be cut with … (2026-11-07)
+function fitLabels(controls, isOn) {
+  let q = 0;
+  const run = () => {
+    q = 0;
+    const spans = [...controls.querySelectorAll(':scope > button > span, :scope > a > span')];
+    spans.forEach(s => { if (s.dataset.hbFs) { s.style.fontSize = ''; s.style.letterSpacing = ''; delete s.dataset.hbFs; } });
+    if (isOn()) return;
+    for (const s of spans) {
+      if (!s.getClientRects().length || s.scrollWidth <= s.clientWidth + 1 || !s.clientWidth) continue;
+      const fs = parseFloat(getComputedStyle(s).fontSize) || 12;
+      let k = Math.max(0.78, (s.clientWidth - 1) / s.scrollWidth);
+      s.dataset.hbFs = '1'; s.style.fontSize = (fs * k).toFixed(2) + 'px';
+      if (s.scrollWidth > s.clientWidth + 1) s.style.letterSpacing = '-0.02em';
+    }
+    mo.takeRecords();
+  };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  const mo = new MutationObserver(later);
+  mo.observe(controls, { childList: true, subtree: true, characterData: true });
+  window.addEventListener('resize', later);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+  window.addEventListener('load', later);
+  later();
+}
+// the PC bar fitted to the window (2026-11-07): long languages (de / fr / ru / id / tr …) made the menu run off the right edge
+// and squeezed the info (turn, move, evaluation) to nothing. Measured on every change, the bar steps down only as far as needed:
+// tighter spacing → the language button shows its code → menu buttons show their icon only (from the last one: lessons /
+// draw offer / puzzles before new / undo) → the title gives way. The info keeps room for its first two chips; chips that still
+// do not fit are left out whole from the end (never cut in half), the first one alone shrinks with … as the very last resort.
+function fitBar(bar, info, getMenu, isOn) {
+  let q = 0;
+  const shown = e => !!(e && e.getClientRects().length);
+  const chipW = c => Math.max(c.getBoundingClientRect().width, c.scrollWidth);
+  // how far anything in the bar runs past its edges (px)
+  const over = () => {
+    const br = bar.getBoundingClientRect(); let m = 0;
+    for (const el of [bar.querySelector('.hb-title'), getMenu(), bar.querySelector('.hb-icons')]) {
+      if (!shown(el) || !bar.contains(el)) continue;
+      const r = el.getBoundingClientRect(); m = Math.max(m, r.right - br.right, br.left - r.left);
+    }
+    return Math.max(m, bar.scrollWidth - bar.clientWidth);
+  };
+  const run = () => {
+    q = 0; if (!isOn()) return;
+    const menu = getMenu(), btns = menu ? [...menu.children] : [];
+    bar.classList.remove('hb-t1', 'hb-lc', 'hb-t2');
+    btns.forEach(b => { b.classList.remove('hb-ico'); if (b.dataset.hbAl) { b.removeAttribute('aria-label'); delete b.dataset.hbAl; } if (b.dataset.hbT) { b.removeAttribute('title'); delete b.dataset.hbT; } });
+    const chips = [...info.children];
+    chips.forEach(c => c.classList.remove('hb-cut', 'hb-shrink'));
+    // the room the info wants: all its chips (the game's optional ones — .opt — aside), at most 30% of the bar but always its
+    // first two (or a short text)
+    const vc = chips.filter(shown), gap = parseFloat(getComputedStyle(info).columnGap) || 0;
+    let want = 0;
+    if (vc.length) {
+      const sum = list => list.reduce((s, c, i) => s + chipW(c) + (i ? gap : 0), 0);
+      const main = vc.filter(c => !c.classList.contains('opt'));
+      want = Math.max(sum(vc.slice(0, 2)), Math.min(sum(main.length ? main : vc), bar.clientWidth * 0.3));
+    } else if (info.textContent.trim()) want = Math.min(info.scrollWidth, 200);
+    const ok = () => over() <= 1 && info.clientWidth + 1 >= want;
+    if (!ok()) {
+      // a menu button can show its icon only when it has an icon and its name in a span (the name moves to title / aria-label)
+      const ico = btns.filter(b => shown(b) && b.querySelector(':scope > svg, :scope > img, :scope > i') && b.querySelector(':scope > span') && b.querySelector(':scope > span').textContent.trim() && getComputedStyle(b.querySelector(':scope > span')).display !== 'none').reverse();
+      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc')]
+        .concat(ico.map(b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); }))
+        .concat([() => bar.classList.add('hb-t2')]);
+      for (const st of steps) { st(); if (ok()) break; }
+    }
+    // chips that still do not fit: left out whole, from the end; the first one alone shrinks
+    let left = chips.filter(shown);
+    while (left.length > 1 && info.scrollWidth > info.clientWidth + 1) left.pop().classList.add('hb-cut');
+    if (left.length && info.scrollWidth > info.clientWidth + 1) left[0].classList.add('hb-shrink');
+    mos.forEach(m => m.takeRecords());   // (our own class changes are not changes to react to)
+  };
+  const later = () => { if (!q) q = requestAnimationFrame(run); };
+  const mos = [];
+  const watch = (el, opt) => { if (!el) return; const m = new MutationObserver(later); m.observe(el, opt); mos.push(m); };
+  watch(info, { childList: true, subtree: true, characterData: true });
+  // (attribute changes only where they change a size: a class toggled with the same value — a clock ticking — is skipped)
+  { const m = new MutationObserver(ms => { if (ms.some(x => x.type !== 'attributes' || x.oldValue !== x.target.getAttribute(x.attributeName))) later(); });
+    m.observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'hidden', 'style'] }); mos.push(m); }
+  watch(document.documentElement, { attributes: true, attributeFilter: ['lang', 'dir'] });
+  window.addEventListener('resize', later);
+  // (sizes that change without a mutation in the bar: web fonts, the game's own media queries)
+  if (window.ResizeObserver) { let lw = -1; new ResizeObserver(() => { const w = bar.clientWidth; if (w !== lw) { lw = w; later(); } }).observe(bar); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+  window.addEventListener('load', later);
+  later();
 }
 // Online dock (common spec): when the dock at the bottom is opened on PC, the page content (.app: board + info) scrolls up
 // smoothly so that it sits centred between the header bar and the top of the opened dock; closing scrolls it back.
