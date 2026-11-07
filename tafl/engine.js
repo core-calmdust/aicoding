@@ -196,6 +196,15 @@ class Pos {
     return out;
   }
   capsOf(m) { return this.clone().play(m).lastCaps; }
+  // the king on the edge with every square beside him held by attackers: not captured where the king needs four sides
+  // (Copenhagen, Fetlar, Ard Ri: the edge is not a fourth side). For a note to the player, not a rule.
+  edgeBoxed() {
+    const k = this.king; if (k < 0 || !this.G.R.king4) return false;
+    const n = this.n, [r, c] = this.rc(k); if (r && c && r < n - 1 && c < n - 1) return false;
+    let held = 0;
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const rr = r + dr, cc = c + dc; if (!this.inB(rr, cc)) continue; if (this.b[rr * n + cc] !== 1) return false; held++; }
+    return held > 0;
+  }
   status() { return this.res ? (this.res === this.turn ? 1 : -1) : this.moves().length ? 0 : -1; }
   spec() { let s = ''; for (const x of this.b) s += '.adk'[x]; return { v: this.v, b: s, side: this.turn }; }
 }
@@ -372,7 +381,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261106tw1';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261107ek1';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };

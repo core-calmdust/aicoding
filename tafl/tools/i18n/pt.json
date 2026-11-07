@@ -419,5 +419,6 @@
 "tr.ardri.ok": "Rei capturado! São precisos os quatro lados.",
 "tr.ardri.ng": "Coloque um atacante na única casa livre ao lado do rei.",
 "pro.btn": "Análise profunda",
-"pro.btn.title": "Abrir a análise com vários núcleos (nova aba)"
+"pro.btn.title": "Abrir a análise com vários núcleos (nova aba)",
+"edge.king4": "Um rei na borda não pode ser capturado: os atacantes precisam cercá-lo pelos quatro lados."
 }

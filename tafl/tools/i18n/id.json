@@ -424,5 +424,6 @@
  "tr.ardri.ok": "Raja tertangkap! Keempat sisi diperlukan.",
  "tr.ardri.ng": "Taruh penyerang di satu-satunya petak kosong di samping raja.",
 "pro.btn": "Analisis mendalam",
-"pro.btn.title": "Buka analisis multi-inti (tab baru)"
+"pro.btn.title": "Buka analisis multi-inti (tab baru)",
+"edge.king4": "Raja di tepi tidak bisa ditangkap: penyerang harus mengepungnya dari keempat sisi."
 }

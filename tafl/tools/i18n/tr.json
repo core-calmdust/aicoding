@@ -424,5 +424,6 @@
  "tr.ardri.ok": "Kral yakalandı! Dört yanın hepsi gerekir.",
  "tr.ardri.ng": "Kralın yanındaki tek boş kareye bir saldıran koyun.",
 "pro.btn": "Derin analiz",
-"pro.btn.title": "Çok çekirdekli analizi aç (yeni sekme)"
+"pro.btn.title": "Çok çekirdekli analizi aç (yeni sekme)",
+"edge.king4": "Kenardaki kral yakalanamaz: saldıranlar onu dört yandan çevrelemelidir."
 }

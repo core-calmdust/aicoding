@@ -419,5 +419,6 @@
 "tr.ardri.ok": "¡Rey capturado! Hacen falta los cuatro lados.",
 "tr.ardri.ng": "Pon un atacante en la única casilla libre junto al rey.",
 "pro.btn": "Análisis profundo",
-"pro.btn.title": "Abrir el análisis con varios núcleos (nueva pestaña)"
+"pro.btn.title": "Abrir el análisis con varios núcleos (nueva pestaña)",
+"edge.king4": "Un rey en el borde no puede ser capturado: los atacantes deben rodearlo por los cuatro lados."
 }

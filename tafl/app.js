@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2tw';
+const ENGINE_URL = 'engine.js?v=nn2ek';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -513,7 +513,7 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
   g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
 })();
 let toastTimer = 0;
-function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
+function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.toggle('long', !big && msg.length > 34); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
 function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle('ai-live', aiGameLive()); if (window.DrawOffer) DrawOffer.sync(); }
 
 // ====================================================================== input (click a piece, then the square it should slide to)
@@ -590,7 +590,14 @@ function playMove(m) {
   update(true); save();
   const st = statusAt(cur);
   if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, d + 450); }   // only if this game is still on the board
+  else edgeNote(before, posAt(cur).pos, d);
   afterPosition();
+}
+// an attacker has just closed the last free square beside the king on the edge: say why the game goes on
+// (Copenhagen, Fetlar, Ard Ri: the king needs attackers on all four sides, and the edge is not one)
+function edgeNote(before, after, delay) {
+  if (!after || !after.edgeBoxed || !after.edgeBoxed() || before.edgeBoxed()) return;
+  setTimeout(() => toast(t('edge.king4'), 3600), delay + 120);
 }
 function afterPosition() {
   const tok = ++busyToken;
