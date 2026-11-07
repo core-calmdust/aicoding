@@ -201,25 +201,40 @@ function init(o) {
 }
 // phone / tablet menu (the buttons under the title): a name that does not fit its button (ru «Подсказка», de «Lektionen» …) is
 // set a little smaller — only that one, down to 78% of its size — before it would be cut with … (2026-11-07)
+// (the bottom tabs — shared/infotabs.js .mtabs: 評価・棋譜・コーチ… — the same way)
 function fitLabels(controls, isOn) {
-  let q = 0;
+  let q = 0, tabs = null;
+  // how much a label needs: its own text width against the room its button leaves it (a label may also spill out of a
+  // button that does not clip — morris — so the button's content box is the measure, not the label's own box)
+  const need = s => {
+    const b = s.parentElement, br = b.getBoundingClientRect(), cs = getComputedStyle(b), sr = s.getBoundingClientRect();
+    const inL = br.left + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0), inR = br.right - (parseFloat(cs.paddingRight) || 0) - (parseFloat(cs.borderRightWidth) || 0);
+    const row = cs.flexDirection.startsWith('row') && cs.display.includes('flex');
+    // room: the label's own box when it is clipped there; otherwise what the button's inside leaves (beside an icon, in a row)
+    let room = Math.min(sr.width, inR - inL);
+    if (row) { let used = 0; for (const c of b.children) if (c !== s && c.getClientRects().length) used += c.getBoundingClientRect().width + (parseFloat(cs.columnGap) || 0); room = Math.min(room + 0.5, inR - inL - used); }
+    return { w: s.scrollWidth, room, spill: Math.max(0, sr.right - inR, inL - sr.left) };
+  };
   const run = () => {
     q = 0;
-    const spans = [...controls.querySelectorAll(':scope > button > span, :scope > a > span')];
+    if (!tabs || !tabs.isConnected) { tabs = document.querySelector('.mtabs'); if (tabs) mo.observe(tabs, { childList: true, subtree: true, characterData: true }); }
+    const spans = [...controls.querySelectorAll(':scope > button > span, :scope > a > span')].concat(tabs ? [...tabs.querySelectorAll('button > .it-lb')] : []);
     spans.forEach(s => { if (s.dataset.hbFs) { s.style.fontSize = ''; s.style.letterSpacing = ''; delete s.dataset.hbFs; } });
-    if (isOn()) return;
     for (const s of spans) {
-      if (!s.getClientRects().length || s.scrollWidth <= s.clientWidth + 1 || !s.clientWidth) continue;
+      if (!s.getClientRects().length || (!tabs || !tabs.contains(s)) && isOn() || !s.textContent.trim()) continue;
+      const n = need(s); if (n.room <= 4 || (n.w <= n.room + 1 && n.spill <= 1)) continue;
       const fs = parseFloat(getComputedStyle(s).fontSize) || 12;
-      let k = Math.max(0.78, (s.clientWidth - 1) / s.scrollWidth);
+      const k = Math.max(0.78, Math.min(1, (n.room - 1) / n.w));
       s.dataset.hbFs = '1'; s.style.fontSize = (fs * k).toFixed(2) + 'px';
-      if (s.scrollWidth > s.clientWidth + 1) s.style.letterSpacing = '-0.02em';
+      const m = need(s); if (m.w > m.room + 1 || m.spill > 1) s.style.letterSpacing = '-0.03em';
     }
     mo.takeRecords();
   };
   const later = () => { if (!q) q = requestAnimationFrame(run); };
   const mo = new MutationObserver(later);
   mo.observe(controls, { childList: true, subtree: true, characterData: true });
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  setTimeout(later, 600); setTimeout(later, 2000);   // (the bottom tabs are made a little later)
   window.addEventListener('resize', later);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
   window.addEventListener('load', later);
