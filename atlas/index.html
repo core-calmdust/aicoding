@@ -277,6 +277,12 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 @media (min-width:761px){ .dgrid > .plp .plrow{grid-template-columns:repeat(6,minmax(0,1fr))} }
 @media (max-width:760px){ .dgrid > .plp .plrow{display:grid;overflow:visible;margin:0;padding:0} .dgrid > .plp .plcb{flex:none} }
 .dgrid > .plp .plnote{margin:10px 2px 0;font-size:14px;color:var(--ink2)}
+/* 明るさ during table play (app.js renderPlace): a small segmented pill at the top left, only while playing */
+.bvbrp{display:none;position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-start:12px;z-index:6;align-items:center;gap:2px;padding:3px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line)}
+.bv.playing .bvbrp{display:flex}.bv.playing.pland .bvbrp,.bv.hist .bvbrp,.bv.rules .bvbrp{display:none}
+.bvbrp i{width:22px;height:22px;margin-inline:5px 2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e09a00' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E") center/contain no-repeat}
+.bvbrp button{height:30px;padding:0 11px;border:0;border-radius:15px;background:none;color:var(--ink);font:800 12.5px var(--round,inherit);cursor:pointer;opacity:.6}
+.bvbrp button[aria-pressed=true]{background:#fff3cf;box-shadow:inset 0 0 0 2px #f1c24b;opacity:1}
 .bvtodb{height:40px;display:flex;align-items:center;gap:6px;padding:0 12px 0 11px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);color:var(--ink);font:800 13px var(--round,inherit);cursor:pointer}
 .bvtodb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none}
 .bvtodb .cv{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;transition:transform .2s}
@@ -1544,8 +1550,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=53n"></script>
 <script src="gamelist-i18n.js?v=8n"></script>
-<script src="table3d.js?v=111"></script>
-<script src="tables3d.js?v=13"></script>
+<script src="table3d.js?v=112"></script>
+<script src="tables3d.js?v=14"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=13"></script>
 <script src="models/backgammon.js?v=118"></script>
@@ -1634,6 +1640,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=16">
 <script src="worldmap.js?v=25"></script>
 <script src="updnews.js?v=2"></script>
-<script src="app.js?v=202"></script>
+<script src="app.js?v=203"></script>
 </body>
 </html>

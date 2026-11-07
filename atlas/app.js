@@ -1146,6 +1146,12 @@
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
     $('bvTodW').classList.toggle('notod', k === 1);   // the time of day: every place but 「2D準拠」 (which follows the 2D page)
     const m = $('bvPlMenu'); if (!m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
+    // 明るさ while playing at the table (the place panel is hidden then): 暗い · 標準 · 明るい at the top left
+    { let pb = $('bvBrPlay'); if (!pb) { pb = document.createElement('div'); pb.id = 'bvBrPlay'; pb.className = 'bvbrp'; pb.setAttribute('role', 'group'); $('bv').appendChild(pb);
+        pb.addEventListener('click', e => { const q = e.target.closest('[data-b]'); if (!q) return; e.stopPropagation(); P3().setBright(+q.dataset.b); }); }
+      const B = X.placeUi('b', lang), b = X.bright();
+      pb.setAttribute('aria-label', X.placeUi('bright', lang));
+      pb.innerHTML = '<i aria-hidden="true"></i>' + B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}">${esc(n)}</button>`).join(''); }
     btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); };
     if (!renderPlace.bound) { renderPlace.bound = 1;
       const close = () => { if (!m.hidden) { m.hidden = true; btn.setAttribute('aria-expanded', 'false'); aside(false); } };
@@ -1160,7 +1166,7 @@
         if (page === 'dress' && dKind === 'table') renderDress();
         else if (!$('bv').classList.contains('on')) render(page);   // (the updates list names the place too; under the board view it is redrawn on close)
       });
-      addEventListener('storage', e => { if (e.key === 'atlas-table' && P3()) P3().setTable(+e.newValue || 0); else if (e.key === 'atlas-bright' && P3()) P3().setBright(+e.newValue || 0); });
+      addEventListener('storage', e => { if (e.key === 'atlas-table' && P3()) P3().setTable(+e.newValue || 0); else if (e.key === 'atlas-bright2' && P3()) P3().setBright(+e.newValue); });
     }
   }
   renderPlace();
