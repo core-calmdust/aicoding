@@ -448,7 +448,7 @@
   function todayGame() { const d = Math.floor(Date.parse(A_.ymd(Date.now())) / 864e5), n = A_.GAMES.length; return A_.GAMES[((d * 3) % n + n) % n]; }
   function renderToday() {
     const g = todayGame(), el = $('today');
-    const hk = 'hist.' + g.id, hs = t(hk) !== hk ? t(hk) : t('about.' + g.id);   // a short history (the description if a language has none)
+    const hk = 'hist.' + g.id, hs = t(hk) !== hk ? t(hk) : ((window.ATLAS_I18N && ATLAS_I18N.en[hk]) || '');   // a short history or trivia — never the rules (falls back to English, else empty)
     el.style.setProperty('--c', g.color);
     el.innerHTML = `<span class="pan">${artImg(g).replace(' loading="lazy"', '')}</span>
       <span class="tx"><span class="kk"><span class="lbl">☀ ${esc(t('today.h'))}</span><span class="dt">${esc(new Date().toLocaleDateString(lang, { month: 'short', day: 'numeric', weekday: 'short' }))}</span></span>
