@@ -31,14 +31,14 @@ html.atlas-sn .frame > .dice-dock .dice-host{opacity:0!important}
 html.atlas-sn .dice-dock{background:none!important}
 html.atlas-sn .frame > .dice-dock .dice-cap{color:#fff3d2!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important}
 html.atlas-sn.sn-band .pdk{background:rgba(120,80,30,.1)!important;border-color:rgba(150,110,50,.28)!important;box-shadow:inset 0 1px 3px rgba(90,60,20,.25)!important}
-/* the throw button: a cream plate with turquoise (faience) letters and a stick icon, pressed into a turquoise shadow */
-html.atlas-sn .dice-dock .roll-pill{background:linear-gradient(180deg,#fffdf6,#f6ecd6)!important;border:2px solid #1f8fa8!important;border-radius:99px!important;box-shadow:0 4px 0 #13647a,0 8px 16px -8px rgba(20,60,70,.55)!important;filter:none!important;animation:none!important;
-  color:#13647a!important;text-shadow:none!important;font-family:'Zen Maru Gothic',sans-serif!important;font-weight:900!important;letter-spacing:.12em!important;text-indent:0!important;writing-mode:horizontal-tb!important;gap:.35em}
+/* the throw button: a cream plate with gold letters and a stick icon, pressed into a gold shadow (matching the gold trim around it) */
+html.atlas-sn .dice-dock .roll-pill{background:linear-gradient(180deg,#fff8e2,#f0dcaa)!important;border:2px solid #c39a45!important;border-radius:99px!important;box-shadow:0 4px 0 #8a6420,0 8px 16px -8px rgba(90,60,20,.55)!important;filter:none!important;animation:none!important;
+  color:#8a6420!important;text-shadow:none!important;font-family:'Zen Maru Gothic',sans-serif!important;font-weight:900!important;letter-spacing:.12em!important;text-indent:0!important;writing-mode:horizontal-tb!important;gap:.35em}
 html.atlas-sn .dice-dock .roll-pill::before{content:'';position:static!important;inset:auto!important;box-shadow:none!important;flex:none;width:1.05em;height:1.05em;border-radius:0!important;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2313647a' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 4v16M10 4v16M14 4v16M18 4v16'/%3E%3C/svg%3E") center/contain no-repeat}
-html.atlas-sn .dice-dock .roll-pill:active,html.atlas-sn .dice-dock.press .roll-pill{box-shadow:0 1px 0 #13647a!important;transform:translate(-50%,-50%) translateY(3px)!important}
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a6420' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 4v16M10 4v16M14 4v16M18 4v16'/%3E%3C/svg%3E") center/contain no-repeat}
+html.atlas-sn .dice-dock .roll-pill:active,html.atlas-sn .dice-dock.press .roll-pill{box-shadow:0 1px 0 #8a6420!important;transform:translate(-50%,-50%) translateY(3px)!important}
 html.atlas-sn .dice-dock.can:not(.rolling) .roll-pill{animation:snRp 2.2s ease-in-out infinite!important}
-@keyframes snRp{0%,100%{box-shadow:0 4px 0 #13647a,0 0 0 0 rgba(31,143,168,0)}50%{box-shadow:0 4px 0 #13647a,0 0 0 5px rgba(31,143,168,.22)}}
+@keyframes snRp{0%,100%{box-shadow:0 4px 0 #8a6420,0 0 0 0 rgba(195,154,69,0)}50%{box-shadow:0 4px 0 #8a6420,0 0 0 5px rgba(195,154,69,.28)}}
 html.atlas-sn .frame > .dice-dock .roll-pill{font-size:calc(var(--bw) * .022)!important}
 html.atlas-sn body:is(.in-lesson,.in-puzzle){--oh:410px!important}
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
@@ -170,6 +170,26 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     const p = document.createElement('p'); p.className = 'sn3dnote'; fd.appendChild(p);
     const paint = () => { const l = (document.getElementById('langSel') || {}).value || 'ja', n = NOTE[l] || NOTE.en; p.innerHTML = ''; const b = document.createElement('b'); b.textContent = n[0]; p.append(b, n[1]); };
     paint(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint, 30));
+    // every senet board is a 3D box here, so the 盤 row is the 3D board picker: each tile shows its box on the table
+    // (atlas/img/board-senet-<design>.webp, rendered by atlas/tools/boards.html) with the 3D badge, under a 「3D盤」 label
+    const V3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+    const row = document.getElementById('bdRow'), lab = fd.querySelector(':scope > label');
+    const thumbs = () => {
+      if (lab) { const l = (document.getElementById('langSel') || {}).value || 'ja', t = V3L[l] || V3L[l.slice(0, 2)] || V3L.en; if (lab.textContent !== t) lab.textContent = t; }
+      if (row) row.querySelectorAll('button[data-v]').forEach(bt => {
+        if (bt.querySelector('img.sn3t')) return;
+        const sv = bt.querySelector('svg'), im = document.createElement('img'); im.className = 'sn3t'; im.alt = ''; im.draggable = false;
+        im.src = '../atlas/img/board-senet-' + bt.dataset.v + '.webp?v=3';
+        if (sv) sv.replaceWith(im); else bt.prepend(im); bt.classList.add('sn3b');
+      });
+    };
+    thumbs(); if (row) new MutationObserver(thumbs).observe(row, { childList: true });
+    if (lab) new MutationObserver(() => { if (lab.textContent && !/3D/.test(lab.textContent)) thumbs(); }).observe(lab, { childList: true, characterData: true, subtree: true });
+    const st3 = document.createElement('style');
+    st3.textContent = `html.atlas-sn #bdRow button.sn3b{position:relative}
+html.atlas-sn #bdRow img.sn3t{display:block;width:100%;aspect-ratio:320/104;object-fit:cover;object-position:50% 46%;border-radius:6px}
+html.atlas-sn #bdRow button.sn3b::after{content:'3D';position:absolute;top:6px;inset-inline-start:6px;padding:0 6px;border-radius:99px;background:linear-gradient(180deg,#ffcf5c,#e09a00);color:#fff;font:900 10px/1.5 'Fredoka',system-ui,sans-serif;letter-spacing:.06em;box-shadow:0 2px 0 #b97a00;pointer-events:none}`;
+    document.head.appendChild(st3);
   }
 
   /* ---------- helpers ---------- */
@@ -276,7 +296,11 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     }
   }
   function stickPlaces(side) {   // four sticks lying across the strip, side by side
-    const b = B2.stickBox(O, side), cx = b[0] + b[2] / 2, cy = b[1] + b[3] / 2, out = [];
+    const b = B2.stickBox(O, side), cy = b[1] + b[3] / 2, out = [];
+    // across the strip where the page keeps the (hidden) 2D sticks: PC lays them at the left with the count beside them (senet/app.js placeDock)
+    let cx = b[0] + b[2] / 2;
+    const dk = document.getElementById('diceDock'), hs = document.getElementById('diceHost');
+    if (O !== 'v' && dk && hs && dk.style.flexDirection === 'row') { const r = dk.getBoundingClientRect(), h = hs.getBoundingClientRect(); if (r.width > 0) cx = b[0] + b[2] * Math.min(.5, Math.max(.12, (h.left + h.width / 2 - r.left) / r.width)); }
     for (let i = 0; i < 4; i++) { const t = (i - 1.5) * 42; out.push(O === 'v' ? [cx + ((i * 37) % 7 - 3) * 1.5, cy + t] : [cx + t, cy + ((i * 37) % 7 - 3) * 1.5]); }
     return out;
   }

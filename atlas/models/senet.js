@@ -1,7 +1,7 @@
 /* =====================================================================
    Senet on the 3D table — a game box after Tutankhamun's (Egyptian Museum, Cairo): an ebony casket with gilded edges,
    its top inlaid with the thirty squares of the 2D board (the very picture of senet/board2d.js: ivory squares with the
-   hieroglyphs on 15 and 26–30), a drawer for the pieces at one end, standing on a stand with four lion legs on a sledge.
+   hieroglyphs on 15 and 26–30), a drawer for the pieces at one end, standing on four lion legs with gilded paws.
    The box follows the 2D design (settings.design): 'tut' ebony · 'faience' blue glaze · 'papyrus' painted wood · 'night' lacquer.
    Pieces: spools (side 0) and cones (side 1), turned on a lathe, in the four looks of the design tab.
    Throw sticks: four flat sticks, one face light (painted bands), the other dark.
@@ -20,6 +20,7 @@
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
   function phys(o) {
     const TT = T(), p = Object.assign({}, o);
+    for (const k in p) if (p[k] === undefined) delete p[k];
     if (p.color !== undefined) p.color = lin(p.color);
     if (X.lite) { delete p.clearcoat; delete p.clearcoatRoughness; return new TT.MeshStandardMaterial(p); }
     return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
@@ -41,8 +42,39 @@
     return (b2p = new Promise(res => {
       if (window.SenetBoard2D) return res();
       const sc = document.createElement('script'), base = /\/(atlas|senet)\//.test(location.pathname) ? '../senet/' : 'senet/';
-      sc.src = base + 'board2d.js?v=5'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
+      sc.src = base + 'board2d.js?v=6'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
     }));
+  }
+  // the blue faience board: its squares are cut into the glaze — deep incised lines between them (as the faience senet boxes in the
+  // museums), drawn dark into the picture and as grooves into a bump map
+  const GX = [], GY = [];
+  for (let i = 0; i <= 10; i++) GX.push(-500 + i * 100);
+  for (let i = 0; i <= 3; i++) GY.push(-150 + i * 100);
+  function grooves(g, k, kind) {
+    const X0 = x => (x + 540) * k, Y0 = y => (y + 190) * k, w = 11 * k;
+    const line = (x0, y0, x1, y1, col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); };
+    g.save(); g.lineCap = 'square';
+    const L = [];
+    for (const x of GX) L.push([X0(x), Y0(-150), X0(x), Y0(150)]);
+    for (const y of GY) L.push([X0(-500), Y0(y), X0(500), Y0(y)]);
+    if (kind === 'color') {
+      for (const l of L) line(...l, 'rgba(6,26,40,.55)', w * 1.5);   // the glaze pooled dark at the edges of the cut
+      for (const l of L) line(...l, '#071a28', w * .75);              // the bottom of the cut
+      for (const l of L) { g.globalAlpha = .35; line(l[0] + w * .55, l[1] + w * .55, l[2] + w * .55, l[3] + w * .55, '#bfe9f2', w * .18); g.globalAlpha = 1; }   // the lit far wall of the groove
+    } else {
+      g.filter = 'blur(' + (2.2 * k) + 'px)';
+      for (const l of L) line(...l, '#000', w * 1.1);
+      g.filter = 'none';
+    }
+    g.restore();
+  }
+  const bumps = {};
+  function bumpTex() {
+    if (bumps.f) return bumps.f;
+    const TT = T(), c = document.createElement('canvas'), k = LO() ? .9 : 1.4;
+    c.width = Math.round(1080 * k); c.height = Math.round(380 * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); grooves(g, k, 'bump');
+    const t = new TT.CanvasTexture(c); t.anisotropy = 8; return (bumps.f = t);
   }
   function topTex(design) {
     if (tops[design]) return tops[design];
@@ -53,7 +85,7 @@
     const draw = () => {
       const B2 = window.SenetBoard2D; if (!B2 || !B2.boardSVG) return;
       const im = new Image(); im.decoding = 'async';
-      im.onload = () => { g.drawImage(im, 0, 0, c.width, c.height); t.needsUpdate = true; if (X.kick) X.kick(300); };
+      im.onload = () => { g.drawImage(im, 0, 0, c.width, c.height); if (design === 'faience') grooves(g, k, 'color'); t.needsUpdate = true; if (X.kick) X.kick(300); };
       im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(B2.boardSVG(design, 'h'));
     };
     if (window.SenetBoard2D) draw(); else b2Ready().then(draw);   // (the portal builds the board before the game's own scripts arrive)
@@ -73,20 +105,18 @@
     const TT = T(), g = new TT.Group(), B = BOX[design];
     const wood = mat('st' + design, () => phys({ color: B.body, roughness: B.rough + .1, clearcoat: B.coat ? B.coat * .6 : undefined, clearcoatRoughness: .3 }));
     const gold = mat('tr' + design, () => phys({ color: B.trim, roughness: .3, metalness: B.trimM }));
-    const LH = .66, top = -LH;
+    const LH = .66;
     // the rails under the box
     const rail = (w, d, x, z) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .12, d), wood); m.position.set(x, -.06, z); m.castShadow = m.receiveShadow = true; g.add(m); };
     rail(W - .6, .16, 0, -D / 2 + .32); rail(W - .6, .16, 0, D / 2 - .32); rail(.16, D - .64, -W / 2 + .4, 0); rail(.16, D - .64, W / 2 - .4, 0);
-    // legs (gilded paws)
+    // legs (gilded paws): standing straight on the table, each gilded foot centred under its leg (no sledge runners)
+    const foot = -LH - .12;   // (the table: the box is lifted by LIFT = LH + .12)
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      const l = new TT.Mesh(legGeo(), wood); l.position.set(sx * (W / 2 - .45), top - .02, sz * (D / 2 - .34)); l.castShadow = true; g.add(l);
-      const paw = new TT.Mesh(new TT.SphereGeometry(.2, LO() ? 10 : 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), gold); paw.scale.set(1.15, .55, 1.4); paw.position.set(sx * (W / 2 - .45), top - .02, sz * (D / 2 - .34) + .05); g.add(paw);
-      const band = new TT.Mesh(new TT.CylinderGeometry(.135, .135, .05, LO() ? 12 : 20), gold); band.position.set(sx * (W / 2 - .45), top + .58, sz * (D / 2 - .34)); g.add(band);
-    }
-    // the sledge runners
-    for (const sz of [-1, 1]) {
-      const r = new TT.Mesh(new TT.BoxGeometry(W - .2, .1, .3), wood); r.position.set(0, top - .07, sz * (D / 2 - .34)); r.castShadow = r.receiveShadow = true; g.add(r);
-      for (const sx of [-1, 1]) { const tip = new TT.Mesh(new TT.CylinderGeometry(.15, .15, .3, LO() ? 10 : 16, 1, false, 0, Math.PI), wood); tip.rotation.x = Math.PI / 2; tip.rotation.z = sx > 0 ? -Math.PI / 2 : Math.PI / 2; tip.position.set(sx * (W / 2 - .1), top - .07 + .0, sz * (D / 2 - .34)); g.add(tip); }
+      const x = sx * (W / 2 - .45), z = sz * (D / 2 - .34);
+      const PH0 = .07;   // the gilded foot: a round plinth under the leg, centred on it
+      const l = new TT.Mesh(legGeo(), wood); l.position.set(x, foot + PH0, z); l.scale.y = (LH - PH0) / LH; l.castShadow = true; g.add(l);
+      const paw = new TT.Mesh(new TT.CylinderGeometry(.25, .29, PH0, LO() ? 14 : 24), gold); paw.position.set(x, foot + PH0 / 2, z); paw.castShadow = paw.receiveShadow = true; g.add(paw);
+      const band = new TT.Mesh(new TT.CylinderGeometry(.135, .135, .05, LO() ? 12 : 20), gold); band.position.set(x, foot + .58, z); g.add(band);
     }
     return g;
   }
@@ -97,7 +127,7 @@
     const TT = T(), g = new TT.Group(), B = BOX[design];
     const body = mat('bd' + design, () => phys({ color: B.body, roughness: B.rough, clearcoat: B.coat || undefined, clearcoatRoughness: .25, envMapIntensity: .9 }));
     const gold = mat('tr' + design, () => phys({ color: B.trim, roughness: .3, metalness: B.trimM }));
-    const topM = mat('top' + design, () => phys({ map: topTex(design), color: '#e4ddd0', roughness: design === 'faience' ? .35 : design === 'papyrus' ? .8 : .6, clearcoat: design === 'papyrus' ? undefined : .12, clearcoatRoughness: .45, envMapIntensity: .5 }));   // (toned down: the white squares glared under the table lights)
+    const topM = mat('top' + design, () => phys({ map: topTex(design), bumpMap: design === 'faience' ? bumpTex() : undefined, bumpScale: design === 'faience' ? .045 : undefined, color: '#e4ddd0', roughness: design === 'faience' ? .35 : design === 'papyrus' ? .8 : .6, clearcoat: design === 'papyrus' ? undefined : .12, clearcoatRoughness: .45, envMapIntensity: .5 }));   // (toned down: the white squares glared under the table lights)
     const box = new TT.Mesh(new TT.BoxGeometry(W, H, D), [body, body, topM, body, body, body]);
     box.position.y = H / 2; box.castShadow = box.receiveShadow = true; g.add(box);
     // gilded edges round the top and the foot of the box

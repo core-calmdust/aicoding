@@ -114,7 +114,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7, agon: 9, konane: 8 })[g.id] || 5}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -191,7 +191,7 @@
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
       <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
       ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'${TF}',sans-serif" font-size="22" letter-spacing="1" fill="#fff">${esc(pre)}</text>` : ''}
-      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
+      <text class="ttlMain" x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
       <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
       <!-- piece tips on the compass -->
       <g fill="#fff" stroke="#111" stroke-width="4">
@@ -204,10 +204,22 @@
   // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
   let tfReady = false;
   if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
+  // the ribbon title must stay inside the ribbon in every language: measure it and shrink the font (never squeeze the glyphs)
+  function fitTitle() {
+    const tx = $('ttl').querySelector('.ttlMain'); if (!tx || !tx.getComputedTextLength) return;
+    const MAX = 430;   // (the ribbon's inner width between the dotted lines is 468)
+    let fs = parseFloat(tx.getAttribute('font-size'));
+    for (let i = 0; i < 4; i++) {
+      const w = tx.getComputedTextLength(); if (!(w > MAX)) break;
+      fs = Math.max(18, Math.floor(fs * MAX / w * 10) / 10);
+      tx.setAttribute('font-size', fs); tx.setAttribute('letter-spacing', Math.round(fs * .05)); tx.setAttribute('y', (205 + fs * .36).toFixed(1));
+    }
+  }
   function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
+    fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
@@ -390,19 +402,19 @@
     $(ids.ic).innerHTML = SRCH;
   }
   // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
-  const RND_SVG = `<svg class="dieic" viewBox="0 0 200 200" aria-hidden="true">
+  const RND_SVG = `<svg class="dieic" viewBox="9.8 19.9 180.4 180.4" aria-hidden="true">
     <g stroke-linejoin="round" stroke-width="10">
       <path d="M16 122 100 166 100 184 16 140Z" fill="#7552e0" stroke="#7552e0"/><path d="M100 166 184 122 184 140 100 184Z" fill="#5a3cc4" stroke="#5a3cc4"/>
       <path d="M100 78 184 122 100 166 16 122Z" fill="#a98bff" stroke="#a98bff"/></g>
     <g fill="#fff" opacity=".35"><circle cx="46" cy="122" r="4"/><circle cx="154" cy="122" r="4"/><circle cx="100" cy="94" r="4"/><circle cx="100" cy="150" r="4"/></g>
-    <ellipse cx="100" cy="131" rx="56" ry="22" fill="#3a2390" opacity=".28"/>
-    <g class="cube" stroke-linejoin="round" stroke-width="7">
+    <ellipse cx="100" cy="128" rx="42" ry="16" fill="#3a2390" opacity=".28"/>
+    <g transform="translate(100 114) scale(.74) translate(-100 -114)"><g class="cube" stroke-linejoin="round" stroke-width="7">
       <path d="M48 54 100 80 100 136 48 110Z" fill="#f3eeff" stroke="#f3eeff"/><path d="M100 80 152 54 152 110 100 136Z" fill="#dcd0ff" stroke="#dcd0ff"/>
       <path d="M100 28 152 54 100 80 48 54Z" fill="#fff" stroke="#fff"/>
       <g transform="matrix(.52 .26 0 .56 48 54)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#ff5d5d">?</text></g>
       <g transform="matrix(.52 -.26 0 .56 100 80)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#36b4ff">?</text></g>
       <g transform="matrix(.52 -.26 .52 .26 48 54)" fill="#ffc928"><circle cx="26" cy="26" r="10"/><circle cx="50" cy="50" r="10"/><circle cx="74" cy="74" r="10"/></g>
-    </g></svg>`;
+    </g></g></svg>`;
   function renderGrid() {
     const list = visibleGames();
     const rnd = list.length ? `<button type="button" class="ic rnd" id="rndTile" style="--c:#8d6bff" aria-label="${esc(t('rnd.n'))}"><span class="art">${RND_SVG}<img class="rimg" alt="" decoding="async" hidden></span>
@@ -780,6 +792,9 @@
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
+  // games opened from here (cards, puzzles …) send their home button back here instead of the top page (shared/homeback.js)
+  const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
+  homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
   const FULL_SKIN = { reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true };
   let lastKind;

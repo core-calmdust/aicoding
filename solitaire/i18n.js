@@ -240,7 +240,7 @@ pt: {
   keys: '<kbd>Z</kbd> Desfazer　<kbd>H</kbd> Dica　<kbd>Espaço</kbd> Monte　<kbd>A</kbd> Concluir　<kbd>N</kbd> Novo<br>Clique duplo leva a carta à fundação. Arraste uma sequência para movê-la inteira.',
 },
 de: {
-  'meta.title': 'Solitär | Weltatlas der Brettspiele', series: 'Weltatlas der Brettspiele', title: 'Solitär', back: 'Startseite',
+  'meta.title': 'Solitär | Welt-Brettspielatlas', series: 'Welt-Brettspielatlas', title: 'Solitär', back: 'Startseite',
   'btn.sound': 'Ton', 'btn.settings': 'Einstellungen', 'btn.new': 'Neues Spiel', 'btn.new.t': 'Spiel und Schwierigkeit wählen, dann geben', 'btn.undo': 'Zurück', 'btn.undo.t': 'Einen Zug zurück (Z)', 'btn.hint': 'Tipp', 'btn.hint.t': 'Einen guten Zug zeigen (H)', 'btn.rules': 'Regeln', 'btn.rules.t': 'Regeln beim Spielen lernen', 'btn.stats': 'Statistik', 'btn.stats.t': 'Deine Bilanz je Spiel',
   auto: 'Automatisch beenden', stuck: 'Keine Züge mehr möglich.', restart: 'Neu starten', 'new.h': 'Neues Spiel', close: 'Schließen', start: 'Geben', 'set.h': 'Einstellungen', 'st.h': 'Statistik', 'st.reset': 'Löschen',
   'res.win': 'Gewonnen!', 'res.again': 'Dieses Spiel nochmal', 'res.next': 'Nächstes Spiel', 'res.new': 'Bestwert', no: 'Nein', yes: 'Ja',

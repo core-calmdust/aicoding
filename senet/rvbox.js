@@ -62,11 +62,14 @@ $('#btnAnalyze').onclick = () => run();
 
 // ---------------------------------------------------------------- PC review box
 const box = document.createElement('section'); box.className = 'card rvbox';
-box.innerHTML = '<div class="rvb-l"></div><div class="rvb-r"><div class="rvb-rh"><span class="rvb-t"></span><span class="rvb-ctl"></span></div><div class="rvb-list"></div><div class="rvb-foot"></div></div>';
+box.innerHTML = '<div class="rvb-top"><span class="rvb-h"></span><span class="rvb-ctl"></span></div><div class="rvb-body"><div class="rvb-l"></div><div class="rvb-r"><div class="rvb-rh"><span class="rvb-t"></span></div><div class="rvb-list"></div><div class="rvb-foot"></div></div></div>';   // (the box's own header row: 振り返り, 検討する and 閉じる side by side — shared/headerbar.js puts the 閉じる at its end)
 $('.app').appendChild(box);
 const css = document.createElement('style'); css.textContent = `
 .rvbox{display:none}
-html.rvb-on .app > .rvbox{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;min-height:0;overflow:hidden;padding:12px 16px}
+html.rvb-on .app > .rvbox{display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:12px 16px}
+.rvb-top{flex:none;display:flex;align-items:center;gap:8px;padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.rvb-h{flex:1;min-width:0;font-family:var(--serif);font-weight:700;letter-spacing:.08em;color:var(--accent);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvb-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
 .rvb-l{min-height:0;overflow-y:auto;font-size:14px;line-height:1.7;scrollbar-width:thin}
 .rvb-l .rv-sum{margin-bottom:6px}
 .rvb-r{display:flex;flex-direction:column;min-height:0;border-inline-start:1px solid var(--line);padding-inline-start:14px}
@@ -89,7 +92,7 @@ body.in-ken .rvb-badge{display:block}
 body.in-ken .review-bar{display:none!important}`;
 document.head.appendChild(css);
 const badge = document.createElement('div'); badge.className = 'rvb-badge'; $('#frame').appendChild(badge);
-const L = box.querySelector('.rvb-l'), RT = box.querySelector('.rvb-t'), CTL = box.querySelector('.rvb-ctl'), LIST = box.querySelector('.rvb-list'), FOOT = box.querySelector('.rvb-foot');
+const RH = box.querySelector('.rvb-h'), L = box.querySelector('.rvb-l'), RT = box.querySelector('.rvb-t'), CTL = box.querySelector('.rvb-ctl'), LIST = box.querySelector('.rvb-list'), FOOT = box.querySelector('.rvb-foot');
 let rows = [], boxCtx = { st: null, src: -1 };
 const boxWanted = () => open && !!R && mqPC.matches && !special && !rtLive();
 function paintBox() {
@@ -105,6 +108,7 @@ function paintBox() {
   if (ken) { st = curState(); n = ken.roll ? ken.roll.n : null; }
   else if (i >= 0 && game.plies[i].m) { src = i; st = posAt(i); n = game.plies[i].n; played = game.plies[i].m; }
   boxCtx = { st, src };
+  RH.textContent = ken ? tr('kenOn') : tr('title');
   RT.textContent = n != null ? tr('cands', { n }) + (st ? ' · ' + sideName(st.turn) : '') : tr('title');
   CTL.innerHTML = ken ? `<button data-a="back"${ken.plies.length ? '' : ' disabled'}>◀ ${esc(tr('back'))}</button><button class="reset" data-a="reset">${esc(tr('reset'))}</button>` : `<button class="go" data-a="ken">${esc(tr('ken'))}</button>`;
   rows = [];

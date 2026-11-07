@@ -276,7 +276,7 @@ pt: {
   'pz.th.stop': 'Parar para vencer', 'pz.th.stop.sub': 'Ir até o fim perde; parar no meio vence.', 'pz.th.chain': 'Seguir para vencer', 'pz.th.chain.sub': 'Parar depois de uma perde; seguir saltando vence.',
 },
 de: {
-  'meta.title': 'Kōnane — Weltatlas der Brettspiele', 'title': 'Kōnane', 'sub': 'Hawaiisches Sprungspiel', 'p1': 'Schwarz', 'p2': 'Weiß',
+  'meta.title': 'Kōnane — Welt-Brettspielatlas', 'title': 'Kōnane', 'sub': 'Hawaiisches Sprungspiel', 'p1': 'Schwarz', 'p2': 'Weiß',
   'pcs': '{m} Sprünge', 'hb.mob': '{n} Sprünge', 'hb.size': '{n}×{n}', 'hb.open1': '{c}: einen Stein abnehmen', 'hb.open2': '{c}: einen Nachbarn abnehmen',
   'rsv.lost': 'verloren {n}', 'rsv.mob': 'Sprünge {n}', 'rsv.mobT': 'Jetzt mögliche Sprünge (keiner am Zug = verloren)', 'rsv.title': '{c}: {a} Steine verloren · {b} Sprünge',
   'open.p1': '{c}: Nimm einen eigenen Stein aus der Mitte oder einer Ecke ab', 'open.p2': '{c}: Nimm einen eigenen Stein neben dem Loch ab',
