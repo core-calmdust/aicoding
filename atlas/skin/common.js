@@ -611,7 +611,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     function fitT(b) { if (!b) return; b.style.fontSize = ''; if (document.documentElement.classList.contains('atlas-land')) return; const cw = b.clientWidth, sw = b.scrollWidth; if (cw > 0 && sw > cw + .5) b.style.fontSize = Math.max(12, parseFloat(getComputedStyle(b).fontSize) * cw / sw * .99) + 'px'; }
     const fitB = () => { fitT(bar.querySelector('.wmT')); fitWM(bar.querySelector('.wmT'), bar.querySelector('.atlas-brand small')); };
     if (document.fonts) document.fonts.ready.then(fitB); addEventListener('resize', fitB);
-    const paint = () => { { const w = bar.querySelector('.wmT'), KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"], "id": ["ATLAS DUNIA", "Permainan Papan"], "tr": ["DÜNYA ATLASI", "Masa Oyunları"]}[lang()]; if (KW) { w.textContent = ''; const k = document.createElement('i'); k.className = 'wk'; k.textContent = KW[0]; w.append(k, KW[1]); } else w.textContent = TITLE[lang()] || TITLE.en; } bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; fitB(); bar.querySelector('.lc').textContent = lang().toUpperCase(); };
+    const paint = () => { { const w = bar.querySelector('.wmT'), KW = {"en": ["WORLD", "Board Game Atlas"], "es": ["ATLAS MUNDIAL", "Juegos de Mesa"], "fr": ["ATLAS MONDIAL", "Jeux de société"], "pt": ["ATLAS MUNDIAL", "Jogos de Tabuleiro"], "de": ["WELT", "Brettspiel-Atlas"], "id": ["ATLAS DUNIA", "Permainan Papan"], "tr": ["DÜNYA ATLASI", "Masa Oyunları"]}[lang()]; if (KW) { w.textContent = ''; const k = document.createElement('i'); k.className = 'wk'; k.textContent = KW[0]; w.append(k, KW[1]); } else w.textContent = TITLE[lang()] || TITLE.en; } bar.querySelector('.atlas-brand small').hidden = lang() === 'en'; fitB(); lbtn.querySelector('.lc').textContent = lang().toUpperCase(); };
     lbtn.onclick = e => { e.stopPropagation(); if (!pop.hidden) { pop.hidden = true; return; }
       pop.innerHTML = [...sel.options].map(o => `<button type="button" data-l="${o.value}" aria-selected="${o.value === lang()}"><b>${o.text}</b><small>${o.value.toUpperCase()} · ${NAMES[o.value]}</small></button>`).join('');
       pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { pop.hidden = true; if (sel.value !== b.dataset.l) { sel.value = b.dataset.l; sel.dispatchEvent(new Event('change')); } setTimeout(paint, 50); });
@@ -619,6 +619,15 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target)) pop.hidden = true; });
     if (sel) sel.addEventListener('change', () => setTimeout(paint, 50));
     paint();
+    // the options button (common rule 2026-11-07, shared/headerbar.js): 戦績・サウンド・言語 in one gear panel; 盤面反転,
+    // 横画面 (#atlasLand) and home stay in the bar. The language list opens under the gear.
+    if (window.HeaderBar && HeaderBar.options) HeaderBar.options({ host: bar, theme: 'atlas', id: 'atlasOpts', gearClass: 'atlas-ic',
+      after: '#atlasLand, a.atlas-ic',
+      keep: el => !/^(atlasRec|atlasSnd|atlasLang)$/.test(el.id) && !el.classList.contains('hbo-x'),
+      onLang: (b, g) => { const br = bar.getBoundingClientRect(), rtl = getComputedStyle(bar).direction === 'rtl';
+        pop.style.top = Math.round(g.bottom - br.top + 8) + 'px';
+        if (rtl) { pop.style.left = Math.max(0, Math.round(g.left - br.left)) + 'px'; pop.style.right = 'auto'; } else { pop.style.right = Math.max(0, Math.round(br.right - g.right)) + 'px'; pop.style.left = 'auto'; }
+        if (pop.hidden) lbtn.click(); } });
     // coins: same numbers as the portal (shared/atlas.js)
     const coins = () => { try { const A = window.Atlas; if (!A) return; const W = A.load(); bar.querySelector('.coinN').textContent = A.coins(W, A.achievements(A.allProgress(), W)).balance.toLocaleString(); } catch (e) {} };
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });

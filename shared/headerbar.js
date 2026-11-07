@@ -18,6 +18,7 @@
 //                                      // --hb-h is the bar height (set on html, so :root sizes can subtract it)
 //   hb.onChange(fn)                    // called with true/false when switching between PC bar and mobile layout
 //   hb.relabel()                       // re-translate the added rules button after a language change
+//   HeaderBar.addOption({…})           // a game's own item in the options (gear) panel — see "the options button" below
 (function () {
 'use strict';
 // PC layout (common spec): mouse + wide enough for left panel + board + right panel, and not a tall window; otherwise the phone layout
@@ -770,5 +771,224 @@ function infoInKifu() {
   seg();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(infoInKifu, 0)); else setTimeout(infoInKifu, 0);
-window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES };
+// ---------- the options button (common rule, 2026-11-07) ----------
+// Inside the games, every option of the header's icon set — record (戦績), sound, language, the game's own extras (settings,
+// move numbers, …) — sits in ONE options button (a gear) that opens a small panel; only 盤面反転 (#btnFlip), 縦横 / 横画面
+// (#btnLand, #btnRot, .land) and the home link stay as their own buttons. The existing elements are moved into the panel
+// (their handlers and state are kept); each gets a label (14 languages) and toggles show their on / off. Done automatically for
+// the 2D pages (.brand-r) and, through HeaderBar.options(), for the portal bar of the 3D full version (atlas/skin/common.js).
+// The home pages (index.html, atlas/index.html) keep their language picker in the open.
+// A game adds its own items with
+//   const h = HeaderBar.addOption({ id: 'mt', icon: '<svg…>', label: { ja: 'マルチスレッド', en: 'Multi-thread', … },
+//     type: 'toggle', get: () => on, set: v => { on = v; } });      // or type: 'button', onClick: () => …
+//   h.sync() (redraw its state), h.remove();   optional: hidden: () => true to leave it out for now, title: {…} (tooltip)
+const OT = {
+  opts: { ja: 'オプション', en: 'Options', zh: '选项', 'zh-TW': '選項', ko: '옵션', es: 'Opciones', fr: 'Options', pt: 'Opções', de: 'Optionen', ru: 'Параметры', tr: 'Seçenekler', id: 'Opsi', hi: 'विकल्प', ar: 'خيارات' },
+  sound: { ja: 'サウンド', en: 'Sound', zh: '声音', 'zh-TW': '聲音', ko: '사운드', es: 'Sonido', fr: 'Son', pt: 'Som', de: 'Ton', ru: 'Звук', tr: 'Ses', id: 'Suara', hi: 'ध्वनि', ar: 'الصوت' },
+  lang: { ja: '言語', en: 'Language', zh: '语言', 'zh-TW': '語言', ko: '언어', es: 'Idioma', fr: 'Langue', pt: 'Idioma', de: 'Sprache', ru: 'Язык', tr: 'Dil', id: 'Bahasa', hi: 'भाषा', ar: 'اللغة' },
+  rec: { ja: '戦績', en: 'Record', zh: '战绩', 'zh-TW': '戰績', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', ru: 'Статистика', tr: 'Kayıt', id: 'Rekor', hi: 'रिकॉर्ड', ar: 'السجل' },
+  set: { ja: '設定', en: 'Settings', zh: '设置', 'zh-TW': '設定', ko: '설정', es: 'Ajustes', fr: 'Réglages', pt: 'Configurações', de: 'Einstellungen', ru: 'Настройки', tr: 'Ayarlar', id: 'Pengaturan', hi: 'सेटिंग्स', ar: 'الإعدادات' },
+  on: { ja: 'オン', en: 'On', zh: '开', 'zh-TW': '開', ko: '켬', es: 'Sí', fr: 'Activé', pt: 'Ligado', de: 'An', ru: 'Вкл', tr: 'Açık', id: 'Aktif', hi: 'चालू', ar: 'تشغيل' },
+  off: { ja: 'オフ', en: 'Off', zh: '关', 'zh-TW': '關', ko: '끔', es: 'No', fr: 'Désactivé', pt: 'Desligado', de: 'Aus', ru: 'Выкл', tr: 'Kapalı', id: 'Nonaktif', hi: 'बंद', ar: 'إيقاف' },
+};
+const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const GLOBE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>';
+const OCSS = `
+.hbo-gear{cursor:pointer}
+.hbo-gear svg{fill:none;stroke:currentColor}
+.hbo-gear[aria-expanded=true]{color:var(--accent,#d8b56a)!important}
+.hbo-gear[hidden]{display:none!important}
+.hbo-pop{position:fixed;z-index:999;display:none;box-sizing:border-box;width:max-content;min-width:230px;max-width:calc(100vw - 16px);overflow-y:auto;overscroll-behavior:contain;padding:6px;border-radius:14px;
+  background:var(--panel2,var(--panel,#1b1d22));color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));box-shadow:0 18px 44px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.25);
+  font-family:inherit;font-size:14px;line-height:1.25;text-align:start;scrollbar-width:thin}
+.hbo-pop.on{display:block;animation:hboIn .14s ease}
+@keyframes hboIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.hbo-row{display:flex;align-items:center;gap:10px;min-height:44px;box-sizing:border-box;padding:4px 10px 4px 4px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:start}
+.hbo-row + .hbo-row{margin-top:2px}
+.hbo-row:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
+.hbo-row[hidden]{display:none!important}
+.hbo-ic{flex:none;width:36px;height:36px;display:grid;place-items:center}
+.hbo-ic > span[aria-hidden]{display:grid;place-items:center}
+.hbo-pop .hbo-ic > :is(button,a){display:inline-flex}   /* (not !important: a game's own display:none!important — the record on phones — still wins) */
+.hbo-pop .hbo-ic > :is(button,a,span){width:36px!important;height:36px!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:inherit!important;align-items:center!important;justify-content:center!important;border-radius:9px!important;position:static!important;cursor:pointer;font:inherit}
+.hbo-pop .hbo-ic svg{width:20px!important;height:20px!important;margin:0!important}
+.hbo-pop .hbo-ic svg:not([fill]){fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hbo-lb{flex:1;min-width:0;white-space:nowrap;font-weight:600}
+.hbo-sw{flex:none;position:relative;width:36px;height:20px;border-radius:10px;background:color-mix(in srgb,currentColor 22%,transparent);transition:background .2s}
+.hbo-sw::after{content:'';position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
+.hbo-row.on .hbo-sw{background:var(--accent,#d8b56a)}
+.hbo-row.on .hbo-sw::after{transform:translateX(16px)}
+html[dir=rtl] .hbo-row.on .hbo-sw::after,html[lang=ar] .hbo-row.on .hbo-sw::after{transform:translateX(-16px)}
+.hbo-row:not(.tg) .hbo-sw{display:none}
+.hbo-end{flex:none;display:flex;align-items:center}
+.hbo-pop .hbo-end .lsel-btn{height:34px!important;min-height:0!important;max-width:none!important;padding:0 10px!important;border:1px solid var(--line,rgba(127,127,127,.35))!important;border-radius:9px!important;background:none!important;box-shadow:none!important;color:inherit!important;font:inherit!important;font-size:13.5px!important;gap:6px!important}
+.hbo-pop .hbo-end .lsel-btn > svg:first-child{display:none}
+.hbo-pop .hbo-end .lsel-btn .lsel-n{display:inline!important}.hbo-pop .hbo-end .lsel-btn .lsel-c{display:none!important}
+.hbo-pop .hbo-end select{height:34px;max-width:none}
+html[dir=rtl] .hbo-pop,html[lang=ar] .hbo-pop{direction:rtl}
+/* the portal look (3D full version) */
+.hbo-pop.hbo-atlas{padding:8px;border-radius:22px;background:#fffdf7;color:#2b3044;border:2px solid #efe3c8;box-shadow:0 6px 0 #efe3c8,0 24px 40px -18px rgba(80,40,0,.5);font-family:'Zen Maru Gothic',sans-serif;font-size:15px}
+.hbo-atlas .hbo-row{border-radius:16px;background:#f6efdd;padding:4px 12px 4px 6px;min-height:46px}
+.hbo-atlas .hbo-row + .hbo-row{margin-top:6px}
+.hbo-atlas .hbo-row:hover{background:#f1e4c6}
+.hbo-atlas .hbo-lb{font-weight:900}
+.hbo-atlas .hbo-row.on .hbo-sw{background:#ffc928;box-shadow:inset 0 -2px 0 #e09a00}
+.hbo-atlas .hbo-sw{background:#e3d7bd}
+.hbo-pop.hbo-atlas .hbo-ic svg:not([fill]){stroke-width:2.2}
+.hbo-pop.hbo-atlas .hbo-end .atlas-lbtn{height:36px!important;width:auto!important;min-width:0!important;padding:0 12px!important;box-shadow:0 2px 0 #efe3c8!important}
+.hbo-pop.hbo-atlas .hbo-end .atlas-lbtn svg{display:none}
+.hbo-pop.hbo-atlas .hbo-end .atlas-lbtn b{display:inline!important}
+`;
+const optL = () => { const s = document.getElementById('langSel'); let l = (s && s.value) || document.documentElement.lang || 'ja'; if (/^zh-(tw|hk|mo|hant)/i.test(l)) l = 'zh-TW'; else if (!OT.opts[l]) l = String(l).slice(0, 2); return OT.opts[l] ? l : 'en'; };
+const ot = (k, l) => (OT[k][l || optL()] || OT[k].en);
+const pickL = m => { if (!m) return ''; if (typeof m === 'function') return m(optL()); if (typeof m === 'string') return m; const l = optL(); return m[l] || m.en || m.ja || ''; };
+const EXTRA = [], INST = [];
+function optCss() { if (!document.getElementById('hboCss')) { const st = document.createElement('style'); st.id = 'hboCss'; st.textContent = OCSS; document.head.appendChild(st); } }
+// options({ host, theme: '2d' | 'atlas', gearClass, keep(el) → stays outside, take(el) → moves in (default: everything not kept),
+//           at: element the gear goes before (default: before the first kept element after the options, else at the end) })
+function options(o) {
+  optCss();
+  const host = o.host; if (!host || host.querySelector(':scope > .hbo-gear')) return null;
+  const keep = o.keep || (() => false), take = o.take || (el => !keep(el));
+  const gear = document.createElement('button'); gear.type = 'button'; gear.className = (o.gearClass || 'snd') + ' hbo-gear'; gear.id = o.id || 'btnOpts';
+  gear.innerHTML = GEAR; gear.setAttribute('aria-haspopup', 'true'); gear.setAttribute('aria-expanded', 'false');
+  const pop = document.createElement('div'); pop.className = 'hbo-pop' + (o.theme === 'atlas' ? ' hbo-atlas' : ''); pop.setAttribute('role', 'menu');
+  const list = document.createElement('div'); list.className = 'hbo-list'; pop.appendChild(list); document.body.appendChild(pop);
+  // the gear: right before the orientation button / home (o.after), so 盤面反転 stays on its left
+  const after = o.after || '#btnLand, #btnRot, .land, a';
+  const seat = () => { const a = [...host.children].find(c => c !== gear && c.matches(after)) || null; if (gear.parentNode !== host || gear.nextElementSibling !== a) host.insertBefore(gear, a); };
+  seat();
+  const rows = new Map();   // unit (the moved element) → row
+  const kind = u => u.matches('.lsel, #langSel, #atlasLang') ? 'lang' : /^(btnSound|atlasSnd)$/.test(u.id) ? 'sound' : /^(btnRecord|atlasRec)$/.test(u.id) ? 'rec' : u.id === 'btnSettings' ? 'set' : 'other';
+  const isTg = u => kind(u) === 'sound' || u.id === 'btnNum' || u.classList.contains('ck-sw') || u.hasAttribute('aria-pressed');
+  const isOn = u => u.getAttribute('aria-pressed') === 'true' || (u.classList.contains('on') && !u.classList.contains('off') && !u.classList.contains('muted'));
+  const strip = s => String(s || '').replace(/\s*[（(][^（）()]*[）)]\s*$/, '').trim();
+  const label = u => { const k = kind(u); if (k === 'sound' || k === 'lang' || k === 'set') return ot(k);
+    if (k === 'rec') return strip(u.getAttribute('aria-label')) || ot('rec');
+    if (u.classList.contains('ck-sw')) { const s = u.querySelector('span'); return s ? s.textContent.trim() : strip(u.title); }
+    return strip(u.title) || strip(u.getAttribute('aria-label')) || u.textContent.trim(); };
+  const shownU = u => { if (!u.isConnected || u.hidden) return false; const cs = getComputedStyle(u); return cs.display !== 'none' && cs.visibility !== 'hidden'; };
+  const target = u => u.matches('.lsel') ? (u.querySelector('.lsel-btn') || u.querySelector('select')) : u;
+  let synth = false;
+  function mkRow(u) {
+    const r = document.createElement('div'); r.className = 'hbo-row'; r.setAttribute('role', 'menuitem');
+    const lg = kind(u) === 'lang';
+    r.innerHTML = `<span class="hbo-ic">${lg ? '<span aria-hidden="true">' + GLOBE + '</span>' : ''}</span><span class="hbo-lb"></span><span class="hbo-sw" aria-hidden="true"></span>` + (lg ? '<span class="hbo-end"></span>' : '');
+    (lg ? r.querySelector('.hbo-end') : r.querySelector('.hbo-ic')).appendChild(u);
+    r.addEventListener('click', e => {
+      if (synth) return;
+      const t = target(u);
+      if (kind(u) === 'lang' && o.onLang) { e.stopPropagation(); e.preventDefault(); const g = gear.getBoundingClientRect(); close(); synth = true; try { o.onLang(t, g); } finally { synth = false; } return; }   // (portal: its own language list, under the gear)
+      if (!u.contains(e.target)) { e.stopPropagation(); e.preventDefault(); synth = true; try { t.click(); } finally { synth = false; } }
+      if (kind(u) === 'lang') return;   // the language list opens beside the panel; picking closes both
+      if (isTg(u)) setTimeout(paint, 0); else close();
+    }, true);
+    rows.set(u, r); return r;
+  }
+  function xRow(x) {
+    const r = document.createElement('button'); r.type = 'button'; r.className = 'hbo-row hbo-x' + (x.type === 'toggle' ? ' tg' : ''); r.setAttribute('role', x.type === 'toggle' ? 'menuitemcheckbox' : 'menuitem'); r.dataset.x = x.id;
+    r.innerHTML = `<span class="hbo-ic"><span aria-hidden="true">${x.icon || ''}</span></span><span class="hbo-lb"></span><span class="hbo-sw" aria-hidden="true"></span>`;
+    r.addEventListener('click', e => { e.stopPropagation();
+      try { if (x.type === 'toggle') { x.set(!x.get()); syncAll(); } else { close(); if (x.onClick) x.onClick(); } } catch (err) { console.error(err); } });
+    return r;
+  }
+  // the rows, in the order of the elements: new ones may arrive any time (record.js / flipbtn.js insert next to #btnSound —
+  // which may already be in the panel), a kept one (盤面反転) found in the panel goes back out, before the gear
+  let q = 0;
+  function sort() {
+    q = 0;
+    const units = [];
+    for (const r of list.querySelectorAll(':scope > .hbo-row:not(.hbo-x)')) for (const c of r.querySelectorAll(':scope > .hbo-ic > *, :scope > .hbo-end > *')) if (!c.matches('.hbo-ic > span[aria-hidden]')) units.push(c);
+    for (const c of [...host.children]) if (c !== gear && c.nodeType === 1 && !/^(STYLE|SCRIPT|TEMPLATE)$/.test(c.tagName) && !keep(c) && take(c)) units.push(c);
+    const out = units.filter(u => keep(u)), ins = units.filter(u => !keep(u));
+    out.forEach(u => host.insertBefore(u, gear)); seat();
+    const want = [];
+    for (const u of ins) { let r = rows.get(u); if (!r || !r.contains(u)) { if (r) r.remove(); r = mkRow(u); } want.push(r); }
+    for (const [u, r] of rows) if (!ins.includes(u)) { r.remove(); rows.delete(u); }
+    // the game's own items (HeaderBar.addOption): before the language row (the language stays last)
+    const xs = EXTRA.filter(x => x.alive);
+    list.querySelectorAll(':scope > .hbo-x').forEach(r => { if (!xs.some(x => x.id === r.dataset.x)) r.remove(); });
+    const xr = xs.map(x => [...list.querySelectorAll(':scope > .hbo-x')].find(e => e.dataset.x === x.id) || xRow(x));   // (no CSS.escape: CSS here is this file's style text)
+    const li = want.findIndex(r => r.querySelector(':scope > .hbo-end'));
+    want.splice(li < 0 ? want.length : li, 0, ...xr);
+    want.forEach((r, k) => { if (list.children[k] !== r) list.insertBefore(r, list.children[k] || null); });   // (only what is out of place: no endless re-sorting)
+    paint();
+  }
+  // labels, on / off, which rows are shown (an element the game hides — the sound on phones, the record while the phones' tab
+  // bar has it — leaves its row out); no row left: no gear
+  function paint() {
+    const l = optL(), onT = ot('on', l), offT = ot('off', l);
+    for (const [u, r] of rows) {
+      const lb = label(u), tg = isTg(u), on = tg && isOn(u), sh = shownU(u);
+      const lbe = r.querySelector('.hbo-lb'); if (lbe.textContent !== lb) lbe.textContent = lb;
+      r.classList.toggle('tg', tg); r.classList.toggle('on', on);
+      if (tg) { r.setAttribute('role', 'menuitemcheckbox'); r.setAttribute('aria-checked', on ? 'true' : 'false'); r.title = lb + ': ' + (on ? onT : offT); } else r.removeAttribute('title');
+      if (r.hidden === sh) r.hidden = !sh;
+    }
+    for (const r of list.querySelectorAll(':scope > .hbo-x')) {
+      const x = EXTRA.find(e => e.id === r.dataset.x); if (!x) continue;
+      const lb = pickL(x.label), on = x.type === 'toggle' && !!safe(x.get);
+      const lbe = r.querySelector('.hbo-lb'); if (lbe.textContent !== lb) lbe.textContent = lb;
+      r.classList.toggle('on', on); if (x.type === 'toggle') r.setAttribute('aria-checked', on ? 'true' : 'false');
+      const t = pickL(x.title) || (x.type === 'toggle' ? lb + ': ' + (on ? onT : offT) : ''); if (t) r.title = t; else r.removeAttribute('title');
+      const hid = !!(x.hidden && safe(x.hidden)); if (r.hidden !== hid) r.hidden = hid;
+    }
+    const any = [...list.children].some(r => !r.hidden), gt = ot('opts', l);
+    if (gear.hidden === any) gear.hidden = !any;
+    if (gear.title !== gt) { gear.title = gt; gear.setAttribute('aria-label', gt); }
+    if (!any && open) close();
+    mo.takeRecords();
+  }
+  const safe = f => { try { return f(); } catch (e) { return false; } };
+  let open = false;
+  function place() {
+    const g = gear.getBoundingClientRect(), vw = innerWidth, vh = innerHeight, M = 8;
+    const tabs = [...document.querySelectorAll('#mtabs, .mtabs')].find(t => t.getClientRects().length && getComputedStyle(t).position === 'fixed');
+    const floor = tabs ? Math.min(vh, tabs.getBoundingClientRect().top) : vh;   // (phones: above the bottom tab bar)
+    const top = g.bottom + 8;
+    pop.style.maxHeight = Math.max(160, floor - top - M) + 'px';
+    const w = pop.offsetWidth, rtl = getComputedStyle(pop).direction === 'rtl';
+    let left = rtl ? g.left : g.right - w; left = Math.max(M, Math.min(left, vw - w - M));
+    pop.style.left = left + 'px'; pop.style.top = top + 'px';
+  }
+  function show() { sort(); open = true; pop.classList.add('on'); gear.setAttribute('aria-expanded', 'true'); place();
+    const f = pop.querySelector('.hbo-row:not([hidden])'); if (f && matchMedia('(hover: hover)').matches) { const t = f.querySelector('button, a') || f; try { t.focus({ preventScroll: true }); } catch (e) {} } }
+  function close(focus) { if (!open) return; open = false; pop.classList.remove('on'); gear.setAttribute('aria-expanded', 'false'); if (focus) try { gear.focus({ preventScroll: true }); } catch (e) {} }
+  gear.addEventListener('click', e => { e.stopPropagation(); open ? close() : show(); });
+  // (the language lists — shared/langsel.js .lsel-pop, the portal's .atlas-lpop — count as inside)
+  document.addEventListener('pointerdown', e => { if (open && !pop.contains(e.target) && !gear.contains(e.target) && !(e.target.closest && e.target.closest('.lsel-pop, .atlas-lpop'))) close(); }, true);
+  document.addEventListener('keydown', e => { if (open && e.key === 'Escape') { e.preventDefault(); close(true); } });
+  document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') { close(); setTimeout(paint, 60); } });
+  addEventListener('resize', () => { if (open) place(); });
+  addEventListener('scroll', e => { if (open && !pop.contains(e.target)) place(); }, true);
+  const later = () => { if (!q) q = requestAnimationFrame(sort); };
+  const mo = new MutationObserver(later);
+  mo.observe(host, { childList: true });
+  mo.observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'aria-pressed', 'aria-label', 'title'] });
+  new MutationObserver(() => setTimeout(paint, 0)).observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'class'] });
+  new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // (body.it-on … hides the record)
+  addEventListener('resize', later); setTimeout(later, 700); setTimeout(later, 2500);
+  sort();
+  const inst = { gear, pop, sort, paint, close, open: show, isOpen: () => open };
+  INST.push(inst); return inst;
+}
+function syncAll() { INST.forEach(i => { try { i.sort(); } catch (e) {} }); }
+function addOption(x) {
+  if (!x || !x.id) return null;
+  const old = EXTRA.findIndex(e => e.id === x.id); if (old >= 0) EXTRA.splice(old, 1);
+  x.alive = true; x.type = x.type === 'toggle' ? 'toggle' : 'button'; EXTRA.push(x); syncAll();
+  return { sync: syncAll, remove() { x.alive = false; const i = EXTRA.indexOf(x); if (i >= 0) EXTRA.splice(i, 1); syncAll(); } };
+}
+// the 2D pages: the icon set .brand-r (moved into the PC header bar or not) — 盤面反転, 縦横 / 横画面 and home stay outside
+const KEEP2D = el => el.classList.contains('hbo-gear') || /^(btnFlip|btnLand|btnRot)$/.test(el.id) || el.classList.contains('land') || el.classList.contains('flip-btn') || el.tagName === 'A' || el.matches('.home, .homebtn, #homeLink');
+function auto2d() {
+  if (document.documentElement.classList.contains('atlas-skin')) return;   // (the 3D full version: the portal bar has its own — atlas/skin/common.js)
+  const br = document.querySelector('.brand .brand-r, .brand-r'); if (!br) return;
+  const snd = document.getElementById('btnSound');
+  const ref = snd && snd.parentNode === br ? snd : [...br.children].find(c => c.tagName === 'BUTTON' && !KEEP2D(c)) || br.querySelector('button');
+  options({ host: br, theme: '2d', keep: KEEP2D, gearClass: (ref && ref.className ? ref.className.replace(/\b(on|off|muted|hidden|grc-ic|numbtn|flip-btn|land)\b/g, '').trim() : '') || 'snd' });
+}
+// (after the deferred scripts — langsel.js turns #langSel into its button first)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(auto2d, 0)); else setTimeout(auto2d, 0);
+window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES, options, addOption, syncOptions: syncAll, OPTIONS_T: OT };
 })();
