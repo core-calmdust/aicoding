@@ -25,7 +25,7 @@
   'use strict';
   if (window.MTEngine) return;
   const DIR = location.pathname.replace(/[^/]*$/, '');
-  const K_PREF = 'aicoding-mt:' + DIR, K_COI = 'aicoding-mt-coi:' + DIR, K_RELOAD = 'coi-reload:' + location.pathname, K_NODIP = 'aicoding-mt-nodip';
+  const K_PREF = 'aicoding-mt', K_PREF0 = 'aicoding-mt:' + DIR, K_COI = 'aicoding-mt-coi:' + DIR, K_RELOAD = 'coi-reload:' + location.pathname, K_NODIP = 'aicoding-mt-nodip';
   const LS = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -41,7 +41,7 @@
   const CAN = 'serviceWorker' in navigator && !!window.isSecureContext && typeof WebAssembly === 'object' && HC >= 2;   // (no Atomics test: Safari exposes Atomics / SharedArrayBuffer only once the page is isolated)
   const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));   // the default (automatic) number of helper threads
   const maxHelpers = () => Math.max(0, HC - 1);                            // PRO mode may use every core the browser reports (at the user's own risk)
-  const pref = () => LS.get(K_PREF);            // '1' on, '0' off, none: automatic (PC on, phones / tablets off)
+  const pref = () => { const v = LS.get(K_PREF); return v !== null ? v : LS.get(K_PREF0); };   // '1' on, '0' off, none: automatic (PC on, phones / tablets off) — one choice for all games (older: per game)
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
   const on = () => ISO && want() && helpers() > 0;
   // Chromium 137+ on a computer: Document-Isolation-Policy can work (worth the one reload after installing the worker)
@@ -132,7 +132,7 @@
     // light (a folder whose worker exists only for this — chess, shogi): no worker at all unless threads may be used through
     // Document-Isolation-Policy (Chromium on a computer) or COOP mode was asked for; an installed one is removed. (On iPhone a
     // worker in the folder coincided with the Google sign-in popup being blocked.)
-    if (light && !FLAGGED && !ISO && !(want() && dipLikely())) {
+    if (light && !FLAGGED && !ISO && !(want() && (dipLikely() || pref() === '1'))) {
       try { const r = await navigator.serviceWorker.getRegistration('./'); if (r && new URL(r.scope).pathname === new URL('./', location.href).pathname) { try { await (await caches.open(FLAG_CACHE)).delete(FLAG_URL); } catch (e) {} await r.unregister(); } } catch (e) {}
       return;
     }
@@ -148,8 +148,11 @@
       await navigator.serviceWorker.ready; reload(); return;
     }
     if (cached) await setFlag(false);
+    // turned on (the choice is kept for every game) but no Document-Isolation-Policy here: COOP mode at once (as the option does)
+    const toCoop = async () => { if (touched || document.body.classList.contains('in-online')) return; await setFlag(true); await navigator.serviceWorker.ready; reload(); };
+    if (pref() === '1' && !dipLikely()) { await toCoop(); return; }
     if (!want() || !dipLikely()) return;
-    if (recently() || (CTRL0 && await ping())) { LS.set(K_NODIP, navigator.userAgent); return; }   // the page came through our worker and still no isolation: no DIP here
+    if (recently() || (CTRL0 && await ping())) { LS.set(K_NODIP, navigator.userAgent); if (pref() === '1') await toCoop(); return; }   // the page came through our worker and still no isolation: no DIP here
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise(res => { navigator.serviceWorker.addEventListener('controllerchange', res, { once: true }); setTimeout(res, 4000); });
     if (!touched && performance.now() < 20000 && !document.body.classList.contains('in-online')) reload();   // (not once the player has started using the page: then from the next visit)
