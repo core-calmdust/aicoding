@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<script src="../shared/latinfs.js?v=1"></script>
-<script src="../shared/phonesnd.js?v=1"></script>
+<script src="../shared/latinfs.js?v=1l14"></script>
+<script src="../shared/phonesnd.js?v=1l14"></script>
 <meta name="theme-color" content="#130d09">
 <meta name="description" content="Floodgateの棋譜と評価値から学習した評価関数で指す、ブラウザ版将棋。20級〜三段の段級位別レッスン付き。">
 <title>将棋 SHOGI</title>
@@ -1247,7 +1247,7 @@ html[lang=ar] .pf-input{direction:rtl}
 #exportNames span{white-space:nowrap;opacity:.85;max-width:40%;overflow:hidden;text-overflow:ellipsis}
 #exportNames input,#exportTtl{flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text)}
 </style>
-<script src="../shared/rangetouch.js?v=1"></script>
+<script src="../shared/rangetouch.js?v=1l14"></script>
 </head>
 <body>
 <div class="app">
@@ -1491,23 +1491,23 @@ html[lang=ar] .pf-input{direction:rtl}
 
 <script src="i18n.js?v=20261107l14"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
-<script src="../shared/placement.js?v=1"></script>
-<script src="../shared/export.js?v=9"></script>
-<script src="../shared/rulesoffer.js?v=16"></script>
+<script src="../shared/placement.js?v=1l14"></script>
+<script src="../shared/export.js?v=9l14"></script>
+<script src="../shared/rulesoffer.js?v=16l14"></script>
 <script src="engine.js?v=20261104v6"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261107l14"></script>
 <script src="lists-ui.js?v=20261107l14"></script>
 <script src="openings-ui.js?v=20261107l14"></script>
-<script src="../shared/pzbook.js?v=5"></script>
-<script src="../shared/headerbar.js?v=43"></script>
-<script src="../shared/flipbtn.js?v=3"></script>
-<script src="../shared/cardbar.js?v=7"></script>
-<script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/tick.js?v=2"></script>
-<script src="../shared/ruletour.js?v=29"></script>
+<script src="../shared/pzbook.js?v=5l14"></script>
+<script src="../shared/headerbar.js?v=43l14"></script>
+<script src="../shared/flipbtn.js?v=3l14"></script>
+<script src="../shared/cardbar.js?v=7l14"></script>
+<script src="../shared/watchpause.js?v=2l14"></script>
+<script src="../shared/tick.js?v=2l14"></script>
+<script src="../shared/ruletour.js?v=29l14"></script>
 <script src="firebase-config.js?v=ac1"></script>
-<script src="../shared/onlinesec.js?v=2"></script>
+<script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2"></script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
@@ -1517,8 +1517,8 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/variants.js?v=20261107l14"></script>
 <script src="rvbox.js?v=20261107l14"></script>
 <script src="rvtip.js?v=20261107l14"></script>
-<script src="../shared/coachkit.js?v=16"></script>
-<script src="../shared/record.js?v=12"></script>
+<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/record.js?v=12l14"></script>
 <script src="coach.js?v=13"></script>
 <script src="coach-i18n.js?v=20261107l14"></script>
 <script>
@@ -5515,22 +5515,22 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37l14'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107')).then(() => load('../atlas/tables3d.js?v=10')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/shogi.js?v=22')).then(() => load('../atlas/skin/shogi.js?v=13'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107l14')).then(() => load('../atlas/tables3d.js?v=10l14')).then(() => load('../atlas/skin/common.js?v=29l14')).then(() => load('../atlas/models/shogi.js?v=22l14')).then(() => load('../atlas/skin/shogi.js?v=13l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261108i14" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
-<script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
-<script src="../shared/infotabs.js?v=17" defer></script>
-<script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=25"></script>
-<script src="../shared/resumeng.js?v=1"></script>
-<script src="../shared/langsel.js?v=1" defer></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
+<script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
+<script src="../shared/infotabs.js?v=17l14" defer></script>
+<script src="../shared/pickdrop.js?v=8l14"></script>
+<script src="../shared/ngtabs.js?v=25l14"></script>
+<script src="../shared/resumeng.js?v=1l14"></script>
+<script src="../shared/langsel.js?v=1l14" defer></script>
 </body>
 </html>
