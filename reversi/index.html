@@ -1814,18 +1814,26 @@ function makeWorker(onmsg) {
 }
 let aiWorker = null, anaWorker = null;
 let aiJob = null, anaJob = null;
+// search speed of the last engine search (nodes per second), shown quietly at the end of the info line under the moves
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(m) {
+  if (!(m.nodes > 50000 && m.ms > 20)) return;
+  lastNps = m.nodes / m.ms * 1000;
+  const el = $('#infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 function aiMsg(e) {
   const m = e.data;
   if (!aiJob || m.id !== aiJob.id) return;
   if (m.type === 'progress') aiJob.onProgress(m);
-  else if (m.type === 'result') { const j = aiJob; aiJob = null; j.resolve(m); }
+  else if (m.type === 'result') { const j = aiJob; aiJob = null; noteNps(m); j.resolve(m); }
 }
 function anaMsg(e) {
   const m = e.data;
   if (!anaJob || m.id !== anaJob.id) return;
   if (m.type === 'analysisProgress') anaJob.onProgress(m.list, false);
   else if (m.type === 'analysis') { const j = anaJob; anaJob = null; j.onProgress(m.list, true); }
-  else if (m.type === 'result' && anaJob.resolve) { const j = anaJob; anaJob = null; j.resolve(m); }   // coachDeep's search
+  else if (m.type === 'result' && anaJob.resolve) { const j = anaJob; anaJob = null; noteNps(m); j.resolve(m); }   // coachDeep's search
 }
 aiWorker = makeWorker(aiMsg);
 anaWorker = makeWorker(anaMsg);
@@ -2156,7 +2164,7 @@ function renderInfo() {
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur });
   const [tb, tw] = counts(positions[positions.length - 1].cells);
   const opn = gameOpening();
-  $('#infoLine').textContent = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : '');
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : ''); il.textContent = il.dataset.base + npsText(); }
   renderReview();
   if (window.ReversiCoach) ReversiCoach.render();
 }
