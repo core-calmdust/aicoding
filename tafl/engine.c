@@ -24,6 +24,9 @@
 // Search: iterative deepening negamax alpha-beta (PVS) with aspiration windows, a transposition table, killer / history
 // move ordering, late move reductions, a tactical horizon (king escape lines and king captures are resolved exactly),
 // repetition handling, mate-distance values, and a hand-written evaluation tuned by self-play (see MODEL_CARD.md).
+// Since 2026-11-07 (search v2): log-based reductions, reverse futility / futility / late-move pruning near the leaves and
+// a null move, all off in PV nodes and under king threats (an escape line, a two-move escape, a king capture next move).
+// The levels with a node budget keep the earlier search (`classic`), so their calibrated strength is unchanged.
 // Build (wasm): see tools/build.sh. Host protocol: everything goes through the shared i32 buffer at io_ptr().
 #include <stdint.h>
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64;
@@ -33,6 +36,7 @@ typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8
 #include <string.h>
 #include <time.h>
 #define EXPORT(name)
+#define TLS
 static double now(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6; }
 static void progress(int depth, int count) { (void)depth; (void)count; }
 #else
@@ -418,7 +422,7 @@ static int evaluate(const Pos *p) {
   }
   v -= EW[12] * chain; v -= EW[14] * edgeD;
   int s = p->side;
-  if (s == 1) { Pos q = *p; q.side = 0; if (kingCapNow(&q)) v -= EW[10]; }
+  if (s == 1 && kingCapNow(p)) v -= EW[10];   // (kingCapNow does not read the side to move)
   v -= EW[15];
   v = s ? v : -v;
   v += EW[9];
@@ -499,7 +503,7 @@ static void handFeat(const Pos *p, float *f) {
     if (x == ATT) { if (p->b[i + W + 1] == ATT) chain++; if (p->b[i + W - 1] == ATT) chain++; }
     else if (x == DEF && (FL[i] & F_EDGE)) edgeD++;
   }
-  int kd = 0; if (p->side == 1) { Pos q = *p; q.side = 0; kd = kingCapNow(&q); }
+  int kd = p->side == 1 && kingCapNow(p);
   f[0] = p->na; f[1] = p->nd; f[2] = MOBT[mob > 23 ? 23 : mob] / 60.f; f[3] = thr > 3 ? 3 : thr; f[4] = thr2 > 2 ? 2 : thr2;
   f[5] = adjA * adjA / 2.f; f[6] = adjD; f[7] = near2; f[8] = blk; f[9] = nearA; f[10] = cd; f[11] = guard; f[12] = dist;
   f[13] = chain; f[14] = edgeD; f[15] = kd;
@@ -703,6 +707,24 @@ static int qsearch(Pos *p, int alpha, int beta, int ply) {
   }
   return best;
 }
+// search switches / margins (SP[i], set_sp for the test tools). Margins are in the evaluation's units: the net's (1000 per
+// logit) or the hand-made one's (an attacker man = 100), scaled by SP_UNIT / SP_HUNIT.
+enum { SP_TTFIRST, SP_RFP, SP_RFPD, SP_RFPM, SP_NMP, SP_NMPD, SP_FUT, SP_FUTD, SP_FUTM, SP_LMP, SP_LMPD, SP_LMPB, SP_LMR, SP_LMRK, SP_UNIT, SP_HUNIT, SP_NMPR, SP_LMRB, SP_KTHR, SP_BLK, SP_N };
+static int SP[32] = { 1, 1, 3, 150, 1, 3, 1, 2, 200, 1, 3, 10, 1, 225, 100, 50, 3, 0, 2, 1 };
+EXPORT(set_sp) void set_sp(int i, int v) { if (i >= 0 && i < 32) SP[i] = v; }
+static double lnx(double x) {   // natural log (no libm in the wasm build)
+  if (x < 1) return 0;
+  double r = 0; while (x >= 2) { x /= 2; r += 0.6931471805599453; }
+  double z = (x - 1) / (x + 1), z2 = z * z; return r + 2 * z * (1 + z2 / 3 + z2 * z2 / 5 + z2 * z2 * z2 / 7);
+}
+static int LMRT[64][64]; static int lmrK = -1;
+static void lmrInit(void) {
+  if (lmrK == SP[SP_LMRK] * 1000 + SP[SP_LMRB]) return;
+  lmrK = SP[SP_LMRK] * 1000 + SP[SP_LMRB];
+  for (int d = 0; d < 64; d++) for (int i = 0; i < 64; i++) LMRT[d][i] = (int)(SP[SP_LMRB] / 100.0 + lnx(d) * lnx(i) * 100 / SP[SP_LMRK]);   // ln(d)·ln(i) / k, rounded down
+}
+static TLS u8 nullAt[MAXPLY + 8];   // the move into this ply was a null move
+static TLS int classic = 0;   // the levels with a node budget: the search as before 2026-11-07 (their strength was calibrated with it)
 static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int quietPlies) {
   if (p->res) return -(WIN - ply);     // the previous move won
   u64 key = p->h;
@@ -720,23 +742,58 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
   if (!noTac && p->side == 1 && depth <= 2 && kingFork(p)) return WIN - ply - 3;
   if (!noTac && p->side == 0 && kingCapNow(p)) return WIN - ply - 1;
   if (depth <= 0) { nodes++; return leafValue(p, alpha, beta, ply); }
-  Move L[MAXMV]; int n = gen(p, L);
-  if (!n) return -(WIN - ply);
   nodes++;
-  if (ply > seldepth) seldepth = ply;
+  // the transposition table first (before the move generation)
   u64 tkey = key ^ ttSalt; TTE *e = &TT[tkey & ((1 << TT_BITS) - 1)];
-  Move ttm = { 0, 0 }; int hasTT = 0;
+  Move ttm = { 0, 0 }; int hasTT = 0, ttv = 0, ttf = 0;
   if (e->key == tkey) {
     if (e->f) { ttm.f = e->f; ttm.t = e->t; hasTT = 1; }
+    ttv = vFromTT(e->v, ply); ttf = e->flag;
     if (!pv && e->d >= depth && ply > 0) {
-      int v = vFromTT(e->v, ply);
-      if (e->flag == TT_EXACT || (e->flag == TT_LOWER && v >= beta) || (e->flag == TT_UPPER && v <= alpha)) return v;
-    }
+      if (ttf == TT_EXACT || (ttf == TT_LOWER && ttv >= beta) || (ttf == TT_UPPER && ttv <= alpha)) return ttv;
+    } else if (e->d < 0) ttf = 0;
   }
+  Move L[MAXMV]; int n = gen(p, L);
+  if (!n) return -(WIN - ply);
+  if (ply > seldepth) seldepth = ply;
   // the opponent threatens to win next move: only moves that stop it are useful (exact pruning)
   u8 mark[NSQ]; int threat = 0;
   if (p->side == 0 && !noTac) { for (int i = 0; i < NSQ; i++) mark[i] = 0; if (kingLines(p, p->king, mark)) threat = 1; }
+  // defenders to move with the king capturable next move: no pruning either
+  int danger = p->side == 1 && !noTac && kingCapNow(p);
+  // pruning near the leaves (not in PV nodes, not under a threat, not near a forced result): the static value
+  int calm = !classic && !pv && !threat && !danger && !noTac && ply > 0 && beta < WINT && alpha > -WINT, ev = 0;
+  int U = nnUse && nnVar == VAR ? SP[SP_UNIT] : SP[SP_HUNIT];
+  // attackers to move and the king one move away from an escape line (a two-move escape threat): no static cuts
+  int kthr = 0;
+  if (calm && SP[SP_KTHR] && p->side == 0) {
+    int kk = p->king;
+    for (int d = 0; d < 4 && !kthr; d++) for (int q = kk + DIRS[d]; p->b[q] == EMP; q += DIRS[d]) {
+      if ((FL[q] & F_RESTR) && !(FL[q] & F_THRONE)) break;
+      if (escapeFrom(p, q)) { kthr = 1; break; }
+    }
+  }
+  if (calm) {
+    evPly = ply; ev = evaluate(p);
+    if (ttf && ((ttf == TT_LOWER && ttv > ev) || (ttf == TT_UPPER && ttv < ev) || ttf == TT_EXACT) && ttv < WINT && ttv > -WINT) ev = ttv;
+    // reverse futility: far above beta near the leaves
+    if (SP[SP_RFP] && !kthr && depth <= SP[SP_RFPD] && ev - SP[SP_RFPM] * U / 100 * depth >= beta) return ev;
+    // null move: let the opponent move twice; still above beta → cut
+    if (SP[SP_NMP] && !nullAt[ply] && depth >= SP[SP_NMPD] && ev >= beta && (p->side ? p->nd : p->na) >= 3) {
+      Pos q = *p; q.side ^= 1; q.h ^= ZSIDE; q.res = 0; q.ncap = 0; dlen = 0; accPush(ply + 1, &q);
+      int r = SP[SP_NMPR] + depth / 4, saveIrr = hirr; hkeys[hn++] = key; hirr = hn;
+      nullAt[ply + 1] = 1;
+      int v = -search(&q, depth - 1 - r, -beta, -beta + 1, ply + 1, 0, quietPlies + 1);
+      nullAt[ply + 1] = 0; hirr = saveIrr; hn--;
+      if (stopFlag) return 0;
+      if (v >= beta) return v > WINT ? beta : v;
+    }
+  }
+  int futile = calm && !(kthr && SP[SP_KTHR] == 1) && SP[SP_FUT] && depth <= SP[SP_FUTD] && ev + SP[SP_FUTM] * U / 100 * depth <= alpha;
+  int lmpN = calm && SP[SP_LMP] && depth <= SP[SP_LMPD] ? SP[SP_LMPB] * (2 + depth * depth) / 2 : MAXMV;
   int sc[MAXMV], k = p->king, side = p->side;
+  int blk[4] = { -1, -1, -1, -1 }, nblk = 0;
+  if (side == 1 && SP[SP_BLK] && !classic) for (int d = 0; d < 4; d++) { int q = k + DIRS[d]; while (p->b[q] == EMP) q += DIRS[d]; if (p->b[q] == DEF) { blk[d] = q; nblk = 1; } }
   for (int i = 0; i < n; i++) {
     Move *m = &L[i]; int s = 0;
     if (hasTT && sameMove(m, &ttm)) s = 1 << 30;
@@ -748,6 +805,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
       else s = hist[side][m->f][m->t >> 3] + histT[side][m->t];
       if (side == 1 && m->f == k) { Pos q = *p; q.b[k] = EMP; q.b[m->t] = KNG; int ln = kingLines(&q, m->t, 0); if (ln) s += (1 << 29) + ln; else if (escapeFrom(&q, m->t)) s += 1 << 26; }
       if (side == 0) { int dk = m->t - k; if (dk == 1 || dk == -1 || dk == W || dk == -W) s += 1 << 25; }
+      else if (nblk && (m->f == blk[0] || m->f == blk[1] || m->f == blk[2] || m->f == blk[3])) s += 1 << 25;   // a defender in the king's way: moving it opens a line
     }
     if (threat && !mark[m->t]) s = -(1 << 30);   // cannot stop the escape (unless it captures the king: kingCapNow was false)
     sc[i] = s;
@@ -758,6 +816,8 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
     int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     if (threat && sc[i] == -(1 << 30)) { if (best == -INF) { best = -(WIN - ply - 2); } break; }
+    int quiet = sc[i] < (1 << 25);   // (sorted: every later move is quiet too)
+    if (quiet && best > -WINT && (futile || i >= lmpN)) break;
     Move *m = &L[i];
     Pos q = *p; doMove(&q, m); accPush(ply + 1, &q);
     int irr = q.ncap > 0, saveIrr = hirr;
@@ -768,8 +828,15 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
     else if (i == 0) v = -search(&q, d1, -beta, -alpha, ply + 1, pv, qp);
     else {
       int red = 0;
-      if (depth >= 3 && i >= 4 && sc[i] < (1 << 25) && !pv) red = 1 + (i >= 12 && depth >= 5);
-      else if (depth >= 3 && i >= 6 && sc[i] < (1 << 25)) red = 1;
+      if (SP[SP_LMR] && !classic) {
+        if (depth >= 3 && i >= 3 && quiet) {
+          red = LMRT[depth < 63 ? depth : 63][i < 63 ? i : 63] - (pv ? 1 : 0) - (threat || danger ? 1 : 0);
+          if (red > d1 - 1) red = d1 - 1;
+          if (red < 0) red = 0;
+        }
+      }
+      else if (depth >= 3 && i >= 4 && quiet && !pv) red = 1 + (i >= 12 && depth >= 5);
+      else if (depth >= 3 && i >= 6 && quiet) red = 1;
       v = -search(&q, d1 - red, -alpha - 1, -alpha, ply + 1, 0, qp);
       if (v > alpha && red) v = -search(&q, d1, -alpha - 1, -alpha, ply + 1, 0, qp);
       if (v > alpha && v < beta) v = -search(&q, d1, -beta, -alpha, ply + 1, pv, qp);
@@ -863,7 +930,8 @@ static void beginSearch(int ms) {
   ttAge++;
   accRoot(&ROOT);
   for (int a = 0; a < 2; a++) for (int b = 0; b < NSQ; b++) { for (int c = 0; c < NSQ / 8 + 1; c++) hist[a][b][c] >>= 2; histT[a][b] >>= 2; }
-  memset(killers, 0, sizeof(killers));
+  memset(killers, 0, sizeof(killers)); memset(nullAt, 0, sizeof(nullAt));
+  lmrInit();
 }
 // reported values (analysis, the AI's own view, the evaluation bar): the tuned weights leave a large constant edge for
 // the defenders in the raw score (it matters to the search: draws and repetitions are scored 0), so the values handed to
@@ -1072,7 +1140,7 @@ static void think1(int level, int seed) {
     // two plies and play blind three times less often; the defenders keep the level's weaknesses (and its misses)
     const int att = ROOT.side == 0;
     noTac = L->blind && (int)(tr32() % 1000) < (att ? L->blind / 3 : L->blind);
-    values(att && L->depth < 2 ? 2 : L->depth, 0);
+    classic = 1; values(att && L->depth < 2 ? 2 : L->depth, 0); classic = 0;
     noTac = 0;
     int bestv = rootVal[0], miss = !att && L->miss && (int)(tr32() % 1000) < L->miss;   // the defenders pass over an escape in one
     if (miss) { for (int i = 0; i < rootN; i++) if (rootVal[i] > WINT) rootVal[i] = -WINT; bestv = -INF; for (int i = 0; i < rootN; i++) if (rootVal[i] > bestv) bestv = rootVal[i]; }
@@ -1092,8 +1160,9 @@ static void think1(int level, int seed) {
 #ifdef NATIVE
   if (getenv("NODES_FOR_MS")) { best(L->depth, 0, nk ? nk : ms * 3 / 4); noiseAmp = 0; return; }   // calibration: the browser searches about 0.75 k nodes per ms
 #endif
+  classic = nk > 0;
   best(L->depth, ms, nk);
-  noiseAmp = 0;
+  noiseAmp = 0; classic = 0;
 }
 
 #ifdef MT
