@@ -241,7 +241,9 @@ const RAMPS = {
 
 if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-  for (const s of D.steps) { if (RAMPS[s.id]) s.ramp = RAMPS[s.id]; else delete s.ramp; }
+  // keep the ru / zh-TW / id / tr texts already in lessons.json when the en text is unchanged (L() only has 10 languages)
+  const NEWL = ['ru', 'zh-TW', 'id', 'tr'], keep = (o, old) => { if (o && old && o.en === old.en) for (const l of NEWL) if (o[l] === undefined && old[l] !== undefined) o[l] = old[l]; };
+  for (const s of D.steps) { if (RAMPS[s.id]) { const prev = s.ramp || []; RAMPS[s.id].forEach((it, j) => { for (const k of ['t', 'b', 'g', 'h', 'y']) keep(it[k], (prev[j] || {})[k]); }); s.ramp = RAMPS[s.id]; } else delete s.ramp; }
   D.rampUi = UI;
   fs.writeFileSync(FILE, JSON.stringify(D));
   console.log('ramps written:', Object.keys(RAMPS).join(', '));
