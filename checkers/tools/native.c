@@ -321,6 +321,39 @@ static int cmdBench(int argc, char **argv) {
   printf("%.2f Mnps, average depth %.1f\n", tot / t / 1000, dep / 8.0); return 0;
 }
 
+// egsample <n> <out.bin> [minPieces] [maxPieces] [seed]: random quiet positions labelled by the endgame database (EGDB=...),
+// as training records (same format as gen2): value +1500 / 0 / -1500 and result 1 / 0 / -1 from the side to move.
+// Self-play stops a game as soon as the database knows the result, so these are the only endgame positions the net learns from.
+static int cmdEgsample(int argc, char **argv) {
+  initGeo(); initCB();
+  if (!egMaxN) { fprintf(stderr, "egsample needs EGDB\n"); return 1; }
+  long N = atol(argv[2]); FILE *f = fopen(argv[3], "ab"); if (!f) { perror(argv[3]); return 1; }
+  int lo = argc > 4 ? atoi(argv[4]) : 2, hi = argc > 5 ? atoi(argv[5]) : egMaxN; if (hi > egMaxN) hi = egMaxN; if (lo < 2) lo = 2;
+  if (argc > 6) rng ^= (u64)atoll(argv[6]) * 0x9E3779B97F4A7C15ull; for (int i = 0; i < 5; i++) rnd32();
+  long got = 0, tries = 0, cnt[3] = { 0 };
+  while (got < N) {
+    tries++;
+    int n = lo + rnd32() % (hi - lo + 1), nb = 1 + rnd32() % (n - 1);
+    double kp = (rnd32() % 100) / 100.0;   // king share varies per position: all men ... all kings
+    Pos p; p.p[0] = p.p[1] = p.k = 0; p.side = rnd32() & 1; int ok = 1;
+    for (int i = 0; i < n && ok; i++) {
+      int c = i < nb ? 0 : 1, king = (rnd32() % 1000) / 1000.0 < kp, sq, guard = 0;
+      do { sq = rnd32() % 32; } while ((((p.p[0] | p.p[1]) >> sq) & 1 || (!king && (PROMO[c] >> sq & 1))) && ++guard < 100);
+      if (guard >= 100) ok = 0;
+      p.p[c] |= 1u << sq; if (king) p.k |= 1u << sq;
+    }
+    if (!ok || hasCaps(&p)) continue;
+    Move L[MAXMV]; if (!gen(&p, L)) continue;
+    int e = egProbe(&p); if (!e) continue;
+    int r = e == 3 ? 0 : e == 1 ? 1 : -1;
+    i32 rec[6] = { (i32)p.p[0], (i32)p.p[1], (i32)p.k, p.side | (200 << 8), r * 1500, r };
+    fwrite(rec, 4, 6, f); got++; cnt[r + 1]++;
+    if (got % 100000 == 0) fprintf(stderr, "\r%ld positions (W/D/L %ld/%ld/%ld)   ", got, cnt[2], cnt[1], cnt[0]);
+  }
+  fclose(f); fprintf(stderr, "\n%ld positions, side to move W/D/L %ld/%ld/%ld\n", got, cnt[2], cnt[1], cnt[0]);
+  return 0;
+}
+
 int main(int argc, char **argv) {
   initGeo(); initCB();
   if (getenv("EGDB")) egLoad(getenv("EGDB"));
@@ -346,6 +379,7 @@ int main(int argc, char **argv) {
   if (argc > 1 && !strcmp(argv[1], "ballots")) return cmdBallots(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "evalpos")) return cmdEvalpos(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "bench")) return cmdBench(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "egsample")) return cmdEgsample(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "acctest")) {   // incremental vs full net evaluation along random games
     int bad = 0, tot = 0;
     for (int g = 0; g < 200; g++) { Pos p = startPos(); accFull(&p, 0); int ply = 0;

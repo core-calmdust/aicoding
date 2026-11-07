@@ -19,6 +19,17 @@
 
   強さは **同じ持ち時間** の対局で判断します。
 
+## ★ 終盤（6駒以下）の学習 — 2026-11-07 追加
+自己対局は終盤DBで勝敗が分かった時点で終わるため、自己対局だけで育てたネットは **6駒以下の局面を一度も学習していません**。
+Mac の対局は両者とも6駒DBを使っていたので問題が隠れていましたが、サイトの終盤DBは4駒までなので、5〜6駒の終盤をネットが自分で判断します。
+実際、30周目のネットは4駒DBの条件だと今のネットに −397 Elo（6駒以下の局面の勝敗の見立てが当てずっぽう同然）。
+
+- `tools/nn/egtune.sh nnwork/net-30.nnue` … 6駒DBで答えの分かる終盤600万局面を作り、ネットの「6駒以下専用の部分」だけを学習（それ以外はバイト単位で同じ）。
+  最後にサイト条件で対局します。`net-30-eg.nnue` ができます。
+- `loop.sh` は今後、終盤の局面を毎回の学習に混ぜます（`nnwork/eg/eg6.bin`、初回だけ数分で作成）。
+- `loop.sh` の結果に **SITE** の行が増えました。4駒DB・ブラウザでの速さ（H=512 は今のネットの0.4倍なので、20k 対 50k 局面）での今のネットとの対局で、
+  **サイトに載せるかはこの行で判断** します（50ms の行はネイティブの速さで6駒DBありなので、参考）。
+
 ## 0. 準備
 ```sh
 cd checkers
@@ -65,6 +76,8 @@ python3 tools/nn/train.py --out a.nnue data/*.bin   # 学習（--init 前の.npz
 tools/nn/match.sh 20k:a.nnue 20k:b.nnue             # 3手バロット全部を先後入れ替えで（532局）
 tools/nn/match.sh 100ms:a.nnue 100ms:nnwork/base.bin
 NETFILE=a.nnue $B bench 1000                       # 速さ（Mnps）と平均の読みの深さ
+EGDB=nnwork/egdb6.bin $B egsample 1000000 eg.bin 2 6 1   # 終盤DBで答えの付いた終盤の局面（学習データと同じ形式）
+python3 tools/nn/train.py --init a.nnue --only-pieces 6 --out b.nnue eg.bin   # 6駒以下の部分だけ学習
 python3 tools/nn/train.py --check a.nnue data.bin  # 学習側の計算 …
 NETFILE=a.nnue $B evalpos data.bin 20              # … とエンジンの評価値が完全に一致するか
 ```
@@ -72,7 +85,7 @@ NETFILE=a.nnue $B evalpos data.bin 20              # … とエンジンの評�
 - `match.sh` の結果は `score`（0.5超で左が強い）、Elo と95%の幅、`pairs`（同じ序盤の先後2局で勝ち越した組の数）。
 
 ## 4. サイトへの反映
-完成したネット（例 `nnwork/net-12.nnue`）を `checkers/nnue-candidate.nnue` としてコミットしてください（`nnwork/` は Git に入りません）。
+完成したネット（例 `nnwork/net-12.nnue`、SITE の行がプラスのもの）を `checkers/nnue-candidate.nnue` としてコミットしてください（`nnwork/` は Git に入りません）。
 反映側で次を行います：
 1. 今のネットとの同じ持ち時間の対局で強さを確認（ブラウザ相当の wasm でも速さを確認）
 2. `gzip -9` して `evalnet.bin.gz` を差し替え、`engine.js` の `V` と `index.html` / `app.js` のキャッシュ番号を上げる
