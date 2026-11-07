@@ -41,7 +41,7 @@ const SHORT = {
   id: { 'Permainan baru': 'Baru', 'Main baru': 'Baru', 'Urungkan': 'Batal', 'Tawarkan seri': 'Seri?', 'Tawar seri': 'Seri?', 'Tawarkan remis': 'Remis?', 'Teka-teki': 'Soal', 'Pelajaran': 'Belajar', 'Main online': 'Online' },
   hi: { 'ड्रॉ प्रस्ताव': 'ड्रॉ?', 'पहेलियाँ': 'पहेली', 'ऑनलाइन खेल': 'ऑनलाइन' },
   ar: { 'عرض تعادل': 'تعادل؟', 'الألغاز': 'ألغاز', 'الدروس': 'دروس', 'اللعب عبر الإنترنت': 'أونلاين', 'الإحصاءات': 'إحصاءات' },
-  ko: { '무승부 제안': '무승부?', '온라인 대국': '온라인', '되돌리기': '무르기' },
+  ko: { '무승부 제안': '무승부?', '온라인 대국': '온라인' },
   zh: { '在线对战': '在线', '离桌结算': '离桌', '结算离桌': '离桌', '残局题': '残局' },
   'zh-TW': { '提議和棋': '提和', '提議和局': '提和', '線上對戰': '線上', '結算離桌': '離桌', '殘局題': '殘局' },
 };
@@ -358,9 +358,11 @@ function fitBar(bar, info, getMenu, isOn) {
       for (const st of steps) { st(); if (ok()) break; }
     }
     // chips that still do not fit: left out whole, from the end; the first one alone shrinks
+    // (measured on the chips' own edges, not scrollWidth: a chip may end a fraction of a pixel past the info and be clipped)
     let left = chips.filter(shown);
-    while (left.length > 1 && info.scrollWidth > info.clientWidth + 1) left.pop().classList.add('hb-cut');
-    if (left.length && info.scrollWidth > info.clientWidth + 1) left[0].classList.add('hb-shrink');
+    const spill = () => { if (info.scrollWidth > info.clientWidth + 1) return true; const ir = info.getBoundingClientRect(); return left.some(c => { const r = c.getBoundingClientRect(); return r.right > ir.right + 0.5 || r.left < ir.left - 0.5; }); };
+    while (left.length > 1 && spill()) left.pop().classList.add('hb-cut');
+    if (left.length && spill()) left[0].classList.add('hb-shrink');
     mos.forEach(m => m.takeRecords());   // (our own class changes are not changes to react to)
   };
   const later = () => { if (!q) q = requestAnimationFrame(run); };
