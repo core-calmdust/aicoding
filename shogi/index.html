@@ -782,7 +782,7 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
 .ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
 .ol-spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:olspin 1s linear infinite}
 @keyframes olspin{to{transform:rotate(360deg)}}
-body.in-online #evalCard .evalrow,body.in-online #evalCard .evalbar,body.in-online #evalCard .graph,body.in-online #btnAnalyze,body.in-online #btnEdit,body.in-online #btnPaste,body.in-online .review-card,body.in-online .coach,body.in-online #infoLine,body.in-online #btnResAnalyze,body.in-online #btnMistakes{display:none!important}
+body.in-online #evalCard .evalrow,body.in-online #evalCard .evalbar,body.in-online #evalCard .graph,body.in-online #btnAnalyze,body.in-online #btnPro,body.in-online #btnEdit,body.in-online #btnPaste,body.in-online .review-card,body.in-online .coach,body.in-online #infoLine,body.in-online #btnResAnalyze,body.in-online #btnMistakes{display:none!important}
 body.in-online #evalCard .navbar{margin-top:0}
 /* online dock (PC: bar at the bottom) / tab bar (phones) */
 .dock{display:none}
@@ -1324,7 +1324,7 @@ html[lang=ar] .pf-input{direction:rtl}
     </div>
     <div class="card review-card" id="reviewCard" data-itc="coach"><div class="rv-head"><span class="label" data-i18n="rv.title"></span><button id="rvClose">×</button></div><div id="rvBody"></div></div>
     <div class="card kifu-card">
-      <div class="kifu-head"><span class="label"><span data-i18n="kifu"></span><span id="senkei" style="margin-left:8px;color:var(--brass)"></span></span><span><button id="btnEdit" data-i18n="ed.btn" data-i18n-title="ed.btn.title"></button><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
+      <div class="kifu-head"><span class="label"><span data-i18n="kifu"></span><span id="senkei" style="margin-left:8px;color:var(--brass)"></span></span><span><button id="btnEdit" data-i18n="ed.btn" data-i18n-title="ed.btn.title"></button><button id="btnAnalyze" data-i18n="rv.analyze" data-i18n-title="rv.analyze.title"></button><button id="btnPro" data-i18n="pro.btn" data-i18n-title="pro.btn.title"></button><button id="btnShare" data-i18n="share" data-i18n-title="share.title"></button><button id="btnPaste" data-i18n="paste" data-i18n-title="paste.title"></button><button id="btnCopy" data-i18n="copy" data-i18n-title="copy.title"></button></span></div>
       <div class="kifu" id="kifu"></div>
     </div>
     <div class="info-line" id="infoLine"></div>
@@ -1489,7 +1489,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261107l14"></script>
+<script src="i18n.js?v=20261107pro"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
@@ -2109,6 +2109,7 @@ function renderInfo() {
   $('#evalCard').dataset.rtnote = t('rt.noEval');
   if (game.rated && !lesson) { $('#btnUndo').disabled = true; if (!game.over) $('#btnHint').disabled = true; }
   $('#btnAnalyze').disabled = rtLive();
+  $('#btnPro').disabled = rtLive(); $('#btnPro').style.display = game.variant ? 'none' : '';   // deep analysis: standard shogi only, not during a rated game
   wpRender();
   if (settings.mode === 'online') { const live = !!net && !net.done && !net.spectate && !game.over; $('#btnUndo').disabled = true; $('#btnHint').disabled = true; $('#btnResign').disabled = !live; $('#btnLesson').disabled = live; $('#btnTsume').disabled = live; }
   else { $('#btnLesson').disabled = false; $('#btnTsume').disabled = false; }
@@ -3185,6 +3186,12 @@ function renderReview() {
 $('#rvBody').addEventListener('click', e => { const ob = e.target.closest('[data-opset],[data-opid]'); if (ob) { const fi = ob.dataset.opid ? ShogiOpenUI.findId(ob.dataset.opid).then(i => i >= 0 ? i : OPEN.sets.findIndex(g => g.id === ob.dataset.opfb)) : Promise.resolve(+ob.dataset.opset); lsTab = 'open'; showOverlay('#lessonOverlay'); Promise.all([fi, openLessons()]).then(([oi]) => { if (oi >= 0) openOpeningChoice(oi); }); return; } if (e.target.closest('#rvPvBtn')) { rvPvShow = !rvPvShow; renderReview(); drawArrows(); return; } const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rvRun) rvCancel(); renderReview(); rvbRender(); };   // (the box under the board closes with it, as in the other games)
 $('#btnAnalyze').onclick = () => runReview();
+// strongest analysis (pro/, several threads, standard shogi only): the displayed position in a new tab (that page is cross-origin isolated)
+$('#btnPro').onclick = () => {
+  if (game.variant) return;
+  const q = new URLSearchParams(); if (game.start) q.set('sfen', game.start); const ms = game.moves.slice(0, cur); if (ms.length) q.set('moves', ms.join(','));
+  window.open('pro/?' + q, '_blank', 'noopener');
+};
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); viewAt(0); };
 
 // ---------------------------------------------------------------- PC review box (rvbox.js): commentary, candidate moves with lines, study mode

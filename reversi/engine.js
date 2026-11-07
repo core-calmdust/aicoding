@@ -664,6 +664,8 @@ function solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
 // ---- the same search in WebAssembly (engine.c, built by tools/build-wasm.sh): used when available, same nodes and values
 let WX = null, WON = false;
 (function loadWasm() {
+  // pro/ (several threads): the worker has already set up an instance on the shared memory (engine_mt.wasm)
+  if (typeof self !== 'undefined' && self.REVERSI_WX) { WX = self.REVERSI_WX; return; }
   try {
     let bytes = null;
     if (typeof importScripts === 'function' && typeof window === 'undefined') {
@@ -876,7 +878,7 @@ function think(cells, toMove, opts, onProgress) {
   const doExact = empties <= lv.exact;
   try {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
-    const startD = Math.min(doExact ? 2 : 1, midMax);
+    const startD = Math.min((doExact ? 2 : 1) + (opts.d0 || 0), midMax);   // d0: a helper thread starting a ply ahead (pro/)
     for (let d = startD; d <= midMax; d++) {
       const ordered = orderRoot(moves, prev);
       let r;

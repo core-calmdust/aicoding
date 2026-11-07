@@ -417,5 +417,7 @@
 "tr.ardri.b": "<b>Ard Rí</b> ('Grande Rei') é um jogo irlandês num tabuleiro de 7×7: 16 atacantes contra 8 defensores e o rei. Mais da metade do tabuleiro está ocupada desde o início: um combate apertado e de contato constante.\nAqui se joga com <b>fuga nos cantos</b> e o rei capturado <b>pelos quatro lados</b> (nunca na borda). Sabe-se que, com fuga por qualquer borda, os defensores sempre vencem.",
 "tr.ardri.task": "Cerque o rei pelos quatro lados com os atacantes (pretos).",
 "tr.ardri.ok": "Rei capturado! São precisos os quatro lados.",
-"tr.ardri.ng": "Coloque um atacante na única casa livre ao lado do rei."
+"tr.ardri.ng": "Coloque um atacante na única casa livre ao lado do rei.",
+"pro.btn": "Análise profunda",
+"pro.btn.title": "Abrir a análise com vários núcleos (nova aba)"
 }

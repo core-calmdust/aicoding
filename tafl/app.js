@@ -2010,6 +2010,11 @@ function drawReviewFx(svg) {
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); };
 $('#btnAnalyze').onclick = () => runReview();
+// strongest analysis (pro/, several threads): the displayed position in a new tab (that page is cross-origin isolated)
+$('#btnPro').onclick = () => {
+  const q = new URLSearchParams({ v: gv }); if (startSpec) q.set('start', startSpec); if (cur) q.set('moves', moves.slice(0, cur).join(','));
+  window.open('pro/?' + q, '_blank', 'noopener');
+};
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 
 // ====================================================================== PC review box (振り返りボックス: 解説 + 候補手と読み筋 + 検討モード)

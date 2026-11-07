@@ -37,6 +37,14 @@ static double now(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts
 static void progress(int depth, int count) { (void)depth; (void)count; }
 #else
 #define EXPORT(name) __attribute__((export_name(#name)))
+/* MT (engine_mt.wasm): several threads search together on one shared memory ("Lazy SMP"); per-thread state is TLS
+   (position, rules of the variant, search tables), the net, the page's switches and the transposition table are shared.
+   Without MT TLS is nothing (same build as before). */
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
 IMPORT(now) double now(void);
 IMPORT(progress) void progress(int depth, int count);
@@ -52,7 +60,7 @@ void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = (u8 *)d; const u
 #define DRAW_PLIES 200
 #define REPV 40            // a repeated position inside the search: slightly better for the attackers (the third occurrence is a loss for the defenders, but it needs their help)
 
-static i32 IO[8192];
+static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry (13 x 13 mailbox with an off-board border)
@@ -67,16 +75,16 @@ enum { EMP = 0, ATT = 1, DEF = 2, KNG = 3, OFF = 4 };
 #define F_RESTR 32
 static const int DIRS[4] = { -W, 1, W, -1 };
 typedef struct { int n, escEdge, kingCap4, shield, fort, encircle; } Rules;
-static Rules R; static int VAR = -1, N = 11, THRONE;
-static u8 FL[NSQ];
-static u64 ZP[4][NSQ], ZSIDE;
-static int CORNERS[4];
+static TLS Rules R; static TLS int VAR = -1, N = 11, THRONE;
+static TLS u8 FL[NSQ];
+static TLS u64 ZP[4][NSQ], ZSIDE;
+static TLS int CORNERS[4];
 static inline int SQ(int r, int c) { return (r + 1) * W + c + 1; }
 static inline int RR(int s) { return s / W - 1; }
 static inline int CC(int s) { return s % W - 1; }
-static u64 rs64 = 0x9E3779B97F4A7C15ull;
+static TLS u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
-static int zReady = 0;
+static TLS int zReady = 0;
 static void setVariant(int v) {
   if (!zReady) { for (int k = 0; k < 4; k++) for (int i = 0; i < NSQ; i++) ZP[k][i] = rnd64(); ZSIDE = rnd64(); zReady = 1; }
   if (v == VAR) return;
@@ -152,7 +160,7 @@ static inline int hostile(const Pos *p, int sq, int vs) {
   return 0;
 }
 // the pieces a move takes off / puts on (for the learned evaluation's incremental first layer): +(1 + x·NSQ + sq) / −(…)
-static int dlog[48], dlen;
+static TLS int dlog[48], dlen;
 static inline void removeAt(Pos *p, int sq) {
   int x = p->b[sq]; p->h ^= ZP[x][sq]; p->b[sq] = EMP; p->ncap++;
   if (dlen < 48) dlog[dlen++] = -(1 + x * NSQ + sq);
@@ -345,9 +353,9 @@ static int EWV[6][NW] = {
   { 100, 855, 59, 91, 4, 69, 9, 43, 37, 20, 260, 2, 31, 68, 1, -784, 35, 15 },   // Fetlar (Copenhagen's set: the same board, corners and king capture)
   { 100, 426, 66, 62, 54, 29, 2, 7, 28, 20, 267, 21, 1, 115, 17, -149, 42, 6 },   // Ard Ri (Brandubh's set; an SPSA tune, 160 × 6 games, gave +38 ± 50 Elo but a jumpy start value, so not used)
 };
-static int EW[NW];
-static int noiseAmp = 0; static u64 noiseSeed = 1;
-static int blockSq[4][3], nearSq[4][2], evalVar = -1;
+static TLS int EW[NW];
+static TLS int noiseAmp = 0; static TLS u64 noiseSeed = 1;
+static TLS int blockSq[4][3], nearSq[4][2], evalVar = -1;
 static void evalInit(void) {
   if (evalVar == VAR) return;
   evalVar = VAR;
@@ -500,10 +508,10 @@ static void handFeat(const Pos *p, float *f) {
 // that move took off and put on (DEL, recorded by accPush right after doMove). GEN orders the pushes: a chain k-1 → k is
 // valid only if k was pushed after k-1 (otherwise k belongs to an older branch); anything else is rebuilt from the board.
 #define ACCN (MAXPLY + 8)
-static Pos ROOT;   // (defined with the root search below)
-static i16 ACC[ACCN][NN_HMAX] __attribute__((aligned(16)));
-static int DEL[ACCN][48], DN[ACCN], OKA[ACCN]; static u64 KEY[ACCN]; static u32 GEN[ACCN], genC; static int evPly = -1;
-static int nnRC[NSQ];   // padded square → r·N + c
+static TLS Pos ROOT;   // (defined with the root search below)
+static TLS i16 ACC[ACCN][NN_HMAX] __attribute__((aligned(16)));
+static TLS int DEL[ACCN][48], DN[ACCN], OKA[ACCN]; static TLS u64 KEY[ACCN]; static TLS u32 GEN[ACCN], genC; static TLS int evPly = -1;
+static TLS int nnRC[NSQ];   // padded square → r·N + c
 static void accPush(int k, const Pos *q) {
   if (k < 0 || k >= ACCN) return;
   DN[k] = dlen; for (int i = 0; i < dlen; i++) DEL[k][i] = dlog[i];
@@ -601,6 +609,10 @@ typedef struct { u64 key; i16 v; u8 f, t; i8 d; u8 flag; u8 age; u8 pad; } TTE;
 #endif
 static TTE TT[1 << TT_BITS];
 static u8 ttAge = 0;
+#ifdef MT
+static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
+static TLS int threadId;            /* 0 = the main thread (time control, result), 1.. = helpers */
+#endif
 static u64 ttSalt = 0;   // native tools: separate table regions for two players
 #define TT_EXACT 3
 #define TT_LOWER 1
@@ -616,16 +628,19 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
-static u64 nodes; static double tEnd; static int stopFlag, nodeLimit_on; static u64 nodeLimit;
-static int hist[2][NSQ][NSQ / 8 + 1];   // history by (from, to>>3) to keep it small
-static int histT[2][NSQ];
-static Move killers[MAXPLY][2];
-static u64 hkeys[2048 + MAXPLY]; static int hn, hirr;
-static int rootQuiet;
-static int seldepth;
+static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimit_on; static TLS u64 nodeLimit;
+static TLS int hist[2][NSQ][NSQ / 8 + 1];   // history by (from, to>>3) to keep it small
+static TLS int histT[2][NSQ];
+static TLS Move killers[MAXPLY][2];
+static TLS u64 hkeys[2048 + MAXPLY]; static TLS int hn, hirr;
+static TLS int rootQuiet;
+static TLS int seldepth;
 static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f && a->t == b->t; }
 static inline int timeUp(void) {
   if (stopFlag) return 1;
+#ifdef MT
+  if ((nodes & 1023) == 0 && gStop) stopFlag = 1;
+#endif
   if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit)) stopFlag = 1; }
   return stopFlag;
 }
@@ -657,7 +672,7 @@ static int kingFork(const Pos *p) {
   }
   return 0;
 }
-static int noTac = 0;   // the weakest levels sometimes play "blind": no tactical horizon (they miss two-move escapes / threats)
+static TLS int noTac = 0;   // the weakest levels sometimes play "blind": no tactical horizon (they miss two-move escapes / threats)
 static int leafValue(Pos *p, int alpha, int beta, int ply) {
   evPly = ply;
   if (noTac) return evaluate(p);
@@ -782,9 +797,9 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
 }
 
 // ---------------------------------------------------------------- root / host interface
-static Pos ROOT;
-static Move rootL[MAXMV]; static int rootN;
-static int rootVal[MAXMV];
+static TLS Pos ROOT;
+static TLS Move rootL[MAXMV]; static TLS int rootN;
+static TLS int rootVal[MAXMV];
 // setup: IO = [variant, side, cells (N*N: 0 empty 1 attacker 2 defender 3 king) ..., nmoves, (from | to << 8) * nmoves]
 // squares are numbered r * N + c (r = 0 the top row). Returns 1 if all moves were legal.
 static int toPad(int i) { return SQ(i / N, i % N); }
@@ -794,7 +809,7 @@ static int findMove(const Pos *p, int f, int t, Move *out) {
   for (int i = 0; i < n; i++) if (L[i].f == f && L[i].t == t) { *out = L[i]; return 1; }
   return 0;
 }
-static int gameRes;   // the game is already over at the root (res of the last move)
+static TLS int gameRes;   // the game is already over at the root (res of the last move)
 EXPORT(setup) int setup(void) {
   setVariant(IO[0]); evalInit();
   Pos p; posInit(&p);
@@ -841,7 +856,12 @@ static void orderRoot(void) {   // a cheap first ordering: one-ply values
   sortRoot();
 }
 static void beginSearch(int ms) {
-  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++; accRoot(&ROOT);
+  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
+#ifdef MT
+  if (!threadId)
+#endif
+  ttAge++;
+  accRoot(&ROOT);
   for (int a = 0; a < 2; a++) for (int b = 0; b < NSQ; b++) { for (int c = 0; c < NSQ / 8 + 1; c++) hist[a][b][c] >>= 2; histT[a][b] >>= 2; }
   memset(killers, 0, sizeof(killers));
 }
@@ -862,8 +882,11 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   Move bm = rootL[0]; int bv = rootVal[0], bd = 0;
   if (rootN == 1 || rootVal[0] >= WIN - 1) { writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = 0; IO[4] = 0; return; }
   for (int i = 0; i < rootN; i++) rootVal[i] = -INF;
-  int prev = 0;
-  for (int d = 1; d <= maxDepth && d < MAXPLY - 8; d++) {
+  int prev = 0, d0 = 1;
+#ifdef MT
+  if (threadId) d0 = 1 + (threadId & 1);   /* helpers: every other one a ply ahead */
+#endif
+  for (int d = d0; d <= maxDepth && d < MAXPLY - 8; d++) {
     seldepth = 0;
     int a = d >= 3 ? prev - 60 : -INF, b = d >= 3 ? prev + 60 : INF, v;
     for (;;) {
@@ -882,7 +905,13 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     if (bi) { Move t = rootL[bi]; int tv = rootVal[bi]; for (int i = bi; i > 0; i--) { rootL[i] = rootL[i - 1]; rootVal[i] = rootVal[i - 1]; } rootL[0] = t; rootVal[0] = tv; }
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
+#ifdef MT
+    writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = bd; IO[4] = (i32)(nodes / 1000);   /* the page reads the result so far */
+#endif
     progress(d, 1);
+#ifdef MT
+    if (gStop) break;
+#endif
     if (v > WINT && WIN - v <= d) break;
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.55) break;
@@ -892,7 +921,7 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
 // analysis: values of all root moves. IO[0] = n, IO[1] = depth, then (move, v) * n, best first
 EXPORT(analyze) void analyze(int ms, int maxDepth) {
   beginSearch(ms); nodeLimit_on = 0;
-  int depthDone = 0; static int vals[MAXMV]; static Move ord[MAXMV];
+  int depthDone = 0; static TLS int vals[MAXMV]; static TLS Move ord[MAXMV];
   if (rootN) { orderRoot(); for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = rootVal[i]; } }
   if (rootN) {
     for (int d = 2; d <= maxDepth && d < MAXPLY - 8; d++) {
@@ -926,7 +955,7 @@ EXPORT(values) void values(int depth, int noise) {
 // ---------------------------------------------------------------- puzzles: forced win within k own moves (exact)
 // winner = the side whose win we look for. att(p): winner to move; def(p): the other side to move.
 // returns 1 yes, 0 no, -1 budget exhausted
-static int pzWinner;
+static TLS int pzWinner;
 static int pzAtt(const Pos *p, int k, u64 *budget);
 static int pzDef(const Pos *p, int k, u64 *budget) {   // loser to move; winner has k moves left after this reply
   if (p->res) return p->res == (pzWinner ? 2 : 1);
@@ -1012,7 +1041,7 @@ static const Level LEVELS[21] = { { 0 },
   { 1, 99, 15, 0, 22, 0, 0 }, { 1, 99, 30, 0, 15, 0, 0 }, { 1, 99, 60, 0, 10, 0, 0 }, { 1, 99, 120, 0, 6, 0, 0 }, // 4級 … 1級
   { 1, 99, 250, 3000, 0, 0, 0 }, { 1, 99, 500, 3000, 0, 0, 0 }, { 1, 99, 1000, 3000, 0, 0, 0 },             // 初段 二段 三段
   { 1, 99, 0, 1200, 0, 0, 0 }, { 1, 99, 0, 2500, 0, 0, 0 } };                                             // 四段 五段
-static u64 trng = 1;
+static TLS u64 trng = 1;
 static u32 tr32(void) { trng ^= trng << 13; trng ^= trng >> 7; trng ^= trng << 17; return (u32)(trng >> 11); }
 static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(tr32() % 2001) - 1000; return s * amp / 2000; }   // approx. N(0, amp^2 / 3)
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
@@ -1066,3 +1095,15 @@ static void think1(int level, int seed) {
   best(L->depth, ms, nk);
   noiseAmp = 0;
 }
+
+#ifdef MT
+/* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+/* every instance first: mt_stack (its own stack top; a function without a frame of its own), then mt_thread */
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+#endif
