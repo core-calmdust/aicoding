@@ -1,7 +1,7 @@
 // Language picker — turns the game's native <select id="langSel"> into an in-page menu (common to every game page).
 // The <select> stays in the page (hidden): the game keeps reading .value and listening to "change"; picking a language
 // here sets .value and fires "change". Code that sets .value is followed too (the button label updates).
-// Usage: <script src="../shared/langsel.js?v=1" defer></script>  (after the game's own scripts)
+// Usage: <script src="../shared/langsel.js?v=2" defer></script>  (after the game's own scripts)
 (function () {
 'use strict';
 const CSS = `
@@ -22,7 +22,7 @@ const CSS = `
 .lsel-pop button:hover,.lsel-pop button:focus-visible{background:rgba(255,255,255,.08);outline:none}
 .lsel-pop button.on{background:rgba(255,255,255,.12);font-weight:700}
 .lsel-pop button.on small::after{content:' ✓';opacity:1}
-.lsel-pop.two{display:grid;grid-auto-flow:column;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;width:min(400px,calc(100vw - 16px));min-width:0;max-height:none}
+.lsel-pop.two{display:grid;grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;width:min(400px,calc(100vw - 16px));min-width:0;max-height:none}
 .lsel-pop.two button{padding:8px 10px;gap:8px;min-width:0}
 .lsel-pop.two button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;
@@ -58,8 +58,8 @@ function enhance(sel) {
   function show() {
     pop.innerHTML = opts().map(o => `<button type="button" role="option" data-v="${o.value}" class="${o.value === sel.value ? 'on' : ''}" aria-selected="${o.value === sel.value}"><span>${o.textContent}</span><small>${o.value}</small></button>`).join('');
     pop.querySelectorAll('[data-v]').forEach(b => { b.onclick = () => pick(b.dataset.v); });
-    // many languages: two columns (read down each column) instead of a long scrolling list
-    const n = sel.options.length, two = n > 8; pop.classList.toggle('two', two); pop.style.gridTemplateRows = two ? `repeat(${Math.ceil(n / 2)}, auto)` : '';
+    // many languages: two columns read left to right, row by row (same order as the World Board Game Atlas picker)
+    const n = sel.options.length, two = n > 8; pop.classList.toggle('two', two);
     open = true; btn.setAttribute('aria-expanded', 'true'); place(); pop.classList.add('on');
     const cur = pop.querySelector('.on') || pop.querySelector('button'); if (cur) cur.focus({ preventScroll: true }); if (cur) cur.scrollIntoView({ block: 'nearest' });
   }

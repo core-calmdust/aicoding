@@ -26,6 +26,7 @@
 | アゴン（2026-11-05 追加） | `agon-multiplay` | `agon/database.rules.json` | 登録する（サイトキー設定済み） |
 | ウル王朝のゲーム（2026-11-05 追加） | `ur-multiplay` | `ur/database.rules.json` | 登録する（サイトキー設定済み） |
 | コナネ（2026-11-06 追加） | `konane-multiplay` | `konane/database.rules.json` | 登録する（サイトキー設定済み） |
+| セネト（2026-11-07 追加） | `senet-multiplay` | `senet/database.rules.json` | 登録する（サイトキー設定済み） |
 | まいにち数独・すぴーど数独・さめが〜め（共用） | `everyday-sudoku-58be0` | 変更なし（`sudoku/database.rules.json` は現行のまま） | 登録する |
 | 共通アカウント（ポータル・各ゲームの同期） | `board-game-atlas-a7055` | 変更なし（`shared/atlas-database.rules.json`） | 登録する |
 

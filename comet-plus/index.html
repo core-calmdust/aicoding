@@ -4131,7 +4131,7 @@ function drawChainComboText(renderCtx, count, alpha = 1.0) {
 }
 
 // タイトルのロゴ画像（白一色の画像を読み込み、COMET は白・OUTBURST+ はテーマ色に塗り分けた絵をテーマごとに作っておく）
-const titleLogoImg = new Image(); titleLogoImg.src = 'title-logo.png?v=6';
+const titleLogoImg = new Image(); titleLogoImg.src = 'title-logo.png?v=7';
 const TITLE_LOGO_SPLIT = 0.743; // 画像の上から何割で COMET と OUTBURST+ を分けるか
 let titleLogoCache = null;
 function titleLogoCanvas(theme) {
@@ -9239,6 +9239,6 @@ setInterval(() => { if (gameState === 'playing' && !document.hidden) audioHandle
 requestAnimationFrame(gameLoop);
 
 </script>
-<script src="../shared/langsel.js?v=1" defer></script>
+<script src="../shared/langsel.js?v=2" defer></script>
 </body>
 </html>

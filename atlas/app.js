@@ -114,7 +114,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7, agon: 9, konane: 7 })[g.id] || 5}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${({ alquerque: 6, ugolki: 7, agon: 9, konane: 8 })[g.id] || 5}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -1670,7 +1670,7 @@
     document.querySelectorAll('#gsSeg button').forEach(b => { b.textContent = t('tab.' + b.dataset.v); });
   }
   // game-styled language picker (the native <select> stays as the source of the options)
-  const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese (Traditional)', id: 'Indonesian', tr: 'Turkish' };
+  const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese', id: 'Indonesian', tr: 'Turkish' };
   function openLang(on) {
     const pop = $('langPop'), btn = $('langBtn');
     if (on === undefined) on = pop.hidden;

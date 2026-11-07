@@ -70,14 +70,18 @@ while [ $r -le $R ]; do
     log "round $r: $(cat $W/r$r/d-*.bin | wc -c | awk '{print int($1 / 24)}') positions"
   fi
   # 2. training on the last WINDOW rounds (+ EXTRA), continuing from the previous net
+  # validation = the newest round's first file, never trained on (a net continued from the previous one has learned
+  # the older rounds, so validating on them always favours the old net: nets then stopped changing)
+  VALF=$(ls $W/r$r/d-*.bin | head -1)
   FILES=""; k=$((r - WINDOW + 1)); [ $k -lt 1 ] && k=1
-  while [ $k -le $r ]; do FILES="$FILES $W/r$k/d-*.bin"; k=$((k + 1)); done
+  while [ $k -le $r ]; do for f in $W/r$k/d-*.bin; do [ "$f" = "$VALF" ] || FILES="$FILES $f"; done; k=$((k + 1)); done
   INIT=""; RLR=$LR
   if [ $prev -ge 1 ] && [ -f $W/net-$prev.nnue.npz ]; then INIT="--init $W/net-$prev.nnue.npz"; RLR=$LR2; fi
   log "round $r: training (data rounds $(( r - WINDOW + 1 < 1 ? 1 : r - WINDOW + 1 ))-$r${EXTRA:+ + extra})"
   python3 tools/nn/train.py --fb $FB --hidden $H --l1 $L1 --l2 $L2 --ob $OB --epochs $EPOCHS --lam $LAM --lr $RLR \
-    --max-positions $MAXPOS --seed $r $INIT --out $W/tmp.nnue $FILES $EGFILE $EXTRA > $W/train-$r.txt 2>/dev/null
+    --max-positions $MAXPOS --seed $r $INIT --val-data $VALF --out $W/tmp.nnue $FILES $EGFILE $EXTRA > $W/train-$r.txt 2>/dev/null
   tail -1 $W/train-$r.txt | sed "s/^/round $r: /" | tee -a $W/log.txt
+  grep -q saved $W/train-$r.txt || log "round $r: WARNING the net did not improve on the validation data (same as the previous one)" 
   mv $W/tmp.nnue.npz $W/net-$r.nnue.npz; mv $W/tmp.nnue $W/net-$r.nnue; cp $W/net-$r.nnue $W/net.nnue
   # 3. measurement
   tools/nn/match.sh $MNODES:$W/net-$r.nnue $MNODES:$NET $P | sed "s/^/round $r: /" | tee -a $W/log.txt

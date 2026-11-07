@@ -42,6 +42,7 @@ const settings = { mode: 'ai', color: 1, level: 9, level2: 9, anim: true, sound:
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
 const pname = p => t(p === P1 ? 'p1' : 'p2');
@@ -418,9 +419,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
-  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${LV(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${LV(rgame.lv)} · R${rgame.or}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 let thinking = 0;
 function renderInfo() {
@@ -451,7 +452,7 @@ function renderInfo() {
   $('#btnTerr').classList.toggle('on', settings.terr);
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview();
-  $('#infoLine').textContent = `${game.n}×${game.n} · ${t('rule.' + game.rule)} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}  ·  ${settings.mode === 'ai' ? 'AI ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  $('#infoLine').textContent = `${game.n}×${game.n} · ${t('rule.' + game.rule)} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1258,7 +1259,7 @@ function crExplain(i, j) {
   if (i > n * n * 0.55) return { kind: 'endgame', txt: t('cr.endgame', { b: crName(b), d: j.desc }) };
   return { kind: 'gen', txt: t('cr.gen', { d: j.desc, b: crName(b) }) };
 }
-function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
+function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : AIW()) : pname(p); }
 // commentary of the move played from the position shown: { head, tag, body } (the coach card and the review box)
 function rvCoachMove() {
   const i = cur, j = rvJudge(i), who = toMoveAt(i);

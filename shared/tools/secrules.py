@@ -103,6 +103,11 @@ GAMES = {
     'ur': dict(first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'finkel': (0, 0, 0), 'blitz': (0, 0, 0), 'masters': (0, 0, 0)},
                legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
                variant=('v', ['finkel', 'blitz', 'masters'])),
+    # Senet: own project "senet-multiplay"; v = tc = 'std' (5 pieces) / 'long' (7); b = Light (moves first). As ur: extra throws
+    # (1 / 4 / 5) and the stick commit–reveal tokens: nt names the next writer; every action has 30 s (free), no reserve; dkey
+    'senet': dict(first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'std': (0, 0, 0), 'long': (0, 0, 0)},
+                  legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
+                  variant=('v', ['std', 'long'])),
     # Alquerque: in the Fanorona project under the node alq/ (its own players / ratings / lobby / games; the page reuses the
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
     'alquerque': dict(host=('fanorona', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],

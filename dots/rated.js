@@ -98,7 +98,7 @@ function rtStatsHtml(n) {
   }
   if (h.length) html += `<div class="rt-lbl2">${esc(t('rt.recent'))}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<span class="rt-chip ${c}" title="${esc((x.sz ? x.sz + '×' + x.sz + ' · ' : '') + lvName(x.lv) + ' · R' + x.or)}"><i>${esc(t('rt.' + c.toUpperCase()))}</i>${x.sz ? x.sz + '×' + x.sz + ' ' : ''}Lv${x.lv}<b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
   if (!pick || pick.n !== n) pick = Object.assign({ n }, rtPick(st.r, n));
-  html += `<div class="rt-opp">${esc(t('rt.next', { n: n + '×' + n }))} <b>AI ${esc(lvName(pick.lv))}</b> <span class="rt-tag ${pick.tag}">R ${pick.or} · ${esc(t('rt.' + pick.tag))}</span></div>`;
+  html += `<div class="rt-opp">${esc(t('rt.next', { n: n + '×' + n }))} <b>${AIW()} ${esc(lvName(pick.lv))}</b> <span class="rt-tag ${pick.tag}">R ${pick.or} · ${esc(t('rt.' + pick.tag))}</span></div>`;
   return html + `</div><p class="rt-desc">${esc(t('rt.desc'))}</p>`;
 }
 
@@ -108,7 +108,7 @@ newGame = function () { RT = null; put(RT_CUR, null); return _newGame.apply(this
 levelFor = function (pl) { return rtGame() ? RT.lv : _levelFor(pl); };
 playerName = function (i) {
   if (!rtGame()) return _playerName(i);
-  return i === game.human ? `${t('you')} · R${RT.my}` : `AI ${lvName(RT.lv)} · R${RT.or}`;
+  return i === game.human ? `${t('you')} · R${RT.my}` : `${AIW()} ${lvName(RT.lv)} · R${RT.or}`;
 };
 canUndo = function () { return rtLive() ? false : _canUndo(); };
 renderInfo = function () {
@@ -116,7 +116,7 @@ renderInfo = function () {
   const live = rtLive();
   document.body.classList.toggle('rated-live', live);
   if (rtGame()) {
-    $('#infoLine').textContent = `${game.n}×${game.n} · ${t('ng.rated')} · AI ${lvName(RT.lv)} (R ${RT.or})`;
+    $('#infoLine').textContent = `${game.n}×${game.n} · ${t('ng.rated')} · ${AIW()} ${lvName(RT.lv)} (R ${RT.or})`;
     if (live) { $('#btnHint').disabled = true; $('#btnUndo').disabled = true; $('#btnAnalyze').disabled = true; }
   }
 };
