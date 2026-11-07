@@ -2251,6 +2251,13 @@ function drawReviewFx(svg) {
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); rvbRender(); };   // (閉じる also closes the box under the board, as in every game)
 $('#btnAnalyze').onclick = () => runReview();
+// strongest analysis (pro/, several threads): the current position in a new tab (that page is cross-origin isolated)
+$('#btnPro').onclick = () => {
+  const p = E.Pos.fromFEN(startFen || E.START), us = [];
+  for (const m of moves.slice(0, cur)) { us.push(p.uci(m)); p.make(m); }
+  const q = new URLSearchParams(); if (startFen) q.set('fen', startFen); if (us.length) q.set('moves', us.join(','));
+  window.open('pro/' + (q.toString() ? '?' + q : ''), '_blank', 'noopener');
+};
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 // your dubious moves and blunders against the AI (graded by the coach) become practice problems
 function mistakeProblems() {

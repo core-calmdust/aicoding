@@ -11,6 +11,13 @@ typedef int i32;
 typedef short i16;
 typedef signed char i8;
 typedef unsigned char u8;
+/* MT (engine_mt.wasm): several threads search together on one shared memory ("Lazy SMP"); per-thread state is TLS,
+   the tables, the network and the transposition table are shared. Without MT TLS is nothing and the build is as before. */
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 
 #ifdef __wasm__
 #define EXPORT(name) __attribute__((export_name(#name)))
@@ -137,14 +144,14 @@ typedef struct {
 } Pos;
 typedef struct { u64 key; int castle, ep, half; u8 cap; } Undo;
 
-static Pos P;
+static TLS Pos P;
 #define HIST_MAX 1024
-static u64 keyHist[HIST_MAX + MAXPLY + 8];
-static int histLen;   /* positions before the current one */
-static Undo undoStack[MAXPLY + 8];
-static Acc accStack[MAXPLY + 8];
-static int accDirty[MAXPLY + 8];
-static int sp;   /* search ply: accStack[sp] belongs to the current position */
+static TLS u64 keyHist[HIST_MAX + MAXPLY + 8];
+static TLS int histLen;   /* positions before the current one */
+static TLS Undo undoStack[MAXPLY + 8];
+static TLS Acc accStack[MAXPLY + 8];
+static TLS int accDirty[MAXPLY + 8];
+static TLS int sp;   /* search ply: accStack[sp] belongs to the current position */
 static int CASTLE_MASK[64];
 
 static inline void put(Pos *p, int pc, int s) { p->bb[pc] |= BIT(s); p->occ[COLOR(pc)] |= BIT(s); p->all |= BIT(s); p->board[s] = (u8)pc; p->key ^= ZP[pc][s]; }
@@ -193,7 +200,7 @@ static void nn_update(Acc *dst, const Acc *src, int na, const int *ap, const int
   }
 }
 /* pending accumulator change for the move just made at ply sp (applied lazily) */
-static struct { int na, ns, ap[2], as[2], spc[2], ss[2]; } accDelta[MAXPLY + 8];
+static TLS struct { int na, ns, ap[2], as[2], spc[2], ss[2]; } accDelta[MAXPLY + 8];
 
 static int nn_eval(const Pos *p) {
   Acc *a = &accStack[sp];
@@ -452,19 +459,26 @@ static inline int score_to_tt(int s, int ply) { return s >= MATE_IN_MAX ? s + pl
 static inline int score_from_tt(int s, int ply) { return s >= MATE_IN_MAX ? s - ply : s <= -MATE_IN_MAX ? s + ply : s; }
 
 /* ------------------------------------------------------------------ search state */
-static int history[2][64][64];
-static int killers[MAXPLY + 8][2];
-static int counterMove[12][64];
+static TLS int history[2][64][64];
+static TLS int killers[MAXPLY + 8][2];
+static TLS int counterMove[12][64];
 static int lmrTable[64][64];
-static double nodes, nodeLimit;
-static double tStart, tSoft, tHard;
-static int stopFlag, selDepth;
-static int pvTable[MAXPLY + 8][MAXPLY + 8], pvLen[MAXPLY + 8];
-static int moveStack[MAXPLY + 8], pieceStack[MAXPLY + 8];
-static int staticEvalStack[MAXPLY + 8];
-static int excludedRoot[256], nExcluded;
+static TLS double nodes, nodeLimit;
+static TLS double tStart, tSoft, tHard;
+static TLS int stopFlag, selDepth;
+static TLS int pvTable[MAXPLY + 8][MAXPLY + 8], pvLen[MAXPLY + 8];
+static TLS int moveStack[MAXPLY + 8], pieceStack[MAXPLY + 8];
+static TLS int staticEvalStack[MAXPLY + 8];
+static TLS int excludedRoot[256], nExcluded;
 
+#ifdef MT
+static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
+static TLS int threadId;            /* 0 = the main thread (time control, result), 1.. = helpers */
+#endif
 static void check_time(void) {
+#ifdef MT
+  if (gStop) { stopFlag = 1; return; }
+#endif
   if (nodeLimit > 0 && nodes >= nodeLimit) { stopFlag = 1; return; }
   if (tHard > 0 && js_now() - tStart >= tHard) stopFlag = 1;
 }
@@ -723,7 +737,7 @@ static void move_to_uci(int m, char *o) {
   int pr = M_PROMO(m); if (pr) { o[4] = " nbrq"[pr]; o[5] = 0; } else o[4] = 0;
 }
 /* setup buffer: "FEN" or "FEN moves m1 m2 ..." (NUL terminated) */
-static char setupBuf[65536];
+static TLS char setupBuf[65536];
 EXPORT(setup_ptr) char *setup_ptr(void) { return setupBuf; }
 EXPORT(set_position) int set_position(void) {
   char *s = setupBuf; char *mv = 0;
@@ -743,9 +757,9 @@ EXPORT(set_position) int set_position(void) {
 }
 
 /* ------------------------------------------------------------------ root search */
-static i32 resBuf[8 + MAXPLY];   /* bestmove, score, depth, nodes(lo), pvlen, seldepth, pv... */
+static TLS i32 resBuf[8 + MAXPLY];   /* bestmove, score, depth, nodes(lo), pvlen, seldepth, pv... */
 EXPORT(res_ptr) i32 *res_ptr(void) { return resBuf; }
-static double resNodes;
+static TLS double resNodes;
 EXPORT(res_nodes) double res_nodes(void) { return resNodes; }
 
 static double ln_(double x) { /* natural log for x >= 1 without libm */ int k = 0; while (x > 2) { x /= 2; k++; } double y = (x - 1) / (x + 1), y2 = y * y, s = 0, t = y; for (int i = 1; i < 40; i += 2) { s += t / i; t *= y2; } return 2 * s + k * 0.69314718055994530942; }
@@ -765,7 +779,11 @@ EXPORT(think) int think(double softMs, double hardMs, int maxDepth, double nodeL
   /* fallback move: first legal */
   { int ml[256], n = gen_moves(&P, ml, 0); for (int i = 0; i < n; i++) { if (is_legal(&P, ml[i])) { int skip = 0; for (int k = 0; k < nExcluded; k++) if (excludedRoot[k] == ml[i]) skip = 1; if (!skip) { bestMove = ml[i]; break; } } } }
   int prevScore = 0;
-  for (int d = 1; d <= maxDepth; d++) {
+  int dStep = 1, d0 = 1;
+#ifdef MT
+  if (threadId) d0 = 1 + (threadId & 1);   /* helpers: every other one a ply ahead, so the threads fill the table with different depths */
+#endif
+  for (int d = d0; d <= maxDepth; d += dStep) {
     selDepth = 0;
     int delta = 20, alpha = -INF, beta = INF, s;
     if (d >= 4) { alpha = prevScore - delta; beta = prevScore + delta; }
@@ -788,6 +806,9 @@ EXPORT(think) int think(double softMs, double hardMs, int maxDepth, double nodeL
     js_progress(d, s, nodes, pv, pvl);
     if (bestScore >= MATE_IN_MAX && d >= (MATE - bestScore) + 2) break;
     if (tSoft > 0 && js_now() - tStart >= tSoft) break;
+#ifdef MT
+    if (gStop) break;
+#endif
     if (nodeLimit > 0 && nodes >= nodeLimit) break;
   }
   resBuf[0] = bestMove; resBuf[1] = bestScore; resBuf[2] = lastDepth; resBuf[3] = (i32)nodes; resBuf[4] = pvl; resBuf[5] = selDepth;
@@ -799,10 +820,10 @@ EXPORT(exclude_ptr) i32 *exclude_ptr(void) { return excludedRoot; }
 EXPORT(set_excluded) void set_excluded(int n) { nExcluded = n; }
 EXPORT(static_eval) int static_eval(void) { sp = 0; accDirty[0] = 1; return evaluate(&P); }
 EXPORT(side_to_move) int side_to_move(void) { return P.side; }
-EXPORT(move_uci) char *move_uci(int m) { static char b[8]; move_to_uci(m, b); return b; }
+EXPORT(move_uci) char *move_uci(int m) { static TLS char b[8]; move_to_uci(m, b); return b; }
 
 /* legal moves of the current position (for analysis loops in JS) */
-static i32 legalBuf[256];
+static TLS i32 legalBuf[256];
 EXPORT(legal_ptr) i32 *legal_ptr(void) { return legalBuf; }
 EXPORT(legal_moves) int legal_moves(void) { int ml[256], n = gen_moves(&P, ml, 0), k = 0; for (int i = 0; i < n; i++) if (is_legal(&P, ml[i])) legalBuf[k++] = ml[i]; return k; }
 
@@ -824,7 +845,7 @@ EXPORT(perft_root) double perft_root(int d) { sp = 0; return (double)perft(&P, d
 /* ------------------------------------------------------------------ analysis: value of every root move
  * anaMoves[0..n) is the move order to use (from the previous depth); values and kinds are written back.
  * kind: 0 exact, 1 upper bound (the move is at least `margin` worse than the best). Returns n, or -1 if aborted. */
-static i32 anaMoves[256], anaVals[256], anaKind[256];
+static TLS i32 anaMoves[256], anaVals[256], anaKind[256];
 EXPORT(ana_moves) i32 *ana_moves(void) { return anaMoves; }
 EXPORT(ana_vals) i32 *ana_vals(void) { return anaVals; }
 EXPORT(ana_kind) i32 *ana_kind(void) { return anaKind; }
@@ -850,3 +871,17 @@ EXPORT(analyze_depth) int analyze_depth(int n, int depth, int margin) {
   resNodes = nodes;
   return n;
 }
+
+#ifdef MT
+/* ------------------------------------------------------------------ threads (engine_mt.wasm, see engine-mt.js) */
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+EXPORT(mt_tls_align) u32 mt_tls_align(void) { return __builtin_wasm_tls_align(); }
+/* every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then
+   mt_thread (its TLS block and thread number) */
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+#endif
