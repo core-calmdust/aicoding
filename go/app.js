@@ -584,7 +584,7 @@ async function maybeAI(tok) {
   let res = await job();
   if (res && res.error && tok === busyToken) res = await job();   // the engine rebuilds itself after a crash: try once more
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
-  const wait = (settings.mode === 'watch' ? 650 : 380) - (Date.now() - t0);
+  const wait = (settings.mode === 'watch' ? 650 : cur > 0 && animOn() ? 220 : 0) - (Date.now() - t0);   // AIの着手は即時：前の石の出現アニメ（.22s）が終わるのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
   thinking = 0;

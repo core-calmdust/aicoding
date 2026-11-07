@@ -905,7 +905,7 @@ async function maybeAI(tok) {
   const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side), cfg: proCfg(levelFor(side)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
   if (res.value !== undefined && res.value !== null) evals[idx] = { v: side === 0 ? res.value : -res.value, exact: !!res.exact };
-  const wait = (settings.mode === 'watch' ? 600 : (P[idx].mv && P[idx].mv.extra ? 280 : 420)) - (performance.now() - t0);
+  const wait = (settings.mode === 'watch' ? 600 : 0) - (performance.now() - t0);   // AIの着手は即時：前の種まきアニメは終わっている（もう一回の案内もアニメの中）。観戦だけ間を取る
   if (wait > 0) await sleep(wait);
   if (tok !== busyToken) return;
   thinking = -1;

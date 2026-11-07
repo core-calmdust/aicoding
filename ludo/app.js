@@ -276,7 +276,8 @@ function afterThrow(my) {
     cRender();
   } else {
     const r = E.think(s, thr, G.level);
-    setTimeout(() => { if (my === token) commit(r.move); }, 240 * SPD());
+    if (G.mode === 'watch') setTimeout(() => { if (my === token) commit(r.move); }, 240 * SPD());   // AIの着手は即時（観戦だけ間を取る）
+    else commit(r.move);
   }
 }
 async function commit(m) {

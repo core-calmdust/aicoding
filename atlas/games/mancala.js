@@ -335,7 +335,7 @@
       const t0 = Date.now(), j = ++aiJ;
       worker.onmessage = e => {
         const m = e.data; if (m.type !== 'move' || m.id !== j || stopped || j !== aiJ || over) return;
-        setTimeout(() => { if (stopped || j !== aiJ || over) return; if (m.move >= 0) play(m.move, ai); }, Math.max(0, 500 - (Date.now() - t0)));
+        setTimeout(() => { if (stopped || j !== aiJ || over) return; if (m.move >= 0) play(m.move, ai); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.postMessage({ type: 'move', id: j, b: Array.from(b), side: ai, rules: RULES, level });
     }

@@ -128,7 +128,7 @@
         later(() => {
           if (id !== jid || over) return;
           const w = play(c); later(next, w + 80);
-        }, Math.max(0, 420 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.move); };
       worker.onerror = () => { worker = null; reply(-1); };

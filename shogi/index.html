@@ -1607,6 +1607,7 @@ let game = null;     // {start, moves:[usi], info:[{ev, q, kif}], human: 0|1, ov
 let cur = 0;         // displayed ply
 let reviewing = false;
 let busyToken = 0;
+let mvEndAt = 0;   // when the running piece animation ends (AIの着手は即時：AIはこれだけ待つ)
 let lesson = null;
 let P = new E.Position();   // position at ply `cur`
 let sel = null;             // {sq} or {hand:t}
@@ -1886,7 +1887,7 @@ function renderBoard(anim) {
         { const g = window.Variants ? Variants.geom(P) : null; if (g && (g.w !== 9 || g.h !== 9)) {   // variants: the piece is smaller than its cell
           const cwp = boardEl.clientWidth / g.w, chp = boardEl.clientHeight / g.h, pw = Math.min(cwp, chp / 1.1) || 1; dx *= cwp / pw; dy *= chp / (pw * 1.1); } }
         el.style.setProperty('--dx', dx + '%'); el.style.setProperty('--dy', dy + '%');
-        el.classList.add('mv');
+        el.classList.add('mv'); mvEndAt = performance.now() + (E.mPromo(lm) && !E.isDrop(lm) ? 560 : 200);   // the AI waits for this, then plays at once
         // promotion: the unpromoted face slides in on top, then the piece turns over to its promoted side
         if (E.mPromo(lm) && !E.isDrop(lm) && E.typeOf(p) > OU && !(P.cfg && P.cfg.flip) && !REDUCED_MOTION.matches) {
           const fe = pieceEl(p - 8);
@@ -2369,7 +2370,7 @@ async function schedule() {
       if (r) { bm = r.u; bmLbl = r.src === 'plan' ? 'cs.plan' : 'book'; }
     } else bm = (pc ? pc.book : levelOf(side) >= 2) && !game.variant ? bookMove() : null;
     if (bm) {
-      await sleep(settings.mode === 'watch' ? 500 : 400); if (token !== busyToken) return;
+      { const w = settings.mode === 'watch' ? 500 : mvEndAt - performance.now(); if (w > 0) { await sleep(w); if (token !== busyToken) return; } }   // AIの着手は即時（定跡の手も。観戦だけ間を取る）
       const prev = game.info[idx]; if (prev && prev.pendingQ) delete prev.pendingQ;
       commitMove(P.fromUsi(bm), false);
       setStatus(side, t(bmLbl), false);
@@ -2380,7 +2381,7 @@ async function schedule() {
     });
     if (!res || token !== busyToken) return;
     if (res.error) { const lm = P.legalMoves(false); res.move = lm.length ? P.toUsi(lm[Math.floor(Math.random() * lm.length)]) : null; res.score = 0; res.depth = 0; }
-    const wait = (settings.mode === 'watch' ? 500 : 350) - (performance.now() - t0);
+    const wait = settings.mode === 'watch' ? 500 - (performance.now() - t0) : mvEndAt - performance.now();   // AIの着手は即時：前の駒のアニメが終わるのを待つだけ（観戦だけ間を取る）
     if (wait > 0) await sleep(wait); if (token !== busyToken) return;
     if (!res.move) { game.over = { winner: side ^ 1, reason: 'mate', ply: idx }; renderInfo(); save(); showResult(); return; }
     const evB = side === 0 ? res.score : -res.score;

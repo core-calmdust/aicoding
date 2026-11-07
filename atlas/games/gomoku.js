@@ -167,7 +167,7 @@
           if (id !== jid || over) return;
           if (m < 0 || !pos.isLegal(m)) { busy = false; hud(''); return; }
           const w = play(m, ai); later(next, w + 60);
-        }, Math.max(0, 420 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? -1 : r.move); };
       worker.onerror = () => { worker = null; reply(-1); };

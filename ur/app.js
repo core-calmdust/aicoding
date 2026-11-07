@@ -606,8 +606,8 @@ async function afterPosition() {
   if (isAI(st.turn)) {
     if (wpActive() && wpPaused) return;
     thinking = 1; renderInfo();
-    await sleep((settings.mode === 'watch' ? 520 : 380) / SPD());
-    if (tok !== busyToken) return;
+    const lastP = game.plies[cur - 1], preWait = settings.mode === 'watch' ? 520 : lastP && lastP.ag ? 380 : 0;   // AIの着手は即時：観戦と「もう一回」の案内のときだけ間を取る
+    if (preWait) { await sleep(preWait / SPD()); if (tok !== busyToken) return; }
     if (!game.roll) {
       const r0 = E.rollDice(Math.random, st.rule), r = { d: r0.dice, n: r0.n };
       thinking = 0; animating = true; renderInfo(); snd('roll');
@@ -619,7 +619,7 @@ async function afterPosition() {
     if (!ms.length) { thinking = 0; afterRoll(tok); return; }
     thinking = 1; renderInfo();
     const t0 = performance.now(), mv = await think(st, r.n, levelFor(st.turn));
-    const wait = (settings.mode === 'watch' ? 420 : 320) / SPD() - (performance.now() - t0);
+    const wait = (settings.mode === 'watch' ? 420 / SPD() : 0) - (performance.now() - t0);   // AIの着手は即時（観戦だけ間を取る）
     if (wait > 0) await sleep(wait);
     thinking = 0;
     if (tok !== busyToken) { renderInfo(); return; }

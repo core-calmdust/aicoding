@@ -711,7 +711,7 @@ async function maybeAI(tok) {
   const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
-  const wait = Math.max((settings.mode === 'watch' ? 700 : 420), prevDur + 120) - (Date.now() - t0);
+  const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
   thinking = 0;

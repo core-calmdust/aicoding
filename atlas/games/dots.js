@@ -319,7 +319,7 @@
       const t0 = Date.now(), j = ++aiJ;
       worker.onmessage = ev => {
         const m = ev.data; if (m.type !== 'move' || m.id !== j || stopped || j !== aiJ || over) return;
-        setTimeout(() => { if (stopped || j !== aiJ || over) return; if (m.move >= 0 && by[m.move] < 0) play(m.move, ai); else { const f = by.findIndex(x => x < 0); if (f >= 0) play(f, ai); } }, Math.max(0, 420 - (Date.now() - t0)));
+        setTimeout(() => { if (stopped || j !== aiJ || over) return; if (m.move >= 0 && by[m.move] < 0) play(m.move, ai); else { const f = by.findIndex(x => x < 0); if (f >= 0) play(f, ai); } }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.postMessage({ type: 'move', id: j, R: n, C: n, edges: moves.slice(), level, lead: score[ai] - score[human] });
     }

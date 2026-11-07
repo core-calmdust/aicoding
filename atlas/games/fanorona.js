@@ -303,7 +303,7 @@
           thinking = false;
           if (m == null || !pos.steps(m)) { const Lm = pos.moves(); if (!Lm.length) { next(); return; } m = Lm[0]; }
           commit(m, false);
-        }, Math.max(0, 420 - (Date.now() - t0)));
+        }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };

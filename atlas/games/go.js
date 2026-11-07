@@ -186,7 +186,7 @@
         if (res && typeof res.wr === 'number') aiWr[k] = res.wr;
         if (res && aiResigns(res)) return;
         if (m !== R.PASS && !pos.legal(m)) m = R.PASS;
-        later(() => { if (over || moves.length !== k) return; const w = play(m); later(next, Math.max(0, w) + 60); }, Math.max(0, 420 - (Date.now() - t0)));
+        later(() => { if (over || moves.length !== k) return; const w = play(m); later(next, Math.max(0, w) + 60); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       });
     }
     // the AI resigns when hopeless (dan levels sooner, kyu levels only when far behind) — like go/app.js

@@ -1516,10 +1516,12 @@ function renderBoard(anim) {
   setHover(hoverCol);
   hitsEl.classList.toggle('can', canHumanPlay());
 }
+let dropEndAt = 0;   // when the running drop animation ends (the AI waits for it, then plays at once)
 function dropAnim(el, r) {
   const cp = cellPx(), dist = (ROWS - 1 - r + 1) * cp;
   if (!settings.anim || reduceMotion || !el.animate) { playDrop(r); return; }
   const dur = 260 + 300 * Math.sqrt((ROWS - r) / ROWS);
+  dropEndAt = performance.now() + dur;
   const b1 = Math.min(cp * 0.22, dist * 0.16), b2 = b1 * 0.32;
   el.animate([
     { transform: `translateY(${-dist}px)`, offset: 0, easing: 'cubic-bezier(.55,0,1,.55)' },
@@ -1787,7 +1789,7 @@ async function maybeAI(tok) {
   const t0 = Date.now();
   const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
-  const wait = (settings.mode === 'watch' ? 650 : 380) - (Date.now() - t0);
+  const wait = settings.mode === 'watch' ? 650 - (Date.now() - t0) : dropEndAt - performance.now();   // AIの着手は即時：前の駒が落ち切るのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
   thinking = 0;
@@ -3329,7 +3331,7 @@ document.addEventListener('keydown', e => {
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=114')).then(() => load('../atlas/tables3d.js?v=21')).then(() => load('../atlas/skin/common.js?v=35l14')).then(() => load('../atlas/models/connect4.js?v=5l14')).then(() => load('../atlas/games/connect4-tiles.js?v=1l14')).then(() => load('../atlas/skin/connect4.js?v=6l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=114')).then(() => load('../atlas/tables3d.js?v=21')).then(() => load('../atlas/skin/common.js?v=35l14')).then(() => load('../atlas/models/connect4.js?v=5l14')).then(() => load('../atlas/games/connect4-tiles.js?v=1l14')).then(() => load('../atlas/skin/connect4.js?v=6l14-aim'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
