@@ -261,7 +261,7 @@ const fileNo = (col, s) => col ? s % 9 + 1 : 9 - s % 9;                     // e
 const CN = ' 一二三四五六七八九';
 function fileName(pos, s) {
   const p = pos.at(s), col = E.colorOf(p), n = fileNo(col, s), l = L();
-  const num = (l === 'ja' || l === 'zh') && !col ? CN[n] : String(n);
+  const num = (l === 'ja' || l === 'zh' || l === 'zh-TW') && !col ? CN[n] : String(n);
   let pre = '';
   if (E.typeOf(p) !== KING && E.typeOf(p) !== ADVISOR && E.typeOf(p) !== ELEPHANT) {
     const same = []; for (let r = 0; r < 10; r++) { const q = r * 9 + s % 9; if (pos.at(q) === p) same.push(q); }

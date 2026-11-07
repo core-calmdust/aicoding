@@ -184,6 +184,7 @@ function enter() {
   }
   for (const h of homes) { if (h.keep) continue; h.el.dataset.ltc = h.k; panel.appendChild(h.el); if (ro) ro.observe(h.el); }
   document.body.classList.add('lt-on'); document.documentElement.classList.add('sn-land');
+  try { if (typeof relayout === 'function') relayout(); } catch (e) {}   // (the board drops its bear-off trays in this layout)
   if (lessonOn()) { cur = 'learn'; lsWas = true; }
   if (!saved && coachOk()) cur = 'coach';
   setOpen(false); refit();
@@ -195,6 +196,7 @@ function leave() {
   homes = [];
   rail.remove(); panel.remove(); nbox.remove();
   document.body.classList.remove('lt-on', 'lt-open', 'lt-nav', 'lt-ckrest'); delete document.body.dataset.lt; document.documentElement.classList.remove('sn-land');
+  try { if (typeof relayout === 'function') relayout(); } catch (e) {}
   refit();
 }
 function refit() {

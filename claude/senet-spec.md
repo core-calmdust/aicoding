@@ -55,5 +55,5 @@
 - `atlas/skin/senet.js`：全画面スキン（縦向きは盤を −90°）。`window.SenetSkin3D = {sync, animateMove, animateRoll}`。
 - `atlas/games/senet.js`＋`senet-kit.js`：ポータルの卓上対局（AI／二人）。`atlas/rules/senet.js`：3Dルールコース（案内役 セティ）。
 
-## 7. 今後
-- アトラスの「ヒストリア」へのセネトの追加は未対応。
+## 7. ヒストリア
+- ヒストリア（2026-11-07）：`atlas/historia/s/senet.json`（地図：サッカラ・テーベ・キプロス・ボストン、3×10の盤図と逆S字の矢印）と14言語の本文 `atlas/historia/<lang>/senet.json`。案内役は av/camel-2。

@@ -98,6 +98,8 @@ html.atlas-ur body:is(.in-lesson,.in-puzzle){--oh:410px!important}
   html.atlas-ur.ur-land .atlas-lbtn b{display:none}
   html.atlas-ur.ur-land .atlas-lpop{top:34px;right:0;z-index:90}
   html.atlas-ur.ur-land body.lt-on .controls .btn{width:38px!important;height:30px!important;border-radius:99px!important;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+  html.atlas-ur.ur-land body.lt-on .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}
+  html.atlas-ur.ur-land body.lt-on .controls .btn.primary svg{stroke:#fff!important}
   html.atlas-ur.ur-land body.lt-on .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
   html.atlas-ur.ur-land body.lt-on .board-area > .player{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important}
   html.atlas-ur.ur-land body.lt-on .board-area > .player.active{border-color:#ffc928!important}
